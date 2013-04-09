@@ -1,0 +1,77 @@
+#!/bin/bash
+
+################################################################################
+#
+#   CONFIGURE VERSIONS AND FOLDERS
+#
+
+ROOT_DIR=$HOME/revlibs
+INSTALL_DIR=$ROOT_DIR/prefix
+
+OPENSSL_VERSION=1.0.0e
+
+echo "Will build into $ROOT_DIR"
+mkdir -p $ROOT_DIR
+
+echo "Will install into $INSTALL_DIR"
+mkdir -p $INSTALL_DIR
+
+################################################################################
+#
+#   BUILD OPENSSL
+#
+
+OPENSSL_TGZ=$ROOT_DIR/openssl-$OPENSSL_VERSION.tar.gz
+OPENSSL_SRC=$ROOT_DIR/openssl-$OPENSSL_VERSION
+OPENSSL_CONFIG="no-hw no-idea no-rc5 shared --prefix=$INSTALL_DIR linux-generic32"
+
+cd $ROOT_DIR
+
+if [ -e $OPENSSL_SRC/config.cmd ]; then
+	OPENSSL_CURRENT_CONFIG=`cat $OPENSSL_SRC/config.cmd`
+else
+	OPENSSL_CURRENT_CONFIG=
+fi
+
+if [ ! -e $OPENSSL_TGZ ]; then
+	echo "Fetching openssl-$OPENSSL_VERSION"
+	wget -nv http://www.openssl.org/source/openssl-$OPENSSL_VERSION.tar.gz
+	if [ $? == 0 ]; then
+		echo "  fetched to $OPENSSL_TGZ"
+	else
+		if [ -e $OPENSSL_TGZ ]; then rm $OPENSSL_TGZ; fi
+		echo "  failed"
+		exit
+	fi
+else
+	echo "Found openssl-$OPENSSL_VERSION tgz at $ROOT_DIR"
+fi
+
+
+if [ ! -e $OPENSSL_SRC ]; then
+	echo "Unpacking openssl-$OPENSSL_VERSION"
+	tar xf $OPENSSL_TGZ
+	if [ $? == 0 ]; then
+		echo "  unpacked to $OPENSSL_SRC"
+	else
+		if [ -e $OPENSSL_SRC ]; then rm -r $OPENSSL_SRC; fi
+		echo "  failed"
+		exit
+	fi
+else
+	echo "Found openssl-$OPENSSL_VERSION src at $ROOT_DIR"
+fi
+
+if [ "$OPENSSL_CONFIG" != "$OPENSSL_CURRENT_CONFIG" ]; then
+	echo "Building openssl-$OPENSSL_VERSION"
+	cd $OPENSSL_SRC
+	./Configure $OPENSSL_CONFIG && make clean && make depend && make && make install_sw
+	if [ $? == 0 ]; then
+		echo "$OPENSSL_CONFIG" > $OPENSSL_SRC/config.cmd
+	else
+		echo "  failed"
+		exit
+	fi
+else
+	echo "Already built openssl-$OPENSSL_VERSION"
+fi

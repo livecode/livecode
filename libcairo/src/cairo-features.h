@@ -1,0 +1,40 @@
+#ifndef CAIRO_FEATURES_H
+#define CAIRO_FEATURES_H
+
+#define CAIRO_HAS_PDF_SURFACE 1
+#define HAVE_UINT64_T 1
+
+#ifdef _MACOSX
+#define CAIRO_NO_MUTEX 1
+#define HAVE_STDINT_H 1
+#define CAIRO_HAS_QUARTZ_SURFACE 1
+#define CAIRO_HAS_QUARTZ_FONT 1
+#ifdef __BIG_ENDIAN__
+#define WORDS_BIGENDIAN 1
+#define FLOAT_WORDS_BIGENDIAN 1
+#else
+#undef WORDS_BIGENDIAN
+#endif
+#endif
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+#define CAIRO_NO_MUTEX 1
+#define HAVE_STDINT_H 1
+#define CAIRO_HAS_QUARTZ_SURFACE 1
+#define CAIRO_HAS_QUARTZ_FONT 1
+#endif
+
+#ifdef _WINDOWS
+#define CAIRO_WIN32_STATIC_BUILD 1
+#define CAIRO_HAS_WIN32_SURFACE 1
+#define CAIRO_HAS_WIN32_FONT 1
+#endif
+
+#ifdef _LINUX
+#define CAIRO_NO_MUTEX 1
+#define HAVE_STDINT_H 1
+#define CAIRO_HAS_FT_FONT 1
+#define CAIRO_HAS_FC_FONT 1
+#endif
+
+#endif

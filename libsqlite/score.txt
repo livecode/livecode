@@ -1,0 +1,10 @@
+library sqlite	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX
+	define SQLITE_ENABLE_FTS3
+	define SQLITE_ENABLE_FTS3_PARANTHESIS	define SQLITE_OMIT_LOAD_EXTENSION
+	include ./include	compile-c src/sqlite3.c
+	compile-c src/gethostuuid.c
+	output libsqlite
+
+library sqlitedataset	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX	enable c++-exceptions
+	include ./include	compile-c++ src/dataset.cpp	compile-c++ src/qry_dat.cpp	compile-c++ src/sqlitedataset.cpp	compile-c++ src/sqlitedecode.cpp
+	output libsqlitedataset

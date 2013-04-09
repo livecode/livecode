@@ -1,0 +1,9 @@
+library gif	support-ppc 10.3.9	support-386 10.4.0
+	--support-x86_64 10.5.0
+	include ./include	compile-c src/dgif_lib.c
+	compile-c src/egif_lib.c
+	compile-c src/gif_err.c
+	compile-c src/gif_font.c
+	compile-c src/gif_hash.c
+	compile-c src/gifalloc.c
+	compile-c src/quantize.c	output libgif

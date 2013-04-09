@@ -1,0 +1,3 @@
+library z	support-ppc 10.3.9	support-386 10.4.0
+	--support-x86_64 10.5.0
+	include ./include	compile-c src/adler32.c	compile-c src/compress.c	compile-c src/crc32.c	compile-c src/deflate.c	compile-c src/gzio.c	compile-c src/infback.c	compile-c src/inffast.c	compile-c src/inflate.c	compile-c src/inftrees.c	compile-c src/trees.c	compile-c src/uncompr.c	compile-c src/zutil.c	output libz

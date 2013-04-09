@@ -1,0 +1,5 @@
+library pq	support-ppc 10.3.9	support-386 10.4.0	define _MACOSX
+	include ./include
+	include ./src
+	compile-c src/fe-lobj.c	compile-c src/pqexpbuffer.c	compile-c src/pipe.c	compile-c src/pgstrcasecmp.c	compile-c src/pgsleep.c	compile-c src/sprompt.c	compile-c src/fe-misc.c	compile-c src/fseeko.c	compile-c src/open.c	compile-c src/noblock.c	compile-c src/wchar.c	compile-c src/kill.c	compile-c src/fe-exec.c	compile-c src/fe-print.c	compile-c src/dirmod.c	compile-c src/encnames.c	compile-c src/md5.c	compile-c src/unsetenv.c	compile-c src/isinf.c	compile-c src/inet_aton.c	compile-c src/qsort.c	compile-c src/snprintf.c	compile-c src/rint.c	compile-c src/random.c	compile-c src/rand.c	compile-c src/pqsignal.c	compile-c src/fe-secure.c	compile-c src/fe-protocol3.c	compile-c src/fe-protocol2.c	compile-c src/fe-connect.c	compile-c src/fe-auth.c	compile-c src/ip.c	compile-c src/thread.c
+	output libpq

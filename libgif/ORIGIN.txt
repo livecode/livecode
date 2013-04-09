@@ -1,0 +1,3 @@
+Files in this folder are based on giflib-5.0.0
+
+Original source archives are available from <http://giflib.sourceforge.net/>

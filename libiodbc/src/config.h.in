@@ -1,0 +1,148 @@
+/* include/config.h.in.  Generated from configure.in by autoheader.  */
+
+/* Define if we detected a GUI library we can use */
+#undef GUI
+
+/* Define to 1 if you have the `asprintf' function. */
+#undef HAVE_ASPRINTF
+
+/* Define to 1 if you have the `dladdr' function */
+#undef HAVE_DLADDR
+
+/* Define if you have the -ldld library */
+#undef HAVE_DLD
+
+/* Define to 1 if you have the <dld.h> header file. */
+#undef HAVE_DLD_H
+
+/* Define to 1 if you have the <dlfcn.h> header file. */
+#undef HAVE_DLFCN_H
+
+/* Define to 1 if you have the `dlopen' function. */
+#undef HAVE_DLOPEN
+
+/* Define to 1 if you have the <dl.h> header file. */
+#undef HAVE_DL_H
+
+/* Define to 1 if you have the Dl_info structure */
+#undef HAVE_DL_INFO
+
+/* Define if you have the DYLD library */
+#undef HAVE_DYLD
+
+/* Define to 1 if you have the `gettimeofday' function. */
+#undef HAVE_GETTIMEOFDAY
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define if you have the -ldl library */
+#undef HAVE_LIBDL
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the `setenv' function. */
+#undef HAVE_SETENV
+
+/* Define if you have the shl_load function */
+#undef HAVE_SHL_LOAD
+
+/* Define to 1 if you have the `snprintf' function. */
+#undef HAVE_SNPRINTF
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the `strerror' function. */
+#undef HAVE_STRERROR
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the `towlower' function. */
+#undef HAVE_TOWLOWER
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Define to 1 if you have the <wchar.h> header file. */
+#undef HAVE_WCHAR_H
+
+/* Define to 1 if you have the `wcscat' function. */
+#undef HAVE_WCSCAT
+
+/* Define to 1 if you have the `wcschr' function. */
+#undef HAVE_WCSCHR
+
+/* Define to 1 if you have the `wcscmp' function. */
+#undef HAVE_WCSCMP
+
+/* Define to 1 if you have the `wcscpy' function. */
+#undef HAVE_WCSCPY
+
+/* Define to 1 if you have the `wcslen' function. */
+#undef HAVE_WCSLEN
+
+/* Define to 1 if you have the `wcsncasecmp' function. */
+#undef HAVE_WCSNCASECMP
+
+/* Define to 1 if you have the `wcsncpy' function. */
+#undef HAVE_WCSNCPY
+
+/* Define to 1 if you have the `_dlopen' function. */
+#undef HAVE__DLOPEN
+
+/* Define if dlsym() requires a leading underscode in symbol names. */
+#undef NEED_USCORE
+
+/* Define to 1 if your C compiler doesn't accept -c and -o together. */
+#undef NO_MINUS_C_MINUS_O
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Define path to systemwide odbcinst.ini file */
+#undef SYS_ODBCINST_INI
+
+/* Define path to systemwide odbc.ini file */
+#undef SYS_ODBC_INI
+
+/* Define to 1 if you can safely include both <sys/time.h> and <time.h>. */
+#undef TIME_WITH_SYS_TIME
+
+/* Version number of package */
+#undef VERSION
+
+/* Define to empty if `const' does not conform to ANSI C. */
+#undef const

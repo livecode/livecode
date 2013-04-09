@@ -1,0 +1,61 @@
+#! /usr/bin/revolution -ui
+
+# filter out lines from target file
+
+local sParams
+local sParamCount
+
+on startup
+	local tGlobs, tArgNum
+	put the globalnames into tGlobs
+	repeat for each item i in tGlobs
+		if char 1 of i is "$" then
+			put (char 2 to -1 of i) into tArgNum
+			if tArgNum is a number then
+				put max(tArgNum, sParamCount) into sParamCount
+				put value(i) into sParams[tArgNum]
+			end if
+		end if
+	end repeat
+
+  try
+    process
+  catch tError
+    write tError & return to stdout
+  end try
+end startup
+
+local sConfig
+
+on process
+	# param 1 - filter pattern
+	# param 2 - filename
+	
+	local tIndex
+	put 1 into tIndex
+
+	if sParamCount is not 2 then
+		throw "expected 2 parameters"
+	end if
+	put sParams[1] into sConfig["filter"]
+	put sParams[2] into sConfig["filename"]
+	
+	local tText
+	
+	put url ("file:" & sConfig["filename"]) into tText
+	write applyFilter(sConfig["filter"], tText) to stdout
+end process
+
+################################################################################
+
+function applyFilter pFilter, pText
+	local tText
+	
+	repeat for each line tLine in pText
+		if not matchText(tLine, pFilter) then
+			put tLine & return after tText
+		end if
+	end repeat
+	
+	return tText
+end applyFilter
