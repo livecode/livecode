@@ -1,0 +1,80 @@
+on startup
+   generate $1, $2, $3
+end startup
+
+on generate pSource, pTarget, pPerfect
+   local tInput
+   put url ("file:" & pSource) into tInput
+   
+   -- Normalize input to ensure { appear as individual words
+   replace "{" with " { " in tInput
+   
+   -- Normalize input to ensure , appear as individual words
+   replace "," with " , " in tInput
+   
+   local tTokens
+   
+   -- We look for all the lines in lextable.cpp where:
+   --   word 1 is "{"
+   --   word 2 is a C-string
+   --
+   -- The C-strings are put into tTokens as keys of an array.
+   --
+   repeat for each line tLine in tInput
+      if word 1 of tLine is not "{" then
+         next repeat
+      end if
+      
+      if char 1 of word 2 of tLine is not quote then
+         next repeat
+      end if
+      
+      if char -1 of word 2 of tLine is not quote then
+         next repeat
+      end if
+
+      if char 2 of word 2 of tLine is "\" then
+         next repeat
+      end if
+      
+      put true into tTokens[char 2 to -2 of word 2 of tLine]
+   end repeat
+   
+   local tTokensFile
+   put the tempName into tTokensFile
+   
+   -- If we are on Mac OS X, then we need to output with UNIX line endings
+   if the platform is "MacOS" then
+      put the keys of tTokens into url ("binfile:" & tTokensFile)
+   else
+      put the keys of tTokens into url ("file:" & tTokensFile)
+   end if
+   
+   local tPerfectCmd
+   set the itemDelimiter to ":"
+   get item 2 to -1 of the address
+   set the itemDelimiter to slash
+   put (item 1 to -2 of it) & "/perfect" into tPerfectCmd
+   switch the platform
+      case "win32"
+         put tPerfectCmd & ".exe" into tPerfectCmd
+      break
+      case "macos"
+         put pPerfect into tPerfectCmd
+         replace space with "\ " in tPerfectCmd
+      break
+      default
+         put quote & pPerfect & quote into tPerfectCmd
+      break
+   end switch
+
+   get shell(tPerfectCmd && "<" & quote & tTokensFile & quote)
+   if char 1 of it is not "#" then
+      delete line 1 of it
+   end if
+
+   put it into url ("binfile:" & pTarget)
+   
+   delete file tTokensFile
+end generate
+

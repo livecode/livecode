@@ -1,0 +1,20 @@
+NAME=dbsqlite
+TYPE=library
+
+SOURCES=\
+	dbdrivercommon.cpp database.cpp dbsqliteapi.cpp sqlite_connection.cpp \
+	sqlite_cursor.cpp
+
+CUSTOM_DEFINES=
+
+CUSTOM_INCLUDES=./src
+
+CUSTOM_LIBS=sqlite external
+CUSTOM_STATIC_LIBS=stdc++
+CUSTOM_DYNAMIC_LIBS=pthread dl
+
+CUSTOM_CCFLAGS=
+
+CUSTOM_LDFLAGS=
+
+include ../rules/library.linux.makefile

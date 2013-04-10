@@ -1,0 +1,18 @@
+NAME=server-revzip
+TYPE=library
+
+SOURCES=revzip.cpp
+
+CUSTOM_DEFINES=
+
+CUSTOM_INCLUDES=./src
+
+CUSTOM_LIBS=zip external z
+CUSTOM_STATIC_LIBS=stdc++
+CUSTOM_DYNAMIC_LIBS=
+
+CUSTOM_CCFLAGS=
+
+CUSTOM_LDFLAGS=
+
+include ../rules/library.linux.makefile

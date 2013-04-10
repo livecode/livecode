@@ -1,0 +1,279 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4D03BBDD0BC2423D00026EA7 /* osxbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */; };
+		4D03BCA50BC2780100026EA7 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCA40BC2780100026EA7 /* Foundation.framework */; };
+		4D03BCAD0BC2781B00026EA7 /* Carbon.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCAC0BC2781B00026EA7 /* Carbon.framework */; };
+		4D03BCB50BC2783300026EA7 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCB40BC2783300026EA7 /* Cocoa.framework */; };
+		4D03BCBC0BC2785100026EA7 /* WebKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D03BCBB0BC2785100026EA7 /* WebKit.framework */; };
+		4DF42ABA0B0488E2003F2D95 /* revbrowser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DF42AB90B0488E2003F2D95 /* revbrowser.cpp */; };
+		4DF42AED0B0489AF003F2D95 /* libexternal.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DF42AEC0B0489A5003F2D95 /* libexternal.a */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		4DF42AEB0B0489A5003F2D95 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DF42A430B048617003F2D95;
+			remoteInfo = external;
+		};
+		4DF42AEE0B0489B4003F2D95 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
+			remoteInfo = external;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXFileReference section */
+		4D03BB390BC17A0500026EA7 /* revbrowser.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = revbrowser.h; path = src/revbrowser.h; sourceTree = "<group>"; };
+		4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; lineEnding = 0; name = osxbrowser.cpp; path = src/osxbrowser.cpp; sourceTree = "<group>"; };
+		4D03BBDC0BC2423D00026EA7 /* osxbrowser.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = osxbrowser.h; path = src/osxbrowser.h; sourceTree = "<group>"; };
+		4D03BCA40BC2780100026EA7 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
+		4D03BCAC0BC2781B00026EA7 /* Carbon.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Carbon.framework; path = /System/Library/Frameworks/Carbon.framework; sourceTree = "<absolute>"; };
+		4D03BCB40BC2783300026EA7 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
+		4D03BCBB0BC2785100026EA7 /* WebKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = WebKit.framework; path = /System/Library/Frameworks/WebKit.framework; sourceTree = "<absolute>"; };
+		4D44EBE10BF1BD4D001B4183 /* w32browser.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32browser.cpp; path = src/w32browser.cpp; sourceTree = "<group>"; };
+		4D44EBE20BF1BD4D001B4183 /* w32browser.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = w32browser.h; path = src/w32browser.h; sourceTree = "<group>"; };
+		4DF42AA80B0488CE003F2D95 /* revbrowser.bundle */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = revbrowser.bundle; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DF42AAA0B0488CE003F2D95 /* revbrowser-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "revbrowser-Info.plist"; path = "rsrc/revbrowser-Info.plist"; sourceTree = "<group>"; };
+		4DF42AB90B0488E2003F2D95 /* revbrowser.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.objcpp; fileEncoding = 30; name = revbrowser.cpp; path = src/revbrowser.cpp; sourceTree = "<group>"; };
+		4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		4DF42ABF0B0488ED003F2D95 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
+		4DF42AC20B0488ED003F2D95 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libexternal.xcodeproj; path = ../libexternal/libexternal.xcodeproj; sourceTree = SOURCE_ROOT; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4DF42AA60B0488CE003F2D95 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DF42AED0B0489AF003F2D95 /* libexternal.a in Frameworks */,
+				4D03BCA50BC2780100026EA7 /* Foundation.framework in Frameworks */,
+				4D03BCAD0BC2781B00026EA7 /* Carbon.framework in Frameworks */,
+				4D03BCB50BC2783300026EA7 /* Cocoa.framework in Frameworks */,
+				4D03BCBC0BC2785100026EA7 /* WebKit.framework in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4DF42A970B0488B1003F2D95 = {
+			isa = PBXGroup;
+			children = (
+				4D03BCBB0BC2785100026EA7 /* WebKit.framework */,
+				4D03BCB40BC2783300026EA7 /* Cocoa.framework */,
+				4D03BCAC0BC2781B00026EA7 /* Carbon.framework */,
+				4D03BCA40BC2780100026EA7 /* Foundation.framework */,
+				4DF42AD90B04899A003F2D95 /* References */,
+				4DF42AAF0B0488D7003F2D95 /* Source */,
+				4DF42AA30B0488B6003F2D95 /* Configurations */,
+				4DF42AA90B0488CE003F2D95 /* Products */,
+				4DF42AAA0B0488CE003F2D95 /* revbrowser-Info.plist */,
+			);
+			sourceTree = "<group>";
+		};
+		4DF42AA30B0488B6003F2D95 /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */,
+				4DF42ABF0B0488ED003F2D95 /* Global.xcconfig */,
+				4DF42AC20B0488ED003F2D95 /* Release.xcconfig */,
+			);
+			name = Configurations;
+			sourceTree = "<group>";
+		};
+		4DF42AA90B0488CE003F2D95 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DF42AA80B0488CE003F2D95 /* revbrowser.bundle */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4DF42AAF0B0488D7003F2D95 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				4D44EBE10BF1BD4D001B4183 /* w32browser.cpp */,
+				4D44EBE20BF1BD4D001B4183 /* w32browser.h */,
+				4D03BBDC0BC2423D00026EA7 /* osxbrowser.h */,
+				4D03BBDB0BC2423D00026EA7 /* osxbrowser.cpp */,
+				4D03BB390BC17A0500026EA7 /* revbrowser.h */,
+				4DF42AB90B0488E2003F2D95 /* revbrowser.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		4DF42AD90B04899A003F2D95 /* References */ = {
+			isa = PBXGroup;
+			children = (
+				4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */,
+			);
+			name = References;
+			sourceTree = "<group>";
+		};
+		4DF42AE50B0489A5003F2D95 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DF42AEC0B0489A5003F2D95 /* libexternal.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		4DF42AA70B0488CE003F2D95 /* revbrowser */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4DF42AAC0B0488CF003F2D95 /* Build configuration list for PBXNativeTarget "revbrowser" */;
+			buildPhases = (
+				4DF42AA50B0488CE003F2D95 /* Sources */,
+				4DF42AA60B0488CE003F2D95 /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				4DF42AEF0B0489B4003F2D95 /* PBXTargetDependency */,
+			);
+			name = revbrowser;
+			productName = revbrowser;
+			productReference = 4DF42AA80B0488CE003F2D95 /* revbrowser.bundle */;
+			productType = "com.apple.product-type.bundle";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4DF42A990B0488B2003F2D95 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 4DF42A9A0B0488B2003F2D95 /* Build configuration list for PBXProject "revbrowser" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				en,
+			);
+			mainGroup = 4DF42A970B0488B1003F2D95;
+			productRefGroup = 4DF42AA90B0488CE003F2D95 /* Products */;
+			projectDirPath = "";
+			projectReferences = (
+				{
+					ProductGroup = 4DF42AE50B0489A5003F2D95 /* Products */;
+					ProjectRef = 4DF42AE40B0489A5003F2D95 /* libexternal.xcodeproj */;
+				},
+			);
+			projectRoot = "";
+			targets = (
+				4DF42AA70B0488CE003F2D95 /* revbrowser */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXReferenceProxy section */
+		4DF42AEC0B0489A5003F2D95 /* libexternal.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = libexternal.a;
+			remoteRef = 4DF42AEB0B0489A5003F2D95 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+/* End PBXReferenceProxy section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4DF42AA50B0488CE003F2D95 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DF42ABA0B0488E2003F2D95 /* revbrowser.cpp in Sources */,
+				4D03BBDD0BC2423D00026EA7 /* osxbrowser.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		4DF42AEF0B0489B4003F2D95 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = external;
+			targetProxy = 4DF42AEE0B0489B4003F2D95 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
+/* Begin XCBuildConfiguration section */
+		4DF42A9B0B0488B2003F2D95 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DF42ABE0B0488ED003F2D95 /* Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		4DF42A9C0B0488B2003F2D95 /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DF42AC20B0488ED003F2D95 /* Release.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		4DF42AAD0B0488CF003F2D95 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXPORTED_SYMBOLS_FILE = "$(SRCROOT)/revbrowser.exports";
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+				);
+				PRODUCT_NAME = revbrowser;
+			};
+			name = Debug;
+		};
+		4DF42AAE0B0488CF003F2D95 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				EXPORTED_SYMBOLS_FILE = "$(SRCROOT)/revbrowser.exports";
+				GCC_ENABLE_CPP_EXCEPTIONS = YES;
+				INFOPLIST_FILE = "rsrc/revbrowser-Info.plist";
+				OTHER_LDFLAGS = (
+					"-framework",
+					Carbon,
+				);
+				PRODUCT_NAME = revbrowser;
+			};
+			name = Release;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4DF42A9A0B0488B2003F2D95 /* Build configuration list for PBXProject "revbrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DF42A9B0B0488B2003F2D95 /* Debug */,
+				4DF42A9C0B0488B2003F2D95 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4DF42AAC0B0488CF003F2D95 /* Build configuration list for PBXNativeTarget "revbrowser" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DF42AAD0B0488CF003F2D95 /* Debug */,
+				4DF42AAE0B0488CF003F2D95 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4DF42A990B0488B2003F2D95 /* Project object */;
+}

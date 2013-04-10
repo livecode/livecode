@@ -1,0 +1,748 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include <pthread.h>
+#include <external.h>
+#include "iPhoneSimulatorRemoteClient.h"
+#include <objc/objc-runtime.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+static NSTask *s_simulator_task = nil;
+static NSDistantObject *s_simulator_proxy = nil;
+static uint32_t s_session_id = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+// These methods simplify the writing of values to Rev external API vars - they
+// are basically sprintf for them.
+
+bool VariableFormat(MCVariableRef var, const char *p_format, ...)
+{
+	va_list t_args;
+	int t_count;
+	va_start(t_args, p_format);
+	t_count = vsnprintf(nil, 0, p_format, t_args);
+	va_end(t_args);
+	
+	char *t_new_string;
+	t_new_string = new char[t_count + 1];
+	if (t_new_string == nil)
+		return false;
+	
+	va_start(t_args, p_format);
+	vsprintf(t_new_string, p_format, t_args);
+	va_end(t_args);
+	
+	MCError t_error;
+	t_error = MCVariableStore(var, kMCOptionAsCString, &t_new_string);
+	
+	delete[] t_new_string;
+	
+	return t_error == kMCErrorNone;
+}
+
+bool VariableAppendFormat(MCVariableRef var, const char *p_format, ...)
+{
+	va_list t_args;
+	int t_count;
+	va_start(t_args, p_format);
+	t_count = vsnprintf(nil, 0, p_format, t_args);
+	va_end(t_args);
+	
+	char *t_new_string;
+	t_new_string = new char[t_count + 1];
+	if (t_new_string == nil)
+		return false;
+	
+	va_start(t_args, p_format);
+	vsprintf(t_new_string, p_format, t_args);
+	va_end(t_args);
+	
+	MCError t_error;
+	t_error = MCVariableAppend(var, kMCOptionAsCString, &t_new_string);
+	
+	delete[] t_new_string;
+	
+	return t_error == kMCErrorNone;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// These methods provide very simple error handling. When a message is thrown
+// it is stored, and then Catch can be used to place it in the result variable.
+// CheckError simply verifies that a Rev external API call succeeded or not,
+// throwing an error if it didn't.
+
+const char *g_error_message = nil;
+
+bool Throw(const char *p_message)
+{
+	g_error_message = p_message;
+	return false;
+}
+
+void Catch(MCVariableRef result)
+{
+	VariableFormat(result, "%s", g_error_message);
+}
+
+bool CheckError(MCError err)
+{
+	if (err == kMCErrorNone)
+		return true;
+	return Throw("error");
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// the currently set simulator root, corresponding to a specific version of the
+// iPhone SDK
+DTiPhoneSimulatorSystemRoot *s_simulator_system_root = nil;
+
+// reference to the launched iPhone simulator session (if any)
+DTiPhoneSimulatorSession *s_simulator_session = nil;
+
+// Syntax:
+//    revIPhoneListSimulatorSDKs()
+// Returns:
+//    A list of available simulator SDK's - one per line. Each of these values
+//    can be passed to revIPhoneLaunchInSimulator to choose a specific SDK to
+//    use.
+//
+bool revIPhoneListSimulatorSDKs(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (t_success &&
+		argc != 0)
+		t_success = Throw("syntax error");
+	
+	if (t_success &&
+		s_simulator_proxy == nil)
+		t_success = Throw("no toolset");
+	
+	if (t_success)
+	{
+		// loop through SDKs available to simulator (see [iPhoneSimulator  showSDKs])
+		NSArray *roots;
+		roots = [s_simulator_proxy getKnownRoots];
+		for (DTiPhoneSimulatorSystemRoot *root in roots)
+		{
+			t_success = VariableAppendFormat(result, "%s,%s,%s\n",
+												[[root sdkDisplayName] cStringUsingEncoding: NSMacOSRomanStringEncoding],
+												[[root sdkVersion] cStringUsingEncoding: NSMacOSRomanStringEncoding],
+												[[root sdkRootPath] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+			
+			if (!t_success)
+			{
+				break;
+			}
+		}
+	}
+	
+	if (!t_success)
+		Catch(result);
+	
+	return t_success;
+}
+
+static bool fetch_named_simulator_root(const char *p_display_name, DTiPhoneSimulatorSystemRoot *&r_root)
+{
+	DTiPhoneSimulatorSystemRoot *t_root = nil;
+	NSArray *t_knownroots;
+	t_knownroots = [s_simulator_proxy getKnownRoots];
+	NSString *t_sdk_string = [NSString stringWithCString:p_display_name encoding: NSMacOSRomanStringEncoding];
+	for (DTiPhoneSimulatorSystemRoot *t_candidate in t_knownroots)
+	{
+		if ([[t_candidate sdkDisplayName] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+			[[t_candidate sdkVersion] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame ||
+			[[t_candidate sdkRootPath] caseInsensitiveCompare: t_sdk_string] == NSOrderedSame)
+		{
+			t_root = t_candidate;
+			break;
+		}
+	}
+	if (t_root != nil)
+	{
+		r_root = t_root;
+		return true;
+	}
+	return false;
+}
+
+// Syntax:
+//   revIPhoneSetSimulatorSDK <sdk>
+// Action:
+//   Choose which SDK to use for the next app launch. If <sdk> is empty, or a
+//   specific SDK has not been requested, the 'default SDK' is used. (see
+//   [DTiPhoneSimulatorRoot defaultRoot].
+bool revIPhoneSetSimulatorSDK(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (t_success && argc > 1)
+		t_success = Throw("syntax error");
+	
+	if (t_success &&
+		s_simulator_proxy == nil)
+		t_success = Throw("no toolset");
+	
+	DTiPhoneSimulatorSystemRoot * t_root = nil;
+	if (t_success)
+	{
+		if (argc == 0)
+			t_root = [s_simulator_proxy getDefaultRoot];
+		else
+		{
+			char *t_sdk_cstring = nil;
+			
+			MCError t_status;
+			t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_sdk_cstring));
+			if (t_success)
+			{
+				t_success = fetch_named_simulator_root(t_sdk_cstring, t_root);
+				if (!t_success)
+				{
+					t_success = Throw("iPhone Simulator version not found");
+				}
+			}
+		}
+
+		// Check whether SDK is a valid sdk, and if so fetch the appropriate object
+		// and store a reference in a global var.
+	}
+	
+	if (t_success)
+	{
+		if (s_simulator_system_root != nil)
+			[s_simulator_system_root release];
+		if (t_root != nil)
+			[t_root retain];
+		s_simulator_system_root = t_root;
+	}
+	if (!t_success)
+		Catch(result);
+	
+	return t_success;
+}
+
+// This is just an example of how to use the new externals API to dispatch a message
+// to an object.
+static bool dispatch_message(MCObjectRef p_target, const char *p_message, const char *p_param)
+{
+	bool t_success;
+	t_success = true;
+	
+	// Create a temporary var for the parameter
+	MCVariableRef t_param;
+	t_param = nil;
+	if (t_success)
+		t_success = CheckError(MCVariableCreate(&t_param));
+	
+	// Set the parameter
+	if (t_success)
+		t_success = CheckError(MCVariableStore(t_param, kMCOptionAsCString, &p_param));
+	
+	// Dispatch the message - note the last parameter is a return for the status (handled,
+	// not handled, pass) which is ignored here.
+	if (t_success)
+		t_success = MCObjectDispatch(p_target, kMCDispatchTypeCommand, p_message, &t_param, 1, nil);
+
+	// Free the var (it does not harm to release nil pointers)
+	MCVariableRelease(t_param);
+	
+	return t_success;
+}
+
+static MCError MCRunOnMainThread_Fix(MCThreadCallback callback, void *state, MCRunOnMainThreadOptions options);
+
+@interface revIPhoneLaunchDelegate : NSObject <DTiPhoneSimulatorSessionDelegate>
+{
+	MCObjectRef m_target;
+	char *m_message;
+	char *m_params;
+	bool m_did_end;
+	bool m_quiet;
+}
+
+- (MCObjectRef) getTarget;
+- (const char *) getMessage;
+- (const char *) getParams;
+- (bool) getQuiet;
+
+- (void) setTarget: (MCObjectRef) target;
+- (void) setMessage: (const char*) message;
+- (void) setParams: (const char*) params;
+- (void) setQuiet: (bool) quiet;
+
+- (void) setErrorMsg: (NSError *) error;
+
+- (bool) didEnd;
+
+@end
+
+@implementation revIPhoneLaunchDelegate
+- (id) init
+{
+	if (self = [super init])
+	{
+		m_message = nil;
+		m_params = nil;
+		m_did_end = false;
+		m_quiet = false;
+	}
+	return self;
+}
+
+- (void) dealloc
+{
+	free(m_message);
+	free(m_params);
+	[super dealloc];
+}
+
+- (const char *) getMessage
+{
+	return m_message;
+}
+
+- (const char *) getParams
+{
+	return m_params;
+}
+
+- (bool) getQuiet
+{
+	return m_quiet;
+}
+
+- (void) setMessage: (const char *)p_message
+{
+	if (m_message != nil)
+		free(m_message);
+	if (p_message == nil)
+		m_message = nil;
+	else
+		m_message = strdup(p_message);
+}
+
+- (void) setParams: (const char *)p_params
+{
+	if (m_params != nil)
+		free(m_params);
+	if (p_params == nil)
+		m_params = nil;
+	else
+		m_params = strdup(p_params);
+}
+
+- (void) setErrorMsg: (NSError*) p_error
+{
+	NSString *t_errorstring = [[NSString stringWithCString: "error: " encoding: NSMacOSRomanStringEncoding] stringByAppendingString: [p_error localizedDescription]];
+	[self setParams: [t_errorstring cStringUsingEncoding: NSMacOSRomanStringEncoding]];
+}
+
+- (void)setQuiet: (bool) p_value
+{
+	m_quiet = p_value;
+}
+
+- (MCObjectRef) getTarget
+{
+	return m_target;
+}
+
+- (void) setTarget: (MCObjectRef) p_target
+{
+	m_target = p_target;
+}
+
+- (bool) didEnd
+{
+	return m_did_end;
+}
+
+- (void) session: (DTiPhoneSimulatorSession *) p_session didEndWithError: (NSError *) p_error
+{
+	m_did_end = true;
+	if (p_error != nil)
+		[self setErrorMsg:p_error];
+	else
+		[self setParams: "stopped"];
+	MCRunOnMainThread_Fix(nil, self, kMCRunOnMainThreadLater);
+}
+
+- (void) session: (DTiPhoneSimulatorSession *) p_session didStart: (BOOL) p_started withError: (NSError *) p_error
+{
+	if (p_error != nil)
+	{
+		m_did_end = true;
+		[self setErrorMsg:p_error];
+	}
+	else
+		[self setParams: "started"];
+	MCRunOnMainThread_Fix(nil, self, kMCRunOnMainThreadLater);
+}
+
+@end
+
+static void reviphone_callback(void *p_state)
+{
+	revIPhoneLaunchDelegate *t_delegate = (revIPhoneLaunchDelegate *)p_state;
+	if (![t_delegate getQuiet])
+		dispatch_message([t_delegate getTarget], [t_delegate getMessage], [t_delegate getParams]);
+	if ([t_delegate didEnd])
+	{
+		//NSLog(@"delegate = %p", t_delegate);
+		[t_delegate release];
+		if (s_simulator_session != nil /*&& [s_simulator_session delegate] == t_delegate*/)
+		{
+			//NSLog(@"session = %p", s_simulator_session);
+			[s_simulator_session release];
+			s_simulator_session = nil;
+		}
+	}
+}
+
+static MCError MCRunOnMainThread_Fix(MCThreadCallback callback, void *state, MCRunOnMainThreadOptions options)
+{
+	return MCRunOnMainThread(reviphone_callback, state, options);
+}
+
+// Syntax:
+//   revIPhoneLaunchInSimulator <path_to_app_bundle>, <family>, <callback>
+// Action:
+//   Launch the given app bundle in the simulator. The callback message should be
+//   invoked to update the caller on status. It should be passed a single
+//   parameter - either "started" or "stopped".
+//   This method should throw an error is an app that has previously been launched
+//   in the simulator has yet to terminate.
+//
+bool revIPhoneLaunchAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_success;
+	t_success = true;
+	
+	if (t_success && argc != 3)
+		t_success = Throw("syntax error");
+	
+	if (t_success &&
+		s_simulator_proxy == nil)
+		t_success = Throw("no toolset");
+	
+	// check if there is a running simulator session
+	if (s_simulator_session != nil)
+		t_success = Throw("simulator already running");
+	
+	// Fetch the app path
+	const char *t_app;
+	t_app = nil;
+	if (t_success)
+		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_app));
+	
+	// Fetch the family string
+	const char *t_family;
+	t_family = nil;
+	if (t_success)
+		t_success = CheckError(MCVariableFetch(argv[1], kMCOptionAsCString, &t_family));
+	
+	// Fetch the callback string
+	const char *t_callback;
+	t_callback = nil;
+	if (t_success)
+		t_success = CheckError(MCVariableFetch(argv[2], kMCOptionAsCString, &t_callback));
+	
+	// This fetches the object handle that should be used to send the callback
+	// to.
+	MCObjectRef t_target;
+	t_target = nil;
+	if (t_success)
+		t_success = CheckError(MCContextMe(&t_target));
+	
+	if (t_success)
+	{
+		if (s_simulator_system_root == nil)
+		{
+			s_simulator_system_root = [s_simulator_proxy getDefaultRoot];
+			[s_simulator_system_root retain];
+		}
+		
+		DTiPhoneSimulatorApplicationSpecifier *t_app_spec;
+		DTiPhoneSimulatorSessionConfig *t_session_config;
+		
+		revIPhoneLaunchDelegate *t_delegate = [[revIPhoneLaunchDelegate alloc] init];
+		[t_delegate setMessage: t_callback];
+		[t_delegate setTarget: t_target];
+
+		t_app_spec = [s_simulator_proxy specifierWithApplicationPath: [NSString stringWithCString:t_app encoding: NSMacOSRomanStringEncoding]];
+		
+		t_session_config = [s_simulator_proxy newSessionConfig];
+		
+		[t_session_config setApplicationToSimulateOnStart:t_app_spec];
+		[t_session_config setSimulatedSystemRoot:s_simulator_system_root];
+		[t_session_config setSimulatedApplicationShouldWaitForDebugger: NO];
+		[t_session_config setSimulatedApplicationLaunchArgs: [NSArray array]];
+		[t_session_config setSimulatedApplicationLaunchEnvironment: [NSDictionary dictionary]];
+		[t_session_config setLocalizedClientName: @"LiveCode"];
+
+		if ([t_session_config respondsToSelector: @selector(setSimulatedDeviceFamily:)])
+		{
+			int32_t t_family_int;
+			if (strcasecmp(t_family, "ipad") == 0)
+				t_family_int = 2;
+			else
+				t_family_int = 1;
+			[t_session_config setSimulatedDeviceFamily: [NSNumber numberWithInt: t_family_int]];
+		}
+		
+		s_simulator_session = [s_simulator_proxy newSession];
+		[s_simulator_session setDelegate: t_delegate];
+		[s_simulator_session setSimulatedApplicationPID: [NSNumber numberWithInt: 35]];
+		
+		// It seems that a session object that has been 'started' will auto-release itself on termination
+		// thus, on success we retain the object.
+		NSError *t_error;
+		t_error = nil;
+		if (![s_simulator_session requestStartWithConfig: t_session_config timeout: 30 error: &t_error])
+		{
+			t_success = Throw("could not start simulator");
+			[t_delegate release];
+			[s_simulator_session release];
+			s_simulator_session = nil;
+		}
+		else
+			[s_simulator_session retain];
+		
+		[t_session_config release];
+		[t_app_spec release];
+	}
+	
+	if (!t_success)
+		Catch(result);
+	
+	return t_success;
+}
+
+// Syntax:
+//    revIPhoneTerminateAppInSimulator
+// Action:
+//    Termiante the currently running app in the simulator that the external launched.
+//
+bool revIPhoneTerminateAppInSimulator(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_success;
+	t_success = true;
+
+	if (t_success && argc != 0)
+		t_success = Throw("syntax error");
+	
+	if (t_success &&
+		s_simulator_proxy == nil)
+		t_success = Throw("no toolset");
+	
+	if (t_success)
+	{
+		// Terminate our current app instance
+		if (s_simulator_session != nil)
+		{
+			[[s_simulator_session delegate] setQuiet: true];
+			[s_simulator_session requestEndWithTimeout: 30];
+			//[s_simulator_session release];
+			//s_simulator_session = nil;
+		}
+	}
+	
+	if (!t_success)
+		Catch(result);
+	
+	return t_success;
+}
+
+// Syntax:
+//   revIPhoneAppIsRunning
+// Action:
+//   Returns 'true' if there is an active session, or false otherwise.
+//
+bool revIPhoneAppIsRunning(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_value;
+	t_value = s_simulator_session != nil;
+	MCVariableStore(result, kMCOptionAsBoolean, (void *)&t_value);
+	return true;
+		
+}
+
+// Syntax:
+//   revIPhoneSetToolset <path>
+// Action:
+//   Set the external to use the given XCode toolset. The path specified must be
+//   a valid toolset root - e.g. /Developer. If the appropriate framework cannot
+//   be loaded "invalid toolset" is thrown.
+bool revIPhoneSetToolset(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	bool t_success;
+	t_success = true;
+	
+	// First stop/unload current things.
+	if (s_simulator_session != nil)
+	{
+		[[s_simulator_session delegate] setQuiet: true];
+		[s_simulator_session requestEndWithTimeout: 30];
+		[s_simulator_session release];
+		s_simulator_session = nil;
+	}
+	
+	if (s_simulator_system_root != nil)
+	{
+		[s_simulator_system_root release];
+		s_simulator_system_root = nil;
+	}
+	
+	if (s_simulator_task != nil)
+	{
+		if (s_simulator_proxy != nil)
+		{
+			[s_simulator_proxy quit];
+			[[s_simulator_proxy connectionForProxy] invalidate];
+		}
+		[s_simulator_task waitUntilExit];
+		[s_simulator_task release];
+		s_simulator_task = nil;
+	}
+	
+	if (s_simulator_proxy != nil)
+	{
+		[s_simulator_proxy release];
+		s_simulator_proxy = nil;
+	}
+	
+	const char *t_toolset_cstring;
+	t_toolset_cstring = nil;
+	if (t_success)
+		t_success = CheckError(MCVariableFetch(argv[0], kMCOptionAsCString, &t_toolset_cstring));
+	
+	NSString *t_path;
+	t_path = nil;
+	if (t_success)
+	{
+		t_path = [NSString stringWithFormat:@"%s/Platforms/iPhoneSimulator.platform/Developer/Library/PrivateFrameworks/iPhoneSimulatorRemoteClient.framework", t_toolset_cstring];
+		if (t_path == nil)
+			t_success = false;
+	}
+	
+	NSTask *t_task;
+	NSString *t_id;
+	t_id = nil;
+	t_task = nil;
+	if (t_success)
+	{
+		NSBundle *t_bundle;
+		t_bundle = [NSBundle bundleForClass: objc_getClass("revIPhoneLaunchDelegate")];
+		t_id = [NSString stringWithFormat: @"com.runrev.reviphoneproxy.%08x.%08x", getpid(), clock()];
+		t_task = [NSTask launchedTaskWithLaunchPath: [t_bundle pathForAuxiliaryExecutable: @"reviphoneproxy"] //[(NSURL *)t_url path]] //@"/Volumes/Macintosh HD/Users/mark/Workspace/revolution/trunk-mobile/_build/Debug/reviphoneproxy"
+										  arguments: [NSArray arrayWithObjects: t_path, t_id, nil]];
+		if (t_task == nil)
+			t_success = Throw("unable to start proxy");
+	}
+	
+	id t_proxy;
+	t_proxy = nil;
+	if (t_success)
+	{
+		while([t_task isRunning] && t_proxy == nil)
+		{
+			t_proxy = [NSConnection rootProxyForConnectionWithRegisteredName: t_id host: nil];
+			if (t_proxy != nil)
+				break;
+			usleep(1000 * 100);
+		}
+		
+		if (t_proxy == nil)
+			t_success = Throw("unable to resolve proxy");
+	}
+	
+	if (t_success)
+	{
+		[t_task retain];
+		s_simulator_task = t_task;
+		[t_proxy retain];
+		s_simulator_proxy = t_proxy;
+	}
+	else
+	{
+		if (t_proxy != nil)
+			[t_proxy quit];
+		
+		if (t_task != nil)
+			[t_task terminate];
+	}
+		
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool revIPhoneStartup(void)
+{
+	return true;
+}
+
+void revIPhoneShutdown(void)
+{
+	if (s_simulator_system_root != nil)
+	{
+		[s_simulator_system_root release];
+		s_simulator_system_root = nil;
+	}
+	
+	if (s_simulator_proxy != nil)
+	{
+		@try
+		{
+			[s_simulator_proxy quit];
+		}
+		@catch(NSException *exception)
+		{
+		}
+		
+		[s_simulator_proxy release];
+		s_simulator_proxy = nil;
+	}
+	
+	if (s_simulator_task != nil)
+	{
+		[s_simulator_task waitUntilExit];
+		[s_simulator_task release];
+		s_simulator_task = nil;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_EXTERNAL_NAME("reviphone")
+MC_EXTERNAL_STARTUP(revIPhoneStartup)
+MC_EXTERNAL_SHUTDOWN(revIPhoneShutdown)
+MC_EXTERNAL_HANDLERS_BEGIN
+MC_EXTERNAL_COMMAND("revIPhoneSetToolset", revIPhoneSetToolset)
+MC_EXTERNAL_FUNCTION("revIPhoneListSimulatorSDKs", revIPhoneListSimulatorSDKs)
+MC_EXTERNAL_COMMAND("revIPhoneSetSimulatorSDK", revIPhoneSetSimulatorSDK)
+MC_EXTERNAL_COMMAND("revIPhoneLaunchAppInSimulator", revIPhoneLaunchAppInSimulator)
+MC_EXTERNAL_COMMAND("revIPhoneTerminateAppInSimulator", revIPhoneTerminateAppInSimulator)
+MC_EXTERNAL_FUNCTION("revIPhoneAppIsRunning", revIPhoneAppIsRunning)
+MC_EXTERNAL_HANDLERS_END

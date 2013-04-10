@@ -1,0 +1,40 @@
+#include "revbuild.h"
+
+111	ICON	DISCARDABLE	"installer.ico"
+
+1 VERSIONINFO
+ FILEVERSION MC_BUILD_ENGINE_MAJOR_VERSION,MC_BUILD_ENGINE_MINOR_VERSION,MC_BUILD_ENGINE_POINT_VERSION,MC_BUILD_REVISION
+ PRODUCTVERSION MC_BUILD_PRODUCT_MAJOR_VERSION,MC_BUILD_PRODUCT_MINOR_VERSION,MC_BUILD_PRODUCT_POINT_VERSION,MC_BUILD_REVISION
+ FILEFLAGSMASK 0x3fL
+#ifdef _DEBUG
+ FILEFLAGS 0x29L
+#else
+ FILEFLAGS 0x28L
+#endif
+ FILEOS 0x40004L
+ FILETYPE 0x1L
+ FILESUBTYPE 0x0L
+BEGIN
+	BLOCK "StringFileInfo"
+	BEGIN
+		BLOCK "040904b0"
+		BEGIN
+		VALUE "Comments",			"\0"
+		VALUE "CompanyName",		"Runtime Revolution Ltd\0"
+		VALUE "FileDescription",	"LiveCode Installer Engine for Windows\0"
+		VALUE "FileVersion",		MC_BUILD_FILE_LONG_VERSION "\0"
+		VALUE "InternalName",		"LiveCodeInstaller\0"
+		VALUE "LegalCopyright",		"Copyright © 1992-2010\0"
+		VALUE "LegalTrademarks",	"Runtime Revolution Ltd\0"
+		VALUE "OriginalFilename",	"LiveCodeInstaller.exe\0"
+		VALUE "PrivateBuild",		"\0"
+		VALUE "ProductName",		"LiveCode Installer\0"
+		VALUE "ProductVersion",		MC_BUILD_PRODUCT_LONG_VERSION "\0"
+		VALUE "SpecialBuild",		"\0"
+		END
+	END
+	BLOCK "VarFileInfo"
+	BEGIN
+		VALUE "Translation", 0x409, 1200
+	END
+END

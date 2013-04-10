@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+          package="${IDENTIFIER}"
+          android:versionCode="${VERSION_CODE}"
+          android:versionName="${VERSION_NAME}"
+          ${INSTALL_LOCATION}>
+${PUSH_PERMISSIONS}
+${USES_PERMISSION}${USES_FEATURE}
+  <uses-sdk android:minSdkVersion="${MIN_SDK_VERSION}" />
+  <supports-screens
+      android:largeScreens="true"
+      android:normalScreens="true"
+      android:smallScreens="true"
+      android:anyDensity="true" />
+  <application android:label="${LABEL}" ${ICON} android:debuggable="false">
+    <activity android:name="${NAME}"
+      android:theme="${THEME}"
+      android:screenOrientation="${ORIENTATION}"
+      android:configChanges="keyboardHidden|orientation"
+      android:windowSoftInputMode="stateHidden"
+      android:launchMode="singleTask">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN" />
+        <category android:name="android.intent.category.LAUNCHER" />
+      </intent-filter>
+      ${CUSTOM_URL_FILTER}
+    </activity>
+    ${SERVICE}
+    ${RECEIVER}
+    ${PUSH_RECEIVER}
+    ${AD_ACTIVITY}
+  </application>
+</manifest>

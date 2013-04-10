@@ -1,0 +1,115 @@
+# The folder containing this script
+TOOLS=`dirname $0`
+TRUNK=`cd $TOOLS/..; pwd`
+
+# Global variables needed later
+export MODE=release
+export DEBUGGABLE_FLAG=false
+export DEBUG_FLAG=0
+export ANDROID_NDK=$TRUNK/sdks/android-ndk
+export ANDROID_SDK=$TRUNK/sdks/android-sdk
+
+# Local variables
+SRCROOT=$TRUNK
+JAVA_SDK=`/usr/libexec/java_home`
+JCOUNT=20
+
+# Path variables
+CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
+NDKBUILD=$ANDROID_NDK/ndk-build
+DSTROOT=$SRCROOT/_build/android/$MODE
+RAWROOT=$SRCROOT/_build/android/$MODE/assets
+
+JAVAC=$JAVA_SDK/bin/javac
+JAR=$JAVA_SDK/bin/jar
+DX=$ANDROID_SDK/platforms/android-8/tools/dx
+AAPT=$ANDROID_SDK/platforms/android-8/tools/aapt
+APKBUILDER=$ANDROID_SDK/tools/apkbuilder
+ZIPALIGN=$ANDROID_SDK/tools/zipalign
+ADB=$ANDROID_SDK/platform-tools/adb
+AIDL=$ANDROID_SDK/platform-tools/aidl
+
+##########
+
+# Build the native code components
+export NDK_PROJECT_PATH=$DSTROOT
+echo "Building native code components..."
+$NDKBUILD NDK_DEBUG=$DEBUG_FLAG NDK_APP_DEBUGGABLE=$DEBUGGABLE_FLAG NDK_APPLICATION_MK=$SRCROOT/Application.mk -j $JCOUNT -s
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+
+JAVASRC=$SRCROOT/engine/src/java
+
+# generate the MarketBillingService interface class from the aidl file
+"$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IMarketBillingService.aidl"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+# Compile the java classes
+echo "Building java classes..."
+mkdir -p "$DSTROOT/classes_livecode"
+mkdir -p "$DSTROOT/classes_app"
+"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/LiveCodeActivity.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/EngineReceiver.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
+if [ $? != 0 ]; then
+	exit $?
+fi
+
+# add LiveCode classes to jar
+echo "Create Classes jar"
+"$JAR" cf "$DSTROOT/LiveCode.jar" -C "$DSTROOT/classes_livecode" .
+
+##########
+# 
+# CUSTOM_DIR="$HOME/Documents/My LiveCode/Runtime/Android"
+# CUSTOM_EXT_DIR="$HOME/Documents/My LiveCode/Externals"
+# 
+# mkdir -p "$CUSTOM_DIR"
+# 
+# cp $DSTROOT/libs/armeabi/librevandroid.so "$CUSTOM_DIR/Standalone"
+# cp $DSTROOT/libs/armeabi/librevxml.so "$CUSTOM_DIR/RevXml"
+# cp $DSTROOT/libs/armeabi/librevzip.so "$CUSTOM_DIR/RevZip"
+# cp $DSTROOT/libs/armeabi/librevdb.so "$CUSTOM_DIR/RevDb"
+# cp $DSTROOT/libs/armeabi/libdbsqlite.so "$CUSTOM_DIR/DbSqlite"
+# cp $DSTROOT/libs/armeabi/libdbmysql.so "$CUSTOM_DIR/DbMysql"
+# cp $DSTROOT/LiveCode.jar "$CUSTOM_DIR/Classes"
+# cp $TRUNK/engine/rsrc/android-manifest.xml "$CUSTOM_DIR/Manifest.xml"
+# cp $TRUNK/engine/rsrc/android-notify-icon.png "$CUSTOM_DIR/notify_icon.png"
+# cp $TRUNK/engine/rsrc/android-inputcontrol.xml "$CUSTOM_DIR/livecode_inputcontrol.xml"
+# 
+# ##########
+
+PKGDIR=$DSTROOT
+
+cp $DSTROOT/libs/armeabi/librevandroid.so $PKGDIR/Standalone
+cp $DSTROOT/libs/armeabi/librevxml.so $PKGDIR/RevXml
+cp $DSTROOT/libs/armeabi/librevzip.so $PKGDIR/RevZip
+cp $DSTROOT/libs/armeabi/librevdb.so $PKGDIR/RevDb
+cp $DSTROOT/libs/armeabi/libdbsqlite.so $PKGDIR/DbSqlite
+cp $DSTROOT/libs/armeabi/libdbmysql.so $PKGDIR/DbMysql
+cp $DSTROOT/LiveCode.jar $PKGDIR/Classes
+cp $TRUNK/engine/rsrc/android-manifest.xml $PKGDIR/Manifest.xml
+cp $TRUNK/engine/rsrc/android-notify-icon.png "$PKGDIR/notify_icon.png"
+cp $TRUNK/engine/rsrc/android-inputcontrol.xml "$PKGDIR/livecode_inputcontrol.xml"
+
+#echo $1 > $PKGDIR/files/version.txt
+
+#cd $PKGDIR/files
+#zip -r ../android-$1.zip *
+#cd -
+
+# cp $PKGDIR/android-$1.zip ~/Builds/Engines
+
+##########

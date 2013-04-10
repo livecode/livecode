@@ -1,0 +1,257 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include "prefix.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "parsedef.h"
+#include "objdefs.h"
+
+#include "execpt.h"
+#include "dispatch.h"
+#include "stack.h"
+#include "card.h"
+#include "cardlst.h"
+#include "util.h"
+
+#include "globals.h"
+
+MCCardnode::~MCCardnode()
+{ }
+
+MCCardlist::MCCardlist()
+{
+	cards = NULL;
+	interval = 0;
+}
+
+MCCardlist::~MCCardlist()
+{
+	while (cards != NULL)
+	{
+		MCCardnode *cptr = cards->remove
+		                   (cards);
+		delete cptr;
+	}
+}
+
+void MCCardlist::trim()
+{
+	while (interval > MIN_FILL)
+	{
+		cards = cards->prev();
+		MCCardnode *cptr = cards->remove
+		                   (cards);
+		if (first == cptr)
+			first = cards;
+		delete cptr;
+		interval--;
+	}
+}
+
+void MCCardlist::getprop(Properties prop, MCStack *stack, MCExecPoint &ep)
+{
+	trim();
+	MCCardnode *tmp = cards;
+	ep.clear();
+	bool first = true;
+	if (tmp != NULL)
+	{
+		MCExecPoint ep2;
+		do
+		{
+			if (stack == NULL || tmp->card->getstack() == stack)
+			{
+				tmp->card->getprop(0, prop, ep2, False);
+				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, first);
+				first = false;
+			}
+			tmp = tmp->next();
+		}
+		while (tmp != cards);
+	}
+}
+
+void MCCardlist::getnames(MCStack *stack, MCExecPoint &ep)
+{
+	getprop(P_SHORT_NAME, stack, ep);
+}
+
+void MCCardlist::getlongids(MCStack *stack, MCExecPoint &ep)
+{
+	getprop(P_LONG_ID, stack, ep);
+}
+
+void MCCardlist::addcard(MCCard *card)
+{
+	if (cards != NULL && cards->card == card || MClockrecent)
+		return;
+	MCCardnode *nptr = new MCCardnode;
+	nptr->card = card;
+	if (cards == NULL)
+		first = nptr;
+	nptr->insertto(cards);
+	if (interval++ > MAX_FILL)
+		trim();
+}
+
+void MCCardlist::deletecard(MCCard *card)
+{
+	MCCardnode *tmp = cards;
+	Boolean restart;
+	if (tmp != NULL)
+		do
+		{
+			restart = False;
+			if (tmp->card == card)
+			{
+				if (tmp == first)
+					first = tmp->next();
+				if (tmp == cards)
+				{
+					MCCardnode *tptr = cards->remove
+					                   (cards);
+					delete tptr;
+					interval--;
+					tmp = cards;
+					if (cards == NULL)
+						break;
+					else
+						restart = True;
+				}
+				else
+				{
+					MCCardnode *tptr = tmp->remove
+					                   (tmp);
+					delete tptr;
+					interval--;
+				}
+			}
+			else
+				tmp = tmp->next();
+		}
+		while (restart || tmp != cards);
+}
+
+void MCCardlist::deletestack(MCStack *stack)
+{
+	MCCardnode *tmp = cards;
+	Boolean restart;
+	if (tmp != NULL)
+		do
+		{
+			restart = False;
+			if (tmp->card->getstack() == stack)
+			{
+				if (tmp == first)
+					first = tmp->next();
+				if (tmp == cards)
+				{
+					MCCardnode *tptr = cards->remove
+					                   (cards);
+					delete tptr;
+					interval--;
+					tmp = cards;
+					if (cards == NULL)
+						break;
+					else
+						restart = True;
+				}
+				else
+				{
+					MCCardnode *tptr = tmp->remove
+					                   (tmp);
+					delete tptr;
+					interval--;
+				}
+			}
+			else
+				tmp = tmp->next();
+		}
+		while (restart || tmp != cards);
+}
+
+void MCCardlist::gorel(int2 offset)
+{
+	if (cards == NULL)
+		return;
+	if (offset > 0)
+		while(offset--)
+			cards = cards->prev();
+	else
+		while(offset++)
+			cards = cards->next();
+	MCStack *sptr = cards->card->getstack();
+	if (sptr != MCdefaultstackptr && MCdefaultstackptr->hcstack())
+		MCdefaultstackptr->close();
+	sptr->setcard(cards->card, False, False);
+	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+	MCdefaultstackptr = sptr;
+}
+
+MCCard *MCCardlist::getrel(int2 offset)
+{
+	if (cards == NULL)
+		return NULL;
+	MCCardnode *tptr = cards;
+	if (offset > 0)
+		while(offset--)
+			tptr = tptr->prev();
+	else
+		while(offset++)
+			tptr = tptr->next();
+	return tptr->card;
+}
+
+void MCCardlist::godirect(Boolean start)
+{
+	if (cards == NULL)
+		return;
+	if (start)
+		cards = first;
+	else
+		cards = first->next();
+	MCStack *sptr = cards->card->getstack();
+	if (sptr != MCdefaultstackptr && MCdefaultstackptr->hcstack())
+		MCdefaultstackptr->close();
+	sptr->setcard(cards->card, False, False);
+	sptr->openrect(sptr->getrect(), WM_LAST, NULL, WP_DEFAULT, OP_NONE);
+	MCdefaultstackptr = sptr;
+}
+
+void MCCardlist::pushcard(MCCard *card)
+{
+	if (card == NULL)
+		return;
+	MCCardnode *nptr = new MCCardnode;
+	nptr->card = card;
+	nptr->insertto(cards);
+}
+
+MCCard *MCCardlist::popcard()
+{
+	if (cards != NULL)
+	{
+		MCCardnode *tptr = cards->remove
+		                   (cards);
+		MCCard *card = tptr->card;
+		delete tptr;
+		return card;
+	}
+	return MCdispatcher->gethome()->getcurcard();
+}
+

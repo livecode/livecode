@@ -1,0 +1,120 @@
+external coverage_test
+
+/////////
+
+enum first-enum
+	"a" as 1
+	"b" as 2
+	
+enum second-enum
+	"a" as 1
+	"b" as 2
+
+/////////
+
+command void_command
+
+command boolean_command
+	return boolean
+	
+command integer_command
+	return integer
+	
+command real_command
+	return real
+	
+command cstring_command
+	return c-string
+
+command string_command
+	return c-data
+
+command objc_string_command
+	return objc-string
+	
+command objc_number_command
+	return objc-string
+
+command objc_data_command
+	return objc-data
+
+/////////
+
+command ind_boolean_command
+	return boolean indirect
+	
+command ind_integer_command
+	return integer indirect
+	
+command ind_real_command
+	return real indirect
+	
+command ind_cstring_command
+	return c-string indirect
+
+command ind_string_command
+	return c-data indirect
+
+command ind_objc_string_command
+	return objc-string indirect
+	
+command ind_objc_number_command
+	return objc-string indirect
+
+command ind_objc_data_command
+	return objc-data indirect
+
+/////////
+
+command command_in_boolean
+	in a as boolean
+	
+command command_inout_boolean
+	inout a as boolean
+	
+command command_out_boolean
+	out a as boolean
+
+////
+
+command command_in_integer
+	in a as integer
+	
+command command_inout_integer
+	inout a as integer
+	
+command command_out_integer
+	out a as integer
+	
+////
+
+command command_in_real
+	in a as real
+	
+command command_inout_real
+	inout a as real
+	
+command command_out_real
+	out a as real
+	
+////
+
+command command_in_cstring
+	in a as c-string
+	
+command command_inout_cstring
+	inout a as c-string
+	
+command command_out_cstring
+	out a as c-string
+	
+////
+
+command command_in_string
+	in a as c-data
+	
+command command_inout_string
+	inout a as c-data
+	
+command command_out_string
+	out a as c-data

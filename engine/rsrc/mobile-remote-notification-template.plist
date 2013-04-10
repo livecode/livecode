@@ -1,0 +1,6 @@
+	<key>CFSupportedRemoteNotificationTypes</key>
+	<array>
+		<string>CFBadge</string>
+		<string>CFSound</string>
+		<string>CFAlert</string>
+	</array>

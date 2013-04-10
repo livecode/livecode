@@ -1,0 +1,13 @@
+NAME=standalone
+TYPE=application
+
+MODE_SOURCES= \
+	lextable.cpp mode_standalone.cpp
+
+MODE_DEFINES=\
+	MODE_STANDALONE
+	
+MODE_LDFLAGS=\
+	-Wl,--script=standalone.link
+
+include Makefile.common

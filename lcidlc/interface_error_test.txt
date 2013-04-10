@@ -1,0 +1,49 @@
+external error_test
+
+// Invalid use
+use unknown-use-clause
+
+// Invalid hook
+on unknown-hook call hook-function
+
+on startup call startup_function
+
+// Target already used
+on shutdown call startup_function
+
+// Invalid enum name
+enum integer
+
+// Enum already defined
+enum test-enum
+enum test-enum
+
+// Enum element already defined
+enum test-enum-2
+	"a" as 1
+	"b" as 2
+	"b" as 3
+
+command test-command
+	call test-command
+function test-command
+	call test-function
+	
+command another-test-command
+	call startup_function
+	
+command foo-bar
+	return test-enum
+
+command foo-bar-2
+	return integer
+	
+command foo-bar-3
+	return integer-foo
+
+command test-foo
+	in foo as integer
+	in bar as real
+	in foo as integer-real
+	optional in foobar as real default 0.0
+	in barfoo as boolean

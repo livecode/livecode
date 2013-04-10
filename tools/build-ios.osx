@@ -1,0 +1,9 @@
+~/Builds/Platforms/Xcode_3_2_6/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator4.3
+~/Builds/Platforms/Xcode_4_2_0/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.0
+~/Builds/Platforms/Xcode_4_3_1/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator5.1
+~/Builds/Platforms/Xcode_4_5_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.0
+~/Builds/Platforms/Xcode_4_6_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild -project stage-mobile.xcodeproj -configuration Release -sdk iphonesimulator6.1
+
+~/Builds/Platforms/Xcode_4_2_0/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.0 ARCHS="arm6 armv7"
+~/Builds/Platforms/Xcode_4_3_1/Xcode.app/Contents/Developer/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos5.1 ARCHS="arm6 armv7"
+~/Builds/Platforms/Xcode_4_6_0/Xcode.app/Contents/Developer/usr/bin/xcodebuild  -project stage-mobile.xcodeproj -configuration Release -sdk iphoneos6.1 ARCHS=armv7

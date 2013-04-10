@@ -1,0 +1,358 @@
+Xinerama libXinerama.so.1
+	XineramaIsActive: (pointer) -> (integer)
+	XineramaQueryScreens: (pointer, pointer) -> (pointer)
+
+xft libXft.so.2
+	XftFontOpenName: (pointer, integer, pointer) -> (pointer)
+	XftFontClose: (pointer, pointer) -> ()
+
+	XftTextExtents16: (pointer, pointer, pointer, integer, pointer) -> ()
+	XftTextExtents8: (pointer, pointer, pointer, integer, pointer) -> ()
+
+	XftDrawCreate: (pointer, integer, pointer, integer) -> (pointer)
+	XftDrawCreateAlpha: (pointer, pointer, integer) -> (pointer)
+	XftDrawCreateBitmap: (pointer, integer) -> (pointer)
+	XftDrawDestroy: (pointer) -> ()
+	XftDrawSetClip: (pointer, integer) -> (integer)
+	XftDrawRect: (pointer, pointer, integer, integer, integer, integer) -> ()
+	XftDrawString16: (pointer, pointer, pointer, integer, integer, pointer, integer) -> ()
+	XftDrawStringUtf8: (pointer, pointer, pointer, integer, integer, pointer, integer) -> ()
+	XftDrawString8: (pointer, pointer, pointer, integer, integer, pointer, integer) -> ()
+	XftDrawChange: (pointer, pointer) -> ()
+	XftColorFree: (pointer, pointer, pointer, pointer) -> ()
+
+	XftColorAllocValue: (pointer, pointer, integer, pointer, pointer) -> (integer)
+	XftFontOpenXlfd: (pointer, integer, pointer) -> (pointer)
+
+pangoxft libpangoxft-1.0.so.0
+	pango_xft_render_layout: (pointer, pointer, pointer, integer, integer) -> ()
+	pango_xft_render_layout_line: (pointer, pointer, pointer, integer, integer) -> ()
+	pango_xft_get_context: (pointer, integer) -> (pointer)
+
+pangoft2 libpangoft2-1.0.so.0
+	pango_fc_font_lock_face: (pointer) -> ()
+	pango_fc_font_unlock_face: (pointer) -> ()
+	pango_fc_font_get_type: (pointer) -> (integer)
+
+pango libpango-1.0.so.0
+	pango_context_load_font: (pointer, pointer) -> (pointer)
+	pango_context_list_families: (pointer, pointer, pointer) -> ()
+	pango_font_family_get_name: (pointer) -> (pointer)
+	pango_font_family_list_faces: (pointer, pointer, pointer) -> ()
+	pango_font_face_list_sizes: (pointer, pointer, pointer) -> ()
+	pango_font_face_get_face_name: (pointer) -> (pointer)
+	pango_layout_new: (pointer) -> (pointer)
+	pango_layout_set_text: (pointer, pointer, integer) -> ()
+	pango_layout_get_text: (pointer) -> (pointer)
+	pango_layout_set_font_description: (pointer, pointer) -> ()
+	pango_layout_get_pixel_extents: (pointer, pointer, pointer) -> ()
+	pango_layout_get_iter: (pointer) -> (pointer)
+	pango_layout_iter_free: (pointer) -> ()
+	pango_layout_iter_get_run: (pointer) -> (pointer)
+	pango_layout_iter_next_run: (pointer) -> (integer)
+	pango_layout_get_line: (pointer, integer) -> (pointer)
+	pango_layout_line_get_pixel_extents: (pointer, pointer, pointer) -> ()
+	? pango_layout_get_line_readonly
+	pango_font_description_from_string: (pointer) -> (pointer)
+	pango_font_description_new: () -> (pointer)
+	pango_font_description_free: (pointer) -> ()
+	pango_font_description_set_family: (pointer, pointer) -> ()
+	pango_font_description_set_size: (pointer, integer) -> ()
+	pango_font_description_set_absolute_size: (pointer, double) -> ()
+	pango_font_description_set_style: (pointer, integer) -> ()
+	pango_font_description_set_weight: (pointer, integer) -> ()
+	pango_font_description_set_stretch: (pointer, integer) -> ()
+
+lcms liblcms.so.1
+	cmsOpenProfileFromFile: (pointer, pointer) -> (pointer)
+	cmsOpenProfileFromMem: (pointer, integer) -> (pointer)
+	cmsCloseProfile: (pointer) -> (integer)
+	
+	cmsCreateRGBProfile: (pointer, pointer, pointer) -> (pointer)
+	cmsCreate_sRGBProfile: () -> (pointer)
+	
+	cmsCreateTransform: (pointer, integer, pointer, integer, integer, integer) -> (pointer)
+	cmsDeleteTransform: (pointer) -> ()
+	
+	cmsDoTransform: (pointer, pointer, pointer, integer) -> ()
+
+	cmsGetColorSpace: (pointer) -> (integer)
+	
+	cmsBuildGamma: (integer, double) -> (pointer)
+	cmsFreeGamma: (pointer) -> ()
+
+gdk libgdk-x11-2.0.so.0
+	gdk_drawable_get_image: (pointer, integer, integer, integer, integer) -> (pointer)
+	gdk_draw_rectangle: (pointer, pointer, integer, integer, integer, integer, integer) -> ()
+	gdk_gc_set_ts_origin: (pointer, integer, integer) -> ()
+	gdk_pixmap_new: (pointer, integer, integer, integer) -> (pointer)
+	gdk_window_clear_area: (pointer, integer, integer, integer, integer) -> ()
+	gdk_window_is_visible: (pointer) -> (integer)
+	gdk_window_set_back_pixmap: (pointer, pointer, integer) -> ()
+	gdk_display_get_default: () -> (pointer)
+	gdk_x11_drawable_get_xid: (pointer) -> (integer)
+	gdk_x11_image_get_ximage: (pointer) -> (pointer)
+	gdk_x11_display_get_xdisplay: (pointer) -> (pointer)
+	gdk_error_trap_push: () -> ()
+	gdk_error_trap_pop: () -> (integer)
+	gdk_flush: () -> ()
+	gdk_window_object_get_type: () -> (integer)
+	gdk_event_get: () -> (pointer)
+	gdk_colormap_new: (pointer, integer) -> (pointer)
+	gdk_visual_get_best_with_depth: (integer) -> (pointer)
+	gdk_drawable_set_colormap: (pointer, pointer) -> ()
+	gdk_gc_new: (pointer) -> (pointer)
+	gdk_gc_set_colormap: (pointer, pointer) -> ()
+	gdk_gc_set_rgb_fg_color: (pointer, pointer) -> ()
+	gdk_rectangle_intersect: (pointer, pointer, pointer) -> (integer)
+
+gtk libgtk-x11-2.0.so.0
+	#@ gtk_major_version
+	#@ gtk_minor_version
+	
+	gtk_object_get_type: () -> (integer)
+	gtk_widget_get_type: () -> (integer)
+	gtk_container_get_type: () -> (integer)
+	gtk_option_menu_get_type: () -> (integer)
+	gtk_bin_get_type: () -> (integer)
+	gtk_hbox_get_type: () -> (integer)
+	gtk_arrow_get_type: () -> (integer)
+	gtk_separator_get_type: () -> (integer)
+	gtk_entry_get_type: () -> (integer)
+	gtk_range_get_type: () -> (integer)
+	gtk_scale_get_type: () -> (integer)
+	gtk_scrollbar_get_type: () -> (integer)
+	gtk_button_get_type: () -> (integer)
+	gtk_toggle_button_get_type: () -> (integer)
+	gtk_progress_bar_get_type: () -> (integer)
+	gtk_misc_get_type: () -> (integer)
+	gtk_dialog_get_type: () -> (integer)
+	gtk_handle_box_get_type: () -> (integer)
+	#gtk_menu_shell_get_type: () -> (integer)
+	gtk_menu_item_get_type: () -> (integer)
+	#gtk_check_menu_item_get_type: () -> (integer)
+
+	gtk_settings_get_default: () -> (pointer)
+	
+	gtk_adjustment_changed: (pointer) -> ()
+	
+	gtk_object_sink: (pointer) -> ()
+	
+	gtk_adjustment_new: (double, double, double, double, double, double) -> (pointer)
+	gtk_arrow_new: (integer, integer) -> (pointer)
+	gtk_button_new: () -> (pointer)
+	gtk_button_new_with_label: (pointer) -> (pointer)
+	gtk_check_button_new_with_label: (pointer) -> (pointer)
+	#gtk_combo_box_new: () -> (pointer)
+	#gtk_combo_box_entry_new: () -> (pointer)
+	gtk_toggle_button_new: () -> (pointer)
+	gtk_entry_new: () -> (pointer)
+	gtk_fixed_new: () -> (pointer)
+	gtk_frame_new: (pointer) -> (pointer)
+	gtk_handle_box_new: () -> (pointer)
+	gtk_hscale_new: (pointer) -> (pointer)
+	gtk_hscrollbar_new: (pointer) -> (pointer)
+	gtk_init: (pointer, pointer) -> ()
+	gtk_label_new: (pointer) -> (pointer)
+	#gtk_menu_new: () -> (pointer)
+	#gtk_menu_bar_new: () -> (pointer)
+	#gtk_menu_item_new: () -> (pointer)
+	gtk_menu_item_new_with_label: (pointer) -> (pointer)
+	#gtk_check_menu_item_new_with_label: (pointer) -> (pointer)
+	#gtk_separator_menu_item_new: () -> (pointer)
+	gtk_notebook_new: () -> (pointer)
+	gtk_option_menu_new: () -> (pointer)
+	gtk_vscale_new: (pointer) -> (pointer)
+	gtk_vscrollbar_new: (pointer) -> (pointer)
+	gtk_tooltips_new: () -> (pointer)
+	gtk_spin_button_new: (pointer, double, integer) -> (pointer)
+	gtk_radio_button_new_with_label: (pointer, pointer) -> (pointer)
+	gtk_progress_bar_new: () -> (pointer)
+	gtk_statusbar_new: () -> (pointer)
+	
+	gtk_paint_arrow: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer, integer, integer) -> ()
+	gtk_paint_box: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_flat_box: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_box_gap: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer, integer, integer, integer) -> ()
+	gtk_paint_check: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_option: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_tab: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_extension: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer, integer) -> ()
+	gtk_paint_focus: (pointer, pointer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_shadow: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer) -> ()
+	gtk_paint_slider: (pointer, pointer, integer, integer, pointer, pointer, pointer, integer, integer, integer, integer, integer) -> ()
+	#gtk_paint_hline: (pointer, pointer, integer, pointer, pointer, pointer, integer, integer, integer) -> ()
+	#gtk_paint_vline: (pointer, pointer, integer, pointer, pointer, pointer, integer, integer, integer) -> ()
+
+	#gtk_menu_shell_append: (pointer, pointer) -> ()
+	#gtk_check_menu_item_set_active: (pointer, integer) -> ()
+	#gtk_menu_item_set_submenu: (pointer, pointer) -> ()
+
+	gtk_progress_bar_set_orientation: (pointer, integer) -> ()
+
+	gtk_range_get_adjustment: (pointer) -> (pointer)
+
+	gtk_style_apply_default_background: (pointer, pointer, integer, integer, pointer, integer, integer, integer, integer) -> ()
+	gtk_style_attach: (pointer, pointer) -> (pointer)
+
+	gtk_toggle_button_set_active: (pointer, integer) -> ()
+	gtk_toggle_button_set_inconsistent: (pointer, integer) -> ()
+
+	gtk_tooltips_force_window: (pointer) -> ()
+
+	gtk_container_add: (pointer, pointer) -> ()
+	#gtk_container_forall: (pointer, pointer, pointer) -> ()
+	
+	gtk_widget_destroy: (pointer) -> ()
+	gtk_widget_realize: (pointer) -> ()
+	gtk_widget_set_state: (pointer, integer) -> ()
+	gtk_widget_set_style: (pointer, pointer) -> ()
+	#gtk_widget_set_direction: (pointer, integer) -> ()
+	gtk_widget_set_name: (pointer, pointer) -> ()
+	gtk_widget_set_sensitive: (pointer, integer) -> ()
+	#gtk_widget_size_request: (pointer, pointer) -> ()
+	#gtk_widget_size_allocate: (pointer, pointer) -> ()
+	
+	gtk_widget_class_install_style_property: (pointer, pointer) -> ()
+	
+	# gtk_widget_style_get: (pointer, pointer | pointer, pointer) -> ()
+	@ gtk_widget_style_get
+
+	gtk_window_new: (integer) -> (pointer)
+	
+	gtk_object_unref: (pointer) -> ()
+	gtk_main_do_event: (pointer) -> ()
+
+	gtk_widget_set_colormap: (pointer, pointer) -> ()
+	gtk_dialog_run: (pointer) -> (integer)
+	gtk_events_pending: () -> (integer)
+	gtk_main_iteration: () -> (integer)
+
+	gtk_border_free: (pointer) -> ()
+	gtk_window_set_keep_above: (pointer, integer) -> ()
+	gtk_window_set_modal: (pointer, integer) -> ()
+	gtk_window_get_type: () -> (integer)
+	gtk_widget_get_parent_window: (pointer) -> (pointer)
+	gdk_window_foreign_new: (pointer) -> (pointer)
+
+	gtk_requisition_free: (pointer) -> ()
+	
+	#gtk_rc_get_style_by_paths: (pointer, pointer, pointer, integer) -> (pointer)
+
+gtk_print_dialog libgtk-x11-2.0.so.0
+	gtk_print_unix_dialog_new: (pointer, pointer) -> (pointer)
+	gtk_print_unix_dialog_get_selected_printer: (pointer) -> (pointer)
+	gtk_print_unix_dialog_get_settings: (pointer) -> (pointer)
+
+	gtk_print_settings_get_n_copies: (pointer) -> (integer)
+	gtk_print_settings_get_collate: (pointer) -> (integer)
+	gtk_print_settings_get_paper_width: (pointer) -> (double)
+	gtk_print_settings_get_paper_height: (pointer) -> (double)
+	gtk_print_settings_get_use_color: (pointer) -> (integer)
+	gtk_print_settings_get_orientation: (pointer) -> (integer)
+	gtk_print_settings_get_duplex: (pointer) -> (integer)
+
+	gtk_page_setup_unix_dialog_new: (pointer, pointer) -> (pointer)
+	gtk_page_setup_unix_dialog_get_page_setup: (pointer) -> (pointer)
+	gtk_page_setup_get_paper_width: (pointer, integer) -> (double)
+	gtk_page_setup_get_paper_height: (pointer, integer) -> (double)
+	gtk_page_setup_get_orientation: (pointer) -> (integer)
+
+	gtk_printer_get_name: (pointer) -> (pointer)
+
+	gtk_print_unix_dialog_get_type: () -> (integer)
+	gtk_page_setup_unix_dialog_get_type: () -> (integer)
+
+	gtk_print_settings_get_output_bin: (pointer) -> (pointer)
+	gtk_print_settings_get: (pointer, pointer) -> (pointer)
+
+	gtk_print_settings_get_page_ranges: (pointer, pointer) -> (pointer)
+	gtk_print_unix_dialog_set_manual_capabilities:(pointer,integer)->()
+
+gtk_file_dialog libgtk-x11-2.0.so.0
+	gtk_file_filter_new: () -> (pointer)
+	gtk_file_filter_set_name: (pointer, pointer) -> ()
+	gtk_file_filter_add_pattern: (pointer, pointer) -> ()
+	gtk_file_filter_get_name: (pointer) -> (pointer)
+
+	#gtk_file_chooser_dialog_new: (pointer, pointer, integer, pointer, integer | pointer, integer, pointer) -> (pointer)
+	@ gtk_file_chooser_dialog_new
+
+	gtk_file_chooser_add_filter: (pointer, pointer) -> ()
+	gtk_file_chooser_get_filter: (pointer) -> (pointer)
+	gtk_file_chooser_set_filename: (pointer, pointer) -> (integer)
+	gtk_file_chooser_get_filename: (pointer) -> (pointer)
+	gtk_file_chooser_get_filenames: (pointer) -> (pointer)
+	gtk_file_chooser_set_current_folder: (pointer, pointer) -> (integer)
+	gtk_file_chooser_get_current_folder: (pointer) -> (pointer)
+	gtk_file_chooser_set_current_name: (pointer, pointer) -> (integer)
+	gtk_file_chooser_set_select_multiple: (pointer, integer) -> ()
+	gtk_file_chooser_get_select_multiple: (pointer) -> (integer)
+
+	gtk_file_chooser_get_type: () -> (integer)
+
+gtk_color_dialog libgtk-x11-2.0.so.0
+	gtk_color_selection_dialog_new: (pointer) -> (pointer)
+	gtk_color_selection_set_current_color: (pointer, pointer) -> ()
+	gtk_color_selection_get_current_color: (pointer, pointer) -> ()
+	
+	gtk_color_selection_dialog_get_type: () -> (integer)
+	gtk_color_selection_get_type: () -> (integer)
+
+
+gnome_vfs libgnomevfs-2.so.0
+	gnome_vfs_init: () -> (integer)
+	gnome_vfs_initialized: () -> (integer)
+	gnome_vfs_get_mime_type_for_name: (pointer) -> (pointer)
+	gnome_vfs_mime_get_default_application: (pointer) -> (pointer)
+	gnome_vfs_mime_get_default_application_for_uri: (pointer,pointer) -> (pointer)
+	gnome_vfs_mime_application_get_exec: (pointer) -> (pointer)
+	gnome_vfs_mime_application_launch: (pointer,pointer) -> (integer)
+	gnome_vfs_get_mime_type_from_uri: (pointer) -> (pointer)
+	gnome_vfs_uri_new: (pointer) -> (pointer)
+	gnome_vfs_make_uri_from_input: (pointer) -> (pointer)
+
+libgnome libgnome-2.so.0
+	gnome_url_show: (pointer,pointer) -> (integer)
+
+libxv libXv.so.1
+	XvQueryAdaptors: (pointer, integer, pointer, pointer) -> (integer)
+
+libxcursor	libXcursor.so.1
+	XcursorSupportsARGB: (pointer) -> (integer)
+	XcursorGetDefaultSize: (pointer) -> (integer)
+	XcursorImageLoadCursor: (pointer, pointer) -> (integer)
+	XcursorShapeLoadCursor: (pointer, integer) -> (integer)
+	XcursorSetTheme: (pointer, pointer) -> ()
+	XcursorSetDefaultSize: (pointer, integer) -> ()
+
+gobject libgobject-2.0.so.0
+	g_signal_connect_data: (pointer, pointer, pointer, pointer, pointer, integer) -> (integer)
+	g_malloc: (integer) -> (pointer)
+	g_free: (pointer) -> ()
+	g_object_ref: (pointer) -> (pointer)
+	g_object_unref: (pointer) -> (pointer)
+	g_type_class_peek: (integer) -> (pointer)
+	g_type_class_ref: (integer) -> (pointer)
+	g_type_class_unref: (pointer) -> ()
+	g_type_check_instance_cast: (pointer, integer) -> (pointer)
+	g_type_check_instance_is_a: (pointer, integer) -> (integer)
+	g_type_init: () -> ()
+	@ g_object_get
+	g_object_get_valist: (pointer, pointer, pointer) -> ()
+	g_object_add_weak_pointer: (pointer, pointer) -> ()
+	g_object_set_data: (pointer, pointer, pointer) -> ()
+
+	g_param_spec_boolean: (pointer, pointer, pointer, integer, integer) -> (pointer)
+
+	# NEW IN 2.9
+	g_timeout_add: (integer, pointer, pointer) -> (integer)
+
+glib libglib-2.0.so.0 
+	g_list_append: (pointer,pointer) -> (pointer)
+	g_list_free: (pointer) -> ()
+
+esd libesd.so.0
+	esd_close: (integer) -> (integer)
+	esd_play_stream: (integer, integer, pointer, pointer) -> (integer)
+	esd_open_sound: (pointer) -> (integer)

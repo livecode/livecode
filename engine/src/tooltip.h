@@ -1,0 +1,50 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+//
+// MCTooltip class declarations
+//
+#ifndef	TOOLTIP_H
+#define	TOOLTIP_H
+
+#include "object.h"
+
+class MCTooltip : public MCStack
+{
+	const char *tooltip;
+	int2 mx;
+	int2 my;
+	MCCard *card;
+
+	MCFontRef m_font;
+public:
+	MCTooltip();
+	virtual ~MCTooltip();
+	virtual void close(void);
+	virtual void timer(MCNameRef mptr, MCParameter *params);
+	virtual void render(MCContext *target, const MCRectangle& dirty);
+
+	void mousemove(int2 x, int2 y, MCCard *c);
+	void clearmatch(MCCard *c);
+	void opentip();
+	void closetip();
+	void settip(const char *tip);
+	const char *gettip()
+	{
+		return tooltip;
+	}
+};
+#endif
