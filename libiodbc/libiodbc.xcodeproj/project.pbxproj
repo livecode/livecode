@@ -276,17 +276,7 @@
 		4DE6704B0C43E2780084FE0B /* herr.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = herr.c; path = src/herr.c; sourceTree = "<group>"; };
 		4DE6704C0C43E2780084FE0B /* info.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = info.c; path = src/info.c; sourceTree = "<group>"; };
 		4DE6704D0C43E2780084FE0B /* result.c */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.c; name = result.c; path = src/result.c; sourceTree = "<group>"; };
-		4DE671160C43E3CC0084FE0B /* config.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = config.h; sourceTree = "<group>"; };
-		4DE671180C43E3CC0084FE0B /* config.mac.ppc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = config.mac.ppc.h; sourceTree = "<group>"; };
-		4DE671190C43E3CC0084FE0B /* config.mac.x86.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = config.mac.x86.h; sourceTree = "<group>"; };
-		4DE6711A0C43E3CC0084FE0B /* iodbc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iodbc.h; sourceTree = "<group>"; };
-		4DE6711B0C43E3CC0084FE0B /* iodbcext.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iodbcext.h; sourceTree = "<group>"; };
-		4DE6711C0C43E3CC0084FE0B /* iodbcinst.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iodbcinst.h; sourceTree = "<group>"; };
 		4DE6711D0C43E3CC0084FE0B /* iodbcunix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = iodbcunix.h; sourceTree = "<group>"; };
-		4DE6711E0C43E3CC0084FE0B /* isql.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = isql.h; sourceTree = "<group>"; };
-		4DE6711F0C43E3CC0084FE0B /* isqlext.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = isqlext.h; sourceTree = "<group>"; };
-		4DE671200C43E3CC0084FE0B /* isqltypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = isqltypes.h; sourceTree = "<group>"; };
-		4DE671210C43E3CC0084FE0B /* odbcinst.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = odbcinst.h; sourceTree = "<group>"; };
 		4DE671220C43E3CC0084FE0B /* sql.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = sql.h; sourceTree = "<group>"; };
 		4DE671230C43E3CC0084FE0B /* sqlext.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = sqlext.h; sourceTree = "<group>"; };
 		4DE671240C43E3CC0084FE0B /* sqltypes.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; path = sqltypes.h; sourceTree = "<group>"; };
@@ -510,17 +500,7 @@
 		4DE671150C43E3CC0084FE0B /* include */ = {
 			isa = PBXGroup;
 			children = (
-				4DE671160C43E3CC0084FE0B /* config.h */,
-				4DE671180C43E3CC0084FE0B /* config.mac.ppc.h */,
-				4DE671190C43E3CC0084FE0B /* config.mac.x86.h */,
-				4DE6711A0C43E3CC0084FE0B /* iodbc.h */,
-				4DE6711B0C43E3CC0084FE0B /* iodbcext.h */,
-				4DE6711C0C43E3CC0084FE0B /* iodbcinst.h */,
 				4DE6711D0C43E3CC0084FE0B /* iodbcunix.h */,
-				4DE6711E0C43E3CC0084FE0B /* isql.h */,
-				4DE6711F0C43E3CC0084FE0B /* isqlext.h */,
-				4DE671200C43E3CC0084FE0B /* isqltypes.h */,
-				4DE671210C43E3CC0084FE0B /* odbcinst.h */,
 				4DE671220C43E3CC0084FE0B /* sql.h */,
 				4DE671230C43E3CC0084FE0B /* sqlext.h */,
 				4DE671240C43E3CC0084FE0B /* sqltypes.h */,
@@ -734,6 +714,11 @@
 					HAVE_CONFIG_H,
 					NO_FRAMEWORKS,
 				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(SRCROOT)/src/inst",
+					"$(inherited)",
+				);
 				OWNER = ..;
 			};
 			name = Debug;
@@ -746,6 +731,11 @@
 					_MACOSX,
 					HAVE_CONFIG_H,
 					NO_FRAMEWORKS,
+				);
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(SRCROOT)/src/inst",
+					"$(inherited)",
 				);
 				OWNER = ..;
 			};
