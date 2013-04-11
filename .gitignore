@@ -5,6 +5,9 @@ libopenssl/src/sslstubs.cpp
 
 # Compiled source #
 ###################
+_build/
+_cache/
+build/
 *.com
 *.class
 *.dll
