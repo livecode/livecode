@@ -1736,6 +1736,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (ncolors > MAX_PLANES || flags & F_COMPRESSION
 			        || flags & F_TRUE_COLOR)
 			{
+				// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
 				repeatcount = -1;
 				if (flags & F_REPEAT_COUNT)
 					if ((stat = IO_read_int2(&repeatcount, stream)) != IO_NORMAL)
