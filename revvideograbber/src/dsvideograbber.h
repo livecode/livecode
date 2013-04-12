@@ -19,19 +19,16 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define DXVIDEO_H
 #include "videograbber.h"
 
-#include <atlbase.h>
-extern CComModule _Module;
-#include <atlcom.h>
-
 #include <strmif.h>
 #include "qedit.h"
 #include <dshow.h>
+
+#include "atlsubset.h"
 
 #define MAX_VIDEODEVICE 10
 #define MAX_AUDIODEVICE 10
 #define MAX_CODEC		50
 #define MAX_DEVICENAME_LENGTH 256
-
 
 // defines for video dialog setting
 enum E_VideoDialog
