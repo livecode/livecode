@@ -163,7 +163,7 @@ bool WindowsSAPI5Narrator::Start(const char* p_string)
 	HRESULT hr;
 	USES_CONVERSION;
 	
-	WCHAR* szWTextString;
+	const WCHAR* szWTextString;
 
 	if(!m_bUseDefaultPitch)
 	{
@@ -173,22 +173,14 @@ bool WindowsSAPI5Narrator::Start(const char* p_string)
 		sprintf( strXMLtag, "<pitch absmiddle = \'%d\'/> ", m_Npitch);
 		strcpy( pstrTotal, strXMLtag);
 		strcat( pstrTotal, p_string);
-		szWTextString = new WCHAR[ strlen(pstrTotal) + 20 ];	
-		wcscpy( szWTextString, A2W(pstrTotal));	
+
+		szWTextString = A2W(pstrTotal);	
 	}
 	else
-	{
-		int t_length;
-		t_length = strlen(p_string);
-		szWTextString = new WCHAR[ t_length + 1 ];
-
-		wcscpy( szWTextString, A2W(p_string));
-	}	
+		szWTextString = A2W(p_string);
 
 	hr = m_cpVoice->Speak(szWTextString, SPF_ASYNC | SPF_IS_XML, NULL );
 	
-	delete[] szWTextString;
-
     if( SUCCEEDED( hr ) )
 	{
 		isspeaking = true;
@@ -235,13 +227,15 @@ bool WindowsSAPI5Narrator::SpeakToFile(const char* p_string, const char* p_file)
 	bool t_success;
 	t_success = true;
 
-	// Set the audio format
-	CSpStreamFormat t_audio_format;
-	hr = t_audio_format.AssignFormat(SPSF_44kHz16BitStereo);
-	if (!SUCCEEDED(hr))
-	{
-		t_success = false;
-	}
+	// Setup the wave format structure - 44kHz, 16bit, stereo
+	WAVEFORMATEX t_waveformat;
+    t_waveformat.wFormatTag = WAVE_FORMAT_PCM;
+    t_waveformat.nChannels = 2;
+	t_waveformat.nBlockAlign = 4;
+    t_waveformat.nSamplesPerSec = 44100;
+    t_waveformat.wBitsPerSample = 16;
+    t_waveformat.nAvgBytesPerSec = t_waveformat.nSamplesPerSec * t_waveformat.nBlockAlign;
+    t_waveformat.cbSize = 0;
 
 	// unicode string containg file path
 	WCHAR* t_file;
@@ -265,10 +259,17 @@ bool WindowsSAPI5Narrator::SpeakToFile(const char* p_string, const char* p_file)
 			wcscpy(t_file, A2W(t_native_path));
 
 			// Bind the output to the stream
-			hr = SPBindToFile(t_file, SPFM_CREATE_ALWAYS, &t_cstream, &t_audio_format.FormatId(), t_audio_format.WaveFormatExPtr(), SPFEI_ALL_EVENTS);
-			if (!SUCCEEDED(hr))
+			hr = CoCreateInstance(CLSID_SpStream, NULL, CLSCTX_ALL, __uuidof(t_cstream), (void**)&t_cstream);
+			t_success = SUCCEEDED(hr);
+			if (t_success)
 			{
-				t_success = false;
+				hr = t_cstream->BindToFile(t_file, SPFM_CREATE_ALWAYS, &SPDFID_WaveFormatEx, &t_waveformat, SPFEI_ALL_EVENTS);
+				t_success = SUCCEEDED(hr);
+				if (!t_success)
+				{
+					t_cstream->Release();
+					t_cstream = NULL;
+				}
 			}
 		}
 	}
@@ -409,6 +410,156 @@ bool WindowsSAPI5Narrator::GetVolume(int& p_volume)
 	}
 }
 
+bool _GetCategoryFromId(const WCHAR *p_id, ISpObjectTokenCategory** r_category)
+{
+	bool t_success = true;
+    
+    CComPtr<ISpObjectTokenCategory> t_token_category = NULL;
+    t_success = SUCCEEDED(t_token_category.CoCreateInstance(CLSID_SpObjectTokenCategory));
+    
+    if (t_success)
+		t_success = SUCCEEDED(t_token_category->SetId(p_id, FALSE));
+    
+    if (t_success)
+		*r_category = t_token_category.Detach();
+    
+    return t_success;
+}
+
+bool _EnumTokens(const WCHAR *p_category_id, const WCHAR *p_req_attribs, const WCHAR *p_opt_attribs, IEnumSpObjectTokens **r_enum)
+{
+	bool t_success = true;
+    
+    CComPtr<ISpObjectTokenCategory> t_category;
+    t_success = _GetCategoryFromId(p_category_id, &t_category);
+    
+    if (t_success)
+        t_success = SUCCEEDED(t_category->EnumTokens(p_req_attribs, p_opt_attribs, r_enum));
+    
+    return t_success;
+}
+
+bool _GetDescription(ISpObjectToken *p_token, WCHAR **r_description)
+{
+	typedef HRESULT (WINAPI *_RegLoadMUIStringWPtr)(HKEY, LPCWSTR, LPWSTR, DWORD, LPDWORD, DWORD, LPCWSTR);
+	static HMODULE s_advapi32 = NULL;
+	static _RegLoadMUIStringWPtr s_RegLoadMUIStringW = NULL;
+
+	if (s_advapi32 == NULL)
+	{
+		// Attempt to load function RegLoadMUIStringW which should be available if we're running on Vista & later
+        s_advapi32 = LoadLibraryA("advapi32.dll");
+        if(s_advapi32 != NULL)
+			s_RegLoadMUIStringW = (_RegLoadMUIStringWPtr)GetProcAddress(s_advapi32, "RegLoadMUIStringW");
+	}
+
+	bool t_success = true;
+
+    if (r_description == NULL)
+    {
+        return false;
+    }
+
+	WCHAR *t_description = NULL;
+
+    if(s_RegLoadMUIStringW != NULL)
+    {
+		WCHAR* t_path = NULL;
+		WCHAR* t_reg_key = NULL;
+		HKEY   t_hkey = NULL;
+
+        t_success = SUCCEEDED(p_token->GetId(&t_reg_key));
+
+        if (t_success)
+        {
+			// Split the path & base of the registry key - path is invalid if there is no separator
+            t_path = wcschr(t_reg_key, L'\\');
+			t_success = t_path != NULL;
+		}
+        if(t_success)
+        {
+            *t_path++ = L'\0';
+
+            if (wcscmp(t_reg_key, L"HKEY_LOCAL_MACHINE") == 0)
+				t_success = ERROR_SUCCESS == RegOpenKeyExW(HKEY_LOCAL_MACHINE, t_path, 0, KEY_QUERY_VALUE, &t_hkey);
+            else if (wcscmp(t_reg_key, L"HKEY_CURRENT_USER") == 0)
+                t_success = ERROR_SUCCESS == RegOpenKeyExW(HKEY_CURRENT_USER, t_path, 0, KEY_QUERY_VALUE, &t_hkey);
+            else
+				t_success = false;
+            
+			DWORD t_size = 0;
+            if (t_success)
+				t_success = ERROR_MORE_DATA == s_RegLoadMUIStringW(t_hkey, L"Description", NULL, 0, &t_size, 0, NULL);
+			if (t_success)
+				t_success = NULL != (t_description = (WCHAR*) CoTaskMemAlloc(t_size));
+			if (t_success)
+                t_success = ERROR_SUCCESS == s_RegLoadMUIStringW(t_hkey, L"Description", t_description, t_size, NULL, 0, NULL);
+        }
+
+		// Cleanup
+        if(t_hkey)
+            RegCloseKey(t_hkey);
+        if(t_reg_key)
+            CoTaskMemFree(t_reg_key);
+
+		if (!t_success && t_description != NULL)
+		{
+			CoTaskMemFree(t_description);
+			t_description = NULL;
+		}
+    }
+
+    // fetch from the registry - if all else fails, fallback to the default attribute
+	if (s_RegLoadMUIStringW == NULL || !t_success)
+    {
+	    WCHAR t_lang_id[10];
+
+		if (_ultow_s(GetUserDefaultUILanguage(), t_lang_id, 9, 16))
+		{
+			t_lang_id[0] = L'0';
+			t_lang_id[1] = 0;
+		}
+
+		HRESULT hr;
+        hr = p_token->GetStringValue(t_lang_id, &t_description);
+        if (hr == SPERR_NOT_FOUND)
+        {
+            hr = p_token->GetStringValue(NULL, &t_description);
+        }
+		t_success = SUCCEEDED(hr);
+    }
+
+	if (t_success)
+		*r_description = t_description;
+
+    return t_success;
+}
+
+// Helper function, frees tokens allocated by ListVoices.
+void ManageCleanup( WCHAR** ppszTokenIds, CSpDynamicString*  ppcDesciptionString, ULONG ulNumTokens)
+{
+    ULONG ulIndex;
+
+    // Free all allocated token ids
+    if ( ppszTokenIds )
+    {
+        for ( ulIndex = 0; ulIndex < ulNumTokens; ulIndex++ )
+        {
+            if ( NULL != ppszTokenIds[ulIndex] )
+            {
+                CoTaskMemFree( ppszTokenIds[ulIndex] );
+            }
+        }
+        
+        delete [] ppszTokenIds;
+    }
+    
+    if ( ppcDesciptionString )
+    {
+        delete [] ppcDesciptionString;
+    }
+}
+
 // Returns
 //   true if listing voices suceeeded, false otherwise.
 // Description
@@ -418,6 +569,9 @@ bool WindowsSAPI5Narrator::GetVolume(int& p_volume)
 //    to get a token enumerator for the voices or if out of memory when listing voices.
 bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoicesCallback p_callback, void* p_context)
 {
+	bool t_success = true;
+
+	USES_CONVERSION;
 	if(!bInited)	
 		return false;
 
@@ -451,41 +605,40 @@ bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoice
 	}
 
     // Get a token enumerator for tts voices available
-    HRESULT hr = SpEnumTokens(SPCAT_VOICES, szRequiredAttributes, NULL, &cpEnum);
+    t_success = _EnumTokens(SPCAT_VOICES, szRequiredAttributes, NULL, &cpEnum);
 
-	if (SUCCEEDED(hr))
+	if (t_success)
 	{
-		hr = cpEnum->GetCount( &ulNumTokens );
+		t_success = SUCCEEDED(cpEnum->GetCount( &ulNumTokens ));
 
-		if ( SUCCEEDED( hr ) && 0 != ulNumTokens )
+		if ( t_success && 0 != ulNumTokens )
         {
 			ppcDesciptionString = new CSpDynamicString [ulNumTokens];
             if ( NULL == ppcDesciptionString )
             {
-                hr = E_OUTOFMEMORY;
+				/* TODO - CLEANUP */
                 return false;
             }
 
 			ppszTokenIds = new WCHAR* [ulNumTokens];
             if ( NULL == ppszTokenIds )
             {
-                hr = E_OUTOFMEMORY;
+				/* TODO - CLEANUP */
                 return false;
             }
             ZeroMemory( ppszTokenIds, ulNumTokens*sizeof( WCHAR* ) );                    
                 
 			// Get the next token in the enumeration
             // State is maintained in the enumerator
-            while (cpEnum->Next(1, &pToken, NULL) == S_OK)
+			while (t_success && cpEnum->Next(1, &pToken, NULL) == S_OK)
             {
                 // Get a string which describes the token, in our case, the voice name
-                hr = SpGetDescription( pToken, &ppcDesciptionString[ulIndex] );
-                _ASSERTE( SUCCEEDED( hr ) );
+                t_success = SUCCEEDED(_GetDescription( pToken, &ppcDesciptionString[ulIndex] ));
                 
                 // Get the token id, for a low overhead way to retrieve the token later
                 // without holding on to the object itself
-                hr = pToken->GetId( &ppszTokenIds[ulIndex] );
-                _ASSERTE( SUCCEEDED( hr ) );
+				if (t_success)
+	                t_success = SUCCEEDED(pToken->GetId( &ppszTokenIds[ulIndex] ));
                 
                 ulIndex++;
                 
@@ -495,7 +648,7 @@ bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoice
 			}
 		}
 		// if we've failed to properly initialize, then we should completely shut-down
-        if ( S_OK != hr )
+        if ( !t_success )
         {
             if ( pToken )
             {
@@ -509,17 +662,14 @@ bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoice
 
 		for ( ulIndex = 0; ulIndex < ulNumTokens; ulIndex++ )
 		{
-			char* string = ppcDesciptionString[ulIndex].CopyToChar();
+			const char* string = W2A(ppcDesciptionString[ulIndex]);
 			p_callback(p_context, p_gender, (const char *)string);
 		}
 
 		ManageCleanup( ppszTokenIds, ppcDesciptionString, ulNumTokens );
-		return true;
 	}
-	else	
-	{
-		return false;
-	}
+
+	return t_success;
 }
 
 // Parameters
@@ -533,41 +683,40 @@ bool WindowsSAPI5Narrator::ListVoices(NarratorGender p_gender, NarratorListVoice
 //   the matching token fails then also returns false.
 bool WindowsSAPI5Narrator::SetVoice(const char* p_voice)
 {
+	USES_CONVERSION;
 	if(!bInited)
 		return false;
 	
+	bool t_success = true;
+
+	const WCHAR *t_wvoice = A2W(p_voice);
+
 	CComPtr<IEnumSpObjectTokens> cpEnum;// Pointer to token enumerator	
 	ULONG ulIndex = 0, ulCurTokenIndex = 0, ulNumTokens = 0;
 	
     // Find out which token corresponds to our voice which is currently in use
     ISpObjectToken *pToken = NULL;		// Token interface pointer
 
-	HRESULT hr = SpEnumTokens(SPCAT_VOICES, NULL, NULL, &cpEnum);
+	t_success = _EnumTokens(SPCAT_VOICES, NULL, NULL, &cpEnum);
 
-	if (SUCCEEDED(hr) )
-	{
-		hr = cpEnum->GetCount( &ulNumTokens );
-	}
-	else
-	{
-		return false;
-	}
+	if (t_success)
+		t_success = SUCCEEDED(cpEnum->GetCount( &ulNumTokens ));
+	if (t_success)
+		t_success = ulNumTokens > 0;
 
-	if ( SUCCEEDED(hr) && 0 != ulNumTokens)
-	{
-		while (cpEnum->Next(1, &pToken, NULL) == S_OK)
-        {
-			CSpDynamicString  ppcDesciptionString;  
-			// Get a string which describes the token, in our case, the voice name
-            hr = SpGetDescription( pToken, &ppcDesciptionString);
-            _ASSERTE( SUCCEEDED( hr ) );
-            
-            // Release the token itself
-            pToken->Release();
-            pToken = NULL;
+	while (t_success && cpEnum->Next(1, &pToken, NULL) == S_OK)
+    {
+		CSpDynamicString  ppcDesciptionString;  
+		// Get a string which describes the token, in our case, the voice name
+        t_success = _GetDescription( pToken, &ppcDesciptionString);
+        
+        // Release the token itself
+        pToken->Release();
+        pToken = NULL;
 
-			char* string = ppcDesciptionString.CopyToChar();
-			if(strcmp(string, p_voice) == 0)
+		if (t_success)
+		{
+			if(wcscmp(ppcDesciptionString, t_wvoice) == 0)
 			{
 				ulCurTokenIndex = ulIndex;
 				break;
@@ -575,27 +724,18 @@ bool WindowsSAPI5Narrator::SetVoice(const char* p_voice)
 			ulIndex++;
 		}
 	}
-	else 
-		return false;
 
-	if ( ulIndex < ulNumTokens )
+	if (t_success)
+		t_success = ulIndex < ulNumTokens;
+
+	if (t_success)
 	{
 		cpEnum->Item( ulCurTokenIndex, &pToken );
-		hr = m_cpVoice->SetVoice( pToken );
-		if (SUCCEEDED(hr))
-		{
-			pToken->Release();					
-			return true;
-		}
-		else
-		{
-			return false;
-		}
+		t_success = SUCCEEDED(m_cpVoice->SetVoice( pToken ));
+		pToken->Release();					
 	}
-	else
-	{
-		return false;		
-	}
+
+	return t_success;
 }
 
 // Parameters
@@ -681,29 +821,4 @@ bool WindowsSAPI5Narrator::GetPitch(int& p_pitch)
 	p_pitch = (int)((((double)(m_Npitch + 10) / 20) * 360.0) + 30);
 
 	return true;
-}
-	
-// Helper function, frees tokens allocated by ListVoices.
-void WindowsSAPI5Narrator::ManageCleanup( WCHAR** ppszTokenIds, CSpDynamicString*  ppcDesciptionString, ULONG ulNumTokens)
-{
-    ULONG ulIndex;
-
-    // Free all allocated token ids
-    if ( ppszTokenIds )
-    {
-        for ( ulIndex = 0; ulIndex < ulNumTokens; ulIndex++ )
-        {
-            if ( NULL != ppszTokenIds[ulIndex] )
-            {
-                CoTaskMemFree( ppszTokenIds[ulIndex] );
-            }
-        }
-        
-        delete [] ppszTokenIds;
-    }
-    
-    if ( ppcDesciptionString )
-    {
-        delete [] ppcDesciptionString;
-    }
 }
