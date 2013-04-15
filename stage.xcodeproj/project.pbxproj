@@ -475,10 +475,10 @@
 		E8DAE3DC1714271C00B96A87 /* Products */ = {
 			isa = PBXGroup;
 			children = (
+				E8DAE3F11714271D00B96A87 /* libkernel.a */,
 				E8DAE3EB1714271D00B96A87 /* LiveCode.app */,
 				E8DAE3ED1714271D00B96A87 /* Standalone.app */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
-				E8DAE3F11714271D00B96A87 /* libkernel.a */,
 				E8DAE3F31714271D00B96A87 /* server */,
 			);
 			name = Products;
