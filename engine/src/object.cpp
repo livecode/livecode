@@ -4038,7 +4038,6 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 			memset(t_other_scanline, 0xff, t_scanline_width * 4);
 		
 		// Now check for overlap!
-		bool t_intersects;
 		t_intersects = false;
 		for(int32_t y = 0; y < t_rect . height; y++)
 		{
