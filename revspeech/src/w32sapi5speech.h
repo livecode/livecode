@@ -21,11 +21,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revspeech.h"
 #endif
 
-#include <atlbase.h>
 #include <sapi.h>
-#include <sphelper.h>
+#include <sperror.h>
 #include <mlang.h>
 #include <stdio.h>
+
+#include "atlsubset.h"
 
 class WindowsSAPI5Narrator: public INarrator
 {
@@ -67,10 +68,39 @@ private:
 
 	// Pointer to our tts voice	
 	CComPtr<ISpVoice> m_cpVoice;		
-	void ManageCleanup( WCHAR** ppszTokenIds, CSpDynamicString*  ppcDesciptionString, ULONG ulNumTokens);
 
 	bool m_bUseDefaultPitch;
 	short m_Npitch;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class CSpDynamicString
+{
+public:
+	CSpDynamicString()
+	{
+		m_ptr = NULL;
+	}
+
+	~CSpDynamicString()
+	{
+		if (m_ptr != NULL)
+			CoTaskMemFree(m_ptr);
+	}
+
+	WCHAR** operator &(void)
+	{
+		return &m_ptr;
+	}
+
+	operator WCHAR* (void)
+	{
+		return m_ptr;
+	}
+
+protected:
+	WCHAR *m_ptr;
 };
 
 #endif

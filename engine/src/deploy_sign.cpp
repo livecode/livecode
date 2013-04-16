@@ -955,7 +955,7 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	t_counter_sig = nil;
 	if (t_success)
 	{
-#if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_WINDOWS)
+#if defined(TARGET_PLATFORM_LINUX) || defined(TARGET_PLATFORM_WINDOWS) || (__MAC_OS_X_VERSION_MAX_ALLOWED > 1050)
 		const unsigned char *t_data;
 		t_data = (const unsigned char *)ep . getsvalue() . getstring();
 #else

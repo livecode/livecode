@@ -44,9 +44,11 @@ Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
 {
+	// MW-2013-04-12: [[ Bug 10837 ]] Make sure we set 'both' when evaluating the
+	//   literal. Not doing this causes problems for things like 'numberFormat'.
 	if (nvalue == BAD_NUMERIC)
 		ep.setnameref_unsafe(value);
 	else
-		ep.setnvalue(nvalue);
+		ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;
 }

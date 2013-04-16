@@ -113,8 +113,6 @@
 		4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1113C1CDC10066119A /* CoreServices.framework */; };
 		4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D982B1813C1CDD20066119A /* ApplicationServices.framework */; };
 		4D982BEF13C2E74A0066119A /* srvoutput.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D982BEE13C2E74A0066119A /* srvoutput.cpp */; };
-		4D98339613C73BE40066119A /* libssl.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */; };
-		4D98339713C73BE60066119A /* libcrypto.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */; };
 		4DAB7B370FE120060009F91E /* bitmapeffect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7B350FE120060009F91E /* bitmapeffect.cpp */; };
 		4DAB7D1E0FF128F10009F91E /* deploy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D1A0FF128F10009F91E /* deploy.cpp */; };
 		4DAB7D1F0FF128F10009F91E /* deploy_linux.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DAB7D1B0FF128F10009F91E /* deploy_linux.cpp */; };
@@ -125,20 +123,11 @@
 		4DADCDFD12393F55003CD17C /* Installer.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4DADCDFC12393F26003CD17C /* Installer.icns */; };
 		4DB381A417143CF300D3F102 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */; };
 		4DB381A517143CFC00D3F102 /* deploysecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E86D59AE170AF0E000060AED /* deploysecurity.cpp */; };
-		4DB382DA1714415F00D3F102 /* libcrypto.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */; };
-		4DB382DB1714415F00D3F102 /* libcups.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A6120B4B76005F2384 /* libcups.2.dylib */; };
-		4DB382DC1714415F00D3F102 /* libssl.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */; };
 		4DB382EE1714418A00D3F102 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		4DB382EF1714418A00D3F102 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
 		4DB382F11714418A00D3F102 /* libgif.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7991171348C1000BCF78 /* libgif.a */; };
 		4DB382F21714418A00D3F102 /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
-		4DB383BB1714419B00D3F102 /* libcrypto.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */; };
-		4DB383BC1714419B00D3F102 /* libcups.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A6120B4B76005F2384 /* libcups.2.dylib */; };
-		4DB383BD1714419B00D3F102 /* libssl.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */; };
-		4DB384BB171441F600D3F102 /* libcrypto.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */; };
-		4DB384BC171441F600D3F102 /* libcups.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A6120B4B76005F2384 /* libcups.2.dylib */; };
-		4DB384BD171441F600D3F102 /* libssl.0.9.7.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */; };
 		4DB384BE1714420A00D3F102 /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
 		4DB384BF1714420A00D3F102 /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4DB384C01714420A00D3F102 /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
@@ -154,6 +143,15 @@
 		4DB386141714426200D3F102 /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4DB386171714429D00D3F102 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8A7EF0016FC98A200C39491 /* stacksecurity.cpp */; };
 		4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DB98625130C09D6008A03DC /* mcutility.cpp */; };
+		4DBDE4A917171D2C00A5F1CC /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01512171716AD001ACDA6 /* libcrypto.dylib */; };
+		4DBDE4AA17171D2C00A5F1CC /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01515171716C6001ACDA6 /* libcups.dylib */; };
+		4DBDE4AB17171D2C00A5F1CC /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE015B31717170A001ACDA6 /* libssl.dylib */; };
+		4DBDE4AC17171D3600A5F1CC /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01512171716AD001ACDA6 /* libcrypto.dylib */; };
+		4DBDE4AD17171D3600A5F1CC /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01515171716C6001ACDA6 /* libcups.dylib */; };
+		4DBDE4AE17171D3600A5F1CC /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE015B31717170A001ACDA6 /* libssl.dylib */; };
+		4DBDE4B71717204E00A5F1CC /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01512171716AD001ACDA6 /* libcrypto.dylib */; };
+		4DBDE4B81717204E00A5F1CC /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01515171716C6001ACDA6 /* libcups.dylib */; };
+		4DBDE4B91717204E00A5F1CC /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE015B31717170A001ACDA6 /* libssl.dylib */; };
 		4DC66D8B1045D41700D1CFA3 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DC66D8A1045D41700D1CFA3 /* notify.cpp */; };
 		4DCA084E11E8DAC7005CF640 /* deploy_dmg.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCA084D11E8DAC7005CF640 /* deploy_dmg.cpp */; };
 		4DCB65721653B2F700E438E6 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCB65711653B2F700E438E6 /* stackcache.cpp */; };
@@ -165,6 +163,9 @@
 		4DDB66721413A02000E5C84C /* redraw.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDB66701413A02000E5C84C /* redraw.cpp */; };
 		4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4DDE61AF14F52B000017E8C6 /* fonttable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D592DEA14EED23600EADBB6 /* fonttable.cpp */; };
+		4DE01513171716AD001ACDA6 /* libcrypto.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01512171716AD001ACDA6 /* libcrypto.dylib */; };
+		4DE01516171716C6001ACDA6 /* libcups.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE01515171716C6001ACDA6 /* libcups.dylib */; };
+		4DE015B41717170A001ACDA6 /* libssl.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE015B31717170A001ACDA6 /* libssl.dylib */; };
 		4DE18D000B82296A0086DB92 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
 		4DE18D010B82296A0086DB92 /* da.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854C0B80DEAB00200116 /* da.lproj */; };
 		4DE18D020B82296A0086DB92 /* French.lproj in Resources */ = {isa = PBXBuildFile; fileRef = 4D58854E0B80DEAC00200116 /* French.lproj */; };
@@ -1032,9 +1033,6 @@
 		4D81A4C811171FD6008AE3F1 /* osxcursor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcursor.mm; path = src/osxcursor.mm; sourceTree = "<group>"; };
 		4D81C0260D742F48004EC824 /* w32printer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32printer.cpp; path = src/w32printer.cpp; sourceTree = "<group>"; };
 		4D81C0270D742F48004EC824 /* w32printer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = w32printer.h; path = src/w32printer.h; sourceTree = "<group>"; };
-		4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.0.9.7.dylib; path = usr/lib/libssl.0.9.7.dylib; sourceTree = SDKROOT; };
-		4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.0.9.7.dylib; path = usr/lib/libcrypto.0.9.7.dylib; sourceTree = SDKROOT; };
-		4D8302A6120B4B76005F2384 /* libcups.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcups.2.dylib; path = usr/lib/libcups.2.dylib; sourceTree = SDKROOT; };
 		4D8387191678B2C9003BEC7C /* ibmp.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = ibmp.cpp; path = src/ibmp.cpp; sourceTree = "<group>"; };
 		4D83871A1678B2C9003BEC7C /* image_rep_encoded.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_encoded.cpp; path = src/image_rep_encoded.cpp; sourceTree = "<group>"; };
 		4D83871B1678B2C9003BEC7C /* image_rep_mutable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep_mutable.cpp; path = src/image_rep_mutable.cpp; sourceTree = "<group>"; };
@@ -1173,6 +1171,9 @@
 		4DDB66711413A02000E5C84C /* redraw.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = redraw.h; path = src/redraw.h; sourceTree = "<group>"; };
 		4DDDEC8612F6E6F90056D206 /* mode_installer_lnx.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_installer_lnx.cpp; path = src/mode_installer_lnx.cpp; sourceTree = "<group>"; };
 		4DDDEC8712F6E6F90056D206 /* mode_installer_w32.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mode_installer_w32.cpp; path = src/mode_installer_w32.cpp; sourceTree = "<group>"; };
+		4DE01512171716AD001ACDA6 /* libcrypto.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcrypto.dylib; path = usr/lib/libcrypto.dylib; sourceTree = SDKROOT; };
+		4DE01515171716C6001ACDA6 /* libcups.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcups.dylib; path = usr/lib/libcups.dylib; sourceTree = SDKROOT; };
+		4DE015B31717170A001ACDA6 /* libssl.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libssl.dylib; path = usr/lib/libssl.dylib; sourceTree = SDKROOT; };
 		4DE18D930B82296A0086DB92 /* Standalone.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Standalone.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DE2AB01100CCA9300A69884 /* deploy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = deploy.h; path = src/deploy.h; sourceTree = "<group>"; };
 		4DE663070BF9C1E50084FE0B /* Standalone-Info.plist */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.plist.xml; name = "Standalone-Info.plist"; path = "rsrc/Standalone-Info.plist"; sourceTree = "<group>"; };
@@ -1282,9 +1283,9 @@
 				4D2A57CC1198634300135143 /* Cocoa.framework in Frameworks */,
 				4D8BED4811B95A1000DED42A /* Security.framework in Frameworks */,
 				4D2A57CD1198634300135143 /* SystemConfiguration.framework in Frameworks */,
-				4DB384BB171441F600D3F102 /* libcrypto.0.9.7.dylib in Frameworks */,
-				4DB384BC171441F600D3F102 /* libcups.2.dylib in Frameworks */,
-				4DB384BD171441F600D3F102 /* libssl.0.9.7.dylib in Frameworks */,
+				4DBDE4AC17171D3600A5F1CC /* libcrypto.dylib in Frameworks */,
+				4DBDE4AD17171D3600A5F1CC /* libcups.dylib in Frameworks */,
+				4DBDE4AE17171D3600A5F1CC /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1306,9 +1307,9 @@
 				4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */,
 				4D00C6290CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
 				4D8BED0211B959F500DED42A /* Security.framework in Frameworks */,
-				4DB382DA1714415F00D3F102 /* libcrypto.0.9.7.dylib in Frameworks */,
-				4DB382DB1714415F00D3F102 /* libcups.2.dylib in Frameworks */,
-				4DB382DC1714415F00D3F102 /* libssl.0.9.7.dylib in Frameworks */,
+				4DE01513171716AD001ACDA6 /* libcrypto.dylib in Frameworks */,
+				4DE01516171716C6001ACDA6 /* libcups.dylib in Frameworks */,
+				4DE015B41717170A001ACDA6 /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1330,9 +1331,9 @@
 				4D8B479A0BE7B3240046CD2F /* Cocoa.framework in Frameworks */,
 				4D8BED0311B95A0300DED42A /* Security.framework in Frameworks */,
 				4D00C62A0CE1F27300341AD3 /* SystemConfiguration.framework in Frameworks */,
-				4DB383BB1714419B00D3F102 /* libcrypto.0.9.7.dylib in Frameworks */,
-				4DB383BC1714419B00D3F102 /* libcups.2.dylib in Frameworks */,
-				4DB383BD1714419B00D3F102 /* libssl.0.9.7.dylib in Frameworks */,
+				4DBDE4A917171D2C00A5F1CC /* libcrypto.dylib in Frameworks */,
+				4DBDE4AA17171D2C00A5F1CC /* libcups.dylib in Frameworks */,
+				4DBDE4AB17171D2C00A5F1CC /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1357,8 +1358,9 @@
 				4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */,
 				4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */,
 				4DFD497613BA2C65008DB91F /* libcurl.dylib in Frameworks */,
-				4D98339713C73BE60066119A /* libcrypto.0.9.7.dylib in Frameworks */,
-				4D98339613C73BE40066119A /* libssl.0.9.7.dylib in Frameworks */,
+				4DBDE4B71717204E00A5F1CC /* libcrypto.dylib in Frameworks */,
+				4DBDE4B81717204E00A5F1CC /* libcups.dylib in Frameworks */,
+				4DBDE4B91717204E00A5F1CC /* libssl.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1414,8 +1416,8 @@
 		4D587DA90B80948B00200116 /* Configurations */ = {
 			isa = PBXGroup;
 			children = (
-				4D587DB20B80949B00200116 /* Release.xcconfig */,
 				4D587DB30B80949B00200116 /* Global.xcconfig */,
+				4D587DB20B80949B00200116 /* Release.xcconfig */,
 				4D587DB40B80949B00200116 /* Debug.xcconfig */,
 			);
 			name = Configurations;
@@ -1474,11 +1476,11 @@
 				4D5880850B80BDF000200116 /* QuickTime.framework */,
 				4D8BED0111B959F500DED42A /* Security.framework */,
 				4D00C6280CE1F27300341AD3 /* SystemConfiguration.framework */,
-				4D8302A4120B4B6E005F2384 /* libcrypto.0.9.7.dylib */,
-				4D8302A6120B4B76005F2384 /* libcups.2.dylib */,
-				4DFD497513BA2C65008DB91F /* libcurl.dylib */,
-				4D8302A2120B4B67005F2384 /* libssl.0.9.7.dylib */,
 				4DB3856E1714422200D3F102 /* Carbon.framework */,
+				4DFD497513BA2C65008DB91F /* libcurl.dylib */,
+				4DE01512171716AD001ACDA6 /* libcrypto.dylib */,
+				4DE01515171716C6001ACDA6 /* libcups.dylib */,
+				4DE015B31717170A001ACDA6 /* libssl.dylib */,
 			);
 			name = Frameworks;
 			sourceTree = "<group>";
@@ -2419,10 +2421,10 @@
 			);
 			projectRoot = ..;
 			targets = (
+				4DEE29F50FDE41BE0009423C /* kernel */,
 				4D587DA10B80945B00200116 /* LiveCode */,
 				4DE18CED0B82296A0086DB92 /* standalone */,
 				4D2A57991198634300135143 /* installer */,
-				4DEE29F50FDE41BE0009423C /* kernel */,
 				4DFD483D13BA2843008DB91F /* server */,
 			);
 		};
