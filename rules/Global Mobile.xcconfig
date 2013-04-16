@@ -1,3 +1,4 @@
+#include "../version"
 OWNER = .
 SOLUTION_DIR = $(PROJECT_DIR)/../$(OWNER)
 SYMROOT = $(SOLUTION_DIR)/_build/ios/$(SDK_NAME)

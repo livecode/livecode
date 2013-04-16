@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // Due to licensing issues with the Inneractive SDK, support for mobile ads
 // in community is disabled.
-#ifdef FEATURE_INNERACTIVE
 
 #include "prefix.h"
 
@@ -44,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidjava.h"
 
 #include "mblad.h"
+
+#ifdef FEATURE_INNERACTIVE
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -231,4 +232,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_InneractiveAdWrapper_doAdUpdate(J
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#else
+
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+{
+	return false;
+}
+
 #endif
+
