@@ -6,20 +6,37 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXAggregateTarget section */
+		4D22209F171D78A100E7E557 /* version */ = {
+			isa = PBXAggregateTarget;
+			buildConfigurationList = 4D2220A2171D78CC00E7E557 /* Build configuration list for PBXAggregateTarget "version" */;
+			buildPhases = (
+				4D22209E171D78A100E7E557 /* Encode Version */,
+			);
+			dependencies = (
+			);
+			name = version;
+			productName = version;
+		};
+/* End PBXAggregateTarget section */
+
 /* Begin PBXBuildFile section */
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
-		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib.a */; };
+		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
 		4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA2CA251136CFDF00B9F27B /* libcoremobile.a */; };
 		4D08A113138EA7C60081F990 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D08A112138EA7C60081F990 /* dummy.cpp */; };
 		4D08A117138EA84C0081F990 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08A116138EA84C0081F990 /* Foundation.framework */; };
 		4D08A11F138EA85E0081F990 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08A11E138EA85E0081F990 /* UIKit.framework */; };
-		4D2D92401386E4770057811A /* mbliphonehooks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9CAF23134365F800231979 /* mbliphonehooks.cpp */; };
+		4D222096171D777400E7E557 /* mbliphoneapp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */; };
+		4D222097171D777B00E7E557 /* mbliphonehooks.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9CAF23134365F800231979 /* mbliphonehooks.cpp */; };
+		4D222098171D782800E7E557 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CE7B26D1704A8810072029F /* stacksecurity.cpp */; };
+		4D2220BA171D7A3E00E7E557 /* mbliphonead.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C34550114F3FEA1008D7E50 /* mbliphonead.mm */; };
+		4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D222092171D770900E7E557 /* libsecurity-community.a */; };
 		4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13F41714198F006782C1 /* libpngmobile.a */; };
 		4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13AD171418F2006782C1 /* libgifmobile.a */; };
 		4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13B5171418FC006782C1 /* libjpegmobile.a */; };
 		4D7B149A17141A6B006782C1 /* libpcremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7B13BD17141906006782C1 /* libpcremobile.a */; };
-		4D7B14F017141D1E006782C1 /* stacksecurity.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CE7B26D1704A8810072029F /* stacksecurity.cpp */; };
 		4D7E39461281623000E7F80A /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7E39451281623000E7F80A /* CoreGraphics.framework */; };
 		4D7E39481281623000E7F80A /* QuartzCore.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7E39471281623000E7F80A /* QuartzCore.framework */; };
 		4D7E394F1281624400E7F80A /* AVFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D7E394E1281624400E7F80A /* AVFoundation.framework */; };
@@ -130,7 +147,6 @@
 		4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE761040AD4D00CAC7EF /* mblflst.cpp */; };
 		4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1B11041192800CAC7EF /* mbliphone.mm */; };
 		4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */; };
-		4DABCDF315ECD4700085E214 /* mbliphonead.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C34550114F3FEA1008D7E50 /* mbliphonead.mm */; };
 		4DABCDF415ECD4700085E214 /* mbliphonealert.mm in Sources */ = {isa = PBXBuildFile; fileRef = F66DE83114BB34D600991D8C /* mbliphonealert.mm */; };
 		4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D7E3A2A12817DC700E7F80A /* mbliphonebrowser.mm */; };
 		4DABCDF615ECD4970085E214 /* mbliphonebusyindicator.mm in Sources */ = {isa = PBXBuildFile; fileRef = F60A5A4114800404000982BF /* mbliphonebusyindicator.mm */; };
@@ -244,7 +260,6 @@
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
-		4DF9A9AF142FABAB0063E6FF /* mbliphoneapp.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -264,6 +279,55 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4D2D91881386E2610057811A;
 			remoteInfo = "standalone-mobile-lib";
+		};
+		4D222099171D783800E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD3DD7D1040AA4700CAC7EF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D222091171D770900E7E557;
+			remoteInfo = "security-community";
+		};
+		4D2220A3171D78EC00E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD3DD7D1040AA4700CAC7EF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 4D22209F171D78A100E7E557;
+			remoteInfo = version;
+		};
+		4D2220A5171D78F000E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD3E0E51040BC6F00CAC7EF /* libjpeg-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
+			remoteInfo = jpegmobile;
+		};
+		4D2220A7171D78F200E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
+			remoteInfo = coremobile;
+		};
+		4D2220A9171D78F500E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DD3E13F1040BD3700CAC7EF /* libpcre-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0F81040BCE300CAC7EF;
+			remoteInfo = pcremobile;
+		};
+		4D2220AB171D78F800E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
+			remoteInfo = gifmobile;
+		};
+		4D2220AD171D78FA00E7E557 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D7B13EC1714198F006782C1 /* libpng-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
+			remoteInfo = pngmobile;
 		};
 		4D7B13AC171418F2006782C1 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -345,15 +409,6 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		4D8DBFE21417D75100A152C3 /* CopyFiles */ = {
-			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = assets/images/space;
-			dstSubfolderSpec = 7;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
 		F670DB65147D45A5008FEA1E /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
@@ -411,7 +466,8 @@
 		4D08A36D138FF3250081F990 /* standalone.ios */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; path = standalone.ios; sourceTree = "<group>"; };
 		4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneplayer.mm; path = src/mbliphoneplayer.mm; sourceTree = "<group>"; };
 		4D1F75B0135CD559005EE740 /* mblandroidtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextlayout.cpp; path = src/mblandroidtextlayout.cpp; sourceTree = "<group>"; };
-		4D2D91891386E2610057811A /* libstandalone-mobile-lib.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-lib.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D222092171D770900E7E557 /* libsecurity-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libsecurity-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-lib-community.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D33766A13F926410096DCFE /* fiber.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = fiber.h; path = src/fiber.h; sourceTree = "<group>"; };
 		4D33766B13F926410096DCFE /* fiber.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = fiber.cpp; path = src/fiber.cpp; sourceTree = "<group>"; };
 		4D4330DD141A6115001164F9 /* tilecachesw.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachesw.cpp; path = src/tilecachesw.cpp; sourceTree = "<group>"; };
@@ -502,7 +558,7 @@
 		4DC684741348E50D002469A4 /* mbliphonegfx.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonegfx.mm; path = src/mbliphonegfx.mm; sourceTree = "<group>"; };
 		4DC684761348E5AC002469A4 /* mbliphoneview.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphoneview.h; path = src/mbliphoneview.h; sourceTree = "<group>"; };
 		4DC684BD1348EAD7002469A4 /* OpenGLES.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = OpenGLES.framework; path = System/Library/Frameworks/OpenGLES.framework; sourceTree = SDKROOT; };
-		4DD3DD991040AA9A00CAC7EF /* standalone-mobile.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "standalone-mobile.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DD3DD991040AA9A00CAC7EF /* standalone-mobile-community.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "standalone-mobile-community.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DD3DD9C1040AA9A00CAC7EF /* standalone-mobile-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; name = "standalone-mobile-Info.plist"; path = "rsrc/standalone-mobile-Info.plist"; sourceTree = "<group>"; };
 		4DD3DDAD1040AC1A00CAC7EF /* bitmapeffect.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = bitmapeffect.cpp; path = src/bitmapeffect.cpp; sourceTree = "<group>"; };
 		4DD3DDAE1040AC1A00CAC7EF /* ask.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ask.h; path = src/ask.h; sourceTree = "<group>"; };
@@ -861,13 +917,7 @@
 				4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */,
 				4D7B149A17141A6B006782C1 /* libpcremobile.a in Frameworks */,
 				4DABCE6515ECD4FF0085E214 /* libstandalone-mobile-kernel.a in Frameworks */,
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4DABCD8815ECD40F0085E214 /* Frameworks */ = {
-			isa = PBXFrameworksBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
+				4D222406171D7F9D00E7E557 /* libsecurity-community.a in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -875,7 +925,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib.a in Frameworks */,
+				4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */,
 				4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */,
 				E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */,
 				E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */,
@@ -1163,9 +1213,10 @@
 		4DD3DD9A1040AA9A00CAC7EF /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4DD3DD991040AA9A00CAC7EF /* standalone-mobile.app */,
-				4D2D91891386E2610057811A /* libstandalone-mobile-lib.a */,
+				4DD3DD991040AA9A00CAC7EF /* standalone-mobile-community.app */,
+				4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */,
 				4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */,
+				4D222092171D770900E7E557 /* libsecurity-community.a */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -1592,29 +1643,26 @@
 		};
 /* End PBXGroup section */
 
-/* Begin PBXHeadersBuildPhase section */
-		4D2D91851386E2610057811A /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-		4DABCD8615ECD40F0085E214 /* Headers */ = {
-			isa = PBXHeadersBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-		};
-/* End PBXHeadersBuildPhase section */
-
 /* Begin PBXNativeTarget section */
-		4D2D91881386E2610057811A /* standalone-mobile-lib */ = {
+		4D222091171D770900E7E557 /* security-community */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4D2D91941386E2800057811A /* Build configuration list for PBXNativeTarget "standalone-mobile-lib" */;
+			buildConfigurationList = 4D222095171D775A00E7E557 /* Build configuration list for PBXNativeTarget "security-community" */;
 			buildPhases = (
-				4D2D91851386E2610057811A /* Headers */,
+				4D22208F171D770900E7E557 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = "security-community";
+			productName = Untitled;
+			productReference = 4D222092171D770900E7E557 /* libsecurity-community.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+		4D2D91881386E2610057811A /* standalone-mobile-lib-community */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4D2D91941386E2800057811A /* Build configuration list for PBXNativeTarget "standalone-mobile-lib-community" */;
+			buildPhases = (
 				4D2D91861386E2610057811A /* Sources */,
 				4D2D91871386E2610057811A /* Frameworks */,
 				4D2D926A1386E7AB0057811A /* Bind Output */,
@@ -1623,40 +1671,44 @@
 			);
 			dependencies = (
 				4DABCE6415ECD4E80085E214 /* PBXTargetDependency */,
+				4D22209A171D783800E7E557 /* PBXTargetDependency */,
 				4DE7ED5D13B33C9D002634F5 /* PBXTargetDependency */,
 				4D7B149017141A3C006782C1 /* PBXTargetDependency */,
 				4D7B149217141A3E006782C1 /* PBXTargetDependency */,
 				4D7B149417141A40006782C1 /* PBXTargetDependency */,
 				4D7B149617141A43006782C1 /* PBXTargetDependency */,
 			);
-			name = "standalone-mobile-lib";
+			name = "standalone-mobile-lib-community";
 			productName = "standalone-mobile-lib";
-			productReference = 4D2D91891386E2610057811A /* libstandalone-mobile-lib.a */;
+			productReference = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */;
 			productType = "com.apple.product-type.library.static";
 		};
 		4DABCD8915ECD40F0085E214 /* standalone-mobile-kernel */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 4DABCD9815ECD4590085E214 /* Build configuration list for PBXNativeTarget "standalone-mobile-kernel" */;
 			buildPhases = (
-				4DABCD8615ECD40F0085E214 /* Headers */,
 				4DABCD8715ECD40F0085E214 /* Sources */,
-				4DABCD8815ECD40F0085E214 /* Frameworks */,
 			);
 			buildRules = (
 			);
 			dependencies = (
+				4D2220A4171D78EC00E7E557 /* PBXTargetDependency */,
+				4D2220A6171D78F000E7E557 /* PBXTargetDependency */,
+				4D2220A8171D78F200E7E557 /* PBXTargetDependency */,
+				4D2220AA171D78F500E7E557 /* PBXTargetDependency */,
+				4D2220AC171D78F800E7E557 /* PBXTargetDependency */,
+				4D2220AE171D78FA00E7E557 /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-kernel";
 			productName = "standalone-mobile-kernel";
 			productReference = 4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */;
 			productType = "com.apple.product-type.library.static";
 		};
-		4DD3DD981040AA9A00CAC7EF /* standalone-mobile */ = {
+		4DD3DD981040AA9A00CAC7EF /* standalone-mobile-community */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 4DD3DD9F1040AA9B00CAC7EF /* Build configuration list for PBXNativeTarget "standalone-mobile" */;
+			buildConfigurationList = 4DD3DD9F1040AA9B00CAC7EF /* Build configuration list for PBXNativeTarget "standalone-mobile-community" */;
 			buildPhases = (
 				4DD3DD951040AA9A00CAC7EF /* Resources */,
-				4D8DBFE21417D75100A152C3 /* CopyFiles */,
 				4DD3DD961040AA9A00CAC7EF /* Sources */,
 				4DD3DD971040AA9A00CAC7EF /* Frameworks */,
 				F670DB65147D45A5008FEA1E /* CopyFiles */,
@@ -1666,9 +1718,9 @@
 			dependencies = (
 				4D08A0D3138EA52B0081F990 /* PBXTargetDependency */,
 			);
-			name = "standalone-mobile";
+			name = "standalone-mobile-community";
 			productName = "standalone-mobile";
-			productReference = 4DD3DD991040AA9A00CAC7EF /* standalone-mobile.app */;
+			productReference = 4DD3DD991040AA9A00CAC7EF /* standalone-mobile-community.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -1713,9 +1765,11 @@
 			);
 			projectRoot = "";
 			targets = (
-				4DD3DD981040AA9A00CAC7EF /* standalone-mobile */,
-				4D2D91881386E2610057811A /* standalone-mobile-lib */,
+				4D22209F171D78A100E7E557 /* version */,
+				4D222091171D770900E7E557 /* security-community */,
 				4DABCD8915ECD40F0085E214 /* standalone-mobile-kernel */,
+				4D2D91881386E2610057811A /* standalone-mobile-lib-community */,
+				4DD3DD981040AA9A00CAC7EF /* standalone-mobile-community */,
 			);
 		};
 /* End PBXProject section */
@@ -1771,6 +1825,24 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4D22209E171D78A100E7E557 /* Encode Version */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/../version",
+				"$(SRCROOT)/include/revbuild.h.in",
+			);
+			name = "Encode Version";
+			outputPaths = (
+				"$(SRCROOT)/include/revbuild.h",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"";
+			showEnvVarsInLog = 0;
+		};
 		4D2D926A1386E7AB0057811A /* Bind Output */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -1783,18 +1855,25 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n\n#$PLATFORM_DEVELOPER_BIN_DIR/ld -r -x -arch ${ARCHS//\\ /\\ -arch\\ } -syslibroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -sectcreate __MISC __deps \"$SRCROOT/standalone.ios\" -exported_symbol _main -exported_symbol _load_module -exported_symbol _resolve_symbol";
+			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		4D22208F171D770900E7E557 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4D222098171D782800E7E557 /* stacksecurity.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		4D2D91861386E2610057811A /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DF9A9AF142FABAB0063E6FF /* mbliphoneapp.mm in Sources */,
-				4D2D92401386E4770057811A /* mbliphonehooks.cpp in Sources */,
+				4D2220BA171D7A3E00E7E557 /* mbliphonead.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1802,7 +1881,115 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DABCD9915ECD4700085E214 /* aclip.cpp in Sources */,
+				4DABCD9A15ECD4700085E214 /* answer.cpp in Sources */,
+				4DABCD9B15ECD4700085E214 /* ask.cpp in Sources */,
+				4DABCD9C15ECD4700085E214 /* bitmapeffect.cpp in Sources */,
+				4DABCD9D15ECD4700085E214 /* bitmapeffectblur.cpp in Sources */,
+				4DABCD9E15ECD4700085E214 /* block.cpp in Sources */,
+				4DABCD9F15ECD4700085E214 /* button.cpp in Sources */,
+				4DABCDA015ECD4700085E214 /* buttondraw.cpp in Sources */,
+				4DABCDA115ECD4700085E214 /* capsule.cpp in Sources */,
+				4DABCDA215ECD4700085E214 /* card.cpp in Sources */,
+				4DABCDA315ECD4700085E214 /* cardlst.cpp in Sources */,
+				4DABCDA415ECD4700085E214 /* cdata.cpp in Sources */,
+				4DABCDA515ECD4700085E214 /* chunk.cpp in Sources */,
+				4DABCDA615ECD4700085E214 /* cmds.cpp in Sources */,
+				4DABCDA715ECD4700085E214 /* cmdsc.cpp in Sources */,
+				4DABCDA815ECD4700085E214 /* cmdse.cpp in Sources */,
+				4DABCDA915ECD4700085E214 /* cmdsf.cpp in Sources */,
+				4DABCDAA15ECD4700085E214 /* cmdsm.cpp in Sources */,
+				4DABCDAB15ECD4700085E214 /* cmdsp.cpp in Sources */,
+				4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */,
+				4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */,
+				4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */,
+				4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */,
+				4DABCDB015ECD4700085E214 /* control.cpp in Sources */,
+				4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */,
+				4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */,
+				4DABCDB415ECD4700085E214 /* date.cpp in Sources */,
+				4DABCDB515ECD4700085E214 /* debug.cpp in Sources */,
+				4DABCDB615ECD4700085E214 /* dispatch.cpp in Sources */,
+				4DABCDB715ECD4700085E214 /* dllst.cpp in Sources */,
+				4DABCDB815ECD4700085E214 /* edittool.cpp in Sources */,
+				4DABCDB915ECD4700085E214 /* eps.cpp in Sources */,
+				4DABCDBA15ECD4700085E214 /* eventqueue.cpp in Sources */,
+				4DABCDBB15ECD4700085E214 /* execpt.cpp in Sources */,
+				4DABCDBC15ECD4700085E214 /* express.cpp in Sources */,
+				4DABCDBE15ECD4700085E214 /* external.cpp in Sources */,
+				4DABCDBF15ECD4700085E214 /* externalv0.cpp in Sources */,
+				4DABCDC015ECD4700085E214 /* externalv1.cpp in Sources */,
+				4DABCDC115ECD4700085E214 /* fiber.cpp in Sources */,
+				4DABCDC315ECD4700085E214 /* field.cpp in Sources */,
+				4DABCDC415ECD4700085E214 /* fieldf.cpp in Sources */,
+				4DABCDC515ECD4700085E214 /* fieldh.cpp in Sources */,
+				4DABCDC615ECD4700085E214 /* fieldhtml.cpp in Sources */,
+				4DABCDC715ECD4700085E214 /* fieldrtf.cpp in Sources */,
+				4DABCDC815ECD4700085E214 /* fields.cpp in Sources */,
+				4DABCDC915ECD4700085E214 /* fieldstyledtext.cpp in Sources */,
+				4DABCDCA15ECD4700085E214 /* font.cpp in Sources */,
+				4DABCDCB15ECD4700085E214 /* fonttable.cpp in Sources */,
+				4DABCDCC15ECD4700085E214 /* funcs.cpp in Sources */,
+				4DABCDCD15ECD4700085E214 /* funcsm.cpp in Sources */,
+				4DABCDCE15ECD4700085E214 /* globals.cpp in Sources */,
+				4DABCDCF15ECD4700085E214 /* gradient.cpp in Sources */,
+				4DABCDD015ECD4700085E214 /* graphic.cpp in Sources */,
+				4DABCDD115ECD4700085E214 /* group.cpp in Sources */,
+				4DABCDD215ECD4700085E214 /* handler.cpp in Sources */,
+				4DABCDD315ECD4700085E214 /* hc.cpp in Sources */,
+				4DABCDD415ECD4700085E214 /* hndlrlst.cpp in Sources */,
+				4D8C69A2167A22DB00D3CCE7 /* ibmp.cpp in Sources */,
+				4DABCDD515ECD4700085E214 /* idraw.cpp in Sources */,
+				4DABCDD615ECD4700085E214 /* ifile.cpp in Sources */,
+				4DABCDD715ECD4700085E214 /* igif.cpp in Sources */,
+				4DABCDD815ECD4700085E214 /* iimport.cpp in Sources */,
+				4DABCDD915ECD4700085E214 /* ijpg.cpp in Sources */,
+				4DABCDDA15ECD4700085E214 /* image.cpp in Sources */,
+				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
+				4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */,
+				4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */,
+				E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */,
+				4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */,
+				4DABCDDB15ECD4700085E214 /* ipng.cpp in Sources */,
+				4DABCDDC15ECD4700085E214 /* iquantization.cpp in Sources */,
+				4DABCDDD15ECD4700085E214 /* iquantize_new.cpp in Sources */,
+				4D8C69A6167A22F900D3CCE7 /* irle.cpp in Sources */,
+				4DABCDDE15ECD4700085E214 /* itransform.cpp in Sources */,
+				4DABCDDF15ECD4700085E214 /* iutil.cpp in Sources */,
+				4DABCDE015ECD4700085E214 /* keywords.cpp in Sources */,
+				4DABCDE115ECD4700085E214 /* lextable.cpp in Sources */,
+				4DABCDE315ECD4700085E214 /* line.cpp in Sources */,
+				4DABCDE415ECD4700085E214 /* literal.cpp in Sources */,
+				4DABCDE515ECD4700085E214 /* magnify.cpp in Sources */,
+				4DABCDE615ECD4700085E214 /* mblactivityindicator.cpp in Sources */,
+				4DABCDE715ECD4700085E214 /* mblad.cpp in Sources */,
+				4DABCDE815ECD4700085E214 /* mblalert.cpp in Sources */,
+				4DABCDE915ECD4700085E214 /* mblbusyindicator.cpp in Sources */,
+				4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */,
+				4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */,
+				4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */,
+				4DABCDED15ECD4700085E214 /* mblcontrol.cpp in Sources */,
+				4DABCDEE15ECD4700085E214 /* mbldc.cpp in Sources */,
+				4DABCDEF15ECD4700085E214 /* mbldialog.cpp in Sources */,
+				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
+				4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */,
+				4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */,
+				4DABCDF415ECD4700085E214 /* mbliphonealert.mm in Sources */,
+				4D222096171D777400E7E557 /* mbliphoneapp.mm in Sources */,
 				4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */,
+				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
+				4DABCDF615ECD4970085E214 /* mbliphonebusyindicator.mm in Sources */,
+				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
+				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
+				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
+				4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */,
+				4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */,
+				4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */,
+				4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */,
+				4DABCDFF15ECD4970085E214 /* mbliphoneextra.mm in Sources */,
+				4DABCE0015ECD4970085E214 /* mbliphonefs.mm in Sources */,
+				4DABCE0115ECD4970085E214 /* mbliphonegfx.mm in Sources */,
+				4D222097171D777B00E7E557 /* mbliphonehooks.cpp in Sources */,
 				4DABCE0215ECD4B50085E214 /* mbliphoneinput.mm in Sources */,
 				4DABCE0315ECD4B50085E214 /* mbliphonemail.mm in Sources */,
 				4DABCE0415ECD4B50085E214 /* mbliphonemediapick.mm in Sources */,
@@ -1874,6 +2061,7 @@
 				4DABCE4615ECD4B50085E214 /* stack.cpp in Sources */,
 				4DABCE4715ECD4B50085E214 /* stack2.cpp in Sources */,
 				4DABCE4815ECD4B50085E214 /* stack3.cpp in Sources */,
+				E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */,
 				4DABCE4915ECD4B50085E214 /* stacklst.cpp in Sources */,
 				4DABCE4A15ECD4B50085E214 /* statemnt.cpp in Sources */,
 				4DABCE4B15ECD4B50085E214 /* styledtext.cpp in Sources */,
@@ -1898,115 +2086,6 @@
 				4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
-				4DABCDF515ECD4970085E214 /* mbliphonebrowser.mm in Sources */,
-				4DABCDF615ECD4970085E214 /* mbliphonebusyindicator.mm in Sources */,
-				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
-				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
-				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
-				4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */,
-				4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */,
-				4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */,
-				4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */,
-				4DABCDFF15ECD4970085E214 /* mbliphoneextra.mm in Sources */,
-				4DABCE0015ECD4970085E214 /* mbliphonefs.mm in Sources */,
-				4DABCE0115ECD4970085E214 /* mbliphonegfx.mm in Sources */,
-				4DABCD9915ECD4700085E214 /* aclip.cpp in Sources */,
-				4DABCD9A15ECD4700085E214 /* answer.cpp in Sources */,
-				4DABCD9B15ECD4700085E214 /* ask.cpp in Sources */,
-				4DABCD9C15ECD4700085E214 /* bitmapeffect.cpp in Sources */,
-				4DABCD9D15ECD4700085E214 /* bitmapeffectblur.cpp in Sources */,
-				4DABCD9E15ECD4700085E214 /* block.cpp in Sources */,
-				4DABCD9F15ECD4700085E214 /* button.cpp in Sources */,
-				4DABCDA015ECD4700085E214 /* buttondraw.cpp in Sources */,
-				4DABCDA115ECD4700085E214 /* capsule.cpp in Sources */,
-				4DABCDA215ECD4700085E214 /* card.cpp in Sources */,
-				4DABCDA315ECD4700085E214 /* cardlst.cpp in Sources */,
-				4DABCDA415ECD4700085E214 /* cdata.cpp in Sources */,
-				4DABCDA515ECD4700085E214 /* chunk.cpp in Sources */,
-				4DABCDA615ECD4700085E214 /* cmds.cpp in Sources */,
-				4DABCDA715ECD4700085E214 /* cmdsc.cpp in Sources */,
-				4DABCDA815ECD4700085E214 /* cmdse.cpp in Sources */,
-				4DABCDA915ECD4700085E214 /* cmdsf.cpp in Sources */,
-				4DABCDAA15ECD4700085E214 /* cmdsm.cpp in Sources */,
-				4DABCDAB15ECD4700085E214 /* cmdsp.cpp in Sources */,
-				4DABCDAC15ECD4700085E214 /* cmdss.cpp in Sources */,
-				4DABCDAD15ECD4700085E214 /* combiners.cpp in Sources */,
-				4DABCDAE15ECD4700085E214 /* constant.cpp in Sources */,
-				4DABCDAF15ECD4700085E214 /* contextscalewrapper.cpp in Sources */,
-				4DABCDB015ECD4700085E214 /* control.cpp in Sources */,
-				4DABCDB115ECD4700085E214 /* cpalette.cpp in Sources */,
-				4DABCDB315ECD4700085E214 /* customprinter.cpp in Sources */,
-				4DABCDB415ECD4700085E214 /* date.cpp in Sources */,
-				4DABCDB515ECD4700085E214 /* debug.cpp in Sources */,
-				4DABCDB615ECD4700085E214 /* dispatch.cpp in Sources */,
-				4DABCDB715ECD4700085E214 /* dllst.cpp in Sources */,
-				4DABCDB815ECD4700085E214 /* edittool.cpp in Sources */,
-				4DABCDB915ECD4700085E214 /* eps.cpp in Sources */,
-				4DABCDBA15ECD4700085E214 /* eventqueue.cpp in Sources */,
-				4DABCDBB15ECD4700085E214 /* execpt.cpp in Sources */,
-				4DABCDBC15ECD4700085E214 /* express.cpp in Sources */,
-				4DABCDBE15ECD4700085E214 /* external.cpp in Sources */,
-				4DABCDBF15ECD4700085E214 /* externalv0.cpp in Sources */,
-				4DABCDC015ECD4700085E214 /* externalv1.cpp in Sources */,
-				4DABCDC115ECD4700085E214 /* fiber.cpp in Sources */,
-				4DABCDC315ECD4700085E214 /* field.cpp in Sources */,
-				4DABCDC415ECD4700085E214 /* fieldf.cpp in Sources */,
-				4DABCDC515ECD4700085E214 /* fieldh.cpp in Sources */,
-				4DABCDC615ECD4700085E214 /* fieldhtml.cpp in Sources */,
-				4DABCDC715ECD4700085E214 /* fieldrtf.cpp in Sources */,
-				4DABCDC815ECD4700085E214 /* fields.cpp in Sources */,
-				4DABCDC915ECD4700085E214 /* fieldstyledtext.cpp in Sources */,
-				4DABCDCA15ECD4700085E214 /* font.cpp in Sources */,
-				4DABCDCB15ECD4700085E214 /* fonttable.cpp in Sources */,
-				4DABCDCC15ECD4700085E214 /* funcs.cpp in Sources */,
-				4DABCDCD15ECD4700085E214 /* funcsm.cpp in Sources */,
-				4DABCDCE15ECD4700085E214 /* globals.cpp in Sources */,
-				4DABCDCF15ECD4700085E214 /* gradient.cpp in Sources */,
-				4DABCDD015ECD4700085E214 /* graphic.cpp in Sources */,
-				4DABCDD115ECD4700085E214 /* group.cpp in Sources */,
-				4DABCDD215ECD4700085E214 /* handler.cpp in Sources */,
-				4DABCDD315ECD4700085E214 /* hc.cpp in Sources */,
-				4DABCDD415ECD4700085E214 /* hndlrlst.cpp in Sources */,
-				4DABCDD515ECD4700085E214 /* idraw.cpp in Sources */,
-				4DABCDD615ECD4700085E214 /* ifile.cpp in Sources */,
-				4DABCDD715ECD4700085E214 /* igif.cpp in Sources */,
-				4DABCDD815ECD4700085E214 /* iimport.cpp in Sources */,
-				4DABCDD915ECD4700085E214 /* ijpg.cpp in Sources */,
-				4DABCDDA15ECD4700085E214 /* image.cpp in Sources */,
-				4DABCDDB15ECD4700085E214 /* ipng.cpp in Sources */,
-				4DABCDDC15ECD4700085E214 /* iquantization.cpp in Sources */,
-				4DABCDDD15ECD4700085E214 /* iquantize_new.cpp in Sources */,
-				4DABCDDE15ECD4700085E214 /* itransform.cpp in Sources */,
-				4DABCDDF15ECD4700085E214 /* iutil.cpp in Sources */,
-				4DABCDE015ECD4700085E214 /* keywords.cpp in Sources */,
-				4DABCDE115ECD4700085E214 /* lextable.cpp in Sources */,
-				4DABCDE315ECD4700085E214 /* line.cpp in Sources */,
-				4DABCDE415ECD4700085E214 /* literal.cpp in Sources */,
-				4DABCDE515ECD4700085E214 /* magnify.cpp in Sources */,
-				4DABCDE615ECD4700085E214 /* mblactivityindicator.cpp in Sources */,
-				4DABCDE715ECD4700085E214 /* mblad.cpp in Sources */,
-				4DABCDE815ECD4700085E214 /* mblalert.cpp in Sources */,
-				4DABCDE915ECD4700085E214 /* mblbusyindicator.cpp in Sources */,
-				4DABCDEA15ECD4700085E214 /* mblcalendar.cpp in Sources */,
-				4DABCDEB15ECD4700085E214 /* mblcamera.cpp in Sources */,
-				4DABCDEC15ECD4700085E214 /* mblcontact.cpp in Sources */,
-				4DABCDED15ECD4700085E214 /* mblcontrol.cpp in Sources */,
-				4DABCDEE15ECD4700085E214 /* mbldc.cpp in Sources */,
-				4DABCDEF15ECD4700085E214 /* mbldialog.cpp in Sources */,
-				4DABCDF015ECD4700085E214 /* mblflst.cpp in Sources */,
-				4DABCDF115ECD4700085E214 /* mbliphone.mm in Sources */,
-				4DABCDF215ECD4700085E214 /* mbliphoneactivityindicator.mm in Sources */,
-				4DABCDF315ECD4700085E214 /* mbliphonead.mm in Sources */,
-				4DABCDF415ECD4700085E214 /* mbliphonealert.mm in Sources */,
-				4D8C699C167A22B500D3CCE7 /* image_rep_encoded.cpp in Sources */,
-				4D8C699D167A22B500D3CCE7 /* image_rep_mutable.cpp in Sources */,
-				4D8C699E167A22B500D3CCE7 /* imagebitmap.cpp in Sources */,
-				4D8C69A2167A22DB00D3CCE7 /* ibmp.cpp in Sources */,
-				4D8C69A6167A22F900D3CCE7 /* irle.cpp in Sources */,
-				E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */,
-				E85E2C0B1697347300E5A78A /* image_rep_transformed.cpp in Sources */,
-				E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */,
-				4D7B14F017141D1E006782C1 /* stacksecurity.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2023,8 +2102,43 @@
 /* Begin PBXTargetDependency section */
 		4D08A0D3138EA52B0081F990 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 4D2D91881386E2610057811A /* standalone-mobile-lib */;
+			target = 4D2D91881386E2610057811A /* standalone-mobile-lib-community */;
 			targetProxy = 4D08A0D2138EA52B0081F990 /* PBXContainerItemProxy */;
+		};
+		4D22209A171D783800E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D222091171D770900E7E557 /* security-community */;
+			targetProxy = 4D222099171D783800E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220A4171D78EC00E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 4D22209F171D78A100E7E557 /* version */;
+			targetProxy = 4D2220A3171D78EC00E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220A6171D78F000E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = jpegmobile;
+			targetProxy = 4D2220A5171D78F000E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220A8171D78F200E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = coremobile;
+			targetProxy = 4D2220A7171D78F200E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220AA171D78F500E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = pcremobile;
+			targetProxy = 4D2220A9171D78F500E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220AC171D78F800E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = gifmobile;
+			targetProxy = 4D2220AB171D78F800E7E557 /* PBXContainerItemProxy */;
+		};
+		4D2220AE171D78FA00E7E557 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = pngmobile;
+			targetProxy = 4D2220AD171D78FA00E7E557 /* PBXContainerItemProxy */;
 		};
 		4D7B149017141A3C006782C1 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2059,27 +2173,45 @@
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
+		4D222093171D770900E7E557 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "security-community";
+			};
+			name = Debug;
+		};
+		4D222094171D770900E7E557 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = "security-community";
+			};
+			name = Release;
+		};
+		4D2220A0171D78A100E7E557 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = version;
+			};
+			name = Debug;
+		};
+		4D2220A1171D78A100E7E557 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = version;
+			};
+			name = Release;
+		};
 		4D2D918A1386E2620057811A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../InneractiveAdSDK/lib\"",
-					"\"$(SRCROOT)/../thirdparty/inneractive/libs\"",
-				);
-				PRODUCT_NAME = "standalone-mobile-lib";
+				PRODUCT_NAME = "standalone-mobile-lib-community";
 			};
 			name = Debug;
 		};
 		4D2D91921386E2620057811A /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-					"\"$(SRCROOT)/../InneractiveAdSDK/lib\"",
-					"\"$(SRCROOT)/../thirdparty/inneractive/libs\"",
-				);
-				PRODUCT_NAME = "standalone-mobile-lib";
+				PRODUCT_NAME = "standalone-mobile-lib-community";
 			};
 			name = Release;
 		};
@@ -2101,7 +2233,7 @@
 					"-Wl,-exported_symbol",
 					"-Wl,_main",
 				);
-				PRODUCT_NAME = "standalone-mobile";
+				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
 			};
 			name = Release;
@@ -2132,7 +2264,7 @@
 			buildSettings = {
 				CODE_SIGN_IDENTITY = "iPhone Developer";
 				INFOPLIST_FILE = "rsrc/standalone-mobile-Info.plist";
-				PRODUCT_NAME = "standalone-mobile";
+				PRODUCT_NAME = "standalone-mobile-community";
 				PROVISIONING_PROFILE = "";
 			};
 			name = Debug;
@@ -2140,7 +2272,25 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		4D2D91941386E2800057811A /* Build configuration list for PBXNativeTarget "standalone-mobile-lib" */ = {
+		4D222095171D775A00E7E557 /* Build configuration list for PBXNativeTarget "security-community" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D222093171D770900E7E557 /* Debug */,
+				4D222094171D770900E7E557 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4D2220A2171D78CC00E7E557 /* Build configuration list for PBXAggregateTarget "version" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4D2220A0171D78A100E7E557 /* Debug */,
+				4D2220A1171D78A100E7E557 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4D2D91941386E2800057811A /* Build configuration list for PBXNativeTarget "standalone-mobile-lib-community" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4D2D918A1386E2620057811A /* Debug */,
@@ -2167,7 +2317,7 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		4DD3DD9F1040AA9B00CAC7EF /* Build configuration list for PBXNativeTarget "standalone-mobile" */ = {
+		4DD3DD9F1040AA9B00CAC7EF /* Build configuration list for PBXNativeTarget "standalone-mobile-community" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				4DD3DD9D1040AA9B00CAC7EF /* Debug */,

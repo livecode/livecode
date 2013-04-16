@@ -25,27 +25,27 @@
 		</dict>
 	</array>
 	<key>CFBundleExecutable</key>
-	<string>LiveCode</string>
-	<key>CFBundleIdentifier</key>
-	<string>com.runrev.livecode</string>
+	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleGetInfoString</key>
-	<string>6.0.0.1511, Copyright 2000-2013 Runtime Revolution Ltd.</string>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2013 Runtime Revolution Ltd.</string>
 	<key>CFBundleIconFile</key>
 	<string>LiveCode.icns</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.runrev.livecode</string>
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
-	<string>6.0.0.1511, Copyright 2000-2013 Runtime Revolution Ltd.</string>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2013 Runtime Revolution Ltd.</string>
 	<key>CFBundleName</key>
 	<string>LiveCode</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>6.0.0.1511</string>
+	<string>$(BUILD_LONG_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>Revo</string>
 	<key>CFBundleVersion</key>
-	<string>6.0.0.1511</string>
+	<string>$(BUILD_LONG_VERSION)</string>
 	<key>CSResourcesFileMapped</key>
 	<true/>
 	<key>LFPrefersCarbon</key>
@@ -53,20 +53,20 @@
 	<key>LSGetAppDiedEvents</key>
 	<true/>
 	<key>NSAppleScriptEnabled</key>
-	<string>YES</string>
+	<false/>
 	<key>NSHumanReadableCopyright</key>
 	<string>Copyright 2000-2013, Runtime Revolution Ltd., All Rights Reserved.</string>
 	<key>UTExportedTypeDeclarations</key>
 	<array>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.runrev.revolution.stack</string>
-			<key>UTTypeDescription</key>
-			<string>LiveCode Stack</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>LiveCode Stack</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.runrev.revolution.stack</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>com.apple.macos.ostype</key>
@@ -78,14 +78,14 @@
 			</dict>
 		</dict>
 		<dict>
-			<key>UTTypeIdentifier</key>
-			<string>com.runrev.livecode.stack</string>
-			<key>UTTypeDescription</key>
-			<string>LiveCode Stack</string>
 			<key>UTTypeConformsTo</key>
 			<array>
 				<string>public.data</string>
 			</array>
+			<key>UTTypeDescription</key>
+			<string>LiveCode Stack</string>
+			<key>UTTypeIdentifier</key>
+			<string>com.runrev.livecode.stack</string>
 			<key>UTTypeTagSpecification</key>
 			<dict>
 				<key>com.apple.macos.ostype</key>
