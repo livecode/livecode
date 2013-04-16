@@ -80,6 +80,34 @@
 			remoteGlobalIDString = 4DE672490C43F2EA0084FE0B;
 			remoteInfo = dbodbc;
 		};
+		4D87F8CC171D96F2003DBF85 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB /* libkernel-server.a */;
+			remoteInfo = "kernel-server";
+		};
+		4D87F8CE171D96F2003DBF85 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221A9E171D58A700E7E557 /* libkernel-development.a */;
+			remoteInfo = "kernel-development";
+		};
+		4D87F8D0171D96F2003DBF85 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D221AF6171D5EC500E7E557 /* libkernel-standalone.a */;
+			remoteInfo = "kernel-standalone";
+		};
+		4D87F8D2171D96F2003DBF85 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB /* libsecurity-community.a */;
+			remoteInfo = "security-community";
+		};
 		4D9B6AD817144CC5001349F2 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE4151714277D00B96A87 /* revdb.xcodeproj */;
@@ -476,10 +504,14 @@
 			isa = PBXGroup;
 			children = (
 				E8DAE3F11714271D00B96A87 /* libkernel.a */,
-				E8DAE3EB1714271D00B96A87 /* LiveCode.app */,
-				E8DAE3ED1714271D00B96A87 /* Standalone.app */,
+				4D87F8CD171D96F2003DBF85 /* libkernel-server.a */,
+				4D87F8CF171D96F2003DBF85 /* libkernel-development.a */,
+				4D87F8D1171D96F2003DBF85 /* libkernel-standalone.a */,
+				4D87F8D3171D96F2003DBF85 /* libsecurity-community.a */,
+				E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */,
+				E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */,
+				E8DAE3F31714271D00B96A87 /* Server-Community */,
 				E8DAE3EF1714271D00B96A87 /* Installer.app */,
-				E8DAE3F31714271D00B96A87 /* server */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -675,6 +707,34 @@
 			remoteRef = 4D657F18171434BA0086071B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
+		4D87F8CD171D96F2003DBF85 /* libkernel-server.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-server.a";
+			remoteRef = 4D87F8CC171D96F2003DBF85 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D87F8CF171D96F2003DBF85 /* libkernel-development.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-development.a";
+			remoteRef = 4D87F8CE171D96F2003DBF85 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D87F8D1171D96F2003DBF85 /* libkernel-standalone.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libkernel-standalone.a";
+			remoteRef = 4D87F8D0171D96F2003DBF85 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4D87F8D3171D96F2003DBF85 /* libsecurity-community.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libsecurity-community.a";
+			remoteRef = 4D87F8D2171D96F2003DBF85 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
 		4D9B6AFA17144CE4001349F2 /* server-dbpostgresql.dylib */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.dylib";
@@ -717,17 +777,17 @@
 			remoteRef = 4D9BF505171447E900B32D29 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E8DAE3EB1714271D00B96A87 /* LiveCode.app */ = {
+		E8DAE3EB1714271D00B96A87 /* LiveCode-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
-			path = LiveCode.app;
+			path = "LiveCode-Community.app";
 			remoteRef = E8DAE3EA1714271D00B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E8DAE3ED1714271D00B96A87 /* Standalone.app */ = {
+		E8DAE3ED1714271D00B96A87 /* Standalone-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
-			path = Standalone.app;
+			path = "Standalone-Community.app";
 			remoteRef = E8DAE3EC1714271D00B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -745,10 +805,10 @@
 			remoteRef = E8DAE3F01714271D00B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E8DAE3F31714271D00B96A87 /* server */ = {
+		E8DAE3F31714271D00B96A87 /* Server-Community */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
-			path = server;
+			path = "Server-Community";
 			remoteRef = E8DAE3F21714271D00B96A87 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -964,6 +1024,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8DAE4711714284E00B96A87 /* Debug.xcconfig */;
 			buildSettings = {
+				SOLUTION_DIR = "$(PROJECT_DIR)";
 			};
 			name = Debug;
 		};
@@ -971,6 +1032,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = E8DAE4731714284E00B96A87 /* Release.xcconfig */;
 			buildSettings = {
+				SOLUTION_DIR = "$(PROJECT_DIR)";
 			};
 			name = Release;
 		};
