@@ -143,7 +143,8 @@ public:
 
 	Boolean isempty(void) const
 	{
-		return format == VF_UNDEFINED || format != VF_ARRAY && format != VF_NUMBER && svalue . getlength() == 0;
+		// MDW 2013-04-15: added parentheses to avoid compiler warning
+		return format == VF_UNDEFINED || ((format != VF_ARRAY) && (format != VF_NUMBER) && (svalue . getlength() == 0));
 	}
 	
 	Value_format getformat()

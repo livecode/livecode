@@ -992,8 +992,9 @@ static bool import_html_equal_style(const MCFieldCharacterStyle& left, const MCF
 static bool import_html_lookup_tag(const char *p_start, const char *p_end, import_html_tag_type_t& r_tag)
 {
 	for(uint32_t i = 0; i < sizeof(s_import_html_tag_strings) / sizeof(s_import_html_tag_strings[0]); i++)
+		// MDW 2013-04-15: cast to size_t to avoid compiler warnings
 		if (MCCStringEqualSubstringCaseless(s_import_html_tag_strings[i] . tag, p_start, p_end - p_start) &&
-			MCCStringLength(s_import_html_tag_strings[i] . tag) == p_end - p_start)
+			MCCStringLength(s_import_html_tag_strings[i] . tag) == (size_t)(p_end - p_start))
 		{
 			r_tag = s_import_html_tag_strings[i] . type;
 			return true;
@@ -1012,8 +1013,9 @@ static void import_html_free_tag(import_html_tag_t& p_tag)
 static bool import_html_lookup_attr(const char *p_start, const char *p_end, import_html_attr_type_t& r_attr)
 {
 	for(uint32_t i = 0; i < sizeof(s_import_html_attr_strings) / sizeof(s_import_html_attr_strings[0]); i++)
+		// MDW 2013-04-15: cast to size_t to avoid compiler warnings
 		if (MCCStringEqualSubstringCaseless(s_import_html_attr_strings[i] . attr, p_start, p_end - p_start) &&
-			MCCStringLength(s_import_html_attr_strings[i] . attr) == p_end - p_start)
+			MCCStringLength(s_import_html_attr_strings[i] . attr) == (size_t)(p_end - p_start))
 		{
 			r_attr = s_import_html_attr_strings[i] . type;
 			return true;
@@ -1062,7 +1064,8 @@ static bool import_html_parse_entity(const char *& x_ptr, const char *p_limit, u
 		bool t_is_hex;
 		const char *t_digit_start_ptr;
 		if (t_start_ptr[1] == 'x')
-			t_is_hex == true, t_digit_start_ptr = t_start_ptr + 2;
+			// MDW 2013-04-15: fixed (was "== true")
+			t_is_hex = true, t_digit_start_ptr = t_start_ptr + 2;
 		else
 			t_is_hex = false, t_digit_start_ptr = t_start_ptr + 1;
 		
@@ -1426,8 +1429,9 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	
 	// If the text is currently native (and there is some) or if the styling has changed
 	// then flush.
-	if (!ctxt . is_unicode && ctxt . byte_count > 0 ||
-		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
+	// MDW 2013-04-15: add parentheses to avoid compiler warnings
+	if (!ctxt . is_unicode && (ctxt . byte_count > 0 ||
+		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style)))
 		import_html_flush_chars(ctxt);
 	
 	// Make sure there's enough room in the buffer.

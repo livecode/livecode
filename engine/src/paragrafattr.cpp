@@ -133,7 +133,8 @@ IO_stat MCParagraph::loadattrs(IO_handle stream)
 		t_stat = IO_read_uint1(&attrs -> border_width, stream);
 	// MW-2012-02-29: [[ Bug ]] Read the first indent field if either has first
 	//   or has list indent.
-	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_FIRST_INDENT) != 0 || (attrs -> flags & PA_HAS_LIST_INDENT) != 0)
+	// MDW 2013-04-15: added parentheses to avoid compiler warning
+	if (t_stat == IO_NORMAL && ((attrs -> flags & PA_HAS_FIRST_INDENT) != 0 || (attrs -> flags & PA_HAS_LIST_INDENT) != 0))
 		t_stat = IO_read_int2(&attrs -> first_indent, stream);
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LEFT_INDENT) != 0)
 		t_stat = IO_read_int2(&attrs -> left_indent, stream);
@@ -216,7 +217,8 @@ IO_stat MCParagraph::saveattrs(IO_handle stream)
 		t_stat = IO_write_uint1(attrs -> border_width, stream);
 	// MW-2012-02-29: [[ Bug ]] Write the first indent field if either has first
 	//   or has list indent.
-	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_FIRST_INDENT) != 0 || (attrs -> flags & PA_HAS_LIST_INDENT) != 0)
+	// MDW 2013-04-15: added parentheses to avoid compiler warning
+	if (t_stat == IO_NORMAL && ((attrs -> flags & PA_HAS_FIRST_INDENT) != 0 || (attrs -> flags & PA_HAS_LIST_INDENT) != 0))
 		t_stat = IO_write_int2(attrs -> first_indent, stream);
 	if (t_stat == IO_NORMAL && (attrs -> flags & PA_HAS_LEFT_INDENT) != 0)
 		t_stat = IO_write_int2(attrs -> left_indent, stream);
