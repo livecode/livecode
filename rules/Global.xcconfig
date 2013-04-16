@@ -1,3 +1,5 @@
+#include "../version"
+
 SDKROOT = macosx10.4
 
 OWNER = .

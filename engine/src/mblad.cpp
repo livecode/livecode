@@ -353,7 +353,6 @@ void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, 
             t_success = false;
         }            
     
-#ifdef FEATURE_INNERACTIVE
     if (t_success)
     {
         uint32_t t_timeout;
@@ -385,7 +384,6 @@ void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, 
             t_ad->Release();
                
     }
-#endif
 
 	if (!t_success)
 		ctxt.SetTheResultToStaticCString("could not create ad"); 
