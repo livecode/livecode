@@ -30,8 +30,21 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
-typedef unsigned long long uint64_t;
-typedef signed long long int64_t;
+// MDW 2013-04.15: only typedef if necessary
+#if !defined(uint64_t)
+	#ifdef __LP64__
+		typedef unsigned long int uint64_t;
+	#else
+		typedef unsigned long long int uint64_t;
+	#endif
+#endif
+#if !defined(int64_t)
+	#ifdef __LP64__
+		typedef long int int64_t;
+	#else
+		typedef unsigned long long int int64_t;
+	#endif
+#endif
 
 typedef uint32_t uindex_t;
 typedef int32_t index_t;
@@ -39,28 +52,35 @@ typedef uint32_t hash_t;
 typedef int32_t compare_t;
 
 #if (defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_SIZE_T)
-typedef long unsigned int size_t;
+	typedef long unsigned int size_t;
 #endif
 #if defined(_LINUX) && !defined(_SIZE_T)
-typedef unsigned int size_t;
+	// MDW 2013-04.15: make 64-bit safe
+	#ifdef __LP64__
+		typedef long unsigned int size_t;
+	#else
+		typedef unsigned int size_t;
+	#endif
 #endif
 
 #ifndef _UINTPTR_T
-#define _UINTPTR_T
-#ifdef __LP64__
-typedef uint64_t uintptr_t;
-#else
-typedef uint32_t uintptr_t;
-#endif
+	#define _UINTPTR_T
+	// MDW 2013-04.15: make 64-bit safe
+	#ifdef __LP64__
+		typedef uint64_t uintptr_t;
+	#else
+		typedef uint32_t uintptr_t;
+	#endif
 #endif
 
 #ifndef _INTPTR_T
-#define _INTPTR_T
-#ifdef __LP64__
-typedef int64_t intptr_t;
-#else
-typedef int32_t intptr_t;
-#endif
+	#define _INTPTR_T
+	// MDW 2013-04.15: make 64-bit safe
+	#ifdef __LP64__
+		typedef int64_t intptr_t;
+	#else
+		typedef int32_t intptr_t;
+	#endif
 #endif
 
 typedef char char_t;
