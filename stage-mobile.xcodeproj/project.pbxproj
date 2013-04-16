@@ -41,6 +41,13 @@
 			remoteGlobalIDString = 4DABCD8A15ECD40F0085E214;
 			remoteInfo = "standalone-mobile-kernel";
 		};
+		4D87F994171D99B2003DBF85 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4DA0B82A12E8249A00B4F692 /* engine-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4D222092171D770900E7E557;
+			remoteInfo = "security-community";
+		};
 		4DA0B84712E8249A00B4F692 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0B82A12E8249A00B4F692 /* engine-mobile.xcodeproj */;
@@ -194,9 +201,10 @@
 		4DA0B82B12E8249A00B4F692 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				4DA0B84812E8249A00B4F692 /* standalone-mobile.app */,
-				4D40F22F13AF2D0A00EB829B /* libstandalone-mobile-lib.a */,
+				4D87F995171D99B2003DBF85 /* libsecurity-community.a */,
 				4D73862315FF3879008016FB /* libstandalone-mobile-kernel.a */,
+				4D40F22F13AF2D0A00EB829B /* libstandalone-mobile-lib-community.a */,
+				4DA0B84812E8249A00B4F692 /* standalone-mobile-community.app */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -283,10 +291,10 @@
 /* End PBXProject section */
 
 /* Begin PBXReferenceProxy section */
-		4D40F22F13AF2D0A00EB829B /* libstandalone-mobile-lib.a */ = {
+		4D40F22F13AF2D0A00EB829B /* libstandalone-mobile-lib-community.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = "libstandalone-mobile-lib.a";
+			path = "libstandalone-mobile-lib-community.a";
 			remoteRef = 4D40F22E13AF2D0A00EB829B /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -297,10 +305,17 @@
 			remoteRef = 4D73862215FF3879008016FB /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4DA0B84812E8249A00B4F692 /* standalone-mobile.app */ = {
+		4D87F995171D99B2003DBF85 /* libsecurity-community.a */ = {
+			isa = PBXReferenceProxy;
+			fileType = archive.ar;
+			path = "libsecurity-community.a";
+			remoteRef = 4D87F994171D99B2003DBF85 /* PBXContainerItemProxy */;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		4DA0B84812E8249A00B4F692 /* standalone-mobile-community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
-			path = "standalone-mobile.app";
+			path = "standalone-mobile-community.app";
 			remoteRef = 4DA0B84712E8249A00B4F692 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
@@ -391,6 +406,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D7EFD6312E72A5A00D67888 /* Debug Mobile.xcconfig */;
 			buildSettings = {
+				SOLUTION_DIR = "$(PROJECT_DIR)";
 			};
 			name = Debug;
 		};
@@ -408,6 +424,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D7EFD6412E72A5A00D67888 /* Release Mobile.xcconfig */;
 			buildSettings = {
+				SOLUTION_DIR = "$(PROJECT_DIR)";
 			};
 			name = Release;
 		};
