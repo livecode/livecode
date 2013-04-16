@@ -153,7 +153,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42A520B04862E003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
-				ARCHS = i386;
 			};
 			name = Debug;
 		};
