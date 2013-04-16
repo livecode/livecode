@@ -5,9 +5,9 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>English</string>
 	<key>CFBundleExecutable</key>
-	<string>Installer</string>
+	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleGetInfoString</key>
-	<string>6.0.0.1511, Copyright 2000-2013 Runtime Revolution Ltd.</string>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2013 Runtime Revolution Ltd.</string>
 	<key>CFBundleIconFile</key>
 	<string>Installer.icns</string>
 	<key>CFBundleIdentifier</key>
@@ -15,19 +15,19 @@
 	<key>CFBundleInfoDictionaryVersion</key>
 	<string>6.0</string>
 	<key>CFBundleLongVersionString</key>
-	<string>6.0.0.1511, Copyright 2000-2013 Runtime Revolution Ltd.</string>
+	<string>$(BUILD_LONG_VERSION), Copyright 2000-2013 Runtime Revolution Ltd.</string>
 	<key>CFBundleName</key>
 	<string>Installer</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
-	<string>6.0.0.1511</string>
+	<string>$(BUILD_LONG_VERSION)</string>
 	<key>CFBundleSignature</key>
 	<string>Revo</string>
 	<key>CFBundleVersion</key>
-	<string>6.0.0.1511</string>
+	<string>$(BUILD_LONG_VERSION)</string>
 	<key>CSResourcesFileMapped</key>
-	<true/>
+	<false/>
 	<key>LFPrefersCarbon</key>
 	<true/>
 	<key>LSGetAppDiedEvents</key>

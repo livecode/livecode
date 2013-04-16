@@ -1,5 +1,6 @@
 # Specific files #
 ##################
+engine/private/
 engine/src/hashedstrings.cpp
 engine/src/encodederrors.cpp
 engine/src/startupstack.cpp
