@@ -887,84 +887,71 @@ public:
             delete m_it;
     }
     
-    Parse_stat parse(MCScriptPoint &p_script_point)
+    Parse_stat parse(MCScriptPoint &p_sp)
     {
-        Parse_stat t_parse_status;
-        t_parse_status = PS_NORMAL;
-        getit(p_script_point,m_it);
+        Parse_stat t_stat;
+        t_stat = PS_NORMAL;
+        getit(p_sp,m_it);
         // Parse the optional 'id' token
-        m_is_id = (PS_NORMAL == p_script_point . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
+        m_is_id = (PS_NORMAL == p_sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
         // Parse the id_or_name expression
-        if (t_parse_status == PS_NORMAL)
-            t_parse_status = p_script_point . parseexp(False, True, &m_id_or_name);
+        if (t_stat == PS_NORMAL)
+            t_stat = p_sp . parseexp(False, True, &m_id_or_name);
         // Parse the 'relative to' tokens
-        if (t_parse_status == PS_NORMAL)
-            t_parse_status = p_script_point . skip_token(SP_FACTOR, TT_TO, PT_RELATIVE);
-        if (t_parse_status == PS_NORMAL)
-            t_parse_status = p_script_point . skip_token(SP_FACTOR, TT_TO, PT_TO);
+        if (t_stat == PS_NORMAL)
+            t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_RELATIVE);
+        if (t_stat == PS_NORMAL)
+            t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_TO);
         // Parse the target object clause
-        if (t_parse_status == PS_NORMAL)
+        if (t_stat == PS_NORMAL)
         {
             m_relative_object = new MCChunk(false);
-            t_parse_status = m_relative_object -> parse(p_script_point, False);
+            t_stat = m_relative_object -> parse(p_sp, False);
         }
-        return t_parse_status;
+        return t_stat;
     }
     
-    Exec_stat exec(MCExecPoint &p_execution_point)
+    Exec_stat exec(MCExecPoint &p_ep)
     {
-        Exec_stat t_execution_status;
+        Exec_stat t_stat;
+        t_stat = ES_NORMAL;
+        
+        uint4 t_part_id;
         MCObject *t_relative_object;
+        if (t_stat == ES_NORMAL)
+            t_stat = m_relative_object -> getobj(p_ep, t_relative_object, t_part_id, True);
+        
+        if (t_stat == ES_NORMAL)
+            t_stat = m_id_or_name -> eval(p_ep);
+        
         MCImage *t_found_image;
-        uint4 t_parent_id;
-        uint4 t_found_image_id;
-        MCString t_found_imgage_name;
-        
-        t_execution_status = ES_NORMAL;
-        
-        // get the relative object
-        t_execution_status = m_relative_object->getobj(p_execution_point, t_relative_object, t_parent_id, True);
-        if (t_execution_status == ES_NORMAL) {
-            // evaluate the id or name expression
-            t_execution_status = m_id_or_name->eval(p_execution_point);
-            if (t_execution_status == ES_NORMAL) {
-                if (m_is_id) {
-                    // it's an ID
-                    t_found_image_id = p_execution_point . getuint4();
-                    if (t_found_image_id) {
-                        // resolve the id
-                        t_found_image = t_relative_object ->resolveimageid(t_found_image_id);
-                        if (t_found_image) {
-                            // get the long id of the found image
-                            t_execution_status =  t_found_image->getprop(0, P_LONG_ID, p_execution_point, False);
-                        } else {
-                            p_execution_point.clear();
-                        }
-                    } else {
-                        p_execution_point.clear();
-                    }
-                } else {
-                    // it's a name
-                    t_found_imgage_name = p_execution_point . getsvalue();
-                    // resolve the id
-                    t_found_image = t_relative_object ->resolveimagename(t_found_imgage_name);
-                    if (t_found_image) {
-                        // get the long id of the found image
-                        t_execution_status = t_found_image->getprop(0, P_LONG_ID, p_execution_point, False);
-                    } else {
-                        p_execution_point.clear();
-                    }
+        t_found_image = nil;
+        if (t_stat == ES_NORMAL)
+        {
+            if (m_is_id)
+            {
+                if (p_ep . ton() == ES_ERROR)
+                {
+                    MCeerror -> add(EE_VARIABLE_NAN, line, pos);
+                    return ES_ERROR;
                 }
+                
+                t_found_image = t_relative_object -> resolveimageid(p_ep . getuint4());
             }
+            else
+                t_found_image = t_relative_object -> resolveimagename(p_ep . getsvalue());
             
+            if (t_found_image != nil)
+                t_stat = t_found_image -> getprop(0, P_LONG_ID, p_ep, False);
+            else
+                p_ep . clear();
         }
-        if (t_execution_status == ES_NORMAL) {
-            if (m_it != NULL) {
-                // set it to the found image's long id
-                t_execution_status = m_it -> set(p_execution_point);
-            }
-        }
-        return t_execution_status;
+        
+        if (t_stat == ES_NORMAL)
+            t_stat = m_it -> set(p_ep);
+        
+        return t_stat;
+        
     }
 private:
     MCChunk *m_relative_object;
