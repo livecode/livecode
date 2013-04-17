@@ -856,52 +856,63 @@ private:
 
 #endif
 
-/*
- 
- _internal resolve image [id] <id or name> relative to <object reference>
- 
- This command resolves a short id or name of an image as would be used for an icon
- and sets it to the long ID of the image according to the documented rules for resolving
- icons.
- 
- it is set empty if the command fails to resolve the image which means it's not on any stack in memory.
- 
- */
+////////////////////////////////////////////////////////////////////////////////
 
-class MCIdeResolveImage : public MCStatement
+// Feature:
+//   ide-resolve-image
+//
+// Contributor:
+//   Monte Goulding (2013-04-17)
+//
+// Syntax:
+//   _internal resolve image [id] <id or name> relative to <object reference>
+//
+// Action:
+//   This command resolves a short id or name of an image as would be used for
+//   an icon and sets it to the long ID of the image according to the documented
+//   rules for resolving icons.
+//
+//   it is set empty if the command fails to resolve the image which means it's
+//   not on any stack in memory.
+
+class MCInternalResolveImage : public MCStatement
 {
 public:
-    MCIdeResolveImage(void)
+    MCInternalResolveImage(void)
     {
         m_relative_object = nil;
         m_id_or_name  = nil;
         m_it = nil;
     }
-    ~MCIdeResolveImage()
+	
+    ~MCInternalResolveImage(void)
     {
-        if (m_relative_object)
-            delete m_relative_object;
-        if (m_id_or_name)
-            delete m_id_or_name;
-        if (m_it)
-            delete m_it;
+		delete m_relative_object;
+		delete m_id_or_name;
+		delete m_it;
     }
     
     Parse_stat parse(MCScriptPoint &p_sp)
     {
         Parse_stat t_stat;
         t_stat = PS_NORMAL;
-        getit(p_sp,m_it);
+		
+		// Fetch a reference to 'it'
+        getit(p_sp, m_it);
+		
         // Parse the optional 'id' token
         m_is_id = (PS_NORMAL == p_sp . skip_token(SP_FACTOR, TT_PROPERTY, P_ID));
+		
         // Parse the id_or_name expression
         if (t_stat == PS_NORMAL)
             t_stat = p_sp . parseexp(False, True, &m_id_or_name);
+		
         // Parse the 'relative to' tokens
         if (t_stat == PS_NORMAL)
             t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_RELATIVE);
         if (t_stat == PS_NORMAL)
             t_stat = p_sp . skip_token(SP_FACTOR, TT_TO, PT_TO);
+		
         // Parse the target object clause
         if (t_stat == PS_NORMAL)
         {
@@ -953,12 +964,12 @@ public:
         return t_stat;
         
     }
+
 private:
     MCChunk *m_relative_object;
     MCExpression *m_id_or_name;
-    Boolean m_is_id;
     MCVarref *m_it;
-	
+    bool m_is_id : 1;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -993,7 +1004,7 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "cancel", nil, class_factory<MCInternalObjectUnListen> },
 #endif
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
-	{ "resolve", "image", class_factory<MCIdeResolveImage> },
+	{ "resolve", "image", class_factory<MCInternalResolveImage> },
 	{ nil, nil, nil }
 };
 
