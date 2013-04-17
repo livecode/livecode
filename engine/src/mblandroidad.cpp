@@ -48,6 +48,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static jobject s_admodule = nil;
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCAndroidInneractiveAd : public MCAd
 {
 public:
@@ -86,7 +90,7 @@ MCAndroidInneractiveAd::MCAndroidInneractiveAd(MCAdType p_type, MCAdTopLeft p_to
 
 bool MCAndroidInneractiveAd::Create(void)
 {
-    MCAndroidEngineRemoteCall("createInneractiveAd", "osiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
+	MCAndroidObjectRemoteCall(s_admodule, "createInneractiveAd", "osiiiim", &m_view, MCAdGetInneractiveKey(), m_type, m_top_left.x, m_top_left.y, m_timeout, m_meta_data);
     if (m_meta_data != nil)
     {
         JNIEnv *env;
@@ -104,7 +108,7 @@ void MCAndroidInneractiveAd::Delete()
 
     if (m_view != nil)
     {
-        MCAndroidEngineRemoteCall("removeAd", "vo", nil, m_view);        
+		MCAndroidObjectRemoteCall(s_admodule, "removeAd", "vo", nil, m_view);
         env->DeleteGlobalRef(m_view);        
         m_view = nil;
     }
@@ -167,8 +171,31 @@ bool MCAndroidInneractiveAd::FindByView(jobject p_view, MCAndroidInneractiveAd *
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCSystemInneractiveAdInit()
+{
+	s_admodule = nil;
+}
+
+//////////
+
+// IM-2013-04-17: [[ AdModule ]] call out to Engine method to load AdModule class
+bool MCAndroidInneractiveAdInitModule()
+{
+	if (s_admodule != nil)
+		return true;
+	
+	MCAndroidEngineCall("loadAdModule", "o", &s_admodule);
+	
+	return s_admodule != nil;
+}
+
+//////////
+
 bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {
+	if (!MCAndroidInneractiveAdInitModule())
+		return false;
+	
     bool t_success;
     t_success = true;
         
@@ -233,6 +260,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_InneractiveAdWrapper_doAdUpdate(J
 ////////////////////////////////////////////////////////////////////////////////
 
 #else
+
+void MCSystemInneractiveAdInit()
+{
+}
 
 bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {
