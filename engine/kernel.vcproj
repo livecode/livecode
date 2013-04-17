@@ -5451,10 +5451,6 @@
 			Name="Core - Security"
 			>
 			<File
-				RelativePath=".\src\stacksecurity.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\stacksecurity.h"
 				>
 			</File>
