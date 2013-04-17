@@ -7,6 +7,15 @@ engine/src/startupstack.cpp
 engine/src/linuxstubs.cpp
 engine/include/revbuild.h
 lcidlc/src/EncodedSupport.c
+IMarketBillingService.java
+crypt.cpp
+crypt.h
+deploysecurity_encrypted.cpp
+encryptedobjectstream.cpp
+encryptedobjectstream.h
+encryptedstack.cpp
+encryptedstack.h
+stacksecurity_encrypted.cpp
 
 # Compiled source #
 ###################
