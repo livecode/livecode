@@ -1,26 +1,16 @@
-NAME=engine
+NAME=engine-community
 TYPE=application
 
 MODE_SOURCES= \
-	ide.cpp internal_development.cpp lextable.cpp mode_development.cpp \
-	startupstack.cpp deploy.cpp deploy_linux.cpp deploy_windows.cpp \
-	deploy_macosx.cpp deploy_capsule.cpp deploy_sign.cpp deploy_file.cpp \
-	deploy_dmg.cpp \
+	stacksecurity.cpp \
 	deploysecurity.cpp \
-	bsdiff_build.cpp encodederrors.cpp
+	startupstack.cpp
 
-MODE_DEFINES=\
-	MODE_DEVELOPMENT
+MODE_DEPS=libkernel-development.a
+
+MODE_LIBS=kernel-development
 
 startupstack.cpp: src/Environment.rev
 	../prebuilt/bin/Revolution.lnx "./compress_data.rev"  "./src/Environment.rev" "./src/startupstack.cpp" "MCstartupstack"
-
-hashedstrings.cpp: src/lextable.cpp
-	../prebuilt/bin/Revolution.lnx "./hash_strings.rev" "./src/lextable.cpp" "./src/hashedstrings.cpp" "../prebuilt/bin/perfect.lnx"
-
-encodederrors.cpp: src/executionerrors.h src/parseerrors.h
-	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
-
-engine: hashedstrings.cpp
 
 include Makefile.common
