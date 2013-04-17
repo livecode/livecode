@@ -36,7 +36,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
 	$(SOLUTION_DIR)/thirdparty/libopenssl/include \
 	$(SOLUTION_DIR)/thirdparty/libcurl/include 
-	
+
 GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib
 

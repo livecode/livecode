@@ -44,7 +44,7 @@ kernel-standalone: kernel
 kernel-development: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
 
-kernel-server: kernel
+kernel-server:
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
 development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development
