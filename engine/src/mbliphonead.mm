@@ -423,6 +423,10 @@ IaAdType MCiOSInneractiveAd::GetIaAdType()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCSystemInneractiveAdInit()
+{
+}
+
 bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {    
     NSMutableDictionary *t_meta_data;
@@ -454,6 +458,10 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_ty
 ////////////////////////////////////////////////////////////////////////////////
 
 #else
+
+void MCSystemInneractiveAdInit()
+{
+}
 
 bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {
