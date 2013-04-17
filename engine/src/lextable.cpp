@@ -1293,6 +1293,7 @@ LT factor_table[] =
 #ifdef MODE_DEVELOPMENT
 		{"revlicenseinfo", TT_PROPERTY, P_REV_LICENSE_INFO},
         {"revlicenselimits",TT_PROPERTY,P_REV_LICENSE_LIMITS},
+		{"revmessageboxlastobject", TT_PROPERTY, P_REV_MESSAGE_BOX_LAST_OBJECT},
 		{"revmessageboxredirect", TT_PROPERTY, P_REV_MESSAGE_BOX_REDIRECT},
 #ifdef FEATURE_PROPERTY_LISTENER
 		// MM-2012-09-05: [[ Property Listener ]] Returns the list of all active object property listeners
