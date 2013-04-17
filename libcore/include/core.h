@@ -42,7 +42,7 @@ typedef signed int int32_t;
 	#ifdef __LP64__
 		typedef long int int64_t;
 	#else
-		typedef unsigned long long int int64_t;
+		typedef long long int int64_t;
 	#endif
 #endif
 
