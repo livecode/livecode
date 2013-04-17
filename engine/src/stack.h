@@ -251,8 +251,8 @@ public:
 	Boolean hcstack();
 	
 	virtual bool iskeyed() { return true; }
-	virtual void securescript(char*& script) { }
-	virtual void unsecurescript(char *script) { }
+	virtual void securescript(MCObject *) { }
+	virtual void unsecurescript(MCObject *) { }
 	
 	Boolean islocked();
 	Boolean isiconic();
