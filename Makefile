@@ -5,6 +5,7 @@
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
+.PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
 
 libexternal:
@@ -37,17 +38,26 @@ libcore:
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
-	$(MAKE) -C ./engine -f Makefile.development engine
+kernel-standalone: kernel
+	$(MAKE) -C ./engine -f Makefile.kernel-standalone libkernel-standalone
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
-	$(MAKE) -C ./engine -f Makefile.standalone standalone
+kernel-development: kernel
+	$(MAKE) -C ./engine -f Makefile.kernel-development libkernel-development
+
+kernel-server: kernel
+	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
+
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development
+	$(MAKE) -C ./engine -f Makefile.development engine-community
+
+standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
-	$(MAKE) -C ./engine -f Makefile.server server
+server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
+	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################
 # revPDFPrinter Targets
