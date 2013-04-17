@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="standalone"
+	Name="standalone-community"
 	ProjectGUID="{90699A04-E42A-460B-B294-40DDC3E6166B}"
 	RootNamespace="oldstandalone"
 	Keyword="Win32Proj"
@@ -187,7 +187,8 @@
 			RelativePathToProject=".\thirdparty\libopenssl\libopenssl.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{91B9D78C-55C2-4717-8702-BDE4A906E3AA}"
+			ReferencedProjectIdentifier="{0491E47C-B096-4DBF-8D26-C28364DF6176}"
+			RelativePathToProject=".\engine\kernel-standalone.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{36960D7E-AD16-47BB-BA13-3770A224EC41}"
@@ -209,11 +210,7 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\lextable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mode_standalone.cpp"
+				RelativePath=".\src\stacksecurity.cpp"
 				>
 			</File>
 		</Filter>
@@ -231,22 +228,6 @@
 			<File
 				RelativePath=".\rsrc\Standalone-Info.plist"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\rsrc\standalone.rc"

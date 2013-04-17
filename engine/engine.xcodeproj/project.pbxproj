@@ -562,42 +562,42 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D221A9D171D58A700E7E557 /* kernel-development */;
+			remoteGlobalIDString = 4D221A9D171D58A700E7E557;
 			remoteInfo = "kernel-development";
 		};
 		4D221AFE171D5F3700E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D221AE0171D5EC500E7E557 /* kernel-standalone */;
+			remoteGlobalIDString = 4D221AE0171D5EC500E7E557;
 			remoteInfo = "kernel-standalone";
 		};
 		4D221B03171D5F7900E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C /* kernel */;
+			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C;
 			remoteInfo = kernel;
 		};
 		4D221B05171D5F8200E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C /* kernel */;
+			remoteGlobalIDString = 4DEE29F50FDE41BE0009423C;
 			remoteInfo = kernel;
 		};
 		4D222013171D730100E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D22200F171D72A500E7E557 /* version */;
+			remoteGlobalIDString = 4D22200F171D72A500E7E557;
 			remoteInfo = version;
 		};
 		4D222015171D730B00E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D587D940B80944100200116 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D22200F171D72A500E7E557 /* version */;
+			remoteGlobalIDString = 4D22200F171D72A500E7E557;
 			remoteInfo = version;
 		};
 		4D2A579B1198634300135143 /* PBXContainerItemProxy */ = {
