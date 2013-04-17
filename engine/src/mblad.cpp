@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+void MCSystemInneractiveAdInit();
 bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -59,6 +60,8 @@ void MCAdInitialize(void)
     s_ads = nil;
     s_last_ad_id = 0;
     s_inneractive_ad_key = nil;
+	
+	MCSystemInneractiveAdInit();
 }
 
 void MCAdFinalize(void)

@@ -103,7 +103,6 @@ public class Engine extends View
     private NativeControlModule m_native_control_module;
     private SoundModule m_sound_module;
     private NotificationModule m_notification_module;
-    /* private AdModule m_ad_module; */
 
     private PowerManager.WakeLock m_wake_lock;
 
@@ -149,7 +148,6 @@ public class Engine extends View
         m_native_control_module = new NativeControlModule(this, ((LiveCodeActivity)getContext()).s_main_layout);
         m_sound_module = new SoundModule(this);
         m_notification_module = new NotificationModule(this);
-        /* m_ad_module = new AdModule(this, ((LiveCodeActivity)getContext()).s_main_layout); */
         
         // MM-2012-08-03: [[ Bug 10316 ]] Initialise the wake lock object.
         PowerManager t_power_manager = (PowerManager) p_context.getSystemService(p_context.POWER_SERVICE);
@@ -931,22 +929,24 @@ public class Engine extends View
 
 ////////////////////////////////////////////////////////////////////////////////
 
-	/*
-    // ad functionality
-    void addAd(Object p_control)
-    {
-    }
+	// IM-2013-04-17: [[ AdModule ]] attempt to load AdModule class, returning null if the class cannot be found
+	Object loadAdModule()
+	{
+		try
+		{
+			Class t_ad_module_class;
+			Constructor t_ad_module_constructor;
 
-    void removeAd(Object p_control)
-    {
-        m_ad_module.removeAd(p_control);
-    }
+			t_ad_module_class = Class.forName("com.runrev.android.AdModule");
+			t_ad_module_constructor = t_ad_module_class.getConstructor(new Class[] {Engine.class, ViewGroup.class});
 
-    Object createInneractiveAd(String p_key, int p_type, int p_left, int p_top, int p_timeout, Map p_meta_data)
-    {
-        return m_ad_module.createInneractiveAd(p_key, p_type, p_left, p_top, p_timeout, p_meta_data);
-    }
-    */
+			return t_ad_module_constructor.newInstance(new Object[] {this, ((LiveCodeActivity)getContext()).s_main_layout});
+		}
+		catch (Exception e)
+		{
+			return null;
+		}
+	}
 
 ////////////////////////////////////////////////////////////////////////////////
 
