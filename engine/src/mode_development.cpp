@@ -63,6 +63,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32prefix.h"
 #include "w32dc.h"
 #include <process.h>
+
+// MW-2013-04-18: [[ Bug ]] Temporarily undefine 'GetObject' so that the reference
+//   to the GetObject() parentscript object method works. (Platform-specific stuff
+//   needs to move into separate files!)
+#undef GetObject
+
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #elif defined(_LINUX_DESKTOP)
