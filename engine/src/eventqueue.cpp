@@ -37,7 +37,8 @@ extern Boolean tripleclick;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y);
+// MDW 2013-04-16: handle_touch is declared but not defined
+// static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y);
 
 enum MCEventType
 {
