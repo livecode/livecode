@@ -1082,8 +1082,10 @@ void MCStack::setacceleratedrendering(bool p_value)
 		return;
 		
 	// Otherwise, we configure based on platform settings.
-	int32_t t_tile_size;
-	int32_t t_cache_limit;
+	// MDW 2013-04-16: failsafe initializing values
+	// MDW-2013-04-16: these are now unsigned
+	uint32_t t_tile_size = 32;
+	uint32_t t_cache_limit = 32 * 1024 * 1024;
 	MCTileCacheCompositorType t_compositor_type;
 #ifdef _MAC_DESKTOP
 	t_compositor_type = kMCTileCacheCompositorCoreGraphics;
@@ -1112,6 +1114,11 @@ void MCStack::setacceleratedrendering(bool p_value)
 		t_tile_size = 64, t_cache_limit = 32 * 1024 * 1024;
 	else
 		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
+#else
+	// MDW 2013-04-16: need an else clause here
+	t_tile_size = 32;
+	t_cache_limit = 32 * 1024 * 1024;
+	t_compositor_type = kMCTileCacheCompositorStaticOpenGL;
 #endif
 
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_tilecache);
