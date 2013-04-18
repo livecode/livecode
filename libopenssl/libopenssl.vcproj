@@ -71,7 +71,7 @@
 			/>
 			<Tool
 				Name="VCPostBuildEventTool"
-				CommandLine="copy $(SolutionDir)prebuilt\lib\revsecurity.dll $(OutDir)"
+				CommandLine="copy &quot;$(SolutionDir)prebuilt\lib\revsecurity.dll&quot; &quot;$(OutDir)&quot;"
 			/>
 		</Configuration>
 		<Configuration
@@ -179,7 +179,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Creating stubs..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(SolutionDir)tools\weak_stub_maker.lc&quot; &lt;&quot;$(InputPath)&quot; &gt;&quot;$(InputDir)stubs.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(SolutionDir)tools\weak_stub_maker.lc&quot; &lt;&quot;$(InputPath)&quot; &gt;&quot;$(InputDir)stubs.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(SolutionDir)tools\weak_stub_maker.lc"
 					Outputs="$(InputDir)stubs.cpp"
 				/>
@@ -190,7 +190,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Creating stubs..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(SolutionDir)tools\weak_stub_maker.lc&quot; &lt;&quot;$(InputPath)&quot; &gt;&quot;$(InputDir)stubs.cpp&quot;&#x0D;&#x0A;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(SolutionDir)tools\weak_stub_maker.lc&quot; &lt;&quot;$(InputPath)&quot; &gt;&quot;$(InputDir)stubs.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(SolutionDir)tools\weak_stub_maker.lc"
 					Outputs="$(InputDir)stubs.cpp"
 				/>
