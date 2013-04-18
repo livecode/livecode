@@ -1539,6 +1539,28 @@
 		<File
 			RelativePath=".\encode_errors.rev"
 			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Encoding error strings"
+					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;"
+					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
+					Outputs="$(InputDir)src\encodederrors.cpp"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Encoding error strings"
+					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;"
+					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
+					Outputs="$(InputDir)src\encodederrors.cpp"
+				/>
+			</FileConfiguration>
 		</File>
 	</Files>
 	<Globals>
