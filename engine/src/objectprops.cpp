@@ -506,8 +506,9 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
     case P_INVISIBLE:
         {
             bool t_vis = getflag(F_VISIBLE);
-            // if visible keep searching parent properties if effective
-            if (t_vis && (effective && parent != NULL))
+            // if visible and effective and parent is a
+            // group then keep searching parent properties 
+            if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
                 return parent->getprop(parid, which, ep, effective);
             else
                 if (which == P_VISIBLE)
