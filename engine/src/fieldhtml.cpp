@@ -1430,9 +1430,9 @@ static void import_html_append_unicode_char(import_html_t& ctxt, uint32_t p_code
 	// If the text is currently native (and there is some) or if the styling has changed
 	// then flush.
 	// MDW 2013-04-15: add parentheses to avoid compiler warnings
-	if (!ctxt . is_unicode && (ctxt . byte_count > 0 ||
-		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style)))
-		import_html_flush_chars(ctxt);
+	// MDW-2013-04-18: reverted because bad.mark.no.doughnut
+	if (!ctxt . is_unicode && ctxt . byte_count > 0 ||
+		!import_html_equal_style(ctxt . last_used_style, ctxt . styles[ctxt . style_index] . style))
 	
 	// Make sure there's enough room in the buffer.
 	if (!import_html_ensure_bytes(ctxt, 2))
