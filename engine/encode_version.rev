@@ -14,9 +14,11 @@ on generate
 
   local tVars
   put url ("file:" & $1 & "/../version") into tVars
+  
   repeat for each line tVar in tVars
-    split tVar by "="
-    replace "$" & word 1 to -1 of tVar[1] with word 1 to -1 of tVar[2] in tTemplate
+    get tVar
+    split it by "="
+    replace ("$" & word 1 to -1 of it[1]) with (word 1 to -1 of it[2]) in tTemplate
   end repeat
 
   put tTemplate into url ("binfile:" & $1 & "/include/revbuild.h")

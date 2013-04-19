@@ -246,6 +246,10 @@
 				RelativePath=".\src\mode_installer_w32.cpp"
 				>
 			</File>
+			<File
+				RelativePath=".\src\stacksecurity.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"
