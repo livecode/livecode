@@ -1391,18 +1391,21 @@ static MCBitmapEffectCompositeCallback MCBitmapEffectChooseCompositer(MCBitmapEf
 static void MCBitmapEffectRender(MCBitmapEffectRenderState& state, MCBitmapEffectLayer& dst, MCBitmapEffectLayer& src)
 {
 	// Compute the dst ptr/stride in pixels.
-	uint32_t t_dst_stride, *t_dst_pixels;
+	int32_t t_dst_stride;
 	t_dst_stride = dst . stride / 4;
+	uint32_t *t_dst_pixels;
 	t_dst_pixels = (uint4 *)dst . bits + t_dst_stride * (state . region . y - dst . bounds . y) + (state . region . x - dst . bounds . x);
 
 	// Compute the blur src ptr/stride in pixels.
-	uint32_t t_blur_src_stride, *t_blur_src_pixels;
+	int32_t t_blur_src_stride;
 	t_blur_src_stride = src . stride / 4;
+	uint32_t *t_blur_src_pixels;
 	t_blur_src_pixels = (uint4 *)src . bits + t_blur_src_stride * (state . blur_rect . y - src . bounds . y) + (state . blur_rect . x - src . bounds . x);
 
 	// Compute the src ptr/stride in pixels.
-	uint32_t t_src_stride, *t_src_pixels;
+	int32_t t_src_stride;
 	t_src_stride = src . stride / 4;
+	uint32_t *t_src_pixels;
 	t_src_pixels = (uint4 *)src . bits + t_src_stride * (state . region . y - src . bounds . y) + (state . region . x - src . bounds . x);
 
 	// Compute the pre-multiplied color.
