@@ -1374,11 +1374,29 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCExecPoint ep(optr, NULL, NULL);
 	MCRedrawLockScreen();
 	MCerrorlock++;
+    // set rect first so it doesn't break gradients
+    MCString t_string = MCString("rect");
+    MCHashentry *e = lookuphash(t_string,true,false);
+    if (e)
+    {
+        e -> value . fetch(ep);
+        optr->setprop(parid, P_RECTANGLE, ep, False);
+        removehash(e);
+    }
+	// set style first so when it changes other properties they are overwritten later
+    t_string = MCString("style");
+    e = lookuphash(t_string,true,false);
+    if (e)
+    {
+        e -> value . fetch(ep);
+        optr->setprop(parid, P_STYLE, ep, False);
+        removehash(e);
+    }
 	uint4 i;
 	for (i = 0 ; i < tablesize ; i++)
 		if (table[i] != NULL)
 		{
-			MCHashentry *e = table[i];
+			e = table[i];
 			while (e != NULL)
 			{
 				MCScriptPoint sp(e->string);
