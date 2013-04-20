@@ -56,7 +56,7 @@ static PropList stackprops[] =
         {"linkColor", P_LINK_COLOR},
         {"linkHiliteColor", P_LINK_HILITE_COLOR},
         {"linkVisitedColor", P_LINK_VISITED_COLOR},
-        {"liveresizing", P_LIVE_RESIZING},
+        {"liveResizing", P_LIVE_RESIZING},
         {"maxHeight", P_MAX_HEIGHT},
         {"maxWidth", P_MAX_WIDTH},
         {"menubar", P_MENU_BAR},
@@ -68,7 +68,7 @@ static PropList stackprops[] =
         {"password", P_PASSWORD},
         {"rect", P_RECTANGLE},
         {"resizable", P_RESIZABLE},
-        {"scroll", P_VSCROLL},
+        {"vScroll", P_VSCROLL},
         {"shadow", P_SHADOW},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
@@ -78,7 +78,7 @@ static PropList stackprops[] =
         {"textFont", P_TEXT_FONT},
         {"textSize", P_TEXT_SIZE},
         {"textStyle", P_TEXT_STYLE},
-        {"unicodeTitle", P_UNICODE_LABEL},
+        {"unicodeLabel", P_UNICODE_LABEL},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"underlineLinks", P_UNDERLINE_LINKS},
@@ -264,6 +264,7 @@ static PropList buttonprops[] =
         {"textSize", P_TEXT_SIZE},
         {"textStyle", P_TEXT_STYLE},
         {"threeD", P_3D},
+        {"titleWidth", P_LABEL_WIDTH},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
@@ -402,6 +403,7 @@ static PropList imageprops[] =
         {"showBorder", P_SHOW_BORDER},
         {"showFocusBorder", P_SHOW_FOCUS_BORDER},
         {"size", P_SIZE},
+        {"text", P_TEXT},
         {"threeD", P_3D},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
@@ -416,7 +418,7 @@ static PropList graphicprops[] =
     {
         {"altId", P_ALT_ID},
         {"angle", P_ANGLE},
-		{"antiAliased", P_ANTI_ALIASED},
+		{"antialiased", P_ANTI_ALIASED},
         {"arcAngle", P_ARC_ANGLE},
         {"arrowSize", P_ARROW_SIZE},
 		{"backColor", P_BACK_COLOR},
@@ -770,7 +772,8 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
                 getprop(parid, (Properties)table[tablesize].value, ep, effective);
 		        break;
         }
-		v->store_element(ep, table[tablesize].token);
+        if (!ep.isempty())
+            v->store_element(ep, table[tablesize].token);
 	}
 	MCerrorlock--;
 	ep.setarray(v, True);
