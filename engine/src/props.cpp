@@ -70,7 +70,6 @@ static PropList stackprops[] =
         {"password", P_PASSWORD},
         {"rect", P_RECTANGLE},
         {"resizable", P_RESIZABLE},
-        {"vScroll", P_VSCROLL},
         {"shadow", P_SHADOW},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
@@ -280,7 +279,6 @@ static PropList buttonprops[] =
         {"unicodeText", P_UNICODE_TEXT},
         {"unicodeToolTip", P_UNICODE_TOOL_TIP},
         {"visible", P_VISIBLE},
-        {"visited", P_VISITED},
         {"visitedIcon", P_VISITED_ICON}
     };
 
@@ -390,7 +388,6 @@ static PropList imageprops[] =
         {"focusPattern", P_FOCUS_PATTERN},
         {"foreColor", P_FORE_COLOR},
         {"forePattern", P_FORE_PATTERN},
-        {"frameCount", P_FRAME_COUNT},
         {"hiliteColor", P_HILITE_COLOR},
         {"hilitePattern", P_HILITE_PATTERN},
         {"hotSpot", P_HOT_SPOT},
@@ -539,7 +536,6 @@ static PropList scrollbarprops[] =
         {"numberFormat", P_NUMBER_FORMAT},
         {"outerGlow", P_BITMAP_EFFECT_OUTER_GLOW},
         {"opaque", P_OPAQUE},
-        {"orientation", P_ORIENTATION},
         {"pageInc", P_PAGE_INC},
         {"rect", P_RECTANGLE},
         {"shadowColor", P_SHADOW_COLOR},
