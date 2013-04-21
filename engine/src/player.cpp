@@ -599,7 +599,11 @@ void MCPlayer::timer(MCNameRef mptr, MCParameter *params)
 
 Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-	uint2 i = 0;
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    uint2 i = 0;
 	switch (which)
 	{
 	case P_FILE_NAME:
@@ -773,7 +777,11 @@ Exec_stat MCPlayer::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 
 Exec_stat MCPlayer::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = False;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = False;
 	Boolean wholecard = False;
 	uint4 ctime;
 	MCString data = ep.getsvalue();

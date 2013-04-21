@@ -785,7 +785,11 @@ void MCGroup::setrect(const MCRectangle &nrect)
 
 Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-	switch (which)
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    switch (which)
 	{
 	case P_CANT_DELETE:
 		ep.setboolean(getflag(F_G_CANT_DELETE));
@@ -910,7 +914,11 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = False;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = False;
 	int2 i1, i2, i3, i4;
 	MCString data = ep.getsvalue();
 

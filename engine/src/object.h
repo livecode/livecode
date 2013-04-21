@@ -287,8 +287,10 @@ public:
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
+	Exec_stat sendgetprop(MCExecPoint& ep, Properties which, MCNameRef p_prop_name);
+    virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
 	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+    Exec_stat sendsetprop(MCExecPoint& ep, Properties which, MCNameRef p_prop_name);
 	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	virtual void select();
@@ -330,7 +332,7 @@ public:
 	Exec_stat sendgetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat getcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
-	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
+    Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 
 	Exec_stat changeid(uint32_t new_id);
 

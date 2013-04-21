@@ -566,7 +566,11 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 
 Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
-	uint2 i;
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    uint2 i;
 	uint4 size = 0;
 
 	switch (which)
@@ -820,7 +824,11 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 
 Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = False;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = False;
 	uint2 i;
 	MCString data = ep.getsvalue();
 	uint4 newstate = state;

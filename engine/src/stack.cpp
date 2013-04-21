@@ -1053,7 +1053,11 @@ void MCStack::setrect(const MCRectangle &nrect)
 
 Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-	uint2 j = 0;
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    uint2 j = 0;
 	uint2 k = 0;
 	MCStack *sptr = this;
 	uint2 num;
@@ -1563,7 +1567,11 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty;
+	Exec_stat t_stat = sendsetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty;
 	Boolean bval;
 	uint4 bflags;
 	Boolean newlock;

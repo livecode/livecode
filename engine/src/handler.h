@@ -61,7 +61,7 @@ class MCHandler
 	//   handler came from, it was loaded in server-script mode.
 	uint2 fileindex;
 	MCNameRef name;
-	Boolean prop;
+	Properties prop;
 	Boolean array;
 	Boolean is_private;
 	uint1 type;
@@ -83,6 +83,10 @@ public:
 	bool hasname(MCNameRef other_name)
 	{
 		return MCNameIsEqualTo(name, other_name, kMCCompareCaseless);
+	}
+    bool hasprop(Properties other_prop)
+	{
+		return prop==other_prop;
 	}
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
@@ -174,6 +178,11 @@ public:
 	{
 		return globals[p_index];
 	}
+    
+    Properties getprop(void) const
+    {
+        return prop;
+    }
 
 private:
 	Parse_stat newparam(MCScriptPoint& sp);

@@ -41,6 +41,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 Boolean MCHandler::gotpass;
 
+extern LT factor_table[];
+extern const uint4 factor_table_size;
+
 MCHandler::MCHandler(uint1 htype, bool p_is_private)
 {
 	statements = NULL;
@@ -52,7 +55,7 @@ MCHandler::MCHandler(uint1 htype, bool p_is_private)
 	nglobals = nparams = nvnames = npnames = nconstants = executing = 0;
 	globals = NULL;
 	nglobals = 0;
-	prop = False;
+	prop = P_UNDEFINED;
 	array = False;
 	type = htype;
 	fileindex = 0;
@@ -140,8 +143,7 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 
 	firstline = sp.getline();
 	hlist = sp.gethlist();
-	prop = isprop;
-
+    
 	if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add(PE_HANDLER_NONAME, sp);
@@ -149,6 +151,21 @@ Parse_stat MCHandler::parse(MCScriptPoint &sp, Boolean isprop)
 	}
 
 	/* UNCHECKED */ MCNameClone(sp . gettoken_nameref(), name);
+    
+    if (isprop)
+    {
+        uint2 i;
+        for (i = 0 ; i < factor_table_size ; i++)
+            if (factor_table[i].type == TT_PROPERTY)
+            {
+                if (MCNameIsEqualToCString(name, factor_table[i].token, kMCCompareCaseless))
+                    prop = (Properties)factor_table[i].which;
+            }
+        if (prop == P_UNDEFINED)
+            prop = P_CUSTOM;
+    }
+    else
+        prop = P_UNDEFINED;
 	
 	const LT *te;
 	// MW-2010-01-08: [[Bug 7792]] Check whether the handler name is a reserved function identifier

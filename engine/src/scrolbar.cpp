@@ -650,7 +650,11 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 
 Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
-	switch (which)
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    switch (which)
 	{
 	case P_STYLE:
 		if (flags & F_SCALE)
@@ -701,7 +705,11 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 
 Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = True;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = True;
 	real8 newvalue;
 	MCString data = ep.getsvalue();
 

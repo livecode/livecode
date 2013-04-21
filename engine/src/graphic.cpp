@@ -668,7 +668,13 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-	switch(which)
+	if (which == P_GRADIENT_FILL || which == P_GRADIENT_STROKE)
+    {
+        Exec_stat t_stat = sendgetprop(ep, which, key);
+        if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+            return t_stat;
+    }
+    switch(which)
 	{
 	case P_GRADIENT_FILL:
 		return MCGradientFillGetProperty(m_fill_gradient, ep, key);
@@ -685,7 +691,11 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 
 Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = True;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = True;
 	int2 i1;
 	MCRectangle drect = rect;
 	MCString data = ep.getsvalue();
@@ -1193,7 +1203,14 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-	Boolean dirty;
+	if (which == P_GRADIENT_FILL || which == P_GRADIENT_STROKE)
+    {
+        Exec_stat t_stat = sendsetprop(ep, which, key);
+        if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+            return t_stat;
+    }
+   
+    Boolean dirty;
 	dirty = False;
 	switch(which)
 	{

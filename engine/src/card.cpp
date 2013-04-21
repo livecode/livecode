@@ -898,7 +898,11 @@ void MCCard::timer(MCNameRef mptr, MCParameter *params)
 
 Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
-	MCRectangle minrect;
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    MCRectangle minrect;
 	uint2 num;
 
 	switch (which)
@@ -1020,7 +1024,11 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 
 Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = False;
+	Exec_stat t_stat = sendsetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = False;
 	uint4 newnumber;
 	MCString data = ep.getsvalue();
 

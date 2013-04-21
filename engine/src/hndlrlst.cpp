@@ -118,8 +118,12 @@ int MCHandlerArray::compare_handler(const void *a, const void *b)
 	MCHandler *ha, *hb;
 	ha = *(MCHandler **)a;
 	hb = *(MCHandler **)b;
-
-	return MCCompare(MCNameGetCaselessSearchKey(ha -> getname()), MCNameGetCaselessSearchKey(hb -> getname()));
+    bool t_ha_is_engine_prop = ha->getprop() != P_UNDEFINED && ha->getprop() != P_CUSTOM;
+    bool t_hb_is_engine_prop = hb->getprop() != P_UNDEFINED && hb->getprop() != P_CUSTOM;
+    if (t_ha_is_engine_prop == t_hb_is_engine_prop)
+       	return MCCompare(MCNameGetCaselessSearchKey(ha -> getname()), MCNameGetCaselessSearchKey(hb -> getname()));
+    else
+        return !t_ha_is_engine_prop && t_hb_is_engine_prop;
 }
 
 ////

@@ -1176,7 +1176,11 @@ void MCField::setrect(const MCRectangle &nrect)
 
 Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
-	switch (which)
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    switch (which)
 	{
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
@@ -1443,7 +1447,11 @@ void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, 
 
 Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = False;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = False;
 	Boolean reset = False;
 	int4 savex = textx;
 	int4 savey = texty;

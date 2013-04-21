@@ -57,6 +57,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "mode.h"
 
+extern LT factor_table[];
+extern const uint4 factor_table_size;
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *ink_names[] =
@@ -244,6 +247,72 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	return t_stat;
 }
+
+Exec_stat MCObject::sendgetprop(MCExecPoint& ep, Properties which, MCNameRef p_prop_name)
+{
+	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
+	// send a 'getProp <setname> <propname>'.
+	//
+    Exec_stat t_stat = ES_NOT_HANDLED;
+    // make sure it's not the engine setting the property
+    if (ep.gethandler() != NULL) {
+        if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
+        {
+            MCParameter p1, p2;
+            p1.setnext(&p2);
+            
+            p1.setnameref_unsafe_argument(p_prop_name);
+            p2.set_argument(ep);
+            
+            MCStack *oldstackptr = MCdefaultstackptr;
+            MCdefaultstackptr = getstack();
+            MCObject *oldtargetptr = MCtargetptr;
+            MCtargetptr = this;
+            Boolean added = False;
+            if (MCnexecutioncontexts < MAX_CONTEXTS)
+            {
+                MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+                added = True;
+            }
+            
+            MCNameRef t_getprop_name;
+            uint2 i;
+            for (i = 0 ; i < factor_table_size ; i++)
+                if (factor_table[i].type == TT_PROPERTY)
+                    if ((Properties)factor_table[i].which == which)
+                    {
+                        MCNameCreateWithCString(factor_table[i].token, t_getprop_name);
+                        t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
+                        if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+                            t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+                        if (t_stat != ES_NOT_HANDLED)
+                            break;
+                    }
+            
+            if (added)
+                MCnexecutioncontexts--;
+            MCdefaultstackptr = oldstackptr;
+            MCtargetptr = oldtargetptr;
+        }
+    }
+
+	if (t_stat == ES_NORMAL)
+	{
+		MCresult -> fetch(ep);
+        
+		// MW-2007-07-03: [[ Bug 3213 ]] Failing to grab the value means that
+		//   things such as doSomething the uProp of me, the uProp2 of me
+		// results in incorrect parameter evaluation (the second custom prop
+		// invocation clobbers the result of the first).
+		if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
+			ep.grabsvalue();
+		else if (ep.getformat() == VF_ARRAY)
+			ep.grabarray();
+	}
+    
+	return t_stat;
+}
+
 
 Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
@@ -601,7 +670,11 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-	switch(which)
+	Exec_stat t_stat = sendgetprop(ep, which, key);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    switch(which)
 	{
 	// MW-2011-11-23: [[ Array TextStyle ]] We now treat textStyle as (potentially) an
 	//   an array.
@@ -1188,8 +1261,57 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	return t_stat;
 }
 
+Exec_stat MCObject::sendsetprop(MCExecPoint& ep, Properties which, MCNameRef p_prop_name)
+{
+	Exec_stat t_stat = ES_NOT_HANDLED;
+    // make sure it's not the engine setting the property
+    if (ep.gethandler() != NULL) {
+        if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
+        {
+            MCParameter p1, p2;
+            p1.setnext(&p2);
+            
+            p1.setnameref_unsafe_argument(p_prop_name);
+            p2.set_argument(ep);
+            
+            MCStack *oldstackptr = MCdefaultstackptr;
+            MCdefaultstackptr = getstack();
+            MCObject *oldtargetptr = MCtargetptr;
+            MCtargetptr = this;
+            Boolean added = False;
+            if (MCnexecutioncontexts < MAX_CONTEXTS)
+            {
+                MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+                added = True;
+            }
+            
+            MCNameRef t_setprop_name;
+            uint2 i;
+            for (i = 0 ; i < factor_table_size ; i++)
+                if (factor_table[i].type == TT_PROPERTY)
+                    if ((Properties)factor_table[i].which == which)
+                    {
+                        MCNameCreateWithCString(factor_table[i].token, t_setprop_name);
+                        t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
+                        if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+                            t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+                        if (t_stat != ES_NOT_HANDLED)
+                            break;
+                    }
+            
+            if (added)
+                MCnexecutioncontexts--;
+            MCdefaultstackptr = oldstackptr;
+            MCtargetptr = oldtargetptr;
+        }
+    }
+    return t_stat;
+}
+
+
 Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+    
 	Boolean dirty = True;
 	Boolean newstate;
 	int2 i1;
@@ -1639,13 +1761,17 @@ Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		if (gettype() >= CT_GROUP)
 			static_cast<MCControl *>(this) -> layer_redrawall();
 	}
-	return ES_NORMAL; 
+	return ES_NORMAL;
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-	MCString data;
+	Exec_stat t_stat = sendsetprop(ep, which, key);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    MCString data;
 	data = ep . getsvalue();
 	switch(which)
 	{

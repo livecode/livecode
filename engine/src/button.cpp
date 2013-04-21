@@ -1604,7 +1604,11 @@ void MCButton::setrect(const MCRectangle &nrect)
 
 Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
-	uint2 fheight;
+	Exec_stat t_stat = sendgetprop(ep, which, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    uint2 fheight;
 	uint2 j = 0;
 
 	switch (which)
@@ -1879,7 +1883,11 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 
 Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
-	Boolean dirty = True;
+	Exec_stat t_stat = sendsetprop(ep, p, kMCEmptyName);
+    if (!(t_stat == ES_NOT_HANDLED || t_stat == ES_PASS))
+        return t_stat;
+    
+    Boolean dirty = True;
 	Boolean all = p == P_STYLE || p == P_LABEL_WIDTH || MCaqua && standardbtn();
 	int2 i1;
 	uint2 i = 0;
