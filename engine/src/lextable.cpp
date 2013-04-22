@@ -1394,6 +1394,7 @@ LT factor_table[] =
         {"shadowpattern", TT_PROPERTY, P_SHADOW_PATTERN},
         {"shadowpixel", TT_PROPERTY, P_SHADOW_PIXEL},
 		{"sharedbehavior", TT_PROPERTY, P_SHARED_BEHAVIOR},
+		{"sharedgroup", TT_PROPERTY, P_SHARED_GROUP},
 		{"sharedgroupids", TT_PROPERTY, P_SHARED_GROUP_IDS},
 		{"sharedgroupnames", TT_PROPERTY, P_SHARED_GROUP_NAMES},
         {"sharedhilite", TT_PROPERTY, P_SHARED_HILITE},
