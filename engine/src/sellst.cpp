@@ -281,6 +281,11 @@ void MCSellist::group()
 		MCSelnode *tptr = objects->next();
 		while (tptr != objects)
 		{
+            if (tptr->ref->gettype() == CT_GROUP && static_cast<MCGroup *>(tptr->ref)->isshared())
+            {
+            	MCresult->sets("control is shared group");
+				return;
+			}
 			if (tptr->ref->getparent() != parent)
 			{
 				MCresult->sets("controls don't have the same owner");
