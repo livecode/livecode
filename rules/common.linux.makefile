@@ -1,18 +1,6 @@
 # Common template Makefile for all types
 
-ifeq ($(MODE),)
-	MODE=debug
-endif
-
-ifeq ($(EDITION),)
-	SOLUTION_DIR=$(shell cat ../owner)/..
-else
-	SOLUTION_DIR=../livecode
-endif
-
-BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(MODE)
-CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(MODE)/$(NAME)
-PRODUCT_DIR=$(BUILD_DIR)
+include $(dir $(lastword $(MAKEFILE_LIST)))/environment.linux.makefile
 
 DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX
 
