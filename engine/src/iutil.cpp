@@ -498,7 +498,9 @@ void MCImage::rotate(uint32_t p_angle)
 
 	if (m_transformed != nil && m_transformed->Matches(rect.width, rect.height, p_angle, getflag(F_LOCK_LOCATION), resizequality, m_rep))
 		t_rep = m_transformed->Retain();
-	else if (p_angle != 0)
+	// IM-2013-04-22: [[ BZ 10858 ]] A transformed rep is needed if the angle is non-zero,
+	// or the rect is locked and doesn't match the source dimensions.
+	else if ((p_angle != 0) || (getflag(F_LOCK_LOCATION) && m_rep != nil && m_rep->GetGeometry(width, height) && (width != rect.width || height != rect.height)))
 		/* UNCHECKED */ MCImageRepGetTranformed(rect.width, rect.height, p_angle, (flags & F_LOCK_LOCATION) != 0, resizequality, m_rep, t_rep);
 	
 	if (m_transformed != nil)
