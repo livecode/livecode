@@ -511,7 +511,15 @@ void MCImage::rotate(uint32_t p_angle)
 	m_transformed = static_cast<MCTransformedImageRep*>(t_rep);
 
 	if (m_transformed != nil)
-		/* UNCHECKED */ m_transformed->GetGeometry(width, height);
+	{
+		// IM-2013-04-22: [[ BZ 10864 ]] if we can't get the transformed image dimensions
+		// then keep the current rect size
+		if (!m_transformed->GetGeometry(width, height))
+		{
+			width = rect.width;
+			height = rect.height;
+		}
+	}
 	else
 		getgeometry(width, height);
 
