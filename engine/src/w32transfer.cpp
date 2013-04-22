@@ -1300,8 +1300,8 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 				}
 		
 			MCImageBitmap t_bitmap;
-			t_bitmap . width = t_rect.right;
-			t_bitmap . height = t_rect . bottom;
+			t_bitmap . width = t_width;
+			t_bitmap . height = t_height;
 			t_bitmap . data = (uint32_t*)t_black_bits;
 			t_bitmap . stride = t_width * 4;
 
