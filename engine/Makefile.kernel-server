@@ -61,6 +61,8 @@ linuxstubs.cpp: src/linux.stubs
 encodederrors.cpp: src/executionerrors.h src/parseerrors.h
 	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
 
-../_cache/linux/$(MODE)/$(NAME)/mcstring.o: include/revbuild.h
+include ../rules/environment.linux.makefile
+
+$(CACHE_DIR)/mcstring.o: include/revbuild.h
 
 include ../rules/archive.linux.makefile
