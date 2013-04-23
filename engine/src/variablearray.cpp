@@ -1375,8 +1375,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCRedrawLockScreen();
 	MCerrorlock++;
     // set rect first so it doesn't break gradients
-    MCString t_string = MCString("rect");
-    MCHashentry *e = lookuphash(t_string,true,false);
+    MCHashentry *e = lookuphash(MCString("rect"),true,false);
     if (e)
     {
         e -> value . fetch(ep);
@@ -1384,12 +1383,19 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
         removehash(e);
     }
 	// set style first so when it changes other properties they are overwritten later
-    t_string = MCString("style");
-    e = lookuphash(t_string,true,false);
+    e = lookuphash(MCString("style"),true,false);
     if (e)
     {
         e -> value . fetch(ep);
         optr->setprop(parid, P_STYLE, ep, False);
+        removehash(e);
+    }
+    // set the textSize first because it changes the textHeight
+    e = lookuphash(MCString("textSize"),true,false);
+    if (e)
+    {
+        e -> value . fetch(ep);
+        optr->setprop(parid, P_TEXT_SIZE, ep, False);
         removehash(e);
     }
 	uint4 i;
