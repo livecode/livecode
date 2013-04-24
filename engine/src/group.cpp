@@ -899,6 +899,33 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			while (cptr != startcard);
 		}
 		break;
+        case P_CHILD_CONTROL_NAMES:
+        case P_CHILD_CONTROL_IDS:
+        {
+            ep.clear();
+			MCExecPoint ep2(ep);
+			
+            MCObject *t_object = controls;
+            MCObject *t_start_object = t_object;
+            uint2 i = 0;
+            do
+            {
+                
+                Properties t_prop;
+                if (which == P_CHILD_CONTROL_NAMES)
+                    t_prop = P_SHORT_NAME;
+                else
+                    t_prop = P_SHORT_ID;
+                
+                t_object->getprop(0, t_prop, ep2, False);
+                
+                ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i++ == 0);
+                t_object = t_object -> next();
+                
+            }
+            while (t_object != t_start_object);
+        }
+        break;
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
 		break;

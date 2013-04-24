@@ -618,6 +618,8 @@ LT factor_table[] =
         {"charset", TT_PROPERTY, P_CHARSET},
         {"chartonum", TT_FUNCTION, F_CHAR_TO_NUM},
         {"checkmark", TT_PROPERTY, P_CHECK_MARK},
+        {"childcontrolids", TT_PROPERTY, P_CHILD_CONTROL_IDS},
+        {"childcontrolnames", TT_PROPERTY, P_CHILD_CONTROL_NAMES},
         {"ciphernames", TT_FUNCTION, F_CIPHER_NAMES},
         {"clickchar", TT_FUNCTION, F_CLICK_CHAR},
         {"clickcharchunk", TT_FUNCTION, F_CLICK_CHAR_CHUNK},
