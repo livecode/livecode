@@ -1374,12 +1374,28 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCExecPoint ep(optr, NULL, NULL);
 	MCRedrawLockScreen();
 	MCerrorlock++;
+    MCHashentry *e;
     // set rect first so it doesn't break gradients
-    MCHashentry *e = lookuphash(MCString("rect"),true,false);
+    e = lookuphash(MCString("rect"),true,false);
     if (e)
     {
         e -> value . fetch(ep);
         optr->setprop(parid, P_RECTANGLE, ep, False);
+        removehash(e);
+    }
+	// set width and height first so again it doesn't break gradients but also to ensure left,right etc are applied correctly
+    e = lookuphash(MCString("width"),true,false);
+    if (e)
+    {
+        e -> value . fetch(ep);
+        optr->setprop(parid, P_WIDTH, ep, False);
+        removehash(e);
+    }
+	e = lookuphash(MCString("height"),true,false);
+    if (e)
+    {
+        e -> value . fetch(ep);
+        optr->setprop(parid, P_HEIGHT, ep, False);
         removehash(e);
     }
 	// set style first so when it changes other properties they are overwritten later
