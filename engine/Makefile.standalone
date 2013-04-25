@@ -1,6 +1,8 @@
 NAME=standalone
 TYPE=application
 
+LBITS := $(shell getconf LONG_BIT)
+
 MODE_SOURCES= \
 	lextable.cpp mode_standalone.cpp
 
@@ -9,5 +11,8 @@ MODE_DEFINES=\
 	
 MODE_LDFLAGS=\
 	-Wl,--script=standalone.link
+
+MODE_CCFLAGS=\
+	-m$(LBITS)
 
 include Makefile.common

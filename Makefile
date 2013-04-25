@@ -1,6 +1,8 @@
 ###############################################################################
 # Engine Targets
 
+LBITS := $(shell getconf LONG_BIT)
+
 .PHONY: libopenssl liburlcache libstubs
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
@@ -42,6 +44,16 @@ development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore k
 
 standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone
+
+#ifeq ($(LBITS),64)
+#standalone2: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
+#	rm -rf _cache
+#	$(MAKE) -C ./engine32 -f Makefile.standalone standalone32 -m32
+#else
+#standalone2: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
+#	rm -rf _cache
+#	$(MAKE) -C ./engine64 -f Makefile.standalone standalone64 -m64
+#endif
 
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 	$(MAKE) -C ./engine -f Makefile.installer installer
@@ -163,3 +175,8 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 	#
+
+clean:
+	rm -rf _cache
+	rm -rf _build
+
