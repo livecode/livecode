@@ -637,7 +637,8 @@ void MCEventQueueFilter(MCEventQueueFilterCallback p_callback, void *p_context)
 // and remove it from the queue. This will also remove all but the last mousemove.
 
 // MDW 2013-04-15: changed p_button from uint32_t to avoid compiler warning.
-bool MCEventQueueGetMouseClick(int32_t p_button)
+// and changed back
+bool MCEventQueueGetMouseClick(uint32_t p_button)
 {
 	// Look for the first mouse down event in the queue
 	MCEvent *t_mouse_down, *t_mouse_move;

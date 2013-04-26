@@ -300,14 +300,14 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 	}
 }
 
-Boolean MCScreenDC::getmouseclick(uint32_t button, Boolean& r_abort)
+Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 {
 	if (!MCModeMakeLocalWindows())
 	{
 		r_abort = wait(0.0, False, True);
 		if (r_abort)
 			return False;
-		return MCEventQueueGetMouseClick(button);
+		return MCEventQueueGetMouseClick((uint32_t)button);
 	}
 	
 	Boolean abort, reset;

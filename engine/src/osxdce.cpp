@@ -319,7 +319,7 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-Boolean MCScreenDC::getmouseclick(uint32_t button, Boolean& r_abort)
+Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 {/* check which mouse is down & set the modifier key states.            *
 	  * check the pendingevents queue first, if there's events in the queue *
 	  * process the events, and remove them.                                */
@@ -328,7 +328,7 @@ Boolean MCScreenDC::getmouseclick(uint32_t button, Boolean& r_abort)
 		r_abort = wait(0.0, False, True);
 		if (r_abort)
 			return False;
-		return MCEventQueueGetMouseClick(button);
+		return MCEventQueueGetMouseClick((uint32_t)button);
 	}
 	
 	r_abort = this->wait(0.0, False, True);
