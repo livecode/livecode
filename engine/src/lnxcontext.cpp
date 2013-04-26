@@ -2097,15 +2097,9 @@ void MCX11Context::clear_surfaces ( Layer *p_layer )
 	XSetBackground ( m_display, m_gc1, BlackPixel(m_display, 0) ) ;
 	
 	
-	
-	// Only clear the surface if this is NOT the base pixmap --- else we might be clearing any image that we
-	// are wrapping this context around.
-	if ( m_layers -> parent != NULL ) 
-	{
-		XSetFunction( m_display, m_gc, GXclear);
-		XCopyArea( m_display, p_layer -> surface, p_layer -> surface ,m_gc, 0, 0, p_layer -> width , p_layer -> height , 0, 0);
-		XSetFunction( m_display, m_gc, m_layers -> function );
-	}
+	XSetFunction( m_display, m_gc, GXclear);
+	XCopyArea( m_display, p_layer -> surface, p_layer -> surface ,m_gc, 0, 0, p_layer -> width , p_layer -> height , 0, 0);
+	XSetFunction( m_display, m_gc, m_layers -> function );
 	
 	clear_mask();
 
@@ -2163,11 +2157,11 @@ void MCX11Context::unlock_bits(MCBitmap *p_bitmap)
 MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride, Layer *t_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  ) 
 {
 	MCBitmap * t_dst_image ;
-	void * t_alpha_ptr ;
+	//void * t_alpha_ptr ;
 	uint1 * t_dst_ptr ;
 	uint4 t_dst_stride ;
-	uint4 t_alpha_stride ;
-	uint4 alpha_offset ;
+	//uint4 t_alpha_stride ;
+	//uint4 alpha_offset ;
 	
 	
 	t_dst_ptr = getimage_shm (t_layer , t_dst_stride, t_layer -> surface, p_x, p_y, p_width, p_height );
@@ -2192,17 +2186,17 @@ MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride
 	}
 	
 	
-	t_alpha_stride = t_layer-> alpha -> bytes_per_line ;
+	//t_alpha_stride = t_layer-> alpha -> bytes_per_line ;
 
-	t_alpha_ptr = (uint1*)t_layer -> alpha -> data ;
+	//t_alpha_ptr = (uint1*)t_layer -> alpha -> data ;
 	
 	
-	alpha_offset = (p_y * t_alpha_stride ) + p_x;
-	t_alpha_ptr = (uint1*)t_alpha_ptr + alpha_offset ;
+	//alpha_offset = (p_y * t_alpha_stride ) + p_x;
+	//t_alpha_ptr = (uint1*)t_alpha_ptr + alpha_offset ;
 	
-	surface_merge_with_alpha_non_pre ( t_dst_ptr, t_dst_stride , 
-							   t_alpha_ptr , t_alpha_stride, 
-							   p_width, p_height ) ;
+	//surface_merge_with_alpha_non_pre ( t_dst_ptr, t_dst_stride , 
+							   //t_alpha_ptr , t_alpha_stride, 
+							   //p_width, p_height ) ;
 
 	return (t_dst_image);
 	
@@ -2212,17 +2206,17 @@ MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride
 void MCX11Context::unlock_layer ( void *p_image_ptr, uint4 p_image_stride , Layer *p_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  ) 
 {
 
-	void *t_image_ptr ;
-	void *t_alpha_ptr ;
+	//void *t_image_ptr ;
+	//void *t_alpha_ptr ;
 
-	t_image_ptr = p_image_ptr; 
-	t_alpha_ptr = p_layer -> alpha -> data ;
+	//t_image_ptr = p_image_ptr; 
+	//t_alpha_ptr = p_layer -> alpha -> data ;
 	
-	t_alpha_ptr = (uint1*) t_alpha_ptr + ( ( p_y * p_layer -> alpha -> bytes_per_line ) + p_x ) ;
+	//t_alpha_ptr = (uint1*) t_alpha_ptr + ( ( p_y * p_layer -> alpha -> bytes_per_line ) + p_x ) ;
 	
-	surface_extract_alpha(t_image_ptr, p_image_stride, //  -> bytes_per_line, 
-						  t_alpha_ptr, p_layer -> alpha -> bytes_per_line, 
-						  p_width, p_height) ;
+	//surface_extract_alpha(t_image_ptr, p_image_stride, //  -> bytes_per_line, 
+						  //t_alpha_ptr, p_layer -> alpha -> bytes_per_line, 
+						  //p_width, p_height) ;
 }
 
 
