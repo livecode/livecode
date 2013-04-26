@@ -300,7 +300,7 @@ Boolean MCScreenDC::getmouse(uint2 button, Boolean& r_abort)
 	}
 }
 
-Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
+Boolean MCScreenDC::getmouseclick(uint32_t button, Boolean& r_abort)
 {
 	if (!MCModeMakeLocalWindows())
 	{
