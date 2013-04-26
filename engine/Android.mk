@@ -4,7 +4,7 @@ include $(CLEAR_VARS)
 
 TARGET_PLATFORM=android-8
 
-LOCAL_MODULE := revandroid
+LOCAL_MODULE := revandroid-kernel
 
 LOCAL_ARM_MODE := arm
 
@@ -41,14 +41,13 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
 	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
-	mblandroid.cpp mblandroidalert.cpp mblandroidad.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
+	mblandroid.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
 	mblandroidcalendar.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
 	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroidinput.cpp \
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
-	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp \
-	stacksecurity.cpp)
+	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp )
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
@@ -64,8 +63,25 @@ LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/../thirdparty/libskia/include/ports \
 	$(LOCAL_PATH)/../thirdparty/libfreetype/include
 
+include $(BUILD_STATIC_LIBRARY)
 
-LOCAL_STATIC_LIBRARIES := libcore libjpeg libpcre libpng libgif libskia libfreetype
+#########
+
+include $(CLEAR_VARS)
+
+TARGET_PLATFORM=android-8
+
+LOCAL_MODULE := revandroid-community
+
+LOCAL_ARM_MODE := arm
+
+LOCAL_SRC_FILES := $(addprefix src/,stacksecurity.cpp mblandroidad.cpp)
+
+LOCAL_C_INCLUDES := \
+	$(LOCAL_PATH)/include \
+	$(LOCAL_PATH)/../libcore/include
+
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libjpeg libpcre libpng libgif libskia libfreetype
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

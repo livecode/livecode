@@ -207,6 +207,9 @@ protected:
 	// MW-2012-10-10: [[ IdCache ]]
 	bool m_in_id_cache : 1;
 	
+	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
+	bool m_script_encrypted : 1;
+	
 	char *tooltip;
 	
 	// MW-2008-10-20: Pointer to the parent script's weak object reference.
@@ -761,6 +764,7 @@ private:
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 
 	friend class MCObjectHandle;
+	friend class MCEncryptedStack;
 };
 
 class MCObjectList : public MCDLlist

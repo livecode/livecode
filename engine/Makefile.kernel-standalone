@@ -1,0 +1,10 @@
+NAME=libkernel-standalone
+TYPE=archive
+
+SOURCES= \
+	lextable.cpp mode_standalone.cpp
+
+KERNEL_DEFINES=\
+	MODE_STANDALONE
+
+include Makefile.kernel-common
