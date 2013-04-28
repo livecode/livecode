@@ -1349,9 +1349,12 @@ const char *MCS_getmachine()
 	return u.machine;
 }
 
+// MDW-2013-04-28 : any reason not to do this? It should return x86 or x86_64
 const char *MCS_getprocessor()
 {
-	return "unknown";
+	uname(&u);
+	return u.machine;
+//	return "unknown";
 }
 
 const char *MCS_getsystemversion()
