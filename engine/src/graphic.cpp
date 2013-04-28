@@ -878,7 +878,8 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 			closepolygon(realpoints, nrealpoints);
 		}
 		break;
-	case P_LINE_SIZE:
+    case P_BORDER_WIDTH:
+    case P_LINE_SIZE:
 	case P_PEN_WIDTH:
 	case P_PEN_HEIGHT:
 		if (!MCU_stoi2(data, i1))
