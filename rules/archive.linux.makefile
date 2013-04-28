@@ -3,7 +3,7 @@
 
 TYPE_DEFINES=
 TYPE_INCLUDES=
-TYPE_CCFLAGS=
+TYPE_CCFLAGS=-fPIC
 
 include $(shell pwd)/$(dir $(lastword $(MAKEFILE_LIST)))/common.linux.makefile
 
