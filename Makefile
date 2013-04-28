@@ -165,6 +165,7 @@ revandroid: libexternalv1
 # All Targets
 
 .PHONY: all clean
+.DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
@@ -172,4 +173,6 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
-	#
+
+clean:
+	@rm -r _build _cache
