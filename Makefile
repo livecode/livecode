@@ -7,6 +7,7 @@ LBITS := $(shell getconf LONG_BIT)
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
+.PHONY: standalone32
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
 
@@ -55,15 +56,15 @@ development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore k
 standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-#ifeq ($(LBITS),64)
-#standalone2: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
-#	rm -rf _cache
-#	$(MAKE) -C ./engine32 -f Makefile.standalone standalone32 -m32
+ifeq ($(LBITS),64)
+standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+	rm -rf _cache
+	$(MAKE) -C ./engine -f Makefile.standalone32 standalone32-community
 #else
-#standalone2: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity
+#standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
 #	rm -rf _cache
 #	$(MAKE) -C ./engine64 -f Makefile.standalone standalone64 -m64
-#endif
+endif
 
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 	$(MAKE) -C ./engine -f Makefile.installer installer
@@ -184,6 +185,9 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
+ifeq ($(LBITS),64)
+all: standalone32
+endif
 	#
 
 clean:

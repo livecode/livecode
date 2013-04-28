@@ -1,0 +1,17 @@
+NAME=standalone32-community
+TYPE=application
+
+MODE_SOURCES= \
+	stacksecurity.cpp
+
+MODE_DEPS=libkernel-standalone.a
+
+MODE_LIBS=kernel-standalone
+
+MODE_LDFLAGS=\
+	-Wl,--script=standalone.link
+
+MODE_CCFLAGS=\
+	-m32
+
+include Makefile.common
