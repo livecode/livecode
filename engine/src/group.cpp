@@ -69,6 +69,7 @@ MCGroup::MCGroup()
 	scrollx = scrolly = 0;
 	scrollbarwidth = MCscrollbarwidth;
 	minrect.x = minrect.y = minrect.width = minrect.height = 0;
+    updateslocked = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -1246,6 +1247,16 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		dirty = False;
 		flags ^= F_SELECT_GROUP;
 		break;
+    case P_LOCK_UPDATES:
+            Exec_stat t_stat;
+            Boolean t_lock;
+            t_stat = ep.getboolean(t_lock, 0, 0, EE_PROPERTY_NAB);
+            if (t_stat == ES_NORMAL)
+                updateslocked = t_lock;
+            if (!t_lock)
+                computeminrect(true);
+            return t_stat;
+        break;
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
