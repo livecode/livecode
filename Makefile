@@ -80,7 +80,7 @@ server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
@@ -107,7 +107,7 @@ libiodbc:
 dbpostgresql: libpq
 	$(MAKE) -C ./revdb dbpostgresql
 
-dbmysql: libmysql libz
+dbmysql: libmysql libz libopenssl
 	$(MAKE) -C ./revdb dbmysql
 
 dbsqlite: libsqlite libexternal
@@ -178,6 +178,7 @@ revandroid: libexternalv1
 # All Targets
 
 .PHONY: all clean
+.DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
@@ -185,6 +186,7 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
+<<<<<<< HEAD
 ifeq ($(LBITS),64)
 all: standalone32
 endif
@@ -194,3 +196,8 @@ clean:
 	rm -rf _cache
 	rm -rf _build
 
+=======
+
+clean:
+	@rm -r _build _cache
+>>>>>>> cf69df25d69a0bec676ed053586ffa6bbfbbdd9f
