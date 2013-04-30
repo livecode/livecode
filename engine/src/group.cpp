@@ -899,12 +899,15 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			while (cptr != startcard);
 		}
 		break;
+        case P_CONTROL_NAMES:
+        case P_CONTROL_IDS:
         case P_CHILD_CONTROL_NAMES:
         case P_CHILD_CONTROL_IDS:
         {
             ep.clear();
-			MCExecPoint ep2(ep);
-			
+			MCExecPoint t_ep_child_prop(ep);
+			MCExecPoint t_ep_getprop(ep);
+            
             MCObject *t_object = controls;
             MCObject *t_start_object = t_object;
             uint2 i = 0;
@@ -917,9 +920,17 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
                 else
                     t_prop = P_SHORT_ID;
                 
-                t_object->getprop(0, t_prop, ep2, False);
+                t_object->getprop(0, t_prop, t_ep_child_prop, False);
                 
-                ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i++ == 0);
+                ep.concatmcstring(t_ep_child_prop.getsvalue(), EC_RETURN, i++ == 0);
+                
+                
+                if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                {
+                    t_object->getprop(parid, which, t_ep_getprop, false);
+                    ep.concatmcstring(t_ep_getprop.getsvalue(), EC_RETURN, i++ == 0);
+                }
+                
                 t_object = t_object -> next();
                 
             }

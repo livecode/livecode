@@ -665,7 +665,9 @@ LT factor_table[] =
 		// MW-2012-10-08: [[ HitTest ]] New functions for determining the control at a point.
 		{"controlatloc", TT_FUNCTION, F_CONTROL_AT_LOC},
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
+        {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
         {"copyresource", TT_FUNCTION, F_COPY_RESOURCE},
