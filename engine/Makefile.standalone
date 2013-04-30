@@ -1,13 +1,19 @@
-NAME=standalone
+NAME=standalone-community
 TYPE=application
 
-MODE_SOURCES= \
-	lextable.cpp mode_standalone.cpp
+LBITS := $(shell getconf LONG_BIT)
 
-MODE_DEFINES=\
-	MODE_STANDALONE
-	
+MODE_SOURCES= \
+	stacksecurity.cpp
+
+MODE_DEPS=libkernel-standalone.a
+
+MODE_LIBS=kernel-standalone
+
 MODE_LDFLAGS=\
 	-Wl,--script=standalone.link
+
+MODE_CCFLAGS=\
+	-m$(LBITS)
 
 include Makefile.common

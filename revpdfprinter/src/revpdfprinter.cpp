@@ -1329,7 +1329,7 @@ bool custom_printer_clusters_to_cairo_clusters(const uint32_t *p_cp_clusters, ui
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 void * operator new (long unsigned int p_amount)
 #else
-void * operator new (unsigned int p_amount)
+void * operator new (size_t p_amount)
 #endif
 {
 	void *t_result;

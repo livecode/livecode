@@ -9,9 +9,9 @@ CUSTOM_DEFINES=_SERVER _LINUX_SERVER
 
 CUSTOM_INCLUDES=./src
 
-CUSTOM_LIBS=mysql z
+CUSTOM_LIBS=mysql
 CUSTOM_STATIC_LIBS=stdc++ ssl crypto
-CUSTOM_DYNAMIC_LIBS=pthread dl m
+CUSTOM_DYNAMIC_LIBS=pthread dl m z
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-non-virtual-dtor -fno-exceptions -fno-rtti \

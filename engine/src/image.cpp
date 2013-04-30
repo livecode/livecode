@@ -524,7 +524,11 @@ void MCImage::setrect(const MCRectangle &nrect)
 
 	if (!(state & CS_SIZE) || !(state & CS_EDITED))
 	{
-		apply_transform();
+		// IM-2013-04-15: [[ BZ 10827 ]] if the image has rotation then apply_transform()
+		// will reset the rect otherwise it will stay as set, in which case we can avoid
+		// the call to apply_transform() and any costly image loading that might cause
+		if (angle != 0)
+			apply_transform();
 		if ((rect.width != orect.width || rect.height != orect.height) && m_rep != nil)
 		{
 			layer_rectchanged(orect, true);
@@ -1736,9 +1740,12 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (ncolors > MAX_PLANES || flags & F_COMPRESSION
 			        || flags & F_TRUE_COLOR)
 			{
+				// IM-2013-04-12: [[ BZ 10843 ]] Initialize to -1 to indicate no repeat count has been set
+				repeatcount = -1;
 				if (flags & F_REPEAT_COUNT)
 					if ((stat = IO_read_int2(&repeatcount, stream)) != IO_NORMAL)
 						return stat;
+
 				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
 					return stat;
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
@@ -2035,7 +2042,9 @@ void MCImage::setrep(MCImageRep *p_rep)
 	}
 
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
-	setframe(currentframe);
+	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
+	if (currentframe != 0)
+		setframe(currentframe);
 
 	notifyneeds(false);
 }

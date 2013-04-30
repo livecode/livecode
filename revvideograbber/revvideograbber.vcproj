@@ -56,7 +56,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib vfw32.lib QTMLClient.lib gdi32.lib"
+				AdditionalDependencies="strmiids.lib vfw32.lib QTMLClient.lib gdi32.lib user32.lib advapi32.lib oleaut32.lib ole32.lib"
 				LinkIncremental="2"
 				AdditionalLibraryDirectories="$(ProgramFiles)\QuickTime SDK\Libraries"
 				GenerateDebugInformation="true"
@@ -128,7 +128,7 @@
 			/>
 			<Tool
 				Name="VCLinkerTool"
-				AdditionalDependencies="strmiids.lib vfw32.lib QTMLClient.lib gdi32.lib"
+				AdditionalDependencies="strmiids.lib vfw32.lib QTMLClient.lib gdi32.lib user32.lib advapi32.lib oleaut32.lib ole32.lib"
 				LinkIncremental="1"
 				AdditionalLibraryDirectories="$(ProgramFiles)\QuickTime SDK\Libraries"
 				GenerateDebugInformation="true"

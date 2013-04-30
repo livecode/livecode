@@ -1,26 +1,37 @@
-.PHONY: engine standalone runtime kernel newruntime server
+.PHONY: engine standalone standalone32 runtime kernel newruntime server kernel-standalone kernel-development kernel-server
 
 kernel:
 	$(MAKE) -f Makefile.kernel libkernel
 
-engine: kernel
-	$(MAKE) -f Makefile.development engine
-	if [ -e ../_build/linux/debug/engine ]; then cp ../_build/linux/debug/engine revolution.debug.x86; fi
-	if [ -e ../_build/linux/release/engine ]; then cp ../_build/linux/release/engine revolution.release.x86; fi
+kernel-standalone:
+	$(MAKE) -f Makefile.kernel-standalone libkernel-standalone
 
-standalone: kernel
-	$(MAKE) -f Makefile.standalone standalone
+kernel-development:
+	$(MAKE) -f Makefile.kernel-development libkernel-development
+
+kernel-server:
+	$(MAKE) -f Makefile.kernel-server libkernel-server
+
+engine: kernel kernel-development
+	$(MAKE) -f Makefile.development engine-community
+
+standalone: kernel kernel-standalone
+	$(MAKE) -f Makefile.standalone standalone-community
+
+standalone32: kernel kernel-standalone
+	$(MAKE) -f Makefile.standalone32 standalone32-community
 
 installer: kernel
 	$(MAKE) -f Makefile.installer installer
 
-server:
-	$(MAKE) -f Makefile.server server
+server: kernel-server
+	$(MAKE) -f Makefile.server server-community
 
 clean:
 	$(MAKE) -f Makefile.development clean
 	$(MAKE) -f Makefile.installer clean
 	$(MAKE) -f Makefile.standalone clean
+	$(MAKE) -f Makefile.standalone32 clean
 	$(MAKE) -f Makefile.runtime clean
 	$(MAKE) -f Makefile.kernel clean
 	$(MAKE) -f Makefile.server clean

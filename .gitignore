@@ -1,10 +1,21 @@
 # Specific files #
 ##################
+engine/private/
 engine/src/hashedstrings.cpp
 engine/src/encodederrors.cpp
 engine/src/startupstack.cpp
 engine/src/linuxstubs.cpp
+engine/include/revbuild.h
 lcidlc/src/EncodedSupport.c
+IMarketBillingService.java
+crypt.cpp
+crypt.h
+deploysecurity_encrypted.cpp
+encryptedobjectstream.cpp
+encryptedobjectstream.h
+encryptedstack.cpp
+encryptedstack.h
+stacksecurity_encrypted.cpp
 
 # Compiled source #
 ###################
@@ -14,6 +25,16 @@ lcidlc/src/EncodedSupport.c
 *.exe
 *.o
 *.so
+=======
+# Compiled source - don't ignore as this is a prebuilt repo #
+#############################################################
+#*.com
+#*.class
+#*.dll
+#*.exe
+#*.o
+#*.so
+>>>>>>> 28179a55c9500f6a569e402d390a16f8a4b079eb
 
 # Packages #
 ############
@@ -55,6 +76,7 @@ Thumbs.db
 *.perspectivev3
 xcuserdata/
 *.vcproj.*.user
+<<<<<<< HEAD
 *.ncb
 *.suo
 
@@ -62,3 +84,5 @@ xcuserdata/
 #################
 _build/
 _cache/
+build/
+

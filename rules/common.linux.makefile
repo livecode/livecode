@@ -1,13 +1,6 @@
 # Common template Makefile for all types
 
-ifeq ($(MODE),)
-	MODE=debug
-endif
-
-SOLUTION_DIR=$(shell cat ../owner)/..
-BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(MODE)
-CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(MODE)/$(NAME)
-PRODUCT_DIR=$(BUILD_DIR)
+include $(dir $(lastword $(MAKEFILE_LIST)))/environment.linux.makefile
 
 DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX
 
@@ -15,7 +8,6 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
-	$(SOLUTION_DIR)/liburlcache/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include/Xft \
@@ -30,8 +22,9 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libxml/include \
 	$(SOLUTION_DIR)/thirdparty/libz/include \
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
-	$(SOLUTION_DIR)/thirdparty/libopenssl/include
-	
+	$(SOLUTION_DIR)/thirdparty/libopenssl/include \
+	$(SOLUTION_DIR)/thirdparty/libcurl/include 
+
 GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib
 
@@ -58,7 +51,7 @@ OBJECTS=$(SRC_OBJECTS) $(CUSTOM_OBJECTS)
 HDEPS:=$(SRC_OBJECTS:.o=.d)
 -include $(HDEPS)
 
-VPATH=./src $(addprefix ./src/,$(SOURCE_DIRS)) $(CACHE_DIR) $(BUILD_DIR)
+VPATH=./src $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)

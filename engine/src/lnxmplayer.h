@@ -69,9 +69,11 @@ class MPlayer
 		int m_pfd_read[2];
 	    pid_t m_cpid;
 	
-		uint4 m_duration ;
-		uint4 m_timescale ;
-		uint4 m_loudness ;
+		// MDW-2013-04-16: lnxmplayer.cpp sets these to -1 and compares for -1
+		// so changed from uint4 to int4
+		int4 m_duration ;
+		int4 m_timescale ;
+		int4 m_loudness ;
 
 	
 		bool launch_player(void) ;

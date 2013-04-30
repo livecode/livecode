@@ -904,7 +904,8 @@ IO_handle MCS_open(const char *path, const char *mode,
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
-				if ((int)buffer != -1)
+				// MDW 2013.04.15: compare without compiler barfing
+				if ((void*)buffer != (void*)-1)
 				{
 					delete newpath;
 					handle = new IO_header(NULL, buffer, len, fd, 0);
@@ -1348,9 +1349,12 @@ const char *MCS_getmachine()
 	return u.machine;
 }
 
+// MDW-2013-04-28 : any reason not to do this? It should return x86 or x86_64
 const char *MCS_getprocessor()
 {
-	return "unknown";
+	uname(&u);
+	return u.machine;
+//	return "unknown";
 }
 
 const char *MCS_getsystemversion()
@@ -1486,7 +1490,8 @@ IO_handle MCS_fakeopenwrite(void)
 
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
-	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, 0, IO_FAKECUSTOM);
+	// MDW 2013.04.15: added 64-bit-safe p_callbacks
+	return new IO_header(NULL, (char *)p_state, (size_t)p_callbacks, 0, IO_FAKECUSTOM);
 }
 
 IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)

@@ -100,4 +100,10 @@ IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_strea
 	return t_stat;
 }
 
+///////////
+
+void MCStackSecurityProcessCapsule(void *p_start, void *p_finish)
+{
+}
+
 ////////////////////////////////////////////////////////////////////////////////
