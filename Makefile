@@ -67,7 +67,7 @@ server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
@@ -94,7 +94,7 @@ libiodbc:
 dbpostgresql: libpq
 	$(MAKE) -C ./revdb dbpostgresql
 
-dbmysql: libmysql libz
+dbmysql: libmysql libz libopenssl
 	$(MAKE) -C ./revdb dbmysql
 
 dbsqlite: libsqlite libexternal
