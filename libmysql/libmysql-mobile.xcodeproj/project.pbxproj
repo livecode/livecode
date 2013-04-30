@@ -481,6 +481,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D7EFD6312E72A5A00D67888 /* Debug Mobile.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(inherited)",
+				);
 				OWNER = ..;
 			};
 			name = Debug;
@@ -489,6 +493,10 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D7EFD6412E72A5A00D67888 /* Release Mobile.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(inherited)",
+				);
 				OWNER = ..;
 			};
 			name = Release;
@@ -496,7 +504,6 @@
 		4D7EFD7C12E72ABB00D67888 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = mysql;
 			};
 			name = Debug;
@@ -504,7 +511,6 @@
 		4D7EFD7D12E72ABB00D67888 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ALWAYS_SEARCH_USER_PATHS = YES;
 				PRODUCT_NAME = mysql;
 			};
 			name = Release;

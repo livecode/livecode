@@ -209,7 +209,6 @@
 		3C36794212637A6100B2519A /* my_fstream.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = my_fstream.c; path = src/my_fstream.c; sourceTree = "<group>"; };
 		3C36794812637A9C00B2519A /* str_alloc.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = str_alloc.c; path = src/str_alloc.c; sourceTree = "<group>"; };
 		3C36794C12637AF700B2519A /* strnlen.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = strnlen.c; path = src/strnlen.c; sourceTree = "<group>"; };
-		3C36795512637C2100B2519A /* config-osx.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "config-osx.h"; path = "src/config-osx.h"; sourceTree = "<group>"; };
 		3C36796C126465F800B2519A /* my_compress.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = my_compress.c; path = src/my_compress.c; sourceTree = "<group>"; };
 		3C3679761264670300B2519A /* viossl.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = viossl.c; path = src/viossl.c; sourceTree = "<group>"; };
 		3C36797A1264673800B2519A /* viosslfactories.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = viosslfactories.c; path = src/viosslfactories.c; sourceTree = "<group>"; };
@@ -250,7 +249,6 @@
 				3C36797A1264673800B2519A /* viosslfactories.c */,
 				3C3679761264670300B2519A /* viossl.c */,
 				3C36796C126465F800B2519A /* my_compress.c */,
-				3C36795512637C2100B2519A /* config-osx.h */,
 				3C3678801263738B00B2519A /* array.c */,
 				3C3678811263738B00B2519A /* bchange.c */,
 				3C36792C126379A900B2519A /* bmove_upp.c */,
@@ -565,8 +563,11 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DCDCA240B80890D0040D436 /* Debug.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(inherited)",
+				);
 				OWNER = ..;
-				USER_HEADER_SEARCH_PATHS = ./include;
 			};
 			name = Debug;
 		};
@@ -574,8 +575,11 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DCDCA230B80890D0040D436 /* Release.xcconfig */;
 			buildSettings = {
+				HEADER_SEARCH_PATHS = (
+					"$(SRCROOT)/src",
+					"$(inherited)",
+				);
 				OWNER = ..;
-				USER_HEADER_SEARCH_PATHS = ./include;
 			};
 			name = Release;
 		};
