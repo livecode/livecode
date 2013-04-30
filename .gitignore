@@ -25,6 +25,16 @@ stacksecurity_encrypted.cpp
 *.exe
 *.o
 *.so
+=======
+# Compiled source - don't ignore as this is a prebuilt repo #
+#############################################################
+#*.com
+#*.class
+#*.dll
+#*.exe
+#*.o
+#*.so
+>>>>>>> 28179a55c9500f6a569e402d390a16f8a4b079eb
 
 # Packages #
 ############
@@ -66,6 +76,7 @@ Thumbs.db
 *.perspectivev3
 xcuserdata/
 *.vcproj.*.user
+<<<<<<< HEAD
 *.ncb
 *.suo
 
@@ -74,3 +85,4 @@ xcuserdata/
 _build/
 _cache/
 build/
+
