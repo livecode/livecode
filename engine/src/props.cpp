@@ -773,30 +773,35 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
             getarrayprop(parid, (Properties)table[tablesize].value, ep, kMCEmptyName, effective);
         else
         {
-            Properties which = (Properties)table[tablesize].value;
             
-            if (which == P_LABEL && hasunicode())
-            {
-                which = P_UNICODE_LABEL;
-                if (gettype() == CT_STACK)
-                    t_token = strdup("unicodeTitle");
-                else
-                    t_token = strdup("unicodeLabel");
+            switch ((Properties)table[tablesize].value) {
+                case P_LABEL:
+                    getprop(parid, P_UNICODE_LABEL, ep, effective);
+                    if (!ep.trytoconvertutf16tonative())
+                    {
+                        if (gettype() == CT_STACK)
+                            t_token = strdup("unicodeTitle");
+                        else
+                            t_token = strdup("unicodeLabel");
+                    }
+                    break;
+                case P_TOOL_TIP:
+                    getprop(parid, P_UNICODE_TOOL_TIP, ep, effective);
+                    if (!ep.trytoconvertutf16tonative())
+                        t_token = strdup("unicodeToolTip");
+                    break;
+                case P_TEXT:
+                    if (gettype() == CT_BUTTON)
+                    {
+                        getprop(parid, P_UNICODE_TEXT, ep, effective);
+                        if (!ep.trytoconvertutf16tonative())
+                            t_token = strdup("unicodeText");
+                        break;
+                    }
+                default:
+                    getprop(parid, (Properties)table[tablesize].value, ep, effective);
+                    break;
             }
-            
-            if (which == P_TOOL_TIP && hasunicode())
-            {
-                which = P_UNICODE_TOOL_TIP;
-                t_token = strdup("unicodeToolTip");
-            }
-            
-            if (which == P_TEXT && hasunicode() && gettype() == CT_BUTTON)
-            {
-                which = P_UNICODE_TEXT;
-                t_token = strdup("unicodeText");
-            }
-        
-            getprop(parid, which, ep, effective);
         }
         
         if (!ep.isempty())
