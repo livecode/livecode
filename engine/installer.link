@@ -2,8 +2,6 @@
    ld. It has been modified with a rule to place the '.project' and '.payload'
    sections after the .bss section to allow easy insertion of the installer data. */
 
-OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
-OUTPUT_ARCH(i386)
 ENTRY(_start)
 SEARCH_DIR("/usr/i386-redhat-linux/lib"); SEARCH_DIR("/usr/local/lib"); SEARCH_DIR("/lib"); SEARCH_DIR("/usr/lib");
 SECTIONS
