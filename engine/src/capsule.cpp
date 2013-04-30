@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "md5.h"
 #include "capsule.h"
 
+#include "stacksecurity.h"
+
 #include <zlib.h>
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -483,7 +485,10 @@ static bool MCCapsuleRead(MCCapsuleRef self, void *p_buffer, uint32_t p_buffer_s
 		// for, the input must be eof.
 		if (self -> buckets_complete)
 			self -> input_eof = (t_amount != t_amount_read);
-
+		
+		// Process any security features.
+		MCStackSecurityProcessCapsule(self -> decompress . next_in + self -> decompress . avail_in, self -> input_buffer + self -> input_frontier + t_amount_read);
+		
 		// Adjust the data pointers
 		self -> input_frontier += t_amount_read;
 		self -> decompress . avail_in = (self -> input_buffer + self -> input_frontier - sizeof(uint32_t)) - (self -> decompress . next_in + self -> decompress . avail_in);

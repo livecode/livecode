@@ -5451,10 +5451,6 @@
 			Name="Core - Security"
 			>
 			<File
-				RelativePath=".\src\stacksecurity.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\stacksecurity.h"
 				>
 			</File>
@@ -5462,6 +5458,32 @@
 		<File
 			RelativePath=".\ChangeLog.txt"
 			>
+		</File>
+		<File
+			RelativePath=".\encode_version.rev"
+			>
+			<FileConfiguration
+				Name="Debug|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generating version info..."
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
+					Outputs="$(ProjectDir)include\revbuild.h"
+				/>
+			</FileConfiguration>
+			<FileConfiguration
+				Name="Release|Win32"
+				>
+				<Tool
+					Name="VCCustomBuildTool"
+					Description="Generating version info..."
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
+					Outputs="$(ProjectDir)include\revbuild.h"
+				/>
+			</FileConfiguration>
 		</File>
 		<File
 			RelativePath=".\Makefile"

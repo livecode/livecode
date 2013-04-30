@@ -2780,6 +2780,10 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
 	{
 		t_new_owner -> relayercontrol(static_cast<MCControl *>(t_source), t_new_target);
 
+		// MW-2013-04-29: [[ Bug 10861 ]] Make sure we trigger a property update as 'layer'
+		//   is changing.
+		t_source -> signallisteners(P_LAYER);
+
 		if (t_card -> getstack() == MCmousestackptr && MCU_point_in_rect(t_source->getrect(), MCmousex, MCmousey))
 			t_card -> mfocus(MCmousex, MCmousey);
 	}
@@ -2809,6 +2813,10 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
 		{
 			t_source -> getparent() -> relayercontrol_remove(static_cast<MCControl *>(t_source));
 			t_new_owner -> relayercontrol_insert(static_cast<MCControl *>(t_source), t_new_target);
+			
+			// MW-2013-04-29: [[ Bug 10861 ]] Make sure we trigger a property update as 'layer'
+			//   is changing.
+			t_source -> signallisteners(P_LAYER);
 		}
 		else
 		{

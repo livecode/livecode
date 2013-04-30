@@ -1,6 +1,6 @@
 # The folder containing this script
-TOOLS=`dirname $0`
-TRUNK=`cd $TOOLS/..; pwd`
+export TOOLS=`dirname $0`
+export TRUNK=`cd $TOOLS/..; pwd`
 
 # Global variables needed later
 export MODE=release
@@ -10,26 +10,29 @@ export ANDROID_NDK=$TRUNK/sdks/android-ndk
 export ANDROID_SDK=$TRUNK/sdks/android-sdk
 
 # Local variables
-SRCROOT=$TRUNK
-JAVA_SDK=`/usr/libexec/java_home`
-JCOUNT=20
+export SRCROOT=$TRUNK
+export JAVA_SDK=`/usr/libexec/java_home`
+export JCOUNT=20
 
 # Path variables
-CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
-NDKBUILD=$ANDROID_NDK/ndk-build
-DSTROOT=$SRCROOT/_build/android/$MODE
-RAWROOT=$SRCROOT/_build/android/$MODE/assets
+export CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
+export NDKBUILD=$ANDROID_NDK/ndk-build
+export DSTROOT=$SRCROOT/_build/android/$MODE
+export RAWROOT=$SRCROOT/_build/android/$MODE/assets
 
-JAVAC=$JAVA_SDK/bin/javac
-JAR=$JAVA_SDK/bin/jar
-DX=$ANDROID_SDK/platforms/android-8/tools/dx
-AAPT=$ANDROID_SDK/platforms/android-8/tools/aapt
-APKBUILDER=$ANDROID_SDK/tools/apkbuilder
-ZIPALIGN=$ANDROID_SDK/tools/zipalign
-ADB=$ANDROID_SDK/platform-tools/adb
-AIDL=$ANDROID_SDK/platform-tools/aidl
+export JAVAC=$JAVA_SDK/bin/javac
+export JAR=$JAVA_SDK/bin/jar
+export DX=$ANDROID_SDK/platforms/android-8/tools/dx
+export AAPT=$ANDROID_SDK/platforms/android-8/tools/aapt
+export APKBUILDER=$ANDROID_SDK/tools/apkbuilder
+export ZIPALIGN=$ANDROID_SDK/tools/zipalign
+export ADB=$ANDROID_SDK/platform-tools/adb
+export AIDL=$ANDROID_SDK/platform-tools/aidl
 
 ##########
+
+# Update version info
+$TRUNK/prebuilt/bin/Revolution.osx -ui $TRUNK/engine/encode_version.rev $TRUNK/engine
 
 # Build the native code components
 export NDK_PROJECT_PATH=$DSTROOT
@@ -40,7 +43,7 @@ if [ $? != 0 ]; then
 fi
 
 
-JAVASRC=$SRCROOT/engine/src/java
+export JAVASRC=$SRCROOT/engine/src/java
 
 # generate the MarketBillingService interface class from the aidl file
 "$AIDL" -I"JAVASRC" -p"$ANDROID_SDK/platforms/android-8/framework.aidl" "$JAVASRC/com/android/vending/billing/IMarketBillingService.aidl"
@@ -50,26 +53,26 @@ fi
 
 # Compile the java classes
 echo "Building java classes..."
-mkdir -p "$DSTROOT/classes_livecode"
+mkdir -p "$DSTROOT/classes_livecode_community"
 mkdir -p "$DSTROOT/classes_app"
-"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/LiveCodeActivity.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/LiveCodeActivity.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/EngineReceiver.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/EngineReceiver.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
-"$JAVAC" -d "$DSTROOT/classes_livecode" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
+"$JAVAC" -d "$DSTROOT/classes_livecode_community" -cp "$CLASSPATH" -sourcepath "$JAVASRC" "$JAVASRC/com/runrev/android/PushReceiver.java"
 if [ $? != 0 ]; then
 	exit $?
 fi
 
 # add LiveCode classes to jar
 echo "Create Classes jar"
-"$JAR" cf "$DSTROOT/LiveCode.jar" -C "$DSTROOT/classes_livecode" .
+"$JAR" cf "$DSTROOT/LiveCode-Community.jar" -C "$DSTROOT/classes_livecode_community" .
 
 ##########
 # 
@@ -93,23 +96,15 @@ echo "Create Classes jar"
 
 PKGDIR=$DSTROOT
 
-cp $DSTROOT/libs/armeabi/librevandroid.so $PKGDIR/Standalone
+cp $DSTROOT/libs/armeabi/librevandroid-community.so $PKGDIR/Standalone-Community
 cp $DSTROOT/libs/armeabi/librevxml.so $PKGDIR/RevXml
 cp $DSTROOT/libs/armeabi/librevzip.so $PKGDIR/RevZip
 cp $DSTROOT/libs/armeabi/librevdb.so $PKGDIR/RevDb
 cp $DSTROOT/libs/armeabi/libdbsqlite.so $PKGDIR/DbSqlite
 cp $DSTROOT/libs/armeabi/libdbmysql.so $PKGDIR/DbMysql
-cp $DSTROOT/LiveCode.jar $PKGDIR/Classes
+cp $DSTROOT/LiveCode-Community.jar $PKGDIR/Classes-Community
 cp $TRUNK/engine/rsrc/android-manifest.xml $PKGDIR/Manifest.xml
 cp $TRUNK/engine/rsrc/android-notify-icon.png "$PKGDIR/notify_icon.png"
 cp $TRUNK/engine/rsrc/android-inputcontrol.xml "$PKGDIR/livecode_inputcontrol.xml"
-
-#echo $1 > $PKGDIR/files/version.txt
-
-#cd $PKGDIR/files
-#zip -r ../android-$1.zip *
-#cd -
-
-# cp $PKGDIR/android-$1.zip ~/Builds/Engines
 
 ##########
