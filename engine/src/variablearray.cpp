@@ -1428,20 +1428,10 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 				        && te->type == TT_PROPERTY && te->which != P_ID)
 				{
 					e -> value . fetch(ep);
-                    switch ((Properties)te->which) {
-                        case P_BITMAP_EFFECT_COLOR_OVERLAY:
-                        case P_BITMAP_EFFECT_DROP_SHADOW:
-                        case P_BITMAP_EFFECT_INNER_SHADOW:
-                        case P_BITMAP_EFFECT_INNER_GLOW:
-                        case P_BITMAP_EFFECT_OUTER_GLOW:
-                        case P_GRADIENT_FILL:
-                        case P_GRADIENT_STROKE:
-                            optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
-                            break;
-                        default:
-                            optr->setprop(parid, (Properties)te->which, ep, False);
-                            break;
-                    }
+                    if ((Properties)te->which > P_FIRST_ARRAY_PROP)
+                        optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
+                    else
+                        optr->setprop(parid, (Properties)te->which, ep, False);
                 }
 				e = e->next;
 			}

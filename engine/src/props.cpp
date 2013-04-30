@@ -81,7 +81,7 @@ static PropList stackprops[] =
 		{"textFont", P_TEXT_FONT},
         {"textSize", P_TEXT_SIZE},
         {"textStyle", P_TEXT_STYLE},
-        {"unicodeLabel", P_UNICODE_LABEL},
+        {"title", P_LABEL},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"underlineLinks", P_UNDERLINE_LINKS},
@@ -116,7 +116,6 @@ static PropList cardprops[] =
         {"layer", P_LAYER},
         {"mark", P_MARKED},
         {"name", P_SHORT_NAME},
-        {"rect", P_RECTANGLE},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
         {"shadowOffset", P_SHADOW_OFFSET},
@@ -189,8 +188,8 @@ static PropList groupprops[] =
         {"traversalOn", P_TRAVERSAL_ON},
         {"unboundedHScroll", P_UNBOUNDED_HSCROLL},
         {"unboundedVScroll", P_UNBOUNDED_VSCROLL},
-        {"unicodeLabel", P_UNICODE_LABEL},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"label", P_LABEL},
+        {"toolTip", P_TOOL_TIP},
         {"visible", P_VISIBLE},
         {"vScroll", P_VSCROLL},
         {"vScrollbar", P_VSCROLLBAR}
@@ -240,6 +239,7 @@ static PropList buttonprops[] =
         {"ink", P_INK},
         {"innerGlow", P_BITMAP_EFFECT_INNER_GLOW},
         {"innerShaddow", P_BITMAP_EFFECT_INNER_SHADOW},
+        {"label", P_LABEL},
         {"labelWidth", P_LABEL_WIDTH},
         {"layer", P_LAYER},
         {"layerMode", P_LAYER_MODE},
@@ -275,9 +275,8 @@ static PropList buttonprops[] =
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
-        {"unicodeLabel", P_UNICODE_LABEL},
-        {"unicodeText", P_UNICODE_TEXT},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"text", P_TEXT},
+        {"toolTip", P_TOOL_TIP},
         {"visible", P_VISIBLE},
         {"visitedIcon", P_VISITED_ICON}
     };
@@ -354,8 +353,8 @@ static PropList fieldprops[] =
         {"toggleHilites", P_TOGGLE_HILITE},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
+        {"toolTip", P_TOOL_TIP},
         {"traversalOn", P_TRAVERSAL_ON},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
         {"vGrid", P_VGRID},
         {"visible", P_VISIBLE},
         {"vScroll", P_VSCROLL},
@@ -415,7 +414,7 @@ static PropList imageprops[] =
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"toolTip", P_TOOL_TIP},
         {"visible", P_VISIBLE},
         {"xHot", P_XHOT},
         {"yHot", P_YHOT}
@@ -455,6 +454,7 @@ static PropList graphicprops[] =
         {"ink", P_INK},
         {"innerGlow", P_BITMAP_EFFECT_INNER_GLOW},
         {"innerShaddow", P_BITMAP_EFFECT_INNER_SHADOW},
+        {"label", P_LABEL},
         {"layer", P_LAYER},
         {"layerMode", P_LAYER_MODE},
         {"lineSize", P_LINE_SIZE},
@@ -486,8 +486,7 @@ static PropList graphicprops[] =
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
-        {"unicodeLabel", P_UNICODE_LABEL},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"toolTip", P_TOOL_TIP},
         {"visible", P_VISIBLE},
         {"markerLineSize", P_MARKER_LSIZE},
         {"startAngle", P_START_ANGLE},
@@ -551,7 +550,7 @@ static PropList scrollbarprops[] =
         {"textStyle", P_TEXT_STYLE},
         {"threeD", P_3D},
         {"thumbPosition", P_THUMB_POS},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"toolTip", P_TOOL_TIP},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
@@ -612,7 +611,7 @@ static PropList playerprops[] =
         {"textSize", P_TEXT_SIZE},
         {"textStyle", P_TEXT_STYLE},
         {"threeD", P_3D},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"toolTip", P_TOOL_TIP},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
@@ -660,7 +659,7 @@ static PropList epsprops[] =
         {"showBorder", P_SHOW_BORDER},
         {"showFocusBorder", P_SHOW_FOCUS_BORDER},
         {"threeD", P_3D},
-        {"unicodeToolTip", P_UNICODE_TOOL_TIP},
+        {"toolTip", P_TOOL_TIP},
         {"topColor", P_TOP_COLOR},
         {"topPattern", P_TOP_PATTERN},
         {"traversalOn", P_TRAVERSAL_ON},
@@ -768,22 +767,40 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
 	MCerrorlock++;
 	while (tablesize--)
 	{
-        switch ((Properties)table[tablesize].value) {
-            case P_BITMAP_EFFECT_COLOR_OVERLAY:
-            case P_BITMAP_EFFECT_DROP_SHADOW:
-            case P_BITMAP_EFFECT_INNER_SHADOW:
-            case P_BITMAP_EFFECT_INNER_GLOW:
-            case P_BITMAP_EFFECT_OUTER_GLOW:
-            case P_GRADIENT_FILL:
-            case P_GRADIENT_STROKE:
-                getarrayprop(parid, (Properties)table[tablesize].value, ep, kMCEmptyName, effective);
-		        break;
-            default:
-                getprop(parid, (Properties)table[tablesize].value, ep, effective);
-		        break;
+        char * t_token = strdup(table[tablesize].token);
+        
+        if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
+            getarrayprop(parid, (Properties)table[tablesize].value, ep, kMCEmptyName, effective);
+        else
+        {
+            Properties which = (Properties)table[tablesize].value;
+            
+            if (which == P_LABEL && hasunicode())
+            {
+                which = P_UNICODE_LABEL;
+                if (gettype() == CT_STACK)
+                    t_token = strdup("unicodeTitle");
+                else
+                    t_token = strdup("unicodeLabel");
+            }
+            
+            if (which == P_TOOL_TIP && hasunicode())
+            {
+                which = P_UNICODE_TOOL_TIP;
+                t_token = strdup("unicodeToolTip");
+            }
+            
+            if (which == P_TEXT && hasunicode() && gettype() == CT_BUTTON)
+            {
+                which = P_UNICODE_TEXT;
+                t_token = strdup("unicodeText");
+            }
+        
+            getprop(parid, which, ep, effective);
         }
+        
         if (!ep.isempty())
-            v->store_element(ep, table[tablesize].token);
+            v->store_element(ep, t_token);
 	}
 	MCerrorlock--;
 	ep.setarray(v, True);
