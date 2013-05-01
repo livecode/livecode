@@ -1551,6 +1551,11 @@ enum Properties {
 	
 	// MW-2012-11-13: [[ Bug 10516 ]] Tag for allowDatagramBroadcasts property.
 	P_ALLOW_DATAGRAM_BROADCASTS,
+    
+    P_CONTROL_IDS,
+    P_CONTROL_NAMES,
+	P_CHILD_CONTROL_IDS,
+    P_CHILD_CONTROL_NAMES,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
