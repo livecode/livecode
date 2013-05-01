@@ -883,6 +883,8 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_CARD_NAMES:
     case P_CARD_IDS:
 		{
+			// MERG-2013-05-01: [[ GrpCardIds ]] Add 'the cardIds' property to
+			//   groups (returns ids rather than names).
 			ep.clear();
 			MCExecPoint ep2(ep);
 			MCCard *startcard = getstack()->getcards();
