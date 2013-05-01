@@ -502,12 +502,21 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_3D:
 		ep.setboolean(getflag(F_3D));
 		break;
-	case P_VISIBLE:
-		ep.setboolean(getflag(F_VISIBLE));
-		break;
-	case P_INVISIBLE:
-		ep.setboolean(!(flags & F_VISIBLE));
-		break;
+    case P_VISIBLE:
+    case P_INVISIBLE:
+        {
+            bool t_vis = getflag(F_VISIBLE);
+            // if visible and effective and parent is a
+            // group then keep searching parent properties 
+            if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
+                return parent->getprop(parid, which, ep, effective);
+            else
+                if (which == P_VISIBLE)
+                    ep.setboolean(t_vis);
+                else
+                    ep.setboolean(!t_vis);
+            break;
+        }
 	case P_DISABLED:
 		ep.setboolean(getflag(F_DISABLED));
 		break;
