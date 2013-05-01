@@ -30,8 +30,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define __WINDOWS_1252__
 #define __CRLF__
-#define PLATFORM_STRING "Win32"
-
+// MDW-2013-04-29: added 64-bit platform
+#ifdef __LLP64__
+	#define PLATFORM_STRING "Win64"
+#else
+	#define PLATFORM_STRING "Win32"
+#endif
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
 #define FEATURE_RELAUNCH_SUPPORT
@@ -41,7 +45,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define __MACROMAN__
 #define __CR__
-#define PLATFORM_STRING "MacOS"
+// MDW-2013-04-29: added 64-bit platform
+#ifdef __LP64__
+	#define PLATFORM_STRING "OSX-64"
+#else
+	#define PLATFORM_STRING "MacOS"
+#endif
 
 #define MCSSL
 #define FEATURE_TASKBAR_ICON
@@ -60,7 +69,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define __WINDOWS_1252__
 #define __CRLF__
-#define PLATFORM_STRING "Win32"
+// MDW-2013-04-29: added 64-bit platform
+#ifdef __LLP64__
+	#define PLATFORM_STRING "Win64"
+#else
+	#define PLATFORM_STRING "Win32"
+#endif
 
 #define MCSSL
 
@@ -68,7 +82,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define __MACROMAN__
 #define __CR__
-#define PLATFORM_STRING "MacOS"
+// MDW-2013-04-29: added 64-bit platform
+#ifdef __LP64__
+	#define PLATFORM_STRING "OSX-64"
+#else
+	#define PLATFORM_STRING "MacOS"
+#endif
 
 #define MCSSL
 
@@ -702,7 +721,7 @@ typedef  _Drawable *        Window;
 typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
 #else
-	// MDW 2013.04.15: added 64-bit-safe typedefs
+	// MDW-2013-04-15: added 64-bit-safe typedefs
 	#ifndef __LP64__
 		#if !defined(Window)
 			typedef unsigned long Window;

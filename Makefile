@@ -187,7 +187,7 @@ all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
 ifeq ($(LBITS),64)
-all: standalone32
+#all: standalone32
 endif
 	#
 

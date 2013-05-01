@@ -86,7 +86,7 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
-// MDW 2013.04.15: added 64-bit-safe typedefs
+// MDW-2013-04-15: added 64-bit-safe typedefs
 #if !defined(uint64_t)
 	#ifndef __LP64__
 		typedef unsigned long long int uint64_t;
@@ -137,10 +137,11 @@ typedef int32_t index_t;
 
 // Pointer defines
 
-// MDW 2013.04.15: added 64-bit-safe typedefs
+// MDW-2013-04-15: added 64-bit-safe typedefs
+// MDW-2013-04-29: added 64-bit Windows LLP64 definition
 #ifndef _UINTPTR_T
 	#define _UINTPTR_T
-	#ifdef __LP64__
+	#if defined(__LP64__) || defined(__LLP64__)
 		typedef uint64_t uintptr_t;
 	#else
 		typedef uint32_t uintptr_t;
@@ -149,7 +150,7 @@ typedef int32_t index_t;
 
 #ifndef _INTPTR_T
 	#define _INTPTR_T
-	#ifdef __LP64__
+	#if defined(__LP64__) || defined(__LLP64__)
 		typedef int64_t intptr_t;
 	#else
 		typedef int32_t intptr_t;
