@@ -1368,6 +1368,16 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 	}
 }
 
+static struct { Properties prop; const char *tag; } s_preprocess_props[] =
+{
+    { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
+    { P_RECTANGLE, "rect" },     // synonym
+    { P_WIDTH, "width" },        // incase left,right are in the array
+    { P_HEIGHT, "height" },      // incase top,bottom are in the array
+    { P_STYLE, "style" },        // changes numerous properties including text alignment
+    { P_TEXT_SIZE, "textSize" }, // changes textHeight
+};
+
 Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
@@ -1375,63 +1385,51 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCRedrawLockScreen();
 	MCerrorlock++;
     MCHashentry *e;
-    // set rect first so it doesn't break gradients
-    e = lookuphash(MCString("rect"),true,false);
-    if (e)
+    
+    // pre-process to ensure properties that impact others are set first
+    uint1 t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
+    uint1 j;
+    for (j=0; j<t_preprocess_size; j++)
     {
-        e -> value . fetch(ep);
-        optr->setprop(parid, P_RECTANGLE, ep, False);
-        removehash(e);
+        e = lookuphash(s_preprocess_props[j].tag,true,false);
+        if (e)
+        {
+            e -> value . fetch(ep);
+            optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
+        }
     }
-	// set width and height first so again it doesn't break gradients but also to ensure left,right etc are applied correctly
-    e = lookuphash(MCString("width"),true,false);
-    if (e)
-    {
-        e -> value . fetch(ep);
-        optr->setprop(parid, P_WIDTH, ep, False);
-        removehash(e);
-    }
-	e = lookuphash(MCString("height"),true,false);
-    if (e)
-    {
-        e -> value . fetch(ep);
-        optr->setprop(parid, P_HEIGHT, ep, False);
-        removehash(e);
-    }
-	// set style first so when it changes other properties they are overwritten later
-    e = lookuphash(MCString("style"),true,false);
-    if (e)
-    {
-        e -> value . fetch(ep);
-        optr->setprop(parid, P_STYLE, ep, False);
-        removehash(e);
-    }
-    // set the textSize first because it changes the textHeight
-    e = lookuphash(MCString("textSize"),true,false);
-    if (e)
-    {
-        e -> value . fetch(ep);
-        optr->setprop(parid, P_TEXT_SIZE, ep, False);
-        removehash(e);
-    }
-	uint4 i;
+    uint4 i;
+    bool t_preprocessed;
 	for (i = 0 ; i < tablesize ; i++)
 		if (table[i] != NULL)
 		{
 			e = table[i];
 			while (e != NULL)
 			{
-				MCScriptPoint sp(e->string);
-				Symbol_type type;
-				const LT *te;
-				if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
+                // check if the key was in the pre-processed
+                t_preprocessed = false;
+                for (j=0; j<t_preprocess_size; j++)
+                {
+                    if (!strcmp(e->string,s_preprocess_props[j].tag))
+                    {
+                        t_preprocessed = true;
+                        break;
+                    }
+                }
+                if (!t_preprocessed)
+                {
+                    MCScriptPoint sp(e->string);
+                    Symbol_type type;
+                    const LT *te;
+                    if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
 				        && te->type == TT_PROPERTY && te->which != P_ID)
-				{
-					e -> value . fetch(ep);
-                    if ((Properties)te->which > P_FIRST_ARRAY_PROP)
-                        optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
-                    else
-                        optr->setprop(parid, (Properties)te->which, ep, False);
+                    {
+                        e -> value . fetch(ep);
+                        if ((Properties)te->which > P_FIRST_ARRAY_PROP)
+                            optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
+                        else
+                            optr->setprop(parid, (Properties)te->which, ep, False);
+                    }
                 }
 				e = e->next;
 			}

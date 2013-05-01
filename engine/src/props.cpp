@@ -767,7 +767,7 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
 	MCerrorlock++;
 	while (tablesize--)
 	{
-        char * t_token = strdup(table[tablesize].token);
+        const char * t_token = table[tablesize].token;
         
         if ((Properties)table[tablesize].value > P_FIRST_ARRAY_PROP)
             getarrayprop(parid, (Properties)table[tablesize].value, ep, kMCEmptyName, effective);
@@ -780,22 +780,22 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
                     if (!ep.trytoconvertutf16tonative())
                     {
                         if (gettype() == CT_STACK)
-                            t_token = strdup("unicodeTitle");
+                            t_token = "unicodeTitle";
                         else
-                            t_token = strdup("unicodeLabel");
+                            t_token = "unicodeLabel";
                     }
                     break;
                 case P_TOOL_TIP:
                     getprop(parid, P_UNICODE_TOOL_TIP, ep, effective);
                     if (!ep.trytoconvertutf16tonative())
-                        t_token = strdup("unicodeToolTip");
+                        t_token = "unicodeToolTip";
                     break;
                 case P_TEXT:
                     if (gettype() == CT_BUTTON)
                     {
                         getprop(parid, P_UNICODE_TEXT, ep, effective);
                         if (!ep.trytoconvertutf16tonative())
-                            t_token = strdup("unicodeText");
+                            t_token = "unicodeText";
                         break;
                     }
                 default:
