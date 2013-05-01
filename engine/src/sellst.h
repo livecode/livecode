@@ -84,7 +84,7 @@ public:
 	void sort();
 	uint32_t count();
 	MCControl *clone(MCObject *target);
-	void group();
+	Exec_stat group(uint2 line, uint2 pos);
 	Boolean copy();
 	Boolean cut();
 	Boolean del();

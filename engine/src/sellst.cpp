@@ -271,28 +271,28 @@ MCControl *MCSellist::clone(MCObject *target)
 	return t_result;
 }
 
-void MCSellist::group()
+Exec_stat MCSellist::group(uint2 line, uint2 pos)
 {
 	MCresult->clear(False);
 	if (objects != NULL && objects->ref->gettype() <= CT_FIELD
 	        && objects->ref->gettype() >= CT_GROUP)
 	{
 		MCObject *parent = objects->ref->getparent();
-		MCSelnode *tptr = objects->next();
-		while (tptr != objects)
-		{
+		MCSelnode *tptr = objects;
+		do {
             if (tptr->ref->gettype() == CT_GROUP && static_cast<MCGroup *>(tptr->ref)->isshared())
             {
-            	MCresult->sets("control is shared group");
-				return;
-			}
+                MCeerror->add(EE_GROUP_NOBG, line, pos);
+				return ES_ERROR;
+            }
 			if (tptr->ref->getparent() != parent)
 			{
-				MCresult->sets("controls don't have the same owner");
-				return;
-			}
+                MCeerror->add(EE_GROUP_DIFFERENTPARENT, line, pos);
+				return ES_ERROR;
+            }
 			tptr = tptr->next();
-		}
+		} while (tptr != objects);
+        
 		sort();
 		MCControl *controls = NULL;
 		while (objects != NULL)
@@ -323,6 +323,7 @@ void MCSellist::group()
 		objects = new MCSelnode(gptr);
 		gptr->message(MCM_selected_object_changed);
 	}
+    return ES_NORMAL;
 }
 
 bool MCSellist::clipboard(bool p_is_cut)

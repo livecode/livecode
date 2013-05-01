@@ -2371,6 +2371,9 @@ enum Exec_errors
 	
 	// {EE-0778} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
+    
+    // {EE-0779} controls don't have the same owner
+	EE_GROUP_DIFFERENTPARENT,
 };
 
 extern const char *MCexecutionerrors;
