@@ -505,18 +505,19 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
     case P_VISIBLE:
     case P_INVISIBLE:
         {
-            bool t_vis = getflag(F_VISIBLE);
+			// MERG-2013-05-01: [[ EffVisible ]] Add 'effective' adjective to
+			//   the visible property.
+            bool t_vis;
+			t_vis = getflag(F_VISIBLE);
+			
             // if visible and effective and parent is a
             // group then keep searching parent properties 
             if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
                 return parent->getprop(parid, which, ep, effective);
-            else
-                if (which == P_VISIBLE)
-                    ep.setboolean(t_vis);
-                else
-                    ep.setboolean(!t_vis);
-            break;
+			
+			ep.setboolean(which == P_VISIBLE ? t_vis : !t_vis);
         }
+		break;
 	case P_DISABLED:
 		ep.setboolean(getflag(F_DISABLED));
 		break;
