@@ -2,7 +2,7 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="8.00"
-	Name="engine"
+	Name="engine-community"
 	ProjectGUID="{FA4E9876-B625-48F4-8311-AA74B180E714}"
 	RootNamespace="oldengine"
 	Keyword="Win32Proj"
@@ -201,6 +201,10 @@
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 			RelativePathToProject=".\thirdparty\libgif\libgif.vcproj"
 		/>
+		<ProjectReference
+			ReferencedProjectIdentifier="{0491E47C-B996-4DBF-8D26-C88263DF6176}"
+			RelativePathToProject=".\engine\kernel-development.vcproj"
+		/>
 	</References>
 	<Files>
 		<Filter
@@ -209,76 +213,16 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
-				RelativePath=".\src\bsdiff_build.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_capsule.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_dmg.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_file.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_linux.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_macosx.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_sign.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\deploy_windows.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\src\deploysecurity.cpp"
 				>
 			</File>
 			<File
-				RelativePath=".\src\encodederrors.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\ide.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\internal_development.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\lextable.cpp"
-				>
-			</File>
-			<File
-				RelativePath=".\src\mode_development.cpp"
+				RelativePath=".\src\stacksecurity.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\startupstack.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						UsePrecompiledHeader="0"
-					/>
-				</FileConfiguration>
 			</File>
 		</Filter>
 		<Filter
@@ -334,32 +278,6 @@
 			</File>
 		</Filter>
 		<File
-			RelativePath=".\encode_errors.rev"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Encoding error strings..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
-					Outputs="$(InputDir)src\encodederrors.cpp"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Encoding error strings..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
-					Outputs="$(InputDir)src\encodederrors.cpp"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
 			RelativePath=".\src\Environment.rev"
 			>
 			<FileConfiguration
@@ -380,32 +298,6 @@
 					Description="Encoding environment..."
 					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)compress_data.rev&quot; &quot;$(InputDir)Environment.rev&quot; &quot;$(InputDir)startupstack.cpp&quot; &quot;MCstartupstack&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)startupstack.cpp"
-				/>
-			</FileConfiguration>
-		</File>
-		<File
-			RelativePath=".\hash_strings.rev"
-			>
-			<FileConfiguration
-				Name="Debug|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Generating hashed strings for colorization..."
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)hash_strings.rev&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)src\lextable.cpp"
-					Outputs="$(InputDir)src\hashedstrings.cpp"
-				/>
-			</FileConfiguration>
-			<FileConfiguration
-				Name="Release|Win32"
-				>
-				<Tool
-					Name="VCCustomBuildTool"
-					Description="Generating hashed strings for colorization..."
-					CommandLine="$(SolutionDir)\bin\tools\Revolution.exe &quot;$(InputDir)hash_strings.rev&quot;  &quot;$(InputDir)src\lextable.cpp&quot; &quot;$(InputDir)src\hashedstrings.cpp&quot;&#x0D;&#x0A;"
-					AdditionalDependencies="$(InputDir)src\lextable.cpp"
-					Outputs="$(InputDir)src\hashedstrings.cpp"
 				/>
 			</FileConfiguration>
 		</File>

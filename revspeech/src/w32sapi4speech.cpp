@@ -161,7 +161,6 @@ STDMETHODIMP CNotify::Warning(LPUNKNOWN p_warning)
 WindowsSAPI4Narrator::WindowsSAPI4Narrator(void)
 {
 	isspeaking = false;
-	SetMessageQueue(96);
 	m_device_engine = NULL;
 	m_device_attributes = NULL;
 	strcpy(ttsvoice,"");

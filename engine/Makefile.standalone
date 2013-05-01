@@ -1,12 +1,13 @@
-NAME=standalone
+NAME=standalone-community
 TYPE=application
 
 MODE_SOURCES= \
-	lextable.cpp mode_standalone.cpp
+	stacksecurity.cpp
 
-MODE_DEFINES=\
-	MODE_STANDALONE
-	
+MODE_DEPS=libkernel-standalone.a
+
+MODE_LIBS=kernel-standalone
+
 MODE_LDFLAGS=\
 	-Wl,--script=standalone.link
 
