@@ -1291,7 +1291,8 @@ enum Properties {
     P_DEFAULT_BUTTON,
     P_GROUP_IDS,
     P_GROUP_NAMES,
-	P_SHARED_GROUP_IDS,
+	P_SHARED_GROUP,
+    P_SHARED_GROUP_IDS,
 	P_SHARED_GROUP_NAMES,
     // audioClip/videoClip/player properties
     P_DONT_REFRESH,

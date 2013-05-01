@@ -446,8 +446,25 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 
 		ep.setstaticcstring(t_value);
 	}
-	break;
-
+        break;
+    case P_SHARED_GROUP:
+    {
+        MCObject * t_object = this;
+        bool t_found = false;
+        while (t_object->gettype() != CT_STACK && t_object->gettype() != CT_CARD)
+        {
+            if (t_object->gettype() == CT_GROUP && static_cast<MCGroup *>(t_object)->isshared())
+            {
+                t_object -> getprop(0, P_LONG_ID, ep, false);
+                t_found = true;
+                break;
+            }
+            t_object = t_object->getparent();
+        }
+        if (!t_found)
+            ep.clear();
+    }
+        break;
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
