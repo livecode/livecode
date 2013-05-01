@@ -618,6 +618,8 @@ LT factor_table[] =
         {"charset", TT_PROPERTY, P_CHARSET},
         {"chartonum", TT_FUNCTION, F_CHAR_TO_NUM},
         {"checkmark", TT_PROPERTY, P_CHECK_MARK},
+        {"childcontrolids", TT_PROPERTY, P_CHILD_CONTROL_IDS},
+        {"childcontrolnames", TT_PROPERTY, P_CHILD_CONTROL_NAMES},
         {"ciphernames", TT_FUNCTION, F_CIPHER_NAMES},
         {"clickchar", TT_FUNCTION, F_CLICK_CHAR},
         {"clickcharchunk", TT_FUNCTION, F_CLICK_CHAR_CHUNK},
@@ -663,7 +665,9 @@ LT factor_table[] =
 		// MW-2012-10-08: [[ HitTest ]] New functions for determining the control at a point.
 		{"controlatloc", TT_FUNCTION, F_CONTROL_AT_LOC},
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
+        {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
         {"copyresource", TT_FUNCTION, F_COPY_RESOURCE},
