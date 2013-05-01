@@ -254,61 +254,82 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, Properties which, MCNameRef p_p
 	// send a 'getProp <setname> <propname>'.
 	//
     Exec_stat t_stat = ES_NOT_HANDLED;
-    // make sure it's not the engine setting the property
-    if (ep.gethandler() != NULL) {
-        if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
-        {
-            MCParameter p1, p2;
-            p1.setnext(&p2);
-            
-            p1.setnameref_unsafe_argument(p_prop_name);
-            p2.set_argument(ep);
-            
-            MCStack *oldstackptr = MCdefaultstackptr;
-            MCdefaultstackptr = getstack();
-            MCObject *oldtargetptr = MCtargetptr;
-            MCtargetptr = this;
-            Boolean added = False;
-            if (MCnexecutioncontexts < MAX_CONTEXTS)
-            {
-                MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
-                added = True;
+    
+    switch (which) {
+        case P_ID:
+        case P_SHORT_ID:
+        case P_LONG_ID:
+        case P_ABBREV_ID:
+        case P_NAME:
+        case P_SHORT_NAME:
+        case P_ABBREV_NAME:
+        case P_LONG_NAME:
+        case P_ALT_ID:
+        case P_LAYER:
+        case P_NUMBER:
+        case P_OWNER:
+        case P_SHORT_OWNER:
+        case P_ABBREV_OWNER:
+        case P_LONG_OWNER:
+            break;
+        default:
+            // make sure it's not the engine setting the property
+            if (ep.gethandler() != NULL) {
+                if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
+                {
+                    MCParameter p1, p2;
+                    p1.setnext(&p2);
+                    
+                    p1.setnameref_unsafe_argument(p_prop_name);
+                    p2.set_argument(ep);
+                    
+                    MCStack *oldstackptr = MCdefaultstackptr;
+                    MCdefaultstackptr = getstack();
+                    MCObject *oldtargetptr = MCtargetptr;
+                    MCtargetptr = this;
+                    Boolean added = False;
+                    if (MCnexecutioncontexts < MAX_CONTEXTS)
+                    {
+                        MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+                        added = True;
+                    }
+                    
+                    MCNameRef t_getprop_name;
+                    uint2 i;
+                    for (i = 0 ; i < factor_table_size ; i++)
+                        if (factor_table[i].type == TT_PROPERTY)
+                            if ((Properties)factor_table[i].which == which)
+                            {
+                                MCNameCreateWithCString(factor_table[i].token, t_getprop_name);
+                                t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
+                                if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+                                    t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
+                                if (t_stat != ES_NOT_HANDLED)
+                                    break;
+                            }
+                    
+                    if (added)
+                        MCnexecutioncontexts--;
+                    MCdefaultstackptr = oldstackptr;
+                    MCtargetptr = oldtargetptr;
+                }
             }
             
-            MCNameRef t_getprop_name;
-            uint2 i;
-            for (i = 0 ; i < factor_table_size ; i++)
-                if (factor_table[i].type == TT_PROPERTY)
-                    if ((Properties)factor_table[i].which == which)
-                    {
-                        MCNameCreateWithCString(factor_table[i].token, t_getprop_name);
-                        t_stat = MCU_dofrontscripts(HT_GETPROP, t_getprop_name, &p1);
-                        if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
-                            t_stat = handle(HT_GETPROP, t_getprop_name, &p1, this);
-                        if (t_stat != ES_NOT_HANDLED)
-                            break;
-                    }
-            
-            if (added)
-                MCnexecutioncontexts--;
-            MCdefaultstackptr = oldstackptr;
-            MCtargetptr = oldtargetptr;
-        }
+            if (t_stat == ES_NORMAL)
+            {
+                MCresult -> fetch(ep);
+                
+                // MW-2007-07-03: [[ Bug 3213 ]] Failing to grab the value means that
+                //   things such as doSomething the uProp of me, the uProp2 of me
+                // results in incorrect parameter evaluation (the second custom prop
+                // invocation clobbers the result of the first).
+                if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
+                    ep.grabsvalue();
+                else if (ep.getformat() == VF_ARRAY)
+                    ep.grabarray();
+            }
+            break;
     }
-
-	if (t_stat == ES_NORMAL)
-	{
-		MCresult -> fetch(ep);
-        
-		// MW-2007-07-03: [[ Bug 3213 ]] Failing to grab the value means that
-		//   things such as doSomething the uProp of me, the uProp2 of me
-		// results in incorrect parameter evaluation (the second custom prop
-		// invocation clobbers the result of the first).
-		if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
-			ep.grabsvalue();
-		else if (ep.getformat() == VF_ARRAY)
-			ep.grabarray();
-	}
     
 	return t_stat;
 }
@@ -1264,46 +1285,56 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 Exec_stat MCObject::sendsetprop(MCExecPoint& ep, Properties which, MCNameRef p_prop_name)
 {
 	Exec_stat t_stat = ES_NOT_HANDLED;
-    // make sure it's not the engine setting the property
-    if (ep.gethandler() != NULL) {
-        if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
-        {
-            MCParameter p1, p2;
-            p1.setnext(&p2);
-            
-            p1.setnameref_unsafe_argument(p_prop_name);
-            p2.set_argument(ep);
-            
-            MCStack *oldstackptr = MCdefaultstackptr;
-            MCdefaultstackptr = getstack();
-            MCObject *oldtargetptr = MCtargetptr;
-            MCtargetptr = this;
-            Boolean added = False;
-            if (MCnexecutioncontexts < MAX_CONTEXTS)
-            {
-                MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
-                added = True;
-            }
-            
-            MCNameRef t_setprop_name;
-            uint2 i;
-            for (i = 0 ; i < factor_table_size ; i++)
-                if (factor_table[i].type == TT_PROPERTY)
-                    if ((Properties)factor_table[i].which == which)
+    
+    switch (which) {
+        case P_ID:
+        case P_NAME:
+        case P_ALT_ID:
+        case P_LAYER:
+        case P_NUMBER:
+            break;
+        default:
+            // make sure it's not the engine setting the property
+            if (ep.gethandler() != NULL) {
+                if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasprop(which)))
+                {
+                    MCParameter p1, p2;
+                    p1.setnext(&p2);
+                    
+                    p1.setnameref_unsafe_argument(p_prop_name);
+                    p2.set_argument(ep);
+                    
+                    MCStack *oldstackptr = MCdefaultstackptr;
+                    MCdefaultstackptr = getstack();
+                    MCObject *oldtargetptr = MCtargetptr;
+                    MCtargetptr = this;
+                    Boolean added = False;
+                    if (MCnexecutioncontexts < MAX_CONTEXTS)
                     {
-                        MCNameCreateWithCString(factor_table[i].token, t_setprop_name);
-                        t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
-                        if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
-                            t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
-                        if (t_stat != ES_NOT_HANDLED)
-                            break;
+                        MCexecutioncontexts[MCnexecutioncontexts++] = &ep;
+                        added = True;
                     }
-            
-            if (added)
-                MCnexecutioncontexts--;
-            MCdefaultstackptr = oldstackptr;
-            MCtargetptr = oldtargetptr;
-        }
+                    
+                    MCNameRef t_setprop_name;
+                    uint2 i;
+                    for (i = 0 ; i < factor_table_size ; i++)
+                        if (factor_table[i].type == TT_PROPERTY)
+                            if ((Properties)factor_table[i].which == which)
+                            {
+                                MCNameCreateWithCString(factor_table[i].token, t_setprop_name);
+                                t_stat = MCU_dofrontscripts(HT_SETPROP, t_setprop_name, &p1);
+                                if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
+                                    t_stat = handle(HT_SETPROP, t_setprop_name, &p1, this);
+                                if (t_stat != ES_NOT_HANDLED)
+                                    break;
+                            }
+                    
+                    if (added)
+                        MCnexecutioncontexts--;
+                    MCdefaultstackptr = oldstackptr;
+                    MCtargetptr = oldtargetptr;
+                }
+            }
     }
     return t_stat;
 }
