@@ -45,6 +45,7 @@ class MCGroup : public MCControl
 	Boolean mgrabbed;
 
 	static uint2 labeloffset;
+    bool updateslocked :1;
 public:
 	MCGroup();
 	MCGroup(const MCGroup &gref);
@@ -200,5 +201,7 @@ public:
 		return (MCGroup *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+    
+    bool islocked(void) {return updateslocked; }
 };
 #endif
