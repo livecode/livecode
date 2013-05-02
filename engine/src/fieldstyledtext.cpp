@@ -427,7 +427,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCVariableVal
 {
 	// Make sure we don't try and append any more than 64K worth of bytes.
 	uint32_t t_text_length;
-	t_text_length = MCMin(p_final - p_initial, 65534 - p_paragraph -> textsize);
+	t_text_length = MCMin((unsigned)(p_final - p_initial), (unsigned)(65534 - p_paragraph -> textsize));
 	
 	// If we are unicode and the text length is odd, chop off the last char.
 	if (p_is_unicode && (t_text_length & 1) != 0)

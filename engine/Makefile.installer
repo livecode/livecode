@@ -7,7 +7,12 @@ MODE_SOURCES= \
 MODE_DEFINES=\
 	MODE_INSTALLER
 	
-MODE_LDFLAGS=\
-	-Wl,--script=installer.link
+ifeq ($(shell gcc -dumpmachine),x86_64-linux-gnu)
+	MODE_LDFLAGS=\
+		-Wl,--script=installer-x64.link
+else
+	MODE_LDFLAGS=\
+		-Wl,--script=installer.link
+endif
 
 include Makefile.common

@@ -27,8 +27,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libz/include \
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
 	$(SOLUTION_DIR)/thirdparty/libopenssl/include \
-	$(SOLUTION_DIR)/thirdparty/libcurl/include \
-	$(SOLUTION_DIR)/thirdparty/headers/linux/include
+	$(SOLUTION_DIR)/thirdparty/libcurl/include
 
 GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib
@@ -41,7 +40,9 @@ endif
 
 DEFINES += __LITTLE_ENDIAN__
 
-PACKAGE_INCLUDES=$(shell pkg-config --cflags-only-I $(GLOBAL_PACKAGES))
+PACKAGE_INCLUDES=$(shell pkg-config --silence-errors --cflags-only-I $(GLOBAL_PACKAGES))
+
+FALLBACK_INCLUDES=-I$(SOLUTION_DIR)/thirdparty/headers/linux/include -I$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo
 
 INCLUDES=$(CUSTOM_INCLUDES) $(TYPE_INCLUDES) $(GLOBAL_INCLUDES)
 
@@ -49,6 +50,10 @@ ifeq ($(MODE),release)
 	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -O2 -fvisibility=hidden -g
 else
 	CCFLAGS=$(CUSTOM_CCFLAGS) $(TYPE_CCFLAGS) -g -fvisibility=hidden
+endif
+
+ifeq ($(PLATFORM),linux-x64)
+	CCFLAGS+=-fPIC
 endif
 
 DEPS=$(addprefix $(BUILD_DIR)/, $(CUSTOM_DEPS))
@@ -62,15 +67,15 @@ VPATH=./src $(SOURCE_DIRS) $(CACHE_DIR) $(BUILD_DIR)
 
 $(CACHE_DIR)/%.o: %.cpp
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
+	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.cpp
 
 $(CACHE_DIR)/%.o: %.c
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES)$(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.c
+	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -MMD -MF $(patsubst %.o,%.d,$@) -c -o$(CACHE_DIR)/$*.o ./src/$*.c
 	
 $(CACHE_DIR)/%.o: %.s
 	mkdir -p $(CACHE_DIR)/$(dir $*)
-	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
+	gcc $(CCFLAGS) $(addprefix -I,$(INCLUDES)) $(PACKAGE_INCLUDES) $(FALLBACK_INCLUDES) $(addprefix -D,$(DEFINES)) -c -o$(CACHE_DIR)/$*.o ./src/$*.s
 
 clean:
 	rm $(OBJECTS)

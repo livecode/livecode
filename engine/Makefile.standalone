@@ -8,7 +8,12 @@ MODE_DEPS=libkernel-standalone.a
 
 MODE_LIBS=kernel-standalone
 
-MODE_LDFLAGS=\
-	-Wl,--script=standalone.link
+ifeq ($(shell gcc -dumpmachine),x86_64-linux-gnu)
+	MODE_LDFLAGS=\
+		-Wl,--script=standalone-x64.link
+else
+	MODE_LDFLAGS=\
+		-Wl,--script=standalone.link
+endif
 
 include Makefile.common

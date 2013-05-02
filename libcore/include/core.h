@@ -30,8 +30,14 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
+
+#ifdef __LP64__
+typedef unsigned long int uint64_t;
+typedef signed long int int64_t;
+#else
 typedef unsigned long long uint64_t;
 typedef signed long long int64_t;
+#endif
 
 typedef uint32_t uindex_t;
 typedef int32_t index_t;
@@ -41,8 +47,13 @@ typedef int32_t compare_t;
 #if (defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)) && !defined(_SIZE_T)
 typedef long unsigned int size_t;
 #endif
+
 #if defined(_LINUX) && !defined(_SIZE_T)
+#ifdef __LP64__
+typedef long unsigned int size_t;
+#else
 typedef unsigned int size_t;
+#endif
 #endif
 
 #ifndef _UINTPTR_T

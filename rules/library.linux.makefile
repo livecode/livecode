@@ -14,6 +14,12 @@ LIBS=$(CUSTOM_LIBS)
 STATIC_LIBS=$(CUSTOM_STATIC_LIBS)
 DYNAMIC_LIBS=$(CUSTOM_DYNAMIC_LIBS)
 
+ifeq ($(PLATFORM),linux-x64)
+	DYNAMIC_LIBS+=stdc++
+else
+	STATIC_LIBS+=stdc++
+endif
+
 LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME).so

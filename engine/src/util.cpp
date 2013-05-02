@@ -2543,7 +2543,9 @@ bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count)
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count)
 {
 	uint4 t_capacity;
 	if (x_length > 65536)

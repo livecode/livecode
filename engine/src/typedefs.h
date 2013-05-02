@@ -86,8 +86,14 @@ typedef unsigned short uint16_t;
 typedef signed short int16_t;
 typedef unsigned int uint32_t;
 typedef signed int int32_t;
+
+#ifdef __LP64__
+typedef unsigned long int uint64_t;
+typedef signed long int int64_t;
+#else
 typedef unsigned long long uint64_t;
-typedef long long int64_t;
+typedef signed long long int64_t;
+#endif
 
 typedef float float32_t;
 typedef double float64_t;

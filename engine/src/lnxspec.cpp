@@ -904,7 +904,10 @@ IO_handle MCS_open(const char *path, const char *mode,
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
-				if ((int)buffer != -1)
+				
+				// MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+				//   rather than '-1'.
+				if (buffer != MAP_FAILED)
 				{
 					delete newpath;
 					handle = new IO_header(NULL, buffer, len, fd, 0);
@@ -1348,9 +1351,15 @@ const char *MCS_getmachine()
 	return u.machine;
 }
 
+// MW-2013-05-02: [[ x64 ]] If 64-bit then return x86_64, else we must be
+//   32-bit Intel so x86.
 const char *MCS_getprocessor()
 {
-	return "unknown";
+#ifdef __LP64__
+	return "x86_64";
+#else
+	return "x86";
+#endif
 }
 
 const char *MCS_getsystemversion()
@@ -1486,7 +1495,9 @@ IO_handle MCS_fakeopenwrite(void)
 
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
-	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, 0, IO_FAKECUSTOM);
+	// MW-2013-05-02: [[ x64 ]] Cast 'p_callbacks' to uintptr_t as it's stored as a
+	//   'size_t' in the IO_header.
+	return new IO_header(NULL, (char *)p_state, (uintptr_t)p_callbacks, 0, IO_FAKECUSTOM);
 }
 
 IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)

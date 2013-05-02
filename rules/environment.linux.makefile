@@ -10,6 +10,12 @@ else
 	SOLUTION_DIR=../livecode
 endif
 
-BUILD_DIR=$(SOLUTION_DIR)/_build/linux/$(MODE)
-CACHE_DIR=$(SOLUTION_DIR)/_cache/linux/$(MODE)/$(NAME)
+ifeq ($(shell gcc -dumpmachine),x86_64-linux-gnu)
+	PLATFORM=linux-x64
+else
+	PLATFORM=linux
+endif
+
+BUILD_DIR=$(SOLUTION_DIR)/_build/$(PLATFORM)/$(MODE)
+CACHE_DIR=$(SOLUTION_DIR)/_cache/$(PLATFORM)/$(MODE)/$(NAME)
 PRODUCT_DIR=$(BUILD_DIR)

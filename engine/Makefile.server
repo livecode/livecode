@@ -17,8 +17,14 @@ CUSTOM_INCLUDES=\
 CUSTOM_DEPS=libkernel-server.a
 
 CUSTOM_LIBS=pcre png jpeg z core gif kernel-server
-CUSTOM_STATIC_LIBS=curl ssl crypto stdc++ rt
+CUSTOM_STATIC_LIBS=rt
 CUSTOM_DYNAMIC_LIBS=dl m
+
+ifeq ($(shell gcc -dumpmachine),x86_64-linux-gnu)
+	CUSTOM_STATIC_LIBS+=crypto-x64 ssl-x64 curl-x64
+else
+	CUSTOM_STATIC_LIBS+=crypto ssl curl
+endif
 
 CUSTOM_CCFLAGS=\
 	-Wall -Wno-unused-variable -Wno-switch -Wno-non-virtual-dtor -fno-exceptions -fno-rtti -fno-strict-aliasing \

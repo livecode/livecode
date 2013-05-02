@@ -708,9 +708,9 @@ typedef unsigned long Window;
 typedef unsigned long Pixmap;
 typedef unsigned long Drawable;
 #else
-typedef unsigned int Window;
-typedef unsigned int Pixmap;
-typedef unsigned int Drawable;
+typedef unsigned long int Window;
+typedef unsigned long int Pixmap;
+typedef unsigned long int Drawable;
 #endif
 
 #endif
