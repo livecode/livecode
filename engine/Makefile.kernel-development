@@ -10,12 +10,18 @@ SOURCES= \
 KERNEL_DEFINES=\
 	MODE_DEVELOPMENT
 
+ifeq ($(shell gcc -dumpmachine),x86_64-linux-gnu)
+	PLATFORM=linux-x64
+else
+	PLATFORM=linux
+endif
+
 src/hashedstrings.cpp: src/lextable.cpp
 	../prebuilt/bin/Revolution.lnx "./hash_strings.rev" "./src/lextable.cpp" "./src/hashedstrings.cpp" "../prebuilt/bin/perfect.lnx"
 
 encodederrors.cpp: src/executionerrors.h src/parseerrors.h
 	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
 
-../_cache/linux/$(MODE)/$(NAME)/ide.o: src/hashedstrings.cpp
+../_cache/$(PLATFORM)/$(MODE)/$(NAME)/ide.o: src/hashedstrings.cpp
 
 include Makefile.kernel-common

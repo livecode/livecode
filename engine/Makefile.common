@@ -12,7 +12,7 @@ CUSTOM_INCLUDES=\
 	./src \
  	$(MODE_INCLUDES)
 
-CUSTOM_DEPS= libkernel.a libcore.a libpng.a libpcre.a libjpeg.a $(MODE_DEPS) 
+CUSTOM_DEPS= libkernel.a libcore.a libpng.a libpcre.a libjpeg.a libopenssl.a $(MODE_DEPS) 
 
 CUSTOM_LIBS=$(MODE_LIBS) kernel core z gif png pcre jpeg openssl
 CUSTOM_STATIC_LIBS=$(MODE_STATIC_LIBS)
