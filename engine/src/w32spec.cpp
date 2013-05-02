@@ -1501,10 +1501,13 @@ const char *MCS_getaddress()
 }
 
 // MDW-2013-04-28 : get ready for 64-bit reporting
-const char KCPU_STRING = "x86";
+// MDW-2013-05-01 : oops - should be a pointer
+const char *KCPU_STRING = "x86";
 
 const char *MCS_getmachine()
 {
+	char * cpu_string;
+	cpu_string = MCS_getenv("ENVIRONMENT_PROCESSOR");
 	return KCPU_STRING;
 }
 
