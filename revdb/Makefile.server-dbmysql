@@ -17,6 +17,6 @@ CUSTOM_CCFLAGS=\
 	-Wall -Wno-non-virtual-dtor -fno-exceptions -fno-rtti \
 	-fmessage-length=0
 
-CUSTOM_LDFLAGS=-L$(HOME)/revlibs/prefix/lib
+CUSTOM_LDFLAGS=-L$(SOLUTION_DIR)/prebuilt/lib
 
 include ../rules/library.linux.makefile
