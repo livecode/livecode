@@ -1,0 +1,11 @@
+setup
+
+test random(1) is 1
+
+local tRand
+repeat with i = 1 to 100
+	put random(10) into tRand
+	test tRand >= 1 and tRand <= 10
+end repeat
+
+teardown

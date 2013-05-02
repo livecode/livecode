@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -160,9 +159,9 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 	{
 		memset(&t_inherited_paragraph_style, 0, sizeof(MCFieldParagraphStyle));
 		t_inherited_paragraph_style . text_align = (getflags() & F_ALIGNMENT) >> F_ALIGNMENT_SHIFT;
-		t_inherited_paragraph_style . vgrid = getflag(F_VGRID) == True;
-		t_inherited_paragraph_style . hgrid = getflag(F_HGRID) == True;
-		t_inherited_paragraph_style . dont_wrap = getflag(F_DONT_WRAP) == True;
+		t_inherited_paragraph_style . vgrid = getflag(F_VGRID);
+		t_inherited_paragraph_style . hgrid = getflag(F_HGRID);
+		t_inherited_paragraph_style . dont_wrap = getflag(F_DONT_WRAP);
 		t_inherited_paragraph_style . first_indent = indent;
 		t_inherited_paragraph_style . tab_count = ntabs;
 		t_inherited_paragraph_style . tabs = tabs;
@@ -177,9 +176,9 @@ bool MCField::doexport(MCFieldExportFlags p_flags, MCParagraph *p_paragraphs, in
 	{
 		memset(&t_inherited_character_style, 0, sizeof(MCFieldCharacterStyle));
 		t_inherited_character_style . text_color = getcoloraspixel(DI_FORE);
-		t_inherited_character_style . link_text = kMCEmptyName;
-		t_inherited_character_style . image_source = kMCEmptyName;
-		t_inherited_character_style . metadata = kMCEmptyName;
+		t_inherited_character_style . link_text = kMCEmptyString;
+		t_inherited_character_style . image_source = kMCEmptyString;
+		t_inherited_character_style . metadata = kMCEmptyString;
 		getfontattsnew(t_inherited_character_style . text_font, t_inherited_character_style . text_size, t_inherited_character_style . text_style);
 	}
 
@@ -617,6 +616,15 @@ static bool export_formatted_text(void *p_context, MCFieldExportEventType p_even
 //   field as either native or unicode.
 void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
 {
+	MCAutoStringRef t_string;
+	if (exportastext(p_part_id, p_start_index, p_finish_index, p_as_unicode, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+/* UNSAFE */ bool MCField::exportastext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
+{
 	uint32_t t_char_count;
 	t_char_count = 0;
 	doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, estimate_char_count, &t_char_count);
@@ -630,12 +638,26 @@ void MCField::exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_
 	if (t_buffer . ensure(t_char_count))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns, p_part_id, p_start_index, p_finish_index, export_text, &t_buffer);
 	
-	t_buffer . givetoep(ep);
+	return t_buffer . takeasstringref(r_string);
 }
 
 // MW-2012-02-20: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode including any list indices.
 void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
+{
+	MCAutoStringRef t_string;
+	if (exportasplaintext(p_paragraphs, p_start_index, p_finish_index, p_as_unicode, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
+{
+	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
+}
+
+bool MCField::exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
 	t_char_count = 0;
@@ -650,18 +672,27 @@ void MCField::exportasplaintext(MCExecPoint& ep, MCParagraph *p_paragraphs, int3
 	if (t_buffer . ensure(t_char_count))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_paragraphs, p_start_index, p_finish_index, export_plain_text, &t_buffer);
 
-	t_buffer . givetoep(ep);
+	return t_buffer . takeasstringref(r_string);
 }
 
-void MCField::exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
+bool MCField::exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
 {
-	exportasplaintext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode);
+	return exportasplaintext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_as_unicode, r_string);
 }
 
 // MW-2012-02-21: [[ FieldExport ]] This method exports the content of the
 //   field as either native or unicode, including any list indices and implicit
 //   line breaks.
 void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode)
+{
+	MCAutoStringRef t_string;
+	if (exportasformattedtext(p_part_id, p_start_index, p_finish_index, p_as_unicode, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+bool MCField::exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string)
 {
 	uint32_t t_char_count;
 	t_char_count = 0;
@@ -676,7 +707,7 @@ void MCField::exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t
 	if (t_buffer . ensure(t_char_count))
 		doexport(kMCFieldExportParagraphs | kMCFieldExportLines | kMCFieldExportRuns | kMCFieldExportParagraphStyles | kMCFieldExportNumbering, p_part_id, p_start_index, p_finish_index, export_formatted_text, &t_buffer);
 
-	t_buffer . givetoep(ep);
+	return t_buffer . takeasstringref(r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -800,6 +831,17 @@ Exec_stat MCField::setstyledtext(uint4 parid, MCExecPoint &ep)
 		setparagraphs(stpgptr, parid);
 	state &= ~CS_NO_FILE;
 	return ES_NORMAL;
+}
+
+void MCField::setstyledtext(uint32_t part_id, MCArrayRef p_text)
+{
+	state |= CS_NO_FILE; // prevent interactions while downloading images
+	MCParagraph *stpgptr = styledtexttoparagraphs(p_text);
+	if (stpgptr == nil)
+		setpartialtext(part_id, MCnullmcstring, false);
+	else
+		setparagraphs(stpgptr, part_id);
+	state &= ~CS_NO_FILE;
 }
 
 Exec_stat MCField::setpartialtext(uint4 parid, const MCString &data, bool p_unicode)

@@ -64,7 +64,9 @@ class MCAudioClip : public MCObject
 #ifdef TARGET_PLATFORM_LINUX
 	X11Audio *x11audio ;
 #endif 
-
+	
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCAudioClip();
 	MCAudioClip(const MCAudioClip &cref);
@@ -72,9 +74,14 @@ public:
 	virtual ~MCAudioClip();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+	
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#ifdef OLD_EXEC
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
 
 	virtual Boolean del();
 	virtual void paste(void);
@@ -99,6 +106,8 @@ public:
 	Boolean open_audio();
 	Boolean play();
 	void stop(Boolean abort);
+	void getloudness(uint2& loudness);
+	void setloudness(uint2 p_loudness);
 
 	IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
 	IO_stat extendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
@@ -145,5 +154,19 @@ public:
 	{
 		return (MCAudioClip *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void GetPlayProp(MCExecContext& ctxt, integer_t& r_loudness);
+	void SetPlayProp(MCExecContext& ctxt, uint2 p_loudness);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetPlayDestination(MCExecContext& ctxt, intenum_t& r_dest);
+	void SetPlayDestination(MCExecContext& ctxt, intenum_t p_dest);
+	void GetPlayLoudness(MCExecContext& ctxt, integer_t& r_value);
+	void SetPlayLoudness(MCExecContext& ctxt, integer_t p_value);
+	void GetSize(MCExecContext& ctxt, uinteger_t& r_size);
+
 };
 #endif

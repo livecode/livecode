@@ -1,0 +1,4 @@
+setup
+test flushEvents("all") is empty
+test flushEvents("this is not an event") is empty
+teardown

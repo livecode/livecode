@@ -88,6 +88,8 @@ protected:
 	static MCControl *focused;
 	static double aspect;
 
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCControl();
 	MCControl(const MCControl &cref);
@@ -106,10 +108,12 @@ public:
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual uint2 gettransient() const;
 
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	virtual void select();
@@ -313,5 +317,36 @@ public:
 	{
 		return (MCControl *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(void);
+	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip, bool is_unicode);
+
+	void DoSetHScroll(MCExecContext& ctxt, int4 tx, integer_t scroll);
+	void DoSetVScroll(MCExecContext& ctxt, int4 ty, integer_t scroll);
+	void DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& sbw);
+	void DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& sbw);
+	void DoSetScrollbarWidth(MCExecContext& ctxt, uint2& sbw, uinteger_t p_width);
+
+
+	////////// PROPERTY ACCESSORS
+
+	void GetLeftMargin(MCExecContext& ctxt, integer_t& r_margin);
+	void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetRightMargin(MCExecContext& ctxt, integer_t& r_margin);
+	void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetTopMargin(MCExecContext& ctxt, integer_t& r_margin);
+	void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetBottomMargin(MCExecContext& ctxt, integer_t& r_margin);
+	void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+	void GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
+	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
+	void GetUnicodeToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
+	void SetUnicodeToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
+	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
+	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
+	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
+
 };
 #endif

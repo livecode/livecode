@@ -41,9 +41,13 @@ public:
 	// Evaluate the exoression as a value, and place its value into ep.
 	virtual Exec_stat eval(MCExecPoint &ep);
 
+	// Compile the syntax into the (new) tree for use by the new evaluator.
+	virtual void compile(MCSyntaxFactoryRef);
+	virtual void compile_out(MCSyntaxFactoryRef);
+	
 	// Evaluate the expression as a container, and place the reference to
 	// the container's value in r_ref.
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref);
+	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 
 	// Return the variable to which this expression refers in the context of
 	// ep, or NULL if it is not just a variable expression.
@@ -114,6 +118,7 @@ public:
 	
 	static int2 compare_arrays(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context);
 	static int2 compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context, bool p_compare_arrays);
+	static bool compare_array_element(void *context, MCArrayRef array, MCNameRef key, MCValueRef value);
 };
 
 class MCFuncref : public MCExpression

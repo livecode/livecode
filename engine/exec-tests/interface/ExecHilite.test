@@ -1,0 +1,9 @@
+setup
+
+create button
+
+hilite button 1
+
+test the hilite of button 1
+
+teardown

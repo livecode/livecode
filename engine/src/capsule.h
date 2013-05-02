@@ -17,10 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_CAPSULE__
 #define __MC_CAPSULE__
 
-#ifndef __MC_CORE__
-#include "core.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // A capsule is sequence of sections, each independent and capable of being

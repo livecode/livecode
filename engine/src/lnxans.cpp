@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
@@ -36,7 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "lnxpsprinter.h"
 #include "lnxans.h"
-#include "sserialize_lnx.h"
 
 #include <locale.h>
 
@@ -45,6 +43,30 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <gdk/gdkx.h>
 #include <gtk/gtkpagesetupunixdialog.h>
 #include <gtk/gtkprintunixdialog.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCLinuxPageSetup
+{
+	int32_t paper_width;
+	int32_t paper_height;
+	int32_t left_margin, top_margin, right_margin, bottom_margin;
+	uint32_t orientation;
+};
+
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size);
+bool MCLinuxPageSetupDecode(const void *data, uint32_t data_size, MCLinuxPageSetup& setup);
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCLinuxPrintSetup
+{
+};
+
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size);
+bool MCLinuxPrintSetupDecode(const void *data, uint32_t data_size, MCLinuxPrintSetup& setup);
+
+////////////////////////////////////////////////////////////////////////////////
 
 typedef GtkWidget* (*gtk_file_chooser_dialog_newPTR )  (const gchar *title,  GtkWindow *parent, GtkFileChooserAction action, const gchar *first_button_text, GtkResponseType first_button_response, ...) ; //, const gchar *second_button_text, GtkResponseType second_button_response, void *EOF );
 extern gtk_file_chooser_dialog_newPTR gtk_file_chooser_dialog_new_ptr;
@@ -672,45 +694,12 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 // ---===================================================---
 
 
-
-
-char * rgbtostr ( uint4 red, uint4 green, uint4 blue ) 
-{
-	char ret[15];
-		
-	memset(ret, 0, (sizeof(char))*15);
-	sprintf( ret, "%d,%d,%d", red >> 8,  green >> 8 , blue >> 8 );
-	return ( strdup ( ret ) ) ;
-}
-
-
-
-
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet)
+bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
 	uint32_t t_red, t_green, t_blue;
-	if (p_initial == NULL)
-	{
-		t_red = MCpencolor.red;
-		t_green = MCpencolor.green;
-		t_blue = MCpencolor.blue;
-	}
-	else
-	{
-		char *cname = NULL;
-		MCColor c;
-		MCscreen->parsecolor(p_initial, &c, &cname);
-		delete cname;
-		t_red = c.red;
-		t_green = c.green;
-		t_blue = c.blue;
-	}
-
-	if (!MCModeMakeLocalWindows())
-	{
-		MCRemoteColorDialog(ep, p_title, t_red >> 8, t_green >> 8, t_blue >> 8);
-		return 0;
-	}
+	t_red = p_initial_color . red;
+	t_green = p_initial_color . green;
+	t_blue = p_initial_color . blue;
 
 	//////////
 
@@ -725,7 +714,7 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	gdk_color . green = t_green;
 	gdk_color . blue = t_blue;
 		
-	dialog = gtk_color_selection_dialog_new  ( p_title);
+	dialog = gtk_color_selection_dialog_new  (MCStringGetCString(p_title));
 	make_front_widget ( dialog ) ;
 	colorsel = GTK_COLOR_SELECTION ( GTK_COLOR_SELECTION_DIALOG (dialog)->colorsel );
 
@@ -735,15 +724,19 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	
 	if (gtk_dialog_run(GTK_DIALOG (dialog)) == GTK_RESPONSE_OK)
 	{
-		gtk_color_selection_get_current_color  (  colorsel , &gdk_color ) ;
+		/*gtk_color_selection_get_current_color  (  colorsel , &gdk_color ) ;
 		colorstr = rgbtostr ( gdk_color.red, gdk_color.green, gdk_color.blue);
 		ep . clear();
 		ep . copysvalue(colorstr, strlen(colorstr));
-		delete colorstr ;
+		delete colorstr ;*/
+		r_chosen_color . red = gdk_color . red;
+		r_chosen_color . blue = gdk_color . blue;
+		r_chosen_color . green = gdk_color . green;
+		r_chosen = true;
 	}
 	else
 	{
-		ep . clear();
+		r_chosen = false;
 	}
 	
 	
@@ -752,7 +745,7 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	while (gtk_events_pending())
 		gtk_main_iteration();
 	
-	return (1);
+	return true;
 }
 
 
@@ -853,14 +846,14 @@ MCPrinterDialogResult MCA_gtk_printer_setup ( PSPrinterSettings &p_settings )
 		
 		
 		GtkPageRange* t_ranges ;
-		MCRange * t_rev_ranges ;
+		MCInterval * t_rev_ranges ;
 		
 		int4 t_range_count ; 
 		
 		t_ranges = gtk_print_settings_get_page_ranges  ( t_printer_settings , &t_range_count ) ;
 		if ( t_range_count > 0 ) 
 		{
-			p_settings . page_ranges = (MCRange*)t_ranges ; // This is OK as the structures are the same - just different member names.
+			p_settings . page_ranges = (MCInterval*)t_ranges ; // This is OK as the structures are the same - just different member names.
 			p_settings . page_range_count = t_range_count ;
 			
 			// We need to adjust these as GTK starts pages at 0 and we start pages at 1
@@ -1044,3 +1037,120 @@ MCPrinterDialogResult MCA_gtk_page_setup (PSPrinterSettings &p_settings)
 	
 	return (result );
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCLinuxPageSetupEncode(const MCLinuxPageSetup& setup, void*& r_data, uint32_t& r_data_size)
+{
+	return false;
+
+	/*bool t_success;
+	t_success = true;
+
+	MCBinaryEncoder *t_encoder;
+	t_encoder = nil;
+	if (t_success)
+		t_success = MCBinaryEncoderCreate(t_encoder);
+
+	if (t_success)
+		t_success = 
+			MCBinaryEncoderWriteUInt32(t_encoder, 0) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . paper_width) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . paper_height) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . left_margin) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . top_margin) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . right_margin) &&
+			MCBinaryEncoderWriteInt32(t_encoder, setup . bottom_margin) &&
+			MCBinaryEncoderWriteUInt32(t_encoder, setup . orientation);
+
+	if (t_success)
+	{
+		void *t_data;
+		uint32_t t_data_size;
+		MCBinaryEncoderBorrow(t_encoder, t_data, t_data_size);
+		t_success = MCMemoryAllocateCopy(t_data, t_data_size, r_data);
+		if (t_success)
+			r_data_size = t_data_size;
+	}
+
+	MCBinaryEncoderDestroy(t_encoder);
+
+	return t_success;*/
+}
+
+bool MCLinuxPageSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPageSetup& setup)
+{
+	return false;
+
+	/*MCBinaryDecoder *t_decoder;
+
+	if (!MCBinaryDecoderCreate(p_data, p_data_size, t_decoder))
+		return false;
+
+	bool t_success;
+	uint32_t version;
+	t_success =
+		MCBinaryDecoderReadUInt32(t_decoder, version) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . paper_width) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . paper_height) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . left_margin) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . top_margin) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . right_margin) &&
+		MCBinaryDecoderReadInt32(t_decoder, setup . bottom_margin) &&
+		MCBinaryDecoderReadUInt32(t_decoder, setup . orientation);
+
+	MCBinaryDecoderDestroy(t_decoder);
+
+	return t_success;*/
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCLinuxPrintSetupEncode(const MCLinuxPrintSetup& setup, void*& r_data, uint32_t& r_data_size)
+{
+	return false;
+
+	/*bool t_success;
+	t_success = true;
+
+	MCBinaryEncoder *t_encoder;
+	t_encoder = nil;
+	if (t_success)
+		t_success = MCBinaryEncoderCreate(t_encoder);
+
+	if (t_success)
+		t_success = true;
+
+	if (t_success)
+	{
+		void *t_data;
+		uint32_t t_data_size;
+		MCBinaryEncoderBorrow(t_encoder, t_data, t_data_size);
+		t_success = MCMemoryAllocateCopy(t_data, t_data_size, r_data);
+		if (t_success)
+			r_data_size = t_data_size;
+	}
+
+	MCBinaryEncoderDestroy(t_encoder);
+
+	return t_success;*/
+}
+
+bool MCLinuxPrintSetupDecode(const void *p_data, uint32_t p_data_size, MCLinuxPrintSetup& setup)
+{
+	return false;
+
+	/*MCBinaryDecoder *t_decoder;
+
+	if (!MCBinaryDecoderCreate(p_data, p_data_size, t_decoder))
+		return false;
+
+	bool t_success;
+	t_success = true;
+
+	MCBinaryDecoderDestroy(t_decoder);
+
+	return t_success;*/
+}
+
+////////////////////////////////////////////////////////////////////////////////

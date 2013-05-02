@@ -1,0 +1,11 @@
+setup
+create field
+
+set the text of the last field to "abc def"
+find "a" in the last field
+test the foundText is "abc"
+
+find "x" in the last field
+test the foundText is empty
+
+teardown

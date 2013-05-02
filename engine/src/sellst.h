@@ -75,7 +75,7 @@ public:
 	MCSellist();
 	~MCSellist();
 	MCObject *getfirst();
-	void getids(MCExecPoint &);
+	bool getids(MCListRef& r_list);
 	void clear(Boolean message);
 	void top(MCObject *objptr);
 	void replace(MCObject *objptr);

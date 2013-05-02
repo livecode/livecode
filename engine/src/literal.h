@@ -37,6 +37,7 @@ public:
 
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 class MCLiteralNumber : public MCExpression

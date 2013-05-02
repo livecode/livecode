@@ -36,11 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "ports.cpp"
 
-#include "core.h"
 #include "notify.h"
 #include "socket.h"
-
-#include "filesystem.h"
 
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
@@ -93,6 +90,8 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release);
 #if !defined(X11) && (!defined(_MACOSX))
 #define socklen_t int
 #endif
+
+extern bool MCNetworkGetHostFromSocketId(MCStringRef p_socket, MCStringRef& r_host);
 
 extern real8 curtime;
 
@@ -229,66 +228,66 @@ bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
 // IP / hostname lookup functions
 //
 
-void MCS_ha(MCExecPoint &ep, MCSocket *s)
+bool MCS_ha(MCSocket *s, MCStringRef& r_string)
 {
 	mc_sockaddr_in_t addr;
 
 	socklen_t addrsize = sizeof(addr);
 	getsockname(s->fd, (sockaddr *)&addr, &addrsize);
-	char *t_name = NULL;
-	if (MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, t_name))
-	{
-		ep.copysvalue(t_name, strlen(t_name));
-		MCCStringFree(t_name);
-	}
+
+	return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
 }
 
-void MCS_hn(MCExecPoint &ep)
+bool MCS_hn(MCStringRef& r_string)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 
-	gethostname(ep.getbuffer(MAXHOSTNAMELEN + 1), MAXHOSTNAMELEN);
-	ep.setstrlen();
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.Resize(MAXHOSTNAMELEN + 1))
+		return false;
+
+	gethostname((char*)t_buffer.Chars(), MAXHOSTNAMELEN);
+	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+
+	return t_buffer.CreateStringAndRelease(r_string);
 }
 
-void MCS_aton(MCExecPoint &ep)
+bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_name = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 
-	char *n = ep.getsvalue().clone();
-	strtok(n, "|:"); // strip extra stuff
+	MCAutoStringRef t_host;
+	if (!MCNetworkGetHostFromSocketId(p_address, &t_host))
+		return false;
 
-	char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
-	t_success = MCS_name_to_sockaddr(n, t_addr);
+	t_success = MCS_name_to_sockaddr(*t_host, t_addr);
 	if (t_success)
 	{
-		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), true, t_name);
+		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), true, r_name);
 	}
 	if (t_success)
 	{
 		MCresult->sets("");
-		ep.copysvalue(t_name, strlen(t_name));
 	}
 	else
 	{
 		MCresult->sets("invalid host address");
-		ep.clear();
+		r_name = MCValueRetain(kMCEmptyString);
+		t_success = true;
 	}
 
-	MCCStringFree(t_name);
-
-	delete n;
+	return t_success;
 }
 
 char *MCS_dnsresolve(const char *p_hostname)
@@ -316,32 +315,31 @@ bool ntoa_callback(void *p_context, bool p_resolved, bool p_final, struct sockad
 {
 	if (p_resolved)
 	{
-		char *t_name;
-		MCExecPoint *t_ep = (MCExecPoint*)p_context;
-		if (MCS_sockaddr_to_string(p_addr, p_addrlen, false, t_name))
-		{
-			t_ep->concatcstring(t_name, EC_RETURN, t_ep->isempty() == True);
-			MCCStringFree(t_name);
-		}
+		MCListRef t_list = (MCListRef) p_context;
+		MCAutoStringRef t_name;
+		if (MCS_sockaddr_to_string(p_addr, p_addrlen, false, &t_name))
+			return MCListAppend(t_list, *t_name);
 	}
 	return true;
 }
 
 typedef struct _mc_ntoa_message_callback_info
 {
-	MCExecPoint *m_ep;
-	char *m_name;
-	MCNameRef m_message;
+	MCObjectHandle *target;
+	MCStringRef name;
+	MCNameRef message;
+	MCListRef list;
 } MCNToAMessageCallbackInfo;
 
 static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 {
 	if (t_info != NULL)
 	{
-		MCNameDelete(t_info->m_message);
-		MCCStringFree(t_info->m_name);
-		delete t_info->m_ep;
-
+		MCValueRelease(t_info->message);
+		MCValueRelease(t_info->name);
+		MCValueRelease(t_info->list);
+		if (t_info->target)
+			t_info->target->Release();
 		MCMemoryDelete(t_info);
 	}
 }
@@ -349,49 +347,57 @@ static void free_ntoa_message_callback_info(MCNToAMessageCallbackInfo *t_info)
 bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen)
 {
 	MCNToAMessageCallbackInfo *t_info = (MCNToAMessageCallbackInfo*)p_context;
-	ntoa_callback(t_info->m_ep, p_resolved, p_final, p_addr, p_addrlen);
+	ntoa_callback(t_info->list, p_resolved, p_final, p_addr, p_addrlen);
 
 	if (p_final)
 	{
-		MCscreen->delaymessage(t_info->m_ep->getobj(), t_info->m_message, strclone(t_info->m_name), strclone(t_info->m_ep->getcstring()));
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
+		MCscreen->delaymessage(t_info->target->Get(), t_info->message, strclone(MCStringGetCString(t_info->name)), strclone(MCStringGetCString(*t_string)));
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
 }
 
-void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
+bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr)
 {
 	if (!MCS_init_sockets())
 	{
-		ep.clear();
-		return;
+		r_addr = MCValueRetain(kMCEmptyList);
+		return true;
 	}
 
-	char *n = ep.getsvalue().clone();
-	strtok(n, "|:"); // strip extra stuff
+	MCAutoStringRef t_host;
+	if (!MCNetworkGetHostFromSocketId(p_hostname, &t_host))
+		return false;
+
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
 	bool t_success = true;
 
-	if (ep2.isempty())
+	if (MCNameIsEqualTo(p_message, kMCEmptyName))
 	{
-		ep.clear();
-		t_success = MCSocketHostNameResolve(n, NULL, SOCK_STREAM, true, ntoa_callback, &ep);
+		t_success = MCSocketHostNameResolve(MCStringGetCString(*t_host), NULL, SOCK_STREAM, true, ntoa_callback, *t_list);
 	}
 	else
 	{
 		MCNToAMessageCallbackInfo *t_info = NULL;
 		t_success = MCMemoryNew(t_info);
 		if (t_success)
-			t_success = MCNameCreateWithCString(ep2.getcstring(), t_info->m_message)
-				&& MCCStringClone(ep.getcstring(), t_info->m_name);
-		ep.clear();
-		if (t_success)
 		{
-			t_info->m_ep = new MCExecPoint(ep);
-			t_success = (t_info->m_ep != NULL);
+			t_info->message = MCValueRetain(p_message);
+			t_success = MCStringCopy(p_hostname, t_info->name);
 		}
 		if (t_success)
-			t_success = MCSocketHostNameResolve(n, NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
+			t_success = MCListCreateMutable('\n', t_info->list);
+
+		if (t_success)
+		{
+			t_info->target = p_target->gethandle();
+			t_success = MCSocketHostNameResolve(MCStringGetCString(*t_host), NULL, SOCK_STREAM, false, ntoa_message_callback, t_info);
+		}
 		
 		if (!t_success)
 			free_ntoa_message_callback_info(t_info);
@@ -399,6 +405,7 @@ void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
 
 	if (!t_success)
 	{
+		/* RESULT - !t_success doesn't necessarily mean an invalid address here */
 		MCresult->sets("invalid host address");
 	}
 	else
@@ -406,21 +413,19 @@ void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2)
 		MCresult->sets("");
 	}
 
-	delete n;
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_addr);
+
+	return t_success;
 }
 
-void MCS_pa(MCExecPoint &ep, MCSocket *s)
+bool MCS_pa(MCSocket *s, MCStringRef& r_string)
 {
 	struct sockaddr_in addr;
 	socklen_t addrsize = sizeof(addr);
 	getpeername(s->fd, (sockaddr *)&addr, &addrsize);
-	char *t_name;
 
-	if (MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, t_name))
-	{
-		ep.copysvalue(t_name, strlen(t_name));
-		MCCStringFree(t_name);
-	}
+	return MCS_sockaddr_to_string((sockaddr *)&addr, addrsize, false, r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -601,7 +606,7 @@ void MCS_close_socket(MCSocket *s)
 	s->closing = True;
 }
 
-void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MCNameRef mptr)
+void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef mptr)
 {
 	ep.clear();
 	if (s->datagram)
@@ -609,11 +614,10 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 		MCNameDelete(s->message);
 		/* UNCHECKED */ MCNameClone(mptr, s -> message);
 		s->object = ep.getobj();
-		delete until;
 	}
 	else
 	{
-		MCSocketread *eptr = new MCSocketread(length, until, ep.getobj(), mptr);
+		MCSocketread *eptr = new MCSocketread(length, until != nil ? strdup(until) : nil, ep.getobj(), mptr);
 		eptr->appendto(s->revents);
 		s->setselect();
 		if (s->accepting)
@@ -692,7 +696,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MC
 	}
 }
 
-void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef mptr)
+void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef mptr)
 {
 	if (s->datagram)
 	{
@@ -712,7 +716,7 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
 			if (!inet_aton(s->name, (in_addr *)&to.sin_addr.s_addr)
-			        || sendto(s->fd, d.getstring(), d.getlength(), 0,
+			        || sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
 			                  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
@@ -720,7 +724,7 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 			}
 			*portptr = ':';
 		}
-		else if (send(s->fd, d.getstring(), d.getlength(), 0) < 0)
+		else if (send(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0) < 0)
 		{
 			mptr = NULL;
 			MCresult->sets("error sending datagram");
@@ -733,7 +737,7 @@ void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef 
 	}
 	else
 	{
-		MCSocketwrite *eptr = new MCSocketwrite(d, optr, mptr);
+		MCSocketwrite *eptr = new MCSocketwrite(MCStringGetOldString(d), optr, mptr);
 		eptr->appendto(s->wevents);
 		s->setselect();
 		if (mptr == NULL)

@@ -1976,8 +1976,8 @@ enum Exec_errors
 	// {EE-0649} begins/ends with: illegal type for left operand
 	EE_BEGINSENDS_BADLEFT,
 	
-	// {EE-0650} load extension: bad filename
-	EE_LOAD_BADEXTENSIONEXP,
+	// {EE-0650} UNUSED
+	EE_UNUSED_0650,
 	
 	// {EE-0651} UNUSED
 	EE_UNUSED_0651,
@@ -2371,6 +2371,39 @@ enum Exec_errors
 	
 	// {EE-0778} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
+
+	// {EE-0779} Error evaluating expression
+	EE_EXPR_EVALERROR,
+	
+	// {EE-0780} Property: value is not a character
+	EE_PROPERTY_NAC,
+	
+	// {EE-0781} Property: value is not a string
+	EE_PROPERTY_NAS,
+	
+	// {EE-0782} Property: value is not a color
+	EE_PROPERTY_NOTACOLOR,
+	
+	// {EE-0783} Property: value is not a rectangle
+	EE_PROPERTY_NOTARECT,
+	
+	// {EE-0784} Property: value is not a point
+	EE_PROPERTY_NOTAPOINT,
+	
+	// {EE-0785} Property: value is not a pair of integers
+	EE_PROPERTY_NOTAINTPAIR,
+	
+	// {EE-0786} Property: value is not a quadruple of integers
+	EE_PROPERTY_NOTAINTQUAD,
+	
+	// {EE-0787} Property: invalid enumeration value
+	EE_PROPERTY_BADENUMVALUE,
+
+	// {EE-0788} Backdrop: invalid value
+	EE_BACKDROP_INVALIDVALUE,
+
+	// {EE-0789} Property: value is not an array
+	EE_PROPERTY_NOTANARRAY,
 };
 
 extern const char *MCexecutionerrors;

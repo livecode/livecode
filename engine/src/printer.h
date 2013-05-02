@@ -47,9 +47,9 @@ enum MCPrinterResult
 
 enum MCPrinterLinkType
 {
-	kMCPrinterLinkUnspecified,
-	kMCPrinterLinkAnchor,
-	kMCPrinterLinkURI
+	kMCPrinterLinkUnspecified = 0,
+	kMCPrinterLinkAnchor = 1,
+	kMCPrinterLinkURI = 2,
 };
 
 class MCPrinterDevice
@@ -159,10 +159,14 @@ enum MCPrinterOutputType
 typedef uint4 MCPrinterFeatureSet;
 enum
 {
-	PRINTER_FEATURE_COLLATE = 1 << 0,
-	PRINTER_FEATURE_COPIES = 1 << 1,
-	PRINTER_FEATURE_COLOR = 1 << 2,
-	PRINTER_FEATURE_DUPLEX = 1 << 3
+	PRINTER_FEATURE_COLLATE_BIT = 0,
+	PRINTER_FEATURE_COLLATE = 1 << PRINTER_FEATURE_COLLATE_BIT,
+	PRINTER_FEATURE_COPIES_BIT = 1,
+	PRINTER_FEATURE_COPIES = 1 << PRINTER_FEATURE_COPIES_BIT,
+	PRINTER_FEATURE_COLOR_BIT = 2,
+	PRINTER_FEATURE_COLOR = 1 << PRINTER_FEATURE_COLOR_BIT,
+	PRINTER_FEATURE_DUPLEX_BIT = 3,
+	PRINTER_FEATURE_DUPLEX = 1 << PRINTER_FEATURE_DUPLEX_BIT
 };
 
 typedef int4 MCPrinterPageRangeCount;
@@ -214,16 +218,18 @@ public:
 
 	void Render(MCCard *p_card, const MCRectangle& p_src, const MCRectangle& p_dst);
 	
-	const char *ChoosePrinter(bool p_window_modal);
-	const char *ChoosePaper(bool p_window_modal);
+	bool ChoosePrinter(bool p_window_modal, MCStringRef &r_result);
+	bool ChoosePaper(bool p_window_modal, MCStringRef &r_result);
 
 	// Device configuration properties
 	//
 	void SetDeviceName(const char *p_name);
 	const char *GetDeviceName(void);
 
-	void SetDeviceSettings(const MCString& p_settings);
-	MCString CopyDeviceSettings(void);
+	void SetDeviceSettings(MCStringRef p_settings);
+	/* LEGACY */ void SetDeviceSettings(const MCString& p_settings);
+	bool CopyDeviceSettings(MCStringRef &r_settings);
+	/* LEGACY */ MCString CopyDeviceSettings(void);
 
 	void SetDeviceOutput(MCPrinterOutputType p_type, const char *p_location);
 	MCPrinterOutputType GetDeviceOutputType(void) const;
@@ -278,9 +284,9 @@ public:
 	void SetJobColor(bool p_color);
 	bool GetJobColor(void) const;
 
-	void SetJobRanges(MCPrinterPageRangeCount p_count_type, const MCRange *p_ranges);
+	void SetJobRanges(MCPrinterPageRangeCount p_count_type, const MCInterval *p_ranges);
 	MCPrinterPageRangeCount GetJobRangeCount(void) const;
-	const MCRange* GetJobRanges(void) const;
+	const MCInterval* GetJobRanges(void) const;
 
 	int GetJobPageNumber(void) const;
 
@@ -421,7 +427,7 @@ private:
 	MCPrinterDuplexMode m_job_duplex;
 	bool m_job_color;
 	MCPrinterPageRangeCount m_job_range_count;
-	MCRange *m_job_ranges;
+	MCInterval *m_job_ranges;
 	
 	bool m_layout_show_borders;
 	int32_t m_layout_row_spacing;
@@ -534,7 +540,7 @@ inline MCPrinterPageRangeCount MCPrinter::GetJobRangeCount(void) const
 	return m_job_range_count;
 }
 
-inline const MCRange* MCPrinter::GetJobRanges(void) const
+inline const MCInterval* MCPrinter::GetJobRanges(void) const
 {
 	return m_job_ranges;
 }

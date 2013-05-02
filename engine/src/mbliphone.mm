@@ -378,22 +378,26 @@ uint32_t MCIPhoneSystem::GetProcessId(void)
 	return getpid();
 }
 
-char *MCIPhoneSystem::GetVersion(void)
+bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 {
-	return strclone([[[UIDevice currentDevice] systemVersion] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+	char *t_version;
+	t_version = [[[UIDevice currentDevice] systemVersion] cStringUsingEncoding:NSMacOSRomanStringEncoding];
+	return MCStringCreateWithNativeChars(t_version, MCCStringLength(t_version), r_string);
 }
 
-char *MCIPhoneSystem::GetMachine(void)
+bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 {
-	return strclone([[[UIDevice currentDevice] model] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+	char *t_machine;
+	t_machine = [[[UIDevice currentDevice] model] cStringUsingEncoding:NSMacOSRomanStringEncoding];
+	return MCStringCreateWithNativeChars(t_machine, MCCStringLength(t_machine), r_string);
 }
 
-char *MCIPhoneSystem::GetProcessor(void)
+MCNameRef MCIPhoneSystem::GetProcessor(void)
 {
 #ifdef __i386__
-	return strclone("i386");
+	return MCN_i386;
 #else
-	return strclone("ARM");
+	return MCN_arm;
 #endif
 }
 
@@ -465,9 +469,13 @@ char *MCIPhoneSystem::ResolveAlias(const char *p_target)
 	return strdup(p_target);
 }
 
-char *MCIPhoneSystem::GetCurrentFolder(void)
+bool MCIPhoneSystem::GetCurrentFolder(MCStringRef& r_path)
 {
-	return getcwd(NULL, 0);
+	MCAutoPointer<char> t_folder;
+	t_folder = getcwd(NULL, 0);
+	if (*t_folder == nil)
+		return false;
+	return MCStringCreateWithCString(*t_folder, r_path);
 }
 
 bool MCIPhoneSystem::SetCurrentFolder(const char *p_path)
@@ -637,51 +645,50 @@ void MCIPhoneSystem::UnloadModule(void *p_module)
 
 ////
 
-char *MCIPhoneSystem::LongFilePath(const char *p_path)
+bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
 {
-	return strclone(p_path);
+	return MCStringCopy(p_path, r_long_path);
 }
 
-char *MCIPhoneSystem::ShortFilePath(const char *p_path)
+bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
 {
-	return strclone(p_path);
+	return MCStringCopy(p_path, r_short_path);
 }
 
-char *MCIPhoneSystem::PathToNative(const char *p_path)
+bool MCIPhoneSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {
-	return strdup(p_path);
+	return MCStringCopy(p_path, r_native);
 }
 
-char *MCIPhoneSystem::PathFromNative(const char *p_path)
+bool MCIPhoneSystem::PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 {
-	return strdup(p_path);
+	return MCStringCopy(p_native, r_path);
 }
 
-char *MCIPhoneSystem::ResolvePath(const char *p_path)
+bool MCIPhoneSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	return ResolveNativePath(p_path);
+	return ResolveNativePath(p_path, r_resolved);
 }
 
-char *MCIPhoneSystem::ResolveNativePath(const char *p_path)
+bool MCIPhoneSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
 	char *t_absolute_path;
-	if (p_path[0] != '/')
+	if (MCStringGetCharAtIndex(p_path, 0) != '/')
 	{
-		char *t_folder;
-		t_folder = GetCurrentFolder();
-		t_absolute_path = new char[strlen(t_folder) + strlen(p_path) + 2];
-		strcpy(t_absolute_path, t_folder);
-		strcat(t_absolute_path, "/");
-		strcat(t_absolute_path, p_path);
-		
-		// MW-2011-07-04: GetCurrentFolder() returns a string that needs to be
-		//   freed.
-		free(t_folder);
+		MCAutoStringRef t_folder;
+		if (!GetCurrentFolder(&t_folder))
+			return false;
+
+		MCAutoStringRef t_resolved;
+		if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
+			!MCStringAppendChar(*t_resolved, '/') ||
+			!MCStringAppend(*t_resolved, p_path))
+			return false;
+
+		return MCStringCopy(*t_resolved, r_resolved);
 	}
 	else
-		t_absolute_path = strdup(p_path);
-	
-	return t_absolute_path;
+		return MCStringCopy(p_path, r_resolved);
 }
 
 
@@ -887,10 +894,10 @@ char *MCIPhoneSystem::GetHostName(void)
 	return strdup(t_hostname);
 }
 
-bool MCIPhoneSystem::HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+bool MCIPhoneSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct hostent *he;
-	he = gethostbyname(p_hostname);
+	he = gethostbyname(MCStringGetCString(p_hostname));
 	if (he == NULL)
 		return false;
 	
@@ -898,8 +905,14 @@ bool MCIPhoneSystem::HostNameToAddress(const char *p_hostname, MCSystemHostResol
 	ptr = (struct in_addr **)he -> h_addr_list;
 	
 	for(uint32_t i = 0; ptr[i] != NULL; i++)
-		if (!p_callback(p_context, inet_ntoa(*ptr[i])))
+	{
+		MCAutoStringRef t_address;
+		char *t_addr_str = inet_ntoa(*ptr[i]);
+		if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
 			return false;
+		if (!p_callback(p_context, t_address))
+			return false;
+	}
 	
 	return true;
 }
@@ -907,7 +920,7 @@ bool MCIPhoneSystem::HostNameToAddress(const char *p_hostname, MCSystemHostResol
 bool MCIPhoneSystem::AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct in_addr addr;
-	if (!inet_aton(p_address, &addr))
+	if (!inet_aton(MCStringGetCString(p_address), &addr))
 		return false;
 		
 	struct hostent *he;
@@ -915,7 +928,9 @@ bool MCIPhoneSystem::AddressToHostName(const char *p_address, MCSystemHostResolv
 	if (he == NULL)
 		return false;
 	
-	return p_callback(p_context, he -> h_name);
+	MCAutoStringRef t_name;
+	return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
+		p_callback(p_context, *t_name);
 }
 
 void MCIPhoneSystem::Debug(const char *p_msg)

@@ -124,13 +124,21 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 
 		if (CoCreateInstance(CLSID_DragDropHelper, NULL, CLSCTX_INPROC_SERVER, __uuidof(IDragSourceHelper), (void **)&t_source_helper) == S_OK)
 		{
+#ifdef SHARED_STRING
 			MCSharedString *t_dib;
 			t_dib = p_image -> converttodragimage();
 			if (t_dib != NULL)
 			{
 				const void *t_data;
 				t_data = t_dib -> Get() . getstring();
-
+#else
+			MCAutoStringRef t_dib;
+			p_image -> converttodragimage(&t_dib);
+			if (*t_dib != nil)
+			{
+				const void *t_data;
+				t_data = (const void *)MCStringGetCString(*t_dib);
+#endif
 				HDC t_dc;
 				t_dc = GetDC(static_cast<MCScreenDC *>(MCscreen) -> getinvisiblewindow());
 
@@ -154,8 +162,9 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 
 					DeleteObject(t_drag_bitmap);
 				}
-
+#ifdef SHARED_STRING
 				t_dib -> Release();
+#endif
 			}
 		}
 

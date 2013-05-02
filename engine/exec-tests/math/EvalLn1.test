@@ -1,0 +1,7 @@
+setup
+
+repeat with i = 1 to 10
+	test ln1(i) is ln(1 + i)
+end repeat
+
+teardown

@@ -39,9 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern int UnicodeToUTF8(const unsigned short *p_source_str, int p_source, char *p_dest_str, int p_dest);
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, unsigned short *p_dest_str, int p_dest);
-
 BSTR ConvertUTF8ToBSTR(const char *p_string)
 {
 	unsigned int t_length;

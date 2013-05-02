@@ -185,14 +185,14 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-const char *MCScreenDC::getdisplayname(void)
+MCNameRef MCScreenDC::getdisplayname(void)
 {
-	return "iphone";
+	return MCN_iphone;
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep . setsvalue("iphone");
+	return MCN_iphone;
 }
 
 uint2 MCScreenDC::getwidth()
@@ -315,7 +315,7 @@ struct MCScreenDCDoSetBeepSoundEnv
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
 static void MCScreenDCDoSetBeepSound(void *p_env)
-{
+	{
 	MCScreenDCDoSetBeepSoundEnv *env;
 	env = (MCScreenDCDoSetBeepSoundEnv *)p_env;
 	
@@ -358,10 +358,10 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	env -> result = t_status == noErr;
 }
 
-bool MCScreenDC::setbeepsound(const char *p_sound)
+bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	MCScreenDCDoSetBeepSoundEnv t_env;
-	t_env . sound = p_sound;
+	t_env . sound = MCStringGetCString(p_beep_sound);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSetBeepSound, &t_env);
@@ -369,12 +369,18 @@ bool MCScreenDC::setbeepsound(const char *p_sound)
 	return t_env . result;
 }
 
-const char *MCScreenDC::getbeepsound(void)
+bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
-	return s_system_sound_name != nil ? s_system_sound_name : "";
+	if (s_system_sound_name != nil)
+		return MCStringCreateWithCString(s_system_sound_name, r_beep_sound);
+	else
+	{
+		r_beep_sound = MCValueRetain(kMCEmptyString);
+		return true;
+	}
 }
 
-void MCScreenDC::getbeep(uint4 property, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
 }
 
@@ -554,7 +560,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			}
 		}
 	}
-	
+		
 	env -> result = t_bitmap;
 }
 
@@ -668,9 +674,9 @@ void MCScreenDC::activateIME(Boolean activate)
 {
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		if (activate)
+	if (activate)
 			MCIPhoneActivateKeyboard();
-		else
+	else
 			MCIPhoneDeactivateKeyboard();
 	});
 }
@@ -793,7 +799,7 @@ static void do_iphone_font_create(void *p_env)
     //   variants were found so use the base font.
 	if (t_font == nil)
 		t_font = t_base_font;
-	
+
 	if (t_font == nil)
 		t_font = [ UIFont systemFontOfSize: p_size ];
 	
@@ -1646,7 +1652,7 @@ static void MCIPhoneDoBreakWait(void *)
 		t_modes = [[NSArray alloc] initWithObject: NSRunLoopCommonModes];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
-	}
+}
 }
 
 void MCIPhoneBreakWait(void)
@@ -1656,7 +1662,7 @@ void MCIPhoneBreakWait(void)
 	
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
-
+	
 	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
 }
 
@@ -1666,21 +1672,21 @@ static void MCIPhoneDoScheduleWait(void *p_ctxt)
 	t_sleep = *(double *)p_ctxt;
 	[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: t_sleep inModes: [NSArray arrayWithObject: NSRunLoopCommonModes]];
 }
-
+	
 static void MCIPhoneDoCancelWait(void *p_ctxt)
-{
+	{
 	[NSObject cancelPreviousPerformRequestsWithTarget: s_break_wait_helper selector: @selector(breakWait) object: nil];
-}
+	}
 
 static bool MCIPhoneWait(double p_sleep)
-{
-	if (s_break_wait_pending)
 	{
+	if (s_break_wait_pending)
+		{
 		MCFiberCall(s_main_fiber, MCIPhoneDoCancelWait, nil);
 		s_break_wait_pending = false;
 		return true;
-	}
-	
+		}
+    
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
 	
@@ -1692,15 +1698,15 @@ static bool MCIPhoneWait(double p_sleep)
 	
 	// Now switch back to the main fiber.
 	MCFiberMakeCurrent(s_main_fiber);
-	
+
 	// Unmark ourselves as waiting.
 	s_wait_depth -= 1;
-	
+
 	bool t_broken;
 	t_broken = s_break_wait_pending;
 	s_break_wait_pending = false;
-	
-	return t_broken;
-}
 
+	return t_broken;
+	}
+	
 ////////////////////////////////////////////////////////////////////////////////

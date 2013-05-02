@@ -22,8 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 
-#include "core.h"
-
 #include "image.h"
 
 #include "imagebitmap.h"

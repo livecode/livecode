@@ -1,0 +1,9 @@
+setup
+
+test the number of bytes in randombytes(25) is 25
+
+local tData
+put randomBytes(25) into tData
+test tData is not randomBytes(25)
+
+teardown

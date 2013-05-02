@@ -32,8 +32,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //    This callback is used to place converted data either after a drop
 //    operation, or a request for promised scrap.
 //
+#ifdef SHARED_STRING
 typedef MCSharedString* (*MCMacOSXConversionCallback)(MCSharedString *p_input);
-
+#else
+typedef bool (*MCMacOSXConversionCallback)(MCStringRef p_input, MCStringRef& r_output);
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Class:
@@ -67,12 +70,18 @@ public:
 	//
 	// If p_callback is not NULL then p_data will be converted upon request
 	// using the callback.
+#ifdef SHARED_STRING
 	bool Publish(ScrapFlavorType p_type, MCSharedString* p_data, MCMacOSXConversionCallback p_callback);
-
+#else
+	bool Publish(ScrapFlavorType p_type, MCStringRef p_data, MCMacOSXConversionCallback p_callback);
+#endif
 	// Publish the given transfer type
 	//
+#ifdef SHARED_STRING
 	bool Publish(MCTransferType p_type, MCSharedString *p_source_data);
-
+#else
+	bool Publish(MCTransferType p_type, MCStringRef p_source_data);
+#endif
 	// Publish the contents of the give pasteboard
 	//
 	bool Publish(MCPasteboard *p_pasteboard);
@@ -80,7 +89,11 @@ public:
 	// Fetch the data for the given flavor type, this will convert the data
 	// as appropriate.
 	//
+#ifdef SHARED_STRING
 	MCSharedString *Subscribe(ScrapFlavorType p_type);
+#else
+	bool Subscribe(ScrapFlavorType p_type, MCStringRef& r_data);
+#endif
 
 	// Iterate over the list of Flavors and perform the given callback for
 	// each one.
@@ -91,7 +104,11 @@ private:
 	struct Entry
 	{
 		ScrapFlavorType type;
-		MCSharedString *data;
+#ifdef SHARED_STRING
+		MCSharedString 	*data;
+#else
+		MCStringRef data;
+#endif
 		MCMacOSXConversionCallback converter;
 	};
 
@@ -122,15 +139,22 @@ public:
 	void Release(void);
 
 	bool Query(MCTransferType*& r_types, unsigned int& r_type_count);
+#ifdef SHARED_STRING
 	bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+#else
+	bool Fetch(MCTransferType p_type, MCStringRef& r_data);
+#endif
 
 protected:
 	MCMacOSXPasteboard(void);
 	virtual ~MCMacOSXPasteboard(void);
 
 	virtual bool QueryFlavors(ScrapFlavorType*& r_types, uint4& r_type_count) = 0;
+#ifdef SHARED_STRING
 	virtual bool FetchFlavor(ScrapFlavorType p_type, MCSharedString*& r_data) = 0;
-
+#else
+	virtual bool FetchFlavor(ScrapFlavorType p_type, MCStringRef& r_data) = 0;
+#endif
 	void Resolve(void);
 
 private:
@@ -138,7 +162,11 @@ private:
 	{
 		MCTransferType type;
 		ScrapFlavorType flavor;
-		MCSharedString *data;
+#ifdef SHARED_STRING
+		MCSharedString 	*data;
+#else
+		MCStringRef data;
+#endif
 	};
 
 	bool AddEntry(MCTransferType p_type, ScrapFlavorType p_flavor);
@@ -179,7 +207,11 @@ public:
 
 protected:
 	bool QueryFlavors(ScrapFlavorType*& r_types, uint4& r_type_count);
+#ifdef SHARED_STRING
 	bool FetchFlavor(ScrapFlavorType p_type, MCSharedString*& r_data);
+#else
+	bool FetchFlavor(ScrapFlavorType p_type, MCStringRef& r_data);
+#endif
 
 private:
 	ScrapRef m_scrap;
@@ -208,12 +240,16 @@ public:
 
 protected:
 	bool QueryFlavors(ScrapFlavorType*& r_types, uint4& r_type_count);
+#ifdef SHARED_STRING	
 	bool FetchFlavor(ScrapFlavorType p_type, MCSharedString*& r_data);
+#else
+	bool FetchFlavor(ScrapFlavorType p_type, MCStringRef& r_data);
+#endif
 	
 private:
 	DragRef m_drag;
 };
-
+#ifdef SHARED_STRING
 MCSharedString *MCConvertTextToMacPlain(MCSharedString *p_data);
 MCSharedString *MCConvertUnicodeToMacUnicode(MCSharedString *p_data);
 MCSharedString *MCConvertStyledTextToMacPlain(MCSharedString *p_data);
@@ -232,5 +268,25 @@ MCSharedString *MCConvertMacTIFFToImage(MCSharedString *p_data);
 
 MCSharedString *MCConvertFilesToMacHFS(MCSharedString *p_data);
 MCSharedString *MCConvertMacHFSToFiles(MCSharedString *p_data);
+#else
+bool MCConvertTextToMacPlain(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertUnicodeToMacUnicode(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertStyledTextToMacPlain(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertStyledTextToMacUnicode(MCStringRef p_input, MCStringRef& r_output);
+
+bool MCConvertStyledTextToMacStyled(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertMacStyledToStyledText(MCStringRef p_text_data, MCStringRef p_style_data, MCStringRef& r_output);
+
+bool MCConvertStyledTextToMacUnicodeStyled(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertMacUnicodeStyledToStyledText(MCStringRef p_text_data, MCStringRef p_style_data, bool p_is_external, MCStringRef& r_output);
+
+bool MCConvertMacPictureToImage(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertImageToMacPicture(MCStringRef p_input, MCStringRef& r_output);
+
+bool MCConvertMacTIFFToImage(MCStringRef p_input, MCStringRef& r_output);
+
+bool MCConvertFilesToMacHFS(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertMacHFSToFiles(MCStringRef p_input, MCStringRef& r_output);
+#endif
 
 #endif

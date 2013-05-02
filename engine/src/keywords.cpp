@@ -767,12 +767,15 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 	MCScriptPoint *sp = NULL;
 	Parse_stat ps;
 	const char *sptr;
-	uint4 l;
-	MCVariableValue *tvar = NULL;
-	MCHashentry *hptr = NULL;
-	uint4 kindex = 0;
 	Boolean donumeric = False;
 	Exec_stat stat;
+
+	MCAutoArrayRef t_array;
+	MCNameRef t_key;
+	MCValueRef t_value;
+	uintptr_t t_iterator;
+	uint4 l;
+
 	switch (form)
 	{
 	case RF_FOR:
@@ -788,37 +791,22 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 			}
 			if (each == FU_ELEMENT)
 			{
-				tvar = ep2.getarray();
-				if (tvar != NULL && tvar -> is_array())
-				{
+				ep2 . copyasarrayref(&t_array);
+				t_iterator = 0;
+
+				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 					l = 1;
-					kindex = 0;
-					donumeric = tvar -> get_array() -> isnumeric();
-					hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-					if (hptr == NULL)
-					{
-						kindex = 0;
-						donumeric = False;
-						hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-					}
-				}
 				else
 					l = 0;
+
 			}
 			else if (each == FU_KEY)
 			{
-				tvar = ep2.getarray();
-				if (tvar != NULL && tvar -> is_array())
-				{
+				ep2 . copyasarrayref(&t_array);
+				t_iterator = 0;
+
+				if (MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 					l = 1;
-					kindex = 0;
-					donumeric = False;
-					hptr = tvar -> get_array() -> getnextkey(kindex, hptr);
-					// [[ Bug 3871 ]] : If hptr is NULL then we are done already (this can happen
-					//                  with an empty custom property set).
-					if (hptr == NULL)
-						l = 0;
-				}
 				else
 					l = 0;
 			}
@@ -942,17 +930,15 @@ Exec_stat MCRepeat::exec(MCExecPoint &ep)
 					case FU_KEY:
 						// MW-2010-12-15: [[ Bug 9218 ]] Make a copy of the key so that it can't be mutated
 						//   accidentally.
-						ep . setstaticcstring(hptr -> string);
+						ep . setvalueref(t_key);
 						loopvar -> set(ep);
-						hptr = tvar -> get_array() -> getnextkey(kindex, hptr);
-						if (hptr == NULL)
+						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 							l = 0;
 						break;
 					case FU_ELEMENT:
-						hptr -> value . fetch(ep);
+						ep . setvalueref(t_value);
 						loopvar -> set(ep);
-						hptr = tvar -> get_array() -> getnextelement(kindex, hptr, donumeric, ep);
-						if (hptr == NULL)
+						if (!MCArrayIterate(*t_array, t_iterator, t_key, t_value))
 							l = 0;
 						break;
 					case FU_LINE:
@@ -1844,7 +1830,7 @@ Exec_stat MCTry::exec(MCExecPoint &ep)
 		case ES_PASS:
 			if (state == TS_CATCH)
 			{
-				errorvar->evalvar(ep)->fetch(ep);
+				errorvar->evalvar(ep)->eval(ep);
 				MCeerror->copysvalue(ep.getsvalue(), False);
 				MCeerror->add(EE_TRY_BADSTATEMENT, line, pos);
 				stat = ES_ERROR;

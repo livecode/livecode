@@ -45,6 +45,16 @@ public:
 	MCObject *getobj(MCExecPoint &ep);
 
 private:
+	Exec_stat eval_variable(MCExecPoint& ep);
+	Exec_stat eval_function(MCExecPoint& ep);
+	Exec_stat eval_global_property(MCExecPoint& ep);
+	Exec_stat eval_object_property(MCExecPoint& ep);
+	Exec_stat eval_count(MCExecPoint& ep);
+	
+	Exec_stat set_variable(MCExecPoint& ep);
+	Exec_stat set_global_property(MCExecPoint& ep);
+	Exec_stat set_object_property(MCExecPoint& ep);
+	
 	Exec_stat resolveprop(MCExecPoint& ep, Properties& r_prop, MCNameRef& r_prop_name, MCNameRef& r_index_name);
 
 	Exec_stat mode_set(MCExecPoint& ep);

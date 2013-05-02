@@ -131,7 +131,11 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 
+#ifdef SHARED_STRING
 bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data);
+#else
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data);
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -347,6 +351,9 @@ private:
 	
 	void notifyneeds(bool p_deleting);
 	
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCImage();
 	MCImage(const MCImage &iref);
@@ -354,6 +361,8 @@ public:
 	virtual ~MCImage();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual void open();
 	virtual void close();
 	virtual Boolean mfocus(int2 x, int2 y);
@@ -363,8 +372,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual void select();
 	virtual void deselect();
 	virtual void undo(Ustruct *us);
@@ -479,8 +488,11 @@ public:
 	// publishing to the clipboard. For PNG, GIF, JPEG images this is the text 
 	// property of the image. For RAW images, the data will be compressed and
 	// returned as PNG.
+#ifdef SHARED_STRING
 	MCSharedString *getclipboardtext(void);
-
+#else
+	bool getclipboardtext(MCStringRef& r_data);
+#endif
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
 	MCWindowShape *makewindowshape(void);
 	
@@ -489,7 +501,11 @@ public:
 	CGImageRef converttodragimage(void);
 #elif defined(_WINDOWS_DESKTOP)
 	MCWinSysIconHandle makeicon(uint4 p_width, uint4 p_height);
+#ifdef SHARED_STRING
 	MCSharedString *converttodragimage(void);
+#else
+	void converttodragimage(MCStringRef& r_output);
+#endif
 #elif defined(_LINUX_DESKTOP)
 	Pixmap makewindowregion();
 #else
@@ -539,6 +555,57 @@ public:
 	{
 		return (MCImage *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data);
+	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data);
+	
+	////////// PROPERTY ACCESSORS
+
+	void GetXHot(MCExecContext& ctxt, integer_t& r_x);
+	void SetXHot(MCExecContext& ctxt, integer_t p_x);
+	void GetYHot(MCExecContext& ctxt, integer_t& r_y);
+	void SetYHot(MCExecContext& ctxt, integer_t p_y);
+	void GetHotSpot(MCExecContext& ctxt, MCPoint& r_spot);
+	void SetHotSpot(MCExecContext& ctxt, MCPoint p_spot);
+	void GetFileName(MCExecContext& ctxt, MCStringRef& r_name);
+	void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
+	void GetAlwaysBuffer(MCExecContext& ctxt, bool& r_setting);
+	void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
+	void GetImagePixmapId(MCExecContext& ctxt, uinteger_t*& r_id);
+	void SetImagePixmapId(MCExecContext& ctxt, uinteger_t* p_id);
+	void GetMaskPixmapId(MCExecContext& ctxt, uinteger_t*& r_id);
+	void SetMaskPixmapId(MCExecContext& ctxt, uinteger_t* p_id);
+	void GetDontDither(MCExecContext& ctxt, bool& r_setting);
+	void SetDontDither(MCExecContext& ctxt, bool setting);
+	void GetMagnify(MCExecContext& ctxt, bool& r_setting);
+	void SetMagnify(MCExecContext& ctxt, bool setting);
+	void GetSize(MCExecContext& ctxt, uinteger_t& r_size);
+	void GetCurrentFrame(MCExecContext& ctxt, uinteger_t& r_frame);
+	void SetCurrentFrame(MCExecContext& ctxt, uinteger_t p_frame);
+	void GetFrameCount(MCExecContext& ctxt, integer_t& r_count);
+	void GetPalindromeFrames(MCExecContext& ctxt, bool& r_setting);
+	void SetPalindromeFrames(MCExecContext& ctxt, bool setting);
+	void GetConstantMask(MCExecContext& ctxt, bool& r_setting);
+	void SetConstantMask(MCExecContext& ctxt, bool setting);
+	void GetRepeatCount(MCExecContext& ctxt, integer_t& r_count);
+	void SetRepeatCount(MCExecContext& ctxt, integer_t p_count);
+	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetImageData(MCExecContext& ctxt, MCStringRef& r_data);
+	void SetImageData(MCExecContext& ctxt, MCStringRef p_data);
+	void GetMaskData(MCExecContext& ctxt, MCStringRef& r_data);
+	void SetMaskData(MCExecContext& ctxt, MCStringRef p_data);
+	void GetAlphaData(MCExecContext& ctxt, MCStringRef& r_data);
+	void SetAlphaData(MCExecContext& ctxt, MCStringRef p_data);
+	void GetResizeQuality(MCExecContext& ctxt, intenum_t& r_quality);
+	void SetResizeQuality(MCExecContext& ctxt, intenum_t p_quality);
+	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);
+	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
+	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
 };
 
 extern bool MCU_israwimageformat(Export_format p_format);

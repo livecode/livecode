@@ -1,0 +1,4 @@
+setup
+put hostaddresstoname("0.0.0.0") into tHostName
+test the hostname is tHostName
+teardown

@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "packed.h"
 
-#include "core.h"
 #include "iquantization.h"
 
 extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
@@ -289,6 +288,7 @@ void MCImage::cutimage()
 	layer_redrawall();
 }
 
+#ifdef SHARED_STRING
 void MCImage::copyimage()
 {
 	bool t_success = true;
@@ -313,6 +313,29 @@ void MCImage::copyimage()
 		t_data -> Release();
 	}
 }
+#else
+void MCImage::copyimage()
+{
+	bool t_success = true;
+	
+	MCImageBitmap *t_bitmap = nil;
+	MCAutoStringRef t_image_data;
+	
+	if (isediting())
+	{
+		MCImageBitmap *t_bitmap = nil;
+		t_success = static_cast<MCMutableImageRep*>(m_rep)->copy_selection(t_bitmap);
+		if (t_success)
+			t_success = MCImageCreateClipboardData(t_bitmap, &t_image_data);
+		MCImageFreeBitmap(t_bitmap);
+	}
+	else
+		/* UNCHECKED */ getclipboardtext(&t_image_data);
+	
+	if (*t_image_data != NULL)
+		MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_image_data);
+}
+#endif
 
 void MCImage::delimage()
 {
@@ -1470,6 +1493,7 @@ void MCImageFreeCompressedBitmap(MCImageCompressedBitmap *p_compressed)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef SHARED_STRING
 bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data)
 {
 	bool t_success = true;
@@ -1501,5 +1525,34 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data
 
 	return t_success;
 }
+#else
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data)
+{
+	bool t_success = true;
+	
+	MCImageBitmap *t_bitmap = nil;
+	IO_handle t_stream = nil;
+	MCAutoStringRef t_image_data;
+	
+	char *t_bytes = nil;
+	uindex_t t_byte_count = 0;
+	
+	t_success = nil != (t_stream = MCS_fakeopenwrite());
+	
+	if (t_success)
+		t_success = MCImageEncodePNG(p_bitmap, t_stream, t_byte_count);
+	
+	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
+		t_success = false;
+	
+	if (t_success)
+		t_success = MCStringCreateWithNativeCharsAndRelease((char_t*)t_bytes, t_byte_count, r_data);
+	
+	if (!t_success)
+		MCMemoryDeallocate(t_bytes);
+	
+	return t_success;
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

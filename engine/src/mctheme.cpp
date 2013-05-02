@@ -40,10 +40,6 @@ uint2 MCTheme::getthemefamilyid()
 {
 	return 0;
 }
-const char *MCTheme::getname()
-{
-	return NULL;
-}
 int4 MCTheme::getmetric(Widget_Metric wmetric)
 {
 	return 0;

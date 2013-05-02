@@ -27,8 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "image.h"
 #include "globals.h"
 
-#include "core.h"
-
 #include <setjmp.h>
 
 extern "C"

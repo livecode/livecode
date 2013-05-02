@@ -1,0 +1,5 @@
+setup
+if the platform is not "MacOS" then
+  test the drivernames is empty
+end if
+teardown

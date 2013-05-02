@@ -301,7 +301,7 @@ const char *MCR_geterror()
 	return regexperror;
 }
 
-regexp *MCR_compile(char *exp)
+regexp *MCR_compile(const char *exp)
 {
 	regexp *re = new regexp;
 	int status;

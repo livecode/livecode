@@ -1,0 +1,46 @@
+setup "conversion tests"
+
+test binaryEncode("x3", "abcd") is null&null&null
+
+test binaryEncode("a3", "abcd") is "abc"
+
+test binaryEncode("A3", "ab") is "ab "
+
+test binaryEncode("b16", "10000110" & "01000110") is "ab"
+
+test binaryEncode("B16", "01100001" & "01100010") is "ab"
+
+test binaryEncode("h4", "16" & "26") is "ab"
+
+test binaryEncode("H4", "61" & "62") is "ab"
+
+test binaryEncode("c1", -1) is numtoByte(255)
+
+test binaryEncode("C1", 255) is numtoByte(255)
+
+test binaryEncode("s1", -1) is numtoByte(255)&numToByte(255)
+
+test binaryEncode("S1", 65535) is numtoByte(255)&numToByte(255)
+
+test binaryEncode("i1", -1) is numtoByte(255)&numToByte(255)&numtoByte(255)&numToByte(255)
+
+test binaryEncode("I1", 4294967295) is numtoByte(255)&numToByte(255)&numtoByte(255)&numToByte(255)
+
+test binaryEncode("n1", -256) is numtoByte(255)&numToByte(0)
+
+test binaryEncode("m1", 65280) is numtoByte(255)&numToByte(0)
+
+test binaryEncode("N1", -65536) is numtoByte(255)&numToByte(255)&numtoByte(0)&numToByte(0)
+
+test binaryEncode("M1", 4294901760) is numtoByte(255)&numToByte(255)&numtoByte(0)&numToByte(0)
+
+teardown
+
+setup "error tests"
+
+local tVar
+test-error binaryEncode("a*")
+test-error binaryEncode("<>?:@~P{}", "abcd")
+test-error binaryEncode("a3a3", "abcdef")
+
+teardown

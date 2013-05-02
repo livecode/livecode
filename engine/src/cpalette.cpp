@@ -174,7 +174,7 @@ Boolean MCColors::mup(uint2 which)
 	return True;
 }
 
-Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -185,12 +185,12 @@ Exec_stat MCColors::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		ep.setcolor(color);
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	MCString data = ep.getsvalue();
@@ -200,21 +200,17 @@ Exec_stat MCColors::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	case P_SELECTED_COLOR:
 		{
 			MCColor color;
-			char *colorname = NULL;
-			if (!MCscreen->parsecolor(data, &color, &colorname))
+			if (!MCscreen->parsecolor(data, &color, nil))
 			{
-				MCeerror->add
-				(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+				MCeerror->add(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
 				return ES_ERROR;
 			}
-			if (colorname != NULL)
-				delete colorname;
 			MCscreen->alloccolor(color);
 			selectedcolor = color.pixel;
 		}
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{

@@ -233,9 +233,6 @@ bool MCSystemPick(const char *p_options, bool p_is_unicode, bool p_use_checkmark
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern int UnicodeToUTF8(const uint2 *p_source_str, int p_source, char *p_dest_str, int p_dest);
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
-
 uint32_t NativeToUnicode(const char *p_string, uint32_t p_string_length, unichar_t *p_buffer, uint32_t p_buffer_length)
 {
 	uint32_t t_to_write = MCU_min(p_string_length, p_buffer_length);
@@ -688,16 +685,19 @@ Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 }
 
-void MCS_getnetworkinterfaces(MCExecPoint& ep)
+bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 {
 	char *t_network_interfaces = NULL;
 	
 	MCAndroidEngineCall("getNetworkInterfaces", "s", &t_network_interfaces);
 
 	if (t_network_interfaces == NULL)
-		ep.clear();
+	{
+		r_interfaces = MCValueRetain(kMCEmptyString);
+		return true;
+	}
 	else
-		ep.grabbuffer(t_network_interfaces, MCCStringLength(t_network_interfaces));
+		return MCStringCreateWithCString(t_network_interfaces, r_interfaces);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1209,7 +1209,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
     
     {"mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
-        
+
     {"mobilePickContact", MCHandlePickContact, nil},
     {"mobileShowContact", MCHandleShowContact, nil},
     {"mobileGetContactData", MCHandleGetContactData, nil},

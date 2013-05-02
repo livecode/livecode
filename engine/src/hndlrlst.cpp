@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -36,11 +35,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "syntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCVariable **MCHandlerlist::s_old_variables = NULL;
 uint32_t MCHandlerlist::s_old_variable_count = 0;
 uint32_t *MCHandlerlist::s_old_variable_map;
 
-////
+////////////////////////////////////////////////////////////////////////////////
 
 MCHandlerArray::MCHandlerArray(void)
 {
@@ -292,12 +295,12 @@ Parse_stat MCHandlerlist::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **
 	if (initialised)
 	{
 		if (p_init != nil)
-			lastvar->setnameref_unsafe(p_init);
+			lastvar->setvalueref(p_init);
 		else
 		{
 			// MW-2011-08-22: [[ Bug ]] We are initializing a UQL in server script
 			//   scope - so set it as a UQL.
-			lastvar->setnameref_unsafe(p_name);
+			lastvar->setvalueref(p_name);
 			lastvar->setuql();
 		}
 	}
@@ -340,21 +343,46 @@ Parse_stat MCHandlerlist::newconstant(MCNameRef p_name, MCNameRef p_value)
 	return PS_NORMAL;
 }
 
+bool MCHandlerlist::getlocalnames(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+	for (MCVariable *t_var = vars; t_var != nil; t_var = t_var->getnext())
+		if (!MCListAppend(*t_list, t_var->getname()))
+			return false;
+
+	return MCListCopy(*t_list, r_list);
+}
+
 void MCHandlerlist::appendlocalnames(MCExecPoint &ep)
 {
-	MCVariable *tmp;
-	for (tmp = vars ; tmp != NULL ; tmp = tmp->getnext())
-		ep.concatnameref(tmp->getname(), EC_COMMA, tmp == vars);
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ getlocalnames(&t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+	/* UNCHECKED */ ep.setvalueref(*t_string);
+}
+
+bool MCHandlerlist::getglobalnames(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+	for (uinteger_t i = 0 ; i < nglobals ; i++)
+		if (!MCListAppend(*t_list, globals[i]->getname()))
+			return false;
+
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCHandlerlist::appendglobalnames(MCExecPoint &ep, bool first)
 {
-	uint2 i;
-	for (i = 0 ; i < nglobals ; i++)
-	{
-		ep.concatnameref(globals[i]->getname(), EC_COMMA, first);
-		first = false;
-	}
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ getglobalnames(&t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+	/* UNCHECKED */ ep.setvalueref(*t_string);
 }
 
 // OK-2008-06-25: <Bug where the variableNames property would return duplicate global names>
@@ -659,3 +687,29 @@ bool MCHandlerlist::enumerate(MCExecPoint& ep, bool p_first)
 	
 	return p_first;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCHandlerlist::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginHandlerList(ctxt);
+	
+	for(uindex_t i = 0; i < nglobals; i++)
+		MCSyntaxFactoryDefineGlobal(ctxt, globals[i] -> getname());
+
+	for(uindex_t i = 0; i < nconstants; i++)
+		MCSyntaxFactoryDefineConstant(ctxt, cinfo[i] . name, cinfo[i] . value);
+	
+	MCVariable *t_var;
+	t_var = vars;
+	for(uindex_t i = 0; t_var != nil; t_var = t_var -> getnext(), i++)
+		MCSyntaxFactoryDefineLocal(ctxt, t_var -> getname(), vinits[i]);
+
+	for(uindex_t i = 0; i < 6; i++)
+		for(uindex_t j = 0; j < handlers[i] . count(); j++)
+			handlers[i] . get()[j] -> compile(ctxt);
+			
+	MCSyntaxFactoryEndHandlerList(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////

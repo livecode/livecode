@@ -1,0 +1,779 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include "prefix.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "mcio.h"
+
+#include "globals.h"
+#include "field.h"
+#include "stack.h"
+#include "card.h"
+
+#include "exec.h"
+#include "debug.h"
+
+#include "ans.h"
+#include "securemode.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCNameRef *s_dialog_types[] = 
+{
+	&MCN_plain,
+	&MCN_clear,
+	&MCN_color,
+	&MCN_effect,
+	&MCN_error,
+	&MCN_file,
+	&MCN_folder,
+	&MCN_information,
+	&MCN_password,
+	&MCN_printer,
+	&MCN_program,
+	&MCN_question,
+	&MCN_record,
+	&MCN_titled,
+	&MCN_warning,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerColor, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithTypes, 6)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFileWithFilter, 6)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFile, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerFolder, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AnswerNotify, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAnswerDialog, 6)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskQuestion, 6)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskPassword, 6)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFile, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithFilter, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, AskFileWithTypes, 5)
+MC_EXEC_DEFINE_EXEC_METHOD(Dialog, CustomAskDialog, 7)
+
+////////////////////////////////////////////////////////////////////////////////
+void MCDialogExecAnswerColor(MCExecContext &ctxt, MCColor *p_initial_color, MCStringRef p_title, bool p_as_sheet)
+{
+	MCAutoStringRef t_value, t_result;
+	bool t_chosen;
+	if (MCsystemCS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_COLOR_DIALOGS))
+	{
+		MCColor t_color;
+		if (p_initial_color != nil)
+			t_color = *p_initial_color;
+		else
+			t_color = MCpencolor;
+		
+		MCColor t_chosen_color;
+		if (!MCA_color(p_title, t_color, p_as_sheet, t_chosen, t_chosen_color))
+		{
+			ctxt.Throw();
+			return;
+		}
+
+		if (t_chosen)
+		{
+			if (!MCStringFormat(&t_value, "%d,%d,%d",
+				t_color.red >> 8, t_color.green >> 8, t_color.blue >> 8))
+			{
+				ctxt.Throw();
+				return;
+			}
+		}
+	}
+	else
+	{
+		MCAutoStringRef t_initial_color_as_string;
+		if (p_initial_color != nil)
+		{
+			if (!MCStringFormat(&t_initial_color_as_string, "%d,%d,%d", p_initial_color -> red >> 8, p_initial_color -> green >> 8, p_initial_color -> blue >> 8))
+			{
+				ctxt . Throw();
+				return;
+			}
+		}
+		else
+			t_initial_color_as_string = kMCEmptyString;
+		
+		MCStringRef t_args[2];
+		t_args[0] = p_title;
+		t_args[1] = *t_initial_color_as_string;
+		MCDialogExecCustomAnswerDialog(ctxt, MCN_color_chooser, MCN_color, p_as_sheet, t_args, 2, &t_value);
+		if (ctxt.HasError())
+			return;
+
+		if (MCStringGetLength(*t_value) == 0)
+			t_chosen = false;
+	}
+
+	if (*t_value != nil)
+		ctxt.SetItToValue(*t_value);
+
+	if (t_chosen)
+		ctxt . SetTheResultToEmpty();
+	else
+		ctxt . SetTheResultToValue(MCN_cancel);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* WRAPPER */
+static bool MCA_file_with_types(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
+						 MCStringRef *p_types, uindex_t p_type_count,
+						 MCStringRef p_title, bool p_sheet,
+						 MCStringRef &r_value, MCStringRef &r_result)
+{
+	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
+	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	
+	char **t_types = nil;
+	if (!MCMemoryNewArray(p_type_count, t_types))
+		return false;
+	
+	for (uindex_t i = 0; i < p_type_count; i++)
+		t_types[i] = (char*)MCStringGetCString(p_types[i]);
+	
+	uint32_t t_options = 0;
+	if (p_plural)
+		t_options |= MCA_OPTION_PLURAL;
+	if (p_sheet)
+		t_options |= MCA_OPTION_SHEET;
+	
+	MCExecPoint ep(nil, nil, nil);
+	int t_error;
+	t_error = MCA_file_with_types(ep, t_title, t_prompt, t_types, p_type_count, t_initial, t_options);
+	
+	MCMemoryDelete(t_types);
+	if (ep.isempty())
+		return MCStringCreateWithCString(MCcancelstring, r_result);
+	else
+		return ep.copyasstringref(r_value);
+}
+
+/* WRAPPER */
+static bool MCA_file(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter,
+			  MCStringRef p_title, bool p_sheet,
+			  MCStringRef &r_value, MCStringRef &r_result)
+{
+	const char *t_title = p_title == nil ? nil : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? nil : MCStringGetCString(p_prompt);
+	const char *t_filter = p_filter == nil ? nil : MCStringGetCString(p_filter);
+	const char *t_initial = p_initial == nil ? nil : MCStringGetCString(p_initial);
+	
+	uint32_t t_options = 0;
+	if (p_plural)
+		t_options |= MCA_OPTION_PLURAL;
+	if (p_sheet)
+		t_options |= MCA_OPTION_SHEET;
+	
+	MCExecPoint ep(nil, nil, nil);
+	int t_error;
+	t_error = MCA_file(ep, t_title, t_prompt, t_filter, t_initial, t_options);
+	if (ep.isempty())
+		return MCStringCreateWithCString(MCcancelstring, r_result);
+	else
+		return ep.copyasstringref(r_value);
+}
+
+void MCDialogExecAnswerFile(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet)
+{
+	MCDialogExecAnswerFileWithFilter(ctxt, p_plural, p_prompt, p_initial, nil, p_title, p_sheet);
+}
+
+void MCDialogExecAnswerFileWithFilter(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_sheet)
+{
+	MCAutoStringRef t_value, t_result;
+
+	if (!MCSecureModeCanAccessDisk())
+	{
+		ctxt.LegacyThrow(EE_DISK_NOPERM);
+		return;
+	}
+
+	if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
+	{
+		if (!MCA_file(p_plural, p_prompt, p_initial, p_filter, p_title, p_sheet, &t_value, &t_result))
+		{
+			ctxt.Throw();
+			return;
+		}
+	}
+	else
+	{
+		MCStringRef t_args[5];
+		uindex_t t_arg_count = 5;
+		t_args[0] = p_title;
+		t_args[1] = p_prompt;
+		t_args[2] = p_filter;
+		t_args[3] = p_initial;
+		t_args[4] = nil;
+		MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
+		if (ctxt.HasError())
+			return;
+
+		if (MCStringGetLength(*t_value) == 0)
+		{
+			if (!MCStringCopy(MCNameGetString(MCN_cancel), &t_result))
+			{
+				ctxt.Throw();
+				return;
+			}
+		}
+	}
+
+	if (*t_value != nil)
+		ctxt.SetItToValue(*t_value);
+
+	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
+		ctxt.SetTheResultToValue(MCN_cancel);
+	else
+		ctxt.SetTheResultToEmpty();
+}
+
+bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+void MCDialogExecAnswerFileWithTypes(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef *p_types, uindex_t p_type_count, MCStringRef p_title, bool p_sheet)
+{
+	MCAutoStringRef t_value, t_result;
+	bool t_success = true;
+
+	MCAutoStringRefArray t_types;
+	for (uindex_t i = 0; t_success && i < p_type_count; i++)
+	{
+		MCAutoStringRefArray t_split;
+		t_success = MCStringsSplit(p_types[i], '\n', t_split.PtrRef(), t_split.CountRef());
+		if (t_success)
+			t_success = t_types.Append(t_split);
+	}
+	if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
+	{
+		if (!MCA_file_with_types(p_plural, p_prompt, p_initial, *t_types, t_types.Count(), p_title, p_sheet, &t_value, &t_result))
+		{
+			ctxt.Throw();
+			return;
+		}
+	}
+	else
+	{
+		MCAutoListRef t_type_list;
+		MCAutoStringRef t_types_string;
+
+		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
+		for (uindex_t i = 0; i < t_types.Count(); i++)
+			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
+		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
+
+		MCStringRef t_args[5];
+		uindex_t t_arg_count = 5;
+		t_args[0] = p_title;
+		t_args[1] = p_prompt;
+		t_args[2] = nil;
+		t_args[3] = p_initial;
+		t_args[4] = *t_types_string;
+		MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_files : MCN_file, p_sheet, t_args, t_arg_count, &t_value);
+		if (ctxt.HasError())
+			return;
+
+		if (MCStringGetLength(*t_value) == 0)
+		{
+			if (!MCStringCopy(MCNameGetString(MCN_cancel), &t_result))
+			{
+				ctxt.Throw();
+				return;
+			}
+		}
+	}
+
+	if (*t_value != nil)
+		ctxt.SetItToValue(*t_value);
+
+	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
+		ctxt.SetTheResultToValue(MCN_cancel);
+	else
+		ctxt.SetTheResultToEmpty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet, MCStringRef& r_value, MCStringRef& r_result)
+{
+	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
+	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	
+	uint32_t t_options = 0;
+	if (p_plural)
+		t_options |= MCA_OPTION_PLURAL;
+	if (p_sheet)
+		t_options |= MCA_OPTION_SHEET;
+	
+	MCExecPoint ep(nil, nil, nil);
+	int t_error;
+	t_error = MCA_folder(ep, t_title, t_prompt, t_initial, t_options);
+	if (ep.isempty())
+		return MCStringCreateWithCString(MCcancelstring, r_result);
+	else
+		return ep.copyasstringref(r_value);	
+}
+
+void MCDialogExecAnswerFolder(MCExecContext &ctxt, bool p_plural, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_title, bool p_sheet)
+{
+	MCAutoStringRef t_value, t_result;
+
+	if (!MCSecureModeCanAccessDisk())
+	{
+		ctxt.LegacyThrow(EE_DISK_NOPERM);
+		return;
+	}
+
+	if (MCsystemFS && MCscreen->hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
+	{
+		if (!MCA_folder(p_plural, p_prompt, p_initial, p_title, p_sheet, &t_value, &t_result))
+		{
+			ctxt.Throw();
+			return;
+		}
+	}
+	else
+	{
+		MCStringRef t_args[4];
+		uindex_t t_arg_count = 4;
+		t_args[0] = p_title;
+		t_args[1] = p_prompt;
+		t_args[2] = nil;
+		t_args[3] = p_initial;
+		MCDialogExecCustomAnswerDialog(ctxt, MCN_file_selector, p_plural ? MCN_folders : MCN_folder, p_sheet, t_args, t_arg_count, &t_value);
+		if (ctxt.HasError())
+			return;
+
+		if (MCStringGetLength(*t_value) == 0)
+		{
+			if (!MCStringCopy(MCNameGetString(MCN_cancel), &t_result))
+			{
+				ctxt.Throw();
+				return;
+			}
+		}
+	}
+
+	if (*t_value != nil)
+		ctxt.SetItToValue(*t_value);
+
+	if (*t_result != nil && MCStringGetLength(*t_result) > 0)
+		ctxt.SetTheResultToValue(MCN_cancel);
+	else
+		ctxt.SetTheResultToEmpty();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef p_prompt, MCStringRef *p_buttons, uindex_t p_button_count, MCStringRef p_title, bool p_sheet)
+{
+#ifndef _MOBILE
+	MCAutoStringRef t_value, t_result;
+	MCAutoListRef t_button_list;
+	MCAutoStringRef t_buttons_string;
+
+	/* UNCHECKED */ MCListCreateMutable('\n', &t_button_list);
+	for (uindex_t i = 0; i < p_button_count; i++)
+		/* UNCHECKED */ MCListAppend(*t_button_list, p_buttons[i]);
+	/* UNCHECKED */ MCListCopyAsString(*t_button_list, &t_buttons_string);
+
+	MCStringRef p_args[3];
+	p_args[0] = p_title;
+	p_args[1] = p_prompt;
+	p_args[2] = *t_buttons_string;
+	MCDialogExecCustomAnswerDialog(ctxt, MCN_answer_dialog, *s_dialog_types[p_type], p_sheet, p_args, 3, &t_value);
+
+	if (ctxt.HasError())
+		return;
+
+	if (*t_value != nil && MCStringGetLength(*t_value) != 0)
+	{
+		ctxt.SetItToValue(*t_value);
+		ctxt.SetTheResultToEmpty();
+	}
+	else
+		ctxt.SetTheResultToValue(MCN_cancel);
+#else
+	uint32_t t_type;
+	switch(mode)
+	{
+	case AT_ERROR: t_type = kMCAnswerDialogTypeError; break;
+	case AT_QUESTION: t_type = kMCAnswerDialogTypeQuestion; break;
+	case AT_WARNING: t_type = kMCAnswerDialogTypeWarning; break;
+	default: t_type = kMCAnswerDialogTypeInformation; break;
+	}
+
+	int32_t t_result;
+	if (!MCscreen->popupanswerdialog(p_buttons, p_button_count, t_type, p_title, p_prompt, t_result))
+	{
+		ctxt.Throw();
+		return;
+	}
+	
+	if (t_result == -1)
+		ctxt.SetTheResultToValue(MCN_cancel);
+	else if (notify . button_count == 0)
+		ctxt.SetItToValue(kMCEmptyString);
+	else
+		ctxt.SetItToValue(p_buttons[t_result]);
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNameRef p_type, bool p_sheet, MCStringRef *p_arg_list, uindex_t p_arg_count, MCStringRef &r_result)
+{
+	bool t_success = true;
+
+	MCAutoStringRef t_arg_string;
+	t_success = MCStringCreateMutable(0, &t_arg_string) &&
+		MCStringAppendFormat(*t_arg_string, "answer %s", MCNameGetCString(p_type));
+
+	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
+		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&
+			(p_arg_list[i] == nil || MCStringAppend(*t_arg_string, p_arg_list[i]));
+
+	if (t_success)
+		t_success = MCdialogdata->setvalueref(*t_arg_string);
+
+	MCStack *t_stack;
+	if (t_success)
+		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+
+	bool t_old_trace = MCtrace == True;
+	MCtrace = false;
+
+	if (t_success)
+	{
+		MCStack *t_parent_stack = nil;
+
+		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+			t_parent_stack = MCdefaultstackptr;
+		else
+			t_parent_stack = MCtopstackptr;
+
+		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_sheet ? WM_SHEET : WM_MODAL, p_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+	}
+
+	MCtrace = t_old_trace;
+
+	if (t_success)
+		t_success = ctxt.ConvertToString(MCdialogdata->getvalueref(), r_result);
+
+	if (t_success)
+		return;
+
+	ctxt.Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
+{
+#ifndef _MOBILE
+	MCStringRef t_args[3];
+	t_args[0] = p_title;
+	t_args[1] = p_prompt;
+	t_args[2] = p_answer;
+	
+	bool t_cancelled;
+	MCAutoStringRef t_result;
+	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_type], p_as_sheet, t_args, 3, t_cancelled, &t_result);
+	if (ctxt . HasError())
+		return;
+	
+	if (!t_cancelled)
+	{
+		ctxt . SetItToValue(*t_result);
+		ctxt . SetTheResultToEmpty();
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+
+#else
+	MCAutoStringRef t_result;
+	if (MCscreen -> popupaskdialog(AT_QUESTION, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
+	{
+		ctxt . SetItToValue(*t_result);
+		ctxt . SetTheResultToEmpty();
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+#endif
+}
+
+void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_prompt, MCStringRef p_answer, bool p_hint_answer, MCStringRef p_title, bool p_as_sheet)
+{
+#ifndef _MOBILE
+	MCStringRef t_args[3];
+	t_args[0] = p_title;
+	t_args[1] = p_prompt;
+	t_args[2] = p_answer;
+	
+	bool t_cancelled;
+	MCAutoStringRef t_result;
+	MCDialogExecCustomAskDialog(ctxt, MCN_ask_dialog, *s_dialog_types[p_clear ? AT_CLEAR : AT_PASSWORD], p_as_sheet, t_args, 3, t_cancelled, &t_result);
+	if (ctxt . HasError())
+		return;
+	
+	if (!t_cancelled)
+	{
+		ctxt . SetItToValue(*t_result);
+		ctxt . SetTheResultToEmpty();
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+	
+#else
+	MCAutoStringRef t_result;
+	if (MCscreen -> popupaskdialog(AT_PASSWORD, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
+	{
+		ctxt . SetItToValue(*t_result);
+		ctxt . SetTheResultToEmpty();
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+#endif
+}
+
+static bool MCA_ask_file(MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_as_sheet, bool& r_cancelled, MCStringRef& r_filename)
+{
+	unsigned int t_options;
+	t_options = 0;
+	if (p_as_sheet)
+		t_options |= MCA_OPTION_SHEET;
+
+	MCExecPoint ep(nil, nil, nil);
+	MCA_ask_file(ep, p_title != nil ? MCStringGetCString(p_title) : nil, p_prompt != nil ? MCStringGetCString(p_prompt) : nil, p_filter != nil ? MCStringGetCString(p_filter) : nil, p_initial != nil ? MCStringGetCString(p_initial) : nil, t_options);
+	if (!ep . isempty())
+	{
+		r_cancelled = false;
+		return ep . copyasstringref(r_filename);
+	}
+	
+	r_cancelled = true;
+	
+	return true;
+}
+
+void MCDialogExecAskFile(MCExecContext& ctxt, MCStringRef prompt, MCStringRef initial, MCStringRef title, bool as_sheet)
+{
+	MCDialogExecAskFileWithFilter(ctxt, prompt, initial, nil, title, as_sheet);
+}
+
+void MCDialogExecAskFileWithFilter(MCExecContext& ctxt, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef p_filter, MCStringRef p_title, bool p_as_sheet)
+{
+	if (!MCSecureModeCanAccessDisk())
+	{
+		ctxt.LegacyThrow(EE_DISK_NOPERM);
+		return;
+	}
+	
+	bool t_cancelled;
+	MCAutoStringRef t_filename;
+	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
+		MCA_ask_file(p_prompt, p_initial, p_filter, p_title, p_as_sheet, t_cancelled, &t_filename);
+	else
+	{
+		MCStringRef t_args[5];
+		uindex_t t_arg_count = 5;
+		t_args[0] = p_title;
+		t_args[1] = p_prompt;
+		t_args[2] = p_filter;
+		t_args[3] = p_initial;
+		t_args[4] = nil;
+		
+		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_filename);
+		if (ctxt.HasError())
+			return;
+	}
+	
+	if (!t_cancelled)
+	{
+		ctxt . SetItToValue(*t_filename);
+		ctxt . SetTheResultToEmpty();
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+}
+
+static bool MCA_ask_file_with_types(MCStringRef p_title, MCStringRef p_prompt, MCStringRef *p_types, uindex_t p_type_count, MCStringRef p_initial, bool p_as_sheet, bool& r_cancelled, MCStringRef& r_filename, MCStringRef& r_chosen_type)
+{
+	unsigned int t_options;
+	t_options = 0;
+	if (p_as_sheet)
+		t_options |= MCA_OPTION_SHEET;
+	
+	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
+	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	
+	char **t_types = nil;
+	if (!MCMemoryNewArray(p_type_count, t_types))
+		return false;
+	
+	for (uindex_t i = 0; i < p_type_count; i++)
+		t_types[i] = (char*)MCStringGetCString(p_types[i]);
+	
+	MCExecPoint ep(nil, nil, nil);
+	MCA_ask_file_with_types(ep, t_title, t_prompt, t_types, p_type_count, t_initial, t_options);
+	MCMemoryDelete(t_types);
+	
+	if (!ep . isempty())
+	{
+		r_cancelled = false;
+		/* UNCHECKED */ ep . copyasstringref(r_filename);
+		MCresult -> eval(ep);
+		/* UNCHECKED */ ep . copyasstringref(r_chosen_type);
+		return true;
+	}
+	
+	r_cancelled = true;
+	
+	return true;
+}
+
+void MCDialogExecAskFileWithTypes(MCExecContext& ctxt, MCStringRef p_prompt, MCStringRef p_initial, MCStringRef *p_types, uindex_t p_type_count, MCStringRef p_title, bool p_as_sheet)
+{
+	if (!MCSecureModeCanAccessDisk())
+	{
+		ctxt.LegacyThrow(EE_DISK_NOPERM);
+		return;
+	}
+	
+	bool t_success = true;
+	MCAutoStringRefArray t_types;
+	for (uindex_t i = 0; t_success && i < p_type_count; i++)
+	{
+		MCAutoStringRefArray t_split;
+		t_success = MCStringsSplit(p_types[i], '\n', t_split.PtrRef(), t_split.CountRef());
+		if (t_success)
+			t_success = t_types.Append(t_split);
+	}
+	
+	bool t_cancelled;
+	MCAutoStringRef t_filename;
+	MCAutoStringRef t_chosen_type;
+	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_FILE_DIALOGS))
+	{
+		MCA_ask_file_with_types(p_title, p_prompt, *t_types, t_types . Count(), p_initial, p_as_sheet, t_cancelled, &t_filename, &t_chosen_type);
+	}
+	else
+	{
+		MCAutoListRef t_type_list;
+		MCAutoStringRef t_types_string;
+		
+		/* UNCHECKED */ MCListCreateMutable('\n', &t_type_list);
+		for (uindex_t i = 0; i < t_types.Count(); i++)
+			/* UNCHECKED */ MCListAppend(*t_type_list, t_types[i]);
+		/* UNCHECKED */ MCListCopyAsString(*t_type_list, &t_types_string);
+		
+		MCStringRef t_args[5];
+		uindex_t t_arg_count = 5;
+		t_args[0] = p_title;
+		t_args[1] = p_prompt;
+		t_args[2] = nil;
+		t_args[3] = p_initial;
+		t_args[4] = *t_types_string;
+		MCDialogExecCustomAskDialog(ctxt, MCN_file_selector, MCN_file, p_as_sheet, t_args, t_arg_count, t_cancelled, &t_filename);
+		if (ctxt . HasError())
+			return;
+	}
+
+	if (!t_cancelled)
+	{
+		ctxt . SetItToValue(*t_filename);
+		ctxt . SetTheResultToValue(*t_chosen_type);
+	}
+	else
+	{
+		ctxt . SetItToEmpty();
+		ctxt . SetTheResultToValue(MCN_cancel);
+	}
+}
+
+void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameRef p_type, bool p_as_sheet, MCStringRef *p_args, uindex_t p_arg_count, bool& r_cancelled, MCStringRef& r_filename)
+{
+	bool t_success = true;
+	
+	MCAutoStringRef t_arg_string;
+	t_success = MCStringCreateMutable(0, &t_arg_string) &&
+	MCStringAppendFormat(*t_arg_string, "ask %s", MCNameGetCString(p_type));
+	
+	for (uindex_t i = 0; t_success && i < p_arg_count; i++)
+		t_success = MCStringAppendNativeChar(*t_arg_string, '\0') &&
+		(p_args[i] == nil || MCStringAppend(*t_arg_string, p_args[i]));
+	
+	if (t_success)
+		t_success = MCdialogdata->setvalueref(*t_arg_string);
+	
+	MCStack *t_stack;
+	if (t_success)
+		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+	
+	bool t_old_trace = MCtrace == True;
+	MCtrace = false;
+	
+	if (t_success)
+	{
+		MCStack *t_parent_stack = nil;
+		
+		if (MCdefaultstackptr->getopened() || MCtopstackptr == nil)
+			t_parent_stack = MCdefaultstackptr;
+		else
+			t_parent_stack = MCtopstackptr;
+		
+		t_success = ES_NORMAL == t_stack->openrect(t_parent_stack->getrect(), p_as_sheet ? WM_SHEET : WM_MODAL, p_as_sheet ? t_parent_stack : nil, WP_DEFAULT, OP_NONE);
+	}
+	
+	MCtrace = t_old_trace;
+	
+	if (t_success)
+		t_success = ctxt . ConvertToString(MCdialogdata -> getvalueref(), r_filename);
+	
+	if (t_success)
+	{
+		if (MCStringGetLength(r_filename) == 1 && MCStringGetCharAtIndex(r_filename, 0) == 0)
+			r_cancelled = true;
+		else
+			r_cancelled = false;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////

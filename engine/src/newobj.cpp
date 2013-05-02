@@ -143,7 +143,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_INSERT:
 		return new MCInsert;
 	case S_INTERSECT:
-		return new MCArrayIntersect;
+		return new MCArrayIntersectCmd;
 	case S_KILL:
 		return new MCKill;
 	case S_LAUNCH:
@@ -275,7 +275,7 @@ MCStatement *MCN_new_statement(int2 which)
 	case S_UNHILITE:
 		return new MCUnhilite;
 	case S_UNION:
-		return new MCArrayUnion;
+		return new MCArrayUnionCmd;
 	case S_UNLOAD:
 		return new MCUnload;
 	case S_UNLOCK:

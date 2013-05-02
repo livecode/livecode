@@ -1,0 +1,12 @@
+setup
+
+local tMessage
+put "pendingMessageTestMessage" into tMessage
+
+test tMessage is not among the items of the pendingmessages
+
+send tMessage to me in 0 seconds
+
+test tMessage is among the items of the pendingmessages
+
+teardown

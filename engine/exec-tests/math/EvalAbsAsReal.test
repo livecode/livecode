@@ -1,0 +1,6 @@
+setup
+
+test abs(12.3) is 12.3
+test abs(-12.3) is 12.3
+
+teardown

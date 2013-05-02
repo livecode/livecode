@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -472,10 +471,10 @@ MCRectangle MCStack::getwindowrect() const
 	RECT wrect;
 	GetWindowRect((HWND)window->handle.window, &wrect);
 	MCRectangle t_rect;
-	t_rect.x = wrect.left;
-	t_rect.y = wrect.top;
-	t_rect.width = wrect.right - wrect.left;
-	t_rect.height = wrect.bottom - wrect.top;
+	t_rect.x = (int2)wrect.left;
+	t_rect.y = (int2)wrect.top;
+	t_rect.width = (uint2)(wrect.right - wrect.left);
+	t_rect.height = (uint2)(wrect.bottom - wrect.top);
 
 	return t_rect;
 }

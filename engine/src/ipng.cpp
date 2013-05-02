@@ -29,8 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
-#include "core.h"
-
 
 extern "C" void fakeread(png_structp png_ptr, png_bytep data, png_size_t length)
 {
@@ -140,7 +138,7 @@ bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 			png_set_palette_to_rgb(t_png);
 		if (t_color_type == PNG_COLOR_TYPE_GRAY || t_color_type == PNG_COLOR_TYPE_GRAY_ALPHA)
 			png_set_gray_to_rgb(t_png);
-
+	
 		if (png_get_valid(t_png, t_info, PNG_INFO_tRNS))
 		{
 			png_set_tRNS_to_alpha(t_png);

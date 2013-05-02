@@ -1,0 +1,13 @@
+setup
+
+test 123 is a number
+test not (123 is not a number)
+
+test "123" is a number
+test "abc" is not a number
+
+test 1.2 is a number
+
+test empty is not a number
+
+teardown

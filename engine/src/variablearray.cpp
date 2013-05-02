@@ -37,8 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 
-#include "core.h"
-
 #include "stacksecurity.h"
 
 void MCVariableArray::presethash(uint4 size)

@@ -1,0 +1,6 @@
+setup
+global gEvalGlobalsTest
+put "value" into gEvalGlobalsTest
+test "gEvalGlobalsTest" is among the items of the globals
+teardown
+

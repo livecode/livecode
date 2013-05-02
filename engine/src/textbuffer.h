@@ -159,6 +159,18 @@ public:
 		m_frontier = 0;
 		m_capacity = 0;
 	}
+
+	bool takeasstringref(MCStringRef& r_string)
+	{
+		if (!MCStringCreateWithNativeCharsAndRelease((char_t *)m_buffer, m_frontier, r_string))
+			return false;
+
+		m_buffer = nil;
+		m_frontier = 0;
+		m_capacity = 0;
+
+		return true;
+	}
 	
 private:
 	char *m_buffer;

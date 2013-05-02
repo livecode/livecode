@@ -213,12 +213,12 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 		}
 		else
 		{
-			int4 iwidth = 0;
-			while (len--)
-				iwidth += f->widths[(uint1)*s++];
-			return iwidth;
-		}
+		int4 iwidth = 0;
+		while (len--)
+			iwidth += f->widths[(uint1)*s++];
+		return iwidth;
 	}
+}
 }
 
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
@@ -246,23 +246,26 @@ void MCScreenDC::freecontext(MCContext *p_context)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
-	CFArrayRef t_printers;
-	if (PMServerCreatePrinterList(kPMServerLocal, &t_printers) != noErr)
-		return;
-
-	for(CFIndex i = 0; i < CFArrayGetCount(t_printers); ++i)
+	MCAutoCustomPointer<CFArrayRef, CFRelease> t_printers;
+	if (PMServerCreatePrinterList(kPMServerLocal, &(&t_printers)) == noErr)
 	{
-		char *t_name;
-		t_name = osx_cfstring_to_cstring(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(t_printers, i)), false);
-		ep . concatcstring(t_name, EC_RETURN, i == 0);
-		free(t_name);
+		for(CFIndex i = 0; i < CFArrayGetCount(*t_printers); ++i)
+		{
+			MCAutoStringRef t_printer_name;
+			if (!MCStringCreateWithCFString(PMPrinterGetName((PMPrinter)CFArrayGetValueAtIndex(*t_printers, i)), &t_printer_name))
+				return false;
+			if (!MCListAppend(*t_list, *t_printer_name))
+				return false;
+		}
 	}
 
-	CFRelease(t_printers);
+	return MCListCopyAsString(*t_list, r_printers);
 }
 
 MCPrinter *MCScreenDC::createprinter(void)

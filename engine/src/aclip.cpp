@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "exec.h"
+
 #if defined _WINDOWS_DESKTOP
 #include "w32prefix.h"
 static HWAVEOUT hwaveout;  //handle to audio device opened
@@ -87,6 +89,24 @@ static int2 ulaw_table[256] = {
                                   244,    228,    212,    196,    180,    164,    148,    132,
                                   120,    112,    104,     96,     88,     80,     72,     64,
                                   56,     48,     40,     32,     24,     16,      8,      0 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCAudioClip::kProperties[] =
+{
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCAudioClip, Size)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_PLAY_DESTINATION, InterfacePlayDestination, MCAudioClip, PlayDestination)
+	DEFINE_RW_OBJ_PROPERTY(P_PLAY_LOUDNESS, Int16, MCAudioClip, PlayLoudness)
+};
+
+MCObjectPropertyTable MCAudioClip::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCAudioClip::MCAudioClip()
 {
@@ -161,7 +181,7 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 			{
 				MCCard *card = mstack->getcurcard();
 				if (card)
-					card->message_with_args(MCM_play_stopped, getname());
+					card->message_with_valueref_args(MCM_play_stopped, getname());
 			}
 			mstack = NULL;
 		}
@@ -170,7 +190,8 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 	}
 }
 
-Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef OLD_EXEC
+Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -234,12 +255,12 @@ Exec_stat MCAudioClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 			ep.setint(loudness);
 		break;
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	int2 i1;
 	MCString data = ep.getsvalue();
@@ -321,8 +342,9 @@ Exec_stat MCAudioClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	default:
 		break;
 	}
-	return MCObject::setprop(parid, p, ep, effective);
+	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCAudioClip::del()
 {
@@ -724,7 +746,7 @@ Boolean MCAudioClip::play()
 	{
 		real8 delay =  MCS_time() + (real8)size / (real8)(rate*nchannels*swidth);
 		MCParameter *newparam = new MCParameter;
-		newparam->setnameref_argument(getname());
+		newparam->setvalueref_argument(getname());
 		MCscreen->addmessage(MCdefaultstackptr->getcurcard(), MCM_play_stopped, delay, newparam);
 		return False;
 	}
@@ -855,6 +877,74 @@ void MCAudioClip::stop(Boolean abort)
 #elif defined(_LINUX)
 #endif
 }
+
+void MCAudioClip::getloudness(uint2& loudness)
+{
+#if defined _WINDOWS
+	if (hwaveout == NULL)
+	{
+		WAVEFORMATEX pwfx;
+		pwfx.wFormatTag = WAVE_FORMAT_PCM;
+		pwfx.nChannels = 1;
+		pwfx.nSamplesPerSec = 22050;
+		pwfx.nAvgBytesPerSec = 22050;
+		pwfx.nBlockAlign = 1;
+		pwfx.wBitsPerSample = 8;
+		pwfx.cbSize = 0;
+		if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0, CALLBACK_NULL
+		                | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
+		{
+			DWORD v;
+			waveOutGetVolume(hwaveout, &v);
+			loudness = MCU_min((uint2)((v & 0xFFFF) * 100 / 0xFFFF) + 1, 100);
+			waveOutClose(hwaveout);
+			hwaveout = NULL;
+		}
+	}
+#elif defined _MACOSX
+	long volume;
+	GetDefaultOutputVolume(&volume);
+	loudness = (HiWord(volume) + LoWord(volume)) * 50 / 255;
+#elif defined TARGET_PLATFORM_LINUX
+	if ( x11audio != NULL)
+		loudness = x11audio -> getloudness();
+#endif
+}
+
+void MCAudioClip::setloudness(uint2 p_loudness)
+{
+#if defined _WINDOWS
+	WORD v = p_loudness * MAXUINT2 / 100;
+	if (hwaveout != NULL)
+		waveOutSetVolume(hwaveout, v | (v << 16));
+	else
+	{
+		WAVEFORMATEX pwfx;
+		pwfx.wFormatTag = WAVE_FORMAT_PCM;
+		pwfx.nChannels = 1;
+		pwfx.nSamplesPerSec = 22050;
+		pwfx.nAvgBytesPerSec = 22050;
+		pwfx.nBlockAlign = 1;
+		pwfx.wBitsPerSample = 8;
+		pwfx.cbSize = 0;
+		if (waveOutOpen(&hwaveout, WAVE_MAPPER, &pwfx, 0, 0,
+						CALLBACK_NULL | WAVE_ALLOWSYNC) == MMSYSERR_NOERROR)
+		{
+			waveOutSetVolume(hwaveout, v | (v << 16));
+			waveOutClose(hwaveout);
+			hwaveout = NULL;
+		}
+	}
+
+#elif defined _MACOSX
+	long volume = p_loudness * 255 / 100;
+	SetDefaultOutputVolume(volume | volume << 16);
+#elif defined TARGET_PLATFORM_LINUX
+	if ( x11audio != NULL)
+		x11audio -> setloudness ( p_loudness ) ;
+#endif
+}
+
 
 ///////////////////////////////////////////////////////////////////////////////
 //

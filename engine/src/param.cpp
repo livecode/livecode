@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "globals.h"
+#include "syntax.h"
 
 Parse_stat MCParameter::parse(MCScriptPoint &sp)
 {
@@ -38,6 +39,40 @@ Parse_stat MCParameter::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
+}
+/////////
+
+bool MCParameter::setoldstring_argument(const MCString& p_string)
+{
+	MCStringRef t_string_ref;
+	if (!MCStringCreateWithNativeChars((const char_t *)p_string . getstring(), p_string . getlength(), t_string_ref))
+		return false;
+	MCValueRelease(value);
+	value = t_string_ref;
+	return true;
+}
+
+void MCParameter::setvalueref_argument(MCValueRef p_value)
+{
+	MCValueRef t_value;
+	t_value = MCValueRetain(p_value);
+
+	MCValueRelease(value);
+	value = t_value;
+}
+
+void MCParameter::setn_argument(real8 p_number)
+{
+	MCNumberRef t_number_ref;
+	/* UNCHECKED */ MCNumberCreateWithReal(p_number, t_number_ref);
+	MCValueRelease(value);
+	value = t_number_ref;
+}
+
+void MCParameter::clear_argument(void)
+{
+	MCValueRelease(value);
+	value = nil;
 }
 
 ////////
@@ -52,27 +87,8 @@ MCVariable *MCParameter::evalvar(MCExecPoint& ep)
 
 Exec_stat MCParameter::eval(MCExecPoint& ep)
 {
-	if (!value . is_undefined() || exp == NULL)
-	{
-		switch(value . get_format())
-		{
-		case VF_STRING:
-			ep . setsvalue(value . get_string());
-		break;
-		case VF_NUMBER:
-			ep . setnvalue(value . get_real());
-		break;
-		case VF_BOTH:
-			ep . setboth(value . get_string(), value . get_real());
-		break;
-		case VF_ARRAY:
-			ep . setarray(&value, False);
-		break;
-		default:
-			ep . clear();
-		break;
-		}
-	}
+	if (value != nil || exp == nil)
+		/* UNCHECKED */ ep . setvalueref_nullable(value);
 	else if (exp -> eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_PARAM_BADEXP, line, pos);
@@ -82,20 +98,23 @@ Exec_stat MCParameter::eval(MCExecPoint& ep)
 	return ES_NORMAL;
 }
 
-Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_var_value)
+Exec_stat MCParameter::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	if (exp == NULL)
 		return ES_ERROR;
 
-	return exp -> evalcontainer(ep, r_var, r_var_value);
+	return exp -> evalcontainer(ep, r_container);
 }
 
 Exec_stat MCParameter::eval_argument(MCExecPoint& ep)
 {
 	if (var != NULL)
-		return var -> fetch(ep);
+		return var -> eval(ep);
 
-	return value . fetch(ep);
+	if (ep . setvalueref_nullable(value))
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 MCVariable *MCParameter::eval_argument_var(void)
@@ -107,42 +126,44 @@ MCVariable *MCParameter::eval_argument_var(void)
 
 void MCParameter::set_argument(MCExecPoint& ep)
 {
-	switch(ep . getformat())
-	{
-	case VF_UNDEFINED:
-		value . clear();
-	break;
-
-	case VF_STRING:
-		if (ep . usingbuffer())
-			value . assign_string(ep . getsvalue());
-		else
-			value . assign_constant_string(ep . getsvalue());
-	break;
-
-	case VF_NUMBER:
-		value . assign_real(ep . getnvalue());
-	break;
-
-	case VF_BOTH:
-		// MW-2008-06-30: [[ Bug ]] Make sure we set 'both', previously the string part
-		//   and then numeric part was being set which caused uninitialized parameters to
-		//   appear as 0.
-		if (ep . usingbuffer())
-			value . assign_both(ep . getsvalue(), ep . getnvalue());
-		else
-			value . assign_constant_both(ep . getsvalue(), ep . getnvalue());
-	break;
-
-	case VF_ARRAY:
-		value . assign(*(ep . getarray()));
-	break;
-	}
-
+	MCValueRef t_old_value;
+	t_old_value = value;
+	/* UNCHECKED */ ep . copyasvalueref(value);
+	MCValueRelease(t_old_value);
 	var = NULL;
 }
 
 void MCParameter::set_argument_var(MCVariable* p_var)
 {
 	var = p_var;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCParameter::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCParameter::compile_in(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCParameter::compile_out(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCParameter::compile_inout(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
 }

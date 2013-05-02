@@ -1,0 +1,12 @@
+setup
+
+test the selectedimage is empty
+
+create image
+choose select tool
+drag from the loc of the last image to the bottomright of the last image
+
+test the selectedimage is "image 1"
+
+teardown
+

@@ -162,6 +162,9 @@ protected:
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	MCStackIdCache *m_id_cache;
@@ -169,7 +172,7 @@ protected:
 	// MW-2011-11-24: [[ UpdateScreen ]] If true, then updates to this stack should only
 	//   be flushed at the next updateScreen point.
 	bool m_defer_updates : 1;
-	
+
 	MCRectangle old_rect ; 	// The rectangle of the stack before it was "fullscreened"
 	
 	static uint2 ibeam;
@@ -183,6 +186,8 @@ public:
 	virtual ~MCStack();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 	
@@ -204,8 +209,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 
 	virtual Boolean del();
 	virtual void paste(void);
@@ -312,7 +317,7 @@ public:
 	MCStack *clone();
 	void compact();
 	Boolean checkid(uint4 cardid, uint4 controlid);
-	IO_stat saveas(const MCString &);
+	IO_stat saveas(const MCStringRef);
 	MCStack *findname(Chunk_term type, const MCString &);
 	MCStack *findid(Chunk_term type, uint4 inid, Boolean alt);
 	void setmark();
@@ -345,7 +350,10 @@ public:
 	Boolean count(Chunk_term otype, Chunk_term ptype, MCObject *, uint2 &num);
 	void renumber(MCCard *card, uint4 newnumber);
 	MCObject *getAV(Chunk_term etype, const MCString &, Chunk_term otype);
+	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
+#ifdef OLD_EXEC
 	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
+#endif
 	MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
 	void addneed(MCButton *bptr);
 	void removeneed(MCButton *bptr);
@@ -384,7 +392,8 @@ public:
 	MCObject *getAVname(Chunk_term type, const MCString &);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
 	MCStack *findstackfile(const MCString &s);
-	MCStack *findstackname(const MCString &);
+	bool findstackname(MCNameRef p_name, MCStack *&r_stack);
+	/* LEGACY */ MCStack *findstackname(const MCString &);
 	MCStack *findsubstackname(const MCString &);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findsubstackid(uint4 fid);
@@ -401,6 +410,7 @@ public:
 	MCObject *getsubstackobjid(Chunk_term type, uint4 inid);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
 	MCObject *getsubstackobjname(Chunk_term type, const MCString &);
+	MCObject *getobjname(Chunk_term type, MCStringRef p_name);
 	MCObject *getobjname(Chunk_term type, const MCString &);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
@@ -417,6 +427,7 @@ public:
 	                 Find_mode fmode);
 	Boolean findone(MCExecPoint &ep, Find_mode mode, const MCString *strings,
 	                uint2 nstrings, MCChunk *field, Boolean firstcard);
+	void find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target);
 	void find(MCExecPoint &ep, Find_mode mode, const MCString &, MCChunk *field);
 	void markfind(MCExecPoint &ep, Find_mode mode, const MCString &,
 	              MCChunk *, Boolean mark);
@@ -540,7 +551,7 @@ public:
 	// MW-2011-11-23: [[ AccelRender ]] Set / get the accelerated rendering derived property.
 	bool getacceleratedrendering(void);
 	void setacceleratedrendering(bool value);
-	
+
 	// MW-2012-10-10: [[ IdCache ]] Add and remove an object from the id cache.
 	void cacheobjectbyid(MCObject *object);
 	void uncacheobjectbyid(MCObject *object);
@@ -559,7 +570,9 @@ public:
 		else
 			f_extended_state &= ~flag;
 	}
-	
+
+	bool changeextendedstate(bool setting, uint32_t mask);
+
 	MCExternalHandlerList *getexternalhandlers(void)
 	{
 		return m_externals;
@@ -664,7 +677,157 @@ public:
 
 	void mode_constrain(MCRectangle& rect);
 	bool mode_needstoopen(void);
-	
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void SetDecoration(Properties which, bool setting);
+	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
+	void GetCardProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
+	void SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamedColor p_color);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetFullscreen(MCExecContext& ctxt, bool &r_flag);
+	void SetFullscreen(MCExecContext& ctxt, bool setting);
+	virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
+	virtual void SetId(MCExecContext& ctxt, uinteger_t p_new_id);
+	virtual void SetVisible(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetNumber(MCExecContext& ctxt, uinteger_t& r_number);
+	void GetLayer(MCExecContext& ctxt, integer_t& r_layer);
+	void GetFileName(MCExecContext& ctxt, MCStringRef& r_file_name);
+	void SetFileName(MCExecContext& ctxt, MCStringRef p_file_name);
+	void GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name);
+	void GetSaveCompressed(MCExecContext& ctxt, bool& r_setting);
+	void SetSaveCompressed(MCExecContext& ctxt, bool setting);
+	void GetCantAbort(MCExecContext& ctxt, bool& r_setting);
+	void SetCantAbort(MCExecContext& ctxt, bool setting);
+	void GetCantDelete(MCExecContext& ctxt, bool& r_setting);
+	void SetCantDelete(MCExecContext& ctxt, bool setting);
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetCantModify(MCExecContext& ctxt, bool& r_setting);
+	void SetCantModify(MCExecContext& ctxt, bool setting);
+	void GetCantPeek(MCExecContext& ctxt, bool& r_setting);
+	void SetCantPeek(MCExecContext& ctxt, bool setting);
+	void GetDynamicPaths(MCExecContext& ctxt, bool& r_setting);
+	void SetDynamicPaths(MCExecContext& ctxt, bool setting);
+	void GetDestroyStack(MCExecContext& ctxt, bool& r_setting);
+	void SetDestroyStack(MCExecContext& ctxt, bool setting);
+	void GetDestroyWindow(MCExecContext& ctxt, bool& r_setting);
+	void SetDestroyWindow(MCExecContext& ctxt, bool setting);
+	void GetAlwaysBuffer(MCExecContext& ctxt, bool& r_setting);
+	void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetCloseBox(MCExecContext& ctxt, bool& r_setting);
+	void SetCloseBox(MCExecContext& ctxt, bool setting);
+	void GetZoomBox(MCExecContext& ctxt, bool& r_setting);
+	void SetZoomBox(MCExecContext& ctxt, bool setting);
+	void GetDraggable(MCExecContext& ctxt, bool& r_setting);
+	void SetDraggable(MCExecContext& ctxt, bool setting);
+	void GetCollapseBox(MCExecContext& ctxt, bool& r_setting);
+	void SetCollapseBox(MCExecContext& ctxt, bool setting);
+	void GetLiveResizing(MCExecContext& ctxt, bool& r_setting);
+	void SetLiveResizing(MCExecContext& ctxt, bool setting);
+	void GetSystemWindow(MCExecContext& ctxt, bool& r_setting);
+	void SetSystemWindow(MCExecContext& ctxt, bool setting);
+	void GetMetal(MCExecContext& ctxt, bool& r_setting);
+	void SetMetal(MCExecContext& ctxt, bool setting);
+	void GetShadow(MCExecContext& ctxt, bool& r_setting);
+	void SetShadow(MCExecContext& ctxt, bool setting);
+	void GetResizable(MCExecContext& ctxt, bool& r_setting);
+	void SetResizable(MCExecContext& ctxt, bool setting);
+	void GetMinWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetMinWidth(MCExecContext& ctxt, uinteger_t p_width);
+	void GetMaxWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetMaxWidth(MCExecContext& ctxt, uinteger_t p_width);
+	void GetMinHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void SetMinHeight(MCExecContext& ctxt, uinteger_t p_height);
+	void GetMaxHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void SetMaxHeight(MCExecContext& ctxt, uinteger_t p_height);
+	void GetRecentNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetRecentCards(MCExecContext& ctxt, MCStringRef& r_cards);
+	void GetIconic(MCExecContext& ctxt, bool& r_setting);
+	void SetIconic(MCExecContext& ctxt, bool setting);
+	void GetStartUpIconic(MCExecContext& ctxt, bool& r_setting);
+	void SetStartUpIconic(MCExecContext& ctxt, bool setting);
+	void GetIcon(MCExecContext& ctxt, uinteger_t& r_id);
+	void SetIcon(MCExecContext& ctxt, uinteger_t p_id);
+	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetMainStack(MCExecContext& ctxt, MCStringRef& r_main_stack);
+	void SetMainStack(MCExecContext& ctxt, MCStringRef p_main_stack);
+	void GetSubstacks(MCExecContext& ctxt, MCStringRef& r_substacks);
+	void SetSubstacks(MCExecContext& ctxt, MCStringRef p_substacks);
+	void GetBackgroundNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetCardIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetCardNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetEditBackground(MCExecContext& ctxt, bool& r_value);
+	void SetEditBackground(MCExecContext& ctxt, bool p_value);
+	void GetExternals(MCExecContext& ctxt, MCStringRef& r_externals);
+	void SetExternals(MCExecContext& ctxt, MCStringRef p_externals);
+	void GetExternalCommands(MCExecContext& ctxt, MCStringRef& r_commands);
+	void GetExternalFunctions(MCExecContext& ctxt, MCStringRef& r_functions);
+	void GetExternalPackages(MCExecContext& ctxt, MCStringRef& r_externals);
+	void GetMode(MCExecContext& ctxt, integer_t& r_mode);
+	void GetWmPlace(MCExecContext& ctxt, bool& r_setting);
+	void SetWmPlace(MCExecContext& ctxt, bool setting);
+	void GetWindowId(MCExecContext& ctxt, uinteger_t& r_id);
+	void GetPixmapId(MCExecContext& ctxt, uinteger_t& r_id);
+	void GetHcAddressing(MCExecContext& ctxt, bool& r_setting);
+	void SetHcAddressing(MCExecContext& ctxt, bool setting);
+	void GetHcStack(MCExecContext& ctxt, bool& r_setting);
+	void GetSize(MCExecContext& ctxt, uinteger_t& r_size);
+	void GetFreeSize(MCExecContext& ctxt, uinteger_t& r_size);
+	void GetLockScreen(MCExecContext& ctxt, bool& r_locked);
+	void SetLockScreen(MCExecContext& ctxt, bool lock);
+	void GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files);
+	void SetStackFiles(MCExecContext& ctxt, MCStringRef p_files);
+	void GetMenuBar(MCExecContext& ctxt, MCStringRef& r_menubar);
+	void SetMenuBar(MCExecContext& ctxt, MCStringRef p_menubar);
+	void GetEditMenus(MCExecContext& ctxt, bool& r_setting);
+	void SetEditMenus(MCExecContext& ctxt, bool setting);
+	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void GetCharset(MCExecContext& ctxt, intenum_t& r_charset);
+	void GetFormatForPrinting(MCExecContext& ctxt, bool& r_setting);
+	void SetFormatForPrinting(MCExecContext& ctxt, bool setting);
+	void GetLinkColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetLinkColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
+	void GetEffectiveLinkColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetLinkHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
+	void GetEffectiveLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetLinkVisitedColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color);
+	void GetEffectiveLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetUnderlineLinks(MCExecContext& ctxt, bool& r_value);
+	void SetUnderlineLinks(MCExecContext& ctxt, bool p_value);
+	void GetEffectiveUnderlineLinks(MCExecContext& ctxt, bool& r_value);
+	void GetWindowShape(MCExecContext& ctxt, uinteger_t& r_shape);
+	void SetWindowShape(MCExecContext& ctxt, uinteger_t p_shape);
+	virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t p_level);
+	void GetScreen(MCExecContext& ctxt, integer_t& r_screen);
+	void GetCurrentCard(MCExecContext& ctxt, MCStringRef& r_card);
+	void SetCurrentCard(MCExecContext& ctxt, MCStringRef p_card);
+	void GetModifiedMark(MCExecContext& ctxt, bool& r_setting);
+	void SetModifiedMark(MCExecContext& ctxt, bool setting);
+	void GetAcceleratedRendering(MCExecContext& ctxt, bool& r_value);
+	void SetAcceleratedRendering(MCExecContext& ctxt, bool p_value);
+	void GetCompositorType(MCExecContext& ctxt, intenum_t*& r_type);
+	void SetCompositorType(MCExecContext& ctxt, intenum_t* p_type);
+	void GetDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
+	void SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value);
+	void GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
+
+	void GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& p_size);
+	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t p_size);
+	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
+	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t p_size);
+
 private:
 	void loadexternals(void);
 	void unloadexternals(void);

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -38,13 +37,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 
 #include "globals.h"
+#include "exec.h"
 
 #define QA_NPOINTS 10
 
 static MCPoint qa_points[QA_NPOINTS];
-
-extern int UTF8ToUnicode(const char * lpSrcStr, int cchSrc, uint16_t * lpDestStr, int cchDest);
-extern int UnicodeToUTF8(const uint16_t *lpSrcStr, int cchSrc, char *lpDestStr, int cchDest);
 
 static void MCU_play_message()
 {
@@ -54,7 +51,7 @@ static void MCU_play_message()
 	if (sptr != NULL)
 	{
 		acptr->setmessagestack(NULL);
-		sptr->getcurcard()->message_with_args(MCM_play_stopped, acptr->getname());
+		sptr->getcurcard()->message_with_valueref_args(MCM_play_stopped, acptr->getname());
 	}
 	if (acptr->isdisposable())
 		delete acptr;
@@ -198,9 +195,43 @@ int4 MCU_any(int4 max)
 	return (int4)(MCU_drand() * (real8)max);
 }
 
+bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string)
+{
+	bool t_success;
+	t_success = true;
+
+	MCAutoStringRef t_buffer;
+	if (t_success)
+		t_success = MCStringCreateMutable(0, &t_buffer);
+
+	{
+		uint2 i = MCU_max(fw - trail - 1, 0);
+		while (t_success && i--)
+			t_success = MCStringAppendNativeChar(*t_buffer, '0');	
+		if (t_success && trail != 0)
+		{
+			t_success = MCStringAppendNativeChar(*t_buffer, '.');
+			i = force;
+			while (t_success && i--)
+				t_success = MCStringAppendNativeChar(*t_buffer, '0');
+			i = trail - force;
+			while (t_success && i--)
+				t_success = MCStringAppendNativeChar(*t_buffer, '#');
+		}
+	}
+
+	if (t_success)
+		return MCStringCopy(*t_buffer, r_string);
+
+	return false;
+}
+
+
 void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 {
-	char *eptr = ep.getbuffer(fw + 1);
+#ifdef OLD_EXEC
+	char *eptr;
+	ep.reserve(fw + 1, eptr);
 	uint2 i = MCU_max(fw - trail - 1, 0);
 	while (i--)
 		*eptr++ = '0';
@@ -215,7 +246,19 @@ void MCU_getnumberformat(MCExecPoint &ep, uint2 fw, uint2 trail, uint2 force)
 			*eptr++ = '#';
 	}
 	*eptr = '\0';
-	ep.setstrlen();
+	ep.commit(strlen(eptr));
+#else
+	MCAutoStringRef t_format;
+	if (MCU_getnumberformat(fw, trail, force, &t_format))
+		/* UNCHECKED */ ep . setvalueref(*t_format);
+	else
+		ep . clear();
+#endif
+}
+
+void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force)
+{
+	MCU_setnumberformat(MCStringGetOldString(p_input), fw, trailing, force);
 }
 
 void MCU_setnumberformat(const MCString &d, uint2 &fw,
@@ -367,6 +410,15 @@ char *MCU_strtok(char *s, const char *delim)
 		olds = s + 1;
 	}
 	return token;
+}
+
+/* WRAPPER */ bool MCU_strtol(MCStringRef p_string, int4& r_l)
+{
+	Boolean t_converted;
+	uint4 l = MCStringGetLength(p_string);
+	const char *sptr = MCStringGetCString(p_string);
+	r_l = MCU_strtol(sptr, l, '\0', t_converted);
+	return True == t_converted;
 }
 
 int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
@@ -558,6 +610,12 @@ uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
 	return strlen(d);
 }
 
+/* WRAPPER */
+bool MCU_stor8(MCStringRef p_string, real8 &r_d, bool p_convert_octals)
+{
+	return True == MCU_stor8(MCStringGetOldString(p_string), r_d, p_convert_octals);
+}
+
 Boolean MCU_stor8(const MCString &s, real8 &d, Boolean convertoctals)
 {
 	const char *sptr = s.getstring();
@@ -641,6 +699,11 @@ real8 MCU_strtor8(const char *&r_str, uint4 &r_len, int1 p_delim, Boolean &r_don
 	return d;
 }
 
+/* WRAPPER */ bool MCU_stoi2(MCStringRef p_string, int2 &r_d)
+{
+	return True == MCU_stoi2(MCStringGetOldString(p_string), r_d);
+}
+
 Boolean MCU_stoi2(const MCString &s, int2 &d)
 {
 	const char *sptr = s.getstring();
@@ -650,6 +713,11 @@ Boolean MCU_stoi2(const MCString &s, int2 &d)
 	if (!done || l != 0)
 		return False;
 	return True;
+}
+
+/* WRAPPER */ bool MCU_stoui2(MCStringRef p_string, uint2 &r_d)
+{
+	return True == MCU_stoui2(MCStringGetOldString(p_string), r_d);
 }
 
 Boolean MCU_stoui2(const MCString &s, uint2 &d)
@@ -677,6 +745,11 @@ Boolean MCU_stoi2x2(const MCString &s, int2 &d1, int2 &d2)
 	return True;
 }
 
+/* WRAPPER */ bool MCU_stoi2x2(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2)
+{
+	return True == MCU_stoi2x2(MCStringGetOldString(p_string), r_d1, r_d2);
+}
+
 Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 {
 	int32_t t_d1, t_d2, t_d3, t_d4;
@@ -689,6 +762,11 @@ Boolean MCU_stoi2x4(const MCString &s, int2 &d1, int2 &d2, int2 &d3, int2 &d4)
 	d4 = t_d4;
 	
 	return True;
+}
+
+/* WRAPPER */ bool MCU_stoi2x4(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2, int16_t& r_d3, int16_t& r_d4)
+{
+	return True == MCU_stoi2x4(MCStringGetOldString(p_string), r_d1, r_d2, r_d3, r_d4);
 }
 
 Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4)
@@ -721,6 +799,10 @@ Boolean MCU_stoi4(const MCString &s, int4 &d)
 		return False;
 	return True;
 }
+/* WRAPPER */ bool MCU_stoui4(MCStringRef p_string, uint4 &r_d)
+{
+	return True == MCU_stoui4(MCStringGetOldString(p_string), r_d);
+}
 
 Boolean MCU_stoui4(const MCString &s, uint4 &d)
 {
@@ -731,6 +813,20 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 	if (!done || l != 0)
 		return False;
 	return True;
+}
+
+/* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)
+{
+	Boolean t_condition;
+	bool t_success;
+	t_success = True == MCU_stob(MCStringGetOldString(p_string), t_condition);
+	if (t_success)
+	{
+		r_condition = t_condition == True;
+		return true;
+	}
+
+	return false;
 }
 
 Boolean MCU_stob(const MCString &s, Boolean &condition)
@@ -1127,14 +1223,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 }
 #endif
 
-const char *MCU_ktos(Boolean condition)
-{
-	if (condition)
-		return MCdownstring;
-	else
-		return MCupstring;
-}
-
 Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 {
 	if (s == MCtruestring)
@@ -1273,7 +1361,7 @@ void MCU_roundrect(MCPoint *&points, uint2 &npoints,
 void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 {
 	uint2 i;
-	ep.getbuffer(I2L * 2 * npoints + 1);
+	//ep.getbuffer(I2L * 2 * npoints + 1);
 	ep.clear();
 	for (i = 0 ; i < npoints ; i++)
 	{
@@ -1281,15 +1369,27 @@ void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &ep)
 		{
 			char buf[I2L * 2];
 			sprintf(buf, "%d,%d", points[i].x, points[i].y);
-			ep.concatcstring(buf, EC_RETURN, i == 0);
+	 		ep.concatcstring(buf, EC_RETURN, i == 0);
 		}
 		else
 			ep.concatcstring(MCnullstring, EC_RETURN, i == 0);
 	}
 }
 
-Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints,
-                        const MCString &data)
+/* WRAPPER */ bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data)
+{
+	uint2 t_noldpoints;
+	t_noldpoints = r_noldpoints;
+ 
+	bool t_result;
+	t_result = (True == MCU_parsepoints(r_points, t_noldpoints, MCStringGetOldString(p_data)));
+ 
+	r_noldpoints = t_noldpoints;
+ 
+	return t_result;
+}
+
+Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints, const MCString &data)
 {
 	Boolean allvalid = True;
 	uint2 npoints = 0;
@@ -1747,6 +1847,62 @@ void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask)
 	outmask = j;
 }
 
+void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool)
+{
+	Tool t_new_tool;
+	MColdtool = MCcurtool;
+	MCAutoStringRef t_tool_name;
+	if (p_tool != T_UNDEFINED)
+	{
+		t_new_tool = p_tool;
+		MCStringCreateWithCString(MCtoolnames[t_new_tool], &t_tool_name);
+	}
+	else
+	{
+		/* UNCHECKED */ ctxt . GetEP() . copyasstringref(&t_tool_name);
+		if (MCStringGetLength(*t_tool_name) < 3)
+		{
+			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
+			return;
+		}
+		uint2 i;
+		for (i = 0 ; i <= T_TEXT ; i++)
+			if (strncmp(MCStringGetCString(*t_tool_name), MCtoolnames[i], 3) == 0)
+			{
+				t_new_tool = (Tool)i;
+				break;
+			}
+		if (i > T_TEXT)
+		{
+			ctxt . LegacyThrow(EE_CHOOSE_BADTOOL);
+			return;
+		}
+	}
+	if (t_new_tool == MCcurtool)
+		return;
+
+	if (MCeditingimage != NULL)
+		MCeditingimage -> canceldraw();
+
+	MCcurtool = t_new_tool;
+
+	MCundos->freestate();
+	if (MCcurtool != T_POINTER)
+		MCselected->clear(True);
+	if (MCactiveimage != NULL && MCcurtool != T_SELECT)
+		MCactiveimage->endsel();
+	MCeditingimage = NULL;
+	if (MCactivefield != NULL
+	        && MCactivefield->getstack()->gettool(MCactivefield) != T_BROWSE)
+		MCactivefield->getstack()->kunfocus();
+	ctxt . GetObject()->getstack()->resetcursor(True);
+	if (MCcurtool == T_BROWSE)
+		MCstacks->restartidle();
+	if (MCtopstackptr != NULL)
+		MCtopstackptr->updatemenubar();
+	ctxt . GetObject()->message_with_args(MCM_new_tool, MCStringGetOldString(*t_tool_name));
+}
+
 Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool, uint2 line, uint2 pos)
 {
 	Tool t_new_tool;
@@ -1837,6 +1993,41 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 	return stat;
 }
 
+bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+{
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_stdpath);
+
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+#ifdef _MACOSX
+		if (t_src[i] == '/')
+			t_dst[i] = ':';
+		else if (t_src[i] == ':')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+#else
+		if (t_src[i] == '/')
+			t_dst[i] = '\\';
+		else if (t_src[i] == '\\')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+#endif
+	}
+
+	return t_path.CreateStringAndRelease(r_stdpath);
+}
+
 void MCU_path2std(char *dptr)
 {
 	if (dptr == NULL || !*dptr)
@@ -1846,18 +2037,46 @@ void MCU_path2std(char *dptr)
 #ifdef _MACOSX
 		if (*dptr == '/')
 			*dptr = ':';
-		else
-			if (*dptr == ':')
+		else if (*dptr == ':')
+			*dptr = '/';
 #else
 		if (*dptr == '/')
 			*dptr = '\\';
-		else
-			if (*dptr == '\\')
+		else if (*dptr == '\\')
+			*dptr = '/';
 #endif
-
-				*dptr = '/';
 	}
 	while (*++dptr);
+}
+
+bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
+{
+#ifdef _WIN32
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_native_path);
+
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		if (t_src[i] == '/')
+			t_dst[i] = '\\';
+		else if (t_src[i] == '\\')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+	}
+
+	return t_path.CreateStringAndRelease(r_native_path);
+#else
+	return MCStringCopy(p_path, r_native_path);
+#endif
 }
 
 void MCU_path2native(char *dptr)
@@ -1928,250 +2147,52 @@ void MCU_fix_path(char *cstr)
 	}
 }
 
-inline uint1 lav(uint1 x)
-{
-	return (x <= 25 ? x + 'A' : (x >= 26 && x <= 51 ? x + 'a' - 26 :
-	                             (x >= 52 && x <= 61 ? x + '0' - 52 :
-	                              (x == 62 ? '+' : (x == 63 ? '/' : '?')))));
-}
+bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
 
 void MCU_base64encode(MCExecPoint &ep)
 {
-	uint4 size = ep.getsvalue().getlength();
-	uint4 newsize = size * 4 / 3 + size / 54 + 5;
-	char *buffer = new char[newsize];
-	const char *s = ep.getsvalue().getstring();
-	char *p = buffer;
-	char *linestart = p;
+	MCAutoStringRef t_source;
+	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	while (size)
-	{
-		uint1 c[3];
-		uint1 d;
-		int2 i = 0;
-		int2 pad = -1;
-
-		while (i < 3)
-		{
-			if (size)
-			{
-				c[i++] = *s++;
-				size--;
-			}
-			else
-			{
-				c[i++] = 0;
-				pad++;
-			}
-		}
-
-		d = c[0] >> 2;
-		*p++ = lav(d);
-
-		if (pad < 2)
-		{
-			d = ((c[0] & 0x3) << 4) | (c[1] >> 4);
-			*p++ = lav(d);
-		}
-		else
-			*p++ = '=';
-
-		if (pad < 1)
-		{
-			d = ((c[1] & 0xf) << 2) | (c[2] >> 6);
-			*p++ = lav(d);
-		}
-		else
-			*p++ = '=';
-
-		if (pad < 0)
-		{
-			d = c[2] & 0x3f;
-			*p++ = lav(d);
-		}
-		else
-			*p++ = '=';
-		if (p - linestart == 72)
-		{
-			*p++ = '\n';
-			linestart = p;
-		}
-	}
-	char *tptr = ep.getbuffer(0);
-	delete tptr;
-	ep.setbuffer(buffer, newsize);
-	ep.setlength(p - buffer);
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
+	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
-inline uint1 isvalid(uint1 x)
-{
-	return ((x >= 'A' && x <= 'Z') || (x >= 'a' && x <= 'z') ||
-	        (x >= '0' && x <= '9') || x == '+' || x == '/');
-}
-
-inline uint1 val(uint1 x)
-{
-	return (x >= 'A' && x <= 'Z' ? x - 'A' :
-	        (x >= 'a' && x <= 'z' ? x - 'a' + 26 :
-	         (x >= '0' && x <= '9' ? x - '0' + 52 :
-	          (x == '+' ? 62 : (x == '/' ? 63 : 0)))));
-}
+bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst);
 
 void MCU_base64decode(MCExecPoint &ep)
 {
-	ep.grabsvalue();
-	uint4 l = ep.getsvalue().getlength();
-	char *s = (char *)ep.getsvalue().getstring();
-	char *p = s;
-	
-	uint1 c[5];
-	c[4] = '\0';
+	MCAutoStringRef t_source;
+	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	while (l)
-	{
-		uint2 i = 0;
-		int2 pad = -1;
-		uint4 d;
-
-		while (i < 4)
-		{
-			if (l--)
-				c[i] = *s++;
-			else
-				c[i] = '=';
-			if (c[i] && isvalid(c[i]))
-			{
-				i++;
-				continue;
-			}
-			if (c[i] && c[i] != '=')
-				continue;
-			while ((!c[i] || c[i] == '=') && i < 4)
-			{
-				pad++;
-				c[i++] = 0;
-				c[i] = '=';
-			}
-		}
-
-		d = (val(c[0]) << 18) | (val(c[1]) << 12) | (val(c[2]) << 6) | val(c[3]);
-
-		if (pad < 2)
-			*p++ = (d & 0xff0000) >> 16;
-		if (pad < 1)
-			*p++ = (d & 0xff00) >> 8;
-		if (pad < 0)
-			*p++ = d & 0xff;
-
-		if (c[4] == '=')
-		{
-			*p = 0;
-			break;
-		}
-	}
-	ep.setlength(p - ep.getbuffer(0));
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
+	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
-static const char *url_table[256] =
-    {
-        "%00", "%01", "%02", "%03", "%04", "%05", "%06", "%07", "%08", "%09",
-        "%0D%0A", "%0B", "%0C", "%0D", "%0E", "%0F", "%10", "%11", "%12",
-        "%13", "%14", "%15", "%16", "%17", "%18", "%19", "%1A", "%1B", "%1C",
-        "%1D", "%1E", "%1F", "+", "%21", "%22", "%23", "%24", "%25", "%26",
-        "%27", "%28", "%29", "*", "%2B", "%2C", "-", ".", "%2F", "0", "1",
-        "2", "3", "4", "5", "6", "7", "8", "9", "%3A", "%3B", "%3C", "%3D",
-        "%3E", "%3F", "%40", "A", "B", "C", "D", "E", "F", "G", "H", "I", "J",
-        "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X",
-        "Y", "Z", "%5B", "%5C", "%5D", "%5E", "_", "%60", "a", "b", "c", "d",
-        "e", "f", "g", "h", "i", "j", "k", "l", "m", "n", "o", "p", "q", "r",
-        "s", "t", "u", "v", "w", "x", "y", "z", "%7B", "%7C", "%7D", "%7E",
-        "%7F", "%80", "%81", "%82", "%83", "%84", "%85", "%86", "%87", "%88",
-        "%89", "%8A", "%8B", "%8C", "%8D", "%8E", "%8F", "%90", "%91", "%92",
-        "%93", "%94", "%95", "%96", "%97", "%98", "%99", "%9A", "%9B", "%9C",
-        "%9D", "%9E", "%9F", "%A0", "%A1", "%A2", "%A3", "%A4", "%A5", "%A6",
-        "%A7", "%A8", "%A9", "%AA", "%AB", "%AC", "%AD", "%AE", "%AF", "%B0",
-        "%B1", "%B2", "%B3", "%B4", "%B5", "%B6", "%B7", "%B8", "%B9", "%BA",
-        "%BB", "%BC", "%BD", "%BE", "%BF", "%C0", "%C1", "%C2", "%C3", "%C4",
-        "%C5", "%C6", "%C7", "%C8", "%C9", "%CA", "%CB", "%CC", "%CD", "%CE",
-        "%CF", "%D0", "%D1", "%D2", "%D3", "%D4", "%D5", "%D6", "%D7", "%D8",
-        "%D9", "%DA", "%DB", "%DC", "%DD", "%DE", "%DF", "%E0", "%E1", "%E2",
-        "%E3", "%E4", "%E5", "%E6", "%E7", "%E8", "%E9", "%EA", "%EB", "%EC",
-        "%ED", "%EE", "%EF", "%F0", "%F1", "%F2", "%F3", "%F4", "%F5", "%F6",
-        "%F7", "%F8", "%F9", "%FA", "%FB", "%FC", "%FD", "%FE", "%FF"
-    };
+bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
 void MCU_urlencode(MCExecPoint &ep)
 {
-	const char *s = ep.getsvalue().getstring();
-	uint4 l = ep.getsvalue().getlength();
-	int4 size = l + 1;
-	size += size / 4;
-	char *buffer = new char[size];
-	char *dptr = buffer;
-	while (l--)
-	{
-		if (dptr - buffer + 7 > size)
-		{
-			uint4 newsize = size + size / 4 + 7;
-			uint4 offset = dptr - buffer;
-			MCU_realloc((char **)&buffer, size, newsize, sizeof(char));
-			dptr = buffer + offset;
-			size = newsize;
-		}
-		const char *sptr = url_table[(uint1)*s++];
-		do
-		{
-			*dptr++ = *sptr++;
-		}
-		while (*sptr);
-	}
-	char *tptr = ep.getbuffer(0);
-	delete tptr;
-	ep.setbuffer(buffer, size);
-	ep.setlength(dptr - buffer);
+	MCAutoStringRef t_source;
+	/* UNCHECKED */ ep . copyasstringref(&t_source);
+
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCFiltersUrlEncode(*t_source, &t_result);
+	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
+
+bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result);
 
 void MCU_urldecode(MCExecPoint &ep)
 {
-	ep.grabsvalue();
-	uint1 *sptr = (uint1 *)ep.getbuffer(0);
-	uint1 *eptr = sptr + ep.getsvalue().getlength();
-	uint1 *dptr = sptr;
-	while (sptr < eptr)
-	{
-		if (*sptr == '%')
-		{
-			uint1 source = MCS_toupper(*++sptr);
-			uint1 value = 0;
-			if (isdigit(source))
-				value = (source - '0') << 4;
-			else
-				if (source >= 'A' && source <= 'F')
-					value = (source - 'A' + 10) << 4;
-			source = MCS_toupper(*++sptr);
-			if (isdigit(source))
-				value += source - '0';
-			else
-				if (source >= 'A' && source <= 'F')
-					value += source - 'A' + 10;
-			if (value != 13)
-				*dptr++ = value;
-		}
-		else
-			if (*sptr == '+')
-				*dptr++ = ' ';
-			else
-				if (*sptr == '\r')
-				{
-					if (*(sptr + 1) == '\n')
-						sptr++;
-					*dptr++ = '\n';
-				}
-				else
-					*dptr++ = *sptr;
-		sptr++;
-	}
-	ep.setlength(dptr - (uint1 *)ep.getbuffer(0));
+	MCAutoStringRef t_source;
+	/* UNCHECKED */ ep . copyasstringref(&t_source);
+
+	MCAutoStringRef t_result;
+	/* UNCHECKED */ MCFiltersUrlDecode(*t_source, &t_result);
+	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
 Boolean MCU_freeinserted(MCObjectList *&l)
@@ -2203,6 +2224,26 @@ void MCU_cleaninserted()
 		;
 }
 
+Exec_stat MCU_change_color(MCColor& c, MCStringRef& n, MCExecPoint& ep, uint2 line, uint2 pos)
+{
+	char *t_name;
+	t_name = nil;
+	if (MCU_change_color(c, t_name, ep, line, pos) != ES_NORMAL)
+		return ES_ERROR;
+	
+	MCStringRef t_name_ref;
+	if (!MCStringCreateWithCString(t_name, t_name_ref))
+	{
+		MCeerror -> add(EE_NO_MEMORY, line, pos);
+		return ES_ERROR;
+	}
+
+	MCValueRelease(n);
+	n = t_name_ref;
+	
+	return ES_NORMAL;
+}
+
 Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
@@ -2211,8 +2252,7 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
 	char *cstring = ep.getsvalue().clone();
 	if (!MCscreen->parsecolor(cstring, &color, &name))
 	{
-		MCeerror->add
-		(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
+		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
 		delete cstring;
 		return ES_ERROR;
 	}
@@ -2222,6 +2262,11 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
 	delete n;
 	n = name;
 	return ES_NORMAL;
+}
+
+void MCU_get_color(MCExecPoint& ep, MCStringRef name, MCColor& c)
+{
+	ep.setcolor(c, name != nil ? MCStringGetCString(name) : nil);
 }
 
 void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
@@ -2266,6 +2311,40 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	}
 }
 
+void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output)
+{
+	MCAutoStringRef t_filename;
+	MCExecPoint ep = ctxt. GetEP();
+	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
+	{
+		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
+		ep . setvalueref(*t_filename);
+		MCS_loadfile(ep, False);
+	}
+	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
+	{
+		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+		ep . setvalueref(*t_filename);
+		MCS_loadfile(ep, True);
+	}
+	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
+	{
+		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
+		ep . setvalueref(*t_filename);		
+		MCS_loadresfile(ep);
+	}
+	else
+	{
+		const char *sptr = MCStringGetCString(p_target);
+		uint4 l = MCStringGetLength(p_target);
+		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
+		{
+			MCS_geturl(ctxt . GetObject(), MCStringGetCString(p_target));
+			MCurlresult->eval(ep);
+		}
+	}
+	/* UNCHECKED */ ep . copyasstringref(r_output);
+}
 
 void MCU_geturl(MCExecPoint &ep)
 {
@@ -2298,7 +2377,7 @@ void MCU_geturl(MCExecPoint &ep)
 				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 				{
 					MCS_geturl(ep . getobj(), ep . getcstring());
-					MCurlresult->fetch(ep);
+					MCurlresult->eval(ep);
 				}
 				else
 					ep . clear();
@@ -2330,38 +2409,65 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		MCS_putintourl(dest . getobj(), data . getsvalue(), dest . getcstring());
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 struct Language2Charset
 {
-	const char *langname;
+	MCNameRef* langname;
 	Lang_charset charset;
 };
 
 static Language2Charset langtocharsets[] = {
-            { "ANSI", LCH_ENGLISH},
-            { "Arabic", LCH_ARABIC },
-            { "Bulgarian", LCH_BULGARIAN },
-            { "Chinese", LCH_CHINESE},
-            { "English", LCH_ENGLISH},
-            { "Greek", LCH_GREEK },
-            { "Hebrew", LCH_HEBREW},
-            { "Japanese", LCH_JAPANESE },
-            { "Korean", LCH_KOREAN},
-						{ "Lithuanian", LCH_LITHUANIAN },
-						{ "Polish", LCH_POLISH},
-            { "Roman", LCH_ROMAN },
-            { "Russian", LCH_RUSSIAN },
-            { "SimpleChinese", LCH_SIMPLE_CHINESE},
-            { "Thai", LCH_THAI},
-            { "Turkish", LCH_TURKISH },
-            { "Ukrainian", LCH_UKRAINIAN},
-            { "Unicode", LCH_UNICODE},
-            { "UTF8", LCH_UTF8},
-						{ "Vietnamese", LCH_VIETNAMESE },
-            { "w", LCH_UNICODE},
-            { "*", LCH_ENGLISH }
-        };
+	{ &MCN_ansi, LCH_ENGLISH},
+	{ &MCN_arabic, LCH_ARABIC },
+	{ &MCN_bulgarian, LCH_BULGARIAN },
+	{ &MCN_chinese, LCH_CHINESE},
+	{ &MCN_english, LCH_ENGLISH},
+	{ &MCN_greek, LCH_GREEK },
+	{ &MCN_hebrew, LCH_HEBREW},
+	{ &MCN_japanese, LCH_JAPANESE },
+	{ &MCN_korean, LCH_KOREAN},
+	{ &MCN_lithuanian, LCH_LITHUANIAN },
+	{ &MCN_polish, LCH_POLISH},
+	{ &MCN_roman, LCH_ROMAN },
+	{ &MCN_russian, LCH_RUSSIAN },
+	{ &MCN_simple_chinese, LCH_SIMPLE_CHINESE},
+	{ &MCN_thai, LCH_THAI},
+	{ &MCN_turkish, LCH_TURKISH },
+	{ &MCN_ukrainian, LCH_UKRAINIAN},
+	{ &MCN_unicode, LCH_UNICODE},
+	{ &MCN_utf8, LCH_UTF8},
+	{ &MCN_vietnamese, LCH_VIETNAMESE },
+	{ &MCN_w_char, LCH_UNICODE},
+	{ &MCN_asterisk_char, LCH_ENGLISH }
+};
 
+MCNameRef MCU_charsettolanguage(uint1 charset)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(langtocharsets); i++)
+		if (langtocharsets[i].charset == charset)
+			return *langtocharsets[i].langname;
+	return kMCEmptyName;
+}
 
+uint1 MCU_languagetocharset(MCNameRef p_language)
+{
+	for (uinteger_t i = 0; i < ELEMENTS(langtocharsets); i++)
+		if (MCNameIsEqualTo(p_language, *langtocharsets[i].langname))
+			return i;
+
+	return 0;
+}
+
+/* LEGACY */ uint1 MCU_languagetocharset(const char *langname)
+{
+	MCNewAutoNameRef t_langname;
+	/* UNCHECKED */ MCNameCreateWithCString(langname, &t_langname);
+	return MCU_languagetocharset(*t_langname);
+}
+
+//////////
 
 struct  CharSet2WinCharset
 {
@@ -2403,25 +2509,6 @@ uint1 MCU_charsettowincharset(uint1 charset)
 		if (charset2wincharsets[i].charset == charset)
 			return charset2wincharsets[i].wincharset;
 	return 0;
-}
-
-uint1 MCU_languagetocharset(const char *langname)
-{
-	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
-		if (MCU_strncasecmp(langtocharsets[i].langname,langname,
-		                    strlen(langname)) == 0)
-			return langtocharsets[i].charset;
-	return 0;
-}
-
-const char *MCU_charsettolanguage(uint1 charset)
-{
-	uint2 i;
-	for (i = 0; i < ELEMENTS(langtocharsets); i++)
-		if (langtocharsets[i].charset == charset)
-			return langtocharsets[i].langname;
-	return NULL;
 }
 
 uint1 MCU_unicodetocharset(uint2 uchar)
@@ -2468,12 +2555,92 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 		MCS_unicodetomultibyte(p_ucstring, p_uclength, p_buffer, p_capacity, r_used, p_mbcharset);
 }
 
+//////////
+
+bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode)
+{
+	const char *startptr = (const char*)p_src . getstring();
+	uint4 length = p_src . getlength();
+	uint4 dlength;
+	MCU_multibytetounicode(startptr, length, NULL, 0, dlength, p_charset);
+
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(dlength))
+		return false;
+
+	char *dptr = (char*)t_buffer.Chars();
+	MCU_multibytetounicode(startptr, length, dptr, dlength, dlength, p_charset);
+
+	return t_buffer.CreateStringAndRelease(r_unicode);
+}
+
+bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode)
+{
+	return MCU_multibytetounicode(MCStringGetOldString(p_src), p_charset, r_unicode);
+}
+
+bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
+{
+	const char *startptr = (const char*)p_src . getstring();
+	uint4 length = p_src . getlength();
+	uint4 dlength;
+	MCU_unicodetomultibyte(startptr, length, NULL, 0, dlength, p_charset);
+
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(dlength))
+		return false;
+
+	char *dptr = (char*)t_buffer.Chars();
+	MCU_unicodetomultibyte(startptr, length, dptr, dlength, dlength, p_charset);
+
+	return t_buffer.CreateStringAndRelease(r_multibyte);
+}
+
+bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte)
+{
+	return MCU_unicodetomultibyte(MCStringGetOldString(p_src), p_charset, r_multibyte);
+}
+
+bool MCU_utf8tonative(MCStringRef p_utf8, MCStringRef& r_native)
+{
+	MCAutoStringRef t_unicode;
+	return MCU_multibytetounicode(p_utf8, LCH_UTF8, &t_unicode) && MCU_unicodetomultibyte(*t_unicode, LCH_ENGLISH, r_native);
+}
+
+bool MCU_nativetoutf8(MCStringRef p_native, MCStringRef& r_utf8)
+{
+	MCAutoStringRef t_unicode;
+	return MCU_multibytetounicode(p_native, LCH_ENGLISH, &t_unicode) && MCU_unicodetomultibyte(*t_unicode, LCH_UTF8, r_utf8);
+}
+
+
+bool MCU_mapunicode(const MCString& p_src, bool is_unicode, bool to_unicode, MCStringRef& r_string)
+{
+	if (to_unicode == is_unicode)
+	{
+		if (MCStringCreateWithNativeChars((const char_t *)p_src . getstring(), p_src . getlength(), r_string))
+			return true;
+	}
+	else if (to_unicode)
+	{
+		if (MCU_multibytetounicode(p_src, LCH_ROMAN, r_string))
+			return true;
+	}
+	else
+	{
+		if (MCU_unicodetomultibyte(p_src, LCH_ROMAN, r_string))
+			return true;
+	}
+
+	return false;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int p_to)
+bool MCU_disjointrangeinclude(MCInterval*& x_ranges, int& x_count, int p_from, int p_to)
 {
-	MCRange *t_new_ranges;
-	t_new_ranges = (MCRange *)malloc(sizeof(MCRange) * (x_count + 1));
+	MCInterval *t_new_ranges;
+	t_new_ranges = (MCInterval *)malloc(sizeof(MCInterval) * (x_count + 1));
 	if (t_new_ranges == NULL)
 		return false;
 	
@@ -2514,7 +2681,7 @@ bool MCU_disjointrangeinclude(MCRange*& x_ranges, int& x_count, int p_from, int 
 	return true;
 }
 
-bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
+bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element)
 {
 	if (p_count == 0)
 		return false;

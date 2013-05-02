@@ -502,22 +502,22 @@ Boolean MCScreenDC::istripleclick()
 	return tripleclick;
 }
 
-uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
+uint1 MCScreenDC::fontnametocharset(MCStringRef p_fontname)
 {
 	// MW-2006-06-09: [[ Bug 3670 ]] Fixed length buffer can cause a crash
 	char fname[256];
-	strncpy(fname, oldfontname, 255);
+	strncpy(fname, (const char *)MCStringGetNativeCharPtr(p_fontname), 255);
 	fname[255] = '\0';
 	
 	char *sptr = fname;
-	if ((sptr = strchr(fname, ',')) != NULL)
-		*sptr = '\0';
 	short ffamilyid;		    //font family ID
 	StringPtr reqnamePascal = c2pstr(fname);
 	GetFNum(reqnamePascal, &ffamilyid);
 	return MCS_langidtocharset(FontToScript(ffamilyid));
 }
 
+// Dead code?
+/*
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 	char *fname = new char[255];
@@ -538,6 +538,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	}
 	return fname;
 }
+*/
 
 void MCScreenDC::openIME()
 {

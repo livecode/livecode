@@ -117,11 +117,15 @@ public:
 	Parse_stat newvar(MCNameRef name, MCNameRef init, MCVarref **, Boolean initialised);
 	Parse_stat findconstant(MCNameRef name, MCExpression **);
 	Parse_stat newconstant(MCNameRef name, MCNameRef value);
+	bool getlocalnames(MCListRef& r_list);
+	bool getglobalnames(MCListRef& r_list);
 	void appendlocalnames(MCExecPoint &ep);
 	void appendglobalnames(MCExecPoint &ep, bool first);
 	void newglobal(MCNameRef name);
+	
 	Parse_stat parse(MCObject *, const char *);
-
+	void compile(MCSyntaxFactoryRef ctxt);
+	
 	Exec_stat findhandler(Handler_type, MCNameRef name, MCHandler *&);
 	bool hashandler(Handler_type type, MCNameRef name);
 	void addhandler(Handler_type type, MCHandler *handler);

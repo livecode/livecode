@@ -46,31 +46,37 @@ void IO_set_stream(IO_handle stream, char *newptr)
 }
 #endif
 
-Boolean IO_findstream(Streamnode *nodes, uint2 nitems,
-                      const char *name, uint2 &i)
+bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name, uindex_t& r_index)
 {
-	if (nitems)
-		do
+	while (p_node_count-- > 0)
+	{
+		if (MCNameIsEqualTo(p_name, p_nodes[p_node_count].name, kMCCompareExact))
 		{
-			nitems--;
-			if (strequal(name, nodes[nitems].name))
-			{
-				i = nitems;
-				return True;
-			}
+			r_index = p_node_count;
+			return true;
 		}
-		while (nitems);
-	return False;
+	}
+	return false;
 }
 
-Boolean IO_findfile(const char *name, uint2 &i)
+bool IO_findfile(MCNameRef p_name, uindex_t& r_index)
 {
-	return IO_findstream(MCfiles, MCnfiles, name, i);
+	return IO_findstream(MCfiles, MCnfiles, p_name, r_index);
 }
 
-Boolean IO_closefile(const char *name)
+/* LEGACY */ Boolean IO_findfile(const char *name, uint2 &i)
 {
-	uint2 index;
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
+	uindex_t t_index;
+	bool t_found = IO_findfile(*t_name, t_index) ? True : False;
+	i = t_index;
+	return t_found;
+}
+
+Boolean IO_closefile(MCNameRef name)
+{
+	uindex_t index;
 	if (IO_findfile(name, index))
 	{
 		if (MCfiles[index].ihandle != NULL)
@@ -82,7 +88,7 @@ Boolean IO_closefile(const char *name)
 				MCS_trunc(MCfiles[index].ohandle);
 			MCS_close(MCfiles[index].ohandle);
 		}
-		delete MCfiles[index].name;
+		MCValueRelease(MCfiles[index].name);
 		while (++index < MCnfiles)
 			MCfiles[index - 1] = MCfiles[index];
 		MCnfiles--;
@@ -91,10 +97,28 @@ Boolean IO_closefile(const char *name)
 	return False;
 }
 
-Boolean IO_findprocess(const char *name, uint2 &i)
+/* LEGACY */ Boolean IO_closefile(const char *name)
 {
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
+	return IO_closefile(*t_name);
+}
+
+bool IO_findprocess(MCNameRef p_name, uindex_t& r_index)
+{
+	/* TODO - update processes to use MCNameRef */
 	IO_cleanprocesses();
-	return IO_findstream(MCprocesses, MCnprocesses, name, i);
+	return IO_findstream(MCprocesses, MCnprocesses, p_name, r_index);
+}
+
+/* LEGACY */ Boolean IO_findprocess(const char *name, uint2 &i)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
+	uindex_t t_index;
+	bool t_found = IO_findprocess(*t_name, t_index) ? True : False;
+	i = t_index;
+	return t_found;
 }
 
 void IO_cleanprocesses()
@@ -112,7 +136,7 @@ void IO_cleanprocesses()
 				MCPlayer *tptr = MCplayers;
 				while (tptr != NULL)
 				{
-					if (strequal(MCprocesses[i].name, tptr->getcommand()))
+					if (MCNameIsEqualToCString(MCprocesses[i].name, tptr->getcommand(), kMCCompareExact))
 					{
 						tptr->playstop(); // removes from linked list
 						break;
@@ -125,7 +149,7 @@ void IO_cleanprocesses()
 				MCS_close(MCprocesses[i].ihandle);
 			if (MCprocesses[i].ohandle != NULL)
 				MCS_close(MCprocesses[i].ohandle);
-			delete MCprocesses[i].name;
+			MCValueRelease(MCprocesses[i].name);
 			uint2 j = i;
 			while (++j < MCnprocesses)
 				MCprocesses[j - 1] = MCprocesses[j];
@@ -173,13 +197,24 @@ real8 IO_cleansockets(real8 ctime)
 	return etime;
 }
 
-Boolean IO_findsocket(const char *name, uint2 &i)
+bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
+	/* TODO - update MCSocket to use MCNameRef */
 	IO_cleansockets(MCS_time());
-	for (i = 0 ; i < MCnsockets ; i++)
-		if (strequal(MCsockets[i]->name, name))
-			return True;
-	return False;
+	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
+		if (MCStringIsEqualToCString(MCNameGetString(p_name), MCsockets[r_index]->name, kMCCompareExact))
+			return true;
+	return false;
+}
+
+/* LEGACY */ Boolean IO_findsocket(char *name, uint2 &i)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithCString(name, &t_name);
+	uindex_t t_index;
+	bool t_found = IO_findsocket(*t_name, t_index) ? True : False;
+	i = t_index;
+	return t_found;
 }
 
 void IO_freeobject(MCObject *o)
@@ -221,9 +256,10 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 {
 	uint4 nread;
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
-	char *dptr = ep.getbuffer(nread);
+	char *dptr;
+	/* UNCHECKED */ ep.reserve(nread, dptr);
 	MCS_read(dptr, 1, nread, stream);
-	ep.setlength(nread);
+	ep.commit(nread);
 	return IO_NORMAL;
 }
 
@@ -670,6 +706,38 @@ IO_stat IO_write_nameref(MCNameRef p_name, IO_handle stream, uint1 size)
 {
 	// MW-2011-10-21: [[ Bug 9826 ]] If the name is empty, write out nil string.
 	return IO_write_string(MCNameIsEmpty(p_name) ? nil : MCNameGetCString(p_name), stream, size);
+}
+
+// MW-2012-05-03: [[ Values* ]] Read a StringRef from a stream. For now we assume
+//   native (as the fileformat only supports this). **UNICODE**
+IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size)
+{
+	IO_stat t_stat;
+	t_stat = IO_NORMAL;
+
+	char *t_string;
+	uint4 t_length;
+	t_string = nil;
+	if (t_stat == IO_NORMAL)
+		t_stat = IO_read_string(t_string, t_length, stream, size);
+
+	if (t_stat == IO_NORMAL &&
+		!MCStringCreateWithNativeChars((const char_t *)t_string, t_length, r_string))
+		t_stat = IO_ERROR;
+
+	delete t_string;
+
+	return t_stat;
+}
+
+// MW-2012-05-03: [[ Values* ]] Write a StringRef to a stream. For now we assume
+//   native (as the fileformat only supports this). **UNICODE**
+IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
+{
+	// If the string is empty, then we out a nil string (matches MCNameRef behavior).
+	uindex_t t_length;
+	t_length = MCStringGetLength(p_string);
+	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -50,13 +49,16 @@ int main(int argc, char *argv[], char *envp[])
 	if (argc == 3&& strcmp(argv[1], "-elevated-slave") == 0)
 		return MCSystemElevatedMain(argc, argv, envp);
 	
+	if (!MCInitialize())
+		exit(-1);
+
 	if (!X_init(argc, argv, envp))
 	{
-		if (MCresult != NULL && MCresult -> getvalue() . is_string())
+		MCExecPoint ep;
+		if (MCresult != nil)
 		{
-			char *t_message;
-			t_message = MCresult -> getvalue() . get_string() . clone();
-			fprintf(stderr, "Startup error - %s\n", t_message);
+			MCresult -> eval(ep);
+			fprintf(stderr, "Startup error - %s\n", ep . getcstring());
 		}
 		exit(-1);
 	}
@@ -64,6 +66,8 @@ int main(int argc, char *argv[], char *envp[])
 	X_main_loop();
 
 	int t_exit_code = X_close();
+
+	MCFinalize();
 
 	exit(t_exit_code);
 }

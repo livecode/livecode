@@ -23,8 +23,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "uidc.h"
 #include "image.h"
 
-#include "core.h"
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);

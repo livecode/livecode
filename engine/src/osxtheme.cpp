@@ -230,11 +230,6 @@ uint2 MCNativeTheme::getthemefamilyid()
 	return LF_MAC;
 }
 
-const char  *MCNativeTheme::getname()
-{
-	return MClnfamstring;
-}
-
 Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect)
 {
 	MCQuickDrawContext *t_qd_context = (MCQuickDrawContext *)dc;
@@ -593,7 +588,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 		//   animation than in Snow Leopard.
 		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCScreenDC::s_animation_current_time - MCScreenDC::s_animation_start_time) * 1000)) / t_millisecs_per_step % 256;
 		((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_PROGRESS, &t_info);
-	}
+}
 }
 
 //get theme track kind
@@ -643,7 +638,7 @@ static void getscrollbarpressedstate(const MCWidgetInfo &winfo, ThemeTrackDrawIn
 						// MW-2012-09-20: [[ Bug ]] Arrow not highlighting when pressed as
 						//   wrong constant was used.
 						ps = kThemeLeftInsideArrowPressed;
-					}
+				}
 				}
 				break;
 			case WTHEME_PART_ARROW_INC:

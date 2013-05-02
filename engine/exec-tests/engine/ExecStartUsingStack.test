@@ -1,0 +1,11 @@
+setup
+
+set the script of this stack to "global tVar;on libraryStack;put true into tVar;end libraryStack"
+
+global tVar
+
+start using this stack
+
+test tVar
+
+teardown

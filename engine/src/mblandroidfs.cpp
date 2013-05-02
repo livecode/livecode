@@ -259,25 +259,23 @@ char *MCAndroidSystem::ResolveAlias(const char *p_target)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidSystem::GetCurrentFolder(void)
+bool MCAndroidSystem::GetCurrentFolder(MCStringRef& r_path)
 {
-	char *t_folder = NULL;
+	MCAutoPointer<char> t_folder;
 	if (apk_get_current_folder() != nil)
-		path_from_apk_path(apk_get_current_folder(), t_folder);
+	{
+		if (!path_from_apk_path(apk_get_current_folder(), &t_folder))
+			return false;
+	}
 	else
 	{
-		if (MCMemoryAllocate(PATH_MAX + 1, t_folder))
-		{
-			if (NULL == getcwd(t_folder, PATH_MAX + 1))
-			{
-				MCMemoryDeallocate(t_folder);
-				return NULL;
-			}
-			uindex_t t_len = MCCStringLength(t_folder);
-			MCMemoryReallocate(t_folder, t_len + 1, t_folder);
-		}
+		if (!MCMemoryAllocate(PATH_MAX + 1, &t_folder))
+			return false;
+
+		if (NULL == getcwd(*t_folder, PATH_MAX + 1))
+			return false;
 	}
-	return t_folder;
+	return MCStringCreateWithCString(*t_folder, r_path);
 }
 
 bool MCAndroidSystem::SetCurrentFolder(const char *p_path)
@@ -382,68 +380,64 @@ char *MCAndroidSystem::GetStandardFolder(const char *p_folder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidSystem::LongFilePath(const char *p_path)
+bool MCAndroidSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
 {
-	return strclone(p_path);
+	return MCStringCopy(p_path, r_long_path);
 }
 
-char *MCAndroidSystem::ShortFilePath(const char *p_path)
+bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
 {
-	return strclone(p_path);
+	return MCStringCopy(p_path, r_short_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidSystem::PathToNative(const char *p_path)
+bool MCAndroidSystem::PathToNative(MCStringRef p_path, MCStringRef& r_native)
 {
-	return strdup(p_path);
+	return MCStringCopy(p_path, r_native);
 }
 
-char *MCAndroidSystem::PathFromNative(const char *p_path)
+bool MCAndroidSystem::PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 {
-	return strdup(p_path);
+	return MCStringCopy(p_native, r_path);
 }
 
-char *MCAndroidSystem::ResolvePath(const char *p_path)
+bool MCAndroidSystem::ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	return ResolveNativePath(p_path);
+	return ResolveNativePath(p_path, r_resolved);
 }
 
-char *MCAndroidSystem::ResolveNativePath(const char *p_path)
+bool MCAndroidSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	MCLog("MCAndroidSystem::ResolveNativePath called", 0);
-	MCLog("p_path=<%p>: \"%s\"", p_path, p_path != NULL ? p_path : "");
-	char *t_absolute_path;
-	if (p_path[0] != '/')
+	MCAutoStringRef t_absolute_path;
+	if (MCStringGetCharAtIndex(p_path, 0) != '/')
 	{
-		char *t_folder;
-		t_folder = GetCurrentFolder();
-		MCLog("current folder: <%p>: \"%s\"", t_folder, t_folder != NULL ? t_folder : "");
-		t_absolute_path = new char[strlen(t_folder) + strlen(p_path) + 2];
-		strcpy(t_absolute_path, t_folder);
-		strcat(t_absolute_path, "/");
-		strcat(t_absolute_path, p_path);
-		
-		// MW-2011-07-04: GetCurrentFolder() returns a string that must be
-		//   freed.
-		free(t_folder);
+		MCAutoStringRef t_folder;
+		if (!GetCurrentFolder(&t_folder))
+			return false;
+
+		if (!MCStringMutableCopy(*t_folder, &t_absolute_path) ||
+			!MCStringAppendChar(*t_absolute_path, '/') ||
+			!MCStringAppend(*t_absolute_path, p_path))
+			return false;
 	}
 	else
-		t_absolute_path = strdup(p_path);
+		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
+
+	char *t_absolute_cstring;
+	t_absolute_cstring = strdup(MCStringGetCStringPtr(t_absolute_path));
 	
 	// IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
-	uindex_t t_length = MCCStringLength(t_absolute_path);
-	char *t_str_ptr = t_absolute_path + 1;
+	uindex_t t_length = MCCStringLength(t_absolute_cstring);
+	char *t_str_ptr = t_absolute_cstring + 1;
 	for (uindex_t i = 1; i < t_length; i++)
 	{
-		if (t_absolute_path[i - 1] != '/' || t_absolute_path[i] != '/')
-			*t_str_ptr++ = t_absolute_path[i];
+		if (t_absolute_cstring[i - 1] != '/' || t_absolute_cstring[i] != '/')
+			*t_str_ptr++ = t_absolute_cstring[i];
 	}
 	*t_str_ptr = '\0';
 	
-	MCLog("MCAndroidSystem::ResolveNativePath done", 0);
-	MCLog("resolvedpath=<%p>: \"%s\"", t_absolute_path, t_absolute_path != NULL ? t_absolute_path : "");
-	return t_absolute_path;
+	return MCStringCreateWithCString(t_absolute_cstring, r_resolved);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -18,6 +18,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define SOCKET_H
 
 #include "dllst.h"
+#include "object.h"
 
 enum MCSocketType {
     MCSOCK_TCP,
@@ -189,14 +190,14 @@ extern bool MCS_init_sockets();
 extern bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b);
 extern MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, char *sslcertfile);
 extern void MCS_close_socket(MCSocket *s);
-extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, char *until, MCNameRef m);
-extern void MCS_write_socket(const MCString &d, MCSocket *s, MCObject *optr, MCNameRef m);
+extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef m);
+extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
 extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile);
-extern void MCS_ha(MCExecPoint &ep, MCSocket *s);
-extern void MCS_hn(MCExecPoint &ep);
-extern void MCS_aton(MCExecPoint &ep);
-extern void MCS_ntoa(MCExecPoint &ep, MCExecPoint &ep2);
-extern void MCS_pa(MCExecPoint &ep, MCSocket *s);
+extern bool MCS_ha(MCSocket *s, MCStringRef& r_string);
+extern bool MCS_hn(MCStringRef& r_string);
+extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);
+extern bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr);
+extern bool MCS_pa(MCSocket *s, MCStringRef& r_string);
 
 
 
@@ -212,14 +213,16 @@ bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_loo
 bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in *r_addr,
 						  MCHostNameResolveCallback p_callback, void *p_context);
 bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr);
+bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr);
 
 
 
 bool addrinfo_lookup(const char *p_name, const char *p_port, int p_socktype, struct addrinfo *&r_addrinfo);
 bool sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string);
 
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string,
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, bool p_blocking,
 							MCSockAddrToStringCallback p_callback, void *p_context);
 bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string);
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef& r_string);
 
 #endif // SOCKET_H

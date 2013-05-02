@@ -1078,7 +1078,23 @@ static uint64_t MCWindowsVersionInfoParseVersion(const char *p_string)
 	return 0ULL | ((uint64_t)a << 48) | ((uint64_t)b << 32) | (c << 16) | d;
 }
 
-static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariableValue *p_info)
+static bool add_version_info_entry(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	MCExecPoint ep(NULL, NULL, NULL);
+
+	if (!ep . setvalueref(p_value))
+		return false;
+
+	MCWindowsVersionInfo *t_string;
+	
+	if (ep . getsvalue() . getstring()[ep . getsvalue() . getlength() - 1] != '\0')
+		ep . appendchar('\0');
+	ep . nativetoutf16();
+	swap_uint16s((uint16_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength() / 2);
+	return MCWindowsVersionInfoAdd((MCWindowsVersionInfo *)p_context, MCStringGetCString(MCNameGetString(p_key)), true, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_string);
+}
+
+static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRef p_info)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 
@@ -1089,9 +1105,9 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariabl
 	t_file_version = t_product_version = 0;
 	if (t_success)
 	{
-		if (p_info -> fetch_element(ep, "FileVersion") == ES_NORMAL)
+		if (ep . fetcharrayelement_cstring(p_info, "FileVersion") == ES_NORMAL)
 			t_file_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
-		if (p_info -> fetch_element(ep, "ProductVersion") == ES_NORMAL)
+		if (ep . fetcharrayelement_cstring(p_info, "ProductVersion") == ES_NORMAL)
 			t_product_version = MCWindowsVersionInfoParseVersion(ep . getcstring());
 	}
 	
@@ -1137,29 +1153,7 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCVariabl
 		t_success = MCWindowsVersionInfoAdd(t_string_file_info, "040904b0", true, NULL, 0, t_string_table);
 
 	if (t_success)
-	{
-		MCHashentry *t_entry;
-		uint32_t t_index;
-		t_entry = NULL;
-		t_index = 0;
-
-		while(t_success)
-		{
-			t_entry = p_info -> get_array() -> getnextkey(t_index, t_entry);
-			if (t_entry == NULL)
-				break;
-
-			MCWindowsVersionInfo *t_string;
-			if (t_entry -> value . fetch(ep) == ES_NORMAL)
-			{
-				if (ep . getsvalue() . getstring()[ep . getsvalue() . getlength() - 1] != '\0')
-					ep . appendchar('\0');
-				ep . nativetoutf16();
-				swap_uint16s((uint16_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength() / 2);
-				t_success = MCWindowsVersionInfoAdd(t_string_table, t_entry -> string, true, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_string);
-			}
-		}
-	}
+		t_success = MCArrayApply(p_info, add_version_info_entry, t_string_table);
 
 	void *t_data;
 	uint32_t t_data_size;

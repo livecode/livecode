@@ -1,0 +1,12 @@
+setup
+
+test-error matchChunk("abcd", "[[[")
+
+local tMatchStart, tMatchEnd
+test matchChunk("abcd", ".(..).", tMatchStart, tMatchEnd) is true
+test tMatchStart is 2
+test tMatchEnd is 3
+
+test matchChunk("abcd", "x(..)x", tMatchStart, tMatchEnd) is false
+
+teardown

@@ -45,6 +45,8 @@ class MCGroup : public MCControl
 	Boolean mgrabbed;
 
 	static uint2 labeloffset;
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCGroup();
 	MCGroup(const MCGroup &gref);
@@ -53,6 +55,8 @@ public:
 	virtual ~MCGroup();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
@@ -72,8 +76,8 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Boolean del();
 	virtual void recompute();
 
@@ -121,7 +125,10 @@ public:
 	MCControl *doclone(Boolean attach, Object_pos p, bool p_copy_ids, bool invisible);
 	void drawthemegroup(MCDC *dc, const MCRectangle &dirty, Boolean drawframe);
 	void drawbord(MCDC *dc, const MCRectangle &dirty);
+	MCControl *getchild(Chunk_term etype, MCStringRef p_expression,Chunk_term otype, Chunk_term ptype);
+#ifdef OLD_EXEC
 	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
+#endif
 	void makegroup(MCControl *newcontrols, MCObject *newparent);
 	MCControl *getcontrols();
 	void setcontrols(MCControl *newcontrols);
@@ -131,17 +138,19 @@ public:
 	MCControl *getmfocused();
 	void clearfocus(MCControl *cptr);
 	void radio(uint4 parid, MCControl *focused);
-	uint2 gethilited(uint4 parid);
 	MCButton *gethilitedbutton(uint4 parid);
+#ifdef OLD_EXEC
+	uint2 gethilited(uint4 parid);
 	uint4 gethilitedid(uint4 parid);
 	MCNameRef gethilitedname(uint4 parid);
 	void sethilited(uint4 parid, uint2 toset);
 	void sethilitedid(uint4 parid, uint4 toset);
 	void sethilitedname(uint4 parid, MCNameRef bname);
 	void setchildprops(uint4 parid, Properties which, MCExecPoint &ep);
+#endif
 	MCRectangle getgrect();
 	void computecrect();
-	Boolean computeminrect(Boolean scrolling);
+	bool computeminrect(Boolean scrolling);
 	void boundcontrols();
 	
 	Exec_stat opencontrols(bool p_is_preopen);
@@ -200,5 +209,68 @@ public:
 		return (MCGroup *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+	
+	////////// PROPERTY SUPPORT METHODS
+
+	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef r_string);
+	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
+
+	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetCantDelete(MCExecContext& ctxt, bool& r_setting);
+	void SetCantDelete(MCExecContext& ctxt, bool setting);
+	void GetDontSearch(MCExecContext& ctxt, bool& r_setting);
+	void SetDontSearch(MCExecContext& ctxt, bool setting);
+	void GetShowPict(MCExecContext& ctxt, bool& r_setting);
+	void SetShowPict(MCExecContext& ctxt, bool setting);
+	void GetRadioBehavior(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	void SetRadioBehavior(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetTabGroupBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetTabGroupBehavior(MCExecContext& ctxt, bool setting);
+	void GetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t& r_button);
+	void SetHilitedButton(MCExecContext& ctxt, uint32_t part, integer_t p_button);
+	void GetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t& r_id);
+	void SetHilitedButtonId(MCExecContext& ctxt, uint32_t part, integer_t p_id);
+	void GetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef& r_name);
+	void SetHilitedButtonName(MCExecContext& ctxt, uint32_t part, MCStringRef p_name);
+	void GetShowName(MCExecContext& ctxt, bool& r_setting);
+	void SetShowName(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
+	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
+	void GetUnboundedHScroll(MCExecContext& ctxt, bool& r_setting);
+	void SetUnboundedHScroll(MCExecContext& ctxt, bool setting);
+	void GetUnboundedVScroll(MCExecContext& ctxt, bool& r_setting);
+	void SetUnboundedVScroll(MCExecContext& ctxt, bool setting);
+	void GetHScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetHScrollbar(MCExecContext& ctxt, bool setting);
+	void GetVScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetVScrollbar(MCExecContext& ctxt, bool setting);
+	void GetScrollbarWidth(MCExecContext& ctxt, integer_t& r_width);
+	void SetScrollbarWidth(MCExecContext& ctxt, integer_t p_width);
+	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_left);
+	void GetFormattedHeight(MCExecContext& ctxt, integer_t& r_height);
+	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_top);
+	void GetFormattedWidth(MCExecContext& ctxt, integer_t& r_width);
+	void GetFormattedRect(MCExecContext& ctxt, MCRectangle& r_rect);
+	void GetBackgroundBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetBackgroundBehavior(MCExecContext& ctxt, bool setting);
+	void GetSharedBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetSharedBehavior(MCExecContext& ctxt, bool setting);
+	void GetBoundingRect(MCExecContext& ctxt, MCRectangle*& r_rect);
+	void SetBoundingRect(MCExecContext& ctxt, MCRectangle* p_rect);
+	void GetBackSize(MCExecContext& ctxt, MCPoint& r_size);
+	void SetBackSize(MCExecContext& ctxt, MCPoint p_size);
+	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
+	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
+	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
 };
 #endif

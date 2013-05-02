@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -1373,7 +1372,7 @@ MCBlock *MCParagraph::indextoblock(uint2 tindex, Boolean forinsert)
 					{
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)"");
+						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -1400,7 +1399,7 @@ MCBlock *MCParagraph::indextoblock(uint2 tindex, Boolean forinsert)
 					{
 						MCBlock *t_new_block;
 						t_new_block = new MCBlock(*t_block);
-						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)"");
+						t_new_block -> setatts(P_IMAGE_SOURCE, (void *)kMCEmptyString);
 
 						// MW-2012-02-14: [[ FontRefs ]] If the block is open, pass in the parent's
 						//   fontref so it can compute its.
@@ -2688,6 +2687,40 @@ static void appendblocktext(MCExecPoint& ep, MCExecPoint& tmpep, char *p_text, M
 	
 }
 
+bool MCParagraph::gettextasstringref(MCStringRef& r_string)
+{
+	if (textsize == 0)
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+
+	MCAutoStringRef t_string;
+	if (!MCStringCreateMutable(0, &t_string))
+		return false;
+
+	MCBlock *t_block;
+	t_block = blocks;
+	do
+	{
+		uint2 i,l;
+		t_block -> getindex(i,l);
+		if (!t_block -> hasunicode())
+		{
+			if (!MCStringAppendNativeChars(*t_string, (const char_t *)(text + i), l))
+				return false;
+		}
+		else
+		{
+			if (!MCStringAppendChars(*t_string, (const unichar_t *)(text + i), l / 2))
+				return false;
+		}
+	}
+	while(t_block != blocks);
+
+	return MCStringCopy(*t_string, r_string);
+}
+
 uint2 MCParagraph::gettextlength()
 {
 	if (text == NULL)
@@ -3026,7 +3059,7 @@ Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 	
 	// MW-2008-09-04: [[ Bug 7085 ]] Extending clicked links upwards should terminate
 	//   when we get to a block with different linkText.
-	const char *t_link_text;
+	MCStringRef t_link_text;
 	t_link_text = bptr -> getlinktext();
 	
 	while (bptr != blocks && isgroup)
@@ -3037,7 +3070,7 @@ Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 			bptr = bptr->prev();
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Use the 'islink()' predicate rather than
 		//   checking directly.
-		isgroup = bptr -> islink() && strequal(bptr -> getlinktext(), t_link_text);
+		isgroup = bptr -> islink() && bptr -> getlinktext() == t_link_text;
 		found |= isgroup;
 	}
 	if (!isgroup)
@@ -3054,7 +3087,7 @@ Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 	
 	// MW-2008-09-04: [[ Bug 7085 ]] Extending clicked links downwards should terminate
 	//   when we get to a block with different linkText.
-	const char *t_link_text;
+	MCStringRef t_link_text;
 	t_link_text = bptr -> getlinktext();
 	
 	while (bptr == NULL || bptr->next() != blocks && isgroup)
@@ -3065,7 +3098,7 @@ Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 			bptr = bptr->next();
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Use the 'islink()' predicate rather than
 		//   checking directly.
-		isgroup = bptr -> islink() && strequal(bptr -> getlinktext(), t_link_text);
+		isgroup = bptr -> islink() && bptr -> getlinktext() == t_link_text;
 		found |= isgroup;
 	}
 	if (!isgroup)
@@ -3250,19 +3283,20 @@ Boolean MCParagraph::getvisited(uint2 si)
 	MCBlock *bptr = indextoblock(si, False);
 	return bptr->getvisited();
 }
-const char *MCParagraph::getlinktext(uint2 si)
+
+MCStringRef MCParagraph::getlinktext(uint2 si)
 {
 	MCBlock *bptr = indextoblock(si, False);
 	return bptr->getlinktext();
 }
 
-const char *MCParagraph::getimagesource(uint2 si)
+MCStringRef MCParagraph::getimagesource(uint2 si)
 {
 	MCBlock *bptr = indextoblock(si, False);
 	return bptr->getimagesource();
 }
 
-const char *MCParagraph::getmetadataatindex(uint2 si)
+MCStringRef MCParagraph::getmetadataatindex(uint2 si)
 {
 	MCBlock *bptr = indextoblock(si, False);
 	return bptr->getmetadata();
@@ -3490,4 +3524,3 @@ bool MCParagraph::imagechanged(MCImage *p_image, bool p_deleting)
 
 	return t_used;
 }
-

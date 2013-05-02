@@ -1,0 +1,4 @@
+setup
+test the length of empty is 0
+test the length of "abc" is 3
+teardown

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -164,8 +163,8 @@ struct export_rtf_char_style_t
 	int32_t font_size;
 	int32_t text_color_index;
 	int32_t background_color_index;
-	MCNameRef link_text;
-	MCNameRef metadata;
+	MCStringRef link_text;
+	MCStringRef metadata;
 };
 
 // The rtf export context structure.
@@ -701,7 +700,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			if (t_new_style . link_text != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCNameGetCString(t_new_style . link_text));
+				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst %s \"%s\"}{\\fldrslt ", t_new_style . link_on ? "HYPERLINK" : "LCANCHOR", MCStringGetCString(t_new_style . link_text));
 				ctxt . styles[ctxt . style_index] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
@@ -721,7 +720,7 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 
 			if (t_new_style . metadata != nil)
 			{
-				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", MCNameGetCString(t_new_style . metadata));
+				ctxt . buffer . appendtextf("{\\field{\\*\\fldinst LCMETADATA \"%s\"}{\\fldrslt ", MCStringGetCString(t_new_style . metadata));
 				ctxt . styles[ctxt . style_index + 1] = ctxt . styles[ctxt . style_index];
 				ctxt . style_index += 1;
 			}
@@ -794,6 +793,26 @@ static bool export_rtf_emit_paragraphs(void *p_context, MCFieldExportEventType p
 // MW-2012-02-29: [[ FieldExport ]] New RTF export method.
 void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index)
 {
+	MCAutoStringRef t_string;
+
+	if (exportasrtftext(p_paragraphs, p_start_index, p_finish_index, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+void MCField::exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index)
+{
+	exportasrtftext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index);
+}
+
+bool MCField::exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
+{
+	return exportasrtftext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, r_string);
+}
+
+/* UNSAFE */ bool MCField::exportasrtftext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef &r_string)
+{
 	export_rtf_t ctxt;
 
 	// Reset the list-style info.
@@ -820,13 +839,8 @@ void MCField::exportasrtftext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_
 	// Output the final info.
 	ctxt . buffer . appendcstring("\n}");
 
-	// Return the buffer in the ep.
-	ctxt . buffer . givetoep(ep);
-}
-
-void MCField::exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index)
-{
-	exportasrtftext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index);
+	// Return the buffer.
+	return ctxt . buffer . takeasstringref(r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

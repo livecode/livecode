@@ -169,6 +169,10 @@ public:
 	//   on a new parent fontref.
 	bool recomputefonts(MCFontRef parent_font);
 
+	// Fetch the contents of the paragraph as a string (at the moment this coerces
+	// it to native).
+	bool gettextasstringref(MCStringRef& r_string);
+
 	// Iterate backwards starting at p_index and return the first index in the
 	// paragraph before which a word-break can occur.
 	uint2 findwordbreakbefore(MCBlock *p_block, uint2 p_index);
@@ -420,15 +424,15 @@ public:
 	// Get the link text (if any) in the block containing index si
 	// Called by:
 	//   MCField::gettextatts
-	const char *getlinktext(uint2 si);
+	MCStringRef getlinktext(uint2 si);
 
 	// Get the image source (if any) in the block contaning index si
 	// Called by:
 	//   MCField::gettextatts
-	const char *getimagesource(uint2 si);
+	MCStringRef getimagesource(uint2 si);
 
 	// Get the metadata (if any) in the block containing index si
-	const char *getmetadataatindex(uint2 si);
+	MCStringRef getmetadataatindex(uint2 si);
 
 	// Return true if the link (if any) in the block containing index si
 	// has been visited.
@@ -467,9 +471,9 @@ public:
 	// Copies all the attributes from the given paragraph.
 	void copyattrs(const MCParagraph& other);
 	// Stores the paragraph attributes into the dst array.
-	void storeattrs(MCVariableValue *dst);
+	void storeattrs(MCArrayRef dst);
 	// Fetches the paragraph attributes from the src array.
-	void fetchattrs(MCVariableValue *src);
+	void fetchattrs(MCArrayRef src);
 	// Clears the paragraph attributes.
 	void clearattrs(void);
 	// Unserializes the paragraph attributes from stream.
@@ -542,7 +546,7 @@ public:
 	// Returns the metadata for the current paragraph.
 	MCNameRef getmetadata(void) const;
 	// Set the metadata property for the current paragraph.
-	void setmetadata(const char *metadata);
+	void setmetadata(MCNameRef metadata);
 
 	// Returns true if the top border will be elided due to hGrid
 	bool elidetopborder(void) const;

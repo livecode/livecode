@@ -50,17 +50,19 @@ class MCScrollbar : public MCControl
 	real8 startvalue;
 	real8 endvalue;
 	uint1 hover_part;
-	
+
 	// MW-2012-09-20: [[ Bug 10395 ]] If this flag is set then the scrollbar is
 	//   embedded within another control and thus must be redrawn differently in
 	//   compositing mode.
 	bool m_embedded : 1;
 	
 	MCControl *linked_control;
-	
+
 	static real8 markpos;
 	static uint2 mode;
 	
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCScrollbar();
 	MCScrollbar(const MCScrollbar &sref);
@@ -69,6 +71,8 @@ public:
 	virtual ~MCScrollbar();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual void open();
 	virtual Boolean kdown(const char *string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
@@ -79,8 +83,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
@@ -119,5 +123,31 @@ public:
 
 	void setembedded(void);
 	void redrawall(void);
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(bool dirty = true);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetThumbSize(MCExecContext& ctxt, double& r_size);
+	void SetThumbSize(MCExecContext& ctxt, double p_size);
+	void GetThumbPos(MCExecContext& ctxt, double& r_pos);
+	void SetThumbPos(MCExecContext& ctxt, double p_pos);
+	void GetLineInc(MCExecContext& ctxt, double& r_inc);
+	void SetLineInc(MCExecContext& ctxt, double p_inc);
+	void GetPageInc(MCExecContext& ctxt, double& r_inc);
+	void SetPageInc(MCExecContext& ctxt, double p_inc);
+	void GetOrientation(MCExecContext& ctxt, intenum_t& r_style);
+	void GetNumberFormat(MCExecContext& ctxt, MCStringRef& r_format);
+	void SetNumberFormat(MCExecContext& ctxt, MCStringRef p_format);
+	void GetStartValue(MCExecContext& ctxt, MCStringRef& r_value);
+	void SetStartValue(MCExecContext& ctxt, MCStringRef p_value);
+	void GetEndValue(MCExecContext& ctxt, MCStringRef& r_value);
+	void SetEndValue(MCExecContext& ctxt, MCStringRef p_value);
+	void GetShowValue(MCExecContext& ctxt, bool& r_setting);
+	void SetShowValue(MCExecContext& ctxt, bool setting);
 };
 #endif

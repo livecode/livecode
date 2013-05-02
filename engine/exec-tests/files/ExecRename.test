@@ -1,0 +1,13 @@
+setup
+   
+open file "test.tmp" for write
+
+close file "test.tmp"
+
+rename "test.tmp" to "test2.tmp"
+
+test there is a file "test2.tmp" and there is not a file "test.tmp"
+
+delete file "test2.tmp"
+
+teardown

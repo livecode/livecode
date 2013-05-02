@@ -1,0 +1,19 @@
+setup
+
+create button
+
+create button
+
+group button 1 and button 2
+
+start editing group 1
+
+stop editing
+
+create button
+
+delete group 1
+
+test there is a button 1 on the current card
+
+teardown

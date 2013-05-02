@@ -35,9 +35,9 @@ public:
 	
 	uint32_t GetProcessId(void);
 	
-	char *GetVersion(void);
-	char *GetMachine(void);
-	char *GetProcessor(void);
+	bool GetVersion(MCStringRef& r_string);
+	bool GetMachine(MCStringRef& r_string);
+	MCNameRef GetProcessor(void);
 	char *GetAddress(void);
 	
 	void Alarm(real64_t p_when);
@@ -59,7 +59,7 @@ public:
 	bool CreateAlias(const char *p_target, const char *p_alias);
 	char *ResolveAlias(const char *p_target);
 	
-	char *GetCurrentFolder(void);
+	bool GetCurrentFolder(MCStringRef& r_path);
 	bool SetCurrentFolder(const char *p_path);
 	
 	bool FileExists(const char *p_path);
@@ -80,21 +80,21 @@ public:
 	void *ResolveModuleSymbol(void *p_module, const char *p_symbol);
 	void UnloadModule(void *p_module);
 	
-	char *LongFilePath(const char *p_path);
-	char *ShortFilePath(const char *p_path);
+	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
+	bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
 	
-	char *PathToNative(const char *p_rev_path);
-	char *PathFromNative(const char *p_rev_path);
-	char *ResolvePath(const char *p_rev_path);
-	char *ResolveNativePath(const char *p_rev_path);
+	bool PathToNative(MCStringRef p_path, MCStringRef& r_native);
+	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path);
+	bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved);
+	bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved);
 	
 	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context);
 	
 	bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode);
 	
 	char *GetHostName(void);
-	bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context);
-	bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context);
+	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context);
+	bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context);
 
 	uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset);
 	bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used);

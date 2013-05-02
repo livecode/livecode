@@ -37,6 +37,11 @@ void MCError::add(uint2 id, uint2 line, uint2 pos)
 	add(id, line, pos, MCnullmcstring);
 }
 
+void MCError::add(uint2 id, uint2 line, uint2 pos, const char *msg)
+{
+	add(id, line, pos, (MCString)msg);
+}
+
 void MCError::add(uint2 id, uint2 line, uint2 pos, uint32_t v)
 {
 	char t_buffer[U4L];
@@ -44,15 +49,29 @@ void MCError::add(uint2 id, uint2 line, uint2 pos, uint32_t v)
 	add(id, line, pos, t_buffer);
 }
 
-void MCError::add(uint2 id, uint2 line, uint2 pos, MCNameRef n)
+void MCError::add(uint2 id, uint2 line, uint2 pos, MCValueRef n)
 {
-	add(id, line, pos, MCNameGetOldString(n));
+	if (n != nil)
+	{
+		MCAutoStringRef t_string;
+		MCValueConvertToStringForSave(n, &t_string);
+		add(id, line, pos, MCStringGetOldString(*t_string));
+	}
+	else
+	{
+		add(id, line, pos, MCnullmcstring);
+	}
 }
 
 void MCError::add(uint2 id, uint2 line, uint2 pos, const MCString &token)
 {
 	if (MCerrorlock != 0 || thrown)
 		return;
+	doadd(id, line, pos, token);
+}
+
+void MCError::doadd(uint2 id, uint2 line, uint2 pos, const MCString &token)
+{
 	if (line != 0 && errorline == 0)
 	{
 		errorline = line;

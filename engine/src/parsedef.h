@@ -20,10 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
 #define NSUBEXP  50
 typedef struct _regexp regexp;
 extern regexp *MCregexcache[];
@@ -81,80 +77,6 @@ enum Ask_type {
 	AT_HINT,
 };
 
-// Chunks, containers and ordinals (and dest for Go command)
-enum Chunk_term {
-    CT_UNDEFINED,
-    CT_START,
-    CT_BACKWARD,
-    CT_FORWARD,
-    CT_FINISH,
-    CT_HOME,
-	// MW-2009-03-03: The chunk type of the invisible 'script' object that
-	//   holds the SERVER mode state.
-	CT_SERVER_SCRIPT,
-    CT_HELP,
-    CT_DIRECT,
-    CT_RECENT,
-    CT_THIS,
-    CT_FIRST,
-    CT_SECOND,
-    CT_THIRD,
-    CT_FOURTH,
-    CT_FIFTH,
-    CT_SIXTH,
-    CT_SEVENTH,
-    CT_EIGHTH,
-    CT_NINTH,
-    CT_TENTH,
-    CT_LAST,
-    CT_NEXT,
-    CT_PREV,
-    CT_MIDDLE,
-    CT_ANY,
-    CT_ORDINAL,
-    CT_ID,
-    CT_EXPRESSION,
-    CT_RANGE,
-    CT_URL,
-    CT_URL_HEADER,
-    CT_ALIAS,
-	CT_DOCUMENT,
-    CT_TOP_LEVEL,
-    CT_MODELESS,
-    CT_PALETTE,
-    CT_MODAL,
-    CT_PULLDOWN,
-    CT_POPUP,
-    CT_OPTION,
-
-    CT_STACK,
-    CT_AUDIO_CLIP,
-    CT_VIDEO_CLIP,
-    CT_BACKGROUND,
-    CT_CARD,
-    CT_MARKED,
-    CT_GROUP,
-    CT_LAYER,
-    CT_BUTTON,
-    CT_MENU,
-    CT_SCROLLBAR,
-    CT_PLAYER,
-    CT_IMAGE,
-    CT_GRAPHIC,
-    CT_EPS,
-    CT_MAGNIFY,
-    CT_COLOR_PALETTE,
-    CT_FIELD,
-	CT_ELEMENT,
-    CT_LINE,
-    CT_ITEM,
-    CT_WORD,
-    CT_TOKEN,
-    CT_CHARACTER,
-    CT_TYPES,
-	CT_KEY
-};
-
 inline Chunk_term ct_class(Chunk_term src)
 {
 	if (src == CT_UNDEFINED)
@@ -200,7 +122,8 @@ enum Dest_type {
     DT_ME,
     DT_MENU_OBJECT,
     DT_TARGET,
-    DT_BUTTON,
+	DT_FIRST_OBJECT,
+    DT_BUTTON = DT_FIRST_OBJECT,
     DT_CARD,
     DT_FIELD,
     DT_GROUP,
@@ -212,6 +135,7 @@ enum Dest_type {
     DT_VIDEO_CLIP,
     DT_PLAYER,
     DT_STACK,
+	DT_LAST_OBJECT,
     DT_SELECTED,
     DT_ERROR,
     DT_TOP_STACK,
@@ -1544,7 +1468,7 @@ enum Properties {
 	// MW-2011-11-24: [[ UpdateScreen ]] Property controlling whether stack updates should
 	//   occur after every command.
 	P_DEFER_SCREEN_UPDATES,
-	
+
 	// MM-2012-09-05: [[ Property Listener ]] Property listing all the currently active object property listeners.
 	P_REV_OBJECT_LISTENERS, // DEVELOPMENT only
 	P_REV_PROPERTY_LISTENER_THROTTLE_TIME, // DEVELOPMENT only

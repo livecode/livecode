@@ -165,7 +165,8 @@ public:
 	Boolean has_composite_wm ;
 	Drawable dest; //
 
-	char *displayname;
+	MCNameRef displayname;
+	MCNameRef vendorname;
 	uint4 savedpixel; // Move into per-context
 
 	MCScreenDC();
@@ -189,7 +190,7 @@ public:
 	virtual Drawable getdest();
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
 	virtual void grabpointer(Window w);
@@ -249,16 +250,14 @@ public:
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
 	                           const char *displayname);
 	
-	
-	virtual void createbackdrop(const char *color);
 	virtual void destroybackdrop();
 	
 	void createbackdrop_window(void);
@@ -287,8 +286,6 @@ public:
 	
 	
 	virtual MCTransferType querydragdata(void);
-	virtual MCSharedString *fetchdragdata(void);
-	
 	virtual MCDragAction dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset);
 
 	
@@ -315,7 +312,7 @@ public:
 	uint2 getbyteorder();
 	uint2 getunit();
 	KeySym translatekeysym(KeySym sym, uint4 keycode);
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	void create_stipple();
 	void setmods(uint2 state, KeySym sym, uint2 button, Boolean release);
 	Boolean handle(Boolean dispatch, Boolean anyevent,
@@ -351,7 +348,7 @@ public:
 	Colormap getcmap32 ( void ) { return cmap32 ; } ; 
 
 	
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 	
 	MCBitmap *regiontomask(MCRegionRef r, int32_t w, int32_t h);

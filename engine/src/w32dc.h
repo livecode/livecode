@@ -201,7 +201,7 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual uint2 getwidth();
 	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
@@ -271,9 +271,9 @@ public:
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
@@ -286,7 +286,7 @@ public:
 	virtual Boolean abortkey();
 	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
@@ -294,8 +294,8 @@ public:
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
 	virtual void flushevents(uint2 e);
 	virtual Boolean istripleclick();
-	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
-	virtual uint1 fontnametocharset(const char *oldfontname);
+//	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
+	virtual uint1 fontnametocharset(MCStringRef p_fontname);
 	virtual void clearIME(Window w);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
@@ -313,7 +313,7 @@ public:
 	virtual void enactraisewindows(void);
 	
 	virtual MCPrinter *createprinter(void);
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 
 	//
 

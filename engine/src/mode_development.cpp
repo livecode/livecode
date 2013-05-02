@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -78,6 +77,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
  void X_main_loop(void);
+
+//////////
+
+bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -233,11 +236,13 @@ IO_stat MCDispatch::startup(void)
 	else
 		*enginedir = '\0';
 
-	MCExecPoint ep;
-	ep . setstaticbytes(MCstartupstack, MCstartupstack_length);
-	MCDecompress::do_decompress(ep, 0, 0);
+	MCStringRef t_decompressed;
+	MCStringRef t_compressed;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
+	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
+	MCValueRelease(t_compressed);
 
-	IO_handle stream = MCS_fakeopen(ep . getsvalue());
+	IO_handle stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -246,9 +251,9 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(stream);
 
-	memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
-	ep . clear();
-	
+	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	MCValueRelease(t_decompressed);
+
 	// Temporary fix to make sure environment stack doesn't get lost behind everything.
 #if defined(_MACOSX)
 	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
@@ -269,7 +274,8 @@ IO_stat MCDispatch::startup(void)
 	
 	if (!MCquit)
 	{
-		MCresult -> fetch(ep);
+		MCExecPoint ep;
+		MCresult -> eval(ep);
 		ep . appendchar('\0');
 		if (ep . getsvalue() . getlength() == 1)
 		{
@@ -278,7 +284,7 @@ IO_stat MCDispatch::startup(void)
 			
 			X_main_loop();
 
-			MCresult -> fetch(ep);
+			MCresult -> eval(ep);
 			ep . appendchar('\0');
 			if (ep . getsvalue() . getlength() == 1)
 				return IO_NORMAL;
@@ -294,7 +300,7 @@ IO_stat MCDispatch::startup(void)
 
 		send_relaunch();
 
-		sptr = findstackname(ep . getsvalue() . getstring());
+		sptr = findstackname(ep . getsvalue());
 
 		if (sptr == NULL && (stat = loadfile(ep . getsvalue() . getstring(), sptr)) != IO_NORMAL)
 			return stat;
@@ -343,16 +349,19 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	MCfrontscripts = nil;
 	
 	// Load the stack
-	MCExecPoint ep;
-	ep . setstaticbytes(p_stack_data, p_stack_data_length);
-	MCDecompress::do_decompress(ep, 0, 0);
+	MCStringRef t_decompressed;
+	MCStringRef t_compressed;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_stack_data, p_stack_data_length, t_compressed);
+	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
+	MCValueRelease(t_compressed);
 
 	bool t_success;
 	MCStack *t_stack;
 	IO_handle t_stream;
 	t_success = false;
 	t_stack = nil;
-	t_stream = MCS_fakeopen(ep . getsvalue());
+	t_stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+
 	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
 	{
 		MCdefaultstackptr = MCstaticdefaultstackptr = MCtopstackptr = stacks;
@@ -368,8 +377,8 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 
 	MCS_close(t_stream);
 
-	memset((void *)ep . getsvalue() . getstring(), 0, ep . getsvalue() . getlength());
-	ep . clear();
+	/* FRAGILE */ memset((void *)MCStringGetNativeCharPtr(t_decompressed), 0, MCStringGetLength(t_decompressed));
+	MCValueRelease(t_decompressed);
 
 	MCtopstackptr = t_old_topstackptr;
 	MCstaticdefaultstackptr = t_old_staticdefaultstack;
@@ -819,18 +828,16 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 	{
 	case P_REV_CRASH_REPORT_SETTINGS:
 		{
-			MCVariableValue *t_settings;
-			t_settings = ep . getarray();
-
-			if (t_settings == NULL)
+			MCAutoArrayRef t_settings;
+			if (!ep . copyasarrayref(&t_settings))
 				break;
 
 			MCExecPoint ep_key(ep);
 
-			if (t_settings -> fetch_element(ep_key, "verbose") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "verbose") == ES_NORMAL)
 				MCU_stob(ep_key . getsvalue(), MCcrashreportverbose);
 
-			if (t_settings -> fetch_element(ep_key, "filename") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "filename") == ES_NORMAL)
 			{
 				if (MCcrashreportfilename != NULL)
 					delete MCcrashreportfilename;
@@ -844,23 +851,22 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 			if(!MCenvironmentactive)
 				break;
 
-			MCVariableValue *t_settings = ep.getarray();
-
-			if (t_settings == NULL)
+			MCAutoArrayRef t_settings;
+			if (!ep . copyasarrayref(&t_settings))
 				break;
 
 			MCExecPoint ep_key(ep);
 
-			if (t_settings -> fetch_element(ep_key, "token") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "token"))
 				MClicenseparameters . license_token = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "name") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "name"))
 				MClicenseparameters . license_name = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "organization") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "organization"))
 				MClicenseparameters . license_organization = ep_key . getsvalue() . clone();
 
-			if (t_settings -> fetch_element(ep_key, "class") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "class"))
 			{
 				static struct { const char *tag; uint32_t value; } s_class_map[] =
 				{
@@ -878,22 +884,22 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				MClicenseparameters . license_class = s_class_map[t_index] . value;
 			}
 
-			if (t_settings -> fetch_element(ep_key, "multiplicity") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "multiplicity") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . license_multiplicity = ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "scriptlimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "scriptlimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . script_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "dolimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "dolimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . do_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "usinglimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "usinglimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . using_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "insertlimit") == ES_NORMAL && ep_key . ton() == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "insertlimit") && ep_key . ton() == ES_NORMAL)
 				MClicenseparameters . insert_limit = ep_key . getnvalue() <= 0 ? 0 : ep_key . getuint4();
 
-			if (t_settings -> fetch_element(ep_key, "deploy") == ES_NORMAL)
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "deploy"))
 			{
 				static struct { const char *tag; uint32_t value; } s_deploy_map[] =
 				{
@@ -930,8 +936,8 @@ Exec_stat MCProperty::mode_set(MCExecPoint& ep)
 				}
 			}
 
-			if (t_settings -> fetch_element(ep_key, "addons") == ES_NORMAL && ep_key . getformat() == VF_ARRAY)
-				MClicenseparameters . addons = new MCVariableValue(*(ep_key . getarray()));
+			if (ep_key . fetcharrayelement_cstring(*t_settings, "addons") && ep_key . isarray())
+				/* UNCHECKED */ ep_key . copyasarrayref(MClicenseparameters . addons);
 		}
 		break;
 
@@ -983,9 +989,8 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 		break;
 	case P_REV_MESSAGE_BOX_REDIRECT:
 		if (MCmessageboxredirect != NULL)
-			MCmessageboxredirect -> names(P_LONG_ID, ep, 0);
-		else
-			ep . clear();
+			return MCmessageboxredirect -> names_old(P_LONG_ID, ep, 0);
+		ep . clear();
 		break;
 	case P_REV_LICENSE_LIMITS:
 		ep.clear();
@@ -1043,21 +1048,9 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 			ep . appendnewline();
 			if (MClicenseparameters . addons != nil)
 			{
-				MCHashentry *t_entry;
-				uint32_t t_index;
-				bool t_first;
-				t_first = true;
-				t_entry = NULL;
-				t_index = 0;
-				for(;;)
-				{
-					t_entry = MClicenseparameters . addons -> get_array() -> getnextkey(t_index, t_entry);
-					if (t_entry == NULL)
-						break;
-
-					ep . concatcstring(t_entry -> string, EC_COMMA, t_first);
-					t_first = false;
-				}
+				MCAutoStringRef t_keys;
+				/* UNCHECKED */ MCArrayListKeys(MClicenseparameters . addons, ',', &t_keys);
+				/* UNCHECKED */ ep . concatstringref(*t_keys, EC_RETURN, false);
 			}
 
 			ep . concatcstring(MCnullmcstring == MClicenseparameters . license_token ? "Global" : "Local", EC_RETURN, false);
@@ -1065,7 +1058,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 		else
 		{
 			if (MClicenseparameters . addons == nil ||
-				MClicenseparameters . addons -> fetch_element(ep, ep . getsvalue(), false) != ES_NORMAL)
+				!ep . fetcharrayelement_oldstring(MClicenseparameters . addons, ep . getsvalue()))
 				ep . clear();
 		}
 	}
@@ -1092,15 +1085,15 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 //
 
 // All stacks can be saved in development mode, so this is a no-op.
-IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename)
 {
 	return IO_NORMAL;
 }
 
 // For development mode, the environment depends on the license edition
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "development";
+	return MCN_development;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -1315,7 +1308,7 @@ void MCModeQueueEvents(void)
 #endif
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;

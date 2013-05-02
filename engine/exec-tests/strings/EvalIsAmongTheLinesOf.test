@@ -1,0 +1,23 @@
+setup " <a> is among the lines of <b> "
+
+test "abc" is among the lines of ("abc" & cr & 123 & cr & comma)
+test 123 is among the lines of ("abc" & cr & 123 & cr & comma)
+test comma is among the lines of ("abc" & cr & 123 & cr & comma)
+
+test not ("x" is among the lines of ("abc" & cr & 123 & cr & comma))
+test not (cr is among the lines of ("abc" & cr & 123 & cr & comma))
+
+teardown
+
+
+setup " <a> is not among the lines of <b> "
+
+test not ("abc" is not among the lines of ("abc" & cr & 123 & cr & comma))
+test not (123 is not among the lines of ("abc" & cr & 123 & cr & comma))
+test not (comma is not among the lines of ("abc" & cr & 123 & cr & comma))
+
+test "x" is not among the lines of ("abc" & cr & 123 & cr & comma)
+test cr is not among the lines of ("abc" & cr & 123 & cr & comma)
+
+teardown
+

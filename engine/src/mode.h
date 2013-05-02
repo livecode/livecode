@@ -45,7 +45,7 @@ void MCModePreMain(void);
 // The hook is called by MCDispatch::savestack and should return IO_NORMAL
 // or IO_ERROR depending on whether the check succeeds or not.
 //
-IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename);
+IO_stat MCModeCheckSaveStack(MCStack *stack, const MCStringRef p_filename);
 
 // This hook is used to work out the appropriate 'environment' string based
 // on the mode and various globals.
@@ -53,7 +53,7 @@ IO_stat MCModeCheckSaveStack(MCStack *stack, const MCString& filename);
 // The hook is called by MCEnvironment::eval and should return the
 // appropriate string constant.
 //
-const char *MCModeGetEnvironment(void);
+MCNameRef MCModeGetEnvironment(void);
 uint32_t MCModeGetEnvironmentType(void);
 
 // This hook is used to work out whether the engine has been licensed.
@@ -183,7 +183,7 @@ void MCModeQueueEvents(void);
 
 // This hook is used to invoke JavaScript in the browser when running in plugin
 // mode.
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script);
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script);
 
 // This hook is used to activate (passive) IME.
 void MCModeActivateIme(MCStack *stack, bool activate);

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -35,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 
 #include "context.h"
+#include "exec.h"
 
 #include "globals.h"
 
@@ -56,6 +56,46 @@ MCCursorRef MCImage::cursor;
 MCCursorRef MCImage::defaultcursor;
 uint2 MCImage::cmasks[MAX_CMASK + 1] = {0x00, 0x01, 0x03, 0x07,
                                         0x0F, 0x1F, 0x3F, 0x7F};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCImage::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_XHOT, Int16, MCImage, XHot)
+	DEFINE_RW_OBJ_PROPERTY(P_YHOT, Int16, MCImage, YHot)
+	DEFINE_RW_OBJ_PROPERTY(P_HOT_SPOT, Point, MCImage, HotSpot)
+	DEFINE_RW_OBJ_PROPERTY(P_FILE_NAME, OptionalString, MCImage, FileName)
+	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCImage, AlwaysBuffer)
+	DEFINE_RW_OBJ_PROPERTY(P_IMAGE_PIXMAP_ID, OptionalUInt16, MCImage, ImagePixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_MASK_PIXMAP_ID, OptionalUInt16, MCImage, MaskPixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_DITHER, Bool, MCImage, DontDither)
+	DEFINE_RW_OBJ_PROPERTY(P_MAGNIFY, Bool, MCImage, Magnify)
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCImage, Size)
+	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_FRAME, UInt16, MCImage, CurrentFrame)
+	DEFINE_RO_OBJ_PROPERTY(P_FRAME_COUNT, Int16, MCImage, FrameCount)
+	DEFINE_RW_OBJ_PROPERTY(P_PALINDROME_FRAMES, Bool, MCImage, PalindromeFrames)
+	DEFINE_RW_OBJ_PROPERTY(P_CONSTANT_MASK, Bool, MCImage, ConstantMask)
+	DEFINE_RW_OBJ_PROPERTY(P_REPEAT_COUNT, Int16, MCImage, RepeatCount)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, UInt16, MCImage, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, UInt16, MCImage, FormattedWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCImage, Text)
+	DEFINE_RW_OBJ_PROPERTY(P_IMAGE_DATA, String, MCImage, ImageData)
+	DEFINE_RW_OBJ_PROPERTY(P_MASK_DATA, String, MCImage, MaskData)
+	DEFINE_RW_OBJ_PROPERTY(P_ALPHA_DATA, String, MCImage, AlphaData)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_RESIZE_QUALITY, InterfaceImageResizeQuality, MCImage, ResizeQuality)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_PAINT_COMPRESSION, InterfaceImagePaintCompression, MCImage, PaintCompression)
+	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCImage, Angle)
+
+};
+
+MCObjectPropertyTable MCImage::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCImage::MCImage()
 {
@@ -528,7 +568,7 @@ void MCImage::setrect(const MCRectangle &nrect)
 		// will reset the rect otherwise it will stay as set, in which case we can avoid
 		// the call to apply_transform() and any costly image loading that might cause
 		if (angle != 0)
-			apply_transform();
+		apply_transform();
 		if ((rect.width != orect.width || rect.height != orect.height) && m_rep != nil)
 		{
 			layer_rectchanged(orect, true);
@@ -564,7 +604,7 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 	MCImageBitmapCheckTransparency(p_bitmap);
 }
 
-Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
 	uint4 size = 0;
@@ -705,10 +745,12 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 			bool t_success = true;
 			
 			uint32_t *t_data_ptr = nil;
-			t_success = nil != (t_data_ptr = (uint32_t*)ep.getbuffer(t_data_size));
+			char *t_buffer = nil;
+			t_success = ep.reserve(t_data_size, t_buffer);
 			
 			if (t_success)
 			{
+				t_data_ptr = (uint32_t*)t_buffer;
 				if (m_rep == nil)
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
@@ -730,7 +772,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 				}
 			}
 			if (t_success)
-				ep.setlength(t_data_size);
+				ep.commit(t_data_size);
 		}
 		break;
 	case P_MASK_DATA:
@@ -742,10 +784,12 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 			bool t_success = true;
 			
 			uint8_t *t_data_ptr = nil;
-			t_success = nil != (t_data_ptr = (uint8_t*)ep.getbuffer(t_data_size));
+			char *t_buffer = nil;
+			t_success = ep . reserve(t_data_size, t_buffer);
 			
 			if (t_success)
 			{
+				t_data_ptr = (uint8_t*)t_buffer;
 				if (m_rep == nil)
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
@@ -778,7 +822,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 				}
 			}
 			if (t_success)
-				ep.setlength(t_data_size);
+				ep.commit(t_data_size);
 		}
 		break;
 	case P_RESIZE_QUALITY:
@@ -813,12 +857,12 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 		ep.setint(angle);
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	uint2 i;
@@ -831,7 +875,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_VISIBLE:
 		{
 			Boolean wasvisible = isvisible();
-			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
+			Exec_stat stat = MCControl::setprop_legacy(parid, p, ep, effective);
 			if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
 			        && !isvisible() && m_rep != nil)
 				closeimage();
@@ -1215,7 +1259,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		}
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -1854,7 +1898,7 @@ bool MCImage::recomputefonts(MCFontRef p_parent_font)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifdef SHARED_STRING
 MCSharedString *MCImage::getclipboardtext(void)
 {
 	MCSharedString *t_data = nil;
@@ -1885,6 +1929,42 @@ MCSharedString *MCImage::getclipboardtext(void)
 
 	return t_data;
 }
+#else
+bool MCImage::getclipboardtext(MCStringRef& r_data)
+{
+	bool t_success = true;
+	
+	recompress();
+	if (getcompression() == F_RLE)
+	{
+		MCImageBitmap *t_bitmap = nil;
+		
+		t_success = lockbitmap(t_bitmap);
+		if (t_success)
+			t_success = MCImageCreateClipboardData(t_bitmap, r_data);
+		unlockbitmap(t_bitmap);
+	}
+	else if (m_rep != nil)
+	{
+		MCImageRepType t_type = m_rep->GetType();
+		void *t_bytes = nil;
+		uindex_t t_size = 0;
+		if (t_type == kMCImageRepResident)
+			static_cast<MCResidentImageRep*>(m_rep)->GetData(t_bytes, t_size);
+		else if (t_type == kMCImageRepVector)
+			static_cast<MCVectorImageRep*>(m_rep)->GetData(t_bytes, t_size);
+		else
+			t_success = false;
+		
+		if (t_success)
+			t_success = MCStringCreateWithNativeChars((const char_t *)t_bytes, t_size, r_data);
+	}
+	else
+		t_success = false;
+	
+	return t_success;
+}
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -2044,7 +2124,7 @@ void MCImage::setrep(MCImageRep *p_rep)
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
 	if (currentframe != 0)
-		setframe(currentframe);
+	setframe(currentframe);
 
 	notifyneeds(false);
 }

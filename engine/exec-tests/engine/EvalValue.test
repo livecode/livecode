@@ -1,0 +1,23 @@
+setup
+
+local tVal
+// variable value
+put 1 into tValue
+test value("tValue") is 1
+
+// array values
+put 1 into tValue["a"]
+put 2 into tValue["b"]
+test value("tValue") is an array
+
+// arithmetic
+test value("1 + 4") is 5
+// string operations
+test value("abc && def") is "abc def"
+// function call
+test value("sum(1, 2, 3)") is 6
+
+// evaluation within the current object
+test value("the long id of me") is the long id of me
+
+teardown

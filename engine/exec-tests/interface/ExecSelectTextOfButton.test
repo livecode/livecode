@@ -1,0 +1,15 @@
+setup
+
+create button "SelTest"
+
+set the style of button "SelTest" to "menu"
+
+set the menuMode of button "SelTest" to "Option"
+
+set the text of button "SelTest" to "bar" & CR & "foo"
+
+select line 2 of button "SelTest"
+
+test the label of button "SelTest" is "foo"
+
+teardown

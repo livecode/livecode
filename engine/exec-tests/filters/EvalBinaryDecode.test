@@ -1,0 +1,64 @@
+setup "conversion tests"
+
+local tVar = "initial value"
+test binaryDecode("x", "abcd", tVar) is 0
+test tVar is "initial value"
+
+test binaryDecode("a3", "abcd", tVar) is 1
+test tVar is "abc"
+
+test binaryDecode("A3", "ab cd", tVar) is 1
+test tVar is "ab"
+
+test binaryDecode("b16", "abcd", tVar) is 1
+test tVar is "10000110" & "01000110"
+
+test binaryDecode("B16", "abcd", tVar) is 1
+test tVar is "01100001" & "01100010"
+
+test binaryDecode("h4", "abcd", tVar) is 1
+test tVar is "16" & "26"
+
+test binaryDecode("H4", "abcd", tVar) is 1
+test tVar is "61" & "62"
+
+test binaryDecode("c1", numtoByte(255), tVar) is 1
+test tVar is -1
+
+test binaryDecode("C1", numtoByte(255), tVar) is 1
+test tVar is 255
+
+test binaryDecode("s1", numtoByte(255)&numToByte(255), tVar) is 1
+test tVar is -1
+
+test binaryDecode("S1", numtoByte(255)&numToByte(255), tVar) is 1
+test tVar is 65535
+
+test binaryDecode("i1", numtoByte(255)&numToByte(255)&numtoByte(255)&numToByte(255), tVar) is 1
+test tVar is -1
+
+test binaryDecode("I1", numtoByte(255)&numToByte(255)&numtoByte(255)&numToByte(255), tVar) is 1
+test tVar is 4294967295
+
+test binaryDecode("n1", numtoByte(255)&numToByte(0), tVar) is 1
+test tVar is -256
+
+test binaryDecode("m1", numtoByte(255)&numToByte(0), tVar) is 1
+test tVar is 65280
+
+test binaryDecode("N1", numtoByte(255)&numToByte(255)&numtoByte(0)&numToByte(0), tVar) is 1
+test tVar is -65536
+
+test binaryDecode("M1", numtoByte(255)&numToByte(255)&numtoByte(0)&numToByte(0), tVar) is 1
+test tVar is 4294901760
+
+teardown
+
+setup "error tests"
+
+local tVar
+test-error binaryDecode("a*", "abcd")
+test-error binaryDecode("<>?:@~P{}", "abcd")
+test-error binaryDecode("a3a3", "abcdef", tVar)
+
+teardown

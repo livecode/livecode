@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -33,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 
 #include "globals.h"
+#include "exec.h"
 
 MCStacknode::~MCStacknode()
 {}
@@ -262,13 +262,13 @@ MCStack *MCStacklist::getstack(uint2 n)
 	return tptr->getstack();
 }
 
-void MCStacklist::stackprops(MCExecPoint &ep, Properties p)
+bool MCStacklist::stackprops(MCExecContext& ctxt, Properties p_property, MCListRef& r_list)
 {
-	ep.clear();
-	if (stacks == NULL)
-		return;
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	MCStacknode *tptr = stacks;
-	MCExecPoint ep2(ep);
 
 	do
 	{
@@ -276,12 +276,18 @@ void MCStacklist::stackprops(MCExecPoint &ep, Properties p)
 
 		if (stackptr->getparent()->gettype() != CT_BUTTON && stackptr != (MCStack *)MCtooltip)
 		{
-			stackptr->getprop(0, p, ep2, True);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, tptr == stacks);
+			MCAutoStringRef t_string;
+			stackptr->getstringprop(ctxt, 0, p_property, True, &t_string);
+			if (ctxt.HasError())
+				return false;
+			if (!MCListAppend(*t_list, *t_string))
+				return false;
 		}
 		tptr = tptr->next();
 	}
 	while (tptr != stacks);
+
+	return MCListCopy(*t_list, r_list);
 }
 
 Boolean MCStacklist::doaccelerator(KeySym key)

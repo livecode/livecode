@@ -43,6 +43,41 @@ typedef struct
 QTEffect;
 #endif
 
+struct MCMultimediaTrackList;
+struct MCMultimediaQTVRConstraints;
+struct MCMultimediaQTVRNode;
+struct MCMultimediaQTVRHotSpot;
+
+enum MCMultimediaQTVRHotSpotType
+{
+	kMCQTVRHotSpotLinkType,
+	kMCQTVRHotSpotURLType,
+	kMCQTVRHotSpotUndefinedType,
+};
+
+enum MCMultimediaQTVRNodeType
+{
+	kMCQTVRNodePanoramaType,
+	kMCQTVRNodeObjectType,
+};
+
+typedef uint4 MCPlayerMediaTypeSet;
+enum
+{
+	PLAYER_MEDIA_TYPE_VIDEO_BIT = 0,
+	PLAYER_MEDIA_TYPE_VIDEO = 1 << PLAYER_MEDIA_TYPE_VIDEO_BIT,
+	PLAYER_MEDIA_TYPE_AUDIO_BIT = 1,
+	PLAYER_MEDIA_TYPE_AUDIO = 1 << PLAYER_MEDIA_TYPE_AUDIO_BIT,
+	PLAYER_MEDIA_TYPE_TEXT_BIT = 2,
+	PLAYER_MEDIA_TYPE_TEXT = 1 << PLAYER_MEDIA_TYPE_TEXT_BIT,
+	PLAYER_MEDIA_TYPE_QTVR_BIT = 3,
+	PLAYER_MEDIA_TYPE_QTVR = 1 << PLAYER_MEDIA_TYPE_QTVR_BIT,
+	PLAYER_MEDIA_TYPE_SPRITE_BIT = 4,
+	PLAYER_MEDIA_TYPE_SPRITE = 1 << PLAYER_MEDIA_TYPE_SPRITE_BIT,
+	PLAYER_MEDIA_TYPE_FLASH_BIT = 4,
+	PLAYER_MEDIA_TYPE_FLASH = 1 << PLAYER_MEDIA_TYPE_FLASH_BIT,
+};
+
 class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
@@ -106,6 +141,8 @@ class MCPlayer : public MCControl
 
 #endif
 
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCPlayer();
 	MCPlayer(const MCPlayer &sref);
@@ -113,6 +150,8 @@ public:
 	virtual ~MCPlayer();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual void open();
 	virtual void close();
 	virtual Boolean kdown(const char *string, KeySym key);
@@ -125,8 +164,8 @@ public:
 	virtual Boolean doubleup(uint2 which);
 	virtual void setrect(const MCRectangle &nrect);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 
 	// MW-2011-09-23: [[ Bug ]] Implement buffer / unbuffer at the point of
 	//   selection to stop redraw issues.
@@ -152,7 +191,7 @@ public:
 	// MW-2005-08-02: Return the rectangle of the player that bounds the active area
 	MCRectangle getactiverect(void);
 
-	void getversion(MCExecPoint &ep);
+	bool getversion(MCStringRef& r_string);
 	void freetmp();
 	uint4 getduration();    //get movie duration/length
 	uint4 gettimescale();  //get movie time scale
@@ -180,20 +219,43 @@ public:
 	Boolean setenabledtracks(const MCString &s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
-	void geteffectlist(MCExecPoint &ep);
+	bool geteffectlist(MCStringRef& r_string);
 	void recordsound(char *fname);
-	void getrecordloudness(MCExecPoint &ep);
-	void getrecordcompressionlist(MCExecPoint &ep);
+	bool getrecordloudness(integer_t& r_loudness);
+	bool getrecordcompressionlist(MCStringRef& r_string);
+
+	//////////////////////////////
+	// QT ACCESSORS
+
+	MCPlayerMediaTypeSet getmediatypes();
+	uint2 getcurrentnode();
+	bool changecurrentnode(uint2 nodeid);
+	real8 getpan();
+	bool changepan(real8 pan);
+	real8 gettilt();
+	bool changetilt(real8 tilt);
+	real8 getzoom();
+	bool changezoom(real8 zoom);
+	bool gettrack(uindex_t index, uint4& id, MCStringRef& r_name, uint4& offset, uint4& duration);
+	void getqtvrconstraints(uint1 index, real4& minrange, real4& maxrange);
+	uint2 getnodecount();
+	bool getnode(uindex_t index, uint2 &id, MCMultimediaQTVRNodeType &type);
+	uint2 gethotspotcount();
+	bool gethotspot(uindex_t index, uint2 &id, MCMultimediaQTVRHotSpotType &type);
+	void setmoviecontrollerid(int4 p_id);
+	uint2 gettrackcount();
+
+	//////////////////////////////
 
 	// MW-2005-05-15: Augment call with extra title field for consistency
-	void stdrecorddlg(MCExecPoint& ep, const char *p_title, Boolean sheet);
+	bool stdrecorddlg(MCStringRef &r_result);
 	void stoprecording();
 
 	// MW-2011-09-23: Ensures the buffering state is consistent with current flags
 	//   and such.
 	void syncbuffering(MCContext *dc);
 
-	Boolean stdeffectdlg(MCExecPoint &ep, const char *p_title, Boolean sheet);
+	bool stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result);
 
 #ifdef _LINUX_DESKTOP
 	const char *getcommand()
@@ -286,7 +348,15 @@ public:
 		scale = s;
 	}
 	Boolean prepare(const char *options);
+	bool prepare(MCStringRef p_options)
+	{
+		return True == prepare(MCStringGetCString(p_options));
+	}
 	Boolean playstart(const char *options);
+	bool playstart(MCStringRef p_options)
+	{
+		return True == playstart(MCStringGetCString(p_options));
+	}
 	Boolean playpause(Boolean on);
 	void playstepforward();
 	void playstepback();
@@ -317,6 +387,68 @@ public:
 	{
 		lasttime = ltime;
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(void);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetFileName(MCExecContext& ctxt, MCStringRef& r_name);
+	void SetFileName(MCExecContext& ctxt, MCStringRef p_name);
+	void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
+	void SetDontRefresh(MCExecContext& ctxt, bool setting);
+	void GetCurrentTime(MCExecContext& ctxt, uinteger_t& r_time);
+	void SetCurrentTime(MCExecContext& ctxt, uinteger_t p_time);
+	void GetDuration(MCExecContext& ctxt, uinteger_t& r_duration);
+	void GetLooping(MCExecContext& ctxt, bool& r_setting);
+	void SetLooping(MCExecContext& ctxt, bool setting);
+	void GetPaused(MCExecContext& ctxt, bool& r_setting);
+	void SetPaused(MCExecContext& ctxt, bool setting);
+	void GetAlwaysBuffer(MCExecContext& ctxt, bool& r_setting);
+	void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
+	void GetPlayRate(MCExecContext& ctxt, double& r_rate);
+	void SetPlayRate(MCExecContext& ctxt, double p_rate);
+	void GetStartTime(MCExecContext& ctxt, uinteger_t*& r_time);
+	void SetStartTime(MCExecContext& ctxt, uinteger_t* p_time);
+	void GetEndTime(MCExecContext& ctxt, uinteger_t*& r_time);
+	void SetEndTime(MCExecContext& ctxt, uinteger_t* p_time);
+	void GetShowBadge(MCExecContext& ctxt, bool& r_setting);
+	void SetShowBadge(MCExecContext& ctxt, bool setting);
+	void GetShowController(MCExecContext& ctxt, bool& r_setting);
+	void SetShowController(MCExecContext& ctxt, bool setting);
+	void GetPlaySelection(MCExecContext& ctxt, bool& r_setting);
+	void SetPlaySelection(MCExecContext& ctxt, bool setting);
+	void GetShowSelection(MCExecContext& ctxt, bool& r_setting);
+	void SetShowSelection(MCExecContext& ctxt, bool setting);
+	void GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks);
+	void SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks);
+	void GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale);
+	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetMovieControllerId(MCExecContext& ctxt, integer_t& r_id);
+	void SetMovieControllerId(MCExecContext& ctxt, integer_t p_id);
+	void GetPlayLoudness(MCExecContext& ctxt, uinteger_t& r_loudness);
+	void SetPlayLoudness(MCExecContext& ctxt, uinteger_t p_loudness);
+	void GetTrackCount(MCExecContext& ctxt, uinteger_t& r_count);
+	void GetMediaTypes(MCExecContext& ctxt, intset_t& r_types);
+	void GetCurrentNode(MCExecContext& ctxt, uinteger_t& r_node);
+	void SetCurrentNode(MCExecContext& ctxt, uinteger_t p_node);
+	void GetPan(MCExecContext& ctxt, double& r_pan);
+	void SetPan(MCExecContext& ctxt, double p_pan);
+	void GetTilt(MCExecContext& ctxt, double& r_tilt);
+	void SetTilt(MCExecContext& ctxt, double p_tilt);
+	void GetZoom(MCExecContext& ctxt, double& r_zoom);
+	void SetZoom(MCExecContext& ctxt, double p_zoom);
+
+	void GetAVITracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+	void GetX11Tracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+	void GetQTTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+	void GetTracks(MCExecContext& ctxt, MCStringRef& r_tracks);
+
+	void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);
+	void GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes);
+	void GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots);
 
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);

@@ -567,6 +567,9 @@ void X_main_loop(void)
 
 int main(int argc, char *argv[], char *envp[])
 {
+	if (!MCInitialize())
+		exit(-1);
+
 	if (!X_init(argc, argv, envp))
 		exit(-1);
 	
@@ -574,6 +577,8 @@ int main(int argc, char *argv[], char *envp[])
 	
 	int t_exit_code;
 	t_exit_code = X_close();
+
+	MCFinalize();
 	
 	exit(t_exit_code);
 }

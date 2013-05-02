@@ -241,7 +241,6 @@ public:
 
 	virtual uint2 getthemeid();
 	virtual uint2 getthemefamilyid();
-	virtual const char *getname();
 	virtual int4 getmetric(Widget_Metric wmetric);
 	virtual Boolean iswidgetsupported(Widget_Type wtype);
 	virtual int4 getwidgetmetric(const MCWidgetInfo &winfo,Widget_Metric wmetric);

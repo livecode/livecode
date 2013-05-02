@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -686,13 +685,13 @@ Exec_stat MCField::getparagraphmacunicodestyles(MCExecPoint& ep, MCParagraph *p_
 	ByteCount t_stream_size;
 	if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, 0, NULL, &t_stream_size) == noErr)
 	{
-		void *t_stream;
-		t_stream = ep . getbuffer(t_stream_size);
+		char *t_stream;
+		/* UNCHECKED */ ep . reserve(t_stream_size, t_stream);
 		if (t_stream != NULL)
 		{
 			if (ATSUFlattenStyleRunsToStream(kATSUDataStreamUnicodeStyledText, 0, t_run_count, t_runs, t_style_count, t_styles, t_stream_size, t_stream, &t_stream_size) != noErr)
 				t_stream_size = 0;
-			ep . setlength(t_stream_size);
+			ep . commit(t_stream_size);
 		}
 	}
 	

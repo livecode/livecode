@@ -363,46 +363,46 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 		s_monitor_count = 0;
 	}
 	
-	if (Xinerama_available && XineramaIsActive ( dpy ) )
-	{
-
-		bool error = false;
-
-		int4 t_monitor_count = 0;
-		XineramaScreenInfo *monitors = XineramaQueryScreens (dpy , &t_monitor_count );
-		
-		t_monitor_displays = new MCDisplay[t_monitor_count];
-
-		for (uint4 a = 0 ; a < t_monitor_count; a++)
+		if (Xinerama_available && XineramaIsActive ( dpy ) )
 		{
-			
-			t_monitor_displays[a] . index = a;
 
-			t_monitor_displays[a] . viewport . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . viewport . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . viewport . width = monitors[a] . width ;
-			t_monitor_displays[a] . viewport . height = monitors[a] . height ;
+			bool error = false;
+
+			int4 t_monitor_count = 0;
+			XineramaScreenInfo *monitors = XineramaQueryScreens (dpy , &t_monitor_count );
 			
-			t_monitor_displays[a] . workarea . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . workarea . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . workarea . width = monitors[a] . width ;
-			t_monitor_displays[a] . workarea . height = monitors[a] . height ;
+			t_monitor_displays = new MCDisplay[t_monitor_count];
+
+			for (uint4 a = 0 ; a < t_monitor_count; a++)
+			{
+				
+				t_monitor_displays[a] . index = a;
+
+				t_monitor_displays[a] . viewport . x = monitors[a] . x_org ;
+				t_monitor_displays[a] . viewport . y = monitors[a] . y_org ;
+				t_monitor_displays[a] . viewport . width = monitors[a] . width ;
+				t_monitor_displays[a] . viewport . height = monitors[a] . height ;
+				
+				t_monitor_displays[a] . workarea . x = monitors[a] . x_org ;
+				t_monitor_displays[a] . workarea . y = monitors[a] . y_org ;
+				t_monitor_displays[a] . workarea . width = monitors[a] . width ;
+				t_monitor_displays[a] . workarea . height = monitors[a] . height ;
+			}
+			
+			XFree(monitors);
+			s_monitor_displays = t_monitor_displays ;
+			s_monitor_count = t_monitor_count;
 		}
-		
-		XFree(monitors);
-		s_monitor_displays = t_monitor_displays ;
-		s_monitor_count = t_monitor_count;
-	}
-	else
-	{
-		t_monitor_displays = new MCDisplay[1];
-		MCU_set_rect(t_monitor_displays[0] . viewport, 0, 0, getwidth(), getheight());
-		MCU_set_rect(t_monitor_displays[0] . workarea, 0, 0, getwidth(), getheight());
-		t_monitor_displays[0] . index = 0 ;
-		s_monitor_count = 1 ;
-		s_monitor_displays = t_monitor_displays ;
+		else
+		{
+			t_monitor_displays = new MCDisplay[1];
+			MCU_set_rect(t_monitor_displays[0] . viewport, 0, 0, getwidth(), getheight());
+			MCU_set_rect(t_monitor_displays[0] . workarea, 0, 0, getwidth(), getheight());
+			t_monitor_displays[0] . index = 0 ;
+			s_monitor_count = 1 ;
+			s_monitor_displays = t_monitor_displays ;
 
-	}
+		}
 	
 	if (s_monitor_count == 1)
 	{
@@ -412,7 +412,7 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	{
 		apply_partial_struts();
 	}
-
+	
 	p_displays = s_monitor_displays;
 	
 	return (s_monitor_count);
@@ -431,12 +431,11 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 
 
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
-	MCresult->store(ep, False);
 	MCdefaultstackptr->domess(LIST_PRINTER_SCRIPT);
-	MCresult->fetch(ep);
+	MCresult->eval(false, (MCValueRef&)r_printers);
+	return true;
 }
 
 

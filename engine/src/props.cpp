@@ -14,6 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#ifdef OLD_EXEC
 typedef struct _PropList
 {
 	const char *token;
@@ -565,15 +566,16 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid)
 	default:
 		return ES_NORMAL;
 	}
-	MCVariableValue *v = new MCVariableValue;
-	v->assign_new_array(64);
+	MCAutoArrayRef t_array;
+	/* UNCHECKED */ MCArrayCreateMutable(&t_array);
 	MCerrorlock++;
 	while (tablesize--)
 	{
 		getprop(parid, (Properties)table[tablesize].value, ep, False);
-		v->store_element(ep, table[tablesize].token);
+		ep.storearrayelement_cstring(*t_array, table[tablesize].token);
 	}
 	MCerrorlock--;
-	ep.setarray(v, True);
+	ep.setvalueref(*t_array);
 	return ES_NORMAL;
 }
+#endif

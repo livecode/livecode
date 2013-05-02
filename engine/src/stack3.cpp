@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -258,13 +257,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		linkatts = new Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_string(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_read_stringref(linkatts->colorname, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_string(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_string(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
@@ -619,13 +618,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_LINK_ATTS)
 	{
 		if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_write_string(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_write_stringref(linkatts->colorname, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_string(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_string(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
@@ -757,7 +756,7 @@ Exec_stat MCStack::resubstack(char *data)
 
 			tsub->appendto(substacks);
 			tsub->parent = this;
-			tsub->message_with_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
+			tsub->message_with_valueref_args(MCM_main_stack_changed, t_old_mainstack -> getname(), getname());
 		}
 		else
 		{
@@ -853,7 +852,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 		t_object = findobjectbyid(inid);
 		if (t_object != nil && (type == CT_LAYER && t_object -> gettype() > CT_CARD || t_object -> gettype() == type))
 			return (MCControl *)t_object;
-		
+
 		MCControl *tobj = controls;
 		do
 		{
@@ -878,7 +877,7 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 				cacheobjectbyid(foundobj);
 				return foundobj;
 			}
-			
+
 			tobj = (MCControl *)tobj->next();
 		}
 		while (tobj != controls);
@@ -1182,13 +1181,23 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-MCStack *MCStack::findstackname(const MCString &s)
+bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
 {
-	MCStack *foundstk;
-	if ((foundstk = findsubstackname(s)) != NULL)
-		return foundstk;
+	if (nil != (r_stack = findsubstackname(MCNameGetOldString(p_name))))
+		return true;
 	else
-		return MCdispatcher->findstackname(s);
+		return nil != (r_stack = MCdispatcher->findstackname(MCNameGetOldString(p_name)));
+}
+
+/* LEGACY */ MCStack *MCStack::findstackname(const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	MCStack *t_stack;
+	if (!findstackname(*t_name, t_stack))
+		return nil;
+
+	return t_stack;
 }
 
 MCStack *MCStack::findsubstackname(const MCString &s)
@@ -1432,7 +1441,12 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString &s)
+/* WRAPPER */ MCObject *MCStack::getobjname(Chunk_term type, MCStringRef p_name)
+{
+	return getobjname(type, MCStringGetOldString(p_name));
+}
+
+MCObject *MCStack::getobjname(Chunk_term type, const MCString& s)
 {
 	MCObject *optr = NULL;
 	uint4 iid;
@@ -1518,10 +1532,7 @@ void MCStack::createmenu(MCControl *nc, uint2 width, uint2 height)
 
 void MCStack::menuset(uint2 button, uint2 defy)
 {
-	char position[U2L];
-	sprintf(position, "%d", button);
-	MCButton *bptr = (MCButton *)curcard->getchild(CT_EXPRESSION, position,
-	                 CT_BUTTON, CT_UNDEFINED);
+	MCButton *bptr = (MCButton *)curcard->getnumberedchild(button, CT_BUTTON, CT_UNDEFINED);
 	if (bptr == NULL)
 	{
 		lasty = defy;
@@ -1866,6 +1877,11 @@ Boolean MCStack::findone(MCExecPoint &ep, Find_mode fmode,
 			}
 		return True;
 	}
+}
+/* WRAPPER */
+void MCStack::find(MCExecPoint &ep, int p_mode, MCStringRef p_needle, MCChunk *p_target)
+{
+	find(ep, (Find_mode)p_mode, MCStringGetOldString(p_needle), p_target);
 }
 
 void MCStack::find(MCExecPoint &ep, Find_mode fmode,

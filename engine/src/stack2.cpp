@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -442,8 +441,8 @@ void MCStack::extraclose(bool p_force)
 		setextendedstate(false, ECS_ISEXTRAOPENED);
 		opened++;
 		MCObject::close();
+		}
 	}
-}
 
 Window MCStack::getwindow()
 {
@@ -670,7 +669,7 @@ Boolean MCStack::checkid(uint4 cardid, uint4 controlid)
 	return False;
 }
 
-IO_stat MCStack::saveas(const MCString &fname)
+IO_stat MCStack::saveas(const MCStringRef p_fname)
 {
 	Exec_stat stat = curcard->message(MCM_save_stack_request);
 	if (stat == ES_NOT_HANDLED || stat == ES_PASS)
@@ -678,7 +677,7 @@ IO_stat MCStack::saveas(const MCString &fname)
 		MCStack *sptr = this;
 		if (!MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)sptr->parent;
-		MCdispatcher->savestack(sptr, fname);
+		MCdispatcher->savestack(sptr, p_fname);
 	}
 	return IO_NORMAL;
 }
@@ -889,7 +888,7 @@ int32_t MCStack::getnextscroll()
 #ifdef _MACOSX
 	MCControl *mbptr;
 	if (!(state & CS_EDIT_MENUS) && hasmenubar()
-	        && (mbptr = curcard->getchild(CT_EXPRESSION, MCNameGetOldString(getmenubar()), CT_GROUP, CT_UNDEFINED)) != NULL
+	        && (mbptr = curcard->getchild(CT_EXPRESSION, MCNameGetString(getmenubar()), CT_GROUP, CT_UNDEFINED)) != NULL
 	        && mbptr->getopened() && mbptr->isvisible())
 	{
 		MCRectangle r = mbptr->getrect();
@@ -1207,8 +1206,152 @@ MCObject *MCStack::getAV(Chunk_term etype, const MCString &s, Chunk_term otype)
 	return tobj;
 }
 
-MCCard *MCStack::getchild(Chunk_term etype, const MCString &s,
-                          Chunk_term otype)
+MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype)
+{
+	if (otype != CT_CARD)
+		return NULL;
+
+	uint2 num = 0;
+
+	if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+
+	// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
+	MCCard *cptr;
+	if (editing != NULL && savecards != NULL)
+		cptr = savecards;
+	else
+		cptr = cards;
+
+	MCCard *found = NULL;
+	if (etype == CT_EXPRESSION && MCStringIsEqualToCString(p_expression, "window", kMCCompareCaseless))
+		etype = CT_THIS;
+	switch (etype)
+	{
+	case CT_THIS:
+		if (curcard != NULL)
+			return curcard;
+		return cards;
+	case CT_FIRST:
+	case CT_SECOND:
+	case CT_THIRD:
+	case CT_FOURTH:
+	case CT_FIFTH:
+	case CT_SIXTH:
+	case CT_SEVENTH:
+	case CT_EIGHTH:
+	case CT_NINTH:
+	case CT_TENTH:
+		num = etype - CT_FIRST;
+		break;
+	case CT_NEXT:
+		cptr = curcard;
+		do
+		{
+			cptr = cptr->next();
+			if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
+				return cptr;
+		}
+		while (cptr != curcard);
+		return NULL;
+	case CT_PREV:
+		cptr = curcard;
+		do
+		{
+			cptr = cptr->prev();
+			if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
+				return cptr;
+		}
+		while (cptr != curcard);
+		return NULL;
+	case CT_LAST:
+	case CT_MIDDLE:
+	case CT_ANY:
+		count(otype, CT_UNDEFINED, NULL, num);
+		switch (etype)
+		{
+		case CT_LAST:
+			num--;
+			break;
+		case CT_MIDDLE:
+			num >>= 1;
+			break;
+		case CT_ANY:
+			num = MCU_any(num);
+			break;
+		default:
+			break;
+		}
+		break;
+	case CT_ID:
+		uint4 inid;
+		if (MCU_stoui4(p_expression, inid))
+		{
+		
+			// OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
+			MCCard *t_cards;
+			if (editing != NULL && savecards != NULL)
+				t_cards = savecards;
+			else
+				t_cards = cards;
+		
+			// OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
+			if (editing == NULL)
+				found = curcard -> findid(CT_CARD, inid, True);
+			else
+				found = NULL;
+
+			if (found == NULL)
+				do
+				{
+					found = cptr->findid(CT_CARD, inid, True);
+					if (found != NULL
+							&& found->countme(backgroundid, (state & CS_MARKED) != 0))
+						break;
+					cptr = cptr->next();
+				}
+				while (cptr != t_cards);
+		}
+		return found;
+	case CT_EXPRESSION:
+		if (MCU_stoui2(p_expression, num))
+		{
+			if (num < 1)
+				return NULL;
+			num--;
+			break;
+		}
+		else
+		{
+			do
+			{
+				found = cptr->findname(otype, MCStringGetOldString(p_expression));
+				if (found != NULL
+				        && found->countme(backgroundid, (state & CS_MARKED) != 0))
+					break;
+				cptr = cptr->next();
+			}
+			while (cptr != cards);
+		}
+		return found;
+	default:
+		return NULL;
+	}
+	do
+	{
+		if (cptr->countme(backgroundid, (state & CS_MARKED) != 0) && num-- == 0)
+			return cptr;
+		cptr = cptr->next();
+	}
+	while (cptr != cards);
+	return NULL;
+}
+
+#ifdef OLD_EXEC
+MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 {
 	if (otype != CT_CARD)
 		return NULL;
@@ -1351,6 +1494,7 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s,
 	while (cptr != cards);
 	return NULL;
 }
+#endif
 
 MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
                                 Chunk_term otype)
@@ -1373,8 +1517,7 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 	case CT_THIS:
 		if  (editing != 0)
 			return editing;
-		return (MCGroup *)curcard->getchild(CT_FIRST, MCnullmcstring,
-		                                    otype, CT_BACKGROUND);
+		return (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, otype, CT_BACKGROUND);
 	case CT_FIRST:
 	case CT_SECOND:
 	case CT_THIRD:
@@ -1389,8 +1532,7 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 		break;
 	case CT_NEXT:
 		{
-			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, MCnullmcstring,
-			                otype, CT_BACKGROUND);
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, otype, CT_BACKGROUND);
 			while (True)
 			{
 				gptr = gptr->next();
@@ -1401,8 +1543,7 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 		break;
 	case CT_PREV:
 		{
-			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, MCnullmcstring,
-			                otype, CT_BACKGROUND);
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, otype, CT_BACKGROUND);
 			while (True)
 			{
 				gptr = gptr->prev();
@@ -1550,7 +1691,7 @@ void MCStack::setwindowname()
 	if (title == NULL)
 	{
 		MCExecPoint ep;
-		ep . setnameref_unsafe(getname());
+		ep . setvalueref(getname());
 		ep . nativetoutf8();
 		t_utf8_name = ep . getsvalue() . clone();
 		tptr = t_utf8_name;
@@ -1562,7 +1703,7 @@ void MCStack::setwindowname()
 	if (editing != NULL)
 	{
 		MCExecPoint ep;
-		editing->names(P_SHORT_NAME, ep, 0);
+		editing->names_old(P_SHORT_NAME, ep, 0);
 		ep.nativetoutf8();
 		char *bgname = ep.getsvalue().clone();
 		newname = new char[strlen(tptr) + strlen(MCbackgroundstring)
@@ -2116,8 +2257,8 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 			resetcursor(True);
 
 		// Only enter a modal loop if we are making local windows.
-		if ((mode == WM_MODAL || mode == WM_SHEET) &&
-			MCModeMakeLocalWindows())
+		// the rev supplied answer/ask dialogs.
+		if (mode == WM_MODAL || mode == WM_SHEET)
 		{
 			// If opening the dialog failed for some reason, this will return false.
 			if (mode_openasdialog())

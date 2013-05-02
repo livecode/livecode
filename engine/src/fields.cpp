@@ -388,7 +388,7 @@ bool MCField::nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only)
 	// Ensure there is room in ep for the data. The size of the data is the
 	// same as the original, so just use getpgsize().
 	char *t_data;
-	t_data = ep . getbuffer(getpgsize(t_paragraphs));
+	/* UNCHECKED */ ep . reserve(getpgsize(t_paragraphs), t_data);
 	
 	// Keep track of how much of the buffer we've used.
 	uint32_t t_length;
@@ -408,7 +408,7 @@ bool MCField::nativizetext(uint4 parid, MCExecPoint& ep, bool p_ascii_only)
 	while(t_paragraph != t_paragraphs);
 	
 	// Update the length of the ep.
-	ep . setlength(t_length);
+	ep . commit(t_length);
 	
 	return t_has_unicode;
 }
@@ -937,18 +937,18 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			ep.setrectangle(0, 0, 0, 0);
 		break;
 	case P_LINK_TEXT:
-		ep.setsvalue(sptr->getlinktext(si));
+		ep.setvalueref_nullable(sptr->getlinktext(si));
 		break;
 	case P_IMAGE_SOURCE:
-		ep.setsvalue(sptr->getimagesource(si));
+		ep.setvalueref_nullable(sptr->getimagesource(si));
 		break;
 	// MW-2012-01-06: [[ Block Metadata ]] Handle fetching the metadata about a given
 	//   index.
 	case P_METADATA:
 		if (is_line_chunk)
-			ep.setnameref_unsafe(sptr -> getmetadata());
+			ep.setvalueref_nullable(sptr -> getmetadata());
 		else
-			ep.setsvalue(sptr->getmetadataatindex(si));
+			ep.setvalueref_nullable(sptr->getmetadataatindex(si));
 		break;
 	case P_VISITED:
 		ep.setboolean(sptr->getvisited(si));
@@ -1446,11 +1446,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	MCColor tcolor;
 	tcolor.red = tcolor.green = tcolor.blue = 0;
 	MCColor *color = &tcolor;
-	char *cname = NULL;
 	int2 shift = 0;
 	Boolean all = False;
 	Boolean newstate;
 	void *t_value;
+
+	MCAutoStringRef t_string_value;
 
 	// If true, it means process this prop set as a paragraph style.
 	bool t_is_para_attr;
@@ -1469,7 +1470,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	case P_FORE_COLOR:
 		if (!s.getlength())
 			color = NULL;
-		else if (!MCscreen->parsecolor(s, &tcolor, &cname))
+		else if (!MCscreen->parsecolor(s, &tcolor, nil))
 			return ES_ERROR;
 		t_value = color;
 		break;
@@ -1532,8 +1533,8 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			break;
 		}
 	case P_LINK_TEXT:
-		fname = s.clone();
-		t_value = (void *)fname;
+		/* UNCHECKED */ ep . copyasstringref(&t_string_value);
+		t_value = (void *)*t_string_value;
 		break;
 	// MW-2012-01-26: [[ FlaggedField ]] Set the flagged status of the range.
 	case P_FLAGGED:
@@ -1654,7 +1655,6 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		pgptr = pgptr->next();
 	}
 	while(ei > 0 && t_stat == ES_NORMAL);
-	delete cname;
 	delete fname;
 	if (t_need_layout)
 	{
@@ -1916,48 +1916,49 @@ void MCField::hiliteline(int2 x, int2 y)
 	}
 }
 
-void MCField::locchar(MCExecPoint &ep, Boolean click)
+bool MCField::locchar(Boolean click, MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (locmark(False, False, click, True, True, si, ei))
-		returntext(ep, si, ei);
-	else
-		ep.clear();
-}
-void MCField::loccharchunk(MCExecPoint &ep, Boolean click)
-{
-	int4 si, ei;
-	if (locmark(False, False, click, True, True, si, ei))
-		returnchunk(ep, si, ei);
-	else
-		ep.clear();
+		return returntext(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::locchunk(MCExecPoint &ep, Boolean click)
+bool MCField::loccharchunk(Boolean click, MCStringRef& r_string)
+{
+	int4 si, ei;
+	if (locmark(False, False, click, True, True, si, ei))
+		return returnchunk(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCField::locchunk(Boolean click, MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (locmark(False, True, click, True, True, si, ei))
-		returnchunk(ep, si, ei);
-	else
-		ep.clear();
+		return returnchunk(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::locline(MCExecPoint &ep, Boolean click)
+bool MCField::locline(Boolean click, MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (locmark(True, True, click, True, True, si, ei))
-		returnline(ep, si, ei);
-	else
-		ep.clear();
+		return returnline(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::loctext(MCExecPoint &ep, Boolean click)
+bool MCField::loctext(Boolean click, MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (locmark(False, True, click, True, True, si, ei))
-		returntext(ep, si, ei);
-	else
-		ep.clear();
+		return returntext(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
@@ -2020,40 +2021,40 @@ Boolean MCField::locmark(Boolean wholeline, Boolean wholeword,
 	return True;
 }
 
-void MCField::foundchunk(MCExecPoint &ep)
+bool MCField::foundchunk(MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (foundmark(False, True, si, ei))
-		returnchunk(ep, si, ei);
-	else
-		ep.clear();
+		return returnchunk(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::foundline(MCExecPoint &ep)
+bool MCField::foundline(MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (foundmark(False, True, si, ei))
-		returnline(ep, si, ei);
-	else
-		ep.clear();
+		return returnline(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::foundloc(MCExecPoint &ep)
+bool MCField::foundloc(MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (foundmark(False, True, si, ei))
-		returnloc(ep, si);
-	else
-		ep.clear();
+		return returnloc(si, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCField::foundtext(MCExecPoint &ep)
+bool MCField::foundtext(MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (foundmark(False, True, si, ei))
-		returntext(ep, si, ei);
-	else
-		ep.clear();
+		return returntext(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei)
@@ -2081,58 +2082,81 @@ Boolean MCField::foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei
 	return True;
 }
 
-void MCField::selectedchunk(MCExecPoint &ep)
+bool MCField::selectedchunk(MCStringRef& r_string)
 {
 	int4 si, ei;
 	if (selectedmark(False, si, ei, False, False))
-		returnchunk(ep, si, ei);
+		return returnchunk(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCField::selectedline(MCStringRef& r_string)
+{
+	int4 si, ei;
+	if (selectedmark(False, si, ei, False, False))
+		return returnline(si, ei, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCField::selectedloc(MCStringRef& r_string)
+{
+	int4 si, ei;
+	if (selectedmark(False, si, ei, False, False))
+		return returnloc(si, r_string);
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+void MCField::selectedtext(MCExecPoint& ep)
+{
+	MCAutoStringRef t_string;
+	if (selectedtext(&t_string))
+		ep.setvalueref(*t_string);
 	else
 		ep.clear();
 }
 
-void MCField::selectedline(MCExecPoint &ep)
+bool MCField::selectedtext(MCStringRef& r_string)
 {
-	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
-		returnline(ep, si, ei);
-	else
-		ep.clear();
-}
-
-void MCField::selectedloc(MCExecPoint &ep)
-{
-	int4 si, ei;
-	if (selectedmark(False, si, ei, False, False))
-		returnloc(ep, si);
-	else
-		ep.clear();
-}
-
-void MCField::selectedtext(MCExecPoint &ep)
-{
-	ep.clear();
 	if (paragraphs == NULL) // never been opened
-		return;
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
 	if (flags & F_LIST_BEHAVIOR)
 	{
-		bool first = true;
 		MCParagraph *pgptr = paragraphs;
+		MCAutoListRef t_list;
+		if (!MCListCreateMutable('\n', &t_list))
+			return false;
 		do
 		{
 			if (pgptr->gethilite())
 			{
-				ep.concatchars(pgptr->gettext(), pgptr->gettextsize(), EC_RETURN, first);
-				first = false;
+				MCAutoStringRef t_string;
+				if (!pgptr -> gettextasstringref(&t_string))
+					return false;
+				if (!MCListAppend(*t_list, *t_string))
+					return false;
 			}
 			pgptr = pgptr->next();
 		}
 		while (pgptr != paragraphs);
+
+		if (!MCListCopyAsString(*t_list, r_string))
+			return false;
+
+		return true;
 	}
 	else
 	{
 		int4 si, ei;
 		if (selectedmark(False, si, ei, False, False))
-			returntext(ep, si, ei);
+			return returntext(si, ei, r_string);
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 }
 
@@ -2226,25 +2250,27 @@ Boolean MCField::selectedmark(Boolean whole, int4 &si, int4 &ei,
 	return True;
 }
 
-void MCField::returnchunk(MCExecPoint &ep, int4 si, int4 ei)
+bool MCField::returnchunk(int4 p_si, int4 p_ei, MCStringRef& r_chunk)
 {
+	MCExecPoint ep(nil, nil, nil);
 	getprop(0, P_NUMBER, ep, False);
 	ep.ton();
 	uint2 number = ep.getuint2();
-	
+
 	// MW-2012-02-23: [[ CharChunk ]] Map the internal field indices (si, ei) to
 	//   char indices.
-	unresolvechars(0, si, ei);
+	unresolvechars(0, p_si, p_ei);
 	
 	const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 										 ? "char %d to %d of card field %d" : "char %d to %d of field %d";
-	ep.setstringf(sptr, si + 1, ei, number);
+	return MCStringFormat(r_chunk, sptr, p_si + 1, p_ei, number);
 }
 
-void MCField::returnline(MCExecPoint &ep, int4 si, int4 ei)
+bool MCField::returnline(int4 si, int4 ei, MCStringRef& r_string)
 {
-	getprop(0, P_NUMBER, ep, False);
-	ep.ton();
+	MCExecPoint ep(nil, nil, nil);
+	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
+	/* UNCHECKED */ ep.ton();
 	uint2 number = ep.getuint2();
 	uint4 line = 0;
 	int4 offset = 0;
@@ -2260,7 +2286,7 @@ void MCField::returnline(MCExecPoint &ep, int4 si, int4 ei)
 	{
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d of card field %d" : "line %d of field %d";
-		ep.setstringf(sptr, line, number);
+		return MCStringFormat(r_string, sptr, line, number);
 	}
 	else
 	{
@@ -2274,18 +2300,18 @@ void MCField::returnline(MCExecPoint &ep, int4 si, int4 ei)
 		while (offset < ei);
 		const char *sptr = parent->gettype() == CT_CARD && getstack()->hcaddress()
 											 ? "line %d to %d of card field %d" : "line %d to %d of field %d";
-		ep.setstringf(sptr, line, endline, number);
+		return MCStringFormat(r_string, sptr, line, endline, number);
 	}
 }
 
 //unicode fine
-void MCField::returnloc(MCExecPoint &ep, int4 si)
+bool MCField::returnloc(int4 si, MCStringRef& r_string)
 {
 	// MW-2006-04-26: If the field is not opened we cannot call indextoloc so must return empty.
 	if (!opened)
 	{
-		ep . clear();
-		return;
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 
 	int4 ei = si;
@@ -2295,13 +2321,18 @@ void MCField::returnloc(MCExecPoint &ep, int4 si)
 
 	// MW-2012-01-25: [[ FieldMetrics ]] The x, y are in paragraph coords, so
 	//   translate to field, then card.
-	ep.setpoint(x + getcontentx(), y + paragraphtoy(pgptr) + getcontenty());
+	return MCStringFormat(r_string, "%d,%d", x + getcontentx(), y + paragraphtoy(pgptr) + getcontenty());
 }
 
 void MCField::returntext(MCExecPoint &ep, int4 si, int4 ei)
 {
 	// MW-2012-02-21: [[ FieldExport ]] Use the new text export method.
 	exportastext(0, ep, si, ei, false);
+}
+
+bool MCField::returntext(int4 p_si, int4 p_ei, MCStringRef& r_string)
+{
+	return exportastext(0, p_si, p_ei, false, r_string);
 }
 
 void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph*& rep, uint4& rsl, uint4& rel)
@@ -2419,6 +2450,7 @@ MCParagraph *MCField::cloneselection()
 	return cutptr;
 }
 
+#ifdef SHARED_STRING
 MCSharedString *MCField::pickleselection(void)
 {
 	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
@@ -2427,6 +2459,19 @@ MCSharedString *MCField::pickleselection(void)
 	t_styled_text . setparent(this);
 	t_styled_text . setparagraphs(cloneselection());
 	return MCObject::pickle(&t_styled_text, 0);
+}
+#endif
+
+bool MCField::pickleselection(MCStringRef& r_string)
+{
+	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
+	//   styledtext's parent the field so that font attr inheritence works.
+	MCStyledText t_styled_text;
+	t_styled_text . setparent(this);
+	t_styled_text . setparagraphs(cloneselection());
+	
+	/* UNCHECKED */ MCObject::pickle(&t_styled_text, 0, r_string);
+	return true;
 }
 
 // Will reflow
@@ -2446,7 +2491,7 @@ void MCField::cuttext()
 	
 	replacecursor(True, True);
 	state |= CS_CHANGED;
-	
+
 	// MW-2012-09-21: [[ Bug 10401 ]] Make sure we unlock the screen!.
 	MCRedrawUnlockScreen();
 	
@@ -2455,6 +2500,7 @@ void MCField::cuttext()
 	textchanged();
 }
 
+#ifdef SHARED_STRING
 void MCField::copytext()
 {
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
@@ -2468,6 +2514,18 @@ void MCField::copytext()
 		t_data -> Release();
 	}
 }
+#else
+void MCField::copytext()
+{
+	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
+		return;
+
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ pickleselection(&t_data);
+	if (*t_data != nil)
+		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
+}
+#endif
 
 void MCField::cuttextindex(uint4 parid, int4 si, int4 ei)
 {

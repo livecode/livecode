@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
@@ -439,7 +438,7 @@ static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t 
 		}
 	}
 	
-	// Check the various HFS codes to see if they match any of the types in the filter
+	// Check the various HFS codes to see if they match any of the typesin the filter
 	if (!t_should_show && m_filters->filetypes_count > 0)
 	{
 		// For regular files, extract any type and creator codes - these are four character codes e.g. REVO
@@ -463,8 +462,8 @@ static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t 
 		for (uint32_t i = 0; i < m_filter->filetypes_count && !t_should_show; i++)
 			if (MCCStringLength(m_filter->filetypes[i]) > 0 &&
 				(MCCStringEqualCaseless(t_type, m_filter->filetypes[i]) || 
-				 MCCStringEqualCaseless(t_creator, m_filter->filetypes[i]) ||
-				 MCCStringEqualCaseless([t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], m_filter->filetypes[i]) ||
+				MCCStringEqualCaseless(t_creator, m_filter->filetypes[i]) ||
+				MCCStringEqualCaseless([t_bundle_sig cStringUsingEncoding: NSMacOSRomanStringEncoding], m_filter->filetypes[i]) ||
 				 MCCStringEqualCaseless([t_bundle_type cStringUsingEncoding: NSMacOSRomanStringEncoding], m_filter->filetypes[i])))				
 				t_should_show = YES;
 	}
@@ -495,7 +494,7 @@ static int s_dialog_result = 0;
 void *MCCreateNSWindow(void *);
 
 static int display_modal_dialog(MCExecPoint &ep, NSSavePanel *p_panel, const char *p_initial_folder, const char *p_initial_file, bool p_as_sheet)
-{	
+{
 	NSString *t_initial_folder;
 	t_initial_folder = nil;
 	if (p_initial_folder != nil)
@@ -627,7 +626,7 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 					NSString *t_alias;
 					resolve_alias([[t_panel filenames] objectAtIndex: i], t_alias);					
 					char *t_conv_filename;
-					t_conv_filename = nil;					
+					t_conv_filename = nil;
 					if (MCCStringToNative([t_alias UTF8String], t_conv_filename))
 						/* UNCHECKED */ MCCStringAppendFormat(t_filename, "%s%s", i > 0 ? "\n" : "", t_conv_filename);
 					/* UNCHECKED */ MCCStringFree(t_conv_filename);
@@ -661,7 +660,7 @@ int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const c
 	if (MCmajorosversion > 0x1040)
 	{
 		int t_result;	
-		
+
 		// MW-2012-03-27: [[ Bug ]] Make sure we initialize t_types to nil.
 		char **t_types;
 		uint32_t t_type_count;	
@@ -670,7 +669,7 @@ int MCA_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, const c
 		t_result = MCA_do_file_dialog(ep, p_title == NULL ? "" : p_title, p_prompt == NULL ? "" : p_prompt, t_types, t_type_count, p_initial, p_options);
 		/* UNCHECKED */ MCMemoryDeleteArray(t_types);
 		return t_result;
-		
+			
 	}
 	else
 		return MCA_file_tiger(ep, p_title, p_prompt, p_filter, p_initial, p_options);
@@ -694,8 +693,8 @@ int MCA_ask_file(MCExecPoint& ep, const char *p_title, const char *p_prompt, con
 	{
 		int t_result;
 		char **t_types;
-		uint32_t t_type_count;
-		t_types = nil;
+		uint32_t t_type_count;	
+			t_types = nil;
 		filter_to_type_list(p_filter, &t_types, t_type_count);
 		t_result = MCA_do_file_dialog(ep, p_prompt == NULL ? "" : p_prompt, "", t_types, t_type_count, p_initial == NULL ? "" : p_initial, p_options | MCA_OPTION_SAVE_DIALOG);
 		/* UNCHECKED */ MCMemoryDeleteArray(t_types);
@@ -759,13 +758,13 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 			[t_choose setCanCreateDirectories: YES];
 			
 			if (display_modal_dialog(ep, t_choose, t_initial_folder, nil, (p_options & MCA_OPTION_SHEET) != 0) == NSOKButton)
-			{
-				// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
-				NSString *t_alias;
-				resolve_alias([t_choose filename], t_alias);									
-				/* UNCHECKED */ MCCStringToNative([t_alias UTF8String], t_folder);
-				[t_alias release];
-			}
+				{
+					// MM-2012-09-25: [[ Bug 10407 ]] Resolve alias (if any) of the returned folder
+					NSString *t_alias;
+					resolve_alias([t_choose filename], t_alias);									
+					/* UNCHECKED */ MCCStringToNative([t_alias UTF8String], t_folder);
+					[t_alias release];
+				}
 			
 			// Send results back
 			if (MCCStringLength(t_folder) == 0)
@@ -789,31 +788,12 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 // MW-2005-05-23: Update to new API
 // MW-2008-03-28: [[ Bug 6248 ]] Updated to use Generic RGB Profile and new NPickColor API to
 //   make sure we don't get unpleasant color drift.
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean p_as_sheet)
+bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
 	uint32_t t_red, t_green, t_blue;
-	if (p_initial == NULL)
-	{
-		t_red = MCpencolor.red;
-		t_green = MCpencolor.green;
-		t_blue = MCpencolor.blue;
-	}
-	else
-	{
-		char *cname = NULL;
-		MCColor c;
-		MCscreen->parsecolor(p_initial, &c, &cname);
-		delete cname;
-		t_red = c.red;
-		t_green = c.green;
-		t_blue = c.blue;
-	}
-	
-	if (!MCModeMakeLocalWindows())
-	{
-		MCRemoteColorDialog(ep, p_title, t_red >> 8, t_green >> 8, t_blue >> 8);
-		return 0;
-	}
+	t_red = p_initial_color . red;
+	t_green = p_initial_color . green;
+	t_blue = p_initial_color . blue;
 
 	Cursor c;
 	SetCursor(GetQDGlobalsArrow(&c)); // bug in OS X doesn't reset this
@@ -842,19 +822,20 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	
 	if (NPickColor(&theColorInfo) == noErr && theColorInfo.newColorChosen)
 	{
-		ep.setcolor(theColorInfo.theColor.color.rgb.red  >> 8, theColorInfo.theColor.color.rgb.green >> 8, theColorInfo.theColor.color.rgb.blue >> 8);
-		MCresult->clear(False);
+		r_chosen = true;
+		r_chosen_color . red = theColorInfo.theColor.color.rgb.red;
+		r_chosen_color . green = theColorInfo.theColor.color.rgb.green;
+		r_chosen_color . blue = theColorInfo.theColor.color.rgb.blue;
 	}
 	else
 	{
-		ep.clear();
-		MCresult->sets(MCcancelstring);
+		r_chosen = false;
 	}
 	
 	if (t_icc_profile != NULL)
 		CMCloseProfile(t_icc_profile);
 	
-	return 0;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

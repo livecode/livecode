@@ -33,10 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #endif
 
-#if defined(_MACOSX)
-#include "core.h"
-#endif
-
 ////////////////////////////////////////////////////////////////////////////////
 //
 // This section contains definitions for the various structures needed to

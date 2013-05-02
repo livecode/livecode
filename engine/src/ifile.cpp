@@ -31,8 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "context.h"
 
-#include "core.h"
-
 bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBitmap *&r_compressed)
 {
 	bool t_success = true;

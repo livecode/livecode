@@ -19,17 +19,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 Boolean InitSSLCrypt();
 void ShutdownSSL();
-void SSL_ciphernames(MCExecPoint &ep);
+bool SSL_ciphernames(MCListRef& r_list, MCStringRef& r_error);
 unsigned long SSLError(char *errbuf);
-char *SSL_encode(Boolean isdecrypt, char *ciphername,
+char *SSL_encode(Boolean isdecrypt, const char *ciphername,
                  const char *data, uint4 inlen,uint4 &outlen, //data to decrypt, length of that data, and pointer to descypted data length
                  const char *keystr, int4 keystrlen, Boolean ispassword, uint2 keylen,
                  const char *saltstr,  uint2 saltlen, const char *ivstr, uint2 ivlen);
 
-bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,
-			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
-			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error);
+bool SSL_encode(bool p_is_decrypt, MCNameRef p_cipher, MCStringRef p_data, MCStringRef p_key, bool p_is_password,
+				MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate, MCStringRef &r_output, MCStringRef &r_result, uint32_t &r_error);
 
-bool MCCrypt_random_bytes(uint32_t p_bytecount, void *&r_bytes);
+bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,
+					const char *p_key, uint32_t p_key_length, const char *p_passphrase,
+					char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error);
+
+bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, MCStringRef p_key, 
+					MCStringRef p_passphrase, MCStringRef &r_message_out, MCStringRef &r_result, uint32_t &r_error);
+
+bool MCCrypt_random_bytes(uint32_t p_bytecount, MCStringRef& r_bytes);
 
 #endif

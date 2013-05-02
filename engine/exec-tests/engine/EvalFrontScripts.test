@@ -1,0 +1,17 @@
+setup
+create button
+put the long id of button 1 into tButton
+set the script of tButton to "on evalFrontScriptsTest" & return & \
+		"end evalFrontScriptsTest" & return
+
+test tButton is not among the lines of the frontscripts
+
+insert the script of tButton into front
+
+test tButton is among the lines of the frontscripts
+
+remove the script of tButton from front
+
+test tButton is not among the lines of the frontscripts
+
+teardown

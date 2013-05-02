@@ -104,6 +104,7 @@ class MCField;
 //  Known Issues:
 //    <none>
 //
+#ifdef SHARED_STRING
 class MCSharedString
 {
 public:
@@ -241,7 +242,7 @@ inline MCSharedString *MCSharedString::CreateNoCopy(void *p_buffer, uint4 p_leng
 {
 	return CreateNoCopy(MCString((char *)p_buffer, p_length));
 }
-
+#endif
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Enumeration:
@@ -364,8 +365,11 @@ public:
 	// The data returned by this method is copied. The callee is responsible
 	// for releasing the reference.
 	//
+#ifdef SHARED_STRING
 	virtual bool Fetch(MCTransferType p_type, MCSharedString*& r_data) = 0;
-
+#else
+	virtual bool Fetch(MCTransferType p_type, MCStringRef& r_data) = 0;
+#endif
 	// Future extension methods for accessing system formats directly.
 	//
 	// virtual bool QuerySystem(const char**& r_system_types, unsigned int& r_system_type_count) = 0;
@@ -409,11 +413,19 @@ public:
 
 	// Fetch the data of the given data type from the object (see
 	// MCPasteboard for precise semantics).
+#ifdef SHARED_STRING
 	bool Fetch(MCTransferType p_type, MCSharedString*& r_data);
+#else
+	bool Fetch(MCTransferType p_type, MCStringRef& r_data);
+#endif
 
 	// Store the given data-type in the object. If a type of the given
 	// class already exists, it is overridden.
+#ifdef SHARED_STRING
 	bool Store(MCTransferType p_type, MCSharedString* p_data);
+#else
+	bool Store(MCTransferType p_type, MCStringRef p_data);
+#endif
 
 private:
 	// Destroy the object.
@@ -428,7 +440,11 @@ private:
 	//
 	// Here r_normal_string has copy semantics, and p_string is unchanged.
 	//
+#ifdef SHARED_STRING
 	bool Normalize(MCTransferType p_type, MCSharedString *p_string, MCTransferType& r_normal_type, MCSharedString*& r_normal_data);
+#else
+	bool Normalize(MCTransferType p_type, MCStringRef p_string, MCTransferType& r_normal_type, MCStringRef& r_normal_data);
+#endif
 
 	// The number of references to this object.
 	uint4 m_references;
@@ -440,7 +456,11 @@ private:
 	MCTransferType *m_types;
 
 	// The array of data buffers.
+#ifdef SHARED_STRING
 	MCSharedString **m_datas;
+#else
+	MCStringRef *m_datas;
+#endif
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -514,8 +534,11 @@ public:
 	// Return data of the given type, converting as necessary.
 	// The returned string has copy semantics, i.e. the caller must
 	// release it when done with it.
+#ifdef SHARED_STRING
 	MCSharedString *Fetch(MCTransferType p_type);
-
+#else
+	bool Fetch(MCTransferType p_type, MCStringRef &r_data);
+#endif
 	// Unlock the object.
 	void Unlock(void);
 
@@ -532,7 +555,11 @@ public:
 
 	// Store the given data in the object. This call does an implicit
 	// Open/Close if one hasn't previously been performed.
+#ifdef SHARED_STRING
 	bool Store(MCTransferType p_type, MCSharedString *p_string);
+#else
+	bool Store(MCTransferType p_type, MCStringRef p_data);
+#endif
 
 	// Close the object applying any updates. If applying the
 	// updates failed, false is returned.
@@ -734,6 +761,7 @@ enum
 typedef uint4 MCDragAction;
 typedef uint4 MCDragActionSet;
 
+#ifdef SHARED_STRING
 typedef MCSharedString* (*MCTransferConverter)(MCSharedString *p_string);
 
 MCSharedString *MCConvertTextToUnicode(MCSharedString *p_string);
@@ -750,6 +778,19 @@ MCSharedString *MCConvertUnicodeToStyledText(const MCString& p_string);
 MCSharedString *MCConvertRTFToStyledText(MCSharedString *p_string);
 MCSharedString *MCConvertRTFToStyledText(const MCString& p_string);
 MCSharedString *MCConvertHTMLToStyledText(MCSharedString *p_string);
+#else
+
+typedef bool (*MCTransferConverter)(MCStringRef p_input, MCStringRef r_output);
+
+bool MCConvertStyledTextToText(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertStyledTextToUnicode(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertStyledTextToRTF(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertStyledTextToHTML(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertTextToStyledText(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertUnicodeToStyledText(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertRTFToStyledText(MCStringRef p_input, MCStringRef& r_output);
+bool MCConvertHTMLToStyledText(MCStringRef p_input, MCStringRef& r_output);
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -768,23 +809,35 @@ struct MCImageData
 	uint4 height;
 	uint4 *pixels;
 };
-
+#ifdef SHARED_STRING
 MCImageFormat MCImageDataIdentify(MCSharedString *p_string);
+MCSharedString *MCImageDataCompress(MCImageData *p_data, MCImageFormat p_as_format);
+#else
+MCImageFormat MCImageDataIdentify(MCStringRef p_string);
+void MCImageDataCompress(MCImageData *p_data, MCImageFormat p_as_format, MCStringRef &r_output);
+#endif
+
 MCImageFormat MCImageDataIdentify(const MCString& p_string);
 MCImageFormat MCImageDataIdentify(IO_handle p_stream);
 
 MCImageData *MCImageDataDecompress(const MCString& p_string);
-MCSharedString *MCImageDataCompress(MCImageData *p_data, MCImageFormat p_as_format);
 
 MCImage *MCImageDataToObject(MCImageData *p_data);
 MCImageData *MCImageDataFromObject(MCImage *p_object);
 
 ///////////////////////////////////////////////////////////////////////////////
-
+#ifdef SHARED_STRING
 bool MCFormatImageIsPNG(MCSharedString *p_string);
 bool MCFormatImageIsGIF(MCSharedString *p_string);
 bool MCFormatImageIsJPEG(MCSharedString *p_string);
 
 bool MCFormatStyledTextIsUnicode(MCSharedString *p_string);
+#else
+bool MCFormatImageIsPNG(MCStringRef p_string);
+bool MCFormatImageIsGIF(MCStringRef p_string);
+bool MCFormatImageIsJPEG(MCStringRef p_string);
+
+bool MCFormatStyledTextIsUnicode(MCStringRef p_string);
+#endif
 
 #endif

@@ -1,0 +1,19 @@
+setup
+
+test round(1.0001) is 1
+test round(1.5) is 2
+test round(1.5001) is 2
+
+test round(-1.0001) is -1
+test round(-1.5) is -2
+test round(-1.5001) is -2
+
+test round(1.2345, 3) is 1.235
+test round(1.2345, 2) is 1.23
+test round(1.2345, 1) is 1.2
+
+test round(12345, -1) is 12350
+test round(12345, -2) is 12300
+test round(12345, -3) is 12000
+
+teardown

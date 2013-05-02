@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -215,6 +214,9 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	t_tsf_mgr = nil;
 	CoCreateInstance(CLSID_TF_ThreadMgr, NULL, CLSCTX_INPROC_SERVER, IID_ITfThreadMgr, (void**)&t_tsf_mgr);
 
+	if (!MCInitialize())
+		exit(-1);
+
 	// Create the main thread's principal fiber.
 	s_main_fiber = ConvertThreadToFiber(nil);
 
@@ -278,6 +280,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	MCstackbottom = (char *)&t_bottom;
 	g_mainthread_errno = _errno();
 	int r = X_close();
+
+	MCFinalize();
 
 	if (t_tsf_mgr != nil)
 		t_tsf_mgr -> Release();

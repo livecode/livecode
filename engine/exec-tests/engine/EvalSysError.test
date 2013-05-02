@@ -1,0 +1,10 @@
+setup
+
+local tError
+open file "this file should not exist" for read
+put the syserror into tError
+
+test tError is an integer
+test tError is not 0
+
+teardown

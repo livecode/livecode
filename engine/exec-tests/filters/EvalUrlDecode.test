@@ -1,0 +1,5 @@
+setup
+test urldecode("+") is " "
+test urldecode("%3F") is "?"
+test urldecode("abcde") is "abcde"
+teardown

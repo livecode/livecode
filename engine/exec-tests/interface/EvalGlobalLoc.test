@@ -1,0 +1,5 @@
+setup
+test globalloc((0,0)) is (the topleft of this stack)
+
+test-error globalloc("not a point")
+teardown

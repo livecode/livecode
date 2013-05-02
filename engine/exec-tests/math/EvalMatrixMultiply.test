@@ -1,0 +1,73 @@
+setup "square matrices"
+
+local tIdentity, tA1, tA2, tA3
+
+put 1 into tIdentity[0,0]
+put 0 into tIdentity[0,1]
+put 0 into tIdentity[1,0]
+put 1 into tIdentity[1,1]
+
+local tVal = 1
+repeat with r = 0 to 1
+	repeat with c = 0 to 1
+		put tVal into tA1[r,c]
+		add 1 to tVal
+	end repeat
+end repeat
+
+repeat with r = 0 to 1
+	repeat with c = 0 to 1
+		put tVal into tA2[r,c]
+		add 1 to tVal
+	end repeat
+end repeat
+
+test matrixMultiply(tIdentity, tA1) is tA1
+test matrixMultiply(tA1, tIdentity) is tA1
+
+put matrixMultiply(tA1, tA2) into tA3
+test matrixMultiply(tA2, tA1) is not tA3
+
+test tA3[0,0] is (tA1[0,0] * tA2[0,0]) + (tA1[0,1] * tA2[1,0])
+test tA3[0,1] is (tA1[0,0] * tA2[0,1]) + (tA1[0,1] * tA2[1,1])
+test tA3[1,0] is (tA1[1,0] * tA2[0,0]) + (tA1[1,1] * tA2[1,0])
+test tA3[1,1] is (tA1[1,0] * tA2[0,1]) + (tA1[1,1] * tA2[1,1])
+
+teardown
+
+setup "non-square matrices"
+local tA1, tA2, tA3
+
+local tVal = 1
+repeat with r = 0 to 2
+	repeat with c = 0 to 3
+		put tVal into tA1[r,c]
+		add 1 to tVal
+	end repeat
+end repeat
+
+repeat with r = 0 to 3
+	repeat with c = 0 to 4
+		put tVal into tA2[r,c]
+		add 1 to tVal
+	end repeat
+end repeat
+
+put matrixMultiply(tA1, tA2) into tA3
+test tA3 is an array
+test the extents of tA3 is ("0,2" & return & "0,4")
+
+local tTotal
+repeat with i = 0 to 2
+	repeat with j = 0 to 4
+		put 0 into tTotal
+		repeat with k = 0 to 3
+			add tA1[i,k] * tA2[k, j] to tTotal
+		end repeat
+		test tTotal is tA3[i,j]
+	end repeat
+end repeat
+
+test-error matrixMultiply(tA2, tA1)
+
+teardown

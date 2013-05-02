@@ -290,22 +290,19 @@ struct MCWindowsSystem: public MCSystemInterface
 		return GetCurrentProcessId();
 	}
 
-	virtual char *GetVersion(void)
+	virtual bool GetVersion(MCStringRef& r_string)
 	{
-		char *buffer;
-		buffer = new char[9 + 2 * I4L];
-		sprintf(buffer, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
-		return buffer;
+		return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
 	}
 
-	virtual char *GetMachine(void)
+	virtual bool GetMachine(MCStringRef& r_string)
 	{
-		return strclone("x86");
+		return MCStringCopy(MCNameGetString(MCN_x86), r_string);
 	}
 
 	virtual char *GetProcessor(void)
 	{
-		return strclone("x86");
+		return MCN_x86;
 	}
 
 	virtual char *GetAddress(void)
@@ -472,11 +469,17 @@ struct MCWindowsSystem: public MCSystemInterface
 		return dest;
 	}
 	
-	virtual char *GetCurrentFolder(void)
+	virtual bool GetCurrentFolder(MCStringRef& r_path)
 	{
-		char *dptr = new char[PATH_MAX + 2];
-		GetCurrentDirectoryA(PATH_MAX +1, (LPSTR)dptr);
-		return dptr;
+		MCAutoNativeCharArray t_buffer;
+		DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
+		if (t_path_len == 0 || !t_buffer.New(t_path_len))
+			return false;
+		if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
+			return false;
+
+		t_buffer.Shrink(t_path_len - 1);
+		return t_buffer.CreateStringAndRelease(r_path);
 	}
 	
 	virtual bool SetCurrentFolder(const char *p_path)
@@ -796,6 +799,15 @@ struct MCWindowsSystem: public MCSystemInterface
 		return longpath;
 	}
 
+	/* WRAPPER */
+	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
+	{
+		MCAutoStringRef t_path;
+		MCAutoPointer<char> t_long_path;
+		t_long_path = LongFilePath(MCStringGetCString(p_path));
+		return *t_long_path != nil && MCStringCreateWithCString(*t_long_path, r_long_path);
+	}
+
 	char *ShortFilePath(const char *p_path)
 	{
 		char *shortpath = new char[PATH_MAX];
@@ -811,45 +823,47 @@ struct MCWindowsSystem: public MCSystemInterface
 		return shortpath;
 	}
 
+	/* WRAPPER */
+	bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
+	{
+		MCAutoStringRef t_path;
+		MCAutoPointer<char> t_short_path;
+		t_short_path = ShortFilePath(MCStringGetCString(p_path));
+		return *t_short_path != nil && MCStringCreateWithCString(*t_short_path, r_short_path);
+	}
+
 	////
 
-	char *PathToNative(const char *p_path)
+	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
-		char *t_path;
-		t_path = strdup(p_path);
-		MCU_path2native(t_path);
-		return t_path;
+		return MCU_path2native(p_path, r_native);
 	}
 	
-	char *PathFromNative(const char *p_path)
+	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 	{
-		char *t_path;
-		t_path = strdup(p_path);
-		MCU_path2std(t_path);
-		return t_path;
+		return MCU_path2std(p_native, r_path);
 	}
-	
-	char *ResolvePath(const char *p_path)
+
+	bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 	{
 		return ResolveNativePath(p_path);
 	}
 	
-	char *ResolveNativePath(const char *path)
+	bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
 	{
-		if (path == NULL)
-		{
-			char *tpath = GetCurrentFolder();
-			return tpath;
-		}
+		if (MCStringGetLength(p_path) == 0)
+			return GetCurrentFolder(r_resolved);
 
 		DWORD t_count;
-		t_count = GetFullPathNameA(path, 0, NULL, NULL);
+		t_count = GetFullPathNameA(MCStringGetCString(p_path), 0, NULL, NULL);
 
-		char *t_path;
-		t_path = new char[t_count];
-		GetFullPathNameA(path, t_count, t_path, NULL);
+		MCAutoNativeCharArray t_path;
+		if (!t_path.New(t_count))
+			return false;
 
-		return t_path;
+		GetFullPathNameA(MCStringGetCString(p_path), t_count, (LPSTR)t_path.Chars(), NULL);
+
+		return t_path.CreateStringAndRelease(r_resolved);
 	}
 	
 	
@@ -1037,10 +1051,10 @@ struct MCWindowsSystem: public MCSystemInterface
 		return strdup(t_hostname);
 	}
 	
-	bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
 		struct hostent *he;
-		he = gethostbyname(p_hostname);
+		he = gethostbyname(MCStringGetCString(p_hostname));
 		if (he == NULL)
 			return false;
 		
@@ -1048,16 +1062,22 @@ struct MCWindowsSystem: public MCSystemInterface
 		ptr = (struct in_addr **)he -> h_addr_list;
 		
 		for(uint32_t i = 0; ptr[i] != NULL; i++)
-			if (!p_callback(p_context, inet_ntoa(*ptr[i])))
+		{
+			MCAutoStringRef t_address;
+			char *t_addr_str = inet_ntoa(*ptr[i]);
+			if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
 				return false;
+			if (!p_callback(p_context, t_address))
+				return false;
+		}
 		
 		return true;
 	}
-	
-	bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+
+	bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
 		struct in_addr addr;
-		if (!inet_aton(p_address, &addr))
+		if (!inet_aton(MCStringGetCString(p_address), &addr))
 			return false;
 			
 		struct hostent *he;
@@ -1065,7 +1085,9 @@ struct MCWindowsSystem: public MCSystemInterface
 		if (he == NULL)
 			return false;
 		
-		return p_callback(p_context, he -> h_name);
+		MCAutoStringRef t_name;
+		return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
+			p_callback(p_context, *t_name);
 	}
 	
 	//////////////////

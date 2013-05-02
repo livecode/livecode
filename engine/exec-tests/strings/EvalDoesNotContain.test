@@ -1,0 +1,31 @@
+setup " <a> is not in <b> "
+
+test not ("a" is not in "abc")
+test not ("b" is not in "abc")
+test not ("c" is not in "abc")
+
+test not ("A" is not in "abc")
+test not ("B" is not in "abc")
+test not ("C" is not in "abc")
+
+test "d" is not in "abc"
+
+test not (123 is not in "abc123def")
+test not ((1 / 2) is not in "abc 0.5 def")
+
+teardown
+
+
+setup " <a> is not in <b> (case sensitive)"
+
+set the caseSensitive to true
+
+test not ("a" is not in "abc")
+test not ("b" is not in "abc")
+test not ("c" is not in "abc")
+
+test "A" is not in "abc"
+test "B" is not in "abc"
+test "C" is not in "abc"
+
+teardown

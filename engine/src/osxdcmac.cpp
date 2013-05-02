@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -355,16 +354,18 @@ static Boolean isKeyPressed(unsigned char *km, uint1 keycode)
 	return (km[keycode >> 3] >> (keycode & 7)) & 1;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
 	MCmodifierstate = querymods();
 	KeyMap map;
 	GetKeys(map);
 	unsigned char *km = (unsigned char *)map;
 	char kstring[U4L];
 	KeySym ksym;
-	bool first = true;
 	uint2 i;
 	for (i = 0; i < 127; i++)
 	{
@@ -376,12 +377,11 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 			else
 				ksym = keysyms[i];
 			if (ksym > 0)
-			{
-				ep.concatuint(ksym, EC_COMMA, first);
-				first = false;
-			}
+				if (!MCListAppendInteger(*t_list, ksym))
+					return false;
 		}
 	}
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCScreenDC::mode_globaltolocal(Point& p)
@@ -2301,18 +2301,18 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 		if (commitedLen == 2 && MCUnicodeMapToNative((const uint2 *)imetext, 1, t_char))
 		{
 			// MW-2012-10-30: [[ Bug 10501 ]] Make sure we stop composing
-			MCactivefield -> stopcomposition(True, False);
-		
-			// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
-			//   for MacRoman characters entered using the default IME.
+				MCactivefield->stopcomposition(True,False);
+				
+				// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
+				//   for MacRoman characters entered using the default IME.
 			char tbuf[2];
 			tbuf[0] = t_char;
 			tbuf[1] = 0;
-			MCdispatcher->wkdown(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
-			MCdispatcher->wkup(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
-		}
-		else
-		{
+				MCdispatcher->wkdown(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
+				MCdispatcher->wkup(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
+			}
+			else
+			{
 			if (commitedLen != 0)
 			{
 				MCactivefield->stopcomposition(True,False);

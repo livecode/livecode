@@ -63,9 +63,21 @@ public:
 	Parse_stat parse(MCScriptPoint &spt, Boolean the);
 	Exec_stat eval(MCExecPoint &);
 	MCVarref *getrootvarref(void);
+	
+	void compile(MCSyntaxFactoryRef factory);
+	void compile_in(MCSyntaxFactoryRef factory);
+	void compile_out(MCSyntaxFactoryRef factory);
+	void compile_inout(MCSyntaxFactoryRef factory);	
+	void compile_object_ptr(MCSyntaxFactoryRef factory);
 
+	Chunk_term getlastchunktype(void);
+	Exec_stat evalobjectchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCObjectChunkPtr& r_chunk);
+	Exec_stat evalvarchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCVariableChunkPtr& r_chunk);
+	Exec_stat evalurlchunk(MCExecPoint& ep, bool whole_chunk, bool force, MCUrlChunkPtr& r_chunk);
+	
 	void take_components(MCChunk *tchunk);
 	Exec_stat getobj(MCExecPoint &, MCObject *&, uint4 &parid, Boolean recurse);
+	Exec_stat getobj(MCExecPoint&, MCObjectPtr&, Boolean recurse);
 	Exec_stat extents(MCCRef *ref, int4 &start, int4 &number,
 	                  MCExecPoint &ep, const char *sptr, const char *eptr,
 	                  int4 (*count)(MCExecPoint &ep, const char *sptr,
@@ -90,10 +102,10 @@ public:
 	Exec_stat setprop(Properties w, MCExecPoint &, MCNameRef index, Boolean effective);
 	Exec_stat getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_parid);
 
-	Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);
+	// REMOVE: Exec_stat select(MCExecPoint &, Preposition_type where, Boolean text, Boolean first);
 	Exec_stat cut(MCExecPoint &);
 	Exec_stat copy(MCExecPoint &);
-	Exec_stat del(MCExecPoint &);
+	// REMOVE: Exec_stat del(MCExecPoint &);
 	Exec_stat changeprop(MCExecPoint &ep, Properties prop, Boolean value);
 
 	// Returns true if this chunk is of text type
@@ -101,6 +113,15 @@ public:
 
 	// Returns true if this chunk is of text type and stops at line
 	bool islinechunk(void) const;
+
+	// Returns true if this chunk is a substring of a variable.
+	bool issubstringchunk(void) const;
+	
+	// Returns true if this chunk is of a variable.
+	bool isvarchunk(void) const;
+	
+	// Returns true if this chunk is of a url
+	bool isurlchunk(void) const;
 
 	// Returns the field, part and range of the text chunk
 	Exec_stat marktextchunk(MCExecPoint& ep, MCField*& r_field, uint4& r_part, uint4& r_start, uint4& r_end);

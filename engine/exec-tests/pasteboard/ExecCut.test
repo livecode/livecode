@@ -1,0 +1,17 @@
+setup
+
+set the failed of this stack to false
+
+create button
+
+select button 1
+
+cut 
+
+if there is a button 1 then set the failed of this stack to true
+
+paste
+
+test there is a button 1 and the failed of this stack is false
+
+teardown

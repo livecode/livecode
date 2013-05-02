@@ -71,10 +71,14 @@ extern void MCB_error(MCExecPoint &ep, uint2 line, uint2 pos, uint2 id);
 extern void MCB_done(MCExecPoint &ep);
 extern void MCB_setvar(MCExecPoint &ep, MCNameRef name);
 
+extern void MCB_parsebreaks(MCExecContext& ctxt, MCStringRef p_input);
 extern void MCB_parsebreaks(MCExecPoint& breaks);
+extern bool MCB_unparsebreaks(MCStringRef& r_value);
 extern void MCB_unparsebreaks(MCExecPoint& breaks);
 extern void MCB_clearbreaks(MCObject *object);
 
+extern void MCB_parsewatches(MCExecContext& ctxt, MCStringRef p_input);
 extern Exec_stat MCB_parsewatches(MCExecPoint& watches);
+extern bool MCB_unparsewatches(MCStringRef &r_watches);
 extern void MCB_unparsewatches(MCExecPoint& watches);
 extern void MCB_clearwatches(void);

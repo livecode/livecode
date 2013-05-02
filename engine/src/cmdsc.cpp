@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -54,7 +53,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "exec.h"
 #include "objptr.h"
+
+#include "syntax.h"
 
 MCClone::~MCClone()
 {
@@ -100,7 +102,7 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 // where a target is valid only if it is not locked and not protected
 Exec_stat MCClone::exec(MCExecPoint &ep)
 {
-	MCStack *odefaultstackptr = MCdefaultstackptr;
+/*	MCStack *odefaultstackptr = MCdefaultstackptr;
 	MCObject *optr = NULL;
 	uint4 parid;
 
@@ -111,7 +113,7 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	
-	switch (optr->gettype())
+/*	switch (optr->gettype())
 	{
 	case CT_STACK:
 		{
@@ -207,7 +209,49 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 	it->set
 	(ep);
 	MCdefaultstackptr = odefaultstackptr;
-	return ES_NORMAL;
+	return ES_NORMAL; */
+
+	MCExecContext ctxt(ep, it);
+	MCObject *optr = NULL;
+	uint4 parid;
+
+	if (source->getobj(ep, optr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_CLONE_NOTARGET, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_new_name;
+	if (newname != NULL)
+	{
+		if (newname->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CLONE_BADNAME, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasstringref(&t_new_name);
+	}
+	MCInterfaceExecClone(ctxt, optr, *t_new_name, visible == False);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCClone::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile_object_ptr(ctxt);
+	if (newname != nil)
+		newname -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+	MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCloneMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -245,7 +289,7 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 
 Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 {
-	// Implicit form - use current context
+	/*// Implicit form - use current context
 	if (targets == NULL)
 	{
 		if (MCactivefield != NULL)
@@ -392,10 +436,158 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 	if (t_objects != NULL)
 		free(t_objects);
 
-	return t_stat;
+	return t_stat;*/
 
+	MCExecContext ctxt(ep, it);
+
+	if (targets == NULL)
+	{
+		// Implicit form - use current context
+		if (iscut())
+			MCPasteboardExecCut(ctxt);
+		else
+			MCPasteboardExecCopy(ctxt);
+	}
+	else if (targets -> istextchunk())
+	{
+		// Explicit form (1) - text chunk-
+		if (targets -> next != NULL)
+		{
+			MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
+			return ES_ERROR;
+		}
+		if (iscut())
+			MCPasteboardExecCutTextToClipboard(ctxt, targets);
+		else
+			MCPasteboardExecCopyTextToClipboard(ctxt, targets);
+	}	
+	else
+	{
+		// Explicit form (2)/(3) - object chunks
+
+		MCChunk *chunkptr = targets;
+		MCObjectPtr t_object;
+		MCAutoArray<MCObjectPtr> t_objects;
+
+		while (chunkptr != NULL)
+		{
+			if (chunkptr -> istextchunk())
+			{
+				MCeerror->add(EE_CLIPBOARD_BADMIX, line, pos);
+				return ES_ERROR;
+			}
+
+			if (chunkptr -> getobj(ep, t_object, True) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CLIPBOARD_BADOBJ, line, pos);
+				return ES_ERROR;
+			}
+			
+			if (!t_objects . Push(t_object))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				break;
+			}
+
+			chunkptr = chunkptr->next;
+		}
+
+		// Calculate destination object (if applicable)
+		MCObjectPtr t_dst_object;
+		if (dest != NULL)
+		{
+			if (dest -> getobj(ep, t_dst_object, True) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CLIPBOARD_NODEST, line, pos);
+				return ES_ERROR;
+			}
+		}
+
+		if (t_objects . Size() > 0)
+		{
+			if (dest != NULL)
+			{
+				if (iscut())
+					MCInterfaceExecCutObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
+				else
+					MCInterfaceExecCopyObjectsToContainer(ctxt, t_objects . Ptr(), t_objects . Size(), t_dst_object);
+			}
+			else
+			{
+				if (iscut())
+					MCPasteboardExecCutObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
+				else
+					MCPasteboardExecCopyObjectsToClipboard(ctxt, t_objects . Ptr(), t_objects . Size());
+			}
+		}
+	}
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
 }
 
+void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (targets == NULL)
+	{
+		if (iscut())
+			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyMethodInfo);
+	}
+	else
+	{
+		uindex_t t_count;
+		t_count = 0;
+
+		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
+		{
+			chunkptr -> compile_object_ptr(ctxt);
+			t_count++;
+		}
+		
+		if (dest != nil)
+		{
+			MCSyntaxFactoryEvalList(ctxt, t_count);
+			dest -> compile_object_ptr(ctxt);
+
+			if (iscut())
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCutObjectsToContainerMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCopyObjectsToContainerMethodInfo);
+		}
+		else if (t_count > 1)
+		{
+			MCSyntaxFactoryEvalList(ctxt, t_count);
+
+			if (iscut())
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
+			else
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
+		}
+		else
+		{
+			if (iscut())
+			{
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutTextToClipboardMethodInfo);
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCutObjectsToClipboardMethodInfo);
+			}
+			else
+			{
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyTextToClipboardMethodInfo);
+				MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecCopyObjectsToClipboardMethodInfo);
+			}
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
+
+/*
 Exec_errors MCClipboardCmd::processtocontainer(MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst)
 {
 	bool t_cut;
@@ -596,7 +788,7 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCObjectRef *p_objects, uint4 p_o
 
 	return EE_UNDEFINED;
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Primary Verb:
@@ -821,7 +1013,7 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 
 Exec_stat MCCreate::exec(MCExecPoint &ep)
 {
-	if (directory)
+/*	if (directory)
 	{
 		if (MCsecuremode & MC_SECUREMODE_DISK)
 		{
@@ -979,7 +1171,171 @@ Exec_stat MCCreate::exec(MCExecPoint &ep)
 	}
 	optr->getprop(0, P_LONG_ID, ep, False);
 	it->set(ep);
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep, it);
+	if (directory)
+	{
+		if (newname->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CREATE_BADEXP, line, pos);
+			return ES_ERROR;
+		}
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ ep . copyasstringref(&t_filename);
+		MCFilesExecCreateFolder(ctxt, *t_filename);
+	}
+	else if (alias)
+	{
+		if (newname->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CREATE_BADFILEEXP, line, pos);
+			return ES_ERROR;
+		}
+		MCAutoStringRef t_alias_name;
+		/* UNCHECKED */ ep . copyasstringref(&t_alias_name);
+		
+		if (file->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CREATE_BADEXP, line, pos);
+			return ES_ERROR;
+		}
+		MCAutoStringRef t_target_filename;
+		/* UNCHECKED */ ep . copyasstringref(&t_target_filename);
+
+		MCFilesExecCreateAlias(ctxt, *t_target_filename, *t_alias_name);
+	}
+	else 
+	{
+		MCAutoStringRef t_new_name;
+		if (newname != NULL)
+		{
+			if (newname->eval(ep) != ES_NORMAL)
+			{
+				MCeerror->add(EE_CREATE_BADEXP, line, pos);
+				return ES_ERROR;
+			}
+			/* UNCHECKED */ ep . copyasstringref(&t_new_name);
+		}
+		switch (otype)
+		{
+		case CT_STACK:
+		{
+			MCObject *tptr = nil;
+			if (container != nil)
+			{
+				uint4 parid;
+				if (container->getobj(ep, tptr, parid, True) != ES_NORMAL || 
+					tptr->gettype() != CT_GROUP && tptr->gettype() != CT_STACK)
+				{
+					MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+					return ES_ERROR;
+				}
+			}
+			if (tptr != nil && tptr->gettype() == CT_GROUP)
+				MCInterfaceExecCreateStackWithGroup(ctxt, (MCGroup *)tptr, *t_new_name, visible == False);
+			else 
+				MCInterfaceExecCreateStack(ctxt, (MCStack *)tptr, *t_new_name, visible == False);
+		}
+			break;
+		case CT_CARD:
+			MCInterfaceExecCreateCard(ctxt, *t_new_name, visible == False);
+			break;
+		default:
+		{
+			MCObject *parent = nil;
+			if (container != nil)
+			{
+				uint4 parid;
+				if (container->getobj(ep, parent, parid, True) != ES_NORMAL || parent->gettype() != CT_GROUP)
+				{
+					MCeerror->add(EE_CREATE_BADBGORCARD, line, pos);
+					return ES_ERROR;
+				}
+			}
+			MCInterfaceExecCreateControl(ctxt, *t_new_name, otype, (MCGroup *)parent, visible == False);
+		}
+			break;
+		}
+	}
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+	
+	return ctxt . Catch(line, pos);
+}
+
+void MCCreate::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (directory)
+	{
+		newname -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateFolderMethodInfo);
+	}
+	else if (alias)
+	{
+		file -> compile(ctxt);
+		newname -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecCreateAliasMethodInfo);
+	}
+	else 
+	{
+		switch (otype)
+		{
+		case CT_STACK:
+			if (container != nil)
+				container -> compile_object_ptr(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+			
+			if (newname != nil)
+				newname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
+			
+			if (container != nil)
+				MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackWithGroupMethodInfo); 
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateStackMethodInfo);
+			break;
+
+		case CT_CARD:
+			if (newname != nil)
+				newname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateCardMethodInfo);
+			break;
+
+		default:
+			if (newname != nil)
+				newname -> compile(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryEvalConstantInt(ctxt, otype);
+
+			if (container != nil)
+				container -> compile_object_ptr(ctxt);
+			else
+				MCSyntaxFactoryEvalConstantNil(ctxt);
+
+			MCSyntaxFactoryEvalConstantBool(ctxt, visible == False);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecCreateControlMethodInfo);
+			break;
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCCustomProp::~MCCustomProp()
@@ -1139,7 +1495,7 @@ Parse_stat MCDelete::parse(MCScriptPoint &sp)
 bool MCServerDeleteSession();
 Exec_stat MCDelete::exec(MCExecPoint &ep)
 {
-	if (var != NULL)
+	/*if (var != NULL)
 		return var->dofree(ep);
 	if (file != NULL)
 	{
@@ -1237,7 +1593,155 @@ Exec_stat MCDelete::exec(MCExecPoint &ep)
 	}
 	else
 		MCselected->del();
-	return ES_NORMAL;
+	return ES_NORMAL; */
+
+	MCExecContext ctxt(ep);
+	if (var != NULL)
+		MCEngineExecDeleteVariable(ctxt, var);
+	else if (file != NULL)
+	{
+		if (file->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_DELETE_BADFILEEXP, line, pos);
+			return ES_ERROR;
+		}
+		MCAutoStringRef t_target;
+		/*UNCHECKED*/ ep.copyasstringref(&t_target);
+		if (url)
+			MCNetworkExecDeleteUrl(ctxt, *t_target);
+		else
+			MCFilesExecDeleteFile(ctxt, *t_target);
+	}
+	else if (targets != NULL && targets -> issubstringchunk())
+	{
+		MCAutoArray<MCVariableChunkPtr> t_chunks;
+		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			if (!t_chunk -> issubstringchunk())
+			{
+				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
+				return ES_ERROR;
+			}
+
+			MCVariableChunkPtr t_var_chunk;
+			if (t_chunk -> evalvarchunk(ep, true, false, t_var_chunk) != ES_NORMAL)
+				return ES_ERROR;
+
+			if (!t_chunks . Push(t_var_chunk))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				break;
+			}
+		}
+
+		MCEngineExecDeleteVariableChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+	}
+	else if (targets != nil && targets -> istextchunk())
+	{
+		MCAutoArray<MCObjectChunkPtr> t_chunks;
+		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			if (!t_chunk -> istextchunk())
+			{
+				MCeerror -> add(EE_CLIPBOARD_BADMIX, line, pos);
+				return ES_ERROR;
+			}
+
+			MCObjectChunkPtr t_obj_chunk;
+			if (t_chunk -> evalobjectchunk(ep, true, false, t_obj_chunk) != ES_NORMAL)
+				return ES_ERROR;
+
+			if (!t_chunks . Push(t_obj_chunk))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				break;
+			}
+		}
+
+		MCInterfaceExecDeleteObjectChunks(ctxt, t_chunks . Ptr(), t_chunks . Size());
+	}
+	else if (targets != nil)
+	{
+		MCAutoArray<MCObjectPtr> t_objects;
+		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			MCObjectPtr t_object;
+			if (t_chunk -> getobj(ep, t_object, True) != ES_NORMAL)
+				return ES_ERROR;
+
+			if (!t_objects . Push(t_object))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				break;
+			}
+		}
+
+		MCInterfaceExecDeleteObjects(ctxt, t_objects . Ptr(), t_objects . Size()); 
+	}
+	else if (session)
+	{
+#ifdef _SERVER
+		MCServerExecDeleteSession(ctxt);
+#else
+		MCeerror->add(EE_SESSION_BADCONTEXT, line, pos);
+		return ES_ERROR;
+#endif
+	}
+	else
+		MCInterfaceExecDelete(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCDelete::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (var != nil)
+	{
+		var -> compile(ctxt);
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableMethodInfo);
+	}
+	else if (file != NULL)
+	{
+		file -> compile(ctxt);
+
+		if (url)
+			MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecDeleteUrlMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecDeleteFileMethodInfo);
+	}
+	else if (targets != nil)
+	{
+		uindex_t t_count;
+		t_count = 0;
+
+		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			t_chunk -> compile_object_ptr(ctxt);
+			t_count++;
+		}
+		
+		MCSyntaxFactoryEvalList(ctxt, t_count);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecDeleteVariableChunksMethodInfo);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectChunksMethodInfo);
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteObjectsMethodInfo); 
+	}
+	else if (session)
+	{
+#ifdef _SERVER
+		MCSyntaxFactoryExecMethod(ctxt, kMCServerExecDeleteSessionMethodInfo);
+#endif
+	}
+	else
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDeleteMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCChangeProp::~MCChangeProp()
@@ -1259,7 +1763,113 @@ Parse_stat MCChangeProp::parse(MCScriptPoint &sp)
 
 Exec_stat MCChangeProp::exec(MCExecPoint &ep)
 {
-	return targets->changeprop(ep, prop, value);
+	/*return targets->changeprop(ep, prop, value);*/
+
+	MCExecContext ctxt(ep);
+	if (targets != NULL)
+	{
+		if (targets -> istextchunk())
+		{
+			MCObjectChunkPtr t_obj_chunk;
+			if (targets -> evalobjectchunk(ep, false, true, t_obj_chunk) != ES_NORMAL)
+			{
+				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
+				return ES_ERROR;
+			}
+				
+			if (t_obj_chunk . object -> gettype() != CT_BUTTON)
+			{
+				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
+				return ES_ERROR;
+			}
+				
+			switch (prop) {
+			case P_DISABLED:
+				if (value)
+					MCInterfaceExecDisableChunkOfButton(ctxt, t_obj_chunk);
+				else
+					MCInterfaceExecEnableChunkOfButton(ctxt, t_obj_chunk);
+				break;
+			case P_HILITE:
+				if (value)
+					MCInterfaceExecHiliteChunkOfButton(ctxt, t_obj_chunk);
+				else
+					MCInterfaceExecUnhiliteChunkOfButton(ctxt, t_obj_chunk);
+				break;
+			default:
+				break;
+			}
+		}
+		else
+		{
+			MCObjectPtr t_obj;
+			if (targets -> getobj(ep, t_obj, True) != ES_NORMAL)
+			{
+				MCeerror->add(EE_DISABLE_NOOBJ, line, pos);
+				return ES_ERROR;
+			}
+			
+			switch (prop) {
+			case P_DISABLED:
+				if (value)
+					MCInterfaceExecDisableObject(ctxt, t_obj);
+				else
+					MCInterfaceExecEnableObject(ctxt, t_obj);
+				break;
+			case P_HILITE:
+				if (value)
+					MCInterfaceExecHiliteObject(ctxt, t_obj);
+				else
+					MCInterfaceExecUnhiliteObject(ctxt, t_obj);
+				break;
+			default:
+				break;
+			}
+		}
+	}
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCChangeProp::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	targets -> compile(ctxt);
+
+	switch(prop)
+	{
+	case P_DISABLED:
+		if (value)
+		{
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableChunkOfButtonMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecDisableObjectMethodInfo);
+		}
+		else
+		{
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableChunkOfButtonMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecEnableObjectMethodInfo);
+		}
+		break;
+	case P_HILITE:
+		if (value)
+		{
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteChunkOfButtonMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecHiliteObjectMethodInfo);
+		}
+		else
+		{
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteChunkOfButtonMethodInfo);
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUnhiliteObjectMethodInfo);
+		}
+		break;
+	default:
+		break;
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCFlip::~MCFlip()
@@ -1297,7 +1907,7 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 //   back to current tool.
 Exec_stat MCFlip::exec(MCExecPoint &ep)
 {
-	bool t_created_selection;
+	/*bool t_created_selection;
 	if (image != NULL)
 	{
 		MCObject *optr;
@@ -1329,7 +1939,53 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 		MCactiveimage -> endsel();
 	}
 
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+	MCExecContext ctxt(ep);
+	if (image != NULL)
+	{
+		MCObject *optr;
+		uint4 parid;
+		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_FLIP_NOIMAGE, line, pos);
+			return ES_ERROR;
+		}
+		if (optr->gettype() != CT_IMAGE)
+		{
+			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
+			return ES_ERROR;
+		}
+		MCImage *iptr = (MCImage *)optr;
+		MCGraphicsExecFlipImage(ctxt, iptr, direction == FL_HORIZONTAL);
+	}
+	else
+		MCGraphicsExecFlipSelection(ctxt, direction == FL_HORIZONTAL);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line,pos);
+}
+
+void MCFlip::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (image != nil)
+	{
+		image -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipImageMethodInfo);
+	}
+	else
+	{
+		MCSyntaxFactoryEvalConstantBool(ctxt, direction == FL_HORIZONTAL);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecFlipSelectionMethodInfo);
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCGrab::~MCGrab()
@@ -1351,7 +2007,7 @@ Parse_stat MCGrab::parse(MCScriptPoint &sp)
 
 Exec_stat MCGrab::exec(MCExecPoint &ep)
 {
-	MCObject *optr;
+	/*MCObject *optr;
 	uint4 parid;
 	if (control->getobj(ep, optr, parid, True) != ES_NORMAL
 	        || optr->gettype() < CT_GROUP)
@@ -1362,7 +2018,34 @@ Exec_stat MCGrab::exec(MCExecPoint &ep)
 	}
 	MCControl *cptr = (MCControl *)optr;
 	cptr->grab();
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCObject *optr;
+	uint4 parid;
+	if (control->getobj(ep, optr, parid, True) != ES_NORMAL
+	        || optr->gettype() < CT_GROUP)
+	{
+		MCeerror->add(EE_GRAB_NOOBJ, line, pos);
+		return ES_ERROR;
+	}
+	MCExecContext ctxt(ep);
+	MCInterfaceExecGrab(ctxt, static_cast<MCControl *>(optr));
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCGrab::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	control -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGrabMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLaunch::~MCLaunch()
@@ -1423,7 +2106,7 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 
 Exec_stat MCLaunch::exec(MCExecPoint &ep)
 {
-	if (MCsecuremode & MC_SECUREMODE_PROCESS)
+	/*if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
@@ -1504,7 +2187,69 @@ Exec_stat MCLaunch::exec(MCExecPoint &ep)
 			MCS_launch_document(docname);
 	}
 
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	MCNewAutoNameRef t_app;
+	if (app != NULL)
+	{
+		if (app->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasnameref(&t_app); 
+	}
+
+	MCAutoStringRef t_document;
+	if (doc != NULL)
+	{
+		if (doc->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_LAUNCH_BADAPPEXP, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasstringref(&t_document); 
+	}
+
+	if (app != NULL)
+		MCFilesExecLaunchApp(ctxt, *t_app, *t_document);
+	else if (doc != NULL)
+	{
+		if (as_url)
+			MCFilesExecLaunchUrl(ctxt, *t_document);
+		else
+			MCFilesExecLaunchDocument(ctxt, *t_document);
+	}
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line,pos);
+}
+
+void MCLaunch::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	if (app != nil)
+	{
+		app -> compile(ctxt);
+		doc -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchAppMethodInfo);
+	}
+	else if (doc != nil)
+	{	
+		doc -> compile(ctxt);
+
+		if (as_url)
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchUrlMethodInfo);
+		else
+			MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecLaunchDocumentMethodInfo);
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCLoad::~MCLoad()
@@ -1539,6 +2284,7 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 
 Exec_stat MCLoad::exec(MCExecPoint &ep)
 {
+	/*
 	char *mptr;
 	if (message != NULL)
 	{
@@ -1561,7 +2307,53 @@ Exec_stat MCLoad::exec(MCExecPoint &ep)
 	MCS_loadurl(ep . getobj(), ep . getcstring(), mptr);
 
 	delete mptr;
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+
+	MCNewAutoNameRef t_message;
+	if (message != NULL)
+	{
+		if (message->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_LOAD_BADMESSAGEEXP, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasnameref(&t_message);
+	}
+	else
+		t_message = kMCEmptyName;
+
+	if (url->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
+		return ES_ERROR;
+	}	
+
+	MCAutoStringRef t_url;
+	/* UNCHECKED */ ep . copyasstringref(&t_url);
+	MCNetworkExecLoadUrl(ctxt, *t_url, *t_message);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCLoad::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	url -> compile(ctxt);
+
+	if (message != nil)
+		message -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstant(ctxt, kMCEmptyName);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecLoadUrlMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCUnload::~MCUnload()
@@ -1585,13 +2377,42 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 
 Exec_stat MCUnload::exec(MCExecPoint &ep)
 {
+	/*
 	if (url->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_UNLOAD_BADURLEXP, line, pos);
 		return ES_ERROR;
 	}
 	MCS_unloadurl(ep . getobj(), ep . getcstring());
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+
+	if (url->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_LOAD_BADURLEXP, line, pos);
+		return ES_ERROR;
+	}	
+
+	MCAutoStringRef t_url;
+	/* UNCHECKED */ ep . copyasstringref(&t_url);
+	MCNetworkExecUnloadUrl(ctxt, *t_url);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCUnload::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	url -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecUnloadUrlMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPost::~MCPost()
@@ -1629,7 +2450,7 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 
 Exec_stat MCPost::exec(MCExecPoint &ep)
 {
-	if (source->eval(ep) != ES_NORMAL)
+	/*if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
@@ -1641,8 +2462,44 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	MCS_posttourl(ep . getobj(), ep . getsvalue(), ep2 . getcstring());
-	MCurlresult->fetch(ep);
-	return it->set(ep);
+	MCurlresult->eval(ep);
+	return it->set(ep);*/
+
+	if (source->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_data;
+	/* UNCHECKED */ ep . copyasstringref(&t_data);
+
+	if (dest->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_POST_BADDESTEXP, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_url;
+	/* UNCHECKED */ ep . copyasstringref(&t_url);
+
+	MCExecContext ctxt(ep, it);
+	MCNetworkExecPostToUrl(ctxt, *t_data, *t_url);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCPost::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+	dest -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCNetworkExecPostToUrlMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMakeGroup::~MCMakeGroup()
@@ -1666,7 +2523,7 @@ Parse_stat MCMakeGroup::parse(MCScriptPoint &sp)
 
 Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 {
-	if (targets != NULL)
+	/*if (targets != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
@@ -1712,7 +2569,59 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 	}
 	else
 		MCselected->group();
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	if (targets != NULL)
+	{
+		MCAutoArray<MCObjectPtr> t_objects;
+		for(MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			MCObjectPtr t_object;
+			if (t_chunk -> getobj(ep, t_object, True) != ES_NORMAL ||
+				t_object . object -> gettype() < CT_FIRST_CONTROL ||
+				t_object . object -> gettype() > CT_LAST_CONTROL)
+				return ES_ERROR;
+
+			if (!t_objects . Push(t_object))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				break;
+			}
+		}
+		MCInterfaceExecGroupControls(ctxt, t_objects . Ptr(), t_objects . Size());
+	}
+	else
+		MCInterfaceExecGroupSelection(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCMakeGroup::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (targets != nil)
+	{
+		uindex_t t_count;
+		t_count = 0;
+		for (MCChunk *t_chunk = targets; t_chunk != nil; t_chunk = t_chunk -> next)
+		{
+			t_chunk -> compile_object_ptr(ctxt);
+			t_count++;
+		}
+
+		MCSyntaxFactoryEvalList(ctxt, t_count);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupControlsMethodInfo);
+	}
+	else
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGroupSelectionMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPasteCmd::~MCPasteCmd()
@@ -1729,7 +2638,7 @@ Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 
 Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
 {
-	MCObject *optr;
+	/*MCObject *optr;
 	if (!MCdispatcher -> dopaste(optr, true))
 		MCresult->sets("can't paste (empty clipboard or locked destination)");
 	else
@@ -1738,7 +2647,24 @@ Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
 			optr->getprop(0, P_LONG_ID, ep, False);
 			it->set(ep);
 		}
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep, it);
+	MCPasteboardExecPaste(ctxt);
+	//it->set(ep);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCPasteCmd::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCPasteboardExecPasteMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCPlace::~MCPlace()
@@ -1771,7 +2697,7 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 
 Exec_stat MCPlace::exec(MCExecPoint &ep)
 {
-	MCObject *gptr;
+	/*MCObject *gptr;
 	uint4 parid;
 	if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
 	{
@@ -1814,7 +2740,54 @@ Exec_stat MCPlace::exec(MCExecPoint &ep)
 
 	cptr->newcontrol((MCControl *)gptr, True);
 
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCObject *gptr;
+	uint4 parid;
+	if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_PLACE_NOBACKGROUND, line, pos);
+		return ES_ERROR;
+	}
+	// MW-2008-03-31: [[ Bug 6281 ]] A little too draconian here - it is possible
+	//   for a parent of a placeable group to be either a card or a stack.
+
+	if (gptr->gettype() != CT_GROUP)
+	{
+		MCeerror->add(EE_PLACE_NOTABACKGROUND, line, pos);
+		return ES_ERROR;
+	}
+	MCObject *optr;
+	if (card->getobj(ep, optr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_PLACE_NOCARD, line, pos);
+		return ES_ERROR;
+	}
+	if (optr->gettype() != CT_CARD)
+	{
+		MCeerror->add(EE_PLACE_NOTACARD, line, pos);
+		return ES_ERROR;
+	}
+	MCCard *cptr = (MCCard *)optr;
+	MCExecContext ctxt(ep);
+	MCInterfaceExecPlaceGroupOnCard(ctxt, gptr, cptr);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCPlace::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	group -> compile_object_ptr(ctxt);
+	card -> compile_object_ptr(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecPlaceGroupOnCardMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRecord::~MCRecord()
@@ -1838,7 +2811,7 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
 
 Exec_stat MCRecord::exec(MCExecPoint &ep)
 {
-	if (MCsecuremode & MC_SECUREMODE_PRIVACY)
+	/*if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 	{
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
@@ -1850,7 +2823,37 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
 	}
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
 	MCtemplateplayer->recordsound(soundfile);
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+
+	if (file->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_RECORD_BADFILE, line, pos);
+		return ES_ERROR;
+	}
+
+	MCAutoStringRef t_filename;
+	/* UNCHECKED */ ep . copyasstringref(&t_filename);
+
+	MCMultimediaExecRecord(ctxt, *t_filename);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+
+}
+
+void MCRecord::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	file -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCMultimediaExecRecordMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 Exec_stat MCRedo::exec(MCExecPoint &ep)
@@ -1934,7 +2937,7 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 
 Exec_stat MCRemove::exec(MCExecPoint &ep)
 {
-	if (all)
+	/*if (all)
 	{
 		MCObjectList *listptr = where == IP_FRONT ? MCfrontscripts : MCbackscripts;
 		MCObjectList *lptr = listptr;
@@ -1993,7 +2996,83 @@ Exec_stat MCRemove::exec(MCExecPoint &ep)
 			optr -> setflag(True, F_GROUP_SHARED);
 		}
 	}
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+	
+	MCExecContext ctxt(ep);
+	if (all)
+		MCEngineExecRemoveAllScriptsFrom(ctxt, where == IP_FRONT);
+	else 
+	{
+		MCObjectPtr optr;
+		uint4 parid;
+		if (target->getobj(ep, optr, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
+			return ES_ERROR;
+		}
+		if (script)
+			MCEngineExecRemoveScriptOfObjectFrom(ctxt, optr . object, where == IP_FRONT);
+		else
+		{
+			if (optr . object->gettype() != CT_GROUP)
+			{
+				MCeerror->add(EE_REMOVE_NOTABACKGROUND, line, pos);
+				return ES_ERROR;
+			}
+
+			MCObject *cptr;
+			if (card->getobj(ep, cptr, parid, True) != ES_NORMAL)
+			{
+				MCeerror->add(EE_REMOVE_NOOBJECT, line, pos);
+				return ES_ERROR;
+			}
+
+			if (cptr->gettype() != CT_CARD)
+			{
+				MCeerror->add(EE_REMOVE_NOTACARD, line, pos);
+				return ES_ERROR;
+			}
+
+			MCCard *cardptr = (MCCard *)cptr;
+			MCInterfaceExecRemoveGroupFromCard(ctxt, optr, cardptr);
+		}
+	}
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);	
+}
+
+void MCRemove::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (all)
+	{
+		MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveAllScriptsFromMethodInfo);
+	}
+	else
+	{
+		target -> compile_object_ptr(ctxt);
+
+		if (script)
+		{
+			MCSyntaxFactoryEvalConstantBool(ctxt, where == IP_FRONT);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCEngineExecRemoveScriptOfObjectFromMethodInfo);
+		}
+		else
+		{
+			card -> compile_object_ptr(ctxt);
+
+			MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRemoveGroupFromCardMethodInfo);
+		}
+	}
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRename::~MCRename()
@@ -2025,7 +3104,7 @@ Parse_stat MCRename::parse(MCScriptPoint &sp)
 
 Exec_stat MCRename::exec(MCExecPoint &ep)
 {
-	if (source->eval(ep) != ES_NORMAL)
+	/* if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_RENAME_BADSOURCE, line, pos);
@@ -2046,7 +3125,45 @@ Exec_stat MCRename::exec(MCExecPoint &ep)
 		MCresult->clear(False);
 	delete s;
 	delete d;
-	return ES_NORMAL;
+	return ES_NORMAL; */
+
+	if (source->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_RENAME_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_from;
+	/* UNCHECKED */ ep . copyasstringref(&t_from);
+
+	if (dest->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_RENAME_BADDEST, line, pos);
+		return ES_ERROR;
+	}
+
+	MCAutoStringRef t_to;
+	/* UNCHECKED */ ep.copyasstringref(&t_to);
+	MCExecContext ctxt(ep);
+	MCFilesExecRename(ctxt, *t_from, *t_to);
+
+	if (!ctxt.HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCRename::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+	dest -> compile(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCFilesExecRenameMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2181,7 +3298,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 
 Exec_stat MCReplace::exec(MCExecPoint &ep)
 {
-	MCExecPoint epp(ep);
+	/*MCExecPoint epp(ep);
 	MCExecPoint epr(ep);
 	if (pattern->eval(epp) != ES_NORMAL || epp.tos() != ES_NORMAL || epp.getsvalue().getlength() < 1)
 	{
@@ -2206,14 +3323,14 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 	if (pstring.getlength() == 1 && rstring.getlength() == 1)
 	{
 		char *t_target;
-		ep.grabsvalue();
-		t_target = ep.getbuffer(0);
+		uindex_t t_length;
+		 UNCHECKED  ep . modify(t_target, t_length);
 		// MW-2012-03-22: [[ Bug ]] char and uint8_t are different on some platforms
 		//   causing problems so we revert to coercing to uint8_t.
 		if (ep.getcasesensitive())
-			replace_char_with_char((uint8_t *)t_target, ep.getsvalue().getlength(), (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
+			replace_char_with_char((uint8_t *)t_target, t_length, (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
 		else
-			replace_char_with_char_caseless((uint8_t *)t_target, ep.getsvalue().getlength(), (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
+			replace_char_with_char_caseless((uint8_t *)t_target, t_length, (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
 	}
 	else
 	{
@@ -2229,14 +3346,57 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	if (pattern->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL || ep.getsvalue().getlength() < 1)
+	{
+		MCeerror->add(EE_REPLACE_BADPATTERN, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_pattern;
+	ep.copyasstringref(&t_pattern);
+	if (replacement->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL)
+	{
+		MCeerror->add(EE_REPLACE_BADREPLACEMENT, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_replacement;
+	ep.copyasstringref(&t_replacement);
+	if (container->eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_REPLACE_BADCONTAINER, line, pos);
+		return ES_ERROR;
+	}
+	MCAutoStringRef t_target;
+	ep.copyasmutablestringref(&t_target);
+	MCExecContext ctxt(ep);
+	MCStringsExecReplace(ctxt, *t_pattern, *t_replacement, *t_target);
+
+	if (!ctxt . HasError())
+	{
+		ep . setvalueref(*t_target);
+		return container -> set(ep, PT_INTO);
+	}
+
+	return ctxt . Catch(line, pos);
 }
 
-////////////////////////////////////////////////////////////////////////////////
+void MCReplace::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	pattern -> compile(ctxt);
+	replacement -> compile(ctxt);
+	container -> compile_inout(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCStringsExecReplaceMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
 
 Exec_stat MCRevert::exec(MCExecPoint &ep)
 {
-	if (MCtopstackptr != NULL)
+	/*if (MCtopstackptr != NULL)
 	{
 		Window_mode oldmode = MCtopstackptr->getmode();
 		MCRectangle oldrect = MCtopstackptr->getrect();
@@ -2250,7 +3410,6 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		sptr->getprop(0, P_FILE_NAME, ep, False);
-		ep.grabsvalue();
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		MCerrorlock++;
@@ -2263,7 +3422,24 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 		if (sptr != NULL)
 			sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
 	}
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	MCInterfaceExecRevert(ctxt);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCRevert::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecRevertMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCRotate::~MCRotate()
@@ -2300,7 +3476,7 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 {
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
 	//   editing operations are not supported yet.
-#ifndef _MOBILE
+/*#ifndef _MOBILE
 
 	MCImage *iptr = nil;
 
@@ -2338,7 +3514,74 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 
 #endif
 
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
+	//   editing operations are not supported yet.
+#ifndef _MOBILE
+	MCImage *iptr;
+	iptr = NULL;
+	MCExecContext ctxt(ep);
+
+	if (image != NULL)
+	{
+		MCObject *optr;
+		uint4 parid;
+		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_ROTATE_NOIMAGE, line, pos);
+			return ES_ERROR;
+		}
+
+		if (optr->gettype() != CT_IMAGE)
+		{
+			MCeerror->add(EE_ROTATE_NOTIMAGE, line, pos);
+			return ES_ERROR;
+		}
+		iptr = (MCImage *)optr;
+	}
+
+	if (angle->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
+	{
+		MCeerror->add(EE_ROTATE_BADANGLE, line, pos);
+		return ES_ERROR;
+	}
+
+	integer_t t_angle;
+	t_angle = ep.getuint4();
+
+	if (iptr != NULL)
+		MCGraphicsExecRotateImage(ctxt, iptr, t_angle);
+	else
+		MCGraphicsExecRotateSelection(ctxt, t_angle);
+
+#endif
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCRotate::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (image != nil)
+	{
+		image -> compile_object_ptr(ctxt);
+		angle -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateImageMethodInfo);
+	}
+	else
+	{
+		angle -> compile(ctxt);
+
+		MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecRotateSelectionMethodInfo);
+	}
+	
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCCrop::~MCCrop()
@@ -2372,8 +3615,8 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 }
 
 Exec_stat MCCrop::exec(MCExecPoint &ep)
-{
-	if (image != NULL)
+{	
+	/*	if (image != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
@@ -2410,7 +3653,70 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 		trect.height = MCU_max(i4 - i2, 1);
 		iptr->crop(&trect);
 	}
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	MCImage *iptr;
+	MCRectangle t_rect;
+	
+	if (image != nil)
+	{
+		MCObject *optr;
+		uint4 parid;
+		if (image->getobj(ep, optr, parid, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CROP_NOIMAGE, line, pos);
+			return ES_ERROR;
+		}
+		if (optr->gettype() != CT_IMAGE)
+		{
+			MCeerror->add(EE_CROP_NOTIMAGE, line, pos);
+			return ES_ERROR;
+		}
+		iptr = (MCImage *)optr;
+		if (newrect->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_CROP_CANTGETRECT, line, pos);
+			return ES_ERROR;
+		}
+		if (!ep . copyaslegacyrectangle(t_rect))
+		{
+			MCeerror->add(EE_CROP_NAR, line, pos, ep.getsvalue());
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		iptr = nil;
+		t_rect = MCRectangleMake(0,0,0,0);
+	}
+
+	MCGraphicsExecCropImage(ctxt, iptr, t_rect);
+	
+	if (!ctxt . HasError()) 
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCCrop::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (image != nil)
+	{
+		image -> compile_object_ptr(ctxt);
+		newrect -> compile(ctxt);
+	}
+	else
+	{
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+		MCSyntaxFactoryEvalConstantLegacyRectangle(ctxt, MCRectangleMake(0,0,0,0));
+	}
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCGraphicsExecCropImageMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCSelect::~MCSelect()
@@ -2458,7 +3764,7 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 
 Exec_stat MCSelect::exec(MCExecPoint &ep)
 {
-	if (targets == NULL)
+	/*if (targets == NULL)
 	{
 		MCselected->clear(True);
 		if (MCactivefield != NULL)
@@ -2479,13 +3785,144 @@ Exec_stat MCSelect::exec(MCExecPoint &ep)
 		}
 		tptr = tptr->next;
 	}
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	if (targets == NULL)
+		MCInterfaceExecSelectEmpty(ctxt);
+	else if (text)
+	{
+		MCObjectPtr t_object;
+		
+		if (targets -> getobj(ep, t_object, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
+			return ES_ERROR;
+		}
+		
+		MCInterfaceExecSelectAllTextOfField(ctxt, t_object);
+	}
+	else if (targets -> next == nil)
+	{
+		MCObjectChunkPtr t_chunk;
+		
+		if (targets -> evalobjectchunk(ep, false, false, t_chunk) != ES_NORMAL)
+		{
+			MCeerror->add(EE_SELECT_BADTARGET, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (t_chunk . chunk != CT_UNDEFINED)
+		{
+			if (t_chunk . object -> gettype() == CT_FIELD)
+				MCInterfaceExecSelectTextOfField(ctxt, where, t_chunk);
+			else if (t_chunk . object -> gettype() == CT_BUTTON)
+				MCInterfaceExecSelectTextOfButton(ctxt, where, t_chunk);
+			else
+			{
+				MCeerror->add(EE_CHUNK_BADCONTAINER, line, pos);
+				return ES_ERROR;
+			}
+		}
+		else
+		{
+			MCObjectPtr t_object;
+			t_object . object = t_chunk . object;
+			t_object . part_id = t_chunk . part_id;
+			MCInterfaceExecSelectObjects(ctxt, &t_object, 1);
+		}
+	}
+	else
+	{
+		MCChunk *chunkptr = targets;
+		MCObjectPtr t_object;
+		MCAutoArray<MCObjectPtr> t_objects;
+
+		while (chunkptr != NULL)
+		{
+			if (chunkptr->getobj(ep, t_object, True) != ES_NORMAL)
+			{
+				MCeerror->add(EE_SELECT_BADTARGET, line, pos);
+				return ES_ERROR;
+			}	
+			
+			if (!t_objects . Push(t_object))
+			{
+				MCeerror -> add(EE_NO_MEMORY, line, pos);
+				return ES_ERROR;
+			}
+
+			chunkptr = chunkptr->next;
+		}
+		MCInterfaceExecSelectObjects(ctxt, t_objects . Ptr(), t_objects . Size());
+	}
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCSelect::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (targets == NULL)
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectEmptyMethodInfo);
+	else if (text)
+	{
+		targets -> compile_object_ptr(ctxt);
+		
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecSelectAllTextOfFieldMethodInfo);
+	}
+	else 
+	{
+		MCSyntaxFactoryEvalConstantInt(ctxt, where);
+		
+		uindex_t t_count;
+		t_count = 0;
+
+		for (MCChunk *chunkptr = targets; chunkptr != nil; chunkptr -> next)
+		{
+			chunkptr -> compile_object_ptr(ctxt);
+			t_count++;
+		}
+		
+		if (t_count > 1)
+		{
+			MCSyntaxFactoryEvalList(ctxt, t_count);
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
+		}
+		else
+		{
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfFieldMethodInfo, 0, 1);
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectTextOfButtonMethodInfo, 0, 1);
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecSelectObjectsMethodInfo, 1);
+		}
+	}
 }
 
 Exec_stat MCUndoCmd::exec(MCExecPoint &ep)
 {
-	MCundos->undo();
-	return ES_NORMAL;
+	/*MCundos->undo();
+	return ES_NORMAL;*/
+	
+	MCExecContext ctxt(ep);
+	MCInterfaceExecUndo(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+}
+
+void MCUndoCmd::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUndoMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCUngroup::~MCUngroup()
@@ -2511,7 +3948,7 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 
 Exec_stat MCUngroup::exec(MCExecPoint &ep)
 {
-	MCObject *gptr;
+	/*MCObject *gptr;
 	if (group != NULL)
 	{
 		uint4 parid;
@@ -2531,7 +3968,48 @@ Exec_stat MCUngroup::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	gptr->getstack()->ungroup((MCGroup *)gptr);
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecContext ctxt(ep);
+	if (group != NULL)
+	{
+		MCObject *gptr;
+		uint4 parid;
+		if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
+		{
+			MCeerror->add(EE_UNGROUP_NOGROUP, line, pos);
+			return ES_ERROR;
+		}
+		if (gptr->gettype() != CT_GROUP)
+		{
+			MCeerror->add(EE_UNGROUP_NOTAGROUP, line, pos);
+			return ES_ERROR;
+		}
+		MCInterfaceExecUngroupObject(ctxt, gptr);
+	}
+	else
+		MCInterfaceExecUngroupSelection(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+
+}
+
+void MCUngroup::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	if (group != nil)
+	{
+		group -> compile_object_ptr(ctxt);	
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupObjectMethodInfo);
+	}
+	else
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecUngroupSelectionMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2798,8 +4276,8 @@ Exec_stat MCRelayer::exec(MCExecPoint& ep)
 
 		// Make sure we remove focus from the control.
 		bool t_was_mfocused, t_was_kfocused;
-		t_was_mfocused = t_card -> getstate(CS_MFOCUSED);
-		t_was_kfocused = t_card -> getstate(CS_KFOCUSED);
+		t_was_mfocused = t_card -> getstate(CS_MFOCUSED) == True;
+		t_was_kfocused = t_card -> getstate(CS_KFOCUSED) == True;
 		if (t_was_mfocused)
 			t_card -> munfocus();
 		if (t_was_kfocused)

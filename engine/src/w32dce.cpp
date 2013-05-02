@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "vclip.h"
 #include "globals.h"
-#include "core.h"
 #include "notify.h"
 #include "osspec.h"
 
@@ -524,19 +523,14 @@ void MCScreenDC::flushevents(uint2 e)
 
 // MW-2006-03-21: Bug 3408 - fix memory leak due to unused memory allocation
 // MW-2006-03-24: Bug 3408 - fix resource leak due to non-deletion of font
-uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
+uint1 MCScreenDC::fontnametocharset(MCStringRef p_font)
 {
-
 	HDC hdc = f_src_dc;
 	LOGFONTA logfont;
 	memset(&logfont, 0, sizeof(LOGFONTA));
-	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, strlen(oldfontname));
-	strncpy(logfont.lfFaceName, oldfontname, maxlength);
+	uint4 maxlength = MCU_min(LF_FACESIZE - 1U, MCStringGetLength(p_font));
+	strncpy(logfont.lfFaceName, MCStringGetCString(p_font), maxlength);
 	logfont.lfFaceName[maxlength] = '\0';
-	//parse font and encoding
-	char *sptr = logfont.lfFaceName;
-	if (sptr = strchr(logfont.lfFaceName, ','))
-		*sptr = '\0';
 	//parse font and encoding
 	logfont.lfCharSet = DEFAULT_CHARSET;
 	HFONT newfont = CreateFontIndirectA(&logfont);
@@ -547,6 +541,7 @@ uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
 	return charset;
 }
 
+/*
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 
@@ -581,6 +576,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	SelectObject(hdc, oldfont);
 	return fontname;
 }
+*/
 
 void MCScreenDC::openIME()
 {}

@@ -1,0 +1,31 @@
+setup
+
+local tUrl = "http://ian.on-rev.com/logo.png"
+local tUrlstatus
+
+unload url tUrl
+
+test the urlstatus of tUrl is empty
+
+load url tUrl
+wait 1 second with messages
+
+put the urlstatus of tUrl into tUrlstatus
+test item 1 of tUrlstatus is among the items of "queued,contacted,requested,loading,cached,error,timeout"
+
+local tReceived, tTotal
+
+if item 1 of tUrlstatus is "loading" then
+	put item 2 of tUrlstatus into tRecieved
+	put item 3 of tUrlstatus into tTotal
+	
+	test tReceived is an integer
+	test tTotal is empty or tTotal is an integer
+	
+	test tTotal is empty or tReceived <= tTotal
+end if
+
+unload url tUrl
+test the urlstatus of tUrl is empty
+
+teardown

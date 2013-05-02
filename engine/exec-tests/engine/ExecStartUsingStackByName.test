@@ -1,0 +1,15 @@
+setup
+
+create stack "Test1"
+
+set the script of stack "Test1" to "on libraryStack;global tVar;put true into tVar; end libraryStack"
+
+global tVar
+
+start using stack "Test1"
+
+test tVar
+
+close stack "Test1"
+
+teardown

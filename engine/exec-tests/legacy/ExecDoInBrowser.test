@@ -1,0 +1,10 @@
+setup
+
+try
+	do "1+1" in browser
+catch tError
+end try
+
+test tError is not empty
+
+teardown

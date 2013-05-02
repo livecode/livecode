@@ -346,12 +346,6 @@ uint2 MCNativeTheme::getthemefamilyid()
 	return LF_WIN95; //gtk inherits from the win95 theme
 }
 
-
-const char  *MCNativeTheme::getname()
-{
-	return MClnfamstring;
-}
-
 void MCNativeTheme::getscrollbarrects(const MCWidgetInfo & winfo,
                                       const MCRectangle & srect,
                                       MCRectangle & sbincarrowrect,

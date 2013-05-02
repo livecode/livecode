@@ -39,12 +39,6 @@ class MCExecPoint
 
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
-	MCVariableValue *array;
-	char *buffer;
-	uint4 size;
-	MCString svalue;
-	real8 nvalue;
-	Value_format format;
 	uint2 nffw;
 	uint2 nftrailing;
 	uint2 nfforce;
@@ -61,6 +55,8 @@ class MCExecPoint
 	char linedel;
 	char rowdel;
 
+	MCValueRef value;
+
 public:
 	MCExecPoint()
 	{
@@ -72,14 +68,12 @@ public:
 		nffw = 8;
 		nftrailing = 6;
 		cutoff = 35;
+		value = MCValueRetain(kMCEmptyString);
 	}
 	MCExecPoint(const MCExecPoint &ep)
 	{
 		*this = ep;
-		array = NULL;
-		deletearray = False;
-		buffer = NULL;
-		size = 0;
+		value = MCValueRetain(kMCEmptyString);
 	}
 	MCExecPoint(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
 	{
@@ -94,6 +88,7 @@ public:
 		nffw = 8;
 		nftrailing = 6;
 		cutoff = 35;
+		value = MCValueRetain(kMCEmptyString);
 	}
 	void restore(const MCExecPoint &ep)
 	{
@@ -103,9 +98,7 @@ public:
 	}
 	~MCExecPoint()
 	{
-		delete buffer;
-		if (deletearray)
-			delete array;
+		MCValueRelease(value);
 	}
 	void sethlist(MCHandlerlist *hl)
 	{
@@ -116,191 +109,6 @@ public:
 		curhandler = newhandler;
 	}
 
-	// Return a pointer to the array value contained in the exec-point
-	MCVariableValue *getarray(void)
-	{
-		return array;
-	}
-
-	Boolean getdeletearray()
-	{
-		return deletearray;
-	}
-
-	// Take the current array value of the ExecPoint away from it
-	void takearray(MCVariableValue*& r_array, Boolean& r_delete)
-	{
-		r_array = array;
-		r_delete = deletearray;
-
-		array = NULL;
-		deletearray = False;
-	}
-
-	// Set the current exec-points value to the given array, if d is
-	// true, then this will manage the lifetime.
-	void setarray(MCVariableValue *a, Boolean d);
-
-	Boolean isempty(void) const
-	{
-		return format == VF_UNDEFINED || format != VF_ARRAY && format != VF_NUMBER && svalue . getlength() == 0;
-	}
-	
-	Value_format getformat()
-	{
-		return format;
-	}
-	void setsvalue(const MCString &s)
-	{
-		svalue = s;
-		format = VF_STRING;
-	}
-	void setnvalue(const real8 &n)
-	{
-		nvalue = n;
-		format = VF_NUMBER;
-	}
-	void setnvalue(uint4 n)
-	{
-		nvalue = (real8)n;
-		format = VF_NUMBER;
-	}
-	void setnvalue(int4 n)
-	{
-		nvalue = (real8)n;
-		format = VF_NUMBER;
-	}
-	void setnvalue(uint2 n)
-	{
-		nvalue = (real8)n;
-		format = VF_NUMBER;
-	}
-	void setnvalue(int2 n)
-	{
-		nvalue = (real8)n;
-		format = VF_NUMBER;
-	}
-	void setboth(const MCString &s, const real8 &n)
-	{
-		svalue = s;
-		nvalue = n;
-		format = VF_BOTH;
-	}
-	void clear();
-	char *getbuffer(uint4 newsize);
-	uint4 getbuffersize()
-	{
-		return size;
-	}
-	void setbuffer(char *s, uint4 l)
-	{
-		buffer = s;
-		size = l;
-	}
-	Boolean changed()
-	{
-		return svalue.getstring() == buffer;
-	}
-	void copysvalue(const char *s, uint4 l);
-	void copysvalue(const char *s) {copysvalue(s, strlen(s));}
-
-	// Ensure that there is a string value available and the exec-point owns it.
-	void grabsvalue();
-
-	// Ensure that the execpoint owns its array (if it has one)
-	void grabarray();
-
-	// Take the memory pointed to by buffer as the value, and set the execpoint to a string
-	void grabbuffer(char *p_buffer, uint4 p_length);
-
-	// Ensure that the execpoint owns its value
-	void grab(void);
-
-	void setint(int4);
-	void setuint(uint4);
-    void setint64(int64_t);
-    void setuint64(uint64_t);
-	void setr8(real8 n, uint2 fw, uint2 trailing, uint2 force);
-	Exec_stat getreal8(real8 &, uint2, uint2, Exec_errors);
-	Exec_stat getuint2(uint2 &, uint2, uint2, Exec_errors);
-	Exec_stat getint4(int4 &, uint2, uint2, Exec_errors);
-	Exec_stat getuint4(uint4 &, uint2, uint2, Exec_errors);
-	Exec_stat getboolean(Boolean &, uint2, uint2, Exec_errors);
-	Exec_stat ntos();
-	Exec_stat ston();
-	void lower();
-	void upper();
-	
-	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-	Exec_stat tos()
-	{
-		return format == VF_NUMBER ? ntos() : (format != VF_ARRAY ? ES_NORMAL : ES_ERROR);
-	}
-	
-	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-	Exec_stat ton()
-	{
-		return format == VF_STRING ? ston() : (format != VF_ARRAY ? ES_NORMAL : ES_ERROR);
-	}
-	
-	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
-	Exec_stat tona(void)
-	{
-		return format == VF_STRING ? ston() : ES_NORMAL;
-	}
-
-	// Ensure that the value in the ExecPoint is a NUL-terminated string and return
-	// a pointer to it.
-	const char *getcstring(void);
-
-	// Ensure that the value in the ExecPoint is NUL-terminated then return it as
-	// a MCString.
-	const MCString& getsvalue0(void)
-	{
-		getcstring();
-		return svalue;
-	}
-
-	const MCString &getsvalue()
-	{
-		if (format==VF_NUMBER)
-			tos();
-		return svalue;
-	}
-	real8 getnvalue() const
-	{
-		return nvalue;
-	}
-	uint4 getuint4() const
-	{
-		return (uint4)(nvalue < 0.0 ? 0 : nvalue + 0.5);
-	}
-	uint2 getuint2() const
-	{
-		return (uint2)(nvalue < 0.0 ? 0 : nvalue + 0.5);
-	}
-	int4 getint4() const
-	{
-		return (int4)(nvalue < 0.0?nvalue - 0.5:nvalue + 0.5);
-	}
-	int64_t getint8() const
-	{
-		return (int4)(nvalue < 0.0?nvalue - 0.5:nvalue + 0.5);
-	}
-	uint64_t getuint8() const
-	{
-		return (uint4)(nvalue < 0.0?nvalue - 0.5:nvalue + 0.5);
-	}
-	void setstrlen()
-	{
-		svalue.set(buffer, strlen(buffer));
-		format = VF_STRING;
-	}
-	void setlength(uint4 l)
-	{
-		svalue.set(buffer, l);
-		format = VF_STRING;
-	}
 	MCObject *getobj() const
 	{
 		return curobj;
@@ -394,6 +202,18 @@ public:
 		return getboolean(wholematches, line, pos, EE_PROPERTY_NAB);
 	}
 
+	void setcasesensitive(bool p_value) {casesensitive = p_value;}
+	void setconvertoctals(bool p_value) {convertoctals = p_value;}
+	void setwholematches(bool p_value) {wholematches = p_value;}
+	void setuseunicode(bool p_value) {useunicode = p_value;}
+	void setusesystemdate(bool p_value) {usesystemdate = p_value;}
+	void setcutoff(uint2 p_value) {cutoff = p_value;}
+	void setitemdel(char_t p_value) {itemdel = p_value;}
+	void setcolumndel(char_t p_value) {columndel = p_value;}
+	void setlinedel(char_t p_value) {linedel = p_value;}
+	void setrowdel(char_t p_value) {rowdel = p_value;}
+	void setnumberformat(uint2 fw, uint2 trailing, uint2 force) {nffw = fw; nftrailing = trailing; nfforce = force;}
+
 	void setobj(MCObject *p_object)
 	{
 		curobj = p_object;
@@ -419,15 +239,219 @@ public:
 	}
 
 	void setnumberformat();
+
+	//////////
+
+	// Returns true if the exec point contains the empty value.
+	bool isempty(void) const;
+	// Returns true if the exec point contains a (non-empty) array.
+	bool isarray(void) const;
+	// Returns true if the exec point contains a string.
+	bool isstring(void) const;
+	// Returns true if the exec point contains a number.
+	bool isnumber(void) const;
+
+	void clear(void);
+	void setsvalue(const MCString& string);
+	void copysvalue(const MCString& string);
+	void copysvalue(const char *string, uindex_t length);
+	void setnvalue(real8 number);
+	void setnvalue(uinteger_t number);
+	void setnvalue(integer_t number);
+	void grabbuffer(char *buffer, uint32_t length);
+
+	bool reserve(uindex_t capacity, char*& r_buffer);
+	void commit(uindex_t size);
+
+	bool modify(char*& r_buffer, uindex_t& r_length);
+	void resize(uindex_t size);
+
+	const char *getcstring(void);
+	MCString getsvalue(void);
+	MCString getsvalue0(void);
+	real8 getnvalue();
+
+	Exec_stat tos(void);
+	Exec_stat ton(void);
+	Exec_stat tona(void);
+
+	uint4 getuint4();
+	uint2 getuint2();
+	int4 getint4();
+
+	Exec_stat getreal8(real8 &, uint2, uint2, Exec_errors);
+	Exec_stat getuint2(uint2 &, uint2, uint2, Exec_errors);
+	Exec_stat getint4(int4 &, uint2, uint2, Exec_errors);
+	Exec_stat getuint4(uint4 &, uint2, uint2, Exec_errors);
+	Exec_stat getboolean(Boolean &, uint2, uint2, Exec_errors);
+
+	void setint(int4);
+	void setuint(uint4);
+    void setint64(int64_t);
+    void setuint64(uint64_t);
+	void setr8(real8 n, uint2 fw, uint2 trailing, uint2 force);
+
+	Exec_stat ntos();
+	Exec_stat ston();
+	void lower();
+	void upper();
+
 	void insert(const MCString &, uint4 s, uint4 e);
 	uint1 *pad(char value, uint4 count);
 	void substring(uint4 s, uint4 e);
+	void tail(uint4 s);
+	void fill(uint4 s, char c, uint4 n);
+	void texttobinary();
+	void binarytotext();
+
+#if 0
+	Boolean isempty(void) const
+	{
+		return format == VF_UNDEFINED || format != VF_ARRAY && format != VF_NUMBER && svalue . getlength() == 0;
+	}
+	
+	Value_format getformat()
+	{
+		return format;
+	}
+	void setsvalue(const MCString &s)
+	{
+		svalue = s;
+		format = VF_STRING;
+	}
+	void setnvalue(const real8 &n)
+	{
+		nvalue = n;
+		format = VF_NUMBER;
+	}
+	void setnvalue(uint4 n)
+	{
+		nvalue = (real8)n;
+		format = VF_NUMBER;
+	}
+	void setnvalue(int4 n)
+	{
+		nvalue = (real8)n;
+		format = VF_NUMBER;
+	}
+	void setnvalue(uint2 n)
+	{
+		nvalue = (real8)n;
+		format = VF_NUMBER;
+	}
+	void setnvalue(int2 n)
+	{
+		nvalue = (real8)n;
+		format = VF_NUMBER;
+	}
+	void setboth(const MCString &s, const real8 &n)
+	{
+		svalue = s;
+		nvalue = n;
+		format = VF_BOTH;
+	}
+	void copysvalue(const char *s, uint4 l);
+	void copysvalue(const char *s) {copysvalue(s, strlen(s));}
+	// Ensure that there is a string value available and the exec-point owns it.e
+	void grabsvalue();
+	// Ensure that the execpoint owns its array (if it has one)
+	void grabarray();
+	// Ensure that the execpoint owns its value
+	void grab(void);
+	void clear();
+	// Take the memory pointed to by buffer as the value, and set the execpoint to a string
+	void grabbuffer(char *p_buffer, uint4 p_length);
+
+	char *getbuffer(uint4 newsize);
+	uint4 getbuffersize()
+	{
+		return size;
+	}
+	void setbuffer(char *s, uint4 l)
+	{
+		buffer = s;
+		size = l;
+	}
+	Boolean changed()
+	{
+		return svalue.getstring() == buffer;
+	}
+
+	void setstrlen()
+	{
+		svalue.set(buffer, strlen(buffer));
+		format = VF_STRING;
+	}
+	void setlength(uint4 l)
+	{
+		svalue.set(buffer, l);
+		format = VF_STRING;
+	}
+	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+	Exec_stat tos()
+	{
+		return format == VF_NUMBER ? ntos() : (format != VF_ARRAY ? ES_NORMAL : ES_ERROR);
+	}
+	
+	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+	Exec_stat ton()
+	{
+		return format == VF_STRING ? ston() : (format != VF_ARRAY ? ES_NORMAL : ES_ERROR);
+	}
+	
+	// MW-2007-07-03: [[ Bug 5123 ]] - Strict array checking modification
+	Exec_stat tona(void)
+	{
+		return format == VF_STRING ? ston() : ES_NORMAL;
+	}
+
+	// Ensure that the value in the ExecPoint is a NUL-terminated string and return
+	// a pointer to it.
+	const char *getcstring(void);
+
+	// Ensure that the value in the ExecPoint is NUL-terminated then return it as
+	// a MCString.
+	const MCString& getsvalue0(void)
+	{
+		getcstring();
+		return svalue;
+	}
+
+	const MCString &getsvalue()
+	{
+		if (format==VF_NUMBER)
+			tos();
+		return svalue;
+	}
+	real8 getnvalue() const
+	{
+		return nvalue;
+	}
+	uint4 getuint4() const
+	{
+		return (uint4)(nvalue < 0.0 ? 0 : nvalue + 0.5);
+	}
+	uint2 getuint2() const
+	{
+		return (uint2)(nvalue < 0.0 ? 0 : nvalue + 0.5);
+	}
+	int4 getint4() const
+	{
+		return (int4)(nvalue < 0.0?nvalue - 0.5:nvalue + 0.5);
+	}
+	Exec_stat ntos();
+	Exec_stat ston();
+	void lower();
+	void upper();
+	
 	void tail(uint4 s);
 	Boolean usingbuffer();
 	void fill(uint4 s, char c, uint4 n);
 	void texttobinary();
 	void binarytotext();
 	void parseURL(Url_type &urltype, const char *&hostname, const char *&rname, uint4 &port, const char *&auth);
+
+#endif
 
 	void utf16toutf8(void);
 	void utf8toutf16(void);
@@ -462,8 +486,10 @@ public:
 	void setchar(char character);
 	void setbytes(const void *bytes, uindex_t length);
 	void setbyte(uint8_t byte);
+	void setbool(bool value);
 	void setboolean(Boolean value);
 	void setpoint(int16_t x, int16_t y);
+	void setpoint(MCPoint point);
 	void setrectangle(int32_t left, int32_t top, int32_t right, int32_t bottom);
 	void setrectangle(const MCRectangle& rect);
 	void setrectangle(const MCRectangle32& rect);
@@ -497,11 +523,104 @@ public:
 
 	void replacechar(char from, char to);
 
-	void setnameref_unsafe(MCNameRef name);
-	void appendnameref(MCNameRef name);
 	void concatnameref(MCNameRef name, Exec_concat sep, bool first);
+	bool copyasnameref(MCNameRef& r_name);
 
-	bool copyasnameref(MCNameRef& name);
+	void concatstringref(MCStringRef string, Exec_concat sep, bool first);
+	bool copyasstringref(MCStringRef& r_string);
+	bool copyasmutablestringref(MCStringRef& r_string);
+
+	bool copyaslegacypoint(MCPoint& r_point);
+	bool copyaslegacyrectangle(MCRectangle& r_rectangle);
+	bool copyaslegacycolor(MCColor& r_color);
+
+	//
+
+	// Methods that work with MCObject::get/set*prop.
+	bool copyasbool(bool& r_value);
+	bool copyasint(integer_t& r_value);
+	bool copyasuint(uinteger_t& r_value);
+	bool copyasdouble(double& r_value);
+	bool copyaschar(char_t& r_value);
+	bool copyasnumber(MCNumberRef& r_value);
+	bool copyasstring(MCStringRef& r_value);
+	bool copyasarray(MCArrayRef& r_value);
+	bool copyasvariant(MCValueRef& r_value);
+	
+	bool copyaspoint(MCPoint& r_value);
+	bool copyasrect(MCRectangle& r_value);
+
+	// Variant methods.
+
+	// Set the ep to the contents of value.
+	bool setvalueref(MCValueRef value);
+	// Get the valueref from the ep.
+	MCValueRef getvalueref(void);
+	// Set the ep to the contents of value. If value is nil, then empty is used.
+	bool setvalueref_nullable(MCValueRef value);
+	// Make a copy of the contents of the ep as a value.
+	bool copyasvalueref(MCValueRef& r_value);
+	
+	// These two methods attempt to convert the given value to a string and return
+	// false if this fails. Note that failure to be the given type and exception
+	// failure are both returned as false (hence these are slightly sloppy).
+	bool convertvaluereftostring(MCValueRef value, MCStringRef& r_string);
+	bool convertvaluereftonumber(MCValueRef value, MCNumberRef& r_number);
+
+	// This method attempts to convert the given value to an numeric type. Returning false
+	// if this is not possible. Note that this method does not throw, so a false
+	// return value really means the value cannot be a number.
+	bool convertvaluereftobool(MCValueRef value, bool& r_uint);
+	bool convertvaluereftouint(MCValueRef value, uinteger_t& r_uint);
+	bool convertvaluereftoint(MCValueRef value, integer_t& r_int);
+	bool convertvaluereftoreal(MCValueRef value, real64_t& r_real);
+
+	// This method attempts to convert the given value to a boolean. Returning false
+	// if this is not possible. Note that this method does not throw, so a false
+	// return value really means the value cannot be a boolean.
+	bool convertvaluereftoboolean(MCValueRef value, MCBooleanRef& r_boolean);
+
+	// Array methods.
+
+	// Return the array contained within the ep - isarray() must return true for this
+	// to be a valid call.
+	MCArrayRef getarrayref(void);
+	// Copy the contents of the ep as an array - non arrays convert to empty array.
+	bool copyasarrayref(MCArrayRef& r_array);
+	// Copy the contents of the ep as a mutable array - non arrays convert to empty array.
+	bool copyasmutablearrayref(MCArrayRef& r_array);
+
+	// Set the ep to a string containing the list of keys from the given array.
+	bool listarraykeys(MCArrayRef array, char delimiter);
+	// Set the ep to the value of the given key in the array.
+	bool fetcharrayelement(MCArrayRef array, MCNameRef key);
+	// Store the contents of the ep as the given key in the given array.
+	bool storearrayelement(MCArrayRef array, MCNameRef key);
+	bool appendarrayelement(MCArrayRef array, MCNameRef key);
+
+	// Compatibility methods - these should eventually be phased out.
+
+	bool fetcharrayindex(MCArrayRef array, index_t index);
+	bool storearrayindex(MCArrayRef array, index_t index);
+
+	// Set the ep to the value of the given key (as a c-string) in the given array.
+	bool fetcharrayelement_cstring(MCArrayRef array, const char *key);
+	// Store the contents of the ep as the given key (as a c-string) in the given array.
+	bool storearrayelement_cstring(MCArrayRef array, const char *key);
+	// Store the contents of the ep as the given key (as a c-string) in the given array.
+	bool appendarrayelement_cstring(MCArrayRef array, const char *key);
+	// Returns true if the given array has the given key (as a c-string);
+	bool hasarrayelement_cstring(MCArrayRef array, const char *key);
+	// Set the ep to the value of the given key (as a c-string) in the given array.
+	bool fetcharrayelement_oldstring(MCArrayRef array, const MCString& key);
+	// Store the contents of the ep as the given key (as a c-string) in the given array.
+	bool storearrayelement_oldstring(MCArrayRef array, const MCString& key);
+	// Returns true if the given array has the given key (as a c-string);
+	bool hasarrayelement_oldstring(MCArrayRef array, const MCString& key);
+	bool appendarrayelement_oldstring(MCArrayRef array, const MCString& key);
+
+	// Perform put ep op src into ep.
+	Exec_stat factorarray(MCExecPoint& src, Operators op);
 
 private:
 	void dounicodetomultibyte(bool p_native, bool p_reverse);
@@ -509,6 +628,13 @@ private:
 	void concat(uint4 n, Exec_concat, Boolean);
 	void concat(int4 n, Exec_concat, Boolean);
 	void concat(const MCString &, Exec_concat, Boolean);
+
+	bool converttostring(void);
+	bool converttomutablestring(void);
+	bool converttonumber(void);
+	bool converttoboolean(void);
+	bool converttoarray(void);
+	bool converttomutablearray(void);
 };
 
 inline void MCExecPoint::utf16toutf8(void)
@@ -542,9 +668,5 @@ inline void MCExecPoint::nativetoutf8(void)
 	nativetoutf16();
 	utf16toutf8();
 }
-
-#ifndef __MC_VARIABLE_IMPLEMENTATION__
-#include "variable_impl.h"
-#endif
 
 #endif

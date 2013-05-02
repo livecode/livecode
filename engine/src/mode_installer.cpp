@@ -647,7 +647,7 @@ private:
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
 			ep . setstaticbytes(p_data, p_data_length);
-			if (context -> var -> append(ep, True) != ES_NORMAL)
+			if (context -> var -> append(ep) != ES_NORMAL)
 				return false;
 		}
 
@@ -905,7 +905,7 @@ public:
 		t_state . first = true;
 		MCSystemListProcesses(ListProcessCallback, &t_state);
 
-		MCresult -> store(ep, False);
+		MCresult -> set(ep);
 
 		delete t_module;
 
@@ -989,7 +989,7 @@ public:
 
 		ep . setboolean(MCSystemCanDeleteKey(ep . getcstring()));
 
-		MCresult -> store(ep, False);
+		MCresult -> set(ep);
 
 		return ES_NORMAL;
 	}
@@ -1031,7 +1031,7 @@ public:
 
 		ep . setboolean(MCSystemCanDeleteFile(ep . getcstring()));
 
-		MCresult -> store(ep, False);
+		MCresult -> set(ep);
 
 		return ES_NORMAL;
 	}
@@ -1502,7 +1502,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 {
 	if (sptr == MCdispatcher -> getstacks())
 	{
@@ -1515,9 +1515,9 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "installer";
+	return MCN_installer;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -1548,8 +1548,8 @@ bool MCModeShouldLoadStacksOnStartup(void)
 void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
 {
 	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
+	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		r_text = strdup(MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
 	else
 		r_text = "unknown reason";
 }
@@ -1655,7 +1655,7 @@ void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;

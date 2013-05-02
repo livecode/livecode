@@ -23,11 +23,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "constant.h"
 
+#include "syntax.h"
+
 Exec_stat MCConstant::eval(MCExecPoint &ep)
 {
 	if (nvalue == BAD_NUMERIC)
 		ep.setsvalue(svalue);
 	else
-		ep.setboth(svalue, nvalue);
+		ep.setnvalue(nvalue);
 	return ES_NORMAL;
+}
+
+void MCConstant::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	
+	if (nvalue == BAD_NUMERIC)
+		MCSyntaxFactoryEvalConstantOldString(ctxt, svalue);
+	else
+		MCSyntaxFactoryEvalConstantDouble(ctxt, nvalue);
+	
+	MCSyntaxFactoryEvalResult(ctxt);
+	
+	MCSyntaxFactoryEndExpression(ctxt);
 }

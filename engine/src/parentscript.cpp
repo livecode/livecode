@@ -134,7 +134,7 @@ MCVariable *MCParentScriptUse::GetVariable(uint32_t i)
 		// AL-2013-02-04: [[ Bug 9981 ]] Make sure the variable is created with its name so
 		//   it can be watched.
 		/* UNCHECKED */ MCVariable::createwithname(t_vars -> getname(), m_locals[j]);
-		m_locals[j] -> setnameref_unsafe(t_vinits[j] != nil ? t_vinits[j] : kMCEmptyName);
+		m_locals[j] -> setvalueref(t_vinits[j] != nil ? t_vinits[j] : kMCEmptyName);
 	}
 
 	return m_locals[i];
@@ -205,7 +205,7 @@ void MCParentScriptUse::PreserveVars(uint32_t *p_map, MCNameRef *p_new_var_inits
 		/* UNCHECKED */ MCVariable::create(t_new_locals[i]);
 
 		// Initialize the variable
-		t_new_locals[i] -> setnameref_unsafe(p_new_var_inits[i] != nil ? p_new_var_inits[i] : kMCEmptyName);
+		t_new_locals[i] -> setvalueref(p_new_var_inits[i] != nil ? p_new_var_inits[i] : kMCEmptyName);
 	}
 
 	m_locals = t_new_locals;

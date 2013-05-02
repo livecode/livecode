@@ -59,14 +59,14 @@ public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	// dummy cut function for checking licensing
 	virtual Boolean cut(Boolean home);
 	virtual Exec_stat handle(Handler_type, MCNameRef, MCParameter *params, MCObject *pass_from);
 	// MCDispatch functions
 	const char *getl(const MCString &s);
-	void getmainstacknames(MCExecPoint &);
+	bool getmainstacknames(MCListRef& r_list);
 	Boolean cl(const MCString &, const MCString &, Boolean doit);
 	void appendstack(MCStack *sptr);
 	void removestack(MCStack *sptr);
@@ -86,7 +86,7 @@ public:
 	bool loadexternal(const char *p_external);
 
 	void cleanup(IO_handle stream, char *lname, char *bname);
-	IO_stat savestack(MCStack *sptr, const MCString &);
+	IO_stat savestack(MCStack *sptr, const MCStringRef);
 	IO_stat startup(void);
 
 	void wclose(Window w);
@@ -157,7 +157,7 @@ public:
 	void configure(Window w);
 	void enter(Window w);
 	void redraw(Window w, MCRegionRef dirty_region);
-	MCFontStruct *loadfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer);
+	MCFontStruct *loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
 
 	// This method iterates through all stacks and ensures none have a reference
 	// to one of the ones in MCcursors.
@@ -205,12 +205,18 @@ public:
 		return stacks;
 	}
 
+	////////// PROPERTY ACCESSORS
+
+	void GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font);
+	void GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size);
+	void GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
 	IO_stat doreadfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr);
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
 	//   is wrapped by savestack to handle logical font table.
-	IO_stat dosavestack(MCStack *sptr, const MCString &);
+	IO_stat dosavestack(MCStack *sptr, const MCStringRef);
 };
 #endif

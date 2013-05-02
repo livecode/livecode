@@ -1,0 +1,11 @@
+setup
+
+local tVar
+
+put the seconds into tVar
+
+convert tVar to date
+
+test tVar is the date
+
+teardown

@@ -30,7 +30,7 @@ struct MCDeployParameters
 
 	// When building on Windows, this might contain an array with the versioninfo
 	// fields.
-	MCVariableValue *version_info;
+	MCArrayRef version_info;
 
 	// The root stackfile to be included in the standalone.
 	char *stackfile;

@@ -151,9 +151,6 @@ public:
 	MCExpression *insertbinop(MCExpression *nfact, MCExpression *&cfact,
 	                          MCExpression **top);
 	Parse_stat parseexp(Boolean single, Boolean items, MCExpression **);
-	Exec_stat getcommands(MCExecPoint &ep);
-	Exec_stat getfactors(MCExecPoint &ep, Token_type which);
-	Exec_stat getconstants(MCExecPoint &ep);
 	
 	// Search for an existing variable in scope, returning an error if it
 	// doesn't exist.

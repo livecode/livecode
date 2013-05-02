@@ -295,7 +295,7 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	virtual uint2 getwidth(void);
 	virtual uint2 getheight(void);
 	virtual uint2 getmaxpoints(void);
@@ -362,9 +362,9 @@ public:
 	virtual uint4 dtouint4(Drawable d);
 	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
@@ -392,14 +392,14 @@ public:
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
-	virtual uint1 fontnametocharset(const char *oldfontname);
-	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
+	virtual uint1 fontnametocharset(MCStringRef p_fontname);
+//	virtual char *charsettofontname(uint1 chharset, const char *oldfontname);
 	virtual void clearIME(Window w);
 	virtual void openIME();
 	virtual void activateIME(Boolean activate);
 	virtual void closeIME();
 
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 	virtual MCPrinter *createprinter(void);
 
 	//
@@ -418,7 +418,7 @@ public:
 	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
 
 	//
-	
+
 	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 	
 	//
@@ -427,7 +427,7 @@ public:
 	void getmods();
 	void setmods(int2 modifiers);
 	void getkeycode(EventRecord &event, char *buffer);
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	// MW-2012-09-21: [[ Bug 10404 ]] If post_or_handle is false, no event is generated in the
 	//   queue. This is used by getmouseclick() to ensure mouseWindow is updated correctly.
 	void mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle = true);

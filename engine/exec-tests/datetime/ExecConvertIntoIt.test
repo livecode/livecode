@@ -1,0 +1,7 @@
+setup
+
+convert "January 1, 2001" to date
+
+test it is "1/1/01"
+
+teardown

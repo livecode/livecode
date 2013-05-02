@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -67,23 +66,25 @@ bool MCParagraph::hasattrs(void)
 	return attrs != nil;
 }
 
-void MCParagraph::storeattrs(MCVariableValue *dst)
+void MCParagraph::storeattrs(MCArrayRef dst)
 {
 	MCExecPoint ep(nil, nil, nil);
 	for(uint32_t i = 0; kMCParagraphAttrsProps[i] . name != nil; i++)
 	{
 		getparagraphattr(kMCParagraphAttrsProps[i] . prop, ep, False);
 		if (!ep . isempty())
-			dst -> store_element(ep, kMCParagraphAttrsProps[i] . name);
+			/* UNCHECKED */ ep . storearrayelement_cstring(dst, kMCParagraphAttrsProps[i] . name);
 	}
 }
 
-void MCParagraph::fetchattrs(MCVariableValue *src)
+void MCParagraph::fetchattrs(MCArrayRef src)
 {
 	MCExecPoint ep(nil, nil, nil);
 	for(uint32_t i = 0; kMCParagraphAttrsProps[i] . name != nil; i++)
-		if (src -> fetch_element_if_exists(ep, kMCParagraphAttrsProps[i] . name, false))
-			setparagraphattr(kMCParagraphAttrsProps[i] . prop, ep);
+	{
+		/* UNCHECKED */ ep . fetcharrayelement_cstring(src, kMCParagraphAttrsProps[i] . name);
+		setparagraphattr(kMCParagraphAttrsProps[i] . prop, ep);
+	}
 }
 
 IO_stat MCParagraph::loadattrs(IO_handle stream)
@@ -375,15 +376,11 @@ static bool setparagraphattr_color(MCExecPoint& ep, MCParagraphAttrs*& attrs, ui
 	}
 
 	MCColor t_color;
-	char *t_color_name;
-	t_color_name = nil;
-	if (!MCscreen -> parsecolor(ep . getsvalue(), &t_color, &t_color_name))
+	if (!MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
 	{
 		MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, ep . getsvalue());
 		return false;
 	}
-
-	delete t_color_name;
 
 	if (attrs == nil)
 		attrs = new MCParagraphAttrs;
@@ -784,7 +781,7 @@ Exec_stat MCParagraph::getparagraphattr(Properties which, MCExecPoint& ep, Boole
 	// MW-2012-11-13: [[ ParaMetadata ]] Add support for the 'metadata' property.
 	case P_METADATA:
 		if (attrs != nil && (attrs -> flags & PA_HAS_METADATA) != 0)
-			ep . setnameref_unsafe(attrs -> metadata);
+			ep . setvalueref_nullable(attrs -> metadata);
 		else
 			ep . clear();
 		break;
@@ -1343,7 +1340,7 @@ void MCParagraph::setliststyle(uint32_t p_new_list_style)
 	}
 }
 
-void MCParagraph::setmetadata(const char *p_metadata)
+void MCParagraph::setmetadata(MCNameRef p_metadata)
 {
 	if (attrs != nil && (attrs -> flags & PA_HAS_METADATA) != 0)
 	{
@@ -1352,13 +1349,13 @@ void MCParagraph::setmetadata(const char *p_metadata)
 		attrs -> metadata = nil;
 	}
 
-	if (p_metadata == nil || *p_metadata == '\0')
+	if (p_metadata == nil || p_metadata == kMCEmptyName)
 		return;
 
 	if (attrs == nil)
 		attrs = new MCParagraphAttrs;
 	attrs -> flags |= PA_HAS_METADATA;
-	/* UNCHECKED */ MCNameCreateWithCString(p_metadata, attrs -> metadata);
+	/* UNCHECKED */ MCNameClone(p_metadata, attrs -> metadata);
 }
 
 void MCParagraph::setlistindex(uint32_t p_new_list_index)

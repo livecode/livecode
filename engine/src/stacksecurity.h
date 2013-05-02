@@ -25,7 +25,7 @@ void MCStackSecurityInit(void);
 
 //////////
 
-bool MCStackSecurityEncryptString(const char *p_string, uint32_t p_length, char *&r_enc);
+bool MCStackSecurityEncryptString(MCStringRef p_string, MCStringRef &r_enc);
 
 //////////
 

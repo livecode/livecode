@@ -1,0 +1,4 @@
+setup
+test the systemVersion is not empty
+
+teardown

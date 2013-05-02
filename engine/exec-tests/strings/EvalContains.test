@@ -1,0 +1,65 @@
+setup " <a> contains <b> "
+
+test "abc" contains "a"
+test "abc" contains "b"
+test "abc" contains "c"
+
+test "abc" contains "A"
+test "abc" contains "B"
+test "abc" contains "C"
+
+test not ("abc" contains "d")
+
+test "abc123def" contains 123
+test "abc 0.5 def" contains (1 / 2)
+
+teardown
+
+
+setup " <a> contains <b> (case sensitive)"
+
+set the caseSensitive to true
+
+test "abc" contains "a"
+test "abc" contains "b"
+test "abc" contains "c"
+
+test not ("abc" contains "A")
+test not ("abc" contains "B")
+test not ("abc" contains "C")
+
+teardown
+
+
+
+setup " <a> is in <b> "
+
+test "a" is in "abc"
+test "b" is in "abc"
+test "c" is in "abc"
+
+test "A" is in "abc"
+test "B" is in "abc"
+test "C" is in "abc"
+
+test not ("d" is in "abc")
+
+test 123 is in "abc123def"
+test (1 / 2) is in "abc 0.5 def"
+
+teardown
+
+
+setup " <a> is in <b> (case sensitive)"
+
+set the caseSensitive to true
+
+test "a" is in "abc"
+test "b" is in "abc"
+test "c" is in "abc"
+
+test not ("A" is in "abc")
+test not ("B" is in "abc")
+test not ("C" is in "abc")
+
+teardown

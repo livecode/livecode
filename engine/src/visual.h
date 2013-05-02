@@ -52,6 +52,9 @@ public:
 	virtual ~MCVisualEffect();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+
+	virtual void compile_effect(MCSyntaxFactoryRef ctxt);
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 struct MCEffectArgument

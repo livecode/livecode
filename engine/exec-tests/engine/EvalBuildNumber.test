@@ -1,0 +1,3 @@
+setup
+test buildnumber() is an integer
+teardown

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "osspec.h"
@@ -64,19 +63,19 @@ int main(int argc, char *argv[], char *envp[])
 	// MW-2011-08-18: [[ Bug ]] Make sure we initialize Cocoa on startup.
 	NSApplicationLoad();
 	
+	if (!MCInitialize())
+		exit(-1);
+	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
-		
 	if (!X_init(argc, argv, envp))
 	{
 		[t_pool release];
 		
-		if (MCresult != NULL && MCresult -> getvalue() . is_string())
-		{
-			char *t_message;
-			t_message = MCresult -> getvalue() . get_string() . clone();
-			fprintf(stderr, "Startup error - %s\n", t_message);
-		}
+		const char *t_caption;
+		const char *t_text;
+		MCModeGetStartupErrorMessage(t_caption, t_text);
+		fprintf(stderr, "%s - %s\n", t_caption, t_text);
 		exit(-1);
 	}
 
@@ -85,6 +84,8 @@ int main(int argc, char *argv[], char *envp[])
 	t_pool = [[NSAutoreleasePool alloc] init];
 	int t_exit_code = X_close();
 	[t_pool release];
+	
+	MCFinalize();
 
 	exit(t_exit_code);
 }

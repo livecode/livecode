@@ -60,6 +60,309 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "regex.h"
 
+#include "exec.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCPropertyInfo kMCPropertyInfoTable[] =
+{
+	DEFINE_RW_PROPERTY(P_CASE_SENSITIVE, Bool, Engine, CaseSensitive)
+	DEFINE_RW_PROPERTY(P_CENTURY_CUTOFF, Int16, Engine, CenturyCutOff)
+	DEFINE_RW_PROPERTY(P_CONVERT_OCTALS, Bool, Engine, ConvertOctals)
+	DEFINE_RW_PROPERTY(P_ITEM_DELIMITER, Char, Engine, ItemDelimiter)
+	DEFINE_RW_PROPERTY(P_COLUMN_DELIMITER, Char, Engine, ColumnDelimiter)
+	DEFINE_RW_PROPERTY(P_ROW_DELIMITER, Char, Engine, RowDelimiter)
+	DEFINE_RW_PROPERTY(P_LINE_DELIMITER, Char, Engine, LineDelimiter)
+	DEFINE_RW_PROPERTY(P_WHOLE_MATCHES, Bool, Engine, WholeMatches)
+	DEFINE_RW_PROPERTY(P_USE_SYSTEM_DATE, Bool, Engine, UseSystemDate)
+	DEFINE_RW_PROPERTY(P_USE_UNICODE, Bool, Engine, UseUnicode)
+	DEFINE_RW_CUSTOM_PROPERTY(P_NUMBER_FORMAT, kMCEngineNumberFormatTypeInfo, Engine, NumberFormat)
+	
+	DEFINE_RO_SET_PROPERTY(P_PRINT_DEVICE_FEATURES, kMCPrintingPrinterFeaturesTypeInfo, Printing, PrintDeviceFeatures)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_DEVICE_OUTPUT, kMCPrintingPrintDeviceOutputTypeInfo, Printing, PrintDeviceOutput)
+	DEFINE_RW_ENUM_PROPERTY(P_PRINT_PAGE_ORIENTATION, kMCPrintingPrinterOrientationTypeInfo, Printing, PrintPageOrientation)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PRINT_JOB_RANGES, kMCPrintingPrinterPageRangeTypeInfo, Printing, PrintJobRanges)
+	
+	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SIZE, Int16X2, Printing, PrintPageSize)
+	DEFINE_RW_PROPERTY(P_PRINT_PAGE_SCALE, Double, Printing, PrintPageScale)
+	DEFINE_RO_PROPERTY(P_PRINT_PAGE_RECTANGLE, Rectangle, Printing, PrintPageRectangle)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_NAME, String, Printing, PrintPageSize)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_COPIES, Int16, Printing, PrintPageScale)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLLATE, Bool, Printing, PrintJobCollate)
+	DEFINE_RW_PROPERTY(P_PRINT_JOB_COLOR, Bool, Printing, PrintJobColor)
+	DEFINE_RW_ENUM_PROPERTY(P_PRINT_JOB_DUPLEX, kMCPrintingPrintJobDuplexTypeInfo, Printing, PrintJobDuplex)
+	DEFINE_RO_PROPERTY(P_PRINT_JOB_PAGE, Int32, Printing, PrintJobPage)
+	DEFINE_RO_PROPERTY(P_PRINT_DEVICE_RECTANGLE, Rectangle, Printing, PrintDeviceRectangle)
+	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_SETTINGS, BinaryString, Printing, PrintDeviceSettings)
+	DEFINE_RW_PROPERTY(P_PRINT_DEVICE_NAME, String, Printing, PrintDeviceName)
+	DEFINE_RW_PROPERTY(P_PRINT_FONT_TABLE, String, Printing, PrintFontTable)
+	DEFINE_RW_PROPERTY(P_PRINT_GUTTERS, Int16X2, Printing, PrintGutters)
+	DEFINE_RW_PROPERTY(P_PRINT_MARGINS, Int16X4, Printing, PrintMargins)
+	DEFINE_RW_PROPERTY(P_PRINT_ROWS_FIRST, Bool, Printing, PrintRowsFirst)
+	DEFINE_RW_PROPERTY(P_PRINT_SCALE, Double, Printing, PrintScale)
+	DEFINE_RW_PROPERTY(P_PRINT_COMMAND, String, Printing, PrintCommand)
+	DEFINE_RW_PROPERTY(P_PRINT_ROTATED, Bool, Printing, PrintRotated)
+	DEFINE_RW_PROPERTY(P_PRINT_CARD_BORDERS, Bool, Printing, PrintCardBorders)
+	DEFINE_RO_PROPERTY(P_PRINTER_NAMES, String, Printing, PrinterNames)
+
+	DEFINE_RW_ENUM_PROPERTY(P_ERROR_MODE, kMCServerErrorModeTypeInfo, Server, ErrorMode)
+	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_LINE_ENDINGS, kMCServerOutputLineEndingsTypeInfo, Server, OutputLineEnding)
+	DEFINE_RW_ENUM_PROPERTY(P_OUTPUT_TEXT_ENCODING, kMCServerOutputTextEncodingTypeInfo, Server, OutputTextEncoding)
+	DEFINE_RW_PROPERTY(P_SESSION_SAVE_PATH, String, Server, SessionSavePath)
+	DEFINE_RW_PROPERTY(P_SESSION_LIFETIME, UInt32, Server, SessionLifetime)
+	DEFINE_RW_PROPERTY(P_SESSION_COOKIE_NAME, String, Server, SessionCookieName)
+	DEFINE_RW_PROPERTY(P_SESSION_ID, String, Server, SessionId)
+
+	DEFINE_RO_PROPERTY(P_SCRIPT_EXECUTION_ERRORS, String, Engine, ScriptExecutionErrors)
+	DEFINE_RO_PROPERTY(P_SCRIPT_PARSING_ERRORS, String, Engine, ScriptParsingErrors)
+	
+	DEFINE_RW_PROPERTY(P_REV_RUNTIME_BEHAVIOUR, UInt16, Legacy, RevRuntimeBehaviour)
+	DEFINE_RW_PROPERTY(P_HC_IMPORT_STAT, String, Legacy, HcImportStat)
+	DEFINE_RW_PROPERTY(P_SCRIPT_TEXT_FONT, String, Legacy, ScriptTextFont)
+	DEFINE_RW_PROPERTY(P_SCRIPT_TEXT_SIZE, UInt16, Legacy, ScriptTextSize)
+
+	DEFINE_RW_PROPERTY(P_DIALOG_DATA, Any, Interface, DialogData)
+
+	DEFINE_RW_ENUM_PROPERTY(P_LOOK_AND_FEEL, kMCInterfaceLookAndFeelTypeInfo, Interface, LookAndFeel)
+	DEFINE_RW_PROPERTY(P_SCREEN_MOUSE_LOC, Point, Interface, ScreenMouseLoc)
+	DEFINE_RW_CUSTOM_PROPERTY(P_BACK_DROP, kMCInterfaceBackdropTypeInfo, Interface, Backdrop)
+	DEFINE_RW_PROPERTY(P_BUFFER_IMAGES, Bool, Interface, BufferImages)
+	DEFINE_RW_PROPERTY(P_SYSTEM_FS, Bool, Interface, SystemFileSelector)
+	DEFINE_RW_PROPERTY(P_SYSTEM_CS, Bool, Interface, SystemColorSelector)
+	DEFINE_RW_PROPERTY(P_SYSTEM_PS, Bool, Interface, SystemPrintSelector)
+	DEFINE_RW_PROPERTY(P_UMASK, UInt16, Files, UMask)
+	DEFINE_RW_PROPERTY(P_FILE_TYPE, String, Files, FileType)
+	DEFINE_RW_PROPERTY(P_ALLOW_INTERRUPTS, Bool, Engine, AllowInterrupts)
+	DEFINE_RW_PROPERTY(P_EXPLICIT_VARIABLES, Bool, Engine, ExplicitVariables)
+	DEFINE_RW_PROPERTY(P_PRESERVE_VARIABLES, Bool, Engine, PreserveVariables)
+
+	DEFINE_RW_PROPERTY(P_RECORD_SAMPLESIZE, UInt16, Multimedia, RecordSampleSize)
+	DEFINE_RW_PROPERTY(P_RECORD_RATE, Double, Multimedia, RecordRate)
+	DEFINE_RW_PROPERTY(P_RECORD_CHANNELS, UInt16, Multimedia, RecordChannels)
+	DEFINE_RW_ENUM_PROPERTY(P_RECORD_FORMAT, kMCMultimediaRecordFormatTypeInfo, Multimedia, RecordFormat) 
+	DEFINE_RW_PROPERTY(P_RECORD_COMPRESSION, String, Multimedia, RecordCompression)
+	DEFINE_RW_PROPERTY(P_RECORD_INPUT, String, Multimedia, RecordInput)
+
+	DEFINE_RW_ENUM_PROPERTY(P_DRAG_ACTION, kMCPasteboardDragActionTypeInfo, Pasteboard, DragAction)
+	DEFINE_RW_PROPERTY(P_ACCEPT_DROP, Bool, Pasteboard, AcceptDrop)
+	DEFINE_RW_PROPERTY(P_DRAG_IMAGE, UInt16, Pasteboard, DragImage)
+	DEFINE_RW_PROPERTY(P_DRAG_IMAGE_OFFSET, Point, Pasteboard, DragImageOffset)
+	DEFINE_RW_SET_PROPERTY(P_ALLOWABLE_DRAG_ACTIONS, kMCPasteboardAllowableDragActionsTypeInfo, Pasteboard, AllowableDragActions)
+	DEFINE_RW_PROPERTY(P_ALLOW_INLINE_INPUT, Bool, Interface, AllowInlineInput)
+	DEFINE_RW_PROPERTY(P_DRAG_DELTA, UInt16, Interface, DragDelta)
+	DEFINE_RW_PROPERTY(P_STACK_FILE_TYPE, String, Interface, StackFileType)
+	
+	DEFINE_RW_PROPERTY(P_ICON_MENU, String, Interface, IconMenu)
+	DEFINE_RW_PROPERTY(P_STATUS_ICON, UInt32, Interface, StatusIcon)
+	DEFINE_RW_PROPERTY(P_STATUS_ICON_TOOLTIP, String, Interface, StatusIconToolTip)
+	DEFINE_RW_PROPERTY(P_STATUS_ICON_MENU, String, Interface, StatusIconMenu)
+	DEFINE_RW_ENUM_PROPERTY(P_PROCESS_TYPE, kMCInterfaceProcessTypeTypeInfo, Interface, ProcessType)
+	DEFINE_RW_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
+	DEFINE_RO_EFFECTIVE_PROPERTY(P_STACK_LIMIT, UInt32, Engine, StackLimit)
+	DEFINE_RW_PROPERTY(P_IMAGE_CACHE_LIMIT, UInt32, Graphics, ImageCacheLimit)
+	DEFINE_RO_PROPERTY(P_IMAGE_CACHE_USAGE, UInt32, Graphics, ImageCacheUsage)
+	DEFINE_RW_PROPERTY(P_ALLOW_DATAGRAM_BROADCASTS, Bool, Network, AllowDatagramBroadcasts)
+	
+	DEFINE_RW_PROPERTY(P_BRUSH_BACK_COLOR, Any, Interface, BrushBackColor)
+	DEFINE_RW_PROPERTY(P_PEN_BACK_COLOR, Any, Interface, PenBackColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_BRUSH_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, BrushColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_PEN_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, PenColor)
+	DEFINE_RW_PROPERTY(P_BRUSH_PATTERN, UInt16, Interface, BrushPattern)
+	DEFINE_RW_PROPERTY(P_PEN_PATTERN, UInt16, Interface, PenPattern)
+	DEFINE_RW_PROPERTY(P_FILLED, Bool, Interface, Filled)
+	DEFINE_RW_PROPERTY(P_POLY_SIDES, UInt16, Interface, PolySides)
+	DEFINE_RW_PROPERTY(P_LINE_SIZE, UInt16, Interface, LineSize)
+	DEFINE_RW_PROPERTY(P_PEN_WIDTH, UInt16, Interface, LineSize)
+	DEFINE_RW_PROPERTY(P_PEN_HEIGHT, UInt16, Interface, LineSize)
+	DEFINE_RW_PROPERTY(P_ROUND_RADIUS, UInt16, Interface, RoundRadius)
+	DEFINE_RW_PROPERTY(P_START_ANGLE, UInt16, Interface, StartAngle)
+	DEFINE_RW_PROPERTY(P_ARC_ANGLE, UInt16, Interface, ArcAngle)
+	DEFINE_RW_PROPERTY(P_ROUND_ENDS, Bool, Interface, RoundEnds)
+	DEFINE_RW_PROPERTY(P_DASHES, String, Interface, Dashes)
+	
+	DEFINE_RW_PROPERTY(P_EDIT_BACKGROUND, Bool, Interface, EditBackground)
+	
+	DEFINE_RW_PROPERTY(P_LOCK_SCREEN, Bool, Interface, LockScreen)
+	
+	DEFINE_RO_PROPERTY(P_RECENT_CARDS, String, Interface, RecentCards)
+	DEFINE_RO_PROPERTY(P_RECENT_NAMES, String, Interface, RecentNames)
+	
+	DEFINE_RW_PROPERTY(P_TEXT_ALIGN, Any, Legacy, TextAlign)
+	DEFINE_RW_PROPERTY(P_TEXT_FONT, Any, Legacy, TextFont)
+	DEFINE_RW_PROPERTY(P_TEXT_HEIGHT, Any, Legacy, TextHeight)
+	DEFINE_RW_PROPERTY(P_TEXT_SIZE, Any, Legacy, TextSize)
+	DEFINE_RW_PROPERTY(P_TEXT_STYLE, Any, Legacy, TextStyle)
+	DEFINE_RW_PROPERTY(P_PRINT_TEXT_ALIGN, Any, Legacy, TextAlign)
+	DEFINE_RW_PROPERTY(P_PRINT_TEXT_FONT, Any, Legacy, TextFont)
+	DEFINE_RW_PROPERTY(P_PRINT_TEXT_HEIGHT, Any, Legacy, TextHeight)
+	DEFINE_RW_PROPERTY(P_PRINT_TEXT_SIZE, Any, Legacy, TextSize)
+	DEFINE_RW_PROPERTY(P_PRINT_TEXT_STYLE, Any, Legacy, TextStyle)
+	
+	DEFINE_RW_PROPERTY(P_PLAY_DESTINATION, String, Multimedia, PlayDestination)
+	DEFINE_RW_PROPERTY(P_PLAY_LOUDNESS, UInt16, Multimedia, PlayLoudness)
+	
+	DEFINE_RW_PROPERTY(P_STACK_FILES, String, Legacy, StackFiles)
+	DEFINE_RO_PROPERTY(P_MENU_BAR, String, Legacy, MenuBar)
+	DEFINE_RW_PROPERTY(P_EDIT_MENUS, Bool, Legacy, EditMenus)
+	DEFINE_RW_PROPERTY(P_BUFFER_MODE, String, Legacy, BufferMode)
+	DEFINE_RW_PROPERTY(P_MULTI_EFFECT, Bool, Legacy, MultiEffect)
+	DEFINE_RW_PROPERTY(P_USER_LEVEL, UInt16, Legacy, UserLevel)
+	DEFINE_RW_PROPERTY(P_USER_MODIFY, Bool, Legacy, UserModify)
+
+	DEFINE_RW_CUSTOM_PROPERTY(P_ACCENT_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, AccentColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_HILITE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, HiliteColor)
+	DEFINE_RW_ENUM_PROPERTY(P_PAINT_COMPRESSION, kMCInterfacePaintCompressionTypeInfo, Interface, PaintCompression)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkHiliteColor)
+	DEFINE_RW_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, LinkVisitedColor)
+	DEFINE_RW_PROPERTY(P_UNDERLINE_LINKS, Bool, Interface, UnderlineLinks)
+	
+	DEFINE_RW_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, Interface, SelectGroupedControls)
+	
+	DEFINE_RW_PROPERTY(P_ICON, UInt32, Interface, Icon)
+	DEFINE_RW_PROPERTY(P_SHOW_INVISIBLES, Bool, Interface, ShowInvisibles)
+
+	DEFINE_RO_PROPERTY(P_URL_RESPONSE, String, Network, UrlResponse)
+	DEFINE_RW_PROPERTY(P_FTP_PROXY, String, Network, FtpProxy)
+	DEFINE_RW_PROPERTY(P_HTTP_PROXY, String, Network, HttpProxy)
+	DEFINE_RW_PROPERTY(P_HTTP_HEADERS, String, Network, HttpHeaders)
+	DEFINE_RW_PROPERTY(P_SOCKET_TIMEOUT, Double, Network, SocketTimeout)
+
+	DEFINE_RW_PROPERTY(P_SECURE_MODE, Bool, Engine, SecureMode)
+	DEFINE_RO_SET_PROPERTY(P_SECURITY_CATEGORIES, kMCEngineSecurityCategoriesTypeInfo, Engine, SecurityCategories)
+	DEFINE_RO_SET_PROPERTY(P_SECURITY_PERMISSIONS, kMCEngineSecurityCategoriesTypeInfo, Engine, SecurityPermissions)
+
+	DEFINE_RW_PROPERTY(P_SERIAL_CONTROL_STRING, String, Files, SerialControlString)
+	DEFINE_RW_PROPERTY(P_HIDE_CONSOLE_WINDOWS, Bool, Files, HideConsoleWindows)
+
+	DEFINE_RW_PROPERTY(P_RANDOM_SEED, Int16, Math, RandomSeed)
+
+	DEFINE_RW_PROPERTY(P_LOCK_CURSOR, Bool, Interface, LockCursor)
+	DEFINE_RW_PROPERTY(P_LOCK_ERRORS, Bool, Interface, LockErrors)
+	DEFINE_RW_PROPERTY(P_LOCK_MENUS, Bool, Interface, LockMenus)
+	DEFINE_RW_PROPERTY(P_LOCK_MESSAGES, Bool, Interface, LockMessages)
+	DEFINE_RW_PROPERTY(P_LOCK_MOVES, Bool, Interface, LockMoves)
+	DEFINE_RW_PROPERTY(P_LOCK_RECENT, Bool, Interface, LockRecent)
+	DEFINE_RW_PROPERTY(P_DEFAULT_MENU_BAR, String, Interface, DefaultMenubar)
+	DEFINE_RW_PROPERTY(P_STACK_FILE_VERSION, String, Interface, StackFileVersion)
+	DEFINE_RW_PROPERTY(P_DEFAULT_STACK, String, Interface, DefaultStack)
+	DEFINE_RW_PROPERTY(P_DEFAULT_CURSOR, UInt16, Interface, DefaultCursor)
+	DEFINE_RW_PROPERTY(P_CURSOR, UInt16, Interface, Cursor)
+
+	DEFINE_RW_PROPERTY(P_TWELVE_TIME, Bool, DateTime, TwelveTime)
+
+	DEFINE_RW_PROPERTY(P_QT_IDLE_RATE, UInt16, Multimedia, QtIdleRate)
+	DEFINE_RW_PROPERTY(P_DONT_USE_QT, Bool, Multimedia, DontUseQt)
+	DEFINE_RW_PROPERTY(P_DONT_USE_QT_EFFECTS, Bool, Multimedia, DontUseQtEffects)
+	
+	DEFINE_RW_PROPERTY(P_RECURSION_LIMIT, UInt16, Engine, RecursionLimit)
+
+	DEFINE_RW_PROPERTY(P_IDLE_RATE, UInt16, Interface, IdleRate)
+	DEFINE_RW_PROPERTY(P_IDLE_TICKS, UInt16, Interface, IdleTicks)
+	DEFINE_RW_PROPERTY(P_BLINK_RATE, UInt16, Interface, BlinkRate)
+	DEFINE_RW_PROPERTY(P_REPEAT_RATE, UInt16, Interface, RepeatRate)
+	DEFINE_RW_PROPERTY(P_REPEAT_DELAY, UInt16, Interface, RepeatDelay)
+	DEFINE_RW_PROPERTY(P_TYPE_RATE, UInt16, Interface, TypeRate)
+	DEFINE_RW_PROPERTY(P_SYNC_RATE, UInt16, Interface, SyncRate)
+	DEFINE_RW_PROPERTY(P_EFFECT_RATE, UInt16, Interface, EffectRate)
+	DEFINE_RW_PROPERTY(P_DOUBLE_DELTA, UInt16, Interface, DoubleDelta)
+	DEFINE_RW_PROPERTY(P_DOUBLE_TIME, UInt16, Interface, DoubleTime)
+	DEFINE_RW_PROPERTY(P_TOOL_TIP_DELAY, UInt16, Interface, TooltipDelay)
+
+	DEFINE_RW_PROPERTY(P_LONG_WINDOW_TITLES, Bool, Legacy, LongWindowTitles)
+	DEFINE_RW_PROPERTY(P_BLIND_TYPING, Bool, Legacy, BlindTyping)
+	DEFINE_RW_PROPERTY(P_POWER_KEYS, Bool, Legacy, PowerKeys)
+	DEFINE_RW_PROPERTY(P_TEXT_ARROWS, Bool, Legacy, TextArrows)
+	DEFINE_RW_PROPERTY(P_NO_PIXMAPS, Bool, Legacy, NoPixmaps)
+	DEFINE_RW_PROPERTY(P_LOW_RESOLUTION_TIMERS, Bool, Legacy, LowResolutionTimers)
+	DEFINE_RW_PROPERTY(P_COLORMAP, String, Legacy, Colormap)
+
+	DEFINE_RW_PROPERTY(P_NAVIGATION_ARROWS, Bool, Interface, NavigationArrows)
+	DEFINE_RW_PROPERTY(P_EXTEND_KEY, UInt16, Interface, ExtendKey)
+	DEFINE_RW_PROPERTY(P_POINTER_FOCUS, Bool, Interface, PointerFocus)
+	DEFINE_RW_PROPERTY(P_EMACS_KEY_BINDINGS, Bool, Interface, EmacsKeyBindings)
+	DEFINE_RW_PROPERTY(P_RAISE_MENUS, Bool, Interface, RaiseMenus)
+	DEFINE_RW_PROPERTY(P_ACTIVATE_PALETTES, Bool, Interface, ActivatePalettes)
+	DEFINE_RW_PROPERTY(P_HIDE_PALETTES, Bool, Interface, HidePalettes)
+	DEFINE_RW_PROPERTY(P_RAISE_PALETTES, Bool, Interface, RaisePalettes)
+	DEFINE_RW_PROPERTY(P_RAISE_WINDOWS, Bool, Interface, RaiseWindows)
+	DEFINE_RW_PROPERTY(P_HIDE_BACKDROP, Bool, Interface, HideBackdrop)
+	DEFINE_RW_PROPERTY(P_DONT_USE_NS, Bool, Interface, DontUseNavigationServices)
+
+	DEFINE_RW_PROPERTY(P_PROPORTIONAL_THUMBS, Bool, Interface, ProportionalThumbs)
+	DEFINE_RW_PROPERTY(P_SHARED_MEMORY, Bool, Interface, SharedMemory)
+	DEFINE_RW_PROPERTY(P_SCREEN_GAMMA, Double, Interface, ScreenGamma)
+	DEFINE_RW_ENUM_PROPERTY(P_SELECTION_MODE, kMCInterfaceSelectionModeTypeInfo, Interface, SelectionMode)
+	DEFINE_RW_CUSTOM_PROPERTY(P_SELECTION_HANDLE_COLOR, kMCInterfaceNamedColorTypeInfo, Interface, SelectionHandleColor)
+	DEFINE_RW_PROPERTY(P_WINDOW_BOUNDING_RECT, Rectangle, Interface, WindowBoundingRect)
+	DEFINE_RW_PROPERTY(P_JPEG_QUALITY, UInt16, Interface, JpegQuality)
+	DEFINE_RW_PROPERTY(P_RELAYER_GROUPED_CONTROLS, Bool, Interface, RelayerGroupedControls)
+
+	DEFINE_RW_PROPERTY(P_VC_SHARED_MEMORY, Bool, Legacy, VcSharedMemory)
+	DEFINE_RW_PROPERTY(P_VC_PLAYER, String, Legacy, VcPlayer)
+	DEFINE_RW_PROPERTY(P_SOUND_CHANNEL, UInt16, Legacy, SoundChannel)
+	DEFINE_RW_PROPERTY(P_LZW_KEY, String, Legacy, LzwKey)
+	DEFINE_RW_PROPERTY(P_MULTIPLE, Bool, Legacy, Multiple)
+	DEFINE_RW_PROPERTY(P_MULTI_SPACE, UInt16, Legacy, MultiSpace)
+
+	DEFINE_RO_PROPERTY(P_ADDRESS, String, Engine, Address)
+	DEFINE_RO_PROPERTY(P_STACKS_IN_USE, String, Engine, StacksInUse)
+
+	DEFINE_RW_PROPERTY(P_SHELL_COMMAND, String, Files, ShellCommand)
+	DEFINE_RW_PROPERTY(P_DIRECTORY, String, Files, CurrentFolder)
+	DEFINE_RO_PROPERTY(P_ENGINE_FOLDER, String, Files, EngineFolder)
+	DEFINE_RO_PROPERTY(P_HOME_FOLDER, String, Files, HomeFolder)	
+	DEFINE_RO_PROPERTY(P_DOCUMENTS_FOLDER, String, Files, DocumentsFolder)
+	DEFINE_RO_PROPERTY(P_DESKTOP_FOLDER, String, Files, DesktopFolder)
+	DEFINE_RO_PROPERTY(P_TEMPORARY_FOLDER, String, Files, TemporaryFolder)
+
+	DEFINE_RW_PROPERTY(P_RECORDING, Bool, Multimedia, Recording)
+
+	DEFINE_RW_PROPERTY(P_SSL_CERTIFICATES, String, Security, SslCertificates)
+
+	DEFINE_RW_PROPERTY(P_TRACE_ABORT, Bool, Debugging, TraceAbort)
+	DEFINE_RW_PROPERTY(P_TRACE_DELAY, UInt16, Debugging, TraceDelay)
+	DEFINE_RW_PROPERTY(P_TRACE_RETURN, Bool, Debugging, TraceReturn)
+	DEFINE_RW_PROPERTY(P_TRACE_STACK, String, Debugging, TraceStack)
+	DEFINE_RW_PROPERTY(P_TRACE_UNTIL, UInt16, Debugging, TraceUntil)
+	DEFINE_RW_PROPERTY(P_MESSAGE_MESSAGES, Bool, Debugging, MessageMessages)
+
+	DEFINE_RW_PROPERTY(P_CENTERED, Bool, Interface, Centered)
+	DEFINE_RW_PROPERTY(P_GRID, Bool, Interface, Grid)
+	DEFINE_RW_PROPERTY(P_GRID_SIZE, UInt16, Interface, GridSize)
+	DEFINE_RW_PROPERTY(P_SLICES, UInt16, Interface, Slices)
+	DEFINE_RW_PROPERTY(P_BEEP_LOUDNESS, Int16, Interface, BeepLoudness)
+	DEFINE_RW_PROPERTY(P_BEEP_PITCH, Int16, Interface, BeepPitch)
+	DEFINE_RW_PROPERTY(P_BEEP_DURATION, Int16, Interface, BeepDuration)
+	DEFINE_RW_PROPERTY(P_BEEP_SOUND, String, Interface, BeepSound)
+	DEFINE_RW_PROPERTY(P_TOOL, String, Interface, Tool)
+	DEFINE_RW_PROPERTY(P_BRUSH, UInt16, Interface, Brush)
+	DEFINE_RW_PROPERTY(P_ERASER, UInt16, Interface, Eraser)
+	DEFINE_RW_PROPERTY(P_SPRAY, UInt16, Interface, Spray)
+
+	DEFINE_RW_PROPERTY(P_DEFAULT_NETWORK_INTERFACE, String, Network, DefaultNetworkInterface)
+	DEFINE_RO_PROPERTY(P_NETWORK_INTERFACES, String, Network, NetworkInterfaces)
+	
+	DEFINE_RW_PROPERTY(P_DEBUG_CONTEXT, String, Debugging, DebugContext)
+	DEFINE_RO_PROPERTY(P_EXECUTION_CONTEXTS, String, Debugging, ExecutionContexts)
+	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
+	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
+};
+
+static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
+{
+	for(uindex_t i = 0; i < sizeof(kMCPropertyInfoTable) / sizeof(MCPropertyInfo); i++)
+		if (kMCPropertyInfoTable[i] . property == p_which && kMCPropertyInfoTable[i] . effective == p_effective)
+		{
+			r_info = &kMCPropertyInfoTable[i];
+			return true;
+		}
+	
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCProperty::MCProperty()
 {
 	tocount = CT_UNDEFINED;
@@ -819,8 +1122,11 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 	return ES_NORMAL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 Exec_stat MCProperty::set(MCExecPoint &ep)
 {
+#if OLD_EXEC
 	MCImage *newim;
 	Pixmap newpm;
 	int2 mx, my;
@@ -1028,7 +1334,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		bool t_error;
 		t_error = false;
 
-		MCRange *t_ranges;
+		MCInterval *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1183,7 +1489,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ES_NORMAL;
 
 	case P_DIALOG_DATA:
-		MCdialogdata->store(ep, True);
+		MCdialogdata->set(ep);
 		break;
 
 	case P_ERROR_MODE:
@@ -1437,7 +1743,6 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (ep.getsvalue() != "none" && ep.getsvalue() != "0")
 			{
 				MCColor t_colour;
-				char *t_colour_name = NULL;
 				
 				MCbackdropcolor = ep.getsvalue().clone();
 				if (!strchr(MCbackdropcolor,','))
@@ -1453,11 +1758,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 							MCbackdroppm = newpm;
 					}
 				}
-				if (MCbackdroppm == DNULL && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
-				{
-					delete t_colour_name;
-				}
-				else
+				if (MCbackdroppm != DNULL || !MCscreen -> parsecolor(MCbackdropcolor, &t_colour, nil))
 					t_colour . red = t_colour . green = t_colour . blue = 0;
 				MCscreen -> configurebackdrop(t_colour, MCbackdroppm, nil);
 				MCscreen -> enablebackdrop();
@@ -2429,8 +2730,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 					char *cstring = ep.getsvalue().clone();
 					if (!MCscreen->parsecolor(cstring, &color, &name))
 					{
-						MCeerror->add
-						(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
+						MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
 						delete cstring;
 						return ES_ERROR;
 					}
@@ -2679,1010 +2979,1399 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#else
+	
+	if (destvar != NULL && which != P_CUSTOM_VAR)
+		return set_variable(ep);
+	
+	if (target == nil)
+		return set_global_property(ep);
+	
+	return set_object_property(ep);
+#endif
 }
+
+Exec_stat MCProperty::set_variable(MCExecPoint& ep)
+{
+	return destvar->set(ep);
+}
+
+Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
+{
+	const MCPropertyInfo *t_info;
+	if (MCPropertyInfoTableLookup(which, effective, t_info))
+	{
+		MCExecContext ctxt(ep);
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_value;
+				/* UNCHECKED */ ep . copyasvalueref(&t_value);
+				((void(*)(MCExecContext&, MCValueRef))t_info -> setter)(ctxt, *t_value);
+			}
+			break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				if (!ep . copyasbool(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAB);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, bool))t_info -> setter)(ctxt, t_value);
+			}
+			break;
+				 
+			case kMCPropertyTypeInt16:
+			{
+				integer_t t_value;
+				if (!ep . copyasint(t_value) ||
+					t_value < -32768 || t_value > 32767)
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, integer_t))t_info -> setter)(ctxt, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeInt32:
+			{
+				integer_t t_value;
+				if (!ep . copyasint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, integer_t))t_info -> setter)(ctxt, t_value);				
+			}
+			break; 
+			
+			case kMCPropertyTypeUInt16:
+			{
+				uinteger_t t_value;
+				if (!ep . copyasuint(t_value) ||
+					t_value < 0 || t_value > 65535)
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, uinteger_t))t_info -> setter)(ctxt, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeUInt32:
+			{
+				uinteger_t t_value;
+				if (!ep . copyasuint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, uinteger_t))t_info -> setter)(ctxt, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeDouble:
+			{
+				double t_value;
+				if (!ep . copyasdouble(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, double))t_info -> setter)(ctxt, t_value);	
+			}
+			break;
+			
+			case kMCPropertyTypeChar:
+			{
+				char_t t_value;
+				if (!ep . copyaschar(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, char_t))t_info -> setter)(ctxt, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeString:
+			case kMCPropertyTypeBinaryString:
+			{
+				MCAutoStringRef t_value;
+				if (!ep . copyasstringref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCStringRef))t_info -> setter)(ctxt, *t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeColor:
+			{
+				MCColor t_value;
+				if (!ep . copyaslegacycolor(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCColor))t_info -> setter)(ctxt, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeRectangle:
+			{
+				MCRectangle t_value;
+				if (!ep . copyaslegacyrectangle(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCRectangle))t_info -> setter)(ctxt, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypePoint:
+			{
+				MCPoint t_value;
+				if (!ep . copyaslegacypoint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCPoint))t_info -> setter)(ctxt, t_value);	
+			}
+			break;
+			
+			case kMCPropertyTypeInt16X2:
+			{
+				int2 a, b;
+				if (!MCU_stoi2x2(ep . getsvalue(), a, b))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
+				if (!ctxt . HasError())
+				{
+					integer_t t_value[2];
+					t_value[0] = a;
+					t_value[1] = b;
+					((void(*)(MCExecContext&, integer_t[2]))t_info -> setter)(ctxt, t_value);
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeInt16X4:
+			{
+				int2 a, b, c, d;
+				if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+				if (!ctxt . HasError())
+				{
+					integer_t t_value[4];
+					t_value[0] = a;
+					t_value[1] = b;
+					t_value[2] = c;
+					t_value[3] = d;
+					((void(*)(MCExecContext&, integer_t[4]))t_info -> setter)(ctxt, t_value);
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeEnum:
+			{
+				MCExecEnumTypeInfo *t_enum_info;
+				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
+				
+				bool t_found;
+				t_found = false;
+				intenum_t t_value;
+				for(uindex_t i = 0; i < t_enum_info -> count; i++)
+					if (!t_enum_info -> elements[i] . read_only &&
+						MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+					{
+						t_found = true;
+						t_value = t_enum_info -> elements[i] . value;
+					}
+			
+				if (!t_found)
+					ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, int))t_info -> setter)(ctxt, t_value);
+			}
+			break;
+		
+			case kMCPropertyTypeSet:
+				ctxt . Unimplemented();
+				break;
+				
+			case kMCPropertyTypeCustom:
+			{
+				MCExecCustomTypeInfo *t_custom_info;
+				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
+				
+				MCAssert(t_custom_info -> size <= 64);
+			
+				MCAutoStringRef t_input_value;
+				/* UNCHECKED */ ep . copyasstringref(&t_input_value);
+				
+				char t_value[64];
+				((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
+				if (!ctxt . HasError())
+				{
+					((void(*)(MCExecContext&, void *))t_info -> setter)(ctxt, t_value);
+					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeOptionalUInt32:
+			{
+				uinteger_t t_value;
+				uinteger_t *t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					if (!ep . copyasuint(t_value))
+						ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, uinteger_t*))t_info -> setter)(ctxt, t_value_ptr);		
+			}
+			break;
+			
+			case kMCPropertyTypeOptionalString:
+			{
+				MCAutoStringRef t_value;
+				if (!ep . isempty())
+				{
+					if (!ep . copyasstringref(&t_value))
+						ctxt . LegacyThrow(EE_PROPERTY_NAS);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCStringRef))t_info -> setter)(ctxt, *t_value);
+			}
+			break;
+				
+			default:
+				ctxt . Unimplemented();
+				break;
+		}
+	
+		if (!ctxt . HasError())
+			return ES_NORMAL;
+		
+		return ctxt . Catch(line, pos);
+	}
+
+	switch (which)
+	{
+		case P_CLIPBOARD_DATA:
+		case P_DRAG_DATA:
+		{
+			MCTransferData *t_pasteboard;
+			if (which == P_CLIPBOARD_DATA)
+				t_pasteboard = MCclipboarddata;
+			else
+				t_pasteboard = MCdragdata;
+			
+			MCTransferType t_type;
+			if (customindex == NULL)
+				t_type = TRANSFER_TYPE_TEXT;
+			else
+			{
+				MCExecPoint ep2(ep);
+				if (customindex -> eval(ep2) != ES_NORMAL)
+				{
+					MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+					return ES_ERROR;
+				}
+				t_type = MCTransferData::StringToType(ep2 . getsvalue());
+			}			
+			if (t_type != TRANSFER_TYPE_NULL)
+			{
+#ifdef SHARED_STRING
+				MCSharedString *t_data;
+				t_data = MCSharedString::Create(ep . getsvalue());
+				if (t_data != NULL)
+				{
+					bool t_success;
+					t_success = t_pasteboard -> Store(t_type, t_data);
+					t_data -> Release();
+#else
+				MCAutoStringRef t_data;
+				/* UNCHECKED */ ep . copyasstringref(&t_data);
+				if (*t_data != nil)
+				{
+					bool t_success;
+					t_success = t_pasteboard -> Store(t_type, *t_data);
+#endif
+					if (!t_success)
+						return ES_ERROR;
+				}
+			}
+		}
+			break;
+		default:
+		{
+			Exec_stat t_stat;
+			t_stat = mode_set(ep);
+			if (t_stat != ES_NORMAL)
+			{
+				MCeerror->add(EE_PROPERTY_CANTSET, line, pos, ep.getsvalue());
+				return ES_ERROR;
+			}
+		}
+		break;
+	}
+	return ES_NORMAL;
+}
+
+Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
+{
+	Properties t_prop;
+	MCNameRef t_prop_name, t_index_name;
+	t_prop_name = t_index_name = nil;
+	if (resolveprop(ep, t_prop, t_prop_name, t_index_name) != ES_NORMAL)
+		return ES_ERROR;
+	
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+	if (t_prop == P_CUSTOM)
+	{
+		MCObject *t_object;
+		uint4 t_parid;
+		t_stat = target -> getobjforprop(ep, t_object, t_parid);
+		
+		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+		//   MCChunk::setprop.
+		if (t_stat == ES_NORMAL)
+		{
+			if (t_index_name == nil)
+				t_stat = t_object -> setcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
+			else
+				t_stat = t_object -> setcustomprop(ep, t_prop_name, t_index_name);
+			// MM-2012-09-05: [[ Property Listener ]] Make sure setting a custom property sends propertyChanged message to listeners.
+			if (t_stat == ES_NORMAL)
+				t_object -> signallisteners(t_prop);
+		}
+	}
+	else
+	{
+		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+		//   a nil index translates to the empty name (the array[empty] <=> the array).
+		MCNameRef t_derived_index_name;
+		if (t_prop < P_FIRST_ARRAY_PROP)
+			t_derived_index_name = nil;
+		else
+			t_derived_index_name = t_index_name != nil ? t_index_name : kMCEmptyName;
+		
+		t_stat = target -> setprop(t_prop, ep, t_derived_index_name, effective);
+	}
+	
+	MCNameDelete(t_index_name);
+	MCNameDelete(t_prop_name);
+	
+	if (t_stat != ES_NORMAL)
+	{
+		MCeerror->add(EE_PROPERTY_CANTSETOBJECT, line, pos, ep . getsvalue());
+		return ES_ERROR;
+	}
+
+	return t_stat;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCProperty::eval(MCExecPoint &ep)
 {
+#ifdef OLD_EXEC
 	uint2 i = 0;
 	int2 mx, my;
 	MCExecPoint ep2(ep);
-
+	
 	if (destvar != NULL && which != P_CUSTOM_VAR)
 		return destvar->eval(ep);
 	if (function != F_UNDEFINED)
 	{
 		switch (function)
 		{
-		case F_DATE:
-			MCD_date(which, ep);
-			return ES_NORMAL;
-		case F_TIME:
-			MCD_time(which, ep);
-			return ES_NORMAL;
-		case F_MILLISECS:
-			if (which == P_LONG)
-				ep.setnvalue(MCS_time() * 1000.0);
-			else
-				ep.setnvalue(floor(MCS_time() * 1000.0));
-			return ES_NORMAL;
-		case F_SECONDS:
-			if (which == P_LONG)
-				ep.setnvalue(MCS_time());
-			else
-				ep.setnvalue(floor(MCS_time()));
-			return ES_NORMAL;
-		case F_TICKS:
-			if (which == P_LONG)
-				ep.setnvalue(MCS_time() * 60.0);
-			else
-				ep.setnvalue(floor(MCS_time() * 60.0));
-			return ES_NORMAL;
-		case F_FILES:
-		case F_DIRECTORIES:
-			if (MCsecuremode & MC_SECUREMODE_DISK)
-			{
-				MCeerror->add(EE_DISK_NOPERM, line, pos);
+			case F_DATE:
+				MCD_date(which, ep);
+				return ES_NORMAL;
+			case F_TIME:
+				MCD_time(which, ep);
+				return ES_NORMAL;
+			case F_MILLISECS:
+				if (which == P_LONG)
+					ep.setnvalue(MCS_time() * 1000.0);
+				else
+					ep.setnvalue(floor(MCS_time() * 1000.0));
+				return ES_NORMAL;
+			case F_SECONDS:
+				if (which == P_LONG)
+					ep.setnvalue(MCS_time());
+				else
+					ep.setnvalue(floor(MCS_time()));
+				return ES_NORMAL;
+			case F_TICKS:
+				if (which == P_LONG)
+					ep.setnvalue(MCS_time() * 60.0);
+				else
+					ep.setnvalue(floor(MCS_time() * 60.0));
+				return ES_NORMAL;
+			case F_FILES:
+			case F_DIRECTORIES:
+				if (MCsecuremode & MC_SECUREMODE_DISK)
+				{
+					MCeerror->add(EE_DISK_NOPERM, line, pos);
+					return ES_ERROR;
+				}
+				MCS_getentries(ep, function == F_FILES, which == P_LONG);
+				return ES_NORMAL;
+			case F_MONTH_NAMES:
+				MCD_monthnames(which, ep);
+				return ES_NORMAL;
+			case F_WEEK_DAY_NAMES:
+				MCD_weekdaynames(which, ep);
+				return ES_NORMAL;
+			case F_DATE_FORMAT:
+				MCD_dateformat(which, ep);
+				return ES_NORMAL;
+			case F_SCREEN_RECT:
+				MCScreenRect::evaluate(ep, which >= 1000, (which % 1000) == P_LONG, effective == True);
+				return ES_NORMAL;
+			default:
+				fprintf(stderr, "MCProperty: ERROR bad function in eval\n");
 				return ES_ERROR;
-			}
-			MCS_getentries(ep, function == F_FILES, which == P_LONG);
-			return ES_NORMAL;
-		case F_MONTH_NAMES:
-			MCD_monthnames(which, ep);
-			return ES_NORMAL;
-		case F_WEEK_DAY_NAMES:
-			MCD_weekdaynames(which, ep);
-			return ES_NORMAL;
-		case F_DATE_FORMAT:
-			MCD_dateformat(which, ep);
-			return ES_NORMAL;
-		case F_SCREEN_RECT:
-			MCScreenRect::evaluate(ep, which >= 1000, (which % 1000) == P_LONG, effective == True);
-			return ES_NORMAL;
-		default:
-			fprintf(stderr, "MCProperty: ERROR bad function in eval\n");
-			return ES_ERROR;
 		}
 	}
 	switch (which)
 	{
-	case P_CASE_SENSITIVE:
-		ep.setboolean(ep.getcasesensitive());
-		break;
-	case P_CENTURY_CUTOFF:
-		ep.setnvalue(ep.getcutoff());
-		break;
-	case P_CONVERT_OCTALS:
-		ep.setboolean(ep.getconvertoctals());
-		break;
-	case P_ITEM_DELIMITER:
+		case P_CASE_SENSITIVE:
+			ep.setboolean(ep.getcasesensitive());
+			break;
+		case P_CENTURY_CUTOFF:
+			ep.setnvalue(ep.getcutoff());
+			break;
+		case P_CONVERT_OCTALS:
+			ep.setboolean(ep.getconvertoctals());
+			break;
+		case P_ITEM_DELIMITER:
 		{
 			char id = ep.getitemdel();
 			ep.copysvalue(&id, 1);
 		}
-		break;
-	case P_COLUMN_DELIMITER:
+			break;
+		case P_COLUMN_DELIMITER:
 		{
 			char id = ep.getcolumndel();
 			ep.copysvalue(&id, 1);
 		}
-		break;
-	case P_ROW_DELIMITER:
+			break;
+		case P_ROW_DELIMITER:
 		{
 			char id = ep.getrowdel();
 			ep.copysvalue(&id, 1);
 		}
-		break;
-	case P_LINE_DELIMITER:
+			break;
+		case P_LINE_DELIMITER:
 		{
 			char id = ep.getlinedel();
 			ep.copysvalue(&id, 1);
 		}
-		break;
-	case P_WHOLE_MATCHES:
-		ep.setboolean(ep.getwholematches());
-		break;
-	case P_USE_SYSTEM_DATE:
-		ep.setboolean(ep.getusesystemdate());
-		break;
-	case P_USE_UNICODE:
-		ep.setboolean(ep.getuseunicode());
-		break;
-	
-	case P_PRINTER_NAMES:
-		if (!MCSecureModeCheckPrinter())
-			return ES_ERROR;
-		MCscreen -> listprinters(ep);
-		break;
-
-	case P_PRINT_DEVICE_NAME:
-		ep . setsvalue(MCprinter -> GetDeviceName());
-		break;
-		
-	case P_PRINT_DEVICE_SETTINGS:
-	{
-		MCString t_settings;
-		t_settings = MCprinter -> CopyDeviceSettings();
-		ep . copysvalue(t_settings . getstring(), t_settings . getlength());
-		delete (char *)t_settings . getstring();
-	}
-	break;
-		
-	case P_PRINT_DEVICE_OUTPUT:
-	{
-		switch(MCprinter -> GetDeviceOutputType())
+			break;
+		case P_WHOLE_MATCHES:
+			ep.setboolean(ep.getwholematches());
+			break;
+		case P_USE_SYSTEM_DATE:
+			ep.setboolean(ep.getusesystemdate());
+			break;
+		case P_USE_UNICODE:
+			ep.setboolean(ep.getuseunicode());
+			break;
+			
+		case P_PRINTER_NAMES:
+			if (!MCSecureModeCheckPrinter())
+				return ES_ERROR;
+			MCscreen -> listprinters(ep);
+			break;
+			
+		case P_PRINT_DEVICE_NAME:
+			ep . setsvalue(MCprinter -> GetDeviceName());
+			break;
+			
+		case P_PRINT_DEVICE_SETTINGS:
 		{
-			case PRINTER_OUTPUT_DEVICE:
-				ep . setstaticcstring("device");
-			break;
-			
-			case PRINTER_OUTPUT_PREVIEW:
-				ep . setstaticcstring("preview");
-			break;
-			
-			case PRINTER_OUTPUT_FILE:
-				ep . setstringf("file:%s", MCprinter -> GetDeviceOutputLocation());
-			break;
-
-			case PRINTER_OUTPUT_SYSTEM:
-				ep . setstaticcstring("system");
-			break;
+			MCString t_settings;
+			t_settings = MCprinter -> CopyDeviceSettings();
+			ep . copysvalue(t_settings . getstring(), t_settings . getlength());
+			delete (char *)t_settings . getstring();
 		}
-	}
-	break;
-
-	case P_PRINT_DEVICE_FEATURES:
-	{
-		MCPrinterFeatureSet t_features;
-		t_features = MCprinter -> GetDeviceFeatures();
-
-		ep . clear();
-
-		int4 t_count;
-		t_count = 0;
-		if ((t_features & PRINTER_FEATURE_COLLATE) != 0)
-			ep . concatcstring("collate", EC_COMMA, t_count++ == 0);
-		if ((t_features & PRINTER_FEATURE_COPIES) != 0)
-			ep . concatcstring("copies", EC_COMMA, t_count++ == 0);
-		if ((t_features & PRINTER_FEATURE_COLOR) != 0)
-			ep . concatcstring("color", EC_COMMA, t_count++ == 0);
-		if ((t_features & PRINTER_FEATURE_DUPLEX) != 0)
-			ep . concatcstring("duplex", EC_COMMA, t_count++ == 0);
-	}
-	break;
-
-	case P_PRINT_DEVICE_RECTANGLE:
-		ep.setrectangle(MCprinter -> GetDeviceRectangle());
-	break;
-	
-	case P_PRINT_PAGE_SIZE:
-		ep.setpoint(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
-	break;
-
-	case P_PRINT_PAGE_RECTANGLE:
-		ep.setrectangle(MCprinter -> GetPageRectangle());
-	break;
-
-	case P_PRINT_PAGE_ORIENTATION:
-	{
-		switch(MCprinter -> GetPageOrientation())
+			break;
+			
+		case P_PRINT_DEVICE_OUTPUT:
 		{
-			case PRINTER_ORIENTATION_PORTRAIT:
-				ep . setstaticcstring("portrait");
-			break;
-			
-			case PRINTER_ORIENTATION_REVERSE_PORTRAIT:
-				ep . setstaticcstring("reverse portrait");
-			break;
-			
-			case PRINTER_ORIENTATION_LANDSCAPE:
-				ep . setstaticcstring("landscape");
-			break;
-			
-			case PRINTER_ORIENTATION_REVERSE_LANDSCAPE:
-				ep . setstaticcstring("reverse landscape");
-			break;
+			switch(MCprinter -> GetDeviceOutputType())
+			{
+				case PRINTER_OUTPUT_DEVICE:
+					ep . setstaticcstring("device");
+					break;
+					
+				case PRINTER_OUTPUT_PREVIEW:
+					ep . setstaticcstring("preview");
+					break;
+					
+				case PRINTER_OUTPUT_FILE:
+					ep . setstringf("file:%s", MCprinter -> GetDeviceOutputLocation());
+					break;
+					
+				case PRINTER_OUTPUT_SYSTEM:
+					ep . setstaticcstring("system");
+					break;
+			}
 		}
-	}
-	break;
-	
-	case P_PRINT_ROTATED:
-		switch(MCprinter -> GetPageOrientation())
+			break;
+			
+		case P_PRINT_DEVICE_FEATURES:
+		{
+			MCPrinterFeatureSet t_features;
+			t_features = MCprinter -> GetDeviceFeatures();
+			
+			ep . clear();
+			
+			int4 t_count;
+			t_count = 0;
+			if ((t_features & PRINTER_FEATURE_COLLATE) != 0)
+				ep . concatcstring("collate", EC_COMMA, t_count++ == 0);
+			if ((t_features & PRINTER_FEATURE_COPIES) != 0)
+				ep . concatcstring("copies", EC_COMMA, t_count++ == 0);
+			if ((t_features & PRINTER_FEATURE_COLOR) != 0)
+				ep . concatcstring("color", EC_COMMA, t_count++ == 0);
+			if ((t_features & PRINTER_FEATURE_DUPLEX) != 0)
+				ep . concatcstring("duplex", EC_COMMA, t_count++ == 0);
+		}
+			break;
+			
+		case P_PRINT_DEVICE_RECTANGLE:
+			ep.setrectangle(MCprinter -> GetDeviceRectangle());
+			break;
+			
+		case P_PRINT_PAGE_SIZE:
+			ep.setpoint(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
+			break;
+			
+		case P_PRINT_PAGE_RECTANGLE:
+			ep.setrectangle(MCprinter -> GetPageRectangle());
+			break;
+			
+		case P_PRINT_PAGE_ORIENTATION:
+		{
+			switch(MCprinter -> GetPageOrientation())
+			{
+				case PRINTER_ORIENTATION_PORTRAIT:
+					ep . setstaticcstring("portrait");
+					break;
+					
+				case PRINTER_ORIENTATION_REVERSE_PORTRAIT:
+					ep . setstaticcstring("reverse portrait");
+					break;
+					
+				case PRINTER_ORIENTATION_LANDSCAPE:
+					ep . setstaticcstring("landscape");
+					break;
+					
+				case PRINTER_ORIENTATION_REVERSE_LANDSCAPE:
+					ep . setstaticcstring("reverse landscape");
+					break;
+			}
+		}
+			break;
+			
+		case P_PRINT_ROTATED:
+			switch(MCprinter -> GetPageOrientation())
 		{
 			case PRINTER_ORIENTATION_PORTRAIT:
 			case PRINTER_ORIENTATION_REVERSE_PORTRAIT:
 				ep . setboolean(false);
-			break;
-			
+				break;
+				
 			case PRINTER_ORIENTATION_LANDSCAPE:
 			case PRINTER_ORIENTATION_REVERSE_LANDSCAPE:
 				ep . setboolean(true);
-			break;
+				break;
 		}
-	break;
-	
-	case P_PRINT_PAGE_SCALE:
-		ep . setnvalue(MCprinter -> GetPageScale());
-	break;
-
-	case P_PRINT_JOB_NAME:
-		ep . setsvalue(MCprinter -> GetJobName());
-	break;
-	case P_PRINT_JOB_COPIES:
-		ep . setint(MCprinter -> GetJobCopies());
-	break;
-	case P_PRINT_JOB_COLLATE:
-		ep . setboolean(MCprinter -> GetJobCollate());
-	break;
-	case P_PRINT_JOB_DUPLEX:
-		switch(MCprinter -> GetJobDuplex())
+			break;
+			
+		case P_PRINT_PAGE_SCALE:
+			ep . setnvalue(MCprinter -> GetPageScale());
+			break;
+			
+		case P_PRINT_JOB_NAME:
+			ep . setsvalue(MCprinter -> GetJobName());
+			break;
+		case P_PRINT_JOB_COPIES:
+			ep . setint(MCprinter -> GetJobCopies());
+			break;
+		case P_PRINT_JOB_COLLATE:
+			ep . setboolean(MCprinter -> GetJobCollate());
+			break;
+		case P_PRINT_JOB_DUPLEX:
+			switch(MCprinter -> GetJobDuplex())
 		{
 			case PRINTER_DUPLEX_MODE_SIMPLEX:
 				ep . setstaticcstring("none");
-			break;
-			
+				break;
+				
 			case PRINTER_DUPLEX_MODE_LONG_EDGE:
 				ep . setstaticcstring("long edge");
-			break;
-			
+				break;
+				
 			case PRINTER_DUPLEX_MODE_SHORT_EDGE:
 				ep . setstaticcstring("short edge");
+				break;
+		}
 			break;
-		}
-	break;
-	case P_PRINT_JOB_COLOR:
-		ep . setboolean(MCprinter -> GetJobColor());
-	break;
-	case P_PRINT_JOB_RANGES:
-	{
-		MCPrinterPageRangeCount t_count;
-		t_count = MCprinter -> GetJobRangeCount();
-		if (t_count == PRINTER_PAGE_RANGE_CURRENT)
-			ep . setstaticcstring("current");
-		else if (t_count == PRINTER_PAGE_RANGE_SELECTION)
-			ep . setstaticcstring("selection");
-		else if (t_count == PRINTER_PAGE_RANGE_ALL)
-			ep . setstaticcstring("all");
-		else
+		case P_PRINT_JOB_COLOR:
+			ep . setboolean(MCprinter -> GetJobColor());
+			break;
+		case P_PRINT_JOB_RANGES:
 		{
-			const MCRange *t_ranges;
-			t_ranges = MCprinter -> GetJobRanges();
-
-			ep . clear();
-			for(int i = 0; i < t_count; ++i)
+			MCPrinterPageRangeCount t_count;
+			t_count = MCprinter -> GetJobRangeCount();
+			if (t_count == PRINTER_PAGE_RANGE_CURRENT)
+				ep . setstaticcstring("current");
+			else if (t_count == PRINTER_PAGE_RANGE_SELECTION)
+				ep . setstaticcstring("selection");
+			else if (t_count == PRINTER_PAGE_RANGE_ALL)
+				ep . setstaticcstring("all");
+			else
 			{
-				char t_buffer[I4L * 2 + 2];
-				if (t_ranges[i] . from == t_ranges[i] . to)
-					sprintf(t_buffer, "%d", t_ranges[i] . from);
-				else
-					sprintf(t_buffer, "%d-%d", t_ranges[i] . from, t_ranges[i] . to);
-				ep . concatcstring(t_buffer, EC_COMMA, i == 0);
+				const MCInterval *t_ranges;
+				t_ranges = MCprinter -> GetJobRanges();
+				
+				ep . clear();
+				for(int i = 0; i < t_count; ++i)
+				{
+					char t_buffer[I4L * 2 + 2];
+					if (t_ranges[i] . from == t_ranges[i] . to)
+						sprintf(t_buffer, "%d", t_ranges[i] . from);
+					else
+						sprintf(t_buffer, "%d-%d", t_ranges[i] . from, t_ranges[i] . to);
+					ep . concatcstring(t_buffer, EC_COMMA, i == 0);
+				}
 			}
 		}
-	}
-	break;
-	case P_PRINT_JOB_PAGE:
-		if (MCprinter -> GetJobPageNumber() == -1)
-			ep . clear();
-		else
-			ep . setint(MCprinter -> GetJobPageNumber());
-	break;
-
-	case P_PRINT_CARD_BORDERS:
-		ep . setboolean(MCprinter -> GetLayoutShowBorders());
-	break;
-
-	case P_PRINT_COMMAND:
-		if (MCprinter -> GetDeviceCommand() == NULL)
-			ep . clear();
-		else
-			ep . copysvalue(MCprinter -> GetDeviceCommand());
-	break;
-	
-	case P_PRINT_FONT_TABLE:
-		// OK-2008-11-25: [[Bug 7475]] Null check needed to avoid crash
-		const char *t_device_font_table;
-		t_device_font_table = MCprinter -> GetDeviceFontTable();
-		if (t_device_font_table == NULL)
-			ep . clear();
-		else
-			ep . copysvalue(t_device_font_table);
-		
-	break;
-	
-	case P_PRINT_GUTTERS:
-		ep.setpoint(MCprinter -> GetLayoutRowSpacing(), MCprinter -> GetLayoutColumnSpacing());
-	break;
-	
-	case P_PRINT_MARGINS:
-		ep.setrectangle(MCprinter -> GetPageLeftMargin(), MCprinter -> GetPageTopMargin(), MCprinter -> GetPageRightMargin(), MCprinter -> GetPageBottomMargin());
-	break;
-
-	case P_PRINT_ROWS_FIRST:
-		ep . setboolean(MCprinter -> GetLayoutRowsFirst());
-	break;
-
-	// MW-2007-09-10: [[ Bug 5343 ]] Without this we get a crash :oD
-	case P_PRINT_SCALE:
-		ep . setnvalue(MCprinter -> GetLayoutScale());
-	break;
-
-	case P_PRINT_TEXT_ALIGN:
-	case P_PRINT_TEXT_FONT:
-	case P_PRINT_TEXT_HEIGHT:
-	case P_PRINT_TEXT_SIZE:
-	case P_PRINT_TEXT_STYLE:
+			break;
+		case P_PRINT_JOB_PAGE:
+			if (MCprinter -> GetJobPageNumber() == -1)
+				ep . clear();
+			else
+				ep . setint(MCprinter -> GetJobPageNumber());
 		break;
-		
-	case P_CLIPBOARD_DATA:
-	case P_DRAG_DATA:
-	{
-		bool t_query_success;
-		t_query_success = true;
 
-		MCTransferData *t_pasteboard;
-		if (which == P_CLIPBOARD_DATA)
-			t_pasteboard = MCclipboarddata;
-		else
-			t_pasteboard = MCdragdata;
-
-		if (t_pasteboard -> Lock())
-		{
-			MCTransferType t_type;
-			if (customindex == NULL)
-				t_type = TRANSFER_TYPE_TEXT;
+		case P_PRINT_CARD_BORDERS:
+			ep . setboolean(MCprinter -> GetLayoutShowBorders());
+			break;
+			
+		case P_PRINT_COMMAND:
+			if (MCprinter -> GetDeviceCommand() == NULL)
+				ep . clear();
 			else
+				ep . copysvalue(MCprinter -> GetDeviceCommand());
+			break;
+			
+		case P_PRINT_FONT_TABLE:
+			// OK-2008-11-25: [[Bug 7475]] Null check needed to avoid crash
+			const char *t_device_font_table;
+			t_device_font_table = MCprinter -> GetDeviceFontTable();
+			if (t_device_font_table == NULL)
+				ep . clear();
+			else
+				ep . copysvalue(t_device_font_table);
+			
+			break;
+			
+		case P_PRINT_GUTTERS:
+			ep.setpoint(MCprinter -> GetLayoutRowSpacing(), MCprinter -> GetLayoutColumnSpacing());
+			break;
+			
+		case P_PRINT_MARGINS:
+			ep.setrectangle(MCprinter -> GetPageLeftMargin(), MCprinter -> GetPageTopMargin(), MCprinter -> GetPageRightMargin(), MCprinter -> GetPageBottomMargin());
+			break;
+			
+		case P_PRINT_ROWS_FIRST:
+			ep . setboolean(MCprinter -> GetLayoutRowsFirst());
+			break;
+			
+			// MW-2007-09-10: [[ Bug 5343 ]] Without this we get a crash :oD
+		case P_PRINT_SCALE:
+			ep . setnvalue(MCprinter -> GetLayoutScale());
+			break;
+			
+		case P_PRINT_TEXT_ALIGN:
+		case P_PRINT_TEXT_FONT:
+		case P_PRINT_TEXT_HEIGHT:
+		case P_PRINT_TEXT_SIZE:
+		case P_PRINT_TEXT_STYLE:
+			break;
+			
+		case P_CLIPBOARD_DATA:
+		case P_DRAG_DATA:
+		{
+			bool t_query_success;
+			t_query_success = true;
+			
+			MCTransferData *t_pasteboard;
+			if (which == P_CLIPBOARD_DATA)
+				t_pasteboard = MCclipboarddata;
+			else
+				t_pasteboard = MCdragdata;
+			
+			if (t_pasteboard -> Lock())
 			{
-				if (customindex->eval(ep) != ES_NORMAL)
+				MCTransferType t_type;
+				if (customindex == NULL)
+					t_type = TRANSFER_TYPE_TEXT;
+				else
 				{
-					MCeerror->add(EE_PROPERTY_BADEXPRESSION, line, pos);
-					return ES_ERROR;
+					if (customindex->eval(ep) != ES_NORMAL)
+					{
+						MCeerror->add(EE_PROPERTY_BADEXPRESSION, line, pos);
+						return ES_ERROR;
+					}
+					t_type = MCTransferData::StringToType(ep . getsvalue());
 				}
-				t_type = MCTransferData::StringToType(ep . getsvalue());
-			}
-
-			if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
-			{
-				MCSharedString *t_data;
-				t_data = t_pasteboard -> Fetch(t_type);
-				if (t_data != NULL)
+				
+				if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
 				{
-					ep . copysvalue(t_data -> Get() . getstring(), t_data -> Get() . getlength());
-					t_data -> Release();
+					MCSharedString *t_data;
+					t_data = t_pasteboard -> Fetch(t_type);
+					if (t_data != NULL)
+					{
+						ep . copysvalue(t_data -> Get() . getstring(), t_data -> Get() . getlength());
+						t_data -> Release();
+					}
+					else
+						t_query_success = false;
 				}
 				else
-					t_query_success = false;
+				{
+					ep . clear();
+					MCresult -> sets("format not available");
+				}
+				
+				t_pasteboard -> Unlock();
 			}
 			else
+				t_query_success = false;
+			
+			if (!t_query_success)
 			{
 				ep . clear();
-				MCresult -> sets("format not available");
+				MCresult -> sets("unable to query clipboard");
 			}
-
-			t_pasteboard -> Unlock();
 		}
-		else
-			t_query_success = false;
-
-		if (!t_query_success)
-		{
-			ep . clear();
-			MCresult -> sets("unable to query clipboard");
-		}
-	}
-	break;
-	case P_DIALOG_DATA:
-		MCdialogdata->fetch(ep);
-		break;
-	case P_HC_IMPORT_STAT:
-		ep.setsvalue(MChcstat);
-		break;
-	case P_SCRIPT_TEXT_FONT:
-		ep.setsvalue(MCscriptfont);
-		break;
-	case P_SCRIPT_TEXT_SIZE:
-		if (MCscriptsize == 0)
-			ep.clear();
-		else
-			ep.setnvalue(MCscriptsize);
-		break;
-	case P_LOOK_AND_FEEL:
-		if (MCcurtheme)
-			ep.setsvalue(MCcurtheme->getname());
-		else
-		{
-			switch(MClook)
+			break;
+		case P_DIALOG_DATA:
+			MCdialogdata->eval(ep);
+			break;
+		case P_HC_IMPORT_STAT:
+			ep.setsvalue(MChcstat);
+			break;
+		case P_SCRIPT_TEXT_FONT:
+			ep.setsvalue(MCscriptfont);
+			break;
+		case P_SCRIPT_TEXT_SIZE:
+			if (MCscriptsize == 0)
+				ep.clear();
+			else
+				ep.setnvalue(MCscriptsize);
+			break;
+		case P_LOOK_AND_FEEL:
+			if (MCcurtheme)
+				ep.setsvalue(MCcurtheme->getname());
+			else
 			{
-			case LF_MAC:
-				ep.setstaticcstring(MClnfmacstring);
+				switch(MClook)
+				{
+					case LF_MAC:
+						ep.setstaticcstring(MClnfmacstring);
+						break;
+					case LF_WIN95:
+						ep.setstaticcstring(MClnfwinstring);
+						break;
+					default:
+						ep.setstaticcstring(MClnfmotifstring);
+						break;
+				}
+			}
+			break;
+		case P_SCREEN_MOUSE_LOC:
+			MCscreen->querymouse(mx, my);
+			ep.setpoint(mx, my);
+			break;
+		case P_UMASK:
+			ep.setint(MCS_getumask());
+			break;
+		case P_BUFFER_MODE:
+			switch(MCscreen->getdepth())
+		{
+			case 1:
+				ep.setstaticcstring("bw");
 				break;
-			case LF_WIN95:
-				ep.setstaticcstring(MClnfwinstring);
+			case 2:
+				ep.setuint(4);
+				break;
+			case 4:
+				ep.setuint(16);
+				break;
+			case 8:
+				ep.setuint(256);
+				break;
+			case 16:
+				ep.setstaticcstring("thousands");
 				break;
 			default:
-				ep.setstaticcstring(MClnfmotifstring);
+				ep.setstaticcstring("millions");
 				break;
-			}
 		}
-		break;
-	case P_SCREEN_MOUSE_LOC:
-		MCscreen->querymouse(mx, my);
-		ep.setpoint(mx, my);
-		break;
-	case P_UMASK:
-		ep.setint(MCS_getumask());
-		break;
-	case P_BUFFER_MODE:
-		switch(MCscreen->getdepth())
+			break;
+		case P_BUFFER_IMAGES:
+			ep.setboolean(MCbufferimages);
+			break;
+		case P_BACK_DROP:
+			if (MCbackdropcolor == NULL)
+				ep.setstaticcstring("none");
+			else
+				ep.setsvalue(MCbackdropcolor);
+			break;
+		case P_MULTI_EFFECT:
+			ep.setboolean(false);
+			break;
+		case P_ALLOW_INTERRUPTS:
+			ep.setboolean(MCallowinterrupts);
+			break;
+		case P_EXPLICIT_VARIABLES:
+			ep.setboolean(MCexplicitvariables);
+			break;
+		case P_PRESERVE_VARIABLES:
+			ep.setboolean(MCpreservevariables);
+			break;
+		case P_SYSTEM_FS:
+			ep.setboolean(MCsystemFS);
+			break;
+		case P_SYSTEM_CS:
+			ep.setboolean(MCsystemCS);
+			break;
+		case P_SYSTEM_PS:
+			ep.setboolean(MCsystemPS);
+			break;
+		case P_FILE_TYPE:
+			ep.setsvalue(MCfiletype);
+			break;
+		case P_STACK_FILE_TYPE:
+			ep.setsvalue(MCstackfiletype);
+			break;
+		case P_STACK_FILE_VERSION:
 		{
-		case 1:
-			ep.setstaticcstring("bw");
-			break;
-		case 2:
-			ep.setuint(4);
-			break;
-		case 4:
-			ep.setuint(16);
-			break;
-		case 8:
-			ep.setuint(256);
-			break;
-		case 16:
-			ep.setstaticcstring("thousands");
-			break;
-		default:
-			ep.setstaticcstring("millions");
-			break;
-		}
-		break;
-	case P_BUFFER_IMAGES:
-		ep.setboolean(MCbufferimages);
-		break;
-	case P_BACK_DROP:
-		if (MCbackdropcolor == NULL)
-			ep.setstaticcstring("none");
-		else
-			ep.setsvalue(MCbackdropcolor);
-		break;
-	case P_MULTI_EFFECT:
-		ep.setboolean(false);
-		break;
-	case P_ALLOW_INTERRUPTS:
-		ep.setboolean(MCallowinterrupts);
-		break;
-	case P_EXPLICIT_VARIABLES:
-		ep.setboolean(MCexplicitvariables);
-		break;
-	case P_PRESERVE_VARIABLES:
-		ep.setboolean(MCpreservevariables);
-		break;
-	case P_SYSTEM_FS:
-		ep.setboolean(MCsystemFS);
-		break;
-	case P_SYSTEM_CS:
-		ep.setboolean(MCsystemCS);
-		break;
-	case P_SYSTEM_PS:
-		ep.setboolean(MCsystemPS);
-		break;
-	case P_FILE_TYPE:
-		ep.setsvalue(MCfiletype);
-		break;
-	case P_STACK_FILE_TYPE:
-		ep.setsvalue(MCstackfiletype);
-		break;
-	case P_STACK_FILE_VERSION:
-	{
-		char t_version[6];
-		t_version[0] = '0' + MCstackfileversion / 1000;
-		t_version[1] = '.';
-		t_version[2] = '0' + (MCstackfileversion % 1000) / 100;
-		if (MCstackfileversion % 100 == 0)
-			t_version[3] = '\0';
-		else
-		{
-			t_version[3] = '.';
-			t_version[4] = '0' + (MCstackfileversion % 100) / 10;
-			t_version[5] = '\0';
-		}
-		ep . copysvalue(t_version, strlen(t_version));
-	}
-	break;
-	case P_SECURE_MODE:
-		ep.setboolean(MCsecuremode == MC_SECUREMODE_ALL);
-		break;
-	case P_SECURITY_CATEGORIES:
-	case P_SECURITY_PERMISSIONS:
-	{
-		int t_count;
-		t_count = 0;
-
-		ep . clear();
-		for (int i=0; i<MC_SECUREMODE_MODECOUNT; i++)
-		{
-			if ((which == P_SECURITY_CATEGORIES) || ((MCsecuremode & (1 << i)) == 0))
+			char t_version[6];
+			t_version[0] = '0' + MCstackfileversion / 1000;
+			t_version[1] = '.';
+			t_version[2] = '0' + (MCstackfileversion % 1000) / 100;
+			if (MCstackfileversion % 100 == 0)
+				t_version[3] = '\0';
+			else
 			{
-				ep.concatcstring(MCsecuremode_strings[i], EC_COMMA, t_count == 0);
-				t_count += 1;
+				t_version[3] = '.';
+				t_version[4] = '0' + (MCstackfileversion % 100) / 10;
+				t_version[5] = '\0';
+			}
+			ep . copysvalue(t_version, strlen(t_version));
+		}
+			break;
+		case P_SECURE_MODE:
+			ep.setboolean(MCsecuremode == MC_SECUREMODE_ALL);
+			break;
+		case P_SECURITY_CATEGORIES:
+		case P_SECURITY_PERMISSIONS:
+		{
+			int t_count;
+			t_count = 0;
+			
+			ep . clear();
+			for (int i=0; i<MC_SECUREMODE_MODECOUNT; i++)
+			{
+				if ((which == P_SECURITY_CATEGORIES) || ((MCsecuremode & (1 << i)) == 0))
+				{
+					ep.concatcstring(MCsecuremode_strings[i], EC_COMMA, t_count == 0);
+					t_count += 1;
+				}
 			}
 		}
-	}
-	break;
-	case P_SERIAL_CONTROL_STRING:
-		ep.setsvalue(MCserialcontrolsettings);
-		break;
-	case P_COLOR_WORLD:
-		ep.setboolean(MCscreen->getdepth() > 1);
-		break;
-	case P_ALLOW_KEY_IN_FIELD:
-	case P_REMAP_COLOR:
-	case P_EDIT_SCRIPTS:
-		ep.setboolean(True);
-		break;
-	case P_ALLOW_FIELD_REDRAW:
-		ep.setboolean(False);
-		break;
-	case P_HIDE_CONSOLE_WINDOWS:
-		ep.setboolean(MChidewindows);
-		break;
-	case P_FTP_PROXY:
-		if (MCftpproxyhost == NULL)
-			ep.clear();
-		else
-			ep.setstringf("%s:%d", MCftpproxyhost, MCftpproxyport);
-		break;
-	case P_HTTP_HEADERS:
-		if (MChttpheaders == NULL)
-			ep.clear();
-		else
-			ep.setsvalue(MChttpheaders);
-		break;
-	case P_HTTP_PROXY:
-		if (MChttpproxy == NULL)
-			ep . clear();
-		else
-			ep . copysvalue(MChttpproxy);
-		break;
-	case P_SHOW_INVISIBLES:
-		ep.setboolean(MCshowinvisibles);
-		break;
-	case P_SOCKET_TIMEOUT:
-		ep.setnvalue(MCsockettimeout * 1000.0);
-		break;
-	case P_RANDOM_SEED:
-		ep.setnvalue(MCrandomseed);
-		break;
-	case P_DEFAULT_STACK:
-		MCdefaultstackptr->getprop(0, P_NAME, ep, effective);
-		break;
-	case P_DEFAULT_MENU_BAR:
-		if (MCdefaultmenubar == NULL)
-			ep.clear();
-		else
-			MCdefaultmenubar->getprop(0, P_LONG_NAME, ep, effective);
-		break;
-	case P_DRAG_SPEED:
-		ep.setint(MCdragspeed);
-		break;
-	case P_MOVE_SPEED:
-		ep.setint(MCmovespeed);
-		break;
-	case P_LOCK_COLORMAP:
-		ep.setboolean(MClockcolormap);
-		break;
-	case P_LOCK_CURSOR:
-		ep.setboolean(MClockcursor);
-		break;
-	case P_LOCK_ERRORS:
-		ep.setboolean(MClockerrors);
-		break;
-	case P_LOCK_MENUS:
-		ep.setboolean(MClockmenus);
-		break;
-	case P_LOCK_MESSAGES:
-		ep.setboolean(MClockmessages);
-		break;
-	case P_LOCK_MOVES:
-		ep.setboolean(MClockmoves);
-		break;
-	case P_LOCK_RECENT:
-		ep.setboolean(MClockrecent);
-		break;
-	case P_USER_LEVEL:
-		ep.setint(MCuserlevel);
-		break;
-	case P_USER_MODIFY:
-		ep.setboolean(True);
-		break;
-	case P_CURSOR:
-		if (MCcursor != None)
-			ep.setint(MCcursorid);
-		else
-			ep.clear();
-		break;
-	case P_DEFAULT_CURSOR:
-		if (MCdefaultcursor != None)
-			ep.setint(MCdefaultcursorid);
-		else
-			ep.clear();
-		break;
-	case P_TRACE_ABORT:
-		ep.setboolean(MCtraceabort);
-		break;
-	case P_TRACE_DELAY:
-		ep.setint(MCtracedelay);
-		break;
-	case P_TRACE_RETURN:
-		ep.setboolean(MCtracereturn);
-		break;
-	case P_TRACE_STACK:
-		if (MCtracestackptr == NULL)
-			ep.clear();
-		else
-			MCtracestackptr->getprop(0, P_NAME, ep, effective);
-		break;
-	case P_TRACE_UNTIL:
-		ep.setuint(MCtraceuntil);
-		break;
-	case P_DIRECTORY:
+			break;
+		case P_SERIAL_CONTROL_STRING:
+			ep.setsvalue(MCserialcontrolsettings);
+			break;
+		case P_COLOR_WORLD:
+			ep.setboolean(MCscreen->getdepth() > 1);
+			break;
+		case P_ALLOW_KEY_IN_FIELD:
+		case P_REMAP_COLOR:
+		case P_EDIT_SCRIPTS:
+			ep.setboolean(True);
+			break;
+		case P_ALLOW_FIELD_REDRAW:
+			ep.setboolean(False);
+			break;
+		case P_HIDE_CONSOLE_WINDOWS:
+			ep.setboolean(MChidewindows);
+			break;
+		case P_FTP_PROXY:
+			if (MCftpproxyhost == NULL)
+				ep.clear();
+			else
+				ep.setstringf("%s:%d", MCftpproxyhost, MCftpproxyport);
+			break;
+		case P_HTTP_HEADERS:
+			if (MChttpheaders == NULL)
+				ep.clear();
+			else
+				ep.setsvalue(MChttpheaders);
+			break;
+		case P_HTTP_PROXY:
+			if (MChttpproxy == NULL)
+				ep . clear();
+			else
+				ep . copysvalue(MChttpproxy);
+			break;
+		case P_SHOW_INVISIBLES:
+			ep.setboolean(MCshowinvisibles);
+			break;
+		case P_SOCKET_TIMEOUT:
+			ep.setnvalue(MCsockettimeout * 1000.0);
+			break;
+		case P_RANDOM_SEED:
+			ep.setnvalue(MCrandomseed);
+			break;
+		case P_DEFAULT_STACK:
+			MCdefaultstackptr->getprop(0, P_NAME, ep, effective);
+			break;
+		case P_DEFAULT_MENU_BAR:
+			if (MCdefaultmenubar == NULL)
+				ep.clear();
+			else
+				MCdefaultmenubar->getprop(0, P_LONG_NAME, ep, effective);
+			break;
+		case P_DRAG_SPEED:
+			ep.setint(MCdragspeed);
+			break;
+		case P_MOVE_SPEED:
+			ep.setint(MCmovespeed);
+			break;
+		case P_LOCK_COLORMAP:
+			ep.setboolean(MClockcolormap);
+			break;
+		case P_LOCK_CURSOR:
+			ep.setboolean(MClockcursor);
+			break;
+		case P_LOCK_ERRORS:
+			ep.setboolean(MClockerrors);
+			break;
+		case P_LOCK_MENUS:
+			ep.setboolean(MClockmenus);
+			break;
+		case P_LOCK_MESSAGES:
+			ep.setboolean(MClockmessages);
+			break;
+		case P_LOCK_MOVES:
+			ep.setboolean(MClockmoves);
+			break;
+		case P_LOCK_RECENT:
+			ep.setboolean(MClockrecent);
+			break;
+		case P_USER_LEVEL:
+			ep.setint(MCuserlevel);
+			break;
+		case P_USER_MODIFY:
+			ep.setboolean(True);
+			break;
+		case P_CURSOR:
+			if (MCcursor != None)
+				ep.setint(MCcursorid);
+			else
+				ep.clear();
+			break;
+		case P_DEFAULT_CURSOR:
+			if (MCdefaultcursor != None)
+				ep.setint(MCdefaultcursorid);
+			else
+				ep.clear();
+			break;
+		case P_TRACE_ABORT:
+			ep.setboolean(MCtraceabort);
+			break;
+		case P_TRACE_DELAY:
+			ep.setint(MCtracedelay);
+			break;
+		case P_TRACE_RETURN:
+			ep.setboolean(MCtracereturn);
+			break;
+		case P_TRACE_STACK:
+			if (MCtracestackptr == NULL)
+				ep.clear();
+			else
+				MCtracestackptr->getprop(0, P_NAME, ep, effective);
+			break;
+		case P_TRACE_UNTIL:
+			ep.setuint(MCtraceuntil);
+			break;
+		case P_DIRECTORY:
 		{
 			if (!MCSecureModeCheckDisk(line, pos))
 				return ES_ERROR;
-
+			
 			char *dir = MCS_getcurdir();
 			ep.copysvalue(dir, strlen(dir));
 			delete dir;
 		}
-		break;
-	case P_SSL_CERTIFICATES:
-		ep.setsvalue(MCsslcertificates);
-		break;
-	case P_DEFAULT_NETWORK_INTERFACE:
-		ep.setsvalue(MCdefaultnetworkinterface);
-		break;
-	case P_NETWORK_INTERFACES:
-		MCS_getnetworkinterfaces(ep);
-		break;
-	case P_ERROR_MODE:
-	{
-		MCSErrorMode t_mode;
-		t_mode = MCS_get_errormode();
-		switch (t_mode)
+			break;
+		case P_SSL_CERTIFICATES:
+			ep.setsvalue(MCsslcertificates);
+			break;
+		case P_DEFAULT_NETWORK_INTERFACE:
+			ep.setsvalue(MCdefaultnetworkinterface);
+			break;
+		case P_NETWORK_INTERFACES:
+			MCS_getnetworkinterfaces(ep);
+			break;
+		case P_ERROR_MODE:
 		{
-		case kMCSErrorModeNone:
+			MCSErrorMode t_mode;
+			t_mode = MCS_get_errormode();
+			switch (t_mode)
+			{
+				case kMCSErrorModeNone:
+					ep.clear();
+					break;
+				case kMCSErrorModeQuiet:
+					ep.setstaticcstring("quiet");
+					break;
+				case kMCSErrorModeStderr:
+					ep.setstaticcstring("stderr");
+					break;
+				case kMCSErrorModeInline:
+					ep.setstaticcstring("inline");
+					break;
+				case kMCSErrorModeDebugger:
+					ep.setstaticcstring("debugger");
+					break;
+				default:
+					break;
+			}
+		}
+			break;
+		case P_OUTPUT_TEXT_ENCODING:
+		{
+			const char *t_encoding;
+			switch(MCS_get_outputtextencoding())
+			{
+				case kMCSOutputTextEncodingWindows1252:
+					t_encoding = "windows-1252";
+					break;
+				case kMCSOutputTextEncodingMacRoman:
+					t_encoding = "macintosh";
+					break;
+				case kMCSOutputTextEncodingISO8859_1:
+					t_encoding = "iso-8859-1";
+					break;
+				case kMCSOutputTextEncodingUTF8:
+					t_encoding = "utf-8";
+					break;
+				default:
+					t_encoding = "";
+					break;
+			}
+			ep.setstaticcstring(t_encoding);
+		}
+			break;
+		case P_OUTPUT_LINE_ENDINGS:
+		{
+			const char *t_ending;
+			switch(MCS_get_outputlineendings())
+			{
+				case kMCSOutputLineEndingsLF:
+					t_ending = "lf";
+					break;
+				case kMCSOutputLineEndingsCR:
+					t_ending = "cr";
+					break;
+				case kMCSOutputLineEndingsCRLF:
+					t_ending = "crlf";
+					break;
+				default:
+					t_ending = "";
+					break;
+			}
+			ep . setstaticcstring(t_ending);
+		}
+			break;
+		case P_SESSION_SAVE_PATH:
+			ep.setcstring(MCS_get_session_save_path());
+			break;
+		case P_SESSION_LIFETIME:
+			ep.setuint(MCS_get_session_lifetime());
+			break;
+		case P_SESSION_COOKIE_NAME:
+			ep.setcstring(MCS_get_session_name());
+			break;
+		case P_SESSION_ID:
+			ep.setcstring(MCS_get_session_id());
+			break;
+			
+		case P_SCRIPT_EXECUTION_ERRORS:
+			ep . setstaticcstring(MCexecutionerrors);
+			break;
+		case P_SCRIPT_PARSING_ERRORS:
+			ep . setstaticcstring(MCparsingerrors);
+			break;
+		case P_REV_RUNTIME_BEHAVIOUR:
+			ep.setint(MCruntimebehaviour);
+			break;
+		case P_PRIVATE_COLORS:
+			ep.setboolean(MCuseprivatecmap);
+			break;
+		case P_TWELVE_TIME:
+			ep.setboolean(MCtwelvetime);
+			break;
+		case P_IDLE_RATE:
+			ep.setint(MCidleRate);
+			break;
+		case P_QT_IDLE_RATE:
+			ep.setint(MCqtidlerate);
+			break;
+		case P_IDLE_TICKS:
+			ep.setint(MCidleRate * 60 / 1000);
+			break;
+		case P_BLINK_RATE:
+			ep.setint(MCblinkrate);
+			break;
+		case P_RECURSION_LIMIT:
+			ep.setuint(MCrecursionlimit);
+			break;
+		case P_REPEAT_RATE:
+			ep.setint(MCrepeatrate);
+			break;
+		case P_REPEAT_DELAY:
+			ep.setint(MCrepeatdelay);
+			break;
+		case P_TYPE_RATE:
+			ep.setint(MCtyperate);
+			break;
+		case P_SYNC_RATE:
+			ep.setint(MCsyncrate);
+			break;
+		case P_EFFECT_RATE:
+			ep.setint(MCeffectrate);
+			break;
+		case P_DOUBLE_DELTA:
+			ep.setint(MCdoubledelta);
+			break;
+		case P_DRAG_DELTA:
+			ep.setint(MCdragdelta);
+			break;
+		case P_DOUBLE_TIME:
+			ep.setint(MCdoubletime);
+			break;
+		case P_TOOL_TIP_DELAY:
+			ep.setint(MCtooltipdelay);
+			break;
+		case P_LONG_WINDOW_TITLES:
+			ep.setboolean(MClongwindowtitles);
+			break;
+		case P_BLIND_TYPING:
+			ep.setboolean(MCblindtyping);
+			break;
+		case P_POWER_KEYS:
+			ep.setboolean(MCpowerkeys);
+			break;
+		case P_NAVIGATION_ARROWS:
+			ep.setboolean(MCnavigationarrows);
+			break;
+		case P_TEXT_ARROWS:
+			ep.setboolean(MCtextarrows);
+			break;
+		case P_EXTEND_KEY:
+			ep.setint(MCextendkey);
+			break;
+		case P_COLORMAP:
+			MCscreen->getcolors(ep);
+			break;
+		case P_NO_PIXMAPS:
+			ep.setboolean(MCnopixmaps);
+			break;
+		case P_LOW_RESOLUTION_TIMERS:
+			ep.setboolean(MClowrestimers);
+			break;
+		case P_POINTER_FOCUS:
+			ep.setboolean(MCpointerfocus);
+			break;
+		case P_EMACS_KEY_BINDINGS:
+			ep.setboolean(MCemacskeys);
+			break;
+		case P_RAISE_MENUS:
+			ep.setboolean(MCraisemenus);
+			break;
+		case P_ACTIVATE_PALETTES:
+			ep.setboolean(MCactivatepalettes);
+			break;
+		case P_HIDE_PALETTES:
+			ep.setboolean(MChidepalettes);
+			break;
+		case P_RAISE_PALETTES:
+			ep.setboolean(MCraisepalettes);
+			break;
+		case P_RAISE_WINDOWS:
+			ep.setboolean(MCraisewindows);
+			break;
+		case P_DONT_USE_NS:
+			ep.setboolean(MCdontuseNS);
+			break;
+		case P_HIDE_BACKDROP:
+			ep.setboolean(MChidebackdrop);
+			break;
+		case P_DONT_USE_QT:
+			ep.setboolean(MCdontuseQT);
+			break;
+		case P_DONT_USE_QT_EFFECTS:
+			ep.setboolean(MCdontuseQTeffects);
+			break;
+		case P_PROPORTIONAL_THUMBS:
+			ep.setboolean(MCproportionalthumbs);
+			break;
+		case P_SHARED_MEMORY:
+			ep.setboolean(MCshm);
+			break;
+		case P_VC_SHARED_MEMORY:
+			ep.setboolean(MCvcshm);
+			break;
+		case P_VC_PLAYER:
+			ep.setsvalue(MCvcplayer);
+			break;
+		case P_SCREEN_GAMMA:
+			ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
+			break;
+		case P_SHELL_COMMAND:
+			ep.setsvalue(MCshellcmd);
+			break;
+		case P_SOUND_CHANNEL:
+			ep.setint(MCsoundchannel);
+			break;
+		case P_ADDRESS:
+			ep.setsvalue(MCS_getaddress());
+			break;
+		case P_STACKS_IN_USE:
+			ep.clear();
+			i = MCnusing;
+			while (i--)
+			{
+				MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
+				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
+			}
+			break;
+		case P_RELAYER_GROUPED_CONTROLS:
+			ep.setboolean(MCrelayergrouped);
+			break;
+		case P_SELECTION_MODE:
+			if (MCselectintersect)
+				ep.setstaticcstring(MCintersectstring);
+			else
+				ep.setstaticcstring(MCsurroundstring);
+			break;
+		case P_SELECTION_HANDLE_COLOR:
+			ep.setcolor(MCselectioncolor, MCselectioncolorname);
+			break;
+		case P_WINDOW_BOUNDING_RECT:
+			ep.setrectangle(MCwbr);
+			break;
+		case P_JPEG_QUALITY:
+			ep.setint(MCjpegquality);
+			break;
+		case P_RECORDING:
+			ep.setboolean(MCrecording);
+			break;
+		case P_BRUSH:
+			if (MCbrush < PI_PATTERNS)
+				ep.setint(MCbrush - PI_BRUSHES);
+			else
+				ep.setint(MCbrush);
+			break;
+		case P_CENTERED:
+			ep.setboolean(MCcentered);
+			break;
+		case P_ERASER:
+			if (MCeraser < PI_PATTERNS)
+				ep.setint(MCeraser - PI_BRUSHES);
+			else
+				ep.setint(MCeraser);
+			break;
+		case P_GRID:
+			ep.setboolean(MCgrid);
+			break;
+		case P_GRID_SIZE:
+			ep.setint(MCgridsize);
+			break;
+		case P_MULTIPLE:
+			ep.setboolean(MCmultiple);
+			break;
+		case P_MULTI_SPACE:
+			ep.setint(MCmultispace);
+			break;
+		case P_SLICES:
+			ep.setint(MCslices);
+			break;
+		case P_SPRAY:
+			if (MCspray < PI_PATTERNS)
+				ep.setint(MCspray - PI_BRUSHES);
+			else
+				ep.setint(MCspray);
+			break;
+		case P_BEEP_LOUDNESS:
+		case P_BEEP_PITCH:
+		case P_BEEP_DURATION:
+			MCscreen->getbeep(which, ep);
+			break;
+		case P_BEEP_SOUND:
+			ep.setsvalue(MCscreen->getbeepsound());
+			break;
+		case P_TOOL:
+			ep.setstringf("%s tool", MCtoolnames[MCcurtool]);
+			break;
+		case P_LZW_KEY:
 			ep.clear();
 			break;
-		case kMCSErrorModeQuiet:
-			ep.setstaticcstring("quiet");
-			break;
-		case kMCSErrorModeStderr:
-			ep.setstaticcstring("stderr");
-			break;
-		case kMCSErrorModeInline:
-			ep.setstaticcstring("inline");
-			break;
-		case kMCSErrorModeDebugger:
-			ep.setstaticcstring("debugger");
-			break;
-		default:
-			break;
-		}
-	}
-	break;
-	case P_OUTPUT_TEXT_ENCODING:
-	{
-		const char *t_encoding;
-		switch(MCS_get_outputtextencoding())
+		case P_RECORD_FORMAT:
+			switch (MCrecordformat)
 		{
-			case kMCSOutputTextEncodingWindows1252:
-				t_encoding = "windows-1252";
+			case EX_AIFF:
+				ep.setstaticcstring("aiff");
 				break;
-			case kMCSOutputTextEncodingMacRoman:
-				t_encoding = "macintosh";
+			case EX_WAVE:
+				ep.setstaticcstring("wave");
 				break;
-			case kMCSOutputTextEncodingISO8859_1:
-				t_encoding = "iso-8859-1";
-				break;
-			case kMCSOutputTextEncodingUTF8:
-				t_encoding = "utf-8";
+			case EX_ULAW:
+				ep.setstaticcstring("ulaw");
 				break;
 			default:
-				t_encoding = "";
+				ep.setstaticcstring("movie");
 				break;
 		}
-		ep.setstaticcstring(t_encoding);
-	}
-	break;
-	case P_OUTPUT_LINE_ENDINGS:
-	{
-		const char *t_ending;
-		switch(MCS_get_outputlineendings())
-		{
-			case kMCSOutputLineEndingsLF:
-				t_ending = "lf";
-				break;
-			case kMCSOutputLineEndingsCR:
-				t_ending = "cr";
-				break;
-			case kMCSOutputLineEndingsCRLF:
-				t_ending = "crlf";
-				break;
-			default:
-				t_ending = "";
-				break;
-		}
-		ep . setstaticcstring(t_ending);
-	}
-	break;
-	case P_SESSION_SAVE_PATH:
-		ep.setcstring(MCS_get_session_save_path());
-		break;
-	case P_SESSION_LIFETIME:
-		ep.setuint(MCS_get_session_lifetime());
-		break;
-	case P_SESSION_COOKIE_NAME:
-		ep.setcstring(MCS_get_session_name());
-		break;
-	case P_SESSION_ID:
-		ep.setcstring(MCS_get_session_id());
-		break;
-
-	case P_SCRIPT_EXECUTION_ERRORS:
-		ep . setstaticcstring(MCexecutionerrors);
-		break;
-	case P_SCRIPT_PARSING_ERRORS:
-		ep . setstaticcstring(MCparsingerrors);
-		break;
-	case P_REV_RUNTIME_BEHAVIOUR:
-		ep.setint(MCruntimebehaviour);
-	break;
-	case P_PRIVATE_COLORS:
-		ep.setboolean(MCuseprivatecmap);
-		break;
-	case P_TWELVE_TIME:
-		ep.setboolean(MCtwelvetime);
-		break;
-	case P_IDLE_RATE:
-		ep.setint(MCidleRate);
-		break;
-	case P_QT_IDLE_RATE:
-		ep.setint(MCqtidlerate);
-		break;
-	case P_IDLE_TICKS:
-		ep.setint(MCidleRate * 60 / 1000);
-		break;
-	case P_BLINK_RATE:
-		ep.setint(MCblinkrate);
-		break;
-	case P_RECURSION_LIMIT:
-		ep.setuint(MCrecursionlimit);
-		break;
-	case P_REPEAT_RATE:
-		ep.setint(MCrepeatrate);
-		break;
-	case P_REPEAT_DELAY:
-		ep.setint(MCrepeatdelay);
-		break;
-	case P_TYPE_RATE:
-		ep.setint(MCtyperate);
-		break;
-	case P_SYNC_RATE:
-		ep.setint(MCsyncrate);
-		break;
-	case P_EFFECT_RATE:
-		ep.setint(MCeffectrate);
-		break;
-	case P_DOUBLE_DELTA:
-		ep.setint(MCdoubledelta);
-		break;
-	case P_DRAG_DELTA:
-		ep.setint(MCdragdelta);
-		break;
-	case P_DOUBLE_TIME:
-		ep.setint(MCdoubletime);
-		break;
-	case P_TOOL_TIP_DELAY:
-		ep.setint(MCtooltipdelay);
-		break;
-	case P_LONG_WINDOW_TITLES:
-		ep.setboolean(MClongwindowtitles);
-		break;
-	case P_BLIND_TYPING:
-		ep.setboolean(MCblindtyping);
-		break;
-	case P_POWER_KEYS:
-		ep.setboolean(MCpowerkeys);
-		break;
-	case P_NAVIGATION_ARROWS:
-		ep.setboolean(MCnavigationarrows);
-		break;
-	case P_TEXT_ARROWS:
-		ep.setboolean(MCtextarrows);
-		break;
-	case P_EXTEND_KEY:
-		ep.setint(MCextendkey);
-		break;
-	case P_COLORMAP:
-		MCscreen->getcolors(ep);
-		break;
-	case P_NO_PIXMAPS:
-		ep.setboolean(MCnopixmaps);
-		break;
-	case P_LOW_RESOLUTION_TIMERS:
-		ep.setboolean(MClowrestimers);
-		break;
-	case P_POINTER_FOCUS:
-		ep.setboolean(MCpointerfocus);
-		break;
-	case P_EMACS_KEY_BINDINGS:
-		ep.setboolean(MCemacskeys);
-		break;
-	case P_RAISE_MENUS:
-		ep.setboolean(MCraisemenus);
-		break;
-	case P_ACTIVATE_PALETTES:
-		ep.setboolean(MCactivatepalettes);
-		break;
-	case P_HIDE_PALETTES:
-		ep.setboolean(MChidepalettes);
-		break;
-	case P_RAISE_PALETTES:
-		ep.setboolean(MCraisepalettes);
-		break;
-	case P_RAISE_WINDOWS:
-		ep.setboolean(MCraisewindows);
-		break;
-	case P_DONT_USE_NS:
-		ep.setboolean(MCdontuseNS);
-		break;
-	case P_HIDE_BACKDROP:
-		ep.setboolean(MChidebackdrop);
-		break;
-	case P_DONT_USE_QT:
-		ep.setboolean(MCdontuseQT);
-		break;
-	case P_DONT_USE_QT_EFFECTS:
-		ep.setboolean(MCdontuseQTeffects);
-		break;
-	case P_PROPORTIONAL_THUMBS:
-		ep.setboolean(MCproportionalthumbs);
-		break;
-	case P_SHARED_MEMORY:
-		ep.setboolean(MCshm);
-		break;
-	case P_VC_SHARED_MEMORY:
-		ep.setboolean(MCvcshm);
-		break;
-	case P_VC_PLAYER:
-		ep.setsvalue(MCvcplayer);
-		break;
-	case P_SCREEN_GAMMA:
-		ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
-		break;
-	case P_SHELL_COMMAND:
-		ep.setsvalue(MCshellcmd);
-		break;
-	case P_SOUND_CHANNEL:
-		ep.setint(MCsoundchannel);
-		break;
-	case P_ADDRESS:
-		ep.setsvalue(MCS_getaddress());
-		break;
-	case P_STACKS_IN_USE:
-		ep.clear();
-		i = MCnusing;
-		while (i--)
-		{
-			MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
-		}
-		break;
-	case P_RELAYER_GROUPED_CONTROLS:
-		ep.setboolean(MCrelayergrouped);
-		break;
-	case P_SELECTION_MODE:
-		if (MCselectintersect)
-			ep.setstaticcstring(MCintersectstring);
-		else
-			ep.setstaticcstring(MCsurroundstring);
-		break;
-	case P_SELECTION_HANDLE_COLOR:
-		ep.setcolor(MCselectioncolor, MCselectioncolorname);
-		break;
-	case P_WINDOW_BOUNDING_RECT:
-		ep.setrectangle(MCwbr);
-		break;
-	case P_JPEG_QUALITY:
-		ep.setint(MCjpegquality);
-		break;
-	case P_RECORDING:
-		ep.setboolean(MCrecording);
-		break;
-	case P_BRUSH:
-		if (MCbrush < PI_PATTERNS)
-			ep.setint(MCbrush - PI_BRUSHES);
-		else
-			ep.setint(MCbrush);
-		break;
-	case P_CENTERED:
-		ep.setboolean(MCcentered);
-		break;
-	case P_ERASER:
-		if (MCeraser < PI_PATTERNS)
-			ep.setint(MCeraser - PI_BRUSHES);
-		else
-			ep.setint(MCeraser);
-		break;
-	case P_GRID:
-		ep.setboolean(MCgrid);
-		break;
-	case P_GRID_SIZE:
-		ep.setint(MCgridsize);
-		break;
-	case P_MULTIPLE:
-		ep.setboolean(MCmultiple);
-		break;
-	case P_MULTI_SPACE:
-		ep.setint(MCmultispace);
-		break;
-	case P_SLICES:
-		ep.setint(MCslices);
-		break;
-	case P_SPRAY:
-		if (MCspray < PI_PATTERNS)
-			ep.setint(MCspray - PI_BRUSHES);
-		else
-			ep.setint(MCspray);
-		break;
-	case P_BEEP_LOUDNESS:
-	case P_BEEP_PITCH:
-	case P_BEEP_DURATION:
-		MCscreen->getbeep(which, ep);
-		break;
-	case P_BEEP_SOUND:
-		ep.setsvalue(MCscreen->getbeepsound());
-		break;
-	case P_TOOL:
-		ep.setstringf("%s tool", MCtoolnames[MCcurtool]);
-		break;
-	case P_LZW_KEY:
-		ep.clear();
-		break;
-	case P_RECORD_FORMAT:
-		switch (MCrecordformat)
-		{
-		case EX_AIFF:
-			ep.setstaticcstring("aiff");
 			break;
-		case EX_WAVE:
-			ep.setstaticcstring("wave");
+		case P_RECORD_COMPRESSION:
+			ep.copysvalue(MCrecordcompression, 4);
 			break;
-		case EX_ULAW:
-			ep.setstaticcstring("ulaw");
+		case P_RECORD_INPUT:
+			ep.copysvalue(MCrecordinput, 4);
 			break;
-		default:
-			ep.setstaticcstring("movie");
+		case P_RECORD_CHANNELS:
+			ep.setnvalue(MCrecordchannels);
 			break;
-		}
-		break;
-	case P_RECORD_COMPRESSION:
-		ep.copysvalue(MCrecordcompression, 4);
-		break;
-	case P_RECORD_INPUT:
-		ep.copysvalue(MCrecordinput, 4);
-		break;
-	case P_RECORD_CHANNELS:
-		ep.setnvalue(MCrecordchannels);
-		break;
-	case P_RECORD_RATE:
-		ep.setnvalue(MCrecordrate);
-		break;
-	case P_RECORD_SAMPLESIZE:
-		ep.setnvalue(MCrecordsamplesize);
-		break;
-	case P_BREAK_POINTS:
-		MCB_unparsebreaks(ep);
-		break;
-	case P_DEBUG_CONTEXT:
+		case P_RECORD_RATE:
+			ep.setnvalue(MCrecordrate);
+			break;
+		case P_RECORD_SAMPLESIZE:
+			ep.setnvalue(MCrecordsamplesize);
+			break;
+		case P_BREAK_POINTS:
+			MCB_unparsebreaks(ep);
+			break;
+		case P_DEBUG_CONTEXT:
 		{
 			ep.clear();
 			if (MCdebugcontext != MAXUINT2)
@@ -3692,8 +4381,8 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				ep.concatuint(MCexecutioncontexts[MCdebugcontext]->getline(), EC_COMMA, false);
 			}
 		}
-		break;
-	case P_EXECUTION_CONTEXTS:
+			break;
+		case P_EXECUTION_CONTEXTS:
 		{
 			ep.clear();
 			Boolean added = False;
@@ -3719,388 +4408,1035 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			if (added)
 				MCnexecutioncontexts--;
 		}
-		break;
-	case P_MESSAGE_MESSAGES:
-		ep.setboolean(MCmessagemessages);
-		break;
-	case P_WATCHED_VARIABLES:
-		MCB_unparsewatches(ep);
-		break;
-	case P_ALLOW_INLINE_INPUT:
-		ep.setboolean(MCinlineinput);
-		break;
-	case P_ACCEPT_DROP:
-		ep.setboolean(MCdragaction != DRAG_ACTION_NONE);
-		break;
-	case P_ALLOWABLE_DRAG_ACTIONS:
-	{
-		int t_count;
-		t_count = 0;
-
-		ep . clear();
-		if ((MCallowabledragactions & DRAG_ACTION_COPY) != 0)
-			ep . concatcstring("copy", EC_COMMA, t_count++ == 0);
-		else if ((MCallowabledragactions & DRAG_ACTION_MOVE) != 0)
-			ep . concatcstring("move", EC_COMMA, t_count++ == 0);
-		else if ((MCallowabledragactions & DRAG_ACTION_LINK) != 0)
-			ep . concatcstring("link", EC_COMMA, t_count++ == 0);
-	}
-	break;
-	case P_DRAG_ACTION:
-		switch(MCdragaction)
+			break;
+		case P_MESSAGE_MESSAGES:
+			ep.setboolean(MCmessagemessages);
+			break;
+		case P_WATCHED_VARIABLES:
+			MCB_unparsewatches(ep);
+			break;
+		case P_ALLOW_INLINE_INPUT:
+			ep.setboolean(MCinlineinput);
+			break;
+		case P_ACCEPT_DROP:
+			ep.setboolean(MCdragaction != DRAG_ACTION_NONE);
+			break;
+		case P_ALLOWABLE_DRAG_ACTIONS:
 		{
-		case DRAG_ACTION_NONE:
-			ep . setstaticcstring("none");
-		break;
-		case DRAG_ACTION_COPY:
-			ep . setstaticcstring("copy");
-		break;
-		case DRAG_ACTION_MOVE:
-			ep . setstaticcstring("move");
-		break;
-		case DRAG_ACTION_LINK:
-			ep . setstaticcstring("link");
-		break;
-		}
-	break;
-	case P_DRAG_IMAGE:
-		if (MCdragimageid != 0)
-			ep . setint(MCdragimageid);
-		else
-			ep . setint(0);
-	break;
-	case P_DRAG_IMAGE_OFFSET:
-		if (MCdragimageid != 0)
-			ep.setpoint(MCdragimageoffset . x, MCdragimageoffset . y);
-		else
+			int t_count;
+			t_count = 0;
+			
 			ep . clear();
-	break;
-	
-	// MW-2008-08-12: Add access to the MCurlresult internal global variable
-	//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
-	case P_URL_RESPONSE:
-		MCurlresult -> fetch(ep);
-	break;
-
-	// MW-2011-11-24: [[ Nice Folders ]] Handle fetching of the special folder types.
-	case P_ENGINE_FOLDER:
-		ep . setstaticcstring("engine");
-		MCS_getspecialfolder(ep);
-		break;
-	case P_HOME_FOLDER:
-		ep . setstaticcstring("home");
-		MCS_getspecialfolder(ep);
-		break;
-	case P_DOCUMENTS_FOLDER:
-		ep . setstaticcstring("documents");
-		MCS_getspecialfolder(ep);
-		break;
-	case P_DESKTOP_FOLDER:
-		ep . setstaticcstring("desktop");
-		MCS_getspecialfolder(ep);
-		break;
-	case P_TEMPORARY_FOLDER:
-		ep . setstaticcstring("temporary");
-		MCS_getspecialfolder(ep);
-		break;
-
-	case P_IMAGE_CACHE_LIMIT:
-		ep.setuint(MCCachedImageRep::GetCacheLimit());
-		break;
-			
-	case P_IMAGE_CACHE_USAGE:
-		ep.setuint(MCCachedImageRep::GetCacheUsage());
-		break;
-			
-	case P_BRUSH_BACK_COLOR:
-	case P_PEN_BACK_COLOR:
-	case P_BRUSH_COLOR:
-	case P_BRUSH_PATTERN:
-	case P_PEN_COLOR:
-	case P_PEN_PATTERN:
-	case P_RECENT_CARDS:
-	case P_RECENT_NAMES:
-	case P_TEXT_ALIGN:
-	case P_TEXT_FONT:
-	case P_TEXT_HEIGHT:
-	case P_TEXT_SIZE:
-	case P_TEXT_STYLE:
-	case P_EDIT_BACKGROUND:
-	case P_ROUND_ENDS:
-	case P_DASHES:
-	case P_FILLED:
-
-	case P_POLY_SIDES:
-	case P_LINE_SIZE:
-	case P_PEN_WIDTH:
-	case P_PEN_HEIGHT:
-	case P_ROUND_RADIUS:
-	case P_START_ANGLE:
-	case P_ARC_ANGLE:
-	case P_NUMBER_FORMAT:
-	case P_PLAY_DESTINATION:
-	case P_PLAY_LOUDNESS:
-	case P_LOCK_SCREEN:
-	case P_STACK_FILES:
-	case P_MENU_BAR:
-	case P_EDIT_MENUS:
-	case P_ACCENT_COLOR:
-	case P_HILITE_COLOR:
-	case P_PAINT_COMPRESSION:
-	case P_LINK_COLOR:
-	case P_LINK_HILITE_COLOR:
-	case P_LINK_VISITED_COLOR:
-	case P_UNDERLINE_LINKS:
-	case P_SELECT_GROUPED_CONTROLS:
-	case P_ICON:
-	case P_ICON_MENU:
-	case P_STATUS_ICON:
-	case P_STATUS_ICON_MENU:
-	case P_STATUS_ICON_TOOLTIP:
-	case P_PROCESS_TYPE:
-	case P_STACK_LIMIT:
-	case P_ALLOW_DATAGRAM_BROADCASTS:
-		if (target == NULL)
-		{
-			switch (which)
-			{
-			case P_BRUSH_BACK_COLOR:
-			case P_PEN_BACK_COLOR:
-				ep.clear();
-				break;
-			case P_BRUSH_COLOR:
-				ep.setcolor(MCbrushcolor, MCbrushcolorname);
-				break;
-			case P_BRUSH_PATTERN:
-				if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
-					ep.setint(MCbrushpmid - PI_PATTERNS);
-				else
-
-					ep.setint(MCbrushpmid);
-				break;
-			case P_PEN_COLOR:
-				ep.setcolor(MCpencolor, MCpencolorname);
-				break;
-			case P_PEN_PATTERN:
-				if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
-					ep.setint(MCpenpmid - PI_PATTERNS);
-				else
-					ep.setint(MCpenpmid);
-				break;
-			case P_RECENT_CARDS:
-				MCrecent->getlongids(NULL, ep);
-				break;
-			case P_RECENT_NAMES:
-				MCrecent->getnames(NULL, ep);
-				break;
-			case P_TEXT_ALIGN:
-			case P_TEXT_FONT:
-			case P_TEXT_HEIGHT:
-			case P_TEXT_SIZE:
-			case P_TEXT_STYLE:
-				ep.clear();
-				break;
-			case P_EDIT_BACKGROUND:
-				return MCdefaultstackptr->getprop(0, which, ep, False);
-			case P_ROUND_ENDS:
-				ep.setboolean(MCroundends);
-				break;
-			case P_DASHES:
-				ep.clear();
-				for (i = 0 ; i < MCndashes ; i++)
-					ep.concatuint(MCdashes[i], EC_COMMA, i == 0);
-				break;
-			case P_FILLED:
-				ep.setboolean(MCfilled);
-				break;
-			case P_POLY_SIDES:
-				ep.setint(MCpolysides);
-				break;
-			case P_LINE_SIZE:
-			case P_PEN_WIDTH:
-			case P_PEN_HEIGHT:
-				ep.setint(MClinesize);
-				break;
-			case P_ROUND_RADIUS:
-				ep.setint(MCroundradius);
-				break;
-			case P_START_ANGLE:
-				ep.setint(MCstartangle);
-				break;
-			case P_ARC_ANGLE:
-				ep.setint(MCarcangle);
-				break;
-			case P_NUMBER_FORMAT:
-				MCU_getnumberformat(ep, ep.getnffw(),
-				                    ep.getnftrailing(), ep.getnfforce());
-				break;
-			case P_PLAY_DESTINATION:
-			case P_PLAY_LOUDNESS:
-				return MCtemplateaudio->getprop(0, which, ep, False);
-			case P_LOCK_SCREEN:
-				// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
-				ep.setboolean(MCRedrawIsScreenLocked());
-				break;
-			case P_STACK_FILES:
-				ep.clear();
-				break;
-			case P_MENU_BAR:
-				if (MCmenubar == NULL)
-					ep.clear();
-				else
-					MCmenubar->getprop(0, P_LONG_NAME, ep, effective);
-				break;
-			case P_EDIT_MENUS:
-				ep.setboolean(True);
-				break;
-			case P_ACCENT_COLOR:
-				ep.setcolor(MCaccentcolor, MCaccentcolorname);
-				break;
-			case P_HILITE_COLOR:
-				ep.setcolor(MChilitecolor, MChilitecolorname);
-				break;
-			case P_PAINT_COMPRESSION:
-				switch (MCpaintcompression)
-				{
-				case EX_PNG:
-					ep.setstaticcstring("png");
-					break;
-				case EX_JPEG:
-					ep.setstaticcstring("jpeg");
-					break;
-				case EX_GIF:
-					ep.setstaticcstring("gif");
-					break;
-				default:
-					ep.setstaticcstring("rle");
-					break;
-				}
-				break;
-			case P_LINK_COLOR:
-				MCU_get_color(ep, MClinkatts.colorname, MClinkatts.color);
-				break;
-			case P_LINK_HILITE_COLOR:
-				MCU_get_color(ep, MClinkatts.hilitecolorname, MClinkatts.hilitecolor);
-				break;
-			case P_LINK_VISITED_COLOR:
-				MCU_get_color(ep, MClinkatts.visitedcolorname, MClinkatts.visitedcolor);
-				break;
-			case P_UNDERLINE_LINKS:
-				ep.setboolean(MClinkatts.underline);
-				break;
-			case P_SELECT_GROUPED_CONTROLS:
-				ep.setboolean(MCselectgrouped);
-				break;
-			case P_ICON:
-				ep.setint(MCiconid);
-			break;
-			case P_ICON_MENU:
-				ep.setsvalue(MCiconmenu);
-			break;
-			case P_STATUS_ICON:
-				ep.setint(MCstatusiconid);
-				break;
-			case P_STATUS_ICON_MENU:
-				ep.setsvalue(MCstatusiconmenu);
-				break;
-			case P_PROCESS_TYPE:
-				ep.setstaticcstring(MCS_processtypeisforeground() ? "foreground" : "background");
-			break;
-			case P_STACK_LIMIT:
-				ep.setuint(effective ? MCstacklimit : MCpendingstacklimit);
-				break;
-			case P_ALLOW_DATAGRAM_BROADCASTS:
-				ep . setboolean(MCallowdatagrambroadcasts);
-				break;
-			default:
-				break;
-			}
-			break;
+			if ((MCallowabledragactions & DRAG_ACTION_COPY) != 0)
+				ep . concatcstring("copy", EC_COMMA, t_count++ == 0);
+			else if ((MCallowabledragactions & DRAG_ACTION_MOVE) != 0)
+				ep . concatcstring("move", EC_COMMA, t_count++ == 0);
+			else if ((MCallowabledragactions & DRAG_ACTION_LINK) != 0)
+				ep . concatcstring("link", EC_COMMA, t_count++ == 0);
 		}
-	default:
-		if (target == NULL)
+			break;
+		case P_DRAG_ACTION:
+			switch(MCdragaction)
 		{
-			Exec_stat t_stat;
-			t_stat = ES_NORMAL;
-
-			if (customindex != nil)
-				t_stat = customindex -> eval(ep);
+			case DRAG_ACTION_NONE:
+				ep . setstaticcstring("none");
+				break;
+			case DRAG_ACTION_COPY:
+				ep . setstaticcstring("copy");
+				break;
+			case DRAG_ACTION_MOVE:
+				ep . setstaticcstring("move");
+				break;
+			case DRAG_ACTION_LINK:
+				ep . setstaticcstring("link");
+				break;
+		}
+			break;
+		case P_DRAG_IMAGE:
+			if (MCdragimageid != 0)
+				ep . setint(MCdragimageid);
+			else
+				ep . setint(0);
+			break;
+		case P_DRAG_IMAGE_OFFSET:
+			if (MCdragimageid != 0)
+				ep.setpoint(MCdragimageoffset . x, MCdragimageoffset . y);
 			else
 				ep . clear();
-
-			if (t_stat == ES_NORMAL)
-				t_stat = mode_eval(ep);
-			if (t_stat != ES_NOT_HANDLED)
-				return t_stat;
-		}
-
-		if (tocount == CT_UNDEFINED)
-		{
-			Properties t_prop;
-			MCNameRef t_prop_name, t_index_name;
-			t_prop_name = t_index_name = nil;
-			if (resolveprop(ep, t_prop, t_prop_name, t_index_name) != ES_NORMAL)
-				return ES_ERROR;
-
-			Exec_stat t_stat;
-			t_stat = ES_NORMAL;
-			if (t_prop == P_CUSTOM)
+			break;
+			
+			// MW-2008-08-12: Add access to the MCurlresult internal global variable
+			//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
+		case P_URL_RESPONSE:
+			MCurlresult -> eval(ep);
+			break;
+			
+			// MW-2011-11-24: [[ Nice Folders ]] Handle fetching of the special folder types.
+		case P_ENGINE_FOLDER:
+			ep . setstaticcstring("engine");
+			MCS_getspecialfolder(ep);
+			break;
+		case P_HOME_FOLDER:
+			ep . setstaticcstring("home");
+			MCS_getspecialfolder(ep);
+			break;
+		case P_DOCUMENTS_FOLDER:
+			ep . setstaticcstring("documents");
+			MCS_getspecialfolder(ep);
+			break;
+		case P_DESKTOP_FOLDER:
+			ep . setstaticcstring("desktop");
+			MCS_getspecialfolder(ep);
+			break;
+		case P_TEMPORARY_FOLDER:
+			ep . setstaticcstring("temporary");
+			MCS_getspecialfolder(ep);
+			break;
+			
+		case P_IMAGE_CACHE_LIMIT:
+			ep.setuint(MCCachedImageRep::GetCacheLimit());
+			break;
+			
+		case P_IMAGE_CACHE_USAGE:
+			ep.setuint(MCCachedImageRep::GetCacheUsage());
+			break;
+			
+		case P_BRUSH_BACK_COLOR:
+		case P_PEN_BACK_COLOR:
+		case P_BRUSH_COLOR:
+		case P_BRUSH_PATTERN:
+		case P_PEN_COLOR:
+		case P_PEN_PATTERN:
+		case P_RECENT_CARDS:
+		case P_RECENT_NAMES:
+		case P_TEXT_ALIGN:
+		case P_TEXT_FONT:
+		case P_TEXT_HEIGHT:
+		case P_TEXT_SIZE:
+		case P_TEXT_STYLE:
+		case P_EDIT_BACKGROUND:
+		case P_ROUND_ENDS:
+		case P_DASHES:
+		case P_FILLED:
+			
+		case P_POLY_SIDES:
+		case P_LINE_SIZE:
+		case P_PEN_WIDTH:
+		case P_PEN_HEIGHT:
+		case P_ROUND_RADIUS:
+		case P_START_ANGLE:
+		case P_ARC_ANGLE:
+		case P_NUMBER_FORMAT:
+		case P_PLAY_DESTINATION:
+		case P_PLAY_LOUDNESS:
+		case P_LOCK_SCREEN:
+		case P_STACK_FILES:
+		case P_MENU_BAR:
+		case P_EDIT_MENUS:
+		case P_ACCENT_COLOR:
+		case P_HILITE_COLOR:
+		case P_PAINT_COMPRESSION:
+		case P_LINK_COLOR:
+		case P_LINK_HILITE_COLOR:
+		case P_LINK_VISITED_COLOR:
+		case P_UNDERLINE_LINKS:
+		case P_SELECT_GROUPED_CONTROLS:
+		case P_ICON:
+		case P_ICON_MENU:
+		case P_STATUS_ICON:
+		case P_STATUS_ICON_MENU:
+		case P_STATUS_ICON_TOOLTIP:
+		case P_PROCESS_TYPE:
+		case P_STACK_LIMIT:
+		case P_ALLOW_DATAGRAM_BROADCASTS:
+			if (target == NULL)
 			{
-				MCObject *t_object;
-				uint4 t_parid;
-				t_stat = target -> getobjforprop(ep, t_object, t_parid);
-
-				// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
-				//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
-				// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
-				//   MCChunk::setprop.
-				if (t_stat == ES_NORMAL)
+				switch (which)
 				{
-					if (t_index_name == nil)
-						t_stat = t_object -> getcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
+					case P_BRUSH_BACK_COLOR:
+					case P_PEN_BACK_COLOR:
+						ep.clear();
+						break;
+					case P_BRUSH_COLOR:
+						ep.setcolor(MCbrushcolor, MCbrushcolorname);
+						break;
+					case P_BRUSH_PATTERN:
+						if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
+							ep.setint(MCbrushpmid - PI_PATTERNS);
+						else
+							
+							ep.setint(MCbrushpmid);
+						break;
+					case P_PEN_COLOR:
+						ep.setcolor(MCpencolor, MCpencolorname);
+						break;
+					case P_PEN_PATTERN:
+						if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
+							ep.setint(MCpenpmid - PI_PATTERNS);
+						else
+							ep.setint(MCpenpmid);
+						break;
+					case P_RECENT_CARDS:
+						MCrecent->getlongids(NULL, ep);
+						break;
+					case P_RECENT_NAMES:
+						MCrecent->getnames(NULL, ep);
+						break;
+					case P_TEXT_ALIGN:
+					case P_TEXT_FONT:
+					case P_TEXT_HEIGHT:
+					case P_TEXT_SIZE:
+					case P_TEXT_STYLE:
+						ep.clear();
+						break;
+					case P_EDIT_BACKGROUND:
+						return MCdefaultstackptr->getprop(0, which, ep, False);
+					case P_ROUND_ENDS:
+						ep.setboolean(MCroundends);
+						break;
+					case P_DASHES:
+						ep.clear();
+						for (i = 0 ; i < MCndashes ; i++)
+							ep.concatuint(MCdashes[i], EC_COMMA, i == 0);
+						break;
+					case P_FILLED:
+						ep.setboolean(MCfilled);
+						break;
+					case P_POLY_SIDES:
+						ep.setint(MCpolysides);
+						break;
+					case P_LINE_SIZE:
+					case P_PEN_WIDTH:
+					case P_PEN_HEIGHT:
+						ep.setint(MClinesize);
+						break;
+					case P_ROUND_RADIUS:
+						ep.setint(MCroundradius);
+						break;
+					case P_START_ANGLE:
+						ep.setint(MCstartangle);
+						break;
+					case P_ARC_ANGLE:
+						ep.setint(MCarcangle);
+						break;
+					case P_NUMBER_FORMAT:
+						MCU_getnumberformat(ep, ep.getnffw(),
+											ep.getnftrailing(), ep.getnfforce());
+						break;
+					case P_PLAY_DESTINATION:
+					case P_PLAY_LOUDNESS:
+						return MCtemplateaudio->getprop(0, which, ep, False);
+					case P_LOCK_SCREEN:
+						// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
+						ep.setboolean(MCRedrawIsScreenLocked());
+						break;
+					case P_STACK_FILES:
+						ep.clear();
+						break;
+					case P_MENU_BAR:
+						if (MCmenubar == NULL)
+							ep.clear();
+						else
+							MCmenubar->getprop(0, P_LONG_NAME, ep, effective);
+						break;
+					case P_EDIT_MENUS:
+						ep.setboolean(True);
+						break;
+					case P_ACCENT_COLOR:
+						ep.setcolor(MCaccentcolor, MCaccentcolorname);
+						break;
+					case P_HILITE_COLOR:
+						ep.setcolor(MChilitecolor, MChilitecolorname);
+						break;
+					case P_PAINT_COMPRESSION:
+						switch (MCpaintcompression)
+						{
+							case EX_PNG:
+								ep.setstaticcstring("png");
+								break;
+							case EX_JPEG:
+								ep.setstaticcstring("jpeg");
+								break;
+							case EX_GIF:
+								ep.setstaticcstring("gif");
+								break;
+							default:
+								ep.setstaticcstring("rle");
+								break;
+						}
+						break;
+					case P_LINK_COLOR:
+						MCU_get_color(ep, MClinkatts.colorname, MClinkatts.color);
+						break;
+					case P_LINK_HILITE_COLOR:
+						MCU_get_color(ep, MClinkatts.hilitecolorname, MClinkatts.hilitecolor);
+						break;
+					case P_LINK_VISITED_COLOR:
+						MCU_get_color(ep, MClinkatts.visitedcolorname, MClinkatts.visitedcolor);
+						break;
+					case P_UNDERLINE_LINKS:
+						ep.setboolean(MClinkatts.underline);
+						break;
+					case P_SELECT_GROUPED_CONTROLS:
+						ep.setboolean(MCselectgrouped);
+						break;
+					case P_ICON:
+						ep.setint(MCiconid);
+						break;
+					case P_ICON_MENU:
+						ep.setsvalue(MCiconmenu);
+						break;
+					case P_STATUS_ICON:
+						ep.setint(MCstatusiconid);
+						break;
+					case P_STATUS_ICON_MENU:
+						ep.setsvalue(MCstatusiconmenu);
+						break;
+					case P_PROCESS_TYPE:
+						ep.setstaticcstring(MCS_processtypeisforeground() ? "foreground" : "background");
+						break;
+					case P_STACK_LIMIT:
+						ep.setuint(effective ? MCstacklimit : MCpendingstacklimit);
+						break;
+					case P_ALLOW_DATAGRAM_BROADCASTS:
+						ep . setboolean(MCallowdatagrambroadcasts);
+						break;
+						
+					default:
+						break;
+				}
+				break;
+			}
+		default:
+			if (target == NULL)
+			{
+				Exec_stat t_stat;
+				t_stat = ES_NORMAL;
+				
+				if (customindex != nil)
+					t_stat = customindex -> eval(ep);
+				else
+					ep . clear();
+				
+				if (t_stat == ES_NORMAL)
+					t_stat = mode_eval(ep);
+				if (t_stat != ES_NOT_HANDLED)
+					return t_stat;
+			}
+			
+			if (tocount == CT_UNDEFINED)
+			{
+				Properties t_prop;
+				MCNameRef t_prop_name, t_index_name;
+				t_prop_name = t_index_name = nil;
+				if (resolveprop(ep, t_prop, t_prop_name, t_index_name) != ES_NORMAL)
+					return ES_ERROR;
+				
+				Exec_stat t_stat;
+				t_stat = ES_NORMAL;
+				if (t_prop == P_CUSTOM)
+				{
+					MCObject *t_object;
+					uint4 t_parid;
+					t_stat = target -> getobjforprop(ep, t_object, t_parid);
+					
+					// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+					//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+					// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+					//   MCChunk::setprop.
+					if (t_stat == ES_NORMAL)
+					{
+						if (t_index_name == nil)
+							t_stat = t_object -> getcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
+						else
+							t_stat = t_object -> getcustomprop(ep, t_prop_name, t_index_name);
+					}
+				}
+				else
+				{
+					// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+					//   a nil index translates to the empty name (the array[empty] <=> the array).
+					MCNameRef t_derived_index_name;
+					if (t_prop < P_FIRST_ARRAY_PROP)
+						t_derived_index_name = nil;
 					else
-						t_stat = t_object -> getcustomprop(ep, t_prop_name, t_index_name);
+						t_derived_index_name = t_index_name != nil ? t_index_name : kMCEmptyName;
+					
+					t_stat = target -> getprop(t_prop, ep, t_derived_index_name, effective);
+				}
+				
+				MCNameDelete(t_index_name);
+				MCNameDelete(t_prop_name);
+				
+				if (t_stat != ES_NORMAL)
+				{
+					MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+					return ES_ERROR;
 				}
 			}
 			else
 			{
-				// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
-				//   a nil index translates to the empty name (the array[empty] <=> the array).
-				MCNameRef t_derived_index_name;
-				if (t_prop < P_FIRST_ARRAY_PROP)
-					t_derived_index_name = nil;
-				else
-					t_derived_index_name = t_index_name != nil ? t_index_name : kMCEmptyName;
-
-				t_stat = target -> getprop(t_prop, ep, t_derived_index_name, effective);
+				if (target->count(tocount, ptype, ep) != ES_NORMAL)
+				{
+					MCeerror->add(EE_PROPERTY_BADCOUNTS, line, pos);
+					return ES_ERROR;
+				}
 			}
-			
-			MCNameDelete(t_index_name);
-			MCNameDelete(t_prop_name);
+	}
+	return ES_NORMAL;
+#else
+	
+	ep . setline(line);
 
-			if (t_stat != ES_NORMAL)
+	if (destvar != nil && which != P_CUSTOM_VAR)
+		return eval_variable(ep);
+	
+	if (function != F_UNDEFINED)
+		return eval_function(ep);
+	
+	if (target == nil)
+		return eval_global_property(ep);
+	
+	if (tocount == CT_UNDEFINED)
+		return eval_object_property(ep);
+	
+	return eval_count(ep);
+#endif
+}
+
+Exec_stat MCProperty::eval_variable(MCExecPoint& ep)
+{
+	return destvar -> eval(ep);
+}
+
+Exec_stat MCProperty::eval_function(MCExecPoint& ep)
+{
+	switch (function)
+	{
+		case F_DATE:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_date;
+
+			MCDateTimeGetDate(ctxt, which, &t_date);
+
+			if (!ctxt . HasError())
 			{
-				MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
-				return ES_ERROR;
+				ep . setvalueref(*t_date);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_TIME:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_time;
+
+			MCDateTimeGetTime(ctxt, which, &t_time);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_time);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_MILLISECS:
+		{
+			MCExecContext ctxt(ep);
+			double t_millisecs;
+
+			if (which == P_LONG)
+				MCDateTimeGetLongMilliseconds(ctxt, t_millisecs);
+			else
+				MCDateTimeGetMilliseconds(ctxt, t_millisecs);
+
+			if (!ctxt . HasError())
+			{
+				ep . setnvalue(t_millisecs);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_SECONDS:
+		{
+			MCExecContext ctxt(ep);
+			double t_secs;
+
+			if (which == P_LONG)
+				MCDateTimeGetLongSeconds(ctxt, t_secs);
+			else
+				MCDateTimeGetSeconds(ctxt, t_secs);
+
+			if (!ctxt . HasError())
+			{
+				ep . setnvalue(t_secs);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_TICKS:
+		{
+			MCExecContext ctxt(ep);
+			double t_ticks;
+
+			if (which == P_LONG)
+				MCDateTimeGetLongTicks(ctxt, t_ticks);
+			else
+				MCDateTimeGetTicks(ctxt, t_ticks);
+
+			if (!ctxt . HasError())
+			{
+				ep . setnvalue(t_ticks);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_FILES:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_files;
+
+			if (which == P_LONG)
+				MCFilesGetDetailedFiles(ctxt, &t_files);
+			else
+				MCFilesGetFiles(ctxt, &t_files);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_files);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_DIRECTORIES:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_folders;
+
+			if (which == P_LONG)
+				MCFilesGetDetailedFolders(ctxt, &t_folders);
+			else
+				MCFilesGetFolders(ctxt, &t_folders);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_folders);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_MONTH_NAMES:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_month_names;
+
+			MCDateTimeGetMonthNames(ctxt, which, &t_month_names);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_month_names);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_WEEK_DAY_NAMES:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_week_day_names;
+
+			MCDateTimeGetWeekDayNames(ctxt, which, &t_week_day_names);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_week_day_names);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_DATE_FORMAT:
+		{
+			MCExecContext ctxt(ep);
+			MCAutoStringRef t_date_format;
+
+			MCDateTimeGetDateFormat(ctxt, which, &t_date_format);
+
+			if (!ctxt . HasError())
+			{
+				ep . setvalueref(*t_date_format);
+				return ES_NORMAL;
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		case F_SCREEN_RECT:
+		{
+			MCExecContext ctxt(ep);
+
+			if ((which % 1000) == P_LONG)
+			{
+				MCAutoStringRef t_rects;
+
+				MCInterfaceGetScreenRects(ctxt, which >= 1000, effective == True, &t_rects);
+
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_rects);
+					return ES_NORMAL;
+				}
+			}
+			else
+			{
+				MCRectangle t_rect;
+
+				MCInterfaceGetScreenRect(ctxt, which >= 1000, effective == True, t_rect);
+
+				if (!ctxt . HasError())
+				{
+					ep . setrectangle(t_rect);
+					return ES_NORMAL;
+				}
+			}
+
+			return ctxt . Catch(line, pos);
+		}
+		default:
+			break;
+	}
+	
+	fprintf(stderr, "MCProperty: ERROR bad function in eval\n");
+	return ES_ERROR;
+}
+
+Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
+{
+	const MCPropertyInfo *t_info;
+	if (MCPropertyInfoTableLookup(which, effective, t_info))
+	{
+		MCExecContext ctxt(ep);
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_any;
+				((void(*)(MCExecContext&, MCValueRef&))t_info -> getter)(ctxt, &t_any);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_any);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				((void(*)(MCExecContext&, bool&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setboolean(t_value ? True : False);
+					return ES_NORMAL;
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeInt16:
+			case kMCPropertyTypeInt32:
+			{
+				integer_t t_value;
+				((void(*)(MCExecContext&, integer_t&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setint(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeUInt16:
+			case kMCPropertyTypeUInt32:
+			{
+				uinteger_t t_value;
+				((void(*)(MCExecContext&, uinteger_t&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setuint(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeDouble:
+			{
+				double t_value;
+				((void(*)(MCExecContext&, double&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setnvalue(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeChar:
+			{
+				char_t t_value;
+				((void(*)(MCExecContext&, char_t&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setchar((char)t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeString:
+			case kMCPropertyTypeBinaryString:
+			{	
+				MCAutoStringRef t_value;
+				((void(*)(MCExecContext&, MCStringRef&))t_info -> getter)(ctxt, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeColor:
+			{
+				MCColor t_value;
+				((void(*)(MCExecContext&, MCColor&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setcolor(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeRectangle:
+			{
+				MCRectangle t_value;
+				((void(*)(MCExecContext&, MCRectangle&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setrectangle(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypePoint:
+			{
+				MCPoint t_value;
+				((void(*)(MCExecContext&, MCPoint&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setpoint(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeInt16X2:
+			{
+				integer_t t_value[2];
+				((void(*)(MCExecContext&, integer_t[2]))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setstringf("%d,%d", t_value[0], t_value[1]);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeInt16X4:
+			{
+				integer_t t_value[4];
+				((void(*)(MCExecContext&, integer_t[4]))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeEnum:
+			{
+				int t_value;
+				((void(*)(MCExecContext&, int&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					MCExecEnumTypeInfo *t_enum_info;
+					t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
+					for(uindex_t i = 0; i < t_enum_info -> count; i++)
+						if (t_enum_info -> elements[i] . value == t_value)
+						{
+							ep . setcstring(t_enum_info -> elements[i] . tag);
+							return ES_NORMAL;
+						}
+					
+					// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+					MCAssert(false);
+					return ES_ERROR;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeSet:
+			{
+				unsigned int t_value;
+				((void(*)(MCExecContext&, unsigned int&))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					MCExecSetTypeInfo *t_set_info;
+					t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
+					
+					bool t_first;
+					t_first = true;
+					
+					ep . clear();
+					for(uindex_t i = 0; i < t_set_info -> count; i++)
+						if (((1 << t_set_info -> elements[i] . bit) & t_value) != 0)
+						{
+							ep . concatcstring(t_set_info -> elements[i] . tag, EC_COMMA, t_first);
+							t_first = false;
+						}
+					
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeCustom:
+			{
+				MCExecCustomTypeInfo *t_custom_info;
+				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
+				
+				MCAssert(t_custom_info -> size <= 64);
+				
+				char t_value[64];
+				((void(*)(MCExecContext&, void *))t_info -> getter)(ctxt, t_value);
+				if (!ctxt . HasError())
+				{
+					MCAutoStringRef t_value_ref;
+					((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
+					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
+					if (!ctxt . HasError())
+					{
+						ep . setvalueref(*t_value_ref);
+						return ES_NORMAL;
+					}
+				}
+				
+			}
+			break;
+				
+			case kMCPropertyTypeOptionalUInt32:
+			{
+				uinteger_t t_value;
+				uinteger_t *t_value_ptr;
+				t_value_ptr = &t_value;
+				((void(*)(MCExecContext&, uinteger_t*&))t_info -> getter)(ctxt, t_value_ptr);
+				if (!ctxt . HasError())
+				{
+					if (t_value_ptr == nil)
+						ep . clear();
+					else
+						ep . setint(t_value);
+					return ES_NORMAL;
+				}
+			}
+			break;
+				
+			case kMCPropertyTypeOptionalString:
+			{
+				MCAutoStringRef t_value;
+				((void(*)(MCExecContext&, MCStringRef&))t_info -> getter)(ctxt, &t_value);
+				if (!ctxt . HasError())
+				{
+					if (*t_value == nil)
+						ep . clear();
+					else
+						ep . setvalueref(*t_value);
+					
+					return ES_NORMAL;
+				}
+				
+			}
+			break;
+				
+			default:
+				MCAssert(false);
+				break;
+		}
+		
+		return ctxt . Catch(line, pos);
+	}
+	
+	switch (which)
+	{
+		case P_CLIPBOARD_DATA:
+		case P_DRAG_DATA:
+		{
+			bool t_query_success;
+			t_query_success = true;
+			
+			MCTransferData *t_pasteboard;
+			if (which == P_CLIPBOARD_DATA)
+				t_pasteboard = MCclipboarddata;
+			else
+				t_pasteboard = MCdragdata;
+			
+			if (t_pasteboard -> Lock())
+			{
+				MCTransferType t_type;
+				if (customindex == NULL)
+					t_type = TRANSFER_TYPE_TEXT;
+				else
+				{
+					if (customindex->eval(ep) != ES_NORMAL)
+					{
+						MCeerror->add(EE_PROPERTY_BADEXPRESSION, line, pos);
+						return ES_ERROR;
+					}
+					t_type = MCTransferData::StringToType(ep . getsvalue());
+				}
+				
+				if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+				{
+#ifdef SHARED_STRING
+					MCSharedString *t_data;
+					t_data = t_pasteboard -> Fetch(t_type);
+					if (t_data != NULL)
+					{
+						ep . copysvalue(t_data -> Get() . getstring(), t_data -> Get() . getlength());
+						t_data -> Release();
+					}
+#else
+					MCAutoStringRef t_data;
+					if (t_pasteboard -> Fetch(t_type, &t_data))
+						/* UNCHECKED */ ep . setvalueref(*t_data);
+#endif
+					else
+						t_query_success = false;
+				}
+				else
+				{
+					ep . clear();
+					MCresult -> sets("format not available");
+				}
+				
+				t_pasteboard -> Unlock();
+			}
+			else
+				t_query_success = false;
+			
+			if (!t_query_success)
+			{
+				ep . clear();
+				MCresult -> sets("unable to query clipboard");
 			}
 		}
-		else
-		{
-			if (target->count(tocount, ptype, ep) != ES_NORMAL)
+			break;
+		default:
 			{
-				MCeerror->add(EE_PROPERTY_BADCOUNTS, line, pos);
-				return ES_ERROR;
+				Exec_stat t_stat;
+				t_stat = ES_NORMAL;
+				
+				if (customindex != nil)
+					t_stat = customindex -> eval(ep);
+				else
+					ep . clear();
+				
+				if (t_stat == ES_NORMAL)
+					t_stat = mode_eval(ep);
+				if (t_stat != ES_NORMAL)
+				{
+					MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+					return ES_ERROR;
+				}
 			}
+			break;
+	}
+	
+	return ES_NORMAL;
+}
+
+Exec_stat MCProperty::eval_object_property(MCExecPoint& ep)
+{
+	Properties t_prop;
+	MCNameRef t_prop_name, t_index_name;
+	t_prop_name = t_index_name = nil;
+	if (resolveprop(ep, t_prop, t_prop_name, t_index_name) != ES_NORMAL)
+		return ES_ERROR;
+	
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+	if (t_prop == P_CUSTOM)
+	{
+		MCObject *t_object;
+		uint4 t_parid;
+		t_stat = target -> getobjforprop(ep, t_object, t_parid);
+		
+		// MW-2011-09-02: Moved handling of customprop != nil case into resolveprop,
+		//   so t_prop_name is always non-nil if t_prop == P_CUSTOM.
+		// MW-2011-11-23: [[ Array Chunk Props ]] Moved handling of arrayprops into
+		//   MCChunk::setprop.
+		if (t_stat == ES_NORMAL)
+		{
+			if (t_index_name == nil)
+				t_stat = t_object -> getcustomprop(ep, t_object -> getdefaultpropsetname(), t_prop_name);
+			else
+				t_stat = t_object -> getcustomprop(ep, t_prop_name, t_index_name);
 		}
 	}
+	else
+	{
+		// MW-2011-11-23: [[ Array Chunk Props ]] If the prop is an array-prop, then
+		//   a nil index translates to the empty name (the array[empty] <=> the array).
+		MCNameRef t_derived_index_name;
+		if (t_prop < P_FIRST_ARRAY_PROP)
+			t_derived_index_name = nil;
+		else
+			t_derived_index_name = t_index_name != nil ? t_index_name : kMCEmptyName;
+		
+		t_stat = target -> getprop(t_prop, ep, t_derived_index_name, effective);
+	}
+	
+	MCNameDelete(t_index_name);
+	MCNameDelete(t_prop_name);
+	
+	if (t_stat != ES_NORMAL)
+	{
+		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+		return ES_ERROR;
+	}
+
+	return ES_NORMAL;
+}
+
+Exec_stat MCProperty::eval_count(MCExecPoint& ep)
+{
+	if (target->count(tocount, ptype, ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_PROPERTY_BADCOUNTS, line, pos);
+		return ES_ERROR;
+	}
+	
 	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-
-
-
-
-
-

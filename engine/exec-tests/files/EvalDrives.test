@@ -1,0 +1,9 @@
+setup
+if the platform is "Win32" then
+  test "c:" is among the lines of the drives
+else if the platform is "MacOS" then
+  test the drives is not empty
+else
+  test the drives is empty
+end if
+teardown

@@ -87,7 +87,7 @@ static XdndMimeTable XTransfer_lookup_table[XDND_TYPE_TABLE_SIZE] =
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-// MCMIMEtype implimentation
+// MCMIMEtype implementation
 
 
 MCMIMEtype::MCMIMEtype( Display * p_display, Atom p_atom )
@@ -160,8 +160,13 @@ void	MCXTransferStore::cleartypes ( void )
 	{
 		for ( uint4 a=0; a<m_entry_count; a++)
 		{
+#ifdef SHARED_STRING
 			if (m_entries[a].data != NULL)
 				m_entries[a].data->Release();
+#else
+			if (m_entries[a].data != nil)
+				MCValueRelease(m_entries[a].data);
+#endif
 			//if ( m_entries[a].format != NULL)
 				delete m_entries[a].format ;
 		}
@@ -188,8 +193,13 @@ void	MCXTransferStore::cleartypes ( void )
 // Functions to add data into the TransferStore
 
 
+
 // Adds an explicit MIME type to the type list
+#ifdef SHARED_STRING
 void MCXTransferStore::addType ( MCMIMEtype * p_mime, MCTransferType p_type, MCSharedString * p_data  ) 
+#else
+void MCXTransferStore::addType ( MCMIMEtype * p_mime, MCTransferType p_type, MCStringRef p_data  ) 
+#endif
 {
 	MCTransferType t_type ;
 	
@@ -213,25 +223,26 @@ void MCXTransferStore::addType ( MCMIMEtype * p_mime, MCTransferType p_type, MCS
 		m_entries[m_entry_count - 1 ] . data = p_data ;
 		
 		// Need to retain the string as it can be used multiple times.
+#ifdef SHARED_STRING
 		if ( p_data != NULL)
 			p_data -> Retain() ;
+#else
+		if ( p_data != nil)
+			MCValueRetain(p_data);
+#endif
 	}
 }
 
 
 
-void MCXTransferStore::addAtom ( Atom p_atom )
-{
-	MCMIMEtype * t_mime ;
-	t_mime = new MCMIMEtype ( m_display, p_atom ) ;
-	addType ( t_mime, TRANSFER_TYPE_NULL, NULL ) ;
-}
-
-
 
 
 // Adds a Revolution DnD type -- the MIME types are then derived from this base type
+#ifdef SHARED_STRING
 void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCSharedString * p_data  )
+#else
+void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCStringRef p_data  )
+#endif
 {
 		
 	switch ( p_type )
@@ -269,6 +280,13 @@ void 	MCXTransferStore::addRevType ( MCTransferType p_type, MCSharedString * p_d
 	
 }
 
+
+void MCXTransferStore::addAtom ( Atom p_atom )
+{
+	MCMIMEtype * t_mime ;
+	t_mime = new MCMIMEtype ( m_display, p_atom ) ;
+	addType ( t_mime, TRANSFER_TYPE_NULL, NULL ) ;
+}
 
 
 
@@ -457,7 +475,7 @@ bool MCXTransferStore::WaitForEventCompletion(XEvent &p_xevent)
 	
 
 
-
+#ifdef SHARED_STRING
 MCSharedString * MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time)  
 {
 	XEvent xevent ;
@@ -508,7 +526,50 @@ MCSharedString * MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom
 	
 	return ( t_ret ) ;
 }
+#else
+bool MCXTransferStore::GetExternalData ( MCTransferType p_type, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time, MCStringRef& r_data)  
+{
+	XEvent xevent ;
+	
+	// Check that the Source application actually owns the XdndSelection.
+	if ( XGetSelectionOwner ( m_display, p_public_atom ) == p_source_window ) 
+	{
 
+		// Take ownership of my Xdnd Atom
+		XSetSelectionOwner (m_display, p_private_atom, p_target_window, p_lock_time);
+		
+		// Now try and convert XdndSelection to XdndMyAtom as type "text/plain"
+		// NOTE: here we need to seach through out entries and find the MIME type of the first matching
+		//       rev type.
+		
+		MCMIMEtype * p_mime_type ;
+		int4   idx ;
+		idx = find_entry_with_rev_type ( p_type );
+		if ( idx > -1 )
+		{
+				p_mime_type = m_entries[idx] . format ;
+			
+			
+			XConvertSelection (m_display, p_public_atom, p_mime_type -> asAtom(), p_private_atom , p_target_window, p_lock_time);
+			
+			// Now we want to wait until we get a SelectionNotify message or we time-out
+			// waiting for it.
+			if ( WaitForEventCompletion(xevent) )
+			{
+
+				char * t_data ;
+				uint4 t_count ;
+				t_data = GetSelection ( xevent.xselection.requestor, p_private_atom , t_count) ;			
+				MCAutoStringRef t_ret;
+				if (MCStringCreateWithNativeChars((const char_t *)t_data, t_count, &t_ret )) ;
+					return Convert_MIME_to_REV ( *t_ret, p_mime_type, r_data ); 
+				return false;
+			}
+		}
+	
+	}
+}
+#endif
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -744,7 +805,7 @@ bool MCXTransferStore::Query(MCTransferType*& r_types, unsigned int& r_type_coun
 
 
 
-
+#ifdef SHARED_STRING
 bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
 {
 #ifdef DEBUG_DND
@@ -778,16 +839,55 @@ bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCSharedString*& r_data, 
 	return false ;
 }
 
+#else
+
+bool MCXTransferStore::Fetch(MCMIMEtype * p_mime_type, MCStringRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+{
+#ifdef DEBUG_DND
+	fprintf(stderr, "Fetch_MIME() : Type = %s\n", p_mime_type -> asString() ) ;
+#endif 
+	if ( m_entries != NULL )
+	{
+		int4 t_idx = find_type ( p_mime_type ) ;
+		if ( t_idx > -1 )
+		{
+			if ( m_entries[t_idx] . data == NULL )	// We SHOULD only need to get the data if we are the TARGET
+			{
+				GetExternalData( m_entries[t_idx] . type , p_public_atom, p_private_atom, p_source_window, p_target_window, p_lock_time, r_data) ;
+				if (r_data != nil)
+					m_entries[t_idx] . data = MCValueRetain(r_data);
+			}
+			else 
+			{
+				if (!m_internal_dnd) 
+					Convert_REV_to_MIME ( m_entries[ t_idx ] . data , m_entries[t_idx] . type,  m_entries [t_idx] . format, r_data ) ;
+				else
+					r_data = MCValueRetain(m_entries[t_idx] . data);
+			}
+
+	
+			if ( r_data == nil )		// This may happen if the selection owner has changed.
+				return false ;
+		
+			return true ;
+		}
+	}
+	return false ;
+}
+#endif
 
 
+#ifdef SHARED_STRING
 bool MCXTransferStore::Fetch(MCTransferType p_type, MCSharedString*& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+#else
+bool MCXTransferStore::Fetch(MCTransferType p_type, MCStringRef& r_data, Atom p_public_atom, Atom p_private_atom, Window p_source_window, Window p_target_window, Time p_lock_time) 
+#endif
 {
 #ifdef DEBUG_DND
 	fprintf(stderr, "Fecth() : Asked for REV type %s\n", RevTypeToString (p_type));
 #endif
 	return ( Fetch ( rev_to_MIME_stored ( p_type ), r_data, p_public_atom, p_private_atom, p_source_window, p_target_window, p_lock_time ) ) ;
 }
-
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -874,7 +974,7 @@ const char *RevTypeToString(MCTransferType p_type)
 //
 // Format conversion routines
 
-
+#ifdef SHARED_STRING
 MCSharedString * MCXTransferStore::Convert_REV_to_MIME ( MCSharedString * p_in, MCTransferType p_type,  MCMIMEtype * p_mime ) 
 {
 #ifdef DEBUG_DND
@@ -1081,4 +1181,194 @@ MCSharedString * ConvertFile_MIME_to_rev ( MCSharedString * p_in, MCMIMEtype * p
 	return ( MCSharedString::Create(ep . getsvalue()) ) ;
 }
 
+#else
 
+bool MCXTransferStore::Convert_REV_to_MIME ( MCStringRef p_input, MCTransferType p_type,  MCMIMEtype * p_mime, MCStringRef& r_output ) 
+{
+#ifdef DEBUG_DND
+	fprintf(stderr, "--> Converting type [%s] into [%s]\n",  RevTypeToString(p_type), p_mime->asString() ) ;
+#endif
+		
+	int4 t_idx ;
+	//t_idx = find_table_entry_with_MIME_type ( p_mime ) ;
+	t_idx = find_table_entry_with_full_types ( p_type , p_mime ) ;
+	if ( t_idx > -1 )
+		if ( XTransfer_lookup_table [ t_idx ] . f_converter_to_mime != NULL )
+		{
+#ifdef DEBUG_DND
+			fprintf(stderr, "\tHave got converter function.\n");
+#endif
+			return XTransfer_lookup_table [ t_idx ] . f_converter_to_mime ( p_input, p_mime->asRev(), r_output ) ;
+		}
+		else
+		{
+#ifdef DEBUG_DND
+			fprintf(stderr, "\tno conversion function defined... doing nothing\n");
+#endif
+			r_output = MCValueRetain(p_input);
+			return true;
+		}
+}
+
+
+
+bool MCXTransferStore::Convert_MIME_to_REV ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) 
+{
+#ifdef DEBUG_DND
+	fprintf(stderr, "<-- Converting type [%s] into [%s]\n", p_MIME->asString(), p_MIME->asRevString() ) ;
+#endif
+
+	int4 t_idx ;
+	t_idx = find_table_entry_with_MIME_type ( p_MIME ) ;
+	if ( t_idx > -1 )
+		if ( XTransfer_lookup_table [ t_idx ] . f_converter_to_rev != NULL )
+		{
+#ifdef DEBUG_DND
+			fprintf(stderr, "\tHave got converter function.\n");
+#endif
+			return XTransfer_lookup_table [ t_idx ] . f_converter_to_rev ( p_input, p_MIME, r_output ) ;
+		}
+		else 
+		{
+#ifdef DEBUG_DND
+			fprintf(stderr, "\tno conversion function defined... doing nothing\n");
+#endif
+			r_output = MCValueRetain(p_input);
+			return true;
+		}
+}
+
+// Convert from UTF8 to TRANSFER_TYPE_STYLED_TEXT
+bool ConvertUnicodeToStyled ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) 
+{
+	MCAutoStringRef t_unicode;
+	if (!MCU_multibytetounicode(p_input, LCH_UTF8, &t_unicode))
+		return false;
+
+	return MCConvertUnicodeToStyledText(*t_unicode, r_output);
+}
+
+
+// Convert from TRANSFER_TYPE_STYLED_TEXT to UTF8
+bool ConvertStyledToUnicode ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) 
+{
+	// Convert from Styles to UTF16
+	MCAutoStringRef t_unicode;
+	if (!MCConvertStyledTextToUnicode(p_input, &t_unicode))
+		return false;
+
+	return MCU_unicodetomultibyte(*t_unicode, LCH_UTF8, r_output);
+}
+
+
+
+// Convert from UTF8 to TRANSFER_TYPE_TEXT
+bool ConvertUnicodeToText ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )
+{
+	return MCU_multibytetounicode(p_input, LCH_UTF8, r_output);
+}
+
+// Convert from TRANSFER_TYPE_TEXT to UTF8
+bool ConvertTextToUnicode ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output )
+{
+	return MCU_unicodetomultibyte(p_input, LCH_UTF8, r_output);
+}
+
+bool ConvertStyled_rev_to_HTML ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) 
+{
+	return MCConvertStyledTextToHTML ( p_input, r_output );
+}
+
+
+bool ConvertStyled_rev_to_RTF ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output )  
+{
+	return MCConvertStyledTextToRTF ( p_input, r_output );
+}
+
+
+bool ConvertStyled_RTF_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )
+{
+	return MCConvertRTFToStyledText ( p_input, r_output );
+}
+
+
+bool ConvertStyled_HTML_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )
+{
+	return MCConvertHTMLToStyledText ( p_input, r_output );
+}
+
+
+bool ConvertStyled_rev_to_TEXT ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output ) 
+{
+	return MCConvertStyledTextToText ( p_input, r_output );
+}
+
+bool ConvertStyled_Text_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output ) 
+{
+	r_output = MCValueRetain(p_input);
+	return true;
+}
+
+
+
+
+
+
+
+bool ConvertFile_rev_to_MIME ( MCStringRef p_input, MCTransferType p_type, MCStringRef& r_output )  
+{
+	MCString *t_strings = NULL ;
+	MCExecPoint ep(NULL, NULL, NULL );
+	uint2 	 n_strings ;
+
+	MCU_break_string( MCStringGetOldString(p_input) , t_strings, n_strings, false);
+	
+	for (uint4 a=0; a < n_strings; a++)
+	{
+		ep.concatcstring("file://", EC_RETURN, (a==0) );
+		ep.concatmcstring(t_strings[a], EC_NONE, false ); 
+	}
+	
+	delete t_strings;
+
+	//MCU_urlencode(ep);
+	return ep . copyasstringref(r_output);
+}
+
+
+
+ 
+ 
+
+
+
+bool ConvertFile_MIME_to_rev ( MCStringRef p_input, MCMIMEtype * p_MIME, MCStringRef& r_output )  
+{
+	MCString *t_strings = NULL ;
+	MCExecPoint ep(NULL, NULL, NULL );
+	uint2 	 n_strings ;
+	char * t_part ;
+	bool first = true ;
+	
+	ep.setvalueref(p_input);
+	ep.texttobinary() ;
+	MCU_urldecode(ep);
+	MCU_break_string( ep.getsvalue(), t_strings, n_strings, false);
+	
+	ep.clear() ;
+	
+	for (uint4 a=0; a < n_strings; a++)
+	{
+		t_part = (char*)t_strings[a].clone();
+		if ( strstr(t_part, "file://") != NULL)
+		{
+			ep.concatcstring((t_part + 7), EC_RETURN, first );
+			first=false;
+		}
+		delete t_part;
+	}
+	delete t_strings ;
+	
+	return ep . copyasstringref(r_output);
+}
+#endif

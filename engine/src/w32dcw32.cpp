@@ -193,14 +193,20 @@ KeySym MCScreenDC::getkeysym(WPARAM wParam, LPARAM lParam)
 	return keysym;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
 	BYTE keystates[256];
-	ep.clear();
 	if (GetKeyboardState((PBYTE)&keystates) == 0) // should use an async function?
-		return;
+	{
+		r_list = MCValueRetain(kMCEmptyList);
+		return true;
+	}
+
 	MCmodifierstate = querymods();
-	bool first = true;
 	KeySym ksym;
 	uint2 i;
 	for (i = 0; i < 256; i++)
@@ -216,12 +222,11 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 					ksym = keysyms[i];
 			}
 			if (ksym > 0)
-			{
-				ep.concatuint(ksym, EC_COMMA, first);
-				first = false;
-			}
+				if (!MCListAppendInteger(*t_list, ksym))
+					return false;
 		}
 	}
+	return MCListCopy(*t_list, r_list);
 }
 
 extern HANDLE g_notify_wakeup;
@@ -539,7 +544,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 						MCParameter *t_parameter;
 						MCString t_param;
 						t_param . set(t_argument, t_argument_length);
-						t_parameter = new MCParameter(t_param);
+						t_parameter = new MCParameter;
+						t_parameter -> sets_argument(t_param);
 						if (t_first_parameter == NULL)
 							t_first_parameter = t_parameter;
 						else
@@ -556,7 +562,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				else
 				{
 					MCExecPoint t_ep;
-					MCresult -> fetch(t_ep);
+					MCresult -> eval(t_ep);
 					
 					if (t_ep . getsvalue() == "background")
 						t_result = (LRESULT)HWND_BOTTOM;
@@ -1184,7 +1190,7 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					if (tptr->isdisposable())
 						tptr->playstop();
 					else
-						tptr->message_with_args(MCM_play_stopped, tptr->getname());
+						tptr->message_with_valueref_args(MCM_play_stopped, tptr->getname());
 					break;
 				}
 				tptr = tptr->getnextplayer();

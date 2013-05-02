@@ -156,7 +156,12 @@ Boolean MCScreenDC::open()
 		return False;
 	}
 	fcntl(ConnectionNumber(dpy), F_SETFD, 1);
-	displayname = XDisplayName(MCdisplayname);
+	/* UNCHECKED */ MCNameCreateWithCString(XDisplayName(MCdisplayname), displayname);
+	{
+		MCAutoStringRef t_vendor_string;
+		/* UNCHECKED */ MCStringFormat(&t_vendor_string, "%s %d", ServerVendor(dpy), VendorRelease(dpy));
+		MCNameCreate(*t_vendor_string, vendorname);
+	}
 	
 #ifdef SYNCMODE
 	XSynchronize(dpy, True);
@@ -467,7 +472,7 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
 	return displayname;
 }
@@ -973,20 +978,20 @@ Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 	return True;
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
 	XKeyboardState values;
 	XGetKeyboardControl(dpy, &values);
 	switch (which)
 	{
 	case P_BEEP_LOUDNESS:
-		ep.setint(values.bell_percent);
+		r_value = values.bell_percent;
 		break;
 	case P_BEEP_PITCH:
-		ep.setint(values.bell_pitch);
+		r_value = values.bell_pitch;
 		break;
 	case P_BEEP_DURATION:
-		ep.setint(values.bell_duration);
+		r_value = values.bell_duration;
 		break;
 	}
 }
@@ -1014,9 +1019,9 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 	}
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep.setstringf("%s %d", ServerVendor(dpy), VendorRelease(dpy));
+	return vendorname;
 }
 
 uint2 MCScreenDC::getpad()
@@ -1327,17 +1332,15 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_color, Pixmap p_pattern, MCImage *p_badge)
 {
 	
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
 	
-	char *cname = NULL;
-	if (MCbackdroppm == DNULL &&
-	        parsecolor(MCbackdropcolor, &backdropcolor, &cname))
+	if (p_pattern == nil)
 	{
-		delete cname;
+		backdropcolor = p_color;
 		alloccolor(backdropcolor);
 	}
 	else
@@ -1375,61 +1378,6 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 	if ( p_mode <= WM_PALETTE && backdrop != DNULL )
 		XSetTransientForHint(dpy, p_window, backdrop);
 }
-
-
-
-
-
-void MCScreenDC::createbackdrop(const char *color)
-{
-	char *cname = NULL;
-	if (MCbackdroppm == DNULL &&
-	        parsecolor(color, &backdropcolor, &cname))
-	{
-		delete cname;
-		alloccolor(backdropcolor);
-	}
-	else
-		backdropcolor.pixel = 0;
-	
-	XSetWindowAttributes xswa;
-	unsigned long xswamask = 0;
-	if (MCbackdroppm != DNULL)
-	{
-		xswamask |= CWBackPixmap;
-		xswa.background_pixmap = MCbackdroppm;
-	}
-	else
-	{
-		xswamask |= CWBackPixel;
-		xswa.background_pixel = backdropcolor.pixel;
-	}
-	
-	
-	if (backdrop != DNULL)
-	{
-		XChangeWindowAttributes(dpy, backdrop, xswamask, &xswa);
-		XClearWindow(dpy, backdrop);
-		return;
-	}
-	
-	
-	xswamask |= CWBorderPixel | CWColormap | CWOverrideRedirect ;
-	xswa.border_pixel = 0;
-	xswa.colormap = cmap;
-	xswa.override_redirect = True;
-	//DH
-	backdrop = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 0, 0,
-	                         getwidth(), getheight(), 0, vis->depth,
-	                         InputOutput, vis->visual, xswamask, &xswa);
-	
-	XSelectInput(dpy, backdrop,  ButtonPressMask | ButtonReleaseMask
-	             | EnterWindowMask | LeaveWindowMask | PointerMotionMask);
-	
-	
-	XMapWindow(dpy, backdrop);
-}
-
 
 void MCScreenDC::destroybackdrop()
 {

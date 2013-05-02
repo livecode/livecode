@@ -56,7 +56,7 @@ struct PSPrinterSettings
 	
 	MCPrinterOutputType printertype ;
 	char * outputfilename ;
-	MCRange * page_ranges ;
+	MCInterval * page_ranges ;
 	int4	page_range_count ;
 	
 };

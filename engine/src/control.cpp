@@ -43,11 +43,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "bitmapeffect.h"
 
+#include "exec.h"
+
 MCControl *MCControl::focused;
 int2 MCControl::defaultmargin = 4;
 int2 MCControl::xoffset;
 int2 MCControl::yoffset;
 double MCControl::aspect;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCControl::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_LEFT_MARGIN, Int16, MCControl, LeftMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_RIGHT_MARGIN, Int16, MCControl, RightMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_TOP_MARGIN, Int16, MCControl, TopMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_BOTTOM_MARGIN, Int16, MCControl, BottomMargin)
+	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, OptionalString, MCControl, ToolTip)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, OptionalString, MCControl, UnicodeToolTip)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
+};
+
+MCObjectPropertyTable MCControl::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCControl::MCControl()
 {
@@ -382,7 +408,7 @@ uint2 MCControl::gettransient() const
 	return 0;
 }
 
-Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -449,7 +475,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 	break;
 
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
@@ -473,7 +499,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	int2 i1, i2, i3, i4;
@@ -604,7 +630,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 	// The opaque property can affect the layer's opaqueness.
 	case P_FILLED:
 	case P_OPAQUE:
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		// Mark the layer attrs for recompute.
@@ -612,7 +638,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 		return ES_NORMAL;
 
 	default:
-		return MCObject::setprop(parid, which, ep, effective);
+		return MCObject::setprop_legacy(parid, which, ep, effective);
 	}
 
 	if (dirty && opened)
@@ -778,7 +804,7 @@ void MCControl::paste(void)
 	if (MCdefaultstackptr->getmode() != WM_TOP_LEVEL)
 		return;
 
-	parent = MCdefaultstackptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+	parent = MCdefaultstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 	MCCard *cptr = (MCCard *)parent;
 	obj_id = 0;
 	//newcontrol->resetfontindex(oldstack);

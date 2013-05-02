@@ -1,0 +1,13 @@
+setup
+
+create field
+
+put bar into field 1
+
+set the script of field 1 to "on keyDown;select me;delete;undo;end keyDown"
+
+type "a"
+
+test the text of field 1 is "bar"
+
+teardown

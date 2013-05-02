@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -62,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "mode.h"
 #include "stacksecurity.h"
+
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -934,10 +935,10 @@ Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCPa
 //   in a parentScript, if any, and executes it if found. [ Inherited parentscripts
 //   should be ignored for now as the semantics for those is not clear ].
 Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_message, MCParameter *p_parameters)
-{
+{	
 	Exec_stat t_stat;
 	t_stat = ES_NOT_HANDLED;
-	
+
 	// Fetch the first parentScript (Use).
 	MCParentScriptUse *t_parentscript;
 	t_parentscript = parent_script;
@@ -986,7 +987,7 @@ Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_messag
 		break;
 #endif
 	}
-	
+
 	return t_stat;
 }
 
@@ -1133,6 +1134,57 @@ MCRectangle MCObject::getrectangle(bool p_effective) const
     return t_rect;
 }
 
+bool MCObject::changeflag(bool setting, uint32_t mask)
+{
+	if (setting && !(flags & mask))
+	{
+		flags |= mask;
+		return true;
+	}
+	
+	if (!setting && (flags & mask))
+	{
+		flags &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCObject::changeextraflag(bool setting, uint32_t mask)
+{
+	if (setting && !(extraflags & mask))
+	{
+		extraflags |= mask;
+		return true;
+	}
+	
+	if (!setting && (extraflags & mask))
+	{
+		extraflags &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
+bool MCObject::changestate(bool setting, uint32_t mask)
+{
+	if (setting && !(state & mask))
+	{
+		state |= mask;
+		return true;
+	}
+	
+	if (!setting && (state & mask))
+	{
+		state &= ~mask;
+		return true;
+	}
+
+	return false;
+}
+
 void MCObject::setflag(uint4 on, uint4 flag)
 {
 	if (on)
@@ -1157,6 +1209,11 @@ void MCObject::setstate(Boolean on, uint4 newstate)
 		state &= ~newstate;
 }
 
+/* WRAPPER */ Exec_stat MCObject::setsprop(Properties which, MCStringRef p_string)
+{
+	return setsprop(which, MCStringGetOldString(p_string));
+}
+
 Exec_stat MCObject::setsprop(Properties which, const MCString &s)
 {
 	MCExecPoint ep(this, NULL, NULL);
@@ -1174,7 +1231,7 @@ void MCObject::help()
 MCCard *MCObject::getcard(uint4 cid)
 {
 	if (cid == 0)
-		return getstack()->getchild(CT_THIS, MCnullmcstring, CT_CARD);
+		return getstack()->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 	return getstack()->getcardid(cid);
 }
 
@@ -1717,7 +1774,7 @@ void MCObject::getfontattsnew(MCNameRef& fname, uint2 &size, uint2 &style)
 		{
 			// This should never happen as the dispatcher always has font props
 			// set.
-			assert(false);
+			MCUnreachable();
 		}
 	}
 
@@ -1946,19 +2003,19 @@ Exec_stat MCObject::message_with_args(MCNameRef mess, const MCString &v1, const 
 	return message(mess, &p1);
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, MCNameRef v1)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1)
 {
 	MCParameter p1;
-	p1.setnameref_unsafe_argument(v1);
+	p1.setvalueref_argument(v1);
 	return message(mess, &p1);
 }
 
-Exec_stat MCObject::message_with_args(MCNameRef mess, MCNameRef v1, MCNameRef v2)
+Exec_stat MCObject::message_with_valueref_args(MCNameRef mess, MCValueRef v1, MCValueRef v2)
 {
 	MCParameter p1, p2;
-	p1.setnameref_unsafe_argument(v1);
+	p1.setvalueref_argument(v1);
 	p1.setnext(&p2);
-	p2.setnameref_unsafe_argument(v2);
+	p2.setvalueref_argument(v2);
 	return message(mess, &p1);
 }
 
@@ -2029,105 +2086,113 @@ void MCObject::sendmessage(Handler_type htype, MCNameRef m, Boolean h)
 	    };
 	MCmessagemessages = False;
 	MCExecPoint ep(this, NULL, NULL);
-	MCresult->fetch(ep);
-
-	// MW-2011-08-22: [[ Bug 9686 ]] Make sure we save the value of 'the result'
-	//   to be restored after the (not)handled message has been processed.
-	ep.grab();
+	MCresult->eval(ep);
 
 	if (h)
 		message_with_args(MCM_message_handled, htypes[htype], MCNameGetOldString(m));
 	else
 		message_with_args(MCM_message_not_handled, htypes[htype], MCNameGetOldString(m));
 
-	MCresult->store(ep, False);
+	MCresult->set(ep);
 
 	MCmessagemessages = True;
 }
 
-Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
+Exec_stat MCObject::names_old(Properties which, MCExecPoint& ep, uint32_t parid)
+{
+	MCAutoStringRef t_name;
+	if (names(which, &t_name) &&
+		ep . setvalueref(*t_name))
+		return ES_NORMAL;
+	/* CHECK MCERROR */
+	return ES_ERROR;
+}
+
+bool MCObject::names(Properties which, MCStringRef& r_name)
 {
 	const char *itypestring = gettypestring();
-	char *tmptypestring = NULL;
+	MCAutoPointer<char> tmptypestring;
 	if (parent != NULL && gettype() >= CT_BUTTON && getstack()->hcaddress())
 	{
 		tmptypestring = new char[strlen(itypestring) + 7];
 		if (parent->gettype() == CT_GROUP)
-			sprintf(tmptypestring, "%s %s", "bkgnd", itypestring);
+			sprintf(*tmptypestring, "%s %s", "bkgnd", itypestring);
 		else
-			sprintf(tmptypestring, "%s %s", "card", itypestring);
-		itypestring = tmptypestring;
+			sprintf(*tmptypestring, "%s %s", "card", itypestring);
+		itypestring = *tmptypestring;
 	}
-	Exec_stat stat = ES_NORMAL;
 	switch (which)
 	{
 	case P_ID:
 	case P_SHORT_ID:
-		ep.setint(obj_id);
-		break;
+		return MCStringFormat(r_name, "%u", obj_id);
 	case P_ABBREV_ID:
-		ep.setstringf("%s id %d", itypestring, obj_id);
-		break;
+		return MCStringFormat(r_name, "%s id %d", itypestring, obj_id);
+
+	// The stack object has its own version of long * which we check for here. We
+	// could make 'names()' virtual and do this that way, but since there shouldn't
+	// really be an exception to how id is formatted (and there won't be for any
+	// future object types) we handle it here.
+	case P_LONG_NAME:
 	case P_LONG_ID:
-		if (parent == NULL)
+		if (gettype() == CT_STACK)
 		{
-			char *buffer = ep.getbuffer(strlen(itypestring) + 13);
-			sprintf(buffer, "the template%s", itypestring);
-			buffer[12] = MCS_toupper(buffer[12]);
-			ep.setstrlen();
+			MCStack *t_this;
+			t_this = static_cast<MCStack *>(this);
+			if (t_this -> getfilename() == NULL)
+			{
+				if (MCdispatcher->ismainstack(t_this))
+				{
+					if (!isunnamed())
+						return MCStringFormat(r_name, "stack \"%s\"", getname_cstring());
+					r_name = MCValueRetain(kMCEmptyString);
+					return true;
+				}
+				if (isunnamed())
+				{
+					r_name = MCValueRetain(kMCEmptyString);
+					return true;
+				}
+				which = P_LONG_NAME;
+			}
+			else
+				return MCStringFormat(r_name, "stack \"%s\"", t_this -> getfilename());
 		}
-		else
+		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
+		//   but *only* for this control (continue with names the rest of the way).
+		Properties t_which_requested;
+		t_which_requested = which;
+		if (which == P_LONG_NAME && isunnamed())
+			which = P_LONG_ID;
+		if (parent != NULL)
 		{
-			MCExecPoint ep2(ep);
-			parent->getprop(parid, P_LONG_ID, ep2, False);
+			MCAutoStringRef t_parent;
+			if (!parent -> names(t_which_requested, &t_parent))
+				return false;
 			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
 				itypestring = "bkgnd";
-			ep.setstringf("%s id %d of ", itypestring, obj_id);
-			ep.appendmcstring(ep2.getsvalue());
+			if (which == P_LONG_ID)
+				return MCStringFormat(r_name, "%s id %d of %s", itypestring, obj_id, MCStringGetCString(*t_parent));
+			return MCStringFormat(r_name, "%s \"%s\" of %s", itypestring, getname_cstring(), MCStringGetCString(*t_parent));
 		}
-		break;
+		return MCStringFormat(r_name, "the template%c%s", MCS_toupper(itypestring[0]), itypestring + 1);
+
 	case P_NAME:
 	case P_ABBREV_NAME:
 		if (isunnamed())
-			stat = getprop(parid, P_ABBREV_ID, ep, False);
-		else
-			ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-		break;
+			return names(P_ABBREV_ID, r_name);
+		return MCStringFormat(r_name, "%s \"%s\"", itypestring, getname_cstring());
 	case P_SHORT_NAME:
 		if (isunnamed())
-			stat = names(P_ABBREV_ID, ep, parid);
-		else
-			ep.setnameref_unsafe(getname());
-		break;
-	case P_LONG_NAME:
-		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
-		//   but *only* for this control (continue with names the rest of the way).
-		if (parent == NULL)
-		{
-			if (!isunnamed())
-				ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-			else
-				ep.setstringf("%s id %d", itypestring, obj_id);
-		}
-		else
-		{
-			MCExecPoint ep2(ep);
-			parent->getprop(parid, P_LONG_NAME, ep2, False);
-			if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
-				itypestring = "bkgnd";
-			if (!isunnamed())
-				ep.setstringf("%s \"%s\" of ", itypestring, getname_cstring());
-			else
-				ep.setstringf("%s id %d of ", itypestring, obj_id);
-			ep.appendmcstring(ep2.getsvalue());
-		}
-		break;
+			return names(P_ABBREV_ID, r_name);
+		r_name = MCValueRetain(MCNameGetString(getname()));
+		return true;
 	default:
-		stat = ES_ERROR;
 		break;
 	}
-	delete tmptypestring;
-	return stat;
+
+	// Shouldn't actually get here, so just return false.
+	return false;
 }
 
 // MW-2012-10-17: [[ Bug 10476 ]] Returns true if message should be fired.
@@ -2504,7 +2569,7 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 	}
 	else
 	{
-		MCresult->fetch(ep);
+		MCresult->eval(ep);
 		stat = ES_NORMAL;
 	}
 	MClockerrors = oldlock;
@@ -2514,6 +2579,17 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 	delete tscript;
 	delete handlist;
 	return stat;
+}
+
+/* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	Exec_stat stat = eval(MCStringGetCString(p_script), ep);
+	/* UNCHECKED */ ep.copyasvalueref(r_value);
+	if (stat != ES_ERROR)
+		return;
+
+	ctxt.Throw();
 }
 
 void MCObject::editscript()
@@ -2672,7 +2748,7 @@ MCBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, b
 		t_ptr[i] = (t_ptr[i] & 0xff00ff00) | ((t_ptr[i] & 0x00ff0000) >> 16) | ((t_ptr[i] & 0x000000ff) << 16);
 	}
 #endif
-	
+
 	MCBitmap *t_scaled_bitmap;
 	if (p_size != nil)
 	{
@@ -3508,8 +3584,8 @@ bool MCObject::resolveparentscript(void)
 
 	// We have a parent script, so use MCdispatcher to try and find the
 	// stack.
-	MCStack *t_stack;
-	t_stack = getstack() -> findstackname(MCNameGetOldString(t_script -> GetObjectStack()));
+	MCStack *t_stack = nil;
+	/* UNCHECKED */ getstack()->findstackname(t_script->GetObjectStack(), t_stack);
 
 	// Next search for the control we need.
 	MCControl *t_control;
@@ -3651,6 +3727,7 @@ MCObjectHandle *MCObject::gethandle(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#ifdef OLD_EXEC
 struct MCObjectChangeIdVisitor: public MCObjectVisitor
 {
 	uint32_t old_card_id;
@@ -3753,6 +3830,7 @@ Exec_stat MCObject::changeid(uint32_t p_new_id)
 
 	return ES_NORMAL;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -4158,7 +4236,7 @@ void MCObject::mapfont(void)
 	{
 		// This should never happen as the only object with nil parent when
 		// opened should be MCdispatcher, which always has font attrs.
-		assert(false);
+		MCUnreachable();
 	}
 	
 	// MW-2012-03-02: [[ Bug 10044 ]] If we had to temporarily map the parent's font

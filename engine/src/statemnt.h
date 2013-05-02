@@ -36,10 +36,14 @@ protected:
 	MCStatement *next;
 public:
 	MCStatement();
+	
 	virtual ~MCStatement();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef factory);
+	
 	virtual uint4 linecount();
+	
 	void setnext(MCStatement *n)
 	{
 		next = n;

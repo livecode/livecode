@@ -154,7 +154,7 @@ MCFontlist::~MCFontlist()
 	}
 }
 
-MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer)
+MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	MCFontnode *tmp = fonts;
 	if (tmp != NULL)
@@ -171,27 +171,29 @@ MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size, uint2 styl
 	return tmp->getfont(fname, size, style);
 }
 
-extern void MCSystemListFontFamilies(MCExecPoint& ep);
-void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
+extern bool MCSystemListFontFamilies(MCListRef& r_names);
+bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 {
-	MCSystemListFontFamilies(ep);
+	return MCSystemListFontFamilies(r_names);
 }
 
-void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
 	// MW-2013-03-14: [[ Bug 10744 ]] All fonts are scalable on mobile - so return 0.
-	ep . setuint(0);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list) || !MCListAppendInteger(*t_list, 0))
+		return false;
+
+	return MCListCopy(*t_list, r_sizes);
 }
 
-extern void MCSystemListFontsForFamily(MCExecPoint& ep, const char *fname);
-void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+extern void MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles);
+bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	MCSystemListFontsForFamily(ep, fname);
+	return MCSystemListFontsForFamily(p_fname, r_styles);
 }
 
-// MW-2012-09-19: [[ Bug 10248 ]] Previously unimplemented, this method is required
-//   for PDF printing (and normal printing!)
-bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCFontlist::getfontstructinfo(MCNameRef&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
 	while (t_font != NULL)

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -50,6 +49,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "menuparse.h"
 #include "objptr.h"
 #include "stacksecurity.h"
+
+#include "exec.h"
 
 uint2 MCButton::mnemonicoffset = 2;
 MCRectangle MCButton::optionrect = {0, 0, 12, 8};
@@ -232,6 +233,58 @@ static ModKeyToken modifier_tokens[] =
 		{MS_CONTROL, 1, "^"},
 		{0, 0, NULL}
 	};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCButton::kProperties[] =
+{
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceButtonStyle, MCButton, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_ARM, Bool, MCButton, AutoArm)
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_HILITE, Bool, MCButton, AutoHilite)
+	DEFINE_RW_OBJ_PROPERTY(P_ARM_BORDER, Bool, MCButton, ArmBorder)
+	DEFINE_RW_OBJ_PROPERTY(P_ARM_FILL, Bool, MCButton, ArmFill)
+	DEFINE_RW_OBJ_PROPERTY(P_HILITE_BORDER, Bool, MCButton, HiliteBorder)
+	DEFINE_RW_OBJ_PROPERTY(P_HILITE_FILL, Bool, MCButton, HiliteFill)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_HILITE, Bool, MCButton, ShowHilite)
+	DEFINE_RW_OBJ_PROPERTY(P_ARM, Bool, MCButton, Arm)
+
+	DEFINE_RW_OBJ_PROPERTY(P_SHARED_HILITE, Bool, MCButton, SharedHilite)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_ICON, Bool, MCButton, ShowIcon)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCButton, ShowName) 
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LABEL, String, MCButton, Label)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_LABEL, String, MCButton, Label)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCButton, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCButton, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL_WIDTH, UInt16, MCButton, LabelWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_FAMILY, UInt16, MCButton, Family)
+	DEFINE_RW_OBJ_PROPERTY(P_VISITED, Bool, MCButton, Visited)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_HISTORY, UInt16, MCButton, MenuHistory)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_LINES, OptionalUInt16, MCButton, MenuLines)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_BUTTON, UInt16, MCButton, MenuButton)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_NAME, OptionalString, MCButton, MenuName)
+	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATOR_TEXT, String, MCButton, AcceleratorText)
+	DEFINE_RO_OBJ_PROPERTY(P_UNICODE_ACCELERATOR_TEXT, String, MCButton, UnicodeAcceleratorText)
+	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATOR_KEY, OptionalString, MCButton, AcceleratorKey)
+
+	DEFINE_RW_OBJ_SET_PROPERTY(P_ACCELERATOR_MODIFIERS, InterfaceButtonAcceleratorModifiers, MCButton, AcceleratorModifiers)
+	
+	DEFINE_RW_OBJ_PROPERTY(P_MNEMONIC, UInt16, MCButton, Mnemonic)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, UInt16, MCButton, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, UInt16, MCButton, FormattedHeight)
+	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
+	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+};
+
+MCObjectPropertyTable MCButton::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCButton::MCButton()
 {
@@ -653,10 +706,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 						newnum = 1;
 					else
 						newnum++;
-				char exp[U2L];
-				sprintf(exp, "%d", newnum);
-				bptr = (MCButton *)getcard()->getchild(CT_EXPRESSION, exp,
-				                                       CT_MENU, CT_UNDEFINED);
+				bptr = (MCButton *)getcard()->getnumberedchild(newnum, CT_MENU, CT_UNDEFINED);
 				if (bptr == this)
 					break;
 				if (bptr->menubutton == menubutton
@@ -841,11 +891,7 @@ Boolean MCButton::mfocus(int2 x, int2 y)
 					return True;
 				for (cptr->count(CT_MENU, CT_UNDEFINED, NULL, i, True) ; i ; i--)
 				{
-					char string[U2L];
-					sprintf(string, "%d", i);
-					MCButton *bptr = (MCButton *)cptr->getchild(CT_EXPRESSION, string,
-					                 CT_MENU,
-					                 CT_UNDEFINED);
+					MCButton *bptr = (MCButton *)cptr->getnumberedchild(i, CT_MENU, CT_UNDEFINED);
 					if (bptr == this)
 						continue;
 					
@@ -1602,7 +1648,7 @@ void MCButton::setrect(const MCRectangle &nrect)
 	}
 }
 
-Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCButton::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 fheight;
 	uint2 j = 0;
@@ -1872,12 +1918,12 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	Boolean all = p == P_STYLE || p == P_LABEL_WIDTH || MCaqua && standardbtn();
@@ -1889,7 +1935,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	switch (p)
 	{
 	case P_NAME:
-		if (MCObject::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		clearmnemonic();
 		setupmnemonic();
@@ -2253,7 +2299,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 			menumode = WM_CLOSED;
 		break;
 	case P_SHOW_BORDER:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (MCaqua && menumode == WM_PULLDOWN)
 		{
@@ -2291,10 +2337,12 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	case P_ACCELERATOR_KEY:
 		if (data != MCnullmcstring)
 		{
+			MCAutoStringRef t_data;
+			/* UNCHECKED */ ep . copyasstringref(&t_data);
 			accelkey = data.getstring()[0];
-			if (data.getlength() > 1)
+			if (MCStringGetLength(*t_data) > 1)
 			{
-				uint4 t_accelkey = MCLookupAcceleratorKeysym(data);
+				uint4 t_accelkey = MCLookupAcceleratorKeysym(*t_data);
 				if (t_accelkey != 0)
 					accelkey = t_accelkey;
 			}
@@ -2399,7 +2447,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	case P_TEXT_STYLE:
 	case P_ENABLED:
 	case P_DISABLED:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2007-07-05: [[ Bug 1292 ]] Field inside combo-box doesn't respect the button's properties
@@ -2419,7 +2467,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		break;
 	case P_MARGINS:
 		// MW-2007-07-05: [[ Bug 1292 ]] We pass the margins through to the combo-box field
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		if (entry != NULL)
@@ -2484,9 +2532,9 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		// MW-2005-09-05: [[Bug 3167]] Only set the entry's property if it exists!
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -3718,41 +3766,43 @@ void MCButton::setupmenu()
 	flags = MENU_FLAGS;
 }
 
-void MCButton::selectedchunk(MCExecPoint &ep)
+bool MCButton::selectedchunk(MCStringRef& r_string)
 {
-	getprop(0, P_NUMBER, ep, False);
-	ep.ton();
+	MCExecPoint ep(nil, nil, nil);
+	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
+	/* UNCHECKED */ ep.ton();
 	uint4 number = ep.getuint4();
 	const char *sptr;
 	const char *eptr;
 	getmenuptrs(sptr, eptr);
-	ep.setstringf("char %d to %d of button %d", sptr - menustring + 1, eptr - menustring, number);
+	return MCStringFormat(r_string, "char %d to %d of button %d", sptr - menustring + 1, eptr - menustring, number);
 }
 
-void MCButton::selectedline(MCExecPoint &ep)
+bool MCButton::selectedline(MCStringRef& r_string)
 {
-	getprop(0, P_NUMBER, ep, False);
+	MCExecPoint ep(nil, nil, nil);
+	/* UNCHECKED */ getprop(0, P_NUMBER, ep, False);
+	/* UNCHECKED */ ep.ton();
 	uint2 number;
 	ep.getuint2(number, 0, 0, EE_UNDEFINED);
-	ep.setstringf("line %d of button %d", menuhistory, number);
+	return MCStringFormat(r_string, "line %d of button %d", menuhistory, number);
 }
 
-void MCButton::selectedtext(MCExecPoint &ep)
+bool MCButton::selectedtext(MCStringRef& r_string)
 {
 	if (entry != NULL)
 	{
 		MCString slabel;
 		bool isunicode;
 		getlabeltext(slabel, isunicode);
-		ep.setsvalue(slabel);
+		return MCStringCreateWithNativeChars((const char_t *)slabel.getstring(), slabel.getlength(), r_string);
 	}
 	else
 	{
 		const char *sptr;
 		const char *eptr;
 		getmenuptrs(sptr, eptr);
-		MCString s(sptr, eptr - sptr);
-		ep.setsvalue(s);
+		return MCStringCreateWithNativeChars((const char_t *)sptr, eptr - sptr, r_string);
 	}
 }
 
@@ -3775,9 +3825,9 @@ void MCButton::getlabeltext(MCString &s, bool& r_unicode)
 	}
 }
 
-Boolean MCButton::resetlabel()
+bool MCButton::resetlabel()
 {
-	Boolean changed = False;
+	bool changed = false;
 	if (menumode == WM_OPTION || menumode == WM_COMBO)
 	{
 		char *oldlabel = label;
@@ -3792,7 +3842,7 @@ Boolean MCButton::resetlabel()
 			flags &= ~F_LABEL;
 
 			if (oldlabel != NULL)
-				changed = True;
+				changed = true;
 		}
 		else
 		{
@@ -3817,7 +3867,7 @@ Boolean MCButton::resetlabel()
 
 			if (oldlabel == NULL || labelsize != oldlabelsize ||
 			        memcmp(label, oldlabel, labelsize) != 0)
-				changed = True;
+				changed = true;
 		}
 		delete oldlabel;
 	}
@@ -3884,10 +3934,7 @@ void MCButton::radio()
 	Chunk_term ptype = parent->gettype() == CT_GROUP ? CT_BACKGROUND : CT_CARD;
 	for (cptr->count(CT_BUTTON, ptype, NULL, i, True) ; i ; i--)
 	{
-		char string[U2L];
-		sprintf(string, "%d", i);
-		MCButton *bptr = (MCButton *)cptr->getchild(CT_EXPRESSION, string,
-		                 CT_BUTTON, ptype);
+		MCButton *bptr = (MCButton *)cptr->getnumberedchild(i, CT_BUTTON, ptype);
 		if (bptr == this)
 			continue;
 		if (bptr->parent == parent && bptr->family == family)

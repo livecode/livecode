@@ -33,6 +33,27 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 
 #include "globals.h"
+#include "exec.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCVideoClip::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_REFRESH, Bool, MCVideoClip, DontRefresh)
+	DEFINE_RW_OBJ_PROPERTY(P_FRAME_RATE, OptionalInt16, MCVideoClip, FrameRate)
+	DEFINE_RW_OBJ_PROPERTY(P_SCALE, Double, MCVideoClip, Scale)
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, Int16, MCVideoClip, Size)
+	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCVideoClip, Text)
+};
+
+MCObjectPropertyTable MCVideoClip::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCVideoClip::MCVideoClip()
 {
@@ -71,7 +92,8 @@ const char *MCVideoClip::gettypestring()
 	return MCvideostring;
 }
 
-Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+#ifdef OLD_EXEC
+Exec_stat MCVideoClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -97,12 +119,12 @@ Exec_stat MCVideoClip::getprop(uint4 parid, Properties which, MCExecPoint &ep, B
 		}
 		break;
 	default:
-		return MCObject::getprop(parid, which, ep, effective);
+		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCVideoClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCVideoClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	MCString data = ep.getsvalue();
 
@@ -149,8 +171,9 @@ Exec_stat MCVideoClip::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 	default:
 		break;
 	}
-	return MCObject::setprop(parid, p, ep, effective);
+	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
+#endif
 
 Boolean MCVideoClip::del()
 {

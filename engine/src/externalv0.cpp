@@ -33,7 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "osspec.h"
 #include "globals.h"
-#include "core.h"
 #include "securemode.h"
 #include "mode.h"
 
@@ -144,7 +143,7 @@ bool MCExternalV0::Prepare(void)
 	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, "configureSecurity");
 	if (t_conf_security != nil)
 		t_conf_security(MCsecuritycbs);
-	
+
 	SHUTDOWNXTABLE t_shutdown;
 	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, "shutdownXtable");
 	if (t_shutdown != nil)
@@ -227,7 +226,7 @@ Exec_stat MCExternalV0::Handle(MCObject *p_context, Handler_type p_type, uint32_
 		else
 		{
 			ep.setsvalue(retval);
-			MCresult->store(ep, False);
+			MCresult->set(ep);
 			m_free(retval);
 		}
 
@@ -299,7 +298,9 @@ static MCControl *getobj(Chunk_term otype, Chunk_term etype,
 		if (strequal(group, MCfalsestring))
 			ctype = CT_BACKGROUND;
 	MCStack *s = MCdefaultstackptr;
-	return s->getcurcard()->getchild(etype, str, otype, ctype);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString(str, &t_string);
+	return s->getcurcard()->getchild(etype, *t_string, otype, ctype);
 }
 
 static char *getfield(MCField *fptr, int *retval)
@@ -369,7 +370,7 @@ static char *get_global(const char *arg1, const char *arg2,
 	{
 		*retval = xresSucc;
 		MCExecPoint ep;
-		tmp->fetch(ep);
+		tmp->eval(ep);
 		return ep.getsvalue().clone();
 	}
 	*retval = xresFail;
@@ -388,7 +389,7 @@ static char *set_global(const char *arg1, const char *arg2,
 	MCExecPoint ep;
 	*retval = xresSucc;
 	ep.setsvalue(arg2);
-	tmp->store(ep, False);
+	tmp->set(ep);
 	return NULL;
 }
 
@@ -535,7 +536,7 @@ static char *get_variable(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCEPptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
-	var -> fetch(*MCEPptr);
+	var -> eval(*MCEPptr);
 	return MCEPptr->getsvalue().clone();
 }
 
@@ -552,7 +553,7 @@ static char *set_variable(const char *arg1, const char *arg2,
 	if (var == NULL)
 		return NULL;
 	MCEPptr->setsvalue(arg2);
-	var->store(*MCEPptr, False);
+	var->set(*MCEPptr);
 	return NULL;
 }
 
@@ -570,10 +571,17 @@ static char *get_variable_ex(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCEPptr, arg1, &var));
 	if (var == NULL)
 		return NULL;
+
 	if (arg2 != NULL && strlen(arg2) != 0)
-		var -> fetch_element(*MCEPptr, arg2);
+	{
+		MCNameRef t_key;
+		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
+		var -> eval(*MCEPptr, &t_key, 1);
+		MCValueRelease(t_key);
+	}
 	else
-		var -> fetch(*MCEPptr);
+		var -> eval(*MCEPptr);
+
 	*value = MCEPptr->getsvalue();
 	return NULL;
 }
@@ -593,11 +601,43 @@ static char *set_variable_ex(const char *arg1, const char *arg2,
 		return NULL;
 	MCEPptr->setsvalue(*value);
 	if (arg2 != NULL && strlen(arg2) > 0)
-		var->store_element(*MCEPptr, arg2, False);
+	{
+		MCNameRef t_key;
+		/* UNCHECKED */ MCNameCreateWithCString(arg2, t_key);
+		var->set(*MCEPptr, &t_key, 1);
+		MCValueRelease(t_key);
+	}
 	else
-		var->store(*MCEPptr, False);
+		var->set(*MCEPptr);
 
 	return NULL;
+}
+
+struct get_array_element_t
+{
+	uindex_t index;
+	uindex_t limit;
+	char **keys;
+	MCstring *strings;
+};
+
+static bool get_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	get_array_element_t *ctxt;
+	ctxt = (get_array_element_t *)p_context;
+
+	ctxt -> keys[ctxt -> index] = (char *)MCStringGetCString(MCNameGetString(p_key));
+	if (ctxt -> strings != nil)
+	{
+		ctxt -> strings[ctxt -> index] . length = MCStringGetLength((MCStringRef)p_value);
+		ctxt -> strings[ctxt -> index] . sptr = (const char *)MCStringGetNativeCharPtr((MCStringRef)p_value);
+	}
+	ctxt -> index++;
+
+	if (ctxt -> index < ctxt -> limit)
+		return true;
+
+	return false;
 }
 
 static char *get_array(const char *arg1, const char *arg2,
@@ -611,14 +651,38 @@ static char *get_array(const char *arg1, const char *arg2,
 		return NULL;
 	}
 	*retval = trans_stat(getvarptr(*MCEPptr, arg1,&var));
-	if (var == NULL || !var->isarray())
+	if (var == NULL)
 		return NULL;
+
+	if (!var -> isarray())
+		return NULL;
+
+	if (!var -> converttoarrayofstrings(*MCEPptr))
+		return NULL;
+
+	MCArrayRef t_array;
+	t_array = (MCArrayRef)var -> getvalueref();
+	if (t_array == nil)
+		return NULL;
+
 	if (value->nelements == 0)
 	{
-		value->nelements = var->getvalue().get_array() -> getnfilled();
+		value->nelements = MCArrayGetCount(t_array);
 		return NULL;
 	}
-	value->nelements = MCU_min(value->nelements,var->getvalue().get_array() -> getnfilled());
+
+	value->nelements = MCU_min(value->nelements, MCArrayGetCount(t_array));
+
+	get_array_element_t t_ctxt;
+	t_ctxt . index = 0;
+	t_ctxt . limit = value -> nelements;
+	t_ctxt . keys = value -> keys;
+	t_ctxt . strings = value -> strings;
+	MCArrayApply(t_array, get_array_element, &t_ctxt);
+
+	return NULL;
+
+#if 0
 	var -> getvalue() . getkeys(value->keys, value->nelements);
 	if (value->strings != NULL)
 	{
@@ -652,6 +716,7 @@ static char *get_array(const char *arg1, const char *arg2,
 		}
 	}
 	return NULL;
+#endif
 }
 
 static char *set_array(const char *arg1, const char *arg2,
@@ -667,19 +732,21 @@ static char *set_array(const char *arg1, const char *arg2,
 	*retval = trans_stat(getvarptr(*MCEPptr, arg1,&var));
 	if (var == NULL)
 		return NULL;
-	var->remove(*MCEPptr,False);//clear variable
+	var->remove(*MCEPptr,nil, 0);//clear variable
 	char tbuf[U4L];
 	for (unsigned int i = 0; i <value->nelements; i++)
 	{
 		MCString *s = (MCString *)&value->strings[i];
 		MCEPptr->setsvalue(*s);
+		MCNameRef t_key;
 		if (value->keys == NULL ||  value->keys[i] == NULL)
 		{
 			sprintf(tbuf,"%d",i+1);
-			var->store_element(*MCEPptr, tbuf, False);
+			/* UNCHECKED */ MCNameCreateWithCString(tbuf, t_key);
 		}
 		else
-			var->store_element(*MCEPptr, value->keys[i], False);
+			/* UNCHECKED */ MCNameCreateWithCString(value -> keys[i], t_key);
+		var->set(*MCEPptr, &t_key, 1);
 	}
 	return NULL;
 }

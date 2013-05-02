@@ -277,7 +277,7 @@ Boolean MCNativeTheme::load()
 	{
 		menucolors[i] = NULL;
 		ep.setsvalue(menucolorsregs[i]);
-		MCS_query_registry(ep, NULL);
+		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
 		{
 			char *name = NULL;
@@ -768,11 +768,6 @@ char *MCNativeTheme::getthemecolor(const MCWidgetInfo &winfo,Widget_Color ctype,
 uint2 MCNativeTheme::getthemefamilyid()
 {
 	return LF_WIN95; //however it belongs to the win32 theme family
-}
-
-const char  *MCNativeTheme::getname()
-{
-	return MClnfamstring;
 }
 
 Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect)
@@ -1550,7 +1545,7 @@ int32_t MCNativeTheme::fetchtooltipstartingheight(void)
 {
 	if (MCmajorosversion < 0x0500)
 		return 0;
-	
+
 	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for XP.
 	if (MCmajorosversion < 0x600)
 		return 2;

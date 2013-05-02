@@ -206,11 +206,11 @@ static ModKeyToken modifier_tokens[] =
 		{0, 0, NULL}
 	};
 
-uint4 MCLookupAcceleratorKeysym(MCString &p_name)
+uint4 MCLookupAcceleratorKeysym(MCStringRef p_name)
 {
 	for (int i = 0; accelerator_keys[i].keysym != 0; i++)
 	{
-		if (p_name == accelerator_keys[i].name)
+		if (MCStringIsEqualToCString(p_name, accelerator_keys[i].name, kMCCompareCaseless))
 		{
 			return accelerator_keys[i].keysym;
 		}
@@ -480,8 +480,9 @@ bool ParseMenuItemAccelerator(char *p_string, char *&r_endstr, MCMenuItem *p_men
 		}
 		else if (r_endstr - p_string > 1)
 		{
-			MCString t_string(p_string, r_endstr - p_string);
-			t_key = MCLookupAcceleratorKeysym(t_string);
+			MCAutoStringRef t_string;
+			MCStringCreateWithNativeChars((const char_t *)p_string, r_endstr - p_string, &t_string);
+			t_key = MCLookupAcceleratorKeysym(*t_string);
 			if (t_key != 0)
 				t_keyname = p_string;
 			else

@@ -36,7 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 
 #include "globals.h"
-#include "core.h"
 
 MCSelnode::MCSelnode(MCObject *object)
 {
@@ -74,21 +73,28 @@ MCObject *MCSellist::getfirst()
 		return NULL;
 }
 
-void MCSellist::getids(MCExecPoint &ep)
+bool MCSellist::getids(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	if (objects != NULL)
 	{
 		MCSelnode *tptr = objects;
-		MCExecPoint ep2(ep);
 		do
 		{
-			tptr->ref->getprop(0, P_LONG_ID, ep2, False);
-			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, tptr == objects);
+			MCAutoStringRef t_string;
+			if (!tptr->ref->names(P_LONG_ID, &t_string))
+				return false;
+			if (!MCListAppend(*t_list, *t_string))
+				return false;
 			tptr = tptr->next();
 		}
 		while (tptr != objects);
 	}
+
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCSellist::clear(Boolean message)
@@ -319,7 +325,7 @@ void MCSellist::group()
 		gptr->message(MCM_selected_object_changed);
 	}
 }
-
+#ifdef SHARED_STRING
 bool MCSellist::clipboard(bool p_is_cut)
 {
 	if (objects != NULL)
@@ -435,6 +441,111 @@ bool MCSellist::clipboard(bool p_is_cut)
 
 	return false;
 }
+#else
+bool MCSellist::clipboard(bool p_is_cut)
+{
+	if (objects != NULL)
+	{
+		// First we construct the pickle of the list of selected objects
+		MCPickleContext *t_context;
+		
+		// MW-2012-03-04: [[ StackFile5500 ]] When pickling for the clipboard, make sure it
+		//   includes both 2.7 and 5.5 stackfile formats.
+		t_context = MCObject::startpickling(true);
+
+		MCSelnode *t_node;
+		t_node = objects;
+
+		// OK-2008-08-06: [[Bug 6794]] - If no objects were copied because the stack was password protected,
+		// then don't write anything to the clipboard. Otherwise the MCClipboard function returns "objects",
+		// yet the clipboardData["objects"] will be empty.
+		bool t_objects_were_copied;
+		t_objects_were_copied = false;
+
+		do
+		{
+			if (!t_node -> ref -> getstack() -> iskeyed())
+				MCresult -> sets("can't cut object (stack is password protected)");
+			else
+			{
+				MCObject::continuepickling(t_context, t_node -> ref, t_node -> ref -> getcard() -> getid());
+				t_objects_were_copied = true;
+			}
+
+			t_node = t_node -> next();
+		}
+		while(t_node != objects);
+
+		bool t_success;
+		t_success = true;
+
+		MCAutoStringRef t_pickle;
+		MCObject::stoppickling(t_context, &t_pickle);
+		if (*t_pickle == nil)
+			t_success = false;
+
+		// OK-2008-08-06: [[Bug 6794]] - Return here before writing to the clipboard to preserve the message in the result.
+		if (!t_objects_were_copied)
+			return false;
+
+		// Now attempt to write it to the clipboard
+		MCclipboarddata -> Open();
+
+		if (t_success)
+		{
+			if (!MCclipboarddata -> Store(TRANSFER_TYPE_OBJECTS, *t_pickle))
+				t_success = false;
+		}
+
+		// If its just a single image object, put image data on the clipboard too
+		if (t_success)
+			if (objects == objects -> next() && objects -> ref -> gettype() == CT_IMAGE)
+			{
+				MCAutoStringRef t_data;
+				static_cast<MCImage *>(objects -> ref) -> getclipboardtext(&t_data);
+				if (*t_data != nil)
+					MCclipboarddata -> Store(TRANSFER_TYPE_IMAGE, *t_data);
+			}
+		
+		if (!MCclipboarddata -> Close())
+			t_success = false;
+
+		// If we succeeded remove the objects if its a cut operation
+		if (t_success)
+		{
+			if (p_is_cut)
+			{
+				MCStack *sptr = objects->ref->getstack();
+				while (objects != NULL)
+				{
+					MCSelnode *tptr = objects->remove(objects);
+					
+					// MW-2008-06-12: [[ Bug 6466 ]] Make sure we don't still delete an
+					//   object if the stack is protected.
+					if (tptr -> ref -> getstack() -> iskeyed())
+					{
+						if (tptr -> ref -> del())
+						{
+							if (tptr -> ref -> gettype() == CT_STACK)
+								MCtodestroy -> remove(static_cast<MCStack *>(tptr -> ref));
+							tptr -> ref -> scheduledelete();
+						}
+					}
+
+					delete tptr;
+				}
+				sptr->message(MCM_selected_object_changed);
+			}
+		}
+		else
+			MCresult -> sets("can't write to clipboard");
+
+		return true;
+	}
+
+	return false;
+}
+#endif
 
 Boolean MCSellist::copy()
 {
@@ -577,7 +688,7 @@ void MCSellist::redraw()
 		if (cptr -> gettype() <= CT_CARD)
 			cptr -> getstack() -> dirtyall();
 		else
-			cptr -> layer_redrawall();
+		cptr -> layer_redrawall();
 
 		tptr = tptr->next();
 	}

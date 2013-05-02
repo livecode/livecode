@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 #include "zlib.h"
 
 #include "minizip.h"

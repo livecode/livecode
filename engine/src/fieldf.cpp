@@ -595,7 +595,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 		//   of background color (apart from 128,128,128!).
 		p_context->setforeground(p_context->getwhite());
 		p_context->setfunction(GXxor);
-		
+
 		// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
 		//   ink works correctly.
 		p_context->begin(false);
@@ -603,7 +603,7 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 		p_context->end();
 		
 		p_context->setfunction(GXcopy);
-	}
+}
 }
 
 void MCField::replacecursor(Boolean force, Boolean goal)
@@ -1416,7 +1416,7 @@ void MCField::endselection()
 		{
 			MCExecPoint ep;
 			selectedtext(ep);
-
+#ifdef SHARED_STRING
 			MCSharedString *t_data;
 			t_data = MCSharedString::Create(ep . getsvalue());
 			if (t_data != NULL)
@@ -1425,6 +1425,15 @@ void MCField::endselection()
 					MCactivefield = this;
 				t_data -> Release();
 			}
+#else
+			MCAutoStringRef t_data;
+			/* UNCHECKED */ ep . copyasstringref(&t_data);
+			if (*t_data != nil)
+			{
+				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))
+					MCactivefield = this;
+			}
+#endif
 		}
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))
@@ -2110,16 +2119,16 @@ void MCField::fmove(Field_translations function, const char *string, KeySym key)
 	}
 	else if ((function == FT_LEFTCHAR || function == FT_RIGHTCHAR)
 				&& focusedparagraph->isselection())
-	{
-		int4 si, ei;
-		selectedmark(False, si, ei, False, False);
-		unselect(False, True);
-		if (function == FT_LEFTCHAR)
-			seltext(si, si, False);
-		else
-			seltext(ei, ei, False);
-		function = FT_UNDEFINED;
-	}
+		{
+			int4 si, ei;
+			selectedmark(False, si, ei, False, False);
+			unselect(False, True);
+			if (function == FT_LEFTCHAR)
+				seltext(si, si, False);
+			else
+				seltext(ei, ei, False);
+			function = FT_UNDEFINED;
+		}
 	else
 		unselect(False, True);
 

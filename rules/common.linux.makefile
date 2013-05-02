@@ -6,6 +6,7 @@ DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX
 
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
+	$(SOLUTION_DIR)/libfoundation/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include \
@@ -24,7 +25,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
 	$(SOLUTION_DIR)/thirdparty/libopenssl/include \
 	$(SOLUTION_DIR)/thirdparty/libcurl/include 
-
+	
 GLOBAL_LIBS=\
 	$(SOLUTION_DIR)/prebuilt/lib
 

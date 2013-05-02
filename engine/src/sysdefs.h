@@ -28,8 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_WINDOWS_DESKTOP)
 
-#define __WINDOWS_1252__
-#define __CRLF__
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
@@ -39,8 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_MAC_DESKTOP)
 
-#define __MACROMAN__
-#define __CR__
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
@@ -49,8 +45,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_LINUX_DESKTOP)
 
-#define __ISO_8859_1__
-#define __LF__
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
@@ -58,46 +52,70 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #elif defined(_WINDOWS_SERVER)
 
-#define __WINDOWS_1252__
-#define __CRLF__
 #define PLATFORM_STRING "Win32"
 
 #define MCSSL
 
 #elif defined(_MAC_SERVER)
 
-#define __MACROMAN__
-#define __CR__
 #define PLATFORM_STRING "MacOS"
 
 #define MCSSL
 
 #elif defined(_LINUX_SERVER) || defined(_DARWIN_SERVER)
 
-#define __ISO_8859_1__
-#define __LF__
 #define PLATFORM_STRING "Linux"
 
 #define MCSSL
 
 #elif defined(_IOS_MOBILE)
 
-#define __MACROMAN__
-#define __LF__
 #define PLATFORM_STRING "iphone"
 
 #elif defined(_ANDROID_MOBILE)
 
-#define __ISO_8859_1__
-#define __LF__
 #define PLATFORM_STRING "android"
 
 #endif
 
 //////////////////////////////////////////////////////////////////////
 //
-//  CHARSET DEFINITION
+//  COMPILER AND CODE GENERATION DEFINES
 //
+
+#if defined(_MSC_VER)
+#define _HAS_VSCPRINTF
+#define _HAS_QSORT_S
+#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
+#define _HAS_VSNPRINTF
+#undef _HAS_QSORT_R
+#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
+#define _HAS_VSNPRINTF
+#define _HAS_QSORT_R
+#elif defined(_ANDROID_MOBILE)
+#define _HAS_VSNPRINTF
+#undef _HAS_QSORT_R
+#else
+#error Unknown compiler being used.
+#endif
+
+//////////////////////////////////////////////////////////////////////
+//
+//  FOUNDATION TYPES
+//
+
+#include <foundation.h>
+#include <foundation-auto.h>
+
+//////////////////////////////////////////////////////////////////////
+//
+//  LEGACY INCLUDES AND DEFINES
+//
+
+class MCString;
+#include "typedefs.h"
+#include "foundation-legacy.h"
+#include "rawarray.h"
 
 // The 'CHARSET' define is used to determine the direction of char
 // translation when reading in stacks. If the stack's charset byte
@@ -109,76 +127,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #else
 #define CHARSET 0
 #endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  COMPILER AND CODE GENERATION DEFINES
-//
-
-#if defined(_MSC_VER)
-#define __VISUALC__
-
-#define _HAS_VSCPRINTF
-#define _HAS_QSORT_S
-
-#elif defined(_LINUX_DESKTOP) || defined(_LINUX_SERVER)
-#define __GCC__
-#define __LINUX_GCC__
-
-#define _HAS_VSNPRINTF
-#undef _HAS_QSORT_R
-
-#elif defined(_MAC_DESKTOP) || defined(_MAC_SERVER) || defined(_DARWIN_SERVER) || defined(_IOS_MOBILE)
-#define __GCC__
-#define __APPLE_GCC__
-
-#define _HAS_VSNPRINTF
-#define _HAS_QSORT_R
-
-#elif defined(_ANDROID_MOBILE)
-#define __GCC__
-#define __ANDROID_GCC__
-
-#define _HAS_VSNPRINTF
-#undef _HAS_QSORT_R
-
-#else
-#error Unknown compiler being used.
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  ARCHITECTURE DEFINES
-//
-
-#ifdef __ppc__
-#undef __LITTLE_ENDIAN__
-#undef __BIG_ENDIAN__
-#define __BIG_ENDIAN__ 1
-#else
-#undef __LITTLE_ENDIAN__
-#undef __BIG_ENDIAN__
-#define __LITTLE_ENDIAN__ 1
-#endif
-
-//////////////////////////////////////////////////////////////////////
-//
-//  COMMON INCLUDES
-//
-
-// The 'typedefs.h' header contains all the old and new-style types
-// that are used everywhere.
-#include "typedefs.h"
-
-//////////////////////////////////////////////////////////////////////
-//
-//  FOUNDATION TYPES
-//
-
-class MCString;
-
-#include "name.h"
-#include "rawarray.h"
 
 //////////////////////////////////////////////////////////////////////
 //
@@ -307,7 +255,7 @@ struct MCFontStruct
 
 #elif defined(_MAC_DESKTOP)
 
-#include <stdarg.h>
+/*#include <stdarg.h>
 #include <errno.h>
 #include <ctype.h>
 #include <string.h>
@@ -315,7 +263,7 @@ struct MCFontStruct
 #include <stdio.h>
 #include <time.h>
 #include <math.h>
-#include <assert.h>
+#include <assert.h>*/
 
 typedef int MCSocketHandle;
 
@@ -599,6 +547,24 @@ struct MCRectangle32
 	int32_t x, y;
 	int32_t width, height;
 };
+
+inline MCPoint MCPointMake(int2 x, int2 y)
+{
+	MCPoint r;
+	r . x = x;
+	r . y = y;
+	return r;
+}
+
+inline MCRectangle MCRectangleMake(int2 x, int2 y, uint2 width, uint2 height)
+{
+	MCRectangle r;
+	r . x = x;
+	r . y = y;
+	r . width = width;
+	r . height = height;
+	return r;
+}
 
 ////////////////////////////////////////
 
@@ -1066,58 +1032,6 @@ typedef unsigned long       Atom;
 
 //////////////////////////////////////////////////////////////////////
 //
-//  UTILITY CLASSES
-//
-
-template<typename T> class MCAutoPointer
-{
-public:
-	MCAutoPointer(void)
-	{
-		m_ptr = nil;
-	}
-
-	~MCAutoPointer(void)
-	{
-		delete m_ptr;
-	}
-
-	T* operator = (T* value)
-	{
-		delete m_ptr;
-		m_ptr = value;
-		return value;
-	}
-
-	T*& operator & (void)
-	{
-		MCAssert(m_ptr == nil);
-		return m_ptr;
-	}
-
-	T* operator -> (void)
-	{
-		MCAssert(m_ptr != nil);
-		return m_ptr;
-	}
-
-	T *operator * (void) const
-	{
-		return m_ptr;
-	}
-
-	void Take(T*&r_ptr)
-	{
-		r_ptr = m_ptr;
-		m_ptr = nil;
-	}
-
-private:
-	T *m_ptr;
-};
-
-//////////////////////////////////////////////////////////////////////
-//
 //  FORWARD REFERENCES
 //
 
@@ -1129,7 +1043,9 @@ typedef struct ssl_ctx_st SSL_CTX;
 class MCContext;
 typedef class MCContext MCDC;
 
+#ifdef SHARED_STRING
 class MCSharedString;
+#endif
 struct MCPickleContext;
 
 class MCUIDC;
@@ -1174,6 +1090,7 @@ struct MCWidgetInfo;
 class MCExecPoint;
 class MCParameter;
 class MCStack;
+class MCExecContext;
 
 typedef uint4 MCDragAction;
 typedef uint4 MCDragActionSet;
@@ -1204,6 +1121,7 @@ class MCParentScript;
 class MCParentScriptUse;
 class MCVariable;
 class MCExpression;
+class MCContainer;
 struct MCPickleContext;
 class MCVariableValue;
 class MCVariableArray;
@@ -1237,6 +1155,114 @@ class MCError;
 class MCStyledText;
 
 typedef struct MCFont *MCFontRef;
+
+typedef struct MCSyntaxFactory *MCSyntaxFactoryRef;
+
+//////////////////////////////////////////////////////////////////////
+
+// Chunks, containers and ordinals (and dest for Go command)
+enum Chunk_term {
+    CT_UNDEFINED,
+    CT_START,
+    CT_BACKWARD,
+    CT_FORWARD,
+    CT_FINISH,
+    CT_HOME,
+	// MW-2009-03-03: The chunk type of the invisible 'script' object that
+	//   holds the SERVER mode state.
+	CT_SERVER_SCRIPT,
+    CT_HELP,
+    CT_DIRECT,
+    CT_RECENT,
+    CT_THIS,
+    CT_FIRST,
+    CT_SECOND,
+    CT_THIRD,
+    CT_FOURTH,
+    CT_FIFTH,
+    CT_SIXTH,
+    CT_SEVENTH,
+    CT_EIGHTH,
+    CT_NINTH,
+    CT_TENTH,
+    CT_LAST,
+    CT_NEXT,
+    CT_PREV,
+    CT_MIDDLE,
+    CT_ANY,
+    CT_ORDINAL,
+    CT_ID,
+    CT_EXPRESSION,
+    CT_RANGE,
+    CT_URL,
+    CT_URL_HEADER,
+    CT_ALIAS,
+	CT_DOCUMENT,
+    CT_TOP_LEVEL,
+    CT_MODELESS,
+    CT_PALETTE,
+    CT_MODAL,
+    CT_PULLDOWN,
+    CT_POPUP,
+    CT_OPTION,
+
+    CT_STACK,
+    CT_AUDIO_CLIP,
+    CT_VIDEO_CLIP,
+    CT_BACKGROUND,
+    CT_CARD,
+    CT_MARKED,
+    CT_GROUP,
+	CT_FIRST_CONTROL = CT_GROUP,
+	CT_LAYER,
+    CT_BUTTON,
+    CT_MENU,
+    CT_SCROLLBAR,
+    CT_PLAYER,
+    CT_IMAGE,
+    CT_GRAPHIC,
+    CT_EPS,
+    CT_MAGNIFY,
+    CT_COLOR_PALETTE,
+    CT_FIELD,
+	CT_LAST_CONTROL = CT_FIELD,
+	CT_ELEMENT,
+    CT_LINE,
+    CT_ITEM,
+    CT_WORD,
+    CT_TOKEN,
+    CT_CHARACTER,
+    CT_TYPES,
+	CT_KEY
+};
+
+struct MCObjectPtr
+{
+	MCObject *object;
+	uint32_t part_id;
+};
+
+struct MCObjectChunkPtr
+{
+	MCObject *object;
+	uint32_t part_id;
+	Chunk_term chunk; 
+	uint32_t start, finish;
+};
+
+struct MCVariableChunkPtr
+{
+	MCVarref *variable;
+	Chunk_term chunk;
+	uint32_t start, finish;
+};
+
+struct MCUrlChunkPtr
+{
+	MCStringRef url;
+	Chunk_term chunk;
+	uint32_t start, finish;
+};
 
 //////////////////////////////////////////////////////////////////////
 

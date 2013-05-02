@@ -598,7 +598,7 @@ char * getdefaultprinter(void)
 {
 	MCExecPoint ep ( NULL, NULL, NULL ) ;
 	MCdefaultstackptr->domess(DEFAULT_PRINTER_SCRIPT);
-	MCresult->fetch(ep);
+	MCresult->eval(ep);
 	return strdup(ep.getcstring());
 }
 
@@ -729,7 +729,7 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 	stream = MCS_open(t_output_file, IO_CREATE_MODE, False, False, 0);
 
 	PSwrite("%!PS-Adobe-3.0\n");
-	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCversionstring); PSwrite(buffer);
+	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);
 	PSwrite("%%DocumentData: Clean8Bit\n");
 	sprintf(buffer, "%%%%Title: %s\n", p_document ) ; PSwrite(buffer ) ;
 	PSwrite("%%MCOrientation Portrait\n");
@@ -1391,11 +1391,13 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 	uint2 i = 0;
 	uint4 fontcount = NDEFAULT_FONTS ;
 
-	const char * fontname; 
+	MCNameRef fontname_n; 
 	uint2 fontstyle;
 	uint2 fontsize;
-	MCFontlistGetCurrent() -> getfontreqs(font, fontname, fontsize, fontstyle);
+	MCFontlistGetCurrent() -> getfontreqs(font, fontname_n, fontsize, fontstyle);
 
+	const char *fontname;
+	fontname = MCStringGetCString(MCNameGetString(fontname_n));
 
 	while (i < fontcount)
 	{
@@ -1564,8 +1566,7 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 void exec_command ( char * command ) 
 {
 	MCExecPoint ep;
-	sprintf(ep.getbuffer(strlen(command)), command);
-	ep.setstrlen();
+	ep.copysvalue(command);
 	if (MCS_runcmd(ep) != IO_NORMAL)
 	{
 		MCeerror->add(EE_PRINT_ERROR, 0, 0);

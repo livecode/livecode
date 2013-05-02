@@ -34,10 +34,10 @@ char *MCAndroidSystem::GetHostName(void)
 	return strdup(t_hostname);
 }
 
-bool MCAndroidSystem::HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+bool MCAndroidSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct hostent *he;
-	he = gethostbyname(p_hostname);
+	he = gethostbyname(MCStringGetCString(p_hostname));
 	if (he == NULL)
 		return false;
 	
@@ -45,16 +45,22 @@ bool MCAndroidSystem::HostNameToAddress(const char *p_hostname, MCSystemHostReso
 	ptr = (struct in_addr **)he -> h_addr_list;
 	
 	for(uint32_t i = 0; ptr[i] != NULL; i++)
-		if (!p_callback(p_context, inet_ntoa(*ptr[i])))
+	{
+		MCAutoStringRef t_address;
+		char *t_addr_str = inet_ntoa(*ptr[i]);
+		if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
 			return false;
+		if (!p_callback(p_context, t_address))
+			return false;
+	}
 	
 	return true;
 }
 
-bool MCAndroidSystem::AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+bool MCAndroidSystem::AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct in_addr addr;
-	if (!inet_aton(p_address, &addr))
+	if (!inet_aton(MCStringGetCString(p_address), &addr))
 		return false;
 		
 	struct hostent *he;
@@ -62,7 +68,9 @@ bool MCAndroidSystem::AddressToHostName(const char *p_address, MCSystemHostResol
 	if (he == NULL)
 		return false;
 	
-	return p_callback(p_context, he -> h_name);
+	MCAutoStringRef t_name;
+	return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
+		p_callback(p_context, *t_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

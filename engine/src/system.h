@@ -48,7 +48,7 @@ struct MCSystemFolderEntry
 };
 
 typedef bool (*MCSystemListFolderEntriesCallback)(void *p_context, const MCSystemFolderEntry *p_entry);
-typedef bool (*MCSystemHostResolveCallback)(void *p_context, const char *p_host);
+typedef bool (*MCSystemHostResolveCallback)(void *p_context, MCStringRef p_host);
 
 struct MCSystemFileHandle
 {
@@ -79,9 +79,9 @@ struct MCSystemInterface
 
 	virtual real64_t GetCurrentTime(void) = 0;
 
-	virtual char *GetVersion(void) = 0;
-	virtual char *GetMachine(void) = 0;
-	virtual char *GetProcessor(void) = 0;
+	virtual bool GetVersion(MCStringRef& r_string) = 0;
+	virtual bool GetMachine(MCStringRef& r_string) = 0;
+	virtual MCNameRef GetProcessor(void) = 0;
 	virtual char *GetAddress(void) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;
@@ -106,7 +106,8 @@ struct MCSystemInterface
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
 	virtual char *ResolveAlias(const char *p_target) = 0;
 	
-	virtual char *GetCurrentFolder(void) = 0;
+	virtual bool GetCurrentFolder(MCStringRef& r_string) = 0;
+	/* LEGACY */ char *GetCurrentFolder(void);
 	virtual bool SetCurrentFolder(const char *p_path) = 0;
 	
 	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
@@ -124,27 +125,31 @@ struct MCSystemInterface
 	virtual MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
+	bool GetTemporaryFileName(MCStringRef& r_path);
 	virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual void *LoadModule(const char *p_path) = 0;
 	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
 	virtual void UnloadModule(void *p_module) = 0;
 	
-	virtual char *LongFilePath(const char *p_path) = 0;
-	virtual char *ShortFilePath(const char *p_path) = 0;
+	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
+	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
 
-	virtual char *PathToNative(const char *p_rev_path) = 0;
-	virtual char *PathFromNative(const char *p_rev_path) = 0;
-	virtual char *ResolvePath(const char *p_rev_path) = 0;
-	virtual char *ResolveNativePath(const char *p_rev_path) = 0;
+	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
+	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
+	/* LEGACY */ char *PathFromNative(const char *p_rev_path);
+	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
+	/* LEGACY */ char *ResolvePath(const char *p_rev_path);
+	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
+	/* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
 	
 	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context) = 0;
 	
 	virtual bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode) = 0;
 
 	virtual char *GetHostName(void) = 0;
-	virtual bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-	virtual bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
+	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
+	virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
 
 	virtual uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset) = 0;
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used) = 0;

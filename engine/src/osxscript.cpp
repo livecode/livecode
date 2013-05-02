@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
@@ -108,7 +107,7 @@ typedef struct {
 typedef struct {
     int                                 version; // current (and only) version is 0
     JSClassAttributes                   attributes;
-	
+
     const char*                         className;
     JSClassRef                          parentClass;
 	
@@ -181,27 +180,27 @@ class MCMacOSXNewJavaScriptEnvironment: public MCScriptEnvironment
 public:
 	MCMacOSXNewJavaScriptEnvironment(void);
 	~MCMacOSXNewJavaScriptEnvironment(void);
-	
+
 	void Retain(void);
 	void Release(void);
-	
+
 	bool Define(const char *p_function, MCScriptEnvironmentCallback p_callback);
-	
+
 	char *Run(const char *p_script);
-	
+
 	char *Call(const char *p_method, const char **p_arguments, unsigned int p_argument_count);
-	
+
 private:
 	struct Function
 	{
 		char *name;
 		MCScriptEnvironmentCallback callback;
 	};
-	
+
 	unsigned int m_references;
-	
+
 	JSGlobalContextRef m_runtime;
-	
+
 	Function *m_functions;
 	uint4 m_function_count;
 };
@@ -326,10 +325,10 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 {
 	MCScriptEnvironmentCallback t_callback;
 	t_callback = (MCScriptEnvironmentCallback)JSObjectGetPrivate(p_function);
-	
+
 	bool t_success;
 	t_success = true;
-	
+
 	char **t_arguments;
 	t_arguments = NULL;
 	if (t_success)
@@ -340,7 +339,7 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 		else
 			t_success = false;
 	}
-	
+
 	if (t_success)
 		for(uindex_t i = 0; i < p_argument_count; i++)
 		{
@@ -351,11 +350,11 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				ConvertJSStringToCString(t_string_arg, t_arguments[i]);
 				JSStringRelease(t_string_arg);
 			}
-
+				
 			if (t_arguments[i] == NULL)
 				t_success = false;
 		}
-	
+
 	JSValueRef t_result;
 	t_result = NULL;
 	if (t_success)
@@ -371,16 +370,16 @@ static JSValueRef InvokeHostFunction(JSContextRef p_context, JSObjectRef p_funct
 				JSStringRelease(t_js_string);
 			}
 		}
-		delete t_str_result;
-	}
-	
+			delete t_str_result;
+		}
+
 	if (t_arguments != NULL)
 	{
 		for(uint4 i = 0; i < p_argument_count; ++i)
 			delete t_arguments[i];
 		delete t_arguments;
 	}
-	
+
 	return t_result;
 }
 
@@ -398,9 +397,9 @@ MCMacOSXNewJavaScriptEnvironment::~MCMacOSXNewJavaScriptEnvironment(void)
 {
 	for(uint4 i = 0; i < m_function_count; ++i)
 		delete m_functions[i] . name;
-	
+
 	delete m_functions;
-	
+
 	if (m_runtime != NULL)
 		JSGlobalContextRelease(m_runtime);
 }
@@ -423,13 +422,13 @@ bool MCMacOSXNewJavaScriptEnvironment::Define(const char *p_name, MCScriptEnviro
 	t_new_functions = (Function *)realloc(m_functions, sizeof(Function) * (m_function_count + 1));
 	if (t_new_functions == NULL)
 		return false;
-	
+
 	t_new_functions[m_function_count] . name = strdup(p_name);
 	t_new_functions[m_function_count] . callback = p_callback;
-	
+
 	m_functions = t_new_functions;
 	m_function_count += 1;
-	
+
 	return true;
 }
 
@@ -437,25 +436,25 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 {
 	bool t_success;
 	t_success = true;
-	
+
 	JSStringRef t_js_script;
 	t_js_script = NULL;
 	if (t_success)
 		t_success = ConvertCStringToJSString(p_script, t_js_script);
-	
+
 	JSGlobalContextRef t_runtime;
 	t_runtime = NULL;
 	if (t_success)
 	{
 		t_runtime = JSGlobalContextCreate(NULL);
-		
+
 		if (t_runtime == NULL)
 			t_success = false;
 	}
-	
+
 	if (t_success)
 		t_success = JSCheckScriptSyntax(t_runtime, t_js_script, NULL, 0, NULL);
-	
+
 	JSObjectRef t_global;
 	t_global = NULL;
 	if (t_success)
@@ -464,7 +463,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 		if (t_global == NULL)
 			t_success = false;
 	}
-	
+
 	JSClassRef t_function_class;
 	t_function_class = NULL;
 	if (t_success)
@@ -474,19 +473,19 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 			0, 0, "__livecode_script_environment_function__", NULL, NULL, NULL,
 			NULL, NULL, NULL, NULL, NULL, NULL, NULL, InvokeHostFunction, NULL, NULL, NULL
 		};
-		
+
 		t_function_class = JSClassCreate(&s_function_class);
 		if (t_function_class == NULL)
 			t_success = false;
 	}
-	
+
 	if (t_success)
 	{
 		for(uint4 i = 0; i < m_function_count && t_success; ++i)
 		{
 			JSStringRef t_js_function_name;
 			t_success = ConvertCStringToJSString(m_functions[i] . name, t_js_function_name);
-			
+
 			JSObjectRef t_function;
 			t_function = NULL;
 			if (t_success)
@@ -495,24 +494,24 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 				if (t_function == NULL)
 					t_success = false;
 			}
-			
+
 			if (t_success)
 				JSObjectSetProperty(t_runtime, t_global, t_js_function_name, t_function, 0, NULL);
-			
+
 			if (t_js_function_name != NULL)
 				JSStringRelease(t_js_function_name);
 		}
 	}
-	
+
 	if (t_function_class != NULL)
 		JSClassRelease(t_function_class);
-	
+
 	if (t_success)
 	{
 		JSValueRef t_eval;
 		t_eval = JSEvaluateScript(t_runtime, t_js_script, NULL, NULL, 0, NULL);
 	}
-	
+
 	if (t_js_script != NULL)
 		JSStringRelease(t_js_script);
 	
@@ -527,7 +526,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Run(const char *p_script)
 		JSGlobalContextRelease(t_runtime);
 		t_result = NULL;
 	}
-	
+
 	return t_result;
 }
 
@@ -535,15 +534,15 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 {
 	if (m_runtime == NULL)
 		return NULL;
-	
+
 	bool t_success;
 	t_success = true;
-	
+
 	JSStringRef t_js_method_name;
 	t_js_method_name = NULL;
 	if (t_success)
 		t_success = ConvertCStringToJSString(p_method, t_js_method_name);
-		
+
 	
 	JSObjectRef t_js_global;
 	t_js_global = NULL;
@@ -553,7 +552,7 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 		if (t_js_global == NULL)
 			t_success = false;
 	}
-	
+
 	JSObjectRef t_js_method;
 	t_js_method = NULL;
 	if (t_success)
@@ -565,16 +564,16 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 		if (t_js_method == NULL)
 			t_success = false;
 	}
-	
+
 	JSValueRef *t_arguments;
 	t_arguments = NULL;
 	if (t_success)
 		t_success = MCMemoryNewArray(p_argument_count, t_arguments);
-	
+
 	if (t_success)
 		for(uint4 i = 0; i < p_argument_count && t_success; ++i)
 			t_success = ConvertCStringToJSValue(m_runtime, p_arguments[i], t_arguments[i]);
-	
+
 	JSValueRef t_js_result;
 	t_js_result = NULL;
 	if (t_success)
@@ -583,19 +582,19 @@ char *MCMacOSXNewJavaScriptEnvironment::Call(const char *p_method, const char **
 		if (t_js_result == NULL)
 			t_success = false;
 	}
-	
+
 	char *t_result;
 	t_result = NULL;
 	if (t_success)
 		t_success = ConvertJSValueToCString(m_runtime, t_js_result, t_result);
-		
+
 	if (t_arguments != nil)
-	{
+		{
 		for(uindex_t i = 0; i < p_argument_count; i++)
 			JSValueUnprotect(m_runtime, t_arguments[i]);
 		MCMemoryDeleteArray(t_arguments);
-	}
-	
+			}
+
 	return t_result;
 }
 

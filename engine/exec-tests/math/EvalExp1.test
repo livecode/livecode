@@ -1,0 +1,5 @@
+setup
+
+test exp1(10) is exp(10) - 1
+
+teardown

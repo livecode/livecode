@@ -1,0 +1,15 @@
+setup "up"
+test the shiftKey is "up"
+teardown
+
+
+setup "down"
+create button
+
+put "on mouseDown|set the cShiftKey of me to shiftKey()|end mouseDown" into tScript
+replace "|" with return in tScript
+set the script of the last button to tScript
+
+click at the loc of the last button with shiftKey
+test the cShiftKey of the last button is "down"
+teardown

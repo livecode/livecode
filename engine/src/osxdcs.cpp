@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -333,9 +332,9 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
-	return "local Mac";
+	return MCN_local_mac;
 }
 
 void MCScreenDC::grabpointer(Window w)
@@ -1206,20 +1205,20 @@ Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 	return True;
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 which, int4& r_value)
 {
 	long v;
 	switch (which)
 	{
 	case P_BEEP_LOUDNESS:
 		GetSysBeepVolume(&v);
-		ep.setint(v);
+		r_value = v;
 		break;
 	case P_BEEP_PITCH:
-		ep.setint(beeppitch);
+		r_value = beeppitch;
 		break;
 	case P_BEEP_DURATION:
-		ep.setint(beepduration);
+		r_value = beepduration;
 		break;
 	}
 }
@@ -1246,9 +1245,9 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 	}
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep.setstaticcstring("Mac OS");
+	return MCN_mac_os;
 }
 
 uint2 MCScreenDC::getpad()

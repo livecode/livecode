@@ -1,0 +1,18 @@
+setup
+
+test 5 ^ 2 is 25
+test 0.5 ^ 3 is 0.125
+
+test 4 ^ 0.5 is 2
+
+repeat with i = 1 to 100
+	test i ^ 0 is 1
+end repeat
+
+test 2 ^ -1 is 0.5
+
+repeat with i = 1 to 100
+	test i ^ -1 is 1 / i
+end repeat
+
+teardown

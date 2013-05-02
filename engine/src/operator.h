@@ -20,9 +20,40 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	OPERATORS_H
 #define	OPERATORS_H
 
+#include "exec.h"
+
 #include "express.h"
 
 class MCChunk;
+
+//////////
+
+class MCUnaryOperator: public MCExpression
+{
+public:
+	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
+	
+	virtual void compile(MCSyntaxFactoryRef factory);
+};
+
+class MCBinaryOperator: public MCExpression
+{
+public:
+	virtual MCExecMethodInfo *getmethodinfo(void) const = 0;
+	
+	virtual void compile(MCSyntaxFactoryRef factory);
+};
+
+class MCMultiBinaryOperator: public MCExpression
+{
+public:
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const = 0;
+	virtual bool canbeunary(void) const {return false;}
+	
+	virtual void compile(MCSyntaxFactoryRef factory);
+};
+
+//////////
 
 class MCAnd : public MCExpression
 {
@@ -34,7 +65,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCAndBits : public MCExpression
+class MCAndBits : public MCBinaryOperator
 {
 public:
 	MCAndBits()
@@ -42,9 +73,11 @@ public:
 		rank = FR_AND_BITS;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseAndMethodInfo;}
 };
 
-class MCConcat : public MCExpression
+class MCConcat : public MCBinaryOperator
 {
 public:
 	MCConcat()
@@ -52,9 +85,11 @@ public:
 		rank = FR_CONCAT;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalConcatenateMethodInfo;}
 };
 
-class MCConcatSpace : public MCExpression
+class MCConcatSpace : public MCBinaryOperator
 {
 public:
 	MCConcatSpace()
@@ -62,9 +97,12 @@ public:
 		rank = FR_CONCAT;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalConcatenateWithSpaceMethodInfo;}
+
 };
 
-class MCContains : public MCExpression
+class MCContains : public MCBinaryOperator
 {
 public:
 	MCContains()
@@ -72,9 +110,11 @@ public:
 		rank = FR_COMPARISON;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalContainsMethodInfo;}
 };
 
-class MCDiv : public MCExpression
+class MCDiv : public MCMultiBinaryOperator
 {
 public:
 	MCDiv()
@@ -82,9 +122,11 @@ public:
 		rank = FR_MULDIV;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCEqual : public MCExpression
+class MCEqual : public MCBinaryOperator
 {
 public:
 	MCEqual()
@@ -92,9 +134,11 @@ public:
 		rank = FR_EQUAL;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsEqualToMethodInfo;}
 };
 
-class MCGreaterThan : public MCExpression
+class MCGreaterThan : public MCBinaryOperator
 {
 public:
 	MCGreaterThan()
@@ -102,9 +146,11 @@ public:
 		rank = FR_COMPARISON;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsGreaterThanMethodInfo;}
 };
 
-class MCGreaterThanEqual : public MCExpression
+class MCGreaterThanEqual : public MCBinaryOperator
 {
 public:
 	MCGreaterThanEqual()
@@ -112,6 +158,8 @@ public:
 		rank = FR_COMPARISON;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsGreaterThanOrEqualToMethodInfo;}
 };
 
 class MCGrouping : public MCExpression
@@ -122,6 +170,7 @@ public:
 		rank = FR_GROUPING;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
 class MCIs : public MCExpression
@@ -139,9 +188,10 @@ public:
 	}
 	Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 
-class MCItem : public MCExpression
+class MCItem : public MCBinaryOperator
 {
 public:
 	MCItem()
@@ -149,9 +199,11 @@ public:
 		rank = FR_CONCAT;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalConcatenateWithCommaMethodInfo;}
 };
 
-class MCLessThan : public MCExpression
+class MCLessThan : public MCBinaryOperator
 {
 public:
 	MCLessThan()
@@ -159,9 +211,11 @@ public:
 		rank = FR_COMPARISON;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsLessThanMethodInfo;}
 };
 
-class MCLessThanEqual : public MCExpression
+class MCLessThanEqual : public MCBinaryOperator
 {
 public:
 	MCLessThanEqual()
@@ -169,9 +223,11 @@ public:
 		rank = FR_COMPARISON;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsLessThanOrEqualToMethodInfo;}
 };
 
-class MCMinus : public MCExpression
+class MCMinus : public MCMultiBinaryOperator
 {
 public:
 	MCMinus()
@@ -179,9 +235,12 @@ public:
 		rank = FR_ADDSUB;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
+	virtual bool canbeunary(void) const {return true;}
 };
 
-class MCMod : public MCExpression
+class MCMod : public MCMultiBinaryOperator
 {
 public:
 	MCMod()
@@ -189,9 +248,11 @@ public:
 		rank = FR_MULDIV;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCWrap : public MCExpression
+class MCWrap : public MCMultiBinaryOperator
 {
 public:
 	MCWrap()
@@ -199,9 +260,11 @@ public:
 		rank = FR_MULDIV;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCNot : public MCExpression
+class MCNot : public MCUnaryOperator
 {
 public:
 	MCNot()
@@ -209,9 +272,11 @@ public:
 		rank = FR_UNARY;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalNotMethodInfo;}
 };
 
-class MCNotBits : public MCExpression
+class MCNotBits : public MCUnaryOperator
 {
 public:
 	MCNotBits()
@@ -219,9 +284,11 @@ public:
 		rank = FR_UNARY;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseNotMethodInfo;}
 };
 
-class MCNotEqual : public MCExpression
+class MCNotEqual : public MCBinaryOperator
 {
 public:
 	MCNotEqual()
@@ -229,6 +296,8 @@ public:
 		rank = FR_EQUAL;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCLogicEvalIsNotEqualToMethodInfo;}
 };
 
 class MCOr : public MCExpression
@@ -241,7 +310,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCOrBits : public MCExpression
+class MCOrBits : public MCBinaryOperator
 {
 public:
 	MCOrBits()
@@ -249,9 +318,11 @@ public:
 		rank = FR_OR_BITS;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseOrMethodInfo;}
 };
 
-class MCOver : public MCExpression
+class MCOver : public MCMultiBinaryOperator
 {
 public:
 	MCOver()
@@ -259,9 +330,11 @@ public:
 		rank = FR_MULDIV;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCPlus : public MCExpression
+class MCPlus : public MCMultiBinaryOperator
 {
 public:
 	MCPlus()
@@ -269,9 +342,12 @@ public:
 		rank = FR_ADDSUB;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
+	virtual bool canbeunary(void) const {return true;}
 };
 
-class MCPow : public MCExpression
+class MCPow : public MCBinaryOperator
 {
 public:
 	MCPow()
@@ -279,6 +355,8 @@ public:
 		rank = FR_POW;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalPowerMethodInfo;}
 };
 
 class MCThere : public MCExpression
@@ -296,9 +374,11 @@ public:
 	virtual ~MCThere();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void compile(MCSyntaxFactoryRef factory);
 };
 
-class MCTimes : public MCExpression
+class MCTimes : public MCMultiBinaryOperator
 {
 public:
 	MCTimes()
@@ -306,9 +386,11 @@ public:
 		rank = FR_MULDIV;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual void getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) const;
 };
 
-class MCXorBits : public MCExpression
+class MCXorBits : public MCBinaryOperator
 {
 public:
 	MCXorBits()
@@ -316,9 +398,11 @@ public:
 		rank = FR_XOR_BITS;
 	}
 	virtual Exec_stat eval(MCExecPoint &);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCMathEvalBitwiseXorMethodInfo;}
 };
 
-class MCBeginsEndsWith : public MCExpression
+class MCBeginsEndsWith : public MCBinaryOperator
 {
 public:
 	MCBeginsEndsWith(void)
@@ -333,12 +417,16 @@ class MCBeginsWith : public MCBeginsEndsWith
 {
 public:
 	virtual Exec_stat eval(MCExecPoint&);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalBeginsWithMethodInfo;}
 };
 
 class MCEndsWith : public MCBeginsEndsWith
 {
 public:
 	virtual Exec_stat eval(MCExecPoint&);
+	
+	virtual MCExecMethodInfo *getmethodinfo(void) const {return kMCStringsEvalEndsWithMethodInfo;}
 };
 
 #endif

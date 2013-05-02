@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -32,10 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #if defined(_LINUX) || defined(_MACOSX)
 #include <sys/stat.h>
-#endif
-
-#if defined(_MACOSX)
-#include "core.h"
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1733,7 +1728,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 		uint32_t t_output_offset;
 		t_output_offset = 0;
 		if (!p_embedded)
-			t_success = MCDeployToMacOSXMain(p_params, false, t_engine, 0, 0, t_output_offset, t_output, MCDeployValidateIOSEngine);
+		t_success = MCDeployToMacOSXMain(p_params, false, t_engine, 0, 0, t_output_offset, t_output, MCDeployValidateIOSEngine);
 		else
 			t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
 	}
@@ -1767,7 +1762,7 @@ Exec_stat MCDeployToIOS(const MCDeployParameters& p_params, bool p_embedded)
 
 				// Write out this arch's portion.
 				if (!p_embedded)
-					t_success = MCDeployToMacOSXMain(p_params, false, t_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, t_output, MCDeployValidateIOSEngine);
+				t_success = MCDeployToMacOSXMain(p_params, false, t_engine, t_fat_arch . offset, t_fat_arch . size, t_output_offset, t_output, MCDeployValidateIOSEngine);
 				else
 					t_success = MCDeployToMacOSXEmbedded(p_params, false, t_engine, 0, 0, t_output_offset, t_output);
 			}

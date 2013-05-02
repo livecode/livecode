@@ -44,6 +44,9 @@ protected:
 	static int2 startx;
 	static int2 starty;
 	static MCObjptr *removedcontrol;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCCard();
 	MCCard(const MCCard &cref);
@@ -51,6 +54,8 @@ public:
 	virtual ~MCCard();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
@@ -71,8 +76,8 @@ public:
 	virtual Boolean doubledown(uint2 which);
 	virtual Boolean doubleup(uint2 which);
 	virtual void timer(MCNameRef mptr, MCParameter *params);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 
 	virtual Boolean del();
 	virtual void paste(void);
@@ -115,8 +120,11 @@ public:
 	Boolean countme(uint4 groupid, Boolean marked);
 	Boolean count(Chunk_term otype, Chunk_term ptype, MCObject *stop,
 	              uint2 &n, Boolean dohc);
-	MCControl *getchild(Chunk_term e, const MCString &,
-	                    Chunk_term o, Chunk_term p);
+	MCControl *getnumberedchild(integer_t p_number, Chunk_term p_obj_type, Chunk_term p_parent_type);
+	MCControl *getchild(Chunk_term e, MCStringRef p_expression, Chunk_term o, Chunk_term p);
+#ifdef OLD_EXEC
+	MCControl *getchild(Chunk_term e, const MCString &, Chunk_term o, Chunk_term p);
+#endif
 	Boolean getchildid(uint4 inid);
 	Exec_stat groupmessage(MCNameRef message, MCCard *other);
 	void installaccels(MCStack *stack);
@@ -147,7 +155,7 @@ public:
 	MCObjptr *getobjptrs(void) { return objptrs; }
 	MCObjptr *getobjptrforcontrol(MCControl *control);
 
-	void selectedbutton(uint2 n, Boolean bg, MCExecPoint &ep);
+	bool selectedbutton(integer_t p_family, bool p_background, MCStringRef& r_string);
 	void grab()
 	{
 		mgrabbed = True;
@@ -240,6 +248,34 @@ public:
 	{
 		return (MCCard *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void GetGroupProps(MCExecContext& ctxt, Properties which, MCStringRef& r_props);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetCantDelete(MCExecContext& ctxt, bool& r_setting);
+	void SetCantDelete(MCExecContext& ctxt, bool setting);
+	void GetDontSearch(MCExecContext& ctxt, bool& r_setting);
+	void SetDontSearch(MCExecContext& ctxt, bool setting);
+	void GetMarked(MCExecContext& ctxt, bool& r_setting);
+	void SetMarked(MCExecContext& ctxt, bool setting);
+	void GetShowPict(MCExecContext& ctxt, bool& r_value);
+	void SetShowPict(MCExecContext& ctxt, bool value);
+	void GetBackgroundNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetBackgroundIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetSharedGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetSharedGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetGroupNames(MCExecContext& ctxt, MCStringRef& r_names);
+	void GetGroupIds(MCExecContext& ctxt, MCStringRef& r_ids);
+	void GetFormattedLeft(MCExecContext& ctxt, integer_t& r_value);
+	void GetFormattedTop(MCExecContext& ctxt, integer_t& r_value);
+	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_value);
+	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_value);
+	void GetFormattedRect(MCExecContext& ctxt, MCRectangle& r_rect);
+	void GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button);
 };
 
 #endif

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -394,7 +393,11 @@ bool MCImageBitmapToMetafile(MCImageBitmap *p_bitmap, MCWinSysMetafileHandle &r_
 	return t_success;
 }
 
+#ifdef SHARED_STRING
 bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragimage)
+#else
+bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCStringRef &r_dragimage)
+#endif
 {
 	uint32_t t_header_size;
 	if (MCmajorosversion <= 0x0500)
@@ -409,8 +412,16 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 	t_data_size = t_header_size + t_image_size;
 
 	char *t_data = nil;
+#ifdef SHARED_STRING
 	if (!MCMemoryAllocate(t_data_size, t_data))
 		return false;
+#else
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(t_data_size))
+		return false;
+
+	t_data = (char*)t_buffer.Chars();
+#endif
 
 	// Location of the bits in the DIB data we are producing
 	char *t_out_bits;
@@ -480,6 +491,7 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 		t_header -> bV4CSType = LCS_WINDOWS_COLOR_SPACE;
 	}
 
+#ifdef SHARED_STRING
 	r_dragimage = MCSharedString::CreateNoCopy(MCString(t_data, t_data_size));
 
 	if (r_dragimage != nil)
@@ -487,8 +499,12 @@ bool MCImageBitmapToDragImage(MCImageBitmap *p_bitmap, MCSharedString *&r_dragim
 
 	MCMemoryDeallocate(t_data);
 	return false;
+#else
+	return t_buffer.CreateStringAndRelease(r_dragimage);
+#endif
 }
 
+#ifdef SHARED_STRING
 MCSharedString *MCImage::converttodragimage(void)
 {
 	MCImageBitmap *t_bitmap = nil;
@@ -503,3 +519,15 @@ MCSharedString *MCImage::converttodragimage(void)
 
 	return t_result;
 }
+#else
+void MCImage::converttodragimage(MCStringRef& r_output)
+{
+	MCImageBitmap *t_bitmap = nil;
+	if (!lockbitmap(t_bitmap))
+		return;
+
+	/* UNCHECKED */ MCImageBitmapToDragImage(t_bitmap, r_output);
+
+	unlockbitmap(t_bitmap);
+}
+#endif

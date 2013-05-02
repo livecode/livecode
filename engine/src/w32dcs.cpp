@@ -41,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "resource.h"
 #include "meta.h"
 #include "mode.h"
-#include "core.h"
 
 #include "w32text.h"
 
@@ -188,10 +187,9 @@ Boolean MCScreenDC::open()
 
 	MCExecPoint ep;
 	ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Hilight");
-	MCS_query_registry(ep, NULL);
+	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *name = NULL;
 		char *cstring = ep.getsvalue().clone();
 		char *sptr = cstring;
 		do
@@ -200,8 +198,7 @@ Boolean MCScreenDC::open()
 				*sptr = ',';
 		}
 		while (*++sptr);
-		parsecolor(cstring, &MChilitecolor, &name);
-		delete cstring;
+		parsecolor(cstring, &MChilitecolor, nil);
 	}
 	alloccolor(MChilitecolor);
 	
@@ -215,10 +212,9 @@ Boolean MCScreenDC::open()
 	else
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Control Panel\\Colors\\Menu");
 
-	MCS_query_registry(ep, NULL);
+	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength())
 	{
-		char *name = NULL;
 		char *cstring = ep.getsvalue().clone();
 		char *sptr = cstring;
 		do
@@ -227,8 +223,7 @@ Boolean MCScreenDC::open()
 				*sptr = ',';
 		}
 		while (*++sptr);
-		parsecolor(cstring, &background_pixel, &name);
-		delete cstring;
+		parsecolor(cstring, &background_pixel, nil);
 	}
 	alloccolor(background_pixel);
 
@@ -326,9 +321,9 @@ Boolean MCScreenDC::close(Boolean force)
 	return True;
 }
 
-const char *MCScreenDC::getdisplayname()
+MCNameRef MCScreenDC::getdisplayname()
 {
-	return "local Win32";
+	return MCN_local_win32;
 }
 
 void MCScreenDC::grabpointer(Window w)
@@ -1085,18 +1080,18 @@ Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 	return True;
 }
 
-void MCScreenDC::getbeep(uint4 which, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
-	switch (which)
+	switch (property)
 	{
 	case P_BEEP_LOUDNESS:
-		ep.setint(100);
+		r_value = 100;
 		break;
 	case P_BEEP_PITCH:
-		ep.setint(beeppitch);
+		r_value = beeppitch;
 		break;
 	case P_BEEP_DURATION:
-		ep.setint(beepduration);
+		r_value = beepduration;
 		break;
 	}
 }
@@ -1122,9 +1117,9 @@ void MCScreenDC::setbeep(uint4 which, int4 beep)
 	}
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep.setstaticcstring("Win32");
+	return MCN_win32;
 }
 
 uint2 MCScreenDC::getpad()

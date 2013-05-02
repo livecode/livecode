@@ -1,0 +1,17 @@
+NAME=libfoundation
+TYPE=archive
+
+SOURCES=foundation-array.cpp foundation-core.cpp foundation-debug.cpp \
+	foundation-list.cpp foundation-name.cpp foundation-nativechars.cpp \
+	foundation-number.cpp foundation-set.cpp foundation-stream.cpp \
+	foundation-string.cpp foundation-unicodechars.cpp foundation-value.cpp \
+	foundation-error.cpp
+
+CUSTOM_DEFINES=
+
+CUSTOM_INCLUDES=./src
+
+CUSTOM_CCFLAGS=-fno-exceptions -fno-rtti
+
+
+include ../rules/archive.linux.makefile

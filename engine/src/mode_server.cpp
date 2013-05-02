@@ -206,7 +206,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef filename)
 {
 	if (sptr == MCdispatcher -> getstacks())
 	{
@@ -219,9 +219,9 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
-	return "server";
+	return MCN_server;
 }
 
 uint32_t MCModeGetEnvironmentType(void)
@@ -331,7 +331,7 @@ void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;

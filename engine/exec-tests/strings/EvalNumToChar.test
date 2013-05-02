@@ -1,0 +1,8 @@
+setup "useUnicode is false"
+test numToChar(97) is "a"
+teardown
+
+setup "useUnicode is true"
+set the useUnicode to true
+test numToChar(24929) is "aa"
+teardown

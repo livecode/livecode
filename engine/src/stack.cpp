@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -57,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 #include "external.h"
 
+#include "exec.h"
+
 #ifdef _MOBILE
 #include "mbldc.h"
 #endif
@@ -65,6 +66,125 @@ static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
 uint2 MCStack::ibeam;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCStack::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_FULLSCREEN, Bool, MCStack, Fullscreen)
+	DEFINE_RO_OBJ_PROPERTY(P_NUMBER, UInt16, MCStack, Number)
+	DEFINE_RO_OBJ_PROPERTY(P_LAYER, Int16, MCStack, Layer)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FILE_NAME, OptionalString, MCStack, FileName)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FILE_NAME, OptionalString, MCStack, FileName)
+	DEFINE_RW_OBJ_PROPERTY(P_SAVE_COMPRESSED, Bool, MCStack, SaveCompressed)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_ABORT, Bool, MCStack, CantAbort)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCStack, CantDelete)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceStackStyle, MCStack, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_MODIFY, Bool, MCStack, CantModify)
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_PEEK, Bool, MCStack, CantPeek)
+	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_STACK, Bool, MCStack, DestroyStack)
+	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_WINDOW, Bool, MCStack, DestroyWindow)
+	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCStack, AlwaysBuffer)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, OptionalString, MCStack, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, OptionalString, MCStack, UnicodeLabel)
+
+	DEFINE_RW_OBJ_PROPERTY(P_CLOSE_BOX, Bool, MCStack, CloseBox)
+	DEFINE_RW_OBJ_PROPERTY(P_ZOOM_BOX, Bool, MCStack, ZoomBox)
+	DEFINE_RW_OBJ_PROPERTY(P_DRAGGABLE, Bool, MCStack, Draggable)
+	DEFINE_RW_OBJ_PROPERTY(P_COLLAPSE_BOX, Bool, MCStack, CollapseBox)
+	DEFINE_RW_OBJ_PROPERTY(P_LIVE_RESIZING, Bool, MCStack, LiveResizing)
+	DEFINE_RW_OBJ_PROPERTY(P_SYSTEM_WINDOW, Bool, MCStack, SystemWindow)
+	DEFINE_RW_OBJ_PROPERTY(P_METAL, Bool, MCStack, Metal)
+	DEFINE_RW_OBJ_PROPERTY(P_SHADOW, Bool, MCStack, Shadow)
+	DEFINE_RW_OBJ_PROPERTY(P_RESIZABLE, Bool, MCStack, Resizable)
+
+	DEFINE_RW_OBJ_PROPERTY(P_MIN_WIDTH, UInt16, MCStack, MinWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_MAX_WIDTH, UInt16, MCStack, MaxWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_MIN_HEIGHT, UInt16, MCStack, MinHeight)
+	DEFINE_RW_OBJ_PROPERTY(P_MAX_HEIGHT, UInt16, MCStack, MaxHeight)
+
+	DEFINE_RO_OBJ_PROPERTY(P_RECENT_NAMES, String, MCStack, RecentNames)
+	DEFINE_RO_OBJ_PROPERTY(P_RECENT_CARDS, String, MCStack, RecentCards)
+
+	DEFINE_RW_OBJ_PROPERTY(P_ICONIC, Bool, MCStack, Iconic)
+	DEFINE_RW_OBJ_PROPERTY(P_START_UP_ICONIC, Bool, MCStack, StartUpIconic)
+	DEFINE_RW_OBJ_PROPERTY(P_ICON, UInt16, MCStack, Icon)
+
+	DEFINE_RO_OBJ_PROPERTY(P_OWNER, OptionalString, MCStack, Owner)
+	DEFINE_RW_OBJ_PROPERTY(P_MAIN_STACK, String, MCStack, MainStack)
+	DEFINE_RW_OBJ_PROPERTY(P_SUBSTACKS, OptionalString, MCStack, Substacks)
+
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_NAMES, String, MCStack, BackgroundNames)
+	DEFINE_RO_OBJ_PROPERTY(P_BACKGROUND_IDS, String, MCStack, BackgroundIds)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_NAMES, String, MCStack, SharedGroupNames)
+	DEFINE_RO_OBJ_PROPERTY(P_SHARED_GROUP_IDS, String, MCStack, SharedGroupIds)
+	DEFINE_RO_OBJ_PROPERTY(P_CARD_IDS, String, MCStack, CardIds)
+	DEFINE_RO_OBJ_PROPERTY(P_CARD_NAMES, String, MCStack, CardNames)
+
+	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)
+	DEFINE_RW_OBJ_PROPERTY(P_EXTERNALS, OptionalString, MCStack, Externals)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_COMMANDS, OptionalString, MCStack, ExternalCommands)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_FUNCTIONS, OptionalString, MCStack, ExternalFunctions)
+	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_PACKAGES, OptionalString, MCStack, ExternalPackages)
+
+	DEFINE_RO_OBJ_PROPERTY(P_MODE, Int16, MCStack, Mode)
+	DEFINE_RW_OBJ_PROPERTY(P_WM_PLACE, Bool, MCStack, WmPlace)
+	DEFINE_RO_OBJ_PROPERTY(P_WINDOW_ID, UInt16, MCStack, WindowId)
+	DEFINE_RO_OBJ_PROPERTY(P_PIXMAP_ID, UInt16, MCStack, PixmapId)
+	DEFINE_RW_OBJ_PROPERTY(P_HC_ADDRESSING, Bool, MCStack, HcAddressing)
+	DEFINE_RO_OBJ_PROPERTY(P_HC_STACK, Bool, MCStack, HcStack)
+	DEFINE_RO_OBJ_PROPERTY(P_SIZE, UInt16, MCStack, Size)
+	DEFINE_RO_OBJ_PROPERTY(P_FREE_SIZE, UInt16, MCStack, FreeSize)
+	DEFINE_RW_OBJ_PROPERTY(P_LOCK_SCREEN, Bool, MCStack, LockScreen)
+
+	DEFINE_RW_OBJ_PROPERTY(P_STACK_FILES, String, MCStack, StackFiles)
+	DEFINE_RW_OBJ_PROPERTY(P_MENU_BAR, String, MCStack, MenuBar)
+	DEFINE_RW_OBJ_PROPERTY(P_EDIT_MENUS, Bool, MCStack, EditMenus)
+	DEFINE_RO_OBJ_PROPERTY(P_VSCROLL, Int32, MCStack, VScroll)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_CHARSET, InterfaceCharset, MCStack, Charset)
+	DEFINE_RW_OBJ_PROPERTY(P_FORMAT_FOR_PRINTING, Bool, MCStack, FormatForPrinting)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_COLOR, InterfaceNamedColor, MCStack, LinkColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_COLOR, InterfaceNamedColor, MCStack, LinkColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, MCStack, LinkHiliteColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_HILITE_COLOR, InterfaceNamedColor, MCStack, LinkHiliteColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_LINK_VISITED_COLOR, InterfaceNamedColor, MCStack, LinkVisitedColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
+
+	DEFINE_RW_OBJ_PROPERTY(P_WINDOW_SHAPE, UInt16, MCStack, WindowShape)
+	DEFINE_RO_OBJ_PROPERTY(P_SCREEN, Int16, MCStack, Screen)
+	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_CARD, OptionalString, MCStack, CurrentCard)
+	DEFINE_RW_OBJ_PROPERTY(P_MODIFIED_MARK, Bool, MCStack, ModifiedMark)
+	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATED_RENDERING, Bool, MCStack, AcceleratedRendering)
+
+	DEFINE_RW_OBJ_OPTIONAL_ENUM_PROPERTY(P_COMPOSITOR_TYPE, InterfaceCompositorType, MCStack, CompositorType)
+	// P_COMPOSITOR_CACHE_LIMIT
+	// P_COMPOSITOR_TILE_SIZE
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
+
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_SHOW_BORDER)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_BORDER_WIDTH)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_ENABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_DISABLED)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_3D)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LOCK_LOCATION)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_TOOL_TIP)
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Stacks don't have tooltips.
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_UNICODE_TOOL_TIP)
+	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_LAYER)
+};
+
+MCObjectPropertyTable MCStack::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCStack::MCStack()
 {
@@ -133,7 +253,7 @@ MCStack::MCStack()
 	
 	// MW-2011-11-24: [[ UpdateScreen ]] Start off with defer updates false.
 	m_defer_updates = false;
-	
+
 	// MW-2012-10-10: [[ IdCache ]]
 	m_id_cache = nil;
 
@@ -291,9 +411,9 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	{
 		linkatts = new Linkatts;
 		memcpy(linkatts, sref.linkatts, sizeof(Linkatts));
-		linkatts->colorname = strclone(sref.linkatts->colorname);
-		linkatts->hilitecolorname = strclone(sref.linkatts->hilitecolorname);
-		linkatts->visitedcolorname = strclone(sref.linkatts->visitedcolorname);
+		linkatts->colorname = (MCStringRef)MCValueRetain(sref.linkatts->colorname);
+		linkatts->hilitecolorname = (MCStringRef)MCValueRetain(sref.linkatts->hilitecolorname);
+		linkatts->visitedcolorname = (MCStringRef)MCValueRetain(sref.linkatts->visitedcolorname);
 	}
 	else
 		linkatts = NULL;
@@ -426,9 +546,9 @@ MCStack::~MCStack()
 	}
 	if (linkatts != NULL)
 	{
-		delete linkatts->colorname;
-		delete linkatts->hilitecolorname;
-		delete linkatts->visitedcolorname;
+		MCValueRelease(linkatts->colorname);
+		MCValueRelease(linkatts->hilitecolorname);
+		MCValueRelease(linkatts->visitedcolorname);
 		delete linkatts;
 	}
 	delete filename;
@@ -736,17 +856,17 @@ Boolean MCStack::kdown(const char *string, KeySym key)
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
 			return False;
 		if (MCmodifierstate & MS_CONTROL)
-			setcard(getstack()->getchild(CT_FIRST, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_FIRST, kMCEmptyString, CT_CARD), True, False);
 		else
-			setcard(getstack()->getchild(CT_PREV, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_PREV, kMCEmptyString, CT_CARD), True, False);
 		return True;
 	case XK_Right:
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
 			return False;
 		if (MCmodifierstate & MS_CONTROL)
-			setcard(getstack()->getchild(CT_LAST, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_LAST, kMCEmptyString, CT_CARD), True, False);
 		else
-			setcard(getstack()->getchild(CT_NEXT, MCnullmcstring, CT_CARD), True, False);
+			setcard(getstack()->getchild(CT_NEXT, kMCEmptyString, CT_CARD), True, False);
 		return True;
 	case XK_Up:
 		if (mode >= WM_PULLDOWN || !MCnavigationarrows)
@@ -1007,7 +1127,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	// MW-2012-10-04: [[ Bug 10436 ]] Make sure we constrain stack size to screen size
 	//   if in fullscreen mode.
 	MCRectangle t_new_rect;
-	if (getextendedstate(ECS_FULLSCREEN))
+	if (getextendedstate(ECS_FULLSCREEN)) 
 	{
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(rect);
@@ -1015,7 +1135,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	}
 	else
 		t_new_rect = nrect;
-	
+
 	if (rect.x != t_new_rect.x || rect.y != t_new_rect.y)
 		state |= CS_BEEN_MOVED;
 
@@ -1051,7 +1171,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 		resize(oldrect . width, oldrect . height);
 }
 
-Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	uint2 j = 0;
 	uint2 k = 0;
@@ -1062,27 +1182,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	{
 		
 	case P_FULLSCREEN:
-			ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
-	break;
-		
-	case P_LONG_ID:
-	case P_LONG_NAME:
-		if (filename == NULL)
-		{
-			if (MCdispatcher->ismainstack(sptr))
-			{
-				if (!isunnamed())
-					ep.setstringf("stack \"%s\"", getname_cstring());
-				else
-					ep.clear();
-			}
-			else if (isunnamed())
-					ep.clear();
-				else
-					return names(P_LONG_NAME, ep, parid);
-		}
-		else
-			ep.setstringf("stack \"%s\"", filename);
+		ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
 		break;
 	case P_NUMBER:
 		if (parent != NULL && !MCdispatcher->ismainstack(sptr))
@@ -1251,7 +1351,6 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
 	case P_RECENT_NAMES:
 		MCrecent->getnames(this, ep);
-
 		break;
 	case P_RECENT_CARDS:
 		MCrecent->getlongids(this, ep);
@@ -1274,7 +1373,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_MAIN_STACK:
 		if (parent != NULL && !MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)parent;
-		ep.setnameref_unsafe(sptr->getname());
+		ep.setvalueref(sptr->getname());
 		break;
 	case P_SUBSTACKS:
 		ep.clear();
@@ -1425,7 +1524,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		getstackfiles(ep);
 		break;
 	case P_MENU_BAR:
-		ep.setnameref_unsafe(getmenubar());
+		ep.setvalueref(getmenubar());
 		break;
 	case P_EDIT_MENUS:
 		ep.setboolean(getstate(CS_EDIT_MENUS));
@@ -1464,7 +1563,6 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				MCU_get_color(ep, la->visitedcolorname, la->visitedcolor);
 				break;
 			case P_UNDERLINE_LINKS:
-
 				ep.setboolean(la->underline);
 				break;
 			default:
@@ -1484,9 +1582,8 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	break;
 	case P_CURRENT_CARD:
 		if (curcard != nil)
-			return curcard -> names(P_SHORT_NAME, ep, parid);
-		else
-			ep . clear();
+			return curcard -> names_old(P_SHORT_NAME, ep, parid);
+		ep . clear();
 	break;
 	case P_MODIFIED_MARK:
 		ep . setboolean(getextendedstate(ECS_MODIFIED_MARK));
@@ -1551,7 +1648,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		Exec_stat t_stat;
 		t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::getprop(parid, which, ep, effective);
+			return MCObject::getprop_legacy(parid, which, ep, effective);
 
 		return t_stat;
 	}
@@ -1561,7 +1658,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 }
 
 
-Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty;
 	Boolean bval;
@@ -1617,7 +1714,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			if (ep . isempty())
 				ep . setstaticcstring(MCuntitledstring);
 
-			if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+			if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
 				return ES_ERROR;
 
 			dirtywindowname();
@@ -1657,7 +1754,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 		dirty = True;
 
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (opened && (!(state & CS_IGNORE_CLOSE)) )
 		{
@@ -1709,7 +1806,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_TEXT_SIZE:
 	case P_TEXT_STYLE:
 	case P_TEXT_HEIGHT:
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		// MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
 		//   of this stack - but for now do the whole screen.
@@ -2109,7 +2206,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			return ES_ERROR;
 		if (edit)
 		{
-			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, MCnullmcstring,
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString,
 			                CT_GROUP, CT_UNDEFINED);
 			if (gptr == NULL)
 				gptr = getbackground(CT_FIRST, MCnullmcstring, CT_GROUP);
@@ -2123,15 +2220,12 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_MAIN_STACK:
 		{
 			MCStack *stackptr = NULL;
-			char *sname = data.clone();
 
-			if ((stackptr = MCdispatcher->findstackname(sname)) == NULL)
+			if ((stackptr = MCdispatcher->findstackname(data)) == NULL)
 			{
 				MCeerror->add(EE_STACK_NOMAINSTACK, 0, 0, data);
-				delete sname;
 				return ES_ERROR;
 			}
-			delete sname;
 
 			if (stackptr != this && !MCdispatcher->ismainstack(stackptr))
 			{
@@ -2184,7 +2278,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 				// OK-2008-04-10 : Added parameters to mainstackChanged message to specify the new
 				// and old mainstack names.
-				message_with_args(MCM_main_stack_changed, t_old_stackptr -> getname(), stackptr -> getname());
+				message_with_valueref_args(MCM_main_stack_changed, t_old_stackptr -> getname(), stackptr -> getname());
 			}
 			else
 			{
@@ -2321,9 +2415,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			{
 				if (linkatts != NULL)
 				{
-					delete linkatts->colorname;
-					delete linkatts->hilitecolorname;
-					delete linkatts->visitedcolorname;
+					MCValueRelease(linkatts->colorname);
+					MCValueRelease(linkatts->hilitecolorname);
+					MCValueRelease(linkatts->visitedcolorname);
 					delete linkatts;
 					linkatts = NULL;
 				}
@@ -2334,9 +2428,9 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 				{
 					linkatts = new Linkatts;
 					memcpy(linkatts, &MClinkatts, sizeof(Linkatts));
-					linkatts->colorname = strclone(MClinkatts.colorname);
-					linkatts->hilitecolorname = strclone(MClinkatts.hilitecolorname);
-					linkatts->visitedcolorname = strclone(MClinkatts.visitedcolorname);
+					linkatts->colorname = (MCStringRef)MCValueRetain(MClinkatts.colorname);
+					linkatts->hilitecolorname = (MCStringRef)MCValueRetain(MClinkatts.hilitecolorname);
+					linkatts->visitedcolorname = (MCStringRef)MCValueRetain(MClinkatts.visitedcolorname);
 					MCscreen->alloccolor(linkatts->color);
 					MCscreen->alloccolor(linkatts->hilitecolor);
 					MCscreen->alloccolor(linkatts->visitedcolor);
@@ -2430,7 +2524,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
 	case P_BLEND_LEVEL:
 		old_blendlevel = blendlevel;
-		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		
 		// MW-2011-11-03: [[ Bug 9852 ]] Make sure an update is scheduled to sync the
@@ -2439,8 +2533,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	break;
 	case P_CURRENT_CARD:
 	{
+		MCAutoStringRef t_exp;
+		/* UNCHECKED */ ep . copyasstringref(&t_exp);
 		MCCard *t_card;
-		t_card = getchild(CT_EXPRESSION, ep . getsvalue(), CT_CARD);
+		t_card = getchild(CT_EXPRESSION, *t_exp, CT_CARD);
 		if (t_card != NULL)
 			setcard(t_card, False, False);
 	}
@@ -2579,7 +2675,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		Exec_stat t_stat;
 		t_stat = mode_setprop(parid, which, ep, MCnullmcstring, MCnullmcstring, effective);
 		if (t_stat == ES_NOT_HANDLED)
-			return MCObject::setprop(parid, which, ep, effective);
+			return MCObject::setprop_legacy(parid, which, ep, effective);
 
 		return t_stat;
 	}
@@ -2963,6 +3059,23 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 	// The return value indicates something changed. This is only used when
 	// descending the hierarchy to eliminate unnecessary updates.
 	return true;
+}
+
+bool MCStack::changeextendedstate(bool setting, uint32_t mask)
+{
+	if (setting && !(f_extended_state & mask))
+	{
+		f_extended_state |= mask;
+		return true;
+	}
+	
+	if (!setting && (f_extended_state & mask))
+	{
+		f_extended_state &= ~mask;
+		return true;
+	}
+
+	return false;
 }
 
 void MCStack::purgefonts()

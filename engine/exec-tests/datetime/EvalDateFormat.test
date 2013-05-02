@@ -1,0 +1,10 @@
+setup
+
+set the useSystemDate to true
+test (the dateformat) is (the system dateformat)
+set the useSystemDate to false
+test (the dateformat) is (the system dateformat)
+
+test the dateFormat is not empty
+
+teardown

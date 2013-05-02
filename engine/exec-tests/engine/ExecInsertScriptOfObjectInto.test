@@ -1,0 +1,17 @@
+setup
+
+create button
+
+set the script of button 1 to "function foo;return true;end foo"
+
+insert the script of button 1 into front
+
+create button 
+
+set the script of button 2 to "function bar;return true;end bar"
+
+insert the script of button 2 into back
+
+test (foo() and bar())
+
+teardown

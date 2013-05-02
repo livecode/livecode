@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -44,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "redraw.h"
 
+#include "exec.h"
+
 int2 MCField::clickx;
 int2 MCField::clicky;
 int2 MCField::goalx;
@@ -69,6 +70,62 @@ uint1 MCField::composeconvertingsi = 0;
 uint1 MCField::composeconvertingei = 0;
 Boolean MCField::composing = False;
 uint2 MCField::composecursorindex = 0;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCField::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_TAB, Bool, MCField, AutoTab)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_SEARCH, Bool, MCField, DontSearch)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_WRAP, Bool, MCField, DontWrap)
+	DEFINE_RW_OBJ_PROPERTY(P_FIXED_HEIGHT, Bool, MCField, FixedHeight)
+	DEFINE_RW_OBJ_PROPERTY(P_LOCK_TEXT, Bool, MCField, LockText)
+	DEFINE_RW_OBJ_PROPERTY(P_SHARED_TEXT, Bool, MCField, SharedText)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_LINES, Bool, MCField, ShowLines)
+	DEFINE_RW_OBJ_PROPERTY(P_HGRID, Bool, MCField, HGrid)
+	DEFINE_RW_OBJ_PROPERTY(P_VGRID, Bool, MCField, VGrid)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceFieldStyle, MCField, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_HILITE, Bool, MCField, AutoHilite)
+	DEFINE_RW_OBJ_PROPERTY(P_AUTO_ARM, Bool, MCField, AutoArm)
+	DEFINE_RW_OBJ_PROPERTY(P_FIRST_INDENT, Int16, MCField, FirstIndent)
+	DEFINE_RW_OBJ_PROPERTY(P_WIDE_MARGINS, Bool, MCField, WideMargins)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int16, MCField, HScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int16, MCField, VScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCField, HScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCField, VScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, UInt16, MCField, ScrollbarWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, UInt16, MCField, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, UInt16, MCField, FormattedHeight)
+	DEFINE_RW_OBJ_PROPERTY(P_LIST_BEHAVIOR, Bool, MCField, ListBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_MULTIPLE_HILITES, Bool, MCField, MultipleHilites)
+	DEFINE_RW_OBJ_PROPERTY(P_NONCONTIGUOUS_HILITES, Bool, MCField, NoncontiguousHilites)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_TEXT, String, MCField, Text)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_TEXT, String, MCField, UnicodeText)
+	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
+	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_HTML_TEXT, String, MCField, HtmlText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_RTF_TEXT, String, MCField, RtfText)
+	DEFINE_RW_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_STYLED_TEXT, Array, MCField, StyledText)
+	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_STYLED_TEXT, Array, MCField, StyledText)
+	DEFINE_RO_OBJ_PART_NON_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
+	DEFINE_RO_OBJ_PART_EFFECTIVE_PROPERTY(P_FORMATTED_STYLED_TEXT, Array, MCField, FormattedStyledText)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_PLAIN_TEXT, String, MCField, PlainText)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_UNICODE_PLAIN_TEXT, String, MCField, UnicodePlainText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_FORMATTED_TEXT, String, MCField, FormattedText)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_UNICODE_FORMATTED_TEXT, String, MCField, UnicodeFormattedText)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCField, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
+	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
+	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
+};
+
+MCObjectPropertyTable MCField::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCField::MCField()
 {
@@ -790,13 +847,12 @@ void MCField::mdrag(void)
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
-	MCSharedString *t_data;
-	t_data = pickleselection();
-	if (t_data != NULL)
+	MCAutoStringRef t_data;
+	pickleselection(&t_data);
+	if (*t_data != nil)
 	{
 		MCallowabledragactions = DRAG_ACTION_MOVE | DRAG_ACTION_COPY;
-		MCdragdata -> Store(TRANSFER_TYPE_STYLED_TEXT, t_data);
-		t_data -> Release();
+		MCdragdata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
 	}
 }
 
@@ -1004,7 +1060,7 @@ Boolean MCField::mup(uint2 which)
 									if (linkstart->getlinktext() == NULL)
 										returntext(ep, linksi, linkei);
 									else
-										ep.setsvalue(linkstart->getlinktext());
+										ep.setvalueref(linkstart->getlinktext());
 									linkstart = linkend = NULL;
 									if (message_with_args(MCM_link_clicked, ep.getsvalue()) == ES_NORMAL)
 										return True;
@@ -1037,6 +1093,7 @@ Boolean MCField::mup(uint2 which)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
+#ifdef SHARED_STRING
 			MCSharedString *t_text;
 			t_text = MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT);
 			if (t_text != NULL)
@@ -1046,6 +1103,16 @@ Boolean MCField::mup(uint2 which)
 				setfocus(mx, my);
 				typetext(t_text -> Get());
 			}
+#else
+			MCAutoStringRef t_text;
+			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, &t_text))
+			{
+				extend = extendwords = False;
+				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
+				setfocus(mx, my);
+				typetext(MCStringGetOldString(*t_text));
+			}
+#endif
 		}
 		break;
 	case Button3:
@@ -1174,7 +1241,7 @@ void MCField::setrect(const MCRectangle &nrect)
 		replacecursor(False, False);
 }
 
-Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -1373,7 +1440,7 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_ENCODING:
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, getpgsize(nil), false);
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
@@ -1441,7 +1508,7 @@ void MCField::formattabstops(Properties which, MCExecPoint& ep, uint16_t *tabs, 
 	}
 }
 
-Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	Boolean reset = False;
@@ -1645,7 +1712,13 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_HSCROLLBARID:
 		{
 			MCScrollbar *t_control;
+#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
+#else
+			MCAutoStringRef t_data;
+			/* UNCHECKED */ ep . copyasstringref(&t_data);
+			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
+#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1669,7 +1742,13 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_VSCROLLBARID:
 		{
 			MCScrollbar *t_control;
+#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
+#else
+			MCAutoStringRef t_data;
+			/* UNCHECKED */ ep . copyasstringref(&t_data);
+			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
+#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1707,7 +1786,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_WIDTH:
 	case P_HEIGHT:
 	case P_RECTANGLE:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		dirty = reset = True;
 		break;
@@ -1881,7 +1960,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_DISABLED:
 	case P_ENABLED:
 	case P_BORDER_WIDTH:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		if (p == P_3D || p == P_OPAQUE || p == P_ENABLED || p == P_DISABLED)
@@ -1906,7 +1985,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_FLAGGED_RANGES:
 		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, getpgsize(nil), false);
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -2566,7 +2645,7 @@ void MCField::textchanged(void)
 {
 	if (getstate(CS_IN_TEXTCHANGED))
 		return;
-	
+
 	signallisteners(P_TEXT);
 
 	setstate(True, CS_IN_TEXTCHANGED);

@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -55,6 +54,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "font.h"
 #include "stacksecurity.h"
+
+#include "exec.h"
+#include "exec-interface.h"
 
 #define UNLICENSED_TIME 6.0
 #ifdef _DEBUG_MALLOC_INC
@@ -125,7 +127,7 @@ bool MCDispatch::isdragtarget(void)
 	return m_drag_target;
 }
 
-Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCDispatch::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -186,7 +188,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	}
 }
 
-Exec_stat MCDispatch::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	return ES_NORMAL;
 }
@@ -298,21 +300,25 @@ Exec_stat MCDispatch::handle(Handler_type htype, MCNameRef mess, MCParameter *pa
 	return stat;
 }
 
-void MCDispatch::getmainstacknames(MCExecPoint &ep)
+bool MCDispatch::getmainstacknames(MCListRef& r_list)
 {
-	ep.clear();
-	MCExecPoint ep2(ep);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	MCStack *tstk = stacks;
-	bool first;
-	first = true;
 	do
 	{
-		tstk->getprop(0, P_SHORT_NAME, ep2, False);
-		ep.concatmcstring(ep2.getsvalue(), EC_RETURN, first);
-		first = false;
+		MCAutoStringRef t_string;
+		if (!tstk->names(P_SHORT_NAME, &t_string))
+			return false;
+		if (!MCListAppend(*t_list, *t_string))
+			return false;
 		tstk = (MCStack *)tstk->next();
 	}
 	while (tstk != stacks);
+
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCDispatch::appendstack(MCStack *sptr)
@@ -533,7 +539,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 
 	if (readheader(stream, version) == IO_NORMAL)
 	{
-		if (strcmp(version, MCversionstring) > 0)
+		if (strcmp(version, MCNameGetCString(MCN_version_string)) > 0)
 		{
 			MCresult->sets("stack was produced by a newer version");
 			return IO_ERROR;
@@ -786,24 +792,24 @@ void MCDispatch::cleanup(IO_handle stream, char *linkname, char *bname)
 	delete bname;
 }
 
-IO_stat MCDispatch::savestack(MCStack *sptr, const MCString& fname)
+IO_stat MCDispatch::savestack(MCStack *sptr, const MCStringRef p_fname)
 {
 	IO_stat stat;
-	stat = dosavestack(sptr, fname);
+	stat = dosavestack(sptr, p_fname);
 
 	MCLogicalFontTableFinish();
 
 	return stat;
 }
 
-IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCString &fname)
+IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 {
-	if (MCModeCheckSaveStack(sptr, fname) != IO_NORMAL)
+	if (MCModeCheckSaveStack(sptr, p_fname) != IO_NORMAL)
 		return IO_ERROR;
 	
 	char *linkname;
-	if (fname.getlength() != 0)
-		linkname = fname.clone();
+	if (MCStringGetLength(p_fname) != 0)
+		linkname = strclone(MCStringGetCString(p_fname));
 	else
 		if ((linkname = strclone(sptr->getfilename())) == NULL)
 		{
@@ -1261,8 +1267,7 @@ void MCDispatch::redraw(Window w, MCRegionRef p_dirty_region)
 	target -> updatewindow(p_dirty_region);
 }
 
-MCFontStruct *MCDispatch::loadfont(const MCString &fname, uint2 &size,
-                                   uint2 style, Boolean printer)
+MCFontStruct *MCDispatch::loadfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 #ifdef _LINUX
 	if (fonts == NULL)
@@ -1596,7 +1601,6 @@ bool MCDispatch::loadexternal(const char *p_external)
 //
 // We try each of these in turn, attempting appropriate things in each case.
 //
-
 bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 {
 	r_objptr = NULL;
@@ -1630,6 +1634,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
+#ifdef SHARED_STRING
 		MCSharedString *t_data;
 		t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
 		if (t_data != NULL)
@@ -1652,6 +1657,28 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 
 		return true;
+#else
+		MCAutoStringRef t_data;
+		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+		{
+			MCExecPoint ep(NULL, NULL, NULL);
+			/* UNCHECKED */ ep . setvalueref(*t_data);
+
+			MCImage *t_image;
+			t_image = new MCImage;
+			t_image -> open();
+			t_image -> openimage();
+			t_image -> setprop(0, P_TEXT, ep, False);
+			MCactiveimage -> pasteimage(t_image);
+			t_image -> closeimage();
+			t_image -> close();
+
+			delete t_image;
+			return true; 
+		}
+
+		return false;
+#endif
 	}
 	
 	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
@@ -1661,9 +1688,9 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 		if (!MCclipboarddata -> Lock())
 			return false;
-
 		if (MCclipboarddata -> HasObjects())
 		{
+#ifdef SHARED_STRING
 			MCSharedString *t_data;
 			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS);
 			if (t_data != NULL)
@@ -1671,9 +1698,15 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 				t_objects = MCObject::unpickle(t_data, MCdefaultstackptr);
 				t_data -> Release();
 			}
+#else
+			MCAutoStringRef t_data;
+			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
+				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
+#endif
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
+#ifdef SHARED_STRING
 			MCSharedString *t_data;
 			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
 			if (t_data != NULL)
@@ -1688,8 +1721,19 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 
 				t_data -> Release();
 			}
+#else
+			MCAutoStringRef t_data;
+			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
+			{
+				MCExecPoint ep(NULL, NULL, NULL);
+				/* UNCHECKED */ ep . setvalueref(*t_data);
+				t_objects = new MCImage(*MCtemplateimage);
+				t_objects -> open();
+				t_objects -> setprop(0, P_TEXT, ep, False);
+				t_objects -> close();
+			}
+#endif
 		}
-
 		MCclipboarddata -> Unlock();
 
 		//
@@ -1957,6 +2001,26 @@ void MCDispatch::freeprinterfonts()
 MCFontlist *MCFontlistGetCurrent(void)
 {
 	return MCdispatcher -> getfontlist();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCDispatch::GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font)
+{
+	if (MCStringCreateWithCString(DEFAULT_TEXT_FONT, r_font))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size)
+{
+	r_size = DEFAULT_TEXT_SIZE;
+}
+
+void MCDispatch::GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
+{
+	r_style . style = FA_DEFAULT_STYLE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

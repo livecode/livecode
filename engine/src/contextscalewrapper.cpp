@@ -327,7 +327,7 @@ void MCContextScaleWrapper::drawtext(int2 x, int2 y, const char *s, uint2 length
 	if (f != m_font)
 	{
 		// Scale the font struct appropriately.
-		const char *t_fontname;
+		MCNameRef t_fontname;
 		uint2 t_fontsize, t_fontstyle;
 		Boolean t_printer;
 		if (MCdispatcher->getfontlist()->getfontstructinfo(t_fontname, t_fontsize, t_fontstyle, t_printer, f))

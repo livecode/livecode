@@ -69,7 +69,7 @@ struct MCLicenseParameters
 	
 	uint32_t deploy_targets;
 
-	MCVariableValue *addons;
+	MCArrayRef addons;
 };
 
 extern MCLicenseParameters MClicenseparameters;

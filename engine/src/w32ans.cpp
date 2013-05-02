@@ -823,13 +823,15 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 		t_error = GetLastError();
 	}
 	
-	if (lpiil != NULL && SHGetPathFromIDListA(lpiil, ep.getbuffer(PATH_MAX)))
+	char *buf;
+	ep.reserve(PATH_MAX, buf);
+	if (lpiil != NULL && SHGetPathFromIDListA(lpiil, buf))
 	{
 		if (s_last_folder != NULL)
 			delete s_last_folder;
-		s_last_folder = strclone(ep . getbuffer(0));
-		MCU_path2std(ep.getbuffer(0));
-		ep.setstrlen();
+		s_last_folder = strclone(buf);
+		MCU_path2std(buf);
+		ep.commit(strlen(buf));
 	}
 	else
 	{
@@ -845,31 +847,33 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 	return 0;
 }
 
-// MW-2005-05-15: Updated for new answer command restructuring
-int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boolean sheet)
+/* WRAPPER */
+bool MCA_folder(bool p_plural, MCStringRef p_prompt, MCStringRef p_initial,
+				MCStringRef p_title, bool p_sheet,
+				MCStringRef &r_value, MCStringRef &r_result)
 {
-	ep . setsvalue(p_initial);
+	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
+	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
+	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
 
-	MCColor oldcolor;
-	if (ep.getsvalue().getlength() == 0)
-	{
-		oldcolor.red = MCpencolor.red;
-		oldcolor.green = MCpencolor.green;
-		oldcolor.blue = MCpencolor.blue;
-	}
+	uint32_t t_options = 0;
+	if (p_plural)
+		t_options |= MCA_OPTION_PLURAL;
+	if (p_sheet)
+		t_options |= MCA_OPTION_SHEET;
+
+	MCExecPoint ep(nil, nil, nil);
+	int t_error;
+	t_error = MCA_folder(ep, t_title, t_prompt, t_initial, t_options);
+	if (ep.isempty())
+		return MCStringCreateWithCString(MCcancelstring, r_result);
 	else
-	{
-		char *cname = NULL;
-		MCscreen->parsecolor(ep.getsvalue(), &oldcolor, &cname);
-		delete cname;
-	}
+		return ep.copyasstringref(r_value);
+}
 
-	if (!MCModeMakeLocalWindows())
-	{
-		MCRemoteColorDialog(ep, p_title, oldcolor.red >> 8, oldcolor.green >> 8, oldcolor.blue >> 8);
-		return 0;
-	}
-
+// MW-2005-05-15: Updated for new answer command restructuring
+bool MCA_color(MCStringRef p_title, MCColor p_initial_color, bool p_as_sheet, bool& r_chosen, MCColor& r_chosen_color)
+{
 	CHOOSECOLORA chooseclr ;
 	static COLORREF custclr[16]; //save custom colors
 	memset(&chooseclr, 0, sizeof(CHOOSECOLORA));
@@ -881,28 +885,30 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 	chooseclr.hwndOwner = t_parent_window != NULL ? (HWND)t_parent_window -> handle . window : NULL;
 
 	chooseclr.Flags = CC_RGBINIT;
-	chooseclr.rgbResult = RGB(oldcolor.red >> 8, oldcolor.green >> 8,
-	                          oldcolor.blue >> 8);
+	chooseclr.rgbResult = RGB(p_initial_color.red >> 8, p_initial_color.green >> 8,
+	                          p_initial_color.blue >> 8);
+
+	bool t_success = true;
 	if (!ChooseColorA(&chooseclr))
 	{
 		DWORD err = CommDlgExtendedError();
-		if (err == 0)
-			MCresult->sets(MCcancelstring);
-		else
-		{
-			char buffer[22 + U4L];
-			sprintf(buffer, "Error %d opening dialog", err);
-			MCresult->copysvalue(buffer);
-		}
-		ep.clear();
+		r_chosen = false;
 	}
 	else
-		ep.setcolor(GetRValue(chooseclr.rgbResult), GetGValue(chooseclr.rgbResult), GetBValue(chooseclr.rgbResult));
+	{
+		r_chosen = true;
+		p_initial_color.red = GetRValue(chooseclr.rgbResult);
+		p_initial_color.red |= p_initial_color.red << 8;
+		p_initial_color.green = GetGValue(chooseclr.rgbResult);
+		p_initial_color.green |= p_initial_color.green << 8;
+		p_initial_color.blue = GetBValue(chooseclr.rgbResult);
+		p_initial_color.blue |= p_initial_color.blue << 8;
+	}
 
 	//  SMR 1880 clear shift and button state
 	waitonbutton();
 
-	return 0;
+	return t_success;
 }
 
 int MCA_ask_file_with_types(MCExecPoint& ep, const char *p_title, const char *p_prompt, char * const p_types[], uint4 p_type_count, const char *p_initial, unsigned int p_options)

@@ -1,0 +1,12 @@
+setup
+
+test atan2( 0,  1) is 0
+test atan2( 1,  1) is pi / 4
+test atan2( 1,  0) is pi / 2
+test atan2( 1, -1) is 3 * pi / 4
+test atan2( 0, -1) is pi
+test atan2(-1, -1) is -3 * pi / 4
+test atan2(-1,  0) is -pi / 2
+test atan2(-1,  1) is -pi / 4
+
+teardown

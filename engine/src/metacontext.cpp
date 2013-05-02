@@ -180,12 +180,12 @@ void MCMetaContext::clearclip(void)
 
 void MCMetaContext::setorigin(int2 x, int2 y)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 void MCMetaContext::clearorigin(void)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 void MCMetaContext::setquality(uint1 quality)
@@ -529,7 +529,7 @@ int4 MCMetaContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_un
 
 void MCMetaContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 
@@ -581,23 +581,23 @@ void MCMetaContext::combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 
 
 MCBitmap *MCMetaContext::lock(void)
 {
-	assert(false);
+	MCUnreachable();
 	return NULL;
 }
 
 void MCMetaContext::unlock(MCBitmap *)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 void MCMetaContext::clear(const MCRectangle *rect)
 {
-	assert(false);
+	MCUnreachable();
 }
 
 MCRegionRef MCMetaContext::computemaskregion(void)
 {
-	assert(false);
+	MCUnreachable();
 	return NULL;
 }
 

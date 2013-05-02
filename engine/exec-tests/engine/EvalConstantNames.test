@@ -1,0 +1,5 @@
+setup
+test the constantNames is not empty
+test "one" is among the lines of the constantNames
+test "two" is among the lines of the constantNames
+teardown

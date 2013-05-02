@@ -1,0 +1,64 @@
+setup "default item delim"
+
+test itemOffset("g", "abc, def, ghi") is 3
+test itemOffset(" def", "abc, def, ghi") is 2
+test itemOffset("x", "abc, def, ghi") is 0
+test itemOffset("ABC", "abc, def, ghi") is 1
+
+test itemOffset("abc", "1,2,abc,4,5,abc", 1) is 2
+test itemOffset("abc", "1,2,abc,4,5,abc", 3) is 3
+test itemOffset("abc", "1,2,abc,4,5,abc", 6) is 0
+
+set the wholematches to true
+
+test itemOffset("g", "abc, def, ghi") is 0
+test itemOffset(" ghi", "abc, def, ghi") is 3
+
+set the wholematches to false
+set the caseSensitive to true
+
+test itemOffset("ab", "abc, def, ghi") is 1
+test itemOffset("AB", "abc, def, ghi") is 0
+
+set the wholematches to true
+
+test itemOffset("ab", "abc, def, ghi") is 0
+test itemOffset("AB", "abc, def, ghi") is 0
+test itemOffset("abc", "abc, def, ghi") is 1
+test itemOffset("ABC", "abc, def, ghi") is 0
+
+teardown
+
+
+setup "custom item delim"
+
+set the itemdel to "|"
+
+test itemOffset("g", "abc|def|ghi") is 3
+test itemOffset("def", "abc|def|ghi") is 2
+test itemOffset("x", "abc|def|ghi") is 0
+test itemOffset("ABC", "abc|def|ghi") is 1
+
+test itemOffset("abc", "1|2|abc|4|5|abc", 1) is 2
+test itemOffset("abc", "1|2|abc|4|5|abc", 3) is 3
+test itemOffset("abc", "1|2|abc|4|5|abc", 6) is 0
+
+set the wholematches to true
+
+test itemOffset("g", "abc|def|ghi") is 0
+test itemOffset("ghi", "abc|def|ghi") is 3
+
+set the wholematches to false
+set the caseSensitive to true
+
+test itemOffset("ab", "abc|def|ghi") is 1
+test itemOffset("AB", "abc|def|ghi") is 0
+
+set the wholematches to true
+
+test itemOffset("ab", "abc|def|ghi") is 0
+test itemOffset("AB", "abc|def|ghi") is 0
+test itemOffset("abc", "abc|def|ghi") is 1
+test itemOffset("ABC", "abc|def|ghi") is 0
+
+teardown

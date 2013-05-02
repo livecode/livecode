@@ -42,7 +42,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "license.h"
 #include "mode.h"
-#include "core.h"
 #include "socket.h"
 #include "osspec.h"
 
@@ -469,7 +468,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				if (aeid == kAEDoScript)
 				{
 					MCdefaultstackptr->getcard()->domess(sptr);
-					MCresult->fetch(ep);
+					MCresult->eval(ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				else
@@ -1019,19 +1018,18 @@ void MCS_alarm(real8 seconds)
 //   MCS_startprocess is called by MCLaunch with a docname
 //   MCS_startprocess is called by MCOpen without a docname
 // Thus, we will fork two methods - and dispatch from MCS_startprocess
-void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevated);
-void MCS_startprocess_launch(char *name, char *docname, Open_mode mode);
+void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Boolean elevated);
+void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode);
 
-void MCS_startprocess(char *name, char *docname, Open_mode mode, Boolean elevated)
+void MCS_startprocess(MCNameRef name, const char *docname, Open_mode mode, Boolean elevated)
 {
-	uint4 t_length = strlen(name);
-	if (t_length > 4 && strcmp(name + t_length - 4, ".app") == 0 || docname != NULL)
+	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || docname != NULL)
 	  MCS_startprocess_launch(name, docname, mode);
 	else
 	  MCS_startprocess_unix(name, NULL, mode, elevated);
 }
 
-void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
+void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode)
 {
 	LaunchParamBlockRec launchParms;
 	launchParms.launchBlockID = extendedBlock;
@@ -1046,7 +1044,7 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 	
 	FSRef t_app_fsref;
 	FSSpec t_app_fsspec;
-	errno = MCS_pathtoref(name, &t_app_fsref);
+	errno = MCS_pathtoref(MCNameGetCString(name), &t_app_fsref);
 	errno = MCS_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
 	
 	uint2 i;
@@ -1090,7 +1088,7 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 	if (docname != NULL && *docname != '\0')
 	{
 		for (i = 0 ; i < MCnprocesses ; i++)
-			if (strequal(name, MCprocesses[i].name))
+			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCCompareExact))
 				break;
 		if (i == MCnprocesses)
 		{
@@ -1121,7 +1119,6 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 			AEPutDesc(&files_list, 0, &file_desc);
 			AEPutParamDesc(&ae, keyDirectObject, &files_list);
 		}
-		delete docname;
 		AppleEvent the_reply;
 		AECreateDesc(typeNull, NULL, 0, &the_reply);
 		errno = AESend(&ae, &the_reply, kAENoReply,
@@ -1139,7 +1136,6 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 		errno = LaunchApplication(&launchParms);
 		if (errno != noErr)
 		{
-			delete name;
 			char buffer[7 + I2L];
 			sprintf(buffer, "error %d", errno);
 			MCresult->copysvalue(buffer);
@@ -1165,8 +1161,6 @@ void MCS_startprocess_launch(char *name, char *docname, Open_mode mode)
 				MCprocesses[MCnprocesses].pid = ++curpid;
 				memcpy(&MCprocesses[MCnprocesses++].sn, &launchParms.launchProcessSN, sizeof(MCMacProcessSerialNumber));
 			}
-			else
-				delete name;
 		}
 	}
 	if (launchParms.launchAppParameters != NULL)
@@ -1248,7 +1242,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 
 }
 
-void MCS_launch_document(char *p_document)
+void MCS_launch_document(const char *p_document)
 {
 	int t_error = 0;
 	
@@ -1269,11 +1263,9 @@ void MCS_launch_document(char *p_document)
 		errno = LSOpenFSRef(&t_document_ref, NULL);
 		MCS_launch_set_result_from_lsstatus();
 	}
-	
-	delete p_document;
 }
 
-void MCS_launch_url(char *p_document)
+void MCS_launch_url(const char *p_document)
 {
 	bool t_success;
 	t_success = true;
@@ -1307,8 +1299,6 @@ void MCS_launch_url(char *p_document)
 		
 	if (t_cf_document != NULL)
 		CFRelease(t_cf_document);
-
-	delete p_document;
 }
 
 void MCS_checkprocesses()
@@ -1375,7 +1365,8 @@ void MCS_killall()
 	sigaction(SIGCHLD, &action, NULL);
 	while (MCnprocesses--)
 	{
-		delete MCprocesses[MCnprocesses].name;
+		MCNameDelete(MCprocesses[MCnprocesses] . name);
+		MCprocesses[MCnprocesses] . name = nil;
 		if (MCprocesses[MCnprocesses].pid != 0
 		        && (MCprocesses[MCnprocesses].ihandle != NULL
 		            || MCprocesses[MCnprocesses].ohandle != NULL))
@@ -1482,20 +1473,25 @@ static void getIOKitProp(io_object_t sObj, const char *propName,
 }
 
 
-void MCS_getDNSservers(MCExecPoint &ep)
+#define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
+if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
+delete last char of it; return it"
+
+bool MCS_getDNSservers(MCListRef& r_list)
 {
-#define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;delete last char of it; return it"
-	ep . clear();
-	MCresult->store(ep, False);
+	MCAutoListRef t_list;
+
+	MCresult->clear();
 	MCdefaultstackptr->domess(DNS_SCRIPT);
-	MCresult->fetch(ep);
+
+	return MCListCreateMutable('\n', &t_list) &&
+		MCListAppend(*t_list, MCresult->getvalueref()) &&
+		MCListCopy(*t_list, r_list);
 }
 
-Boolean MCS_getdevices(MCExecPoint &ep)
+bool MCS_getdevices(MCListRef& r_list)
 {
-	ep.clear();
-
-
+	MCAutoListRef t_list;
 	io_iterator_t SerialPortIterator = NULL;
 	mach_port_t masterPort = NULL;
 	io_object_t thePort;
@@ -1505,27 +1501,54 @@ Boolean MCS_getdevices(MCExecPoint &ep)
 		sprintf(buffer, "error %d", errno);
 		MCresult->copysvalue(buffer);
 		delete buffer;
-		return False;
+		return false;
 	}
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	uint2 portCount = 0;
+
+	bool t_success = true;
 	if (SerialPortIterator != 0)
 	{
-		while ((thePort = IOIteratorNext(SerialPortIterator)) != 0)
+		while (t_success && (thePort = IOIteratorNext(SerialPortIterator)) != 0)
 		{
 			char ioresultbuffer[256];
-			getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-			ep.concatcstring(ioresultbuffer, EC_RETURN, portCount == 0);//name
-			getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-			ep.concatcstring(ioresultbuffer, EC_COMMA, false);//TTY file
-			getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-			ep.concatcstring(ioresultbuffer, EC_COMMA, false);//CU file
+
+			MCAutoListRef t_result_list;
+			MCAutoStringRef t_result_string;
+
+			t_success = MCListCreateMutable(',', &t_result_list);
+
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//name
+			}
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+			}
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+			}
+
+			if (t_success)
+				t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+
+			if (t_success)
+				t_success = MCListAppend(*t_list, *t_result_string);
+
 			IOObjectRelease(thePort);
 			portCount++;
 		}
 		IOObjectRelease(SerialPortIterator);
 	}
 	
-	return True;
+	return t_success && MCListCopy(*t_list, r_list);
 }
 
 
@@ -1584,7 +1607,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 		{
 			MCU_realloc((char **)&MCprocesses, MCnprocesses,
 									MCnprocesses + 1, sizeof(Streamnode));
-			MCprocesses[MCnprocesses].name = strclone("shell");
+			MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
 			MCprocesses[MCnprocesses].mode = OM_NEITHER;
 			MCprocesses[MCnprocesses].ohandle = NULL;
 			MCprocesses[MCnprocesses].ihandle = NULL;
@@ -1637,8 +1660,10 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
 		return IO_ERROR;
 	}
-	char *buffer = ep.getbuffer(0);
-	uint4 buffersize = ep.getbuffersize();
+	char *buffer;
+	uint4 buffersize;
+	buffer = (char *)malloc(4096);
+	buffersize = 4096;
 	uint4 size = 0;
 	if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
 	{
@@ -1646,11 +1671,10 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 		close(toparent[0]);
 		if (MCprocesses[index].pid != 0)
 			MCS_kill(MCprocesses[index].pid, SIGKILL);
-		ep.setbuffer(buffer, buffersize);
+		ep.grabbuffer(buffer, size);
 		return IO_ERROR;
 	}
-	ep.setbuffer(buffer, buffersize);
-	ep.setlength(size);
+	ep.grabbuffer(buffer, size);
 	close(toparent[0]);
 	MCS_checkprocesses();
 	if (MCprocesses[index].pid != 0)
@@ -1677,7 +1701,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	{
 		MCExecPoint ep2(ep);
 		ep2.setint(MCprocesses[index].retcode);
-		MCresult->store(ep2, False);
+		MCresult->set(ep2);
 	}
 	else
 		MCresult->clear(False);
@@ -1697,18 +1721,14 @@ uint4 MCS_getpid()
 	return getpid();
 }
 
-const char *MCS_getaddress()
+bool MCS_getaddress(MCStringRef& r_address)
 {
 	static struct utsname u;
-	static char *buffer;
 	uname(&u);
-	if (buffer == NULL)
-		buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
-	sprintf(buffer, "%s:%s", u.nodename, MCcmd);
-	return buffer;
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
 }
 
-const char *MCS_getmachine()
+bool MCS_getmachine(MCStringRef& r_string)
 {
 	static Str255 machineName;
 	long response;
@@ -1718,19 +1738,19 @@ const char *MCS_getmachine()
 		if (machineName != nil)
 		{
 			p2cstr(machineName);
-			return (const char*)machineName;
+			return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
 		}
 	}
-	return "unknown";
+	return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
 }
 
 // MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
-const char *MCS_getprocessor()
+MCNameRef MCS_getprocessor()
 { //get machine processor
 #ifdef __LITTLE_ENDIAN__
-	return "x86";
+	return MCN_x86;
 #else
-  return "Motorola PowerPC";
+    return MCN_motorola_powerpc;
 #endif
 }
 
@@ -1762,61 +1782,37 @@ real8 MCS_getfreediskspace(void)
 	return t_free_space;	
 }
 
-const char *MCS_getsystemversion()
+bool MCS_getsystemversion(MCStringRef& r_string)
 {
-	static char versioninfo[12];
-	
-	long response;
-	
-	// MW-2007-10-30: [[ Bug 5406 ]] On OS X 10.4 and above we need to use a different method to fetch the version
-	if (MCmajorosversion >= 0x1040)
-	{
-		long t_major, t_minor, t_bugfix;
-		Gestalt(gestaltSystemVersionMajor, &t_major);
-		Gestalt(gestaltSystemVersionMinor, &t_minor);
-		Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-		sprintf(versioninfo, "%d.%d.%d", t_major, t_minor, t_bugfix);
-		return versioninfo;
-	}
-	else if ((errno = Gestalt(gestaltSystemVersion, &response)) == noErr)
-	{
-		uint2 i = 0;
-		if (response & 0xF000)
-			versioninfo[i++] = ((response & 0xF000) >> 12) + '0';
-		versioninfo[i++] = ((response & 0xF00) >> 8) + '0';
-		versioninfo[i++] = '.';
-		versioninfo[i++] = ((response & 0xF0) >> 4) + '0';
-		versioninfo[i++] = '.';
-		versioninfo[i++] = (response & 0xF) + '0';
-		versioninfo[i] = '\0';
-		return versioninfo;
-	}
-	
-	return NULL;
+	long t_major, t_minor, t_bugfix;
+	Gestalt(gestaltSystemVersionMajor, &t_major);
+	Gestalt(gestaltSystemVersionMinor, &t_minor);
+	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
 }
 
-void MCS_query_registry(MCExecPoint &dest, const char** type)
+bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
-	dest.clear();
+	/* RESULT */ //MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_set_registry(const char *key, MCExecPoint &dest, char *type)
+bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
-	dest.setboolean(False);
+	/* RESULT */ //MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_delete_registry(const char *key, MCExecPoint &dest)
+bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
-	dest.setboolean(False);
+	/* RESULT */ //MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_list_registry(MCExecPoint& p_dest)
+bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
 {
-	MCresult -> sets("not supported");
-	p_dest . setboolean(False);
+	/* RESULT */ //MCresult -> sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
 Boolean MCS_poll(real8 delay, int fd)
@@ -2326,6 +2322,20 @@ char *MCS_FSSpec2path(FSSpec *fSpec)
 	return tutfpath;
 }
 
+bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
+{
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(PATH_MAX))
+		return false;
+	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Chars(), PATH_MAX);
+
+	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+
+	MCAutoStringRef t_utf8_path;
+	return t_buffer.CreateStringAndRelease(&t_utf8_path) &&
+		MCU_utf8tonative(*t_utf8_path, r_path);
+}
+
 char *MCS_fsref_to_path(FSRef& p_ref)
 {
 	char *t_path;
@@ -2426,6 +2436,11 @@ OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref)
 	return t_error;
 }
 
+OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
+{
+	return MCS_pathtoref(MCStringGetCString(p_path), &r_ref);
+}
+
 OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 {
 	char *t_resolved_path;
@@ -2446,11 +2461,10 @@ OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 }
 
 // based on MoreFiles (Apple DTS)
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
+OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 {
-	char *path = MCS_resolvepath(fname);
+	char *path = MCS_resolvepath(MCStringGetCString(p_filename));
 	memset(fspec, 0, sizeof(FSSpec));
-
 
 	char *f2 = strrchr(path, '/');
 	if (f2 != NULL && f2 != path)
@@ -2481,6 +2495,13 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 	delete fspecname;
 	delete path;
 	return errno;
+}
+
+OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
+{
+	MCAutoStringRef t_filename;
+	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
+	return MCS_path2FSSpec(*t_filename, fspec);
 }
 
 /**************************************************************************
@@ -2757,16 +2778,21 @@ static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
 
 }
 
-void MCS_alternatelanguages(MCExecPoint &ep)
+bool MCS_alternatelanguages(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+	
 	getosacomponents();
-	uint2 i;
-	for (i = 0; i < osancomponents; i++)
-		ep.concatcstring(osacomponents[i].compname, EC_RETURN, i == 0);
+	for (uindex_t i = 0; i < osancomponents; i++)
+		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
+			return false;
+	
+	return MCListCopy(*t_list, r_list);
 }
 
-static OSErr osacompile(MCString &s, ComponentInstance compinstance,
+static OSErr osacompile(const MCString &s, ComponentInstance compinstance,
                         OSAID &scriptid)
 {
 	AEDesc aedscript;
@@ -2843,16 +2869,16 @@ static void getosacomponents()
 	DisposeHandle(compname);
 }
 
-void MCS_doalternatelanguage(MCString &s, const char *langname)
+void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
 	getosacomponents();
 	OSAcomponent *posacomp = NULL;
 	uint2 i;
-	uint4 l = strlen(langname);
+	uint4 l = strlen(MCStringGetCString(p_language));
 	for (i = 0; i < osancomponents; i++)
 	{
 		if (l == strlen(osacomponents[i].compname)
-		        && !MCU_strncasecmp(osacomponents[i].compname, langname, l))
+		        && !MCU_strncasecmp(osacomponents[i].compname, MCStringGetCString(p_language), l))
 		{
 			posacomp = &osacomponents[i];
 			break;
@@ -2868,7 +2894,7 @@ void MCS_doalternatelanguage(MCString &s, const char *langname)
 		                         posacomp->compsubtype);
 	//self check if returns error
 	OSAID scriptid;
-	if (osacompile(s, posacomp->compinstance, scriptid) != noErr)
+	if (osacompile(MCStringGetOldString(p_script), posacomp->compinstance, scriptid) != noErr)
 	{
 		MCresult->sets("compiler error");
 		return;
@@ -3157,10 +3183,10 @@ uint32_t MCS_getsyserror(void)
 	return errno;
 }
 
-bool MCS_mcisendstring(const char *command, char buffer[256])
+bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 {
-	strcpy(buffer, "not supported");
-	return true;
+	r_error = false;
+	return MCStringCreateWithCString("not supported", r_result);
 }
 
 void MCS_system_alert(const char *p_title, const char *p_message)
@@ -3321,7 +3347,7 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 	return false;
 }
 
-void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevated)
+void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Boolean elevated)
 {
 	Boolean noerror = True;
 	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
@@ -3330,7 +3356,7 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 				
 	// Store process information.
 	uint2 index = MCnprocesses;
-	MCprocesses[MCnprocesses].name = name;
+	MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(name);
 	MCprocesses[MCnprocesses].mode = mode;
 	MCprocesses[MCnprocesses].ihandle = NULL;
 	MCprocesses[MCnprocesses].ohandle = NULL;
@@ -3367,12 +3393,14 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 			// Fork
 			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
 			{
+				char *t_name_dup;
+				t_name_dup = strdup(MCNameGetCString(name));
 				
 				// The pid is 0, so here we are in the child process.
 				// Construct the argument string to pass to the process..
 				char **argv = NULL;
 				uint32_t argc = 0;
-				startprocess_create_argv(name, doc, argc, argv);
+				startprocess_create_argv(t_name_dup, (char *)doc, argc, argv);
 				
 				// The parent is reading, so we (we are child) are writing.
 				if (reading)
@@ -3484,12 +3512,12 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 		if (t_status == noErr)
 		{
 			char *t_name_dup;
-			t_name_dup = strdup(name);
+			t_name_dup = strdup(MCNameGetCString(name));
 			
 			// Split the arguments
 			uint32_t t_argc;
 			char **t_argv;
-			startprocess_create_argv(t_name_dup, doc, t_argc, t_argv);
+			startprocess_create_argv(t_name_dup, (char *)doc, t_argc, t_argv);
 			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
 			for(uint32_t i = 0; i < t_argc; i++)
 				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
@@ -3527,13 +3555,10 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 			AuthorizationFree(t_auth, kAuthorizationFlagDefaults);
 	}
 	
-	delete doc;
 	if (!noerror || MCprocesses[index].pid == -1 || MCprocesses[index].pid == 0)
 	{
 		if (noerror)
 			MCprocesses[index].pid = 0;
-		else
-			delete name;
 		MCresult->sets("not opened");
 	}
 	else

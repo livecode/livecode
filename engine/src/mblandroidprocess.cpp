@@ -30,28 +30,30 @@ uint32_t MCAndroidSystem::GetProcessId(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidSystem::GetVersion(void)
+bool MCAndroidSystem::GetVersion(MCStringRef& r_string)
 {
-	char *t_system_version = NULL;
-	MCAndroidEngineCall("getSystemVersion", "s", &t_system_version);
+	static char *s_system_version = NULL;
+	if (s_system_version == nil)
+		MCAndroidEngineCall("getSystemVersion", "s", &s_system_version);
 	
-	return t_system_version;
+	return MCStringCreateWithNativeChars(s_system_version, MCCStringLength(s_system_version), r_string);
 }
 
-char *MCAndroidSystem::GetMachine(void)
+bool MCAndroidSystem::GetMachine(MCStringRef& r_string)
 {
-	char *t_machine = NULL;
-	MCAndroidEngineCall("getMachine", "s", &t_machine);
+	static char *s_machine = nil;
+	if (s_machine == nil)
+		MCAndroidEngineCall("getMachine", "s", &s_machine);
 	
-	return t_machine;
+	return MCStringCreateWithNativeChars(s_machine, MCCStringLength(s_machine), r_string);
 }
 
-char *MCAndroidSystem::GetProcessor(void)
+MCNameRef MCAndroidSystem::GetProcessor(void)
 {
 #ifdef __i386__
-	return strclone("i386");
+    return MCN_i386;
 #else
-	return strclone("ARM");
+    return MCN_arm;
 #endif
 }
 

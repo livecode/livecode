@@ -164,6 +164,19 @@ struct MCObjectFontAttrs
 	uint2 size;
 };
 
+struct MCPropertyInfo;
+struct MCObjectPropertyTable
+{
+	MCObjectPropertyTable *parent;
+	uindex_t size;
+	MCPropertyInfo *table;
+};
+
+struct MCInterfaceNamedColor;
+struct MCInterfaceLayer;
+struct MCInterfaceShadow;
+struct MCInterfaceTextStyle;
+
 class MCObject : public MCDLlist
 {
 protected:
@@ -199,7 +212,7 @@ protected:
 	// MW-2012-02-16: [[ LogFonts ]] The logical font flags - whether the object's
 	//   labels are unicode and what font attrs should be considered as set.
 	uint1 m_font_flags;
-	
+
 	// MM-2012-09-05: [[ Property Listener ]]
 	bool m_listening : 1;
 	uint8_t m_properties_changed : 6;
@@ -248,7 +261,9 @@ protected:
 	//   at some point since it was last unset an object has been loaded that
 	//   requires parentScript resolution.
 	static bool s_loaded_parent_script_reference;
-	
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCObject();
 	MCObject(const MCObject &oref);
@@ -256,6 +271,8 @@ public:
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
 
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+	
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor);
 
 	virtual IO_stat save(IO_handle stream, uint4 p_part, bool p_force_ext);
@@ -286,9 +303,9 @@ public:
 	virtual void setrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	virtual void select();
@@ -316,6 +333,33 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Returns the current concrete fontref of the object.
 	MCFontRef getfontref(void) const { return m_font; }
 
+	Exec_stat getprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
+	Exec_stat setprop(uint32_t part_id, Properties which, MCExecPoint& ep, Boolean effective);
+	
+	// MW-2012-05-28: [[ Value Prop Accessors ]] These methods allow access to object props
+	//   via direct types. Appropriate type coercion will be performed, with errors thrown as
+	//   necessary.
+	//   The methods return no value since they will 'Throw()' if an error occurs - check
+	//   ctxt.HasError() on return to ensure things are okay.
+	//   Note that these functions will clobber the ctxt's EP.
+	void getboolprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, bool& r_value);
+	void getintprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, integer_t& r_value);
+	void getuintprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, uinteger_t& r_value);
+	void getdoubleprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, double& r_value);
+	void getnumberprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCNumberRef& r_value);
+	void getstringprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCStringRef& r_value);
+	void getarrayprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCArrayRef& r_value);
+	void getvariantprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCValueRef& r_value);
+	//
+	void setboolprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, bool r_value);
+	void setintprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, integer_t r_value);
+	void setuintprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, uinteger_t r_value);
+	void setdoubleprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, double r_value);
+	void setnumberprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCNumberRef r_value);
+	void setstringprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCStringRef r_value);
+	void setarrayprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCArrayRef r_value);
+	void setvariantprop(MCExecContext& ctxt, uint32_t parid, Properties which, Boolean effective, MCValueRef r_value);
+
 	const MCRectangle &getrect() const;
     virtual MCRectangle getrectangle(bool p_effective) const;
 
@@ -332,7 +376,10 @@ public:
 	Exec_stat sendsetprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 	Exec_stat setcustomprop(MCExecPoint& ep, MCNameRef set_name, MCNameRef prop_name);
 
+#ifdef OLD_EXEC
+	Exec_stat setprops(uint32_t parid, MCExecPoint& ep);
 	Exec_stat changeid(uint32_t new_id);
+#endif
 
 	uint4 getid() const
 	{
@@ -386,11 +433,11 @@ public:
 	{
 		return hashandlers;
 	}
-	Boolean getflag(uint4 flag) const
+	bool getflag(uint4 flag) const
 	{
 		return (flags & flag) != 0;
 	}
-	Boolean getextraflag(uint4 flag) const
+	bool getextraflag(uint4 flag) const
 	{
 		return (extraflags & flag) != 0;
 	}
@@ -410,10 +457,14 @@ public:
 	uint32_t getopacity(void) { return blendlevel * 255 / 100; }
 	uint32_t getink(void) { return ink; }
 
+	bool changeflag(bool setting, uint32_t mask);
+	bool changeextraflag(bool setting, uint32_t mask);
+	bool changestate(bool setting, uint32_t mask);
+
 	void setflag(uint4 on, uint4 flag);
 	void setextraflag(uint4 on, uint4 flag);
 
-	Boolean getstate(uint4 flag) const
+	bool getstate(uint4 flag) const
 	{
 		return (state & flag) != 0;
 	}
@@ -424,6 +475,7 @@ public:
 		return (flags & F_DISABLED) != 0;
 	}
 
+	Exec_stat setsprop(Properties which, MCStringRef p_string);
 	Exec_stat setsprop(Properties which, const MCString &);
 	void help();
 
@@ -530,8 +582,8 @@ public:
 	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2);
 	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3);
 	Exec_stat message_with_args(MCNameRef name, const MCString &v1, const MCString &v2, const MCString& v3, const MCString& v4);
-	Exec_stat message_with_args(MCNameRef name, MCNameRef v1);
-	Exec_stat message_with_args(MCNameRef name, MCNameRef v1, MCNameRef v2);
+	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1);
+	Exec_stat message_with_valueref_args(MCNameRef name, MCValueRef v1, MCValueRef v2);
 	Exec_stat message_with_args(MCNameRef name, int4 v1);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2);
 	Exec_stat message_with_args(MCNameRef name, int4 v1, int4 v2, int4 v3);
@@ -539,7 +591,13 @@ public:
 	
 	void senderror();
 	void sendmessage(Handler_type htype, MCNameRef mess, Boolean handled);
-	Exec_stat names(Properties which, MCExecPoint &ep, uint4 parid);
+	
+	// New method for returning the various 'names' of an object. This should really
+	// return an 'MCValueRef' at some point, but as it stands that causes issues.
+	bool names(Properties which, MCStringRef& r_name);
+	// Wrapper for 'names()' working in the old way (for convenience).
+	Exec_stat names_old(Properties which, MCExecPoint& ep, uint32_t parid);
+
 	Boolean parsescript(Boolean report, Boolean force = False);
 	void drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset);
 	void draw3d(MCDC *dc, const MCRectangle &drect,
@@ -547,6 +605,7 @@ public:
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
 	Exec_stat domess(const char *sptr);
+	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	Exec_stat eval(const char *sptr, MCExecPoint &ep);
 	void editscript();
 	void removefrom(MCObjectList *l);
@@ -575,9 +634,11 @@ public:
 
 	MCBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
 
+#ifdef OLD_EXEC
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.
 	Exec_stat getproparray(MCExecPoint &ep, uint4 parid);
+#endif
 
 	MCObjectHandle *gethandle(void);
 
@@ -592,12 +653,15 @@ public:
 	//   of the objects will be included.
 	static MCPickleContext *startpickling(bool include_2700);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
+#ifdef SHARED_STRING
 	static MCSharedString *stoppickling(MCPickleContext *p_context);
-
 	static MCSharedString *pickle(MCObject *p_object, uint4 p_part);
-
 	static MCObject *unpickle(MCSharedString *p_object, MCStack *p_stack);
-
+#else
+	static void pickle(MCObject *p_object, uint4 p_part, MCStringRef& r_string);
+	static void stoppickling(MCPickleContext *p_context, MCStringRef& r_string);
+	static MCObject *unpickle(MCStringRef p_data, MCStack *p_stack);
+#endif
 	// in DLList overrides
 	MCObject *next()
 	{
@@ -631,7 +695,7 @@ public:
 	{
 		return (MCObject *)MCDLlist::remove((MCDLlist *&)list);
 	}
-	
+
 	// MM-2012-09-05: [[ Property Listener ]]
 	void listen(void)
 	{
@@ -676,6 +740,13 @@ public:
 
 	void scheduledelete(void);
 	
+	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
+	// returns true if the referenced image is still in use by this object
+	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
+	{
+		return false;
+	}
+
 	// MW-2012-10-10: [[ IdCache ]]
 	void setinidcache(bool p_value)
 	{
@@ -686,14 +757,273 @@ public:
 	{
 		return m_in_id_cache;
 	}
+	
+	////////// PROPERTY SUPPORT METHODS
 
-	// IM-2013-02-11 image change notification (used by button icons, field images, etc.)
-	// returns true if the referenced image is still in use by this object
-	virtual bool imagechanged(MCImage *p_image, bool p_deleting)
-	{
-		return false;
-	}
+	void Redraw(void);
 
+	bool GetPixel(MCExecContext& ctxt, Properties which, bool effective, uinteger_t& r_pixel);
+	void SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel);
+
+	bool GetColor(MCExecContext& ctxt, Properties which, bool effective, MCInterfaceNamedColor& r_color);
+	void SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedColor& p_color);
+	bool GetColors(MCExecContext& ctxt, bool effective, MCStringRef& r_colors);
+
+	bool GetPattern(MCExecContext& ctxt, Properties which, bool effective, uint4& r_pattern);
+	void SetPattern(MCExecContext& ctxt, uint2 p_new_pixmap, uint4* p_new_id);
+	bool GetPatterns(MCExecContext& ctxt, bool effective, MCStringRef& r_patterns);
+
+	void SetVisibility(MCExecContext& ctxt, uint32_t part, bool flag, bool visible);
+
+	void SetRectProp(MCExecContext& ctxt, bool effective, MCRectangle p_rect);
+	void GetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint &r_point);
+	void SetRectPoint(MCExecContext& ctxt, bool effective, Properties which, MCPoint point);
+	void GetRectValue(MCExecContext& ctxt, bool effective, Properties which, integer_t& r_value);
+	void SetRectValue(MCExecContext& ctxt, bool effective, Properties which, integer_t value);
+
+	bool TextPropertyMapFont();
+	void TextPropertyUnmapFont(bool p_unmap);
+	
+	////////// PROPERTY ACCESSORS
+	
+	void GetId(MCExecContext& ctxt, uint32_t& r_id);
+	virtual void SetId(MCExecContext& ctxt, uint32_t id);
+	void GetAbbrevId(MCExecContext& ctxt, MCStringRef& r_abbrev_id);
+	void GetLongName(MCExecContext& ctxt, MCStringRef& r_long_name);
+	void GetLongId(MCExecContext& ctxt, MCStringRef& r_long_id);
+	void GetName(MCExecContext& ctxt, MCStringRef& r_name);
+	virtual void SetName(MCExecContext& ctxt, MCStringRef name);
+	void GetAbbrevName(MCExecContext& ctxt, MCStringRef& r_abbrev_name);
+	void GetShortName(MCExecContext& ctxt, MCStringRef& r_short_name);
+	
+	void GetAltId(MCExecContext& ctxt, uinteger_t& r_alt_id);
+	void SetAltId(MCExecContext& ctxt, uinteger_t alt_id);
+
+	void GetLayer(MCExecContext& ctxt, uint32_t part, MCInterfaceLayer& r_layer);
+	void SetLayer(MCExecContext& ctxt, uint32_t part, const MCInterfaceLayer& p_layer);
+
+	void GetScript(MCExecContext& ctxt, MCStringRef& r_script);
+	void SetScript(MCExecContext& ctxt, MCStringRef new_script);
+	void GetParentScript(MCExecContext& ctxt, MCStringRef& r_p_script);
+	void SetParentScript(MCExecContext& ctxt, MCStringRef new_parent_script);
+	void GetNumber(MCExecContext& ctxt, uint32_t part, uinteger_t& r_number);
+	void GetEffectiveForePixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetForePixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetBackPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveHilitePixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetHilitePixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveBorderPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetBorderPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetTopPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveBottomPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetBottomPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveShadowPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetShadowPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	void GetEffectiveFocusPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetFocusPixel(MCExecContext& ctxt, uinteger_t*& r_pixel);
+	void SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel);
+
+	void GetPenBackColor(MCExecContext& ctxt, MCValueRef& r_value);
+	void SetPenBackColor(MCExecContext& ctxt, MCValueRef r_value);
+	void GetBrushBackColor(MCExecContext& ctxt, MCValueRef& r_value);
+	void SetBrushBackColor(MCExecContext& ctxt, MCValueRef r_value);
+	void GetPenPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetPenPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetBrushPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetBrushPattern(MCExecContext& ctxt, uinteger_t* pattern);
+
+	void GetForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveBorderColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetTopColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveTopColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetBottomColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveBottomColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetShadowColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveShadowColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetFocusColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	void GetEffectiveFocusColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+
+	void GetColors(MCExecContext& ctxt, MCStringRef& r_colors);
+	void SetColors(MCExecContext& ctxt, MCStringRef colors);
+	void GetEffectiveColors(MCExecContext& ctxt, MCStringRef& r_colors);
+
+	void GetForePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveForePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetBackPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveBackPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetHilitePattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveHilitePattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetBorderPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveBorderPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetTopPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveTopPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetBottomPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveBottomPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetShadowPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveShadowPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+	void GetFocusPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+	void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	void GetEffectiveFocusPattern(MCExecContext& ctxt, uinteger_t& r_pattern);
+
+	void GetPatterns(MCExecContext& ctxt, MCStringRef& r_patterns);
+	void SetPatterns(MCExecContext& ctxt, MCStringRef patterns);
+	void GetEffectivePatterns(MCExecContext& ctxt, MCStringRef& r_patterns);
+
+	void GetLockLocation(MCExecContext& ctxt, bool& r_setting);
+	void SetLockLocation(MCExecContext& ctxt, bool setting);
+
+	void GetTextHeight(MCExecContext& ctxt, uinteger_t*& r_height);
+	void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+	void GetEffectiveTextHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetTextAlign(MCExecContext& ctxt, intenum_t*& r_align);
+	void SetTextAlign(MCExecContext& ctxt, intenum_t* align);
+	void GetEffectiveTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+	void GetTextFont(MCExecContext& ctxt, MCStringRef& r_font);
+	virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+	void GetEffectiveTextFont(MCExecContext& ctxt, MCStringRef& r_font);
+	void GetTextSize(MCExecContext& ctxt, uinteger_t*& r_size);
+	virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+	void GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size);
+	void GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+	virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+	void GetEffectiveTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+
+	void GetShowBorder(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+	void GetShowFocusBorder(MCExecContext& ctxt, bool& r_setting);
+	void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
+
+	void GetBorderWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+	void GetOpaque(MCExecContext& ctxt, bool& r_setting);
+	void SetOpaque(MCExecContext& ctxt, bool setting);
+	void GetShadow(MCExecContext& ctxt, MCInterfaceShadow& r_shadow);
+	void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+	void GetShadowOffset(MCExecContext& ctxt, integer_t& r_offset);
+	void SetShadowOffset(MCExecContext& ctxt, integer_t offset);
+	void Get3D(MCExecContext& ctxt, bool& r_setting);
+	void Set3D(MCExecContext& ctxt, bool setting);
+
+	void GetVisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	virtual void SetVisible(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetInvisible(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	void SetInvisible(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetEnabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetDisabled(MCExecContext& ctxt, uint32_t part, bool& r_setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetSelected(MCExecContext& ctxt, bool& r_setting);
+	void SetSelected(MCExecContext& ctxt, bool setting);
+	void GetTraversalOn(MCExecContext& ctxt, bool& r_setting);
+	void SetTraversalOn(MCExecContext& ctxt, bool setting);
+
+	void GetOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetShortOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetAbbrevOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+	void GetLongOwner(MCExecContext& ctxt, MCStringRef& r_owner);
+
+	void GetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_props);
+	void SetProperties(MCExecContext& ctxt, uint32_t part, MCArrayRef props);
+	void GetCustomPropertySet(MCExecContext& ctxt, MCStringRef& r_propset);
+	void SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset);
+	void GetCustomPropertySets(MCExecContext& ctxt, MCStringRef& r_propsets);
+	void SetCustomPropertySets(MCExecContext& ctxt, MCStringRef propsets);
+
+	void GetInk(MCExecContext& ctxt, intenum_t& r_ink);
+	void SetInk(MCExecContext& ctxt, intenum_t ink);
+	void GetCantSelect(MCExecContext& ctxt, bool& r_setting);
+	virtual void SetCantSelect(MCExecContext& ctxt, bool setting);
+	void GetEffectiveCantSelect(MCExecContext& ctxt, bool& r_setting);
+	void GetBlendLevel(MCExecContext& ctxt, uinteger_t& r_level);
+	virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
+
+	void GetLocation(MCExecContext& ctxt, MCPoint& r_location);
+	void SetLocation(MCExecContext& ctxt, MCPoint location);
+	void GetEffectiveLocation(MCExecContext& ctxt, MCPoint& r_location);
+	void SetEffectiveLocation(MCExecContext& ctxt, MCPoint location);
+
+	void GetLeft(MCExecContext& ctxt, integer_t& r_value);
+	void SetLeft(MCExecContext& ctxt, integer_t value);
+	void GetEffectiveLeft(MCExecContext& ctxt, integer_t& r_value);
+	void SetEffectiveLeft(MCExecContext& ctxt, integer_t value);
+	void GetRight(MCExecContext& ctxt, integer_t& r_value);
+	void SetRight(MCExecContext& ctxt, integer_t value);
+	void GetEffectiveRight(MCExecContext& ctxt, integer_t& r_value);
+	void SetEffectiveRight(MCExecContext& ctxt, integer_t value);
+	void GetTop(MCExecContext& ctxt, integer_t& r_value);
+	void SetTop(MCExecContext& ctxt, integer_t value);
+	void GetEffectiveTop(MCExecContext& ctxt, integer_t& r_value);
+	void SetEffectiveTop(MCExecContext& ctxt, integer_t value);
+	void GetBottom(MCExecContext& ctxt, integer_t& r_value);
+	void SetBottom(MCExecContext& ctxt, integer_t value);
+	void GetEffectiveBottom(MCExecContext& ctxt, integer_t& r_value);
+	void SetEffectiveBottom(MCExecContext& ctxt, integer_t value);
+
+	void GetTopLeft(MCExecContext& ctxt, MCPoint& r_value);
+	void SetTopLeft(MCExecContext& ctxt, MCPoint value);
+	void GetEffectiveTopLeft(MCExecContext& ctxt, MCPoint& r_value);
+	void SetEffectiveTopLeft(MCExecContext& ctxt, MCPoint value);
+	void GetTopRight(MCExecContext& ctxt, MCPoint& r_value);
+	void SetTopRight(MCExecContext& ctxt, MCPoint value);
+	void GetEffectiveTopRight(MCExecContext& ctxt, MCPoint& r_value);
+	void SetEffectiveTopRight(MCExecContext& ctxt, MCPoint value);
+	void GetBottomLeft(MCExecContext& ctxt, MCPoint& r_value);
+	void SetBottomLeft(MCExecContext& ctxt, MCPoint value);
+	void GetEffectiveBottomLeft(MCExecContext& ctxt, MCPoint& r_value);
+	void SetEffectiveBottomLeft(MCExecContext& ctxt, MCPoint value);
+	void GetBottomRight(MCExecContext& ctxt, MCPoint& r_value);
+	void SetBottomRight(MCExecContext& ctxt, MCPoint value);
+	void GetEffectiveBottomRight(MCExecContext& ctxt, MCPoint& r_value);
+	void SetEffectiveBottomRight(MCExecContext& ctxt, MCPoint value);
+
+	void GetWidth(MCExecContext& ctxt, uinteger_t& r_value);
+	void SetWidth(MCExecContext& ctxt, uinteger_t value);
+	void GetEffectiveWidth(MCExecContext& ctxt, uinteger_t& r_value);
+	void SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value);
+	void GetHeight(MCExecContext& ctxt, uinteger_t& r_value);
+	void SetHeight(MCExecContext& ctxt, uinteger_t value);
+	void GetEffectiveHeight(MCExecContext& ctxt, uinteger_t& r_value);
+	void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
+
+	void GetRectangle(MCExecContext& ctxt, MCRectangle& r_rect);
+	void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+	void GetEffectiveRectangle(MCExecContext& ctxt, MCRectangle& r_rect);
+	void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+
+	void GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding);
+
+//////////
+				
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
 	IO_stat defaultextendedload(MCObjectInputStream& p_stream, const char *p_version, uint4 p_remaining);
@@ -711,30 +1041,31 @@ protected:
 	void unmapfont(void);
 	
 private:
+#ifdef OLD_EXEC
+	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
+	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 
-	Exec_stat setrectprop(Properties which, MCExecPoint& ep, Boolean effective);
 	Exec_stat setscriptprop(MCExecPoint& ep);
 	Exec_stat setparentscriptprop(MCExecPoint& ep);
-	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
 	Exec_stat setshowfocusborderprop(MCExecPoint& ep);
-
+#endif
 	bool clonepropsets(MCObjectPropertySet*& r_new_props) const;
 	void deletepropsets(void);
 
 	// Find the propset with the given name.
-	bool findpropset(MCNameRef name, bool p_empty_is_default, MCVariableValue*& r_value);
+	bool findpropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
 	// Find the propset with the given name, creating it if necessary.
-	/* CAN FAIL */ bool ensurepropset(MCNameRef name, bool p_empty_is_default, MCVariableValue*& r_value);
-	// Set propset to the one corresponding to name, creating it if it does
-	// not exist.
+	/* CAN FAIL */ bool ensurepropset(MCNameRef name, bool p_empty_is_default, MCObjectPropertySet*& r_set);
+#ifdef OLD_EXEC
+	// Set propset to the one corresponding to name, creating it if it does not exist.
 	/* CAN FAIL */ bool setpropset(MCNameRef name);
 
 	// List the available propsets into ep.
 	void listpropsets(MCExecPoint& ep);
 	// Change the available propsets to those listed in ep.
 	/* CAN FAIL */ bool changepropsets(MCExecPoint& ep);
-
+#endif
 	bool hasarraypropsets(void);
 	uint32_t measurearraypropsets(void);
 	IO_stat loadunnamedpropset(IO_handle stream);

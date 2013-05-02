@@ -1120,40 +1120,6 @@ Parse_stat MCScriptPoint::parseexp(Boolean single, Boolean items,
 	return PS_NORMAL;
 }
 
-Exec_stat MCScriptPoint::getcommands(MCExecPoint &ep)
-{
-	bool first = true;
-	uint2 i;
-	for (i = 0 ; i < command_table_size ; i++)
-		if (command_table[i].type == TT_STATEMENT)
-		{
-			ep.concatcstring(command_table[i].token, EC_RETURN, first);
-			first = false;
-		}
-	return ES_NORMAL;
-}
-
-Exec_stat MCScriptPoint::getfactors(MCExecPoint &ep, Token_type which)
-{
-	bool first = true;
-	uint2 i;
-	for (i = 0 ; i < factor_table_size ; i++)
-		if (factor_table[i].type == which)
-		{
-			ep.concatcstring(factor_table[i].token, EC_RETURN, first);
-			first = false;
-		}
-	return ES_NORMAL;
-}
-
-Exec_stat MCScriptPoint::getconstants(MCExecPoint &ep)
-{
-	uint2 i;
-	for (i = 0 ; i < constant_table_size ; i++)
-		ep.concatcstring(constant_table[i].token, EC_RETURN, i == 0);
-	return ES_NORMAL;
-}
-
 Parse_stat MCScriptPoint::findvar(MCNameRef p_name, MCVarref** r_var)
 {
 	if (curhandler != NULL)

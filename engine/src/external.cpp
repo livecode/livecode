@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "osspec.h"
 #include "globals.h"
-#include "core.h"
 
 #include "external.h"
 
@@ -61,6 +60,32 @@ bool MCExternalHandlerList::ListExternals(MCExecPoint& ep)
 	return true;
 }
 
+bool MCExternalHandlerList::ListExternals(MCStringRef& r_list)
+{
+	bool t_success;
+	t_success = true;
+
+	MCAutoListRef t_external_list;
+
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_external_list);
+
+	for(uindex_t i = 0, j = 0; i < m_externals . Count(); i++)
+	{
+		MCAutoStringRef t_name_string;
+
+		if (t_success)
+			t_success = MCStringCreateWithCString(m_externals[i] -> GetName(), &t_name_string);
+		if (t_success)
+			t_success = MCListAppend(*t_external_list, *t_name_string);
+	}
+
+	if (t_success)
+		t_success = MCListCopyAsString(*t_external_list, r_list);
+
+	return t_success;
+}
+
 bool MCExternalHandlerList::ListHandlers(MCExecPoint& ep, Handler_type p_type)
 {
 	ep . clear();
@@ -68,6 +93,28 @@ bool MCExternalHandlerList::ListHandlers(MCExecPoint& ep, Handler_type p_type)
 		if (m_externals[m_handlers[i] . external] -> GetHandlerType(m_handlers[i] . handler) == p_type)
 			ep . concatnameref(m_handlers[i] . name, EC_RETURN, j++ == 0);
 	return true;
+}
+
+bool MCExternalHandlerList::ListHandlers(Handler_type p_type, MCStringRef& r_list)
+{
+	bool t_success;
+	t_success = true;
+
+	MCAutoListRef t_handler_list;
+
+	if (t_success)
+		t_success = MCListCreateMutable('\n', &t_handler_list);
+
+	for(uindex_t i = 0, j = 0; i < m_handlers . Count(); i++)
+	{
+		if (t_success && m_externals[m_handlers[i] . external] -> GetHandlerType(m_handlers[i] . handler) == p_type)
+			t_success = MCListAppend(*t_handler_list, m_handlers[i] . name);
+	}
+
+	if (t_success)
+		t_success = MCListCopyAsString(*t_handler_list, r_list);
+
+	return t_success;
 }
 
 bool MCExternalHandlerList::Load(const char *p_external)
@@ -92,7 +139,7 @@ bool MCExternalHandlerList::Load(const char *p_external)
 		t_external -> ListHandlers(AddHandler, this);
 		t_success = m_externals . Append(t_external);
 	}
-	
+
 	if (!t_success)
 	{
 		for(uindex_t i = 0; i < m_handlers . Count(); i++)

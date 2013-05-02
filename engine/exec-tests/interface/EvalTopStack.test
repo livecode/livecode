@@ -1,0 +1,5 @@
+setup
+
+test word 1 of the topStack is "stack"
+
+teardown

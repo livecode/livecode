@@ -257,29 +257,26 @@ struct MCPosixSystem: public MCSystemInterface
 		return getpid();
 	}
 
-	virtual char *GetVersion(void)
-	{
-		char *buffer;
-		struct utsname u;
-		uname(&u);
-		buffer = new char[strlen(u.sysname) + strlen(u.release) + 2];
-		sprintf(buffer, "%s %s", u.sysname, u.release);
-		return buffer;
-	}
-
-	virtual char *GetMachine(void)
+	virtual bool GetVersion(MCStringRef& r_string)
 	{
 		struct utsname u;
 		uname(&u);
-		return strclone(u.machine);
+		return MCStringFormat(r_string, "%s %s", u.sysname, u.release);
 	}
 
-	virtual char *GetProcessor(void)
+	virtual bool GetMachine(MCStringRef& r_string)
+	{
+		struct utsname u;
+		uname(&u);
+		return MCStringCreateWithNativeChars(u.machine, MCCStringLength(u.machine), r_string);
+	}
+
+	MCNameRef GetProcessor(void)
 	{
 #ifdef __LITTLE_ENDIAN__
-		return strclone("x86");
+		return MCN_x86;
 #else
-		return strclone("Motorola PowerPC");
+		return MCN_motorola_powerpc;
 #endif
 	}
 
@@ -357,9 +354,13 @@ struct MCPosixSystem: public MCSystemInterface
 		return strdup(p_target);
 	}
 	
-	virtual char *GetCurrentFolder(void)
+	virtual bool GetCurrentFolder(MCStringRef& r_path)
 	{
-		return getcwd(NULL, 0);
+		MCAutoPointer<char> t_folder;
+		t_folder = getcwd(NULL, 0);
+		if (*t_folder == nil)
+			return false;
+		return MCStringCreateWithCString(*t_folder, r_path);
 	}
 	
 	virtual bool SetCurrentFolder(const char *p_path)
@@ -477,85 +478,85 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	////
 	
-	char *PathToNative(const char *p_path)
+	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
 	{
-		return strdup(p_path);
+		return MCStringCopy(p_path, r_native);
 	}
 	
-	char *PathFromNative(const char *p_path)
+	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
 	{
-		return strdup(p_path);
+		return MCStringCopy(p_native, r_path);
+	}
+
+	bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
+	{
+		MCAutoStringRef t_native;
+		return PathToNative(p_path, &t_native) &&
+			ResolveNativePath(*t_native, r_resolved);
 	}
 	
-	char *ResolvePath(const char *p_path)
+	bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
 	{
-		return ResolveNativePath(p_path);
-	}
-	
-	char *ResolveNativePath(const char *p_path)
-	{
-		char *t_tilde_path;
-		t_tilde_path = NULL;
-		if (p_path[0] == '~')
+		MCAutoStringRef t_tilde_path;
+		if (MCStringGetCharAtIndex(p_path, 0) == '~')
 		{
-			const char *t_user_end;
-			t_user_end = strchr(p_path, '/');
-			if (t_user_end == NULL)
-				t_user_end = p_path + strlen(p_path);
+			uindex_t t_user_end;
+			if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
+				t_user_end = MCStringGetLength(p_string);
 			
 			// Prepend user name
 			struct passwd *t_password;
-			if (t_user_end - p_path == 1)
+			if (t_user_end == 1)
 				t_password = getpwuid(getuid());
 			else
 			{
-				char *t_username;
-				t_username = strndup(p_path, t_user_end - p_path);
-				t_password = getpwnam(t_username);
-				delete t_username;
+				MCAutoStringRef t_username;
+				if (!MCStringCopySubstring(p_path, MCRange(1, t_user_end - 1), &t_username))
+					return false;
+
+				t_password = getpwnam(MCStringGetCString(t_username));
 			}
 			
 			if (t_password != NULL)
 			{
-				t_tilde_path = new char[strlen(t_password -> pw_dir) + strlen(p_path) - (t_user_end - p_path) + 1];
-				strcpy(t_tilde_path, t_password -> pw_dir);
-				strcat(t_tilde_path, t_user_end);
+				if (!MCStringCreateMutable(0, &t_tilde_path) ||
+					!MCStringAppendNativeChars(*t_tilde_path, t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+					!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+					return false;
 			}
 			else
-				t_tilde_path = strdup(p_path);
+				t_tilde_path = p_path;
 		}
 		else
-			t_tilde_path = strdup(p_path);
+			t_tilde_path = p_path;
 		
-		char *t_absolute_path;
-		if (t_tilde_path[0] != '/')
+		if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
 		{
-			char *t_folder;
-			t_folder = GetCurrentFolder();
-			t_absolute_path = new char[strlen(t_folder) + strlen(t_tilde_path) + 2];
-			strcpy(t_absolute_path, t_folder);
-			strcat(t_absolute_path, "/");
-			strcat(t_absolute_path, t_tilde_path);
-			delete t_tilde_path;
-			
-			// MW-2011-07-04: GetCurrentFolder() returns a string that must be
-			//   freed.
-			free(t_folder);
+			MCAutoStringRef t_folder;
+			if (!GetCurrentFolder(&t_folder))
+				return false;
+
+			MCAutoStringRef t_resolved;
+			if (!MCStringMutableCopy(*t_folder, &t_resolved) ||
+				!MCStringAppendChar(*t_resolved, '/') ||
+				!MCStringAppend(*t_resolved, *t_tilde_path))
+				return false;
+
+			return MCStringCopy(*t_resolved, r_resolved);
 		}
 		else
-			t_absolute_path = t_tilde_path;
-		
-		return t_absolute_path;
+			return MCStringCopy(*t_tilde_path, r_resolved);
+
 	}
 	
-	char *LongFilePath(const char *p_path)
+	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 	{
-		return strclone(p_path);
+		return MCStringCopy(p_path, r_long_path);
 	}
 	
-	char *ShortFilePath(const char *p_path)
+	bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
 	{
-		return strclone(p_path);
+		return MCStringCopy(p_path, r_short_path);
 	}
 	
 	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context)
@@ -765,10 +766,10 @@ struct MCPosixSystem: public MCSystemInterface
 		return strdup(t_hostname);
 	}
 	
-	bool HostNameToAddress(const char *p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
 		struct hostent *he;
-		he = gethostbyname(p_hostname);
+		he = gethostbyname(MCStringGetCString(p_hostname));
 		if (he == NULL)
 			return false;
 		
@@ -776,16 +777,22 @@ struct MCPosixSystem: public MCSystemInterface
 		ptr = (struct in_addr **)he -> h_addr_list;
 		
 		for(uint32_t i = 0; ptr[i] != NULL; i++)
-			if (!p_callback(p_context, inet_ntoa(*ptr[i])))
+		{
+			MCAutoStringRef t_address;
+			char *t_addr_str = inet_ntoa(*ptr[i]);
+			if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
 				return false;
+			if (!p_callback(p_context, t_address))
+				return false;
+		}
 		
 		return true;
 	}
-	
-	bool AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+
+	bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 	{
 		struct in_addr addr;
-		if (!inet_aton(p_address, &addr))
+		if (!inet_aton(MCStringGetCString(p_address), &addr))
 			return false;
 			
 		struct hostent *he;
@@ -793,7 +800,9 @@ struct MCPosixSystem: public MCSystemInterface
 		if (he == NULL)
 			return false;
 		
-		return p_callback(p_context, he -> h_name);
+		MCAutoStringRef t_name;
+		return MCStringCreateWithNativeChars((char_t*)he->h_name, MCCStringLength(he->h_name), &t_name) &&
+			p_callback(p_context, *t_name);
 	}
 	
 	//////////////////

@@ -259,7 +259,7 @@ Exec_stat MCVariableValue::lookup_element(MCExecPoint& ep, const MCString& key, 
 	t_stat = lookup_hash(ep, key, True, t_value);
 	if (t_stat == ES_ERROR)
 		return t_stat;
-	
+
 	r_value = &(t_value -> value);
 
 	set_dbg_mutated(true);
@@ -287,7 +287,7 @@ Exec_stat MCVariableValue::lookup_hash(MCExecPoint& ep, const MCString& p_key, b
 			r_value = NULL;
 			return ES_NORMAL;
 		}
-
+		
 		if (is_string() && (p_key . getstring() < strnum . buffer . data + strnum . buffer . size && p_key . getstring() + p_key . getlength() >= strnum . buffer . data))
 		{
 			t_key . set((char *)malloc(p_key . getlength()), p_key . getlength());
@@ -1193,7 +1193,7 @@ IO_stat MCVariableValue::savekeys(IO_header *stream)
 	return IO_write_uint4(0, stream);
 }
 
-IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream, bool p_merge)
+IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream)
 {
 	if (!p_merge)
 		destroy();

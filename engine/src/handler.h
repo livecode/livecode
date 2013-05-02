@@ -87,21 +87,29 @@ public:
 
 	Parse_stat parse(MCScriptPoint &sp, Boolean isprop);
 	Exec_stat exec(MCExecPoint &, MCParameter *);
+	void compile(MCSyntaxFactoryRef factory);
+	
 	MCVariable *getvar(uint2 index, Boolean isparam)
 	{
 		return isparam ? params[index] : vars[index];
 	}
-	Exec_stat getnparams(uint2 &);
-	Exec_stat getparam(uint2 index,  MCExecPoint &);
+	integer_t getnparams(void);
+    MCValueRef getparam(uindex_t p_index);
 	Parse_stat findvar(MCNameRef name, MCVarref **);
 	Parse_stat newvar(MCNameRef name, MCNameRef init, MCVarref **);
 	Parse_stat findconstant(MCNameRef name, MCExpression **);
 	Parse_stat newconstant(MCNameRef name, MCNameRef value);
 	void newglobal(MCNameRef name);
+	bool getparamnames(MCListRef& r_list);
+	bool getvariablenames(MCListRef& r_list);
+	bool getglobalnames(MCListRef& r_list);
+	bool getvarnames(bool p_all, MCListRef& r_list);
 	Exec_stat getvarnames(MCExecPoint &, Boolean all);
+	void eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value);
 	Exec_stat eval(MCExecPoint &);
 	uint4 linecount();
 	void deletestatements(MCStatement *statements);
+	void doscript(MCExecContext& ctxt, MCStringRef p_script);
 	Exec_stat doscript(MCExecPoint &ep, uint2 line, uint2 pos);
 
 	// Used by the externals API, this method returns the current incarnation of

@@ -48,9 +48,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define SELECTIONNAME "MCConvertDestination"
 
-extern int UTF8ToUnicode(const char * lpSrcStr, int cchSrc,
-                  uint2 * lpDestStr, int cchDest);
-
 int xerror(Display *dpy, XErrorEvent *ev);
 void xdnd_target_event_loop ( XEvent xevent ) ;
 extern Atom XdndEnter ;
@@ -237,14 +234,16 @@ static Boolean isKeyPressed(char *km, uint1 keycode)
 	return (km[keycode >> 3] >> (keycode & 7)) & 1;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
 	char kstring[U4L];
 	char km[32];
-	ep.clear();
 	MCmodifierstate = querymods();
 	XQueryKeymap(dpy, km);
-	bool first = true;
 	uint2 i;
 	KeySym ksym;
 	for (i = 0; i < 256; i++)
@@ -257,12 +256,11 @@ void MCScreenDC::getkeysdown(MCExecPoint &ep)
 			else
 				ksym  = XKeycodeToKeysym(dpy, i, 0);
 			if (ksym > 0)
-			{
-				ep.concatuint(ksym, EC_COMMA, first);
-				first = false;
-			}
+				if (!MCListAppendInteger(*t_list, ksym))
+					return false;
 		}
 	}
+	return MCListCopy(*t_list, r_list);
 }
 
 void MCScreenDC::create_stipple()
@@ -895,6 +893,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				// If I don't own the clipboard at this point, then something has gone wrong	
 				if ( ownsclipboard() ) 
 				{
+#ifdef SHARED_STRING
 					MCSharedString * t_data; 
 					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), t_data, None, None, DNULL, DNULL, MCeventtime ))
 					{
@@ -902,7 +901,15 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 					                srevent -> target, 8, PropModeReplace,
 					                (const unsigned char *)t_data -> Get() . getstring(),
 					                t_data -> Get() . getlength());
-						
+#else
+					MCAutoStringRef t_data; 
+					if (m_Clipboard_store -> Fetch(  new MCMIMEtype(dpy, srevent -> target), &t_data, None, None, DNULL, DNULL, MCeventtime ))
+					{
+						XChangeProperty(dpy, srevent -> requestor, srevent -> property,
+					                srevent -> target, 8, PropModeReplace,
+					                (const unsigned char *)MCStringGetCString(*t_data),
+					                MCStringGetLength(*t_data));
+#endif
 						if (srevent->property != None)
 							sendevent.property = srevent->property;
 						else

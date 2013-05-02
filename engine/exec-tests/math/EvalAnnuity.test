@@ -1,0 +1,5 @@
+setup
+
+test annuity(0.02, 25) is ( 1 - ( 1 + 0.02 ) ^ ( - 25 ) ) / 0.02
+
+teardown

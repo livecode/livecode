@@ -1,0 +1,44 @@
+setup "invalid input"
+	create image
+	create image
+	
+	test-error intersect("not an image", image 2)
+teardown
+
+
+
+setup
+
+local tAlpha, tBlackImage
+
+repeat with i = 1 to 100
+	put numToByte(0) after tAlpha[0]
+	put numToByte(127) after tAlpha[1]
+	put numToByte(255) after tAlpha[2]
+	
+	put numToByte(0)&numToByte(0)&numToByte(0)&numToByte(0) after tBlackImage
+end repeat
+
+
+local tImage1, tImage2
+create image
+put the long id of the last image into tImage1
+create image
+put the long id of the last image into tImage2
+
+set the rect of tImage1 to 0,0,10,10
+set the rect of tImage2 to 0,0,10,10
+
+repeat with i = 0 to 2
+	set the alphadata of tImage1 to tAlpha[i]
+	repeat with j = i to 2
+		set the alphadata of tImage2 to tAlpha[j]
+		test intersect(tImage1, tImage2)
+	end repeat
+end repeat
+
+
+set the topleft of tImage2 to the topright of tImage1
+test not intersect(tImage1, tImage2)
+
+teardown

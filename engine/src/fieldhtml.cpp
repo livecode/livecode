@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -79,10 +78,10 @@ struct export_html_tag_t
 			uint32_t bg_color;
 		} font;
 		uint32_t shift;
-		MCNameRef metadata;
+		MCStringRef metadata;
 		struct
 		{
-			MCNameRef target;
+			MCStringRef target;
 			bool is_href;
 		} link;
 	};
@@ -406,7 +405,7 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 			{
 				ctxt . buffer . appendtextf("<a %s=\"", p_value . link . is_href ? "href" : "name");
 				// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-				export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_value . link . target), kExportHtmlEscapeTypeAttribute);
+				export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . link . target), kExportHtmlEscapeTypeAttribute);
 				ctxt . buffer . appendcstring("\">");
 			}
 			else
@@ -416,7 +415,7 @@ static void export_html_add_tag(export_html_t& ctxt, export_html_tag_type_t p_ta
 	case kExportHtmlTagSpan:
 		ctxt . buffer . appendcstring("<span metadata=\"");
 		// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-		export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_value . metadata), kExportHtmlEscapeTypeAttribute);
+		export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_value . metadata), kExportHtmlEscapeTypeAttribute);
 		ctxt . buffer . appendcstring("\">");
 		break;
 	default:
@@ -595,7 +594,7 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 		{
 			ctxt . buffer . appendcstring("<img src=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
-			export_html_emit_cstring(ctxt . buffer, MCNameGetCString(p_event_data . character_style . image_source), kExportHtmlEscapeTypeAttribute);
+			export_html_emit_cstring(ctxt . buffer, MCStringGetCString(p_event_data . character_style . image_source), kExportHtmlEscapeTypeAttribute);
 			ctxt . buffer . appendcstring("\" char=\"");
 			// MW-2012-09-19: [[ Bug 10228 ]] Make sure we generate the string in quote context.
 			export_html_emit_text(ctxt . buffer, p_event_data . bytes, p_event_data . byte_count, p_event_type == kMCFieldExportEventUnicodeRun, kExportHtmlEscapeTypeAttribute);
@@ -613,6 +612,26 @@ static bool export_html_emit_paragraphs(void *p_context, MCFieldExportEventType 
 
 void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
 {
+	MCAutoStringRef t_string;
+
+	if (exportashtmltext(p_paragraphs, p_start_index, p_finish_index, p_effective, &t_string))
+		/* UNCHECKED */ ep . setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
+{
+	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
+}
+
+bool MCField::exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
+{
+	return exportashtmltext(resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective, r_string);
+}
+
+bool MCField::exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string)
+{
 	export_html_t ctxt;
 	memset(&ctxt, 0, sizeof(export_html_t));
 	
@@ -628,13 +647,8 @@ void MCField::exportashtmltext(MCExecPoint& ep, MCParagraph *p_paragraphs, int32
 	// Now execute the second pass which generates all the paragraph content.
 	doexport(t_flags, p_paragraphs, p_start_index, p_finish_index, export_html_emit_paragraphs, &ctxt);
 
-	// Return the buffer in the ep.
-	ctxt . buffer . givetoep(ep);
-}
-
-void MCField::exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t p_start_index, int32_t p_finish_index, bool p_effective)
-{
-	exportashtmltext(ep, resolveparagraphs(p_part_id), p_start_index, p_finish_index, p_effective);
+	// Return the buffer.
+	return ctxt . buffer . takeasstringref(r_string);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -965,20 +979,20 @@ static void import_html_copy_style(const MCFieldCharacterStyle& p_src, MCFieldCh
 {
 	r_dst = p_src;
 	if (p_src . has_link_text)
-		MCNameClone(p_src . link_text, r_dst . link_text);
+		r_dst . link_text = MCValueRetain(p_src . link_text);
 	if (p_src . has_image_source)
-		MCNameClone(p_src . image_source, r_dst . image_source);
+		r_dst . image_source = MCValueRetain(p_src . image_source);
 	if (p_src . has_metadata)
-		MCNameClone(p_src . metadata, r_dst . metadata);
+		r_dst . metadata = MCValueRetain(p_src . metadata);
 	if (p_src . has_text_font)
 		MCNameClone(p_src . text_font, r_dst . text_font);
 }
 
 static void import_html_free_style(MCFieldCharacterStyle& p_style)
 {
-	MCNameDelete(p_style . link_text);
-	MCNameDelete(p_style . image_source);
-	MCNameDelete(p_style . metadata);
+	MCValueRelease(p_style . link_text);
+	MCValueRelease(p_style . image_source);
+	MCValueRelease(p_style . metadata);
 	MCNameDelete(p_style . text_font);
 }
 
@@ -1589,7 +1603,7 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		case kImportHtmlTagAnchor:
 		{
 			bool t_is_link;
-			MCNameRef t_linktext;
+			MCStringRef t_linktext;
 			t_linktext = nil;
 			t_is_link = false;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
@@ -1597,8 +1611,8 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 				// MW-2012-03-16: [[ Bug ]] LinkText without link style is encoded with a 'name' attr.
 				if (p_tag . attrs[i] . type == kImportHtmlAttrName || p_tag . attrs[i] . type == kImportHtmlAttrHref)
 				{
-					MCNameDelete(t_linktext);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_linktext);
+					MCValueRelease(t_linktext);
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_linktext);
 					t_is_link = p_tag . attrs[i] . type == kImportHtmlAttrHref;
 				}
 			}
@@ -1617,13 +1631,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		break;
 		case kImportHtmlTagImage:
 		{
-			MCNameRef t_src;
+			MCStringRef t_src;
 			t_src = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrSrc)
 				{
-					MCNameDelete(t_src);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_src);
+					MCValueRelease(t_src);
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_tag . attrs[i] . value, strlen(p_tag . attrs[i] . value), t_src);
 				}
 			
 			if (t_src != nil)
@@ -1722,13 +1736,13 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 		// MW-2012-08-31: [[ Bug 10343 ]] Implement support for importing 'span' tags.
 		case kImportHtmlTagSpan:
 		{
-			MCNameRef t_metadata;
+			MCStringRef t_metadata;
 			t_metadata = nil;
 			for(uint32_t i = 0; i < p_tag . attr_count; i++)
 				if (p_tag . attrs[i] . type == kImportHtmlAttrMetadata)
 				{
-					MCNameDelete(t_metadata);
-					MCNameCreateWithCString(p_tag . attrs[i] . value, t_metadata);
+					MCValueRelease(t_metadata);
+					MCStringCreateWithCString(p_tag . attrs[i] . value, t_metadata);
 				}
 			
 			if (t_metadata != nil)

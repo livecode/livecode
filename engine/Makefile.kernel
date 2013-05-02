@@ -28,7 +28,7 @@ SOURCES=\
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-	contextscalewrapper.cpp variablearray.cpp objectstream.cpp \
+	contextscalewrapper.cpp objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
@@ -41,9 +41,19 @@ SOURCES=\
 	lnxtextlayout.cpp lnxcolor.cpp lnxcursor.cpp lnxelevate.cpp lnxflst.cpp lnxmisc.cpp \
 	lnximage.cpp dskmain.cpp dsklnxmain.cpp \
 	linuxstubs.cpp notify.cpp eventqueue.cpp \
-	objectprops.cpp objectpropsets.cpp variablevalue.cpp internal.cpp mcutility.cpp name.cpp \
+	objectprops.cpp objectpropsets.cpp internal.cpp mcutility.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp syslnxregion.cpp fieldstyledtext.cpp paragrafattr.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp stackcache.cpp
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp syslnxfs.cpp stackcache.cpp \
+	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
+	exec-logic exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting \
+	exec-strings.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
+	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
+	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
+	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
+	exec-interface-object.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
+	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp \
+	syntax.cpp \
+	foundation-legacy.cpp legacy_spec.cpp
 
 linuxstubs.cpp: src/linux.stubs
 	../prebuilt/bin/Revolution.lnx "../tools/weak_stub_maker.lc" <./src/linux.stubs >./src/linuxstubs.cpp
@@ -54,5 +64,5 @@ include/revbuild.h: include/revbuild.h.in ../version
 include ../rules/environment.linux.makefile
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
-
+	
 include Makefile.kernel-common

@@ -29,11 +29,14 @@ inline char *pStrcpy(unsigned char *dest, const unsigned char *src)
 
 extern char *MCS_FSSpec2path(FSSpec *fileSpec);
 extern OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
+extern OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec);
 
 extern OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec);
 extern OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref);
 extern OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref);
+extern OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref);
 extern OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
+extern bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
 extern char *MCS_fsref_to_path(FSRef& p_ref);
 
 extern Boolean MCS_imeisunicode();
@@ -41,7 +44,9 @@ extern Boolean MCS_handle_sockets();
 
 extern const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
 extern const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+extern bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error);
 extern const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+extern bool MCS_openresourcefile_with_fsref(FSRef& p_fsref, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error);
 extern const char *MCS_openresourcefile_with_fsref(FSRef *p_fsref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
 extern void MCS_closeresourcefile(SInt16 p_fork_ref);
 

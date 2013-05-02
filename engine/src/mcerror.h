@@ -47,7 +47,8 @@ public:
 	void add(uint2 id, uint2 line, uint2 pos);
 	void add(uint2 id, uint2 line, uint2 pos, uint32_t);
 	void add(uint2 id, uint2 line, uint2 pos, const MCString &);
-	void add(uint2 id, uint2 line, uint2 pos, MCNameRef);
+	void add(uint2 id, uint2 line, uint2 pos, const char *);
+	void add(uint2 id, uint2 line, uint2 pos, MCValueRef);
 	void append(MCError& string);
 	const MCString &getsvalue();
 	void copysvalue(const MCString &s, Boolean t);
@@ -57,6 +58,9 @@ public:
 		return strlen(buffer) == 0;
 	}
 	void geterrorloc(uint2 &line, uint2 &pos);
+
+private:
+	void doadd(uint2 id, uint2 line, uint2 pos, const MCString& token);
 };
 #endif
 

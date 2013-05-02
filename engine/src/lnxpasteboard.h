@@ -29,9 +29,13 @@ public:
 	void Retain(void) ;
 	void Release(void) ;
 	bool Query(MCTransferType*& r_types, unsigned int& r_type_count) ;
+#ifdef SHARED_STRING
 	bool Fetch(MCTransferType p_type, MCSharedString*& r_data) ;
 	bool Fetch_MIME(MCMIMEtype *p_type, MCSharedString*& r_data);
-	
+#else
+	bool Fetch(MCTransferType p_type, MCStringRef& r_data) ;
+	bool Fetch_MIME(MCMIMEtype *p_type, MCStringRef& r_data);	
+#endif
 	void SetWindows ( Window p_source_window , Window p_target_window ) ;
 	
 private:

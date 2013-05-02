@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -83,15 +82,14 @@ MCBlock::MCBlock(const MCBlock &bref) : MCDLlist(bref)
 
 		atts->shift = bref.atts->shift;
 
-		// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
+		// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+		//   strings.
 		if (flags & F_HAS_LINK)
-			/* UNCHECKED */ MCNameClone(bref.atts->linktext, atts->linktext);
+			atts -> linktext = MCValueRetain(bref . atts -> linktext);
 		if (flags & F_HAS_IMAGE)
-			/* UNCHECKED */ MCNameClone(bref.atts->imagesource, atts->imagesource);
-
-		// MW-2012-01-6: [[ Block Metadata ]] Copy the metadata (if any).
+			atts -> imagesource = MCValueRetain(bref . atts -> imagesource);
 		if (flags & F_HAS_METADATA)
-			/* UNCHECKED */ MCNameClone(bref.atts->metadata, atts->metadata);
+			atts -> metadata = MCValueRetain(bref . atts -> metadata);
 	}
 	else
 		atts = NULL;
@@ -226,20 +224,31 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		if ((stat = IO_read_int2(&atts->shift, stream)) != IO_NORMAL)
 			return stat;
 
-	// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings.
 	if (flags & F_HAS_LINK)
-		if ((stat = IO_read_nameref(atts->linktext, stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_read_stringref(atts->linktext, stream)) != IO_NORMAL)
 			return stat;
+		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
+	}
+
 	if (flags & F_HAS_IMAGE)
-		if ((stat = IO_read_nameref(atts->imagesource, stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_read_stringref(atts->imagesource, stream)) != IO_NORMAL)
 			return stat;
+		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
+	}
 
 	// MW-2012-03-04: [[ StackFile5500 ]] If there is a metadata attr then read
 	//   it in.
 	if (flags & F_HAS_METADATA)
-		if ((stat = IO_read_nameref(atts->metadata, stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_read_stringref(atts->metadata, stream)) != IO_NORMAL)
 			return stat;
-	
+		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
+	}
+
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block, then skip
 	//   to the end of the attrs record.
 	if (is_ext)
@@ -349,12 +358,13 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 		if ((stat = IO_write_int2(atts->shift, stream)) != IO_NORMAL)
 			return stat;
 
-	// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings.
 	if (flags & F_HAS_LINK)
-		if ((stat = IO_write_nameref(atts->linktext, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(atts->linktext, stream)) != IO_NORMAL)
 			return stat;
 	if (flags & F_HAS_IMAGE)
-		if ((stat = IO_write_nameref(atts->imagesource, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(atts->imagesource, stream)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -362,7 +372,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	if (t_is_ext)
 	{
 		if (flags & F_HAS_METADATA)
-			if ((stat = IO_write_nameref(atts -> metadata, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref(atts -> metadata, stream)) != IO_NORMAL)
 				return stat;
 	}
 	
@@ -523,8 +533,8 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 		return False;
 	
 	// If the metadatas are not the same, the blocks are different. Notice that
-	// we do a pointer comparison - these are 'Names' and as such are identical
-	// iff they are the same pointer.
+	// we do a pointer comparison - the metadata fields are unique values so this
+	// is sufficient to check for equality.
 	if (getmetadata() != bptr -> getmetadata())
 		return False;
 
@@ -1275,7 +1285,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 	{
 		MCRectangle t_box;
 		MCU_set_rect(t_box, x - 1, y - t_ascent, getwidth(dc, cx) + 3, t_ascent + t_descent);
-		dc -> drawlink(getlinktext(), t_box);
+		dc -> drawlink(MCStringGetCString(getlinktext()), t_box);
 	}
 }
 
@@ -1360,7 +1370,9 @@ bool MCBlock::hasfontattrs(void) const
 
 void MCBlock::setatts(Properties which, void *value)
 {
-		// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings and 'value' is a StringRef in those cases.
+
 	if (which == P_LINK_TEXT)
 	{
 		const char *t_text;
@@ -1368,8 +1380,7 @@ void MCBlock::setatts(Properties which, void *value)
 
 		if (flags & F_HAS_LINK)
 		{
-			// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
-			MCNameDelete(atts -> linktext);
+			MCValueRelease(atts -> linktext);
 			atts -> linktext = nil;
 		}
 
@@ -1380,8 +1391,8 @@ void MCBlock::setatts(Properties which, void *value)
 			if (atts == NULL)
 				atts = new Blockatts;
 
-			// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
-			/* UNCHECKED */ MCNameCreateWithCString(t_text, atts -> linktext);
+			/* UNCHECKED */ MCValueInter((MCStringRef)value, atts -> linktext);
+
 			flags |= F_HAS_LINK;
 		}
 	}
@@ -1395,8 +1406,7 @@ void MCBlock::setatts(Properties which, void *value)
 			if (opened)
 				closeimage();
 
-			// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
-			MCNameDelete(atts -> imagesource);
+			MCValueRelease(atts -> imagesource);
 			atts -> imagesource = nil;
 		}
 
@@ -1407,8 +1417,8 @@ void MCBlock::setatts(Properties which, void *value)
 			if (atts == NULL)
 				atts = new Blockatts;
 
-			// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
-			/* UNCHECKED */ MCNameCreateWithCString(t_image, atts -> imagesource);
+			/* UNCHECKED */ MCValueInter((MCStringRef)value, atts -> imagesource);
+
 			atts->image = NULL;
 			flags |= F_HAS_IMAGE;
 		}
@@ -1424,7 +1434,7 @@ void MCBlock::setatts(Properties which, void *value)
 
 		if (flags & F_HAS_METADATA)
 		{
-			MCNameDelete(atts -> metadata);
+			MCValueRelease(atts -> metadata);
 			atts -> metadata = nil;
 		}
 
@@ -1435,7 +1445,7 @@ void MCBlock::setatts(Properties which, void *value)
 			if (atts == nil)
 				atts = new Blockatts;
 
-			/* UNCHECKED */ MCNameCreateWithCString(t_metadata, atts -> metadata);
+			/* UNCHECKED */ MCValueInter((MCStringRef)value, atts -> metadata);
 
 			flags |= F_HAS_METADATA;
 		}
@@ -1823,10 +1833,12 @@ void MCBlock::freeatts()
 
 void MCBlock::freerefs()
 {
-	// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings.
+
 	if (flags & F_HAS_LINK)
 	{
-		MCNameDelete(atts -> linktext);
+		MCValueRelease(atts -> linktext);
 		atts -> linktext = nil;
 	}
 
@@ -1835,15 +1847,13 @@ void MCBlock::freerefs()
 		if (opened)
 			closeimage();
 
-		// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
-		MCNameDelete(atts -> imagesource);
+		MCValueRelease(atts -> imagesource);
 		atts -> imagesource = nil;
 	}
 
-	// MW-2012-01-06: [[ Block Metadata ]] If we have metadata, delete it.
 	if (flags & F_HAS_METADATA)
 	{
-		MCNameDelete(atts -> metadata);
+		MCValueRelease(atts -> metadata);
 		atts -> metadata = nil;
 	}
 
@@ -1859,12 +1869,11 @@ void MCBlock::openimage()
 		// MW-2009-02-02: [[ Improved image search ]]
 		// Search for the appropriate image object using the standard method - here we
 		// use the field as the starting point.
-		// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
 		uint4 t_image_id;
-		if (MCU_stoui4(MCNameGetOldString(atts->imagesource), t_image_id))
+		if (MCU_stoui4(MCStringGetOldString(atts->imagesource), t_image_id))
 			atts -> image = t_field -> resolveimageid(t_image_id);
 		else
-			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, MCNameGetOldString(atts->imagesource));
+			atts->image = (MCImage *)t_field->getstack()->getobjname(CT_IMAGE, MCStringGetOldString(atts->imagesource));
 
 		if (atts->image != NULL)
 		{
@@ -1887,36 +1896,32 @@ void MCBlock::closeimage()
 }
 
 
-const char *MCBlock::getlinktext()
+MCStringRef MCBlock::getlinktext()
 {
-	// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
 	// MW-2012-10-01: [[ Bug 10178 ]] Added guard to ensure we don't get a null
 	//   dereference.
 	if (flags & F_HAS_LINK && atts != nil)
-		return MCNameGetCString(atts->linktext);
-	else
-		return NULL;
+		return atts->linktext;
+
+	return NULL;
 }
 
-const char *MCBlock::getimagesource()
+MCStringRef MCBlock::getimagesource()
 {
-	// MW-2012-01-06: [[ Block Changes ]] Change linktext/imagesource to be names.
 	// MW-2012-10-01: [[ Bug 10178 ]] Added guard to ensure we don't get a null
 	//   dereference.
 	if (flags & F_HAS_IMAGE && atts != nil)
-		return MCNameGetCString(atts->imagesource);
-	else
-		return NULL;
+		return atts->imagesource;
+
+	return NULL;
 }
 
-// MW-2012-01-06: [[ Block Metadata ]] This method returns the metadata of the
-//   block if set, otherwise nil.
-const char *MCBlock::getmetadata(void)
+MCStringRef MCBlock::getmetadata(void)
 {
 	// MW-2012-10-01: [[ Bug 10178 ]] Added guard to ensure we don't get a null
 	//   dereference.
 	if (flags & F_HAS_METADATA && atts != nil)
-		return MCNameGetCString(atts -> metadata);
+		return atts -> metadata;
 
 	return nil;
 }
@@ -2170,7 +2175,7 @@ MCBlock *MCBlock::retreatindex(uint2& p_index)
 		p_index -= 2;
 	else
 		p_index -= 1;
-	
+
 	// MW-2012-03-10: [[ Bug ]] Loop while the block is empty, or the block doesn't
 	//   contain the index.
 	while(p_index < t_block -> index || t_block -> size == 0)
@@ -2292,11 +2297,11 @@ void MCBlock::importattrs(const MCFieldCharacterStyle& p_style)
 		setbackcolor(&t_color);
 	}
 	if (p_style . has_link_text)
-		setatts(P_LINK_TEXT, (void *)MCNameGetCString(p_style . link_text));
+		setatts(P_LINK_TEXT, (void *)p_style . link_text);
 	if (p_style . has_image_source)
-		setatts(P_IMAGE_SOURCE, (void *)MCNameGetCString(p_style . image_source));
+		setatts(P_IMAGE_SOURCE, (void *)p_style . image_source);
 	if (p_style . has_metadata)
-		setatts(P_METADATA, (void *)MCNameGetCString(p_style . metadata));
+		setatts(P_METADATA, (void *)p_style . metadata);
 	if (p_style . has_text_font)
 		setatts(P_TEXT_FONT, (void *)MCNameGetCString(p_style . text_font));
 	if (p_style . has_text_style)
@@ -2324,6 +2329,15 @@ uint32_t measure_nameref(MCNameRef p_name)
 	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
 }
 
+static uint32_t measure_stringref(MCStringRef p_string)
+{
+	const char *t_cstring;
+	t_cstring = MCStringGetCString(p_string);
+	if (*t_cstring == '\0')
+		return 2;
+	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
+}
+
 // MW-2012-03-04: [[ StackFile5500 ]] Compute the number of bytes the attributes will
 //   take up when serialized.
 uint32_t MCBlock::measureattrs(void)
@@ -2346,12 +2360,15 @@ uint32_t MCBlock::measureattrs(void)
 		t_size += 6;
 	if ((flags & F_HAS_SHIFT) != 0)
 		t_size += 2;
+
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings.
 	if ((flags & F_HAS_LINK) != 0)
-		t_size += measure_nameref(atts -> linktext);
+		t_size += measure_stringref(atts -> linktext);
 	if ((flags & F_HAS_IMAGE) != 0)
-		t_size += measure_nameref(atts -> imagesource);
+		t_size += measure_stringref(atts -> imagesource);
 	if ((flags & F_HAS_METADATA) != 0)
-		t_size += measure_nameref(atts -> metadata);
+		t_size += measure_stringref((MCStringRef)atts -> metadata);
 
 	return t_size;
 }

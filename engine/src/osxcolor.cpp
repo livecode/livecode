@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -111,7 +110,7 @@ static void byte_swap_bitmap_data(MCImageBitmap *p_bitmap)
 		uint32_t *t_src_pixel = (uint32_t*)t_src_row;
 		for (uindex_t x = 0; x < p_bitmap->width; x++)
 		{
-			*t_src_pixel = MCByteSwappedFromHost32(*t_src_pixel);
+			*t_src_pixel = MCSwapInt32HostToBig(*t_src_pixel);
 			t_src_pixel++;
 		}
 		t_src_row += p_bitmap->stride;

@@ -1,0 +1,2028 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include "prefix.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "mcio.h"
+#include "sysdefs.h"
+
+#include "globals.h"
+#include "field.h"
+#include "stack.h"
+#include "card.h"
+#include "button.h"
+#include "util.h"
+#include "dispatch.h"
+#include "stacklst.h"
+#include "image.h"
+#include "sellst.h"
+#include "chunk.h"
+#include "date.h"
+
+#include "exec.h"
+#include "mode.h"
+
+#include "eps.h"
+#include "graphic.h"
+#include "group.h"
+#include "scrolbar.h"
+#include "player.h"
+#include "aclip.h"
+#include "vclip.h"
+#include "osspec.h"
+
+#include "debug.h"
+#include "card.h"
+#include "cardlst.h"
+
+#include "undolst.h"
+
+#include "redraw.h"
+#include "visual.h"
+#include "pxmaplst.h"
+#include "mctheme.h"
+
+#include "exec-interface.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MC_EXEC_DEFINE_GET_METHOD(Interface, DialogData, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DialogData, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LookAndFeel, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LookAndFeel, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenMouseLoc, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenMouseLoc, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Backdrop, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Backdrop, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BufferImages, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BufferImages, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SystemFileSelector, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SystemFileSelector, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SystemColorSelector, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SystemColorSelector, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SystemPrintSelector, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SystemPrintSelector, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PaintCompression, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PaintCompression, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BrushBackColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BrushBackColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PenBackColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PenBackColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BrushColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BrushColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PenColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PenColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BrushPattern, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BrushPattern, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PenPattern, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PenPattern, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Filled, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Filled, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PolySides, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PolySides, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LineSize, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LineSize, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RoundRadius, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RoundRadius, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StartAngle, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StartAngle, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ArcAngle, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ArcAngle, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RoundEnds, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RoundEnds, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Dashes, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Dashes, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RecentCards, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RecentNames, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, EditBackground, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, EditBackground, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockScreen, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockScreen, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, AccentColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, AccentColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, HiliteColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, HiliteColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LinkColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LinkColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LinkHiliteColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LinkHiliteColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LinkVisitedColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LinkVisitedColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, UnderlineLinks, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, UnderlineLinks, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SelectGroupedControls, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SelectGroupedControls, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Icon, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Icon, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, AllowInlineInput, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, AllowInlineInput, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DragDelta, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DragDelta, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileType, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileType, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StackFileVersion, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StackFileVersion, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, IconMenu, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, IconMenu, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIcon, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIcon, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconToolTip, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconToolTip, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, StatusIconMenu, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, StatusIconMenu, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ProcessType, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ProcessType, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ShowInvisibles, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ShowInvisibles, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Cursor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Cursor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultCursor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultCursor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultStack, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultStack, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DefaultMenubar, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DefaultMenubar, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DragSpeed, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DragSpeed, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, MoveSpeed, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, MoveSpeed, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockCursor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockCursor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockErrors, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockErrors, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockMenus, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockMenus, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockMessages, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockMessages, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockMoves, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockMoves, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, LockRecent, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, LockRecent, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, IdleRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, IdleRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, IdleTicks, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, IdleTicks, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BlinkRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BlinkRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RepeatDelay, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RepeatDelay, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, TypeRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, TypeRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SyncRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SyncRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, EffectRate, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, EffectRate, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleDelta, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleDelta, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DoubleTime, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DoubleTime, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, TooltipDelay, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, TooltipDelay, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, NavigationArrows, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, NavigationArrows, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ExtendKey, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ExtendKey, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, PointerFocus, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, PointerFocus, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, EmacsKeyBindings, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, EmacsKeyBindings, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseMenus, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseMenus, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ActivatePalettes, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ActivatePalettes, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, HidePalettes, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, HidePalettes, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RaisePalettes, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RaisePalettes, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RaiseWindows, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RaiseWindows, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, HideBackdrop, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, HideBackdrop, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, DontUseNavigationServices, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, DontUseNavigationServices, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ProportionalThumbs, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ProportionalThumbs, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SharedMemory, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SharedMemory, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenGamma, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, ScreenGamma, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionMode, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionMode, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, SelectionHandleColor, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, SelectionHandleColor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, WindowBoundingRect, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, WindowBoundingRect, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, JpegQuality, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, JpegQuality, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, RelayerGroupedControls, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, RelayerGroupedControls, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Brush, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Brush, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Eraser, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Eraser, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Spray, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Spray, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Centered, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Centered, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Grid, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Grid, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, GridSize, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, GridSize, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Slices, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Slices, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BeepLoudness, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BeepLoudness, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BeepPitch, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BeepPitch, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BeepDuration, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BeepDuration, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, BeepSound, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, BeepSound, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, Tool, 1)
+MC_EXEC_DEFINE_SET_METHOD(Interface, Tool, 1)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRect, 3)
+MC_EXEC_DEFINE_GET_METHOD(Interface, ScreenRects, 3)
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
+{
+	if (MCStringGetLength(p_input) == 0)
+	{
+		r_output . name = MCValueRetain(kMCEmptyString);
+		return;
+	}
+
+	MCColor t_color;
+	MCAutoPointer<char> t_color_name;
+	if (!MCscreen -> parsecolor(MCStringGetOldString(p_input), &t_color, &(&t_color_name)))
+	{
+		 ctxt . LegacyThrow(EE_PROPERTY_BADCOLOR);
+		 return;
+	}
+	
+	MCStringRef t_color_name_ref;
+	t_color_name_ref = nil;
+	if (*t_color_name != nil &&
+		!MCStringCreateWithCString(*t_color_name, t_color_name_ref))
+	{
+		ctxt . Throw();
+		return;
+	}
+
+	r_output . color = t_color;
+	r_output . name = t_color_name_ref;
+}
+
+void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColor& p_input, MCStringRef& r_output)
+{
+	if (p_input . name != nil)
+	{
+		r_output = (MCStringRef)MCValueRetain(p_input . name);
+		return;
+	}
+	
+	if (ctxt . FormatLegacyColor(p_input . color, r_output))
+		return;
+		
+	ctxt . Throw();
+}
+
+static void MCInterfaceNamedColorInit(MCExecContext& ctxt, MCInterfaceNamedColor& r_output)
+{
+	MCMemoryClear(&r_output, sizeof(MCInterfaceNamedColor));
+}
+
+void MCInterfaceNamedColorFree(MCExecContext& ctxt, MCInterfaceNamedColor& p_input)
+{
+	MCValueRelease(p_input . name);
+}
+
+static void MCInterfaceNamedColorCopy(MCExecContext& ctxt, const MCInterfaceNamedColor& p_source, MCInterfaceNamedColor& r_target)
+{
+	r_target . color = p_source . color;
+	if (p_source . name != nil)
+		r_target . name = (MCStringRef)MCValueRetain(p_source . name);
+}
+
+static bool MCInterfaceNamedColorIsEqualTo(const MCInterfaceNamedColor& p_left, const MCInterfaceNamedColor& p_right)
+{
+	if (p_left . name != nil && p_right . name != nil)
+		return MCStringIsEqualTo(p_left . name, p_right . name, kMCStringOptionCompareCaseless);
+
+	if (p_left . name != nil || p_right . name != nil)
+		return false;
+
+	return p_left . color . red == p_right . color . red &&
+			p_left . color . green == p_right . color . green &&
+			p_left . color . blue == p_right . color . blue;
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceNamedColorTypeInfo =
+{
+	"Interface.NamedColor",
+	sizeof(MCInterfaceNamedColor),
+	(void *)MCInterfaceNamedColorParse,
+	(void *)MCInterfaceNamedColorFormat,
+	(void *)MCInterfaceNamedColorFree
+};
+
+//////////
+
+enum MCInterfaceBackdropType
+{
+	kMCInterfaceBackdropTypeNone,
+	kMCInterfaceBackdropTypeColor,
+	kMCInterfaceBackdropTypePattern,
+};
+
+struct MCInterfaceBackdrop
+{
+	MCInterfaceBackdropType type;
+	union
+	{
+		MCInterfaceNamedColor named_color;
+		uinteger_t pattern;
+	};
+};
+
+static void MCInterfaceBackdropParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceBackdrop& r_backdrop)
+{
+	if (MCValueIsEmpty(p_input) ||
+		MCStringIsEqualToCString(p_input, "none", kMCCompareCaseless))
+	{
+		r_backdrop . type = kMCInterfaceBackdropTypeNone;
+		return;
+	}
+
+	bool t_converted;
+	if (!ctxt . TryToConvertToUnsignedInteger(p_input, t_converted, r_backdrop . pattern))
+	{
+		ctxt . Throw();
+		return;
+	}
+
+	if (t_converted)
+	{
+		if (r_backdrop . pattern == 0)
+			r_backdrop . type = kMCInterfaceBackdropTypeNone;
+		else
+			r_backdrop . type = kMCInterfaceBackdropTypePattern;
+
+		return;
+	}
+
+	MCInterfaceNamedColorParse(ctxt, p_input, r_backdrop . named_color);
+	if (ctxt . HasError())
+	{
+		// Should EE_BACKDROP_BADVALUE (?)
+		return;
+	}
+
+	r_backdrop . type = kMCInterfaceBackdropTypeColor;
+}
+
+static void MCInterfaceBackdropFormat(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop, MCStringRef& r_output)
+{
+	switch(p_backdrop . type)
+	{
+	case kMCInterfaceBackdropTypeNone:
+		if (MCStringCreateWithCString("none", r_output))
+			return;
+		break;
+	case kMCInterfaceBackdropTypeColor:
+		MCInterfaceNamedColorFormat(ctxt, p_backdrop . named_color, r_output);
+		return;
+	case kMCInterfaceBackdropTypePattern:
+		if (ctxt . FormatUnsignedInteger(p_backdrop . pattern, r_output))
+			return;
+		break;
+	}
+
+	ctxt . Throw();
+}
+
+static void MCInterfaceBackdropInit(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
+{
+	MCMemoryClear(&r_backdrop, sizeof(MCInterfaceBackdrop));
+}
+
+static void MCInterfaceBackdropFree(MCExecContext& ctxt, MCInterfaceBackdrop& p_backdrop)
+{
+	if (p_backdrop . type == kMCInterfaceBackdropTypeColor)
+		MCInterfaceNamedColorFree(ctxt, p_backdrop . named_color);
+}
+
+static void MCInterfaceBackdropCopy(MCExecContext& ctxt, const MCInterfaceBackdrop& p_source, MCInterfaceBackdrop& r_target)
+{
+	r_target . type = p_source . type;
+	if (r_target . type == kMCInterfaceBackdropTypePattern)
+		r_target . pattern = p_source . pattern;
+	else if (r_target . type == kMCInterfaceBackdropTypeColor)
+		MCInterfaceNamedColorCopy(ctxt, p_source . named_color, r_target . named_color);
+}
+
+static bool MCInterfaceBackdropIsEqualTo(const MCInterfaceBackdrop& p_left, const MCInterfaceBackdrop& p_right)
+{
+	if (p_left . type != p_right . type)
+		return false;
+
+	if (p_left . type == kMCInterfaceBackdropTypeNone)
+		return true;
+
+	if (p_left . type == kMCInterfaceBackdropTypePattern)
+		return p_left . pattern == p_right . pattern;
+
+	return MCInterfaceNamedColorIsEqualTo(p_left . named_color, p_right . named_color);
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceBackdropTypeInfo =
+{
+	"Interface.Backdrop",
+	sizeof(MCInterfaceBackdrop),
+	(void *)MCInterfaceBackdropParse,
+	(void *)MCInterfaceBackdropFormat,
+	(void *)MCInterfaceBackdropFree,
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceLookAndFeelElementInfo[] =
+{	
+	{ "Appearance Manager", LF_AM, false },
+	{ "Motif", LF_MOTIF, false },
+	{ "Macintosh", LF_MAC, false },
+	{ "Windows 95", LF_WIN95, false },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceLookAndFeelTypeInfo =
+{
+	"Interface.LookAndFeel",
+	sizeof(_kMCInterfaceLookAndFeelElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceLookAndFeelElementInfo
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfacePaintCompressionElementInfo[] =
+{
+	{ "png", EX_PNG },
+	{ "jpeg", EX_JPEG },
+	{ "gif", EX_GIF },
+	{ "rle", EX_PBM },
+};
+
+static MCExecEnumTypeInfo _kMCInterfacePaintCompressionTypeInfo =
+{
+	"Interface.PaintCompression",
+	sizeof(_kMCInterfacePaintCompressionElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfacePaintCompressionElementInfo,
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceProcessTypeElementInfo[] =
+{
+	{ "background", 0 },
+	{ "foreground", 1 },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceProcessTypeTypeInfo =
+{
+	"Interface.ProcessType",
+	sizeof(_kMCInterfaceProcessTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceProcessTypeElementInfo,
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCInterfaceSelectionModeElementInfo[] =
+{
+	{ "surround", 0 },
+	{ "intersect", 1 },
+};
+
+static MCExecEnumTypeInfo _kMCInterfaceSelectionModeTypeInfo =
+{
+	"Interface.ProcessType",
+	sizeof(_kMCInterfaceSelectionModeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCInterfaceSelectionModeElementInfo,
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecEnumTypeInfo *kMCInterfaceLookAndFeelTypeInfo = &_kMCInterfaceLookAndFeelTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceBackdropTypeInfo = &_kMCInterfaceBackdropTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceNamedColorTypeInfo = &_kMCInterfaceNamedColorTypeInfo;
+MCExecEnumTypeInfo *kMCInterfacePaintCompressionTypeInfo = &_kMCInterfacePaintCompressionTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceProcessTypeTypeInfo = &_kMCInterfaceProcessTypeTypeInfo;
+MCExecEnumTypeInfo *kMCInterfaceSelectionModeTypeInfo = &_kMCInterfaceSelectionModeTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCInterfaceBackdrop MCbackdrop;
+static Pixmap MCbackdroppm;
+static uint4 MCiconid;
+static MCStringRef MCiconmenu;
+static uint4 MCstatusiconid;
+static MCStringRef MCstatusiconmenu;
+static MCStringRef MCstatusicontooltip;
+
+void MCInterfaceInitialize(MCExecContext& ctxt)
+{
+	MCInterfaceBackdropInit(ctxt, MCbackdrop);
+	MCbackdroppm = DNULL;
+	MCiconid = 0;
+	MCiconmenu = (MCStringRef)MCValueRetain(kMCEmptyString);
+	MCstatusiconid = 0;
+	MCstatusiconmenu = (MCStringRef)MCValueRetain(kMCEmptyString);
+	MCstatusicontooltip = (MCStringRef)MCValueRetain(kMCEmptyString);
+}
+
+void MCInterfaceFinalize(MCExecContext& ctxt)
+{
+	MCInterfaceBackdropFree(ctxt, MCbackdrop);
+	MCValueRelease(MCiconmenu);
+	MCValueRelease(MCstatusiconmenu);
+	MCValueRelease(MCstatusicontooltip);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetDialogData(MCExecContext& ctxt, MCValueRef& r_value)
+{
+	r_value = MCValueRetain(MCdialogdata -> getvalueref());
+}
+void MCInterfaceSetDialogData(MCExecContext& ctxt, MCValueRef p_value)
+{
+	MCdialogdata -> setvalueref(p_value);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetLookAndFeel(MCExecContext& ctxt, intenum_t& r_value)
+{
+	if (MCcurtheme != nil)
+		r_value = LF_AM;
+	else
+		r_value = MClook;
+}
+
+void MCInterfaceSetLookAndFeel(MCExecContext& ctxt, intenum_t p_value)
+{
+	MCTheme *newtheme = NULL;
+	MCField *oldactive = MCactivefield;
+	if (oldactive != NULL)
+		oldactive->kunfocus();
+	uint2 oldlook = MClook;
+	MCTheme *oldtheme = MCcurtheme;
+	MCcurtheme = NULL;
+	MClook = p_value;
+	
+	if (p_value == LF_AM)
+	{
+		if (!oldtheme || 
+			(oldtheme->getthemeid() != LF_NATIVEWIN && 
+			 oldtheme->getthemeid() != LF_NATIVEMAC &&
+			 oldtheme->getthemeid() != LF_NATIVEGTK))
+		{
+			MCcurtheme = MCThemeCreateNative();
+			if (MCcurtheme->load())
+			{
+				if (oldtheme != NULL)
+					oldtheme -> unload();
+				delete oldtheme;
+				MClook = MCcurtheme->getthemefamilyid();
+			}
+			else
+			{
+				delete MCcurtheme;
+				MCcurtheme = oldtheme;
+				MClook = oldlook;
+			}
+		}
+		else
+		{
+			MCcurtheme = oldtheme;
+			MClook = oldlook;
+		}
+	}
+	if (MClook != oldlook || MCcurtheme != oldtheme)
+	{
+		if (IsMacEmulatedLF())
+		{
+			MCtemplatescrollbar->alloccolors();
+			MCtemplatebutton->allocicons();
+		}
+		if (oldtheme)
+		{
+			oldtheme->unload();
+			delete oldtheme;
+		}
+		
+		// MW-2011-08-17: [[ Redraw ]] Changing theme means we must dirty
+		//   everything.
+		MCRedrawDirtyScreen();
+	}
+	if (oldactive != NULL)
+		oldactive->kfocus();
+}
+
+void MCInterfaceGetScreenMouseLoc(MCExecContext& ctxt, MCPoint& r_value)
+{
+	int2 mx, my;
+	MCscreen->querymouse(mx, my);
+	r_value . x = mx;
+	r_value . y = my;
+}
+
+void MCInterfaceSetScreenMouseLoc(MCExecContext& ctxt, MCPoint p_value)
+{
+	MCscreen->setmouse(p_value . x, p_value . y);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetBackdrop(MCExecContext& ctxt, MCInterfaceBackdrop& r_backdrop)
+{
+	r_backdrop = MCbackdrop;
+}
+
+void MCInterfaceSetBackdrop(MCExecContext& ctxt, const MCInterfaceBackdrop& p_backdrop)
+{
+	if (MCInterfaceBackdropIsEqualTo(p_backdrop, MCbackdrop))
+		return;
+	
+	MCInterfaceBackdropFree(ctxt, MCbackdrop);
+	MCInterfaceBackdropCopy(ctxt, p_backdrop, MCbackdrop);
+	if (ctxt . HasError())
+		return;
+
+	if (MCbackdroppm != DNULL)
+	{
+		MCpatterns -> freepat(MCbackdroppm);
+		MCbackdroppm = DNULL;
+	}
+
+	switch (p_backdrop . type)
+	{
+	case kMCInterfaceBackdropTypeNone:
+		MCscreen -> disablebackdrop();
+		MCscreen -> configurebackdrop(MCscreen -> getwhite(), NULL, nil);
+		return;
+	case kMCInterfaceBackdropTypeColor:
+		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, DNULL, nil);
+		MCscreen -> enablebackdrop();
+		break;
+	case kMCInterfaceBackdropTypePattern:
+		MCbackdroppm = MCpatterns->allocpat(p_backdrop . pattern, ctxt . GetObject());
+		MCscreen -> configurebackdrop(MCbackdrop . named_color . color, MCbackdroppm, nil);
+		MCscreen -> enablebackdrop();
+		break;
+	}
+}
+
+void MCInterfaceGetBufferImages(MCExecContext& ctxt, bool &r_value)
+{
+	r_value = MCbufferimages == True;
+}
+
+void MCInterfaceSetBufferImages(MCExecContext& ctxt, bool p_value)
+{
+	MCbufferimages = p_value ? True : False;
+}
+
+void MCInterfaceGetSystemFileSelector(MCExecContext& ctxt, bool &r_value)
+{
+	r_value = MCsystemFS == True;
+}
+
+void MCInterfaceSetSystemFileSelector(MCExecContext& ctxt, bool p_value)
+{
+	MCsystemFS = p_value ? True : False;
+}
+
+void MCInterfaceGetSystemColorSelector(MCExecContext& ctxt, bool &r_value)
+{
+	r_value = MCsystemCS == True;
+}
+
+void MCInterfaceSetSystemColorSelector(MCExecContext& ctxt, bool p_value)
+{
+	MCsystemCS = p_value ? True : False;
+}
+
+void MCInterfaceGetSystemPrintSelector(MCExecContext& ctxt, bool &r_value)
+{
+	r_value = MCsystemPS == True;
+}
+
+void MCInterfaceSetSystemPrintSelector(MCExecContext& ctxt, bool p_value)
+{
+	MCsystemPS = p_value ? True : False;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void get_interface_color(const MCColor& p_color, MCStringRef p_color_name, MCInterfaceNamedColor& r_color)
+{
+	r_color . name = p_color_name != nil ? (MCStringRef)MCValueRetain(p_color_name) : nil;
+	r_color . color = p_color;
+}
+
+void set_interface_color(MCColor& x_color, MCStringRef& x_color_name, const MCInterfaceNamedColor& p_color)
+{
+	MCValueRelease(x_color_name);
+	x_color_name = p_color . name != nil ? (MCStringRef)MCValueRetain(p_color . name) : nil;
+	x_color = p_color . color;
+}
+
+void MCInterfaceGetPaintCompression(MCExecContext& ctxt, intenum_t& r_value)
+{
+	r_value = MCpaintcompression;
+}
+
+void MCInterfaceSetPaintCompression(MCExecContext& ctxt, intenum_t p_value)
+{
+	MCpaintcompression = (Export_format)p_value;
+}
+
+//////////
+
+void MCInterfaceGetBrushBackColor(MCExecContext& ctxt, MCValueRef& r_color)
+{
+	r_color = MCValueRetain(kMCEmptyString);
+}
+
+void MCInterfaceSetBrushBackColor(MCExecContext& ctxt, MCValueRef color)
+{
+	// NO-OP
+}
+
+void MCInterfaceGetPenBackColor(MCExecContext& ctxt, MCValueRef& r_color)
+{
+	r_color = MCValueRetain(kMCEmptyString);
+}
+
+void MCInterfaceSetPenBackColor(MCExecContext& ctxt, MCValueRef color)
+{
+	// NO-OP
+}
+
+//////////
+
+void MCInterfaceGetBrushColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MCbrushcolor, MCbrushcolorname, r_color);
+}
+
+void MCInterfaceSetBrushColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	MCeditingimage = nil;
+	MCpatterns->freepat(MCbrushpm);
+	set_interface_color(MCbrushcolor, MCbrushcolorname, p_color);
+	MCscreen -> alloccolor(MCbrushcolor);
+}
+
+void MCInterfaceGetPenColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MCpencolor, MCpencolorname, r_color);
+}
+
+void MCInterfaceSetPenColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	MCeditingimage = nil;
+	MCpatterns->freepat(MCpenpm);
+	set_interface_color(MCpencolor, MCpencolorname, p_color);
+	MCscreen -> alloccolor(MCpencolor);
+}
+
+void MCInterfaceGetBrushPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+{
+	if (MCbrushpmid < PI_END && MCbrushpmid > PI_PATTERNS)
+		r_pattern = MCbrushpmid - PI_PATTERNS;
+	else
+		
+		r_pattern = MCbrushpmid;
+}
+
+void MCInterfaceSetBrushPattern(MCExecContext& ctxt, uinteger_t pattern)
+{
+	Pixmap newpm;
+	if (MCbrushpmid < PI_END)
+		MCbrushpmid += PI_PATTERNS;
+	newpm = MCpatterns->allocpat(MCbrushpmid, ctxt . GetObject());
+	if (newpm == None)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_BRUSHPATNOIMAGE);
+		return;
+	}
+	MCeditingimage = nil;
+	MCpatterns->freepat(MCbrushpm);
+	MCbrushpm = newpm;
+}
+
+void MCInterfaceGetPenPattern(MCExecContext& ctxt, uinteger_t& r_pattern)
+{
+	if (MCpenpmid < PI_END && MCpenpmid > PI_PATTERNS)
+		r_pattern = MCpenpmid - PI_PATTERNS;
+	else
+		r_pattern = MCpenpmid;
+}
+
+void MCInterfaceSetPenPattern(MCExecContext& ctxt, uinteger_t pattern)
+{
+	Pixmap newpm;
+	if (MCpenpmid < PI_END)
+		MCpenpmid += PI_PATTERNS;
+	newpm = MCpatterns->allocpat(MCpenpmid, ctxt . GetObject());
+	if (newpm == None)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_PENPATNOIMAGE);
+		return;
+	}
+	MCeditingimage = nil;
+	MCpatterns->freepat(MCpenpm);
+	MCpenpm = newpm;
+}
+
+void MCInterfaceGetFilled(MCExecContext& ctxt, bool& r_filled)
+{
+	r_filled = MCfilled == True;
+}
+
+void MCInterfaceSetFilled(MCExecContext& ctxt, bool p_filled)
+{
+	MCfilled = p_filled;
+}
+
+void MCInterfaceGetPolySides(MCExecContext& ctxt, uinteger_t& r_sides)
+{
+	r_sides = MCpolysides;
+}
+
+void MCInterfaceSetPolySides(MCExecContext& ctxt, uinteger_t p_sides)
+{
+	MCpolysides = MCU_max(3U, MCU_min(p_sides, (uinteger_t)MCscreen->getmaxpoints()));
+}
+
+void MCInterfaceGetLineSize(MCExecContext& ctxt, uinteger_t& r_size)
+{
+	r_size = MClinesize;
+}
+
+void MCInterfaceSetLineSize(MCExecContext& ctxt, uinteger_t p_size)
+{
+	MClinesize = p_size;
+}
+
+void MCInterfaceGetRoundRadius(MCExecContext& ctxt, uinteger_t& r_radius)
+{
+	r_radius = MCroundradius;
+}
+
+void MCInterfaceSetRoundRadius(MCExecContext& ctxt, uinteger_t p_radius)
+{
+	MCroundradius = p_radius;
+}
+
+void MCInterfaceGetStartAngle(MCExecContext& ctxt, uinteger_t& r_angle)
+{
+	r_angle = MCstartangle;
+}
+
+void MCInterfaceSetStartAngle(MCExecContext& ctxt, uinteger_t p_angle)
+{
+	MCstartangle = p_angle % 360;
+}
+
+void MCInterfaceGetArcAngle(MCExecContext& ctxt, uinteger_t& r_angle)
+{
+	r_angle = MCarcangle;
+}
+
+void MCInterfaceSetArcAngle(MCExecContext& ctxt, uinteger_t p_angle)
+{
+	MCarcangle = p_angle % 361;
+}
+
+void MCInterfaceGetRoundEnds(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCroundends == True;
+}
+
+void MCInterfaceSetRoundEnds(MCExecContext& ctxt, bool p_value)
+{
+	MCroundends = p_value;
+}
+
+void MCInterfaceGetDashes(MCExecContext& ctxt, MCStringRef& r_dashes)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCAutoListRef t_list;
+	t_success = MCListCreateMutable(',', &t_list);
+
+	for(uindex_t i = 0; i < MCndashes && t_success; i++)
+		t_success = MCListAppendInteger(*t_list, MCdashes[i]);
+		
+	if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_dashes);
+		
+	if (t_success)
+		return;
+		
+	ctxt . Throw();
+}
+
+void MCInterfaceSetDashes(MCExecContext& ctxt, MCStringRef p_dashes)
+{
+	uint1 *newdashes = NULL;
+	uint2 newndashes = 0;
+	char *svalue = strdup(MCStringGetCString(p_dashes));
+	char *eptr = svalue;
+	uint4 t_dash_len = 0;
+	while ((eptr = strtok(eptr, ",")) != NULL)
+	{
+		int2 i1;
+		MCString e = eptr;
+		if ((!MCU_stoi2(e, i1)) || i1 < 0)
+		{
+			ctxt . LegacyThrow(EE_GRAPHIC_NAN);
+			return;
+		}
+		t_dash_len += i1;
+		MCU_realloc((char **)&newdashes, newndashes, newndashes + 1, sizeof(uint1));
+		newdashes[newndashes++] = (uint1)i1;
+		eptr = NULL;
+	}
+	if (newndashes > 0 && t_dash_len == 0)
+	{
+		delete newdashes;
+		newdashes = NULL;
+		newndashes = 0;
+	}
+	delete svalue;
+	delete MCdashes;
+	MCdashes = newdashes;
+	MCndashes = newndashes;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetRecentCards(MCExecContext& ctxt, MCStringRef& r_cards)
+{
+	if (MCrecent -> GetRecent(ctxt, nil, P_LONG_ID, r_cards))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCInterfaceGetRecentNames(MCExecContext& ctxt, MCStringRef& r_names)
+{
+	if (MCrecent -> GetRecent(ctxt, nil, P_SHORT_NAME, r_names))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCInterfaceGetEditBackground(MCExecContext& ctxt, bool& r_value)
+{
+	MCdefaultstackptr -> getboolprop(ctxt, 0, P_EDIT_BACKGROUND, False, r_value);
+}
+
+void MCInterfaceSetEditBackground(MCExecContext& ctxt, bool p_new_value)
+{
+	MCdefaultstackptr -> setboolprop(ctxt, 0, P_EDIT_BACKGROUND, False, p_new_value);
+}
+
+void MCInterfaceGetLockScreen(MCExecContext& ctxt, bool& r_value)
+{
+	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
+	r_value = MCRedrawIsScreenLocked();
+}
+
+void MCInterfaceSetLockScreen(MCExecContext& ctxt, bool p_new_lock)
+{
+	// MW-2011-08-18: [[ Redraw ]] Update to use redraw methods.
+	if (p_new_lock)
+		MCRedrawLockScreen();
+	else
+		MCRedrawUnlockScreenWithEffects();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetAccentColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MCaccentcolor, MCaccentcolorname, r_color);
+}
+
+void MCInterfaceSetAccentColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MCaccentcolor, MCaccentcolorname, p_color);
+}
+
+void MCInterfaceGetHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MChilitecolor, MChilitecolorname, r_color);
+}
+
+void MCInterfaceSetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MChilitecolor, MChilitecolorname, p_color);
+}
+
+void MCInterfaceGetLinkColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MClinkatts . color, MClinkatts . colorname, r_color);
+}
+
+void MCInterfaceSetLinkColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MClinkatts . color, MClinkatts . colorname, p_color);
+	
+	// MW-2011-08-17: [[ Redraw ]] Global property could affect anything so dirty screen.
+	MCRedrawDirtyScreen();
+}
+
+void MCInterfaceGetLinkHiliteColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MClinkatts . color, MClinkatts . colorname, r_color);
+}
+
+void MCInterfaceSetLinkHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MClinkatts . hilitecolor, MClinkatts . hilitecolorname, p_color);
+	
+	// MW-2011-08-17: [[ Redraw ]] Global property could affect anything so dirty screen.
+	MCRedrawDirtyScreen();
+}
+
+void MCInterfaceGetLinkVisitedColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MClinkatts . visitedcolor, MClinkatts . visitedcolorname, r_color);
+}
+
+void MCInterfaceSetLinkVisitedColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MClinkatts . visitedcolor, MClinkatts . visitedcolorname, p_color);
+	
+	// MW-2011-08-17: [[ Redraw ]] Global property could affect anything so dirty screen.
+	MCRedrawDirtyScreen();
+}
+
+void MCInterfaceGetUnderlineLinks(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClinkatts . underline == True;
+}
+
+void MCInterfaceSetUnderlineLinks(MCExecContext& ctxt, bool p_value)
+{
+	MClinkatts . underline = p_value;
+	
+	// MW-2011-08-17: [[ Redraw ]] Global property could affect anything so dirty screen.
+	MCRedrawDirtyScreen();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetSelectGroupedControls(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCselectgrouped == True;
+}
+
+void MCInterfaceSetSelectGroupedControls(MCExecContext& ctxt, bool p_value)
+{
+	MCselectgrouped = p_value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetIcon(MCExecContext& ctxt, uinteger_t& r_icon)
+{
+	r_icon = MCiconid;
+}
+
+void MCInterfaceSetIcon(MCExecContext& ctxt, uinteger_t p_icon)
+{
+	MCiconid = p_icon;
+	MCscreen -> seticon(MCiconid);
+}
+
+void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu)
+{
+	r_menu = (MCStringRef)MCValueRetain(MCiconmenu);
+}
+
+void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef p_menu)
+{
+	MCValueRelease(MCiconmenu);
+	MCiconmenu = (MCStringRef)MCValueRetain(p_menu);
+	MCscreen -> seticonmenu(MCStringGetCString(MCiconmenu));
+}
+
+void MCInterfaceGetStatusIcon(MCExecContext& ctxt, uinteger_t& r_icon)
+{
+	r_icon = MCstatusiconid;
+}
+
+void MCInterfaceSetStatusIcon(MCExecContext& ctxt, uinteger_t p_icon)
+{
+	if (MCstatusiconid == p_icon)
+		return;
+		
+	MCstatusiconid = p_icon;
+	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+}
+
+void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
+{
+	r_tooltip = (MCStringRef)MCValueRetain(MCstatusicontooltip);
+}
+
+void MCInterfaceSetStatusIconToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
+{
+	MCValueRelease(MCstatusicontooltip);
+	MCstatusicontooltip = (MCStringRef)MCValueRetain(p_tooltip);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+}
+
+void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
+{
+	r_icon_menu = (MCStringRef)MCValueRetain(MCstatusiconmenu);
+}
+
+void MCInterfaceSetStatusIconMenu(MCExecContext& ctxt, MCStringRef p_icon_menu)
+{
+	MCValueRelease(MCstatusiconmenu);
+	MCstatusiconmenu = (MCStringRef)MCValueRetain(p_icon_menu);
+	MCscreen -> configurestatusicon(MCstatusiconid, MCStringGetCString(MCstatusiconmenu), MCStringGetCString(MCstatusicontooltip));
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetAllowInlineInput(MCExecContext& ctxt, bool &r_value)
+{
+	r_value = MCinlineinput == True;
+}
+
+void MCInterfaceSetAllowInlineInput(MCExecContext& ctxt, bool p_value)
+{
+	MCinlineinput = p_value ? True : False;
+}
+
+void MCInterfaceGetDragDelta(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCdragdelta;
+}
+
+void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCdragdelta = p_value;
+}
+
+void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	if (MCStringCreateWithCString(MCstackfiletype, r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
+{
+	delete MCstackfiletype;
+	MCstackfiletype = strclone(MCStringGetCString(p_value));
+}
+
+
+void MCInterfaceGetStackFileVersion(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	if (MCstackfileversion % 100 == 0) 
+	{
+		if (MCStringFormat(r_value, "%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100))
+			return;
+	}
+	else
+	{
+		if (MCStringFormat(r_value, "%d.%d.%d", MCstackfileversion / 1000, (MCstackfileversion % 1000) / 100, (MCstackfileversion % 100) / 10))
+			return;
+	}
+
+	ctxt . Throw();
+}
+
+void MCInterfaceSetStackFileVersion(MCExecContext& ctxt, MCStringRef p_value)
+{
+	uint4 major = 0, minor = 0, revision = 0, version = 0;
+	uint4 count;
+	// MW-2006-03-24: This should be snscanf - except it doesn't exist on BSD!!
+	char *t_version;
+	
+	t_version = strclone(MCStringGetCString(p_value));
+	count = sscanf(t_version, "%d.%d.%d", &major, &minor, &revision);
+	delete t_version;
+	
+	version = major * 1000 + minor * 100 + revision * 10;
+	
+	// MW-2012-03-04: [[ StackFile5500 ]] Allow versions up to 5500 to be set.
+	if (count < 2 || version < 2400 || version > 5500)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_STACKFILEBADVERSION);
+		return;
+	}
+	MCstackfileversion = version;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetProcessType(MCExecContext& ctxt, intenum_t& r_value)
+{
+	r_value = MCS_processtypeisforeground() ? 1 : 0;
+}
+
+void MCInterfaceSetProcessType(MCExecContext& ctxt, intenum_t p_value)
+{
+	bool t_wants_foreground;
+	if (p_value == 0)
+		t_wants_foreground = false;
+	else
+		t_wants_foreground = true;
+		
+	if (MCS_changeprocesstype(t_wants_foreground))
+		return;
+		
+	ctxt . LegacyThrow(EE_PROCESSTYPE_NOTPOSSIBLE);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetShowInvisibles(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCshowinvisibles == True;
+}
+
+void MCInterfaceSetShowInvisibles(MCExecContext& ctxt, bool p_value)
+{
+	MCshowinvisibles = p_value ? True : False;
+	
+	// MW-2011-08-17: [[ Redraw ]] Things are now visible that weren't before so dirty the screen.
+	MCRedrawDirtyScreen();
+}
+
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t& r_id, bool p_is_default, MCCursorRef& r_cursor)
+{
+	if (r_id < PI_NCURSORS)
+	{
+		if (!p_is_default && r_id == PI_BUSY)
+		{
+			r_id = PI_BUSY1 + MCbusycount;
+			MCbusycount = MCbusycount + 1 & 0x7;
+		}
+		r_cursor = MCcursors[r_id];
+	}
+	else
+	{
+		// MW-2009-02-02: [[ Improved image search ]]
+		// Search for the appropriate image object using the standard method - note
+		// here we use the object attached to the execution context rather than the
+		// 'parent' - this ensures that the search follows the use of behavior.
+		MCImage *newim;
+		newim = ctxt . GetObject() -> resolveimageid(r_id);
+		
+		if (newim == nil)
+		{
+			if (r_id == 28)
+				r_cursor = MCcursors[8];
+			else if (r_id == 29)
+				r_cursor = MCcursors[1];
+			else
+			{
+				ctxt . LegacyThrow(EE_PROPERTY_CURSORNOIMAGE);
+				return;
+			}
+		}
+		else
+			r_cursor = newim->getcursor(p_is_default);
+	}
+}
+
+
+void MCInterfaceGetCursor(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCcursorid;
+}
+
+void MCInterfaceSetCursor(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCCursorRef t_cursor;
+	MCInterfaceSetCursor(ctxt, p_value, false, t_cursor);
+	if (t_cursor != nil)
+	{
+		MCcursor = t_cursor;
+		MCcursorid = p_value;
+		if (MCmousestackptr != NULL)
+			MCmousestackptr->resetcursor(True);
+		else
+			MCdefaultstackptr->resetcursor(True);
+	}
+}
+
+void MCInterfaceGetDefaultCursor(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCdefaultcursorid;
+}
+
+void MCInterfaceSetDefaultCursor(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCCursorRef t_cursor;
+	MCInterfaceSetCursor(ctxt, p_value, true, t_cursor);
+	if (t_cursor != nil)
+	{
+		MCdefaultcursor = t_cursor;
+		MCdefaultcursorid = p_value;
+		if (MCmousestackptr != NULL)
+			MCmousestackptr->resetcursor(True);
+		else
+			MCdefaultstackptr->resetcursor(True);
+	}
+}
+void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	MCdefaultstackptr -> names(P_NAME, r_value);
+}
+
+void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
+{
+	MCStack *sptr;
+	sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_value));
+	
+	if (sptr == nil)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTSTACK);
+		return;
+	}
+
+	MCdefaultstackptr = MCstaticdefaultstackptr = sptr;
+}
+
+void MCInterfaceGetDefaultMenubar(MCExecContext& ctxt, MCStringRef& r_value)
+{	
+	if (MCdefaultmenubar == nil)
+	{
+		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
+		return;
+	}
+	else
+	{
+		if (MCdefaultmenubar->names(P_LONG_NAME, r_value))
+			return;
+	}
+
+	ctxt . Throw();
+}
+
+void MCInterfaceSetDefaultMenubar(MCExecContext& ctxt, MCStringRef p_value)
+{
+	MCGroup *gptr = (MCGroup *)MCdefaultstackptr->getobjname(CT_GROUP, p_value);
+																	 
+	if (gptr == NULL)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_NODEFAULTMENUBAR);
+		return;
+	}
+	
+	MCdefaultmenubar = gptr;
+	MCscreen->updatemenubar(False);
+}
+void MCInterfaceGetDragSpeed(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCdragspeed;
+}
+
+void MCInterfaceSetDragSpeed(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCdragspeed = p_value;
+}
+
+void MCInterfaceGetMoveSpeed(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCmovespeed;
+}
+
+void MCInterfaceSetMoveSpeed(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCmovespeed = p_value;
+}
+
+void MCInterfaceGetLockCursor(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockcursor == True;
+}
+
+void MCInterfaceSetLockCursor(MCExecContext& ctxt, bool p_value)
+{
+	MClockcursor = p_value ? True : False;
+	if (!MClockcursor)
+		ctxt . GetObject()->getstack()->resetcursor(True);
+}
+
+void MCInterfaceGetLockErrors(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockerrors == True;
+}
+
+void MCInterfaceSetLockErrors(MCExecContext& ctxt, bool p_value)
+{			
+	MCerrorlockptr = ctxt . GetObject();
+	MClockerrors = p_value ? True : False;
+}
+
+void MCInterfaceGetLockMenus(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockmenus == True;
+}
+
+void MCInterfaceSetLockMenus(MCExecContext& ctxt, bool p_value)
+{
+	MClockmenus = p_value ? True : False;
+	MCscreen->updatemenubar(True);
+}
+
+void MCInterfaceGetLockMessages(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockmessages == True;
+}
+
+void MCInterfaceSetLockMessages(MCExecContext& ctxt, bool p_value)
+{
+	MClockmessages = p_value ? True : False;
+}
+
+void MCInterfaceGetLockMoves(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockmoves == True;
+}
+
+void MCInterfaceSetLockMoves(MCExecContext& ctxt, bool p_value)
+{
+	MClockmoves = p_value ? True : False;
+}
+
+void MCInterfaceGetLockRecent(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MClockrecent == True;
+}
+
+void MCInterfaceSetLockRecent(MCExecContext& ctxt, bool p_value)
+{
+	MClockrecent = p_value ? True : False;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetIdleRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCidleRate;
+}
+
+void MCInterfaceSetIdleRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCidleRate = MCU_max(p_value, (uint4)1);
+}
+
+void MCInterfaceGetIdleTicks(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCidleRate * 60 / 1000;
+}
+
+void MCInterfaceSetIdleTicks(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCidleRate = MCU_max(p_value * 1000 / 60, (uint4)1);
+}
+
+void MCInterfaceGetBlinkRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCblinkrate;
+}
+
+void MCInterfaceSetBlinkRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCblinkrate = MCU_max(p_value, (uint4)1);
+}
+
+void MCInterfaceGetRepeatRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCrepeatrate;
+}
+
+void MCInterfaceSetRepeatRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCrepeatrate = MCU_max(p_value, (uint4)1);
+}
+
+void MCInterfaceGetRepeatDelay(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCrepeatdelay;
+}
+
+void MCInterfaceSetRepeatDelay(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCrepeatdelay = p_value;
+}
+
+void MCInterfaceGetTypeRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCtyperate;
+}
+
+void MCInterfaceSetTypeRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCtyperate = p_value;
+}
+
+void MCInterfaceGetSyncRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCsyncrate;
+}
+
+void MCInterfaceSetSyncRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCsyncrate = MCU_max(p_value, (uint4)1);
+}
+
+void MCInterfaceGetEffectRate(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCeffectrate;
+}
+
+void MCInterfaceSetEffectRate(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCeffectrate = p_value;
+}
+
+void MCInterfaceGetDoubleDelta(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCdoubledelta;
+}
+
+void MCInterfaceSetDoubleDelta(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCdoubledelta = p_value;
+}
+
+void MCInterfaceGetDoubleTime(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCdoubletime;
+}
+
+void MCInterfaceSetDoubleTime(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCdoubletime = p_value;
+}
+
+void MCInterfaceGetTooltipDelay(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCtooltipdelay;
+}
+
+void MCInterfaceSetTooltipDelay(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCtooltipdelay = p_value;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetNavigationArrows(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCnavigationarrows == True;
+}
+
+void MCInterfaceSetNavigationArrows(MCExecContext& ctxt, bool p_value)
+{
+	MCnavigationarrows = p_value ? True : False;
+}
+
+void MCInterfaceGetExtendKey(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCextendkey;
+}
+
+void MCInterfaceSetExtendKey(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCextendkey = p_value;
+}
+
+void MCInterfaceGetPointerFocus(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCpointerfocus == True;
+}
+
+void MCInterfaceSetPointerFocus(MCExecContext& ctxt, bool p_value)
+{
+	MCpointerfocus = p_value ? True : False;
+}
+
+void MCInterfaceGetEmacsKeyBindings(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCemacskeys == True;
+}
+
+void MCInterfaceSetEmacsKeyBindings(MCExecContext& ctxt, bool p_value)
+{
+	MCemacskeys = p_value ? True : False;
+}
+
+void MCInterfaceGetRaiseMenus(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCraisemenus == True;
+}
+
+void MCInterfaceSetRaiseMenus(MCExecContext& ctxt, bool p_value)
+{
+	MCraisemenus = p_value ? True : False;
+}
+
+void MCInterfaceGetActivatePalettes(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCactivatepalettes == True;
+}
+
+void MCInterfaceSetActivatePalettes(MCExecContext& ctxt, bool p_value)
+{
+	MCactivatepalettes = p_value ? True : False;
+}
+
+void MCInterfaceGetHidePalettes(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MChidepalettes == True;
+}
+
+void MCInterfaceSetHidePalettes(MCExecContext& ctxt, bool p_value)
+{
+	MChidepalettes = p_value ? True : False;
+}
+
+
+void MCInterfaceGetRaisePalettes(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCraisepalettes == True;
+}
+
+void MCInterfaceSetRaisePalettes(MCExecContext& ctxt, bool p_value)
+{
+	// MW-2004-11-17: On Linux, effect a restack if 'raisepalettes' is changed
+	// MW-2004-11-24: Altered MCStacklst::restack to find right stack if passed NULL
+	MCraisepalettes = p_value ? True : False;
+#ifdef LINUX
+	MCstacks -> restack(NULL);
+#endif
+}
+
+void MCInterfaceGetRaiseWindows(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCraisewindows == True;
+}
+
+void MCInterfaceSetRaiseWindows(MCExecContext& ctxt, bool p_value)
+{
+	MCraisewindows = p_value ? True : False;
+	MCscreen -> enactraisewindows();
+}
+
+void MCInterfaceGetHideBackdrop(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MChidebackdrop == True;
+}
+
+void MCInterfaceSetHideBackdrop(MCExecContext& ctxt, bool p_value)
+{
+	MChidebackdrop = p_value ? True : False;
+}
+
+void MCInterfaceGetDontUseNavigationServices(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCdontuseNS == True;
+}
+
+void MCInterfaceSetDontUseNavigationServices(MCExecContext& ctxt, bool p_value)
+{
+	MCdontuseNS = p_value ? True : False;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetProportionalThumbs(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCproportionalthumbs == True;
+}
+
+void MCInterfaceSetProportionalThumbs(MCExecContext& ctxt, bool p_value)
+{
+	if (IsMacLFAM())
+		return;
+
+	MCproportionalthumbs = p_value ? True : False;
+	
+	// MW-2011-08-17: [[ Redraw ]] This affects the redraw of any scrollbar so dirty everything.
+	MCRedrawDirtyScreen();
+}
+
+void MCInterfaceGetSharedMemory(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCshm == True;
+}
+
+void MCInterfaceSetSharedMemory(MCExecContext& ctxt, bool p_value)
+{
+	MCshm = p_value ? True : False;
+}
+
+void MCInterfaceGetScreenGamma(MCExecContext& ctxt, double& r_value)
+{
+	r_value = MCgamma;
+}
+
+void MCInterfaceSetScreenGamma(MCExecContext& ctxt, double p_value)
+{
+	MCgamma = p_value;
+}
+
+void MCInterfaceGetSelectionMode(MCExecContext& ctxt, intenum_t& r_value)
+{
+	r_value = (intenum_t)MCselectintersect;
+}
+
+void MCInterfaceSetSelectionMode(MCExecContext& ctxt, intenum_t p_value)
+{
+	MCselectintersect = (Boolean)p_value;
+}
+
+void MCInterfaceGetSelectionHandleColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+	get_interface_color(MCselectioncolor, MCselectioncolorname, r_color);
+}
+
+void MCInterfaceSetSelectionHandleColor(MCExecContext& ctxt, const MCInterfaceNamedColor& p_color)
+{
+	set_interface_color(MCselectioncolor, MCselectioncolorname, p_color);
+	MCselected->redraw();
+}
+
+void MCInterfaceGetWindowBoundingRect(MCExecContext& ctxt, MCRectangle& r_value)
+{
+	r_value = MCwbr;
+}
+
+void MCInterfaceSetWindowBoundingRect(MCExecContext& ctxt, MCRectangle p_value)
+{
+	MCwbr = p_value;
+}
+
+void MCInterfaceGetJpegQuality(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCjpegquality;
+}
+
+void MCInterfaceSetJpegQuality(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCjpegquality = MCU_min(p_value, (uint4)100);
+}
+
+void MCInterfaceGetRelayerGroupedControls(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCrelayergrouped == True;
+}
+
+void MCInterfaceSetRelayerGroupedControls(MCExecContext& ctxt, bool p_value)
+{
+	MCrelayergrouped= p_value ? True : False;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceSetBrush(MCExecContext& ctxt, Properties p_which, uinteger_t p_value)
+{
+	uint4 t_newbrush = p_value;
+	if (t_newbrush < PI_PATTERNS)
+		t_newbrush += PI_BRUSHES;
+
+	// MW-2009-02-02: [[ Improved image search ]]
+	// Search for the appropriate image object using the standard method - note
+	// here we use the object attached to the execution context rather than the
+	// 'parent' - this ensures that the search follows the use of behavior.
+	MCImage *newim;
+	newim = ctxt . GetObject() -> resolveimageid(t_newbrush);
+
+	if (newim == NULL)
+	{
+		ctxt . LegacyThrow(EE_PROPERTY_BRUSHNOIMAGE);
+		return;
+	}
+
+	switch (p_which)
+	{
+	case P_BRUSH:
+		MCbrush = t_newbrush;
+		break;
+	case P_ERASER:
+		MCeraser = t_newbrush;
+		break;
+	case P_SPRAY:
+		MCspray = t_newbrush;
+		break;
+	default:
+		break;
+	}
+
+	newim->createbrush(p_which);
+	ctxt . GetObject() -> getstack() -> resetcursor(True);
+}
+
+void MCInterfaceGetBrush(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCbrush < PI_PATTERNS ? MCbrush - PI_BRUSHES : MCbrush;
+}
+
+void MCInterfaceSetBrush(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCInterfaceSetBrush(ctxt, P_BRUSH, p_value);
+}
+
+void MCInterfaceGetEraser(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCeraser < PI_PATTERNS ? MCeraser - PI_BRUSHES : MCeraser;
+}
+
+void MCInterfaceSetEraser(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCInterfaceSetBrush(ctxt, P_ERASER, p_value);
+}
+
+void MCInterfaceGetSpray(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCspray < PI_PATTERNS ? MCspray - PI_BRUSHES : MCspray;
+}
+
+void MCInterfaceSetSpray(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCInterfaceSetBrush(ctxt, P_SPRAY, p_value);
+}
+
+void MCInterfaceGetCentered(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCcentered == True;
+}
+
+void MCInterfaceSetCentered(MCExecContext& ctxt, bool p_value)
+{
+	MCcentered = p_value ? True : False;
+}
+
+void MCInterfaceGetGrid(MCExecContext& ctxt, bool& r_value)
+{
+	r_value = MCgrid == True;
+}
+
+void MCInterfaceSetGrid(MCExecContext& ctxt, bool p_value)
+{
+	MCgrid = p_value ? True : False;
+}
+
+void MCInterfaceGetGridSize(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCgridsize;
+}
+
+void MCInterfaceSetGridSize(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCgridsize = MCU_max(p_value, (uint4)1);
+}
+
+void MCInterfaceGetSlices(MCExecContext& ctxt, uinteger_t& r_value)
+{
+	r_value = MCslices;
+}
+
+void MCInterfaceSetSlices(MCExecContext& ctxt, uinteger_t p_value)
+{
+	MCslices = p_value < 2 ? 2 : p_value;
+}
+
+void MCInterfaceGetBeepLoudness(MCExecContext& ctxt, integer_t& r_value)
+{
+	MCscreen -> getbeep(P_BEEP_LOUDNESS, r_value);
+}
+
+void MCInterfaceSetBeepLoudness(MCExecContext& ctxt, integer_t p_value)
+{
+	MCscreen -> setbeep(P_BEEP_LOUDNESS, p_value);
+}
+
+void MCInterfaceGetBeepPitch(MCExecContext& ctxt, integer_t& r_value)
+{
+	MCscreen -> getbeep(P_BEEP_PITCH, r_value);
+}
+
+void MCInterfaceSetBeepPitch(MCExecContext& ctxt, integer_t p_value)
+{
+	MCscreen -> setbeep(P_BEEP_PITCH, p_value);
+}
+
+void MCInterfaceGetBeepDuration(MCExecContext& ctxt, integer_t& r_value)
+{
+	MCscreen -> getbeep(P_BEEP_DURATION, r_value);
+}
+
+void MCInterfaceSetBeepDuration(MCExecContext& ctxt, integer_t p_value)
+{
+	MCscreen -> setbeep(P_BEEP_DURATION, p_value);
+}
+
+void MCInterfaceGetBeepSound(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	if (!MCscreen -> getbeepsound(r_value))
+		r_value = MCValueRetain(kMCEmptyString);
+}
+
+void MCInterfaceSetBeepSound(MCExecContext& ctxt, MCStringRef p_value)
+{
+	if (MCscreen -> setbeepsound(p_value))
+		return;
+
+	ctxt . Throw();
+}
+void MCInterfaceGetTool(MCExecContext& ctxt, MCStringRef& r_value)
+{
+	MCStringFormat(r_value, "%s tool", MCtoolnames[MCcurtool]);
+}
+
+void MCInterfaceSetTool(MCExecContext& ctxt, MCStringRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	MCU_choose_tool(ctxt, T_UNDEFINED);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCInterfaceGetScreenRect(MCExecContext& ctxt, bool p_working, bool p_effective, MCRectangle& r_value)
+{
+	const MCDisplay *t_displays;
+	MCscreen -> getdisplays(t_displays, p_effective);
+
+	r_value = p_working ? t_displays[0] . workarea : t_displays[0] . viewport;
+}
+
+void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effective, MCStringRef& r_value)
+{
+	MCAutoListRef t_list;
+	bool t_success = true;
+
+	t_success = MCListCreateMutable('\n', &t_list);
+
+	const MCDisplay *t_displays;
+	uinteger_t t_count = 0;
+
+	t_count = MCscreen->getdisplays(t_displays, p_effective);
+
+	for (uinteger_t i = 0; t_success && i < t_count; i++)
+	{
+		MCAutoStringRef t_string;
+		MCRectangle t_rect;
+
+		t_rect = p_working ? t_displays[i].workarea : t_displays[i].viewport;
+		t_success = MCStringFormat(&t_string, "%d,%d,%d,%d", t_rect.x, t_rect.y,
+			t_rect.x + t_rect.width, t_rect.y + t_rect.height) &&
+			MCListAppend(*t_list, *t_string);
+	}
+
+	if (t_success)
+		t_success = MCListCopyAsString(*t_list, r_value);
+
+	if (t_success)
+		return;
+
+	ctxt.Throw();
+}

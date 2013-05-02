@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "w32prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -34,31 +33,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-enum reg_accessmode
-{
-	kRegAccessDefault,
-	kRegAccessAs32,
-	kRegAccessAs64
-};
-
 typedef struct
 { //struct for WIN registry
 	const char *token;
 	HKEY key;
-	reg_accessmode mode;
+	uint32_t mode;
 }
 reg_keytype;
 
 static reg_keytype Regkeys[] = {  //WIN registry root keys struct
-                                   {"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT, kRegAccessDefault},
-                                   {"HKEY_CURRENT_USER", HKEY_CURRENT_USER, kRegAccessDefault},
-                                   {"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE, kRegAccessDefault},
-                                   {"HKEY_LOCAL_MACHINE_32", HKEY_LOCAL_MACHINE, kRegAccessAs32},
-                                   {"HKEY_LOCAL_MACHINE_64", HKEY_LOCAL_MACHINE, kRegAccessAs64},
-                                   {"HKEY_USERS", HKEY_USERS, kRegAccessDefault},
-                                   {"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA, kRegAccessDefault},
-                                   {"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG, kRegAccessDefault},
-                                   {"HKEY_DYN_DATA", HKEY_DYN_DATA, kRegAccessDefault}
+                                   {"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT, 0},
+                                   {"HKEY_CURRENT_USER", HKEY_CURRENT_USER, 0},
+                                   {"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE, 0},
+                                   {"HKEY_LOCAL_MACHINE_32", HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY},
+                                   {"HKEY_LOCAL_MACHINE_64", HKEY_LOCAL_MACHINE, KEY_WOW64_64KEY},
+                                   {"HKEY_USERS", HKEY_USERS, 0},
+                                   {"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA, 0},
+                                   {"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG, 0},
+                                   {"HKEY_DYN_DATA", HKEY_DYN_DATA, 0}
                                };
 
 typedef struct
@@ -68,7 +60,7 @@ typedef struct
 }
 reg_datatype;
 
-static reg_datatype RegDatatypes[] = {  //WIN registry root keys struct
+static reg_datatype RegDatatypes[] = {  //WIN registry value types struct
                                          {"binary", REG_BINARY},
                                          {"dword", REG_DWORD},
                                          {"dwordlittleendian", REG_DWORD_LITTLE_ENDIAN},
@@ -82,235 +74,332 @@ static reg_datatype RegDatatypes[] = {  //WIN registry root keys struct
                                          {"sz", REG_SZ}
                                      };
 
-void MCS_list_registry(MCExecPoint& p_context)
+bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key)
 {
-	char *t_full_key;
-	t_full_key = p_context . getsvalue() . clone();
-
-	p_context . clear();
-
-	char *t_root_key;
-	t_root_key = t_full_key;
-	
-	char *t_child_key;
-	t_child_key = strchr(t_full_key, '\\');
-	if (t_child_key != NULL)
-		*t_child_key++ = '\0';
-	else
-		t_child_key = NULL;
-
-	uint2 i;
-	MCString s = t_root_key;
-	for (i = 0 ; i < ELEMENTS(Regkeys) ; i++)
-		if (s == Regkeys[i].token)
-			break;
-
-	HKEY t_key;
-	if (i >= ELEMENTS(Regkeys) || RegOpenKeyExA(Regkeys[i] . key, t_child_key, 0, KEY_READ, &t_key) != ERROR_SUCCESS)
+	uindex_t t_length = MCStringGetLength(p_path);
+	uindex_t t_offset = t_length;
+	if (!MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_offset))
 	{
-		MCresult -> sets("bad key");
-		delete t_full_key;
-		return;
+		t_offset = t_length;
+	}
+	return MCStringCopySubstring(p_path, MCRangeMake(0, t_offset), r_root) &&
+		MCStringCopySubstring(p_path, MCRangeMake(t_offset + 1, t_length), r_key);
+}
+
+bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key, MCStringRef& r_value)
+{
+	// only copy components out if they are present - <ROOT>\<KEY>\<VALUE>, <ROOT>\<VALUE>, <ROOT>
+	// (components may be empty)
+	bool t_success = true;
+	uindex_t t_length = MCStringGetLength(p_path);
+	uindex_t t_path_offset = t_length;
+	uindex_t t_value_offset = t_length;
+	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
+	{
+		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
+		{
+			if (t_value_offset > t_path_offset)
+				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+			else
+				t_value_offset = t_length;
+		}
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
+	}
+	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
+}
+
+bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+	{
+		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+		{
+			r_hkey = Regkeys[i].key;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey, uint32_t& x_access_mode)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+	{
+		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+		{
+			r_hkey = Regkeys[i].key;
+			if (MCmajorosversion >= 0x0501)
+				x_access_mode |= Regkeys[i].mode;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
+	{
+		if (p_type == RegDatatypes[i].type)
+		{
+			return MCStringCreateWithCString(RegDatatypes[i].token, r_string);
+		}
 	}
 
-	DWORD t_index;
-	t_index = 0;
-	for(;;)
+	return false;
+}
+
+DWORD MCS_registry_type_from_string(MCStringRef p_string)
+{
+	if (p_string != nil)
 	{
-		LONG t_result;
-		char t_name[256];
-		DWORD t_name_length;
-		t_name_length = 256;
-		t_result = RegEnumKeyExA(t_key, t_index, t_name, &t_name_length, NULL, NULL, NULL, NULL);
-		if (t_result == ERROR_NO_MORE_ITEMS)
-			break;
-		p_context . concatchars(t_name, t_name_length, EC_RETURN, t_index == 0);
+		for (uindex_t i = 0; i < ELEMENTS(RegDatatypes); i++)
+		{
+			if (MCStringIsEqualToCString(p_string, RegDatatypes[i].token, kMCCompareCaseless))
+				return RegDatatypes[i].type;
+		}
+	}
+
+	return REG_SZ;
+}
+
+class MCAutoRegistryKey
+{
+public:
+	MCAutoRegistryKey(void)
+	{
+		m_key = NULL;
+	}
+
+	~MCAutoRegistryKey(void)
+	{
+		if (m_key != NULL)
+			RegCloseKey(m_key);
+	}
+
+	HKEY operator = (HKEY value)
+	{
+		MCAssert(m_key == NULL);
+		m_key = value;
+		return m_key;
+	}
+
+	HKEY* operator & (void)
+	{
+		MCAssert(m_key == NULL);
+		return &m_key;
+	}
+
+	HKEY operator * (void) const
+	{
+		return m_key;
+	}
+
+private:
+	HKEY m_key;
+};
+
+bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
+{
+	MCAutoStringRef t_root, t_key;
+	HKEY t_hkey;
+	MCAutoRegistryKey t_regkey;
+
+	if (!MCS_registry_split_key(p_path, &t_root, &t_key))
+		return false;
+	if (!MCS_registry_root_to_hkey(*t_root, t_hkey) ||
+		RegOpenKeyExA(t_hkey, MCStringGetCString(*t_key), 0, KEY_READ, &t_regkey) != ERROR_SUCCESS)
+	{
+		return MCStringCreateWithCString("bad key", r_error);
+	}
+
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	DWORD t_max_key_length;
+	if (ERROR_SUCCESS != RegQueryInfoKeyA(*t_regkey, NULL, NULL, NULL, NULL, &t_max_key_length, NULL, NULL, NULL, NULL, NULL, NULL))
+		return false;
+
+	DWORD t_index = 0;
+	MCAutoArray<char> t_buffer;
+
+	t_max_key_length++;
+	if (!t_buffer.New(t_max_key_length))
+		return false;
+
+	LONG t_result = ERROR_SUCCESS;
+	while (t_result == ERROR_SUCCESS)
+	{
+		DWORD t_name_length = t_max_key_length;
+		t_result = RegEnumKeyExA(*t_regkey, t_index, t_buffer.Ptr(), &t_name_length, NULL, NULL, NULL, NULL);
+		if (t_result == ERROR_SUCCESS && !MCListAppendCString(*t_list, t_buffer.Ptr()))
+			return false;
+
 		t_index += 1;
 	}
 
-	RegCloseKey(t_key);
-	delete t_full_key;
+	if (t_result != ERROR_NO_MORE_ITEMS)
+		return false;
+
+	r_error = nil;
+	return MCListCopy(*t_list, r_list);
 }
 
-void MCS_query_registry(MCExecPoint &dest, const char** type)
+bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
 {
-	HKEY hkey;
-	char *key = dest.getsvalue().clone();
+	MCAutoStringRef t_root, t_key, t_value;
+
+	r_value = r_error = nil;
+
 	//key = full path info such as: HKEY_LOCAL_MACHINE\\Software\\..\\valuename
+	if (!MCS_registry_split_key(p_key, &t_root, &t_key, &t_value))
+		return false;
 
-	dest.clear();
-
-	/* get the value name, it is at the end of the key          */
-	char *str = strrchr(key, '\\');
-	if (str == NULL)
-	{ //invalid key path specified
-		MCresult->sets("no key");
-		delete key;
-		return;
-	}
-	//chop off the end and make str point to the begining of the value name
-	*str ++ = '\0';
-	char *VName = str; //VName now points to the name of the value to be queryed
-
-	/* get the root key, it is at the begining of the key       */
-	str = strchr(key, '\\');
-	if (str != NULL) /* key != HKEY_ROOT\.mc    case */
-		*str ++ = '\0';  //str now pointing to the begining of subkey
-
-	/** find the matching root key with the root string  **/
-	uint2 i;
-	MCString s = key;
-	for (i = 0 ; i < ELEMENTS(Regkeys) ; i++)
-		if (s == Regkeys[i].token)
-			break;
-
-	DWORD t_access;
-	t_access = KEY_READ;
-	if (MCmajorosversion >= 0x0501)
+	if (*t_value == nil)
 	{
-		if (Regkeys[i].mode == kRegAccessAs32)
-			t_access |= KEY_WOW64_32KEY;
-		else if (Regkeys[i].mode == kRegAccessAs64)
-			t_access |= KEY_WOW64_64KEY;
+		/* RESULT */ //MCresult->sets("no key");
+		return MCStringCreateWithCString("no key", r_error);
 	}
 
-	if (i >= ELEMENTS(Regkeys)
-	        || (RegOpenKeyExA(Regkeys[i].key, str, 0, t_access, &hkey)
-	            != ERROR_SUCCESS))
+	if (*t_key == nil)
+		t_key = kMCEmptyString;
+
+	HKEY t_hkey;
+	MCAutoRegistryKey t_regkey;
+
+	uint32_t t_access_mode = KEY_READ;
+
+	if (!MCS_registry_root_to_hkey(*t_root, t_hkey, t_access_mode) ||
+		(RegOpenKeyExA(t_hkey, MCStringGetCString(*t_key), 0, t_access_mode, &t_regkey) != ERROR_SUCCESS))
 	{
-		MCresult->sets("bad key");
-		delete key;
-		return;
+		/* RESULT */ //MCresult->sets("bad key");
+		return MCStringCreateWithCString("bad key", r_error);
 	}
-
-	//determine the size of value buffer needed
 
 	LONG err = 0;
-	DWORD VType;                         //value type
-	DWORD VBufLen = 1;                   //value buffer len
-	char *VValue;                        //value value
-	err = RegQueryValueExA(hkey, VName, 0, NULL /*&VType*/, NULL, &VBufLen);
+	MCAutoNativeCharArray t_buffer;
+	DWORD t_buffer_len = 0;
+	DWORD t_type;
+
+	//determine the size of value buffer needed
+	err = RegQueryValueExA(*t_regkey, MCStringGetCString(*t_value), 0, NULL, NULL, &t_buffer_len);
 	if (err == ERROR_SUCCESS || err == ERROR_MORE_DATA)
 	{
-		VValue = new char[VBufLen]; //alloc space for the key value
-		if ((err = RegQueryValueExA(hkey, VName, 0, &VType, (LPBYTE)VValue,
-		                           &VBufLen)) == ERROR_SUCCESS && VBufLen)
+		if (!t_buffer.New(t_buffer_len))
+			return false;
+		if ((err = RegQueryValueExA(*t_regkey, MCStringGetCString(*t_value), 0, &t_type,
+			(LPBYTE)t_buffer.Chars(), &t_buffer_len)) == ERROR_SUCCESS && t_buffer_len)
 		{
-			DWORD t_original_buflen;
-			t_original_buflen = VBufLen;
-			if (VType == REG_SZ || VType == REG_EXPAND_SZ || VType == REG_MULTI_SZ)
+			DWORD t_len;
+			t_len = t_buffer_len;
+			if (t_type == REG_SZ || t_type == REG_EXPAND_SZ || t_type == REG_MULTI_SZ)
 			{
-				while(VBufLen > 0 && VValue[VBufLen - 1] == '\0')
-					VBufLen -= 1;
-				if (VType == REG_MULTI_SZ && VBufLen < t_original_buflen)
-					VBufLen += 1;
+				char_t *t_chars = t_buffer.Chars();
+				while(t_len > 0 && t_chars[t_len - 1] == '\0')
+					t_len -= 1;
+				if (t_type == REG_MULTI_SZ && t_len < t_buffer_len)
+					t_len += 1;
 			}
-			dest.copysvalue(VValue, VBufLen); //VBufLen - (VType == REG_SZ ? 1 : 0));
-		}
 
-		// MW-2006-01-15: Memory Leak
-		delete VValue;
+			t_buffer.Shrink(t_len);
+			return t_buffer.CreateStringAndRelease(r_value) &&
+                MCS_registry_type_to_string(t_type, r_type);
+		}
 	}
 	else
 	{
 		errno = err;
-		MCresult->sets("can't find key");
+		/* RESULT */ //MCresult->sets("can't find key");
+		return MCStringCreateWithCString("can't find key", r_error);
 	}
-	RegCloseKey(hkey);
-	delete key;
 
-	if (type != NULL)
-		for (i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
-			if (VType == RegDatatypes[i].type)
-			{
-				*type = RegDatatypes[i] . token;
-				break;
-			}
-
-	MCresult -> clear();
-
-	return;
+	r_value = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCS_set_registry(const char *key, MCExecPoint &dest, char *type)
+void MCS_query_registry(MCExecPoint &dest)
 {
-	HKEY hkey = NULL;
-	DWORD keyState; //REG_CREATED_NEW_KEY or REG_OPENED_EXISTING_KEY
-
-	/* get the root key string, it is at the begining of the key       */
-	char *str = (char *)strchr(key, '\\');
-	*str++ = '\0';  //str now pointing to the begining of subkey string
-
-	/* find the matching key for the root key string                   */
-	MCString s = key;
-	uint1 i;
-	for (i = 0 ; i < ELEMENTS(Regkeys) ; i++)
-		if (s == Regkeys[i].token)
-			break;
-	if (i >= ELEMENTS(Regkeys))
+	MCAutoStringRef t_key;
+	/* UNCHECKED */ dest.copyasstringref(&t_key);
+	MCAutoStringRef t_value, t_type, t_error;
+	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
+	if (*t_error != nil)
 	{
-		MCresult->sets("bad key");
-		dest.setboolean(False);
-		return;
+		dest.clear();
+		/* UNCHECKED */ MCresult->setvalueref(*t_error);
 	}
-	/* get the value name string, it is at the end of the key          */
-	char *VName = strrchr(str, '\\');
-	if (VName == NULL)
-	{ //invalid key path specified
-		MCresult->sets("bad key specified");
-		dest.setboolean(False);
-		return;
+	else
+	{
+		dest.setvalueref(*t_value);
+		MCresult->clear();
 	}
-	*VName++ = '\0';
-	if (RegCreateKeyExA(Regkeys[i].key, str, 0, NULL, REG_OPTION_NON_VOLATILE,
-	                   KEY_ALL_ACCESS, NULL, &hkey, &keyState) != ERROR_SUCCESS)
+}
+
+bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+{
+	MCAutoStringRef t_root, t_key, t_value;
+	HKEY t_root_hkey;
+
+	if (!MCS_registry_split_key(p_key, &t_root, &t_key, &t_value))
+		return false;
+
+	if (!MCS_registry_root_to_hkey(*t_root, t_root_hkey))
+	{
+		/* RESULT */ //MCresult->sets("bad key");
+		return MCStringCreateWithCString("bad key", r_error);
+	}
+	if (*t_key == nil)
+	{
+		/* RESULT */ //MCresult->sets("bad key specified");
+		return MCStringCreateWithCString("bad key specified", r_error);
+	}
+
+	MCAutoRegistryKey t_regkey;
+	DWORD t_keystate;
+
+	if (RegCreateKeyExA(t_root_hkey, MCStringGetCString(*t_key), 0, NULL, REG_OPTION_NON_VOLATILE,
+	                   KEY_ALL_ACCESS, NULL, &t_regkey, &t_keystate) != ERROR_SUCCESS)
 	{
 		MCS_seterrno(GetLastError());
-		MCresult->sets("can't create key");
-		dest.setboolean(False);
-		return;
+		/* RESULT */ //MCresult->sets("can't create key");
+		return MCStringCreateWithCString("can't create key", r_error);
 	}
-	if (dest.getsvalue().getlength() == 0)
+
+	if (MCStringGetLength(p_value) == 0)
 	{//delete this value
-		if ((errno = RegDeleteValueA(hkey, VName)) != ERROR_SUCCESS)
+		if ((errno = RegDeleteValueA(*t_regkey, MCStringGetCString(*t_value))) != ERROR_SUCCESS)
 		{
 			MCS_seterrno(GetLastError());
-			MCresult->sets("can't delete value");
-			dest.setboolean(False);
-			RegCloseKey(hkey); //write data to registry
-			return;
+			/* RESULT */ //MCresult->sets("can't delete value");
+			return MCStringCreateWithCString("can't delete value", r_error);
 		}
 	}
 	else
 	{
-		DWORD VType = REG_SZ;
-		if (type != NULL)
-			for (i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
-				if (!MCU_strncasecmp(type, RegDatatypes[i].token, strlen(type) + 1))
-				{
-					VType = RegDatatypes[i].type;
-					break;
-				}
-		char *VValue = dest.getsvalue().clone();
-		uint4 VLength = dest.getsvalue().getlength();
-		if (RegSetValueExA(hkey, VName, 0, VType, (const BYTE *)VValue,
-		                  VLength + (VType == REG_SZ ? 1 : 0)) != ERROR_SUCCESS)
+		DWORD t_type;
+		t_type = MCS_registry_type_from_string(p_type);
+
+		const BYTE *t_byte_ptr = MCStringGetBytePtr(p_value);
+		uint32_t t_length = MCStringGetLength(p_value);
+		if (t_type == REG_SZ && t_byte_ptr[t_length - 1] != '\0')
+			t_length++;
+
+		if (RegSetValueExA(*t_regkey, MCStringGetCString(*t_value), 0, t_type,
+			t_byte_ptr, t_length) != ERROR_SUCCESS)
 		{
 			MCS_seterrno(GetLastError());
-			MCresult->sets("can't set value");
-			dest.setboolean(False);
-			delete VValue;
-			return;
+			/* RESULT */ //MCresult->sets("can't set value");
+			return MCStringCreateWithCString("can't set value", r_error);
 		}
-		delete VValue;
 	}
-	MCresult->clear(False);
-	dest.setboolean(True);
-	RegCloseKey(hkey); //write data to registry
+
+	r_error = nil;
+	return true;
 }
 
 //WINNT does not delete registry entry if there are subkeys..this functions fixes that.
-DWORD RegDeleteKeyNT(HKEY hStartKey, char *pKeyName)
+DWORD RegDeleteKeyNT(HKEY hStartKey, const char *pKeyName)
 {
 	DWORD dwRtn, dwSubKeyLength;
 	char *pSubKey = NULL;
@@ -347,44 +436,38 @@ DWORD RegDeleteKeyNT(HKEY hStartKey, char *pKeyName)
 	return dwRtn;
 }
 
-void MCS_delete_registry(const char *key, MCExecPoint &dest)
+bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
 {
+	MCAutoStringRef t_root, t_key;
+
+	if (!MCS_registry_split_key(p_key, &t_root, &t_key))
+		return false;
+
 	HKEY hkey = NULL;
 
-	/* get the root key string, it is at the begining of the key       */
-	char *str = (char *)strchr(key, '\\');
-	if (!str)
+	if (MCStringGetLength(*t_key) == 0)
 	{
-		MCresult->sets("no key");
-		dest.setboolean(False);
-		return;
+		/* RESULT */ //MCresult->sets("no key");
+		return MCStringCreateWithCString("no key", r_error);
 	}
-	*str++ = '\0';  //str now pointing to the begining of subkey string
 
-	/* find the matching key for the root key string                   */
-	MCString s = key;
-	uint1 i;
-	for (i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+	if (!MCS_registry_root_to_hkey(*t_root, hkey))
 	{
-		if (s == Regkeys[i].token)
-			break;
+		/* RESULT */ //MCresult->sets("bad key");
+		return MCStringCreateWithCString("bad key", r_error);
 	}
-	if (i >= ELEMENTS(Regkeys))
-	{
-		MCresult->sets("bad key");
-		dest.setboolean(False);
-		return;
-	}
-	errno = RegDeleteKeyNT(Regkeys[i].key, str);
+
+	errno = RegDeleteKeyNT(hkey, MCStringGetCString(*t_key));
 	if (errno != ERROR_SUCCESS)
 	{
-		MCresult->sets("could not delete key");
-		dest.setboolean(False);
+		/* RESULT */ //MCresult->sets("could not delete key");
+		return MCStringCreateWithCString("could not delete key", r_error);
 	}
 	else
 	{
-		MCresult->clear(False);
-		dest.setboolean(True);
+		/* RESULT */ MCresult->clear(False);
+		r_error = nil;
+		return true;
 	}
 }
 

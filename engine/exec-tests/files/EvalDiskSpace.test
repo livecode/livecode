@@ -1,0 +1,4 @@
+setup
+test the diskspace is a number
+test the diskspace > 0
+teardown

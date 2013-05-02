@@ -82,6 +82,7 @@ public:
 	
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef);
 	
 private:
 	Parse_errors parse_pagesetup(MCScriptPoint& sp);
@@ -92,17 +93,6 @@ private:
 	Parse_errors parse_file(MCScriptPoint& sp);
 	Parse_errors parse_folder(MCScriptPoint& sp);
 	Parse_errors parse_notify(MCScriptPoint& sp);
-	
-	Exec_errors exec_pagesetup(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_printer(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_effect(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_record(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_colour(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_file(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_folder(MCExecPoint& ep, const char *p_title);
-	Exec_errors exec_notify(MCExecPoint& ep, const char *p_title);
-
-	Exec_errors exec_custom(MCExecPoint& sp, const MCString& p_name, const char *p_type, unsigned int t_count, ...);
 };
 
 #endif

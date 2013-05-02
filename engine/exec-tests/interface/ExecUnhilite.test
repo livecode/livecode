@@ -1,0 +1,11 @@
+setup
+
+create button
+
+set the hilite of button 1 to true
+
+unhilite button 1
+
+test not the hilite of button 1
+
+teardown

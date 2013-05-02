@@ -80,8 +80,11 @@ public:
 
 	// Create a return-delimited list of external names.
 	bool ListExternals(MCExecPoint& ep);
+	bool ListExternals(MCStringRef& r_list);
+
 	// Create a return-delimited list of external handlers of the given type.
 	bool ListHandlers(MCExecPoint& ep, Handler_type type);
+	bool ListHandlers(Handler_type p_type, MCStringRef& r_list);
 
 	// Looks to see if there is a handler of the given type.
 	bool HasHandler(MCNameRef handler, Handler_type type);

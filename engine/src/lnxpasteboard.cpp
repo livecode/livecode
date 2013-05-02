@@ -70,6 +70,7 @@ bool MCXPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_count)
   	
 }
 
+#ifdef SHARED_STRING
 
 bool MCXPasteboard::Fetch_MIME(MCMIMEtype *p_type, MCSharedString*& r_data)
 {
@@ -91,3 +92,17 @@ bool MCXPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 		r_data -> Retain() ;
 	return ( t_success ) ;
 }
+
+#else
+
+bool MCXPasteboard::Fetch_MIME(MCMIMEtype *p_type, MCStringRef& r_data)
+{
+	return m_transfer_store -> Fetch ( p_type, r_data, m_public_atom, m_private_atom, m_source_window, m_target_window, m_lock_time ) ;
+}
+
+
+bool MCXPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
+{
+	return m_transfer_store -> Fetch ( p_type, r_data, m_public_atom, m_private_atom, m_source_window, m_target_window, m_lock_time ) ;
+}
+#endif

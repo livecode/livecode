@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
 #include "execpt.h"
 #include "util.h"
@@ -37,8 +36,35 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "mctheme.h"
 
+#include "exec.h"
+
 real8 MCScrollbar::markpos;
 uint2 MCScrollbar::mode = SM_CLEARED;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCScrollbar::kProperties[] =
+{
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceScrollbarStyle, MCScrollbar, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_THUMB_SIZE, Double, MCScrollbar, ThumbSize)
+	DEFINE_RW_OBJ_PROPERTY(P_THUMB_POS, Double, MCScrollbar, ThumbPos)
+	DEFINE_RW_OBJ_PROPERTY(P_LINE_INC, Double, MCScrollbar, LineInc)
+	DEFINE_RW_OBJ_PROPERTY(P_PAGE_INC, Double, MCScrollbar, PageInc)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_ORIENTATION, InterfaceScrollbarOrientation, MCScrollbar, Orientation)
+	DEFINE_RW_OBJ_PROPERTY(P_NUMBER_FORMAT, String, MCScrollbar, NumberFormat)
+	DEFINE_RW_OBJ_PROPERTY(P_START_VALUE, String, MCScrollbar, StartValue)
+	DEFINE_RW_OBJ_PROPERTY(P_END_VALUE, String, MCScrollbar, EndValue)
+//	DEFINE_RW_OBJ_PROPERTY(P_SHOW_VALUE, Bool, MCScrollbar, ShowValue)
+};
+
+MCObjectPropertyTable MCScrollbar::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCScrollbar::MCScrollbar()
 {
@@ -59,7 +85,7 @@ MCScrollbar::MCScrollbar()
 	hover_part = WTHEME_PART_UNDEFINED;
 
 	linked_control = NULL;
-
+	
 	m_embedded = false;
 }
 
@@ -648,7 +674,7 @@ void MCScrollbar::timer(MCNameRef mptr, MCParameter *params)
 		MCControl::timer(mptr, params);
 }
 
-Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -694,12 +720,12 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 		ep.setboolean(getflag(F_SHOW_VALUE));
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	real8 newvalue;
@@ -835,7 +861,7 @@ Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 			dirty = False;
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	flags |= F_SAVE_ATTS;
 	if (dirty && opened)

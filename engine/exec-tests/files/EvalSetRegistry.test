@@ -1,0 +1,69 @@
+setup
+
+local tTestKey = "HKEY_CURRENT_USER\Software\LiveCode\Tests\SetRegistry\"
+
+// test setting default value
+test setRegistry(tTestKey, "setRegistryTest", "string")
+test queryRegistry(tTestKey) is "setRegistryTest"
+
+// test setting named value
+test setRegistry(tTestKey & "testValue", "setRegistryTest", "string")
+test queryRegistry(tTestKey & "testValue") is "setRegistryTest"
+
+// test clearing value
+test setRegistry(tTestKey & "testValue", empty, "string")
+test queryRegistry(tTestKey & "testValue") is empty
+test the result is "can't find key"
+
+teardown
+
+
+setup "setting types"
+
+local tTestKey = "HKEY_CURRENT_USER\Software\LiveCode\Tests\SetRegistry\"
+local tTypeTestKey
+put tTestKey & "typeTest" into tTypeTestKey
+
+local tType
+
+// test string types
+test setRegistry(tTypeTestKey, "a string", "string")
+test queryRegistry(tTypeTestKey, tType) is "a string"
+test tType is "string"
+test setRegistry(tTypeTestKey, "a string", "sz")
+test queryRegistry(tTypeTestKey, tType) is "a string"
+test tType is "string"
+test setRegistry(tTypeTestKey, "%PATH%", "expandsz")
+test queryRegistry(tTypeTestKey, tType) is "%PATH%"
+test tType is "expandsz"
+local tMultiSz
+put "string 1" & null & "string 2" & null into tMulti
+test setRegistry(tTypeTestKey, tMulti, "multisz")
+test queryRegistry(tTypeTestKey, tType) is tMulti
+test tType is "multisz"
+
+// binary type
+local tBin
+repeat with i = 1 to 1000
+	put numtobyte(random(256) - 1) after tBin
+end repeat
+test setRegistry(tTypeTestKey, tBin, "binary")
+test queryRegistry(tTypeTestKey, tType) is tBin
+test tType is "binary"
+
+// dword types
+local tdword
+put binaryEncode("i1", 1234567) into tdword
+test setRegistry(tTypeTestKey, tdword, "dword")
+test queryRegistry(tTypeTestKey, tType) is tdword
+test tType is "dword"
+put binaryEncode("i1", 1234567) into tdword
+test setRegistry(tTypeTestKey, tdword, "dwordlittleendian")
+test queryRegistry(tTypeTestKey, tType) is tdword
+test tType is "dword"
+put binaryEncode("N1", 1234567) into tdword
+test setRegistry(tTypeTestKey, tdword, "dwordbigendian")
+test queryRegistry(tTypeTestKey, tType) is tdword
+test tType is "dwordbigendian"
+
+teardown

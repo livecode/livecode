@@ -619,8 +619,6 @@ static bool MCConvertNativeFromWindows1252(const uint8_t *p_chars, uint32_t p_ch
 static bool MCConvertNativeFromMacRoman(const uint8_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
 static bool MCConvertNativeFromISO8859_1(const uint8_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
 
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
-
 static bool cgi_native_from_encoding(MCSOutputTextEncoding p_encoding, const char *p_text, uint32_t p_text_length, char *&r_native, uint32_t &r_native_length)
 {
 	bool t_success = true;
@@ -1570,7 +1568,11 @@ bool MCServerDeleteSession()
 {
 	bool t_success = true;
 	
-	t_success = MCSessionExpire(MCS_get_session_id());
+	MCAutoStringRef t_id;
+	t_success = MCS_get_session_id(&t_id);
+
+	if (t_success)
+		t_success = MCSessionExpire(MCStringGetCString(*t_id));
 	
 	if (s_current_session != NULL)
 	{
@@ -1601,11 +1603,11 @@ void cgi_finalize_session()
 static char *s_session_temp_dir = NULL;
 bool MCS_get_temporary_folder(char *&r_folder);
 
-bool MCS_set_session_save_path(const char *p_path)
+bool MCS_set_session_save_path(MCStringRef p_path)
 {
 	char *t_save_path = nil;
 	
-	if (!MCCStringClone(p_path, t_save_path))
+	if (!MCCStringClone(MCStringGetCString(p_path), t_save_path))
 		return false;
 	
 	MCCStringFree(MCsessionsavepath);
@@ -1614,18 +1616,19 @@ bool MCS_set_session_save_path(const char *p_path)
 	return true;
 }
 
-const char *MCS_get_session_save_path(void)
+bool MCS_get_session_save_path(MCStringRef& r_path)
 {
 	if (MCsessionsavepath != NULL && MCCStringLength(MCsessionsavepath) > 0)
-		return MCsessionsavepath;
+		return MCStringCreateWithCString(MCsessionsavepath, r_path);
 	
 	if (s_session_temp_dir != NULL)
-		return s_session_temp_dir;
+		return MCStringCreateWithCString(s_session_temp_dir, r_path);
 	
 	if (MCS_get_temporary_folder(s_session_temp_dir))
-		return s_session_temp_dir;
+		return MCStringCreateWithCString(s_session_temp_dir, r_path);
 	
-	return NULL;
+	r_path = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 bool MCS_set_session_lifetime(uint32_t p_lifetime)
@@ -1639,11 +1642,11 @@ uint32_t MCS_get_session_lifetime(void)
 	return MCsessionlifetime;
 }
 
-bool MCS_set_session_name(const char *p_name)
+bool MCS_set_session_name(MCStringRef p_name)
 {
 	char *t_name = nil;
 	
-	if (!MCCStringClone(p_name, t_name))
+	if (!MCCStringClone(MCStringGetCString(p_name), t_name))
 		return false;
 	
 	MCCStringFree(MCsessionname);
@@ -1652,22 +1655,22 @@ bool MCS_set_session_name(const char *p_name)
 	return true;
 }
 
-const char *MCS_get_session_name(void)
+bool MCS_get_session_name(MCStringRef &r_name)
 {
 	if (MCsessionname != NULL && MCCStringLength(MCsessionname) > 0)
-		return MCsessionname;
+		return MCStringCreateWithCString(MCsessionname, r_name);
 	
-	return "LCSESSION";
+	return MCStringCreateWithCString("LCSESSION", r_name);
 }
 
-bool MCS_set_session_id(const char *p_id)
+bool MCS_set_session_id(MCStringRef p_id)
 {
 	char *t_id = nil;
 	
 	if (s_current_session != NULL)
 		return false;
 	
-	if (!MCCStringClone(p_id, t_id))
+	if (!MCCStringClone(MCStringGetCString(p_id), t_id))
 		return false;
 	
 	MCCStringFree(MCsessionid);
@@ -1676,12 +1679,12 @@ bool MCS_set_session_id(const char *p_id)
 	return true;
 }
 
-const char *MCS_get_session_id(void)
+bool MCS_get_session_id(MCStringRef& r_id)
 {
 	if (s_current_session != NULL)
-		return s_current_session->id;
+		return MCStringCreateWithCString(s_current_session->id, r_id);
 	
-	return MCsessionid;
+	return MCStringCreateWithCString(MCsessionid, r_id);
 }
 
 bool MCServerGetSessionIdFromCookie(char *&r_id)
@@ -1700,7 +1703,8 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 		return false;
 	
 	MCExecPoint ep;
-	if (ES_NORMAL != t_cookie_array->fetch_element(ep, MCS_get_session_name()))
+	MCAutoStringRef t_name;
+	if (!MCS_get_session_name(&t_name) || ES_NORMAL != t_cookie_array->fetch_element(ep, MCStringGetOldString(*t_name)))
 		return false;
 	
 	// retrieve ID from cookie value

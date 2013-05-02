@@ -1,0 +1,17 @@
+setup
+
+create button
+
+set the script of button 1 to "on mouseUp;set the ID of the templateStack to 2000;end mouseUp"
+
+send "mouseUp" to button 1 in 10
+
+wait 5
+
+cancel item 1 of last line of the pendingMessages
+
+wait 10
+
+test the ID of the templateStack is 1001
+
+teardown

@@ -1,0 +1,4 @@
+setup "up"
+test the capsLockKey is "up"
+teardown
+

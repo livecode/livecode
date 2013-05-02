@@ -48,7 +48,7 @@ public:
 };
 
 extern bool MCParseMenuString(MCString &r_string, IParseMenuCallback *p_callback, bool isunicode, uint1 p_menumode);
-extern uint4 MCLookupAcceleratorKeysym(MCString &p_name);
+extern uint4 MCLookupAcceleratorKeysym(MCStringRef p_name);
 extern const char *MCLookupAcceleratorName(uint4 p_keysym);
 
 #endif

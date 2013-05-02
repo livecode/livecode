@@ -32,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "socket.h"
-#include "core.h"
 #include "notify.h"
 
 #include "ports.cpp"
@@ -422,6 +421,10 @@ bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr)
 	return MCS_name_to_sockaddr(p_name_in, &r_addr, NULL, NULL);
 }
 
+bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr)
+{
+	return MCS_name_to_sockaddr(MCStringGetCString(p_name), &r_addr, NULL, NULL);
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -516,72 +519,75 @@ bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_loo
 	return t_success;
 }
 
-struct _sockaddr_name_info
-{
-	bool m_resolved;
-	char *m_name;
-};
-
-void sockaddr_to_string_callback(void *p_context, bool p_resolved, const char *p_name)
-{
-	struct _sockaddr_name_info* t_info = (_sockaddr_name_info*) p_context;
-
-	t_info->m_resolved = p_resolved;
-	if (p_resolved)
-		t_info->m_resolved = MCCStringClone(p_name, t_info->m_name);
-}
-
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string,
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, bool p_blocking,
 							MCSockAddrToStringCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 
-	MCSockAddrToStringCallback t_callback = p_callback;
-	void *t_context = p_context;
-
-	_sockaddr_name_info *t_info = NULL;
-
-	if (t_callback == NULL)
-	{
-		t_callback = sockaddr_to_string_callback;
-
-		t_success = MCMemoryNew(t_info);
-		t_context = t_info;
-	}
-
+	if (p_callback == NULL)
+		return false;
 
 	if (!p_lookup_hostname)
 	{
-		// MW-2010-06-01: If there was no callback specified, then we don't want to keep the
-		//   string that is returned here. This is because our callback clones it.
 		char *t_string;
 		t_success = sockaddr_to_string(p_addr, p_addrlen, false, t_string);
-		t_callback(t_context, t_success, t_string);
-		if (t_info == nil)
-			r_string = t_string;
-		else
-			MCCStringFree(t_string);
+		p_callback(p_context, t_success, t_string);
+		MCCStringFree(t_string);
 	}
 	else
 	{
-		t_success = MCSocketAddrToString(p_addr, p_addrlen, p_lookup_hostname, (p_callback == NULL), t_callback, t_context);
-	}
-
-	if (t_info != NULL)
-	{
-		if (t_success)
-		{
-			r_string = t_info->m_name;
-			t_success = t_info->m_resolved;
-		}
-		MCMemoryDelete(t_info);
+		t_success = MCSocketAddrToString(p_addr, p_addrlen, p_lookup_hostname, p_blocking, p_callback, p_context);
 	}
 
 	return t_success;
 }
 
-bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string)
+struct _sockaddr_to_string_context
 {
-	return MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, r_string, NULL, NULL);
+	bool success;
+	char *name;
+};
+
+void sockaddr_to_string_callback(void *p_context, bool p_resolved, const char *p_name)
+{
+	struct _sockaddr_to_string_context* t_info = (_sockaddr_to_string_context*) p_context;
+
+	t_info->success = p_resolved && MCCStringClone(p_name, t_info->name);
 }
 
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, char *&r_string)
+{
+	struct _sockaddr_to_string_context t_info;
+	t_info.success = true;
+	t_info.name = nil;
+	if (MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, true, sockaddr_to_string_callback, &t_info) &&
+		t_info.success)
+	{
+		r_string = t_info.name;
+		return true;
+	}
+
+	return false;
+}
+
+struct _sockaddr_to_stringref_context
+{
+	bool success;
+	MCAutoStringRef name;
+};
+
+void sockaddr_to_stringref_callback(void *p_context, bool p_resolved, const char *p_name)
+{
+	struct _sockaddr_to_stringref_context* t_info = (_sockaddr_to_stringref_context*) p_context;
+
+	t_info->success = p_resolved && MCStringCreateWithNativeChars((const char_t*)p_name, MCCStringLength(p_name), &t_info->name);
+}
+
+bool MCS_sockaddr_to_string(struct sockaddr *p_addr, int p_addrlen, bool p_lookup_hostname, MCStringRef& r_string)
+{
+	struct _sockaddr_to_stringref_context t_info;
+	t_info.success = true;
+
+	return MCS_sockaddr_to_string(p_addr, p_addrlen, p_lookup_hostname, true, sockaddr_to_stringref_callback, &t_info) &&
+		t_info.success && MCStringCopy(*t_info.name, r_string);
+}

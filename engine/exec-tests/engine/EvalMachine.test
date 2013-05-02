@@ -1,0 +1,8 @@
+setup
+if the platform is "win32" then
+   test the machine is "x86"
+else
+   // need to create tests for other platforms
+   test false
+end if
+teardown

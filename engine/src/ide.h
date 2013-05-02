@@ -341,4 +341,49 @@ private:
 	MCVarref *m_it;
 };
 
+//////////
+
+class MCIdeSyntaxTokenize: public MCStatement
+{
+public:
+	MCIdeSyntaxTokenize(void);
+	virtual ~MCIdeSyntaxTokenize(void);
+
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+	virtual Exec_stat exec(MCExecPoint& p_exec);
+
+private:
+	MCChunk *m_script;
+};
+
+class MCIdeSyntaxRecognize: public MCStatement
+{
+public:
+	MCIdeSyntaxRecognize(void);
+	virtual ~MCIdeSyntaxRecognize(void);
+
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+	virtual Exec_stat exec(MCExecPoint& p_exec);
+
+private:
+	MCExpression *m_script;
+	MCExpression *m_language;
+};
+
+class MCIdeSyntaxCompile: public MCStatement
+{
+public:
+	MCIdeSyntaxCompile(void);
+	virtual ~MCIdeSyntaxCompile(void);
+	
+	virtual Parse_stat parse(MCScriptPoint& p_script);
+	virtual Exec_stat exec(MCExecPoint& p_exec);
+	
+private:
+	MCChunk *m_target;
+	MCVarref *m_it;
+};
+
+//////////
+
 #endif

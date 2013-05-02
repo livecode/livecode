@@ -24,7 +24,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define REG_OKAY 0
 
 #define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
+extern MCStringRef MCregexpatterns[];
 
 //regex structure
 typedef struct
@@ -57,7 +57,7 @@ typedef struct _regexp
 regexp;
 
 const char *MCR_geterror();
-regexp *MCR_compile(char *exp);
+regexp *MCR_compile(const char *exp);
 int MCR_exec(regexp *prog, const char *string, uint4 len);
 void MCR_free(regexp *prog);
 

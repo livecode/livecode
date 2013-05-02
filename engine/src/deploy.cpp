@@ -327,9 +327,9 @@ Parse_stat MCIdeDeploy::parse(MCScriptPoint& sp)
 	return sp . parseexp(False, True, &m_params);
 }
 
-static Exec_stat fetch_opt_cstring(MCExecPoint& ep, MCVariableValue *array, const char *key, char*& r_result)
+static Exec_stat fetch_opt_cstring(MCExecPoint& ep, MCArrayRef array, const char *key, char*& r_result)
 {
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
+	if (!ep . fetcharrayelement_cstring(array, key))
 		return ES_ERROR;
 	if (ep . getsvalue() == MCnullmcstring)
 		r_result = NULL;
@@ -338,9 +338,9 @@ static Exec_stat fetch_opt_cstring(MCExecPoint& ep, MCVariableValue *array, cons
 	return ES_NORMAL;
 }
 
-static Exec_stat fetch_opt_uint32(MCExecPoint& ep, MCVariableValue *array, const char *key, uint32_t& r_result)
+static Exec_stat fetch_opt_uint32(MCExecPoint& ep, MCArrayRef array, const char *key, uint32_t& r_result)
 {
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
+	if (!ep . fetcharrayelement_cstring(array, key))
 		return ES_ERROR;
 	if (ep . ston() != ES_NORMAL)
 		return ES_ERROR;
@@ -348,9 +348,9 @@ static Exec_stat fetch_opt_uint32(MCExecPoint& ep, MCVariableValue *array, const
 	return ES_NORMAL;
 }
 
-static Exec_stat fetch_opt_filepath(MCExecPoint& ep, MCVariableValue *array, const char *key, char*& r_result)
+static Exec_stat fetch_opt_filepath(MCExecPoint& ep, MCArrayRef array, const char *key, char*& r_result)
 {
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
+	if (!ep . fetcharrayelement_cstring(array, key))
 		return ES_ERROR;
 	if (ep . getsvalue() == MCnullmcstring)
 		r_result = NULL;
@@ -359,9 +359,9 @@ static Exec_stat fetch_opt_filepath(MCExecPoint& ep, MCVariableValue *array, con
 	return ES_NORMAL;
 }
 
-static Exec_stat fetch_opt_boolean(MCExecPoint& ep, MCVariableValue *array, const char *key, bool& r_result)
+static Exec_stat fetch_opt_boolean(MCExecPoint& ep, MCArrayRef array, const char *key, bool& r_result)
 {
-	if (array -> fetch_element(ep, key) != ES_NORMAL)
+	if (!ep . fetcharrayelement_cstring(array, key))
 		return ES_ERROR;
 	if (ep . getsvalue() == MCtruemcstring)
 		r_result = true;
@@ -372,28 +372,28 @@ static Exec_stat fetch_opt_boolean(MCExecPoint& ep, MCVariableValue *array, cons
 	return ES_NORMAL;
 }
 
-static Exec_stat fetch_cstring(MCExecPoint& ep, MCVariableValue *array, const char *key, char *& r_result)
+static Exec_stat fetch_cstring(MCExecPoint& ep, MCArrayRef array, const char *key, char *& r_result)
 {
-	if (!array -> has_element(ep, key))
+	if (!ep . hasarrayelement_cstring(array, key))
 		return ES_ERROR;
 	return fetch_opt_cstring(ep, array, key, r_result);
 }
 
-static Exec_stat fetch_uint32(MCExecPoint& ep, MCVariableValue *array, const char *key, uint32_t& r_result)
+static Exec_stat fetch_uint32(MCExecPoint& ep, MCArrayRef array, const char *key, uint32_t& r_result)
 {
-	if (!array -> has_element(ep, key))
+	if (!ep . hasarrayelement_cstring(array, key))
 		return ES_ERROR;
 	return fetch_opt_uint32(ep, array, key, r_result);
 }
 
-static Exec_stat fetch_filepath(MCExecPoint& ep, MCVariableValue *array, const char *key, char *& r_result)
+static Exec_stat fetch_filepath(MCExecPoint& ep, MCArrayRef array, const char *key, char *& r_result)
 {
-	if (!array -> has_element(ep, key))
+	if (!ep . hasarrayelement_cstring(array, key))
 		return ES_ERROR;
 	return fetch_opt_filepath(ep, array, key, r_result);
 }
 
-static Exec_stat fetch_filepath_array(MCExecPoint& ep, MCVariableValue *array, const char *key, char**& r_filepaths, uint32_t& r_filepath_count)
+static Exec_stat fetch_filepath_array(MCExecPoint& ep, MCArrayRef array, const char *key, char**& r_filepaths, uint32_t& r_filepath_count)
 {
 	bool t_success;
 	t_success = true;
@@ -433,7 +433,7 @@ static Exec_stat fetch_filepath_array(MCExecPoint& ep, MCVariableValue *array, c
 	return t_success ? ES_NORMAL : ES_ERROR;
 }
 
-static Exec_stat fetch_cstring_array(MCExecPoint& ep, MCVariableValue *array, const char *key, char**& r_strings, uint32_t& r_string_count)
+static Exec_stat fetch_cstring_array(MCExecPoint& ep, MCArrayRef array, const char *key, char**& r_strings, uint32_t& r_string_count)
 {
 	bool t_success;
 	t_success = true;
@@ -477,11 +477,10 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = m_params -> eval(ep);
 
-	MCVariableValue *t_array;
+	MCAutoArrayRef t_array;
 	if (t_stat == ES_NORMAL)
 	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
+		if (!ep . copyasarrayref(&t_array))
 			return ES_ERROR;
 	}
 
@@ -491,46 +490,44 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	memset(&t_params, 0, sizeof(MCDeployParameters));
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine_ppc", t_params . engine_ppc);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "engine_ppc", t_params . engine_ppc);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine_x86", t_params . engine_x86);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "engine_x86", t_params . engine_x86);
 	if (t_stat == ES_NORMAL && t_params . engine_ppc == NULL && t_params . engine_x86 == NULL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "engine", t_params . engine);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "engine", t_params . engine);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "stackfile", t_params . stackfile);
+		t_stat = fetch_filepath(ep2, *t_array, "stackfile", t_params . stackfile);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath_array(ep2, t_array, "auxillary_stackfiles", t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
+		t_stat = fetch_filepath_array(ep2, *t_array, "auxillary_stackfiles", t_params . auxillary_stackfiles, t_params . auxillary_stackfile_count);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_cstring_array(ep2, t_array, "externals", t_params . externals, t_params . external_count);
+		t_stat = fetch_cstring_array(ep2, *t_array, "externals", t_params . externals, t_params . external_count);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "startup_script", t_params . startup_script);
+		t_stat = fetch_opt_cstring(ep2, *t_array, "startup_script", t_params . startup_script);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_cstring_array(ep2, t_array, "redirects", t_params . redirects, t_params . redirect_count);
+		t_stat = fetch_cstring_array(ep2, *t_array, "redirects", t_params . redirects, t_params . redirect_count);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "appicon", t_params . app_icon);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "appicon", t_params . app_icon);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "docicon", t_params . doc_icon);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "docicon", t_params . doc_icon);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "manifest", t_params . manifest);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "manifest", t_params . manifest);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "payload", t_params . payload);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "payload", t_params . payload);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "spill", t_params . spill);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "spill", t_params . spill);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
+		t_stat = fetch_filepath(ep2, *t_array, "output", t_params . output);
 
 	if (t_stat == ES_NORMAL)
-	{
-		t_stat = t_array -> fetch_element(ep2, "version");
-		if (t_stat == ES_NORMAL && ep2 . getarray() != NULL)
-			t_params . version_info = new MCVariableValue(*ep2 . getarray());
-	}
+		if (ep2 . fetcharrayelement_cstring(*t_array, "version") == ES_NORMAL &&
+			ep2 . isarray())
+			/* UNCHECKED */ ep2 . copyasarrayref(t_params . version_info);
 	
 	// If platform is iOS and we are not Mac then error
 #ifndef _MACOSX
@@ -604,7 +601,7 @@ Exec_stat MCIdeDeploy::exec(MCExecPoint& ep)
 	delete t_params . engine;
 	delete t_params . engine_ppc;
 	delete t_params . engine_x86;
-	delete t_params . version_info;
+	MCValueRelease(t_params . version_info);
 
 	if (t_stat == ES_ERROR && t_soft_error)
 		return ES_NORMAL;
@@ -656,11 +653,10 @@ Exec_stat MCIdeSign::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = m_params -> eval(ep);
 
-	MCVariableValue *t_array;
+	MCAutoArrayRef t_array;
 	if (t_stat == ES_NORMAL)
 	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
+		if (!ep . copyasarrayref(&t_array))
 			return ES_ERROR;
 	}
 
@@ -670,23 +666,23 @@ Exec_stat MCIdeSign::exec(MCExecPoint& ep)
 	memset(&t_params, 0, sizeof(MCDeploySignParameters));
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "passphrase", t_params . passphrase);
+		t_stat = fetch_opt_cstring(ep2, *t_array, "passphrase", t_params . passphrase);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "certificate", t_params . certificate);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "certificate", t_params . certificate);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "privatekey", t_params . privatekey);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "privatekey", t_params . privatekey);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_filepath(ep2, t_array, "certstore", t_params . certstore);
+		t_stat = fetch_opt_filepath(ep2, *t_array, "certstore", t_params . certstore);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "timestamper", t_params . timestamper);
+		t_stat = fetch_opt_cstring(ep2, *t_array, "timestamper", t_params . timestamper);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "description", t_params . description);
+		t_stat = fetch_opt_cstring(ep2, *t_array, "description", t_params . description);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_cstring(ep2, t_array, "url", t_params . url);
+		t_stat = fetch_opt_cstring(ep2, *t_array, "url", t_params . url);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "input", t_params . input);
+		t_stat = fetch_filepath(ep2, *t_array, "input", t_params . input);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
+		t_stat = fetch_filepath(ep2, *t_array, "output", t_params . output);
 
 	if (t_stat == ES_NORMAL)
 		if (t_params . certstore != NULL && (t_params . certificate != NULL || t_params . privatekey != NULL))
@@ -772,11 +768,10 @@ Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = m_params -> eval(ep);
 
-	MCVariableValue *t_array;
+	MCAutoArrayRef t_array;
 	if (t_stat == ES_NORMAL)
 	{
-		t_array = ep . getarray();
-		if (t_array == NULL)
+		if (!ep . copyasarrayref(&t_array))
 			return ES_ERROR;
 	}
 
@@ -786,23 +781,23 @@ Exec_stat MCIdeDiet::exec(MCExecPoint& ep)
 	memset(&t_params, 0, sizeof(MCDeployDietParameters));
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "input", t_params . input);
+		t_stat = fetch_filepath(ep2, *t_array, "input", t_params . input);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_filepath(ep2, t_array, "output", t_params . output);
+		t_stat = fetch_filepath(ep2, *t_array, "output", t_params . output);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_x86", t_params . keep_x86);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_x86", t_params . keep_x86);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_x86_64", t_params . keep_x86_64);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_x86_64", t_params . keep_x86_64);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_ppc", t_params . keep_ppc);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_ppc", t_params . keep_ppc);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_ppc64", t_params . keep_ppc64);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_ppc64", t_params . keep_ppc64);
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_arm", t_params . keep_arm);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_arm", t_params . keep_arm);
 
 	if (t_stat == ES_NORMAL)
-		t_stat = fetch_opt_boolean(ep2, t_array, "keep_debug_symbols", t_params . keep_debug_symbols);
+		t_stat = fetch_opt_boolean(ep2, *t_array, "keep_debug_symbols", t_params . keep_debug_symbols);
 
 
 	if (t_stat == ES_NORMAL)
@@ -909,14 +904,14 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		t_stat = m_items -> eval(ep);
 		
-	if (t_stat == ES_NORMAL && ep . getformat() != VF_ARRAY)
+	if (t_stat == ES_NORMAL && !ep.isarray())
 		t_stat = ES_ERROR;
 
-	MCVariableArray *t_array;
+	MCAutoArrayRef t_array;
 	if (t_stat == ES_NORMAL)
 	{
-		t_array = ep . getarray() -> get_array();
-		if (!t_array -> issequence())
+		if (!ep . copyasarrayref(&t_array) ||
+			!MCArrayIsSequence(*t_array))
 			t_stat = ES_ERROR;
 	}
 
@@ -926,8 +921,8 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 	t_item_count = 0;
 	if (t_stat == ES_NORMAL)
 	{
-		if (MCMemoryNewArray(t_array -> getnfilled(), t_items))
-			t_item_count = t_array -> getnfilled();
+		if (MCMemoryNewArray(MCArrayGetCount(*t_array), t_items))
+			t_item_count = MCArrayGetCount(*t_array);
 		else
 			t_stat = ES_ERROR;
 	}
@@ -936,26 +931,19 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 	if (t_stat == ES_NORMAL)
 		for(uint32_t i = 0; i < t_item_count && t_stat == ES_NORMAL; i++)
 		{
-			MCHashentry *t_element;
-			t_element = t_array -> lookupindex(i + 1, False);
-			if (t_element == nil)
+			if (!ep2 . fetcharrayindex(*t_array, i + 1))
 				t_stat = ES_ERROR;
 
-			if (t_stat == ES_NORMAL)
-				t_stat = t_element -> value . fetch(ep2);
-
-			MCVariableValue *t_item_array;
+			MCAutoArrayRef t_item_array;
 			if (t_stat == ES_NORMAL)
 			{
-				t_item_array = ep2 . getarray();
-				if (t_item_array == nil)
-					t_stat = ES_ERROR;
+				if (!ep2 . copyasarrayref(&t_item_array))
+					return ES_ERROR;
 			}
 
 			if (t_stat == ES_NORMAL)
 			{
-				t_stat = t_item_array -> fetch_element(ep2, "type");
-				if (t_stat == ES_NORMAL)
+				if (ep2 . fetcharrayelement_cstring(*t_item_array, "type"))
 				{
 					if (ep2 . getsvalue() == "folder")
 						t_items[i] . is_folder = true;
@@ -964,30 +952,32 @@ Exec_stat MCIdeDmgBuild::exec(MCExecPoint& ep)
 					else
 						t_stat = ES_ERROR;
 				}
+				else
+					t_stat = ES_ERROR;
 			}
 
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_uint32(ep2, t_item_array, "parent", t_items[i] . parent);
+				t_stat = fetch_uint32(ep2, *t_item_array, "parent", t_items[i] . parent);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_cstring(ep2, t_item_array, "name", t_items[i] . name);
+				t_stat = fetch_cstring(ep2, *t_item_array, "name", t_items[i] . name);
 
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "owner_id", t_items[i] . owner_id);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "owner_id", t_items[i] . owner_id);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "group_id", t_items[i] . group_id);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "group_id", t_items[i] . group_id);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "file_mode", t_items[i] . file_mode);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "file_mode", t_items[i] . file_mode);
 
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "create_date", t_items[i] . create_date);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "create_date", t_items[i] . create_date);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "content_mod_date", t_items[i] . content_mod_date);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "content_mod_date", t_items[i] . content_mod_date);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "attribute_mod_date", t_items[i] . attribute_mod_date);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "attribute_mod_date", t_items[i] . attribute_mod_date);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "access_date", t_items[i] . access_date);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "access_date", t_items[i] . access_date);
 			if (t_stat == ES_NORMAL)
-				t_stat = fetch_opt_uint32(ep2, t_item_array, "backup_date", t_items[i] . backup_date);
+				t_stat = fetch_opt_uint32(ep2, *t_item_array, "backup_date", t_items[i] . backup_date);
 		}
 
 	/////////

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -54,7 +53,7 @@ extern "C" int initialise_weak_link_pangoft2();
 struct MCNewFontStruct: public MCFontStruct
 {
 	// The requested details of the font
-	char *family;
+	MCNameRef family;
 	uint16_t size;
 	uint16_t style;
 
@@ -74,12 +73,12 @@ public:
 	virtual bool create(void);
 	virtual void destroy(void);
 
-	virtual MCFontStruct *getfont(const MCString &fname, uint2 &size, uint2 style, Boolean printer);
-	virtual void getfontnames(MCExecPoint &ep, char *type);
-	virtual void getfontsizes(const char *fname, MCExecPoint &ep);
-	virtual void getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep);
-	virtual bool getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font);
-	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style);
+	virtual MCFontStruct *getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer);
+	virtual bool getfontnames(MCStringRef p_type, MCListRef& r_names);
+	virtual bool getfontsizes(MCStringRef p_fname, MCListRef& r_sizes);
+	virtual bool getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles);
+	virtual bool getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font);
+	virtual void getfontreqs(MCFontStruct *f, MCNameRef& r_name, uint2& r_size, uint2& r_style);
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
 	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
@@ -193,41 +192,23 @@ void MCNewFontlist::setuptarget(Pixmap p_pixmap, uint32_t p_color)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCFontStruct *MCNewFontlist::getfont(const MCString& p_family, uint2& p_size, uint2 p_style, Boolean p_printer)
+MCFontStruct *MCNewFontlist::getfont(MCNameRef p_family, uint2& p_size, uint2 p_style, Boolean p_printer)
 {
 	MCNewFontStruct *t_font;
 	for(t_font = m_fonts; t_font != nil; t_font = t_font -> next)
-		if (p_family == t_font -> family && p_size == t_font -> size && p_style == t_font -> style)
+		if (MCNameIsEqualTo(p_family, t_font -> family) && p_size == t_font -> size && p_style == t_font -> style)
 			return t_font;
 
 	t_font = new MCNewFontStruct;
-	t_font -> family = p_family . clone();
+	t_font -> family = MCValueRetain(p_family);
 	t_font -> size = p_size;
 	t_font -> style = p_style;
 	t_font -> next = m_fonts;
+	t_font -> unicode = False;
 	m_fonts = t_font;
 
-	const char *t_charset;
-	t_charset = strchr(t_font -> family, ',');
-	if (t_charset != nil)
-	{
-		t_font -> charset = MCU_languagetocharset(t_charset + 1);
-		t_font -> unicode = (t_font -> charset != 0);
-	}
-	else
-	{
-		t_font -> charset = 0;
-		t_font -> unicode = False;
-	}
-
-	char *t_family_name;
-	if (t_charset != nil)
-		MCCStringCloneSubstring(t_font -> family, t_charset - t_font -> family, t_family_name);
-	else
-		MCCStringClone(t_font -> family, t_family_name);
-
 	t_font -> description = pango_font_description_new();
-	pango_font_description_set_family(t_font -> description, t_family_name);
+	pango_font_description_set_family(t_font -> description, MCStringGetCString(MCNameGetString(t_font -> family)));
 	pango_font_description_set_absolute_size(t_font -> description, p_size * PANGO_SCALE);
 	if ((p_style & (FA_ITALIC | FA_OBLIQUE)) != 0)
 		pango_font_description_set_style(t_font -> description, PANGO_STYLE_ITALIC);
@@ -264,33 +245,43 @@ MCFontStruct *MCNewFontlist::getfont(const MCString& p_family, uint2& p_size, ui
 
 	g_object_unref(t_p_font);
 
-	MCCStringFree(t_family_name);
-
 	return t_font;
 }
 
-void MCNewFontlist::getfontnames(MCExecPoint &ep, char *type)
+bool MCNewFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return true;
+
+	bool t_success = true;
 
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; i < t_family_count; i++)
-		ep . concatcstring(pango_font_family_get_name(t_families[i]), EC_RETURN, i == 0);
+	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+		t_success = MCListAppendCString(*t_list, pango_font_family_get_name(t_families[i]));
 
 	g_free(t_families);
+
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_names);
+	return t_success;
 }
 
-void MCNewFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCNewFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
 
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; i < t_family_count; i++)
-		if (MCCStringEqualCaseless(fname, pango_font_family_get_name(t_families[i])))
+	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+		if (MCStringIsEqualToCString(p_fname, pango_font_family_get_name(t_families[i]), kMCCompareCaseless))
 		{
 			PangoFontFace **t_faces;
 			int t_face_count;
@@ -301,43 +292,51 @@ void MCNewFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
 				int t_size_count;
 				pango_font_face_list_sizes(t_faces[0], &t_sizes, &t_size_count);
 				if (t_sizes == nil)
-					ep . setcstring("0");
+					t_success = MCListAppendInteger(*t_list, 0);
 				else
 				{
-					for(uint32_t i = 0; i < t_size_count; i++)
-						ep . concatint(t_sizes[i] / PANGO_SCALE, EC_RETURN, i == 0);
+					for(uint32_t i = 0; t_success && i < t_size_count; i++)
+						t_success = MCListAppendInteger(*t_list, t_sizes[i] / PANGO_SCALE);
 					g_free(t_sizes);
 				}
 				g_free(t_faces);
 			}
 			break;
 		}
-
 	g_free(t_families);
+
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_sizes);
+	return t_success;
 }
 
-void MCNewFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+bool MCNewFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	ep . clear();
-
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+	bool t_success = true;
 	PangoFontFamily **t_families;
 	int t_family_count;
 	pango_context_list_families(m_pango, &t_families, &t_family_count);
-	for(uint32_t i = 0; i < t_family_count; i++)
-		if (MCCStringEqualCaseless(fname, pango_font_family_get_name(t_families[i])))
+	for(uint32_t i = 0; t_success && i < t_family_count; i++)
+		if (MCStringIsEqualToCString(p_fname, pango_font_family_get_name(t_families[i]), kMCCompareCaseless))
 		{
 			PangoFontFace **t_faces;
 			int t_face_count;
 			pango_font_family_list_faces(t_families[i], &t_faces, &t_face_count);
-			for(uint32_t i = 0; i < t_face_count; i++)
-				ep . concatcstring(pango_font_face_get_face_name(t_faces[i]), EC_RETURN, i == 0);
+			for(uint32_t i = 0; t_success && i < t_face_count; i++)
+				t_success = MCListAppendCString(*t_list, pango_font_face_get_face_name(t_faces[i]));
 			g_free(t_faces);
 		}
 
 	g_free(t_families);
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_styles);
+	return t_success;
 }
 
-bool MCNewFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCNewFontlist::getfontstructinfo(MCNameRef &r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCNewFontStruct *t_font;
 	t_font = static_cast<MCNewFontStruct *>(p_font);
@@ -348,7 +347,7 @@ bool MCNewFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 
 	return true;
 }
 
-void MCNewFontlist::getfontreqs(MCFontStruct *p_font, const char*& r_name, uint2& r_size, uint2& r_style)
+void MCNewFontlist::getfontreqs(MCFontStruct *p_font, MCNameRef& r_name, uint2& r_size, uint2& r_style)
 {
 	MCNewFontStruct *t_font;
 	t_font = static_cast<MCNewFontStruct *>(p_font);

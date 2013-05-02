@@ -58,7 +58,9 @@ extern void MCU_saveprops(MCSaveprops &sp);
 extern void MCU_restoreprops(MCSaveprops &sp);
 extern int4 MCU_any(int4 max);
 extern void MCU_getnumberformat(MCExecPoint &, uint2, uint2, uint2);
+extern bool MCU_getnumberformat(uint2 fw, uint2 trail, uint2 force, MCStringRef& r_string);
 extern void MCU_setnumberformat(const MCString &, uint2 &, uint2 &, uint2 &);
+extern void MCU_setnumberformat(MCStringRef p_input, uint2 &fw, uint2 &trailing, uint2 &force);
 extern real8 MCU_stoIEEE(const char *bytes);
 extern real8 MCU_i4tor8(int4 in);
 extern real8 MCU_fwrap(real8 p_x, real8 p_y);
@@ -71,21 +73,29 @@ extern Boolean MCU_strchr(const char *&, uint4 &, char,
 	                          Boolean isunicode = False);
 inline uint1 MCU_charsize(Boolean isunicode = False);
 extern char *MCU_strtok(char *, const char *);
+/* WRAPPER */ extern bool MCU_strtol(MCStringRef p_string, int4& r_l);
 extern int4 MCU_strtol(const char *&, uint4 &, int1, Boolean &done,
 	                       Boolean reals = False, Boolean octals = False);
 extern real8 MCU_strtor8(const char *&, uint4 &, int1, Boolean &r_done,
 						Boolean convertoctals = False);
 extern void MCU_strip(char *sptr, uint2 trailing, uint2 force);
 extern uint4 MCU_r8tos(char *&sptr, uint4 &s, real8 n,uint2 fw, uint2 trailing, uint2 force);
+extern bool MCU_stor8(MCStringRef, real8& r_d, bool co = false);
 extern Boolean MCU_stor8(const MCString&, real8& d, Boolean co = False);
+extern bool MCU_stoi2(MCStringRef, int2 &r_d);
 extern Boolean MCU_stoi2(const MCString&, int2 &d);
+extern bool MCU_stoui2(MCStringRef p_string, uint2 &r_d);
 extern Boolean MCU_stoui2(const MCString&, uint2 &d);
+extern bool MCU_stoi2x2(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2);
 extern Boolean MCU_stoi2x2(const MCString&, int2 &d1, int2 &d2);
+extern bool MCU_stoi2x4(MCStringRef p_string, int16_t& r_d1, int16_t& r_d2, int16_t& r_d3, int16_t& r_d4);
 extern Boolean MCU_stoi2x4(const MCString&, int2 &d1, int2 &d2, int2 &d3, int2 &d4);
 extern Boolean MCU_stoi4x4(const MCString&, int32_t &d1, int32_t &d2, int32_t &d3, int32_t &d4);
 extern Boolean MCU_stobxb(const MCString& p_string, Boolean &r_left, Boolean& r_right);
 extern Boolean MCU_stoi4(const MCString&, int4& d);
+extern bool MCU_stoui4(MCStringRef p_string, uint4 &r_d);
 extern Boolean MCU_stoui4(const MCString&, uint4& d);
+extern bool MCU_stob(MCStringRef p_string, bool r_condition);
 extern Boolean MCU_stob(const MCString&, Boolean& condition);
 extern void MCU_lower(char *sptr, const MCString& s);
 extern void MCU_upper(char *sptr, const MCString& s);
@@ -103,13 +113,13 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
-extern const char *MCU_ktos(Boolean condition);
 extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
 	                          const MCRectangle &, uint2 radius);
 extern void MCU_unparsepoints(MCPoint *points, uint2 npoints, MCExecPoint &);
+extern bool MCU_parsepoints(MCPoint *&r_points, uindex_t &r_noldpoints, MCStringRef p_data);
 extern Boolean MCU_parsepoints(MCPoint *&oldpoints, uint2 &n, const MCString &);
 extern Boolean MCU_parsepoint(MCPoint &r_point, const MCString &);
 extern void MCU_querymouse(int2 &x, int2 &y);
@@ -138,10 +148,13 @@ extern MCRectangle MCU_offset_rect(const MCRectangle& r, int2 ox, int2 oy);
 
 extern MCRectangle MCU_recttoroot(MCStack *sptr, const MCRectangle &o);
 extern void MCU_getshift(uint4 mask, uint2 &shift, uint2 &outmask);
+extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
+extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
 extern void MCU_path2std(char *dptr);
+extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
 extern void MCU_path2native(char *dptr);
 extern void MCU_fix_path(char *cstr);
 extern void MCU_base64encode(MCExecPoint &ep);
@@ -150,37 +163,50 @@ extern void MCU_urlencode(MCExecPoint &ep);
 extern void MCU_urldecode(MCExecPoint &ep);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
-	                                  uint2 line, uint2 pos);
+extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
+extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
+extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);
 extern void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	                       real8 tn, real8 oldn, MCSortnode *titems);
+extern void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output);
 extern void MCU_geturl(MCExecPoint &ep);
 extern void MCU_puturl(MCExecPoint &ep, MCExecPoint &data);
 extern uint1 MCU_unicodetocharset(uint2 uchar);
-extern uint1 MCU_languagetocharset(const char *langname);
-extern const char *MCU_charsettolanguage(uint1 charset);
+extern uint1 MCU_languagetocharset(MCNameRef langname);
+extern MCNameRef MCU_charsettolanguage(uint1 charset);
+/* LEGACY */ extern uint1 MCU_languagetocharset(const char *langname);
 extern uint1 MCU_wincharsettocharset(uint2 wincharset);
 extern uint1 MCU_charsettowincharset(uint1 charset);
+extern bool MCU_multibytetounicode(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_unicode);
+extern bool MCU_unicodetomultibyte(MCStringRef p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
+extern bool MCU_multibytetounicode(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_unicode);
+extern bool MCU_unicodetomultibyte(const MCString& p_src, uinteger_t p_charset, MCStringRef& r_multibyte);
 extern void MCU_multibytetounicode(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
 extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 	                                   uint4 destbufferlength, uint4 &destlen,
 	                                   uint1 charset);
+
+extern bool MCU_nativetoutf8(MCStringRef p_native, MCStringRef& r_utf8);
+extern bool MCU_utf8tonative(MCStringRef p_utf8, MCStringRef& r_native);
+
+extern bool MCU_mapunicode(const MCString& p_src, bool is_unicode, bool to_unicode, MCStringRef& r_string);
+
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
 // 
 
-struct MCRange
+struct MCInterval
 {
 	int from;
 	int to;
 };
 
-extern bool MCU_disjointrangeinclude(MCRange*& p_ranges, int& p_count, int p_from, int p_to);
-extern bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element);
+extern bool MCU_disjointrangeinclude(MCInterval*& p_ranges, int& p_count, int p_from, int p_to);
+extern bool MCU_disjointrangecontains(MCInterval* p_ranges, int p_count, int p_element);
 
 //
 

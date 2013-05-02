@@ -1,0 +1,12 @@
+setup
+
+local tRect, tLoc
+put the screenrect into tRect
+put the screenloc into tLoc
+
+test the number of items in tLoc is 2
+
+test item 1 of tLoc is ((item 1 of tRect + item 3 of tRect) div 2)
+test item 2 of tLoc is ((item 2 of tRect + item 4 of tRect) div 2)
+
+teardown

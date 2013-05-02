@@ -1,7 +1,7 @@
 ###############################################################################
 # Engine Targets
 
-.PHONY: libopenssl liburlcache libstubs
+.PHONY: libopenssl liburlcache libstubs libfoundation
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
@@ -34,10 +34,13 @@ libopenssl:
 
 libcore:
 	$(MAKE) -C ./libcore libcore
-	
+
+libfoundation:
+	$(MAKE) -C ./libfoundation libfoundation
+
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
-
+	
 kernel-standalone: kernel
 	$(MAKE) -C ./engine -f Makefile.kernel-standalone libkernel-standalone
 
@@ -47,16 +50,16 @@ kernel-development: kernel
 kernel-server:
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-development
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+standalone: libz libgif libjpeg libpcre libpng libopenssl libfoundation kernel revsecurity kernel-standalone
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libfoundation kernel
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
-server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
+server: libz libgif  libjpeg libpcre libpng libopenssl libexternal libfoundation kernel kernel-server revsecurity
 	$(MAKE) -C ./engine -f Makefile.server server-community
 
 ###############################################################################

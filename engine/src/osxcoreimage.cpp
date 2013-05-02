@@ -39,8 +39,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "visual.h"
 #include "image.h"
 
-#include "core.h"
-
 #include "visualeffect.h"
 
 static bool s_coreimage_initialized = false;

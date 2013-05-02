@@ -1,0 +1,16 @@
+setup
+
+test-error max("string", 1)
+
+test max() is 0
+test max(1.23) is 1.23
+test max("1, 2, 3, 4, 5") is 5
+test max(1, 5, 2, 4, 3) is 5
+
+local tArray
+repeat with i = 1 to 5
+	put 6 - i into tArray[i]
+end repeat
+test max(tArray) is 5
+
+teardown

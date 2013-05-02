@@ -1,0 +1,4 @@
+setup
+test hasMemory(1024) is true
+test-error hasMemory("NaN")
+teardown

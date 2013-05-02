@@ -88,6 +88,16 @@ bool MCSecureModeCheckNetwork(uint2 line, uint2 pos)
 	return false;
 }
 
+bool MCSecureModeCheckProcess(uint2 line, uint2 pos)
+{
+	if ((MCsecuremode & MC_SECUREMODE_PROCESS) == 0)
+		return true;
+
+	MCeerror -> add(EE_PROCESS_NOPERM, line, pos);
+
+	return false;
+}
+
 bool MCSecureModeCheckAppleScript(uint2 line, uint2 pos)
 {
 	if ((MCsecuremode & MC_SECUREMODE_APPLESCRIPT) == 0)
@@ -116,4 +126,14 @@ bool MCSecureModeCheckDoAlternate(uint2 line, uint2 pos)
 bool MCSecureModeCanAccessExternal(void)
 {
 	return ((MCsecuremode & MC_SECUREMODE_EXTERNAL) == 0);
+}
+
+bool MCSecureModeCheckPrivacy(uint2 line, uint2 pos)
+{
+	if ((MCsecuremode & MC_SECUREMODE_PRIVACY) == 0)
+		return true;
+
+	MCeerror -> add(EE_PRIVACY_NOPERM, line, pos);
+
+	return false;
 }

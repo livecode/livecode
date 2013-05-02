@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -733,7 +732,7 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 
 		// Remove the scenery.
 		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), p_control -> geteffectiverect());
-		
+
 		// MW-2012-10-11: [[ Bug ]] Redraw glitch caused by resetting the layer id
 		//   before removing the layer.
 		// MW-2012-09-21: [[ Bug 10005 ]] Make sure we reset the layer attrs so we
@@ -792,11 +791,11 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 	//   rect to the update region; otherwise just add the exposed rects.
 	if (!getflag(F_SHOW_BORDER))
 	{
-		if (p_width > t_old_rect.width)
-			layer_dirtyrect(MCU_make_rect(t_old_rect.width, 0, p_width - t_old_rect.width, p_height));
-		if (p_height > t_old_rect.height)
-			layer_dirtyrect(MCU_make_rect(0, t_old_rect.height, p_width, p_height - t_old_rect.height));
-	}
+	if (p_width > t_old_rect.width)
+		layer_dirtyrect(MCU_make_rect(t_old_rect.width, 0, p_width - t_old_rect.width, p_height));
+	if (p_height > t_old_rect.height)
+		layer_dirtyrect(MCU_make_rect(0, t_old_rect.height, p_width, p_height - t_old_rect.height));
+}
 	else
 		layer_dirtyrect(rect);
 }
@@ -1105,7 +1104,7 @@ void MCStack::setacceleratedrendering(bool p_value)
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
 	t_medium_screen = MCMin(t_viewport . width, t_viewport . height) <= 768 && MCMax(t_viewport . width, t_viewport . height) <= 1024;
-
+	
 	if (t_small_screen)
 		t_tile_size = 32, t_cache_limit = 16 * 1024 * 1024;
 	else if (t_medium_screen)

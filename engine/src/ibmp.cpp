@@ -26,8 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 
-#include "core.h"
-
 #ifdef __LITTLE_ENDIAN__
 #define NATIVE_IMAGE_FORMAT EX_RAW_BGRA
 #else

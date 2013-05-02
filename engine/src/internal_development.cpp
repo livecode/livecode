@@ -259,7 +259,7 @@ public:
 		if (internal_get_value(ep, t_method -> return_type, t_value) != ES_NORMAL)
 			return ES_ERROR;
 
-		return MCresult -> store(ep, False);
+		return MCresult -> set(ep);
 	}
 
 private:
@@ -463,7 +463,7 @@ public:
 			return ES_ERROR;
 
 		MCStack *t_new_home;
-		t_new_home = MCdispatcher -> findstackname(ep . getsvalue() . getstring());
+		t_new_home = MCdispatcher -> findstackname(ep . getsvalue());
 
 		if (t_new_home == nil &&
 			MCdispatcher -> loadfile(ep . getcstring(), t_new_home) != IO_NORMAL)
@@ -1003,6 +1003,9 @@ MCInternalVerbInfo MCinternalverbs[] =
 	{ "listen", nil, class_factory<MCInternalObjectListen> },
 	{ "cancel", nil, class_factory<MCInternalObjectUnListen> },
 #endif
+	{ "syntax", "tokenize", class_factory<MCIdeSyntaxTokenize> },
+	{ "syntax", "recognize", class_factory<MCIdeSyntaxRecognize> },
+	{ "syntax", "compile", class_factory<MCIdeSyntaxCompile> },
 	{ "filter", "controls", class_factory<MCIdeFilterControls> },
 	{ "resolve", "image", class_factory<MCInternalResolveImage> },
 	{ nil, nil, nil }

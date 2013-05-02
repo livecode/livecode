@@ -31,8 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 
-#include "core.h"
-
 #include "gif_lib.h"
 
 void MCImage::setframe(int32_t p_newframe)
@@ -66,13 +64,13 @@ void MCImage::setframe(int32_t p_newframe)
 	currentframe = p_newframe;
 
 	notifyneeds(false);
-	
+
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	// MW-2011-11-15: [[ Bug 9863 ]] Only invalidate the whole object if it has an
 	//   owner!
 	if (parent != nil)
 		layer_redrawall();
-}
+	}
 
 void MCImage::advanceframe()
 {
@@ -134,31 +132,31 @@ static void gif_draw_image_into_canvas(MCImageBitmap *p_canvas, GifByteType *p_r
 	for(int32_t y = 0; y < p_height; y++)
 	{
 		for(int32_t x = 0; x < p_width; x++)
-		{
+{
 			uint8_t t_color;
 			t_color = t_src_ptr[x];
-			
+
 			if (t_overlay && t_color == p_transparency)
 				continue;
 				
 			uint32_t t_pixel;
 			if (t_color < p_colors -> ColorCount)
-			{
+	{
 				if (t_color != p_transparency)
 					t_pixel = gif_color_to_pixel(p_colors -> Colors[t_color]);
 				else
 					t_pixel = 0;
-			}
+		}
 			else
 				t_pixel = 0;
-				
+
 			t_dst_ptr[x] = t_pixel;
 		}
-		
+
 		t_dst_ptr += p_canvas -> stride / 4;
 		t_src_ptr += p_width;
 	}
-}
+	}
 
 void gif_fill_image_region(MCImageBitmap *p_bitmap, MCRectangle &p_region, uindex_t p_pixel)
 {
@@ -173,13 +171,13 @@ void gif_fill_image_region(MCImageBitmap *p_bitmap, MCRectangle &p_region, uinde
 
 	uint8_t *t_dst_ptr = (uint8_t*)p_bitmap->data + t_top * p_bitmap->stride + t_left * sizeof(uint32_t);
 	for (uindex_t y = t_top; y < t_bottom; y++)
-	{
+{
 		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 		for (uindex_t x = t_left; x < t_right; x++)
 			*t_dst_row++ = p_pixel;
 		t_dst_ptr += p_bitmap->stride;
 	}
-}
+	}
 
 static void gif_paste_image(MCImageBitmap *p_dst, MCImageBitmap *p_src, int32_t p_x_offset, int32_t p_y_offset)
 {
@@ -197,22 +195,22 @@ static void gif_paste_image(MCImageBitmap *p_dst, MCImageBitmap *p_src, int32_t 
 		t_src_ptr += p_src->stride;
 		t_dst_ptr += p_dst->stride;
 	}
-}
+		}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 int gif_readFunc(GifFileType *p_gif, GifByteType *p_buffer, int p_byte_count)
-{
+	{
 	IO_handle t_stream = (IO_handle)p_gif->UserData;
 	uindex_t t_byte_count = p_byte_count;
 	/* UNCHECKED */	MCS_read(p_buffer, sizeof(GifByteType), t_byte_count, t_stream);
 	return t_byte_count;
-}
+	}
 
 bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count)
 {
 	bool t_success = true;
-
+	
 	GifFileType *t_gif = nil;
 	int t_err = 0;
 
@@ -256,7 +254,7 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 	
 	// Loop through all the images, making frames as we go.
 	for(uindex_t i = 0; t_success && i < t_gif -> ImageCount; i++)
-	{
+			{
 		// Process the disposal.
 		switch (t_disposal_mode)
 		{
@@ -286,7 +284,7 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 		int32_t t_image_delay;
 		int32_t t_image_disposal;
 		GifByteType *t_image_raster;
-		
+
 		// First the information from the image description.
 		t_image_region.x = t_gif -> SavedImages[i] . ImageDesc . Left;
 		t_image_region.y = t_gif -> SavedImages[i] . ImageDesc . Top;
@@ -309,12 +307,12 @@ bool MCImageDecodeGIF(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_f
 			t_image_transparency = -1;
 			t_image_delay = 0;
 			t_image_disposal = DISPOSAL_UNSPECIFIED;
-		}
-		
+			}
+			
 		// If disposal is 'previous' then cache the portion of the canvas we are
 		// about to affect.
 		if (t_image_disposal == DISPOSE_PREVIOUS)
-		{
+			{
 			if (t_restore_image != nil)
 			{
 				if (t_disposal_mode != DISPOSE_PREVIOUS ||

@@ -1,0 +1,6 @@
+setup
+
+test sha1digest(empty) is binaryEncode("h*", "ad933aeee5b6b4d02355fbfe59068109fa8d7090")
+test sha1digest("abcd") is binaryEncode("h*", "18efb8ef7875c6e3bc2224f6e87548372819a7fc")
+
+teardown

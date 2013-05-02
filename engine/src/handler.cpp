@@ -39,7 +39,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "redraw.h"
 
+#include "exec.h"
+
+#include "syntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 Boolean MCHandler::gotpass;
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCHandler::MCHandler(uint1 htype, bool p_is_private)
 {
@@ -323,7 +331,7 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 					break;
 				}
 				/* UNCHECKED */ MCVariable::createwithname(i < npnames ? pinfo[i] . name : kMCEmptyName, newparams[i]);
-				newparams[i]->store(ep, False);
+				newparams[i]->set(ep);
 			}
 			plist = plist->getnext();
 		}
@@ -366,13 +374,13 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 
 			// A UQL is indicated by 'init' being nil.
 			if (vinfo[i] . init != nil)
-				vars[i] -> setnameref_unsafe(vinfo[i] . init);
+				vars[i] -> setvalueref(vinfo[i] . init);
 			else
 			{
 				// At the moment UQL detection relies on the fact that the 'name'
 				// and 'value' of a variable share the same base ptr as well as 'is_uql'
 				// being set.
-				vars[i] -> setnameref_unsafe(vinfo[i] . name);
+				vars[i] -> setvalueref(vinfo[i] . name);
 				vars[i] -> setuql();
 		}
 	}
@@ -491,27 +499,21 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 	return stat;
 }
 
-Exec_stat MCHandler::getnparams(uint2 &index)
+integer_t MCHandler::getnparams(void)
 {
-	index = npassedparams;
-	return ES_NORMAL;
+	return npassedparams;
 }
 
 // MW-2007-07-03: [[ Bug 3174 ]] - Non-declared parameters accessed via 'param' should
 //   be considered to be both empty and 0 as they are akin to undeclared variables.
-Exec_stat MCHandler::getparam(uint2 index, MCExecPoint &ep)
+MCValueRef MCHandler::getparam(uindex_t p_index)
 {
-	if (index == 0)
-		ep.setnameref_unsafe(name);
-	else if (index > nparams)
-		ep.setboth(MCnullmcstring, 0);
-	else if (params[index - 1]->fetch(ep) != ES_NORMAL)
-	{
-		MCeerror->add(EE_HANDLER_BADPARAM, 0, 0);
-		return ES_ERROR;
-	}
-
-	return ES_NORMAL;
+    if (p_index == 0)
+        return name;
+    else if (p_index > nparams)
+        return kMCEmptyString;
+    else
+        return params[p_index - 1]->getvalueref();
 }
 
 MCVariable *MCHandler::getit(void)
@@ -576,10 +578,10 @@ Parse_stat MCHandler::newvar(MCNameRef p_name, MCNameRef p_init, MCVarref **r_re
 		/* UNCHECKED */ MCVariable::createwithname(p_name, vars[nvnames]);
 
 		if (p_init != nil)
-			vars[nvnames] -> setnameref_unsafe(p_init);
+			vars[nvnames] -> setvalueref(p_init);
 		else
 		{
-			vars[nvnames] -> setnameref_unsafe(p_name);
+			vars[nvnames] -> setvalueref(p_name);
 			vars[nvnames] -> setuql();
 		}
 	}
@@ -623,45 +625,96 @@ void MCHandler::newglobal(MCNameRef p_name)
 	globals[nglobals++] = gptr;
 }
 
-Exec_stat MCHandler::getvarnames(MCExecPoint &ep, Boolean all)
+bool MCHandler::getparamnames(MCListRef& r_list)
 {
-	ep.setempty();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
 
-	for(uint2 i = 0 ; i < npnames ; i++)
-		ep.concatnameref(pinfo[i] . name, EC_COMMA, i == 0);
-	ep.appendnewline();
+	for (uinteger_t i = 0; i < npnames; i++)
+		if (!MCListAppend(*t_list, pinfo[i].name))
+			return false;
 
-	for(uint2 i = 0 ; i < nvnames ; i++)
-		ep.concatnameref(vinfo[i] . name, EC_COMMA, i == 0);
-	ep.appendnewline();
+	return MCListCopy(*t_list, r_list);
+}
 
-	hlist->appendlocalnames(ep);
-	if (all)
+bool MCHandler::getvariablenames(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
+	for (uinteger_t i = 0; i < nvnames; i++)
+		if (!MCListAppend(*t_list, vinfo[i].name))
+			return false;
+
+	return MCListCopy(*t_list, r_list);
+}
+
+bool MCHandler::getglobalnames(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable(',', &t_list))
+		return false;
+
+	// OK-2008-06-25: <Bug where the variableNames property would return duplicate global names>
+	for (uint2 i = 0 ; i < nglobals ; i++)
+		if (!MCListAppend(*t_list, globals[i]->getname()))
+			return false;
+
+	for (uint2 i = 0; i < hlist -> getnglobals(); i++)
 	{
-		ep.appendnewline();
+		MCNameRef t_global_name = hlist->getglobal(i)->getname();
+		bool t_already_appended;
+		t_already_appended = false;
+		for (uint2 j = 0; (!t_already_appended) && j < nglobals; j++)
+			t_already_appended = globals[j] -> hasname(t_global_name);
 
-		// OK-2008-06-25: <Bug where the variableNames property would return duplicate global names>
-		for (uint2 i = 0 ; i < nglobals ; i++)
-			ep . concatnameref(globals[i] -> getname(), EC_COMMA, i == 0);
-
-		for (uint2 i = 0; i < hlist -> getnglobals(); i++)
-		{
-			bool t_already_appended;
-			t_already_appended = false;
-			for (uint2 j = 0; j < nglobals; j++)
-			{
-				if (globals[j] -> hasname(hlist -> getglobal(i) -> getname()))
-				{
-					t_already_appended = true;
-					continue;
-				}
-			}
-
-			// OK-2008-08-14: [[Bug 6883]] - Problem where comma delimiter was missed off if nglobals = 0.
-			if (!t_already_appended)
-				ep . concatnameref(hlist -> getglobal(i) -> getname(), EC_COMMA, (nglobals == 0 && i == 0));
-		}
+		if (!t_already_appended)
+			if (!MCListAppend(*t_list, t_global_name))
+				return false;
 	}
+
+	return MCListCopy(*t_list, r_list);
+}
+
+bool MCHandler::getvarnames(bool p_all, MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	MCAutoListRef t_param_list, t_variable_list, t_script_variable_list;
+	if (!(getparamnames(&t_param_list) &&
+		MCListAppend(*t_list, *t_param_list)))
+		return false;
+
+	if (!(getvariablenames(&t_variable_list) &&
+		MCListAppend(*t_list, *t_variable_list)))
+		return false;
+
+	if (!(hlist->getlocalnames(&t_script_variable_list) &&
+		MCListAppend(*t_list, *t_script_variable_list)))
+		return false;
+
+	if (p_all)
+	{
+		MCAutoListRef t_global_list;
+		if (!(getglobalnames(&t_global_list) &&
+			MCListAppend(*t_list, *t_global_list)))
+			return false;
+	}
+
+	return MCListCopy(*t_list, r_list);
+}
+
+Exec_stat MCHandler::getvarnames(MCExecPoint& ep, Boolean all)
+{
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ getvarnames(all == True, &t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+	/* UNCHECKED */ ep.setvalueref(*t_string);
 	return ES_NORMAL;
 }
 
@@ -673,12 +726,21 @@ Exec_stat MCHandler::eval(MCExecPoint &ep)
 	Symbol_type type;
 	Exec_stat stat = ES_ERROR;
 	if (sp.parseexp(False, True, &exp) == PS_NORMAL && sp.next(type) == PS_EOF)
-	{
 		stat = exp->eval(ep);
-		ep.grabsvalue();
-	}
 	delete exp;
 	return stat;
+}
+
+/*WRAPPER */ void MCHandler::eval(MCExecContext& ctxt, MCStringRef p_expression, MCValueRef& r_value)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	/* UNCHECKED */ ep.setvalueref(p_expression);
+	Exec_stat stat = eval(ep);
+	/* UNCHECKED */ ep.copyasvalueref(r_value);
+	if (stat != ES_ERROR)
+		return;
+
+	ctxt.Throw();
 }
 
 uint4 MCHandler::linecount()
@@ -815,3 +877,56 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 	return ES_NORMAL;
 }
 
+/* WRAPPER */ void MCHandler::doscript(MCExecContext& ctxt, MCStringRef p_script)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	/* UNCHECKED */ ep.setvalueref(p_script);
+	Exec_stat stat = doscript(ep, 0, 0);
+	if (stat != ES_ERROR)
+		return;
+
+	ctxt.Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCHandler::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxHandlerType t_type;
+	switch(type)
+	{
+		case HT_MESSAGE:
+			t_type = is_private ? kMCSyntaxHandlerTypePrivateCommand : kMCSyntaxHandlerTypeMessage;
+			break;
+		case HT_FUNCTION:
+			t_type = is_private ? kMCSyntaxHandlerTypePrivateFunction : kMCSyntaxHandlerTypeFunction;
+			break;
+		case HT_GETPROP:
+			t_type = kMCSyntaxHandlerTypeGetProp;
+			break;
+		case HT_SETPROP:
+			t_type = kMCSyntaxHandlerTypeSetProp;
+			break;
+		case HT_BEFORE:
+			t_type = kMCSyntaxHandlerTypeBeforeMessage;
+			break;
+		case HT_AFTER:
+			t_type = kMCSyntaxHandlerTypeAfterMessage;
+			break;
+		default:
+			MCAssert(false);
+			break;
+	}
+	
+	MCSyntaxFactoryBeginHandler(ctxt, t_type, name);
+	
+	for(uindex_t i = 0; i < npnames; i++)
+		MCSyntaxFactoryDefineParameter(ctxt, pinfo[i] . name, pinfo[i] . is_reference);
+	
+	for(MCStatement *t_statement = statements; t_statement != nil; t_statement = t_statement -> getnext())
+		t_statement -> compile(ctxt);
+	
+	MCSyntaxFactoryEndHandler(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////

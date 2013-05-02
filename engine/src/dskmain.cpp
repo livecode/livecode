@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -98,7 +97,6 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 	
-	MCNameInitialize();
 	MCU_initialize_names();
 
 	////
@@ -281,7 +279,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			        [-u[i]] (don't create graphical user interface)\n\
 			        [-v[isualid] n] (use visual id n as listed from xdpyinfo)\n\
 			        [-w[indowid] n] (watch window id n for commands)\n\
-			        [stackname(s) | argument(s)]\n", MCversionstring, MCcmd);
+			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCcmd);
 			return False;
 		}
 		if (argv[i] != NULL && strlen(argv[i]) > 0)

@@ -1,0 +1,12 @@
+setup
+
+test (baseConvert("00000000", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("0F3C5A69", 16, 10)
+test (baseConvert("FFFFFFFF", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("F0C3A596", 16, 10)
+test (baseConvert("33333333", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("3C0F695A", 16, 10)
+test (baseConvert("CCCCCCCC", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("C3F096A5", 16, 10)
+test (baseConvert("55555555", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("5A690F3C", 16, 10)
+test (baseConvert("AAAAAAAA", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("A596F0C3", 16, 10)
+test (baseConvert("66666666", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("695A3C0F", 16, 10)
+test (baseConvert("99999999", 16, 10) bitXor baseConvert("0F3C5A69", 16, 10)) is baseConvert("96A5C3F0", 16, 10)
+
+teardown

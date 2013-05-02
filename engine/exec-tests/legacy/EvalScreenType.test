@@ -1,0 +1,5 @@
+setup
+
+test the screentype is among the items of "staticgray,staticcolor,grayscale,pseudocolor,truecolor,directcolor"
+
+teardown

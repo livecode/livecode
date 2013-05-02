@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -319,20 +318,23 @@ IO_stat MCLogicalFontTableSave(IO_handle p_stream)
 			t_stat = IO_write_uint2(t_textsize, p_stream);
 			if (t_stat == IO_NORMAL)
 				t_stat = IO_write_uint2(t_textstyle, p_stream);
+
+			// MW-2012-05-03: [[ Values* ]] Use a stringref and format to build
+			//   the actual font name.
+			MCAutoStringRef t_unicode_textfont;
 			if (t_stat == IO_NORMAL)
 			{
 				if (t_is_unicode)
 				{
-					char *t_unicode_textfont;
-					t_unicode_textfont = new char[strlen(MCNameGetCString(t_textfont)) + 9];
-					strcpy(t_unicode_textfont, MCNameGetCString(t_textfont));
-					strcat(t_unicode_textfont, ",unicode");
-					t_stat = IO_write_string(t_unicode_textfont, p_stream);
-					delete t_unicode_textfont;
+					if (!MCStringFormat(&t_unicode_textfont, "%s,unicode", MCStringGetCString(MCNameGetString(t_textfont))))
+						t_stat = IO_ERROR;
 				}
 				else
-					t_stat = IO_write_string(MCNameGetCString(t_textfont), p_stream);
+					t_unicode_textfont = MCNameGetString(t_textfont);
 			}
+
+			if (t_stat == IO_NORMAL)
+				t_stat = IO_write_stringref(*t_unicode_textfont, p_stream);
 		}
 
 	return t_stat;

@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "graphic.h"
 #include "mcerror.h"
 #include "globals.h"
-#include "core.h"
 
 #include "path.h"
 #include "context.h"
@@ -38,11 +37,61 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "font.h"
 
+#include "exec.h"
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
 #define GRAPHIC_EXTRA_STROKEGRADIENT	(1UL << 2)
 #define GRAPHIC_EXTRA_MARGINS			(1UL << 3)
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCGraphic::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_ANTI_ALIASED, Bool, MCGraphic, AntiAliased)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_FILL_RULE, InterfaceGraphicFillRule, MCGraphic, FillRule)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_EDIT_MODE, InterfaceGraphicEditMode, MCGraphic, EditMode)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_CAP_STYLE, InterfaceGraphicCapStyle, MCGraphic, CapStyle)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_JOIN_STYLE, InterfaceGraphicJoinStyle, MCGraphic, JoinStyle)
+	DEFINE_RW_OBJ_PROPERTY(P_MITER_LIMIT, Double, MCGraphic, MiterLimit)
+	DEFINE_RW_OBJ_PROPERTY(P_LINE_SIZE, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_WIDTH, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_HEIGHT, Int16, MCGraphic, LineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_POLY_SIDES, Int16, MCGraphic, PolySides)
+	DEFINE_RW_OBJ_PROPERTY(P_ANGLE, Int16, MCGraphic, Angle)
+	DEFINE_RW_OBJ_PROPERTY(P_START_ANGLE, Int16, MCGraphic, StartAngle)
+	DEFINE_RW_OBJ_PROPERTY(P_ARC_ANGLE, Int16, MCGraphic, ArcAngle)
+	DEFINE_RW_OBJ_PROPERTY(P_ROUND_RADIUS, Int16, MCGraphic, RoundRadius)
+	DEFINE_RW_OBJ_PROPERTY(P_ARROW_SIZE, Int16, MCGraphic, ArrowSize)
+	DEFINE_RW_OBJ_PROPERTY(P_START_ARROW, Bool, MCGraphic, StartArrow)
+	DEFINE_RW_OBJ_PROPERTY(P_END_ARROW, Bool, MCGraphic, EndArrow)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_LSIZE, Int16, MCGraphic, MarkerLineSize)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_DRAWN, Bool, MCGraphic, MarkerDrawn)
+	DEFINE_RW_OBJ_PROPERTY(P_MARKER_OPAQUE, Bool, MCGraphic, MarkerOpaque)
+	DEFINE_RW_OBJ_PROPERTY(P_ROUND_ENDS, Bool, MCGraphic, RoundEnds)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_RESIZE, Bool, MCGraphic, DontResize)
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_STYLE, InterfaceGraphicStyle, MCGraphic, Style)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGraphic, ShowName)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, String, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, String, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
+	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
+};
+
+MCObjectPropertyTable MCGraphic::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCGraphic::MCGraphic()
 {
@@ -459,7 +508,7 @@ void MCGraphic::setgradientrect(MCGradientFill *p_gradient, const MCRectangle &n
 	}
 }
 
-Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	uint2 i;
 
@@ -660,7 +709,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		}
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
@@ -683,7 +732,7 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	return ES_NORMAL;
 }
 
-Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	int2 i1;
@@ -792,7 +841,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
 		}
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	break;
 	case P_FORE_COLOR:
 	case P_FORE_PATTERN:
@@ -801,7 +850,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 			MCGradientFillFree(m_stroke_gradient);
 			m_stroke_gradient = NULL;
 		}
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	break;
 	case P_EDIT_MODE:
 		{
@@ -1173,7 +1222,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 			dirty = False;
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty)
 	{
@@ -2118,9 +2167,9 @@ uint2 MCGraphic::getjoinstyle()
 	case F_JOINMITER:
 		return JoinMiter;
 	default:
-		assert(true);
-		return 0;
+		break;
 	}
+	return 0;
 }
 
 void MCGraphic::setjoinstyle(uint2 p_style)
@@ -2150,9 +2199,9 @@ uint2 MCGraphic::getfillrule()
 	case F_FILLRULEEVENODD:
 		return kMCFillRuleEvenOdd;
 	default:
-		assert(true);
-		return 0;
+		break;
 	}
+	return 0;
 }
 
 void MCGraphic::setfillrule(uint2 p_rule)

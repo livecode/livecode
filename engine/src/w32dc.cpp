@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "execpt.h"
 #include "globals.h"
-#include "core.h"
 #include "notify.h"
 
 #include "w32dc.h"
@@ -201,8 +200,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 
 ///////////////////////////////////////////////////////////////////////////////
 
-extern int UTF8ToUnicode(const char *p_source_str, int p_source, uint2 *p_dest_str, int p_dest);
-
 LPWSTR MCScreenDC::convertutf8towide(const char *p_utf8_string)
 {
 	int t_new_length;
@@ -241,9 +238,11 @@ MCPrinter *MCScreenDC::createprinter(void)
 	return new MCWindowsPrinter;
 }
 
-void MCScreenDC::listprinters(MCExecPoint& ep)
+bool MCScreenDC::listprinters(MCStringRef& r_printers)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
 	DWORD t_flags;
 	DWORD t_level;
@@ -254,22 +253,26 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 	DWORD t_bytes_needed;
 	t_printer_count = 0;
 	t_bytes_needed = 0;
-	if (EnumPrintersA(t_flags, NULL, t_level, NULL, 0, &t_bytes_needed, &t_printer_count) == 0 && GetLastError() != ERROR_INSUFFICIENT_BUFFER)
-		return;
-
-	char *t_printers;
-	t_printers = new char[t_bytes_needed];
-	if (EnumPrintersA(t_flags, NULL, t_level, (LPBYTE)t_printers, t_bytes_needed, &t_bytes_needed, &t_printer_count) != 0)
+	if (EnumPrintersW(t_flags, NULL, t_level, NULL, 0, &t_bytes_needed, &t_printer_count) != 0 || GetLastError() == ERROR_INSUFFICIENT_BUFFER)
 	{
-		for(uint4 i = 0; i < t_printer_count; ++i)
+		MCAutoPointer<byte_t> t_printers;
+		if (!MCMemoryNewArray(t_bytes_needed, &t_printers))
+			return false;
+
+		if (EnumPrintersW(t_flags, NULL, t_level, (LPBYTE)*t_printers, t_bytes_needed, &t_bytes_needed, &t_printer_count) != 0)
 		{
-			const char *t_printer_name;
-			t_printer_name = ((PRINTER_INFO_4A *)t_printers)[i] . pPrinterName;
-			ep . concatcstring(t_printer_name, EC_RETURN, i == 0);
+			for(uint4 i = 0; i < t_printer_count; ++i)
+			{
+				MCAutoStringRef t_printer_name;
+				if (!MCStringCreateWithWString(((PRINTER_INFO_4W *)*t_printers)[i] . pPrinterName, &t_printer_name))
+					return false;
+				if (!MCListAppend(*t_list, *t_printer_name))
+					return false;
+			}
 		}
 	}
 
-	delete t_printers;
+	return MCListCopyAsString(*t_list, r_printers);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

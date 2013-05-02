@@ -1,0 +1,22 @@
+setup
+
+local tScript
+put "local sScript" & return & \
+	"on testMe pParam" & return & \
+	"	global gVariableNamesGlobal" & return & \
+	"	local tLocal" & return & \
+	"	set the cVariableNames of me to the variableNames" & return & \
+	"end testMe" into tScript
+
+create button
+set the script of button 1 to tScript
+local tParam = "abcd"
+send "testMe tParam" to button 1
+
+test the number of lines in the cVariableNames of button 1 is 4
+test line 1 of the cVariableNames of button 1 is "pParam"
+test line 2 of the cVariableNames of button 1 is "tLocal"
+test line 3 of the cVariableNames of button 1 is "sScript"
+test line 4 of the cVariableNames of button 1 is "gVariableNamesGlobal"
+
+teardown

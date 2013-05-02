@@ -27,7 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "osspec.h"
 
-#include "core.h"
+#include "exec.h"
 
 MCDateTimeLocale g_english_locale =
 {
@@ -729,6 +729,13 @@ void MCD_decompose_format(MCExecPoint& p_context, uint4 p_format, uint4& r_lengt
 	}
 }
 
+/* WRAPPER */ bool MCD_date(MCExecContext& ctxt, Properties p_format, MCStringRef& r_date)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	/* UNCHECKED */ MCD_date(p_format, ep);
+	return ep.copyasstringref(r_date);
+}
+
 void MCD_date(Properties p_format, MCExecPoint& p_output)
 {
 	MCDateTime t_datetime;
@@ -759,6 +766,13 @@ void MCD_date(Properties p_format, MCExecPoint& p_output)
 	uint4 t_buffer_length;
 	t_buffer_length = datetime_format(t_locale, t_date_format, t_datetime, t_buffer) - t_buffer;
 	p_output . copysvalue(t_buffer, t_buffer_length);
+}
+
+/* WRAPPER */ bool MCD_time(MCExecContext& ctxt, Properties p_format, MCStringRef& r_time)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	/* UNCHECKED */ MCD_time(p_format, ep);
+	return ep.copyasstringref(r_time);
 }
 
 void MCD_time(Properties p_format, MCExecPoint& p_output)
@@ -795,11 +809,11 @@ void MCD_time(Properties p_format, MCExecPoint& p_output)
 	p_output . copysvalue(t_buffer, t_buffer_length);
 }
 
-void MCD_monthnames(Properties p_format, MCExecPoint& p_output)
+bool MCD_monthnames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list)
 {
 	bool t_use_system;
 	uint4 t_length;
-	MCD_decompose_format(p_output, p_format, t_length, t_use_system);
+	MCD_decompose_format(ctxt.GetEP(), p_format, t_length, t_use_system);
 
 	if (t_length == P_UNDEFINED)
 		t_length = P_LONG;
@@ -810,24 +824,39 @@ void MCD_monthnames(Properties p_format, MCExecPoint& p_output)
 	else
 		t_locale = &g_english_locale;
 
-	p_output . clear();
+	bool t_success = true;
 
-	for(uint4 t_month = 1; t_month <= 12; ++t_month)
+	MCAutoListRef t_list;
+	t_success = MCListCreateMutable('\n', &t_list);
+
+	for(uint4 t_month = 1; t_success && t_month <= 12; ++t_month)
 	{
 		if (t_length == P_SHORT)
-			p_output . concatuint(t_month, EC_RETURN, t_month == 1);
+			t_success = MCListAppendInteger(*t_list, t_month);
 		else if (t_length == P_ABBREVIATE)
-			p_output . concatcstring(t_locale -> abbrev_month_names[t_month - 1], EC_RETURN, t_month == 1);
+			t_success = MCListAppendCString(*t_list, t_locale -> abbrev_month_names[t_month - 1]);
 		else
-			p_output . concatcstring(t_locale -> month_names[t_month - 1], EC_RETURN, t_month == 1);
+			t_success = MCListAppendCString(*t_list, t_locale -> month_names[t_month - 1]);
 	}
+
+	return t_success && MCListCopy(*t_list, r_list);
 }
 
-void MCD_weekdaynames(Properties p_format, MCExecPoint& p_output)
+/* LEGACY */ void MCD_monthnames(Properties p_format, MCExecPoint& ep)
+{
+	MCExecContext ctxt(ep);
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCD_monthnames(ctxt, p_format, &t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+	/* UNCHECKED */ ep.setvalueref(*t_string);
+}
+
+bool MCD_weekdaynames(MCExecContext& ctxt, Properties p_format, MCListRef& r_list)
 {
 	bool t_use_system;
 	uint4 t_length;
-	MCD_decompose_format(p_output, p_format, t_length, t_use_system);
+	MCD_decompose_format(ctxt.GetEP(), p_format, t_length, t_use_system);
 
 	if (t_length == P_UNDEFINED)
 		t_length = P_LONG;
@@ -838,17 +867,39 @@ void MCD_weekdaynames(Properties p_format, MCExecPoint& p_output)
 	else
 		t_locale = &g_english_locale;
 
-	p_output . clear();
+	bool t_success = true;
 
-	for(uint4 t_weekday = 1; t_weekday <= 7; ++t_weekday)
+	MCAutoListRef t_list;
+	t_success = MCListCreateMutable('\n', &t_list);
+
+	for(uint4 t_weekday = 1; t_success && t_weekday <= 7; ++t_weekday)
 	{
 		if (t_length == P_SHORT)
-			p_output . concatuint(t_weekday, EC_RETURN, t_weekday == 1);
+			t_success = MCListAppendInteger(*t_list, t_weekday);
 		else if (t_length == P_ABBREVIATE)
-			p_output . concatcstring(t_locale -> abbrev_weekday_names[t_weekday - 1], EC_RETURN, t_weekday == 1);
+			t_success = MCListAppendCString(*t_list, t_locale -> abbrev_weekday_names[t_weekday - 1]);
 		else
-			p_output . concatcstring(t_locale -> weekday_names[t_weekday - 1], EC_RETURN, t_weekday == 1);
+			t_success = MCListAppendCString(*t_list, t_locale -> weekday_names[t_weekday - 1]);
 	}
+
+	return t_success && MCListCopy(*t_list, r_list);
+}
+
+/* LEGACY */ void MCD_weekdaynames(Properties p_format, MCExecPoint& ep)
+{
+	MCExecContext ctxt(ep);
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCD_weekdaynames(ctxt, p_format, &t_list);
+	/* UNCHECKED */ MCListCopyAsString(*t_list, &t_string);
+	/* UNCHECKED */ ep.setvalueref(*t_string);
+}
+
+/* WRAPPER */ bool MCD_dateformat(MCExecContext& ctxt, Properties p_format, MCStringRef& r_dateformat)
+{
+	MCExecPoint ep(ctxt.GetEP());
+	/* UNCHECKED */ MCD_dateformat(p_format, ep);
+	return ep.copyasstringref(r_dateformat);
 }
 
 void MCD_dateformat(Properties p_length, MCExecPoint& p_output)
@@ -1295,6 +1346,19 @@ bool MCD_convert_from_datetime(MCExecPoint &p_context, Convert_form p_primary_to
 	}
     
     return t_success;
+}
+
+/* WRAPPER */
+bool MCD_convert(MCExecContext& ctxt, MCStringRef p_string, Convert_form p_primary_from, Convert_form p_secondary_from, Convert_form p_primary_to, Convert_form p_secondary_to, MCStringRef& r_converted)
+{
+	MCExecPoint ep(ctxt.GetEP());
+
+	/* UNCHECKED */ ep.setvalueref(p_string);
+	if (!MCD_convert(ep, p_primary_from, p_secondary_from, p_primary_to, p_secondary_to))
+		return false;
+
+	/* UNCHECKED */ ep.copyasstringref(r_converted);
+	return true;
 }
 
 Boolean MCD_convert(MCExecPoint& p_context, Convert_form p_primary_from, Convert_form p_secondary_from, Convert_form p_primary_to, Convert_form p_secondary_to)

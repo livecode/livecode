@@ -114,7 +114,7 @@ void MCPrinter::Finalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCPrinter::ChoosePaper(bool p_window_modal)
+bool MCPrinter::ChoosePaper(bool p_window_modal, MCStringRef &r_result)
 {
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{
@@ -124,24 +124,24 @@ const char *MCPrinter::ChoosePaper(bool p_window_modal)
 		switch(DoPageSetup(p_window_modal, t_owner))
 		{
 		case PRINTER_DIALOG_RESULT_CANCEL:
-			return "cancel";
-			break;
+			return MCStringCreateWithCString("cancel", r_result);
 
 		case PRINTER_DIALOG_RESULT_ERROR:
-			return "unable to open dialog";
-			break;
+			return MCStringCreateWithCString("unable to open dialog", r_result);
 
 		case PRINTER_DIALOG_RESULT_OKAY:
-			return NULL;
+			r_result = MCValueRetain(kMCEmptyString);
+			return true;
 		}
+
+		MCAssert(false);
+		return false;
 	}
 	else
-		return "non-system page setup dialogs not supported";
-
-	return NULL;
+		return MCStringCreateWithCString("non-system page setup dialogs not supported", r_result);
 }
 
-const char *MCPrinter::ChoosePrinter(bool p_window_modal)
+bool MCPrinter::ChoosePrinter(bool p_window_modal, MCStringRef &r_result)
 {
 	if (MCsystemFS && MCscreen -> hasfeature(PLATFORM_FEATURE_OS_PRINT_DIALOGS))
 	{
@@ -151,21 +151,21 @@ const char *MCPrinter::ChoosePrinter(bool p_window_modal)
 		switch(DoPrinterSetup(p_window_modal, t_owner))
 		{
 		case PRINTER_DIALOG_RESULT_CANCEL:
-			return "cancel";
-			break;
+			return MCStringCreateWithCString("cancel", r_result);
 
 		case PRINTER_DIALOG_RESULT_ERROR:
-			return "unable to open dialog";
-			break;
+			return MCStringCreateWithCString("unable to open dialog", r_result);
 
 		case PRINTER_DIALOG_RESULT_OKAY:
-			return NULL;
+			r_result = MCValueRetain(kMCEmptyString);
+			return true;
 		}
+
+		MCAssert(false);
+		return false;
 	}
 	else
-		return "non-system printer dialogs not supported";
-
-	return NULL;
+		return MCStringCreateWithCString("non-system page setup dialogs not supported", r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -181,7 +181,18 @@ const char *MCPrinter::GetDeviceName(void)
 	return DoFetchName();
 }
 
-void MCPrinter::SetDeviceSettings(const MCString& p_settings)
+void MCPrinter::SetDeviceSettings(MCStringRef p_settings)
+{
+	if (MCStringGetLength(p_settings) == 0)
+		DoReset(NULL);
+	else if (!DoResetSettings(MCStringGetOldString(p_settings)))
+	{
+		MCresult -> sets("unknown printer");
+		return;
+	}
+}
+
+/* LEGACY */ void MCPrinter::SetDeviceSettings(const MCString& p_settings)
 {
 	if (p_settings . getlength() == 0)
 		DoReset(NULL);
@@ -192,7 +203,15 @@ void MCPrinter::SetDeviceSettings(const MCString& p_settings)
 	}
 }
 
-MCString MCPrinter::CopyDeviceSettings(void)
+bool MCPrinter::CopyDeviceSettings(MCStringRef &r_settings)
+{
+	void *t_buffer;
+	uint4 t_length;
+	DoFetchSettings(t_buffer, t_length);
+	return MCStringCreateWithCString((char *)t_buffer, r_settings);
+}
+
+/* LEGACY */ MCString MCPrinter::CopyDeviceSettings(void)
 {
 	void *t_buffer;
 	uint4 t_length;
@@ -319,7 +338,7 @@ void MCPrinter::SetJobColor(bool p_color)
 	m_job_color = p_color;
 }
 
-void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_ranges)
+void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCInterval *p_ranges)
 {
 	// MW-2008-02-28: [[ Bug 5623 ]] Intermittant crash when using printing commands is caused
 	//   by this being deleted, but not set to NULL to prevent it being deleted in future.
@@ -329,8 +348,8 @@ void MCPrinter::SetJobRanges(MCPrinterPageRangeCount p_count, const MCRange *p_r
 	m_job_range_count = p_count;
 	if (p_count > 0)
 	{
-		m_job_ranges = new MCRange[p_count];
-		memcpy(m_job_ranges, p_ranges, sizeof(MCRange) * p_count);
+		m_job_ranges = new MCInterval[p_count];
+		memcpy(m_job_ranges, p_ranges, sizeof(MCInterval) * p_count);
 	}
 }
 
@@ -564,7 +583,7 @@ void MCPrinter::LayoutCard(MCCard *p_card, const MCRectangle *p_rect)
 	Close();
 }
 
-void MCPrinter::MakeAnchor(const char *p_name, int2 x, int2 y)
+void MCPrinter::MakeAnchor(const char *p_name, int16_t x, int16_t y)
 {
 	Open();
 

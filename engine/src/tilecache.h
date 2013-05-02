@@ -78,6 +78,7 @@ enum MCTileCacheCompositorType
 	kMCTileCacheCompositorNone,
 	kMCTileCacheCompositorSoftware,
 	kMCTileCacheCompositorCoreGraphics,
+	kMCTileCacheCompositorOpenGL,
 	kMCTileCacheCompositorStaticOpenGL,
 	kMCTileCacheCompositorDynamicOpenGL
 };

@@ -1,0 +1,15 @@
+setup "up"
+test the mouse is "up"
+teardown
+
+
+setup "down"
+create button
+
+put "on mouseDown|set the cMouse of me to mouse()|end mouseDown" into tScript
+replace "|" with return in tScript
+set the script of the last button to tScript
+
+click at the loc of the last button
+test the cMouse of the last button is "down"
+teardown

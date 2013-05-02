@@ -849,7 +849,7 @@ void MCScreenDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int
 		//   (rather than down).
 		for(uint32_t i = 0; i < h; i++)
 			memcpy(t_dst_ptr + i * t_dst_stride, t_src_ptr + i * t_src_stride, (w * source -> depth + 7) / 8);
-	}
+}
 }
 
 MCBitmap *MCScreenDC::getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h, Boolean shm)
@@ -1015,17 +1015,20 @@ Boolean MCScreenDC::istripleclick()
 	return False;
 }
 
-void MCScreenDC::getkeysdown(MCExecPoint &ep)
+bool MCScreenDC::getkeysdown(MCListRef& r_list)
 {
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-uint1 MCScreenDC::fontnametocharset(const char *oldfontname)
+uint1 MCScreenDC::fontnametocharset(MCStringRef p_fontname)
 {
 	return 0;
 }
 
+/*
 char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 {
 	const char *t_charset;
@@ -1039,6 +1042,7 @@ char *MCScreenDC::charsettofontname(uint1 charset, const char *oldfontname)
 	}
 	return strclone(oldfontname);
 }
+*/
 
 void MCScreenDC::clearIME(Window w)
 {

@@ -488,13 +488,9 @@ Exec_stat MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties whic
 		return ES_NORMAL;
 
 	// Otherwise we have an array get, so first create a new value
-	MCVariableValue *v;
-	v = new MCVariableValue;
-	if (v == NULL)
+	MCAutoArrayRef v;
+	if (!MCArrayCreateMutable(&v))
 		return ES_ERROR;
-
-	// Initialize it to an array
-	v -> assign_new_array(8);
 
 	// Now loop through all the properties, getting the ones applicable to this type.
 	for(uint32_t i = 0; i < ELEMENTS(s_bitmap_effect_properties); i++)
@@ -502,16 +498,13 @@ Exec_stat MCBitmapEffectsGetProperties(MCBitmapEffectsRef& self, Properties whic
 		{
 			// Attempt to fetch the property, then store it into the array.
 			if (MCBitmapEffectGetProperty(t_effect, s_bitmap_effect_properties[i] . value, ep) != ES_NORMAL ||
-				v -> store_element(ep, s_bitmap_effect_properties[i] . token) != ES_NORMAL)
-			{
-				delete v;
+				ep . storearrayelement_cstring(*v, s_bitmap_effect_properties[i] . token) != ES_NORMAL)
 				return ES_ERROR;
-			}
 		}
 
 	// Give the array to the ep
-	ep . setarray(v, True);
-
+	ep . setvalueref(*v);
+	
 	return ES_NORMAL;
 }
 
@@ -607,9 +600,7 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyColor:
 		{
 			MCColor t_mc_color;
-			char *t_name;
-			t_name = NULL;
-			if (!MCscreen -> parsecolor(t_data, &t_mc_color, &t_name))
+			if (!MCscreen -> parsecolor(t_data, &t_mc_color, nil))
 			{
 				MCeerror -> add(EE_BITMAPEFFECT_BADCOLOR, 0, 0, t_data);
 				return ES_ERROR;
@@ -797,7 +788,7 @@ Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties whic
 	t_is_array = MCNameIsEqualTo(prop, kMCEmptyName, kMCCompareCaseless);
 
 	// First handle the 'clear' action (i.e. carray is empty and ep is 'empty')
-	if (t_is_array && (ep . getformat() != VF_ARRAY || ep . getarray() == NULL))
+	if (t_is_array && !ep . isarray())
 	{
 		if (self == NULL || (self -> mask & (1 << t_type)) == 0)
 			return ES_NORMAL;
@@ -851,11 +842,12 @@ Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties whic
 		if (MCBitmapEffectSetProperty(&t_effect, t_property, ep, t_dirty) != ES_NORMAL)
 			return ES_ERROR;
 	}
-	else if (ep . getarray() != NULL)
+	else
 	{
 		// We are storing an array of properties
-		MCVariableValue *v;
-		v = ep . getarray();
+		MCAutoArrayRef v;
+		if (!ep . copyasarrayref(&v))
+			return ES_ERROR;
 
 		// Loop through all the properties in the table and apply the relevant
 		// ones.
@@ -863,11 +855,11 @@ Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties whic
 			if ((s_bitmap_effect_properties[i] . mask & (1 << t_type)) != 0)
 			{
 				// If we don't have the given element, then move to the next one
-				if (!v -> has_element(ep, s_bitmap_effect_properties[i] . token))
+				if (!ep . hasarrayelement_cstring(*v, s_bitmap_effect_properties[i] . token))
 					continue;
 				
 				// Otherwise, fetch the keys value and attempt to set the property
-				if (v -> fetch_element(ep, s_bitmap_effect_properties[i] . token) != ES_NORMAL ||
+				if (ep . fetcharrayelement_cstring(*v, s_bitmap_effect_properties[i] . token) != ES_NORMAL ||
 					MCBitmapEffectSetProperty(&t_effect, s_bitmap_effect_properties[i] . value, ep, t_dirty) != ES_NORMAL)
 					return ES_ERROR;
 			}

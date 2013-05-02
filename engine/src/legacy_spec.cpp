@@ -1,0 +1,99 @@
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+
+This file is part of LiveCode.
+
+LiveCode is free software; you can redistribute it and/or modify it under
+the terms of the GNU General Public License v3 as published by the Free
+Software Foundation.
+
+LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+WARRANTY; without even the implied warranty of MERCHANTABILITY or
+FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+for more details.
+
+You should have received a copy of the GNU General Public License
+along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+
+#include "prefix.h"
+
+#include "parsedef.h"
+#include "filedefs.h"
+#include "osspec.h"
+#include "execpt.h"
+#include "globals.h"
+
+#include "exec.h"
+
+char *MCS_getcurdir(void)
+{
+	MCAutoStringRef t_current;
+	char *t_cstring;
+	if (MCS_getcurdir(&t_current) && 
+		MCCStringClone(MCStringGetCString(*t_current), t_cstring))
+		return t_cstring;
+	return NULL;
+}
+
+char *MCS_resolvepath(const char* p_path)
+{
+	MCAutoStringRef t_path;
+	MCAutoStringRef t_resolved;
+	char *t_cstring;
+
+	if (MCStringCreateWithCString(p_path, &t_path) &&
+		MCS_resolvepath(*t_path, &t_resolved) &&
+		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
+		return t_cstring;
+
+	return NULL;
+}
+
+const char *MCS_tmpnam()
+{
+	// MW-2008-06-19: Make sure fname is stored in a static to keep the (rather
+	//   unpleasant) current semantics of the call.
+	static char *fname;
+	if (fname != NULL)
+	{
+		delete fname;
+		fname = NULL;
+	}
+
+	MCAutoStringRef t_tmpname;
+	if (MCS_tmpnam(&t_tmpname))
+		fname = strclone(MCStringGetCString(*t_tmpname));
+
+	return fname;
+}
+
+void MCS_getspecialfolder(MCExecPoint &ep)
+{
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_path;
+	MCAutoStringRef t_special_folder_path;
+	/* UNCHECKED */ ep.copyasstring(&t_path);
+	if (!MCS_getspecialfolder(ctxt, *t_path, &t_special_folder_path))
+	{
+		MCresult->sets("folder not found");
+		ep.clear();
+	}
+	/* UNCHECKED */ ep.setvalueref(*t_special_folder_path);
+}
+
+void MCS_getentries(MCExecPoint& ep, bool p_files, bool p_detailed)
+{
+	MCAutoListRef t_list;
+	MCAutoStringRef t_string;
+	if (MCS_getentries(p_files, p_detailed, &t_list) && MCListCopyAsString(*t_list, &t_string))
+		/* UNCHECKED */ ep.setvalueref(*t_string);
+	else
+		ep . clear();
+}
+
+Boolean MCS_exists(const char *path, Boolean file)
+{
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithCString(path, &t_string);
+
+	return MCS_exists(*t_string, file == True);
+}

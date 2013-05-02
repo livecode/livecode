@@ -141,6 +141,9 @@ class MCButton : public MCControl
 	static MCImage *macrbtrack;
 	static MCImage *macrbhilite;
 	static MCImage *macrbhilitetrack;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCButton();
 	MCButton(const MCButton &bref);
@@ -152,6 +155,8 @@ public:
 	virtual ~MCButton();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	virtual bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 
@@ -175,8 +180,8 @@ public:
 
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual void closemenu(Boolean kfocus, Boolean disarm);
 	
 	// MW-2011-09-20: [[ Collision ]] Compute shape of button - will use mask of icon if possible.
@@ -282,10 +287,10 @@ public:
 	void docascade(MCString &pick);
 	void getmenuptrs(const char *&sptr, const char *&eptr);
 	void setupmenu();
-	void selectedchunk(MCExecPoint &);
-	void selectedline(MCExecPoint &);
-	void selectedtext(MCExecPoint &);
-	Boolean resetlabel();
+	bool selectedchunk(MCStringRef& r_string);
+	bool selectedline(MCStringRef& r_string);
+	bool selectedtext(MCStringRef& r_string);
+	bool resetlabel();
 	void reseticon();
 	void radio();
 	void setmenuhistory(int2 newline);
@@ -350,6 +355,91 @@ public:
 	{
 		return (MCButton *)MCDLlist::remove((MCDLlist *&)list);
 	}
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void GetIcon(MCExecContext& ctxt, Properties which, uinteger_t& r_icon);
+	void SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon);
+	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef& r_label);
+	void DoSetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void DoSetText(MCExecContext& ctxt, MCStringRef p_label);
+	void UpdateIconAndMenus(void);
+
+	////////// PROPERTY ACCESSORS
+
+	virtual void SetName(MCExecContext& ctxt, MCStringRef p_name);
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetAutoArm(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoArm(MCExecContext& ctxt, bool setting);
+	void GetAutoHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoHilite(MCExecContext& ctxt, bool setting);
+	void GetArmBorder(MCExecContext& ctxt, bool& r_setting);
+	void SetArmBorder(MCExecContext& ctxt, bool setting);
+	void GetArmFill(MCExecContext& ctxt, bool& r_setting);
+	void SetArmFill(MCExecContext& ctxt, bool setting);
+	void GetHiliteBorder(MCExecContext& ctxt, bool& r_setting);
+	void SetHiliteBorder(MCExecContext& ctxt, bool setting);
+	void GetHiliteFill(MCExecContext& ctxt, bool& r_setting);
+	void SetHiliteFill(MCExecContext& ctxt, bool setting);
+	void GetShowHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetShowHilite(MCExecContext& ctxt, bool setting);
+	void GetArm(MCExecContext& ctxt, bool& r_setting);
+	void SetArm(MCExecContext& ctxt, bool setting);
+	void GetSharedHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetSharedHilite(MCExecContext& ctxt, bool setting);
+	void GetShowIcon(MCExecContext& ctxt, bool& r_setting);
+	void SetShowIcon(MCExecContext& ctxt, bool setting);
+	void GetShowName(MCExecContext& ctxt, bool& r_setting);
+	void SetShowName(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetLabelWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetLabelWidth(MCExecContext& ctxt, uinteger_t p_width);
+	void GetFamily(MCExecContext& ctxt, uinteger_t& r_family);
+	void SetFamily(MCExecContext& ctxt, uinteger_t p_family);
+	void GetVisited(MCExecContext& ctxt, bool& r_setting);
+	void SetVisited(MCExecContext& ctxt, bool setting);
+	void GetMenuHistory(MCExecContext& ctxt, uinteger_t& r_history);
+	void SetMenuHistory(MCExecContext& ctxt, uinteger_t p_history);
+	void GetMenuLines(MCExecContext& ctxt, uinteger_t*& r_lines);
+	void SetMenuLines(MCExecContext& ctxt, uinteger_t* p_lines);
+	void GetMenuButton(MCExecContext& ctxt, uinteger_t& r_button);
+	void SetMenuButton(MCExecContext& ctxt, uinteger_t p_button);
+	void GetMenuMode(MCExecContext& ctxt, intenum_t& r_mode);
+	void SetMenuMode(MCExecContext& ctxt, intenum_t p_mode);
+	void GetMenuName(MCExecContext& ctxt, MCStringRef& r_name);
+	void SetMenuName(MCExecContext& ctxt, MCStringRef p_name);
+	virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+	void GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetUnicodeAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
+	void GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetAcceleratorKey(MCExecContext& ctxt, MCStringRef p_text);
+	void GetAcceleratorModifiers(MCExecContext& ctxt, intset_t& r_mods);
+	void SetAcceleratorModifiers(MCExecContext& ctxt, intset_t p_mods);
+	void GetMnemonic(MCExecContext& ctxt, uinteger_t& r_mnemonic);
+	void SetMnemonic(MCExecContext& ctxt, uinteger_t p_mnemonic);
+	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetDefault(MCExecContext& ctxt, bool& r_setting);
+	void SetDefault(MCExecContext& ctxt, bool setting);
+	virtual void SetTextFont(MCExecContext& ctxt, MCStringRef p_font);
+	virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* p_height);
+	virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* p_size);
+	virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, MCStringRef p_text);
+	virtual void SetCantSelect(MCExecContext& ctxt, bool setting);
+
 
 private:
 	int4 formattedtabwidth(void);

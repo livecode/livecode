@@ -28,22 +28,16 @@ class MCParameter
 public:
 	MCParameter(void)
 	{
-		exp = NULL;
-		next = NULL;
-		var = NULL;
-	}
-
-	MCParameter(const MCString& s)
-	{
-		exp = NULL;
-		next = NULL;
-		var = NULL;
-		value . assign_constant_string(s);
+		exp = nil;
+		next = nil;
+		var = nil;
+		value = nil;
 	}
 
 	~MCParameter(void)
 	{
 		delete exp;
+		MCValueRelease(value);
 	}
 
 	void setnext(MCParameter *n)
@@ -56,47 +50,28 @@ public:
 		return next;
 	}
 
-	void sets_argument(const MCString& s)
+	void sets_argument(const MCString& string)
 	{
-		value . assign_constant_string(s);
+		/* UNCHECKED */ setoldstring_argument(string);
+	}
+
+	void copysvalue_argument(const MCString& string)
+	{
+		/* UNCHECKED */ setoldstring_argument(string);
+	}
+
+	// Sets the parameter to the given string, taking ownership of the
+	// buffer.
+	void setbuffer(char *buffer, uint32_t length)
+	{
+		/* UNCHECKED */ setoldstring_argument(MCString(buffer, length));
+		delete buffer;
 	}
 	
-	void copysvalue_argument(const MCString& s)
-	{
-		value . assign_string(s);
-	}
-
-	void setnameref_argument(MCNameRef n)
-	{
-		value . assign_string(MCNameGetOldString(n));
-	}
-
-	void setnameref_unsafe_argument(MCNameRef n)
-	{
-		value . assign_constant_string(MCNameGetOldString(n));
-	}
-
-	void setn_argument(real8 n)
-	{
-		value . assign_real(n);
-	}
-
-	void clear_argument(void)
-	{
-		value . clear();
-	}
-
-	void setbuffer(char *buffer, uint4 length)
-	{
-		value . assign_buffer(buffer, length);
-	}
-
-	// MW-2009-06-26: Returns a mutable reference to the parameters
-	//   value object.
-	MCVariableValue& getvalue(void)
-	{
-		return value;
-	}
+	bool setoldstring_argument(const MCString& string);
+	void setvalueref_argument(MCValueRef name);
+	void setn_argument(real8 n);
+	void clear_argument(void);
 
 	// Evaluate the value *stored* in the parameter - i.e. Used by
 	// the callee in a function/command invocation.
@@ -110,10 +85,15 @@ public:
 	// Evaluate the value of the given parameter in the context of
 	// <ep>.
 	Exec_stat eval(MCExecPoint& ep);
-	Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_var_value);
+	Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	MCVariable *evalvar(MCExecPoint& ep);
 
 	Parse_stat parse(MCScriptPoint &);
+
+	void compile(MCSyntaxFactoryRef);
+	void compile_in(MCSyntaxFactoryRef);
+	void compile_out(MCSyntaxFactoryRef);
+	void compile_inout(MCSyntaxFactoryRef);
 
 private:
 	// Parameter as syntax (i.e. location of the expression
@@ -127,7 +107,7 @@ private:
 	// Parameter as value (i.e. value of the argument when
 	// passed to a function/command).
 	MCVariable *var;
-	MCVariableValue value;
+	MCValueRef value;
 };
 
 #endif

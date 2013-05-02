@@ -485,10 +485,10 @@ static bool MCCapsuleRead(MCCapsuleRef self, void *p_buffer, uint32_t p_buffer_s
 		// for, the input must be eof.
 		if (self -> buckets_complete)
 			self -> input_eof = (t_amount != t_amount_read);
-		
+
 		// Process any security features.
 		MCStackSecurityProcessCapsule(self -> decompress . next_in + self -> decompress . avail_in, self -> input_buffer + self -> input_frontier + t_amount_read);
-		
+
 		// Adjust the data pointers
 		self -> input_frontier += t_amount_read;
 		self -> decompress . avail_in = (self -> input_buffer + self -> input_frontier - sizeof(uint32_t)) - (self -> decompress . next_in + self -> decompress . avail_in);
@@ -722,7 +722,7 @@ bool MCCapsuleProcess(MCCapsuleRef self)
 
 		// Fetch the first header word to see if we need to read more.
 		if (t_success)
-			t_header[0] = MCByteSwappedToHost32(((uint32_t *)self -> output_buffer)[0]);
+			t_header[0] = MCSwapInt32NetworkToHost(((uint32_t *)self -> output_buffer)[0]);
 
 		// If the top bit of the first header word is set, it means that we
 		// need to read another header word.
@@ -733,7 +733,7 @@ bool MCCapsuleProcess(MCCapsuleRef self)
 				break;
 
 			if (t_success)
-				t_header[1] = MCByteSwappedToHost32(((uint32_t *)self -> output_buffer)[1]);
+				t_header[1] = MCSwapInt32NetworkToHost(((uint32_t *)self -> output_buffer)[1]);
 		}
 
 		// Now we have the header compute its tag and size.
@@ -1100,7 +1100,7 @@ static bool MCRecordColorDecode(void *state, MCExecPoint& ep, void *p_encoded_co
 	return true;
 }
 
-static bool MCRecordEncode(MCRecordField *p_fields, MCVariableValue *p_array, void *r_record)
+static bool MCRecordEncode(MCRecordField *p_fields, MCArrayRef p_array, void *r_record)
 {
 	uint32_t *t_record;
 	t_record = (uint32_t *)r_record;
@@ -1108,9 +1108,9 @@ static bool MCRecordEncode(MCRecordField *p_fields, MCVariableValue *p_array, vo
 	MCExecPoint ep(nil, nil, nil);
 	for(uint32_t i = 0; p_fields[i] . name != nil; i++)
 	{
-		if (!p_array -> has_element(ep, p_fields[i] . name))
+		if (!ep . hasarrayelement_cstring(p_array, p_fields[i] . name))
 			return false;
-		if (p_array -> fetch_element(ep, p_fields[i] . name) != ES_NORMAL)
+		if (ep . fetcharrayelement_cstring(p_array, p_fields[i] . name) != ES_NORMAL)
 			return false;
 
 		if ((p_fields[i] . offset & 31) == 0 && (p_fields[i] . length % 32) == 0)
@@ -1141,7 +1141,7 @@ static bool MCRecordEncode(MCRecordField *p_fields, MCVariableValue *p_array, vo
 	return true;
 }
 
-static bool MCRecordDecode(MCRecordField *p_fields, MCVariableValue *array, void *p_record)
+static bool MCRecordDecode(MCRecordField *p_fields, MCArrayRef array, void *p_record)
 {
 	uint32_t *t_record;
 	t_record = (uint32_t *)p_record;
@@ -1166,7 +1166,7 @@ static bool MCRecordDecode(MCRecordField *p_fields, MCVariableValue *array, void
 		else
 			return false;
 
-		if (array -> store_element(ep, p_fields[i] . name) != ES_NORMAL)
+		if (ep . storearrayelement_cstring(array, p_fields[i] . name) != ES_NORMAL)
 			return false;
 	}
 
@@ -1204,4 +1204,3 @@ static bool MCCapsuleEnvironmentVersionDecode(void *state, MCExecPoint& ep, void
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-

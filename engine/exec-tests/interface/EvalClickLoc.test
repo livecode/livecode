@@ -1,0 +1,9 @@
+setup
+
+click at 50,100
+test the clickLoc is 50,100
+
+click at 0,0
+test the clickLoc is 0,0
+
+teardown

@@ -1,0 +1,21 @@
+setup
+
+test "abc" ends with "c"
+test "abc" ends with "C"
+
+test not ("abc" ends with "a")
+test not ("abc" ends with "b")
+
+test "abc123" ends with 123
+test "abc 0.5" ends with (1 / 2)
+
+teardown
+
+setup "case sensitive"
+
+set the caseSensitive to true
+
+test "abc" ends with "c"
+test not ("abc" ends with "C")
+
+teardown

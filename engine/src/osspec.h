@@ -23,9 +23,9 @@ extern void MCS_seterrno(int value);
 extern int MCS_geterrno(void);
 extern uint32_t MCS_getsyserror(void);
 extern void MCS_alarm(real8 secs);
-extern void MCS_launch_document(char *docname);
-extern void MCS_launch_url(char *url);
-extern void MCS_startprocess(char *appname, char *docname, Open_mode mode, Boolean elevated);
+extern void MCS_launch_document(const char *docname);
+extern void MCS_launch_url(const char *url);
+extern void MCS_startprocess(MCNameRef appname, const char *docname, Open_mode mode, Boolean elevated);
 extern void MCS_checkprocesses();
 extern void MCS_closeprocess(uint2 index);
 extern void MCS_kill(int4 pid, int4 sig);
@@ -42,17 +42,23 @@ extern Boolean MCS_rename(const char *oname, const char *nname);
 extern Boolean MCS_backup(const char *oname, const char *nname);
 extern Boolean MCS_unbackup(const char *oname, const char *nname);
 extern Boolean MCS_unlink(const char *path);
-extern const char *MCS_tmpnam();
-extern char *MCS_resolvepath(const char *path);
+extern bool MCS_tmpnam(MCStringRef& r_path);
+/* LEGACY */ extern const char *MCS_tmpnam();
+extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
+/* LEGACY */ extern char *MCS_resolvepath(const char *path);
 extern char *MCS_get_canonical_path(const char *path);
-extern char *MCS_getcurdir();
-extern Boolean MCS_setcurdir(const char *path);
-extern void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed);
-extern void MCS_getDNSservers(MCExecPoint &);
-extern Boolean MCS_getdevices(MCExecPoint &);
-extern Boolean MCS_getdrives(MCExecPoint &);
+extern bool MCS_getcurdir(MCStringRef& r_path);
+/* LEGACY */ extern char *MCS_getcurdir();
+extern bool MCS_setcurdir(MCStringRef p_path);
+/* LEGACY */ extern Boolean MCS_setcurdir(const char *path);
+/* LEGACY */ extern void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed);
+extern bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list);
+extern bool MCS_getDNSservers(MCListRef& r_list);
+extern bool MCS_getdevices(MCListRef& r_list);
+extern bool MCS_getdrives(MCListRef& r_list);
 extern Boolean MCS_noperm(const char *path);
-extern Boolean MCS_exists(const char *path, Boolean file);
+extern bool MCS_exists(MCStringRef p_path, bool p_is_file);
+/* LEGACY */ extern Boolean MCS_exists(const char *path, Boolean file);
 extern Boolean MCS_nodelay(int4 fd);
 
 extern IO_stat MCS_runcmd(MCExecPoint &);
@@ -64,20 +70,21 @@ extern Boolean MCS_mkdir(const char *path);
 extern Boolean MCS_rmdir(const char *path);
 
 extern uint4 MCS_getpid();
-extern const char *MCS_getaddress();
-extern const char *MCS_getmachine();
-extern const char *MCS_getprocessor();
+extern bool MCS_getaddress(MCStringRef& r_string);
+extern bool MCS_getmachine(MCStringRef& r_string);
+extern MCNameRef MCS_getprocessor();
 extern real8 MCS_getfreediskspace(void);
-extern const char *MCS_getsystemversion();
+extern bool MCS_getsystemversion(MCStringRef& r_string);
 extern void MCS_loadfile(MCExecPoint &ep, Boolean binary);
 extern void MCS_loadresfile(MCExecPoint &ep);
 extern void MCS_savefile(const MCString &f, MCExecPoint &data, Boolean b);
 extern void MCS_saveresfile(const MCString &s, const MCString data);
 
-extern void MCS_query_registry(MCExecPoint &dest, const char** type);
-extern void MCS_delete_registry(const char *key, MCExecPoint &dest);
-extern void MCS_list_registry(MCExecPoint& dest);
-extern void MCS_set_registry(const char *key, MCExecPoint &dest, char *type);
+extern bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
+/* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
+extern bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error);
+extern bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error);
+extern bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error);
 
 extern Boolean MCS_poll(real8 delay, int fd);
 // Mac AppleEvent calls
@@ -87,24 +94,21 @@ extern void MCS_reply(const MCString &mess, const char *keyword, Boolean err);
 extern char *MCS_request_ae(const MCString &message, uint2 ae);
 extern char *MCS_request_program(const MCString &message, const char *program);
 extern void MCS_copyresourcefork(const char *source, const char *dest);
-extern void MCS_copyresource(const char *source, const char *dest,
-	                             const char *type, const char *name,
-	                             const char *newid);
-extern void MCS_deleteresource(const char *source, const char *type,
-	                               const char *name);
-extern void MCS_getresource(const char *source, const char *type,
-	                            const char *name, MCExecPoint &ep);
-extern char *MCS_getresources(const char *source, const char *type);
-extern void MCS_setresource(const char *source, const char *type,
-	                            const char *name, const char *id, const char *flags,
-	                            const MCString &s);
-extern void MCS_getspecialfolder(MCExecPoint &ep);
-extern void MCS_shortfilepath(MCExecPoint &ep);
-extern void MCS_longfilepath(MCExecPoint &ep);
-extern Boolean MCS_createalias(char *srcpath, char *dstpath);
-extern void MCS_resolvealias(MCExecPoint &ep);
-extern void MCS_doalternatelanguage(MCString &s, const char *langname);
-extern void MCS_alternatelanguages(MCExecPoint &ep);
+extern bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+							 MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error);
+extern bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error);
+extern bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error);
+extern bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error);
+extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error);
+extern bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_path);
+/* LEGACY */ extern void MCS_getspecialfolder(MCExecPoint &ep);
+extern bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path);
+extern bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path);
+extern Boolean MCS_createalias(const char *srcpath, const char *dstpath);
+extern bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error);
+extern void MCS_doalternatelanguage(MCStringRef script, MCStringRef language);
+extern bool MCS_alternatelanguages(MCListRef& r_list);
 extern uint1 MCS_langidtocharset(uint2 langid);
 extern uint2 MCS_charsettolangid(uint1 charset);
 
@@ -139,14 +143,14 @@ extern bool MCS_changeprocesstype(bool to_foreground);
 extern bool MCS_isatty(int);
 extern bool MCS_isnan(double value);
 
-extern bool MCS_mcisendstring(const char *command, char buffer[256]);
+extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
 // Called by trial timeout function in MCDispatch to pop-up a system dialog.
 void MCS_system_alert(const char *title, const char *message);
 
 bool MCS_generate_uuid(char buffer[128]);
 
-void MCS_getnetworkinterfaces(MCExecPoint& ep);
+bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -177,7 +181,7 @@ enum MCSPutKind
 	kMCSPutUnicodeMarkup
 };
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind kind, const MCString& data);
+bool MCS_put(MCExecPoint& ep, MCSPutKind kind, MCStringRef data);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -237,14 +241,14 @@ enum MCSOutputLineEndings
 void MCS_set_outputlineendings(MCSOutputLineEndings line_endings);
 MCSOutputLineEndings MCS_get_outputlineendings(void);
 
-bool MCS_set_session_save_path(const char *p_path);
-const char *MCS_get_session_save_path(void);
+bool MCS_set_session_save_path(MCStringRef p_path);
+bool MCS_get_session_save_path(MCStringRef& r_path);
 bool MCS_set_session_lifetime(uint32_t p_lifetime);
 uint32_t MCS_get_session_lifetime(void);
-bool MCS_set_session_name(const char *p_name);
-const char *MCS_get_session_name(void);
-bool MCS_set_session_id(const char *p_id);
-const char *MCS_get_session_id(void);
+bool MCS_set_session_name(MCStringRef p_name);
+bool MCS_get_session_name(MCStringRef &r_name);
+bool MCS_set_session_id(MCStringRef p_id);
+bool MCS_get_session_id(MCStringRef &r_name);
 
 ///////////////////////////////////////////////////////////////////////////////
 

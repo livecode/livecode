@@ -44,9 +44,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "hndlrlst.h"
 #include "external.h"
 #include "parentscript.h"
+#include "osspec.h"
 #include "card.h"
 
 #include "globals.h"
+
+#include "syntax.h"
 
 // script flush <field chunk>
 // script configure classes tExpr
@@ -478,11 +481,10 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 	if (t_stat == ES_NORMAL)
 		t_stat = f_settings -> eval(p_exec);
 
-	MCVariableValue *t_settings;
+	MCAutoArrayRef t_settings;
 	if (t_stat == ES_NORMAL)
 	{
-		t_settings = p_exec . getarray();
-		if (t_settings == NULL)
+		if (!p_exec . copyasarrayref(&t_settings))
 			t_stat = ES_ERROR;
 	}
 
@@ -510,7 +512,7 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				memset(&t_style, 0, sizeof(MCColourizeStyle));
 
 				t_value . setstringf("%s attributes", s_script_class_names[t_class]);
-				if (t_settings -> fetch_element(t_value, t_value . getsvalue()) == ES_NORMAL)
+				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
 				{
 					for(uint4 t_attribute = 0; t_attribute < SCRIPT_STYLE_ATTRIBUTE_COUNT; ++t_attribute)
 						if (strstr(t_value . getcstring(), s_script_style_attribute_names[t_attribute]) != NULL)
@@ -518,13 +520,8 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				}
 
 				t_value . setstringf("%s color", s_script_class_names[t_class]);
-				if (t_settings -> fetch_element(t_value, t_value . getsvalue()) == ES_NORMAL)
-				{
-					char *t_colour_name;
-					t_colour_name = NULL;
-					MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, &t_colour_name);
-					delete t_colour_name;
-				}
+				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
+					MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil);
 
 				s_script_class_styles[t_class] = commit_style(t_style);
 			}
@@ -553,7 +550,7 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				memset(&t_style, 0, sizeof(MCColourizeStyle));
 
 				t_value . setstringf("%s attributes", s_script_keywords[t_keyword]);
-				if (t_settings -> fetch_element(t_value, t_value . getsvalue()) == ES_NORMAL)
+				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
 				{
 					for(uint4 t_attribute = 0; t_attribute < SCRIPT_STYLE_ATTRIBUTE_COUNT; ++t_attribute)
 						if (strstr(t_value . getcstring(), s_script_style_attribute_names[t_attribute]) != NULL)
@@ -564,15 +561,10 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				}
 
 				t_value . setstringf("%s color", s_script_keywords[t_keyword]);
-				if (t_settings -> fetch_element(t_value, t_value . getsvalue()) == ES_NORMAL)
+				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
 				{
-					char *t_colour_name;
-					t_colour_name = NULL;
-					if (MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, &t_colour_name))
-					{
-						delete t_colour_name;
+					if (MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil))
 						t_changed = true;
-					}
 				}
 
 				if (t_changed)
@@ -1037,12 +1029,13 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 		char *t_text;
 		uint4 t_length;
 		uint4 t_min_nesting, t_nesting;
-		t_text = ep . getbuffer(t_paragraph -> gettextsize());
+		t_text = new char[t_paragraph -> gettextsize()];
 		t_length = 0;
 		t_paragraph -> nativizetext(true, t_text, t_length);
 		t_paragraph -> clearzeros();
 		tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
-		
+		delete t_text;
+
 		t_old_nesting += t_state -> GetCommentDelta(t_line);
 		if (p_mutate)
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
@@ -1057,11 +1050,12 @@ static void TokenizeField(MCField *p_field, MCIdeState *p_state, Chunk_term p_ty
 			char *t_text;
 			uint4 t_length;
 			uint4 t_min_nesting, t_nesting;
-			t_text = ep . getbuffer(t_paragraph -> gettextsize());
+			t_text = new char[t_paragraph -> gettextsize()];
 			t_length = 0;
 			t_paragraph -> nativizetext(true, t_text, t_length);
 			t_paragraph -> clearzeros();
 			tokenize((const unsigned char *)t_text, t_length, t_new_nesting, t_nesting, t_min_nesting, p_callback, t_paragraph);
+			delete t_text;
 
 			t_old_nesting += t_state -> GetCommentDelta(t_line);
 			t_state -> SetCommentDelta(t_line, t_nesting - t_new_nesting);
@@ -1258,7 +1252,7 @@ Exec_stat MCIdeScriptDescribe::exec(MCExecPoint& p_exec)
 	}
 
 	if (t_status == ES_NORMAL)
-		MCresult -> store(p_exec, False);
+		MCresult -> set(p_exec);
 
 	return t_status;
 }
@@ -1808,6 +1802,250 @@ Exec_stat MCIdeScriptClassify::exec(MCExecPoint& ep)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+///////////////////////////////////////////////////////////////////////////////
+
+//#include "tokenizer.h"
+
+MCIdeSyntaxTokenize::MCIdeSyntaxTokenize(void)
+	: m_script(NULL)
+{
+}
+
+MCIdeSyntaxTokenize::~MCIdeSyntaxTokenize(void)
+{
+	delete m_script;
+}
+
+Parse_stat MCIdeSyntaxTokenize::parse(MCScriptPoint& sp)
+{
+	initpoint(sp);
+
+	Parse_stat t_stat;
+	t_stat = PS_NORMAL;
+
+	if (t_stat == PS_NORMAL)
+	{
+		m_script = new MCChunk(True);
+		t_stat = m_script -> parse(sp, False);
+	}
+
+	return t_stat;
+}
+
+Exec_stat MCIdeSyntaxTokenize::exec(MCExecPoint& ep)
+{
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+
+#if 0
+	// By default, the result is empty
+	MCresult -> clear();
+
+	if (t_stat == ES_NORMAL)
+		t_stat = m_script -> eval(ep);
+
+	if (t_stat == ES_NORMAL)
+	{
+		MCStringRef t_script_string;
+		MCStringCreateWithNativeChars((const char_t *)ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_script_string);
+		ep . clear();
+
+		MCTokenizerRef t_tokenizer;
+		MCTokenizerCreate(t_script_string, t_tokenizer);
+
+		for(;;)
+		{
+			const MCToken *t_token;
+			MCTokenizerRetrieve(t_tokenizer, t_token);
+
+			const char *t_value_desc_cstring;
+			MCStringRef t_value_desc;
+			t_value_desc = nil;
+			if (t_token -> value != nil)
+			{
+				MCValueCopyDescription(t_token -> value, t_value_desc);
+				t_value_desc_cstring = MCStringGetCString(t_value_desc);
+			}
+			else
+				t_value_desc_cstring = "<>";
+
+			ep . appendstringf("%d (%d,%d)-(%d,%d) %s\n", t_token -> type, t_token -> start . row, t_token -> start . column, t_token -> finish . row, t_token -> finish . column, t_value_desc_cstring);
+
+			MCValueRelease(t_value_desc);
+
+			if (t_token -> type == kMCTokenTypeEnd)
+				break;
+
+			MCTokenizerAdvance(t_tokenizer);
+			MCTokenizerMark(t_tokenizer);
+		}
+
+		MCValueRelease(t_script_string);
+		MCTokenizerDestroy(t_tokenizer);
+
+		// We have our output, so now set the chunk back to it
+		t_stat = m_script -> set(ep, PT_INTO);
+	}
+#endif
+
+	return t_stat;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+//#include "recognizer.h"
+
+MCIdeSyntaxRecognize::MCIdeSyntaxRecognize(void)
+	: m_script(NULL), m_language(NULL)
+{
+}
+
+MCIdeSyntaxRecognize::~MCIdeSyntaxRecognize(void)
+{
+	delete m_script;
+	delete m_language;
+}
+
+Parse_stat MCIdeSyntaxRecognize::parse(MCScriptPoint& sp)
+{
+	initpoint(sp);
+
+	Parse_stat t_stat;
+	t_stat = PS_NORMAL;
+
+	if (t_stat == PS_NORMAL)
+		t_stat = sp . parseexp(False, True, &m_script);
+
+	if (t_stat == PS_NORMAL)
+		t_stat = sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH);
+
+	if (t_stat == PS_NORMAL)
+		t_stat = sp . parseexp(False, True, &m_language);
+
+	return t_stat;
+}
+
+Exec_stat MCIdeSyntaxRecognize::exec(MCExecPoint& ep)
+{
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+
+#if 0
+	// By default, the result is empty
+	MCresult -> clear();
+
+	MCAutoStringRef t_script;
+	if (t_stat == ES_NORMAL)
+		if (m_script -> eval(ep) != ES_NORMAL ||
+			!ep . copyasstringref(&t_script))
+			t_stat = ES_ERROR;
+
+	MCAutoStringRef t_language;
+	if (t_stat == ES_NORMAL)
+		if (m_language -> eval(ep) != ES_NORMAL ||
+			!ep . copyasstringref(&t_language))
+			t_stat = ES_ERROR;
+
+	MCStreamRef t_stream;
+	t_stream = nil;
+	if (t_stat == ES_NORMAL)
+	{
+		ep . setvalueref(*t_language);
+		MCS_loadfile(ep, True);
+		if (!MCMemoryInputStreamCreate(ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_stream))
+			t_stat = ES_ERROR;
+	}
+
+	MCRecognizerRef t_recognizer;
+	t_recognizer = nil;
+	if (t_stat == ES_NORMAL)
+		if (!MCRecognizerCreate(t_stream, t_recognizer))
+			t_stat = ES_ERROR;
+
+	MCTokenizerRef t_tokenizer;
+	t_tokenizer = nil;
+	if (t_stat == ES_NORMAL)
+		if (!MCTokenizerCreate(*t_script, t_tokenizer))
+			t_stat = ES_ERROR;
+
+	if (t_stat == ES_NORMAL)
+	{
+		MCRecognizerParse(t_recognizer, t_tokenizer);
+	}
+
+	MCTokenizerDestroy(t_tokenizer);
+	MCRecognizerDestroy(t_recognizer);
+	MCValueRelease(t_stream);
+#endif
+
+	return t_stat;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+MCIdeSyntaxCompile::MCIdeSyntaxCompile(void)
+	: m_target(NULL), m_it(NULL)
+{
+}
+
+MCIdeSyntaxCompile::~MCIdeSyntaxCompile(void)
+{
+	delete m_target;
+}
+
+Parse_stat MCIdeSyntaxCompile::parse(MCScriptPoint& sp)
+{
+	initpoint(sp);
+	
+	Parse_stat t_stat;
+	t_stat = PS_NORMAL;
+	
+	if (t_stat == PS_NORMAL)
+	{
+		m_target = new MCChunk(False);
+		t_stat = m_target -> parse(sp, False);
+	}
+	
+	getit(sp, m_it);
+	
+	return t_stat;
+}
+
+Exec_stat MCIdeSyntaxCompile::exec(MCExecPoint& ep)
+{
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
+	
+	MCObject *optr;
+	uint4 parid;
+	if (m_target->getobj(ep, optr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add(EE_EDIT_BADTARGET, line, pos);
+		return ES_ERROR;
+	}
+	
+	MCHandlerlist *t_hlist;
+	t_hlist = new MCHandlerlist;
+	if (t_hlist -> parse(optr, optr -> getscript()) == PS_NORMAL)
+	{
+		MCSyntaxFactoryRef t_factory;
+		MCSyntaxFactoryCreate(t_factory);
+		t_hlist -> compile(t_factory);
+		
+		MCAutoStringRef t_log;
+		MCSyntaxFactoryCopyLog(t_factory, &t_log);
+		
+		MCSyntaxFactoryDestroy(t_factory);
+
+		m_it -> evalvar(ep) -> setvalueref(*t_log);
+	}
+	delete t_hlist;
+	
+	return t_stat;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // filter controls of stack <stack> where <prop> <op> <pattern>
 
 struct MCIdeFilterControlsVisitor: public MCObjectVisitor
@@ -1856,7 +2094,7 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 			}
 			break;
 			case kMCIdeFilterPropertyName:
-				t_left_ep . setnameref_unsafe(p_object -> getname());
+				t_left_ep . setvalueref_nullable(p_object -> getname());
 				break;
 			case kMCIdeFilterPropertyVisible:
 				t_left_ep . setboolean(p_object -> getflag(F_VISIBLE));
@@ -1866,27 +2104,28 @@ struct MCIdeFilterControlsVisitor: public MCObjectVisitor
 				break;
 		}
 		
+		MCExecContext ctxt(m_ep);
 		bool t_accept;
 		t_accept = false;
 		switch(m_operator)
 		{
 			case kMCIdeFilterOperatorLessThan:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) < 0;
+				MCLogicEvalIsLessThan(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorLessThanOrEqual:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) <= 0;
+				MCLogicEvalIsLessThanOrEqualTo(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorEqual:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) == 0;
+				MCLogicEvalIsEqualTo(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorNotEqual:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) != 0;
+				MCLogicEvalIsNotEqualTo(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorGreaterThanOrEqual:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) >= 0;
+				MCLogicEvalIsGreaterThanOrEqualTo(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorGreaterThan:
-				t_accept = MCExpression::compare_values(t_left_ep, m_pattern, &m_ep, false) > 0;
+				MCLogicEvalIsGreaterThan(ctxt, t_left_ep.getvalueref(), m_pattern.getvalueref(), t_accept);
 				break;
 			case kMCIdeFilterOperatorBeginsWith:
 			{

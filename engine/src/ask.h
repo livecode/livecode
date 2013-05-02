@@ -79,6 +79,7 @@ public:
 
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+	virtual void compile(MCSyntaxFactoryRef);
 
 private:
 	Parse_errors parse_question(MCScriptPoint& sp);

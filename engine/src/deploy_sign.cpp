@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -946,7 +945,7 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	// Now convert the reply to binary.
 	if (t_success)
 	{
-		MCurlresult -> fetch(ep);
+		MCurlresult -> eval(ep);
 		MCU_base64decode(ep);
 	}
 

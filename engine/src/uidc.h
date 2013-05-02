@@ -260,8 +260,8 @@ public:
 	MCUIDC();
 	virtual ~MCUIDC();
 	
-	virtual bool setbeepsound ( const char * p_internal) ;
-	virtual const char * getbeepsound ( void );
+	virtual bool setbeepsound ( MCStringRef p_beep_sound) ;
+	virtual bool getbeepsound ( MCStringRef& r_beep_sound );
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
@@ -272,7 +272,7 @@ public:
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 
-	virtual const char *getdisplayname();
+	virtual MCNameRef getdisplayname();
 	
 	virtual void resetcursors();
 	virtual void setcursor(Window w, MCCursorRef c);
@@ -357,9 +357,9 @@ public:
 	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
 
-	virtual void getbeep(uint4 property, MCExecPoint &ep);
+	virtual void getbeep(uint4 property, int4& r_value);
 	virtual void setbeep(uint4 property, int4 beep);
-	virtual void getvendorstring(MCExecPoint &ep);
+	virtual MCNameRef getvendorname(void);
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
@@ -402,14 +402,14 @@ public:
 	// and such to be processed. If the wait was called with 'anyevent' True
 	// then it will cause termination of the wait.
 	virtual void pingwait(void);
-
+	
 	virtual void flushevents(uint2 e);
 	virtual void updatemenubar(Boolean force);
 	virtual Boolean istripleclick();
-	virtual void getkeysdown(MCExecPoint &ep);
+	virtual bool getkeysdown(MCListRef& r_list);
 	
-	virtual uint1 fontnametocharset(const char *oldfontname);
-	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
+	virtual uint1 fontnametocharset(MCStringRef p_fontname);
+//	virtual char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	virtual void clearIME(Window w);
 	virtual void openIME();
@@ -424,7 +424,7 @@ public:
 	//
 
 	virtual MCPrinter *createprinter(void);
-	virtual void listprinters(MCExecPoint& ep);
+	virtual bool listprinters(MCStringRef& r_printers);
 
 	//
 
@@ -514,11 +514,12 @@ public:
 
 	//
 
+	/* WRAPPER */ virtual bool popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice);
 	virtual int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
 	virtual char *popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint);
 	
 	//
-	
+
 	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
 	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 	
@@ -528,16 +529,17 @@ public:
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
 	void cancelmessageobject(MCObject *optr, MCNameRef name);
-	void listmessages(MCExecPoint &ep);
+	bool listmessages(MCExecContext& ctxt, MCListRef& r_list);
 	Boolean handlepending(real8 &curtime, real8 &eventtime, Boolean dispatch);
 	void addmove(MCObject *optr, MCPoint *pts, uint2 npts,
 	             real8 &duration, Boolean waiting);
-	void listmoves(MCExecPoint &ep);
+	bool listmoves(MCExecContext& ctxt, MCListRef& r_list);
 	void stopmove(MCObject *optr, Boolean finish);
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
 	Boolean lookupcolor(const MCString &s, MCColor *color);
 	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
+	bool parsecolor(MCStringRef p_string, MCColor& r_color);
 	Boolean parsecolor(const MCString &s, MCColor *color, char **cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
@@ -545,7 +547,7 @@ public:
 	void querycolor(MCColor &color);
 	Boolean getcolors(MCExecPoint &);
 	Boolean setcolors(const MCString &);
-	void getcolornames(MCExecPoint &);
+	bool getcolornames(MCStringRef&);
 	void getpaletteentry(uint4 n, MCColor &c);
 	uint4 getpixel(MCBitmap *image, int2 x, int2 y);
 	void getfixed(uint2 &rs, uint2 &gs, uint2 &bs,

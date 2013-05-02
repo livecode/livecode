@@ -70,6 +70,8 @@ class MCGraphic : public MCControl
 	MCEditTool *m_edit_tool;
 	real4 m_stroke_miter_limit;
 
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCGraphic();
 	MCGraphic(const MCGraphic &sref);
@@ -81,6 +83,9 @@ public:
 	// virtual functions from MCObject
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual Boolean mdown(uint2 which);
 	virtual Boolean mup(uint2 which);
@@ -89,9 +94,9 @@ public:
 	virtual void setrect(const MCRectangle &nrect);
 
 	// MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat getarrayprop(uint4 parid, Properties which, MCExecPoint &, MCNameRef key, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setarrayprop(uint4 parid, Properties which, MCExecPoint&, MCNameRef key, Boolean effective);
 
 	// virtual functions from MCControl
@@ -138,5 +143,66 @@ public:
 	uint2 getfillrule();
 	void setfillrule(uint2 p_rule);
 
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(MCRectangle drect);
+	void Redraw(void);
+	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string);
+	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetAntiAliased(MCExecContext& ctxt, bool& r_setting);
+	void SetAntiAliased(MCExecContext& ctxt, bool setting);
+	void GetFillRule(MCExecContext& ctxt, intenum_t& r_rule);
+	void SetFillRule(MCExecContext& ctxt, intenum_t rule);
+	void GetEditMode(MCExecContext& ctxt, intenum_t& r_mode);
+	void SetEditMode(MCExecContext& ctxt, intenum_t mode);
+	void GetCapStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetCapStyle(MCExecContext& ctxt, intenum_t style);
+	void GetJoinStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetJoinStyle(MCExecContext& ctxt, intenum_t style);
+	void GetMiterLimit(MCExecContext& ctxt, double& r_limit);
+	void SetMiterLimit(MCExecContext& ctxt, double limit);
+	void GetLineSize(MCExecContext& ctxt, integer_t& r_size);
+	void SetLineSize(MCExecContext& ctxt, integer_t size);
+	void GetPolySides(MCExecContext& ctxt, integer_t& r_sides);
+	void SetPolySides(MCExecContext& ctxt, integer_t p_sides);
+	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
+	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
+	void GetStartAngle(MCExecContext& ctxt, integer_t& r_angle);
+	void SetStartAngle(MCExecContext& ctxt, integer_t p_angle);
+	void GetArcAngle(MCExecContext& ctxt, integer_t& r_angle);
+	void SetArcAngle(MCExecContext& ctxt, integer_t p_angle);
+	void GetRoundRadius(MCExecContext& ctxt, integer_t& r_radius);
+	void SetRoundRadius(MCExecContext& ctxt, integer_t radius);
+	void GetArrowSize(MCExecContext& ctxt, integer_t& r_size);
+	void SetArrowSize(MCExecContext& ctxt, integer_t size);
+	void GetStartArrow(MCExecContext& ctxt, bool& r_setting);
+	void SetStartArrow(MCExecContext& ctxt, bool setting);
+	void GetEndArrow(MCExecContext& ctxt, bool& r_setting);
+	void SetEndArrow(MCExecContext& ctxt, bool setting);
+	void GetMarkerLineSize(MCExecContext& ctxt, integer_t& r_size);
+	void SetMarkerLineSize(MCExecContext& ctxt, integer_t size);
+	void GetMarkerDrawn(MCExecContext& ctxt, bool& r_setting);
+	void SetMarkerDrawn(MCExecContext& ctxt, bool setting);
+	void GetMarkerOpaque(MCExecContext& ctxt, bool& r_setting);
+	void SetMarkerOpaque(MCExecContext& ctxt, bool setting);
+	void GetRoundEnds(MCExecContext& ctxt, bool& r_setting);
+	void SetRoundEnds(MCExecContext& ctxt, bool setting);
+	void GetDontResize(MCExecContext& ctxt, bool& r_setting);
+	void SetDontResize(MCExecContext& ctxt, bool setting);
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetShowName(MCExecContext& ctxt, bool& r_setting);
+	void SetShowName(MCExecContext& ctxt, bool setting);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetFilled(MCExecContext& ctxt, bool& r_setting);
+	void SetFilled(MCExecContext& ctxt, bool setting);
 };
 #endif

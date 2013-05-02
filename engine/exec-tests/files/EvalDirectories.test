@@ -1,0 +1,17 @@
+setup
+
+set the defaultFolder to specialFolderPath("temporary")
+
+put "evalThereIsAFolderTest" into tTestFolder
+create folder tTestFolder
+
+test tTestFolder is among the lines of the directories
+
+delete folder tTestFolder
+
+repeat for each line tLine in the directories
+	test there is a folder tLine
+	test there is not a file tLine
+end repeat
+
+teardown

@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "notify.h"
 #include "osspec.h"
 
+#include "exec.h"
+
 #include "w32dc.h"
 
 #include <locale.h>
@@ -48,6 +50,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <iphlpapi.h>
 
 int *g_mainthread_errno;
+
+extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+
+bool MCS_getcurdir_native(MCStringRef& r_path);
+bool MCS_path_append(MCStringRef p_base, MCStringRef p_component, codepoint_t p_separator, MCStringRef& r_path);
 
 // MW-2004-11-28: A null FPE signal handler.
 static void handle_fp_exception(int p_signal)
@@ -88,29 +96,28 @@ void MCS_init()
 		MClowrestimers = True;
 	MCExecPoint ep;
 	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-	MCS_query_registry(ep, NULL);
+	MCS_query_registry(ep);
 	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
 	{
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-		MCS_query_registry(ep, NULL);
+		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
 			MChttpproxy = ep . getsvalue() . clone();
 	}
 	else
 	{
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-		MCS_query_registry(ep, NULL);
+		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
 		{
 			char *t_host;
 			int4 t_port;
 			t_host = ep.getsvalue().clone();
 			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-			MCS_query_registry(ep, NULL);
+			MCS_query_registry(ep);
 			ep.ston();
 			t_port = ep.getint4();
 			ep.setstringf("%s:%d", t_host, t_port);
-			ep . setstrlen();
 			MChttpproxy = ep . getsvalue() . clone();
 			delete t_host;
 		}
@@ -201,7 +208,7 @@ void MCS_checkprocesses()
 				if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
 					t_available = 0;
 				if (t_available != 0)
-					return;
+					continue;
 
 				// MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
 				if (MCprocesses[i] . ihandle != nil)
@@ -371,8 +378,7 @@ Boolean MCS_unbackup(const char *oname, const char *nname)
 Boolean MCS_unlink(const char *path)
 {
 	char *p = MCS_resolvepath(path);
-	Boolean done = remove
-		               (p) == 0;
+	Boolean done = remove(p) == 0;
 	if (!done)
 	{ // bug in NT serving: can't delete full path from current dir
 		char dir[PATH_MAX];
@@ -389,53 +395,43 @@ Boolean MCS_unlink(const char *path)
 }
 
 // returns in native path format
-const char *MCS_tmpnam()
+bool MCS_tmpnam(MCStringRef& r_string)
 {
-	MCExecPoint ep(NULL, NULL, NULL);
-	
-	// MW-2008-06-19: Make sure fname is stored in a static to keep the (rather
-	//   unplesant) current semantics of the call.
-	static char *fname;
-	if (fname != NULL)
-		delete fname;
+	MCAutoStringRef t_path;
+	MCAutoStringRef t_stdpath;
+	MCAutoStringRef t_long_path;
+	MCAutoPointer<char> t_fname;
 
-	// TS-2008-06-18: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
-	fname = _tempnam("\\tmp", "tmp");
+	t_fname = _tempnam("\\tmp", "tmp");
+	uindex_t t_length;
 
-	char *t_ptr = (char*)strrchr(fname, '\\');
-	if (t_ptr != NULL)
-		*t_ptr = 0 ;
-	
-	MCU_path2std(fname);
-	ep.setsvalue(fname);
-	MCS_longfilepath(ep);
+	const char *t_ptr = strrchr(*t_fname, '\\');
+	if (t_ptr == nil)
+		t_length = strlen(*t_fname);
+	else
+		t_length = t_ptr - *t_fname;
 
-	if (t_ptr != NULL)
-		ep.appendstringf("/%s", ++t_ptr);
+	if (!MCStringCreateWithNativeChars((const char_t*)*t_fname, t_length, &t_path) ||
+		!MCU_path2std(*t_path, &t_stdpath) ||
+		!MCS_longfilepath(*t_stdpath, &t_long_path))
+		return false;
 
-	// MW-2008-06-19: Make sure we delete this version of fname, since we don't
-	//   need it anymore.
-	delete fname;
+	if (t_ptr == nil)
+		return MCStringCopy(*t_long_path, r_string);
 
-	// MW-2008-06-19: Use ep . getsvalue() . clone() to make sure we get a copy
-	//   of the ExecPoint's string as a NUL-terminated (C-string) string.
-	fname = ep . getsvalue() . clone();
-
-	return fname;
+	MCAutoStringRef t_tmp_name;
+	return MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
+		MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
+		MCStringCopy(*t_tmp_name, r_string);
 }
 
 // returns in native path format
-char *MCS_resolvepath(const char *path)
+bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
 {
-	if (path == NULL)
-	{
-		char *tpath = MCS_getcurdir();
-		MCU_path2native(tpath);
-		return tpath;
-	}
-	char *cstr = strclone(path);
-	MCU_path2native(cstr);
-	return cstr;
+	if (MCStringGetLength(p_path) == 0)
+		return MCS_getcurdir_native(r_resolved_path);
+
+	return MCU_path2native(p_path, r_resolved_path);
 }
 
 static inline bool is_legal_drive(char p_char)
@@ -502,12 +498,33 @@ char *MCS_get_canonical_path(const char *path)
 	return t_path;
 }
 
-char *MCS_getcurdir()
+bool MCS_getcurdir_native(MCStringRef& r_path)
 {
-	char *dptr = new char[PATH_MAX + 2];
-	GetCurrentDirectoryA(PATH_MAX +1, (LPSTR)dptr);
-	MCU_path2std(dptr);
-	return dptr;
+	MCAutoNativeCharArray t_buffer;
+	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
+	if (t_path_len == 0 || !t_buffer.New(t_path_len))
+		return false;
+	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
+		return false;
+
+	t_buffer.Shrink(t_path_len - 1);
+	return t_buffer.CreateStringAndRelease(r_path);
+}
+
+bool MCS_getcurdir(MCStringRef& r_path)
+{
+	MCAutoStringRef t_path;
+	return MCS_getcurdir_native(&t_path) &&
+		MCU_path2std(*t_path, r_path);
+}
+
+bool MCS_setcurdir(MCStringRef p_path)
+{
+	MCAutoStringRef t_new_path;
+	if (MCS_resolvepath(p_path, &t_new_path))
+		return SetCurrentDirectoryA((LPCSTR)MCStringGetCString(*t_new_path)) == TRUE;
+
+	return false;
 }
 
 Boolean MCS_setcurdir(const char *path)
@@ -518,36 +535,37 @@ Boolean MCS_setcurdir(const char *path)
 	return done;
 }
 
-#define ENTRIES_CHUNK 4096
-
-// MH-2007-03-30: [[ Bug 4293 ]] This bug is a Mac bug, but caused a prototype change to the MCS_getentries function and the use of an ExecPont to return information.
-void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed)
+bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {
-	p_context . clear();
+	MCAutoListRef t_list;
+
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
 	WIN32_FIND_DATAA data;
 	HANDLE ffh;            //find file handle
 	uint4 t_entry_count;
 	t_entry_count = 0;
 	Boolean ok = False;
-	char *tpath = MCS_getcurdir();
-	MCU_path2native(tpath);
-	char *spath = new char [strlen(tpath) + 5];//path to be searched
-	strcpy(spath, tpath);
-	if (tpath[strlen(tpath) - 1] != '\\')
-		strcat(spath, "\\");
-	strcat(spath, "*.*");
-	delete tpath;
+
+	MCAutoStringRef t_curdir_native;
+	MCAutoStringRef t_search_path;
+
+	const char *t_separator;
+	/* UNCHECKED */ MCS_getcurdir_native(&t_curdir_native);
+	if (MCStringGetCharAtIndex(*t_curdir_native, MCStringGetLength(*t_curdir_native) - 1) != '\\')
+		t_separator = "\\";
+	else
+		t_separator = "";
+	/* UNCHECKED */ MCStringFormat(&t_search_path, "%s%s*.*", MCStringGetCString(*t_curdir_native), t_separator);
+
 	/*
 	* Now open the directory for reading and iterate over the contents.
 	*/
-	ffh = FindFirstFileA(spath, &data);
+	ffh = FindFirstFileA(MCStringGetCString(*t_search_path), &data);
 	if (ffh == INVALID_HANDLE_VALUE)
-	{
-		delete spath;
-		return;
-	}
-	MCExecPoint ep(NULL, NULL, NULL);
+		return false;
+
 	do
 	{
 		if (strequal(data.cFileName, "."))
@@ -555,87 +573,155 @@ void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed)
 		if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !p_files
 		        || !(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && p_files)
 		{
-			char tbuf[PATH_MAX * 3 + U4L * 4 + 22];
+			MCAutoStringRef t_detailed_string;
 			if (p_detailed)
 			{
-				ep.copysvalue(data.cFileName, strlen(data.cFileName));
-				MCU_urlencode(ep);
+				MCAutoStringRef t_filename_string;
+				/* UNCHECKED */ MCStringCreateWithNativeChars((char_t *)data.cFileName, MCCStringLength(data.cFileName), &t_filename_string);
+				MCAutoStringRef t_urlencoded_string;
+				/* UNCHECKED */ MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
 				struct _stati64 buf;
 				_stati64(data.cFileName, &buf);
 				// MW-2007-02-26: [[ Bug 4474 ]] - Fix issue with detailed files not working on windows due to time field lengths
 				// MW-2007-12-10: [[ Bug 606 ]] - Make unsupported fields appear as empty
-				sprintf(tbuf, "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-				        (int)ep.getsvalue().getlength(), (int)ep.getsvalue().getlength(),
-				        ep.getsvalue().getstring(), buf.st_size, (long)buf.st_ctime,
-				        (long)buf.st_mtime, (long)buf.st_atime, buf.st_mode & 0777);
+				/* UNCHECKED */ MCStringFormat(&t_detailed_string,
+					"%s,%I64d,,%ld,%ld,%ld,,,,%03o,",
+					MCStringGetCString(*t_urlencoded_string),
+					buf.st_size, (long)buf.st_ctime, (long)buf.st_mtime,
+					(long)buf.st_atime, buf.st_mode & 0777);
 			}
 
 			if (p_detailed)
-				p_context . concatcstring(tbuf, EC_RETURN, t_entry_count == 0);
+				/* UNCHECKED */ MCListAppend(*t_list, *t_detailed_string);
 			else
-				p_context . concatcstring(data.cFileName, EC_RETURN, t_entry_count == 0);
+				/* UNCHECKED */ MCListAppendNativeChars(*t_list, (char_t *)data.cFileName, MCCStringLength(data.cFileName));
 
 			t_entry_count += 1;
 		}
 	}
 	while (FindNextFileA(ffh, &data));
 	FindClose(ffh);
-	delete spath;
+
+	return MCListCopy(*t_list, r_list);
 }
 
+////////////////////////////////////////////////////////////////////////////////
 
-void MCS_getDNSservers(MCExecPoint &ep)
+bool dns_servers_from_network_params(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	ULONG t_buffer_size = 0;
+	MCAutoBlock<byte_t> t_buffer;
 
-			ULONG bl = sizeof(FIXED_INFO);
-			FIXED_INFO *fi = (FIXED_INFO *)new char[bl];
-			memset(fi, 0, bl);
-	if ((errno = GetNetworkParams(fi, &bl)) == ERROR_BUFFER_OVERFLOW)
-			{
-				delete fi;
-				fi = (FIXED_INFO *)new char[bl];
-				memset(fi, 0, bl);
-		errno = GetNetworkParams(fi, &bl);
-			}
-			IP_ADDR_STRING *pIPAddr = &fi->DnsServerList;
-			if (errno == ERROR_SUCCESS && *pIPAddr->IpAddress.String)
-			{
-				uint2 i = 0;
-				do
-				{
-					ep.concatcstring(pIPAddr->IpAddress.String, EC_RETURN, i++ == 0);
-					pIPAddr = pIPAddr->Next;
-				}
-				while (pIPAddr != NULL);
-			}
-			delete fi;
+	FIXED_INFO *t_fixed_info = nil;
 
-	if (ep.getsvalue().getlength() == 0)
+	errno = GetNetworkParams(t_fixed_info, &t_buffer_size);
+	if (errno == ERROR_NO_DATA)
 	{
-		MCScreenDC *pms = (MCScreenDC *)MCscreen;
-		ep.setstaticcstring("HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\NameServer");
-		MCS_query_registry(ep, NULL);
-		char *sptr = ep.getbuffer(0);
-		uint4 l = ep.getsvalue().getlength();
-		while (l--)
-			if (sptr[l] == ' ' || sptr[l] == ',')
-				sptr[l] = '\n';
+		r_list = MCValueRetain(kMCEmptyList);
+		return true;
 	}
+	else if (errno != ERROR_BUFFER_OVERFLOW)
+		return false;
+
+	if (!t_buffer.Allocate(t_buffer_size))
+		return false;
+
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	t_fixed_info = (FIXED_INFO*)*t_buffer;
+	MCMemoryClear(t_fixed_info, t_buffer_size);
+
+	errno = GetNetworkParams(t_fixed_info, &t_buffer_size);
+
+	if (errno == ERROR_SUCCESS)
+	{
+		IP_ADDR_STRING *t_addr_string = &t_fixed_info->DnsServerList;
+		while (t_addr_string != nil && t_addr_string->IpAddress.String[0] != '\0')
+		{
+			if (!MCListAppendCString(*t_list, t_addr_string->IpAddress.String))
+				return false;
+			t_addr_string = t_addr_string->Next;
+		}
+	}
+
+	return MCListCopy(*t_list, r_list);
 }
 
-Boolean MCS_getdevices(MCExecPoint &ep)
+#define NAMESERVER_REG_KEY "HKEY_LOCAL_MACHINE\\SYSTEM\\ControlSet001\\Services\\Tcpip\\Parameters\\NameServer"
+bool dns_servers_from_registry(MCListRef& r_list)
 {
-	ep.clear();
-	return True;
+	MCAutoStringRef t_key, t_value, t_type, t_error;
+	if (!MCStringCreateWithCString(NAMESERVER_REG_KEY, &t_key))
+		return false;
+	if (!MCS_query_registry(*t_key, &t_value, &t_type, &t_error))
+		return false;
+
+	if (*t_error == nil)
+	{
+		r_list = MCValueRetain(kMCEmptyList);
+		return true;
+	}
+
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	const char_t *t_chars;
+	uindex_t t_char_count;
+	t_chars = MCStringGetNativeCharPtr(*t_value);
+	t_char_count = MCStringGetLength(*t_value);
+
+	uindex_t t_start = 0;
+
+	for (uindex_t i = 0; i < t_char_count; i++)
+	{
+		if (t_chars[i] == ' ' || t_chars[i] == ',' || t_chars[i] == '\n')
+		{
+			if (!MCListAppendNativeChars(*t_list, t_chars + t_start, i - t_start))
+				return false;
+			t_start = i + 1;
+		}
+	}
+	if (t_start < t_char_count)
+	{
+		if (!MCListAppendNativeChars(*t_list, t_chars + t_start, t_char_count - t_start))
+			return false;
+	}
+
+	return MCListCopy(*t_list, r_list);
 }
 
-Boolean MCS_getdrives(MCExecPoint &ep)
+bool MCS_getDNSservers(MCListRef& r_list)
 {
+	MCAutoListRef t_list;
+	if (!dns_servers_from_network_params(&t_list))
+		return false;
+
+	if (!MCListIsEmpty(*t_list))
+		return MCListCopy(*t_list, r_list);
+
+	return dns_servers_from_registry(r_list);
+}
+
+bool MCS_getdevices(MCListRef& r_list)
+{
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
+}
+
+bool MCS_getdrives(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	MCAutoBlock<char_t> t_buffer;
 	DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
-	char *sptr = ep.getbuffer(maxsize);
-	char *dptr = sptr;
-	GetLogicalDriveStringsA(maxsize, sptr);
+	if (!t_buffer . Allocate(maxsize) || !MCListCreateMutable('\n', &t_list))
+		return false;
+
+	char_t *sptr = *t_buffer;
+	char_t *dptr = sptr;
+	GetLogicalDriveStringsA(maxsize, (LPSTR)sptr);
 	while (True)
 	{
 		if (*sptr == '\\')
@@ -650,8 +736,9 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 					*(dptr - 1) = '\n';
 		}
 	}
-	ep.setstrlen();
-	return True;
+	return MCListAppendNativeChars(*t_list, *t_buffer, dptr - 1 - *t_buffer) &&
+		MCListCopy(*t_list, r_list);
+//	return MCStringCreateWithNativeChars(*t_buffer, dptr - 1 - *t_buffer, r_string);
 }
 
 Boolean MCS_noperm(const char *path)
@@ -666,45 +753,47 @@ Boolean MCS_noperm(const char *path)
 	return False;
 }
 
-Boolean MCS_exists(const char *path, Boolean file)
+bool MCS_native_path_exists(MCStringRef p_path, bool p_is_file)
 {
-	char *newpath = MCS_resolvepath(path);
-	//MS's stat() fails if there is a trailing '\\'. Workaround is to delete it
+	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
+	DWORD t_attrs;
+	t_attrs = GetFileAttributesA(MCStringGetCString(p_path));
+
+	if (t_attrs == INVALID_FILE_ATTRIBUTES)
+		return false;
+
+	return p_is_file == ((t_attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
+
+bool MCS_exists(MCStringRef p_path, bool p_is_file)
+{
+	MCAutoStringRef t_resolved;
 	// MW-2004-04-20: [[ Purify ]] If *newpath == 0 then we should return False
-	if (*newpath == '\0')
-	{
-		delete newpath;
-		return False;
-	}
-	
+	if (!MCS_resolvepath(p_path, &t_resolved) || MCStringGetLength(*t_resolved) == 0)
+		return false;
+
 	// MW-2008-01-15: [[ Bug 4981 ]] - It seems that stat will fail for checking
 	//   a folder 'C:' and requires that it be 'C:\'
-	if (strlen(newpath) == 2 && newpath[1] == ':')
+	if (MCStringGetLength(*t_resolved) == 2 && MCStringGetCharAtIndex(*t_resolved, 1) == ':')
 	{
-		// newpath is of form "<driveletter>:"
-		char *t_modified_path;
-		t_modified_path = new char[strlen(newpath) + 2];
-		strcpy(t_modified_path, newpath);
-		strcat(t_modified_path, "\\");
-		delete newpath;
-		newpath = t_modified_path;
-		// newpath is of form "<driverletter>:\"
+		MCAutoStringRef t_drive_string;
+		return MCStringMutableCopy(*t_resolved, &t_drive_string) &&
+			MCStringAppendChar(*t_drive_string, '\\') &&
+			MCS_native_path_exists(*t_drive_string, p_is_file);
 	}
 
 	// OK-2007-12-05 : Bug 5555, modified to allow paths with trailing backslashes on Windows.
-	if ((newpath[strlen(newpath) - 1] == '\\' || newpath[strlen(newpath) - 1] == '/')
-	        && (strlen(newpath) != 3 || newpath[1] != ':'))
-		newpath[strlen(newpath) - 1] = '\0';
+	uindex_t t_path_len = MCStringGetLength(*t_resolved);
+	char_t t_last_char = MCStringGetNativeCharAtIndex(*t_resolved, t_path_len - 1);
+	if ((t_last_char == '\\' || t_last_char == '/') &&
+		!(t_path_len == 3 && MCStringGetNativeCharAtIndex(*t_resolved, 1) == ':'))
+	{
+		MCAutoStringRef t_trimmed_string;
+		return MCStringCopySubstring(*t_resolved, MCRangeMake(0, t_path_len - 1), &t_trimmed_string) &&
+			MCS_native_path_exists(*t_trimmed_string, p_is_file);
+	}
 
-	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
-	DWORD t_attrs;
-	t_attrs = GetFileAttributesA(newpath);
-	delete newpath;
-
-	if (t_attrs == INVALID_FILE_ATTRIBUTES)
-		return False;
-
-	return file == ((t_attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+	return MCS_native_path_exists(*t_resolved, p_is_file);
 }
 
 int64_t MCS_fsize(IO_handle stream)
@@ -1010,7 +1099,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	MCU_realloc((char **)&MCprocesses, MCnprocesses,
 	            MCnprocesses + 1, sizeof(Streamnode));
 	uint4 index = MCnprocesses;
-	MCprocesses[index].name = strclone("shell");
+	MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
 	MCprocesses[index].mode = OM_NEITHER;
 	MCprocesses[index].ohandle = NULL;
 	MCprocesses[index].ihandle = new IO_header((MCWinSysHandle)hChildStdoutRd, NULL, 0, 0);
@@ -1087,7 +1176,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 	{
 		MCExecPoint ep2(ep);
 		ep2.setint(MCprocesses[index].retcode);
-		MCresult->store(ep2, False);
+		MCresult->set(ep2);
 	}
 	else
 		MCresult->clear(False);
@@ -1487,27 +1576,24 @@ uint4 MCS_getpid()
 	return _getpid();
 }
 
-const char *MCS_getaddress()
+bool MCS_getaddress(MCStringRef& r_address)
 {
-	static char *buffer;
 	if (!wsainit())
-		return "unknown";
-	if (buffer == NULL)
-		buffer = new char[MAXHOSTNAMELEN + strlen(MCcmd) + 2];
+		return MCStringCreateWithCString("unknown", r_address);
+
+	char *buffer = new char[MAXHOSTNAMELEN + 1];
 	gethostname(buffer, MAXHOSTNAMELEN);
-	strcat(buffer, ":");
-	strcat(buffer, MCcmd);
-	return buffer;
+	return MCStringFormat(r_address, "%s:&d", buffer, MCcmd);
 }
 
-const char *MCS_getmachine()
+bool MCS_getmachine(MCStringRef& r_string)
 {
-	return "x86";
+	return MCStringCopy(MCNameGetString(MCN_x86), r_string);
 }
 
-const char *MCS_getprocessor()
+MCNameRef MCS_getprocessor()
 {
-	return "x86";
+	return MCN_x86;
 }
 
 real8 MCS_getfreediskspace(void)
@@ -1517,13 +1603,9 @@ real8 MCS_getfreediskspace(void)
 	return ((real8)bs * (real8)sc * (real8)fc);
 }
 
-const char *MCS_getsystemversion()
+bool MCS_getsystemversion(MCStringRef& r_string)
 {
-	static Meta::static_ptr_t<char> buffer;
-	if (buffer == NULL)
-		buffer = new char[9 + 2 * I4L];
-	sprintf(buffer, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
-	return buffer;
+	return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
 }
 
 
@@ -1552,9 +1634,12 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 	{
 		DWORD fsize;
 		DWORD nread = 0;
-		if ((fsize = GetFileSize(hf, NULL)) == 0xFFFFFFFF
-		        || ep.getbuffer(fsize) == NULL
-		        || !ReadFile(hf, ep.getbuffer(fsize), fsize, &nread, NULL)
+		char *buf;
+		fsize = GetFileSize(hf, NULL);
+		if (fsize != 0xFFFFFFFF)
+			ep.reserve(fsize, buf);
+		if (fsize == 0xFFFFFFFF
+		        || !ReadFile(hf, buf, fsize, &nread, NULL)
 		        || nread != fsize)
 		{
 			ep.clear();
@@ -1563,7 +1648,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		}
 		else
 		{
-			ep.setlength(fsize);
+			ep.commit(fsize);
 			if (!binary)
 				ep.texttobinary();
 			MCresult->clear(False);
@@ -1719,270 +1804,239 @@ char *MCS_request_program(const MCString &message, const char *program)
 void MCS_copyresourcefork(const char *source, const char *dest)
 {}
 
-void MCS_copyresource(const char *source, const char *dest,
-                      const char *type, const char *name,
-                      const char *newid)
+bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_deleteresource(const char *source, const char *type,
-                        const char *name)
+bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_getresource(const char *source, const char *type,
-                     const char *name, MCExecPoint &ep)
+bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
 {
-	ep.clear();
-	MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-char *MCS_getresources(const char *source, const char *type)
+bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
-	return NULL;
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_setresource(const char *source, const char *type,
-                     const char *name, const char *id, const char *flags,
-                     const MCString &s)
+extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
 {
-	MCresult->sets("not supported");
+	return MCStringCreateWithCString("not supported", r_error);
 }
 
 typedef struct
 {
-	const char *token;
+	MCNameRef *token;
 	uint4 winfolder;
 }
 sysfolders;
 
 // need to add at least a temp folder and the system folder here
 static sysfolders sysfolderlist[] = {
-                                        {"desktop", CSIDL_DESKTOP},
-                                        {"fonts", CSIDL_FONTS},
-                                        {"documents", CSIDL_PERSONAL},
-                                        {"start", CSIDL_STARTMENU},
-										{"home", CSIDL_PROFILE}, //TS-2007-08-20 Added so that "home" gives something useful across all platforms
-										// MW-2012-10-08: [[ Bug 10277 ]] Maps to roming appdata folder.
-										{"support", CSIDL_APPDATA},
+                                        {&MCN_desktop, CSIDL_DESKTOP},
+                                        {&MCN_fonts, CSIDL_FONTS},
+                                        {&MCN_documents, CSIDL_PERSONAL},
+                                        {&MCN_start, CSIDL_STARTMENU},
+										{&MCN_system, CSIDL_WINDOWS},
+										{&MCN_home, CSIDL_PROFILE}, //TS-2007-08-20 Added so that "home" gives something useful across all platforms
+										{&MCN_support, CSIDL_APPDATA},
                                     };
 
-
-
-// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
-void MCS_getlongfilepath(MCExecPoint ep, char *&r_long_path, uint4 &r_length)
+bool MCS_specialfolder_to_csidl(MCStringRef p_folder, uint32_t& r_csidl)
 {
-	// Clone the original exec point so that MCS_longfilepath doesn't overwrite it
-	MCExecPoint *ep2;
-	ep2 = new MCExecPoint(ep);
-
-	// Attempt to expand the path
-	MCS_longfilepath(*ep2);
-	
-	// If the path conversion was not succesful, and ep2 was cleared, then
-	// we revert back to using the original ep.
-	MCExecPoint *ep3;
-	if (ep2 -> getsvalue() . getlength() == 0)
-		ep3 = &ep;
-	else
-		ep3 = ep2;
-
-	char *t_long_path;
-	t_long_path = (char *)malloc(ep3 -> getsvalue() . getlength() + 1);
-	memcpy(t_long_path, ep3 -> getsvalue() . getstring(), ep3 -> getsvalue() . getlength());
-	t_long_path[ep3 -> getsvalue() . getlength()] = '\0';
-
-	r_long_path = t_long_path;
-	r_length = ep3 -> getsvalue() . getlength();
-
-	delete ep2;
-}
-
-
-void MCS_getspecialfolder(MCExecPoint &ep)
-{
-	Boolean wasfound = False;
-	uint4 specialfolder = 0;
-	if (ep.getsvalue() == "temporary")
+	for (uindex_t i = 0 ; i < ELEMENTS(sysfolderlist) ; i++)
 	{
-		if (GetTempPathA(PATH_MAX, ep.getbuffer(PATH_MAX)))
+		if (MCStringIsEqualTo(p_folder, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
 		{
-			char *sptr = strrchr(ep.getbuffer(0), '\\');
-			if (sptr != NULL)
-				*sptr = '\0';
-
-			wasfound = True;
+			r_csidl = sysfolderlist[i].winfolder;
+			return true;
 		}
 	}
-	else
-		if (ep.getsvalue() == "system")
-		{
-			if (GetWindowsDirectoryA(ep.getbuffer(PATH_MAX), PATH_MAX))
-				wasfound = True;
-		}
-		else
-		{
-			if (ep.ton() == ES_NORMAL)
-			{
-				specialfolder = ep.getuint4();
-				wasfound = True;
-			}
-			else
-			{
-				uint1 i;
-				for (i = 0 ; i < ELEMENTS(sysfolderlist) ; i++)
-					if (ep.getsvalue() == sysfolderlist[i].token)
-					{
-						specialfolder = sysfolderlist[i].winfolder;
-						wasfound = True;
-						break;
-					}
-			}
-			if (wasfound)
-			{
-				LPITEMIDLIST lpiil;
-				LPMALLOC lpm;
-				SHGetMalloc(&lpm);
-				wasfound = False;
-				if (SHGetSpecialFolderLocation(HWND_DESKTOP, specialfolder,
-				                               &lpiil) == 0
-				        && SHGetPathFromIDListA(lpiil, ep.getbuffer(PATH_MAX)))
-					wasfound = True;
-				lpm->Free(lpiil);
-				lpm->Release();
-			}
-		}
-	if (wasfound)
+
+	return false;
+}
+
+// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
+bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
+{
+	// If the path conversion was not succesful, then
+	// we revert back to using the original path.
+	MCAutoStringRef t_long_path;
+	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
 	{
+		r_long_path = MCValueRetain(*t_long_path);
+		return true;
+	}
+
+	return MCStringCopy(p_short_path, r_long_path);
+}
+
+// return kMCEmptyString if path not found
+bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_special, MCStringRef& r_path)
+{
+	bool t_wasfound = false;
+	uint32_t t_special_folder = 0;
+	MCAutoStringRef t_native_path;
+	if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_temporary), kMCStringOptionCompareCaseless))
+	{
+		MCAutoNativeCharArray t_buffer;
+		uindex_t t_length;
+		t_length = GetTempPathA(0, NULL);
+		if (t_length != 0)
+		{
+			if (!t_buffer.New(t_length))
+				return false;
+			t_length = GetTempPathA(t_length, (LPSTR)t_buffer.Chars());
+			if (t_length != 0)
+			{
+				if (!t_buffer.CreateStringAndRelease(&t_native_path))
+					return false;
+				t_wasfound = true;
+			}
+		}
+	}
+	//else if (MCStringIsEqualTo(p_special, MCNameGetString(MCN_system), kMCStringOptionCompareCaseless))
+	//{
+		//char *buf;
+		//ep.reserve(PATH_MAX, buf);
+		//if (GetWindowsDirectoryA(buf, PATH_MAX))
+		//{
+		//	wasfound = True;
+		//	ep.commit(strlen(buf));
+		//}
+	//}
+	else
+	{
+		if (ctxt.ConvertToUnsignedInteger(p_special, t_special_folder) ||
+			MCS_specialfolder_to_csidl(p_special, t_special_folder))
+		{
+			LPITEMIDLIST lpiil;
+			MCAutoNativeCharArray t_buffer;
+			if (!t_buffer.New(PATH_MAX))
+				return false;
+
+			t_wasfound = (SHGetSpecialFolderLocation(HWND_DESKTOP, t_special_folder, &lpiil) == 0) &&
+				SHGetPathFromIDListA(lpiil, (LPSTR)t_buffer.Chars());
+
+			CoTaskMemFree(lpiil);
+
+			if (t_wasfound && !t_buffer.CreateStringAndRelease(&t_native_path))
+				return false;
+		}
+	}
+	if (t_wasfound)
+	{
+		MCAutoStringRef t_standard_path;
 		// TS-2008-06-16: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
 		// First we need to swap to standard path seperator
-		MCU_path2std(ep.getbuffer(0));
-		// Next copy ep.buffer into ep.svalue
-		ep.setsvalue(ep.getbuffer(0));
+		if (!MCU_path2std(*t_native_path, &t_standard_path))
+			return false;
 
 		// OK-2009-01-28: [[Bug 7452]]
 		// And call the function to expand the path - if cannot convert to a longfile path,
 		// we should return what we already had!
-		char *t_long_path;
-		uint4 t_path_length;
-		MCS_getlongfilepath(ep, t_long_path, t_path_length);
-
-		// MW-2010-10-22: [[ Bug 7988 ]] Make sure the result is empty regardless of outcome of prevous call.
-		MCresult -> clear();
-		
-		char *t_old_buffer;
-		t_old_buffer = ep . getbuffer(0);
-		ep . clear();
-		delete t_old_buffer;
-
-		ep . setbuffer(t_long_path, t_path_length);
-		ep.setstrlen();
+		return MCS_getlongfilepath(*t_standard_path, r_path);
 	}
 	else
 	{
-		ep.clear();
-		MCresult->sets("folder not found");
+		r_path = MCValueRetain(kMCEmptyString);
+		return true;
 	}
 }
 
-void MCS_shortfilepath(MCExecPoint &ep)
+bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 {
-	char *tpath = ep.getsvalue().clone();
-	char *newpath = MCS_resolvepath(tpath);
-	delete tpath;
-	if (!GetShortPathNameA(newpath, ep.getbuffer(PATH_MAX), PATH_MAX))
+	MCAutoStringRef t_resolved, t_short_path;
+	MCAutoNativeCharArray t_buffer;
+
+	if (!MCS_resolvepath(p_path, &t_resolved) ||
+		!t_buffer.New(PATH_MAX + 1))
+		return false;
+
+	if (!GetShortPathNameA(MCStringGetCString(*t_resolved), (LPSTR)t_buffer.Chars(), PATH_MAX))
 	{
-		MCresult->sets("can't get");
 		MCS_seterrno(GetLastError());
-		ep.clear();
+		r_short_path = MCValueRetain(kMCEmptyString);
+		return true;
 	}
-	else
-	{
-		MCU_path2std(ep.getbuffer(0));
-		ep.setstrlen();
-	}
-	delete newpath;
+	t_buffer.Shrink(MCCStringLength((const char*)t_buffer.Chars()));
+	return t_buffer.CreateStringAndRelease(&t_short_path) &&
+		MCU_path2std(*t_short_path, r_short_path);
+}
+
+bool MCS_path_append(MCStringRef p_base, unichar_t p_separator, MCStringRef p_component, MCStringRef& r_path)
+{
+	MCAutoStringRef t_path;
+	if (!MCStringMutableCopy(p_base, &t_path))
+		return false;
+
+	if (MCStringGetCharAtIndex(p_base, MCStringGetLength(p_base) - 1) != p_separator &&
+		!MCStringAppendChars(*t_path, &p_separator, 1))
+		return false;
+
+	return MCStringAppend(*t_path, p_component) && MCStringCopy(*t_path, r_path);
 }
 
 #define PATH_DELIMITER '\\'
 
 
-void MCS_longfilepath(MCExecPoint &ep)
+bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
 {
-	char *tpath = ep.getsvalue().clone();
-	char *shortpath = MCS_resolvepath(tpath);
-	delete tpath;
-	char *longpath = ep.getbuffer(PATH_MAX);
-	char *p, *pStart;
-	char buff[PATH_MAX];
-	WIN32_FIND_DATAA wfd;
-	HANDLE handle;
-	int i;
+	MCAutoStringRef t_resolved_path;
+	if (!MCS_resolvepath(p_path, &t_resolved_path))
+		return false;
 
-	// Keep strings null-terminated
-	*buff = '\0';
-	*longpath = '\0';
-	//
-	p = shortpath;
-	while (p != NULL)
+	MCAutoStringRef t_long_path;
+	if (!MCStringCreateMutable(0, &t_long_path))
+		return false;
+
+	MCAutoStringRefArray t_components;
+	if (!MCStringsSplit(*t_resolved_path, '\\', t_components.PtrRef(), t_components.CountRef()))
+		return false;
+
+	for (uindex_t i = 0; i < t_components.Count(); i++)
 	{
-		// Find next
-		p = strchr(pStart = p, PATH_DELIMITER);
-		// See if a token was found
-		if (p != pStart)
+		if (MCStringGetCharAtIndex(t_components[i], 1) == ':')
 		{
-			i = strlen(buff);
-			// Append token to temp buffer
-			if (p == NULL)
-			{
-				strcpy(buff + i, pStart);
-			}
-			else
-			{
-				*p = '\0';
-				strcpy(buff + i, pStart);
-				*p = PATH_DELIMITER;
-			}
-			// Copy token unmodified if drive specifier
-			if (strchr(buff + i, ':') != NULL)
-				strcat(longpath, buff + i);
-			else
-			{
-				// Convert token to long name
-				handle = FindFirstFileA(buff, &wfd);
-				if (handle == INVALID_HANDLE_VALUE)
-				{
-					MCresult->sets("can't get");
-					MCS_seterrno(GetLastError());
-					ep.clear();
-					delete shortpath;
-					return;
-				}
-				strcat(longpath, wfd.cFileName);
-				FindClose(handle);
-			}
+			if (!MCStringAppend(*t_long_path, t_components[i]))
+				return false;
 		}
-		// Copy terminator
-		if (p != NULL)
+		else
 		{
-			buff[i = strlen(buff)] = *p;
-			buff[i + 1] = '\0';
-			longpath[i = strlen(longpath)] = *p;
-			longpath[i + 1] = '\0';
+			MCAutoStringRef t_short_path;
+			if (!MCS_path_append(*t_long_path, PATH_DELIMITER, t_components[i], &t_short_path))
+				return false;
+
+			// Convert token to long name
+			WIN32_FIND_DATAA wfd;
+			HANDLE handle;
+
+			handle = FindFirstFileA(MCStringGetCString(*t_short_path), &wfd);
+			if (handle == INVALID_HANDLE_VALUE)
+			{
+				MCS_seterrno(GetLastError());
+				r_long_path = MCValueRetain(kMCEmptyString);
+				return true;
+			}
+			MCAutoStringRef t_filename;
+			bool t_success = MCStringAppendFormat(*t_long_path, "\\%s", wfd.cFileName);
+			FindClose(handle);
+			if (!t_success)
+				return false;
 		}
-		// Bump pointer
-		if (p)
-			p++;
 	}
-	MCU_path2std(ep.getbuffer(0));
-	ep.setstrlen();
-	delete shortpath;
+
+	return MCU_path2std(*t_long_path, r_long_path);
 }
 
-Boolean MCS_createalias(char *srcpath, char *dstpath)
+Boolean MCS_createalias(const char *srcpath, const char *dstpath)
 {
 	HRESULT err;
 	char *source = MCS_resolvepath(srcpath);
@@ -2026,17 +2080,21 @@ Boolean MCS_createalias(char *srcpath, char *dstpath)
 	return SUCCEEDED(err);
 }
 
-void MCS_resolvealias(MCExecPoint &ep)
+bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error)
 {
-	char *tpath = ep.getsvalue().clone();
-	char *source = MCS_resolvepath(tpath);
-	delete tpath;
-	char *dest = ep.getbuffer(PATH_MAX);
+	MCAutoStringRef t_resolved_path;
+	
+	if (!MCS_resolvepath(p_path, &t_resolved_path))
+		return false;
+	
+	MCAutoNativeCharArray t_dest;
+	if (!t_dest.New(PATH_MAX))
+		return false;
+
 	HRESULT hres;
 	IShellLinkA* psl;
-	char szGotPath[PATH_MAX];
 	WIN32_FIND_DATA wfd;
-	*dest = 0;
+	t_dest.Chars()[0] = 0;
 	hres = CoCreateInstance(CLSID_ShellLink, NULL, CLSCTX_INPROC_SERVER,
 	                        IID_IShellLinkA, (LPVOID *) &psl);
 	if (SUCCEEDED(hres))
@@ -2046,46 +2104,44 @@ void MCS_resolvealias(MCExecPoint &ep)
 		if (SUCCEEDED(hres))
 		{
 			WORD wsz[PATH_MAX];
-			MultiByteToWideChar(CP_ACP, 0, source, -1, (LPWSTR)wsz, PATH_MAX);
+			MultiByteToWideChar(CP_ACP, 0, MCStringGetCString(*t_resolved_path), -1, (LPWSTR)wsz, PATH_MAX);
 			hres = ppf->Load((LPCOLESTR)wsz, STGM_READ);
 			if (SUCCEEDED(hres))
 			{
 				hres = psl->Resolve(HWND_DESKTOP, SLR_ANY_MATCH|SLR_NO_UI|SLR_UPDATE);
 				if (SUCCEEDED(hres))
 				{
-					hres = psl->GetPath(szGotPath, PATH_MAX, (WIN32_FIND_DATAA *)&wfd,
+					hres = psl->GetPath((char*)t_dest.Chars(), PATH_MAX, (WIN32_FIND_DATAA *)&wfd,
 					                    SLGP_SHORTPATH);
-					lstrcpyA(dest, szGotPath);
 				}
 			}
 			ppf->Release();
 		}
 		psl->Release();
 	}
-	delete source;
 	if (SUCCEEDED(hres))
 	{
-		MCU_path2std(ep.getbuffer(0));
-		ep.setstrlen();
+		MCAutoStringRef t_std_path;
+		t_dest.Shrink(MCCStringLength((char*)t_dest.Chars()));
+		return t_dest.CreateStringAndRelease(&t_std_path) && MCU_path2std(*t_std_path, r_resolved);
 	}
 	else
 	{
-		MCresult->sets("can't get");
 		MCS_seterrno(GetLastError());
-		ep.clear();
+		return MCStringCreateWithCString("can't get", r_error);
 	}
 }
 
-void MCS_doalternatelanguage(MCString &s, const char *langname)
+void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
 	MCScriptEnvironment *t_environment;
-	t_environment = MCscreen -> createscriptenvironment(langname);
+	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
 	if (t_environment == NULL)
 		MCresult -> sets("alternate language not found");
 	else
 	{
 		MCExecPoint ep(NULL, NULL, NULL);
-		ep . setsvalue(s);
+		ep . setsvalue(MCStringGetOldString(p_script));
 		ep . nativetoutf8();
 		
 		char *t_result;
@@ -2109,10 +2165,14 @@ void MCS_doalternatelanguage(MCString &s, const char *langname)
 // {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
 DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
 
-void MCS_alternatelanguages(MCExecPoint &ep)
+bool MCS_alternatelanguages(MCListRef& r_list)
 {
-	ep.clear();
+	MCAutoListRef t_list;
+	
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
+	bool t_success = true;
 	HRESULT t_result;
 	t_result = S_OK;
 
@@ -2129,19 +2189,14 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 	if (t_result == S_OK)
 	{
 		GUID t_cls_uuid;
-		unsigned int t_index;
-		t_index = 0;
 
-		while(t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
+		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
 		{
 			LPOLESTR t_prog_id;
 			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
 			{
-				MCExecPoint t_unicode_ep(NULL, NULL, NULL);
-				t_unicode_ep . setsvalue(MCString((char *)t_prog_id, wcslen(t_prog_id) * 2));
-				t_unicode_ep . utf16tonative();
-				ep . concatmcstring(t_unicode_ep . getsvalue(), EC_RETURN, t_index == 0);
-				t_index += 1;
+				MCAutoStringRef t_string;
+				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
 
 				CoTaskMemFree(t_prog_id);
 			}
@@ -2153,6 +2208,8 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 
 	if (t_cat_info != NULL)
 		t_cat_info -> Release();
+	
+	return t_success && MCListCopy(*t_list, r_list);
 }
 
 struct  LangID2Charset
@@ -2237,7 +2294,7 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 	return IsDBCSLeadByteEx(codepage, *s);
 }
 
-static void MCS_do_launch(char *p_document)
+static void MCS_do_launch(const char *p_document)
 {
 	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
 	//   things always appear on top...
@@ -2278,12 +2335,11 @@ static void MCS_do_launch(char *p_document)
 		MCresult -> clear();
 }
 
-void MCS_launch_document(char *p_document)
+void MCS_launch_document(const char *p_document)
 {
 	char *t_native_document;
 
 	t_native_document = MCS_resolvepath(p_document);
-	delete p_document;
 
 	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
 	//   pointer to do_launch!
@@ -2292,12 +2348,9 @@ void MCS_launch_document(char *p_document)
 	delete t_native_document;
 }
 
-void MCS_launch_url(char *p_document)
+void MCS_launch_url(const char *p_document)
 {
 	MCS_do_launch(p_document);
-	
-	// MW-2007-12-13: <p_document> is owned by the callee
-	delete p_document;
 }
 
 MCSysModuleHandle MCS_loadmodule(const char *p_filename)
@@ -2359,17 +2412,18 @@ uint32_t MCS_getsyserror(void)
 	return GetLastError();
 }
 
-bool MCS_mcisendstring(const char *p_command, char p_buffer[256])
+bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 {
 	DWORD t_error_code;
-	t_error_code = mciSendStringA(p_command, p_buffer, 255, NULL);
-	if (t_error_code == 0)
-		return true;
+	char t_buffer[256];
+	t_buffer[0] = '\0';
+	t_error_code = mciSendStringA(MCStringGetCString(p_command), t_buffer, 255, NULL);
+	r_error = t_error_code != 0;
+	if (!r_error)
+		return MCStringCreateWithCString(t_buffer, r_result);
 
-	if (!mciGetErrorStringA(t_error_code, p_buffer, 255))
-		sprintf(p_buffer, "Error %d", t_error_code);
-
-	return false;
+	return mciGetErrorStringA(t_error_code, t_buffer, 255) &&
+		MCStringCreateWithCString(t_buffer, r_result);
 }
 
 void MCS_system_alert(const char *p_title, const char *p_message)
@@ -2420,7 +2474,7 @@ static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_l
 	return true;
 }
 
-static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, void *p_data)
+static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
 {
 	DWORD t_written;
 	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
@@ -2457,13 +2511,13 @@ static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
 
 // MW-2010-05-09: Updated to add 'elevated' parameter for executing binaries
 //   at increased privilege level.
-void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
+void MCS_startprocess(MCNameRef p_name, const char *doc, Open_mode mode, Boolean elevated)
 {
 	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
 	Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
 	MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
 	            sizeof(Streamnode));
-	MCprocesses[MCnprocesses].name = name;
+	MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(p_name);
 	MCprocesses[MCnprocesses].mode = mode;
 	MCprocesses[MCnprocesses].ihandle = NULL;
 	MCprocesses[MCnprocesses].ohandle = NULL;
@@ -2484,12 +2538,11 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 	t_error = nil;
 	if (created)
 	{
-		char *cmdline = name;
-		if (doc != NULL && *doc != '\0')
-		{
-			cmdline = new char[strlen(name) + strlen(doc) + 4];
-			sprintf(cmdline, "%s \"%s\"", name, doc);
-		}
+		MCAutoStringRef t_cmdline;
+		if (doc != nil && *doc != '\0')
+			/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), doc);
+		else
+			t_cmdline = MCNameGetString(p_name);
 		
 		// There's no such thing as Elevation before Vista (majorversion 6)
 		if (!elevated || MCmajorosversion < 0x0600)
@@ -2525,7 +2578,7 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 				siStartInfo.hStdInput = hChildStdinRd;
 				siStartInfo.hStdOutput = hChildStdoutWr;
 				siStartInfo.hStdError = hChildStderrWr;
-				if (CreateProcessA(NULL, cmdline, NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
+				if (CreateProcessA(NULL, (LPSTR)MCStringGetCString(*t_cmdline), NULL, NULL, TRUE, CREATE_NEW_CONSOLE, NULL, NULL, &siStartInfo, &piProcInfo))
 				{
 					t_process_handle = piProcInfo . hProcess;
 					t_process_id = piProcInfo . dwProcessId;
@@ -2596,6 +2649,8 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 					}
 
 					// Write out the cmd line and env strings
+					const char *cmdline;
+					cmdline = MCStringGetCString(*t_cmdline);
 					if (write_blob_to_pipe(t_output_pipe, strlen(cmdline) + 1, cmdline) &&
 						write_blob_to_pipe(t_output_pipe, t_env_length, t_env_strings))
 					{
@@ -2636,13 +2691,6 @@ void MCS_startprocess(char *name, char *doc, Open_mode mode, Boolean elevated)
 					t_error = "access denied";
 				created = False;
 			}
-		}
-
-		if (doc != NULL)
-		{
-			if (*doc != '\0')
-				delete cmdline;
-			delete doc;
 		}
 	}
 	if (created)

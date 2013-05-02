@@ -109,7 +109,7 @@ public:
 
 	void destroy();
 	Boolean isempty();
-	void stackprops(MCExecPoint &, Properties p);
+	bool stackprops(MCExecContext& ctxt, Properties p_property, MCListRef& r_list);
 	Boolean doaccelerator(KeySym key);
 	void addaccelerator(MCButton *button, MCStack *stack, uint2 key, uint1 mods);
 	void deleteaccelerator(MCButton *button, MCStack *stack);

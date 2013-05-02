@@ -75,6 +75,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libexternalv1", "libexterna
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "revandroid", "revmobile\revandroid.vcproj", "{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
+EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgif", "thirdparty\libgif\libgif.vcproj", "{09751ABE-310B-4324-BACE-F7FFDA2299DE}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libopenssl", "thirdparty\libopenssl\libopenssl.vcproj", "{0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE}"
@@ -219,6 +221,10 @@ Global
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Debug|Win32.Build.0 = Debug|Win32
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Release|Win32.ActiveCfg = Debug|Win32
 		{1B9ADC87-EB90-4E50-BC80-C1C7D2F40BD4}.Release|Win32.Build.0 = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Debug|Win32.Build.0 = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.ActiveCfg = Release|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493718999}.Release|Win32.Build.0 = Release|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Debug|Win32.ActiveCfg = Debug|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Debug|Win32.Build.0 = Debug|Win32
 		{09751ABE-310B-4324-BACE-F7FFDA2299DE}.Release|Win32.ActiveCfg = Debug|Win32

@@ -1,0 +1,6 @@
+setup
+
+test the processor is not empty
+test the processor is among the items of "unknown,x86,motorola powerpc,i386,arm"
+
+teardown

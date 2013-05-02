@@ -322,18 +322,28 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemListFontFamilies(MCExecPoint& ep)
+bool MCSystemListFontFamilies(MCListRef& r_names)
 {
-	ep . clear();
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 	for(NSString *t_family in [UIFont familyNames])
-		ep . concatcstring([t_family cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, ep . getsvalue() . getlength() == 0);
+		if (!MCListAppendCString(*t_list, [t_family cStringUsingEncoding: NSMacOSRomanStringEncoding]))
+			return false;
+
+	return MCListCopy(*t_list, r_names);
 }
 
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
+bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
 {
-	ep . clear();
-	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: p_family encoding: NSMacOSRomanStringEncoding]])
-		ep . concatcstring([t_font cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, ep . getsvalue() . getlength() == 0);
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+	for(NSString *t_font in [UIFont fontNamesForFamilyName: [NSString stringWithCString: MCStringGetCString(p_family) encoding: NSMacOSRomanStringEncoding]])
+		if (!MCListAppendCString(*t_list, [t_font cStringUsingEncoding: NSMacOSRomanStringEncoding]))
+			return false;
+
+	return MCListCopy(*t_list, r_styles);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1256,7 +1266,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
     {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
-	
+    
     {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
     {false, "mobileSensorReading", MCHandleSensorReading, nil},
@@ -1312,7 +1322,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
 	{false, "mobileShowStatusBar", MCHandleShowStatusBar, nil},
 	{false, "mobileHideStatusBar", MCHandleHideStatusBar, nil},
-    
+	
 	{true, "iphonePick", MCHandlePick, nil},
 	{true, "iphonePickDate", MCHandlePickDate, nil},
     
@@ -1423,7 +1433,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
     {false, "iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
     {false, "iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
-
+    
     {true, "mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
     {false, "mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
     {true, "mobileCreateEvent", MCHandleCreateEvent, nil},                 // create event in calendar // UI

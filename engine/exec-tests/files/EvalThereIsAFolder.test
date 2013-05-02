@@ -1,0 +1,16 @@
+setup
+
+set the defaultFolder to specialFolderPath("temporary")
+
+put "evalThereIsAFolderTest" into tTestFolder
+create folder tTestFolder
+
+test there is a folder tTestFolder
+test not (there is not a folder tTestFolder)
+
+delete folder tTestFolder
+
+test not (there is a folder tTestFolder)
+test there is not a folder tTestFolder
+
+teardown

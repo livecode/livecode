@@ -660,7 +660,6 @@ void xdnd_target_event_loop ( XEvent xevent )
 				
 				uint2 t_old_modstate = MCmodifierstate ;
 				MCmodifierstate = make_modifier_state(&xevent);
-				// The call to wmdragdrop _may_ end up calling fetchdragdata, which will do the rest of the DnD protocol.
 				MCdispatcher -> wmdragdrop ( target_window );
 				MCmodifierstate = t_old_modstate ;
 
@@ -683,7 +682,6 @@ void xdnd_target_event_loop ( XEvent xevent )
 			                          D n D   S O U R C E 
 
 =========================================================================================*/
-
 MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)
 {
 
@@ -703,7 +701,6 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 	// Loop over all types returned by p_pasteboard -> Query ()
 	MCTransferType *t_ttypes ;
 	uint4 ntypes ;
-	MCSharedString *t_data ;
 	MCXPasteboard * t_pasteboard ;
 	
 	MCDragAction t_dragactiondone = DRAG_ACTION_NONE ;
@@ -715,8 +712,15 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 	
 	for ( uint4 a = 0 ; a < ntypes ; a++)
 	{
+#ifdef SHARED_STRING
+		MCSharedString *t_data ;
 		if ( p_pasteboard -> Fetch ( t_ttypes[a], t_data ) )
 			MCtransferstore -> addRevType ( t_ttypes[a], t_data) ;
+#else
+		MCAutoStringRef t_data;
+		if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
+			MCtransferstore -> addRevType ( t_ttypes[a], *t_data) ;
+#endif
 	}
 	
 	MCtransferstore -> apply_to_window ( last_window ) ;
@@ -908,15 +912,22 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 																								XGetAtomName ( m_display, xevent.xselectionrequest.property ) );
 #endif
 
-						MCSharedString * t_string ;
 						MCTransferType t_type ;
 						MCMIMEtype * t_mime_type ;
 						
 						t_mime_type = new MCMIMEtype ( dpy, xevent.xselectionrequest.target ) ;
 						t_type = t_mime_type->asRev() ;
 						last_target = xevent.xselectionrequest.target ;
+						
+#ifdef SHARED_STRING
+						MCSharedString * t_string ;
 						if ( t_pasteboard->Fetch_MIME ( t_mime_type, t_string ) )
 							xdnd_selection_send( &xevent.xselectionrequest, t_string -> Get() . getstring() , t_string -> Get() . getlength() ) ;
+#else
+						MCAutoStringRef t_string ;
+						if ( t_pasteboard->Fetch_MIME ( t_mime_type, &t_string ) )
+							xdnd_selection_send( &xevent.xselectionrequest, MCStringGetCString(*t_string), MCStringGetLength(*t_string) ) ;
+#endif
 						xdnd_stage = XDND_STAGE_WAITING ;
 					}
 				break;
@@ -976,7 +987,6 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 }
 
 
-
 /*=========================================================================================
 
 			             O L D     E N G I N E    I N T E R F A C E
@@ -989,12 +999,6 @@ const char *RevTypeToString(MCTransferType p_type);
 MCTransferType MCScreenDC::querydragdata(void)
 {
 	return TRANSFER_TYPE_NULL ;
-}
-
-
-MCSharedString *MCScreenDC::fetchdragdata(void)
-{
-	return NULL;
 }
 
 

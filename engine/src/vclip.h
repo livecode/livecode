@@ -28,6 +28,9 @@ class MCVideoClip : public MCObject
 	uint2 framerate;
 	uint1 *frames;
 	uint4 size;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCVideoClip();
 	MCVideoClip(const MCVideoClip &sref);
@@ -35,10 +38,15 @@ public:
 	virtual ~MCVideoClip();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#ifdef OLD_EXEC
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+#endif
 	virtual Boolean del();
 	virtual void paste(void);
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
 	MCVideoClip *clone();
 	char *getfile();
 	real8 getscale()
@@ -86,5 +94,18 @@ public:
 		return (MCVideoClip *)MCDLlist::remove
 			       ((MCDLlist *&)list);
 	}
+	
+	////////// PROPERTY ACCESSORS
+
+	void GetDontRefresh(MCExecContext& ctxt, bool& r_setting);
+	void SetDontRefresh(MCExecContext& ctxt, bool setting);
+	void GetFrameRate(MCExecContext& ctxt, integer_t*& r_rate);
+	void SetFrameRate(MCExecContext& ctxt, integer_t* p_rate);
+	void GetScale(MCExecContext& ctxt, double& r_scale);
+	void SetScale(MCExecContext& ctxt, double p_scale);
+	void GetSize(MCExecContext& ctxt, integer_t& r_size);
+	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
+	void SetText(MCExecContext& ctxt, MCStringRef p_text);
+
 };
 #endif

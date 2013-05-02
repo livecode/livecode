@@ -74,6 +74,7 @@ public:
 	MCCardlist();
 	~MCCardlist();
 	void trim();
+	bool GetRecent(MCExecContext& ctxt, MCStack *stack, Properties which, MCStringRef& r_props);
 	void getprop(Properties prop, MCStack *stack, MCExecPoint &);
 	void getnames(MCStack *stack, MCExecPoint &);
 	void getlongids(MCStack *stack, MCExecPoint &);

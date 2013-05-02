@@ -1,0 +1,22 @@
+setup
+
+local tValue
+put 1 into tValue["a"]
+
+test "abcd" is not an array
+test not ("abcd" is an array)
+
+test 1 is not an array
+test not (1 is an array)
+
+test 1.5 is not an array
+test not (1.5 is an array)
+
+test 1,2,3 is not an array
+test not (1,2,3 is an array)
+
+
+test tValue is an array
+test not (tValue is not an array)
+
+teardown

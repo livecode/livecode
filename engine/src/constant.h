@@ -30,5 +30,7 @@ public:
 	MCConstant(const MCString &s, const real8 &n) : svalue(s), nvalue(n)
 	{ }
 	virtual Exec_stat eval(MCExecPoint &ep);
+	
+	virtual void compile(MCSyntaxFactoryRef ctxt);
 };
 #endif

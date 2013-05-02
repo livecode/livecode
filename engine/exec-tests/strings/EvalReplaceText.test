@@ -1,0 +1,9 @@
+setup
+
+test-error replaceText("abcd", "[[[", "efgh")
+
+test replaceText("abc abc", "a", empty) is "bc bc"
+test replaceText("abc", "xxx", empty) is "abc"
+test replaceText("abc abc", ".", "xxx") is "xxxxxxxxxxxxxxxxxxxxx"
+
+teardown

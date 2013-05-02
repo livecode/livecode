@@ -1,0 +1,12 @@
+setup
+create field
+
+set the text of the last field to "abc"
+
+select char 1 to -1 of the last field
+test the selectedText is "abc"
+
+select empty
+test the selectedText is empty
+
+teardown

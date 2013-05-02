@@ -2390,7 +2390,12 @@ MCStack *MCHcstak::build()
 	return sptr;
 }
 
-IO_stat hc_import(char *name, IO_handle stream, MCStack *&sptr)
+/* WRAPPER */ IO_stat hc_import(MCStringRef p_name, IO_handle p_stream, MCStack *&p_stack)
+{
+	return hc_import(MCStringGetCString(p_name), p_stream, *&p_stack);
+}
+
+IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 {
 	maxid = 0;
 	delete MChcstat;
@@ -2402,10 +2407,7 @@ IO_stat hc_import(char *name, IO_handle stream, MCStack *&sptr)
 	uint2 startlen = strlen(hcbuffer);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
-	{
 		sptr = hcstak->build();
-		delete name;
-	}
 	delete hcbuffer;
 	delete hcstak;
 	if (!MClockerrors && strlen(MChcstat) != startlen)

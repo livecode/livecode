@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "scriptpt.h"
 #include "execpt.h"
 
+#include "syntax.h"
+
 Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
@@ -32,8 +34,16 @@ Parse_stat MCLiteral::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLiteral::eval(MCExecPoint &ep)
 {
-	ep.setnameref_unsafe(value);
+	ep.setvalueref(value);
 	return ES_NORMAL;
+}
+
+void MCLiteral::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalConstant(ctxt, value);
+	MCSyntaxFactoryEvalResult(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
 }
 
 Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
@@ -47,7 +57,7 @@ Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
 	// MW-2013-04-12: [[ Bug 10837 ]] Make sure we set 'both' when evaluating the
 	//   literal. Not doing this causes problems for things like 'numberFormat'.
 	if (nvalue == BAD_NUMERIC)
-		ep.setnameref_unsafe(value);
+		ep.setvalueref_nullable(value);
 	else
 		ep.setboth(MCNameGetOldString(value), nvalue);
 	return ES_NORMAL;

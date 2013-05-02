@@ -91,9 +91,9 @@ struct MCFieldCharacterStyle
 	
 	uint32_t text_color;
 	uint32_t background_color;
-	MCNameRef link_text;
-	MCNameRef image_source;
-	MCNameRef metadata;
+	MCStringRef link_text;
+	MCStringRef image_source;
+	MCStringRef metadata;
 	MCNameRef text_font;
 	uint2 text_style;
 	uint2 text_size;
@@ -219,6 +219,9 @@ class MCField : public MCControl
 	static uint2 composecursorindex;
 	static uint1 composeconvertingsi;
 	static uint1 composeconvertingei;
+
+	static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCField();
 	MCField(const MCField &fref);
@@ -226,6 +229,8 @@ public:
 	virtual ~MCField();
 	virtual Chunk_term gettype() const;
 	virtual const char *gettypestring();
+
+	virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
 	bool visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor* p_visitor);
 
@@ -245,8 +250,8 @@ public:
 	virtual void select();
 	virtual uint2 gettransient() const;
 	virtual void setrect(const MCRectangle &nrect);
-	virtual Exec_stat getprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
-	virtual Exec_stat setprop(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
+	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual void undo(Ustruct *us);
 	virtual void recompute();
 
@@ -397,37 +402,43 @@ public:
 	Exec_stat sethilitedlines(const MCString &,Boolean forcescroll = True);
 	void hiliteline(int2 x, int2 y);
 
-	void locchar(MCExecPoint &ep, Boolean click);
-	void loccharchunk(MCExecPoint &ep, Boolean click);
-	void locchunk(MCExecPoint &ep, Boolean click);
-	void locline(MCExecPoint &ep, Boolean click);
-	void loctext(MCExecPoint &ep, Boolean click);
+	bool locchar(Boolean click, MCStringRef& r_string);
+	bool loccharchunk(Boolean click, MCStringRef& r_string);
+	bool locchunk(Boolean click, MCStringRef& r_string);
+	bool locline(Boolean click, MCStringRef& r_string);
+	bool loctext(Boolean click, MCStringRef& r_string);
 	Boolean locmark(Boolean wholeline, Boolean wholeword,
 	                Boolean click, Boolean chunk, Boolean inc_cr, int4 &si, int4 &ei);
 
-	void foundchunk(MCExecPoint &ep);
-	void foundline(MCExecPoint &ep);
-	void foundloc(MCExecPoint &ep);
-	void foundtext(MCExecPoint &ep);
+	bool foundchunk(MCStringRef& r_string);
+	bool foundline(MCStringRef& r_string);
+	bool foundloc(MCStringRef& r_string);
+	bool foundtext(MCStringRef& r_string);
 	Boolean foundmark(Boolean wholeline, Boolean inc_cr, int4 &si, int4 &ei);
 
-	void selectedchunk(MCExecPoint &ep);
-	void selectedline(MCExecPoint &ep);
-	void selectedloc(MCExecPoint &ep);
+	bool selectedchunk(MCStringRef& r_string);
+	bool selectedline(MCStringRef& r_string);
+	bool selectedloc(MCStringRef& r_string);
 	void selectedtext(MCExecPoint &ep);
+	bool selectedtext(MCStringRef& r_string);
 	Boolean selectedmark(Boolean wholeline, int4 &si, int4 &ei,
 	                     Boolean force, Boolean inc_cr);
 
-	void returnchunk(MCExecPoint &ep, int4 si, int4 ei);
-	void returnline(MCExecPoint &ep, int4 si, int4 ei);
-	void returnloc(MCExecPoint &ep, int4 si);
+	bool returnchunk(int4 si, int4 ei, MCStringRef& r_string);
+	bool returnline(int4 si, int4 ei, MCStringRef& r_string);
+	bool returnloc(int4 si, MCStringRef& r_string);
+
 	void returntext(MCExecPoint &ep, int4 si, int4 ei);
+	bool returntext(int4 si, int4 ei, MCStringRef& r_string);
 
 	void charstoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep, uint4& sl, uint4& el);
 	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
+#ifdef SHARED_STRING
 	MCSharedString *pickleselection(void);
+#endif
+	bool pickleselection(MCStringRef& r_string);
 
 	void cuttext();
 	void copytext();
@@ -447,6 +458,7 @@ public:
 	Exec_stat sethtml(uint4 parid, const MCString &data);
 	Exec_stat setrtf(uint4 parid, const MCString &data);
 	Exec_stat setstyledtext(uint4 parid, MCExecPoint& ep);
+	void setstyledtext(uint32_t part_id, MCArrayRef p_text);
 	Exec_stat setpartialtext(uint4 parid, const MCString &data, bool unicode);
 	Exec_stat gethtml(uint4 parid, MCExecPoint &ep);
 	Exec_stat getparagraphhtml(MCExecPoint &ep, MCParagraph *start, MCParagraph *end);
@@ -461,12 +473,13 @@ public:
 
 	MCParagraph *rtftoparagraphs(const MCString &data);
 	MCParagraph *styledtexttoparagraphs(MCExecPoint& ep);
+	MCParagraph *styledtexttoparagraphs(MCArrayRef p_array);
 	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
 	
-	MCParagraph *parsestyledtextappendparagraph(MCVariableValue *p_style, const char *metadata, bool p_split, MCParagraph*& x_paragraphs);
-	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCVariableValue *p_style, const char *p_initial, const char *p_final, const char *p_metadata, bool p_is_unicode);
-	void parsestyledtextblockarray(MCVariableValue *p_block_value, MCParagraph*& x_paragraphs);
-	void parsestyledtextarray(MCVariableArray *p_styled_text, bool p_paragraph_break, MCParagraph*& x_paragraphs);
+	MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCNameRef metadata, bool p_split, MCParagraph*& x_paragraphs);
+	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode);
+	void parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs);
+	void parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_break, MCParagraph*& x_paragraphs);
 	
 	MCCdata *getcdata(void) {return fdata;}
 	
@@ -484,21 +497,35 @@ public:
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, either as unicode
 	//   or native encoding.
 	void exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
+	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, bool as_unicode, MCStringRef& r_string);
+
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices. The output is encoded in either unicode or native.
 	void exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
 	void exportasplaintext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool as_unicode);
+	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices and line breaks.
 	void exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
+	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to rtf.
 	void exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index);
 	void exportasrtftext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index);
+	bool exportasrtftext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
+	bool exportasrtftext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
+
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to (livecode) html.
 	void exportashtmltext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_effective);
 	void exportashtmltext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool p_effective);
+	bool exportashtmltext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
+	bool exportashtmltext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_effective, MCStringRef& r_string);
+
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to styled text arrays.
 	void exportasstyledtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool p_formatted, bool p_effective);
+	bool exportasstyledtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_formatted, bool p_effective, MCArrayRef &r_array);
 
 	// MW-2012-03-07: [[ FieldImport ]] Conver the htmlText string to a list of paragraphs.
 	MCParagraph *importhtmltext(const MCString& p_data);
@@ -536,5 +563,85 @@ public:
 
 	bool imagechanged(MCImage *p_image, bool p_deleting);
 
+
+	////////// PROPERTY SUPPORT METHODS
+
+	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
+
+	////////// PROPERTY ACCESSORS
+
+	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
+	void SetAutoTab(MCExecContext& ctxt, bool flag);
+	void GetDontSearch(MCExecContext& ctxt, bool& r_flag);
+	void SetDontSearch(MCExecContext& ctxt, bool flag);
+	void GetDontWrap(MCExecContext& ctxt, bool& r_flag);
+	void SetDontWrap(MCExecContext& ctxt, bool flag);
+	void GetFixedHeight(MCExecContext& ctxt, bool& r_flag);
+	void SetFixedHeight(MCExecContext& ctxt, bool flag);
+	void GetLockText(MCExecContext& ctxt, bool& r_flag);
+	void SetLockText(MCExecContext& ctxt, bool flag);
+	void GetSharedText(MCExecContext& ctxt, bool& r_flag);
+	void SetSharedText(MCExecContext& ctxt, bool flag);
+	void GetShowLines(MCExecContext& ctxt, bool& r_flag);
+	void SetShowLines(MCExecContext& ctxt, bool flag);
+	void GetHGrid(MCExecContext& ctxt, bool& r_flag);
+	void SetHGrid(MCExecContext& ctxt, bool flag);
+	void GetVGrid(MCExecContext& ctxt, bool& r_flag);
+	void SetVGrid(MCExecContext& ctxt, bool flag);
+	void GetStyle(MCExecContext& ctxt, intenum_t& r_style);
+	void SetStyle(MCExecContext& ctxt, intenum_t p_style);
+	void GetAutoHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoHilite(MCExecContext& ctxt, bool setting);
+	void GetAutoArm(MCExecContext& ctxt, bool& r_setting);
+	void SetAutoArm(MCExecContext& ctxt, bool setting);
+	void GetFirstIndent(MCExecContext& ctxt, integer_t& r_indent);
+	void SetFirstIndent(MCExecContext& ctxt, integer_t indent);
+	void GetWideMargins(MCExecContext& ctxt, bool& r_setting);
+	void SetWideMargins(MCExecContext& ctxt, bool setting);
+	void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetHScroll(MCExecContext& ctxt, integer_t scroll);
+	void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+	void SetVScroll(MCExecContext& ctxt, integer_t scroll);
+	void GetHScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetHScrollbar(MCExecContext& ctxt, bool setting);
+	void GetVScrollbar(MCExecContext& ctxt, bool& r_setting);
+	void SetVScrollbar(MCExecContext& ctxt, bool setting);
+	void GetScrollbarWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void SetScrollbarWidth(MCExecContext& ctxt, uinteger_t p_width);
+	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
+	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
+	void GetListBehavior(MCExecContext& ctxt, bool& r_setting);
+	void SetListBehavior(MCExecContext& ctxt, bool setting);
+	void GetMultipleHilites(MCExecContext& ctxt, bool& r_setting);
+	void SetMultipleHilites(MCExecContext& ctxt, bool setting);
+	void GetNoncontiguousHilites(MCExecContext& ctxt, bool& r_setting);
+	void SetNoncontiguousHilites(MCExecContext& ctxt, bool setting);
+	void GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void GetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
+	void SetRtfText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
+	void SetStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef p_array);
+	void GetEffectiveStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
+	void GetFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
+	void GetEffectiveFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
+	void GetPlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void GetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void SetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
+	void GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
+	void GetLabel(MCExecContext& ctxt, MCStringRef& r_string);
+	void SetLabel(MCExecContext& ctxt, MCStringRef p_string);
+	void GetToggleHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetToggleHilite(MCExecContext& ctxt, bool setting);
+	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
+	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
+	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
 };
 #endif

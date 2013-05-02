@@ -101,14 +101,14 @@ public:
 	{
 		m_target = p_target;
         if (m_target != nil)
-            m_target -> Retain();
+		m_target -> Retain();
 		m_event = p_event;
 	}
 	
 	void Destroy(void)
 	{
         if (m_target != nil)
-            m_target -> Release();
+		m_target -> Release();
 		delete this;
 	}
 	
@@ -146,27 +146,27 @@ public:
         }
         else
         {
-            MCObjectHandle *t_object;
-            t_object = m_target->GetOwner();
-            if (t_object != nil && t_object->Exists())
+        MCObjectHandle *t_object;
+        t_object = m_target->GetOwner();
+        if (t_object != nil && t_object->Exists())
+        {
+            switch(m_event)
             {
-                switch(m_event)
-                {
-                    case kMCAdEventTypeReceive:
-                        t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCfalsemcstring);
-                        break;
-                    case kMCAdEventTypeReceiveDefault:
-                        t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCtruemcstring);
-                        break;
-                    case kMCAdEventTypeReceiveFailed:
-                        t_object->Get()->message_with_args(MCM_ad_load_failed, m_target->GetName());
-                        break;
-                    case kMCAdEventTypeClick:
-                        t_object->Get()->message_with_args(MCM_ad_clicked, m_target->GetName());
-                        break;
-                }
+                case kMCAdEventTypeReceive:
+                    t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCfalsemcstring);
+                    break;
+                case kMCAdEventTypeReceiveDefault:
+                    t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCtruemcstring);
+                    break;
+                case kMCAdEventTypeReceiveFailed:
+                    t_object->Get()->message_with_args(MCM_ad_load_failed, m_target->GetName());
+                    break;
+                case kMCAdEventTypeClick:
+                    t_object->Get()->message_with_args(MCM_ad_clicked, m_target->GetName());
+                    break;
             }
         }
+	}
 	}
 	
 private:
@@ -385,11 +385,11 @@ void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, 
         }
         else if (t_ad != nil)
             t_ad->Release();
-               
+        
+        if (!t_success)
+            ctxt.SetTheResultToStaticCString("could not create ad");        
     }
-
-	if (!t_success)
-		ctxt.SetTheResultToStaticCString("could not create ad"); 
+    
 }
 
 void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name)

@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "osspec.h"
+#include "exec.h"
+#include "syntax.h"
 
 #include <float.h>
 
@@ -99,36 +101,39 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCAdd::exec(MCExecPoint &ep)
 {
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	t_dst_ref = NULL;
-
+#ifdef OLD_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 
-	if (overlap)
-		ep . grab();
-
-	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADDEST, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_dst_ref != NULL && t_dst_ref -> is_array())
+	MCExecPoint ep2(ep);
+	if (*t_dst_container != nil)
 	{
-		if (t_dst_ref->factorarray(ep, O_PLUS) != ES_NORMAL)
-		{
-			MCeerror->add(EE_ADD_BADARRAY, line, pos);
+		if (t_dst_container -> eval(ep2) != ES_NORMAL)
 			return ES_ERROR;
+
+		if (ep2 . isarray())
+		{
+			if (ep2 . factorarray(ep, O_PLUS) != ES_NORMAL)
+			{
+				MCeerror->add(EE_ADD_BADARRAY, line, pos);
+				return ES_ERROR;
+			}
+			
+			return t_dst_container -> set(ep2);
 		}
-		return ES_NORMAL;
 	}
 
-	if (ep.getformat() == VF_ARRAY)
+	if (ep.isarray())
 	{
 		MCeerror->add(EE_ADD_MISMATCH, line, pos);
 		return ES_ERROR;
@@ -136,19 +141,15 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 
 	// Variable case
 	real8 n1 = ep.getnvalue();
-	if (t_dst_ref != NULL)
+	if (*t_dst_container != NULL)
 	{
-		real8 n2;
-		if (!t_dst_ref -> get_as_real(ep, n2))
+		if (ep2 . ton() != ES_NORMAL)
 		{
-			MCeerror -> add(EE_ADD_BADDEST, line, pos);
+			MCeerror->add(EE_ADD_BADDEST, line, pos);
 			return ES_ERROR;
 		}
 
-		t_dst_ref -> assign_real(n1 + n2);
-
-		if (t_dst_var != NULL)
-			t_dst_var -> synchronize(ep, True);
+		/* UNCHECKED */ t_dst_container -> set_real(n1 + ep2 . getnvalue());
 
 		return ES_NORMAL;
 	}
@@ -167,9 +168,104 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
-
 	return ES_NORMAL;
+#else
+	MCAutoValueRef t_src;
+	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+	{
+		MCeerror->add(EE_ADD_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+	
+	MCAutoValueRef t_dst;
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != nil)
+	{
+		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+		{
+			MCeerror->add(EE_ADD_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+			return ES_ERROR;
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	else
+	{
+		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+		{
+			MCeerror->add(EE_ADD_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	
+	MCExecContext ctxt(ep);
+	
+	MCAutoValueRef t_result;
+	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecAddArrayToArray(ctxt, (MCArrayRef)*t_src, (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+		else
+		{
+			MCeerror->add(EE_ADD_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecAddNumberToArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+		else
+		{
+			double t_real_result;
+			MCMathExecAddNumberToNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), MCNumberFetchAsReal((MCNumberRef)*t_dst), t_real_result);
+			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
+		}
+	}
+	
+	if (!ctxt . HasError())
+	{
+		if (destvar != nil)
+		{
+			if (t_dst_container -> set_valueref(*t_result))
+				return ES_NORMAL;
+			ctxt . Throw();
+		}
+		else
+		{
+			ep . setvalueref(*t_result);
+			if (dest->set(ep, PT_INTO) == ES_NORMAL)
+				return ES_NORMAL;
+			ctxt . LegacyThrow(EE_ADD_CANTSET);
+		}
+	}
+
+	return ctxt . Catch(line, pos);
+#endif
+}
+
+void MCAdd::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (destvar != nil)
+		destvar -> compile_inout(ctxt);
+	else
+		dest -> compile_inout(ctxt);
+
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddArrayToArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddNumberToArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecAddNumberToNumberMethodInfo, 0, 1, 1);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCDivide::~MCDivide()
@@ -218,36 +314,39 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCDivide::exec(MCExecPoint &ep)
 {
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	t_dst_ref = NULL;
-
+#if 0
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIVIDE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 
-	if (overlap)
-		ep . grab();
-
-	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_dst_ref != NULL && t_dst_ref -> is_array())
+	MCExecPoint ep2(ep);
+	if (*t_dst_container != nil)
 	{
-		if (t_dst_ref->factorarray(ep, O_OVER) != ES_NORMAL)
-		{
-			MCeerror->add(EE_DIVIDE_BADARRAY, line, pos);
+		if (t_dst_container -> eval(ep2) != ES_NORMAL)
 			return ES_ERROR;
+
+		if (ep2 . isarray())
+		{
+			if (ep2 . factorarray(ep, O_OVER) != ES_NORMAL)
+			{
+				MCeerror->add(EE_DIVIDE_BADARRAY, line, pos);
+				return ES_ERROR;
+			}
+			
+			return t_dst_container -> set(ep2);
 		}
-		return ES_NORMAL;
 	}
 
-	if (ep.getformat() == VF_ARRAY)
+	if (ep.isarray())
 	{
 		MCeerror->add(EE_DIVIDE_MISMATCH, line, pos);
 		return ES_ERROR;
@@ -255,15 +354,16 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 
 	// Variable case
 	real8 n2 = ep.getnvalue();
-	if (t_dst_ref != NULL)
+	if (*t_dst_container != NULL)
 	{
-		real8 n1;
-		if (!t_dst_ref -> get_as_real(ep, n1))
+		if (ep2 . ton() != ES_NORMAL)
 		{
-			MCeerror -> add(EE_ADD_BADDEST, line, pos);
+			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
 			return ES_ERROR;
 		}
-		
+
+		double n1 = ep2 . getnvalue();
+
 		MCS_seterrno(0);
 		n1 /= n2;
 		if (n1 == MCinfinity || MCS_geterrno() != 0)
@@ -275,10 +375,8 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 				MCeerror->add(EE_DIVIDE_RANGE, line, pos);
 			return ES_ERROR;
 		}
-		t_dst_ref -> assign_real(n1);
 
-		if (t_dst_var != NULL)
-			t_dst_var -> synchronize(ep, True);
+		/* UNCHECKED */ t_dst_container -> set_real(n1);
 
 		return ES_NORMAL;
 	}
@@ -309,6 +407,103 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#else
+	MCAutoValueRef t_src;
+	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+	{
+		MCeerror->add(EE_DIVIDE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+	
+	MCAutoValueRef t_dst;
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != nil)
+	{
+		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+		{
+			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+			return ES_ERROR;
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	else
+	{
+		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+		{
+			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	
+	MCExecContext ctxt(ep);
+	
+	MCAutoValueRef t_result;
+	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecDivideArrayByArray(ctxt, (MCArrayRef)*t_dst, (MCArrayRef)*t_src, (MCArrayRef&)&t_result);
+		else
+		{
+			MCeerror->add(EE_DIVIDE_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecDivideArrayByNumber(ctxt, (MCArrayRef)*t_dst, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef&)&t_result);
+		else
+		{
+			double t_real_result;
+			MCMathExecDivideNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst), MCNumberFetchAsReal((MCNumberRef)*t_src), t_real_result);
+			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
+		}
+	}
+	
+	if (!ctxt . HasError())
+	{
+		if (destvar != nil)
+		{
+			if (t_dst_container -> set_valueref(*t_result))
+				return ES_NORMAL;
+			ctxt . Throw();
+		}
+		else
+		{
+			ep . setvalueref(*t_result);
+			if (dest->set(ep, PT_INTO) == ES_NORMAL)
+				return ES_NORMAL;
+			ctxt . LegacyThrow(EE_DIVIDE_CANTSET);
+		}
+	}
+	
+	return ctxt . Catch(line, pos);
+#endif
+}
+
+void MCDivide::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (destvar != nil)
+		destvar -> compile_inout(ctxt);
+	else
+		dest -> compile_inout(ctxt);
+
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideArrayByArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideArrayByNumberMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecDivideNumberByNumberMethodInfo, 0, 1, 1);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCMultiply::~MCMultiply()
@@ -360,36 +555,39 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCMultiply::exec(MCExecPoint &ep)
 {
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	t_dst_ref = NULL;
-
+#ifdef OLD_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_MULTIPLY_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 
-	if (overlap)
-		ep . grab();
-
-	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MULTIPLY_BADDEST, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_dst_ref != NULL && t_dst_ref -> is_array())
+	MCExecPoint ep2(ep);
+	if (*t_dst_container != nil)
 	{
-		if (t_dst_ref->factorarray(ep, O_TIMES) != ES_NORMAL)
-		{
-			MCeerror->add(EE_MULTIPLY_BADARRAY, line, pos);
+		if (t_dst_container -> eval(ep2) != ES_NORMAL)
 			return ES_ERROR;
+
+		if (ep2 . isarray())
+		{
+			if (ep2 . factorarray(ep, O_TIMES) != ES_NORMAL)
+			{
+				MCeerror->add(EE_MULTIPLY_BADARRAY, line, pos);
+				return ES_ERROR;
+			}
+
+			return t_dst_container -> set(ep2);
 		}
-		return ES_NORMAL;
 	}
 
-	if (ep.getformat() == VF_ARRAY)
+	if (ep.isarray())
 	{
 		MCeerror->add(EE_MULTIPLY_MISMATCH, line, pos);
 		return ES_ERROR;
@@ -397,15 +595,16 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 
 	// Variable case
 	real8 n2 = ep.getnvalue();
-	if (t_dst_ref != NULL)
+	if (*t_dst_container != NULL)
 	{
-		real8 n1;
-		if (!t_dst_ref -> get_as_real(ep, n1))
+		if (ep2 . ton() != ES_NORMAL)
 		{
 			MCeerror -> add(EE_MULTIPLY_BADDEST, line, pos);
 			return ES_ERROR;
 		}
 		
+		double n1 = ep2 . getnvalue();
+
 		MCS_seterrno(0);
 		n1 *= n2;
 		if (n1 == MCinfinity || MCS_geterrno() != 0)
@@ -414,10 +613,8 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 			MCeerror->add(EE_MULTIPLY_RANGE, line, pos);
 			return ES_ERROR;
 		}
-		t_dst_ref -> assign_real(n1);
 
-		if (t_dst_var != NULL)
-			t_dst_var -> synchronize(ep, True);
+		/* UNCHECKED */ t_dst_container -> set_real(n1);
 
 		return ES_NORMAL;
 	}
@@ -445,6 +642,103 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#else
+	MCAutoValueRef t_src;
+	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+	{
+		MCeerror->add(EE_MULTIPLY_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+	
+	MCAutoValueRef t_dst;
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != nil)
+	{
+		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+		{
+			MCeerror->add(EE_MULTIPLY_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+			return ES_ERROR;
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	else
+	{
+		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+		{
+			MCeerror->add(EE_MULTIPLY_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	
+	MCExecContext ctxt(ep);
+	
+	MCAutoValueRef t_result;
+	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecMultiplyArrayByArray(ctxt, (MCArrayRef)*t_dst, (MCArrayRef)*t_src, (MCArrayRef&)&t_result);
+		else
+		{
+			MCeerror->add(EE_MULTIPLY_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecMultiplyArrayByNumber(ctxt, (MCArrayRef)*t_dst, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef&)&t_result);
+		else
+		{
+			double t_real_result;
+			MCMathExecMultiplyNumberByNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_dst), MCNumberFetchAsReal((MCNumberRef)*t_src), t_real_result);
+			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
+		}
+	}
+	
+	if (!ctxt . HasError())
+	{
+		if (destvar != nil)
+		{
+			if (t_dst_container -> set_valueref(*t_result))
+				return ES_NORMAL;
+			ctxt . Throw();
+		}
+		else
+		{
+			ep . setvalueref(*t_result);
+			if (dest->set(ep, PT_INTO) == ES_NORMAL)
+				return ES_NORMAL;
+			ctxt . LegacyThrow(EE_MULTIPLY_CANTSET);
+		}
+	}
+	
+	return ctxt . Catch(line, pos);
+#endif
+}
+
+void MCMultiply::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (destvar != nil)
+		destvar -> compile_inout(ctxt);
+	else
+		dest -> compile_inout(ctxt);
+
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyArrayByArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyArrayByNumberMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecMultiplyNumberByNumberMethodInfo, 0, 1, 1);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCSubtract::~MCSubtract()
@@ -496,58 +790,59 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCSubtract::exec(MCExecPoint &ep)
 {
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	t_dst_ref = NULL;
-
+#if OLD_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUBTRACT_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 
-	if (overlap)
-		ep . grab();
-
-	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUBTRACT_BADDEST, line, pos);
 		return ES_ERROR;
 	}
 
-	if (t_dst_ref != NULL && t_dst_ref -> is_array())
+	MCExecPoint ep2(ep);
+	if (*t_dst_container != nil)
 	{
-		if (t_dst_ref->factorarray(ep, O_MINUS) != ES_NORMAL)
-		{
-			MCeerror->add(EE_SUBTRACT_BADARRAY, line, pos);
+		if (t_dst_container -> eval(ep2) != ES_NORMAL)
 			return ES_ERROR;
+
+		if (ep2 . isarray())
+		{
+			if (ep2 . factorarray(ep, O_MINUS) != ES_NORMAL)
+			{
+				MCeerror->add(EE_SUBTRACT_BADARRAY, line, pos);
+				return ES_ERROR;
+			}
+
+			return t_dst_container -> set(ep2);
 		}
-		return ES_NORMAL;
 	}
 
-	if (ep.getformat() == VF_ARRAY)
+	if (ep.isarray())
 	{
 		MCeerror->add(EE_SUBTRACT_MISMATCH, line, pos);
 		return ES_ERROR;
 	}
+
 	// Variable case
 	real8 n1 = ep.getnvalue();
-	if (t_dst_ref != NULL)
+	if (*t_dst_container != NULL)
 	{
-		real8 n2;
-		if (!t_dst_ref -> get_as_real(ep, n2))
+		if (ep2 . ton() != ES_NORMAL)
 		{
-			MCeerror -> add(EE_SUBTRACT_BADDEST, line, pos);
+			MCeerror->add(EE_ADD_BADDEST, line, pos);
 			return ES_ERROR;
 		}
-		
-		t_dst_ref -> assign_real(n2 - n1);
 
-		if (t_dst_var != NULL)
-			t_dst_var -> synchronize(ep, True);
+		/* UNCHECKED */ t_dst_container -> set_real(ep2 . getnvalue() - n1);
 
 		return ES_NORMAL;
 	}
+
 
 	// Chunk case
 	if (dest->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -564,6 +859,103 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#else
+	MCAutoValueRef t_src;
+	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+	{
+		MCeerror->add(EE_SUBTRACT_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	/* UNCHECKED */ ep . copyasvalueref(&t_src);
+	
+	MCAutoValueRef t_dst;
+	MCAutoPointer<MCContainer> t_dst_container;
+	if (destvar != nil)
+	{
+		if (destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+		{
+			MCeerror->add(EE_SUBTRACT_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (t_dst_container -> eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+			return ES_ERROR;
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	else
+	{
+		if (dest->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
+		{
+			MCeerror->add(EE_SUBTRACT_BADDEST, line, pos);
+			return ES_ERROR;
+		}
+		
+		/* UNCHECKED */ ep . copyasvalueref(&t_dst);
+	}
+	
+	MCExecContext ctxt(ep);
+	
+	MCAutoValueRef t_result;
+	if (MCValueGetTypeCode(*t_src) == kMCValueTypeCodeArray)
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecSubtractArrayFromArray(ctxt, (MCArrayRef)*t_src, (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+		else
+		{
+			MCeerror->add(EE_SUBTRACT_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+	}
+	else
+	{
+		if (MCValueGetTypeCode(*t_dst) == kMCValueTypeCodeArray)
+			MCMathExecSubtractNumberFromArray(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), (MCArrayRef)*t_dst, (MCArrayRef&)&t_result);
+		else
+		{
+			double t_real_result;
+			MCMathExecSubtractNumberFromNumber(ctxt, MCNumberFetchAsReal((MCNumberRef)*t_src), MCNumberFetchAsReal((MCNumberRef)*t_dst), t_real_result);
+			/* UNCHECKED */ MCNumberCreateWithReal(t_real_result, (MCNumberRef&)t_result);
+		}
+	}
+	
+	if (!ctxt . HasError())
+	{
+		if (destvar != nil)
+		{
+			if (t_dst_container -> set_valueref(*t_result))
+				return ES_NORMAL;
+			ctxt . Throw();
+		}
+		else
+		{
+			ep . setvalueref(*t_result);
+			if (dest->set(ep, PT_INTO) == ES_NORMAL)
+				return ES_NORMAL;
+			ctxt . LegacyThrow(EE_SUBTRACT_CANTSET);
+		}
+	}
+	
+	return ctxt . Catch(line, pos);
+#endif
+}
+
+void MCSubtract::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	source -> compile(ctxt);
+
+	if (destvar != nil)
+		destvar -> compile_inout(ctxt);
+	else
+		dest -> compile_inout(ctxt);
+
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractArrayFromArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractNumberFromArrayMethodInfo, 0, 1, 1);
+	MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCMathExecSubtractNumberFromNumberMethodInfo, 0, 1, 1);
+
+	MCSyntaxFactoryEndStatement(ctxt);
 }
 
 MCArrayOp::~MCArrayOp()
@@ -623,7 +1015,7 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 	}
-	
+
 	if (sp . skip_token(SP_FACTOR, TT_PREP, PT_AS) == PS_NORMAL)
 	{
 		if (sp . skip_token(SP_COMMAND, TT_STATEMENT, S_SET) != PS_NORMAL ||
@@ -641,8 +1033,10 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 {
-	uint1 e;
-	uint1 k = '\0';
+	MCExecContext ctxt(ep);
+
+	MCAutoStringRef t_element_del;
+	MCAutoStringRef t_key_del;
 	uint4 chunk;
 	chunk = mode;
 	switch(chunk)
@@ -650,83 +1044,141 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		case TYPE_USER:
 			if (element != NULL)
 			{
-				if (element->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL
-								|| ep.getsvalue().getlength() != 1)
+				if (element->eval(ep) != ES_NORMAL || 
+					!ep . copyasstringref(&t_element_del))
 				{
 					MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
 					return ES_ERROR;
 				}
-				e = ep.getsvalue().getstring()[0];
+
 				if (key != NULL)
 				{
-					if (key->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL
-									|| ep.getsvalue().getlength() != 1)
+					if (key->eval(ep) != ES_NORMAL ||
+						!ep . copyasstringref(&t_key_del))
 					{
 						MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					k = ep.getsvalue().getstring()[0];
 				}
 			}
 		break;
-		case TYPE_ROW:
-			e = ep . getrowdel();
-		break;
-		case TYPE_COLUMN:
-			e = ep . getcolumndel();
-		break;
-		case TYPE_LINE:
-			e = ep . getlinedel();
-		break;
-		case TYPE_ITEM:
-			e = ep . getitemdel();
-		break;
-		case TYPE_WORD:
-		case TYPE_TOKEN:
-		case TYPE_CHARACTER:
 		default:
 			return ES_ERROR;
 		break;
 	}
 
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	if (destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_container;
+	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
 		return ES_ERROR;
 	}
 
+	if (t_container -> eval(ep) != ES_NORMAL)
+		return ES_ERROR;
+
+	if (is_combine)
+	{
+		MCAutoArrayRef t_array;
+		if (!ep . copyasarrayref(&t_array))
+			return ES_ERROR;
+
+		MCAutoStringRef t_string;
+		if (form == FORM_NONE)
+		{
+			if (chunk == TYPE_COLUMN)
+				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
+			else if (chunk == TYPE_ROW)
+				MCArraysExecCombineByColumn(ctxt, *t_array, &t_string);
+			else
+				MCArraysExecCombine(ctxt, *t_array, *t_element_del, *t_key_del, &t_string);
+		}
+		else if (form == FORM_SET)
+			MCArraysExecCombineAsSet(ctxt, *t_array, *t_element_del, &t_string);
+
+		if (!ctxt . HasError())
+		{
+			ep . setvalueref(*t_string);
+			return t_container -> set(ep);
+		}
+	}
+	else
+	{
+		MCAutoStringRef t_string;
+		if (!ep . copyasstringref(&t_string))
+			return ES_ERROR;
+
+		MCAutoArrayRef t_array;
+		if (form == FORM_NONE)
+		{
+			if (chunk == TYPE_COLUMN)
+				MCArraysExecSplitByColumn(ctxt, *t_string, &t_array);
+			else if (chunk == TYPE_ROW)
+				MCArraysExecSplitByRow(ctxt, *t_string, &t_array);
+			else
+				MCArraysExecSplit(ctxt, *t_string, *t_element_del, *t_key_del, &t_array);
+		}
+		else if (form == FORM_SET)
+			MCArraysExecSplitAsSet(ctxt, *t_string, *t_element_del, &t_array);
+
+		if (!ctxt . HasError())
+		{
+			ep . setvalueref(*t_array);
+			return t_container -> set(ep);
+		}
+	}
+
+	return ES_ERROR;
+}
+
+void MCArrayOp::compile(MCSyntaxFactoryRef ctxt)
+{	
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	destvar -> compile_inout(ctxt);
+
+	if (mode == TYPE_USER && element != nil)
+		element -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+
+	if (mode == TYPE_USER && key != nil)
+		key -> compile(ctxt);
+	else
+		MCSyntaxFactoryEvalConstantNil(ctxt);
+
 	if (is_combine)
 	{
 		if (form == FORM_NONE)
 		{
-			if (chunk == TYPE_COLUMN)
-				t_dst_ref -> combine_column(e, ep . getrowdel(), ep);
+			if (mode == TYPE_COLUMN)
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
+			else if (mode == TYPE_ROW)
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineByColumnMethodInfo, 0, 0);
 			else
-				t_dst_ref -> combine(e, k, ep);
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineMethodInfo, 0, 1, 2, 0);
 		}
-		else
-			t_dst_ref -> combine_as_set(e, ep);
+		else if (form == FORM_SET)
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecCombineAsSetMethodInfo, 0, 1, 0);
 	}
 	else
 	{
 		if (form == FORM_NONE)
 		{
-			if (chunk == TYPE_COLUMN)
-				t_dst_ref -> split_column(e, ep . getrowdel(), ep);
+			if (mode == TYPE_COLUMN)
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByColumnMethodInfo, 0, 0);
+			else if (mode == TYPE_ROW)
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitByRowMethodInfo, 0, 0);
 			else
-				t_dst_ref -> split(e, k, ep);
+				MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitMethodInfo, 0, 1, 2, 0);
 		}
-		else
-			t_dst_ref -> split_as_set(e, ep);
+		else if (form == FORM_SET)
+			MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCArraysExecSplitAsSetMethodInfo, 0, 1, 0);
 	}
 
-	if (t_dst_var != NULL)
-		t_dst_var -> synchronize(ep, True);
-
-	return ES_NORMAL;
+	MCSyntaxFactoryEndStatement(ctxt);
 }
+
 
 MCSetOp::~MCSetOp()
 {
@@ -761,11 +1213,6 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 		return PS_ERROR;
 	}
 
-	MCVarref *t_src_ref, *t_dst_ref;
-	t_src_ref = source -> getrootvarref();
-	t_dst_ref = destvar -> getrootvarref();
-	overlap = t_src_ref != NULL && t_dst_ref != NULL && t_src_ref -> rootmatches(t_dst_ref);
-
 	return PS_NORMAL;
 }
 
@@ -778,44 +1225,55 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	if (ep . getformat() != VF_ARRAY)
+	if (!ep . isarray())
 		ep . clear();
 
-	if (overlap)
-		ep . grab();
-
-	MCVariable *t_dst_var;
-	MCVariableValue *t_dst_ref;
-	if (destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	MCAutoPointer<MCContainer> t_container;
+	if (destvar -> evalcontainer(ep, &t_container) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
 		return ES_ERROR;
 	}
 
-	MCVariableValue *t_src_ref;
-	t_src_ref = ep . getarray();
-	
-	// Do nothing if source and dest are the same
-	if (t_src_ref == t_dst_ref)
-		return ES_NORMAL;
+	MCExecPoint ep2(ep);
+	if (t_container -> eval(ep2) != ES_NORMAL)
+		return ES_ERROR;
+
+	MCAutoArrayRef t_dst_array;
+	if (!ep2 . copyasmutablearrayref(&t_dst_array))
+		return ES_ERROR;
+
+	MCAutoArrayRef t_src_array;
+	if (!ep . copyasarrayref(&t_src_array))
+		return ES_ERROR;
+
+	MCExecContext ctxt(ep);
+	if (intersect)
+		MCArraysExecIntersect(ctxt, *t_dst_array, *t_src_array);
+	else
+		MCArraysExecUnion(ctxt, *t_dst_array, *t_src_array);
+
+	if (!ctxt . HasError())
+	{
+		ep2 . setvalueref(*t_dst_array);
+		return t_container -> set(ep2);
+	}
+
+	return ES_ERROR;
+}
+
+void MCSetOp::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+
+	// MUTABLE ARRAY 
+	destvar -> compile_inout(ctxt);
+	source -> compile(ctxt);
 
 	if (intersect)
-	{
-		if (t_src_ref == NULL)
-			t_dst_ref -> assign_empty();
-		else
-			t_dst_ref -> intersectarray(*t_src_ref);
-	}
+		MCSyntaxFactoryExecMethod(ctxt, kMCArraysExecIntersectMethodInfo);
 	else
-	{
-		if (t_src_ref == NULL)
-			return ES_NORMAL;
+		MCSyntaxFactoryExecMethod(ctxt, kMCArraysExecUnionMethodInfo);
 
-		t_dst_ref -> unionarray(*t_src_ref);
-	}
-
-	if (t_dst_var != NULL)
-		t_dst_var -> synchronize(ep, True);
-
-	return ES_NORMAL;
+	MCSyntaxFactoryEndStatement(ctxt);
 }

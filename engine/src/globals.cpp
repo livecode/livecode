@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -81,6 +80,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblcontrol.h"
 #include "mblsensor.h"
 #endif
+
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -177,22 +178,20 @@ Boolean MCproportionalthumbs = True;
 MCColor MCzerocolor;
 MCColor MConecolor;
 MCColor MCpencolor;
-char *MCpencolorname;
+MCStringRef MCpencolorname;
 MCColor MCbrushcolor;
-char *MCbrushcolorname;
+MCStringRef MCbrushcolorname;
 uint4 MCpenpmid = PI_PATTERNS;
 Pixmap MCpenpm;
 uint4 MCbrushpmid = PI_PATTERNS;
 Pixmap MCbrushpm;
-uint4 MCbackdroppmid;
-Pixmap MCbackdroppm;
 MCPixmaplist *MCpatterns;
 MCColor MCaccentcolor;
-char *MCaccentcolorname;
+MCStringRef MCaccentcolorname;
 MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
-char *MChilitecolorname;
+MCStringRef MChilitecolorname;
 MCColor MCselectioncolor;
-char *MCselectioncolorname;
+MCStringRef MCselectioncolorname;
 Linkatts MClinkatts = { { 0, 0, 0, 0xEFBE, 0, 0 }, NULL,
                         { 0, 0xFFFF, 0, 0, 0, 0 }, NULL,
                         { 0, 0x5144, 0x1861, 0x8038, 0, 0 }, NULL, True };
@@ -337,7 +336,6 @@ Boolean MCbufferimages;
 char *MCserialcontrolsettings;
 char *MCshellcmd;
 char *MCvcplayer;
-char *MCbackdropcolor;
 
 char *MCftpproxyhost;
 uint2 MCftpproxyport;
@@ -445,12 +443,6 @@ MCString MCtruemcstring;
 MCString MCfalsemcstring;
 MCString MCnullmcstring;
 Boolean MCinlineinput = True;
-
-uint4 MCiconid = 0;
-char *MCiconmenu = NULL;
-uint4 MCstatusiconid = 0;
-char *MCstatusiconmenu = NULL;
-char *MCstatusicontooltip = NULL;
 
 uint4 MCqtidlerate = 50;
 
@@ -570,8 +562,6 @@ void X_clear_globals(void)
 	MCpenpm = nil;
 	MCbrushpmid = PI_PATTERNS;
 	MCbrushpm = nil;
-	MCbackdroppmid = 0;
-	MCbackdroppm = nil;
 	MCpatterns = nil;
 	memset(&MCaccentcolor, 0, sizeof(MCColor));
 	MCaccentcolorname = nil;
@@ -718,7 +708,6 @@ void X_clear_globals(void)
 	MCserialcontrolsettings = nil;
 	MCshellcmd = nil;
 	MCvcplayer = nil;
-	MCbackdropcolor = nil;
 	MCftpproxyhost = nil;
 	MCftpproxyport = 0;
 	MChttpproxy = nil;
@@ -818,7 +807,7 @@ void X_clear_globals(void)
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 		MCcursors[i] = nil;
-	
+    
 	// MM-2012-09-05: [[ Property Listener ]]
 	MCobjectpropertieschanged = False;
 	MCpropertylistenerthrottletime = 250;
@@ -943,6 +932,10 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen->alloccolor(MClinkatts.visitedcolor);
 	}
 	
+	MCExecPoint ep;
+	MCExecContext ctxt(ep);
+	MCInterfaceInitialize(ctxt);
+	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
 	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
@@ -990,6 +983,10 @@ int X_close(void)
 		MCscreen -> disablebackdrop(true);
 	}
 
+	MCExecPoint ep;
+	MCExecContext ctxt(ep);
+	MCInterfaceFinalize(ctxt);
+
 	MCstacks->closeall();
 	MCselected->clear(False);
 
@@ -1011,13 +1008,11 @@ int X_close(void)
 	MCtooltip = NULL;
 
 	delete MChttpproxy;
-
-	delete MCbackdropcolor;
-	delete MCpencolorname;
-	delete MCbrushcolorname;
-	delete MChilitecolorname;
-	delete MCaccentcolorname;
-	delete MCselectioncolorname;
+	MCValueRelease(MCpencolorname);
+	MCValueRelease(MCbrushcolorname);
+	MCValueRelease(MChilitecolorname);
+	MCValueRelease(MCaccentcolorname);
+	MCValueRelease(MCselectioncolorname);
 	delete MClongdateformat;
 	delete MCshortdateformat;
 
@@ -1079,9 +1074,9 @@ int X_close(void)
 	delete MCusing;
 	delete MChttpheaders;
 	delete MCscriptfont;
-	delete MClinkatts.colorname;
-	delete MClinkatts.hilitecolorname;
-	delete MClinkatts.visitedcolorname;
+	MCValueRelease(MClinkatts . colorname);
+	MCValueRelease(MClinkatts . hilitecolorname);
+	MCValueRelease(MClinkatts . visitedcolorname);
 	MCB_clearwatches();
 	MCB_clearbreaks(nil);
 	MCU_cleaninserted();
@@ -1094,7 +1089,7 @@ int X_close(void)
 	uint2 i;
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
-		delete MCregexpatterns[i];
+        MCValueRelease(MCregexpatterns[i]);
 		MCR_free(MCregexcache[i]);
 	}
 	delete MCperror;
@@ -1130,10 +1125,6 @@ int X_close(void)
 		MCcurtheme -> unload();
 	delete MCcurtheme;
 
-	delete MCiconmenu;
-	delete MCstatusiconmenu;
-	delete MCstatusicontooltip;
-
 	// Cleanup the cursors array - *before* we close the screen!!
 	if (MCModeMakeLocalWindows())
 		for(uint32_t i = 0; i < PI_NCURSORS; i++)
@@ -1155,7 +1146,7 @@ int X_close(void)
 	delete MClicenseparameters . license_token;
 	delete MClicenseparameters . license_name;
 	delete MClicenseparameters . license_organization;
-	delete MClicenseparameters . addons;
+	MCValueRelease(MClicenseparameters . addons);
 
 	// Cleanup the startup stacks list
 	delete MCstacknames;
@@ -1167,9 +1158,6 @@ int X_close(void)
 	MCLogicalFontTableFinalize();
 	// MW-2012-02-23: [[ FontRefs ]] Finalize the font module.
 	MCFontFinalize();
-	
-	MCU_finalize_names();
-	MCNameFinalize();
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions
@@ -1179,5 +1167,7 @@ int X_close(void)
     MCAndroidCustomFontsFinalize();
 #endif
 	
+	MCU_finalize_names();
+
 	return MCretcode;
 }

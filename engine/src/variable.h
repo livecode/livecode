@@ -554,8 +554,8 @@ class MCVariable
 {
 protected:
 	MCNameRef name;
+	MCValueRef value;
 	MCVariable *next;
-	MCVariableValue value;
 
 	bool is_msg : 1;
 	bool is_env : 1;
@@ -583,7 +583,47 @@ public:
 	// Destructor
 	~MCVariable(void);
 
-	//
+	/////////
+
+	// Set the content of the variable (nested key) to the given value.
+	bool setvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef value);
+	// Return the content of the variable (nested key). This does not copy the value.
+	MCValueRef getvalueref(MCNameRef *path, uindex_t length, bool case_sensitive);
+	// Make an immutable copy of the content of the variable (nested key).
+	bool copyasvalueref(MCNameRef *path, uindex_t length, bool case_sensitive, MCValueRef& r_value);
+
+	// Evaluate the contents of the variable (nested key) into the ep.
+	Exec_stat eval(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+	// Evalue the contents of the variable (nested key) into r_value.
+	void eval(MCNameRef *p_path, uindex_t p_length, bool p_case_sensitive, MCValueRef &r_value);
+	// Copy the contents of the ep into the variable (nested key).
+	Exec_stat set(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+	// Append the content of the ep to the variable (nested key).
+	Exec_stat append(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+	// Remove the content (nested key) of the variable.
+	Exec_stat remove(MCExecPoint& ep, MCNameRef *path, uindex_t length);
+
+	bool setvalueref(MCValueRef value);
+	MCValueRef getvalueref(void);
+	bool copyasvalueref(MCValueRef& r_value);
+
+	Exec_stat eval(MCExecPoint& ep);
+	Exec_stat set(MCExecPoint& ep);
+	Exec_stat append(MCExecPoint& ep);
+	Exec_stat remove(MCExecPoint& ep);
+	void eval(bool p_case_sensitive, MCValueRef &r_value);
+
+	// Converts the value in the variable to an array of strings.
+	bool converttoarrayofstrings(MCExecPoint& ep);
+	// Converts the value in the variable to an array of numbers.
+	bool converttoarrayofnumbers(MCExecPoint& ep);
+
+	// Converts the value to a (mutable) string.
+	bool converttomutablestring(MCExecPoint& ep);
+	// Converts the value to a (mutable) array.
+	bool converttomutablearray(void);
+
+	/////////
 
 	// Return whether the variable has been assigned a value. i.e. whether the
 	// value is 'UNDEFINED'.
@@ -603,13 +643,6 @@ public:
 
 	// Returns true if the variable is (currently) a UQL.
 	bool isuql(void) const;
-
-	//
-
-	MCVariableValue& getvalue(void)
-	{
-		return value;
-	}
 
 	//
 
@@ -635,7 +668,6 @@ public:
 	// NB: This should only be used for *constant* strings.
 	//
 	Exec_stat sets(const MCString &s);
-	Exec_stat setnameref_unsafe(MCNameRef name);
 
 	// Copy the given string into the variable
 	void copysvalue(const MCString &s);
@@ -650,14 +682,21 @@ public:
 
 	//
 
+	//Exec_stat fetch(MCExecPoint& ep);
+	//Exec_stat store(MCExecPoint& ep, bool notify);
+
+#if 0
 	// Store the value in ep, into this variable.
 	// If notify is true, then update debugger state.
 	Exec_stat store(MCExecPoint& ep, Boolean notify)
 	{
-		Exec_stat stat;
-		stat = value . store(ep);
-		synchronize(ep, notify);
-		return stat;
+		MCValueRef t_new_value;
+		if (ep . copyasvalueref(t_new_value))
+		{
+			MCValueRelease(value);
+			t_new_value = value;
+			return ES_NORMAL;
+		}
 	}
 
 	// Store the value the value in ep, into the key key.
@@ -673,16 +712,22 @@ public:
 	// Fetch the value of this variable into ep.
 	Exec_stat fetch(MCExecPoint& ep)
 	{
-		return value . fetch(ep);
+		if (ep . setvalueref(value))
+			return ES_NORMAL;
+		return ES_ERROR;
 	}
+#endif
 
+#if 0
 	// Fetch the value of key key, into ep
 	// Note that k can be owned by ep, it is used before ep is changed.
 	Exec_stat fetch_element(MCExecPoint& ep, const MCString& k)
 	{
 		return value . fetch_element(ep, k);
 	}
+#endif
 
+#if 0
 	// Append the value in ep to this variable
 	Exec_stat append(MCExecPoint& ep, Boolean notify)
 	{
@@ -713,6 +758,7 @@ public:
 		synchronize(ep, notify);
 		return stat;
 	}
+#endif
 
 	// Apply any changes to the value to the 'special' part of the var.
 	// i.e. if it is an environment variable or the msg variable
@@ -779,6 +825,7 @@ public:
 
 //
 
+#if 0
 inline Boolean MCVariable::isclear(void) const
 {
 	return value . is_clear();
@@ -849,6 +896,40 @@ inline void MCVariable::clearuql(void)
 
 	doclearuql();
 }
+#endif
+
+///////////////////////////////////////////////////////////////////////////////
+
+class MCContainer
+{
+public:
+	~MCContainer(void);
+
+	//
+
+	Exec_stat eval(MCExecPoint& ep);
+	Exec_stat set(MCExecPoint& ep);
+	Exec_stat append(MCExecPoint& ep);
+	Exec_stat remove(MCExecPoint& ep);
+
+	//
+
+	bool clear(void);
+	bool set_oldstring(const MCString& string);
+	bool set_cstring(const char *cstring);
+	bool set_real(double real);
+
+	bool set_valueref(MCValueRef value);
+
+	static bool createwithvariable(MCVariable *var, MCContainer*& r_container);
+	static bool createwithpath(MCVariable *var, MCNameRef *path, uindex_t length, MCContainer*& r_container);
+
+private:
+	MCVariable *m_variable;
+	MCNameRef *m_path;
+	uindex_t m_length;
+	bool m_case_sensitive;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -915,9 +996,14 @@ public:
 	virtual ~MCVarref();
 	
 	virtual Exec_stat eval(MCExecPoint &);
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref);
+	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
 	
+	virtual void compile(MCSyntaxFactoryRef);
+	virtual void compile_in(MCSyntaxFactoryRef);
+	virtual void compile_out(MCSyntaxFactoryRef);
+	virtual void compile_inout(MCSyntaxFactoryRef);
+
 	//virtual MCVariable *getvar();
 	virtual MCVarref *getrootvarref(void);
 
@@ -939,7 +1025,7 @@ public:
 private:
 	MCVariable *fetchvar(MCExecPoint& ep);
 
-	Exec_stat resolve(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_parent_ref, MCHashentry*& r_ref, bool p_add);
+	Exec_stat resolve(MCExecPoint& ep, MCContainer*& r_container);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -974,7 +1060,7 @@ public:
 	// just ensure 'compute' is called on the MCDeferredVar before the
 	// super-class methods with the same name are invoked.
 	virtual Exec_stat eval(MCExecPoint&);
-	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref);
+	virtual Exec_stat evalcontainer(MCExecPoint& ep, MCContainer*& r_container);
 	virtual MCVariable *evalvar(MCExecPoint& ep);
 };
 

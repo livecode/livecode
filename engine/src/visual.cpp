@@ -27,6 +27,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "globals.h"
 #include "util.h"
+#include "syntax.h"
+#include "exec.h"
+#include "exec-interface.h"
 
 MCEffectList::~MCEffectList()
 {
@@ -199,6 +202,7 @@ Parse_stat MCVisualEffect::parse(MCScriptPoint &sp)
 
 Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 {
+#if 0	
 	MCEffectList *effectptr = MCcur_effects;
 
 	if (nameexp -> eval(ep) != ES_NORMAL)
@@ -292,4 +296,128 @@ Exec_stat MCVisualEffect::exec(MCExecPoint &ep)
 	effectptr -> arguments = t_arguments;
 	
 	return ES_NORMAL;
+#else
+
+	MCAutoStringRef t_name;
+
+	if (nameexp -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
+		return ES_ERROR;
+	}
+	/* UNCHECKED */ ep . copyasstringref(&t_name);
+
+	MCAutoStringRef t_sound;
+
+	if (soundexp != NULL)
+	{
+		if (soundexp->eval(ep) != ES_NORMAL)
+		{
+			MCeerror->add(EE_VISUAL_BADEXP, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep.copyasstringref(&t_sound);
+	}
+
+	MCScriptPoint spt(ep);
+	MCerrorlock++;
+
+	// reset values so expression parsing can proceed
+	MCExpression *oldnameexp = nameexp;
+	nameexp = NULL;
+	Visual_effects olddirection = direction;
+	direction = VE_UNDEFINED;
+	Visual_effects oldspeed = speed;
+	speed = VE_NORMAL;
+
+	parse(spt); // get values from variable, don't worry about errors
+	
+	// restore values if not set in expression
+	delete nameexp;
+	nameexp = oldnameexp;
+	if (direction == VE_UNDEFINED)
+		direction = olddirection;
+	if (speed == VE_NORMAL)
+		speed = oldspeed;
+	
+	MCerrorlock--;
+
+	MCExecContext ctxt(ep);	
+	MCAutoArray<MCInterfaceVisualEffectArgument> t_args_array;
+
+	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
+	{
+		MCInterfaceVisualEffectArgument t_argument;
+		MCAutoStringRef t_value;
+		if (t_parameter -> value -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_VISUAL_BADEXP, line, pos);
+			return ES_ERROR;
+		}
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+
+		MCAutoStringRef t_key;
+		/* UNCHECKED */ MCStringCreateWithCString(t_parameter -> key, &t_key);
+
+		MCInterfaceMakeVisualEffectArgument(ctxt, *t_value, *t_key, t_parameter -> has_id, t_argument);
+
+		/* UNCHECKED */ t_args_array . Push(t_argument);
+	}
+
+	MCInterfaceVisualEffect t_effect;
+	MCInterfaceMakeVisualEffect(ctxt, *t_name, *t_sound, t_args_array . PtrRef(), t_args_array . Size(), effect, direction, speed, image, t_effect);
+
+	for (uindex_t i = 0; i < t_args_array . Size(); i++)
+		MCInterfaceVisualEffectArgumentFree(ctxt, t_args_array[i]);
+
+	MCInterfaceExecVisualEffect(ctxt, t_effect);
+
+	MCInterfaceVisualEffectFree(ctxt, t_effect);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
+#endif
+}
+
+void MCVisualEffect::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	
+	compile_effect(ctxt);
+
+	MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecVisualEffectMethodInfo);
+
+	MCSyntaxFactoryEndStatement(ctxt);
+}
+
+void MCVisualEffect::compile_effect(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+
+	nameexp -> compile(ctxt);
+	soundexp -> compile(ctxt);
+
+	uindex_t t_count = 0;
+	for(KeyValue *t_parameter = parameters; t_parameter != nil; t_parameter = t_parameter -> next)
+	{
+		MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+		t_parameter -> value -> compile(ctxt);
+		MCSyntaxFactoryEvalConstantOldString(ctxt, t_parameter -> key);
+		MCSyntaxFactoryEvalConstantBool(ctxt, t_parameter -> has_id);
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectArgumentMethodInfo);
+		MCSyntaxFactoryEndExpression(ctxt);
+		t_count++;
+	}
+	MCSyntaxFactoryEvalList(ctxt, t_count);
+
+	MCSyntaxFactoryEvalConstantInt(ctxt, effect);
+	MCSyntaxFactoryEvalConstantInt(ctxt, direction);
+	MCSyntaxFactoryEvalConstantInt(ctxt, speed);
+	MCSyntaxFactoryEvalConstantInt(ctxt, image);
+
+	MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceMakeVisualEffectMethodInfo);
+
+	MCSyntaxFactoryEndExpression(ctxt);
 }

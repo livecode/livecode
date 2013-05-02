@@ -1,0 +1,5 @@
+setup
+
+test toUpper("aBcD") is "ABCD"
+
+teardown

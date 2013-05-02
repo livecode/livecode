@@ -56,9 +56,9 @@ static X2MacFontTable XMfonts[MAX_XFONT2MACFONT] = { // X to Mac font table
             { "terminal", "Courier" }
         };
 
-MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
+MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 {
-	reqname = fname.clone();
+	reqname = fname;
 	reqsize = size;
 	reqstyle = style;
 	char *tmpname;
@@ -70,17 +70,7 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	// MW-2005-05-10: Update this to FM type
 	FMFontFamily ffamilyid;		    //font family ID
 	
-	tmpname = strclone(reqname);//make a copy of the font name
-
-	char *sptr = tmpname;
-	if ((sptr = strchr(tmpname, ',')) != NULL)
-	{
-		*sptr = '\0';
-		sptr++;
-		font->charset = MCU_languagetocharset(sptr);
-		if (font->charset)
-			font->unicode = True;
-	}
+	tmpname = strclone(MCStringGetCString(MCNameGetString(fname)));//make a copy of the font name
 	StringPtr reqnamePascal = c2pstr(tmpname);
 	
 	// MW-2005-05-10: Update this call to FM rountines
@@ -92,7 +82,7 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 	{ //font does not exist
 		uint2 i;     // check the font mapping table
 		for (i = 0 ; i < MAX_XFONT2MACFONT ; i++)
-			if (fname == XMfonts[i].Xfontname)
+			if (MCNameIsEqualToCString(fname, XMfonts[i].Xfontname, kMCCompareCaseless))
 			{ //find MAC equivalent of X font name
 				tmpname = strclone(XMfonts[i].Macfontname);
 				reqnamePascal = c2pstr(tmpname);
@@ -163,13 +153,12 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size, uint2 style)
 
 MCFontnode::~MCFontnode()
 {
-	delete reqname;
 	delete font;
 }
 
-MCFontStruct *MCFontnode::getfont(const MCString &fname, uint2 size, uint2 style)
+MCFontStruct *MCFontnode::getfont(MCNameRef fname, uint2 size, uint2 style)
 {
-	if (fname != reqname)
+	if (!MCNameIsEqualTo(fname, *reqname))
 		return NULL;
 	if (size == 0)
 		return font;
@@ -193,8 +182,7 @@ MCFontlist::~MCFontlist()
 	}
 }
 
-MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size,
-                                  uint2 style, Boolean printer)
+MCFontStruct *MCFontlist::getfont(MCNameRef fname, uint2 &size, uint2 style, Boolean printer)
 {
 	MCFontnode *tmp = fonts;
 	if (tmp != NULL)
@@ -211,10 +199,14 @@ MCFontStruct *MCFontlist::getfont(const MCString &fname, uint2 &size,
 	return tmp->getfont(fname, size, style);
 }
 
-void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
+bool MCFontlist::getfontnames(MCStringRef p_type, MCListRef& r_names)
 { //get a list of all the available font in the system
-	ep.clear();
-	short i = 1;
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
+
 	unsigned char fname[255]; //hold family font name
 	
 	FMFontFamilyIterator            fontFamilyIterator;
@@ -224,35 +216,42 @@ void MCFontlist::getfontnames(MCExecPoint &ep, char *type)
 	// Create an iterator to enumerate the font families.
 	status = FMCreateFontFamilyIterator(NULL, NULL, kFMDefaultOptions,
 										&fontFamilyIterator);
-	while ((status = FMGetNextFontFamily(&fontFamilyIterator, &fontFamily)) == noErr)
+	while (t_success && (status = FMGetNextFontFamily(&fontFamilyIterator, &fontFamily)) == noErr)
 	{
 		if (FMGetFontFamilyName(fontFamily, fname) == noErr)
 		{
 			p2cstr(fname);
 			if (fname[0] != '%' && fname[0] != '.')          //exclude printer fonts
-				ep.concatcstring((char *)fname, EC_RETURN, i++ == 1);
+				t_success = MCListAppendCString(*t_list, (char*)fname);
 		}
 	}
 	
 	FMDisposeFontFamilyIterator (&fontFamilyIterator);
+
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_names);
+	return t_success;
 }
 
-void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
+bool MCFontlist::getfontsizes(MCStringRef p_fname, MCListRef& r_sizes)
 {
-	ep.clear();
-	short i;
-	char sizeBuf[U2L];
 	FMFontFamily ffamilyID;
-	char *tmpname = strclone(fname);
+	/* UNCHECKED */ char *tmpname = strclone(MCStringGetCString(p_fname));
 	StringPtr reqnamePascal = c2pstr((char *)tmpname);
 	// MW-2005-05-10: Update this call to FM rountines
 	ffamilyID = FMGetFontFamilyFromName(reqnamePascal);
 	if (ffamilyID == 0)
 	{
-		ep.clear();
-		return;
+		r_sizes = MCValueRetain(kMCEmptyList);
+		return true;
 	}
-	
+
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
+
 	// MW-2013-03-14: [[ Bug 10744 ]] Make sure we return 0 for scalable fonts. I'm
 	//   not sure we need do this anymore - I think all fonts are scalable on Mac these
 	//   days. I'm also assuming that true-type and postscript fonts are always outline
@@ -263,29 +262,37 @@ void MCFontlist::getfontsizes(const char *fname, MCExecPoint &ep)
 	if (FMGetFontFromFontFamilyInstance(ffamilyID, 0, &t_font, NULL) == noErr &&
 		FMGetFontFormat(t_font, &t_type) == noErr &&
 		(t_type == kFMTrueTypeFontTechnology || t_type == kFMPostScriptFontTechnology))
-		ep . setuint(0);
+		t_success = MCListAppendInteger(*t_list, 0);
 	else
 	{
 		//loop from size 6 to 72 point, query if the size is available
-		bool first = true;
-		for (i = 6 ; i <= 72; i++)
-		{
+		for (integer_t i = 6 ; t_success && i <= 72; i++)
 			if (RealFont(ffamilyID, i) == True)
-			{
-				ep.concatuint(i, EC_RETURN, first);
-				first = false;
-			}
-		}
+				t_success = MCListAppendInteger(*t_list, i);
+
 	}
 	delete tmpname;
+
+	if (t_success)
+		t_success = MCListCopy(*t_list, r_sizes);
+	return t_success;
 }
 
-void MCFontlist::getfontstyles(const char *fname, uint2 fsize, MCExecPoint &ep)
+bool MCFontlist::getfontstyles(MCStringRef p_fname, uint2 fsize, MCListRef& r_styles)
 {
-	ep.setstaticcstring("plain\nbold\nitalic\nbold-italic");
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
+	t_success = MCListAppend(*t_list, MCN_plain) &&
+		MCListAppend(*t_list, MCN_bold) &&
+		MCListAppend(*t_list, MCN_italic) &&
+		MCListAppend(*t_list, MCN_bold_italic);
+	return t_success && MCListCopy(*t_list, r_styles);
 }
 
-bool MCFontlist::getfontstructinfo(const char *&r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
+bool MCFontlist::getfontstructinfo(MCNameRef& r_name, uint2 &r_size, uint2 &r_style, Boolean &r_printer, MCFontStruct *p_font)
 {
 	MCFontnode *t_font = fonts;
 	while (t_font != NULL)

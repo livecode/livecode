@@ -188,7 +188,7 @@ void MCEPS::setrect(const MCRectangle &nrect)
 		rect = nrect;
 }
 
-Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
+Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -242,12 +242,12 @@ Exec_stat MCEPS::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolean
 		ep.setint(MCU_max(pagecount, 1));
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = True;
 	real8 n;
@@ -259,7 +259,7 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 	{
 	case P_TRAVERSAL_ON:
 	case P_SHOW_BORDER:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		resetscale();
 		break;
@@ -411,7 +411,7 @@ Exec_stat MCEPS::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean eff
 			curpage = i;
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -717,8 +717,11 @@ void MCEPS::resetscale()
 		yscale = xscale;
 	}
 }
-
-Boolean MCEPS::import(char *fname, IO_handle stream)
+/* WRAPPER */ bool MCEPS::import(MCStringRef p_filename, IO_handle p_stream)
+{
+	return True == import(MCStringGetCString(p_filename), p_stream);
+}
+Boolean MCEPS::import(const char *fname, IO_handle stream)
 {
 	size = (uint4)MCS_fsize(stream);
 	delete postscript;

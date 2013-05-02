@@ -1,0 +1,11 @@
+setup
+
+test-error sqrt(-1)
+
+test sqrt(0.25) is 0.5
+
+repeat with i = 1 to 10 step 0.1
+	test sqrt(i) ^ 2 is i
+end repeat
+
+teardown

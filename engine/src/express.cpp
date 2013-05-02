@@ -35,6 +35,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "syntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCExpression::MCExpression()
 {
 	rank = FR_VALUE;
@@ -60,7 +64,7 @@ MCVariable *MCExpression::evalvar(MCExecPoint& ep)
 	return NULL;
 }
 
-Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue*& r_ref)
+Exec_stat MCExpression::evalcontainer(MCExecPoint& ep, MCContainer*& r_container)
 {
 	return ES_ERROR;
 }
@@ -392,64 +396,58 @@ Parse_stat MCExpression::getparams(MCScriptPoint &sp, MCParameter **params)
 	return PS_NORMAL;
 }
 
+/* struct compare_arrays_t
+{
+	MCArrayRef other_array;
+	bool case_sensitive;
+	MCExecPoint *ep;
+	compare_t result;
+};
+
+bool MCExpression::compare_array_element(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	compare_arrays_t *ctxt;
+	ctxt = (compare_arrays_t *)p_context;
+
+	MCValueRef t_other_value;
+	if (MCArrayFetchValue(ctxt -> other_array, ctxt -> case_sensitive, p_key, t_other_value))
+	{
+		MCExecPoint ep1(*(ctxt -> ep)), ep2(*(ctxt -> ep));
+		ep1 . setvalueref(p_value);
+		ep2 . setvalueref(t_other_value);
+		ctxt -> result = MCExpression::compare_values(ep1, ep2, ctxt -> ep, true);
+		if (ctxt -> result == 0)
+			return true;
+	}
+	else
+		ctxt -> result = MAXUINT2;
+
+	return false;
+}
+
 // OK-2009-02-17: [[Bug 7693]] - This function implements array comparison.
 // The return value is 0 if the arrays are equal, non-zero otherwise. For now this is left as an int2
 // for more easy compatibility with compare_values.
 int2 MCExpression::compare_arrays(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context)
 {
-	MCVariableArray *t_array1, *t_array2;
-	t_array1 = ep1 . getarray() -> get_array();
-	t_array2 = ep2 . getarray() -> get_array();
+	MCArrayRef t_array1, t_array2;
+	t_array1 = ep1 . getarrayref();
+	t_array2 = ep2 . getarrayref();
 
-	// If one of the arrays has more keys it is bigger, otherwise we don't know yet.
-	if (t_array1 -> getnfilled() > t_array2 -> getnfilled())
+	if (MCArrayGetCount(t_array1) > MCArrayGetCount(t_array2))
 		return 1;
-	else if (t_array2 -> getnfilled() > t_array1 -> getnfilled())
+
+	if (MCArrayGetCount(t_array1) < MCArrayGetCount(t_array2))
 		return -1;
-		
-	// From here onwards, we know that the arrays have the same number of elements, so begin
-	// iterating through to compare them.
-	uint4 t_index1, t_index2;
-	t_index1 = 0;
-	t_index2 = 0;
-
-	MCHashentry *t_entry1, *t_entry2;
-	t_entry1 = NULL;
-	t_entry2 = NULL;
 	
-	int2 t_result;
-	t_result = 0;
-	do
-	{
-		t_entry1 = t_array1 -> getnextkey(t_index1, t_entry1);
+	compare_arrays_t t_ctxt;
+	t_ctxt . other_array = t_array2;
+	t_ctxt . case_sensitive = p_context -> getcasesensitive() == True;
+	t_ctxt . ep = p_context;
+	t_ctxt . result = 0;
+	MCArrayApply(t_array1, compare_array_element, &t_ctxt);
 
-		// As we know the two arrays have the same number of elements, if this number of elements happens to be zero, we
-		// can straight away say they are equal, without bothering to lookup the corresponding element in the other array.
-		if (t_entry1 == NULL)
-			return 0;
-
-		t_entry2 = t_array2 -> lookuphash(t_entry1 -> string, p_context -> getcasesensitive(), false);
-
-		// If the corresponding element in the second array cannot be found, this means we have been asked to compare two
-		// arrays with the same number of elements, but different keys. If this is the case, we cannot compare them beyond
-		// saying that they are not equal (however this is all we need for now anyway).
-		if (t_entry2 == NULL)
-			return MAXINT2;
-
-		// Given that the two key names are the same, we need to compare the values.
-		// This is done simply by making a recursive call to compare_values. We create
-		// new exec points from p_context to ensure nothing gets messed up.
-		MCExecPoint t_ep1(*p_context);
-		MCExecPoint t_ep2(*p_context);
-		t_entry1 -> value . fetch(t_ep1, false);
-		t_entry2 -> value . fetch(t_ep2, false);
-		t_result = compare_values(t_ep1, t_ep2, p_context, true);
-		if (t_result != 0)
-			return t_result;
-
-	} while (t_entry1 != NULL);
-	
-	return t_result;
+	return t_ctxt . result;
 }
 
 int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoint *p_context, bool p_compare_arrays)
@@ -465,8 +463,8 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 	if (p_compare_arrays)
 	{
 		bool t_ep1_array, t_ep2_array;
-		t_ep1_array = ep1 . getformat() == VF_ARRAY;
-		t_ep2_array = ep2 . getformat() == VF_ARRAY;
+		t_ep1_array = ep1 . isarray()
+		t_ep2_array = ep2 . isarray();
 		if (t_ep1_array && t_ep2_array)
 			return compare_arrays(ep1, ep2, p_context);
 		if (t_ep1_array)
@@ -477,7 +475,7 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 
 	Boolean n1 = True;
 	Boolean n2 = True;
-	if (ep1.getformat() == VF_STRING)
+	if (ep1.isstring())
 	{
 		n1 = False;
 		const char *sptr = ep1.getsvalue().getstring();
@@ -494,7 +492,7 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 		}
 	}
 	if (n1)
-		if (ep2.getformat() == VF_STRING)
+		if (ep2.isstring())
 		{
 			n2 = False;
 			const char *sptr = ep2.getsvalue().getstring();
@@ -544,7 +542,6 @@ int2 MCExpression::compare_values(MCExecPoint &ep1, MCExecPoint &ep2, MCExecPoin
 	return i;
 }
 
-
 Exec_stat MCExpression::compare(MCExecPoint &ep1, int2 &i, bool p_compare_arrays)
 {
 	MCExecPoint ep2(ep1);
@@ -571,7 +568,7 @@ Exec_stat MCExpression::compare(MCExecPoint &ep1, int2 &i, bool p_compare_arrays
 	i = compare_values(ep1, ep2, &t_original_ep, p_compare_arrays);
 	
 	return ES_NORMAL;
-}
+}*/
 
 Parse_stat MCExpression::parse(MCScriptPoint &sp, Boolean the)
 {
@@ -589,6 +586,22 @@ void MCExpression::initpoint(MCScriptPoint &sp)
 	line = sp.getline();
 	pos = sp.getpos();
 }
+
+void MCExpression::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginExpression(ctxt, line, pos);
+	MCSyntaxFactoryEvalUnimplemented(ctxt);
+	MCSyntaxFactoryEndExpression(ctxt);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCFuncref::MCFuncref(MCNameRef inname)
 {
@@ -756,11 +769,9 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	MCresult->fetch(ep);
-	if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
-		ep.grabsvalue();
-	else if (ep.getformat() == VF_ARRAY)
-		ep.grabarray();
+	MCresult->eval(ep);
 
 	return ES_NORMAL;
 }
+
+////////////////////////////////////////////////////////////////////////////////

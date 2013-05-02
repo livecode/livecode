@@ -1,0 +1,7 @@
+setup
+
+do "set the cDidThis of this stack to 100"
+
+test the cDidThis of this stack is 100
+
+teardown

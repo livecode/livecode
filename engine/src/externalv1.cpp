@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -40,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 
 #include "external.h"
+
+#ifdef OLD_EXEC
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1955,3 +1956,10 @@ MCExternalInterface g_external_interface =
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#endif
+
+MCExternal *MCExternalCreateV1(void)
+{
+	return nil;
+}

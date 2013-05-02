@@ -28,13 +28,11 @@ typedef struct Blockatts
 {
 	MCColor *color;
 	MCColor *backcolor;
-	// MW-2012-01-06: [[ Block Changes ]] Change the linktext and imagesource
-	//   strings to be interred names.
-	MCNameRef linktext;
-	MCNameRef imagesource;
-	// MW-2012-01-06: [[ Block Metadata ]] An arbitrary (text) string that can
-	//   be attached to a run of text.
-	MCNameRef metadata;
+	// MW-2012-05-04: [[ Values ]] linkText, imageSource and metaData are all
+	//   better represented as uniqued strings, rather than names.
+	MCStringRef linktext;
+	MCStringRef imagesource;
+	MCStringRef metadata;
 	MCImage *image;
 	// MW-2012-01-06: [[ Block Changes ]] These are the x, y location of the
 	//   image source (previously unioned with colornames).
@@ -172,11 +170,13 @@ public:
 	void freerefs();
 	void openimage();
 	void closeimage();
-	const char *getlinktext();
-	const char *getimagesource();
-	// MW-2012-01-06: [[ Block Metadata ]] Returns the metadata of the block as
-	//   a cstring if the property has been set; otherwise it returns nil.
-	const char *getmetadata(void);
+
+	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
+	//   strings.
+	MCStringRef getlinktext();
+	MCStringRef getimagesource();
+	MCStringRef getmetadata(void);
+
 	void sethilite(Boolean on);
 	
 	bool getfirstlinebreak(uint2& index);

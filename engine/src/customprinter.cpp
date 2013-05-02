@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-#include "core.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -1015,7 +1014,7 @@ void MCCustomMetaContext::dotextmark(MCMark *p_mark)
 	t_state . font_size = p_mark -> text . font -> size;
 #elif defined(_LINUX)
 	extern MCFontlist *MCFontlistGetCurrent(void);
-	const char *t_name;
+	MCNameRef t_name;
 	uint2 t_size, t_style;
 	MCFontlistGetCurrent() -> getfontreqs(p_mark -> text . font, t_name, t_size, t_style);
 	t_state . font_size = t_size;
@@ -1071,7 +1070,7 @@ public:
 
 	const char *Error(void) const;
 
-	MCPrinterResult Start(const char *p_title, MCVariableValue *p_options);
+	MCPrinterResult Start(const char *p_title, MCArrayRef p_options);
 	MCPrinterResult Finish(void);
 
 	MCPrinterResult Cancel(void);
@@ -1116,7 +1115,30 @@ const char *MCCustomPrinterDevice::Error(void) const
 	return m_device -> GetError();
 }
 
-MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValue *p_options)
+struct convert_options_array_t
+{
+	uindex_t index;
+	char **option_keys;
+	char **option_values;
+};
+
+static bool convert_options_array(void *p_context, MCArrayRef p_array, MCNameRef p_key, MCValueRef p_value)
+{
+	convert_options_array_t *ctxt;
+	ctxt = (convert_options_array_t *)p_context;
+
+	MCExecPoint ep(nil, nil, nil);
+	if (!MCCStringClone(MCStringGetCString(MCNameGetString(p_key)), ctxt -> option_keys[ctxt -> index]))
+		return false;
+	if (!ep . setvalueref(p_value))
+		return false;
+	if (!MCCStringClone(ep . getcstring(), ctxt -> option_values[ctxt -> index]))
+		return false;
+	ctxt -> index += 1;
+	return true;
+}
+
+MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCArrayRef p_options)
 {
 	MCPrinterResult t_result;
 	t_result = PRINTER_RESULT_SUCCESS;
@@ -1137,7 +1159,7 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 	t_option_count = 0;
 	if (t_result == PRINTER_RESULT_SUCCESS && p_options != nil)
 	{
-		t_option_count = p_options -> get_array() -> getnfilled();
+		t_option_count = MCArrayGetCount(p_options);
 		if (!MCMemoryNewArray(t_option_count, t_option_keys) ||
 			!MCMemoryNewArray(t_option_count, t_option_values))
 			t_result = PRINTER_RESULT_ERROR;
@@ -1145,22 +1167,12 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
 	{
-		MCHashentry *t_option;
-		t_option = nil;
-		for(uint32_t i = 0; i < t_option_count; i++)
-		{
-			MCExecPoint ep(nil, nil, nil);
-
-			t_option = p_options -> get_array() -> getnextkey(t_option);
-			t_option -> value . fetch(ep);
-
-			t_option_keys[i] = t_option -> string;
-			if (!MCCStringClone(ep . getcstring(), t_option_values[i]))
-			{
-				t_result = PRINTER_RESULT_ERROR;
-				break;
-			}
-		}
+		convert_options_array_t ctxt;
+		ctxt . index = 0;
+		ctxt . option_keys = t_option_keys;
+		ctxt . option_values = t_option_values;
+		if (!MCArrayApply(p_options, convert_options_array, &ctxt))
+			t_result = PRINTER_RESULT_ERROR;
 	}
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
@@ -1174,7 +1186,10 @@ MCPrinterResult MCCustomPrinterDevice::Start(const char *p_title, MCVariableValu
 
 	if (t_option_values != nil)
 		for(uint32_t i = 0; i < t_document . option_count; i++)
+		{
+			MCCStringFree(t_option_keys[i]);
 			MCCStringFree(t_option_values[i]);
+		}
 
 	MCMemoryDeleteArray(t_option_values);
 	MCMemoryDeleteArray(t_option_keys);
@@ -1433,7 +1448,7 @@ public:
 	MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device);
 	~MCCustomPrinter(void);
 
-	void SetDeviceOptions(MCVariableValue *p_options);
+	void SetDeviceOptions(MCArrayRef p_options);
 
 protected:
 	void DoInitialize(void);
@@ -1456,7 +1471,7 @@ protected:
 private:
 	char *m_device_name;
 	MCCustomPrintingDevice *m_device;
-	MCVariableValue *m_device_options;
+	MCArrayRef m_device_options;
 };
 
 MCCustomPrinter::MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device)
@@ -1475,13 +1490,16 @@ MCCustomPrinter::~MCCustomPrinter(void)
 	Finalize();
 
 	delete m_device_name;
-	delete m_device_options;
+	MCValueRelease(m_device_options);
 }
 
-void MCCustomPrinter::SetDeviceOptions(MCVariableValue *p_options)
+void MCCustomPrinter::SetDeviceOptions(MCArrayRef p_options)
 {
+	MCValueRelease(m_device_options);
+	m_device_options = nil;
+
 	if (p_options != nil)
-		m_device_options = new MCVariableValue(*p_options);
+		/* UNCHECKED */ MCArrayCopy(p_options, m_device_options);
 }
 
 void MCCustomPrinter::DoInitialize(void)
@@ -1977,7 +1995,7 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filename, MCVariableValue *p_options, MCPrinter*& r_printer)
+Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;

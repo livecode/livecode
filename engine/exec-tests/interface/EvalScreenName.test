@@ -1,0 +1,12 @@
+setup
+
+test the screenname is not empty
+
+if the platform is "win32" then
+	test the screenname is "local win32"
+else
+	// TODO - add other platform tests
+	test false
+end if
+
+teardown

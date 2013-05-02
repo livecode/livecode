@@ -1,0 +1,16 @@
+setup
+
+set the useSystemDate to false
+test "12/31/2012" is a date
+test "31/12/2012" is not a date
+
+set the useSystemDate to true
+test "31/12/2012" is a date
+test "12/31/2012" is not a date
+
+test 1234567890 is a date
+test 1234567890.12345 is a date
+
+test empty is not a date
+
+teardown

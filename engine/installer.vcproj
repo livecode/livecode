@@ -192,8 +192,8 @@
 			RelativePathToProject=".\engine\kernel.vcproj"
 		/>
 		<ProjectReference
-			ReferencedProjectIdentifier="{6899CD7E-BE16-44CE-A28B-27304F42E127}"
-			RelativePathToProject=".\libcore\libcore.vcproj"
+			ReferencedProjectIdentifier="{8862ADC2-BEB0-4765-A1E4-0E3493718999}"
+			RelativePathToProject=".\libfoundation\libfoundation.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{09751ABE-310B-4324-BACE-F7FFDA2299DE}"

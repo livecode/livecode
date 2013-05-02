@@ -47,9 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #define STACK_SIZE "10000"
 #define FREE_SIZE  "0"
-#define HEAP_SPACE  "1000000"
 #define DISK_SPACE  "1000000"
-#define STACK_SPACE  "1000000"
 
 #define START_ID 1001
 
@@ -580,11 +578,11 @@ Keynames;
 typedef struct _Linkatts
 {
 	MCColor color;
-	char *colorname;
+	MCStringRef colorname;
 	MCColor hilitecolor;
-	char *hilitecolorname;
+	MCStringRef hilitecolorname;
 	MCColor visitedcolor;
-	char *visitedcolorname;
+	MCStringRef visitedcolorname;
 	Boolean underline;
 }
 Linkatts;

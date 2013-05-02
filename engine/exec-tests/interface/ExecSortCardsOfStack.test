@@ -1,0 +1,33 @@
+setup 
+
+create field
+
+put "c" into field 1
+
+create card
+
+create field
+
+put "a" into field 1
+
+create card
+
+create field
+
+put "b" into field 1
+
+sort cards by field 1
+
+go card 1
+
+test field 1 is "a"
+
+go card 2
+
+test field 1 is "b"
+
+go card 3
+
+test field 1 is "c"
+
+teardown

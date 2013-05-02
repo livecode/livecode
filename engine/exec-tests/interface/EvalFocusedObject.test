@@ -1,0 +1,8 @@
+setup
+create field
+focus on field 1
+test (the focusedObject is the long id of field 1)
+
+focus on nothing
+test (the focusedObject is the long id of this card)
+teardown

@@ -1,0 +1,23 @@
+setup
+
+test (the date) is (the english date)
+set the useSystemDate to true
+test (the date) is (the system date)
+set the useSystemDate to false
+
+local tVar
+set the itemDelimiter to "/"
+test the number of items in the date is 3
+put item 1 of the date into tVar
+test tVar is an integer
+test tVar >= 1 and tVar <= 12
+
+put item 2 of the date into tVar
+test tVar is an integer
+test tVar >= 1 and tVar <= 31
+
+put item 3 of the date into tVar
+test tVar is an integer
+test tVar >= 0 and tVar <= 99
+
+teardown

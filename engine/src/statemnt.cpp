@@ -37,6 +37,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "syntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCStatement::MCStatement()
 {
 	line = pos = 0;
@@ -121,8 +125,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		case PS_EOF:
 			if (needchunk)
 			{
-				MCperror->add
-				(PE_STATEMENT_BADCHUNK, sp);
+				MCperror->add(PE_STATEMENT_BADCHUNK, sp);
 				return PS_ERROR;
 			}
 			return PS_NORMAL;
@@ -134,8 +137,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		if (newptr->parse(sp, False) != PS_NORMAL)
 		{
 			delete newptr;
-			MCperror->add
-			(PE_STATEMENT_BADCHUNK, sp);
+			MCperror->add(PE_STATEMENT_BADCHUNK, sp);
 			return PS_ERROR;
 		}
 		if (pptr == NULL)
@@ -159,8 +161,7 @@ Parse_stat MCStatement::gettargets(MCScriptPoint &sp, MCChunk **targets,
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_NOTAND, sp);
+			MCperror->add(PE_STATEMENT_NOTAND, sp);
 			return PS_ERROR;
 		}
 		needchunk = True;
@@ -191,8 +192,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		case PS_EOF:
 			if (needparam)
 			{
-				MCperror->add
-				(PE_STATEMENT_BADPARAM, sp);
+				MCperror->add(PE_STATEMENT_BADPARAM, sp);
 				return PS_ERROR;
 			}
 			return PS_NORMAL;
@@ -204,8 +204,7 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		if (newptr->parse(sp) != PS_NORMAL)
 		{
 			delete newptr;
-			MCperror->add
-			(PE_STATEMENT_BADPARAM, sp);
+			MCperror->add(PE_STATEMENT_BADPARAM, sp);
 			return PS_ERROR;
 		}
 		if (pptr == NULL)
@@ -228,14 +227,12 @@ Parse_stat MCStatement::getparams(MCScriptPoint &sp, MCParameter **params)
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_NOTSEP, sp);
+			MCperror->add(PE_STATEMENT_NOTSEP, sp);
 			return PS_ERROR;
 		}
 		if (type != ST_SEP)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 		needparam = True;
@@ -252,14 +249,12 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 	{
 		if (sp.next(type) != PS_NORMAL)
 		{
-			MCperror->add
-			(PE_STATEMENT_NOKEY, sp);
+			MCperror->add(PE_STATEMENT_NOKEY, sp);
 			return PS_ERROR;
 		}
 		if (sp.lookup(SP_FACTOR, te) != PS_NORMAL || te->type != TT_FUNCTION)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADKEY, sp);
+			MCperror->add(PE_STATEMENT_BADKEY, sp);
 			return PS_ERROR;
 		}
 		switch (te->which)
@@ -277,8 +272,7 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 			mstate |= MS_SHIFT;
 			break;
 		default:
-			MCperror->add
-			(PE_STATEMENT_BADKEY, sp);
+			MCperror->add(PE_STATEMENT_BADKEY, sp);
 			return PS_ERROR;
 		}
 		if (sp.skip_token(SP_COMMAND, TT_ELSE, S_UNDEFINED) == PS_NORMAL)
@@ -294,14 +288,12 @@ Parse_stat MCStatement::getmods(MCScriptPoint &sp, uint2 &mstate)
 		case PS_EOF:
 			return PS_NORMAL;
 		default:
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 		if (type != ST_SEP)
 		{
-			MCperror->add
-			(PE_STATEMENT_BADSEP, sp);
+			MCperror->add(PE_STATEMENT_BADSEP, sp);
 			return PS_ERROR;
 		}
 	}
@@ -347,6 +339,15 @@ void MCStatement::getit(MCScriptPoint &sp, MCVarref *&it)
 	if (sp.findnewvar(MCN_it, kMCEmptyName, &it) != PS_NORMAL)
 		it = it; // This should handle an error.
 }
+
+void MCStatement::compile(MCSyntaxFactoryRef ctxt)
+{
+	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+	MCSyntaxFactoryExecUnimplemented(ctxt);
+	MCSyntaxFactoryEndStatement(ctxt);
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCComref::MCComref(MCNameRef n)
 {
@@ -503,3 +504,5 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 		MCnexecutioncontexts--;
 	return stat;
 }
+
+////////////////////////////////////////////////////////////////////////////////

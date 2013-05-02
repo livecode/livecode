@@ -57,8 +57,8 @@ public:
 	Boolean close(Boolean force);
 
 	bool hasfeature(MCPlatformFeature feature);
-	const char *getdisplayname(void);
-	void getvendorstring(MCExecPoint &ep);
+	MCNameRef getdisplayname(void);
+	MCNameRef getvendorname(void);
 	uint2 getwidth();
 	uint2 getheight();
 	uint2 getwidthmm();
@@ -126,9 +126,9 @@ public:
 	Boolean uint4towindow(uint4, Window &w);
 
 	void beep();
-	bool setbeepsound(const char *sound);
-	const char *getbeepsound(void);
-	void getbeep(uint4 property, MCExecPoint &ep);
+	bool setbeepsound(MCStringRef p_beep_sound);
+	bool getbeepsound(MCStringRef& r_beep_sound);
+	void getbeep(uint4 property, int4& r_value);
 	void setbeep(uint4 property, int4 beep);
 
 	MCBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
@@ -163,10 +163,10 @@ public:
 	void flushevents(uint2 e);
 	void updatemenubar(Boolean force);
 	Boolean istripleclick();
-	void getkeysdown(MCExecPoint &ep);
+	bool getkeysdown(MCListRef& r_list);
 	
-	uint1 fontnametocharset(const char *oldfontname);
-	char *charsettofontname(uint1 charset, const char *oldfontname);
+	uint1 fontnametocharset(MCStringRef p_fontname);
+//	char *charsettofontname(uint1 charset, const char *oldfontname);
 	
 	void clearIME(Window w);
 	void openIME();

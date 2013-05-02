@@ -1,0 +1,25 @@
+setup
+
+create field
+
+put "FOO" into field 1
+
+set the caseSensitive to true
+
+replace "F" with "b" in field 1
+
+replace "B" with "x" in field 1
+
+replace "OO" with "ar" in field 1
+
+replace "AR" with "x" in field 1
+
+set the caseSensitive to false
+
+replace "A" with "o" in field 1
+
+replace "BO" with "fooba" in field 1
+
+test the text of field 1 is "foobar"
+
+teardown

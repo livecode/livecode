@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -317,17 +316,18 @@ Exec_stat MCGradientFillGetProperty(MCGradientFill* p_gradient, MCExecPoint &ep,
 	}
 	else
 	{
-		MCVariableValue *v = new MCVariableValue;
-		v->assign_new_array(tablesize);
+		MCAutoArrayRef v;
+		/* UNCHECKED */ MCArrayCreateMutable(&v);
 
 		MCerrorlock++;
 		while (tablesize--)
 		{
 			MCGradientFillGetProperty(p_gradient, gradientprops[tablesize].value, ep);
-			v->store_element(ep, gradientprops[tablesize].token);
+			ep.storearrayelement_cstring(*v, gradientprops[tablesize].token);
 		}
 		MCerrorlock--;
-		ep.setarray(v, True);
+
+		ep.setvalueref(*v);
 	}
 	return ES_NORMAL;
 }
@@ -544,32 +544,37 @@ Exec_stat MCGradientFillSetProperty(MCGradientFill* &p_gradient, MCExecPoint &ep
 		
 		if (t_stat == ES_NORMAL)
 			t_stat = MCGradientFillSetProperty(t_gradient, t_property, ep, dirty, rect);
-			}
-	else
+	}
+	else if (ep . isarray() || ep . isempty())
 	{
-		MCVariableValue *v = ep.getarray();
-		if (v == NULL)
+		MCAutoArrayRef v;
+		if (ep . copyasarrayref(&v))
 		{
-			delete t_gradient;
-			t_gradient = NULL;
-			p_gradient = NULL;
-			dirty = True;
-		}
-		else if (!v->is_array())
-		{
-			MCeerror->add(EE_GRAPHIC_BADGRADIENTKEY, 0, 0, data);
-			t_stat = ES_ERROR;
+			if (MCArrayGetCount(*v) == 0)
+			{
+				delete t_gradient;
+				t_gradient = NULL;
+				p_gradient = NULL;
+				dirty = True;
+			}
+			else
+			{
+				MCerrorlock++;
+				while (tablesize--)
+				{
+					ep . fetcharrayelement_cstring(*v, gradientprops[tablesize].token);
+					MCGradientFillSetProperty(t_gradient, gradientprops[tablesize].value, ep, dirty, rect);
+				}
+				MCerrorlock--;
+			}
 		}
 		else
-		{
-			MCerrorlock++;
-			while (tablesize--)
-			{
-				v->fetch_element(ep, gradientprops[tablesize].token);
-				MCGradientFillSetProperty(t_gradient, gradientprops[tablesize].value, ep, dirty, rect);
-			}
-			MCerrorlock--;
-		}
+			t_stat = ES_ERROR;
+	}
+	else
+	{
+		MCeerror->add(EE_GRAPHIC_BADGRADIENTKEY, 0, 0, data);
+		t_stat = ES_ERROR;
 	}
 
 	if (t_stat == ES_ERROR)
@@ -668,7 +673,7 @@ void MCGradientFillRampUnparse(MCGradientFillStop* p_stops, uint1 p_stop_count, 
 {
 	uint4 i;
 
-	p_ep.getbuffer(STOP_LINE_LENGTH*p_stop_count + 1);
+	//p_ep.getbuffer(STOP_LINE_LENGTH*p_stop_count + 1);
 	p_ep.clear();
 	for (i=0; i<p_stop_count; i++)
 	{
@@ -762,7 +767,7 @@ template<MCGradientFillKind x_type> static inline int4 compute_index(int4 p_x, i
 		}
 		break;
 	default:
-		assert (false);
+		MCUnreachable();
 		return NULL;
 	}
 	if (p_mirror)

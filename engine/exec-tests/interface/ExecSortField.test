@@ -1,0 +1,11 @@
+setup 
+
+create field
+
+put "b" & CR & "d" & CR & "a" & CR & "c" into field 1
+
+sort field 1
+
+test line 1 of field 1 is "a" and line 2 of field 1 is "b" and line 3 of field 1 is "c" and line 4 of field 1 is "d"
+
+teardown

@@ -273,10 +273,10 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	else
     {
         if (p_status == kMCSystemUrlStatusLoading)
-            context -> data . append_string(*(const MCString *)p_data);
-        send_url_progress(context -> object, p_status, context -> url, context -> data . get_string() . getlength(), context -> total, (const char *)p_data);
+		context -> data . append_string(*(const MCString *)p_data);
+	send_url_progress(context -> object, p_status, context -> url, context -> data . get_string() . getlength(), context -> total, (const char *)p_data);
     }
-	
+		
 		
 	return true;
 }
@@ -804,14 +804,15 @@ MCSOutputLineEndings MCS_get_outputlineendings(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_set_session_save_path(const char *p_path)
+bool MCS_set_session_save_path(MCStringRef p_path)
 {
 	return true;
 }
 
-const char *MCS_get_session_save_path(void)
+bool MCS_get_session_save_path(MCStringRef& r_path);
 {
-	return NULL;
+	r_path = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 bool MCS_set_session_lifetime(uint32_t p_lifetime)
@@ -824,24 +825,26 @@ uint32_t MCS_get_session_lifetime(void)
 	return 0;
 }
 
-bool MCS_set_session_name(const char *p_name)
+bool MCS_set_session_name(MCStringRef p_name)
 {
 	return true;
 }
 
-const char *MCS_get_session_name(void)
+bool MCS_get_session_name(MCStringRef &r_name)
 {
-	return NULL;
+	r_name = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-bool MCS_set_session_id(const char *p_id)
+bool MCS_set_session_id(MCStringRef p_id)
 {
 	return true;
 }
 
-const char *MCS_get_session_id(void)
+bool MCS_get_session_id(MCStringRef &r_id)
 {
-	return NULL;
+	r_name = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

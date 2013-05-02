@@ -27,14 +27,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define SAVE_ENCRYPTED 0x80000000
 #define SAVE_LARGE     0x40000000
 
-enum IO_stat {
-    IO_NORMAL,
-    IO_NONE,
-    IO_ERROR,
-    IO_EOF,
-    IO_TIMEOUT
-};
-
 enum Open_mode {
     OM_APPEND,
     OM_NEITHER,
@@ -182,7 +174,7 @@ typedef IO_header * IO_handle;
 
 typedef struct _Streamnode
 {
-	char *name;
+	MCNameRef name;
 	Open_mode mode;
 	IO_handle ihandle;
 	IO_handle ohandle;

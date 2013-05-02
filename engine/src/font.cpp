@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -83,7 +82,7 @@ bool MCFontCreate(MCNameRef p_name, MCFontStyle p_style, int32_t p_size, MCFontR
 
 	uint2 t_temp_size;
 	t_temp_size = self -> size;
-	self -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(self -> name), t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
+	self -> fontstruct = MCdispatcher -> loadfont(self -> name, t_temp_size, MCFontStyleToTextStyle(self -> style), (self -> style & kMCFontStylePrinterMetrics) != 0);
 
 	self -> next = s_fonts;
 	s_fonts = self;

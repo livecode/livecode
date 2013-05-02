@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -75,7 +74,7 @@ extern "C"
 }
 
 static void configureSerialPort(int sRefNum);
-static void getResourceInfo(char *&list, uint4 &len, ResType searchType);
+static bool getResourceInfo(MCListRef p_list, ResType p_type);
 static void parseSerialControlStr(char *set, struct termios *theTermios);
 
 char *path2utf(char *path);
@@ -237,7 +236,8 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		MCresult->sets("can't open file");
 	else
 	{
-		char *buffer = ep.getbuffer(buf.st_size);
+		char *buffer;
+		/* UNCHECKED */ ep . reserve(buf . st_size, buffer); 
 		if (buffer == NULL)
 		{
 			ep.clear();
@@ -253,7 +253,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 			}
 			else
 			{
-				ep.setlength(tsize);
+				ep . commit(tsize);
 				if (!binary)
 					ep.texttobinary();
 				MCresult->clear(False);
@@ -599,35 +599,24 @@ Boolean MCS_noperm(const char *path)
 
 
 // File queries
-Boolean MCS_exists(const char *path, Boolean file)
+
+bool MCS_exists(MCStringRef p_path, bool p_is_file)
 {
-	if (path == NULL || !*path)
-		return False;
-	Boolean found = False;
-	
-	// OK-2010-01-08: [[Bug 7872]] - MCS_resolvepath can return null if a path in the form ~<non-existing-username> is given.
-	// This will cause path2utf to crash. So instead we check for null and return false.
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(path);
-	if (t_resolved_path == NULL)
-		return False;
-	
-	char *newpath = path2utf(t_resolved_path);
+	if (MCStringGetLength(p_path) == 0)
+		return false;
 
+	MCAutoStringRef t_resolved, t_utf8_path;
+	if (!MCS_resolvepath(p_path, &t_resolved) ||
+		!MCU_nativetoutf8(*t_resolved, &t_utf8_path))
+		return false;
 
+	bool t_found;
 	struct stat buf;
-	found = stat(newpath, (struct stat *)&buf) == 0;
-	if (found)
-		if (file)
-		{
-			if (buf.st_mode & S_IFDIR)
-				found = False;
-		}
-		else
-			if (!(buf.st_mode & S_IFDIR))
-				found = False;
-	delete newpath;
-	return found;
+	t_found = stat(MCStringGetCString(*t_utf8_path), (struct stat *)&buf) == 0;
+	if (t_found)
+		t_found = (p_is_file == ((buf.st_mode & S_IFDIR) == 0));
+
+	return t_found;
 }
 
 // File actions
@@ -775,35 +764,37 @@ IO_stat MCS_trunc(IO_handle stream)
 
 // Anything else
 
-const char *MCS_tmpnam()
+bool MCS_tmpnam(MCStringRef& r_path)
 {
-	static char *s_last_path;
-	
-	free(s_last_path);
-	s_last_path = nil;
-
+	char *t_temp_file = nil;
 	FSRef t_folder_ref;
 	if (FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
 	{
-		char *t_temp_file;
 		t_temp_file = MCS_fsref_to_path(t_folder_ref);
 		MCCStringAppendFormat(t_temp_file, "/tmp.%d.XXXXXXXX", getpid());
 		
 		int t_fd;
 		t_fd = mkstemp(t_temp_file);
-		if (t_fd != -1)
+		if (t_fd == -1)
 		{
-			close(t_fd);
-			unlink(t_temp_file);
-			s_last_path = t_temp_file;
+			delete t_temp_file;
+			return false;
 		}
+
+		close(t_fd);
+		unlink(t_temp_file);
 	}
 	
-	if (s_last_path == nil)
-		return "";
-	
-	return s_last_path;
+	if (t_temp_file == nil)
+	{
+		r_path = MCValueRetain(kMCEmptyString);
+		return true;
 	}
+	
+	bool t_success = MCStringCreateWithCString(t_temp_file, r_path);
+	delete t_temp_file;
+	return t_success;
+}
 	
 	
 /********************************************************************/
@@ -940,7 +931,7 @@ static void configureSerialPort(int sRefNum)
 // MH Updating createalias to use FSRefs instead.
 // MW-2007-12-18: [[ Bug 5679 ]] 'create alias' not working on OS X
 // MW-2007-12-18: [[ Bug 1059 ]] 'create alias' doesn't work when passed a folder
-Boolean MCS_createalias(char *p_source_path, char *p_dest_path)
+Boolean MCS_createalias(const char *p_source_path, const char *p_dest_path)
 {
 	bool t_error;
 	t_error = false;
@@ -1071,49 +1062,26 @@ Boolean MCS_createalias(char *p_source_path, char *p_dest_path)
 	return !t_error;
 }
 
-void MCS_resolvealias(MCExecPoint &p_context)
+bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error)
 {
-	const char *t_error;
-	t_error = NULL;
-	
-	char *t_path;
-	t_path = p_context . getsvalue() . clone();
-	
 	FSRef t_fsref;
-	if (t_error == NULL)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(t_path, &t_fsref);
-		if (t_os_error != noErr)
-			t_error = "file not found";
-	}
+
+	OSErr t_os_error;
+	t_os_error = MCS_pathtoref(p_path, t_fsref);
+	if (t_os_error != noErr)
+		return MCStringCreateWithCString("file not found", r_error);
 	
 	Boolean t_is_folder;
 	Boolean t_is_alias;
-	if (t_error == NULL)
-	{
-		OSErr t_os_error;
-		t_os_error = FSResolveAliasFile(&t_fsref, TRUE, &t_is_folder, &t_is_alias);
-		if (t_os_error != noErr || !t_is_alias) // this always seems to be false
-			t_error = "can't get alias";
-	}
+
+	t_os_error = FSResolveAliasFile(&t_fsref, TRUE, &t_is_folder, &t_is_alias);
+	if (t_os_error != noErr || !t_is_alias) // this always seems to be false
+		return MCStringCreateWithCString("can't get alias", r_error);
 	
-	char *t_resolved_path;
-	t_resolved_path = NULL;
-	if (t_error == NULL)
-	{
-		t_resolved_path = MCS_fsref_to_path(t_fsref);
-		if (t_resolved_path == NULL)
-			t_error = "can't get alias path";
-	}
-	
-	if (t_error == NULL)
-		p_context . copysvalue(t_resolved_path, strlen(t_resolved_path));
-	else
-		MCresult -> sets(t_error);
-	
-	delete t_path;
-	delete t_resolved_path;
+	if (!MCS_fsref_to_path(t_fsref, r_resolved))
+		return MCStringCreateWithCString("can't get alias path", r_error);
+
+	return true;
 }
 
 
@@ -1122,140 +1090,164 @@ void MCS_resolvealias(MCExecPoint &p_context)
 /*                       Resource Handling                          */
 /********************************************************************/ 
 
+class MCAutoResourceFileHandle
+{
+public:
+	MCAutoResourceFileHandle()
+	{
+		m_res_file = 0;
+	}
+	
+	~MCAutoResourceFileHandle()
+	{
+		if (m_res_file != 0)
+			MCS_closeresourcefile(m_res_file);
+	}
+	
+	short operator = (short p_res_file)
+	{
+		MCAssert(m_res_file == 0);
+		m_res_file = p_res_file;
+		return m_res_file;
+	}
+	
+	short operator * (void)
+	{
+		return m_res_file;
+	}
+	
+	short& operator & (void)
+	{
+		MCAssert(m_res_file == 0);
+		return m_res_file;
+	}
+	
+private:
+	short m_res_file;
+};
+
 /*************************************************************************
  * 'which' param can be an id or a name of a resource. If the dest       *
  * file does not have a  resource fork we will create one for it         *
  *************************************************************************/
-void MCS_copyresource(const char *src, const char *dest, const char *rtype,
-                      const char *which, const char *newid)
+bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
 {
 	short prev_res_file = CurResFile(); //save the current resource fork
-	short srcFileRefNum, destFileRefNum;
+	MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
 	
-	const char *t_open_res_error;
-	t_open_res_error = MCS_openresourcefile_with_path(src, fsRdPerm, false, &srcFileRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{
-		MCresult -> sets(t_open_res_error);
-		return;
-	}
+	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
+		return false;
+	if (r_error != nil)
+		return true;
+		
+	// exclusive read/write permission for the dest file
+	// and do not set result if there is error
+	if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
+		return false;
+	if (r_error != nil)
+		return true;
 	
-	t_open_res_error = MCS_openresourcefile_with_path(src, fsRdWrPerm, true, &destFileRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{
-		MCresult -> sets(t_open_res_error);
-		return;
-	}
+	UseResFile(*destFileRefNum);
 	
-	UseResFile(destFileRefNum);
-	
-	if (rtype == NULL || strlen(rtype) != 4)
-	{ //copying the entire resource file
+	if (MCStringGetLength(p_type) != 4)
+	{ 
+		//copying the entire resource file
 		short resTypeCount = Count1Types();
 		short resCount;
-		uint1 i, j;
 		ResType resourceType;
 		Handle hres;
-		for (i = 1; i <= resTypeCount; i++)
+		for (uindex_t i = 1; i <= resTypeCount; i++)
 		{
-			UseResFile(srcFileRefNum);
+			UseResFile(*srcFileRefNum);
 			Get1IndType(&resourceType, i);
 			resCount = Count1Resources(resourceType);
 			Str255 rname;
 			short id;
 			ResType type;
-			for (j=1; j <= resCount; j++)
+			for (uindex_t j = 1; j <= resCount; j++)
 			{
-				UseResFile(srcFileRefNum);
+				UseResFile(*srcFileRefNum);
 				hres = Get1IndResource(resourceType, j);
 				if (hres != NULL)
 				{
 					GetResInfo(hres, &id, &type, rname);
 					DetachResource(hres);
-					UseResFile(destFileRefNum);
+					UseResFile(*destFileRefNum);
 					AddResource(hres, type, id, rname);
 				}
 			}	//loop through each res within each res type
 		} //loop through each res type
 		
-		MCS_closeresourcefile(srcFileRefNum);
-		MCS_closeresourcefile(destFileRefNum);
-		
 		UseResFile(prev_res_file); //restore the original state
-		return;
+		return true;
 	}
-
+	
 	//copy only one resource, specified either by id or name
-	UseResFile(srcFileRefNum); //set the source resource file as the current file
-
+	UseResFile(*srcFileRefNum); //set the source resource file as the current file
+	
 	ResType restype;
-	memcpy((char *)&restype, rtype, 4); /* let's get the resource type */
 	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-	restype = (ResType)MCSwapInt32HostToNetwork(restype);
+	restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
 
-	char *whichres = strclone(which);
-	const char *eptr = (char *)whichres;    /* find out whichres is a name or an id */
-
-	long rid = strtol(whichres, (char **)&eptr, 10); // if can't covnert, then the value
+	Str255 t_resname;
+	
+	const char *whichres = MCStringGetCString(p_name);
+	const char *eptr = whichres;    /* find out whichres is a name or an id */
+	
+	long rid = strtol(whichres, (char **)&eptr, 10); // if can't convert, then the value
 	// passed in is a resource name
 	Boolean hasResName = False;
-	unsigned char *rname;
 	Handle rh = NULL;
-
+	
 	if (eptr == whichres)
 	{  /*did not do the conversion, use resource name */
-		rname = c2pstr((char *)whichres); //resource name in Pascal
-		rh = Get1NamedResource(restype, rname);
+		c2pstrcpy(t_resname, MCStringGetCString(p_name));
+		rh = Get1NamedResource(restype, t_resname);
 		hasResName = True;
 	}
-	else //we got an resrouce id
+	else //we got an resource id
 		rh = Get1Resource(restype, rid);
 	if (rh == NULL || *rh == 0)
 	{//bail out if resource handle is bad
 		errno = ResError();
-		MCresult->sets("can't find the resource specified");
-		MCS_closeresourcefile(srcFileRefNum);
-		MCS_closeresourcefile(destFileRefNum);
 		
 		UseResFile(prev_res_file); //restore to the original state
-		return;
+		return MCStringCreateWithCString("can't find the resource specified", r_error);
 	}
-
+	
 	unsigned char resourceName[255];
 	short srcID;        //let's get it's resource name.
 	ResType srcType;
 	if (!hasResName) //No name specified for the resource to be copied
 		GetResInfo(rh, &srcID, &srcType, resourceName);
-
+	
 	//detach the src res file, and select the dest res file
 	DetachResource(rh);
-	UseResFile(destFileRefNum);
+	UseResFile(*destFileRefNum);
 	unsigned long newResID;
-	if (newid == NULL)
+	if (p_newid == NULL)
 		newResID = srcID; //use the resource id of the src file's resource
 	else
-		newResID = strtoul(newid, (char **)&eptr, 10); //use the id passed in
-
+		newResID = strtoul(MCStringGetCString(p_newid), (char **)&eptr, 10); //use the id passed in
+	
 	//delete the resource by id to be copied in the destination file, if it existed
 	Handle rhandle = Get1Resource(restype, newResID);
 	if (rhandle != NULL && ResError() != resNotFound)
 		RemoveResource(rhandle);
-
+	
 	//now, let's copy the resource to the dest file
 	if (!hasResName)
 		AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
 	else
-		AddResource(rh, restype, (short)newResID, rname);
+		AddResource(rh, restype, (short)newResID, t_resname);
 	//errno = ResError();//if errno == 0 means O.K.
 	OSErr t_os_error = ResError();
-	delete whichres;   //delete the buffer created earlier
-	
-	MCS_closeresourcefile(srcFileRefNum);
-	MCS_closeresourcefile(destFileRefNum);
 	
 	UseResFile(prev_res_file); //restore to the original state
+	
+	return true;
 }
-
 
 
 /*********************************************************************
@@ -1313,6 +1305,53 @@ void MCS_copyresourcefork(const char *p_source, const char *p_destination)
 // MH-2007-04-02 rewriting this function to support FSRefs, long filenames in particular.
 // This function is quite specific to the older API resource routines, so the prototype needs to be adjusted.
 //OSErr MCS_openResFile(const char *p_file, SignedByte p_permission, short *p_file_ref_num, Boolean p_create, Boolean p_set_result)
+
+
+bool MCS_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_create, SInt16& r_fileref_num, MCStringRef& r_error)
+{
+	FSSpec fspec;
+	
+	if (FSGetCatalogInfo(&p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
+		return MCStringCreateWithCString("file not found", r_error);
+	
+	r_fileref_num = FSOpenResFile(&p_ref, p_permissions);
+	if (p_create && r_fileref_num < 0)
+	{
+		OSType t_creator, t_ftype;
+		CInfoPBRec t_cpb;
+		MCMemoryClear(&t_cpb, sizeof(t_cpb));
+		t_cpb.hFileInfo.ioNamePtr = fspec.name;
+		t_cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
+		t_cpb.hFileInfo.ioDirID = fspec.parID;
+		/* DEPRECATED */ if (PBGetCatInfoSync(&t_cpb) == noErr)
+		{
+			t_creator = t_cpb.hFileInfo.ioFlFndrInfo.fdCreator;
+			t_ftype = t_cpb.hFileInfo.ioFlFndrInfo.fdType;
+		}
+		else
+		{
+			t_creator = MCSwapInt32NetworkToHost(*(OSType*)MCfiletype);
+			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(MCfiletype + 4));
+		}
+		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
+		
+		if ((errno = ResError()) != noErr)
+			return MCStringCreateWithCString("can't create resource fork", r_error);
+		
+		/* DEPRECATED */ r_fileref_num = FSpOpenResFile(&fspec, p_permissions);
+	}
+	
+	if (r_fileref_num < 0)
+	{
+		errno = fnfErr;
+		return MCStringCreateWithCString("Can't open resource fork", r_error);
+	}
+	
+	if ((errno = ResError()) != noErr)
+		return MCStringCreateWithCString("Error opening resource fork", r_error);
+	
+	return true;
+}
 
 const char *MCS_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool create, SInt16 *fileRefNum)
 {
@@ -1434,6 +1473,22 @@ const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permissio
 	return t_error;	
 }
 
+bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
+{
+//	MCAutoStringRef t_utf8_path;
+//	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
+//		return false;
+	
+	FSRef t_ref;
+	OSErr t_os_error;
+	
+	t_os_error = MCS_pathtoref(p_path, t_ref);
+	if (t_os_error != noErr)
+		return MCStringCreateWithCString("can't open file", r_error);
+	
+	return MCS_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
+}
+
 const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
 {
 	const char *t_error;
@@ -1505,7 +1560,8 @@ void MCS_loadresfile(MCExecPoint &ep)
 	else
 	{
 		toread = fsize;
-		char *buffer = ep.getbuffer(fsize);
+		char *buffer;
+		/* UNCHECKED */ ep . reserve(fsize, buffer);
 		if (buffer == NULL)
 			MCresult->sets("can't create data buffer");
 		else
@@ -1515,7 +1571,7 @@ void MCS_loadresfile(MCExecPoint &ep)
 				MCresult->sets("error reading file");
 			else
 			{
-				ep.setlength(fsize);
+				ep . commit(fsize);
 				MCresult->clear(False);
 			}
 		}
@@ -1607,6 +1663,18 @@ void MCS_deleteresource(const char *resourcefile, const char *rtype,
 	MCS_closeresourcefile(rfRefNum);
 }
 
+/* WRAPPER */
+bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
+{
+	MCS_deleteresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_name));
+	if (MCresult->isclear())
+		return true;
+
+	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+
+	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+}
+
 void MCS_getresource(const char *resourcefile, const char *restype,
                      const char *name, MCExecPoint &ep)
 {
@@ -1661,64 +1729,80 @@ void MCS_getresource(const char *resourcefile, const char *restype,
 	MCS_closeresourcefile(resFileRefNum);
 }
 
-char *MCS_getresources(const char *resourcefile, const char *restype)
+/* WRAPPER */
+bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
+{
+	MCExecPoint ep(nil, nil, nil);
+	MCS_getresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_name), ep);
+	if (MCresult->isclear())
+		return ep.copyasstringref(r_value);
+	
+	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+	
+	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+}
+
+bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_resources, MCStringRef& r_error)
 { /* get resources from the resource fork of file 'path',
 	   * if resource type is not empty, only resources of the specified type
 	   * are listed. otherwise lists all resources from the
 	   * resource fork.					    */
 
-	short resFileRefNum;
-	const char *t_open_res_error;
-	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdPerm, true, &resFileRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{	
-		MCresult -> sets(t_open_res_error);
-		return NULL;
-	}
-	//if (MCS_openResFile(resourcefile, fsRdPerm, &resFileRefNum,
-	//                    False, True) != noErr)
-	//	return NULL;
+	MCAutoResourceFileHandle resFileRefNum;
+	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
+		return false;
+	if (r_error != nil)
+		return true;
+	
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	SetResLoad(False);
 	//since most recently opened file is place on the top of the search
 	//path, no need to call UseResFile() to set this resource file as
 	//the current file
-	char *resourceInfoList = NULL; //has to be initialized to NULL
-	uint4 len = 0;
+	
+	bool t_success = true;
+	errno = noErr;
+	
 	ResType rtype, type;
-	if (restype != NULL)
-	{ //get the resorce info specified by the resource type
-		memcpy((char *)&rtype, restype, 4);
+	if (p_type != nil)
+	{ //get the resource info specified by the resource type
 		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-		rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
-		getResourceInfo(resourceInfoList, len, rtype);
+		rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+		t_success = getResourceInfo(*t_list, rtype);
 	}
 	else
 	{               //rtype is NULL, return All the resources
 		short typeCount = Count1Types(); //find out how many resource type there is
-		if (ResError() != noErr || typeCount <= 0)
+		if (ResError() != noErr)
 		{
 			errno = ResError();
-			//CloseResFile(resFileRefNum);
-			UpdateResFile(resFileRefNum);
-			FSCloseFork(resFileRefNum);
-			SetResLoad(True);
-			return NULL;
+			t_success = false;
 		}
-		short i;
-		for (i = 1; i <= typeCount; i++)
+		for (uindex_t i = 1; t_success && i <= typeCount; i++)
 		{
 			Get1IndType(&type, i);
-			if (ResError() != noErr || type == NULL)
+			if (ResError() != noErr || type == 0)
 				continue;
-			getResourceInfo(resourceInfoList, len, type);
+			t_success = getResourceInfo(*t_list, type);
 		}
 	}
-	if (len)
-		resourceInfoList[len - 1] = '\0';
-	MCresult->clear(False);
-	MCS_closeresourcefile(resFileRefNum);
 	SetResLoad(True);
-	return resourceInfoList;
+	
+	if (t_success)
+	{
+		return MCListCopy(*t_list, r_resources);
+	}
+	else if (errno != noErr)
+	{
+		r_resources = MCValueRetain(kMCEmptyList);
+		r_error = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return false;
 }
 
 void MCS_setresource(const char *resourcefile, const char *type,
@@ -1839,31 +1923,43 @@ void MCS_setresource(const char *resourcefile, const char *type,
 	MCS_closeresourcefile(resFileRefNum);
 }
 
+/* WRAPPER */
+extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
+{
+	MCS_setresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_id), MCStringGetCString(p_name), MCStringGetCString(p_flags), MCStringGetOldString(p_value));
+	if (MCresult->isclear())
+		return true;
+	
+	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+	
+	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+}
+
 // Resource utility functions
 
-static void getResourceInfo(char *&list, uint4 &len, ResType searchType)
+static bool getResourceInfo(MCListRef p_list, ResType searchType)
 { /* get info of resources of a resource type and build a list of
 	   * <resName>, <resID>, <resType>, <resSize> on each line */
-	uint2 i;
 	Handle rh;
 	short rid;
 	ResType rtype;
 	Str255 rname;  //Pascal string
-	char *cstr;  //C string
+	char cstr[256];  //C string
 	char typetmp[5]; //buffer for storing type string in c format
 	short total = Count1Resources(searchType);
-	if (ResError() != noErr || total <= 0)
+	if (ResError() != noErr)
 	{
 		errno = ResError();
-		return;
+		return false;
 	}
 	char buffer[4 + U2L + 255 + U4L + 6];
-	for (i = 1 ; i <= total ; i++)
+	for (uindex_t i = 1 ; i <= total ; i++)
 	{
 		if ((rh = Get1IndResource(searchType, i)) == NULL)
 			continue;
 		GetResInfo(rh, &rid, &rtype, rname);
-		cstr = p2cstr(rname);  //convert to C string
+		p2cstrcpy(cstr, rname); //convert to C string
 		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
 		rtype = (ResType)MCSwapInt32NetworkToHost(rtype);
 		memcpy(typetmp, (char*)&rtype, 4);
@@ -1885,13 +1981,16 @@ static void getResourceInfo(char *&list, uint4 &len, ResType searchType)
 		if (flags & resChanged)
 			*sptr++ = 'C';
 		*sptr = '\0';
-		sprintf(buffer, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
-		        GetMaxResourceSize(rh), fstring);
-		uint2 buflen = strlen(buffer);
-		MCU_realloc(&list, len, len + buflen, 1);
-		memcpy(&list[len], buffer, buflen);
-		len += buflen;
+		
+		MCAutoStringRef t_string;
+		if (!MCStringFormat(&t_string, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
+		        GetMaxResourceSize(rh), fstring))
+			return false;
+		if (!MCListAppend(p_list, *t_string))
+			return false;
 	}
+	
+	return true;
 }
 
 
@@ -1929,6 +2028,11 @@ Boolean MCS_unlink(const char *path)
 
 // Setting and Getting the current directory
 
+bool MCS_setcurdir(MCStringRef p_path)
+{
+	return MCS_setcurdir(MCStringGetCString(p_path)) == True;
+}
+
 // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
 Boolean MCS_setcurdir(const char *path)
 {
@@ -1948,16 +2052,21 @@ Boolean MCS_setcurdir(const char *path)
 	return True;
 }
 
-char *MCS_getcurdir()
+bool MCS_getcurdir(MCStringRef& r_path)
 {
 	char namebuf[PATH_MAX + 2];
-	char *dptr = new char[PATH_MAX + 2];
-	getcwd(namebuf, PATH_MAX);
+	if (NULL == getcwd(namebuf, PATH_MAX))
+		return false;
+
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(PATH_MAX + 1))
+		return false;
+
 	uint4 outlen;
-	outlen = PATH_MAX + 2;
-	MCS_utf8tonative(namebuf, strlen(namebuf), dptr, outlen);
-	dptr[outlen] = 0;
-	return dptr;
+	outlen = PATH_MAX + 1;
+	MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
+	t_buffer.Shrink(outlen);
+	return t_buffer.CreateStringAndRelease(r_path);
 }
 
 // Canonical path resolution
@@ -1978,7 +2087,7 @@ char *MCS_get_canonical_path(const char *p_path)
 //   This allows macfolder to be 0, which means don't alias the tag to the specified disk.
 typedef struct
 {
-	const char *token;
+	MCNameRef *token;
 	unsigned long macfolder;
 	OSType domain;
 	unsigned long mactag;
@@ -1990,94 +2099,80 @@ sysfolders;
 // http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
 
 static sysfolders sysfolderlist[] = {
-                                        {"Apple", 'amnu', kOnAppropriateDisk, 'amnu'},
-                                        {"Desktop", 'desk', kOnAppropriateDisk, 'desk'},
-                                        {"Control", 'ctrl', kOnAppropriateDisk, 'ctrl'},
-                                        {"Extension",'extn', kOnAppropriateDisk, 'extn'},
-                                        {"Fonts",'font', kOnAppropriateDisk, 'font'},
-                                        {"Preferences",'pref', kUserDomain, 'pref'},
-                                        {"Temporary",'temp', kUserDomain, 'temp'},
-                                        {"System", 'macs', kOnAppropriateDisk, 'macs'},
+                                        {&MCN_apple, 'amnu', kOnAppropriateDisk, 'amnu'},
+                                        {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
+                                        {&MCN_control, 'ctrl', kOnAppropriateDisk, 'ctrl'},
+                                        {&MCN_extension,'extn', kOnAppropriateDisk, 'extn'},
+                                        {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
+                                        {&MCN_preferences,'pref', kUserDomain, 'pref'},
+                                        {&MCN_temporary,'temp', kUserDomain, 'temp'},
+                                        {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
 										// TS-2007-08-20: Added to allow a common notion of "home" between all platforms
-									    {"Home", 'cusr', kUserDomain, 'cusr'},
+									    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
 										// MW-2007-09-11: Added for uniformity across platforms
-										{"Documents", 'docs', kUserDomain, 'docs'},
+										{&MCN_documents, 'docs', kUserDomain, 'docs'},
 										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-										{"Support", 0, kUserDomain, 'asup'},
+										{&MCN_support, 0, kUserDomain, 'asup'},
                                     };
+
+bool MCS_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
+{
+	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
+	{
+		if (MCStringIsEqualTo(p_type, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
+		{
+			r_folder = sysfolderlist[i].macfolder;
+			r_domain = sysfolderlist[i].domain;
+            return true;
+		}
+	}
+    return false;
+}
 
 // MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
 //   the sysfolderlist was being searched second.
 // MW-2008-06-18: [[ Bug 6578 ]] specialFolderPath("temp") returns empty sometimes, presumably
 //   because the folder wasn't necessarily being created.
-void MCS_getspecialfolder(MCExecPoint &p_context)
+bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_path)
 {
-	const char *t_error;
-	t_error = NULL;
-	
-	FSRef t_folder_ref;
-	if (t_error == NULL)
-	{
-		bool t_found_folder;
-		t_found_folder = false;
-	
-		uint4 t_mac_folder;
-		if (p_context . getsvalue() . getlength() == 4)
-		{
-			memcpy(&t_mac_folder, p_context . getsvalue() . getstring(), 4);
-			t_mac_folder = MCSwapInt32NetworkToHost(t_mac_folder);
-		}
-		else
-			t_mac_folder = 0;
-			
-		OSErr t_os_error;
-		uint2 t_i;
-		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-			if (p_context . getsvalue() == sysfolderlist[t_i] . token || t_mac_folder == sysfolderlist[t_i] . macfolder)
-			{
-				Boolean t_create_folder;
-				t_create_folder = sysfolderlist[t_i] . domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-				
-				// MW-2012-10-10: [[ Bug 10453 ]] Use the 'mactag' field for the folder id as macfolder can be
-				//   zero.
-				t_os_error = FSFindFolder(sysfolderlist[t_i] . domain, sysfolderlist[t_i] . mactag, t_create_folder, &t_folder_ref);
-				if (t_os_error == noErr)
-				{
-					t_found_folder = true;
-					break;
-				}
-			}
+	uint32_t t_mac_folder = 0;
+	OSType t_domain = kOnAppropriateDisk;
+	bool t_found_folder = false;
 
-		if (!t_found_folder && p_context . getsvalue() . getlength() == 4)
-		{
-			OSErr t_os_error;
-			t_os_error = FSFindFolder(kOnAppropriateDisk, t_mac_folder, kDontCreateFolder, &t_folder_ref);
-			if (t_os_error == noErr)
+	if (MCS_specialfolder_to_mac_folder(p_type, t_mac_folder, t_domain))
+		t_found_folder = true;
+	else if (MCStringGetLength(p_type) == 4)
+	{
+		t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(p_type)));
+			
+		uindex_t t_i;
+		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+			if (t_mac_folder == sysfolderlist[t_i] . macfolder)
+			{
+				t_domain = sysfolderlist[t_i] . domain;
+				t_mac_folder = sysfolderlist[t_i] . mactag;
 				t_found_folder = true;
-		}
-		
-		if (!t_found_folder)
-			t_error = "folder not found";
+				break;
+			}
 	}
-		
-	char *t_folder_path;
-	t_folder_path = NULL;
-	if (t_error == NULL)
+
+	FSRef t_folder_ref;
+	if (t_found_folder)
 	{
-		t_folder_path = MCS_fsref_to_path(t_folder_ref);
-		if (t_folder_path == NULL)
-			t_error = "folder not found";
+		OSErr t_os_error;
+		Boolean t_create_folder;
+		t_create_folder = t_domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+		t_os_error = FSFindFolder(t_domain, t_mac_folder, t_create_folder, &t_folder_ref);
+		t_found_folder = t_os_error == noErr;
 	}
-	
-	if (t_error == NULL)
-		p_context . copysvalue(t_folder_path, strlen(t_folder_path));
-	else
+
+	if (!t_found_folder)
 	{
-		p_context . clear();
-		MCresult -> sets(t_error);
+		r_path = MCValueRetain(kMCEmptyString);
+		return true;
 	}
-	
-	delete t_folder_path;
+		
+	return MCS_fsref_to_path(t_folder_ref, r_path);
 }
 
 
@@ -2086,24 +2181,26 @@ void MCS_getspecialfolder(MCExecPoint &p_context)
 /********************************************************************/ 
 
 #define CATALOG_MAX_ENTRIES 16
-void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
+bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {
-	OSStatus t_os_status;
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
 
-	p_context . clear();
+	OSStatus t_os_status;
 	
 	Boolean t_is_folder;
 	FSRef t_current_fsref;
 	
 	t_os_status = FSPathMakeRef((const UInt8 *)".", &t_current_fsref, &t_is_folder);
 	if (t_os_status != noErr || !t_is_folder)
-		return;
+		return false;
 
 	// Create the iterator, pass kFSIterateFlat to iterate over the current subtree only
 	FSIterator t_catalog_iterator;
 	t_os_status = FSOpenIterator(&t_current_fsref, kFSIterateFlat, &t_catalog_iterator);
 	if (t_os_status != noErr)
-		return;
+		return false;
 	
 	uint4 t_entry_count;
 	t_entry_count = 0;
@@ -2111,7 +2208,7 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 	if (!p_files)
 	{
 		t_entry_count++;
-		p_context . concatcstring("..", EC_RETURN, true);
+		/* UNCHECKED */ MCListAppendCString(*t_list, "..");
 	}
 	
 	ItemCount t_max_objects, t_actual_objects;
@@ -2137,8 +2234,7 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 		if (t_oserror != noErr && t_oserror != errFSNoMoreItems)
 		{	// clean up and exit
 			FSCloseIterator(t_catalog_iterator);
-			p_context . clear();
-			return;
+			return false;
 		}
 		
 		for(uint4 t_i = 0; t_i < (uint4)t_actual_objects; t_i++)
@@ -2224,10 +2320,10 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 						t_permissions -> mode & 0777,
 						t_filetype);
 						
-					p_context . concatcstring(t_buffer, EC_RETURN, t_entry_count == 0);
+					/* UNCHECKED */ MCListAppendCString(*t_list, t_buffer);
 				}
 				else
-					p_context . concatchars(t_native_name, t_native_length, EC_RETURN, t_entry_count == 0);
+					/* UNCHECKED */ MCListAppendNativeChars(*t_list, (const char_t *)t_native_name, t_native_length);
 					
 				t_entry_count += 1;		
 			}
@@ -2235,89 +2331,123 @@ void MCS_getentries(MCExecPoint& p_context, bool p_files, bool p_detailed)
 	} while(t_oserror != errFSNoMoreItems);
 	
 	FSCloseIterator(t_catalog_iterator);
+	return MCListCopy(*t_list, r_list);
 }
 
-void MCS_longfilepath(MCExecPoint &ep)
-{}
-
-void MCS_shortfilepath(MCExecPoint &ep)
-{}
-
-char *MCS_resolvepath(const char *path)
+bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
 {
+	return MCStringCopy(p_path, r_long_path);
+}
 
-	if (path == NULL)
-		return MCS_getcurdir();
-	char *tildepath;
-	if (path[0] == '~')
+bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
+{
+	return MCStringCopy(p_path, r_short_path);
+}
+
+bool MCS_is_link(MCStringRef p_path)
+{
+	struct stat buf;
+	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+}
+
+bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
+{
+	struct stat t_stat;
+	ssize_t t_size;
+	MCAutoNativeCharArray t_buffer;
+    
+	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
+		!t_buffer.New(t_stat.st_size))
+		return false;
+    
+	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+    
+	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+}
+
+bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
+{
+	if (MCStringGetLength(p_path) == 0)
+		return MCS_getcurdir(r_resolved);
+
+	MCAutoStringRef t_tilde_path;
+	if (MCStringGetCharAtIndex(p_path, 0) == '~')
 	{
-		char *tpath = strclone(path);
-		char *tptr = strchr(tpath, '/');
-		if (tptr == NULL)
-		{
-			tpath[0] = '\0';
-			tptr = tpath;
-		}
+		uindex_t t_user_end;
+		if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
+			t_user_end = MCStringGetLength(p_path);
+		
+		// Prepend user name
+		struct passwd *t_password;
+		if (t_user_end == 1)
+			t_password = getpwuid(getuid());
 		else
-			*tptr++ = '\0';
+		{
+			MCAutoStringRef t_username;
+			if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+				return false;
 
-		struct passwd *pw;
-		if (*(tpath + 1) == '\0')
-			pw = getpwuid(getuid());
-		else
-			pw = getpwnam(tpath + 1);
-		if (pw == NULL)
-			return NULL;
-		tildepath = new char[strlen(pw->pw_dir) + strlen(tptr) + 2];
-		strcpy(tildepath, pw->pw_dir);
-		if (*tptr)
-		{
-			strcat(tildepath, "/");
-			strcat(tildepath, tptr);
+			t_password = getpwnam(MCStringGetCString(*t_username));
 		}
-		delete tpath;
+		
+		if (t_password != NULL)
+		{
+			if (!MCStringCreateMutable(0, &t_tilde_path) ||
+				!MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+				!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+				return false;
+		}
+		else
+			t_tilde_path = p_path;
 	}
 	else
-		tildepath = strclone(path);
-	if (tildepath[0] != '/')
+		t_tilde_path = p_path;
+
+	MCAutoStringRef t_fullpath;
+	if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
 	{
-		char *cstr = MCS_getcurdir();
-		if (strlen(cstr) + strlen(tildepath) + 2 < PATH_MAX)
-		{
-			strcat(cstr, "/");
-			strcat(cstr, tildepath);
-		}
-		delete tildepath;
-		tildepath = cstr;
+		MCAutoStringRef t_folder;
+		if (!MCS_getcurdir(&t_folder))
+			return false;
+
+		MCAutoStringRef t_resolved;
+		if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
+			!MCStringAppendChar(*t_fullpath, '/') ||
+			!MCStringAppend(*t_fullpath, *t_tilde_path))
+			return false;
 	}
-	struct stat buf;
-	if (lstat(tildepath, &buf) != 0 || !S_ISLNK(buf.st_mode))
-		return tildepath;
-	int4 size;
-	char *newname = new char[PATH_MAX + 2];
-	if ((size = readlink(tildepath, newname, PATH_MAX)) < 0)
+	else
+		t_fullpath = *t_tilde_path;
+
+	if (!MCS_is_link(*t_fullpath))
+		return MCStringCopy(*t_fullpath, r_resolved);
+
+	MCAutoStringRef t_newname;
+	if (!MCS_readlink(*t_fullpath, &t_newname))
+		return false;
+
+	// IM - Should we really be using the original p_path parameter here?
+	// seems like we should use the computed t_fullpath value.
+	if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
 	{
-		delete tildepath;
-		delete newname;
-		return NULL;
-	}
-	delete tildepath;
-	newname[size] = '\0';
-	if (newname[0] != '/')
-	{
-		char *fullpath = new char[strlen(path) + strlen(newname) + 2];
-		strcpy(fullpath, path);
-		char *sptr = strrchr(fullpath, '/');
-		if (sptr == NULL)
-			sptr = fullpath;
+		MCAutoStringRef t_resolved;
+
+		uindex_t t_last_component;
+		uindex_t t_path_length;
+
+		if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
+			t_last_component++;
 		else
-			sptr++;
-		strcpy(sptr, newname);
-		delete newname;
-		newname = MCS_resolvepath(fullpath);
-		delete fullpath;
+			t_last_component = 0;
+
+		if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
+			!MCStringAppend(*t_resolved, *t_newname))
+			return false;
+
+		return MCStringCopy(*t_resolved, r_resolved);
 	}
-	return newname;
+	else
+		return MCStringCopy(*t_newname, r_resolved);
 }
 
 Boolean MCS_rename(const char *oname, const char *nname)
@@ -2332,8 +2462,12 @@ Boolean MCS_rename(const char *oname, const char *nname)
 	return done;
 }
 
-Boolean MCS_getdrives(MCExecPoint &ep)
+bool MCS_getdrives(MCListRef& r_list)
 {
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
 	OSErr t_err;
 	ItemCount t_index;
 	bool t_first;
@@ -2341,8 +2475,6 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 	t_index = 1;
 	t_err = noErr;
 	t_first = true;
-	
-	ep . clear();
 	
 	// To list all the mounted volumes on the system we use the FSGetVolumeInfo
 	// API with first parameter kFSInvalidVolumeRefNum and an index in the
@@ -2358,15 +2490,14 @@ Boolean MCS_getdrives(MCExecPoint &ep)
 		t_err = FSGetVolumeInfo(kFSInvalidVolumeRefNum, t_index, NULL, kFSVolInfoNone, NULL, &t_unicode_name, NULL);
 		if (t_err == noErr)
 		{
-			MCExecPoint ep2(NULL, NULL, NULL);
-			ep2 . setsvalue(MCString((char *)&t_unicode_name . unicode[0], t_unicode_name . length * 2));
-			ep2 . utf16tonative();
-			
-			ep . concatmcstring(ep2 . getsvalue(), EC_RETURN, t_first);
-			t_first = false;
+			MCAutoStringRef t_volume_name;
+			if (!MCStringCreateWithChars(t_unicode_name . unicode, t_unicode_name . length, &t_volume_name))
+				return false;
+			if (!MCListAppend(*t_list, *t_volume_name))
+				return false;
 		}
 		t_index += 1;
 	}
 	
-	return True;
+	return MCListCopy(*t_list, r_list);
 }

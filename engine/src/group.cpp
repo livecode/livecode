@@ -21,7 +21,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
-#include "core.h"
 
 #include "execpt.h"
 #include "handler.h"
@@ -51,8 +50,52 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "context.h"
+#include "exec.h"
 
 uint2 MCGroup::labeloffset = 6;
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCGroup::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCGroup, CantDelete)
+	DEFINE_RW_OBJ_PROPERTY(P_DONT_SEARCH, Bool, MCGroup, DontSearch)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_PICT, Bool, MCGroup, ShowPict)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_RADIO_BEHAVIOR, Bool, MCGroup, RadioBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_TAB_GROUP_BEHAVIOR, Bool, MCGroup, TabGroupBehavior)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON, Int16, MCGroup, HilitedButton)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON_ID, Int16, MCGroup, HilitedButtonId)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_HILITED_BUTTON_NAME, String, MCGroup, HilitedButtonName)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGroup, ShowName)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCGroup, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, String, MCGroup, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int16, MCGroup, HScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int16, MCGroup, VScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_UNBOUNDED_HSCROLL, Bool, MCGroup, UnboundedHScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_UNBOUNDED_VSCROLL, Bool, MCGroup, UnboundedVScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCGroup, HScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCGroup, VScrollbar)
+	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, Int16, MCGroup, ScrollbarWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_LEFT, Int16, MCGroup, FormattedLeft)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_HEIGHT, Int16, MCGroup, FormattedHeight)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_TOP, Int16, MCGroup, FormattedTop)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_WIDTH, Int16, MCGroup, FormattedWidth)
+	DEFINE_RO_OBJ_PROPERTY(P_FORMATTED_RECT, Rectangle, MCGroup, FormattedRect)
+	DEFINE_RW_OBJ_PROPERTY(P_BACKGROUND_BEHAVIOR, Bool, MCGroup, BackgroundBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_SHARED_BEHAVIOR, Bool, MCGroup, SharedBehavior)
+	DEFINE_RW_OBJ_PROPERTY(P_BOUNDING_RECT, OptionalRectangle, MCGroup, BoundingRect)
+	DEFINE_RW_OBJ_PROPERTY(P_BACK_SIZE, Point, MCGroup, BackSize)
+	DEFINE_RW_OBJ_PROPERTY(P_SELECT_GROUPED_CONTROLS, Bool, MCGroup, SelectGroupedControls)
+};
+
+MCObjectPropertyTable MCGroup::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCGroup::MCGroup()
 {
@@ -783,7 +826,7 @@ void MCGroup::setrect(const MCRectangle &nrect)
 	}
 }
 
-Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
@@ -802,6 +845,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_TAB_GROUP_BEHAVIOR:
 		ep.setboolean(getflag(F_TAB_GROUP_BEHAVIOR));
 		break;
+#ifdef OLD_EXEC
 	case P_HILITED_BUTTON:
 		ep.setint(gethilited(parid));
 		break;
@@ -809,8 +853,9 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setint(gethilitedid(parid));
 		break;
 	case P_HILITED_BUTTON_NAME:
-		ep.setnameref_unsafe(gethilitedname(parid));
+		ep.setvalueref(gethilitedname(parid));
 		break;
+#endif
 	case P_SHOW_NAME:
 		ep.setboolean(getflag(F_SHOW_NAME));
 		break;
@@ -903,12 +948,12 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setboolean(!(flags & F_SELECT_GROUP));
 		break;
 	default:
-		return MCControl::getprop(parid, which, ep, effective);
+		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
 	return ES_NORMAL;
 }
 
-Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
+Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
 {
 	Boolean dirty = False;
 	int2 i1, i2, i3, i4;
@@ -919,12 +964,12 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
 	case P_TEXT_SIZE:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		dirty = computeminrect(False);
 		break;
 	case P_TEXT_HEIGHT:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		resetscrollbars(False);
 		break;
@@ -966,6 +1011,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		radio(parid, kfocused);
 		radio(parid, mfocused);
 		break;
+#ifdef OLD_EXEC
 	case P_HILITED_BUTTON:
 		uint2 button;
 		if (!MCU_stoui2(data, button))
@@ -1009,6 +1055,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		if (dirty)
 			setchildprops(parid, p, ep);
 		break;
+#endif
 	case P_SHOW_NAME:
 		if (!MCU_matchflags(data, flags, F_SHOW_NAME, dirty))
 		{
@@ -1061,7 +1108,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	case P_RIGHT_MARGIN:
 	case P_TOP_MARGIN:
 	case P_BOTTOM_MARGIN:
-		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (leftmargin == defaultmargin && rightmargin == defaultmargin
 		        && topmargin == defaultmargin && bottommargin == defaultmargin)
@@ -1247,7 +1294,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		flags ^= F_SELECT_GROUP;
 		break;
 	default:
-		return MCControl::setprop(parid, p, ep, effective);
+		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{
@@ -1771,6 +1818,98 @@ void MCGroup::setsbrects()
 	resetscrollbars(False);
 }
 
+MCControl *MCGroup::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype, Chunk_term ptype)
+{
+	if (otype < CT_GROUP || controls == NULL)
+		return NULL;
+
+	MCControl *cptr = controls;
+	uint2 num = 0;
+
+	switch (etype)
+	{
+	case CT_FIRST:
+	case CT_SECOND:
+	case CT_THIRD:
+	case CT_FOURTH:
+	case CT_FIFTH:
+	case CT_SIXTH:
+	case CT_SEVENTH:
+	case CT_EIGHTH:
+	case CT_NINTH:
+	case CT_TENTH:
+		num = etype - CT_FIRST;
+		break;
+	case CT_LAST:
+	case CT_MIDDLE:
+	case CT_ANY:
+		count(otype, NULL, num);
+		// MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
+		//   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
+		if (otype == CT_GROUP)
+			num--;
+		switch (etype)
+		{
+		case CT_LAST:
+			num--;
+			break;
+		case CT_MIDDLE:
+			num >>= 1;
+			break;
+		case CT_ANY:
+			num = MCU_any(num);
+			break;
+		default:
+			break;
+		}
+		break;
+	case CT_ID:
+		uint4 tofindid;
+		if (MCU_stoui4(p_expression, tofindid))
+			do
+			{
+				MCControl *foundobj;
+				if ((foundobj = cptr->findid(otype, tofindid, True)) != NULL)
+					return foundobj;
+				cptr = cptr->next();
+			}
+			while (cptr != controls);
+		return NULL;
+	case CT_EXPRESSION:
+		if (MCU_stoui2(p_expression, num))
+		{
+			if (num < 1)
+				return NULL;
+			num--;
+		}
+		else
+		{
+			do
+			{
+				MCControl *foundobj;
+				if ((foundobj = cptr->findname(otype, MCStringGetOldString(p_expression))) != NULL)
+					return foundobj;
+				cptr = cptr->next();
+			}
+			while (cptr != controls);
+			return NULL;
+		}
+		break;
+	default:
+		//    fprintf(stderr, "MCGroup: didn't have child type %d\n", etype);
+		return NULL;
+	}
+	do
+	{
+		MCControl *foundobj;
+		if ((foundobj = cptr->findnum(otype, num)) != NULL)
+			return foundobj;
+		cptr = cptr->next();
+	}
+	while (cptr != controls);
+	return NULL;
+}
+#ifdef OLD_EXEC
 MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
                              Chunk_term otype, Chunk_term ptype)
 {
@@ -1862,6 +2001,7 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 	while (cptr != controls);
 	return NULL;
 }
+#endif
 
 void MCGroup::makegroup(MCControl *newcontrols, MCObject *newparent)
 {
@@ -2008,6 +2148,7 @@ void MCGroup::radio(uint4 parid, MCControl *focused)
 	}
 }
 
+#ifdef OLD_EXEC
 uint2 MCGroup::gethilited(uint4 parid)
 {
 	if (controls != NULL)
@@ -2030,7 +2171,7 @@ uint2 MCGroup::gethilited(uint4 parid)
 	}
 	return 0;
 }
-
+#endif
 
 MCButton *MCGroup::gethilitedbutton(uint4 parid)
 {
@@ -2053,6 +2194,7 @@ MCButton *MCGroup::gethilitedbutton(uint4 parid)
 	return NULL;
 }
 
+#ifdef OLD_EXEC
 uint4 MCGroup::gethilitedid(uint4 parid)
 {
 	MCButton *bptr = gethilitedbutton(parid);
@@ -2125,7 +2267,6 @@ void MCGroup::sethilitedname(uint4 parid, MCNameRef bname)
 	}
 }
 
-
 void MCGroup::setchildprops(uint4 parid, Properties p, MCExecPoint &ep)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
@@ -2161,6 +2302,7 @@ void MCGroup::setchildprops(uint4 parid, Properties p, MCExecPoint &ep)
 	}
 	MCRedrawUnlockScreen();
 }
+#endif
 
 MCRectangle MCGroup::getgrect()
 {
@@ -2211,7 +2353,7 @@ void MCGroup::computecrect()
 	}
 }
 
-Boolean MCGroup::computeminrect(Boolean scrolling)
+bool MCGroup::computeminrect(Boolean scrolling)
 {
 	MCRectangle oldrect = rect;
 	MCRectangle oldmin = minrect;
@@ -2279,7 +2421,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 	if (oldrect.x != rect.x || oldrect.y != rect.y
 	        || oldrect.width != rect.width || oldrect.height != rect.height)
 	{
-		Bool t_all;
+		bool t_all;
 
 		uint4 oldstate = state;
 		if (scrolling)
@@ -2290,7 +2432,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 			if (!layer_isscrolling())
 			{
 				layer_rectchanged(oldrect, true);
-				t_all = True;
+				t_all = true;
 			}
 			else
 			{
@@ -2312,11 +2454,11 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 					layer_dirtycontentrect(MCU_make_rect(t_outer_rect . x, t_inner_rect . y + t_inner_rect . height, t_outer_rect . width, (t_outer_rect . y + t_outer_rect . height) - (t_inner_rect . y + t_inner_rect . height)), false);
 				
 				layer_rectchanged(oldrect, false);
-				t_all = False;
+				t_all = false;
 			}
 		}
 		else
-			t_all = True;
+			t_all = true;
 		state = oldstate;
 		return t_all;
 	}
@@ -2328,7 +2470,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	return False;
+	return false;
 }
 
 void MCGroup::boundcontrols()

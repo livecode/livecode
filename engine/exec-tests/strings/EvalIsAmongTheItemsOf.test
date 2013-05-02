@@ -1,0 +1,23 @@
+setup " <a> is among the items of <b> "
+
+test "abc" is among the items of ("abc,def",123,cr)
+test 123 is among the items of ("abc",123,cr)
+test cr is among the items of ("abc",123,cr)
+
+test not ("x" is among the items of ("abc",123,cr))
+test not (comma is among the items of ("abc",123,cr))
+
+teardown
+
+
+setup " <a> is not among the items of <b> "
+
+test not ("abc" is not among the items of ("abc,def",123,cr))
+test not (123 is not among the items of ("abc",123,cr))
+test not (cr is not among the items of ("abc",123,cr))
+
+test "x" is not among the items of ("abc",123,cr)
+test comma is not among the items of ("abc",123,cr)
+
+teardown
+

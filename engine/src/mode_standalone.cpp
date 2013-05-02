@@ -62,6 +62,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
 //
 //  Globals specific to STANDALONE mode
 //
@@ -83,17 +87,17 @@ struct MCCapsuleInfo
 
 #if defined(_WINDOWS)
 #pragma section(".project", read, discard)
-__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {};
+__declspec(allocate(".project")) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_LINUX)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(_MACOSX)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
-__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section("__PROJECT,__project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {};
+__attribute__((section(".project"))) volatile MCCapsuleInfo MCcapsule = {0};
 #elif defined(TARGET_PLATFORM_MOBILE)
-MCCapsuleInfo MCcapsule = {};
+MCCapsuleInfo MCcapsule = {0};
 #endif
 
 MCLicenseParameters MClicenseparameters =
@@ -207,7 +211,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 		delete t_external;
 	}
 	break;
-	
+			
 	case kMCCapsuleSectionTypeStartupScript:
 	{
 		char *t_script;
@@ -342,7 +346,9 @@ IO_stat MCDispatch::startup(void)
 	t_is_device = true;
 #endif
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
-	if (strcmp(MCS_getmachine(), "sdk") == 0)
+	MCAutoStringRef t_machine_string;
+	/* UNCHECKED */ MCS_getmachine(&t_machine_string);
+	if (MCStringIsEqualToCString(*t_machine_string, "sdk", kMCCompareExact))
 		t_is_device = false;
 	else
 		t_is_device = true;
@@ -441,28 +447,33 @@ IO_stat MCDispatch::startup(void)
 	DebugBreak();*/
 #endif
 
-	MCStack *t_stack;
-	IO_handle t_stream;
-	t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
-	if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+	if (MCcapsule . size == 0)
 	{
-		MCresult -> sets("failed to read standalone stack");
-		return IO_ERROR;
-	}
-	MCS_close(t_stream);
-	
-	MCcmd = openpath;
-	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
-	
-	t_stack -> extraopen(false);
-	
-	MCModeResetCursors();
-	MCImage::init();
-	send_startup_message();
-	if (!MCquit)
-		t_stack -> open();
+		MCStack *t_stack;
+		IO_handle t_stream;
+		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
+		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
+		{
+			MCresult -> sets("failed to read standalone stack");
+			return IO_ERROR;
+		}
+		MCS_close(t_stream);
+		
+		MCcmd = openpath;
+		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
+		
+		t_stack -> extraopen(false);
+		
+		MCModeResetCursors();
+		MCImage::init();
+		send_startup_message();
+		if (!MCquit)
+			t_stack -> open();
 
-#else
+		return IO_NORMAL;
+	}
+#endif
+
 	// The info structure that will be filled in while parsing the capsule.
 	MCStandaloneCapsuleInfo t_info;
 	memset(&t_info, 0, sizeof(MCStandaloneCapsuleInfo));
@@ -524,7 +535,6 @@ IO_stat MCDispatch::startup(void)
 	send_startup_message();
 	if (!MCquit)
 		t_info . stack -> open();
-#endif
 
 	return IO_NORMAL;
 }
@@ -671,7 +681,7 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 
 // In standalone mode, the standalone stack built into the engine cannot
 // be saved.
-IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
+IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCStringRef p_filename)
 {
 	if (sptr == MCdispatcher -> getstacks())
 	{
@@ -684,19 +694,19 @@ IO_stat MCModeCheckSaveStack(MCStack *sptr, const MCString& filename)
 
 // In standalone mode, the environment depends on various command-line/runtime
 // globals.
-const char *MCModeGetEnvironment(void)
+MCNameRef MCModeGetEnvironment(void)
 {
 #ifdef _MOBILE
-	return "mobile";
+	return MCN_mobile;
 #else
 	// MW-2011-09-19: [[ Bug 9734 ]] If in '-ui' mode, return 'command line'.
 	if (MCnoui)
-		return "command line";
+		return MCN_command_line;
 
 	if (MCnofiles)
-		return "helper application";
+		return MCN_helper_application;
 
-	return "standalone application";
+	return MCN_standalone_application;
 #endif
 }
 
@@ -730,8 +740,8 @@ bool MCModeShouldLoadStacksOnStartup(void)
 void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
 {
 	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
+	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		r_text = strdup(MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
 	else
 		r_text = "unknown reason";
 }
@@ -830,7 +840,7 @@ void MCModeQueueEvents(void)
 {
 }
 
-Exec_stat MCModeExecuteScriptInBrowser(const MCString& script)
+Exec_stat MCModeExecuteScriptInBrowser(MCStringRef p_script)
 {
 	MCeerror -> add(EE_ENVDO_NOTSUPPORTED, 0, 0);
 	return ES_ERROR;

@@ -49,13 +49,183 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 #include "parentscript.h"
 #include "bitmapeffect.h"
+#include "objectpropsets.h"
+#include "exec.h"
 
 #include "globals.h"
 #include "mctheme.h"
+#include "redraw.h"
 
 #include "license.h"
 #include "context.h"
 #include "mode.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCObject::kProperties[] =
+{
+	DEFINE_RW_OBJ_PROPERTY(P_ID, UInt32, MCObject, Id)
+	DEFINE_RW_OBJ_PROPERTY(P_SHORT_ID, UInt32, MCObject, Id)
+	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_ID, String, MCObject, AbbrevId)
+	DEFINE_RO_OBJ_PROPERTY(P_LONG_ID, String, MCObject, LongId)
+	DEFINE_RW_OBJ_PROPERTY(P_NAME, String, MCObject, Name)
+	DEFINE_RO_OBJ_PROPERTY(P_SHORT_NAME, String, MCObject, ShortName)
+	DEFINE_RO_OBJ_PROPERTY(P_LONG_NAME, String, MCObject, LongName)
+	DEFINE_RW_OBJ_PROPERTY(P_ALT_ID, UInt32, MCObject, AltId)
+	DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_LAYER, InterfaceLayer, MCObject, Layer)
+	DEFINE_RW_OBJ_PROPERTY(P_SCRIPT, String, MCObject, Script)
+	DEFINE_RW_OBJ_PROPERTY(P_PARENT_SCRIPT, OptionalString, MCObject, ParentScript)
+	DEFINE_RO_OBJ_PART_PROPERTY(P_NUMBER, UInt32, MCObject, Number)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PIXEL, OptionalUInt16, MCObject, ForePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PIXEL, UInt16, MCObject, ForePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PIXEL, OptionalUInt16, MCObject, BackPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PIXEL, UInt16, MCObject, BackPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, OptionalUInt16, MCObject, HilitePixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PIXEL, UInt16, MCObject, HilitePixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, OptionalUInt16, MCObject, BorderPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PIXEL, UInt16, MCObject, BorderPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PIXEL, OptionalUInt16, MCObject, TopPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PIXEL, UInt16, MCObject, TopPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, OptionalUInt16, MCObject, BottomPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PIXEL, UInt16, MCObject, BottomPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, OptionalUInt16, MCObject, ShadowPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PIXEL, UInt16, MCObject, ShadowPixel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, OptionalUInt16, MCObject, FocusPixel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PIXEL, UInt16, MCObject, FocusPixel)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_BACK_COLOR, Any, MCObject, PenBackColor)
+	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_BACK_COLOR, Any, MCObject, PenBackColor)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_PATTERN, OptionalUInt16, MCObject, PenPattern)
+	DEFINE_RW_OBJ_PROPERTY(P_BRUSH_PATTERN, OptionalUInt16, MCObject, PenPattern)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_PEN_COLOR, InterfaceNamedColor, MCObject, ForeColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_BRUSH_COLOR, InterfaceNamedColor, MCObject, BackColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_BRUSH_COLOR, InterfaceNamedColor, MCObject, BackColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCObject, ForeColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCObject, ForeColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCObject, BackColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCObject, BackColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, MCObject, HiliteColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, MCObject, HiliteColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_BORDER_COLOR, InterfaceNamedColor, MCObject, BorderColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_BORDER_COLOR, InterfaceNamedColor, MCObject, BorderColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_TOP_COLOR, InterfaceNamedColor, MCObject, TopColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_TOP_COLOR, InterfaceNamedColor, MCObject, TopColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_BOTTOM_COLOR, InterfaceNamedColor, MCObject, BottomColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_BOTTOM_COLOR, InterfaceNamedColor, MCObject, BottomColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_SHADOW_COLOR, InterfaceNamedColor, MCObject, ShadowColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_SHADOW_COLOR, InterfaceNamedColor, MCObject, ShadowColor)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCObject, FocusColor)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FORE_PATTERN, OptionalUInt16, MCObject, ForePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FORE_PATTERN, UInt16, MCObject, ForePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BACK_PATTERN, OptionalUInt16, MCObject, BackPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BACK_PATTERN, UInt16, MCObject, BackPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, OptionalUInt16, MCObject, HilitePattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_HILITE_PATTERN, UInt16, MCObject, HilitePattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, OptionalUInt16, MCObject, BorderPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BORDER_PATTERN, UInt16, MCObject, BorderPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_PATTERN, OptionalUInt16, MCObject, TopPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TOP_PATTERN, UInt16, MCObject, TopPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt16, MCObject, BottomPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_PATTERN, UInt16, MCObject, BottomPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, OptionalUInt16, MCObject, ShadowPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_SHADOW_PATTERN, UInt16, MCObject, ShadowPattern)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, OptionalUInt16, MCObject, FocusPattern)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_FOCUS_PATTERN, UInt16, MCObject, FocusPattern)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_COLORS, String, MCObject, Colors)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_PATTERNS, String, MCObject, Patterns)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_PATTERNS, String, MCObject, Patterns)
+
+	DEFINE_RW_OBJ_PROPERTY(P_LOCK_LOCATION, Bool, MCObject, LockLocation)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT_HEIGHT, OptionalUInt16, MCObject, TextHeight)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT_HEIGHT, UInt16, MCObject, TextHeight)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_OPTIONAL_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCObject, TextAlign)
+	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCObject, TextAlign)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT_FONT, OptionalString, MCObject, TextFont)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT_FONT, String, MCObject, TextFont)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT_SIZE, OptionalUInt16, MCObject, TextSize)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT_SIZE, UInt16, MCObject, TextSize)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_CUSTOM_PROPERTY(P_TEXT_STYLE, InterfaceTextStyle, MCObject, TextStyle)
+	DEFINE_RO_OBJ_EFFECTIVE_CUSTOM_PROPERTY(P_TEXT_STYLE, InterfaceTextStyle, MCObject, TextStyle)
+
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_BORDER, Bool, MCObject, ShowBorder)
+	DEFINE_RW_OBJ_PROPERTY(P_SHOW_FOCUS_BORDER, Bool, MCObject, ShowFocusBorder)
+	DEFINE_RW_OBJ_PROPERTY(P_BORDER_WIDTH, UInt16, MCObject, BorderWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_LINE_SIZE, UInt16, MCObject, BorderWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_WIDTH, UInt16, MCObject, BorderWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_PEN_HEIGHT, UInt16, MCObject, BorderWidth)
+	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCObject, Opaque)	
+	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCObject, Opaque)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_SHADOW, InterfaceShadow, MCObject, Shadow)
+	DEFINE_RW_OBJ_PROPERTY(P_SHADOW_OFFSET, Int16, MCObject, ShadowOffset)
+	DEFINE_RW_OBJ_PROPERTY(P_3D, Bool, MCObject, 3D)
+
+	DEFINE_RW_OBJ_PART_PROPERTY(P_VISIBLE, Bool, MCObject, Visible)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_INVISIBLE, Bool, MCObject, Invisible)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_ENABLED, Bool, MCObject, Enabled)
+	DEFINE_RW_OBJ_PART_PROPERTY(P_DISABLED, Bool, MCObject, Disabled)
+	DEFINE_RW_OBJ_PROPERTY(P_SELECTED, Bool, MCObject, Selected)
+	DEFINE_RW_OBJ_PROPERTY(P_TRAVERSAL_ON, Bool, MCObject, TraversalOn)
+
+	DEFINE_RO_OBJ_PROPERTY(P_OWNER, OptionalString, MCObject, Owner)
+	DEFINE_RO_OBJ_PROPERTY(P_SHORT_OWNER, OptionalString, MCObject, ShortOwner)
+	DEFINE_RO_OBJ_PROPERTY(P_ABBREV_OWNER, OptionalString, MCObject, AbbrevOwner)
+	DEFINE_RO_OBJ_PROPERTY(P_LONG_OWNER, OptionalString, MCObject, LongOwner)
+
+	DEFINE_RW_OBJ_PART_PROPERTY(P_PROPERTIES, Array, MCObject, Properties)
+	DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTY_SET, String, MCObject, CustomPropertySet)
+	DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_PROPERTY_SETS, String, MCObject, CustomPropertySets)
+
+	DEFINE_RW_OBJ_ENUM_PROPERTY(P_INK, InterfaceInkNames, MCObject, Ink)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_CANT_SELECT, Bool, MCObject, CantSelect)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_CANT_SELECT, Bool, MCObject, CantSelect)
+	DEFINE_RW_OBJ_PROPERTY(P_BLEND_LEVEL, UInt16, MCObject, BlendLevel)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LOCATION, Point, MCObject, Location)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_LOCATION, Point, MCObject, Location)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_RECTANGLE, Rectangle, MCObject, Rectangle)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_RECTANGLE, Rectangle, MCObject, Rectangle)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_WIDTH, UInt16, MCObject, Width)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_WIDTH, UInt16, MCObject, Width)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_HEIGHT, UInt16, MCObject, Height)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_HEIGHT, UInt16, MCObject, Height)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LEFT, Int16, MCObject, Left)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_RIGHT, Int16, MCObject, Right)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM, Int16, MCObject, Bottom)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP, Int16, MCObject, Top)
+
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_LEFT, Point, MCObject, TopLeft)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TOP_RIGHT, Point, MCObject, TopRight)	
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_LEFT, Point, MCObject, BottomLeft)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_BOTTOM_RIGHT, Point, MCObject, BottomRight)
+
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_LEFT, Int16, MCObject, Left)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_RIGHT, Int16, MCObject, Right)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM, Int16, MCObject, Bottom)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_TOP, Int16, MCObject, Top)
+
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_TOP_LEFT, Point, MCObject, TopLeft)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_TOP_RIGHT, Point, MCObject, TopRight)	
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_LEFT, Point, MCObject, BottomLeft)
+	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_RIGHT, Point, MCObject, BottomRight)
+
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCObject, Encoding)
+};
+
+MCObjectPropertyTable MCObject::kPropertyTable =
+{
+	nil,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -117,7 +287,7 @@ static const char *ink_names[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef OLD_EXEC
 Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCRectangle t_rect;
@@ -169,6 +339,7 @@ Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 	return ES_NORMAL;
 }
 
+#endif
 Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
@@ -185,7 +356,7 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_getprop_name)))
 	{
 		MCParameter p1;
-		p1.setnameref_unsafe_argument(t_param_name);
+		p1.setvalueref_argument(t_param_name);
 
 		MCStack *oldstackptr = MCdefaultstackptr;
 		MCdefaultstackptr = getstack();
@@ -207,18 +378,7 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 	}
 
 	if (t_stat == ES_NORMAL)
-	{
-		MCresult -> fetch(ep);
-
-		// MW-2007-07-03: [[ Bug 3213 ]] Failing to grab the value means that
-		//   things such as doSomething the uProp of me, the uProp2 of me
-		// results in incorrect parameter evaluation (the second custom prop
-		// invocation clobbers the result of the first).
-		if (ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH)
-			ep.grabsvalue();
-		else if (ep.getformat() == VF_ARRAY)
-			ep.grabarray();
-	}
+		MCresult -> eval(ep);
 
 	return t_stat;
 }
@@ -233,10 +393,9 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	t_stat = sendgetprop(ep, p_set_name, p_prop_name);
 	if (t_stat == ES_NOT_HANDLED || t_stat == ES_PASS)
 	{
-		MCVariableValue *p;
-		if (findpropset(p_set_name, false, p))
-			p -> fetch_element(ep, MCNameGetOldString(p_prop_name));
-		else
+		MCObjectPropertySet *p;
+		if (!findpropset(p_set_name, false, p) ||
+			!p -> fetchelement(ep, p_prop_name))
 			ep.clear();
 
 		t_stat = ES_NORMAL;
@@ -245,8 +404,9 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 	return t_stat;
 }
 
-Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+#ifdef OLD_EXEC
 	uint2 num = 0;
 
 	switch (which)
@@ -259,7 +419,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_SHORT_NAME:
 	case P_ABBREV_NAME:
 	case P_LONG_NAME:
-		return names(which, ep, parid);
+		return names_old(which, ep, parid);
 	case P_ALT_ID:
 		ep.setint(altid);
 		break;
@@ -531,7 +691,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_PROPERTIES:
 		return getproparray(ep, parid);
 	case P_CUSTOM_PROPERTY_SET:
-		ep . setnameref_unsafe(getdefaultpropsetname());
+		ep . setvalueref(getdefaultpropsetname());
 		break;
 	case P_CUSTOM_PROPERTY_SETS:
 		listpropsets(ep);
@@ -579,6 +739,16 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	}
 
 	return ES_NORMAL;
+#else
+	Exec_stat t_stat;
+	t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
+	if (t_stat == ES_NOT_HANDLED)
+	{
+		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
+		return ES_ERROR;
+	}
+	return t_stat;
+#endif
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
@@ -627,13 +797,13 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 	case P_CUSTOM_KEYS:
 	case P_CUSTOM_PROPERTIES:
 		{
-			MCVariableValue *p;
+			MCObjectPropertySet *p;
 			if (findpropset(key, true, p))
 			{
 				if (which == P_CUSTOM_KEYS)
-					p -> getkeys(ep);
+					p -> list(ep);
 				else
-					ep.setarray(p, False);
+					p -> fetch(ep);
 			}
 			else
 				ep.clear();
@@ -655,7 +825,7 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+#ifdef OLD_EXEC
 Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCString t_data;
@@ -773,7 +943,7 @@ Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 	{
 		MCRectangle t_inner_rect;
 		t_inner_rect = getrectangle(false);
-		
+
 		t_rect . x += t_inner_rect . x - t_outer_rect . x;
 		t_rect . y += t_inner_rect . y - t_outer_rect . y;
 		t_rect . width -= (t_inner_rect . x - t_outer_rect . x) + (t_outer_rect . x + t_outer_rect . width - (t_inner_rect . x + t_inner_rect . width));
@@ -1123,7 +1293,7 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 
 	return ES_NORMAL;
 }
-
+#endif
 Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'setProp <propname> <value>'
@@ -1146,7 +1316,7 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		MCParameter p1, p2;
 		p1.setnext(&p2);
 
-		p1.setnameref_unsafe_argument(t_param_name);
+		p1.setvalueref_argument(t_param_name);
 		p2.set_argument(ep);
 		
 		MCStack *oldstackptr = MCdefaultstackptr;
@@ -1180,16 +1350,19 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 	if (t_stat == ES_PASS || t_stat == ES_NOT_HANDLED)
 	{
-		MCVariableValue *p;
+		MCObjectPropertySet *p;
 		/* UNCHECKED */ ensurepropset(p_set_name, false, p);
-		return p->store_element(ep, MCNameGetOldString(p_prop_name));
+		if (!p -> storeelement(ep, p_prop_name))
+			return ES_ERROR;
+		return ES_NORMAL;
 	}
 
 	return t_stat;
 }
 
-Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
+Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+#ifdef OLD_EXEC
 	Boolean dirty = True;
 	Boolean newstate;
 	int2 i1;
@@ -1214,10 +1387,10 @@ Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		{
 			// Cannot have return characters in object names.
 			ep . replacechar('\n', '_');
-
+	
 			MCAutoNameRef t_new_name;
 			/* UNCHECKED */ ep . copyasnameref(t_new_name);
-			
+				
 			// MW-2012-09-12; [[ Bug ]] Make sure we compare literally, otherwise can't
 			//   change case of names of objects.
 			if (getname() != t_new_name)
@@ -1225,7 +1398,7 @@ Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 				MCAutoNameRef t_old_name;
 				t_old_name . Clone(getname());
 				setname(t_new_name);
-				message_with_args(MCM_name_changed, t_old_name, getname());
+				message_with_valueref_args(MCM_name_changed, t_old_name, getname());
 			}
 		}
 		break;
@@ -1551,8 +1724,8 @@ Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		dirty = False;
 		break;
 	case P_PROPERTIES:
-		if (ep.getformat() == VF_ARRAY)
-			return ep.getarray()->setprops(parid, this);
+		if (ep.isarray())
+			return setprops(parid, ep);
 		dirty = False;
 		break;
 	case P_CUSTOM_PROPERTY_SET:
@@ -1639,6 +1812,12 @@ Exec_stat MCObject::setprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		if (gettype() >= CT_GROUP)
 			static_cast<MCControl *>(this) -> layer_redrawall();
 	}
+#else
+
+	MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
+	return ES_ERROR;
+
+#endif
 	return ES_NORMAL; 
 }
 
@@ -1689,7 +1868,7 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 	break;
 	case P_CUSTOM_KEYS:
 		{
-			MCVariableValue *p;
+			MCObjectPropertySet *p;
 
 			if (data == MCnullmcstring)
 			{
@@ -1699,38 +1878,21 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 			}
 
 			/* UNCHECKED */ ensurepropset(key, true, p);
-
-			if (ep.getsvalue().getstring()[ep.getsvalue().getlength() - 1] != '\n')
-				ep.appendnewline();
-			char *string = ep.getsvalue().clone();
-			char *eptr = string;
-			MCVariableValue *newp = new MCVariableValue;
-			while ((eptr = strtok(eptr, "\n")) != NULL)
-			{
-				if (p != NULL)
-					p->fetch_element(ep, eptr);
-				else
-					ep.clear();
-				newp->store_element(ep, eptr);
-				eptr = NULL;
-			}
-			delete string;
-			p -> exchange(*newp);
-			delete newp;
+			/* UNCHECKED */ p -> restrict(ep);
 		}
 		break;
 	case P_CUSTOM_PROPERTIES:
 		{
-			MCVariableValue *p;
+			MCObjectPropertySet *p;
 
-			if (ep.getformat() != VF_ARRAY)
+			if (!ep . isarray())
 			{
 				if (findpropset(key, true, p))
 					p -> clear();
 				break;
 			}
 			/* UNCHECKED */ ensurepropset(key, true, p);
-			p -> assign(*ep.getarray());
+			p -> store(ep);
 		}
 		break;
 	default:
@@ -1746,6 +1908,884 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 		}
 	}
 	return ES_NORMAL;
+}
+#ifdef OLD_EXEC
+Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
+{
+	MCAutoArrayRef t_array;
+	if (!ep . copyasarrayref(&t_array))
+		return ES_NORMAL;
+
+	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
+	MCRedrawLockScreen();
+	MCerrorlock++;
+
+	uintptr_t t_iterator;
+	t_iterator = 0;
+	MCNameRef t_key;
+	MCValueRef t_value;
+	while(MCArrayIterate(*t_array, t_iterator, t_key, t_value))
+	{
+		MCScriptPoint sp(MCStringGetCString(MCNameGetString(t_key)));
+		Symbol_type type;
+		const LT *te;
+		if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
+		        && te->type == TT_PROPERTY && te->which != P_ID)
+		{
+			ep . setvalueref(t_value);
+			setprop(p_parid, (Properties)te->which, ep, False);
+		}
+	}	
+	MCerrorlock--;
+	MCRedrawUnlockScreen();
+
+	return ES_NORMAL;
+}
+#endif
+////////////////////////////////////////////////////////////////////////////////
+
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective)
+{
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective))
+			return &p_table -> table[i];
+	
+	if (p_table -> parent != nil)
+		return lookup_object_property(p_table -> parent, p_which, p_effective);
+	
+	return nil;
+}
+
+Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
+{
+	MCPropertyInfo *t_info;
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True);
+	
+	if (t_info != nil && t_info -> getter == nil)
+	{
+		MCeerror -> add(EE_OBJECT_GETNOPROP, 0, 0);
+		return ES_ERROR;
+	}
+	
+	if (t_info != nil)
+	{
+		MCExecContext ctxt(ep);
+		
+		MCObjectPtr t_object;
+		t_object . object = this;
+		t_object . part_id = p_part_id;
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_any;
+				((void(*)(MCExecContext&, MCObjectPtr, MCValueRef&))t_info -> getter)(ctxt, t_object, &t_any);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_any);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, bool&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setboolean(t_value ? True : False);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeInt16:
+			case kMCPropertyTypeInt32:
+			{
+				integer_t t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, integer_t&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setint(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeUInt16:
+			case kMCPropertyTypeUInt32:
+			{
+				uinteger_t t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, uinteger_t&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setuint(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeDouble:
+			{
+				double t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, double&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setnvalue(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeChar:
+			{
+				char_t t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, char_t&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setchar((char)t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeString:
+			case kMCPropertyTypeBinaryString:
+			{	
+				MCAutoStringRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeColor:
+			{
+				MCColor t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCColor&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setcolor(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeRectangle:
+			{
+				MCRectangle t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCRectangle&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setrectangle(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypePoint:
+			{
+				MCPoint t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCPoint&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setpoint(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeInt16X2:
+			{
+				integer_t t_value[2];
+				((void(*)(MCExecContext&, MCObjectPtr, integer_t[2]))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setstringf("%d,%d", t_value[0], t_value[1]);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeInt16X4:
+			{
+				integer_t t_value[4];
+				((void(*)(MCExecContext&, MCObjectPtr, integer_t[4]))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeArray:
+			{
+				MCAutoArrayRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCArrayRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+
+			case kMCPropertyTypeEnum:
+			{
+				int t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, int&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					MCExecEnumTypeInfo *t_enum_info;
+					t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
+					for(uindex_t i = 0; i < t_enum_info -> count; i++)
+						if (t_enum_info -> elements[i] . value == t_value)
+						{
+							ep . setcstring(t_enum_info -> elements[i] . tag);
+							return ES_NORMAL;
+						}
+					
+					// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+					MCAssert(false);
+					return ES_ERROR;
+				}
+			}
+				break;
+
+			case kMCPropertyTypeOptionalEnum:
+			{
+				int t_value;
+				int *t_value_ptr;
+				t_value_ptr = &t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, int*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
+				if (!ctxt . HasError())
+				{
+					if (t_value_ptr == nil)
+						ep . clear();
+					else
+					{
+						MCExecEnumTypeInfo *t_enum_info;
+						t_enum_info = (MCExecEnumTypeInfo *)(t_info -> type_info);
+						for(uindex_t i = 0; i < t_enum_info -> count; i++)
+							if (t_enum_info -> elements[i] . value == t_value)
+							{
+								ep . setcstring(t_enum_info -> elements[i] . tag);
+								return ES_NORMAL;
+							}
+						
+						// THIS MEANS A METHOD HAS RETURNED AN ILLEGAL VALUE
+						MCAssert(false);
+						return ES_ERROR;
+					}
+					return ES_NORMAL;
+				}
+			}
+				break;
+								
+			case kMCPropertyTypeSet:
+			{
+				unsigned int t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, unsigned int&))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					MCExecSetTypeInfo *t_set_info;
+					t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
+					
+					bool t_first;
+					t_first = true;
+					
+					ep . clear();
+					for(uindex_t i = 0; i < t_set_info -> count; i++)
+						if (((1 << t_set_info -> elements[i] . bit) & t_value) != 0)
+						{
+							ep . concatcstring(t_set_info -> elements[i] . tag, EC_COMMA, t_first);
+							t_first = false;
+						}
+					
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeCustom:
+			{
+				MCExecCustomTypeInfo *t_custom_info;
+				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
+				
+				MCAssert(t_custom_info -> size <= 64);
+				
+				char t_value[64];
+				((void(*)(MCExecContext&, MCObjectPtr, void *))t_info -> getter)(ctxt, t_object, t_value);
+				if (!ctxt . HasError())
+				{
+					MCAutoStringRef t_value_ref;
+					((MCExecCustomTypeFormatProc)t_custom_info -> format)(ctxt, t_value, &t_value_ref);
+					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
+					if (!ctxt . HasError())
+					{
+						ep . setvalueref(*t_value_ref);
+						return ES_NORMAL;
+					}
+				}
+				
+			}
+				break;
+
+			case kMCPropertyTypeOptionalInt16:	
+			{
+				integer_t t_value;
+				integer_t *t_value_ptr;
+				t_value_ptr = &t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, integer_t*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
+				if (!ctxt . HasError())
+				{
+					if (t_value_ptr == nil)
+						ep . clear();
+					else
+						ep . setint(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+
+			case kMCPropertyTypeOptionalUInt16:	
+			case kMCPropertyTypeOptionalUInt32:
+			{
+				uinteger_t t_value;
+				uinteger_t *t_value_ptr;
+				t_value_ptr = &t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
+				if (!ctxt . HasError())
+				{
+					if (t_value_ptr == nil)
+						ep . clear();
+					else
+						ep . setint(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeOptionalString:
+			{
+				MCAutoStringRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCStringRef&))t_info -> getter)(ctxt, t_object, &t_value);
+				if (!ctxt . HasError())
+				{
+					if (*t_value == nil)
+						ep . clear();
+					else
+						ep . setvalueref(*t_value);
+					
+					return ES_NORMAL;
+				}
+				
+			}
+				break;
+
+			case kMCPropertyTypeOptionalRectangle:
+			{
+				MCRectangle t_value;
+				MCRectangle *t_value_ptr;
+				t_value_ptr = &t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCRectangle*&))t_info -> getter)(ctxt, t_object, t_value_ptr);
+				if (!ctxt . HasError())
+				{
+					if (t_value_ptr == nil)
+						ep . clear();
+					else
+						ep . setrectangle(t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+
+		}
+		
+		return ctxt . Catch(0, 0);
+	}
+	
+
+	return getprop_legacy(p_part_id, p_which, ep, p_effective);
+}
+
+Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
+{
+	MCPropertyInfo *t_info;
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True);
+
+	if (t_info != nil && t_info -> setter == nil)
+	{
+		MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
+		return ES_ERROR;
+	}
+
+	if (t_info != nil)
+	{
+		MCExecContext ctxt(ep);
+		
+		MCObjectPtr t_object;
+		t_object . object = this;
+		t_object . part_id = p_part_id;
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_value;
+				/* UNCHECKED */ ep . copyasvalueref(&t_value);
+				((void(*)(MCExecContext&, MCObjectPtr, MCValueRef))t_info -> setter)(ctxt, t_object, *t_value);
+			}
+			break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				if (!ep . copyasbool(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAB);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, bool))t_info -> setter)(ctxt, t_object, t_value);
+			}
+			break;
+				 
+			case kMCPropertyTypeInt16:
+			{
+				integer_t t_value;
+				if (!ep . copyasint(t_value) ||
+					t_value < -32768 || t_value > 32767)
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, integer_t))t_info -> setter)(ctxt, t_object, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeInt32:
+			{
+				integer_t t_value;
+				if (!ep . copyasint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, integer_t))t_info -> setter)(ctxt, t_object, t_value);				
+			}
+			break; 
+			
+			case kMCPropertyTypeUInt16:
+			{
+				uinteger_t t_value;
+				if (!ep . copyasuint(t_value) ||
+					t_value < 0 || t_value > 65535)
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t))t_info -> setter)(ctxt, t_object, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeUInt32:
+			{
+				uinteger_t t_value;
+				if (!ep . copyasuint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t))t_info -> setter)(ctxt, t_object, t_value);				
+			}
+			break;
+				
+			case kMCPropertyTypeDouble:
+			{
+				double t_value;
+				if (!ep . copyasdouble(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, double))t_info -> setter)(ctxt, t_object, t_value);	
+			}
+			break;
+			
+			case kMCPropertyTypeChar:
+			{
+				char_t t_value;
+				if (!ep . copyaschar(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, char_t))t_info -> setter)(ctxt, t_object, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeString:
+			case kMCPropertyTypeBinaryString:
+			{
+				MCAutoStringRef t_value;
+				if (!ep . copyasstringref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeColor:
+			{
+				MCColor t_value;
+				if (!ep . copyaslegacycolor(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCColor))t_info -> setter)(ctxt, t_object, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypeRectangle:
+			{
+				MCRectangle t_value;
+				if (!ep . copyaslegacyrectangle(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCRectangle))t_info -> setter)(ctxt, t_object, t_value);	
+			}
+			break;
+				
+			case kMCPropertyTypePoint:
+			{
+				MCPoint t_value;
+				if (!ep . copyaslegacypoint(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAPOINT);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCPoint))t_info -> setter)(ctxt, t_object, t_value);	
+			}
+			break;
+			
+			case kMCPropertyTypeInt16X2:
+			{
+				int2 a, b;
+				if (!MCU_stoi2x2(ep . getsvalue(), a, b))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTPAIR);
+				if (!ctxt . HasError())
+				{
+					integer_t t_value[2];
+					t_value[0] = a;
+					t_value[1] = b;
+					((void(*)(MCExecContext&, MCObjectPtr, integer_t[2]))t_info -> setter)(ctxt, t_object, t_value);
+				}
+			}
+			break;
+			
+			case kMCPropertyTypeInt16X4:
+			{
+				int2 a, b, c, d;
+				if (!MCU_stoi2x4(ep . getsvalue(), a, b, c, d))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTAINTQUAD);
+				if (!ctxt . HasError())
+				{
+					integer_t t_value[4];
+					t_value[0] = a;
+					t_value[1] = b;
+					t_value[2] = c;
+					t_value[3] = d;
+					((void(*)(MCExecContext&, MCObjectPtr, integer_t[4]))t_info -> setter)(ctxt, t_object, t_value);
+				}
+			}
+			break;
+
+			case kMCPropertyTypeArray:
+			{
+				MCAutoArrayRef t_value;
+				if (!ep . copyasarrayref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCArrayRef))t_info -> setter)(ctxt, t_object, *t_value);	
+			}
+			break;	
+
+			case kMCPropertyTypeEnum:
+			{
+				MCExecEnumTypeInfo *t_enum_info;
+				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
+				
+				bool t_found;
+				t_found = false;
+				intenum_t t_value;
+				for(uindex_t i = 0; i < t_enum_info -> count; i++)
+					if (!t_enum_info -> elements[i] . read_only &&
+						MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+					{
+						t_found = true;
+						t_value = t_enum_info -> elements[i] . value;
+					}
+			
+				if (!t_found)
+					ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, int))t_info -> setter)(ctxt, t_object, t_value);
+			}
+			break;
+
+			case kMCPropertyTypeOptionalEnum:
+			{
+				MCExecEnumTypeInfo *t_enum_info;
+				t_enum_info = (MCExecEnumTypeInfo *)t_info -> type_info;
+				
+				intenum_t t_value;
+				intenum_t* t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					bool t_found;
+					t_found = false;
+					for(uindex_t i = 0; i < t_enum_info -> count; i++)
+						if (!t_enum_info -> elements[i] . read_only &&
+							MCU_strcasecmp(ep . getcstring(), t_enum_info -> elements[i] . tag) == 0)
+						{
+							t_found = true;
+							t_value = t_enum_info -> elements[i] . value;
+						}
+				
+					if (!t_found)
+						ctxt . LegacyThrow(EE_PROPERTY_BADENUMVALUE);
+				}
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, int*))t_info -> setter)(ctxt, t_object, t_value_ptr);
+			}
+			break;
+
+			case kMCPropertyTypeSet:
+				ctxt . Unimplemented();
+				break;
+				
+			case kMCPropertyTypeCustom:
+			{
+				MCExecCustomTypeInfo *t_custom_info;
+				t_custom_info = (MCExecCustomTypeInfo *)(t_info -> type_info);
+				
+				MCAssert(t_custom_info -> size <= 64);
+			
+				MCAutoStringRef t_input_value;
+				/* UNCHECKED */ ep . copyasstringref(&t_input_value);
+				
+				char t_value[64];
+				((MCExecCustomTypeParseProc)t_custom_info -> parse)(ctxt, *t_input_value, t_value);
+				if (!ctxt . HasError())
+				{
+					((void(*)(MCExecContext&, MCObjectPtr, void *))t_info -> setter)(ctxt, t_object, t_value);
+					((MCExecCustomTypeFreeProc)t_custom_info -> free)(ctxt, t_value);
+				}
+			}
+			break;
+
+			case kMCPropertyTypeOptionalInt16:
+			{
+				integer_t t_value;
+				integer_t *t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					if (!ep . copyasint(t_value) ||
+						t_value < -32768 || t_value > 32767)
+						ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, integer_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
+			}
+			break;
+
+			case kMCPropertyTypeOptionalUInt16:
+			{
+				uinteger_t t_value;
+				uinteger_t *t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					if (!ep . copyasuint(t_value) ||
+						t_value < 0 || t_value > 65535)
+						ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
+			}
+			break;
+
+			case kMCPropertyTypeOptionalUInt32:
+			{
+				uinteger_t t_value;
+				uinteger_t *t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					if (!ep . copyasuint(t_value))
+						ctxt . LegacyThrow(EE_PROPERTY_NAN);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, uinteger_t*))t_info -> setter)(ctxt, t_object, t_value_ptr);		
+			}
+			break;
+			
+			case kMCPropertyTypeOptionalString:
+			{
+				MCAutoStringRef t_value;
+				if (!ep . isempty())
+				{
+					if (!ep . copyasstringref(&t_value))
+						ctxt . LegacyThrow(EE_PROPERTY_NAS);
+				}
+				
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCStringRef))t_info -> setter)(ctxt, t_object, *t_value);
+			}
+			break;
+
+			case kMCPropertyTypeOptionalRectangle:
+			{
+				MCRectangle t_value;
+				MCRectangle *t_value_ptr;
+				if (ep . isempty())
+					t_value_ptr = nil;
+				else
+				{
+					t_value_ptr = &t_value;
+					if (!ep . copyaslegacyrectangle(t_value))
+						ctxt . LegacyThrow(EE_PROPERTY_NOTARECT);
+				}
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCRectangle*))t_info -> setter)(ctxt, t_object, t_value_ptr);	
+			}
+			break;	
+
+			default:
+				ctxt . Unimplemented();
+				break;
+		}
+		
+		if (!ctxt . HasError())
+			return ES_NORMAL;
+
+		return ctxt . Catch(0, 0);
+	}
+	
+	return setprop_legacy(p_part_id, p_which, ep, p_effective);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCObject::getboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, bool& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasbool(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCObject::setboolprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, bool p_value)
+{
+	ctxt . GetEP() . setbool(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, integer_t& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasint(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, uinteger_t& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasuint(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCObject::setuintprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, uinteger_t p_value)
+{
+	ctxt . GetEP() . setuint(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
+
+//////////
+
+void MCObject::getdoubleprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, double& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasdouble(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCObject::getnumberprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCNumberRef& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasnumber(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+/////////
+
+void MCObject::getstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasstring(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCObject::setstringprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCStringRef p_value)
+{
+	ctxt . GetEP() . setvalueref(p_value);
+	if (setprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL)
+		return;
+	
+	ctxt . Throw();
+}
+
+/////////
+
+void MCObject::getarrayprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCArrayRef& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasarray(r_value))
+		return;
+
+	ctxt . Throw();
+}
+
+void MCObject::getvariantprop(MCExecContext& ctxt, uint32_t p_part_id, Properties p_which, Boolean p_effective, MCValueRef& r_value)
+{
+	if (getprop(p_part_id, p_which, ctxt . GetEP(), p_effective) == ES_NORMAL &&
+		ctxt . GetEP() . copyasvariant(r_value))
+		return;
+
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -177,14 +177,14 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-const char *MCScreenDC::getdisplayname(void)
+MCNameRef MCScreenDC::getdisplayname(void)
 {
-	return "android";
+	return MCN_android;
 }
 
-void MCScreenDC::getvendorstring(MCExecPoint &ep)
+MCNameRef MCScreenDC::getvendorname(void)
 {
-	ep . setsvalue("android");
+	return MCN_android;
 }
 
 uint2 MCScreenDC::getwidth()
@@ -320,17 +320,18 @@ void MCScreenDC::beep(void)
 	MCAndroidEngineRemoteCall("doBeep", "vi", nil, 1);
 }
 
-bool MCScreenDC::setbeepsound(const char *p_sound)
+bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 {
 	return false;
 }
 
-const char *MCScreenDC::getbeepsound(void)
+bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
-	return "";
+	r_beep_sound = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCScreenDC::getbeep(uint4 property, MCExecPoint &ep)
+void MCScreenDC::getbeep(uint4 property, int4& r_value)
 {
 }
 
