@@ -1,10 +1,13 @@
 ###############################################################################
 # Engine Targets
 
+LBITS := $(shell getconf LONG_BIT)
+
 .PHONY: libopenssl liburlcache libstubs
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
+.PHONY: standalone32
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
 
@@ -53,6 +56,16 @@ development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore k
 standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
+ifeq ($(LBITS),64)
+standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+	rm -rf _cache
+	$(MAKE) -C ./engine -f Makefile.standalone32 standalone32-community
+#else
+#standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+#	rm -rf _cache
+#	$(MAKE) -C ./engine64 -f Makefile.standalone standalone64 -m64
+endif
+
 installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
@@ -67,7 +80,7 @@ server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
@@ -94,7 +107,7 @@ libiodbc:
 dbpostgresql: libpq
 	$(MAKE) -C ./revdb dbpostgresql
 
-dbmysql: libmysql libz
+dbmysql: libmysql libz libopenssl
 	$(MAKE) -C ./revdb dbmysql
 
 dbsqlite: libsqlite libexternal
@@ -165,6 +178,7 @@ revandroid: libexternalv1
 # All Targets
 
 .PHONY: all clean
+.DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
@@ -172,4 +186,18 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
+<<<<<<< HEAD
+ifeq ($(LBITS),64)
+all: standalone32
+endif
 	#
+
+clean:
+	rm -rf _cache
+	rm -rf _build
+
+=======
+
+clean:
+	@rm -r _build _cache
+>>>>>>> cf69df25d69a0bec676ed053586ffa6bbfbbdd9f

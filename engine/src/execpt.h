@@ -143,6 +143,8 @@ public:
 
 	Boolean isempty(void) const
 	{
+		// MDW 2013-04-15: added parentheses to avoid compiler warning
+		// MDW-2013-04-18: reverted because bad.mark.no.doughnut
 		return format == VF_UNDEFINED || format != VF_ARRAY && format != VF_NUMBER && svalue . getlength() == 0;
 	}
 	

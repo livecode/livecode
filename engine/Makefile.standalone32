@@ -1,7 +1,5 @@
-NAME=standalone-community
+NAME=standalone32-community
 TYPE=application
-
-LBITS := $(shell getconf LONG_BIT)
 
 MODE_SOURCES= \
 	stacksecurity.cpp
@@ -14,6 +12,6 @@ MODE_LDFLAGS=\
 	-Wl,--script=standalone.link
 
 MODE_CCFLAGS=\
-	-m$(LBITS)
+	-m32
 
 include Makefile.common
