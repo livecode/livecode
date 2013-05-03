@@ -54,11 +54,17 @@ Parse_stat MCLiteralNumber::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLiteralNumber::eval(MCExecPoint &ep)
 {
+	// IM-2013-05-02: *TODO* the bugfix here cannot be applied to the syntax
+	// refactor branch as MCExecPoint::setboth() does not exist there
+#ifdef OLD_EXEC
 	// MW-2013-04-12: [[ Bug 10837 ]] Make sure we set 'both' when evaluating the
 	//   literal. Not doing this causes problems for things like 'numberFormat'.
 	if (nvalue == BAD_NUMERIC)
 		ep.setvalueref_nullable(value);
 	else
 		ep.setboth(MCNameGetOldString(value), nvalue);
+#else
+	ep.setvalueref_nullable(value);
+#endif
 	return ES_NORMAL;
 }
