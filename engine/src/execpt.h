@@ -56,6 +56,10 @@ class MCExecPoint
 	char rowdel;
 
 	MCValueRef value;
+	
+	// IM-2013-05-03: converted value for getsvalue
+	MCStringRef m_svalue;
+	MCValueRef m_svalue_source;
 
 public:
 	MCExecPoint()
@@ -69,11 +73,17 @@ public:
 		nftrailing = 6;
 		cutoff = 35;
 		value = MCValueRetain(kMCEmptyString);
+		
+		m_svalue = nil;
+		m_svalue_source = nil;
 	}
 	MCExecPoint(const MCExecPoint &ep)
 	{
 		*this = ep;
 		value = MCValueRetain(kMCEmptyString);
+		
+		m_svalue = nil;
+		m_svalue_source = nil;
 	}
 	MCExecPoint(MCObject *object, MCHandlerlist *hlist, MCHandler *handler)
 	{
@@ -89,6 +99,9 @@ public:
 		nftrailing = 6;
 		cutoff = 35;
 		value = MCValueRetain(kMCEmptyString);
+		
+		m_svalue = nil;
+		m_svalue_source = nil;
 	}
 	void restore(const MCExecPoint &ep)
 	{
@@ -99,6 +112,9 @@ public:
 	~MCExecPoint()
 	{
 		MCValueRelease(value);
+		
+		MCValueRelease(m_svalue);
+		MCValueRelease(m_svalue_source);
 	}
 	void sethlist(MCHandlerlist *hl)
 	{

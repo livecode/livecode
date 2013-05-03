@@ -276,9 +276,22 @@ MCString MCExecPoint::getsvalue0(void)
 
 MCString MCExecPoint::getsvalue(void)
 {
-	converttostring();
+	if (MCValueGetTypeCode(value) == kMCValueTypeCodeString)
+		return MCStringGetOldString((MCStringRef)value);
+	
+	if (m_svalue_source != value)
+	{
+		MCValueRelease(m_svalue);
+		MCValueRelease(m_svalue_source);
+		m_svalue = nil;
+		m_svalue_source = nil;
+		
+		if (!convertvaluereftostring(value, m_svalue))
+			m_svalue = MCValueRetain(kMCEmptyString);
+		m_svalue_source = MCValueRetain(value);
+	}
 
-	return MCStringGetOldString((MCStringRef)value);
+	return MCStringGetOldString(m_svalue);
 }
 
 real8 MCExecPoint::getnvalue(void)
