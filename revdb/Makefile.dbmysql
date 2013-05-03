@@ -1,6 +1,8 @@
 NAME=dbmysql
 TYPE=library
 
+include ../rules/environment.linux.makefile
+
 SOURCES=\
 	dbdrivercommon.cpp database.cpp dbmysqlapi.cpp mysql_connection.cpp \
 	mysql_cursor.cpp
@@ -10,7 +12,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./src
 
 CUSTOM_LIBS=mysql z openssl
-CUSTOM_STATIC_LIBS=stdc++
 CUSTOM_DYNAMIC_LIBS=m pthread dl
 CUSTOM_SHARED_LIBS=
 

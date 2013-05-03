@@ -1,7 +1,7 @@
 NAME=standalone-community
 TYPE=application
 
-LBITS := $(shell getconf LONG_BIT)
+include ../rules/environment.linux.makefile
 
 MODE_SOURCES= \
 	stacksecurity.cpp
@@ -11,9 +11,6 @@ MODE_DEPS=libkernel-standalone.a
 MODE_LIBS=kernel-standalone
 
 MODE_LDFLAGS=\
-	-Wl,--script=standalone.link
-
-MODE_CCFLAGS=\
-	-m$(LBITS)
+	-Wl,--script=standalone-$(ARCH).link
 
 include Makefile.common

@@ -1,6 +1,8 @@
 NAME=libkernel-development
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES= \
 	ide.cpp internal_development.cpp lextable.cpp mode_development.cpp \
 	deploy.cpp deploy_linux.cpp deploy_windows.cpp \
@@ -16,6 +18,6 @@ src/hashedstrings.cpp: src/lextable.cpp
 encodederrors.cpp: src/executionerrors.h src/parseerrors.h
 	../prebuilt/bin/Revolution.lnx "./encode_errors.rev"  "./src" "./src/encodederrors.cpp"
 
-../_cache/linux/$(MODE)/$(NAME)/ide.o: src/hashedstrings.cpp
+$(CACHE_DIR)/ide.o: src/hashedstrings.cpp
 
 include Makefile.kernel-common

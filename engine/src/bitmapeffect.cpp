@@ -1388,6 +1388,8 @@ static MCBitmapEffectCompositeCallback MCBitmapEffectChooseCompositer(MCBitmapEf
 	return NULL;
 }
 
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
 static void MCBitmapEffectRender(MCBitmapEffectRenderState& state, MCBitmapEffectLayer& dst, MCBitmapEffectLayer& src)
 {
 	// Compute the dst ptr/stride in pixels.

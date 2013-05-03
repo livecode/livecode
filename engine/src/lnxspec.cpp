@@ -904,9 +904,10 @@ IO_handle MCS_open(const char *path, const char *mode,
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
-				// MW-2013-05-03: [[ x64 ]] Compare with MAP_FAILED (should be correct
-				//   pointer type on all plats / archs).
-				if ((void*)buffer != MAP_FAILED)
+											
+				// MW-2013-05-02: [[ x64 ]] Make sure we use the MAP_FAILED constant
+				//   rather than '-1'.
+				if (buffer != MAP_FAILED)
 				{
 					delete newpath;
 					handle = new IO_header(NULL, buffer, len, fd, 0);
@@ -1350,12 +1351,12 @@ const char *MCS_getmachine()
 	return u.machine;
 }
 
-// MW-2013-05-03: [[ x64 ]] Return a standard identifier depending on target
-//   compile architecture (to guard against variance in uname).
+// MW-2013-05-02: [[ x64 ]] If 64-bit then return x86_64, else we must be
+//   32-bit Intel so x86.
 const char *MCS_getprocessor()
 {
 #ifdef __LP64__
-	return "x64";
+	return "x86_64";
 #else
 	return "x86";
 #endif
@@ -1494,9 +1495,9 @@ IO_handle MCS_fakeopenwrite(void)
 
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
-	// MW-2015-05-03: [[ x64 ]] Use 'uintptr_t' as cast for callbacks (as its a context
-	//   ptr that's being cast to an int). (There should really be a different constructor
-	//   for this usage!).
+	// MW-2015-05-03: [[ x64 ]] Use 'uintptr_t' as cast for callbacks (param is actually
+	//   size_t, but uintptr_t is the 'correct' type for this usage - there should really
+	//   be a different constructor for this case!)
 	return new IO_header(NULL, (char *)p_state, (uintptr_t)p_callbacks, 0, IO_FAKECUSTOM);
 }
 

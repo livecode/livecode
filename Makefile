@@ -1,13 +1,10 @@
 ###############################################################################
 # Engine Targets
 
-LBITS := $(shell getconf LONG_BIT)
-
 .PHONY: libopenssl liburlcache libstubs
 .PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
-.PHONY: standalone32
 .PHONY: kernel-standalone kernel-development kernel-server
 .PHONY: libireviam onrev-server
 
@@ -37,6 +34,9 @@ libopenssl:
 
 libcore:
 	$(MAKE) -C ./libcore libcore
+
+revsecurity:
+	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
 	
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
@@ -50,23 +50,13 @@ kernel-development: kernel
 kernel-server:
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-ifeq ($(LBITS),64)
-standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
-	rm -rf _cache
-	$(MAKE) -C ./engine -f Makefile.standalone32 standalone32-community
-#else
-#standalone32: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
-#	rm -rf _cache
-#	$(MAKE) -C ./engine64 -f Makefile.standalone standalone64 -m64
-endif
-
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
 server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
@@ -186,9 +176,6 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
-ifeq ($(LBITS),64)
-all: standalone32
-endif
 
 clean:
-	@rm -r _build _cache
+	@rm -r _build/linux _cache/linux
