@@ -1,6 +1,8 @@
 NAME=libopenssl
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES=\
 	sslstubs.cpp
 
@@ -9,7 +11,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./include ./src
 
 CUSTOM_CCFLAGS=
-
 
 sslstubs.cpp: ssl.stubs
 	mkdir -p ./src

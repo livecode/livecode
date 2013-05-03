@@ -1,7 +1,8 @@
 NAME=libmysql
 TYPE=archive
 
-################################################################################
+include ../../rules/environment.linux.makefile
+
 SOURCES= \
 	array.c bchange.c bmove_upp.c charset.c charset-def.c client.c \
 	ctype-big5.c ctype-bin.c ctype.c ctype-cp932.c ctype-czech.c \
@@ -22,7 +23,7 @@ SOURCES= \
 
 CUSTOM_DEFINES=
 
-CUSTOM_INCLUDES=./include ./src $(HOME)/revlibs/prefix/include
+CUSTOM_INCLUDES=./include ./src
 
 CUSTOM_CCFLAGS=
 

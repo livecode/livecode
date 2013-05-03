@@ -1,6 +1,8 @@
 NAME=libjpeg
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES=\
 	jcapimin.c jcapistd.c jccoefct.c jccolor.c jcdctmgr.c jchuff.c jcinit.c jcmainct.c \
 	jcmarker.c jcmaster.c jcomapi.c jcparam.c jcphuff.c jcprepct.c jcsample.c jctrans.c \
