@@ -287,13 +287,13 @@
 		4D58857C0B80DEBE00200116 /* LiveCode.rsrc in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885620B80DEAC00200116 /* LiveCode.rsrc */; };
 		4D592DEB14EED23600EADBB6 /* fonttable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D592DEA14EED23600EADBB6 /* fonttable.cpp */; };
 		4D606EB01670C781004A71AA /* exec-debugging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D606EAF1670C781004A71AA /* exec-debugging.cpp */; };
-		4D67BB24164A76090092CF4C /* exec-ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BB23164A76090092CF4C /* exec-ide.cpp */; };
-		4D67BBB9164AB2C50092CF4C /* exec-printing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BBB8164AB2C50092CF4C /* exec-printing.cpp */; };
 		4D657F9917143B720086071B /* libpcre.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7999171348CD000BCF78 /* libpcre.a */; };
 		4D657F9A17143B750086071B /* libgif.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7991171348C1000BCF78 /* libgif.a */; };
 		4D657F9B17143B770086071B /* libjpeg.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7989171348B4000BCF78 /* libjpeg.a */; };
 		4D657F9C17143B7A0086071B /* libpng.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C7981171348A6000BCF78 /* libpng.a */; };
 		4D657F9D17143B800086071B /* libz.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D6C797917134897000BCF78 /* libz.a */; };
+		4D67BB24164A76090092CF4C /* exec-ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BB23164A76090092CF4C /* exec-ide.cpp */; };
+		4D67BBB9164AB2C50092CF4C /* exec-printing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D67BBB8164AB2C50092CF4C /* exec-printing.cpp */; };
 		4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
 		4D6C27FD1647D942007C96B7 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */; };
 		4D6C27FE1647D942007C96B7 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6C27FC1647D942007C96B7 /* exec-security.cpp */; };
@@ -666,20 +666,6 @@
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
 			remoteInfo = libpcre;
-		};
-		4D6C284B1647D9A9007C96B7 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DF42A420B048617003F2D95;
-			remoteInfo = foundation;
-		};
-		4D6C284D1647D9B2007C96B7 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DF42A420B048617003F2D95;
-			remoteInfo = foundation;
 		};
 		4D7FA7BA1594E0FA00EEF440 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1195,7 +1181,6 @@
 		4D7741181226B930001C9150 /* lnxtextlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxtextlayout.cpp; path = src/lnxtextlayout.cpp; sourceTree = "<group>"; };
 		4D7741191226B930001C9150 /* lnxtransfer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxtransfer.cpp; path = src/lnxtransfer.cpp; sourceTree = "<group>"; };
 		4D77411A1226B930001C9150 /* lnxtransfer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxtransfer.h; path = src/lnxtransfer.h; sourceTree = "<group>"; };
-		4D7BDC9C169708830072DF16 /* exec-printing.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-printing.syntax"; path = "src/exec-printing.syntax"; sourceTree = "<group>"; };
 		4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libfoundation.xcodeproj; path = ../libfoundation/libfoundation.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
 		4D81A4C111171F6A008AE3F1 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
@@ -1350,23 +1335,16 @@
 		4DE3B0D415888A93008EB6B5 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
 		4DE3B0D515888A93008EB6B5 /* foundation-legacy.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-legacy.h"; path = "src/foundation-legacy.h"; sourceTree = "<group>"; };
 		4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-array.cpp"; path = "src/exec-array.cpp"; sourceTree = "<group>"; };
-		4DE3B0F015888AB8008EB6B5 /* exec-array.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-array.syntax"; path = "src/exec-array.syntax"; sourceTree = "<group>"; };
 		4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-engine.cpp"; path = "src/exec-engine.cpp"; sourceTree = "<group>"; };
-		4DE3B0F215888AB8008EB6B5 /* exec-engine.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-engine.syntax"; path = "src/exec-engine.syntax"; sourceTree = "<group>"; };
 		4DE3B0F315888AB8008EB6B5 /* exec-files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files.cpp"; path = "src/exec-files.cpp"; sourceTree = "<group>"; };
 		4DE3B0F415888AB8008EB6B5 /* exec-filters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-filters.cpp"; path = "src/exec-filters.cpp"; sourceTree = "<group>"; };
-		4DE3B0F515888AB8008EB6B5 /* exec-filters.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-filters.syntax"; path = "src/exec-filters.syntax"; sourceTree = "<group>"; };
 		4DE3B0F615888AB8008EB6B5 /* exec-interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface.cpp"; path = "src/exec-interface.cpp"; sourceTree = "<group>"; };
-		4DE3B0F715888AB8008EB6B5 /* exec-interface.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-interface.syntax"; path = "src/exec-interface.syntax"; sourceTree = "<group>"; };
 		4DE3B0F815888AB8008EB6B5 /* exec-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-legacy.cpp"; path = "src/exec-legacy.cpp"; sourceTree = "<group>"; };
 		4DE3B0F915888AB8008EB6B5 /* exec-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-math.cpp"; path = "src/exec-math.cpp"; sourceTree = "<group>"; };
-		4DE3B0FA15888AB8008EB6B5 /* exec-math.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-math.syntax"; path = "src/exec-math.syntax"; sourceTree = "<group>"; };
 		4DE3B0FB15888AB8008EB6B5 /* exec-multimedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-multimedia.cpp"; path = "src/exec-multimedia.cpp"; sourceTree = "<group>"; };
 		4DE3B0FC15888AB8008EB6B5 /* exec-network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-network.cpp"; path = "src/exec-network.cpp"; sourceTree = "<group>"; };
 		4DE3B0FD15888AB8008EB6B5 /* exec-pasteboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pasteboard.cpp"; path = "src/exec-pasteboard.cpp"; sourceTree = "<group>"; };
-		4DE3B0FE15888AB8008EB6B5 /* exec-pasteboard.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-pasteboard.syntax"; path = "src/exec-pasteboard.syntax"; sourceTree = "<group>"; };
 		4DE3B0FF15888AB8008EB6B5 /* exec-strings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings.cpp"; path = "src/exec-strings.cpp"; sourceTree = "<group>"; };
-		4DE3B10015888AB8008EB6B5 /* exec-strings.syntax */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "exec-strings.syntax"; path = "src/exec-strings.syntax"; sourceTree = "<group>"; };
 		4DE3B10115888AB8008EB6B5 /* exec-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-text.cpp"; path = "src/exec-text.cpp"; sourceTree = "<group>"; };
 		4DE3B10215888AB8008EB6B5 /* exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exec.cpp; path = src/exec.cpp; sourceTree = "<group>"; };
 		4DE3B10315888AB8008EB6B5 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = exec.h; path = src/exec.h; sourceTree = "<group>"; };
@@ -1459,7 +1437,6 @@
 		E875FD8C17293B4F005A69F4 /* exec-interface-stack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-stack.cpp"; path = "src/exec-interface-stack.cpp"; sourceTree = "<group>"; };
 		E875FD8D17293B4F005A69F4 /* exec-interface-vclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-vclip.cpp"; path = "src/exec-interface-vclip.cpp"; sourceTree = "<group>"; };
 		E875FD8E17293B4F005A69F4 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
-		E8A49104170F16D000769C7A /* rawarray.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = rawarray.h; path = src/rawarray.h; sourceTree = "<group>"; };
 		E8A49106170F179000769C7A /* region.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = region.h; path = src/region.h; sourceTree = "<group>"; };
 		E8A49107170F179000769C7A /* tilecachegl.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = tilecachegl.cpp; path = src/tilecachegl.cpp; sourceTree = "<group>"; };
 		E8A7EEFA16FC982F00C39491 /* stacksecurity.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = stacksecurity.h; path = src/stacksecurity.h; sourceTree = "<group>"; };
@@ -1633,7 +1610,6 @@
 				4D587FAE0B809C0C00200116 /* Projects */,
 				4D58819C0B80C68600200116 /* Resources */,
 				4D6C26DA1647D765007C96B7 /* Tests */,
-				4D587DD20B8096D600200116 /* Headers */,
 				4D587DCC0B8096B000200116 /* Sources */,
 			);
 			sourceTree = "<group>";
@@ -2174,35 +2150,27 @@
 			children = (
 				E875FD8017293B29005A69F4 /* exec-interface */,
 				4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */,
-				4DE3B0F015888AB8008EB6B5 /* exec-array.syntax */,
 				4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */,
 				4D606EAF1670C781004A71AA /* exec-debugging.cpp */,
 				4D83866216789E27003BEC7C /* exec-dialog.cpp */,
 				4DE3B0F115888AB8008EB6B5 /* exec-engine.cpp */,
-				4DE3B0F215888AB8008EB6B5 /* exec-engine.syntax */,
 				4DE3B0F315888AB8008EB6B5 /* exec-files.cpp */,
 				4DE3B0F415888AB8008EB6B5 /* exec-filters.cpp */,
-				4DE3B0F515888AB8008EB6B5 /* exec-filters.syntax */,
 				4D6C27FB1647D942007C96B7 /* exec-graphics.cpp */,
 				4D67BB23164A76090092CF4C /* exec-ide.cpp */,
 				4D23416816AD41B300F5B5DA /* exec-interface2.cpp */,
 				4DE3B0F615888AB8008EB6B5 /* exec-interface.cpp */,
-				4DE3B0F715888AB8008EB6B5 /* exec-interface.syntax */,
 				4DE3B0F815888AB8008EB6B5 /* exec-legacy.cpp */,
 				E8189EB515D17E8000194F25 /* exec-logic.cpp */,
 				4DE3B0F915888AB8008EB6B5 /* exec-math.cpp */,
-				4DE3B0FA15888AB8008EB6B5 /* exec-math.syntax */,
 				4DE3B0FB15888AB8008EB6B5 /* exec-multimedia.cpp */,
 				4DE3B0FC15888AB8008EB6B5 /* exec-network.cpp */,
 				4DE3B0FD15888AB8008EB6B5 /* exec-pasteboard.cpp */,
-				4DE3B0FE15888AB8008EB6B5 /* exec-pasteboard.syntax */,
 				4D67BBB8164AB2C50092CF4C /* exec-printing.cpp */,
-				4D7BDC9C169708830072DF16 /* exec-printing.syntax */,
 				E8AE103215D90DE700A517E8 /* exec-scripting.cpp */,
 				4D6C27FC1647D942007C96B7 /* exec-security.cpp */,
 				4D83866316789E27003BEC7C /* exec-server.cpp */,
 				4DE3B0FF15888AB8008EB6B5 /* exec-strings.cpp */,
-				4DE3B10015888AB8008EB6B5 /* exec-strings.syntax */,
 				4DE3B10115888AB8008EB6B5 /* exec-text.cpp */,
 				4DE3B10215888AB8008EB6B5 /* exec.cpp */,
 				4DE3B10315888AB8008EB6B5 /* exec.h */,
@@ -2660,7 +2628,6 @@
 				4D8D356B171D4B83009D9D25 /* PBXTargetDependency */,
 				4D8D356D171D4B83009D9D25 /* PBXTargetDependency */,
 				4D8D356F171D4B83009D9D25 /* PBXTargetDependency */,
-				4D8D3571171D4B83009D9D25 /* PBXTargetDependency */,
 				4D1F9C5E171C67B00091C6CB /* PBXTargetDependency */,
 			);
 			name = "kernel-server";
@@ -2720,7 +2687,6 @@
 			dependencies = (
 				4D2A579A1198634300135143 /* PBXTargetDependency */,
 				4D1F9C52171C66230091C6CB /* PBXTargetDependency */,
-				4D2A57AC1198634300135143 /* PBXTargetDependency */,
 			);
 			name = Installer;
 			productName = engine;
@@ -2784,7 +2750,6 @@
 				4D8D355F171D4B72009D9D25 /* PBXTargetDependency */,
 				4D8D3561171D4B72009D9D25 /* PBXTargetDependency */,
 				4D8D3563171D4B72009D9D25 /* PBXTargetDependency */,
-				4D8D3565171D4B72009D9D25 /* PBXTargetDependency */,
 				4DEE2BD30FDE4A1E0009423C /* PBXTargetDependency */,
 			);
 			name = kernel;
@@ -3591,16 +3556,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4D6C284C1647D9A9007C96B7 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = foundation;
-			targetProxy = 4D6C284B1647D9A9007C96B7 /* PBXContainerItemProxy */;
-		};
-		4D6C284E1647D9B2007C96B7 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = foundation;
-			targetProxy = 4D6C284D1647D9B2007C96B7 /* PBXContainerItemProxy */;
-		};
 		4D1F9C49171C655E0091C6CB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D1F9C2D171C64320091C6CB /* security-community */;

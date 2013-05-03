@@ -974,13 +974,13 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 	case P_REV_MESSAGE_BOX_LAST_OBJECT:
 		if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
 		{
-			MCmessageboxlastobject->Get()->names(P_LONG_ID, ep, 0);
+			MCmessageboxlastobject->Get()->names_old(P_LONG_ID, ep, 0);
 			ep.concatnameref(MCmessageboxlasthandler, EC_COMMA, false);
 			ep.concatuint(MCmessageboxlastline, EC_COMMA, false);
 			if (MCmessageboxlastobject->Get()->getparentscript() != nil)
 			{
 				MCExecPoint ep2;
-				MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, ep2, 0);
+				MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names_old(P_LONG_ID, ep2, 0);
 				ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
 			}
 		}
