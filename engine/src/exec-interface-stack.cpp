@@ -1542,11 +1542,11 @@ void MCStack::SetLinkAtt(MCExecContext& ctxt, Properties which, MCInterfaceNamed
 	{
 		if (linkatts == nil)
 		{
-			linkatts = new Linkatts;
-			memcpy(linkatts, &MClinkatts, sizeof(Linkatts));
-			linkatts->colorname = (MCStringRef)MCValueRetain(MClinkatts.colorname);
-			linkatts->hilitecolorname = (MCStringRef)MCValueRetain(MClinkatts.hilitecolorname);
-			linkatts->visitedcolorname = (MCStringRef)MCValueRetain(MClinkatts.visitedcolorname);
+			/* UNCHECKED */ linkatts = new Linkatts;
+			MCMemoryCopy(linkatts, &MClinkatts, sizeof(Linkatts));
+			linkatts->colorname = MClinkatts.colorname == nil ? nil : MCValueRetain(MClinkatts.colorname);
+			linkatts->hilitecolorname = MClinkatts.hilitecolorname == nil ? nil : MCValueRetain(MClinkatts.hilitecolorname);
+			linkatts->visitedcolorname = MClinkatts.visitedcolorname == nil ? nil : MCValueRetain(MClinkatts.visitedcolorname);
 			MCscreen->alloccolor(linkatts->color);
 			MCscreen->alloccolor(linkatts->hilitecolor);
 			MCscreen->alloccolor(linkatts->visitedcolor);
