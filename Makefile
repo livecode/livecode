@@ -186,18 +186,10 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
-<<<<<<< HEAD
 ifeq ($(LBITS),64)
 all: standalone32
 endif
 	#
 
 clean:
-	rm -rf _cache
-	rm -rf _build
-
-=======
-
-clean:
 	@rm -r _build _cache
->>>>>>> cf69df25d69a0bec676ed053586ffa6bbfbbdd9f
