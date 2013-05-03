@@ -189,7 +189,6 @@ all: development standalone installer server
 ifeq ($(LBITS),64)
 all: standalone32
 endif
-	#
 
 clean:
 	@rm -r _build _cache

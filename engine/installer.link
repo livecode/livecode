@@ -2,7 +2,6 @@
    ld. It has been modified with a rule to place the '.project' and '.payload'
    sections after the .bss section to allow easy insertion of the installer data. */
 
-/* MDW-2013-04-23 don't need OUTPUT_FORMAT and OUTPUT_ARCH directives */
 ENTRY(_start)
 SEARCH_DIR("/usr/i386-redhat-linux/lib"); SEARCH_DIR("/usr/local/lib"); SEARCH_DIR("/lib"); SEARCH_DIR("/usr/lib");
 SECTIONS
