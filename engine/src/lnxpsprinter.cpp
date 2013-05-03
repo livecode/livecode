@@ -641,8 +641,9 @@ bool MCPSPrinter::DoReset(const char *p_name)
 		m_printersettings . printername = strdup(p_name);
 	
 	FlushSettings();
-	// MDW 2013-04-16: DoReset needs to return a bool
-	return (true);
+	
+	// MDW-2013-04-16: [[ x64 ]] DoReset needs to return a bool
+	return true;
 }
 
 
@@ -1371,7 +1372,7 @@ void MCPSMetaContext::printimage(MCBitmap *image, int2 dx, int2 dy, real8 xscale
 				}
 				else
 				{
-					// MDW 2013-04-16: need to compare unsigned with unsigned
+					// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
 					if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
 						PSwrite("F");
 					else
@@ -1476,7 +1477,7 @@ void MCPSMetaContext::printpattern(MCBitmap *image)
 			}
 			else
 			{
-				// MDW 2013-04-16: need to compare unsigned with unsigned
+				// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
 				if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
 					PSwrite("F");
 				else
@@ -1515,7 +1516,7 @@ void MCPSMetaContext::fillpattern ( Pixmap p_pattern, MCPoint p_origin )
 {
 	if ( !pattern_created ( p_pattern ) ) 
 		create_pattern ( p_pattern ) ;
-	// MDW 2013-04-16: p_pattern is an XID (long unsigned int), so need $ld here
+	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
 	sprintf(buffer, "pattern_id_%ld\n", p_pattern );
 	PSwrite ( buffer );
 	sprintf(buffer, "[1 0 0 1 %d %d]\n", p_origin.x, cardheight - p_origin.y);
@@ -1533,7 +1534,7 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 	MCBitmap *image ;
 	image = MCscreen -> getimage ( p_pattern, 0, 0, t_w, t_h, false ) ;
 	
-	// MDW 2013-04-16: p_pattern is an XID (long unsigned int), so need $ld here
+	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
 	sprintf(buffer, "/pattern_id_%ld\n", p_pattern);
 	PSwrite ( buffer  ) ;
 	

@@ -891,8 +891,8 @@ IO_handle MCS_open(const char *path, const char *mode,
 {
 	char *newpath = MCS_resolvepath(path);
 	IO_handle handle = NULL;
+	
 #ifndef NOMMAP
-
 	if (map && MCmmap && !driver && strequal(mode, IO_READ_MODE))
 	{
 		int fd = open(newpath, O_RDONLY);
@@ -904,8 +904,9 @@ IO_handle MCS_open(const char *path, const char *mode,
 			{
 				char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
 				                            fd, offset);
-				// MDW 2013.04.15: compare without compiler barfing
-				if ((void*)buffer != (void*)-1)
+				// MW-2013-05-03: [[ x64 ]] Compare with MAP_FAILED (should be correct
+				//   pointer type on all plats / archs).
+				if ((void*)buffer != MAP_FAILED)
 				{
 					delete newpath;
 					handle = new IO_header(NULL, buffer, len, fd, 0);
@@ -1349,12 +1350,15 @@ const char *MCS_getmachine()
 	return u.machine;
 }
 
-// MDW-2013-04-28 : any reason not to do this? It should return x86 or x86_64
+// MW-2013-05-03: [[ x64 ]] Return a standard identifier depending on target
+//   compile architecture (to guard against variance in uname).
 const char *MCS_getprocessor()
 {
-	uname(&u);
-	return u.machine;
-//	return "unknown";
+#ifdef __LP64__
+	return "x64";
+#else
+	return "x86";
+#endif
 }
 
 const char *MCS_getsystemversion()
@@ -1490,8 +1494,10 @@ IO_handle MCS_fakeopenwrite(void)
 
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
-	// MDW 2013.04.15: added 64-bit-safe p_callbacks
-	return new IO_header(NULL, (char *)p_state, (size_t)p_callbacks, 0, IO_FAKECUSTOM);
+	// MW-2015-05-03: [[ x64 ]] Use 'uintptr_t' as cast for callbacks (as its a context
+	//   ptr that's being cast to an int). (There should really be a different constructor
+	//   for this usage!).
+	return new IO_header(NULL, (char *)p_state, (uintptr_t)p_callbacks, 0, IO_FAKECUSTOM);
 }
 
 IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)

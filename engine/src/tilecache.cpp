@@ -136,7 +136,7 @@ struct MCTileCache
 	bool clean : 1;
 	
 	// The size of a single tile in pixels (tiles are square).
-	// MDW 2013-04-16: no need for this to be a signed int, messed up comparisons
+	// MDW-2013-04-16: [[ x64 ]] no need for this to be a signed int, messed up comparisons
 	uint32_t tile_size;
 	
 	// The number of bytes currently in use by cached images.
@@ -1042,7 +1042,7 @@ static void MCTileCacheFlushCellsContainingLayers(MCTileCacheRef self, uint32_t 
 			t_cell = MCTileCacheGetSceneryCell(self, x, y);
 			
 			// Loop through each tile, destroying any that have become invalid.
-			// MDW 2013-04-16: was comparing signed and unsigned values
+			// MDW-2013-04-16: [[ x64 ]] was comparing signed and unsigned values
 			uint32_t t_new_tile_count;
 			t_new_tile_count = 0;
 			for(uint32_t i = 0; i < t_cell -> tile_count; i++)

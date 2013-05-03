@@ -37,9 +37,6 @@ extern Boolean tripleclick;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MDW 2013-04-16: handle_touch is declared but not defined
-// static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y);
-
 enum MCEventType
 {
 	kMCEventTypeNotify,
@@ -635,7 +632,6 @@ void MCEventQueueFilter(MCEventQueueFilterCallback p_callback, void *p_context)
 
 // Search through the eventqueue for a mouse click (mousedown followed by mouseup)
 // and remove it from the queue. This will also remove all but the last mousemove.
-
 bool MCEventQueueGetMouseClick(uint32_t p_button)
 {
 	// Look for the first mouse down event in the queue

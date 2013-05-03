@@ -1500,17 +1500,14 @@ const char *MCS_getaddress()
 	return buffer;
 }
 
-// MDW-2013-04-28 : get ready for 64-bit reporting
-const char KCPU_STRING = "x86";
-
 const char *MCS_getmachine()
 {
-	return KCPU_STRING;
+	return "x86";
 }
 
 const char *MCS_getprocessor()
 {
-	return KCPU_STRING;
+	return "x86";
 }
 
 real8 MCS_getfreediskspace(void)

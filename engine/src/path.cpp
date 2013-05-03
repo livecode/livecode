@@ -150,8 +150,8 @@ void MCPath::release(void)
 	f_references -= 1;
 	if (f_references == 0)
 	{
-		// MDW-2013-04-17: data storage is now separate from MCPath object
-		// so don't forget to free it as well.
+		// MDW-2013-04-17: [[ x64 ]] data storage is now separate from MCPath object
+		//   so don't forget to free it as well.
 		if (this -> f_commands != NULL)
 			free(this -> f_commands);
 		if (this -> f_data != NULL)
@@ -172,7 +172,7 @@ MCPath *MCPath::allocate(uint4 p_command_count, uint4 p_point_count)
 {
 	MCPath *t_path;
 
-	// MDW-2013-04-17: eliminating magic numbers, adjusting for 64-bit space
+	// MDW-2013-04-17: [[ x64 ]] eliminating magic numbers, adjusting for 64-bit space
 	t_path = new MCPath;
 	t_path -> f_references = 1;
 

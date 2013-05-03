@@ -1724,15 +1724,11 @@ const char *MCS_getmachine()
 	return "unknown";
 }
 
-// MDW-2013-04-28 : any reason not to do this?
-static struct utsname u;
 // MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
 const char *MCS_getprocessor()
 { //get machine processor
 #ifdef __LITTLE_ENDIAN__
-	uname(&u);
-	return u.processor;
-//	return "x86";
+	return "x86";
 #else
   return "Motorola PowerPC";
 #endif

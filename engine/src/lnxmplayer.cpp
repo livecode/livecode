@@ -186,8 +186,7 @@ bool MPlayer::launch_player(void)
 		
 		
 		char t_widbuf[20];
-		// MDW-2013-04-16: m_window is an XID so needs "%ld"
-		sprintf(t_widbuf, "%ld", m_window);
+		sprintf(t_widbuf, "%d", m_window);
 		
 		// TS-2007-12-17 : Added in the ability to drop down to use the native X11 video driver if Xv is not present (i.e. no hardware
 		// 					video support.
@@ -374,8 +373,7 @@ void MPlayer::play ( bool p_play )
 	{
 		if ( m_playing != p_play )
 		{
-			// MDW-2013-04-16: avoiding compiler warning by casting char *
-			write_command(const_cast<char *>("pause"));
+			write_command("pause");
 			m_playing = !m_playing ;
 		}
 	}
@@ -412,8 +410,7 @@ void MPlayer::seek ( int4 p_amount )
 
 void MPlayer::seek(void)
 {
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	write_command(const_cast<char *>("frame_step"));
+	write_command("frame_step");
 }
 
 void MPlayer::osd ( uint4 p_level = 0 )
@@ -425,8 +422,7 @@ void MPlayer::osd ( uint4 p_level = 0 )
 
 void MPlayer::osd(void)
 {
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	write_command(const_cast<char *>("pausing_keep osd"));
+	write_command("pausing_keep osd");
 }
 
 void MPlayer::quit(void)
@@ -434,8 +430,7 @@ void MPlayer::quit(void)
 	if ( m_cpid > -1 && m_window != DNULL ) 
 	{
 		int t_status ;
-		// MDW-2013-04-16: avoiding compiler warning by casting char *
-		write_command(const_cast<char *>("quit"));
+		write_command("quit");
 		// Wait for the child to quit.
 		waitpid(m_cpid, &t_status, 0) ;
 		shutdown();
@@ -462,8 +457,7 @@ void MPlayer::set_property ( char * p_prop, char * p_value )
 char * MPlayer::get_property ( char * p_prop ) 
 {
 	if ( m_window == DNULL ) 
-		// MDW-2013-04-16: avoiding compiler warning by casting char *
-		return const_cast<char *>("-1");
+		return "-1";
 		
 	char t_response[1024] ;
 	char t_question[1024];
@@ -479,8 +473,7 @@ uint4 MPlayer::getduration(void)
 	if ( m_duration == -1 )
 	{
 		char * t_ret ;
-		// MDW-2013-04-16: avoiding compiler warning by casting char *
-		t_ret = get_property(const_cast<char *>("stream_length")) ;
+		t_ret = get_property("stream_length") ;
 		if ( t_ret != NULL )
  			m_duration = atoi(t_ret);
 		else 
@@ -493,8 +486,7 @@ uint4 MPlayer::getduration(void)
 uint4 MPlayer::getcurrenttime(void)
 {
 	char * t_ret ;
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	t_ret = get_property(const_cast<char *>("stream_pos")) ;
+	t_ret = get_property("stream_pos") ;
 	if ( t_ret != NULL )
  		return atoi(t_ret);
 	else 
@@ -509,8 +501,7 @@ uint4 MPlayer::gettimescale(void)
 	{
 		double t_length ;
 		char * t_ret ;
-		// MDW-2013-04-16: avoiding compiler warning by casting char *
-		t_ret = get_property(const_cast<char *>("length")) ;
+		t_ret = get_property("length") ;
 		if ( t_ret != NULL )
 		{
 			t_length = atof(t_ret);
@@ -527,22 +518,19 @@ void MPlayer::setspeed(double p_speed)
 {
 	char t_buffer[100];
 	sprintf(t_buffer, "%f", p_speed);
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	set_property(const_cast<char *>("speed"), t_buffer);
+	set_property("speed", t_buffer);
 }
 
 void MPlayer::setlooping(bool p_loop)
 {
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	set_property(const_cast<char *>("looping"), (char*)(p_loop ? "0" : "-1") ) ;
+	set_property("looping", (char*)(p_loop ? "0" : "-1") ) ;
 }	
 
 void MPlayer::setloudness(uint4 p_volume )
 {
 	char t_buffer[4] ;
 	sprintf(t_buffer,"%d", p_volume);
-	// MDW-2013-04-16: avoiding compiler warning by casting char *
-	set_property(const_cast<char *>("volume"), t_buffer);
+	set_property("volume", t_buffer);
 }
 
 uint4 MPlayer::getloudness(void)
@@ -550,8 +538,7 @@ uint4 MPlayer::getloudness(void)
 	if ( m_loudness == -1 )
 	{
 		char * t_ret ;
-		// MDW-2013-04-16: avoiding compiler warning by casting char *
-		t_ret = get_property(const_cast<char *>("volume")) ;
+		t_ret = get_property("volume") ;
 		if ( t_ret != NULL)
 			m_loudness = atoi(t_ret);
 		else 

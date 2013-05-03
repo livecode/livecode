@@ -427,12 +427,11 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCVariableVal
 {
 	// Make sure we don't try and append any more than 64K worth of bytes.
 	uint32_t t_text_length;
-// MDW 2013.04.15 added 64-bit-safe typecasts
-#ifdef __LP64__
-	t_text_length = MCMin((int64_t)(p_final - p_initial), (int64_t)(65534 - p_paragraph -> textsize));
-#else
-	t_text_length = MCMin(p_final - p_initial, 65534 - p_paragraph -> textsize);
-#endif
+	
+	// MW-2013-05-03: [[ x64 ]] Make sure both sides are unsigned to ensure
+	//   correct template can be selected (through auto promotion).
+	t_text_length = MCMin((unsigned)(p_final - p_initial), (unsigned)(65534 - p_paragraph -> textsize));
+
 	// If we are unicode and the text length is odd, chop off the last char.
 	if (p_is_unicode && (t_text_length & 1) != 0)
 		t_text_length -= 1;

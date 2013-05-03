@@ -328,7 +328,7 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 		r_abort = wait(0.0, False, True);
 		if (r_abort)
 			return False;
-		return MCEventQueueGetMouseClick((uint32_t)button);
+		return MCEventQueueGetMouseClick(button);
 	}
 	
 	r_abort = this->wait(0.0, False, True);
