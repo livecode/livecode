@@ -1105,6 +1105,7 @@ enum Properties {
     P_SHORT_ID,
     P_ABBREV_ID,
     P_LONG_ID,
+    P_RUGGED_ID,
     P_ALT_ID,
     P_NUMBER,
     P_SHOW_BORDER,

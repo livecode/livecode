@@ -259,6 +259,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_SHORT_NAME:
 	case P_ABBREV_NAME:
 	case P_LONG_NAME:
+    case P_RUGGED_ID:
 		return names(which, ep, parid);
 	case P_ALT_ID:
 		ep.setint(altid);
