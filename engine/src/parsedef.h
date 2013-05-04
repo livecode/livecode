@@ -871,6 +871,7 @@ enum Properties {
     P_SHORT,
     P_ABBREVIATE,
     P_LONG,
+    P_RUGGED,
     P_INTERNET,
     P_EFFECTIVE,
     P_ENGLISH,
