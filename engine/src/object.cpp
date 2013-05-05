@@ -2132,9 +2132,14 @@ Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
             }
             else
             {
-                if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
-                    itypestring = "bkgnd";
-                ep.setstringf("%s id %d of stack \"%s\"", itypestring, obj_id,getstack()->getname_cstring());
+                if (gettype() == CT_STACK)
+                    ep.setstringf("stack \"%s\"", getstack()->getname_cstring());
+                else
+                {
+                    if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
+                        itypestring = "bkgnd";
+                    ep.setstringf("%s id %d of stack \"%s\"", itypestring, obj_id,getstack()->getname_cstring());
+                }
             }
             break;
 	default:

@@ -1245,6 +1245,7 @@ enum Properties {
     P_SHORT_OWNER,
     P_ABBREV_OWNER,
     P_LONG_OWNER,
+    P_RUGGED_OWNER,
     P_CUSTOM,
     P_CUSTOM_VAR,
     P_CUSTOM_PROPERTY_SET,
