@@ -259,7 +259,8 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_SHORT_NAME:
 	case P_ABBREV_NAME:
 	case P_LONG_NAME:
-		return names(which, ep, parid);
+    case P_RUGGED_ID:
+    	return names(which, ep, parid);
 	case P_ALT_ID:
 		ep.setint(altid);
 		break;
@@ -534,9 +535,12 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_SHORT_OWNER:
 	case P_ABBREV_OWNER:
 	case P_LONG_OWNER:
-		if (parent != NULL)
-			return parent->getprop(0, (Properties)(P_NAME + which - P_OWNER), ep, False);
-		ep.clear();
+        if (parent != NULL)
+            return parent->getprop(0, (Properties)(P_NAME + which - P_OWNER), ep, False);
+        break;
+    case P_RUGGED_OWNER:
+        if (parent != NULL)
+			return parent->getprop(0, (Properties)(P_RUGGED_ID), ep, False);
 		break;
 	case P_PROPERTIES:
 		return getproparray(ep, parid);

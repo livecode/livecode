@@ -174,7 +174,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 
 	if (which == P_SHORT || which == P_LONG || which == P_ABBREVIATE ||
 			which == P_ENGLISH || which == P_INTERNET || which == P_SYSTEM ||
-			which == P_WORKING)
+			which == P_WORKING || which == P_RUGGED)
 	{
 		uint2 dummy;
 		if (which == P_SYSTEM
@@ -216,9 +216,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 		switch (te->type)
 		{
 		case TT_PROPERTY:
-			if (te->which == P_ID || te->which == P_NAME || te->which == P_OWNER)
+			if (te->which == P_ID || (te->which == P_NAME &&  which != P_RUGGED) || te->which == P_OWNER)
 			{
-				if (which == P_SHORT || which == P_ABBREVIATE || which == P_LONG)
+				if (which == P_SHORT || which == P_ABBREVIATE || which == P_LONG || which == P_RUGGED)
 					which = (Properties)(te->which + which - P_SHORT + 1);
 			}
 			else
@@ -235,7 +235,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 			//   Augment which to be the corresponding property. Note that 'the owner'
 			//   is parsed as a function.
 			case F_OWNER:
-				if (which == P_SHORT || which == P_ABBREVIATE || which == P_LONG)
+				if (which == P_SHORT || which == P_ABBREVIATE || which == P_LONG || which == P_RUGGED)
 					which = (Properties)(P_OWNER + which - P_SHORT + 1);
 				break;
 			case F_TIME:

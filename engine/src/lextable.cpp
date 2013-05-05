@@ -1324,6 +1324,7 @@ LT factor_table[] =
 		{"rowdel", TT_PROPERTY, P_ROW_DELIMITER},
 		{"rowdelimiter", TT_PROPERTY, P_ROW_DELIMITER},
         {"rtftext", TT_PROPERTY, P_RTF_TEXT},
+        {"rugged", TT_PROPERTY, P_RUGGED},
         {"savecompressed", TT_PROPERTY, P_SAVE_COMPRESSED},
         {"sb", TT_CHUNK, CT_SCROLLBAR},
         {"sbs", TT_CLASS, CT_SCROLLBAR},

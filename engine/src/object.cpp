@@ -2122,6 +2122,26 @@ Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
 			ep.appendmcstring(ep2.getsvalue());
 		}
 		break;
+    case P_RUGGED_ID:
+            if (parent == NULL)
+            {
+                char *buffer = ep.getbuffer(strlen(itypestring) + 13);
+                sprintf(buffer, "the template%s", itypestring);
+                buffer[12] = MCS_toupper(buffer[12]);
+                ep.setstrlen();
+            }
+            else
+            {
+                if (gettype() == CT_STACK)
+                    ep.setstringf("stack \"%s\"", getstack()->getname_cstring());
+                else
+                {
+                    if (gettype() == CT_GROUP && parent->gettype() == CT_STACK)
+                        itypestring = "bkgnd";
+                    ep.setstringf("%s id %d of stack \"%s\"", itypestring, obj_id,getstack()->getname_cstring());
+                }
+            }
+            break;
 	default:
 		stat = ES_ERROR;
 		break;
