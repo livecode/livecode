@@ -1387,8 +1387,8 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
     MCHashentry *e;
     
     // pre-process to ensure properties that impact others are set first
-    uint1 t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
-    uint1 j;
+    uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
+    uindex_t j;
     for (j=0; j<t_preprocess_size; j++)
     {
         e = lookuphash(s_preprocess_props[j].tag,true,false);
@@ -1399,39 +1399,30 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
         }
     }
     uint4 i;
-    bool t_preprocessed;
-	for (i = 0 ; i < tablesize ; i++)
+    
+    for (i = 0 ; i < tablesize ; i++)
 		if (table[i] != NULL)
 		{
 			e = table[i];
 			while (e != NULL)
 			{
-                // check if the key was in the pre-processed
-                t_preprocessed = false;
-                for (j=0; j<t_preprocess_size; j++)
+                MCScriptPoint sp(e->string);
+                Symbol_type type;
+                const LT *te;
+                if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
+                    && te->type == TT_PROPERTY && te->which != P_ID)
                 {
-                    if (!strcmp(e->string,s_preprocess_props[j].tag))
-                    {
-                        t_preprocessed = true;
-                        break;
-                    }
+                    // check if the key was in the pre-processed
+                    for (j=0; j<t_preprocess_size; j++)
+                        if (te->which == s_preprocess_props[j].prop)
+                            continue;
+                    e -> value . fetch(ep);
+                    if ((Properties)te->which > P_FIRST_ARRAY_PROP)
+                        optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
+                    else
+                        optr->setprop(parid, (Properties)te->which, ep, False);
                 }
-                if (!t_preprocessed)
-                {
-                    MCScriptPoint sp(e->string);
-                    Symbol_type type;
-                    const LT *te;
-                    if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
-				        && te->type == TT_PROPERTY && te->which != P_ID)
-                    {
-                        e -> value . fetch(ep);
-                        if ((Properties)te->which > P_FIRST_ARRAY_PROP)
-                            optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
-                        else
-                            optr->setprop(parid, (Properties)te->which, ep, False);
-                    }
-                }
-				e = e->next;
+            	e = e->next;
 			}
 		}
 	MCerrorlock--;
