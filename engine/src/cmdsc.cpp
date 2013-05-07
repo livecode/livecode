@@ -1688,6 +1688,8 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
             
+			// MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
+			//   parent.
             if (optr->getparent() != (MCControl *)chunkptr->getdestobj()->getparent())
             {
                 MCeerror->add(EE_GROUP_DIFFERENTPARENT, line, pos);
