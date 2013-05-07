@@ -1368,6 +1368,8 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 	}
 }
 
+// MERG-2013-05-07: [[ RevisedPropsProp ]] Array of object props that must be set first
+//   to ensure other properties don't set them differently.
 static struct { Properties prop; const char *tag; } s_preprocess_props[] =
 {
     { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
@@ -1386,7 +1388,8 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCerrorlock++;
     MCHashentry *e;
     
-    // pre-process to ensure properties that impact others are set first
+    // MERG-2013-05-07: [[ RevisedPropsProp ]] pre-process to ensure properties
+	//   that impact others are set first.
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
     uindex_t j;
     for (j=0; j<t_preprocess_size; j++)
@@ -1398,8 +1401,8 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
         }
     }
+	
     uint4 i;
-    
     for (i = 0 ; i < tablesize ; i++)
 		if (table[i] != NULL)
 		{
@@ -1412,10 +1415,12 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
                 if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
                     && te->type == TT_PROPERTY && te->which != P_ID)
                 {
-                    // check if the key was in the pre-processed
+                    // MERG-2013-05-07: [[ RevisedPropsProp ]] check if the key was
+					//   in the pre-processed.
                     for (j=0; j<t_preprocess_size; j++)
                         if (te->which == s_preprocess_props[j].prop)
                             continue;
+					
                     e -> value . fetch(ep);
                     if ((Properties)te->which > P_FIRST_ARRAY_PROP)
                         optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
@@ -1425,6 +1430,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
             	e = e->next;
 			}
 		}
+	
 	MCerrorlock--;
 	MCRedrawUnlockScreen();
 

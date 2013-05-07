@@ -996,12 +996,13 @@ bool MCExecPoint::trytoconvertutf16tonative()
     t_other_ep . utf16tonative();
     t_other_ep . nativetoutf16();
     
-    if (getsvalue() . getlength() == t_other_ep . getsvalue() . getlength()
-        && memcmp(getsvalue() . getstring(), t_other_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
-        {
-            copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
-            return true;
-        }
+    if (getsvalue() . getlength() == t_other_ep . getsvalue() . getlength() &&
+		memcmp(getsvalue() . getstring(), t_other_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
+	{
+		copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
+		return true;
+	}
+	
     return false;
 }
         

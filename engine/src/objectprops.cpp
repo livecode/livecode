@@ -529,6 +529,8 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.clear();
 		break;
 	case P_PROPERTIES:
+		// MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
+		//   properties of object ...'.
 		return getproparray(ep, parid, effective);
 	case P_CUSTOM_PROPERTY_SET:
 		ep . setnameref_unsafe(getdefaultpropsetname());

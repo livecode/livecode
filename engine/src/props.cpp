@@ -773,7 +773,8 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
             getarrayprop(parid, (Properties)table[tablesize].value, ep, kMCEmptyName, effective);
         else
         {
-            
+            // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
+			//   be either Unicode or native (ensure minimal encoding is used).
             switch ((Properties)table[tablesize].value) {
                 case P_LABEL:
                     getprop(parid, P_UNICODE_LABEL, ep, effective);

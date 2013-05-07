@@ -503,6 +503,8 @@ public:
 
 	bool copyasnameref(MCNameRef& name);
     
+	// Attempts to convert the contents of the ep from UTF-16 to native,
+	// returning true if successful and replacing the contents.
     bool trytoconvertutf16tonative();
 
 private:
