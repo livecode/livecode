@@ -529,7 +529,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.clear();
 		break;
 	case P_PROPERTIES:
-		return getproparray(ep, parid);
+		return getproparray(ep, parid, effective);
 	case P_CUSTOM_PROPERTY_SET:
 		ep . setnameref_unsafe(getdefaultpropsetname());
 		break;

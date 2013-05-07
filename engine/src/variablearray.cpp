@@ -1368,29 +1368,61 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 	}
 }
 
+static struct { Properties prop; const char *tag; } s_preprocess_props[] =
+{
+    { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
+    { P_RECTANGLE, "rect" },     // synonym
+    { P_WIDTH, "width" },        // incase left,right are in the array
+    { P_HEIGHT, "height" },      // incase top,bottom are in the array
+    { P_STYLE, "style" },        // changes numerous properties including text alignment
+    { P_TEXT_SIZE, "textSize" }, // changes textHeight
+};
+
 Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 {
 	// MW-2011-08-18: [[ Redraw ]] Update to use redraw.
 	MCExecPoint ep(optr, NULL, NULL);
 	MCRedrawLockScreen();
 	MCerrorlock++;
-	uint4 i;
-	for (i = 0 ; i < tablesize ; i++)
+    MCHashentry *e;
+    
+    // pre-process to ensure properties that impact others are set first
+    uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
+    uindex_t j;
+    for (j=0; j<t_preprocess_size; j++)
+    {
+        e = lookuphash(s_preprocess_props[j].tag,true,false);
+        if (e)
+        {
+            e -> value . fetch(ep);
+            optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
+        }
+    }
+    uint4 i;
+    
+    for (i = 0 ; i < tablesize ; i++)
 		if (table[i] != NULL)
 		{
-			MCHashentry *e = table[i];
+			e = table[i];
 			while (e != NULL)
 			{
-				MCScriptPoint sp(e->string);
-				Symbol_type type;
-				const LT *te;
-				if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
-				        && te->type == TT_PROPERTY && te->which != P_ID)
-				{
-					e -> value . fetch(ep);
-					optr->setprop(parid, (Properties)te->which, ep, False);
-				}
-				e = e->next;
+                MCScriptPoint sp(e->string);
+                Symbol_type type;
+                const LT *te;
+                if (sp.next(type) && sp.lookup(SP_FACTOR, te) == PS_NORMAL
+                    && te->type == TT_PROPERTY && te->which != P_ID)
+                {
+                    // check if the key was in the pre-processed
+                    for (j=0; j<t_preprocess_size; j++)
+                        if (te->which == s_preprocess_props[j].prop)
+                            continue;
+                    e -> value . fetch(ep);
+                    if ((Properties)te->which > P_FIRST_ARRAY_PROP)
+                        optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
+                    else
+                        optr->setprop(parid, (Properties)te->which, ep, False);
+                }
+            	e = e->next;
 			}
 		}
 	MCerrorlock--;

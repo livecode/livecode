@@ -502,6 +502,8 @@ public:
 	void concatnameref(MCNameRef name, Exec_concat sep, bool first);
 
 	bool copyasnameref(MCNameRef& name);
+    
+    bool trytoconvertutf16tonative();
 
 private:
 	void dounicodetomultibyte(bool p_native, bool p_reverse);
