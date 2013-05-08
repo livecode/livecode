@@ -309,6 +309,7 @@
 		4D8387201678B2C9003BEC7C /* image_rep_mutable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871B1678B2C9003BEC7C /* image_rep_mutable.cpp */; };
 		4D8387211678B2C9003BEC7C /* imagebitmap.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871C1678B2C9003BEC7C /* imagebitmap.cpp */; };
 		4D8387221678B2C9003BEC7C /* irle.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D83871D1678B2C9003BEC7C /* irle.cpp */; };
+		4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8589AA173A856600B20951 /* uuid.cpp */; };
 		4D8B47990BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4D8B479A0BE7B3240046CD2F /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D8B47960BE7B3240046CD2F /* Cocoa.framework */; };
 		4D8BEC4011B9379500DED42A /* osxicon.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D8BEC3F11B9379500DED42A /* osxicon.cpp */; };
@@ -1164,6 +1165,8 @@
 		4D8387241678B2F4003BEC7C /* flst.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = flst.h; path = src/flst.h; sourceTree = "<group>"; };
 		4D8387251678B2F4003BEC7C /* image_rep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = image_rep.h; path = src/image_rep.h; sourceTree = "<group>"; };
 		4D8387261678B2F4003BEC7C /* imagebitmap.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagebitmap.h; path = src/imagebitmap.h; sourceTree = "<group>"; };
+		4D8589AA173A856600B20951 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uuid.cpp; path = src/uuid.cpp; sourceTree = "<group>"; };
+		4D8589AC173A88D700B20951 /* uuid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uuid.h; path = src/uuid.h; sourceTree = "<group>"; };
 		4D88B73815F4C66F002CFBD6 /* libgif.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libgif.xcodeproj; path = ../thirdparty/libgif/libgif.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D8B47960BE7B3240046CD2F /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		4D8BEC3F11B9379500DED42A /* osxicon.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxicon.cpp; path = src/osxicon.cpp; sourceTree = "<group>"; };
@@ -2409,6 +2412,8 @@
 				4DD27ACC0D5B3A280000CC15 /* unicode.h */,
 				4D587E8D0B8096FD00200116 /* util.cpp */,
 				4D587E1D0B8096E600200116 /* util.h */,
+				4D8589AA173A856600B20951 /* uuid.cpp */,
+				4D8589AC173A88D700B20951 /* uuid.h */,
 			);
 			name = "Core - Misc";
 			sourceTree = "<group>";
@@ -3352,6 +3357,7 @@
 				4D8387221678B2C9003BEC7C /* irle.cpp in Sources */,
 				E8DDE5DF16C2B1A7007367E4 /* image_rep_transformed.cpp in Sources */,
 				E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */,
+				4D8589F9173AAA0900B20951 /* uuid.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

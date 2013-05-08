@@ -1580,6 +1580,8 @@ LT factor_table[] =
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},
         {"usesystemdate", TT_PROPERTY, P_USE_SYSTEM_DATE},
         {"useunicode", TT_PROPERTY, P_USE_UNICODE},
+		// MW-2013-05-08: [[ Uuid ]] The uuid function token.
+		{"uuid", TT_FUNCTION, F_UUID},
         {"value", TT_FUNCTION, F_VALUE},
         {"variablenames", TT_FUNCTION, F_VARIABLES},
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},

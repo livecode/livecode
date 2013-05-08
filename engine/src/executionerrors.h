@@ -2371,6 +2371,27 @@ enum Exec_errors
 	
 	// {EE-0778} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
+	
+	// {EE-0779} uuid: bad type expression
+	EE_UUID_BADTYPE,
+	
+	// {EE-0780} uuid: wrong number of arguments for specified type
+	EE_UUID_TOOMANYPARAMS,
+	
+	// {EE-0781} uuid: unsupported type
+	EE_UUID_UNKNOWNTYPE,
+	
+	// {EE-0782} uuid: bad namespace expression
+	EE_UUID_BADNAMESPACEID,
+	
+	// {EE-0783} uuid: namespace not a uuid
+	EE_UUID_NAMESPACENOTAUUID,
+	
+	// {EE-0784} uuid: bad name expression
+	EE_UUID_BADNAME,
+	
+	// {EE-0785} uuid: not enough randomness available
+	EE_UUID_NORANDOMNESS,
 };
 
 extern const char *MCexecutionerrors;
