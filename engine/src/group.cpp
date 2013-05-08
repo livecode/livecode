@@ -881,17 +881,25 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setpoint(rect.width, rect.height);
 		break;
 	case P_CARD_NAMES:
+    case P_CARD_IDS:
 		{
+			// MERG-2013-05-01: [[ GrpCardIds ]] Add 'the cardIds' property to
+			//   groups (returns ids rather than names).
 			ep.clear();
 			MCExecPoint ep2(ep);
 			MCCard *startcard = getstack()->getcards();
 			MCCard *cptr = startcard;
 			uint2 j = 0;
-			do
+            Properties t_prop;
+            if (which == P_CARD_NAMES)
+                t_prop = P_SHORT_NAME;
+            else
+                t_prop = P_SHORT_ID;
+            do
 			{
 				if (cptr->countme(obj_id, False))
 				{
-					cptr->getprop(0, P_SHORT_NAME, ep2, False);
+					cptr->getprop(0, t_prop, ep2, False);
 					ep.concatmcstring(ep2.getsvalue(), EC_RETURN, j++ == 0);
 				}
 				cptr = cptr->next();
@@ -899,6 +907,44 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			while (cptr != startcard);
 		}
 		break;
+	case P_CONTROL_NAMES:
+	case P_CONTROL_IDS:
+	case P_CHILD_CONTROL_NAMES:
+	case P_CHILD_CONTROL_IDS:
+        {
+			// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+			//   immediate and all descendent controls of a group.
+		
+            ep.clear();
+		
+			MCExecPoint t_other_ep(ep);	
+            MCObject *t_object = controls;
+            MCObject *t_start_object = t_object;
+            uint2 i = 0;
+            do
+            {
+                Properties t_prop;
+                if (which == P_CHILD_CONTROL_NAMES)
+                    t_prop = P_SHORT_NAME;
+                else
+                    t_prop = P_SHORT_ID;
+                
+                t_object->getprop(0, t_prop, t_other_ep, False);
+                
+                ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                
+                if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                {
+                    t_object->getprop(parid, which, t_other_ep, false);
+                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                }
+                
+                t_object = t_object -> next();
+                
+            }
+            while (t_object != t_start_object);
+        }
+        break;
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
 		break;

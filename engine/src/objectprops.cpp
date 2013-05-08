@@ -502,11 +502,21 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	case P_3D:
 		ep.setboolean(getflag(F_3D));
 		break;
-	case P_VISIBLE:
-		ep.setboolean(getflag(F_VISIBLE));
-		break;
-	case P_INVISIBLE:
-		ep.setboolean(!(flags & F_VISIBLE));
+    case P_VISIBLE:
+    case P_INVISIBLE:
+        {
+			// MERG-2013-05-01: [[ EffVisible ]] Add 'effective' adjective to
+			//   the visible property.
+            bool t_vis;
+			t_vis = getflag(F_VISIBLE);
+			
+            // if visible and effective and parent is a
+            // group then keep searching parent properties 
+            if (t_vis && effective && parent != NULL && parent->gettype() == CT_GROUP)
+                return parent->getprop(parid, which, ep, effective);
+			
+			ep.setboolean(which == P_VISIBLE ? t_vis : !t_vis);
+        }
 		break;
 	case P_DISABLED:
 		ep.setboolean(getflag(F_DISABLED));
@@ -529,7 +539,9 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		ep.clear();
 		break;
 	case P_PROPERTIES:
-		return getproparray(ep, parid);
+		// MERG-2013-05-07: [[ RevisedPropsProp ]] Add support for 'the effective
+		//   properties of object ...'.
+		return getproparray(ep, parid, effective);
 	case P_CUSTOM_PROPERTY_SET:
 		ep . setnameref_unsafe(getdefaultpropsetname());
 		break;
