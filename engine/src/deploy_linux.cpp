@@ -398,6 +398,11 @@ struct MCLinuxELF32Traits
 	typedef Elf32_Ehdr Ehdr;
 	typedef Elf32_Shdr Shdr;
 	typedef Elf32_Phdr Phdr;
+	
+	inline static uint32_t round(uint32_t x)
+	{
+		return (x + 3) & ~3;
+	}
 };
 
 struct MCLinuxELF64Traits
@@ -405,6 +410,11 @@ struct MCLinuxELF64Traits
 	typedef Elf64_Ehdr Ehdr;
 	typedef Elf64_Shdr Shdr;
 	typedef Elf64_Phdr Phdr;
+	
+	inline static uint32_t round(uint32_t x)
+	{
+		return (x + 7) & ~7;
+	}
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -761,7 +771,10 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	{
 		t_success = MCDeployWritePayload(p_params, false, t_output, t_output_offset, t_payload_size);
 		if (t_success)
+		{
+			t_payload_size = T::round(t_payload_size);
 			t_output_offset += t_payload_size;
+		}
 	}
 
 	// Write out the project info struct
@@ -773,7 +786,10 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 		t_project_offset = t_output_offset;
 		t_success = MCDeployWriteProject(p_params, false, t_output, t_output_offset, t_project_size);
 		if (t_success)
+		{
+			t_project_size = T::round(t_project_size);
 			t_output_offset += t_project_size;
+		}
 	}
 
 	// Next use the project size to compute the updated header values we need.
@@ -820,10 +836,10 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 
 		//
 
-		t_section_table_size = t_header . e_shnum * sizeof(Elf32_Shdr);
+		t_section_table_size = t_header . e_shnum * sizeof(typename T::Shdr);
 		t_section_table_offset = t_header . e_shoff;
 
-		t_segment_table_size = t_header . e_phnum * sizeof(Elf32_Phdr);
+		t_segment_table_size = t_header . e_phnum * sizeof(typename T::Phdr);
 		t_segment_table_offset = t_header . e_phoff;
 
 		//
