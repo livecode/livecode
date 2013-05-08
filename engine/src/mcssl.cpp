@@ -163,6 +163,14 @@ bool MCCrypt_random_bytes(uint32_t p_bytecount, MCStringRef& r_bytes)
 		t_buffer.CreateString(r_bytes);
 }
 
+bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
+{
+	if (!InitSSLCrypt())
+		return false;
+		
+	return RAND_bytes((unsigned char *)r_buffer, p_bytecount) == 1;
+}
+
 bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
 {
 	bool t_success = true;

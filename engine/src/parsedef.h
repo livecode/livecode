@@ -533,6 +533,9 @@ enum Functions {
 	// MW-2012-10-08: [[ HitTest ]] New functions for returning control at a point.
 	F_CONTROL_AT_LOC,
 	F_CONTROL_AT_SCREEN_LOC,
+	
+	// MW-2013-05-08: [[ Uuid ]] New function for generating uuids.
+	F_UUID,
 };
 
 enum Handler_type {

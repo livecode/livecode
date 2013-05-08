@@ -763,6 +763,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCControlAtLoc(false);
 	case F_CONTROL_AT_SCREEN_LOC:
 		return new MCControlAtLoc(true);
+	// MW-2013-05-08: [[ Uuid ]] Constructor for uuid function.
+	case F_UUID:
+		return new MCUuidFunc;
 
 	default:
 		break;
