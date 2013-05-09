@@ -1,6 +1,8 @@
 NAME=libxml
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES= c14n.c catalog.c chvalid.c debugXML.c dict.c DOCBparser.c encoding.c \
 	entities.c error.c globals.c hash.c HTMLparser.c HTMLtree.c legacy.c list.c \
 	parser.c parserInternals.c pattern.c relaxng.c SAX.c schematron.c threads.c \
@@ -13,9 +15,5 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./include/libxml ./src
 
 CUSTOM_CCFLAGS=
-
-libxml.headers:
-	#mkdir -p $(HEADER_DIR)/libxml
-	#cp -R include/libxml/*.h -t $(HEADER_DIR)/libxml
 
 include ../../rules/archive.linux.makefile

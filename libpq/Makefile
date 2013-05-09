@@ -1,6 +1,8 @@
 NAME=libpq
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES= \
 	fe-lobj.c pqexpbuffer.c pipe.c pgstrcasecmp.c pgsleep.c \
 	sprompt.c fe-misc.c fseeko.c open.c noblock.c wchar.c \

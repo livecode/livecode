@@ -1,6 +1,8 @@
 NAME=libcairopdf
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES=cairo-analysis-surface.c cairo-arc.c cairo-array.c cairo-atomic.c \
 	cairo-base64-stream.c cairo-base85-stream.c \
 	cairo-bentley-ottmann-rectangular.c cairo-bentley-ottmann-rectilinear.c \

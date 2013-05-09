@@ -1,6 +1,8 @@
 NAME=libiodbc
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES= \
 	catalog.c connect.c dlproc.c execute.c fetch.c hdbc.c henv.c herr.c \
 	hstmt.c info.c main.c misc.c odbc3.c prepare.c result.c trace/AllocConnect.c \
@@ -39,7 +41,7 @@ CUSTOM_DEFINES=HAVE_CONFIG_H
 
 CUSTOM_INCLUDES=./include ./src ./src/inst ./src/trace
 
-CUSTOM_CCFLAGS= -fno-rtti
+CUSTOM_CCFLAGS=
 
 include ../../rules/archive.linux.makefile
 

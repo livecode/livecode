@@ -1,6 +1,8 @@
 NAME=libzip
 TYPE=archive
 
+include ../../rules/environment.linux.makefile
+
 SOURCES=mkstemp.c zip_add.c zip_close.c zip_delete.c zip_dirent.c zip_entry_free.c \
 	zip_entry_new.c zip_err_str.c zip_error.c zip_error_get.c zip_error_get_sys_type.c \
 	zip_error_strerror.c zip_error_to_str.c zip_fclose.c zip_file_error_get.c \
