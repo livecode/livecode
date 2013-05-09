@@ -1,6 +1,8 @@
 NAME=server-community
 TYPE=application
 
+include ../rules/environment.linux.makefile
+
 SOURCES=\
 	stacksecurity.cpp
 	
@@ -17,7 +19,7 @@ CUSTOM_INCLUDES=\
 CUSTOM_DEPS=libkernel-server.a
 
 CUSTOM_LIBS=pcre png jpeg z core gif kernel-server
-CUSTOM_STATIC_LIBS=curl ssl crypto stdc++ rt
+CUSTOM_STATIC_LIBS=curl ssl crypto rt
 CUSTOM_DYNAMIC_LIBS=dl m
 
 CUSTOM_CCFLAGS=\

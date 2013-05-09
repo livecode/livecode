@@ -1,9 +1,7 @@
 /* This is the standard linker script (ld --verbose) from version 2.17.50 of
-   ld. It has been modified with a rule to place the '.project' and '.payload'
-   sections after the .bss section to allow easy insertion of the installer data. */
+   ld. It has been modified with a rule to place the '.project' section
+   after the .bss section to allow easy insertion of the standalone data. */
 
-OUTPUT_FORMAT("elf32-i386", "elf32-i386", "elf32-i386")
-OUTPUT_ARCH(i386)
 ENTRY(_start)
 SEARCH_DIR("/usr/i386-redhat-linux/lib"); SEARCH_DIR("/usr/local/lib"); SEARCH_DIR("/lib"); SEARCH_DIR("/usr/lib");
 SECTIONS
@@ -157,11 +155,6 @@ SECTIONS
       FIXME: Why do we need it? When there is no .bss section, we don't
       pad the .data section.  */
    . = ALIGN(. != 0 ? 32 / 8 : 1);
-  }
-  . = ALIGN(32 / 8);
-  .payload         :
-  {
-   *(.payload)
   }
   . = ALIGN(32 / 8);
   .project         :
