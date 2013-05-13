@@ -1539,7 +1539,7 @@ void MCQuickDrawContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_
 
 	layer_lock(f_layers, t_original_dst_ptr, t_dst_stride);
 
-	void *t_dst_ptr;
+	uint1 *t_dst_ptr;
 	t_dst_ptr = ((uint1 *)t_original_dst_ptr) + (t_clip . y - f_layers -> origin . y) * t_dst_stride + (t_clip . x - f_layers -> origin . x) * 4;
 	
 	t_src_ptr = p_mask -> data + t_clip . y * p_mask -> stride + t_clip . x;
@@ -1548,15 +1548,15 @@ void MCQuickDrawContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_
 	
 	if (p_update_width > p_mask -> width)
 	{
-		for(uint4 t_height = t_clip . height; t_height > 0; --t_height, (uint1 *)t_dst_ptr += t_dst_stride)
+		for(uint4 t_height = t_clip . height; t_height > 0; --t_height, t_dst_ptr += t_dst_stride)
 			memset((uint1 *)t_dst_ptr + p_mask -> width * 4, 0, (p_update_width - p_mask -> width) * 4);
 	}
 	else if (p_update_height > p_mask -> height)
-		(uint1 *)t_dst_ptr += t_dst_stride * p_mask -> height;
+		t_dst_ptr += t_dst_stride * p_mask -> height;
 	
 	if (p_update_height > p_mask -> height)
 	{
-		for(; p_update_height > p_mask -> height; --p_update_height, (uint1 *)t_dst_ptr += t_dst_stride)
+		for(; p_update_height > p_mask -> height; --p_update_height, t_dst_ptr += t_dst_stride)
 			memset(t_dst_ptr, 0, p_update_width * 4);
 	}
 	
@@ -1565,11 +1565,13 @@ void MCQuickDrawContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_
 
 void MCQuickDrawContext::clear(const MCRectangle *rect)
 {
-	void *t_dst_ptr;
+	void *t_bits;
+	uint1 *t_dst_ptr;
 	uint4 t_dst_stride;
 	
-	layer_lock(f_layers, t_dst_ptr, t_dst_stride);
-	for(uint4 y = f_layers -> height; y > 0; --y, (uint1 *)t_dst_ptr += t_dst_stride)
+	layer_lock(f_layers, t_bits, t_dst_stride);
+	t_dst_ptr = (uint1*)t_bits;
+	for(uint4 y = f_layers -> height; y > 0; --y, t_dst_ptr += t_dst_stride)
 		memset(t_dst_ptr, 0, t_dst_stride);
 	layer_unlock(f_layers, t_dst_ptr, t_dst_stride);
 }
@@ -1586,14 +1588,16 @@ MCRegionRef MCQuickDrawContext::computemaskregion(void)
 	
 	memset(t_bits, 0, t_stride * f_layers -> height);
 	
-	void *t_src_ptr;
+	void *t_src_bits;
+	uint1 *t_src_ptr;
 	uint4 t_src_stride;
-	layer_lock(f_layers, t_src_ptr, t_src_stride);
+	layer_lock(f_layers, t_src_bits, t_src_stride);
+	t_src_ptr = (uint1 *)t_src_bits;
 	
 	uint1 *t_bits_ptr;
 	t_bits_ptr = (uint1 *)t_bits;
 	
-	for(uint4 y = f_layers -> height; y > 0; --y, t_bits_ptr += t_stride, (uint1 *)t_src_ptr += t_src_stride)
+	for(uint4 y = f_layers -> height; y > 0; --y, t_bits_ptr += t_stride, t_src_ptr += t_src_stride)
 	{
 		uint1 t_mask = 0x80;
 		for(uint4 x = 0; x < f_layers -> width; ++x)

@@ -342,7 +342,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_tar
 		{
 			PixMapHandle t_target_pixmap;
 			uint32_t t_target_stride;
-			void *t_target_ptr;
+			uint8_t *t_target_ptr;
 
 			t_target_pixmap = GetGWorldPixMap(p_target);
 			LockPixels(t_target_pixmap);
@@ -350,8 +350,8 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_tar
 			Rect t_bounds;
 			GetPixBounds(t_target_pixmap, &t_bounds);
 			t_target_stride = GetPixRowBytes(t_target_pixmap);
-			t_target_ptr = GetPixBaseAddr(t_target_pixmap);
-			(uint8_t *)t_target_ptr += t_target_stride * -t_bounds . top - t_bounds . left * 4;
+			t_target_ptr = (uint8_t *)GetPixBaseAddr(t_target_pixmap);
+			t_target_ptr += t_target_stride * -t_bounds . top - t_bounds . left * 4;
 			
 			// MW-2011-10-01: [[ Bug 9769 ]] Make sure we use the correct byte order.
 			CGColorSpaceRef t_color_space;
