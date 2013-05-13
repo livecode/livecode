@@ -1824,12 +1824,15 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-	MCString data;
-	data = ep . getsvalue();
 	switch(which)
 	{
 	case P_TEXT_STYLE:
 	{
+		// MW-2013-05-13: [[ Bug ]] Make sure we don't co-erce to a string unless
+		//   we are only processing a string.
+		MCString data;
+		data = ep . getsvalue();
+	
 		// MW-2011-11-23: [[ Array TextStyle ]] If the key is empty, then we are
 		//   manipulating the whole set at once.
 		if (MCNameIsEmpty(key))
@@ -1868,6 +1871,11 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 	break;
 	case P_CUSTOM_KEYS:
 		{
+			// MW-2013-05-13: [[ Bug ]] Make sure we don't co-erce to a string unless
+			//   we are only processing a string.
+			MCString data;
+			data = ep . getsvalue();
+		
 			MCObjectPropertySet *p;
 
 			if (data == MCnullmcstring)
