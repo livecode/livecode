@@ -207,7 +207,6 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4DF42A520B04862E003F2D95 /* Debug.xcconfig */;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_64_BIT)";
 			};
 			name = Debug;
 		};

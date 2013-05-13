@@ -23,6 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <stdarg.h>
 #include <string.h>
+#include <ctype.h>
 
 extern "C" __declspec(noalias) void __cdecl free(void *memory);
 extern "C" __declspec(noalias) void * __cdecl malloc(size_t size);
@@ -162,6 +163,11 @@ extern "C" void __eprintf(const char *, const char *, unsigned, const char *);
 
 typedef long time_t;
 extern "C" time_t time(time_t *);
+
+////////// ctype.h
+
+#include <ctype.h>
+#undef isnumber
 
 #endif
 
