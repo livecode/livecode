@@ -546,11 +546,6 @@ static PropList videoclipprops[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCInterfaceLayer
-{
-	uint4 layer;
-};
-
 static void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output)
 {
 	uint4 layer;

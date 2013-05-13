@@ -47,6 +47,20 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec-interface.h"
 
+void MCCard::GetLayer(MCExecContext &ctxt, MCInterfaceLayer &r_layer)
+{
+	uint16_t t_num;
+	getstack()->count(CT_CARD, CT_UNDEFINED, this, t_num);
+	
+	r_layer.layer = t_num;
+}
+
+void MCCard::SetLayer(MCExecContext &ctxt, const MCInterfaceLayer &p_layer)
+{
+	if (parent != NULL)
+		getstack()->renumber(this, p_layer.layer);
+}
+
 void MCCard::GetCantDelete(MCExecContext& ctxt, bool& r_setting)
 {
 	r_setting = getflag(F_C_CANT_DELETE);

@@ -101,6 +101,13 @@ struct MCInterfaceTextStyle
 	uint2 style;
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCInterfaceLayer
+{
+	uint4 layer;
+};
+
 //////////
 
 static MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =

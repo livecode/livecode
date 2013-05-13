@@ -76,8 +76,8 @@ extern bool MCosxmenupoppedup;
 
 MCPropertyInfo MCCard::kProperties[] =
 {
-	//DEFINE_RW_OBJ_PROPERTY(P_LAYER, Int16, MCCard, Layer)
-	//DEFINE_RW_OBJ_PROPERTY(P_NUMBER, UInt16, MCCard, Number)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_LAYER, InterfaceLayer, MCCard, Layer)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_NUMBER, InterfaceLayer, MCCard, Layer)
 
 	DEFINE_RW_OBJ_PROPERTY(P_CANT_DELETE, Bool, MCCard, CantDelete)
 	DEFINE_RW_OBJ_PROPERTY(P_DONT_SEARCH, Bool, MCCard, DontSearch)

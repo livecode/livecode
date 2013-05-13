@@ -256,6 +256,8 @@ public:
 
 	////////// PROPERTY ACCESSORS
 
+	void GetLayer(MCExecContext& ctxt, MCInterfaceLayer& r_layer);
+	void SetLayer(MCExecContext& ctxt, const MCInterfaceLayer& p_layer);
 	void GetCantDelete(MCExecContext& ctxt, bool& r_setting);
 	void SetCantDelete(MCExecContext& ctxt, bool setting);
 	void GetDontSearch(MCExecContext& ctxt, bool& r_setting);
