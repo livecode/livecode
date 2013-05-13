@@ -1285,6 +1285,8 @@ bool MCPlayer::getversion(MCStringRef& r_string)
 	}
 	else //for AVI movie
 		t_success = MCStringCreateWithNativeChars((const char_t*)"0.0", 3, r_string);  //indicates that no QT installed
+	
+	return t_success;
 #else
     r_string = MCValueRetain(kMCEmptyString);
     return true;
