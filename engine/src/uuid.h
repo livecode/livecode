@@ -44,11 +44,11 @@ struct MCUuid
 // This returns false if generation failed (due to lack of random bytes).
 bool MCUuidGenerateRandom(MCUuid& r_uuid);
 
-// Generate a (random) type v3 UUID using the given name and namespace
+// Generate a (non-random) type v3 UUID using the given name and namespace
 // id.
 void MCUuidGenerateMD5(const MCUuid& namespace_id, const MCString& name, MCUuid& r_uuid);
 
-// Generate a (random) type v4 UUID using the given name and namespace
+// Generate a (non-random) type v4 UUID using the given name and namespace
 // id.
 void MCUuidGenerateSHA1(const MCUuid& namespace_id, const MCString& name, MCUuid& r_uuid);
 
