@@ -52,15 +52,17 @@ extern int32_t g_android_keyboard_type;
 
 void MCQuit(void)
 {
+	// IM-2013-05-01: [[ BZ 10586 ]] send shutdown message when closing due
+	// to unhandled backKey message
+	if (MCdefaultstackptr != nil)
+		MCdefaultstackptr->getcard()->message(MCM_shut_down);
 	MCquit = True;
 	MCexitall = True;
 	MCtracestackptr = NULL;
 	MCtraceabort = True;
 	MCtracereturn = True;
-
-	// finish LiveCodeActivity
-	MCLog("finishActivity() called", nil);
-	MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+	// IM-2013-05-01: [[ BZ 10586 ]] No longer call finishActivity from here,
+	// instead wait for main loop to terminate in mobile_main()
 }
 
 class MCMessageEvent : public MCCustomEvent
