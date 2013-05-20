@@ -1480,6 +1480,8 @@ enum Properties {
     P_HGRID,
     P_VGRID,
     P_PAGE_HEIGHTS,
+	// JS-2013-05-15: [[ PageRanges ]] Property tag for the pageranges property.
+    P_PAGE_RANGES,
     P_LINK_TEXT,
     P_IMAGE_SOURCE,
 	// MW-2012-01-06: [[ Block Metadata ]] Property tag for the metadata block property.

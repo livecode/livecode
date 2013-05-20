@@ -449,12 +449,19 @@ public:
 	// MW-2012-02-24: [[ FieldChars ]] Pass in the part_id so the paragraph can map
 	//   field indices to char indices.
 	void getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta);
-
+    
 	// Return true if the paragraph completely fits in theight. Otherwise, return
 	// false and set lastline to the line that would be clipped.
 	// Called by:
 	//   MCField::getprop
 	Boolean pageheight(uint2 fixedheight, uint2 &theight, MCLine *&lastline);
+
+    // JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+	// Return true if the paragraph completely fits in theight. Otherwise, return
+	// false and set lastline to the line that would be clipped.
+	// Called by:
+	//   MCField::getprop
+	Boolean pagerange(uint2 fixedheight, uint2 &theight, uint2 &tend, MCLine *&lastline);
 
 	// Returns true if any of the paragraph attributes are non-default.
 	bool hasattrs(void);

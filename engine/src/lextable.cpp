@@ -1154,6 +1154,8 @@ LT factor_table[] =
         {"pageheights", TT_PROPERTY, P_PAGE_HEIGHTS},
         {"pageinc", TT_PROPERTY, P_PAGE_INC},
         {"pageincrement", TT_PROPERTY, P_PAGE_INC},
+        // JS-2013-05-15: [[ PageRanges ]] New 'pageRanges' field property.
+        {"pageranges", TT_PROPERTY, P_PAGE_RANGES},
         {"paintcompression", TT_PROPERTY, P_PAINT_COMPRESSION},
         {"palindromeframes", TT_PROPERTY, P_PALINDROME_FRAMES},
         {"pan", TT_PROPERTY, P_PAN},
