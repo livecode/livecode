@@ -341,6 +341,11 @@ bool MCCrypt_random_bytes(uint32_t p_byte_count, MCStringRef& r_bytes)
 	return true;
 }
 
+bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
+{
+	return false;
+}
+
 bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
 			char *&r_message_out, uint32_t &r_message_out_length, char *&r_result, uint32_t &r_error)
