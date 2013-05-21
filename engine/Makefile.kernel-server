@@ -34,7 +34,7 @@ SOURCES=\
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp \
 	objectprops.cpp objectpropsets.cpp variablevalue.cpp mcutility.cpp notify.cpp customprinter.cpp \
-	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp \
+	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvflst.cpp srvposix.cpp srvdebug.cpp \
 	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp \
 	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp sysregion.cpp tilecache.cpp tilecachesw.cpp \
