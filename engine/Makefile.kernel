@@ -33,7 +33,7 @@ SOURCES=\
 	contextscalewrapper.cpp variablearray.cpp objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
-	externalv0.cpp externalv1.cpp \
+	externalv0.cpp externalv1.cpp uuid.cpp \
 	dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	lnxpasteboard.cpp lnxtransfer.cpp lnxclipboard.cpp \
 	lnxdc.cpp lnxdce.cpp lnxdcs.cpp lnxdclnx.cpp lnxflst.cpp lnxflstold.cpp \
