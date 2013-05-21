@@ -45,8 +45,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "core.h"
 #include "socket.h"
 #include "osspec.h"
-
 #include "osxdc.h"
+#include "mcssl.h"
 
 #include <sys/stat.h>
 #include <sys/utsname.h>
@@ -3539,3 +3539,5 @@ void MCS_startprocess_unix(char *name, char *doc, Open_mode mode, Boolean elevat
 	else
 		MCresult->clear(False);
 }
+
+////////////////////////////////////////////////////////////////////////////////

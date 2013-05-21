@@ -5237,6 +5237,26 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\sysosxrandom.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\sysosxregion.cpp"
 				>
 				<FileConfiguration
@@ -5341,7 +5361,49 @@
 				</FileConfiguration>
 			</File>
 			<File
+				RelativePath=".\src\sysunxrandom.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					ExcludedFromBuild="true"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
 				RelativePath=".\src\sysw32network.cpp"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						PrecompiledHeaderThrough="w32prefix.h"
+						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
+					/>
+				</FileConfiguration>
+			</File>
+			<File
+				RelativePath=".\src\sysw32random.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -5468,7 +5530,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>
@@ -5479,7 +5541,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>

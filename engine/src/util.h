@@ -171,6 +171,10 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
+// MW-2013-05-21: [[ RandomBytes ]] Generate random bytes using either OpenSSL (if available)
+//   or platform support (if not).
+extern bool MCU_random_bytes(size_t count, void *buffer);
+
 // 
 
 struct MCRange
