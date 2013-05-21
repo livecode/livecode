@@ -37,7 +37,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
 	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
-	sysunxdate.cpp sysspec.cpp stackcache.cpp \
+	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
 	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \

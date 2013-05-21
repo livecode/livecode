@@ -148,6 +148,11 @@ bool MCS_generate_uuid(char buffer[128]);
 
 void MCS_getnetworkinterfaces(MCExecPoint& ep);
 
+// MW-2013-05-21: [[ RandomBytes ]] Attempt to generate a sequence of random
+//   bytes into the provided buffer. The function returns 'false' if there isnt
+//   enough entropy available to generate them.
+bool MCS_random_bytes(size_t p_count, void *p_buffer);
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCS_deleteurl(MCObject *p_target, const char *p_url);

@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/types.h>
 #include <sys/sysctl.h>
 #include <mach-o/loader.h>
+#include <Security/SecRandom.h>
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIDevice.h>
@@ -944,3 +945,13 @@ MCSystemInterface *MCMobileCreateSystem(void)
 {
 	return new MCIPhoneSystem;
 }
+
+//////////////////
+
+// MW-2013-05-21: [[ RandomBytes ]] System function for random bytes on iOS.
+bool MCS_random_bytes(size_t p_count, void* p_buffer)
+{
+	return SecRandomCopyBytes(kSecRandomDefault, p_count, (uint8_t *)p_buffer) != 0;
+}
+
+//////////////////

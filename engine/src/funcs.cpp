@@ -6129,29 +6129,29 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
 		return ES_ERROR;
 	}
-
-	if (!InitSSLCrypt())
+	
+	size_t t_count;
+	t_count = ep.getuint4();
+	
+	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
+	//   than SSL.
+	
+	void *t_bytes;
+	t_bytes = ep . getbuffer(t_count);
+	if (t_bytes == nil)
 	{
-		MCeerror->add(EE_SECURITY_NOLIBRARY, line, pos);
+		MCeerror -> add(EE_NO_MEMORY, line, pos);
 		return ES_ERROR;
 	}
-	bool t_success = true;
-	void *t_bytes = nil;
-	uint32_t t_count;
-
-	t_count = ep.getuint4();
-
-	t_success = MCCrypt_random_bytes(t_count, t_bytes);
-
-	if (t_success)
-		ep.copysvalue((char*)t_bytes, t_count);
+	
+	if (MCU_random_bytes(t_count, t_bytes))
+		ep . setlength(t_count);
 	else
 	{
-		ep.clear();
+		ep . clear();
 		MCresult->copysvalue(MCString("error: could not get random bytes"));
 	}
-
-	MCMemoryDeallocate(t_bytes);
+	
 	return ES_NORMAL;
 }
 

@@ -18,4 +18,5 @@ framework CoreMotion
 framework AddressBook
 framework AddressBookUI
 framework EventKit
-framework EventKitUI
+framework EventKit
+framework Security
