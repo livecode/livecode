@@ -2330,6 +2330,26 @@ public:
 	virtual Exec_stat eval(MCExecPoint &ep);
 };
 
+// MW-20113-05-08: [[ Uuid ]] The uuid generation function.
+class MCUuidFunc: public MCFunction
+{
+	MCExpression *type;
+	MCExpression *namespace_id;
+	MCExpression *name;
+	
+public:
+	MCUuidFunc(void)
+	{
+		type = nil;
+		namespace_id = nil;
+		name = nil;
+	}
+	
+	virtual ~MCUuidFunc(void);
+	virtual Parse_stat parse(MCScriptPoint &sp, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &ep);
+};
+
 #endif
 
 

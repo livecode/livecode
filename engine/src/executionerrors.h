@@ -2374,6 +2374,27 @@ enum Exec_errors
     
     // {EE-0782} controls don't have the same owner
 	EE_GROUP_DIFFERENTPARENT,
+	
+	// {EE-0783} uuid: bad type expression
+	EE_UUID_BADTYPE,
+	
+	// {EE-0784} uuid: wrong number of arguments for specified type
+	EE_UUID_TOOMANYPARAMS,
+	
+	// {EE-0785} uuid: unsupported type
+	EE_UUID_UNKNOWNTYPE,
+	
+	// {EE-0786} uuid: bad namespace expression
+	EE_UUID_BADNAMESPACEID,
+	
+	// {EE-0787} uuid: namespace not a uuid
+	EE_UUID_NAMESPACENOTAUUID,
+	
+	// {EE-0788} uuid: bad name expression
+	EE_UUID_BADNAME,
+	
+	// {EE-0789} uuid: not enough randomness available
+	EE_UUID_NORANDOMNESS,
 };
 
 extern const char *MCexecutionerrors;

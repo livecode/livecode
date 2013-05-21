@@ -154,6 +154,7 @@ unsigned long SSLError(char *errbuf)
 }
 
 #ifdef MCSSL
+
 bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
 {
 	bool t_success = true;
@@ -312,6 +313,11 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 }
 
 #else // !defined(MCSSL)
+
+bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
+{
+	return false;
+}
 
 bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,
 			const char *p_key, uint32_t p_key_length, const char *p_passphrase,
