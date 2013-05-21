@@ -923,6 +923,14 @@
 				RelativePath=".\src\util.h"
 				>
 			</File>
+			<File
+				RelativePath=".\src\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Core - Objects"
@@ -1545,7 +1553,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;"
+					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
@@ -1556,7 +1564,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Encoding error strings"
-					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;"
+					CommandLine="$(SolutionDir)prebuilt\bin\Revolution.exe &quot;$(InputDir)encode_errors.rev&quot;  &quot;$(InputDir)src&quot; &quot;$(InputDir)src\encodederrors.cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(InputDir)src\executionerrors.h;$(InputDir)src\parseerrors.h"
 					Outputs="$(InputDir)src\encodederrors.cpp"
 				/>
