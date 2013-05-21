@@ -1386,6 +1386,14 @@
 				RelativePath="src\util.h"
 				>
 			</File>
+			<File
+				RelativePath=".\src\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="_Derived"
