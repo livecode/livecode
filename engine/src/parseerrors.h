@@ -1597,7 +1597,9 @@ enum Parse_errors
 	
 	// {PE-0523} split/combine: bad form clause
 	PE_ARRAYOP_BADFORM,
-
+	
+	// {PE-0524} uuid: bad parameter list
+	PE_UUID_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

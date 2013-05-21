@@ -1390,6 +1390,14 @@
 				RelativePath="src\util.h"
 				>
 			</File>
+			<File
+				RelativePath=".\src\uuid.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\uuid.h"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="_Derived"
@@ -5468,7 +5476,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>
@@ -5479,7 +5487,7 @@
 				<Tool
 					Name="VCCustomBuildTool"
 					Description="Generating version info..."
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(InputPath)&quot; &quot;$(ProjectDir)&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(ProjectDir)include\revbuilt.h.in;$(SolutionDir)\version"
 					Outputs="$(ProjectDir)include\revbuild.h"
 				/>

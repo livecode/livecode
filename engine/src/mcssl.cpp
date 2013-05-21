@@ -162,12 +162,24 @@ bool MCCrypt_random_bytes(uint32_t p_bytecount, void *&r_bytes)
 	t_success = InitSSLCrypt() == True;
 	if (t_success)
 		t_success = MCMemoryAllocate(p_bytecount, t_bytes);
+
 	if (t_success)
 		t_success = RAND_bytes(t_bytes, p_bytecount) == 1;
 
 	if (t_success)
 		r_bytes = t_bytes;
+	else
+		MCMemoryDeallocate(t_bytes);
+		
 	return t_success;
+}
+
+bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
+{
+	if (!InitSSLCrypt())
+		return false;
+		
+	return RAND_bytes((unsigned char *)r_buffer, p_bytecount) == 1;
 }
 
 bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
@@ -329,6 +341,11 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 
 #else // !defined(MCSSL)
 bool MCCrypt_random_bytes(uint32_t p_byte_count, void *&r_bytes)
+{
+	return false;
+}
+
+bool MCCrypt_random_bytes_static(uint32_t p_bytecount, void *r_buffer)
 {
 	return false;
 }
