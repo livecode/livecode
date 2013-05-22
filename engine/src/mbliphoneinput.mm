@@ -630,10 +630,13 @@ UIView *MCNativeInputFieldControl::CreateView(void)
 void MCNativeInputFieldControl::DeleteView(UIView *p_view)
 {
 	[p_view setDelegate: nil];
-	[p_view release];
 	
+	// MW-2013-05-22: [[ Bug 10880 ]] Make sure we release the delegate here as
+	//   it might need to refer to the view to deregister itself.
 	[m_delegate release];
 	m_delegate = nil;
+	
+	[p_view release];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -882,10 +885,13 @@ UIView *MCNativeMultiLineControl::CreateView(void)
 void MCNativeMultiLineControl::DeleteView(UIView *p_view)
 {
 	[p_view setDelegate: nil];
-	[p_view release];
 	
+	// MW-2013-05-22: [[ Bug 10880 ]] Make sure we release the delegate here as
+	//   it might need to refer to the view to deregister itself.
 	[m_delegate release];
 	m_delegate = nil;
+	
+	[p_view release];
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1132,6 +1138,15 @@ private:
 	
 	return self;
 }
+
+// MW-2013-05-22: [[ Bug 10880 ]] Make sure we have a 'dealloc' method so observers
+//   can be removed that reference this object.
+- (void)dealloc
+{
+	[m_instance -> GetView() removeObserver: self forKeyPath:@"contentSize"];
+	[super dealloc];
+}
+   
 
 - (void)scrollViewWillBeginDragging: (UIScrollView*)scrollView
 {
