@@ -755,12 +755,14 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	
 	// MW-2011-02-26: [[ Bug 9416 ]] Make sure the linkrect and block extends to the
 	//   extremities of the link.
+	// MW-2013-05-21: [[ Bug 10794 ]] Make sure we update sb/eb with the actual blocks
+	//   the indices are within.
 	uint2 t_index;
 	t_index = (uint2)si;
-	sptr -> extendup(sb, t_index);
+	sb = sptr -> extendup(sb, t_index);
 	si = t_index;
 	t_index = (uint2)(ei - 1);
-	sptr -> extenddown(eb, t_index);
+	eb = sptr -> extenddown(eb, t_index);
 	ei = t_index;
 	
 	linksi += si;
