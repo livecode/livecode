@@ -1014,8 +1014,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				// making sure the ranges are adjusted to the start of the range.
 				sptr -> getflaggedranges(parid, ep, si, ei, t_index_offset);
 
-				// Increment the offset by the size of the paragraph.
-				t_index_offset += sptr -> gettextsizecr();
+				// MW-2013-05-22: [[ Bug 10908 ]] Increment the offset by the size of the
+				//   paragraph in codepoints not bytes.
+				t_index_offset += sptr -> gettextlength() + 1;
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				si = 0;
