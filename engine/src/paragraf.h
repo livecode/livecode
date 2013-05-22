@@ -739,13 +739,13 @@ private:
 
 	MCLine *indextoline(uint2 tindex);
 
-	// Returns true if the given block is part of a link, in which case si is
-	// the start index of the link.
-	Boolean extendup(MCBlock *bptr, uint2 &si);
-
-	// Returns true if the given block is part of a link, in which case ei is
-	// the end index of the link.
-	Boolean extenddown(MCBlock *bptr, uint2 &ei);
+	// Searches forward for the end of a link, returning the last index in si
+	// and returning the block containing it.
+	MCBlock *extendup(MCBlock *bptr, uint2 &si);
+	
+	// Searches backward for the start of a link, returning the first index in ei
+	// and returning the block containing it.
+	MCBlock *extenddown(MCBlock *bptr, uint2 &ei);
 
 	int2 getx(uint2 tindex, MCLine *lptr);
 
