@@ -1302,6 +1302,27 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				t_env -> DeleteLocalRef(t_java_string);
 			}
 			break;
+		case kMCJavaTypeMCStringRef:
+			{
+				jstring t_java_string;
+				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
+				{
+					t_exception_thrown = true;
+					t_success = false;
+				}
+
+                char *t_cstring;
+				if (t_success)
+                    t_success = MCJavaStringToNative(t_env, t_java_string, t_cstring);
+                if (t_success)
+                    t_success = MCStringCreateWithCString(t_cstring, (MCStringRef)context -> return_value);
+
+				delete t_cstring;
+
+				t_env -> DeleteLocalRef(t_java_string);
+			}
+			break;
 		case kMCJavaTypeByteArray:
 			{
 				jbyteArray t_byte_array;

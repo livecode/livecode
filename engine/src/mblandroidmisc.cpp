@@ -168,18 +168,18 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 					*(va_arg(t_args, char **)) = nil;
 				break;
 			
-			case 'd':
+			case 'v':
 				if (t_success)
-					(va_arg(t_args, MCString *)) -> set(ep . getsvalue() . clone(), ep . getsvalue() . getlength());
+					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
 				else
-					(va_arg(t_args, MCString *)) -> set(nil, 0);
+					t_success = false;
 				break;
 			
 			case 'a':
-				if (t_success && ep . getformat() == VF_ARRAY)
-					*(va_arg(t_args, MCVariableValue **)) = ep . getarray();
+				if (t_success)
+					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
 				else
-					*(va_arg(t_args, MCVariableValue **)) = nil;
+					t_success = false;
 				break;
 				
 			case 'r':

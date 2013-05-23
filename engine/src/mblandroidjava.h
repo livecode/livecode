@@ -42,6 +42,7 @@ typedef enum
     kMCJavaTypeCString,
     kMCJavaTypeMCString,
     kMCJavaTypeMCStringUnicode,
+	kMCJavaTypeMCStringRef,
     kMCJavaTypeByteArray,
     kMCJavaTypeList,
     kMCJavaTypeMap, // MM-2012-02-22: Added ability to create Java maps
