@@ -193,7 +193,7 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 					if (t_data != NULL)
 					{
 						MCImageBitmap *t_bitmap = nil;
-						if (t_image->lockbitmap(t_bitmap))
+						if (t_image->lockbitmap(t_bitmap, true))
 							MCImageBitmapPremultiplyRegion(t_bitmap, 0, 0, t_bitmap->width, t_bitmap->height, t_rect.width * sizeof(uint32_t), t_data);
 						else
 							MCMemoryClear(t_data, t_rect.width * sizeof(uint32_t) * t_rect.height);

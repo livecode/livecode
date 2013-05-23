@@ -173,12 +173,13 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
+#ifdef LIBGRAPHICS_BROKEN
 //TS: X11 Context creation
 	virtual MCContext *createcontext ( Drawable p_drawable, MCBitmap *p_mask) ;
 	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	virtual MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient) ;
 	virtual void freecontext(MCContext *p_context) ;
-
+#endif
+	
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 	
 	virtual uint2 getdepth();
@@ -231,18 +232,15 @@ public:
 		                              , uint1 value,
 		                              Boolean shm, Boolean forceZ);
 	virtual void destroyimage(MCBitmap *image);
-	virtual MCBitmap *copyimage(MCBitmap *source, Boolean invert);
 	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
 	                      int2 dx, int2 dy, uint2 w, uint2 h);
-	virtual MCBitmap *getimage(Drawable pm, int2 x, int2 y,
-	                           uint2 w, uint2 h, Boolean shm = False);
-	virtual void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
+	virtual void flipimage(XImage *image, int2 byte_order, int2 bit_order);
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 
-	MCCursorRef createcursor(MCImageBuffer *p_image, int2 p_xhot, int2 p_yhot);
+	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot);
 	virtual void freecursor(MCCursorRef c);
 
 	virtual void setfunction(uint4 rop);
@@ -254,7 +252,7 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window,
 	                           const char *displayname);
 	
 	
@@ -267,7 +265,7 @@ public:
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
-	virtual void configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
@@ -354,6 +352,9 @@ public:
 	virtual void listprinters(MCExecPoint& ep);
 	virtual MCPrinter *createprinter(void);
 	
+#ifdef OLD_GRAPHICS
 	MCBitmap *regiontomask(MCRegionRef r, int32_t w, int32_t h);
+#endif
+
 };
 #endif

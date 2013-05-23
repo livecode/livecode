@@ -91,50 +91,6 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 	return t_success;
 }
 
-void MCImage::compress(MCBitmap *image, bool p_take_geometry, bool p_includes_alpha)
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-
-	t_success = MCImageBitmapCreateWithOldBitmap(image, t_bitmap);
-
-	if (t_success)
-	{
-		if (p_includes_alpha)
-		{
-			// IM-2013-03-27: [[ BZ 10759 ]] if the source has alpha transparency, then we need to unpremultiply
-			MCImageBitmapUnpremultiply(t_bitmap);
-			MCImageBitmapCheckTransparency(t_bitmap);
-		}
-		else
-			MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	}
-
-	if (t_success)
-		t_success = setbitmap(t_bitmap);
-
-	MCImageFreeBitmap(t_bitmap);
-
-	if (t_success)
-	{
-		if (p_take_geometry)
-		{
-			if (!(flags & F_LOCK_LOCATION))
-			{
-				uindex_t t_width, t_height;
-				if (m_rep->GetGeometry(t_width, t_height))
-				{
-					rect . width = t_width;
-					rect . height = t_height;
-				}
-			}
-		}
-
-		angle = 0;
-	}
-}
-
 void MCImage::recompress()
 {
 	if (!opened || !isediting())
@@ -198,74 +154,50 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 	return t_success;
 }
 
-bool MCImageCreateBrush(MCImageBitmap *p_src, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_bitmap)
-{
-	bool t_success = true;
-
-	MCBitmap *t_drawimage = nil;
-	MCBitmap *t_maskimage = nil;
-	MCBitmap *t_maskimagealpha = nil;
-	Pixmap t_drawdata = nil;
-	Pixmap t_drawmask = nil;
-
-	t_success = MCImageSplitRasters(p_src, t_drawimage, t_maskimage, t_maskimagealpha);
-
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_drawimage, 1, t_drawdata);
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_maskimage, 1, t_drawmask);
-
-	if (t_success)
-	{
-		r_drawdata = t_drawdata;
-		r_drawmask = t_drawmask;
-		r_bitmap = t_maskimage;
-	}
-	else
-	{
-		MCscreen->freepixmap(t_drawdata);
-		MCscreen->freepixmap(t_drawmask);
-		if (t_maskimage != nil)
-			MCscreen->destroyimage(t_maskimage);
-	}
-
-	if (t_drawimage != nil)
-		MCscreen->destroyimage(t_drawimage);
-	if (t_maskimagealpha != nil)
-		MCscreen->destroyimage(t_maskimagealpha);
-
-	return t_success;
-}
-
-void MCImage::decompressbrush(Pixmap &r_mask, Pixmap &r_data, MCBitmap *&r_bitmap)
+bool MCImage::decompressbrush(MCGImageRef &r_brush)
 {
 	/* TODO - may be able to improve this now by rasterizing the metafile */
 	if (getcompression() == F_PICT || m_rep == nil)
 	{
-		r_mask = r_data = DNULL;
-		r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
-		return;
+		return false;
+		//r_mask = r_data = DNULL;
+		//r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
+		//return;
 	}
 
 	bool t_success = true;
 
 	MCImageFrame *t_frame = nil;
 
-	t_success = m_rep->LockImageFrame(0, t_frame);
+	t_success = m_rep->LockImageFrame(0, true, t_frame);
 
 	if (t_success)
-		t_success = MCImageCreateBrush(t_frame->image, r_data, r_mask, r_bitmap);
+	{
+		MCGRaster t_raster;
+		t_raster.width = t_frame->image->width;
+		t_raster.height = t_frame->image->height;
+		t_raster.stride = t_frame->image->stride;
+		t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+		t_raster.pixels = t_frame->image->data;
+
+		t_success = MCGImageCreateWithRaster(t_raster, r_brush);
+	}
 
 	m_rep->UnlockImageFrame(0, t_frame);
+
+	return t_success;
 }
 
 void MCImage::prepareimage()
 {
 	if (m_rep != nil)
 	{
-		MCImageBitmap *t_bitmap = nil;
-		lockbitmap(t_bitmap);
-		unlockbitmap(t_bitmap);
+		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
+		 * as we expect them to be rendered, but if not then this is actually
+		 * causing more work to be done than needed */
+		MCImageFrame *t_frame = nil;
+		m_rep->LockImageFrame(0, true, t_frame);
+		m_rep->UnlockImageFrame(0, t_frame);
 	}
 }
 
@@ -317,12 +249,6 @@ void MCImage::closeimage()
 	MCscreen->cancelmessageobject(this, MCM_internal);
 
 	recompress();
-
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
 
 	m_image_opened--;
 }
@@ -447,8 +373,6 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	while (opened)
 		close();
 
-	delete pixmapids;
-	delete pixmaps;
 	if (p_newfile)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR);
 	Boolean was = (flags & F_I_ALWAYS_BUFFER) != 0;

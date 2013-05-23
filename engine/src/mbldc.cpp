@@ -772,126 +772,9 @@ void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy, uint2 sw, u
 	}
 }
 
-MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height, Boolean set, uint1 value, Boolean shm, Boolean forceZ)
-{
-	if (depth == 0)
-		depth = 32;
-	
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = (uint1)depth;
-	image->red_mask = image->green_mask = image->blue_mask = (depth == 1 || depth == getdepth() ? 0x00 : 0xFF);
-	image->data = new char[image->bytes_per_line * height];
-	
-	if (set)
-	{
-		uint4 bytes = image->bytes_per_line * height;
-		memset(image->data, value, bytes);
-	}
-	
-	return image;
-}
-
-void MCScreenDC::destroyimage(MCBitmap *image)
-{
-	if (image -> data != NULL)
-		delete image -> data;
-	delete image;
-}
-
-MCBitmap *MCScreenDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = createimage(source->depth, source->width, source->height, 0, 0, False, False);
-	uint4 bytes = image->bytes_per_line * image->height;
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int2 dx, int2 dy, uint2 w, uint2 h)
-{
-	uint8_t *t_src_ptr;
-	uint32_t t_src_stride;
-	t_src_ptr = (uint8_t *)source -> data + source -> bytes_per_line * sy + sx * source -> depth / 8;
-	t_src_stride = source -> bytes_per_line;
-	
-	MCMobileBitmap *t_dst_bitmap;
-	uint8_t *t_dst_ptr;
-	uint32_t t_dst_stride;
-	t_dst_bitmap = (MCMobileBitmap *)dest -> handle . pixmap;
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data + t_dst_bitmap -> stride * dy + dx * (t_dst_bitmap -> is_mono ? 1 : 32) / 8;
-	t_dst_stride = t_dst_bitmap -> stride;
-	
-	if (!t_dst_bitmap -> is_mono)
-		for(uint32_t i = 0; i < h; i++, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
-			for(uint32_t j = 0; j < w; j++)
-				((uint32_t *)t_dst_ptr)[j] = ((uint32_t *)t_src_ptr)[j];
-	else
-	{
-		// MW-2012-06-27: [[ Bug ]] Round up number of bytes to copy to nearest byte
-		//   (rather than down).
-		for(uint32_t i = 0; i < h; i++)
-			memcpy(t_dst_ptr + i * t_dst_stride, t_src_ptr + i * t_src_stride, (w * source -> depth + 7) / 8);
-	}
-}
-
-MCBitmap *MCScreenDC::getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h, Boolean shm)
-{
-	// NULL input means get from screen - not supported at present.
-	if (pm == NULL)
-		return NULL;
-	
-	MCMobileBitmap *t_src_bitmap;
-	uint8_t *t_src_ptr;
-	uint32_t t_src_stride;
-	t_src_bitmap = (MCMobileBitmap *)pm -> handle . pixmap;
-	t_src_ptr = (uint8_t*)t_src_bitmap -> data + y * t_src_bitmap -> stride + x * (t_src_bitmap -> is_mono ? 1 : 32) / 8;
-	t_src_stride = t_src_bitmap -> stride;
-	
-	MCBitmap *t_dst_bitmap;
-	uint8_t *t_dst_ptr;
-	uint32_t t_dst_stride;
-	t_dst_bitmap = createimage(t_src_bitmap -> is_mono ? 1 : 32, w, h, False, 0, False, shm);
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data;
-	t_dst_stride = t_dst_bitmap -> bytes_per_line;
-	
-	if (!t_src_bitmap -> is_mono)
-		for(uint32_t i = 0; i < h; i++, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
-			for(uint32_t j = 0; j < w; j++)
-				((uint32_t *)t_dst_ptr)[j] = ((uint32_t *)t_src_ptr)[j];
-	else
-		// IM-2012-11-16: [[ Bug ]] Round up number of bytes to copy to nearest byte
-		//   (rather than down).
-		for(uint32_t i = 0; i < h; i++)
-			memcpy(t_dst_ptr + i * t_dst_stride, t_src_ptr + i * t_src_stride, (w + 7) / 8);
-	
-	return t_dst_bitmap;
-}
-
-void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCCursorRef MCScreenDC::createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
+MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
 {
 	return NULL;
 }
@@ -936,7 +819,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
 {
 }
 

@@ -22,7 +22,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 #include "mcio.h"
 
-#include "pxmaplst.h"
 #include "sellst.h"
 #include "undolst.h"
 #include "util.h"
@@ -40,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "osspec.h"
 #include "redraw.h"
+
+#include "graphicscontext.h"
 
 class MCNullPrinter: public MCPrinter
 {
@@ -356,22 +357,6 @@ void MCUIDC::beep()
 { }
 void MCUIDC::setinputfocus(Window window)
 { }
-MCContext *MCUIDC::createcontext(Drawable p_drawable, MCBitmap *p_bitmap)
-{
-	return NULL;
-}
-MCContext *MCUIDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	return NULL;
-}
-MCContext *MCUIDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return NULL;
-}
-void MCUIDC::freecontext(MCContext *p_context)
-{ }
-void MCUIDC::freepixmap(Pixmap &pixmap)
-{ }
 
 int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
@@ -388,37 +373,10 @@ uint2 MCUIDC::getdepth(void)
 	return 0;
 }
 
-Pixmap MCUIDC::createpixmap(uint2 width, uint2 height,
-                            uint2 depth, Boolean purge)
-{
-	return (Pixmap)1;
-}
-
-bool MCUIDC::lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride)
-{
-	return false;
-}
-
-void MCUIDC::unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride)
-{
-}
-
-Pixmap MCUIDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-	return (Pixmap)1;
-}
-
 Boolean MCUIDC::getwindowgeometry(Window w, MCRectangle &drect)
 {
 	drect.x = drect.y = 0;
 	drect.width = drect.height = 32;
-	return True;
-}
-
-Boolean MCUIDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
-{
-	w = h = 32;
-	d = 8;
 	return True;
 }
 
@@ -431,92 +389,6 @@ void MCUIDC::copyarea(Drawable source, Drawable dest, int2 depth,
 void MCUIDC::copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
                        uint2 sw, uint2 sh, int2 dx, int2 dy,
                        uint4 rop, uint4 pixel)
-{ }
-
-MCBitmap *MCUIDC::createimage(uint2 depth, uint2 width, uint2 height,
-                              Boolean set
-	                              , uint1 value,
-	                              Boolean shm, Boolean forceZ)
-{
-	// MW-2012-10-04: [[ Bug 10421 ]] If depth is 0 then we actually mean 32-bit :)
-	if (depth == 0)
-		depth = 32;
-
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = (uint1)depth;
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	if (set
-	   )
-		memset(image->data, value, bytes);
-	return image;
-}
-
-void MCUIDC::destroyimage(MCBitmap *image)
-{
-	delete image->data;
-	delete image;
-}
-
-MCBitmap *MCUIDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = new MCBitmap;
-	image->width = source->width;
-	image->height = source->height;
-	image->bits_per_pixel = source->bits_per_pixel;
-	image->bytes_per_line = source->bytes_per_line;
-	image->format = source->format;
-	image->byte_order = MSBFirst;
-	image->bitmap_bit_order = MSBFirst;
-
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
-void MCUIDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-                      int2 dx, int2 dy, uint2 w, uint2 h)
-{ }
-
-MCBitmap *MCUIDC::getimage(Drawable pm, int2 x, int2 y,
-                           uint2 w, uint2 h, Boolean shm)
-{
-	MCBitmap *image = new MCBitmap;
-	image->width = w;
-	image->height = h;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = 8;
-	image->bytes_per_line = ((w * image->depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = image->depth;
-	uint4 bytes = image->bytes_per_line * image->height;
-	image->data = (char *)new uint1[bytes];
-	memset(image->data, 0, bytes);
-	return image;
-}
-
-void MCUIDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
 { }
 
 MCColorTransformRef MCUIDC::createcolortransform(const MCColorSpaceInfo& info)
@@ -533,7 +405,7 @@ bool MCUIDC::transformimagecolors(MCColorTransformRef transform, MCImageBitmap *
 	return false;
 }
 
-MCCursorRef MCUIDC::createcursor(MCImageBuffer *p_image, int2 p_xhot, int2 p_yhot)
+MCCursorRef MCUIDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p_yhot)
 {
 	return nil;
 }
@@ -581,7 +453,7 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
                            const char *displayname)
 {
 	return NULL;
@@ -595,7 +467,7 @@ void MCUIDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCUIDC::configurebackdrop(const MCColor&, Pixmap, MCImage *)
+void MCUIDC::configurebackdrop(const MCColor&, MCGImageRef p_pattern, MCImage *)
 {
 }
 
@@ -1274,15 +1146,11 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 {
 	MCColor newcolor;
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
 	// MW-2012-03-30: [[ Bug ]] On Mac, use the snapshot method to get the mouseColor
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
-	MCBitmap *image = snapshot(t_rect, 0, nil);
-#else
-	MCBitmap *image = getimage(d, mx, my, 1, 1);
-#endif
+	MCImageBitmap *image = snapshot(t_rect, 0, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)
@@ -1291,8 +1159,8 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 		return;
 	}
 
-	newcolor.pixel = getpixel(image, 0, 0);
-	destroyimage(image);
+	newcolor.pixel = MCImageBitmapGetPixel(image, 0, 0);
+	MCImageFreeBitmap(image);
 	querycolor(newcolor);
 	if (cptr != NULL)
 		*cptr = newcolor;
@@ -1301,14 +1169,15 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 		alloccolor(newcolor);
 		if (MCmodifierstate & MS_CONTROL)
 		{
-			if (MCbrushpm != DNULL)
-				MCpatterns->freepat(MCbrushpm);
+			if (MCbrushpattern != nil)
+				MCpatternlist->freepat(MCbrushpattern);
+
 			MCbrushcolor = newcolor;
 		}
 		else
 		{
-			if (MCpenpm != DNULL)
-				MCpatterns->freepat(MCpenpm);
+			if (MCpenpattern != nil)
+				MCpatternlist->freepat(MCpenpattern);
 			MCpencolor = newcolor;
 		}
 	}
@@ -1427,6 +1296,7 @@ void MCUIDC::getcolornames(MCExecPoint &ep)
 		ep.concatcstring(color_table[i].token, EC_RETURN, i == 0);
 }
 
+#ifdef OLD_GRAPHICS
 uint4 MCUIDC::getpixel(MCBitmap *image, int2 x, int2 y)
 {
 	switch (image->bits_per_pixel)
@@ -1482,47 +1352,7 @@ uint4 MCUIDC::getpixel(MCBitmap *image, int2 x, int2 y)
 	        image->bits_per_pixel);
 	return 0;
 }
-
-void MCUIDC::setpixel(MCBitmap *image, int2 x, int2 y, uint4 pixel)
-{
-	switch (image->bits_per_pixel)
-	{
-	case 1:
-		{
-			uint1 bit = 0x80 >> (x & 0x7);
-			uint4 offset = y * image->bytes_per_line + (x >> 3);
-			if(pixel)
-				image->data[offset] |= bit;
-			else
-				image->data[offset] &= ~bit;
-		}
-		break;
-	case 4:
-		break;
-	case 8:
-		{
-			uint1 *oneptr = (uint1 *)&image->data[y * image->bytes_per_line + x];
-			*oneptr = pixel;
-		}
-		break;
-	case 16:
-		{
-			uint2 *twoptr = (uint2 *)&image->data[y * image->bytes_per_line
-			                                      + (x << 1)];
-			*twoptr = pixel;
-		}
-		break;
-	case 32:
-		{
-			uint4 *fourptr = (uint4 *)&image->data[y * image->bytes_per_line
-			                                       + (x << 2)];
-			*fourptr = pixel;
-		}
-		break;
-	default:
-		break;
-	}
-}
+#endif
 
 void MCUIDC::getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
                       uint2 &rb, uint2 &gb, uint2 &bb)
@@ -1629,289 +1459,6 @@ Boolean MCUIDC::position(const char *geom, MCRectangle &rect)
 	if (*geom != '\0')
 		return False;
 	return True;
-}
-
-static void scaleline1(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
-{
-	uint1 sbyte = *s++;
-	uint1 dbyte = 0;
-	uint1 sbit = 0x80;
-	uint1 dbit = 0x80;
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				if (sbyte & sbit)
-					dbyte |= dbit;
-				dbit >>= 1;
-				if (!dbit)
-				{
-					dbit = 0x80;
-					*d++ = dbyte;
-					dbyte = 0;
-				}
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			sbit >>= 1;
-			if (!sbit)
-			{
-				sbit = 0x80;
-				sbyte = *s++;
-			}
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			if (sbyte & sbit)
-				dbyte |= dbit;
-			dbit >>= 1;
-			if (!dbit)
-			{
-				dbit = 0x80;
-				*d++ = dbyte;
-				dbyte = 0;
-			}
-			if (xe >= 0)
-			{
-				sbit >>= 1;
-				if (!sbit)
-				{
-					sbit = 0x80;
-					sbyte = *s++;
-				}
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-	if (dbit != 0x80)
-		*d = dbyte;
-}
-
-static void scaleline8(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-static void scaleline16(uint2 *s, uint2 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-static void scaleline32(uint4 *s, uint4 *d, uint2 sw, uint2 dw)
-{
-	if (sw > dw)
-	{
-		int2 xe2 = dw << 1;
-		int2 xe = xe2 - sw;
-		int2 xe1 = xe - sw;
-		while (sw--)
-		{
-			if (xe >= 0)
-			{
-				*d++ = *s;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-			s++;
-		}
-	}
-	else
-	{
-		int2 xe2 = (sw - 1) << 1;
-		int2 xe = xe2 - dw;
-		int2 xe1 = xe - dw;
-		while (dw--)
-		{
-			*d++ = *s;
-			if (xe >= 0)
-			{
-				s++;
-				xe += xe1;
-			}
-			else
-				xe += xe2;
-		}
-	}
-}
-
-void MCUIDC::scaleimage(MCBitmap *source, MCBitmap *dest)
-{
-	uint1 *sptr = (uint1 *)source->data;
-	uint1 *dptr = (uint1 *)dest->data;
-	//return;
-	if (source->height >= dest->height)
-	{
-		int2 ye2 = dest->height << 1;
-		int2 ye = ye2 - source->height;
-		int2 ye1 = ye - source->height;
-		uint2 y = source->height;
-		while (y--)
-		{
-			if (ye >= 0)
-			{
-				switch (source->bits_per_pixel)
-				{
-				case 1:
-					scaleline1(sptr, dptr, source->width, dest->width);
-					break;
-				case 2:
-					scaleline8(sptr, dptr, source->width >> 2, dest->width >> 2);
-					break;
-				case 4:
-					scaleline8(sptr, dptr, source->width >> 1, dest->width >> 1);
-					break;
-				case 8:
-					scaleline8(sptr, dptr, source->width, dest->width);
-					break;
-				case 16:
-					scaleline16((uint2 *)sptr, (uint2 *)dptr, source->width, dest->width);
-					break;
-				case 32:
-					scaleline32((uint4 *)sptr, (uint4 *)dptr, source->width, dest->width);
-					break;
-				}
-				dptr += dest->bytes_per_line;
-				ye += ye1;
-			}
-			else
-				ye += ye2;
-			sptr += source->bytes_per_line;
-		}
-	}
-	else
-	{
-		int2 ye2 = source->height << 1;
-		int2 ye = ye2 - dest->height;
-		int2 ye1 = ye - dest->height;
-		uint2 y = dest->height;
-		Boolean first = True;
-		while (y--)
-		{
-			if (ye >= 0 || first)
-			{
-				switch (source->bits_per_pixel)
-				{
-				case 1:
-					scaleline1(sptr, dptr, source->width, dest->width);
-					break;
-				case 2:
-					scaleline8(sptr, dptr, source->width >> 2, dest->width >> 2);
-					break;
-				case 4:
-					scaleline8(sptr, dptr, source->width >> 1, dest->width >> 1);
-					break;
-				case 8:
-					scaleline8(sptr, dptr, source->width, dest->width);
-					break;
-				case 16:
-					scaleline16((uint2 *)sptr, (uint2 *)dptr,
-					            source->width, dest->width);
-					break;
-				case 32:
-					scaleline32((uint4 *)sptr, (uint4 *)dptr,
-					            source->width, dest->width);
-					break;
-				}
-				sptr += source->bytes_per_line;
-				if (first)
-				{
-					first = False;
-					dptr += dest->bytes_per_line;
-					ye += ye1;
-					continue;
-				}
-			}
-			if (ye >= 0)
-				ye += ye1;
-			else
-			{
-				memcpy(dptr, dptr - dest->bytes_per_line, dest->bytes_per_line);
-				ye += ye2;
-			}
-			dptr += dest->bytes_per_line;
-		}
-	}
 }
 
 void MCUIDC::seticon(uint4 p_icon)

@@ -32,6 +32,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxcontext.h"
 #include "osxtheme.h"
 
+#ifndef _IOS_MOBILE
+#define CGFloat float
+#endif
+
 static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &winfo, ThemeButtonDrawInfo &bNewInfo,const MCRectangle &drect,Rect &macR);
 static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
 static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect);
@@ -296,6 +300,7 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 	case WTHEME_TYPE_LISTBOX_FRAME:
 		{
 			MCThemeDrawInfo t_info;
+			t_info.dest = drect;
 			converttonativerect(MCU_reduce_rect(trect, 1), t_info . frame . bounds);
 			if ((winfo . state & WTHEME_STATE_DISABLED) != 0)
 				t_info . frame . state = kThemeStateInactive;
@@ -313,6 +318,7 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 	case WTHEME_TYPE_GROUP_FRAME:
 		{
 			MCThemeDrawInfo t_info;
+			t_info.dest = drect;
 			converttonativerect(trect, t_info . group . bounds);
 			
 			if ((winfo . state & WTHEME_STATE_DISABLED) != 0)
@@ -441,6 +447,7 @@ static ThemeButtonKind getthemebuttonpartandstate(const MCWidgetInfo &widgetinfo
 static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRectangle &drect)
 {
 	MCThemeDrawInfo t_info;
+	t_info . dest = drect;
 	t_info . button . kind =  getthemebuttonpartandstate(widgetinfo, t_info . button . info, drect, t_info . button . bounds);
 	if (t_info . button . kind == kThemePushButton && t_info . button . info . adornment == kThemeAdornmentDefault)
 	{
@@ -459,6 +466,7 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 	if (widgetinfo.type == WTHEME_TYPE_TABPANE)
 	{
 		MCThemeDrawInfo t_info;
+		t_info . dest = drect;
 	
 		converttonativerect(drect, t_info . tab_pane . bounds);
 		
@@ -469,6 +477,7 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 		else
 		{
 		MCThemeDrawInfo t_info;
+		t_info.dest = drect;
 		converttonativerect(drect, t_info . tab . bounds);
 		t_info . tab . is_hilited = (widgetinfo . state & WTHEME_STATE_HILITED) != 0;
 		t_info . tab . is_disabled = (widgetinfo . state & WTHEME_STATE_DISABLED) != 0;
@@ -539,6 +548,7 @@ static Widget_Part HitTestScrollControls(const MCWidgetInfo &winfo, int2 mx,int2
 static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect)
 {
 	MCThemeDrawInfo t_info;
+	t_info . dest = drect;
 	if (winfo.datatype != WTHEME_DATA_SCROLLBAR && winfo.type != WTHEME_TYPE_SMALLSCROLLBAR)
 		return;
 	fillTrackDrawInfo(winfo, t_info . slider . info, drect);
@@ -968,6 +978,7 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 	MCRectangle trect;
 	trect = MCU_reduce_rect(p_rect, 3);
 	MCThemeDrawInfo t_info;
+	t_info.dest = p_rect;
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	t_info . focus_rect . focused = True;
 	pms->MCRect2MacRect(trect, t_info . focus_rect . bounds);
@@ -986,6 +997,7 @@ bool MCNativeTheme::drawmetalbackground(MCContext *p_context, const MCRectangle&
 		return false;
 
 	MCThemeDrawInfo p_info;
+	p_info.dest = p_rect;
 	p_info . background . bounds . left = p_dirty . x;
 	p_info . background . bounds . top = p_dirty . y;
 	p_info . background . bounds . right = p_dirty . x + p_dirty . width;
@@ -1013,3 +1025,61 @@ MCTheme *MCThemeCreateNative(void)
 {
 	return new MCNativeTheme;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
+{
+	bool t_success = true;
+	
+	MCImageBitmap *t_bitmap = nil;
+	CGContextRef t_cgcontext = nil;
+	CGColorSpaceRef t_colorspace = nil;
+	MCRectangle t_rect;
+	
+	t_rect = p_info_ptr->dest;
+	
+	t_success = MCImageBitmapCreate(t_rect.width, t_rect.height, t_bitmap);
+	
+	if (t_success)
+		t_success = nil != (t_colorspace = CGColorSpaceCreateDeviceRGB());
+	
+	if (t_success)
+	{
+		CGBitmapInfo t_bitmap_info;
+		t_bitmap_info = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
+
+		MCImageBitmapClear(t_bitmap);
+		t_success = nil != (t_cgcontext = CGBitmapContextCreate(t_bitmap->data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bitmap_info));
+	}
+	
+	if (t_success)
+	{
+		CGContextTranslateCTM(t_cgcontext, 0, (CGFloat)t_rect.height);
+		CGContextScaleCTM(t_cgcontext, 1.0, -1.0);
+		CGContextTranslateCTM(t_cgcontext, -(CGFloat)t_rect.x, -(CGFloat)t_rect.y);
+		MCMacDrawTheme(p_type, *p_info_ptr, t_cgcontext);
+		
+		CGContextRelease(t_cgcontext);
+		
+		MCGRaster t_raster;
+		t_raster.width = t_bitmap->width;
+		t_raster.height = t_bitmap->height;
+		t_raster.pixels = t_bitmap->data;
+		t_raster.stride = t_bitmap->stride;
+		t_raster.format = kMCGRasterFormat_ARGB;
+		
+		MCGRectangle t_dst = MCGRectangleMake(t_rect.x, t_rect.y, t_raster.width, t_raster.height);
+		MCGContextDrawPixels(p_context, t_raster, t_dst, kMCGImageFilterNearest);
+	}
+	
+	if (t_colorspace != nil)
+		CGColorSpaceRelease(t_colorspace);
+	
+	if (t_bitmap != nil)
+		MCImageFreeBitmap(t_bitmap);
+		
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////

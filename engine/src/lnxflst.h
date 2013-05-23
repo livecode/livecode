@@ -39,7 +39,9 @@ public:
 	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style) = 0;
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override) = 0;
+#ifdef OLD_GRAPHICS
 	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override) = 0;
+#endif
 	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font) = 0;
 
 	virtual bool ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context) = 0;

@@ -435,23 +435,22 @@ void MCContextScaleWrapper::draweps(real8 sx, real8 sy, int2 angle, real8 xscale
 
 void MCContextScaleWrapper::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
-	MCImageBitmap *t_scaled = nil;
+	int32_t t_x_offset = dx - sx;
+	int32_t t_y_offset = dy - sy;
+	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(t_x_offset, t_y_offset);
+	t_transform = MCGAffineTransformScale(t_transform, scale, scale);
+	t_transform = MCGAffineTransformTranslate(t_transform, -t_x_offset, -t_y_offset);
 
-	uindex_t t_width, t_height;
-	t_width = p_image.bitmap->width;
-	t_height = p_image.bitmap->height;
-
-	t_width *= scale;
-	t_height *= scale;
-
-	/* UNCHECKED */ MCImageScaleBitmap(p_image . bitmap, t_width, t_height, INTERPOLATION_NEAREST, t_scaled);
+	if (p_image . has_transform)
+		t_transform = MCGAffineTransformConcat(t_transform, p_image . transform);
 
 	MCImageDescriptor t_image;
 	memset(&t_image, 0, sizeof(MCImageDescriptor));
-	t_image . bitmap = t_scaled;
-	m_context -> drawimage(t_image, sx * scale, sy * scale, sw * scale, sh * scale, dx * scale, dy * scale);
+	t_image . has_transform = true;
+	t_image . transform = t_transform;
+	t_image . bitmap = p_image . bitmap;
 
-	MCImageFreeBitmap(t_scaled);
+	m_context -> drawimage(t_image, sx * scale, sy * scale, sw * scale, sh * scale, dx * scale, dy * scale);
 }
 
 void MCContextScaleWrapper::drawlink(const char *link, const MCRectangle& region)

@@ -255,7 +255,7 @@ void MCColors::draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_
 	MCColor c;
 
 	c = dc->getwhite();
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	for (i = 0 ; i < ycells ; i++)
 		for (j = 0 ; j < xcells ; j++)
 		{

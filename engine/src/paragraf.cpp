@@ -946,11 +946,11 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					//   list labels.
 					if (IsMacLF() && !parent->isautoarm())
 					{
-						Pixmap p;
+						MCGImageRef t_pattern;
 						int2 x, y;
 						MCColor fc, hc;
-						parent->getforecolor(DI_FORE, False, True, fc, p, x, y, dc, parent);
-						parent->getforecolor(DI_HILITE, False, True, hc, p, x, y, dc, parent);
+						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, parent);
+						parent->getforecolor(DI_HILITE, False, True, hc, t_pattern, x, y, dc, parent);
 						if (hc.pixel == fc.pixel)
 							parent->setforeground(dc, DI_BACK, False, True);
 					}

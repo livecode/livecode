@@ -98,7 +98,7 @@ bool MCEncodedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_fra
 bool MCEncodedImageRep::CalculateGeometry(uindex_t &r_width, uindex_t &r_height)
 {
 	MCImageFrame *t_frame = nil;
-	if (!LockImageFrame(0, t_frame))
+	if (!LockImageFrame(0, m_premultiplied, t_frame))
 		return false;
 
 	r_width = t_frame->image->width;
@@ -118,7 +118,7 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 		return m_compression;
 
 	MCImageFrame *t_frame = nil;
-	if (LockImageFrame(0, t_frame))
+	if (LockImageFrame(0, m_premultiplied, t_frame))
 		UnlockImageFrame(0, t_frame);
 
 	return m_compression;

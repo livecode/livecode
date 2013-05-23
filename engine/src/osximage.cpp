@@ -139,7 +139,7 @@ CGImageRef MCImage::makeicon(uint4 p_width, uint4 p_height)
 
 	MCImageBitmap *t_bitmap = nil;
 	
-	if (lockbitmap(t_bitmap))
+	if (lockbitmap(t_bitmap, false))
 	{
 		MCImageBitmap *t_scaled = nil;
 		if (p_width != t_bitmap->width || p_height != t_bitmap->height)
@@ -164,7 +164,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 	uindex_t t_alpha_stride = 0;
 	uindex_t t_width, t_height;
 	
-	t_success = lockbitmap(t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 	
 	if (t_success)
 		t_success = MCImageBitmapHasTransparency(t_bitmap);
@@ -214,6 +214,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 
 bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	bool t_success = true;
 	
 	Pixmap drawdata = nil, drawmask = nil;
@@ -358,6 +359,9 @@ bool MCImageBitmapToPICT(MCImageBitmap *p_bitmap, MCMacSysPictHandle &r_pict)
 		r_pict = (MCMacSysPictHandle)t_handle;
 	
 	return t_success;
+#else
+	return false;
+#endif
 }
 
 CGImageRef MCImage::converttodragimage(void)
@@ -365,7 +369,7 @@ CGImageRef MCImage::converttodragimage(void)
 	CGImageRef t_image = NULL;
 	MCImageBitmap *t_bitmap = nil;
 	
-	if (lockbitmap(t_bitmap))
+	if (lockbitmap(t_bitmap, false))
 		/* UNCHECKED */ MCImageBitmapToCGImage(t_bitmap, false, t_image);
 	unlockbitmap(t_bitmap);
 	

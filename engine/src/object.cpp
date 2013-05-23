@@ -34,7 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "undolst.h"
-#include "pxmaplst.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -63,6 +62,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "stacksecurity.h"
 
+#include "graphicscontext.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -87,10 +88,6 @@ MCColor MCObject::maccolors[MAC_NCOLORS] = {
             { 0, 0xE8E8, 0xE8E8, 0xE8E8, 0, 0 }
         };
 
-Pixmap MCObject::pattern = DNULL;
-static uint4 sbpat[8] = { 0x88888888, 0x22222222, 0x88888888, 0x22222222,
-                          0x88888888, 0x22222222, 0x88888888, 0x22222222 };
-
 MCObject::MCObject()
 {
 	parent = NULL;
@@ -103,9 +100,9 @@ MCObject::MCObject()
 
 	colors = NULL;
 	colornames = NULL;
-	npixmaps = 0;
-	pixmapids = NULL;
-	pixmaps = NULL;
+	npatterns = 0;
+	patternids = NULL;
+	patterns = NULL;
 	opened = 0;
 	script = NULL;
 	hlist = NULL;
@@ -179,19 +176,19 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 		colors = NULL;
 		colornames = NULL;
 	}
-	npixmaps = oref.npixmaps;
-	if (npixmaps > 0)
+	npatterns = oref.npatterns;
+	if (npatterns > 0)
 	{
-		pixmapids = new uint4[npixmaps];
+		patternids = new uint4[npatterns];
 		uint2 i;
-		for (i = 0 ; i < npixmaps ; i++)
-			pixmapids[i] = oref.pixmapids[i];
-		pixmaps = new Pixmap[npixmaps];
+		for (i = 0 ; i < npatterns ; i++)
+			patternids[i] = oref.patternids[i];
+		/* UNCHECKED */ patterns = new MCGImageRef[npatterns];
 	}
 	else
 	{
-		pixmapids = NULL;
-		pixmaps = NULL;
+		patternids = NULL;
+		patterns = NULL;
 	}
 	opened = 0;
 	script = strclone(oref.script);
@@ -274,8 +271,8 @@ MCObject::~MCObject()
 			delete colornames[ncolors];
 		delete colornames;
 	}
-	delete pixmapids;
-	delete pixmaps;
+	delete patternids;
+	delete patterns;
 	delete script;
 	deletepropsets();
 	delete tooltip;
@@ -336,8 +333,8 @@ void MCObject::open()
 	for (uint32_t i = 0 ; i < ncolors ; i++)
 		MCscreen->alloccolor(colors[i]);
 
-	for (uint32_t i = 0 ; i < npixmaps ; i++)
-		pixmaps[i] = MCpatterns->allocpat(pixmapids[i], this);
+	for (uint32_t i = 0 ; i < npatterns ; i++)
+		patterns[i] = MCpatternlist->allocpat(patternids[i], this);
 }
 
 void MCObject::close()
@@ -348,8 +345,8 @@ void MCObject::close()
 	if (state & CS_MENU_ATTACHED)
 		closemenu(False, True);
 
-	for (uint32_t i = 0 ; i < npixmaps ; i++)
-		MCpatterns->freepat(pixmaps[i]);
+	for (uint32_t i = 0 ; i < npatterns ; i++)
+		MCpatternlist->freepat(patterns[i]);
 
 	// MW-2012-02-14: [[ FontRefs ]] Unmap the object's font.
 	unmapfont();
@@ -1216,7 +1213,7 @@ Boolean MCObject::resizeparent()
 }
 
 Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
-                               MCColor &c, Pixmap &pix,
+                               MCColor &c, MCGImageRef &r_pattern,
                                int2 &x, int2 &y, MCDC *dc, MCObject *o)
 {
 	uint2 i;
@@ -1231,7 +1228,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 		else
 			if (getpindex(di, i))
 			{
-				pix = pixmaps[i];
+				r_pattern = patterns[i];
 
 				if (gettype() == CT_STACK)
 					x = y = 0;
@@ -1255,11 +1252,11 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 					if (di == DI_BACK)
 						c = dc->getwhite();
 					else
-						parent->getforecolor(di, rev, False, c, pix, x, y, dc, o);
+						parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
 					return True;
 				}
 				if (parent && parent != MCdispatcher)
-					return parent->getforecolor(di, rev, False, c, pix, x, y, dc, o);
+					return parent->getforecolor(di, rev, False, c, r_pattern, x, y, dc, o);
 			}
 	}
 
@@ -1279,11 +1276,11 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 #ifdef _MACOSX
 		if (IsMacLFAM() && dc -> gettype() != CONTEXT_TYPE_PRINTER)
 		{
-			extern Pixmap MCMacThemeGetBackgroundPixmap(Window_mode mode, Boolean active);
+			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageRef &r_pattern);
 			x = 0;
 			y = 0;
-			pix = MCMacThemeGetBackgroundPixmap(o -> getstack() -> getmode(), True);
-			if (pix != DNULL)
+			
+			if (MCMacThemeGetBackgroundPattern(o -> getstack() -> getmode(), True, r_pattern))
 				return False;
 		}
 #endif
@@ -1331,22 +1328,22 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 
 	MCColor color;
-	Pixmap pix;
+	MCGImageRef t_pattern = nil;
 	int2 x, y;
-	if (getforecolor(idi, rev, hilite, color, pix, x, y, dc, this))
+	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
 	{
 		MCColor fcolor;
 		if (dc->getdepth() == 1 && di != DI_BACK
 		        && getforecolor((state & CS_HILITED && flags & F_OPAQUE)
 		                        ? DI_HILITE : DI_BACK, False, False, fcolor,
-		                        pix, x, y, dc, this)
+		                        t_pattern, x, y, dc, this)
 		        && color.pixel == fcolor.pixel)
 			color.pixel ^= 1;
 		dc->setforeground(color);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
-	else if (pix == DNULL)
-		dc->setfillstyle(FillStippled, DNULL, 0, 0);
+	else if (t_pattern == nil)
+		dc->setfillstyle(FillStippled, nil, 0, 0);
 	else
 	{
 		// MW-2011-09-22: [[ Layers ]] Check to see if the object is on a dynamic
@@ -1368,7 +1365,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 			t_parent = t_parent -> getparent();
 		}
 
-		dc->setfillstyle(FillTiled, pix, x, y);
+		dc->setfillstyle(FillTiled, t_pattern, x, y);
 	}
 }
 
@@ -1401,7 +1398,7 @@ Boolean MCObject::setcolor(uint2 index, const MCString &data)
 		{
 			if (opened)
 
-				MCpatterns->freepat(pixmaps[j]);
+				MCpatternlist->freepat(patterns[j]);
 			destroypindex(index, j);
 		}
 		if (opened)
@@ -1432,7 +1429,7 @@ Boolean MCObject::setcolors(const MCString &data)
 			if (getpindex(index, j))
 			{
 				if (opened)
-					MCpatterns->freepat(pixmaps[j]);
+					MCpatternlist->freepat(patterns[j]);
 				destroypindex(index, j);
 			}
 		}
@@ -1476,7 +1473,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 		if (getpindex(newpixmap, i))
 		{
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i]);
 			destroypindex(newpixmap, i);
 		}
 	}
@@ -1493,12 +1490,12 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 			i = createpindex(newpixmap);
 		else
 			if (t_isopened)
-				MCpatterns->freepat(pixmaps[i]);
+				MCpatternlist->freepat(patterns[i]);
 		if (newid < PI_PATTERNS)
 			newid += PI_PATTERNS;
-		pixmapids[i] = newid;
+		patternids[i] = newid;
 		if (t_isopened)
-			pixmaps[i] = MCpatterns->allocpat(pixmapids[i], this);
+			patterns[i] = MCpatternlist->allocpat(patternids[i], this);
 		if (getcindex(newpixmap, i))
 			destroycindex(newpixmap, i);
 		}
@@ -1616,17 +1613,17 @@ Boolean MCObject::getpindex(uint2 di, uint2 &i)
 
 uint2 MCObject::createpindex(uint2 di)
 {
-	uint4 *oldpixmapids = pixmapids;
-	Pixmap *oldpixmaps = pixmaps;
-	npixmaps++;
-	pixmapids = new uint4[npixmaps];
-	pixmaps = new Pixmap[npixmaps];
+	uint4 *oldpatternids =patternids;
+	MCGImageRef *oldpatterns = patterns;
+	npatterns++;
+	patternids = new uint4[npatterns];
+	patterns = new MCGImageRef[npatterns];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 p = 0;
 	uint2 op = 0;
 	uint2 m = DF_FORE_PATTERN;
-	while (p < npixmaps)
+	while (p < npatterns)
 	{
 		if (i == di)
 		{
@@ -1636,24 +1633,24 @@ uint2 MCObject::createpindex(uint2 di)
 		else
 			if (dflags & m)
 			{
-				pixmapids[p] = oldpixmapids[op];
-				pixmaps[p++] = oldpixmaps[op++];
+				patternids[p] = oldpatternids[op];
+				patterns[p++] = oldpatterns[op++];
 			}
 		i++;
 		m <<= 1;
 	}
-	delete oldpixmapids;
-	delete oldpixmaps;
+	delete oldpatternids;
+	delete oldpatterns;
 	return ri;
 }
 
 void MCObject::destroypindex(uint2 di, uint2 i)
 {
-	npixmaps--;
-	while (i < npixmaps)
+	npatterns--;
+	while (i < npatterns)
 	{
-		pixmapids[i] = pixmapids[i + 1];
-		pixmaps[i] = pixmaps[i + 1];
+		patternids[i] = patternids[i + 1];
+		patterns[i] = patterns[i + 1];
 		i++;
 	}
 	uint2 m = DF_FORE_PATTERN;
@@ -2567,14 +2564,9 @@ void MCObject::alloccolors()
 	uint2 i = MAC_NCOLORS;
 	while (i--)
 		MCscreen->alloccolor(maccolors[i]);
-
-#ifndef _MOBILE
-	if (pattern == DNULL)
-		pattern = MCscreen->createstipple(32, 8, sbpat);
-#endif
 }
 
-MCBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, bool p_with_effects)
+MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, bool p_with_effects)
 {
 	Chunk_term t_type;
 	t_type = gettype();
@@ -2607,8 +2599,30 @@ MCBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, b
 	if (r . width == 0 || r . height == 0)
 		return NULL;
 
-	MCContext *t_context = MCscreen -> creatememorycontext(r . width, r . height, true, true);
-	t_context -> setorigin(r . x, r . y);
+	uint32_t t_context_width = r.width;
+	uint32_t t_context_height = r.height;
+	if (p_size != nil)
+	{
+		t_context_width = p_size->x;
+		t_context_height = p_size->y;
+	}
+
+	MCImageBitmap *t_bitmap = nil;
+	/* UNCHECKED */ MCImageBitmapCreate(t_context_width, t_context_height, t_bitmap);
+	MCImageBitmapClear(t_bitmap);
+
+	MCGContextRef t_gcontext = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_gcontext);
+	///* UNCHECKED */ MCGContextCreateWithRaster(t_raster, t_gcontext);
+	///* UNCHECKED */ MCGContextCreate(t_context_width, t_context_height, true, t_gcontext);
+
+	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
+	if (p_size != nil)
+		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
+
+	MCGContextConcatCTM(t_gcontext, t_transform);
+
+	MCContext *t_context = new MCGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
 	// MW-2011-01-29: [[ Bug 9355 ]] Make sure we only open a control if it needs it!
@@ -2655,35 +2669,10 @@ MCBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, b
 		}
 	}
 
-	MCBitmap *t_bitmap;
-	t_bitmap = t_context -> lock();
-
-#ifdef TARGET_SUBPLATFORM_ANDROID
-	// MW-2011-10-04: [[ Bug 9779 ]] Make sure we swap red/blue for Android. Not the best
-	//   place to do this, but will do for now :)
-	for(uint32_t i = 0; i < t_bitmap -> bytes_per_line * t_bitmap -> height / 4; i++)
-	{
-		uint32_t *t_ptr;
-		t_ptr = (uint32_t *)t_bitmap -> data;
-		t_ptr[i] = (t_ptr[i] & 0xff00ff00) | ((t_ptr[i] & 0x00ff0000) >> 16) | ((t_ptr[i] & 0x000000ff) << 16);
-	}
-#endif
-	
-	MCBitmap *t_scaled_bitmap;
-	if (p_size != nil)
-	{
-		extern MCBitmap *MCImageResizeBilinear(MCBitmap *p_src, int32_t p_new_width, int32_t p_new_height);
-		t_scaled_bitmap = MCImageResizeBilinear(t_bitmap, MCMax(0, p_size -> x), MCMax(0, p_size -> y));
-	}
-	else
-	{
-		t_scaled_bitmap = MCscreen->copyimage(t_bitmap, false);
-	}
-
-	t_context -> unlock(t_bitmap);
-	MCscreen -> freecontext(t_context);
-
-	return t_scaled_bitmap;
+	delete t_context;
+	MCGContextRelease(t_gcontext);
+	MCImageBitmapUnpremultiply(t_bitmap);
+	return t_bitmap;
 }
 
 bool MCObject::isselectable(bool p_only_object) const
@@ -2803,17 +2792,17 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			return stat;
 		}
 	}
-	if ((stat = IO_read_uint2(&npixmaps, stream)) != IO_NORMAL)
+	if ((stat = IO_read_uint2(&npatterns, stream)) != IO_NORMAL)
 		return stat;
-	uint2 addflags = npixmaps & 0xFFF0;
-	npixmaps &= 0x0F;
-	if (npixmaps > 0)
+	uint2 addflags = npatterns & 0xFFF0;
+	npatterns &= 0x0F;
+	if (npatterns > 0)
 	{
-		pixmapids = new uint4[npixmaps];
-		for (i = 0 ; i < npixmaps ; i++)
-			if ((stat = IO_read_uint4(&pixmapids[i], stream)) != IO_NORMAL)
+		patternids = new uint4[npatterns];
+		for (i = 0 ; i < npatterns ; i++)
+			if ((stat = IO_read_uint4(&patternids[i], stream)) != IO_NORMAL)
 				return stat;
-		pixmaps = new Pixmap[npixmaps];
+		patterns = new MCGImageRef[npatterns];
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
 		return stat;
@@ -3026,7 +3015,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (t_need_font)
 		flags |= F_FONT;
 
-	uint2 addflags = npixmaps;
+	uint2 addflags = npatterns;
 	if (t_extended)
 		addflags |= AF_EXTENDED;
 	if (flags & F_SCRIPT && strlen(script) >= MAXUINT2 || t_extended)
@@ -3099,8 +3088,8 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if ((stat = IO_write_uint2(addflags, stream)) != IO_NORMAL)
 		return stat;
-	for (i = 0 ; i < npixmaps ; i++)
-		if ((stat = IO_write_uint4(pixmapids[i], stream)) != IO_NORMAL)
+	for (i = 0 ; i < npatterns ; i++)
+		if ((stat = IO_write_uint4(patternids[i], stream)) != IO_NORMAL)
 			return stat;
 	// MW-2012-02-22; [[ NoScrollSave ]] Adjust the rect by the current group offset.
 	if ((stat = IO_write_int2(rect.x + MCgroupedobjectoffset . x, stream)) != IO_NORMAL)
@@ -3770,7 +3759,11 @@ struct object_mask_info
 	uint32_t stride;
 	
 	// This is freed after processing.
-	MCBitmap *temp_bits;
+	struct
+	{
+		uint8_t *data;
+		uint32_t stride;
+	} temp_bits;
 };
 
 // This method fills a scanline for comparison from a soft mask.
@@ -3858,23 +3851,24 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	return p_shape . bounds;
 }
 
-static MCBitmap *compute_objectshape_copycontextmask(MCContext *p_context, MCRectangle& p_rect, uint32_t p_threshold)
+static bool compute_objectshape_copycontextmask(MCImageBitmap *p_bitmap, MCRectangle& p_rect, uint32_t p_threshold, uint8_t *&r_mask_bits, uint32_t &r_mask_stride)
 {
-	MCBitmap *t_bitmap;
-	t_bitmap = MCscreen -> createimage(1, p_rect . width, p_rect . height, True, 0, False, False);
-	
-	MCBitmap *t_src_bitmap;
-	t_src_bitmap = p_context -> lock();
-	
+	uint8_t *t_mask_bits = nil;
+	uint32_t t_mask_stride = (p_rect.width + 7) / 8;
+	if (!MCMemoryAllocate(t_mask_stride * p_rect.height, t_mask_bits))
+		return false;
+
+	MCMemoryClear(t_mask_bits, t_mask_stride * p_rect.height);
+
 	void *t_src_ptr;
 	uint4 t_src_stride;
-	t_src_ptr = t_src_bitmap -> data;
-	t_src_stride = t_src_bitmap -> bytes_per_line;
+	t_src_ptr = p_bitmap -> data;
+	t_src_stride = p_bitmap -> stride;
 	
-	uint1 *t_bits_ptr;
-	t_bits_ptr = (uint1 *)t_bitmap -> data;
+	uint8_t *t_bits_ptr;
+	t_bits_ptr = t_mask_bits;
 
-	for(uint4 y = p_rect . height; y > 0; --y, t_bits_ptr += t_bitmap -> bytes_per_line, t_src_ptr = (uint8_t *)t_src_ptr + t_src_stride)
+	for(uint4 y = p_rect . height; y > 0; --y, t_bits_ptr += t_mask_stride, t_src_ptr = (uint8_t *)t_src_ptr + t_src_stride)
 	{
 		uint1 t_mask = 0x80;
 		for(uint4 x = 0; x < p_rect . width; ++x)
@@ -3887,9 +3881,7 @@ static MCBitmap *compute_objectshape_copycontextmask(MCContext *p_context, MCRec
 		}
 	}
 	
-	p_context -> unlock(t_src_bitmap);
-	
-	return t_bitmap;
+	return true;
 }
 
 // This method computes the mask details for a given shape, rasterizing the object
@@ -3933,12 +3925,17 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	
 	// Otherwise we are in the complex case and must rasterize and extract a
 	// temporary mask.
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(p_rect . width, p_rect . height, True, True);
-	t_context -> setorigin(p_rect . x, p_rect . y);
-	t_context -> setclip(p_rect);
-	t_context -> setopacity(255);
-	t_context -> setfunction(GXblendSrcOver);
+	MCImageBitmap *t_snapshot = nil;
+	/* UNCHECKED */ MCImageBitmapCreate(p_rect.width, p_rect.height, t_snapshot);
+	MCImageBitmapClear(t_snapshot);
+
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(t_snapshot->width, t_snapshot->height, t_snapshot->stride, t_snapshot->data, true, t_context);
+	MCGContextTranslateCTM(t_context, -(MCGFloat)p_rect.x, -(MCGFloat)p_rect.y);
+	MCGContextClipToRect(t_context, MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height));
+
+	MCContext *t_gfxcontext = nil;
+	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
 	
 	// Make sure the object is opened.
 	bool t_needs_open;
@@ -3947,23 +3944,26 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 		p_object -> open();
 	
 	// Render the object into the context (isolated).
-	((MCControl *)p_object) -> draw(t_context, p_rect, true, false);
+	((MCControl *)p_object) -> draw(t_gfxcontext, p_rect, true, false);
 	
 	// Close the object if we opened it.
 	if (t_needs_open)
 		p_object -> close();
 	
+	delete t_gfxcontext;
+	MCGContextRelease(t_context);
+
 	// Fetch the context's mask.
-	r_mask . temp_bits = compute_objectshape_copycontextmask(t_context, p_rect, p_threshold);
+	/* UNCHECKED */ compute_objectshape_copycontextmask(t_snapshot, p_rect, p_threshold, r_mask . temp_bits . data, r_mask . temp_bits . stride);
 
 	// Now set up the mask structure.
 	r_mask . fill = compute_objectshapescanline_sharp;
-	r_mask . bits = r_mask . temp_bits -> data;
-	r_mask . stride = r_mask . temp_bits -> bytes_per_line;
+	r_mask . bits = r_mask . temp_bits . data;
+	r_mask . stride = r_mask . temp_bits . stride;
 	r_mask . width = p_rect . width;
 	r_mask . offset = 0;
 	
-	MCscreen -> freecontext(t_context);
+	MCImageFreeBitmap(t_snapshot);
 	
 	return;
 }
@@ -4070,10 +4070,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		MCMemoryDeleteArray(t_other_scanline);
 		
 		// Free the temporary masks that were generated (if any).
-		if (t_this_mask . temp_bits != nil)
-			MCscreen -> destroyimage(t_this_mask . temp_bits);
-		if (t_other_mask . temp_bits != nil)
-			MCscreen -> destroyimage(t_other_mask . temp_bits);
+		MCMemoryDeallocate(t_this_mask . temp_bits . data);
+		MCMemoryDeallocate(t_other_mask . temp_bits . data);
 	}
 	
 	p_other -> unlockshape(t_other_shape);

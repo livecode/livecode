@@ -807,7 +807,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 
 Exec_stat MCExport::exec(MCExecPoint &ep)
 {
-	MCBitmap *t_img = nil;
+	MCImageBitmap *t_bitmap = nil;
 	MCObject *optr = NULL;
 
 	Exec_stat t_status = ES_NORMAL;
@@ -911,11 +911,11 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_img = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
-			if (t_img == nil)
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror -> add(EE_EXPORT_EMPTYRECT, line, pos);
@@ -924,8 +924,8 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_img = MCscreen->snapshot(r, w, sdisp);
-			if (t_img == nil)
+			t_bitmap = MCscreen->snapshot(r, w, sdisp);
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
@@ -999,22 +999,16 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		delete mfile;
 	}
 
-	MCImageBitmap *t_bitmap = nil;
 	bool t_dither = false;
 	bool t_image_locked = false;
-	if (t_img == nil)
+	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap);
+		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap, false);
 		t_image_locked = true;
 		t_dither = !optr->getflag(F_DONT_DITHER);
 	}
 	else
-	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
-		MCImageBitmapCheckTransparency(t_bitmap);
-		MCscreen->destroyimage(t_img);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
-	}
 
 	IO_handle t_out_stream = nil;
 	if (stream != nil)
@@ -1608,7 +1602,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 		}
 		
-		MCBitmap *t_bitmap = nil;
+		MCImageBitmap *t_bitmap = nil;
 		if (container != NULL)
 		{
 			MCObject *parent = NULL;
@@ -1639,9 +1633,11 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		if (t_bitmap != nil)
 		{
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			iptr -> compress(t_bitmap, true, true);
-			MCscreen->destroyimage(t_bitmap);
+			if (t_bitmap != nil)
+				iptr->setbitmap(t_bitmap, true);
+			MCImageFreeBitmap(t_bitmap);
 		}
+
 	
 		if (iptr != NULL)
 			iptr->attach(OP_CENTER, false);

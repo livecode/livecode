@@ -55,7 +55,6 @@ struct MCNewFontStruct: public MCFontStruct
 {
 	// The requested details of the font
 	char *family;
-	uint16_t size;
 	uint16_t style;
 
 	// The pango description
@@ -82,7 +81,9 @@ public:
 	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style);
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
+#ifdef OLD_GRAPHICS
 	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
+#endif
 	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
 
 	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context);
@@ -385,6 +386,7 @@ int4 MCNewFontlist::ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool
 	return t_logical . width;
 }
 
+#ifdef OLD_GRAPHICS
 void MCNewFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override)
 {
 	// Set the text of the layout appropriately.
@@ -575,6 +577,7 @@ void MCNewFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char
 			MCscreen -> freepixmap(t_alpha);
 	}
 }
+#endif
 
 void MCNewFontlist::ctxt_setfont(MCX11Context *ctxt, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
 {

@@ -16,6 +16,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/liburlcache/include \
+	$(SOLUTION_DIR)/libgraphics/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include/cairo \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include/Xft \

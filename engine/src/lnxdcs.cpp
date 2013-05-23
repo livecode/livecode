@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "util.h"
 #include "execpt.h"
 #include "stacklst.h"
-#include "pxmaplst.h"
 
 #include "sellst.h"
 
@@ -59,7 +58,15 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define ICON_SIZE 48
 #define XYCUTOFF 4        // plane based or packed pixel
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap);
+
+////////////////////////////////////////////////////////////////////////////////
+
 Display *MCdpy;
+
+////////////////////////////////////////////////////////////////////////////////
 
 extern "C" int initialise_weak_link_gobject(void);
 extern "C" int initialise_weak_link_gdk(void);
@@ -72,6 +79,8 @@ extern "C" int initialise_weak_link_glib ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libgnome ( void ) ;
 extern "C" int initialise_weak_link_libxv ( void ) ;
+
+////////////////////////////////////////////////////////////////////////////////
 
 static uint1 flip_table[] =
     {
@@ -117,6 +126,8 @@ static uint4 cmap_scale[17] =
         257,   128,    64,   32,
         16,     8,     4,    2,   1
     };
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::setstatus(const char *status)
 {
@@ -814,41 +825,6 @@ void MCScreenDC::destroyimage(MCBitmap *image)
 	image = NULL ;
 }
 
-
-
-MCBitmap *MCScreenDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	// IM-2013-03-18: [[ BZ 10703 ]] the source image may have a depth of 0, which will cause XCreateImage to fail if passed on
-	uint32_t depth = source->depth;
-	if (depth == 0)
-	{
-		if (vis -> depth == 24)
-			depth = 24;
-		else
-			depth = 32;
-	}
-	
-	MCBitmap *image = (MCBitmap *)XCreateImage(dpy, getvisual(), depth,
-	                               source->format, 0, NULL,
-	                               source->width, source->height, getpad(), 0);
-	uint4 bytes = image->bytes_per_line * image->height;
-	if (image->bits_per_pixel == 1)
-		bytes *= image->depth;
-	image->data = (char *)new uint1[bytes];
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	image->byte_order = source->byte_order;
-	image->bitmap_bit_order = source->bitmap_bit_order;
-	return image;
-}
-
 void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
                           int2 dx, int2 dy, uint2 w, uint2 h)
 {
@@ -857,7 +833,7 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 	
 	if (MCshm && source->obdata != NULL)
 	{
-		flipimage(source, getbyteorder(), getbitorder());
+		flipimage((XImage*)source, getbyteorder(), getbitorder());
 		XShmPutImage(dpy, dest, getgc(), (XImage *)source, sx, sy, dx, dy, w, h, False);
 	}
 	else
@@ -870,23 +846,7 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 	}
 }
 
-
-MCBitmap *MCScreenDC::getimage(Drawable d, int2 x, int2 y,
-                               uint2 w, uint2 h, Boolean shm)
-{
-	if (d == DNULL)
-		d = getroot();
-	MCBitmap *b = (MCBitmap *)XGetImage(dpy, d, x, y, w, h, AllPlanes, ZPixmap);
-
-	assert ( b != NULL ) ;
-	
-	flipimage(b, MSBFirst, MSBFirst);
-	
-	return b;
-
-}
-
-void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
+void MCScreenDC::flipimage(XImage *image, int2 byte_order, int2 bit_order)
 {
 	if (image == NULL)
 		return;
@@ -926,6 +886,7 @@ void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
 		}
 }
 
+#ifdef OLD_GRAPHICS
 MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
 {
 	Pixmap t_image;
@@ -948,7 +909,7 @@ MCBitmap *MCScreenDC::regiontomask(MCRegionRef r, int32_t w, int32_t h)
 
 	return t_bitmap;
 }
-
+#endif
 
 void MCScreenDC::setfunction(uint4 rop)
 {
@@ -1029,7 +990,7 @@ Window MCScreenDC::getroot()
 	return RootWindow(dpy, getscreen());
 }
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
                                const char *displayname)
 {
 	Display *olddpy = dpy;
@@ -1195,19 +1156,23 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 	r = MCU_clip_rect(r, 0, 0, getwidth(), getheight());
 	if (r.width == 0 || r.height == 0)
 		return NULL;
-	MCBitmap *timage = (MCBitmap *)XGetImage(dpy, root, r.x, r.y, r.width, r.height,
-	                             AllPlanes, ZPixmap);
-	if (timage == NULL)
+	XImage *t_image = XGetImage(dpy, root, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
+	if (t_image == NULL)
 		return NULL;
-	timage->red_mask = timage->green_mask = timage->blue_mask = 0;
-	MCscreen->flipimage(timage, MSBFirst, MSBFirst);
+	t_image->red_mask = t_image->green_mask = t_image->blue_mask = 0;
+	flipimage(t_image, MSBFirst, MSBFirst);
 	if (dpy != olddpy)
 	{
 		XCloseDisplay(dpy);
 		dpy = olddpy;
 	}
 	cmap = oldcmap;
-	return timage;
+
+	MCImageBitmap *t_bitmap = nil;
+	/* UNCHECKED */ MCImageBitmapCreateWithXImage(t_image, t_bitmap);
+	XDestroyImage(t_image);
+
+	return t_bitmap;
 }
 
 
@@ -1327,9 +1292,9 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
 {
-	
+#ifdef LIBGRAPHICS_BORKEN
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
 	
@@ -1367,6 +1332,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MC
 	}
 	
 	MCstacks -> refresh();
+#endif
 }
 
 
@@ -1382,6 +1348,7 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 void MCScreenDC::createbackdrop(const char *color)
 {
+#ifdef LIBGRAPHICS_BORKEN
 	char *cname = NULL;
 	if (MCbackdroppm == DNULL &&
 	        parsecolor(color, &backdropcolor, &cname))
@@ -1428,6 +1395,7 @@ void MCScreenDC::createbackdrop(const char *color)
 	
 	
 	XMapWindow(dpy, backdrop);
+#endif
 }
 
 
@@ -1439,8 +1407,8 @@ void MCScreenDC::destroybackdrop()
 		XDestroyWindow(dpy, backdrop);
 		backdrop = DNULL;
 		backdropcolor.pixel = 0;
-		}
 	}
+}
 
 
 

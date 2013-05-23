@@ -264,6 +264,7 @@ inline void *operator new(size_t, void *p)
 typedef struct __MCWinSysHandle *MCWinSysHandle;
 typedef struct __MCWinSysIconHandle *MCWinSysIconHandle;
 typedef struct __MCWinSysMetafileHandle *MCWinSysMetafileHandle;
+typedef struct __MCWinSysEnhMetafileHandle *MCWinSysEnhMetafileHandle;
 
 #if defined(_DEBUG)
 
@@ -293,6 +294,7 @@ extern void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize,
 struct MCFontStruct
 {
 	MCSysFontHandle fid;
+	uint16_t size;
 	int ascent;
 	int descent;
 	uint1 widths[256];
@@ -410,6 +412,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 
 struct MCFontStruct
 {
+	uint16_t size;
 	uint2 ascent;
 	uint2 descent;
 	uint1 charset;
@@ -1156,7 +1159,6 @@ class MCField;
 class MCObject;
 class MCObjectList;
 class MCMagnify;
-class MCPixmaplist;
 class MCPrinter;
 class MCPrinterDevice;
 class MCPrinterSetupDialog;

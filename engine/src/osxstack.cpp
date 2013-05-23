@@ -44,6 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "region.h"
 
+#include "graphicscontext.h"
+
 #include "osxdc.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -773,10 +775,6 @@ void  MCStack::getWinstyle(uint32_t &wstyle, uint32_t &wclass)
 		wstyle |= kWindowNoShadowAttribute;
 }
 
-void MCStack::drawgrowicon(const MCRectangle &dirty)
-{
-}
-
 void MCRevolutionStackViewRelink(WindowPtr p_window, MCStack *p_stack);
 
 void MCStack::start_externals()
@@ -960,6 +958,8 @@ static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void
 	t_colorspace = CGColorSpaceCreateDeviceRGB();
 	if (t_colorspace != nil)
 	{
+		// MM-2013-02-07: Adjust byte order of bitmap to match that of Skia (for new graphics context)
+		// MM-2013-02-13: Reverted back and altered Skia's native byte ordering instead.
 		CGBitmapInfo t_bitmap_info;
 		t_bitmap_info = kCGBitmapByteOrder32Host;
 		t_bitmap_info |= p_has_alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
@@ -992,8 +992,8 @@ class MCMacStackSurface: public MCStackSurface
 	
 	MCRectangle m_locked_area;
 	MCContext *m_locked_context;
-	Pixmap m_locked_pixmap;
 	void *m_locked_bits;
+	uint32_t m_locked_stride;
 	
 public:
 	MCMacStackSurface(MCStack *p_stack, MCRegionRef p_region, CGContextRef p_context)
@@ -1003,34 +1003,24 @@ public:
 		m_context = p_context;
 		
 		m_locked_context = nil;
-		m_locked_pixmap = nil;
 		m_locked_bits = nil;
 	}
 	
 	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
 	{
-		MCRectangle t_actual_area;
-		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
-		
-		if (MCU_empty_rect(t_actual_area))
-			return false;
-		
-		m_locked_pixmap = MCscreen -> createpixmap(t_actual_area . width, t_actual_area . height, 0, False);
-		if (m_locked_pixmap != nil)
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
 		{
-			m_locked_context = MCscreen -> createcontext(m_locked_pixmap, False, False);
+			m_locked_context = new MCGraphicsContext(t_raster . width, t_raster . height, t_raster . stride, t_raster . pixels, true);
 			if (m_locked_context != nil)
 			{
-				m_locked_context -> setorigin(t_actual_area . x, t_actual_area . y);
-				m_locked_context -> setclip(t_actual_area);
+				m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
+				m_locked_context -> setclip(m_locked_area);
 				
-				m_locked_area = t_actual_area;
 				r_context = m_locked_context;
 				
 				return true;
 			}
-			
-			MCscreen -> freepixmap(m_locked_pixmap);
 		}
 		
 		return false;
@@ -1041,19 +1031,15 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		MCscreen -> freecontext(m_locked_context);
+		delete m_locked_context;
 		m_locked_context = nil;
 		
-		void *t_bits;
-		uint32_t t_stride;
-		MCscreen -> lockpixmap(m_locked_pixmap, t_bits, t_stride);
-		FlushBits(t_bits, t_stride);
-		MCscreen -> unlockpixmap(m_locked_pixmap, t_bits, t_stride);
+		FlushBits(m_locked_bits, m_locked_stride);
 		
-		MCscreen -> freepixmap(m_locked_pixmap);
+		UnlockPixels();
 	}
 	
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
 		MCRectangle t_actual_area;
 		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
@@ -1061,13 +1047,17 @@ public:
 		if (MCU_empty_rect(t_actual_area))
 			return false;
 		
-		m_locked_bits = malloc(t_actual_area . width * t_actual_area . height * sizeof(uint32_t));
+		m_locked_stride = t_actual_area . width * sizeof(uint32_t);
+		m_locked_bits = malloc(t_actual_area . height * m_locked_stride);
 		if (m_locked_bits != nil)
 		{
 			m_locked_area = t_actual_area;
 			
-			r_bits = m_locked_bits;
-			r_stride = t_actual_area . width * sizeof(uint32_t);
+			r_raster . width = t_actual_area . width;
+			r_raster . height = t_actual_area . height;
+			r_raster . stride = m_locked_stride;
+			r_raster . pixels = m_locked_bits;
+			r_raster . format = kMCGRasterFormat_ARGB;
 			return true;
 		}
 		
@@ -1353,9 +1343,9 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 
 						void *t_bits;
 						uint32_t t_stride;
-						MCscreen -> lockpixmap(s_update_pixmap, t_bits, t_stride);
+						((MCScreenDC*)MCscreen) -> lockpixmap(s_update_pixmap, t_bits, t_stride);
 						MCMacRenderBitsToCG(t_graphics, t_area, t_bits, t_stride, t_context -> stack -> getwindowshape() != nil ? true : false);
-						MCscreen -> unlockpixmap(s_update_pixmap, t_bits, t_stride);
+						((MCScreenDC*)MCscreen) -> unlockpixmap(s_update_pixmap, t_bits, t_stride);
 					}
 
 					// Restore the context state

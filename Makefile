@@ -2,7 +2,7 @@
 # Engine Targets
 
 .PHONY: libopenssl liburlcache libstubs
-.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore
+.PHONY: libexternal libexternalv1 libz libjpeg libpcre libpng libplugin libcore libgraphics libskia
 .PHONY: revsecurity libgif
 .PHONY: kernel development standalone webruntime webplugin webplayer server
 .PHONY: libireviam onrev-server
@@ -31,10 +31,13 @@ libgif:
 libopenssl:
 	$(MAKE) -C ./thirdparty/libopenssl libopenssl
 
+libskia:
+	$(MAKE) -C ./thirdparty/libskia libskia
+
 libcore:
 	$(MAKE) -C ./libcore libcore
 	
-kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
+kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 
 development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel

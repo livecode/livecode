@@ -33,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxcontext.h"
 #include "osxprinter.h"
 
+#include "graphicscontext.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
@@ -221,6 +223,9 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 	}
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+#ifdef OLD_GRAPHICS
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 {
 	MCQuickDrawContext *t_context;
@@ -231,18 +236,34 @@ MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
 {
-	return MCQuickDrawContext::create_with_port(p_drawable -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_drawable -> handle . window) : (CGrafPtr)p_drawable -> handle . pixmap, p_transient, p_alpha);
-}
+	//return MCQuickDrawContext::create_with_port(p_drawable -> type == DC_WINDOW ? GetWindowPort((WindowPtr)p_drawable -> handle . window) : (CGrafPtr)p_drawable -> handle . pixmap, p_transient, p_alpha);
+	
+	// MM-2013-02-07: Use new MCGraphicsContext.
+	CGrafPtr t_port;
+	t_port = (CGrafPtr) p_drawable -> handle . pixmap;
+	
+	Rect t_bounds;
+	GetPortBounds(t_port, &t_bounds);	
+	uint32_t t_width;
+	t_width = t_bounds . right - t_bounds . left;
+	uint32_t t_height;
+	t_height = t_bounds . bottom - t_bounds . top;
 
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return MCQuickDrawContext::create_with_parameters(p_width, p_height, p_transient, p_alpha);
+	PixMapHandle t_pixmap;
+	t_pixmap = GetGWorldPixMap(t_port);	
+	void *t_pixels;
+	t_pixels = GetPixBaseAddr(t_pixmap);	
+	uint32_t t_stride;
+	t_stride = GetPixRowBytes(t_pixmap);
+	
+	return new MCGraphicsContext(t_width, t_height, t_stride, t_pixels, p_alpha);	
 }
 
 void MCScreenDC::freecontext(MCContext *p_context)
 {
 	delete p_context;
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

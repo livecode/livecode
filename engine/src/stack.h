@@ -74,7 +74,7 @@ public:
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, void*& r_bits, uint32_t& r_stride) = 0;
+	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -158,7 +158,7 @@ protected:
 	
 	// MW-2011-09-13: [[ Effects ]] The temporary snapshot of a rect of the
 	//  window.
-	Pixmap m_snapshot;
+	MCGImageRef m_snapshot;
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
@@ -517,7 +517,7 @@ public:
 	//   frame.
 	void updatetilecache(void);
 	// MW-2013-01-08: Snapshot the contents of the tilecache (if any).
-	bool snapshottilecache(MCRectangle area, Pixmap& r_pixmap);
+	bool snapshottilecache(MCRectangle area, MCGImageRef& r_image);
 	
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
 	//   surface.
@@ -586,9 +586,6 @@ public:
 	//   window.
 	void composite(void);
 	
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom) { }
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
@@ -598,16 +595,10 @@ public:
 	}
 	MCSysWindowHandle getqtwindow(void);
 	void showmenubar();
-	void scrollpm(Pixmap tpm, int2 newy);
-	void property(Window w, Atom atom) { }
 	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
 
 	void getminmax(MCMacSysRect *winrect);
-	void drawgrowicon(const MCRectangle &dirty);
 #elif defined(_LINUX_DESKTOP)
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom);
 	void setmodalhints(void);
 
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence

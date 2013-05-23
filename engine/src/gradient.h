@@ -76,6 +76,15 @@ struct MCGradientFill
 
 #define GRADIENT_HEADER_SIZE (1 + 1 + 1 + 3 * sizeof(MCPoint))
 
+// MM-2013-03-04: Moved from gradient.cpp into header.
+#define STOP_DIFF_PRECISION 24
+#define STOP_DIFF_MULT ((1 << STOP_DIFF_PRECISION) * (uint4)255)
+#define STOP_INT_PRECISION 16
+#define STOP_INT_MAX ((1 << STOP_INT_PRECISION) - 1)
+#define STOP_INT_MIRROR_MAX ((2 << STOP_INT_PRECISION) - 1)
+
+#define GRADIENT_AA_SCALE (2)
+
 class MCString;
 class MCExecPoint;
 struct MCGradientCombiner;

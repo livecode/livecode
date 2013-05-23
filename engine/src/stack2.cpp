@@ -54,8 +54,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #include "context.h"
-
-MCBitmap *dither_image(uint2 depth, MCBitmap *image);
+#include "graphicscontext.h"
 
 void MCStack::external_idle()
 {
@@ -2387,7 +2386,7 @@ void MCStack::updatetilecache(void)
 	MCTileCacheEndFrame(m_tilecache);
 }
 
-bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
+bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)
 {
 	if (m_tilecache == nil)
 		return false;
@@ -2401,7 +2400,10 @@ void MCStack::applyupdates(void)
 {
 	// MW-2011-09-13: [[ Effects ]] Ditch any snapshot.
 	if (m_snapshot != nil)
-		MCscreen -> freepixmap(m_snapshot);
+	{
+		MCGImageRelease(m_snapshot);
+		m_snapshot = nil;
+	}
 	
 	// Ensure the title is up to date.
 	if (getstate(CS_TITLE_CHANGED))
@@ -2471,7 +2473,7 @@ void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 
 void MCStack::takewindowsnapshot(MCStack *p_other_stack)
 {
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
 	m_snapshot = p_other_stack -> m_snapshot;
 	p_other_stack -> m_snapshot = nil;
 }
@@ -2480,7 +2482,10 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 {
 	// Dispose of any existing snapshot.
 	if (m_snapshot != nil)
-		MCscreen -> freepixmap(m_snapshot);
+	{
+		MCGImageRelease(m_snapshot);
+		m_snapshot = nil;
+	}
 
 	// If the window isn't open, or is invisible do nothing.
 	if (opened == 0 || window == NULL || !isvisible())
@@ -2501,31 +2506,52 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 	}
 	
 	if (!snapshottilecache(t_effect_area, m_snapshot))
-	{
-		// Create a pixmap the size of the window.
-		m_snapshot = MCscreen -> createpixmap(t_effect_area . width, t_effect_area . height, 0, False);
-		if (m_snapshot == nil)
-			return;
-		
+	{	
+		bool t_success = true;
 		// Render the current content.
-		MCContext *t_context;
-		t_context = MCscreen -> createcontext(m_snapshot, True, True);
-		if (t_context != nil)
+		MCGRaster t_raster;
+		MCGContextRef t_context = nil;
+		MCContext *t_gfxcontext = nil;
+
+		t_raster.width = t_effect_area.width;
+		t_raster.height = t_effect_area.height;
+		t_raster.stride = t_raster.width * sizeof(uint32_t);
+		t_raster.format = kMCGRasterFormat_ARGB;
+		t_raster.pixels = nil;
+		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);
+
+		if (t_success)
 		{
-			t_context -> setorigin(t_effect_area . x, t_effect_area . y);
-			t_context -> setclip(t_effect_area);
-			render(t_context, t_effect_area);
+			MCMemoryClear(t_raster.pixels, t_raster.stride * t_raster.height);
+			t_success = MCGContextCreateWithRaster(t_raster, t_context);
+		}
+
+		if (t_success)
+		{
+			MCGContextTranslateCTM(t_context, -(MCGFloat)t_effect_area.x, -(MCGFloat)t_effect_area.y);
+			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+		}
+
+		if (t_success)
+		{
+			t_gfxcontext -> setclip(t_effect_area);
+			render(t_gfxcontext, t_effect_area);
 			
 			if (m_window_shape != nil && !m_window_shape -> is_sharp)
 			{
-				t_context -> setclip(t_effect_area);
-				t_context -> applywindowshape(m_window_shape, t_effect_area . width, t_effect_area . height);
+				t_gfxcontext -> setclip(t_effect_area);
+				t_gfxcontext -> applywindowshape(m_window_shape, t_effect_area . width, t_effect_area . height);
 			}
 			
-			MCscreen -> freecontext(t_context);
 		}
-		else
-			MCscreen -> freepixmap(m_snapshot);
+
+		delete t_gfxcontext;
+		MCGContextRelease(t_context);
+
+		if (t_success)
+			t_success = MCGImageCreateWithRaster(t_raster, m_snapshot);
+
+		MCMemoryDeallocate(t_raster.pixels);
 	}
 	
 #ifdef _ANDROID_MOBILE

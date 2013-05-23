@@ -85,14 +85,6 @@ inline int32 fast_floor(double val) {
 }
 #endif
 
-#define STOP_DIFF_PRECISION 24
-#define STOP_DIFF_MULT ((1 << STOP_DIFF_PRECISION) * (uint4)255)
-#define STOP_INT_PRECISION 16
-#define STOP_INT_MAX ((1 << STOP_INT_PRECISION) - 1)
-#define STOP_INT_MIRROR_MAX ((2 << STOP_INT_PRECISION) - 1)
-
-#define GRADIENT_AA_SCALE (2)
-
 typedef struct _GradientPropList
 {
 	const char *token;

@@ -49,9 +49,9 @@ int2 MCImage::magmy;
 MCRectangle MCImage::magrect;
 MCObject *MCImage::magtoredraw;
 Boolean MCImage::filledborder;
-MCbrushmask MCImage::brush;
-MCbrushmask MCImage::spray;
-MCbrushmask MCImage::eraser;
+MCBrush MCImage::brush;
+MCBrush MCImage::spray;
+MCBrush MCImage::eraser;
 MCCursorRef MCImage::cursor;
 MCCursorRef MCImage::defaultcursor;
 uint2 MCImage::cmasks[MAX_CMASK + 1] = {0x00, 0x01, 0x03, 0x07,
@@ -63,8 +63,9 @@ MCImage::MCImage()
 	flags &= ~(F_SHOW_BORDER | F_TRAVERSAL_ON);
 
 	m_rep = nil;
-	m_transformed = nil;
+	m_transformed_bitmap = nil;
 	m_image_opened = false;
+	m_has_transform = false;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -84,8 +85,9 @@ MCImage::MCImage()
 MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 {
 	m_rep = nil;
-	m_transformed = nil;
+	m_transformed_bitmap = nil;
 	m_image_opened = false;
+	m_has_transform = false;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -137,12 +139,6 @@ MCImage::~MCImage()
 	{
 		m_rep->Release();
 		m_rep = nil;
-	}
-
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
 	}
 
 	if (filename != nil)
@@ -285,6 +281,8 @@ Boolean MCImage::mdown(uint2 which)
 					if (MCmodifierstate & MS_CONTROL)
 					{ //cropping
 						state |= CS_EDITED;
+						m_current_width = rect.width;
+						m_current_height = rect.height;
 					}
 					if (state & CS_IMAGE_PM)
 					{
@@ -460,7 +458,7 @@ void MCImage::timer(MCNameRef mptr, MCParameter *params)
 				if (irepeatcount)
 				{
 					MCImageFrame *t_frame = nil;
-					if (m_rep->LockImageFrame(currentframe, t_frame))
+					if (m_rep->LockImageFrame(currentframe, true, t_frame))
 					{
 						MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 						m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -713,7 +711,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap);
+					t_success = lockbitmap(t_bitmap, false);
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -750,7 +748,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap);
+					t_success = lockbitmap(t_bitmap, false);
 					if (t_success)
 					{
 						uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -839,7 +837,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
 			{
 				MCImageFrame *t_frame = nil;
-				if (m_rep->LockImageFrame(currentframe, t_frame))
+				if (m_rep->LockImageFrame(currentframe, true, t_frame))
 				{
 					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -984,7 +982,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				setframe(currentframe == m_rep->GetFrameCount() - 1 ? 0 : currentframe + 1);
 				MCImageFrame *t_frame = nil;
-				if (m_rep->LockImageFrame(currentframe, t_frame))
+				if (m_rep->LockImageFrame(currentframe, true, t_frame))
 				{
 					MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 					m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -1045,7 +1043,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (m_rep != nil)
 			{
 				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap);
+				t_success = lockbitmap(t_bitmap, false);
 				if (t_success)
 					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
 				unlockbitmap(t_bitmap);
@@ -1101,7 +1099,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (m_rep != nil)
 			{
 				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap);
+				t_success = lockbitmap(t_bitmap, false);
 				if (t_success)
 					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
 				unlockbitmap(t_bitmap);
@@ -1134,7 +1132,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (m_rep != nil)
 			{
 				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap);
+				t_success = lockbitmap(t_bitmap, false);
 				if (t_success)
 					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
 				unlockbitmap(t_bitmap);
@@ -1183,8 +1181,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				// MW-2010-11-25: [[ Bug 9195 ]] Make sure we have some image data to rotate, otherwise
 				//   odd things happen with the rect.
 				MCRectangle oldrect = rect;
-				if (m_rep != nil)
-					rotate(i1);
+				rotate_transform(i1);
 
 				angle = i1;
 
@@ -1283,11 +1280,23 @@ Boolean MCImage::maskrect(const MCRectangle &srect)
 		return True;
 
 	// MW-2007-09-11: [[ Bug 5177 ]] If the object is currently selected, make its mask the whole rectangle
-	MCImageBitmap *t_bitmap = nil;
-	if (!getstate(CS_SELECTED) && lockbitmap(t_bitmap))
+	MCImageFrame *t_frame = nil;
+	if (!getstate(CS_SELECTED) && m_rep != nil && m_rep->LockImageFrame(currentframe, true, t_frame))
 	{
-		uint32_t t_pixel = MCImageBitmapGetPixel(t_bitmap, srect.x - rect.x, srect.y - rect.y);
-		unlockbitmap(t_bitmap);
+		int32_t t_x = srect.x - rect.x;
+		int32_t t_y = srect.y - rect.y;
+		if (m_has_transform)
+		{
+			MCGAffineTransform t_inverted = MCGAffineTransformInvert(m_transform);
+			MCGPoint t_src_point = MCGPointApplyAffineTransform(MCGPointMake(t_x, t_y), t_inverted);
+			t_x = t_src_point.x;
+			t_y = t_src_point.y;
+		}
+		uint32_t t_pixel = 0;
+		if (t_x >= 0 && t_y >= 0 && t_x <t_frame->image->width && t_y < t_frame->image->height)
+			t_pixel = MCImageBitmapGetPixel(t_frame->image, t_x, t_y);
+
+		m_rep->UnlockImageFrame(currentframe, t_frame);
 		return (t_pixel >> 24) != 0;
 	}
 	else
@@ -1309,7 +1318,7 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 	bool t_mask, t_alpha;
 	MCImageBitmap *t_bitmap = nil;
 
-	/* UNCHECKED */ lockbitmap(t_bitmap);
+	/* UNCHECKED */ lockbitmap(t_bitmap, true);
 	t_mask = MCImageBitmapHasTransparency(t_bitmap, t_alpha);
 
 	// If the image has no mask, then it is a solid rectangle.
@@ -1858,7 +1867,7 @@ MCSharedString *MCImage::getclipboardtext(void)
 
 		MCImageBitmap *t_bitmap = nil;
 
-		t_success = lockbitmap(t_bitmap);
+		t_success = lockbitmap(t_bitmap, false);
 		if (t_success)
 			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
 		unlockbitmap(t_bitmap);
@@ -1889,26 +1898,11 @@ void MCImage::apply_transform()
 		m_rep->GetGeometry(t_width, t_height);
 
 	if (angle != 0)
-	{
-		rotate(angle);
-	}
+		rotate_transform(angle);
 	else if (rect.width != t_width || rect.height != t_height)
-	{
-		if (m_transformed == nil ||
-			m_transformed->GetWidth() != rect.width ||
-			m_transformed->GetHeight() != rect.height)
-		{
-			resize();
-		}
-	}
+		resize_transform();
 	else
-	{
-		if (m_transformed != nil)
-		{
-			m_transformed->Release();
-			m_transformed = nil;
-		}
-	}
+		m_has_transform = false;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1948,7 +1942,7 @@ bool MCImage::convert_to_mutable()
 	MCImageBitmap *t_bitmap = nil;
 	if (m_rep != nil)
 	{
-		t_success = lockbitmap(t_bitmap);
+		t_success = lockbitmap(t_bitmap, true);
 		if (t_success)
 			t_success = nil != (t_rep = new MCMutableImageRep(this, t_bitmap));
 		unlockbitmap(t_bitmap);
@@ -2004,7 +1998,7 @@ void MCImage::finishediting()
 	MCImageRep *t_rep = m_rep;
 	MCImageFrame *t_frame = nil;
 
-	t_success = t_rep->LockImageFrame(0, t_frame);
+	t_success = t_rep->LockImageFrame(0, false, t_frame);
 	if (t_success)
 		t_success = setbitmap(t_frame->image);
 	t_rep->UnlockImageFrame(0, t_frame);
@@ -2028,11 +2022,7 @@ void MCImage::setrep(MCImageRep *p_rep)
 
 	m_rep = t_rep;
 
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
+	m_has_transform = false;
 
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	setframe(currentframe);
@@ -2099,7 +2089,7 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 	return t_success;
 }
 
-bool MCImage::setbitmap(MCImageBitmap *p_bitmap)
+bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
 {
 	bool t_success = true;
 
@@ -2111,6 +2101,24 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap)
 		t_success = setcompressedbitmap(t_compressed);
 
 	MCImageFreeCompressedBitmap(t_compressed);
+
+	if (t_success)
+	{
+		if (p_update_geometry)
+		{
+	#ifdef FEATURE_DONT_RESIZE
+			if (!(flags & F_LOCK_LOCATION) && !(flags & F_PLAYER_DONT_RESIZE))
+	#else
+			if (!(flags & F_LOCK_LOCATION))
+	#endif
+			{
+				rect . width = p_bitmap->width;
+				rect . height = p_bitmap->height;
+			}
+		}
+
+		angle = 0;
+	}
 
 	return t_success;
 }
@@ -2157,25 +2165,74 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_update_transform)
+bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform)
 {
 	if (p_update_transform)
 		apply_transform();
 
-	if (m_transformed != nil)
-	{
-		if (!m_transformed->LockImageFrame(currentframe, m_locked_frame))
-			return false;
-		r_bitmap = m_locked_frame->image;
-		return true;
-	}
-
 	if (m_rep != nil)
 	{
-		if (!m_rep->LockImageFrame(currentframe, m_locked_frame))
+		if (!m_rep->LockImageFrame(currentframe, p_premultiplied || m_has_transform, m_locked_frame))
 			return false;
-		r_bitmap = m_locked_frame->image;
-		return true;
+
+		if (!m_has_transform)
+		{
+			r_bitmap = m_locked_frame->image;
+			return true;
+		}
+
+		// Create a copy of the bitmap rendered with the current transform
+		bool t_success = true;
+
+		MCGContextRef t_context = nil;
+		MCGRaster t_raster;
+
+		uint32_t t_trans_width = rect.width;
+		uint32_t t_trans_height = rect.height;
+
+		// while cropping
+		if ((state & CS_SIZE) && (state & CS_EDITED))
+		{
+			/* OVERHAUL - REVISIT: compute from transform? */
+			t_trans_width = m_current_width;
+			t_trans_height = m_current_height;
+		}
+
+		MCLog("locking transformed image: (%d,%d) -> (%d,%d)", m_locked_frame->image->width, m_locked_frame->image->height, t_trans_width, t_trans_height);
+
+		t_success = MCImageBitmapCreate(t_trans_width, t_trans_height, m_transformed_bitmap);
+		MCImageBitmapClear(m_transformed_bitmap);
+
+		if (t_success)
+			t_success = MCGContextCreateWithPixels(t_trans_width, t_trans_height, m_transformed_bitmap->stride, m_transformed_bitmap->data, true, t_context);
+
+		if (t_success)
+		{
+			t_raster.width = m_locked_frame->image->width;
+			t_raster.height = m_locked_frame->image->height;
+			t_raster.stride = m_locked_frame->image->stride;
+			t_raster.pixels = m_locked_frame->image->data;
+			t_raster.format = kMCGRasterFormat_ARGB;
+
+			MCGRectangle t_dst = MCGRectangleMake(0, 0, m_locked_frame->image->width, m_locked_frame->image->height);
+			MCGImageFilter t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+			MCGContextConcatCTM(t_context, m_transform);
+			MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
+		}
+
+		MCGContextRelease(t_context);
+
+		if (t_success)
+		{
+			MCImageBitmapCheckTransparency(m_transformed_bitmap);
+			if (!p_premultiplied)
+				MCImageBitmapUnpremultiply(m_transformed_bitmap);
+			r_bitmap = m_transformed_bitmap;
+			return true;
+		}
+
+		MCImageFreeBitmap(m_transformed_bitmap);
+		m_transformed_bitmap = nil;
 	}
 
 	return false;
@@ -2186,12 +2243,10 @@ void MCImage::unlockbitmap(MCImageBitmap *p_bitmap)
 	if (p_bitmap == nil || m_locked_frame == nil)
 		return;
 
-	if (m_transformed != nil)
-	{
-		m_transformed->UnlockImageFrame(currentframe, m_locked_frame);
-		m_locked_frame = nil;
-	}
-	else if (m_rep != nil)
+	MCImageFreeBitmap(m_transformed_bitmap);
+	m_transformed_bitmap = nil;
+
+	if (m_rep != nil)
 	{
 		m_rep->UnlockImageFrame(currentframe, m_locked_frame);
 		m_locked_frame = nil;
@@ -2238,6 +2293,14 @@ MCString MCImage::getrawdata()
 
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {
+	// while cropping
+	if ((state & CS_EDITED) && (state & CS_SIZE))
+	{
+		r_pixwidth = m_current_width;
+		r_pixheight = m_current_height;
+		return;
+	}
+
 	if (m_rep != nil && m_rep->GetGeometry(r_pixwidth, r_pixheight))
 		return;
 

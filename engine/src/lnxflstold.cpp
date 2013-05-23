@@ -165,7 +165,9 @@ public:
 	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style);
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
+#ifdef OLD_GRAPHICS
 	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
+#endif
 	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
 
 	virtual bool ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context);
@@ -704,6 +706,7 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 	return XTextWidth(f->fstruct, s, l);
 }
 
+#ifdef OLD_GRAPHICS
 void MCOldFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *of, Boolean image, bool p_unicode_override)
 {
 	MCOldFontStruct *f;
@@ -754,6 +757,7 @@ void MCOldFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char
 				  ctxt -> m_layers -> clip . width,
 				  f -> ascent + f -> descent ) ;
 }
+#endif
 
 void MCOldFontlist::ctxt_setfont(MCX11Context *ctxt, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
 {

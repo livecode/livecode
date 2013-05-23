@@ -559,6 +559,7 @@ MCPrinterResult MCPSPrinterDevice::Begin(const MCPrinterRectangle& p_src_rect, c
 
 MCPrinterResult MCPSPrinterDevice::End(MCContext *p_context)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	PSwrite("grestore\n");
 	
 	MCPSMetaContext *t_metacontext;
@@ -566,7 +567,8 @@ MCPrinterResult MCPSPrinterDevice::End(MCContext *p_context)
 	t_metacontext -> execute();
 	
 	MCscreen -> freecontext ( t_metacontext ) ;
-	
+#endif
+
 	return ( PRINTER_RESULT_SUCCESS ) ;
 }
 
@@ -1130,6 +1132,7 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 
 MCContext *MCPSMetaContext::begincomposite(const MCRectangle& p_region)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	uint4 t_scale = 4;
 	
 	MCContext *t_context;
@@ -1139,12 +1142,15 @@ MCContext *MCPSMetaContext::begincomposite(const MCRectangle& p_region)
 
 	t_context -> setprintmode();
 	return t_context;
-	
+#else
+	return nil;
+#endif
 }
 
 
 void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region )
 {
+#ifdef LIBGRAPHICS_BROKEN
 	// Get the t_context surface
 	// get the bytes
 	// Dump it to PS
@@ -1175,6 +1181,7 @@ void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_regi
 
 	MCscreen -> freecontext(t_context);
 	delete p_context;
+#endif
 }
 
 
@@ -1523,6 +1530,7 @@ void MCPSMetaContext::fillpattern ( Pixmap p_pattern, MCPoint p_origin )
 		
 void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 {
+#ifdef LIBGRAPHICS_BROKEN
 	uint2 t_w, t_h, t_d ;
 	MCscreen -> getpixmapgeometry ( p_pattern, t_w, t_h, t_d ) ;
 	
@@ -1547,7 +1555,7 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 	
 	f_pattern_count ++ ;
 	f_pattern_pixmaps [ f_pattern_count ] = p_pattern ; // Mark this pattern as being created already
-		
+#endif
 }
 
 

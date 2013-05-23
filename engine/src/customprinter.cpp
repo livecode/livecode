@@ -44,11 +44,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void surface_merge_with_alpha_non_pre(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-
-////////////////////////////////////////////////////////////////////////////////
-
 static bool MCCustomPrinterBlendModeFromInk(uint1 p_function, MCCustomPrinterBlendMode& r_mode)
 {
 	switch(p_function)
@@ -225,6 +220,7 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_IMAGE:
 		{
+#ifdef LIBGRAPHICS_BROKEN
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
@@ -242,6 +238,9 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 				t_image . type = kMCCustomPrinterImageRawMRGB;
 
 			return m_device -> CanRenderImage(t_image);
+#else
+			return false;
+#endif
 		}
 		break;
 	case MARK_TYPE_METAFILE:
@@ -411,6 +410,7 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 
 void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	// See if we can render the image using the original text
 	MCCustomPrinterImageType t_image_type;
 	t_image_type = kMCCustomPrinterImageNone;
@@ -492,7 +492,7 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 		if (!m_device -> DrawImage(t_image, t_transform, t_clip))
 			m_execute_error = true;
 	}
-
+#endif
 }
 
 void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
@@ -505,6 +505,7 @@ void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
 
 MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	// TODO: Make the rasterization scale depend in some way on current scaling,
 	//   after all there's no point in making a large rasterized bitmap if it ends
 	//   up being printed really really small!
@@ -534,6 +535,9 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	m_composite_scale = t_scale;
 	
 	return t_context;
+#else
+	return nil;
+#endif
 }
 
 static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height)
@@ -574,6 +578,7 @@ static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_strid
 
 void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	// Get the underlying context
 	MCContext *t_context;
 	t_context = static_cast<MCContextScaleWrapper *>(p_context) -> getcontext();
@@ -641,6 +646,7 @@ void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_
 	
 	// Delete the context scale wrapper
 	delete p_context;
+#endif
 }
 
 void MCCustomMetaContext::dopathmark(MCMark *p_mark, MCPath *p_path)
@@ -715,9 +721,11 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		MCCustomPrinterPaint t_paint;
 		t_paint . type = kMCCustomPrinterPaintNone;
 
+#ifdef LIBGRAPHICS_BROKEN
 		// This is a temporary bitmap containing the data for the pattern.
 		MCBitmap *t_paint_bitmap;
 		t_paint_bitmap = nil;
+#endif
 
 		// This is a temporary array containing the gradient stops (if any).
 		MCCustomPrinterGradientStop *t_paint_stops;
@@ -770,6 +778,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		}
 		else if (p_mark -> fill -> style == FillTiled)
 		{
+#ifdef LIBGRAPHICS_BROKEN
 			// Fetch the size of the tile, and its data.
 			uint2 t_tile_width, t_tile_height, t_tile_depth;
 			MCscreen -> getpixmapgeometry(p_mark -> fill -> pattern, t_tile_width, t_tile_height, t_tile_depth);
@@ -794,6 +803,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 			}
 			else
 				m_execute_error = true;
+#endif
 		}
 
 		if (!m_execute_error)
@@ -874,8 +884,10 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 
 		if (t_paint_stops != nil)
 			delete[] t_paint_stops;
+#ifdef LIBGRAPHICS_BROKEN
 		if (t_paint_bitmap != nil)
 			MCscreen -> destroyimage(t_paint_bitmap);
+#endif
 	}
 	else
 		m_execute_error = true;

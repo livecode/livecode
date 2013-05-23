@@ -59,7 +59,7 @@ static MCCursorRef create_hidden_cursor(void)
 	uint32_t t_img_data;
 	t_img_data = 0;
 	
-	MCImageBuffer t_image;
+	MCImageBitmap t_image;
 	t_image . width = 1;
 	t_image . height = 1;
 	t_image . stride = 4;
@@ -95,7 +95,7 @@ static ThemeCursor theme_cursorlist[PI_NCURSORS] =
 	kThemeArrowCursor, kThemeCrossCursor, kThemeWatchCursor, kThemeArrowCursor   
 };
 
-static CGImageRef CreateCGImageFromImageBuffer(const struct MCImageBuffer *p_buffer)
+static CGImageRef CreateCGImageFromImageBitmap(const struct MCImageBitmap *p_buffer)
 {
 	CGImageRef t_image = NULL;
 	
@@ -178,10 +178,10 @@ void MCScreenDC::resetcursors(void)
 	}
 }
 
-MCCursorRef MCScreenDC::createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
+MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
 {
 	CGImageRef t_cg_image;
-	t_cg_image = CreateCGImageFromImageBuffer(p_image);
+	t_cg_image = CreateCGImageFromImageBitmap(p_image);
 	
 	// Convert the CGImage into an NSIMage
 	NSImage *t_cursor_image;
@@ -192,8 +192,8 @@ MCCursorRef MCScreenDC::createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, i
 	
 	// MW-2010-10-12: [[ Bug 8994 ]] If the hotspot is outwith the cursor rect, we get a
 	//   duff cursor.
-	p_hotspot_x = MCU_max(0, MCU_min(p_image -> width - 1, p_hotspot_x));
-	p_hotspot_y = MCU_max(0, MCU_min(p_image -> height - 1, p_hotspot_y));
+	p_hotspot_x = MCU_max(0, MCU_min((int32_t)p_image -> width - 1, p_hotspot_x));
+	p_hotspot_y = MCU_max(0, MCU_min((int32_t)p_image -> height - 1, p_hotspot_y));
 	
 	NSCursor *t_nscursor = nil;
 	

@@ -446,7 +446,8 @@ MCStack::~MCStack()
 	MCTileCacheDestroy(m_tilecache);
 	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
@@ -593,7 +594,8 @@ void MCStack::close()
 		opened--;
 
 	// MW-2011-09-13: [[ Effects ]] Free any snapshot that we have.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
 }

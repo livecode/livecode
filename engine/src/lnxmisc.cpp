@@ -35,12 +35,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  REFACTORED FROM WIDGET.CPP
-//
-
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  REFACTORED FROM STACKLST.CPP
 //
 
@@ -98,6 +92,7 @@ void MCLinuxWindowSetTransientFor(Window p_window, Window p_transient_for)
 
 void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	MCRectangle t_bounds = p_parameters->crect;
 	MCContext *t_context = MCscreen->creatememorycontext(t_bounds.width, t_bounds.height, true, true);
 	t_context->setorigin(t_bounds.x, t_bounds.y);
@@ -120,6 +115,7 @@ void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p
 
 	MCscreen->destroyimage(t_dstimg);
 	MCscreen->freecontext(t_context);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -259,10 +255,12 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_inpu
 //  MISC 
 //
 
+#ifdef OLD_GRAPHICS
 void MCLinuxApplyPatternToFillImage(MCContext *ctxt, const MCRectangle& rect)
 {
 	((MCX11Context *)ctxt) -> fillrect_with_native_function(rect, GXand);
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 //

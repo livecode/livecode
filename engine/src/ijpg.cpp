@@ -155,7 +155,6 @@ bool MCImageValidateJpeg(const void *p_data, uint32_t p_length, uint16_t& r_widt
 
 static boolean read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned int *icc_data_len);
 static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t* r_orientation);
-static void apply_exif_orientation(uint32_t orientation, MCBitmap *bitmap);
 
 ////DECODING
 

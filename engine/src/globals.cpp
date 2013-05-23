@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "dispatch.h"
 #include "hndlrlst.h"
-#include "pxmaplst.h"
 #include "cardlst.h"
 
 #include "stack.h"
@@ -181,12 +180,12 @@ char *MCpencolorname;
 MCColor MCbrushcolor;
 char *MCbrushcolorname;
 uint4 MCpenpmid = PI_PATTERNS;
-Pixmap MCpenpm;
+MCGImageRef MCpenpattern;
 uint4 MCbrushpmid = PI_PATTERNS;
-Pixmap MCbrushpm;
+MCGImageRef MCbrushpattern;
 uint4 MCbackdroppmid;
-Pixmap MCbackdroppm;
-MCPixmaplist *MCpatterns;
+MCGImageRef MCbackdroppattern;
+MCImageList *MCpatternlist;
 MCColor MCaccentcolor;
 char *MCaccentcolorname;
 MCColor MChilitecolor = { 0, 0, 0, 0x8080, 0, 0 };
@@ -373,9 +372,6 @@ Boolean MCantialiasedtextworkaround = False;
 
 // MW-2012-03-08: [[ StackFile5500 ]] Make stackfile version 5.5 the default.
 uint4 MCstackfileversion = 5500;
-
-uint1 MCleftmasks[8] = {0xFF, 0x7F, 0x3f, 0x1F, 0x0F, 0x07, 0x03, 0x01};
-uint1 MCrightmasks[8] = {0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
 
 #if defined(_WINDOWS)
 uint2 MClook = LF_WIN95;
@@ -567,12 +563,12 @@ void X_clear_globals(void)
 	memset(&MCbrushcolor, 0, sizeof(MCColor));
 	MCbrushcolorname = nil;
 	MCpenpmid = PI_PATTERNS;
-	MCpenpm = nil;
+	MCpenpattern = nil;
 	MCbrushpmid = PI_PATTERNS;
-	MCbrushpm = nil;
+	MCbrushpattern = nil;
 	MCbackdroppmid = 0;
-	MCbackdroppm = nil;
-	MCpatterns = nil;
+	MCbackdroppattern = nil;
+	MCpatternlist = nil;
 	memset(&MCaccentcolor, 0, sizeof(MCColor));
 	MCaccentcolorname = nil;
 	memset(&MChilitecolor, 0, sizeof(MCColor));
@@ -663,6 +659,7 @@ void X_clear_globals(void)
 	MCtemplatescrollbar = nil;
 	MCtemplateplayer = nil;
 	MCtemplateimage = nil;
+	MCtemplatefield = nil;
 	MCmagimage = nil;
 	MCmagnifier = nil;
 	MCdragsource = nil;
@@ -850,7 +847,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	////
 
-	MCpatterns = new MCPixmaplist;
+	MCpatternlist = new MCImageList();
 
 	/* UNCHECKED */ MCVariable::ensureglobal(MCN_msg, MCmb);
 	MCmb -> setmsg();
@@ -1070,7 +1067,7 @@ int X_close(void)
 	delete IO_stdin;
 	delete IO_stdout;
 	delete IO_stderr;
-	delete MCpatterns;
+	delete MCpatternlist;
 	delete MCresult;
 	delete MCurlresult;
 	delete MCdialogdata;

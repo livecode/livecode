@@ -102,8 +102,10 @@ bool MCRegionUnion(MCRegionRef p_dst, MCRegionRef p_left, MCRegionRef p_right)
 	return true;
 }
 
+#ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_height, MCBitmap*& r_mask)
 {
 	r_mask = ((MCScreenDC *)MCscreen) -> regiontomask(p_region, p_width, p_height);
 	return true;
 }
+#endif

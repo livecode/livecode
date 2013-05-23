@@ -73,6 +73,7 @@ extern void MCMacEnableScreenUpdates(void);
 
 void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	// Get the list of effects.
 	MCEffectList *t_effects = MCcur_effects;
 	MCcur_effects = NULL;
@@ -490,6 +491,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	
 	// Finally, mark the affected area of the stack for a redraw.
 	dirtyrect(p_area);
+#endif
 }
 
 Boolean barneffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
@@ -575,6 +577,7 @@ Boolean dissolveeffect_step(const MCRectangle &drect, Drawable p_target, Drawabl
 	void *t_end_ptr;
 	uint4 t_end_stride;
 	
+#ifdef LIBGRAPHICS_BROKEN
 #ifndef TARGET_PLATFORM_LINUX
 	MCscreen -> lockpixmap(p_start, t_result_ptr, t_result_stride);
 	MCscreen -> lockpixmap(p_end, t_end_ptr, t_end_stride);
@@ -632,6 +635,7 @@ Boolean dissolveeffect_step(const MCRectangle &drect, Drawable p_target, Drawabl
 #ifndef TARGET_PLATFORM_LINUX
 	MCscreen -> unlockpixmap(p_end, t_end_ptr, t_end_stride);
 	MCscreen -> unlockpixmap(p_start, t_result_ptr, t_result_stride);
+#endif
 #endif
 	
 	return done;
@@ -829,6 +833,7 @@ Boolean shrinkeffect_step(const MCRectangle &drect, Drawable p_target, Drawable 
 	static uint2 oldheight;
 
 	Boolean done = False;
+#ifdef LIBGRAPHICS_BROKEN
 	if (delta == 0)
 	{
 		result = MCscreen->createpixmap(drect.width, drect.height, 32, False);
@@ -909,6 +914,7 @@ Boolean shrinkeffect_step(const MCRectangle &drect, Drawable p_target, Drawable 
 	}
 	if (delta == duration)
 		MCscreen->freepixmap(result);
+#endif
 	return done;
 }
 
@@ -918,6 +924,7 @@ Boolean stretcheffect_step(const MCRectangle &drect, Drawable p_target, Drawable
 	static uint2 oldheight;
 
 	Boolean done = False;
+#ifdef LIBGRAPHICS_BROKEN
 	if (delta == 0)
 	{
 		result = MCscreen->createpixmap(drect.width, drect.height, 32, False);
@@ -985,6 +992,7 @@ Boolean stretcheffect_step(const MCRectangle &drect, Drawable p_target, Drawable
 	
 	if (delta == duration)
 		MCscreen->freepixmap(result);
+#endif
 		
 	return done;
 }

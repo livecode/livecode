@@ -1380,67 +1380,6 @@ void MCScreenDC::copybits(Drawable s, Drawable d, int2 sx, int2 sy,
 		UnlockPixels(dpm);
 }
 
-
-
-Pixmap MCScreenDC::getbackpm(Window_mode m, Boolean active)
-{
-	static _Drawable bpm;
-	static ThemeBrush oldtb;
-	ThemeBrush tb;
-	switch (m)
-	{
-	case WM_TOP_LEVEL:
-	case WM_TOP_LEVEL_LOCKED:
-		tb = kThemeBrushDocumentWindowBackground;
-		break;
-	case WM_MODELESS:
-		tb = kThemeBrushModelessDialogBackgroundActive;
-		break;
-	case WM_MODAL:
-	case WM_SHEET:
-		tb = kThemeBrushDialogBackgroundActive;
-		break;
-	case WM_PALETTE:
-		tb = kThemeBrushUtilityWindowBackgroundActive;
-		break;
-
-
-	case WM_DRAWER:
-		tb = kThemeBrushDrawerBackground;
-		break;
-
-
-	default:
-		tb = kThemeBrushDialogBackgroundActive;
-		break;
-	}
-	if (!active && tb != kThemeBrushDocumentWindowBackground)
-		tb++;
-	if (tb == oldtb)
-		return &bpm;
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	Rect r;
-	SetRect(&r, 0, 0, 64, 64);
-	if (bgw == NULL)
-	{
-		NewGWorld(&bgw, 32, &r, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
-		bpm.type = DC_BITMAP;
-		bpm.handle.pixmap = (MCSysBitmapHandle)bgw;
-	}
-	SetGWorld(bgw, NULL);
-	PixMapHandle pm = GetGWorldPixMap(bgw);
-	LockPixels(pm);
-
-	SetThemeBackground(tb, getdepth(), True);
-	EraseRect(&r);
-	UnlockPixels(pm);
-	SetGWorld(oldport, olddevice);
-	oldtb = tb;
-	return &bpm;
-}
-
 /**************************************************************************
     * Following functions create and handle menus.  These menus are MC       *
     * stack-based menus i.e. menus attached to a stack.  In Buttom.cpp file  *

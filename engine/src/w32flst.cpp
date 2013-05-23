@@ -229,6 +229,7 @@ MCFontnode::MCFontnode(const MCString &fname, uint2 &size,
 	TEXTMETRICA tm;
 	GetTextMetricsA(hdc, &tm);
 	font->fid = (MCSysFontHandle)newfont;
+	font->size = size;
 	font->ascent = MulDiv(tm.tmAscent, 15, 16);
 	font->descent = tm.tmDescent;
 	font->printer = printer;

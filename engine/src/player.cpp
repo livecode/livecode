@@ -5036,6 +5036,7 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 #elif defined(TARGET_PLATFORM_WINDOWS)
 	if (qteffect != 0)
 	{
+#ifdef LIBGRAPHICS_BROKEN
 		MCscreen -> lockpixmap(p_start, s_qt_start_ptr, s_qt_start_stride);
 		QTNewGWorldFromPtr(&s_qt_start_port, k32BGRAPixelFormat, &t_src_rect, NULL, NULL, 0, s_qt_start_ptr, s_qt_start_stride);
 		s_qt_start_pixmap = GetGWorldPixMap(s_qt_start_port);
@@ -5063,6 +5064,7 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 			s_qt_target_stride = 0;
 		}
 		s_qt_target_drawable = p_target;
+#endif
 	}
 #endif
 
@@ -5189,7 +5191,9 @@ void MCQTEffectEnd(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		UnlockPixels(s_qt_target_pixmap);
 #elif defined(TARGET_PLATFORM_WINDOWS)
+#ifdef LIBGRAPHICS_BROKEN
 		MCscreen -> unlockpixmap(s_qt_target_drawable, s_qt_target_ptr, s_qt_target_stride);
+#endif
 #endif
 		s_qt_target_pixmap = NULL;
 		s_qt_target_port = NULL;
@@ -5209,7 +5213,9 @@ void MCQTEffectEnd(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		UnlockPixels(s_qt_end_pixmap);
 #elif defined(TARGET_PLATFORM_WINDOWS)
+#ifdef LIBGRAPHICS_BROKEN
 		MCscreen -> unlockpixmap(s_qt_end_drawable, s_qt_end_ptr, s_qt_end_stride);
+#endif
 #endif
 		s_qt_end_pixmap = NULL;
 		s_qt_end_port = NULL;
@@ -5222,7 +5228,9 @@ void MCQTEffectEnd(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		UnlockPixels(s_qt_start_pixmap);
 #elif defined(TARGET_PLATFORM_WINDOWS)
+#ifdef LIBGRAPHICS_BROKEN
 		MCscreen -> unlockpixmap(s_qt_start_drawable, s_qt_start_ptr, s_qt_start_stride);
+#endif
 #endif
 		s_qt_start_pixmap = NULL;
 		s_qt_start_port = NULL;

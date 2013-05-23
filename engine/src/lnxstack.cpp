@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 #include "lnxcontext.h"
+#include "graphicscontext.h"
 
 static uint2 calldepth;
 static uint2 nwait;
@@ -642,6 +643,8 @@ class MCLinuxStackSurface: public MCStackSurface
 	MCRectangle m_locked_area;
 	MCContext *m_locked_context;
 	MCBitmap *m_locked_bitmap;
+	void *m_locked_bits;
+	uint32_t m_locked_stride;
 
 public:
 	MCLinuxStackSurface(MCStack *p_stack, MCRegionRef p_region)
@@ -655,19 +658,23 @@ public:
 
 	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
 	{
-		m_locked_area = MCRegionGetBoundingBox(p_area);
-
-		MCWindowShape *t_mask;
-		t_mask = m_stack -> getwindowshape();
-		m_locked_context = MCscreen -> creatememorycontext(m_locked_area . width, m_locked_area . height, t_mask != nil && !t_mask -> is_sharp, False);
-		if (m_locked_context != nil)
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
 		{
-			m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
-			m_locked_context -> setclip(m_locked_area);
-			r_context = m_locked_context;
-			return true;
+			m_locked_context = new MCGraphicsContext(t_raster.width, t_raster.height, t_raster.stride, t_raster.pixels, true);
+			if (m_locked_context != nil)
+			{
+				m_locked_context->setorigin(m_locked_area.x, m_locked_area.y);
+				m_locked_context->setclip(m_locked_area);
+				
+				r_context = m_locked_context;
+				
+				return true;
+			}
+			
+			UnlockPixels(false);
 		}
-
+		
 		return false;
 	}
 
@@ -676,34 +683,52 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		MCWindowShape *t_mask;
-		t_mask = m_stack -> getwindowshape();
-		if (t_mask != nil && !t_mask -> is_sharp)
-			m_locked_context -> applywindowshape(t_mask, m_locked_area . width, m_locked_area . height);
-		
-		MCscreen -> copyarea(((MCX11Context *)m_locked_context) -> get_surface(), m_stack -> getwindow(), 0, 0, 0, m_locked_area . width, m_locked_area . height, m_locked_area . x, m_locked_area . y, GXcopy);
-		
-		MCscreen -> freecontext(m_locked_context);
+		delete m_locked_context;
 		m_locked_context = nil;
+		
+		UnlockPixels(true);
 	}
 
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
-		MCContext *t_context;
-		if (!LockGraphics(p_area, t_context))
+		MCRectangle t_actual_area;
+		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), MCRegionGetBoundingBox(m_region));
+		if (MCU_empty_rect(t_actual_area))
 			return false;
-
-		m_locked_bitmap = ((MCX11Context *)t_context) -> lock_bits(r_bits, r_stride);
-
+		
+		m_locked_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_actual_area.width, t_actual_area.height, False, 0x0, False, False);
+		if (m_locked_bitmap == nil)
+			return false;
+		
+		m_locked_area = t_actual_area;
+		m_locked_bits = m_locked_bitmap->data;
+		m_locked_stride = m_locked_bitmap->bytes_per_line;
+		
+		r_raster . format = kMCGRasterFormat_ARGB;
+		r_raster . width = t_actual_area . width;
+		r_raster . height = t_actual_area . height;
+		r_raster . stride = m_locked_stride;
+		r_raster . pixels = m_locked_bits;
+		
 		return true;
 	}
 
 	void UnlockPixels(void)
 	{
-		((MCX11Context *)m_locked_context) -> unlock_bits(m_locked_bitmap);
+		UnlockPixels(true);
+	}
+	
+	void UnlockPixels(bool p_update)
+	{
+		if (m_locked_bitmap == nil)
+			return;
+		
+		if (p_update)
+			((MCScreenDC*)MCscreen)->putimage(m_stack->getwindow(), m_locked_bitmap, 0, 0, m_locked_area.x, m_locked_area.y, m_locked_area.width, m_locked_area.height);
+		
+		((MCScreenDC*)MCscreen)->destroyimage(m_locked_bitmap);
 		m_locked_bitmap = nil;
-
-		UnlockGraphics();
+		m_locked_bits = nil;
 	}
 
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)

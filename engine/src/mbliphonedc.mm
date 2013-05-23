@@ -282,11 +282,6 @@ MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_t
 	return new MCIPhoneContext(t_bitmap, nil, true, p_alpha);
 }
 
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return new MCIPhoneContext(MCMobileBitmapCreate(p_width, p_height, false), nil, false, p_alpha);
-}
-
 void MCScreenDC::freecontext(MCContext *p_context)
 {
 	delete p_context;
@@ -395,6 +390,7 @@ struct MCScreenDCDoSnapshotEnv
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
 static void MCScreenDCDoSnapshot(void *p_env)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	MCScreenDCDoSnapshotEnv *env;
 	env = (MCScreenDCDoSnapshotEnv *)p_env;
 	
@@ -556,6 +552,9 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	}
 	
 	env -> result = t_bitmap;
+#else
+	env -> result = nil;
+#endif
 }
 
 MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)

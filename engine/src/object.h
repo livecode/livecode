@@ -174,8 +174,8 @@ protected:
 	MCRectangle rect;
 	MCColor *colors;
 	char **colornames;
-	uint4 *pixmapids;
-	Pixmap *pixmaps;
+	uint4 *patternids;
+	MCGImageRef *patterns;
 	char *script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
@@ -183,7 +183,7 @@ protected:
 	uint2 fontheight;
 	uint2 dflags;
 	uint2 ncolors;
-	uint2 npixmaps;
+	uint2 npatterns;
 	uint2 altid;
 	uint1 hashandlers;
 	uint1 scriptdepth;
@@ -234,7 +234,6 @@ protected:
 	static uint1 menudepth;
 	static MCStack *attachedmenu;
 	static MCColor maccolors[MAC_NCOLORS];
-	static Pixmap pattern;
 
 	// MW-2012-02-17: [[ LogFonts ]] We store the last loaded font index for
 	//   the object being serialized. This is because the fonttable comes
@@ -474,7 +473,7 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     Pixmap &pix, int2 &x, int2 &y, MCDC *dc, MCObject *o);
+	                     MCGImageRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
@@ -570,7 +569,7 @@ public:
 	//   type.
 	Exec_stat handleparent(Handler_type type, MCNameRef message, MCParameter* parameters);
 
-	MCBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
+	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
 
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.

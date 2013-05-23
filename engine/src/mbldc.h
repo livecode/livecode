@@ -103,22 +103,14 @@ public:
 
 	MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
 	MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
 	void freecontext(MCContext *p_context);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
 	void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel);
-	MCBitmap *createimage(uint2 depth, uint2 width, uint2 height, Boolean set, uint1 value, Boolean shm, Boolean forceZ);
 
-	void destroyimage(MCBitmap *image);
-	MCBitmap *copyimage(MCBitmap *source, Boolean invert);
-	void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int2 dx, int2 dy, uint2 w, uint2 h);
-	MCBitmap *getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h, Boolean shm = False);
-	void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
-
-	MCCursorRef createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
+	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
 	void freecursor(MCCursorRef c);
 
 	uint4 dtouint4(Drawable d);
@@ -135,7 +127,7 @@ public:
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
-	void configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge);
+	void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
 	void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	void hidemenu();

@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mctheme.h"
 
+#include "graphicscontext.h"
+
 MCScreenDC::MCScreenDC()
 {
 	f_src_dc = NULL;
@@ -124,6 +126,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
+#ifdef OLD_GRAPHICS
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 {
 	MCGDIContext *t_context;
@@ -139,20 +142,22 @@ MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_t
 	if (p_drawable -> type == DC_WINDOW)
 		t_context = MCGDIContext::create_with_window((HWND)p_drawable -> handle . window);
 	else
-		t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, p_transient);
+	{
+		//t_context = MCGDIContext::create_with_bitmap((HBITMAP)p_drawable -> handle . pixmap, p_transient);
+		BITMAP t_info;
+
+		GetObjectA((HBITMAP)p_drawable -> handle . pixmap, sizeof(BITMAP), &t_info);
+		t_context = new MCGraphicsContext(t_info.bmWidth, t_info.bmHeight, t_info.bmWidthBytes, t_info.bmBits, p_alpha);
+	}
 
 	return t_context;
-}
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return MCGDIContext::create_with_parameters(p_width, p_height, p_alpha, p_transient);
 }
 
 void MCScreenDC::freecontext(MCContext *p_context)
 {
 	delete p_context;
 }
+#endif
 
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
 {

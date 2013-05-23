@@ -296,11 +296,6 @@ MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_t
 	return new MCAndroidContext(t_bitmap -> width, t_bitmap -> height, t_bitmap -> stride, t_bitmap -> data, p_alpha);
 }
 
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{
-	return new MCAndroidContext(p_width, p_height, p_alpha);
-}
-
 void MCScreenDC::freecontext(MCContext *p_context)
 {
 	delete p_context;
@@ -340,7 +335,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
 {
 	return NULL;
 }

@@ -358,10 +358,3 @@ void MCImage::set_gif(uint1 *data, uint4 length)
 	flags |= F_GIF;
 	obj_id = 1;
 }
-
-#if !defined(_DESKTOP)
-MCRegionRef MCImage::makewindowregion(void)
-{
-	return NULL;
-}
-#endif

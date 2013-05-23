@@ -1490,3 +1490,12 @@ MCTheme *MCThemeCreateNative(void)
 	return new MCNativeTheme;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
+{
+	// OVERHAUL - REVISIT: unimplemented
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////

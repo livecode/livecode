@@ -763,8 +763,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 						}
 					}
 				}
-				else
-					MCdispatcher->property(pevent->window, pevent->atom);
 			handled = True;
 			break;
 		case ConfigureNotify:

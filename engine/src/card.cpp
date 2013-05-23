@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objptr.h"
 #include "sellst.h"
 #include "stacklst.h"
-#include "pxmaplst.h"
 #include "undolst.h"
 #include "group.h"
 #include "button.h"

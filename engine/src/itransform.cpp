@@ -33,14 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __forceinline inline
 #endif
 
-extern void surface_unmerge(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-extern void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);
-extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_unmerge_pre(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
-extern void surface_unmerge_pre_checking(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);extern void surface_merge_with_alpha_non_pre(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-
 // ---------------
 // Resizing 32-32
 // ---------------
@@ -253,86 +245,6 @@ static void resize_seq_32_32(	const uint1* const src_data, const int src_n, cons
 #define BLUE_OFFSET 0
 
 // Sizing
-void resize_bicubic_32_32(const MCBitmap& src, const MCBitmap& dst)
-{
-	int i;
-
-	// Temporary resizes rows data
-	const int tmp_bytes_per_line = dst.width << 2;
-
-	uint1* const tmp_data = new uint1[tmp_bytes_per_line * src.height];
-
-	// Clearing temp and destination data
-	memset(tmp_data, 0, tmp_bytes_per_line * src.height);
-	memset(dst.data, 0, dst.bytes_per_line * dst.height);
-
-	// Temporary derivative arrays
-	real8* aa;
-	real8* bb;
-
-	if(src.width > src.height)
-		aa = new real8[src.width], bb = new real8[src.width];
-	else
-		aa = new real8[src.height], bb = new real8[src.height];
-
-	// resizing rows
-	for(i=0 ; i<src.height ; i++)
-	{
-		// R
-		resize_seq_32_32(	(const uint1*)src.data + i * src.bytes_per_line, src.width, 4,
-		                  (uint1*)tmp_data + i * tmp_bytes_per_line, dst.width, 4,
-		                  RED_OFFSET,
-		                  aa, bb);
-
-		// G
-		resize_seq_32_32(	(const uint1*)src.data + i * src.bytes_per_line, src.width, 4,
-		                  (uint1*)tmp_data + i * tmp_bytes_per_line, dst.width, 4,
-		                  GREEN_OFFSET,
-		                  aa, bb);
-
-		// B
-		resize_seq_32_32(	(const uint1*)src.data + i * src.bytes_per_line, src.width, 4,
-		                  (uint1*)tmp_data + i * tmp_bytes_per_line, dst.width, 4,
-		                  BLUE_OFFSET,
-		                  aa, bb);
-	}
-
-	// resizing cols
-	for(i=0 ; i<dst.width ; i++)
-	{
-		// R
-		resize_seq_32_32(	(const uint1*)tmp_data + (i << 2), src.height, tmp_bytes_per_line,
-		                  (uint1*)dst.data + (i << 2), dst.height, dst.bytes_per_line,
-		                  RED_OFFSET,
-		                  aa, bb);
-
-		// G
-		resize_seq_32_32(	(const uint1*)tmp_data + (i << 2), src.height, tmp_bytes_per_line,
-		                  (uint1*)dst.data + (i << 2), dst.height, dst.bytes_per_line,
-		                  GREEN_OFFSET,
-		                  aa, bb);
-
-		// B
-		resize_seq_32_32(	(const uint1*)tmp_data + (i << 2), src.height, tmp_bytes_per_line,
-		                  (uint1*)dst.data + (i << 2), dst.height, dst.bytes_per_line,
-		                  BLUE_OFFSET,
-		                  aa, bb);
-	}
-	
-	for(uint2 y = 0; y < dst.height; ++y)
-	{
-		uint1 *t_alpha;
-		t_alpha = (uint1 *)dst . data + y * dst . bytes_per_line;
-// **** ENDIAN ISSUE
-		t_alpha += ALPHA_OFFSET;
-		for(uint2 x = 0; x < dst . width; ++x, t_alpha += 4)
-			*t_alpha = 255;
-	}
-	
-	delete[] bb;
-	delete[] aa;
-	delete[] tmp_data;
-}
 
 static void scaleimage_nearest(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, uint4 p_dst_stride, uint4 p_src_width, uint4 p_src_height, uint4 p_dst_width, uint4 p_dst_height)
 {
@@ -651,14 +563,4 @@ bool MCImageScaleBitmap(MCImageBitmap *p_src_bitmap, uindex_t p_width, uindex_t 
 		scaleimage_bicubic(t_src_ptr, t_src_stride, t_dst_ptr, t_dst_stride, owidth, oheight, p_width, p_height);
 
 	return true;
-}
-
-MCBitmap *MCImageResizeBilinear(MCBitmap *p_src, int32_t p_new_width, int32_t p_new_height)
-{
-	MCBitmap *t_dst;
-	t_dst = MCscreen -> createimage(p_src -> depth, p_new_width, p_new_height, True, 0, False, True);
-	
-	scaleimage_bilinear(p_src -> data, p_src -> bytes_per_line, t_dst -> data, t_dst -> bytes_per_line, p_src -> width, p_src -> height, t_dst -> width, t_dst -> height);
-	
-	return t_dst;
 }

@@ -61,6 +61,18 @@ MCMetaContext::~MCMetaContext(void)
 {
 	while(f_state_stack != NULL)
 		end();
+
+	while (f_fill_foreground != nil)
+	{
+		MCGImageRelease(f_fill_foreground -> pattern);
+		f_fill_foreground = f_fill_foreground -> previous;
+	}
+
+	while (f_fill_background != nil)
+	{
+		MCGImageRelease(f_fill_background -> pattern);
+		f_fill_background = f_fill_background -> previous;
+	}
 }
 
 
@@ -247,7 +259,7 @@ void MCMetaContext::setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes)
 	}
 }
 
-void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
+void MCMetaContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
 {
 	if (f_fill_foreground == NULL || style != f_fill_foreground -> style || p != f_fill_foreground -> pattern || x != f_fill_foreground -> origin . x || y != f_fill_foreground -> origin . y)
 	{
@@ -258,7 +270,8 @@ void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
 			if (style != FillTiled || p != NULL)
 			{
 				f_fill_foreground -> style = style;
-				f_fill_foreground -> pattern = p;
+				MCGImageRelease(f_fill_foreground -> pattern);
+				f_fill_foreground -> pattern = MCGImageRetain(p);
 				f_fill_foreground -> origin . x = x;
 				f_fill_foreground -> origin . y = y;
 			}
@@ -273,7 +286,7 @@ void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
 	}
 }
 
-void MCMetaContext::getfillstyle(uint2& style, Pixmap& p, int2& x, int2& y)
+void MCMetaContext::getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y)
 {
 	if (f_fill_foreground != NULL)
 	{
@@ -554,6 +567,7 @@ void MCMetaContext::drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_info)
 /* OVERHAUL - REVISIT - change source parameter */
 void MCMetaContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	MCImageDescriptor t_image;
 	memset(&t_image, 0, sizeof(MCImageDescriptor));
 	
@@ -573,8 +587,10 @@ void MCMetaContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx,
 	MCImageFreeBitmap(t_bitmap);
 	if (t_old_bitmap != nil)
 		MCscreen -> destroyimage(t_old_bitmap);
+#endif
 }
 
+#ifdef OLD_GRAPHICS
 void MCMetaContext::combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh)
 {
 }
@@ -589,6 +605,7 @@ void MCMetaContext::unlock(MCBitmap *)
 {
 	assert(false);
 }
+#endif
 
 void MCMetaContext::clear(const MCRectangle *rect)
 {
@@ -685,6 +702,7 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 		if (p_mark -> fill != NULL)
 		{
 			p_context -> setforeground(p_mark -> fill -> colour);
+
 			p_context -> setfillstyle(p_mark -> fill -> style, p_mark -> fill -> pattern, p_mark -> fill -> origin . x, p_mark -> fill -> origin . y);
 
 			p_context->setgradient(p_mark->fill->gradient);	
@@ -832,15 +850,18 @@ void MCMetaContext::new_fill_foreground(void)
 {
 	if (f_fill_foreground_used || f_fill_foreground == NULL)
 	{
-		f_fill_foreground = f_heap . allocate<MCMarkFill>();
-		if (f_fill_foreground != NULL)
+		MCMarkFill *t_new_fill = f_heap . allocate<MCMarkFill>();
+		if (t_new_fill != NULL)
 		{
-			f_fill_foreground -> style = FillSolid;
-			f_fill_foreground -> colour = getblack();
-			f_fill_foreground -> pattern = NULL;
-			f_fill_foreground -> origin . x = 0;
-			f_fill_foreground -> origin . y = 0;
-			f_fill_foreground -> gradient = NULL;
+			t_new_fill -> style = FillSolid;
+			t_new_fill -> colour = getblack();
+			t_new_fill -> pattern = NULL;
+			t_new_fill -> origin . x = 0;
+			t_new_fill -> origin . y = 0;
+			t_new_fill -> gradient = NULL;
+
+			t_new_fill -> previous = f_fill_foreground;
+			f_fill_foreground = t_new_fill;
 		}
 		
 		f_fill_foreground_used = false;
@@ -851,15 +872,18 @@ void MCMetaContext::new_fill_background(void)
 {
 	if (f_fill_background_used || f_fill_background == NULL)
 	{
-		f_fill_background = f_heap . allocate<MCMarkFill>();
-		if (f_fill_background != NULL)
+		MCMarkFill *t_new_fill = f_heap . allocate<MCMarkFill>();
+		if (t_new_fill != NULL)
 		{
-			f_fill_background -> style = FillSolid;
-			f_fill_background -> colour = getwhite();
-			f_fill_background -> pattern = NULL;
-			f_fill_background -> origin . x = 0;
-			f_fill_background -> origin . y = 0;
-			f_fill_background -> gradient = NULL;
+			t_new_fill -> style = FillSolid;
+			t_new_fill -> colour = getwhite();
+			t_new_fill -> pattern = NULL;
+			t_new_fill -> origin . x = 0;
+			t_new_fill -> origin . y = 0;
+			t_new_fill -> gradient = NULL;
+
+			t_new_fill -> previous = f_fill_background;
+			f_fill_background = t_new_fill;
 		}
 		
 		f_fill_background_used = false;

@@ -148,7 +148,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 }
 
 
-
+#ifdef LIBGRAPHICS_BROKEN
 MCContext *MCScreenDC::createcontext ( Drawable p_drawable, MCBitmap *p_mask)
 {
 	MCContext *t_context ;
@@ -178,15 +178,11 @@ MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_t
 }
 
 
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{	
-	return MCX11Context::create_memory_context(p_width, p_height, dpy, p_alpha);
-}
-
 void MCScreenDC::freecontext(MCContext *p_context)
 {
 	delete p_context;
 }
+#endif
 
 GC MCScreenDC::getgc(void)
 {

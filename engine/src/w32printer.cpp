@@ -40,12 +40,33 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32context.h"
 #include "w32printer.h"
 
+#include "graphics.h"
+#include "graphicscontext.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 extern void Windows_RenderMetaFile(HDC p_color_dc, HDC p_mask_dc, uint1 *p_data, uint4 p_length, const MCRectangle& p_dst_rect);
 
 extern void MCRemotePrintSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
 extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_size, uint32_t &r_result, const char *p_config_data, uint32_t p_config_data_size);
+
+extern bool MCImageBitmapSplitHBITMAPWithMask(HDC p_dc, MCImageBitmap *p_bitmap, HBITMAP &r_bitmap, HBITMAP &r_mask);
+extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
+
+///////////////////////////////////////////////////////////////////////////////
+
+inline XFORM MCGAffineTransformToXFORM(const MCGAffineTransform &p_transform)
+{
+	XFORM t_xform;
+	t_xform.eM11 = p_transform.a;
+	t_xform.eM12 = p_transform.b;
+	t_xform.eM21 = p_transform.c;
+	t_xform.eM22 = p_transform.d;
+	t_xform.eDx = p_transform.tx;
+	t_xform.eDy = p_transform.ty;
+
+	return t_xform;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -370,6 +391,7 @@ protected:
 private:
 	HDC m_dc;
 	MCRectangle m_composite_rect;
+	HBITMAP m_composite_bitmap;
 };
 
 MCGDIMetaContext::MCGDIMetaContext(const MCRectangle& p_page)
@@ -471,8 +493,16 @@ static void resolve_dashes(int2 p_offset, uint1* p_data, uint4 p_length, DWORD*&
 
 bool MCGDIMetaContext::candomark(MCMark *mark)
 {
-	// As currently implemented, the system contexts can do all marks unless it
-	// is a group. Group marks are only generated precisely when the (most feable)
+	// printing transformed images does not seem to work reliably
+	if (mark -> type == MARK_TYPE_IMAGE && mark -> image . descriptor . has_transform)
+	{
+		// we can handle scaled images through StretchBlt, only return false here
+		// if the transform includes rotation
+		MCGAffineTransform t_transform = mark -> image . descriptor . transform;
+		if (t_transform.b != 0 || t_transform.c != 0)
+			return false;
+	}
+	// Group marks are only generated precisely when the (most feable)
 	// system context cannot render it.
 	return mark -> type != MARK_TYPE_GROUP;
 }
@@ -766,50 +796,42 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
 			
 			// Work out source/dst sizes and decompressed bitmap
-			HBITMAP t_src_bitmap;
+			HBITMAP t_src_bitmap = nil;
+			HBITMAP t_src_mask = nil;
 			uint32_t t_src_width, t_src_height, t_dst_width, t_dst_height;
 
-			Pixmap t_color = nil, t_mask = nil;
-			MCBitmap *t_alpha = nil;
-			uindex_t t_width, t_height;
+			int32_t t_src_x = p_mark->image.dx - p_mark->image.sx;
+			int32_t t_src_y = p_mark->image.dy - p_mark->image.sy;
 
-			Pixmap t_original_color = nil, t_original_mask = nil;
-			MCBitmap *t_original_alpha = nil;
-			uindex_t t_original_width, t_original_height;
-
+			DWORD t_err;
 			if (p_mark->image.descriptor.bitmap != nil)
 			{
-				/* UNCHECKED */ MCImageSplitPixmaps(p_mark->image.descriptor.bitmap, t_color, t_mask, t_alpha);
-				t_width = p_mark->image.descriptor.bitmap->width;
-				t_height = p_mark->image.descriptor.bitmap->height;
+				/* UNCHECKED */ MCImageBitmapSplitHBITMAPWithMask(t_src_dc, p_mark->image.descriptor.bitmap, t_src_bitmap, t_src_mask);
+				t_src_width = p_mark->image.descriptor.bitmap->width;
+				t_src_height = p_mark->image.descriptor.bitmap->height;
 			}
 
-			if (p_mark->image.descriptor.original_bitmap != nil)
+			if (!p_mark->image.descriptor.has_transform)
 			{
-				/* UNCHECKED */ MCImageSplitPixmaps(p_mark->image.descriptor.original_bitmap, t_original_color, t_original_mask, t_original_alpha);
-				t_original_width = p_mark->image.descriptor.original_bitmap->width;
-				t_original_height = p_mark->image.descriptor.original_bitmap->height;
-			}
-
-			if (p_mark -> image . descriptor . angle != 0 || t_original_color == NULL)
-			{
-				t_src_bitmap = (HBITMAP)t_color -> handle . pixmap;
-				t_dst_width = t_src_width = t_width;
-				t_dst_height = t_src_height = t_height;
+				t_dst_width = t_src_width;
+				t_dst_height = t_src_height;
 			}
 			else
 			{
-				t_src_bitmap = (HBITMAP)t_original_color -> handle . pixmap;
-				t_src_width = t_original_width;
-				t_src_height = t_original_height;
-				t_dst_width = t_width;
-				t_dst_height = t_height;
+				// here, we only handle scaling transforms
+				MCGAffineTransform t_transform = p_mark->image.descriptor.transform;
+
+				MCGPoint t_topleft = MCGPointApplyAffineTransform(MCGPointMake(t_src_x, t_src_y), t_transform);
+				MCGPoint t_bottomright = MCGPointApplyAffineTransform(MCGPointMake(t_src_x + t_src_width, t_src_y + t_src_height), t_transform);
+
+				t_dst_width = t_bottomright.x - t_topleft.x;
+				t_dst_height = t_bottomright.y - t_topleft.y;
 			}
 
 			// Pass JPEG data straight through to the printer, if it supports such data.
 			bool t_handled;
 			t_handled = false;
-			if (p_mark -> image . descriptor . data_type == kMCImageDataJPEG && p_mark -> image . descriptor . angle == 0)
+			if (p_mark -> image . descriptor . data_type == kMCImageDataJPEG)
 			{
 				DWORD t_test;
 				t_test = CHECKJPEGFORMAT;
@@ -820,15 +842,15 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 					BITMAPINFO t_bitmap;
 					memset(&t_bitmap, 0, sizeof(t_bitmap));
 					t_bitmap . bmiHeader . biSize = sizeof(BITMAPINFOHEADER);
-					t_bitmap . bmiHeader . biWidth = t_original_width;
-					t_bitmap . bmiHeader . biHeight = -(signed)t_original_height; // top-down image
+					t_bitmap . bmiHeader . biWidth = t_src_width;
+					t_bitmap . bmiHeader . biHeight = -(signed)t_src_height; // top-down image
 					t_bitmap . bmiHeader . biPlanes = 1;
 					t_bitmap . bmiHeader . biBitCount = 0;
 					t_bitmap . bmiHeader . biCompression = BI_JPEG;
 					t_bitmap . bmiHeader . biSizeImage = p_mark -> image . descriptor . data_size;
 
 					if (StretchDIBits(t_dc,
-							p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy, t_dst_width, t_dst_height,
+							t_src_x, t_src_y, t_dst_width, t_dst_height,
 							0, 0, t_src_width, t_src_height,
 							p_mark -> image . descriptor . data_bits,
 							&t_bitmap,
@@ -842,23 +864,18 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			{
 				HGDIOBJ t_old_bitmap;
 				t_old_bitmap = SelectObject(t_src_dc, t_src_bitmap);
-				StretchBlt(t_dc,
-							p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy, t_dst_width, t_dst_height,
-							t_src_dc,
-							0, 0, t_src_width, t_src_height,
+				StretchBlt(t_dc, t_src_x, t_src_y, t_dst_width, t_dst_height,
+							t_src_dc, 0, 0, t_src_width, t_src_height,
 							SRCCOPY);
 				SelectObject(t_src_dc, t_old_bitmap);
 			}
 
-			MCscreen->freepixmap(t_color);
-			MCscreen->freepixmap(t_mask);
-			if (t_alpha != nil)
-				MCscreen->destroyimage(t_alpha);
-
-			MCscreen->freepixmap(t_original_color);
-			MCscreen->freepixmap(t_original_mask);
-			if (t_original_alpha != nil)
-				MCscreen->destroyimage(t_original_alpha);
+			if (t_src_bitmap != nil)
+				DeleteObject(t_src_bitmap);
+			if (t_src_mask != nil)
+				DeleteObject(t_src_mask);
+			RestoreDC(t_dc, -1);
+			SetGraphicsMode(t_dc, GM_COMPATIBLE);
 		}
 		break;
 
@@ -883,12 +900,13 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 		// Now create a suitable pattern by tiling out the selected pattern to be
 		// at least 32x32
-		BITMAP t_info;
-		GetObject(p_mark -> fill -> pattern -> handle . pixmap, sizeof(BITMAP), &t_info);
+		int32_t t_src_width, t_src_height;
+		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern);
+		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern);
 
 		int32_t t_width, t_height;
-		t_width = t_info . bmWidth;
-		t_height = t_info . bmHeight;
+		t_width = t_src_width;
+		t_height = t_src_height;
 		while(t_width < 32)
 			t_width *= 2;
 		while(t_height < 32)
@@ -897,27 +915,23 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		HDC t_src_dc;
 		t_src_dc = CreateCompatibleDC(m_dc);
 
-		HBITMAP t_pattern;
-		t_pattern = nil;
-		if (t_info . bmWidth < 32 || t_info . bmHeight < 32)
+		// draw the pattern image into a bitmap
+		HBITMAP t_pattern = nil;
+		void *t_bits = nil;
+		/* UNCHECKED */ create_temporary_dib(t_src_dc, t_width, t_height, t_pattern, t_bits);
+		MCGContextRef t_context = nil;
+		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
+
+		for (uint32_t y = 0; y < t_height; y += t_src_height)
 		{
-			HDC t_dst_dc;
-			t_dst_dc = CreateCompatibleDC(m_dc);
-
-			t_pattern = CreateCompatibleBitmap(m_dc, t_width, t_height);
-
-			SelectObject(t_dst_dc, t_pattern);
-			SelectObject(t_src_dc, p_mark -> fill -> pattern -> handle . pixmap);
-
-			for(int32_t y = 0; y < t_height; y += t_info . bmHeight)
-				for(int32_t x = 0; x < t_width; x += t_info . bmWidth)
-					BitBlt(t_dst_dc, x, y, t_info . bmWidth, t_info . bmHeight, t_src_dc, 0, 0, SRCCOPY);
-
-			DeleteDC(t_dst_dc);
+			for (uint32_t x = 0; x < t_width; x += t_src_width)
+			{
+				MCGRectangle t_dst = MCGRectangleMake(x, y, t_src_width, t_src_height);
+				MCGContextDrawImage(t_context, p_mark->fill->pattern, t_dst, kMCGImageFilterNearest);
+			}
 		}
-		else
-			t_pattern = (HBITMAP)p_mark -> fill -> pattern -> handle . pixmap;
 
+		MCGContextRelease(t_context);
 		
 		// Finally adjust the starting position based on origin, and tile the clip.
 		int32_t x, y;
@@ -937,10 +951,10 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 			for(int32_t tx = x; tx < t_clip . right; tx += t_width)
 				BitBlt(m_dc, tx, y, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
 
-		if (t_pattern != (HBITMAP)p_mark -> fill -> pattern -> handle . pixmap)
+		if (t_pattern != nil)
 			DeleteObject(t_pattern);
-
-		DeleteDC(t_src_dc);
+		if (t_src_dc != nil)
+			DeleteDC(t_src_dc);
 	}
 
 	if (t_old_pen != NULL)
@@ -952,20 +966,51 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 	SelectClipRgn(t_dc, NULL);
 }
 
+#define SCALE 4
+
 MCContext *MCGDIMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 {
-	uint4 t_scale = 4;
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(p_mark_clip . width * t_scale, p_mark_clip . height * t_scale, true, true);
-	t_context -> setprintmode();
-	t_context = new MCContextScaleWrapper(t_context, t_scale);
-	
-	t_context -> setorigin(p_mark_clip . x, p_mark_clip . y);
-	
+	bool t_success = true;
 
-	m_composite_rect = p_mark_clip;
+	MCGContextRef t_context = nil;
+	MCContext *t_gfxcontext = nil;
+	void *t_bits = nil;
+
+	m_composite_bitmap = nil;
+
+	uint4 t_scale = SCALE;
+
+	uint32_t t_width, t_height;
+	t_width = p_mark_clip . width * t_scale;
+	t_height = p_mark_clip . height * t_scale;
+
+	t_success = create_temporary_dib(((MCScreenDC*)MCscreen)->getsrchdc(), t_width, t_height, m_composite_bitmap, t_bits);
+
+	if (t_success)
+		t_success = MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
+	if (t_success)
+		t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 	
-	return t_context;
+	if (t_success)
+	{
+		MCGContextScaleCTM(t_context, t_scale, t_scale);
+		t_gfxcontext -> setorigin(p_mark_clip . x, p_mark_clip . y);
+
+		m_composite_rect = p_mark_clip;
+
+		MCGContextRelease(t_context);
+
+		return t_gfxcontext;
+	}
+	
+	MCGContextRelease(t_context);
+
+	if (m_composite_bitmap != nil)
+		DeleteObject(m_composite_bitmap);
+
+	m_composite_bitmap = nil;
+
+	return nil;
 }
 
 void MCGDIMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
@@ -975,17 +1020,19 @@ void MCGDIMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_reg
 	GetWindowOrgEx(m_dc, &t_old_org);
 	GetWindowExtEx(m_dc, &t_old_ext);
 
-	SetWindowOrgEx(m_dc, t_old_org . x * 4, t_old_org . y * 4, NULL);
-	SetWindowExtEx(m_dc, t_old_ext . cx * 4, t_old_ext . cy * 4, NULL);
+	SetWindowOrgEx(m_dc, t_old_org . x * SCALE, t_old_org . y * SCALE, NULL);
+	SetWindowExtEx(m_dc, t_old_ext . cx * SCALE, t_old_ext . cy * SCALE, NULL);
 
-	uint4 t_scale = 4;
+	uint4 t_scale = SCALE;
 	if (p_clip_region == NULL)
 		SelectClipRgn(m_dc, NULL);
 	else
 		MCRegionConvertToDeviceAndClip(p_clip_region, (MCSysContextHandle)m_dc);
 
-	MCGDIContext *t_context = (MCGDIContext*) ((MCContextScaleWrapper*)p_context)->getcontext();
-	BitBlt(m_dc, m_composite_rect . x * 4, m_composite_rect . y * 4, m_composite_rect . width * 4, m_composite_rect . height * 4, t_context -> gethdc(), m_composite_rect . x * 4, m_composite_rect . y * 4, SRCCOPY);
+	HDC t_src_dc = ((MCScreenDC*)MCscreen)->getsrchdc();
+	SelectObject(t_src_dc, m_composite_bitmap);
+
+	BitBlt(m_dc, m_composite_rect . x * SCALE, m_composite_rect . y * SCALE, m_composite_rect . width * SCALE, m_composite_rect . height * SCALE, t_src_dc, 0, 0, SRCCOPY);
 
 	if (p_clip_region != NULL)
 	{
@@ -996,9 +1043,11 @@ void MCGDIMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_reg
 	SetWindowOrgEx(m_dc, t_old_org . x, t_old_org . y, NULL);
 	SetWindowExtEx(m_dc, t_old_ext . cx, t_old_ext . cy, NULL);
 
-	MCscreen -> freecontext(t_context);
+	//MCscreen -> freecontext(t_context);
 
 	delete p_context;
+	DeleteObject(m_composite_bitmap);
+	m_composite_bitmap = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

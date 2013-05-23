@@ -33,7 +33,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "undolst.h"
-#include "pxmaplst.h"
 #include "hndlrlst.h"
 #include "handler.h"
 #include "scriptpt.h"
@@ -416,11 +415,11 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	{
 		uint2 i;
 		if (getpindex(which - P_FORE_PATTERN, i))
-			if (pixmapids[i] < PI_END && pixmapids[i] > PI_PATTERNS)
-				ep.setint(pixmapids[i] - PI_PATTERNS);
+			if (patternids[i] < PI_END && patternids[i] > PI_PATTERNS)
+				ep.setint(patternids[i] - PI_PATTERNS);
 
 			else
-				ep.setint(pixmapids[i]);
+				ep.setint(patternids[i]);
 		else
 			if (effective && parent != NULL)
 				return parent->getprop(parid, which, ep, effective);

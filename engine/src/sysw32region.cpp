@@ -92,6 +92,7 @@ bool MCRegionIncludeRect(MCRegionRef p_region, const MCRectangle& p_rect)
 	return true;
 }
 
+#ifdef OLD_GRAPHICS
 bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_height, MCBitmap*& r_mask)
 {
 	// Our src HDC
@@ -133,6 +134,7 @@ bool MCRegionCalculateMask(MCRegionRef p_region, int32_t p_width, int32_t p_heig
 
 	return true;
 }
+#endif
 
 bool MCRegionForEachRect(MCRegionRef p_region, MCRegionForEachRectCallback p_callback, void *p_context)
 {

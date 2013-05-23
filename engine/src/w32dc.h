@@ -151,7 +151,7 @@ class MCScreenDC : public MCUIDC
 	bool backdrop_hard;
 	HWND backdrop_window;
 	MCColor backdrop_colour;
-	Pixmap backdrop_pattern;
+	MCGImageRef backdrop_pattern;
 	MCImage *backdrop_badge;
 
 	HDC m_printer_dc;
@@ -226,21 +226,7 @@ public:
 	virtual void hidetaskbar();
 	virtual void setinputfocus(Window window);
 
-	virtual MCContext *createcontext(Drawable p_drawable, MCBitmap *p_alpha);
-	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha, bool p_transient);
-	virtual MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
-	virtual void freecontext(MCContext *p_context);
-
-	virtual void freepixmap(Pixmap &pixmap);
-	virtual Pixmap createpixmap(uint2 width, uint2 height,
-	                            uint2 depth, Boolean purge);
-	virtual Pixmap createstipple(uint2 width, uint2 height, uint4 *bits);
-
-	virtual bool lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride);
-	virtual void unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride);
-
 	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
@@ -249,23 +235,12 @@ public:
 	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
 	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
 	                       uint4 rop, uint4 pixel);
-	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height,
-	                              Boolean set
-		                              , uint1 value,
-		                              Boolean shm, Boolean forceZ);
 																	
-	virtual void destroyimage(MCBitmap *image);
-	virtual MCBitmap *copyimage(MCBitmap *source, Boolean invert);
-	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-	                      int2 dx, int2 dy, uint2 w, uint2 h);
-	virtual MCBitmap *getimage(Drawable pm, int2 x, int2 y,
-	                           uint2 w, uint2 h, Boolean shm);
-
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
 	virtual bool transformimagecolors(MCColorTransformRef transform, MCImageBitmap *image);
 
-	virtual MCCursorRef createcursor(MCImageBuffer *image, int2 xhot, int2 yhot);
+	virtual MCCursorRef createcursor(MCImageBitmap *image, int2 xhot, int2 yhot);
 	virtual void freecursor(MCCursorRef c);
 
 	virtual uint4 dtouint4(Drawable d);
@@ -276,10 +251,10 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	//virtual bool selectrect(MCRectangle &r_rect);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
 
-	virtual HRGN PixmapToRegion(Pixmap p);
+	virtual HRGN BitmapToRegion(MCImageBitmap *p_bitmap);
 
 	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void expose();
@@ -303,7 +278,7 @@ public:
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
-	virtual void configurebackdrop(const MCColor& p_color, Pixmap p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_color, MCGImageRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(enum Window_mode p_mode, Window p_window);
 
 	virtual void seticon(uint4 p_icon);

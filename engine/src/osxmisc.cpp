@@ -38,32 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  REFACTORED FROM WIDGET.CPP
-//
-
-void *MCWidgetContextLockNative(MCContext *p_context)
-{
-	return static_cast<MCQuickDrawContext *>(p_context) -> qd_get_port();
-}
-
-void MCWidgetContextUnlockNative(MCContext *p_context)
-{
-}
-
-void MCWidgetContextBeginOffscreen(MCContext *p_context, void*& r_dc)
-{
-}
-
-void MCWidgetContextEndOffscreen(MCContext *p_context, void* p_dc)
-{
-}
-
-void MCWidgetInvalidateRect(Window window, const MCRectangle& rect)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  REFACTORED FROM STACKLST.CPP
 //
 
@@ -144,42 +118,6 @@ void MCStacklist::hidepalettes(Boolean hide)
 		tptr = tptr->next();
 	}
 	while (tptr != stacks);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-//  REFACTORED FROM CONTEXTSCALEWRAPPER.CPP
-//
-
-extern CGImageRef PixMapToCGImage(PixMapHandle p_pixmap, bool p_grayscale, bool p_with_alpha = false);
-void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters)
-{
-		// MW-2009-06-14: Previously this was attempting to extract the clip region from
-	//   the theme parameters. Unfortunately, it seems that these are not 'correct'
-	//   (well, correct enough for clipping). Instead we just temporary create a context
-	//   that covers the size of the unscaled clip and use that. (We throw it again
-	//   immediately after using, so its not very much less efficient).
-	MCRectangle t_bounds;
-	t_bounds = getclip();
-
-	MCContext *t_context = MCscreen->creatememorycontext(t_bounds.width, t_bounds.height, true, true);
-	t_context->setorigin(t_bounds.x, t_bounds.y);
-	t_context->setclip(t_bounds);
-	t_context->drawtheme(p_type, p_parameters);
-	
-	CGImageRef t_image = PixMapToCGImage(((MCQuickDrawContext*)t_context)->qd_get_pixmap(), false, true);
-	
-	CGContextRef ctx = ((MCQuickDrawContext*)m_context)->lock_as_cg();
-	if (ctx)
-	{
-		CGRect t_rect = CGRectMake(t_bounds.x * scale, t_bounds.y * scale, t_bounds.width * scale, t_bounds.height * scale);
-		CGContextClipToRect(ctx, t_rect);
-		CGContextDrawImage(ctx, t_rect, t_image);
-		((MCQuickDrawContext*)m_context)->unlock_as_cg(ctx);
-	}
-	
-	CGImageRelease(t_image);
-	MCscreen->freecontext(t_context);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -785,14 +723,119 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 //  MISC 
 //
 
-void MCMacApplyPatternToFillImage(MCContext *ctxt, const MCRectangle& rect)
+bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageRef &r_pattern)
 {
-	((MCQuickDrawContext *)ctxt) -> fillrect_with_native_function(rect, notSrcBic);
-}
+	bool t_success = true;
+	
+	static MCGImageRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
+	
+	ThemeBrush t_themebrush = 0;
+	uint32_t t_index = 0;
+	
+	switch (p_mode)
+	{
+		case WM_TOP_LEVEL:
+		case WM_TOP_LEVEL_LOCKED:
+			t_themebrush = kThemeBrushDocumentWindowBackground;
+			t_index = 0;
+			break;
+			
+		case WM_MODELESS:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushModelessDialogBackgroundActive;
+				t_index = 1;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushModelessDialogBackgroundInactive;
+				t_index = 2;
+			}
+			break;
+			
+		case WM_PALETTE:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushUtilityWindowBackgroundActive;
+				t_index = 3;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushUtilityWindowBackgroundInactive;
+				t_index = 4;
+			}
+			break;
+			
+		case WM_DRAWER:
+			t_themebrush = kThemeBrushDrawerBackground;
+			t_index = 5;
+			break;
+			
+		case WM_MODAL:
+		case WM_SHEET:
+		default:
+			if (p_active)
+			{
+				t_themebrush = kThemeBrushDialogBackgroundActive;
+				t_index = 6;
+			}
+			else
+			{
+				t_themebrush = kThemeBrushDialogBackgroundInactive;
+				t_index = 7;
+			}
+			break;
+	}
+	
+	if (s_patterns[t_index] != nil)
+	{
+		r_pattern = s_patterns[t_index];
+		return true;
+	}
+	
+	CGrafPtr t_gworld = nil;
+	PixMapHandle t_pixmap = nil;
+	
+	Rect t_bounds;
+	SetRect(&t_bounds, 0, 0, 64, 64);
+	
+	NewGWorld(&t_gworld, 32, &t_bounds, nil, nil, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
 
-Pixmap MCMacThemeGetBackgroundPixmap(Window_mode mode, Boolean active)
-{
-	return ((MCScreenDC *)MCscreen) -> getbackpm(mode, active);
+	CGrafPtr t_oldport;
+	GDHandle t_olddevice;
+	GetGWorld(&t_oldport, &t_olddevice);
+	
+	SetGWorld(t_gworld, NULL);
+	t_pixmap = GetGWorldPixMap(t_gworld);
+	LockPixels(t_pixmap);
+	
+	SetThemeBackground(t_themebrush, 32, True);
+	EraseRect(&t_bounds);
+	UnlockPixels(t_pixmap);
+	
+	SetGWorld(t_oldport, t_olddevice);
+	
+	void *t_bits = nil;
+	uint32_t t_stride = 0;
+	
+	t_bits = GetPixBaseAddr(t_pixmap);
+	t_stride = GetPixRowBytes(t_pixmap);
+	
+	MCGRaster t_raster;
+	t_raster.width = t_bounds.right - t_bounds.left;
+	t_raster.height = t_bounds.bottom - t_bounds.top;
+	t_raster.pixels = t_bits;
+	t_raster.stride = t_stride;
+	t_raster.format = kMCGRasterFormat_ARGB;
+	
+	t_success = MCGImageCreateWithRaster(t_raster, r_pattern);
+
+	if (t_success)
+		s_patterns[t_index] = r_pattern;
+	
+	DisposeGWorld(t_gworld);
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -804,3 +847,121 @@ MCUIDC *MCCreateScreenDC(void)
 {
 	return new MCScreenDC;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  REFACTORED FROM OSXCONTEXT.CPP
+//
+
+int4 OSX_DrawUnicodeText(int2 x, int2 y, const void *p_text, uint4 p_text_byte_length, MCFontStruct *f, bool p_fill_background, bool p_measure_only = false)
+{	
+	OSStatus t_err;
+	ATSUTextLayout t_layout;
+	ATSUStyle t_style;
+	
+	ATSUFontID t_font_id;
+	Fixed t_font_size;
+	/*Boolean t_font_is_bold;
+	 Boolean t_font_is_italic;
+	 Boolean t_font_is_underline;
+	 Boolean t_font_is_condensed;
+	 Boolean t_font_is_extended;*/
+	ATSLineLayoutOptions t_layout_options;
+	
+	ATSUAttributeTag t_tags[] =
+	{
+		kATSUFontTag,
+		kATSUSizeTag,
+		/*kATSUQDBoldfaceTag,
+		 kATSUQDItalicTag,
+		 kATSUQDUnderlineTag,
+		 kATSUQDCondensedTag,
+		 kATSUQDExtendedTag*/
+	};
+	ByteCount t_sizes[] =
+	{
+		sizeof(ATSUFontID),
+		sizeof(Fixed),
+		/*sizeof(Boolean),
+		 sizeof(Boolean),
+		 sizeof(Boolean),
+		 sizeof(Boolean),
+		 sizeof(Boolean)*/
+	};
+	ATSUAttributeValuePtr t_attrs[] =
+	{
+		&t_font_id,
+		&t_font_size,
+		/*&t_font_is_bold,
+		 &t_font_is_italic,
+		 &t_font_is_underline,
+		 &t_font_is_condensed,
+		 &t_font_is_extended*/
+	};
+	
+	ATSUAttributeTag t_layout_tags[] =
+	{
+		kATSULineLayoutOptionsTag,
+	};
+	ByteCount t_layout_sizes[] =
+	{
+		sizeof(ATSLineLayoutOptions)
+	};
+	ATSUAttributeValuePtr t_layout_attrs[] =
+	{
+		&t_layout_options
+	};
+	
+	UniCharCount t_run = p_text_byte_length / 2;
+	
+	t_err = ATSUFONDtoFontID((short)(intptr_t)f -> fid, f -> style, &t_font_id);
+	
+	t_font_size = f -> size << 16;
+	/*t_font_is_bold = f -> style & bold;
+	 t_font_is_italic = f -> style & italic;
+	 t_font_is_underline = f -> style & underline;
+	 t_font_is_condensed = f -> style & condense;
+	 t_font_is_extended = f -> style & extend;*/
+	
+	t_err = ATSUCreateStyle(&t_style);
+	t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
+	
+	t_err = ATSUCreateTextLayoutWithTextPtr((const UniChar *)p_text, 0, p_text_byte_length / 2, p_text_byte_length / 2, 1, &t_run, &t_style, &t_layout);
+	t_err = ATSUSetTransientFontMatching(t_layout, true);
+	
+	t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+	t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	
+	int4 t_result;
+	t_result = 0;
+	
+	if (p_fill_background || p_measure_only)
+	{
+		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+		ATSUGetUnjustifiedBounds(t_layout, 0, p_text_byte_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+		
+		t_ascent = (t_ascent + 0xffff) >> 16;
+		t_descent = (t_descent + 0xffff) >> 16;
+		t_after = (t_after + 0xffff) >> 16;
+		
+		Rect t_bounds;
+		t_bounds . left = x;
+		t_bounds . top = y - f -> ascent;
+		t_bounds . right = x + t_after;
+		t_bounds . bottom = y - f -> ascent + (t_descent + t_ascent);
+		
+		if (p_fill_background)
+			EraseRect(&t_bounds);
+		else
+			t_result = t_after;
+	}
+	
+	if (!p_measure_only)
+		t_err = ATSUDrawText(t_layout, 0, p_text_byte_length / 2, kATSUUseGrafPortPenLoc, kATSUUseGrafPortPenLoc);
+	
+	t_err = ATSUDisposeTextLayout(t_layout);
+	t_err = ATSUDisposeStyle(t_style);
+	
+	return t_result;
+}
+

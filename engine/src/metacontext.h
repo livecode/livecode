@@ -157,8 +157,8 @@ public:
 	void setforeground(const MCColor& c);
 	void setbackground(const MCColor& c);
 	void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes);
-	void setfillstyle(uint2 style, Pixmap p, int2 x, int2 y);
-	void getfillstyle(uint2& style, Pixmap& p, int2& x, int2& y);
+	void setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y);
+	void getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y);
 	void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle);
 	void setmiterlimit(real8 p_limit);
 	void setgradient(MCGradientFill *p_gradient);
@@ -192,13 +192,15 @@ public:
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
 	void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh);
+#ifdef OLD_GRAPHICS
 	void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh);
-
-	void clear(const MCRectangle *rect);
-	MCRegionRef computemaskregion(void);
 	
 	MCBitmap *lock(void);
 	void unlock(MCBitmap *);
+#endif
+
+	void clear(const MCRectangle *rect);
+	MCRegionRef computemaskregion(void);
 	
 	uint2 getdepth(void) const;
 	const MCColor& getblack(void) const;
@@ -378,9 +380,11 @@ struct MCMarkFill
 {
 	uint2 style;
 	MCColor colour;
-	Pixmap pattern;
+	MCGImageRef pattern;
 	MCPoint origin;
 	MCGradientFill *gradient;
+
+	MCMarkFill *previous;
 };
 
 struct MCMarkLink

@@ -1057,13 +1057,13 @@ void MCControl::drawselected(MCDC *dc)
 	MCRectangle rects[8];
 	sizerects(rects);
 	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillStippled, DNULL, 0, 0);
+		dc->setfillstyle(FillStippled, nil, 0, 0);
 	else
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->setforeground(MCselectioncolor);
 	dc->fillrects(rects, 8);
 	if (flags & F_LOCK_LOCATION)
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 }
 
 void MCControl::drawarrow(MCDC *dc, int2 x, int2 y, uint2 size,
