@@ -477,7 +477,7 @@ void MCCalculateRotatedGeometry(uint32_t p_width, uint32_t p_height, int32_t p_a
 	real8 t_angle = p_angle * M_PI / 180.0;
 	real8 t_cos = cos(t_angle);
 	real8 t_sin = sin(t_angle);
-	
+
 	r_width = (uint32_t)ceil(p_width * fabs(t_cos) + p_height * fabs(t_sin));
 	r_height = (uint32_t)ceil(p_width * fabs(t_sin) + p_height * fabs(t_cos));
 }
@@ -487,11 +487,13 @@ void MCImage::rotate_transform(int32_t p_angle)
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
 	if (m_rep != nil)
 		/* UNCHECKED */ m_rep->GetGeometry(t_src_width, t_src_height);
-
+	
 	uint32_t t_trans_width = t_src_width;
 	uint32_t t_trans_height = t_src_height;
 
-	if (p_angle == 0 && !getflag(F_LOCK_LOCATION))
+	// IM-2013-04-22: [[ BZ 10858 ]] A transformed rep is needed if the angle is non-zero,
+	// or the rect is locked and doesn't match the source dimensions.
+	if (p_angle == 0 && !(getflag(F_LOCK_LOCATION) && (t_src_width != rect.width || t_src_height != rect.height)))
 		m_has_transform = false;
 	else
 	{
@@ -508,7 +510,7 @@ void MCImage::rotate_transform(int32_t p_angle)
 			t_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
 			t_trans_width = rect.width;
 			t_trans_height = rect.height;
-		}
+	}
 
 		m_transform = t_transform;
 	}
@@ -533,13 +535,13 @@ void MCImage::resize_transform()
 	if (rect.width == t_src_width && rect.height == t_src_height)
 		m_has_transform = nil;
 	else
-	{
+		{
 		m_has_transform = true;
 		MCGFloat t_mid_x = (MCGFloat)t_src_width / 2.0;
 		MCGFloat t_mid_y = (MCGFloat)t_src_height / 2.0;
 		m_transform = MCGAffineTransformMakeScale(rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
+		}
 	}
-}
 
 void MCImage::createbrush(Properties which)
 {
@@ -742,7 +744,7 @@ bool MCImage::createpattern(MCGImageRef &r_image)
 	MCGImageRef t_image = nil;
 
 	openimage();
-	
+
 	if (m_rep == nil)
 	{
 		// create blank bitmap;
@@ -764,7 +766,7 @@ bool MCImage::createpattern(MCGImageRef &r_image)
 		t_raster.pixels = t_bitmap->data;
 		t_raster.stride = t_bitmap->stride;
 		t_raster.format = t_bitmap->has_transparency ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
-
+	
 		t_success = MCGImageCreateWithRaster(t_raster, t_image);
 	}
 
@@ -773,7 +775,7 @@ bool MCImage::createpattern(MCGImageRef &r_image)
 	else
 		unlockbitmap(t_bitmap);
 
-	closeimage();
+		closeimage();
 
 	if (t_success)
 		r_image = t_image;

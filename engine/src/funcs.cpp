@@ -2787,7 +2787,9 @@ Exec_stat MCIntersect::eval(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		
-		if (ep . ston() == ES_NORMAL)
+		// MW-2013-04-12: [[ Bug 10844 ]] Make sure we use ton(), otherwise it assumes
+		//   input is a string.
+		if (ep . ton() == ES_NORMAL)
 			t_threshold = ep . getuint4();
 		else
 		{

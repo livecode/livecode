@@ -57,11 +57,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "mode.h"
 #include "revbuild.h"
+#include "parentscript.h"
 
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
 #include <process.h>
+
+// MW-2013-04-18: [[ Bug ]] Temporarily undefine 'GetObject' so that the reference
+//   to the GetObject() parentscript object method works. (Platform-specific stuff
+//   needs to move into separate files!)
+#undef GetObject
+
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 #elif defined(_LINUX_DESKTOP)
@@ -96,6 +103,12 @@ MCLicenseParameters MClicenseparameters =
 Boolean MCenvironmentactive = False;
 
 MCObject *MCmessageboxredirect = NULL;
+
+// IM-2013-04-16: [[ BZ 10836 ]] Provide reference to the last "put" source
+// as a global property, the "revMessageBoxLastObject"
+MCObjectHandle *MCmessageboxlastobject = nil;
+MCNameRef MCmessageboxlasthandler = nil;
+uint32_t MCmessageboxlastline = 0;
 
 Boolean MCcrashreportverbose = False;
 char *MCcrashreportfilename = NULL;
@@ -952,6 +965,22 @@ Exec_stat MCProperty::mode_eval(MCExecPoint& ep)
 {
 	switch(which)
 	{
+	case P_REV_MESSAGE_BOX_LAST_OBJECT:
+		if (MCmessageboxlastobject != NULL && MCmessageboxlastobject->Exists())
+		{
+			MCmessageboxlastobject->Get()->names(P_LONG_ID, ep, 0);
+			ep.concatnameref(MCmessageboxlasthandler, EC_COMMA, false);
+			ep.concatuint(MCmessageboxlastline, EC_COMMA, false);
+			if (MCmessageboxlastobject->Get()->getparentscript() != nil)
+			{
+				MCExecPoint ep2;
+				MCmessageboxlastobject->Get()->getparentscript()->GetObject()->names(P_LONG_ID, ep2, 0);
+				ep.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
+			}
+		}
+		else
+			ep.clear();
+		break;
 	case P_REV_MESSAGE_BOX_REDIRECT:
 		if (MCmessageboxredirect != NULL)
 			MCmessageboxredirect -> names(P_LONG_ID, ep, 0);
@@ -1119,6 +1148,48 @@ bool MCModeShouldCheckCantStandalone(void)
 
 bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 {
+	// IM-2013-04-16: [[ BZ 10836 ]] update revMessageBoxLastObject
+	// if the source of the change is not within the message box
+	MCObject *t_msg_box = nil;
+	if (MCmessageboxredirect != nil)
+		t_msg_box = MCmessageboxredirect;
+	else
+	{
+		if (MCmbstackptr == nil)
+			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+		t_msg_box = MCmbstackptr;
+	}
+	
+	MCObject *t_src_object = nil;
+	if (ep.getobj() != nil)
+		t_src_object = ep.getobj();
+	
+	bool t_in_msg_box = false;
+	
+	MCObject *t_obj_ptr = t_src_object;
+	while (t_obj_ptr != nil)
+	{
+		if (t_obj_ptr == t_msg_box)
+		{
+			t_in_msg_box = true;
+			break;
+		}
+		t_obj_ptr = t_obj_ptr->getparent();
+	}
+	
+	if (!t_in_msg_box)
+	{
+		if (MCmessageboxlastobject != nil)
+			MCmessageboxlastobject->Release();
+		MCmessageboxlastobject = t_src_object->gethandle();
+		
+		MCNameDelete(MCmessageboxlasthandler);
+		MCmessageboxlasthandler = nil;
+		MCNameClone(ep.gethandler()->getname(), MCmessageboxlasthandler);
+		
+		MCmessageboxlastline = ep.getline();
+	}
+	
 	if (MCmessageboxredirect != NULL)
 	{
 		if (MCmessageboxredirect -> gettype() == CT_FIELD)

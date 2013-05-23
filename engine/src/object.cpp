@@ -143,6 +143,9 @@ MCObject::MCObject()
 	
 	// MW-2012-10-10: [[ IdCache ]]
 	m_in_id_cache = false;
+	
+	// IM-2013-04-16: Initialize to false;
+	m_script_encrypted = false;
 }
 
 MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
@@ -192,6 +195,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	}
 	opened = 0;
 	script = strclone(oref.script);
+	m_script_encrypted = oref.m_script_encrypted;
 	hlist = NULL;
 	scriptdepth = 0;
 	state = oref.state & ~CS_SELECTED;
@@ -2157,12 +2161,12 @@ Boolean MCObject::parsescript(Boolean report, Boolean force)
 			if (hlist == NULL)
 				hlist = new MCHandlerlist;
 			
-			getstack() -> unsecurescript(script);
+			getstack() -> unsecurescript(this);
 			
 			Parse_stat t_stat;
 			t_stat = hlist -> parse(this, script);
 			
-			getstack() -> securescript(script);
+			getstack() -> securescript(this);
 			
 			if (t_stat != PS_NORMAL)
 			{
@@ -2766,7 +2770,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		if ((stat = IO_read_string(script, stream)) != IO_NORMAL)
 			return stat;
 		
-		getstack() -> securescript(script);
+		getstack() -> securescript(this);
 	}
 
 	if ((stat = IO_read_uint2(&dflags, stream)) != IO_NORMAL)
@@ -2887,7 +2891,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				t_length -= script == NULL ? 1 : strlen(script) + 1;
 				
 				if (script != nil)
-					getstack() -> securescript(script);
+					getstack() -> securescript(this);
 			}
 
 			if (stat == IO_NORMAL && t_length > 0)
@@ -2921,7 +2925,7 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 			return stat;
 		flags |= F_SCRIPT;
 		
-		getstack() -> securescript(script);
+		getstack() -> securescript(this);
 	}
 
 	if (addflags & AF_BLEND_LEVEL)
@@ -3044,9 +3048,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	if (flags & F_SCRIPT && !(addflags & AF_LONG_SCRIPT))
 	{
-		getstack() -> unsecurescript(script);
+		getstack() -> unsecurescript(this);
 		stat = IO_write_string(script, stream);
-		getstack() -> securescript(script);
+		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
 	}
@@ -3166,9 +3170,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		{
 			MCObjectOutputStream *t_stream = nil;
 			/* UNCHECKED */ MCStackSecurityCreateObjectOutputStream(stream, t_stream);
-			getstack() -> unsecurescript(script);
+			getstack() -> unsecurescript(this);
 			stat = t_stream -> WriteCString(script);
-			getstack() -> securescript(script);
+			getstack() -> securescript(this);
 			if (stat == IO_NORMAL)
 				stat = extendedsave(*t_stream, p_part);
 			if (stat == IO_NORMAL)
@@ -3205,9 +3209,9 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	}
 	else if (addflags & AF_LONG_SCRIPT)
 	{
-		getstack() -> unsecurescript(script);
+		getstack() -> unsecurescript(this);
 		stat = IO_write_string(script, stream, 4);
-		getstack() -> securescript(script);
+		getstack() -> securescript(this);
 		if (stat != IO_NORMAL)
 			return stat;
 	}
@@ -4038,7 +4042,6 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 			memset(t_other_scanline, 0xff, t_scanline_width * 4);
 		
 		// Now check for overlap!
-		bool t_intersects;
 		t_intersects = false;
 		for(int32_t y = 0; y < t_rect . height; y++)
 		{

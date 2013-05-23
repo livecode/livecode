@@ -302,9 +302,9 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 		}
 		if (script != nil)
 		{
-			getstack() -> unsecurescript(script);
+			getstack() -> unsecurescript(this);
 			ep.copysvalue(script);
-			getstack() -> securescript(script);
+			getstack() -> securescript(this);
 		}
 		else
 			ep . clear();
@@ -859,7 +859,7 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 		else
 			script = data.clone();
 			
-		getstack() -> securescript(script);
+		getstack() -> securescript(this);
 		
 		flags |= F_SCRIPT;
 		if (MCModeCanSetObjectScript(obj_id))

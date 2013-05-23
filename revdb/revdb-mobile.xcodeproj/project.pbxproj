@@ -61,14 +61,14 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0B9E112E8416E00B4F692 /* libexternal-mobile.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888 /* external */;
+			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888;
 			remoteInfo = external;
 		};
 		4D379C5617141F8200B9037C /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DA0BD3212E87A1C00B4F692 /* libmysql-mobile.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888 /* mysql */;
+			remoteGlobalIDString = 4D7EFD7912E72ABA00D67888;
 			remoteInfo = mysql;
 		};
 		4DA0B9E512E8416E00B4F692 /* PBXContainerItemProxy */ = {

@@ -481,6 +481,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	// MM-2011-07-14: Add support for listing avaiable network interfaces
 	case P_NETWORK_INTERFACES:
 
+	case P_REV_MESSAGE_BOX_LAST_OBJECT: // DEVELOPMENT only
 	case P_REV_MESSAGE_BOX_REDIRECT: // DEVELOPMENT only
 	case P_REV_LICENSE_LIMITS: // DEVELOPMENT only
 
