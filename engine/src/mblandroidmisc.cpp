@@ -168,7 +168,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 					*(va_arg(t_args, char **)) = nil;
 				break;
 			
-			case 'v':
+			case 'x':
 				if (t_success)
 					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
 				else

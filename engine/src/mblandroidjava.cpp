@@ -734,7 +734,7 @@ static MCJavaType native_sigchar_to_returntype(char p_sigchar)
             return kMCJavaTypeMCString;
         case 'U':
             return kMCJavaTypeMCStringUnicode;
-		case 'v':
+		case 'x':
 			return kMCJavaTypeMCStringRef;
         case 'd':
             return kMCJavaTypeByteArray;
