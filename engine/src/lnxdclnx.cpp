@@ -960,9 +960,16 @@ int xerror(Display *dpy, XErrorEvent *ev)
 				fprintf(stderr,
 						"%s: XCreatePixmap failed, X server is out of memory --- oops\n", MCcmd);
 			else
+			{
+				// Added 'XGetErrorText()' for more helpful error message.
+				// Based on: http://www.unix.com/man-page/all/3x/XSetErrorHandler/
+				// and: http://www.squarebox.co.uk/cgi-squarebox/manServer/XSetErrorHandler.3X11
+				char msg[80];
+	 			XGetErrorText(dpy, ev->error_code, msg, 80);
 				fprintf(stderr,
-						"%s: X error major code %d minor code %d error was %d\n",
-						MCcmd, ev->request_code, ev->minor_code, ev->error_code);
+						"%s: X error major code %d minor code %d error was %d : %s\n",
+						MCcmd, ev->request_code, ev->minor_code, ev->error_code, msg);
+			}
 		}
 	}
 	return 0;
