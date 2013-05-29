@@ -173,7 +173,7 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
-	char *t_address, *t_cc_address, *t_subject, *t_message_body;
+/*	char *t_address, *t_cc_address, *t_subject, *t_message_body;
 	t_address = nil;
 	t_cc_address = nil;
 	t_subject = nil;
@@ -216,7 +216,47 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_subject;
 	delete t_message_body;
 	
-	return ES_NORMAL;
+	return ES_NORMAL; */
+
+	MCAutoStringRef t_address, t_cc_address, t_subject, t_message_body;
+
+	MCExecPoint ep(nil, nil, nil);
+	
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		/* UNCHECKED */ ep . copyasstringref(&t_address);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		/* UNCHECKED */ ep . copyasstringref(&t_cc_address);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		/* UNCHECKED */ ep . copyasstringref(&t_subject);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		/* UNCHECKED */ ep . copyasstringref(&t_message_body);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	MCExecContext ctxt(ep);
+	MCIPhoneSendEmail(t_address, t_cc_address, t_subject, t_message_body);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos)
 }
 
 ////////////////////////////////////////////////////////////////////////////////

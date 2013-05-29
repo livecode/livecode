@@ -60,6 +60,7 @@ typedef enum
 	kMCDisplayOrientationLandscapeRight,
 
 	kMCDisplayOrientationFaceUp,
+	kMCDisplayOrientationUnknown,
 } MCAndroidDisplayOrientation;
 
 static uint32_t s_allowed_orientations = 0;
@@ -212,9 +213,13 @@ static const char *android_device_rotation_to_string(MCAndroidDisplayFormat p_de
 	return s_orientation_names[android_device_orientation_from_rotation(p_device_format, p_rotation)];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/* MOVED to mblhandlers.cpp
+
 Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
-/* 	int32_t t_rotation;
+	int32_t t_rotation;
 	MCAndroidDisplayFormat t_format;
 
 	t_rotation = android_get_display_rotation();
@@ -224,21 +229,12 @@ Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 //	MCLog("display rotation %d", t_rotation);
 
 	MCresult->sets(MCString(android_display_rotation_to_string(t_format, t_rotation)));
-	return ES_NORMAL; */
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-	MCMobileGetOrientation(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ES_ERROR;
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
-/*	int32_t t_dev_rotation;
+	int32_t t_dev_rotation;
 	MCAndroidDisplayFormat t_dev_format;
 
 	t_dev_rotation = android_get_device_rotation();
@@ -248,41 +244,24 @@ Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 //	MCLog("device rotation %d", t_dev_rotation);
 
 	MCresult->sets(MCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
-	return ES_NORMAL; */
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-	MCMobileGetDeviceOrientation(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ES_ERROR;
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 {
-	/*MCExecPoint ep(nil, nil, nil);
+	MCExecPoint ep(nil, nil, nil);
 	for(uint32_t j = 0; s_orientation_names[j] != nil; j++)
 		if ((s_allowed_orientations & (1 << j)) != 0)
 			ep . concatcstring(s_orientation_names[j], EC_COMMA, ep . isempty());
 
 	MCresult -> store(ep, True);
 	
-	return ES_NORMAL;*/
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
-	/*bool t_success;
+	bool t_success;
 	t_success = true;
 	
 	char *t_orientations;
@@ -313,75 +292,29 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	
 	MCCStringFree(t_orientations);
 	
-	return ES_NORMAL;*/
-
-	bool t_success;
-	t_success = true;
-	
-	MCAutoStringRef t_orientations;
-
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_orientations);
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-
-	if (t_success)
-		MCMobileSetAllowedOrientations(ctxt, *t_orientations);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters)
 {
-/*	if (s_orientation_lock < MAXUINT4)
+	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
-	return ES_NORMAL; */
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-	MCMobileExecLockOrientation(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
 {
-/*	if (s_orientation_lock > 0)
+	if (s_orientation_lock > 0)
 		s_orientation_lock--;
-	return ES_NORMAL; */
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-	MCMobileExecUnlockOrientation(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	return ES_NORMAL;
 }
 
 Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
-/*	MCresult->sets(MCU_btos(s_orientation_lock > 0));
-	return ES_NORMAL; */
-
-	MCExecPoint ep(nil, nil, nil)
-	MCExecContext ctxt(ep);
-	MCMobileGetOrientationLocked(ctxt);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ctxt . Catch(line, pos);
+	MCresult->sets(MCU_btos(s_orientation_lock > 0));
+	return ES_NORMAL; 
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -417,67 +350,17 @@ void MCAndroidOrientationChanged(int orientation)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MCMobileGetAllowedOrientations(MCExecContext& ctxt)
+void MCSystemGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientations)
 {
-	bool t_success;
-	t_success = true;
-	
-	MCAutoListRef t_orientations;
-
-	if (t_success)
-		t_success = MCListCreateMutable(EC_COMMA, &t_orientations);
-
-	for (uint32_t j = 0; s_orientation_names[j] != nil; j++)
-	{
-		if (s_allowed_orientations & (1 << j)) != 0)
-		{		
-			MCAutoStringRef t_orientation;
-			if (t_success)
-				t_success = MCStringFormat(&t_orientation, "%s", s_orientation_names[j]);
-
-			if (t_success)
-				t_success = MCListAppend(*t_orientations, *t_orientation);
-		}
-	}
-
-	MCAutoStringRef t_result;
-	if (t_success)
-		t_success = MCListCopyAsString(*t_orientations, &t_result);
-
-	if (t_success)
-	{
-		ctxt . SetTheResultToValue(*t_result);
-		return;
-	}
-
-	ctxt . Throw();
+	r_orientations = (intset_t)s_allowed_orientations;
 }
 
-void MCMobileSetAllowedOrientations(MCExecContext& ctxt, MCStringRef p_orientations)
+void MCSystemSetAllowedOrientations(MCExecContext& ctxt, MCStringRef p_orientations)
 {
-	char **t_orientations_array;
-	uint32_t t_orientations_count;
-	t_orientations_array = nil;
-	t_orientations_count = 0;
-	if (t_success)
-		t_success = MCCStringSplit(MCStringGetCString(t_orientations), ',', t_orientations_array, t_orientations_count);
-	
-	uint32_t t_orientations_set;
-	t_orientations_set = 0;
-	if (t_success)
-		for(uint32_t i = 0; i < t_orientations_count; i++)
-			for(uint32_t j = 0; s_orientation_names[j] != nil; j++)
-				if (MCCStringEqualCaseless(t_orientations_array[i], s_orientation_names[j]))
-					t_orientations_set |= (1 << j);
-	
-	s_allowed_orientations = t_orientations_set;
-	
-	for(uint32_t i = 0; i < t_orientations_count; i++)
-		MCCStringFree(t_orientations_array[i]);
-	MCMemoryDeleteArray(t_orientations_array);
+	s_allowed_orientations = (uint32_t)p_orientations;
 }
 
-void MCMobileGetOrientation(MCExecContext& ctxt)
+void MCSystemGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
 	int32_t t_rotation;
 	MCAndroidDisplayFormat t_format;
@@ -485,10 +368,13 @@ void MCMobileGetOrientation(MCExecContext& ctxt)
 	t_rotation = android_get_display_rotation();
 	t_format = android_get_display_format();
 
-	ctxt . SetTheResultToStaticCString(android_display_rotation_to_string(t_format, t_rotation)));
+	if (t_format == kMCDisplayFormatUnknown)
+		r_orientation = (intenum_t)kMCDisplayOrientationUnknown;
+	else
+		r_orientation = (intenum_t)android_display_orientation_from_rotation(t_format, t_rotation);
 }
 
-void MCMobileGetDeviceOrientation(MCExecContext& ctxt)
+void MCSystemGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
 	int32_t t_dev_rotation;
 	MCAndroidDisplayFormat t_dev_format;
@@ -496,22 +382,31 @@ void MCMobileGetDeviceOrientation(MCExecContext& ctxt)
 	t_dev_rotation = android_get_device_rotation();
 	t_dev_format = android_get_device_format();
 
-	ctxt . SetTheResultToCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
+	r_orientation = (intenum_t)android_display_orientation_from_rotation(t_dev_format, t_dev_rotation);
+	ctxt . SetTheResultToStaticCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
 }
 
-void MCMobileExecLockOrientation(MCExecContext& ctxt)
+void MCSystemExecLockOrientation(MCExecContext& ctxt)
 {
 	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
 }
 
-void MCMobileExecUnlockOrientation(MCExecContext& ctxt)
+void MCSystemExecUnlockOrientation(MCExecContext& ctxt)
 {
 	if (s_orientation_lock > 0)
 		s_orientation_lock--;
 }
 
-void MCMobileGetOrientationLocked(MCExecContext& ctxt)
+void MCSystemGetOrientationLocked(MCExecContext& ctxt, bool &r_locked)
 {
-	ctxt . SetTheResultToStaticCString(s_orientation_lock > 0 ? MCtruestring : MCfalsestring);
+	r_locked = s_orientation_lock > 0;
+}
+
+const char * get_orientation_name(int p_index)
+{
+	if (p_index == kMCDisplayOrientationUnknown)
+		return "unknown";
+	else
+		return s_orientation_names[p_index];
 }

@@ -110,11 +110,18 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 					(va_arg(t_args, MCString *)) -> set(nil, 0);
 				break;
 			
-			case 'a':
-				if (t_success && ep . getformat() == VF_ARRAY)
-					*(va_arg(t_args, MCVariableValue **)) = ep . getarray();
+			case 'x':
+				if (t_success)
+					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
 				else
-					*(va_arg(t_args, MCVariableValue **)) = nil;
+					t_success = false;
+				break;
+			
+			case 'a':
+				if (t_success)
+					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
+				else
+					t_success = false;
 				break;
 				
 			case 'r':
@@ -496,6 +503,8 @@ Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/* MOVED TO mbliphoneorientation.mm
+
 // Important: We switch right and left here. Internally we use 'device orientation' but to script
 // we use 'interface orientation'. Interface orientation ties landscape to the position of the home
 // button as you look at the device.
@@ -504,7 +513,7 @@ static const char *s_orientation_names[] =
 {
 	"unknown", "portrait", "portrait upside down", "landscape right", "landscape left", "face up", "face down", nil
 };
-
+*/
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
 // HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
@@ -682,7 +691,7 @@ static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
-
+/* MOVED TO mbliphoneorientation.mm
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[[[UIDevice currentDevice] orientation]]);
@@ -760,7 +769,7 @@ static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_pa
 	
 	return ES_NORMAL;
 }
-
+*/
 static Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters)
 {
 	return ES_NORMAL;
@@ -1253,14 +1262,14 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
 	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "iphoneLockOrientation", MCHandleLockUnlockOrientation, (void*)true},
-	{false, "iphoneUnlockOrientation", MCHandleLockUnlockOrientation, (void*)false},
+	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
+	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
 	{false, "mobileOrientation", MCHandleOrientation, nil},
 	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
 	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "mobileLockOrientation", MCHandleLockUnlockOrientation, (void*)true},
-	{false, "mobileUnlockOrientation", MCHandleLockUnlockOrientation, (void*)false},
+	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
 	
 	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
