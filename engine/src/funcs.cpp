@@ -6249,7 +6249,7 @@ Parse_stat MCUuidFunc::parse(MCScriptPoint& sp, Boolean the)
 	uint2 ecount = 0;
 	
 	// Parse the parameters and check that there are 0, 1 or 3 of them.
-	if (getexps(sp, earray, ecount) != PS_NORMAL || (ecount != 0 && ecount == 1 && ecount == 3))
+	if (getexps(sp, earray, ecount) != PS_NORMAL || (ecount != 0 && ecount != 1 && ecount != 3))
 	{
 		// If there are the wrong number of params, free the exps.
 		freeexps(earray, ecount);
