@@ -129,7 +129,6 @@ char *GetFieldByName(const char *p_group, const char *p_name, int *r_success)
 {
 	char *t_result;
 	// MDW-2013-05-08 : fix for bug 7913
-//	t_result = (s_operations[OPERATION_GET_FIELD_BY_NAME])(p_group, p_name, NULL, r_success);
 	t_result = (s_operations[OPERATION_GET_FIELD_BY_NAME])(p_name, p_group, NULL, r_success);
 	return retstr(t_result);
 }
@@ -160,7 +159,6 @@ void SetFieldByName(const char *p_group, const char *p_name, const char *p_value
 {
 	char *t_result;
 	// MDW-2013-05-08 : fix for bug 7913
-//	t_result = (s_operations[OPERATION_SET_FIELD_BY_NAME])(p_group, p_name, p_value, r_success);
 	t_result = (s_operations[OPERATION_SET_FIELD_BY_NAME])(p_name, p_group, p_value, r_success);
 	if (t_result != NULL)
 		(s_delete)(t_result);
@@ -192,7 +190,6 @@ void ShowImageByName(const char *p_group, const char *p_name, int *r_success)
 {
 	char *t_result;
 	// MDW-2013-05-08 : fix for bug 7913
-//	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_NAME])(p_group, p_name, NULL, r_success);
 	t_result = (s_operations[OPERATION_SHOW_IMAGE_BY_NAME])(p_name, p_group, NULL, r_success);
 	if (t_result != NULL)
 		(s_delete)(t_result);
