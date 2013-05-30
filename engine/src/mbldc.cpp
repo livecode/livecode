@@ -606,11 +606,6 @@ Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height, uint2 depth, Boolean 
 	return t_pixmap;
 }
 
-Pixmap MCScreenDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-	return NULL;
-}
-
 void MCScreenDC::freepixmap(Pixmap &pixmap)
 {
 	if (pixmap == NULL)
@@ -705,68 +700,6 @@ void MCScreenDC::copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, i
 	for(uint32_t i = 0; i < t_height; i++)
 	{
 		memcpy(t_dst_ptr, t_src_ptr, t_width * t_src_depth / 8);
-		t_src_ptr += t_src_stride;
-		t_dst_ptr += t_dst_stride;
-	}
-}
-
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel)
-{
-	MCMobileBitmap *t_src_bitmap, *t_dst_bitmap;
-	t_src_bitmap = (MCMobileBitmap *)s -> handle . pixmap;
-	t_dst_bitmap = (MCMobileBitmap *)d -> handle . pixmap;
-	
-	assert(t_src_bitmap -> is_mono);
-	assert(!t_dst_bitmap -> is_mono);
-	
-	uint8_t *t_src_ptr, *t_dst_ptr;
-	t_src_ptr = (uint8_t *)t_src_bitmap -> data;
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data;
-	
-	uint32_t t_src_stride, t_dst_stride;
-	t_src_stride = t_src_bitmap -> stride;
-	t_dst_stride = t_dst_bitmap -> stride;
-	
-	t_src_ptr += sy * t_src_stride + sx / 8;
-	t_dst_ptr += dy * t_dst_stride + dx * 4;
-	
-	uint32_t t_src_first_bit;
-	t_src_first_bit = 0x80 >> (sx & 0x7);
-	
-	for (uint32_t y = 0; y < sh; y++)
-	{
-		uint8_t *t_src_bits;
-		uint32_t *t_dst_bits;
-		t_src_bits = t_src_ptr;
-		t_dst_bits = (uint32_t *)t_dst_ptr;
-		uint32_t t_bit;
-		t_bit = t_src_first_bit;
-		for (uint32_t x = 0; x < sw; x++)
-		{
-			if (*t_src_bits & t_bit)
-			{
-				switch (rop)
-				{
-					case GXcopy:
-						*t_dst_bits = pixel;
-						break;
-					case GXand:
-						*t_dst_bits &= pixel;
-						break;
-					case GXor:
-						*t_dst_bits |= pixel;
-						break;
-				}
-			}
-			
-			t_bit >>= 1;
-			if (t_bit == 0)
-			{
-				t_bit = 0x80;
-				t_src_bits++;
-			}
-			t_dst_bits++;
-		}
 		t_src_ptr += t_src_stride;
 		t_dst_ptr += t_dst_stride;
 	}

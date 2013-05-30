@@ -46,7 +46,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
 #include "graphicscontext.h"
 
 static uint2 calldepth;
@@ -449,7 +448,7 @@ void MCStack::destroywindowshape()
 		Pixmap t_pixmap;
 		t_pixmap = (Pixmap)m_window_shape -> handle;
 		if (t_pixmap != nil)
-			MCscreen -> freepixmap(t_pixmap);
+			((MCScreenDC*)MCscreen) -> freepixmap(t_pixmap);
 	}
 
 	delete m_window_shape;

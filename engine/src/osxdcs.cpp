@@ -850,32 +850,6 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
 	SetGWorld(oldport, olddevice);
 }
 
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy,
-                           uint2 sw, uint2 sh, int2 dx, int2 dy,
-                           uint4 rop, uint4 pixel)
-{
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	SetGWorld((CGrafPtr)d->handle.pixmap, NULL);
-	
-	RGBColor dstColor;
-	
-	if (s == nil || d == nil)
-		return;
-	
-	dstColor.red = (pixel & 0xFF0000) >> 8;
-	dstColor.green = pixel & 0xFF00;
-	dstColor.blue = (pixel & 0xFF) << 8;
-	dstColor.red |= dstColor.red >> 8;
-	dstColor.green |= dstColor.green >> 8;
-	dstColor.blue |= dstColor.blue >> 8;
-	
-	RGBForeColor(&dstColor);
-	copybits(s, d, sx, sy, sw, sh, dx, dy, ink_table_c[rop]);
-	SetGWorld(oldport, olddevice);
-}
-
 uint4 MCScreenDC::dtouint4(Drawable d)
 {
 	if (d == DNULL)

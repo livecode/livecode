@@ -32,7 +32,7 @@ bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
 	MCImageBitmap *t_bitmap;
 	uindex_t t_width = p_image->width;
 	uindex_t t_height = p_image->height;
-
+	
 	if (!MCImageBitmapCreate(t_width, t_height, t_bitmap))
 		return false;
 
@@ -44,7 +44,7 @@ bool MCImageBitmapCreateWithXImage(XImage *p_image, MCImageBitmap *&r_bitmap)
 		t_src_ptr += p_image->bytes_per_line;
 		t_dst_ptr += t_bitmap->stride;
 	}
-
+	
 	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
 	r_bitmap = t_bitmap;
 	return true;
@@ -66,7 +66,7 @@ MCWindowShape *MCImage::makewindowshape(void)
 
 	MCImageBitmap *t_bitmap = nil;
 	bool t_has_mask = false, t_has_alpha = false;
-	t_success = lockbitmap(t_bitmap);
+	t_success = lockbitmap(t_bitmap, true);
 	if (t_success)
 	{
 		t_has_mask = MCImageBitmapHasTransparency(t_bitmap, t_has_alpha);

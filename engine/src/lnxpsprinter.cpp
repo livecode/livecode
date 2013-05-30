@@ -43,11 +43,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "contextscalewrapper.h"
 
+#include "lnxflst.h"
 #include "printer.h"
-#include "lnxcontext.h"
 #include "lnxpsprinter.h"
 
-#include "lnxcontext.h"
 #include "lnxans.h"
 
 #define A4_PAPER_HEIGHT	210
@@ -936,11 +935,12 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 	}
 	if ( isFilled ) 
 	{
-		
 		if (p_mark -> fill -> style == FillTiled)
 		{
+#ifdef LIBGRAPHICS_BROKEN		
 			fillpattern( p_mark -> fill -> pattern, p_mark -> fill -> origin )  ;
 			onPattern = True ;
+#endif
 		}
 		else if ( onPattern )
 		{
@@ -1266,6 +1266,7 @@ void MCPSMetaContext::write_scaling(const MCRectangle &rect)
 
 void MCPSMetaContext::printimage(MCBitmap *image, int2 dx, int2 dy, real8 xscale, real8 yscale)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	MCColor c;
 	uint2 x, y;
 	uint4 charCount = 0;
@@ -1388,6 +1389,7 @@ void MCPSMetaContext::printimage(MCBitmap *image, int2 dx, int2 dy, real8 xscale
 		}
 		PSwrite("\n");
 	}
+#endif
 }
 
 
@@ -1449,6 +1451,7 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 
 void MCPSMetaContext::printpattern(MCBitmap *image)
 {
+#ifdef LIBGRAPHICS_BROKEN
 	MCColor c;
 	uint2 x, y;
 	uint4 charCount = 0;
@@ -1497,6 +1500,7 @@ void MCPSMetaContext::printpattern(MCBitmap *image)
 		PSwrite(">\nfalse 1\ncolorimage\n");
 
 	PSwrite("\n");
+#endif
 }
 
 

@@ -96,8 +96,6 @@ public:
 	bool lockpixmap(Pixmap pixmap, void*& r_data, uint4& r_stride);
 	void unlockpixmap(Pixmap pixmap, void* p_data, uint4 p_stride);
 
-	Pixmap createstipple(uint2 width, uint2 height, uint4 *bits);
-
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
@@ -108,7 +106,6 @@ public:
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
-	void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel);
 
 	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
 	void freecursor(MCCursorRef c);

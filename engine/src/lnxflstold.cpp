@@ -168,8 +168,6 @@ public:
 #ifdef OLD_GRAPHICS
 	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
 #endif
-	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
-
 	virtual bool ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context);
 };
 
@@ -758,12 +756,6 @@ void MCOldFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char
 				  f -> ascent + f -> descent ) ;
 }
 #endif
-
-void MCOldFontlist::ctxt_setfont(MCX11Context *ctxt, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
-{
-	XSetFont(ctxt -> m_display, ctxt -> m_gc, static_cast<MCOldFontStruct *>(font)->fstruct->fid);
-	XSetFont(ctxt -> m_display, ctxt -> m_gc1, static_cast<MCOldFontStruct *>(font)->fstruct->fid);
-}
 
 bool MCOldFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context)
 {

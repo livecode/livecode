@@ -679,51 +679,6 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth, int2 sx, int2 sy,
 	}
 }
 
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy,
-                           uint2 sw, uint2 sh, int2 dx, int2 dy,
-                           uint4 rop, uint4 pixel)
-{
-	HDC t_src_dc, t_dst_dc;
-	HGDIOBJ t_old_src, t_old_dst;
-
-	if (s == nil || d == nil)
-		return;
-	
-	if (s -> type == DC_WINDOW)
-		t_src_dc = GetDC((HWND)s -> handle . window); // Released
-	else
-		t_old_src = SelectObject(f_src_dc, s -> handle . pixmap), t_src_dc = f_src_dc;
-
-	if (d -> type == DC_WINDOW)
-		t_dst_dc = GetDC((HWND)s -> handle . window); // Released
-	else
-		t_old_dst = SelectObject(f_dst_dc, d -> handle . pixmap), t_dst_dc = f_dst_dc;
-
-	int t_old_mode;
-	t_old_mode = SetBkMode(f_dst_dc, OPAQUE);
-	if (rop == GXand)
-		MaskBlt(t_dst_dc, dx, dy, sw, sh, t_dst_dc, dx, dy, (HBITMAP)s->handle.pixmap, sx, sy, MAKEROP4(BLACKNESS, SRCCOPY));
-	else
-	{
-		// MW-2011-07-15: [[ COLOR ]] The 'pixel' field of MCColor is now 0xXXRRGGBB
-		//   universally. As Win32 uses 0xXXBBGGRR, we must flip.
-		SetTextColor(t_dst_dc, (pixel & 0x00ff00) | ((pixel & 0x0000ff) << 16) | ((pixel & 0xff0000) >> 16));
-		BitBlt(t_dst_dc, dx, dy, sw, sh, t_src_dc, sx, sy, image_inks[rop]);
-		SetTextColor(t_dst_dc, white_pixel . pixel);
-	}
-	SetBkMode(f_dst_dc, t_old_mode);
-
-	if (d -> type == DC_WINDOW)
-		ReleaseDC((HWND)d -> handle . window, t_dst_dc);
-	else
-		SelectObject(f_dst_dc, t_old_dst);
-
-	if (s -> type == DC_WINDOW)
-		ReleaseDC((HWND)s -> handle . window, t_src_dc);
-	else
-		SelectObject(f_src_dc, t_old_src);
-}
-
 static void fixdata(uint4 *bits, uint2 width, uint2 height)
 {
 	uint4 mask = width == 16 ? 0xFFFF0000 : 0xFF000000;

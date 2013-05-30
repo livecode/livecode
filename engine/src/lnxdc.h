@@ -19,7 +19,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "uidc.h"
 #include "lnxflst.h"
-#include "lnxcontext.h"
 #include "lnxtransfer.h"
 
 #define XLOOKUPSTRING_SIZE 32
@@ -107,7 +106,6 @@ class MCScreenDC : public MCUIDC
 
 	GC gc;		// This is the GC in "Native" (i.e. actual screen) depth
 	GC gc1;		// This is the GC in 1-bit depth used for image masks
-	GC gc32 ;	// This is the GC in 32-bit depth. This depth is used internally regardless of the actual screen depth.
 	
 	bool m_application_has_focus ; // This allows us to track if the application is at the front.
 	
@@ -216,7 +214,6 @@ public:
 	virtual void freepixmap(Pixmap &pixmap);
 	virtual Pixmap createpixmap(uint2 width, uint2 height,
 	                            uint2 depth, Boolean purge);
-	virtual Pixmap createstipple(uint2 width, uint2 height, uint4 *bits);
 	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
@@ -224,9 +221,6 @@ public:
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-	                       uint4 rop, uint4 pixel);
 	virtual MCBitmap *createimage(uint2 depth, uint2 width, uint2 height,
 	                              Boolean set
 		                              , uint1 value,
@@ -234,6 +228,8 @@ public:
 	virtual void destroyimage(MCBitmap *image);
 	virtual void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
 	                      int2 dx, int2 dy, uint2 w, uint2 h);
+	virtual XImage *getimage(Drawable pm, int2 x, int2 y,
+	                           uint2 w, uint2 h, Boolean shm = False);
 	virtual void flipimage(XImage *image, int2 byte_order, int2 bit_order);
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
@@ -302,8 +298,6 @@ public:
 
 	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 	
-	Pixmap getstipple(void);
-	
 	void initatoms();
 	void setupcolors();
 	uint2 getscreen();
@@ -338,7 +332,6 @@ public:
 	
 	// Public acccess functions get get GC's, visuals and cmaps for different depths
 	GC getgc(void) ; 
-	GC getgc32(void) { return gc32; };
 	GC getgc1 (void) { return gc1; } ;
 	GC getgcnative (void) { return gc; } ;
 	

@@ -318,9 +318,6 @@ public:
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-	                       uint4 rop, uint4 pixel);
 
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);
@@ -523,12 +520,6 @@ public:
 	void getcolornames(MCExecPoint &);
 	void getpaletteentry(uint4 n, MCColor &c);
 
-#ifdef OLD_GRAPHICS
-	uint4 getpixel(MCBitmap *image, int2 x, int2 y);
-#endif
-
-	void getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
-	              uint2 &rb, uint2 &gb, uint2 &bb);
 	Boolean position(const char *geom, MCRectangle &rect);
 	Boolean hasmessages()
 	{

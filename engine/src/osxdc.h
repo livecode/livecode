@@ -337,9 +337,6 @@ public:
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
 	                      int2 sx, int2 sy, uint2 sw, uint2 sh,
 	                      int2 dx, int2 dy, uint4 rop);
-	virtual void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-	                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-	                       uint4 rop, uint4 pixel);
 	
 	virtual MCColorTransformRef createcolortransform(const MCColorSpaceInfo& info);
 	virtual void destroycolortransform(MCColorTransformRef transform);

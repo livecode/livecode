@@ -28,7 +28,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "text.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
 #include "lnxgtkthemedrawing.h"
 #include "lnximagecache.h"
 #include "lnxtheme.h"

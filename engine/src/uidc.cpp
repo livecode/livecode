@@ -386,10 +386,6 @@ void MCUIDC::copyarea(Drawable source, Drawable dest, int2 depth,
                       int2 sx, int2 sy, uint2 sw, uint2 sh,
                       int2 dx, int2 dy, uint4 rop)
 { }
-void MCUIDC::copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-                       uint2 sw, uint2 sh, int2 dx, int2 dy,
-                       uint4 rop, uint4 pixel)
-{ }
 
 MCColorTransformRef MCUIDC::createcolortransform(const MCColorSpaceInfo& info)
 {
@@ -1294,75 +1290,6 @@ void MCUIDC::getcolornames(MCExecPoint &ep)
 	uint2 i;
 	for (i = 0 ; i < end ; i++)
 		ep.concatcstring(color_table[i].token, EC_RETURN, i == 0);
-}
-
-#ifdef OLD_GRAPHICS
-uint4 MCUIDC::getpixel(MCBitmap *image, int2 x, int2 y)
-{
-	switch (image->bits_per_pixel)
-	{
-	case 1:
-		{
-			uint1 bit = 0x80 >> (x & 0x7);
-			uint4 offset = y * image->bytes_per_line + (x >> 3);
-			uint1 byte = image->data[offset] & bit ? 1 : 0;
-			uint4 planesize = image->bytes_per_line * image->height;
-			uint2 j = image->depth;
-			while (--j)
-			{
-				offset += planesize;
-				byte <<= 1;
-				byte |= image->data[offset] & bit ? 1 : 0;
-			}
-			return (uint4)byte;
-		}
-	case 2:
-		{
-			uint1 *qptr = (uint1 *)&image->data[y * image->bytes_per_line
-			                                    + (x >> 2)];
-			return (uint4)(*qptr >> 2 * (x & 3) & 0x03);
-		}
-	case 4:
-		{
-			uint1 *halfptr = (uint1 *)&image->data[y * image->bytes_per_line
-			                                       + (x >> 1)];
-			return (uint4)(*halfptr >> 4 * (x & 1) & 0x0F);
-		}
-	case 8:
-		{
-			uint1 *oneptr = (uint1 *)&image->data[y * image->bytes_per_line + x];
-			return *oneptr;
-		}
-	case 16:
-		{
-			uint2 *twoptr = (uint2 *)&image->data[y * image->bytes_per_line
-			                                      + (x << 1)];
-			return (uint4)*twoptr;
-		}
-	case 32:
-		{
-			uint4 *fourptr = (uint4 *)&image->data[y * image->bytes_per_line
-			                                       + (x << 2)];
-			return *fourptr;
-		}
-	default:
-		break;
-	}
-	fprintf(stderr, "MCImage: ERROR unsupported depth %d\n",
-	        image->bits_per_pixel);
-	return 0;
-}
-#endif
-
-void MCUIDC::getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
-                      uint2 &rb, uint2 &gb, uint2 &bb)
-{
-	rs = redshift;
-	gs = greenshift;
-	bs = blueshift;
-	rb = redbits;
-	gb = greenbits;
-	bb = bluebits;
 }
 
 static int ReadInteger(const char *string, const char **NextString)

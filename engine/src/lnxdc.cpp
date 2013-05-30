@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
 
 #include "lnxpsprinter.h"
 

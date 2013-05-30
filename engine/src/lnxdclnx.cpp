@@ -272,25 +272,6 @@ void MCScreenDC::create_stipple()
 	XSetGraphicsExposures(dpy, gc1, False);
 	XSetForeground(dpy, gc1, 1);
 	XSetBackground(dpy, gc1, 0);
-
-	Boolean oldshm = MCshm;
-	MCBitmap *im = createimage(1, 64, 64, False, 0x0, True, False);
-	int2 i;
-	uint4 *dptr = (uint4 *)im->data;
-	for (i = 0 ; i < 16 ; i++)
-	{
-
-		*dptr++ = 0xAAAAAAAA;
-		*dptr++ = 0xAAAAAAAA;
-		*dptr++ = 0x55555555;
-		*dptr++ = 0x55555555;
-	}
-
-	putimage(graystipple, im, 0, 0, 0, 0, 32, 32);
-	XSync(dpy, False);
-	if (oldshm != MCshm)
-		putimage(graystipple, im, 0, 0, 0, 0, 32, 32);
-	destroyimage(im);
 }
 
 void MCScreenDC::setmods(uint2 state, KeySym sym,

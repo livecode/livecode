@@ -331,11 +331,6 @@ Boolean MCScreenDC::open()
 	             | KeyPressMask | KeyReleaseMask | ExposureMask
 	             | FocusChangeMask | StructureNotifyMask | PropertyChangeMask);
 	
-	// Creation of the 32-bit GC
-	// OK - as we are using getdepth() this _may_ return 24 if its a 24-bit display.
-	Drawable t_32 = MCscreen -> createpixmap ( 1, 1, getdepth(), false );
-	gc32 = XCreateGC( dpy, t_32, 0, NULL ) ;
-	MCscreen -> freepixmap ( t_32 ) ;
 	
 	
 	
@@ -457,7 +452,6 @@ Boolean MCScreenDC::close(Boolean force)
 	
 	XFreeGC ( dpy, gc ) ;
 	XFreeGC ( dpy, gc1 ) ;
-	XFreeGC ( dpy, gc32 ) ;
 	
 	// I.M. 12/01/09
 	// We need to free all X server resources before closing
@@ -654,27 +648,6 @@ Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height,
 	return pm;
 }
 
-Pixmap MCScreenDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-		
-	Pixmap pm = XCreatePixmap(dpy, getroot(), width, height, 1);
-	XImage *image = XCreateImage(dpy, getvisual(), 1, XYPixmap, 0,
-	                             NULL, width, height, getpad(), 0);
-	image->data = (char *)bits;
-
-	XPutImage(dpy, pm, gc1, image, 0, 0, 0, 0, width, height);
-
-	image->data = NULL;
-	XDestroyImage(image);
-	return pm;
-}
-
-Pixmap MCScreenDC::getstipple(void)
-{
-	return graystipple;
-}
-
-
 Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 {
 	Window root, child;
@@ -733,25 +706,6 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth,
 	XFreeGC ( dpy, t_gc ) ;
 }
 
-void MCScreenDC::copyplane(Drawable source, Drawable dest, int2 sx, int2 sy,
-                           uint2 sw, uint2 sh, int2 dx, int2 dy,
-                           uint4 rop, uint4 pixel)
-{
-	if (source == nil || dest == nil)
-		return;
-	
-	GC t_gc = getgc32();
-	
-	if (rop != GXcopy)
-		XSetFunction(dpy, t_gc, rop);
-	XSetForeground(dpy, t_gc, pixel );
-	
-	XCopyPlane(dpy, source, dest, t_gc, sx, sy, sw, sh, dx, dy, 1);
-	
-	if (rop != GXcopy)
-		XSetFunction(dpy, t_gc, GXcopy);
-}
-
 MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height,
                                   Boolean set
 	                                  , uint1 value,
@@ -803,21 +757,6 @@ void MCScreenDC::destroyimage(MCBitmap *image)
 {
 	if (image->data != NULL)
 	{
-		if (image->obdata != NULL)
-		{
-			XShmSegmentInfo *shminfo = (XShmSegmentInfo *)image->obdata;
-			XShmDetach(dpy, shminfo);
-			XSync(dpy, False);
-			shmdt(image->data);
-			shmctl(shminfo->shmid, IPC_RMID, NULL);
-			image->data = NULL;
-			delete shminfo;
-		}
-		else
-		{
-			delete image->data;
-			image->data = NULL;
-		}
 		delete image->data;
 		image->data = NULL;
 	}
@@ -830,20 +769,27 @@ void MCScreenDC::putimage(Drawable d, MCBitmap *source, int2 sx, int2 sy,
 {
 	if (d == nil)
 		return;
+
+	GC t_gc;
+
+	t_gc = XCreateGC(dpy, d, 0, NULL ) ;
+	XPutImage(dpy, d, t_gc , (XImage *)source, sx, sy, dx, dy, w, h);
+	XFreeGC(dpy, t_gc);
+}
+
+XImage *MCScreenDC::getimage(Drawable d, int2 x, int2 y,
+                               uint2 w, uint2 h, Boolean shm)
+{
+	if (d == DNULL)
+		d = getroot();
+	XImage *b = XGetImage(dpy, d, x, y, w, h, AllPlanes, ZPixmap);
+
+	assert ( b != NULL ) ;
 	
-	if (MCshm && source->obdata != NULL)
-	{
-		flipimage((XImage*)source, getbyteorder(), getbitorder());
-		XShmPutImage(dpy, dest, getgc(), (XImage *)source, sx, sy, dx, dy, w, h, False);
-	}
-	else
-	{
-		GC t_gc;
-			
-		t_gc = XCreateGC(dpy, d, 0, NULL ) ;
-		XPutImage(dpy, d, t_gc , (XImage *)source, sx, sy, dx, dy, w, h);
-		XFreeGC(dpy, t_gc);
-	}
+	flipimage(b, MSBFirst, MSBFirst);
+	
+	return b;
+
 }
 
 void MCScreenDC::flipimage(XImage *image, int2 byte_order, int2 bit_order)

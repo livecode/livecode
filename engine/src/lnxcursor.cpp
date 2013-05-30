@@ -257,8 +257,8 @@ MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p
 
 		// Turn our bitmaps into pixmaps
 		Pixmap t_color_pm, t_trans_pm;
-		t_color_pm = MCscreen -> createpixmap(p_image -> width, p_image -> height, 1, False);
-		t_trans_pm = MCscreen -> createpixmap(p_image -> width, p_image -> height, 1, False);
+		t_color_pm = ((MCScreenDC*)MCscreen) -> createpixmap(p_image -> width, p_image -> height, 1, False);
+		t_trans_pm = ((MCScreenDC*)MCscreen) -> createpixmap(p_image -> width, p_image -> height, 1, False);
 
 		((MCScreenDC*)MCscreen) -> putimage(t_color_pm, t_color_mask, 0, 0, 0, 0, p_image -> width, p_image -> height);
 		((MCScreenDC*)MCscreen) -> putimage(t_trans_pm, t_trans_mask, 0, 0, 0, 0, p_image -> width, p_image -> height);
@@ -268,8 +268,8 @@ MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_xhot, int2 p
 		pixel_to_color(t_first_color, bc);
 		t_xcursor = XCreatePixmapCursor(dpy, t_color_pm, t_trans_pm, (XColor *)&fc, (XColor *)&bc, p_xhot - 1, p_yhot - 1);
 
-		MCscreen -> freepixmap(t_trans_pm);
-		MCscreen -> freepixmap(t_color_pm);
+		((MCScreenDC*)MCscreen) -> freepixmap(t_trans_pm);
+		((MCScreenDC*)MCscreen) -> freepixmap(t_color_pm);
 
 		((MCScreenDC*)MCscreen) -> destroyimage(t_color_mask);
 		((MCScreenDC*)MCscreen) -> destroyimage(t_trans_mask);
