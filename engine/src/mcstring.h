@@ -437,5 +437,6 @@ extern MCNameRef MCM_product_details_received;
 extern MCNameRef MCM_product_request_error;
 extern MCNameRef MCM_protected_data_available;
 extern MCNameRef MCM_protected_data_unavailable;
+extern MCNameRef MCM_remote_control_received;
 #endif
 

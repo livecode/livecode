@@ -460,6 +460,7 @@ MCNameRef MCM_product_details_received;
 MCNameRef MCM_product_request_error;
 MCNameRef MCM_protected_data_available;
 MCNameRef MCM_protected_data_unavailable;
+MCNameRef MCM_remote_control_received;
 #endif
 
 void MCU_initialize_names(void)
@@ -741,6 +742,7 @@ void MCU_initialize_names(void)
     /* UNCHECKED */ MCNameCreateWithCString("productRequestError", MCM_product_request_error);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataDidBecomeAvailable", MCM_protected_data_available);
     /* UNCHECKED */ MCNameCreateWithCString("protectedDataWillBecomeUnavailable", MCM_protected_data_unavailable);
+	/* UNCHECKED */ MCNameCreateWithCString("remoteControlReceived", MCM_remote_control_received);
 #endif
 }
 

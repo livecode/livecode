@@ -36,6 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "mbldc.h"
 #include "text.h"
+#include "card.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIGraphics.h>
@@ -1042,6 +1043,109 @@ static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_pa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool s_remote_control_enabled = false;
+
+class MCRemoteControlEvent: public MCCustomEvent
+{
+public:
+	MCRemoteControlEvent(UIEventSubtype p_type)
+		: m_type(p_type)
+	{
+	}
+	
+	void Destroy(void)
+	{
+		delete this;
+	}
+	
+	void Dispatch(void)
+	{
+		const char *t_type_string;
+		switch(m_type)
+		{
+			case UIEventSubtypeRemoteControlPlay:
+				t_type_string = "play";
+				break;
+			case UIEventSubtypeRemoteControlPause:
+				t_type_string = "pause";
+				break;
+			case UIEventSubtypeRemoteControlStop:
+				t_type_string = "stop";
+				break;
+			case UIEventSubtypeRemoteControlTogglePlayPause:
+				t_type_string = "toggle play pause";
+				break;
+			case UIEventSubtypeRemoteControlNextTrack:
+				t_type_string = "next track";
+				break;
+			case UIEventSubtypeRemoteControlPreviousTrack:
+				t_type_string = "previous track";
+				break;
+			case UIEventSubtypeRemoteControlBeginSeekingBackward:
+				t_type_string = "begin seeking backward";
+				break;
+			case UIEventSubtypeRemoteControlEndSeekingBackward:
+				t_type_string = "end seeking backward";
+				break;
+			case UIEventSubtypeRemoteControlBeginSeekingForward:
+				t_type_string = "begin seeking forward";
+				break;
+			case UIEventSubtypeRemoteControlEndSeekingForward:
+				t_type_string = "end seeking forward";
+				break;
+			default:
+				return;
+		}
+		
+		MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_remote_control_received, t_type_string);
+	}
+	
+private:
+	UIEventSubtype m_type;
+};
+
+static Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_parameters)
+{
+	if (!s_remote_control_enabled)
+	{
+		[[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+		s_remote_control_enabled = true;
+	}
+	
+	return ES_NORMAL;
+}
+
+static Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_parameters)
+{
+	if (s_remote_control_enabled)
+	{
+		[[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+		s_remote_control_enabled = false;
+	}
+	
+	return ES_NORMAL;
+}
+
+static Exec_stat MCHandleRemoteControlEnabled(void *context, MCParameter *p_parameters)
+{
+	MCresult -> sets(MCU_btos(s_remote_control_enabled));
+	return ES_NORMAL;
+}
+
+static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
+{
+	return ES_ERROR;
+}
+
+void MCIPhoneHandleRemoteControlEvent(UIEventSubtype p_type, NSTimeInterval p_timestamp)
+{
+	MCCustomEvent *t_event;
+	t_event = new MCRemoteControlEvent(p_type);
+	MCEventQueuePostCustom(t_event);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
 
 // MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
@@ -1436,6 +1540,12 @@ static MCPlatformMessageSpec s_platform_messages[] =
     // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
     {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
     {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+	
+	// MW-2013-05-30: [[ RemoteControl ]] Support for iOS 'remote controls' and metadata display.
+	{false, "iphoneEnableRemoteControl", MCHandleEnableRemoteControl, nil},
+	{false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
+	{false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
+	{false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
     
 	{nil, nil, nil}
 
