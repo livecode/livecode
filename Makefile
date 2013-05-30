@@ -38,6 +38,9 @@ libskia:
 libcore:
 	$(MAKE) -C ./libcore libcore
 	
+libgraphics: libskia
+	$(MAKE) -C ./libgraphics libgraphics
+
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore libgraphics
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
 
