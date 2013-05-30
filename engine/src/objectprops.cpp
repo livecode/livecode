@@ -985,21 +985,16 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 			t_use = MCParentScript::Acquire(this, t_id, t_stack);
 			if (t_use == NULL)
 				t_stat = ES_ERROR;
-
-			// MW-2009-01-28: [[ Inherited parentScripts ]]
-			// Next we have to ensure the inheritence hierarchy is in place (The
-			// inherit call will create super-uses, and will return false if there
-				// is not enough memory).
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
+				
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we resolve the the
+			//   parent script as pointing to the object (so Inherit works correctly).
+			t_use -> GetParent() -> Resolve(t_object);
+			
+			// MW-2013-05-30: [[ InheritedPscripts ]] Next we have to ensure the
+			//   inheritence hierarchy is in place (The inherit call will create
+			//   super-uses, and will return false if there is not enough memory).
 			if (!t_use -> Inherit())
 				t_stat = ES_ERROR;
-
-			// TODO: Update all the Uses of this object, if it is currently
-			// being used as a parentScript, because we have now changed the
-			// inheritence hierarchy dynamically, and the various uses need
-			// their super_use chains updated.
-			// 
-#endif
 
 			// We have succeeded in creating a new use of an object as a parent
 			// script, so now release the old parent script this object points
@@ -1009,8 +1004,18 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 
 			parent_script = t_use;
 
-			// Finally resolve the parent script as pointing to the object.
-			parent_script -> GetParent() -> Resolve(t_object);
+			// MW-2013-05-30: [[ InheritedPscripts ]] Make sure we update all the
+			//   uses of this object if it is being used as a parentScript. This
+			//   is because the inheritence hierarchy has been updated and so the
+			//   super_use chains need to be remade.
+			MCParentScript *t_this_parent;
+			if (getstate(CS_IS_PARENTSCRIPT))
+			{
+				t_this_parent = MCParentScript::Lookup(this);
+				if (t_this_parent != nil)
+					if (!t_this_parent -> Reinherit())
+						t_stat = ES_ERROR;
+			}
 		}
 	}
 	else
