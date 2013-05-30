@@ -3369,4 +3369,14 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
 
 ///////////
 
+void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
+void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
+void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientation);
+void MCOrientationSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orientations);
+void MCOrientationGetOrientationLocked(MCExecContext& ctxt, bool& r_locked);
+void MCOrientationExecLockOrientation(MCExecContext& ctxt);
+void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
+
+///////////
+
 #endif

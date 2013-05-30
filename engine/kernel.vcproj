@@ -6429,6 +6429,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-mail.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-math.cpp"
 				>
 			</File>
@@ -6446,6 +6450,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-orientation.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-orientation.h"
 				>
 			</File>
 			<File

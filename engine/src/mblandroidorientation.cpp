@@ -54,18 +54,18 @@ typedef enum
 
 typedef enum
 {
+	kMCDisplayOrientationUnknown,
 	kMCDisplayOrientationPortrait,
-	kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationPortraitUpsideDown,
 	kMCDisplayOrientationLandscapeRight,
-
+	kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationFaceUp,
-	kMCDisplayOrientationUnknown,
 } MCAndroidDisplayOrientation;
 
 static uint32_t s_allowed_orientations = 0;
 static uint32_t s_orientation_lock = 0;
 
+/*
 static const char *s_orientation_names[] = {
 	"portrait",
 	"landscape left",
@@ -73,7 +73,7 @@ static const char *s_orientation_names[] = {
 	"landscape right",
 	nil
 //	"face up",
-};
+}; */
 
 ////////////////////////////////////////////////////////////////////////////////
 

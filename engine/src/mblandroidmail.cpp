@@ -42,13 +42,23 @@ bool MCCanSendMail()
 
 Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 {
-	MCresult->sets(MCU_btos(MCCanSendMail()));
-	return ES_NORMAL;
+/*	MCresult->sets(MCU_btos(MCCanSendMail()));
+	return ES_NORMAL;*/
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	MCMobileGetCanSendMail(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ctxt . Catch(line, pos);
 }
 
-void MCAndroidSendEmail(const char *p_address, const char *p_cc_address, const char *p_subject, const char *p_message_body)
+void MCAndroidSendEmail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
 {
-	MCAndroidEngineCall("sendEmail", "vssss", nil, p_address, p_cc_address, p_subject, p_message_body);
+	MCAndroidEngineCall("sendEmail", "vxxxx", nil, p_address, p_cc_address, p_subject, p_message_body);
 }
 
 typedef enum
@@ -63,7 +73,7 @@ static MCAndroidMailStatus s_mail_status = kMCAndroidMailWaiting;
 
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
-	char *t_address, *t_cc_address, *t_subject, *t_message_body;
+/*	char *t_address, *t_cc_address, *t_subject, *t_message_body;
 	t_address = nil;
 	t_cc_address = nil;
 	t_subject = nil;
@@ -84,7 +94,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 		case kMCAndroidMailSent:
 			MCresult -> sets("sent");
 			break;
-			
+	
 		case kMCAndroidMailCanceled:
 			MCresult -> sets("cancel");
 			break;
@@ -101,7 +111,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_message_body;
 	
 	return ES_NORMAL;
-}
+}*/
 
 enum MCMailType
 {
@@ -152,7 +162,7 @@ static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCSt
 
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
-	bool t_success;
+/*	bool t_success;
 	t_success = true;
 	
 	char *t_to, *t_cc, *t_bcc;
@@ -255,7 +265,7 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	delete t_body . getstring();
 	
 	return ES_NORMAL;
-}
+} */
 
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters)
 {
@@ -284,4 +294,54 @@ void MCAndroidMailCanceled()
 	// IM-2012-10-22 - [[ BZ 10486 ]] - android mail activity always returns canceled
 	// regardless of what the user does so for now we just return unknown
 	s_mail_status = kMCAndroidMailUnknown;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCAndroidMailResult(MCExecContext& ctxt)
+{
+	while (s_mail_status == kMCAndroidMailWaiting)
+		MCscreen->wait(60.0, False, True);
+
+	switch (s_mail_status)
+	{
+		case kMCAndroidMailSent:
+			ctxt . SetTheResultToStaticCString("sent");
+			break;
+	
+		case kMCAndroidMailCanceled:
+			ctxt . SetTheResultToStaticCString("cancel");
+			break;
+			
+		case kMCAndroidMailUnknown:
+		default:
+			ctxt . SetTheResultToStaticCString("unknown");
+			break;
+	}
+}
+
+void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
+{
+	s_mail_status = kMCAndroidMailWaiting;
+	MCAndroidSendEmail(p_address, p_cc_address, p_subject, p_message_body);
+	MCAndroidMailResult(ctxt);
+}
+
+void MCSystemPrepareMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type)
+{
+	const char *t_prep_sig;
+	t_prep_sig = "vxxxxxb";
+
+	MCAndroidEngineCall("prepareEmail", t_prep_sig, nil, p_to, p_cc, p_bcc, p_subject, p_body, p_type == kMCMailTypeHtml);
+}
+
+void MCSystemSendPreparedMail(MCExecContext& ctxt)
+{
+	MCAndroidEngineCall("sendEmail", "v", nil);
+	MCAndroidMailResult(ctxt);
+}
+
+void MCSystemGetCanSendMail(MCExecContext& ctxt, bool& r_result)
+{
+	r_result = MCCanSendMail();
 }

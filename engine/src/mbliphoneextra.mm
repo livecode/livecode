@@ -503,7 +503,7 @@ Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-/* MOVED TO mbliphoneorientation.mm
+/*
 
 // Important: We switch right and left here. Internally we use 'device orientation' but to script
 // we use 'interface orientation'. Interface orientation ties landscape to the position of the home
@@ -514,6 +514,7 @@ static const char *s_orientation_names[] =
 	"unknown", "portrait", "portrait upside down", "landscape right", "landscape left", "face up", "face down", nil
 };
 */
+
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
 // HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
