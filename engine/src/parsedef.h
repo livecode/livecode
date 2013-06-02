@@ -907,6 +907,8 @@ enum Properties {
     P_LOCK_MOVES,
     P_LOCK_RECENT,
     P_LOCK_SCREEN,
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Property tag for 'the lockUpdates' of groups.
+    P_LOCK_UPDATES,
     P_BEEP_LOUDNESS,
     P_BEEP_PITCH,
     P_BEEP_DURATION,

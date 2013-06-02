@@ -1203,16 +1203,22 @@ Boolean MCObject::resizeparent()
 	if (parent != NULL && parent->gettype() == CT_GROUP)
 	{
 		MCGroup *gptr = (MCGroup *)parent;
-		// MM-2012-09-05: [[ Property Listener ]] Moving/resizing an object within a group will potentially effect the location/rect properties of the group.
-		if (gptr->computeminrect((state & (CS_MOVE | CS_SIZE)) != 0))
+        
+		// MERG-2013-06-02: [[ GrpLckUpdates ]] Only recalculate the group if not locked.
+        if (!gptr -> islocked())
 		{
-			if (state & CS_MOVE)
-				gptr -> signallisteners(P_LOCATION);
-			else
-				gptr -> signallisteners(P_RECTANGLE);
-			return True;
-		} else 
-			return False;
+            // MM-2012-09-05: [[ Property Listener ]] Moving/resizing an object within a group will potentially effect the location/rect properties of the group.
+            if (gptr->computeminrect((state & (CS_MOVE | CS_SIZE)) != 0))
+            {
+                if (state & CS_MOVE)
+                    gptr -> signallisteners(P_LOCATION);
+                else
+                    gptr -> signallisteners(P_RECTANGLE);
+                return True;
+            }
+			else 
+                return False;
+        }
 	}
 	return False;
 }
