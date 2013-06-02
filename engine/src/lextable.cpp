@@ -1012,6 +1012,7 @@ LT factor_table[] =
         {"lockmoves", TT_PROPERTY, P_LOCK_MOVES},
         {"lockrecent", TT_PROPERTY, P_LOCK_RECENT},
         {"lockscreen", TT_PROPERTY, P_LOCK_SCREEN},
+        {"lockupdates", TT_PROPERTY, P_LOCK_UPDATES},
         {"locktext", TT_PROPERTY, P_LOCK_TEXT},
         {"log10", TT_FUNCTION, F_LOG10},
         {"log2", TT_FUNCTION, F_LOG2},

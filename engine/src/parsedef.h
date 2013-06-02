@@ -904,6 +904,7 @@ enum Properties {
     P_LOCK_MOVES,
     P_LOCK_RECENT,
     P_LOCK_SCREEN,
+    P_LOCK_UPDATES,
     P_BEEP_LOUDNESS,
     P_BEEP_PITCH,
     P_BEEP_DURATION,
