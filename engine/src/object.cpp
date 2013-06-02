@@ -1206,7 +1206,9 @@ Boolean MCObject::resizeparent()
 	{
 		MCGroup *gptr = (MCGroup *)parent;
         
-        if (!gptr -> islocked()) {
+		// MERG-2013-06-02: [[ GrpLckUpdates ]] Only recalculate the group if not locked.
+        if (!gptr -> islocked())
+		{
             // MM-2012-09-05: [[ Property Listener ]] Moving/resizing an object within a group will potentially effect the location/rect properties of the group.
             if (gptr->computeminrect((state & (CS_MOVE | CS_SIZE)) != 0))
             {
@@ -1215,7 +1217,8 @@ Boolean MCObject::resizeparent()
                 else
                     gptr -> signallisteners(P_RECTANGLE);
                 return True;
-            } else 
+            }
+			else 
                 return False;
         }
 	}
