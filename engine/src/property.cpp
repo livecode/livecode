@@ -347,6 +347,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RO_PROPERTY(P_EXECUTION_CONTEXTS, String, Debugging, ExecutionContexts)
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
+
+	DEFINE_RW_PROPERTY
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
@@ -3248,66 +3250,14 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
 		return ctxt . Catch(line, pos);
 	}
 
-	switch (which)
+	Exec_stat t_stat;
+	t_stat = mode_set(ep);
+	if (t_stat != ES_NORMAL)
 	{
-		case P_CLIPBOARD_DATA:
-		case P_DRAG_DATA:
-		{
-			MCTransferData *t_pasteboard;
-			if (which == P_CLIPBOARD_DATA)
-				t_pasteboard = MCclipboarddata;
-			else
-				t_pasteboard = MCdragdata;
-			
-			MCTransferType t_type;
-			if (customindex == NULL)
-				t_type = TRANSFER_TYPE_TEXT;
-			else
-			{
-				MCExecPoint ep2(ep);
-				if (customindex -> eval(ep2) != ES_NORMAL)
-				{
-					MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
-					return ES_ERROR;
-				}
-				t_type = MCTransferData::StringToType(ep2 . getsvalue());
-			}			
-			if (t_type != TRANSFER_TYPE_NULL)
-			{
-#ifdef SHARED_STRING
-				MCSharedString *t_data;
-				t_data = MCSharedString::Create(ep . getsvalue());
-				if (t_data != NULL)
-				{
-					bool t_success;
-					t_success = t_pasteboard -> Store(t_type, t_data);
-					t_data -> Release();
-#else
-				MCAutoStringRef t_data;
-				/* UNCHECKED */ ep . copyasstringref(&t_data);
-				if (*t_data != nil)
-				{
-					bool t_success;
-					t_success = t_pasteboard -> Store(t_type, *t_data);
-#endif
-					if (!t_success)
-						return ES_ERROR;
-				}
-			}
-		}
-			break;
-		default:
-		{
-			Exec_stat t_stat;
-			t_stat = mode_set(ep);
-			if (t_stat != ES_NORMAL)
-			{
-				MCeerror->add(EE_PROPERTY_CANTSET, line, pos, ep.getsvalue());
-				return ES_ERROR;
-			}
-		}
-		break;
+		MCeerror->add(EE_PROPERTY_CANTSET, line, pos, ep.getsvalue());
+		return ES_ERROR;
 	}
+
 	return ES_NORMAL;
 }
 
@@ -5285,93 +5235,23 @@ Exec_stat MCProperty::eval_global_property(MCExecPoint& ep)
 		
 		return ctxt . Catch(line, pos);
 	}
+
+	Exec_stat t_stat;
+	t_stat = ES_NORMAL;
 	
-	switch (which)
+	if (customindex != nil)
+		t_stat = customindex -> eval(ep);
+	else
+		ep . clear();
+	
+	if (t_stat == ES_NORMAL)
+		t_stat = mode_eval(ep);
+	if (t_stat != ES_NORMAL)
 	{
-		case P_CLIPBOARD_DATA:
-		case P_DRAG_DATA:
-		{
-			bool t_query_success;
-			t_query_success = true;
-			
-			MCTransferData *t_pasteboard;
-			if (which == P_CLIPBOARD_DATA)
-				t_pasteboard = MCclipboarddata;
-			else
-				t_pasteboard = MCdragdata;
-			
-			if (t_pasteboard -> Lock())
-			{
-				MCTransferType t_type;
-				if (customindex == NULL)
-					t_type = TRANSFER_TYPE_TEXT;
-				else
-				{
-					if (customindex->eval(ep) != ES_NORMAL)
-					{
-						MCeerror->add(EE_PROPERTY_BADEXPRESSION, line, pos);
-						return ES_ERROR;
-					}
-					t_type = MCTransferData::StringToType(ep . getsvalue());
-				}
-				
-				if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
-				{
-#ifdef SHARED_STRING
-					MCSharedString *t_data;
-					t_data = t_pasteboard -> Fetch(t_type);
-					if (t_data != NULL)
-					{
-						ep . copysvalue(t_data -> Get() . getstring(), t_data -> Get() . getlength());
-						t_data -> Release();
-					}
-#else
-					MCAutoStringRef t_data;
-					if (t_pasteboard -> Fetch(t_type, &t_data))
-						/* UNCHECKED */ ep . setvalueref(*t_data);
-#endif
-					else
-						t_query_success = false;
-				}
-				else
-				{
-					ep . clear();
-					MCresult -> sets("format not available");
-				}
-				
-				t_pasteboard -> Unlock();
-			}
-			else
-				t_query_success = false;
-			
-			if (!t_query_success)
-			{
-				ep . clear();
-				MCresult -> sets("unable to query clipboard");
-			}
-		}
-			break;
-		default:
-			{
-				Exec_stat t_stat;
-				t_stat = ES_NORMAL;
-				
-				if (customindex != nil)
-					t_stat = customindex -> eval(ep);
-				else
-					ep . clear();
-				
-				if (t_stat == ES_NORMAL)
-					t_stat = mode_eval(ep);
-				if (t_stat != ES_NORMAL)
-				{
-					MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
-					return ES_ERROR;
-				}
-			}
-			break;
+		MCeerror->add(EE_PROPERTY_NOPROP, line, pos);
+		return ES_ERROR;
 	}
-	
+
 	return ES_NORMAL;
 }
 

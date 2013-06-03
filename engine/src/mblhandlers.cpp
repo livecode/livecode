@@ -238,7 +238,7 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	t_success = true;
 	
 	MCAutoStringRef t_to, t_cc, t_bcc, t_subject, t_body;
-	MCVariableValue t_attachments;
+	MCAutoArrayRef t_attachments;
 
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);

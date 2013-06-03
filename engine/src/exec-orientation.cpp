@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 
 #include "exec.h"
+#include "exec-orientation.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -41,16 +42,16 @@ static MCExecSetTypeElementInfo _kMCOrientationOrientationsElementInfo[] =
 	{ "face down", ORIENTATION_FACE_DOWN_BIT },
 };
 
-static MCExecSetTypeInfo _kMCPrintingPrinterFeaturesTypeInfo =
+static MCExecSetTypeInfo _kMCOrientationOrientationsTypeInfo =
 {
-	"Printing.PrinterFeatures",
-	sizeof(_kMCPrintingPrinterFeaturesElementInfo) / sizeof(MCExecSetTypeElementInfo),
-	_kMCPrintingPrinterFeaturesElementInfo
+	"Orientation.Orientations",
+	sizeof(_kMCOrientationOrientationsElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCOrientationOrientationsElementInfo
 };
 
 //////////
 
-static MCExecSetTypeElementInfo _kMCOrientationOrientationsElementInfo[] =
+static MCExecEnumTypeElementInfo _kMCOrientationOrientationElementInfo[] =
 {
 	{ "unknown", ORIENTATION_UNKNOWN },
 	{ "portrait", ORIENTATION_PORTRAIT },
@@ -61,11 +62,11 @@ static MCExecSetTypeElementInfo _kMCOrientationOrientationsElementInfo[] =
 	{ "face down", ORIENTATION_FACE_DOWN },
 };
 
-static MCExecEnumTypeInfo _kMCPrintingPrinterOrientationTypeInfo =
+static MCExecEnumTypeInfo _kMCOrientationOrientationTypeInfo =
 {
-	"Printing.PrinterOrientation",
-	sizeof(_kMCPrintingPrinterOrientationElementInfo) / sizeof(MCExecEnumTypeElementInfo),
-	_kMCPrintingPrinterOrientationElementInfo
+	"Orientation.Orientation",
+	sizeof(_kMCOrientationOrientationElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCOrientationOrientationElementInfo
 };
 
 ////////////////////////////////////////////////////////////////////////////////

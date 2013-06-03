@@ -615,9 +615,6 @@ void MCInterfaceEvalClickLine(MCExecContext& ctxt, MCStringRef& r_string)
 
 //////////
 
-// REVIEW-MW-2012-05-18: Having added 'get*prop()' methods to MCObject, EP can be
-//   eliminated from these methods.
-
 void MCInterfaceEvalClickField(MCExecContext& ctxt, MCStringRef& r_string)
 {
 	if (MCclickfield == nil)

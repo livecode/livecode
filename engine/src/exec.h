@@ -2019,6 +2019,10 @@ extern MCExecMethodInfo *kMCPasteboardGetDragImageOffsetMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardSetDragImageOffsetMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardGetAllowableDragActionsMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardSetAllowableDragActionsMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardGetClipboardDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardSetClipboardDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardGetDragDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardSetDragDataMethodInfo;
 
 void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string);
 void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
@@ -2051,6 +2055,11 @@ void MCPasteboardGetDragImageOffset(MCExecContext& ctxt, MCPoint*& r_value);
 void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
+
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
 
 ///////////
 
@@ -3378,5 +3387,9 @@ void MCOrientationExecLockOrientation(MCExecContext& ctxt);
 void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
 
 ///////////
+
+void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
+void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
+void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
 
 #endif

@@ -63,6 +63,10 @@ MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragImageOffset, 1)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragImageOffset, 1)
 MC_EXEC_DEFINE_GET_METHOD(Pasteboard, AllowableDragActions, 1)
 MC_EXEC_DEFINE_SET_METHOD(Pasteboard, AllowableDragActions, 1)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, ClipboardData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, ClipboardData, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pasteboard, DragData, 2)
+MC_EXEC_DEFINE_SET_METHOD(Pasteboard, DragData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -652,4 +656,85 @@ void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value)
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value)
 {
 	MCallowabledragactions = (MCDragActionSet)p_value;
+}
+
+void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCStringRef& r_data)
+{
+	MCTransferData *t_pasteboard;
+	if (p_is_clipboard)
+		t_pasteboard = MCclipboarddata;
+	else
+		t_pasteboard = MCdragdata;
+
+	bool t_success;
+	t_success = true;
+
+	if (t_pasteboard -> Lock())
+	{
+		MCTransferType t_type;
+		if (p_index == nil)
+			t_type = TRANSFER_TYPE_TEXT;
+		else
+			t_type = MCTransferData::StringToType(MCStringGetOldString(p_index));
+			
+		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
+		{
+			if (!t_pasteboard -> Fetch(t_type, &r_data))
+				t_success = false;
+		}
+		else
+			ctxt . SetTheResultToStaticCString("format not available");
+		
+		t_pasteboard -> Unlock();
+	}
+	else
+		t_success = false;
+	
+	if (!t_success)
+		ctxt . SetTheResultToStaticCString("unable to query clipboard");
+}
+
+void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCStringRef p_data)
+{
+	MCTransferData *t_pasteboard;
+	if (p_is_clipboard)
+		t_pasteboard = MCclipboarddata;
+	else
+		t_pasteboard = MCdragdata;
+	
+	MCTransferType t_type;
+	if (p_index == nil)
+		t_type = TRANSFER_TYPE_TEXT;
+	else
+		t_type = MCTransferData::StringToType(MCStringGetOldString(p_index));
+		
+	if (t_type != TRANSFER_TYPE_NULL && p_data != nil)
+	{
+		if (t_pasteboard -> Store(t_type, p_data))
+			return;
+	}
+	else
+		return;
+
+	ctxt . Throw();
+}
+
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data)
+{
+	MCPasteboardGetClipboardOrDragData(ctxt, p_index, true, r_data);
+}
+
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
+{
+	MCPasteboardSetClipboardOrDragData(ctxt, p_index, true, p_data);
+}
+
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data)
+{
+	MCPasteboardGetClipboardOrDragData(ctxt, p_index, false, r_data);
+}
+
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
+{
+	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, r_data);
 }
