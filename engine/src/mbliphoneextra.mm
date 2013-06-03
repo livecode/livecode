@@ -53,12 +53,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblstore.h"
 
+#import <objc/message.h>
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // global counter for the iPhone idle timer
 uint g_idle_timer = 0;
-
-id objc_lookUpClass(const char *name);
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 {
@@ -949,12 +949,30 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandeSystemIdentifier(void *context, MCParameter *p_parameters)
+static Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters)
 {
-	NSString *t_identifier = nil;
-	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
-	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-	return ES_NORMAL;	
+    // MM-2013-05-21: [[ Bug 10895 ]] The method uniqueIdentifier of UIDevice is now deprecated (as of May 2013).
+    //  Calling the method dynamically prevents apps from being rejected by the app store
+    //  but preserves functionality for testing and backwards compatibility.
+    NSString *t_identifier;
+    t_identifier = objc_msgSend([UIDevice currentDevice], sel_getUid("uniqueIdentifier"));
+    MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    return ES_NORMAL;
+}
+
+// MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+//  identifierForVendor was only added to UIDevice in iOS 6.1 so make sure we weakly link.
+static Exec_stat MCHandleIdentifierForVendor(void *context, MCParameter *p_parameters)
+{
+    if ([UIDevice instancesRespondToSelector:@selector(identifierForVendor)])
+    {
+        NSString *t_identifier;
+        t_identifier = [[[UIDevice currentDevice] identifierForVendor] UUIDString];
+        MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    }
+    else
+        MCresult -> clear();
+    return ES_NORMAL;
 }
 
 static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
@@ -1380,8 +1398,12 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
 	{false, "mobileClearTouches", MCHandleClearTouches, nil},
 	
-	{false, "iphoneSystemIdentifier", MCHandeSystemIdentifier, nil},
+	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
 	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
+    
+    // MM-2013-05-21: [[ Bug 10895 ]] Added iphoneIdentifierForVendor as an initial replacement for iphoneSystemIdentifier.
+    {false, "mobileIdentifierForVendor", MCHandleIdentifierForVendor, nil},
+    {false, "iphoneIdentifierForVendor", MCHandleIdentifierForVendor, nil},
 	
 	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
 	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
