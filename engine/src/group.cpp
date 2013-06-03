@@ -70,7 +70,7 @@ MCGroup::MCGroup()
 	scrollbarwidth = MCscrollbarwidth;
 	minrect.x = minrect.y = minrect.width = minrect.height = 0;
 	
-	// MERG-2013-06-02: [[ LckGrpUpdates ]] Make sure the group's updates are unlocked
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when created.
     m_updates_locked = false;
 }
@@ -144,7 +144,7 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
 	
-	// MERG-2013-06-02: [[ LckGrpUpdates ]] Make sure the group's updates are unlocked
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
 	//   when cloned.
     m_updates_locked = false;
 }
@@ -1262,7 +1262,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		
 		t_stat = ep.getboolean(t_lock, 0, 0, EE_PROPERTY_NAB);
 		if (t_stat == ES_NORMAL)
-			m_updates_locked = t_lock ? true : false;
+			m_updates_locked = (t_lock == True);
 			
 		// When the lock is turned off, make sure we update the group.
 		if (!t_lock)
