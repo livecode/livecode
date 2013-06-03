@@ -1085,7 +1085,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
+				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
+				//   rather than 3.
+				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
 					break;
 			}
 		}

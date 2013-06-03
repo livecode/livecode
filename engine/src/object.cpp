@@ -3921,7 +3921,8 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 		// What we setup depends on whether the mask is depth 1 or 8 and the threshold.
 		// If the threshold is not 1, we use soft bits if they are available.
 		r_mask . fill = compute_objectshapescanline_soft;
-		r_mask . bits = p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x;
+		// IM-2013-05-10: fix wrong bit pointer offset due to adding stride (in bytes) to data (4-byte word pointer)
+		r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x * sizeof(uint32_t);
 		r_mask . stride = p_shape . mask . bits -> stride;
 		r_mask . offset = 0;
 		
@@ -4041,7 +4042,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		
 		// Now check for overlap!
 		t_intersects = false;
-		for(int32_t y = 0; y < t_rect . height; y++)
+		// IM-2013-05-10: optimize - exit from outer loop if intersect found
+		for(int32_t y = 0; !t_intersects && y < t_rect . height; y++)
 		{
 			// Fill the scanline for this.
 			if (t_this_mask . fill != nil)
@@ -4058,12 +4060,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 			}
 			
 			// Check to see if they intersect.
-			for(int32_t x = 0; x < t_scanline_width; x++)
-				if ((t_this_scanline[x] & t_other_scanline[x]) != 0)
-				{
-					t_intersects = true;
-					break;
-				}
+			for(int32_t x = 0; !t_intersects && x < t_scanline_width; x++)
+				t_intersects = (t_this_scanline[x] & t_other_scanline[x]) != 0;
 		}
 		
 		// Scanlines aren't needed anymore.

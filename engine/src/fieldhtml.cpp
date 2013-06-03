@@ -114,7 +114,7 @@ static const char *s_export_html_tag_strings[] =
 	"b",
 	"strike",
 	"u",
-	"super",
+	"sup",
 	"sub",
 	"condensed",
 	"expanded",
