@@ -192,12 +192,6 @@ public:
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
 	void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh);
-#ifdef OLD_GRAPHICS
-	void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh);
-	
-	MCBitmap *lock(void);
-	void unlock(MCBitmap *);
-#endif
 
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);

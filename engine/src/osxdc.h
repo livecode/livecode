@@ -317,12 +317,6 @@ public:
 	virtual void beep();
 	virtual void setinputfocus(Window window);
 
-#ifdef OLD_GRAPHICS
-	virtual MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
-	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha, bool p_transient);
-	virtual void freecontext(MCContext *p_context);
-#endif
-	
 	virtual void freepixmap(Pixmap &pixmap);
 	virtual Pixmap createpixmap(uint2 width, uint2 height,
 	                            uint2 depth, Boolean purge);
@@ -346,7 +340,6 @@ public:
 	virtual void freecursor(MCCursorRef c);
 
 	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
 	virtual void getbeep(uint4 property, MCExecPoint &ep);
 	virtual void setbeep(uint4 property, int4 beep);

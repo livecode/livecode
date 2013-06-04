@@ -868,12 +868,6 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return d;
 }
 
-Boolean MCScreenDC::uint4topixmap(uint4 id, Pixmap &p)
-{
-	p = id;
-	return True;
-}
-
 Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
 {
 	w = id;

@@ -111,7 +111,6 @@ public:
 	void freecursor(MCCursorRef c);
 
 	uint4 dtouint4(Drawable d);
-	Boolean uint4topixmap(uint4, Pixmap &p);
 	Boolean uint4towindow(uint4, Window &w);
 
 	void beep();

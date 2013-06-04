@@ -590,23 +590,6 @@ void MCMetaContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx,
 #endif
 }
 
-#ifdef OLD_GRAPHICS
-void MCMetaContext::combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh)
-{
-}
-
-MCBitmap *MCMetaContext::lock(void)
-{
-	assert(false);
-	return NULL;
-}
-
-void MCMetaContext::unlock(MCBitmap *)
-{
-	assert(false);
-}
-#endif
-
 void MCMetaContext::clear(const MCRectangle *rect)
 {
 	assert(false);

@@ -415,12 +415,6 @@ uint4 MCUIDC::dtouint4(Drawable d)
 }
 
 
-Boolean MCUIDC::uint4topixmap(uint4, Pixmap &p)
-{
-	p = (Pixmap)1;
-	return True;
-}
-
 Boolean MCUIDC::uint4towindow(uint4, Window &w)
 {
 	w = (Window)1;

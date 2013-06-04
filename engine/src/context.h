@@ -183,13 +183,6 @@ public:
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
 	virtual void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh) = 0;
 
-#ifdef OLD_GRAPHICS
-	virtual void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh) = 0;
-
-	virtual MCBitmap *lock(void) = 0;
-	virtual void unlock(MCBitmap *p_bitmap) = 0;
-#endif
-
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
 	virtual void clear(const MCRectangle* rect) = 0;

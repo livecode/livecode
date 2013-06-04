@@ -726,16 +726,6 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return (uint4)d -> handle . pixmap;
 }
 
-Boolean MCScreenDC::uint4topixmap(uint4 p_ptr, Pixmap &p)
-{
-	_Drawable *t_pixmap;
-	t_pixmap = new _Drawable;
-	t_pixmap -> type = DC_BITMAP;
-	t_pixmap -> handle . pixmap = (MCSysBitmapHandle)p_ptr;
-	p = t_pixmap;
-	return True;
-}
-
 Boolean MCScreenDC::uint4towindow(uint4, Window &w)
 {
 	return False;

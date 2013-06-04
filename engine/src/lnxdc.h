@@ -241,7 +241,6 @@ public:
 
 	virtual void setfunction(uint4 rop);
 	virtual uint4 dtouint4(Drawable d);
-	virtual Boolean uint4topixmap(uint4, Pixmap &p);
 	virtual Boolean uint4towindow(uint4, Window &w);
 	virtual void getbeep(uint4 property, MCExecPoint &ep);
 	virtual void setbeep(uint4 property, int4 beep);
