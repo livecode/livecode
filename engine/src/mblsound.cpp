@@ -45,9 +45,9 @@ bool MCSystemDeleteSoundChannel(const char *p_channel);
 bool MCSystemSetSoundChannelVolume(const char *p_channel, int32_t p_volume);
 bool MCSystemSoundChannelVolume(const char *p_channel, int32_t& r_volume);
 bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_status);
-bool MCSystemSoundOnChannel(const char *p_channel, char*& r_sound);
-bool MCSystemNextSoundOnChannel(const char *p_channel, char*& r_sound);
-bool MCSystemListSoundChannels(char*& r_channels);
+bool MCSystemSoundOnChannel(const char *p_channel, MCStringRef &r_sound);
+bool MCSystemNextSoundOnChannel(const char *p_channel, MCStringRef &r_sound);
+bool MCSystemListSoundChannels(MCStringRef &r_channels);
 bool MCSystemSetAudioCategory(MCSoundAudioCategory p_category);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -204,7 +204,7 @@ bool MCSoundGetStatusOfChannel(MCExecContext& ctxt, const char *p_channel, MCSou
     return t_success;
 }
 
-bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound)
+bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, MCStringRef &r_sound)
 {
     bool t_success;
 	t_success = true;
@@ -216,7 +216,7 @@ bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*&
     return t_success;
 }
 
-bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound)
+bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, MCStringRef &r_sound)
 {
     bool t_success;
 	t_success = true;
@@ -228,7 +228,7 @@ bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, ch
     return t_success;
 }
 
-bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels)
+bool MCSoundGetSoundChannels(MCExecContext& ctxt, MCStringRef &r_channels)
 {
     bool t_success;
 	t_success = true;
@@ -256,8 +256,8 @@ bool MCSoundSetAudioCategory(MCExecContext &ctxt, MCSoundAudioCategory p_categor
 Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();  
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();  
     
 	bool t_success;
 	t_success = true;
@@ -278,21 +278,24 @@ Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 		else if (MCCStringEqualCaseless(t_type, "looping"))
 			t_play_type = kMCSoundChannelPlayLooping;
 		
-		MCSoundExecPlaySoundOnChannel(t_ctxt, t_channel, t_sound, t_play_type);
+		MCSoundExecPlaySoundOnChannel(ctxt, t_channel, t_sound, t_play_type);
 	}
 		
 	delete t_sound;
 	delete t_channel;
 	delete t_type;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();  
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();  
     
 	bool t_success;
 	t_success = true;
@@ -303,18 +306,21 @@ Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
 	if (t_success)
-		MCSoundExecPauseSoundOnChannel(t_ctxt, t_channel);
+		MCSoundExecPauseSoundOnChannel(ctxt, t_channel);
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty(); 
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty(); 
     
 	bool t_success;
 	t_success = true;
@@ -325,18 +331,21 @@ Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameter
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
 	if (t_success)
-		MCSoundExecResumeSoundOnChannel(t_ctxt, t_channel);
+		MCSoundExecResumeSoundOnChannel(ctxt, t_channel);
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	bool t_success;
 	t_success = true;
@@ -347,18 +356,21 @@ Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
 	if (t_success)
-		MCSoundExecStopSoundOnChannel(t_ctxt, t_channel);
+		MCSoundExecStopSoundOnChannel(ctxt, t_channel);
 		
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();  
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();  
     
 	bool t_success;
 	t_success = true;
@@ -369,18 +381,21 @@ Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
 	if (t_success)
-		MCSoundExecDeleteChannel(t_ctxt, t_channel);
+		MCSoundExecDeleteChannel(ctxt, t_channel);
 		
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();  
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();  
 
 	bool t_success;
 	t_success = true;
@@ -392,18 +407,21 @@ Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters
 		t_success = MCParseParameters(p_parameters, "su", &t_channel, &t_volume);
 	
 	if (t_success)
-		MCSoundSetVolumeOfChannel(t_ctxt, t_channel, t_volume);
+		MCSoundSetVolumeOfChannel(ctxt, t_channel, t_volume);
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();  
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();  
 
 	bool t_success;
 	t_success = true;
@@ -415,21 +433,24 @@ Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 	
 	int32_t t_volume;
 	if (t_success)
-		t_success = MCSoundGetVolumeOfChannel(t_ctxt, t_channel, t_volume);
+		t_success = MCSoundGetVolumeOfChannel(ctxt, t_channel, t_volume);
 	
 	if (t_success)
 		MCresult -> setnvalue(t_volume);
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	bool t_success;
 	t_success = true;
@@ -441,7 +462,7 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 	
 	MCSoundChannelStatus t_status;
 	if (t_success)
-		t_success = MCSoundGetStatusOfChannel(t_ctxt, t_channel, t_status);
+		t_success = MCSoundGetStatusOfChannel(ctxt, t_channel, t_status);
 	
 	if (t_success && t_status >= 0)
 	{
@@ -456,14 +477,17 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;	
 }
 
 Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
 
 	bool t_success;
 	t_success = true;
@@ -473,25 +497,28 @@ Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
-    MCAutoRawCString t_sound;
+    MCAutoStringRef t_sound;
 	if (t_success)
-		t_success = MCSoundGetSoundOfChannel(t_ctxt, t_channel, t_sound);
+		t_success = MCSoundGetSoundOfChannel(ctxt, t_channel, &t_sound);
 	
     if (t_success)
-        if (t_sound.Borrow() != nil)
-            ep.copysvalue(t_sound.Borrow());
+        if (*t_sound != nil)
+            ep.setvalueref(*t_sound);
     
     if (t_success)
-        MCresult->store(ep, False);
+        ctxt . SetTheResultToValue(*t_sound);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	bool t_success;
 	t_success = true;
@@ -501,49 +528,56 @@ Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
-    MCAutoRawCString t_sound;
+    MCAutoStringRef t_sound;
 	if (t_success)
-		t_success = MCSoundGetNextSoundOfChannel(t_ctxt, t_channel, t_sound);
+		t_success = MCSoundGetNextSoundOfChannel(ctxt, t_channel, &t_sound);
 	
     if (t_success)
-        if (t_sound.Borrow() != nil)
-            ep.copysvalue(t_sound.Borrow());
+        if (*t_sound != nil)
+            ep.setvalueref(*t_sound);
     
     if (t_success)
-        MCresult->store(ep, False);
+        ctxt . SetTheResultToValue(*t_sound);
     
-    return t_ctxt.GetStat();
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();	
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();	
     
     bool t_success;
 	t_success = true;
     
-    MCAutoRawCString t_channels;
+    MCAutoStringRef t_channels;
 	if (t_success)
-		t_success = MCSoundGetSoundChannels(t_ctxt, t_channels);
+		t_success = MCSoundGetSoundChannels(ctxt, &t_channels);
 	
     if (t_success)
-        if (t_channels.Borrow() != nil)
-            ep.copysvalue(t_channels.Borrow());
+        if (*t_channels != nil)
+            ep.setvalueref(*t_channels);
     
     if (t_success)
-        MCresult->store(ep, False);
+        ctxt . SetTheResultToValue(*t_channels);
 
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();    
     
 	bool t_success;
 	t_success = true;
@@ -572,13 +606,20 @@ Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
     }
 
     if (t_success)
-        t_success = MCSoundSetAudioCategory(t_ctxt, t_category);
+        t_success = MCSoundSetAudioCategory(ctxt, t_category);
     
     if (t_success)
-        MCresult->store(ep, False);
+	{
+        MCAutoStringRef t_result;
+		ep . copyasstringref(&t_result);
+		ctxt . SetTheResultToValue(*t_result);
+	}
     
     MCCStringFree(t_category_string);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 

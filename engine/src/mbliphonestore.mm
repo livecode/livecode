@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "param.h"
 
-#include "core.h"
 #include "eventqueue.h"
 
 #include "mblstore.h"

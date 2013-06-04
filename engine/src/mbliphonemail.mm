@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -257,6 +256,11 @@ static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet p_se
 	return [[NSString stringWithCString: MCStringGetCString(p_string) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByCharactersInSet: p_separator_set];
 }
 
+static NSData *mcstringref_to_nsdata(MCStringRef p_string)
+{
+	return [[NSData alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string)];
+}
+
 static bool array_to_attachment(MCVariableArray *p_array, NSData*& r_data, NSString*& r_type, NSString*& r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
@@ -495,11 +499,10 @@ void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, M
 	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
 }
 
-void MCSystemPrepareMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type)
+void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void &*dialog_ptr)
 {
-	compose_mail_t *context;
-	context -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
-	[ context -> dialog setMailComposeDelegate: context -> dialog ];
+	dialog_ptr = [[MCIPhoneMailComposerDialog alloc ] init];
+	[ dialog_ptr setMailComposeDelegate: dialog_ptr ];
 	
 	NSCharacterSet *t_separator_set;
 	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
@@ -525,20 +528,61 @@ void MCSystemPrepareMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 	if (p_bcc != nil && !MCStringIsEqualTo(p_bcc, kMCEmptyString, kMCCompareCaseless))
 		t_ns_bcc = mcstringref_to_nsarray(p_bcc, t_separator_set);	
 
-	[ ctxt -> dialog setSubject: t_ns_subject ];
-	[ ctxt -> dialog setToRecipients: t_ns_to ];
-	[ ctxt -> dialog setCcRecipients: t_ns_cc ];
-	[ ctxt -> dialog setBccRecipients: t_ns_bcc ];
-	[ ctxt -> dialog setMessageBody: t_ns_body isHTML: ctxt -> type == kMCMailTypeHtml ];
+	[ dialog_ptr setSubject: t_ns_subject ];
+	[ dialog_ptr setToRecipients: t_ns_to ];
+	[ dialog_ptr setCcRecipients: t_ns_cc ];
+	[ dialog_ptr setBccRecipients: t_ns_bcc ];
+	[ dialog_ptr setMessageBody: t_ns_body isHTML: ctxt -> type == kMCMailTypeHtml ];
+
+	[dialog_ptr preWait];
+	while([dialog_ptr isRunning])
+		MCscreen -> wait(60.0, False, True);
 }
 
-void MCSystemSendPreparedMail(MCExecContext& ctxt)
+void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr)
 {
-	MCAndroidEngineCall("sendEmail", "v", nil);
-	MCAndroidMailResult(ctxt);
+	NSData *t_data;
+	NSString *t_type;
+	NSString *t_name;
+
+	if (p_file == nil && p_data == nil)
+		t_data = [[NSData alloc] initWithBytes: nil length: 0];
+	else if (p_data != nil)
+		t_data = mcstringref_to_nsdata(p_data);
+	else if (t_file != nil)
+	{
+		MCAutoStringRef t_resolved_path;
+		MCS_resolvepath(p_file, &t_resolved_path);
+		t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithCString: MCStringGetCString(*t_resolved_path) encoding: NSMacOSRomanStringEncoding]];
+	}
+	
+	if (p_type == nil)
+		t_type = @"application/octet-stream";
+	else
+		t_type = [NSString stringWithCString: MCStringGetCString(p_type) encoding: NSMacOSRomanStringEncoding];
+	}
+	
+	if (p_name == nil)
+		t_name = nil;
+	else
+		t_name = [NSString stringWithCString: MCStringGetCString(p_name) encoding: NSMacOSRomanStringEncoding];
+		
+	[dialog_ptr addAttachmentData: t_data mimeType: t_type fileName: t_name];
+	[t_data release];
 }
 
-void MCSystemGetCanSendMail(MCExecContext& ctxt, bool& r_result)
+void MCSystemSendPreparedMail(void *dialog_ptr)
+{
+	[dialog_ptr postWait];
+
+	while([dialog_ptr retainCount] > 2)
+		MCscreen -> wait(0.01, False, True);
+	
+	MCIPhoneCallSelectorOnMainFiber(dialog_ptr, @selector(release));
+}
+
+void MCSystemGetCanSendMail(bool& r_result)
 {
 	r_result = [MCIPhoneMailComposerDialog canSendMail];
 }
+

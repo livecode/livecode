@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -26,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "globals.h"
 #include "param.h"
+#include "exec.h"
 
 #include "mblandroidutil.h"
 
@@ -48,12 +48,13 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
-	MCMobileGetCanSendMail(ctxt);
+	bool t_result;
+	MCMailGetCanSendMail(ctxt, t_result);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 void MCAndroidSendEmail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
@@ -109,9 +110,9 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_cc_address;
 	delete t_subject;
 	delete t_message_body;
-	
+	*/
 	return ES_NORMAL;
-}*/
+}
 
 enum MCMailType
 {
@@ -120,7 +121,7 @@ enum MCMailType
 	kMCMailTypeHtml
 };
 
-static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
+/*static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
 	t_data = p_array -> lookuphash("data", False, False);
@@ -158,7 +159,7 @@ static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCSt
 	}
 
 	return t_success;
-}
+}*/
 
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
@@ -263,9 +264,9 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	MCCStringFree(t_cc);
 	MCCStringFree(t_bcc);
 	delete t_body . getstring();
-	
+	*/
 	return ES_NORMAL;
-} */
+} 
 
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters)
 {
@@ -320,14 +321,13 @@ void MCAndroidMailResult(MCExecContext& ctxt)
 	}
 }
 
-void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
 {
 	s_mail_status = kMCAndroidMailWaiting;
 	MCAndroidSendEmail(p_address, p_cc_address, p_subject, p_message_body);
-	MCAndroidMailResult(ctxt);
 }
 
-void MCSystemPrepareMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type)
+void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void *dialog_ptr)
 {
 	const char *t_prep_sig;
 	t_prep_sig = "vxxxxxb";
@@ -335,10 +335,17 @@ void MCSystemPrepareMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 	MCAndroidEngineCall("prepareEmail", t_prep_sig, nil, p_to, p_cc, p_bcc, p_subject, p_body, p_type == kMCMailTypeHtml);
 }
 
-void MCSystemSendPreparedMail(MCExecContext& ctxt)
+void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr)
+{
+	if (p_file != nil && MCStringGetLength(p_file) > 0)
+		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_file, &p_type, &p_name);
+	else
+		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_data, &p_type, &p_name);
+}
+
+void MCSystemSendPreparedMail(void *dialog_ptr)
 {
 	MCAndroidEngineCall("sendEmail", "v", nil);
-	MCAndroidMailResult(ctxt);
 }
 
 void MCSystemGetCanSendMail(MCExecContext& ctxt, bool& r_result)

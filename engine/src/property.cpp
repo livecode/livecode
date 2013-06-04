@@ -348,7 +348,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_PROPERTY
+	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
+	DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)

@@ -31,12 +31,12 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	combiners.cpp path.cpp contextscalewrapper.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp \
 	customprinter.cpp iquantization.cpp iquantize_new.cpp \
-	variablearray.cpp variablevalue.cpp objectstream.cpp \
+	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
-	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
+	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
 	sysunxdate.cpp sysspec.cpp stackcache.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
@@ -51,7 +51,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/../libcore/include \
+	$(LOCAL_PATH)/../libfoundation/include \
 	$(LOCAL_PATH)/../thirdparty/libpng/include \
 	$(LOCAL_PATH)/../thirdparty/libpcre/include \
 	$(LOCAL_PATH)/../thirdparty/libjpeg/include \
@@ -79,9 +79,9 @@ LOCAL_SRC_FILES := $(addprefix src/,stacksecurity.cpp mblandroidad.cpp)
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
-	$(LOCAL_PATH)/../libcore/include
+	$(LOCAL_PATH)/../libfoundation/include
 
-LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libjpeg libpcre libpng libgif libskia libfreetype
+LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libjpeg libpcre libpng libgif libskia libfreetype
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 

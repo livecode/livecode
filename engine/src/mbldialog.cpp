@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "date.h"
 
-#include "core.h"
 
 #include "mblsyntax.h"
 
@@ -169,10 +168,10 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 			t_media_types += MCMediaTypeFromCString("movies, tv, videoPodcasts, musicVideos, videoITunesU");;
 #endif		
 	}
-    MCExecContext t_ctxt(ep);
+    MCExecContext ctxt(ep);
     
 	// Call MCIPhonePickMedia to process the media pick selection. 
-    MCDialogExecPickMedia(t_ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
+    MCDialogExecPickMedia(ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
 	
 	return ES_NORMAL;
 }
@@ -501,9 +500,9 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
         
         if (t_success)
         {
-            p_ctxt.GetEP().setcstring(t_return_string);
-            // make execpoint take ownership of result string
-            p_ctxt.GetEP().grabsvalue();
+			MCAutoStringRef t_return;
+			MCStringCreateWithCString(t_return_string, &t_return);
+            p_ctxt.GetEP().setvalueref(*t_return);
         }
     }
     
@@ -513,6 +512,7 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
     FreeStringArray (t_result_choices_array);
     FreeIndexArray (t_initial_indices);
     FreeIndexArray (t_option_result);
+	delete t_return_string;
 }
 
 void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_type, const_cstring_array_t *p_option_lists, const_int32_array_t *p_initial_indices, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, const_int32_array_t &r_picked_options, MCRectangle p_button_rect)
@@ -546,9 +546,9 @@ void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_ty
             if (t_success)
                 t_success = IndexesArrayToString (t_option_result, t_return_string, t_cancelled);
             
-            p_ctxt.GetEP().setcstring(t_return_string);
-            // make execpoint take ownership of result string
-            p_ctxt.GetEP().grabsvalue();
+			MCAutoStringRef t_string;
+			MCStringCreateWithCString(t_return_string, &t_string);
+            p_ctxt . GetEP() . setvalueref(*t_string);
         }
     }
     
@@ -576,8 +576,8 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	uint32_t t_initial_index;
     const_int32_array_t *t_initial_index_array = nil;
 	
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     
 	t_options_list = nil;
 	// get the mandatory options list and the initial index
@@ -670,18 +670,25 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	}
 
 	// call MCSystemPick to process the pick wheel
-	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
+	MCDialogExecPickOptionByIndex(ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
 
 	
 	if (t_success)
     {
         // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
         // set the value of the 'it' variable
-        if (MCresult->isempty())
-            MCresult->store(ep, True);
+		if (MCresult->isempty())
+		{
+			MCAutoStringRef t_value;
+			/* UNCHECKED */ ep . copyasstringref(&t_value);
+			ctxt . SetTheResultToValue(*t_value);
+		}
     }
 	
-	return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -831,8 +838,8 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     }
 
     
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     
     MCDateTime *t_current_date_ptr = nil;
     MCDateTime *t_start_date_ptr = nil;
@@ -849,13 +856,13 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     {
         // MM-2012-03-15: [[ Bug ]] Make sure we handle no type being passed.
         if (t_type == nil)
-            MCDialogExecPickDate(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
+            MCDialogExecPickDate(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
         else if (MCCStringEqualCaseless("time", t_type))
-            MCDialogExecPickTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+            MCDialogExecPickTime(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
         else if (MCCStringEqualCaseless("datetime", t_type))
-            MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+            MCDialogExecPickDateAndTime(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
         else
-            MCDialogExecPickDate(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
+            MCDialogExecPickDate(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
     }
     
     MCCStringFree(t_type);
@@ -863,9 +870,16 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
     // set the value of the 'it' variable
     if (MCresult->isempty())
-        MCresult->store(ep, True);
-    
-	return t_ctxt.GetStat();
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
@@ -929,8 +943,8 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
     
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     
     MCDateTime *t_current_date_ptr = nil;
     MCDateTime *t_start_date_ptr = nil;
@@ -944,12 +958,19 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
         t_end_date_ptr = &t_end_date;
     
 	if (t_success)
-		MCDialogExecPickTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+		MCDialogExecPickTime(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
     if (MCresult->isempty())
-        MCresult->store(ep, True);
-    
-	return t_ctxt.GetStat();
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 
@@ -1014,8 +1035,8 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
     
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     
     MCDateTime *t_current_date_ptr = nil;
     MCDateTime *t_start_date_ptr = nil;
@@ -1029,10 +1050,17 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
         t_end_date_ptr = &t_end_date;
     
 	if (t_success)
-		MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+		MCDialogExecPickDateAndTime(ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
     if (MCresult->isempty())
-        MCresult->store(ep, True);
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
     
-	return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }

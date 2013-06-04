@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
 #include "mblandroid.h"
 
@@ -48,9 +47,9 @@ bool MCAndroidSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostReso
 	{
 		MCAutoStringRef t_address;
 		char *t_addr_str = inet_ntoa(*ptr[i]);
-		if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
+		if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_addr_str), &t_address))
 			return false;
-		if (!p_callback(p_context, t_address))
+		if (!p_callback(p_context, *t_address))
 			return false;
 	}
 	

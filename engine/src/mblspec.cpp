@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -283,7 +282,8 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 
 void MCS_geturl(MCObject *p_target, const char *p_url)
 {
-	MCSGetUrlState t_state;
+	// TODO 
+/*	MCSGetUrlState t_state;
 	t_state . url = p_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
@@ -310,7 +310,7 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 		MCresult -> getvalue() . exchange(t_state . error);
 	}
 	
-	t_state . object -> Release();
+	t_state . object -> Release();*/
 }
 
 //////////
@@ -535,6 +535,8 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 
 void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url)
 {
+	// TODO
+	/* 
 	bool t_success = true;
 	
 	char *t_processed = nil;
@@ -578,7 +580,7 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 	
 	MCCStringFree(t_processed);
 	if (t_obj != nil)
-		t_obj -> Release();
+		t_obj -> Release();*/
 }
 
 //////////
@@ -809,7 +811,7 @@ bool MCS_set_session_save_path(MCStringRef p_path)
 	return true;
 }
 
-bool MCS_get_session_save_path(MCStringRef& r_path);
+bool MCS_get_session_save_path(MCStringRef& r_path)
 {
 	r_path = MCValueRetain(kMCEmptyString);
 	return true;
@@ -843,7 +845,7 @@ bool MCS_set_session_id(MCStringRef p_id)
 
 bool MCS_get_session_id(MCStringRef &r_id)
 {
-	r_name = MCValueRetain(kMCEmptyString);
+	r_id = MCValueRetain(kMCEmptyString);
 	return true;
 }
 

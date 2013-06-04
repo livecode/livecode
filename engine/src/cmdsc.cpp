@@ -3555,12 +3555,14 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 	else
 		MCGraphicsExecRotateSelection(ctxt, t_angle);
 
-#endif
-
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
 	return ctxt . Catch(line, pos);
+#else
+
+	return ES_NORMAL;
+#endif
 }
 
 void MCRotate::compile(MCSyntaxFactoryRef ctxt)

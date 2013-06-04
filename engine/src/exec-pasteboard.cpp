@@ -679,11 +679,14 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 			
 		if (t_type != TRANSFER_TYPE_NULL && t_pasteboard -> Contains(t_type, true))
 		{
-			if (!t_pasteboard -> Fetch(t_type, &r_data))
+			if (!t_pasteboard -> Fetch(t_type, r_data))
 				t_success = false;
 		}
 		else
+		{
+			r_data = MCValueRetain(kMCEmptyString);
 			ctxt . SetTheResultToStaticCString("format not available");
+		}
 		
 		t_pasteboard -> Unlock();
 	}
@@ -691,7 +694,10 @@ void MCPasteboardGetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index
 		t_success = false;
 	
 	if (!t_success)
+	{
+		r_data = MCValueRetain(kMCEmptyString);
 		ctxt . SetTheResultToStaticCString("unable to query clipboard");
+	}
 }
 
 void MCPasteboardSetClipboardOrDragData(MCExecContext& ctxt, MCStringRef p_index, bool p_is_clipboard, MCStringRef p_data)
@@ -736,5 +742,5 @@ void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringR
 
 void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
 {
-	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, r_data);
+	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
 }

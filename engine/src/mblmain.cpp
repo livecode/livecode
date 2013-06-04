@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -98,7 +97,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 	
-	MCNameInitialize();
+	//MCNameInitialize();
 	MCU_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.

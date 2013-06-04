@@ -35,6 +35,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 extern void MCIPhoneSwitchToUIKit(void);
 extern void MCIPhoneSwitchToOpenGL(void);
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
+#include <windows.h>
 #include <GLES/gl.h>
 #include <GLES/glext.h>
 extern void MCAndroidEnableOpenGLMode(void);

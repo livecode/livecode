@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "exec.h"
-#include "core.h"
 
 #include "eventqueue.h"
 
@@ -145,9 +144,9 @@ void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor, bool
     MCSystemGetSensorAvailable(p_sensor, r_available);
 }
 
-void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_location)
+void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location)
 {
-    MCSensorLocationReading t_reading;
+ /*   MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, true))
     {
         MCVariableValue *t_location = nil;
@@ -186,22 +185,19 @@ void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCVariableValue *&
         t_element->assign_real(t_reading.vertical_accuracy);
         
         r_detailed_location = t_location;
-    }
+    }*/
 }
 
-void MCSensorGetLocationOfDevice(MCExecContext& ctxt, char *&r_location)
+void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 {
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
-    {
-        r_location = nil;
-        MCCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
-    }
+        MCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
 }
 
-void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_heading)
+void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
 {
-    MCSensorHeadingReading t_reading;
+/*    MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
     {
         MCVariableValue *t_heading = nil;
@@ -234,22 +230,19 @@ void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCVariableValue *&r
         t_element->assign_real(t_reading.accuracy);
 
         r_detailed_heading = t_heading;
-    }    
+    }    */
 }
 
-void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, char *&r_heading)
+void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
 {
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
-    {
-        r_heading = nil;
-        MCCStringFormat(r_heading, "%Lf", t_reading.heading);
-    }
+        MCStringFormat(r_heading, "%Lf", t_reading.heading);
 }
 
-void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_acceleration)
+void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration)
 {
-    MCSensorAccelerationReading t_reading;
+ /*   MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
         MCVariableValue *t_acceleration = nil;
@@ -270,22 +263,19 @@ void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCVariableValu
         t_element->assign_real(t_reading.timestamp);
         
         r_detailed_acceleration = t_acceleration;
-    }    
+    }    */
 }
 
-void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, char *&r_acceleration)
+void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceleration)
 {
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
-    {
-        r_acceleration = nil;
-        MCCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
-    }
+        MCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
 }
 
-void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCVariableValue *&r_detailed_rotation_rate)
+void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate)
 {
-    MCSensorRotationRateReading t_reading;
+/*    MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         MCVariableValue *t_rotation_rate = nil;
@@ -306,16 +296,17 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCVariableValu
         t_element->assign_real(t_reading.timestamp);
         
         r_detailed_rotation_rate = t_rotation_rate;
-    }    
+    }    */
+
 }
 
-void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, char *&r_rotation_rate)
+void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate)
 {
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         r_rotation_rate = nil;
-        MCCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        MCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
     }
 }
 
@@ -574,15 +565,18 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
         t_loosely = ep . getsvalue() == MCtruemcstring;
     }
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
     if (t_sensor != kMCSensorTypeUnknown)
     {
-        MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
+        MCSensorExecStartTrackingSensor(ctxt, t_sensor, t_loosely);
     }
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
@@ -598,58 +592,70 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
         p_parameters = p_parameters->getnext();
     }
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
 
     if (t_sensor != kMCSensorTypeUnknown)
     {
-        MCSensorExecStopTrackingSensor(t_ctxt, t_sensor);
+        MCSensorExecStopTrackingSensor(ctxt, t_sensor);
     }
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
 Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	if ((bool)p_context)
-        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeAcceleration, false);
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeAcceleration, false);
     else
-        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeAcceleration);
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeAcceleration);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	if ((bool)p_context)
-        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeLocation, false);
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeLocation, false);
     else
-        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeLocation);
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeLocation);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	if ((bool)p_context)
-        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeHeading, true);
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeHeading, true);
     else
-        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeHeading);
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeHeading);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
@@ -672,99 +678,114 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
         t_detailed = ep . getsvalue() == MCtruemcstring;
     }
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
-    MCVariableValue *t_detailed_reading = nil;
-    MCAutoRawCString t_reading;
+    MCAutoArrayRef t_detailed_reading;
+    MCAutoStringRef t_reading;
 
     switch (t_sensor)
     {
         case kMCSensorTypeLocation:
         {
             if (t_detailed)
-                MCSensorGetDetailedLocationOfDevice(t_ctxt, t_detailed_reading);
+                MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
             else
-                MCSensorGetLocationOfDevice(t_ctxt, t_reading);
+                MCSensorGetLocationOfDevice(ctxt, &t_reading);
             break;
         }
         case kMCSensorTypeHeading:
         {
             if (t_detailed)
-                MCSensorGetDetailedHeadingOfDevice(t_ctxt, t_detailed_reading);
+                MCSensorGetDetailedHeadingOfDevice(ctxt,& t_detailed_reading);
             else
-                MCSensorGetHeadingOfDevice(t_ctxt, t_reading);
+                MCSensorGetHeadingOfDevice(ctxt, &t_reading);
             break;
         }
         case kMCSensorTypeAcceleration:
         {
             if (t_detailed)
-                MCSensorGetDetailedAccelerationOfDevice(t_ctxt, t_detailed_reading);
+                MCSensorGetDetailedAccelerationOfDevice(ctxt, &t_detailed_reading);
             else
-                MCSensorGetAccelerationOfDevice(t_ctxt, t_reading);
+                MCSensorGetAccelerationOfDevice(ctxt, &t_reading);
             break;
         }
         case kMCSensorTypeRotationRate:
         {
             if (t_detailed)
-                MCSensorGetDetailedRotationRateOfDevice(t_ctxt, t_detailed_reading);
+                MCSensorGetDetailedRotationRateOfDevice(ctxt, &t_detailed_reading);
             else
-                MCSensorGetRotationRateOfDevice(t_ctxt, t_reading);
+                MCSensorGetRotationRateOfDevice(ctxt, &t_reading);
             break;
         }
     }
     
     if (t_detailed)
     {
-        if (t_detailed_reading != nil)
-            ep.setarray(t_detailed_reading, True);
+        if (*t_detailed_reading != nil)
+            ep.setvalueref(*t_detailed_reading);
     }
     else
     {
-        if (t_reading.Borrow() != nil)
-            ep.copysvalue(t_reading.Borrow());
+        if (*t_reading != nil)
+            ep.setvalueref(*t_reading);
     }
     
-    MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneGetCurrentLocation etc)
 Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
-    MCVariableValue *t_detailed_reading = nil;
-    MCSensorGetDetailedLocationOfDevice(t_ctxt, t_detailed_reading);
-    if (t_detailed_reading != nil)
-        ep.setarray(t_detailed_reading, True);
+    MCAutoArrayRef t_detailed_reading;
+    MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
+    if (*t_detailed_reading != nil)
+        ep.setvalueref(*t_detailed_reading);
     
-    MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
-    MCVariableValue *t_detailed_reading = nil;
-    MCSensorGetDetailedHeadingOfDevice(t_ctxt, t_detailed_reading);
-    if (t_detailed_reading != nil)
-        ep.setarray(t_detailed_reading, True);
+    MCAutoArrayRef t_detailed_reading;
+    MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
+    if (*t_detailed_reading != nil)
+        ep.setvalueref(*t_detailed_reading);
     
-    MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
     if (p_parameters)
@@ -772,30 +793,36 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         p_parameters->eval(ep);
         t_timeout = atoi(ep.getcstring());
     }
-    MCSensorSetLocationCalibration(t_ctxt, t_timeout);
+    MCSensorSetLocationCalibration(ctxt, t_timeout);
     
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
-    MCSensorGetLocationCalibration(t_ctxt, t_timeout);
+    MCSensorGetLocationCalibration(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
     
-    t_ctxt . SetTheResultToEmpty();
-    return t_ctxt.GetStat();
+    ctxt . SetTheResultToEmpty();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);    
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
 
     MCSensorType t_sensor;
     t_sensor = kMCSensorTypeUnknown;    
@@ -808,38 +835,47 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(t_ctxt, t_sensor, t_available);
+    MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);    
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
         
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeLocation, t_available);
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);    
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeHeading, t_available);
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

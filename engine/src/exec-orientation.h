@@ -14,7 +14,7 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-enum MCOrientation
+typedef enum
 {
 	ORIENTATION_UNKNOWN,
 	ORIENTATION_PORTRAIT,
@@ -23,9 +23,9 @@ enum MCOrientation
 	ORIENTATION_LANDSCAPE_LEFT,
 	ORIENTATION_FACE_UP,
 	ORIENTATION_FACE_DOWN
-};
+} MCOrientation;
 
-enum MCOrientationSet
+typedef enum
 {
 	ORIENTATION_UNKNOWN_BIT = 1 << ORIENTATION_UNKNOWN ,
 	ORIENTATION_PORTRAIT_BIT = 1 << ORIENTATION_PORTRAIT,
@@ -34,4 +34,4 @@ enum MCOrientationSet
 	ORIENTATION_LANDSCAPE_LEFT_BIT = 1 << ORIENTATION_LANDSCAPE_LEFT,
 	ORIENTATION_FACE_UP_BIT = 1 << ORIENTATION_FACE_UP,
 	ORIENTATION_FACE_DOWN_BIT = 1 << ORIENTATION_FACE_DOWN
-};
+} MCOrientationSet;

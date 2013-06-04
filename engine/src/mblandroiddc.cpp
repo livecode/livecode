@@ -32,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "statemnt.h"
 #include "funcs.h"
 #include "eventqueue.h"
-#include "core.h"
 #include "mode.h"
 #include "osspec.h"
 #include "redraw.h"
@@ -48,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pthread.h>
 #include <android/log.h>
 #include <android/bitmap.h>
+#include <windows.h>
 #include <GLES/gl.h>
 #include <unistd.h>
 
@@ -1316,7 +1316,11 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				if (t_success)
                     t_success = MCJavaStringToNative(t_env, t_java_string, t_cstring);
                 if (t_success)
-                    t_success = MCStringCreateWithCString(t_cstring, (MCStringRef)context -> return_value);
+				{
+					MCStringRef t_string;
+                    t_success = MCStringCreateWithCString(t_cstring, t_string);
+					((MCStringRef)context -> return_value) = t_string;
+				}
 
 				delete t_cstring;
 

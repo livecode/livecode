@@ -25,8 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "eventqueue.h"
-
-#include "core.h"
+#include "exec.h"
 
 #include "param.h"
 
@@ -351,7 +350,10 @@ Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
 	MCPurchaseList(list_purchases, &ep);
-	MCresult -> store(ep, False);
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+	ctxt . SetTheResultToValue(*t_result);
 	return ES_NORMAL;
 }
 
@@ -471,11 +473,16 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 		MCPurchaseLookupProperty(t_prop_name, t_property);
 	
 	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
 	if (t_success)
 		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
 	
 	if (t_success)
-		MCresult->store(ep, True);
+	{
+		MCAutoStringRef t_string;
+		ep . copyasstringref(&t_string);
+		ctxt . SetTheResultToValue(*t_string);
+	}
 	else
 		MCresult->clear();
 	

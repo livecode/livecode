@@ -34,7 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "funcs.h"
 #include "eventqueue.h"
 #include "image.h"
-#include "core.h"
 #include "osspec.h"
 #include "fiber.h"
 #include "redraw.h"
@@ -146,19 +145,19 @@ static void sel_callback_arg(void *p_context)
 
 static void MCFiberCallSelector(MCFiberRef p_fiber, id object, SEL selector)
 {
-	sel_ctxt_t t_ctxt;
-	t_ctxt . object = object;
-	t_ctxt . selector = selector;
-	MCFiberCall(p_fiber, sel_callback, &t_ctxt);
+	sel_ctxt_t ctxt;
+	ctxt . object = object;
+	ctxt . selector = selector;
+	MCFiberCall(p_fiber, sel_callback, &ctxt);
 }
 
 static void MCFiberCallSelectorWithObject(MCFiberRef p_fiber, id object, SEL selector, id arg)
 {
-	sel_ctxt_t t_ctxt;
-	t_ctxt . object = object;
-	t_ctxt . selector = selector;
-	t_ctxt . argument = arg;
-	MCFiberCall(p_fiber, sel_callback_arg, &t_ctxt);
+	sel_ctxt_t ctxt;
+	ctxt . object = object;
+	ctxt . selector = selector;
+	ctxt . argument = arg;
+	MCFiberCall(p_fiber, sel_callback_arg, &ctxt);
 }
 
 void MCIPhoneCallOnMainFiber(void (*handler)(void *), void *context)

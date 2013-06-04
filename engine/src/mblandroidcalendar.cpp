@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -146,7 +145,7 @@ void MCAndroidUpdateCalendarEventCanceled(const char* p_calendar_event_id)
 	s_calendar_event_status = kMCAndroidCalendarEventCanceled;
 }
 
-bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_calendar_event_id, MCVariableValue *&r_calendar_event_data)
+bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_calendar_event_id, MCArrayRef &r_calendar_event_data)
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
     MCLog("MCSystemGetEventData: %s", p_calendar_event_id);

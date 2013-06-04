@@ -358,7 +358,7 @@ bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
 
 bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 {
-	return MCsystem->ShortFilePath(p_path, r_long_path);
+	return MCsystem->ShortFilePath(p_path, r_short_path);
 }
 
 bool MCS_setcurdir(MCStringRef p_path)
@@ -395,6 +395,8 @@ struct MCS_getentries_state
 	MCAutoListRef list;
 };
 
+bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+
 static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
 {
 	MCS_getentries_state *t_state;
@@ -407,7 +409,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (t_state -> details)
 	{
 		MCStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithNativeChars(p_entry->name, MCCStringLength(p_entry->name), t_filename_string);
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), t_filename_string);
 		MCStringRef t_urlencoded_string;
 		/* UNCHECKED */ MCFiltersUrlEncode(t_filename_string, t_urlencoded_string);
 		MCValueRelease(t_filename_string);
@@ -483,7 +485,7 @@ uint2 MCS_umask(uint2 p_mask)
 /* WRAPPER */
 bool MCS_exists(MCStringRef p_path, bool p_is_file)
 {
-	MCStringRef t_resolved;
+	MCAutoStringRef t_resolved;
 	if (!MCS_resolvepath(p_path, &t_resolved))
 		return false;
 
@@ -904,15 +906,20 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 	uint32_t t_size;
 	t_size = (uint32_t)t_file -> GetFileSize();
 	
-	char *t_buffer;
-	t_buffer = ep . getbuffer(t_size);
+	MCAutoNativeCharArray t_buffer;
+	/* UNCHECKED */ t_buffer . New(t_size);
+	//t_buffer = ep . getbuffer(t_size);
 	
 	uint32_t t_read;
-	if (t_buffer != NULL &&
-		t_file -> Read(t_buffer, t_size, t_read) &&
+	if (t_buffer.Chars() != NULL &&
+		t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
 		t_read == t_size)
 	{
-		ep . setlength(t_size);
+		MCAutoStringRef t_string;
+		t_buffer . Shrink(t_size);
+		t_buffer . CreateStringAndRelease(&t_string);
+		ep . setvalueref(*t_string);
+
 		if (!p_binary)
 			ep . texttobinary();
 		MCresult -> clear(False);
@@ -1247,7 +1254,7 @@ bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, M
 	}
 	
 	MCAutoListRef t_list;
-	if (!MClistCreateMutable('\n', &t_list))
+	if (!MCListCreateMutable('\n', &t_list))
 		return false;
 	if (!MCsystem -> HostNameToAddress(p_hostname, MCS_resolve_callback, *t_list))
 	{
@@ -1336,7 +1343,7 @@ uint32_t MCS_getsyserror(void)
 bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 {
 	r_error = false;
-	return MCStringCreateWithCString("not supported");
+	return MCStringCreateWithCString("not supported", r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1357,7 +1364,7 @@ char *MCSystemInterface::PathFromNative(const char *p_native)
 	MCAutoStringRef t_native;
 	MCAutoStringRef t_path;
 	char *t_cstring = nil;
-	if (MCStringCreateWithCString(&t_native, p_native) &&
+	if (MCStringCreateWithCString(p_native, &t_native) &&
 		PathFromNative(*t_native, &t_path) &&
 		MCCStringClone(MCStringGetCString(*t_path), t_cstring))
 		return t_cstring;
@@ -1379,7 +1386,7 @@ char *MCSystemInterface::ResolvePath(const char *p_path)
 	MCAutoStringRef t_path;
 	MCAutoStringRef t_resolved;
 	char *t_cstring = nil;
-	if (MCStringCreateWithCString(&t_path, p_path) &&
+	if (MCStringCreateWithCString(p_path, &t_path) &&
 		ResolvePath(*t_path, &t_resolved) &&
 		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
 		return t_cstring;
@@ -1391,7 +1398,7 @@ char *MCSystemInterface::ResolveNativePath(const char *p_path)
 	MCAutoStringRef t_path;
 	MCAutoStringRef t_resolved;
 	char *t_cstring = nil;
-	if (MCStringCreateWithCString(&t_path, p_path) &&
+	if (MCStringCreateWithCString(p_path, &t_path) &&
 		ResolveNativePath(*t_path, &t_resolved) &&
 		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
 		return t_cstring;

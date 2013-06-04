@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "system.h"
 
 #include "globdefs.h"
@@ -38,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "exec-orientation.h"
 
 extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 extern MCAndroidDeviceConfiguration s_device_configuration;
@@ -65,7 +65,6 @@ typedef enum
 static uint32_t s_allowed_orientations = 0;
 static uint32_t s_orientation_lock = 0;
 
-/*
 static const char *s_orientation_names[] = {
 	"portrait",
 	"landscape left",
@@ -73,7 +72,7 @@ static const char *s_orientation_names[] = {
 	"landscape right",
 	nil
 //	"face up",
-}; */
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -350,17 +349,38 @@ void MCAndroidOrientationChanged(int orientation)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientations)
+MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
 {
-	r_orientations = (intset_t)s_allowed_orientations;
+	switch (p_orientation)
+	{
+	case kMCDisplayOrientationPortrait:
+		return ORIENTATION_PORTRAIT;
+	case kMCDisplayOrientationPortraitUpsideDown:
+		return ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+	case kMCDisplayOrientationLandscapeRight:
+		return ORIENTATION_LANDSCAPE_RIGHT;
+	case kMCDisplayOrientationLandscapeLeft:
+		return ORIENTATION_LANDSCAPE_LEFT;
+	case kMCDisplayOrientationFaceUp:
+		return ORIENTATION_FACE_UP;
+	default:
+		return ORIENTATION_UNKNOWN;
+	}
 }
 
-void MCSystemSetAllowedOrientations(MCExecContext& ctxt, MCStringRef p_orientations)
+void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
 {
-	s_allowed_orientations = (uint32_t)p_orientations;
+	//r_orientations = get_orientation(s_allowed_orientations);
+	r_orientations = ORIENTATION_UNKNOWN_BIT;
 }
 
-void MCSystemGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
+void MCSystemSetAllowedOrientations(MCExecContext& ctxt, MCOrientationSet p_orientations)
+{
+	//s_allowed_orientations = (uint32_t)p_orientations;
+	s_allowed_orientations = 0;
+}
+
+void MCSystemGetOrientation(MCOrientation& r_orientation)
 {
 	int32_t t_rotation;
 	MCAndroidDisplayFormat t_format;
@@ -369,12 +389,12 @@ void MCSystemGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 	t_format = android_get_display_format();
 
 	if (t_format == kMCDisplayFormatUnknown)
-		r_orientation = (intenum_t)kMCDisplayOrientationUnknown;
+		r_orientation = ORIENTATION_UNKNOWN;
 	else
-		r_orientation = (intenum_t)android_display_orientation_from_rotation(t_format, t_rotation);
+		r_orientation = get_orientation(android_display_orientation_from_rotation(t_format, t_rotation));
 }
 
-void MCSystemGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
 {
 	int32_t t_dev_rotation;
 	MCAndroidDisplayFormat t_dev_format;
@@ -382,31 +402,22 @@ void MCSystemGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 	t_dev_rotation = android_get_device_rotation();
 	t_dev_format = android_get_device_format();
 
-	r_orientation = (intenum_t)android_display_orientation_from_rotation(t_dev_format, t_dev_rotation);
-	ctxt . SetTheResultToStaticCString(android_device_rotation_to_string(t_dev_format, t_dev_rotation)));
+	r_orientation = get_orientation(android_display_orientation_from_rotation(t_dev_format, t_dev_rotation));
 }
 
-void MCSystemExecLockOrientation(MCExecContext& ctxt)
+void MCSystemExecLockOrientation()
 {
 	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
 }
 
-void MCSystemExecUnlockOrientation(MCExecContext& ctxt)
+void MCSystemExecUnlockOrientation()
 {
 	if (s_orientation_lock > 0)
 		s_orientation_lock--;
 }
 
-void MCSystemGetOrientationLocked(MCExecContext& ctxt, bool &r_locked)
+void MCSystemGetOrientationLocked(bool &r_locked)
 {
 	r_locked = s_orientation_lock > 0;
-}
-
-const char * get_orientation_name(int p_index)
-{
-	if (p_index == kMCDisplayOrientationUnknown)
-		return "unknown";
-	else
-		return s_orientation_names[p_index];
 }

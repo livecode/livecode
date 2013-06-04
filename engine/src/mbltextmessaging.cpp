@@ -81,9 +81,9 @@ Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
     }
 	t_success = MCParseParameters(p_parameters, "s", &t_body);
     
-    MCExecContext t_ctxt(ep);
+    MCExecContext ctxt(ep);
     
-	MCComposeTextMessageExec(t_ctxt, t_recipients, t_body);
+	MCComposeTextMessageExec(ctxt, t_recipients, t_body);
     
 	return ES_NORMAL;
 }

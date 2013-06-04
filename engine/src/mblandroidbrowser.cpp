@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -96,12 +95,16 @@ Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExe
 {
     jobject t_view;
     t_view = GetView();
-    
+
     switch (p_property)
     {
         case kMCNativeControlPropertyUrl:
             if (t_view != nil)
-                MCAndroidObjectRemoteCall(t_view, "setUrl", "vS", nil, &(ep.getsvalue()));
+			{
+				MCAutoStringRef t_value;
+				/* UNCHECKED */ ep . copyasstringref(&t_value);
+                MCAndroidObjectRemoteCall(t_view, "setUrl", "vx", nil, *t_value);
+			}
             return ES_NORMAL;
             
 			// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
@@ -131,12 +134,11 @@ Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExe
     {
         case kMCNativeControlPropertyUrl:
         {
-            char *t_url = nil;
+            MCAutoStringRef t_url;
             if (t_view != nil)
             {
-                MCAndroidObjectRemoteCall(t_view, "getUrl", "s", &t_url);
-                ep.setcstring(t_url);
-                ep.grabsvalue();
+                MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
+                /* UNCHECKED */ ep.setvalueref(*t_url);
             }
             return ES_NORMAL;
         }

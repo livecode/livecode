@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -892,7 +891,7 @@ static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	
 	MCExecPoint ep;
 	ep.setsvalue(t_id_string);
-	MCresult->store(ep, True);
+	ctxt . SetTheResultToValue(ep . getsvalue());
 	
 	return ES_NORMAL;
 }
@@ -919,7 +918,7 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 	}
 	
 	if (t_success)
-		MCresult->store(ep, True);
+		ctxt . SetTheResultToValue(ep . getsvalue());
 	else
 		MCresult->clear();
 	
@@ -1487,12 +1486,12 @@ Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message
 			//   jump to the main fiber for it.
 			if (!s_platform_messages[i] . waitable)
 			{
-				handle_context_t t_ctxt;
-				t_ctxt . handler = s_platform_messages[i] . handler;
-				t_ctxt . context = s_platform_messages[i] . context;
-				t_ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &t_ctxt);
-				return t_ctxt . result;
+				handle_context_t ctxt;
+				ctxt . handler = s_platform_messages[i] . handler;
+				ctxt . context = s_platform_messages[i] . context;
+				ctxt . parameters = p_parameters;
+				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+				return ctxt . result;
 			}
 			
 			// Execute the method as normal, in this case the method will have to jump
