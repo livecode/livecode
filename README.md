@@ -58,6 +58,8 @@ However, there is no need for you to necessarily use 3.2.6 – the more recent X
 * open up rules/Global.xcconfig
 *	change SDKROOT to be set to 10.6
 
+*Note:* Trevor DeVore has put together a guide for getting things to build on Mountain Lion with Xcode 4.6.2 - see [here](http://trevordevore.clarify-it.com/d/j9fxqj)
+
 *Note:* Not using 3.2.6 and the 10.4 SDK will potentially result in engine binaries that will not run on older versions of Mac (particular PowerPC) but this doesn't matter for development purposes (only distribution).
 
 ### Linux ###
