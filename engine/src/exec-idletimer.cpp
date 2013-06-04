@@ -35,7 +35,7 @@ MC_EXEC_DEFINE_GET_METHOD(IdleTimer, IdleTimerLocked, 1);
 
 bool MCSystemLockIdleTimer();
 bool MCSystemUnlockIdleTimer();
-bool MCSystemGetIdleTimerLocked();
+bool MCSystemIdleTimerLocked();
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -52,5 +52,5 @@ void MCIdleTimerExecUnlockIdleTimer(MCExecContext& ctxt)
 
 void MCIdleTimerGetIdleTimerLocked(MCExecContext& ctxt, bool& r_result)
 {
-    r_result = MCSystemGetIdleTimerLocked();
+    r_result = MCSystemIdleTimerLocked();
 }

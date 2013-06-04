@@ -60,7 +60,7 @@ uint g_idle_timer = 0;
 
 
 
-static bool MCSystemLockIdleTimer(void)
+bool MCSystemLockIdleTimer(void)
 {
 	g_idle_timer++;
 	if (g_idle_timer == 1)
@@ -69,7 +69,7 @@ static bool MCSystemLockIdleTimer(void)
 	return true;
 }
 
-static bool MCSystemUnlockIdleTimer(void)
+bool MCSystemUnlockIdleTimer(void)
 {
 	if (g_idle_timer == 1)
 		[[UIApplication sharedApplication] setIdleTimerDisabled:NO];
@@ -79,7 +79,7 @@ static bool MCSystemUnlockIdleTimer(void)
 	return true;
 }
 
-static bool MCSystemIdleTimerLocked(void)
+bool MCSystemIdleTimerLocked(void)
 {
 	return ([[UIApplication sharedApplication] isIdleTimerDisabled] == YES);
 }

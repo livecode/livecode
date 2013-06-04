@@ -68,6 +68,9 @@ xcuserdata/
 *.vcproj.*.user
 *.ncb
 *.suo
+*.mode1v3
+*.xcworkspacedata
+
 
 # Build folders #
 #################

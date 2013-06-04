@@ -55,9 +55,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// global counter for the iPhone idle timer
-uint g_idle_timer = 0;
-
 id objc_lookUpClass(const char *name);
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
