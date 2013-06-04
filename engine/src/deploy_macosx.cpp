@@ -1136,7 +1136,7 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	// Make sure linkedit follows project, or linkedit follows misc, follows project
 	if (t_success &&
 		(t_linkedit_index != t_project_index + 1) &&
-		(t_misc_segment == nil && (t_linkedit_index == t_misc_index + 1 && t_misc_index == t_project_index + 1)))
+		(t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1)))
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
 
 	// Make sure project follows payload (if required)
