@@ -220,7 +220,96 @@ For the standalone engines (only works in Debug profile):
 Contributing
 ------------
 
-TBC
+At the moment we will accept contributions to the engine and external source only. (Contributions to IDE and documentation will be organised in due course).
+
+### Discussion ###
+
+If you are interested in contributing to engine development then we urge you to get involved in the Engine Contributors forum on the LiveCode forums here: http://forums.runrev.com/viewforum.php?f=66
+
+### Pull Requests ###
+
+Our work flow is a typical git-flow model, where contributors fork the livecode repository, make their changes on a branch, and submit a Pull Request.
+
+In general, branching should be done off of 'master' wherever possible (particularly for bug-fixes) as this allows us to be more agile in terms of the releases in which we can include changes. Obviously, in the cases where features or fixes rely on work on the current 'develop' branch then that should be the base for the branch.
+
+When you submit a pull request, our team will review it and provide feedback to ensure the patch is suitable to be integrated into the repositoriy.
+
+When your pull request is accepted it will be scheduled for inclusion into an appropriate release.
+
+### Contributor's Agreements ###
+
+If you are wanting to contribute to development of LiveCode then it is important that you sign the (Contributor's Agreement)[http://livecode.com/store/account/contributor-agreement-signup]. This agreement is required as the LiveCode project is dual-licensed both under the GPLv3 and a commercial (closed-source) license and you need to give us permission to use your submissions in this way.
+
+*Note:* We cannot accept any pull-requests from individuals who have not signed this agreement.
+
+### Personalising Git ###
+
+Please ensure that your full name and email address are correctly configured in your git repository. The email address should ideally match the one you used to sign the contributor's agreement (i.e. your LiveCode Customer Login), but at the very least should match the one you use (publically) on github.
+
+You can do this from the command-line (for all git repositories) with the following commands:
+
+    git config --global user.name “<your name>”
+    git config --global user.email <your email address>
+
+*Note*: We cannot accept any pull-requests where the commit log does not contain correct Name / Email Address references.
+
+### Bug Fixes ###
+
+If you are wanting to fix a bug then please ensure there is an appropriate confirmed bug report lodged in the [LiveCode QA Centre](http://quality.runrev.com/) - this helps us track what is being fixed and provide support for doing so, should it not be straight-forward.
+
+Pull requests for bug-fixes should be as minimal as possible, fixing only a single bug (or two or more highly-interdependent bugs).
+
+### Features ###
+
+If you are wanting to add a feature, or augment existing functionality we strongly encourage you to start a discussion topic about it on the [Engine Contributors](http://forums.runrev.com/viewforum.php?f=66) forum. This will help ensure that the feature you are adding is likely to be accepted, and fits in with the rest of the LiveCode language.
+
+*Note:* In particular, we do ask that significant syntax additions be thoroughly discussed first as once added it is very hard to change and/or remove in the future!
+
+Pull requests for features should be as minimal as possible, incorporating only the changes needed to add that feature.
+
+### Coding Style ###
+
+We are currently working on a more comprehensive coding style document which we will make available in due course, however here is a quick summary of our general practices in this regard:
+
+* The majority of the engine is written in C++-as-a-better-C and so does not use the language's entire feature-set. In particular:
+  * The engine does not use exceptions nor rtti.
+  * The engine uses templates sparingly, typically as 'sanitized macros' for efficiency purposes, or resource acquisition classes.
+  * The engine does not use the standard C++ library.
+* Naming conventions:
+  * Use descriptive variable and function names - don't be scared of verbosity but don't go overboard.
+  * Variable names should be lower-case, using underscores to separate words.
+  * Variables should be prefixed with the following to indicate their scope:
+     * t_ - local variables
+     * p_ - in parameters
+     * r_ - out parameters
+     * x_ - in-out parameters
+     * m_ - object instance variables
+     * s_ - object class (static) variables or file-local static variables
+     * g_ - global variables
+  * Function names should generally be camel-case, prefixed by 'MC' followed by the module name (note for file-local static functions, lower-case with underscores without module prefix is also acceptable).
+  * Constants (both in and out of enumerations) should be camel-case prefixed by 'kMC' and the module name.
+* Coding practices:
+  * Declare and initialize local variables on separate lines.
+  * Initialize all variables to a base value. i.e. pointers to nil, bools to true/false etc.
+  * Only pass bools to if, while, do and the middle section of for - don't rely on NULL/nil/0 being false.
+  * Always check the success of memory allocations, or if the calling code can't handle memory failure then mark the line that does the allocation with a /* UNCHECKED */ prefix.
+  * Don't use #define's to abbreviate code.
+  * Use inline functions instead of macros wherever possible.
+  * 'out' function parameters should not be altered by the function until the end, and then only if the function succeeds.
+  * Do not use 'goto'.
+  * Do not use the ternery operator (... ? ... : ...).
+  * When declaring boolean values in a struct/class use a bit-field - bool m_my_var_name : 1
+* Layout and style:
+  * All curly braces must be on a line on their own and indented appropriately (matching the level of the construct they are related to).
+  * Use a single space after 'for', 'while', 'if', 'switch'. (e.g. if (true))
+  * Do not use a space before the parameter list in function calls/definitions. (e.g. foo(a, b, c))
+  * Use a single space after any comma.
+  * Use a single space before and after binary operators. (e.g. x == y, x + y)
+  * Put only a single statement on any line.
+  * Split overly long lines appropriately (preferring the line-break after any binary operators or commas, rather than before).
+  * Use a single blank line to separate different areas of code within a function.
+  * Use a single blank line between function and type definitions.
+  * Separate significant areas of code with a sequence of (80) slashes.
 
 License
 -------
