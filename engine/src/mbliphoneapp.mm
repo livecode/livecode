@@ -1039,6 +1039,8 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	MCIPhoneHandleMotionEnded(motion, [event timestamp]);
 }
 
+// MW-2013-05-30: [[ RemoteControl ]] Handle the remote control event and pass
+//   on if applicable.
 - (void)remoteControlReceivedWithEvent: (UIEvent *)event
 {
 	if ([event type] == UIEventTypeRemoteControl)

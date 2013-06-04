@@ -680,4 +680,52 @@ bool MCImageForceBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_dither, MCImage
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCImageDataIsJPEG(const MCString& data)
+{
+	const unsigned char *t_data;
+	t_data = (const unsigned char *)data . getstring();
+    
+	uint4 t_length;
+	t_length = data . getlength();
+    
+	if (t_length < 9)
+		return false;
+    
+	if (t_data[0] != 0xFF || t_data[1] != 0xE0)
+		return false;
+    
+	if (memcmp(t_data + 4, "JFIF", 5) != 0)
+		return false;
+    
+	return true;
+}
 
+bool MCImageDataIsPNG(const MCString& data)
+{
+	const unsigned char *t_data;
+	t_data = (const unsigned char *)data . getstring();
+    
+	uint4 t_length;
+	t_length = data . getlength();
+    
+	if (t_length < 8)
+		return false;
+    
+	return memcmp(t_data, "\x89PNG\x0d\x0a\x1a\x0a", 8) == 0;
+}
+
+bool MCImageDataIsGIF(const MCString& data)
+{
+	const unsigned char *t_data;
+	t_data = (const unsigned char *)data . getstring();
+    
+	uint4 t_length;
+	t_length = data . getlength();
+    
+	if (t_length < 6)
+		return false;
+    
+	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
