@@ -116,21 +116,15 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	switch (p_property)
 	{
 		case kMCPurchasePropertyQuantity:
 		{
-			uint32_t t_quantity;
-			if (!MCU_stoui4(ep . getsvalue(), t_quantity))
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-				return ES_ERROR;
-			}
 			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: t_quantity];
+				[t_ios_data->payment setQuantity: p_quantity];
 			return ES_NORMAL;
 		}
 			break;
@@ -271,7 +265,7 @@ bool MCStoreRestorePurchases()
 	return true;
 }
 
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error)
 {
 	if (p_purchase == nil || p_purchase->state != kMCPurchaseStateError)
 		return false;
@@ -281,7 +275,7 @@ bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
 	if (t_ios_data == nil)
 		return false;
 	
-	return MCCStringClone(t_ios_data->error, r_error);
+	return MCStringCreateWithCString(t_ios_data->error, r_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

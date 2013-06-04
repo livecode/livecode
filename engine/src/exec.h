@@ -3379,9 +3379,43 @@ void MCTextMessagingExecComposeTextMessage(MCExecContext& ctxt, MCStringRef p_re
 
 extern MCExecMethodInfo *kMCIdleTimerExecLockIdleTimerMethodInfo;
 extern MCExecMethodInfo *kMCIdleTimerExecUnlockIdleTimerMethodIndo;
+extern MCExecMethodInfo *kMCIdleTimerGetidleTimerLockedMethodInfo;
 
 void MCIdleTimerExecLockIdleTimer(MCExecContext& ctxt);
 void MCIdleTimerExecUnlockIdleTimer(MCExecContext& ctxt);
 void MCIdleTimerGetIdleTimerLocked(MCExecContext& ctxt, bool& r_result);
+
+//////////
+
+extern MCExecMethodInfo* kMCStoreGetCanMakePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecEnablePurchaseUpdatesMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecDisablePurchaseUpdatesMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecRestorePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseListMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecCreatePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseStateMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseErrorMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchasePropertyMethodInfo;
+extern MCExecMethodInfo* kMCStoreSetPurchasePropertyMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecSendPurchaseRequestMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecConfirmPurchaseDeliveryMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecRequestProductDetailsMethodInfo;
+
+
+void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result);
+void MCStoreExecEnablePurchaseUpdates(MCExecContext& ctxt);
+void MCStoreExecDisablePurchaseUpdates(MCExecContext& ctxt);
+void MCStoreExecRestorePurchases(MCExecContext& ctxt);
+//void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list);
+void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, uint32_t& r_id);
+void MCStoreGetPurchaseState(MCExecContext& ctxt, int p_id, MCStringRef& r_state);
+void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error);
+void MCStoreGetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name);
+void MCStoreSetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, uint32_t p_quantity);
+void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
+void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
+//void MCStoreExecRequestProductDetails(MCExecContext& ctxt);
+
+
 
 #endif

@@ -303,6 +303,7 @@
 		BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
+		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -904,6 +905,7 @@
 		BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
 		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
+		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -1231,17 +1233,17 @@
 			children = (
 				4D91B3E2134CB7AE000D7AA5 /* com */,
 				4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */,
-				4DB983C0130BB1DF008A03DC /* mblandroid.cpp */,
 				4DB983C1130BB1DF008A03DC /* mblandroid.h */,
+				4DB983C0130BB1DF008A03DC /* mblandroid.cpp */,
 				4C34550014F3FE8D008D7E50 /* mblandroidad.cpp */,
 				E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */,
+				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
 				4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */,
 				4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */,
-				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */,
 				4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */,
 				4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */,
@@ -1370,6 +1372,7 @@
 				BE4494D7175CDE7400346B49 /* exec-scripting.cpp */,
 				BE4494D8175CDE7400346B49 /* exec-security.cpp */,
 				BE4494D9175CDE7400346B49 /* exec-server.cpp */,
+				BE7506EF175E0BD200A339DA /* exec-store.cpp */,
 				BE4494DA175CDE7400346B49 /* exec-strings.cpp */,
 				BE4494DB175CDE7400346B49 /* exec-text.cpp */,
 				BE4494DC175CDE7400346B49 /* exec.cpp */,
@@ -2297,6 +2300,7 @@
 				BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */,
 				BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */,
 				BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */,
+				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
