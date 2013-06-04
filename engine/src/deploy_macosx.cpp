@@ -1084,10 +1084,11 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 	if (t_success && p_validate_header_callback != nil)
 		t_success = p_validate_header_callback(p_params, t_header, t_commands);
 
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Search for a rogue 'misc' segment.
 	// Next check that the executable is in a form we can work with
-	segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment;
-	uint32_t t_linkedit_index, t_project_index, t_payload_index;
-	t_linkedit_segment = t_project_segment = t_payload_segment = NULL;
+	segment_command *t_linkedit_segment, *t_project_segment, *t_payload_segment, *t_misc_segment;
+	uint32_t t_linkedit_index, t_project_index, t_payload_index, t_misc_index;
+	t_linkedit_segment = t_project_segment = t_payload_segment = t_misc_segment = NULL;
 	if (t_success)
 		for(uint32_t i = 0; i < t_header . ncmds; i++)
 			if (t_commands[i] -> cmd == LC_SEGMENT)
@@ -1109,6 +1110,11 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 					t_payload_index = i;
 					t_payload_segment = t_command;
 				}
+				else if (memcmp(t_command -> segname, "__MISC", 6) == 0)
+				{
+					t_misc_index = i;
+					t_misc_segment = t_command;
+				}
 			}
 
 	// Make sure we have both segments we think should be there
@@ -1118,9 +1124,19 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoProjectSegment);
 	if (t_success && p_params . payload != NULL && t_payload_segment == NULL)
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXNoPayloadSegment);
-
-	// Make sure linkedit follows project
-	if (t_success && t_linkedit_index != t_project_index + 1)
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] If 'misc' segment is present but not between
+	//   linkedit and project, then all is well.
+	if (t_success &&
+		t_misc_segment != nil && (t_linkedit_index != t_misc_index + 1 || t_misc_index != t_project_index + 1))
+		t_misc_segment = nil;
+	
+	// MW-2013-05-04: [[ iOSDeployMisc ]] Check 'misc' segment (if potentially an issue) is
+	//   in a place we can handle it.
+	// Make sure linkedit follows project, or linkedit follows misc, follows project
+	if (t_success &&
+		(t_linkedit_index != t_project_index + 1) &&
+		(t_misc_segment == nil && (t_linkedit_index == t_misc_index + 1 && t_misc_index == t_project_index + 1)))
 		t_success = MCDeployThrow(kMCDeployErrorMacOSXBadSegmentOrder);
 
 	// Make sure project follows payload (if required)
@@ -1194,7 +1210,12 @@ static bool MCDeployToMacOSXMain(const MCDeployParameters& p_params, bool p_big_
 			relocate_segment_command(t_project_segment, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset, (t_payload_segment -> fileoff + t_payload_size) - t_old_project_offset);
 		}
 		
-		t_old_linkedit_offset = t_linkedit_segment -> fileoff;
+		// MW-2013-05-04: [[ iOSDeployMisc ]] If there is a 'misc' segment then use a different
+		//   'post' project offset (which will include 'misc').
+		if (t_misc_segment == nil)
+			t_old_linkedit_offset = t_linkedit_segment -> fileoff;
+		else
+			t_old_linkedit_offset = t_misc_segment -> fileoff;
 
 		// Now go through, updating the offsets for all load commands after
 		// and including linkedit.
