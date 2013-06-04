@@ -32,7 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "statemnt.h"
 #include "funcs.h"
 #include "eventqueue.h"
-#include "core.h"
+
 #include "mode.h"
 #include "osspec.h"
 #include "redraw.h"

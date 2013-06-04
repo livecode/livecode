@@ -1111,7 +1111,9 @@ int X_close(void)
 	delete MCsslcertificates;
 	delete MCdefaultnetworkinterface;
 	
+#ifndef _MOBILE
 	ShutdownSSL();
+#endif
 	MCS_shutdown();
 	delete MCundos;
 	while (MCcur_effects != NULL)

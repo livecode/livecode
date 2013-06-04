@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -520,7 +520,7 @@ Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_key);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 
@@ -569,7 +569,7 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_ad);
 	    
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
@@ -591,7 +591,7 @@ Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
@@ -618,7 +618,7 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
@@ -642,7 +642,7 @@ Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
@@ -663,6 +663,7 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCAdGetTopLeftOfAd(t_ctxt, t_ad, t_top_left);
     
+#ifdef MOBILE_BROKEN
     if (t_success)
     {
         MCAutoRawCString t_top_left_string;
@@ -674,10 +675,11 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
     
     if (t_success)
         MCresult->store(ep, False);
+#endif
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
@@ -706,7 +708,7 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
     MCCStringFree(t_top_left_string);
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
@@ -717,7 +719,8 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
     MCExecPoint ep(nil, nil, nil);
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
-        
+    
+#ifdef MOBILE_BROKEN
     if (t_success)
     {
         MCAutoRawCString t_ads;
@@ -728,8 +731,9 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 
     if (t_success)
         MCresult->store(ep, False);
+#endif
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

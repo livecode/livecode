@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -443,8 +443,7 @@ Exec_stat MCNativePlayerControl::Get(MCNativeControlProperty p_property, MCExecP
 			{
 				CGSize t_size;
 				t_size = [m_controller naturalSize];
-				sprintf(ep.getbuffer(I2L * 2 + 3), "%d,%d", (int32_t)t_size . width, (int32_t)t_size . height);
-				ep.setstrlen();
+				ep.setstringf("%d,%d", (int32_t)t_size . width, (int32_t)t_size . height);
 			}
 			return ES_NORMAL;
 			

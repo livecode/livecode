@@ -26,7 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "eventqueue.h"
 
-#include "core.h"
+
 
 #include "param.h"
 
@@ -349,9 +349,11 @@ static bool list_purchases(void *context, MCPurchase* p_purchase)
 
 Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)
 {
+#ifdef MOBILE_BROKEN
 	MCExecPoint ep(nil, nil, nil);
 	MCPurchaseList(list_purchases, &ep);
 	MCresult -> store(ep, False);
+#endif
 	return ES_NORMAL;
 }
 
@@ -474,11 +476,13 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
 	
+#ifdef MOBILE_BROKEN
 	if (t_success)
 		MCresult->store(ep, True);
 	else
 		MCresult->clear();
-	
+#endif
+    
 	MCCStringFree(t_prop_name);
 	
 	return ES_NORMAL;

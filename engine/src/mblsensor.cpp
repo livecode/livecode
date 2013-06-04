@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "exec.h"
-#include "core.h"
+
 
 #include "eventqueue.h"
 
@@ -582,7 +582,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
         MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
     }
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
@@ -606,7 +606,7 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
         MCSensorExecStopTrackingSensor(t_ctxt, t_sensor);
     }
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
@@ -621,7 +621,7 @@ Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parame
     else
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeAcceleration);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_parameters)
@@ -635,7 +635,7 @@ Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_paramete
     else
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeLocation);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameters)
@@ -649,7 +649,7 @@ Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameter
     else
         MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeHeading);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
@@ -675,6 +675,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
     
+#ifdef MOBILE_BROKEN
     MCVariableValue *t_detailed_reading = nil;
     MCAutoRawCString t_reading;
 
@@ -726,7 +727,9 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     }
     
     MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+#endif
+    
+    return t_ctxt.GetExecStat();
 }
 
 // MM-2012-02-11: Added support old style senseor syntax (iPhoneGetCurrentLocation etc)
@@ -738,11 +741,14 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
     
     MCVariableValue *t_detailed_reading = nil;
     MCSensorGetDetailedLocationOfDevice(t_ctxt, t_detailed_reading);
+
+#ifdef MOBILE_BROKEN
     if (t_detailed_reading != nil)
         ep.setarray(t_detailed_reading, True);
     
     MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+#endif
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
@@ -753,11 +759,14 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
     
     MCVariableValue *t_detailed_reading = nil;
     MCSensorGetDetailedHeadingOfDevice(t_ctxt, t_detailed_reading);
+
+#ifdef MOBILE_BROKEN
     if (t_detailed_reading != nil)
         ep.setarray(t_detailed_reading, True);
     
     MCresult->store(ep, False);
-    return t_ctxt.GetStat();
+#endif
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
@@ -774,7 +783,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
     }
     MCSensorSetLocationCalibration(t_ctxt, t_timeout);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
@@ -788,7 +797,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
     MCresult->setnvalue(t_timeout);
     
     t_ctxt . SetTheResultToEmpty();
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
@@ -811,7 +820,7 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     MCSensorGetSensorAvailable(t_ctxt, t_sensor, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
@@ -825,7 +834,7 @@ Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
     MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeLocation, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
@@ -839,7 +848,7 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
     MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeHeading, t_available);
     
     MCresult->sets(MCU_btos(t_available));
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -649,6 +649,9 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 
 const char *MCStringGetCString(MCStringRef p_string)
 {
+    if (p_string == nil)
+        return nil;
+    
 	const char *t_cstring;
 	t_cstring = (const char *)MCStringGetNativeCharPtr(p_string);
 	
@@ -675,7 +678,7 @@ bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstrin
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_oldstring . getstring(), p_oldstring . getlength(), p_options);
 }
 
-#ifdef _MACOSX
+#if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 bool MCCStringToCFString(const char *p_cstring, CFStringRef& r_cfstring)
 {
 	CFStringRef t_cfstring;
@@ -989,6 +992,55 @@ bool MCCStringLastIndexOf(const char *p_string, const char *p_search, uint32_t &
 bool MCCStringContains(const char *p_haystack, const char *p_needle)
 {
 	return strstr(p_haystack, p_needle) != nil;
+}
+
+bool MCCStringCombine(const char * const *p_elements, uint32_t p_element_count, char p_separator, char*& r_string)
+{
+	uint32_t t_length;
+	t_length = 0;
+	for(uint32_t i = 0; i < p_element_count; i++)
+		t_length += MCCStringLength(p_elements[i]) + 1;
+	
+	char *t_string;
+	if (!MCMemoryNewArray(t_length, t_string))
+		return false;
+	
+	char *t_ptr;
+	t_ptr = t_string;
+	for(uint32_t i = 0; i < p_element_count; i++)
+	{
+		if (i > 0)
+			*t_ptr++ = p_separator;
+		
+		uint32_t t_element_length;
+		t_element_length = MCCStringLength(p_elements[i]);
+		MCMemoryCopy(t_ptr, p_elements[i], t_element_length);
+		t_ptr += t_element_length;
+	}
+	*t_ptr = '\0';
+	
+	r_string = t_string;
+    
+	return true;
+}
+
+bool MCCStringIsEmpty(const char *p_string)
+{
+	return p_string == nil || *p_string == '\0';
+}
+
+bool MCCStringIsInteger(const char *p_string)
+{
+	if (p_string == nil)
+		return false;
+	
+	while(isdigit(*p_string++))
+		;
+	
+	if (*p_string == '\0')
+		return true;
+	
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

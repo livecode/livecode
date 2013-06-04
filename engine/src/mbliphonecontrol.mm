@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -159,10 +159,12 @@ bool MCiOSControl::ParseUnicodeString(MCExecPoint& ep, NSString*& r_string)
 
 bool MCiOSControl::FormatUnicodeString(MCExecPoint& ep, NSString *p_string)
 {
+#ifdef MOBILE_BROKEN
 	unichar *t_buffer;
 	t_buffer = (unichar*)ep.getbuffer([p_string length] * 2);
 	[p_string getCharacters: t_buffer range: NSMakeRange(0, [p_string length])];
 	ep.setlength([p_string length] * 2);
+#endif
 	return true;
 }
 

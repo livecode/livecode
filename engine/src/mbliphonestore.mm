@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "param.h"
 
-#include "core.h"
+
 #include "eventqueue.h"
 
 #include "mblstore.h"
@@ -668,6 +668,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     if (t_success)
         t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
     
+#ifdef MOBILE_BROKEN
     if (t_success)
     {
         MCExecPoint ep(nil, nil, nil);
@@ -732,6 +733,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
         
         MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
     }
+#endif
     
     if (t_unicode_description != nil)
         MCMemoryDeleteArray(t_unicode_description);

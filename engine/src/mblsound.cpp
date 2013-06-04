@@ -285,7 +285,7 @@ Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 	delete t_channel;
 	delete t_type;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters)
@@ -307,7 +307,7 @@ Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters)
@@ -329,7 +329,7 @@ Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameter
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
@@ -351,7 +351,7 @@ Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 		
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
@@ -373,7 +373,7 @@ Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 		
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters)
@@ -396,7 +396,7 @@ Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
@@ -422,7 +422,7 @@ Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
@@ -456,7 +456,7 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 	
 	delete t_channel;
 	
-    return t_ctxt.GetStat();	
+    return t_ctxt.GetExecStat();	
 }
 
 Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
@@ -473,6 +473,7 @@ Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
+#ifdef MOBILE_BROKEN
     MCAutoRawCString t_sound;
 	if (t_success)
 		t_success = MCSoundGetSoundOfChannel(t_ctxt, t_channel, t_sound);
@@ -483,8 +484,9 @@ Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
     
     if (t_success)
         MCresult->store(ep, False);
+#endif
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
@@ -501,6 +503,7 @@ Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "s", &t_channel);
 	
+#ifdef MOBILE_BROKEN
     MCAutoRawCString t_sound;
 	if (t_success)
 		t_success = MCSoundGetNextSoundOfChannel(t_ctxt, t_channel, t_sound);
@@ -511,8 +514,9 @@ Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
     
     if (t_success)
         MCresult->store(ep, False);
-    
-    return t_ctxt.GetStat();
+#endif
+
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
@@ -524,6 +528,7 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
     bool t_success;
 	t_success = true;
     
+#ifdef MOBILE_BROKEN
     MCAutoRawCString t_channels;
 	if (t_success)
 		t_success = MCSoundGetSoundChannels(t_ctxt, t_channels);
@@ -534,8 +539,9 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
     
     if (t_success)
         MCresult->store(ep, False);
+#endif
 
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
@@ -573,12 +579,14 @@ Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
 
     if (t_success)
         t_success = MCSoundSetAudioCategory(t_ctxt, t_category);
-    
+
+#ifdef MOBILE_BROKEN
     if (t_success)
         MCresult->store(ep, False);
+#endif
     
     MCCStringFree(t_category_string);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 

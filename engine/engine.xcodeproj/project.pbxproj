@@ -772,6 +772,20 @@
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
 		};
+		BE3F705D175CD3E700DBFB07 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95 /* foundation */;
+			remoteInfo = foundation;
+		};
+		BE3F705F175CD40000DBFB07 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95 /* foundation */;
+			remoteInfo = foundation;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -2629,6 +2643,7 @@
 				4D8D356D171D4B83009D9D25 /* PBXTargetDependency */,
 				4D8D356F171D4B83009D9D25 /* PBXTargetDependency */,
 				4D1F9C5E171C67B00091C6CB /* PBXTargetDependency */,
+				BE3F705E175CD3E700DBFB07 /* PBXTargetDependency */,
 			);
 			name = "kernel-server";
 			productName = kernel;
@@ -2751,6 +2766,7 @@
 				4D8D3561171D4B72009D9D25 /* PBXTargetDependency */,
 				4D8D3563171D4B72009D9D25 /* PBXTargetDependency */,
 				4DEE2BD30FDE4A1E0009423C /* PBXTargetDependency */,
+				BE3F7060175CD40000DBFB07 /* PBXTargetDependency */,
 			);
 			name = kernel;
 			productName = kernel;
@@ -3685,6 +3701,16 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DEE2BD20FDE4A1E0009423C /* PBXContainerItemProxy */;
+		};
+		BE3F705E175CD3E700DBFB07 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = BE3F705D175CD3E700DBFB07 /* PBXContainerItemProxy */;
+		};
+		BE3F7060175CD40000DBFB07 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = foundation;
+			targetProxy = BE3F705F175CD40000DBFB07 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

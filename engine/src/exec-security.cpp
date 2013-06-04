@@ -44,6 +44,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Security, BlockDecryptWithKey, 5)
 MC_EXEC_DEFINE_GET_METHOD(Security, SslCertificates, 1)
 MC_EXEC_DEFINE_SET_METHOD(Security, SslCertificates, 1)
 
+#ifndef _MOBILE
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest)
@@ -190,3 +191,69 @@ void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
 	delete MCsslcertificates;
 	MCsslcertificates = strclone(MCStringGetCString(p_value));	
 }
+
+#else
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCStringRef& r_bytes)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSecurityExecRsaOperation(MCExecContext& ctxt, bool p_is_decrypt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
+{
+}
+
+void MCSecurityExecRsaEncrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
+{
+}
+
+void MCSecurityExecRsaDecrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase)
+{
+}
+
+void MCSecurityExecBlockOperation(MCExecContext& ctxt, bool p_is_decrypt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, bool p_is_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
+{
+}
+
+void MCSecurityExecBlockEncryptWithPassword(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
+{
+}
+
+void MCSecurityExecBlockEncryptWithKey(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, MCStringRef p_iv, uint2 p_bit_rate)
+{
+}
+
+void MCSecurityExecBlockDecryptWithPassword(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_password, MCStringRef p_salt, MCStringRef p_iv, uint2 p_bit_rate)
+{
+}
+
+void MCSecurityExecBlockDecryptWithKey(MCExecContext& ctxt, MCStringRef p_data, MCNameRef p_cipher, MCStringRef p_key, MCStringRef p_iv, uint2 p_bit_rate)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSecurityGetSslCertificates(MCExecContext& ctxt, MCStringRef& r_value)
+{
+}
+
+void MCSecuritySetSslCertificates(MCExecContext& ctxt, MCStringRef p_value)
+{
+}
+
+#endif

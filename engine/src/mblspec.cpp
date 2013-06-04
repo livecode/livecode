@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -300,6 +300,7 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	while(t_state . status != kMCSystemUrlStatusFinished && t_state . status != kMCSystemUrlStatusError)
 		MCscreen -> wait(60.0, True, True);
 	
+#ifdef MOBILE_BROKEN
     MCurlresult -> getvalue() . exchange(t_state . data);
 	if (t_state . status == kMCSystemUrlStatusFinished)
 	{
@@ -309,6 +310,7 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	{
 		MCresult -> getvalue() . exchange(t_state . error);
 	}
+#endif
 	
 	t_state . object -> Release();
 }
@@ -564,6 +566,7 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 		while(t_state . status != kMCSystemUrlStatusFinished && t_state . status != kMCSystemUrlStatusError)
 			MCscreen -> wait(60.0, True, True);
 		
+#ifdef MOBILE_BROKEN
 		if (t_state . status == kMCSystemUrlStatusFinished)
 		{
 			MCurlresult -> getvalue() . exchange(t_state . data);
@@ -574,6 +577,7 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 			MCurlresult -> clear();
 			MCresult -> getvalue() . exchange(t_state . data);
 		}
+#endif
 	}
 	
 	MCCStringFree(t_processed);
@@ -751,8 +755,10 @@ void MCS_unloadurl(MCObject *p_object, const char *p_url)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
+
+bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 {
+#ifdef MOBILE_BROKEN
 	ep . setsvalue(p_data);
 
 	switch(p_kind)
@@ -767,7 +773,7 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
 	default:
 		break;
 	}
-
+#endif
 	return true;
 }
 
@@ -809,7 +815,7 @@ bool MCS_set_session_save_path(MCStringRef p_path)
 	return true;
 }
 
-bool MCS_get_session_save_path(MCStringRef& r_path);
+bool MCS_get_session_save_path(MCStringRef& r_path)
 {
 	r_path = MCValueRetain(kMCEmptyString);
 	return true;
@@ -843,7 +849,7 @@ bool MCS_set_session_id(MCStringRef p_id)
 
 bool MCS_get_session_id(MCStringRef &r_id)
 {
-	r_name = MCValueRetain(kMCEmptyString);
+	r_id = MCValueRetain(kMCEmptyString);
 	return true;
 }
 
@@ -874,9 +880,20 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	return 0;
 }
 
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet)
+bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	return 0;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_getaddress(MCStringRef& r_address)
+{
+#ifdef MOBILE_BROKEN
+#else
+    return true;
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

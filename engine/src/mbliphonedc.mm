@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "funcs.h"
 #include "eventqueue.h"
 #include "image.h"
-#include "core.h"
+
 #include "osspec.h"
 #include "fiber.h"
 #include "redraw.h"
@@ -1304,7 +1304,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	if (!t_init_success)
 	{
 		MCExecPoint ep(nil, nil, nil);
-		MCresult -> fetch(ep);
+        ep . setvalueref(MCresult -> getvalueref());
 		NSLog(@"Startup error: %s\n", ep . getcstring());
 		abort();
 		return;

@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 #include "date.h"
 
-#include "core.h"
+
 
 #include "mblsyntax.h"
 
@@ -499,12 +499,14 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
 
         p_ctxt.SetTheResultToEmpty();
         
+#ifdef MOBILE_BROKEN
         if (t_success)
         {
             p_ctxt.GetEP().setcstring(t_return_string);
             // make execpoint take ownership of result string
             p_ctxt.GetEP().grabsvalue();
         }
+#endif
     }
     
     // Free memory
@@ -547,8 +549,10 @@ void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_ty
                 t_success = IndexesArrayToString (t_option_result, t_return_string, t_cancelled);
             
             p_ctxt.GetEP().setcstring(t_return_string);
+#ifdef MOBILE_BROKEN
             // make execpoint take ownership of result string
             p_ctxt.GetEP().grabsvalue();
+#endif
         }
     }
     
@@ -673,6 +677,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
 
 	
+#ifdef MOBILE_BROKEN
 	if (t_success)
     {
         // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
@@ -680,8 +685,9 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
         if (MCresult->isempty())
             MCresult->store(ep, True);
     }
+#endif
 	
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -860,12 +866,14 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     
     MCCStringFree(t_type);
     
+#ifdef MOBILE_BROKEN
     // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
     // set the value of the 'it' variable
     if (MCresult->isempty())
         MCresult->store(ep, True);
+#endif
     
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
@@ -946,10 +954,12 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 	if (t_success)
 		MCDialogExecPickTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
+#ifdef MOBILE_BROKEN
     if (MCresult->isempty())
         MCresult->store(ep, True);
+#endif
     
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 
@@ -1031,8 +1041,10 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	if (t_success)
 		MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
     
+#ifdef MOBILE_BROKEN
     if (MCresult->isempty())
         MCresult->store(ep, True);
+#endif
     
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }

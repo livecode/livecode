@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 
 #include "mbldc.h"
-#include "core.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

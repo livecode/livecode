@@ -383,6 +383,7 @@ void MCVariableArray::getkeys(char **keylist, uint4 kcount)
 
 void MCVariableArray::getkeys(MCExecPoint &ep)
 {
+#ifdef MOBILE_BROKEN
 	ep.clear();
 	char *startptr = ep.getbuffer(keysize);
 	char *dptr = startptr;
@@ -403,6 +404,7 @@ void MCVariableArray::getkeys(MCExecPoint &ep)
 	if (dptr != startptr)
 		dptr--;
 	ep.setlength(dptr - startptr);
+#endif
 }
 
 Exec_stat MCVariableArray::transpose(MCVariableArray& v)
@@ -448,6 +450,7 @@ Exec_stat MCVariableArray::dofunc(MCExecPoint& ep, Functions func, uint4 &nparam
 
 Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 {
+#ifdef MOBILE_BROKEN
 	uint4 i;
 	MCS_seterrno(0);
 	if (ep.getformat() == VF_ARRAY)
@@ -586,6 +589,7 @@ Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 				}
 			}
 	}
+#endif
 	return ES_NORMAL;
 }
 

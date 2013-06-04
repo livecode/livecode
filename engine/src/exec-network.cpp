@@ -178,6 +178,7 @@ void MCNetworkEvalHostAddress(MCExecContext& ctxt, MCNameRef p_socket, MCStringR
 
 void MCNetworkEvalPeerAddress(MCExecContext& ctxt, MCNameRef p_socket, MCStringRef& r_address)
 {
+#ifndef _MOBILE
 	uindex_t t_socket_index;
 	if (IO_findsocket(p_socket, t_socket_index))
 	{
@@ -192,6 +193,7 @@ void MCNetworkEvalPeerAddress(MCExecContext& ctxt, MCNameRef p_socket, MCStringR
 	}
 
 	ctxt.Throw();
+#endif
 }
 
 //////////
@@ -240,10 +242,12 @@ void MCNetworkEvalHostNameToAddress(MCExecContext& ctxt, MCStringRef p_hostname,
 
 void MCNetworkEvalHostName(MCExecContext& ctxt, MCStringRef& r_string)
 {
+#ifndef _MOBILE
 	if (MCS_hn(r_string))
 		return;
 
 	ctxt.Throw();
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

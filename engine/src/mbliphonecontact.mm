@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -337,6 +337,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 			}
 			else
 			{
+#ifdef MOBILE_BROKEN
 				MCVariableValue *t_prop_array = ep.getarray();
 				if (t_prop_array != nil)
 				{
@@ -391,7 +392,8 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 					if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
 						t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
 				}
-			}
+#endif
+            }
 		}
 	}
 	

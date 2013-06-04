@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "exec.h"
-#include "core.h"
+
 
 #include "mblsyntax.h"
 
@@ -114,7 +114,7 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
     MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
@@ -126,5 +126,5 @@ Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
     
     MCBusyIndicatorExecStop(t_ctxt);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }

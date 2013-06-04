@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -878,11 +878,13 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
 	
+#ifdef MOBILE_BROKEN
 	if (t_success)
 		MCresult -> store(ep, True);
 	else
 		MCresult -> clear();
-	
+#endif
+    
 	delete t_prop_name;
 	delete t_control_name;
 	
@@ -950,9 +952,11 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 {
+#ifdef MOBILE_BROKEN
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
 	MCresult -> store(ep, False);
+#endif
 	return ES_NORMAL;
 }
 

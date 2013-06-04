@@ -74,12 +74,14 @@ void MCUpdateContactExec(MCExecContext& p_ctxt, MCVariableValue *p_contact, cons
 
 void MCGetContactDataExec(MCExecContext& p_ctxt, int32_t p_contact_id)
 {
+#ifdef MOBILE_BROKEN
     MCVariableValue *r_contact_data = nil;
     MCSystemGetContactData(p_ctxt, p_contact_id, r_contact_data);
     if (r_contact_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
         p_ctxt.GetEP().setarray(r_contact_data, True);
+#endif
 }
 
 void MCRemoveContactExec(MCExecContext& p_ctxt, int32_t p_contact_id)
@@ -191,7 +193,7 @@ Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeo
     // Call the Exec implementation
     MCPickContactExec(t_ctxt);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPersonViewController
@@ -211,7 +213,7 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
     // Call the Exec implementation
     MCShowContactExec(t_ctxt, t_contact_id);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABNewPersonViewController
@@ -223,7 +225,7 @@ Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABN
     // Call the Exec implementation
     MCCreateContactExec(t_ctxt);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABUnknownPersonViewController
@@ -239,7 +241,7 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
     // Call the Exec implementation
     MCUpdateContactExec(ctxt, t_contact, t_title, t_message, t_alternate_name);
     // Set return value
-	return ctxt.GetStat();
+	return ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
@@ -257,9 +259,11 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
     t_ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
     MCGetContactDataExec(t_ctxt, t_contact_id);
+#ifdef MOBILE_BROKEN
     if (MCresult->isempty())
         MCresult->store(ep, True);
-	return t_ctxt.GetStat();
+#endif
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
@@ -278,7 +282,7 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCRemoveContactExec(t_ctxt, t_contact_id);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
@@ -293,7 +297,7 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCAddContactExec(t_ctxt, t_contact);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
@@ -313,5 +317,5 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCFindContactExec(t_ctxt, t_contact_name);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }

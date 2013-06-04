@@ -16,7 +16,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-#include "core.h"
+
 #include "parsedef.h"
 #include "filedefs.h"
 #include "globals.h"
@@ -1584,6 +1584,9 @@ int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
+    if (!MCInitialize())
+        return -1;
+    
 	int t_exit_code;
     
     // MW-2012-09-26: [[ Bug ]] Make sure we set a valid current folder on

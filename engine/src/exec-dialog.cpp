@@ -416,7 +416,7 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 		ctxt.SetTheResultToValue(MCN_cancel);
 #else
 	uint32_t t_type;
-	switch(mode)
+	switch(p_type)
 	{
 	case AT_ERROR: t_type = kMCAnswerDialogTypeError; break;
 	case AT_QUESTION: t_type = kMCAnswerDialogTypeQuestion; break;
@@ -433,7 +433,7 @@ void MCDialogExecAnswerNotify(MCExecContext &ctxt, integer_t p_type, MCStringRef
 	
 	if (t_result == -1)
 		ctxt.SetTheResultToValue(MCN_cancel);
-	else if (notify . button_count == 0)
+	else if (p_button_count == 0)
 		ctxt.SetItToValue(kMCEmptyString);
 	else
 		ctxt.SetItToValue(p_buttons[t_result]);
@@ -515,6 +515,7 @@ void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prom
 	}
 
 #else
+#ifdef MOBILE_BROKEN
 	MCAutoStringRef t_result;
 	if (MCscreen -> popupaskdialog(AT_QUESTION, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
@@ -526,6 +527,7 @@ void MCDialogExecAskQuestion(MCExecContext& ctxt, int p_type, MCStringRef p_prom
 		ctxt . SetItToEmpty();
 		ctxt . SetTheResultToValue(MCN_cancel);
 	}
+#endif
 #endif
 }
 
@@ -555,6 +557,7 @@ void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_pr
 	}
 	
 #else
+#ifdef MOBILE_BROKEN
 	MCAutoStringRef t_result;
 	if (MCscreen -> popupaskdialog(AT_PASSWORD, p_title, p_prompt, p_answer, p_hint_answer, &t_result))
 	{
@@ -566,6 +569,7 @@ void MCDialogExecAskPassword(MCExecContext& ctxt, bool p_clear, MCStringRef p_pr
 		ctxt . SetItToEmpty();
 		ctxt . SetTheResultToValue(MCN_cancel);
 	}
+#endif
 #endif
 }
 

@@ -3518,10 +3518,12 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
 	//   editing operations are not supported yet.
+    MCExecContext ctxt(ep);
+
+    
 #ifndef _MOBILE
 	MCImage *iptr;
 	iptr = NULL;
-	MCExecContext ctxt(ep);
 
 	if (image != NULL)
 	{

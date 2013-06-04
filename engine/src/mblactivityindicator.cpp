@@ -29,7 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "exec.h"
-#include "core.h"
+
 
 #include "mblsyntax.h"
 
@@ -103,6 +103,7 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
             p_parameters = p_parameters->getnext();
     }
     
+#ifdef MOBILE_BROKEN
     if (p_parameters != nil)
     {
         p_parameters->eval(ep);
@@ -123,6 +124,7 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
         if (t_location.y == -1)
             t_location.x = -1;
     }
+#endif
 
     MCExecContext t_ctxt(ep);
 	t_ctxt . SetTheResultToEmpty();
@@ -130,7 +132,7 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
 	if (t_style != nil)
 		t_indicator_type = MCActivityIndicatorTypeFromCString(t_style);
     MCActivityIndicatorExecStart(t_ctxt, t_indicator_type, t_location);
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_parameters)
@@ -142,5 +144,5 @@ Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_paramete
     
     MCActivityIndicatorExecStop(t_ctxt);
     
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }

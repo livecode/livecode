@@ -70,12 +70,14 @@ void MCUpdateEventExec(MCExecContext& p_ctxt, const char* p_event_id)
 
 void MCGetEventDataExec(MCExecContext& p_ctxt, const char* p_event_id)
 {
+#ifdef MOBILE_BROKEN
     MCVariableValue *r_event_data = nil;
     MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
     if (r_event_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
         p_ctxt.GetEP().setarray(r_event_data, True);
+#endif
 }
 
 void MCRemoveEventExec(MCExecContext& p_ctxt, bool p_reocurring, const char* p_event_id)
@@ -319,7 +321,7 @@ Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCShowEventExec(t_ctxt, t_event_id);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
@@ -339,7 +341,7 @@ Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCUpdateEventExec(t_ctxt, t_event_id);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
@@ -351,7 +353,7 @@ Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCCreateEventExec(t_ctxt);
     // Set return value
-	return t_ctxt.GetStat();
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
@@ -369,9 +371,11 @@ Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
     t_ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
     MCGetEventDataExec(t_ctxt, t_event_id);
+#ifdef MOBILE_BROKEN
     if (MCresult->isempty())
         MCresult->store(ep, True);
-	return t_ctxt.GetStat();
+#endif
+	return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
@@ -393,7 +397,7 @@ Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCRemoveEventExec(t_ctxt, t_reocurring, t_event_id);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
@@ -407,7 +411,7 @@ Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCAddEventExec(t_ctxt, t_new_event_data);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
@@ -418,7 +422,7 @@ Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCGetCalendarsEventExec(t_ctxt);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }
 
 Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
@@ -452,5 +456,5 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     // Call the Exec implementation
     MCFindEventExec(t_ctxt, t_start_date, t_end_date);
     // Set return value
-    return t_ctxt.GetStat();
+    return t_ctxt.GetExecStat();
 }

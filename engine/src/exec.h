@@ -3369,4 +3369,19 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
 
 ///////////
 
+extern MCExecMethodInfo *kMCTextMessagingExecComposeTextMessageMethodInfo;
+extern MCExecMethodInfo *kMCTextMessagingGetCanComposeTextMessageMethodInfo;
+
+void MCTextMessagingGetCanComposeTextMessage(MCExecContext& ctxt, bool& r_result);
+void MCTextMessagingExecComposeTextMessage(MCExecContext& ctxt, MCStringRef p_recipients, MCStringRef p_body);
+
+///////////
+
+extern MCExecMethodInfo *kMCIdleTimerExecLockIdleTimerMethodInfo;
+extern MCExecMethodInfo *kMCIdleTimerExecUnlockIdleTimerMethodIndo;
+
+void MCIdleTimerExecLockIdleTimer(MCExecContext& ctxt);
+void MCIdleTimerExecUnlockIdleTimer(MCExecContext& ctxt);
+void MCIdleTimerGetIdleTimerLocked(MCExecContext& ctxt, bool& r_result);
+
 #endif

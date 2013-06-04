@@ -236,8 +236,10 @@ Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameter
         MCNotificationGetDetails(ctxt, t_id, t_details);
         if (t_details != nil)
         {
+#ifdef MOBILE_BROKEN
             ep.setarray(t_details, True);
             MCresult->store(ep, False);
+#endif
         }
     }
     
