@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "textlayout.h"
 #include "region.h"
 
+#include "graphicscontext.h"
+
 #ifdef _LINUX_DESKTOP
 #include "flst.h"
 #endif
@@ -98,6 +100,21 @@ static bool MCCustomPrinterGradientFromMCGradient(MCGradientFillKind p_kind, MCC
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCCustomPrinterTransform MCGAffineTransformToCustomPrinterTransform(const MCGAffineTransform &p_transform)
+{
+	MCCustomPrinterTransform t_transform;
+	t_transform.scale_x = p_transform.a;
+	t_transform.skew_x = p_transform.c;
+	t_transform.translate_x = p_transform.tx;
+	t_transform.skew_y = p_transform.b;
+	t_transform.scale_y = p_transform.d;
+	t_transform.translate_y = p_transform.ty;
+
+	return t_transform;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCCustomMetaContext: public MCMetaContext
 {
 public:
@@ -141,15 +158,23 @@ private:
 	// The untransformed rect and scale of current composite region
 	MCRectangle m_composite_rect;
 	uint32_t m_composite_scale;
+
+	// The compositing bitmap and graphics context used to render into it
+	MCImageBitmap *m_composite_bitmap;
+	MCGContextRef m_composite_context;
 };
 
 MCCustomMetaContext::MCCustomMetaContext(const MCRectangle& p_page)
 	: MCMetaContext(p_page)
 {
+	m_composite_bitmap = nil;
+	m_composite_context = nil;
 }
 
 MCCustomMetaContext::~MCCustomMetaContext(void)
 {
+	MCGContextRelease(m_composite_context);
+	MCImageFreeBitmap(m_composite_bitmap);
 }
 
 bool MCCustomMetaContext::render(MCCustomPrintingDevice *p_device, const MCPrinterRectangle& p_src_rect, const MCPrinterRectangle& p_dst_rect, const MCPrinterRectangle& p_page_rect)
@@ -208,9 +233,14 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Check to see if its a pattern
 			if (p_mark -> fill -> style == FillTiled)
 			{
+				/* OVERHAUL REVISIT - pattern printing not currently working */
+#ifdef OLD_GRAPHICS
 				t_paint . type = kMCCustomPrinterPaintPattern;
 				t_paint . pattern . image . type = kMCCustomPrinterImageRawXRGB;
 				return m_device -> CanRenderPaint(t_paint);
+#else
+				return false;
+#endif
 			}
 
 			// Otherwise it is FillStippled or FillOpaqueStippled - neither of which
@@ -220,7 +250,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 		break;
 	case MARK_TYPE_IMAGE:
 		{
-#ifdef LIBGRAPHICS_BROKEN
 			// Devices have to support unmasked images (otherwise we couldn't
 			// rasterize!).
 			bool t_mask, t_alpha;
@@ -238,9 +267,6 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 				t_image . type = kMCCustomPrinterImageRawMRGB;
 
 			return m_device -> CanRenderImage(t_image);
-#else
-			return false;
-#endif
 		}
 		break;
 	case MARK_TYPE_METAFILE:
@@ -410,11 +436,10 @@ void MCCustomMetaContext::domark(MCMark *p_mark)
 
 void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 {
-#ifdef LIBGRAPHICS_BROKEN
 	// See if we can render the image using the original text
 	MCCustomPrinterImageType t_image_type;
 	t_image_type = kMCCustomPrinterImageNone;
-	if (p_mark -> image . descriptor . data_type != kMCImageDataNone && p_mark -> image . descriptor . angle == 0)
+	if (p_mark -> image . descriptor . data_type != kMCImageDataNone)
 	{
 		switch(p_mark -> image . descriptor . data_type)
 		{
@@ -430,26 +455,11 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 			t_image_type = kMCCustomPrinterImageNone;
 	}
 
-	// Work out whether to use scaled or unscaled portion
-	double t_img_scale_x, t_img_scale_y;
 	uint2 t_img_width, t_img_height;
 	MCImageBitmap *t_img_bitmap = nil;
-	if (p_mark -> image . descriptor . angle != 0 || p_mark -> image . descriptor . original_bitmap == NULL)
-	{
-		t_img_bitmap = p_mark -> image . descriptor . bitmap;
-		t_img_width = t_img_bitmap -> width;
-		t_img_height = t_img_bitmap -> height;
-		t_img_scale_x = 1.0;
-		t_img_scale_y = 1.0;
-	}
-	else
-	{
-		t_img_bitmap = p_mark -> image . descriptor . original_bitmap;
-		t_img_width = t_img_bitmap -> width;
-		t_img_height = t_img_bitmap -> height;
-		t_img_scale_x = (double)p_mark -> image . descriptor . bitmap -> width / (double)t_img_width;
-		t_img_scale_y = (double)p_mark -> image . descriptor . bitmap -> height / (double)t_img_height;
-	}
+	t_img_bitmap = p_mark -> image . descriptor . bitmap;
+	t_img_width = t_img_bitmap -> width;
+	t_img_height = t_img_bitmap -> height;
 
 	if (!m_execute_error)
 	{
@@ -476,23 +486,20 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 
 		// Compute the transform that is needed - this transform goes from image
 		// space to page space.
-		MCCustomPrinterTransform t_transform;
-		t_transform . scale_x = m_scale_x * t_img_scale_x;
-		t_transform . scale_y = m_scale_y * t_img_scale_y;
-		t_transform . skew_x = 0.0;
-		t_transform . skew_y = 0.0;
-		t_transform . translate_x = m_translate_x + m_scale_x * (p_mark -> image . dx - p_mark -> image . sx);
-		t_transform . translate_y = m_translate_y + m_scale_y * (p_mark -> image . dy - p_mark -> image . sy);
+		MCGAffineTransform t_transform;
+		t_transform = MCGAffineTransformMakeScale(m_scale_x, m_scale_y);
+		t_transform = MCGAffineTransformTranslate(t_transform, m_translate_x + p_mark -> image . dx - p_mark -> image . sx, m_translate_y + p_mark -> image . dy - p_mark -> image . sy);
+		if (p_mark -> image . descriptor . has_transform)
+			t_transform = MCGAffineTransformConcat(t_transform, p_mark -> image . descriptor . transform);
 
 		// Compute the clip that is needed - the mark alreay has the appropriate clip set.
 		MCCustomPrinterRectangle t_clip;
 		compute_clip(p_mark -> clip, t_clip);
 
 		// Render the primitive
-		if (!m_device -> DrawImage(t_image, t_transform, t_clip))
+		if (!m_device -> DrawImage(t_image, MCGAffineTransformToCustomPrinterTransform(t_transform), t_clip))
 			m_execute_error = true;
 	}
-#endif
 }
 
 void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
@@ -505,39 +512,63 @@ void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
 
 MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 {
-#ifdef LIBGRAPHICS_BROKEN
+	bool t_success = true;
+
+	MCImageBitmap *t_bitmap = nil;
+	MCGContextRef t_gcontext = nil;
+
 	// TODO: Make the rasterization scale depend in some way on current scaling,
 	//   after all there's no point in making a large rasterized bitmap if it ends
 	//   up being printed really really small!
 	uint4 t_scale;
 	t_scale = 4;
 
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(p_mark_clip . width * t_scale, p_mark_clip . height * t_scale, true, true);
-	if (t_context == nil)
+	uint32_t t_width = p_mark_clip.width * t_scale;
+	uint32_t t_height = p_mark_clip.height * t_scale;
+
+	t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
+
+	if (t_success)
 	{
+		MCImageBitmapClear(t_bitmap);
+
+		MCGRaster t_raster;
+		t_raster.width = t_width;
+		t_raster.height = t_height;
+		t_raster.format = kMCGRasterFormat_ARGB;
+		t_raster.pixels = t_bitmap->data;
+		t_raster.stride = t_bitmap->stride;
+
+		t_success = MCGContextCreateWithRaster(t_raster, t_gcontext);
+	}
+
+	MCContext *t_context = nil;
+	if (t_success)
+	{
+		MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
+
+		t_success = nil != (t_context = new MCGraphicsContext(t_gcontext));
+	}
+
+	if (!t_success)
+	{
+		MCGContextRelease(t_gcontext);
+		MCImageFreeBitmap(t_bitmap);
+
 		m_execute_error = true;
 		return nil;
 	}
 
 	t_context -> setprintmode();
-
-	t_context = new MCContextScaleWrapper(t_context, t_scale);
-	if (t_context == nil)
-	{
-		m_execute_error = true;
-		return nil;
-	}
-
 	t_context -> setorigin(p_mark_clip . x, p_mark_clip . y);
+
+	m_composite_bitmap = t_bitmap;
+	m_composite_context = t_gcontext;
 
 	m_composite_rect = p_mark_clip;
 	m_composite_scale = t_scale;
 	
 	return t_context;
-#else
-	return nil;
-#endif
 }
 
 static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height)
@@ -578,39 +609,33 @@ static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_strid
 
 void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
 {
-#ifdef LIBGRAPHICS_BROKEN
-	// Get the underlying context
-	MCContext *t_context;
-	t_context = static_cast<MCContextScaleWrapper *>(p_context) -> getcontext();
+	/* OVERHAUL - REVISIT: Disabling the mask stuff for now, just treat the composite image as ARGB */
 
 	// Make sure the region is in logical coords.
-	MCRegionOffset(p_clip_region, -(signed)m_composite_rect . x * m_composite_scale, -(signed)m_composite_rect . y * m_composite_scale);
+	//MCRegionOffset(p_clip_region, -(signed)m_composite_rect . x * m_composite_scale, -(signed)m_composite_rect . y * m_composite_scale);
 
-	// Lock the surface to get the image bits we need.
-	MCBitmap *t_image;
-	t_image = t_context -> lock();
-	if (t_image != nil)
+	if (m_composite_bitmap != nil)
 	{
 		// We now need to merge the region into the surface as a 1-bit mask... So first
 		// get the region as such a mask
-		MCBitmap *t_mask;
-		if (MCRegionCalculateMask(p_clip_region, t_image -> width, t_image -> height, t_mask))
-		{
-			// And then merge in the mask - note we preserve the pixel data of the pixels
-			// behind the mask... This is to eliminate rendering artifacts when the image
-			// is resampled for display... Hmm - although the artifacts may be a cairo
-			// problem - doing this doesn't seem to solve the issue!
-			surface_merge_with_mask_preserve(t_image -> data, t_image -> bytes_per_line, t_mask -> data, t_mask -> bytes_per_line, 0, t_image -> width, t_image -> height);
+		//MCBitmap *t_mask;
+		//if (MCRegionCalculateMask(p_clip_region, t_image -> width, t_image -> height, t_mask))
+		//{
+		//	// And then merge in the mask - note we preserve the pixel data of the pixels
+		//	// behind the mask... This is to eliminate rendering artifacts when the image
+		//	// is resampled for display... Hmm - although the artifacts may be a cairo
+		//	// problem - doing this doesn't seem to solve the issue!
+		//	surface_merge_with_mask_preserve(t_image -> data, t_image -> bytes_per_line, t_mask -> data, t_mask -> bytes_per_line, 0, t_image -> width, t_image -> height);
 
 			// Now we have a masked image, issue an appropriate image rendering call to the
 			// device
 			MCCustomPrinterImage t_img_data;
-			t_img_data . type = kMCCustomPrinterImageRawMRGB;
+			t_img_data . type = kMCCustomPrinterImageRawARGB;
 			t_img_data . id = 0;
-			t_img_data . width = t_image -> width;
-			t_img_data . height = t_image -> height;
-			t_img_data . data = t_image -> data;
-			t_img_data . data_size = t_image -> bytes_per_line * t_image -> height;
+			t_img_data . width = m_composite_bitmap -> width;
+			t_img_data . height = m_composite_bitmap -> height;
+			t_img_data . data = m_composite_bitmap -> data;
+			t_img_data . data_size = m_composite_bitmap -> stride * m_composite_bitmap -> height;
 
 			MCCustomPrinterTransform t_img_transform;
 			t_img_transform . scale_x = m_scale_x / m_composite_scale;
@@ -627,26 +652,24 @@ void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_
 				m_execute_error = true;
 
 			// Destroy our mask image
-			MCscreen -> destroyimage(t_mask);
-		}
-		else
-			m_execute_error = true;
-		
-		// Unlock the surface - and thus implicitly destroying the image
-		t_context -> unlock(t_image);
+		//	MCscreen -> destroyimage(t_mask);
+		//}
+		//else
+		//	m_execute_error = true;
 	}
 	else
 		m_execute_error = true;
 
-	// Delete the memory context
-	MCscreen -> freecontext(t_context);
+	// Delete the context
+	delete p_context;
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
+
+	MCImageFreeBitmap(m_composite_bitmap);
+	m_composite_bitmap = nil;
 
 	// Delete the region
 	MCRegionDestroy(p_clip_region);
-	
-	// Delete the context scale wrapper
-	delete p_context;
-#endif
 }
 
 void MCCustomMetaContext::dopathmark(MCMark *p_mark, MCPath *p_path)
