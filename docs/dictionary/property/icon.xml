@@ -1,0 +1,52 @@
+<doc>
+  <legacy_id>1367</legacy_id>
+  <name>icon</name>
+  <type>property</type>
+  <syntax>
+    <example>set the icon to {<i>imageID</i> | <i>imageName</i>}</example>
+    <example>set the icon of {<i>button</i> | <i>stack</i>} to {<i>imageID</i> | <i>imageName</i>}</example>
+  </syntax>
+  <library></library>
+  <objects>
+    <global/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Appearance &amp; Positioning</category>
+    <category>Files, Folders, &amp; Resources</category>
+  </classification>
+  <references>
+    <property tag="armedIcon">armedIcon Property</property>
+    <property tag="hilitedIcon">hilitedIcon Property</property>
+    <message tag="iconifyStack">iconifyStack Message</message>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="3.5"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies an <keyword tag="image">image</keyword> that is displayed in a <keyword tag="button">button</keyword>, or used as the <glossary tag="desktop">desktop</glossary> icon of a <glossary tag="stack file">stack file</glossary> or application.</summary>
+  <examples>
+    <example>set the icon of this stack to kStackIcon</example>
+    <example>set the icon of button "Help" to "Question Mark"</example>
+    <example>set the icon to the myAppIcon of stack "Main Settings"</example>
+  </examples>
+  <description>
+    <p>Use the <b>icon</b> <glossary tag="property">property</glossary> to change a <glossary tag="button">button's</glossary> appearance, or to set the <property tag="icon">icon</property> used for a <object tag="stack">stack</object> or <glossary tag="application">application</glossary> in the <glossary tag="OS X">OS X</glossary> dock.</p><p/><p><b>Value:</b></p><p>The <b>icon</b> is the short <b>ID</b> or short <b>name</b> of the image to use for the current application's dock icon. The <b>icon</b> of a button or stack is also a short <b>name</b> or <b>ID</b> of an image.</p><p/><p>By default, the <b>icon</b> property is set to zero (no icon). The <b>icon</b> of newly created <glossary tag="button">buttons</glossary> and <function tag="stacks">stacks</function> is set to zero (no <property tag="icon">icon</property>) by <keyword tag="default">default</keyword>.</p><p/><p><b>Comments:</b></p><p>LiveCode looks for the specified image in the following order:</p><p/><p>1) The stack of the object's <property tag="behavior">behavior</property> (if applicable)</p><p>2) The stack of the owner of the object's <property tag="behavior">behavior</property> (if applicable)</p><p> ...</p><p>n) The stack of the object's stack's <property tag="behavior">behavior</property> (if applicable)</p><p>A) The object's stack</p><p>B) The object's stack's mainstack (if a substack)</p><p>C) The object's stack's mainstacks substacks</p><p>D) The list of open stacks, in order they were loaded</p><p/><p>If a button has been clicked during the current session and its <b>visitedIcon</b> <glossary tag="property">property</glossary> is set, its <property tag="visitedIcon">visitedIcon</property> is displayed instead of its <b>icon</b>. If the button is disabled and its <property tag="disabledIcon">disabledIcon</property> <glossary tag="property">property</glossary> is set, its <property tag="disabledIcon">disabledIcon</property> is displayed instead of its <b>icon</b>.</p><p/><p><img src="202652"/> <b>Cross-platform note:</b> On <glossary tag="OS X">OS X systems</glossary>, a <glossary tag="stack">stack's</glossary> <b>icon</b> is displayed in the dock when the stack is minimized. On <glossary tag="Unix">Unix systems</glossary>, the <glossary tag="stack">stack's</glossary> <b>icon</b> is displayed on the <glossary tag="desktop">desktop</glossary> when the <object tag="stack">stack</object> is <glossary tag="iconify">iconified</glossary>. Setting a <glossary tag="stack">stack's</glossary> <b>icon</b> <glossary tag="property">property</glossary> has no effect on <glossary tag="Mac OS">Mac OS</glossary> and <glossary tag="Windows">Windows systems</glossary>.</p><p/><p><img src="202652"/> <b>Cross-platform note:</b> On OS X systems, the global <b>icon</b> property specifies the current application's <glossary tag="dock">dock</glossary> <property tag="icon">icon</property>. The setting of the <command tag="global">global</command><b> icon </b> <glossary tag="property">property</glossary> has no effect on <glossary tag="Mac OS">Mac OS</glossary>, <glossary tag="Unix">Unix</glossary>, or <glossary tag="Windows">Windows systems</glossary>.</p><p/><p><b>Changes:</b></p><p>The order in which LiveCode searches for icons was changed in version 3.5. Previously, the current stack was searched first, followed by the list of open stacks.</p><p/><p>The ability to specify an icon for an application or stack file on OS X systems was added in version 2.1. In previous versions, the <b>icon</b> was a <keyword tag="button">button</keyword> and <object tag="stack">stack</object> <glossary tag="property">property</glossary> but not a <glossary tag="global">global property</glossary>, and the <b>icon</b> of a <object tag="stack">stack</object> had no effect on <glossary tag="OS X">OS X systems</glossary>.</p>
+  </description>
+</doc>

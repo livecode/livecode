@@ -1,0 +1,49 @@
+<doc>
+  <legacy_id>2221</legacy_id>
+  <name>RTFText</name>
+  <type>property</type>
+  <syntax>
+    <example>set the RTFText of [<i>chunk</i> of] <i>field</i> to <i>RTFString</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <field/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Text and Data Processing</category>
+  </classification>
+  <references>
+    <property tag="HTMLText">HTMLText Property</property>
+    <function tag="charToNum">charToNum Function</function>
+    <property tag="foregroundColor">foregroundColor Property</property>
+    <property tag="dragData">dragData Property</property>
+  </references>
+  <history>
+    <introduced version="2.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies the contents of a <keyword tag="field">field</keyword>, with its text <glossary tag="format">formatting</glossary> represented in <glossary tag="RTF">RTF format</glossary>.</summary>
+  <examples>
+    <example>set the RTFText of field "Stuff" to URL "file:New Stuff.rtf"</example>
+    <example>put the RTFText of field "Destination" into URL myURL</example>
+  </examples>
+  <description>
+    <p>Use the <b>RTFText</b> <glossary tag="property">property</glossary> to <command tag="import">import</command> and <command tag="export">export</command> text in <glossary tag="RTF">RTF format</glossary>.</p><p/><p><b>Value:</b></p><p>The <b>RTFText</b> of a <keyword tag="field">field</keyword> is a <keyword tag="string">string</keyword>.</p><p/><p><b>Comments:</b></p><p>The <b>RTFText</b> <glossary tag="property">property</glossary> is a representation of the styled text of the <keyword tag="field">field</keyword> in <glossary tag="RTF">RTF format</glossary>.</p><p/><p>Setting the <b>RTFText</b> of a <keyword tag="field">field</keyword> (or a <glossary tag="chunk">chunk</glossary> of a <keyword tag="field">field</keyword>) sets both the text contents and the font, size, style, and color attributes corresponding to the information in the <i>RTFString</i>. Any other formatting controls in the <i>RTFstring</i> are ignored.</p><p/><p>The <b>RTFText</b> <glossary tag="property">property</glossary> interprets the following <glossary tag="RTF">RTF</glossary> formatting controls:</p><p><b>Colors:</b>  \cf, \colortbl, \red, \green, \blue, \highlight</p><p><b>Styles:</b>  \plain, \b, \i, \ul, \ulnon, \strike, \dn, \up</p><p><b>Font and character set:</b>  \fcharset, \ansi, \mac, \pc, \pca, \u, \fonttbl, \f, \fs</p><p><b>Others:</b>  \header, \par, \line, \tab</p><p/><p>Getting the <b>RTFText</b> <glossary tag="property">property</glossary> reports a <keyword tag="string">string</keyword> consisting of the text of the <keyword tag="field">field</keyword> (or <glossary tag="chunk">chunk</glossary> of a <keyword tag="field">field</keyword>), with any font, size, style, and color <property tag="properties">properties</property> embedded in the text in the form of <glossary tag="RTF">RTF</glossary> control words. <glossary tag="Unicode">Unicode</glossary> text is supported.</p><p/><p><code/><img src="202653"/> <b>Important!</b><code/> Because the <glossary tag="RTF">RTF</glossary> standard does not include the <keyword tag="box">box</keyword>, <keyword tag="threeDBox">threeDbox</keyword>, and <keyword tag="link">link</keyword> styles supported by LiveCode, the <b>RTFText</b> <glossary tag="property">property</glossary> does not necessarily include all information necessary to reproduce the style information in a <glossary tag="chunk">chunk</glossary>. To export and re-import <keyword tag="field">field</keyword> information without losing any style information, use the <property tag="HTMLText">htmlText</property> <glossary tag="property">property</glossary> instead.</p><p/><p>For technical information about the RTF format, see the article at &lt;<u>http://msdn.microsoft.com/library/en-us/dnrtfspec/html/rtfspec.asp</u>&gt;.</p>
+  </description>
+</doc>

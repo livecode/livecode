@@ -1,0 +1,41 @@
+<doc>
+  <legacy_id>2379</legacy_id>
+  <name>condensed</name>
+  <type>keyword</type>
+  <syntax>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Appearance &amp; Positioning</category>
+  </classification>
+  <references>
+    <keyword tag="expanded">expanded Keyword</keyword>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Used with the <property tag="textStyle">textStyle</property> <glossary tag="property">property</glossary> to indicate horizontally compressed text.</summary>
+  <examples>
+    <example>set the textStyle of line 1 of field "Main" to condensed</example>
+    <example>if the textStyle of the mouseControl is "condensed" then beep</example>
+  </examples>
+  <description>
+    <p>Use the <b>condensed</b> <glossary tag="keyword">keyword</glossary> to reduce the width of text without changing its size.</p><p/><p><b>Comments:</b></p><p>You can condense an object (which condenses all the text displayed by the object) or  a chunk in a field or button.</p><p/><p>To condense text without removing other styles (such as bold or italic), add the <b>condensed</b> <glossary tag="keyword">keyword</glossary> to the end of the <property tag="textStyle">textStyle</property>. The following example condenses the text of a <keyword tag="field">field</keyword> without affecting its existing style setting:</p><p/><p><code>  if the textStyle of field "Dark" is empty then</code></p><p><code>    set the textStyle of field "Dark" to condensed</code></p><p><code>  else</code></p><p><code>    set the textStyle of field "Dark" to \</code></p><p><code>   (the textStyle of field "Dark") &amp; comma &amp; "condensed"</code></p><p><code>  end if</code></p>
+  </description>
+</doc>
