@@ -34,7 +34,7 @@ MC_EXEC_DEFINE_GET_METHOD(Store, CanMakePurchase, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, EnablePurchaseUpdates, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, DisablePurchaseUpdates, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, RestorePurchases, 0)
-//MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseList, 1)
+MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseList, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, CreatePurchase, 1)
 MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseState, 2)
 MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseError, 2)
@@ -42,7 +42,8 @@ MC_EXEC_DEFINE_GET_METHOD(Store, PurchaseProperty, 2)
 MC_EXEC_DEFINE_SET_METHOD(Store, PurchaseProperty, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, SendPurchaseRequest, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Store, ConfirmPurchaseDelivery, 1)
-//MC_EXEC_DEFINE_ (Store, RequestProductDetails)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, RequestProductDetails, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -206,4 +207,26 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
         ctxt.Throw();
 }
 
-//void MCStoreExecRequestProductDetails(MCExecContext& ctxt);
+void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id)
+{
+    if (MCStoreRequestProductDetails(p_product_id))
+        return;
+    
+    ctxt.Throw();
+}
+
+void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified)
+{
+    MCPurchase *t_purchase = nil;
+    bool t_success = true;    
+    
+    t_success = MCPurchaseFindById(p_id, t_purchase);
+    
+    if (t_success)
+        MCPurchaseVerify(t_purchase, p_verified);
+
+    if (t_success)
+        return;
+    
+    ctxt.Throw();
+}

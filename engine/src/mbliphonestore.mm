@@ -509,13 +509,13 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 @end
 
 
-bool MCStoreRequestProductDetails(const char *p_product)
+bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 {
     SKProductsRequest *t_request = nil;
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithCString:p_product encoding:NSMacOSRomanStringEncoding];
+    t_product_id = [NSString stringWithCString:MCStringGetCString(p_product_id) encoding:NSMacOSRomanStringEncoding];
     t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
@@ -752,20 +752,28 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+//extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+//{
+//    bool t_success = true;
+//    
+//    char * t_product;
+//    MCPurchase *t_purchase = nil;
+//    
+//    if (t_success)
+//        t_success = MCParseParameters(p_parameters, "s", &t_product);
+//    
+//    if (t_success)
+//        MCStoreRequestProductDetails(t_product);
+//    
+//    return ES_NORMAL;
+//}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 {
-    bool t_success = true;
-    
-    char * t_product;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product);
-    
-    if (t_success)
-        MCStoreRequestProductDetails(t_product);
-    
-    return ES_NORMAL;
+    // Not Implemented
 }

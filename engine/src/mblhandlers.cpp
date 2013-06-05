@@ -389,3 +389,46 @@ Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_paramete
         return ES_NORMAL;
 }
 
+
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_product;
+    bool t_success = true;    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &t_product);
+        
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCStoreExecRequestProductDetails(ctxt, *t_product);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    bool t_verified = true;
+    
+    uint32_t t_id;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCStoreExecPurchaseVerify(ctxt, t_id, t_verified);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+

@@ -3400,6 +3400,7 @@ extern MCExecMethodInfo* kMCStoreSetPurchasePropertyMethodInfo;
 extern MCExecMethodInfo* kMCStoreExecSendPurchaseRequestMethodInfo;
 extern MCExecMethodInfo* kMCStoreExecConfirmPurchaseDeliveryMethodInfo;
 extern MCExecMethodInfo* kMCStoreExecRequestProductDetailsMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecPurchaseVerifyMethodInfo;
 
 
 void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result);
@@ -3414,7 +3415,8 @@ void MCStoreGetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_pro
 void MCStoreSetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, uint32_t p_quantity);
 void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
-//void MCStoreExecRequestProductDetails(MCExecContext& ctxt);
+void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
+void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
 
 
 

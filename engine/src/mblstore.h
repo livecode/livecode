@@ -92,6 +92,8 @@ void MCPurchaseRelease(MCPurchase *p_purchase);
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);
 
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified);
+
 bool MCStoreCanMakePurchase();
 
 bool MCStoreEnablePurchaseUpdates();
@@ -103,6 +105,8 @@ MCPurchase *MCStoreGetPurchases();
 
 bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string);
 bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error);
+
+bool MCStoreRequestProductDetails(MCStringRef p_product_id);
 
 void MCPurchaseNotifyUpdate(MCPurchase *p_purchase);
 
