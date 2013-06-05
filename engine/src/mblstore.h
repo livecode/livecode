@@ -82,7 +82,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_property);
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
-bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context);
+bool MCPurchaseList(MCExecPoint& ep);
 
 bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_purchase);
 

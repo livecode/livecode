@@ -67,14 +67,20 @@ void MCStoreExecDisablePurchaseUpdates(MCExecContext& ctxt)
 
 void MCStoreExecRestorePurchases(MCExecContext& ctxt)
 {
-    MCStoreRestorePurchases();
+    if (!MCStoreRestorePurchases())
+        ctxt.Throw();
 }
 
 
-//void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list)
-//{
-//    
-//}
+void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list)
+{
+    if (!MCPurchaseList(ctxt.GetEP()))
+        ctxt.Throw();
+    else
+    {
+        /*UNCHECKED*/ ctxt.GetEP().copyasstringref(r_list);
+    }
+}
 
 void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, uint32_t& r_id)
 {
@@ -86,7 +92,7 @@ void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, ui
     if (t_success)
         r_id = t_purchase->id;
     else
-        ctxt.Throw();    
+        ctxt.Throw();
 }
 
 void MCStoreGetPurchaseState(MCExecContext& ctxt, int p_id, MCStringRef& r_state)

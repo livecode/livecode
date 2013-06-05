@@ -116,11 +116,10 @@ bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string)
 	return false;
 }
 
-bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context)
-{
+bool MCPurchaseList(MCExecPoint& ep)
+{    
 	for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != NULL; t_purchase = t_purchase->next)
-		if (!p_callback(p_context, t_purchase))
-			return false;
+        ep.concatuint(t_purchase -> id, EC_RETURN, ep.isempty());
 	
 	return true;
 }
@@ -310,45 +309,44 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 
 #include "param.h"
 
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
-/* MOVED TO mblhandlers.cpp
+////MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters)
+//{
+//	MCresult -> sets(MCU_btos( MCStoreCanMakePurchase() ));
+//	return ES_NORMAL;
+//}
 
-Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters)
-{
-	MCresult -> sets(MCU_btos( MCStoreCanMakePurchase() ));
-	return ES_NORMAL;
-}
+//Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters)
+//{
+//	MCStoreEnablePurchaseUpdates();
+//	return ES_NORMAL;
+//}
 
-Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters)
-{
-	MCStoreEnablePurchaseUpdates();
-	return ES_NORMAL;
-}
+//Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters)
+//{
+//	MCStoreDisablePurchaseUpdates();
+//	return ES_NORMAL;
+//}
 
-Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters)
-{
-	MCStoreDisablePurchaseUpdates();
-	return ES_NORMAL;
-}
+//Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters)
+//{
+//	MCStoreRestorePurchases();
+//	return ES_NORMAL;
+//}
 
-Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters)
-{
-	MCStoreRestorePurchases();
-	return ES_NORMAL;
-}
- 
-*/
 
-static bool list_purchases(void *context, MCPurchase* p_purchase)
-{
-	MCExecPoint *ep;
-	ep = (MCExecPoint *)context;
-	
-	ep -> concatuint(p_purchase -> id, EC_RETURN, ep -> isempty());
-	
-	return true;
-}
+// No longer needed
+//static bool list_purchases(void *context, MCPurchase* p_purchase)
+//{
+//	MCExecPoint *ep;
+//	ep = (MCExecPoint *)context;
+//	
+//	ep -> concatuint(p_purchase -> id, EC_RETURN, ep -> isempty());
+//	
+//	return true;
+//}
 
 //// MOVED TO mblhandlers.cpp
 //Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)

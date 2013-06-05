@@ -3406,7 +3406,7 @@ void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result);
 void MCStoreExecEnablePurchaseUpdates(MCExecContext& ctxt);
 void MCStoreExecDisablePurchaseUpdates(MCExecContext& ctxt);
 void MCStoreExecRestorePurchases(MCExecContext& ctxt);
-//void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list);
+void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list);
 void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, uint32_t& r_id);
 void MCStoreGetPurchaseState(MCExecContext& ctxt, int p_id, MCStringRef& r_state);
 void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error);

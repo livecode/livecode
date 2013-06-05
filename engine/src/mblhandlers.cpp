@@ -157,10 +157,10 @@ Exec_stat MCHandleEnablePurchaseUpdates(void* p_context, MCParameter* p_paramete
     
     MCStoreExecEnablePurchaseUpdates(ctxt);
     
-    if (ctxt.HasError())
-        return ES_ERROR;
-    else
+    if (!ctxt.HasError())
         return ES_NORMAL;
+    
+    return ES_ERROR;
 }
 
 Exec_stat MCHandleDisablePurchaseUpdates(void* p_context, MCParameter* p_parameters)
@@ -192,12 +192,21 @@ Exec_stat MCHandleRestorePurchases(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandlePurchaseList(void* p_context, MCParameter* p_parameters)
 {
-#ifdef MOBILE_BROKEN
     MCExecPoint ep(nil, nil, nil);
-    MCPurchaseList(list_purchases, &ep);
-    MCresult -> store(ep, False);
-#endif
-    return ES_NORMAL;
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_list;
+    
+    MCStoreGetPurchaseList(ctxt, &t_list);
+    
+    
+    if(ctxt.HasError())
+        return ES_ERROR;
+    else
+    {
+        ctxt.SetTheResultToValue(*t_list);
+        return ES_NORMAL;
+    }
 }
 
 Exec_stat MCHandlePurchaseCreate(void* p_context, MCParameter* p_parameters)
