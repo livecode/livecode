@@ -168,6 +168,8 @@ bool MCGImageCreateWithRaster(const MCGRaster& raster, MCGImageRef& r_image);
 bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef& r_image);
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 
+bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster);
+
 MCGImageRef MCGImageRetain(MCGImageRef image);
 void MCGImageRelease(MCGImageRef image);
 

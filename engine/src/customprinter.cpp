@@ -100,7 +100,7 @@ static bool MCCustomPrinterGradientFromMCGradient(MCGradientFillKind p_kind, MCC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCCustomPrinterTransform MCGAffineTransformToCustomPrinterTransform(const MCGAffineTransform &p_transform)
+static MCCustomPrinterTransform MCCustomPrinterTransformFromMCGAffineTransform(const MCGAffineTransform &p_transform)
 {
 	MCCustomPrinterTransform t_transform;
 	t_transform.scale_x = p_transform.a;
@@ -111,6 +111,22 @@ static MCCustomPrinterTransform MCGAffineTransformToCustomPrinterTransform(const
 	t_transform.translate_y = p_transform.ty;
 
 	return t_transform;
+}
+
+static MCCustomPrinterImageType MCCustomPrinterImageTypeFromMCGRasterFormat(MCGRasterFormat p_format)
+{
+	switch (p_format)
+	{
+	case kMCGRasterFormat_ARGB:
+		return kMCCustomPrinterImageRawARGB;
+	case kMCGRasterFormat_xRGB:
+		return kMCCustomPrinterImageRawXRGB;
+	case kMCGRasterFormat_A:
+	case kMCGRasterFormat_U_ARGB:
+		// Unsupported
+		MCAssert(false);
+		return kMCCustomPrinterImageNone;
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -233,14 +249,9 @@ bool MCCustomMetaContext::candomark(MCMark *p_mark)
 			// Check to see if its a pattern
 			if (p_mark -> fill -> style == FillTiled)
 			{
-				/* OVERHAUL REVISIT - pattern printing not currently working */
-#ifdef OLD_GRAPHICS
 				t_paint . type = kMCCustomPrinterPaintPattern;
-				t_paint . pattern . image . type = kMCCustomPrinterImageRawXRGB;
+				t_paint . pattern . image . type = kMCCustomPrinterImageRawARGB;
 				return m_device -> CanRenderPaint(t_paint);
-#else
-				return false;
-#endif
 			}
 
 			// Otherwise it is FillStippled or FillOpaqueStippled - neither of which
@@ -497,7 +508,7 @@ void MCCustomMetaContext::doimagemark(MCMark *p_mark)
 		compute_clip(p_mark -> clip, t_clip);
 
 		// Render the primitive
-		if (!m_device -> DrawImage(t_image, MCGAffineTransformToCustomPrinterTransform(t_transform), t_clip))
+		if (!m_device -> DrawImage(t_image, MCCustomPrinterTransformFromMCGAffineTransform(t_transform), t_clip))
 			m_execute_error = true;
 	}
 }
@@ -744,12 +755,6 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		MCCustomPrinterPaint t_paint;
 		t_paint . type = kMCCustomPrinterPaintNone;
 
-#ifdef LIBGRAPHICS_BROKEN
-		// This is a temporary bitmap containing the data for the pattern.
-		MCBitmap *t_paint_bitmap;
-		t_paint_bitmap = nil;
-#endif
-
 		// This is a temporary array containing the gradient stops (if any).
 		MCCustomPrinterGradientStop *t_paint_stops;
 		t_paint_stops = nil;
@@ -801,22 +806,18 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		}
 		else if (p_mark -> fill -> style == FillTiled)
 		{
-#ifdef LIBGRAPHICS_BROKEN
 			// Fetch the size of the tile, and its data.
-			uint2 t_tile_width, t_tile_height, t_tile_depth;
-			MCscreen -> getpixmapgeometry(p_mark -> fill -> pattern, t_tile_width, t_tile_height, t_tile_depth);
-			t_paint_bitmap = MCscreen -> getimage(p_mark -> fill -> pattern, 0, 0, t_tile_width, t_tile_height);
-
-			// Construct the paint pattern.
-			if (t_paint_bitmap != nil)
+			MCGRaster t_tile_raster;
+			if (MCGImageGetRaster(p_mark -> fill -> pattern, t_tile_raster))
 			{
+				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
-				t_paint . pattern . image . type = kMCCustomPrinterImageRawXRGB;
+				t_paint . pattern . image . type = MCCustomPrinterImageTypeFromMCGRasterFormat(t_tile_raster . format);
 				t_paint . pattern . image . id = (uint32_t)(intptr_t)p_mark -> fill -> pattern;
-				t_paint . pattern . image . width = t_tile_width;
-				t_paint . pattern . image . height = t_tile_height;
-				t_paint . pattern . image . data = t_paint_bitmap -> data;
-				t_paint . pattern . image . data_size = t_paint_bitmap -> bytes_per_line * t_tile_height;
+				t_paint . pattern . image . width = t_tile_raster . width;
+				t_paint . pattern . image . height = t_tile_raster . height;
+				t_paint . pattern . image . data = t_tile_raster . pixels;
+				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
 				t_paint . pattern . transform . scale_x = 1.0;
 				t_paint . pattern . transform . scale_y = 1.0;
 				t_paint . pattern . transform . skew_x = 0.0;
@@ -826,7 +827,6 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 			}
 			else
 				m_execute_error = true;
-#endif
 		}
 
 		if (!m_execute_error)
@@ -907,10 +907,6 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 
 		if (t_paint_stops != nil)
 			delete[] t_paint_stops;
-#ifdef LIBGRAPHICS_BROKEN
-		if (t_paint_bitmap != nil)
-			MCscreen -> destroyimage(t_paint_bitmap);
-#endif
 	}
 	else
 		m_execute_error = true;

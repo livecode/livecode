@@ -350,6 +350,17 @@ inline SkBitmap::Config MCGRasterFormatToSkBitmapConfig(MCGRasterFormat p_format
 	}
 }
 
+inline MCGRasterFormat MCGRasterFormatFromSkBitmapConfig(SkBitmap::Config p_config)
+{
+	switch (p_config)
+	{
+	case SkBitmap::kA8_Config:
+		return kMCGRasterFormat_A;
+	case SkBitmap::kARGB_8888_Config:
+		return kMCGRasterFormat_ARGB;
+	}
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

@@ -50,6 +50,24 @@ bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
 	return t_success;	
 }
 
+bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
+{
+	if (p_image == nil)
+		return false;
+
+	__MCGImage *t_image = (__MCGImage*)p_image;
+	if (!t_image->is_valid || t_image->bitmap == nil)
+		return false;
+
+	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config());
+	r_raster.width = t_image->bitmap->width();
+	r_raster.height = t_image->bitmap->height();
+	r_raster.pixels = t_image->bitmap->getPixels();
+	r_raster.stride =t_image->bitmap->rowBytes();
+
+	return true;
+}
+
 bool MCGImageCreateWithData(const void *p_bytes, uindex_t p_byte_count, MCGImageRef& r_image)
 {
 	// TODO: Implement
