@@ -1,0 +1,114 @@
+#! /usr/bin/revolution -ui
+
+# merge resources
+
+local sParams
+local sParamCount
+
+on startup
+	local tGlobs, tArgNum
+	put the globalnames into tGlobs
+	repeat for each item i in tGlobs
+		if char 1 of i is "$" then
+			put (char 2 to -1 of i) into tArgNum
+			if tArgNum is a number then
+				put max(tArgNum, sParamCount) into sParamCount
+				put value(i) into sParams[tArgNum]
+			end if
+		end if
+	end repeat
+
+  try
+    process
+  catch tError
+    write tError & return to stdout
+  end try
+end startup
+
+local sConfig
+
+on process
+	# param 1 - library name
+	# param 2, 3, ... - dll module def files
+	
+	local tIndex
+	put 1 into tIndex
+	repeat while tIndex <= sParamCount
+		if sParams[tIndex] is "--name" then
+			if tIndex < sParamCount then
+				put sParams[tIndex + 1] into sConfig["name"]
+				add 1 to tIndex
+			end if
+		else if sParams[tIndex] is "--filter" then
+			if tIndex < sParamCount then
+				put sParams[tIndex + 1] into sConfig["filter"]
+				add 1 to tIndex
+			end if
+		else
+			if sConfig["files"] is empty then
+				put sParams[tIndex] & return into sConfig["files"]
+			else
+				put sParams[tIndex] & return after sConfig["files"]
+			end if
+		end if
+		add 1 to tIndex
+	end repeat
+	
+	local tLibName, tRes, tMerge
+	if sConfig["files"] is not empty then
+		put mergeResources(sConfig["name"], sConfig["filter"], sConfig["files"]) into tMerge
+		
+		write tMerge to stdout
+	end if
+end process
+
+################################################################################
+
+function mergeResources pModuleName, pFilter, pResFiles
+	local tMergeRes, tExports, tRes
+	local tOrdinal
+	
+	repeat for each line tFile in pResFiles
+		put url ("file:" & tFile) into tRes
+		put getExports(tRes) after tExports
+	end repeat
+	
+	put 1 into tOrdinal
+	
+	sort tExports
+	put "LIBRARY" && pModuleName & return & \
+			"EXPORTS" & return into tMergeRes
+	
+	repeat for each line tLine in tExports
+		if pFilter is empty or not matchText(tLine, pFilter) then
+			put "    " & tLine & "    @" & tOrdinal & return after tMergeRes
+			add 1 to tOrdinal
+		end if
+	end repeat
+   
+	return tMergeRes
+end mergeResources
+
+function getExports pRes
+   local tExports, tHaveExports, tToken
+   put false into tHaveExports
+   
+   repeat for each line tLine in pRes
+      put word 1 of tLine into tToken
+      if tToken is not empty and not isComment(tToken) then
+         if tHaveExports then
+            put tToken & return after tExports
+         else
+            if tToken is "EXPORTS" then
+               put true into tHaveExports
+            end if
+         end if
+      end if
+   end repeat
+   
+   return tExports
+end getExports
+
+function isComment pToken
+   return char 1 of pToken is ";"
+end isComment

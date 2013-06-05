@@ -1,0 +1,15 @@
+NAME=revsecurity
+
+include ../../rules/environment.linux.makefile
+
+FILES=$(PREBUILT_LIB_DIR)/libcrypto.a $(PREBUILT_LIB_DIR)/libssl.a
+
+$(BUILD_DIR)/revsecurity.so:
+	gcc -shared -Xlinker -no-undefined -Xlinker --export-dynamic -static-libgcc -o$(BUILD_DIR)/revsecurity.so -Wl,--whole-archive $(FILES) -Wl,-no-whole-archive -ldl -Wl,-soname,revsecurity.so
+	cd $(BUILD_DIR) && \
+		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
+		strip --strip-debug --strip-unneeded "$(NAME).so" && \
+		objcopy --add-gnu-debuglink="$(NAME).so.dbg" "$(NAME).so"
+
+.PHONY: revsecurity
+revsecurity: $(BUILD_DIR)/revsecurity.so

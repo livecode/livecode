@@ -1,0 +1,313 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4DD3E11D1040BCFC00CAC7EF /* pcre_config.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1001040BCFC00CAC7EF /* pcre_config.c */; };
+		4DD3E11E1040BCFC00CAC7EF /* pcre_get.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1011040BCFC00CAC7EF /* pcre_get.c */; };
+		4DD3E11F1040BCFC00CAC7EF /* pcre_xclass.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1021040BCFC00CAC7EF /* pcre_xclass.c */; };
+		4DD3E1201040BCFC00CAC7EF /* pcre_try_flipped.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1031040BCFC00CAC7EF /* pcre_try_flipped.c */; };
+		4DD3E1221040BCFC00CAC7EF /* pcre.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E1051040BCFC00CAC7EF /* pcre.h */; };
+		4DD3E1231040BCFC00CAC7EF /* pcre_ucp_searchfuncs.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1061040BCFC00CAC7EF /* pcre_ucp_searchfuncs.c */; };
+		4DD3E1241040BCFC00CAC7EF /* pcre_version.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1071040BCFC00CAC7EF /* pcre_version.c */; };
+		4DD3E1251040BCFC00CAC7EF /* pcre_info.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1081040BCFC00CAC7EF /* pcre_info.c */; };
+		4DD3E1261040BCFC00CAC7EF /* pcre_maketables.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1091040BCFC00CAC7EF /* pcre_maketables.c */; };
+		4DD3E1271040BCFC00CAC7EF /* pcre_refcount.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E10A1040BCFC00CAC7EF /* pcre_refcount.c */; };
+		4DD3E1281040BCFC00CAC7EF /* ucp.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E10B1040BCFC00CAC7EF /* ucp.h */; };
+		4DD3E1291040BCFC00CAC7EF /* pcre_valid_utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E10C1040BCFC00CAC7EF /* pcre_valid_utf8.c */; };
+		4DD3E12A1040BCFC00CAC7EF /* pcreposix.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E10D1040BCFC00CAC7EF /* pcreposix.c */; };
+		4DD3E12B1040BCFC00CAC7EF /* pcre_internal.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E10E1040BCFC00CAC7EF /* pcre_internal.h */; };
+		4DD3E12C1040BCFC00CAC7EF /* pcre_dfa_exec.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E10F1040BCFC00CAC7EF /* pcre_dfa_exec.c */; };
+		4DD3E12D1040BCFC00CAC7EF /* pcre_study.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1101040BCFC00CAC7EF /* pcre_study.c */; };
+		4DD3E12E1040BCFC00CAC7EF /* pcre_tables.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1111040BCFC00CAC7EF /* pcre_tables.c */; };
+		4DD3E12F1040BCFC00CAC7EF /* pcre_fullinfo.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1121040BCFC00CAC7EF /* pcre_fullinfo.c */; };
+		4DD3E1301040BCFC00CAC7EF /* pcre_compile.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1131040BCFC00CAC7EF /* pcre_compile.c */; };
+		4DD3E1311040BCFC00CAC7EF /* ucpinternal.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E1141040BCFC00CAC7EF /* ucpinternal.h */; };
+		4DD3E1321040BCFC00CAC7EF /* pcre_ord2utf8.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1151040BCFC00CAC7EF /* pcre_ord2utf8.c */; };
+		4DD3E1341040BCFC00CAC7EF /* pcre_globals.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1171040BCFC00CAC7EF /* pcre_globals.c */; };
+		4DD3E1351040BCFC00CAC7EF /* pcre_scanner.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E1181040BCFC00CAC7EF /* pcre_scanner.h */; };
+		4DD3E1361040BCFC00CAC7EF /* config.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E1191040BCFC00CAC7EF /* config.h */; };
+		4DD3E1381040BCFC00CAC7EF /* pcre_exec.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E11B1040BCFC00CAC7EF /* pcre_exec.c */; };
+		4DD3E1391040BCFC00CAC7EF /* pcreposix.h in Headers */ = {isa = PBXBuildFile; fileRef = 4DD3E11C1040BCFC00CAC7EF /* pcreposix.h */; };
+		4DD3E1801040BDCA00CAC7EF /* chartables.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1041040BCFC00CAC7EF /* chartables.c */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		4DD3DF451040B04D00CAC7EF /* Global Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Global Mobile.xcconfig"; path = "../../rules/Global Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
+		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
+		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
+		4DD3E0F91040BCE300CAC7EF /* libpcremobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libpcremobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		4DD3E1001040BCFC00CAC7EF /* pcre_config.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_config.c; path = src/pcre_config.c; sourceTree = "<group>"; };
+		4DD3E1011040BCFC00CAC7EF /* pcre_get.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_get.c; path = src/pcre_get.c; sourceTree = "<group>"; };
+		4DD3E1021040BCFC00CAC7EF /* pcre_xclass.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_xclass.c; path = src/pcre_xclass.c; sourceTree = "<group>"; };
+		4DD3E1031040BCFC00CAC7EF /* pcre_try_flipped.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_try_flipped.c; path = src/pcre_try_flipped.c; sourceTree = "<group>"; };
+		4DD3E1041040BCFC00CAC7EF /* chartables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = chartables.c; path = src/chartables.c; sourceTree = "<group>"; };
+		4DD3E1051040BCFC00CAC7EF /* pcre.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre.h; path = include/pcre.h; sourceTree = "<group>"; };
+		4DD3E1061040BCFC00CAC7EF /* pcre_ucp_searchfuncs.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_ucp_searchfuncs.c; path = src/pcre_ucp_searchfuncs.c; sourceTree = "<group>"; };
+		4DD3E1071040BCFC00CAC7EF /* pcre_version.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_version.c; path = src/pcre_version.c; sourceTree = "<group>"; };
+		4DD3E1081040BCFC00CAC7EF /* pcre_info.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_info.c; path = src/pcre_info.c; sourceTree = "<group>"; };
+		4DD3E1091040BCFC00CAC7EF /* pcre_maketables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_maketables.c; path = src/pcre_maketables.c; sourceTree = "<group>"; };
+		4DD3E10A1040BCFC00CAC7EF /* pcre_refcount.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_refcount.c; path = src/pcre_refcount.c; sourceTree = "<group>"; };
+		4DD3E10B1040BCFC00CAC7EF /* ucp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ucp.h; path = src/ucp.h; sourceTree = "<group>"; };
+		4DD3E10C1040BCFC00CAC7EF /* pcre_valid_utf8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_valid_utf8.c; path = src/pcre_valid_utf8.c; sourceTree = "<group>"; };
+		4DD3E10D1040BCFC00CAC7EF /* pcreposix.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcreposix.c; path = src/pcreposix.c; sourceTree = "<group>"; };
+		4DD3E10E1040BCFC00CAC7EF /* pcre_internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre_internal.h; path = src/pcre_internal.h; sourceTree = "<group>"; };
+		4DD3E10F1040BCFC00CAC7EF /* pcre_dfa_exec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_dfa_exec.c; path = src/pcre_dfa_exec.c; sourceTree = "<group>"; };
+		4DD3E1101040BCFC00CAC7EF /* pcre_study.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_study.c; path = src/pcre_study.c; sourceTree = "<group>"; };
+		4DD3E1111040BCFC00CAC7EF /* pcre_tables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_tables.c; path = src/pcre_tables.c; sourceTree = "<group>"; };
+		4DD3E1121040BCFC00CAC7EF /* pcre_fullinfo.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_fullinfo.c; path = src/pcre_fullinfo.c; sourceTree = "<group>"; };
+		4DD3E1131040BCFC00CAC7EF /* pcre_compile.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_compile.c; path = src/pcre_compile.c; sourceTree = "<group>"; };
+		4DD3E1141040BCFC00CAC7EF /* ucpinternal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = ucpinternal.h; path = src/ucpinternal.h; sourceTree = "<group>"; };
+		4DD3E1151040BCFC00CAC7EF /* pcre_ord2utf8.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_ord2utf8.c; path = src/pcre_ord2utf8.c; sourceTree = "<group>"; };
+		4DD3E1161040BCFC00CAC7EF /* dftables.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = dftables.c; path = src/dftables.c; sourceTree = "<group>"; };
+		4DD3E1171040BCFC00CAC7EF /* pcre_globals.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_globals.c; path = src/pcre_globals.c; sourceTree = "<group>"; };
+		4DD3E1181040BCFC00CAC7EF /* pcre_scanner.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcre_scanner.h; path = src/pcre_scanner.h; sourceTree = "<group>"; };
+		4DD3E1191040BCFC00CAC7EF /* config.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = config.h; path = src/config.h; sourceTree = "<group>"; };
+		4DD3E11A1040BCFC00CAC7EF /* ucptable.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = ucptable.c; path = src/ucptable.c; sourceTree = "<group>"; };
+		4DD3E11B1040BCFC00CAC7EF /* pcre_exec.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = pcre_exec.c; path = src/pcre_exec.c; sourceTree = "<group>"; };
+		4DD3E11C1040BCFC00CAC7EF /* pcreposix.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = pcreposix.h; path = include/pcreposix.h; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		4DD3E0F71040BCE300CAC7EF /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		4DD3DD7B1040AA4700CAC7EF = {
+			isa = PBXGroup;
+			children = (
+				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
+				4DD3DDAC1040ABB000CAC7EF /* Sources */,
+				4DD3DD9A1040AA9A00CAC7EF /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		4DD3DD9A1040AA9A00CAC7EF /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				4DD3E0F91040BCE300CAC7EF /* libpcremobile.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
+			isa = PBXGroup;
+			children = (
+				4DD3E1001040BCFC00CAC7EF /* pcre_config.c */,
+				4DD3E1011040BCFC00CAC7EF /* pcre_get.c */,
+				4DD3E1021040BCFC00CAC7EF /* pcre_xclass.c */,
+				4DD3E1031040BCFC00CAC7EF /* pcre_try_flipped.c */,
+				4DD3E1041040BCFC00CAC7EF /* chartables.c */,
+				4DD3E1051040BCFC00CAC7EF /* pcre.h */,
+				4DD3E1061040BCFC00CAC7EF /* pcre_ucp_searchfuncs.c */,
+				4DD3E1071040BCFC00CAC7EF /* pcre_version.c */,
+				4DD3E1081040BCFC00CAC7EF /* pcre_info.c */,
+				4DD3E1091040BCFC00CAC7EF /* pcre_maketables.c */,
+				4DD3E10A1040BCFC00CAC7EF /* pcre_refcount.c */,
+				4DD3E10B1040BCFC00CAC7EF /* ucp.h */,
+				4DD3E10C1040BCFC00CAC7EF /* pcre_valid_utf8.c */,
+				4DD3E10D1040BCFC00CAC7EF /* pcreposix.c */,
+				4DD3E10E1040BCFC00CAC7EF /* pcre_internal.h */,
+				4DD3E10F1040BCFC00CAC7EF /* pcre_dfa_exec.c */,
+				4DD3E1101040BCFC00CAC7EF /* pcre_study.c */,
+				4DD3E1111040BCFC00CAC7EF /* pcre_tables.c */,
+				4DD3E1121040BCFC00CAC7EF /* pcre_fullinfo.c */,
+				4DD3E1131040BCFC00CAC7EF /* pcre_compile.c */,
+				4DD3E1141040BCFC00CAC7EF /* ucpinternal.h */,
+				4DD3E1151040BCFC00CAC7EF /* pcre_ord2utf8.c */,
+				4DD3E1161040BCFC00CAC7EF /* dftables.c */,
+				4DD3E1171040BCFC00CAC7EF /* pcre_globals.c */,
+				4DD3E1181040BCFC00CAC7EF /* pcre_scanner.h */,
+				4DD3E1191040BCFC00CAC7EF /* config.h */,
+				4DD3E11A1040BCFC00CAC7EF /* ucptable.c */,
+				4DD3E11B1040BCFC00CAC7EF /* pcre_exec.c */,
+				4DD3E11C1040BCFC00CAC7EF /* pcreposix.h */,
+			);
+			name = Sources;
+			sourceTree = "<group>";
+		};
+		4DD3DF3A1040B03B00CAC7EF /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */,
+				4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */,
+				4DD3DF451040B04D00CAC7EF /* Global Mobile.xcconfig */,
+			);
+			name = Configurations;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXHeadersBuildPhase section */
+		4DD3E0F51040BCE300CAC7EF /* Headers */ = {
+			isa = PBXHeadersBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DD3E1221040BCFC00CAC7EF /* pcre.h in Headers */,
+				4DD3E1281040BCFC00CAC7EF /* ucp.h in Headers */,
+				4DD3E12B1040BCFC00CAC7EF /* pcre_internal.h in Headers */,
+				4DD3E1311040BCFC00CAC7EF /* ucpinternal.h in Headers */,
+				4DD3E1351040BCFC00CAC7EF /* pcre_scanner.h in Headers */,
+				4DD3E1361040BCFC00CAC7EF /* config.h in Headers */,
+				4DD3E1391040BCFC00CAC7EF /* pcreposix.h in Headers */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXHeadersBuildPhase section */
+
+/* Begin PBXNativeTarget section */
+		4DD3E0F81040BCE300CAC7EF /* pcremobile */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 4DD3E0FF1040BCE700CAC7EF /* Build configuration list for PBXNativeTarget "pcremobile" */;
+			buildPhases = (
+				4DD3E0F51040BCE300CAC7EF /* Headers */,
+				4DD3E0F61040BCE300CAC7EF /* Sources */,
+				4DD3E0F71040BCE300CAC7EF /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = pcremobile;
+			productName = libpcremobile;
+			productReference = 4DD3E0F91040BCE300CAC7EF /* libpcremobile.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		4DD3DD7D1040AA4700CAC7EF /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "libpcre-mobile" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 4DD3DD7B1040AA4700CAC7EF;
+			productRefGroup = 4DD3DD9A1040AA9A00CAC7EF /* Products */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				4DD3E0F81040BCE300CAC7EF /* pcremobile */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		4DD3E0F61040BCE300CAC7EF /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4DD3E11D1040BCFC00CAC7EF /* pcre_config.c in Sources */,
+				4DD3E11E1040BCFC00CAC7EF /* pcre_get.c in Sources */,
+				4DD3E11F1040BCFC00CAC7EF /* pcre_xclass.c in Sources */,
+				4DD3E1201040BCFC00CAC7EF /* pcre_try_flipped.c in Sources */,
+				4DD3E1231040BCFC00CAC7EF /* pcre_ucp_searchfuncs.c in Sources */,
+				4DD3E1241040BCFC00CAC7EF /* pcre_version.c in Sources */,
+				4DD3E1251040BCFC00CAC7EF /* pcre_info.c in Sources */,
+				4DD3E1261040BCFC00CAC7EF /* pcre_maketables.c in Sources */,
+				4DD3E1271040BCFC00CAC7EF /* pcre_refcount.c in Sources */,
+				4DD3E1291040BCFC00CAC7EF /* pcre_valid_utf8.c in Sources */,
+				4DD3E12A1040BCFC00CAC7EF /* pcreposix.c in Sources */,
+				4DD3E12C1040BCFC00CAC7EF /* pcre_dfa_exec.c in Sources */,
+				4DD3E12D1040BCFC00CAC7EF /* pcre_study.c in Sources */,
+				4DD3E12E1040BCFC00CAC7EF /* pcre_tables.c in Sources */,
+				4DD3E12F1040BCFC00CAC7EF /* pcre_fullinfo.c in Sources */,
+				4DD3E1301040BCFC00CAC7EF /* pcre_compile.c in Sources */,
+				4DD3E1321040BCFC00CAC7EF /* pcre_ord2utf8.c in Sources */,
+				4DD3E1341040BCFC00CAC7EF /* pcre_globals.c in Sources */,
+				4DD3E1381040BCFC00CAC7EF /* pcre_exec.c in Sources */,
+				4DD3E1801040BDCA00CAC7EF /* chartables.c in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		4D75E669113C0DA7000A129F /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
+			buildSettings = {
+				OWNER = ..;
+			};
+			name = Release;
+		};
+		4D75E66A113C0DA7000A129F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = pcremobile;
+			};
+			name = Release;
+		};
+		4D8F6FDA113EC99B0056ED41 /* ReleaseDeviceForShark */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */;
+			buildSettings = {
+				OWNER = ..;
+			};
+			name = ReleaseDeviceForShark;
+		};
+		4D8F6FDB113EC99B0056ED41 /* ReleaseDeviceForShark */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = pcremobile;
+			};
+			name = ReleaseDeviceForShark;
+		};
+		4DD3DD7E1040AA4700CAC7EF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */;
+			buildSettings = {
+				OWNER = ..;
+			};
+			name = Debug;
+		};
+		4DD3E0FA1040BCE400CAC7EF /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = pcremobile;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "libpcre-mobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DD3DD7E1040AA4700CAC7EF /* Debug */,
+				4D75E669113C0DA7000A129F /* Release */,
+				4D8F6FDA113EC99B0056ED41 /* ReleaseDeviceForShark */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		4DD3E0FF1040BCE700CAC7EF /* Build configuration list for PBXNativeTarget "pcremobile" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				4DD3E0FA1040BCE400CAC7EF /* Debug */,
+				4D75E66A113C0DA7000A129F /* Release */,
+				4D8F6FDB113EC99B0056ED41 /* ReleaseDeviceForShark */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 4DD3DD7D1040AA4700CAC7EF /* Project object */;
+}

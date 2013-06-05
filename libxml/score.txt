@@ -1,0 +1,6 @@
+library xml
+	support-ppc 10.3.9
+	support-386 10.4.0
+	include ./include
+	compile-c src/c14n.c	compile-c src/catalog.c	compile-c src/chvalid.c	compile-c src/debugXML.c	compile-c src/dict.c	compile-c src/DOCBparser.c	compile-c src/encoding.c	compile-c src/entities.c	compile-c src/error.c	compile-c src/globals.c	compile-c src/hash.c	compile-c src/HTMLparser.c	compile-c src/HTMLtree.c	compile-c src/legacy.c	compile-c src/list.c	compile-c src/parser.c	compile-c src/parserInternals.c	compile-c src/pattern.c	compile-c src/relaxng.c	compile-c src/SAX.c	compile-c src/schematron.c	compile-c src/threads.c	compile-c src/tree.c	compile-c src/uri.c	compile-c src/valid.c	compile-c src/xinclude.c	compile-c src/xlink.c	compile-c src/xmlIO.c	compile-c src/xmlmemory.c	compile-c src/xmlmodule.c	compile-c src/xmlreader.c	compile-c src/xmlregexp.c	compile-c src/xmlsave.c	compile-c src/xmlschemas.c	compile-c src/xmlschemastypes.c	compile-c src/xmlstring.c	compile-c src/xmlunicode.c	compile-c src/xmlwriter.c	compile-c src/xpath.c	compile-c src/xpointer.c	compile-c src/SAX2.c
+	output libxml

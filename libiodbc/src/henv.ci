@@ -1,0 +1,263 @@
+/*
+ *  henv.ci
+ *
+ *  $Id: henv.ci,v 1.12 2006/01/20 15:58:34 source Exp $
+ *
+ *  Function names
+ *
+ *  The iODBC driver manager.
+ *  
+ *  Copyright (C) 1995 by Ke Jin <kejin@empress.com> 
+ *  Copyright (C) 1996-2006 by OpenLink Software <iodbc@openlinksw.com>
+ *  All Rights Reserved.
+ *
+ *  This software is released under the terms of either of the following
+ *  licenses:
+ *
+ *      - GNU Library General Public License (see LICENSE.LGPL) 
+ *      - The BSD License (see LICENSE.BSD).
+ *
+ *  Note that the only valid version of the LGPL license as far as this
+ *  project is concerned is the original GNU Library General Public License
+ *  Version 2, dated June 1991.
+ *
+ *  While not mandated by the BSD license, any patches you make to the
+ *  iODBC source code may be contributed back into the iODBC project
+ *  at your discretion. Contributions will benefit the Open Source and
+ *  Data Access community as a whole. Submissions may be made at:
+ *
+ *      http://www.iodbc.org
+ *
+ *
+ *  GNU Library Generic Public License Version 2
+ *  ============================================
+ *  This library is free software; you can redistribute it and/or
+ *  modify it under the terms of the GNU Library General Public
+ *  License as published by the Free Software Foundation; only
+ *  Version 2 of the License dated June 1991.
+ *
+ *  This library is distributed in the hope that it will be useful,
+ *  but WITHOUT ANY WARRANTY; without even the implied warranty of
+ *  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ *  Library General Public License for more details.
+ *
+ *  You should have received a copy of the GNU Library General Public
+ *  License along with this library; if not, write to the Free
+ *  Foundation, Inc., 51 Franklin St, Fifth Floor, Boston, MA  02110-1301  USA
+ *
+ *
+ *  The BSD License
+ *  ===============
+ *  Redistribution and use in source and binary forms, with or without
+ *  modification, are permitted provided that the following conditions
+ *  are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright
+ *     notice, this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright
+ *     notice, this list of conditions and the following disclaimer in
+ *     the documentation and/or other materials provided with the
+ *     distribution.
+ *  3. Neither the name of OpenLink Software Inc. nor the names of its
+ *     contributors may be used to endorse or promote products derived
+ *     from this software without specific prior written permission.
+ *
+ *  THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS
+ *  "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ *  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR
+ *  A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL OPENLINK OR
+ *  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL,
+ *  EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO,
+ *  PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR
+ *  PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF
+ *  LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
+ *  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+ *  SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+
+/* There are some exceptions :
+ * on FreeBSD 2.x      CLI is defined in Config.mk as "_SQL"
+ * on HP/UX s300/s400, CLI is defined in Config.mk as "_SQL" 
+ * on AIX 3.x 4.x,     CLI is defined in Config.mk as ".SQL" 
+ */
+#ifndef CLI
+# if defined(NEED_USCORE) || defined (DLDAPI_DYLD)
+#  define CLI    "_SQL"
+# else
+#  define CLI    "SQL"
+# endif
+#endif
+
+FUNCDEF (SQL_API_SQLALLOCENV,         en_AllocEnv,         CLI "AllocEnv")
+FUNCDEF (SQL_API_SQLALLOCCONNECT,     en_AllocConnect,     CLI "AllocConnect")
+FUNCDEF (SQL_API_SQLCONNECT,          en_Connect,          CLI "Connect")
+FUNCDEF (SQL_API_SQLDRIVERCONNECT,    en_DriverConnect,    CLI "DriverConnect")
+FUNCDEF (SQL_API_SQLBROWSECONNECT,    en_BrowseConnect,    CLI "BrowseConnect")
+
+FUNCDEF (SQL_API_SQLDATASOURCES,      en_DataSources,      CLI "DataSources")
+FUNCDEF (SQL_API_SQLDRIVERS,          en_Drivers,          CLI "Drivers")
+FUNCDEF (SQL_API_SQLGETINFO,          en_GetInfo,          CLI "GetInfo")
+FUNCDEF (SQL_API_SQLGETFUNCTIONS,     en_GetFunctions,     CLI "GetFunctions")
+FUNCDEF (SQL_API_SQLGETTYPEINFO,      en_GetTypeInfo,      CLI "GetTypeInfo")
+
+FUNCDEF (SQL_API_SQLSETCONNECTOPTION, en_SetConnectOption, CLI "SetConnectOption")
+FUNCDEF (SQL_API_SQLGETCONNECTOPTION, en_GetConnectOption, CLI "GetConnectOption")
+FUNCDEF (SQL_API_SQLSETSTMTOPTION,    en_SetStmtOption,    CLI "SetStmtOption")
+FUNCDEF (SQL_API_SQLGETSTMTOPTION,    en_GetStmtOption,    CLI "GetStmtOption")
+
+FUNCDEF (SQL_API_SQLALLOCSTMT,        en_AllocStmt,        CLI "AllocStmt")
+FUNCDEF (SQL_API_SQLPREPARE,          en_Prepare,          CLI "Prepare")
+FUNCDEF (SQL_API_SQLBINDPARAMETER,    en_BindParameter,    CLI "BindParameter")
+FUNCDEF (SQL_API_SQLPARAMOPTIONS,     en_ParamOptions,     CLI "ParamOptions")
+FUNCDEF (SQL_API_SQLGETCURSORNAME,    en_GetCursorName,    CLI "GetCursorName")
+FUNCDEF (SQL_API_SQLSETCURSORNAME,    en_SetCursorName,    CLI "SetCursorName")
+FUNCDEF (SQL_API_SQLSETSCROLLOPTIONS, en_SetScrollOptions, CLI "SetScrollOptions")
+FUNCDEF (SQL_API_SQLSETPARAM,         en_SetParam,         CLI "SetParam")
+
+FUNCDEF (SQL_API_SQLEXECUTE,          en_Execute,          CLI "Execute")
+FUNCDEF (SQL_API_SQLEXECDIRECT,       en_ExecDirect,       CLI "ExecDirect")
+FUNCDEF (SQL_API_SQLNATIVESQL,        en_NativeSql,        CLI "NativeSql")
+FUNCDEF (SQL_API_SQLDESCRIBEPARAM,    en_DescribeParam,    CLI "DescribeParam")
+FUNCDEF (SQL_API_SQLNUMPARAMS,        en_NumParams,        CLI "NumParams")
+FUNCDEF (SQL_API_SQLPARAMDATA,        en_ParamData,        CLI "ParamData")
+FUNCDEF (SQL_API_SQLPUTDATA,          en_PutData,          CLI "PutData")
+
+FUNCDEF (SQL_API_SQLROWCOUNT,         en_RowCount,         CLI "RowCount")
+FUNCDEF (SQL_API_SQLNUMRESULTCOLS,    en_NumResultCols,    CLI "NumResultCols")
+FUNCDEF (SQL_API_SQLDESCRIBECOL,      en_DescribeCol,      CLI "DescribeCol")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTES,    en_ColAttributes,    CLI "ColAttributes")
+FUNCDEF (SQL_API_SQLBINDCOL,          en_BindCol,          CLI "BindCol")
+FUNCDEF (SQL_API_SQLFETCH,            en_Fetch,            CLI "Fetch")
+FUNCDEF (SQL_API_SQLEXTENDEDFETCH,    en_ExtendedFetch,    CLI "ExtendedFetch")
+FUNCDEF (SQL_API_SQLGETDATA,          en_GetData,          CLI "GetData")
+FUNCDEF (SQL_API_SQLSETPOS,           en_SetPos,           CLI "SetPos")
+FUNCDEF (SQL_API_SQLMORERESULTS,      en_MoreResults,      CLI "MoreResults")
+FUNCDEF (SQL_API_SQLERROR,            en_Error,            CLI "Error")
+
+FUNCDEF (SQL_API_SQLCOLUMNPRIVILEGES, en_ColumnPrivileges, CLI "ColumnPrivileges")
+FUNCDEF (SQL_API_SQLCOLUMNS,          en_Columns,          CLI "Columns")
+FUNCDEF (SQL_API_SQLFOREIGNKEYS,      en_ForeignKeys,      CLI "ForeignKeys")
+FUNCDEF (SQL_API_SQLPRIMARYKEYS,      en_PrimaryKeys,      CLI "PrimaryKeys")
+FUNCDEF (SQL_API_SQLPROCEDURECOLUMNS, en_ProcedureColumns, CLI "ProcedureColumns")
+FUNCDEF (SQL_API_SQLPROCEDURES,       en_Procedures,       CLI "Procedures")
+FUNCDEF (SQL_API_SQLSPECIALCOLUMNS,   en_SpecialColumns,   CLI "SpecialColumns")
+FUNCDEF (SQL_API_SQLSTATISTICS,       en_Statistics,       CLI "Statistics")
+FUNCDEF (SQL_API_SQLTABLEPRIVILEGES,  en_TablePrivileges,  CLI "TablePrivileges")
+FUNCDEF (SQL_API_SQLTABLES,           en_Tables,           CLI "Tables")
+
+FUNCDEF (SQL_API_SQLFREESTMT,         en_FreeStmt,         CLI "FreeStmt")
+FUNCDEF (SQL_API_SQLCANCEL,           en_Cancel,           CLI "Cancel")
+FUNCDEF (SQL_API_SQLTRANSACT,         en_Transact,         CLI "Transact")
+
+FUNCDEF (SQL_API_SQLDISCONNECT,       en_Disconnect,       CLI "Disconnect")
+FUNCDEF (SQL_API_SQLFREECONNECT,      en_FreeConnect,      CLI "FreeConnect")
+FUNCDEF (SQL_API_SQLFREEENV,          en_FreeEnv,          CLI "FreeEnv")
+
+#if (ODBCVER >= 0x0300)
+FUNCDEF (SQL_API_SQLALLOCHANDLE,      en_AllocHandle,      CLI "AllocHandle")
+FUNCDEF (SQL_API_SQLBINDPARAM,        en_BindParam,        CLI "BindParam")
+FUNCDEF (SQL_API_SQLBULKOPERATIONS,   en_BulkOperations,   CLI "BulkOperations")
+FUNCDEF (SQL_API_SQLCLOSECURSOR,      en_CloseCursor,      CLI "CloseCursor")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTE,     en_ColAttribute,     CLI "ColAttribute")
+FUNCDEF (SQL_API_SQLCOPYDESC,         en_CopyDesc,         CLI "CopyDesc")
+FUNCDEF (SQL_API_SQLENDTRAN,          en_EndTran,          CLI "EndTran")
+FUNCDEF (SQL_API_SQLFETCHSCROLL,      en_FetchScroll,      CLI "FetchScroll")
+FUNCDEF (SQL_API_SQLFREEHANDLE,       en_FreeHandle,       CLI "FreeHandle")
+FUNCDEF (SQL_API_SQLGETCONNECTATTR,   en_GetConnectAttr,   CLI "GetConnectAttr")
+FUNCDEF (SQL_API_SQLGETDESCFIELD,     en_GetDescField,     CLI "GetDescField")
+FUNCDEF (SQL_API_SQLGETDESCREC,       en_GetDescRec,       CLI "GetDescRec")
+FUNCDEF (SQL_API_SQLGETDIAGFIELD,     en_GetDiagField,     CLI "GetDiagField")
+FUNCDEF (SQL_API_SQLGETDIAGREC,       en_GetDiagRec,       CLI "GetDiagRec")
+FUNCDEF (SQL_API_SQLGETENVATTR,       en_GetEnvAttr,       CLI "GetEnvAttr")
+FUNCDEF (SQL_API_SQLGETSTMTATTR,      en_GetStmtAttr,      CLI "GetStmtAttr")
+FUNCDEF (SQL_API_SQLSETCONNECTATTR,   en_SetConnectAttr,   CLI "SetConnectAttr")
+FUNCDEF (SQL_API_SQLSETDESCFIELD,     en_SetDescField,     CLI "SetDescField")
+FUNCDEF (SQL_API_SQLSETDESCREC,       en_SetDescRec,       CLI "SetDescRec")
+FUNCDEF (SQL_API_SQLSETENVATTR,       en_SetEnvAttr,       CLI "SetEnvAttr")
+FUNCDEF (SQL_API_SQLSETSTMTATTR,      en_SetStmtAttr,      CLI "SetStmtAttr")
+#endif
+
+/* Unicode function set API */
+#if (ODBCVER >= 0x0300)
+FUNCDEF (SQL_API_SQLCONNECT, 	      en_ConnectW, 	   CLI "ConnectW")
+FUNCDEF (SQL_API_SQLDRIVERCONNECT,    en_DriverConnectW,   CLI "DriverConnectW")
+FUNCDEF (SQL_API_SQLBROWSECONNECT,    en_BrowseConnectW,   CLI "BrowseConnectW")
+FUNCDEF (SQL_API_SQLDATASOURCES,      en_DataSourcesW,     CLI "DataSourcesW")
+FUNCDEF (SQL_API_SQLDRIVERS,          en_DriversW, 	   CLI "DriversW")
+FUNCDEF (SQL_API_SQLGETINFO, 	      en_GetInfoW, 	   CLI "GetInfoW")
+FUNCDEF (SQL_API_SQLGETTYPEINFO,      en_GetTypeInfoW,     CLI "GetTypeInfoW")
+FUNCDEF (SQL_API_SQLSETCONNECTOPTION, en_SetConnectOptionW, CLI "SetConnectOptionW")
+FUNCDEF (SQL_API_SQLGETCONNECTOPTION, en_GetConnectOptionW, CLI "GetConnectOptionW")
+FUNCDEF (SQL_API_SQLPREPARE, 	      en_PrepareW, 	   CLI "PrepareW")
+FUNCDEF (SQL_API_SQLGETCURSORNAME,    en_GetCursorNameW,   CLI "GetCursorNameW")
+FUNCDEF (SQL_API_SQLSETCURSORNAME,    en_SetCursorNameW,   CLI "SetCursorNameW")
+FUNCDEF (SQL_API_SQLEXECDIRECT,       en_ExecDirectW,      CLI "ExecDirectW")
+FUNCDEF (SQL_API_SQLNATIVESQL, 	      en_NativeSqlW,       CLI "NativeSqlW")
+FUNCDEF (SQL_API_SQLDESCRIBECOL,      en_DescribeColW,     CLI "DescribeColW")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTES,    en_ColAttributesW,   CLI "ColAttributesW")
+FUNCDEF (SQL_API_SQLERROR, 	      en_ErrorW, 	   CLI "ErrorW")
+FUNCDEF (SQL_API_SQLCOLUMNPRIVILEGES, en_ColumnPrivilegesW, CLI "ColumnPrivilegesW")
+FUNCDEF (SQL_API_SQLCOLUMNS, 	      en_ColumnsW, 	   CLI "ColumnsW")
+FUNCDEF (SQL_API_SQLFOREIGNKEYS,      en_ForeignKeysW,     CLI "ForeignKeysW")
+FUNCDEF (SQL_API_SQLPRIMARYKEYS,      en_PrimaryKeysW,     CLI "PrimaryKeysW")
+FUNCDEF (SQL_API_SQLPROCEDURECOLUMNS, en_ProcedureColumnsW, CLI "ProcedureColumnsW")
+FUNCDEF (SQL_API_SQLPROCEDURES,       en_ProceduresW,      CLI "ProceduresW")
+FUNCDEF (SQL_API_SQLSPECIALCOLUMNS,   en_SpecialColumnsW,  CLI "SpecialColumnsW")
+FUNCDEF (SQL_API_SQLSTATISTICS,       en_StatisticsW,      CLI "StatisticsW")
+FUNCDEF (SQL_API_SQLTABLEPRIVILEGES,  en_TablePrivilegesW, CLI "TablePrivilegesW")
+FUNCDEF (SQL_API_SQLTABLES, 	      en_TablesW, 	   CLI "TablesW")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTE,     en_ColAttributeW,    CLI "ColAttributeW")
+FUNCDEF (SQL_API_SQLGETCONNECTATTR,   en_GetConnectAttrW,  CLI "GetConnectAttrW")
+FUNCDEF (SQL_API_SQLGETDESCFIELD,     en_GetDescFieldW,    CLI "GetDescFieldW")
+FUNCDEF (SQL_API_SQLGETDESCREC,       en_GetDescRecW,      CLI "GetDescRecW")
+FUNCDEF (SQL_API_SQLGETDIAGFIELD,     en_GetDiagFieldW,    CLI "GetDiagFieldW")
+FUNCDEF (SQL_API_SQLGETDIAGREC,       en_GetDiagRecW,      CLI "GetDiagRecW")
+FUNCDEF (SQL_API_SQLGETSTMTATTR,      en_GetStmtAttrW,     CLI "GetStmtAttrW")
+FUNCDEF (SQL_API_SQLSETCONNECTATTR,   en_SetConnectAttrW,  CLI "SetConnectAttrW")
+FUNCDEF (SQL_API_SQLSETDESCFIELD,     en_SetDescFieldW,    CLI "SetDescFieldW")
+FUNCDEF (SQL_API_SQLSETSTMTATTR,      en_SetStmtAttrW,     CLI "SetStmtAttrW")
+
+/* Ansi function set API */
+FUNCDEF (SQL_API_SQLSETSTMTOPTION,    en_SetStmtOptionA,    CLI "SetStmtOptionA")
+FUNCDEF (SQL_API_SQLGETSTMTOPTION,    en_GetStmtOptionA,    CLI "GetStmtOptionA")
+FUNCDEF (SQL_API_SQLCONNECT, 	      en_ConnectA, 	   CLI "ConnectA")
+FUNCDEF (SQL_API_SQLDRIVERCONNECT,    en_DriverConnectA,   CLI "DriverConnectA")
+FUNCDEF (SQL_API_SQLBROWSECONNECT,    en_BrowseConnectA,   CLI "BrowseConnectA")
+FUNCDEF (SQL_API_SQLDATASOURCES,      en_DataSourcesA,     CLI "DataSourcesA")
+FUNCDEF (SQL_API_SQLDRIVERS,          en_DriversA, 	   CLI "DriversA")
+FUNCDEF (SQL_API_SQLGETINFO,          en_GetInfoA, 	   CLI "GetInfoA")
+FUNCDEF (SQL_API_SQLGETTYPEINFO,      en_GetTypeInfoA, 	   CLI "GetTypeInfoA")
+FUNCDEF (SQL_API_SQLSETCONNECTOPTION, en_SetConnectOptionA, CLI "SetConnectOptionA")
+FUNCDEF (SQL_API_SQLGETCONNECTOPTION, en_GetConnectOptionA, CLI "GetConnectOptionA")
+FUNCDEF (SQL_API_SQLPREPARE,          en_PrepareA, 	   CLI "PrepareA")
+FUNCDEF (SQL_API_SQLGETCURSORNAME,    en_GetCursorNameA,   CLI "GetCursorNameA")
+FUNCDEF (SQL_API_SQLSETCURSORNAME,    en_SetCursorNameA,   CLI "SetCursorNameA")
+FUNCDEF (SQL_API_SQLEXECDIRECT,       en_ExecDirectA, 	   CLI "ExecDirectA")
+FUNCDEF (SQL_API_SQLNATIVESQL,        en_NativeSqlA, 	   CLI "NativeSqlA")
+FUNCDEF (SQL_API_SQLDESCRIBECOL,      en_DescribeColA,     CLI "DescribeColA")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTES,    en_ColAttributesA,   CLI "ColAttributesA")
+FUNCDEF (SQL_API_SQLERROR,            en_ErrorA, 	   CLI "ErrorA")
+FUNCDEF (SQL_API_SQLCOLUMNPRIVILEGES, en_ColumnPrivilegesA, CLI "ColumnPrivilegesA")
+FUNCDEF (SQL_API_SQLCOLUMNS,          en_ColumnsA, 	   CLI "ColumnsA")
+FUNCDEF (SQL_API_SQLFOREIGNKEYS,      en_ForeignKeysA,     CLI "ForeignKeysA")
+FUNCDEF (SQL_API_SQLPRIMARYKEYS,      en_PrimaryKeysA,     CLI "PrimaryKeysA")
+FUNCDEF (SQL_API_SQLPROCEDURECOLUMNS, en_ProcedureColumnsA, CLI "ProcedureColumnsA")
+FUNCDEF (SQL_API_SQLPROCEDURES,       en_ProceduresA,      CLI "ProceduresA")
+FUNCDEF (SQL_API_SQLSPECIALCOLUMNS,   en_SpecialColumnsA,  CLI "SpecialColumnsA")
+FUNCDEF (SQL_API_SQLSTATISTICS,       en_StatisticsA,      CLI "StatisticsA")
+FUNCDEF (SQL_API_SQLTABLEPRIVILEGES,  en_TablePrivilegesA, CLI "TablePrivilegesA")
+FUNCDEF (SQL_API_SQLTABLES, 	      en_TablesA, 	   CLI "TablesA")
+FUNCDEF (SQL_API_SQLCOLATTRIBUTE,     en_ColAttributeA,    CLI "ColAttributeA")
+FUNCDEF (SQL_API_SQLGETCONNECTATTR,   en_GetConnectAttrA,  CLI "GetConnectAttrA")
+FUNCDEF (SQL_API_SQLGETDESCFIELD,     en_GetDescFieldA,    CLI "GetDescFieldA")
+FUNCDEF (SQL_API_SQLGETDESCREC,       en_GetDescRecA,      CLI "GetDescRecA")
+FUNCDEF (SQL_API_SQLGETDIAGFIELD,     en_GetDiagFieldA,    CLI "GetDiagFieldA")
+FUNCDEF (SQL_API_SQLGETDIAGREC,       en_GetDiagRecA,      CLI "GetDiagRecA")
+FUNCDEF (SQL_API_SQLGETSTMTATTR,      en_GetStmtAttrA,     CLI "GetStmtAttrA")
+FUNCDEF (SQL_API_SQLSETCONNECTATTR,   en_SetConnectAttrA,  CLI "SetConnectAttrA")
+FUNCDEF (SQL_API_SQLSETDESCFIELD,     en_SetDescFieldA,    CLI "SetDescFieldA")
+FUNCDEF (SQL_API_SQLSETSTMTATTR,      en_SetStmtAttrA,     CLI "SetStmtAttrA")
+#endif
+
+#undef CLI

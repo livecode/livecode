@@ -1,0 +1,7 @@
+library pcre
+	support-ppc 10.3.9
+	support-386 10.4.0
+	--support-x86_64 10.5.0
+	include ./include
+	compile-c src/chartables.c	compile-c src/pcre_compile.c	compile-c src/pcre_config.c	compile-c src/pcre_dfa_exec.c	compile-c src/pcre_exec.c	compile-c src/pcre_fullinfo.c	compile-c src/pcre_get.c	compile-c src/pcre_globals.c	compile-c src/pcre_info.c	compile-c src/pcre_maketables.c	compile-c src/pcre_ord2utf8.c	compile-c src/pcre_refcount.c	compile-c src/pcre_study.c	compile-c src/pcre_tables.c	compile-c src/pcre_try_flipped.c	compile-c src/pcre_ucp_searchfuncs.c	compile-c src/pcre_valid_utf8.c	compile-c src/pcre_version.c	compile-c src/pcre_xclass.c
+	output libpcre
