@@ -26,7 +26,9 @@
 #ifndef GNOME_VFS_STANDARD_CALLBACKS_H
 #define GNOME_VFS_STANDARD_CALLBACKS_H
 
-#include <glib/gtypes.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+//#include <glib/gtypes.h>
+#include <glib.h>
 #include <libgnomevfs/gnome-vfs-uri.h>
 
 G_BEGIN_DECLS

@@ -24,7 +24,9 @@
 #ifndef GNOME_VFS_DIRECTORY_H
 #define GNOME_VFS_DIRECTORY_H
 
-#include <glib/gmacros.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+#include <glib.h>
+//#include <glib/gmacros.h>
 #include <libgnomevfs/gnome-vfs-file-info.h>
 
 G_BEGIN_DECLS

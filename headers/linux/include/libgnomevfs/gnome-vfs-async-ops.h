@@ -25,7 +25,9 @@
 #ifndef GNOME_VFS_ASYNC_OPS_H
 #define GNOME_VFS_ASYNC_OPS_H
 
-#include <glib/giochannel.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+#include <glib.h>
+//#include <glib/giochannel.h>
 #include <libgnomevfs/gnome-vfs-file-info.h>
 #include <libgnomevfs/gnome-vfs-find-directory.h>
 #include <libgnomevfs/gnome-vfs-handle.h>

@@ -24,8 +24,10 @@
 #ifndef GNOME_URL_H
 #define GNOME_URL_H
 
-#include <glib/gmacros.h>
-#include <glib/gerror.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+#include <glib.h>
+//#include <glib/gmacros.h>
+//#include <glib/gerror.h>
 
 G_BEGIN_DECLS
 

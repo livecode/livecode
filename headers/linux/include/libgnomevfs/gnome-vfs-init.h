@@ -24,7 +24,9 @@
 #ifndef GNOME_VFS_INIT_H
 #define GNOME_VFS_INIT_H
 
-#include <glib/gtypes.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+//#include <glib/gtypes.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 

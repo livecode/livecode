@@ -27,7 +27,9 @@
 #ifndef GNOME_VFS_UTILS_H
 #define GNOME_VFS_UTILS_H
 
-#include <glib/gmessages.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+//#include <glib/gmessages.h>
+#include <glib.h>
 #include <libgnomevfs/gnome-vfs-file-size.h>
 #include <libgnomevfs/gnome-vfs-result.h>
 #include <libgnomevfs/gnome-vfs-uri.h>

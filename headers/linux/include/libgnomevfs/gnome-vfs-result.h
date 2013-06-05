@@ -26,7 +26,9 @@
 #ifndef GNOME_VFS_RESULT_H
 #define GNOME_VFS_RESULT_H
 
-#include <glib/gmacros.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+//#include <glib/gmacros.h>
+#include <glib.h>
 
 G_BEGIN_DECLS
 

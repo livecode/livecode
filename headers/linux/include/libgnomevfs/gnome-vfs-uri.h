@@ -24,7 +24,9 @@
 #ifndef GNOME_VFS_URI_H
 #define GNOME_VFS_URI_H
 
-#include <glib/glist.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+#include <glib.h>
+//#include <glib/glist.h>
 #include <glib-object.h> /* For GType */
 
 G_BEGIN_DECLS

@@ -26,7 +26,9 @@
 #ifndef GNOME_VFS_FILE_SIZE_H
 #define GNOME_VFS_FILE_SIZE_H
 
-#include <glib/gtypes.h>
+// MDW 2013-06-05 : error: #error "Only <glib.h> can be included directly."
+#include <glib.h>
+//#include <glib/gtypes.h>
 
 /*
  * This defines GnomeVFSFileSize and GnomeVFSFileOffset
