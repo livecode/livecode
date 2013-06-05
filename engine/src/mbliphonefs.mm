@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
@@ -27,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "mblsyntax.h"
 
 #include <sys/xattr.h>
 
@@ -110,7 +110,7 @@ typedef struct
 //    {"complete until first user authentication", NSFileProtectionCompleteUntilFirstUserAuthentication},
 //};
 
-bool MCDataProtectionFromString(const char *p_string, NSString *&r_protection)
+bool MCDataProtectionFromString(MCStringRef p_string, NSString *&r_protection)
 {
 //    for (uint32_t i = 0; i < 4; i++)
 //    {
@@ -120,12 +120,12 @@ bool MCDataProtectionFromString(const char *p_string, NSString *&r_protection)
 //            return true;
 //        }
 //    }
-    if (MCCStringEqualCaseless(p_string, "none"))
+    if (MCStringIsEqualToCString(p_string, "none", kMCCompareCaseless))
     {
         r_protection = NSFileProtectionNone;
         return true;
     }
-    if (MCCStringEqualCaseless(p_string, "complete"))
+    if (MCStringIsEqualToCString(p_string, "complete", kMCCompareCaseless))
     {
         r_protection = NSFileProtectionComplete;
         return true;
@@ -133,13 +133,13 @@ bool MCDataProtectionFromString(const char *p_string, NSString *&r_protection)
 #ifdef __IPHONE_5_0
     if (MCmajorosversion >= 500)
     {
-        if (MCCStringEqualCaseless(p_string, "complete unless open"))
+        if (MCStringIsEqualToCString(p_string, "complete unless open", kMCCompareCaseless))
         {
             //r_protection = NSFileProtectionCompleteUnlessOpen;
             r_protection = @"NSFileProtectionCompleteUnlessOpen";
             return true;
         }
-        if (MCCStringEqualCaseless(p_string, "complete until first user authentication"))
+        if (MCStringIsEqualToCString(p_string, "complete until first user authentication", kMCCompareCaseless))
         {
             //r_protection = NSFileProtectionCompleteUntilFirstUserAuthentication;
             r_protection = @"NSFileProtectionCompleteUntilFirstUserAuthentication";
@@ -150,7 +150,7 @@ bool MCDataProtectionFromString(const char *p_string, NSString *&r_protection)
     return false;
 }
 
-bool MCDataProtectionToString(NSString *p_protection, const char *&r_string)
+bool MCDataProtectionToString(NSString *p_protection, MCStringRef &r_string)
 {
 //    for (uint32_t i = 0; i < 4; i++)
 //    {
@@ -162,12 +162,12 @@ bool MCDataProtectionToString(NSString *p_protection, const char *&r_string)
 //    }
     if ([p_protection isEqualToString:NSFileProtectionNone])
     {
-        r_string = "none";
+        MCStringCreateWithCString("none", r_string);
         return true;
     }
     if ([p_protection isEqualToString:NSFileProtectionComplete])
     {
-        r_string = "complete";
+        MCStringCreateWithCString("complete", r_string);
         return true;
     }
 #ifdef __IPHONE_5_0
@@ -176,13 +176,13 @@ bool MCDataProtectionToString(NSString *p_protection, const char *&r_string)
         //if ([p_protection isEqualToString:NSFileProtectionCompleteUnlessOpen])
         if ([p_protection isEqualToString:@"NSFileProtectionCompleteUnlessOpen"])
         {
-            r_string = "complete unless open";
+            MCStringCreateWithCString("complete unless open", r_string);
             return true;
         }
         //if ([p_protection isEqualToString:NSFileProtectionCompleteUntilFirstUserAuthentication])
         if ([p_protection isEqualToString:@"NSFileProtectionCompleteUntilFirstUserAuthentication"])
         {
-            r_string = "complete until first user authentication";
+            MCStringCreateWithCString("complete until first user authentication", r_string);
             return true;
         }
     }
@@ -224,9 +224,10 @@ bool MCFileGetDataProtection(const char *p_filename, NSString *&r_protection)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
 Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil);
+/*	MCExecPoint ep(nil, nil, nil);
 	
     const char *t_path = nil;
     
@@ -249,12 +250,41 @@ Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
     if (t_path != nil)
         MCiOSFileSetDoNotBackup(t_path, t_no_backup);
 	
-	return ES_NORMAL;
+	return ES_NORMAL;*/
+
+	MCExecPoint ep(nil, nil, nil);
+	
+    MCAutoStringRef t_path;
+    
+	bool t_no_backup;
+	t_no_backup = true;
+    
+    if (p_parameters != nil)
+    {
+        p_parameters->eval_argument(ep);
+        /* UNCHECKED */ ep . copyasstringref(&t_path);
+        p_parameters = p_parameters->getnext();
+    }
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		/* UNCHECKED */ ep . copyasbool(t_no_backup);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	MCExecContext ctxt(ep);
+    if (*t_path != nil)
+        //MCMobileExecFileSetDoNotBackup(ctxt, *t_path, t_no_backup);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
 {
-    MCExecPoint ep(nil, nil, nil);
+/*    MCExecPoint ep(nil, nil, nil);
     
     const char *t_path = nil;
     if (p_parameters != nil)
@@ -264,14 +294,31 @@ Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
     }
     MCresult->sets(MCU_btos(MCiOSFileGetDoNotBackup(t_path)));
     
-    return ES_NORMAL;
+    return ES_NORMAL; */
+
+	MCExecPoint ep(nil, nil, nil);
+
+	MCAutoStringRef t_path;
+    {
+        p_parameters->eval_argument(ep);
+        /* UNCHECKED */ ep . copyasstringref(&t_path);
+    }
+
+	MCExecContext ctxt(ep);
+
+	//MCMobileExecFileGetDoNotBackup(ctxt, *t_path);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters)
 {
-    bool t_success = true;
+/*  bool t_success = true;
     
     char *t_filename = nil;
     char *t_protection_string = nil;
@@ -301,12 +348,29 @@ Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters
     if (t_success)
         MCresult->clear();
     
-    return ES_NORMAL;
+    return ES_NORMAL; */
+
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    MCAutoStringRef t_filename;
+    MCAutoStringRef t_protection_string;
+    
+    NSString *t_protection = nil;
+    
+    if (MCParseParameters(p_parameters, "xx", &t_filename, &t_protection_string))
+	{
+		//MCMobileExecFileSetDataProtection(ctxt, *t_filename, *t_protection_string);
+	}
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters)
 {
-    MCExecPoint ep(nil, nil, nil);
+/*	MCExecPoint ep(nil, nil, nil);
     
     bool t_success = true;
     
@@ -333,5 +397,71 @@ Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters
     else
         MCresult->clear();
     
-    return ES_NORMAL;
+    return ES_NORMAL; */
+		
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    MCAutoStringRef t_filename;
+    
+    if (p_parameters != nil)
+    {
+        p_parameters->eval_argument(ep);
+        /* UNCHECKED */ ep . copyasstringref(&t_filename);
+		//MCMobileExecFileGetDataProtection(ctxt, *t_filename);
+    }
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+
+void MCMobileExecFileSetDoNotBackup(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup)
+{
+	MCiOSFileSetDoNotBackup(MCStringGetCString(p_path), p_no_backup);
+}
+
+void MCMobileExecFileGetDoNotBackup(MCExecContext& ctxt, MCStringRef p_path)
+{
+	MCiOSFileGetDoNotBackup(MCStringGetCString(p_path));
+}
+
+void MCMobileExecFileSetDataProtection(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_protection_string)
+{
+	NSString *t_protection = nil;
+
+    if (!MCDataProtectionFromString(p_protection_string, t_protection))
+    {
+		ctxt . SetTheResultToStaticCString("unknown protection type");
+        return;
+    }
+    
+    if (!MCFileSetDataProtection(MCStringGetCString(p_filename), t_protection))
+    {
+		ctxt . SetTheResultToStaticCString("cannot set file protection");
+        return;
+    }    
+    
+	ctxt . SetTheResultToEmpty();
+}
+
+void MCMobileExecFileGetDataProtection(MCExecContext& ctxt, MCStringRef p_filename)
+{
+	NSString *t_protection = nil;
+	MCAutoStringRef t_protection_string;
+	bool t_success;
+
+	if (t_success)
+		t_success = MCFileGetDataProtection(MCStringGetCString(p_filename), t_protection);
+
+	if (t_success)
+		t_success = MCDataProtectionToString(t_protection, &t_protection_string);
+    
+	if (t_success)
+        ctxt . SetTheResultToValue(*t_protection_string);
+    else
+        ctxt . SetTheResultToEmpty();
 }

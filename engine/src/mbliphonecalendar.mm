@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -567,7 +566,7 @@ bool MCSystemUpdateEvent(const char* p_event_id, char*& r_result)
     return t_result;
 }
 
-bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCVariableValue *&r_event_data)
+bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCArrayRef &r_event_data)
 {
     bool t_result;
     NSString* t_ns_event = [[NSString alloc] initWithUTF8String:p_event_id];

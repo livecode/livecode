@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -26,6 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "globals.h"
 #include "param.h"
+#include "mblsyntax.h"
 
 #include "mblandroidutil.h"
 
@@ -40,15 +40,9 @@ bool MCCanSendMail()
 	return t_can_send;
 }
 
-Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
+void MCAndroidSendEmail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
 {
-	MCresult->sets(MCU_btos(MCCanSendMail()));
-	return ES_NORMAL;
-}
-
-void MCAndroidSendEmail(const char *p_address, const char *p_cc_address, const char *p_subject, const char *p_message_body)
-{
-	MCAndroidEngineCall("sendEmail", "vssss", nil, p_address, p_cc_address, p_subject, p_message_body);
+	MCAndroidEngineCall("sendEmail", "vxxxx", nil, p_address, p_cc_address, p_subject, p_message_body);
 }
 
 typedef enum
@@ -60,6 +54,25 @@ typedef enum
 } MCAndroidMailStatus;
 
 static MCAndroidMailStatus s_mail_status = kMCAndroidMailWaiting;
+
+/* MOVED TO mblhandlers.cpp
+
+Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
+{
+	MCresult->sets(MCU_btos(MCCanSendMail()));
+	return ES_NORMAL;
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	bool t_result;
+	MCMailGetCanSendMail(ctxt, t_result);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
 
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
@@ -84,7 +97,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 		case kMCAndroidMailSent:
 			MCresult -> sets("sent");
 			break;
-			
+	
 		case kMCAndroidMailCanceled:
 			MCresult -> sets("cancel");
 			break;
@@ -99,7 +112,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_cc_address;
 	delete t_subject;
 	delete t_message_body;
-	
+
 	return ES_NORMAL;
 }
 
@@ -253,9 +266,9 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	MCCStringFree(t_cc);
 	MCCStringFree(t_bcc);
 	delete t_body . getstring();
-	
+
 	return ES_NORMAL;
-}
+} 
 
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters)
 {
@@ -272,6 +285,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *parameters)
 {
 	return MCHandleComposeMail(kMCMailTypeHtml, parameters);
 }
+*/
 
 void MCAndroidMailDone()
 {
@@ -284,4 +298,60 @@ void MCAndroidMailCanceled()
 	// IM-2012-10-22 - [[ BZ 10486 ]] - android mail activity always returns canceled
 	// regardless of what the user does so for now we just return unknown
 	s_mail_status = kMCAndroidMailUnknown;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCSystemMailResult(MCStringRef& r_result)
+{
+	while (s_mail_status == kMCAndroidMailWaiting)
+		MCscreen->wait(60.0, False, True);
+
+	switch (s_mail_status)
+	{
+		case kMCAndroidMailSent:
+			/* UNCHECKED */ MCStringCreateWithCString("sent", r_result);
+			return;
+	
+		case kMCAndroidMailCanceled:
+			/* UNCHECKED */ MCStringCreateWithCString("cancel", r_result);
+			return;
+			
+		case kMCAndroidMailUnknown:
+		default:
+			/* UNCHECKED */ MCStringCreateWithCString("unknown", r_result);
+			return;
+	}
+}
+
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
+{
+	s_mail_status = kMCAndroidMailWaiting;
+	MCAndroidSendEmail(p_address, p_cc_address, p_subject, p_message_body);
+}
+
+void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void *dialog_ptr)
+{
+	const char *t_prep_sig;
+	t_prep_sig = "vxxxxxb";
+
+	MCAndroidEngineCall("prepareEmail", t_prep_sig, nil, p_to, p_cc, p_bcc, p_subject, p_body, p_type == kMCMailTypeHtml);
+}
+
+void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr)
+{
+	if (p_file != nil && MCStringGetLength(p_file) > 0)
+		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_file, &p_type, &p_name);
+	else
+		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_data, &p_type, &p_name);
+}
+
+void MCSystemSendPreparedMail(void *dialog_ptr)
+{
+	MCAndroidEngineCall("sendEmail", "v", nil);
+}
+
+void MCSystemGetCanSendMail(bool& r_result)
+{
+	r_result = MCCanSendMail();
 }

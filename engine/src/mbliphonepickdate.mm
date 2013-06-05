@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -207,8 +206,10 @@ UIViewController *MCIPhoneGetViewController(void);
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];
+#ifdef MOBILE_BROKEN
 		// need to make self as delegate otherwise overridden delegates are not called
 		popoverController.delegate = self;
+#endif
 	}
 	else
 	{

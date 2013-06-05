@@ -105,28 +105,28 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 	if (t_success)
 		t_success = MCStringCreateMutable(0, &t_string);
 
-	combine_array_t t_list_ctxt;
-	t_list_ctxt . elements = nil;
+	combine_array_t t_lisctxt;
+	t_lisctxt . elements = nil;
 	if (t_success)
-		t_success = MCMemoryNewArray(t_count, t_list_ctxt . elements);
+		t_success = MCMemoryNewArray(t_count, t_lisctxt . elements);
 
 	if (t_success)
 	{
-		t_list_ctxt . index = 0;
-		MCArrayApply(p_array, list_array_elements, &t_list_ctxt);
-		qsort(t_list_ctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
+		t_lisctxt . index = 0;
+		MCArrayApply(p_array, list_array_elements, &t_lisctxt);
+		qsort(t_lisctxt . elements, t_count, sizeof(array_element_t), compare_array_element);
 		for(uindex_t i = 0; i < t_count; i++)
 		{
 			MCAutoStringRef t_value_as_string;
 			if (p_key_delimiter != nil)
 			{
-				t_success = ctxt . ConvertToString(t_list_ctxt . elements[i] . value, &t_value_as_string);
+				t_success = ctxt . ConvertToString(t_lisctxt . elements[i] . value, &t_value_as_string);
 				if (!t_success)
 					break;
 			}
 
 			t_success =
-				MCStringAppend(*t_string, MCNameGetString(t_list_ctxt . elements[i] . key)) &&
+				MCStringAppend(*t_string, MCNameGetString(t_lisctxt . elements[i] . key)) &&
 				(p_key_delimiter == nil ||
 					MCStringAppend(*t_string, p_key_delimiter) &&
 					MCStringAppend(*t_string, *t_value_as_string)) &&
@@ -141,7 +141,7 @@ void MCArraysExecCombine(MCExecContext& ctxt, MCArrayRef p_array, MCStringRef p_
 	if (t_success)
 		t_success = MCStringCopy(*t_string, r_string);
 
-	MCMemoryDeleteArray(t_list_ctxt . elements);
+	MCMemoryDeleteArray(t_lisctxt . elements);
 
 	if (t_success)
 		return;

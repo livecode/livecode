@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "system.h"
 
 #include "mblandroid.h"
@@ -380,12 +379,12 @@ char *MCAndroidSystem::GetStandardFolder(const char *p_folder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCAndroidSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
+bool MCAndroidSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 {
 	return MCStringCopy(p_path, r_long_path);
 }
 
-bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
+bool MCAndroidSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 {
 	return MCStringCopy(p_path, r_short_path);
 }
@@ -425,7 +424,7 @@ bool MCAndroidSystem::ResolveNativePath(MCStringRef p_path, MCStringRef& r_resol
 		t_absolute_path = (MCStringRef)MCValueRetain(p_path);
 
 	char *t_absolute_cstring;
-	t_absolute_cstring = strdup(MCStringGetCStringPtr(t_absolute_path));
+	t_absolute_cstring = strdup((const char *)MCStringGetNativeCharPtr(*t_absolute_path));
 	
 	// IM-2012-10-09 - [[ BZ 10432 ]] strip out extra slashes from paths
 	uindex_t t_length = MCCStringLength(t_absolute_cstring);

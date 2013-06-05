@@ -39,21 +39,21 @@ extern void android_font_destroy(void *font);
 extern void android_font_get_metrics(void *font, float& a, float& d);
 #endif
 
-MCFontnode::MCFontnode(MCNameRef p_name, uint2& p_size, uint2 p_style)
+MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 {
-	reqname = p_name;
-	reqsize = p_size;
-	reqstyle = p_style;
+	reqname = fname;
+	reqsize = size;
+	reqstyle = style;
 
     MCAutoPointer<char> tmpname;
-	tmpname = strclone(MCStringGetCString(MCNameGetString(p_name)));//make a copy of the font name
+	tmpname = strclone(MCStringGetCString(MCNameGetString(fname)));//make a copy of the font name
     
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
 	font -> charset = 0;
 	
 	char *t_comma;
-	t_comma = strchr(*tmpname, ',');
+	t_comma = strchr(MCNameGetCString(*reqname), ',');
 
 	uint1 t_charset;
 	t_charset = LCH_ENGLISH;
@@ -64,24 +64,24 @@ MCFontnode::MCFontnode(MCNameRef p_name, uint2& p_size, uint2 p_style)
 	{
 		*t_comma = '\0';
 		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)iphone_font_create(*tmpname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)iphone_font_create(MCNameGetCString(*reqname), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 		*t_comma = ',';
 	}
 	else
 	{
 		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)iphone_font_create(*tmpname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)iphone_font_create(MCNameGetCString(*reqname), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	
 	if (font -> unicode)
 		font -> charset = LCH_UNICODE;
 	
-	font -> ascent = p_size - 1;
-	font -> descent = p_size * 2 / 14 + 1;
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
 	float ascent, descent;
 	iphone_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > p_size)
+	if (ceilf(ascent) + ceilf(descent) > size)
 		font -> ascent++;
 	
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
@@ -89,7 +89,8 @@ MCFontnode::MCFontnode(MCNameRef p_name, uint2& p_size, uint2 p_style)
 	font -> charset = 0;
 	
 	char *t_comma;
-	t_comma = strchr(*tmpname, ',');
+	t_comma = strchr(MCNameGetCString(*reqname), ',');
+
 
 	uint1 t_charset;
 	t_charset = LCH_ENGLISH;
@@ -100,21 +101,21 @@ MCFontnode::MCFontnode(MCNameRef p_name, uint2& p_size, uint2 p_style)
 	{
 		*t_comma = '\0';
 		font -> unicode = True;
-		font -> fid = (MCSysFontHandle)android_font_create(*tmpname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)android_font_create(MCNameGetCString(*reqname), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 		*t_comma = ',';
 	}
 	else
 	{
 		font -> unicode = False;
-		font -> fid = (MCSysFontHandle)android_font_create(*tmpname, reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
+		font -> fid = (MCSysFontHandle)android_font_create(MCNameGetCString(*reqname), reqsize, (reqstyle & FA_WEIGHT) > 0x05, (reqstyle & FA_ITALIC) != 0);
 	}
 	
-	font -> ascent = p_size - 1;
-	font -> descent = p_size * 2 / 14 + 1;
+	font -> ascent = size - 1;
+	font -> descent = size * 2 / 14 + 1;
 	
 	float ascent, descent;
 	android_font_get_metrics(font -> fid,  ascent, descent);
-	if (ceilf(ascent) + ceilf(descent) > p_size)
+	if (ceilf(ascent) + ceilf(descent) > size)
 		font -> ascent++;
 
 #endif

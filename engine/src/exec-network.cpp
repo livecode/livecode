@@ -794,7 +794,7 @@ void MCNetworkGetNetworkInterfaces(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkGetAllowDatagramBroadcasts(MCExecContext& ctxt, bool& r_value)
 {
-	r_value = MCallowdatagrambroadcasts;
+	r_value = MCallowdatagrambroadcasts == True;
 }
 
 void MCNetworkSetAllowDatagramBroadcasts(MCExecContext& ctxt, bool p_value)

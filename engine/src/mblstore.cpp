@@ -25,8 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "eventqueue.h"
-
-
+#include "exec.h"
 
 #include "param.h"
 
@@ -533,3 +532,4 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 //	
 //	return ES_NORMAL;
 //}
+

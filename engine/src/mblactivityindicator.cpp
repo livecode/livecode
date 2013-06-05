@@ -29,8 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 
 #include "exec.h"
-
-
 #include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -126,23 +124,31 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
     }
 #endif
 
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
 
 	if (t_style != nil)
 		t_indicator_type = MCActivityIndicatorTypeFromCString(t_style);
-    MCActivityIndicatorExecStart(t_ctxt, t_indicator_type, t_location);
-    return t_ctxt.GetExecStat();
+    MCActivityIndicatorExecStart(ctxt, t_indicator_type, t_location);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
-    MCActivityIndicatorExecStop(t_ctxt);
+    MCActivityIndicatorExecStop(ctxt);
     
-    return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+
 }

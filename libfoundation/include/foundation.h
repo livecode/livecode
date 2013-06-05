@@ -195,6 +195,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define __LITTLE_ENDIAN__
 #define __X86_64__
 #define __HUGE__
+#elif defined(__arm__)
+#define __32_BIT__
+#define __LITTLE_ENDIAN__
+#define __ARM__
+#define __SMALL__
 #endif
 
 // Native char set

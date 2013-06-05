@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "parsedef.h"
@@ -637,7 +636,7 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_arr
 			t_success = ES_NORMAL == t_hashentry->value.fetch(ep);
 			jstring t_jstring = nil;
 			if (t_success)
-				t_success = MCJavaStringFromNative(p_env, &ep.getsvalue(), t_jstring);
+				t_success = MCJavaStringFromNative(p_env, ep.getsvalue().clone(), t_jstring);
 			if (t_success)
 				t_jobj = t_jstring;
 		}
@@ -734,6 +733,8 @@ static MCJavaType native_sigchar_to_returntype(char p_sigchar)
             return kMCJavaTypeMCString;
         case 'U':
             return kMCJavaTypeMCStringUnicode;
+		case 'x':
+			return kMCJavaTypeMCStringRef;
         case 'd':
             return kMCJavaTypeByteArray;
         case 'i':
@@ -773,6 +774,7 @@ static const char *return_type_to_java_sig(MCJavaType p_type)
         case kMCJavaTypeCString:  // string from char *
         case kMCJavaTypeMCString:  // string from MCString *
         case kMCJavaTypeMCStringUnicode:  // string from utf16 MCString *
+		case kMCJavaTypeMCStringRef: // string from MCStringRef
             return "Ljava/lang/String;";
         case kMCJavaTypeByteArray:  // binary data from MCString * as byte[]
             return "[B";
@@ -909,7 +911,14 @@ bool MCJavaObjectGetField(JNIEnv *env, jobject p_object, const char *p_fieldname
                 t_success = false;
                 break;
             }
-                
+            
+			case kMCJavaTypeMCStringRef:
+            {
+                /* UNIMPLEMENTED */
+                t_success = false;
+                break;
+            }
+            
             case kMCJavaTypeByteArray:
             {
                 /* UNIMPLEMENTED */
@@ -1024,6 +1033,20 @@ bool MCJavaConvertParameters(JNIEnv *env, const char *p_signature, va_list p_arg
                     t_object = true;
                 }
                     break;
+				case kMCJavaTypeMCStringRef:
+				{
+					MCAutoStringRef t_string;
+					t_success = MCStringCopy(va_arg(p_args, MCStringRef), &t_string);
+
+					if (t_success)
+						t_success = MCJavaStringFromNative(env, MCStringGetCString(*t_string), t_java_string);
+                    if (t_success)
+                        t_value . l = t_java_string;
+                    
+                    t_delete = true;
+                    t_object = true;
+				}
+					break;
                 case kMCJavaTypeByteArray:
                 {
                     t_mcstring = va_arg(p_args, const MCString *);

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -202,8 +201,9 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
             int32_t t_width = 0, t_height = 0;
             MCAndroidObjectRemoteCall(t_view, "getVideoWidth", "i", &t_width);
             MCAndroidObjectRemoteCall(t_view, "getVideoHeight", "i", &t_height);
-            sprintf(ep.getbuffer(I2L * 2 + 3), "%d,%d", t_width, t_height);
-            ep.setstrlen();
+			char t_buffer[I2L * 2 + 3];
+            sprintf(t_buffer, "%d,%d", t_width, t_height);
+            ep.setuint(strlen(t_buffer));
             return ES_NORMAL;
         }
             

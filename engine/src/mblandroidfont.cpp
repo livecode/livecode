@@ -98,9 +98,10 @@ void MCSystemListFontFamilies(MCExecPoint& ep)
     /*UNCHECKED */ MCCStringFree(t_custom_font_names);
 }
 
-void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
+bool MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
 {
-    uint32_t t_styles;
+	// TODO
+/*    uint32_t t_styles;
     t_styles = 0;
     
     for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
@@ -123,7 +124,9 @@ void MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
     if (t_styles & kMCAndroidFontStyleItalic)
         ep.concatcstring("italic", EC_RETURN, ep.getsvalue().getlength() == 0);
     if (t_styles & kMCAndroidFontStyleBoldItalic)
-        ep.concatcstring("bold-italic", EC_RETURN, ep.getsvalue().getlength() == 0);
+        ep.concatcstring("bold-italic", EC_RETURN, ep.getsvalue().getlength() == 0); */
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

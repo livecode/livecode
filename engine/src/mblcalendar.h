@@ -40,11 +40,11 @@ typedef struct
 } MCCalendar;
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_contact, MCVariableValue *&r_result);
+void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_contact, MCArrayRef &r_result);
 bool MCSystemShowEvent(const char* p_event_id, char*& r_result);
 bool MCSystemCreateEvent(char*& r_result);
 bool MCSystemUpdateEvent(const char* p_event_id, char*& r_result);
-bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCVariableValue*& r_event_data);
+bool MCSystemGetEventData(MCExecContext &r_ctxt, const char* p_event_id, MCArrayRef& r_event_data);
 bool MCSystemRemoveEvent(const char* p_event_id, bool p_reocurring, char*& r_event_id_deleted);
 bool MCSystemAddEvent(MCCalendar p_new_calendar_data, char*& r_result);
 bool MCSystemGetCalendarsEvent(char*& r_result);

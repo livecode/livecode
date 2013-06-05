@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
-
 #include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -111,20 +110,27 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
             t_opacity = -1;
     }
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
-    return t_ctxt.GetExecStat();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    MCBusyIndicatorExecStart(ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+
 }
 
 Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
     
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
-    MCBusyIndicatorExecStop(t_ctxt);
+	MCBusyIndicatorExecStop(ctxt);
     
-    return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }

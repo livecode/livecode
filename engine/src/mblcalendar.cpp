@@ -70,14 +70,12 @@ void MCUpdateEventExec(MCExecContext& p_ctxt, const char* p_event_id)
 
 void MCGetEventDataExec(MCExecContext& p_ctxt, const char* p_event_id)
 {
-#ifdef MOBILE_BROKEN
-    MCVariableValue *r_event_data = nil;
-    MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
-    if (r_event_data == nil)
+    MCAutoArrayRef t_event_data;
+    MCSystemGetEventData(p_ctxt, p_event_id, &t_event_data);
+    if (*t_event_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
-        p_ctxt.GetEP().setarray(r_event_data, True);
-#endif
+        p_ctxt.SetTheResultToValue(*t_event_data);
 }
 
 void MCRemoveEventExec(MCExecContext& p_ctxt, bool p_reocurring, const char* p_event_id)
@@ -235,9 +233,11 @@ MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_re
     return p_result;
 }
 
-void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVariableValue *&r_result)
+void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCArrayRef &r_result)
 {
-    MCExecPoint ep(nil, nil, nil);
+ // TODO - use array instead of MCVariableValue
+
+ /*   MCExecPoint ep(nil, nil, nil);
     MCVariableValue *t_entry = nil;
     r_result = new MCVariableValue ();
     char t_int_string[11];
@@ -299,7 +299,7 @@ void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCVari
             r_result->lookup_element(r_ctxt.GetEP(), "enddate", t_entry);
             t_entry->assign_string(t_secs_string);
         }
-    }
+    }*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -316,12 +316,15 @@ Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_event_id = ep.getsvalue().getstring();
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCShowEventExec(t_ctxt, t_event_id);
+    MCShowEventExec(ctxt, t_event_id);
     // Set return value
-	return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
@@ -336,24 +339,31 @@ Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_event_id = ep.getsvalue().getstring();
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCUpdateEventExec(t_ctxt, t_event_id);
-    // Set return value
-	return t_ctxt.GetExecStat();
+    MCUpdateEventExec(ctxt, t_event_id);
+    // Set return valu
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
 {
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCCreateEventExec(t_ctxt);
+    MCCreateEventExec(ctxt);
     // Set return value
-	return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
@@ -367,15 +377,21 @@ Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_event_id = ep.getsvalue().getstring();
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCGetEventDataExec(t_ctxt, t_event_id);
-#ifdef MOBILE_BROKEN
+    MCGetEventDataExec(ctxt, t_event_id);
     if (MCresult->isempty())
-        MCresult->store(ep, True);
-#endif
-	return t_ctxt.GetExecStat();
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
@@ -392,12 +408,15 @@ Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
     {
         t_success = MCParseParameters(p_parameters, "b", &t_reocurring);
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCRemoveEventExec(t_ctxt, t_reocurring, t_event_id);
+    MCRemoveEventExec(ctxt, t_reocurring, t_event_id);
     // Set return value
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
@@ -406,23 +425,29 @@ Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
     // Handle parameters. We are doing that in a dedicated call
     MCCalendar t_new_event_data;
     t_new_event_data = MCParameterDataToCalendar(p_parameters, t_new_event_data);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCAddEventExec(t_ctxt, t_new_event_data);
+    MCAddEventExec(ctxt, t_new_event_data);
     // Set return value
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCGetCalendarsEventExec(t_ctxt);
+    MCGetCalendarsEventExec(ctxt);
     // Set return value
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
@@ -451,10 +476,13 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
             t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
         }
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCFindEventExec(t_ctxt, t_start_date, t_end_date);
+    MCFindEventExec(ctxt, t_start_date, t_end_date);
     // Set return value
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }

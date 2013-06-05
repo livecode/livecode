@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -182,21 +181,21 @@ bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_s
     return t_success;
 }
 
-bool MCSystemSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemSoundOnChannel(const char *p_channel, MCStringRef &r_sound)
 {
-    MCAndroidEngineRemoteCall("getSoundOnChannel", "ss", &r_sound, p_channel);
+    MCAndroidEngineRemoteCall("getSoundOnChannel", "xs", r_sound, p_channel);
     return true;
 }
 
-bool MCSystemNextSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemNextSoundOnChannel(const char *p_channel, MCStringRef &r_sound)
 {
-    MCAndroidEngineRemoteCall("getNextSoundOnChannel", "ss", &r_sound, p_channel);
+    MCAndroidEngineRemoteCall("getNextSoundOnChannel", "xs", r_sound, p_channel);
     return true;
 }
 
-bool MCSystemListSoundChannels(char*& r_channels)
+bool MCSystemListSoundChannels(MCStringRef &r_channels)
 {
-    MCAndroidEngineRemoteCall("getSoundChannels", "s", &r_channels);
+    MCAndroidEngineRemoteCall("getSoundChannels", "s", r_channels);
     return true;
 }
 

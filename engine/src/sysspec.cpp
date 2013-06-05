@@ -411,7 +411,7 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 	if (t_state -> details)
 	{
 		MCStringRef t_filename_string;
-		/* UNCHECKED */ MCStringCreateWithCString(p_entry->name, t_filename_string);
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), t_filename_string);
 		MCStringRef t_urlencoded_string;
 		/* UNCHECKED */ MCFiltersUrlEncode(t_filename_string, t_urlencoded_string);
 		MCValueRelease(t_filename_string);
@@ -487,14 +487,14 @@ uint2 MCS_umask(uint2 p_mask)
 /* WRAPPER */
 bool MCS_exists(MCStringRef p_path, bool p_is_file)
 {
-	MCStringRef t_resolved;
-	if (!MCS_resolvepath(p_path, t_resolved))
+	MCAutoStringRef t_resolved;
+	if (!MCS_resolvepath(p_path, &t_resolved))
 		return false;
 
 	if (p_is_file)
-		return MCsystem->FileExists(MCStringGetCString(t_resolved));
+		return MCsystem->FileExists(MCStringGetCString(*t_resolved));
 	else
-		return MCsystem->FolderExists(MCStringGetCString(t_resolved));
+		return MCsystem->FolderExists(MCStringGetCString(*t_resolved));
 }
 
 Boolean MCS_noperm(const char *p_path)
@@ -908,16 +908,20 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 	uint32_t t_size;
 	t_size = (uint32_t)t_file -> GetFileSize();
 	
-#ifdef TO_FIX
-	char *t_buffer;
-	t_buffer = ep . getbuffer(t_size);
+	MCAutoNativeCharArray t_buffer;
+	/* UNCHECKED */ t_buffer . New(t_size);
+	//t_buffer = ep . getbuffer(t_size);
 	
 	uint32_t t_read;
-	if (t_buffer != NULL &&
-		t_file -> Read(t_buffer, t_size, t_read) &&
+	if (t_buffer.Chars() != NULL &&
+		t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
 		t_read == t_size)
 	{
-		ep . setlength(t_size);
+		MCAutoStringRef t_string;
+		t_buffer . Shrink(t_size);
+		t_buffer . CreateStringAndRelease(&t_string);
+		ep . setvalueref(*t_string);
+
 		if (!p_binary)
 			ep . texttobinary();
 		MCresult -> clear(False);
@@ -927,7 +931,6 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 		ep . clear();
 		MCresult -> sets("error reading file");
 	}
-#endif
 
 	t_file -> Close();
 }

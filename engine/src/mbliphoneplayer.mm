@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -659,6 +658,7 @@ private:
 
 static struct { NSString **name; SEL selector; } s_player_notifications[] =
 {
+#ifdef MOBILE_BROKEN
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },
 	{ &MPMovieNaturalSizeAvailableNotification, @selector(movieNaturalSizeAvailable:) },
@@ -670,6 +670,7 @@ static struct { NSString **name; SEL selector; } s_player_notifications[] =
 	{ &MPMoviePlayerPlaybackDidFinishNotification, @selector(playerPlaybackDidFinish:) },
 	{ &MPMoviePlayerPlaybackStateDidChangeNotification, @selector(playerPlaybackStateDidChange:) },
 	{ &MPMoviePlayerScalingModeDidChangeNotification, @selector(playerScalingModeDidChange:) },
+#endif
 	{ nil, nil }
 };
 

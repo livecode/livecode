@@ -30,11 +30,14 @@ class MCFontnode : public MCDLlist
 public:
 	MCFontnode(MCNameRef fname, uint2 &size, uint2 style);
 	~MCFontnode();
+
 	MCFontStruct *getfont(MCNameRef fname, uint2 size, uint2 style);
+
 	MCFontStruct *getfontstruct()
 	{
 		return font;
 	}
+
 	MCNameRef getname()
 	{
 		return *reqname;

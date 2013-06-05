@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -676,35 +675,37 @@ bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_s
 	return true;
 }
 
-bool MCSystemSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemSoundOnChannel(const char *p_channel, MCStringRef& r_sound)
 {
-	MCSystemSoundChannel *t_channel;
+/*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-	return MCCStringClone(t_channel -> current_player . sound, r_sound);
+	return MCCStringClone(t_channel -> current_player . sound, r_sound);*/
+    return false;
 }
 
-bool MCSystemNextSoundOnChannel(const char *p_channel, char*& r_sound)
+bool MCSystemNextSoundOnChannel(const char *p_channel, MCStringRef& r_sound)
 {
-	MCSystemSoundChannel *t_channel;
+/*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
 		return false;
 	
-    return MCCStringClone(t_channel -> next_player . sound, r_sound);
+    return MCCStringClone(t_channel -> next_player . sound, r_sound);*/
+    return false;
 }
 
 // MM-2012-02-11: Refactored to return a formatted sting of channels
-bool MCSystemListSoundChannels(char*& r_channels)
+bool MCSystemListSoundChannels(MCStringRef& r_channels)
 {
-	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
+/*	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
 		if (t_channel -> name != nil)
         {
             if (r_channels == nil)
                 MCCStringClone(t_channel -> name, r_channels);
             else
                 MCCStringAppendFormat(r_channels, "\n%s", t_channel -> name);
-        }
+        } */
 	return true;
 }
 

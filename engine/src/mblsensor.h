@@ -63,6 +63,43 @@ typedef struct
     double timestamp;
 } MCSensorRotationRateReading;
 
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemStartTrackingLocation(bool p_loosely);
+bool MCSystemStopTrackingLocation();
+
+bool MCSystemStartTrackingHeading(bool p_loosely);
+bool MCSystemStopTrackingHeading();
+
+bool MCSystemStartTrackingAcceleration(bool p_loosely);
+bool MCSystemStopTrackingAcceleration();
+
+bool MCSystemStartTrackingRotationRate(bool p_loosely);
+bool MCSystemStopTrackingRotationRate();
+
+bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
+
+bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely);
+bool MCSystemStopTrackingSensor(MCSensorType p_sensor);
+
+bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
+
+double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor);
+
+bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed);
+bool MCSystemGetHeadingReading(MCSensorHeadingReading &r_reading, bool p_detailed);
+bool MCSystemGetAccelerationReading(MCSensorAccelerationReading &r_reading, bool p_detailed);
+bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool p_detailed);
+
+// MM-2012-02-11: Added support for iPhoneGet/SetCalibrationTimeout
+bool MCSystemGetLocationCalibrationTimeout(int32_t&);
+bool MCSystemSetLocationCalibrationTimeout(int32_t);
+
+void MCSystemSensorInitialize(void);
+void MCSystemSensorFinalize(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCSensorPostChangeMessage(MCSensorType p_sensor);
 void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error);
 
@@ -70,5 +107,6 @@ void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error);
 void MCSensorInitialize(void);
 void MCSensorFinalize(void);
 
+MCSensorType MCSensorTypeFromCString(const char* p_string);
 
 #endif

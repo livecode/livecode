@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "system.h"
 
 #include "globdefs.h"
@@ -38,6 +37,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
+#include "exec-orientation.h"
 
 extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 extern MCAndroidDeviceConfiguration s_device_configuration;
@@ -54,11 +54,11 @@ typedef enum
 
 typedef enum
 {
+	kMCDisplayOrientationUnknown,
 	kMCDisplayOrientationPortrait,
-	kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationPortraitUpsideDown,
 	kMCDisplayOrientationLandscapeRight,
-
+	kMCDisplayOrientationLandscapeLeft,
 	kMCDisplayOrientationFaceUp,
 } MCAndroidDisplayOrientation;
 
@@ -212,6 +212,10 @@ static const char *android_device_rotation_to_string(MCAndroidDisplayFormat p_de
 	return s_orientation_names[android_device_orientation_from_rotation(p_device_format, p_rotation)];
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/* MOVED to mblhandlers.cpp
+
 Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
 	int32_t t_rotation;
@@ -307,9 +311,9 @@ Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
 Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
 	MCresult->sets(MCU_btos(s_orientation_lock > 0));
-	return ES_NORMAL;
+	return ES_NORMAL; 
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 
@@ -341,4 +345,89 @@ void MCAndroidOrientationChanged(int orientation)
 //	MCLog("MCAndroidOrientationChanged(%d)", orientation);
 	MCCustomEvent *t_orientation_event = new MCOrientationChangedEvent();
 	MCEventQueuePostCustom(t_orientation_event);
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
+{
+	switch (p_orientation)
+	{
+	case kMCDisplayOrientationPortrait:
+		return ORIENTATION_PORTRAIT;
+	case kMCDisplayOrientationPortraitUpsideDown:
+		return ORIENTATION_PORTRAIT_UPSIDE_DOWN;
+	case kMCDisplayOrientationLandscapeRight:
+		return ORIENTATION_LANDSCAPE_RIGHT;
+	case kMCDisplayOrientationLandscapeLeft:
+		return ORIENTATION_LANDSCAPE_LEFT;
+	case kMCDisplayOrientationFaceUp:
+		return ORIENTATION_FACE_UP;
+	default:
+		return ORIENTATION_UNKNOWN;
+	}
+}
+
+MCOrientationSet get_orientation_set(uint32_t p_orientations)
+{
+	// UNIMPLEMENTED
+	return ORIENTATION_UNKNOWN_BIT
+}
+
+uint32_t get_android_orientations(MCOrientationSet p_orientations)
+{
+	//UNIMPLEMENTED
+	return 0;
+}
+
+void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+{
+	r_orientations = get_orientation_set(s_allowed_orientations);
+}
+
+void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations)
+{
+	s_allowed_orientations = get_android_orientations(p_orientations);
+}
+
+void MCSystemGetOrientation(MCOrientation& r_orientation)
+{
+	int32_t t_rotation;
+	MCAndroidDisplayFormat t_format;
+
+	t_rotation = android_get_display_rotation();
+	t_format = android_get_display_format();
+
+	if (t_format == kMCDisplayFormatUnknown)
+		r_orientation = ORIENTATION_UNKNOWN;
+	else
+		r_orientation = get_orientation(android_display_orientation_from_rotation(t_format, t_rotation));
+}
+
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
+{
+	int32_t t_dev_rotation;
+	MCAndroidDisplayFormat t_dev_format;
+
+	t_dev_rotation = android_get_device_rotation();
+	t_dev_format = android_get_device_format();
+
+	r_orientation = get_orientation(android_display_orientation_from_rotation(t_dev_format, t_dev_rotation));
+}
+
+void MCSystemLockOrientation()
+{
+	if (s_orientation_lock < MAXUINT4)
+		s_orientation_lock++;
+}
+
+void MCSystemUnlockOrientation()
+{
+	if (s_orientation_lock > 0)
+		s_orientation_lock--;
+}
+
+void MCSystemGetOrientationLocked(bool &r_locked)
+{
+	r_locked = s_orientation_lock > 0;
 }

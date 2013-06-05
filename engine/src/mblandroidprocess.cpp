@@ -16,8 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "system.h"
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "globals.h"
+
 #include "mblandroid.h"
 #include "mblandroidutil.h"
 
@@ -32,20 +37,14 @@ uint32_t MCAndroidSystem::GetProcessId(void)
 
 bool MCAndroidSystem::GetVersion(MCStringRef& r_string)
 {
-	static char *s_system_version = NULL;
-	if (s_system_version == nil)
-		MCAndroidEngineCall("getSystemVersion", "s", &s_system_version);
-	
-	return MCStringCreateWithNativeChars(s_system_version, MCCStringLength(s_system_version), r_string);
+	MCAndroidEngineCall("getSystemVersion", "x", &r_string);
+	return true;
 }
 
 bool MCAndroidSystem::GetMachine(MCStringRef& r_string)
 {
-	static char *s_machine = nil;
-	if (s_machine == nil)
-		MCAndroidEngineCall("getMachine", "s", &s_machine);
-	
-	return MCStringCreateWithNativeChars(s_machine, MCCStringLength(s_machine), r_string);
+	MCAndroidEngineCall("getMachine", "x", &r_string);
+	return true;
 }
 
 MCNameRef MCAndroidSystem::GetProcessor(void)

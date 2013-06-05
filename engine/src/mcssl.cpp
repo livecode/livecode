@@ -364,6 +364,7 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 		return false;
 	}
 
+#ifdef MCSSL
 	uint4 t_outlen;
 	char *t_ssl_encode;
 	t_ssl_encode = SSL_encode(p_is_decrypt, MCNameGetCString(p_cipher), MCStringGetCString(p_data), MCStringGetLength(p_data), 
@@ -398,6 +399,9 @@ bool MCCrypt_rsa_op(bool p_encrypt, bool p_is_public, MCStringRef p_message_in, 
 		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_ssl_encode, t_outlen, r_output);
 		return true;
 	}
+#else
+	return false;
+#endif
 }
 
 char *SSL_encode(Boolean isdecrypt, const char *ciphername,

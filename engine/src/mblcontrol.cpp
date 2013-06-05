@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -32,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #include "mblcontrol.h"
 
@@ -739,38 +739,36 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	bool t_success;
 	t_success = true;
 	
-	char *t_type_name;
-	t_type_name = nil;
+	MCAutoStringRef t_type_name;
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_type_name);
+		t_success = MCParseParameters(p_parameters, "x", &t_type_name);
 	
-	char *t_control_name;
-	t_control_name = nil;
+	MCAutoStringRef t_control_name;
 	if (t_success && p_parameters != nil)
-		t_success = MCParseParameters(p_parameters, "s", &t_control_name);
+		t_success = MCParseParameters(p_parameters, "x", &t_control_name);
 	
 	// Make sure the name is valid.
-	if (t_success && t_control_name != nil)
+	if (t_success && *t_control_name != nil)
 	{
-		if (MCCStringIsEmpty(t_control_name))
-		{
-			delete t_control_name;
-			t_control_name = nil;
-		}
+		if (MCStringIsEqualTo(*t_control_name, kMCEmptyString, kMCCompareCaseless))
+			t_success = false;
 		else
-			t_success = !MCCStringIsInteger(t_control_name);
+		{
+			int2 t_integer;
+			t_success = !MCU_stoi2(*t_control_name, t_integer);
+		}
 	}
 	
 	// Make sure a control does not already exist with the name
-	if (t_success && t_control_name != nil)
+	if (t_success && *t_control_name != nil)
 	{
 		MCNativeControl *t_control;
-		t_success = !MCNativeControl::FindByNameOrId(t_control_name, t_control);
+		t_success = !MCNativeControl::FindByNameOrId(MCStringGetCString(*t_control_name), t_control);
 	}
 	
 	MCNativeControlType t_type;
 	if (t_success)
-		t_success = MCNativeControl::LookupType(t_type_name, t_type);
+		t_success = MCNativeControl::LookupType(MCStringGetCString(*t_type_name), t_type);
 	
 	MCNativeControl *t_control;
 	t_control = nil;
@@ -781,7 +779,7 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	{
 		extern MCExecPoint *MCEPptr;
 		t_control -> SetOwner(MCEPptr -> getobj());
-		t_control -> SetName(t_control_name);
+		t_control -> SetName(MCStringGetCString(*t_control_name));
 		MCresult -> setnvalue(t_control -> GetId());
 	}
 	else
@@ -791,10 +789,6 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 		
 		MCresult -> clear();
 	}
-	
-	delete t_control_name;
-	delete t_type_name;
-	
 	return ES_NORMAL;
 }
 
@@ -878,13 +872,16 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
 	
-#ifdef MOBILE_BROKEN
+	MCExecContext ctxt(ep);
 	if (t_success)
-		MCresult -> store(ep, True);
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
 	else
-		MCresult -> clear();
-#endif
-    
+		ctxt . SetTheResultToEmpty();
+
 	delete t_prop_name;
 	delete t_control_name;
 	
@@ -952,11 +949,15 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 {
-#ifdef MOBILE_BROKEN
+
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
-	MCresult -> store(ep, False);
-#endif
+
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_value;
+	/* UNCHECKED */ ep . copyasstringref(&t_value);
+    ctxt . SetTheResultToValue(*t_value);
+
 	return ES_NORMAL;
 }
 

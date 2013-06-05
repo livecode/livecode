@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -52,6 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneview.h"
 
 #include "mblstore.h"
+#include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -508,6 +508,8 @@ Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
+/*
+
 // Important: We switch right and left here. Internally we use 'device orientation' but to script
 // we use 'interface orientation'. Interface orientation ties landscape to the position of the home
 // button as you look at the device.
@@ -516,6 +518,7 @@ static const char *s_orientation_names[] =
 {
 	"unknown", "portrait", "portrait upside down", "landscape right", "landscape left", "face up", "face down", nil
 };
+*/
 
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
@@ -694,7 +697,7 @@ static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
-
+/* MOVED TO mbliphoneorientation.mm
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[[[UIDevice currentDevice] orientation]]);
@@ -774,7 +777,7 @@ static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_pa
 	
 	return ES_NORMAL;
 }
-
+*/
 static Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters)
 {
 	return ES_NORMAL;
@@ -894,12 +897,10 @@ static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	const char *t_id_string = nil;
 	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
 	
-#ifdef MOBILE_BROKEN
-	MCExecPoint ep;
-	ep.setsvalue(t_id_string);
-	MCresult->store(ep, True);
-#endif
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
     
+	ctxt . SetTheResultToStaticCString(t_id_string);
 	return ES_NORMAL;
 }
 
@@ -926,7 +927,7 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 	
 #ifdef MOBILE_BROKEN
 	if (t_success)
-		MCresult->store(ep, True);
+		ctxt . SetTheResultToValue(ep . getsvalue());
 	else
 		MCresult->clear();
 #endif
@@ -1213,6 +1214,14 @@ extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_paramet
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
+
 static MCPlatformMessageSpec s_platform_messages[] =
 {
     // MM-2012-02-22: Added support for ad management
@@ -1278,14 +1287,14 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
 	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "iphoneLockOrientation", MCHandleLockUnlockOrientation, (void*)true},
-	{false, "iphoneUnlockOrientation", MCHandleLockUnlockOrientation, (void*)false},
+	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
+	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
 	{false, "mobileOrientation", MCHandleOrientation, nil},
 	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
 	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
 	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "mobileLockOrientation", MCHandleLockUnlockOrientation, (void*)true},
-	{false, "mobileUnlockOrientation", MCHandleLockUnlockOrientation, (void*)false},
+	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
 	
 	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
@@ -1502,12 +1511,12 @@ Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message
 			//   jump to the main fiber for it.
 			if (!s_platform_messages[i] . waitable)
 			{
-				handle_context_t t_ctxt;
-				t_ctxt . handler = s_platform_messages[i] . handler;
-				t_ctxt . context = s_platform_messages[i] . context;
-				t_ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &t_ctxt);
-				return t_ctxt . result;
+				handle_context_t ctxt;
+				ctxt . handler = s_platform_messages[i] . handler;
+				ctxt . context = s_platform_messages[i] . context;
+				ctxt . parameters = p_parameters;
+				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+				return ctxt . result;
 			}
 			
 			// Execute the method as normal, in this case the method will have to jump

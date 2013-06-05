@@ -2019,6 +2019,10 @@ extern MCExecMethodInfo *kMCPasteboardGetDragImageOffsetMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardSetDragImageOffsetMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardGetAllowableDragActionsMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardSetAllowableDragActionsMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardGetClipboardDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardSetClipboardDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardGetDragDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardSetDragDataMethodInfo;
 
 void MCPasteboardEvalClipboard(MCExecContext& ctxt, MCNameRef& r_string);
 void MCPasteboardEvalClipboardKeys(MCExecContext& ctxt, MCStringRef& r_string);
@@ -2051,6 +2055,11 @@ void MCPasteboardGetDragImageOffset(MCExecContext& ctxt, MCPoint*& r_value);
 void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
+
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
 
 ///////////
 
@@ -3418,6 +3427,31 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
 void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
 
+void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
+void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
+void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientation);
+void MCOrientationSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orientations);
+void MCOrientationGetOrientationLocked(MCExecContext& ctxt, bool& r_locked);
+void MCOrientationExecLockOrientation(MCExecContext& ctxt);
+void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
 
+///////////
+
+extern MCExecMethodInfo* kMCMailGetCanSendMailMethodInfo;
+
+void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
+void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
+void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
+
+///////////
+
+void MCAddressBookExecPickContact(MCExecContext& ctxt);
+void MCAddressBookExecShowContact(MCExecContext& ctxt, int32_t p_contact_id);
+void MCAddressBookExecCreateContact(MCExecContext& ctxt);
+void MCAddressBookExecUpdateContact(MCExecContext& ctxt, MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name);
+void MCAddressBookGetContactData(MCExecContext& ctxt, int32_t p_contact_id, MCArrayRef& r_contact_data);
+void MCAddressBookExecRemoveContact(MCExecContext& ctxt, int32_t p_contact_id);
+void MCAddressBookExecAddContact(MCExecContext &ctxt, MCArrayRef p_contact);
+void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_name);
 
 #endif

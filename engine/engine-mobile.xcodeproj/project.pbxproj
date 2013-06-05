@@ -304,6 +304,16 @@
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
+		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
+		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
+		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
+		BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
+		BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
+		BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
+		BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
+		BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
+		BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
+		BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -906,6 +916,11 @@
 		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
+		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
+		BE94042B175F6308003EAB87 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
+		BE94042C175F6308003EAB87 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
+		BE94042D175F6308003EAB87 /* exec-sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sensor.cpp"; path = "src/exec-sensor.cpp"; sourceTree = "<group>"; };
+		BE940436175F659F003EAB87 /* mbliphoneorientation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneorientation.mm; path = src/mbliphoneorientation.mm; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -1090,11 +1105,10 @@
 		4D7E389E1281528500E7F80A /* iOS */ = {
 			isa = PBXGroup;
 			children = (
-				BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */,
 				4D4BA4E412C14F850031AB06 /* mbliphone.h */,
 				4DD3E1B11041192800CAC7EF /* mbliphone.mm */,
-				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
 				F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */,
+				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
 				F66DE83114BB34D600991D8C /* mbliphonealert.mm */,
 				4D839B351431F52E00984D5D /* mbliphoneapp.h */,
 				4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */,
@@ -1106,20 +1120,24 @@
 				F68B56881541960200097647 /* mbliphonecontact.mm */,
 				4DE9C63D113813A00059588F /* mbliphonecontext.cpp */,
 				4DE9C634113810030059588F /* mbliphonecontext.h */,
-				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4D7E38A6128152EF00E7F80A /* mbliphonecontrol.h */,
+				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */,
 				4D6F954B12AC157100026A72 /* mbliphonedialog.mm */,
+				4DABCEC515ECD7840085E214 /* mbliphoneembedded.mm */,
+				4D5C4DDE15ECE0B600A76456 /* mbliphoneembeddedtest.mm */,
 				4D8F6BBA113D36F90056ED41 /* mbliphoneextra.mm */,
 				E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */,
 				4DC684741348E50D002469A4 /* mbliphonegfx.mm */,
 				4D9CAF23134365F800231979 /* mbliphonehooks.cpp */,
+				BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */,
 				4DA7BA391324E50300F9214A /* mbliphoneinput.mm */,
 				4D7651611342243D0042EB2D /* mbliphonelocation.mm */,
 				4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */,
 				F6C6FD3E1456AFB30076C29D /* mbliphonemediapick.mm */,
 				4D01C2D413CE33180041A281 /* mbliphonemisc.mm */,
 				F6D1C29414BDD78A00FDD15A /* mbliphonenotification.mm */,
+				BE940436175F659F003EAB87 /* mbliphoneorientation.mm */,
 				4DE7B8641330D6F200305469 /* mbliphonepick.mm */,
 				F622A6421490E57600383FF2 /* mbliphonepickdate.mm */,
 				4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */,
@@ -1134,8 +1152,6 @@
 				4DDA602A113C7E7000930F4F /* mbliphoneurl.mm */,
 				4D5435DD129EE62E0086A96E /* mbliphonevideo.mm */,
 				4DC684761348E5AC002469A4 /* mbliphoneview.h */,
-				4DABCEC515ECD7840085E214 /* mbliphoneembedded.mm */,
-				4D5C4DDE15ECE0B600A76456 /* mbliphoneembeddedtest.mm */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -1351,6 +1367,10 @@
 			isa = PBXGroup;
 			children = (
 				BE449502175CDE7D00346B49 /* exec-interface */,
+				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
+				BE94042B175F6308003EAB87 /* exec-mail.cpp */,
+				BE94042C175F6308003EAB87 /* exec-orientation.cpp */,
+				BE94042D175F6308003EAB87 /* exec-sensor.cpp */,
 				BE4494B7175CDE7400346B49 /* exec-array.cpp */,
 				BE4494B8175CDE7400346B49 /* exec-datetime.cpp */,
 				BE4494B9175CDE7400346B49 /* exec-debugging.cpp */,
@@ -2301,6 +2321,10 @@
 				BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */,
 				BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */,
 				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
+				BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */,
+				BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */,
+				BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */,
+				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2312,6 +2336,12 @@
 				BE449996175D029600346B49 /* mblhandlers.cpp in Sources */,
 				BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */,
 				BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */,
+				BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */,
+				BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */,
+				BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */,
+				BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */,
+				BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */,
+				BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

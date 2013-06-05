@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -251,12 +250,13 @@ Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecP
     switch (p_property)
     {
         case kMCNativeControlPropertyText:
-            MCAndroidObjectRemoteCall(t_view, "setText", "vS", nil, &(ep.getsvalue()));
+		case kMCNativeControlPropertyUnicodeText:
+		{
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCAndroidObjectRemoteCall(t_view, "setText", "vx", nil, *t_string);
             return ES_NORMAL;
-            
-        case kMCNativeControlPropertyUnicodeText:
-            MCAndroidObjectRemoteCall(t_view, "setText", "vU", nil, &(ep.getsvalue()));
-            return ES_NORMAL;
+		}
 
         case kMCNativeControlPropertyTextColor:
         {
@@ -333,7 +333,9 @@ Exec_stat MCAndroidInputControl::Set(MCNativeControlProperty p_property, MCExecP
         {
             if (!ParseEnum(ep, s_return_key_type_enum, t_enum))
                 return ES_ERROR;
-            MCAndroidObjectRemoteCall(t_view, "setReturnKeyType", "viS", nil, t_enum, &(ep.getsvalue()));
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCAndroidObjectRemoteCall(t_view, "setReturnKeyType", "vix", nil, t_enum, *t_string);
             return ES_NORMAL;
         }
             
@@ -396,23 +398,14 @@ Exec_stat MCAndroidInputControl::Get(MCNativeControlProperty p_property, MCExecP
     switch (p_property)
     {
         case kMCNativeControlPropertyText:
+		case kMCNativeControlPropertyUnicodeText:
         {
-            MCString t_text;
-            MCAndroidObjectRemoteCall(t_view, "getText", "S", &t_text);
-            ep.setsvalue(t_text);
-            ep.grabsvalue();
+            MCAutoStringRef t_text;
+            MCAndroidObjectRemoteCall(t_view, "getText", "x", &t_text);
+            /* UNCHECKED */ ep.setvalueref(*t_text);
             return ES_NORMAL;
         }
-            
-        case kMCNativeControlPropertyUnicodeText:
-        {
-            MCString t_text;
-            MCAndroidObjectRemoteCall(t_view, "getText", "U", &t_text);
-            ep.setsvalue(t_text);
-            ep.grabsvalue();
-            return ES_NORMAL;
-        }
-            
+                       
         case kMCNativeControlPropertyTextColor:
         {
             int32_t t_color;

@@ -3052,6 +3052,7 @@ void MCObject::SetCustomPropertySet(MCExecContext& ctxt, MCStringRef propset)
 			t_next_set -> setnext(props);
 			props = t_next_set;
 		}
+		return;
 	}
 
 	ctxt . Throw();

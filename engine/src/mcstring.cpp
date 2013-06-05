@@ -941,12 +941,12 @@ void MCU_initialize_names(void)
 	/* UNCHECKED */ MCNameCreateWithCString("phone", MCN_phone);
 	/* UNCHECKED */ MCNameCreateWithCString("address", MCN_address);
 
-	///* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
+//	/* UNCHECKED */ MCNameCreateWithCString("home", MCN_home);
 	/* UNCHECKED */ MCNameCreateWithCString("work", MCN_work);
 	/* UNCHECKED */ MCNameCreateWithCString("other", MCN_other);
 
-	///* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
-	///* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
+//	/* UNCHECKED */ MCNameCreateWithCString("mobile", MCN_mobile);
+//	/* UNCHECKED */ MCNameCreateWithCString("iphone", MCN_iphone);
 	/* UNCHECKED */ MCNameCreateWithCString("main", MCN_main);
 	/* UNCHECKED */ MCNameCreateWithCString("homefax", MCN_homefax);
 	/* UNCHECKED */ MCNameCreateWithCString("workfax", MCN_workfax);
@@ -1364,11 +1364,11 @@ void MCU_finalize_names(void)
 	MCNameDelete(MCN_phone);
 	MCNameDelete(MCN_address);
 	
-	//MCNameDelete(MCN_home);
+//	MCNameDelete(MCN_home);
 	MCNameDelete(MCN_work);
 	MCNameDelete(MCN_other);
-	//MCNameDelete(MCN_mobile);
-	//MCNameDelete(MCN_iphone);
+//	MCNameDelete(MCN_mobile);
+//	MCNameDelete(MCN_iphone);
 	MCNameDelete(MCN_main);
 	MCNameDelete(MCN_homefax);
 	MCNameDelete(MCN_workfax);

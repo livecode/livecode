@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbldc.h"
 
-
 ////////////////////////////////////////////////////////////////////////////////
 
 // A utility class used to manage a stack of windows.

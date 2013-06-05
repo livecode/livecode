@@ -81,9 +81,10 @@ void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt)
         p_ctxt.SetTheResultToEmpty();
 }
 
-void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCVariableValue *&r_details)
+void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCArrayRef &r_details)
 {
-    MCNotification t_notification;
+	// TODO
+ /*   MCNotification t_notification;
     if (MCSystemGetNotificationDetails(p_id, t_notification))
     {
         MCVariableValue *t_details = nil;
@@ -112,7 +113,7 @@ void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCVariableValue
         r_details = t_details;
     }
     
-    FreeNotification(t_notification);
+    FreeNotification(t_notification);*/
 }
 
 void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, int32_t p_id) 
@@ -183,8 +184,8 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
     bool t_play_sound_vibrate = true;
     int32_t t_badge_value = 0;
     
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
      
     if (t_success && p_parameters != nil)
 		t_success = MCParseParameters (p_parameters, "sss", &t_notification_body, &t_notification_action, &t_notification_user_info);
@@ -202,7 +203,7 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
     if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "u", &t_badge_value);
     
-	MCLocalNotificationExec (t_ctxt, t_notification_body, t_notification_action, t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
+	MCLocalNotificationExec (ctxt, t_notification_body, t_notification_action, t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
     
     return ES_NORMAL;
 }
@@ -210,9 +211,9 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
 Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    MCGetRegisteredNotificationsExec (t_ctxt);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCGetRegisteredNotificationsExec (ctxt);
     
     return ES_NORMAL;
 }
@@ -225,7 +226,7 @@ Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameter
     bool t_success = true;
     
     int32_t t_id = -1;
-    MCVariableValue *t_details = nil;
+    MCAutoArrayRef t_details;
     
     if (t_success)
         t_success = MCParseParameters(p_parameters, "i", &t_id);
@@ -233,13 +234,11 @@ Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameter
     ctxt.SetTheResultToEmpty();
     if (t_success)
     {
-        MCNotificationGetDetails(ctxt, t_id, t_details);
-        if (t_details != nil)
+        MCNotificationGetDetails(ctxt, t_id, &t_details);
+        if (*t_details != nil)
         {
-#ifdef MOBILE_BROKEN
-            ep.setarray(t_details, True);
-            MCresult->store(ep, False);
-#endif
+            ep.setvalueref(*t_details);
+			ctxt . SetTheResultToValue(*t_details);
         }
     }
     
@@ -251,11 +250,11 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
     MCExecPoint ep(nil, nil, nil);
     int32_t t_cancel_this;
     bool t_success;
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     if (p_parameters != nil)
 		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
-    MCCancelLocalNotificationExec (t_ctxt, t_cancel_this);
+    MCCancelLocalNotificationExec (ctxt, t_cancel_this);
     
     return ES_NORMAL;
 }
@@ -263,9 +262,9 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
 Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    MCCancelAllLocalNotificationsExec (t_ctxt);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCCancelAllLocalNotificationsExec (ctxt);
     
     return ES_NORMAL;
 }
@@ -273,9 +272,9 @@ Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_par
 Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    MCGetNotificationBadgeValueExec (t_ctxt);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCGetNotificationBadgeValueExec (ctxt);
     
     return ES_NORMAL;
 }
@@ -285,12 +284,12 @@ Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_param
     MCExecPoint ep(nil, nil, nil);
     uint32_t t_badge_value;
     bool t_success = true;
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     if (t_success && p_parameters != nil)
 		t_success = MCParseParameters (p_parameters, "i", &t_badge_value);
     if (t_success)
-        MCSetNotificationBadgeValueExec (t_ctxt, t_badge_value);
+        MCSetNotificationBadgeValueExec (ctxt, t_badge_value);
     
     return ES_NORMAL;
 }
@@ -298,9 +297,9 @@ Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_param
 Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    MCGetDeviceTokenExec (t_ctxt);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCGetDeviceTokenExec (ctxt);
     
     return ES_NORMAL;
 }
@@ -308,9 +307,9 @@ Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
 Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
-    MCGetLaunchUrlExec (t_ctxt);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCGetLaunchUrlExec (ctxt);
     
     return ES_NORMAL;
 }

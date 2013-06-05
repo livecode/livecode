@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 
 #include "mblcontact.h"
-
+/*
 void MCPickContactExec(MCExecContext& p_ctxt)
 {
     int32_t r_result = 0;
@@ -62,10 +62,10 @@ void MCCreateContactExec(MCExecContext& p_ctxt)
         p_ctxt.SetTheResultToEmpty();
 }
 
-void MCUpdateContactExec(MCExecContext& p_ctxt, MCVariableValue *p_contact, const char *p_title, const char *p_message, const char *p_alternate_name)
+void MCUpdateContactExec(MCExecContext& p_ctxt, MCArrayRef p_contact, const char *p_title, const char *p_message, const char *p_alternate_name)
 {
     int32_t r_result = 0;
-    /* UNCHECKED */ MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
+    MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
     if (r_result > 0)
         p_ctxt.SetTheResultToNumber(r_result);
     else
@@ -74,14 +74,13 @@ void MCUpdateContactExec(MCExecContext& p_ctxt, MCVariableValue *p_contact, cons
 
 void MCGetContactDataExec(MCExecContext& p_ctxt, int32_t p_contact_id)
 {
-#ifdef MOBILE_BROKEN
-    MCVariableValue *r_contact_data = nil;
-    MCSystemGetContactData(p_ctxt, p_contact_id, r_contact_data);
-    if (r_contact_data == nil)
+
+    MCAutoArrayRef t_contact_data;
+    MCSystemGetContactData(p_ctxt, p_contact_id, &t_contact_data);
+    if (*t_contact_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
-        p_ctxt.GetEP().setarray(r_contact_data, True);
-#endif
+        p_ctxt.SetTheResultToValue(*t_contact_data);
 }
 
 void MCRemoveContactExec(MCExecContext& p_ctxt, int32_t p_contact_id)
@@ -92,10 +91,10 @@ void MCRemoveContactExec(MCExecContext& p_ctxt, int32_t p_contact_id)
         p_ctxt.SetTheResultToEmpty();
 }
 
-void MCAddContactExec(MCExecContext &ctxt, MCVariableValue *p_contact)
+void MCAddContactExec(MCExecContext &ctxt, MCArrayRef p_contact)
 {
 	int32_t t_result = 0;
-	/* UNCHECKED */ MCSystemAddContact(p_contact, t_result);
+	MCSystemAddContact(p_contact, t_result);
 	if (t_result > 0)
 		ctxt.SetTheResultToNumber(t_result);
 	else
@@ -113,19 +112,22 @@ void MCFindContactExec(MCExecContext& p_ctxt, const char* p_contact_name)
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCContactAddProperty(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCString p_value)
+bool MCContactAddProperty(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value)
 {
-	MCVariableValue *t_element;
+/*	MCVariableValue *t_element;
 	return p_contact->lookup_element(ep, MCNameGetOldString(p_property), t_element) == ES_NORMAL &&
-		t_element->assign_string(p_value);
+		t_element->assign_string(p_value);*/
+
+	// TODO - implement
+	return false;
 }
 
-bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCVariableValue *p_value)
+bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCArrayRef p_value)
 {
-	MCVariableValue *t_element;
+/*	MCVariableValue *t_element;
 	MCVariableValue *t_array;
 	if (p_contact->lookup_element(ep, MCNameGetOldString(p_property), t_array) != ES_NORMAL ||
 		t_array->lookup_element(ep, MCNameGetOldString(p_label), t_array) != ES_NORMAL)
@@ -138,12 +140,27 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, 
 		t_index = t_array->get_array()->getnfilled() + 1;
 	
 	return t_array->lookup_index(ep, t_index, t_element) == ES_NORMAL &&
-		t_element->assign(*p_value);
+		t_element->assign(*p_value); */
+
+	MCValueRef t_element;
+	MCValueRef t_array;
+	if (!MCArrayFetchValue(p_contact, false, p_property, t_array) ||
+		!MCValueIsArray(t_array) ||
+		!MCArrayFetchValue((MCArrayRef)t_array, false, p_label, t_array))
+		return false;
+	
+	uindex_t t_index = 1;
+	if (!MCValueIsArray(t_array))
+		t_index = 1;
+	else
+		t_index = MCArrayGetCount((MCArrayRef)t_array) + 1;
+	
+	return MCArrayStoreValueAtIndex((MCArrayRef)t_array, t_index, p_value);
 }
 
-bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCString p_value)
+bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCStringRef p_value)
 {
-	bool t_success = true;
+/*	bool t_success = true;
 	MCVariableValue *t_element;
 	t_element = new MCVariableValue();
 	
@@ -151,23 +168,25 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, 
 		t_element->assign_string(p_value) &&
 		MCContactAddPropertyWithLabel(ep, p_contact, p_property, p_label, t_element);
 	delete t_element;
-	return t_success;
+	return t_success;*/
+
+	// TODO - implement
+	return false;
 }
 
-bool MCContactParseParams(MCParameter *p_params, MCVariableValue *&r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
+/*
+bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
 {
 	bool t_success = true;
 	
-	MCVariableValue *t_contact = nil;
 	char *t_title = nil;
 	char *t_message = nil;
 	char *t_alternate_name = nil;
 	
-	t_success = MCParseParameters(p_params, "a|sss", &t_contact, &t_title, &t_message, &t_alternate_name);
+	t_success = MCParseParameters(p_params, "a|sss", r_contact, &t_title, &t_message, &t_alternate_name);
 	
 	if (t_success)
 	{
-		r_contact = t_contact;
 		r_title = t_title;
 		r_message = t_message;
 		r_alternate_name = t_alternate_name;
@@ -188,12 +207,15 @@ Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeo
 {
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCPickContactExec(t_ctxt);
+    MCPickContactExec(ctxt);
     // Set return value
-	return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPersonViewController
@@ -208,24 +230,30 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
         p_parameters->eval(ep);
         t_contact_id = atoi (ep.getsvalue().getstring());
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCShowContactExec(t_ctxt, t_contact_id);
+    MCShowContactExec(ctxt, t_contact_id);
     // Set return value
-	return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABNewPersonViewController
 {
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCCreateContactExec(t_ctxt);
+    MCCreateContactExec(ctxt);
     // Set return value
-	return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABUnknownPersonViewController
@@ -233,15 +261,18 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     // Handle parameters. We are doing that in a dedicated call
-	MCVariableValue *t_contact = nil;
+	MCAutoArrayRef t_contact;
 	char *t_title = nil;
 	char *t_message = nil;
 	char *t_alternate_name = nil;
-	/* UNCHECKED */ MCContactParseParams(p_parameters, t_contact, t_title, t_message, t_alternate_name);
+	MCContactParseParams(p_parameters, &t_contact, t_title, t_message, t_alternate_name);
     // Call the Exec implementation
-    MCUpdateContactExec(ctxt, t_contact, t_title, t_message, t_alternate_name);
+    MCUpdateContactExec(ctxt, *t_contact, t_title, t_message, t_alternate_name);
     // Set return value
-	return ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
@@ -255,15 +286,22 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_contact_id = atoi (ep.getsvalue().getstring());
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCGetContactDataExec(t_ctxt, t_contact_id);
-#ifdef MOBILE_BROKEN
+    MCGetContactDataExec(ctxt, t_contact_id);
+
     if (MCresult->isempty())
-        MCresult->store(ep, True);
-#endif
-	return t_ctxt.GetExecStat();
+	{
+		MCAutoStringRef t_value;
+		ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
@@ -277,27 +315,33 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_contact_id = atoi (ep.getsvalue().getstring());
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCRemoveContactExec(t_ctxt, t_contact_id);
+    MCRemoveContactExec(ctxt, t_contact_id);
     // Set return value
-    return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
     // Handle parameters. We are doing that in a dedicated call
-	MCVariableValue *t_contact;
+	MCAutoArrayRef t_contact;
 	
-	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &t_contact);
+	MCParseParameters(p_parameters, "a", &t_contact);
 
-    MCExecContext t_ctxt(ep);
+    MCExecContext ctxt(ep);
     // Call the Exec implementation
-    MCAddContactExec(t_ctxt, t_contact);
+    MCAddContactExec(ctxt, *t_contact);
     // Set return value
-    return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
@@ -312,10 +356,13 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
         p_parameters->eval(ep);
         t_contact_name = ep.getcstring();
     }
-    MCExecContext t_ctxt(ep);
-    t_ctxt.SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCFindContactExec(t_ctxt, t_contact_name);
+    MCFindContactExec(ctxt, t_contact_name);
     // Set return value
-    return t_ctxt.GetExecStat();
-}
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}*/

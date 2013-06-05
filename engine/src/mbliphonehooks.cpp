@@ -16,8 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
-
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <dirent.h>

@@ -16,7 +16,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
 
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -507,8 +506,8 @@ Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	char *t_key;
 	t_key = nil;
@@ -516,11 +515,14 @@ Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "s", &t_key);
 	
 	if (t_success)
-		MCAdExecRegisterWithInneractive(t_ctxt, t_key);
+		MCAdExecRegisterWithInneractive(ctxt, t_key);
     
     MCCStringFree(t_key);
     
-    return t_ctxt.GetExecStat();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+		return ES_ERROR;
 }
 
 
@@ -530,8 +532,8 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	t_success = true;
 		
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     	
 	char *t_ad;
 	t_ad = nil;
@@ -565,11 +567,14 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
         MCParseParameters(p_parameters, "a", &t_meta_data);
 
 	if (t_success)
-		MCAdExecCreateAd(t_ctxt, t_ad, t_type, t_top_left, t_meta_data);
+		MCAdExecCreateAd(ctxt, t_ad, t_type, t_top_left, t_meta_data);
     
     MCCStringFree(t_ad);
 	    
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
@@ -578,8 +583,8 @@ Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	char *t_ad;
 	t_ad = nil;
@@ -587,11 +592,14 @@ Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "s", &t_ad);
 	
 	if (t_success)
-		MCAdExecDeleteAd(t_ctxt, t_ad);
+		MCAdExecDeleteAd(ctxt, t_ad);
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
@@ -600,8 +608,8 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	char *t_ad;
 	t_ad = nil;
@@ -611,14 +619,17 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
     bool t_visible;
     t_visible = false;
 	if (t_success)
-		t_success = MCAdGetVisibleOfAd(t_ctxt, t_ad, t_visible);
+		t_success = MCAdGetVisibleOfAd(ctxt, t_ad, t_visible);
     
     if (t_success)
         MCresult->sets(MCU_btos(t_visible));
     
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
@@ -627,8 +638,8 @@ Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	char *t_ad;
 	t_ad = nil;
@@ -638,11 +649,14 @@ Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "sb", &t_ad, &t_visible);
 	
 	if (t_success)
-		MCAdSetVisibleOfAd(t_ctxt, t_ad, t_visible);
+		MCAdSetVisibleOfAd(ctxt, t_ad, t_visible);
     
     MCCStringFree(t_ad);
-    
-    return t_ctxt.GetExecStat();
+
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
@@ -651,9 +665,9 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+#ifdef OLD_EXEC
 	char *t_ad;
 	t_ad = nil;
 	if (t_success)
@@ -661,7 +675,7 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 	
     MCAdTopLeft t_top_left = {0,0};
 	if (t_success)
-		t_success = MCAdGetTopLeftOfAd(t_ctxt, t_ad, t_top_left);
+		t_success = MCAdGetTopLeftOfAd(ctxt, t_ad, t_top_left);
     
 #ifdef MOBILE_BROKEN
     if (t_success)
@@ -678,8 +692,12 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 #endif
     
     MCCStringFree(t_ad);
-    
-    return t_ctxt.GetExecStat();
+
+#endif   
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
@@ -688,8 +706,8 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
     
 	char *t_ad;
 	t_ad = nil;
@@ -703,12 +721,15 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
         t_success = sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
     
 	if (t_success)
-		MCAdSetTopLeftOfAd(t_ctxt, t_ad, t_top_left);
+		MCAdSetTopLeftOfAd(ctxt, t_ad, t_top_left);
     
     MCCStringFree(t_top_left_string);
     MCCStringFree(t_ad);
     
-    return t_ctxt.GetExecStat();
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
@@ -717,14 +738,13 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
     t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
-#ifdef MOBILE_BROKEN
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+#ifdef OLD_EXEC        
     if (t_success)
     {
         MCAutoRawCString t_ads;
-        t_success = MCAdGetAds(t_ctxt, t_ads);
+        t_success = MCAdGetAds(ctxt, t_ads);
         if (t_success && t_ads.Borrow() != nil)
             ep.copysvalue(t_ads.Borrow());
     }
@@ -732,8 +752,12 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
     if (t_success)
         MCresult->store(ep, False);
 #endif
-    
-    return t_ctxt.GetExecStat();
+
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+
 }
 
 ////////////////////////////////////////////////////////////////////////////////
