@@ -275,5 +275,55 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_t
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible);
 
 ///////////////////////////////////////////////////////////////////////////////
+// from Orientation module
+
+typedef enum
+{
+	ORIENTATION_UNKNOWN,
+	ORIENTATION_PORTRAIT,
+	ORIENTATION_PORTRAIT_UPSIDE_DOWN,
+	ORIENTATION_LANDSCAPE_RIGHT,
+	ORIENTATION_LANDSCAPE_LEFT,
+	ORIENTATION_FACE_UP,
+	ORIENTATION_FACE_DOWN
+} MCOrientation;
+
+typedef enum
+{
+	ORIENTATION_UNKNOWN_BIT = 1 << ORIENTATION_UNKNOWN ,
+	ORIENTATION_PORTRAIT_BIT = 1 << ORIENTATION_PORTRAIT,
+	ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT = 1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN,
+	ORIENTATION_LANDSCAPE_RIGHT_BIT = 1 << ORIENTATION_LANDSCAPE_RIGHT,
+	ORIENTATION_LANDSCAPE_LEFT_BIT = 1 << ORIENTATION_LANDSCAPE_LEFT,
+	ORIENTATION_FACE_UP_BIT = 1 << ORIENTATION_FACE_UP,
+	ORIENTATION_FACE_DOWN_BIT = 1 << ORIENTATION_FACE_DOWN
+} MCOrientationSet;
+
+void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations);
+void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations);
+void MCSystemGetOrientation(MCOrientation& r_orientation);
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation);
+void MCSystemLockOrientation();
+void MCSystemUnlockOrientation();
+void MCSystemGetOrientationLocked(bool &r_locked);
+
+///////////////////////////////////////////////////////////////////////////////
+// from Mail module
+
+enum MCMailType
+{
+	kMCMailTypePlain,
+	kMCMailTypeUnicode,
+	kMCMailTypeHtml
+};
+
+void MCSystemMailResult(MCStringRef& r_result);
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body);
+void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void *dialog_ptr);
+void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr);
+void MCSystemSendPreparedMail(void *dialog_ptr);
+void MCSystemGetCanSendMail(bool& r_result);
+
+///////////////////////////////////////////////////////////////////////////////
 
 #endif

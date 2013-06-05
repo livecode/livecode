@@ -37,27 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemStartTrackingSensor(MCSensorType p_sensor, bool p_loosely);
-bool MCSystemStopTrackingSensor(MCSensorType p_sensor);
-
-bool MCSystemGetSensorAvailable(MCSensorType p_sensor, bool& r_available);
-
-double MCSystemGetSensorDispatchThreshold(MCSensorType p_sensor);
-
-bool MCSystemGetLocationReading(MCSensorLocationReading &r_reading, bool p_detailed);
-bool MCSystemGetHeadingReading(MCSensorHeadingReading &r_reading, bool p_detailed);
-bool MCSystemGetAccelerationReading(MCSensorAccelerationReading &r_reading, bool p_detailed);
-bool MCSystemGetRotationRateReading(MCSensorRotationRateReading &r_reading, bool p_detailed);
-
-// MM-2012-02-11: Added support for iPhoneGet/SetCalibrationTimeout
-bool MCSystemGetLocationCalibrationTimeout(int32_t&);
-bool MCSystemSetLocationCalibrationTimeout(int32_t);
-
-void MCSystemSensorInitialize(void);
-void MCSystemSensorFinalize(void);
-
-////////////////////////////////////////////////////////////////////////////////
-
 static bool s_sensor_message_pending[] = {false, false, false, false, false};
 
 static MCSensorLocationReading *s_last_location_reading = nil;
@@ -128,6 +107,7 @@ static bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/* MOVED TO exec-sensor.cpp
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor, bool p_loosely)
 {
@@ -146,7 +126,7 @@ void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor, bool
 
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location)
 {
- /*   MCSensorLocationReading t_reading;
+	MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, true))
     {
         MCVariableValue *t_location = nil;
@@ -185,7 +165,7 @@ void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_deta
         t_element->assign_real(t_reading.vertical_accuracy);
         
         r_detailed_location = t_location;
-    }*/
+    }
 }
 
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
@@ -197,7 +177,7 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
 {
-/*    MCSensorHeadingReading t_reading;
+    MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
     {
         MCVariableValue *t_heading = nil;
@@ -230,7 +210,7 @@ void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detai
         t_element->assign_real(t_reading.accuracy);
 
         r_detailed_heading = t_heading;
-    }    */
+    }    
 }
 
 void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
@@ -242,7 +222,7 @@ void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
 
 void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration)
 {
- /*   MCSensorAccelerationReading t_reading;
+    MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
         MCVariableValue *t_acceleration = nil;
@@ -263,7 +243,7 @@ void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_
         t_element->assign_real(t_reading.timestamp);
         
         r_detailed_acceleration = t_acceleration;
-    }    */
+    }
 }
 
 void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceleration)
@@ -275,7 +255,7 @@ void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceler
 
 void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate)
 {
-/*    MCSensorRotationRateReading t_reading;
+    MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         MCVariableValue *t_rotation_rate = nil;
@@ -296,7 +276,7 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
         t_element->assign_real(t_reading.timestamp);
         
         r_detailed_rotation_rate = t_rotation_rate;
-    }    */
+    }   
 
 }
 
@@ -320,7 +300,7 @@ void MCSensorGetLocationCalibration(MCExecContext& ctxt, int32_t& r_timeout)
 {
     MCSystemGetLocationCalibrationTimeout(r_timeout);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCSensorErrorEvent: public MCCustomEvent
@@ -545,6 +525,7 @@ void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* MOVED TO mblhandlers.cpp
 Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
@@ -876,6 +857,6 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 		return ES_NORMAL;
 
 	return ES_ERROR;
-}
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////

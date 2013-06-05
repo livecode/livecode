@@ -3392,4 +3392,15 @@ void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
 void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
 
+///////////
+
+void MCAddressBookExecPickContact(MCExecContext& ctxt);
+void MCAddressBookExecShowContact(MCExecContext& ctxt, int32_t p_contact_id);
+void MCAddressBookExecCreateContact(MCExecContext& ctxt);
+void MCAddressBookExecUpdateContact(MCExecContext& ctxt, MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name);
+void MCAddressBookGetContactData(MCExecContext& ctxt, int32_t p_contact_id, MCArrayRef& r_contact_data);
+void MCAddressBookExecRemoveContact(MCExecContext& ctxt, int32_t p_contact_id);
+void MCAddressBookExecAddContact(MCExecContext &ctxt, MCArrayRef p_contact);
+void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_name);
+
 #endif

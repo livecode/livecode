@@ -3973,7 +3973,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -6313,6 +6312,10 @@
 			Name="_InProgress"
 			>
 			<File
+				RelativePath=".\src\exec-addressbook.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-array.cpp"
 				>
 			</File>
@@ -6441,7 +6444,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -6469,22 +6471,9 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\exec-orientation.h"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					ExcludedFromBuild="true"
-					>
-					<Tool
-						Name="VCCustomBuildTool"
 					/>
 				</FileConfiguration>
 			</File>
@@ -6506,6 +6495,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-security.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-sensor.cpp"
 				>
 			</File>
 			<File

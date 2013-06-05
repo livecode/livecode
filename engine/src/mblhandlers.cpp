@@ -229,10 +229,10 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos)
+	return ES_ERROR;
 }
 
-Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
+Exec_stat MCHandleComposeMail(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
 	t_success = true;
@@ -247,27 +247,81 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments, p_type);
+		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 {
-	return MCHandleComposeMail(kMCMailTypePlain, p_parameters);
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_to, t_cc, t_bcc, t_subject, t_body;
+	MCAutoArrayRef t_attachments;
+
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	if (t_success)
+		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 {
-	return MCHandleComposeMail(kMCMailTypeUnicode, p_parameters);
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_to, t_cc, t_bcc, t_subject, t_body;
+	MCAutoArrayRef t_attachments;
+
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	if (t_success)
+		MCMailExecComposeUnicodeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 {
-	return MCHandleComposeMail(kMCMailTypeHtml, p_parameters);
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_to, t_cc, t_bcc, t_subject, t_body;
+	MCAutoArrayRef t_attachments;
+
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	if (t_success)
+		MCMailExecComposeHtmlMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
@@ -280,4 +334,524 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 	MCMailGetCanSendMail(ctxt, t_can_send);
 
 	ctxt . SetTheResultToValue(t_can_send);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    bool t_loosely = false;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_loosely = ep . getsvalue() == MCtruemcstring;
+    }
+    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    if (t_sensor != kMCSensorTypeUnknown)
+    {
+        MCSensorExecStartTrackingSensor(ctxt, t_sensor, t_loosely);
+    }
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+
+    if (t_sensor != kMCSensorTypeUnknown)
+    {
+        MCSensorExecStopTrackingSensor(ctxt, t_sensor);
+    }
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+// MM-2012-02-11: Added support old style sensor syntax (iPhoneEnableAcceleromter etc)
+Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeAcceleration, false);
+    else
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeAcceleration);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeLocation, false);
+    else
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeLocation);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeHeading, true);
+    else
+        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeHeading);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    bool t_detailed = false;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_detailed = ep . getsvalue() == MCtruemcstring;
+    }
+    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCAutoArrayRef t_detailed_reading;
+    MCAutoStringRef t_reading;
+
+    switch (t_sensor)
+    {
+        case kMCSensorTypeLocation:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
+            else
+                MCSensorGetLocationOfDevice(ctxt, &t_reading);
+            break;
+        }
+        case kMCSensorTypeHeading:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedHeadingOfDevice(ctxt,& t_detailed_reading);
+            else
+                MCSensorGetHeadingOfDevice(ctxt, &t_reading);
+            break;
+        }
+        case kMCSensorTypeAcceleration:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedAccelerationOfDevice(ctxt, &t_detailed_reading);
+            else
+                MCSensorGetAccelerationOfDevice(ctxt, &t_reading);
+            break;
+        }
+        case kMCSensorTypeRotationRate:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedRotationRateOfDevice(ctxt, &t_detailed_reading);
+            else
+                MCSensorGetRotationRateOfDevice(ctxt, &t_reading);
+            break;
+        }
+    }
+    
+    if (t_detailed)
+    {
+        if (*t_detailed_reading != nil)
+            ep.setvalueref(*t_detailed_reading);
+    }
+    else
+    {
+        if (*t_reading != nil)
+            ep.setvalueref(*t_reading);
+    }
+    
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+// MM-2012-02-11: Added support old style senseor syntax (iPhoneGetCurrentLocation etc)
+Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCAutoArrayRef t_detailed_reading;
+    MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
+    if (*t_detailed_reading != nil)
+        ep.setvalueref(*t_detailed_reading);
+    
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCAutoArrayRef t_detailed_reading;
+    MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
+    if (*t_detailed_reading != nil)
+        ep.setvalueref(*t_detailed_reading);
+    
+	MCAutoStringRef t_result;
+	ep . copyasstringref(&t_result);
+    ctxt . SetTheResultToValue(*t_result);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    int t_timeout;
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_timeout = atoi(ep.getcstring());
+    }
+    MCSensorSetLocationCalibration(ctxt, t_timeout);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    int t_timeout;
+    MCSensorGetLocationCalibration(ctxt, t_timeout);
+    MCresult->setnvalue(t_timeout);
+    
+    ctxt . SetTheResultToEmpty();
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+
+    MCSensorType t_sensor;
+    t_sensor = kMCSensorTypeUnknown;    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }    
+    
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+        
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
+{
+	bool t_success = true;
+	
+	char *t_title = nil;
+	char *t_message = nil;
+	char *t_alternate_name = nil;
+	
+	t_success = MCParseParameters(p_params, "a|sss", r_contact, &t_title, &t_message, &t_alternate_name);
+	
+	if (t_success)
+	{
+		r_title = t_title;
+		r_message = t_message;
+		r_alternate_name = t_alternate_name;
+	}
+	else
+	{
+		MCCStringFree(t_title);
+		MCCStringFree(t_message);
+		MCCStringFree(t_alternate_name);
+	}
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeoplePickerNavigationController
+{
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    MCAddressBookExecPickContact(ctxt);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPersonViewController
+{
+    int32_t t_contact_id = 0;
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+
+    MCExecContext ctxt(ep);
+
+    MCAddressBookExecShowContact(ctxt, t_contact_id);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABNewPersonViewController
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    MCAddressBookExecCreateContact(ctxt);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABUnknownPersonViewController
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+	MCAutoArrayRef t_contact;
+	MCAutoStringRef t_title;
+	MCAutoStringRef t_message;
+	MCAutoStringRef t_alternate_name;
+
+	if (MCParseParams(p_parameters, "axxx", &t_contact, &t_title, &t_message, &t_alternate_name))
+	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+
+    int32_t t_contact_id = 0;
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+
+    MCExecContext ctxt(ep);
+
+	MCAutoArrayRef t_contact_data;
+	MCAddressBookGetContactData(ctxt, t_contact_id, &t_contact_data);
+
+	if (*t_contact_data != nil)
+		ctxt . SetTheResultToValue(*t_contact_data);
+	else
+		ctxt . SetTheResultToEmpty();
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+
+    int32_t t_contact_id = 0;
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+
+    MCExecContext ctxt(ep);
+    
+	MCAddressBookExecRemoveContact(ctxt, t_contact_id);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    // Handle parameters. We are doing that in a dedicated call
+	MCAutoArrayRef t_contact;
+	
+	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &t_contact);
+
+    MCExecContext ctxt(ep);
+    // Call the Exec implementation
+    MCAddContactExec(ctxt, *t_contact);
+    // Set return value
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
+{
+    const char *t_contact_name = NULL;
+    const char *r_result = NULL;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_name = ep.getcstring();
+    }
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCFindContactExec(ctxt, t_contact_name);
+    // Set return value
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
 }

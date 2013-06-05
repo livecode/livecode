@@ -230,12 +230,14 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 //     name - preferred filename
 //
 
+/*
 enum MCMailType
 {
 	kMCMailTypePlain,
 	kMCMailTypeUnicode,
 	kMCMailTypeHtml
 };
+*/
 
 static NSString *mcstring_to_nsstring(const MCString& p_string, bool p_unicode)
 {
@@ -586,3 +588,7 @@ void MCSystemGetCanSendMail(bool& r_result)
 	r_result = [MCIPhoneMailComposerDialog canSendMail];
 }
 
+void MCSystemMailResult(MCStringRef& r_result)
+{
+	r_result = MCValueRetain(kMCEmptyString);
+}

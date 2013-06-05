@@ -25,7 +25,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 #include "globals.h"
 #include "param.h"
-#include "exec.h"
+#include "mblsyntax.h"
 
 #include "mblandroidutil.h"
 
@@ -38,23 +38,6 @@ bool MCCanSendMail()
 	bool t_can_send = false;
 	MCAndroidEngineCall("canSendMail", "b", &t_can_send);
 	return t_can_send;
-}
-
-Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
-{
-/*	MCresult->sets(MCU_btos(MCCanSendMail()));
-	return ES_NORMAL;*/
-
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCMailGetCanSendMail(ctxt, t_result);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ES_ERROR;
 }
 
 void MCAndroidSendEmail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
@@ -72,9 +55,28 @@ typedef enum
 
 static MCAndroidMailStatus s_mail_status = kMCAndroidMailWaiting;
 
+/* MOVED TO mblhandlers.cpp
+
+Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
+{
+	MCresult->sets(MCU_btos(MCCanSendMail()));
+	return ES_NORMAL;
+
+	MCExecPoint ep(nil, nil, nil);
+	MCExecContext ctxt(ep);
+
+	bool t_result;
+	MCMailGetCanSendMail(ctxt, t_result);
+
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+
+	return ES_ERROR;
+}
+
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
-/*	char *t_address, *t_cc_address, *t_subject, *t_message_body;
+	char *t_address, *t_cc_address, *t_subject, *t_message_body;
 	t_address = nil;
 	t_cc_address = nil;
 	t_subject = nil;
@@ -110,7 +112,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_cc_address;
 	delete t_subject;
 	delete t_message_body;
-	*/
+
 	return ES_NORMAL;
 }
 
@@ -121,7 +123,7 @@ enum MCMailType
 	kMCMailTypeHtml
 };
 
-/*static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
+static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
 	t_data = p_array -> lookuphash("data", False, False);
@@ -159,11 +161,11 @@ enum MCMailType
 	}
 
 	return t_success;
-}*/
+}
 
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
-/*	bool t_success;
+	bool t_success;
 	t_success = true;
 	
 	char *t_to, *t_cc, *t_bcc;
@@ -264,7 +266,7 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	MCCStringFree(t_cc);
 	MCCStringFree(t_bcc);
 	delete t_body . getstring();
-	*/
+
 	return ES_NORMAL;
 } 
 
@@ -283,6 +285,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *parameters)
 {
 	return MCHandleComposeMail(kMCMailTypeHtml, parameters);
 }
+*/
 
 void MCAndroidMailDone()
 {
@@ -299,7 +302,7 @@ void MCAndroidMailCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidMailResult(MCExecContext& ctxt)
+void MCSystemMailResult(MCStringRef& r_result)
 {
 	while (s_mail_status == kMCAndroidMailWaiting)
 		MCscreen->wait(60.0, False, True);
@@ -307,17 +310,17 @@ void MCAndroidMailResult(MCExecContext& ctxt)
 	switch (s_mail_status)
 	{
 		case kMCAndroidMailSent:
-			ctxt . SetTheResultToStaticCString("sent");
-			break;
+			/* UNCHECKED */ MCStringCreateWithCString("sent", r_result);
+			return;
 	
 		case kMCAndroidMailCanceled:
-			ctxt . SetTheResultToStaticCString("cancel");
-			break;
+			/* UNCHECKED */ MCStringCreateWithCString("cancel", r_result);
+			return;
 			
 		case kMCAndroidMailUnknown:
 		default:
-			ctxt . SetTheResultToStaticCString("unknown");
-			break;
+			/* UNCHECKED */ MCStringCreateWithCString("unknown", r_result);
+			return;
 	}
 }
 
@@ -348,7 +351,7 @@ void MCSystemSendPreparedMail(void *dialog_ptr)
 	MCAndroidEngineCall("sendEmail", "v", nil);
 }
 
-void MCSystemGetCanSendMail(MCExecContext& ctxt, bool& r_result)
+void MCSystemGetCanSendMail(bool& r_result)
 {
 	r_result = MCCanSendMail();
 }

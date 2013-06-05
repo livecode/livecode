@@ -26,8 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "debug.h"
 #include "handler.h"
 
-#include "exec.h"
-#include "exec-orientation.h"
+#include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -73,37 +72,45 @@ static MCExecEnumTypeInfo _kMCOrientationOrientationTypeInfo =
 
 void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
-	MCSystemGetDeviceOrientation(ctxt, r_orientation);
+	MCOrientation t_orientation;
+	MCSystemGetDeviceOrientation(t_orientation);
+	r_orientation = (intenum_t)t_orientation;
 }
 
 void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
-	MCSystemGetOrientation(ctxt, r_orientation);
+	MCOrientation t_orientation;
+	MCSystemGetOrientation(t_orientation);
+	r_orientation = (intenum_t)t_orientation;
 }
 
-void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientation)
+void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientations)
 {
-	MCSystemGetAllowedOrientations(ctxt, r_orientation);
+	MCOrientationSet t_orientations;
+	MCSystemGetAllowedOrientations(t_orientations);
+	r_orientations = (intset_t)t_orientations;
 }
 
 void MCOrientationSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orientations)
-{
-	MCSystemSetAllowedOrientations(ctxt, p_orientations);
+{	
+	MCOrientationSet t_orientations;
+	t_orientations = (MCOrientationSet)p_orientations;
+	MCSystemSetAllowedOrientations(t_orientations);
 }
 
 void MCOrientationGetOrientationLocked(MCExecContext& ctxt, bool& r_locked)
 {
-	MCSystemGetOrientationLocked(ctxt, r_locked);
+	MCSystemGetOrientationLocked(r_locked);
 }
 
 void MCOrientationExecLockOrientation(MCExecContext& ctxt)
 {
-	MCSystemLockOrientation(ctxt);
+	MCSystemLockOrientation();
 }
 
 void MCOrientationExecUnlockOrientation(MCExecContext& ctxt)
 {
-	MCSystemLockOrientation(ctxt);
+	MCSystemLockOrientation();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

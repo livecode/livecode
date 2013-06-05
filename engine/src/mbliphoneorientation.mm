@@ -20,7 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
-#include "exec-orientation.h"
+#include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,37 +38,49 @@ MCOrientation get_orientation(UIInterfaceOrientation p_orientation)
 		return ORIENTATION_PORTRAIT_LANDSCAPE_RIGHT;
 }
 
-void MCSystemGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
+MCOrientationSet get_orientation_set(uint32_t p_orientations)
 {
-	r_orientation = (intenum_t)[[UIDevice currentDevice] orientation];
+	//UNIMPLEMENTED
+	return ORIENTATION_UNKNOWN_BIT;
 }
 
-void MCSystemGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
+uint32_t get_iphone_orientation(MCOrientationSet p_orientations)
 {
-	r_orientation = (intenum_t)MCIPhoneGetOrientation();
+	//UNIMPLEMENTED
+	return 0;
 }
 
-void MCSystemGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientations)
+void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
 {
-	r_orientations = (intset_t)[MCIPhoneGetApplication() allowedOrientations];
+	r_orientation = get_orientation([[UIDevice currentDevice] orientation]);
 }
 
-void MCSystemSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orientations)
+void MCSystemGetOrientation(MCOrientation& r_orientation)
 {
-	[MCIPhoneGetApplication() setAllowedOrientations: (uint32_t)p_orientations];
+	r_orientation = get_orientation(MCIPhoneGetOrientation());
 }
 
-void MCSystemGetOrientationLocked(MCExecContext& ctxt, bool& r_locked)
+void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+{
+	r_orientations = get_orientation_set([MCIPhoneGetApplication() allowedOrientations]);
+}
+
+void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations)
+{
+	[MCIPhoneGetApplication() setAllowedOrientations: get_iphone_orientation(p_orientations)];
+}
+
+void MCSystemGetOrientationLocked(bool& r_locked)
 {
 	r_locked = (int)[MCIPhoneGetApplication() orientationLocked] == YES;
 }
 
-void MCSystemLockOrientation(MCExecContext& ctxt)
+void MCSystemLockOrientation()
 {
 	[MCIPhoneGetApplication() lockOrientation];
 }
 
-void MCSystemUnlockOrientation(MCExecContext& ctxt)
+void MCSystemUnlockOrientation()
 {
 	[MCIPhoneGetApplication() unlockOrientation];
 }

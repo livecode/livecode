@@ -31,7 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 
 #include "mblcontact.h"
-
+/*
 void MCPickContactExec(MCExecContext& p_ctxt)
 {
     int32_t r_result = 0;
@@ -65,7 +65,7 @@ void MCCreateContactExec(MCExecContext& p_ctxt)
 void MCUpdateContactExec(MCExecContext& p_ctxt, MCArrayRef p_contact, const char *p_title, const char *p_message, const char *p_alternate_name)
 {
     int32_t r_result = 0;
-    /* UNCHECKED */ MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
+    MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
     if (r_result > 0)
         p_ctxt.SetTheResultToNumber(r_result);
     else
@@ -93,7 +93,7 @@ void MCRemoveContactExec(MCExecContext& p_ctxt, int32_t p_contact_id)
 void MCAddContactExec(MCExecContext &ctxt, MCArrayRef p_contact)
 {
 	int32_t t_result = 0;
-	/* UNCHECKED */ MCSystemAddContact(p_contact, t_result);
+	MCSystemAddContact(p_contact, t_result);
 	if (t_result > 0)
 		ctxt.SetTheResultToNumber(t_result);
 	else
@@ -111,7 +111,7 @@ void MCFindContactExec(MCExecContext& p_ctxt, const char* p_contact_name)
         p_ctxt.SetTheResultToEmpty();
     MCCStringFree(t_result);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCContactAddProperty(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value)
@@ -173,6 +173,7 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCName
 	return false;
 }
 
+/*
 bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
 {
 	bool t_success = true;
@@ -263,7 +264,7 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	char *t_title = nil;
 	char *t_message = nil;
 	char *t_alternate_name = nil;
-	/* UNCHECKED */ MCContactParseParams(p_parameters, &t_contact, t_title, t_message, t_alternate_name);
+	MCContactParseParams(p_parameters, &t_contact, t_title, t_message, t_alternate_name);
     // Call the Exec implementation
     MCUpdateContactExec(ctxt, *t_contact, t_title, t_message, t_alternate_name);
     // Set return value
@@ -292,7 +293,7 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
     if (MCresult->isempty())
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+		ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
 
@@ -330,7 +331,7 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
     // Handle parameters. We are doing that in a dedicated call
 	MCAutoArrayRef t_contact;
 	
-	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &t_contact);
+	MCParseParameters(p_parameters, "a", &t_contact);
 
     MCExecContext ctxt(ep);
     // Call the Exec implementation
@@ -363,4 +364,4 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 		return ES_NORMAL;
 
 	return ES_ERROR;
-}
+}*/

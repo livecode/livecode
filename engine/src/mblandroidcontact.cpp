@@ -158,8 +158,8 @@ bool MCAndroidContactFromJavaMap(jobject p_map, MCVariableValue *&r_contact)
 	return MCJavaMapToArray(t_env, ep, p_map, r_contact);
 }
 
-bool MCSystemUpdateContact(MCVariableValue *p_contact,
-						   const char *p_title, const char *p_message, const char *p_alternate_name,
+bool MCSystemUpdateContact(MCArrayRef p_contact,
+						   MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
     MCLog("MCSystemUpdateContact", NULL);
@@ -167,7 +167,7 @@ bool MCSystemUpdateContact(MCVariableValue *p_contact,
 	
 	jobject t_map = nil;
 	// convert contact to java map
-	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
+//	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
 	if (t_success)
 	{
 		s_contact_status = kMCAndroidContactWaiting;
@@ -177,6 +177,7 @@ bool MCSystemUpdateContact(MCVariableValue *p_contact,
 		r_result = s_contact_selected;
 		return true;
 	}
+
 	return false;
 }
 
@@ -194,7 +195,7 @@ void MCAndroidUpdateContactCanceled(int32_t p_contact_id)
 	s_contact_status = kMCAndroidContactCanceled;
 }
 
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVariableValue *&r_contact_data)
+bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArrayRef &r_contact_data)
 {
     MCLog("MCSystemGetContactData: %d", p_contact_id);
 	jobject t_jmap = nil;
@@ -204,11 +205,12 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCVaria
 	if (t_jmap == nil)
 		return false;
 	
-	bool t_success = MCAndroidContactFromJavaMap(t_jmap, r_contact_data);
+//	bool t_success = MCAndroidContactFromJavaMap(t_jmap, r_contact_data);
 	if (t_jmap != nil)
 		MCJavaGetThreadEnv()->DeleteGlobalRef(t_jmap);
 	
-	return t_success;
+//	return t_success;
+	return false;
 }
 
 bool MCSystemRemoveContact(int32_t p_contact_id)
@@ -218,14 +220,14 @@ bool MCSystemRemoveContact(int32_t p_contact_id)
     return true;
 }
 
-bool MCSystemAddContact(MCVariableValue *p_contact, int32_t &r_result)
+bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 {
     MCLog("MCSystemAddContact", NULL);
 	
 	bool t_success = true;
 	jobject t_map = nil;
 	// convert contact to java map
-	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
+//	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
 	if (t_success)
 	{
 		MCAndroidEngineRemoteCall("addContact", "im", &r_result, t_map);

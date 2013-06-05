@@ -368,16 +368,26 @@ MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
 	}
 }
 
-void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+MCOrientationSet get_orientation_set(uint32_t p_orientations)
 {
-	//r_orientations = get_orientation(s_allowed_orientations);
-	r_orientations = ORIENTATION_UNKNOWN_BIT;
+	// UNIMPLEMENTED
+	return ORIENTATION_UNKNOWN_BIT
 }
 
-void MCSystemSetAllowedOrientations(MCExecContext& ctxt, MCOrientationSet p_orientations)
+uint32_t get_android_orientations(MCOrientationSet p_orientations)
 {
-	//s_allowed_orientations = (uint32_t)p_orientations;
-	s_allowed_orientations = 0;
+	//UNIMPLEMENTED
+	return 0;
+}
+
+void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+{
+	r_orientations = get_orientation_set(s_allowed_orientations);
+}
+
+void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations)
+{
+	s_allowed_orientations = get_android_orientations(p_orientations);
 }
 
 void MCSystemGetOrientation(MCOrientation& r_orientation)
@@ -405,13 +415,13 @@ void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
 	r_orientation = get_orientation(android_display_orientation_from_rotation(t_dev_format, t_dev_rotation));
 }
 
-void MCSystemExecLockOrientation()
+void MCSystemLockOrientation()
 {
 	if (s_orientation_lock < MAXUINT4)
 		s_orientation_lock++;
 }
 
-void MCSystemExecUnlockOrientation()
+void MCSystemUnlockOrientation()
 {
 	if (s_orientation_lock > 0)
 		s_orientation_lock--;
