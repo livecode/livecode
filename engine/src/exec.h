@@ -3454,4 +3454,26 @@ void MCAddressBookExecRemoveContact(MCExecContext& ctxt, int32_t p_contact_id);
 void MCAddressBookExecAddContact(MCExecContext &ctxt, MCArrayRef p_contact);
 void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_name);
 
+///////////
+
+extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
+extern MCExecMethodInfo* kMCAdExecreateAdMethodInfo;
+extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
+extern MCExecMethodInfo* kMCAdSetVisibleOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetVisibleOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetTopLeftOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdSetTopLeftOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetAdsMethodInfo;
+
+void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key);
+void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata);
+void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name);
+void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible);
+void MCAdGetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool& r_visible);
+void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y);
+void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y);
+void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
+
+
+
 #endif

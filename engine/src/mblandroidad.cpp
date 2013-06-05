@@ -190,7 +190,7 @@ bool MCAndroidInneractiveAdInitModule()
 
 //////////
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCArrayRef p_meta_data)
 {
 	if (!MCAndroidInneractiveAdInitModule())
 		return false;
@@ -207,24 +207,55 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
     
     if (p_meta_data != nil)
     {
+        MCValueRef t_value;
         if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "age", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", ctxt.GetEP().getcstring());  
+        {
+            MCNewAutoNameRef t_age_key;
+            MCNameCreateWithCStrinf("age", &t_age_key);
+            
+            if (MCArrayFetchValue(p_meta_data, false, *t_age_key, t_value))
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "age", MCStringGetCString((MCStringRef)t_value));
+        }
         if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "distribution id", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", ctxt.GetEP().getcstring());
-        /*if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "external id", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "external id", ctxt.GetEP().getcstring());*/
+        {            
+            MCNewAutoNameRef t_distrib_key;
+            MCNameCreateWithCStrinf("distribution id", &t_distrib_key);
+            
+            if (MCArrayFetchValue(p_meta_data, false, *t_distrib_key, t_value))
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "distribution id", MCStringGetCString((MCStringRef)t_value));
+        }        
+//        if (t_success)
+//        {
+//            MCNewAutoNameRef t_eternal_key;
+//            MCNameCreateWithCStrinf("external id", &t_external_key);
+//            
+//            if (MCArrayFetchValue(p_meta_data, false, *t_external_key, t_value))
+//                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "eternal id", MCStringGetCString((MCStringRef)t_value));
+//        }
         if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "gender", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", ctxt.GetEP().getcstring());
+        {
+            MCNewAutoNameRef t_gender_key;
+            MCNameCreateWithCStrinf("gender", &t_gender_key);
+            
+            if (MCArrayFetchValue(p_meta_data, false, *t_gender_key, t_value))
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "gender", MCStringGetCString((MCStringRef)t_value));
+        }
         if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "keywords", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", ctxt.GetEP().getcstring());
+        {
+            MCNewAutoNameRef t_keywords_key;
+            MCNameCreateWithCStrinf("keywords", &t_keywords_key);
+            
+            if (MCArrayFetchValue(p_meta_data, false, *t_keywords_key, t_value))
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "keywords", MCStringGetCString((MCStringRef)t_value));
+        }
         if (t_success)
-            if (p_meta_data->fetch_element_if_exists(ctxt.GetEP(), "phone number", false))
-                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", ctxt.GetEP().getcstring());
+        {
+            MCNewAutoNameRef t_phone_key;
+            MCNameCreateWithCStrinf("phone number", &t_phone_key);
+            
+            if (MCArrayFetchValue(p_meta_data, false, *t_phone_key, t_value))
+                t_success = MCJavaMapPutStringToString(t_env, t_meta_data, "phone number", MCStringGetCString((MCStringRef)t_value));
+        }
     }
     
     MCAd *t_ad;

@@ -32,6 +32,8 @@
 
 #include "mblsyntax.h"
 #include "mblsensor.h"
+//#include "mblad.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1265,3 +1267,246 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 
 	return ES_ERROR;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_key;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_key);
+	
+	if (t_success)
+		MCAdExecRegisterWithInneractive(ctxt, *t_key);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+
+Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    MCAutoStringRef t_type;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &t_ad, &t_type);
+    
+//    MCAdTopLeft t_top_left = {0,0};
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+
+    if (t_success)
+    {
+//        char *t_top_left_string;
+//        t_top_left_string = nil;
+//        if (MCParseParameters(p_parameters, "s", &t_top_left_string))
+//        /* UNCHECKED */ sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
+//        MCCStringFree(t_top_left_string);
+        t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
+    }
+    
+    MCAutoArrayRef t_metadata;
+    
+    if (t_success)
+        MCParseParameters(p_parameters, "a", &t_metadata);
+    
+	if (t_success)
+		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft_x, t_topleft_y, *t_metadata);
+    
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+	if (t_success)
+		MCAdExecDeleteAd(ctxt, *t_ad);
+        
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+    bool t_visible;
+    t_visible = false;
+    
+	if (t_success)
+		MCAdGetVisibleOfAd(ctxt, *t_ad, t_visible);
+    
+    if (t_success)
+        MCresult->sets(MCU_btos(t_visible));
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    
+    bool t_visible;
+    t_visible = false;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "xb", &t_ad, &t_visible);
+	
+	if (t_success)
+		MCAdSetVisibleOfAd(ctxt, *t_ad, t_visible);
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+
+	MCAutoStringRef t_ad;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+    
+	if (t_success)
+		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+    
+#ifdef MOBILE_BROKEN
+    if (t_success)
+    {
+        MCAutoRawCString t_top_left_string;
+        t_success = MCCStringFormat(t_top_left_string, "%u,%u", t_top_left.x, t_top_left.y);
+        if (t_success)
+            if (t_top_left_string.Borrow() != nil)
+                ep.copysvalue(t_top_left_string.Borrow());
+    }
+    
+    if (t_success)
+        MCresult->store(ep, False);
+#endif
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "suu", &t_ad, t_topleft_x, t_topleft_y);
+    
+	if (t_success)
+		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+#ifdef OLD_EXEC
+    if (t_success)
+    {
+        MCAutoRawCString t_ads;
+        t_success = MCAdGetAds(ctxt, t_ads);
+        if (t_success && t_ads.Borrow() != nil)
+            ep.copysvalue(t_ads.Borrow());
+    }
+    
+    if (t_success)
+        MCresult->store(ep, False);
+#endif
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+    
+}
+
+//////////////////////////////////////////////////////////////////////////////////////

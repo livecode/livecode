@@ -107,5 +107,6 @@ void MCAdInitialize(void);
 void MCAdFinalize(void);
 const char *MCAdGetInneractiveKey(void);
 void MCAdPostMessage(MCAd *, MCAdEventType);
+MCAdType MCAdTypeFromCString(const char *p_string);
 
 #endif //__MC_MOBILE_AD__
