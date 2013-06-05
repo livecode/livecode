@@ -823,7 +823,12 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
-
+	
+	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression. This flag
+	//   indicates to do this processing later on in the method.
+	bool t_needs_unpremultiply;
+	t_needs_unpremultiply = false;
 	if (sformat == EX_SNAPSHOT)
 	{
 		char *srect = NULL;
@@ -921,6 +926,10 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 				MCeerror -> add(EE_EXPORT_EMPTYRECT, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+			//   so mark it to be unpremultiplied for later on.
+			t_needs_unpremultiply = true;
 		}
 		else
 		{
@@ -1008,6 +1017,12 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		t_dither = !optr->getflag(F_DONT_DITHER);
 	}
 	else
+	{
+		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
+		// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+		if (t_needs_unpremultiply)
+			MCImageBitmapUnpremultiply(t_bitmap);
+		MCImageBitmapCheckTransparency(t_bitmap);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
 
 	IO_handle t_out_stream = nil;

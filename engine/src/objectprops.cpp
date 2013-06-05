@@ -849,6 +849,7 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 	else
 	{
 		char *oldscript = script;
+		bool t_old_script_encrypted = m_script_encrypted;
 		if (data.getstring()[length - 1] != '\n')
 		{
 			script = new char[length + 2];
@@ -859,6 +860,8 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 		else
 			script = data.clone();
 			
+		// IM-2013-05-29: [[ BZ 10916 ]] flag new script as unencrypted
+		m_script_encrypted = false;
 		getstack() -> securescript(this);
 		
 		flags |= F_SCRIPT;
@@ -872,6 +875,7 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 				hlist = NULL;
 				delete script;
 				script = oldscript;
+				m_script_encrypted = t_old_script_encrypted;
 				oldscript = NULL;
 				if (script == NULL)
 					flags &= ~F_SCRIPT;

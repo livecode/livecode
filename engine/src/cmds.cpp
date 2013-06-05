@@ -1178,9 +1178,9 @@ Exec_stat MCQuit::exec(MCExecPoint &ep)
 	default:
 		return ES_NORMAL;
 	}
-#ifndef TARGET_SUBPLATFORM_ANDROID
+	// IM-2013-05-01: [[ BZ 10586 ]] remove #ifdefs so this message is sent
+	// here on Android in the same place as (almost) everything else
 	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-#endif
 #endif
 	if (retcode != NULL && retcode->eval(ep) == ES_NORMAL
 	        && ep.ton() == ES_NORMAL)

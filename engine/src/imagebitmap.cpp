@@ -42,11 +42,17 @@ static bool check_bounds(MCImageBitmap *p_bitmap, int32_t x, int32_t y, uint32_t
 
 static void clamp_region(MCImageBitmap *p_bitmap, int32_t &x, int32_t &y, uint32_t &width, uint32_t &height)
 {
-	x = MCMax(0, x);
-	y = MCMax(0, y);
+	int32_t t_x1, t_y1, t_x2, t_y2;
 
-	width = MCMin((int32_t)p_bitmap->width - x, (int32_t)width);
-	height = MCMin((int32_t)p_bitmap->height - y, (int32_t)height);
+	t_x1 = MCMax(0, MCMin((int32_t)p_bitmap->width, x));
+	t_y1 = MCMax(0, MCMin((int32_t)p_bitmap->height, y));
+	t_x2 = MCMax(0, MCMin((int32_t)p_bitmap->width, x + (int32_t)width));
+	t_y2 = MCMax(0, MCMin((int32_t)p_bitmap->height, y + (int32_t)height));
+
+	x = t_x1;
+	y = t_y1;
+	width = t_x2 - t_x1;
+	height = t_y2 - t_y1;
 }
 
 bool MCImageBitmapCreate(uindex_t p_width, uindex_t p_height, MCImageBitmap *&r_bitmap)
@@ -234,17 +240,20 @@ void MCImageBitmapCopyRegionToBitmap(MCImageBitmap *p_dst, MCImageBitmap *p_src,
 	int32_t t_dst_x, t_dst_y;
 	uint32_t t_width, t_height;
 
-	t_src_x = MCMax(0, p_src_rect.x);
-	t_src_y = MCMax(0, p_src_rect.y);
+	t_src_x = p_src_rect.x;
+	t_src_y = p_src_rect.y;
 
-	t_dst_x = MCMax(0, p_dst_offset.x);
-	t_dst_y = MCMax(0, p_dst_offset.y);
+	t_width = p_src_rect.width;
+	t_height = p_src_rect.height;
 
-	t_width = MCMin((int32_t)p_src->width - t_src_x, (int32_t)p_src_rect.width);
-	t_height = MCMin((int32_t)p_src->height - t_src_y, (int32_t)p_src_rect.height);
+	t_dst_x = p_dst_offset.x;
+	t_dst_y = p_dst_offset.y;
 
-	t_width = MCMin((int32_t)p_dst->width - t_dst_x, (int32_t)t_width);
-	t_height = MCMin((int32_t)p_dst->height - t_dst_y, (int32_t)t_height);
+	clamp_region(p_src, t_src_x, t_src_y, t_width, t_height);
+	clamp_region(p_dst, t_dst_x, t_dst_y, t_width, t_height);
+
+	if (t_width == 0 || t_height == 0)
+		return;
 
 	copy_bitmap_data((uint8_t*)p_dst->data + p_dst->stride * t_dst_y + t_dst_x * sizeof(uint32_t), p_dst->stride, (uint8_t*)p_src->data + p_src->stride * t_src_y + t_src_x * sizeof(uint32_t), p_src->stride, t_width, t_height);
 
