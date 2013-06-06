@@ -1128,8 +1128,9 @@ static void LCObjectPostV_perform(void *p_context)
 	uint32_t t_argc;
 	t_argv = nil;
 	t_argc = 0;
-	if (t_error == kMCErrorNone)
-		t_error = LCArgumentsCreateV(context -> signature, context -> args, t_argv, t_argc);
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kMCErrorNone)
+	t_error = LCArgumentsCreateV(context -> signature, context -> args, t_argv, t_argc);
 	
 	struct LCObjectPostV_event *t_event;
 	t_event = nil;
@@ -1205,8 +1206,9 @@ LCError LCObjectSendV(LCObjectRef p_object, const char *p_message, const char *p
 	uint32_t t_argc;
 	t_argv = nil;
 	t_argc = 0;
-	if (t_error == kMCErrorNone)
-		t_error = LCArgumentsCreateV(p_signature, p_args, t_argv, t_argc);
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kMCErrorNone)
+	t_error = LCArgumentsCreateV(p_signature, p_args, t_argv, t_argc);
 	
 	if (t_error == kMCErrorNone)
 	{
@@ -1256,8 +1258,9 @@ LCError LCObjectGet(LCObjectRef p_object, unsigned int p_options, const char *p_
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
-		t_error = MCVariableCreate(&t_var);
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kMCErrorNone)
+	t_error = MCVariableCreate(&t_var);
 	
 	if (t_error == kMCErrorNone)
 		t_error = s_interface -> object_get((MCObjectRef)p_object, p_options, p_name, p_key, t_var);
@@ -1278,8 +1281,9 @@ LCError LCObjectSet(LCObjectRef p_object, unsigned int p_options, const char *p_
 		
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
-		t_error = MCVariableCreate(&t_var);
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kMCErrorNone)
+	t_error = MCVariableCreate(&t_var);
 	
 	if (t_error == kMCErrorNone)
 		t_error = LCValueStore(t_var, p_options, p_value);
@@ -1457,12 +1461,13 @@ static LCError alloc_bitmap(int p_width, int p_height, bool p_is_mask, void*& r_
 	
 	Mobile_Bitmap *t_bitmap;
 	t_bitmap = nil;
-	if (t_error == kLCErrorNone)
-	{
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kLCErrorNone)
+//	{
 		t_bitmap = (Mobile_Bitmap *)calloc(1, sizeof(Mobile_Bitmap));
 		if (t_bitmap == nil)
 			t_error = kLCErrorOutOfMemory;
-	}
+//	}
 	
 	if (t_error == kLCErrorNone)
 	{
@@ -1530,8 +1535,9 @@ LCError LCImageAttach(LCObjectRef p_object, unsigned int p_options, LCImageRef *
 	t_error = kLCErrorNone;
 	
 	char *t_name;
-	if (t_error == kLCErrorNone)
-		t_error = LCObjectGet(p_object, kLCValueOptionAsCString, "name", nil, &t_name);
+	// MDW 2013-06-04 : removed unnecessary conditional
+//	if (t_error == kLCErrorNone)
+	t_error = LCObjectGet(p_object, kLCValueOptionAsCString, "name", nil, &t_name);
 	
 	if (t_error == kLCErrorNone && strncmp(t_name, "image ", 6) != 0)
 		t_error = kLCErrorNotAnImageObject;
