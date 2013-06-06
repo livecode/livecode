@@ -305,9 +305,9 @@ bool InterfaceDefineEnumElement(InterfaceRef self, Position p_where, StringRef p
 	return true;
 }
 
-bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, NameRef p_name)
+bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, HandlerAttributes p_attr, NameRef p_name)
 {
-	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand || p_type == kHandlerTypeTailCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
+	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
 	
 	Handler *t_handler;
 	t_handler = nil;
@@ -329,6 +329,8 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			
 		t_handler = &self -> handlers[self -> handler_count - 1];
 		t_handler -> type = p_type;
+		t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;
+		t_handler -> is_tail = (p_attr & kHandlerAttributeIsTail) != 0;
 		t_handler -> name = ValueRetain(p_name);
 	}
 	

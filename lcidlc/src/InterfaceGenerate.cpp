@@ -743,17 +743,13 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 		Handler *t_handler;
 		t_handler = &self -> handlers[i];
 		
-		if (t_handler -> type == kHandlerTypeJava)
+		if (t_handler -> type == kHandlerTypeMethod)
 		{
-			// Generate stub for calling Java method.
-			InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
-			continue;
-		}
-		
-		if (t_handler -> type == kHandlerTypeNative)
-		{
-			// Generate stub for calling native method.
-			InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
+			// Generate stub for calling Java or native method.
+			if (t_handler -> is_java)
+				InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
+			else
+				InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
 			continue;
 		}
 		
@@ -1058,7 +1054,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "}");
 		}
 		
-		if (t_handler -> type == kHandlerTypeTailCommand || t_handler -> type == kHandlerTypeTailFunction)
+		if (t_handler -> is_tail)
 		{
 			CoderWriteLine(p_coder, "struct handler__%s_env_t", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "{");
@@ -1181,11 +1177,12 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 		Handler *t_handler;
 		t_handler = &self -> handlers[i];
 
-		if (t_handler -> type == kHandlerTypeJava || t_handler -> type == kHandlerTypeNative)
+		// Don't declare methods in the external handlers table.
+		if (t_handler -> type == kHandlerTypeMethod)
 			continue;
 		
 		CoderWriteLine(p_coder, "\t{ %d, \"%s\", handler__%s },",
-			t_handler -> type == kHandlerTypeCommand || t_handler -> type == kHandlerTypeTailCommand ? 1 : 2,
+			t_handler -> type == kHandlerTypeCommand ? 1 : 2,
 			NameGetCString(t_handler -> name),
 			NameGetCString(t_handler -> name));
 	}

@@ -98,10 +98,9 @@ typedef enum LCError
 	// The value argument to object set/get was nil
 	kLCErrorNoObjectPropertyValue = 35,
 	
-	// The operation is not supported by this platform / engine version
-	kLCErrorNotSupported = 37,
+	//////////
 	
-	// A string could not be encoded as a cstring
+	// A string could not be encoded as a (native) cstring
 	kLCErrorCannotEncodeCString = 16384,
 	
 	// No wait object was passed to a wait manipulation function
@@ -127,6 +126,9 @@ typedef enum LCError
 	
 	// The mask of an image object was requested, but none was attached.
 	kLCErrorMaskNotAttached = 16392,
+	
+	// The value was requested as a (native) char, but the source was not convertible.
+	kLCErrorNotAChar = 16393,
 } LCError;
 
 typedef struct LCBytes
@@ -306,11 +308,13 @@ enum
 	kLCValueOptionAsInteger = 2,
 	// The 'value' parameter is a pointer to a double variable.
 	kLCValueOptionAsReal = 4,
-	// The 'value' parameter is a pointer to a char * variable.
-	kLCValueOptionAsCString = 6,
 	// The 'value' parameter is a pointer to an LCBytes variable.
 	kLCValueOptionAsCData = 5,
-	
+	// The 'value' parameter is a pointer to a char * variable (native encoding)
+	kLCValueOptionAsCString = 6,
+	// The 'value' parameter is a pointer to a char variable (native encoding)
+	kLCValueOptionAsChar = 7,
+
 	// The 'value' parameter is a pointer to an LCArrayRef variable.
 	kLCValueOptionAsLCArray = 16,
 	// The 'value' parameter is a pointer to an NSNumber* variable.
@@ -352,9 +356,7 @@ enum
 	// settings in effect in the calling (LiveCode) handler.
 	// Must only be used in handler context.
 	kLCValueOptionNumberFormatFromContext = 3 << 26,	
-};	
-	
-#ifdef __NOT_YET_READY_FOR_USE__
+};
 	
 typedef struct __LCArray *LCArrayRef;
 	
@@ -390,8 +392,6 @@ LCError LCArrayStoreKeyWithPath(LCArrayRef array, unsigned int options, const ch
 LCError LCArrayRemoveKey(LCArrayRef array, unsigned int options, const char *key);
 LCError LCArrayRemoveKeyOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length, const char *key);
 LCError LCArrayRemoveKeyWithPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length);
-
-#endif
 	
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -479,8 +479,9 @@ LCError LCObjectRelease(LCObjectRef object);
 //   NoObject - the 'object' parameter was nil
 //   NoObjectMessage - the 'message' parameter was nil
 //   ObjectDoesNotExist - the object handles target no longer exists
-//   ScriptExited - the message caused 'exit to top' to be called
-//   ScriptFailed - the message caused an error to be thrown
+//   Aborted - the message execution was aborted
+//   Exited - the message caused 'exit to top' to be called
+//   Failed - the message caused an error to be thrown
 // Context Safety:
 //   Must be called in dispatch context.
 // Semantics:
@@ -497,6 +498,7 @@ LCError LCObjectRelease(LCObjectRef object);
 //     'r' - the parameter is of 'double' type, converts to a number
 //     'z' - the parameter is of 'c-string' type, converts to a (text) string
 //	   'y' - the parameter is of 'c-data' type, converts to a (binary) string
+//     'c' - the parameter is of 'char' type, converts to a (text) string
 //     'N' - the parameter is of 'NSNumber*' type, converts to a number
 //     'S' - the parameter is of 'NSString*' type, converts to a (text) string
 //     'D' - the parameter is of 'NSData*' type, converts to a (binary) string
@@ -556,6 +558,7 @@ LCError LCObjectPost(LCObjectRef object, const char *message, const char *signat
 //     binary data
 //   NotAString - the value was requested as a string, and it is not a string
 //   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
 // Context Safety:
 //   Must be called in dispatch context.
 // Semantics:
@@ -606,6 +609,7 @@ LCError LCObjectGet(LCObjectRef object, unsigned int options, const char *proper
 //     binary data
 //   NotAString - the value was requested as a string, and it is not a string
 //   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
 // Context Safety:
 //   Must be called in dispatch context.
 // Semantics:
@@ -698,7 +702,232 @@ LCError	LCContextDefaultStack(LCObjectRef *r_default_stack);
 //   it is no longer needed.
 //
 LCError LCContextDefaultCard(LCObjectRef *r_default_card);	
-	
+
+// Function:
+//   LCContextCaseSensitive
+// Parameters:
+//   (out) r_case_sensitive - bool
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'caseSensitive' property.
+//
+LCError LCContextCaseSensitive(bool* r_case_sensitive);
+
+// Function:
+//   LCContextConvertOctals
+// Parameters:
+//   (out) r_convert_octals - bool
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'convertOctals' property.
+//
+LCError LCContextConvertOctals(bool *r_convert_octals);
+
+// Function:
+//   LCContextWholeMatches
+// Parameters:
+//   (out) r_whole_matches - bool
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'wholeMatches' property.
+//
+LCError LCContextWholeMatches(bool* r_whole_matches);
+
+// Function:
+//   LCContextItemDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'itemDelimiter' property.
+//
+LCError LCContextItemDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextLineDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'lineDelimiter' property.
+//
+LCError LCContextLineDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextColumnDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'columnDelimiter' property.
+//
+LCError LCContextColumnDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextRowDelimiter
+// Parameters:
+//   (in) options - unsigned int
+//   (out) value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Returns a the current value of the local 'rowDelimiter' property.
+//
+LCError LCContextRowDelimiter(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextResult
+// Parameters:
+//   (in) options - unsigned int
+//   (out) r_value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Fetches the value of 'the result' in the way specified by 'options'.
+//   The usage of options and values is as described in the section on 'values'.
+//
+LCError LCContextResult(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextResult
+// Parameters:
+//   (in) options - unsigned int
+//   (out) r_value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Fetches the value of 'it' in the way specified by 'options'. The usage of
+//   options and values is as described in the section on 'values'.
+//
+LCError LCContextIt(unsigned int options, void *r_value);
+
+// Function:
+//   LCContextEvaluate
+// Parameters:
+//   (in) expression - const char *
+//   (in) options - unsigned int
+//   (out) r_value - depends on options
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   Aborted - the script evaluation was aborted
+//   Exited - the script evaluation caused 'exit to top' to be invoked
+//   Failed - the script evaluation caused an error to be thrown
+//   NotABoolean - the value was requested as a boolean, and it is not a boolean
+//   NotANumber - the value was requested as a number, and it is not a number
+//   NotAnInteger - the value was requested as an integer, and it is not an
+//     integer
+//   NotABinaryString - the value was requested as binary data, and it is not
+//     binary data
+//   NotAString - the value was requested as a string, and it is not a string
+//   NotAnArray - the value was requested as an array, and it is not an array
+//   NotAChar - the value was requested as a char, and it is not a char
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Evaluates the given expression in the context of the calling handler, and
+//   returns the value in the way specified by 'options'. The usage of options
+//   and values is as described in the section on 'values'.
+//
+LCError LCContextEvaluate(const char *expression, unsigned int options, void *r_value);
+
+// Function:
+//   LCContextExecute
+// Parameters:
+//   (in) statements - const char *
+// Errors:
+//   OutOfMemory - memory ran out while attempting to perform the operation
+//   Aborted - the script evaluation was aborted
+//   Exited - the script evaluation caused 'exit to top' to be invoked
+//   Failed - the script evaluation caused an error to be thrown
+// Context Safety:
+//   Must be called from handler context.
+// Semantics:
+//   Executes the given sequence of statements in the context of the calling
+//   handler.
+//
+LCError LCContextExecute(const char *statements);
+
 ////////////////////////////////////////////////////////////////////////////////
 	
 typedef struct __LCWait *LCWaitRef;
@@ -782,7 +1011,7 @@ LCError LCWaitIsRunning(LCWaitRef wait, bool *r_running);
 // Errors:
 //   NoWait - the 'wait' parameter was nil
 //   WaitRunning - the 'wait' object is already running
-//   WaitAborted - the 'wait' ran but was aborted rather than broken.
+//   Aborted - the 'wait' ran but was aborted rather than broken.
 // Context Safety:
 //   Must be called from handler context.
 // Semantics:

@@ -76,6 +76,9 @@ struct HandlerVariant
 struct Handler
 {
 	HandlerType type;
+	bool is_java : 1;
+	bool is_tail : 1;
+	
 	NameRef name;
 	
 	HandlerVariant *variants;

@@ -31,10 +31,14 @@ enum HandlerType
 {
 	kHandlerTypeCommand,
 	kHandlerTypeFunction,
-	kHandlerTypeTailCommand,
-	kHandlerTypeTailFunction,
-	kHandlerTypeJava,
-	kHandlerTypeNative,
+	kHandlerTypeMethod,
+};
+
+typedef uint32_t HandlerAttributes;
+enum
+{
+	kHandlerAttributeIsJava = 1 << 0,
+	kHandlerAttributeIsTail = 1 << 1,
 };
 
 enum ParameterType
@@ -56,7 +60,7 @@ bool InterfaceBeginEnum(InterfaceRef interface, Position where, NameRef name);
 bool InterfaceDefineEnumElement(InterfaceRef interface, Position where, StringRef element, ValueRef value);
 bool InterfaceEndEnum(InterfaceRef interface);
 
-bool InterfaceBeginHandler(InterfaceRef interface, Position where, HandlerType type, NameRef name);
+bool InterfaceBeginHandler(InterfaceRef interface, Position where, HandlerType type, HandlerAttributes attrs, NameRef name);
 bool InterfaceDefineHandlerParameter(InterfaceRef interface, Position where, ParameterType param_type, NameRef name, NameRef type, ValueRef default_value);
 bool InterfaceDefineHandlerReturn(InterfaceRef interface, Position where, NameRef type, bool indirect);
 bool InterfaceDefineHandlerBinding(InterfaceRef interface, Position where, NameRef name);

@@ -52,7 +52,7 @@ typedef uint32_t MCExternalRunOnMainThreadOptions;
 typedef void (*MCExternalThreadOptionalCallback)(void *state);
 typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
-#define kMCExternalInterfaceVersion 4
+#define kMCExternalInterfaceVersion 5
 
 enum
 {
@@ -157,8 +157,6 @@ enum MCExternalError
 	kMCExternalErrorNoObjectPropertyValue = 35,
 	
 	kMCExternalErrorInvalidInterfaceQuery = 36,
-	
-	kMCExternalErrorNotSupported = 37,
 };
 
 enum MCExternalContextQueryTag
@@ -179,6 +177,8 @@ enum MCExternalContextQueryTag
 	
 	kMCExternalContextQueryDefaultStack,
 	kMCExternalContextQueryDefaultCard,
+	
+	kMCExternalContextQueryWholeMatches,
 };
 
 enum MCExternalVariableQueryTag
@@ -301,6 +301,11 @@ struct MCExternalInterface
 	/////////
 	
 	MCExternalError (*object_update)(MCExternalObjectRef object, unsigned int options, void *region); // V3
+	
+	/////////
+	
+	MCExternalError (*context_evaluate)(const char *p_expression, MCExternalValueOptions options, MCExternalVariableRef value); // V5
+	MCExternalError (*context_execute)(const char *p_expression); // V5
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -930,6 +935,9 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 		break;
 	case kMCExternalContextQueryConvertOctals:
 		*(bool *)result = MCEPptr -> getconvertoctals() == True;
+		break;
+	case kMCExternalContextQueryWholeMatches:
+		*(bool *)result = MCEPptr -> getwholematches() == True;
 		break;
 	case kMCExternalContextQueryItemDelimiter:
 		*(uint32_t *)result = MCEPptr -> getitemdel();
