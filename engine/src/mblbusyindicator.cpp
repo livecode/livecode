@@ -117,6 +117,7 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
 		return ES_NORMAL;
 
 	return ES_ERROR;
+
 }
 
 Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)

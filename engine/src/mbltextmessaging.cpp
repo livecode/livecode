@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "exec.h"
 
 #include "mblsyntax.h"
-
+/* MOVED TO exec-textmessaging.cpp
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -49,9 +49,9 @@ void MCComposeTextMessageExec(MCExecContext& ctxt, const char *p_recipients, con
 {
 	MCSystemComposeTextMessage(p_recipients, p_body);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
-
+/* moved to mblhandlers.cpp
 Exec_stat MCHandleCanComposeTextMessage(void *p_context, MCParameter *p_parameters)
 {
     if (MCSystemCanSendTextMessage())
@@ -86,6 +86,6 @@ Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
 	MCComposeTextMessageExec(ctxt, t_recipients, t_body);
     
 	return ES_NORMAL;
-}
+}*/
 
 ////////////////////////////////////////////////////////////////////////////////

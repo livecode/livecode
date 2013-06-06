@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "system.h"
 
+#include "foundation.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCSystemLaunchUrl(const char *p_document);
@@ -1187,7 +1189,7 @@ void MCS_close_socket(MCSocket *p_socket)
 {
 }
 
-void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, char *p_until, MCNameRef p_message)
+void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, const char *p_until, MCNameRef p_message)
 {
 }
 

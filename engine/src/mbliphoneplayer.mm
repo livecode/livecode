@@ -442,8 +442,7 @@ Exec_stat MCNativePlayerControl::Get(MCNativeControlProperty p_property, MCExecP
 			{
 				CGSize t_size;
 				t_size = [m_controller naturalSize];
-				sprintf(ep.getbuffer(I2L * 2 + 3), "%d,%d", (int32_t)t_size . width, (int32_t)t_size . height);
-				ep.setstrlen();
+				ep.setstringf("%d,%d", (int32_t)t_size . width, (int32_t)t_size . height);
 			}
 			return ES_NORMAL;
 			
@@ -659,6 +658,7 @@ private:
 
 static struct { NSString **name; SEL selector; } s_player_notifications[] =
 {
+#ifdef MOBILE_BROKEN
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },
 	{ &MPMovieNaturalSizeAvailableNotification, @selector(movieNaturalSizeAvailable:) },
@@ -670,6 +670,7 @@ static struct { NSString **name; SEL selector; } s_player_notifications[] =
 	{ &MPMoviePlayerPlaybackDidFinishNotification, @selector(playerPlaybackDidFinish:) },
 	{ &MPMoviePlayerPlaybackStateDidChangeNotification, @selector(playerPlaybackStateDidChange:) },
 	{ &MPMoviePlayerScalingModeDidChangeNotification, @selector(playerScalingModeDidChange:) },
+#endif
 	{ nil, nil }
 };
 

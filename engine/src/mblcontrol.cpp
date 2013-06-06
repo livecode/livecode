@@ -881,7 +881,7 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	}
 	else
 		ctxt . SetTheResultToEmpty();
-	
+
 	delete t_prop_name;
 	delete t_control_name;
 	
@@ -949,12 +949,15 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 {
+
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
+
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_value;
 	/* UNCHECKED */ ep . copyasstringref(&t_value);
     ctxt . SetTheResultToValue(*t_value);
+
 	return ES_NORMAL;
 }
 

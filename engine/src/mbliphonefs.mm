@@ -26,6 +26,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "mblsyntax.h"
 
 #include <sys/xattr.h>
 
@@ -272,13 +273,13 @@ Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
 	}
 	
 	MCExecContext ctxt(ep);
-    if (t_path != nil)
-        MCMobileExecFileSetDoNotBackup(ctxt, *t_path, t_no_backup);
+    if (*t_path != nil)
+        //MCMobileExecFileSetDoNotBackup(ctxt, *t_path, t_no_backup);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
@@ -305,12 +306,12 @@ Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
 
 	MCExecContext ctxt(ep);
 
-	MCMobileExecFileGetDoNotBackup(ctxt, *t_path);	
+	//MCMobileExecFileGetDoNotBackup(ctxt, *t_path);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
@@ -359,12 +360,12 @@ Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters
     
     if (MCParseParameters(p_parameters, "xx", &t_filename, &t_protection_string))
 	{
-		MCMobileExecFileSetDataProtection(ctxt, *t_filename, *t_protection_string);
+		//MCMobileExecFileSetDataProtection(ctxt, *t_filename, *t_protection_string);
 	}
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 	
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters)
@@ -407,30 +408,30 @@ Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters
     {
         p_parameters->eval_argument(ep);
         /* UNCHECKED */ ep . copyasstringref(&t_filename);
-		MCMobileExecFileGetDataProtection(ctxt, *t_filename);
+		//MCMobileExecFileGetDataProtection(ctxt, *t_filename);
     }
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
-	return ctxt . Catch(line, pos);
+	return ES_ERROR;
 }
 
 //////////////////////////////////////////////////////////////////////////////////
 
 void MCMobileExecFileSetDoNotBackup(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup)
 {
-	MCiOSFileSetDoNotBackup(p_path, p_no_backup);
+	MCiOSFileSetDoNotBackup(MCStringGetCString(p_path), p_no_backup);
 }
 
 void MCMobileExecFileGetDoNotBackup(MCExecContext& ctxt, MCStringRef p_path)
 {
-	ctxt . SetTheResultToValue(MCiOSFileGetDoNotBackup(MCStringGetCString(t_path));
+	MCiOSFileGetDoNotBackup(MCStringGetCString(p_path));
 }
 
 void MCMobileExecFileSetDataProtection(MCExecContext& ctxt, MCStringRef p_filename, MCStringRef p_protection_string)
 {
-	NSString t_protection = nil;
+	NSString *t_protection = nil;
 
     if (!MCDataProtectionFromString(p_protection_string, t_protection))
     {

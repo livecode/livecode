@@ -458,9 +458,11 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	if (!MCtemplateaudio->issupported())
 	{
 #ifdef _MOBILE
+#ifdef MOBILE_BROKEN
 		extern bool MCSystemPlaySound(const char *p_filename, bool p_looping);
 		if (!MCSystemPlaySound(ep.getcstring(), looping == True))
 		MCresult->sets("no sound support");
+#endif
 #endif
 		return;
 	}
@@ -542,6 +544,7 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping, MCPoint *p_at, MCStringRef p_options)
 {
 #ifdef _MOBILE
+#ifdef MOBILE_BROKEN
 		extern bool MCSystemPlayVideo(const char *p_filename);
 		MCExecPoint *t_old_ep;
 		t_old_ep = MCEPptr;
@@ -550,6 +553,7 @@ void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			MCresult->sets("no video support");
 		MCEPptr = t_old_ep;
 		return;
+#endif
 #endif
 
 	MCPlayer *tptr = MCMultimediaExecGetClip(p_clip, p_chunk_type);

@@ -343,7 +343,8 @@ Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
     MCUpdateEventExec(ctxt, t_event_id);
-    // Set return value
+    // Set return valu
+    
     if (!ctxt . HasError())
 		return ES_NORMAL;
 

@@ -24,14 +24,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "object.h"
 #include "mbldc.h"
+#include "mblsyntax.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
 #import <UIKit/UIGraphics.h>
 #import <UIKit/UIImage.h>
 #import <UIKit/UIImagePickerController.h>
-
-#include "mblsyntax.h"
 
 #include "mbliphoneapp.h"
 
@@ -140,9 +139,9 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	if (m_source_type == UIImagePickerControllerSourceTypeCamera &&
 		[UIImagePickerController isCameraDeviceAvailable: m_device_type])
 		[self setCameraDevice: m_device_type]; 
-	
+#ifdef MOBILE_BROKEN
 	[ self setDelegate: self ];
-	
+#endif
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
 	id t_popover;
@@ -165,7 +164,9 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 			t_rect = [[t_main_controller view] frame];
 		
 		m_popover_controller = [[t_popover alloc] initWithContentViewController: self];
+#ifdef MOBILE_BROKEN
 		[m_popover_controller setDelegate: self];
+#endif
 		[m_popover_controller presentPopoverFromRect: t_rect inView: [t_main_controller view] permittedArrowDirections: UIPopoverArrowDirectionAny animated: YES];
 	}
 	else

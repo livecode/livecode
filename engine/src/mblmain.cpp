@@ -96,8 +96,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	MCS_init();
 	
 	////
-	
-	//MCNameInitialize();
+
 	MCU_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.

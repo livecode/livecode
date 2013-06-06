@@ -20,6 +20,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+
+#include "execpt.h"
+#include "printer.h"
+#include "globals.h"
+#include "dispatch.h"
+#include "stack.h"
+#include "image.h"
+#include "player.h"
+#include "param.h"
+#include "chunk.h"
+#include "scriptpt.h"
+#include "eventqueue.h"
+#include "redraw.h"
+#include "mbldc.h"
+#include "text.h"
+
+#import <Foundation/Foundation.h>
+#import <UIKit/UIGraphics.h>
+#import <UIKit/UIImage.h>
+#import <UIKit/UIImagePickerController.h>
+#import <UIKit/UIAccelerometer.h>
+// HC-2011-10-12 [[ Media Picker ]] Included relevant library.
+#import <MediaPlayer/MPMediaPickerController.h>
+#import <MessageUI/MessageUI.h>
+
+// HC-2011-10-12 [[ Media Picker ]] Included relevant library.
+#include "mbliphonecontrol.h"
+#include "mbliphone.h"
+#include "mbliphoneview.h"
+
+#include "mblstore.h"
 #include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -35,7 +66,8 @@ MCOrientation get_orientation(UIInterfaceOrientation p_orientation)
 	case UIInterfaceOrientationLandscapeLeft:
 		return ORIENTATION_LANDSCAPE_LEFT;
 	case UIInterfaceOrientationLandscapeRight:
-		return ORIENTATION_PORTRAIT_LANDSCAPE_RIGHT;
+		return ORIENTATION_LANDSCAPE_RIGHT;
+    }
 }
 
 MCOrientationSet get_orientation_set(uint32_t p_orientations)

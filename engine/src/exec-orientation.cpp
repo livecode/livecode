@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 
 #include "mblsyntax.h"
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 

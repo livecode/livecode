@@ -284,7 +284,7 @@ Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 	delete t_sound;
 	delete t_channel;
 	delete t_type;
-	
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -334,7 +334,7 @@ Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameter
 		MCSoundExecResumeSoundOnChannel(ctxt, t_channel);
 	
 	delete t_channel;
-	
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -410,7 +410,7 @@ Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters
 		MCSoundSetVolumeOfChannel(ctxt, t_channel, t_volume);
 	
 	delete t_channel;
-	
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -476,7 +476,7 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 	}
 	
 	delete t_channel;
-	
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 

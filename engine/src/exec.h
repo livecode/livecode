@@ -3378,6 +3378,57 @@ void MCDebuggingSetWatchedVariables(MCExecContext& ctxt, MCStringRef p_value);
 
 ///////////
 
+extern MCExecMethodInfo *kMCTextMessagingExecComposeTextMessageMethodInfo;
+extern MCExecMethodInfo *kMCTextMessagingGetCanComposeTextMessageMethodInfo;
+
+void MCTextMessagingGetCanComposeTextMessage(MCExecContext& ctxt, bool& r_result);
+void MCTextMessagingExecComposeTextMessage(MCExecContext& ctxt, MCStringRef p_recipients, MCStringRef p_body);
+
+///////////
+
+extern MCExecMethodInfo *kMCIdleTimerExecLockIdleTimerMethodInfo;
+extern MCExecMethodInfo *kMCIdleTimerExecUnlockIdleTimerMethodIndo;
+extern MCExecMethodInfo *kMCIdleTimerGetidleTimerLockedMethodInfo;
+
+void MCIdleTimerExecLockIdleTimer(MCExecContext& ctxt);
+void MCIdleTimerExecUnlockIdleTimer(MCExecContext& ctxt);
+void MCIdleTimerGetIdleTimerLocked(MCExecContext& ctxt, bool& r_result);
+
+//////////
+
+extern MCExecMethodInfo* kMCStoreGetCanMakePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecEnablePurchaseUpdatesMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecDisablePurchaseUpdatesMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecRestorePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseListMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecCreatePurchaseMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseStateMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchaseErrorMethodInfo;
+extern MCExecMethodInfo* kMCStoreGetPurchasePropertyMethodInfo;
+extern MCExecMethodInfo* kMCStoreSetPurchasePropertyMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecSendPurchaseRequestMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecConfirmPurchaseDeliveryMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecRequestProductDetailsMethodInfo;
+extern MCExecMethodInfo* kMCStoreExecPurchaseVerifyMethodInfo;
+
+
+void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result);
+void MCStoreExecEnablePurchaseUpdates(MCExecContext& ctxt);
+void MCStoreExecDisablePurchaseUpdates(MCExecContext& ctxt);
+void MCStoreExecRestorePurchases(MCExecContext& ctxt);
+void MCStoreGetPurchaseList(MCExecContext& ctxt, MCStringRef& r_list);
+void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, uint32_t& r_id);
+void MCStoreGetPurchaseState(MCExecContext& ctxt, int p_id, MCStringRef& r_state);
+void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error);
+void MCStoreGetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name);
+void MCStoreSetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, uint32_t p_quantity);
+void MCStoreExecSendPurchaseRequest(MCExecContext& ctxt, uint32_t p_id);
+void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
+void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
+void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
+
+///////////
+
 extern MCExecMethodInfo *kMCOrientationGetDeviceOrientationMethodInfo;
 extern MCExecMethodInfo *kMCOrientationGetOrientationMethodInfo;
 extern MCExecMethodInfo *kMCOrientationGetAllowedOrientationsMethodInfo;
@@ -3400,7 +3451,7 @@ extern MCExecMethodInfo *kMCMailExecSendEmailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeMailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeUnicodeMailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeHtmlMailMethodInfo;
-extern MCExecMethodInfo *kMCMailExecGetCanSendMailMethodInfo;
+extern MCExecMethodInfo* kMCMailGetCanSendMailMethodInfo;
 
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
 void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
@@ -3427,5 +3478,27 @@ void MCAddressBookGetContactData(MCExecContext& ctxt, int32_t p_contact_id, MCAr
 void MCAddressBookExecRemoveContact(MCExecContext& ctxt, int32_t p_contact_id);
 void MCAddressBookExecAddContact(MCExecContext &ctxt, MCArrayRef p_contact);
 void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_name);
+
+///////////
+
+extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
+extern MCExecMethodInfo* kMCAdExecreateAdMethodInfo;
+extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
+extern MCExecMethodInfo* kMCAdSetVisibleOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetVisibleOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetTopLeftOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdSetTopLeftOfAdMethodInfo;
+extern MCExecMethodInfo* kMCAdGetAdsMethodInfo;
+
+void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key);
+void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata);
+void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name);
+void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible);
+void MCAdGetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool& r_visible);
+void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y);
+void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y);
+void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
+
+
 
 #endif

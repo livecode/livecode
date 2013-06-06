@@ -15,7 +15,6 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
@@ -332,7 +331,9 @@ UIViewController *MCIPhoneGetViewController(void);
 			else
 				tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, t_horizontal, t_vertical) style:(UITableViewStylePlain)];
 			tableView.delegate = self;
+#ifdef MOBILE_BROKEN
 			tableView.dataSource = self;
+#endif
 			// allow the user to select items
 			tableView.allowsSelection = YES;
 			
@@ -435,9 +436,10 @@ UIViewController *MCIPhoneGetViewController(void);
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];						
-		
+#ifdef MOBILE_BROKEN		
 		// need to make self as delegate otherwise overridden delegates are not called
 		popoverController.delegate = self;
+#endif
 		[popoverController setContentViewController:self];	
 	}
 	else
@@ -643,8 +645,10 @@ static void do_pickn_prewait(void *p_context)
 	// call the picker with the label and options list
 	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: ctxt -> use_checkmark];
+#ifdef MOBILE_BROKEN
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt -> option_list_array andInitial: ctxt -> initial_index_array  andCancel: ctxt -> use_cancel andDone: ctxt -> use_done andPicker: ctxt -> use_picker andButtonRect: ctxt -> button_rect];
+#endif
 }
 
 static void do_pickn_postwait(void *p_context)
@@ -738,8 +742,11 @@ static void pick_option_prewait(void *p_context)
 	
 	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: !ctxt->use_hilited];
+#ifdef MOBILE_BROKEN
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt->option_list_array andInitial: ctxt->initial_index_array andCancel: ctxt->use_cancel andDone: ctxt->use_done andPicker: ctxt->use_picker andButtonRect: ctxt->button_rect];
+#endif
+
 }
 
 static void pick_option_postwait(void *p_context)

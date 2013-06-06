@@ -24,7 +24,6 @@
 		3CC6F42812AD0A6100852B3B /* CFNetwork.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 3CC6F42712AD0A6100852B3B /* CFNetwork.framework */; };
 		4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */; };
 		4D08A0D0138EA51D0081F990 /* libstandalone-mobile-lib-community.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D2D91891386E2610057811A /* libstandalone-mobile-lib-community.a */; };
-		4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DA2CA251136CFDF00B9F27B /* libcoremobile.a */; };
 		4D08A113138EA7C60081F990 /* dummy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D08A112138EA7C60081F990 /* dummy.cpp */; };
 		4D08A117138EA84C0081F990 /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08A116138EA84C0081F990 /* Foundation.framework */; };
 		4D08A11F138EA85E0081F990 /* UIKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D08A11E138EA85E0081F990 /* UIKit.framework */; };
@@ -188,7 +187,6 @@
 		4DABCE1B15ECD4B50085E214 /* mbltextmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = F62D52A314DBF68300E7C1CD /* mbltextmessaging.cpp */; };
 		4DABCE1C15ECD4B50085E214 /* mcerror.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE811040AD6200CAC7EF /* mcerror.cpp */; };
 		4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE7F1040AD6200CAC7EF /* mcio.cpp */; };
-		4DABCE1E15ECD4B50085E214 /* mcssl.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE861040AD8500CAC7EF /* mcssl.cpp */; };
 		4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE841040AD8500CAC7EF /* mcstring.cpp */; };
 		4DABCE2015ECD4B50085E214 /* mctheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE8F1040AD8500CAC7EF /* mctheme.cpp */; };
 		4DABCE2115ECD4B50085E214 /* mcutility.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDD7F35134BA5DA009037A0 /* mcutility.cpp */; };
@@ -196,7 +194,6 @@
 		4DABCE2315ECD4B50085E214 /* menuparse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE8A1040AD8500CAC7EF /* menuparse.cpp */; };
 		4DABCE2415ECD4B50085E214 /* metacontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE871040AD8500CAC7EF /* metacontext.cpp */; };
 		4DABCE2515ECD4B50085E214 /* mode_standalone.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA81040AD9300CAC7EF /* mode_standalone.cpp */; };
-		4DABCE2615ECD4B50085E214 /* name.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8EE13DD909F006233A4 /* name.cpp */; };
 		4DABCE2715ECD4B50085E214 /* newobj.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA01040AD9300CAC7EF /* newobj.cpp */; };
 		4DABCE2815ECD4B50085E214 /* notify.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DA2CA3D1136D0A800B9F27B /* notify.cpp */; };
 		4DABCE2915ECD4B50085E214 /* object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE9D1040AD9300CAC7EF /* object.cpp */; };
@@ -204,7 +201,6 @@
 		4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */; };
 		4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE9B1040AD9300CAC7EF /* objectstream.cpp */; };
 		4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DE991040AD9300CAC7EF /* objptr.cpp */; };
-		4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA61040AD9300CAC7EF /* opensslsocket.cpp */; };
 		4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEA51040AD9300CAC7EF /* operator.cpp */; };
 		4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DEB31040ADAF00CAC7EF /* paragraf.cpp */; };
 		4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAEA83F14E911FE006DFECF /* paragrafattr.cpp */; };
@@ -260,6 +256,65 @@
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
+		BE4494AE175CDCB900346B49 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */; };
+		BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B7175CDE7400346B49 /* exec-array.cpp */; };
+		BE4494DE175CDE7400346B49 /* exec-datetime.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B8175CDE7400346B49 /* exec-datetime.cpp */; };
+		BE4494DF175CDE7400346B49 /* exec-debugging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B9175CDE7400346B49 /* exec-debugging.cpp */; };
+		BE4494E0175CDE7400346B49 /* exec-dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BA175CDE7400346B49 /* exec-dialog.cpp */; };
+		BE4494E1175CDE7400346B49 /* exec-engine.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BB175CDE7400346B49 /* exec-engine.cpp */; };
+		BE4494E2175CDE7400346B49 /* exec-files.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BC175CDE7400346B49 /* exec-files.cpp */; };
+		BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BD175CDE7400346B49 /* exec-filters.cpp */; };
+		BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BE175CDE7400346B49 /* exec-graphics.cpp */; };
+		BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BF175CDE7400346B49 /* exec-ide.cpp */; };
+		BE4494E6175CDE7400346B49 /* exec-interface-aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */; };
+		BE4494E7175CDE7400346B49 /* exec-interface-button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */; };
+		BE4494E8175CDE7400346B49 /* exec-interface-card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */; };
+		BE4494E9175CDE7400346B49 /* exec-interface-control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */; };
+		BE4494EA175CDE7400346B49 /* exec-interface-field.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */; };
+		BE4494EB175CDE7400346B49 /* exec-interface-graphic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */; };
+		BE4494EC175CDE7400346B49 /* exec-interface-group.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */; };
+		BE4494ED175CDE7400346B49 /* exec-interface-image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */; };
+		BE4494EE175CDE7400346B49 /* exec-interface-object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */; };
+		BE4494EF175CDE7400346B49 /* exec-interface-player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */; };
+		BE4494F0175CDE7400346B49 /* exec-interface-scrollbar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */; };
+		BE4494F1175CDE7400346B49 /* exec-interface-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */; };
+		BE4494F2175CDE7400346B49 /* exec-interface-vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */; };
+		BE4494F3175CDE7400346B49 /* exec-interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CD175CDE7400346B49 /* exec-interface.cpp */; };
+		BE4494F4175CDE7400346B49 /* exec-interface2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CF175CDE7400346B49 /* exec-interface2.cpp */; };
+		BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D0175CDE7400346B49 /* exec-legacy.cpp */; };
+		BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D1175CDE7400346B49 /* exec-logic.cpp */; };
+		BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D2175CDE7400346B49 /* exec-math.cpp */; };
+		BE4494F8175CDE7400346B49 /* exec-multimedia.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D3175CDE7400346B49 /* exec-multimedia.cpp */; };
+		BE4494F9175CDE7400346B49 /* exec-network.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D4175CDE7400346B49 /* exec-network.cpp */; };
+		BE4494FA175CDE7400346B49 /* exec-pasteboard.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D5175CDE7400346B49 /* exec-pasteboard.cpp */; };
+		BE4494FB175CDE7400346B49 /* exec-printing.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D6175CDE7400346B49 /* exec-printing.cpp */; };
+		BE4494FC175CDE7400346B49 /* exec-scripting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D7175CDE7400346B49 /* exec-scripting.cpp */; };
+		BE4494FE175CDE7400346B49 /* exec-server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D9175CDE7400346B49 /* exec-server.cpp */; };
+		BE4494FF175CDE7400346B49 /* exec-strings.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494DA175CDE7400346B49 /* exec-strings.cpp */; };
+		BE449500175CDE7400346B49 /* exec-text.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494DB175CDE7400346B49 /* exec-text.cpp */; };
+		BE449501175CDE7400346B49 /* exec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494DC175CDE7400346B49 /* exec.cpp */; };
+		BE449505175CE13900346B49 /* legacy_spec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449504175CE13900346B49 /* legacy_spec.cpp */; };
+		BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449508175CE8AC00346B49 /* syntax.cpp */; };
+		BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D8175CDE7400346B49 /* exec-security.cpp */; };
+		BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */ = {isa = PBXBuildFile; fileRef = BE44950C175CF03E00346B49 /* iphone_test.rev */; };
+		BE449996175D029600346B49 /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
+		BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
+		BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
+		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
+		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
+		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
+		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
+		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
+		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
+		BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
+		BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
+		BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
+		BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
+		BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
+		BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
+		BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */; };
+		BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -300,13 +355,6 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
 			remoteInfo = jpegmobile;
-		};
-		4D2220A7171D78F200E7E557 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
-			remoteInfo = coremobile;
 		};
 		4D2220A9171D78F500E7E557 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -385,13 +433,6 @@
 			remoteGlobalIDString = 4DD3E0171040BB5D00CAC7EF;
 			remoteInfo = pngmobile;
 		};
-		4DA2CA241136CFDF00B9F27B /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */;
-			proxyType = 2;
-			remoteGlobalIDString = 4DD3E06B1040BC4700CAC7EF;
-			remoteInfo = coremobile;
-		};
 		4DABCE6315ECD4E80085E214 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4DD3DD7D1040AA4700CAC7EF /* Project object */;
@@ -399,12 +440,26 @@
 			remoteGlobalIDString = 4DABCD8915ECD40F0085E214;
 			remoteInfo = "standalone-mobile-kernel";
 		};
-		4DE7ED5C13B33C9D002634F5 /* PBXContainerItemProxy */ = {
+		BE096E84175CD79D00F92F90 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */;
+			containerPortal = BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */;
+			proxyType = 2;
+			remoteGlobalIDString = 4DD3E06B1040BC4700CAC7EF;
+			remoteInfo = libfoundationmobile;
+		};
+		BE096E87175CD7B300F92F90 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */;
 			proxyType = 1;
 			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
-			remoteInfo = coremobile;
+			remoteInfo = libfoundationmobile;
+		};
+		BE096E89175CD7C100F92F90 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = 4DD3E06A1040BC4700CAC7EF;
+			remoteInfo = libfoundationmobile;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -527,7 +582,6 @@
 		4D91B3EC134CB7AE000D7AA5 /* VideoControl.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = VideoControl.java; sourceTree = "<group>"; };
 		4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = mblandroid.java; path = src/java/mblandroid.java; sourceTree = "<group>"; };
 		4D9CAF23134365F800231979 /* mbliphonehooks.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbliphonehooks.cpp; path = src/mbliphonehooks.cpp; sourceTree = "<group>"; };
-		4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libcore-mobile.xcodeproj"; path = "../libcore/libcore-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		4DA2CA351136D07600B9F27B /* eventqueue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = eventqueue.cpp; path = src/eventqueue.cpp; sourceTree = "<group>"; };
 		4DA2CA371136D08700B9F27B /* eventqueue.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = eventqueue.h; path = src/eventqueue.h; sourceTree = "<group>"; };
 		4DA2CA381136D08700B9F27B /* externalv0.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = externalv0.cpp; path = src/externalv0.cpp; sourceTree = "<group>"; };
@@ -813,6 +867,62 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
+		BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
+		BE4494B7175CDE7400346B49 /* exec-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-array.cpp"; path = "src/exec-array.cpp"; sourceTree = "<group>"; };
+		BE4494B8175CDE7400346B49 /* exec-datetime.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-datetime.cpp"; path = "src/exec-datetime.cpp"; sourceTree = "<group>"; };
+		BE4494B9175CDE7400346B49 /* exec-debugging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-debugging.cpp"; path = "src/exec-debugging.cpp"; sourceTree = "<group>"; };
+		BE4494BA175CDE7400346B49 /* exec-dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-dialog.cpp"; path = "src/exec-dialog.cpp"; sourceTree = "<group>"; };
+		BE4494BB175CDE7400346B49 /* exec-engine.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-engine.cpp"; path = "src/exec-engine.cpp"; sourceTree = "<group>"; };
+		BE4494BC175CDE7400346B49 /* exec-files.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-files.cpp"; path = "src/exec-files.cpp"; sourceTree = "<group>"; };
+		BE4494BD175CDE7400346B49 /* exec-filters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-filters.cpp"; path = "src/exec-filters.cpp"; sourceTree = "<group>"; };
+		BE4494BE175CDE7400346B49 /* exec-graphics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-graphics.cpp"; path = "src/exec-graphics.cpp"; sourceTree = "<group>"; };
+		BE4494BF175CDE7400346B49 /* exec-ide.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ide.cpp"; path = "src/exec-ide.cpp"; sourceTree = "<group>"; };
+		BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
+		BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-button.cpp"; path = "src/exec-interface-button.cpp"; sourceTree = "<group>"; };
+		BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-card.cpp"; path = "src/exec-interface-card.cpp"; sourceTree = "<group>"; };
+		BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-control.cpp"; path = "src/exec-interface-control.cpp"; sourceTree = "<group>"; };
+		BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field.cpp"; path = "src/exec-interface-field.cpp"; sourceTree = "<group>"; };
+		BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-graphic.cpp"; path = "src/exec-interface-graphic.cpp"; sourceTree = "<group>"; };
+		BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-group.cpp"; path = "src/exec-interface-group.cpp"; sourceTree = "<group>"; };
+		BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-image.cpp"; path = "src/exec-interface-image.cpp"; sourceTree = "<group>"; };
+		BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-object.cpp"; path = "src/exec-interface-object.cpp"; sourceTree = "<group>"; };
+		BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-player.cpp"; path = "src/exec-interface-player.cpp"; sourceTree = "<group>"; };
+		BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-scrollbar.cpp"; path = "src/exec-interface-scrollbar.cpp"; sourceTree = "<group>"; };
+		BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-stack.cpp"; path = "src/exec-interface-stack.cpp"; sourceTree = "<group>"; };
+		BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-vclip.cpp"; path = "src/exec-interface-vclip.cpp"; sourceTree = "<group>"; };
+		BE4494CD175CDE7400346B49 /* exec-interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface.cpp"; path = "src/exec-interface.cpp"; sourceTree = "<group>"; };
+		BE4494CE175CDE7400346B49 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
+		BE4494CF175CDE7400346B49 /* exec-interface2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface2.cpp"; path = "src/exec-interface2.cpp"; sourceTree = "<group>"; };
+		BE4494D0175CDE7400346B49 /* exec-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-legacy.cpp"; path = "src/exec-legacy.cpp"; sourceTree = "<group>"; };
+		BE4494D1175CDE7400346B49 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
+		BE4494D2175CDE7400346B49 /* exec-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-math.cpp"; path = "src/exec-math.cpp"; sourceTree = "<group>"; };
+		BE4494D3175CDE7400346B49 /* exec-multimedia.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-multimedia.cpp"; path = "src/exec-multimedia.cpp"; sourceTree = "<group>"; };
+		BE4494D4175CDE7400346B49 /* exec-network.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-network.cpp"; path = "src/exec-network.cpp"; sourceTree = "<group>"; };
+		BE4494D5175CDE7400346B49 /* exec-pasteboard.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pasteboard.cpp"; path = "src/exec-pasteboard.cpp"; sourceTree = "<group>"; };
+		BE4494D6175CDE7400346B49 /* exec-printing.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-printing.cpp"; path = "src/exec-printing.cpp"; sourceTree = "<group>"; };
+		BE4494D7175CDE7400346B49 /* exec-scripting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-scripting.cpp"; path = "src/exec-scripting.cpp"; sourceTree = "<group>"; };
+		BE4494D8175CDE7400346B49 /* exec-security.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-security.cpp"; path = "src/exec-security.cpp"; sourceTree = "<group>"; };
+		BE4494D9175CDE7400346B49 /* exec-server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-server.cpp"; path = "src/exec-server.cpp"; sourceTree = "<group>"; };
+		BE4494DA175CDE7400346B49 /* exec-strings.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-strings.cpp"; path = "src/exec-strings.cpp"; sourceTree = "<group>"; };
+		BE4494DB175CDE7400346B49 /* exec-text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-text.cpp"; path = "src/exec-text.cpp"; sourceTree = "<group>"; };
+		BE4494DC175CDE7400346B49 /* exec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = exec.cpp; path = src/exec.cpp; sourceTree = "<group>"; };
+		BE449504175CE13900346B49 /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
+		BE449508175CE8AC00346B49 /* syntax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syntax.cpp; path = src/syntax.cpp; sourceTree = "<group>"; };
+		BE449509175CE8AC00346B49 /* syntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = syntax.h; path = src/syntax.h; sourceTree = "<group>"; };
+		BE44950C175CF03E00346B49 /* iphone_test.rev */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.rev; path = ../iphone_test.rev; sourceTree = "<group>"; };
+		BE449995175D029600346B49 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; };
+		BE449997175D02AE00346B49 /* exec-textmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-textmessaging.cpp"; path = "src/exec-textmessaging.cpp"; sourceTree = "<group>"; };
+		BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
+		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
+		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
+		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
+		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
+		BE94042B175F6308003EAB87 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
+		BE94042C175F6308003EAB87 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
+		BE94042D175F6308003EAB87 /* exec-sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sensor.cpp"; path = "src/exec-sensor.cpp"; sourceTree = "<group>"; };
+		BE940436175F659F003EAB87 /* mbliphoneorientation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneorientation.mm; path = src/mbliphoneorientation.mm; sourceTree = "<group>"; };
+		BE940439175F74D2003EAB87 /* exec-ad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ad.cpp"; path = "src/exec-ad.cpp"; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -911,7 +1021,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4D08A0D6138EA58E0081F990 /* libcoremobile.a in Frameworks */,
+				BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */,
 				4D7B149717141A5F006782C1 /* libpngmobile.a in Frameworks */,
 				4D7B149817141A63006782C1 /* libgifmobile.a in Frameworks */,
 				4D7B149917141A67006782C1 /* libjpegmobile.a in Frameworks */,
@@ -999,8 +1109,8 @@
 			children = (
 				4D4BA4E412C14F850031AB06 /* mbliphone.h */,
 				4DD3E1B11041192800CAC7EF /* mbliphone.mm */,
-				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
 				F6FF08F6148F869A005572E6 /* mbliphoneactivityindicator.mm */,
+				4C34550114F3FEA1008D7E50 /* mbliphonead.mm */,
 				F66DE83114BB34D600991D8C /* mbliphonealert.mm */,
 				4D839B351431F52E00984D5D /* mbliphoneapp.h */,
 				4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */,
@@ -1012,20 +1122,24 @@
 				F68B56881541960200097647 /* mbliphonecontact.mm */,
 				4DE9C63D113813A00059588F /* mbliphonecontext.cpp */,
 				4DE9C634113810030059588F /* mbliphonecontext.h */,
-				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4D7E38A6128152EF00E7F80A /* mbliphonecontrol.h */,
+				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */,
 				4D6F954B12AC157100026A72 /* mbliphonedialog.mm */,
+				4DABCEC515ECD7840085E214 /* mbliphoneembedded.mm */,
+				4D5C4DDE15ECE0B600A76456 /* mbliphoneembeddedtest.mm */,
 				4D8F6BBA113D36F90056ED41 /* mbliphoneextra.mm */,
 				E8B4FDD8152CAF8300CBAF90 /* mbliphonefs.mm */,
 				4DC684741348E50D002469A4 /* mbliphonegfx.mm */,
 				4D9CAF23134365F800231979 /* mbliphonehooks.cpp */,
+				BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */,
 				4DA7BA391324E50300F9214A /* mbliphoneinput.mm */,
 				4D7651611342243D0042EB2D /* mbliphonelocation.mm */,
 				4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */,
 				F6C6FD3E1456AFB30076C29D /* mbliphonemediapick.mm */,
 				4D01C2D413CE33180041A281 /* mbliphonemisc.mm */,
 				F6D1C29414BDD78A00FDD15A /* mbliphonenotification.mm */,
+				BE940436175F659F003EAB87 /* mbliphoneorientation.mm */,
 				4DE7B8641330D6F200305469 /* mbliphonepick.mm */,
 				F622A6421490E57600383FF2 /* mbliphonepickdate.mm */,
 				4D18948C1323CCFD00488783 /* mbliphoneplayer.mm */,
@@ -1040,8 +1154,6 @@
 				4DDA602A113C7E7000930F4F /* mbliphoneurl.mm */,
 				4D5435DD129EE62E0086A96E /* mbliphonevideo.mm */,
 				4DC684761348E5AC002469A4 /* mbliphoneview.h */,
-				4DABCEC515ECD7840085E214 /* mbliphoneembedded.mm */,
-				4D5C4DDE15ECE0B600A76456 /* mbliphoneembeddedtest.mm */,
 			);
 			name = iOS;
 			sourceTree = "<group>";
@@ -1094,14 +1206,6 @@
 			path = android;
 			sourceTree = "<group>";
 		};
-		4DA2CA1E1136CFDF00B9F27B /* Products */ = {
-			isa = PBXGroup;
-			children = (
-				4DA2CA251136CFDF00B9F27B /* libcoremobile.a */,
-			);
-			name = Products;
-			sourceTree = "<group>";
-		};
 		4DB983BE130BB1AE008A03DC /* Mobile */ = {
 			isa = PBXGroup;
 			children = (
@@ -1120,6 +1224,7 @@
 				E823E62D14D178BE001F73C4 /* mblcontrol.cpp */,
 				E823E62F14D19886001F73C4 /* mblcontrol.h */,
 				4D01C31613CE36F60041A281 /* mbldc.cpp */,
+				BE449995175D029600346B49 /* mblhandlers.cpp */,
 				4DD3DE731040AD4D00CAC7EF /* mbldc.h */,
 				E89112EB148E73EB00B554CF /* mbldialog.cpp */,
 				E864816E1439BC9400775960 /* mblevent.h */,
@@ -1145,9 +1250,9 @@
 			isa = PBXGroup;
 			children = (
 				4D91B3E2134CB7AE000D7AA5 /* com */,
-				4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */,
 				4DB983C0130BB1DF008A03DC /* mblandroid.cpp */,
 				4DB983C1130BB1DF008A03DC /* mblandroid.h */,
+				4D91B3ED134CB7AE000D7AA5 /* mblandroid.java */,
 				4C34550014F3FE8D008D7E50 /* mblandroidad.cpp */,
 				E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
@@ -1162,6 +1267,7 @@
 				4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */,
 				4CF8A31615067985000745A4 /* mblandroidfont.cpp */,
 				4DB983C8130BB1DF008A03DC /* mblandroidfs.cpp */,
+				BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */,
 				E8111F921541A66A00DB16E3 /* mblandroidinput.cpp */,
 				4DB983C9130BB1DF008A03DC /* mblandroidio.cpp */,
 				E8720DE114C46AF60016F645 /* mblandroidjava.cpp */,
@@ -1204,6 +1310,7 @@
 				4D82FCE71714864F00C48403 /* template-ResourceRules.plist */,
 				4D7E3A581281835D00E7F80A /* Default.png */,
 				4CD038F216C8FE1700EBCCBA /* Default-568h@2x.png */,
+				BE44950C175CF03E00346B49 /* iphone_test.rev */,
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
@@ -1224,6 +1331,9 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				BE449507175CE88F00346B49 /* Syntax */,
+				BE449503175CE10F00346B49 /* Legacy */,
+				BE4494B6175CDE4E00346B49 /* Exec */,
 				E81AC12D170C8CCE00315861 /* Core - Foundation */,
 				E81AC137170C8E1000315861 /* Core - Graphics */,
 				E81AC13A170C8F1200315861 /* Core - Language */,
@@ -1247,9 +1357,96 @@
 			name = Configurations;
 			sourceTree = "<group>";
 		};
+		BE096E7E175CD79D00F92F90 /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				BE096E85175CD79D00F92F90 /* libfoundationmobile.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		BE4494B6175CDE4E00346B49 /* Exec */ = {
+			isa = PBXGroup;
+			children = (
+				BE449502175CDE7D00346B49 /* exec-interface */,
+				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
+				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
+				BE4494B7175CDE7400346B49 /* exec-array.cpp */,
+				BE4494B8175CDE7400346B49 /* exec-datetime.cpp */,
+				BE4494B9175CDE7400346B49 /* exec-debugging.cpp */,
+				BE4494BA175CDE7400346B49 /* exec-dialog.cpp */,
+				BE4494BB175CDE7400346B49 /* exec-engine.cpp */,
+				BE4494BC175CDE7400346B49 /* exec-files.cpp */,
+				BE4494BD175CDE7400346B49 /* exec-filters.cpp */,
+				BE4494BE175CDE7400346B49 /* exec-graphics.cpp */,
+				BE4494BF175CDE7400346B49 /* exec-ide.cpp */,
+				BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */,
+				BE4494D0175CDE7400346B49 /* exec-legacy.cpp */,
+				BE4494D1175CDE7400346B49 /* exec-logic.cpp */,
+				BE94042B175F6308003EAB87 /* exec-mail.cpp */,
+				BE4494D2175CDE7400346B49 /* exec-math.cpp */,
+				BE4494D3175CDE7400346B49 /* exec-multimedia.cpp */,
+				BE4494D4175CDE7400346B49 /* exec-network.cpp */,
+				BE94042C175F6308003EAB87 /* exec-orientation.cpp */,
+				BE4494D5175CDE7400346B49 /* exec-pasteboard.cpp */,
+				BE4494D6175CDE7400346B49 /* exec-printing.cpp */,
+				BE4494D7175CDE7400346B49 /* exec-scripting.cpp */,
+				BE4494D8175CDE7400346B49 /* exec-security.cpp */,
+				BE94042D175F6308003EAB87 /* exec-sensor.cpp */,
+				BE4494D9175CDE7400346B49 /* exec-server.cpp */,
+				BE7506EF175E0BD200A339DA /* exec-store.cpp */,
+				BE4494DA175CDE7400346B49 /* exec-strings.cpp */,
+				BE4494DB175CDE7400346B49 /* exec-text.cpp */,
+				BE449997175D02AE00346B49 /* exec-textmessaging.cpp */,
+				BE4494DC175CDE7400346B49 /* exec.cpp */,
+			);
+			name = Exec;
+			sourceTree = "<group>";
+		};
+		BE449502175CDE7D00346B49 /* exec-interface */ = {
+			isa = PBXGroup;
+			children = (
+				BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */,
+				BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */,
+				BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */,
+				BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */,
+				BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */,
+				BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */,
+				BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */,
+				BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */,
+				BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */,
+				BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */,
+				BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */,
+				BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */,
+				BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */,
+				BE4494CD175CDE7400346B49 /* exec-interface.cpp */,
+				BE4494CE175CDE7400346B49 /* exec-interface.h */,
+				BE4494CF175CDE7400346B49 /* exec-interface2.cpp */,
+			);
+			name = "exec-interface";
+			sourceTree = "<group>";
+		};
+		BE449503175CE10F00346B49 /* Legacy */ = {
+			isa = PBXGroup;
+			children = (
+				BE449504175CE13900346B49 /* legacy_spec.cpp */,
+			);
+			name = Legacy;
+			sourceTree = "<group>";
+		};
+		BE449507175CE88F00346B49 /* Syntax */ = {
+			isa = PBXGroup;
+			children = (
+				BE449508175CE8AC00346B49 /* syntax.cpp */,
+				BE449509175CE8AC00346B49 /* syntax.h */,
+			);
+			name = Syntax;
+			sourceTree = "<group>";
+		};
 		E81AC12D170C8CCE00315861 /* Core - Foundation */ = {
 			isa = PBXGroup;
 			children = (
+				BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */,
 				E81AC133170C8DF500315861 /* name.h */,
 				E81AC134170C8DF500315861 /* rawarray.h */,
 				4DFFC8EE13DD909F006233A4 /* name.cpp */,
@@ -1342,8 +1539,8 @@
 				4DD3DE2A1040AD0300CAC7EF /* hndlrlst.h */,
 				4DD3DE631040AD2800CAC7EF /* keywords.cpp */,
 				4DD3DE621040AD2800CAC7EF /* keywords.h */,
-				4DD3DE5C1040AD2800CAC7EF /* literal.cpp */,
 				4DD3DE5B1040AD2800CAC7EF /* literal.h */,
+				4DD3DE5C1040AD2800CAC7EF /* literal.cpp */,
 				4DD3DEA01040AD9300CAC7EF /* newobj.cpp */,
 				4DD3DE9F1040AD9300CAC7EF /* newobj.h */,
 				4DD3DEA51040AD9300CAC7EF /* operator.cpp */,
@@ -1523,8 +1720,8 @@
 		E82D43BF1712CF1A00A10289 /* Projects */ = {
 			isa = PBXGroup;
 			children = (
+				BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */,
 				4D7B13EC1714198F006782C1 /* libpng-mobile.xcodeproj */,
-				4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */,
 				4D88B96415F54C13002CFBD6 /* libgif-mobile.xcodeproj */,
 				4DD3E0E51040BC6F00CAC7EF /* libjpeg-mobile.xcodeproj */,
 				4DD3E13F1040BD3700CAC7EF /* libpcre-mobile.xcodeproj */,
@@ -1672,11 +1869,11 @@
 			dependencies = (
 				4DABCE6415ECD4E80085E214 /* PBXTargetDependency */,
 				4D22209A171D783800E7E557 /* PBXTargetDependency */,
-				4DE7ED5D13B33C9D002634F5 /* PBXTargetDependency */,
 				4D7B149017141A3C006782C1 /* PBXTargetDependency */,
 				4D7B149217141A3E006782C1 /* PBXTargetDependency */,
 				4D7B149417141A40006782C1 /* PBXTargetDependency */,
 				4D7B149617141A43006782C1 /* PBXTargetDependency */,
+				BE096E8A175CD7C100F92F90 /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-lib-community";
 			productName = "standalone-mobile-lib";
@@ -1694,10 +1891,10 @@
 			dependencies = (
 				4D2220A4171D78EC00E7E557 /* PBXTargetDependency */,
 				4D2220A6171D78F000E7E557 /* PBXTargetDependency */,
-				4D2220A8171D78F200E7E557 /* PBXTargetDependency */,
 				4D2220AA171D78F500E7E557 /* PBXTargetDependency */,
 				4D2220AC171D78F800E7E557 /* PBXTargetDependency */,
 				4D2220AE171D78FA00E7E557 /* PBXTargetDependency */,
+				BE096E88175CD7B300F92F90 /* PBXTargetDependency */,
 			);
 			name = "standalone-mobile-kernel";
 			productName = "standalone-mobile-kernel";
@@ -1743,8 +1940,8 @@
 			projectDirPath = "";
 			projectReferences = (
 				{
-					ProductGroup = 4DA2CA1E1136CFDF00B9F27B /* Products */;
-					ProjectRef = 4DA2CA1D1136CFDF00B9F27B /* libcore-mobile.xcodeproj */;
+					ProductGroup = BE096E7E175CD79D00F92F90 /* Products */;
+					ProjectRef = BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */;
 				},
 				{
 					ProductGroup = 4D7B13A9171418F2006782C1 /* Products */;
@@ -1803,11 +2000,11 @@
 			remoteRef = 4D7B13F31714198F006782C1 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4DA2CA251136CFDF00B9F27B /* libcoremobile.a */ = {
+		BE096E85175CD79D00F92F90 /* libfoundationmobile.a */ = {
 			isa = PBXReferenceProxy;
 			fileType = archive.ar;
-			path = libcoremobile.a;
-			remoteRef = 4DA2CA241136CFDF00B9F27B /* PBXContainerItemProxy */;
+			path = libfoundationmobile.a;
+			remoteRef = BE096E84175CD79D00F92F90 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
 /* End PBXReferenceProxy section */
@@ -1819,6 +2016,7 @@
 			files = (
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
+				BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2018,7 +2216,6 @@
 				4DABCE1B15ECD4B50085E214 /* mbltextmessaging.cpp in Sources */,
 				4DABCE1C15ECD4B50085E214 /* mcerror.cpp in Sources */,
 				4DABCE1D15ECD4B50085E214 /* mcio.cpp in Sources */,
-				4DABCE1E15ECD4B50085E214 /* mcssl.cpp in Sources */,
 				4DABCE1F15ECD4B50085E214 /* mcstring.cpp in Sources */,
 				4DABCE2015ECD4B50085E214 /* mctheme.cpp in Sources */,
 				4DABCE2115ECD4B50085E214 /* mcutility.cpp in Sources */,
@@ -2026,7 +2223,6 @@
 				4DABCE2315ECD4B50085E214 /* menuparse.cpp in Sources */,
 				4DABCE2415ECD4B50085E214 /* metacontext.cpp in Sources */,
 				4DABCE2515ECD4B50085E214 /* mode_standalone.cpp in Sources */,
-				4DABCE2615ECD4B50085E214 /* name.cpp in Sources */,
 				4DABCE2715ECD4B50085E214 /* newobj.cpp in Sources */,
 				4DABCE2815ECD4B50085E214 /* notify.cpp in Sources */,
 				4DABCE2915ECD4B50085E214 /* object.cpp in Sources */,
@@ -2034,7 +2230,6 @@
 				4DABCE2B15ECD4B50085E214 /* objectpropsets.cpp in Sources */,
 				4DABCE2C15ECD4B50085E214 /* objectstream.cpp in Sources */,
 				4DABCE2D15ECD4B50085E214 /* objptr.cpp in Sources */,
-				4DABCE2E15ECD4B50085E214 /* opensslsocket.cpp in Sources */,
 				4DABCE2F15ECD4B50085E214 /* operator.cpp in Sources */,
 				4DABCE3015ECD4B50085E214 /* paragraf.cpp in Sources */,
 				4DABCE3115ECD4B50085E214 /* paragrafattr.cpp in Sources */,
@@ -2086,6 +2281,53 @@
 				4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
+				BE4494AE175CDCB900346B49 /* foundation-legacy.cpp in Sources */,
+				BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */,
+				BE4494DE175CDE7400346B49 /* exec-datetime.cpp in Sources */,
+				BE4494DF175CDE7400346B49 /* exec-debugging.cpp in Sources */,
+				BE4494E0175CDE7400346B49 /* exec-dialog.cpp in Sources */,
+				BE4494E1175CDE7400346B49 /* exec-engine.cpp in Sources */,
+				BE4494E2175CDE7400346B49 /* exec-files.cpp in Sources */,
+				BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */,
+				BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */,
+				BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */,
+				BE4494E6175CDE7400346B49 /* exec-interface-aclip.cpp in Sources */,
+				BE4494E7175CDE7400346B49 /* exec-interface-button.cpp in Sources */,
+				BE4494E8175CDE7400346B49 /* exec-interface-card.cpp in Sources */,
+				BE4494E9175CDE7400346B49 /* exec-interface-control.cpp in Sources */,
+				BE4494EA175CDE7400346B49 /* exec-interface-field.cpp in Sources */,
+				BE4494EB175CDE7400346B49 /* exec-interface-graphic.cpp in Sources */,
+				BE4494EC175CDE7400346B49 /* exec-interface-group.cpp in Sources */,
+				BE4494ED175CDE7400346B49 /* exec-interface-image.cpp in Sources */,
+				BE4494EE175CDE7400346B49 /* exec-interface-object.cpp in Sources */,
+				BE4494EF175CDE7400346B49 /* exec-interface-player.cpp in Sources */,
+				BE4494F0175CDE7400346B49 /* exec-interface-scrollbar.cpp in Sources */,
+				BE4494F1175CDE7400346B49 /* exec-interface-stack.cpp in Sources */,
+				BE4494F2175CDE7400346B49 /* exec-interface-vclip.cpp in Sources */,
+				BE4494F3175CDE7400346B49 /* exec-interface.cpp in Sources */,
+				BE4494F4175CDE7400346B49 /* exec-interface2.cpp in Sources */,
+				BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */,
+				BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */,
+				BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */,
+				BE4494F8175CDE7400346B49 /* exec-multimedia.cpp in Sources */,
+				BE4494F9175CDE7400346B49 /* exec-network.cpp in Sources */,
+				BE4494FA175CDE7400346B49 /* exec-pasteboard.cpp in Sources */,
+				BE4494FB175CDE7400346B49 /* exec-printing.cpp in Sources */,
+				BE4494FC175CDE7400346B49 /* exec-scripting.cpp in Sources */,
+				BE4494FE175CDE7400346B49 /* exec-server.cpp in Sources */,
+				BE4494FF175CDE7400346B49 /* exec-strings.cpp in Sources */,
+				BE449500175CDE7400346B49 /* exec-text.cpp in Sources */,
+				BE449501175CDE7400346B49 /* exec.cpp in Sources */,
+				BE449505175CE13900346B49 /* legacy_spec.cpp in Sources */,
+				BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */,
+				BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */,
+				BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */,
+				BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */,
+				BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */,
+				BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */,
+				BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */,
+				BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */,
+				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2094,6 +2336,16 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D08A113138EA7C60081F990 /* dummy.cpp in Sources */,
+				BE449996175D029600346B49 /* mblhandlers.cpp in Sources */,
+				BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */,
+				BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */,
+				BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */,
+				BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */,
+				BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */,
+				BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */,
+				BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */,
+				BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */,
+				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2119,11 +2371,6 @@
 			isa = PBXTargetDependency;
 			name = jpegmobile;
 			targetProxy = 4D2220A5171D78F000E7E557 /* PBXContainerItemProxy */;
-		};
-		4D2220A8171D78F200E7E557 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = coremobile;
-			targetProxy = 4D2220A7171D78F200E7E557 /* PBXContainerItemProxy */;
 		};
 		4D2220AA171D78F500E7E557 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
@@ -2165,10 +2412,15 @@
 			target = 4DABCD8915ECD40F0085E214 /* standalone-mobile-kernel */;
 			targetProxy = 4DABCE6315ECD4E80085E214 /* PBXContainerItemProxy */;
 		};
-		4DE7ED5D13B33C9D002634F5 /* PBXTargetDependency */ = {
+		BE096E88175CD7B300F92F90 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			name = coremobile;
-			targetProxy = 4DE7ED5C13B33C9D002634F5 /* PBXContainerItemProxy */;
+			name = libfoundationmobile;
+			targetProxy = BE096E87175CD7B300F92F90 /* PBXContainerItemProxy */;
+		};
+		BE096E8A175CD7C100F92F90 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libfoundationmobile;
+			targetProxy = BE096E89175CD7C100F92F90 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 

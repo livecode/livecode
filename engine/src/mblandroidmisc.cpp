@@ -717,6 +717,10 @@ Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+/* MOVED TO mblandroididletimer.cpp
+
 Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 {
 	MCAndroidEngineCall("doLockIdleTimer", "v", nil);
@@ -736,6 +740,8 @@ Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_parameters)
     MCresult -> sets(MCU_btos(r_idle_timer_locked));
 	return ES_NORMAL;
 }
+ 
+ */
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -72,7 +72,7 @@ void MCSensorFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCSensorType MCSensorTypeFromCString(const char *p_string)
+MCSensorType MCSensorTypeFromCString(const char *p_string)
 {
     if (MCCStringEqualCaseless(p_string, "location"))
         return kMCSensorTypeLocation;
@@ -553,7 +553,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     {
         MCSensorExecStartTrackingSensor(ctxt, t_sensor, t_loosely);
     }
-    
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -580,7 +580,7 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
     {
         MCSensorExecStopTrackingSensor(ctxt, t_sensor);
     }
-    
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -615,7 +615,7 @@ Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_paramete
         MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeLocation, false);
     else
         MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeLocation);
-    
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -711,7 +711,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
         if (*t_reading != nil)
             ep.setvalueref(*t_reading);
     }
-    
+
 	MCAutoStringRef t_result;
 	ep . copyasstringref(&t_result);
     ctxt . SetTheResultToValue(*t_result);
@@ -727,7 +727,7 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
-    
+
     MCAutoArrayRef t_detailed_reading;
     MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
@@ -775,7 +775,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         t_timeout = atoi(ep.getcstring());
     }
     MCSensorSetLocationCalibration(ctxt, t_timeout);
-    
+
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 

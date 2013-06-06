@@ -195,6 +195,7 @@ bool MCCFDictionaryToArray(MCExecPoint& ep, CFDictionaryRef p_dict, MCVariableVa
 	MCMemoryDeleteArray(t_dict_values);
 	
 	return t_success;
+
 }
 
 bool MCCFDictionaryFromArray(MCExecPoint& p_ep, MCVariableValue *p_array, CFDictionaryRef& r_dict)
@@ -392,8 +393,8 @@ bool MCCreatePersonData(MCExecPoint& ep, ABRecordRef p_person, MCVariableValue *
 	return t_success;
 }
 
-bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &r_person)
-{
+bool MCCreatePerson(MCExecPoint &p_ep, MCArrayRef p_contact, ABRecordRef &r_person)
+{ 
 	MCExecPoint ep(p_ep);
 	bool t_success = true;
 	ABRecordRef t_person = nil;
@@ -415,6 +416,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 			}
 			else
 			{
+
 				MCVariableValue *t_prop_array = ep.getarray();
 				if (t_prop_array != nil)
 				{
@@ -469,7 +471,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 					if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
 						t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
 				}
-			}
+            }
 		}
 	}
 	
@@ -633,7 +635,6 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
 {
     bool t_success = true;
-	MCExecPoint ep(nil, nil, nil);
 	
     ABAddressBookRef t_address_book = nil;
 	if (t_success)
@@ -641,7 +642,7 @@ bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
 	
 	ABRecordRef t_contact = nil;
 	if (t_success)
-		t_success = MCCreatePerson(ep, p_contact, t_contact);
+		t_success = MCCreatePerson(p_contact, t_contact);
 	
 	
     // try to add new record in the address book
@@ -664,7 +665,7 @@ bool MCContactAddContact(MCArrayRef p_contact, int32_t& r_chosen)
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; 
 }
 
 bool MCContactDeleteContact(int32_t p_person_id)
@@ -716,7 +717,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 			// set the label item
 			for (int i = 1; t_success && i < [t_people count]; i++)
 			{
-				/* UNCHECKED */ [t_chosen appendFormat:@",%d", ABRecordGetRecordID((ABRecordRef)[t_people objectAtIndex:i])];
+            [t_chosen appendFormat:@",%d", ABRecordGetRecordID((ABRecordRef)[t_people objectAtIndex:i])];
 			}
 		}
 	}
@@ -731,7 +732,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -849,7 +850,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 		m_pick_contact.peoplePickerDelegate = self;
 		NSArray *t_displayed_items = [NSArray arrayWithObjects:[NSNumber numberWithInt:kABPersonPhoneProperty],
 									  [NSNumber numberWithInt:kABPersonEmailProperty],
-									  [NSNumber numberWithInt:kABPersonBirthdayProperty], nil];
+									  [NSNumber numberWithInt:kABPersonBirthdayProperty], nil, nil];
 		
 		m_pick_contact.displayedProperties = t_displayed_items;
 		// Show the picker
@@ -1268,8 +1269,14 @@ bool MCSystemCreateContact(int32_t& r_result) // ABNewPersonViewController
 bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
+<<<<<<< HEAD
 	bool t_success = true;
 
+=======
+/*	bool t_success = true;
+	
+	MCExecPoint ep(nil, nil, nil);
+>>>>>>> 863393a8e76fd6f2e5f9e4e48d3a4452a4f8aba0
 	ABRecordRef t_contact = nil;
 	t_success = MCCreatePerson(p_contact, t_contact);
 
@@ -1285,12 +1292,17 @@ bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRe
 	if (t_contact != nil)
 		CFRelease(t_contact);
 	
-	return t_success;
+	return t_success; */
+    return false;
 }
 
+<<<<<<< HEAD
 bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
+=======
+bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArrayRef &r_contact_data)
+>>>>>>> 863393a8e76fd6f2e5f9e4e48d3a4452a4f8aba0
 {
-	bool t_success = true;
+/*	bool t_success = true;
 	
     ABAddressBookRef t_address_book = nil;
 	t_success = nil != (t_address_book = ABAddressBookCreate());
@@ -1305,7 +1317,8 @@ bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success;
+	return t_success; */
+    return false;
 }
 
 bool MCSystemRemoveContact(int32_t p_contact_id)

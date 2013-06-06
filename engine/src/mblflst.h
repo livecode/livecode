@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dllst.h"
 #endif
 
-class MCFontnode: public MCDLlist
+class MCFontnode : public MCDLlist
 {
 	MCNewAutoNameRef reqname;
 	uint2 reqsize;
@@ -30,29 +30,26 @@ class MCFontnode: public MCDLlist
 public:
 	MCFontnode(MCNameRef fname, uint2 &size, uint2 style);
 	~MCFontnode();
-	
+
 	MCFontStruct *getfont(MCNameRef fname, uint2 size, uint2 style);
-	
+
 	MCFontStruct *getfontstruct()
 	{
 		return font;
 	}
-	
+
 	MCNameRef getname()
 	{
 		return *reqname;
 	}
-	
 	uint2 getsize()
 	{
 		return reqsize;
 	}
-	
 	uint2 getstyle()
 	{
 		return reqstyle;
 	}
-	
 	MCFontnode *next()
 	{
 		return (MCFontnode *)MCDLlist::next();
@@ -81,9 +78,11 @@ public:
 	{
 		MCDLlist::splitat((MCDLlist *)node) ;
 	}
-	MCFontnode *remove(MCFontnode *&list)
+	MCFontnode *remove
+	(MCFontnode *&list)
 	{
-		return (MCFontnode *)MCDLlist::remove((MCDLlist *&)list);
+		return (MCFontnode *)MCDLlist::remove
+        ((MCDLlist *&)list);
 	}
 };
 

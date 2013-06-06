@@ -45,6 +45,9 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	reqsize = size;
 	reqstyle = style;
 
+    MCAutoPointer<char> tmpname;
+	tmpname = strclone(MCStringGetCString(MCNameGetString(fname)));//make a copy of the font name
+    
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
 	font -> charset = 0;
@@ -87,6 +90,7 @@ MCFontnode::MCFontnode(MCNameRef fname, uint2 &size, uint2 style)
 	
 	char *t_comma;
 	t_comma = strchr(MCNameGetCString(*reqname), ',');
+
 
 	uint1 t_charset;
 	t_charset = LCH_ENGLISH;

@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "handler.h"
 
 #include "mblsyntax.h"
+#include "exec.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -109,13 +110,13 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body)
 {
-	bool t_can_send;
-	MCMailGetCanSendMail(ctxt, t_can_send);
-
-	if (!t_can_send)
-		return;
-
-	MCSystemSendMail(p_to, p_cc, p_subject, p_body);
+    bool t_can_send;
+    MCMailGetCanSendMail(ctxt, t_can_send);
+    
+    if (t_can_send)
+        MCSystemSendMail(p_to, p_cc, p_subject, p_body);
+    else
+        ctxt . SetTheResultToStaticCString("not supported");
 }
 
 void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments)

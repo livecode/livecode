@@ -76,13 +76,13 @@ typedef struct _mcpurchase_t
 
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity);
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
 
-bool MCPurchaseLookupProperty(const char *p_property, MCPurchaseProperty &r_property);
+bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_property);
 
 bool MCPurchaseFindById(uint32_t p_id, MCPurchase *&r_purchase);
-bool MCPurchaseList(MCPurchaseListCallback p_callback, void *p_context);
+bool MCPurchaseList(MCExecPoint& ep);
 
 bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_purchase);
 
@@ -91,6 +91,8 @@ void MCPurchaseRelease(MCPurchase *p_purchase);
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase);
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase);
+
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified);
 
 bool MCStoreCanMakePurchase();
 
@@ -102,7 +104,9 @@ bool MCStoreRestorePurchases();
 MCPurchase *MCStoreGetPurchases();
 
 bool MCPurchaseStateToString(MCPurchaseState p_state, const char *&r_string);
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error);
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error);
+
+bool MCStoreRequestProductDetails(MCStringRef p_product_id);
 
 void MCPurchaseNotifyUpdate(MCPurchase *p_purchase);
 

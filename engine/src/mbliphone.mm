@@ -379,16 +379,16 @@ uint32_t MCIPhoneSystem::GetProcessId(void)
 
 bool MCIPhoneSystem::GetVersion(MCStringRef& r_string)
 {
-	char *t_version;
+	const char *t_version;
 	t_version = [[[UIDevice currentDevice] systemVersion] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-	return MCStringCreateWithNativeChars(t_version, MCCStringLength(t_version), r_string);
+	return MCStringCreateWithCString(t_version, r_string);
 }
 
 bool MCIPhoneSystem::GetMachine(MCStringRef& r_string)
 {
-	char *t_machine;
+	const char *t_machine;
 	t_machine = [[[UIDevice currentDevice] model] cStringUsingEncoding:NSMacOSRomanStringEncoding];
-	return MCStringCreateWithNativeChars(t_machine, MCCStringLength(t_machine), r_string);
+	return MCStringCreateWithCString(t_machine, r_string);
 }
 
 MCNameRef MCIPhoneSystem::GetProcessor(void)
@@ -609,20 +609,20 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 
 //////////
 
-void *MCIPhoneSystem::LoadModule(const char *p_path)
+void *MCIPhoneSystem::LoadModule(const char *p_cstring_path)
 {
+    MCAutoStringRef t_path;
+    /* UNCHECKED */ MCStringCreateWithCString(p_cstring_path, &t_path);
+    
 	void *t_module;
-	t_module = load_module(p_path);
+	t_module = load_module(MCStringGetCString(*t_path));
 	if (t_module != NULL)
 		return t_module;
-	
-	char *t_path;
-	t_path = ResolveNativePath(p_path);
-	if (t_path != NULL)
-		t_module = dlopen(t_path, RTLD_LAZY);
-	
-	delete t_path;
-	
+    
+	MCAutoStringRef t_resolved_path;
+	/* UNCHECKED */ ResolveNativePath(*t_path, &t_resolved_path);
+    t_module = dlopen(MCStringGetCString(*t_resolved_path), RTLD_LAZY);
+    
 	return t_module;
 }
 
@@ -644,12 +644,12 @@ void MCIPhoneSystem::UnloadModule(void *p_module)
 
 ////
 
-bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
+bool MCIPhoneSystem::LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
 {
 	return MCStringCopy(p_path, r_long_path);
 }
 
-bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
+bool MCIPhoneSystem::ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 {
 	return MCStringCopy(p_path, r_short_path);
 }
@@ -906,17 +906,18 @@ bool MCIPhoneSystem::HostNameToAddress(MCStringRef p_hostname, MCSystemHostResol
 	for(uint32_t i = 0; ptr[i] != NULL; i++)
 	{
 		MCAutoStringRef t_address;
-		char *t_addr_str = inet_ntoa(*ptr[i]);
-		if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
+		MCAutoPointer<char> t_addr_str;
+        t_addr_str = inet_ntoa(*ptr[i]);
+		if (!MCStringCreateWithCString(*t_addr_str, &t_address))
 			return false;
-		if (!p_callback(p_context, t_address))
+		if (!p_callback(p_context, *t_address))
 			return false;
 	}
 	
 	return true;
 }
 
-bool MCIPhoneSystem::AddressToHostName(const char *p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+bool MCIPhoneSystem::AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
 {
 	struct in_addr addr;
 	if (!inet_aton(MCStringGetCString(p_address), &addr))

@@ -51,11 +51,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneview.h"
 
 #include "mblstore.h"
+#include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// global counter for the iPhone idle timer
-uint g_idle_timer = 0;
 
 id objc_lookUpClass(const char *name);
 
@@ -109,19 +107,25 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 					(va_arg(t_args, MCString *)) -> set(nil, 0);
 				break;
 			
-			case 'x':
-				if (t_success)
-					ep . copyasstringref(*(va_arg(t_args, MCStringRef *)));
+            case 'x':
+            {
+                MCStringRef t_string;
+                if (t_success && ep . copyasstringref(t_string))
+                    *(va_arg(t_args, MCStringRef *)) = t_string;
 				else
-					t_success = false;
+					*(va_arg(t_args, MCStringRef *)) = nil;
 				break;
-			
+            }
+                
 			case 'a':
-				if (t_success)
-					ep . copyasarrayref(*(va_arg(t_args, MCArrayRef *)));
+            {
+                MCArrayRef t_array;
+				if (t_success && ep . copyasarray(t_array))
+					*(va_arg(t_args, MCArrayRef *)) = t_array;
 				else
-					t_success = false;
+					*(va_arg(t_args, MCArrayRef *)) = nil;
 				break;
+            }
 				
 			case 'r':
 			{
@@ -136,8 +140,9 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			case 'i':
 				if (t_success)
 				{
-					if (ep . getformat() != VF_STRING || ep . ston() == ES_NORMAL)
-						*(va_arg(t_args, int32_t *)) = ep . getint4();
+                    integer_t t_int;
+					if (ep . copyasint(t_int))
+						*(va_arg(t_args, integer_t *)) = t_int;
 					else
 						t_success = false;
 				}
@@ -146,8 +151,9 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
 			case 'u':
 				if (t_success)
 				{
-					if (ep . getformat() != VF_STRING || ep . ston() == ES_NORMAL)
-						*(va_arg(t_args, uint32_t *)) = ep . getuint4();
+                    uinteger_t t_uint;
+					if (ep . copyasuint(t_uint))
+						*(va_arg(t_args, uinteger_t *)) = t_uint;
 					else
 						t_success = false;
 				}
@@ -714,8 +720,10 @@ static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_param
 		if ((t_orientations & (1 << j)) != 0)
 			ep . concatcstring(s_orientation_names[j], EC_COMMA, ep . isempty());
 
+#ifdef MOBILE_BROKEN
 	MCresult -> store(ep, True);
-	
+#endif
+    
 	return ES_NORMAL;
 }
 
@@ -889,10 +897,10 @@ static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	const char *t_id_string = nil;
 	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
 	
-	MCExecPoint ep;
-	ep.setsvalue(t_id_string);
-	ctxt . SetTheResultToValue(ep . getsvalue());
-	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	ctxt . SetTheResultToStaticCString(t_id_string);
 	return ES_NORMAL;
 }
 
@@ -917,17 +925,19 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 		}
 	}
 	
+#ifdef MOBILE_BROKEN
 	if (t_success)
 		ctxt . SetTheResultToValue(ep . getsvalue());
 	else
 		MCresult->clear();
+#endif
 	
 	return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-
+/* MOVED TO mbliphoneidletimer.mm
 
 static Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 {
@@ -955,6 +965,8 @@ static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters
 		MCresult -> sets(MCfalsestring);
 	return ES_NORMAL;
 }
+ 
+*/
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1194,8 +1206,21 @@ extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_paramet
 extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);           // get calendar entry
 extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
+extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
+extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
+
+
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
 
 static MCPlatformMessageSpec s_platform_messages[] =
 {

@@ -1583,6 +1583,9 @@ int main(int argc, char *argv[], char *envp[])
 	}
 #endif
 	
+    if (!MCInitialize())
+        return -1;
+    
 	int t_exit_code;
     
     // MW-2012-09-26: [[ Bug ]] Make sure we set a valid current folder on

@@ -1,22 +1,43 @@
 /* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+ 
+ This file is part of LiveCode.
+ 
+ LiveCode is free software; you can redistribute it and/or modify it under
+ the terms of the GNU General Public License v3 as published by the Free
+ Software Foundation.
+ 
+ LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
+ WARRANTY; without even the implied warranty of MERCHANTABILITY or
+ FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
+ for more details.
+ 
+ You should have received a copy of the GNU General Public License
+ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-This file is part of LiveCode.
+#include "prefix.h"
 
-LiveCode is free software; you can redistribute it and/or modify it under
-the terms of the GNU General Public License v3 as published by the Free
-Software Foundation.
+#include "sysdefs.h"
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+#include "mcio.h"
 
-LiveCode is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or
-FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-for more details.
+#include "globals.h"
+#include "stack.h"
+#include "image.h"
+#include "param.h"
 
-You should have received a copy of the GNU General Public License
-along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
+#include "exec.h"
 
+#include "mblsyntax.h"
+#include "mblsensor.h"
+//#include "mblad.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 static const char *s_orientation_names[] =
 {
@@ -25,9 +46,404 @@ static const char *s_orientation_names[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+Exec_stat MCHandleCanComposeTextMessage(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_result;
+    MCTextMessagingGetCanComposeTextMessage(ctxt, t_result);
+    
+    if (t_result)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_recipients, t_body;
+    
+    bool t_success;
+	MCExecPoint ep(nil, nil, nil);
+
+	t_success = MCParseParameters(p_parameters, "x", &t_recipients);
+    if (t_success == false)
+    {
+        MCresult -> sets(MCfalsestring);
+        return ES_NORMAL;
+    }
+	t_success = MCParseParameters(p_parameters, "x", &t_body);
+    
+    ep . clear();
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCTextMessagingExecComposeTextMessage(ctxt, *t_recipients, *t_body);
+    
+	return ES_NORMAL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCIdleTimerExecLockIdleTimer(ctxt);
+    
+    return ES_NORMAL;
+}
+
+
+Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCIdleTimerExecUnlockIdleTimer(ctxt);
+    
+    return ES_NORMAL;    
+}
+
+Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_result;
+    
+    MCIdleTimerGetIdleTimerLocked(ctxt, t_result);
+    
+    if (t_result)
+        ctxt.SetTheResultToValue(kMCTrue);    
+    else
+        ctxt.SetTheResultToValue(kMCFalse);
+    
+    if (ctxt.HasError())
+        return ES_ERROR;        
+    else
+        return ES_NORMAL;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+
+
+Exec_stat MCHandleCanMakePurchase(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_result;
+    
+    MCStoreGetCanMakePurchase(ctxt, t_result);
+    
+    if (t_result)
+        ctxt.SetTheResultToValue(kMCTrue);
+    else
+        ctxt.SetTheResultToValue(kMCFalse);
+    
+    if (ctxt.HasError())
+        return ES_ERROR;
+    else
+        return ES_NORMAL;    
+}
+
+Exec_stat MCHandleEnablePurchaseUpdates(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCStoreExecEnablePurchaseUpdates(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleDisablePurchaseUpdates(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCStoreExecDisablePurchaseUpdates(ctxt);
+    
+    if(ctxt.HasError())
+        return ES_ERROR;
+    else
+        return ES_NORMAL;
+}
+    
+Exec_stat MCHandleRestorePurchases(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCStoreExecRestorePurchases(ctxt);
+    
+    if(ctxt.HasError())
+        return ES_ERROR;
+    else
+        return ES_NORMAL;
+}
+
+
+Exec_stat MCHandlePurchaseList(void* p_context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_list;
+    
+    MCStoreGetPurchaseList(ctxt, &t_list);
+    
+    
+    if(ctxt.HasError())
+        return ES_ERROR;
+    else
+    {
+        ctxt.SetTheResultToValue(*t_list);
+        return ES_NORMAL;
+    }
+}
+
+Exec_stat MCHandlePurchaseCreate(void* p_context, MCParameter* p_parameters)
+{
+    bool t_success = true;
+    MCAutoStringRef t_product_id;
+    uint32_t t_id;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &t_product_id);
+    
+    if (t_success)
+        MCStoreExecCreatePurchase(ctxt, &t_product_id, t_id);
+    
+    if (ctxt.HasError())
+    {
+        ctxt.SetTheResultToEmpty();
+        return ES_ERROR;
+    }
+    else
+    {
+        ctxt.SetTheResultToNumber(t_id);
+        return ES_NORMAL;
+    }
+}
+
+
+Exec_stat MCHandlePurchaseState(void* p_context, MCParameter* p_parameters)
+{    
+	bool t_success = true;
+	
+	uint32_t t_id;
+    MCAutoStringRef t_state;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+    
+	if (t_success)
+		MCStoreGetPurchaseState(ctxt, t_id, &t_state);
+	
+	if (ctxt.HasError())
+    {
+        ctxt.SetTheResultToEmpty();
+        return ES_ERROR;}
+    else
+    {
+        ctxt.SetTheResultToValue(*t_state);
+        return ES_NORMAL;
+    }
+}
+
+
+Exec_stat MCHandlePurchaseError(void* p_context, MCParameter* p_parameters)
+{
+	bool t_success = true;
+	
+    MCStringRef t_error;
+	uint32_t t_id;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+	
+	if (t_success)
+        MCStoreGetPurchaseError(ctxt, t_id, t_error);
+    
+    if (ctxt.HasError())
+    {
+        ctxt.SetTheResultToEmpty();
+        return ES_ERROR;
+    }
+    else
+    {
+        ctxt.SetTheResultToValue(t_error);
+        return ES_NORMAL;
+    }
+}
+
+Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	uint32_t t_id;
+	MCAutoStringRef t_prop_name;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "us", &t_id, &t_prop_name);
+	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+	if (t_success)
+        MCStoreGetPurchaseProperty(ctxt, t_id, &t_prop_name);
+	
+	if (!ctxt . HasError())
+    {
+        MCAutoStringRef t_string;
+        /* UNCHECKED */ ep . copyasstringref(&t_string);
+		ctxt . SetTheResultToValue(*t_string);
+        return ES_NORMAL;
+    }
+    
+    ctxt . SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+
+Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	uint32_t t_id;
+	MCAutoStringRef t_prop_name;
+    uint32_t t_quantity;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "uxu", &t_id, &t_prop_name, &t_quantity);
+		
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	if (t_success)
+        MCStoreSetPurchaseProperty(ctxt, t_id, &t_prop_name, t_quantity);
+	
+    if (ctxt.HasError())
+        return ES_ERROR;
+    else
+        return ES_NORMAL;
+}
+
+
+
+Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	uint32_t t_id;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCStoreExecSendPurchaseRequest(ctxt, t_id);
+    
+	if (ctxt.HasError())
+        return ES_ERROR;
+    else
+        return ES_NORMAL;
+}
+
+Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters)
+{
+	bool t_success = true;
+	
+	uint32_t t_id;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	if (t_success)
+        MCStoreExecConfirmPurchaseDelivery(ctxt, t_id);
+    
+    if (ctxt.HasError())
+        return ES_ERROR;
+	else
+        return ES_NORMAL;
+}
+
+
+Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_product;
+    bool t_success = true;    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &t_product);
+        
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCStoreExecRequestProductDetails(ctxt, *t_product);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    bool t_verified = true;
+    
+    uint32_t t_id;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (t_success)
+        MCStoreExecPurchaseVerify(ctxt, t_id, t_verified);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	intenum_t t_orientation;
@@ -43,13 +459,13 @@ Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	intenum_t t_orientation;
 	MCOrientationGetOrientation(ctxt, t_orientation);
 
-	ctxt . SetTheResultToStaticCString(s_orientation_names[(int)r_orientation]);
+	ctxt . SetTheResultToStaticCString(s_orientation_names[(int)t_orientation]);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -59,7 +475,7 @@ Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	intset_t t_orientations;
@@ -68,45 +484,40 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 	bool t_success;
 	t_success = true;
 	
-	MCAutoListRef t_orientations;
+	MCAutoListRef t_orientation_list;
 
 	if (t_success)
-		t_success = MCListCreateMutable(EC_COMMA, &t_orientations);
+		t_success = MCListCreateMutable(EC_COMMA, &t_orientation_list);
 
 	for (uint32_t j = 0; s_orientation_names[j] != nil; j++)
 	{
-		if (r_orientations & (1 << j)) != 0)
+		if ((t_orientations & (1 << j)) != 0)
 		{		
 			MCAutoStringRef t_orientation;
 			if (t_success)
 				t_success = MCStringFormat(&t_orientation, "%s", s_orientation_names[j]);
 
 			if (t_success)
-				t_success = MCListAppend(*t_orientations, *t_orientation);
+				t_success = MCListAppend(*t_orientation_list, *t_orientation);
 		}
 	}
 
 	MCAutoStringRef t_result;
 	if (t_success)
-		t_success = MCListCopyAsString(*t_orientations, &t_result);
+		t_success = MCListCopyAsString(*t_orientation_list, &t_result);
 
 	if (t_success)
 	{
 		ctxt . SetTheResultToValue(*t_result);
-		return;
-	}
-	else 
-		ctxt . Throw();
-
-	if (!ctxt . HasError())
 		return ES_NORMAL;
+	}
 
 	return ES_ERROR;
 }
 
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+/*	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	MCAutoStringRef t_orientations;
@@ -114,17 +525,18 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	if (p_parameters != nil)
 	{
 		p_parameters -> eval_argument(ep);
-		/* UNCHECKED */ ep . copyasstringref(&t_orientations);
+		ep . copyasstringref(&t_orientations);
 	}
 
+    bool t_success = true;
 	char **t_orientations_array;
 	uint32_t t_orientations_count;
 	t_orientations_array = nil;
 	t_orientations_count = 0;
 	if (t_success)
-		t_success = MCCStringSplit(MCStringGetCString(t_orientations), ',', t_orientations_array, t_orientations_count);
+		t_success = MCCStringSplit(MCStringGetCString(*t_orientations), ',', t_orientations_array, t_orientations_count);
 	
-	intset_t_t t_orientations_set;
+	intset_t t_orientations_set;
 	t_orientations_set = 0;
 	if (t_success)
 		for(uint32_t i = 0; i < t_orientations_count; i++)
@@ -140,19 +552,19 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
-
+*/
 	return ES_ERROR;
 }
 
 Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	bool t_locked;
 	MCOrientationGetOrientationLocked(ctxt, t_locked);
 
-	ctxt . SetTheResultToValue(t_locked);
+	//ctxt . SetTheResultToValue(t_locked);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -162,10 +574,10 @@ Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
-	MCOrientationLockOrientation(ctxt);
+	MCOrientationExecLockOrientation(ctxt);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -175,10 +587,10 @@ Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
 {
-	MCExecPoint ep(nil, nil, nil)
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
-	MCOrientationUnlockOrientation(ctxt);
+	MCOrientationExecUnlockOrientation(ctxt);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -224,7 +636,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	
 	MCExecContext ctxt(ep);
 
-	MCMailExecSendEmail(t_address, t_cc_address, t_subject, t_message_body);
+	//MCMailExecSendMail(t_address, t_cc_address, t_subject, t_message_body);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -247,7 +659,7 @@ Exec_stat MCHandleComposeMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+//		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -270,7 +682,7 @@ Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+//		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -293,7 +705,7 @@ Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-		MCMailExecComposeUnicodeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+//		MCMailExecComposeUnicodeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -316,7 +728,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-		MCMailExecComposeHtmlMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+//		MCMailExecComposeHtmlMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -333,7 +745,7 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 
 	MCMailGetCanSendMail(ctxt, t_can_send);
 
-	ctxt . SetTheResultToValue(t_can_send);
+//	ctxt . SetTheResultToValue(t_can_send);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -477,7 +889,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     MCAutoArrayRef t_detailed_reading;
     MCAutoStringRef t_reading;
 
-    switch (t_sensor)
+ /*   switch (t_sensor)
     {
         case kMCSensorTypeLocation:
         {
@@ -511,7 +923,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
                 MCSensorGetRotationRateOfDevice(ctxt, &t_reading);
             break;
         }
-    }
+    } */
     
     if (t_detailed)
     {
@@ -541,7 +953,7 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
-    MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
+    //MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
         ep.setvalueref(*t_detailed_reading);
     
@@ -561,7 +973,7 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
-    MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
+    //MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
         ep.setvalueref(*t_detailed_reading);
     
@@ -628,7 +1040,7 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
+    //MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
     
     MCresult->sets(MCU_btos(t_available));
 	if (!ctxt . HasError())
@@ -645,7 +1057,7 @@ Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
         
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
+    //MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
     
     MCresult->sets(MCU_btos(t_available));
 	if (!ctxt . HasError())
@@ -662,7 +1074,7 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
     
     bool t_available;
     t_available = false;
-    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
+    //MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
     
     MCresult->sets(MCU_btos(t_available));
 	if (!ctxt . HasError())
@@ -758,7 +1170,7 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
-	if (MCParseParams(p_parameters, "axxx", &t_contact, &t_title, &t_message, &t_alternate_name))
+	if (MCParseParameters(p_parameters, "axxx", &t_contact, &t_title, &t_message, &t_alternate_name))
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())
@@ -825,7 +1237,7 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 
     MCExecContext ctxt(ep);
     // Call the Exec implementation
-    MCAddContactExec(ctxt, *t_contact);
+    MCAddressBookExecAddContact(ctxt, *t_contact);
     // Set return value
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -848,10 +1260,253 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    MCFindContactExec(ctxt, t_contact_name);
+    //MCAddressBookExecFindContact(ctxt, t_contact_name);
     // Set return value
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
 	return ES_ERROR;
 }
+
+
+//////////////////////////////////////////////////////////////////////////////
+
+
+Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_key;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_key);
+	
+	if (t_success)
+		MCAdExecRegisterWithInneractive(ctxt, *t_key);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+
+Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    MCAutoStringRef t_type;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &t_ad, &t_type);
+    
+//    MCAdTopLeft t_top_left = {0,0};
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+
+    if (t_success)
+    {
+//        char *t_top_left_string;
+//        t_top_left_string = nil;
+//        if (MCParseParameters(p_parameters, "s", &t_top_left_string))
+//        /* UNCHECKED */ sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
+//        MCCStringFree(t_top_left_string);
+        t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
+    }
+    
+    MCAutoArrayRef t_metadata;
+    
+    if (t_success)
+        MCParseParameters(p_parameters, "a", &t_metadata);
+    
+	if (t_success)
+		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft_x, t_topleft_y, *t_metadata);
+    
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+	if (t_success)
+		MCAdExecDeleteAd(ctxt, *t_ad);
+        
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+    bool t_visible;
+    t_visible = false;
+    
+	if (t_success)
+		MCAdGetVisibleOfAd(ctxt, *t_ad, t_visible);
+    
+    if (t_success)
+        MCresult->sets(MCU_btos(t_visible));
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    
+    bool t_visible;
+    t_visible = false;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "xb", &t_ad, &t_visible);
+	
+	if (t_success)
+		MCAdSetVisibleOfAd(ctxt, *t_ad, t_visible);
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+
+	MCAutoStringRef t_ad;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_ad);
+	
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+    
+	if (t_success)
+		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+    
+#ifdef MOBILE_BROKEN
+    if (t_success)
+    {
+        MCAutoRawCString t_top_left_string;
+        t_success = MCCStringFormat(t_top_left_string, "%u,%u", t_top_left.x, t_top_left.y);
+        if (t_success)
+            if (t_top_left_string.Borrow() != nil)
+                ep.copysvalue(t_top_left_string.Borrow());
+    }
+    
+    if (t_success)
+        MCresult->store(ep, False);
+#endif
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCAutoStringRef t_ad;
+    uint32_t t_topleft_x;
+    uint32_t t_topleft_y;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "suu", &t_ad, t_topleft_x, t_topleft_y);
+    
+	if (t_success)
+		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+#ifdef OLD_EXEC
+    if (t_success)
+    {
+        MCAutoRawCString t_ads;
+        t_success = MCAdGetAds(ctxt, t_ads);
+        if (t_success && t_ads.Borrow() != nil)
+            ep.copysvalue(t_ads.Borrow());
+    }
+    
+    if (t_success)
+        MCresult->store(ep, False);
+#endif
+    
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+    
+}
+
+//////////////////////////////////////////////////////////////////////////////////////

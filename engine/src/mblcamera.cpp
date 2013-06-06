@@ -47,7 +47,8 @@ void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_
 		ctxt . SetTheResultToStaticCString("source not available");
 		return;
 	}
-	
+    
+#ifdef MOBILE_BROKEN
 	MCAutoRawMemoryBlock t_image_data;
 	size_t t_image_data_size;
 	if (!MCSystemAcquirePhoto(p_source, p_max_width, p_max_height, t_image_data, t_image_data_size))
@@ -70,6 +71,7 @@ void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_
 	MCExecPoint ep(nil, nil, nil);
 	ep . setsvalue(MCString((char *)t_image_data . Borrow(), t_image_data_size));
 	iptr -> setprop(0, P_TEXT, ep, false);
+#endif
 }
 
 void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo)
@@ -115,7 +117,9 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 		ep . concatcstring("video", EC_COMMA, ep . isempty());
 	if ((t_features_set & kMCCameraFeatureFlash) != 0)
 		ep . concatcstring("flash", EC_COMMA, ep . isempty());
+#ifdef MOBILE_BROKEN
 	MCresult -> store(ep, False);
+#endif
 	
 	return ES_NORMAL;
 }
@@ -179,7 +183,7 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	else
 		MCCameraExecAcquirePhoto(t_ctxt, t_photo_source);
 
-	return t_ctxt . GetStat();
+	return t_ctxt . GetExecStat();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

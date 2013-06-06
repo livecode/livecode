@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "mblsyntax.h"
 
 #include "mbliphoneapp.h"
 
@@ -291,7 +292,7 @@ static NSString *mcstringref_to_nsstring(MCStringRef p_string, bool p_unicode)
 	return [[[NSString alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
 }
 
-static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet p_separator_set)
+static NSArray *mcstringref_to_nsarray(MCStringRef p_string, NSCharacterSet* p_separator_set)
 {
 	return [[NSString stringWithCString: MCStringGetCString(p_string) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByCharactersInSet: p_separator_set];
 }
@@ -596,14 +597,14 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 */
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body, MCStringRef& r_result)
+void MCSystemSendMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body, MCStringRef& r_result)
 {
 	iphone_send_email_t context;
 	ctxt . to_addresses = p_to;
 	ctxt . cc_addresses = p_cc;
 	ctxt . subject = p_subject;
 	ctxt . body = p_body;
-	
+
 	MCIPhoneRunOnMainFiber(iphone_send_email_prewait, &context);
 	
 	while([context . dialog isRunning])

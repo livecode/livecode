@@ -1303,7 +1303,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	if (!t_init_success)
 	{
 		MCExecPoint ep(nil, nil, nil);
-		MCresult -> fetch(ep);
+        ep . setvalueref(MCresult -> getvalueref());
 		NSLog(@"Startup error: %s\n", ep . getcstring());
 		abort();
 		return;

@@ -141,6 +141,7 @@ bool MCCStringEndsWithCaseless(const char *string, const char *suffix);
 uint32_t MCCStringLength(const char *s);
 
 bool MCCStringSplit(const char *string, char p_separator, char**& r_elements, uint32_t& r_element_count);
+bool MCCStringCombine(const char * const *p_elements, uint32_t p_element_count, char p_separator, char*& r_string);
 
 void MCCStringArrayFree(char **cstrings, uint32_t count);
 
@@ -160,6 +161,9 @@ bool MCCStringFirstIndexOf(const char *p_string, const char *p_search, uint32_t 
 bool MCCStringLastIndexOf(const char *p_string, char p_search, uint32_t &r_index);
 bool MCCStringLastIndexOf(const char *p_string, const char *p_search, uint32_t &r_index);
 bool MCCStringContains(const char *p_haystack, const char *p_needle);
+
+bool MCCStringIsEmpty(const char *);
+bool MCCStringIsInteger(const char *);
 
 ////////////////////////////////////////////////////////////////////////////////
 

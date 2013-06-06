@@ -427,8 +427,7 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 			{
 				UIEdgeInsets t_insets;
 				t_insets = [p_view scrollIndicatorInsets];
-				sprintf(ep.getbuffer(I2L * 4 + 4), "%d,%d,%d,%d", (int16_t)(t_insets.left * t_scale), (int16_t)(t_insets.top * t_scale), (int16_t)(t_insets.right * t_scale), (int16_t)(t_insets.bottom * t_scale));
-				ep.setstrlen();
+                ep.setstringf("%d,%d,%d,%d", (int16_t)(t_insets.left * t_scale), (int16_t)(t_insets.top * t_scale), (int16_t)(t_insets.right * t_scale), (int16_t)(t_insets.bottom * t_scale));
 			}
 			else
 				ep.clear();

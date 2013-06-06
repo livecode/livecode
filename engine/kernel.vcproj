@@ -6312,6 +6312,10 @@
 			Name="_InProgress"
 			>
 			<File
+				RelativePath=".\src\exec-ad.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-addressbook.cpp"
 				>
 			</File>
@@ -6361,6 +6365,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-ide.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-idletimer.cpp"
 				>
 			</File>
 			<File
@@ -6506,6 +6514,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-store.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-strings.cpp"
 				>
 			</File>
@@ -6515,6 +6527,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-textmessaging.cpp"
 				>
 			</File>
 			<File

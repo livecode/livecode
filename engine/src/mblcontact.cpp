@@ -74,6 +74,7 @@ void MCUpdateContactExec(MCExecContext& p_ctxt, MCArrayRef p_contact, const char
 
 void MCGetContactDataExec(MCExecContext& p_ctxt, int32_t p_contact_id)
 {
+
     MCAutoArrayRef t_contact_data;
     MCSystemGetContactData(p_ctxt, p_contact_id, &t_contact_data);
     if (*t_contact_data == nil)

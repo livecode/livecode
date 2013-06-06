@@ -28,6 +28,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "objectstream.h"
 
+#include "variable_impl.h"
+
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCVariableValue::assign_empty(void)
@@ -115,6 +117,7 @@ void MCVariableValue::exchange(MCVariableValue& v)
 
 Exec_stat MCVariableValue::fetch(MCExecPoint& ep, bool p_copy)
 {
+#ifdef MOBILE_BROKEN
 	switch(get_type())
 	{
 	case VF_UNDEFINED:
@@ -145,12 +148,14 @@ Exec_stat MCVariableValue::fetch(MCExecPoint& ep, bool p_copy)
 			ep . setarray(new MCVariableValue(*this), True);
 	break;
 	}
+#endif
 
 	return ES_NORMAL;
 }
 
 Exec_stat MCVariableValue::store(MCExecPoint& ep)
 {
+#ifdef MOBILE_BROKEN
 	switch(ep . getformat())
 	{
 	case VF_UNDEFINED:
@@ -181,7 +186,8 @@ Exec_stat MCVariableValue::store(MCExecPoint& ep)
 		}
 	break;
 	}
-
+#endif
+    
 	return ES_NORMAL;
 }
 
@@ -195,9 +201,11 @@ Exec_stat MCVariableValue::fetch_element(MCExecPoint& ep, const MCString& key, b
 			return e -> value . fetch(ep, p_copy);
 	}
 
+#ifdef MOBILE_BROKEN
 	// MW-2008-06-30: [[ Bug ]] If an element is not found, then it should set the ep to the
 	//   'undefined' value (which is BOTH empty and 0.0).
 	ep . setboth(MCnullmcstring, 0.0);
+#endif
 
 	return ES_NORMAL;
 }
@@ -679,6 +687,7 @@ Exec_stat MCVariableValue::append(MCExecPoint& ep)
 	if (!ensure_string(ep))
 		return ES_ERROR;
 
+#ifdef MOBILE_BROKEN
 	// If we attempt to append an array, the array gets converted to empty,
 	// thus resulting in a no-op.
 	if (ep . getformat() == VF_ARRAY)
@@ -695,6 +704,7 @@ Exec_stat MCVariableValue::append(MCExecPoint& ep)
 
 		return ES_ERROR;
 	}
+#endif
 
 	return ES_NORMAL;
 }
@@ -1193,7 +1203,7 @@ IO_stat MCVariableValue::savekeys(IO_header *stream)
 	return IO_write_uint4(0, stream);
 }
 
-IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream)
+IO_stat MCVariableValue::loadarray(MCObjectInputStream& p_stream, bool p_merge)
 {
 	if (!p_merge)
 		destroy();

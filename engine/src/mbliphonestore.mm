@@ -115,21 +115,15 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	switch (p_property)
 	{
 		case kMCPurchasePropertyQuantity:
 		{
-			uint32_t t_quantity;
-			if (!MCU_stoui4(ep . getsvalue(), t_quantity))
-			{
-				MCeerror->add(EE_OBJECT_NAN, 0, 0, ep.getsvalue());
-				return ES_ERROR;
-			}
 			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: t_quantity];
+				[t_ios_data->payment setQuantity: p_quantity];
 			return ES_NORMAL;
 		}
 			break;
@@ -270,7 +264,7 @@ bool MCStoreRestorePurchases()
 	return true;
 }
 
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error)
 {
 	if (p_purchase == nil || p_purchase->state != kMCPurchaseStateError)
 		return false;
@@ -280,7 +274,7 @@ bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
 	if (t_ios_data == nil)
 		return false;
 	
-	return MCCStringClone(t_ios_data->error, r_error);
+	return MCStringCreateWithCString(t_ios_data->error, r_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -514,13 +508,13 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product);
 @end
 
 
-bool MCStoreRequestProductDetails(const char *p_product)
+bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 {
     SKProductsRequest *t_request = nil;
     
     NSString *t_product_id = nil;
     
-    t_product_id = [NSString stringWithCString:p_product encoding:NSMacOSRomanStringEncoding];
+    t_product_id = [NSString stringWithCString:MCStringGetCString(p_product_id) encoding:NSMacOSRomanStringEncoding];
     t_request = [[MCProductsRequest alloc] initWithProductId: t_product_id];
     
     [t_request setDelegate: [[MCProductsRequestDelegate alloc] init]];
@@ -667,6 +661,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     if (t_success)
         t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
     
+#ifdef MOBILE_BROKEN
     if (t_success)
     {
         MCExecPoint ep(nil, nil, nil);
@@ -731,6 +726,7 @@ void MCStoreProductRequestResponseEvent::Dispatch()
         
         MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
     }
+#endif
     
     if (t_unicode_description != nil)
         MCMemoryDeleteArray(t_unicode_description);
@@ -755,20 +751,28 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+//extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
-Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
+//{
+//    bool t_success = true;
+//    
+//    char * t_product;
+//    MCPurchase *t_purchase = nil;
+//    
+//    if (t_success)
+//        t_success = MCParseParameters(p_parameters, "s", &t_product);
+//    
+//    if (t_success)
+//        MCStoreRequestProductDetails(t_product);
+//    
+//    return ES_NORMAL;
+//}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 {
-    bool t_success = true;
-    
-    char * t_product;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "s", &t_product);
-    
-    if (t_success)
-        MCStoreRequestProductDetails(t_product);
-    
-    return ES_NORMAL;
+    // Not Implemented
 }

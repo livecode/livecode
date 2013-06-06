@@ -464,6 +464,7 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
+#ifndef _MOBILE
 	Exec_stat t_status = ES_NORMAL;
 	char *t_rsa_key = nil;
 	uint32_t t_rsa_keylength;
@@ -545,6 +546,9 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 	MCCStringFree(t_rsa_passphrase);
 
 	return t_status;
+#else
+    return ES_NORMAL;
+#endif
 }
 
 Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)

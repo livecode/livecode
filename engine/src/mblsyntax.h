@@ -263,16 +263,16 @@ struct MCAdTopLeft {
     uint32_t y;
 };
 
-void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, const char *p_key);
-void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, MCAdTopLeft p_top_left, MCVariableValue *p_meta_data);
-void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name);
-
-bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_top_left);
-bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible);
-bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads);
-
-void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_top_left);
-void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible);
+//void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, const char *p_key);
+//void MCAdExecCreateAd(MCExecContext& ctxt, const char *p_name, MCAdType p_type, MCAdTopLeft p_top_left, MCVariableValue *p_meta_data);
+//void MCAdExecDeleteAd(MCExecContext& ctxt, const char *p_name);
+//
+//bool MCAdGetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft &r_top_left);
+//bool MCAdGetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool &r_visible);
+//bool MCAdGetAds(MCExecContext& ctxt, char*& r_ads);
+//
+//void MCAdSetTopLeftOfAd(MCExecContext& ctxt, const char *p_name, MCAdTopLeft p_top_left);
+//void MCAdSetVisibleOfAd(MCExecContext& ctxt, const char *p_name, bool p_visible);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Orientation module
