@@ -40,8 +40,13 @@ MC_EXEC_DEFINE_GET_METHOD(Mail, CanSendMail, 1)
 
 void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, MCMailType p_type)
 {	
-	void *dialog_ptr = nil;
-	MCSystemPrepareMail(p_to, p_cc, p_bcc, p_subject, p_body, p_type, dialog_ptr);
+	bool t_can_send;
+	MCMailGetCanSendMail(ctxt, t_can_send);
+
+	if (!t_can_send)
+		return;
+
+	MCAutoArray<MCAttachmentData> t_attachments;
 
 	MCNewAutoNameRef t_data_name, t_file_name, t_type_name, t_name_name;
 	MCNameCreateWithCString("data", &t_data_name);
@@ -51,13 +56,14 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 
 	if (p_attachments != nil)
 	{
+		MCValueRef t_data;
+		MCValueRef t_file;
+		MCValueRef t_type;
+		MCValueRef t_name;
+		MCAttachmentData t_attachment;
+		
 		if (MCArrayIsSequence(p_attachments))
 		{
-			MCValueRef t_data;
-			MCValueRef t_file;
-			MCValueRef t_type;
-			MCValueRef t_name;
-
 			for(uindex_t i = 0; i < MCArrayGetCount(p_attachments); i++)
 			{
 				MCValueRef t_value;
@@ -69,34 +75,46 @@ void MCMailDoComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
 				MCArrayFetchValue((MCArrayRef)t_value, false, &t_file_name, t_file);
 				MCArrayFetchValue((MCArrayRef)t_value, false, &t_type_name, t_type);
 				MCArrayFetchValue((MCArrayRef)t_value, false, &t_name_name, t_name);
-				MCSystemAddAttachment((MCStringRef)t_data, (MCStringRef)t_file, (MCStringRef)t_type, (MCStringRef)t_name, dialog_ptr);
+
+				t_attachment . data = (MCStringRef)t_data;
+				t_attachment . file = (MCStringRef)t_file;
+				t_attachment . type = (MCStringRef)t_type;
+				t_attachment . name = (MCStringRef)t_name;
+
+				t_attachments . Push(t_attachment);
 			}	
 		}
 		else
 		{
-			MCValueRef t_data;
-			MCValueRef t_file;
-			MCValueRef t_type;
-			MCValueRef t_name;
-
 			MCArrayFetchValue(p_attachments, false, &t_data_name, t_data);
 			MCArrayFetchValue(p_attachments, false, &t_file_name, t_file);
 			MCArrayFetchValue(p_attachments, false, &t_type_name, t_type);
 			MCArrayFetchValue(p_attachments, false, &t_name_name, t_name);
 
-			MCSystemAddAttachment((MCStringRef)t_data, (MCStringRef)t_file, (MCStringRef)t_type, (MCStringRef)t_name, dialog_ptr);	
+			t_attachment . data = (MCStringRef)t_data;
+			t_attachment . file = (MCStringRef)t_file;
+			t_attachment . type = (MCStringRef)t_type;
+			t_attachment . name = (MCStringRef)t_name;
+		
+			t_attachments . Push(t_attachment);
 		}
 	}
 
-	MCSystemSendPreparedMail(&dialog_ptr);
-
 	MCAutoStringRef t_result;
-	MCSystemMailResult(&t_result);
+
+	MCSystemSendMailWithAttachments(p_to, p_cc, p_bcc, p_subject, p_body, p_type, t_attachments . Ptr(), t_attachments . Size(), &t_result);
+
 	ctxt . SetTheResultToValue(*t_result);
 }
 
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body)
 {
+	bool t_can_send;
+	MCMailGetCanSendMail(ctxt, t_can_send);
+
+	if (!t_can_send)
+		return;
+
 	MCSystemSendMail(p_to, p_cc, p_subject, p_body);
 }
 

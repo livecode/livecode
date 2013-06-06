@@ -91,16 +91,22 @@ static MCIPhoneMailComposerDialog *s_mail_composer_dialog = nil;
 
 struct iphone_send_email_t
 {
-	const char *to_addresses;
+/*	const char *to_addresses;
 	const char *cc_addresses;
 	const char *subject;
 	const char *body;
-	MCIPhoneMailComposerDialog *dialog;
+	MCIPhoneMailComposerDialog *dialog; */
+
+	MCStringRef to_addresses;
+	MCStringRef cc_addresses;
+	MCStringRef subject;
+	MCStringRef body;
+	MCIPhoneMailComposerDialog *dialog; 
 };
 
 static void iphone_send_email_prewait(void *p_context)
 {
-	iphone_send_email_t *ctxt;
+/*	iphone_send_email_t *ctxt;
 	ctxt = (iphone_send_email_t *)p_context;
 	
 	ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
@@ -130,6 +136,38 @@ static void iphone_send_email_prewait(void *p_context)
 	else
 		[ ctxt -> dialog setMessageBody: @"" isHTML: NO ];
 	
+	[ctxt -> dialog preWait]; */
+
+	iphone_send_email_t *ctxt;
+	ctxt = (iphone_send_email_t *)p_context;
+	
+	ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
+	[ ctxt -> dialog setMailComposeDelegate: ctxt -> dialog ];
+	
+	NSArray *t_recipients;
+	t_recipients = nil;
+	if (ctxt -> to_addresses != nil && !MCStringIsEqualTo(ctxt -> to_addresses, kMCEmptyString, kMCCompareCaseless))
+		t_recipients = [[NSString stringWithCString: MCStringGetCString(ctxt -> to_addresses) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString: @","];
+	
+	NSArray *t_ccs;
+	t_ccs = nil;
+	if (ctxt -> cc_addresses != nil && !MCStringIsEqualTo(ctxt -> cc_addresses, kMCEmptyString, kMCCompareCaseless))
+		t_ccs = [[NSString stringWithCString: MCStringGetCString(ctxt -> cc_addresses) encoding: NSMacOSRomanStringEncoding] componentsSeparatedByString: @","];
+	
+	[ ctxt -> dialog setToRecipients: t_recipients ];
+	
+	[ ctxt -> dialog setCcRecipients: t_ccs ];
+	
+	if (ctxt -> subject != nil)
+		[ ctxt -> dialog setSubject: [NSString stringWithCString: MCStringGetCString(ctxt -> subject) encoding: NSMacOSRomanStringEncoding]];
+	else
+		[ ctxt -> dialog setSubject: @"" ];
+	
+	if (ctxt -> body != nil)
+		[ ctxt -> dialog setMessageBody: [NSString stringWithCString: MCStringGetCString(ctxt -> body) encoding: NSMacOSRomanStringEncoding] isHTML: NO ];
+	else
+		[ ctxt -> dialog setMessageBody: @"" isHTML: NO ];
+	
 	[ctxt -> dialog preWait];
 }
 
@@ -140,7 +178,7 @@ static void iphone_send_email_postwait(void *p_context)
 	
 	[ctxt -> dialog postWait];
 }
-
+/*
 static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addresses, const char *p_subject, const char *p_body)
 {
 	if (![MCIPhoneMailComposerDialog canSendMail])
@@ -169,7 +207,7 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 	
 	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
 }
-
+*/
 /*Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
 	char *t_address, *t_cc_address, *t_subject, *t_message_body;
@@ -262,7 +300,7 @@ static NSData *mcstringref_to_nsdata(MCStringRef p_string)
 {
 	return [[NSData alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string)];
 }
-
+/*
 static bool array_to_attachment(MCVariableArray *p_array, NSData*& r_data, NSString*& r_type, NSString*& r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
@@ -305,17 +343,27 @@ static bool array_to_attachment(MCVariableArray *p_array, NSData*& r_data, NSStr
 		
 	return true;
 }
-
+*/
 struct compose_mail_t
 {
-	MCMailType type;
+/*	MCMailType type;
 	MCParameter *parameters;
+	MCIPhoneMailComposerDialog *dialog; */
+
+	MCStringRef to;
+	MCStringRef cc;
+	MCStringRef bcc;
+	MCStringRef subject;
+	MCStringRef body;
+	MCMailType type;
+	MCAttachmentData *attachments;
+	uindex_t count;
 	MCIPhoneMailComposerDialog *dialog;
 };
 
 static void compose_mail_prewait(void *p_context)
 {
-	compose_mail_t *ctxt;
+/*	compose_mail_t *ctxt;
 	ctxt = (compose_mail_t *)p_context;
 	
 	bool t_success;
@@ -410,7 +458,83 @@ static void compose_mail_prewait(void *p_context)
 	MCCStringFree(t_to);
 	MCCStringFree(t_cc);
 	MCCStringFree(t_bcc);
-	delete t_body . getstring();
+	delete t_body . getstring(); */
+
+	compose_mail_t *ctxt;
+	ctxt = (compose_mail_t *)p_context;
+	
+	bool t_success;
+	t_success = true;
+
+	ctxt -> dialog = [[MCIPhoneMailComposerDialog alloc ] init];
+	[ ctxt -> dialog setMailComposeDelegate: ctxt -> dialog ];
+
+	if (ctxt -> attachments != nil)
+	{
+		for (uindex_t i = 0; i < ctxt -> attachment_count; i++)
+		{
+			NSData *t_data;
+			NSString *t_type;
+			NSString *t_name;
+
+			if (ctxt -> attachments[i] . file == nil && ctxt -> attachments[i] . data == nil)
+				t_data = [[NSData alloc] initWithBytes: nil length: 0];
+			else if (ctxt -> attachments[i] . data != nil)
+				t_data = mcstringref_to_nsdata(ctxt -> attachments[i] . data);
+			else if (ctxt -> attachments[i] . file != nil)
+			{
+				MCAutoStringRef t_resolved_path;
+				MCS_resolvepath(ctxt -> attachments[i] . file, &t_resolved_path);
+				t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithCString: MCStringGetCString(*t_resolved_path) encoding: NSMacOSRomanStringEncoding]];
+			}
+			
+			if (ctxt -> attachments[i] . type == nil)
+				t_type = @"application/octet-stream";
+			else
+				t_type = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . type) encoding: NSMacOSRomanStringEncoding];
+			}
+			
+			if (ctxt -> attachments[i] . name == nil)
+				t_name = nil;
+			else
+				t_name = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . name) encoding: NSMacOSRomanStringEncoding];
+				
+			[dialog_ptr addAttachmentData: t_data mimeType: t_type fileName: t_name];
+			[t_data release];
+		}
+	}
+
+	NSCharacterSet *t_separator_set;
+	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
+	
+	NSString *t_ns_subject;
+	t_ns_subject = mcstringref_to_nsstring(p_subject, ctxt -> type == kMCMailTypeUnicode);
+	
+	NSString *t_ns_body;
+	t_ns_body = mcstringref_to_nsstring(t_body, ctxt -> type == kMCMailTypeUnicode);
+	
+	NSArray *t_ns_to;
+	t_ns_to = nil;
+	if (ctxt -> to != nil && !MCStringIsEqualTo(ctxt -> to, kMCEmptyString, kMCCompareCaseless))
+		t_ns_to = mcstringref_to_nsarray(ctxt -> to, t_separator_set);
+	
+	NSArray *t_ns_cc;
+	t_ns_cc = nil;
+	if (ctxt -> cc != nil && !MCStringIsEqualTo(ctxt -> cc, kMCEmptyString, kMCCompareCaseless))
+		t_ns_cc = mcstringref_to_nsarray(ctxt -> cc, t_separator_set);
+
+	NSArray *t_ns_bcc;
+	t_ns_bcc = nil;
+	if (ctxt -> bcc != nil && !MCStringIsEqualTo(ctxt -> bcc, kMCEmptyString, kMCCompareCaseless))
+		t_ns_bcc = mcstringref_to_nsarray(ctxt -> bcc, t_separator_set);	
+
+	[ ctxt -> dialog setSubject: t_ns_subject ];
+	[ ctxt -> dialog setToRecipients: t_ns_to ];
+	[ ctxt -> dialog setCcRecipients: t_ns_cc ];
+	[ ctxt -> dialog setBccRecipients: t_ns_bcc ];
+	[ ctxt -> dialog setMessageBody: t_ns_body isHTML: ctxt -> type == kMCMailTypeHtml ];
+
+	[ctxt -> dialog preWait];
 }
 
 static void compose_mail_postwait(void *p_context)
@@ -420,7 +544,7 @@ static void compose_mail_postwait(void *p_context)
 	
 	[ctxt -> dialog postWait];
 }
-
+/*
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
 	compose_mail_t ctxt;
@@ -469,22 +593,16 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body)
+void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body, MCStringRef& r_result)
 {
-	if (![MCIPhoneMailComposerDialog canSendMail])
-	{
-		ctxt . SetTheResultToStaticCString("not configured");
-		return;
-	}
-	
 	iphone_send_email_t context;
-	ctxt . to_addresses = MCStringGetCString(p_to);
-	ctxt . cc_addresses = MCStringGetCString(p_cc);
-	ctxt . subject = MCStringGetCString(p_subject);
-	ctxt . body = MCStringGetCString(p_body);
+	ctxt . to_addresses = p_to;
+	ctxt . cc_addresses = p_cc;
+	ctxt . subject = p_subject;
+	ctxt . body = p_body;
 	
 	MCIPhoneRunOnMainFiber(iphone_send_email_prewait, &context);
 	
@@ -499,88 +617,36 @@ void MCSystemSendMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, M
 		MCscreen -> wait(0.01, False, True);
 	
 	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
+
+	MCSystemMailResult(r_result);
 }
 
-void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void &*dialog_ptr)
+void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result)
 {
-	dialog_ptr = [[MCIPhoneMailComposerDialog alloc ] init];
-	[ dialog_ptr setMailComposeDelegate: dialog_ptr ];
-	
-	NSCharacterSet *t_separator_set;
-	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
-	
-	NSString *t_ns_subject;
-	t_ns_subject = mcstringref_to_nsstring(p_subject, p_type == kMCMailTypeUnicode);
-	
-	NSString *t_ns_body;
-	t_ns_body = mcstringref_to_nsstring(t_body, p_type == kMCMailTypeUnicode);
-	
-	NSArray *t_ns_to;
-	t_ns_to = nil;
-	if (p_to != nil && !MCStringIsEqualTo(p_to, kMCEmptyString, kMCCompareCaseless))
-		t_ns_to = mcstringref_to_nsarray(p_to, t_separator_set);
-	
-	NSArray *t_ns_cc;
-	t_ns_cc = nil;
-	if (p_cc != nil && !MCStringIsEqualTo(p_cc, kMCEmptyString, kMCCompareCaseless))
-		t_ns_cc = mcstringref_to_nsarray(p_cc, t_separator_set);
+	compose_mail_t ctxt;
 
-	NSArray *t_ns_bcc;
-	t_ns_bcc = nil;
-	if (p_bcc != nil && !MCStringIsEqualTo(p_bcc, kMCEmptyString, kMCCompareCaseless))
-		t_ns_bcc = mcstringref_to_nsarray(p_bcc, t_separator_set);	
-
-	[ dialog_ptr setSubject: t_ns_subject ];
-	[ dialog_ptr setToRecipients: t_ns_to ];
-	[ dialog_ptr setCcRecipients: t_ns_cc ];
-	[ dialog_ptr setBccRecipients: t_ns_bcc ];
-	[ dialog_ptr setMessageBody: t_ns_body isHTML: ctxt -> type == kMCMailTypeHtml ];
-
-	[dialog_ptr preWait];
-	while([dialog_ptr isRunning])
+	ctxt . to = p_to;
+	ctxt . cc = p_cc;
+	ctxt . bcc = p_bcc;
+	ctxt . subject = p_subject;
+	ctxt . body = p_body;
+	ctxt . type = p_type;
+	ctxt . attachments = p_attachments;
+	ctxt . attachment_count = p_attachment_count;
+	
+	MCIPhoneRunOnMainFiber(compose_mail_prewait, &ctxt);
+	
+	while([ctxt . dialog isRunning])
 		MCscreen -> wait(60.0, False, True);
-}
-
-void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr)
-{
-	NSData *t_data;
-	NSString *t_type;
-	NSString *t_name;
-
-	if (p_file == nil && p_data == nil)
-		t_data = [[NSData alloc] initWithBytes: nil length: 0];
-	else if (p_data != nil)
-		t_data = mcstringref_to_nsdata(p_data);
-	else if (t_file != nil)
-	{
-		MCAutoStringRef t_resolved_path;
-		MCS_resolvepath(p_file, &t_resolved_path);
-		t_data = [[NSData alloc] initWithContentsOfMappedFile: [NSString stringWithCString: MCStringGetCString(*t_resolved_path) encoding: NSMacOSRomanStringEncoding]];
-	}
 	
-	if (p_type == nil)
-		t_type = @"application/octet-stream";
-	else
-		t_type = [NSString stringWithCString: MCStringGetCString(p_type) encoding: NSMacOSRomanStringEncoding];
-	}
+	MCIPhoneRunOnMainFiber(compose_mail_postwait, &ctxt);
 	
-	if (p_name == nil)
-		t_name = nil;
-	else
-		t_name = [NSString stringWithCString: MCStringGetCString(p_name) encoding: NSMacOSRomanStringEncoding];
-		
-	[dialog_ptr addAttachmentData: t_data mimeType: t_type fileName: t_name];
-	[t_data release];
-}
-
-void MCSystemSendPreparedMail(void *dialog_ptr)
-{
-	[dialog_ptr postWait];
-
-	while([dialog_ptr retainCount] > 2)
+	while([ctxt . dialog retainCount] > 2)
 		MCscreen -> wait(0.01, False, True);
 	
-	MCIPhoneCallSelectorOnMainFiber(dialog_ptr, @selector(release));
+	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));
+
+	MCSystemMailResult(r_result);
 }
 
 void MCSystemGetCanSendMail(bool& r_result)
