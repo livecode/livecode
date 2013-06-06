@@ -34,17 +34,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32theme.h"
 #include "w32context.h"
 
+#include <uxtheme.h>
+
 ////////////////////////////////////////////////////////////////////////////////
-
-typedef enum THEMESIZE
-{
-    TS_MIN,             // minimum size
-    TS_TRUE,            // size without stretching
-    TS_DRAW,            // size that theme mgr will use to draw part
-};
-
-#define THEME_COLOR 204
- #define THEME_FONT  210
 
 // Generic state constants
 #define TS_NORMAL    1
@@ -109,14 +101,6 @@ typedef enum THEMESIZE
 #define CBP_READONLY		 5
 #define CBP_DROPDOWNBUTTONRIGHT 6
 
-#define DTBG_CLIPRECT        0x00000001   // rcClip has been specified
-#define DTBG_DRAWSOLID       0x00000002   // draw transparent/alpha images as solid
-#define DTBG_OMITBORDER      0x00000004   // don't draw border of part
-#define DTBG_OMITCONTENT     0x00000008   // don't draw content area of part
-
-#define DTBG_COMPUTINGREGION 0x00000010   // TRUE if calling to compute region
-
-#define DTBG_MIRRORDC        0x00000020   // assume the hdc is mirrorred and
 
 enum {
 	MENU_MENUITEM_TMSCHEMA = 1,
@@ -180,34 +164,6 @@ enum {
 	MSM_DISABLED = 2,
 };
 
-
-typedef struct _DTBGOPTS
-{
-	DWORD dwSize;
-	DWORD dwFlags;
-	RECT rcClip;
-}
-DTBGOPTS, *PDTBGOPTS;
-
-typedef HANDLE HPAINTBUFFER;  // handle to a buffered paint context
-
-// BP_BUFFERFORMAT
-typedef enum _BP_BUFFERFORMAT
-{
-    BPBF_COMPATIBLEBITMAP,    // Compatible bitmap
-    BPBF_DIB,                 // Device-independent bitmap
-    BPBF_TOPDOWNDIB,          // Top-down device-independent bitmap
-    BPBF_TOPDOWNMONODIB       // Top-down monochrome device-independent bitmap
-} BP_BUFFERFORMAT;
-
-// BP_PAINTPARAMS
-typedef struct _BP_PAINTPARAMS
-{
-    DWORD                       cbSize;
-    DWORD                       dwFlags; // BPPF_ flags
-    const RECT *                prcExclude;
-    const BLENDFUNCTION *       pBlendFunction;
-} BP_PAINTPARAMS, *PBP_PAINTPARAMS;
 
 
 typedef HANDLE (WINAPI*OpenThemeDataPtr)(HWND hwnd, LPCWSTR pszClassList);
@@ -1873,8 +1829,9 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 {
 	bool t_success = true;
 
-	if (beginBufferedPaint != nil)
-		return MCWin32ThemeDrawBuffered(p_context, p_type, p_info_ptr);
+	/* OVERHAUL - REVISIT: This does not seem to fix the issue of alpha-transparency with windows GDI calls, disabling for now */
+	//if (beginBufferedPaint != nil)
+	//	return MCWin32ThemeDrawBuffered(p_context, p_type, p_info_ptr);
 
 	MCImageBitmap *t_bitmap = nil;
 	int32_t t_x, t_y;
