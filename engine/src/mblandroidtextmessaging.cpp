@@ -72,11 +72,11 @@ bool MCSystemCanSendTextMessage()
 	return t_can_send;
 }
 
-bool MCSystemComposeTextMessage(const char *p_recipients, const char *p_body)
+bool MCSystemComposeTextMessage(MCStringRef p_recipients, MCStringRef p_body)
 {
     s_text_status = kMCAndroidTextWaiting;
 
-    MCAndroidEngineRemoteCall("composeTextMessage", "vss", nil, p_recipients, p_body);
+    MCAndroidEngineRemoteCall("composeTextMessage", "vxx", nil, p_recipients, p_body);
     while (s_text_status == kMCAndroidTextWaiting)
 		MCscreen->wait(60.0, False, True);
 	

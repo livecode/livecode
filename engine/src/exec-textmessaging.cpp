@@ -30,7 +30,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(TextMessaging, ComposeTextMessage, 2)
 MC_EXEC_DEFINE_GET_METHOD(TextMessaging, CanComposeTextMessage, 1)
 
 bool MCSystemCanSendTextMessage();
-bool MCSystemComposeTextMessage(const char *p_recipients, const char *p_body);
+bool MCSystemComposeTextMessage(MCStringRef p_recipients, MCStringRef p_body);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -44,5 +44,5 @@ void MCTextMessagingExecComposeTextMessage(MCExecContext& ctxt, MCStringRef p_re
     if (!MCSystemCanSendTextMessage())
         ctxt . SetTheResultToValue(kMCFalse);
     else
-        MCSystemComposeTextMessage(MCStringGetCString(p_recipients), MCStringGetCString(p_body));
+        MCSystemComposeTextMessage(p_recipients, p_body);
 }
