@@ -3495,4 +3495,29 @@ void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id);
 //void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id);
 //void MCCalendarGetCalendars(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_calendars);
 //void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
+
+
+///////////
+
+extern MCExecMethodInfo* kMCNotificationExecCreateLocalNotificationMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetRegisteredNotificationsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetDetailsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationExecCancelLocalNotificationMethodInfo;
+extern MCExecMethodInfo* kMCNotificationExecCancelAllLocalNotificationsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetNotificationBadgeValueMethodInfo;
+extern MCExecMethodInfo* kMCNotificationSetNotificationBadgeValueMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetDeviceTokenMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetLaunchUrlMethodInfo;
+
+void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
+void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt);
+void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_details);
+void MCNotificationExecCancelLocalNotification(MCExecContext& ctxt, int32_t p_id);
+void MCNotificationExecCancelAllLocalNotifications(MCExecContext& ctxt);
+void MCNotificationGetNotificationBadgeValue(MCExecContext& ctxt);
+void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_badge_value);
+void MCNotificationGetDeviceToken(MCExecContext& ctxt);
+void MCNotificationGetLaunchUrl(MCExecContext& ctxt);
+
+
 #endif

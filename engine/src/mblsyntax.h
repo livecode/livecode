@@ -180,22 +180,22 @@ void MCVibrateExec (MCExecContext& ctxt);
 ///////////////////////////////////////////////////////////////////////////////
 // from Local Notification
 
-void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
-void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt);
-void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, const char *t_alert_descriptor);
-void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt);
-void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt);
-void MCSetNotificationBadgeValueExec (MCExecContext p_ctxt);
+//void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
+//void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt);
+//void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, const char *t_alert_descriptor);
+//void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt);
+//void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt);
+//void MCSetNotificationBadgeValueExec (MCExecContext p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Push Notification
 
-void MCGetDeviceTokenExec (MCExecContext& p_ctxt);
+//void MCGetDeviceTokenExec (MCExecContext& p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Custom URL Schemes
 
-void MCGetLaunchUrlExec (MCExecContext& p_ctxt);
+//void MCGetLaunchUrlExec (MCExecContext& p_ctxt);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Text Messaging

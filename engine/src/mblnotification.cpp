@@ -36,283 +36,316 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id);
-bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts);
-bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification);
-bool MCSystemCancelLocalNotification(uint32_t p_alert_descriptor); 
-bool MCSystemCancelAllLocalNotifications ();
-bool MCSystemGetNotificationBadgeValue (uint32_t &r_badge_value);
-bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
-bool MCSystemGetDeviceToken (char *&r_device_token);
-bool MCSystemGetLaunchUrl (char *&r_launch_url);
+//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+//bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id);
+//bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts);
+//bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification);
+//bool MCSystemCancelLocalNotification(uint32_t p_alert_descriptor); 
+//bool MCSystemCancelAllLocalNotifications ();
+//bool MCSystemGetNotificationBadgeValue (uint32_t &r_badge_value);
+//bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
+//bool MCSystemGetDeviceToken (char *&r_device_token);
+//bool MCSystemGetLaunchUrl (char *&r_launch_url);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void FreeNotification(MCNotification &p_notification)
 {
-    MCCStringFree(p_notification.body);
-    MCCStringFree(p_notification.action);
-    MCCStringFree(p_notification.user_info);
+    MCValueRelease(p_notification.body);
+    MCValueRelease(p_notification.action);
+    MCValueRelease(p_notification.user_info);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
+//// MOVED TO exec-notofication.cpp
+//void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value)
+//{
+//    bool t_success;
+//    int32_t t_id = -1;
+//    t_success = MCSystemCreateLocalNotification (p_alert_body, p_alert_action, p_user_info, p_date, p_play_sound, p_badge_value, t_id);
+//    if (t_success)
+//        p_ctxt.SetTheResultToNumber(t_id);
+//    else
+//        p_ctxt.SetTheResultToEmpty();
+//}
+//
+//void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt) 
+//{
+//    char *t_registered_alerts = nil;
+//    bool t_success;
+//    t_success = MCSystemGetRegisteredNotifications (t_registered_alerts);
+//    if (t_success)
+//        p_ctxt.SetTheResultToCString(t_registered_alerts);
+//    else
+//        p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCLocalNotificationExec (MCExecContext& p_ctxt, const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value)
-{
-    bool t_success;
-    int32_t t_id = -1;
-    t_success = MCSystemCreateLocalNotification (p_alert_body, p_alert_action, p_user_info, p_date, p_play_sound, p_badge_value, t_id);
-    if (t_success)
-        p_ctxt.SetTheResultToNumber(t_id);
-    else
-        p_ctxt.SetTheResultToEmpty();
-}
+//void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCArrayRef &r_details)
+//{
+//	// TODO
+// /*   MCNotification t_notification;
+//    if (MCSystemGetNotificationDetails(p_id, t_notification))
+//    {
+//        MCVariableValue *t_details = nil;
+//        t_details = new MCVariableValue();
+//        
+//        MCVariableValue *t_element = nil;
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "body", t_element);
+//        t_element->assign_string(t_notification.body);
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "title", t_element);
+//        t_element->assign_string(t_notification.action);
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "payload", t_element);
+//        t_element->assign_string(t_notification.user_info);
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "time", t_element);
+//        t_element->assign_real(t_notification.time);
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "play sound", t_element);
+//        t_element->assign_constant_string(MCU_btos(t_notification.play_sound));
+//        
+//        t_details->lookup_element(ctxt.GetEP(), "badge value", t_element);
+//        t_element->assign_real(t_notification.badge_value);
+//        
+//        r_details = t_details;
+//    }
+//    
+//    FreeNotification(t_notification);*/
+//}
 
-void MCGetRegisteredNotificationsExec (MCExecContext& p_ctxt) 
-{
-    char *t_registered_alerts = nil;
-    bool t_success;
-    t_success = MCSystemGetRegisteredNotifications (t_registered_alerts);
-    if (t_success)
-        p_ctxt.SetTheResultToCString(t_registered_alerts);
-    else
-        p_ctxt.SetTheResultToEmpty();
-}
+//void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, int32_t p_id)
+//{
+//    bool t_success;
+//    t_success = MCSystemCancelLocalNotification (p_id);
+//    p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCArrayRef &r_details)
-{
-	// TODO
- /*   MCNotification t_notification;
-    if (MCSystemGetNotificationDetails(p_id, t_notification))
-    {
-        MCVariableValue *t_details = nil;
-        t_details = new MCVariableValue();
-        
-        MCVariableValue *t_element = nil;
-        
-        t_details->lookup_element(ctxt.GetEP(), "body", t_element);
-        t_element->assign_string(t_notification.body);
-        
-        t_details->lookup_element(ctxt.GetEP(), "title", t_element);
-        t_element->assign_string(t_notification.action);
-        
-        t_details->lookup_element(ctxt.GetEP(), "payload", t_element);
-        t_element->assign_string(t_notification.user_info);
-        
-        t_details->lookup_element(ctxt.GetEP(), "time", t_element);
-        t_element->assign_real(t_notification.time);
-        
-        t_details->lookup_element(ctxt.GetEP(), "play sound", t_element);
-        t_element->assign_constant_string(MCU_btos(t_notification.play_sound));
-        
-        t_details->lookup_element(ctxt.GetEP(), "badge value", t_element);
-        t_element->assign_real(t_notification.badge_value);
-        
-        r_details = t_details;
-    }
-    
-    FreeNotification(t_notification);*/
-}
+//void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt)
+//{
+//    bool t_success;
+//    t_success = MCSystemCancelAllLocalNotifications ();
+//    p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCCancelLocalNotificationExec (MCExecContext& p_ctxt, int32_t p_id) 
-{
-    bool t_success;
-    t_success = MCSystemCancelLocalNotification (p_id);
-    p_ctxt.SetTheResultToEmpty();
-}
+//void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt)
+//{
+//    uint32_t r_badge_value = 0;
+//    bool t_success;
+//    t_success = MCSystemGetNotificationBadgeValue (r_badge_value);
+//    if (t_success)
+//        p_ctxt.SetTheResultToNumber(r_badge_value);
+//    else
+//        p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCCancelAllLocalNotificationsExec (MCExecContext& p_ctxt)
-{
-    bool t_success;
-    t_success = MCSystemCancelAllLocalNotifications ();
-    p_ctxt.SetTheResultToEmpty();
-}
+//void MCSetNotificationBadgeValueExec (MCExecContext& p_ctxt, uint32_t p_badge_value)
+//{ 
+//    bool t_success;
+//    t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
+//    p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCGetNotificationBadgeValueExec (MCExecContext& p_ctxt)
-{
-    uint32_t r_badge_value = 0;
-    bool t_success;
-    t_success = MCSystemGetNotificationBadgeValue (r_badge_value);
-    if (t_success)
-        p_ctxt.SetTheResultToNumber(r_badge_value);
-    else
-        p_ctxt.SetTheResultToEmpty();
-}
+//void MCGetDeviceTokenExec (MCExecContext& p_ctxt)
+//{
+//    char *r_device_token = nil;
+//    bool t_success;
+//    t_success = MCSystemGetDeviceToken (r_device_token);
+//    if (t_success)
+//        p_ctxt.GiveCStringToResult(r_device_token);
+//    else
+//        p_ctxt.SetTheResultToEmpty();
+//}
 
-void MCSetNotificationBadgeValueExec (MCExecContext& p_ctxt, uint32_t p_badge_value)
-{ 
-    bool t_success;
-    t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
-    p_ctxt.SetTheResultToEmpty();
-}
-
-void MCGetDeviceTokenExec (MCExecContext& p_ctxt)
-{
-    char *r_device_token = nil;
-    bool t_success;
-    t_success = MCSystemGetDeviceToken (r_device_token);
-    if (t_success)
-        p_ctxt.GiveCStringToResult(r_device_token);
-    else
-        p_ctxt.SetTheResultToEmpty();
-}
-
-void MCGetLaunchUrlExec (MCExecContext& p_ctxt)
-{
-    char *t_launch_url = nil;
-    bool t_success;
-    t_success = MCSystemGetLaunchUrl (t_launch_url);
-    if (t_success)
-        p_ctxt.GiveCStringToResult(t_launch_url);
-    else
-        p_ctxt.SetTheResultToEmpty();
-}
+//void MCGetLaunchUrlExec (MCExecContext& p_ctxt)
+//{
+//    char *t_launch_url = nil;
+//    bool t_success;
+//    t_success = MCSystemGetLaunchUrl (t_launch_url);
+//    if (t_success)
+//        p_ctxt.GiveCStringToResult(t_launch_url);
+//    else
+//        p_ctxt.SetTheResultToEmpty();
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    
-    bool t_success = true;
-    char *t_notification_body = nil;
-    char *t_notification_action = nil;
-    char *t_notification_user_info = nil;
-    MCDateTime t_date;
-    bool t_play_sound_vibrate = true;
-    int32_t t_badge_value = 0;
-    
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-     
-    if (t_success && p_parameters != nil)
-		t_success = MCParseParameters (p_parameters, "sss", &t_notification_body, &t_notification_action, &t_notification_user_info);
-	if (t_success && p_parameters != nil)
-    {
-        p_parameters->eval(ep);
-        if (!ep.isempty())
-        {
-            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
-        }
-        p_parameters = p_parameters->getnext();
-    }
-    if (t_success && p_parameters != nil)
-		t_success = MCParseParameters(p_parameters, "b", &t_play_sound_vibrate);
-    if (t_success && p_parameters != nil)
-		t_success = MCParseParameters(p_parameters, "u", &t_badge_value);
-    
-	MCLocalNotificationExec (ctxt, t_notification_body, t_notification_action, t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
-    
-    return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    
+//    bool t_success = true;
+//    MCAutoStringRef t_notification_body;
+//    MCAutoStringRef t_notification_action;
+//    MCAutoStringRef t_notification_user_info;
+//    MCDateTime t_date;
+//    bool t_play_sound_vibrate = true;
+//    int32_t t_badge_value = 0;
+//    
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//     
+//    if (t_success && p_parameters != nil)
+//		t_success = MCParseParameters (p_parameters, "xxx", &t_notification_body, &t_notification_action, &t_notification_user_info);
+//	if (t_success && p_parameters != nil)
+//    {
+//        p_parameters->eval(ep);
+//        if (!ep.isempty())
+//        {
+//            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
+//        }
+//        p_parameters = p_parameters->getnext();
+//    }
+//    if (t_success && p_parameters != nil)
+//		t_success = MCParseParameters(p_parameters, "b", &t_play_sound_vibrate);
+//    if (t_success && p_parameters != nil)
+//		t_success = MCParseParameters(p_parameters, "u", &t_badge_value);
+//    
+//	MCNotificationExecCreateLocalNotification (ctxt, *t_notification_body, *t_notification_action, *t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCGetRegisteredNotificationsExec (ctxt);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//
+//    MCNotificationGetRegisteredNotifications(ctxt);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    
-    bool t_success = true;
-    
-    int32_t t_id = -1;
-    MCAutoArrayRef t_details;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "i", &t_id);
-    
-    ctxt.SetTheResultToEmpty();
-    if (t_success)
-    {
-        MCNotificationGetDetails(ctxt, t_id, &t_details);
-        if (*t_details != nil)
-        {
-            ep.setvalueref(*t_details);
-			ctxt . SetTheResultToValue(*t_details);
-        }
-    }
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    
+//    bool t_success = true;
+//    
+//    int32_t t_id = -1;
+//    MCAutoArrayRef t_details;
+//    
+//    if (t_success)
+//        t_success = MCParseParameters(p_parameters, "i", &t_id);
+//    
+//    ctxt.SetTheResultToEmpty();
+//    if (t_success)
+//    {
+//        MCNotificationGetDetails(ctxt, t_id, &t_details);
+//        if (*t_details != nil)
+//        {
+//            ep.setvalueref(*t_details);
+//			ctxt . SetTheResultToValue(*t_details);
+//            return ES_NORMAL;
+//        }
+//    }
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_parameters) 
-{
-    MCExecPoint ep(nil, nil, nil);
-    int32_t t_cancel_this;
-    bool t_success;
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    if (p_parameters != nil)
-		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
-    MCCancelLocalNotificationExec (ctxt, t_cancel_this);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    int32_t t_cancel_this;
+//    bool t_success;
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    if (p_parameters != nil)
+//		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
+//    
+//    if (t_success)
+//    {
+//        MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
+//    }
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCCancelAllLocalNotificationsExec (ctxt);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    
+//    MCNotificationExecCancelAllLocalNotifications(ctxt);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCGetNotificationBadgeValueExec (ctxt);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    MCNotificationGetNotificationBadgeValue (ctxt);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    uint32_t t_badge_value;
-    bool t_success = true;
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    if (t_success && p_parameters != nil)
-		t_success = MCParseParameters (p_parameters, "i", &t_badge_value);
-    if (t_success)
-        MCSetNotificationBadgeValueExec (ctxt, t_badge_value);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    uint32_t t_badge_value;
+//    bool t_success = true;
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    
+//    if (t_success && p_parameters != nil)
+//		t_success = MCParseParameters (p_parameters, "i", &t_badge_value);
+//    
+//    if (t_success)
+//        MCNotificationSetNotificationBadgeValue (ctxt, t_badge_value);
+//    
+//    if (t_success && !ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCGetDeviceTokenExec (ctxt);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    MCNotificationGetDeviceToken (ctxt);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
-Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCGetLaunchUrlExec (ctxt);
-    
-    return ES_NORMAL;
-}
+//Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
+//{
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    MCNotificationGetLaunchUrl (ctxt);
+//    
+//    if (!ctxt.HasError())
+//        return ES_NORMAL;
+//    
+//    return ES_ERROR;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 

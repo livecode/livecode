@@ -48,24 +48,20 @@
 #include <jni.h>
 
 
-bool MCHandleLockIdleTimer(void)
+void MCSystemLockIdleTimer(void)
 {
 	MCAndroidEngineCall("doLockIdleTimer", "v", nil);
-	return true;
 }
 
-bool MCHandleUnlockIdleTimer(void)
+void MCSystemUnlockIdleTimer(void)
 {
 	MCAndroidEngineCall("doUnlockIdleTimer", "v", nil);
-	return ES_NORMAL;
 }
 
-bool MCHandleIdleTimerLocked(void)
+bool MCSystemIdleTimerLocked(void)
 {
     bool r_idle_timer_locked = false;
 	MCAndroidEngineCall("getLockIdleTimerLocked", "b", &r_idle_timer_locked);
-    
-    MCresult -> sets(MCU_btos(r_idle_timer_locked));
-    
+        
 	return r_idle_timer_locked;
 }

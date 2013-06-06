@@ -32,7 +32,6 @@
 
 #include "mblsyntax.h"
 #include "mblsensor.h"
-//#include "mblad.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1636,7 +1635,7 @@ Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-//    MCGetCalendarsEventExec(ctxt);
+//    MCGetCalendarsEvent(ctxt);
 //    // Set return value
 //    if (!ctxt . HasError())
 //		return ES_NORMAL;
@@ -1673,10 +1672,187 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-//    MCFindEventExec(ctxt, t_start_date, t_end_date);
+//    MCCalendarExecFindEvent(ctxt, t_start_date, t_end_date);
     // Set return value
     if (!ctxt . HasError())
 		return ES_NORMAL;
     
 	return ES_ERROR;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    bool t_success = true;
+    MCAutoStringRef t_notification_body;
+    MCAutoStringRef t_notification_action;
+    MCAutoStringRef t_notification_user_info;
+    MCDateTime t_date;
+    bool t_play_sound_vibrate = true;
+    int32_t t_badge_value = 0;
+    
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "xxx", &t_notification_body, &t_notification_action, &t_notification_user_info);
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_play_sound_vibrate);
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "u", &t_badge_value);
+    
+	MCNotificationExecCreateLocalNotification (ctxt, *t_notification_body, *t_notification_action, *t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+    MCNotificationGetRegisteredNotifications(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success = true;
+    
+    int32_t t_id = -1;
+    MCAutoArrayRef t_details;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "i", &t_id);
+    
+    ctxt.SetTheResultToEmpty();
+    if (t_success)
+    {
+        MCNotificationGetDetails(ctxt, t_id, &t_details);
+        if (*t_details != nil)
+        {
+            ep.setvalueref(*t_details);
+			ctxt . SetTheResultToValue(*t_details);
+            return ES_NORMAL;
+        }
+    }
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    int32_t t_cancel_this;
+    bool t_success;
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    if (p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
+    
+    if (t_success)
+    {
+        MCNotificationExecCancelLocalNotification (ctxt, t_cancel_this);
+    }
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+    MCNotificationExecCancelAllLocalNotifications(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCNotificationGetNotificationBadgeValue (ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    uint32_t t_badge_value;
+    bool t_success = true;
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "i", &t_badge_value);
+    
+    if (t_success)
+        MCNotificationSetNotificationBadgeValue (ctxt, t_badge_value);
+    
+    if (t_success && !ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCNotificationGetDeviceToken (ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    MCNotificationGetLaunchUrl (ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
