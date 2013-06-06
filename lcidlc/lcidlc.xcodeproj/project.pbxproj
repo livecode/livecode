@@ -68,6 +68,7 @@
 		4DBA0E7D136799A3006EEA7D /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
 		4DE553EC13A4D9E200C99D11 /* lclink.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclink.sh; sourceTree = "<group>"; };
 		4DE553ED13A4D9E200C99D11 /* lclinktest.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclinktest.sh; sourceTree = "<group>"; };
+		4DED6D131760ECD5001DEF0C /* Support.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = Support.java; path = src/Support.java; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -129,6 +130,7 @@
 				4D90369F1398FC0800CBC7F6 /* Support.mm */,
 				4D9036A01398FC0800CBC7F6 /* Value.cpp */,
 				4D9036A11398FC0800CBC7F6 /* Value.h */,
+				4DED6D131760ECD5001DEF0C /* Support.java */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
