@@ -304,8 +304,8 @@ struct MCExternalInterface
 	
 	/////////
 	
-	MCExternalError (*context_evaluate)(const char *p_expression, MCExternalValueOptions options, MCExternalVariableRef value); // V5
-	MCExternalError (*context_execute)(const char *p_expression); // V5
+	MCExternalError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef value); // V5
+	MCExternalError (*context_execute)(const char *p_expression, unsigned int options); // V5
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -978,6 +978,40 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	default:
 		return kMCExternalErrorInvalidContextQuery;
 	}
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef p_result)
+{
+	MCEPptr -> setsvalue(p_expression);
+	
+	Exec_stat t_stat;
+	t_stat = MCEPptr -> gethandler() -> eval(*MCEPptr);
+	
+	if (t_stat == ES_ERROR)
+		return kMCExternalErrorFailed;
+	
+	if (t_stat == ES_EXIT_ALL)
+		return kMCExternalErrorExited;
+	
+	p_result -> store(*MCEPptr);
+	
+	return kMCExternalErrorNone;
+}
+
+MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options)
+{
+	MCEPptr -> setsvalue(p_commands);
+	
+	Exec_stat t_stat;
+	t_stat = MCEPptr -> gethandler() -> doscript(*MCEPptr, 0, 0);
+	
+	if (t_stat == ES_ERROR)
+		return kMCExternalErrorFailed;
+	
+	if (t_stat == ES_EXIT_ALL)
+		return kMCExternalErrorExited;
+	
 	return kMCExternalErrorNone;
 }
 
@@ -1960,6 +1994,9 @@ MCExternalInterface g_external_interface =
 	MCExternalInterfaceQuery,
 	
 	MCExternalObjectUpdate,
+	
+	MCExternalContextEvaluate,
+	MCExternalContextExecute,
 };
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -216,8 +216,8 @@ typedef struct MCExternalInterface
 	MCError (*object_set)(MCObjectRef object, unsigned int options, const char *name, const char *key, MCVariableRef value);
 	MCError (*interface_query)(MCExternalInterfaceQuery query, void *result);
 	MCError (*object_update)(MCObjectRef object, unsigned int options, void *region);
-	MCError (*context_evaluate)(const char *p_expression, MCValueOptions options, MCVariableRef value);
-	MCError (*context_execute)(const char *p_expression);
+	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value);
+	MCError (*context_execute)(const char *p_expression, unsigned int options);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -1102,7 +1102,7 @@ LCError LCContextEvaluate(const char *p_expression, unsigned int p_options, void
 		t_error = (LCError)MCVariableCreate(&t_value_var);
 		
 	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_evaluate(p_expression, p_options, t_value_var);
+		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, t_value_var);
 		
 	if (t_error == kLCErrorNone)
 		t_error = LCValueFetch(t_value_var, p_options, r_value);
@@ -1113,12 +1113,12 @@ LCError LCContextEvaluate(const char *p_expression, unsigned int p_options, void
 	return t_error;
 }
 
-LCError LCContextExecute(const char *p_commands)
+LCError LCContextExecute(const char *p_commands, unsigned int p_options)
 {
 	if (s_interface -> version < 5)
 		return kLCErrorNotImplemented;
 		
-	return (LCError)s_interface -> context_execute(p_commands);
+	return (LCError)s_interface -> context_execute(p_commands, 0);
 }
 
 //////////
@@ -1171,17 +1171,6 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 		
 		switch(p_signature[i])
 		{
-			case 'c': // char
-			{
-				char t_char;
-				LCBytes t_bytes;
-				t_bytes . buffer = &t_char;
-				t_bytes . length = 1;
-				t_char = (char)va_arg(p_args, int);
-				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
-			}
-			break;
-			
 			case 'b': // boolean
 			{
 				bool t_boolean;
@@ -1203,6 +1192,17 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 				double t_real;
 				t_real = va_arg(p_args, double);
 				t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_real);
+			}
+			break;
+				
+			case 'c': // char
+			{
+				char t_char;
+				LCBytes t_bytes;
+				t_bytes . buffer = &t_char;
+				t_bytes . length = 1;
+				t_char = (char)va_arg(p_args, int);
+				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
 			}
 			break;
 				

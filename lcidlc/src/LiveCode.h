@@ -479,7 +479,6 @@ LCError LCObjectRelease(LCObjectRef object);
 //   NoObject - the 'object' parameter was nil
 //   NoObjectMessage - the 'message' parameter was nil
 //   ObjectDoesNotExist - the object handles target no longer exists
-//   Aborted - the message execution was aborted
 //   Exited - the message caused 'exit to top' to be called
 //   Failed - the message caused an error to be thrown
 // Context Safety:
@@ -890,7 +889,6 @@ LCError LCContextIt(unsigned int options, void *r_value);
 //   (out) r_value - depends on options
 // Errors:
 //   OutOfMemory - memory ran out while attempting to perform the operation
-//   Aborted - the script evaluation was aborted
 //   Exited - the script evaluation caused 'exit to top' to be invoked
 //   Failed - the script evaluation caused an error to be thrown
 //   NotABoolean - the value was requested as a boolean, and it is not a boolean
@@ -915,9 +913,9 @@ LCError LCContextEvaluate(const char *expression, unsigned int options, void *r_
 //   LCContextExecute
 // Parameters:
 //   (in) statements - const char *
+//   (in) options - unsigned int
 // Errors:
 //   OutOfMemory - memory ran out while attempting to perform the operation
-//   Aborted - the script evaluation was aborted
 //   Exited - the script evaluation caused 'exit to top' to be invoked
 //   Failed - the script evaluation caused an error to be thrown
 // Context Safety:
@@ -926,7 +924,7 @@ LCError LCContextEvaluate(const char *expression, unsigned int options, void *r_
 //   Executes the given sequence of statements in the context of the calling
 //   handler.
 //
-LCError LCContextExecute(const char *statements);
+LCError LCContextExecute(const char *statements, unsigned int options);
 
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -1011,14 +1009,12 @@ LCError LCWaitIsRunning(LCWaitRef wait, bool *r_running);
 // Errors:
 //   NoWait - the 'wait' parameter was nil
 //   WaitRunning - the 'wait' object is already running
-//   Aborted - the 'wait' ran but was aborted rather than broken.
 // Context Safety:
 //   Must be called from handler context.
 // Semantics:
 //   Blocks the caller's execution and runs the main application event loop
 //   until either 'LCWaitBreak' is called on the wait object, or the wait is
-//   aborted (due to application exit). In the latter case, 'kLCWaitAborted'
-//   is returned.
+//   aborted (due to application exit).
 //
 //   If 'LCWaitBreak' has already been called on the wait object LCWaitRun
 //   will return without running the event loop.
