@@ -1310,17 +1310,11 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &t_ad, &t_type);
     
-//    MCAdTopLeft t_top_left = {0,0};
     uint32_t t_topleft_x;
     uint32_t t_topleft_y;
 
     if (t_success)
     {
-//        char *t_top_left_string;
-//        t_top_left_string = nil;
-//        if (MCParseParameters(p_parameters, "s", &t_top_left_string))
-//        /* UNCHECKED */ sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
-//        MCCStringFree(t_top_left_string);
         t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
     }
     
@@ -1436,22 +1430,15 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 	if (t_success)
 		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
     
-#ifdef MOBILE_BROKEN
-    if (t_success)
-    {
-        MCAutoRawCString t_top_left_string;
-        t_success = MCCStringFormat(t_top_left_string, "%u,%u", t_top_left.x, t_top_left.y);
-        if (t_success)
-            if (t_top_left_string.Borrow() != nil)
-                ep.copysvalue(t_top_left_string.Borrow());
-    }
-    
-    if (t_success)
-        MCresult->store(ep, False);
-#endif
-    
     if (!ctxt . HasError())
-		return ES_NORMAL;
+    {
+        MCAutoStringRef t_topleft_string;
+        if(MCStringFormat(&t_topleft_string, "uu", t_topleft_x, t_topleft_y))
+        {
+            ctxt.SetTheResultToValue(*t_topleft_string);
+            return ES_NORMAL;
+        }
+    }
     
 	return ES_ERROR;
 }
@@ -1470,7 +1457,7 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
     uint32_t t_topleft_y;
 	
     if (t_success)
-		t_success = MCParseParameters(p_parameters, "suu", &t_ad, t_topleft_x, t_topleft_y);
+		t_success = MCParseParameters(p_parameters, "xuu", &t_ad, t_topleft_x, t_topleft_y);
     
 	if (t_success)
 		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
@@ -1483,30 +1470,213 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 {
-    bool t_success;
-    t_success = true;
-    
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
-#ifdef OLD_EXEC
-    if (t_success)
-    {
-        MCAutoRawCString t_ads;
-        t_success = MCAdGetAds(ctxt, t_ads);
-        if (t_success && t_ads.Borrow() != nil)
-            ep.copysvalue(t_ads.Borrow());
-    }
-    
-    if (t_success)
-        MCresult->store(ep, False);
-#endif
-    
+
+    MCAutoStringRef t_ads;
+    MCAdGetAds(ctxt, &t_ads);
+
     if (!ctxt . HasError())
+    {
+        ctxt . SetTheResultToValue(*t_ads);
 		return ES_NORMAL;
+    }
     
 	return ES_ERROR;
     
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+
+
+Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_id;
+    bool t_success;
+    t_success = true;
+    
+    // Handle parameters.
+    
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "x", &t_id);
+    }
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    // Call the Exec implementation
+    if (t_success)
+        MCCalendarExecShowEvent(ctxt, *t_id);
+    
+    // Set return value
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_id;
+    bool t_success;
+    t_success = true;
+
+    // Handle parameters.    
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "x", &t_id);
+    }
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    // Call the Exec implementation
+    if (t_success)
+        MCCalendarExecUpdateEvent(ctxt, *t_id);
+    
+    // Set return value
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_id;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+
+    // Call the Exec implementation
+    MCcalendarExecCreateEvent(ctxt);
+    // Set return value
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_id;
+    bool t_success;
+    t_success = true;
+    
+    // Handle parameters.
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &t_id);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    // Call the Exec implementation
+    MCAutoArrayRef t_data;
+    if (t_success)
+    {
+        MCCalendarGetEventData(ctxt, *t_id, &t_data);
+    }    
+    
+    if (!ctxt . HasError())
+    {
+        ctxt.SetTheResultToValue(*t_data);
+		return ES_NORMAL;
+    }
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_id;
+    bool t_reocurring = false;
+    bool t_success = true;
+    // Handle parameters.
+    t_success = MCParseParameters(p_parameters, "s", &t_id);
+    
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "b", &t_reocurring);
+    }
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+//    MCCalendarExecRemoveEvent(ctxt, t_reocurring, &t_id);
+    // Set return value
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    // Handle parameters. We are doing that in a dedicated call
+//    MCCalendar t_new_event_data;
+//    t_new_event_data = MCParameterDataToCalendar(p_parameters, t_new_event_data);
+//    MCExecContext ctxt(ep);
+//    ctxt.SetTheResultToEmpty();
+//    // Call the Exec implementation
+//    MCAddEventExec(ctxt, t_new_event_data);
+//    // Set return value
+//    if (!ctxt . HasError())
+//		return ES_NORMAL;
+//    
+//	return ES_ERROR;
+}
+
+Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+//    MCGetCalendarsEventExec(ctxt);
+//    // Set return value
+//    if (!ctxt . HasError())
+//		return ES_NORMAL;
+//    
+//	return ES_ERROR;
+}
+
+Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
+{
+    MCDateTime t_start_date;
+    MCDateTime t_end_date;
+    bool t_success = true;
+    const char *r_result = NULL;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+    if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+        }
+    }
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+//    MCFindEventExec(ctxt, t_start_date, t_end_date);
+    // Set return value
+    if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}

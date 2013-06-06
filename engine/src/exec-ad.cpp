@@ -258,7 +258,7 @@ void MCAd::SetOwner(MCObjectHandle *p_owner)
 	m_object = p_owner;
 }
 
-bool MCAd::SetName(const char *p_name)
+bool MCAd::SetName(MCStringRef p_name)
 {
 	if (m_name != nil)
 	{
@@ -267,7 +267,7 @@ bool MCAd::SetName(const char *p_name)
 	}
 	
 	if (p_name != nil)
-		return MCCStringClone(p_name, m_name);
+		return MCCStringClone(MCStringGetCString(p_name), m_name);
 	
 	return true;
 }
@@ -277,16 +277,16 @@ MCAd *MCAd::GetFirst()
     return s_ads;
 }
 
-bool MCAd::FindByNameOrId(const char *p_name, MCAd *&r_ad)
+bool MCAd::FindByNameOrId(MCStringRef p_name, MCAd *&r_ad)
 {
 	char *t_id_end;
 	uint32_t t_id;
-	t_id = strtoul(p_name, &t_id_end, 10);
-	if (t_id_end != p_name)
+	t_id = strtoul(MCStringGetCString(p_name), &t_id_end, 10);
+	if (t_id_end != MCStringGetCString(p_name))
 		return FindById(t_id, r_ad);
 	
 	for(MCAd *t_ad = s_ads; t_ad != nil; t_ad = t_ad -> m_next)
-		if (t_ad -> GetName() != nil && MCCStringEqualCaseless(t_ad -> GetName(), p_name))
+		if (t_ad -> GetName() != nil && MCCStringEqualCaseless(t_ad -> GetName(), MCStringGetCString(p_name)))
 		{
 			r_ad = t_ad;
 			return true;
@@ -332,8 +332,13 @@ void MCAd::Finalize(void)
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
 {
-    MCCStringFree(s_inneractive_ad_key);
-    /* UNCHECKED */ MCCStringClone(MCStringGetCString(p_key), s_inneractive_ad_key);
+    if (s_inneractive_ad_key != nil)
+        MCCStringFree(s_inneractive_ad_key);
+    
+    if (MCCStringClone(MCStringGetCString(p_key), s_inneractive_ad_key))
+        return;
+    
+    ctxt.Throw();
 }
 
 void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata)
@@ -351,9 +356,9 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
     t_ad = nil;
     
     if (t_success)
-        if (MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
+        if (MCAd::FindByNameOrId(p_name, t_ad))
         {
-            ctxt.SetTheResultToStaticCString("ad already exists");
+            ctxt.SetTheResultToStaticCString("ad already exists");            
             t_success = false;
         }
     
@@ -387,7 +392,6 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
             
             t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, t_type, t_topleft, t_timeout, p_metadata);
         }
-
         
         if (t_success)
             t_success = t_ad->Create();
@@ -395,20 +399,19 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         if (t_success)
         {
             t_ad->SetNext(s_ads);
-            t_ad->SetName(MCStringGetCString(p_name));
+            t_ad->SetName(p_name);
             t_ad->SetOwner(ctxt.GetObjectHandle());
             s_ads = t_ad;
+            
+            return;
         }
         else if (t_ad != nil)
             t_ad->Release();
         
-        if (!t_success)
-        {
-            ctxt.SetTheResultToStaticCString("could not create ad");
-            ctxt.Throw();
-        }
+        ctxt.SetTheResultToStaticCString("could not create ad");
     }
     
+    ctxt.Throw();
 }
 
 void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
@@ -421,7 +424,7 @@ void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
     
     MCAd *t_ad;
     t_ad = nil;
-    if (MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
+    if (MCAd::FindByNameOrId(p_name, t_ad))
     {
         t_ad->Release();
         return;
@@ -441,7 +444,7 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_top
     
     MCAd *t_ad;
     t_ad = nil;
-    if (MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
+    if (MCAd::FindByNameOrId(p_name, t_ad))
     {
         r_topleft_x = t_ad->GetTopLeft().x;
         r_topleft_y = t_ad->GetTopLeft().y;
@@ -462,7 +465,7 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topl
     
     MCAd *t_ad;
     t_ad = nil;
-    if (MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
+    if (MCAd::FindByNameOrId(p_name, t_ad))
     {
         MCAdTopLeft t_topleft;
         t_topleft.x = p_topleft_x;
@@ -486,7 +489,7 @@ void MCAdGetVisibleOfAd(MCExecContext& ctxt,  MCStringRef p_name, bool &r_visibl
     
     MCAd *t_ad;
     t_ad = nil;
-    if (MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
+    if (MCAd::FindByNameOrId(p_name, t_ad))
     {
         r_visible = t_ad->GetVisible();
         return;
@@ -507,27 +510,42 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
     
     MCAd *t_ad;
     t_ad = nil;
-    if (!MCAd::FindByNameOrId(MCStringGetCString(p_name), t_ad))
-        ctxt.SetTheResultToStaticCString("could not find ad");
-    else
+    if (!MCAd::FindByNameOrId(p_name, t_ad))
+    {
         t_ad->SetVisible(p_visible);
+        return;
+    }
+    
+    ctxt.SetTheResultToStaticCString("could not find ad");
+    ctxt.Throw();
 }
 
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
     bool t_success;
     t_success = true;
+    MCAutoStringRef t_ads;
 	for(MCAd *t_ad = s_ads; t_ad != nil && t_success; t_ad = t_ad->GetNext())
+    {
 		if (t_ad->GetName() != nil)
         {
-            if (r_ads == nil)
-                t_success = MCStringCreateWithCString(t_ad->GetName(), r_ads);
+            if (*t_ads == nil)
+            {
+                MCAutoStringRef t_first_ad;
+                t_success = MCStringCreateWithCString(t_ad->GetName(), &t_first_ad);
+                if (t_success)
+                    t_success = MCStringMutableCopy(*t_first_ad, &t_ads);
+            }
             else
-                t_success = MCStringAppendFormat(r_ads, "\n%s", t_ad->GetName());
+                t_success = MCStringAppendFormat(*t_ads, "\n%s", t_ad->GetName());
         }
+    }
     
     if (t_success)
+    {
+        r_ads = MCValueRetain(*t_ads);
         return;
+    }
     
     ctxt.Throw();
 }

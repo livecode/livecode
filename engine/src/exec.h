@@ -3475,5 +3475,24 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topl
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 
+///////////
 
+extern MCExecMethodInfo* kMCCalendarExecShowEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarGetEventDataMethodInfo;
+extern MCExecMethodInfo* kMCcalendarExecCreateEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecUpdateEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarGetCalendarsMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarExecFindEventMethodInfo;
+
+
+void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id);
+void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data);
+void MCcalendarExecCreateEvent(MCExecContext& ctxt);
+void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id);
+void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id);
+//void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id);
+//void MCCalendarGetCalendars(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_calendars);
+//void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
 #endif
