@@ -3519,5 +3519,20 @@ void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_bad
 void MCNotificationGetDeviceToken(MCExecContext& ctxt);
 void MCNotificationGetLaunchUrl(MCExecContext& ctxt);
 
+///////////
+
+extern MCExecEnumTypeInfo* kMCBusyIndicatorTypeInfo;
+extern MCExecEnumTypeInfo* kMCActivityIndicatorTypeInfo;
+
+extern MCExecMethodInfo* kMCBusyIndicatorExecStartActivityIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStopActivityIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStartBusyIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStopBusyIndicatorMethodInfo;
+
+
+void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y);
+void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt);
+void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
+void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
 
 #endif

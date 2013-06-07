@@ -48,9 +48,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 //   Not implemented on Android.
-bool MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity)
+bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity)
 {
-    MCAndroidEngineRemoteCall("showBusyIndicator", "vs", nil, p_label);
+    MCAndroidEngineRemoteCall("showBusyIndicator", "vx", nil, p_label);
     return true;
 }
 

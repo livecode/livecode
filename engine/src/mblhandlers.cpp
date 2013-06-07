@@ -1856,3 +1856,179 @@ Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+////////////////
+
+static MCBusyIndicatorType MCBusyIndicatorTypeFromCString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "in line", kMCCompareCaseless))
+        return kMCBusyIndicatorInLine;
+    else if (MCStringIsEqualToCString(p_string, "square", kMCCompareCaseless))
+        return kMCBusyIndicatorSquare;
+    else if (MCStringIsEqualToCString(p_string, "keyboard", kMCCompareCaseless))
+        return kMCBusyIndicatorKeyboard;
+    
+    return kMCBusyIndicatorSquare;
+}
+
+static bool MCBusyIndicatorTypeToCString(MCSensorType p_indicator, MCStringRef& r_string)
+{
+    switch (p_indicator)
+    {
+        case kMCBusyIndicatorInLine:
+            return MCStringCreateWithCString("in line", r_string);
+        case kMCBusyIndicatorSquare:
+            return MCStringCreateWithCString("square", r_string);
+        case kMCBusyIndicatorKeyboard:
+            return MCStringCreateWithCString("keyboard", r_string);
+        default:
+            return MCStringCreateWithCString("unknown", r_string);
+    }
+    return false;
+}
+
+
+// MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
+Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
+{
+    bool t_success = true;
+    MCAutoStringRef t_indicator_string;
+    MCAutoStringRef t_label;    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "xx", &t_indicator_string, &t_label);
+    
+    intenum_t t_indicator;
+    if(t_success)
+        t_success = MCBusyIndicatorTypeFromCString(*t_indicator_string);        
+    
+    int32_t t_opacity = -1;
+    if(t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "i", &t_opacity);
+        if (t_opacity < 0 || t_opacity > 100)
+            t_opacity = -1;
+    }
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCBusyIndicatorExecStartBusyIndicator(ctxt, kMCBusyIndicatorSquare, *t_label, t_opacity);
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;    
+}
+
+Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	MCBusyIndicatorExecStopBusyIndicator(ctxt);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+///////////////
+
+static MCActivityIndicatorType MCActivityIndicatorTypeFromCString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "white", kMCCompareCaseless))
+        return kMCActivityIndicatorWhite;
+    else if (MCStringIsEqualToCString(p_string, "large white", kMCCompareCaseless))
+        return kMCActivityIndicatorWhiteLarge;
+    else if (MCStringIsEqualToCString(p_string, "gray", kMCCompareCaseless))
+        return kMCActivityIndicatorGray;
+    
+    return kMCActivityIndicatorWhite;
+}
+
+static bool MCActivityIndicatorTypeToCString(MCSensorType p_indicator, MCStringRef& r_string)
+{
+    switch (p_indicator)
+    {
+        case kMCActivityIndicatorWhite:
+            return MCStringCreateWithCString("white", r_string);
+        case kMCActivityIndicatorWhiteLarge:
+            return MCStringCreateWithCString("large white", r_string);
+        case kMCActivityIndicatorGray:
+            return MCStringCreateWithCString("gray", r_string);
+        default:
+            return MCStringCreateWithCString("unknown", r_string);
+    }
+    return false;
+}
+
+Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_parameters)
+{
+    MCAutoStringRef t_style_string;
+    MCActivityIndicatorType t_style;
+    t_style = kMCActivityIndicatorWhite;
+    
+    bool t_success = true;
+    
+    t_success = MCParseParameters(p_parameters, "x", &t_style_string);
+    
+    if (t_success)
+    {
+        if (MCStringIsEqualToCString(*t_style_string, "whitelarge", kMCCompareCaseless))
+            t_success = MCStringCreateWithCString("large white", &t_style_string);
+    }
+    
+    if (t_success)
+        t_style = MCActivityIndicatorTypeFromCString(*t_style_string);
+        
+    
+    bool t_location_param;
+    integer_t* t_location_ptr;
+    integer_t t_location_x;
+    integer_t t_location_y;
+    
+    t_location_ptr = &t_location_x;
+    if (t_success)
+        t_location_param = MCParseParameters(p_parameters, "i", t_location_ptr);
+
+    t_location_ptr = &t_location_y;
+    if (t_location_param)
+        t_location_param = MCParseParameters(p_parameters, "i", t_location_ptr);
+    
+    if (!t_location_param)
+    {
+        t_location_x = -1;
+        t_location_y = -1;
+    }
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    if (t_success)
+        MCBusyIndicatorExecStartActivityIndicator(ctxt, t_style, t_location_x, t_location_y);
+    
+	if (t_success && !ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    MCBusyIndicatorExecStopActivityIndicator(ctxt);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+    
+}
+

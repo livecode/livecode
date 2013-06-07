@@ -305,6 +305,8 @@
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
 		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
+		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
+		BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
 		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
@@ -920,6 +922,8 @@
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
 		BE93A90517608B4500791270 /* exec-notification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-notification.cpp"; path = "src/exec-notification.cpp"; sourceTree = "<group>"; };
+		BE93A9091760D32200791270 /* exec-busyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-busyindicator.cpp"; path = "src/exec-busyindicator.cpp"; sourceTree = "<group>"; };
+		BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-activityindicator.cpp"; path = "src/exec-activityindicator.cpp"; sourceTree = "<group>"; };
 		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
 		BE94042B175F6308003EAB87 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
 		BE94042C175F6308003EAB87 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
@@ -1372,9 +1376,11 @@
 		BE4494B6175CDE4E00346B49 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */,
 				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
 				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
 				BE4494B7175CDE7400346B49 /* exec-array.cpp */,
+				BE93A9091760D32200791270 /* exec-busyindicator.cpp */,
 				BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */,
 				BE4494B8175CDE7400346B49 /* exec-datetime.cpp */,
 				BE4494B9175CDE7400346B49 /* exec-debugging.cpp */,
@@ -2354,6 +2360,8 @@
 				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
 				BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */,
 				BE93A9061760912100791270 /* exec-notification.cpp in Sources */,
+				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
+				BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
