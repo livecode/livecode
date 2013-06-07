@@ -20,6 +20,7 @@
 		4D99EA3D1363A92A0056938B /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D99EA3C1363A9220056938B /* libcore.a */; };
 		4D99EA5B1363AA530056938B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D99EA5A1363AA530056938B /* CoreFoundation.framework */; };
 		4DBA0E7E136799A3006EEA7D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBA0E7D136799A3006EEA7D /* Foundation.framework */; };
+		4DED6F09176233B0001DEF0C /* EncodedJavaSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -69,6 +70,7 @@
 		4DE553EC13A4D9E200C99D11 /* lclink.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclink.sh; sourceTree = "<group>"; };
 		4DE553ED13A4D9E200C99D11 /* lclinktest.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclinktest.sh; sourceTree = "<group>"; };
 		4DED6D131760ECD5001DEF0C /* Support.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = Support.java; path = src/Support.java; sourceTree = "<group>"; };
+		4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedJavaSupport.c; path = src/EncodedJavaSupport.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -138,6 +140,7 @@
 		4D9036AE1398FC1600CBC7F6 /* Derived Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */,
 				4D9036901398FC0800CBC7F6 /* EncodedSupport.c */,
 			);
 			name = "Derived Sources";
@@ -238,14 +241,16 @@
 			);
 			inputPaths = (
 				"$(SRCROOT)/Support.cpp",
+				"$(SRCROOT)/Support.java",
 			);
 			name = "Encode Support";
 			outputPaths = (
-				"$(SRCROOT)/EncodedSupport.cpp",
+				"$(SRCROOT)/EncodedSupport.c",
+				"$(SRCROOT)/EncodedJavaSupport.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.mm\" \"$SRCROOT/src/EncodedSupport.c\" \"g_support_template\"";
+			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.mm\" \"$SRCROOT/src/EncodedSupport.c\" \"g_support_template\"\n\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.java\" \"$SRCROOT/src/EncodedJavaSupport.c\" \"g_java_support_template\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -255,6 +260,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DED6F09176233B0001DEF0C /* EncodedJavaSupport.c in Sources */,
 				4D9036A21398FC0800CBC7F6 /* EncodedSupport.c in Sources */,
 				4D9036A31398FC0800CBC7F6 /* Error.cpp in Sources */,
 				4D9036A41398FC0800CBC7F6 /* Interface.cpp in Sources */,

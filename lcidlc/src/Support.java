@@ -1,4 +1,4 @@
-package /*package{*/ com.runrev.external /*}*/
+package com.runrev.external;
 
 import java.lang.*;
 
@@ -230,6 +230,4 @@ public class LC
 	
 	public static native Activity InterfaceQueryActivity();
 	public static native ViewGroup InterfaceQueryContainer();
-	
-	/*methods{}*/
 };

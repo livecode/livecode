@@ -1361,11 +1361,13 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)");
 	CoderWriteLine(p_coder, "{");
 	CoderWriteLine(p_coder, "\ts_java_vm = vm;");
-	CoderWriteLine(p_coder, "\ts_java_vm -> GetEnv((void **)&s_java_env, JNI_VERSION_1_2);");
-	CoderWriteLine(p_coder, "\ts_java_class = (jclass)s_java_env -> NewGlobalRef(s_java_env -> FindClass(\"%s\"));", t_java_class_name);
+	CoderWriteLine(p_coder, "\tJavaEnv *t_java_env; s_java_vm -> GetEnv((void **)&t_java_env, JNI_VERSION_1_2);");
+	CoderWriteLine(p_coder, "\ts_java_class = (jclass)t_java_env -> NewGlobalRef(t_java_env -> FindClass(\"%s\"));", t_java_class_name);
 	CoderWriteLine(p_coder, "");
 	CoderWriteLine(p_coder, "\treturn JNI_VERSION_1_2;");
 	CoderWriteLine(p_coder, "}");
+
+#ifdef NOT_USED
 	for(uint32_t i = 0; t_java_class_name[i] != '\0'; i++)
 		if (t_java_class_name[i] == '/')
 			t_java_class_name[i] = '_';
@@ -1381,6 +1383,25 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "}");
 	CoderWriteLine(p_coder, "#endif");
 	free(t_java_class_name);
+#endif
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern const char *g_java_support_template;
+
+/*static struct { const char *tag; void (*generator)(InterfaceRef self, CoderRef coder); } s_sections[] =
+{
+	{ "package", InterfaceGenerateJavaPackageSection },
+};*/
+
+static bool InterfaceGenerateJava(InterfaceRef self, CoderRef p_coder)
+{
+	CoderWriteLine(p_coder, "package %s;", NameGetCString(self -> qualified_name));
+	
+	CoderWrite(p_coder, "%s", strchr(g_java_support_template, '\n') + 1);
 	
 	return true;
 }
@@ -1395,11 +1416,23 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 	CoderRef t_coder;
 	t_coder = nil;
 	
+	char *t_native_output_filename, *t_java_output_filename;
+	if (MCCStringEndsWith(p_output, "/"))
+	{
+		MCCStringFormat(t_native_output_filename, "%s%s.lcidlc.cpp", p_output, NameGetCString(self -> name));
+		MCCStringFormat(t_java_output_filename, "%sLC.java", p_output);
+	}
+	else
+	{
+		t_native_output_filename = (char *)p_output;
+		t_java_output_filename = nil;
+	}
+
 	if (t_success)
 		t_success = !self -> invalid;
 	
 	if (t_success)
-		t_success = CoderStart(p_output, t_coder);
+		t_success = CoderStart(t_native_output_filename, t_coder);
 	
 	if (t_success)
 		t_success = InterfaceGenerateSupport(self, t_coder);
@@ -1420,6 +1453,25 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 		t_success = CoderFinish(t_coder);
 	else
 		CoderCancel(t_coder);
+	
+	if (t_success && t_java_output_filename != nil)
+	{
+		if (t_success)
+			t_success = CoderStart(t_java_output_filename, t_coder);
+		
+		if (t_success)
+			t_success = InterfaceGenerateJava(self, t_coder);
+		
+		if (t_success)
+			t_success = CoderFinish(t_coder);
+		else
+			CoderCancel(t_coder);
+	}
+	
+	if (t_native_output_filename != p_output)
+		free(t_native_output_filename);
+	
+	free(t_java_output_filename);
 	
 	return t_success;
 }
