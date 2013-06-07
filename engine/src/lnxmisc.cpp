@@ -251,18 +251,6 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_input_encoding, const void *p_inpu
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  MISC 
-//
-
-#ifdef OLD_GRAPHICS
-void MCLinuxApplyPatternToFillImage(MCContext *ctxt, const MCRectangle& rect)
-{
-	((MCX11Context *)ctxt) -> fillrect_with_native_function(rect, GXand);
-}
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  REFACTORED FROM GLOBALS.CPP
 //
 

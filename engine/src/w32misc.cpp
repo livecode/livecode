@@ -93,30 +93,6 @@ void MCStacklist::hidepalettes(Boolean hide)
 
 ////////////////////////////////////////////////////////////////////////////////
 //
-//  REFACTORED FROM CONTEXTSCALEWRAPPER.CPP
-//
-
-#ifdef OLD_GRAPHICS
-void MCContextScaleWrapper::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters)
-{
-	MCRectangle t_bounds = p_parameters -> bounds;
-	MCContext *t_context = MCscreen->creatememorycontext(t_bounds.width, t_bounds.height, true, true);
-	t_context->setorigin(t_bounds.x, t_bounds.y);
-	t_context->clearclip();
-	t_context->drawtheme(p_type, p_parameters);
-	((MCGDIContext*)t_context)->flush_mask();
-
-	HDC t_dsthdc = ((MCGDIContext*)m_context)->gethdc();
-	HDC t_srchdc = ((MCGDIContext*)t_context)->gethdc();
-
-	StretchBlt(t_dsthdc, t_bounds.x * scale, t_bounds.y * scale, t_bounds.width * scale, t_bounds.height * scale, t_srchdc, t_bounds.x, t_bounds.y, t_bounds.width, t_bounds.height, SRCCOPY);
-
-	MCscreen->freecontext(t_context);
-}
-#endif
-
-////////////////////////////////////////////////////////////////////////////////
-//
 //  REFACTORED FROM CUSTOMPRINTER.CPP
 //
 
