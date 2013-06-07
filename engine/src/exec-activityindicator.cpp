@@ -59,9 +59,13 @@ bool MCSystemActivityIndicatorStop ();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y)
+void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y)
 {
-    MCSystemActivityIndicatorStart(p_indicator, p_location_x, p_location_y);
+    // Check whether the location is provided
+    if (p_location_x == nil || p_location_y == nil)
+        MCSystemActivityIndicatorStart(p_indicator, -1, -1);
+    else
+        MCSystemActivityIndicatorStart(p_indicator, *p_location_x, *p_location_y);
 }
 
 void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt)

@@ -105,8 +105,18 @@ private:
 
 void MCAdInitialize(void);
 void MCAdFinalize(void);
+
 const char *MCAdGetInneractiveKey(void);
+bool MCAdInneractiveKeyIsNil(void);
+bool MCAdSetInneractiveKey(MCStringRef p_new_key);
+
+MCAd* MCAdGetStaticAdsPtr();
+void MCAdSetStaticAdsPtr(MCAd* p_ads_ptr);
+
+uint32_t MCAdGetLastAdId();
+void MCAdSetLastAdId(uint32_t p_newLastId);
+
 void MCAdPostMessage(MCAd *, MCAdEventType);
-static MCAdType MCAdTypeFromCString(const char *p_string);
+MCAdType MCAdTypeFromCString(const char *p_string);
 
 #endif //__MC_MOBILE_AD__

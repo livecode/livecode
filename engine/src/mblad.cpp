@@ -45,14 +45,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 void MCSystemInneractiveAdInit();
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data);
+//bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCAd *s_ads = nil;
 static uint32_t s_last_ad_id = 0;
 
-static char *s_inneractive_ad_key = nil;
+static MCStringRef s_inneractive_ad_key = MCValueRetain(kMCEmptyString);
 
 void MCAdInitialize(void)
 {
@@ -65,7 +65,7 @@ void MCAdInitialize(void)
 
 void MCAdFinalize(void)
 {
-    MCCStringFree(s_inneractive_ad_key);
+    MCValueRelease(s_inneractive_ad_key);
     MCAd::Finalize();
     s_ads = nil;
     s_last_ad_id = 0;  
@@ -73,7 +73,7 @@ void MCAdFinalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCAdType MCAdTypeFromCString(const char *p_string)
+MCAdType MCAdTypeFromCString(const char *p_string)
 {
     if (MCCStringEqualCaseless(p_string, "banner"))
         return kMCAdTypeBanner;
@@ -88,7 +88,30 @@ static MCAdType MCAdTypeFromCString(const char *p_string)
 
 const char *MCAdGetInneractiveKey(void)
 {
-    return s_inneractive_ad_key;
+    return MCStringGetCString(s_inneractive_ad_key);
+}
+
+bool MCAdInneractiveKeyIsNil(void)
+{
+    return MCStringGetLength(s_inneractive_ad_key) != 0;
+}
+
+bool MCAdSetInneractiveKey(MCStringRef p_new_key)
+{
+    MCValueRelease(s_inneractive_ad_key);
+    return MCStringCopy(p_new_key, s_inneractive_ad_key);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCAd* MCAdGetStaticAdsPtr()
+{
+    return s_ads;
+}
+
+void MCAdSetStaticAdsPtr(MCAd* p_ads_ptr)
+{
+    s_ads = p_ads_ptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

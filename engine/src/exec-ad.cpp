@@ -49,44 +49,24 @@ MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
 
 
 //void MCSystemInneractiveAdInit();
-//bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCArrayRef p_meta_data);
-
-
-////////////////////////////////////////////////////////////////////////////////
-
-//MCAdType MCAdTypeFromCString(const char *p_string)
-//{
-//    if (MCCStringEqualCaseless(p_string, "banner"))
-//        return kMCAdTypeBanner;
-//    else if (MCCStringEqualCaseless(p_string, "text"))
-//        return kMCAdTypeText;
-//    else if (MCCStringEqualCaseless(p_string, "full screen"))
-//        return kMCAdTypeFullscreen;
-//    return kMCAdTypeUnknown;
-//}
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key != nil)
-        MCCStringFree(s_inneractive_ad_key);
-    
-    if (MCCStringClone(MCStringGetCString(p_key), s_inneractive_ad_key))
+    if (!MCAdInneractiveKeyIsNil())
         return;
     
     ctxt.Throw();
-#endif
 }
 
 void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata)
 {
-#ifdef MOBILE_BROKEN
     bool t_success;
     t_success = true;
     
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         t_success = false;;
@@ -130,7 +110,7 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
             t_topleft.x = p_topleft_x;
             t_topleft.y = p_topleft_y;
             
-            t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, t_type, t_topleft, t_timeout, p_metadata);
+            t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, t_type, p_topleft_x, p_topleft_y, t_timeout, p_metadata);
         }
         
         if (t_success)
@@ -138,10 +118,10 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         
         if (t_success)
         {
-            t_ad->SetNext(s_ads);
+            t_ad->SetNext(MCAdGetStaticAdsPtr());
             t_ad->SetName(p_name);
             t_ad->SetOwner(ctxt.GetObjectHandle());
-            s_ads = t_ad;
+            MCAdSetStaticAdsPtr(t_ad);
             
             return;
         }
@@ -150,14 +130,12 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         
         ctxt.SetTheResultToStaticCString("could not create ad");
     }
-#endif
     ctxt.Throw();
 }
 
 void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         return;
@@ -172,14 +150,12 @@ void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
     }
     
     ctxt.SetTheResultToStaticCString("could not find ad");
-#endif
     ctxt.Throw();
 }
 
 void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         ctxt.Throw();
@@ -195,14 +171,12 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_top
     }
     
     ctxt.SetTheResultToStaticCString("could not find ad");
-#endif
     ctxt.Throw();
 }
 
 void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         return;
@@ -221,14 +195,12 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topl
     }
     
     ctxt.SetTheResultToStaticCString("could not find ad");
-#endif
     ctxt.Throw();
 }
 
 void MCAdGetVisibleOfAd(MCExecContext& ctxt,  MCStringRef p_name, bool &r_visible)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         ctxt.Throw();
@@ -243,14 +215,12 @@ void MCAdGetVisibleOfAd(MCExecContext& ctxt,  MCStringRef p_name, bool &r_visibl
     }
     
     ctxt.SetTheResultToStaticCString("could not find ad");
-#endif
     ctxt.Throw();
 }
 
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 {
-#ifdef MOBILE_BROKEN
-    if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
+    if (MCAdInneractiveKeyIsNil())
     {
         ctxt.SetTheResultToStaticCString("not registered with ad service");
         ctxt.Throw();
@@ -266,17 +236,15 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
     }
     
     ctxt.SetTheResultToStaticCString("could not find ad");
-#endif
     ctxt.Throw();
 }
 
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
-#ifdef MOBILE_BROKEN
     bool t_success;
     t_success = true;
     MCAutoStringRef t_ads;
-	for(MCAd *t_ad = s_ads; t_ad != nil && t_success; t_ad = t_ad->GetNext())
+	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {
 		if (t_ad->GetName() != nil)
         {
@@ -297,7 +265,7 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
         r_ads = MCValueRetain(*t_ads);
         return;
     }
-#endif
+
     ctxt.Throw();
 }
 

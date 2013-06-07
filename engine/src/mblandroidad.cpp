@@ -54,7 +54,7 @@ static jobject s_admodule = nil;
 class MCAndroidInneractiveAd : public MCAd
 {
 public:
-    MCAndroidInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, jobject p_meta_data);
+    MCAndroidInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, jobject p_meta_data);
     
     bool Create(void);
     void Delete(void);
@@ -78,11 +78,13 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCAndroidInneractiveAd::MCAndroidInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, jobject p_meta_data)
+MCAndroidInneractiveAd::MCAndroidInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, jobject p_meta_data)
+
 {
     m_view = nil;
     m_type = p_type;
-    m_top_left = p_top_left;
+    m_top_left.x = p_top_left_x;
+    m_top_left.y = p_top_left_y;
     m_timeout = p_timeout;
     m_meta_data = p_meta_data;
 }
@@ -190,7 +192,7 @@ bool MCAndroidInneractiveAdInitModule()
 
 //////////
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCArrayRef p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data)
 {
 	if (!MCAndroidInneractiveAdInitModule())
 		return false;
@@ -262,7 +264,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_ty
     t_ad = nil;
     if (t_success)
     {
-        t_ad = new MCAndroidInneractiveAd(p_type, p_top_left, p_timeout, t_meta_data);
+        t_ad = new MCAndroidInneractiveAd(p_type, p_top_left_x, p_top_left_y, p_timeout, t_meta_data);
         t_success = t_ad != nil;
     }
     
@@ -295,7 +297,7 @@ void MCSystemInneractiveAdInit()
 {
 }
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd *&r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {
 	return false;
 }

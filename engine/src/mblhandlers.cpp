@@ -1985,30 +1985,28 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
         
     
     bool t_location_param;
-    integer_t* t_location_ptr;
+    integer_t* t_location_x_ptr = nil;
+    integer_t* t_location_y_ptr = nil;
     integer_t t_location_x;
     integer_t t_location_y;
     
-    t_location_ptr = &t_location_x;
-    if (t_success)
-        t_location_param = MCParseParameters(p_parameters, "i", t_location_ptr);
-
-    t_location_ptr = &t_location_y;
-    if (t_location_param)
-        t_location_param = MCParseParameters(p_parameters, "i", t_location_ptr);
     
-    if (!t_location_param)
+    if (MCParseParameters(p_parameters, "i", t_location_x))
     {
-        t_location_x = -1;
-        t_location_y = -1;
+        t_location_x_ptr = &t_location_x;
     }
-    
+
+    if (MCParseParameters(p_parameters, "i", t_location_y))
+    {
+        t_location_y_ptr = &t_location_y;
+    }
+        
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
     
     if (t_success)
-        MCBusyIndicatorExecStartActivityIndicator(ctxt, t_style, t_location_x, t_location_y);
+        MCBusyIndicatorExecStartActivityIndicator(ctxt, t_style, t_location_x_ptr, t_location_y_ptr);
     
 	if (t_success && !ctxt . HasError())
 		return ES_NORMAL;

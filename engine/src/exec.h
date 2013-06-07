@@ -3530,7 +3530,7 @@ extern MCExecMethodInfo* kMCBusyIndicatorExecStartBusyIndicatorMethodInfo;
 extern MCExecMethodInfo* kMCBusyIndicatorExecStopBusyIndicatorMethodInfo;
 
 
-void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y);
+void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y);
 void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt);
 void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
 void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
