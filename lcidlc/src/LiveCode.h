@@ -136,6 +136,9 @@ typedef enum LCError
 	
 	// An array cannot be encoded as a sequence (i.e. NSArray).
 	kLCErrorNotASequence = 16394,
+	
+	// A dictionary could not be encoded as an array.
+	kLCErrorCannotEncodeMap = 16395
 } LCError;
 
 typedef struct LCBytes
