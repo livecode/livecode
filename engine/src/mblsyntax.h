@@ -223,30 +223,30 @@ enum MCSoundChannelStatus
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 enum MCSoundAudioCategory
 {
-    kMCMCSoundAudioCategoryUnknown,
-    kMCMCSoundAudioCategoryAmbient,
-    kMCMCSoundAudioCategorySoloAmbient,
-    kMCMCSoundAudioCategoryPlayback,
-    kMCMCSoundAudioCategoryRecord,
-    kMCMCSoundAudioCategoryPlayAndRecord,
-    kMCMCSoundAudioCategoryAudioProcessing
+    kMCSoundAudioCategoryUnknown,
+    kMCSoundAudioCategoryAmbient,
+    kMCSoundAudioCategorySoloAmbient,
+    kMCSoundAudioCategoryPlayback,
+    kMCSoundAudioCategoryRecord,
+    kMCSoundAudioCategoryPlayAndRecord,
+    kMCSoundAudioCategoryAudioProcessing
 };
 
-void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, const char *p_channel, const char *p_file, MCSoundChannelPlayType p_type);
-void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
-void MCSoundExecDeleteChannel(MCExecContext& ctxt, const char *p_channel);
-
-void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t p_volume);
-
-bool MCSoundGetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t& r_volume);
-bool MCSoundGetStatusOfChannel(MCExecContext& ctxt, const char *p_channel, MCSoundChannelStatus& r_status);
-bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
-bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
-bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels);
-
-bool MCSoundSetAudioCategory(MCExecContext &ctxt, MCSoundAudioCategory p_category);
+//void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, const char *p_channel, const char *p_file, MCSoundChannelPlayType p_type);
+//void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
+//void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
+//void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, const char *p_channel);
+//void MCSoundExecDeleteChannel(MCExecContext& ctxt, const char *p_channel);
+//
+//void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t p_volume);
+//
+//bool MCSoundGetVolumeOfChannel(MCExecContext& ctxt, const char *p_channel, int32_t& r_volume);
+//bool MCSoundGetStatusOfChannel(MCExecContext& ctxt, const char *p_channel, MCSoundChannelStatus& r_status);
+//bool MCSoundGetSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
+//bool MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, const char *p_channel, char*& r_sound);
+//bool MCSoundGetSoundChannels(MCExecContext& ctxt, char*& r_channels);
+//
+//bool MCSoundSetAudioCategory(MCExecContext &ctxt, MCSoundAudioCategory p_category);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Ad module

@@ -3535,4 +3535,34 @@ void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt);
 void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
 void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
 
+////////////
+
+extern MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo;
+
+extern MCExecMethodInfo* kMCSoundExecPlaySoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecStopSoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecPauseSoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecResumeSoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecDeleteSoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundSetVolumeOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetVolumeOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetStatusOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetSoundOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetNextSoundOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetSoundChannelsMethodInfo;
+extern MCExecMethodInfo* kMCSoundSetAudioCategoryMethodInfo;
+
+void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef p_file, intenum_t p_type);
+void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecDeleteSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t p_volume);
+void MCSoundGetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t& r_volume);
+void MCSoundGetStatusOfChannel(MCExecContext& ctxt, MCStringRef p_channel, intenum_t& r_status);
+void MCSoundGetSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound);
+void MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound);
+void MCSoundGetSoundChannels(MCExecContext& ctxt, MCStringRef &r_channels);
+void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category);
+
 #endif

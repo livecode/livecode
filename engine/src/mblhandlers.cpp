@@ -1936,7 +1936,7 @@ Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
 
 ///////////////
 
-static MCActivityIndicatorType MCActivityIndicatorTypeFromCString(MCStringRef p_string)
+static MCActivityIndicatorType MCActivityIndicatorTypeFromString(MCStringRef p_string)
 {
     if (MCStringIsEqualToCString(p_string, "white", kMCCompareCaseless))
         return kMCActivityIndicatorWhite;
@@ -1948,7 +1948,7 @@ static MCActivityIndicatorType MCActivityIndicatorTypeFromCString(MCStringRef p_
     return kMCActivityIndicatorWhite;
 }
 
-static bool MCActivityIndicatorTypeToCString(MCSensorType p_indicator, MCStringRef& r_string)
+static bool MCActivityIndicatorTypeToString(MCSensorType p_indicator, MCStringRef& r_string)
 {
     switch (p_indicator)
     {
@@ -1981,7 +1981,7 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
     }
     
     if (t_success)
-        t_style = MCActivityIndicatorTypeFromCString(*t_style_string);
+        t_style = MCActivityIndicatorTypeFromString(*t_style_string);
         
     
     bool t_location_param;
@@ -1989,7 +1989,6 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
     integer_t* t_location_y_ptr = nil;
     integer_t t_location_x;
     integer_t t_location_y;
-    
     
     if (MCParseParameters(p_parameters, "i", t_location_x))
     {
@@ -2027,6 +2026,423 @@ Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_paramete
 		return ES_NORMAL;
     
 	return ES_ERROR;
-    
 }
 
+////////////////
+
+
+static MCSoundAudioCategory MCSoundAudioCategoryFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "ambient", kMCCompareCaseless))
+        return kMCSoundAudioCategoryAmbient;
+    else if (MCStringIsEqualToCString(p_string, "solo ambient", kMCCompareCaseless))
+        return kMCSoundAudioCategorySoloAmbient;
+    else if (MCStringIsEqualToCString(p_string, "playback", kMCCompareCaseless))
+        return kMCSoundAudioCategoryPlayback;
+    else if (MCStringIsEqualToCString(p_string, "record", kMCCompareCaseless))
+        return kMCSoundAudioCategoryRecord;
+    else if (MCStringIsEqualToCString(p_string, "play and record", kMCCompareCaseless))
+        return kMCSoundAudioCategoryPlayAndRecord;
+    else if (MCStringIsEqualToCString(p_string, "audio processing", kMCCompareCaseless))
+        return kMCSoundAudioCategoryAudioProcessing;
+    
+    return kMCSoundAudioCategoryUnknown;
+}
+
+static bool MCSoundAudioCategoryTypeToString(MCSoundAudioCategory p_indicator, MCStringRef& r_string)
+{
+    switch (p_indicator)
+    {
+        case kMCSoundAudioCategoryAmbient:
+            return MCStringCreateWithCString("ambient", r_string);
+        case kMCSoundAudioCategorySoloAmbient:
+            return MCStringCreateWithCString("solo ambient", r_string);
+        case kMCSoundAudioCategoryPlayback:
+            return MCStringCreateWithCString("playback", r_string);
+        case kMCSoundAudioCategoryRecord:
+            return MCStringCreateWithCString("record", r_string);
+        case kMCSoundAudioCategoryPlayAndRecord:
+            return MCStringCreateWithCString("play and record", r_string);
+        case kMCSoundAudioCategoryAudioProcessing:
+            return MCStringCreateWithCString("audio processing", r_string);
+        default:
+            return false;
+    }
+}
+
+static MCSoundChannelStatus MCSoundChannelStatusFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "playing", kMCCompareCaseless))
+        return kMCSoundChannelStatusPlaying;
+    else if (MCStringIsEqualToCString(p_string, "paused", kMCCompareCaseless))
+        return kMCSoundChannelStatusPaused;
+    else //if (MCStringIsEqualToCString(p_string, "stopped", kMCCompareCaseless))
+        return kMCSoundChannelStatusStopped;
+}
+
+static bool MCSoundChannelStatusTypeToString(MCSoundChannelStatus p_status, MCStringRef& r_string)
+{
+    switch(p_status)
+    {
+        case kMCSoundChannelStatusPaused:
+            return MCStringCreateWithCString("paused", r_string);
+        case kMCSoundChannelStatusStopped:
+            return MCStringCreateWithCString("stopped", r_string);
+        case kMCSoundChannelStatusPlaying:
+            return MCStringCreateWithCString("playing", r_string);
+        default:
+            return false;
+    }
+}
+
+static MCSoundChannelPlayType MCSoundChannelPlayTypeFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "next", kMCCompareCaseless))
+        return kMCSoundChannelPlayNext;
+    else if (MCStringIsEqualToCString(p_string, "looping", kMCCompareCaseless))
+        return kMCSoundChannelPlayLooping;
+    else
+        return kMCSoundChannelPlayNow;
+}
+
+static bool MCSoundChannelPlayTypeToString(MCSoundChannelPlayType p_type, MCStringRef& r_string)
+{
+    switch(p_type)
+    {
+        case kMCSoundChannelPlayLooping:
+            return MCStringCreateWithCString("play looping", r_string);
+        case kMCSoundChannelPlayNext:
+            return MCStringCreateWithCString("play next", r_string);
+        default:
+            return MCStringCreateWithCString("play now", r_string);
+    }
+}
+
+
+Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_sound;
+    MCAutoStringRef t_channel;
+    MCAutoStringRef t_type;
+	t_sound = nil;
+	t_channel = nil;
+	t_type = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "xxx", &t_sound, &t_channel, &t_type);
+	
+    MCSoundChannelPlayType t_play_type;
+	if (t_success)
+        t_play_type = MCSoundChannelPlayTypeFromString(*t_type);
+    
+    if(t_success)
+		MCSoundExecPlaySoundOnChannel(ctxt, *t_channel, *t_sound, (integer_t)t_play_type);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	if (t_success)
+		MCSoundExecPauseSoundOnChannel(ctxt, *t_channel);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+    
+	MCAutoStringRef t_channel;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	if (t_success)
+		MCSoundExecResumeSoundOnChannel(ctxt, *t_channel);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	if (t_success)
+		MCSoundExecStopSoundOnChannel(ctxt, *t_channel);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	if (t_success)
+		MCSoundExecDeleteSoundOnChannel(ctxt, *t_channel);
+	
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	int32_t t_volume;
+	MCAutoStringRef t_channel;
+
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xu", &t_channel, &t_volume);
+	
+	if (t_success)
+		MCSoundSetVolumeOfChannel(ctxt, *t_channel, t_volume);
+	    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	int32_t t_volume;
+	if (t_success)
+        MCSoundGetVolumeOfChannel(ctxt, *t_channel, t_volume);
+	
+	ctxt.SetTheResultToNumber(t_volume);
+		
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+	intenum_t t_status;
+	if (t_success)
+		MCSoundGetStatusOfChannel(ctxt, *t_channel, t_status);
+	
+	if (t_success && t_status >= 0)
+	{
+        MCAutoStringRef t_status_string;
+        if (MCSoundChannelStatusTypeToString((MCSoundChannelStatus)t_status, &t_status_string))
+            ctxt.SetTheResultToValue(*t_status_string);
+    }
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+    MCAutoStringRef t_sound;
+	if (t_success)
+		MCSoundGetSoundOfChannel(ctxt, *t_channel, &t_sound);
+	
+    if (t_success)
+        if (*t_sound != nil)
+            ep.setvalueref(*t_sound);
+    
+    if (t_success)
+        ctxt . SetTheResultToValue(*t_sound);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_channel;
+    
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_channel);
+	
+    MCAutoStringRef t_sound;
+	if (t_success)
+		MCSoundGetNextSoundOfChannel(ctxt, *t_channel, &t_sound);
+	
+    if (t_success)
+        if (*t_sound != nil)
+            ep.setvalueref(*t_sound);
+    
+    if (t_success)
+        ctxt . SetTheResultToValue(*t_sound);
+    
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+    bool t_success;
+	t_success = true;
+    
+    MCAutoStringRef t_channels;
+	if (t_success)
+		MCSoundGetSoundChannels(ctxt, &t_channels);
+	
+    if (t_success)
+        if (*t_channels != nil)
+            ep.setvalueref(*t_channels);
+    
+    if (t_success)
+        ctxt . SetTheResultToValue(*t_channels);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+// MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
+Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_category_string;
+	
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_category_string);
+    
+    MCSoundAudioCategory t_category;
+    t_category = kMCSoundAudioCategoryUnknown;
+    if (t_success)
+    {
+        MCSoundAudioCategoryFromString(*t_category_string);
+    }
+    
+    if (t_success)
+        MCSoundSetAudioCategory(ctxt, t_category);
+    
+    if (t_success)
+	{
+        MCAutoStringRef t_result;
+		ep . copyasstringref(&t_result);
+		ctxt . SetTheResultToValue(*t_result);
+	}
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}

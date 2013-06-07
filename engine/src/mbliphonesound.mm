@@ -413,7 +413,7 @@ static void delete_sound_channel(MCSystemSoundChannel *p_channel)
 	MCMemoryDelete(p_channel);
 }
 
-static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_channel)
+static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_channel)
 {
 	bool t_success;
 	t_success = true;
@@ -424,7 +424,7 @@ static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_ch
 		t_success = MCMemoryNew(t_channel);
 	
 	if (t_success)
-		t_success = MCCStringClone(p_channel, t_channel -> name);
+		t_success = MCCStringClone(MCStringGetCString(p_channel), t_channel -> name);
 	
 	if (t_success)
 	{
@@ -448,10 +448,10 @@ static bool new_sound_channel(const char *p_channel, MCSystemSoundChannel*& r_ch
 	return t_success;
 }
 
-static bool find_sound_channel(const char *p_channel, bool p_create, MCSystemSoundChannel*& r_channel)
+static bool find_sound_channel(MCStringRef p_channel, bool p_create, MCSystemSoundChannel*& r_channel)
 {
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
-		if (MCCStringEqualCaseless(p_channel, t_channel -> name))
+		if (MCStringIsEqualToCString(p_channel, t_channel -> name, kMCCompareCaseless))
 		{
 			r_channel = t_channel;
 			return true;
@@ -463,10 +463,10 @@ static bool find_sound_channel(const char *p_channel, bool p_create, MCSystemSou
 	return false;
 }
 
-static bool new_player_for_channel(MCSystemSoundChannel *p_channel, const char *p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
+static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
 {
 	char *t_resolved_file;
-	t_resolved_file = MCS_resolvepath(p_file);
+	t_resolved_file = MCS_resolvepath(MCStringGetCString(p_file));
 	
 	NSURL *t_url;
 	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_resolved_file encoding: NSMacOSRomanStringEncoding]];
@@ -494,7 +494,7 @@ static bool new_player_for_channel(MCSystemSoundChannel *p_channel, const char *
 }
 
 // MM-2012-02-11: Refactored to take a MCObjectHandle * rather than MCObject.
-bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
+bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, true, t_channel))
@@ -508,7 +508,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 		t_channel -> current_player . player != nil)
 	{	
 		// If no file is given, cancel the next sound.
-		if (p_file == nil || MCCStringEqualCaseless(p_file, MCnullstring))
+		if (p_file == nil || MCStringIsEqualToCString(p_file, MCnullstring, kMCCompareCaseless))
 			return true;
 		
 		if (new_player_for_channel(t_channel, p_file, false, p_object, t_channel -> next_player))
@@ -531,7 +531,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 		delete_player_on_channel(t_channel, t_channel -> current_player);
 	
 	// If no file is given, cancel the current sound.
-	if (p_file == nil || MCCStringEqualCaseless(p_file, MCnullstring))
+	if (p_file == nil || MCStringIsEqualToCString(p_file, MCnullstring, kMCCompareCaseless))
 		return true;
 	
 	if (new_player_for_channel(t_channel, p_file, p_type == kMCSoundChannelPlayLooping, p_object, t_channel -> current_player))
@@ -564,7 +564,7 @@ bool MCSystemPlaySoundOnChannel(const char *p_channel, const char *p_file, MCSou
 	return false;
 }
 
-bool MCSystemStopSoundChannel(const char *p_channel)
+bool MCSystemStopSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -582,7 +582,7 @@ bool MCSystemStopSoundChannel(const char *p_channel)
 }
 
 // MM-2012-02-11: Refactored PauseResume to two funciton calls
-bool MCSystemPauseSoundChannel(const char *p_channel)
+bool MCSystemPauseSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -601,7 +601,7 @@ bool MCSystemPauseSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemResumeSoundChannel(const char *p_channel)
+bool MCSystemResumeSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -620,7 +620,7 @@ bool MCSystemResumeSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemDeleteSoundChannel(const char *p_channel)
+bool MCSystemDeleteSoundChannel(MCStringRef p_channel)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -632,7 +632,7 @@ bool MCSystemDeleteSoundChannel(const char *p_channel)
 	return true;
 }
 
-bool MCSystemSetSoundChannelVolume(const char *p_channel, int32_t p_loudness)
+bool MCSystemSetSoundChannelVolume(MCStringRef p_channel, int32_t p_loudness)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, true, t_channel))
@@ -647,7 +647,7 @@ bool MCSystemSetSoundChannelVolume(const char *p_channel, int32_t p_loudness)
 	return true;
 }
 
-bool MCSystemSoundChannelVolume(const char *p_channel, int32_t& r_volume)
+bool MCSystemSoundChannelVolume(MCStringRef p_channel, int32_t& r_volume)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -658,7 +658,7 @@ bool MCSystemSoundChannelVolume(const char *p_channel, int32_t& r_volume)
 	return true;
 }
 
-bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_status)
+bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status)
 {
 	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -675,7 +675,7 @@ bool MCSystemSoundChannelStatus(const char *p_channel, MCSoundChannelStatus& r_s
 	return true;
 }
 
-bool MCSystemSoundOnChannel(const char *p_channel, MCStringRef& r_sound)
+bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
 /*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -685,7 +685,7 @@ bool MCSystemSoundOnChannel(const char *p_channel, MCStringRef& r_sound)
     return false;
 }
 
-bool MCSystemNextSoundOnChannel(const char *p_channel, MCStringRef& r_sound)
+bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 {
 /*	MCSystemSoundChannel *t_channel;
 	if (!find_sound_channel(p_channel, false, t_channel))
@@ -740,28 +740,28 @@ extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, cons
 ////////////////////////////////////////////////////////////////////////////////
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
-bool MCSystemSetAudioCategory(MCSoundAudioCategory p_category)
+bool MCSystemSetAudioCategory(intenum_t p_category)
 {
     NSString *t_category;
     t_category = nil;
     switch (p_category)
     {
-        case kMCMCSoundAudioCategoryAmbient:
+        case kMCSoundAudioCategoryAmbient:
             t_category = AVAudioSessionCategoryAmbient;
             break;
-        case kMCMCSoundAudioCategorySoloAmbient:
+        case kMCSoundAudioCategorySoloAmbient:
             t_category = AVAudioSessionCategorySoloAmbient;
             break;
-        case kMCMCSoundAudioCategoryPlayback:
+        case kMCSoundAudioCategoryPlayback:
             t_category = AVAudioSessionCategoryPlayback;
             break;
-        case kMCMCSoundAudioCategoryRecord:
+        case kMCSoundAudioCategoryRecord:
             t_category = AVAudioSessionCategoryRecord;
             break;
-        case kMCMCSoundAudioCategoryPlayAndRecord:
+        case kMCSoundAudioCategoryPlayAndRecord:
             t_category = AVAudioSessionCategoryPlayAndRecord;
             break;
-        case kMCMCSoundAudioCategoryAudioProcessing:
+        case kMCSoundAudioCategoryAudioProcessing:
             t_category = AVAudioSessionCategoryAudioProcessing;
             break;
         default:
