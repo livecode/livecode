@@ -565,7 +565,7 @@ char *InterfaceGenerateJavaMethodSignature(InterfaceRef self, Handler *p_handler
 
 static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
-	NameRef t_name;
+/*	NameRef t_name;
 	t_name = p_handler -> name;
 	
 	HandlerVariant *t_variant;
@@ -645,12 +645,12 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	CoderWriteLine(p_coder, "\ts_interface -> engine_run_on_main_thread((void *)%s_callback, &ctxt, kMCRunOnMainThreadJumpToUI);", NameGetCString(t_name));
 	if (t_variant -> return_type != nil)
 		CoderWriteLine(p_coder, "\treturn ctxt . result;");
-	CoderWriteLine(p_coder, "}");
+	CoderWriteLine(p_coder, "}");*/
 }
 
 static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
-	NameRef t_name;
+	/*NameRef t_name;
 	t_name = p_handler -> name;
 	
 	HandlerVariant *t_variant;
@@ -732,8 +732,114 @@ static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_code
 	
 	CoderWriteLine(p_coder, "}");
 	
-	MCCStringFree(t_native_name);
+	MCCStringFree(t_native_name);*/
+}
+
+static void InterfaceGenerateJavaHandlerStubParameters(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
+{
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+	{
+		if (i != 0)
+			CoderWrite(p_coder, ", ");
+		
+		const char *t_type;
+		t_type = native_type_to_type_in_cstring(NativeTypeFromName(p_variant -> parameters[i] . type));
+		
+		CoderWrite(p_coder, "%s p_param_%d", t_type, i);
+	}
+}
+
+static char *InterfaceGenerateJavaHandlerStubSignature(InterfaceRef self, Handler *p_handler, HandlerVariant *p_variant)
+{
+	char *t_signature;
+	t_signature = nil;
+	MCCStringAppend(t_signature, "(");
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		MCCStringAppend(t_signature, native_type_to_java_sig(NativeTypeFromName(p_variant -> parameters[i] . type)));
+	MCCStringAppend(t_signature, ")");
+	MCCStringAppend(t_signature, p_variant -> return_type != nil ? native_type_to_java_sig(NativeTypeFromName(p_variant -> return_type)) : "V");
+	return t_signature;
+}
+
+static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
+{	
+	// Compute the return types for various contexts.
+	const char *t_java_method_type, *t_c_return_type, *t_java_return_type;
+	if (p_variant -> return_type != nil)
+	{
+		t_java_method_type = native_type_to_java_method_type_cstring(NativeTypeFromName(p_variant -> return_type));
+		t_c_return_type = native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type));
+		t_java_return_type = native_type_to_java_type_cstring(NativeTypeFromName(p_variant -> return_type));
+	}
+	else
+	{
+		t_java_method_type = "Void";
+		t_c_return_type = "void";
+		t_java_return_type = "void";
+	}
 	
+	// Compute the env var.
+	const char *t_env_var;
+	if (p_handler -> is_tail)
+		t_env_var = "s_android_env";
+	else
+		t_env_var = "s_engine_env";
+	
+	// Generate the signature.
+	CoderWrite(p_coder, "%s %s(", t_c_return_type, NameGetCString(p_variant -> binding));
+	InterfaceGenerateJavaHandlerStubParameters(self, p_coder, p_handler, p_variant);
+	CoderWriteLine(p_coder, ")");
+	CoderWriteLine(p_coder, "{");
+	
+	// Generate code to fetch the static method id.
+	char *t_java_sig;
+	t_java_sig = InterfaceGenerateJavaHandlerStubSignature(self, p_handler, p_variant);
+	CoderWriteLine(p_coder, "\tstatic jmethodID s_method = 0;");
+	CoderWriteLine(p_coder, "\tif (s_method == 0)");
+	CoderWriteLine(p_coder, "\t\ts_method = %s -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", t_env_var, NameGetCString(p_variant -> binding), t_java_sig);
+	free(t_java_sig);
+	
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+	{
+		HandlerParameter *t_parameter;
+		t_parameter = &p_variant -> parameters[i];
+		
+		NativeType t_param_native_type;
+		t_param_native_type = NativeTypeFromName(t_parameter -> type);
+		
+		const char *t_java_param_type;
+		t_java_param_type = native_type_to_java_type_cstring(t_param_native_type);
+		
+		CoderWriteLine(p_coder, "\t%s t_param_%d;", t_java_param_type, i);
+		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(%s, p_param_%d);", i, NativeTypeGetTag(t_param_native_type), t_env_var, i);
+	}
+	
+	if (p_variant -> return_type != nil)
+		CoderWriteLine(p_coder, "\t%s t_java_result;", t_java_return_type);
+	
+	if (p_variant -> return_type != nil)
+		CoderWrite(p_coder, "\tt_java_result = %s -> CallStatic%sMethod(s_java_class, s_method", t_env_var, t_java_method_type);
+	else
+		CoderWrite(p_coder, "\t%s -> CallStatic%sMethod(s_java_class, s_method", t_env_var, t_java_method_type);
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		CoderWrite(p_coder, ", t_param_%d", i);
+	CoderWrite(p_coder, ");\n");
+	
+	if (p_variant -> return_type != nil)
+	{
+		CoderWriteLine(p_coder, "\t%s result;", native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tt_result = java_to__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+	}
+	
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_param_%d);", NativeTypeGetTag(NativeTypeFromName(p_variant -> parameters[i] . type)), t_env_var, i);
+	
+	if (p_variant -> return_type != nil)
+		CoderWriteLine(p_coder, "\treturn t_result;");
+		
+	CoderWriteLine(p_coder, "}");
+
 }
 
 static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
@@ -1115,6 +1221,21 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			}
 			CoderWriteLine(p_coder, "\treturn error__report_bad_parameter_count(result);");
 			CoderWriteLine(p_coder, "}");
+		}
+	}
+	
+	// If this is a Java handler, then generate the 'variant__*' methods for it.
+	for(uint32_t i = 0; i < self -> handler_count; i++)
+	{
+		Handler *t_handler;
+		t_handler = &self -> handlers[i];
+		
+		if (t_handler -> is_java)
+		{
+			CoderWriteLine(p_coder, "#ifdef __ANDROID__");
+			for(uint32_t i = 0; i < t_handler -> variant_count; i++)
+				InterfaceGenerateJavaHandlerStub(self, p_coder, t_handler, &t_handler -> variants[i]);
+			CoderWriteLine(p_coder, "#endif");
 		}
 	}
 	

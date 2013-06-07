@@ -40,6 +40,7 @@ enum InterfaceError
 	kInterfaceErrorOptionalParamImpliesIn,
 	kInterfaceErrorNoOptionalBoolean,
 	kInterfaceErrorUnknownType,
+	kInterfaceErrorJavaImpliesInParam,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -426,6 +427,11 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		t_variant -> parameter_count > 0 &&
 		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
+	
+	// RULE: If java handler, then only in parameters are allowed.
+	if (self -> current_handler -> is_java)
+		if (p_param_type != kParameterTypeIn)
+			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);
 	
 	if (!MCMemoryResizeArray(t_variant -> parameter_count + 1, t_variant -> parameters, t_variant -> parameter_count))
 		return false;

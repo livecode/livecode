@@ -2403,7 +2403,8 @@ static bool verify__out_parameter(const char *arg, MCVariableRef var)
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) __attribute__((visibility("default")));
 
 static JavaVM *s_java_vm = nil;
-static JNIEnv *s_java_env = nil;
+static JNIEnv *s_android_env = nil;
+static JNIEnv *s_engine_env = nil;
 static jclass s_java_class = nil;
 
 //////////
@@ -2424,12 +2425,12 @@ static jobject java__get_container(void)
 
 //////////
 
-static bool java_from__bool(bool p_value)
+static bool java_from__bool(JNIEnv *env, bool p_value)
 {
 	return p_value;
 }
 
-static jobject java_from__cstring(const char *p_value)
+static jobject java_from__cstring(JNIEnv *env, const char *p_value)
 {
 	size_t t_char_count;
 	t_char_count = strlen(p_value);
@@ -2440,42 +2441,42 @@ static jobject java_from__cstring(const char *p_value)
 		t_chars[i] = p_value[i];
 	
 	jobject t_java_value;
-	t_java_value = (jobject)s_java_env -> NewString(t_chars, t_char_count);
+	t_java_value = (jobject)env -> NewString(t_chars, t_char_count);
 	
 	return t_java_value;
 }
 
-static jobject java_from__cdata(LCBytes p_value)
+static jobject java_from__cdata(JNIEnv *env, LCBytes p_value)
 {
 	jobject t_java_value;
-	t_java_value = (jobject)s_java_env -> NewByteArray(p_value . length);
+	t_java_value = (jobject)env -> NewByteArray(p_value . length);
 	s_java_env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
 	return t_java_value;
 }
 
-static int java_from__int(int p_value)
+static int java_from__int(JNIEnv *env, int p_value)
 {
 	return p_value;
 }
 
-static double java_from__double(double p_value)
+static double java_from__double(JNIEnv *env, double p_value)
 {
 	return p_value;
 }
 
 //////////
 
-static bool java_to__bool(bool p_value)
+static bool java_to__bool(JNIEnv *env, bool p_value)
 {
 	return p_value;
 }
 
-static char *java_to__cstring(jobject p_value)
+static char *java_to__cstring(JNIEnv *env, jobject p_value)
 {
 	const jchar *t_unichars;
 	uint32_t t_unichar_count;
-	t_unichars = s_java_env -> GetStringChars((jstring)p_value, nil);
-	t_unichar_count = s_java_env -> GetStringLength((jstring)p_value);
+	t_unichars = env -> GetStringChars((jstring)p_value, nil);
+	t_unichar_count = env -> GetStringLength((jstring)p_value);
 	
 	char *t_native_value;
 	t_native_value = (char *)malloc(t_unichar_count + 1);
@@ -2483,54 +2484,54 @@ static char *java_to__cstring(jobject p_value)
 		t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
 	t_native_value[t_unichar_count] = 0;
 	
-	s_java_env -> ReleaseStringChars((jstring)p_value, t_unichars);
+	env -> ReleaseStringChars((jstring)p_value, t_unichars);
 	
 	return t_native_value;
 }
 
-static LCBytes java_to__cdata(jobject p_value)
+static LCBytes java_to__cdata(JNIEnv *env, jobject p_value)
 {
 	LCBytes t_native_value;
-	t_native_value . length = s_java_env -> GetArrayLength((jbyteArray)p_value);
+	t_native_value . length = env -> GetArrayLength((jbyteArray)p_value);
 	t_native_value . buffer = malloc(t_native_value . length);
 	jbyte *t_bytes;
-	t_bytes = s_java_env -> GetByteArrayElements((jbyteArray)p_value, nil);
+	t_bytes = env -> GetByteArrayElements((jbyteArray)p_value, nil);
 	memcpy(t_native_value . buffer, t_bytes, t_native_value . length);
-	s_java_env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
+	env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
 	return t_native_value;
 }
 
-static int java_to__int(int p_value)
+static int java_to__int(JNIEnv *env, int p_value)
 {
 	return p_value;
 }
 
-static double java_to__double(double p_value)
+static double java_to__double(JNIEnv *env, double p_value)
 {
 	return p_value;
 }
 
 //////////
 
-static void java_free__bool(bool p_value)
+static void java_free__bool(JNIEnv *env, bool p_value)
 {
 }
 
-static void java_free__cstring(jobject p_value)
+static void java_free__cstring(JNIEnv *env, jobject p_value)
 {
-	s_java_env -> DeleteLocalRef(p_value);
+	env -> DeleteLocalRef(p_value);
 }
 
-static void java_free__cdata(jobject p_value)
+static void java_free__cdata(JNIEnv *env, jobject p_value)
 {
-	s_java_env -> DeleteLocalRef(p_value);
+	env -> DeleteLocalRef(p_value);
 }
 
-static void java_free__int(int p_value)
+static void java_free__int(JNIEnv *env, int p_value)
 {
 }
 
-static void java_free__double(double p_value)
+static void java_free__double(JNIEnv *env, double p_value)
 {
 }
 
