@@ -98,7 +98,6 @@ class MCPlayer : public MCControl
 
 #ifdef _MAC_DESKTOP
 	void *movie_view;
-	Drawable offscreenMovie;
 #elif defined _WINDOWS_DESKTOP
 	uint32_t deviceID;  //device id for opened AVI device.
 	uint32_t mciPlayFrom, mciPlayTo;
@@ -258,12 +257,13 @@ public:
 	Boolean prepareQT();
 	void bufferDraw(bool p_resize); //direct movie controller to draw to Offscreen buffer
 	void unbufferDraw(); //direct movie controller to draw to Screen/Window
-#ifdef _WINDOWS_DESKTOP
+
 	Boolean isbuffering()
 	{
 		return (m_offscreen != NULL);
 	}
-
+	
+#ifdef _WINDOWS_DESKTOP
 	void changewindow(MCSysWindowHandle p_old_window);
 
 	Boolean prepareAVI();
@@ -277,11 +277,6 @@ public:
 	MCSysWindowHandle getplayerwindow()
 	{
 		return hwndMovie;
-	}
-#else
-	Boolean isbuffering()
-	{
-		return (offscreenMovie != NULL);
 	}
 #endif
 #endif

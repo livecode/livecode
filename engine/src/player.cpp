@@ -147,6 +147,12 @@ static inline MCRectangle RectToMCRectangle(Rect r)
 #endif
 
 #ifdef _MACOSX
+struct MCPlayerOffscreenBuffer
+{
+	CGrafPtr gworld;
+	MCImageBitmap image_bitmap;
+};
+
 static Boolean IsQTVRInstalled(void);
 #endif
 
@@ -192,7 +198,7 @@ MCPlayer::MCPlayer()
 #endif
 
 #ifdef _MACOSX
-	offscreenMovie = NULL;
+	m_offscreen = nil;
 #elif defined _WINDOWS
 	deviceID = 0;
 	hwndMovie = NULL;
@@ -233,7 +239,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 #endif
 
 #ifdef _MACOSX
-	offscreenMovie = NULL;
+	m_offscreen = nil;
 #elif defined _WINDOWS
 	deviceID = 0;
 	hwndMovie = NULL;
@@ -2359,32 +2365,35 @@ if (theMovie == NULL)
 	
 	GWorldPtr t_old_buffer;
 	if (p_resize)
-		t_old_buffer = (CGrafPtr)offscreenMovie -> handle . pixmap;
+		t_old_buffer = m_offscreen->gworld;
 	else
 		t_old_buffer = NULL;
 	
-	if (offscreenMovie != NULL)
-		delete offscreenMovie;
+	if (m_offscreen != NULL)
+		MCMemoryDelete(m_offscreen);
 	
 	Rect macr;
 	macr.left = macr.top = 0;
 	macr.bottom = trect.height;
 	macr.right = trect.width;
-	offscreenMovie = new _Drawable;
-	offscreenMovie -> type = DC_BITMAP;
-	NewGWorld((CGrafPtr *)&offscreenMovie -> handle . pixmap, 32, &macr, NULL, NULL, useTempMem | kNativeEndianPixMap);
+	/* UNCHECKED */ MCMemoryNew(m_offscreen);
+	NewGWorld((CGrafPtr *)&m_offscreen->gworld, 32, &macr, NULL, NULL, useTempMem | kNativeEndianPixMap);
 	
-	if (offscreenMovie -> handle . pixmap == NULL) //not successful, bail out
+	if (m_offscreen->gworld == NULL) //not successful, bail out
 	{
-		delete offscreenMovie;
-		offscreenMovie = NULL;
+		MCMemoryDelete(m_offscreen);
+		m_offscreen = nil;
 		unbufferDraw();
 		if (p_resize)
 			bufferDraw(false);
 		return;
 	}
 	
-	MCSetControllerPort((MovieController)theMC, (CGrafPtr)offscreenMovie -> handle . pixmap);
+	m_offscreen->image_bitmap.width = trect.width;
+	m_offscreen->image_bitmap.height = trect.height;
+	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
+	
+	MCSetControllerPort((MovieController)theMC, m_offscreen->gworld);
 	MCRectangle r = trect;
 	r.x = r.y = 0;
 
@@ -2434,13 +2443,13 @@ void MCPlayer::unbufferDraw()
 	//reset back to draw to window
 	MCSetControllerPort((MovieController)theMC, GetWindowPort((WindowPtr)getstack()->getqtwindow()));
 	
-	// Ok-2007-06-15: Fix for bug 5151. If the width or height of a player is set to zero, offscreenMovie
+	// Ok-2007-06-15: Fix for bug 5151. If the width or height of a player is set to zero, m_offscreen
 	// is deleted and set to NULL in bufferDraw, unbufferDraw is then called, previously leading to a crash.
-	if (offscreenMovie != NULL)
+	if (m_offscreen != NULL)
 	{
-		DisposeGWorld((CGrafPtr)offscreenMovie -> handle . pixmap);
-		delete offscreenMovie;
-		offscreenMovie = NULL;
+		DisposeGWorld(m_offscreen->gworld);
+		MCMemoryDelete(m_offscreen);
+		m_offscreen = nil;
 	}
 	// MW-2011-11-30: [[ Bug 9887 ]] Make sure the player rect is adjusted to account for
 	//   menubar.
@@ -2929,7 +2938,7 @@ void MCPlayer::qt_setcurtime(uint4 newtime)
 #ifdef _WINDOWS
 			MCDoAction((MovieController)theMC, mcActionDraw, bufferGW);
 #else
-			MCDoAction((MovieController)theMC, mcActionDraw, offscreenMovie -> handle . pixmap);
+			MCDoAction((MovieController)theMC, mcActionDraw, m_offscreen->gworld);
 #endif
 
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
@@ -3196,7 +3205,21 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 
 	if (isbuffering())
 	{
-		dc -> copyarea(offscreenMovie, trect . x, trect . y, 0, 0, trect . width, trect . height);
+		PixMapHandle t_pixmap;
+		t_pixmap = GetGWorldPixMap(m_offscreen->gworld);
+		LockPixels(t_pixmap);
+		
+		m_offscreen->image_bitmap.data = (uint32_t*)GetPixBaseAddr(t_pixmap);
+		m_offscreen->image_bitmap.stride = GetPixRowBytes(t_pixmap);
+		
+		MCImageDescriptor t_image;
+		MCMemoryClear(&t_image, sizeof(t_image));
+		t_image.filter = kMCGImageFilterNearest;
+		t_image.bitmap = &m_offscreen->image_bitmap;
+		
+		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
+
+		UnlockPixels(t_pixmap);
 	}
 	else
 	{
