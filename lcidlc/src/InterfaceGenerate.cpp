@@ -936,6 +936,8 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
 							break;
 						case kNativeTypeObjcData:
+						case kNativeTypeObjcArray:
+						case kNativeTypeObjcDictionary:		
 							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
 							break;
 						case kNativeTypeCString:

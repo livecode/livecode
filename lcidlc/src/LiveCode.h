@@ -58,6 +58,10 @@ typedef enum LCError
 	// A request was made for an array value, but the source was not convertible
 	// to one.
 	kLCErrorNotAnArray = 14,
+	
+	// A request was made for a number, but the source was too big to fit in the
+	// requested type.
+	kLCErrorNumberTooBig = 16,
 
 	// No object handle was passed to an object manipulation function
 	kLCErrorNoObject = 23,
@@ -129,6 +133,9 @@ typedef enum LCError
 	
 	// The value was requested as a (native) char, but the source was not convertible.
 	kLCErrorNotAChar = 16393,
+	
+	// An array cannot be encoded as a sequence (i.e. NSArray).
+	kLCErrorNotASequence = 16394,
 } LCError;
 
 typedef struct LCBytes
@@ -323,6 +330,10 @@ enum
 	kLCValueOptionAsObjcString = 18,
 	// The 'value' parameter is a pointer to an NSData* variable.
 	kLCValueOptionAsObjcData = 19,
+	// The 'value' parameter is a pointer to an NSArray* variable.
+	kLCValueOptionAsObjcArray = 20,
+	// The 'value' parameter is a pointer to an NSDictionary *variable.
+	kLCValueOptionAsObjcDictionary = 21,
 	
 	// Treat array keys as case-insensitive.
 	kLCValueOptionCaseSensitiveFalse = 0 << 30,
@@ -367,11 +378,11 @@ LCError LCArrayRelease(LCArrayRef array);
 LCError LCArrayCountKeys(LCArrayRef array, unsigned int options, unsigned int *r_count);
 LCError LCArrayCountKeysOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length, unsigned int *r_count);
 
-LCError LCArrayListAllKeys(LCArrayRef array, unsigned int options, char **key_buffer, unsigned int key_buffer_size);
-LCError LCArrayListAllKeysOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length, char **key_buffer, unsigned int key_buffer_size);
+LCError LCArrayListKeys(LCArrayRef array, unsigned int options, char **key_buffer, unsigned int key_buffer_size);
+LCError LCArrayListKeysOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length, char **key_buffer, unsigned int key_buffer_size);
 	
-LCError LCArrayRemoveAllKeys(LCArrayRef array, unsigned int options);
-LCError LCArrayRemoveAllKeysOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length);
+LCError LCArrayRemoveKeys(LCArrayRef array, unsigned int options);
+LCError LCArrayRemoveKeysOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length);
 	
 LCError LCArrayHasKey(LCArrayRef array, unsigned int options, const char *key, bool *r_exists);
 LCError LCArrayHasKeyOnPath(LCArrayRef array, unsigned int options, const char **path, unsigned int path_length, const char *key, bool *r_exists);

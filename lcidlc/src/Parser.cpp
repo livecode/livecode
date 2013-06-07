@@ -745,7 +745,7 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 		if (!ParserMatchConstant(self, t_default))
 			return false;
 	}
-	
+
 	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default))
 		return false;
 
