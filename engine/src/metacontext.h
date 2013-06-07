@@ -191,7 +191,6 @@ public:
 	void applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height);
 
 	void drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_parameters);
-	void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh);
 
 	void clear(const MCRectangle *rect);
 	MCRegionRef computemaskregion(void);

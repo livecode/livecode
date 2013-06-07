@@ -107,7 +107,6 @@ public:
 	void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height);
 
 	void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters);
-	void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh);
 
 	void combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh);
 

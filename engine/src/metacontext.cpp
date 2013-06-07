@@ -564,32 +564,6 @@ void MCMetaContext::drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_info)
 	end();
 }
 
-/* OVERHAUL - REVISIT - change source parameter */
-void MCMetaContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh)
-{
-#ifdef LIBGRAPHICS_BROKEN
-	MCImageDescriptor t_image;
-	memset(&t_image, 0, sizeof(MCImageDescriptor));
-	
-	uint2 w, h, d;
-	MCscreen -> getpixmapgeometry(p_src, w, h, d);
-
-	MCBitmap *t_old_bitmap = nil;
-	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ t_old_bitmap = MCscreen->getimage(p_src, 0, 0, w, h);
-	/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_old_bitmap, t_bitmap);
-	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-
-	t_image . bitmap = t_bitmap;
-
-	drawimage(t_image, p_sx, p_sy, p_sw, p_sh, p_dx, p_dy);
-
-	MCImageFreeBitmap(t_bitmap);
-	if (t_old_bitmap != nil)
-		MCscreen -> destroyimage(t_old_bitmap);
-#endif
-}
-
 void MCMetaContext::clear(const MCRectangle *rect)
 {
 	assert(false);

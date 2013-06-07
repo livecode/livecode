@@ -614,10 +614,6 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGraphicsContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh)
-{
-}
-
 void MCGraphicsContext::drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_info)
 {
 	MCThemeDraw(m_gcontext, p_type, p_info);

@@ -181,7 +181,6 @@ public:
 	virtual void applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height) = 0;
 
 	virtual void drawtheme(MCThemeDrawType p_type, MCThemeDrawInfo* p_parameters) = 0;
-	virtual void copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh) = 0;
 
 	
 	virtual MCRegionRef computemaskregion(void) = 0;
