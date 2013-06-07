@@ -107,7 +107,8 @@ static bool ScannerIsNumberPrefix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if (t_lookahead >= '0' && t_lookahead <= '9')
+	if ((t_lookahead >= '0' && t_lookahead <= '9') ||
+        t_lookahead == '-')
 		return true;
 	return false;
 }
