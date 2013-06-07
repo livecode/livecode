@@ -3429,6 +3429,9 @@ void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verifi
 
 ///////////
 
+extern MCExecSetTypeInfo *kMCOrientationOrientationsTypeInfo;
+extern MCExecEnumTypeInfo *kMCOrientationOrientationTypeInfo;
+
 extern MCExecMethodInfo *kMCOrientationGetDeviceOrientationMethodInfo;
 extern MCExecMethodInfo *kMCOrientationGetOrientationMethodInfo;
 extern MCExecMethodInfo *kMCOrientationGetAllowedOrientationsMethodInfo;

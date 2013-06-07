@@ -299,8 +299,8 @@ typedef enum
 	ORIENTATION_FACE_DOWN_BIT = 1 << ORIENTATION_FACE_DOWN
 } MCOrientationSet;
 
-void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations);
-void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations);
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations);
+void MCSystemSetAllowedOrientations(uint32_t p_orientations);
 void MCSystemGetOrientation(MCOrientation& r_orientation);
 void MCSystemGetDeviceOrientation(MCOrientation& r_orientation);
 void MCSystemLockOrientation();

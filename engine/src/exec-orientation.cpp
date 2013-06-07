@@ -71,6 +71,11 @@ static MCExecEnumTypeInfo _kMCOrientationOrientationTypeInfo =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCExecSetTypeInfo *kMCOrientationOrientationsTypeInfo = &_kMCOrientationOrientationsTypeInfo;
+MCExecEnumTypeInfo *kMCOrientationOrientationTypeInfo = &_kMCOrientationOrientationTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 {
 	MCOrientation t_orientation;
@@ -87,15 +92,15 @@ void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation)
 
 void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientations)
 {
-	MCOrientationSet t_orientations;
+	uint32_t t_orientations;
 	MCSystemGetAllowedOrientations(t_orientations);
 	r_orientations = (intset_t)t_orientations;
 }
 
 void MCOrientationSetAllowedOrientations(MCExecContext& ctxt, intset_t p_orientations)
 {	
-	MCOrientationSet t_orientations;
-	t_orientations = (MCOrientationSet)p_orientations;
+	uint32_t t_orientations;
+	t_orientations = (uint32_t)p_orientations;
 	MCSystemSetAllowedOrientations(t_orientations);
 }
 

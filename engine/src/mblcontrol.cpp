@@ -136,7 +136,7 @@ void MCNativeControl::SetOwner(MCObject *p_owner)
 	m_object = p_owner -> gethandle();
 }
 
-bool MCNativeControl::SetName(const char *p_name)
+bool MCNativeControl::SetName(MCStringRef p_name)
 {
 	if (m_name != nil)
 	{
@@ -144,8 +144,8 @@ bool MCNativeControl::SetName(const char *p_name)
 		m_name = nil;
 	}
 	
-	if (p_name != nil)
-		return MCCStringClone(p_name, m_name);
+	if (p_name != nil) 
+		return MCCStringClone(MCStringGetCString(p_name), m_name);
 	
 	return true;
 }

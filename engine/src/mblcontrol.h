@@ -280,7 +280,7 @@ private:
 	// The id of the instance
 	uint32_t m_id;
 	// The name of the instance
-	char *m_name;
+	MCStringRef m_name;
 	// The instance's owning object (handle)
 	MCObjectHandle *m_object;    
 };
