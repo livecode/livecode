@@ -52,13 +52,13 @@ void MCSystemInneractiveAdInit();
 static MCAd *s_ads = nil;
 static uint32_t s_last_ad_id = 0;
 
-static MCStringRef s_inneractive_ad_key = MCValueRetain(kMCEmptyString);
+static MCStringRef s_inneractive_ad_key;
 
 void MCAdInitialize(void)
 {
     s_ads = nil;
     s_last_ad_id = 0;
-    s_inneractive_ad_key = nil;
+    s_inneractive_ad_key  = MCValueRetain(kMCEmptyString);
 	
 	MCSystemInneractiveAdInit();
 }
@@ -345,7 +345,6 @@ void MCAd::Finalize(void)
         delete t_ad;
         t_ad = t_next_ad;
     }
-    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

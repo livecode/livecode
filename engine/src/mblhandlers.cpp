@@ -1966,7 +1966,7 @@ static bool MCActivityIndicatorTypeToString(MCSensorType p_indicator, MCStringRe
 
 Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
-    MCAutoStringRef t_style_string;
+    MCAutoStringRef t_style_string;    
     MCActivityIndicatorType t_style;
     t_style = kMCActivityIndicatorWhite;
     
@@ -1984,19 +1984,21 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
         t_style = MCActivityIndicatorTypeFromString(*t_style_string);
         
     
-    bool t_location_param;
+    bool t_location_param = false;
     integer_t* t_location_x_ptr = nil;
     integer_t* t_location_y_ptr = nil;
     integer_t t_location_x;
     integer_t t_location_y;
     
-    if (MCParseParameters(p_parameters, "i", t_location_x))
+    if (MCParseParameters(p_parameters, "i", &t_location_x))
     {
+        t_location_param = true;
         t_location_x_ptr = &t_location_x;
     }
 
-    if (MCParseParameters(p_parameters, "i", t_location_y))
+    if (MCParseParameters(p_parameters, "i", &t_location_y))
     {
+        t_location_param = true;
         t_location_y_ptr = &t_location_y;
     }
         
