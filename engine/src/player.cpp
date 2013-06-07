@@ -81,6 +81,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #ifdef _WINDOWS
+
+struct MCPlayerOffscreenBuffer
+{
+	HDC hdc;
+	HBITMAP hbitmap;
+	MCImageBitmap image_bitmap;
+};
+
 PixMapHandle GetPortPixMap(CGrafPtr port)
 {
 	return port->portPixMap;
@@ -188,7 +196,7 @@ MCPlayer::MCPlayer()
 #elif defined _WINDOWS
 	deviceID = 0;
 	hwndMovie = NULL;
-	offscreenMovie = NULL;
+	m_offscreen = nil;
 	bufferGW = NULL;//gworld for buffering draw - for QT only
 	m_has_port_association = false;
 #endif
@@ -229,7 +237,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 #elif defined _WINDOWS
 	deviceID = 0;
 	hwndMovie = NULL;
-	offscreenMovie = NULL;
+	m_offscreen = nil;
 	m_has_port_association = false;
 #endif
 }
@@ -2276,22 +2284,25 @@ if (theMovie == NULL)
 	
 #ifdef _WINDOWS
 	ShowWindow((HWND)hwndMovie, SW_HIDE);
-	HBITMAP t_old_bitmap;
-	HDC t_old_dc;
-	GWorldPtr t_old_gworld;
 	if (p_resize)
 	{
+		HBITMAP t_old_bitmap;
+		HDC t_old_dc;
+		GWorldPtr t_old_gworld;
+
 		t_old_gworld = (GWorldPtr)bufferGW;
-		t_old_dc = (HDC)((_ExtendedDrawable *)offscreenMovie) -> hdc;
-		t_old_bitmap = (HBITMAP)((_ExtendedDrawable *)offscreenMovie) -> handle . pixmap;
+		t_old_dc = m_offscreen->hdc;
+		t_old_bitmap = m_offscreen->hbitmap;
+
+		if (t_old_gworld != NULL)
+		{
+			DisposeGWorld(t_old_gworld);
+			DeleteObject(t_old_bitmap);
+			DeleteDC(t_old_dc);
+		}
 	}
 	else
-	{
-		t_old_gworld = NULL;
-		t_old_dc = NULL;
-		t_old_bitmap = NULL;
-		offscreenMovie = new _ExtendedDrawable;
-	}
+		/* UNCHECKED */ MCMemoryNew(m_offscreen);
 
 	HBITMAP t_new_bitmap = NULL;
 	HDC t_new_dc = NULL;
@@ -2314,23 +2325,20 @@ if (theMovie == NULL)
 			DeleteDC(t_new_dc);
 		if (t_new_bitmap != NULL)
 			DeleteObject(t_new_bitmap);
-		delete offscreenMovie;
-		offscreenMovie = NULL;
+		MCMemoryDelete(m_offscreen);
+		m_offscreen = nil;
 		if (p_resize)
 			bufferDraw(false);
 		return;
 	}
 
-	offscreenMovie -> type = DC_BITMAP_WITH_DC;
-	offscreenMovie -> handle . pixmap = (MCSysBitmapHandle)t_new_bitmap;
-	((_ExtendedDrawable *)offscreenMovie) -> hdc = (MCSysContextHandle)t_new_dc;
-
-	if (t_old_gworld != NULL)
-	{
-		DisposeGWorld(t_old_gworld);
-		DeleteObject(t_old_bitmap);
-		DeleteDC(t_old_dc);
-	}
+	m_offscreen->hbitmap = t_new_bitmap;
+	m_offscreen->hdc = t_new_dc;
+	m_offscreen->image_bitmap.width = trect.width;
+	m_offscreen->image_bitmap.height = trect.height;
+	m_offscreen->image_bitmap.data = (uint32_t*)t_bits;
+	m_offscreen->image_bitmap.stride = trect.width * sizeof(uint32_t);
+	m_offscreen->image_bitmap.has_transparency = m_offscreen->image_bitmap.has_alpha = false;
 
 	bufferGW = t_new_gworld;
 	SetGWorld((CGrafPtr)bufferGW, (GDHandle)NULL); // Port or graphics world to make current
@@ -2411,10 +2419,10 @@ void MCPlayer::unbufferDraw()
 
 	DisposeGWorld((GWorldPtr)bufferGW);
 	bufferGW = NULL;
-	DeleteObject(offscreenMovie -> handle . pixmap);
-	DeleteDC((HDC)((_ExtendedDrawable *)offscreenMovie) -> hdc);
-	delete offscreenMovie;
-	offscreenMovie = NULL;
+	DeleteObject(m_offscreen->hbitmap);
+	DeleteDC(m_offscreen->hdc);
+	MCMemoryDelete(m_offscreen);
+	m_offscreen = nil;
 
 	setMCposition(trect); //reset the movie & controller postion
 	if (flags & F_SHOW_BADGE) //if the showbadge is supposed to be on turn it back on
@@ -2766,7 +2774,7 @@ Boolean MCPlayer::qt_prepare(void)
 	// MW-2006-07-26: [[ Bug 3645 ]] - We buffer here in the case of a buffered player, this prevents
 	//   the player drawing itself somewhere else...
   if (getflag(F_ALWAYS_BUFFER) || !MCModeMakeLocalWindows())
-		bufferDraw(offscreenMovie != NULL);
+		bufferDraw(m_offscreen != NULL);
 
 	MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
 	
@@ -3169,7 +3177,12 @@ void MCPlayer::qt_draw(MCDC *dc, const MCRectangle& dirty)
 
 	if (isbuffering())
 	{
-		dc -> copyarea(offscreenMovie, trect . x, trect . y, 0, 0, trect . width, trect . height);
+		MCImageDescriptor t_image;
+		MCMemoryClear(&t_image, sizeof(t_image));
+		t_image.filter = kMCGImageFilterNearest;
+		t_image.bitmap = &m_offscreen->image_bitmap;
+
+		dc -> drawimage(t_image, 0, 0, trect.width, trect.height, trect.x, trect.y);
 	}
 	else
 	{
