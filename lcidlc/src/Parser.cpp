@@ -269,9 +269,12 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	const Token *t_token;
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
-
-	if (t_token -> type != kTokenTypeString &&
-		t_token -> type != kTokenTypeNumber)
+    
+    if ((t_token -> type != kTokenTypeString &&
+         t_token -> type != kTokenTypeNumber) ||
+        (t_token->type == kTokenTypeIdentifier &&
+         !NameEqualToCString(t_token -> value, "false") &&
+         !NameEqualToCString(t_token -> value, "true")))
 		return ParserReport(self, t_token -> start, kParserErrorConstantExpected, nil);
 		
 	if (!ScannerAdvance(self -> scanner))
