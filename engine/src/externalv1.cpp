@@ -188,6 +188,8 @@ enum MCExternalVariableQueryTag
 	kMCExternalVariableQueryFormat,
 	kMCExternalVariableQueryRetention,
 	kMCExternalVariableQueryIsAnArray,
+	kMCExternalVariableQueryIsASequence, // V5
+	kMCExternalVariableQueryIsEmpty, // V5
 };
 
 enum MCExternalInterfaceQueryTag
@@ -1093,6 +1095,12 @@ static MCExternalError MCExternalVariableQuery(MCExternalVariableRef var, MCExte
 		break;
 	case kMCExternalVariableQueryIsAnArray:
 		*(bool *)r_result = var -> is_empty() || var -> is_array();
+		break;
+	case kMCExternalVariableQueryIsEmpty:
+		*(bool *)r_result = var -> is_empty();
+		break;
+	case kMCExternalVariableQueryIsASequence:
+		*(bool *)r_result = var -> is_array() && var -> get_array() -> issequence();
 		break;
 	default:
 		return kMCExternalErrorInvalidVariableQuery;

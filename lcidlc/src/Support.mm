@@ -165,10 +165,8 @@ typedef enum MCExternalVariableQuery
 	kMCExternalVariableQueryFormat = 3,
 	kMCExternalVariableQueryRetention = 4,
 	kMCExternalVariableQueryIsAnArray = 5,
-	kMCExternalVariableQueryIsAString = 6,
-	kMCExternalVariableQueryIsANumber = 7,
-	kMCExternalVariableQueryIsAnInteger = 8,
-	kMCExternalVariableQueryIsABoolean = 9,
+	kMCExternalVariableQueryIsASequence = 6,
+	kMCExternalVariableQueryIsEmpty = 7,
 } MCExternalVariableQuery;
 
 typedef enum MCExternalInterfaceQuery
@@ -264,9 +262,19 @@ static MCError MCVariableIsTransient(MCVariableRef var, bool *r_transient)
 	return s_interface -> variable_query(var, kMCExternalVariableQueryIsTransient, r_transient);
 }
 
+static MCError MCVariableIsEmpty(MCVariableRef var, bool *r_empty)
+{
+	return s_interface -> variable_query(var, kMCExternalVariableQueryIsEmpty, r_empty);
+}
+
 static MCError MCVariableIsAnArray(MCVariableRef var, bool *r_array)
 {
 	return s_interface -> variable_query(var, kMCExternalVariableQueryIsAnArray, r_array);
+}
+
+static MCError MCVariableIsASequence(MCVariableRef var, bool *r_sequence)
+{
+	return s_interface -> variable_query(var, kMCExternalVariableQueryIsASequence, r_sequence);
 }
 
 static MCError MCVariableStore(MCVariableRef var, MCValueOptions options, void *value)
@@ -285,11 +293,117 @@ static MCError MCVariableFetch(MCVariableRef var, MCValueOptions options, void *
 
 BEGIN_EXTERN_C
 
+static LCError LCValueFetch(MCVariableRef var, unsigned int options, void *r_value);
+static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst);
+static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_dst);
+
 #ifdef __OBJC__
 
+// Convert a LiveCode value into an element of an Objc Array/Dictionary. This
+// converts all non-array values to strings, arrays which are sequences to
+// NSArray, and arrays which are maps to NSDictionary.
+static LCError LCValueArrayValueToObjcValue(MCVariableRef src, id& r_dst)
+{
+	MCError t_error;
+	t_error = kMCErrorNone;
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_empty;
+		t_error = MCVariableIsEmpty(src, &t_is_empty);
+		if (t_error == kMCErrorNone && t_is_empty)
+		{
+			r_dst = @"";
+			return kLCErrorNone;
+		}
+	}
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_array;
+		t_error = MCVariableIsAnArray(src, &t_is_array);
+		if (t_error == kMCErrorNone && t_is_array)
+			return LCValueFetch(src, kLCValueOptionAsObjcString, &r_dst);
+	}
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_sequence;
+		t_error = MCVariableIsASequence(src, &t_is_sequence);
+		if (t_error == kMCErrorNone && t_is_sequence)
+			return LCValueArrayToObjcArray(src, (NSArray*&)r_dst);
+	}
+	
+	if (t_error == kMCErrorNone)
+		return LCValueArrayToObjcDictionary(src, (NSDictionary*&)r_dst);
+	
+	return (LCError)t_error;
+}
+
+// Convert a LiveCode array into an NSArray. The returned NSArray is alloc'd.
 static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst)
 {
-	return kLCErrorNotImplemented;
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	if (t_error == kLCErrorNone)
+	{
+		bool t_is_sequence;
+		t_error = (LCError)MCVariableIsASequence(src, &t_is_sequence);
+		if (t_error == kLCErrorNone && !t_is_sequence)
+			t_error = kLCErrorNotASequence;
+	}
+	
+	uint32_t t_count;
+	t_count = 0;
+	if (t_error = kLCErrorNone)
+		t_count = s_interface -> variable_count_keys(src, &t_count);
+	
+	id *t_objects;
+	t_objects = nil;
+	if (t_error == kLCErrorNone)
+	{
+		t_objects = (id *)calloc(sizeof(id), t_count);
+		if (t_objects == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	MCVariableIteratorRef t_iterator;
+	t_iterator = nil;
+	for(uint32_t i = 0; i < t_count && t_error == kLCErrorNone; i++)
+	{
+		// Fetch the key and value.
+		const char *t_key;
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_iterate_keys(src, &t_iterator, kMCOptionAsCString, &t_key, &t_value);
+		
+		// Now convert the value - remembering that LC sequences are 1 based, and
+		// Objc arrays are 0 based. Note that we don't have to validate the key as
+		// its guaranteed to be of the correct form as we checked the array was a
+		// sequence.
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueToObjcValue(t_value, t_objects[strtoul(t_key, nil, 10) - 1]);
+	}
+	
+	// If we succeeded, then try to build an NSArray.
+	NSArray *t_array;
+	if (t_error == kLCErrorNone)
+	{
+		t_array = [[NSArray alloc] initWithObjects: t_objects count: t_count];
+		if (t_array == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	if (t_error == kLCErrorNone)
+		r_dst = t_array;
+	
+	// We free the objects array since its copied by NSArray.
+	for(uint32_t i = 0; i < t_count; i++)
+		[t_objects[i] release];
+	free(t_objects);
+	
+	return t_error;
 }
 
 static LCError LCValueArrayFromObjcArray(NSArray *src, MCVariableRef& r_dst)
@@ -299,7 +413,68 @@ static LCError LCValueArrayFromObjcArray(NSArray *src, MCVariableRef& r_dst)
 
 static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_dst)
 {
-	return kLCErrorNotImplemented;
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	uint32_t t_count;
+	t_count = 0;
+	if (t_error = kLCErrorNone)
+		t_count = s_interface -> variable_count_keys(src, &t_count);
+	
+	id *t_keys, *t_values;
+	t_keys = t_values = nil;
+	if (t_error == kLCErrorNone)
+	{
+		t_keys = (id *)calloc(sizeof(id), t_count);
+		t_values = (id *)calloc(sizeof(id), t_count);
+		if (t_keys == nil || t_values == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	MCVariableIteratorRef t_iterator;
+	t_iterator = nil;
+	for(uint32_t i = 0; i < t_count && t_error == kLCErrorNone; i++)
+	{
+		// Fetch the key and value.
+		const char *t_key;
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_iterate_keys(src, &t_iterator, kMCOptionAsCString, &t_key, &t_value);
+		
+		// Convert the key.
+		if (t_error == kLCErrorNone)
+		{
+			t_keys[i] = [[NSString alloc] initWithCString: t_key encoding: NSMacOSRomanStringEncoding];
+			if (t_keys[i] == nil)
+				t_error = kLCErrorOutOfMemory;
+		}
+		
+		// Now convert the value.
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueToObjcValue(t_value, t_values[i]);
+	}
+	
+	// If we succeeded then build the dictionary.
+	NSDictionary *t_dictionary;
+	if (t_error == kLCErrorNone)
+	{
+		t_dictionary = [[NSDictionary alloc] initWithObjects: t_values forKeys: t_keys count: t_count];
+		if (t_dictionary == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	if (t_error == kLCErrorNone)
+		r_dst = t_dictionary;
+	
+	for(uint32_t i = 0; i < t_count; i++)
+	{
+		[t_keys[i] release];
+		[t_values[i] release];
+	}
+	free(t_keys);
+	free(t_values);
+	
+	return t_error;
 }
 
 static LCError LCValueArrayFromObjcDictionary(NSDictionary *src, MCVariableRef& r_dst)
@@ -495,9 +670,13 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				break;
 			case kLCValueOptionAsObjcArray:
 				t_error = LCValueArrayToObjcArray(t_array_value, *(NSArray **)r_value);
+				if (t_error == kLCErrorNone)
+					[*(NSArray **)r_value autorelease];
 				break;
 			case kLCValueOptionAsObjcDictionary:
 				t_error = LCValueArrayToObjcDictionary(t_array_value, *(NSDictionary **)r_value);
+				if (t_error == kLCErrorNone)
+					[*(NSDictionary **)r_value autorelease];
 				break;
 #endif
 		}
