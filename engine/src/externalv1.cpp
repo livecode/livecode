@@ -197,8 +197,10 @@ enum MCExternalInterfaceQueryTag
 	kMCExternalInterfaceQueryView = 1,
 	kMCExternalInterfaceQueryViewScale = 2,
 	kMCExternalInterfaceQueryViewController = 3,
-	kMCExternalInterfaceQueryActivity = 4,
-	kMCExternalInterfaceQueryContainer = 5,
+	kMCExternalInterfaceQueryActivity = 4, // V4
+	kMCExternalInterfaceQueryContainer = 5, // V4
+	kMCExternalInterfaceQueryScriptJavaEnv = 6, // V5
+	kMCExternalInterfaceQuerySystemJavaEnv = 7, // V5
 };
 
 enum
@@ -1924,6 +1926,8 @@ extern void *MCIPhoneGetViewController(void);
 extern float MCIPhoneGetResolutionScale(void);
 extern void *MCAndroidGetActivity(void);
 extern void *MCAndroidGetContainer(void);
+extern void *MCAndroidGetScriptJavaEnv(void);
+extern void *MCAndroidGetSystemJavaEnv(void);
 
 static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, void *r_value)
 {
@@ -1951,6 +1955,12 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 			break;
 		case kMCExternalInterfaceQueryContainer:
 			*(void **)r_value = MCAndroidGetContainer();
+			break;
+		case kMCExternalInterfaceQueryScriptJavaEnv:
+			*(void **)r_value = MCAndroidGetScriptJavaEnv();
+			break;
+		case kMCExternalInterfaceQuerySystemJavaEnv:
+			*(void **)r_value = MCAndroidGetSystemJavaEnv();
 			break;
 		default:
 			return kMCExternalErrorInvalidInterfaceQuery;

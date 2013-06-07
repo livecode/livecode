@@ -41,6 +41,9 @@ enum InterfaceError
 	kInterfaceErrorNoOptionalBoolean,
 	kInterfaceErrorUnknownType,
 	kInterfaceErrorJavaImpliesInParam,
+	kInterfaceErrorMethodsCannotHaveVariants,
+	kInterfaceErrorMethodsMustBeJava,
+	kInterfaceErrorMethodsAreAlwaysTail
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -318,10 +321,26 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			t_handler = &self -> handlers[i];
 			break;
 		}
-		
+	
+	// RULE: Methods cannot have variants.
+	if (t_handler != nil &&
+			p_type == kHandlerTypeMethod)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsCannotHaveVariants, p_name);
+	
 	// RULE: Variants of handlers must all have the same type.
-	if (t_handler != nil && t_handler -> type != p_type)
+	if (t_handler != nil &&
+			t_handler -> type != p_type &&
+			t_handler -> is_java == (p_attr & kHandlerAttributeIsJava) != 0 &&
+			t_handler -> is_tail == (p_attr & kHandlerAttributeIsTail) != 0)
 		InterfaceReport(self, p_where, kInterfaceErrorCannotMixHandlerTypes, p_name);
+	
+	// RULE: Methods must specify 'java'.
+	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsJava) == 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsMustBeJava, p_name);
+	
+	// RULE: Methods must not specify 'tail' since that is their purpose.
+	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsTail) != 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsAreAlwaysTail, p_name);
 		
 	if (t_handler == nil)
 	{

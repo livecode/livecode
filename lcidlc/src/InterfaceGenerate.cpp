@@ -565,7 +565,7 @@ char *InterfaceGenerateJavaMethodSignature(InterfaceRef self, Handler *p_handler
 
 static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
-/*	NameRef t_name;
+	NameRef t_name;
 	t_name = p_handler -> name;
 	
 	HandlerVariant *t_variant;
@@ -582,7 +582,7 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	t_java_sig = InterfaceGenerateJavaMethodSignature(self, p_handler);
 	CoderWriteLine(p_coder, "\tstatic jmethodID s_method = 0;");
 	CoderWriteLine(p_coder, "\tif (s_method == 0)");
-	CoderWriteLine(p_coder, "\t\ts_method = s_java_env -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", NameGetCString(t_name), t_java_sig);
+	CoderWriteLine(p_coder, "\t\ts_method = s_android_env -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", NameGetCString(t_name), t_java_sig);
 	free(t_java_sig);
 	
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
@@ -597,7 +597,7 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 		t_java_param_type = native_type_to_java_type_cstring(t_param_native_type);
 		
 		CoderWriteLine(p_coder, "\t%s t_param_%d;", t_java_param_type, i);
-		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(ctxt -> arg_%d);", i, NativeTypeGetTag(t_param_native_type), i);
+		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(s_android_env, ctxt -> arg_%d);", i, NativeTypeGetTag(t_param_native_type), i);
 	}
 	
 	const char *t_java_method_type, *t_c_return_type, *t_java_return_type;
@@ -618,21 +618,21 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 		CoderWriteLine(p_coder, "\t%s t_result;", t_java_return_type);
 	
 	if (t_variant -> return_type != nil)
-		CoderWrite(p_coder, "\tt_result = s_java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
+		CoderWrite(p_coder, "\tt_result = s_android_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
 	else
-		CoderWrite(p_coder, "\ts_java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
+		CoderWrite(p_coder, "\ts_android_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
 		CoderWrite(p_coder, ", t_param_%d", i);
 	CoderWrite(p_coder, ");\n");
 	
 	if (t_variant -> return_type != nil)
 	{
-		CoderWriteLine(p_coder, "\tctxt -> result = java_to__%s(t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
-		CoderWriteLine(p_coder, "\tjava_free__%s(t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tctxt -> result = java_to__%s(s_android_env, t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tjava_free__%s(s_android_env, t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
 	}
 	
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
-		CoderWriteLine(p_coder, "\tjava_free__%s(t_param_%d);", NativeTypeGetTag(NativeTypeFromName(t_variant -> parameters[i] . type)), i);
+		CoderWriteLine(p_coder, "\tjava_free__%s(s_android_env, t_param_%d);", NativeTypeGetTag(NativeTypeFromName(t_variant -> parameters[i] . type)), i);
 	
 	CoderWriteLine(p_coder, "}");
 	CoderWrite(p_coder, "%s %s(", t_c_return_type, NameGetCString(t_name));
@@ -645,12 +645,13 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	CoderWriteLine(p_coder, "\ts_interface -> engine_run_on_main_thread((void *)%s_callback, &ctxt, kMCRunOnMainThreadJumpToUI);", NameGetCString(t_name));
 	if (t_variant -> return_type != nil)
 		CoderWriteLine(p_coder, "\treturn ctxt . result;");
-	CoderWriteLine(p_coder, "}");*/
+	CoderWriteLine(p_coder, "}");
 }
 
+#ifdef NOT_READY
 static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
-	/*NameRef t_name;
+	NameRef t_name;
 	t_name = p_handler -> name;
 	
 	HandlerVariant *t_variant;
@@ -732,8 +733,9 @@ static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_code
 	
 	CoderWriteLine(p_coder, "}");
 	
-	MCCStringFree(t_native_name);*/
+	MCCStringFree(t_native_name);
 }
+#endif
 
 static void InterfaceGenerateJavaHandlerStubParameters(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
 {
@@ -854,8 +856,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			// Generate stub for calling Java or native method.
 			if (t_handler -> is_java)
 				InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
+#ifdef NOT_READY
 			else
 				InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
+#endif
 			continue;
 		}
 		
@@ -1265,8 +1269,16 @@ bool MCExternalInitialize(MCExternalInterface *p_interface)\n\
 {\n\
 	s_interface = p_interface;\n\
 \n\
+#ifndef __ANDROID__\n\
 	if (s_interface -> version < 3)\n\
 		return false;\n\
+#else\n\
+	if (s_interface -> version < 5)\n\
+		return false;\n\
+\n\
+	s_interface -> interface_query(kMCExternalInterfaceQueryScriptJavaEnv, &s_engine_env);\n\
+	s_interface -> interface_query(kMCExternalInterfaceQuerySystemJavaEnv, &s_android_env);\n\
+#endif\n\
 \n\
 #ifdef kMCExternalStartup\n\
 	if (!kMCExternalStartup())\n\

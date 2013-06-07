@@ -176,6 +176,8 @@ typedef enum MCExternalInterfaceQuery
 	kMCExternalInterfaceQueryViewController = 3,
 	kMCExternalInterfaceQueryActivity = 4,
 	kMCExternalInterfaceQueryContainer = 5,
+	kMCExternalInterfaceQueryScriptJavaEnv = 6,
+	kMCExternalInterfaceQuerySystemJavaEnv = 7,
 } MCExternalInterfaceQuery;
 
 enum
