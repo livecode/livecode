@@ -697,19 +697,17 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	NameRef t_type;
 	if (!ParserMatchIdentifier(self, t_type))
 		return false;
-		
+    
 	ValueRef t_default;
 	t_default = nil;
 	if (t_is_optional)
 	{
-		if (!ParserMatchKeyword(self, kParserKeywordDefault))
-			return false;
-			
-		if (!ParserMatchConstant(self, t_default))
-			return false;
+		if (ParserMatchKeyword(self, kParserKeywordDefault))
+            if (!ParserMatchConstant(self, t_default))
+                return false;
 	}
 	
-	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default))
+	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default, t_is_optional))
 		return false;
 
 	return true;

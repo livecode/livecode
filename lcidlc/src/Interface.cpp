@@ -384,11 +384,11 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default, bool optional)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
-			p_default != nil ? "optional " : "",
+			optional ? "optional " : "",
 			s_param_types[p_param_type],
 			StringGetCStringPtr(NameGetString(p_name)), 
 			StringGetCStringPtr(NameGetString(p_type)));
@@ -434,7 +434,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
 	
-	if (p_default == nil)
+	if (!optional)
 		t_variant -> minimum_parameter_count += 1;
 	
 	return true;
