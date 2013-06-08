@@ -38,7 +38,7 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
-	kInterfaceErrorNoOptionalBoolean,
+	kInterfaceErrorBooleanDefaultWrongType,
 	kInterfaceErrorUnknownType,
 };
 
@@ -116,8 +116,8 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorOptionalParamImpliesIn:
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
-	case kInterfaceErrorNoOptionalBoolean:
-		fprintf(stderr, "Optional boolean parameters not yet supported\n");
+	case kInterfaceErrorBooleanDefaultWrongType:
+		fprintf(stderr, "Boolean defaults must be either true or false\n");
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
@@ -404,8 +404,8 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
 	
 	// RULE: optional 'boolean' not currently supported
-	if (NameEqualToCString(p_type, "boolean") && p_default != nil)
-		InterfaceReport(self, p_where, kInterfaceErrorNoOptionalBoolean, nil);
+	if (NameEqualToCString(p_type, "boolean") && !ValueIsName(p_default))
+        InterfaceReport(self, p_where, kInterfaceErrorBooleanDefaultWrongType, nil);
 	
 	// RULE: optional parameters can only be 'in'
 	if (p_default != nil && p_param_type != kParameterTypeIn)
@@ -433,6 +433,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . name = ValueRetain(p_name);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
+	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = optional;
 	
 	if (!optional)
 		t_variant -> minimum_parameter_count += 1;

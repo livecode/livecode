@@ -96,6 +96,49 @@ void ValueRelease(ValueRef self)
 	MCMemoryDelete(self);
 }
 
+bool ValueIsEmpty(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeEmpty;
+}
+
+bool ValueIsBoolean(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeBoolean;
+}
+
+bool ValueIsInteger(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeInteger;
+}
+
+bool ValueIsReal(ValueRef self)
+{
+    if (self == nil)
+		return false;
+    return self->type == kValueTypeReal;
+}
+
+bool ValueIsString(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeString;
+}
+
+bool ValueIsName(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeName;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool NameCreateWithNativeChars(const char *p_chars, uindex_t p_char_count, ValueRef& r_value)

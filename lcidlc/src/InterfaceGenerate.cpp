@@ -817,10 +817,9 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				}
 				if (t_parameter -> mode == kParameterTypeIn || t_parameter -> mode == kParameterTypeInOut)
 				{
-					CoderWriteLine(p_coder, "\tif (success)");
+					CoderWriteLine(p_coder, "\tif (success)\n\t{");
 					if (t_parameter -> default_value != nil)
 					{
-						CoderWriteLine(p_coder, "\t{");
 						CoderWriteLine(p_coder, "\t\tif (argc > %d)", k);
 						if (t_native_type != kNativeTypeEnum)
 							CoderWriteLine(p_coder, "\t\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
@@ -830,7 +829,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 						switch(t_native_type)
 						{
 						case kNativeTypeBoolean:
-                            CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, StringGetCStringPtr(t_parameter -> default_value));
+                            CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, StringGetCStringPtr(NameGetString(t_parameter -> default_value)));
                             break;
 						case kNativeTypeObjcData:
 							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
@@ -855,15 +854,18 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
 							break;
 						}
-						CoderWriteLine(p_coder, "\t}");
 					}
 					else
 					{
 						if (t_native_type != kNativeTypeEnum)
-							CoderWriteLine(p_coder, "\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
+							CoderWriteLine(p_coder, "\t\tbool t_fetched = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
-							CoderWriteLine(p_coder, "\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-					}
+							CoderWriteLine(p_coder, "\t\bool t_fetched = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
+                        // optional parameters without a default value
+                        if (!t_parameter->is_optional)
+                            CoderWriteLine(p_coder, "\t\tsuccess = t_fetched;");
+                   }
+                    CoderWriteLine(p_coder, "\t}");
 				}
 				if ((t_native_type == kNativeTypeCString || t_native_type == kNativeTypeCData) && t_parameter -> mode == kParameterTypeInOut)
 				{

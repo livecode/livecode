@@ -270,11 +270,11 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
     
-    if ((t_token -> type != kTokenTypeString &&
-         t_token -> type != kTokenTypeNumber) ||
+    if (!(t_token -> type == kTokenTypeString ||
+         t_token -> type == kTokenTypeNumber ||
         (t_token->type == kTokenTypeIdentifier &&
-         !NameEqualToCString(t_token -> value, "false") &&
-         !NameEqualToCString(t_token -> value, "true")))
+         (NameEqualToCString(t_token -> value, "false") ||
+         NameEqualToCString(t_token -> value, "true")))))
 		return ParserReport(self, t_token -> start, kParserErrorConstantExpected, nil);
 		
 	if (!ScannerAdvance(self -> scanner))
@@ -296,7 +296,7 @@ static bool ParserMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 	if (t_token -> type != kTokenTypeIdentifier ||
 		!NameEqualToCString(t_token -> value, s_parser_keyword_strings[p_keyword]))
 		
-		return ParserReport(self, t_token -> start, kParserErrorKeywordExpected, &s_parser_keyword_strings[p_keyword]);
+		return false;
 
 	if (!ScannerAdvance(self -> scanner))
 		return false;
