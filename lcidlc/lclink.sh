@@ -6,18 +6,21 @@ fi
 
 DEPS=`cat "$LIVECODE_DEP_FILE"`
 
-VERSION=${SDK_NAME: -3}
-VERSION="${VERSION//\./}"
+SDK_MAJORVERSION=${SDK_NAME: -3}
+SDK_MAJORVERSION=${SDK_MAJORVERSION: 0:1}
+SDK_MINORVERSION=${SDK_NAME: -1}
 
 # Frameworks may not exist in older sdks so conditionally include
-for MINVERSION in 30 40 50 60; do
-    if [ $VERSION -lt $MINVERSION ]; then
-        DEPS="$(echo "$DEPS" | sed "/framework$MINVERSION /d")"
-        DEPS="$(echo "$DEPS" | sed "/weak-framework$MINVERSION /d")"
-    else
-        DEPS=${DEPS//framework$MINVERSION /framework }
-        DEPS=${DEPS//weak-framework$MINVERSION /weak-framework }
-    fi
+for MAJORVERSION in 3 4 5 6 7; do
+    for MINORVERSION in 0 1 2 3 4; do
+        if [[ $SDK_MAJORVERSION -lt $MAJORVERSION || ($SDK_MAJORVERSION == $MAJORVERSION && $SDK_MINORVERSION -lt $MINORVERSION) ]]; then
+            DEPS="$(echo "$DEPS" | sed "/framework-$MAJORVERSION.$MINORVERSION /d")"
+            DEPS="$(echo "$DEPS" | sed "/weak-framework-$MAJORVERSION.$MINORVERSION /d")"
+        else
+            DEPS=${DEPS//framework-$MAJORVERSION.$MINORVERSION /framework }
+            DEPS=${DEPS//weak-framework-$MAJORVERSION.$MINORVERSION /weak-framework }
+        fi
+    done
 done
 
 DEPS=${DEPS//library /-l}

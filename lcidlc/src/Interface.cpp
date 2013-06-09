@@ -384,11 +384,11 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default, bool optional)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default, bool p_optional)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
-			optional ? "optional " : "",
+			p_optional ? "optional " : "",
 			s_param_types[p_param_type],
 			StringGetCStringPtr(NameGetString(p_name)), 
 			StringGetCStringPtr(NameGetString(p_type)));
@@ -420,7 +420,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (!optional &&
+	if (!p_optional &&
 		t_variant -> parameter_count > 0 &&
 		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
@@ -433,9 +433,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . name = ValueRetain(p_name);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
-	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = optional;
+	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = p_optional;
 	
-	if (!optional)
+	if (!p_optional)
 		t_variant -> minimum_parameter_count += 1;
 	
 	return true;
