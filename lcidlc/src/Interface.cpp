@@ -403,8 +403,8 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
 	
-	// RULE: optional 'boolean' not currently supported
-	if (NameEqualToCString(p_type, "boolean") && !ValueIsName(p_default))
+	// RULE: optional 'boolean' default should be a name value
+	if (NameEqualToCString(p_type, "boolean") && p_default != nil && !ValueIsName(p_default))
         InterfaceReport(self, p_where, kInterfaceErrorBooleanDefaultWrongType, nil);
 	
 	// RULE: optional parameters can only be 'in'
@@ -420,7 +420,7 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (p_default == nil &&
+	if (optional &&
 		t_variant -> parameter_count > 0 &&
 		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
