@@ -420,9 +420,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (optional &&
+	if (!optional &&
 		t_variant -> parameter_count > 0 &&
-		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
+		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
 	
 	if (!MCMemoryResizeArray(t_variant -> parameter_count + 1, t_variant -> parameters, t_variant -> parameter_count))
