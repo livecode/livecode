@@ -2561,8 +2561,31 @@ Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 			break;
 
 			case kMCPropertyTypeSet:
-				ctxt . Unimplemented();
-				break;
+			{
+				MCExecSetTypeInfo *t_set_info;
+				t_set_info = (MCExecSetTypeInfo *)(t_info -> type_info);
+				
+				intset_t t_value = 0;
+				char **t_elements;
+				uindex_t t_element_count;
+				MCCStringSplit(ep . getcstring(), ',', t_elements, t_element_count);
+
+				for (uindex_t i = 0; i < t_element_count; i++)
+				{
+					for (uindex_t j = 0; j < t_set_info -> count; j++)
+					{
+						if (MCU_strcasecmp(t_elements[i], t_set_info -> elements[j] . tag) == 0)
+						{
+							t_value |= 1 << t_set_info -> elements[j] . bit;
+							break;
+						}
+					}
+				}
+
+				MCCStringArrayFree(t_elements, t_element_count);
+				((void(*)(MCExecContext&, MCObjectPtr, unsigned int))t_info -> setter)(ctxt, t_object, t_value);
+			}
+			break;
 				
 			case kMCPropertyTypeCustom:
 			{

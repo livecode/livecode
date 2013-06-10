@@ -70,16 +70,35 @@ MCOrientation get_orientation(UIInterfaceOrientation p_orientation)
     }
 }
 
-MCOrientationSet get_orientation_set(uint32_t p_orientations)
+uint32_t get_orientation_set(uint32_t p_orientations)
 {
-	//UNIMPLEMENTED
-	return ORIENTATION_UNKNOWN_BIT;
+	uint32_t t_orientations = 0;
+
+	if (p_orientations & (1 << UIInterfaceOrientationPortrait))
+		t_orientations |= ORIENTATION_PORTRAIT_BIT;
+	if (p_orientations & (1 << UIInterfaceOrientationPortraitUpsideDown))
+		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
+		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
+		t_orientations |= ORIENTATION_LANDSCAPE_LEFT_BIT;
+
+	return t_orientations;
 }
 
-uint32_t get_iphone_orientation(MCOrientationSet p_orientations)
+uint32_t get_iphone_orientations(uint32_t p_orientations)
 {
-	//UNIMPLEMENTED
-	return 0;
+	uint32_t t_orientations = 0;
+	if (p_orientations & (1 << ORIENTATION_PORTRAIT_BIT))
+		t_orientations |= UIInterfaceOrientationPortrait;
+	if (p_orientations & (1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT))
+		t_orientations |= UIInterfaceOrientationPortraitUpsideDown;
+	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_RIGHT_BIT))
+		t_orientations |= UIInterfaceOrientationLandscapeRight;
+	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_LEFT_BIT))
+		t_orientations |= UIInterfaceOrientationLandscapeLeft;
+
+	return t_orientations;
 }
 
 void MCSystemGetDeviceOrientation(MCOrientation& r_orientation)
@@ -92,14 +111,14 @@ void MCSystemGetOrientation(MCOrientation& r_orientation)
 	r_orientation = get_orientation(MCIPhoneGetOrientation());
 }
 
-void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations)
 {
 	r_orientations = get_orientation_set([MCIPhoneGetApplication() allowedOrientations]);
 }
 
-void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations)
+void MCSystemSetAllowedOrientations(uint32_t p_orientations)
 {
-	[MCIPhoneGetApplication() setAllowedOrientations: get_iphone_orientation(p_orientations)];
+	[MCIPhoneGetApplication() setAllowedOrientations: get_iphone_orientations(p_orientations)];
 }
 
 void MCSystemGetOrientationLocked(bool& r_locked)

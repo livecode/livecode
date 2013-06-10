@@ -302,7 +302,7 @@ void MCAndroidMailCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemMailResult(MCStringRef& r_result)
+void MCAndoidMailResult(MCStringRef& r_result)
 {
 	while (s_mail_status == kMCAndroidMailWaiting)
 		MCscreen->wait(60.0, False, True);
@@ -324,31 +324,31 @@ void MCSystemMailResult(MCStringRef& r_result)
 	}
 }
 
-void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body)
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body, MCStringRef& r_result)
 {
 	s_mail_status = kMCAndroidMailWaiting;
 	MCAndroidSendEmail(p_address, p_cc_address, p_subject, p_message_body);
+	MCAndroidMailResult(r_result);
 }
 
-void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void *dialog_ptr)
+void MCSystemSendMailWithAttachments(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_message_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result)
 {
 	const char *t_prep_sig;
 	t_prep_sig = "vxxxxxb";
 
 	MCAndroidEngineCall("prepareEmail", t_prep_sig, nil, p_to, p_cc, p_bcc, p_subject, p_body, p_type == kMCMailTypeHtml);
-}
 
-void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr)
-{
-	if (p_file != nil && MCStringGetLength(p_file) > 0)
-		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_file, &p_type, &p_name);
-	else
-		MCAndroidEngineCall("addAttachment", "vxxx", nil, &p_data, &p_type, &p_name);
-}
+	for (uindex_t i = 0; i < p_attachment_count; i++)
+	{
+		if (p_attachments[i] . file != nil && MCStringGetLength(p_attachments[i] . file) > 0)
+			MCAndroidEngineCall("addAttachment", "vxxx", nil, p_attachments[i] . file, p_attachments[i] . type, p_attachments[i] . name);
+		else
+			MCAndroidEngineCall("addAttachment", "vxxx", nil, p_attachments[i] . data, p_attachments[i] . type, p_attachments[i] . name);
+	}
 
-void MCSystemSendPreparedMail(void *dialog_ptr)
-{
 	MCAndroidEngineCall("sendEmail", "v", nil);
+	
+	MCAndroidMailResult(r_result);
 }
 
 void MCSystemGetCanSendMail(bool& r_result)

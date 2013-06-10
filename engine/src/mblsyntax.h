@@ -299,8 +299,8 @@ typedef enum
 	ORIENTATION_FACE_DOWN_BIT = 1 << ORIENTATION_FACE_DOWN
 } MCOrientationSet;
 
-void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations);
-void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations);
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations);
+void MCSystemSetAllowedOrientations(uint32_t p_orientations);
 void MCSystemGetOrientation(MCOrientation& r_orientation);
 void MCSystemGetDeviceOrientation(MCOrientation& r_orientation);
 void MCSystemLockOrientation();
@@ -317,11 +317,17 @@ enum MCMailType
 	kMCMailTypeHtml
 };
 
+struct MCAttachmentData
+{
+	MCStringRef data;
+	MCStringRef file;
+	MCStringRef type;
+	MCStringRef name;
+};
+
 void MCSystemMailResult(MCStringRef& r_result);
 void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body);
-void MCSystemPrepareMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, void *dialog_ptr);
-void MCSystemAddAttachment(MCStringRef p_data, MCStringRef p_file, MCStringRef p_type, MCStringRef p_name, void *dialog_ptr);
-void MCSystemSendPreparedMail(void *dialog_ptr);
+void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result);
 void MCSystemGetCanSendMail(bool& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////

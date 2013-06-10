@@ -3427,6 +3427,19 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id);
 void MCStoreExecRequestProductDetails(MCExecContext& ctxt, MCStringRef p_product_id);
 void MCStoreExecPurchaseVerify(MCExecContext& ctxt, uint32_t p_id, bool p_verified);
 
+///////////
+
+extern MCExecSetTypeInfo *kMCOrientationOrientationsTypeInfo;
+extern MCExecEnumTypeInfo *kMCOrientationOrientationTypeInfo;
+
+extern MCExecMethodInfo *kMCOrientationGetDeviceOrientationMethodInfo;
+extern MCExecMethodInfo *kMCOrientationGetOrientationMethodInfo;
+extern MCExecMethodInfo *kMCOrientationGetAllowedOrientationsMethodInfo;
+extern MCExecMethodInfo *kMCOrientationSetAllowedOrientationsMethodInfo;
+extern MCExecMethodInfo *kMCOrientationGetOrientationLockedMethodInfo;
+extern MCExecMethodInfo *kMCOrientationExecLockOrientationMethodInfo;
+extern MCExecMethodInfo *kMCOrientationExecUnlockOrientationMethodInfo;
+
 void MCOrientationGetDeviceOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
 void MCOrientationGetOrientation(MCExecContext& ctxt, intenum_t& r_orientation);
 void MCOrientationGetAllowedOrientations(MCExecContext& ctxt, intset_t& r_orientation);
@@ -3437,13 +3450,28 @@ void MCOrientationExecUnlockOrientation(MCExecContext& ctxt);
 
 ///////////
 
+extern MCExecMethodInfo *kMCMailExecSendEmailMethodInfo;
+extern MCExecMethodInfo *kMCMailExecComposeMailMethodInfo;
+extern MCExecMethodInfo *kMCMailExecComposeUnicodeMailMethodInfo;
+extern MCExecMethodInfo *kMCMailExecComposeHtmlMailMethodInfo;
 extern MCExecMethodInfo* kMCMailGetCanSendMailMethodInfo;
 
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
 void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
+void MCMailExecComposeUnicodeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
+void MCMailExecComposeHtmlMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
 void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
 
 ///////////
+
+extern MCExecMethodInfo *kMCAddressBookExecPickContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecShowContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecCreateContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecUpdateContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookGetContactDataMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecRemoveContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecAddContactMethodInfo;
+extern MCExecMethodInfo *kMCAddressBookExecFindContactMethodInfo;
 
 void MCAddressBookExecPickContact(MCExecContext& ctxt);
 void MCAddressBookExecShowContact(MCExecContext& ctxt, int32_t p_contact_id);

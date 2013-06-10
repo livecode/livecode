@@ -368,24 +368,46 @@ MCOrientation get_orientation(MCAndroidDisplayOrientation p_orientation)
 	}
 }
 
-MCOrientationSet get_orientation_set(uint32_t p_orientations)
+uint32_t get_orientation_set(uint32_t p_orientations)
 {
-	// UNIMPLEMENTED
-	return ORIENTATION_UNKNOWN_BIT
+	uint32_t t_orientations = 0;
+	if (p_orientations & (1 << kMCDisplayOrientationPortrait))
+		t_orientations |= ORIENTATION_PORTRAIT_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationPortraitUpsideDown))
+		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
+		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
+		t_orientations |= ORIENTATION_LANDSCAPE_LEFT_BIT;
+	if (p_orientations & (1 << kMCDisplayOrientationFaceUp))
+		t_orientations |= ORIENTATION_FACE_UP_BIT;
+
+	return t_orientations;
 }
 
-uint32_t get_android_orientations(MCOrientationSet p_orientations)
+uint32_t get_android_orientations(uint32_t p_orientations)
 {
-	//UNIMPLEMENTED
-	return 0;
+	uint32_t t_orientations = 0;
+	if (p_orientations & (1 << ORIENTATION_PORTRAIT_BIT))
+		t_orientations |= kMCDisplayOrientationPortrait;
+	if (p_orientations & (1 << ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT))
+		t_orientations |= kMCDisplayOrientationPortraitUpsideDown;
+	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_RIGHT_BIT))
+		t_orientations |= kMCDisplayOrientationLandscapeRight;
+	if (p_orientations & (1 << ORIENTATION_LANDSCAPE_LEFT_BIT))
+		t_orientations |= kMCDisplayOrientationLandscapeLeft;
+	if (p_orientations & (1 << ORIENTATION_FACE_UP_BIT))
+		t_orientations |= kMCDisplayOrientationFaceUp;
+
+	return t_orientations;
 }
 
-void MCSystemGetAllowedOrientations(MCOrientationSet& r_orientations)
+void MCSystemGetAllowedOrientations(uint32_t& r_orientations)
 {
 	r_orientations = get_orientation_set(s_allowed_orientations);
 }
 
-void MCSystemSetAllowedOrientations(MCOrientationSet p_orientations)
+void MCSystemSetAllowedOrientations(uint32_t p_orientations)
 {
 	s_allowed_orientations = get_android_orientations(p_orientations);
 }

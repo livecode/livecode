@@ -3541,7 +3541,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
@@ -3561,7 +3560,6 @@
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
-					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCustomBuildTool"
@@ -4451,6 +4449,18 @@
 					</FileConfiguration>
 				</File>
 				<File
+					RelativePath=".\src\mblandroidideltimer.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
 					RelativePath=".\src\mblandroidinput.cpp"
 					>
 					<FileConfiguration
@@ -5161,6 +5171,10 @@
 							Name="VCCLCompilerTool"
 						/>
 					</FileConfiguration>
+				</File>
+				<File
+					RelativePath=".\src\mbliphoneidletimer.mm"
+					>
 				</File>
 				<File
 					RelativePath=".\src\mbliphoneinput.mm"
@@ -6312,6 +6326,10 @@
 			Name="_InProgress"
 			>
 			<File
+				RelativePath=".\src\exec-ad.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-addressbook.cpp"
 				>
 			</File>
@@ -6361,6 +6379,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-ide.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-idletimer.cpp"
 				>
 			</File>
 			<File
@@ -6442,13 +6464,6 @@
 			<File
 				RelativePath=".\src\exec-mail.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\exec-math.cpp"
@@ -6463,19 +6478,16 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-nativecontrol.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-network.cpp"
 				>
 			</File>
 			<File
 				RelativePath=".\src\exec-orientation.cpp"
 				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-					/>
-				</FileConfiguration>
 			</File>
 			<File
 				RelativePath=".\src\exec-pasteboard.cpp"
@@ -6506,6 +6518,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\exec-store.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\exec-strings.cpp"
 				>
 			</File>
@@ -6515,6 +6531,10 @@
 			</File>
 			<File
 				RelativePath=".\src\exec-text.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\exec-textmessaging.cpp"
 				>
 			</File>
 			<File
