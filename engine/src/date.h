@@ -163,6 +163,9 @@ extern Boolean MCD_convert(MCExecPoint &, Convert_form f, Convert_form fs,
 extern bool MCD_convert_to_datetime(MCExecPoint &ep, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
 extern bool MCD_convert_from_datetime(MCExecPoint &ep, Convert_form p_primary_to, Convert_form p_secondary_to, MCDateTime &p_datetime);
 
+/* WRAPPER */ extern bool MCD_convert_to_datetime(MCExecContext& ctxt, MCStringRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime);
+/* WRAPPER */ extern bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef &r_output);
+
 extern void MCD_getlocaleformats();
 
 #endif

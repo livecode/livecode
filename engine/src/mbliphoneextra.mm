@@ -121,7 +121,7 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...)
             {
                 MCArrayRef t_array;
 				if (t_success && ep . copyasarray(t_array))
-					*(va_arg(t_args, MCArrayRef *)) = t_array;
+                    *(va_arg(t_args, MCArrayRef *)) = t_array;
 				else
 					*(va_arg(t_args, MCArrayRef *)) = nil;
 				break;
@@ -522,6 +522,7 @@ static const char *s_orientation_names[] =
 
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
+/*
 // HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
 static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 {
@@ -586,7 +587,7 @@ static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameter
 	}
 	return ES_NORMAL;
 }
-
+*/
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	extern Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters);

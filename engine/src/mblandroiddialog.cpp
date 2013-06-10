@@ -299,6 +299,67 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
 
 static uint32_t s_selected_index;
 
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
+{
+    // multi-pick list not supported
+    if (p_pick_list_count != 1)
+        return false;
+    
+    bool t_success = true;
+    // convert MCStringRef array to java list of strings
+    
+    JNIEnv *t_env = MCJavaGetThreadEnv();
+    jobject t_joptionlist = nil;
+    const char *t_title = nil;
+    bool t_has_selection = false;
+    uint32_t t_selected_index = 0;
+    
+    t_success = MCJavaInitList(t_env, t_joptionlist);
+    
+    if (t_success)
+    {
+        for (uint32_t i = 0; t_success && i < p_pick_lists[0] . option_count; i++)
+        {
+            MCString t_string = MCStringGetOldString(p_pick_lists[0] . options[i]);
+            t_success = MCJavaListAppendString(t_env, t_joptionlist, &t_string);
+        }
+    }
+    
+    if (t_success)
+    {
+        t_has_selection = (p_pick_lists[0] . initial != 0);
+        t_selected_index = p_pick_lists[0] . initial;
+        
+        MCLog("selected index: %d", t_selected_index);
+        s_in_popup_dialog = true;
+        s_dialog_result = kMCDialogResultUnknown;
+        MCAndroidEngineRemoteCall("showListPicker", "vlsbibbb", nil, t_joptionlist, t_title, t_has_selection, t_selected_index, p_use_checkmark, p_use_cancel, p_use_done);
+        
+        while (s_in_popup_dialog)
+            MCscreen->wait(60.0, True, True);
+        
+        if (s_dialog_result == kMCDialogResultError)
+            t_success = false;
+        
+        r_canceled = s_dialog_result == kMCDialogResultCanceled;
+        if (!r_canceled)
+        {
+            t_success = MCMemoryNew(r_result) && MCMemoryNewArray(1, r_result->elements);
+            if (t_success)
+            {
+                r_result_count = 1;
+                *r_result = s_selected_index + 1;
+            }
+        }
+        
+    }
+    
+    if (t_joptionlist != nil)
+        MCJavaFreeList(t_env, t_joptionlist);
+    
+    return t_success;
+}
+
 bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_checkmark, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
     MCLog("indexes: (%p) {length = %d, element[0] = %d}", p_indexes, p_indexes ? p_indexes->length : 0, p_indexes && p_indexes->length > 0 ? p_indexes->elements[0] : 0); 

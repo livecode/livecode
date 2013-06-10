@@ -34,15 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 
 
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-
-bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
-bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
-bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
-
-bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect);
-
-bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_multiple);
+// bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 //////////////////////////////////////// Media Pickers ////////////////////////////////////////
 
@@ -89,7 +81,7 @@ static MCMediaScope MCMediaScopeFromCString(const char *p_string)
     
     return kMCunknownMediaType;
 }
-
+/* moved to exec-pick.cpp
 // pick [ "multiple" ] (podcast(s), song(s), audiobook(s), movie(s), musicvideo(s)) from library
 void MCDialogExecPickMedia(MCExecContext &p_ctxt, MCMediaType *p_media_type, bool p_multiple, const char *&r_result)
 {
@@ -113,7 +105,8 @@ void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMe
     }
     p_ctxt.SetTheResultToStaticCString(r_result);
 }
-
+*/
+/* MOVED TO mblhandlers.cpp
 //iphonePickMedia [multiple] [, music, podCast, audioBook, anyAudio, movie, tv, videoPodcast, musicVideo, videoITunesU, anyVideo]
 Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 {
@@ -174,7 +167,7 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
-
+*/
 //////////////////////////////////////// Item Pickers ////////////////////////////////////////
 
 void FreeIndexArray (const_int32_array_t *p_array)
@@ -446,7 +439,7 @@ bool SplitOptionListsByChunk(MCChunkType p_chunk_type, const_cstring_array_t *p_
 
 	return t_success;
 }	
-
+/* moved to exec-pick.cpp
 void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, const_cstring_array_t *p_option_lists, const char *p_initial_choice, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, char *&r_picked_options, MCRectangle p_button_rect)
 {
     bool t_success = true;
@@ -556,8 +549,8 @@ void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType p_chunk_ty
     // Free memory
     FreeStringArray (t_option_lists, t_option_lists_count);
     FreeIndexArray(t_option_result);
-}
-
+} */
+/* MOVED TO mblhandlers.cpp
 Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
@@ -682,7 +675,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 		if (MCresult->isempty())
 		{
 			MCAutoStringRef t_value;
-			/* UNCHECKED */ ep . copyasstringref(&t_value);
+            ep . copyasstringref(&t_value);
 			ctxt . SetTheResultToValue(*t_value);
 		}
     }
@@ -693,9 +686,10 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 
 	return ES_ERROR;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
+/* moved to exec-pick.cpp
 void MCDialogExecPickDate(MCExecContext &p_ctxt, MCDateTime *p_current, MCDateTime *p_start, MCDateTime *p_end, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect)
 {
     bool t_success = true;
@@ -758,9 +752,9 @@ void MCDialogExecPickDateAndTime(MCExecContext &p_ctxt, MCDateTime *p_current, M
         }
     }
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
-
+/* MOVED TO mblhandlers.cpp
 // MM-2012-11-02: Temporarily refactored mobilePickDate to use the old syntax (rather than three separate pick date, pick time, pick date and time).
 Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 {
@@ -875,7 +869,7 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
     if (MCresult->isempty())
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+		ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
 
@@ -966,7 +960,7 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
     if (MCresult->isempty())
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+		ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
 
@@ -1058,7 +1052,7 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
     if (MCresult->isempty())
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+		ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
     
@@ -1067,3 +1061,4 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 
 	return ES_ERROR;
 }
+*/

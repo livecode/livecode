@@ -71,17 +71,18 @@ Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
     
     bool t_success;
 	MCExecPoint ep(nil, nil, nil);
-
+    MCExecContext ctxt(ep);
+    
 	t_success = MCParseParameters(p_parameters, "x", &t_recipients);
     if (t_success == false)
     {
-        MCresult -> sets(MCfalsestring);
+         ctxt . SetTheResultToValue(kMCFalse);
         return ES_NORMAL;
     }
 	t_success = MCParseParameters(p_parameters, "x", &t_body);
     
     ep . clear();
-    MCExecContext ctxt(ep);
+  
     
     if (t_success)
         MCTextMessagingExecComposeTextMessage(ctxt, *t_recipients, *t_body);
@@ -517,7 +518,7 @@ Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
-/*	MCExecPoint ep(nil, nil, nil);
+	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
 
 	MCAutoStringRef t_orientations;
@@ -539,11 +540,24 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 	intset_t t_orientations_set;
 	t_orientations_set = 0;
 	if (t_success)
+    {
 		for(uint32_t i = 0; i < t_orientations_count; i++)
-			for(uint32_t j = 0; get_orientation_name(j) != nil; j++)
-				if (MCCStringEqualCaseless(t_orientations_array[i], s_orientation_names[j]))
-					t_orientations_set |= (1 << j);
-	
+        {
+            if (MCCStringEqualCaseless(t_orientations_array[i], "portrait"))
+                t_orientations_set |= ORIENTATION_PORTRAIT_BIT;
+            else if (MCCStringEqualCaseless(t_orientations_array[i], "portrait upside down"))
+                t_orientations_set |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
+            else if (MCCStringEqualCaseless(t_orientations_array[i], "landscape right"))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
+            else if (MCCStringEqualCaseless(t_orientations_array[i], "landscape left"))
+                t_orientations_set |= ORIENTATION_LANDSCAPE_LEFT_BIT;
+            else if (MCCStringEqualCaseless(t_orientations_array[i], "face up"))
+                t_orientations_set |= ORIENTATION_FACE_UP_BIT;
+            else if (MCCStringEqualCaseless(t_orientations_array[i], "face down"))
+                t_orientations_set |= ORIENTATION_FACE_DOWN_BIT;
+        }
+	}
+    
 	for(uint32_t i = 0; i < t_orientations_count; i++)
 		MCCStringFree(t_orientations_array[i]);
 	MCMemoryDeleteArray(t_orientations_array);
@@ -552,7 +566,7 @@ Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameter
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
-*/
+
 	return ES_ERROR;
 }
 
@@ -564,8 +578,11 @@ Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 	bool t_locked;
 	MCOrientationGetOrientationLocked(ctxt, t_locked);
 
-	//ctxt . SetTheResultToValue(t_locked);
-
+    if (t_locked)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
+    
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -636,7 +653,7 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	
 	MCExecContext ctxt(ep);
 
-	//MCMailExecSendMail(t_address, t_cc_address, t_subject, t_message_body);
+	MCMailExecSendEmail(ctxt, *t_address, *t_cc_address, *t_subject, *t_message_body);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -659,7 +676,7 @@ Exec_stat MCHandleComposeMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-//		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -682,7 +699,7 @@ Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-//		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+		MCMailExecComposeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -705,7 +722,7 @@ Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-//		MCMailExecComposeUnicodeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+		MCMailExecComposeUnicodeMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -728,7 +745,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 	MCExecContext ctxt(ep);
 
 	if (t_success)
-//		MCMailExecComposeHtmlMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
+        MCMailExecComposeHtmlMail(ctxt, *t_to, *t_cc, *t_bcc, *t_subject, *t_body, *t_attachments);
 
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -744,8 +761,11 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 	bool t_can_send;
 
 	MCMailGetCanSendMail(ctxt, t_can_send);
-
-//	ctxt . SetTheResultToValue(t_can_send);
+    
+    if (t_can_send)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -775,7 +795,7 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
     
     if (t_sensor != kMCSensorTypeUnknown)
     {
-        MCSensorExecStartTrackingSensor(ctxt, t_sensor, t_loosely);
+        MCSensorExecStartTrackingSensor(ctxt, (intenum_t)t_sensor, t_loosely);
     }
     
 	if (!ctxt . HasError())
@@ -802,7 +822,7 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
 
     if (t_sensor != kMCSensorTypeUnknown)
     {
-        MCSensorExecStopTrackingSensor(ctxt, t_sensor);
+        MCSensorExecStopTrackingSensor(ctxt, (intenum_t)t_sensor);
     }
     
 	if (!ctxt . HasError())
@@ -821,7 +841,7 @@ Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parame
 	if ((bool)p_context)
         MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeAcceleration, false);
     else
-        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeAcceleration);
+        MCSensorExecStopTrackingSensor(ctxt, (intenum_t)kMCSensorTypeAcceleration);
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -838,7 +858,7 @@ Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_paramete
 	if ((bool)p_context)
         MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeLocation, false);
     else
-        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeLocation);
+        MCSensorExecStopTrackingSensor(ctxt, (intenum_t)kMCSensorTypeLocation);
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -855,7 +875,7 @@ Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameter
 	if ((bool)p_context)
         MCSensorExecStartTrackingSensor(ctxt, kMCSensorTypeHeading, true);
     else
-        MCSensorExecStopTrackingSensor(ctxt, kMCSensorTypeHeading);
+        MCSensorExecStopTrackingSensor(ctxt, (intenum_t)kMCSensorTypeHeading);
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -889,7 +909,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
     MCAutoArrayRef t_detailed_reading;
     MCAutoStringRef t_reading;
 
- /*   switch (t_sensor)
+    switch (t_sensor)
     {
         case kMCSensorTypeLocation:
         {
@@ -923,7 +943,9 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
                 MCSensorGetRotationRateOfDevice(ctxt, &t_reading);
             break;
         }
-    } */
+        default:
+            break;
+    }
     
     if (t_detailed)
     {
@@ -945,7 +967,7 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
-// MM-2012-02-11: Added support old style senseor syntax (iPhoneGetCurrentLocation etc)
+// MM-2012-02-11: Added support old style sensor syntax (iPhoneGetCurrentLocation etc)
 Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 {
     MCExecPoint ep(nil, nil, nil);
@@ -953,7 +975,7 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
-    //MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
+    MCSensorGetDetailedLocationOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
         ep.setvalueref(*t_detailed_reading);
     
@@ -973,7 +995,7 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
     MCAutoArrayRef t_detailed_reading;
-    //MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
+    MCSensorGetDetailedHeadingOfDevice(ctxt, &t_detailed_reading);
     if (*t_detailed_reading != nil)
         ep.setvalueref(*t_detailed_reading);
     
@@ -998,7 +1020,7 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
         p_parameters->eval(ep);
         t_timeout = atoi(ep.getcstring());
     }
-    MCSensorSetLocationCalibration(ctxt, t_timeout);
+    MCSensorSetLocationCalibrationTimeout(ctxt, t_timeout);
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -1013,7 +1035,7 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
 	ctxt . SetTheResultToEmpty();
     
     int t_timeout;
-    MCSensorGetLocationCalibration(ctxt, t_timeout);
+    MCSensorGetLocationCalibrationTimeout(ctxt, t_timeout);
     MCresult->setnvalue(t_timeout);
     
     ctxt . SetTheResultToEmpty();
@@ -1040,9 +1062,13 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
     
     bool t_available;
     t_available = false;
-    //MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
+    MCSensorGetSensorAvailable(ctxt, t_sensor, t_available);
     
-    MCresult->sets(MCU_btos(t_available));
+    if (t_available)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
+    
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1057,9 +1083,13 @@ Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
         
     bool t_available;
     t_available = false;
-    //MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeLocation, t_available);
     
-    MCresult->sets(MCU_btos(t_available));
+    if (t_available)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
+    
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1074,9 +1104,13 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
     
     bool t_available;
     t_available = false;
-    //MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
+    MCSensorGetSensorAvailable(ctxt, kMCSensorTypeHeading, t_available);
     
-    MCresult->sets(MCU_btos(t_available));
+    if (t_available)
+        ctxt . SetTheResultToValue(kMCTrue);
+    else
+        ctxt . SetTheResultToValue(kMCFalse);
+    
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 
@@ -1233,7 +1267,7 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
     // Handle parameters. We are doing that in a dedicated call
 	MCAutoArrayRef t_contact;
 	
-	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &t_contact);
+	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &(&t_contact));
 
     MCExecContext ctxt(ep);
     // Call the Exec implementation
@@ -1507,6 +1541,509 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
     
 	return ES_ERROR;
     
+}
+
+//////////////////////////////////////////////////////////////////////////////////////
+
+//iphonePickMedia [multiple] [, music, podCast, audioBook, anyAudio, movie, tv, videoPodcast, musicVideo, videoITunesU, anyVideo]
+Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
+{
+/*	bool t_success, t_allow_multipe_items;
+	char *t_option_list;
+    const char *r_return_media_types;
+	MCMediaType t_media_types;
+	
+	t_success = true;
+	t_allow_multipe_items = false;
+	t_media_types = 0;
+	
+	t_option_list = nil;
+	
+    MCExecPoint ep(nil, nil, nil);
+    
+	// Get the options list.
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	while (t_success)
+	{
+		if (MCCStringEqualCaseless(t_option_list, "true"))
+			t_allow_multipe_items = true;
+		else if (MCCStringEqualCaseless(t_option_list, "music"))
+			t_media_types += kMCsongs;
+		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
+			t_media_types += kMCpodcasts;
+		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
+			t_media_types += kMCaudiobooks;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+		{
+			if (MCCStringEqualCaseless(t_option_list, "movie"))
+				t_media_types += kMCmovies;
+			else if (MCCStringEqualCaseless(t_option_list, "tv"))
+				t_media_types += kMCtv;
+			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
+				t_media_types += kMCvideopodcasts;
+			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
+				t_media_types += kMCmusicvideos;
+			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
+				t_media_types += kMCmovies;
+		}
+#endif
+		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	}
+	if (t_media_types == 0)
+	{
+		t_media_types = MCMediaTypeFromCString("podcast, songs, audiobook");;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+			t_media_types += MCMediaTypeFromCString("movies, tv, videoPodcasts, musicVideos, videoITunesU");;
+#endif
+	}
+    MCExecContext ctxt(ep);
+    
+	// Call MCIPhonePickMedia to process the media pick selection.
+    MCDialogExecPickMedia(ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
+*/	
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
+	t_success = true;
+	t_more_optional = true;
+	t_use_checkmark = false;
+	t_use_done = false;
+	t_use_cancel = false;
+	t_use_picker = false;
+	
+    
+    MCAutoArray<MCStringRef> t_option_lists;
+    MCAutoArray<uindex_t> t_indices;
+    
+    MCStringRef t_string_param;
+   	uint32_t t_initial_index;
+    // get the mandatory options list and the initial index
+    // HC-30-2011-30 [[ Bug 10036 ]] iPad pick list only returns 0.
+	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
+        if (!t_success)
+        {
+            // Degrade gracefully, even if the second mandatory parameter is not supplied.
+            t_initial_index = 0;
+            t_success = true;
+        }
+        t_option_lists . Push(t_string_param);
+        t_indices . Push(t_initial_index);
+    }
+    
+    // get further options lists if they exist
+    while (t_success && t_more_optional)
+    {
+    	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+        if (t_success)
+        {
+            if (t_string_param != nil)
+            {
+                if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless) ||
+                    MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless) ||
+                    MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless) ||
+                    MCStringIsEqualToCString(t_string_param, "cancelDone", kMCCompareCaseless) ||
+                    MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
+                        t_more_optional = false;
+                else
+                {
+                    t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
+                    if (!t_success)
+                    {
+                        // Degrade gracefully, even if the second mandatory parameter is not supplied.
+                        t_initial_index = 0;
+                        t_success = true;
+                    }
+                    t_option_lists . Push(t_string_param);
+                    t_indices . Push(t_initial_index);
+                }
+            }
+            else
+                t_more_optional = false;
+        }
+    }
+    
+    // now process any additional parameters
+    
+    MCPickButtonType t_type = kMCPickButtonNone;
+    
+    while (t_success && t_string_param != nil)
+    {
+        if (MCStringIsEqualToCString(t_string_param, "checkmark", kMCCompareCaseless))
+            t_use_checkmark = true;
+        else if (MCStringIsEqualToCString(t_string_param, "cancel", kMCCompareCaseless))
+            t_type = kMCPickButtonCancel;
+        else if (MCStringIsEqualToCString(t_string_param, "done", kMCCompareCaseless))
+            t_type = kMCPickButtonDone;
+        else if (MCStringIsEqualToCString(t_string_param, "canceldone", kMCCompareCaseless))
+            t_type = kMCPickButtonCancelAndDone;
+        else if (MCStringIsEqualToCString(t_string_param, "picker", kMCCompareCaseless))
+            t_use_picker = true;
+        
+        MCValueRelease(t_string_param);
+        t_success = MCParseParameters(p_parameters, "x", t_string_param);
+    }
+    
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+	// call the Exec method to process the pick wheel
+	MCPickExecPickOptionByIndex(ctxt, (int)kMCLines, t_option_lists . Ptr(), t_option_lists . Size(), t_indices . Ptr(), t_indices . Size(),t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, MCtargetptr->getrect());
+    
+	if (t_success)
+    {
+        // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
+        // set the value of the 'it' variable
+		if (MCresult->isempty())
+		{
+			MCAutoStringRef t_value;
+			/* UNCHECKED */ ep . copyasstringref(&t_value);
+			ctxt . SetTheResultToValue(*t_value);
+		}
+    }
+
+    // Free memory
+    for (uindex_t i = 0; i < t_option_lists . Size(); i++)
+        MCValueRelease(t_option_lists[i]);
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+/*
+// HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
+Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
+{
+	bool t_success, t_allow_multipe_items;
+	char *t_option_list;
+	MPMediaType t_media_types;
+	NSString *r_return_media_types;
+    
+	t_success = true;
+	t_allow_multipe_items = false;
+	t_media_types = 0;
+	
+	t_option_list = nil;
+    
+	// Get the options list.
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	while (t_success)
+	{
+		if (MCCStringEqualCaseless(t_option_list, "true"))
+			t_allow_multipe_items = true;
+		else if (MCCStringEqualCaseless(t_option_list, "music"))
+			t_media_types += MPMediaTypeMusic;
+		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
+			t_media_types += MPMediaTypePodcast;
+		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
+			t_media_types += MPMediaTypeAudioBook;
+		else if (MCCStringEqualCaseless(t_option_list, "anyAudio"))
+			t_media_types += MPMediaTypeAnyAudio;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+		{
+			if (MCCStringEqualCaseless(t_option_list, "movie"))
+				t_media_types += MPMediaTypeMovie;
+			else if (MCCStringEqualCaseless(t_option_list, "tv"))
+				t_media_types += MPMediaTypeTVShow;
+			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
+				t_media_types += MPMediaTypeVideoPodcast;
+			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
+				t_media_types += MPMediaTypeMusicVideo;
+			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
+				t_media_types += MPMediaTypeVideoITunesU;
+			else if (MCCStringEqualCaseless(t_option_list, "anyVideo"))
+				t_media_types += MPMediaTypeAnyVideo;
+		}
+#endif
+		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	}
+	if (t_media_types == 0)
+	{
+		t_media_types = MPMediaTypeAnyAudio;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+			t_media_types += MPMediaTypeAnyVideo;
+#endif
+	}
+	// Call MCIPhonePickMedia to process the media pick selection.
+	t_success = MCIPhonePickMedia(t_allow_multipe_items, t_media_types, r_return_media_types);
+	
+	if (t_success && r_return_media_types != nil)
+	{
+		MCresult -> sets ([r_return_media_types cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+	}
+	return ES_NORMAL;
+}
+*/
+// MM-2012-11-02: Temporarily refactored mobilePickDate to use the old syntax (rather than three separate pick date, pick time, pick date and time).
+Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_success;
+	t_success = true;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    char *t_type;
+    t_type = nil;
+    
+    if (t_success && p_parameters != nil)
+  		t_success = MCParseParameters(p_parameters, "s", &t_type);
+    
+    MCAutoStringRef t_current, t_start, t_end;
+    
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_current);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_start);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_end);
+        p_parameters = p_parameters->getnext();
+    }
+	
+    int32_t t_step;
+    int32_t *t_step_ptr = nil;
+    if (t_success && p_parameters != nil)
+        if (MCParseParameters(p_parameters, "i", &t_step))
+            t_step_ptr = &t_step;
+    
+    MCPickButtonType t_button_type = kMCPickButtonNone;
+    if (t_success && p_parameters != nil)
+    {
+        char *t_button;
+        t_button = nil;
+		t_success = MCParseParameters(p_parameters, "s", &t_button);
+        if (t_success)
+        {
+            if (MCCStringEqualCaseless("cancel", t_button))
+                t_button_type = kMCPickButtonCancel;
+            else if (MCCStringEqualCaseless("done", t_button))
+                t_button_type = kMCPickButtonDone;
+            else if (MCCStringEqualCaseless("canceldone", t_button))
+                t_button_type = kMCPickButtonCancelAndDone;
+        }
+        MCCStringFree(t_button);
+    }
+    
+    MCExecContext ctxt(ep);
+     
+	if (t_success)
+    {
+        // MM-2012-03-15: [[ Bug ]] Make sure we handle no type being passed.
+        if (t_type == nil)
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+        else if (MCCStringEqualCaseless("time", t_type))
+            MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+        else if (MCCStringEqualCaseless("datetime", t_type))
+            MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+        else
+            MCPickExecPickDate(ctxt, *t_current, *t_start, *t_end, (intenum_t)t_button_type, MCtargetptr->getrect());
+    }
+    
+    MCCStringFree(t_type);
+    
+    // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
+    // set the value of the 'it' variable
+    if (MCresult->isempty())
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_success, t_use_done, t_use_cancel;
+	t_success = true;
+	t_use_done = false;
+	t_use_cancel = false;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    MCAutoStringRef t_current, t_start, t_end;
+    
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_current);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_start);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_end);
+        p_parameters = p_parameters->getnext();
+    }
+	
+    int32_t t_step;
+    int32_t *t_step_ptr = nil;
+    if (t_success && p_parameters != nil)
+        if (MCParseParameters(p_parameters, "i", &t_step))
+            t_step_ptr = &t_step;
+    
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_cancel);
+	
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
+    
+    MCPickButtonType t_button_type = kMCPickButtonNone;
+    if (t_success)
+    {
+        if (t_use_cancel)
+        {
+            if (t_use_done)
+                t_button_type = kMCPickButtonCancelAndDone;
+            else
+                t_button_type = kMCPickButtonCancel;
+        }
+        else if (t_use_done)
+            t_button_type = kMCPickButtonDone;           
+    }
+
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+    
+	if (t_success)
+		MCPickExecPickTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+    
+    if (MCresult->isempty())
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+
+Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_success, t_use_done, t_use_cancel;
+	t_success = true;
+	t_use_done = false;
+	t_use_cancel = false;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    MCAutoStringRef t_current, t_start, t_end;
+    
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_current);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_start);
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        t_success = ep . copyasstringref(&t_end);
+        p_parameters = p_parameters->getnext();
+    }
+	
+    int32_t t_step;
+    int32_t *t_step_ptr = nil;
+    if (t_success && p_parameters != nil)
+        if (MCParseParameters(p_parameters, "i", &t_step))
+            t_step_ptr = &t_step;
+    
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_cancel);
+	
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
+    
+    MCPickButtonType t_button_type = kMCPickButtonNone;
+    if (t_success)
+    {
+        if (t_use_cancel)
+        {
+            if (t_use_done)
+                t_button_type = kMCPickButtonCancelAndDone;
+            else
+                t_button_type = kMCPickButtonCancel;
+        }
+        else if (t_use_done)
+            t_button_type = kMCPickButtonDone;
+    }
+    
+    MCExecContext ctxt(ep);
+    ctxt.SetTheResultToEmpty();
+       
+	if (t_success)
+		MCPickExecPickDateAndTime(ctxt, *t_current, *t_start, *t_end, t_step_ptr, (intenum_t)t_button_type, MCtargetptr->getrect());
+    
+    if (MCresult->isempty())
+	{
+		MCAutoStringRef t_value;
+		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+    
+	return ES_ERROR;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

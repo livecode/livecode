@@ -107,6 +107,7 @@ void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error);
 void MCSensorInitialize(void);
 void MCSensorFinalize(void);
 
+bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string);
 MCSensorType MCSensorTypeFromCString(const char* p_string);
 
 #endif

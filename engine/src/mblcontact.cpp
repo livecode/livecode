@@ -114,18 +114,15 @@ void MCFindContactExec(MCExecContext& p_ctxt, const char* p_contact_name)
 }
 */
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCContactAddProperty(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value)
+/*
+bool MCContactAddProperty(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCString p_value)
 {
-/*	MCVariableValue *t_element;
+	MCVariableValue *t_element;
 	return p_contact->lookup_element(ep, MCNameGetOldString(p_property), t_element) == ES_NORMAL &&
-		t_element->assign_string(p_value);*/
-
-	// TODO - implement
-	return false;
+		t_element->assign_string(p_value);
 }
 
-bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCArrayRef p_value)
+bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCVariableValue *p_value)
 {
 /*	MCVariableValue *t_element;
 	MCVariableValue *t_array;
@@ -140,8 +137,31 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCName
 		t_index = t_array->get_array()->getnfilled() + 1;
 	
 	return t_array->lookup_index(ep, t_index, t_element) == ES_NORMAL &&
-		t_element->assign(*p_value); */
+		t_element->assign(*p_value);
+}
 
+bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCVariableValue *p_contact, MCNameRef p_property, MCNameRef p_label, MCString p_value)
+{
+/*	bool t_success = true;
+	MCVariableValue *t_element;
+	t_element = new MCVariableValue();
+	
+	t_success = t_element != nil &&
+		t_element->assign_string(p_value) &&
+		MCContactAddPropertyWithLabel(ep, p_contact, p_property, p_label, t_element);
+	delete t_element;
+	return t_success;
+}
+*/
+
+bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value)
+{
+   
+    return MCArrayStoreValue(p_contact, false, p_property, p_value);
+}
+
+bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCValueRef p_value)
+{   
 	MCValueRef t_element;
 	MCValueRef t_array;
 	if (!MCArrayFetchValue(p_contact, false, p_property, t_array) ||
@@ -156,22 +176,6 @@ bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCName
 		t_index = MCArrayGetCount((MCArrayRef)t_array) + 1;
 	
 	return MCArrayStoreValueAtIndex((MCArrayRef)t_array, t_index, p_value);
-}
-
-bool MCContactAddPropertyWithLabel(MCExecPoint& ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCStringRef p_value)
-{
-/*	bool t_success = true;
-	MCVariableValue *t_element;
-	t_element = new MCVariableValue();
-	
-	t_success = t_element != nil &&
-		t_element->assign_string(p_value) &&
-		MCContactAddPropertyWithLabel(ep, p_contact, p_property, p_label, t_element);
-	delete t_element;
-	return t_success;*/
-
-	// TODO - implement
-	return false;
 }
 
 /*

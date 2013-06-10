@@ -384,6 +384,29 @@ bool MCNativeControl::List(MCNativeControlListCallback p_callback, void *p_conte
 	return true;
 }
 
+bool MCNativeControl::GetControlList(MCStringRef& r_list)
+{
+    bool t_success;
+    t_success = true;
+    
+    MCAutoListRef t_list;
+    MCListCreateMutable('\n', &t_list);
+	for(MCNativeControl *t_control = s_native_controls; t_success && t_control != nil; t_control = t_control -> m_next)
+    {
+        MCAutoStringRef t_control_string;
+        if (t_control -> GetName() != nil)
+            t_success = MCStringCreateWithCString(t_control -> GetName(), &t_control_string);
+        else
+            t_success = MCStringFormat(&t_control_string, "%u");
+        
+        if (t_success)
+            t_success = MCListAppend(*t_list, *t_control_string);
+    }
+    
+    MCListCopyAsString(*t_list, r_list);
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCNativeBrowserControlCreate(MCNativeControl*& r_control);
@@ -779,7 +802,7 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	{
 		extern MCExecPoint *MCEPptr;
 		t_control -> SetOwner(MCEPptr -> getobj());
-		t_control -> SetName(MCStringGetCString(*t_control_name));
+		t_control -> SetName(*t_control_name);
 		MCresult -> setnvalue(t_control -> GetId());
 	}
 	else
