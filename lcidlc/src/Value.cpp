@@ -345,8 +345,6 @@ bool BooleanCreateWithBool(bool value, ValueRef& r_value)
 		self -> type = kValueTypeBoolean;
         self -> boolean = value;
         
-		s_names = self;
-		
 		r_value = self;
 	}
 	else

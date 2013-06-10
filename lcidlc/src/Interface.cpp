@@ -118,7 +118,7 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
     case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
-        fprintf(stderr, "Delfault values must be specified for non-pointer type optional parameters\n");
+        fprintf(stderr, "Default values must be specified for non-pointer type optional parameters\n");
         break;
     case kInterfaceErrorDefaultWrongType:
 		fprintf(stderr, "Default specified is the wrong type\n");
