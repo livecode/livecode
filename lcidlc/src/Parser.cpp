@@ -725,8 +725,7 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	if (t_is_optional)
 	{
 		bool t_is_default;
-        if (!ParserSkipKeyword(self, kParserKeywordDefault, t_is_default))
-            return false;
+        ParserSkipKeyword(self, kParserKeywordDefault, t_is_default);
         if (t_is_default)
             if (!ParserMatchConstant(self, t_default))
                 return false;
