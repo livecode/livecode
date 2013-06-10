@@ -53,8 +53,14 @@ MC_EXEC_DEFINE_EXEC_METHOD(Misc, ShowStatusBar, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, HideStatusBar, 0)
 MC_EXEC_DEFINE_SET_METHOD(Misc, StatusBarStyle, 1)
 
+MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardType, 1)
+MC_EXEC_DEFINE_SET_METHOD(Misc, KeyboardReturnKey, 1);
+
 MC_EXEC_DEFINE_GET_METHOD(Misc, PreferredLanguages, 1)
 MC_EXEC_DEFINE_GET_METHOD(Misc, CurrentLocale, 1)
+
+MC_EXEC_DEFINE_GET_METHOD(Misc, SystemIdentifier, 1)
+MC_EXEC_DEFINE_GET_METHOD(Misc, ApplicationIdentifier, 1)
 
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, ClearTouches, 0)
 
@@ -87,6 +93,7 @@ bool MCSystemGetDeviceScale(real64_t& r_scale);
 bool MCSystemSetStatusBarStyle(intenum_t p_style);
 bool MCSystemShowStatusBar();
 bool MCSystemHideStatusBar();
+
 bool MCSystemSetKeyboardType(intenum_t p_type);
 bool MCSystemSetKeyboardReturnKey(intenum_t p_type);
 
