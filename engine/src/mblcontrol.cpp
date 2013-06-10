@@ -377,6 +377,8 @@ void MCNativeControl::Finalize(void)
 
 bool MCNativeControl::List(MCNativeControlListCallback p_callback, void *p_context)
 {
+	// MERG-2013-06-10: [[ Bug 10945 ]] Make sure we only list controls that haven't
+	//   been deleted.
 	for(MCNativeControl *t_control = s_native_controls; t_control != nil; t_control = t_control -> m_next)
 		if (!t_control -> m_deleted)
             if (!p_callback(p_context, t_control))
