@@ -315,8 +315,7 @@ static bool ParserMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 
 	if (t_token -> type != kTokenTypeIdentifier ||
 		!NameEqualToCString(t_token -> value, s_parser_keyword_strings[p_keyword]))
-		
-		return false;
+		return ParserReport(self, t_token -> start, kParserErrorKeywordExpected, &s_parser_keyword_strings[p_keyword]);
 
 	if (!ScannerAdvance(self -> scanner))
 		return false;
@@ -725,10 +724,13 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	t_default = nil;
 	if (t_is_optional)
 	{
-		if (ParserMatchKeyword(self, kParserKeywordDefault))
+		bool t_is_default;
+        if (!ParserSkipKeyword(self, kParserKeywordDefault, t_is_default))
+            return false;
+        if (t_is_default)
             if (!ParserMatchConstant(self, t_default))
                 return false;
-	}
+    }
 	
 	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default, t_is_optional))
 		return false;
