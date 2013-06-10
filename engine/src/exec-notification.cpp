@@ -40,9 +40,6 @@ MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelLocalNotification, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelAllNotifications, 0)
 MC_EXEC_DEFINE_GET_METHOD(Notification, NotificationBadgeValue, 0)
 MC_EXEC_DEFINE_SET_METHOD(Notification, NotificationBadgeValue, 1)
-MC_EXEC_DEFINE_GET_METHOD(Notification, DeviceToken, 0)
-MC_EXEC_DEFINE_GET_METHOD(Notification, LaunchUrl, 0)
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -54,9 +51,6 @@ bool MCSystemCancelLocalNotification(uint32_t p_alert_descriptor);
 bool MCSystemCancelAllLocalNotifications ();
 bool MCSystemGetNotificationBadgeValue (uint32_t &r_badge_value);
 bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
-bool MCSystemGetDeviceToken (MCStringRef& r_device_token);
-bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url);
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -191,26 +185,4 @@ void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_bad
     bool t_success;
     t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
     ctxt.SetTheResultToEmpty();
-}
-
-void MCNotificationGetDeviceToken(MCExecContext& ctxt)
-{
-    MCAutoStringRef t_device_token;
-    bool t_success;
-    t_success = MCSystemGetDeviceToken (&t_device_token);
-    if (t_success)
-        ctxt.SetTheResultToValue(*t_device_token);
-    else
-        ctxt.SetTheResultToEmpty();
-}
-
-void MCNotificationGetLaunchUrl(MCExecContext& ctxt)
-{
-    MCAutoStringRef t_launch_url;
-    bool t_success;
-    t_success = MCSystemGetLaunchUrl (&t_launch_url);
-    if (t_success)
-        ctxt.SetTheResultToValue(*t_launch_url);
-    else
-        ctxt.SetTheResultToEmpty();
 }

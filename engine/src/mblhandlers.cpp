@@ -1313,14 +1313,12 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
     uint32_t t_topleft_y;
 
     if (t_success)
-    {
         t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
-    }
     
     MCAutoArrayRef t_metadata;
     
     if (t_success)
-        MCParseParameters(p_parameters, "a", &t_metadata);
+        t_success = MCParseParameters(p_parameters, "a", &t_metadata);
     
 	if (t_success)
 		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft_x, t_topleft_y, *t_metadata);
@@ -1362,7 +1360,6 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
     
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
-	ctxt . SetTheResultToEmpty();
     
 	MCAutoStringRef t_ad;
     
@@ -1375,12 +1372,18 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
 	if (t_success)
 		MCAdGetVisibleOfAd(ctxt, *t_ad, t_visible);
     
-    if (t_success)
-        MCresult->sets(MCU_btos(t_visible));
     
     if (!ctxt . HasError())
+    {
+        if (t_visible)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
 		return ES_NORMAL;
-    
+    }
+
+	ctxt . SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -1416,7 +1419,6 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
     
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
-	ctxt . SetTheResultToEmpty();
 
 	MCAutoStringRef t_ad;
     
@@ -1439,6 +1441,7 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
         }
     }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -1482,8 +1485,8 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 		return ES_NORMAL;
     }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
-    
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
@@ -1584,6 +1587,7 @@ Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
 		return ES_NORMAL;
     }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -1748,17 +1752,17 @@ Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameter
     if (t_success)
         t_success = MCParseParameters(p_parameters, "i", &t_id);
     
-    ctxt.SetTheResultToEmpty();
     if (t_success)
     {
         MCNotificationGetDetails(ctxt, t_id, &t_details);
-        if (*t_details != nil)
+        if (!ctxt.HasError() && *t_details != nil)
         {
-            ep.setvalueref(*t_details);
 			ctxt . SetTheResultToValue(*t_details);
             return ES_NORMAL;
         }
     }
+    
+    ctxt.SetTheResultToEmpty();
     return ES_ERROR;
 }
 
@@ -1824,37 +1828,12 @@ Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_param
     if (t_success)
         MCNotificationSetNotificationBadgeValue (ctxt, t_badge_value);
     
-    if (t_success && !ctxt.HasError())
-        return ES_NORMAL;
-    
-    return ES_ERROR;
-}
-
-Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCNotificationGetDeviceToken (ctxt);
-    
     if (!ctxt.HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
 }
 
-Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    ctxt.SetTheResultToEmpty();
-    MCNotificationGetLaunchUrl (ctxt);
-    
-    if (!ctxt.HasError())
-        return ES_NORMAL;
-    
-    return ES_ERROR;
-}
 
 ////////////////
 
@@ -2167,7 +2146,7 @@ Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters
 		t_success = MCParseParameters(p_parameters, "x", &t_channel);
 	
 	if (t_success)
-		MCSoundExecPauseSoundOnChannel(ctxt, *t_channel);
+		MCSoundExecPausePlayingOnChannel(ctxt, *t_channel);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2189,7 +2168,7 @@ Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameter
 		t_success = MCParseParameters(p_parameters, "x", &t_channel);
 	
 	if (t_success)
-		MCSoundExecResumeSoundOnChannel(ctxt, *t_channel);
+		MCSoundExecResumePlayingOnChannel(ctxt, *t_channel);
     
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2211,7 +2190,7 @@ Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "x", &t_channel);
 	
 	if (t_success)
-		MCSoundExecStopSoundOnChannel(ctxt, *t_channel);
+		MCSoundExecStopPlayingOnChannel(ctxt, *t_channel);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2233,7 +2212,7 @@ Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 		t_success = MCParseParameters(p_parameters, "x", &t_channel);
 	
 	if (t_success)
-		MCSoundExecDeleteSoundOnChannel(ctxt, *t_channel);
+		MCSoundExecDeleteSoundChannel(ctxt, *t_channel);
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -2282,12 +2261,14 @@ Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 	int32_t t_volume;
 	if (t_success)
         MCSoundGetVolumeOfChannel(ctxt, *t_channel, t_volume);
-	
-	ctxt.SetTheResultToNumber(t_volume);
 		
 	if (!ctxt . HasError())
+    {
+        ctxt.SetTheResultToNumber(t_volume);
 		return ES_NORMAL;
+    }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -2309,16 +2290,17 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 	if (t_success)
 		MCSoundGetStatusOfChannel(ctxt, *t_channel, t_status);
 	
-	if (t_success && t_status >= 0)
+	if (t_success && t_status >= 0 && !ctxt.HasError())
 	{
         MCAutoStringRef t_status_string;
         if (MCSoundChannelStatusTypeToString((MCSoundChannelStatus)t_status, &t_status_string))
+        {
             ctxt.SetTheResultToValue(*t_status_string);
+            return ES_NORMAL;
+        }
     }
     
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-    
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -2344,12 +2326,13 @@ Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
         if (*t_sound != nil)
             ep.setvalueref(*t_sound);
     
-    if (t_success)
+    if (!ctxt . HasError())
+    {
         ctxt . SetTheResultToValue(*t_sound);
+        return ES_NORMAL;
+    }
     
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-    
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -2375,14 +2358,14 @@ Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
         if (*t_sound != nil)
             ep.setvalueref(*t_sound);
     
-    if (t_success)
+    if (!ctxt . HasError())
+    {
         ctxt . SetTheResultToValue(*t_sound);
-    
-    
-	if (!ctxt . HasError())
 		return ES_NORMAL;
+    }
     
-	return ES_ERROR;
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
 }
 
 Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
@@ -2402,12 +2385,13 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
         if (*t_channels != nil)
             ep.setvalueref(*t_channels);
     
-    if (t_success)
+    if (!ctxt . HasError() && t_success)
+    {
         ctxt . SetTheResultToValue(*t_channels);
-    
-	if (!ctxt . HasError())
 		return ES_NORMAL;
+    }
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
 
@@ -2446,5 +2430,603 @@ Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
 	if (!ctxt . HasError())
 		return ES_NORMAL;
     
+    ctxt.SetTheResultToEmpty();
 	return ES_ERROR;
 }
+
+/////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_token;
+    
+    MCMiscGetDeviceToken(ctxt, &t_token);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_token);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_url;
+    
+    MCMiscGetLaunchUrl (ctxt, &t_url);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_url);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
+{
+    int32_t t_number_of_times;
+    int32_t* t_number_of_times_ptr = nil;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (!MCParseParameters(p_parameters, "i", &t_number_of_times))
+        t_number_of_times_ptr = &t_number_of_times;
+    
+    MCMiscExecBeep(ctxt, t_number_of_times_ptr);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
+{
+    int32_t t_number_of_times;
+    int32_t* t_number_of_times_ptr = nil;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    if (MCParseParameters(p_parameters, "i", &t_number_of_times))
+        t_number_of_times_ptr = &t_number_of_times;
+    
+    MCMiscExecVibrate(ctxt, t_number_of_times_ptr);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_resolution;
+    MCMiscGetiphoneDeviceResolution(ctxt, &t_resolution);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_resolution);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_use_device_res;
+    bool t_use_control_device_res;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameters, "bb", &t_use_device_res, &t_use_control_device_res);
+    
+    if (t_success)
+        MCMiscSetiphoneUseDeviceResolution(ctxt, t_use_device_res, t_use_control_device_res);
+    
+    if (!ctxt.HasError() && t_success)
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    real64_t t_resolution;
+    
+    MCMiscGetiphoneDeviceScale(ctxt, t_resolution);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToNumber(t_resolution);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandlePixelDensity(void* context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    real64_t t_density;
+    
+    MCMiscGetPixelDensity(ctxt, t_density);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToNumber(t_density);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+static MCMiscStatusBarStyle MCMiscStatusBarStyleFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "translucent", kMCCompareCaseless))
+        return kMCMiscStatusBarStyleTranslucent;
+    else if (MCStringIsEqualToCString(p_string, "opaque", kMCCompareCaseless))
+        return kMCMiscStatusBarStyleOpaque;
+    else
+        return kMCMiscStatusBarStyleDefault;
+}
+
+Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+    MCAutoStringRef t_status_bar_style_string;
+    MCMiscStatusBarStyle t_status_bar_style;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameters, "x", &t_status_bar_style_string);
+    
+    if (t_success)
+    {
+        t_status_bar_style = MCMiscStatusBarStyleFromString(*t_status_bar_style_string);
+        MCMiscSetStatusBarStyle(ctxt, t_status_bar_style);
+    }
+	
+	if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleShowStatusBar(void* context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    bool t_success = true;
+        
+    if(t_success)
+        MCMiscExecShowStatusBar(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleHideStatusBar(void* context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    bool t_success = true;
+    
+    if(t_success)
+        MCMiscExecHideStatusBar(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+static MCMiscKeyboardType MCMiscKeyboardTypeFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "alphabet", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeAlphabet;
+    else if (MCStringIsEqualToCString(p_string, "numeric", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeNumeric;
+    else if (MCStringIsEqualToCString(p_string, "decimal", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeDecimal;
+    else if (MCStringIsEqualToCString(p_string, "number", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeNumber;
+    else if (MCStringIsEqualToCString(p_string, "phone", kMCCompareCaseless))
+        return kMCMiscKeyboardTypePhone;
+    else if (MCStringIsEqualToCString(p_string, "email", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeEmail;
+    else if (MCStringIsEqualToCString(p_string, "url", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeUrl;
+    else if (MCStringIsEqualToCString(p_string, "contact", kMCCompareCaseless))
+        return kMCMiscKeyboardTypeContact;
+    else // default
+        return kMCMiscKeyboardTypeDefault;
+}
+
+Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success = true;
+    
+    MCAutoStringRef t_keyboard_type_string;
+    MCMiscKeyboardType t_keyboard_type;
+    
+    t_success = MCParseParameters(p_parameters, "x", &t_keyboard_type_string);
+    
+    t_keyboard_type = MCMiscKeyboardTypeFromString(*t_keyboard_type_string);
+    
+    MCMiscSetKeyboardType(ctxt, t_keyboard_type);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    return ES_ERROR;
+}
+
+static MCMiscKeyboardReturnKey MCMiscKeyboardReturnKeyTypeFromString(MCStringRef p_string)
+{
+    if (MCStringIsEqualToCString(p_string, "go", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyGo;
+    else if (MCStringIsEqualToCString(p_string, "google", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyGoogle;
+    else if (MCStringIsEqualToCString(p_string, "join", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyJoin;
+    else if (MCStringIsEqualToCString(p_string, "next", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyNext;
+    else if (MCStringIsEqualToCString(p_string, "route", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyRoute;
+    else if (MCStringIsEqualToCString(p_string, "search", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeySearch;
+    else if (MCStringIsEqualToCString(p_string, "send", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeySend;
+    else if (MCStringIsEqualToCString(p_string, "yahoo", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyYahoo;
+    else if (MCStringIsEqualToCString(p_string, "done", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyDone;
+    else if (MCStringIsEqualToCString(p_string, "emergency call", kMCCompareCaseless))
+        return kMCMiscKeyboardReturnKeyEmergencyCall;
+    else // default
+        return kMCMiscKeyboardReturnKeyDefault;
+}
+
+Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_keyboard_return_key_string;
+    MCMiscKeyboardReturnKey t_keyboard_return_key;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameters, "x", &t_keyboard_return_key_string);
+    
+    if (t_success)
+    {
+        t_keyboard_return_key = MCMiscKeyboardReturnKeyTypeFromString(*t_keyboard_return_key_string);
+        MCMiscSetKeyboardReturnKey(ctxt, t_keyboard_return_key);
+    }
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandlePreferredLanguages(void *context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    MCAutoStringRef t_preferred_languages;
+    
+    MCMiscGetPreferredLanguages(ctxt, &t_preferred_languages);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_preferred_languages);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleCurrentLocale(void *context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_current_locale;
+    
+    MCMiscGetCurrentLocale(ctxt, &t_current_locale);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_current_locale);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleClearTouches(void* context, MCParameter* p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCMiscExecClearTouches(ctxt);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_identifier;
+    
+    MCMiscGetSystemIdentifier(ctxt, &t_identifier);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_identifier);
+        return ES_NORMAL;
+    }
+
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef r_identifier;
+    
+    MCMiscGetApplicationIdentifier(ctxt, &r_identifier);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_hostname;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &t_hostname);
+	
+	if (t_success)
+		MCMiscSetReachabilityTarget(ctxt, *t_hostname);
+	
+	return !ctxt.HasError() ? ES_NORMAL : ES_ERROR;
+}
+
+Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_hostname;
+    
+    MCMiscGetReachabilityTarget(ctxt, &t_hostname);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_hostname);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
+{
+    MCAutoStringRef r_save_result;
+    MCAutoStringRef t_file_name;
+    
+    bool t_file_extension_ok = false;
+    
+	MCAutoStringRef t_raw_data;
+    bool t_success = true;
+	MCLog("MCHandleExportImageToAlbum() called", nil);
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    t_success = MCParseParameters(p_parameters, "x", &t_raw_data);
+    
+    if (t_success)
+    {
+        if (!MCParseParameters(p_parameters, "x", &t_file_name))
+            t_file_name = kMCEmptyString;
+    
+        MCMiscExecExportImageToAlbum(ctxt, *t_raw_data, *t_file_name);
+    }
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	bool t_success;
+	t_success = true;
+	
+	int32_t t_interval;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "i", &t_interval);
+	
+	if (t_success)
+        MCMiscSetRedrawInterval(ctxt, t_interval);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	bool t_success;
+	t_success = true;
+
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+    
+    if (t_success)
+        MCMiscSetAnimateAutorotation(ctxt, t_enabled);
+    
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+
+Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
+{    
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+    MCAutoStringRef t_path;
+    
+    bool t_success = true;
+	bool t_no_backup;
+	t_no_backup = true;
+    
+	if (t_success)
+        t_success = MCParseParameters(p_parameters, "xu", &t_path, &t_no_backup);
+    
+    if (t_success)
+        MCMiscSetDoNotBackupFile(ctxt, *t_path, t_no_backup);
+    
+    if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	MCAutoStringRef t_path;
+    bool t_no_backup;
+    bool t_success = true;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "x", &t_path);
+    
+    if (t_success)
+        MCMiscGetDoNotBackupFile(ctxt, *t_path, t_no_backup);
+    
+	if (!ctxt . HasError())
+    {
+        if (t_no_backup)
+            ctxt.SetTheResultToValue(kMCTrueString);
+        else
+            ctxt.SetTheResultToValue(kMCFalseString);
+        
+		return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters)
+{    
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_filename;
+    MCAutoStringRef t_protection_string;
+    
+    if (MCParseParameters(p_parameters, "xx", &t_filename, &t_protection_string))
+	{
+        MCMiscSetFileDataProtection(ctxt, *t_filename, *t_protection_string);
+	}
+    
+	if (!ctxt . HasError())
+		return ES_NORMAL;
+	
+	return ES_ERROR;
+}
+
+Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters)
+{    
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_path;
+    MCAutoStringRef t_protection_string;
+    
+    if (MCParseParameters(p_parameters, "x", &t_path))
+        MCMiscGetFileDataProtection(ctxt, *t_path, &t_protection_string);
+    
+	if (!ctxt . HasError())
+    {
+        ctxt.SetTheResultToValue(*t_protection_string);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+	return ES_ERROR;
+}
+

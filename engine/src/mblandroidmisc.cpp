@@ -602,58 +602,188 @@ void MCAndroidPhotoPickCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleSetKeyboardType(void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//
+//	if (p_parameters != nil)
+//	{
+//		int32_t t_type;
+//		
+//		p_parameters -> eval_argument(ep);
+//		if (ep . getsvalue() == "default")
+//			t_type = 1;
+//		else if (ep . getsvalue() == "alphabet")
+//			t_type = 1;
+//		else if (ep . getsvalue() == "numeric" || ep . getsvalue() == "decimal")
+//			t_type = 3;
+//		else if (ep . getsvalue() == "number")
+//			t_type = 2;
+//		else if (ep . getsvalue() == "phone")
+//			t_type = 4;
+//		else if (ep . getsvalue() == "email")
+//			t_type = 5;
+//		else
+//			t_type = 1;
+//		
+//		g_android_keyboard_type = t_type;
+//	}
+//	
+//	MCAndroidEngineRemoteCall("setTextInputMode", "vi", nil, g_android_keyboard_type);
+//	
+//	return ES_NORMAL;
+//}
 
-	if (p_parameters != nil)
-	{
-		int32_t t_type;
-		
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_type = 1;
-		else if (ep . getsvalue() == "alphabet")
-			t_type = 1;
-		else if (ep . getsvalue() == "numeric" || ep . getsvalue() == "decimal")
-			t_type = 3;
-		else if (ep . getsvalue() == "number")
-			t_type = 2;
-		else if (ep . getsvalue() == "phone")
-			t_type = 4;
-		else if (ep . getsvalue() == "email")
-			t_type = 5;
-		else
-			t_type = 1;
-		
-		g_android_keyboard_type = t_type;
-	}
-	
+static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type)
+{
+    switch(p_type)
+    {
+        case kMCMiscKeyboardTypeAlphabet:
+            return 1;
+        case kMCMiscKeyboardTypeDecimal:
+            return 1;
+        case kMCMiscKeyboardTypeNumeric:
+            return 3;
+        case kMCMiscKeyboardTypeNumber:
+            return 2;
+        case kMCMiscKeyboardTypePhone:
+            return 4;
+        case kMCMiscKeyboardTypeEmail:
+            return 5;
+        default:
+            return 1;
+    }
+}
+
+bool MCSystemSetKeyboardType(intenum_t p_type)
+{
+    int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum(p_type);
+    
+    g_android_keyboard_type = t_type;
+    
 	MCAndroidEngineRemoteCall("setTextInputMode", "vi", nil, g_android_keyboard_type);
-	
-	return ES_NORMAL;
+    
+    return true;
+}
+
+bool MCSystemSetKeyboardReturnType(intenum_t p_type)
+{
+    // not implemented on Android
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
+//{
+//	bool t_visible;
+//	t_visible = ((uint32_t)context) != 0;
+//
+//	MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
+//
+//	return ES_NORMAL;
+//}
+
+bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
 {
-	bool t_visible;
-	t_visible = ((uint32_t)context) != 0;
+    // not implemented on Android
+    return false;
+}
 
-	MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
+bool MCSystemShowStatusBar()
+{
+    MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, true);
+    
+    return true;
+}
 
-	return ES_NORMAL;
+bool MCSystemHideStatusBar()
+{
+    MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, false);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandlePixelDensity(void *context, MCParameter *p_parameters)
+bool MCSystemBeep (int32_t p_number_of_beeps)
 {
-	float t_density;
-	MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
-	MCresult -> setnvalue(t_density);
-	return ES_NORMAL;
+    MCAndroidEngineRemoteCall("doBeep", "vi", nil, p_number_of_beeps);
+    return true;
+}
+
+bool MCSystemVibrate (int32_t p_number_of_vibrates)
+{
+    MCAndroidEngineRemoteCall("doVibrate", "vi", nil, p_number_of_vibrates);
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandlePixelDensity(void *context, MCParameter *p_parameters)
+//{
+//	float t_density;
+//	MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+//	MCresult -> setnvalue(t_density);
+//	return ES_NORMAL;
+//}
+
+bool MCSystemGetPixelDensity(real64_t& r_density)
+{
+    MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+    return true;
+}
+
+bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
+{
+    // Not implemented
+    return false;
+}
+
+bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res)
+{
+    //not implemented on Android
+    return false;
+}
+
+bool MCSystemGetDeviceScale(real64_t& r_scale)
+{
+    //not implemented on Android
+    return false;
+}
+
+bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemSetReachabilityTarget(MCStringRef hostname)
+{
+    // not implemented on Android
+    return false;
+}
+
+const char *MCSystemGetReachabilityTarget(void)
+{
+    // not implemented on Android
+    return "";
+}
+
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+{
+    MCAndroidEngineCall("exportImageToAlbum", "xdxx", r_save_result, t_raw_data, t_file_name, t_file_extension);
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -701,20 +831,75 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+//{
+//    char *r_preferred_languages = NULL;
+//	MCAndroidEngineCall("getPreferredLanguages", "s", &r_preferred_languages);
+//    MCresult -> sets(r_preferred_languages);
+//	return ES_NORMAL;
+//}
+
+//Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
+//{
+//    char *r_preferred_locale = NULL;
+//	MCAndroidEngineCall("getPreferredLocale", "s", &r_preferred_locale);
+//   	MCresult -> sets(r_preferred_locale);
+//	return ES_NORMAL;
+//}
+
+bool MCSystemGetPreferredLanguage(MCStringRef& r_preferred_languages)
 {
-    char *r_preferred_languages = NULL;
-	MCAndroidEngineCall("getPreferredLanguages", "s", &r_preferred_languages);
-    MCresult -> sets(r_preferred_languages);
-	return ES_NORMAL;
+    MCAndroidEngineCall("getPreferredLanguages", "x", &r_preferred_languages);
+    
+    return true;
 }
 
-Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
+bool MCSystemGetCurrentLocale(MCStringRef r_current_locale)
 {
-    char *r_preferred_locale = NULL;
-	MCAndroidEngineCall("getPreferredLocale", "s", &r_preferred_locale);
-   	MCresult -> sets(r_preferred_locale);
-	return ES_NORMAL;
+    MCAndroidEngineCall("getCurrentLocale", "x", &r_current_locale);
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemSetRedrawInterval(int32_t p_interval)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemSetAnimateAutorotation(bool p_enabled)
+{
+    // not implemented on Android
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_string, MCStringRef& r_status)
+{
+    // not implemented on Android
+    return false;
+}
+
+bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string)
+{
+    // not implemented on Android
+    return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -760,107 +945,108 @@ static bool is_jpeg_data(const MCString& p_data)
 	return p_data . getlength() > 2 && MCMemoryEqual(p_data . getstring(), "\xff\xd8", 2);
 }
 
-Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
-{
-    char *r_save_result = NULL;
-    char *t_file_name = NULL;
-    char t_file_extension[5];
-    t_file_extension[0] = '\0';
-	MCString t_raw_data = NULL;
-    bool t_success = true;
-	MCLog("MCHandleExportImageToAlbum() called", nil);
-
-    if (p_parameters == nil)
-		return ES_NORMAL;
-	
-	MCExecPoint ep(nil, nil, nil);	
-	p_parameters -> eval_argument(ep);
-    
-	if (is_png_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".png\n");
-    }
-    else if (is_gif_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".gif\n");
-    }
-    else if (is_jpeg_data(ep . getsvalue()))
-    {
-        sprintf (t_file_extension, ".jpg\n");
-    }
-    if (t_file_extension[0] != '\0')
-    {
-        t_raw_data = ep . getsvalue();
-    }
-	else
-    {
-        MCLog("Type not found", nil);
-		uint4 parid;
-		MCObject *objptr;
-		MCChunk *tchunk = new MCChunk(False);
-		MCerrorlock++;
-		MCScriptPoint sp(ep);
-		Parse_stat stat = tchunk->parse(sp, False);
-		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
-		{
-            MCLog("could not find image", nil);
-			MCresult -> sets("could not find image");
-			MCerrorlock--;
-			delete tchunk;
-			return ES_NORMAL;
-		}
-		
-		if (objptr -> gettype() != CT_IMAGE)
-		{
-            MCLog("not an image", nil);
-			MCresult -> sets("not an image");
-			return ES_NORMAL;
-		}
-		
-		MCImage *t_image;
-		t_image = static_cast<MCImage *>(objptr);
-		if (t_image -> getcompression() == F_PNG)
-        {
-            sprintf (t_file_extension, ".png\n");
-        }
-        else if (t_image -> getcompression() == F_JPEG)
-        {
-            sprintf (t_file_extension, ".jpg\n");
-        }
-        else if (t_image -> getcompression() == F_GIF)
-		{
-            sprintf (t_file_extension, ".gif\n");
-        }
-        else
-        {
-            MCLog("not a supported image", nil);
-			MCresult -> sets("not a supported format");
-			return ES_NORMAL;
-		}
-        MCLog("MCHandleExportImageToAlbum() converting to raw data", nil);
-		t_raw_data = t_image -> getrawdata();
-    }
-    // See if the user provided us with a file name
-    if (t_success)
-    {
-        if (p_parameters != nil)
-        {
-            p_parameters = p_parameters -> getnext();
-            if (p_parameters != nil)
-            {
-                p_parameters -> eval_argument(ep);
-                t_file_name = ep . getsvalue() . clone();
-            }
-        }
-        MCAndroidEngineCall("exportImageToAlbum", "sdss", &r_save_result, &t_raw_data, t_file_name, t_file_extension);
-        MCresult -> sets(r_save_result);
-    }
-    else
-    {
-        MCresult -> sets("export failed");
-    }       
-	return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
+//{
+//    char *r_save_result = NULL;
+//    char *t_file_name = NULL;
+//    char t_file_extension[5];
+//    t_file_extension[0] = '\0';
+//	MCString t_raw_data = NULL;
+//    bool t_success = true;
+//	MCLog("MCHandleExportImageToAlbum() called", nil);
+//
+//    if (p_parameters == nil)
+//		return ES_NORMAL;
+//	
+//	MCExecPoint ep(nil, nil, nil);	
+//	p_parameters -> eval_argument(ep);
+//    
+//	if (is_png_data(ep . getsvalue()))
+//    {
+//        sprintf (t_file_extension, ".png\n");
+//    }
+//    else if (is_gif_data(ep . getsvalue()))
+//    {
+//        sprintf (t_file_extension, ".gif\n");
+//    }
+//    else if (is_jpeg_data(ep . getsvalue()))
+//    {
+//        sprintf (t_file_extension, ".jpg\n");
+//    }
+//    if (t_file_extension[0] != '\0')
+//    {
+//        t_raw_data = ep . getsvalue();
+//    }
+//	else
+//    {
+//        MCLog("Type not found", nil);
+//		uint4 parid;
+//		MCObject *objptr;
+//		MCChunk *tchunk = new MCChunk(False);
+//		MCerrorlock++;
+//		MCScriptPoint sp(ep);
+//		Parse_stat stat = tchunk->parse(sp, False);
+//		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
+//		{
+//            MCLog("could not find image", nil);
+//			MCresult -> sets("could not find image");
+//			MCerrorlock--;
+//			delete tchunk;
+//			return ES_NORMAL;
+//		}
+//		
+//		if (objptr -> gettype() != CT_IMAGE)
+//		{
+//            MCLog("not an image", nil);
+//			MCresult -> sets("not an image");
+//			return ES_NORMAL;
+//		}
+//		
+//		MCImage *t_image;
+//		t_image = static_cast<MCImage *>(objptr);
+//		if (t_image -> getcompression() == F_PNG)
+//        {
+//            sprintf (t_file_extension, ".png\n");
+//        }
+//        else if (t_image -> getcompression() == F_JPEG)
+//        {
+//            sprintf (t_file_extension, ".jpg\n");
+//        }
+//        else if (t_image -> getcompression() == F_GIF)
+//		{
+//            sprintf (t_file_extension, ".gif\n");
+//        }
+//        else
+//        {
+//            MCLog("not a supported image", nil);
+//			MCresult -> sets("not a supported format");
+//			return ES_NORMAL;
+//		}
+//        MCLog("MCHandleExportImageToAlbum() converting to raw data", nil);
+//		t_raw_data = t_image -> getrawdata();
+//    }
+//    // See if the user provided us with a file name
+//    if (t_success)
+//    {
+//        if (p_parameters != nil)
+//        {
+//            p_parameters = p_parameters -> getnext();
+//            if (p_parameters != nil)
+//            {
+//                p_parameters -> eval_argument(ep);
+//                t_file_name = ep . getsvalue() . clone();
+//            }
+//        }
+//        MCAndroidEngineCall("exportImageToAlbum", "sdss", &r_save_result, &t_raw_data, t_file_name, t_file_extension);
+//        MCresult -> sets(r_save_result);
+//    }
+//    else
+//    {
+//        MCresult -> sets("export failed");
+//    }       
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -940,49 +1126,51 @@ void MCAndroidMediaCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-
-void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verify);
-static Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    
-    bool t_verified = true;
-    uint32_t t_id;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
-    
-    if (t_success)
-        t_success = MCPurchaseFindById(t_id, t_purchase);
-    
-    if (t_success)
-        MCPurchaseVerify(t_purchase, t_verified);
-    
-    return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
+//
+//void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verify);
+//static Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
+//{
+//    bool t_success = true;
+//    
+//    bool t_verified = true;
+//    uint32_t t_id;
+//    MCPurchase *t_purchase = nil;
+//    
+//    if (t_success)
+//        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
+//    
+//    if (t_success)
+//        t_success = MCPurchaseFindById(t_id, t_purchase);
+//    
+//    if (t_success)
+//        MCPurchaseVerify(t_purchase, t_verified);
+//    
+//    return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
-{
-	MCscreen -> wait(1/25.0, False, False);
-	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
-	MCEventQueueClearTouches();
-	return ES_NORMAL;
-}
+//// MOVED TO mblmhandlers.cpp
+//static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
+//{
+//	MCscreen -> wait(1/25.0, False, False);
+//	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
+//	MCEventQueueClearTouches();
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1052,8 +1240,6 @@ extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *);
 extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *);
 extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *);
-extern Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters);
 
 // MM-2012-02-22: Added support for ad management
 extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
@@ -1074,7 +1260,45 @@ extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
+
 extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
+extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
+extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
+
+extern Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleBeep(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleVibrate(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlerPixelDensity(void* p_context, MCParameter* p_parameters);
+
+extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleExportImageToAlbum(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
+
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1154,10 +1378,20 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobileOrientationLocked", MCHandleOrientationLocked, nil},
 	
 	{"mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+    
+    {"mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
+    {"mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
 
-	{"mobileShowStatusbar", MCHandleSetStatusbarVisibility, (void*)1},
-	{"mobileHideStatusbar", MCHandleSetStatusbarVisibility, (void*)0},
-
+    {"mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+	{"mobileShowStatusbar", MCHandleShowStatusBar, nil},
+	{"mobileHideStatusbar", MCHandleHideStatusBar, nil},
+    {"mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+    {"mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+    
+    
+    {"mobileDeviceResolution", MCHandleDeviceResolution, nil},
+    {"mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+    {"mobileDeviceScale", MCHandleDeviceScale, nil},
 	{"mobilePixelDensity", MCHandlePixelDensity, nil},
 
 	{"mobileBuildInfo", MCHandleBuildInfo, nil},
@@ -1200,6 +1434,11 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{"mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
 	{"mobileSoundChannels", MCHandleSoundChannels, nil},
     
+    {"iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
+    {"iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
+    {"iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
+    {"iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
+    
 	{"mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
 	{"mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
 	{"mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
@@ -1210,10 +1449,13 @@ static MCPlatformMessageSpec s_platform_messages[] =
     {"mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
     {"mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
     
-    {"mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
-    {"mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
-    
     {"mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+    
+	{"iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
+	
+    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
+    //   or not.
+	{"iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil},
 
     {"mobilePickContact", MCHandlePickContact, nil},
     {"mobileShowContact", MCHandleShowContact, nil},

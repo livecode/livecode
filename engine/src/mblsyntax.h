@@ -325,5 +325,41 @@ void MCSystemSendPreparedMail(void *dialog_ptr);
 void MCSystemGetCanSendMail(bool& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
+// form Misc module
+
+enum MCMiscStatusBarStyle
+{
+    kMCMiscStatusBarStyleDefault,
+    kMCMiscStatusBarStyleTranslucent,
+    kMCMiscStatusBarStyleOpaque
+};
+
+enum MCMiscKeyboardType
+{
+    kMCMiscKeyboardTypeDefault,
+    kMCMiscKeyboardTypeAlphabet,
+    kMCMiscKeyboardTypeNumeric,
+    kMCMiscKeyboardTypeDecimal,
+    kMCMiscKeyboardTypeNumber,
+    kMCMiscKeyboardTypePhone,
+    kMCMiscKeyboardTypeEmail,
+    kMCMiscKeyboardTypeUrl,
+    kMCMiscKeyboardTypeContact
+};
+
+enum MCMiscKeyboardReturnKey
+{
+    kMCMiscKeyboardReturnKeyDefault,
+    kMCMiscKeyboardReturnKeyGo,
+    kMCMiscKeyboardReturnKeyGoogle,
+    kMCMiscKeyboardReturnKeyJoin,
+    kMCMiscKeyboardReturnKeyNext,
+    kMCMiscKeyboardReturnKeyRoute,
+    kMCMiscKeyboardReturnKeySearch,
+    kMCMiscKeyboardReturnKeySend,
+    kMCMiscKeyboardReturnKeyYahoo,
+    kMCMiscKeyboardReturnKeyDone,
+    kMCMiscKeyboardReturnKeyEmergencyCall
+};
 
 #endif

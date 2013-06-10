@@ -132,7 +132,7 @@ void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, M
     }
 }
 
-void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
+void MCSoundExecStopPlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
     bool t_success;
 	t_success = true;
@@ -143,7 +143,7 @@ void MCSoundExecStopSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 		ctxt.SetTheResultToStaticCString("could not find channel");
 }
 
-void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
+void MCSoundExecPausePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
     bool t_success;
 	t_success = true;
@@ -154,7 +154,7 @@ void MCSoundExecPauseSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 		ctxt.SetTheResultToStaticCString("could not find channel");
 }
 
-void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
+void MCSoundExecResumePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
     bool t_success;
 	t_success = true;
@@ -165,7 +165,7 @@ void MCSoundExecResumeSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
 		ctxt.SetTheResultToStaticCString("could not find channel");
 }
 
-void MCSoundExecDeleteSoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel)
+void MCSoundExecDeleteSoundChannel(MCExecContext& ctxt, MCStringRef p_channel)
 {
     bool t_success;
 	t_success = true;
