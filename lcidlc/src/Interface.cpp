@@ -38,7 +38,8 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
-	kInterfaceErrorBooleanDefaultWrongType,
+    kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue,
+	kInterfaceErrorDefaultWrongType,
 	kInterfaceErrorUnknownType,
 };
 
@@ -116,8 +117,11 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorOptionalParamImpliesIn:
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
-	case kInterfaceErrorBooleanDefaultWrongType:
-		fprintf(stderr, "Boolean defaults must be either true or false\n");
+    case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
+        fprintf(stderr, "Delfault values must be specified for non-pointer type optional parameters\n");
+        break;
+    case kInterfaceErrorDefaultWrongType:
+		fprintf(stderr, "Default specified is the wrong type\n");
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
@@ -402,11 +406,32 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: 'ref' not currently supported
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
-	
-	// RULE: optional 'boolean' default should be a name value
-	if (NameEqualToCString(p_type, "boolean") && p_default != nil && !ValueIsName(p_default))
-        InterfaceReport(self, p_where, kInterfaceErrorBooleanDefaultWrongType, nil);
-	
+    
+    // RULE: only pointer types may not have a default value
+    if (p_optional && p_default == nil &&
+        (NameEqualToCString(p_type, "boolean") ||
+         NameEqualToCString(p_type, "integer") ||
+         NameEqualToCString(p_type, "real")  ||
+         NameEqualToCString(p_type, "c-data")))
+        InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
+    
+    // RULE: wrong default type
+    if (p_default != nil)
+    {
+        bool t_correct_type = false;
+        if (!t_correct_type)
+           t_correct_type =  NameEqualToCString(p_type, "boolean") && ValueIsBoolean(p_default);
+        if (!t_correct_type)
+            t_correct_type = NameEqualToCString(p_type, "integer") && ValueIsInteger(p_default);
+        if (!t_correct_type)
+            t_correct_type = NameEqualToCString(p_type, "real") && ValueIsReal(p_default);
+        if (!t_correct_type)
+            t_correct_type = (NameEqualToCString(p_type, "c-string") || NameEqualToCString(p_type, "objc-string")) && ValueIsString(p_default);
+        
+        if (!t_correct_type)
+            InterfaceReport(self, p_where, kInterfaceErrorDefaultWrongType, nil);
+    }
+    
 	// RULE: optional parameters can only be 'in'
 	if (p_default != nil && p_param_type != kParameterTypeIn)
 		InterfaceReport(self, p_where, kInterfaceErrorOptionalParamImpliesIn, nil);

@@ -270,11 +270,30 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
     
+    bool t_is_bool = t_token -> type == kTokenTypeIdentifier;
+    if (t_is_bool)
+    {
+        bool t_bool;
+        
+        if (t_is_bool)
+        {
+            t_bool = !NameEqualToCString(t_token -> value, "false");
+            t_is_bool = !t_bool;
+        }
+        
+        if (!t_is_bool)
+        {
+            t_bool = NameEqualToCString(t_token -> value, "true");
+            t_is_bool = t_bool;
+        }
+        
+        if (t_is_bool)
+            BooleanCreateWithBool(t_bool, r_value);
+    }
+    
     if (!(t_token -> type == kTokenTypeString ||
          t_token -> type == kTokenTypeNumber ||
-        (t_token->type == kTokenTypeIdentifier &&
-         (NameEqualToCString(t_token -> value, "false") ||
-         NameEqualToCString(t_token -> value, "true")))))
+        t_is_bool))
 		return ParserReport(self, t_token -> start, kParserErrorConstantExpected, nil);
 		
 	if (!ScannerAdvance(self -> scanner))
@@ -282,7 +301,8 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 		
 	self -> position = t_token -> start;
 	
-	r_value = t_token -> value;
+    if (!t_is_bool)
+        r_value = t_token -> value;
 	
 	return true;
 }

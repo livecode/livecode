@@ -328,3 +328,40 @@ double NumberGetReal(NumberRef self)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool BooleanCreateWithBool(bool value, ValueRef& r_value)
+{
+    bool t_success;
+	t_success = true;
+	
+	Value *self;
+	self = nil;
+	if (t_success)
+		t_success = MCMemoryNew(self);
+    
+	if (t_success)
+	{
+		self -> references = 1;
+		self -> type = kValueTypeBoolean;
+        self -> boolean = value;
+        
+		s_names = self;
+		
+		r_value = self;
+	}
+	else
+	{
+		MCMemoryDelete(self);
+	}
+	
+	return t_success;
+
+}
+
+bool BooleanGetBool(ValueRef self)
+{
+    return self -> boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

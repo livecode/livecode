@@ -837,7 +837,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
                             switch(t_native_type)
                             {
                                 case kNativeTypeBoolean:
-                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, StringGetCStringPtr(NameGetString(t_parameter -> default_value)));
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, BooleanGetBool(t_parameter -> default_value) ? "true" : "false");
                                     break;
                                 case kNativeTypeObjcData:
                                     CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
