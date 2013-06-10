@@ -41,8 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "metacontext.h"
 
-#include "contextscalewrapper.h"
-
 #include "lnxflst.h"
 #include "printer.h"
 #include "lnxpsprinter.h"

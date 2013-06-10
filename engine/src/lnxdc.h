@@ -171,13 +171,6 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-#ifdef LIBGRAPHICS_BROKEN
-//TS: X11 Context creation
-	virtual MCContext *createcontext ( Drawable p_drawable, MCBitmap *p_mask) ;
-	virtual MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	virtual void freecontext(MCContext *p_context) ;
-#endif
-	
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 	
 	virtual uint2 getdepth();

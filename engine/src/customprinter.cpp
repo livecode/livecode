@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "customprinter.h"
 #include "license.h"
-#include "contextscalewrapper.h"
 #include "path.h"
 #include "pathprivate.h"
 #include "gradient.h"
