@@ -34,8 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity);
-void MCSystemBusyIndicatorStop ();
+//void MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity);
+//void MCSystemBusyIndicatorStop ();
 
 ////////////////////////////////////////////////////////////////////////////////
 

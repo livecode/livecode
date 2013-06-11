@@ -31,6 +31,7 @@
 #include "card.h"
 
 #include "mblad.h"
+#include "mblsyntax.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -44,12 +45,6 @@ MC_EXEC_DEFINE_SET_METHOD(Ad, TopLeftOfAd, 3)
 MC_EXEC_DEFINE_GET_METHOD(Ad, TopLeftOfAd, 3)
 MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
 
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-//void MCSystemInneractiveAdInit();
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 

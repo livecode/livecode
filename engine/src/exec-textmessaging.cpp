@@ -25,12 +25,12 @@
 #include "mcerror.h"
 #include "globals.h"
 #include "exec.h"
+#include "mblsyntax.h"
+
+////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(TextMessaging, ComposeTextMessage, 2)
 MC_EXEC_DEFINE_GET_METHOD(TextMessaging, CanComposeTextMessage, 1)
-
-bool MCSystemCanSendTextMessage();
-bool MCSystemComposeTextMessage(MCStringRef p_recipients, MCStringRef p_body);
 
 ////////////////////////////////////////////////////////////////////////////////
 

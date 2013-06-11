@@ -97,21 +97,6 @@ MCExecEnumTypeInfo* kMCSoundChannelPlayType = &_kMCSoundChannelPlayTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSoundChannelPlayType p_type, MCObjectHandle *p_object);
-bool MCSystemStopSoundChannel(MCStringRef p_channel);
-bool MCSystemPauseSoundChannel(MCStringRef p_channel);
-bool MCSystemResumeSoundChannel(MCStringRef p_channel);
-bool MCSystemDeleteSoundChannel(MCStringRef p_channel);
-bool MCSystemSetSoundChannelVolume(MCStringRef p_channel, int32_t p_volume);
-bool MCSystemSoundChannelVolume(MCStringRef p_channel, int32_t& r_volume);
-bool MCSystemSoundChannelStatus(MCStringRef p_channel, intenum_t& r_status);
-bool MCSystemSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound);
-bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef &r_sound);
-bool MCSystemListSoundChannels(MCStringRef &r_channels);
-bool MCSystemSetAudioCategory(intenum_t p_category);
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef p_file, intenum_t p_type)
 {
     bool t_success;

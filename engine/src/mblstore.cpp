@@ -123,8 +123,8 @@ bool MCPurchaseList(MCExecPoint& ep)
 	return true;
 }
 
-bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_context);
-bool MCPurchaseCreate(const char *p_product_id, void *p_context, MCPurchase *&r_purchase)
+bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context);
+bool MCPurchaseCreate(MCStringRef p_product_id, void *p_context, MCPurchase *&r_purchase)
 {
 	bool t_success = true;
 	
@@ -306,7 +306,7 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 ////////////////////////////////////////////////////////////////////////////////
 
 
-#include "param.h"
+//#include "param.h"
 
 //bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 

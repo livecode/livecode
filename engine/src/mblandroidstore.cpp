@@ -131,7 +131,7 @@ bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_context)
+bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context)
 {
     bool t_success = true;
     
@@ -141,12 +141,12 @@ bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_co
     {
         MCAndroidPurchase *t_android_data = nil;
         
-        t_success = p_product_id != nil;
+        t_success = MCStringGetLength(p_product_id) != 0;
         
         if (t_success)
             t_success = MCMemoryNew(t_android_data);
         if (t_success)
-            t_success = MCCStringClone(p_product_id, t_android_data->product_id);
+            t_success = MCCStringClone(MCStringGetCString(p_product_id), t_android_data->product_id);
         if (t_success)
             p_purchase->platform_data = t_android_data;
         else
@@ -298,8 +298,6 @@ static bool purchase_confirm(MCPurchase *p_purchase)
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 {
     MCLog("MCPurchaseConfirmDelivery(%p)", p_purchase);
-    if (!(p_purchase->state == kMCPurchaseStatePaymentReceived || p_purchase->state == kMCPurchaseStateRefunded || p_purchase->state == kMCPurchaseStateRestored))
-        return false;
     
     purchase_confirm(p_purchase);
 }

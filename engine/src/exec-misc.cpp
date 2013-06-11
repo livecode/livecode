@@ -44,9 +44,9 @@ MC_EXEC_DEFINE_GET_METHOD(Misc, LaunchUrl, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, Beep, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, Vibrate, 1)
 
-MC_EXEC_DEFINE_GET_METHOD(Misc, iphoneDeviceResolution, 1)
-MC_EXEC_DEFINE_SET_METHOD(Misc, iphoneUseDeviceResolution, 1)
-MC_EXEC_DEFINE_GET_METHOD(Misc, iphoneDeviceScale, 1)
+MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceResolution, 1)
+MC_EXEC_DEFINE_SET_METHOD(Misc, UseDeviceResolution, 1)
+MC_EXEC_DEFINE_GET_METHOD(Misc, DeviceScale, 1)
 MC_EXEC_DEFINE_GET_METHOD(Misc, PixelDensity, 1)
 
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, ShowStatusBar, 0)
@@ -76,47 +76,6 @@ MC_EXEC_DEFINE_GET_METHOD(Misc, DoNotBackupFile, 2)
 MC_EXEC_DEFINE_SET_METHOD(Misc, DoNotBackupFile, 2)
 MC_EXEC_DEFINE_GET_METHOD(Misc, FileDateProtection, 2)
 MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
-
-////////////////////////////////////////////////////////////////////////////////
-
-bool MCSystemGetDeviceToken (MCStringRef& r_device_token);
-bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url);
-
-bool MCSystemBeep(int32_t p_number_of_times);
-bool MCSystemVibrate(int32_t p_number_of_times);
-
-bool MCSystemGetDeviceResolution(MCStringRef& p_resolution);
-bool MCSystemGetPixelDensity(real64_t& r_density);
-bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res);
-bool MCSystemGetDeviceScale(real64_t& r_scale);
-
-bool MCSystemSetStatusBarStyle(intenum_t p_style);
-bool MCSystemShowStatusBar();
-bool MCSystemHideStatusBar();
-
-bool MCSystemSetKeyboardType(intenum_t p_type);
-bool MCSystemSetKeyboardReturnKey(intenum_t p_type);
-
-bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages);
-bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale);
-
-bool MCSystemClearTouches();
-
-bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier);
-bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier);
-
-bool MCSystemSetReachabilityTarget(MCStringRef p_hostname);
-bool MCSystemGetReachabilityTarget(MCStringRef& r_hostname);
-
-bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension);
-
-bool MCSystemSetRedrawInterval(int32_t p_interval);
-bool MCSystemSetAnimateAutorotation(bool p_enabled);
-
-bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup);
-bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup);
-bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_string, MCStringRef& r_status);
-bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -226,7 +185,7 @@ void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times)
     ctxt.Throw();
 }
 
-void MCMiscGetiphoneDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution)
+void MCMiscGetDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution)
 {
     if(MCSystemGetDeviceResolution(r_resolution))
         return;
@@ -234,7 +193,7 @@ void MCMiscGetiphoneDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolut
     ctxt.Throw();
 }
 
-void MCMiscSetiphoneUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res)
+void MCMiscSetUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res)
 {
     if (MCSystemSetDeviceUseResolution(p_use_control_device_res, p_use_control_device_res))
         return;
@@ -242,7 +201,7 @@ void MCMiscSetiphoneUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_r
     ctxt.Throw();
 }
 
-void MCMiscGetiphoneDeviceScale(MCExecContext& ctxt, real64_t& r_scale)
+void MCMiscGetDeviceScale(MCExecContext& ctxt, real64_t& r_scale)
 {
     if(MCSystemGetDeviceScale(r_scale))
         return;

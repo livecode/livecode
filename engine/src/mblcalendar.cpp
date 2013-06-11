@@ -239,8 +239,347 @@ MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_re
     return p_result;
 }
 
-void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCArrayRef &r_result)
+bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
 {
+    bool t_success;
+    
+    t_success = MCArrayGetCount(p_array) > 0;
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_allday;
+        MCNameCreateWithCString("allday", &t_key_allday);
+        MCAutoValueRef t_str_allday;
+    
+        t_success = MCArrayFetchValue(p_array, false, *t_key_allday, &t_str_allday);
+        
+        if (t_success)
+        {
+            if (MCStringIsEqualTo((MCStringRef)*t_str_allday, kMCTrueString, kMCCompareCaseless))
+                r_calendar.mcallday = true;
+            else
+                r_calendar.mcallday = false;
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_note;
+        MCNameCreateWithCString("note", &t_key_note);
+        MCAutoValueRef t_str_note;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_note, &t_str_note);
+        
+        if (t_success)
+        {
+            MCValueRelease(r_calendar.mcnote);
+            t_success = MCStringCopy((MCStringRef)*t_str_note, r_calendar.mcnote);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_title;
+        MCNameCreateWithCString("title", &t_key_title);
+        MCAutoValueRef t_str_title;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_title, &t_str_title);
+        
+        if (t_success)
+        {
+            MCValueRelease(r_calendar.mctitle);
+            t_success = MCStringCopy((MCStringRef)*t_str_title, r_calendar.mctitle);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_location;
+        MCNameCreateWithCString("location", &t_key_location);
+        MCAutoValueRef t_str_location;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_location, &t_str_location);
+        
+        if (t_success)
+        {
+            MCValueRelease(r_calendar.mclocation);
+            t_success = MCStringCopy((MCStringRef)*t_str_location, r_calendar.mclocation);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_calendar;
+        MCNameCreateWithCString("calendar", &t_key_calendar);
+        MCAutoValueRef t_str_calendar;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_calendar, &t_str_calendar);
+        
+        if (t_success)
+        {
+            MCValueRelease(r_calendar.mccalendar);
+            t_success = MCStringCopy((MCStringRef)*t_str_calendar, r_calendar.mccalendar);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_frequency;
+        MCNewAutoNameRef t_key_frequency_count;
+        MCNewAutoNameRef t_key_frequency_interval;
+        MCNameCreateWithCString("frequency", &t_key_frequency);
+        MCNameCreateWithCString("frequencycount", &t_key_frequency_count);
+        MCNameCreateWithCString("frequencyinterval", &t_key_frequency_interval);
+        MCAutoValueRef t_str_frequency;
+        MCAutoValueRef t_int_frequency_count;
+        MCAutoValueRef t_int_frequency_interval;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_frequency, &t_str_frequency);
+        
+        if (t_success)
+        {
+            MCValueRelease(r_calendar.mcfrequency);
+            t_success = MCStringCopy((MCStringRef)*t_str_frequency, r_calendar.mcfrequency);
+        }
+        
+        if (t_success)
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_count, &t_int_frequency_count);
+            
+        if (t_success)
+            r_calendar.mcfrequencycount = MCNumberFetchAsInteger((MCNumberRef)*t_int_frequency_count);
+        
+        if (t_success)
+            t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_interval, &t_int_frequency_interval);
+        
+        if (t_success)
+            r_calendar.mcfrequencyinterval = MCNumberFetchAsInteger((MCNumberRef)*t_int_frequency_interval);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert1;
+        MCNameCreateWithCString("alert1", &t_key_alert1);
+        MCAutoValueRef t_int_alert1;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert1, &t_int_alert1);
+        
+        if (t_success)
+            r_calendar.mcalert1 = MCNumberFetchAsInteger((MCNumberRef)*t_int_alert1);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert2;
+        MCNameCreateWithCString("alert2", &t_key_alert2);
+        MCAutoValueRef t_int_alert2;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_alert2, &t_int_alert2);
+        
+        if (t_success)
+            r_calendar.mcalert2 = MCNumberFetchAsInteger((MCNumberRef)*t_int_alert2);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_startdate;
+        MCNameCreateWithCString("startdate", &t_key_startdate);
+        MCAutoValueRef t_int_startdate;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_startdate, &t_int_startdate);
+        
+        if (t_success)
+        {
+            MCExecPoint ep(nil, nil, nil);
+            
+            ep.setint(MCNumberFetchAsInteger((MCNumberRef)*t_int_startdate));
+            t_success = MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, r_calendar.mcstartdate);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_enddate;
+        MCNameCreateWithCString("enddate", &t_key_enddate);
+        MCAutoValueRef t_int_enddate;
+        
+        t_success = MCArrayFetchValue(p_array, false, *t_key_enddate, &t_int_enddate);
+        
+        if (t_success)
+        {
+            MCExecPoint ep(nil, nil, nil);
+            
+            ep.setint(MCNumberFetchAsInteger((MCNumberRef)*t_int_enddate));
+            t_success = MCD_convert_to_datetime(ep, CF_SECONDS, CF_SECONDS, r_calendar.mcenddate);
+        }
+    }
+    
+    return t_success;
+}
+
+
+bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayRef &r_result)
+{
+    bool t_success = false;
+    
+    if (!MCArrayIsMutable(r_result))
+        t_success = MCArrayCreateMutable(r_result);
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_allday;
+        MCNameCreateWithCString("allday", &t_key_allday);
+        MCAutoStringRef t_str_allday;
+        
+        if (p_calendar.mcallday == true)
+            t_success = MCStringCopy(kMCTrueString, &t_str_allday);
+        else
+            t_success = MCStringCopy(kMCFalseString, &t_str_allday);
+        
+        t_success = MCArrayStoreValue(r_result, false, *t_key_allday, *t_str_allday);
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_note;
+        MCNameCreateWithCString("note", &t_key_note);        
+        if (MCStringGetLength(p_calendar.mcnote) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_note, p_calendar.mcnote);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_title;
+        MCNameCreateWithCString("title", &t_key_title);
+        
+        if (MCStringGetLength(p_calendar.mctitle) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_title, p_calendar.mctitle);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_location;
+        MCNameCreateWithCString("location", &t_key_location);        
+        if (MCStringGetLength(p_calendar.mclocation) > 0)
+        {
+            MCArrayStoreValue(r_result, false, *t_key_location, p_calendar.mclocation);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_calendar;
+        MCNameCreateWithCString("calendar", &t_key_calendar);
+        MCAutoStringRef t_str_calendar;
+        
+        if (MCStringGetLength(p_calendar.mccalendar) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_calendar, p_calendar.mccalendar);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_frequency;
+        MCNewAutoNameRef t_key_frequency_count;
+        MCNewAutoNameRef t_key_frequency_interval;
+        MCNameCreateWithCString("frequency", &t_key_frequency);
+        MCNameCreateWithCString("frequencycount", &t_key_frequency_count);
+        MCNameCreateWithCString("frequencyinterval", &t_key_frequency_interval);
+        MCAutoNumberRef t_int_frequency_count;
+        MCAutoNumberRef t_int_frequency_interval;
+        
+        if (MCStringGetLength(p_calendar.mcfrequency) > 0)
+        {
+            t_success = MCArrayStoreValue(r_result, false, *t_key_frequency, p_calendar.mcfrequency);
+            
+            if (t_success)
+                t_success = MCNumberCreateWithInteger(p_calendar.mcfrequencycount, &t_int_frequency_count);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_frequency_count, *t_int_frequency_count);
+            
+            if (t_success)
+                t_success = MCNumberCreateWithInteger(p_calendar.mcfrequencyinterval, &t_int_frequency_interval);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_frequency_interval, *t_int_frequency_interval);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert1;
+        MCNameCreateWithCString("alert1", &t_key_alert1);
+        MCAutoNumberRef t_int_alert1;
+        
+        if (p_calendar.mcalert1 >= 0)
+        {
+            t_success = MCNumberCreateWithInteger(p_calendar.mcalert1, &t_int_alert1);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_alert1, *t_int_alert1);
+        }
+    }
+    
+    if (t_success)
+    {
+        MCNewAutoNameRef t_key_alert2;
+        MCNameCreateWithCString("alert2", &t_key_alert2);
+        MCAutoNumberRef t_int_alert2;
+        
+        if (p_calendar.mcalert2 >= 0)
+        {
+            t_success = MCNumberCreateWithInteger(p_calendar.mcalert2, &t_int_alert2);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_alert2, *t_int_alert2);
+        }
+    }
+    
+    if (t_success)
+    {
+        // Convert the start date to seconds
+        int32_t t_secs;
+        if (MCD_convert_from_datetime(ctxt.GetEP(), CF_SECONDS, CF_SECONDS, p_calendar.mcstartdate))
+        {
+            t_secs = ctxt.GetEP().getnvalue();
+            
+            MCNewAutoNameRef t_key_startdate;
+            MCNameCreateWithCString("startdate", &t_key_startdate);
+            MCAutoNumberRef t_int_startdate;
+            
+            t_success = MCNumberCreateWithInteger(t_secs, &t_int_startdate);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_startdate, *t_int_startdate);
+        }
+    }
+    
+    if (t_success)
+    {
+        // Convert the start date to seconds
+        int32_t t_secs;
+        if (MCD_convert_from_datetime(ctxt.GetEP(), CF_SECONDS, CF_SECONDS, p_calendar.mcenddate))
+        {
+            t_secs = ctxt.GetEP().getnvalue();
+            
+            MCNewAutoNameRef t_key_enddate;
+            MCNameCreateWithCString("enddate", &t_key_enddate);
+            MCAutoNumberRef t_int_enddate;
+            
+            t_success = MCNumberCreateWithInteger(t_secs, &t_int_enddate);
+            
+            if (t_success)
+                t_success = MCArrayStoreValue(r_result, false, *t_key_enddate, *t_int_enddate);
+        }
+    }
+    
+    return t_success;
+
  // TODO - use array instead of MCVariableValue
 
 //    MCExecPoint ep(nil, nil, nil);

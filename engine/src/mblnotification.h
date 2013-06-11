@@ -19,16 +19,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblsyntax.h"
 
-typedef struct
-{
-    MCStringRef body;
-    MCStringRef action;
-    MCStringRef user_info;
-    uint32_t time; // in seconds
-    uint32_t badge_value;
-    bool play_sound;
-} MCNotification;
-
 void MCNotificationPostLocalNotificationEvent(MCString pPayload);
 void MCNotificationPostPushNotificationEvent(MCString p_payload);
 void MCNotificationPostPushRegistered (MCString p_registration_text);

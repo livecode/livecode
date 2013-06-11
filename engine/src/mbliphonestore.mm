@@ -61,7 +61,7 @@ bool MCPurchaseFindByTransaction(SKPaymentTransaction *p_transaction, MCPurchase
 	return false;
 }
 
-bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_context)
+bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_context)
 {
 	bool t_success = true;
 
@@ -73,13 +73,13 @@ bool MCPurchaseInit(MCPurchase *p_purchase, const char *p_product_id, void *p_co
 	{
 		MCiOSPurchase *t_ios_data = nil;
 
-		t_success = p_product_id != nil;
+		t_success = MCStringGetLength(p_product_id) != 0;
 		
 		if (t_success)
 			t_success = MCMemoryNew(t_ios_data);
 		
 		if (t_success)
-			t_success = nil != (t_ios_data->product_id = [NSString stringWithCString:p_product_id encoding:NSMacOSRomanStringEncoding]);
+			t_success = nil != (t_ios_data->product_id = [NSString stringWithCString:MCStringGetCString(p_product_id) encoding:NSMacOSRomanStringEncoding]);
 		if (t_success)
 			t_success = nil != (t_ios_data->payment = [SKMutablePayment paymentWithProductIdentifier: t_ios_data->product_id]);
 		
@@ -239,9 +239,6 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 
 bool MCPurchaseConfirmDelivery(MCPurchase *p_purchase)
 {
-	if (p_purchase == nil || !(p_purchase->state == kMCPurchaseStatePaymentReceived || p_purchase->state == kMCPurchaseStateRestored))
-		return false;
-	
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	[[SKPaymentQueue defaultQueue] finishTransaction: t_ios_data->transaction];
@@ -265,10 +262,7 @@ bool MCStoreRestorePurchases()
 }
 
 bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef &r_error)
-{
-	if (p_purchase == nil || p_purchase->state != kMCPurchaseStateError)
-		return false;
-	
+{	
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
 	
 	if (t_ios_data == nil)

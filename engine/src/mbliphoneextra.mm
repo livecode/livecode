@@ -252,7 +252,7 @@ UIWindow *MCIPhoneGetWindow(void);
 struct export_image_t
 {
 	MCExportImageToAlbumDelegate *delegate;
-	MCString raw_data;
+	MCStringRef raw_data;
 };
 
 static void export_image(void *p_context)
@@ -261,7 +261,7 @@ static void export_image(void *p_context)
 	ctxt = (export_image_t *)p_context;
 	
 	NSData *t_data;
-	t_data = [[NSData alloc] initWithBytes: (void *)ctxt -> raw_data . getstring() length: ctxt -> raw_data . getlength()];
+	t_data = [[NSData alloc] initWithBytes: (void *)MCStringGetCString(ctxt -> raw_data) length: MCStringGetLength(ctxt -> raw_data)];
 	
 	UIImage *t_img;
 	t_img = [[UIImage alloc] initWithData: t_data];
@@ -342,7 +342,7 @@ static void export_image(void *p_context)
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
 	export_image_t ctxt;
-	ctxt . raw_data = MCStringGetOldString(p_raw_data);
+	MCStringCopy(p_raw_data, ctxt . raw_data);
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
 
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);

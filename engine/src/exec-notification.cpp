@@ -29,6 +29,7 @@
 #include "param.h"
 
 #include "mblnotification.h"
+#include "mblsyntax.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -40,17 +41,6 @@ MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelLocalNotification, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Notification, CancelAllNotifications, 0)
 MC_EXEC_DEFINE_GET_METHOD(Notification, NotificationBadgeValue, 0)
 MC_EXEC_DEFINE_SET_METHOD(Notification, NotificationBadgeValue, 1)
-
-////////////////////////////////////////////////////////////////////////////////
-
-
-bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id);
-bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts);
-bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification);
-bool MCSystemCancelLocalNotification(uint32_t p_alert_descriptor);
-bool MCSystemCancelAllLocalNotifications ();
-bool MCSystemGetNotificationBadgeValue (uint32_t &r_badge_value);
-bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value);
 
 ////////////////////////////////////////////////////////////////////////////////
 

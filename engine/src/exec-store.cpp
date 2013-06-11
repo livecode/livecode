@@ -88,7 +88,7 @@ void MCStoreExecCreatePurchase(MCExecContext& ctxt, MCStringRef p_product_id, ui
     MCPurchase *t_purchase = nil;
     bool t_success = true;
     
-    t_success = MCPurchaseCreate(MCStringGetCString(p_product_id), nil, t_purchase);
+    t_success = MCPurchaseCreate(p_product_id, nil, t_purchase);
     
     if (t_success)
         r_id = t_purchase->id;
@@ -119,19 +119,20 @@ void MCStoreGetPurchaseState(MCExecContext& ctxt, int p_id, MCStringRef& r_state
 void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error)
 {
     bool t_success = true;
-	MCStringRef t_error = nil;
+	MCAutoStringRef t_error;
 	MCPurchase *t_purchase = nil;
     
     t_success = MCPurchaseFindById(p_id, t_purchase);
 	
+    if (t_success)
+        t_success = (t_purchase == nil || t_purchase->state != kMCPurchaseStateError);
+    
 	if (t_success)
-		t_success = MCPurchaseGetError(t_purchase, t_error);
+		t_success = MCPurchaseGetError(t_purchase, &t_error);
 	
 	if (t_success)
-    {
-        MCStringCopy(t_error, r_error);
-        return;
-    }
+        if (MCStringCopy(*t_error, r_error))
+            return;
     
     ctxt.Throw();
 }
@@ -197,6 +198,9 @@ void MCStoreExecConfirmPurchaseDelivery(MCExecContext& ctxt, uint32_t p_id)
     bool t_success = true;
     
     t_success = MCPurchaseFindById(p_id, t_purchase);
+    
+    if (t_success)
+        t_success = (!(t_purchase->state == kMCPurchaseStatePaymentReceived || t_purchase->state == kMCPurchaseStateRefunded || t_purchase->state == kMCPurchaseStateRestored));
 	
 	if (t_success)
 		t_success = MCPurchaseConfirmDelivery(t_purchase);

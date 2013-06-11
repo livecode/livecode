@@ -34,6 +34,9 @@
 MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartBusyIndicator, 3)
 MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopBusyIndicator, 0)
 
+MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StartActivityIndicator, 3)
+MC_EXEC_DEFINE_EXEC_METHOD(BusyIndicator, StopActivityIndicator, 0)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecEnumTypeElementInfo _kMCBusyIndicatorElementInfo[] =
@@ -45,17 +48,28 @@ static MCExecEnumTypeElementInfo _kMCBusyIndicatorElementInfo[] =
 
 static MCExecEnumTypeInfo _kMCBusyIndicatorTypeInfo =
 {
-    "BusyIndicator.Indicator",
+    "BusyIndicator.BusyIndicator",
     sizeof(_kMCBusyIndicatorElementInfo) / sizeof(MCExecEnumTypeElementInfo),
     _kMCBusyIndicatorElementInfo
 };
 
 MCExecEnumTypeInfo *kMCBusyIndicatorTypeInfo = &_kMCBusyIndicatorTypeInfo;
 
-////////////////////////////////////////////////////////////////////////////////
+static MCExecEnumTypeElementInfo _kMCActivityIndicatorElementInfo[] =
+{
+    { "white", kMCActivityIndicatorWhite },
+    { "large white", kMCActivityIndicatorWhiteLarge},
+    { "gray", kMCActivityIndicatorGray}
+};
 
-bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
-bool MCSystemBusyIndicatorStop ();
+static MCExecEnumTypeInfo _kMCActivityIndicatorTypeInfo =
+{
+    "BusyIndicator.ActivityIndicator",
+    sizeof(_kMCActivityIndicatorElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCActivityIndicatorElementInfo
+};
+
+MCExecEnumTypeInfo* kMCActivityIndicatorTypeInfo = &_kMCActivityIndicatorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -74,4 +88,18 @@ void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt)
         return;
     
     ctxt.Throw();
+}
+
+void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y)
+{
+    // Check whether the location is provided
+    if (p_location_x == nil || p_location_y == nil)
+        MCSystemActivityIndicatorStart(p_indicator, -1, -1);
+    else
+        MCSystemActivityIndicatorStart(p_indicator, *p_location_x, *p_location_y);
+}
+
+void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt)
+{
+    MCSystemActivityIndicatorStop ();
 }

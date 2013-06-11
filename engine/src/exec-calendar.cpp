@@ -38,6 +38,9 @@ MC_EXEC_DEFINE_EXEC_METHOD(Calendar, ShowEvent, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Calendar, CreateEvent, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Calendar, UpdateEvent, 1)
 MC_EXEC_DEFINE_GET_METHOD(Calendar, EventData, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Calendar, RemoveEvent, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Calendar, AddEvent, 2)
+MC_EXEC_DEFINE_GET_METHOD(Calendar, CalendarEvent, 0)
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -63,8 +66,10 @@ void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id)
 void MCCalendarExecCreateEvent(MCExecContext& ctxt)
 {
     MCAutoStringRef t_result;
+    
+    bool t = MCSystemCreateEvent(&t_result);
 
-    if (MCSystemCreateEvent(&t_result))
+    if (t)
     {
         ctxt.SetTheResultToValue(*t_result);
         return;
@@ -111,21 +116,28 @@ void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id, bool p_reo
     ctxt.Throw();
 }
 
-void MCCalendarExecAddEvent(MCExecContext& ctxt, MCCalendar p_new_event_data, MCStringRef p_id)
+void MCCalendarExecAddEvent(MCExecContext& ctxt, MCArrayRef p_data)
 {
     MCAutoStringRef t_result;
+    MCCalendar t_new_event_data;
+    bool t_success;
     
-    if (MCSystemAddEvent(p_new_event_data, &t_result))
+    t_success = MCArrayDataToCalendar(p_data, t_new_event_data);
+    
+    if (t_success)
     {
-        ctxt.SetTheResultToValue(*t_result);
-        return;
+        if (MCSystemAddEvent(t_new_event_data, &t_result))
+        {
+            ctxt.SetTheResultToValue(*t_result);
+            return;
+        }
     }
     
     ctxt.SetTheResultToEmpty();
     ctxt.Throw();
 }
 
-void MCGetCalendarsEventExec(MCExecContext& ctxt)
+void MCCalendarGetCalendars(MCExecContext& ctxt)
 {
     MCAutoStringRef t_result;
     
@@ -139,7 +151,7 @@ void MCGetCalendarsEventExec(MCExecContext& ctxt)
     ctxt.Throw();
 }
 
-void MCFindEventExec(MCExecContext& ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
+void MCCalendarExecFindEvent(MCExecContext& ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
 {
     MCAutoStringRef t_result;
     

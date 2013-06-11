@@ -310,7 +310,6 @@
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
 		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
 		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
-		BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
 		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
@@ -504,7 +503,7 @@
 		4C34550114F3FEA1008D7E50 /* mbliphonead.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonead.mm; path = src/mbliphonead.mm; sourceTree = "<group>"; };
 		4C34550314F3FF12008D7E50 /* AdModule.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = AdModule.java; sourceTree = "<group>"; };
 		4C6D0A371407D04D003B1BA3 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
-		4C7D1CE31476747700129F01 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = exec.h; path = src/exec.h; sourceTree = "<group>"; };
+		4C7D1CE31476747700129F01 /* exec.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; lineEnding = 0; name = exec.h; path = src/exec.h; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.objcpp; };
 		4C7D1CE5147674C300129F01 /* mblcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcamera.cpp; path = src/mblcamera.cpp; sourceTree = "<group>"; };
 		4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecamera.mm; path = src/mbliphonecamera.mm; sourceTree = "<group>"; };
 		4C7D1CFA1476863600129F01 /* mblsyntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsyntax.h; path = src/mblsyntax.h; sourceTree = "<group>"; };
@@ -923,7 +922,7 @@
 		BE449508175CE8AC00346B49 /* syntax.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syntax.cpp; path = src/syntax.cpp; sourceTree = "<group>"; };
 		BE449509175CE8AC00346B49 /* syntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = syntax.h; path = src/syntax.h; sourceTree = "<group>"; };
 		BE44950C175CF03E00346B49 /* iphone_test.rev */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.rev; path = ../iphone_test.rev; sourceTree = "<group>"; };
-		BE449995175D029600346B49 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; };
+		BE449995175D029600346B49 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		BE449997175D02AE00346B49 /* exec-textmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-textmessaging.cpp"; path = "src/exec-textmessaging.cpp"; sourceTree = "<group>"; };
 		BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
 		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
@@ -931,7 +930,6 @@
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
 		BE93A90517608B4500791270 /* exec-notification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-notification.cpp"; path = "src/exec-notification.cpp"; sourceTree = "<group>"; };
 		BE93A9091760D32200791270 /* exec-busyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-busyindicator.cpp"; path = "src/exec-busyindicator.cpp"; sourceTree = "<group>"; };
-		BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-activityindicator.cpp"; path = "src/exec-activityindicator.cpp"; sourceTree = "<group>"; };
 		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
 		BE94042B175F6308003EAB87 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
 		BE94042C175F6308003EAB87 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
@@ -1386,10 +1384,6 @@
 		BE4494B6175CDE4E00346B49 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
-				768D66C41765E11300F203A3 /* exec-pick.cpp */,
-				768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */,
-				BE449502175CDE7D00346B49 /* exec-interface */,
-				BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */,
 				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
 				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
 				BE4494B7175CDE7400346B49 /* exec-array.cpp */,
@@ -1410,10 +1404,12 @@
 				BE4494D2175CDE7400346B49 /* exec-math.cpp */,
 				BE94594A17621812008408DE /* exec-misc.cpp */,
 				BE4494D3175CDE7400346B49 /* exec-multimedia.cpp */,
+				768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */,
 				BE4494D4175CDE7400346B49 /* exec-network.cpp */,
 				BE93A90517608B4500791270 /* exec-notification.cpp */,
 				BE94042C175F6308003EAB87 /* exec-orientation.cpp */,
 				BE4494D5175CDE7400346B49 /* exec-pasteboard.cpp */,
+				768D66C41765E11300F203A3 /* exec-pick.cpp */,
 				BE4494D6175CDE7400346B49 /* exec-printing.cpp */,
 				BE4494D7175CDE7400346B49 /* exec-scripting.cpp */,
 				BE4494D8175CDE7400346B49 /* exec-security.cpp */,
@@ -1425,6 +1421,7 @@
 				BE4494DB175CDE7400346B49 /* exec-text.cpp */,
 				BE449997175D02AE00346B49 /* exec-textmessaging.cpp */,
 				BE4494DC175CDE7400346B49 /* exec.cpp */,
+				BE449502175CDE7D00346B49 /* exec-interface */,
 				BE449502175CDE7D00346B49 /* exec-interface */,
 			);
 			name = Exec;
@@ -2380,7 +2377,6 @@
 				BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */,
 				BE93A9061760912100791270 /* exec-notification.cpp in Sources */,
 				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
-				BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */,
 				BE9459491761E250008408DE /* exec-sound.cpp in Sources */,
 				BE94594B17621812008408DE /* exec-misc.cpp in Sources */,
 			);

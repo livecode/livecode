@@ -3568,9 +3568,9 @@ extern MCExecMethodInfo* kMCCalendarGetEventDataMethodInfo;
 extern MCExecMethodInfo* kMCCalendarExecCreateEventMethodInfo;
 extern MCExecMethodInfo* kMCCalendarExecUpdateEventMethodInfo;
 extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
-//extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
-//extern MCExecMethodInfo* kMCCalendarGetCalendarsMethodInfo;
-//extern MCExecMethodInfo* kMCCalendarExecFindEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarGetCalendarsMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecFindEventMethodInfo;
 
 
 void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id);
@@ -3578,9 +3578,9 @@ void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r
 void MCCalendarExecCreateEvent(MCExecContext& ctxt);
 void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id);
 void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id);
-//void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id);
-//void MCCalendarGetCalendars(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_calendars);
-//void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
+void MCCalendarExecAddEvent(MCExecContext& ctxt, MCArrayRef p_data);
+void MCCalendarGetCalendars(MCExecContext& ctxt);
+void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
 
 
 ///////////
@@ -3657,9 +3657,9 @@ extern MCExecMethodInfo* kMCMiscGetDeviceTokenMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetLaunchUrlMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecBeepMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecVibrateMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetiphoneDeviceResolutionMethodInfo;
-extern MCExecMethodInfo* kMCMiscSetiphoneUseDeviceResolutionMethodInfo;
-extern MCExecMethodInfo* kMCMiscGetiphoneDeviceScaleMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetDeviceResolutionMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetUseDeviceResolutionMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetDeviceScaleMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetPixelDensityMethodInfo;
 extern MCExecMethodInfo* kMCMiscSetStatusBarStyleMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecShowStatusBarMethodInfo;
@@ -3688,9 +3688,9 @@ void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
 void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times);
 void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times);
 
-void MCMiscGetiphoneDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution);
-void MCMiscSetiphoneUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res);
-void MCMiscGetiphoneDeviceScale(MCExecContext& ctxt, real64_t& r_scale);
+void MCMiscGetDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution);
+void MCMiscSetUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res);
+void MCMiscGetDeviceScale(MCExecContext& ctxt, real64_t& r_scale);
 void MCMiscGetPixelDensity(MCExecContext& ctxt, real64_t& r_density);
 
 void MCMiscSetStatusBarStyle(MCExecContext& ctxt, intenum_t p_style);
