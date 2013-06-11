@@ -69,23 +69,6 @@ enum MCSensorType
     kMCSensorTypeRotationRate,
 };
 
-void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
-void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
-
-void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor);
-
-void MCSensorGetDetailedLocation(MCExecContext& ctxt, MCArrayRef& r_detailed_location);
-void MCSensorGetLocation(MCExecContext& ctxt, MCStringRef& r_location);
-void MCSensorGetDetailedHeading(MCExecContext& ctxt, MCArrayRef& r_detailed_heading);
-void MCSensorGetHeading(MCExecContext& ctxt, MCStringRef& r_heading);
-void MCSensorGetDetailedAcceleration(MCExecContext& ctxt, MCArrayRef& r_detailed_acceleration);
-void MCSensorGetAcceleration(MCExecContext& ctxt, MCStringRef& r_acceleration);
-void MCSensorGetDetailedRotationRate(MCExecContext& ctxt, MCArrayRef& r_detailed_rotation_rate);
-void MCSensorGetRotationRate(MCExecContext& ctxt, MCStringRef& r_rotation_rate);
-
-void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
-void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
-
 ///////////////////////////////////////////////////////////////////////////////
 // from Busy Indicator
 
@@ -120,10 +103,6 @@ void MCActivityIndicatorExecStop (MCExecContext& ctxt);
 ///////////////////////////////////////////////////////////////////////////////
 // from Dialog module
 
-void MCDialogExecPickDate(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
-void MCDialogExecPickTime(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
-void MCDialogExecPickDateAndTime(MCExecContext& ctxt, MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_cancel_button, bool p_done_button, MCRectangle p_button_rect);
-
 struct const_int32_array_t
 {
     int32_t *elements;
@@ -143,9 +122,6 @@ enum
     kMCLines,
     kMCItems,    
 };
-
-void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType chunk_type, const_cstring_array_t *option_lists, const char *initial_choice, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, char *&r_picked_options);
-void MCDialogExecPickOptionByIndex(MCExecContext &p_ctxt, MCChunkType chunk_type, const_cstring_array_t *option_lists, const_int32_array_t initial_indices, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, const_int32_array_t &r_picked_options);
 
 typedef uint32_t MCMediaType;
 enum

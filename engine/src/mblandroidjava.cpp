@@ -607,7 +607,7 @@ bool MCJavaIterateMap(JNIEnv *env, jobject p_map, MCJavaMapCallback p_callback, 
 	
 	return t_success;
 }
-
+/*
 bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_array, jobject &r_object)
 {
 	if (!init_hashmap_class(p_env))
@@ -652,7 +652,50 @@ bool MCJavaMapFromArray(JNIEnv *p_env, MCExecPoint &p_ep, MCVariableValue *p_arr
 	
 	return t_success;
 }
+*/
 
+bool MCJavaMapFromArray(JNIEnv *p_env, MCArrayRef p_array, jobject &r_object)
+{
+	if (!init_hashmap_class(p_env))
+		return false;
+	
+	bool t_success = true;
+	
+	uindex_t t_index = 0;
+	jobject t_map = nil;
+	
+	t_success = MCJavaInitMap(p_env, t_map);
+    
+    MCValueRef t_element;
+    MCNameRef t_name;
+    
+	while (t_success && MCArrayIterate(p_array, t_index, t_name, t_element))
+	{
+		jobject t_jobj = nil;
+		if (MCValueIsArray(t_element))
+			t_success = MCJavaMapFromArray(p_env, (MCArrayRef)t_element, t_jobj);
+		else
+		{
+			jstring t_jstring = nil;
+			if (t_success)
+				t_success = MCJavaStringFromNative(p_env, MCStringGetCString((MCStringRef)t_element), t_jstring);
+			if (t_success)
+				t_jobj = t_jstring;
+		}
+		if (t_success)
+			t_success = MCJavaMapPutStringToObject(p_env, t_map, MCNameGetCString(t_name), t_jobj);
+		if (t_jobj != nil)
+			p_env->DeleteLocalRef(t_jobj);
+	}
+	if (t_success)
+		r_object = t_map;
+	else if (t_map != nil)
+		MCJavaFreeMap(p_env, t_map);
+	
+	return t_success;
+}
+
+/*
 typedef struct
 {
 	MCVariableValue *array;
@@ -715,6 +758,72 @@ bool MCJavaMapToArray(JNIEnv *p_env, MCExecPoint &p_ep, jobject p_map, MCVariabl
 		r_array = t_array;
 	else
 		delete t_array;
+	
+	return t_success;
+}
+*/
+
+typedef struct
+{
+	MCArrayRef array;
+	MCExecPoint *ep;
+} map_to_array_context_t;
+
+static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_value, void *p_context)
+{
+	bool t_success = true;
+	
+	map_to_array_context_t *t_context = (map_to_array_context_t*)p_context;
+	
+    MCNewAutoNameRef t_key;
+    MCNameCreateWithCString(p_key, &t_key);
+	t_success = t_context->array->lookup_element(*(t_context->ep), MCString(p_key), t_array_entry) == ES_NORMAL;
+	
+	if (t_success)
+	{
+		if (p_env->IsInstanceOf(p_value, s_string_class))
+		{
+            MCAutoStringRef t_string;
+			char *t_string_value = nil;
+			t_success = MCJavaStringToNative(p_env, (jstring)p_value, t_string_value);
+			if (t_success && t_string_value != nil)
+				t_success = MCStringCreateWithCString(t_string_value, &t_string);
+            if (t_success)
+                t_success = MCArrayStoreValue(p_context -> array, false, *t_key, *t_string);
+			if (t_string_value != nil)
+				MCCStringFree(t_string_value);
+		}
+		else if (p_env->IsInstanceOf(p_value, s_hash_map_class))
+		{
+            MCAutoArraYRef t_array;
+			map_to_array_context_t t_new_context;
+			t_new_context.array = &t_array;
+			t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);
+		}
+		else
+			t_success = false;
+	}
+	
+	return t_success;
+}
+
+bool MCJavaMapToArray(JNIEnv *p_env, jobject p_map, MCArrayRef &r_array)
+{
+	if (!init_string_class(p_env) || !init_hashmap_class(p_env))
+		return false;
+	
+	bool t_success = true;
+	
+	MCAutoArrayRef t_array;
+	
+	map_to_array_context_t t_context;
+	t_context.array = &t_array;
+	
+	if (t_success)
+		t_success = MCJavaIterateMap(p_env, p_map, s_map_to_array_callback, &t_context);
+	
+	if (t_success)
+		r_array = MCValueRetain(*t_array);
 	
 	return t_success;
 }

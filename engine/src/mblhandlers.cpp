@@ -669,7 +669,7 @@ Exec_stat MCHandleComposeMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -692,7 +692,7 @@ Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -715,7 +715,7 @@ Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -738,7 +738,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -1116,6 +1116,8 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
 {
 	bool t_success = true;
@@ -1141,8 +1143,6 @@ bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r
 	
 	return t_success;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeoplePickerNavigationController
 {
@@ -1203,7 +1203,7 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
-	if (MCParseParameters(p_parameters, "axxx", &t_contact, &t_title, &t_message, &t_alternate_name))
+	if (MCParseParameters(p_parameters, "axxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())
@@ -1280,20 +1280,19 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 {
-    const char *t_contact_name = NULL;
-    const char *r_result = NULL;
+    MCAutoStringRef t_contact_name;
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
     // Handle parameters.
     if (p_parameters)
     {
         p_parameters->eval(ep);
-        t_contact_name = ep.getcstring();
+        /* UNCHECKED */ ep . copyasstringref(&t_contact_name);
     }
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    //MCAddressBookExecFindContact(ctxt, t_contact_name);
+    MCAddressBookExecFindContact(ctxt, *t_contact_name);
     // Set return value
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -3147,7 +3146,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
    	uint32_t t_initial_index;
     // get the mandatory options list and the initial index
     // HC-30-2011-30 [[ Bug 10036 ]] iPad pick list only returns 0.
-	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+	t_success = MCParseParameters(p_parameters, "x", &t_string_param);
     if (t_success)
     {
         t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
@@ -3164,7 +3163,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     // get further options lists if they exist
     while (t_success && t_more_optional)
     {
-    	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+    	t_success = MCParseParameters(p_parameters, "x", &t_string_param);
         if (t_success)
         {
             if (t_string_param != nil)
@@ -3211,7 +3210,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", t_string_param);
+        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
     }
     
     MCExecContext ctxt(ep);
