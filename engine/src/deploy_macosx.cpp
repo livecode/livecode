@@ -1635,6 +1635,7 @@ static bool MCDeployToMacOSXFat(const MCDeployParameters& p_params, bool p_embed
 		}
 	}
 	
+	return true;
 }
 
 // This method verifies that the given engine is for Mac. It checks the CPU is
