@@ -256,6 +256,7 @@
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		762A39BD1767429C00A60EA7 /* mblandroidcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 762A39BC1767429C00A60EA7 /* mblandroidcamera.cpp */; };
 		768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
@@ -877,6 +878,7 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		762A39BC1767429C00A60EA7 /* mblandroidcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcamera.cpp; path = src/mblandroidcamera.cpp; sourceTree = "<group>"; };
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
@@ -1275,6 +1277,7 @@
 				E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
+				762A39BC1767429C00A60EA7 /* mblandroidcamera.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
 				4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */,
@@ -2357,6 +2360,7 @@
 				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
 				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
+				762A39BD1767429C00A60EA7 /* mblandroidcamera.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

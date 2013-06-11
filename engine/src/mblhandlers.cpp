@@ -3566,4 +3566,137 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	
+	MCCameraSourceType t_source;
+	p_parameters -> eval_argument(ep);
+	if (MCU_strcasecmp(ep . getcstring(), "front"))
+		t_source = kMCCameraSourceTypeFront;
+	else if (MCU_strcasecmp(ep . getcstring(), "rear"))
+		t_source = kMCCameraSourceTypeRear;
+	else
+		return ES_NORMAL;
+	
+    MCExecContext ctxt(ep);
+    intset_t t_result;
+    
+    MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result)
+	
+	MCCameraFeaturesType t_features_set;
+    t_features_set = (MCCameraFeaturesType)t_result;
+    
+	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
+		ctxt . GetEP() . concatcstring("photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCameraFeatureVideo) != 0)
+		ctxt . GetEP() . concatcstring("video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCameraFeatureFlash) != 0)
+		ctxt . GetEP() . concatcstring("flash", EC_COMMA, ctxt . GetEP() . isempty());
+	
+    MCAutoStringRef t_features;
+    /* UNCHECKED */ ep . copyasstringref(&t_features);
+    ctxt . SetTheResultToValue(&t_result);
+    
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
+{
+    if (p_parameters != nil)
+		return MCHandleSpecificCameraFeatures(context, p_parameters);
+    
+    MCExecPoint ep(nil, nil, nil);
+	ep.clear();
+    
+    MCExecContext ctxt(ep);
+    
+    intset_t t_features;
+    
+    MCPickGetCameraFeatures(ctxt, t_features);
+    
+    MCCamerasFeaturesType t_features_set;
+    t_features_set = (MCCamerasFeaturesType)t_features;
+    
+	if ((t_features_set & kMCCamerasFeatureFrontPhoto) != 0)
+		ctxt . GetEP() . concatcstring("front photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureFrontVideo) != 0)
+		ctxt . GetEP() . concatcstring("front video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureFrontFlash) != 0)
+		ctxt . GetEP() . concatcstring("front flash", EC_COMMA, ctxt . GetEP() . isempty());
+   	if ((t_features_set & kMCCamerasFeatureRearPhoto) != 0)
+		ctxt . GetEP() . concatcstring("rear photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureRearVideo) != 0)
+		ctxt . GetEP() . concatcstring("rear video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureRearFlash) != 0)
+		ctxt . GetEP() . concatcstring("rear flash", EC_COMMA, ctxt . GetEP() . isempty());
+    
+    MCAutoStringRef t_features;
+    /* UNCHECKED */ ep . copyasstringref(&t_features);
+    ctxt . SetTheResultToValue(*t_features);
+}
+
+Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	
+	MCParameter *t_source_param, *t_width_param, *t_height_param;
+	t_source_param = p_parameters;
+	t_width_param = t_source_param != nil ? t_source_param -> getnext() : nil;
+	t_height_param = t_width_param != nil ? t_width_param -> getnext() : nil;
+	
+	int32_t t_width, t_height;
+	t_width = t_height = 0;
+	if (t_width_param != nil)
+	{
+		t_width_param -> eval_argument(ep);
+		t_width = ep . getint4();
+	}
+	if (t_height_param != nil)
+	{
+		t_height_param -> eval_argument(ep);
+		t_height = ep . getint4();
+	}
+    
+	const char *t_source;
+	t_source = nil;
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_source = ep . getcstring();
+	}
+	
+	MCPhotoSourceType t_photo_source;
+	bool t_is_take;
+	t_is_take = false;
+	
+	if (MCU_strcasecmp(t_source, "library") == 0)
+		t_photo_source = kMCPhotoSourceTypeLibrary;
+	else if (MCU_strcasecmp(t_source, "album") == 0)
+		t_photo_source = kMCPhotoSourceTypeAlbum;
+	else if (MCU_strcasecmp(t_source, "camera") == 0 || MCU_strcasecmp(t_source, "rear camera") == 0)
+		t_photo_source = kMCPhotoSourceTypeRearCamera;
+	else if (MCU_strcasecmp(t_source, "front camera") == 0)
+		t_photo_source = kMCPhotoSourceTypeFrontCamera;
+	else
+	{
+		MCresult -> sets("unknown source");
+		return ES_NORMAL;
+	}
+	
+	/////
+	
+	MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+	
+	if (t_width != 0 && t_height != 0)
+		MCCameraExecAcquirePhotoAndResize(t_ctxt, t_photo_source, t_width, t_height);
+	else
+		MCCameraExecAcquirePhoto(t_ctxt, t_photo_source);
+    
+	return t_ctxt . GetExecStat();
+}
+
 //////////////////////////////////////////////////////////////////////////////////////

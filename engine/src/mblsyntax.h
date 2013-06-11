@@ -47,12 +47,31 @@ enum MCCameraSourceType
 	kMCCameraSourceTypeRear,
 };
 
+enum
+{
+    kMCCameraFeatureTypePhoto,
+    kMCCameraFeatureTypeVideo,
+    kMCCameraFeatureTypeFlash,
+    kMCCameraNumFeatures = 3,
+};
+
 typedef uint32_t MCCameraFeaturesType;
 enum
 {
-	kMCCameraFeaturePhoto = 1 << 0,
-	kMCCameraFeatureVideo = 1 << 1,
-	kMCCameraFeatureFlash = 1 << 2,
+	kMCCameraFeaturePhoto = 1 << kMCCameraFeatureTypePhoto,
+	kMCCameraFeatureVideo = 1 << kMCCameraFeatureTypeVideo,
+	kMCCameraFeatureFlash = 1 << kMCCameraFeatureTypeFlash,
+};
+
+typedef uint32_t MCCamerasFeaturesType;
+enum
+{
+    kMCCamerasFeatureFrontPhoto = 1 << kMCCameraFeatureTypePhoto,
+    kMCCamerasFeatureFrontVideo = 1 << kMCCameraFeatureTypeVideo,
+    kMCCamerasFeatureFrontFlash = 1 << kMCCameraFeatureTypeFlash,
+    kMCCamerasFeatureRearPhoto = 1 << (kMCCameraFeatureTypePhoto + kMCCameraNumFeatures),
+    kMCCamerasFeatureRearVideo = 1 << (kMCCameraFeatureTypeVideo + kMCCameraNumFeatures),
+    kMCCamerasFeatureRearFlash = 1 << (kMCCameraFeatureTypeFlash + kMCCameraNumFeatures),
 };
 
 void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, char*& r_features);

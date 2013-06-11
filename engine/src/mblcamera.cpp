@@ -87,7 +87,7 @@ void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, MCCam
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/* moved to mblhandlers.cpp
 Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -184,6 +184,6 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 		MCCameraExecAcquirePhoto(t_ctxt, t_photo_source);
 
 	return t_ctxt . GetExecStat();
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////////
