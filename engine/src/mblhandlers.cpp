@@ -1198,11 +1198,7 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
-<<<<<<< HEAD
-	if (MCParseParameters(p_parameters, "axxx", &t_contact, &(&t_title), &(&t_message), &(&t_alternate_name)))
-=======
 	if (MCParseParameters(p_parameters, "axxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
->>>>>>> 7e5f042e5fb51cb0d346724b5435fbaf1b41ee1a
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())
