@@ -3507,7 +3507,7 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 extern MCExecMethodInfo* kMCCalendarExecShowEventMethodInfo;
 extern MCExecMethodInfo* kMCCalendarGetEventDataMethodInfo;
-extern MCExecMethodInfo* kMCcalendarExecCreateEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecCreateEventMethodInfo;
 extern MCExecMethodInfo* kMCCalendarExecUpdateEventMethodInfo;
 extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
 //extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
@@ -3517,7 +3517,7 @@ extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
 
 void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id);
 void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data);
-void MCcalendarExecCreateEvent(MCExecContext& ctxt);
+void MCCalendarExecCreateEvent(MCExecContext& ctxt);
 void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id);
 void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id);
 //void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id);

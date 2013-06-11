@@ -1553,7 +1553,7 @@ Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
 
     // Call the Exec implementation
-    MCcalendarExecCreateEvent(ctxt);
+    MCCalendarExecCreateEvent(ctxt);
     // Set return value
 	if (!ctxt . HasError())
 		return ES_NORMAL;

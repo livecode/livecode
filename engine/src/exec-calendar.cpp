@@ -42,103 +42,116 @@ MC_EXEC_DEFINE_GET_METHOD(Calendar, EventData, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemCreateEvent(MCStringRef& r_result);
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id)
 {
-    char *t_result;
-    t_result = nil;
+    MCAutoStringRef t_result;    
+    if(MCSystemShowEvent(p_id, &t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
     
-    MCSystemShowEvent(MCStringGetCString(p_id), t_result);
-    
-    if (t_result != nil)
-        ctxt.SetTheResultToCString(t_result);
-    else
-        ctxt.SetTheResultToEmpty();
-    
-    MCCStringFree(t_result);
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
 }
 
-void MCcalendarExecCreateEvent(MCExecContext& ctxt)
+void MCCalendarExecCreateEvent(MCExecContext& ctxt)
 {
-    char *t_result;
-    t_result = nil;
+    MCAutoStringRef t_result;
+
+    if (MCSystemCreateEvent(&t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
     
-    MCSystemCreateEvent(t_result);
-    if (t_result != nil)
-        ctxt.SetTheResultToCString(t_result);
-    else
-        ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
 }
 
 void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id)
 {
-    char *t_result;
-    t_result = nil;
-    MCSystemUpdateEvent(MCStringGetCString(p_id), t_result);
-    if (t_result != nil)
-        ctxt.SetTheResultToCString(t_result);
-    else
-        ctxt.SetTheResultToEmpty();
-    MCCStringFree(t_result);
+    MCAutoStringRef t_result;
+    
+    if(MCSystemUpdateEvent(p_id, &t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return;
 }
 
 void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data)
 {
-    MCSystemGetEventData(ctxt, MCStringGetCString(p_id), r_data);
+    MCSystemGetEventData(ctxt, p_id, r_data);
     if (r_data == nil)
         ctxt.SetTheResultToEmpty();
     else
         ctxt.SetTheResultToValue(r_data);
 }
 
-//void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id)
-//{
-//    char  *t_event_id_deleted;
-//    t_event_id_deleted = nil;
-//    MCSystemRemoveEvent (p_event_id, p_reocurring, t_event_id_deleted);
-//    if (t_event_id_deleted != nil)
-//        p_ctxt.SetTheResultToCString(t_event_id_deleted);
-//    else
-//        p_ctxt.SetTheResultToEmpty();
-//    MCCStringFree(t_event_id_deleted);
-//}
+void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id, bool p_reocurring)
+{
+    MCAutoStringRef t_event_id_deleted;
+    
+    if(MCSystemRemoveEvent (p_id, p_reocurring, &t_event_id_deleted))
+    {
+        ctxt.SetTheResultToValue(*t_event_id_deleted);
+        return;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
+}
 
-//void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id)
-//{
-//    char *t_result;
-//    t_result = nil;
-//    MCSystemAddEvent(p_new_event_data, t_result);
-//    if (t_result != nil)
-//        p_ctxt.SetTheResultToCString(t_result);
-//    else
-//        p_ctxt.SetTheResultToEmpty();
-//    MCCStringFree(t_result);
-//}
-//
-//void MCGetCalendarsEventExec(MCExecContext& p_ctxt)
-//{
-//    char *t_result;
-//    t_result = nil;
-//    MCSystemGetCalendarsEvent(t_result);
-//    if (t_result != nil)
-//        p_ctxt.SetTheResultToCString(t_result);
-//    else
-//        p_ctxt.SetTheResultToEmpty();
-//    MCCStringFree(t_result);
-//}
-//
-//void MCFindEventExec(MCExecContext& p_ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
-//{
-//    char *t_result;
-//    t_result = nil;
-//    MCSystemFindEvent(p_start_date, p_end_date, t_result);
-//    if (t_result != nil)
-//        p_ctxt.SetTheResultToCString(t_result);
-//    else
-//        p_ctxt.SetTheResultToEmpty();
-//    MCCStringFree(t_result);
-//}
+void MCCalendarExecAddEvent(MCExecContext& ctxt, MCCalendar p_new_event_data, MCStringRef p_id)
+{
+    MCAutoStringRef t_result;
+    
+    if (MCSystemAddEvent(p_new_event_data, &t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
+}
+
+void MCGetCalendarsEventExec(MCExecContext& ctxt)
+{
+    MCAutoStringRef t_result;
+    
+    if (MCSystemGetCalendarsEvent(&t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
+}
+
+void MCFindEventExec(MCExecContext& ctxt, MCDateTime p_start_date, MCDateTime p_end_date)
+{
+    MCAutoStringRef t_result;
+    
+    if (MCSystemFindEvent(p_start_date, p_end_date, &t_result))
+    {
+        ctxt.SetTheResultToValue(*t_result);
+        return;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    ctxt.Throw();
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

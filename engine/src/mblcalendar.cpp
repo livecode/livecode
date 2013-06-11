@@ -243,69 +243,69 @@ void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_calendar, MCArra
 {
  // TODO - use array instead of MCVariableValue
 
- /*   MCExecPoint ep(nil, nil, nil);
-    MCVariableValue *t_entry = nil;
-    r_result = new MCVariableValue ();
-    char t_int_string[11];
-    if (r_result != NULL)
-    {
-        r_result->lookup_element(r_ctxt.GetEP(), "allday", t_entry);
-        if (p_calendar.mcallday == true)
-            t_entry->assign_string("true");
-        else
-            t_entry->assign_string("false");
-        if (p_calendar.mcnote.getlength() > 0){
-            r_result->lookup_element(r_ctxt.GetEP(), "note", t_entry);
-            t_entry->assign_string(p_calendar.mcnote);}
-        if (p_calendar.mctitle.getlength() > 0){
-            r_result->lookup_element(r_ctxt.GetEP(), "title", t_entry);
-            t_entry->assign_string(p_calendar.mctitle);}
-        if (p_calendar.mclocation.getlength() > 0){
-            r_result->lookup_element(r_ctxt.GetEP(), "location", t_entry);
-            t_entry->assign_string(p_calendar.mclocation);}
-        if (p_calendar.mccalendar.getlength() > 0){
-            r_result->lookup_element(r_ctxt.GetEP(), "calendar", t_entry);
-            t_entry->assign_string(p_calendar.mccalendar);}
-        if (p_calendar.mcfrequency.getlength() > 0){
-            r_result->lookup_element(r_ctxt.GetEP(), "frequency", t_entry);
-            t_entry->assign_string(p_calendar.mcfrequency);
-            r_result->lookup_element(r_ctxt.GetEP(), "fequencycount", t_entry);
-            sprintf(t_int_string, "%d", p_calendar.mcfrequencycount);
-            t_entry->assign_string(t_int_string);
-            r_result->lookup_element(r_ctxt.GetEP(), "fequencyinterval", t_entry);
-            sprintf(t_int_string, "%d", p_calendar.mcfrequencyinterval);
-            t_entry->assign_string(t_int_string);}
-        if (p_calendar.mcalert1 >=0)
-        {
-            r_result->lookup_element(r_ctxt.GetEP(), "alert1", t_entry);
-            sprintf(t_int_string, "%d", p_calendar.mcalert1);
-            t_entry->assign_string(t_int_string);
-        }
-        if (p_calendar.mcalert2 >=0)
-        {
-            r_result->lookup_element(r_ctxt.GetEP(), "alert2", t_entry);
-            sprintf(t_int_string, "%d", p_calendar.mcalert2);
-            t_entry->assign_string(t_int_string);
-        }
-        // Convert the start date to seconds
-        int32_t t_secs;
-        char t_secs_string[11];
-        if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_calendar.mcstartdate))
-        {
-            t_secs = ep.getnvalue();
-            sprintf (t_secs_string, "%d", t_secs);
-            r_result->lookup_element(r_ctxt.GetEP(), "startdate", t_entry);
-            t_entry->assign_string(t_secs_string);
-        }
-        // Convert the end date to seconds
-        if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_calendar.mcenddate))
-        {
-            t_secs = ep.getnvalue();
-            sprintf (t_secs_string, "%d", t_secs);
-            r_result->lookup_element(r_ctxt.GetEP(), "enddate", t_entry);
-            t_entry->assign_string(t_secs_string);
-        }
-    }*/
+//    MCExecPoint ep(nil, nil, nil);
+//    MCVariableValue *t_entry = nil;
+//    r_result = new MCVariableValue ();
+//    char t_int_string[11];
+//    if (r_result != NULL)
+//    {
+//        r_result->lookup_element(r_ctxt.GetEP(), "allday", t_entry);
+//        if (p_calendar.mcallday == true)
+//            t_entry->assign_string("true");
+//        else
+//            t_entry->assign_string("false");
+//        if (p_calendar.mcnote.getlength() > 0){
+//            r_result->lookup_element(r_ctxt.GetEP(), "note", t_entry);
+//            t_entry->assign_string(p_calendar.mcnote);}
+//        if (p_calendar.mctitle.getlength() > 0){
+//            r_result->lookup_element(r_ctxt.GetEP(), "title", t_entry);
+//            t_entry->assign_string(p_calendar.mctitle);}
+//        if (p_calendar.mclocation.getlength() > 0){
+//            r_result->lookup_element(r_ctxt.GetEP(), "location", t_entry);
+//            t_entry->assign_string(p_calendar.mclocation);}
+//        if (p_calendar.mccalendar.getlength() > 0){
+//            r_result->lookup_element(r_ctxt.GetEP(), "calendar", t_entry);
+//            t_entry->assign_string(p_calendar.mccalendar);}
+//        if (p_calendar.mcfrequency.getlength() > 0){
+//            r_result->lookup_element(r_ctxt.GetEP(), "frequency", t_entry);
+//            t_entry->assign_string(p_calendar.mcfrequency);
+//            r_result->lookup_element(r_ctxt.GetEP(), "fequencycount", t_entry);
+//            sprintf(t_int_string, "%d", p_calendar.mcfrequencycount);
+//            t_entry->assign_string(t_int_string);
+//            r_result->lookup_element(r_ctxt.GetEP(), "fequencyinterval", t_entry);
+//            sprintf(t_int_string, "%d", p_calendar.mcfrequencyinterval);
+//            t_entry->assign_string(t_int_string);}
+//        if (p_calendar.mcalert1 >=0)
+//        {
+//            r_result->lookup_element(r_ctxt.GetEP(), "alert1", t_entry);
+//            sprintf(t_int_string, "%d", p_calendar.mcalert1);
+//            t_entry->assign_string(t_int_string);
+//        }
+//        if (p_calendar.mcalert2 >=0)
+//        {
+//            r_result->lookup_element(r_ctxt.GetEP(), "alert2", t_entry);
+//            sprintf(t_int_string, "%d", p_calendar.mcalert2);
+//            t_entry->assign_string(t_int_string);
+//        }
+//        // Convert the start date to seconds
+//        int32_t t_secs;
+//        char t_secs_string[11];
+//        if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_calendar.mcstartdate))
+//        {
+//            t_secs = ep.getnvalue();
+//            sprintf (t_secs_string, "%d", t_secs);
+//            r_result->lookup_element(r_ctxt.GetEP(), "startdate", t_entry);
+//            t_entry->assign_string(t_secs_string);
+//        }
+//        // Convert the end date to seconds
+//        if (MCD_convert_from_datetime(ep, CF_SECONDS, CF_SECONDS, p_calendar.mcenddate))
+//        {
+//            t_secs = ep.getnvalue();
+//            sprintf (t_secs_string, "%d", t_secs);
+//            r_result->lookup_element(r_ctxt.GetEP(), "enddate", t_entry);
+//            t_entry->assign_string(t_secs_string);
+//        }
+//    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
