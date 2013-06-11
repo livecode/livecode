@@ -1,4 +1,4 @@
-## Improved properties Property
+# Improved properties Property
 The 'properties' object property has been significantly revised. In particular on fetching:
 * It returns the minimal set of properties of an object to allow it to be recreated exactly.
 * It returns unicode variants of properties if, and only if, they are needed.
