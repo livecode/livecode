@@ -339,7 +339,7 @@ struct MCMarkText
 struct MCMarkTheme
 {
 	MCThemeDrawType type;
-	uint8_t info[64];
+	uint8_t info[0];
 };
 
 // MW-2009-06-14: [[ Bitmap Effects ]] Added reference to any effects that may

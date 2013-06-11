@@ -893,8 +893,16 @@ MCMark *MCMetaContext::new_mark(uint4 p_type, bool p_stroke, bool p_fill)
 		sizeof(MCMarkPath),
 	};
 	
+	// IM-2013-06-11: dynamically allocate sufficient memory for a
+	// MCThemeDrawInfo struct (previous fixed size of 64bytes was too
+	// small.
+	uint32_t t_mark_size;
+	t_mark_size = sizeof(MCMarkHeader) + s_mark_sizes[p_type];
+	if (p_type == MARK_TYPE_THEME && MCcurtheme != nil)
+		t_mark_size += MCcurtheme->getthemedrawinfosize();
+		
 	MCMark *t_mark;
-	t_mark = f_heap . allocate<MCMark>(sizeof(MCMarkHeader) + s_mark_sizes[p_type]);
+	t_mark = f_heap . allocate<MCMark>(t_mark_size);
 	if (t_mark != NULL)
 	{
 		if (p_stroke)
