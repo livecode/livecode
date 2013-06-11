@@ -322,7 +322,7 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 			MCParentScript *t_parent;
 			t_parent = parent_script -> GetParent();
  
-			ep . setstringf("button id %d of stack \"%s\"",
+			ep . setstringf("%s id %d of stack \"%s\"",gettypestring(),
 								t_parent -> GetObjectId(),
 								MCNameGetCString(t_parent -> GetObjectStack()));
 		}
@@ -943,10 +943,6 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 	uint32_t t_part_id;
 	if (t_stat == ES_NORMAL)
 		t_stat = t_chunk -> getobj(ep2, t_object, t_part_id, False);
-
-	// Check that the object is a button
-	if (t_stat == ES_NORMAL && t_object -> gettype() != CT_BUTTON)
-		t_stat = ES_ERROR;
 
 	// MW-2009-01-28: [[ Bug ]] Make sure we aren't setting the parentScript of
 	//   an object to itself.
