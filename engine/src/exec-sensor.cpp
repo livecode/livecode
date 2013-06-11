@@ -31,9 +31,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StartTrackingSensor, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Sensor, StopTrackingSensor, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, SensorAvailable, 2)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedLocationOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedHeadingOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, HeadingOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedAccelerationOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, AccelerationOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, DetailedRotationRateOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, RotationRateOfDevice, 1)
+MC_EXEC_DEFINE_GET_METHOD(Sensor, LocationCalibrationTimeout, 1)
+MC_EXEC_DEFINE_SET_METHOD(Sensor, LocationCalibrationTimeout, 1)
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCExecEnumTypeElementInfo _kMCSensorTypeElementInfo[] =
 {
-	{ "unknown", 0 },
+	{ "unknown", kMCSensorTypeUnknown, true },
+    { "location", kMCSensorTypeLocation, false },
+    { "heading", kMCSensorTypeHeading, false },
+    { "acceleration", kMCSensorTypeAcceleration, false },
+    { "rotation rate", kMCSensorTypeRotationRate, false }
 };
 
 static MCExecEnumTypeInfo _kMCSensorTypeTypeInfo =
@@ -45,39 +65,61 @@ static MCExecEnumTypeInfo _kMCSensorTypeTypeInfo =
 
 //////////
 
-void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor, bool p_loosely)
+MCExecEnumTypeInfo *kMCSensorTypeTypeInfo = &_kMCSensorTypeTypeInfo;
+
+//////////
+
+void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely)
 {
-    switch (p_sensor)
+    MCSensorType t_sensor;
+    t_sensor = (MCSensorType)p_sensor;
+    
+    switch (t_sensor)
     {
         case kMCSensorTypeLocation:
             MCSystemStartTrackingLocation(p_loosely);
+            break;
         case kMCSensorTypeHeading:
             MCSystemStartTrackingHeading(p_loosely);
+            break;
         case kMCSensorTypeAcceleration:
             MCSystemStartTrackingAcceleration(p_loosely);
+            break;
         case kMCSensorTypeRotationRate:
             MCSystemStartTrackingRotationRate(p_loosely);
-    }    
-}
-
-void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor)
-{
-    switch (p_sensor)
-    {
-        case kMCSensorTypeLocation:
-            MCSystemStopTrackingLocation();
-        case kMCSensorTypeHeading:
-            MCSystemStopTrackingHeading();
-        case kMCSensorTypeAcceleration:
-            MCSystemStopTrackingAcceleration();
-        case kMCSensorTypeRotationRate:
-            MCSystemStopTrackingRotationRate();
+            break;
+        default:
+            break;
     }
 }
 
-void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor, bool& r_available)
+void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor)
 {
-    MCSystemGetSensorAvailable(p_sensor, r_available);
+    MCSensorType t_sensor;
+    t_sensor = (MCSensorType)p_sensor;
+    
+    switch (t_sensor)
+    {
+        case kMCSensorTypeLocation:
+            MCSystemStopTrackingLocation();
+            break;
+        case kMCSensorTypeHeading:
+            MCSystemStopTrackingHeading();
+            break;
+        case kMCSensorTypeAcceleration:
+            MCSystemStopTrackingAcceleration();
+            break;
+        case kMCSensorTypeRotationRate:
+            MCSystemStopTrackingRotationRate();
+            break;
+        default:
+            break;
+    }
+}
+
+void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available)
+{
+    MCSystemGetSensorAvailable((MCSensorType)p_sensor, r_available);
 }
 
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location)
@@ -310,12 +352,12 @@ void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotatio
 }
 
 // MM-2012-02-11: Added support for iPhoneGet/SetCalibrationTimeout
-void MCSensorSetLocationCalibration(MCExecContext& ctxt, int32_t p_timeout)
+void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout)
 {
     MCSystemSetLocationCalibrationTimeout(p_timeout);
 }
 
-void MCSensorGetLocationCalibration(MCExecContext& ctxt, int32_t& r_timeout)
+void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout)
 {
     MCSystemGetLocationCalibrationTimeout(r_timeout);
 }

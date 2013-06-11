@@ -113,8 +113,12 @@ void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc
     bool t_can_send;
     MCMailGetCanSendMail(ctxt, t_can_send);
     
+    MCAutoStringRef t_result;
     if (t_can_send)
-        MCSystemSendMail(p_to, p_cc, p_subject, p_body);
+        MCSystemSendMail(p_to, p_cc, p_subject, p_body, &t_result);
+    
+    if (*t_result != nil)
+        ctxt . SetTheResultToValue(*t_result);
     else
         ctxt . SetTheResultToStaticCString("not supported");
 }

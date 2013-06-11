@@ -3454,10 +3454,10 @@ extern MCExecMethodInfo *kMCMailExecSendEmailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeMailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeUnicodeMailMethodInfo;
 extern MCExecMethodInfo *kMCMailExecComposeHtmlMailMethodInfo;
-extern MCExecMethodInfo* kMCMailGetCanSendMailMethodInfo;
+extern MCExecMethodInfo *kMCMailGetCanSendMailMethodInfo;
 
 void MCMailExecSendEmail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body);
-void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments, int p_type);
+void MCMailExecComposeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
 void MCMailExecComposeUnicodeMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
 void MCMailExecComposeHtmlMail(MCExecContext& ctxt, MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCArrayRef p_attachments);
 void MCMailGetCanSendMail(MCExecContext& ctxt, bool& r_result);
@@ -3502,6 +3502,64 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_top
 void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y);
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
+///////////
+
+extern MCExecMethodInfo* kMCNativeControlExecCreateControlMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlExecDeleteControlMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlExecSetPropertyMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlExecGetPropertyMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlExecDoMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlGetTargetMethodInfo;
+extern MCExecMethodInfo* kMCNativeControlGetControlListMethodInfo;
+
+void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_name, MCStringRef p_control_name);
+void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name);
+void MCNativeControlExecSetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef p_value);
+void MCNativeControlExecGetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef& r_value);
+void MCNativeControlExecDo(MCExecContext& ctxt);
+void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target);
+void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);
+
+//////////
+
+extern MCExecEnumTypeInfo *kMCSensorTypeTypeInfo;
+
+extern MCExecMethodInfo *kMCSensorExecStartTrackingSensorMethodInfo;
+extern MCExecMethodInfo *kMCSensorExecStopTrackingSensorMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetSensorAvailableMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetDetailedLocationOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetLocationOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetDetailedHeadingOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetHeadingOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetDetailedAccelerationOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetAccelerationOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetDetailedRotationRateOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetRotationRateOfDeviceMethodInfo;
+extern MCExecMethodInfo *kMCSensorGetLocationCalibrationMethodInfo;
+extern MCExecMethodInfo *kMCSensorSetLocationCalibrationMethodInfo;
+
+void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
+void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
+void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available);
+void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location);
+void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location);
+void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading);
+void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading);
+void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration);
+void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceleration);
+void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate);
+void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate);
+void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
+void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
+
+//////////
+
+extern MCExecEnumTypeInfo *kMCPickButtonTypeTypeInfo;
+
+void MCPickExecPickDate(MCExecContext& ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, intenum_t p_buttons, MCRectangle p_button_rect);
+void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
+void MCPickExecPickDateAndTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
+void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCStringRef *p_option_lists, uindex_t p_option_list_count, uindex_t *p_initial_indices, uindex_t p_indices_count, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, MCRectangle p_button_rect);
 
 ///////////
 
@@ -3662,6 +3720,5 @@ void MCMiscGetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool& r_n
 void MCMiscSetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup);
 void MCMiscGetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef& p_protection_string);
 void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef p_protection_string);
-
 
 #endif

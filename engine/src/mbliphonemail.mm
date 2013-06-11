@@ -206,10 +206,10 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 	/*while([ctxt . dialog retainCount] > 2)
 		MCscreen -> wait(0.01, False, True);
 	
-	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
+	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));
 }
-*/
-/*Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
+
+Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
 	char *t_address, *t_cc_address, *t_subject, *t_message_body;
 	t_address = nil;
@@ -358,7 +358,7 @@ struct compose_mail_t
 	MCStringRef body;
 	MCMailType type;
 	MCAttachmentData *attachments;
-	uindex_t count;
+	uindex_t attachment_count;
 	MCIPhoneMailComposerDialog *dialog;
 };
 
@@ -493,14 +493,13 @@ static void compose_mail_prewait(void *p_context)
 				t_type = @"application/octet-stream";
 			else
 				t_type = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . type) encoding: NSMacOSRomanStringEncoding];
-			}
 			
 			if (ctxt -> attachments[i] . name == nil)
 				t_name = nil;
 			else
 				t_name = [NSString stringWithCString: MCStringGetCString(ctxt -> attachments[i] . name) encoding: NSMacOSRomanStringEncoding];
 				
-			[dialog_ptr addAttachmentData: t_data mimeType: t_type fileName: t_name];
+			[ctxt -> dialog addAttachmentData: t_data mimeType: t_type fileName: t_name];
 			[t_data release];
 		}
 	}
@@ -509,10 +508,10 @@ static void compose_mail_prewait(void *p_context)
 	t_separator_set = [NSCharacterSet characterSetWithCharactersInString: @","];
 	
 	NSString *t_ns_subject;
-	t_ns_subject = mcstringref_to_nsstring(p_subject, ctxt -> type == kMCMailTypeUnicode);
+	t_ns_subject = mcstringref_to_nsstring(ctxt -> subject, ctxt -> type == kMCMailTypeUnicode);
 	
 	NSString *t_ns_body;
-	t_ns_body = mcstringref_to_nsstring(t_body, ctxt -> type == kMCMailTypeUnicode);
+	t_ns_body = mcstringref_to_nsstring(ctxt -> body, ctxt -> type == kMCMailTypeUnicode);
 	
 	NSArray *t_ns_to;
 	t_ns_to = nil;
@@ -599,18 +598,18 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 
 void MCSystemSendMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body, MCStringRef& r_result)
 {
-	iphone_send_email_t context;
+	iphone_send_email_t ctxt;
 	ctxt . to_addresses = p_to;
 	ctxt . cc_addresses = p_cc;
 	ctxt . subject = p_subject;
 	ctxt . body = p_body;
 
-	MCIPhoneRunOnMainFiber(iphone_send_email_prewait, &context);
+	MCIPhoneRunOnMainFiber(iphone_send_email_prewait, &ctxt);
 	
-	while([context . dialog isRunning])
+	while([ctxt . dialog isRunning])
 		MCscreen -> wait(60.0, False, True);
 	
-	MCIPhoneRunOnMainFiber(iphone_send_email_postwait, &context);
+	MCIPhoneRunOnMainFiber(iphone_send_email_postwait, &ctxt);
 	
 	// Make sure we wait until only (presumably) the system has a reference to it.
 	// (This ensures we can call mail multiple times in the same handler).

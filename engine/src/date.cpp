@@ -320,10 +320,12 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 					// MW-2008-03-24: [[ Bug 6183 ]] Hmmm... Wishful thinking here - there are definitely 7 days of
 					//   the week, not 12 as was previously asserted.
 					if (t_loose_components)
+                    {
 						if (!match_prefix(p_locale -> weekday_names, 7, t_input, t_input_length, t_dayofweek))
 							t_skip = true; // Weekday names are optional, so skip to the next specifier
 						else
 							t_valid = true;
+                    }
 				}
 				else
 					t_valid = true;
@@ -334,10 +336,12 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 					// MW-2008-03-24: [[ Bug 6183 ]] Hmmm... Wishful thinking here - there are definitely 7 days of
 					//   the week, not 12 as was previously asserted.
 					if (t_loose_components)
+                    {
 						if (!match_prefix(p_locale -> abbrev_weekday_names, 7, t_input, t_input_length, t_dayofweek))
 							t_skip = true; // Weekday names are optional, so skip to the next specifier
 						else
 							t_valid = true;
+                    }
 				}
 				else
 					t_valid = true;
@@ -662,11 +666,13 @@ static void datetime_normalize(MCDateTime& x_datetime)
 	while(t_datetime . day > s_datetime_month_length[t_datetime . month - 1])
 	{
 		if (t_datetime . month == 2 && datetime_get_gregorian_leap_year(t_datetime . year))
+        {
 			if (t_datetime . day == 29)
 				break;
 			else
 				t_datetime . day -= 1;
-
+        }
+        
 		t_datetime . day -= s_datetime_month_length[t_datetime . month - 1];
 		t_datetime . month += 1;
 		if (t_datetime . month > 12)
@@ -1061,6 +1067,12 @@ static bool convert_parse_time(MCExecPoint& p_context, const MCDateTimeLocale *p
 	return false;
 }
 
+/* WRAPPER */ bool MCD_convert_to_datetime(MCExecContext& ctxt, MCStringRef p_input, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime)
+{
+    /* UNCHECKED */ ctxt . GetEP() . setvalueref(p_input);
+    return MCD_convert_to_datetime(ctxt . GetEP(), p_primary_from, p_secondary_from, r_datetime);
+}
+
 bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from, Convert_form p_secondary_from, MCDateTime &r_datetime)
 {
     bool t_success = true;
@@ -1300,6 +1312,14 @@ bool MCD_convert_to_datetime(MCExecPoint &p_context, Convert_form p_primary_from
         r_datetime = t_datetime;
     
     return t_success;
+}
+
+/* WRAPPER */ bool MCD_convert_from_datetime(MCExecContext& ctxt, MCDateTime p_datetime, Convert_form p_primary_from, Convert_form p_secondary_from, MCStringRef &r_output)
+{
+    if (MCD_convert_to_datetime(ctxt . GetEP(), p_primary_from, p_secondary_from, p_datetime))
+        return ctxt . GetEP() . copyasstringref(r_output);
+    
+    return false;
 }
 
 bool MCD_convert_from_datetime(MCExecPoint &p_context, Convert_form p_primary_to, Convert_form p_secondary_to, MCDateTime &p_datetime)

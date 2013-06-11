@@ -69,15 +69,14 @@ typedef enum
 	kMCContactKeyCountryCode,	// iOS
 } MCContactEntryKey;
 
-bool MCContactAddProperty(MCExecPoint &ep, MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value);
-bool MCContactAddPropertyWithLabel(MCExecPoint &ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCArrayRef p_value);
-bool MCContactAddPropertyWithLabel(MCExecPoint &ep, MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCStringRef p_value);
+bool MCContactAddProperty(MCArrayRef p_contact, MCNameRef p_property, MCStringRef p_value);
+bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, MCNameRef p_label, MCValueRef p_value);
 
 bool MCSystemPickContact(int32_t& r_result);
 bool MCSystemShowContact(int32_t p_contact_id, int32_t& r_result);
 bool MCSystemCreateContact(int32_t& r_result);
 bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name, int32_t &r_result);
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArrayRef& r_contact_data);
+bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef& r_contact_data);
 bool MCSystemRemoveContact(int32_t p_contact_id);
 bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result);
 bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result);

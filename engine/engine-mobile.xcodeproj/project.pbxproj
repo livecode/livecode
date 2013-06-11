@@ -256,6 +256,10 @@
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
+		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
+		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
+		768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
 		BE096E8B175CD7CF00F92F90 /* libfoundationmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = BE096E85175CD79D00F92F90 /* libfoundationmobile.a */; };
 		BE4494AE175CDCB900346B49 /* foundation-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */; };
 		BE4494DD175CDE7400346B49 /* exec-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494B7175CDE7400346B49 /* exec-array.cpp */; };
@@ -873,6 +877,8 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
+		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
 		BE4494AD175CDCB400346B49 /* foundation-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-legacy.cpp"; path = "src/foundation-legacy.cpp"; sourceTree = "<group>"; };
 		BE4494B7175CDE7400346B49 /* exec-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-array.cpp"; path = "src/exec-array.cpp"; sourceTree = "<group>"; };
@@ -1380,6 +1386,9 @@
 		BE4494B6175CDE4E00346B49 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				768D66C41765E11300F203A3 /* exec-pick.cpp */,
+				768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */,
+				BE449502175CDE7D00346B49 /* exec-interface */,
 				BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */,
 				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
 				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
@@ -2346,6 +2355,8 @@
 				BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */,
 				BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */,
 				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
+				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
+				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2364,6 +2375,8 @@
 				BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */,
 				BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */,
 				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
+				768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
+				768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */,
 				BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */,
 				BE93A9061760912100791270 /* exec-notification.cpp in Sources */,
 				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,

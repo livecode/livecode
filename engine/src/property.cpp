@@ -3197,7 +3197,10 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
 				for (uindex_t i = 0; i < t_element_count; i++)
 					for (uindex_t j = 0; j < t_set_info -> count; j++)
 						if (MCU_strcasecmp(t_elements[i], t_set_info -> elements[j] . tag) == 0)
+                        {
 							t_value |= 1 << t_set_info -> elements[j] . bit;
+                            break;
+                        }
 				MCCStringArrayFree(t_elements, t_element_count);
 				((void(*)(MCExecContext&, unsigned int))t_info -> setter)(ctxt, t_value);
 			}

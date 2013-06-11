@@ -198,7 +198,7 @@ public:
 	const char *GetName(void);
 	
 	// Set the native control's name
-	bool SetName(const char *name);
+	bool SetName(MCStringRef name);
 	
 	// Get the owning object of the instance
 	MCObject *GetOwner(void);
@@ -227,7 +227,8 @@ public:
 	
 	// Iterate through all controls
 	static bool List(MCNativeControlListCallback callback, void *context);
-	
+    static bool GetControlList(MCStringRef &r_list);
+    
 	// Create an instance with the given type
 	static bool CreateWithType(MCNativeControlType p_type, MCNativeControl*& r_control);
 
@@ -260,7 +261,7 @@ public:
     static bool ParseRange(MCExecPoint &ep, uint32_t &r_start, uint32_t &r_length);
     static bool FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_length);
 
-    // MM-2012-02-22: Clean up all ads
+    // MM-2012-02-22: Clean up all controls
     static void Finalize(void);
 
 protected:
@@ -280,7 +281,7 @@ private:
 	// The id of the instance
 	uint32_t m_id;
 	// The name of the instance
-	MCStringRef m_name;
+	char *m_name;
 	// The instance's owning object (handle)
 	MCObjectHandle *m_object;    
 };

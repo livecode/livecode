@@ -84,7 +84,7 @@ void MCAddressBookExecUpdateContact(MCExecContext& ctxt, MCArrayRef p_contact, M
 
 void MCAddressBookGetContactData(MCExecContext& ctxt, int32_t p_contact_id, MCArrayRef& r_contact_data)
 {
-      MCSystemGetContactData(ctxt, p_contact_id, r_contact_data);
+      MCSystemGetContactData(p_contact_id, r_contact_data);
 }
 
 void MCAddressBookExecRemoveContact(MCExecContext& ctxt, int32_t p_contact_id)

@@ -762,6 +762,101 @@ static void pick_option_postwait(void *p_context)
 	[ctxt-> picker release];
 }
 
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
+{
+    bool t_success;
+	t_success = true;
+	
+	NSString *t_options;
+	NSArray *t_option_list_array;
+	NSArray *t_initial_index_array;
+    NSArray *t_temp_picker_array;
+  	
+	int t_max_result_memory = 0;
+	// HC-30-2011-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
+	NSString *t_return_index = nil;
+	
+    if (t_success)
+	{
+		t_option_list_array = [[NSArray alloc] init];
+		t_initial_index_array = [[NSArray alloc] init];
+		[t_option_list_array retain];
+		[t_initial_index_array retain];
+	}
+    
+    // convert the input data from a c-style array of MCPickLists to an NSArray
+    for (int i = 0; i < p_pick_list_count; i++)
+    {
+        t_temp_picker_array = [[NSArray alloc] init];
+        [t_temp_picker_array retain];
+        for (int j = 0; j < p_pick_lists[i] . option_count; j++)
+        {
+            t_options = [NSString stringWithCString: MCStringGetCString(p_pick_lists[i] . options[j]) encoding: NSMacOSRomanStringEncoding];
+            t_temp_picker_array = [t_temp_picker_array arrayByAddingObject: t_options];
+        }
+        t_option_list_array = [t_option_list_array arrayByAddingObject: t_temp_picker_array];
+    }
+    
+    // convert the input indexes data from const_cstring_array_t to an NSArray
+    for (int i = 0; i < p_pick_list_count; i++)
+    {
+        t_initial_index_array = [t_initial_index_array arrayByAddingObject: [NSNumber numberWithInt: p_pick_lists[i] . initial]];
+    }
+    
+	// get the maximum number of digits needed for the entry column that was just added
+	t_max_result_memory+=5;
+	
+	picker_t ctxt;
+	ctxt . option_list_array = t_option_list_array;
+	ctxt . use_hilited = p_use_hilited;
+	ctxt . use_cancel = p_use_cancel;
+	ctxt . use_done = p_use_done;
+	ctxt . use_picker = p_use_picker;
+	ctxt . initial_index_array = t_initial_index_array;
+	ctxt . button_rect = p_button_rect;
+	ctxt . cancelled = false;
+	
+	// call the picker with the label and options list
+	MCIPhoneRunOnMainFiber(pick_option_prewait, &ctxt);
+	
+	while([ctxt . picker isRunning])
+		MCscreen -> wait(1.0, False, True);
+	
+	MCIPhoneRunOnMainFiber(pick_option_postwait, &ctxt);
+    
+	r_canceled = ctxt . cancelled;
+	
+    // Create the result information here
+    if (ctxt . return_index == nil)
+    {
+        r_result = nil;
+        r_result_count = 0;
+    }
+    else
+    {
+        MCAutoArray<uindex_t> t_indices;
+		char *t_ptr;
+		MCCStringClone ([ctxt . return_index cStringUsingEncoding:NSMacOSRomanStringEncoding], t_ptr);
+		
+		const char *t_token;
+		t_token = strtok (t_ptr, ",");
+        
+        while (t_ptr != nil)
+        {
+            t_indices . Push(atoi (t_ptr));
+            t_ptr = strtok (nil, ",");
+                
+        }
+        r_result = t_indices . Ptr();
+        r_result_count = t_indices . Size();
+    }
+
+	[ctxt . return_index release];
+	
+    return t_success;
+    
+}
+/*
 bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -862,7 +957,7 @@ bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_
 	[ctxt . return_index release];
 	
     return t_success;
-}
+} */
 
 ////////////////////////////////////////////////////////////////////////////////
 

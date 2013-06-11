@@ -69,22 +69,22 @@ enum MCSensorType
     kMCSensorTypeRotationRate,
 };
 
-void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor, bool p_loosely);
-void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, MCSensorType p_sensor);
+void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely);
+void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor);
 
-void MCSensorGetSensorAvailable(MCExecContext& ctxt, MCSensorType p_sensor);
+void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor);
 
-void MCSensorGetDetailedLocation(MCExecContext& ctxt, MCVariableValue *&r_detailed_location);
-void MCSensorGetLocation(MCExecContext& ctxt, char *&r_location);
-void MCSensorGetDetailedHeading(MCExecContext& ctxt, MCVariableValue *&r_detailed_heading);
-void MCSensorGetHeading(MCExecContext& ctxt, char *&r_heading);
-void MCSensorGetDetailedAcceleration(MCExecContext& ctxt, MCVariableValue *&r_detailed_acceleration);
-void MCSensorGetAcceleration(MCExecContext& ctxt, char *&r_acceleration);
-void MCSensorGetDetailedRotationRate(MCExecContext& ctxt, MCVariableValue *&r_detailed_rotation_rate);
-void MCSensorGetRotationRate(MCExecContext& ctxt, char *&r_rotation_rate);
+void MCSensorGetDetailedLocation(MCExecContext& ctxt, MCArrayRef& r_detailed_location);
+void MCSensorGetLocation(MCExecContext& ctxt, MCStringRef& r_location);
+void MCSensorGetDetailedHeading(MCExecContext& ctxt, MCArrayRef& r_detailed_heading);
+void MCSensorGetHeading(MCExecContext& ctxt, MCStringRef& r_heading);
+void MCSensorGetDetailedAcceleration(MCExecContext& ctxt, MCArrayRef& r_detailed_acceleration);
+void MCSensorGetAcceleration(MCExecContext& ctxt, MCStringRef& r_acceleration);
+void MCSensorGetDetailedRotationRate(MCExecContext& ctxt, MCArrayRef& r_detailed_rotation_rate);
+void MCSensorGetRotationRate(MCExecContext& ctxt, MCStringRef& r_rotation_rate);
 
-void MCSensorSetLocationCalibration(MCExecContext& ctxt, int32_t p_timeout);
-void MCSensorGetLocationCalibration(MCExecContext& ctxt, int32_t& r_timeout);
+void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout);
+void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Busy Indicator
@@ -326,11 +326,36 @@ struct MCAttachmentData
 };
 
 void MCSystemMailResult(MCStringRef& r_result);
-void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body);
+void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_subject, MCStringRef p_message_body, MCStringRef& r_result);
 void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result);
 void MCSystemGetCanSendMail(bool& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
+// from Dialog module
+
+typedef enum
+{
+    kMCPickButtonNone,
+    kMCPickButtonCancel,
+    kMCPickButtonDone,
+    kMCPickButtonCancelAndDone
+} MCPickButtonType;
+
+struct MCPickList
+{
+    MCStringRef *options;
+    uindex_t option_count;
+    uindex_t initial;
+};
+
+bool MCSystemPickDate(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+bool MCSystemPickTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTime *p_max, int32_t p_step, bool p_use_cancel, bool p_use_done, MCDateTime *r_result, bool &r_canceled, MCRectangle p_button_rect);
+
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect);
+
+bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_multiple);
+
 // form Misc module
 
 enum MCMiscStatusBarStyle

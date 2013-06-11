@@ -272,13 +272,13 @@ bool MCCFDictionaryToArray(CFDictionaryRef p_dict, MCArrayRef &r_array)
 			{
 				MCAutoStringRef t_string;
 				MCStringCreateWithCString([(NSString*)t_dict_values[i] cStringUsingEncoding: NSMacOSRomanStringEncoding], &t_string);
-				t_success = MCArrayStoreValue(*t_prop_array, *t_key_name, *t_string);
+				t_success = MCArrayStoreValue(*t_prop_array, false, *t_key_name, *t_string);
 			}
 		}
 	}
 	
 	if (t_success)
-		r_array = MCValueRetain(t_prop_array);
+		r_array = MCValueRetain(*t_prop_array);
 	
 	MCMemoryDeleteArray(t_dict_keys);
 	MCMemoryDeleteArray(t_dict_values);
@@ -297,7 +297,7 @@ bool MCCFDictionaryFromArray(MCArrayRef p_array, CFDictionaryRef& r_dict)
 	
 	MCValueRef t_entry;
 	MCNameRef t_key_name;
-	uindex_t t_index = 0;
+	uintptr_t t_index;
 
 	while (t_success && MCArrayIterate(p_array, t_index, t_key_name, t_entry))
 	{
@@ -546,7 +546,7 @@ bool MCCreatePersonData(ABRecordRef p_person, MCArrayRef& r_contact)
 	}
 	
 	if (t_success)
-		r_contact = MCValueRetain(t_contact);
+		r_contact = MCValueRetain(*t_contact);
 
 	return t_success;
 }
@@ -580,14 +580,14 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 				for (uindex_t j = 0; t_success && j < ELEMENTS(s_label_map); j++)
 				{
 					MCValueRef t_element;
-					if (MCArrayFetchValue((MCArrayRef)t_value, false, *s_label_map[j].name, t_element)
+					if (MCArrayFetchValue((MCArrayRef)t_value, false, *s_label_map[j].name, t_element))
 					{
 						if (MCValueIsArray(t_element))
 						{
 							uindex_t t_index = 1;
 							MCValueRef t_index_value;
 							
-							while (t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value))
+							while ((t_success = MCArrayFetchValueAtIndex((MCArrayRef)t_element, t_index++, t_index_value)))
 							{
 								if (t_index_value == nil)
 									break;
@@ -617,11 +617,10 @@ bool MCCreatePerson(MCArrayRef p_contact, ABRecordRef &r_person)
 				
 				if (t_success && ABMultiValueGetCount(t_multi_value) > 0)
 					t_success = ABRecordSetValue(t_person, *s_property_map[i].property, t_multi_value, nil);
-				}
-			}
-		}
-	}
-	
+            }
+        }
+    }
+    
 	if (t_success)
 		r_person = t_person;
 	else if (t_person != nil)
@@ -705,7 +704,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	NSMutableString *t_chosen = nil;
 	
     if (t_success)
-		t_success = nil != (t_person_name = CFStringCreateWithCString(NULL, p_person_name, kCFStringEncodingMacRoman));
+		t_success = nil != (t_person_name = CFStringCreateWithCString(NULL, MCStringGetCString(p_person_name), kCFStringEncodingMacRoman));
 
 	if (t_success)
 	{
@@ -723,7 +722,7 @@ bool MCContactFindContact(MCStringRef p_person_name, MCStringRef &r_chosen)
 	}
 
 	if (t_success)
-		t_success = MCCStringClone([t_chosen cStringUsingEncoding:NSMacOSRomanStringEncoding], r_chosen);
+		t_success = MCStringCreateWithCString([t_chosen cStringUsingEncoding:NSMacOSRomanStringEncoding], r_chosen);
 	
     if (t_people != nil)
 		[t_people release];
@@ -1269,14 +1268,8 @@ bool MCSystemCreateContact(int32_t& r_result) // ABNewPersonViewController
 bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRef p_message, MCStringRef p_alternate_name,
 						   int32_t &r_result)
 {
-<<<<<<< HEAD
 	bool t_success = true;
 
-=======
-/*	bool t_success = true;
-	
-	MCExecPoint ep(nil, nil, nil);
->>>>>>> 863393a8e76fd6f2e5f9e4e48d3a4452a4f8aba0
 	ABRecordRef t_contact = nil;
 	t_success = MCCreatePerson(p_contact, t_contact);
 
@@ -1292,17 +1285,12 @@ bool MCSystemUpdateContact(MCArrayRef p_contact, MCStringRef p_title, MCStringRe
 	if (t_contact != nil)
 		CFRelease(t_contact);
 	
-	return t_success; */
-    return false;
+	return t_success; 
 }
 
-<<<<<<< HEAD
 bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
-=======
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArrayRef &r_contact_data)
->>>>>>> 863393a8e76fd6f2e5f9e4e48d3a4452a4f8aba0
 {
-/*	bool t_success = true;
+	bool t_success = true;
 	
     ABAddressBookRef t_address_book = nil;
 	t_success = nil != (t_address_book = ABAddressBookCreate());
@@ -1317,8 +1305,7 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArray
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	
-	return t_success; */
-    return false;
+	return t_success; 
 }
 
 bool MCSystemRemoveContact(int32_t p_contact_id)

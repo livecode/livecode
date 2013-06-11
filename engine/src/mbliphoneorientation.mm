@@ -78,9 +78,9 @@ uint32_t get_orientation_set(uint32_t p_orientations)
 		t_orientations |= ORIENTATION_PORTRAIT_BIT;
 	if (p_orientations & (1 << UIInterfaceOrientationPortraitUpsideDown))
 		t_orientations |= ORIENTATION_PORTRAIT_UPSIDE_DOWN_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationLandscapeRight))
+	if (p_orientations & (1 << UIInterfaceOrientationLandscapeRight))
 		t_orientations |= ORIENTATION_LANDSCAPE_RIGHT_BIT;
-	if (p_orientations & (1 << kMCDisplayOrientationLandscapeLeft))
+	if (p_orientations & (1 << UIInterfaceOrientationLandscapeLeft))
 		t_orientations |= ORIENTATION_LANDSCAPE_LEFT_BIT;
 
 	return t_orientations;

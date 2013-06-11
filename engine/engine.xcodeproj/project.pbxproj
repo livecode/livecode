@@ -776,14 +776,14 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DF42A420B048617003F2D95 /* foundation */;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
 		};
 		BE3F705F175CD40000DBFB07 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 4D7FA7B61594E0FA00EEF440 /* libfoundation.xcodeproj */;
 			proxyType = 1;
-			remoteGlobalIDString = 4DF42A420B048617003F2D95 /* foundation */;
+			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = foundation;
 		};
 /* End PBXContainerItemProxy section */
@@ -1410,6 +1410,76 @@
 		4DFFC7DE13DD8A91006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
 		4DFFC7DF13DD8A91006233A4 /* sysunxnetwork.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysunxnetwork.cpp; path = src/sysunxnetwork.cpp; sourceTree = "<group>"; };
 		4DFFC7E613DD8AB9006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
+		768D665F1762076000F203A3 /* exec-ad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ad.cpp"; path = "src/exec-ad.cpp"; sourceTree = "<group>"; };
+		768D66601762076000F203A3 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
+		768D66611762076000F203A3 /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
+		768D66621762076000F203A3 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
+		768D66631762076000F203A3 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
+		768D66641762076000F203A3 /* exec-sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sensor.cpp"; path = "src/exec-sensor.cpp"; sourceTree = "<group>"; };
+		768D66651762076000F203A3 /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
+		768D66661762076000F203A3 /* exec-textmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-textmessaging.cpp"; path = "src/exec-textmessaging.cpp"; sourceTree = "<group>"; };
+		768D6667176207B100F203A3 /* mblactivityindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblactivityindicator.cpp; path = src/mblactivityindicator.cpp; sourceTree = "<group>"; };
+		768D6668176207B100F203A3 /* mblad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblad.cpp; path = src/mblad.cpp; sourceTree = "<group>"; };
+		768D6669176207B100F203A3 /* mblad.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblad.h; path = src/mblad.h; sourceTree = "<group>"; };
+		768D666A176207B100F203A3 /* mblalert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblalert.cpp; path = src/mblalert.cpp; sourceTree = "<group>"; };
+		768D666B176207B100F203A3 /* mblbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblbusyindicator.cpp; path = src/mblbusyindicator.cpp; sourceTree = "<group>"; };
+		768D666C176207B100F203A3 /* mblcalendar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcalendar.cpp; path = src/mblcalendar.cpp; sourceTree = "<group>"; };
+		768D666D176207B100F203A3 /* mblcalendar.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblcalendar.h; path = src/mblcalendar.h; sourceTree = "<group>"; };
+		768D666E176207B100F203A3 /* mblcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcamera.cpp; path = src/mblcamera.cpp; sourceTree = "<group>"; };
+		768D666F176207B100F203A3 /* mblcontact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcontact.cpp; path = src/mblcontact.cpp; sourceTree = "<group>"; };
+		768D6670176207B100F203A3 /* mblcontact.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblcontact.h; path = src/mblcontact.h; sourceTree = "<group>"; };
+		768D6671176207B100F203A3 /* mblcontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblcontrol.cpp; path = src/mblcontrol.cpp; sourceTree = "<group>"; };
+		768D6672176207B100F203A3 /* mblcontrol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblcontrol.h; path = src/mblcontrol.h; sourceTree = "<group>"; };
+		768D6673176207B100F203A3 /* mbldialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbldialog.cpp; path = src/mbldialog.cpp; sourceTree = "<group>"; };
+		768D6674176207B100F203A3 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; };
+		768D6675176207B100F203A3 /* mblnotification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblnotification.cpp; path = src/mblnotification.cpp; sourceTree = "<group>"; };
+		768D6676176207B100F203A3 /* mblnotification.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblnotification.h; path = src/mblnotification.h; sourceTree = "<group>"; };
+		768D6677176207B100F203A3 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
+		768D6678176207B100F203A3 /* mblsensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsensor.h; path = src/mblsensor.h; sourceTree = "<group>"; };
+		768D6679176207B100F203A3 /* mblsound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsound.cpp; path = src/mblsound.cpp; sourceTree = "<group>"; };
+		768D667A176207B100F203A3 /* mblstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblstore.cpp; path = src/mblstore.cpp; sourceTree = "<group>"; };
+		768D667B176207B100F203A3 /* mblstore.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblstore.h; path = src/mblstore.h; sourceTree = "<group>"; };
+		768D667C176207B100F203A3 /* mblsyntax.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsyntax.h; path = src/mblsyntax.h; sourceTree = "<group>"; };
+		768D667D176207B100F203A3 /* mbltextmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbltextmessaging.cpp; path = src/mbltextmessaging.cpp; sourceTree = "<group>"; };
+		768D667E176207CB00F203A3 /* mblandroidad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidad.cpp; path = src/mblandroidad.cpp; sourceTree = "<group>"; };
+		768D667F176207CB00F203A3 /* mblandroidalert.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidalert.cpp; path = src/mblandroidalert.cpp; sourceTree = "<group>"; };
+		768D6680176207CB00F203A3 /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
+		768D6681176207CB00F203A3 /* mblandroidbusyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbusyindicator.cpp; path = src/mblandroidbusyindicator.cpp; sourceTree = "<group>"; };
+		768D6682176207CB00F203A3 /* mblandroidcalendar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcalendar.cpp; path = src/mblandroidcalendar.cpp; sourceTree = "<group>"; };
+		768D6683176207CB00F203A3 /* mblandroidcontact.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontact.cpp; path = src/mblandroidcontact.cpp; sourceTree = "<group>"; };
+		768D6684176207CB00F203A3 /* mblandroidcontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontrol.cpp; path = src/mblandroidcontrol.cpp; sourceTree = "<group>"; };
+		768D6685176207CB00F203A3 /* mblandroidcontrol.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidcontrol.h; path = src/mblandroidcontrol.h; sourceTree = "<group>"; };
+		768D6686176207CB00F203A3 /* mblandroidfont.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfont.cpp; path = src/mblandroidfont.cpp; sourceTree = "<group>"; };
+		768D6687176207CB00F203A3 /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
+		768D6688176207CB00F203A3 /* mblandroidinput.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidinput.cpp; path = src/mblandroidinput.cpp; sourceTree = "<group>"; };
+		768D6689176207CB00F203A3 /* mblandroidnotification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidnotification.cpp; path = src/mblandroidnotification.cpp; sourceTree = "<group>"; };
+		768D668A176207CB00F203A3 /* mblandroidplayer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidplayer.cpp; path = src/mblandroidplayer.cpp; sourceTree = "<group>"; };
+		768D668B176207CB00F203A3 /* mblandroidscroller.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidscroller.cpp; path = src/mblandroidscroller.cpp; sourceTree = "<group>"; };
+		768D668C176207CB00F203A3 /* mblandroidsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsensor.cpp; path = src/mblandroidsensor.cpp; sourceTree = "<group>"; };
+		768D668D176207CB00F203A3 /* mblandroidsound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidsound.cpp; path = src/mblandroidsound.cpp; sourceTree = "<group>"; };
+		768D668E176207CB00F203A3 /* mblandroidstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
+		768D668F176207CB00F203A3 /* mblandroidtextmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtextmessaging.cpp; path = src/mblandroidtextmessaging.cpp; sourceTree = "<group>"; };
+		768D66901762087500F203A3 /* mbliphoneactivityindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneactivityindicator.mm; path = src/mbliphoneactivityindicator.mm; sourceTree = "<group>"; };
+		768D66911762087500F203A3 /* mbliphonead.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonead.mm; path = src/mbliphonead.mm; sourceTree = "<group>"; };
+		768D66921762087500F203A3 /* mbliphonealert.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonealert.mm; path = src/mbliphonealert.mm; sourceTree = "<group>"; };
+		768D66931762087500F203A3 /* mbliphoneapp.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphoneapp.h; path = src/mbliphoneapp.h; sourceTree = "<group>"; };
+		768D66941762087500F203A3 /* mbliphoneapp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneapp.mm; path = src/mbliphoneapp.mm; sourceTree = "<group>"; };
+		768D66951762087500F203A3 /* mbliphoneappview.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneappview.mm; path = src/mbliphoneappview.mm; sourceTree = "<group>"; };
+		768D66961762087500F203A3 /* mbliphonebusyindicator.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonebusyindicator.mm; path = src/mbliphonebusyindicator.mm; sourceTree = "<group>"; };
+		768D66971762087500F203A3 /* mbliphonecalendar.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecalendar.mm; path = src/mbliphonecalendar.mm; sourceTree = "<group>"; };
+		768D66981762087500F203A3 /* mbliphonecamera.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecamera.mm; path = src/mbliphonecamera.mm; sourceTree = "<group>"; };
+		768D66991762087500F203A3 /* mbliphonecontact.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonecontact.mm; path = src/mbliphonecontact.mm; sourceTree = "<group>"; };
+		768D669A1762087500F203A3 /* mbliphoneembedded.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneembedded.mm; path = src/mbliphoneembedded.mm; sourceTree = "<group>"; };
+		768D669B1762087500F203A3 /* mbliphoneembeddedtest.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneembeddedtest.mm; path = src/mbliphoneembeddedtest.mm; sourceTree = "<group>"; };
+		768D669C1762087500F203A3 /* mbliphonefs.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonefs.mm; path = src/mbliphonefs.mm; sourceTree = "<group>"; };
+		768D669D1762087500F203A3 /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
+		768D669E1762087500F203A3 /* mbliphonemediapick.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonemediapick.mm; path = src/mbliphonemediapick.mm; sourceTree = "<group>"; };
+		768D669F1762087500F203A3 /* mbliphonenotification.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonenotification.mm; path = src/mbliphonenotification.mm; sourceTree = "<group>"; };
+		768D66A01762087500F203A3 /* mbliphoneorientation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneorientation.mm; path = src/mbliphoneorientation.mm; sourceTree = "<group>"; };
+		768D66A11762087500F203A3 /* mbliphonepickdate.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonepickdate.mm; path = src/mbliphonepickdate.mm; sourceTree = "<group>"; };
+		768D66A21762087500F203A3 /* mbliphonesensor.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonesensor.mm; path = src/mbliphonesensor.mm; sourceTree = "<group>"; };
+		768D66A31762087500F203A3 /* mbliphonestore.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonestore.mm; path = src/mbliphonestore.mm; sourceTree = "<group>"; };
+		768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextmessaging.mm; path = src/mbliphonetextmessaging.mm; sourceTree = "<group>"; };
 		A04643DB0BAAA63A0030A830 /* w32ans.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32ans.cpp; path = src/w32ans.cpp; sourceTree = "<group>"; };
 		A04643DC0BAAA63A0030A830 /* w32context.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32context.cpp; path = src/w32context.cpp; sourceTree = "<group>"; };
 		A04643DD0BAAA63A0030A830 /* w32context.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = w32context.h; path = src/w32context.h; sourceTree = "<group>"; };
@@ -2020,6 +2090,24 @@
 		4DD54D14134F590600981610 /* Mobile - Android */ = {
 			isa = PBXGroup;
 			children = (
+				768D667E176207CB00F203A3 /* mblandroidad.cpp */,
+				768D667F176207CB00F203A3 /* mblandroidalert.cpp */,
+				768D6680176207CB00F203A3 /* mblandroidbrowser.cpp */,
+				768D6681176207CB00F203A3 /* mblandroidbusyindicator.cpp */,
+				768D6682176207CB00F203A3 /* mblandroidcalendar.cpp */,
+				768D6683176207CB00F203A3 /* mblandroidcontact.cpp */,
+				768D6684176207CB00F203A3 /* mblandroidcontrol.cpp */,
+				768D6685176207CB00F203A3 /* mblandroidcontrol.h */,
+				768D6686176207CB00F203A3 /* mblandroidfont.cpp */,
+				768D6687176207CB00F203A3 /* mblandroidideltimer.cpp */,
+				768D6688176207CB00F203A3 /* mblandroidinput.cpp */,
+				768D6689176207CB00F203A3 /* mblandroidnotification.cpp */,
+				768D668A176207CB00F203A3 /* mblandroidplayer.cpp */,
+				768D668B176207CB00F203A3 /* mblandroidscroller.cpp */,
+				768D668C176207CB00F203A3 /* mblandroidsensor.cpp */,
+				768D668D176207CB00F203A3 /* mblandroidsound.cpp */,
+				768D668E176207CB00F203A3 /* mblandroidstore.cpp */,
+				768D668F176207CB00F203A3 /* mblandroidtextmessaging.cpp */,
 				4DD54D15134F591500981610 /* com */,
 				4DD54D20134F591500981610 /* mblandroid.java */,
 				4DD54D21134F591500981610 /* mblandroid.cpp */,
@@ -2104,6 +2192,27 @@
 		4DD54D46134F591C00981610 /* Mobile - iOS */ = {
 			isa = PBXGroup;
 			children = (
+				768D66901762087500F203A3 /* mbliphoneactivityindicator.mm */,
+				768D66911762087500F203A3 /* mbliphonead.mm */,
+				768D66921762087500F203A3 /* mbliphonealert.mm */,
+				768D66931762087500F203A3 /* mbliphoneapp.h */,
+				768D66941762087500F203A3 /* mbliphoneapp.mm */,
+				768D66951762087500F203A3 /* mbliphoneappview.mm */,
+				768D66961762087500F203A3 /* mbliphonebusyindicator.mm */,
+				768D66971762087500F203A3 /* mbliphonecalendar.mm */,
+				768D66981762087500F203A3 /* mbliphonecamera.mm */,
+				768D66991762087500F203A3 /* mbliphonecontact.mm */,
+				768D669A1762087500F203A3 /* mbliphoneembedded.mm */,
+				768D669B1762087500F203A3 /* mbliphoneembeddedtest.mm */,
+				768D669C1762087500F203A3 /* mbliphonefs.mm */,
+				768D669D1762087500F203A3 /* mbliphoneidletimer.mm */,
+				768D669E1762087500F203A3 /* mbliphonemediapick.mm */,
+				768D669F1762087500F203A3 /* mbliphonenotification.mm */,
+				768D66A01762087500F203A3 /* mbliphoneorientation.mm */,
+				768D66A11762087500F203A3 /* mbliphonepickdate.mm */,
+				768D66A21762087500F203A3 /* mbliphonesensor.mm */,
+				768D66A31762087500F203A3 /* mbliphonestore.mm */,
+				768D66A41762087500F203A3 /* mbliphonetextmessaging.mm */,
 				4DFECDA013CE411700288995 /* mbliphonemisc.mm */,
 				4DD54D47134F593600981610 /* mbliphonelocation.mm */,
 				4DD54D48134F593600981610 /* mbliphonemail.mm */,
@@ -2138,6 +2247,29 @@
 		4DD54D63134F593F00981610 /* Mobile */ = {
 			isa = PBXGroup;
 			children = (
+				768D6667176207B100F203A3 /* mblactivityindicator.cpp */,
+				768D6668176207B100F203A3 /* mblad.cpp */,
+				768D6669176207B100F203A3 /* mblad.h */,
+				768D666A176207B100F203A3 /* mblalert.cpp */,
+				768D666B176207B100F203A3 /* mblbusyindicator.cpp */,
+				768D666C176207B100F203A3 /* mblcalendar.cpp */,
+				768D666D176207B100F203A3 /* mblcalendar.h */,
+				768D666E176207B100F203A3 /* mblcamera.cpp */,
+				768D666F176207B100F203A3 /* mblcontact.cpp */,
+				768D6670176207B100F203A3 /* mblcontact.h */,
+				768D6671176207B100F203A3 /* mblcontrol.cpp */,
+				768D6672176207B100F203A3 /* mblcontrol.h */,
+				768D6673176207B100F203A3 /* mbldialog.cpp */,
+				768D6674176207B100F203A3 /* mblhandlers.cpp */,
+				768D6675176207B100F203A3 /* mblnotification.cpp */,
+				768D6676176207B100F203A3 /* mblnotification.h */,
+				768D6677176207B100F203A3 /* mblsensor.cpp */,
+				768D6678176207B100F203A3 /* mblsensor.h */,
+				768D6679176207B100F203A3 /* mblsound.cpp */,
+				768D667A176207B100F203A3 /* mblstore.cpp */,
+				768D667B176207B100F203A3 /* mblstore.h */,
+				768D667C176207B100F203A3 /* mblsyntax.h */,
+				768D667D176207B100F203A3 /* mbltextmessaging.cpp */,
 				4DFECD9E13CE411700288995 /* mbldc.cpp */,
 				4DFECD9F13CE411700288995 /* mblevent.h */,
 				4DD54D64134F594E00981610 /* mbldc.h */,
@@ -2162,6 +2294,14 @@
 		4DE3B0EE15888AA1008EB6B5 /* Exec */ = {
 			isa = PBXGroup;
 			children = (
+				768D665F1762076000F203A3 /* exec-ad.cpp */,
+				768D66601762076000F203A3 /* exec-addressbook.cpp */,
+				768D66611762076000F203A3 /* exec-idletimer.cpp */,
+				768D66621762076000F203A3 /* exec-mail.cpp */,
+				768D66631762076000F203A3 /* exec-orientation.cpp */,
+				768D66641762076000F203A3 /* exec-sensor.cpp */,
+				768D66651762076000F203A3 /* exec-store.cpp */,
+				768D66661762076000F203A3 /* exec-textmessaging.cpp */,
 				E875FD8017293B29005A69F4 /* exec-interface */,
 				4DE3B0EF15888AB8008EB6B5 /* exec-array.cpp */,
 				4D7FA7C61594E17500EEF440 /* exec-datetime.cpp */,

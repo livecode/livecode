@@ -86,7 +86,7 @@ MCSensorType MCSensorTypeFromCString(const char *p_string)
     return kMCSensorTypeUnknown;
 }
 
-static bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
+bool MCSensorTypeToCString(MCSensorType p_sensor, char *&r_string)
 {
     switch (p_sensor)
     {
