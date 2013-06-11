@@ -85,8 +85,6 @@ LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libjpeg libpcre libpng li
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 
-ifneq ($(MODE),debug)
 LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link
-endif
 
 include $(BUILD_SHARED_LIBRARY)
