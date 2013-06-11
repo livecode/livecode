@@ -135,11 +135,8 @@ void MCAndroidCreateContactCanceled(int32_t p_contact_id)
 
 // 
 
-bool MCAndroidContactToJavaMap(MCVariableValue *p_contact, jobject &r_map)
+bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 {
-	if (!p_contact->is_array())
-		return false;
-	
 	bool t_success = true;
 	
 	JNIEnv *t_env = MCJavaGetThreadEnv();
@@ -150,7 +147,7 @@ bool MCAndroidContactToJavaMap(MCVariableValue *p_contact, jobject &r_map)
 	return t_success;
 }
 
-bool MCAndroidContactFromJavaMap(jobject p_map, MCVariableValue *&r_contact)
+bool MCAndroidContactFromJavaMap(jobject p_map, MCArrayRef &r_contact)
 {
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	MCExecPoint ep(nil, nil, nil);
@@ -167,11 +164,11 @@ bool MCSystemUpdateContact(MCArrayRef p_contact,
 	
 	jobject t_map = nil;
 	// convert contact to java map
-//	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
+	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
 	if (t_success)
 	{
 		s_contact_status = kMCAndroidContactWaiting;
-		MCAndroidEngineRemoteCall("updateContact", "vmsss", nil, t_map, p_title, p_message, p_alternate_name);
+		MCAndroidEngineRemoteCall("updateContact", "vmxxx", nil, t_map, p_title, p_message, p_alternate_name);
 		while (s_contact_status == kMCAndroidContactWaiting)
 			MCscreen->wait(60.0, False, True);
 		r_result = s_contact_selected;
@@ -227,7 +224,7 @@ bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 	bool t_success = true;
 	jobject t_map = nil;
 	// convert contact to java map
-//	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
+	t_success = MCAndroidContactToJavaMap(p_contact, t_map);
 	if (t_success)
 	{
 		MCAndroidEngineRemoteCall("addContact", "im", &r_result, t_map);
@@ -236,14 +233,11 @@ bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 	return false;
 }
 
-bool MCSystemFindContact(const char* p_contact_name, char *& r_result)
+bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result)
 {
-    char *t_result;
     MCLog("MCSystemFindContact: %s", p_contact_name);
-    MCAndroidEngineRemoteCall("findContact", "vs", nil, p_contact_name);
-    r_result = s_contacts_selected.clone();
-    MCLog("MCSystemFindContact result: %s", r_result);
-    return true;
+    MCAndroidEngineRemoteCall("findContact", "vx", nil, p_contact_name);
+    return MCStringCreateWithCString(s_contacts_selected, r_result);
 }
 
 // Get data from Java and assign the values to class values that are then returned to the 

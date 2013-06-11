@@ -651,6 +651,7 @@ static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameter
 	return ES_NORMAL;
 }
 */
+/* moved to mblhandlers.cpp
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	extern Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters);
@@ -709,7 +710,7 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	t_string = [t_string substringToIndex: t_string_length];
 	MCresult -> copysvalue([t_string cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 	return ES_NORMAL;
-}
+}*/
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 

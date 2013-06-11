@@ -664,7 +664,7 @@ Exec_stat MCHandleComposeMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -687,7 +687,7 @@ Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -710,7 +710,7 @@ Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -733,7 +733,7 @@ Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 	MCAutoArrayRef t_attachments;
 
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "|xxxxxa", &t_subject, &t_to, &t_cc, &t_bcc, &t_body, &t_attachments);
+		t_success = MCParseParameters(p_parameters, "|xxxxxa", &(&t_subject), &(&t_to), &(&t_cc), &(&t_bcc), &(&t_body), &(&t_attachments));
 
 	MCExecPoint ep(nil, nil, nil);
 	MCExecContext ctxt(ep);
@@ -1111,6 +1111,8 @@ Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r_title, char *&r_message, char *&r_alternate_name)
 {
 	bool t_success = true;
@@ -1136,8 +1138,6 @@ bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r
 	
 	return t_success;
 }
-
-////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeoplePickerNavigationController
 {
@@ -1198,7 +1198,11 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 	MCAutoStringRef t_message;
 	MCAutoStringRef t_alternate_name;
 
+<<<<<<< HEAD
 	if (MCParseParameters(p_parameters, "axxx", &t_contact, &(&t_title), &(&t_message), &(&t_alternate_name)))
+=======
+	if (MCParseParameters(p_parameters, "axxx", &(&t_contact), &(&t_title), &(&t_message), &(&t_alternate_name)))
+>>>>>>> 7e5f042e5fb51cb0d346724b5435fbaf1b41ee1a
 	    MCAddressBookExecUpdateContact(ctxt, *t_contact, *t_title, *t_message, *t_alternate_name);
     
 	if (!ctxt . HasError())
@@ -1275,20 +1279,19 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 {
-    const char *t_contact_name = NULL;
-    const char *r_result = NULL;
+    MCAutoStringRef t_contact_name;
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
     // Handle parameters.
     if (p_parameters)
     {
         p_parameters->eval(ep);
-        t_contact_name = ep.getcstring();
+        /* UNCHECKED */ ep . copyasstringref(&t_contact_name);
     }
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
     // Call the Exec implementation
-    //MCAddressBookExecFindContact(ctxt, t_contact_name);
+    MCAddressBookExecFindContact(ctxt, *t_contact_name);
     // Set return value
 	if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -3149,7 +3152,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
    	uint32_t t_initial_index;
     // get the mandatory options list and the initial index
     // HC-30-2011-30 [[ Bug 10036 ]] iPad pick list only returns 0.
-	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+	t_success = MCParseParameters(p_parameters, "x", &t_string_param);
     if (t_success)
     {
         t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
@@ -3166,7 +3169,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     // get further options lists if they exist
     while (t_success && t_more_optional)
     {
-    	t_success = MCParseParameters(p_parameters, "x", t_string_param);
+    	t_success = MCParseParameters(p_parameters, "x", &t_string_param);
         if (t_success)
         {
             if (t_string_param != nil)
@@ -3213,7 +3216,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
             t_use_picker = true;
         
         MCValueRelease(t_string_param);
-        t_success = MCParseParameters(p_parameters, "x", t_string_param);
+        t_success = MCParseParameters(p_parameters, "x", &t_string_param);
     }
     
     MCExecContext ctxt(ep);
@@ -3567,6 +3570,139 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 		return ES_NORMAL;
     
 	return ES_ERROR;
+}
+
+Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	
+	MCCameraSourceType t_source;
+	p_parameters -> eval_argument(ep);
+	if (MCU_strcasecmp(ep . getcstring(), "front"))
+		t_source = kMCCameraSourceTypeFront;
+	else if (MCU_strcasecmp(ep . getcstring(), "rear"))
+		t_source = kMCCameraSourceTypeRear;
+	else
+		return ES_NORMAL;
+	
+    MCExecContext ctxt(ep);
+    intset_t t_result;
+    
+    MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result)
+	
+	MCCameraFeaturesType t_features_set;
+    t_features_set = (MCCameraFeaturesType)t_result;
+    
+	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
+		ctxt . GetEP() . concatcstring("photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCameraFeatureVideo) != 0)
+		ctxt . GetEP() . concatcstring("video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCameraFeatureFlash) != 0)
+		ctxt . GetEP() . concatcstring("flash", EC_COMMA, ctxt . GetEP() . isempty());
+	
+    MCAutoStringRef t_features;
+    /* UNCHECKED */ ep . copyasstringref(&t_features);
+    ctxt . SetTheResultToValue(&t_result);
+    
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
+{
+    if (p_parameters != nil)
+		return MCHandleSpecificCameraFeatures(context, p_parameters);
+    
+    MCExecPoint ep(nil, nil, nil);
+	ep.clear();
+    
+    MCExecContext ctxt(ep);
+    
+    intset_t t_features;
+    
+    MCPickGetCameraFeatures(ctxt, t_features);
+    
+    MCCamerasFeaturesType t_features_set;
+    t_features_set = (MCCamerasFeaturesType)t_features;
+    
+	if ((t_features_set & kMCCamerasFeatureFrontPhoto) != 0)
+		ctxt . GetEP() . concatcstring("front photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureFrontVideo) != 0)
+		ctxt . GetEP() . concatcstring("front video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureFrontFlash) != 0)
+		ctxt . GetEP() . concatcstring("front flash", EC_COMMA, ctxt . GetEP() . isempty());
+   	if ((t_features_set & kMCCamerasFeatureRearPhoto) != 0)
+		ctxt . GetEP() . concatcstring("rear photo", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureRearVideo) != 0)
+		ctxt . GetEP() . concatcstring("rear video", EC_COMMA, ctxt . GetEP() . isempty());
+	if ((t_features_set & kMCCamerasFeatureRearFlash) != 0)
+		ctxt . GetEP() . concatcstring("rear flash", EC_COMMA, ctxt . GetEP() . isempty());
+    
+    MCAutoStringRef t_features;
+    /* UNCHECKED */ ep . copyasstringref(&t_features);
+    ctxt . SetTheResultToValue(*t_features);
+}
+
+Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	
+	MCParameter *t_source_param, *t_width_param, *t_height_param;
+	t_source_param = p_parameters;
+	t_width_param = t_source_param != nil ? t_source_param -> getnext() : nil;
+	t_height_param = t_width_param != nil ? t_width_param -> getnext() : nil;
+	
+	int32_t t_width, t_height;
+	t_width = t_height = 0;
+	if (t_width_param != nil)
+	{
+		t_width_param -> eval_argument(ep);
+		t_width = ep . getint4();
+	}
+	if (t_height_param != nil)
+	{
+		t_height_param -> eval_argument(ep);
+		t_height = ep . getint4();
+	}
+    
+	const char *t_source;
+	t_source = nil;
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_source = ep . getcstring();
+	}
+	
+	MCPhotoSourceType t_photo_source;
+	bool t_is_take;
+	t_is_take = false;
+	
+	if (MCU_strcasecmp(t_source, "library") == 0)
+		t_photo_source = kMCPhotoSourceTypeLibrary;
+	else if (MCU_strcasecmp(t_source, "album") == 0)
+		t_photo_source = kMCPhotoSourceTypeAlbum;
+	else if (MCU_strcasecmp(t_source, "camera") == 0 || MCU_strcasecmp(t_source, "rear camera") == 0)
+		t_photo_source = kMCPhotoSourceTypeRearCamera;
+	else if (MCU_strcasecmp(t_source, "front camera") == 0)
+		t_photo_source = kMCPhotoSourceTypeFrontCamera;
+	else
+	{
+		MCresult -> sets("unknown source");
+		return ES_NORMAL;
+	}
+	
+	/////
+	
+	MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+	
+	if (t_width != 0 && t_height != 0)
+		MCCameraExecAcquirePhotoAndResize(t_ctxt, t_photo_source, t_width, t_height);
+	else
+		MCCameraExecAcquirePhoto(t_ctxt, t_photo_source);
+    
+	return t_ctxt . GetExecStat();
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

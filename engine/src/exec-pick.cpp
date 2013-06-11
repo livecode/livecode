@@ -34,6 +34,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDate, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickTime, 6)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
+MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
+MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -279,6 +281,16 @@ void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMe
     }
     p_ctxt.SetTheResultToStaticCString(r_result);
      */
+}
+
+void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features)
+{
+    r_features = (intset_t)MCSystemGetSpecificCameraFeatures((MCCameraSourceType)p_source);
+}
+
+void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features)
+{
+    r_features = (intset_t)MCSystemGetAllCameraFeatures();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

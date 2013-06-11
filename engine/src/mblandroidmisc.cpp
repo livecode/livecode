@@ -436,6 +436,7 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* moved to mblhandlers.cpp
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	char *t_camera_dir = nil;
@@ -489,7 +490,7 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	MCCStringFree(t_info_string);
 	MCCStringFree(t_camera_dir);
 	return ES_NORMAL;
-}
+}*/
 
 void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 {
