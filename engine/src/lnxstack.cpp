@@ -53,6 +53,10 @@ static uint2 nwait;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MW-2011-09-14: [[ Redraw ]] If non-nil, this pixmap is used in the next
 //   onpaint update.
 static Pixmap s_update_pixmap = nil;
@@ -634,6 +638,18 @@ void MCStack::clearscroll(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCBitmapClearRegion(MCBitmap *p_image, int32_t p_x, int32_t p_y, uint32_t p_width, uint32_t p_height)
+{
+	uint8_t *t_dst_row = (uint8_t*)p_image->data + p_y * p_image->bytes_per_line + p_x * sizeof(uint32_t);
+	for (uint32_t y = 0; y < p_height; y++)
+	{
+		MCMemoryClear(t_dst_row, p_width * sizeof(uint32_t));
+		t_dst_row += p_image->bytes_per_line;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCLinuxStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
@@ -723,7 +739,30 @@ public:
 			return;
 		
 		if (p_update)
+		{
+			MCWindowShape *t_mask;
+			t_mask = m_stack -> getwindowshape();
+			if (t_mask != nil && !t_mask -> is_sharp)
+			{
+				if (m_locked_area.x + m_locked_area.width > t_mask->width)
+					MCBitmapClearRegion(m_locked_bitmap, t_mask->width, 0, m_locked_area.x + m_locked_area.width - t_mask->width, m_locked_area.height);
+				if (m_locked_area.y + m_locked_area.height > t_mask->height)
+					MCBitmapClearRegion(m_locked_bitmap, 0, t_mask->height, m_locked_area.width, m_locked_area.y + m_locked_area.height - t_mask->height);
+					
+				uint32_t t_width = 0;
+				uint32_t t_height = 0;
+				if (t_mask->width > m_locked_area.x)
+					t_width = MCMin(t_mask->width - m_locked_area.x, m_locked_area.width);
+				if (t_mask->height > m_locked_area.y)
+					t_height = MCMin(t_mask->height - m_locked_area.y, m_locked_area.height);
+					
+				void *t_src_ptr;
+				t_src_ptr = t_mask -> data + m_locked_area . y * t_mask -> stride + m_locked_area . x;
+				surface_merge_with_alpha(m_locked_bits, m_locked_stride, t_src_ptr, t_mask -> stride, t_width, t_height);
+			}
+			
 			((MCScreenDC*)MCscreen)->putimage(m_stack->getwindow(), m_locked_bitmap, 0, 0, m_locked_area.x, m_locked_area.y, m_locked_area.width, m_locked_area.height);
+		}
 		
 		((MCScreenDC*)MCscreen)->destroyimage(m_locked_bitmap);
 		m_locked_bitmap = nil;
