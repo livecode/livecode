@@ -34,21 +34,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <MessageUI/MessageUI.h>
 #import <AudioToolbox/AudioServices.h>
 
-// We do not need this in iOS, as beep is already implemented and handled.
-bool MCSystemBeep (int32_t p_number_of_beeps)
-{
-    return true;
-}
-
-bool MCSystemVibrate (int32_t p_number_of_vibrates)
-{
-    for (int32_t i = 0; i < p_number_of_vibrates; i++)
-    {
-		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
-		MCIPhoneRunBlockOnMainFiber(^(void) {
-			AudioServicesPlayAlertSound(kSystemSoundID_Vibrate); // Vibrates and beeps if no vibrate is supported
-		});
-		MCscreen->wait(BEEP_INTERVAL, False, False);
-    }
-    return true;
-}
+//// MOVED TO mbliphoneextra.mm
+//// We do not need this in iOS, as beep is already implemented and handled.
+//bool MCSystemBeep (int32_t p_number_of_beeps)
+//{
+//    return true;
+//}
+//
+//bool MCSystemVibrate (int32_t p_number_of_vibrates)
+//{
+//    for (int32_t i = 0; i < p_number_of_vibrates; i++)
+//    {
+//		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
+//		MCIPhoneRunBlockOnMainFiber(^(void) {
+//			AudioServicesPlayAlertSound(kSystemSoundID_Vibrate); // Vibrates and beeps if no vibrate is supported
+//		});
+//		MCscreen->wait(BEEP_INTERVAL, False, False);
+//    }
+//    return true;
+//}

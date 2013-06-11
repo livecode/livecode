@@ -53,7 +53,7 @@ public:
 	const char *GetName(void);
 	
 	// Set the native ad's name
-	bool SetName(const char *name);
+	bool SetName(MCStringRef name);
 	
 	// Get the owning object of the instance
 	MCObjectHandle *GetOwner(void);
@@ -68,7 +68,7 @@ public:
     void SetNext(MCAd *p_next);
     
 	// Look for an instance either by name or id
-	static bool FindByNameOrId(const char *name_or_id, MCAd *&r_ad);
+	static bool FindByNameOrId(MCStringRef name_or_id, MCAd *&r_ad);
     
 	// Look for an instance with a given id
 	static bool FindById(uint32_t p_id, MCAd *&r_ad);
@@ -105,7 +105,14 @@ private:
 
 void MCAdInitialize(void);
 void MCAdFinalize(void);
+
 const char *MCAdGetInneractiveKey(void);
+bool MCAdInneractiveKeyIsNil(void);
+bool MCAdSetInneractiveKey(MCStringRef p_new_key);
+
+MCAd* MCAdGetStaticAdsPtr();
+void MCAdSetStaticAdsPtr(MCAd* p_ads_ptr);
+
 void MCAdPostMessage(MCAd *, MCAdEventType);
 MCAdType MCAdTypeFromCString(const char *p_string);
 

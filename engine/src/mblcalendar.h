@@ -39,7 +39,7 @@ typedef struct
     MCString   mccalendar;          //
 } MCCalendar;
 
-bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
+//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 void MCCalendarToArrayData (MCExecContext &r_ctxt, MCCalendar p_contact, MCArrayRef &r_result);
 bool MCSystemShowEvent(const char* p_event_id, char*& r_result);
 bool MCSystemCreateEvent(char*& r_result);

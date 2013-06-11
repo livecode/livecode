@@ -36,7 +36,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
+bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
     int64_t t_id = -1;
     int32_t t_seconds;
@@ -45,12 +45,12 @@ bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_al
     MCD_convert_from_datetime(ep, CF_SECONDS, CF_UNDEFINED, p_date);
     t_seconds = ep.getint4();
 
-    MCAndroidEngineRemoteCall("createLocalNotification", "jsssibi", &t_id, p_alert_body, p_alert_action, p_user_info, t_seconds, p_play_sound, p_badge_value);
+    MCAndroidEngineRemoteCall("createLocalNotification", "jsssibi", &t_id, MCStringGetCString(p_alert_body), MCStringGetCString(p_alert_action), MCStringGetCString(p_user_info), t_seconds, p_play_sound, p_badge_value);
     r_id = (int32_t) t_id;
     return t_id >= 0;
 }
 
-bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts)
+bool MCSystemGetRegisteredNotifications (MCStringRef &r_registered_alerts)
 {
     char *t_notifications = nil;
     
@@ -59,8 +59,7 @@ bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts)
     if (t_notifications != nil)
     {
 //        MCLog("got list of notifications: %s", t_notifications);
-        r_registered_alerts = t_notifications;
-        return true;
+        return MCStringCreateWithCString(t_notifications, r_registered_alerts);
     }
     else
         return false;
@@ -134,7 +133,7 @@ bool MCSystemSetNotificationBadgeValue (uint32_t p_badge_value)
     return false;
 }
 
-bool MCSystemGetDeviceToken (char *&r_device_token)
+bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
 {
     bool t_success = true;
     char *t_registration_id = nil;
@@ -143,12 +142,12 @@ bool MCSystemGetDeviceToken (char *&r_device_token)
     t_success = t_registration_id != nil;
     
     if (t_success)
-        r_device_token = t_registration_id;
+        t_success = MCStringCreateWithCString(r_device_token, t_registration_id);
     
     return t_success;
 }
 
-bool MCSystemGetLaunchUrl (char *&r_launch_url)
+bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url)
 {
     bool t_success = true;
     char *t_launch_url = nil;
@@ -157,7 +156,7 @@ bool MCSystemGetLaunchUrl (char *&r_launch_url)
     t_success = t_launch_url != nil;
     
     if (t_success)
-        r_launch_url = t_launch_url;
+        t_success = MCStringCreateWithCString(t_launch_url, r_launch_url);
     
     return t_success;
 }

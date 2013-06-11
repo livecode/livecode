@@ -157,7 +157,7 @@ static BusyIndicator *s_busy_indicator = nil;
 @end
 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
-bool MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_label, int32_t p_opacity)
+bool MCSystemBusyIndicatorStart (intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity)
 {
     switch (p_indicator)
     {
@@ -175,14 +175,15 @@ bool MCSystemBusyIndicatorStart (MCBusyIndicatorType p_indicator, const char *p_
                 [s_busy_indicator showBusy:@"" withOpacity:p_opacity];
             else
                 // TODO - update for unicode. Change false to the appropriate value.
-                [s_busy_indicator showBusy:[NSString stringWithCString: p_label encoding: false ? NSUTF8StringEncoding : NSMacOSRomanStringEncoding] withOpacity:p_opacity];
+                [s_busy_indicator showBusy:[NSString stringWithCString: MCStringGetCString(p_label) encoding: false ? NSUTF8StringEncoding : NSMacOSRomanStringEncoding] withOpacity:p_opacity];
                 
             return true;
         }
         case kMCBusyIndicatorKeyboard:
             return true;
+        default:
+            return false;
     }
-    return false;
 }
 
 bool MCSystemBusyIndicatorStop ()

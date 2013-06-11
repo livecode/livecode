@@ -308,6 +308,9 @@
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
+		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
+		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
+		BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
 		BE94042F175F6308003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940430175F6308003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
@@ -319,6 +322,9 @@
 		BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
 		BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */; };
 		BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
+		BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */; };
+		BE9459491761E250008408DE /* exec-sound.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9459481761E219008408DE /* exec-sound.cpp */; };
+		BE94594B17621812008408DE /* exec-misc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94594A17621812008408DE /* exec-misc.cpp */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
 		E8111F90154193AB00DB16E3 /* AddressBookUI.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */; };
@@ -923,12 +929,18 @@
 		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
+		BE93A90517608B4500791270 /* exec-notification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-notification.cpp"; path = "src/exec-notification.cpp"; sourceTree = "<group>"; };
+		BE93A9091760D32200791270 /* exec-busyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-busyindicator.cpp"; path = "src/exec-busyindicator.cpp"; sourceTree = "<group>"; };
+		BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-activityindicator.cpp"; path = "src/exec-activityindicator.cpp"; sourceTree = "<group>"; };
 		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
 		BE94042B175F6308003EAB87 /* exec-mail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-mail.cpp"; path = "src/exec-mail.cpp"; sourceTree = "<group>"; };
 		BE94042C175F6308003EAB87 /* exec-orientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-orientation.cpp"; path = "src/exec-orientation.cpp"; sourceTree = "<group>"; };
 		BE94042D175F6308003EAB87 /* exec-sensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sensor.cpp"; path = "src/exec-sensor.cpp"; sourceTree = "<group>"; };
 		BE940436175F659F003EAB87 /* mbliphoneorientation.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneorientation.mm; path = src/mbliphoneorientation.mm; sourceTree = "<group>"; };
 		BE940439175F74D2003EAB87 /* exec-ad.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ad.cpp"; path = "src/exec-ad.cpp"; sourceTree = "<group>"; };
+		BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-calendar.cpp"; path = "src/exec-calendar.cpp"; sourceTree = "<group>"; };
+		BE9459481761E219008408DE /* exec-sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-sound.cpp"; path = "src/exec-sound.cpp"; sourceTree = "<group>"; };
+		BE94594A17621812008408DE /* exec-misc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-misc.cpp"; path = "src/exec-misc.cpp"; sourceTree = "<group>"; };
 		E8111F8B1541938E00DB16E3 /* CoreMotion.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreMotion.framework; path = System/Library/Frameworks/CoreMotion.framework; sourceTree = SDKROOT; };
 		E8111F8D154193A500DB16E3 /* AddressBook.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBook.framework; path = System/Library/Frameworks/AddressBook.framework; sourceTree = SDKROOT; };
 		E8111F8F154193AB00DB16E3 /* AddressBookUI.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AddressBookUI.framework; path = System/Library/Frameworks/AddressBookUI.framework; sourceTree = SDKROOT; };
@@ -1377,9 +1389,12 @@
 				768D66C41765E11300F203A3 /* exec-pick.cpp */,
 				768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */,
 				BE449502175CDE7D00346B49 /* exec-interface */,
+				BE93A90D1760E22D00791270 /* exec-activityindicator.cpp */,
 				BE940439175F74D2003EAB87 /* exec-ad.cpp */,
 				BE94042A175F6307003EAB87 /* exec-addressbook.cpp */,
 				BE4494B7175CDE7400346B49 /* exec-array.cpp */,
+				BE93A9091760D32200791270 /* exec-busyindicator.cpp */,
+				BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */,
 				BE4494B8175CDE7400346B49 /* exec-datetime.cpp */,
 				BE4494B9175CDE7400346B49 /* exec-debugging.cpp */,
 				BE4494BA175CDE7400346B49 /* exec-dialog.cpp */,
@@ -1393,8 +1408,10 @@
 				BE4494D1175CDE7400346B49 /* exec-logic.cpp */,
 				BE94042B175F6308003EAB87 /* exec-mail.cpp */,
 				BE4494D2175CDE7400346B49 /* exec-math.cpp */,
+				BE94594A17621812008408DE /* exec-misc.cpp */,
 				BE4494D3175CDE7400346B49 /* exec-multimedia.cpp */,
 				BE4494D4175CDE7400346B49 /* exec-network.cpp */,
+				BE93A90517608B4500791270 /* exec-notification.cpp */,
 				BE94042C175F6308003EAB87 /* exec-orientation.cpp */,
 				BE4494D5175CDE7400346B49 /* exec-pasteboard.cpp */,
 				BE4494D6175CDE7400346B49 /* exec-printing.cpp */,
@@ -1402,11 +1419,13 @@
 				BE4494D8175CDE7400346B49 /* exec-security.cpp */,
 				BE94042D175F6308003EAB87 /* exec-sensor.cpp */,
 				BE4494D9175CDE7400346B49 /* exec-server.cpp */,
+				BE9459481761E219008408DE /* exec-sound.cpp */,
 				BE7506EF175E0BD200A339DA /* exec-store.cpp */,
 				BE4494DA175CDE7400346B49 /* exec-strings.cpp */,
 				BE4494DB175CDE7400346B49 /* exec-text.cpp */,
 				BE449997175D02AE00346B49 /* exec-textmessaging.cpp */,
 				BE4494DC175CDE7400346B49 /* exec.cpp */,
+				BE449502175CDE7D00346B49 /* exec-interface */,
 			);
 			name = Exec;
 			sourceTree = "<group>";
@@ -2358,6 +2377,12 @@
 				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
 				768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
 				768D66C61765E11300F203A3 /* exec-pick.cpp in Sources */,
+				BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */,
+				BE93A9061760912100791270 /* exec-notification.cpp in Sources */,
+				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
+				BE93A90E1760E22E00791270 /* exec-activityindicator.cpp in Sources */,
+				BE9459491761E250008408DE /* exec-sound.cpp in Sources */,
+				BE94594B17621812008408DE /* exec-misc.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

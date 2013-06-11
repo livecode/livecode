@@ -34,7 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneapp.h"
 #include "mblnotification.h"
 
-bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_alert_action, const char *p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
+bool MCSystemCreateLocalNotification (MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value, int32_t &r_id)
 {
     MCExecPoint ep(nil, nil, nil);
     int t_message_id = 1;
@@ -51,24 +51,24 @@ bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_al
     }
     // Build the notification.	
 	UILocalNotification *t_local_notification = [[t_cls alloc] init];
-    if (p_alert_body == nil || strlen (p_alert_body) == 0)
+    if (p_alert_body == nil || MCStringGetLength(p_alert_body) == 0)
         t_local_notification.alertBody = nil;
     else
-        t_local_notification.alertBody = [NSString stringWithCString: p_alert_body encoding: NSMacOSRomanStringEncoding];
-    if (p_alert_action == nil || strlen (p_alert_action) == 0)
+        t_local_notification.alertBody = [NSString stringWithCString: MCStringGetCString(p_alert_body) encoding: NSMacOSRomanStringEncoding];
+    if (p_alert_action == nil || MCStringGetLength(p_alert_action) == 0)
     {
         t_local_notification.alertAction = nil;
         t_local_notification.hasAction = NO;
     }
     else
     {
-        t_local_notification.alertAction = [NSString stringWithCString: p_alert_action encoding: NSMacOSRomanStringEncoding];
+        t_local_notification.alertAction = [NSString stringWithCString: MCStringGetCString(p_alert_action) encoding: NSMacOSRomanStringEncoding];
         t_local_notification.hasAction = YES;
     }
     // Create the dictionary.
     NSDictionary *t_dictionary;
-    if (strlen (p_user_info) > 0)
-        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithCString: p_user_info encoding: NSMacOSRomanStringEncoding],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
+    if (MCStringGetLength(p_user_info) > 0)
+        t_dictionary = [NSDictionary dictionaryWithObjectsAndKeys:[NSString stringWithCString: MCStringGetCString(p_user_info) encoding: NSMacOSRomanStringEncoding],@"payload",[NSString stringWithFormat:@"%i", t_message_id],@"notificationId", nil];
     else
         t_dictionary = [NSDictionary dictionaryWithObject:[NSString stringWithFormat:@"%i", t_message_id] forKey: @"notificationId"];
     t_local_notification.userInfo = t_dictionary;
@@ -87,7 +87,7 @@ bool MCSystemCreateLocalNotification (const char *p_alert_body, const char *p_al
     return true;
 }
 
-bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts) 
+bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts)
 {
     // Get the array of UILocalNotification entries
     NSString *t_result = nil;
@@ -103,7 +103,7 @@ bool MCSystemGetRegisteredNotifications (char *&r_registered_alerts)
     if (t_result == nil)
         r_registered_alerts = nil;
     else
-        return MCCStringClone([t_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_registered_alerts);
+        return MCStringCreateWithCString([t_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_registered_alerts);
     return true;
 }
 
@@ -115,9 +115,9 @@ bool MCSystemGetNotificationDetails(int32_t p_id, MCNotification &r_notification
         UILocalNotification* t_local_notification = [t_scheduled_local_notifications objectAtIndex:i];
         if (atoi ([[t_local_notification.userInfo objectForKey:@"notificationId"] cStringUsingEncoding:NSMacOSRomanStringEncoding]) == p_id) 
         {
-            MCCStringClone ([[t_local_notification alertBody] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.body); // or ""
-            MCCStringClone ([[t_local_notification alertAction] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.action); // or ""
-            MCCStringClone ([[t_local_notification.userInfo objectForKey:@"payload"] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.user_info);
+            MCStringCreateWithCString ([[t_local_notification alertBody] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.body); // or ""
+            MCStringCreateWithCString ([[t_local_notification alertAction] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.action); // or ""
+            MCStringCreateWithCString ([[t_local_notification.userInfo objectForKey:@"payload"] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_notification.user_info);
             r_notification.time = [[t_local_notification fireDate] timeIntervalSince1970];
             r_notification.badge_value = t_local_notification.applicationIconBadgeNumber;
             r_notification.play_sound = t_local_notification.soundName != nil ? true : false;
@@ -163,12 +163,12 @@ bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value)
     return true;
 }
 
-bool MCSystemGetDeviceToken (char *&r_device_token)
+bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
 {
-    return MCCStringClone([MCIPhoneGetApplication() fetchDeviceToken], r_device_token);
+    return MCStringCreateWithCString([MCIPhoneGetApplication() fetchDeviceToken], r_device_token);
 }
 
-bool MCSystemGetLaunchUrl (char *&r_launch_url)
+bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url)
 {
-	return MCCStringClone([MCIPhoneGetApplication() fetchLaunchUrl], r_launch_url);
+	return MCStringCreateWithCString([MCIPhoneGetApplication() fetchLaunchUrl], r_launch_url);
 }

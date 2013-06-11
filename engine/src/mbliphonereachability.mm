@@ -200,20 +200,23 @@ static bool MCRemoveReachabilityTarget(const char *p_host)
 	return true;
 }
 
-bool MCReachabilitySetTarget(const char *p_hostname)
+bool MCSystemSetReachabilityTarget(MCStringRef p_hostname)
 {
-	if (p_hostname == nil || MCCStringLength(p_hostname) == 0)
+	if (p_hostname == nil || MCStringGetLength(p_hostname) == 0)
 	{
 		MCRemoveReachabilityTarget(s_reach_target);
 		return true;
 	}
 	
-	return MCAddReachabilityTarget(p_hostname);
+	return MCAddReachabilityTarget(MCStringGetCString(p_hostname));
 }
 
-const char *MCReachabilityGetTarget(void)
+bool MCSystemGetReachabilityTarget(MCStringRef& r_reach_target)
 {
-	return s_reach_target == nil ? "" : s_reach_target;
+    if (s_reach_target != nil)
+        return MCStringCreateWithCString(s_reach_target, r_reach_target);
+
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

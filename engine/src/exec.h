@@ -3561,4 +3561,164 @@ void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef 
 void MCPickExecPickDateAndTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCStringRef *p_option_lists, uindex_t p_option_list_count, uindex_t *p_initial_indices, uindex_t p_indices_count, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, MCRectangle p_button_rect);
 
+///////////
+
+extern MCExecMethodInfo* kMCCalendarExecShowEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarGetEventDataMethodInfo;
+extern MCExecMethodInfo* kMCcalendarExecCreateEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecUpdateEventMethodInfo;
+extern MCExecMethodInfo* kMCCalendarExecRemoveEventMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarExecAddEventMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarGetCalendarsMethodInfo;
+//extern MCExecMethodInfo* kMCCalendarExecFindEventMethodInfo;
+
+
+void MCCalendarExecShowEvent(MCExecContext& ctxt, MCStringRef p_id);
+void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data);
+void MCcalendarExecCreateEvent(MCExecContext& ctxt);
+void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id);
+void MCCalendarExecRemoveEvent(MCExecContext& ctxt, MCStringRef p_id);
+//void MCCalendarExecAddEvent(MCExecContext& ctxt, MCStringRef p_id);
+//void MCCalendarGetCalendars(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_calendars);
+//void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_found);
+
+
+///////////
+
+extern MCExecMethodInfo* kMCNotificationExecCreateLocalNotificationMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetRegisteredNotificationsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetDetailsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationExecCancelLocalNotificationMethodInfo;
+extern MCExecMethodInfo* kMCNotificationExecCancelAllLocalNotificationsMethodInfo;
+extern MCExecMethodInfo* kMCNotificationGetNotificationBadgeValueMethodInfo;
+extern MCExecMethodInfo* kMCNotificationSetNotificationBadgeValueMethodInfo;
+
+void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value);
+void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt);
+void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_details);
+void MCNotificationExecCancelLocalNotification(MCExecContext& ctxt, int32_t p_id);
+void MCNotificationExecCancelAllLocalNotifications(MCExecContext& ctxt);
+void MCNotificationGetNotificationBadgeValue(MCExecContext& ctxt);
+void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_badge_value);
+
+///////////
+
+extern MCExecEnumTypeInfo* kMCBusyIndicatorTypeInfo;
+extern MCExecEnumTypeInfo* kMCActivityIndicatorTypeInfo;
+
+extern MCExecMethodInfo* kMCBusyIndicatorExecStartActivityIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStopActivityIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStartBusyIndicatorMethodInfo;
+extern MCExecMethodInfo* kMCBusyIndicatorExecStopBusyIndicatorMethodInfo;
+
+
+void MCBusyIndicatorExecStartActivityIndicator(MCExecContext& ctxt, intenum_t p_indicator, integer_t* p_location_x, integer_t* p_location_y);
+void MCBusyIndicatorExecStopActivityIndicator(MCExecContext& ctxt);
+void MCBusyIndicatorExecStartBusyIndicator(MCExecContext& ctxt, intenum_t p_indicator, MCStringRef p_label, int32_t p_opacity);
+void MCBusyIndicatorExecStopBusyIndicator(MCExecContext& ctxt);
+
+////////////
+
+extern MCExecEnumTypeInfo* kMCSoundAudioCategoryTypeInfo;
+
+extern MCExecMethodInfo* kMCSoundExecPlaySoundOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecStopPlayingOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecPausePlayingOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecResumePlayingOnChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundExecDeleteSoundChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundSetVolumeOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetVolumeOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetStatusOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetSoundOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetNextSoundOfChannelMethodInfo;
+extern MCExecMethodInfo* kMCSoundGetSoundChannelsMethodInfo;
+extern MCExecMethodInfo* kMCSoundSetAudioCategoryMethodInfo;
+
+void MCSoundExecPlaySoundOnChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef p_file, intenum_t p_type);
+void MCSoundExecStopPlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecPausePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecResumePlayingOnChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundExecDeleteSoundChannel(MCExecContext& ctxt, MCStringRef p_channel);
+void MCSoundSetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t p_volume);
+void MCSoundGetVolumeOfChannel(MCExecContext& ctxt, MCStringRef p_channel, int32_t& r_volume);
+void MCSoundGetStatusOfChannel(MCExecContext& ctxt, MCStringRef p_channel, intenum_t& r_status);
+void MCSoundGetSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound);
+void MCSoundGetNextSoundOfChannel(MCExecContext& ctxt, MCStringRef p_channel, MCStringRef &r_sound);
+void MCSoundGetSoundChannels(MCExecContext& ctxt, MCStringRef &r_channels);
+void MCSoundSetAudioCategory(MCExecContext &ctxt, intenum_t p_category);
+
+/////////////
+
+extern MCExecEnumTypeInfo* kMCMiscKeyboardTypeTypeInfo;
+extern MCExecEnumTypeInfo* kMCMiscKeyboardReturnTypeTypeInfo;
+extern MCExecEnumTypeInfo* kMCMiscStatusBarStyleTypeInfo;
+
+extern MCExecMethodInfo* kMCMiscGetDeviceTokenMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetLaunchUrlMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecBeepMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecVibrateMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetiphoneDeviceResolutionMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetiphoneUseDeviceResolutionMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetiphoneDeviceScaleMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetPixelDensityMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetStatusBarStyleMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecShowStatusBarMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecHideStatusBarMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetKeyboardTypeMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetKeyboardReturnKeyMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetPreferredLanguagesMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetPreferredLocaleMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecClearTouchesMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetSystemIdentifierMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetApplicationIdentifierMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetReachabilityTargetMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetReachabilityTargetMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecExportImageToAlbumMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetRedrawIntervalMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetAnimatedAutorotationMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetDoNotBackupFileMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetDoNotBackupFileMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetFileDataProtectionMethodInfo;
+extern MCExecMethodInfo* kMCMiscSetFileDataProtectionMethodInfo;
+
+
+void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
+void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url);
+
+void MCMiscExecBeep(MCExecContext& ctxt, int32_t* p_number_of_times);
+void MCMiscExecVibrate(MCExecContext& ctxt, int32_t* p_number_of_times);
+
+void MCMiscGetiphoneDeviceResolution(MCExecContext& ctxt, MCStringRef& r_resolution);
+void MCMiscSetiphoneUseDeviceResolution(MCExecContext& ctxt, bool p_use_device_res, bool p_use_control_device_res);
+void MCMiscGetiphoneDeviceScale(MCExecContext& ctxt, real64_t& r_scale);
+void MCMiscGetPixelDensity(MCExecContext& ctxt, real64_t& r_density);
+
+void MCMiscSetStatusBarStyle(MCExecContext& ctxt, intenum_t p_style);
+void MCMiscExecShowStatusBar(MCExecContext& ctxt);
+void MCMiscExecHideStatusBar(MCExecContext& ctxt);
+
+void MCMiscSetKeyboardType(MCExecContext& ctxt, intenum_t p_keyboard_type);
+void MCMiscSetKeyboardReturnKey(MCExecContext& ctxt, intenum_t p_keyboard_return_key);
+
+void MCMiscGetPreferredLanguages(MCExecContext& ctxt, MCStringRef& r_preferred_languages);
+void MCMiscGetCurrentLocale(MCExecContext& ctxt, MCStringRef& r_current_locale);
+
+void MCMiscExecClearTouches(MCExecContext& ctxt);
+
+void MCMiscGetSystemIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier);
+void MCMiscGetApplicationIdentifier(MCExecContext& ctxt, MCStringRef& r_identifier);
+
+void MCMiscSetReachabilityTarget(MCExecContext& ctxt, MCStringRef p_hostname);
+void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname);
+
+void MCMiscExecExportImageToAlbum(MCExecContext& ctxt, MCStringRef p_data, MCStringRef p_file_name);
+
+void MCMiscSetRedrawInterval(MCExecContext& ctxt, int32_t p_interval);
+void MCMiscSetAnimateAutorotation(MCExecContext& ctxt, bool p_enabled);
+
+void MCMiscGetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool& r_no_backup);
+void MCMiscSetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup);
+void MCMiscGetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef& p_protection_string);
+void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef p_protection_string);
+
 #endif

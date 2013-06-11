@@ -83,7 +83,7 @@ class MCiOSInneractiveAd;
 class MCiOSInneractiveAd : public MCAd
 {
 public:
-    MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, NSMutableDictionary *p_meta_data);
+    MCiOSInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, NSMutableDictionary *p_meta_data);
     
     // overridden methods
     bool Create(void);
@@ -246,7 +246,7 @@ static void initialize_ad_delegate(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, NSMutableDictionary *p_meta_data)
+MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, NSMutableDictionary *p_meta_data)
 {
     m_view = nil;
     m_delegate = nil;
@@ -254,8 +254,12 @@ MCiOSInneractiveAd::MCiOSInneractiveAd(MCAdType p_type, MCAdTopLeft p_top_left, 
     m_timeout = p_timeout;
     m_meta_data = p_meta_data;
     if (m_type != kMCAdTypeFullscreen)
-        m_top_left = p_top_left;
-    else {
+    {
+        m_top_left.x = p_top_left_x;
+        m_top_left.y = p_top_left_y;
+    }
+    else
+    {
         m_top_left.x = 0;
         m_top_left.y = 0;
     }
@@ -426,7 +430,7 @@ void MCSystemInneractiveAdInit()
 {
 }
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCVariableValue *p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCVariableValue *p_meta_data)
 {    
     NSMutableDictionary *t_meta_data;
     t_meta_data = [[NSMutableDictionary alloc] init];    
@@ -450,7 +454,7 @@ bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_ty
             [t_meta_data setObject:[NSString stringWithCString: ctxt.GetEP().getcstring() encoding: NSMacOSRomanStringEncoding] forKey:[NSNumber numberWithInt:Key_Msisdn]];        
     }
     
-	r_ad = new MCiOSInneractiveAd(p_type, p_top_left, p_timeout, t_meta_data);
+	r_ad = new MCiOSInneractiveAd(p_type, p_top_left_x, p_top_left_y, p_timeout, t_meta_data);
 	return true;
 }
 
@@ -462,7 +466,7 @@ void MCSystemInneractiveAdInit()
 {
 }
 
-bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, MCAdTopLeft p_top_left, uint32_t p_timeout, MCArrayRef p_meta_data)
+bool MCSystemInneractiveAdCreate(MCExecContext &ctxt, MCAd*& r_ad, MCAdType p_type, uint32_t p_top_left_x, uint32_t p_top_left_y, uint32_t p_timeout, MCArrayRef p_meta_data)
 {
 	return false;
 }

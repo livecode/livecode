@@ -44,14 +44,19 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // HC-2011-10-12 [[ Media Picker ]] Included relevant library.
 #import <MediaPlayer/MPMediaPickerController.h>
 #import <MessageUI/MessageUI.h>
+#import <AudioToolbox/AudioServices.h>
 
 // HC-2011-10-12 [[ Media Picker ]] Included relevant library.
 #include "mbliphonecontrol.h"
 #include "mbliphone.h"
 #include "mbliphoneview.h"
 
+#include <sys/xattr.h>
+
 #include "mblstore.h"
 #include "mblsyntax.h"
+
+#define FILEATTR_DONOTBACKUP "com.apple.MobileBackup"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -228,20 +233,21 @@ UIWindow *MCIPhoneGetWindow(void);
 
 @end
 
-static bool is_png_data(const MCString& p_data)
-{
-	return p_data . getlength() > 4 && MCMemoryEqual(p_data . getstring(), "\211PNG", 4);
-}
-
-static bool is_gif_data(const MCString& p_data)
-{
-	return p_data . getlength() > 4 && MCMemoryEqual(p_data . getstring(), "GIF8", 4);
-}
-
-static bool is_jpeg_data(const MCString& p_data)
-{
-	return p_data . getlength() > 2 && MCMemoryEqual(p_data . getstring(), "\xff\xd8", 2);
-}
+//// MOVED TO exec-misc.cpp
+//static bool is_png_data(const MCString& p_data)
+//{
+//	return p_data . getlength() > 4 && MCMemoryEqual(p_data . getstring(), "\211PNG", 4);
+//}
+//
+//static bool is_gif_data(const MCString& p_data)
+//{
+//	return p_data . getlength() > 4 && MCMemoryEqual(p_data . getstring(), "GIF8", 4);
+//}
+//
+//static bool is_jpeg_data(const MCString& p_data)
+//{
+//	return p_data . getlength() > 2 && MCMemoryEqual(p_data . getstring(), "\xff\xd8", 2);
+//}
 
 struct export_image_t
 {
@@ -265,71 +271,93 @@ static void export_image(void *p_context)
 	[t_data release];
 }
 
-Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
-{
-	if (p_parameters == nil)
-		return ES_NORMAL;
-	
-	MCExecPoint ep(nil, nil, nil);	
-	p_parameters -> eval_argument(ep);
+//// MOVED TO mblhandlers.cpp
+//Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
+//{
+//	if (p_parameters == nil)
+//		return ES_NORMAL;
+//	
+//	MCExecPoint ep(nil, nil, nil);	
+//	p_parameters -> eval_argument(ep);
+//
+//	MCString t_raw_data;
+//	if (is_png_data(ep . getsvalue()) ||
+//		is_gif_data(ep . getsvalue()) ||
+//		is_jpeg_data(ep . getsvalue()))
+//		t_raw_data = ep . getsvalue();
+//	else
+//	{
+//		uint4 parid;
+//		MCObject *objptr;
+//		MCChunk *tchunk = new MCChunk(False);
+//		MCerrorlock++;
+//		MCScriptPoint sp(ep);
+//		Parse_stat stat = tchunk->parse(sp, False);
+//		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
+//		{
+//			MCresult -> sets("could not find image");
+//			MCerrorlock--;
+//			delete tchunk;
+//			return ES_NORMAL;
+//		}
+//		
+//		if (objptr -> gettype() != CT_IMAGE)
+//		{
+//			MCresult -> sets("not an image");
+//			return ES_NORMAL;
+//		}
+//		
+//		MCImage *t_image;
+//		t_image = static_cast<MCImage *>(objptr);
+//		if (t_image -> getcompression() != F_PNG &&
+//			t_image -> getcompression() != F_JPEG &&
+//			t_image -> getcompression() != F_GIF)
+//		{
+//			MCresult -> sets("not a supported format");
+//			return ES_NORMAL;
+//		}
+//		
+//		t_raw_data = t_image -> getrawdata();
+//	}
+//	
+//	export_image_t ctxt;
+//	ctxt . raw_data = t_raw_data;
+//	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
+//	
+//	MCIPhoneRunOnMainFiber(export_image, &ctxt);
+//	
+//	while(![ctxt . delegate isFinished])
+//		MCscreen -> wait(60.0, False, True);
+//	
+//	if ([ctxt . delegate isSuccessful])
+//		MCresult -> clear();
+//	else
+//		MCresult -> sets("export failed");
+//	
+//	[ctxt . delegate release];
+//	
+//	return ES_NORMAL;
+//}
 
-	MCString t_raw_data;
-	if (is_png_data(ep . getsvalue()) ||
-		is_gif_data(ep . getsvalue()) ||
-		is_jpeg_data(ep . getsvalue()))
-		t_raw_data = ep . getsvalue();
-	else
-	{
-		uint4 parid;
-		MCObject *objptr;
-		MCChunk *tchunk = new MCChunk(False);
-		MCerrorlock++;
-		MCScriptPoint sp(ep);
-		Parse_stat stat = tchunk->parse(sp, False);
-		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
-		{
-			MCresult -> sets("could not find image");
-			MCerrorlock--;
-			delete tchunk;
-			return ES_NORMAL;
-		}
-		
-		if (objptr -> gettype() != CT_IMAGE)
-		{
-			MCresult -> sets("not an image");
-			return ES_NORMAL;
-		}
-		
-		MCImage *t_image;
-		t_image = static_cast<MCImage *>(objptr);
-		if (t_image -> getcompression() != F_PNG &&
-			t_image -> getcompression() != F_JPEG &&
-			t_image -> getcompression() != F_GIF)
-		{
-			MCresult -> sets("not a supported format");
-			return ES_NORMAL;
-		}
-		
-		t_raw_data = t_image -> getrawdata();
-	}
-	
+bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
+{
 	export_image_t ctxt;
-	ctxt . raw_data = t_raw_data;
+	ctxt . raw_data = MCStringGetOldString(p_raw_data);
 	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
-	
+
 	MCIPhoneRunOnMainFiber(export_image, &ctxt);
-	
+
 	while(![ctxt . delegate isFinished])
 		MCscreen -> wait(60.0, False, True);
-	
+
 	if ([ctxt . delegate isSuccessful])
-		MCresult -> clear();
-	else
-		MCresult -> sets("export failed");
-	
+        r_save_result = kMCEmptyString;
+    else
+		MCStringCreateWithCString("export failed", r_save_result);
+
 	[ctxt . delegate release];
-	
-	return ES_NORMAL;
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -470,40 +498,75 @@ bool MCIPhoneSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
+//// MOVED TO mbmlhandlers.cpp
+//static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//	
+//	UIStatusBarStyle t_style;
+//	t_style = UIStatusBarStyleDefault;
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		if (ep . getsvalue() == "default")
+//			t_style = UIStatusBarStyleDefault;
+//		else if (ep . getsvalue() == "translucent")
+//			t_style = UIStatusBarStyleBlackTranslucent;
+//		else if (ep . getsvalue() == "opaque")
+//			t_style = UIStatusBarStyleBlackOpaque;
+//	}
+//	
+//	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
+//	
+//	return ES_NORMAL;
+//}
+
+//Exec_stat MCHandleShowStatusBar(void *context, MCParameter *p_parameters)
+//{
+//	[MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
+//	
+//	return ES_NORMAL;
+//}
+//
+//Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
+//{
+//	[MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
+//	
+//	return ES_NORMAL;
+//}
+
+static UIStatusBarStyle MCMiscUIStatusBarStyleFromMCExecEnum(MCMiscStatusBarStyle p_status_bar_style)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
-	UIStatusBarStyle t_style;
-	t_style = UIStatusBarStyleDefault;
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_style = UIStatusBarStyleDefault;
-		else if (ep . getsvalue() == "translucent")
-			t_style = UIStatusBarStyleBlackTranslucent;
-		else if (ep . getsvalue() == "opaque")
-			t_style = UIStatusBarStyleBlackOpaque;
-	}
-	
-	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
-	
-	return ES_NORMAL;
+    switch(p_status_bar_style)
+    {
+        case kMCMiscStatusBarStyleOpaque:
+            return UIStatusBarStyleBlackOpaque;
+        case kMCMiscStatusBarStyleTranslucent:
+            return UIStatusBarStyleBlackTranslucent;
+        default:
+            return UIStatusBarStyleDefault;
+    }
 }
 
-Exec_stat MCHandleShowStatusBar(void *context, MCParameter *p_parameters)
-{
-	[MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
-	
-	return ES_NORMAL;
+bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
+{	
+	[MCIPhoneGetApplication() switchToStatusBarStyle: MCMiscUIStatusBarStyleFromMCExecEnum((MCMiscStatusBarStyle)p_status_bar_style)];
+    
+    return true;
 }
 
-Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
+bool MCSystemShowStatusBar()
 {
-	[MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
-	
-	return ES_NORMAL;
+    [MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
+    
+    return true;
+}
+
+bool MCSystemHideStatusBar()
+{
+    [MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
+    
+    return false;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -537,7 +600,7 @@ static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameter
 	
 	t_option_list = nil;
 
-	// Get the options list.
+	// Get the options list.z
 	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
 	while (t_success)
 	{
@@ -648,56 +711,120 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	return ES_NORMAL;
 }
 
-static Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// We do not need this in iOS, as beep is already implemented and handled.
+bool MCSystemBeep (int32_t p_number_of_beeps)
+{
+    return true;
+}
+
+bool MCSystemVibrate (int32_t p_number_of_vibrates)
+{
+    for (int32_t i = 0; i < p_number_of_vibrates; i++)
+    {
+		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
+		MCIPhoneRunBlockOnMainFiber(^(void) {
+			AudioServicesPlayAlertSound(kSystemSoundID_Vibrate); // Vibrates and beeps if no vibrate is supported
+		});
+		MCscreen->wait(BEEP_INTERVAL, False, False);
+    }
+    return true;
+}
+
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
+//{
+//	UIScreenMode *t_mode;
+//	t_mode = [[UIScreen mainScreen] currentMode];
+//		
+//    // MM-2012-11-22: [[ Bug 10502 ]] Make sure the resolution is reported as width height in relation to portrait.
+//	char t_size[U4L + 1 + U4L + 1];
+//    if ([t_mode size] . width < [t_mode size] .height)
+//        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . width, (uint32_t)[t_mode size] . height);
+//    else
+//        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . height, (uint32_t)[t_mode size] . width);
+//	MCresult -> copysvalue(t_size);
+//
+//	return ES_NORMAL;
+//}
+
+bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
 {
 	UIScreenMode *t_mode;
 	t_mode = [[UIScreen mainScreen] currentMode];
-		
+
     // MM-2012-11-22: [[ Bug 10502 ]] Make sure the resolution is reported as width height in relation to portrait.
 	char t_size[U4L + 1 + U4L + 1];
     if ([t_mode size] . width < [t_mode size] .height)
         sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . width, (uint32_t)[t_mode size] . height);
     else
         sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . height, (uint32_t)[t_mode size] . width);
-	MCresult -> copysvalue(t_size);
+    
+	MCStringCreateWithCString(t_size, p_resolution);
 
 	return ES_NORMAL;
 }
 
-static Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//	
+//	bool t_use_device_res;
+//	t_use_device_res = false;
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_use_device_res = (ep . getsvalue() == MCtruemcstring);
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	bool t_use_control_device_res;
+//	t_use_control_device_res = false;
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_use_control_device_res = (ep . getsvalue() == MCtruemcstring);
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	
+//	MCIPhoneUseDeviceResolution(t_use_device_res, t_use_control_device_res);
+//	
+//	return ES_NORMAL;
+//}
+
+bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
-	bool t_use_device_res;
-	t_use_device_res = false;
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_use_device_res = (ep . getsvalue() == MCtruemcstring);
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	bool t_use_control_device_res;
-	t_use_control_device_res = false;
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_use_control_device_res = (ep . getsvalue() == MCtruemcstring);
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	
-	MCIPhoneUseDeviceResolution(t_use_device_res, t_use_control_device_res);
-	
-	return ES_NORMAL;
+    MCIPhoneUseDeviceResolution(p_use_control_device_res, p_use_control_device_res);
+    
+    return true;
 }
 
-static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
+//{
+//	MCresult -> setnvalue(MCIPhoneGetDeviceScale());
+//	
+//	return ES_NORMAL;
+//}
+
+bool MCSystemGetDeviceScale(real64_t& r_scale)
 {
-	MCresult -> setnvalue(MCIPhoneGetDeviceScale());
-	
-	return ES_NORMAL;
+    r_scale = MCIPhoneGetDeviceScale();
+    
+    return true;
 }
+
+// Not implemented on IPhone
+bool MCSystemGetPixelDensity(real64_t& r_density)
+{
+    return false;
+}
+
 /* MOVED TO mbliphoneorientation.mm
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
@@ -818,125 +945,330 @@ static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_para
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
-{
-	MCExecPoint ep(nil, nil, nil);
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//
+//	if (p_parameters != nil)
+//	{
+//		UIKeyboardType t_type;
+//		p_parameters -> eval_argument(ep);
+//		if (ep . getsvalue() == "default")
+//			t_type = UIKeyboardTypeDefault;
+//		else if (ep . getsvalue() == "alphabet")
+//			t_type = UIKeyboardTypeAlphabet;
+//		else if (ep . getsvalue() == "numeric")
+//			t_type = UIKeyboardTypeNumbersAndPunctuation;
+//		else if (ep . getsvalue() == "url")
+//			t_type = UIKeyboardTypeURL;
+//		else if (ep . getsvalue() == "number")
+//			t_type = UIKeyboardTypeNumberPad;
+//		else if (ep . getsvalue() == "phone")
+//			t_type = UIKeyboardTypePhonePad;
+//		else if (ep . getsvalue() == "contact")
+//			t_type = UIKeyboardTypeNamePhonePad;
+//		else if (ep . getsvalue() == "email")
+//			t_type = UIKeyboardTypeEmailAddress;
+//#ifdef __IPHONE_4_1
+//		else if (ep . getsvalue() == "decimal")
+//			t_type = UIKeyboardTypeDecimalPad;				
+//#endif
+//		
+//		MCIPhoneSetKeyboardType(t_type);
+//	}
+//	return ES_NORMAL;
+//}
 
-	if (p_parameters != nil)
-	{
-		UIKeyboardType t_type;
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_type = UIKeyboardTypeDefault;
-		else if (ep . getsvalue() == "alphabet")
-			t_type = UIKeyboardTypeAlphabet;
-		else if (ep . getsvalue() == "numeric")
-			t_type = UIKeyboardTypeNumbersAndPunctuation;
-		else if (ep . getsvalue() == "url")
-			t_type = UIKeyboardTypeURL;
-		else if (ep . getsvalue() == "number")
-			t_type = UIKeyboardTypeNumberPad;
-		else if (ep . getsvalue() == "phone")
-			t_type = UIKeyboardTypePhonePad;
-		else if (ep . getsvalue() == "contact")
-			t_type = UIKeyboardTypeNamePhonePad;
-		else if (ep . getsvalue() == "email")
-			t_type = UIKeyboardTypeEmailAddress;
+static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_type)
+{
+    switch(p_type)
+    {
+        case kMCMiscKeyboardTypeAlphabet:
+            return UIKeyboardTypeAlphabet;
+        case kMCMiscKeyboardTypeNumeric:
+            return UIKeyboardTypeNumbersAndPunctuation;
+        case kMCMiscKeyboardTypeUrl:
+            return UIKeyboardTypeURL;
+        case kMCMiscKeyboardTypeNumber:
+            return UIKeyboardTypeNumberPad;
+        case kMCMiscKeyboardTypePhone:
+            return UIKeyboardTypePhonePad;
+        case kMCMiscKeyboardTypeContact:
+            return UIKeyboardTypeNamePhonePad;
+        case kMCMiscKeyboardTypeEmail:
+            return UIKeyboardTypeEmailAddress;
 #ifdef __IPHONE_4_1
-		else if (ep . getsvalue() == "decimal")
-			t_type = UIKeyboardTypeDecimalPad;				
-#endif
-		
-		MCIPhoneSetKeyboardType(t_type);
-	}
-	return ES_NORMAL;
+        case kMCMiscKeyboardTypeDecimal:
+            return UIKeyboardTypeDecimalPad;
+#endif // __IPHONE_4_1
+        default:
+            return UIKeyboardTypeDefault;
+    }
 }
 
-static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
+bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-	MCExecPoint ep(nil, nil, nil);
-	
-	if (p_parameters != nil)
-	{	
-		UIReturnKeyType t_type;
-		p_parameters -> eval_argument(ep);
-		if (ep . getsvalue() == "default")
-			t_type = UIReturnKeyDefault;
-		else if (ep . getsvalue() == "go")
-			t_type = UIReturnKeyGo;
-		else if (ep . getsvalue() == "google")
-			t_type = UIReturnKeyGoogle;
-		else if (ep . getsvalue() == "join")
-			t_type = UIReturnKeyJoin;
-		else if (ep . getsvalue() == "next")
-			t_type = UIReturnKeyNext;
-		else if (ep . getsvalue() == "route")
-			t_type = UIReturnKeyRoute;
-		else if (ep . getsvalue() == "search")
-			t_type = UIReturnKeySearch;
-		else if (ep . getsvalue() == "send")
-			t_type = UIReturnKeySend;
-		else if (ep . getsvalue() == "yahoo")
-			t_type = UIReturnKeyYahoo;
-		else if (ep . getsvalue() == "done")
-			t_type = UIReturnKeyDone;
-		else if (ep . getsvalue() == "emergency call")
-			t_type = UIReturnKeyEmergencyCall;
-		
-		MCIPhoneSetReturnKeyType(t_type);
-	}
-	return ES_NORMAL;
+    MCIPhoneSetKeyboardType(MCMiscGetUIKeyboardTypeFromExecEnum((MCMiscKeyboardType)p_type));
+    
+    return  true;
+}
+
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//
+//	if (p_parameters != nil)
+//	{
+//		UIReturnKeyType t_type;
+//		p_parameters -> eval_argument(ep);
+//		if (ep . getsvalue() == "default")
+//			t_type = UIReturnKeyDefault;
+//		else if (ep . getsvalue() == "go")
+//			t_type = UIReturnKeyGo;
+//		else if (ep . getsvalue() == "google")
+//			t_type = UIReturnKeyGoogle;
+//		else if (ep . getsvalue() == "join")
+//			t_type = UIReturnKeyJoin;
+//		else if (ep . getsvalue() == "next")
+//			t_type = UIReturnKeyNext;
+//		else if (ep . getsvalue() == "route")
+//			t_type = UIReturnKeyRoute;
+//		else if (ep . getsvalue() == "search")
+//			t_type = UIReturnKeySearch;
+//		else if (ep . getsvalue() == "send")
+//			t_type = UIReturnKeySend;
+//		else if (ep . getsvalue() == "yahoo")
+//			t_type = UIReturnKeyYahoo;
+//		else if (ep . getsvalue() == "done")
+//			t_type = UIReturnKeyDone;
+//		else if (ep . getsvalue() == "emergency call")
+//			t_type = UIReturnKeyEmergencyCall;
+//
+//		MCIPhoneSetReturnKeyType(t_type);
+//	}
+//	return ES_NORMAL;
+//}
+
+static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardReturnKey p_type)
+{
+    switch(p_type)
+    {
+        case kMCMiscKeyboardReturnKeyGo:
+            return UIReturnKeyGo;
+        case kMCMiscKeyboardReturnKeyGoogle:
+            return UIReturnKeyGoogle;
+        case kMCMiscKeyboardReturnKeyJoin:
+            return UIReturnKeyJoin;
+        case kMCMiscKeyboardReturnKeyNext:
+            return UIReturnKeyNext;
+        case kMCMiscKeyboardReturnKeySearch:
+            return UIReturnKeySearch;
+        case kMCMiscKeyboardReturnKeySend:
+            return UIReturnKeySend;
+        case kMCMiscKeyboardReturnKeyRoute:
+            return UIReturnKeyRoute;
+        case kMCMiscKeyboardReturnKeyYahoo:
+            return UIReturnKeyYahoo;
+        case kMCMiscKeyboardReturnKeyDone:
+            return UIReturnKeyDone;
+        case kMCMiscKeyboardReturnKeyEmergencyCall:
+            return UIReturnKeyEmergencyCall;
+        default:
+            return UIReturnKeyDefault;
+    }
+}
+
+bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
+{
+    MCIPhoneSetReturnKeyType(MCMiscGetUIReturnKeyTypeFromMCExecEnum((MCMiscKeyboardReturnKey)p_type));
+                             
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
-{
-	NSString *t_current_locale_id = nil;
-	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
-	
-	const char *t_id_string = nil;
-	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
-	
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    
-	ctxt . SetTheResultToStaticCString(t_id_string);
-	return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
+//{
+//	NSString *t_current_locale_id = nil;
+//	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
+//	
+//	const char *t_id_string = nil;
+//	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
+//	
+//    MCExecPoint ep(nil, nil, nil);
+//    MCExecContext ctxt(ep);
+//    
+//	ctxt . SetTheResultToStaticCString(t_id_string);
+//	return ES_NORMAL;
+//}
 
-static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+//static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+//{
+//	bool t_success;
+//	t_success = true;
+//	
+//	NSArray *t_preferred_langs = nil;
+//	t_preferred_langs = [NSLocale preferredLanguages];
+//	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
+//
+//	MCExecPoint ep;
+//	const char *t_lang_string = nil;
+//	if (t_success)
+//	{
+//		bool t_first = true;
+//		for (NSString *t_lang in t_preferred_langs)
+//		{
+//			ep.concatcstring([t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, t_first);
+//			t_first = false;
+//		}
+//	}
+//	
+//#ifdef MOBILE_BROKEN
+//	if (t_success)
+//		ctxt . SetTheResultToValue(ep . getsvalue());
+//	else
+//		MCresult->clear();
+//#endif
+//	
+//	return ES_NORMAL;
+//}
+
+bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 {
 	bool t_success;
 	t_success = true;
-	
+
 	NSArray *t_preferred_langs = nil;
 	t_preferred_langs = [NSLocale preferredLanguages];
 	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
 
-	MCExecPoint ep;
-	const char *t_lang_string = nil;
+    MCAutoStringRef t_preferred_languages;
+    t_success |= MCStringCreateMutable(0, &t_preferred_languages);
+    
 	if (t_success)
 	{
-		bool t_first = true;
 		for (NSString *t_lang in t_preferred_langs)
 		{
-			ep.concatcstring([t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, t_first);
-			t_first = false;
-		}
+            t_success |= MCStringAppendFormat(&t_preferred_languages, "\ns", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+        }
 	}
-	
-#ifdef MOBILE_BROKEN
-	if (t_success)
-		ctxt . SetTheResultToValue(ep . getsvalue());
-	else
-		MCresult->clear();
-#endif
-	
-	return ES_NORMAL;
+    
+    if (t_success)
+    {
+        r_preferred_languages = MCValueRetain(*t_preferred_languages);
+        return ES_NORMAL;
+    }
+    
+    return ES_ERROR;
+}
+
+
+bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
+{
+	NSString *t_current_locale_id = nil;
+	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
+
+	MCStringCreateWithCString([t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding], r_current_locale);
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
+{
+	NSString *t_identifier = nil;
+	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
+	
+    return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+}
+
+bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
+{
+	NSDictionary *t_plist;
+	t_plist = [[NSBundle mainBundle] infoDictionary];
+	
+	NSString *t_identifier;
+	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
+	
+	return MCStringCreateWithCString([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding], r_identifier);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCFileSetDataProtection(MCStringRef p_filename, NSString *p_protection);
+extern bool MCFileGetDataProtection(MCStringRef p_filename, NSString *&r_protection);
+extern bool MCDataProtectionFromString(MCStringRef p_string, NSString *&r_protection);
+extern bool MCDataProtectionToString(NSString *p_protection, MCStringRef &r_string);
+
+bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup)
+{
+   bool t_success = true;
+    if (p_no_backup)
+    {
+        uint8_t t_val = 1;
+        t_success = 0 == setxattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0);
+    }
+    else
+    {
+        t_success = 0 == removexattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, 0);
+    }
+    return t_success;
+}
+
+bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup)
+{
+    uint8_t t_val = 0;
+    if (-1 == getxattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
+        return false;
+    return t_val != 0;
+}
+
+bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_string, MCStringRef& r_status)
+{
+	NSString *t_protection = nil;
+    bool t_success;
+
+    t_success = MCDataProtectionFromString(p_protection_string, t_protection);
+    
+    if (t_success)
+        t_success = MCFileSetDataProtection(p_path, t_protection);
+    else
+    {
+		MCStringCreateWithCString("unknown protection type", r_status);
+        return false;
+    }
+
+    if (t_success)
+        return true;
+    
+    MCStringCreateWithCString("cannot set file protection", r_status);
+    return false;
+}
+
+bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string)
+{
+	NSString *t_protection = nil;
+	MCAutoStringRef t_protection_string;
+	bool t_success;
+
+	if (t_success)
+		t_success = MCFileGetDataProtection(p_path, t_protection);
+
+	if (t_success)
+		t_success = MCDataProtectionToString(t_protection, &t_protection_string);
+
+	if (t_success)
+    {
+        r_protection_string = MCValueRetain(*t_protection_string);
+        return true;
+    }
+
+    return false;
+}
 
 /* MOVED TO mbliphoneidletimer.mm
 
@@ -971,105 +1303,129 @@ static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
-{
-	MCscreen -> wait(1/25.0, False, False);
-	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
-	MCEventQueueClearTouches();
-	return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
+//{
+//	MCscreen -> wait(1/25.0, False, False);
+//	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
+//	MCEventQueueClearTouches();
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandeSystemIdentifier(void *context, MCParameter *p_parameters)
-{
-	NSString *t_identifier = nil;
-	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
-	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-	return ES_NORMAL;	
-}
-
-static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
-{
-	// Get the plist
-	NSDictionary *t_plist;
-	t_plist = [[NSBundle mainBundle] infoDictionary];
-	
-	NSString *t_identifier;
-	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
-	
-	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-	
-	return ES_NORMAL;	
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-extern bool MCReachabilitySetTarget(const char *hostname);
-extern const char *MCReachabilityGetTarget(void);
-
-static Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_hostname = nil;
-	
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_hostname);
-	
-	if (t_success)
-		t_success = MCReachabilitySetTarget(t_hostname);
-	
-	MCCStringFree(t_hostname);
-	return t_success ? ES_NORMAL : ES_ERROR;
-}
-
-static Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters)
-{
-	MCresult -> copysvalue(MCReachabilityGetTarget());
-	return ES_NORMAL;
-}
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandeSystemIdentifier(void *context, MCParameter *p_parameters)
+//{
+//	NSString *t_identifier = nil;
+//	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
+//	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+//	return ES_NORMAL;	
+//}
+//
+//static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
+//{
+//	// Get the plist
+//	NSDictionary *t_plist;
+//	t_plist = [[NSBundle mainBundle] infoDictionary];
+//	
+//	NSString *t_identifier;
+//	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
+//	
+//	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+//	
+//	return ES_NORMAL;	
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
+//// MOVED TO exec-misc.cpp
+//extern bool MCReachabilitySetTarget(const char *hostname);
+//extern const char *MCReachabilityGetTarget(void);
+
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
+//{
+//	bool t_success;
+//	t_success = true;
+//	
+//	char *t_hostname = nil;
+//	
+//	if (t_success)
+//		t_success = MCParseParameters(p_parameters, "s", &t_hostname);
+//	
+//	if (t_success)
+//		t_success = MCReachabilitySetTarget(t_hostname);
+//	
+//	MCCStringFree(t_hostname);
+//	return t_success ? ES_NORMAL : ES_ERROR;
+//}
+//
+//static Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters)
+//{
+//	MCresult -> copysvalue(MCReachabilityGetTarget());
+//	return ES_NORMAL;
+//}
+
+////////////////////////////////////////////////////////////////////////////////
+
+//// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
+//{
+//	bool t_success;
+//	t_success = true;
+//	
+//	int32_t t_interval;
+//	if (t_success)
+//		t_success = MCParseParameters(p_parameters, "i", &t_interval);
+//	
+//	if (t_success)
+//	{
+//		if (t_interval <= 0)
+//			MCRedrawEnableScreenUpdates();
+//		else
+//			MCRedrawDisableScreenUpdates();
+//	
+//		[MCIPhoneGetApplication() setRedrawInterval: t_interval];
+//	}
+//	
+//	return ES_NORMAL;
+//}
+//
+//// MW-2012-02-15: [[ Bug 9985 ]] Handler method for the 'iphoneSetAnimateAutorotation'
+////   command.
+//static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
+//{
+//	bool t_success;
+//	t_success = true;
+//	
+//	bool t_enabled;
+//	if (t_success)
+//		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+//	
+//	if (t_success)
+//		[MCIPhoneGetApplication() setAnimateAutorotation: t_enabled];
+//	
+//	return ES_NORMAL;
+//}
+
+bool MCSystemSetRedrawInterval(int32_t p_interval)
 {
-	bool t_success;
-	t_success = true;
-	
-	int32_t t_interval;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "i", &t_interval);
-	
-	if (t_success)
-	{
-		if (t_interval <= 0)
-			MCRedrawEnableScreenUpdates();
-		else
-			MCRedrawDisableScreenUpdates();
-	
-		[MCIPhoneGetApplication() setRedrawInterval: t_interval];
-	}
-	
-	return ES_NORMAL;
+    if (p_interval <= 0)
+        MCRedrawEnableScreenUpdates();
+    else
+        MCRedrawDisableScreenUpdates();
+    
+    [MCIPhoneGetApplication() setRedrawInterval: p_interval];
+    
+    return true;
 }
 
-// MW-2012-02-15: [[ Bug 9985 ]] Handler method for the 'iphoneSetAnimateAutorotation'
-//   command.
-static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
+bool MCSystemSetAnimateAutorotation(bool p_enabled)
 {
-	bool t_success;
-	t_success = true;
-	
-	bool t_enabled;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
-	
-	if (t_success)
-		[MCIPhoneGetApplication() setAnimateAutorotation: t_enabled];
-	
-	return ES_NORMAL;
+    [MCIPhoneGetApplication() setAnimateAutorotation: p_enabled];
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1150,8 +1506,6 @@ extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *);
 extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *); 
 extern Exec_stat MCHandleGetNotificationBadgeValue(void *, MCParameter *); 
 extern Exec_stat MCHandleSetNotificationBadgeValue(void *, MCParameter *); 
-extern Exec_stat MCHandleGetDeviceToken(void *, MCParameter *);
-extern Exec_stat MCHandleGetLaunchUrl(void *, MCParameter *);
 
 extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
@@ -1207,10 +1561,39 @@ extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_paramet
 extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);           // get calendar entry
 extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleGetDeviceToken(void *, MCParameter *);
+extern Exec_stat MCHandleGetLaunchUrl(void *, MCParameter *);
+
+extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
+
 extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
 extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
 extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
 
+extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
+extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
 
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
@@ -1300,7 +1683,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
 	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
 	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
-    {false, "mobilePixelDensity", MCHandleDeviceScale, nil},
+    {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
     
     {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
     {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
@@ -1425,7 +1808,7 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
 	{false, "mobileClearTouches", MCHandleClearTouches, nil},
 	
-	{false, "iphoneSystemIdentifier", MCHandeSystemIdentifier, nil},
+	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
 	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
 	
 	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},

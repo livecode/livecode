@@ -21,9 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 typedef struct
 {
-    char *body;
-    char *action;
-    char *user_info;
+    MCStringRef body;
+    MCStringRef action;
+    MCStringRef user_info;
     uint32_t time; // in seconds
     uint32_t badge_value;
     bool play_sound;

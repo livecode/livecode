@@ -48,6 +48,15 @@ bool MCNumberCreateWithReal(real64_t p_value, MCNumberRef& r_number)
 	return true;
 }
 
+
+bool MCNumberCreateWithUnsignedInteger(uinteger_t p_value, MCNumberRef& r_number)
+{
+    if (p_value <= INTEGER_MAX)
+        return MCNumberCreateWithInteger((integer_t)p_value, r_number);
+    
+    return MCNumberCreateWithReal((real64_t)p_value, r_number);
+}
+
 bool MCNumberIsInteger(MCNumberRef self)
 {
 	return (self -> flags & kMCNumberFlagIsReal) == 0;
