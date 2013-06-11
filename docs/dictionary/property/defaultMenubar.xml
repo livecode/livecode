@@ -1,0 +1,42 @@
+<doc>
+  <legacy_id>1261</legacy_id>
+  <name>defaultMenubar</name>
+  <type>property</type>
+  <syntax>
+    <example>set the defaultMenubar to <i>groupName</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <global/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Menus</category>
+  </classification>
+  <references>
+    <function tag="menus">menus Function</function>
+    <property tag="editMenus">editMenus Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies which <glossary tag="menu bar">menu bar</glossary> is displayed on <glossary tag="Mac OS">Mac OS</glossary> systems when the <glossary tag="active window">active window's</glossary> <property tag="menubar">menubar</property> <glossary tag="property">property</glossary> is empty.</summary>
+  <examples>
+    <example>set the defaultMenubar to "Standard Menus"</example>
+    <example>set the defaultMenubar to the short name of group 1 of stack "Menubars"</example>
+  </examples>
+  <description>
+    <p>Use the <b>defaultMenubar</b> <glossary tag="property">property</glossary> to change the <function tag="menus">menus</function> used by <function tag="stacks">stacks</function> that don't have their own custom <glossary tag="menu bar">menu bar</glossary>.</p><p/><p><b>Value:</b></p><p>The <b>defaultMenubar</b> is the short <property tag="name">name</property> of any <command tag="group">group</command> that is in a <object tag="stack">stack</object> that is in memory.</p><p/><p><b>Comments:</b></p><p>The <b>defaultMenuBar</b> specifies a <command tag="group">group</command> of <glossary tag="button">buttons</glossary>. Each <keyword tag="button">button</keyword> in the <command tag="group">group</command> becomes a <keyword tag="menu">menu</keyword> in the <glossary tag="menu bar">menu bar</glossary>.</p><p/><p>The setting of the <b>defaultMenubar</b> <glossary tag="property">property</glossary> has no effect on <glossary tag="Unix">Unix</glossary> and <glossary tag="Windows">Windows systems</glossary>, except that references to <function tag="menus">menus</function> are taken as referring to the <b>defaultMenubar</b> if the <object tag="stack">stack</object> in the <glossary tag="active window">active window</glossary> has no <glossary tag="menu bar">menu bar</glossary> of its own.</p>
+  </description>
+</doc>

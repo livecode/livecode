@@ -1329,7 +1329,8 @@ bool custom_printer_clusters_to_cairo_clusters(const uint32_t *p_cp_clusters, ui
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 void * operator new (long unsigned int p_amount)
 #else
-void * operator new (unsigned int p_amount)
+// MP-2013-05-02: [[ x64 ]] Make sure we use the right type for 64-bit.
+void * operator new (size_t p_amount)
 #endif
 {
 	void *t_result;

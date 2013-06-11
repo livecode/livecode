@@ -1,0 +1,65 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>productRequestError</name>
+	<type>message</type>
+
+	<syntax>
+		<example>productRequestError <i>product, error</i></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Sent when a request for product details fails.</summary>
+
+	<examples>
+<example><p>on productRequestError pProduct, pError</p><p>   answer &quot;Error:&quot; &amp;&amp; pError &amp;&amp; &quot;when requesting details for&quot; &amp;&amp; pProduct</p><p>end productRequestError</p></example>
+	</examples>
+
+	<history>
+		<introduced version="5.5">Added</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<ios/>
+	</platforms>
+
+	<classes>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<command tag="iphoneRequestProductDetails">iphoneRequestProductDetails Commad</command>
+		<message tag="productDetailsReceived">productDetailsReceived Message</message>
+	</references>
+
+	<description>
+	<overview>Handle the <b>productRequestError</b> message if you want to perform an action when a request for product details fails.</overview>
+
+		<parameters>
+  <parameter>
+    <name>product</name>
+    <description>The identifier of the product for which you wish to retrieve the details.</description>
+  </parameter>
+  <parameter>
+    <name>error</name>
+    <description>The description of the error that occurred.  </description>
+  </parameter>		</parameters>
+
+	<value></value>
+	<comments>The <b>productRequestError</b> message is sent to an application when a request for product details, made using the <b>iphoneRequestProductDetails</b> command, fails.</comments>
+	</description>
+</doc>

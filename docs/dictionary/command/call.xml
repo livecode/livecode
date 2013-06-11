@@ -1,0 +1,51 @@
+<doc>
+  <legacy_id>1069</legacy_id>
+  <name>call</name>
+  <type>command</type>
+  <syntax>
+    <example>call <i>handler</i> [of <i>object</i>]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+  </classification>
+  <references>
+    <property tag="defaultStack">defaultStack Property</property>
+    <command tag="do">do Command</command>
+    <function tag="params">params Function</function>
+    <control_st tag="pass">pass Control Structure</control_st>
+    <command tag="send">send Command</command>
+    <command tag="start using">start using Command</command>
+    <function tag="value">value Function</function>
+    <command tag="insert script">insert script Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary><glossary tag="execute">Executes</glossary> the specified <glossary tag="handler">handler</glossary> in any <glossary tag="object">object'sscript</glossary>.</summary>
+  <examples>
+    <example>call "mouseUp"</example>
+    <example>call "doItAgain Sam,Ilsa" of card "Holding Pen"</example>
+    <example>call myMessage of button "Help" of first card</example>
+  </examples>
+  <description>
+    <p>Use the <b>call</b> <glossary tag="command">command</glossary> to use a <glossary tag="handler">handler</glossary> that's not in the normal <glossary tag="message path">message path</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>handler</i> is any <glossary tag="handler">handler</glossary> in the <property tag="script">script</property> of the specified <i>object,</i> along with any <glossary tag="parameter">parameters</glossary> that <glossary tag="handler">handler</glossary> requires, separated by commas. The entire <i>handler</i> including <glossary tag="parameter">parameters</glossary> must be enclosed in quotes.</p><p/><p>The <i>object</i> is any <href tag="reference/object_reference.rev">object reference</href>. If no <i>object</i> is specified, LiveCode uses the current <glossary tag="object">object</glossary>.</p><p/><p><b>Comments:</b></p><p>The <b>call</b> <glossary tag="command">command</glossary> sends a <i>handler</i> <keyword tag="message box">message</keyword> to the <i>object</i>. If the <property tag="script">script</property> of the <i>object</i> doesn't <glossary tag="trap">trap</glossary> the <i>handler</i> <keyword tag="message box">message</keyword>, the <keyword tag="message box">message</keyword> is <glossary tag="pass">passed</glossary> to the next <glossary tag="object">object</glossary> in the <i>object's</i> <glossary tag="message path">message path</glossary>.</p><p/><p>When executing a handler invoked by the <b>call </b>command the <property tag="defaultStack">defaultStack</property> remains the same as it was when the <b>call </b>command was issued. Therefore any object references in the called handler are evaluated in the context of the call command that invoked the handler.  For example, <i>button 3 </i>may commonly refer to button 3 of the current card of the stack from which the target handler was called.</p><p/><p>This differs from the <command tag="send">send</command> <glossary tag="command">command</glossary> which temporarily changes the context so that <href tag="reference/object_reference.rev">object references</href> are evaluated in the context of the object containing the target handler.</p><p/><p><img src="202651"/> <b>Tip:</b> If a <glossary tag="handler">handler</glossary> contains complex <glossary tag="parameter">parameters</glossary>, especially if some <glossary tag="parameter">parameters</glossary> contain <glossary tag="double quote">double quotes</glossary>, it may be simpler to put the <keyword tag="message box">message</keyword> name and <glossary tag="parameter">parameters</glossary> into a <glossary tag="variable">variable</glossary>, then use the name of the <glossary tag="variable">variable</glossary> in the <b>call</b> <glossary tag="statement">statement</glossary>.</p>
+  </description>
+</doc>

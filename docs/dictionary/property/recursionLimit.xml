@@ -1,0 +1,53 @@
+<doc>
+  <legacy_id>1219</legacy_id>
+  <name>recursionLimit</name>
+  <type>property</type>
+  <syntax>
+    <example>set the recursionLimit to <em>stackSizeInBytes</em></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <global/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Writing LiveCode</category>
+  </classification>
+  <references>
+
+  </references>
+  <history>
+    <introduced version="2.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies how many levels deep a recursive function is allowed to go.</summary>
+  <examples>
+    <example>set the recursionLimit to 20</example>
+  </examples>
+  <description>
+    <p>Use the <strong>recursionLimit</strong> property to quickly find possible recursion bugs or to extend the ability to use deeply recursive routines.</p><p></p>
+<p><strong>Value:</strong></p>
+<p>The <strong>recursionLimit</strong> is a positive integer.</p>
+<p>By default, the <strong>recursionLimit</strong> property is set to 400000.</p><p></p>
+<p><strong>Comments:</strong></p>
+<p>The <em>stackSizeInBytes</em> specifies the CPU call stack size. ("Stack" in this sense has nothing to do with LiveCode stack objects; it refers to a type of data structure used by the processor.)</p>
+<p>The relationship between the <strong>recursionLimit</strong> and the number of levels of nesting permitted for a recursive call depends on a number of factors, including the processor type and the number of parameters passed during each function call. This means that the same <strong>recursionLimit</strong> value may allow a different maximum level of nesting, depending on the platform.</p>
+<p>Recursion may be used deliberately, especially in processing large data sets. To allow deeper levels of recursion than usual, increase the <strong>recursionLimit</strong>.</p>
+<p>Recursion may also occur accidentally. In this case, the recursion is usually infinite--that is, the function will keep recursing until it reaches the limit and causes an execution error. To track down such problems more quickly, reduce the <strong>recursionLimit</strong>. The lower the limit, the more quickly a buggy routine will cause an execution error.</p>
+  </description>
+</doc>

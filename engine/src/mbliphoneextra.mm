@@ -36,6 +36,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 #include "mbldc.h"
 #include "text.h"
+#include "card.h"
+#include "osspec.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIGraphics.h>
@@ -45,6 +47,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // HC-2011-10-12 [[ Media Picker ]] Included relevant library.
 #import <MediaPlayer/MPMediaPickerController.h>
 #import <MessageUI/MessageUI.h>
+
+#ifdef __IPHONE_5_0
+#include <MediaPlayer/MPNowPlayingInfoCenter.h>
+#endif
 
 // HC-2011-10-12 [[ Media Picker ]] Included relevant library.
 #include "mbliphonecontrol.h"
@@ -1060,6 +1066,211 @@ static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_pa
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-05-30: [[ RemoteControl ]] Support for iOS 'remote controls' and metadata display.
+
+static bool s_remote_control_enabled = false;
+
+class MCRemoteControlEvent: public MCCustomEvent
+{
+public:
+	MCRemoteControlEvent(UIEventSubtype p_type)
+		: m_type(p_type)
+	{
+	}
+	
+	void Destroy(void)
+	{
+		delete this;
+	}
+	
+	void Dispatch(void)
+	{
+		const char *t_type_string;
+		switch(m_type)
+		{
+			case UIEventSubtypeRemoteControlPlay:
+				t_type_string = "play";
+				break;
+			case UIEventSubtypeRemoteControlPause:
+				t_type_string = "pause";
+				break;
+			case UIEventSubtypeRemoteControlStop:
+				t_type_string = "stop";
+				break;
+			case UIEventSubtypeRemoteControlTogglePlayPause:
+				t_type_string = "toggle play pause";
+				break;
+			case UIEventSubtypeRemoteControlNextTrack:
+				t_type_string = "next track";
+				break;
+			case UIEventSubtypeRemoteControlPreviousTrack:
+				t_type_string = "previous track";
+				break;
+			case UIEventSubtypeRemoteControlBeginSeekingBackward:
+				t_type_string = "begin seeking backward";
+				break;
+			case UIEventSubtypeRemoteControlEndSeekingBackward:
+				t_type_string = "end seeking backward";
+				break;
+			case UIEventSubtypeRemoteControlBeginSeekingForward:
+				t_type_string = "begin seeking forward";
+				break;
+			case UIEventSubtypeRemoteControlEndSeekingForward:
+				t_type_string = "end seeking forward";
+				break;
+			default:
+				return;
+		}
+		
+		MCdefaultstackptr -> getcurcard() -> message_with_args(MCM_remote_control_received, t_type_string);
+	}
+	
+private:
+	UIEventSubtype m_type;
+};
+
+static Exec_stat MCHandleEnableRemoteControl(void *context, MCParameter *p_parameters)
+{
+	if (!s_remote_control_enabled)
+	{
+		[[UIApplication sharedApplication] beginReceivingRemoteControlEvents];
+		s_remote_control_enabled = true;
+	}
+	
+	return ES_NORMAL;
+}
+
+static Exec_stat MCHandleDisableRemoteControl(void *context, MCParameter *p_parameters)
+{
+	if (s_remote_control_enabled)
+	{
+		[[UIApplication sharedApplication] endReceivingRemoteControlEvents];
+		s_remote_control_enabled = false;
+	}
+	
+	return ES_NORMAL;
+}
+
+static Exec_stat MCHandleRemoteControlEnabled(void *context, MCParameter *p_parameters)
+{
+	MCresult -> sets(MCU_btos(s_remote_control_enabled));
+	return ES_NORMAL;
+}
+
+enum RCDPropType
+{
+	kRCDPropTypeNumber,
+	kRCDPropTypeString,
+	kRCDPropTypeImage,
+};
+
+static Exec_stat MCHandleSetRemoteControlDisplay(void *context, MCParameter *p_parameters)
+{
+#ifdef __IPHONE_5_0
+	static struct { const char *key; NSString *property; RCDPropType type; } s_props[] =
+	{
+		{ "title", MPMediaItemPropertyTitle, kRCDPropTypeString },
+		{ "artist", MPMediaItemPropertyArtist, kRCDPropTypeString },
+		{ "artwork", MPMediaItemPropertyArtwork, kRCDPropTypeImage },
+		{ "composer", MPMediaItemPropertyComposer, kRCDPropTypeString },
+		{ "genre", MPMediaItemPropertyGenre, kRCDPropTypeString },
+		{ "album title", MPMediaItemPropertyAlbumTitle, kRCDPropTypeString},
+		{ "album track count", MPMediaItemPropertyAlbumTrackCount, kRCDPropTypeNumber },
+		{ "album track number", MPMediaItemPropertyAlbumTrackNumber, kRCDPropTypeNumber },
+		{ "disc count", MPMediaItemPropertyDiscCount, kRCDPropTypeNumber },
+		{ "disc number", MPMediaItemPropertyDiscNumber, kRCDPropTypeNumber },
+		{ "chapter number", MPNowPlayingInfoPropertyChapterNumber, kRCDPropTypeNumber },
+		{ "chapter count", MPNowPlayingInfoPropertyChapterCount, kRCDPropTypeNumber },
+		{ "playback duration", MPMediaItemPropertyPlaybackDuration, kRCDPropTypeNumber },
+		{ "elapsed playback time", MPNowPlayingInfoPropertyElapsedPlaybackTime, kRCDPropTypeNumber },
+		{ "playback rate", MPNowPlayingInfoPropertyPlaybackRate, kRCDPropTypeNumber },
+		{ "playback queue index", MPNowPlayingInfoPropertyPlaybackQueueIndex, kRCDPropTypeNumber },
+		{ "playback queue count", MPNowPlayingInfoPropertyPlaybackQueueCount, kRCDPropTypeNumber },
+	};
+	
+	bool t_success;
+	t_success = true;
+	
+	MCVariableValue *t_props;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "a", &t_props);
+	
+	NSMutableDictionary *t_info_dict;
+	t_info_dict = nil;
+	if (t_success && t_props != nil)
+	{
+		t_info_dict = [[NSMutableDictionary alloc] initWithCapacity: 8];
+		for(uindex_t i = 0; i < sizeof(s_props) / sizeof(s_props[0]); i++)
+		{
+			MCExecPoint ep;
+			
+			MCHashentry *t_entry;
+			if (!t_props -> has_element(ep, s_props[i] . key))
+				continue;
+			
+			if (t_props -> fetch_element(ep, s_props[i] . key) != ES_NORMAL)
+				continue;
+			
+			NSObject *t_value;
+			t_value = nil;
+			switch(s_props[i] . type)
+			{
+				case kRCDPropTypeNumber:
+					t_value = [[NSNumber alloc] initWithDouble: ep . getnvalue()];
+				break;
+				case kRCDPropTypeString:
+					t_value = [[NSString alloc] initWithCString: ep . getcstring() encoding: NSMacOSRomanStringEncoding];
+					break;
+				case kRCDPropTypeImage:
+                {
+                    UIImage *t_image;
+                    if (MCImageDataIsJPEG(ep . getsvalue()) ||
+                        MCImageDataIsGIF(ep . getsvalue()) ||
+                        MCImageDataIsPNG(ep . getsvalue()))
+                    {
+                        t_image = [[UIImage alloc] initWithData: [NSData dataWithBytes: ep . getsvalue() . getstring() length: ep . getsvalue() . getlength()]];
+                    }
+                    else if (MCS_exists(ep . getcstring(), true))
+                    {
+                        MCAutoPointer<char> t_resolved_path;
+                        /* UNCHECKED */ t_resolved_path = MCS_resolvepath(ep . getcstring());
+                        t_image = [[UIImage alloc] initWithContentsOfFile: [NSString stringWithCString: *t_resolved_path encoding: NSMacOSRomanStringEncoding]];
+                    }
+                    
+                    if (t_image != nil)
+                    {
+                        t_value = [[MPMediaItemArtwork alloc] initWithImage: t_image];
+                        [t_image release];
+                    }
+                }
+                break;
+			}
+							   
+			if (t_value == nil)
+				continue;
+			
+			[t_info_dict setObject: t_value forKey: s_props[i] . property];
+            
+            [t_value release];
+		}
+	}
+	
+	if (t_success)
+		[[MPNowPlayingInfoCenter defaultCenter] setNowPlayingInfo: t_info_dict];
+#endif
+	
+	return ES_NORMAL;
+}
+
+void MCIPhoneHandleRemoteControlEvent(UIEventSubtype p_type, NSTimeInterval p_timestamp)
+{
+	MCCustomEvent *t_event;
+	t_event = new MCRemoteControlEvent(p_type);
+	MCEventQueuePostCustom(t_event);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
 
 // MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
@@ -1458,6 +1669,12 @@ static MCPlatformMessageSpec s_platform_messages[] =
     // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
     {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
     {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+	
+	// MW-2013-05-30: [[ RemoteControl ]] Support for iOS 'remote controls' and metadata display.
+	{false, "iphoneEnableRemoteControl", MCHandleEnableRemoteControl, nil},
+	{false, "iphoneDisableRemoteControl", MCHandleDisableRemoteControl, nil},
+	{false, "iphoneRemoteControlEnabled", MCHandleRemoteControlEnabled, nil},
+	{false, "iphoneSetRemoteControlDisplay", MCHandleSetRemoteControlDisplay, nil},
     
 	{nil, nil, nil}
 

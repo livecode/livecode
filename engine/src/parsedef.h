@@ -609,6 +609,9 @@ enum Functions {
 	// MW-2012-10-08: [[ HitTest ]] New functions for returning control at a point.
 	F_CONTROL_AT_LOC,
 	F_CONTROL_AT_SCREEN_LOC,
+	
+	// MW-2013-05-08: [[ Uuid ]] New function for generating uuids.
+	F_UUID,
 };
 
 enum Handler_type {
@@ -904,6 +907,8 @@ enum Properties {
     P_LOCK_MOVES,
     P_LOCK_RECENT,
     P_LOCK_SCREEN,
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Property tag for 'the lockUpdates' of groups.
+    P_LOCK_UPDATES,
     P_BEEP_LOUDNESS,
     P_BEEP_PITCH,
     P_BEEP_DURATION,
@@ -1480,6 +1485,8 @@ enum Properties {
     P_HGRID,
     P_VGRID,
     P_PAGE_HEIGHTS,
+	// JS-2013-05-15: [[ PageRanges ]] Property tag for the pageranges property.
+    P_PAGE_RANGES,
     P_LINK_TEXT,
     P_IMAGE_SOURCE,
 	// MW-2012-01-06: [[ Block Metadata ]] Property tag for the metadata block property.
@@ -1551,6 +1558,11 @@ enum Properties {
 	
 	// MW-2012-11-13: [[ Bug 10516 ]] Tag for allowDatagramBroadcasts property.
 	P_ALLOW_DATAGRAM_BROADCASTS,
+    
+    P_CONTROL_IDS,
+    P_CONTROL_NAMES,
+	P_CHILD_CONTROL_IDS,
+    P_CHILD_CONTROL_NAMES,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,

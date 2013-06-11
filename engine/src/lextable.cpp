@@ -618,6 +618,8 @@ LT factor_table[] =
         {"charset", TT_PROPERTY, P_CHARSET},
         {"chartonum", TT_FUNCTION, F_CHAR_TO_NUM},
         {"checkmark", TT_PROPERTY, P_CHECK_MARK},
+        {"childcontrolids", TT_PROPERTY, P_CHILD_CONTROL_IDS},
+        {"childcontrolnames", TT_PROPERTY, P_CHILD_CONTROL_NAMES},
         {"ciphernames", TT_FUNCTION, F_CIPHER_NAMES},
         {"clickchar", TT_FUNCTION, F_CLICK_CHAR},
         {"clickcharchunk", TT_FUNCTION, F_CLICK_CHAR_CHUNK},
@@ -663,7 +665,9 @@ LT factor_table[] =
 		// MW-2012-10-08: [[ HitTest ]] New functions for determining the control at a point.
 		{"controlatloc", TT_FUNCTION, F_CONTROL_AT_LOC},
 		{"controlatscreenloc", TT_FUNCTION, F_CONTROL_AT_SCREEN_LOC},
+        {"controlids", TT_PROPERTY, P_CONTROL_IDS},
         {"controlkey", TT_FUNCTION, F_CONTROL_KEY},
+        {"controlnames", TT_PROPERTY, P_CONTROL_NAMES},
         {"controls", TT_CLASS, CT_LAYER},
         {"convertoctals", TT_PROPERTY, P_CONVERT_OCTALS},
         {"copyresource", TT_FUNCTION, F_COPY_RESOURCE},
@@ -1013,6 +1017,8 @@ LT factor_table[] =
         {"lockrecent", TT_PROPERTY, P_LOCK_RECENT},
         {"lockscreen", TT_PROPERTY, P_LOCK_SCREEN},
         {"locktext", TT_PROPERTY, P_LOCK_TEXT},
+		// MERG-2013-06-02: [[ GrpLckUpdates ]] The lockUpdates group property.
+        {"lockupdates", TT_PROPERTY, P_LOCK_UPDATES},
         {"log10", TT_FUNCTION, F_LOG10},
         {"log2", TT_FUNCTION, F_LOG2},
         {"long", TT_PROPERTY, P_LONG},
@@ -1150,6 +1156,8 @@ LT factor_table[] =
         {"pageheights", TT_PROPERTY, P_PAGE_HEIGHTS},
         {"pageinc", TT_PROPERTY, P_PAGE_INC},
         {"pageincrement", TT_PROPERTY, P_PAGE_INC},
+        // JS-2013-05-15: [[ PageRanges ]] New 'pageRanges' field property.
+        {"pageranges", TT_PROPERTY, P_PAGE_RANGES},
         {"paintcompression", TT_PROPERTY, P_PAINT_COMPRESSION},
         {"palindromeframes", TT_PROPERTY, P_PALINDROME_FRAMES},
         {"pan", TT_PROPERTY, P_PAN},
@@ -1580,6 +1588,8 @@ LT factor_table[] =
         {"userproperties", TT_PROPERTY, P_CUSTOM_KEYS},
         {"usesystemdate", TT_PROPERTY, P_USE_SYSTEM_DATE},
         {"useunicode", TT_PROPERTY, P_USE_UNICODE},
+		// MW-2013-05-08: [[ Uuid ]] The uuid function token.
+		{"uuid", TT_FUNCTION, F_UUID},
         {"value", TT_FUNCTION, F_VALUE},
         {"variablenames", TT_FUNCTION, F_VARIABLES},
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},

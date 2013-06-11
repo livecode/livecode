@@ -441,7 +441,8 @@ void MCX11Context::begin( bool p_group)
 	setclip(m_layers -> clip);
 
 	// Clear out the newly created surfaces (and the context draw mask);
-	clear_surfaces ( t_layer ) ;
+	// MW-2013-05-07: Clear the contents of the new layer.
+	clear_surfaces ( t_layer, false ) ;
 	
 }
 
@@ -478,7 +479,8 @@ bool MCX11Context::begin_with_effects(MCBitmapEffectsRef p_effects, const MCRect
 	setclip(m_layers -> clip);
 
 	// Clear out the newly created surfaces (and the context draw mask);
-	clear_surfaces ( t_new_layer ) ;
+	// MW-2013-05-07: Clear the contents of the new layer.
+	clear_surfaces ( t_new_layer, false ) ;
 
 	return true;
 }
@@ -682,7 +684,8 @@ MCX11Context *MCX11Context::create_context(Drawable p_drawable, uint2 w, uint2 h
 	
 	t_context -> f_fill . pattern_image = NULL ;
 	
-	t_context -> clear_surfaces ( t_context -> m_layers ) ;
+	// MW-2013-05-07: Preserve the contents of the new layer.
+	t_context -> clear_surfaces ( t_context -> m_layers, true ) ;
 	
 
 	return t_context;
@@ -712,7 +715,8 @@ MCX11Context *MCX11Context::create_memory_context(uint32_t p_width, uint32_t p_h
 	t_context -> f_width = p_width ;
 	t_context -> f_height = p_height ;
 	t_context -> f_fill . pattern_image = NULL ;
-	t_context -> clear_surfaces ( t_context -> m_layers ) ;
+	// MW-2013-05-07: Clear the contents of the new layer.
+	t_context -> clear_surfaces ( t_context -> m_layers, false ) ;
 
 	return t_context;
 }
@@ -2091,16 +2095,15 @@ MCSegment * MCX11Context::adjustSegs(MCSegment *n_segs, MCSegment *segs, uint2 n
 //===================================================================================================//
 
 
-void MCX11Context::clear_surfaces ( Layer *p_layer ) 
+void MCX11Context::clear_surfaces ( Layer *p_layer, bool p_preserve_contents ) 
 {
 	XSetForeground ( m_display, m_gc1, WhitePixel(m_display, 0) );
 	XSetBackground ( m_display, m_gc1, BlackPixel(m_display, 0) ) ;
 	
-	
-	
-	// Only clear the surface if this is NOT the base pixmap --- else we might be clearing any image that we
-	// are wrapping this context around.
-	if ( m_layers -> parent != NULL ) 
+	// MP-2013-05-07: [[ Bug 9448 ]] Make sure the base surface is always cleared.
+	// MW-2013-05-07: Make sure we only clear the surface if its not a case where contents
+	//   should be preserved.
+	if (!p_preserve_contents)
 	{
 		XSetFunction( m_display, m_gc, GXclear);
 		XCopyArea( m_display, p_layer -> surface, p_layer -> surface ,m_gc, 0, 0, p_layer -> width , p_layer -> height , 0, 0);
@@ -2163,11 +2166,8 @@ void MCX11Context::unlock_bits(MCBitmap *p_bitmap)
 MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride, Layer *t_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  ) 
 {
 	MCBitmap * t_dst_image ;
-	void * t_alpha_ptr ;
 	uint1 * t_dst_ptr ;
 	uint4 t_dst_stride ;
-	uint4 t_alpha_stride ;
-	uint4 alpha_offset ;
 	
 	
 	t_dst_ptr = getimage_shm (t_layer , t_dst_stride, t_layer -> surface, p_x, p_y, p_width, p_height );
@@ -2192,17 +2192,17 @@ MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride
 	}
 	
 	
-	t_alpha_stride = t_layer-> alpha -> bytes_per_line ;
-
-	t_alpha_ptr = (uint1*)t_layer -> alpha -> data ;
-	
-	
-	alpha_offset = (p_y * t_alpha_stride ) + p_x;
-	t_alpha_ptr = (uint1*)t_alpha_ptr + alpha_offset ;
-	
-	surface_merge_with_alpha_non_pre ( t_dst_ptr, t_dst_stride , 
-							   t_alpha_ptr , t_alpha_stride, 
-							   p_width, p_height ) ;
+	// MP-2013-05-07: [[ Bug 9448 ]] Disable alpha merging as it seems unnecessary.
+	//void * t_alpha_ptr ;
+	//uint4 t_alpha_stride ;
+	//uint4 alpha_offset ;
+	//t_alpha_stride = t_layer-> alpha -> bytes_per_line ;
+	//t_alpha_ptr = (uint1*)t_layer -> alpha -> data ;
+	//alpha_offset = (p_y * t_alpha_stride ) + p_x;
+	//t_alpha_ptr = (uint1*)t_alpha_ptr + alpha_offset ;
+	//surface_merge_with_alpha_non_pre ( t_dst_ptr, t_dst_stride , 
+							   //t_alpha_ptr , t_alpha_stride, 
+							   //p_width, p_height ) ;
 
 	return (t_dst_image);
 	
@@ -2211,18 +2211,16 @@ MCBitmap * MCX11Context::lock_layer ( uint1 *&p_data_ptr, uint4  & p_data_stride
 // This function takes a complete RGBA surface and extracts the alpha layer back to the local plane mask
 void MCX11Context::unlock_layer ( void *p_image_ptr, uint4 p_image_stride , Layer *p_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  ) 
 {
-
-	void *t_image_ptr ;
-	void *t_alpha_ptr ;
-
-	t_image_ptr = p_image_ptr; 
-	t_alpha_ptr = p_layer -> alpha -> data ;
 	
-	t_alpha_ptr = (uint1*) t_alpha_ptr + ( ( p_y * p_layer -> alpha -> bytes_per_line ) + p_x ) ;
-	
-	surface_extract_alpha(t_image_ptr, p_image_stride, //  -> bytes_per_line, 
-						  t_alpha_ptr, p_layer -> alpha -> bytes_per_line, 
-						  p_width, p_height) ;
+	// MP-2013-05-07: [[ Bug 9448 ]] Disable alpha extraction as it seems unnecessary.
+	//void *t_image_ptr ;
+	//void *t_alpha_ptr ;
+	//t_image_ptr = p_image_ptr; 
+	//t_alpha_ptr = p_layer -> alpha -> data ;
+	//t_alpha_ptr = (uint1*) t_alpha_ptr + ( ( p_y * p_layer -> alpha -> bytes_per_line ) + p_x ) ;
+	//surface_extract_alpha(t_image_ptr, p_image_stride, //  -> bytes_per_line, 
+						  //t_alpha_ptr, p_layer -> alpha -> bytes_per_line, 
+						  //p_width, p_height) ;
 }
 
 
