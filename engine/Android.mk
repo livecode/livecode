@@ -15,16 +15,13 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp objectprops.cpp \
-	exec-ad.cpp exec-addressbook.cpp exec-busyindicator.cpp exec-calendar.cpp exec-idletimer.cpp exec-mail.cpp exec-misc.cpp \
-	exec-nativecontrol.cpp exec-notification.cpp exec-orientation.cpp exec-pick.cpp \
-	exec-sensor.cpp exec-sound.cpp exec-store.cpp exec-textmessaging.cpp \
 	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp fieldstyledtext.cpp fieldhtml.cpp fieldrtf.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp igif.cpp iimport.cpp \
 	ijpg.cpp image.cpp image_rep.cpp image_rep_encoded.cpp image_rep_mutable.cpp \
 	image_rep_transformed.cpp imagebitmap.cpp ipng.cpp irle.cpp itransform.cpp iutil.cpp \
 	keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
-	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp \
+	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp mcutility.cpp newobj.cpp\
 	object.cpp objectpropsets.cpp objptr.cpp operator.cpp paragraf.cpp paragrafattr.cpp param.cpp \
 	property.cpp pxmaplst.cpp pickle.cpp regex.cpp \
 	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp stack.cpp stack2.cpp \
@@ -36,6 +33,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	combiners.cpp path.cpp contextscalewrapper.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp \
 	customprinter.cpp iquantization.cpp iquantize_new.cpp \
+	pathgray.cpp pathprocess.cpp \
 	objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp capsule.cpp \
@@ -46,13 +44,26 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcamera.cpp mblcontact.cpp \
 	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
 	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
-	mblandroid.cpp mblandroidad.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
+	mblandroid.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
 	mblandroidcalendar.cpp mblandroidcamera.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
 	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroididletimer.cpp mblandroidinput.cpp \
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
-	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp )
+	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp \
+	exec-ad.cpp exec-addressbook.cpp exec-busyindicator.cpp exec-calendar.cpp exec-idletimer.cpp exec-mail.cpp exec-misc.cpp \
+	exec-nativecontrol.cpp exec-notification.cpp exec-orientation.cpp exec-pick.cpp \
+	exec-sensor.cpp exec-sound.cpp exec-store.cpp exec-textmessaging.cpp \
+	exec-array.cpp exec-datetime.cpp exec-engine.cpp exec-files.cpp exec-filters.cpp exec-interface.cpp \
+	exec-logic.cpp exec-math.cpp exec-multimedia.cpp exec-network.cpp exec-pasteboard.cpp exec-scripting.cpp \
+	exec-strings.cpp exec-text.cpp exec-graphics.cpp exec-security.cpp exec-printing.cpp exec-debugging.cpp \
+	exec-ide.cpp exec-server.cpp exec-interface2.cpp exec.cpp \
+	exec-interface-aclip.cpp exec-interface-button.cpp exec-interface-card.cpp exec-interface-control.cpp \
+	exec-interface-field.cpp exec-interface-graphic.cpp exec-interface-group.cpp exec-interface-image.cpp \
+	exec-interface-object.cpp exec-interface-player.cpp exec-interface-scrollbar.cpp exec-interface-stack.cpp \
+	exec-interface-vclip.cpp exec-legacy.cpp exec-dialog.cpp \
+	syntax.cpp \
+	foundation-legacy.cpp legacy_spec.cpp )
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \

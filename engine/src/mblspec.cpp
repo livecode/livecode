@@ -251,10 +251,10 @@ struct MCSGetUrlState
 {
 	const char *url;
 	MCSystemUrlStatus status;
-	MCVariableValue data;
+	MCStringRef data;
 	MCObjectHandle *object;
 	int32_t total;
-    MCVariableValue error;
+    MCStringRef error;
 };
 
 static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, const void *p_data)
@@ -266,14 +266,16 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	
 	if (p_status == kMCSystemUrlStatusError)
     {
-		context -> error . assign_string((const char *)p_data);
-        send_url_progress(context -> object, p_status, context -> url, context -> error . get_string() . getlength(), context -> total, (const char *)p_data);
+		MCStringCreateWithCString((const char *)p_data, context -> error);
+        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> error), context -> total, (const char *)p_data);
     }
 	else
     {
+# ifdef MOBILE_BROKEN
         if (p_status == kMCSystemUrlStatusLoading)
 		context -> data . append_string(*(const MCString *)p_data);
 	send_url_progress(context -> object, p_status, context -> url, context -> data . get_string() . getlength(), context -> total, (const char *)p_data);
+#endif
     }
 		
 		
@@ -282,12 +284,13 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 
 void MCS_geturl(MCObject *p_target, const char *p_url)
 {
-	// TODO 
-/*	MCSGetUrlState t_state;
+	MCSGetUrlState t_state;
 	t_state . url = p_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
+#ifdef MOBILE_BROKEN
 	t_state . data . assign_empty();
+#endif
 	
 	if (!MCSystemLoadUrl(p_url, MCS_geturl_callback, &t_state))
 	{
@@ -312,7 +315,7 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	}
 #endif
 	
-	t_state . object -> Release();*/
+	t_state . object -> Release();
 }
 
 //////////
@@ -505,7 +508,7 @@ struct MCSPostUrlState
 {
 	const char *url;
 	MCSystemUrlStatus status;
-	MCVariableValue data;
+	MCStringRef data;
 	MCObjectHandle *object;
 	int32_t post_sent;
 	int32_t post_length;
@@ -520,25 +523,24 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	context -> status = p_status;
 	
 	if (p_status == kMCSystemUrlStatusError)
-		context -> data . assign_string((const char *)p_data);
+		/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, context -> data);
 	else if (p_status == kMCSystemUrlStatusLoading)
+#ifdef MOBILE_BROKEN
 		context -> data . append_string(*(const MCString *)p_data);
-	
+#endif
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
 		context -> post_sent = *(uint32_t*)p_data;
 		send_url_progress(context -> object, p_status, context -> url, context -> post_sent, context -> post_length, nil);
 	}
 	else
-		send_url_progress(context -> object, p_status, context -> url, context -> data . get_string() . getlength(), context -> total, (const char *)p_data);
+		send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
 	
 	return true;
 }
 
 void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url)
 {
-	// TODO
-	/* 
 	bool t_success = true;
 	
 	char *t_processed = nil;
@@ -554,7 +556,9 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 		t_state . url = t_processed;
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
+#ifdef MOBILE_BROKEN
 		t_state . data . assign_empty();
+#endif    
 		t_state . post_sent = 0;
 		t_state . post_length = p_data . getlength();
 		
@@ -584,7 +588,7 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 	
 	MCCStringFree(t_processed);
 	if (t_obj != nil)
-		t_obj -> Release();*/
+		t_obj -> Release();
 }
 
 //////////

@@ -192,7 +192,7 @@ void MCAndroidUpdateContactCanceled(int32_t p_contact_id)
 	s_contact_status = kMCAndroidContactCanceled;
 }
 
-bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArrayRef &r_contact_data)
+bool MCSystemGetContactData(int32_t p_contact_id, MCArrayRef &r_contact_data)
 {
     MCLog("MCSystemGetContactData: %d", p_contact_id);
 	jobject t_jmap = nil;
@@ -202,12 +202,11 @@ bool MCSystemGetContactData(MCExecContext &r_ctxt, int32_t p_contact_id, MCArray
 	if (t_jmap == nil)
 		return false;
 	
-//	bool t_success = MCAndroidContactFromJavaMap(t_jmap, r_contact_data);
+	bool t_success = MCAndroidContactFromJavaMap(t_jmap, r_contact_data);
 	if (t_jmap != nil)
 		MCJavaGetThreadEnv()->DeleteGlobalRef(t_jmap);
 	
-//	return t_success;
-	return false;
+	return t_success;
 }
 
 bool MCSystemRemoveContact(int32_t p_contact_id)

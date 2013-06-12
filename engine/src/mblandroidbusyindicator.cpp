@@ -59,3 +59,15 @@ bool MCSystemBusyIndicatorStop ()
     MCAndroidEngineRemoteCall("hideBusyIndicator", "v", nil);
     return true;
 }
+
+bool MCSystemActivityIndicatorStart (intenum_t p_indicator, integer_t p_location_x, integer_t p_location_y)
+{
+    // UNIMPLEMENTED
+    return false;
+}
+
+bool MCSystemActivityIndicatorStop ()
+{
+    // UNIMPLEMENTED
+    return false;
+}
