@@ -1,0 +1,1 @@
+# mobileControls() returns deleted controls in the list
