@@ -777,7 +777,6 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 	
     MCNewAutoNameRef t_key;
     MCNameCreateWithCString(p_key, &t_key);
-	t_success = t_context->array->lookup_element(*(t_context->ep), MCString(p_key), t_array_entry) == ES_NORMAL;
 	
 	if (t_success)
 	{
@@ -789,13 +788,13 @@ static bool s_map_to_array_callback(JNIEnv *p_env, const char *p_key, jobject p_
 			if (t_success && t_string_value != nil)
 				t_success = MCStringCreateWithCString(t_string_value, &t_string);
             if (t_success)
-                t_success = MCArrayStoreValue(p_context -> array, false, *t_key, *t_string);
+                t_success = MCArrayStoreValue(t_context -> array, false, *t_key, *t_string);
 			if (t_string_value != nil)
 				MCCStringFree(t_string_value);
 		}
 		else if (p_env->IsInstanceOf(p_value, s_hash_map_class))
 		{
-            MCAutoArraYRef t_array;
+            MCAutoArrayRef t_array;
 			map_to_array_context_t t_new_context;
 			t_new_context.array = &t_array;
 			t_success = MCJavaIterateMap(p_env, p_value, s_map_to_array_callback, &t_new_context);

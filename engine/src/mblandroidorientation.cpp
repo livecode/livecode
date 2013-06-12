@@ -37,9 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblandroid.h"
 #include "mblandroidutil.h"
-#include "exec-orientation.h"
+#include "mblsyntax.h"
 
-extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 extern MCAndroidDeviceConfiguration s_device_configuration;
 
 ////////////////////////////////////////////////////////////////////////////////

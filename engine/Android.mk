@@ -80,6 +80,8 @@ LOCAL_MODULE := revandroid-community
 
 LOCAL_ARM_MODE := arm
 
+LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
+
 LOCAL_SRC_FILES := $(addprefix src/,stacksecurity.cpp mblandroidad.cpp)
 
 LOCAL_C_INCLUDES := \

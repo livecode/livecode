@@ -302,7 +302,7 @@ void MCAndroidMailCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndoidMailResult(MCStringRef& r_result)
+void MCAndroidMailResult(MCStringRef& r_result)
 {
 	while (s_mail_status == kMCAndroidMailWaiting)
 		MCscreen->wait(60.0, False, True);
@@ -331,7 +331,7 @@ void MCSystemSendMail(MCStringRef p_address, MCStringRef p_cc_address, MCStringR
 	MCAndroidMailResult(r_result);
 }
 
-void MCSystemSendMailWithAttachments(MCStringRef p_address, MCStringRef p_cc_address, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_message_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result)
+void MCSystemSendMailWithAttachments(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_bcc, MCStringRef p_subject, MCStringRef p_body, MCMailType p_type, MCAttachmentData *p_attachments, uindex_t p_attachment_count, MCStringRef& r_result)
 {
 	const char *t_prep_sig;
 	t_prep_sig = "vxxxxxb";
