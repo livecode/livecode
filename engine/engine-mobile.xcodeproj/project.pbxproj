@@ -271,21 +271,6 @@
 		BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BD175CDE7400346B49 /* exec-filters.cpp */; };
 		BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BE175CDE7400346B49 /* exec-graphics.cpp */; };
 		BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494BF175CDE7400346B49 /* exec-ide.cpp */; };
-		BE4494E6175CDE7400346B49 /* exec-interface-aclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */; };
-		BE4494E7175CDE7400346B49 /* exec-interface-button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */; };
-		BE4494E8175CDE7400346B49 /* exec-interface-card.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */; };
-		BE4494E9175CDE7400346B49 /* exec-interface-control.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */; };
-		BE4494EA175CDE7400346B49 /* exec-interface-field.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */; };
-		BE4494EB175CDE7400346B49 /* exec-interface-graphic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */; };
-		BE4494EC175CDE7400346B49 /* exec-interface-group.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */; };
-		BE4494ED175CDE7400346B49 /* exec-interface-image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */; };
-		BE4494EE175CDE7400346B49 /* exec-interface-object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */; };
-		BE4494EF175CDE7400346B49 /* exec-interface-player.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */; };
-		BE4494F0175CDE7400346B49 /* exec-interface-scrollbar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */; };
-		BE4494F1175CDE7400346B49 /* exec-interface-stack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */; };
-		BE4494F2175CDE7400346B49 /* exec-interface-vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */; };
-		BE4494F3175CDE7400346B49 /* exec-interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CD175CDE7400346B49 /* exec-interface.cpp */; };
-		BE4494F4175CDE7400346B49 /* exec-interface2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494CF175CDE7400346B49 /* exec-interface2.cpp */; };
 		BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D0175CDE7400346B49 /* exec-legacy.cpp */; };
 		BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D1175CDE7400346B49 /* exec-logic.cpp */; };
 		BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D2175CDE7400346B49 /* exec-math.cpp */; };
@@ -878,6 +863,7 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
+		7607CF0117688D1400ADB512 /* mblandroidcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcamera.cpp; path = src/mblandroidcamera.cpp; sourceTree = "<group>"; };
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
@@ -891,22 +877,6 @@
 		BE4494BD175CDE7400346B49 /* exec-filters.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-filters.cpp"; path = "src/exec-filters.cpp"; sourceTree = "<group>"; };
 		BE4494BE175CDE7400346B49 /* exec-graphics.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-graphics.cpp"; path = "src/exec-graphics.cpp"; sourceTree = "<group>"; };
 		BE4494BF175CDE7400346B49 /* exec-ide.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-ide.cpp"; path = "src/exec-ide.cpp"; sourceTree = "<group>"; };
-		BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
-		BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-button.cpp"; path = "src/exec-interface-button.cpp"; sourceTree = "<group>"; };
-		BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-card.cpp"; path = "src/exec-interface-card.cpp"; sourceTree = "<group>"; };
-		BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-control.cpp"; path = "src/exec-interface-control.cpp"; sourceTree = "<group>"; };
-		BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-field.cpp"; path = "src/exec-interface-field.cpp"; sourceTree = "<group>"; };
-		BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-graphic.cpp"; path = "src/exec-interface-graphic.cpp"; sourceTree = "<group>"; };
-		BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-group.cpp"; path = "src/exec-interface-group.cpp"; sourceTree = "<group>"; };
-		BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-image.cpp"; path = "src/exec-interface-image.cpp"; sourceTree = "<group>"; };
-		BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-object.cpp"; path = "src/exec-interface-object.cpp"; sourceTree = "<group>"; };
-		BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-player.cpp"; path = "src/exec-interface-player.cpp"; sourceTree = "<group>"; };
-		BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-scrollbar.cpp"; path = "src/exec-interface-scrollbar.cpp"; sourceTree = "<group>"; };
-		BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-stack.cpp"; path = "src/exec-interface-stack.cpp"; sourceTree = "<group>"; };
-		BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-vclip.cpp"; path = "src/exec-interface-vclip.cpp"; sourceTree = "<group>"; };
-		BE4494CD175CDE7400346B49 /* exec-interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface.cpp"; path = "src/exec-interface.cpp"; sourceTree = "<group>"; };
-		BE4494CE175CDE7400346B49 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
-		BE4494CF175CDE7400346B49 /* exec-interface2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface2.cpp"; path = "src/exec-interface2.cpp"; sourceTree = "<group>"; };
 		BE4494D0175CDE7400346B49 /* exec-legacy.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-legacy.cpp"; path = "src/exec-legacy.cpp"; sourceTree = "<group>"; };
 		BE4494D1175CDE7400346B49 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		BE4494D2175CDE7400346B49 /* exec-math.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-math.cpp"; path = "src/exec-math.cpp"; sourceTree = "<group>"; };
@@ -1268,6 +1238,7 @@
 		4DB983BF130BB1BD008A03DC /* Android */ = {
 			isa = PBXGroup;
 			children = (
+				7607CF0117688D1400ADB512 /* mblandroidcamera.cpp */,
 				4D91B3E2134CB7AE000D7AA5 /* com */,
 				4DB983C0130BB1DF008A03DC /* mblandroid.cpp */,
 				4DB983C1130BB1DF008A03DC /* mblandroid.h */,
@@ -1425,33 +1396,8 @@
 				BE4494DB175CDE7400346B49 /* exec-text.cpp */,
 				BE449997175D02AE00346B49 /* exec-textmessaging.cpp */,
 				BE4494DC175CDE7400346B49 /* exec.cpp */,
-				BE449502175CDE7D00346B49 /* exec-interface */,
-				BE449502175CDE7D00346B49 /* exec-interface */,
 			);
 			name = Exec;
-			sourceTree = "<group>";
-		};
-		BE449502175CDE7D00346B49 /* exec-interface */ = {
-			isa = PBXGroup;
-			children = (
-				BE4494C0175CDE7400346B49 /* exec-interface-aclip.cpp */,
-				BE4494C1175CDE7400346B49 /* exec-interface-button.cpp */,
-				BE4494C2175CDE7400346B49 /* exec-interface-card.cpp */,
-				BE4494C3175CDE7400346B49 /* exec-interface-control.cpp */,
-				BE4494C4175CDE7400346B49 /* exec-interface-field.cpp */,
-				BE4494C5175CDE7400346B49 /* exec-interface-graphic.cpp */,
-				BE4494C6175CDE7400346B49 /* exec-interface-group.cpp */,
-				BE4494C7175CDE7400346B49 /* exec-interface-image.cpp */,
-				BE4494C8175CDE7400346B49 /* exec-interface-object.cpp */,
-				BE4494C9175CDE7400346B49 /* exec-interface-player.cpp */,
-				BE4494CA175CDE7400346B49 /* exec-interface-scrollbar.cpp */,
-				BE4494CB175CDE7400346B49 /* exec-interface-stack.cpp */,
-				BE4494CC175CDE7400346B49 /* exec-interface-vclip.cpp */,
-				BE4494CD175CDE7400346B49 /* exec-interface.cpp */,
-				BE4494CE175CDE7400346B49 /* exec-interface.h */,
-				BE4494CF175CDE7400346B49 /* exec-interface2.cpp */,
-			);
-			name = "exec-interface";
 			sourceTree = "<group>";
 		};
 		BE449503175CE10F00346B49 /* Legacy */ = {
@@ -2319,21 +2265,6 @@
 				BE4494E3175CDE7400346B49 /* exec-filters.cpp in Sources */,
 				BE4494E4175CDE7400346B49 /* exec-graphics.cpp in Sources */,
 				BE4494E5175CDE7400346B49 /* exec-ide.cpp in Sources */,
-				BE4494E6175CDE7400346B49 /* exec-interface-aclip.cpp in Sources */,
-				BE4494E7175CDE7400346B49 /* exec-interface-button.cpp in Sources */,
-				BE4494E8175CDE7400346B49 /* exec-interface-card.cpp in Sources */,
-				BE4494E9175CDE7400346B49 /* exec-interface-control.cpp in Sources */,
-				BE4494EA175CDE7400346B49 /* exec-interface-field.cpp in Sources */,
-				BE4494EB175CDE7400346B49 /* exec-interface-graphic.cpp in Sources */,
-				BE4494EC175CDE7400346B49 /* exec-interface-group.cpp in Sources */,
-				BE4494ED175CDE7400346B49 /* exec-interface-image.cpp in Sources */,
-				BE4494EE175CDE7400346B49 /* exec-interface-object.cpp in Sources */,
-				BE4494EF175CDE7400346B49 /* exec-interface-player.cpp in Sources */,
-				BE4494F0175CDE7400346B49 /* exec-interface-scrollbar.cpp in Sources */,
-				BE4494F1175CDE7400346B49 /* exec-interface-stack.cpp in Sources */,
-				BE4494F2175CDE7400346B49 /* exec-interface-vclip.cpp in Sources */,
-				BE4494F3175CDE7400346B49 /* exec-interface.cpp in Sources */,
-				BE4494F4175CDE7400346B49 /* exec-interface2.cpp in Sources */,
 				BE4494F5175CDE7400346B49 /* exec-legacy.cpp in Sources */,
 				BE4494F6175CDE7400346B49 /* exec-logic.cpp in Sources */,
 				BE4494F7175CDE7400346B49 /* exec-math.cpp in Sources */,
