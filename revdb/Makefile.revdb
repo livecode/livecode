@@ -1,6 +1,8 @@
 NAME=revdb
 TYPE=library
 
+include ../rules/environment.linux.makefile
+
 SOURCES=revdb.cpp unxsupport.cpp database.cpp dbdrivercommon.cpp
 
 CUSTOM_DEFINES=
@@ -8,7 +10,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./src
 
 CUSTOM_LIBS=external
-CUSTOM_STATIC_LIBS=stdc++
 CUSTOM_DYNAMIC_LIBS=dl
 
 CUSTOM_CCFLAGS=\

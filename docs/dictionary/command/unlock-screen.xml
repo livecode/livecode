@@ -1,0 +1,51 @@
+<doc>
+  <legacy_id>1646</legacy_id>
+  <name>unlock screen</name>
+  <type>command</type>
+  <syntax>
+    <example>unlock screen [with visual [effect] <i>effectName</i> [<i>speed</i>] \  [to<i> finalImag</i>e] [with sound <i>audioClip</i>]]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Appearance &amp; Positioning</category>
+  </classification>
+  <references>
+    <command tag="unlock recent">unlock recent Command</command>
+    <command tag="unlock error dialogs">unlock error dialogs Command</command>
+    <command tag="unlock colorMap">unlock colorMap Command</command>
+    <command tag="unlock moves">unlock moves Command</command>
+    <command tag="unlock cursor">unlock cursor Command</command>
+    <property tag="allowFieldRedraw">allowFieldRedraw Property</property>
+    <property tag="lockScreen">lockScreen Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="1.1"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Sets the <property tag="lockScreen">lockScreen</property> <glossary tag="property">property</glossary> to false, updating the screen and displaying any changes made since the screen was <property tag="lockLocation">locked</property>.</summary>
+  <examples>
+    <example>unlock screen</example>
+    <example>unlock screen with visual effect dissolve</p><p>unlock screen with visual barn door open to white with sound "Yelp"</example>
+  </examples>
+  <description>
+    <p>Use the <b>unlock screen</b> <glossary tag="command">command</glossary> to allow changes to the screen appearance to be seen.</p><p/><p><b>Parameters:</b></p><p>The <i>effectName</i>, <i>speed</i>, <i>finalImage</i>, and <i>audioClip</i> are described in the <command tag="visual effect">visual effect</command> command. These three <glossary tag="parameter">parameters</glossary> operate the same way as they do with the <command tag="visual effect">visual effect</command> command.</p><p/><p><b>Comments:</b></p><p>The <b>unlock screen</b> <glossary tag="command">command</glossary> sets the <property tag="lockScreen">lockScreen</property> <glossary tag="property">property</glossary> to false. When all pending <glossary tag="handler">handlers</glossary> are finished <glossary tag="execute">executing</glossary>, the <property tag="lockScreen">lockScreen</property> <glossary tag="property">property</glossary> is automatically set to false.</p><p/><p><b>Changes:</b></p><p>The ability to use QuickTime special effects was introduced in version 1.1. In previous versions, only the built-in visual effects listed under the <b>visual effect</b> <glossary tag="command">command</glossary> were available.</p>
+  </description>
+</doc>

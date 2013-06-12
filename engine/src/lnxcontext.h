@@ -274,7 +274,7 @@ private:
 	
 	MCBitmap *lock_layer ( uint1 *&p_data_image, uint4 & p_data_stride, Layer *t_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  ) ;
 	void unlock_layer ( void *p_image_ptr, uint4 p_image_stride , Layer *p_layer, int4 p_x, int4 p_y,  int4 p_width, int4 p_height  );
-	void clear_surfaces ( Layer *p_layer ) ;
+	void clear_surfaces ( Layer *p_layer, bool preserve_contents ) ;
 
 	bool is_a_nest(bool p_group);
 	bool mask_changed(void);

@@ -1059,10 +1059,11 @@ static bool import_html_parse_entity(const char *& x_ptr, const char *p_limit, u
 		t_conv_end_ptr = nil;
 		
 		// MW-2012-11-19: Add support for hex-encoded html entities.
+		// MDW-2013-04-15: Corrected 't_is_hex == true' to 't_is_hex = true'.
 		bool t_is_hex;
 		const char *t_digit_start_ptr;
 		if (t_start_ptr[1] == 'x')
-			t_is_hex == true, t_digit_start_ptr = t_start_ptr + 2;
+			t_is_hex = true, t_digit_start_ptr = t_start_ptr + 2;
 		else
 			t_is_hex = false, t_digit_start_ptr = t_start_ptr + 1;
 		

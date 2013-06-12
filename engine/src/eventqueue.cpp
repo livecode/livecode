@@ -35,9 +35,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 extern Boolean tripleclick;
 
-////////////////////////////////////////////////////////////////////////////////
-
+#ifdef _MOBILE
 static void handle_touch(MCStack *p_stack, MCEventTouchPhase p_phase, uint32_t p_id, uint32_t p_taps, int32_t x, int32_t y);
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
 
 enum MCEventType
 {

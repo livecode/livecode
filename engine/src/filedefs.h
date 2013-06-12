@@ -99,7 +99,9 @@ public:
 #if defined(_WINDOWS_DESKTOP)
 	MCWinSysHandle fhandle;
 	char *buffer;
-	uint4 len;
+	// MW-2013-05-02: [[ x64 ]] This is used to store a pointer in 'fake' mode so
+	//   upgrade to size_t.
+	size_t len;
 	char *ioptr;
 	MCWinSysHandle mhandle; //memory map file handle
 	int putback;
@@ -125,9 +127,14 @@ public:
 	short serialOut; //serial port output reference number
 	MCMacSysHandle hserialInputBuff; //handle to serial input buffer
 	char *buffer;   //buffer for read data
-	uint4 len;      //file length
+	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
+	//   upgrade to size_t.
+	size_t len;      //file length
 	char *ioptr;    //the starting point of a read
-	IO_header(FILE *f, short in, short out, MCMacSysHandle serialbuf, char *b, uint4 l, uint2 iflags)
+	
+	// MW-2013-05-02: [[ x64 ]] 'l' is passed a pointer in 'fake' mode so upgrade
+	//   to size_t.
+	IO_header(FILE *f, short in, short out, MCMacSysHandle serialbuf, char *b, size_t l, uint2 iflags)
 	{
 		fptr = f;
 		serialIn = in;
@@ -144,10 +151,15 @@ public:
 #elif defined(_LINUX_DESKTOP)
 	FILE *fptr;
 	char *buffer;
-	uint4 len;
+	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
+	//   upgrade to size_t.
+	size_t len;
 	char *ioptr;
 	int fd;
-	IO_header(FILE *f, char *b, uint4 l, int ifd, uint2 iflags)
+	
+	// MW-2013-05-02: [[ x64 ]] 'l' is passed a pointer in 'fake' mode so upgrade
+	//   to size_t.
+	IO_header(FILE *f, char *b, size_t l, int ifd, uint2 iflags)
 	{
 		fptr = f;
 		ioptr = buffer = b;
@@ -161,8 +173,11 @@ public:
 	}
 #elif defined(_MOBILE) || defined(_SERVER)
 	MCSystemFileHandle *handle;
-	uint32_t len;
+	// MW-2013-05-02: [[ x64 ]] 'len' is used to store a pointer in 'fake' mode so
+	//   upgrade to size_t.
+	size_t len;
 	char *buffer;
+	
 	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
 	{
 		handle = p_handle;

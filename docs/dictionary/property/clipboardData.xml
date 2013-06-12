@@ -1,0 +1,45 @@
+<doc>
+  <legacy_id>1735</legacy_id>
+  <name>clipboardData</name>
+  <type>property</type>
+  <syntax>
+    <example>set the clipboardData to <i>clipboardArray</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <global/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>User Interaction</category>
+  </classification>
+  <references>
+    <command tag="copy">copy Command</command>
+    <property tag="dragData">dragData Property</property>
+  </references>
+  <history>
+    <introduced version="2.0">Added.</introduced>
+    <changed version="2.9"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies what data and of what type is on the <function tag="clipboard">clipboard</function>.</summary>
+  <examples>
+    <example>set the clipboardData["text"] to "Meep!"</example>
+    <example>set the clipboardData["RTF"] to the RTFText of field "Info"</example>
+    <example>set the clipboardData["image"] to image 1</example>
+  </examples>
+  <description>
+    <p>Use the <b>clipboardData</b> <glossary tag="property">property</glossary> to put data in the <function tag="clipboard">clipboard</function> in a specified <function tag="format">format</function>, or to get the contents of the <function tag="clipboard">clipboard</function>, without copying or pasting.</p><p/><p><b>Value:</b></p><p>The <b>clipboardData</b> pseudo-array provides access to the data to be transferred through a drag-drop operation.  The following types can be queried or set:</p><p/><p><i>text</i> - plain text in the native encoding to the platform (MacRoman on OS X, Windows-1252 on</p><p>  Windows and ISO8859-1 on Unix)</p><p><i>unicode</i> - plain text in UTF-16 encoded using host byte order</p><p><i>styles</i> - styled text in LiveCode internal styled-text format</p><p><i>html</i> - styled text in LiveCode HTML format</p><p><i>rtf </i>- styled text in LiveCode RTF format</p><p><i>image</i> - the 'text' of an image object, i.e. binary data in PNG, GIF or JPEG format</p><p><i>files </i>- a return-delimited list of filenames in LiveCode format</p><p><i>objects</i> - one or more LiveCode objects serialized into an internal format</p><p><i>private</i> - an arbitrary application-defined string. This format will only be visible within the same</p><p>    LiveCode process.</p><p/><p>If the clipboard does not contain data of the specified type, the array element for that type is empty. (For example, if the clipboard contains text, clipboardData["image"] is empty.)</p><p/><p><b>Comments:</b></p><p>The <b>clipboardData</b> <glossary tag="property">property</glossary> is populated automatically when the <function tag="clipboard">clipboard</function> content is changed, either by using the <command tag="cut">cut</command> or <command tag="copy">copy</command> <glossary tag="command">command</glossary>, or by cutting or copying in another application.</p><p/><p>You can query the keys of the <b>clipboardData</b> to determine what types of data are on the <function tag="clipboard">clipboard</function>. For example, if the <function tag="clipboard">clipboard</function> contains styled text, you can put that text (in <property tag="HTMLText">htmlText</property> <function tag="format">format</function>) in a <glossary tag="variable">variable</glossary> with the following <glossary tag="statement">statement</glossary>:</p><p/><p>  put the clipboardData["html"] into tHTML</p><p/><p><b>Note:</b> The objects type can now be queried and will return a binary string that can be re-used.  Furthermore, this type is now published to all applications and so object cut/copy/paste operaions can occur between LiveCode processes.  To change the contents of the clipboard, you can set the <b>clipboardData</b> <glossary tag="property">property</glossary> directly. For example, the following <glossary tag="statement">statement</glossary> places the text "Hello World" on the <function tag="clipboard">clipboard</function>:</p><p/><p>  set the clipboardData["text"] to "Hello World"</p><p/><p>The above statement is equivalent to selecting the text "Hello World" in a field and choosing <b>Edit menu<img src="202656"/>Copy</b>, or to using the <command tag="copy">copy</command> <glossary tag="command">command</glossary>. The data you place on the <function tag="clipboard">clipboard</function> is accessible to your <glossary tag="application">application</glossary> using the <command tag="paste">paste</command> command, and to other applications (that support pasting text) using the application's Paste <glossary tag="menu item">menu item</glossary>.</p><p/><p><img src="202651"/> <b>Tip:</b> To quickly find out what kind of data is on the <function tag="clipboard">clipboard</function>, use the <function tag="clipboard">clipboardfunction</function>.</p>
+  </description>
+</doc>

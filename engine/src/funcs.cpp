@@ -57,6 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "license.h"
 #include "mode.h"
 #include "stacksecurity.h"
+#include "uuid.h"
 
 #include "core.h"
 
@@ -6107,6 +6108,8 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 	return t_address;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
 MCRandomBytes::~MCRandomBytes()
 {
 	delete byte_count;
@@ -6129,31 +6132,33 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
 		return ES_ERROR;
 	}
-
-	if (!InitSSLCrypt())
+	
+	size_t t_count;
+	t_count = ep.getuint4();
+	
+	// MW-2013-05-21: [[ RandomBytes ]] Updated to use system primitive, rather
+	//   than SSL.
+	
+	void *t_bytes;
+	t_bytes = ep . getbuffer(t_count);
+	if (t_bytes == nil)
 	{
-		MCeerror->add(EE_SECURITY_NOLIBRARY, line, pos);
+		MCeerror -> add(EE_NO_MEMORY, line, pos);
 		return ES_ERROR;
 	}
-	bool t_success = true;
-	void *t_bytes = nil;
-	uint32_t t_count;
-
-	t_count = ep.getuint4();
-
-	t_success = MCCrypt_random_bytes(t_count, t_bytes);
-
-	if (t_success)
-		ep.copysvalue((char*)t_bytes, t_count);
+	
+	if (MCU_random_bytes(t_count, t_bytes))
+		ep . setlength(t_count);
 	else
 	{
-		ep.clear();
+		ep . clear();
 		MCresult->copysvalue(MCString("error: could not get random bytes"));
 	}
-
-	MCMemoryDeallocate(t_bytes);
+	
 	return ES_NORMAL;
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 MCControlAtLoc::~MCControlAtLoc()
 {
@@ -6223,3 +6228,160 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+MCUuidFunc::~MCUuidFunc(void)
+{
+	delete type;
+	delete name;
+	delete namespace_id;
+}
+
+// Syntax:
+//   uuid() - random uuid
+//   uuid("random") - random uuid
+//   uuid("md5" | "sha1", <namespace_id>, <name>)
+// So either 0, 1, or 3 parameters.
+Parse_stat MCUuidFunc::parse(MCScriptPoint& sp, Boolean the)
+{
+	// Parameters are parsed by 'getexps' into this array.
+	MCExpression *earray[MAX_EXP];
+	uint2 ecount = 0;
+	
+	// Parse the parameters and check that there are 0, 1 or 3 of them.
+	if (getexps(sp, earray, ecount) != PS_NORMAL || (ecount != 0 && ecount != 1 && ecount != 3))
+	{
+		// If there are the wrong number of params, free the exps.
+		freeexps(earray, ecount);
+		
+		// Throw a parse error.
+		MCperror -> add(PE_UUID_BADPARAM, sp);
+		return PS_ERROR;
+	}
+	
+	// Assign the expressions as appropriate.
+	if (ecount > 0)
+	{
+		type = earray[0];
+	
+		if (ecount > 1)
+		{
+			namespace_id = earray[1];
+			name = earray[2];
+		}
+	}
+	
+	// We are done, so return.
+	return PS_NORMAL;
+}
+
+Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
+{
+	// First work out what type we want.
+	MCUuidType t_type;
+	if (type == nil)
+		t_type = kMCUuidTypeRandom;
+	else
+	{
+		if (type -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADTYPE, line, pos);
+			return ES_ERROR;
+		}
+		
+		if (ep . getsvalue() == "random")
+		{
+			// If there is more than one parameter, it's an error.
+			if (name != nil)
+			{
+				MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+				return ES_ERROR;
+			}
+			
+			t_type = kMCUuidTypeRandom;
+		}
+		else if (ep . getsvalue() == "md5")
+			t_type = kMCUuidTypeMD5;
+		else if (ep . getsvalue() == "sha1")
+			t_type = kMCUuidTypeSHA1;
+		else
+		{
+			// If the type isn't one of 'random', 'md5', 'sha1' then it's
+			// an error.
+			MCeerror -> add(EE_UUID_UNKNOWNTYPE, line, pos);
+			return ES_ERROR;
+		}
+	}
+	
+	// If it is not of random type, then evaluate the other params.
+	MCUuid t_namespace_id;
+	MCString t_name;
+	if (t_type != kMCUuidTypeRandom)
+	{
+		// If there aren't namespace_id and name exprs, its an error.
+		if (namespace_id == nil || name == nil)
+		{
+			MCeerror -> add(EE_UUID_TOOMANYPARAMS, line, pos);
+			return ES_ERROR;
+		}
+	
+		// Evaluate the namespace parameter.
+		if (namespace_id -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAMESPACEID, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Attempt to convert it to a uuid.
+		if (!MCUuidFromCString(ep . getcstring(), t_namespace_id))
+		{
+			MCeerror -> add(EE_UUID_NAMESPACENOTAUUID, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Evaluate the name parameter.
+		if (name -> eval(ep) != ES_NORMAL)
+		{
+			MCeerror -> add(EE_UUID_BADNAME, line, pos);
+			return ES_ERROR;
+		}
+		
+		// Borrow the value from the ep - this is okay in this instance because
+		// ep isn't used again until the name has been utilised.
+		t_name = ep . getsvalue();
+	}
+	
+	// Generate the uuid.
+	MCUuid t_uuid;
+	switch(t_type)
+	{
+	case kMCUuidTypeRandom:
+		if (!MCUuidGenerateRandom(t_uuid))
+		{
+			MCeerror -> add(EE_UUID_NORANDOMNESS, line, pos);
+			return ES_ERROR;
+		}
+		break;
+	
+	case kMCUuidTypeMD5:
+		MCUuidGenerateMD5(t_namespace_id, t_name, t_uuid);
+		break;
+		
+	case kMCUuidTypeSHA1:
+		MCUuidGenerateSHA1(t_namespace_id, t_name, t_uuid);
+		break;
+		
+	default:
+		assert(false);
+		break;
+	}
+	
+	// Convert the uuid to a string.
+	char t_uuid_buffer[kMCUuidCStringLength];
+	MCUuidToCString(t_uuid, t_uuid_buffer);
+	
+	// And set it as the return value (in the ep).
+	ep . copysvalue(t_uuid_buffer);
+	
+	return ES_NORMAL;
+}

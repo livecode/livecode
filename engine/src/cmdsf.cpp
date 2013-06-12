@@ -1227,7 +1227,9 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 	return *p == 0;
 }
 
-char *MCFilter::filterlines(char *sstring, char *pstring,
+// JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
+//     pass linedelimiter as extra parameter to filterlines
+char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
                             Boolean casesensitive)
 {
 	uint4 offset = 0;
@@ -1262,14 +1264,14 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	// Record whether or not the string was terminated with a trailing delimiter,
 	// if it was, then remove this trailing delimiter.
 	bool t_was_terminated;
-	t_was_terminated = (t_string[t_length - 1] == '\n');
+	t_was_terminated = (t_string[t_length - 1] == delimiter);
 	if (t_was_terminated)
 		t_string[t_length - 1] = '\0';
 
 	for(;;)
 	{
 		char *t_return;
-		t_return = strchr(t_string, '\n');
+		t_return = strchr(t_string, delimiter);
 
 		if (t_return != nil)
 			*t_return = '\0';
@@ -1278,7 +1280,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 		if (match(line, pstring, casesensitive) != out)
 		{
 			if (offset)
-				dstring[offset++] = '\n';
+				dstring[offset++] = delimiter;
 
 			// MW-2010-10-18: [[ Bug 7864 ]] This should be a 32-bit integer - removing 65535 char limit.
 			uint32_t length = strlen(line);
@@ -1293,7 +1295,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	}
 
 	if (offset != 0 && t_was_terminated)
-		dstring[offset++] = '\n';
+		dstring[offset++] = delimiter;
 
 
 	free(t_original_string);
@@ -1352,7 +1354,9 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	char *pptr = ep.getsvalue().clone();
-	char *dptr = filterlines(sptr, pptr, ep.getcasesensitive());
+    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
+    //     pass linedelimiter as extra parameter to filterlines
+	char *dptr = filterlines(sptr, pptr, ep.getlinedel(), ep.getcasesensitive());
 	delete sptr;
 	delete pptr;
 	ep.copysvalue(dptr, strlen(dptr));
