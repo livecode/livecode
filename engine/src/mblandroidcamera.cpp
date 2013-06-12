@@ -21,17 +21,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "mcerror.h"
 #include "execpt.h"
-#include "printer.h"
 #include "globals.h"
+#include "stack.h"
+#include "system.h"
+#include "player.h"
+#include "eventqueue.h"
+#include "osspec.h"
 
-#include "mbldc.h"
-
+#include "mblandroid.h"
 #include "mblandroidutil.h"
+
+#include "mblandroidjava.h"
+#include "mblsyntax.h"
+
+#include <jni.h>
 #include "mblandroidjava.h"
 
-#include "mblsyntax.h"
+#include "mblad.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
