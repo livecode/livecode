@@ -89,19 +89,17 @@ JNIEXPORT jboolean JNICALL Java_com_runrev_android_NotificationModule_doReturnNo
     if (t_success)
     {
 //        MCLog("doReturnNotificationDetails(%s, %s, %s, %lld, %d, %d", t_body, t_action, t_user_info, time, play_sound, badge_value);
-        s_notification->body = t_body;
-        s_notification->action = t_action;
-        s_notification->user_info = t_user_info;
+        t_success = MCStringCreateWithCString(t_body, s_notification->body);
+        t_success |= MCStringCreateWithCString(t_action, s_notification->action);
+        t_success |= MCStringCreateWithCString(t_user_info, s_notification->user_info);
         s_notification->time = (uint32_t)(time / 1000);
         s_notification->play_sound = play_sound;
         s_notification->badge_value = badge_value;
     }
-    else
-    {
-        MCCStringFree(t_body);
-        MCCStringFree(t_action);
-        MCCStringFree(t_user_info);
-    }
+    
+    MCCStringFree(t_body);
+    MCCStringFree(t_action);
+    MCCStringFree(t_user_info);
     
     return t_success;
 }
@@ -136,13 +134,14 @@ bool MCSystemSetNotificationBadgeValue (uint32_t p_badge_value)
 bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
 {
     bool t_success = true;
-    char *t_registration_id = nil;
+    MCAutoStringRef t_registration_id;
     
-    MCAndroidEngineRemoteCall("getRemoteNotificationId", "s", &t_registration_id);
-    t_success = t_registration_id != nil;
+    MCAndroidEngineRemoteCall("getRemoteNotificationId", "x", &t_registration_id);
+    
+    t_success = *t_registration_id != nil;
     
     if (t_success)
-        t_success = MCStringCreateWithCString(r_device_token, t_registration_id);
+        t_success = MCStringCopy(*t_registration_id, r_device_token);
     
     return t_success;
 }

@@ -8,6 +8,8 @@ LOCAL_MODULE := revandroid-kernel
 
 LOCAL_ARM_MODE := arm
 
+LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
+
 LOCAL_SRC_FILES := $(addprefix src/,\
 	aclip.cpp block.cpp button.cpp buttondraw.cpp card.cpp cardlst.cpp \
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
@@ -45,7 +47,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
 	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
 	mblandroid.cpp mblandroidad.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
-	mblandroidcalendar.cpp mbandroidcamera.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
+	mblandroidcalendar.cpp mblandroidcamera.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
 	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroididletimer.cpp mblandroidinput.cpp \
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
@@ -83,13 +85,15 @@ LOCAL_SRC_FILES := $(addprefix src/,stacksecurity.cpp mblandroidad.cpp)
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
 	$(LOCAL_PATH)/../libfoundation/include
+    
+LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
 LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libjpeg libpcre libpng libgif libskia libfreetype
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 
 ifneq ($(MODE),debug)
-LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link
+LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link 
 endif
 
 include $(BUILD_SHARED_LIBRARY)

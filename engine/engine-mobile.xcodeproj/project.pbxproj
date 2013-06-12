@@ -308,6 +308,8 @@
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
+		BE8EA68A1768A78700EF66EE /* mblandroidcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */; };
+		BE8EA68B1768A78700EF66EE /* mblandroidcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */; };
 		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
 		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
@@ -928,6 +930,7 @@
 		BE7506E9175DED8F00A339DA /* mblandroididletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroididletimer.cpp; path = src/mblandroididletimer.cpp; sourceTree = "<group>"; };
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
+		BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcamera.cpp; path = src/mblandroidcamera.cpp; sourceTree = "<group>"; };
 		BE93A90517608B4500791270 /* exec-notification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-notification.cpp"; path = "src/exec-notification.cpp"; sourceTree = "<group>"; };
 		BE93A9091760D32200791270 /* exec-busyindicator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-busyindicator.cpp"; path = "src/exec-busyindicator.cpp"; sourceTree = "<group>"; };
 		BE94042A175F6307003EAB87 /* exec-addressbook.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-addressbook.cpp"; path = "src/exec-addressbook.cpp"; sourceTree = "<group>"; };
@@ -1272,6 +1275,7 @@
 				4C34550014F3FE8D008D7E50 /* mblandroidad.cpp */,
 				E8111F911541A66A00DB16E3 /* mblandroidalert.cpp */,
 				E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */,
+				BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */,
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
@@ -2354,6 +2358,7 @@
 				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
 				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
+				BE8EA68A1768A78700EF66EE /* mblandroidcamera.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2379,6 +2384,7 @@
 				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
 				BE9459491761E250008408DE /* exec-sound.cpp in Sources */,
 				BE94594B17621812008408DE /* exec-misc.cpp in Sources */,
+				BE8EA68B1768A78700EF66EE /* mblandroidcamera.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
