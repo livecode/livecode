@@ -132,116 +132,122 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //
 //////////////////////////////////////////////////////////////////////////////////
 
-MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_result)
-{
-#ifdef MOBILE_BROKEN
-  	MCExecPoint ep(nil, nil, nil);
-	bool t_success = true;
-	char *t_property_name = NULL;
-	char *t_property_value_s = NULL;
-	bool t_property_value_b;
-    int32_t t_property_value_d;
-    
-    // Pre-define some defaults
-    p_result.mcallday = false;
-    p_result.mcalldayset = false;
-    p_result.mcstartdateset = false;
-    p_result.mcenddateset = false;
-    p_result.mcalert1 = -1;
-    p_result.mcalert2 = -1;
-    p_result.mcfrequencycount = 1;
-    p_result.mcfrequencyinterval = 0;
 
-	while (t_success)
-	{
-		t_success = MCParseParameters(p_parameters, "s", &t_property_name);
-        if (t_success)
-        {
-			if (MCCStringEqualCaseless(t_property_name, "allday"))
-            {
-                t_success = MCParseParameters(p_parameters, "b", &t_property_value_b);
-                p_result.mcallday = t_property_value_b;
-                p_result.mcalldayset = true;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "eventid"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mceventid = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "note"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mcnote = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "title"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mctitle = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "calendar"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mccalendar = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "location"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mclocation = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "frequency"))
-            {
-                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
-                p_result.mcfrequency = t_property_value_s;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "frequencycount"))
-            {
-                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
-                p_result.mcfrequencycount = t_property_value_d;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "frequencyinterval"))
-            {
-                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
-                p_result.mcfrequencyinterval = t_property_value_d;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "alert1"))
-            {
-                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
-                p_result.mcalert1 = t_property_value_d;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "alert2"))
-            {
-                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
-                p_result.mcalert2 = t_property_value_d;
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "startdate"))
-            {
-                p_parameters->eval(ep);
-                if (!ep.isempty())
-                {
-                    t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, p_result.mcstartdate);
-                    p_result.mcstartdateset = true;
-                }
-                t_success = MCParseParameters(p_parameters, "s", &t_property_name);
-            }
-            else if (MCCStringEqualCaseless(t_property_name, "enddate"))                                                                      
-            {
-                p_parameters->eval(ep);
-                if (!ep.isempty())
-                {
-                    t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, p_result.mcenddate);
-                    p_result.mcenddateset = true;
-                }
-                t_success = MCParseParameters(p_parameters, "s", &t_property_name);
-            }
-        }
-    }
-#endif
-    return p_result;
-}
+//// Replaced by MCArrayDataToCalendar
+//MCCalendar MCParameterDataToCalendar (MCParameter *p_parameters, MCCalendar p_result)
+//{
+//  	MCExecPoint ep(nil, nil, nil);
+//	bool t_success = true;
+//	char *t_property_name = NULL;
+//	char *t_property_value_s = NULL;
+//	bool t_property_value_b;
+//    int32_t t_property_value_d;
+//    
+//    // Pre-define some defaults
+//    p_result.mcallday = false;
+//    p_result.mcalldayset = false;
+//    p_result.mcstartdateset = false;
+//    p_result.mcenddateset = false;
+//    p_result.mcalert1 = -1;
+//    p_result.mcalert2 = -1;
+//    p_result.mcfrequencycount = 1;
+//    p_result.mcfrequencyinterval = 0;
+//
+//	while (t_success)
+//	{
+//		t_success = MCParseParameters(p_parameters, "s", &t_property_name);
+//        if (t_success)
+//        {
+//			if (MCCStringEqualCaseless(t_property_name, "allday"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "b", &t_property_value_b);
+//                p_result.mcallday = t_property_value_b;
+//                p_result.mcalldayset = true;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "eventid"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mceventid = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "note"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mcnote = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "title"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mctitle = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "calendar"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mccalendar = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "location"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mclocation = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "frequency"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_value_s);
+//                p_result.mcfrequency = t_property_value_s;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "frequencycount"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
+//                p_result.mcfrequencycount = t_property_value_d;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "frequencyinterval"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
+//                p_result.mcfrequencyinterval = t_property_value_d;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "alert1"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
+//                p_result.mcalert1 = t_property_value_d;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "alert2"))
+//            {
+//                t_success = MCParseParameters(p_parameters, "i", &t_property_value_d);
+//                p_result.mcalert2 = t_property_value_d;
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "startdate"))
+//            {
+//                p_parameters->eval(ep);
+//                if (!ep.isempty())
+//                {
+//                    t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, p_result.mcstartdate);
+//                    p_result.mcstartdateset = true;
+//                }
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_name);
+//            }
+//            else if (MCCStringEqualCaseless(t_property_name, "enddate"))                                                                      
+//            {
+//                p_parameters->eval(ep);
+//                if (!ep.isempty())
+//                {
+//                    t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, p_result.mcenddate);
+//                    p_result.mcenddateset = true;
+//                }
+//                t_success = MCParseParameters(p_parameters, "s", &t_property_name);
+//            }
+//        }
+//    }
+//    return p_result;
+//}
 
 bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
 {
     bool t_success;
+    
+    MCValueRelease(r_calendar.mcnote);
+    MCValueRelease(r_calendar.mctitle);
+    MCValueRelease(r_calendar.mclocation);
+    MCValueRelease(r_calendar.mccalendar);
+    MCValueRelease(r_calendar.mcfrequency);    
     
     t_success = MCArrayGetCount(p_array) > 0;
     
@@ -271,10 +277,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         t_success = MCArrayFetchValue(p_array, false, *t_key_note, &t_str_note);
         
         if (t_success)
-        {
-            MCValueRelease(r_calendar.mcnote);
             t_success = MCStringCopy((MCStringRef)*t_str_note, r_calendar.mcnote);
-        }
     }
     
     if (t_success)
@@ -286,10 +289,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         t_success = MCArrayFetchValue(p_array, false, *t_key_title, &t_str_title);
         
         if (t_success)
-        {
-            MCValueRelease(r_calendar.mctitle);
             t_success = MCStringCopy((MCStringRef)*t_str_title, r_calendar.mctitle);
-        }
     }
     
     if (t_success)
@@ -301,10 +301,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         t_success = MCArrayFetchValue(p_array, false, *t_key_location, &t_str_location);
         
         if (t_success)
-        {
-            MCValueRelease(r_calendar.mclocation);
             t_success = MCStringCopy((MCStringRef)*t_str_location, r_calendar.mclocation);
-        }
     }
     
     if (t_success)
@@ -316,10 +313,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         t_success = MCArrayFetchValue(p_array, false, *t_key_calendar, &t_str_calendar);
         
         if (t_success)
-        {
-            MCValueRelease(r_calendar.mccalendar);
             t_success = MCStringCopy((MCStringRef)*t_str_calendar, r_calendar.mccalendar);
-        }
     }
     
     if (t_success)
@@ -337,10 +331,7 @@ bool MCArrayDataToCalendar (MCArrayRef p_array, MCCalendar& r_calendar)
         t_success = MCArrayFetchValue(p_array, false, *t_key_frequency, &t_str_frequency);
         
         if (t_success)
-        {
-            MCValueRelease(r_calendar.mcfrequency);
             t_success = MCStringCopy((MCStringRef)*t_str_frequency, r_calendar.mcfrequency);
-        }
         
         if (t_success)
             t_success = MCArrayFetchValue(p_array, false, *t_key_frequency_count, &t_int_frequency_count);

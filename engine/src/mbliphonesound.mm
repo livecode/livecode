@@ -698,15 +698,22 @@ bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 // MM-2012-02-11: Refactored to return a formatted sting of channels
 bool MCSystemListSoundChannels(MCStringRef& r_channels)
 {
-/*	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
+    MCStringCreateMutable(0, r_channels);
+    bool t_elementsfound = false;
+    
+	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
+    {
 		if (t_channel -> name != nil)
         {
-            if (r_channels == nil)
-                MCCStringClone(t_channel -> name, r_channels);
+            t_elementsfound = true;
+            if (MCStringGetLength(r_channels))
+                MCStringAppendFormat(r_channels, "%s", t_channel -> name);
             else
-                MCCStringAppendFormat(r_channels, "\n%s", t_channel -> name);
-        } */
-	return true;
+                MCStringAppendFormat(r_channels, "\n%s", t_channel -> name);
+        }
+    }
+    
+	return t_elementsfound;
 }
 
 extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object);

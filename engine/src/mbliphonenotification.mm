@@ -101,7 +101,7 @@ bool MCSystemGetRegisteredNotifications (MCStringRef& r_registered_alerts)
             t_result = [t_result stringByAppendingFormat:@",%@", [t_local_notification.userInfo objectForKey:@"notificationId"]];
     }
     if (t_result == nil)
-        r_registered_alerts = nil;
+        r_registered_alerts = kMCEmptyString;
     else
         return MCStringCreateWithCString([t_result cStringUsingEncoding:NSMacOSRomanStringEncoding], r_registered_alerts);
     return true;

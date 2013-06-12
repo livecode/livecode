@@ -1151,9 +1151,16 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
     
 	if (t_success)
 	{
+        bool t_first = true;
 		for (NSString *t_lang in t_preferred_langs)
 		{
-            t_success |= MCStringAppendFormat(&t_preferred_languages, "\ns", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+            if (t_first)
+            {
+                t_success |= MCStringAppendFormat(&t_preferred_languages, "%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+                t_first = false;
+            }
+            else
+                t_success |= MCStringAppendFormat(&t_preferred_languages, "\n%s", [t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding]);
         }
 	}
     
@@ -1661,9 +1668,9 @@ static MCPlatformMessageSpec s_platform_messages[] =
 	{true, "iphonePickPhoto", MCHandlePickPhoto, nil},
 	{true, "iphonePickMedia", MCHandleIPhonePickMedia, nil},
 	{true, "mobilePickMedia", MCHandleIPhonePickMedia, nil},
-	{false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
+//	{false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
 	{true, "mobilePickPhoto", MCHandlePickPhoto, nil},
-	{false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
+//	{false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
     
 	{false, "iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
 	{false, "mobileDeviceOrientation", MCHandleDeviceOrientation, nil},

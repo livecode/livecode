@@ -48,6 +48,36 @@ MC_EXEC_DEFINE_EXEC_METHOD(Store, PurchaseVerify, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCExecEnumTypeElementInfo _kMCStorePurchasePropertyElementInfo[] =
+{
+    { "product identifier", kMCPurchasePropertyProductIdentifier},
+    { "quantity", kMCPurchasePropertyQuantity},
+    { "developer payload", kMCPurchasePropertyDeveloperPayload},
+    { "localized title", kMCPurchasePropertyLocalizedTitle},
+    { "localized description", kMCPurchasePropertyLocalizedDescription},
+    { "localized price", kMCPurchasePropertyLocalizedPrice},
+    { "purchase date", kMCPurchasePropertyPurchaseDate},
+    { "transaction identifier", kMCPurchasePropertyTransactionIdentifier},
+    { "receipt", kMCPurchasePropertyReceipt},
+    { "original transaction identifier", kMCPurchasePropertyOriginalTransactionIdentifier},
+    { "original purchase date", kMCPurchasePropertyOriginalPurchaseDate},
+    { "original receipt", kMCPurchasePropertyOriginalReceipt},
+    { "signed data", kMCPurchasePropertySignedData},
+    { "signature", kMCPurchasePropertySignature},
+    { "unknown", kMCPurchasePropertyUnknown}
+};
+
+static MCExecEnumTypeInfo _kMCStorePurchasePropertyTypeInfo =
+{
+    "Store.PurchaseProperty",
+    sizeof(_kMCStorePurchasePropertyElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCStorePurchasePropertyElementInfo
+};
+
+MCExecEnumTypeInfo* kMCStorePurchasePropertyTypeInfo = &_kMCStorePurchasePropertyTypeInfo;
+
+////////////////////////////////////////////////////////////////////////////////
+
 
 void MCStoreGetCanMakePurchase(MCExecContext& ctxt, bool& r_result)
 {

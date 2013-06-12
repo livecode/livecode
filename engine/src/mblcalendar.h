@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mblsyntax.h"
 
+//// MOVED TO mblsyntax.h
 //typedef struct
 //{
 //    MCString   mceventid;           //

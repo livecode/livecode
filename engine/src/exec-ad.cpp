@@ -50,7 +50,7 @@ MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
 {
-    if (!MCAdInneractiveKeyIsNil())
+    if (MCAdSetInneractiveKey(p_key))
         return;
     
     ctxt.Throw();
@@ -125,6 +125,7 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         
         ctxt.SetTheResultToStaticCString("could not create ad");
     }
+    
     ctxt.Throw();
 }
 
@@ -237,7 +238,8 @@ void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible)
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 {
     bool t_success;
-    t_success = true;
+    t_success = false;
+    
     MCAutoStringRef t_ads;
 	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {

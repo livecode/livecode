@@ -2147,10 +2147,8 @@ Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 	MCAutoStringRef t_sound;
     MCAutoStringRef t_channel;
     MCAutoStringRef t_type;
-	t_sound = nil;
-	t_channel = nil;
-	t_type = nil;
-	if (t_success)
+	
+    if (t_success)
 		t_success = MCParseParameters(p_parameters, "xxx", &(&t_sound), &(&t_channel), &(&t_type));
 	
     MCSoundChannelPlayType t_play_type;
@@ -2415,12 +2413,8 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
     MCAutoStringRef t_channels;
 	if (t_success)
 		MCSoundGetSoundChannels(ctxt, &t_channels);
-	
-    if (t_success)
-        if (*t_channels != nil)
-            ep.setvalueref(*t_channels);
     
-    if (!ctxt . HasError() && t_success)
+    if (!ctxt . HasError())
     {
         ctxt . SetTheResultToValue(*t_channels);
 		return ES_NORMAL;
@@ -3585,7 +3579,7 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
     MCExecContext ctxt(ep);
     intset_t t_result;
     
-    MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result)
+    MCPickGetSpecificCameraFeatures(ctxt, (intenum_t)t_source, t_result);
 	
 	MCCameraFeaturesType t_features_set;
     t_features_set = (MCCameraFeaturesType)t_result;

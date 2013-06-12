@@ -93,12 +93,14 @@ const char *MCAdGetInneractiveKey(void)
 
 bool MCAdInneractiveKeyIsNil(void)
 {
-    return MCStringGetLength(s_inneractive_ad_key) != 0;
+    return s_inneractive_ad_key != nil && MCStringGetLength(s_inneractive_ad_key) != 0;
 }
 
 bool MCAdSetInneractiveKey(MCStringRef p_new_key)
 {
-    MCValueRelease(s_inneractive_ad_key);
+    if (p_new_key != nil)
+        MCValueRelease(s_inneractive_ad_key);
+    
     return MCStringCopy(p_new_key, s_inneractive_ad_key);
 }
 

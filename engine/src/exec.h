@@ -3585,6 +3585,8 @@ void MCCalendarExecFindEvent(MCExecContext& ctxt, MCStringRef p_id, bool& r_foun
 
 ///////////
 
+extern MCExecEnumTypeInfo* kMCStorePurchasePropertyTypeInfo;
+
 extern MCExecMethodInfo* kMCNotificationExecCreateLocalNotificationMethodInfo;
 extern MCExecMethodInfo* kMCNotificationGetRegisteredNotificationsMethodInfo;
 extern MCExecMethodInfo* kMCNotificationGetDetailsMethodInfo;

@@ -925,7 +925,7 @@
 		BE449995175D029600346B49 /* mblhandlers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; lineEnding = 0; name = mblhandlers.cpp; path = src/mblhandlers.cpp; sourceTree = "<group>"; xcLanguageSpecificationIdentifier = xcode.lang.cpp; };
 		BE449997175D02AE00346B49 /* exec-textmessaging.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-textmessaging.cpp"; path = "src/exec-textmessaging.cpp"; sourceTree = "<group>"; };
 		BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-idletimer.cpp"; path = "src/exec-idletimer.cpp"; sourceTree = "<group>"; };
-		BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidideltimer.cpp; path = src/mblandroidideltimer.cpp; sourceTree = "<group>"; };
+		BE7506E9175DED8F00A339DA /* mblandroididletimer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroididletimer.cpp; path = src/mblandroididletimer.cpp; sourceTree = "<group>"; };
 		BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneidletimer.mm; path = src/mbliphoneidletimer.mm; sourceTree = "<group>"; };
 		BE7506EF175E0BD200A339DA /* exec-store.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-store.cpp"; path = "src/exec-store.cpp"; sourceTree = "<group>"; };
 		BE93A90517608B4500791270 /* exec-notification.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-notification.cpp"; path = "src/exec-notification.cpp"; sourceTree = "<group>"; };
@@ -1283,7 +1283,7 @@
 				4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */,
 				4CF8A31615067985000745A4 /* mblandroidfont.cpp */,
 				4DB983C8130BB1DF008A03DC /* mblandroidfs.cpp */,
-				BE7506E9175DED8F00A339DA /* mblandroidideltimer.cpp */,
+				BE7506E9175DED8F00A339DA /* mblandroididletimer.cpp */,
 				E8111F921541A66A00DB16E3 /* mblandroidinput.cpp */,
 				4DB983C9130BB1DF008A03DC /* mblandroidio.cpp */,
 				E8720DE114C46AF60016F645 /* mblandroidjava.cpp */,
@@ -1347,17 +1347,17 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				BE449507175CE88F00346B49 /* Syntax */,
-				BE449503175CE10F00346B49 /* Legacy */,
-				BE4494B6175CDE4E00346B49 /* Exec */,
 				E81AC12D170C8CCE00315861 /* Core - Foundation */,
 				E81AC137170C8E1000315861 /* Core - Graphics */,
 				E81AC13A170C8F1200315861 /* Core - Language */,
 				E84BE35C170C96D500807CF6 /* Core - Misc */,
 				E81AC13B170C90C600315861 /* Core - Objects */,
 				4CE7B2671704A8430072029F /* Core - Security */,
+				BE4494B6175CDE4E00346B49 /* Exec */,
+				BE449503175CE10F00346B49 /* Legacy */,
 				4DB983BE130BB1AE008A03DC /* Mobile */,
 				E84BE363170C99F700807CF6 /* Standalone */,
+				BE449507175CE88F00346B49 /* Syntax */,
 				E84BE35B170C967B00807CF6 /* System */,
 			);
 			name = Sources;
