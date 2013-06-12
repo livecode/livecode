@@ -34,8 +34,11 @@ echo $DEPS
 # used - thus we force linking to Foundation, dittor for UIKit
 DEPS="$DEPS -framework Foundation -framework UIKit"
 
-# The list of symbols exported by an iOS external is fixed
-SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
+# Support using the same script for old externals
+if [ $SYMBOLS != "_getXtable" ]; then
+    # The list of symbols exported by an iOS external is fixed
+    SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
+fi
 
 # Munge the passed in ARCHS environment variable into a form suitable for g++
 ARCHS="-arch ${ARCHS// / -arch }"
