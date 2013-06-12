@@ -68,6 +68,7 @@ static CRITICAL_SECTION s_notify_lock;
 #elif defined(_MACOSX)
 static bool s_notify_sent = false;
 static pthread_mutex_t s_notify_lock;
+static pthread_t s_main_thread;
 #elif defined(_LINUX)
 static bool s_notify_sent = false;
 int g_notify_pipe[2] = {-1, -1};
@@ -173,6 +174,17 @@ static void MCNotifyUnlock(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool MCNotifyIsMainThread(void)
+{
+#if defined(_WINDOWS)
+	return true; // not implemented yet
+#elif defined(_MACOSX) || defined(_LINUX)
+	return pthread_self() == s_main_thread;
+#endif
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(_MACOSX)
 extern bool g_osx_dispatch_event;
 static OSStatus MCNotifyEventHandler(EventHandlerCallRef p_ref, EventRef p_event, void *p_data)
@@ -195,6 +207,7 @@ bool MCNotifyInitialize(void)
 	static EventTypeSpec t_events[] = { 'revo', 'wkup' };
 	::InstallApplicationEventHandler(MCNotifyEventHandler, 1, t_events, NULL, NULL);
 	pthread_mutex_init(&s_notify_lock, NULL);
+	s_main_thread = pthread_self();
 #elif defined(_LINUX)
 	pthread_mutex_init(&s_notify_lock, NULL);
 	pipe(g_notify_pipe);
@@ -265,6 +278,18 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	bool t_success;
 	t_success = true;
 
+	// The request for a blocking, non-safe notification on the main thread should just
+	// invoke the callback.
+	if (p_block && !p_safe && MCNotifyIsMainThread())
+	{
+		p_callback(p_state);
+		return true;
+	}
+	
+	// The request for a blocking, safe notification on the main thread is an error.
+	if (p_block && p_safe && MCNotifyIsMainThread())
+		return false;
+	
 	// Create a new notification
 	MCNotification *t_notification;
 	t_notification = NULL;
