@@ -38,6 +38,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 #include "debug.h"
 
+#include "mblsyntax.h"
+
 #include "mblandroid.h"
 #include "mblandroidutil.h"
 #include "mbldc.h"
@@ -659,7 +661,7 @@ static int32_t MCMiscAndroidKeyboardEnumFromMCExecEnum(MCMiscKeyboardType p_type
 
 bool MCSystemSetKeyboardType(intenum_t p_type)
 {
-    int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum(p_type);
+    int32_t t_type = MCMiscAndroidKeyboardEnumFromMCExecEnum((MCMiscKeyboardType)p_type);
     
     g_android_keyboard_type = t_type;
     
@@ -734,7 +736,7 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
-    MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+    MCAndroidEngineRemoteCall("getPixelDensity", "f", &r_density);
     return true;
 }
 
@@ -782,7 +784,7 @@ const char *MCSystemGetReachabilityTarget(void)
 
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
-    MCAndroidEngineCall("exportImageToAlbum", "xdxx", r_save_result, t_raw_data, t_file_name, t_file_extension);
+    MCAndroidEngineCall("exportImageToAlbum", "xdxx", r_save_result, p_raw_data, p_file_name, p_file_extension);
     
     return true;
 }
@@ -1175,6 +1177,20 @@ void MCAndroidMediaCanceled()
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
+
 extern Exec_stat MCHandleRevMail(void *context, MCParameter *parameters);
 extern Exec_stat MCHandleCanSendMail(void *context, MCParameter *parameters);
 extern Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters);
@@ -1281,7 +1297,7 @@ extern Exec_stat MCHandleVibrate(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlerPixelDensity(void* p_context, MCParameter* p_parameters);
+extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
 
 extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
@@ -1298,6 +1314,8 @@ extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_paramet
 extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
 
 extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
 
 
 

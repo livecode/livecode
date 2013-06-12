@@ -97,10 +97,10 @@ bool MCSystemPlaySoundOnChannel(MCStringRef p_channel, MCStringRef p_file, MCSou
     t_success = true;    
     const char *t_apk_file = nil;;
     if (t_success)
-        if (path_to_apk_path(p_file, t_apk_file))
+        if (path_to_apk_path(MCStringGetCString(p_file), t_apk_file))
             MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, t_apk_file, p_file, (int32_t) p_type, true, (long) p_object);
         else
-            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);       
+            MCAndroidEngineRemoteCall("playSoundOnChannel", "bxsxibj", &t_success, p_channel, p_file, p_file, (int32_t) p_type, false, (long) p_object);
     return t_success;
 }
 
