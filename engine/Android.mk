@@ -87,13 +87,15 @@ LOCAL_SRC_FILES := $(addprefix src/,stacksecurity.cpp mblandroidad.cpp)
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
 	$(LOCAL_PATH)/../libfoundation/include
+    
+LOCAL_CFLAGS := -DGL_GLEXT_PROTOTYPES=1
 
 LOCAL_STATIC_LIBRARIES := librevandroid-kernel libfoundation libjpeg libpcre libpng libgif libskia libfreetype
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 
 ifneq ($(MODE),debug)
-LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link
+LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link 
 endif
 
 include $(BUILD_SHARED_LIBRARY)
