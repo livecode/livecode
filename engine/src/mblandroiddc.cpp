@@ -47,7 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <pthread.h>
 #include <android/log.h>
 #include <android/bitmap.h>
-#include <windows.h>
 #include <GLES/gl.h>
 #include <unistd.h>
 
@@ -1319,7 +1318,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 				{
 					MCStringRef t_string;
                     t_success = MCStringCreateWithCString(t_cstring, t_string);
-					((MCStringRef)context -> return_value) = t_string;
+					*((MCStringRef *)context -> return_value) = t_string;
 				}
 
 				delete t_cstring;
