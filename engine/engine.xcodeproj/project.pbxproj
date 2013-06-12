@@ -2938,10 +2938,13 @@
 			name = "Encode Version";
 			outputPaths = (
 				"$(SRCROOT)/include/revbuild.h",
+				"$(SRCROOT)/rsrc/Installer-Info.plist",
+				"$(SRCROOT)/rsrc/Standalone-Info.plist",
+				"$(SRCROOT)/rsrc/Revolution-Info.plist",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"";
+			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_version.rev\" \"$SRCROOT\"\ntouch \"$SRCROOT/rsrc/Revolution-Info.plist\"\ntouch \"$SRCROOT/rsrc/Installer-Info.plist\"\ntouch \"$SRCROOT/rsrc/Standalone-Info.plist\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
