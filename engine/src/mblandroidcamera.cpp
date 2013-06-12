@@ -53,7 +53,7 @@ MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_sour
 
     if (p_source == kMCCameraSourceTypeFront)
         t_cam_exists = MCStringFirstIndexOfChar(*t_camera_dir, 'f', 0, kMCCompareCaseless, t_offset);
-    else if (p_source == kMCCAmeraSourceTypeRear)
+    else if (p_source == kMCCameraSourceTypeRear)
         t_cam_exists = MCStringFirstIndexOfChar(*t_camera_dir, 'b', 0, kMCCompareCaseless, t_offset);
     
     if (t_cam_exists)
@@ -75,7 +75,7 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
     if (MCStringFirstIndexOfChar(*t_camera_dir, 'f', 0, kMCCompareCaseless, t_offset))
         t_features |= kMCCamerasFeatureFrontPhoto;
     if (MCStringFirstIndexOfChar(*t_camera_dir, 'b', 0, kMCCompareCaseless, t_offset))
-        t_features |= kMCCAmerasFeatureRearPhoto;
+        t_features |= kMCCamerasFeatureRearPhoto;
     
     return t_features;
 }

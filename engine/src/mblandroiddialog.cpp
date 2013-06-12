@@ -299,7 +299,7 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
 
 static uint32_t s_selected_index;
 
-bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
+bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_checkmark, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
     // multi-pick list not supported
     if (p_pick_list_count != 1)
@@ -344,7 +344,6 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
         r_canceled = s_dialog_result == kMCDialogResultCanceled;
         if (!r_canceled)
         {
-            t_success = MCMemoryNew(r_result) && MCMemoryNewArray(1, r_result->elements);
             if (t_success)
             {
                 r_result_count = 1;
@@ -359,7 +358,7 @@ bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, ui
     
     return t_success;
 }
-
+/*
 bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_t *p_indexes, uint32_t p_expression_cnt, const_int32_array_t *&r_result, bool p_use_checkmark, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect)
 {
     MCLog("indexes: (%p) {length = %d, element[0] = %d}", p_indexes, p_indexes ? p_indexes->length : 0, p_indexes && p_indexes->length > 0 ? p_indexes->elements[0] : 0); 
@@ -422,7 +421,7 @@ bool MCSystemPickOption(const_cstring_array_t **p_expression, const_int32_array_
     
     return t_success;
 }
-
+*/
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doListPickerDone(JNIEnv *env, jobject object, jint p_index, jboolean p_done) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doListPickerDone(JNIEnv *env, jobject object, jint p_index, jboolean p_done)
 {

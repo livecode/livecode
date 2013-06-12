@@ -142,7 +142,7 @@ bool MCAndroidContactToJavaMap(MCArrayRef p_contact, jobject &r_map)
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	MCExecPoint ep(nil, nil, nil);
 	
-	t_success = MCJavaMapFromArray(t_env, ep, p_contact, r_map);
+	t_success = MCJavaMapFromArray(t_env, p_contact, r_map);
 	
 	return t_success;
 }
@@ -152,7 +152,7 @@ bool MCAndroidContactFromJavaMap(jobject p_map, MCArrayRef &r_contact)
 	JNIEnv *t_env = MCJavaGetThreadEnv();
 	MCExecPoint ep(nil, nil, nil);
 	
-	return MCJavaMapToArray(t_env, ep, p_map, r_contact);
+	return MCJavaMapToArray(t_env, p_map, r_contact);
 }
 
 bool MCSystemUpdateContact(MCArrayRef p_contact,
@@ -235,9 +235,8 @@ bool MCSystemAddContact(MCArrayRef p_contact, int32_t &r_result)
 
 bool MCSystemFindContact(MCStringRef p_contact_name, MCStringRef& r_result)
 {
-    MCLog("MCSystemFindContact: %s", p_contact_name);
     MCAndroidEngineRemoteCall("findContact", "vx", nil, p_contact_name);
-    return MCStringCreateWithCString(s_contacts_selected, r_result);
+    return MCStringCreateWithCString(s_contacts_selected . getstring(), r_result);
 }
 
 // Get data from Java and assign the values to class values that are then returned to the 
