@@ -439,7 +439,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doListPickerDone(JNIEnv *e
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_multiple)
+bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r_result)
 {
     // UNIMPLEMENTED
     return false;

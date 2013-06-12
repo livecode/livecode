@@ -36,6 +36,7 @@ MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickTime, 6)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
 MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,7 +65,83 @@ static MCExecEnumTypeInfo _kMCPickButtonTypeTypeInfo =
 
 //////////
 
+static MCExecEnumTypeElementInfo _kMCPickCameraSourceTypeElementInfo[] =
+{
+	{ "front", kMCCameraSourceTypeFront, false },
+	{ "rear", kMCCameraSourceTypeRear, false },
+	{ "unknown", kMCCameraSourceTypeUnknown, true },
+};
+
+static MCExecEnumTypeInfo _kMCPickCameraSourceTypeTypeInfo =
+{
+	"Pick.CameraSourceType",
+	sizeof(_kMCPickCameraSourceTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCPickCameraSourceTypeElementInfo
+};
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCPickCameraFeaturesElementInfo[] =
+{
+	{ "photo", kMCCameraFeaturePhoto },
+	{ "video", kMCCameraFeatureVideo },
+	{ "flash", kMCCameraFeatureFlash },
+};
+
+static MCExecSetTypeInfo _kMCPickCameraFeaturesTypeInfo =
+{
+	"Pick.CameraFeatures",
+	sizeof(_kMCPickCameraFeaturesElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCPickCameraFeaturesElementInfo
+};
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCPickCamerasFeaturesElementInfo[] =
+{
+	{ "photo", kMCCamerasFeatureFrontPhoto },
+	{ "video", kMCCamerasFeatureFrontVideo },
+	{ "flash", kMCCamerasFeatureFrontFlash },
+    { "photo", kMCCamerasFeatureRearPhoto },
+	{ "video", kMCCamerasFeatureRearVideo },
+	{ "flash", kMCCamerasFeatureRearFlash },
+};
+
+static MCExecSetTypeInfo _kMCPickCamerasFeaturesTypeInfo =
+{
+	"Pick.CamerasFeatures",
+	sizeof(_kMCPickCamerasFeaturesElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCPickCamerasFeaturesElementInfo
+};
+
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCPickMediaTypesElementInfo[] =
+{
+	{ "podcasts", kMCMediaTypePodcasts },
+	{ "songs", kMCMediaTypeSongs },
+	{ "audiobooks", kMCMediaTypeAudiobooks },
+    { "movies", kMCMediaTypeMovies },
+	{ "musicvideos", kMCMediaTypeMusicVideos },
+	{ "tv", kMCMediaTypeTv },
+    { "videopodcasts", kMCMediaTypeVideoPodcasts },
+};
+
+static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
+{
+	"Pick.MediaTypes",
+	sizeof(_kMCPickMediaTypesElementInfo) / sizeof(MCExecSetTypeElementInfo),
+	_kMCPickMediaTypesElementInfo
+};
+
+//////////
+
 MCExecEnumTypeInfo *kMCPickButtonTypeTypeInfo = &_kMCPickButtonTypeTypeInfo;
+MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
+MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo = &_kMCPickCameraFeaturesTypeInfo;
+MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo = &_kMCPickCamerasFeaturesTypeInfo;
+MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo = &_kMCPickMediaTypesTypeInfo;
 
 //////////
 
@@ -258,29 +335,14 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
 }
 
 // pick [ "multiple" ] (podcast(s), song(s), audiobook(s), movie(s), musicvideo(s)) from library
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, MCMediaType *p_media_type, bool p_multiple, const char *&r_result)
+void MCPickExecPickMedia(MCExecContext &ctxt, intset_t p_allowed_types, bool p_multiple)
 {
-    MCSystemPickMedia(p_media_type, r_result, p_multiple);
-    p_ctxt.SetTheResultToStaticCString(r_result);
-}
-
-// pick [ "multiple" ] items from [(audio|media) allowing expression
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMediaScope *p_media_scope, bool p_multiple, const char *&r_result)
-{
-    /*
-    MCMediaType t_media_type, t_allowed_media_type;
-    t_media_type = MCMediaTypeFromCString(p_media_expression);
-    t_allowed_media_type = MCMediaTypeFromCString("podcast, songs, audiobook");
+    MCAutoStringRef t_result;
+    if (MCSystemPickMedia((MCMediaType)p_allowed_types, p_multiple, &t_result))
+        ctxt . SetTheResultToValue(*t_result);
     
-    if (*p_media_scope == kMCmedia)
-        MCSystemPickMedia(&t_media_type, r_result, p_multiple);
-    else if (*p_media_scope == kMCaudio)
-    {
-        t_media_type = t_media_type & t_allowed_media_type;
-        MCSystemPickMedia(&t_media_type, r_result, p_multiple);
-    }
-    p_ctxt.SetTheResultToStaticCString(r_result);
-     */
+    ctxt . SetTheResultToEmpty();
+    
 }
 
 void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features)

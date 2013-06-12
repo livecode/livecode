@@ -36,8 +36,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source);
 bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size);
 
-MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height)
@@ -80,12 +78,12 @@ void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, MCCameraFeaturesType& r_features)
 {
 	r_features = MCSystemGetCameraFeatures(p_camera);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 /* moved to mblhandlers.cpp
 Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)

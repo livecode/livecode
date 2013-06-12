@@ -1607,6 +1607,8 @@ extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_paramet
 extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
 
+extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
+
 static MCPlatformMessageSpec s_platform_messages[] =
 {
     // MM-2012-02-22: Added support for ad management

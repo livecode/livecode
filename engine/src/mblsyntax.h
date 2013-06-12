@@ -52,7 +52,7 @@ enum
     kMCCameraFeatureTypePhoto,
     kMCCameraFeatureTypeVideo,
     kMCCameraFeatureTypeFlash,
-    kMCCameraNumFeatures = 3,
+    kMCCameraFeatureRearShift = 3,
 };
 
 typedef uint32_t MCCameraFeaturesType;
@@ -69,12 +69,15 @@ enum
     kMCCamerasFeatureFrontPhoto = 1 << kMCCameraFeatureTypePhoto,
     kMCCamerasFeatureFrontVideo = 1 << kMCCameraFeatureTypeVideo,
     kMCCamerasFeatureFrontFlash = 1 << kMCCameraFeatureTypeFlash,
-    kMCCamerasFeatureRearPhoto = 1 << (kMCCameraFeatureTypePhoto + kMCCameraNumFeatures),
-    kMCCamerasFeatureRearVideo = 1 << (kMCCameraFeatureTypeVideo + kMCCameraNumFeatures),
-    kMCCamerasFeatureRearFlash = 1 << (kMCCameraFeatureTypeFlash + kMCCameraNumFeatures),
+    kMCCamerasFeatureRearPhoto = 1 << (kMCCameraFeatureTypePhoto + kMCCameraFeatureRearShift),
+    kMCCamerasFeatureRearVideo = 1 << (kMCCameraFeatureTypeVideo + kMCCameraFeatureRearShift),
+    kMCCamerasFeatureRearFlash = 1 << (kMCCameraFeatureTypeFlash + kMCCameraFeatureRearShift),
 };
 
-void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, char*& r_features);
+//void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, char*& r_features);
+MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_source);
+MCCamerasFeaturesType MCSystemGetAllCameraFeatures();
+
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Sensor module
@@ -145,14 +148,14 @@ enum
 typedef uint32_t MCMediaType;
 enum
 {
-    kMCunknownMediaType = 0,
-    kMCpodcasts =         1 << 0,
-    kMCsongs =            1 << 1,
-    kMCaudiobooks =       1 << 2,
-    kMCmovies =           1 << 3,
-    kMCmusicvideos =      1 << 4,
-    kMCtv =               1 << 5,
-    kMCvideopodcasts =    1 << 6,
+    kMCUnknownMediaType = 0,
+    kMCMediaTypePodcasts =         1 << 0,
+    kMCMediaTypeSongs =            1 << 1,
+    kMCMediaTypeAudiobooks =       1 << 2,
+    kMCMediaTypeMovies =           1 << 3,
+    kMCMediaTypeMusicVideos =      1 << 4,
+    kMCMediaTypeTv =               1 << 5,
+    kMCMediaTypeVideoPodcasts =    1 << 6,
 };
 
 typedef uint32_t MCMediaScope;
@@ -162,9 +165,6 @@ enum
     kMCaudio,
     kMCmedia,
 };
-
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, MCMediaType *p_media_type, bool p_multiple);
-void MCDialogExecPickMedia(MCExecContext &p_ctxt, char *p_media_expression, MCMediaScope *p_media_scope, bool p_multiple);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Alert
@@ -349,7 +349,7 @@ bool MCSystemPickDateAndTime(MCDateTime *p_current, MCDateTime *p_min, MCDateTim
 
 bool MCSystemPickOption(MCPickList *p_pick_lists, uindex_t p_pick_list_count, uindex_t *&r_result, uindex_t &r_result_count, bool p_use_hilited, bool p_use_picker, bool p_use_cancel, bool p_use_done, bool &r_canceled, MCRectangle p_button_rect);
 
-bool MCSystemPickMedia(MCMediaType *p_media_type, const char *&r_result, bool p_multiple);
+bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r_result);
 
 // form Misc module
 
