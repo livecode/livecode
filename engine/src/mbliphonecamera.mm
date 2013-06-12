@@ -295,7 +295,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 	return true;
 }
 
-MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source)
+MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_source)
 {
 	UIImagePickerControllerCameraDevice t_device_type;
 	if (p_source == kMCCameraSourceTypeRear)
@@ -320,6 +320,21 @@ MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source)
 		}
 	
 	return t_features;
+}
+
+MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
+{
+    MCCameraFeaturesType t_front_features;
+    MCCameraFeaturesType t_rear_features;
+    
+    t_front_features = MCSystemGetSpecificCameraFeatures(kMCCameraSourceTypeFront);
+    t_rear_features = MCSystemGetSpecificCameraFeatures(kMCCameraSourceTypeRear);
+    
+    MCCamerasFeaturesType t_features;
+    t_features = 0;
+    
+    t_features |= t_front_features;
+    t_features |= (t_rear_features << kMCCameraFeatureRearShift);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

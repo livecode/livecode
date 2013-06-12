@@ -3555,11 +3555,26 @@ void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeo
 //////////
 
 extern MCExecEnumTypeInfo *kMCPickButtonTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo;
+extern MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo;
+extern MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo;
+extern MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo;
+
+extern MCExecMethodInfo *kMCPickExecPickDateMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickTimeMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickDateAndTimeMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickOptionByIndexMethodInfo;
+extern MCExecMethodInfo *kMCPickGetSpecificCameraFeaturesMethodInfo;
+extern MCExecMethodInfo *kMCPickGetCameraFeaturesMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickMediaMethodInfo;
 
 void MCPickExecPickDate(MCExecContext& ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickDateAndTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCStringRef *p_option_lists, uindex_t p_option_list_count, uindex_t *p_initial_indices, uindex_t p_indices_count, bool p_use_hilite_type, bool p_use_picker, bool p_use_cancel, bool p_use_done, MCRectangle p_button_rect);
+void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features);
+void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features);
+void MCPickExecPickMedia(MCExecContext &ctxt, intset_t p_allowed_types, bool p_multiple);
 
 ///////////
 

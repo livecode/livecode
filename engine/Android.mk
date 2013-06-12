@@ -13,6 +13,9 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
 	cmdsm.cpp cmdsp.cpp cmdss.cpp constant.cpp control.cpp cpalette.cpp \
 	date.cpp debug.cpp dispatch.cpp dllst.cpp objectprops.cpp \
+	exec-ad.cpp exec-addressbook.cpp exec-busyindicator.cpp exec-calendar.cpp exec-idletimer.cpp exec-mail.cpp exec-misc.cpp \
+	exec-nativecontrol.cpp exec-notification.cpp exec-orientation.cpp exec-pick.cpp \
+	exec-sensor.cpp exec-sound.cpp exec-store.cpp exec-textmessaging.cpp \
 	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp fieldstyledtext.cpp fieldhtml.cpp fieldrtf.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp igif.cpp iimport.cpp \
@@ -38,12 +41,12 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
 	redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
 	sysunxdate.cpp sysspec.cpp stackcache.cpp \
-	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
-	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
-	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
-	mblandroid.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
-	mblandroidcalendar.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
-	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroidinput.cpp \
+	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcamera.cpp mblcontact.cpp \
+	mblcontrol.cpp mbldc.cpp mbldialog.cpp mblflst.cpp mblhandlers.cpp mblmain.cpp mblnotification.cpp \
+	mblsensor.cpp mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
+	mblandroid.cpp mblandroidad.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
+	mblandroidcalendar.cpp mbandroidcamera.cpp mblandroidcontact.cpp mblandroidcontext.cpp mblandroidcontrol.cpp \
+	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroididletimer.cpp mblandroidinput.cpp \
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \

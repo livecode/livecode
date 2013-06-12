@@ -3061,10 +3061,44 @@ Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters
 
 //////////////////////////////////////////////////////////////////////////////////////
 
+static MCMediaType MCMediaTypeFromCString(const char *p_string)
+{
+    const char *t_ptr = p_string;
+    MCMediaType t_media_type = kMCUnknownMediaType;
+    
+    while (true)
+    {
+        while(*t_ptr == ' ' || *t_ptr == ',')
+            t_ptr += 1;
+        if (*t_ptr == '\0')
+            break;
+    	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
+        if (MCCStringEqualSubstringCaseless(t_ptr, "podcasts", 7))
+            t_media_type = t_media_type | kMCMediaTypePodcasts;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "songs", 4))
+            t_media_type = t_media_type | kMCMediaTypeSongs;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "audiobooks", 9))
+            t_media_type = t_media_type | kMCMediaTypeAudiobooks;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "movies", 5))
+            t_media_type = t_media_type | kMCMediaTypeMovies;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "musicvideos", 10))
+            t_media_type = t_media_type | kMCMediaTypeMusicVideos;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "tv", 2))
+            t_media_type = t_media_type | kMCMediaTypeTv;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
+            t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
+        
+        while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
+            t_ptr += 1;
+        
+    }
+    return t_media_type;
+}
+
 //iphonePickMedia [multiple] [, music, podCast, audioBook, anyAudio, movie, tv, videoPodcast, musicVideo, videoITunesU, anyVideo]
 Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 {
-/*	bool t_success, t_allow_multipe_items;
+	bool t_success, t_allow_multipe_items;
 	char *t_option_list;
     const char *r_return_media_types;
 	MCMediaType t_media_types;
@@ -3084,24 +3118,24 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 		if (MCCStringEqualCaseless(t_option_list, "true"))
 			t_allow_multipe_items = true;
 		else if (MCCStringEqualCaseless(t_option_list, "music"))
-			t_media_types += kMCsongs;
-		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
-			t_media_types += kMCpodcasts;
-		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
-			t_media_types += kMCaudiobooks;
+			t_media_types |= kMCMediaTypeSongs;
+		else if (MCCStringEqualCaseless(t_option_list, "podcast"))
+			t_media_types += kMCMediaTypePodcasts;
+		else if (MCCStringEqualCaseless(t_option_list, "audiobook"))
+			t_media_types += kMCMediaTypeAudiobooks;
 #ifdef __IPHONE_5_0
 		if (MCmajorosversion >= 500)
 		{
 			if (MCCStringEqualCaseless(t_option_list, "movie"))
-				t_media_types += kMCmovies;
+				t_media_types += kMCMediaTypeMovies;
 			else if (MCCStringEqualCaseless(t_option_list, "tv"))
-				t_media_types += kMCtv;
+				t_media_types += kMCMediaTypeTv;
 			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
-				t_media_types += kMCvideopodcasts;
+				t_media_types += kMCMediaTypeVideoPodcasts;
 			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
-				t_media_types += kMCmusicvideos;
+				t_media_types += kMCMediaTypeMusicVideos;
 			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
-				t_media_types += kMCmovies;
+				t_media_types += kMCMediaTypeMovies;
 		}
 #endif
 		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
@@ -3117,8 +3151,8 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     
 	// Call MCIPhonePickMedia to process the media pick selection.
-    MCDialogExecPickMedia(ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
-*/	
+    MCPickExecPickMedia(ctxt, (intset_t)t_media_types, t_allow_multipe_items);
+	
 	return ES_NORMAL;
 }
 
@@ -3236,72 +3270,7 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
     
 	return ES_ERROR;
 }
-/*
-// HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
-Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
-{
-	bool t_success, t_allow_multipe_items;
-	char *t_option_list;
-	MPMediaType t_media_types;
-	NSString *r_return_media_types;
-    
-	t_success = true;
-	t_allow_multipe_items = false;
-	t_media_types = 0;
-	
-	t_option_list = nil;
-    
-	// Get the options list.
-	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	while (t_success)
-	{
-		if (MCCStringEqualCaseless(t_option_list, "true"))
-			t_allow_multipe_items = true;
-		else if (MCCStringEqualCaseless(t_option_list, "music"))
-			t_media_types += MPMediaTypeMusic;
-		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
-			t_media_types += MPMediaTypePodcast;
-		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
-			t_media_types += MPMediaTypeAudioBook;
-		else if (MCCStringEqualCaseless(t_option_list, "anyAudio"))
-			t_media_types += MPMediaTypeAnyAudio;
-#ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
-		{
-			if (MCCStringEqualCaseless(t_option_list, "movie"))
-				t_media_types += MPMediaTypeMovie;
-			else if (MCCStringEqualCaseless(t_option_list, "tv"))
-				t_media_types += MPMediaTypeTVShow;
-			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
-				t_media_types += MPMediaTypeVideoPodcast;
-			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
-				t_media_types += MPMediaTypeMusicVideo;
-			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
-				t_media_types += MPMediaTypeVideoITunesU;
-			else if (MCCStringEqualCaseless(t_option_list, "anyVideo"))
-				t_media_types += MPMediaTypeAnyVideo;
-		}
-#endif
-		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	}
-	if (t_media_types == 0)
-	{
-		t_media_types = MPMediaTypeAnyAudio;
-#ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
-			t_media_types += MPMediaTypeAnyVideo;
-#endif
-	}
-	// Call MCIPhonePickMedia to process the media pick selection.
-	t_success = MCIPhonePickMedia(t_allow_multipe_items, t_media_types, r_return_media_types);
-	
-	if (t_success && r_return_media_types != nil)
-	{
-		MCresult -> sets ([r_return_media_types cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-	}
-	return ES_NORMAL;
-}
-*/
+
 // MM-2012-11-02: Temporarily refactored mobilePickDate to use the old syntax (rather than three separate pick date, pick time, pick date and time).
 Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 {
@@ -3628,9 +3597,9 @@ Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 	if ((t_features_set & kMCCamerasFeatureRearFlash) != 0)
 		ctxt . GetEP() . concatcstring("rear flash", EC_COMMA, ctxt . GetEP() . isempty());
     
-    MCAutoStringRef t_features;
-    /* UNCHECKED */ ep . copyasstringref(&t_features);
-    ctxt . SetTheResultToValue(*t_features);
+    MCAutoStringRef t_features_string;
+    /* UNCHECKED */ ep . copyasstringref(&t_features_string);
+    ctxt . SetTheResultToValue(*t_features_string);
 }
 
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)

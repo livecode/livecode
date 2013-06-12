@@ -37,11 +37,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 //////////////////////////////////////// Media Pickers ////////////////////////////////////////
-
+/*
 static MCMediaType MCMediaTypeFromCString(const char *p_string)
 {
     const char *t_ptr = p_string;
-    MCMediaType t_media_type = kMCunknownMediaType;
+    MCMediaType t_media_type = kMCUnknownMediaType;
     
     while (true)
     {
@@ -51,27 +51,27 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
             break;
     	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
         if (MCCStringEqualSubstringCaseless(t_ptr, "podcasts", 7))
-            t_media_type = t_media_type | kMCpodcasts;
+            t_media_type = t_media_type | kMCMediaTypePodcasts;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "songs", 4))
-            t_media_type = t_media_type | kMCsongs;
+            t_media_type = t_media_type | kMCMediaTypeSongs;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "audiobooks", 9))
-            t_media_type = t_media_type | kMCaudiobooks;
+            t_media_type = t_media_type | kMCMediaTypeAudiobooks;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "movies", 5))
-            t_media_type = t_media_type | kMCmovies;
+            t_media_type = t_media_type | kMCMediaTypeMovies;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "musicvideos", 10))
-            t_media_type = t_media_type | kMCmusicvideos;
+            t_media_type = t_media_type | kMCMediaTypeMusicVideos;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "tv", 2))
-            t_media_type = t_media_type | kMCtv;
+            t_media_type = t_media_type | kMCMediaTypeTv;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
-            t_media_type = t_media_type | kMCvideopodcasts;
+            t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
 
         while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
             t_ptr += 1;
 
     }
     return t_media_type;
-}
-
+}*/
+/*
 static MCMediaScope MCMediaScopeFromCString(const char *p_string)
 {
     if (MCCStringEqualCaseless(p_string, "audio"))
@@ -79,8 +79,8 @@ static MCMediaScope MCMediaScopeFromCString(const char *p_string)
     else if (MCCStringEqualCaseless(p_string, "media"))
         return kMCmedia;
     
-    return kMCunknownMediaType;
-}
+    return kMCUnknownMediaType;
+}*/
 /* moved to exec-pick.cpp
 // pick [ "multiple" ] (podcast(s), song(s), audiobook(s), movie(s), musicvideo(s)) from library
 void MCDialogExecPickMedia(MCExecContext &p_ctxt, MCMediaType *p_media_type, bool p_multiple, const char *&r_result)
