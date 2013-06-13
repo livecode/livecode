@@ -1085,6 +1085,8 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				
 				if (t_variant -> minimum_parameter_count == t_variant -> parameter_count)
 					CoderWriteLine(p_coder, "\tif (env -> argc == %d)", t_variant -> parameter_count);
+				else if (t_variant -> minimum_parameter_count == 0)
+                	CoderWriteLine(p_coder, "\tif (env -> argc <= %d)", t_variant -> parameter_count);
 				else
 					CoderWriteLine(p_coder, "\tif (env -> argc >= %d && env -> argc <= %d)", t_variant -> minimum_parameter_count, t_variant -> parameter_count);
 					
