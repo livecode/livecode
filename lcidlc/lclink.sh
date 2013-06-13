@@ -35,7 +35,7 @@ echo $DEPS
 DEPS="$DEPS -framework Foundation -framework UIKit"
 
 # Support using the same script for old externals
-if [ $SYMBOLS != "_getXtable" ]; then
+if [ "$SYMBOLS" != "_getXtable" ]; then
     # The list of symbols exported by an iOS external is fixed
     SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
 fi
