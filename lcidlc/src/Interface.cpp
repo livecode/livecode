@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -415,18 +416,32 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
          NameEqualToCString(p_type, "c-data")))
         InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
     
+    NativeType t_native_type;
+    t_native_type = NativeTypeFromName(p_type);
+    
     // RULE: wrong default type
     if (p_default != nil)
     {
         bool t_correct_type = false;
-        if (!t_correct_type)
-           t_correct_type =  NameEqualToCString(p_type, "boolean") && ValueIsBoolean(p_default);
-        if (!t_correct_type)
-            t_correct_type = NameEqualToCString(p_type, "integer") && ValueIsInteger(p_default);
-        if (!t_correct_type)
-            t_correct_type = NameEqualToCString(p_type, "real") && ValueIsReal(p_default);
-        if (!t_correct_type)
-            t_correct_type = (NameEqualToCString(p_type, "c-string") || NameEqualToCString(p_type, "objc-string")) && ValueIsString(p_default);
+        switch (t_native_type) {
+            case kNativeTypeBoolean:
+                t_correct_type = ValueIsBoolean(p_default);
+                break;
+            case kNativeTypeInteger:
+                t_correct_type = ValueIsInteger(p_default);
+                break;
+            case kNativeTypeReal:
+                t_correct_type = ValueIsReal(p_default) || ValueIsInteger(p_default);
+                break;
+            case kNativeTypeObjcString:
+            case kNativeTypeCString:
+            case kNativeTypeEnum:
+                t_correct_type = ValueIsString(p_default);
+                break;
+            default:
+                t_correct_type = false;
+                break;
+        }
         
         if (!t_correct_type)
             InterfaceReport(self, p_where, kInterfaceErrorDefaultWrongType, nil);
