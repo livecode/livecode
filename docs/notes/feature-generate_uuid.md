@@ -1,7 +1,7 @@
 # UUID Generation
 There is a new function **uuid()** which can be used to generate UUIDs on all platforms:
 
-	**uuid([ *type*, [ *namespace_id*, *name* ])**
+	**uuid([ *type*, [ *namespace_id*, *name* ]])**
 
 If no parameters are specified, or *type* is "random" then it returns a version 4 (random) UUID. A cryptographic quality pseudo-random number generator is used to generate the randomness.
 
