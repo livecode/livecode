@@ -84,6 +84,63 @@ static const MCAndroidDroidFontMap s_droid_fonts[] = {
 static void MCAndroidCustomFontsList(char *&r_font_names);
 static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name);
 
+bool MCSystemListFontFamilies(MCListRef& r_names)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+    for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
+		if (!MCListAppendCString(*t_list, s_droid_fonts[i].name))
+			return false;
+    
+    char *t_custom_font_names;
+    MCAndroidCustomFontsList(t_custom_font_names);
+    if (!MCListAppendCString(*t_list, t_custom_font_names))
+        return false;
+    
+    MCCStringFree(t_custom_font_names);
+    
+	return MCListCopy(*t_list, r_names);
+}
+
+bool MCSystemListFontsForFamily(MCStringRef p_family, MCListRef& r_styles)
+{
+    uint32_t t_styles;
+    t_styles = 0;
+    
+    for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
+    {
+        if (MCStringIsEqualToCString(p_family, s_droid_fonts[i].name, kMCCompareCaseless))
+        {
+            t_styles = s_droid_fonts[i].styles;
+            break;
+        }
+    }
+    
+    if (t_styles == 0)
+        t_styles = MCAndroidCustomFontsGetStyle(MCStringGetCString(p_family));
+    
+    
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+    if (t_styles & kMCAndroidFontStyleRegular)
+        if (!MCListAppendCString(*t_list, "plain"))
+            return false;
+    if (t_styles & kMCAndroidFontStyleBold)
+        if (!MCListAppendCString(*t_list, "bold"))
+            return false;
+    if (t_styles & kMCAndroidFontStyleItalic)
+        if (!MCListAppendCString(*t_list, "italic"))
+            return false;
+    if (t_styles & kMCAndroidFontStyleBoldItalic)
+        if (!MCListAppendCString(*t_list, "bold-italic"))
+            return false;
+    
+	return MCListCopy(*t_list, r_styles);
+}
+/*
 void MCSystemListFontFamilies(MCExecPoint& ep)
 {
     ep . clear();        
@@ -95,13 +152,13 @@ void MCSystemListFontFamilies(MCExecPoint& ep)
     MCAndroidCustomFontsList(t_custom_font_names);
     if (t_custom_font_names != nil)
         ep.concatcstring(t_custom_font_names, EC_RETURN, ep.getsvalue().getlength() == 0);
-    /*UNCHECKED */ MCCStringFree(t_custom_font_names);
+    MCCStringFree(t_custom_font_names);
 }
+
 
 bool MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
 {
-	// TODO
-/*    uint32_t t_styles;
+    uint32_t t_styles;
     t_styles = 0;
     
     for (uint32_t i = 0; s_droid_fonts[i].name != nil; i++)
@@ -124,11 +181,11 @@ bool MCSystemListFontsForFamily(MCExecPoint& ep, const char *p_family)
     if (t_styles & kMCAndroidFontStyleItalic)
         ep.concatcstring("italic", EC_RETURN, ep.getsvalue().getlength() == 0);
     if (t_styles & kMCAndroidFontStyleBoldItalic)
-        ep.concatcstring("bold-italic", EC_RETURN, ep.getsvalue().getlength() == 0); */
+        ep.concatcstring("bold-italic", EC_RETURN, ep.getsvalue().getlength() == 0);
 
 	return false;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCAndroidCustomFont {

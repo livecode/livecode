@@ -178,6 +178,12 @@ void __MCLog(const char *p_file, uint32_t p_line, const char *p_format, ...)
 	va_end(args);
 }
 
+void __MCUnreachable(void)
+{
+	fprintf(stderr, "**** UNREACHABLE CODE EXECUTED ****\n");
+	abort();
+}
+
 #endif
 
 #endif
