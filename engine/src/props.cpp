@@ -804,8 +804,7 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
             }
         }
         
-        if (!ep.isempty())
-            v->store_element(ep, t_token);
+        v->store_element(ep, t_token);
 	}
 	MCerrorlock--;
 	ep.setarray(v, True);
