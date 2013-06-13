@@ -3575,6 +3575,8 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
 void MCPickGetSpecificCameraFeatures(MCExecContext& ctxt, intenum_t p_source, intset_t& r_features);
 void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features);
 void MCPickExecPickMedia(MCExecContext &ctxt, intset_t p_allowed_types, bool p_multiple);
+void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinteger_t p_width, uinteger_t p_height);
+void MCPickExecPickPhoto(MCExecContext& ctxt, intenum_t p_source);
 
 ///////////
 

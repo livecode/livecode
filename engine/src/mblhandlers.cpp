@@ -3653,15 +3653,18 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	
 	/////
 	
-	MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
+	MCExecContext ctxt(ep);
+	ctxt . SetTheResultToEmpty();
 	
 	if (t_width != 0 && t_height != 0)
-		MCCameraExecAcquirePhotoAndResize(t_ctxt, t_photo_source, t_width, t_height);
+		MCPickExecPickPhotoAndResize(ctxt, t_photo_source, t_width, t_height);
 	else
-		MCCameraExecAcquirePhoto(t_ctxt, t_photo_source);
+		MCPickExecPickPhoto(ctxt, t_photo_source);
     
-	return t_ctxt . GetExecStat();
+	if (ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////

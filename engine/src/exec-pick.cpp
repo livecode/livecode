@@ -355,4 +355,14 @@ void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features)
     r_features = (intset_t)MCSystemGetAllCameraFeatures();
 }
 
+void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinteger_t p_width, uinteger_t p_height)
+{
+    
+}
+
+void MCPickExecPickPhoto(MCExecContext& ctxt, intenum_t p_source)
+{
+    
+}
+
 ////////////////////////////////////////////////////////////////////////////////

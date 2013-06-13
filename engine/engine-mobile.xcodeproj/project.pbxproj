@@ -256,6 +256,7 @@
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
+		7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
 		768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */; };
 		768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 768D66C41765E11300F203A3 /* exec-pick.cpp */; };
@@ -287,14 +288,11 @@
 		BE44950A175CE8AC00346B49 /* syntax.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449508175CE8AC00346B49 /* syntax.cpp */; };
 		BE44950B175CEEF300346B49 /* exec-security.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE4494D8175CDE7400346B49 /* exec-security.cpp */; };
 		BE44950D175CF03F00346B49 /* iphone_test.rev in Resources */ = {isa = PBXBuildFile; fileRef = BE44950C175CF03E00346B49 /* iphone_test.rev */; };
-		BE449996175D029600346B49 /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
 		BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449997175D02AE00346B49 /* exec-textmessaging.cpp */; };
 		BE7506E3175DE36000A339DA /* mblhandlers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE449995175D029600346B49 /* mblhandlers.cpp */; };
 		BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506E1175DE05E00A339DA /* exec-idletimer.cpp */; };
 		BE7506EC175DEDB400A339DA /* mbliphoneidletimer.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EB175DEDB400A339DA /* mbliphoneidletimer.mm */; };
 		BE7506F0175E0BD200A339DA /* exec-store.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE7506EF175E0BD200A339DA /* exec-store.cpp */; };
-		BE8EA68A1768A78700EF66EE /* mblandroidcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */; };
-		BE8EA68B1768A78700EF66EE /* mblandroidcamera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE8EA6891768A78700EF66EE /* mblandroidcamera.cpp */; };
 		BE93A9061760912100791270 /* exec-notification.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A90517608B4500791270 /* exec-notification.cpp */; };
 		BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE93A9091760D32200791270 /* exec-busyindicator.cpp */; };
 		BE94042E175F6308003EAB87 /* exec-addressbook.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042A175F6307003EAB87 /* exec-addressbook.cpp */; };
@@ -305,7 +303,6 @@
 		BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042B175F6308003EAB87 /* exec-mail.cpp */; };
 		BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042C175F6308003EAB87 /* exec-orientation.cpp */; };
 		BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94042D175F6308003EAB87 /* exec-sensor.cpp */; };
-		BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */ = {isa = PBXBuildFile; fileRef = BE940436175F659F003EAB87 /* mbliphoneorientation.mm */; };
 		BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D84DF4F132D13C0004604F7 /* mbliphonemail.mm */; };
 		BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE940439175F74D2003EAB87 /* exec-ad.cpp */; };
 		BE94043F175F9D8C003EAB87 /* exec-calendar.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE94043E175F9D8B003EAB87 /* exec-calendar.cpp */; };
@@ -2289,7 +2286,7 @@
 				BE940431175F6308003EAB87 /* exec-sensor.cpp in Sources */,
 				768D66C217622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
 				768D66C51765E11300F203A3 /* exec-pick.cpp in Sources */,
-				BE8EA68A1768A78700EF66EE /* mblandroidcamera.cpp in Sources */,
+				7607CF321768D26700ADB512 /* mbliphoneorientation.mm in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -2298,14 +2295,12 @@
 			buildActionMask = 2147483647;
 			files = (
 				4D08A113138EA7C60081F990 /* dummy.cpp in Sources */,
-				BE449996175D029600346B49 /* mblhandlers.cpp in Sources */,
 				BE449998175D02AE00346B49 /* exec-textmessaging.cpp in Sources */,
 				BE7506E6175DEB7700A339DA /* exec-idletimer.cpp in Sources */,
 				BE940432175F6418003EAB87 /* exec-addressbook.cpp in Sources */,
 				BE940433175F6418003EAB87 /* exec-mail.cpp in Sources */,
 				BE940434175F6418003EAB87 /* exec-orientation.cpp in Sources */,
 				BE940435175F6418003EAB87 /* exec-sensor.cpp in Sources */,
-				BE940437175F65A2003EAB87 /* mbliphoneorientation.mm in Sources */,
 				BE940438175F6CD4003EAB87 /* mbliphonemail.mm in Sources */,
 				BE94043B175F74D2003EAB87 /* exec-ad.cpp in Sources */,
 				768D66C317622FE200F203A3 /* exec-nativecontrol.cpp in Sources */,
@@ -2315,7 +2310,6 @@
 				BE93A90A1760D32300791270 /* exec-busyindicator.cpp in Sources */,
 				BE9459491761E250008408DE /* exec-sound.cpp in Sources */,
 				BE94594B17621812008408DE /* exec-misc.cpp in Sources */,
-				BE8EA68B1768A78700EF66EE /* mblandroidcamera.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
