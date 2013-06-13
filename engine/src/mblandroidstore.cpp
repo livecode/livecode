@@ -177,8 +177,9 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
     MCMemoryDelete(t_android_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
 {
+    /*
     if (p_purchase->state != kMCPurchaseStateInitialized)
         return ES_NOT_HANDLED;
     
@@ -200,7 +201,7 @@ Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
         default:
             break;
     }
-    
+    */
     return ES_NOT_HANDLED;
 }
 
@@ -254,7 +255,7 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 }
 
 
-bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
+bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef& r_error)
 {
     if (p_purchase == nil || p_purchase->state != kMCPurchaseStateError)
         return false;
@@ -264,7 +265,7 @@ bool MCPurchaseGetError(MCPurchase *p_purchase, char *&r_error)
     if (t_android_data == nil)
         return false;
     
-    return MCCStringClone(t_android_data->error, r_error);
+    return MCStringCreateWithCString(t_android_data->error, r_error);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

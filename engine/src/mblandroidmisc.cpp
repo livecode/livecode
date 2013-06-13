@@ -776,10 +776,15 @@ bool MCSystemSetReachabilityTarget(MCStringRef hostname)
     return false;
 }
 
-const char *MCSystemGetReachabilityTarget(void)
+bool MCSystemGetReachabilityTarget(MCStringRef& r_target)
 {
     // not implemented on Android
-    return "";
+    return false;
+}
+
+bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
+{
+    return false;
 }
 
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
@@ -851,14 +856,14 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 //	return ES_NORMAL;
 //}
 
-bool MCSystemGetPreferredLanguage(MCStringRef& r_preferred_languages)
+bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 {
     MCAndroidEngineCall("getPreferredLanguages", "x", &r_preferred_languages);
     
     return true;
 }
 
-bool MCSystemGetCurrentLocale(MCStringRef r_current_locale)
+bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 {
     MCAndroidEngineCall("getCurrentLocale", "x", &r_current_locale);
     
@@ -1502,3 +1507,12 @@ Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+
+
+
+
+
+
+
+
