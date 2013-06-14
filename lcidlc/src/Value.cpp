@@ -291,7 +291,11 @@ bool NumberCreateWithNativeChars(const char *p_chars, uindex_t p_char_count, Val
 		self -> references = 1;
 
 		char *t_end;
+#ifdef WIN32
+		self -> integer = _strtoui64(t_cstring, &t_end, 10);
+#else
 		self -> integer = strtoull(t_cstring, &t_end, 10);
+#endif
 		if (*t_end == '\0')
 			self -> type = kValueTypeInteger;
 		else
@@ -324,7 +328,7 @@ int64_t NumberGetInteger(NumberRef self)
 double NumberGetReal(NumberRef self)
 {
 	if (self -> type == kValueTypeInteger)
-		return self -> integer;
+		return (double)self -> integer;
 	return self -> real;
 }
 

@@ -346,8 +346,8 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 	// RULE: Variants of handlers must all have the same type.
 	if (t_handler != nil &&
 			t_handler -> type != p_type &&
-			t_handler -> is_java == (p_attr & kHandlerAttributeIsJava) != 0 &&
-			t_handler -> is_tail == (p_attr & kHandlerAttributeIsTail) != 0)
+			t_handler -> is_java == ((p_attr & kHandlerAttributeIsJava) != 0) &&
+			t_handler -> is_tail == ((p_attr & kHandlerAttributeIsTail) != 0))
 		InterfaceReport(self, p_where, kInterfaceErrorCannotMixHandlerTypes, p_name);
 	
 	// RULE: Methods must specify 'java'.

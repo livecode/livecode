@@ -131,14 +131,15 @@ static const char *InterfaceGetReferenceSuffix(InterfaceRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const char *g_support_template;
+extern "C" const char *g_support_template[];
 
 static bool InterfaceGenerateSupport(InterfaceRef self, CoderRef p_coder)
 {
 	if (self -> use_cpp_exceptions)
 		CoderWriteLine(p_coder, "#include <exception>");
 	
-	CoderWrite(p_coder, "%s", g_support_template);
+	for(int i = 0; g_support_template[i] != nil; i++)
+		CoderWrite(p_coder, "%s", g_support_template[i]);
 	
 	return true;
 }
@@ -1154,7 +1155,7 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const char *g_java_support_template;
+extern "C" const char *g_java_support_template[];
 
 /*static struct { const char *tag; void (*generator)(InterfaceRef self, CoderRef coder); } s_sections[] =
 {
@@ -1165,7 +1166,7 @@ static bool InterfaceGenerateJava(InterfaceRef self, CoderRef p_coder)
 {
 	CoderWriteLine(p_coder, "package %s;", NameGetCString(self -> qualified_name));
 	
-	CoderWrite(p_coder, "%s", strchr(g_java_support_template, '\n') + 1);
+	// CoderWrite(p_coder, "%s", strchr(g_java_support_template, '\n') + 1);
 	
 	return true;
 }
