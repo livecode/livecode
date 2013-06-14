@@ -23,6 +23,27 @@ extern "C" {
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(_WIN64) || defined(_WIN32)
+#define __WINDOWS__
+#elif defined(__APPLE__)
+#  include <TargetConditionals.h>
+#  if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
+#    define __IOS__
+#  elif TARGET_OS_MAC
+#    define __MAC__
+#  else
+#    error unsupported platform
+#  endif
+#elif defined(__linux__)
+#define __LINUX__
+#elif defined(__ANDROID__)
+// #define __ANDROID__
+#else
+#error unsupported platform
+#endif
+	
+////////////////////////////////////////////////////////////////////////////////
+
 typedef enum LCError
 {
 	// No errors occured, the operation succeeded.

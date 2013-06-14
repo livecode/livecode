@@ -1,0 +1,82 @@
+// !$*UTF8*$!
+{
+	4DCD7354176B5B780033F2AB /* LiveCode */ = {
+		isa = PBXExecutable;
+                activeArgIndices = (
+                        YES,
+                );
+                argumentStrings = (
+                        "$(SRCROOT)/revtestexternal.rev",
+                );
+
+		autoAttachOnCrash = 1;
+		breakpointsEnabled = 0;
+		configStateDict = {
+			"PBXLSLaunchAction-0" = {
+				PBXLSLaunchAction = 0;
+				PBXLSLaunchStartAction = 1;
+				PBXLSLaunchStdioStyle = 2;
+				PBXLSLaunchStyle = 0;
+				class = PBXLSRunLaunchConfig;
+				commandLineArgs = (
+				);
+				displayName = "Executable Runner";
+				environment = {
+				};
+				identifier = com.apple.Xcode.launch.runConfig;
+				remoteHostInfo = "";
+				startActionInfo = "";
+			};
+		};
+		customDataFormattersEnabled = 1;
+		dataTipCustomDataFormattersEnabled = 1;
+		dataTipShowTypeColumn = 1;
+		dataTipSortType = 0;
+		debuggerPlugin = GDBDebugging;
+		disassemblyDisplayState = 0;
+		dylibVariantSuffix = "";
+		enableDebugStr = 1;
+		environmentEntries = (
+			{
+				active = YES;
+				name = REV_TOOLS_PATH;
+				value = "$(SOLUTION_DIR)/ide";
+			},
+		);
+		executableSystemSymbolLevel = 0;
+		executableUserSymbolLevel = 0;
+		launchableReference = 4DCD73D1176B5FD80033F2AB /* LiveCode.app */;
+		libgmallocEnabled = 0;
+		name = LiveCode;
+		savedGlobals = {
+		};
+		showTypeColumn = 0;
+		sourceDirectories = (
+		);
+	};
+        4DCD73D1176B5FD80033F2AB /* LiveCode-Community.app */ = { 
+                isa = PBXFileReference;
+                path = "LiveCode-Community.app";
+                sourceTree = BUILT_PRODUCTS_DIR;
+
+        };
+
+	E82D44CF17131C3400A10289 /* Project object */ = {
+		activeBuildConfigurationName = Debug;
+		activeExecutable = 4DCD7354176B5B780033F2AB /* LiveCode */;
+		activeTarget = E82D44D617131C3400A10289 /* revtestexternal */;
+		addToTargets = (
+		);
+		codeSenseManager = 4D405283176B3E7B0097F2D6 /* Code sense */;
+		executables = (
+			4DCD7354176B5B780033F2AB /* LiveCode */,
+		);
+	};
+        E82D44D617131C3400A10289 /* revtestexternal */ = {
+                activeExec = 0;
+        };
+        E82D458A1713231200A10289 /* server-revtestexternal */ = {
+                activeExec = 0;
+        };
+
+}
