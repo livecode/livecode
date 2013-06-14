@@ -83,7 +83,6 @@ void FreeNotification(MCNotification &p_notification)
 
 //void MCNotificationGetDetails(MCExecContext &ctxt, int32_t p_id, MCArrayRef &r_details)
 //{
-//	// TODO
 // /*   MCNotification t_notification;
 //    if (MCSystemGetNotificationDetails(p_id, t_notification))
 //    {

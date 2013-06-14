@@ -247,8 +247,6 @@
 		4DABCE5A15ECD4B50085E214 /* unicode.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF0B1040ADFC00CAC7EF /* unicode.cpp */; };
 		4DABCE5B15ECD4B50085E214 /* util.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF261040AE0700CAC7EF /* util.cpp */; };
 		4DABCE5C15ECD4B50085E214 /* variable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF241040AE0700CAC7EF /* variable.cpp */; };
-		4DABCE5D15ECD4B50085E214 /* variablearray.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF211040AE0700CAC7EF /* variablearray.cpp */; };
-		4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DDD7F2D134BA5C0009037A0 /* variablevalue.cpp */; };
 		4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF201040AE0700CAC7EF /* vclip.cpp */; };
 		4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF1C1040AE0700CAC7EF /* visual.cpp */; };
 		4DABCE6515ECD4FF0085E214 /* libstandalone-mobile-kernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */; };
@@ -840,8 +838,6 @@
 		4DD3DF1C1040AE0700CAC7EF /* visual.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = visual.cpp; path = src/visual.cpp; sourceTree = "<group>"; };
 		4DD3DF1F1040AE0700CAC7EF /* vclip.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = vclip.h; path = src/vclip.h; sourceTree = "<group>"; };
 		4DD3DF201040AE0700CAC7EF /* vclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = vclip.cpp; path = src/vclip.cpp; sourceTree = "<group>"; };
-		4DD3DF211040AE0700CAC7EF /* variablearray.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = variablearray.cpp; path = src/variablearray.cpp; sourceTree = "<group>"; };
-		4DD3DF221040AE0700CAC7EF /* variable_impl.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = variable_impl.h; path = src/variable_impl.h; sourceTree = "<group>"; };
 		4DD3DF231040AE0700CAC7EF /* variable.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = variable.h; path = src/variable.h; sourceTree = "<group>"; };
 		4DD3DF241040AE0700CAC7EF /* variable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = variable.cpp; path = src/variable.cpp; sourceTree = "<group>"; };
 		4DD3DF251040AE0700CAC7EF /* util.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = util.h; path = src/util.h; sourceTree = "<group>"; };
@@ -860,7 +856,6 @@
 		4DDD7F29134BA5BF009037A0 /* iquantize_new.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = iquantize_new.cpp; path = src/iquantize_new.cpp; sourceTree = "<group>"; };
 		4DDD7F2A134BA5BF009037A0 /* objectprops.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectprops.cpp; path = src/objectprops.cpp; sourceTree = "<group>"; };
 		4DDD7F2B134BA5BF009037A0 /* sha1.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sha1.cpp; path = src/sha1.cpp; sourceTree = "<group>"; };
-		4DDD7F2D134BA5C0009037A0 /* variablevalue.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = variablevalue.cpp; path = src/variablevalue.cpp; sourceTree = "<group>"; };
 		4DDD7F35134BA5DA009037A0 /* mcutility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mcutility.cpp; path = src/mcutility.cpp; sourceTree = "<group>"; };
 		4DDD7F52134BA80E009037A0 /* customprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = customprinter.cpp; path = src/customprinter.cpp; sourceTree = "<group>"; };
 		4DDD7F57134BA833009037A0 /* mbliphonetextlayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextlayout.mm; path = src/mbliphonetextlayout.mm; sourceTree = "<group>"; };
@@ -875,7 +870,6 @@
 		4DFFC8EE13DD909F006233A4 /* name.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = name.cpp; path = src/name.cpp; sourceTree = "<group>"; };
 		4DFFC8F213DD90AF006233A4 /* objectpropsets.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = objectpropsets.cpp; path = src/objectpropsets.cpp; sourceTree = "<group>"; };
 		4DFFC8F613DD90CE006233A4 /* syscfdate.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = syscfdate.cpp; path = src/syscfdate.cpp; sourceTree = "<group>"; };
-		7607CF0117688D1400ADB512 /* mblandroidcamera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcamera.cpp; path = src/mblandroidcamera.cpp; sourceTree = "<group>"; };
 		7607CF601769BB4C00ADB512 /* exec-interface-aclip.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-aclip.cpp"; path = "src/exec-interface-aclip.cpp"; sourceTree = "<group>"; };
 		7607CF611769BB4C00ADB512 /* exec-interface-button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-button.cpp"; path = "src/exec-interface-button.cpp"; sourceTree = "<group>"; };
 		7607CF621769BB4C00ADB512 /* exec-interface-card.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface-card.cpp"; path = "src/exec-interface-card.cpp"; sourceTree = "<group>"; };
@@ -892,6 +886,7 @@
 		7607CF6D1769BB4D00ADB512 /* exec-interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface.cpp"; path = "src/exec-interface.cpp"; sourceTree = "<group>"; };
 		7607CF6E1769BB4D00ADB512 /* exec-interface.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "exec-interface.h"; path = "src/exec-interface.h"; sourceTree = "<group>"; };
 		7607CF6F1769BB4D00ADB512 /* exec-interface2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-interface2.cpp"; path = "src/exec-interface2.cpp"; sourceTree = "<group>"; };
+		7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidmediapick.cpp; path = src/mblandroidmediapick.cpp; sourceTree = "<group>"; };
 		768D66C117622FE100F203A3 /* exec-nativecontrol.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-nativecontrol.cpp"; path = "src/exec-nativecontrol.cpp"; sourceTree = "<group>"; };
 		768D66C41765E11300F203A3 /* exec-pick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-pick.cpp"; path = "src/exec-pick.cpp"; sourceTree = "<group>"; };
 		BE096E7D175CD79D00F92F90 /* libfoundation-mobile.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = "libfoundation-mobile.xcodeproj"; path = "../libfoundation/libfoundation-mobile.xcodeproj"; sourceTree = SOURCE_ROOT; };
@@ -1266,7 +1261,6 @@
 		4DB983BF130BB1BD008A03DC /* Android */ = {
 			isa = PBXGroup;
 			children = (
-				7607CF0117688D1400ADB512 /* mblandroidcamera.cpp */,
 				4D91B3E2134CB7AE000D7AA5 /* com */,
 				4DB983C0130BB1DF008A03DC /* mblandroid.cpp */,
 				4DB983C1130BB1DF008A03DC /* mblandroid.h */,
@@ -1282,6 +1276,7 @@
 				4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */,
 				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */,
+				7607CFD5176B232E00ADB512 /* mblandroidmediapick.cpp */,
 				4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */,
 				4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */,
 				4CF8A31615067985000745A4 /* mblandroidfont.cpp */,
@@ -1582,9 +1577,6 @@
 				4DD3DF071040ADFC00CAC7EF /* statemnt.h */,
 				4DD3DF241040AE0700CAC7EF /* variable.cpp */,
 				4DD3DF231040AE0700CAC7EF /* variable.h */,
-				4DD3DF221040AE0700CAC7EF /* variable_impl.h */,
-				4DD3DF211040AE0700CAC7EF /* variablearray.cpp */,
-				4DDD7F2D134BA5C0009037A0 /* variablevalue.cpp */,
 			);
 			name = "Core - Language";
 			sourceTree = "<group>";
@@ -2303,8 +2295,6 @@
 				4DABCE5A15ECD4B50085E214 /* unicode.cpp in Sources */,
 				4DABCE5B15ECD4B50085E214 /* util.cpp in Sources */,
 				4DABCE5C15ECD4B50085E214 /* variable.cpp in Sources */,
-				4DABCE5D15ECD4B50085E214 /* variablearray.cpp in Sources */,
-				4DABCE5E15ECD4B50085E214 /* variablevalue.cpp in Sources */,
 				4DABCE5F15ECD4B50085E214 /* vclip.cpp in Sources */,
 				4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */,
 				BE4494AE175CDCB900346B49 /* foundation-legacy.cpp in Sources */,

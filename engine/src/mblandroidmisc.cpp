@@ -492,7 +492,7 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	MCCStringFree(t_info_string);
 	MCCStringFree(t_camera_dir);
 	return ES_NORMAL;
-}*/
+}
 
 void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 {
@@ -505,9 +505,9 @@ void MCMobileCreateImageFromData(const char *p_bytes, uint32_t p_length)
 	ep . setsvalue(MCString(p_bytes, p_length));
 	iptr -> setprop(0, P_TEXT, ep, false);
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
-
+/* moved to mblandroidcamera.cpp
 bool MCMobilePickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
 {
 	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
@@ -602,7 +602,7 @@ void MCAndroidPhotoPickCanceled()
 {
 	MCAndroidPhotoPickError("cancel");
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 //// MOVED TO mblhandlers.cpp
@@ -1057,7 +1057,7 @@ static bool is_jpeg_data(const MCString& p_data)
 //}
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 typedef enum
 {
     kMCAndroidMediaWaiting,
@@ -1131,7 +1131,7 @@ void MCAndroidMediaCanceled()
 //    MCLog("MCAndroidMediaCanceled() called", nil);
 	s_media_status = kMCAndroidMediaCanceled;
 }
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
 
 //// MOVED TO mblhandlers.cpp
@@ -1321,8 +1321,8 @@ extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_pa
 extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
 
 extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
-
-
+extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters);
+extern Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters);
 
 ////////////////////////////////////////////////////////////////////////////////
 

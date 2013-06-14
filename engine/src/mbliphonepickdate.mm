@@ -206,10 +206,8 @@ UIViewController *MCIPhoneGetViewController(void);
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];
-#ifdef MOBILE_BROKEN
 		// need to make self as delegate otherwise overridden delegates are not called
-		popoverController.delegate = self;
-#endif
+        popoverController.delegate = (id<UIPopoverControllerDelegate>)self;
 	}
 	else
 	{

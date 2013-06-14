@@ -1276,10 +1276,12 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 				}
 				else
 					if (isspace(t_buffer.Chars()[size - 1]))
+                    {
 						if (--p_count == 0)
 							break;
 						else
 							doingspace = True;
+                    }
 			}
 			else
 			{
@@ -1293,7 +1295,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 						j--;
 					}
 					if (i == 0 && (t_buffer.Chars()[j] == MCStringGetNativeCharAtIndex(p_sentinel, 0)
-					               || MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\n' && t_buffer.Chars()[j] == '\r'))
+					               || (MCStringGetNativeCharAtIndex(p_sentinel, 0) == '\n' && t_buffer.Chars()[j] == '\r')))
 					{
 						// MW-2008-08-15: [[ Bug 6580 ]] This clause looks ahead for CR LF sequences
 						//   if we have just enp_countered CR. However, it was previousy using MCS_seek_cur
@@ -1304,10 +1306,12 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 							uint1 term;
 							uint4 nread = 1;
 							if (MCS_read(&term, sizeof(char), nread, p_stream) == IO_NORMAL)
+                            {
 								if (term != '\n')
 									MCS_putback(term, p_stream);
 								else
 									t_buffer.Chars()[j] = '\n';
+                            }
 						}
 						if (--p_count == 0)
 							break;
@@ -1399,10 +1403,12 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 				}
 				else
 					if (isspace(t_buffer.Chars()[size - 1]))
+                    {
 						if (--p_count == 0)
 							break;
 						else
 							doingspace = True;
+                    }
 			}
 			else
 			{
@@ -1965,8 +1971,8 @@ void MCFilesExecWriteToProcess(MCExecContext& ctxt, MCNameRef p_process, MCStrin
 void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, bool is_by, int64_t p_at)
 {
 	uindex_t t_index;
-	if (!IO_findfile(p_file, t_index) || MCfiles[t_index].ihandle == NULL && 
-		MCfiles[t_index].ohandle == NULL)
+	if (!IO_findfile(p_file, t_index)
+        || (MCfiles[t_index].ihandle == NULL && MCfiles[t_index].ohandle == NULL))
 	{
 		ctxt . LegacyThrow(EE_SEEK_NOFILE);
 		return;

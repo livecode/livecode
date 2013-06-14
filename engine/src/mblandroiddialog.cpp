@@ -108,7 +108,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAnswerDialogDone(JNIEnv 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
+bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_popup_dialog)
 		return nil;
@@ -119,13 +119,15 @@ char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const cha
 	while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);
 
-	char *t_result = nil;
+	bool t_success;
+    t_success = false;
+    
 	if (s_popup_dialog_text != nil)
 	{
-		t_result = s_popup_dialog_text;
+		t_success = MCStringCreateWithCString(s_popup_dialog_text, r_result);
 		s_popup_dialog_text = nil;
 	}
-	return t_result;
+	return t_success;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *env, jobject object, jstring result) __attribute__((visibility("default")));
@@ -437,10 +439,4 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doListPickerDone(JNIEnv *e
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCSystemPickMedia(MCMediaType p_media_type, bool p_multiple, MCStringRef& r_result)
-{
-    // UNIMPLEMENTED
-    return false;
-}
 

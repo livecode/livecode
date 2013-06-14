@@ -669,10 +669,4 @@ inline void MCExecPoint::nativetoutf8(void)
 	utf16toutf8();
 }
 
-#ifndef MOBILE_BROKEN
-#ifndef __MC_VARIABLE_IMPLEMENTATION__
-#include "variable_impl.h"
-#endif
-#endif
-
 #endif

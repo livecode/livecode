@@ -32,12 +32,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblsyntax.h"
 
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source);
 bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size);
-
+*/
 ////////////////////////////////////////////////////////////////////////////////
-
+/*
 void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height)
 {
 	if (!MCSystemCanAcquirePhoto(p_source))
@@ -46,7 +46,6 @@ void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_
 		return;
 	}
     
-#ifdef MOBILE_BROKEN
 	MCAutoRawMemoryBlock t_image_data;
 	size_t t_image_data_size;
 	if (!MCSystemAcquirePhoto(p_source, p_max_width, p_max_height, t_image_data, t_image_data_size))
@@ -69,7 +68,6 @@ void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_
 	MCExecPoint ep(nil, nil, nil);
 	ep . setsvalue(MCString((char *)t_image_data . Borrow(), t_image_data_size));
 	iptr -> setprop(0, P_TEXT, ep, false);
-#endif
 }
 
 void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo)
@@ -115,9 +113,7 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 		ep . concatcstring("video", EC_COMMA, ep . isempty());
 	if ((t_features_set & kMCCameraFeatureFlash) != 0)
 		ep . concatcstring("flash", EC_COMMA, ep . isempty());
-#ifdef MOBILE_BROKEN
 	MCresult -> store(ep, False);
-#endif
 	
 	return ES_NORMAL;
 }

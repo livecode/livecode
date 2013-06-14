@@ -3087,7 +3087,10 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
             t_media_type = t_media_type | kMCMediaTypeTv;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
             t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
-        
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "anyAudio", 12))
+            t_media_type = t_media_type | kMCMediaTypeAnyAudio;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "anyVideo", 12))
+            t_media_type = t_media_type | kMCMediaTypeAnyVideo;
         while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
             t_ptr += 1;
         
@@ -3153,6 +3156,43 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 	// Call MCIPhonePickMedia to process the media pick selection.
     MCPickExecPickMedia(ctxt, (intset_t)t_media_types, t_allow_multipe_items);
 	
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+    t_success = true;
+    char *t_option_list;
+    MCMediaType t_media_type;
+    t_media_type = kMCUnknownMediaType;
+    
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	while (t_success)
+	{
+		if ((MCCStringEqualCaseless(t_option_list, "music")) ||
+		    (MCCStringEqualCaseless(t_option_list, "podCast")) ||
+		    (MCCStringEqualCaseless(t_option_list, "audioBook")) ||
+            (MCCStringEqualCaseless(t_option_list, "anyAudio")))
+        {
+            t_media_type += kMCMediaTypeAnyAudio;
+        }
+		if ((MCCStringEqualCaseless(t_option_list, "movie")) ||
+			(MCCStringEqualCaseless(t_option_list, "tv")) ||
+            (MCCStringEqualCaseless(t_option_list, "videoPodcast")) ||
+            (MCCStringEqualCaseless(t_option_list, "musicVideo")) ||
+            (MCCStringEqualCaseless(t_option_list, "videoITunesU")) ||
+            (MCCStringEqualCaseless(t_option_list, "anyVideo")))
+        {
+            t_media_type += kMCMediaTypeAnyVideo;
+		}
+		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	}
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCPickExecPickMedia(ctxt, (intset_t)t_media_type, false);
+    
 	return ES_NORMAL;
 }
 
@@ -3641,7 +3681,9 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 		t_photo_source = kMCPhotoSourceTypeLibrary;
 	else if (MCU_strcasecmp(t_source, "album") == 0)
 		t_photo_source = kMCPhotoSourceTypeAlbum;
-	else if (MCU_strcasecmp(t_source, "camera") == 0 || MCU_strcasecmp(t_source, "rear camera") == 0)
+	else if (MCU_strcasecmp(t_source, "camera") == 0)
+        t_photo_source = kMCPhotoSourceTypeCamera;
+    else if (MCU_strcasecmp(t_source, "rear camera") == 0)
 		t_photo_source = kMCPhotoSourceTypeRearCamera;
 	else if (MCU_strcasecmp(t_source, "front camera") == 0)
 		t_photo_source = kMCPhotoSourceTypeFrontCamera;

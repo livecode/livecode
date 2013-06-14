@@ -331,9 +331,8 @@ UIViewController *MCIPhoneGetViewController(void);
 			else
 				tableView = [[UITableView alloc] initWithFrame:CGRectMake(0, 0, t_horizontal, t_vertical) style:(UITableViewStylePlain)];
 			tableView.delegate = self;
-#ifdef MOBILE_BROKEN
-			tableView.dataSource = self;
-#endif
+            tableView.dataSource = (id<UITableViewDataSource>)self;
+
 			// allow the user to select items
 			tableView.allowsSelection = YES;
 			
@@ -435,11 +434,10 @@ UIViewController *MCIPhoneGetViewController(void);
 		[popoverController presentPopoverFromRect:MCRectangleToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
-										 animated:YES];						
-#ifdef MOBILE_BROKEN		
+										 animated:YES];							
 		// need to make self as delegate otherwise overridden delegates are not called
-		popoverController.delegate = self;
-#endif
+		popoverController.delegate = (id<UIPopoverControllerDelegate>)self;
+
 		[popoverController setContentViewController:self];	
 	}
 	else
@@ -624,13 +622,13 @@ static MCIPhonePickWheelDelegate *s_pick_wheel_delegate = nil;
 
 struct picker_t
 {
-	const NSArray *option_list_array;
+	NSArray *option_list_array;
 	bool use_checkmark;
 	bool use_cancel;
 	bool use_done;
 	bool use_picker;
 	bool use_hilited;
-	const NSArray *initial_index_array;
+	NSArray *initial_index_array;
 	NSString *return_index;
 	MCRectangle button_rect;
 	MCIPhonePickWheelDelegate *picker;
@@ -645,10 +643,10 @@ static void do_pickn_prewait(void *p_context)
 	// call the picker with the label and options list
 	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: ctxt -> use_checkmark];
-#ifdef MOBILE_BROKEN
+
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt -> option_list_array andInitial: ctxt -> initial_index_array  andCancel: ctxt -> use_cancel andDone: ctxt -> use_done andPicker: ctxt -> use_picker andButtonRect: ctxt -> button_rect];
-#endif
+
 }
 
 static void do_pickn_postwait(void *p_context)
@@ -664,7 +662,7 @@ static void do_pickn_postwait(void *p_context)
 
 // HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons
 // HC-2011-09-30 [[ Bug 9773 ]] Changed using char*& argument to NSString*& for return value
-bool MCSystemPickN(const NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, const NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
+bool MCSystemPickN(NSArray *p_option_list_array, bool p_use_checkmark, bool p_use_cancel, bool p_use_done, bool p_use_picker, NSArray *p_initial_index_array, NSString*& r_return_index, MCRectangle p_button_rect)
 {
 	MCExecPoint ep(nil, nil, nil);
 	
@@ -688,7 +686,9 @@ bool MCSystemPickN(const NSArray *p_option_list_array, bool p_use_checkmark, boo
 	MCIPhoneRunOnMainFiber(do_pickn_postwait, &ctxt);
 	
 	r_return_index = [ctxt . return_index autorelease];
-	
+	[ctxt . option_list_array release];
+    [ctxt . initial_index_array release];
+    
 	return true;
 }
 
@@ -742,10 +742,8 @@ static void pick_option_prewait(void *p_context)
 	
 	ctxt -> picker = [[MCIPhonePickWheelDelegate alloc] init];
 	[ctxt -> picker setUseCheckmark: !ctxt->use_hilited];
-#ifdef MOBILE_BROKEN
 	// HC-2011-09-28 [[ Picker Buttons ]] Added arguments to force the display of buttons and picker
 	[ctxt -> picker startPicking: ctxt->option_list_array andInitial: ctxt->initial_index_array andCancel: ctxt->use_cancel andDone: ctxt->use_done andPicker: ctxt->use_picker andButtonRect: ctxt->button_rect];
-#endif
 
 }
 

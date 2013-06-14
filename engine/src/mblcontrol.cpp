@@ -764,11 +764,11 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	
 	MCAutoStringRef t_type_name;
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "x", &t_type_name);
+		t_success = MCParseParameters(p_parameters, "x", &(&t_type_name));
 	
 	MCAutoStringRef t_control_name;
 	if (t_success && p_parameters != nil)
-		t_success = MCParseParameters(p_parameters, "x", &t_control_name);
+		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
 	
 	// Make sure the name is valid.
 	if (t_success && *t_control_name != nil)

@@ -2050,9 +2050,9 @@ int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_coun
 	return 0;
 }
 
-char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
+bool MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
 {
-	return nil;
+	return false;
 }
 
 bool MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice)

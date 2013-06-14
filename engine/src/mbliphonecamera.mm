@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "object.h"
 #include "mbldc.h"
-#include "mblsyntax.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -32,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <UIKit/UIImage.h>
 #import <UIKit/UIImagePickerController.h>
 
+#include "mblsyntax.h"
 #include "mbliphoneapp.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,9 +139,9 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 	if (m_source_type == UIImagePickerControllerSourceTypeCamera &&
 		[UIImagePickerController isCameraDeviceAvailable: m_device_type])
 		[self setCameraDevice: m_device_type]; 
-#ifdef MOBILE_BROKEN
-	[ self setDelegate: self ];
-#endif
+
+    [ self setDelegate: (id<UINavigationControllerDelegate, UIImagePickerControllerDelegate>)self ];
+
 	// 19/10/2010 IM - fix crash in iOS4.0
 	// UIPopoverController only available on iPad but NSClassFromString returns non-nil in iOS4 phone/pod
 	id t_popover;
@@ -164,9 +164,8 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 			t_rect = [[t_main_controller view] frame];
 		
 		m_popover_controller = [[t_popover alloc] initWithContentViewController: self];
-#ifdef MOBILE_BROKEN
-		[m_popover_controller setDelegate: self];
-#endif
+        [m_popover_controller setDelegate: (id<UIPopoverControllerDelegate>)self];
+
 		[m_popover_controller presentPopoverFromRect: t_rect inView: [t_main_controller view] permittedArrowDirections: UIPopoverArrowDirectionAny animated: YES];
 	}
 	else
@@ -244,6 +243,7 @@ static void map_photo_source_to_source_and_device(MCPhotoSourceType p_source, UI
 			r_source_type = UIImagePickerControllerSourceTypeCamera;
 			r_device_type = UIImagePickerControllerCameraDeviceFront;
 			break;
+        case kMCPhotoSourceTypeCamera:
 		case kMCPhotoSourceTypeRearCamera:
 			r_source_type = UIImagePickerControllerSourceTypeCamera;
 			r_device_type = UIImagePickerControllerCameraDeviceRear;
@@ -270,7 +270,7 @@ bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source)
 	return true;
 }
 
-bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size)
+bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result)
 {
 	UIImagePickerControllerSourceType t_source_type;
 	UIImagePickerControllerCameraDevice t_device_type;
@@ -288,6 +288,7 @@ bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32
 	{
 		r_image_data = nil;
 		r_image_data_size = 0;
+        MCStringCreateWithCString("cancel", r_result);
 	}
 	
 	[t_ns_image_data release];

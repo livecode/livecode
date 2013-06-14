@@ -3559,6 +3559,7 @@ extern MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo;
 extern MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo;
 extern MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo;
 extern MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo;
+extern MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo;
 
 extern MCExecMethodInfo *kMCPickExecPickDateMethodInfo;
 extern MCExecMethodInfo *kMCPickExecPickTimeMethodInfo;
@@ -3567,6 +3568,8 @@ extern MCExecMethodInfo *kMCPickExecPickOptionByIndexMethodInfo;
 extern MCExecMethodInfo *kMCPickGetSpecificCameraFeaturesMethodInfo;
 extern MCExecMethodInfo *kMCPickGetCameraFeaturesMethodInfo;
 extern MCExecMethodInfo *kMCPickExecPickMediaMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickPhotoAndResizeMethodInfo;
+extern MCExecMethodInfo *kMCPickExecPickPhotoMethodInfo;
 
 void MCPickExecPickDate(MCExecContext& ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, intenum_t p_buttons, MCRectangle p_button_rect);
 void MCPickExecPickTime(MCExecContext &ctxt, MCStringRef p_current, MCStringRef p_start, MCStringRef p_end, int32_t *p_step, intenum_t p_buttons, MCRectangle p_button_rect);

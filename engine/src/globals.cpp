@@ -925,7 +925,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 		MCscreen = MCCreateScreenDC();
 				
 		if (!MCscreen->open())
-			return False;
+			return false;
 
 		MCscreen->alloccolor(MClinkatts.color);
 		MCscreen->alloccolor(MClinkatts.hilitecolor);

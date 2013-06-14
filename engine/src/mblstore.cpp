@@ -350,11 +350,9 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 //// MOVED TO mblhandlers.cpp
 //Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters)
 //{
-//#ifdef MOBILE_BROKEN
 //	MCExecPoint ep(nil, nil, nil);
 //	MCPurchaseList(list_purchases, &ep);
 //	MCresult -> store(ep, False);
-//#endif
 //	return ES_NORMAL;
 //}
 
@@ -481,12 +479,10 @@ void MCPurchaseNotifyUpdate(MCPurchase *p_purchase)
 //	if (t_success)
 //		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
 //	
-//#ifdef MOBILE_BROKEN
 //	if (t_success)
 //		MCresult->store(ep, True);
 //	else
 //		MCresult->clear();
-//#endif
 //    
 //	MCCStringFree(t_prop_name);
 //	

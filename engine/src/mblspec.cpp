@@ -55,12 +55,9 @@ bool MCS_isnan(double value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCS_log(const MCString& p_message)
+void MCS_log(MCStringRef p_message)
 {
-	char *t_cstring;
-	t_cstring = p_message . clone();
-	MCsystem -> Debug(t_cstring);
-	delete t_cstring;
+	MCsystem -> Debug(MCStringGetCString(p_message));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -266,19 +263,29 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 	
 	if (p_status == kMCSystemUrlStatusError)
     {
+        if (context -> error != nil)
+            MCValueRelease(context -> error);
 		MCStringCreateWithCString((const char *)p_data, context -> error);
         send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> error), context -> total, (const char *)p_data);
     }
 	else
     {
-# ifdef MOBILE_BROKEN
         if (p_status == kMCSystemUrlStatusLoading)
-		context -> data . append_string(*(const MCString *)p_data);
-	send_url_progress(context -> object, p_status, context -> url, context -> data . get_string() . getlength(), context -> total, (const char *)p_data);
-#endif
+        {
+            MCAutoStringRef t_new_data;
+            if (context -> data != nil)
+            {
+                /* UNCHECKED */ MCStringMutableCopy(context -> data, &t_new_data);
+                MCValueRelease(context -> data);
+            }
+            else
+                /* UNCHECKED */ MCStringCreateMutable(0, &t_new_data);
+            
+            /* UNCHECKED */ MCStringAppendFormat(*t_new_data, "%s", (const char *)p_data);
+            /* UNCHECKED */ MCStringCopy(*t_new_data, context -> data);
+        }
+        send_url_progress(context -> object, p_status, context -> url, MCStringGetLength(context -> data), context -> total, (const char *)p_data);
     }
-		
-		
 	return true;
 }
 
@@ -288,9 +295,6 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	t_state . url = p_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
-#ifdef MOBILE_BROKEN
-	t_state . data . assign_empty();
-#endif
 	
 	if (!MCSystemLoadUrl(p_url, MCS_geturl_callback, &t_state))
 	{
@@ -303,17 +307,21 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	while(t_state . status != kMCSystemUrlStatusFinished && t_state . status != kMCSystemUrlStatusError)
 		MCscreen -> wait(60.0, True, True);
 	
-#ifdef MOBILE_BROKEN
-    MCurlresult -> getvalue() . exchange(t_state . data);
-	if (t_state . status == kMCSystemUrlStatusFinished)
-	{
+    if (t_state . data != nil)
+    {
+        MCurlresult -> setvalueref(t_state . data);
+        MCValueRelease(t_state . data);
+    }
+    else
+        MCurlresult -> clear();
+    
+	if (t_state . status == kMCSystemUrlStatusFinished || t_state . error == nil)
 		MCresult -> clear();
-	}
 	else
-	{
-		MCresult -> getvalue() . exchange(t_state . error);
-	}
-#endif
+        MCresult -> setvalueref(t_state . error);
+
+    if (t_state . error != nil)
+        MCValueRelease(t_state . error);
 	
 	t_state . object -> Release();
 }
@@ -525,9 +533,16 @@ static bool MCS_posturl_callback(void *p_context, MCSystemUrlStatus p_status, co
 	if (p_status == kMCSystemUrlStatusError)
 		/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, context -> data);
 	else if (p_status == kMCSystemUrlStatusLoading)
-#ifdef MOBILE_BROKEN
-		context -> data . append_string(*(const MCString *)p_data);
-#endif
+    {
+        MCAutoStringRef t_data;
+        if (context -> data != nil)
+            /* UNCHECKED */ MCStringMutableCopy(context -> data, &t_data);
+        else
+            MCStringCreateMutable(0, &t_data);
+
+		/* UNCHECKED */ MCStringAppendFormat(*t_data, "%s", (const char *)p_data);
+        MCStringCopy(*t_data, context -> data);
+    }
 	if (p_status == kMCSystemUrlStatusUploading || p_status == kMCSystemUrlStatusUploaded)
 	{
 		context -> post_sent = *(uint32_t*)p_data;
@@ -556,9 +571,6 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 		t_state . url = t_processed;
 		t_state . status = kMCSystemUrlStatusNone;
 		t_state . object = t_obj;
-#ifdef MOBILE_BROKEN
-		t_state . data . assign_empty();
-#endif    
 		t_state . post_sent = 0;
 		t_state . post_length = p_data . getlength();
 		
@@ -568,24 +580,28 @@ void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url
 	if (t_success)
 	{
 		MCurlresult -> clear();
+        MCresult -> clear();
 		
 		while(t_state . status != kMCSystemUrlStatusFinished && t_state . status != kMCSystemUrlStatusError)
 			MCscreen -> wait(60.0, True, True);
 		
-#ifdef MOBILE_BROKEN
 		if (t_state . status == kMCSystemUrlStatusFinished)
 		{
-			MCurlresult -> getvalue() . exchange(t_state . data);
 			MCresult -> clear();
+            if (t_state . data != nil)
+                MCurlresult -> setvalueref(t_state . data);
 		}
 		else
 		{
 			MCurlresult -> clear();
-			MCresult -> getvalue() . exchange(t_state . data);
+            if (t_state . data != nil)
+                MCresult -> setvalueref(t_state . data);
 		}
-#endif
 	}
 	
+    if (t_state . data != nil)
+        MCValueRelease(t_state . data);
+    
 	MCCStringFree(t_processed);
 	if (t_obj != nil)
 		t_obj -> Release();
@@ -764,8 +780,7 @@ void MCS_unloadurl(MCObject *p_object, const char *p_url)
 
 bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 {
-#ifdef MOBILE_BROKEN
-	ep . setsvalue(p_data);
+	/* UNCHECKED */ ep . setvalueref(p_data);
 
 	switch(p_kind)
 	{
@@ -779,7 +794,6 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data)
 	default:
 		break;
 	}
-#endif
 	return true;
 }
 
@@ -895,10 +909,9 @@ bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_
 
 bool MCS_getaddress(MCStringRef& r_address)
 {
-#ifdef MOBILE_BROKEN
-#else
+    r_address = MCValueRetain(kMCEmptyString);
     return true;
-#endif
+    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

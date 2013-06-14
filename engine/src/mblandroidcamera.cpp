@@ -79,3 +79,97 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
     
     return t_features;
 }
+
+bool MCAndroidPickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
+{
+	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
+}
+
+static char *s_pick_photo_data = nil;
+static uint32_t s_pick_photo_size = 0;
+static char *s_pick_photo_err = nil;
+static bool s_pick_photo_returned = false;
+
+static const char *MCPhotoSourceTypeToCString(MCPhotoSourceType p_source)
+{
+    switch (p_source)
+    {
+        case kMCPhotoSourceTypeLibrary:
+            return "library";
+        case kMCPhotoSourceTypeAlbum:
+            return "album";
+        case kMCPhotoSourceTypeCamera:
+        case kMCPhotoSourceTypeFrontCamera:
+        case kMCPhotoSourceTypeRearCamera:
+            return "camera";
+    }
+}
+
+bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result)
+{    
+	if (!MCAndroidPickPhoto(MCPhotoSourceTypeToCString(p_source), p_max_width, p_max_height))
+        return false;
+    
+	while (!s_pick_photo_returned)
+		MCscreen->wait(60.0, False, True);
+
+	if (s_pick_photo_data != nil)
+	{
+		r_image_data = (void *)s_pick_photo_data;
+        r_image_data_size = s_pick_photo_size;
+	}
+	else
+	{
+        if (s_pick_photo_err != nil)
+        {
+            /* UNCHECKED */ MCStringCreateWithCString(s_pick_photo_err, r_result);
+            delete s_pick_photo_err;
+        }
+        else
+        /* UNCHECKED */MCStringCreateWithCString("cancel", r_result);
+	}
+    
+	return ES_NORMAL;
+}
+
+bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source)
+{
+    if (p_source == kMCPhotoSourceTypeUnknown)
+        return false;
+    
+    return true;
+}
+
+void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
+{
+	if (s_pick_photo_data != nil)
+	{
+		MCMemoryDeallocate(s_pick_photo_data);
+		s_pick_photo_data = nil;
+	}
+    
+	if (p_data != nil)
+	{
+		MCMemoryAllocateCopy(p_data, p_size, (void*&)s_pick_photo_data);
+		s_pick_photo_size = p_size;
+	}
+	s_pick_photo_returned = true;
+}
+
+void MCAndroidPhotoPickError(const char *p_error)
+{
+	if (s_pick_photo_data != nil)
+	{
+		MCMemoryDeallocate(s_pick_photo_data);
+		s_pick_photo_data = nil;
+	}
+	if (s_pick_photo_err != nil)
+		MCCStringFree(s_pick_photo_err);
+	MCCStringClone(p_error, s_pick_photo_err);
+	s_pick_photo_returned = true;
+}
+
+void MCAndroidPhotoPickCanceled()
+{
+	MCAndroidPhotoPickError("cancel");
+}

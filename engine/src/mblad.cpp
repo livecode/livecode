@@ -706,7 +706,6 @@ void MCAd::Finalize(void)
 //	if (t_success)
 //		t_success = MCAdGetTopLeftOfAd(ctxt, t_ad, t_top_left);
 //    
-//#ifdef MOBILE_BROKEN
 //    if (t_success)
 //    {
 //        MCAutoRawCString t_top_left_string;
@@ -718,7 +717,6 @@ void MCAd::Finalize(void)
 //    
 //    if (t_success)
 //        MCresult->store(ep, False);
-//#endif
 //    
 //    MCCStringFree(t_ad);
 //

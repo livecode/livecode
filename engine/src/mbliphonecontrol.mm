@@ -158,13 +158,23 @@ bool MCiOSControl::ParseUnicodeString(MCExecPoint& ep, NSString*& r_string)
 
 bool MCiOSControl::FormatUnicodeString(MCExecPoint& ep, NSString *p_string)
 {
-#ifdef MOBILE_BROKEN
+    MCAutoArray<unichar_t> t_buffer;
+    if (t_buffer . New([p_string length] * 2))
+    {
+        [p_string getCharacters: t_buffer . PtrRef() range: NSMakeRange(0, [p_string length])];
+        MCAutoStringRef t_formatted_string;
+        if (MCStringCreateWithChars(t_buffer . Ptr(), [p_string length] * 2, &t_formatted_string)
+            && ep . setvalueref(*t_formatted_string))
+            return true;
+    }
+    return false;
+/*
 	unichar *t_buffer;
 	t_buffer = (unichar*)ep.getbuffer([p_string length] * 2);
 	[p_string getCharacters: t_buffer range: NSMakeRange(0, [p_string length])];
 	ep.setlength([p_string length] * 2);
-#endif
 	return true;
+ */
 }
 
 bool MCiOSControl::ParseRange(MCExecPoint &ep, NSRange &r_range)

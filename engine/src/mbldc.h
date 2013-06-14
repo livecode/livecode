@@ -201,7 +201,7 @@ public:
 	//
 	
 	int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	char *popupaskdialog(uint32_t p_type, const char *p_title, const char *p_prompt, const char *p_initial, bool p_hint);
+	bool popupaskdialog(uint32_t p_type, const char *p_title, const char *p_prompt, const char *p_initial, bool p_hint, MCStringRef& r_result);
 	
 	////////// COMMON IMPLEMENTATION METHODS
 	

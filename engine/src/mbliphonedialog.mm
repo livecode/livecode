@@ -482,7 +482,7 @@ static void dopopupaskdialog_postwait(void *p_context)
 }
 
 // MM-2011-09-20: [[ BZ 9730 ]] Updated ask dialogs for iOS 5 to use updated UIALertView features. Fixes layout bug in iOS 5.
-char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint)
+bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
 {
 	if (s_in_modal)
 		return nil;
@@ -502,7 +502,7 @@ char *MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const cha
 
 	MCIPhoneRunOnMainFiber(dopopupaskdialog_postwait, &ctxt);
 	
-	return ctxt . result;
+	return MCStringCreateWithCString(ctxt . result, r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

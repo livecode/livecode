@@ -656,9 +656,8 @@ private:
 	MCNameRef m_notification;
 };
 
-static struct { NSString **name; SEL selector; } s_player_notifications[] =
+static struct { NSString * const *name; SEL selector; } s_player_notifications[] =
 {
-#ifdef MOBILE_BROKEN
 	{ &MPMovieDurationAvailableNotification, @selector(movieDurationAvailable:) },
 	{ &MPMovieMediaTypesAvailableNotification, @selector(movieMediaTypesAvailable:) },
 	{ &MPMovieNaturalSizeAvailableNotification, @selector(movieNaturalSizeAvailable:) },
@@ -670,7 +669,6 @@ static struct { NSString **name; SEL selector; } s_player_notifications[] =
 	{ &MPMoviePlayerPlaybackDidFinishNotification, @selector(playerPlaybackDidFinish:) },
 	{ &MPMoviePlayerPlaybackStateDidChangeNotification, @selector(playerPlaybackStateDidChange:) },
 	{ &MPMoviePlayerScalingModeDidChangeNotification, @selector(playerScalingModeDidChange:) },
-#endif
 	{ nil, nil }
 };
 

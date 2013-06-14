@@ -33,13 +33,14 @@ enum MCPhotoSourceType
 	kMCPhotoSourceTypeUnknown,
 	kMCPhotoSourceTypeAlbum,
 	kMCPhotoSourceTypeLibrary,
+    kMCPhotoSourceTypeCamera,
 	kMCPhotoSourceTypeFrontCamera,
 	kMCPhotoSourceTypeRearCamera,
 };
-
+/*
 void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height);
 void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo);
-
+*/
 enum MCCameraSourceType
 {
 	kMCCameraSourceTypeUnknown,
@@ -78,6 +79,8 @@ enum
 MCCameraFeaturesType MCSystemGetSpecificCameraFeatures(MCCameraSourceType p_source);
 MCCamerasFeaturesType MCSystemGetAllCameraFeatures();
 
+bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source);
+bool MCSystemAcquirePhoto(MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height, void*& r_image_data, size_t& r_image_data_size, MCStringRef& r_result);
 
 ///////////////////////////////////////////////////////////////////////////////
 // from Sensor module
@@ -158,6 +161,8 @@ enum
     kMCMediaTypeMusicVideos =      1 << 4,
     kMCMediaTypeTv =               1 << 5,
     kMCMediaTypeVideoPodcasts =    1 << 6,
+    kMCMediaTypeAnyAudio =         kMCMediaTypePodcasts + kMCMediaTypeSongs + kMCMediaTypeAudiobooks,
+    kMCMediaTypeAnyVideo =         kMCMediaTypeMovies + kMCMediaTypeMusicVideos + kMCMediaTypeTv + kMCMediaTypeVideoPodcasts,
 };
 
 typedef uint32_t MCMediaScope;
