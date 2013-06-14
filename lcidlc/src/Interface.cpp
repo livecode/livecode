@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,7 +39,8 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
-	kInterfaceErrorNoOptionalBoolean,
+    kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue,
+	kInterfaceErrorDefaultWrongType,
 	kInterfaceErrorUnknownType,
 	kInterfaceErrorJavaImpliesInParam,
 	kInterfaceErrorMethodsCannotHaveVariants,
@@ -120,8 +122,11 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorOptionalParamImpliesIn:
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
-	case kInterfaceErrorNoOptionalBoolean:
-		fprintf(stderr, "Optional boolean parameters not yet supported\n");
+    case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
+        fprintf(stderr, "Default values must be specified for non-pointer type optional parameters\n");
+        break;
+    case kInterfaceErrorDefaultWrongType:
+		fprintf(stderr, "Default specified is the wrong type\n");
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
@@ -406,11 +411,11 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default, bool p_optional)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
-			p_default != nil ? "optional " : "",
+			p_optional ? "optional " : "",
 			s_param_types[p_param_type],
 			StringGetCStringPtr(NameGetString(p_name)), 
 			StringGetCStringPtr(NameGetString(p_type)));
@@ -424,11 +429,46 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: 'ref' not currently supported
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
-	
-	// RULE: optional 'boolean' not currently supported
-	if (NameEqualToCString(p_type, "boolean") && p_default != nil)
-		InterfaceReport(self, p_where, kInterfaceErrorNoOptionalBoolean, nil);
-	
+    
+    // RULE: only pointer types may not have a default value
+    if (p_optional && p_default == nil &&
+        (NameEqualToCString(p_type, "boolean") ||
+         NameEqualToCString(p_type, "integer") ||
+         NameEqualToCString(p_type, "real")  ||
+         NameEqualToCString(p_type, "c-data")))
+        InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
+    
+    NativeType t_native_type;
+    t_native_type = NativeTypeFromName(p_type);
+    
+    // RULE: wrong default type
+    if (p_default != nil)
+    {
+        bool t_correct_type = false;
+        switch (t_native_type) {
+            case kNativeTypeBoolean:
+                t_correct_type = ValueIsBoolean(p_default);
+                break;
+            case kNativeTypeInteger:
+                t_correct_type = ValueIsInteger(p_default);
+                break;
+            case kNativeTypeReal:
+                t_correct_type = ValueIsReal(p_default) || ValueIsInteger(p_default);
+                break;
+            case kNativeTypeObjcString:
+            case kNativeTypeCString:
+            case kNativeTypeEnum:
+                t_correct_type = ValueIsString(p_default);
+                break;
+            default:
+                t_correct_type = false;
+                break;
+        }
+        
+        if (!t_correct_type)
+            InterfaceReport(self, p_where, kInterfaceErrorDefaultWrongType, nil);
+    }
+    
 	// RULE: optional parameters can only be 'in'
 	if (p_default != nil && p_param_type != kParameterTypeIn)
 		InterfaceReport(self, p_where, kInterfaceErrorOptionalParamImpliesIn, nil);
@@ -442,9 +482,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (p_default == nil &&
+	if (!p_optional &&
 		t_variant -> parameter_count > 0 &&
-		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
+		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
 	
 	// RULE: If java handler, then only in parameters are allowed.
@@ -460,8 +500,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . name = ValueRetain(p_name);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
+	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = p_optional;
 	
-	if (p_default == nil)
+	if (!p_optional)
 		t_variant -> minimum_parameter_count += 1;
 	
 	return true;

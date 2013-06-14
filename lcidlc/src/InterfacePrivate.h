@@ -57,6 +57,7 @@ struct HandlerParameter
 	NameRef name;
 	NameRef type;
 	ValueRef default_value;
+    bool is_optional;
 };
 
 struct HandlerVariant

@@ -2051,7 +2051,7 @@ LCError LCImageAttach(LCObjectRef p_object, unsigned int p_options, LCImageRef *
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
-	char *t_name;
+	char *t_name = NULL;
 	if (t_error == kLCErrorNone)
 		t_error = LCObjectGet(p_object, kLCValueOptionAsCString, "name", nil, &t_name);
 	
