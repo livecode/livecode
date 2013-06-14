@@ -96,6 +96,8 @@ void ValueRelease(ValueRef self)
 	MCMemoryDelete(self);
 }
 
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement type checking methods.
+
 bool ValueIsEmpty(ValueRef self)
 {
     if (self == nil)
@@ -137,7 +139,6 @@ bool ValueIsName(ValueRef self)
 		return false;
 	return self->type == kValueTypeName;
 }
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -329,6 +330,7 @@ double NumberGetReal(NumberRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement boolean ValueRef methods.
 bool BooleanCreateWithBool(bool value, ValueRef& r_value)
 {
     bool t_success;

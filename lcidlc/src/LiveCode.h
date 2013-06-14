@@ -322,8 +322,6 @@ enum
 	kLCValueOptionAsCData = 5,
 	// The 'value' parameter is a pointer to a char * variable (native encoding)
 	kLCValueOptionAsCString = 6,
-	// The 'value' parameter is a pointer to a char variable (native encoding)
-	kLCValueOptionAsChar = 7,
 
 	// The 'value' parameter is a pointer to an LCArrayRef variable.
 	kLCValueOptionAsLCArray = 16,
@@ -337,6 +335,9 @@ enum
 	kLCValueOptionAsObjcArray = 20,
 	// The 'value' parameter is a pointer to an NSDictionary *variable.
 	kLCValueOptionAsObjcDictionary = 21,
+	
+	// The 'value' parameter is a pointer to a char variable (native encoding)
+	kLCValueOptionAsCChar = 22,
 	
 	// Treat array keys as case-insensitive.
 	kLCValueOptionCaseSensitiveFalse = 0 << 30,
@@ -371,6 +372,8 @@ enum
 	// Must only be used in handler context.
 	kLCValueOptionNumberFormatFromContext = 3 << 26,	
 };
+	
+////////////////////////////////////////////////////////////////////////////////
 	
 typedef struct __LCArray *LCArrayRef;
 	

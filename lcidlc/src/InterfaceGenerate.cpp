@@ -673,30 +673,24 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				{
 					CoderWriteLine(p_coder, "\tif (success)", k);
 					CoderWriteLine(p_coder, "\t{", k);
+					// MERG-2013-06-14: [[ ExternalsApiV5 ]] Changes to allow optional parameters without default value.
                     if (t_parameter -> is_optional)
 					{
 						CoderWriteLine(p_coder, "\t\tif (argc > %d)", k);
-                        if (t_parameter -> default_value != nil)
-                            CoderWrite(p_coder, "\t\t\tsuccess = ");
-                        else
-                            CoderWrite(p_coder, "\t\t\t");
+						CoderWrite(p_coder, "\t\t\t");
 						if (t_native_type != kNativeTypeEnum)
 							CoderWriteLine(p_coder, "fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
 							CoderWriteLine(p_coder, "fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
                         if (t_parameter -> default_value != nil)
 						{
-                            CoderWriteLine(p_coder, "\t\tif (!success)", k);
+							CoderWriteLine(p_coder, "\t\telse", k);
                             switch(t_native_type)
                             {
                                 case kNativeTypeBoolean:
                                     CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, BooleanGetBool(t_parameter -> default_value) ? "true" : "false");
                                     break;
-                                case kNativeTypeObjcData:
-                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-                                    break;
                                 case kNativeTypeCString:
-                                case kNativeTypeCData:
                                     CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
                                     break;
                                 case kNativeTypeObjcString:
@@ -710,6 +704,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
                                     break;
                                 case kNativeTypeEnum:
                                     CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
+                                    break;
+								case kNativeTypeCData:
+								case kNativeTypeObjcData:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
                                     break;
                                 default:
                                     CoderWriteLine(p_coder, "\t\t\tsuccess = false;");

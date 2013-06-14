@@ -107,9 +107,11 @@ static bool ScannerIsNumberPrefix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Allow negative integer constants.
 	if ((t_lookahead >= '0' && t_lookahead <= '9') ||
         t_lookahead == '-')
 		return true;
+
 	return false;
 }
 
@@ -117,8 +119,7 @@ static bool ScannerIsIntegerSuffix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if ((t_lookahead >= '0' && t_lookahead <= '9')||
-        t_lookahead == '-')
+	if ((t_lookahead >= '0' && t_lookahead <= '9'))
 		return true;
 	return false;
 }

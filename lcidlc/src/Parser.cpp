@@ -270,7 +270,9 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
     
-    bool t_is_bool = t_token -> type == kTokenTypeIdentifier;
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Check for a 'boolean' constant.
+    bool t_is_bool;
+	t_is_bool = t_token -> type == kTokenTypeIdentifier;
     if (t_is_bool)
     {
         bool t_bool;
@@ -762,14 +764,18 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	t_default = nil;
 	if (t_is_optional)
 	{
+		// MERG-2013-06-14: [[ ExternalsApiV5 ]] 'default' clause is now optional.
 		bool t_is_default;
-        ParserSkipKeyword(self, kParserKeywordDefault, t_is_default);
+        if (!ParserSkipKeyword(self, kParserKeywordDefault, t_is_default))
+			return false;
+		
+		// If default keyword was present, then match a constant.
         if (t_is_default)
             if (!ParserMatchConstant(self, t_default))
                 return false;
     }
 	
-	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default, t_is_optional))
+	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_is_optional, t_default))
 		return false;
 
 	return true;

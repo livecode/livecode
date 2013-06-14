@@ -39,7 +39,13 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Error for when a non-pointer type is
+	//   optional with no default value.
     kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue,
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Error for when a default value is 
+	//   specified for a type that doesn't support defaulting.
+	kInterfaceErrorDefaultValueNotSupportedForType,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Wrong constant type for default value.
 	kInterfaceErrorDefaultWrongType,
 	kInterfaceErrorUnknownType,
 	kInterfaceErrorJavaImpliesInParam,
@@ -125,6 +131,9 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
     case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
         fprintf(stderr, "Default values must be specified for non-pointer type optional parameters\n");
         break;
+	case kInterfaceErrorDefaultValueNotSupportedForType:
+		fprintf(stderr, "Default value not supported for the given type\n");
+		break;
     case kInterfaceErrorDefaultWrongType:
 		fprintf(stderr, "Default specified is the wrong type\n");
 		break;
@@ -332,6 +341,8 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			p_type == kHandlerTypeMethod)
 		InterfaceReport(self, p_where, kInterfaceErrorMethodsCannotHaveVariants, p_name);
 	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] 'java' and 'tail' separated out - make sure
+	//   all variants have the same kind.
 	// RULE: Variants of handlers must all have the same type.
 	if (t_handler != nil &&
 			t_handler -> type != p_type &&
@@ -354,8 +365,12 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			
 		t_handler = &self -> handlers[self -> handler_count - 1];
 		t_handler -> type = p_type;
+		
+		// MW-2013-06-14: [[ ExternalsApiV5 ]] Set the attributes appropriate in the
+		//   handler.
 		t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;
 		t_handler -> is_tail = (p_attr & kHandlerAttributeIsTail) != 0;
+
 		t_handler -> name = ValueRetain(p_name);
 	}
 	
@@ -411,7 +426,7 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default, bool p_optional)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, bool p_optional, ValueRef p_default)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
@@ -438,9 +453,19 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
          NameEqualToCString(p_type, "c-data")))
         InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
     
+	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
+	if (p_optional && p_default != nil &&
+		NameEqualToCString(p_type, "c-data") ||
+		NameEqualToCString(p_type, "objc-data") ||
+		NameEqualToCString(p_type, "objc-dictionary") ||
+		NameEqualToCString(p_type, "objc-array"))
+		InterfaceReport(self, p_where, kInterfaceErrorDefaultValueNotSupportedForType, nil);
+	
     NativeType t_native_type;
     t_native_type = NativeTypeFromName(p_type);
     
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Check that the type of the constant is
+	//   correct for the type of the parameter.
     // RULE: wrong default type
     if (p_default != nil)
     {
@@ -487,6 +512,8 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
 	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] New rule to check java methods have compatible
+	//   signature.
 	// RULE: If java handler, then only in parameters are allowed.
 	if (self -> current_handler -> is_java)
 		if (p_param_type != kParameterTypeIn)

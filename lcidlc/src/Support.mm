@@ -216,8 +216,10 @@ typedef struct MCExternalInterface
 	MCError (*object_set)(MCObjectRef object, unsigned int options, const char *name, const char *key, MCVariableRef value);
 	MCError (*interface_query)(MCExternalInterfaceQuery query, void *result);
 	MCError (*object_update)(MCObjectRef object, unsigned int options, void *region);
-	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value);
-	MCError (*context_execute)(const char *p_expression, unsigned int options);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] New context methods for script execution.
+	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value, ...);
+	MCError (*context_execute)(const char *p_expression, unsigned int options, ...);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -300,14 +302,19 @@ static MCError MCVariableFetch(MCVariableRef var, MCValueOptions options, void *
 
 BEGIN_EXTERN_C
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from an internal
+//   variable.
 static LCError LCValueFetch(MCVariableRef var, unsigned int options, void *r_value);
 static LCError LCValueStore(MCVariableRef var, unsigned int options, void *r_value);
+
+#ifdef __OBJC__
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from objc-arrays
+//   and dictionaries.
 static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst);
 static LCError LCValueArrayFromObjcArray(MCVariableRef src, NSArray* r_dst);
 static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_dst);
 static LCError LCValueArrayFromObjcDictionary(MCVariableRef src, NSDictionary* r_dst);
-
-#ifdef __OBJC__
 
 // Convert a LiveCode value into an element of an Objc Array/Dictionary. This
 // converts all non-array values to strings, arrays which are sequences to
@@ -633,7 +640,7 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cstring_value;
 				break;
-			case kLCValueOptionAsChar:
+			case kLCValueOptionAsCChar:
 				t_options_to_use = kMCOptionAsString;
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cdata_value;
@@ -704,7 +711,7 @@ static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 					t_error = kLCErrorOutOfMemory;
 			}
 			break;
-			case kLCValueOptionAsChar:
+			case kLCValueOptionAsCChar:
 			{
 				if (t_cdata_value . length == 1)
 					*(char *)r_value = *(char *)t_cdata_value . buffer;
@@ -792,7 +799,7 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			t_options_to_use = p_options & kLCValueOptionMaskAs;
 			t_value_to_use = p_value;
 			break;
-		case kLCValueOptionAsChar:
+		case kLCValueOptionAsCChar:
 			t_options_to_use = kMCOptionAsString;
 			t_value_to_use = &t_cdata_value;
 			t_cdata_value . buffer = p_value;
@@ -802,6 +809,7 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			t_options_to_use = kMCOptionAsVariable;
 			t_value_to_use = *(void **)p_value;
 			break;
+			
 #ifdef __OBJC__
 		case kLCValueOptionAsObjcNumber:
 			t_options_to_use = kMCOptionAsReal;
@@ -866,6 +874,8 @@ static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 	return t_error;
 }
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New internal method to convert between
+//   values.
 static LCError LCValueConvert(unsigned int p_in_options, void *p_in_value, unsigned int p_out_options, void *r_out_value)
 {
 	LCError t_error;
@@ -1099,7 +1109,7 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 		case kLCValueOptionAsReal:
 			*(double *)r_value = 0.0;
 			break;
-		case kLCValueOptionAsChar:
+		case kLCValueOptionAsCChar:
 			*(char *)r_value = '\0';
 			break;
 		case kLCValueOptionAsCData:
@@ -1359,7 +1369,7 @@ static LCError LCContextQueryDelimiter(MCExternalContextVar p_var, unsigned int 
 	{
 		char t_native_delimiter_char;
 		t_native_delimiter_char = (char)t_delimiter_char;
-		t_error = LCValueConvert(kLCValueOptionAsChar, &t_delimiter_char, p_options, r_value);
+		t_error = LCValueConvert(kLCValueOptionAsCChar, &t_delimiter_char, p_options, r_value);
 	}
 	
 	return t_error;
@@ -2051,7 +2061,9 @@ LCError LCImageAttach(LCObjectRef p_object, unsigned int p_options, LCImageRef *
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
-	char *t_name = NULL;
+	// MERG-2013-06-14: [[ Bug ]] Make sure 'name' is initialized to nil.
+	char *t_name;
+	t_name = nil;
 	if (t_error == kLCErrorNone)
 		t_error = LCObjectGet(p_object, kLCValueOptionAsCString, "name", nil, &t_name);
 	

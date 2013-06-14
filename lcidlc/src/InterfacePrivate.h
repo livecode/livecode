@@ -56,8 +56,10 @@ struct HandlerParameter
 	ParameterType mode;
 	NameRef name;
 	NameRef type;
-	ValueRef default_value;
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Allow optional parameters without
+	//   default.
     bool is_optional;
+	ValueRef default_value;
 };
 
 struct HandlerVariant

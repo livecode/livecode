@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4051A1176B2D340097F2D6 /* NativeType.cpp */; };
 		4D9036A21398FC0800CBC7F6 /* EncodedSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036901398FC0800CBC7F6 /* EncodedSupport.c */; };
 		4D9036A31398FC0800CBC7F6 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036911398FC0800CBC7F6 /* Error.cpp */; };
 		4D9036A41398FC0800CBC7F6 /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036931398FC0800CBC7F6 /* Interface.cpp */; };
@@ -42,6 +43,8 @@
 
 /* Begin PBXFileReference section */
 		4D3B10121367E35D00E00C1E /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		4D4051A1176B2D340097F2D6 /* NativeType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NativeType.cpp; path = src/NativeType.cpp; sourceTree = "<group>"; };
+		4D4051A2176B2D340097F2D6 /* NativeType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeType.h; path = src/NativeType.h; sourceTree = "<group>"; };
 		4D57DF461338F14B0044FFEC /* lcidlc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lcidlc; sourceTree = BUILT_PRODUCTS_DIR; };
 		4D9036901398FC0800CBC7F6 /* EncodedSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedSupport.c; path = src/EncodedSupport.c; sourceTree = "<group>"; };
 		4D9036911398FC0800CBC7F6 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Error.cpp; path = src/Error.cpp; sourceTree = "<group>"; };
@@ -115,6 +118,8 @@
 		4D9036AD1398FC0C00CBC7F6 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4D4051A1176B2D340097F2D6 /* NativeType.cpp */,
+				4D4051A2176B2D340097F2D6 /* NativeType.h */,
 				4D9036911398FC0800CBC7F6 /* Error.cpp */,
 				4D9036921398FC0800CBC7F6 /* Error.h */,
 				4D9036931398FC0800CBC7F6 /* Interface.cpp */,
@@ -271,6 +276,7 @@
 				4D9036A91398FC0800CBC7F6 /* Scanner.cpp in Sources */,
 				4D9036AA1398FC0800CBC7F6 /* Support.mm in Sources */,
 				4D9036AB1398FC0800CBC7F6 /* Value.cpp in Sources */,
+				4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
