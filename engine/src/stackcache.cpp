@@ -187,7 +187,7 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash)
 	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
 	
 	uindex_t t_h1;
-#ifdef __ARM__
+#if defined(__ARM__) && 0 // TODO
 #ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
 #endif
@@ -237,7 +237,7 @@ uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
 	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
 
 	uindex_t t_h1;
-#ifdef __ARM__
+#if defined(__ARM__) && 0 // TODO
 #ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
 #endif
@@ -275,7 +275,7 @@ uindex_t MCStackIdCache::FindBucketAfterRehash(uint32_t p_id, hash_t p_hash)
 	t_capacity = __kMCValueHashTableSizes[m_capacity_idx];
 
 	uindex_t t_h1;
-#ifdef __ARM__
+#if defined(__ARM__) && 0 // TODO
 #ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
 #endif

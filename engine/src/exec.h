@@ -3699,6 +3699,7 @@ extern MCExecMethodInfo* kMCMiscGetDoNotBackupFileMethodInfo;
 extern MCExecMethodInfo* kMCMiscSetDoNotBackupFileMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetFileDataProtectionMethodInfo;
 extern MCExecMethodInfo* kMCMiscSetFileDataProtectionMethodInfo;
+extern MCExecMethodInfo* kMCMiscExecLibDownloadUrlToFileMethodInfo;
 
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
@@ -3739,5 +3740,7 @@ void MCMiscGetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool& r_n
 void MCMiscSetDoNotBackupFile(MCExecContext& ctxt, MCStringRef p_path, bool p_no_backup);
 void MCMiscGetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef& p_protection_string);
 void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef p_protection_string);
+
+void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename);
 
 #endif

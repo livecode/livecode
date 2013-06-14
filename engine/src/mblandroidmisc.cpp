@@ -408,33 +408,34 @@ void MCAndroidSearchKey()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
-{
-	char *t_url, *t_filename;
-	t_url = nil;
-	t_filename = nil;
-	
-	MCExecPoint ep(nil, nil, nil);
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_url = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_filename = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	extern void MCS_downloadurl(MCObject *, const char *, const char *);
-	MCS_downloadurl(MCtargetptr, t_url, t_filename);
-	
-	return ES_NORMAL;
-}
+// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
+//{
+//	char *t_url, *t_filename;
+//	t_url = nil;
+//	t_filename = nil;
+//	
+//	MCExecPoint ep(nil, nil, nil);
+//	
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_url = ep . getsvalue() . clone();
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_filename = ep . getsvalue() . clone();
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	extern void MCS_downloadurl(MCObject *, const char *, const char *);
+//	MCS_downloadurl(MCtargetptr, t_url, t_filename);
+//	
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1314,6 +1315,8 @@ extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_para
 extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
 
 extern Exec_stat MCHandleExportImageToAlbum(void* p_context, MCParameter* p_parameter);
+
+extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
 
 extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);

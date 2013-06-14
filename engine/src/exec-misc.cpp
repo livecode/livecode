@@ -77,6 +77,8 @@ MC_EXEC_DEFINE_SET_METHOD(Misc, DoNotBackupFile, 2)
 MC_EXEC_DEFINE_GET_METHOD(Misc, FileDateProtection, 2)
 MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
 
+MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlDownloadToFile, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static MCExecEnumTypeElementInfo _kMCMiscStatusBarStyleElementInfo[] =
@@ -312,6 +314,13 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
         return;
     
     ctxt.Throw();
+}
+
+void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
+{
+    extern void MCS_downloadurl(MCObject *p_target, const char *p_url, const char *p_file);
+
+    MCS_downloadurl(MCtargetptr, MCStringGetCString(p_url), MCStringGetCString(p_filename));
 }
 
 //////////////////////////////////////////////////////////////////////
