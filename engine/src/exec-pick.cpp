@@ -25,6 +25,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "debug.h"
 #include "handler.h"
+#include "image.h"
+#include "stack.h"
 
 #include "mblsyntax.h"
 #include "exec.h"
@@ -37,6 +39,8 @@ MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickDateAndTime, 6)
 MC_EXEC_DEFINE_GET_METHOD(Pick, SpecificCameraFeatures, 2)
 MC_EXEC_DEFINE_GET_METHOD(Pick, CameraFeatures, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickMedia, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhoto, 1)
+MC_EXEC_DEFINE_EXEC_METHOD(Pick, PickPhotoAndResize, 3)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -99,12 +103,12 @@ static MCExecSetTypeInfo _kMCPickCameraFeaturesTypeInfo =
 
 static MCExecSetTypeElementInfo _kMCPickCamerasFeaturesElementInfo[] =
 {
-	{ "photo", kMCCamerasFeatureFrontPhoto },
-	{ "video", kMCCamerasFeatureFrontVideo },
-	{ "flash", kMCCamerasFeatureFrontFlash },
-    { "photo", kMCCamerasFeatureRearPhoto },
-	{ "video", kMCCamerasFeatureRearVideo },
-	{ "flash", kMCCamerasFeatureRearFlash },
+	{ "front photo", kMCCamerasFeatureFrontPhoto },
+	{ "front video", kMCCamerasFeatureFrontVideo },
+	{ "front flash", kMCCamerasFeatureFrontFlash },
+    { "rear photo", kMCCamerasFeatureRearPhoto },
+	{ "rear video", kMCCamerasFeatureRearVideo },
+	{ "rear flash", kMCCamerasFeatureRearFlash },
 };
 
 static MCExecSetTypeInfo _kMCPickCamerasFeaturesTypeInfo =
@@ -113,7 +117,6 @@ static MCExecSetTypeInfo _kMCPickCamerasFeaturesTypeInfo =
 	sizeof(_kMCPickCamerasFeaturesElementInfo) / sizeof(MCExecSetTypeElementInfo),
 	_kMCPickCamerasFeaturesElementInfo
 };
-
 
 //////////
 
@@ -126,6 +129,8 @@ static MCExecSetTypeElementInfo _kMCPickMediaTypesElementInfo[] =
 	{ "musicvideos", kMCMediaTypeMusicVideos },
 	{ "tv", kMCMediaTypeTv },
     { "videopodcasts", kMCMediaTypeVideoPodcasts },
+    { "anyAudio", kMCMediaTypeAnyAudio },
+    { "anyVideo", kMCMediaTypeAnyVideo },
 };
 
 static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
@@ -137,11 +142,30 @@ static MCExecSetTypeInfo _kMCPickMediaTypesTypeInfo =
 
 //////////
 
+static MCExecEnumTypeElementInfo _kMCPickPhotoSourceTypeElementInfo[] =
+{
+	{ "album", kMCCameraSourceTypeFront, false },
+	{ "library", kMCCameraSourceTypeRear, false },
+	{ "camera", kMCCameraSourceTypeUnknown, false },
+	{ "front camera", kMCCameraSourceTypeUnknown, false },
+	{ "rear camera", kMCCameraSourceTypeUnknown, false },
+};
+
+static MCExecEnumTypeInfo _kMCPickPhotoSourceTypeTypeInfo =
+{
+	"Pick.PhotoSourceType",
+	sizeof(_kMCPickPhotoSourceTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+	_kMCPickPhotoSourceTypeElementInfo
+};
+
+//////////
+
 MCExecEnumTypeInfo *kMCPickButtonTypeTypeInfo = &_kMCPickButtonTypeTypeInfo;
 MCExecEnumTypeInfo *kMCPickCameraSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
 MCExecSetTypeInfo *kMCPickCameraFeaturesTypeInfo = &_kMCPickCameraFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickCamerasFeaturesTypeInfo = &_kMCPickCamerasFeaturesTypeInfo;
 MCExecSetTypeInfo *kMCPickMediaTypesTypeInfo = &_kMCPickMediaTypesTypeInfo;
+MCExecEnumTypeInfo *kMCPickPhotoSourceTypeTypeInfo = &_kMCPickCameraSourceTypeTypeInfo;
 
 //////////
 
@@ -357,12 +381,42 @@ void MCPickGetCameraFeatures(MCExecContext& ctxt, intset_t& r_features)
 
 void MCPickExecPickPhotoAndResize(MCExecContext& ctxt, intenum_t p_source, uinteger_t p_width, uinteger_t p_height)
 {
+    if (!MCSystemCanAcquirePhoto((MCPhotoSourceType)p_source))
+    {
+        ctxt . SetTheResultToStaticCString("source not available");
+        return;
+    }
     
+    void *t_image_data = nil;
+    size_t t_image_data_size;
+    MCAutoStringRef t_result;
+    if (!MCSystemAcquirePhoto((MCPhotoSourceType)p_source, p_width, p_height, t_image_data, t_image_data_size, &t_result))
+    {
+        ctxt . SetTheResultToStaticCString("error");
+        return;
+    }
+    
+    if (t_image_data == nil)
+    {
+        ctxt . SetTheResultToValue(*t_result);
+        return;
+    }
+    
+    ctxt . SetTheResultToEmpty();
+    
+    MCtemplateimage->setparent((MCObject *)MCdefaultstackptr -> getcurcard());
+    MCImage *iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+    MCtemplateimage->setparent(NULL);
+    iptr -> attach(OP_CENTER, false);
+    
+    MCAutoStringRef t_text;
+    MCStringCreateWithCString((char *)t_image_data, &t_text);
+    iptr -> SetText(ctxt, *t_text);
 }
 
 void MCPickExecPickPhoto(MCExecContext& ctxt, intenum_t p_source)
 {
-    
+    MCPickExecPickPhotoAndResize(ctxt, p_source, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

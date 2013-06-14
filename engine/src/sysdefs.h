@@ -1123,9 +1123,10 @@ class MCVariable;
 class MCExpression;
 class MCContainer;
 struct MCPickleContext;
+/*
 class MCVariableValue;
 class MCVariableArray;
-
+*/
 class MCExternal;
 class MCExternalHandlerList;
 

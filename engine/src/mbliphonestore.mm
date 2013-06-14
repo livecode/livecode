@@ -615,7 +615,7 @@ bool MCNSStringToUnicode(NSString *p_ns_string, unichar_t *&r_uni_string, uint32
 
 void MCStoreProductRequestResponseEvent::Dispatch()
 {
-    bool t_success = true;
+/*    bool t_success = true;
     
     const char *t_product_id = nil;
     const char *t_description = nil;
@@ -655,7 +655,6 @@ void MCStoreProductRequestResponseEvent::Dispatch()
     if (t_success)
         t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
     
-#ifdef MOBILE_BROKEN
     if (t_success)
     {
         MCExecPoint ep(nil, nil, nil);
@@ -720,7 +719,132 @@ void MCStoreProductRequestResponseEvent::Dispatch()
         
         MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
     }
-#endif
+    
+    if (t_unicode_description != nil)
+        MCMemoryDeleteArray(t_unicode_description);
+    if (t_unicode_title != nil)
+        MCMemoryDeleteArray(t_unicode_title);
+    if (t_unicode_currency_symbol != nil)
+        MCMemoryDeleteArray(t_unicode_currency_symbol); */
+    
+    bool t_success = true;
+    
+    const char *t_product_id = nil;
+    const char *t_description = nil;
+    const char *t_title = nil;
+    const char *t_currency_code = nil;
+    const char *t_currency_symbol = nil;
+    
+    unichar_t *t_unicode_description = nil;
+    uint32_t t_unicode_description_length = 0;
+    
+    unichar_t *t_unicode_title = nil;
+    uint32_t t_unicode_title_length = 0;
+    
+    unichar_t *t_unicode_currency_symbol = nil;
+    uint32_t t_unicode_currency_symbol_length = 0;
+    
+    double t_price = 0.0;
+    
+    NSString *t_locale_currency_code = nil;
+    NSString *t_locale_currency_symbol = nil;
+    
+    t_locale_currency_code = [[m_product priceLocale] objectForKey: NSLocaleCurrencyCode];
+    t_locale_currency_symbol = [[m_product priceLocale] objectForKey: NSLocaleCurrencySymbol];
+    
+    t_product_id = [[m_product productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    t_description = [[m_product localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    t_title = [[m_product localizedTitle] cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    t_currency_code = [t_locale_currency_code cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    t_currency_symbol = [t_locale_currency_symbol cStringUsingEncoding: NSMacOSRomanStringEncoding];
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode([m_product localizedDescription], t_unicode_description, t_unicode_description_length);
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode([m_product localizedTitle], t_unicode_title, t_unicode_title_length);
+    
+    if (t_success)
+        t_success = MCNSStringToUnicode(t_locale_currency_symbol, t_unicode_currency_symbol, t_unicode_currency_symbol_length);
+    
+    MCAutoStringRef t_description_string, t_title_string, t_currency_code_string, t_currency_symbol_string;
+    MCAutoStringRef t_unicode_description_string, t_unicode_title_string, t_unicode_currency_symbol_string;
+    MCAutoNumberRef t_price_number;
+    
+    MCNewAutoNameRef t_price_key, t_description_key, t_title_key, t_currency_code_key, t_currency_symbol_key;
+    MCNewAutoNameRef t_unicode_description_key, t_unicode_title_key, t_unicode_currency_symbol_key;
+    
+    MCAutoArrayRef t_array;
+    if (t_success)
+        t_success = MCArrayCreateMutable(&t_array);
+    
+    if (t_success)
+        t_success = (MCNumberCreateWithReal([[m_product price] doubleValue], &t_price_number)
+                     && MCNameCreateWithCString("price", &t_price_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_price_key, *t_price_number));
+
+        
+    if (t_success && t_description != nil)
+    {
+        t_success = (MCStringCreateWithCString(t_description, &t_description_string)
+                     && MCNameCreateWithCString("description", &t_description_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_description_key, *t_description_string));
+    }
+    
+    if (t_success && t_title != nil)
+    {
+        t_success = (MCStringCreateWithCString(t_title, &t_title_string)
+                     && MCNameCreateWithCString("title", &t_title_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_title_key, *t_title_string));
+    }
+    
+    if (t_success && t_currency_code != nil)
+    {
+        t_success = (MCStringCreateWithCString(t_currency_code, &t_currency_code_string)
+                     && MCNameCreateWithCString("currency code", &t_currency_code_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_code_key, *t_currency_code_string));
+    }
+    
+    if (t_success && t_currency_symbol != nil)
+    {
+        t_success = (MCStringCreateWithCString(t_currency_symbol, &t_currency_symbol_string)
+                     && MCNameCreateWithCString("currency symbol", &t_currency_symbol_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_currency_symbol_key, *t_currency_symbol_string));
+    }
+    
+    if (t_success && t_unicode_description != nil)
+    {
+        t_success = (MCStringCreateWithChars(t_unicode_description, 2 * t_unicode_description_length, &t_unicode_description_string)
+                     && MCNameCreateWithCString("unicode description", &t_unicode_description_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_description_key, *t_unicode_description_string));
+    }
+    
+    if (t_success && t_unicode_title != nil)
+    {
+        t_success = (MCStringCreateWithChars(t_unicode_title, 2 * t_unicode_title_length, &t_unicode_title_string)
+                     && MCNameCreateWithCString("unicode title", &t_unicode_title_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_title_key, *t_unicode_title_string));
+    }
+    
+    if (t_success && t_unicode_currency_symbol != nil)
+    {
+        t_success = (MCStringCreateWithChars(t_unicode_currency_symbol, 2 * t_unicode_currency_symbol_length, &t_unicode_currency_symbol_string)
+                     && MCNameCreateWithCString("unicode currency symbol", &t_unicode_currency_symbol_key)
+                     && MCArrayStoreValue(*t_array, kMCCompareCaseless, *t_unicode_currency_symbol_key, *t_unicode_currency_symbol_string));
+    }
+    
+    MCAutoStringRef t_product_id_string;
+    MCStringCreateWithCString(t_product_id, &t_product_id_string);
+    MCParameter p1, p2;
+    p1.setvalueref_argument(*t_product_id_string);
+    p1.setnext(&p2);
+    if (*t_array != nil)
+        p2.setvalueref_argument(*t_array);
+    else
+        p2.setvalueref_argument(kMCEmptyArray);
+    
+    MCdefaultstackptr->getcurcard()->message(MCM_product_details_received, &p1);
+
     
     if (t_unicode_description != nil)
         MCMemoryDeleteArray(t_unicode_description);

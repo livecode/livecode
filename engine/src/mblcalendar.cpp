@@ -571,8 +571,6 @@ bool MCCalendarToArrayData (MCExecContext &ctxt, MCCalendar p_calendar, MCArrayR
     
     return t_success;
 
- // TODO - use array instead of MCVariableValue
-
 //    MCExecPoint ep(nil, nil, nil);
 //    MCVariableValue *t_entry = nil;
 //    r_result = new MCVariableValue ();

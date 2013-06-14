@@ -849,9 +849,7 @@ static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_param
 		if ((t_orientations & (1 << j)) != 0)
 			ep . concatcstring(s_orientation_names[j], EC_COMMA, ep . isempty());
 
-#ifdef MOBILE_BROKEN
 	MCresult -> store(ep, True);
-#endif
     
 	return ES_NORMAL;
 }
@@ -1128,12 +1126,10 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 //		}
 //	}
 //	
-//#ifdef MOBILE_BROKEN
 //	if (t_success)
 //		ctxt . SetTheResultToValue(ep . getsvalue());
 //	else
 //		MCresult->clear();
-//#endif
 //	
 //	return ES_NORMAL;
 //}

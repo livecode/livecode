@@ -351,16 +351,16 @@ Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 #else
 	if (!t_error)
 	{
-		char *t_result;
-		t_result = MCscreen -> popupaskdialog(AT_QUESTION, p_title, *t_prompt, *t_answer, question . hint);
-		if (t_result != nil)
-			ep . copysvalue(t_result);
+
+		MCAutoStringRef t_result;
+		MCscreen -> popupaskdialog(AT_QUESTION, p_title, *t_prompt, *t_answer, question . hint, &t_result);
+		if (*t_result != nil)
+        /* UNCHECKED */ ep . setvalueref(*t_result);
 		else
 		{
 			ep.clear();
 			MCresult -> sets(MCcancelstring);
 		}
-		delete t_result;
 	}
 #endif
 
@@ -388,16 +388,15 @@ Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 #else
 	if (!t_error)
 	{
-		char *t_result;
-		t_result = MCscreen -> popupaskdialog(AT_PASSWORD, p_title, *t_prompt, *t_answer, password . hint);
-		if (t_result != nil)
-			ep . copysvalue(t_result);
+		MCAutoStringRef t_result;
+		MCscreen -> popupaskdialog(AT_PASSWORD, p_title, *t_prompt, *t_answer, password . hint, &t_result);
+		if (*t_result != nil)
+			/* UNCHECKED */ ep . setvalueref(*t_result);
 		else
 		{
 			ep.clear();
 			MCresult -> sets(MCcancelstring);
 		}
-		delete t_result;
 	}
 #endif
 	

@@ -104,7 +104,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //            p_parameters = p_parameters->getnext();
 //    }
 //    
-//#ifdef MOBILE_BROKEN
 //    if (p_parameters != nil)
 //    {
 //        p_parameters->eval(ep);
@@ -125,7 +124,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //        if (t_location.y == -1)
 //            t_location.x = -1;
 //    }
-//#endif
 //
 //    MCExecContext ctxt(ep);
 //	ctxt . SetTheResultToEmpty();

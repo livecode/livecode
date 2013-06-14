@@ -361,7 +361,7 @@ bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_
 struct post_url_t
 {
 	const char *url;
-	const void *data;
+	MCStringRef data;
 	uint32_t length;
 	MCSystemUrlCallback callback;
 	void *context;
@@ -446,7 +446,7 @@ bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, M
 {
 	post_url_t ctxt;
 	ctxt . url = p_url;
-	ctxt . data = p_data;
+	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, ctxt . data);
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;

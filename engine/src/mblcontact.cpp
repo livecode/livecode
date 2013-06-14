@@ -175,7 +175,11 @@ bool MCContactAddPropertyWithLabel(MCArrayRef p_contact, MCNameRef p_property, M
 	else
 		t_index = MCArrayGetCount((MCArrayRef)t_array) + 1;
 	
-	return MCArrayStoreValueAtIndex((MCArrayRef)t_array, t_index, p_value);
+    MCAutoArrayRef t_copied_array;
+    if (MCArrayCopy((MCArrayRef) t_array, &t_copied_array))
+        return MCArrayStoreValueAtIndex(*t_copied_array, t_index, p_value);
+    
+    return false;
 }
 
 /*

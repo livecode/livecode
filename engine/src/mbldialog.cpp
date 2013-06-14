@@ -489,15 +489,13 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
             t_success = StringArrayToString (t_result_choices_array, t_return_string, p_chunk_type);
 
         p_ctxt.SetTheResultToEmpty();
-        
-#ifdef MOBILE_BROKEN
+
         if (t_success)
         {
 			MCAutoStringRef t_return;
 			MCStringCreateWithCString(t_return_string, &t_return);
             p_ctxt.GetEP().setvalueref(*t_return);
         }
-#endif
     }
     
     // Free memory
@@ -667,7 +665,6 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 	MCDialogExecPickOptionByIndex(ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
 
 	
-#ifdef MOBILE_BROKEN
 	if (t_success)
     {
         // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
@@ -679,7 +676,6 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 			ctxt . SetTheResultToValue(*t_value);
 		}
     }
-#endif
 	
 	if (!ctxt . HasError())
 		return ES_NORMAL;
