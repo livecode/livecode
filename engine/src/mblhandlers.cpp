@@ -3068,7 +3068,7 @@ Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
 	
     bool t_success;
     
-    t_success = MCParseParameters(p_parameters, "xx", &t_url, &t_filename);
+    t_success = MCParseParameters(p_parameters, "xx", &(&t_url), &(&t_filename));
     
     if (t_success)
         MCMiscExecLibUrlDownloadToFile(ctxt, *t_url, *t_filename);
