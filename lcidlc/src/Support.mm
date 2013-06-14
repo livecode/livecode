@@ -27,6 +27,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "LiveCode.h"
 
+#ifdef __WINDOWS__
+#include <windows.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifndef nil
@@ -1847,9 +1851,31 @@ struct __LCWait
 	unsigned int options;
 	bool running;
 	bool broken;
+#ifdef __WINDOWS__
+	HANDLE lock;
+#else
 	pthread_mutex_t lock;
+#endif
 };
 
+static void LCWaitLock(LCWaitRef p_wait)
+{
+#ifdef __WINDOWS__
+	WaitForSingleObject(p_wait -> lock, INFINITE);
+#else
+	pthread_mutex_lock(&p_wait -> lock);
+#endif
+}
+
+static void LCWaitUnlock(LCWaitRef p_wait)
+{
+#ifdef __WINDOWS__
+	ReleaseMutex(p_wait -> lock);
+#else
+	pthread_mutex_unlock(&p_wait -> lock);
+#endif
+}
+	
 LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 {		
 	LCWaitRef t_wait;
@@ -1861,7 +1887,11 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 	t_wait -> options = p_options;
 	t_wait -> running = false;
 	t_wait -> broken = false;
+#ifdef __WINDOWS__
+	t_wait -> lock = CreateMutex(NULL, FALSE, NULL);
+#else
 	pthread_mutex_init(&t_wait -> lock, nil);
+#endif
 	
 	*r_wait = t_wait;
 	
@@ -1870,7 +1900,11 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 
 static void LCWaitDestroy(LCWaitRef p_wait)
 {
+#ifdef __WINDOWS__
+	CloseHandle(t_wait -> lock);
+#else
 	pthread_mutex_destroy(&p_wait -> lock);
+#endif
 	free(p_wait);
 }
 
@@ -1879,9 +1913,9 @@ LCError LCWaitRetain(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	p_wait -> references += 1;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }
@@ -1890,10 +1924,10 @@ LCError LCWaitRelease(LCWaitRef p_wait)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-
-	pthread_mutex_lock(&p_wait -> lock);
+	
+	LCWaitLock(p_wait);
 	p_wait -> references -= 1;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	if (p_wait -> references == 0)
 		LCWaitDestroy(p_wait);
@@ -1905,10 +1939,10 @@ LCError LCWaitIsRunning(LCWaitRef p_wait, bool *r_running)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-
-	pthread_mutex_lock(&p_wait -> lock);
+	
+	LCWaitLock(p_wait);
 	*r_running = p_wait -> running;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }	
@@ -1921,7 +1955,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	
 	p_wait -> running = true;
 
@@ -1932,11 +1966,11 @@ LCError LCWaitRun(LCWaitRef p_wait)
 		if (p_wait -> broken)
 			break;
 		
-		pthread_mutex_unlock(&p_wait -> lock);
+		LCWaitUnlock(p_wait);
 		
 		t_error = s_interface -> wait_run(nil, p_wait -> options & kLCWaitOptionDispatching);
 		
-		pthread_mutex_lock(&p_wait -> lock);
+		LCWaitLock(p_wait);
 		
 		if (t_error != kMCErrorNone)
 			break;
@@ -1944,7 +1978,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 
 	p_wait -> running = false;
 	
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return (LCError)t_error;
 }
@@ -1959,13 +1993,13 @@ LCError LCWaitBreak(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	if (p_wait -> running && !p_wait -> broken)
 	{
 		p_wait -> broken = true;
 		s_interface -> wait_break(nil, 0);
 	}
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }
@@ -1978,9 +2012,9 @@ LCError LCWaitReset(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(&p_wait -> lock);
 	p_wait -> broken = false;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return (LCError)kMCErrorNone;
 }
