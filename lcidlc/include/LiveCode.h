@@ -1260,7 +1260,7 @@ LCError LCRunOnSystemThread(LCRunOnSystemThreadCallback callback, void *state);
 //   Identical to LCRunOnSystemThread except that an Objective-C block is invoked
 //   rather than a function.
 //
-#ifdef __OBJC__
+#if defined(__OBJC__) && defined(__BLOCKS__)
 LCError LCRunBlockOnSystemThread(void (^callback)(void));
 #endif
 	
@@ -1306,7 +1306,7 @@ enum
 //
 LCError LCRunOnMainThread(unsigned int options, LCRunOnMainThreadCallback callback, void *state);
 
-#ifdef __OBJC__
+#if defined(__OBJC__) && defined(__BLOCKS__)
 LCError LCRunBlockOnMainThread(unsigned int options, void (^callback)(void));
 #endif
 
@@ -1344,7 +1344,7 @@ enum
 //
 LCError LCPostOnMainThread(unsigned int options, LCPostOnMainThreadCallback callback, void *state);
 	
-#ifdef __OBJC__
+#if defined(__OBJC__) && defined(__BLOCKS__)
 LCError LCPostBlockOnMainThread(unsigned int options, void (^callback)(void));
 #endif
 	

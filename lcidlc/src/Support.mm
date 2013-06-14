@@ -457,7 +457,7 @@ static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
-	for(NSUInteger t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
+	for(unsigned int t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
 	{
 		char t_key[12];
 		if (t_error == kLCErrorNone)
@@ -547,8 +547,19 @@ static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];
+#ifndef __OBJC2__
+	NSEnumerator *t_enumerator;
+	t_enumerator = [p_src objectEnumerator];
+	for(;;)
+	{
+		id t_key;
+		t_key = [t_enumerator nextObject];
+		if (t_key == nil)
+			break;
+#else
 	for(id t_key in p_src)
 	{
+#endif
 		if (t_error == kLCErrorNone && ![t_key isKindOfClass: [NSString class]])
 			t_error = kLCErrorCannotEncodeMap;
 		
@@ -2239,7 +2250,7 @@ LCError LCPostOnMainThread(unsigned int p_options, LCPostOnMainThreadCallback p_
 	return (LCError)s_interface -> engine_run_on_main_thread((void *)p_callback, p_context, kMCRunOnMainThreadPost | kMCRunOnMainThreadRequired | kMCRunOnMainThreadSafe | kMCRunOnMainThreadDeferred);
 }
 
-#ifdef __OBJC__
+#if defined(__OBJC__) && defined(__BLOCKS__)
 static void LCRunBlockOnSystemThreadCallback(void *p_context)
 {
 	void (^t_callback)(void) = (void (^)(void))p_context;
