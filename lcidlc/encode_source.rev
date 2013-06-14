@@ -21,6 +21,7 @@ on generate
 
   put "const char *" & $3 & " =" & return after tOutput
   repeat for each line tLine in tInput
+    replace "\" with "\\" in tLine
     replace quote with "\" & quote in tLine
     put tab & quote & tLine & "\n" & quote & return after tOutput
   end repeat
