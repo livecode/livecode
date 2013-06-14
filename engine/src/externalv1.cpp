@@ -52,6 +52,7 @@ typedef uint32_t MCExternalRunOnMainThreadOptions;
 typedef void (*MCExternalThreadOptionalCallback)(void *state);
 typedef void (*MCExternalThreadRequiredCallback)(void *state, int flags);
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Update the interface version.
 #define kMCExternalInterfaceVersion 5
 
 enum
@@ -178,6 +179,7 @@ enum MCExternalContextQueryTag
 	kMCExternalContextQueryDefaultStack,
 	kMCExternalContextQueryDefaultCard,
 	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to fetch 'the wholeMatches'.
 	kMCExternalContextQueryWholeMatches,
 };
 
@@ -188,7 +190,13 @@ enum MCExternalVariableQueryTag
 	kMCExternalVariableQueryFormat,
 	kMCExternalVariableQueryRetention,
 	kMCExternalVariableQueryIsAnArray,
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to determine if a variable
+	//   is a 1-based, dense, numerically keyed array (aka a sequence).
 	kMCExternalVariableQueryIsASequence, // V5
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to determine if a variable
+	//   is empty.
 	kMCExternalVariableQueryIsEmpty, // V5
 };
 
@@ -199,7 +207,13 @@ enum MCExternalInterfaceQueryTag
 	kMCExternalInterfaceQueryViewController = 3,
 	kMCExternalInterfaceQueryActivity = 4, // V4
 	kMCExternalInterfaceQueryContainer = 5, // V4
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to get the JavaEnv for the
+	//   script thread.
 	kMCExternalInterfaceQueryScriptJavaEnv = 6, // V5
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to get the JavaEnv for the
+	//   system thread.
 	kMCExternalInterfaceQuerySystemJavaEnv = 7, // V5
 };
 
@@ -308,8 +322,13 @@ struct MCExternalInterface
 	
 	/////////
 	
-	MCExternalError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef value); // V5
-	MCExternalError (*context_execute)(const char *p_expression, unsigned int options); // V5
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Method to evaluate the given expression
+	//   in the current context.
+	MCExternalError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef value, ...); // V5
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Method to execute the given expression
+	//   in the current context.
+	MCExternalError (*context_execute)(const char *p_expression, unsigned int options, ...); // V5
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -890,6 +909,8 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
 {
 #if defined(_DESKTOP)
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Pass the correct parameters through
+	//   to MCNotifyPush so that LCObjectPost works.
 	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, (p_options & kMCExternalRunOnMainThreadPost) == 0, (p_options & kMCExternalRunOnMainThreadSafe) != 0))
 		return kMCExternalErrorOutOfMemory;
 
@@ -940,6 +961,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	case kMCExternalContextQueryConvertOctals:
 		*(bool *)result = MCEPptr -> getconvertoctals() == True;
 		break;
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of 'the wholeMatches' query.
 	case kMCExternalContextQueryWholeMatches:
 		*(bool *)result = MCEPptr -> getwholematches() == True;
 		break;
@@ -985,7 +1007,8 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 	return kMCExternalErrorNone;
 }
 
-MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef p_result)
+// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_evaluate method.
+MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef p_result, ...)
 {
 	MCEPptr -> setsvalue(p_expression);
 	
@@ -1003,7 +1026,8 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 	return kMCExternalErrorNone;
 }
 
-MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options)
+// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_execute method.
+MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options, ...)
 {
 	MCEPptr -> setsvalue(p_commands);
 	
@@ -1098,12 +1122,17 @@ static MCExternalError MCExternalVariableQuery(MCExternalVariableRef var, MCExte
 	case kMCExternalVariableQueryIsAnArray:
 		*(bool *)r_result = var -> is_empty() || var -> is_array();
 		break;
+			
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsEmpty variable query.
 	case kMCExternalVariableQueryIsEmpty:
 		*(bool *)r_result = var -> is_empty();
 		break;
+			
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of IsASequence variable query.
 	case kMCExternalVariableQueryIsASequence:
 		*(bool *)r_result = var -> is_array() && var -> get_array() -> issequence();
 		break;
+	
 	default:
 		return kMCExternalErrorInvalidVariableQuery;
 	}
@@ -1912,10 +1941,9 @@ static MCExternalError MCExternalWaitRun(void *unused, unsigned int p_options)
 
 static MCExternalError MCExternalWaitBreak(void *unused, unsigned int p_options)
 {
-#ifdef TARGET_SUBPLATFORM_IPHONE
-	// MW-2011-08-16: [[ Wait ]] Tell the wait to look for more stuff to do/exit.
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Do a pingwait() on all platforms (still
+	//   needs implemented on Desktop).
 	MCscreen -> pingwait();
-#endif
 	return kMCExternalErrorNone;
 }
 
@@ -1926,6 +1954,8 @@ extern void *MCIPhoneGetViewController(void);
 extern float MCIPhoneGetResolutionScale(void);
 extern void *MCAndroidGetActivity(void);
 extern void *MCAndroidGetContainer(void);
+
+// MW-2013-06-13: [[ ExternalsApiV5 ]] Methods to get the JavaEnv's.
 extern void *MCAndroidGetScriptJavaEnv(void);
 extern void *MCAndroidGetSystemJavaEnv(void);
 
@@ -1956,12 +1986,17 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 		case kMCExternalInterfaceQueryContainer:
 			*(void **)r_value = MCAndroidGetContainer();
 			break;
+			
+		// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of the script JavaEnv accessor.
 		case kMCExternalInterfaceQueryScriptJavaEnv:
 			*(void **)r_value = MCAndroidGetScriptJavaEnv();
 			break;
+			
+		// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of the systen JavaEnv accessor.
 		case kMCExternalInterfaceQuerySystemJavaEnv:
 			*(void **)r_value = MCAndroidGetSystemJavaEnv();
 			break;
+
 		default:
 			return kMCExternalErrorInvalidInterfaceQuery;
 	}
@@ -2013,6 +2048,8 @@ MCExternalInterface g_external_interface =
 	
 	MCExternalObjectUpdate,
 	
+	// MW-2013-06-13: [[ ExternalsApiV5 ]] Declare the evaluate and execute methods
+	//   for the outside world.
 	MCExternalContextEvaluate,
 	MCExternalContextExecute,
 };

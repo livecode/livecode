@@ -65,6 +65,7 @@ static bool s_shutting_down = false;
 #if defined(_WINDOWS)
 HANDLE g_notify_wakeup = NULL;
 static CRITICAL_SECTION s_notify_lock;
+static DWORD s_main_thread_id = 0;
 #elif defined(_MACOSX)
 static bool s_notify_sent = false;
 static pthread_mutex_t s_notify_lock;
@@ -177,7 +178,7 @@ static void MCNotifyUnlock(void)
 static bool MCNotifyIsMainThread(void)
 {
 #if defined(_WINDOWS)
-	return true; // not implemented yet
+	return GetCurrentThreadId() == s_main_thread_id;
 #elif defined(_MACOSX) || defined(_LINUX)
 	return pthread_self() == s_main_thread;
 #endif
@@ -203,6 +204,7 @@ bool MCNotifyInitialize(void)
 #if defined(_WINDOWS)
 	g_notify_wakeup = CreateEvent(NULL, FALSE, FALSE, NULL);
 	InitializeCriticalSection(&s_notify_lock);
+	s_main_thread_id = GetCurrentThreadId();
 #elif defined(_MACOSX)
 	static EventTypeSpec t_events[] = { 'revo', 'wkup' };
 	::InstallApplicationEventHandler(MCNotifyEventHandler, 1, t_events, NULL, NULL);
@@ -326,26 +328,7 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 
 				// Ping the main thread to make sure it knows to check for a shiny new
 				// thing.
-#if defined(_WINDOWS)
-				SetEvent(g_notify_wakeup);
-#elif defined(_MACOSX)
-				if (!s_notify_sent)
-				{
-					s_notify_sent = true;
-					EventRef t_event;
-					::CreateEvent(NULL, 'revo', 'wkup', 0, kEventAttributeNone, &t_event);
-					::PostEventToQueue(::GetMainEventQueue(), t_event, p_block ? kEventPriorityHigh : kEventPriorityStandard);
-					::ReleaseEvent(t_event);
-				}
-#elif defined(_LINUX)
-				if (!s_notify_sent)
-				{
-					s_notify_sent = true;
-					char t_notify_char = 1;
-					write(g_notify_pipe[1], &t_notify_char, 1);
-				}
-#endif
-
+				MCNotifyPing(p_block);
 			}
 			else
 				t_success = false;
@@ -428,4 +411,28 @@ bool MCNotifyDispatch(bool p_safe)
 			t_dispatched = true;
 
 	return t_dispatched;
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Wake up the event loop.
+void MCNotifyPing(bool p_high_priority)
+{
+#if defined(_WINDOWS)
+	SetEvent(g_notify_wakeup);
+#elif defined(_MACOSX)
+	if (!s_notify_sent)
+	{
+		s_notify_sent = true;
+		EventRef t_event;
+		::CreateEvent(NULL, 'revo', 'wkup', 0, kEventAttributeNone, &t_event);
+		::PostEventToQueue(::GetMainEventQueue(), t_event, p_high_priority ? kEventPriorityHigh : kEventPriorityStandard);
+		::ReleaseEvent(t_event);
+	}
+#elif defined(_LINUX)
+	if (!s_notify_sent)
+	{
+		s_notify_sent = true;
+		char t_notify_char = 1;
+		write(g_notify_pipe[1], &t_notify_char, 1);
+	}
+#endif
 }
