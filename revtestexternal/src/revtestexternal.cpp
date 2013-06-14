@@ -36,7 +36,7 @@ void *thread_begin(void *(*p_callback)(void *), void *p_context)
 	pthread_t t_handle;
 	if (pthread_create(&t_handle, NULL, p_callback, p_context) != 0)
 		return NULL;
-	return t_handle;
+	return (void *)t_handle;
 }
 
 void *thread_finish(void *p_thread)

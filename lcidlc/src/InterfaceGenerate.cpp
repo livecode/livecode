@@ -620,8 +620,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "{");
 			if (self -> use_objc_objects)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\tNSAutoreleasePool *t_pool;");
 				CoderWriteLine(p_coder, "\tt_pool = [[NSAutoreleasePool alloc] init];");
+				CoderWriteLine(p_coder, "#endif");
 				CoderWriteLine(p_coder, "");
 			}
 			
@@ -771,7 +773,11 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			}
 			
 			if (self -> use_objc_exceptions)
+			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\tNS_DURING");
+				CoderWriteLine(p_coder, "#endif");
+			}
 				
 			if (t_native_return_type != kNativeTypeNone)
 			{
@@ -798,9 +804,11 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			
 			if (self -> use_objc_exceptions)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\t\tNS_HANDLER");
 				CoderWriteLine(p_coder, "\t\t\tsuccess = error__raise([[localException reason] cStringUsingEncoding: NSMacOSRomanStringEncoding]);");
 				CoderWriteLine(p_coder, "\t\tNS_ENDHANDLER");
+				CoderWriteLine(p_coder, "#endif");
 			}
 			
 			if (self -> use_cpp_exceptions)
@@ -908,7 +916,9 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				
 			if (self -> use_objc_objects)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\t[t_pool release];");
+				CoderWriteLine(p_coder, "#endif");
 				CoderWriteLine(p_coder, "");
 			}
 			
