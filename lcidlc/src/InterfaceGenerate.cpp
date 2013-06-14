@@ -1134,9 +1134,10 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "{");
 	CoderWriteLine(p_coder, "\treturn java__get_container();");
 	CoderWriteLine(p_coder, "}");
-	CoderWriteLine(p_coder, "#endif");
 	free(t_java_class_name);
 #endif
+	
+	CoderWriteLine(p_coder, "#endif");
 	
 	return true;
 }
