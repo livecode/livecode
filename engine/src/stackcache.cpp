@@ -188,9 +188,7 @@ uindex_t MCStackIdCache::FindBucket(uint32_t p_id, hash_t p_hash)
 	
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#endif
 #else
 	t_h1 = p_hash % t_capacity;
 #endif
@@ -238,9 +236,7 @@ uindex_t MCStackIdCache::FindBucketIfExists(uint32_t p_id, hash_t p_hash)
 
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#endif
 #else
 	t_h1 = p_hash % t_capacity;
 #endif
@@ -276,9 +272,7 @@ uindex_t MCStackIdCache::FindBucketAfterRehash(uint32_t p_id, hash_t p_hash)
 
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(p_hash, m_capacity_idx);
-#endif
 #else
 	t_h1 = p_hash % t_capacity;
 #endif

@@ -746,9 +746,7 @@ static bool __MCArrayFindKeyValueSlot(__MCArray *self, bool p_case_sensitive, MC
 	// Fold the hash code appropriately.
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO	
-#ifdef NOHASHFOLD
 	t_h1 = __MCHashFold(t_hash, __MCArrayGetTableSizeIndex(self));
-#endif
 #else
 	t_h1 = t_hash % t_size;
 #endif

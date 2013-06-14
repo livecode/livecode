@@ -377,10 +377,8 @@ static uindex_t __MCValueFindUniqueValueBucket(__MCValue *p_value, hash_t p_hash
 
 	// Fold the hash code appropriately.
 	uindex_t t_h1;
-#if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD    
+#if defined(__ARM__) && 0 // TODO 
 	t_h1 = __MCHashFold(p_hash, s_unique_value_capacity_idx);
-#endif 
 #else
 	t_h1 = p_hash % t_capacity;
 #endif
@@ -452,9 +450,7 @@ static uindex_t __MCValueFindUniqueValueBucketForRemove(__MCValue *p_value, hash
 	// Fold the has code appropriately.
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD   
 	t_h1 = __MCHashFold(p_hash, s_unique_value_capacity_idx);
-#endif
 #else
 	t_h1 = p_hash % t_capacity;
 #endif
@@ -501,9 +497,7 @@ static uindex_t __MCValueFindUniqueValueBucketAfterRehash(__MCValue *p_value, ha
 	// Fold the has code appropriately.
 	uindex_t t_h1;
 #if defined(__ARM__) && 0 // TODO
-#ifdef NOHASHFOLD   
 	t_h1 = __MCHashFold(p_hash, s_unique_value_capacity_idx);
-#endif
 #else
 	t_h1 = p_hash % t_capacity;
 #endif
