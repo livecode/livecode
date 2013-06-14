@@ -22,13 +22,59 @@
 ////////////////////////////////////////////////////////////////////////////////
 
 #if defined(__WINDOWS__)
+#include <windows.h>
+#include <process.h>
+
+typedef void *(*windows_thread_function)(void *p_context);
+struct windows_thread_info
+{
+	windows_thread_function m_function;
+	void * m_context;
+};
+
+static unsigned int __stdcall windows_thread_callback(void *p_context)
+{
+	windows_thread_info *t_info = (windows_thread_info*)p_context;
+
+	unsigned int t_result;
+	t_result = (unsigned int)t_info->m_function(t_info->m_context);
+
+	free(t_info);
+	return t_result;
+}
+
+void thread_sleep(unsigned int p_seconds)
+{
+	Sleep(p_seconds * 1000);
+}
+
+void *thread_begin(void *(*p_callback)(void *), void *p_context)
+{
+	windows_thread_info *t_info = NULL;
+	t_info = (windows_thread_info *)malloc(sizeof(windows_thread_info));
+
+	t_info -> m_function = p_callback;
+	t_info -> m_context = p_context;
+
+	HANDLE t_thread;
+	t_thread = (HANDLE)_beginthreadex(NULL, 0, windows_thread_callback, t_info, 0, NULL);
+
+	return (void *)t_thread;
+}
+
+void *thread_finish(void *p_thread)
+{
+	WaitForSingleObject((HANDLE)p_thread, INFINITE);
+	CloseHandle((HANDLE)p_thread);
+	return NULL;
+}
 #else
 #include <pthread.h>
 #include <unistd.h>
 
 void thread_sleep(unsigned int p_seconds)
 {
-	usleep(p_seconds * 1000);
+	usleep(p_seconds * 1000 * 1000);
 }
 
 void *thread_begin(void *(*p_callback)(void *), void *p_context)
@@ -52,7 +98,7 @@ void *thread_finish(void *p_thread)
 
 static void *test_wait_callback(void *p_handle)
 {
-	usleep(10 * 1000 * 1000);
+	thread_sleep(10);
 	LCWaitBreak((LCWaitRef)p_handle);
 	return NULL;
 }

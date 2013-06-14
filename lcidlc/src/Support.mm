@@ -14,11 +14,9 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <stdint.h>
 #include <string.h>
 
 #ifdef __OBJC__
@@ -29,6 +27,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #ifdef __WINDOWS__
 #include <windows.h>
+typedef unsigned int uint32_t;
+#else
+#include <pthread.h>
+#include <stdint.h>
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1901,7 +1903,7 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 static void LCWaitDestroy(LCWaitRef p_wait)
 {
 #ifdef __WINDOWS__
-	CloseHandle(t_wait -> lock);
+	CloseHandle(p_wait -> lock);
 #else
 	pthread_mutex_destroy(&p_wait -> lock);
 #endif
@@ -2012,7 +2014,7 @@ LCError LCWaitReset(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	LCWaitLock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	p_wait -> broken = false;
 	LCWaitUnlock(p_wait);
 	

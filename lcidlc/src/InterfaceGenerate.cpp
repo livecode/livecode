@@ -1015,11 +1015,20 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *s_exports_template = "\
+#ifndef __WINDOWS__\n\
+#define DLLEXPORT\n\
 extern \"C\" MCExternalInfo *MCExternalDescribe(void) __attribute__((visibility(\"default\")));\n\
 extern \"C\" bool MCExternalInitialize(MCExternalInterface *) __attribute__((visibility(\"default\")));\n\
 extern \"C\" void MCExternalFinalize(void) __attribute__((visibility(\"default\")));\n\
+#else\n\
+#define DLLEXPORT __declspec(dllexport)\n\
+extern \"C\" MCExternalInfo DLLEXPORT *MCExternalDescribe(void);\n\
+extern \"C\" bool DLLEXPORT MCExternalInitialize(MCExternalInterface *);\n\
+extern \"C\" void DLLEXPORT MCExternalFinalize(void);\n\
+#endif\n\
+\
 \n\
-MCExternalInfo *MCExternalDescribe(void)\n\
+MCExternalInfo DLLEXPORT *MCExternalDescribe(void)\n\
 {\n\
 	static MCExternalInfo s_info;\n\
 	s_info . version = 1;\n\
@@ -1029,7 +1038,7 @@ MCExternalInfo *MCExternalDescribe(void)\n\
 	return &s_info;\n\
 }\n\
 \n\
-bool MCExternalInitialize(MCExternalInterface *p_interface)\n\
+bool DLLEXPORT MCExternalInitialize(MCExternalInterface *p_interface)\n\
 {\n\
 	s_interface = p_interface;\n\
 \n\
@@ -1052,7 +1061,7 @@ bool MCExternalInitialize(MCExternalInterface *p_interface)\n\
 	return true;\n\
 }\n\
 \n\
-void MCExternalFinalize(void)\n\
+void DLLEXPORT MCExternalFinalize(void)\n\
 {\n\
 #ifdef kMCExternalShutdown\n\
 	kMCExternalShutdown();\n\
