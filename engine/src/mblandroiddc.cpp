@@ -920,6 +920,8 @@ static void *mobile_main(void *arg)
 	// our current thread to the VM.
 
 	MCLog("Attaching thread to VM %p", s_java_vm);
+    
+    MCInitialize();
 
 	// Attach ourselves to the JVM - if we fail, we just return.
 	if (s_java_vm -> AttachCurrentThread(&s_java_env, nil) < 0)

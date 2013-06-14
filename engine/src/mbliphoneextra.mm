@@ -910,37 +910,38 @@ static Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameter
 	return ES_NORMAL;
 }
 
-static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
-{
-	char *t_url, *t_filename;
-	t_url = nil;
-	t_filename = nil;
-	
-	MCExecPoint ep(nil, nil, nil);
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_url = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	if (p_parameters != nil)
-	{
-		p_parameters -> eval_argument(ep);
-		t_filename = ep . getsvalue() . clone();
-		p_parameters = p_parameters -> getnext();
-	}
-	
-	extern void MCS_downloadurl(MCObject *, const char *, const char *);
-	MCS_downloadurl(MCtargetptr, t_url, t_filename);
-	
-    // IM-2012-04-04 - these were allocated but not released
-    MCCStringFree(t_url);
-    MCCStringFree(t_filename);
-    
-	return ES_NORMAL;
-}
+// MOVED TO mblhandlers.cpp
+//static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
+//{
+//	char *t_url, *t_filename;
+//	t_url = nil;
+//	t_filename = nil;
+//	
+//	MCExecPoint ep(nil, nil, nil);
+//	
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_url = ep . getsvalue() . clone();
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	if (p_parameters != nil)
+//	{
+//		p_parameters -> eval_argument(ep);
+//		t_filename = ep . getsvalue() . clone();
+//		p_parameters = p_parameters -> getnext();
+//	}
+//	
+//	extern void MCS_downloadurl(MCObject *, const char *, const char *);
+//	MCS_downloadurl(MCtargetptr, t_url, t_filename);
+//	
+//    // IM-2012-04-04 - these were allocated but not released
+//    MCCStringFree(t_url);
+//    MCCStringFree(t_filename);
+//    
+//	return ES_NORMAL;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1594,6 +1595,8 @@ extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_par
 
 extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
+
+extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
 
 extern Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters);
 

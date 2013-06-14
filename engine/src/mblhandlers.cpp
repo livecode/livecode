@@ -3059,6 +3059,26 @@ Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
+{
+	MCAutoStringRef t_url, t_filename;
+	
+	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+	
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameters, "xx", &t_url, &t_filename);
+    
+    if (t_success)
+        MCMiscExecLibUrlDownloadToFile(ctxt, *t_url, *t_filename);
+	
+    if (!ctxt.HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 static MCMediaType MCMediaTypeFromCString(const char *p_string)
