@@ -960,6 +960,10 @@ static void *mobile_main(void *arg)
 	{
 		MCLog("X_init failed", 0);
 
+		// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread to exit
+		// finish LiveCodeActivity
+		MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+		
 		// Yield for now as we don't detect error states correctly.
 		co_yield_to_android();
 
@@ -1001,16 +1005,17 @@ static void *mobile_main(void *arg)
 	}
 
 	MCLog("Shutting down project", 0);
-	MCexitall = False;
-	MCdefaultstackptr->getcard()->message(MCM_shut_down);
-	MCQuit();
-
-	while(s_engine_running)
-		X_main_loop_iteration();
-
+	
 	MCLog("Calling X_close", 0);
 	X_close();
 
+	// IM-2013-05-01: [[ BZ 10586 ]] signal java ui thread
+	// and wait for it to exit
+	MCAndroidEngineRemoteCall("finishActivity", "v", nil);
+	
+	while (s_engine_running)
+		co_yield_to_android();
+	
 	// Free argument.
 	MCCStringFree(t_args[0]);
 
@@ -1569,11 +1574,10 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doDestroy(JNIEnv *env, job
 
 	s_engine_running = false;
 
-	// Set the global exit vars appropriately and yield to the engine thread
-	// which should heed them and exit.
+	// IM-2013-05-01: [[ BZ 10586 ]] we should now only be called when the
+	// engine thread is about to exit, so set s_engine_running to false & yield
+	// so it can finish terminating
 	MCLog("Yielding to engine thread to perform finalization phase", 0);
-	MCquit = True;
-	MCexitall = True;
 	co_yield_to_engine();
 
 	// Finalize bitmap mutex
