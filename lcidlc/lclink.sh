@@ -4,17 +4,19 @@ if [ "$LIVECODE_DEP_FILE" == "" ]; then
 	LIVECODE_DEP_FILE="$SRCROOT/$PRODUCT_NAME.ios"
 fi
 
-DEPS=`cat "$LIVECODE_DEP_FILE"`
-DEPS=${DEPS//library /-l}
-DEPS=${DEPS//weak-framework /-weak }
-DEPS=${DEPS//framework /-framework }
-DEPS=${DEPS//-weak /-weak_framework }
+if [ -f "$LIVECODE_DEP_FILE" ]; then
+    DEPS=`cat "$LIVECODE_DEP_FILE"`
+    DEPS=${DEPS//library /-l}
+    DEPS=${DEPS//weak-framework /-weak }
+    DEPS=${DEPS//framework /-framework }
+    DEPS=${DEPS//-weak /-weak_framework }
 
-echo $DEPS
+    echo $DEPS
 
-# At the moment, lcidlc still includes things that need objective-c, even if 'objc-objects' is not
-# used - thus we force linking to Foundation, dittor for UIKit
-DEPS="$DEPS -framework Foundation -framework UIKit"
+    # At the moment, lcidlc still includes things that need objective-c, even if 'objc-objects' is not
+    # used - thus we force linking to Foundation, dittor for UIKit
+    DEPS="$DEPS -framework Foundation -framework UIKit"    
+fi
 
 # The list of symbols exported by an iOS external is fixed
 SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
