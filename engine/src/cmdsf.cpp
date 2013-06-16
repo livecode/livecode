@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "context.h"
 #include "osspec.h"
+#include "regex.h"
 
 #include "socket.h"
 #include "mcssl.h"
@@ -1122,31 +1123,73 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	return t_status;
 }
 
-MCFilter::~MCFilter()
+MCPatternMatcher::~MCPatternMatcher()
 {
-	delete container;
-	delete pattern;
+}
+
+Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
+{
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+	{
+		if (strequal(pattern, MCregexpatterns[i]))
+		{
+			compiled = MCregexcache[i];
+			break;
+		}
+	}
+	if (compiled == NULL)
+	{
+		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
+		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
+		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
+		{
+			MCregexcache[i] = MCregexcache[i - 1];
+			MCregexpatterns[i] = MCregexpatterns[i - 1];
+		}
+		MCregexpatterns[0] = pattern;
+		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
+		compiled = MCregexcache[0];
+	}
+	if (compiled == NULL)
+	{
+		MCeerror->add
+		(EE_MATCH_BADPATTERN, line, pos, MCR_geterror());
+		return ES_ERROR;
+	}
+    return ES_NORMAL;
+}
+
+Boolean MCRegexMatcher::match(char *s)
+{
+	return MCR_exec(compiled, s, strlen(s));
+}
+
+Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
+{
+    // wildcard patterns are not compiled
+    return ES_NORMAL;
 }
 
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
+Boolean MCWildcardMatcher::match(char *s, char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
-
+    
 	while (*s)
 	{
 		scc = *s++;
 		c = *p++;
 		switch (c)
 		{
-		case OPEN_BRACKET:
+            case OPEN_BRACKET:
 			{
 				Boolean ok = False;
 				int lc = -1;
 				int notflag = 0;
-
+                
 				if (*p == '!' )
 				{
 					notflag = 1;
@@ -1190,36 +1233,36 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 						}
 				}
 			}
-			return False;
-		case '?':
-			break;
-		case '*':
-			while (*p == '*')
-				p++;
-			if (*p == 0)
-				return True;
-			--s;
-			c = *p;
-			while (*s)
-				if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
+                return False;
+            case '?':
+                break;
+            case '*':
+                while (*p == '*')
+                    p++;
+                if (*p == 0)
+                    return True;
+                --s;
+                c = *p;
+                while (*s)
+                    if ((casesensitive ? c != *s : MCS_tolower(c) != MCS_tolower(*s))
 				        && *p != '?' && *p != OPEN_BRACKET)
-					s++;
-				else
-					if (match(s++, p, casesensitive))
-						return True;
-			return False;
-		case 0:
-			return scc == 0;
-		default:
-			if (casesensitive)
-			{
-				if (c != scc)
-					return False;
-			}
-			else
-				if (MCS_tolower(c) != MCS_tolower(scc))
-					return False;
-			break;
+                        s++;
+                    else
+                        if (match(s++, p, casesensitive))
+                            return True;
+                return False;
+            case 0:
+                return scc == 0;
+            default:
+                if (casesensitive)
+                {
+                    if (c != scc)
+                        return False;
+                }
+                else
+                    if (MCS_tolower(c) != MCS_tolower(scc))
+                        return False;
+                break;
 		}
 	}
 	while (*p == '*')
@@ -1227,14 +1270,27 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 	return *p == 0;
 }
 
-// JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-//     pass linedelimiter as extra parameter to filterlines
-char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
-                            Boolean casesensitive)
+Boolean MCWildcardMatcher::match(char *s)
+{
+	char *p = pattern;
+	return match(s, p, casesensitive);
+}
+
+MCFilter::~MCFilter()
+{
+	delete container;
+	delete target;
+	delete it;
+	delete source;
+	delete pattern;
+	delete matcher;
+}
+
+char *MCFilter::filterdelimited(char *sstring, char delimiter)
 {
 	uint4 offset = 0;
 	char *dstring = new char[strlen(sstring) + 1];
-	char *line;
+	char *chunk;
 
 	// OK-2010-01-11: Bug 7649 - Filter command was incorrectly removing empty lines.
 	// Now does:
@@ -1276,15 +1332,15 @@ char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
 		if (t_return != nil)
 			*t_return = '\0';
 
-		line = t_string;
-		if (match(line, pstring, casesensitive) != out)
+		chunk = t_string;
+		if (matcher->match(chunk) != discardmatches)
 		{
 			if (offset)
 				dstring[offset++] = delimiter;
 
 			// MW-2010-10-18: [[ Bug 7864 ]] This should be a 32-bit integer - removing 65535 char limit.
-			uint32_t length = strlen(line);
-			memcpy(&dstring[offset], line, length);
+			uint32_t length = strlen(chunk);
+			memcpy(&dstring[offset], chunk, length);
 			offset += length;
 		}
 
@@ -1306,47 +1362,127 @@ char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
 
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
+	// Syntax :
+	//   filter [ ( lines | items ) of ] <container_or_exp>
+	//          ( with | without | [ not ] matching )
+	//          [ { wildcard | regex } [ pattern ] ] <pattern>
+	//          [ into <container> ]
+	//
+	Parse_errors t_error;
+	t_error = PE_UNDEFINED;
+    
 	initpoint(sp);
-	container = new MCChunk(True);
-	if (container->parse(sp, False) != PS_NORMAL)
+
+	// Parse the chunk type (if present)
+	if (t_error == PE_UNDEFINED)
 	{
-		MCperror->add
-		(PE_FILTER_BADDEST, sp);
+		// First check for 'lines' or 'items'.
+		if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_LINE) == PS_NORMAL)
+			chunktype = CT_LINE;
+		else if (sp.skip_token(SP_FACTOR, TT_CLASS, CT_ITEM) == PS_NORMAL)
+			chunktype = CT_ITEM;
+		// If we parsed a chunk then ensure there's an 'of'
+		if (chunktype != CT_UNDEFINED && sp.skip_token(SP_FACTOR, TT_OF) != PS_NORMAL)
+			t_error = PE_FILTER_BADDEST;
+	}
+
+	// If there was no error and no chunk type then default to line
+	if (t_error == PE_UNDEFINED && chunktype == CT_UNDEFINED)
+		chunktype = CT_LINE;
+
+	// Next parse the source container or expression
+	if (t_error == PE_UNDEFINED)
+	{
+		MCerrorlock++;
+		MCScriptPoint tsp(sp);
+		container = new MCChunk(True);
+		if (container->parse(sp, False) != PS_NORMAL)
+		{
+			sp = tsp;
+			MCerrorlock--;
+			delete container;
+			container = NULL;
+			if (sp.parseexp(True, True, &source) != PS_NORMAL)
+			{
+				t_error = PE_FILTER_BADDEST;
+			}
+		}
+		else
+			MCerrorlock--;
+	}
+
+	// Now look for the filter mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
+			discardmatches = True;
+		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_MATCHING) == PS_NORMAL)
+			discardmatches = False;
+		else if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL
+				 && sp.skip_token(SP_SUGAR, TT_PREP, PT_MATCHING) == PS_NORMAL)
+			discardmatches = True;
+		else
+			t_error = PE_FILTER_NOWITH;
+	}
+
+	// Now look for the optional pattern match mode
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_REGEX) == PS_NORMAL)
+			matchmode = MA_REGEX;
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_WILDCARD) == PS_NORMAL)
+			matchmode = MA_WILDCARD;
+		// Skip the optional pattern keyword
+		sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_PATTERN);
+	}
+
+	// Now parse the pattern expression
+	if (t_error == PE_UNDEFINED && sp.parseexp(False, True, &pattern) != PS_NORMAL)
+		t_error = PE_FILTER_BADEXP;
+
+	// Finally check for the (optional) 'into' clause
+	if (t_error == PE_UNDEFINED)
+	{
+		if (sp.skip_token(SP_FACTOR, TT_PREP, PT_INTO) == PS_NORMAL)
+		{
+			target = new MCChunk(True);
+			if (target->parse(sp, False) != PS_NORMAL)
+				t_error = PE_FILTER_BADDEST;
+        }
+        else if (container == NULL)
+			getit(sp, it);
+	}
+
+	// If we encountered an error, add it to the parse error stack and fail.
+	if (t_error != PE_UNDEFINED)
+	{
+		MCperror->add(t_error, sp);
 		return PS_ERROR;
 	}
-	if (sp.skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	Parse_stat stat = sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT);
-	if (stat == PS_ERROR)
-	{
-		MCperror->add
-		(PE_FILTER_NOWITH, sp);
-		return PS_ERROR;
-	}
-	else
-		if (stat == PS_NORMAL)
-			out = True;
-	if (sp.parseexp(False, True, &pattern) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_FILTER_BADEXP, sp);
-		return PS_ERROR;
-	}
+
+	// Success!
 	return PS_NORMAL;
 }
 
 Exec_stat MCFilter::exec(MCExecPoint &ep)
 {
-	if (container->eval(ep) != ES_NORMAL)
+	Exec_stat stat;
+
+	// Evaluate the container or source expression
+	if (container != NULL)
+		stat = container->eval(ep);
+	else
+		stat = source->eval(ep);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGET, line, pos);
 		return ES_ERROR;
 	}
 	char *sptr = ep.getsvalue().clone();
+
+	// Evaluate the pattern expression
 	if (pattern->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGETPATTERN, line, pos);
@@ -1354,18 +1490,48 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	char *pptr = ep.getsvalue().clone();
-    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-    //     pass linedelimiter as extra parameter to filterlines
-	char *dptr = filterlines(sptr, pptr, ep.getlinedel(), ep.getcasesensitive());
+
+	// Create the pattern matcher
+	if (matchmode == MA_REGEX)
+        matcher = new MCRegexMatcher(pptr);
+    else
+		matcher = new MCWildcardMatcher(pptr, ep.getcasesensitive());
+	stat = matcher->compile(line, pos);
+	if (stat != ES_NORMAL)
+	{
+		delete sptr;
+		delete pptr;
+		return stat;
+	}
+
+	// Determine the delimiter
+	char delimiter;
+	if (chunktype == CT_LINE)
+		delimiter = ep.getlinedel();
+	else
+		delimiter = ep.getitemdel();
+
+	// Filter the data
+	char *dptr = filterdelimited(sptr, delimiter);
 	delete sptr;
 	delete pptr;
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
-	if (container->set(ep, PT_INTO) != ES_NORMAL)
+
+	// Now put the filtered data into the correct container
+	if (it != NULL)
+		stat = it->set(ep);
+	else if (target != NULL)
+		stat = target->set(ep, PT_INTO);
+	else
+		stat = container->set(ep, PT_INTO);
+	if (stat != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTSET, line, pos);
 		return ES_ERROR;
 	}
+
+	// Success!
 	return ES_NORMAL;
 }
 
