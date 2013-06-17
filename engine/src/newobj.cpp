@@ -468,6 +468,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCGetResource;
 	case F_GET_RESOURCES:
 		return new MCGetResources;
+	case F_GEO_MEAN:
+		return new MCGeometricMean;
 	case F_GLOBAL_LOC:
 		return new MCGlobalLoc;
 	case F_GLOBALS:

@@ -51,6 +51,12 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
+	if (func == F_GEO_MEAN)
+	{ //use recursion to get count first
+		if (evalparams(F_COUNT, params, ep) != ES_NORMAL)
+			return ES_ERROR;
+		oldn = ep.getnvalue();
+	}
 	if (func == F_MEDIAN)
 	{ //use recursion to count items first
 		if (evalparams(F_UNDEFINED, params, ep) != ES_NORMAL)
@@ -678,6 +684,40 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 		MCS_seterrno(0);
 		MCeerror->add
 		(EE_EXP10_DOMAIN, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+MCGeometricMean::~MCGeometricMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_AVERAGE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;

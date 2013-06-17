@@ -2022,6 +2022,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCGeometricMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCGeometricMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCGeometricMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCLn : public MCFunction
 {
 	MCExpression *source;

@@ -2237,6 +2237,7 @@ void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
+	real8 tp;
 	switch (func)
 	{
 	case F_ARI_MEAN:
@@ -2246,6 +2247,17 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	case F_AVG_DEV:
 		tn = tn - oldn;
 		n += abs(tn);
+		nparams++;
+		break;
+	case F_COUNT:
+		n++;
+		nparams++;
+		break;
+	case F_GEO_MEAN:
+		if (nparams == 0)
+			n = 1;
+		tp = 1 / oldn;
+		n *= pow(tn, tp);
 		nparams++;
 		break;
 	case F_MAX:

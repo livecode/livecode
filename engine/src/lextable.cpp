@@ -863,6 +863,7 @@ LT factor_table[] =
         {"functionnames", TT_FUNCTION, F_FUNCTION_NAMES},
         {"getresource", TT_FUNCTION, F_GET_RESOURCE},
         {"getresources", TT_FUNCTION, F_GET_RESOURCES},
+        {"geometricmean", TT_FUNCTION, F_GEO_MEAN},
         {"globalloc", TT_FUNCTION, F_GLOBAL_LOC},
         {"globalnames", TT_FUNCTION, F_GLOBALS},
         {"globals", TT_FUNCTION, F_GLOBALS},
