@@ -326,6 +326,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAtan;
 	case F_AVERAGE:
 		return new MCAverage;
+	case F_AVG_DEV:
+		return new MCAvgDev;
 	case F_BACK_SCRIPTS:
 		return new MCBackScripts;
 	case F_BASE64_DECODE:

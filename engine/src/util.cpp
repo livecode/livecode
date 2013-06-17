@@ -2243,6 +2243,11 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		n += tn;
 		nparams++;
 		break;
+	case F_AVG_DEV:
+		tn = tn - oldn;
+		n += abs(tn);
+		nparams++;
+		break;
 	case F_MAX:
 		if (nparams++ == 0 || tn > n)
 			n = tn;

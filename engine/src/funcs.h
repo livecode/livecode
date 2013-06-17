@@ -1930,6 +1930,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCAvgDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCAvgDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCAvgDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCCompound : public MCFunction
 {
 	MCExpression *rate;

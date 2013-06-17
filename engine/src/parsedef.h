@@ -371,6 +371,7 @@ enum Functions {
     F_ATAN,
     F_ATAN2,
     F_AVERAGE,
+    F_AVG_DEV,
     F_BACK_SCRIPTS,
     F_BASE_CONVERT,
     F_BASE64_DECODE,
