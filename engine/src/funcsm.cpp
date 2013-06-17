@@ -45,15 +45,15 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	real8 n, tn, oldn;
 	n = oldn = 0.0;
 	MCSortnode *mditems = NULL;
-	if (func == F_AVG_DEV || func == F_POP_STD_DEV || func == F_SMP_STD_DEV)
+	if (func == F_AVG_DEV || func == F_POP_STD_DEV || func == F_POP_VARIANCE || func == F_SMP_STD_DEV || func == F_SMP_VARIANCE)
 	{ //use recursion to get average first
 		if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
 	if (func == F_GEO_MEAN)
-	{ //use recursion to get count first
-		if (evalparams(F_COUNT, params, ep) != ES_NORMAL)
+	{ //use recursion to count items first
+		if (evalparams(F_UNDEFINED, params, ep) != ES_NORMAL)
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
@@ -129,6 +129,8 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 		switch (func)
 		{
 		case F_ARI_MEAN:
+			n /= nparams;
+			break;
 		case F_AVG_DEV:
 			n /= nparams;
 			break;
@@ -149,8 +151,14 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 		case F_POP_STD_DEV:
 			n = sqrt(n/nparams);
 			break;
+		case F_POP_VARIANCE:
+			n /= nparams;
+			break;
 		case F_SMP_STD_DEV:
 			n = sqrt(n/(nparams - 1));
+			break;
+		case F_SMP_VARIANCE:
+			n /= nparams - 1;
 			break;
 		case F_UNDEFINED:
 			n = nparams;
@@ -1147,7 +1155,7 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-MCPopStdDev::~MCPopStdDev()
+MCPopulationStdDev::~MCPopulationStdDev()
 {
 	while (params != NULL)
 	{
@@ -1157,7 +1165,7 @@ MCPopStdDev::~MCPopStdDev()
 	}
 }
 
-Parse_stat MCPopStdDev::parse(MCScriptPoint &sp, Boolean the)
+Parse_stat MCPopulationStdDev::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
 	
@@ -1170,9 +1178,43 @@ Parse_stat MCPopStdDev::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCPopStdDev::eval(MCExecPoint &ep)
+Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
 {
 	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+MCPopulationVariance::~MCPopulationVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopulationVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_POP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_STDDEV_BADSOURCE, line, pos);
@@ -1315,7 +1357,7 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-MCSmpStdDev::~MCSmpStdDev()
+MCSampleStdDev::~MCSampleStdDev()
 {
 	while (params != NULL)
 	{
@@ -1325,7 +1367,7 @@ MCSmpStdDev::~MCSmpStdDev()
 	}
 }
 
-Parse_stat MCSmpStdDev::parse(MCScriptPoint &sp, Boolean the)
+Parse_stat MCSampleStdDev::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
 	
@@ -1338,9 +1380,43 @@ Parse_stat MCSmpStdDev::parse(MCScriptPoint &sp, Boolean the)
 	return PS_NORMAL;
 }
 
-Exec_stat MCSmpStdDev::eval(MCExecPoint &ep)
+Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 {
 	if (evalparams(F_SMP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+MCSampleVariance::~MCSampleVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCSampleVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_SMP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_STDDEV_BADSOURCE, line, pos);

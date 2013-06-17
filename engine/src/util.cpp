@@ -2249,10 +2249,6 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		n += abs(tn);
 		nparams++;
 		break;
-	case F_COUNT:
-		n++;
-		nparams++;
-		break;
 	case F_GEO_MEAN:
 		if (nparams == 0)
 			n = 1;
@@ -2280,7 +2276,9 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		nparams++;
 		break;
 	case F_POP_STD_DEV:
+	case F_POP_VARIANCE:
 	case F_SMP_STD_DEV:
+	case F_SMP_VARIANCE:
 		tn = tn - oldn;
 		n += tn * tn;
 		nparams++;

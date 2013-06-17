@@ -625,7 +625,9 @@ MCExpression *MCN_new_function(int2 which)
 	case F_PLATFORM:
 		return new MCPlatform;
 	case F_POP_STD_DEV:
-		return new MCPopStdDev;
+		return new MCPopulationStdDev;
+	case F_POP_VARIANCE:
+		return new MCPopulationVariance;
 	case F_PROCESSOR:
 		return new MCProcessor;
 	case F_PROCESS_ID:
@@ -700,7 +702,9 @@ MCExpression *MCN_new_function(int2 which)
 	case F_SIN:
 		return new MCSin;
 	case F_SMP_STD_DEV:
-		return new MCSmpStdDev;
+		return new MCSampleStdDev;
+	case F_SMP_VARIANCE:
+		return new MCSampleVariance;
 	case F_SOUND:
 		return new MCSound;
 	case F_SPECIAL_FOLDER_PATH:
