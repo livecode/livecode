@@ -1457,6 +1457,20 @@ void *MCAndroidGetContainer(void)
 	return (void *)s_android_container;
 }
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the Android system
+//   thread.
+void *MCAndroidGetSystemJavaEnv(void)
+{
+	return s_android_ui_env;
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the engine's script
+//   thread.
+void *MCAndroidGetScriptJavaEnv(void)
+{
+	return s_java_env;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view) __attribute__((visibility("default")));

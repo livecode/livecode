@@ -5,6 +5,24 @@ if [ "$LIVECODE_DEP_FILE" == "" ]; then
 fi
 
 DEPS=`cat "$LIVECODE_DEP_FILE"`
+
+SDK_MAJORVERSION=${SDK_NAME: -3}
+SDK_MAJORVERSION=${SDK_MAJORVERSION: 0:1}
+SDK_MINORVERSION=${SDK_NAME: -1}
+
+# Frameworks may not exist in older sdks so conditionally include
+for MAJORVERSION in 3 4 5 6 7; do
+    for MINORVERSION in 0 1 2 3 4; do
+        if [[ $SDK_MAJORVERSION -lt $MAJORVERSION || ($SDK_MAJORVERSION == $MAJORVERSION && $SDK_MINORVERSION -lt $MINORVERSION) ]]; then
+            DEPS="$(echo "$DEPS" | sed "/framework-$MAJORVERSION.$MINORVERSION /d")"
+            DEPS="$(echo "$DEPS" | sed "/weak-framework-$MAJORVERSION.$MINORVERSION /d")"
+        else
+            DEPS=${DEPS//framework-$MAJORVERSION.$MINORVERSION /framework }
+            DEPS=${DEPS//weak-framework-$MAJORVERSION.$MINORVERSION /weak-framework }
+        fi
+    done
+done
+
 DEPS=${DEPS//library /-l}
 DEPS=${DEPS//weak-framework /-weak }
 DEPS=${DEPS//framework /-framework }
@@ -16,8 +34,11 @@ echo $DEPS
 # used - thus we force linking to Foundation, dittor for UIKit
 DEPS="$DEPS -framework Foundation -framework UIKit"
 
-# The list of symbols exported by an iOS external is fixed
-SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
+# Support using the same script for old externals
+if [ "$SYMBOLS" != "_getXtable" ]; then
+    # The list of symbols exported by an iOS external is fixed
+    SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
+fi
 
 # Munge the passed in ARCHS environment variable into a form suitable for g++
 ARCHS="-arch ${ARCHS// / -arch }"

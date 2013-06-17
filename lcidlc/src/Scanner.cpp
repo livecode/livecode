@@ -76,6 +76,25 @@ static bool ScannerIsCommentPrefix(ScannerRef self)
 	return false;
 }
 
+static bool ScannerIsMultilineCommentPrefix(ScannerRef self)
+{
+	if (self -> input_buffer[self -> input_frontier] == '/' &&
+		self -> input_buffer[self -> input_frontier + 1] == '*')
+		return true;
+	
+	return false;
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Add support for /* ... */ style multi-line comments.
+static bool ScannerIsMultilineCommentSuffix(ScannerRef self)
+{
+	if (self -> input_buffer[self -> input_frontier] == '*' &&
+		self -> input_buffer[self -> input_frontier + 1] == '/')
+		return true;
+	
+	return false;
+}
+
 static bool ScannerIsIdentifierPrefix(ScannerRef self)
 {
 	char t_lookahead;
@@ -107,8 +126,11 @@ static bool ScannerIsNumberPrefix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if (t_lookahead >= '0' && t_lookahead <= '9')
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Allow negative integer constants.
+	if ((t_lookahead >= '0' && t_lookahead <= '9') ||
+        t_lookahead == '-')
 		return true;
+
 	return false;
 }
 
@@ -116,7 +138,7 @@ static bool ScannerIsIntegerSuffix(ScannerRef self)
 {
 	char t_lookahead;
 	t_lookahead = self -> input_buffer[self -> input_frontier];
-	if (t_lookahead >= '0' && t_lookahead <= '9')
+	if ((t_lookahead >= '0' && t_lookahead <= '9'))
 		return true;
 	return false;
 }
@@ -171,6 +193,26 @@ static void ScannerSkipComment(ScannerRef self)
 	}
 }
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Add support for /* ... */ style multi-line comments.
+static void ScannerSkipMultilineComment(ScannerRef self)
+{
+	while(!ScannerIsEndPrefix(self))
+	{
+		if (ScannerIsNewlinePrefix(self))
+			ScannerSkipNewline(self);
+		else if (ScannerIsMultilineCommentSuffix(self))
+		{
+			self -> input_frontier += 2;
+			self -> input_column += 2;
+			break;
+		}
+		
+		self -> input_frontier += 1;
+		self -> input_column += 1;
+	}
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Add support for /* ... */ style multi-line comments.
 static void ScannerSkipWhitespace(ScannerRef self)
 {
 	while(!ScannerIsEndPrefix(self))
@@ -184,6 +226,8 @@ static void ScannerSkipWhitespace(ScannerRef self)
 			ScannerSkipNewline(self);
 		else if (ScannerIsCommentPrefix(self))
 			ScannerSkipComment(self);
+		else if (ScannerIsMultilineCommentPrefix(self))
+			ScannerSkipMultilineComment(self);
 		else
 			break;
 	}

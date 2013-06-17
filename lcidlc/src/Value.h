@@ -77,4 +77,9 @@ double NumberGetReal(ValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MERG-2013-06-14: [[ ExternalsApiV5 ]] Implement boolean ValueRef type.
+bool BooleanCreateWithBool(bool value, ValueRef& r_value);
+
+bool BooleanGetBool(ValueRef value);
+
 #endif

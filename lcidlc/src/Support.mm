@@ -14,15 +14,24 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 #ifdef __OBJC__
 #import <Foundation/Foundation.h>
 #endif
 
 #include "LiveCode.h"
+
+#ifdef __WINDOWS__
+#include <windows.h>
+typedef unsigned int uint32_t;
+#else
+#include <pthread.h>
+#include <stdint.h>
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -154,7 +163,8 @@ typedef enum MCExternalContextVar
 	kMCExternalContextVarColumnDelimiter = 10,
 	kMCExternalContextVarRowDelimiter = 11,
 	kMCExternalContextVarDefaultStack = 12,
-	kMCExternalContextVarDefaultCard = 13
+	kMCExternalContextVarDefaultCard = 13,
+	kMCExternalContextVarWholeMatches = 14,
 } MCExternalContextVar;
 
 typedef enum MCExternalVariableQuery
@@ -164,10 +174,8 @@ typedef enum MCExternalVariableQuery
 	kMCExternalVariableQueryFormat = 3,
 	kMCExternalVariableQueryRetention = 4,
 	kMCExternalVariableQueryIsAnArray = 5,
-	kMCExternalVariableQueryIsAString = 6,
-	kMCExternalVariableQueryIsANumber = 7,
-	kMCExternalVariableQueryIsAnInteger = 8,
-	kMCExternalVariableQueryIsABoolean = 9,
+	kMCExternalVariableQueryIsASequence = 6,
+	kMCExternalVariableQueryIsEmpty = 7,
 } MCExternalVariableQuery;
 
 typedef enum MCExternalInterfaceQuery
@@ -177,6 +185,8 @@ typedef enum MCExternalInterfaceQuery
 	kMCExternalInterfaceQueryViewController = 3,
 	kMCExternalInterfaceQueryActivity = 4,
 	kMCExternalInterfaceQueryContainer = 5,
+	kMCExternalInterfaceQueryScriptJavaEnv = 6,
+	kMCExternalInterfaceQuerySystemJavaEnv = 7,
 } MCExternalInterfaceQuery;
 
 enum
@@ -215,6 +225,10 @@ typedef struct MCExternalInterface
 	MCError (*object_set)(MCObjectRef object, unsigned int options, const char *name, const char *key, MCVariableRef value);
 	MCError (*interface_query)(MCExternalInterfaceQuery query, void *result);
 	MCError (*object_update)(MCObjectRef object, unsigned int options, void *region);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] New context methods for script execution.
+	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value, ...);
+	MCError (*context_execute)(const char *p_expression, unsigned int options, ...);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -256,14 +270,29 @@ static MCError MCVariableRelease(MCVariableRef var)
 	return s_interface -> variable_release(var);
 }
 
+static MCError MCVariableClear(MCVariableRef var)
+{
+	return s_interface -> variable_clear(var);
+}
+
 static MCError MCVariableIsTransient(MCVariableRef var, bool *r_transient)
 {
 	return s_interface -> variable_query(var, kMCExternalVariableQueryIsTransient, r_transient);
 }
 
+static MCError MCVariableIsEmpty(MCVariableRef var, bool *r_empty)
+{
+	return s_interface -> variable_query(var, kMCExternalVariableQueryIsEmpty, r_empty);
+}
+
 static MCError MCVariableIsAnArray(MCVariableRef var, bool *r_array)
 {
 	return s_interface -> variable_query(var, kMCExternalVariableQueryIsAnArray, r_array);
+}
+
+static MCError MCVariableIsASequence(MCVariableRef var, bool *r_sequence)
+{
+	return s_interface -> variable_query(var, kMCExternalVariableQueryIsASequence, r_sequence);
 }
 
 static MCError MCVariableStore(MCVariableRef var, MCValueOptions options, void *value)
@@ -281,6 +310,289 @@ static MCError MCVariableFetch(MCVariableRef var, MCValueOptions options, void *
 ////////////////////////////////////////////////////////////////////////////////
 
 BEGIN_EXTERN_C
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from an internal
+//   variable.
+static LCError LCValueFetch(MCVariableRef var, unsigned int options, void *r_value);
+static LCError LCValueStore(MCVariableRef var, unsigned int options, void *r_value);
+
+#ifdef __OBJC__
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New methods to convert to/from objc-arrays
+//   and dictionaries.
+static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst);
+static LCError LCValueArrayFromObjcArray(MCVariableRef src, NSArray* r_dst);
+static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_dst);
+static LCError LCValueArrayFromObjcDictionary(MCVariableRef src, NSDictionary* r_dst);
+
+// Convert a LiveCode value into an element of an Objc Array/Dictionary. This
+// converts all non-array values to strings, arrays which are sequences to
+// NSArray, and arrays which are maps to NSDictionary.
+static LCError LCValueArrayValueToObjcValue(MCVariableRef var, id& r_dst)
+{
+	MCError t_error;
+	t_error = kMCErrorNone;
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_empty;
+		t_error = MCVariableIsEmpty(var, &t_is_empty);
+		if (t_error == kMCErrorNone && t_is_empty)
+		{
+			r_dst = @"";
+			return kLCErrorNone;
+		}
+	}
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_array;
+		t_error = MCVariableIsAnArray(var, &t_is_array);
+		if (t_error == kMCErrorNone && t_is_array)
+			return LCValueFetch(var, kLCValueOptionAsObjcString, &r_dst);
+	}
+	
+	if (t_error == kMCErrorNone)
+	{
+		bool t_is_sequence;
+		t_error = MCVariableIsASequence(var, &t_is_sequence);
+		if (t_error == kMCErrorNone && t_is_sequence)
+			return LCValueArrayToObjcArray(var, (NSArray*&)r_dst);
+	}
+	
+	if (t_error == kMCErrorNone)
+		return LCValueArrayToObjcDictionary(var, (NSDictionary*&)r_dst);
+	
+	return (LCError)t_error;
+}
+
+static LCError LCValueArrayValueFromObjcValue(MCVariableRef var, id src)
+{
+	if ([src isKindOfClass: [NSNull class]])
+		return (LCError)MCVariableClear(var);
+	
+	if ((CFBooleanRef)src == kCFBooleanTrue || (CFBooleanRef)src == kCFBooleanFalse)
+	{
+		bool t_bool;
+		t_bool = (CFBooleanRef)src == kCFBooleanTrue;
+		return LCValueStore(var, kLCValueOptionAsBoolean, &t_bool);
+	}
+		
+	if ([src isKindOfClass: [NSNumber class]])
+		return LCValueStore(var, kLCValueOptionAsObjcNumber, &src);
+		
+	if ([src isKindOfClass: [NSString class]])
+		return LCValueStore(var, kLCValueOptionAsObjcString, &src);
+		
+	if ([src isKindOfClass: [NSArray class]])
+		return LCValueArrayFromObjcArray(var, (NSArray *)src);
+	
+	if ([src isKindOfClass: [NSDictionary class]])
+		return LCValueArrayFromObjcDictionary(var, (NSDictionary *)src);
+	
+	NSString *t_as_string;
+	t_as_string = [src description];
+	return LCValueStore(var, kLCValueOptionAsObjcString, &t_as_string);
+}
+
+// Convert a LiveCode array into an NSArray. The returned NSArray is alloc'd.
+static LCError LCValueArrayToObjcArray(MCVariableRef src, NSArray*& r_dst)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	if (t_error == kLCErrorNone)
+	{
+		bool t_is_sequence;
+		t_error = (LCError)MCVariableIsASequence(src, &t_is_sequence);
+		if (t_error == kLCErrorNone && !t_is_sequence)
+			t_error = kLCErrorNotASequence;
+	}
+	
+	uint32_t t_count;
+	t_count = 0;
+	if (t_error = kLCErrorNone)
+		t_count = s_interface -> variable_count_keys(src, &t_count);
+	
+	id *t_objects;
+	t_objects = nil;
+	if (t_error == kLCErrorNone)
+	{
+		t_objects = (id *)calloc(sizeof(id), t_count);
+		if (t_objects == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	MCVariableIteratorRef t_iterator;
+	t_iterator = nil;
+	for(uint32_t i = 0; i < t_count && t_error == kLCErrorNone; i++)
+	{
+		// Fetch the key and value.
+		const char *t_key;
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_iterate_keys(src, &t_iterator, kMCOptionAsCString, &t_key, &t_value);
+		
+		// Now convert the value - remembering that LC sequences are 1 based, and
+		// Objc arrays are 0 based. Note that we don't have to validate the key as
+		// its guaranteed to be of the correct form as we checked the array was a
+		// sequence.
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueToObjcValue(t_value, t_objects[strtoul(t_key, nil, 10) - 1]);
+	}
+	
+	// If we succeeded, then try to build an NSArray.
+	NSArray *t_array;
+	if (t_error == kLCErrorNone)
+	{
+		t_array = [[NSArray alloc] initWithObjects: t_objects count: t_count];
+		if (t_array == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	if (t_error == kLCErrorNone)
+		r_dst = t_array;
+	
+	// We free the objects array since its copied by NSArray.
+	for(uint32_t i = 0; i < t_count; i++)
+		[t_objects[i] release];
+	free(t_objects);
+	
+	return t_error;
+}
+
+static LCError LCValueArrayFromObjcArray(MCVariableRef var, NSArray *src)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	for(unsigned int t_index = 0; t_index < [src count] && t_error == kLCErrorNone; t_index++)
+	{
+		char t_key[12];
+		if (t_error == kLCErrorNone)
+			sprintf(t_key, "%ud", t_index + 1);
+		
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, t_key, true, &t_value);
+		
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueFromObjcValue(t_value, [src objectAtIndex: t_index]);
+	}
+	
+	return t_error;
+}
+
+static LCError LCValueArrayToObjcDictionary(MCVariableRef src, NSDictionary*& r_dst)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	uint32_t t_count;
+	t_count = 0;
+	if (t_error = kLCErrorNone)
+		t_count = s_interface -> variable_count_keys(src, &t_count);
+	
+	id *t_keys, *t_values;
+	t_keys = t_values = nil;
+	if (t_error == kLCErrorNone)
+	{
+		t_keys = (id *)calloc(sizeof(id), t_count);
+		t_values = (id *)calloc(sizeof(id), t_count);
+		if (t_keys == nil || t_values == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	MCVariableIteratorRef t_iterator;
+	t_iterator = nil;
+	for(uint32_t i = 0; i < t_count && t_error == kLCErrorNone; i++)
+	{
+		// Fetch the key and value.
+		const char *t_key;
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_iterate_keys(src, &t_iterator, kMCOptionAsCString, &t_key, &t_value);
+		
+		// Convert the key.
+		if (t_error == kLCErrorNone)
+		{
+			t_keys[i] = [[NSString alloc] initWithCString: t_key encoding: NSMacOSRomanStringEncoding];
+			if (t_keys[i] == nil)
+				t_error = kLCErrorOutOfMemory;
+		}
+		
+		// Now convert the value.
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueToObjcValue(t_value, t_values[i]);
+	}
+	
+	// If we succeeded then build the dictionary.
+	NSDictionary *t_dictionary;
+	if (t_error == kLCErrorNone)
+	{
+		t_dictionary = [[NSDictionary alloc] initWithObjects: t_values forKeys: t_keys count: t_count];
+		if (t_dictionary == nil)
+			t_error = kLCErrorOutOfMemory;
+	}
+	
+	if (t_error == kLCErrorNone)
+		r_dst = t_dictionary;
+	
+	for(uint32_t i = 0; i < t_count; i++)
+	{
+		[t_keys[i] release];
+		[t_values[i] release];
+	}
+	free(t_keys);
+	free(t_values);
+	
+	return t_error;
+}
+
+static LCError LCValueArrayFromObjcDictionary(MCVariableRef var, NSDictionary *p_src)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+#ifndef __OBJC2__
+	NSEnumerator *t_enumerator;
+	t_enumerator = [p_src objectEnumerator];
+	for(;;)
+	{
+		id t_key;
+		t_key = [t_enumerator nextObject];
+		if (t_key == nil)
+			break;
+#else
+	for(id t_key in p_src)
+	{
+#endif
+		if (t_error == kLCErrorNone && ![t_key isKindOfClass: [NSString class]])
+			t_error = kLCErrorCannotEncodeMap;
+		
+		const char *t_key_cstring;
+		if (t_error == kLCErrorNone)
+		{
+			t_key_cstring = [(NSString *)t_key cStringUsingEncoding: NSMacOSRomanStringEncoding];
+			if (t_key_cstring == nil)
+				t_error = kLCErrorCannotEncodeCString;
+		}
+		
+		MCVariableRef t_value;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_lookup_key(var, kMCOptionAsCString, (void *)t_key_cstring, true, &t_value);
+		
+		if (t_error == kLCErrorNone)
+			t_error = LCValueArrayValueFromObjcValue(t_value, [p_src objectForKey: t_key]);
+	}
+	[t_pool release];
+	
+	return t_error;
+}
+
+#endif
 
 static unsigned int LCValueOptionsGetCaseSensitive(unsigned int p_options)
 {
@@ -306,10 +618,10 @@ static unsigned int LCValueOptionsGetNumberFormat(unsigned int p_options)
 	return ((p_options & kLCValueOptionMaskNumberFormat) + (1 << 26)) & kLCValueOptionMaskNumberFormat;
 }
 
-static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r_value)
+static LCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 
 	unsigned int t_options_to_use;
 	void *t_value_to_use;
@@ -318,8 +630,9 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 		double t_number_value;
 		LCBytes t_cdata_value;
 		char *t_cstring_value;
+		MCVariableRef t_array_value;
 	};
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		switch(p_options & kLCValueOptionMaskAs)
 		{
@@ -337,16 +650,25 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_options_to_use |= LCValueOptionsGetConvertOctals(p_options);
 				t_value_to_use = r_value;
 				break;
-				
+			case kLCValueOptionAsCData:
+				t_options_to_use = kMCOptionAsString;
+				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
+				t_value_to_use = &t_cdata_value;
+				break;
 			case kLCValueOptionAsCString:
 				t_options_to_use = kMCOptionAsCString;
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cstring_value;
 				break;
-			case kLCValueOptionAsCData:
+			case kLCValueOptionAsCChar:
 				t_options_to_use = kMCOptionAsString;
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cdata_value;
+				break;
+				
+			case kLCValueOptionAsLCArray:
+				t_options_to_use = kMCOptionAsVariable;
+				t_value_to_use = &t_array_value;
 				break;
 				
 #ifdef __OBJC__
@@ -365,19 +687,26 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				t_options_to_use |= LCValueOptionsGetNumberFormat(p_options);
 				t_value_to_use = &t_cdata_value;
 				break;
+			case kLCValueOptionAsObjcArray:
+			case kLCValueOptionAsObjcDictionary:
+				t_options_to_use = kMCOptionAsVariable;
+				t_value_to_use = &t_array_value;
+				break;
 #endif
 				
 			default:
-				t_error = (MCError)kLCErrorBadValueOptions;
+				t_error = kLCErrorBadValueOptions;
 		}
-		if (t_error == kMCErrorNone)
-			t_error = s_interface -> variable_fetch(p_var, t_options_to_use, t_value_to_use);
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_fetch(p_var, t_options_to_use, t_value_to_use);
 	}
 	
-	if (t_error == kMCErrorNone && t_value_to_use == r_value)
-		return kMCErrorNone;
+	// If the output value pointer was the one passed in, we are done.
+	if (t_error == kLCErrorNone && t_value_to_use == r_value)
+		return kLCErrorNone;
 	
-	if (t_error == kMCErrorNone)
+	// Otherwise we need to process the output value.
+	if (t_error == kLCErrorNone)
 	{
 		switch(p_options & kLCValueOptionMaskAs)
 		{
@@ -386,7 +715,7 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 				if (t_cstring_value != nil)
 					*(char **)r_value = t_cstring_value;
 				else
-					t_error = kMCErrorOutOfMemory;
+					t_error = kLCErrorOutOfMemory;
 				break;
 			case kLCValueOptionAsCData:
 			{
@@ -399,7 +728,43 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 					((LCBytes *)r_value) -> length = t_cdata_value . length;
 				}
 				else
-					t_error = kMCErrorOutOfMemory;
+					t_error = kLCErrorOutOfMemory;
+			}
+			break;
+			case kLCValueOptionAsCChar:
+			{
+				if (t_cdata_value . length == 1)
+					*(char *)r_value = *(char *)t_cdata_value . buffer;
+				else
+					t_error = kLCErrorNotAChar;
+			}
+			break;
+			
+			case kLCValueOptionAsLCArray:
+			{
+				// Check the value is actually an array.
+				bool t_is_array;
+				t_is_array = false;
+				if (t_error == kLCErrorNone)
+					t_error = (LCError)MCVariableIsAnArray(t_array_value, &t_is_array);
+				if (t_error == kLCErrorNone && !t_is_array)
+					t_error = kLCErrorNotAnArray;
+				
+				// Now clone the array.
+				MCVariableRef t_var_copy;
+				t_var_copy = nil;
+				if (t_error == kLCErrorNone)
+					t_error = (LCError)MCVariableCreate(&t_var_copy);
+				if (t_error == kLCErrorNone)
+					t_error = (LCError)MCVariableStore(t_var_copy, kMCOptionAsVariable, t_array_value);
+				if (t_error == kLCErrorNone)
+					*(LCArrayRef *)r_value = (LCArrayRef)t_array_value;
+				else
+				{
+					// Make sure we free the array if there's a problem.
+					if (t_var_copy != nil)
+						MCVariableRelease(t_var_copy);
+				}
 			}
 			break;
 				
@@ -413,17 +778,27 @@ static MCError LCValueFetch(MCVariableRef p_var, unsigned int p_options, void *r
 			case kLCValueOptionAsObjcData:
 				*(NSData **)r_value = [NSData dataWithBytes: t_cdata_value . buffer length: t_cdata_value . length];
 				break;
+			case kLCValueOptionAsObjcArray:
+				t_error = LCValueArrayToObjcArray(t_array_value, *(NSArray **)r_value);
+				if (t_error == kLCErrorNone)
+					[*(NSArray **)r_value autorelease];
+				break;
+			case kLCValueOptionAsObjcDictionary:
+				t_error = LCValueArrayToObjcDictionary(t_array_value, *(NSDictionary **)r_value);
+				if (t_error == kLCErrorNone)
+					[*(NSDictionary **)r_value autorelease];
+				break;
 #endif
 		}
 	}
 
-	return (MCError)t_error;
+	return t_error;
 }	
 
-static MCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p_value)
+static LCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 
 	unsigned int t_options_to_use;
 	void *t_value_to_use;
@@ -444,10 +819,17 @@ static MCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			t_options_to_use = p_options & kLCValueOptionMaskAs;
 			t_value_to_use = p_value;
 			break;
+		case kLCValueOptionAsCChar:
+			t_options_to_use = kMCOptionAsString;
+			t_value_to_use = &t_cdata_value;
+			t_cdata_value . buffer = p_value;
+			t_cdata_value . length = 1;
+			break;
 		case kLCValueOptionAsLCArray:
 			t_options_to_use = kMCOptionAsVariable;
 			t_value_to_use = *(void **)p_value;
 			break;
+			
 #ifdef __OBJC__
 		case kLCValueOptionAsObjcNumber:
 			t_options_to_use = kMCOptionAsReal;
@@ -460,7 +842,7 @@ static MCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			if (t_cstring_value != nil)
 				t_value_to_use = &t_cstring_value;
 			else
-				t_error = (MCError)kLCErrorCannotEncodeCString;
+				t_error = kLCErrorCannotEncodeCString;
 			break;
 		case kLCValueOptionAsObjcData:
 			t_options_to_use = kMCOptionAsString;
@@ -468,19 +850,75 @@ static MCError LCValueStore(MCVariableRef p_var, unsigned int p_options, void *p
 			t_cdata_value . length = [*(NSData **)p_value length];
 			t_value_to_use = &t_cdata_value;
 			break;
+		case kLCValueOptionAsObjcArray:
+		{
+			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
+			MCVariableRef t_tmp_array;
+			t_tmp_array = nil;
+			if (t_error == kLCErrorNone)
+				t_error = (LCError)MCVariableCreate(&t_tmp_array);
+			if (t_error == kLCErrorNone)
+				t_error = LCValueArrayFromObjcArray(t_tmp_array, *(NSArray **)p_value);
+			if (t_error == kLCErrorNone)
+				t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
+			if (t_tmp_array != nil)
+				MCVariableRelease(t_tmp_array);
+			return t_error;
+		}
+		//  break;
+		case kLCValueOptionAsObjcDictionary:
+		{
+			// For efficiency, we use 'exchange' - this prevents copying a temporary array.
+			MCVariableRef t_tmp_array;
+			t_tmp_array = nil;
+			if (t_error == kLCErrorNone)
+				t_error = (LCError)MCVariableCreate(&t_tmp_array);
+			if (t_error == kLCErrorNone)
+				t_error = LCValueArrayFromObjcDictionary(t_tmp_array, *(NSDictionary **)p_value);
+			if (t_error == kLCErrorNone)
+				t_error = (LCError)s_interface -> variable_exchange(p_var, t_tmp_array);
+			if (t_tmp_array != nil)
+				MCVariableRelease(t_tmp_array);
+			return t_error;
+		}
+		//  break;
 #endif
 		default:
-			t_error = (MCError)kLCErrorBadValueOptions;
+			t_error = kLCErrorBadValueOptions;
 			break;
 	}
+
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> variable_store(p_var, t_options_to_use, t_value_to_use);
 	
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> variable_store(p_var, t_options_to_use, t_value_to_use);
-	
-	return (MCError)t_error;
+	return t_error;
 }
 
-#ifdef __NOT_YET_FINISHED__
+// MW-2013-06-14: [[ ExternalsApiV5 ]] New internal method to convert between
+//   values.
+static LCError LCValueConvert(unsigned int p_in_options, void *p_in_value, unsigned int p_out_options, void *r_out_value)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	MCVariableRef t_temp_var;
+	t_temp_var = nil;
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableCreate(&t_temp_var);
+	
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableStore(t_temp_var, p_in_options, p_in_value);
+		
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableFetch(t_temp_var, p_out_options, r_out_value);
+		
+	if (t_temp_var != nil)
+		MCVariableRelease(t_temp_var);
+		
+	return t_error;
+}
+
+//////////
 
 LCError LCArrayCreate(unsigned int p_options, LCArrayRef* r_array)
 {
@@ -499,51 +937,21 @@ LCError LCArrayRelease(LCArrayRef p_array)
 
 //////////
 
-static MCError LCArrayFetchAsArray(MCVariableRef p_key, bool *r_exists, void *r_value)
+static LCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, MCVariableRef& r_var)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
-	
-	bool t_is_array;
-	if (t_error == kMCErrorNone)
-	{
-		s_interface -> variable_query(p_key, kMCExternalVariableQueryIsAnArray, &t_is_array);
-		if (!t_is_array)
-			t_error = kMCErrorNotAnArray;
-	}
-	
-	MCVariableRef t_var_copy;
-	t_var_copy = nil;
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> variable_create(&t_var_copy);
-	
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> variable_store(t_var_copy, kMCOptionAsVariable, p_key);
-	
-	if (t_error == kMCErrorNone)
-	{
-		*(LCArrayRef *)r_value = (LCArrayRef)t_var_copy;
-		*r_exists = true;
-	}
-	
-	return t_error;
-}
-
-static MCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, MCVariableRef& r_var)
-{
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	MCVariableRef t_key;
 	t_key = (MCVariableRef)p_array;
 	for(unsigned int i = 0; i <= p_path_length; i++)
 	{
-		t_error = s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i < p_path_length ? (void *)&p_path[i] : (void *)&p_key, false, &t_key);
-		if (t_error != kMCErrorNone || t_key == nil)
+		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i < p_path_length ? (void *)&p_path[i] : (void *)&p_key, false, &t_key);
+		if (t_error != kLCErrorNone || t_key == nil)
 			break;
 	}
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		r_var = t_key;
 	
 	return t_error;
@@ -553,15 +961,15 @@ static MCError LCArrayResolvePath(LCArrayRef p_array, unsigned int p_options, co
 
 LCError LCArrayCountKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, unsigned int *r_count)
 {		
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	if (p_options != 0)
-		t_error = (MCError)kLCErrorBadArrayOptions;
+		t_error = kLCErrorBadValueOptions;
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
@@ -569,28 +977,28 @@ LCError LCArrayCountKeysOnPath(LCArrayRef p_array, unsigned int p_options, const
 			t_var = (MCVariableRef)p_array;
 	}
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		if (t_var == nil)
 			*r_count = 0;
 		else
-			t_error = s_interface -> variable_count_keys(t_var, r_count);
+			t_error = (LCError)s_interface -> variable_count_keys(t_var, r_count);
 	}
 	
 	return (LCError)t_error;
 }
 
-LCError LCArrayListAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, char **p_key_buffer, unsigned int p_key_buffer_size)
+LCError LCArrayListKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, char **p_key_buffer, unsigned int p_key_buffer_size)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	if (p_options != 0)
-		t_error = (MCError)kLCErrorBadArrayOptions;
+		t_error = kLCErrorBadValueOptions;
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
@@ -600,36 +1008,36 @@ LCError LCArrayListAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, con
 	
 	unsigned int t_key_count;
 	t_key_count = 0;
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> variable_count_keys((MCVariableRef)p_array, &t_key_count);
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> variable_count_keys((MCVariableRef)p_array, &t_key_count);
 	
-	if (t_error == kMCErrorNone && t_key_count > p_key_buffer_size)
-		t_error = (MCError)kLCErrorArrayBufferTooSmall;
+	if (t_error == kLCErrorNone && t_key_count > p_key_buffer_size)
+		t_error = kLCErrorArrayBufferTooSmall;
 	
 	char **t_keys;
 	t_keys = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		t_keys = (char **)calloc(sizeof(char *), t_key_count);
 		if (t_keys == nil)
-			t_error = (MCError)kLCErrorOutOfMemory;
+			t_error = (LCError)kLCErrorOutOfMemory;
 	}
 	
 	MCVariableIteratorRef t_iterator;
 	t_iterator = nil;
-	for(unsigned int i = 0; i < t_key_count && t_error == kMCErrorNone; i++)
+	for(unsigned int i = 0; i < t_key_count && t_error == kLCErrorNone; i++)
 	{
 		MCVariableRef t_key_var;
-		t_error = s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsCString, &t_keys[i], &t_key_var);
-		if (t_error == kMCErrorNone)
+		t_error = (LCError)s_interface -> variable_iterate_keys(t_var, &t_iterator, kMCOptionAsCString, &t_keys[i], &t_key_var);
+		if (t_error == kLCErrorNone)
 		{
 			t_keys[i] = strdup(t_keys[i]);
 			if (t_keys[i] == NULL)
-				t_error = kMCErrorNone;
+				t_error = kLCErrorOutOfMemory;
 		}
 	}
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		memcpy(p_key_buffer, t_keys, sizeof(char *) * t_key_count);
 		memset(p_key_buffer + t_key_count, 0, sizeof(char *) * (p_key_buffer_size - t_key_count));
@@ -643,21 +1051,21 @@ LCError LCArrayListAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, con
 	
 	free(t_keys);
 	
-	return (LCError)t_error;
+	return t_error;
 }
 
-LCError LCArrayRemoveAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length)
+LCError LCArrayRemoveKeysOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	if (p_options != 0)
-		t_error = (MCError)kLCErrorBadArrayOptions;
+		t_error = kLCErrorBadValueOptions;
 	
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
@@ -665,7 +1073,7 @@ LCError LCArrayRemoveAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, c
 			t_var = (MCVariableRef)p_array;
 	}
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		s_interface -> variable_clear(t_var);
 	
 	return (LCError)t_error;
@@ -673,18 +1081,18 @@ LCError LCArrayRemoveAllKeysOnPath(LCArrayRef p_array, unsigned int p_options, c
 
 LCError LCArrayHasKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, bool *r_exists)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	if ((p_options & ~kLCValueOptionMaskCaseSensitive) != 0)
-		t_error = (MCError)kLCErrorBadArrayOptions;
+		t_error = kLCErrorBadValueOptions;
 
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length, p_key, t_var);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		*r_exists = t_var != nil;
 	
 	return (LCError)t_error;
@@ -700,15 +1108,15 @@ LCError LCArrayHasKeyWithPath(LCArrayRef p_array, unsigned int p_options, const 
 
 LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, bool *r_exists, void *r_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length, p_key, t_var);
 	
-	if (t_error == kMCErrorNone && t_var == nil)
+	if (t_error == kLCErrorNone && t_var == nil)
 	{
 		switch(p_options & kLCValueOptionMaskAs)
 		{
@@ -720,6 +1128,9 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 			break;
 		case kLCValueOptionAsReal:
 			*(double *)r_value = 0.0;
+			break;
+		case kLCValueOptionAsCChar:
+			*(char *)r_value = '\0';
 			break;
 		case kLCValueOptionAsCData:
 			((LCBytes *)r_value) -> length = 0;
@@ -733,23 +1144,20 @@ LCError LCArrayLookupKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 			*(void **)r_value = nil;
 			break;
 		default:
-			t_error = (MCError)kLCErrorBadArrayOptions;
+			t_error = kLCErrorBadValueOptions;
 			break;
 		}
 		
-		if (t_error == kMCErrorNone)
+		if (t_error == kLCErrorNone)
 			*r_exists = false;
 		
-		return (LCError)t_error;
+		return t_error;
 	}
-	
-	if (t_error == kMCErrorNone && (p_options & kLCValueOptionMaskAs) == kLCValueOptionAsLCArray)
-		return (LCError)LCArrayFetchAsArray(t_var, r_exists, r_value);
-	
-	if (t_error == kMCErrorNone)
+
+	if (t_error == kLCErrorNone)
 		t_error = LCValueFetch(t_var, p_options, r_value);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		*r_exists = true;
 	
 	return (LCError)t_error;
@@ -777,8 +1185,8 @@ LCError LCArrayFetchKeyWithPath(LCArrayRef p_array, unsigned int p_options, cons
 
 LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key, void *p_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 
 	unsigned int t_path_index;
 	MCVariableRef t_previous_key, t_key;
@@ -786,35 +1194,33 @@ LCError LCArrayStoreKeyOnPath(LCArrayRef p_array, unsigned int p_options, const 
 	for(t_path_index = 0; t_path_index <= p_path_length; t_path_index++)
 	{
 		t_previous_key = t_key;
-		t_error = s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, t_path_index < p_path_length ? (void *)&p_path[t_path_index] : (void *)&p_key, false, &t_key);
-		if (t_error != kMCErrorNone || t_key == nil)
+		t_error = (LCError)s_interface -> variable_lookup_key((MCVariableRef)t_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, t_path_index < p_path_length ? (void *)&p_path[t_path_index] : (void *)&p_key, false, &t_key);
+		if (t_error != kLCErrorNone || t_key == nil)
 			break;
 	}
 	
-	if (t_error == kMCErrorNone && t_key == nil)
-		t_error = s_interface -> variable_create(&t_key);
+	if (t_error == kLCErrorNone && t_key == nil)
+		t_error = (LCError)s_interface -> variable_create(&t_key);
 	
-	if (t_error == kMCErrorNone)
-	{
+	if (t_error == kLCErrorNone)
 		t_error = LCValueStore(t_key, p_options, p_value);
-	}
 	
-	if (t_error == kMCErrorNone && t_path_index == p_path_length + 1)
+	if (t_error == kLCErrorNone && t_path_index == p_path_length + 1)
 		return kLCErrorNone;
 	
 	MCVariableRef t_parent_key;
 	t_parent_key = nil;
-	if (t_error == kMCErrorNone && t_path_index < p_path_length)
-		t_error = s_interface -> variable_create(&t_parent_key);
+	if (t_error == kLCErrorNone && t_path_index < p_path_length)
+		t_error = (LCError)s_interface -> variable_create(&t_parent_key);
 	
-	for(unsigned int i = p_path_length + 1; i > t_path_index && t_error == kMCErrorNone; i--)
+	for(unsigned int i = p_path_length + 1; i > t_path_index && t_error == kLCErrorNone; i--)
 	{
 		MCVariableRef t_key_value;
-		if (t_error == kMCErrorNone)
-			t_error = s_interface -> variable_lookup_key(i - 1 == t_path_index ? t_previous_key : t_parent_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i <= p_path_length ? (void *)&p_path[i - 1] : (void *)&p_key, true, &t_key_value);
-		if (t_error == kMCErrorNone)
-			t_error = s_interface -> variable_exchange(t_key_value, t_key);
-		if (t_error == kMCErrorNone)
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_lookup_key(i - 1 == t_path_index ? t_previous_key : t_parent_key, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, i <= p_path_length ? (void *)&p_path[i - 1] : (void *)&p_key, true, &t_key_value);
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)s_interface -> variable_exchange(t_key_value, t_key);
+		if (t_error == kLCErrorNone)
 		{
 			MCVariableRef t;
 			t = t_parent_key;
@@ -842,15 +1248,15 @@ LCError LCArrayStoreKeyWithPath(LCArrayRef p_array, unsigned int p_options, cons
 
 LCError LCArrayRemoveKeyOnPath(LCArrayRef p_array, unsigned int p_options, const char **p_path, unsigned int p_path_length, const char *p_key)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	if ((p_options & ~kLCValueOptionMaskCaseSensitive) != 0)
-		t_error = (MCError)kLCErrorBadArrayOptions;
+		t_error = kLCErrorBadValueOptions;
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		if (p_path_length != 0)
 			t_error = LCArrayResolvePath(p_array, p_options, p_path, p_path_length - 1, p_path[p_path_length - 1], t_var);
@@ -858,8 +1264,8 @@ LCError LCArrayRemoveKeyOnPath(LCArrayRef p_array, unsigned int p_options, const
 			t_var = (MCVariableRef)p_array;
 	}
 	
-	if (t_error == kMCErrorNone && t_var != nil)
-		t_error = s_interface -> variable_remove_key(t_var, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, (void *)&p_key);
+	if (t_error == kLCErrorNone && t_var != nil)
+		t_error = (LCError)s_interface -> variable_remove_key(t_var, LCValueOptionsGetCaseSensitive(p_options) | kMCOptionAsCString, (void *)&p_key);
 		
 	return (LCError)t_error;
 }
@@ -879,14 +1285,14 @@ LCError LCArrayCountKeys(LCArrayRef array, unsigned int options, unsigned int *r
 	return LCArrayCountKeysOnPath(array, options, nil, 0, r_count);
 }
 
-LCError LCArrayListAllKeys(LCArrayRef array, unsigned int options, char **key_buffer, unsigned int key_buffer_size)
+LCError LCArrayListKeys(LCArrayRef array, unsigned int options, char **key_buffer, unsigned int key_buffer_size)
 {
-	return LCArrayListAllKeysOnPath(array, options, nil, 0, key_buffer, key_buffer_size);
+	return LCArrayListKeysOnPath(array, options, nil, 0, key_buffer, key_buffer_size);
 }
 
-LCError LCArrayRemoveAllKeys(LCArrayRef array, unsigned int options)
+LCError LCArrayRemoveKeys(LCArrayRef array, unsigned int options)
 {
-	return LCArrayRemoveAllKeysOnPath(array, options, nil, 0);
+	return LCArrayRemoveKeysOnPath(array, options, nil, 0);
 }
 
 LCError LCArrayHasKey(LCArrayRef array, unsigned int options, const char *key, bool *r_exists)
@@ -914,8 +1320,6 @@ LCError LCArrayRemoveKey(LCArrayRef array, unsigned int options, const char *key
 	return LCArrayRemoveKeyWithPath(array, options, &key, 1);
 }
 
-#endif
-
 END_EXTERN_C
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -924,6 +1328,8 @@ BEGIN_EXTERN_C
 
 typedef struct __LCObject *LCObjectRef;
 typedef struct __LCWait *LCWaitRef;
+
+//////////
 
 LCError LCContextMe(LCObjectRef *r_object)
 {
@@ -943,6 +1349,141 @@ LCError LCContextDefaultStack(LCObjectRef *r_object)
 LCError LCContextDefaultCard(LCObjectRef *r_object)
 {
 	return (LCError)s_interface -> context_query(kMCExternalContextVarDefaultCard, r_object);
+}
+
+//////////
+
+LCError LCContextCaseSensitive(bool *r_case_sensitive)
+{
+	return (LCError)s_interface -> context_query(kMCExternalContextVarCaseSensitive, r_case_sensitive);
+}
+
+LCError LCContextConvertOctals(bool *r_convert_octals)
+{
+	return (LCError)s_interface -> context_query(kMCExternalContextVarConvertOctals, r_convert_octals);
+}
+
+LCError LCContextWholeMatches(bool *r_whole_matches)
+{
+	if (s_interface -> version < 5)
+		return kLCErrorNotImplemented;
+	return (LCError)s_interface -> context_query(kMCExternalContextVarWholeMatches, r_whole_matches);
+}
+
+//////////
+
+static LCError LCContextQueryDelimiter(MCExternalContextVar p_var, unsigned int p_options, void *r_value)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	// Fetch the delimiter char from the context - this is returned as a uint32_t, but is just
+	// a native char.
+	uint32_t t_delimiter_char;
+	t_delimiter_char = '\0';
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> context_query(p_var, &t_delimiter_char);
+	
+	// Convert the native char to the requested output.
+	if (t_error == kLCErrorNone)
+	{
+		char t_native_delimiter_char;
+		t_native_delimiter_char = (char)t_delimiter_char;
+		t_error = LCValueConvert(kLCValueOptionAsCChar, &t_delimiter_char, p_options, r_value);
+	}
+	
+	return t_error;
+}
+
+LCError LCContextItemDelimiter(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryDelimiter(kMCExternalContextVarItemDelimiter, p_options, r_value);
+}
+
+LCError LCContextLineDelimiter(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryDelimiter(kMCExternalContextVarLineDelimiter, p_options, r_value);
+}
+
+LCError LCContextRowDelimiter(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryDelimiter(kMCExternalContextVarRowDelimiter, p_options, r_value);
+}
+
+LCError LCContextColumnDelimiter(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryDelimiter(kMCExternalContextVarColumnDelimiter, p_options, r_value);
+}
+
+//////////
+
+static LCError LCContextQueryVariable(MCExternalContextVar p_var, unsigned int p_options, void *r_value)
+{
+	LCError t_error;
+	t_error = kLCErrorNone;
+
+	// Request (direct) access to the variable.
+	MCVariableRef t_var;
+	t_var = nil;
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> context_query(kMCExternalContextVarIt, &t_var);
+	
+	// Fetch the value in the format requested.
+	if (t_error == kLCErrorNone)
+		t_error = LCValueFetch(t_var, p_options, r_value);
+		
+	// Release the variable.
+	if (t_var != nil)
+		MCVariableRelease(t_var);
+		
+	return t_error;
+}
+
+LCError LCContextIt(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryVariable(kMCExternalContextVarIt, p_options, r_value);
+}
+
+LCError LCContextResult(unsigned int p_options, void *r_value)
+{
+	return LCContextQueryVariable(kMCExternalContextVarResult, p_options, r_value);
+}
+
+//////////
+
+LCError LCContextEvaluate(const char *p_expression, unsigned int p_options, void *r_value)
+{	
+	if (s_interface -> version < 5)
+		return kLCErrorNotImplemented;
+		
+	//////////
+
+	LCError t_error;
+	t_error = kLCErrorNone;
+
+	MCVariableRef t_value_var;
+	t_value_var = nil;
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableCreate(&t_value_var);
+		
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, t_value_var);
+		
+	if (t_error == kLCErrorNone)
+		t_error = LCValueFetch(t_value_var, p_options, r_value);
+		
+	if (t_value_var != nil)
+		MCVariableRelease(t_value_var);
+		
+	return t_error;
+}
+
+LCError LCContextExecute(const char *p_commands, unsigned int p_options)
+{
+	if (s_interface -> version < 5)
+		return kLCErrorNotImplemented;
+		
+	return (LCError)s_interface -> context_execute(p_commands, 0);
 }
 
 //////////
@@ -1002,7 +1543,7 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 				t_error = MCVariableStore(t_argv[i], kMCOptionAsBoolean, &t_boolean);
 			}
 			break;
-				
+
 			case 'i': // integer
 			{
 				int t_integer;
@@ -1016,6 +1557,17 @@ static MCError LCArgumentsCreateV(const char *p_signature, va_list p_args, MCVar
 				double t_real;
 				t_real = va_arg(p_args, double);
 				t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_real);
+			}
+			break;
+				
+			case 'c': // char
+			{
+				char t_char;
+				LCBytes t_bytes;
+				t_bytes . buffer = &t_char;
+				t_bytes . length = 1;
+				t_char = (char)va_arg(p_args, int);
+				t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
 			}
 			break;
 				
@@ -1251,46 +1803,46 @@ LCError LCObjectSend(LCObjectRef p_object, const char *p_message, const char *p_
 
 LCError LCObjectGet(LCObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, void *r_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 	
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
-		t_error = MCVariableCreate(&t_var);
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableCreate(&t_var);
 	
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> object_get((MCObjectRef)p_object, p_options, p_name, p_key, t_var);
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> object_get((MCObjectRef)p_object, p_options, p_name, p_key, t_var);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_error = LCValueFetch(t_var, p_options, r_value);
 	
 	if (t_var != nil)
 		MCVariableRelease(t_var);
 	
-	return (LCError)t_error;
+	return t_error;
 }
 
 LCError LCObjectSet(LCObjectRef p_object, unsigned int p_options, const char *p_name, const char *p_key, void *p_value)
 {
-	MCError t_error;
-	t_error = kMCErrorNone;
+	LCError t_error;
+	t_error = kLCErrorNone;
 		
 	MCVariableRef t_var;
 	t_var = nil;
-	if (t_error == kMCErrorNone)
-		t_error = MCVariableCreate(&t_var);
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)MCVariableCreate(&t_var);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 		t_error = LCValueStore(t_var, p_options, p_value);
 	
-	if (t_error == kMCErrorNone)
-		t_error = s_interface -> object_set((MCObjectRef)p_object, p_options, p_name, p_key, t_var);
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> object_set((MCObjectRef)p_object, p_options, p_name, p_key, t_var);
 	
 	if (t_var != nil)
 		MCVariableRelease(t_var);
 	
-	return (LCError)t_error;
+	return t_error;
 }
 
 /////////
@@ -1301,9 +1853,31 @@ struct __LCWait
 	unsigned int options;
 	bool running;
 	bool broken;
+#ifdef __WINDOWS__
+	HANDLE lock;
+#else
 	pthread_mutex_t lock;
+#endif
 };
 
+static void LCWaitLock(LCWaitRef p_wait)
+{
+#ifdef __WINDOWS__
+	WaitForSingleObject(p_wait -> lock, INFINITE);
+#else
+	pthread_mutex_lock(&p_wait -> lock);
+#endif
+}
+
+static void LCWaitUnlock(LCWaitRef p_wait)
+{
+#ifdef __WINDOWS__
+	ReleaseMutex(p_wait -> lock);
+#else
+	pthread_mutex_unlock(&p_wait -> lock);
+#endif
+}
+	
 LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 {		
 	LCWaitRef t_wait;
@@ -1315,7 +1889,11 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 	t_wait -> options = p_options;
 	t_wait -> running = false;
 	t_wait -> broken = false;
+#ifdef __WINDOWS__
+	t_wait -> lock = CreateMutex(NULL, FALSE, NULL);
+#else
 	pthread_mutex_init(&t_wait -> lock, nil);
+#endif
 	
 	*r_wait = t_wait;
 	
@@ -1324,7 +1902,11 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 
 static void LCWaitDestroy(LCWaitRef p_wait)
 {
+#ifdef __WINDOWS__
+	CloseHandle(p_wait -> lock);
+#else
 	pthread_mutex_destroy(&p_wait -> lock);
+#endif
 	free(p_wait);
 }
 
@@ -1333,9 +1915,9 @@ LCError LCWaitRetain(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	p_wait -> references += 1;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }
@@ -1344,10 +1926,10 @@ LCError LCWaitRelease(LCWaitRef p_wait)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-
-	pthread_mutex_lock(&p_wait -> lock);
+	
+	LCWaitLock(p_wait);
 	p_wait -> references -= 1;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	if (p_wait -> references == 0)
 		LCWaitDestroy(p_wait);
@@ -1359,10 +1941,10 @@ LCError LCWaitIsRunning(LCWaitRef p_wait, bool *r_running)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-
-	pthread_mutex_lock(&p_wait -> lock);
+	
+	LCWaitLock(p_wait);
 	*r_running = p_wait -> running;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }	
@@ -1375,7 +1957,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	
 	p_wait -> running = true;
 
@@ -1386,11 +1968,11 @@ LCError LCWaitRun(LCWaitRef p_wait)
 		if (p_wait -> broken)
 			break;
 		
-		pthread_mutex_unlock(&p_wait -> lock);
+		LCWaitUnlock(p_wait);
 		
 		t_error = s_interface -> wait_run(nil, p_wait -> options & kLCWaitOptionDispatching);
 		
-		pthread_mutex_lock(&p_wait -> lock);
+		LCWaitLock(p_wait);
 		
 		if (t_error != kMCErrorNone)
 			break;
@@ -1398,7 +1980,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 
 	p_wait -> running = false;
 	
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return (LCError)t_error;
 }
@@ -1413,13 +1995,13 @@ LCError LCWaitBreak(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	if (p_wait -> running && !p_wait -> broken)
 	{
 		p_wait -> broken = true;
 		s_interface -> wait_break(nil, 0);
 	}
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return kLCErrorNone;
 }
@@ -1432,9 +2014,9 @@ LCError LCWaitReset(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	pthread_mutex_lock(&p_wait -> lock);
+	LCWaitLock(p_wait);
 	p_wait -> broken = false;
-	pthread_mutex_unlock(&p_wait -> lock);
+	LCWaitUnlock(p_wait);
 	
 	return (LCError)kMCErrorNone;
 }
@@ -1529,7 +2111,9 @@ LCError LCImageAttach(LCObjectRef p_object, unsigned int p_options, LCImageRef *
 	LCError t_error;
 	t_error = kLCErrorNone;
 	
+	// MERG-2013-06-14: [[ Bug ]] Make sure 'name' is initialized to nil.
 	char *t_name;
+	t_name = nil;
 	if (t_error == kLCErrorNone)
 		t_error = LCObjectGet(p_object, kLCValueOptionAsCString, "name", nil, &t_name);
 	
@@ -1705,7 +2289,7 @@ LCError LCPostOnMainThread(unsigned int p_options, LCPostOnMainThreadCallback p_
 	return (LCError)s_interface -> engine_run_on_main_thread((void *)p_callback, p_context, kMCRunOnMainThreadPost | kMCRunOnMainThreadRequired | kMCRunOnMainThreadSafe | kMCRunOnMainThreadDeferred);
 }
 
-#ifdef __OBJC__
+#if defined(__OBJC__) && defined(__BLOCKS__)
 static void LCRunBlockOnSystemThreadCallback(void *p_context)
 {
 	void (^t_callback)(void) = (void (^)(void))p_context;
@@ -1903,7 +2487,7 @@ static bool error__bad_string_conversion(void)
 	return false;
 }
 
-static bool error__bad_api_call(MCError err)
+static bool error__bad_api_call(LCError err)
 {
 	error__format("internal api error (%d)", err);
 	return false;
@@ -1945,258 +2529,250 @@ static bool default__cstring(const char *arg, char*& r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool fetch__report_error(LCError err, const char *arg)
+{
+	if (err == kLCErrorOutOfMemory)
+		return error__out_of_memory();
+	if (err == kLCErrorNotABoolean)
+		return error__format("parameter '%s' is not a boolean", arg);
+	if (err == kLCErrorNotAString)
+		return error__format("parameter '%s' is not a string", arg);
+	if (err == kLCErrorNotABinaryString)
+		return error__format("parameter '%s' is not a binary string", arg);
+	if (err == kLCErrorNotAnInteger)
+		return error__format("parameter '%s' is not an integer", arg);
+	if (err == kLCErrorNotANumber)
+		return error__format("parameter '%s' is not a number", arg);
+	if (err == kLCErrorNumberTooBig)
+		return error__format("parameter '%s' is too big", arg);
+	if (err == kLCErrorNotASequence)
+		return error__format("parameter '%s' is not a sequence", arg);
+	if (err == kLCErrorNotAnArray)
+		return error__format("parameter '%s' is not an array", arg);
+	return error__bad_api_call(err);
+}
+
 static bool fetch__bool(const char *arg, MCVariableRef var, bool& r_value)
 {
-	MCError err;
-	err = MCVariableFetch(var, kMCOptionAsBoolean, &r_value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsBoolean, &r_value);
+	if (err == kLCErrorNone)
 		return true;
-	if (err == kMCErrorNotABoolean)
-		return error__format("parameter '%s' is not a boolean", arg);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__cstring(const char *arg, MCVariableRef var, char*& r_value)
 {
-	MCError err;
-	err = MCVariableFetch(var, kMCOptionAsCString, &r_value);
-	if (err == kMCErrorNone)
-	{
-		r_value = strdup(r_value);
-		if (r_value != nil)
-			return true;
-		return error__out_of_memory();
-	}
-	if (err == kMCErrorNotACString)
-		return error__format("parameter '%s' is not a string", arg);
-	return error__bad_api_call(err);
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsCString, &r_value);
+	if (err == kLCErrorNone)
+		return true;
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__cdata(const char *arg, MCVariableRef var, LCBytes& r_value)
 {
-	MCError err;
-	err = MCVariableFetch(var, kMCOptionAsString, &r_value);
-	if (err == kMCErrorNone)
-	{
-		if (r_value . length == 0)
-			return true;
-		
-		void *buffer;
-		buffer = malloc(r_value . length);
-		if (buffer != nil)
-		{
-			memcpy(buffer, r_value . buffer, r_value . length);
-			r_value . buffer = buffer;
-			return true;
-		}
-		return error__out_of_memory();
-	}
-	if (err == kMCErrorNotAString)
-		return error__format("parameter '%s' is not a binary string", arg);
-	return error__bad_api_call(err);
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsCData, &r_value);
+	if (err == kLCErrorNone)
+		return true;
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__int(const char *arg, MCVariableRef var, int& r_value)
 {
-	MCError err;
-	err = MCVariableFetch(var, kMCOptionAsInteger, &r_value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsInteger, &r_value);
+	if (err == kLCErrorNone)
 		return true;
-	if (err == kMCErrorNotAnInteger || err == kMCErrorNotANumber)
-		return error__format("parameter '%s' is not an integer", arg);
-	if (err == kMCErrorNumericOverflow)
-		return error__format("parameter '%s' is too big", arg);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__double(const char *arg, MCVariableRef var, double& r_value)
 {
-	MCError err;
-	err = MCVariableFetch(var, kMCOptionAsReal, &r_value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsReal, &r_value);
+	if (err == kLCErrorNone)
 		return true;
-	if (err == kMCErrorNotANumber)
-		return error__format("parameter '%s' is not a number", arg);
-	if (err == kMCErrorNumericOverflow)
-		return error__format("parameter '%s' is too big", arg);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
+}
+
+static bool fetch__lc_array(const char *arg, MCVariableRef var, LCArrayRef& r_array)
+{
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsLCArray, &r_array);
+	if (err == kLCErrorNone)
+		return true;
+	return fetch__report_error(err, arg);
 }
 
 #ifdef __OBJC__
 static bool fetch__objc_string(const char *arg, MCVariableRef var, NSString*& r_string)
 {
-	MCError err;
-	char *cstring;
-	err = MCVariableFetch(var, kMCOptionAsCString, &cstring);
-	if (err == kMCErrorNone)
-	{
-		r_string = [NSString stringWithCString: cstring encoding: NSMacOSRomanStringEncoding];
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsObjcString, &r_string);
+	if (err == kLCErrorNone)
 		return true;
-	}
-	if (err == kMCErrorNotACString)
-		return error__format("parameter '%s' is not a string", arg);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__objc_number(const char *arg, MCVariableRef var, NSNumber*& r_number)
 {
-	double real;
-	if (!fetch__double(arg, var, real))
-		return false;
-	r_number = [NSNumber numberWithDouble: real];
-	return true;
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsObjcNumber, &r_number);
+	if (err == kLCErrorNone)
+		return true;
+	return fetch__report_error(err, arg);
 }
 
 static bool fetch__objc_data(const char *arg, MCVariableRef var, NSData*& r_data)
 {
-	MCError err;
-	LCBytes data;
-	err = MCVariableFetch(var, kMCOptionAsString, &data);
-	if (err == kMCErrorNone)
-	{
-		r_data = [NSData dataWithBytes: data . buffer length: data . length];
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsObjcData, &r_data);
+	if (err == kLCErrorNone)
 		return true;
-	}
-	if (err == kMCErrorNotAString)
-		return error__format("parameter '%s' is not a binary string", arg);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
 }
-#endif
 
-#ifdef __NOT_YET_FINISHED__
-
-static bool fetch__lc_array(const char *arg, MCVariableRef var, LCArrayRef& r_array)
+static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray**& r_array)
 {
-	MCError err;
-	bool t_is_array;
-	err = MCVariableIsAnArray(var, &t_is_array);
-	if (err == kMCErrorNone && !t_is_array)
-		return error__format("parameter '%s' is not an array", arg);
-	
-	MCVariableRef array;
-	array = nil;
-	if (err == kMCErrorNone)
-		err = MCVariableCreate(&array);
-	if (err == kMCErrorNone)
-		err = MCVariableStore(array, kMCOptionAsVariable, var);
-	if (err == kMCErrorNone)
-	{
-		r_array = (LCArrayRef)array;
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsObjcArray, &r_array);
+	if (err == kLCErrorNone)
 		return true;
-	}
-	if (array != nil)
-		MCVariableRelease(array);
-	return error__bad_api_call(err);
+	return fetch__report_error(err, arg);
 }
 
+static bool fetch__objc_dictionary(const char *arg, MCVariableRef var, NSDictionary*& r_dictionary)
+{
+	LCError err;
+	err = LCValueFetch(var, kLCValueOptionAsObjcDictionary, &r_dictionary);
+	if (err == kLCErrorNone)
+		return true;
+	return fetch__report_error(err, arg);
+}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool store__report_error(LCError err)
+{
+	if (err == kLCErrorOutOfMemory)
+		return error__out_of_memory();
+	if (err == kLCErrorCannotEncodeCString)
+		return error__bad_string_conversion();
+	return error__bad_api_call(err);
+}
+
 static bool store__int(MCVariableRef var, int value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsInteger, &value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsInteger, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__double(MCVariableRef var, double value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsReal, &value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsReal, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__bool(MCVariableRef var, bool value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsBoolean, &value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsBoolean, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__cstring(MCVariableRef var, const char* value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsCString, &value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsCString, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__cdata(MCVariableRef var, LCBytes value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsString, (void *)&value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsCData, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
+}
+
+static bool store__lc_array(MCVariableRef var, LCArrayRef value)
+{
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsLCArray, &value);
+	if (err == kLCErrorNone)
+		return true;
+	return store__report_error(err);
 }
 
 #ifdef __OBJC__
 static bool store__objc_string(MCVariableRef var, NSString* value)
 {
-	const char *cstring;
-	cstring = [value cStringUsingEncoding: NSMacOSRomanStringEncoding];
-	if (cstring == nil)
-		return error__bad_string_conversion();
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsCString, &cstring);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsObjcString, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__objc_number(MCVariableRef var, NSNumber* value)
 {
-	double real;
-	real = [value doubleValue];
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsReal, &real);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsObjcNumber, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
 static bool store__objc_data(MCVariableRef var, NSData* value)
 {
-	LCBytes data;
-	data . buffer = (char *)[value bytes];
-	data . length = [value length];
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsString, &data);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsObjcData, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
-#endif
 
-#ifdef __NOT_YET_FINISHED__
-
-static bool store__lc_array(MCVariableRef var, LCArrayRef value)
+static bool store__objc_array(MCVariableRef var, NSArray* value)
 {
-	MCError err;
-	err = MCVariableStore(var, kMCOptionAsVariable, (void *)value);
-	if (err == kMCErrorNone)
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsObjcArray, &value);
+	if (err == kLCErrorNone)
 		return true;
-	return error__bad_api_call(err);
+	return store__report_error(err);
 }
 
+static bool store__objc_dictionary(MCVariableRef var, NSDictionary* value)
+{
+	LCError err;
+	err = LCValueStore(var, kLCValueOptionAsObjcDictionary, &value);
+	if (err == kLCErrorNone)
+		return true;
+	return store__report_error(err);
+}
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool verify__out_parameter(const char *arg, MCVariableRef var)
 {
-	MCError err;
+	LCError err;
 	bool transient;
-	err = MCVariableIsTransient(var, &transient);
-	if (err == kMCErrorNone)
+	err = (LCError)MCVariableIsTransient(var, &transient);
+	if (err == kLCErrorNone)
 	{
 		if (!transient)
 			return true;
@@ -2216,7 +2792,8 @@ static bool verify__out_parameter(const char *arg, MCVariableRef var)
 extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) __attribute__((visibility("default")));
 
 static JavaVM *s_java_vm = nil;
-static JNIEnv *s_java_env = nil;
+static JNIEnv *s_android_env = nil;
+static JNIEnv *s_engine_env = nil;
 static jclass s_java_class = nil;
 
 //////////
@@ -2237,12 +2814,12 @@ static jobject java__get_container(void)
 
 //////////
 
-static bool java_from__bool(bool p_value)
+static bool java_from__bool(JNIEnv *env, bool p_value)
 {
 	return p_value;
 }
 
-static jobject java_from__cstring(const char *p_value)
+static jobject java_from__cstring(JNIEnv *env, const char *p_value)
 {
 	size_t t_char_count;
 	t_char_count = strlen(p_value);
@@ -2253,42 +2830,42 @@ static jobject java_from__cstring(const char *p_value)
 		t_chars[i] = p_value[i];
 	
 	jobject t_java_value;
-	t_java_value = (jobject)s_java_env -> NewString(t_chars, t_char_count);
+	t_java_value = (jobject)env -> NewString(t_chars, t_char_count);
 	
 	return t_java_value;
 }
 
-static jobject java_from__cdata(LCBytes p_value)
+static jobject java_from__cdata(JNIEnv *env, LCBytes p_value)
 {
 	jobject t_java_value;
-	t_java_value = (jobject)s_java_env -> NewByteArray(p_value . length);
+	t_java_value = (jobject)env -> NewByteArray(p_value . length);
 	s_java_env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
 	return t_java_value;
 }
 
-static int java_from__int(int p_value)
+static int java_from__int(JNIEnv *env, int p_value)
 {
 	return p_value;
 }
 
-static double java_from__double(double p_value)
+static double java_from__double(JNIEnv *env, double p_value)
 {
 	return p_value;
 }
 
 //////////
 
-static bool java_to__bool(bool p_value)
+static bool java_to__bool(JNIEnv *env, bool p_value)
 {
 	return p_value;
 }
 
-static char *java_to__cstring(jobject p_value)
+static char *java_to__cstring(JNIEnv *env, jobject p_value)
 {
 	const jchar *t_unichars;
 	uint32_t t_unichar_count;
-	t_unichars = s_java_env -> GetStringChars((jstring)p_value, nil);
-	t_unichar_count = s_java_env -> GetStringLength((jstring)p_value);
+	t_unichars = env -> GetStringChars((jstring)p_value, nil);
+	t_unichar_count = env -> GetStringLength((jstring)p_value);
 	
 	char *t_native_value;
 	t_native_value = (char *)malloc(t_unichar_count + 1);
@@ -2296,54 +2873,54 @@ static char *java_to__cstring(jobject p_value)
 		t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
 	t_native_value[t_unichar_count] = 0;
 	
-	s_java_env -> ReleaseStringChars((jstring)p_value, t_unichars);
+	env -> ReleaseStringChars((jstring)p_value, t_unichars);
 	
 	return t_native_value;
 }
 
-static LCBytes java_to__cdata(jobject p_value)
+static LCBytes java_to__cdata(JNIEnv *env, jobject p_value)
 {
 	LCBytes t_native_value;
-	t_native_value . length = s_java_env -> GetArrayLength((jbyteArray)p_value);
+	t_native_value . length = env -> GetArrayLength((jbyteArray)p_value);
 	t_native_value . buffer = malloc(t_native_value . length);
 	jbyte *t_bytes;
-	t_bytes = s_java_env -> GetByteArrayElements((jbyteArray)p_value, nil);
+	t_bytes = env -> GetByteArrayElements((jbyteArray)p_value, nil);
 	memcpy(t_native_value . buffer, t_bytes, t_native_value . length);
-	s_java_env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
+	env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
 	return t_native_value;
 }
 
-static int java_to__int(int p_value)
+static int java_to__int(JNIEnv *env, int p_value)
 {
 	return p_value;
 }
 
-static double java_to__double(double p_value)
+static double java_to__double(JNIEnv *env, double p_value)
 {
 	return p_value;
 }
 
 //////////
 
-static void java_free__bool(bool p_value)
+static void java_free__bool(JNIEnv *env, bool p_value)
 {
 }
 
-static void java_free__cstring(jobject p_value)
+static void java_free__cstring(JNIEnv *env, jobject p_value)
 {
-	s_java_env -> DeleteLocalRef(p_value);
+	env -> DeleteLocalRef(p_value);
 }
 
-static void java_free__cdata(jobject p_value)
+static void java_free__cdata(JNIEnv *env, jobject p_value)
 {
-	s_java_env -> DeleteLocalRef(p_value);
+	env -> DeleteLocalRef(p_value);
 }
 
-static void java_free__int(int p_value)
+static void java_free__int(JNIEnv *env, int p_value)
 {
 }
 
-static void java_free__double(double p_value)
+static void java_free__double(JNIEnv *env, double p_value)
 {
 }
 

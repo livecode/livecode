@@ -14,21 +14,20 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
-#ifndef __MC_NOTIFY__
-#define __MC_NOTIFY__
+// The name of the external (note external name must be all lowercase!)
+external revtestexternal
 
-bool MCNotifyInitialize(void);
-void MCNotifyFinalize(void);
+// This external uses C++ name mangling (by virtue of the fact the source file is obj-c++)
+use c++-naming
+// This external uses obj-c objects and autorelease pools.
+use objc-objects
 
-// MW-2010-09-04: Added 'safe' parameter. If true, the notification will only
-//   be performed at the next script-safe point.
-bool MCNotifyPush(void (*callback)(void *), void *state, bool block, bool safe);
+// Declare the startup/shutdown routines (these are optional)
+on startup call revTestExternalStartup
+on shutdown call revTestExternalShutdown
 
-// MW-2010-09-04: If 'safe' is true then all notifications will be dispatched
-//   otherwise only ones which are for non-script safe points will be.
-bool MCNotifyDispatch(bool safe);
+command revTestExternalTestWait
 
-// MW-2013-06-14: [[ ExternalsApiV5 ]] Wake up any currently running 'wait'.
-void MCNotifyPing(bool p_high_priority);
+command revTestExternalTestPost
 
-#endif
+command revTestExternalTestArrays

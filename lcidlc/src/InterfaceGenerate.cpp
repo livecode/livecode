@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,159 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Support
 // Wrappers
 // Exports
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum NativeType
-{
-	kNativeTypeNone,
-	kNativeTypeBoolean,
-	kNativeTypeCString,
-	kNativeTypeCData,
-	kNativeTypeInteger,
-	kNativeTypeReal,
-	kNativeTypeObjcString,
-	kNativeTypeObjcNumber,
-	kNativeTypeObjcData,
-	kNativeTypeObjcArray,
-	kNativeTypeObjcDictionary,
-	
-	kNativeTypeEnum
-};
-
-static NativeType NativeTypeFromName(NameRef p_type)
-{
-	if (NameEqualToCString(p_type, "boolean"))
-		return kNativeTypeBoolean;
-	else if (NameEqualToCString(p_type, "c-string"))
-		return kNativeTypeCString;
-	else if (NameEqualToCString(p_type, "c-data"))
-		return kNativeTypeCData;
-	else if (NameEqualToCString(p_type, "integer"))
-		return kNativeTypeInteger;
-	else if (NameEqualToCString(p_type, "real"))
-		return kNativeTypeReal;
-	else if (NameEqualToCString(p_type, "objc-string"))
-		return kNativeTypeObjcString;
-	else if (NameEqualToCString(p_type, "objc-number"))
-		return kNativeTypeObjcNumber;
-	else if (NameEqualToCString(p_type, "objc-data"))
-		return kNativeTypeObjcData;
-	else if (NameEqualToCString(p_type, "objc-array"))
-		return kNativeTypeObjcArray;
-	else if (NameEqualToCString(p_type, "objc-dictionary"))
-		return kNativeTypeObjcDictionary;
-		
-	return kNativeTypeEnum;
-}
-
-static const char *NativeTypeGetTypedef(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "bool";
-	case kNativeTypeCString:
-		return "char*";
-	case kNativeTypeCData:
-		return "LCBytes";
-	case kNativeTypeInteger:
-		return "int";
-	case kNativeTypeReal:
-		return "double";
-	case kNativeTypeObjcString:
-		return "NSString*";
-	case kNativeTypeObjcNumber:
-		return "NSNumber*";
-	case kNativeTypeObjcData:
-		return "NSData*";
-	case kNativeTypeObjcArray:
-		return "NSArray*";
-	case kNativeTypeObjcDictionary:
-		return "NSDictionary*";
-	case kNativeTypeEnum:
-		return "int";
-	default:
-		break;
-	}
-	return "<<unknown>>";
-}
-
-static const char *NativeTypeGetSecondaryPrefix(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeCString:
-	case kNativeTypeObjcString:
-	case kNativeTypeObjcNumber:
-	case kNativeTypeObjcData:
-	case kNativeTypeObjcArray:
-	case kNativeTypeObjcDictionary:
-		return "*";
-	}
-	
-	return "";
-}
-
-static const char *NativeTypeGetTag(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "bool";
-	case kNativeTypeCString:
-		return "cstring";
-	case kNativeTypeCData:
-		return "cdata";
-	case kNativeTypeInteger:
-		return "int";
-	case kNativeTypeReal:
-		return "double";
-	case kNativeTypeObjcString:
-		return "objc_string";
-	case kNativeTypeObjcNumber:
-		return "objc_number";
-	case kNativeTypeObjcData:
-		return "objc_data";
-	case kNativeTypeObjcArray:
-		return "objc_array";
-	case kNativeTypeObjcDictionary:
-		return "objc_dictionary";
-	case kNativeTypeEnum:
-		return "int";
-	default:
-		break;
-	}
-	return "<<unknown>>";
-}
-
-static const char *NativeTypeGetInitializer(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "false";
-	case kNativeTypeCString:
-	case kNativeTypeObjcString:
-	case kNativeTypeObjcNumber:
-	case kNativeTypeObjcData:
-	case kNativeTypeObjcArray:
-	case kNativeTypeObjcDictionary:
-		return "nil";
-	case kNativeTypeCData:
-		return "{ 0, nil }";
-	case kNativeTypeInteger:
-		return "0";
-	case kNativeTypeReal:
-		return "0.0";
-	case kNativeTypeEnum:
-		return "0";
-	default:
-		break;
-	}
-		
-	return nil;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -283,14 +131,15 @@ static const char *InterfaceGetReferenceSuffix(InterfaceRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern const char *g_support_template;
+extern "C" const char *g_support_template[];
 
 static bool InterfaceGenerateSupport(InterfaceRef self, CoderRef p_coder)
 {
 	if (self -> use_cpp_exceptions)
 		CoderWriteLine(p_coder, "#include <exception>");
 	
-	CoderWrite(p_coder, "%s", g_support_template);
+	for(int i = 0; g_support_template[i] != nil; i++)
+		CoderWrite(p_coder, "%s", g_support_template[i]);
 	
 	return true;
 }
@@ -404,106 +253,6 @@ static int64_t InterfaceResolveEnumElement(InterfaceRef self, NameRef p_name, Va
 	return 0;
 }
 
-static const char *native_type_to_java_type_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "jobject";
-		case kNativeTypeCData:
-			return "jobject";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_java_sig(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "Z";
-		case kNativeTypeCString:
-			return "Ljava/lang/String;";
-		case kNativeTypeCData:
-			return "[B";
-		case kNativeTypeInteger:
-			return "I";
-		case kNativeTypeReal:
-			return "D";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_java_method_type_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "Boolean";
-		case kNativeTypeCString:
-			return "Object";
-		case kNativeTypeCData:
-			return "Object";
-		case kNativeTypeInteger:
-			return "Int";
-		case kNativeTypeReal:
-			return "Double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_type_in_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "const char *";
-		case kNativeTypeCData:
-			return "LCBytes";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_type_out_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "char *";
-		case kNativeTypeCData:
-			return "LCBytes";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
 static void InterfaceGenerateMethodStubContext(InterfaceRef self, CoderRef p_coder, Handler *p_handler, bool p_in)
 {
 	NameRef t_name;
@@ -582,7 +331,7 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	t_java_sig = InterfaceGenerateJavaMethodSignature(self, p_handler);
 	CoderWriteLine(p_coder, "\tstatic jmethodID s_method = 0;");
 	CoderWriteLine(p_coder, "\tif (s_method == 0)");
-	CoderWriteLine(p_coder, "\t\ts_method = s_java_env -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", NameGetCString(t_name), t_java_sig);
+	CoderWriteLine(p_coder, "\t\ts_method = s_android_env -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", NameGetCString(t_name), t_java_sig);
 	free(t_java_sig);
 	
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
@@ -597,7 +346,7 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 		t_java_param_type = native_type_to_java_type_cstring(t_param_native_type);
 		
 		CoderWriteLine(p_coder, "\t%s t_param_%d;", t_java_param_type, i);
-		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(ctxt -> arg_%d);", i, NativeTypeGetTag(t_param_native_type), i);
+		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(s_android_env, ctxt -> arg_%d);", i, NativeTypeGetTag(t_param_native_type), i);
 	}
 	
 	const char *t_java_method_type, *t_c_return_type, *t_java_return_type;
@@ -618,21 +367,21 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 		CoderWriteLine(p_coder, "\t%s t_result;", t_java_return_type);
 	
 	if (t_variant -> return_type != nil)
-		CoderWrite(p_coder, "\tt_result = s_java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
+		CoderWrite(p_coder, "\tt_result = s_android_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
 	else
-		CoderWrite(p_coder, "\ts_java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
+		CoderWrite(p_coder, "\ts_android_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
 		CoderWrite(p_coder, ", t_param_%d", i);
 	CoderWrite(p_coder, ");\n");
 	
 	if (t_variant -> return_type != nil)
 	{
-		CoderWriteLine(p_coder, "\tctxt -> result = java_to__%s(t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
-		CoderWriteLine(p_coder, "\tjava_free__%s(t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tctxt -> result = java_to__%s(s_android_env, t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tjava_free__%s(s_android_env, t_result);", NativeTypeGetTag(NativeTypeFromName(t_variant -> return_type)));
 	}
 	
 	for(uindex_t i = 0; i < t_variant -> parameter_count; i++)
-		CoderWriteLine(p_coder, "\tjava_free__%s(t_param_%d);", NativeTypeGetTag(NativeTypeFromName(t_variant -> parameters[i] . type)), i);
+		CoderWriteLine(p_coder, "\tjava_free__%s(s_android_env, t_param_%d);", NativeTypeGetTag(NativeTypeFromName(t_variant -> parameters[i] . type)), i);
 	
 	CoderWriteLine(p_coder, "}");
 	CoderWrite(p_coder, "%s %s(", t_c_return_type, NameGetCString(t_name));
@@ -648,6 +397,7 @@ static void InterfaceGenerateJavaMethodStub(InterfaceRef self, CoderRef p_coder,
 	CoderWriteLine(p_coder, "}");
 }
 
+#ifdef NOT_READY
 static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler)
 {
 	NameRef t_name;
@@ -733,7 +483,114 @@ static void InterfaceGenerateNativeMethodStub(InterfaceRef self, CoderRef p_code
 	CoderWriteLine(p_coder, "}");
 	
 	MCCStringFree(t_native_name);
+}
+#endif
+
+static void InterfaceGenerateJavaHandlerStubParameters(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
+{
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+	{
+		if (i != 0)
+			CoderWrite(p_coder, ", ");
+		
+		const char *t_type;
+		t_type = native_type_to_type_in_cstring(NativeTypeFromName(p_variant -> parameters[i] . type));
+		
+		CoderWrite(p_coder, "%s p_param_%d", t_type, i);
+	}
+}
+
+static char *InterfaceGenerateJavaHandlerStubSignature(InterfaceRef self, Handler *p_handler, HandlerVariant *p_variant)
+{
+	char *t_signature;
+	t_signature = nil;
+	MCCStringAppend(t_signature, "(");
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		MCCStringAppend(t_signature, native_type_to_java_sig(NativeTypeFromName(p_variant -> parameters[i] . type)));
+	MCCStringAppend(t_signature, ")");
+	MCCStringAppend(t_signature, p_variant -> return_type != nil ? native_type_to_java_sig(NativeTypeFromName(p_variant -> return_type)) : "V");
+	return t_signature;
+}
+
+static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant)
+{	
+	// Compute the return types for various contexts.
+	const char *t_java_method_type, *t_c_return_type, *t_java_return_type;
+	if (p_variant -> return_type != nil)
+	{
+		t_java_method_type = native_type_to_java_method_type_cstring(NativeTypeFromName(p_variant -> return_type));
+		t_c_return_type = native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type));
+		t_java_return_type = native_type_to_java_type_cstring(NativeTypeFromName(p_variant -> return_type));
+	}
+	else
+	{
+		t_java_method_type = "Void";
+		t_c_return_type = "void";
+		t_java_return_type = "void";
+	}
 	
+	// Compute the env var.
+	const char *t_env_var;
+	if (p_handler -> is_tail)
+		t_env_var = "s_android_env";
+	else
+		t_env_var = "s_engine_env";
+	
+	// Generate the signature.
+	CoderWrite(p_coder, "%s %s(", t_c_return_type, NameGetCString(p_variant -> binding));
+	InterfaceGenerateJavaHandlerStubParameters(self, p_coder, p_handler, p_variant);
+	CoderWriteLine(p_coder, ")");
+	CoderWriteLine(p_coder, "{");
+	
+	// Generate code to fetch the static method id.
+	char *t_java_sig;
+	t_java_sig = InterfaceGenerateJavaHandlerStubSignature(self, p_handler, p_variant);
+	CoderWriteLine(p_coder, "\tstatic jmethodID s_method = 0;");
+	CoderWriteLine(p_coder, "\tif (s_method == 0)");
+	CoderWriteLine(p_coder, "\t\ts_method = %s -> GetStaticMethodID(s_java_class, \"%s\", \"%s\");", t_env_var, NameGetCString(p_variant -> binding), t_java_sig);
+	free(t_java_sig);
+	
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+	{
+		HandlerParameter *t_parameter;
+		t_parameter = &p_variant -> parameters[i];
+		
+		NativeType t_param_native_type;
+		t_param_native_type = NativeTypeFromName(t_parameter -> type);
+		
+		const char *t_java_param_type;
+		t_java_param_type = native_type_to_java_type_cstring(t_param_native_type);
+		
+		CoderWriteLine(p_coder, "\t%s t_param_%d;", t_java_param_type, i);
+		CoderWriteLine(p_coder, "\tt_param_%d = java_from__%s(%s, p_param_%d);", i, NativeTypeGetTag(t_param_native_type), t_env_var, i);
+	}
+	
+	if (p_variant -> return_type != nil)
+		CoderWriteLine(p_coder, "\t%s t_java_result;", t_java_return_type);
+	
+	if (p_variant -> return_type != nil)
+		CoderWrite(p_coder, "\tt_java_result = %s -> CallStatic%sMethod(s_java_class, s_method", t_env_var, t_java_method_type);
+	else
+		CoderWrite(p_coder, "\t%s -> CallStatic%sMethod(s_java_class, s_method", t_env_var, t_java_method_type);
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		CoderWrite(p_coder, ", t_param_%d", i);
+	CoderWrite(p_coder, ");\n");
+	
+	if (p_variant -> return_type != nil)
+	{
+		CoderWriteLine(p_coder, "\t%s result;", native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tt_result = java_to__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+	}
+	
+	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_param_%d);", NativeTypeGetTag(NativeTypeFromName(p_variant -> parameters[i] . type)), t_env_var, i);
+	
+	if (p_variant -> return_type != nil)
+		CoderWriteLine(p_coder, "\treturn t_result;");
+		
+	CoderWriteLine(p_coder, "}");
+
 }
 
 static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
@@ -743,17 +600,15 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 		Handler *t_handler;
 		t_handler = &self -> handlers[i];
 		
-		if (t_handler -> type == kHandlerTypeJava)
+		if (t_handler -> type == kHandlerTypeMethod)
 		{
-			// Generate stub for calling Java method.
-			InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
-			continue;
-		}
-		
-		if (t_handler -> type == kHandlerTypeNative)
-		{
-			// Generate stub for calling native method.
-			InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
+			// Generate stub for calling Java or native method.
+			if (t_handler -> is_java)
+				InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
+#ifdef NOT_READY
+			else
+				InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
+#endif
 			continue;
 		}
 		
@@ -766,8 +621,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "{");
 			if (self -> use_objc_objects)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\tNSAutoreleasePool *t_pool;");
 				CoderWriteLine(p_coder, "\tt_pool = [[NSAutoreleasePool alloc] init];");
+				CoderWriteLine(p_coder, "#endif");
 				CoderWriteLine(p_coder, "");
 			}
 			
@@ -817,46 +674,49 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				}
 				if (t_parameter -> mode == kParameterTypeIn || t_parameter -> mode == kParameterTypeInOut)
 				{
-					CoderWriteLine(p_coder, "\tif (success)");
-					if (t_parameter -> default_value != nil)
+					CoderWriteLine(p_coder, "\tif (success)", k);
+					CoderWriteLine(p_coder, "\t{", k);
+					// MERG-2013-06-14: [[ ExternalsApiV5 ]] Changes to allow optional parameters without default value.
+                    if (t_parameter -> is_optional)
 					{
-						CoderWriteLine(p_coder, "\t{");
 						CoderWriteLine(p_coder, "\t\tif (argc > %d)", k);
+						CoderWrite(p_coder, "\t\t\t");
 						if (t_native_type != kNativeTypeEnum)
-							CoderWriteLine(p_coder, "\t\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
+							CoderWriteLine(p_coder, "fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
-							CoderWriteLine(p_coder, "\t\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-						CoderWriteLine(p_coder, "\t\telse");
-						switch(t_native_type)
+							CoderWriteLine(p_coder, "fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
+                        if (t_parameter -> default_value != nil)
 						{
-						case kNativeTypeBoolean:
-							// TODO: Implement boolean default values
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						case kNativeTypeObjcData:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						case kNativeTypeCString:
-						case kNativeTypeCData:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
-							break;
-						case kNativeTypeObjcString:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = @\"%s\";", t_name, StringGetCStringPtr(t_parameter -> default_value));
-							break;
-						case kNativeTypeInteger:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, NumberGetInteger(t_parameter -> default_value));
-							break;
-						case kNativeTypeReal:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %.15g;", t_name, NumberGetReal(t_parameter -> default_value));
-							break;
-						case kNativeTypeEnum:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
-							break;
-						default:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						}
-						CoderWriteLine(p_coder, "\t}");
+							CoderWriteLine(p_coder, "\t\telse", k);
+                            switch(t_native_type)
+                            {
+                                case kNativeTypeBoolean:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, BooleanGetBool(t_parameter -> default_value) ? "true" : "false");
+                                    break;
+                                case kNativeTypeCString:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
+                                    break;
+                                case kNativeTypeObjcString:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = @\"%s\";", t_name, StringGetCStringPtr(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeInteger:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, NumberGetInteger(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeReal:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %.15g;", t_name, NumberGetReal(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeEnum:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
+                                    break;
+								case kNativeTypeCData:
+								case kNativeTypeObjcData:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
+                                    break;
+                                default:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
+                                    break;
+                            }
+                        }
 					}
 					else
 					{
@@ -864,8 +724,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 							CoderWriteLine(p_coder, "\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
 							CoderWriteLine(p_coder, "\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-					}
-				}
+                    }
+                    CoderWriteLine(p_coder, "\t}");
+                    
+                }
 				if ((t_native_type == kNativeTypeCString || t_native_type == kNativeTypeCData) && t_parameter -> mode == kParameterTypeInOut)
 				{
 					CoderWriteLine(p_coder, "\tif (success)");
@@ -912,7 +774,11 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			}
 			
 			if (self -> use_objc_exceptions)
+			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\tNS_DURING");
+				CoderWriteLine(p_coder, "#endif");
+			}
 				
 			if (t_native_return_type != kNativeTypeNone)
 			{
@@ -939,9 +805,11 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			
 			if (self -> use_objc_exceptions)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\t\tNS_HANDLER");
 				CoderWriteLine(p_coder, "\t\t\tsuccess = error__raise([[localException reason] cStringUsingEncoding: NSMacOSRomanStringEncoding]);");
 				CoderWriteLine(p_coder, "\t\tNS_ENDHANDLER");
+				CoderWriteLine(p_coder, "#endif");
 			}
 			
 			if (self -> use_cpp_exceptions)
@@ -1049,7 +917,9 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				
 			if (self -> use_objc_objects)
 			{
+				CoderWriteLine(p_coder, "#ifdef __OBJC__");
 				CoderWriteLine(p_coder, "\t[t_pool release];");
+				CoderWriteLine(p_coder, "#endif");
 				CoderWriteLine(p_coder, "");
 			}
 			
@@ -1058,7 +928,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 			CoderWriteLine(p_coder, "}");
 		}
 		
-		if (t_handler -> type == kHandlerTypeTailCommand || t_handler -> type == kHandlerTypeTailFunction)
+		if (t_handler -> is_tail)
 		{
 			CoderWriteLine(p_coder, "struct handler__%s_env_t", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "{");
@@ -1077,6 +947,8 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				
 				if (t_variant -> minimum_parameter_count == t_variant -> parameter_count)
 					CoderWriteLine(p_coder, "\tif (env -> argc == %d)", t_variant -> parameter_count);
+				else if (t_variant -> minimum_parameter_count == 0)
+                	CoderWriteLine(p_coder, "\tif (env -> argc <= %d)", t_variant -> parameter_count);
 				else
 					CoderWriteLine(p_coder, "\tif (env -> argc >= %d && env -> argc <= %d)", t_variant -> minimum_parameter_count, t_variant -> parameter_count);
 					
@@ -1122,17 +994,41 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 		}
 	}
 	
+	// If this is a Java handler, then generate the 'variant__*' methods for it.
+	for(uint32_t i = 0; i < self -> handler_count; i++)
+	{
+		Handler *t_handler;
+		t_handler = &self -> handlers[i];
+		
+		if (t_handler -> is_java)
+		{
+			CoderWriteLine(p_coder, "#ifdef __ANDROID__");
+			for(uint32_t i = 0; i < t_handler -> variant_count; i++)
+				InterfaceGenerateJavaHandlerStub(self, p_coder, t_handler, &t_handler -> variants[i]);
+			CoderWriteLine(p_coder, "#endif");
+		}
+	}
+	
 	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *s_exports_template = "\
+#ifndef __WINDOWS__\n\
+#define DLLEXPORT\n\
 extern \"C\" MCExternalInfo *MCExternalDescribe(void) __attribute__((visibility(\"default\")));\n\
 extern \"C\" bool MCExternalInitialize(MCExternalInterface *) __attribute__((visibility(\"default\")));\n\
 extern \"C\" void MCExternalFinalize(void) __attribute__((visibility(\"default\")));\n\
+#else\n\
+#define DLLEXPORT __declspec(dllexport)\n\
+extern \"C\" MCExternalInfo DLLEXPORT *MCExternalDescribe(void);\n\
+extern \"C\" bool DLLEXPORT MCExternalInitialize(MCExternalInterface *);\n\
+extern \"C\" void DLLEXPORT MCExternalFinalize(void);\n\
+#endif\n\
+\
 \n\
-MCExternalInfo *MCExternalDescribe(void)\n\
+MCExternalInfo DLLEXPORT *MCExternalDescribe(void)\n\
 {\n\
 	static MCExternalInfo s_info;\n\
 	s_info . version = 1;\n\
@@ -1142,12 +1038,20 @@ MCExternalInfo *MCExternalDescribe(void)\n\
 	return &s_info;\n\
 }\n\
 \n\
-bool MCExternalInitialize(MCExternalInterface *p_interface)\n\
+bool DLLEXPORT MCExternalInitialize(MCExternalInterface *p_interface)\n\
 {\n\
 	s_interface = p_interface;\n\
 \n\
+#ifndef __ANDROID__\n\
 	if (s_interface -> version < 3)\n\
 		return false;\n\
+#else\n\
+	if (s_interface -> version < 5)\n\
+		return false;\n\
+\n\
+	s_interface -> interface_query(kMCExternalInterfaceQueryScriptJavaEnv, &s_engine_env);\n\
+	s_interface -> interface_query(kMCExternalInterfaceQuerySystemJavaEnv, &s_android_env);\n\
+#endif\n\
 \n\
 #ifdef kMCExternalStartup\n\
 	if (!kMCExternalStartup())\n\
@@ -1157,7 +1061,7 @@ bool MCExternalInitialize(MCExternalInterface *p_interface)\n\
 	return true;\n\
 }\n\
 \n\
-void MCExternalFinalize(void)\n\
+void DLLEXPORT MCExternalFinalize(void)\n\
 {\n\
 #ifdef kMCExternalShutdown\n\
 	kMCExternalShutdown();\n\
@@ -1181,11 +1085,12 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 		Handler *t_handler;
 		t_handler = &self -> handlers[i];
 
-		if (t_handler -> type == kHandlerTypeJava || t_handler -> type == kHandlerTypeNative)
+		// Don't declare methods in the external handlers table.
+		if (t_handler -> type == kHandlerTypeMethod)
 			continue;
 		
 		CoderWriteLine(p_coder, "\t{ %d, \"%s\", handler__%s },",
-			t_handler -> type == kHandlerTypeCommand || t_handler -> type == kHandlerTypeTailCommand ? 1 : 2,
+			t_handler -> type == kHandlerTypeCommand ? 1 : 2,
 			NameGetCString(t_handler -> name),
 			NameGetCString(t_handler -> name));
 	}
@@ -1229,11 +1134,13 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)");
 	CoderWriteLine(p_coder, "{");
 	CoderWriteLine(p_coder, "\ts_java_vm = vm;");
-	CoderWriteLine(p_coder, "\ts_java_vm -> GetEnv((void **)&s_java_env, JNI_VERSION_1_2);");
-	CoderWriteLine(p_coder, "\ts_java_class = (jclass)s_java_env -> NewGlobalRef(s_java_env -> FindClass(\"%s\"));", t_java_class_name);
+	CoderWriteLine(p_coder, "\tJavaEnv *t_java_env; s_java_vm -> GetEnv((void **)&t_java_env, JNI_VERSION_1_2);");
+	CoderWriteLine(p_coder, "\ts_java_class = (jclass)t_java_env -> NewGlobalRef(t_java_env -> FindClass(\"%s\"));", t_java_class_name);
 	CoderWriteLine(p_coder, "");
 	CoderWriteLine(p_coder, "\treturn JNI_VERSION_1_2;");
 	CoderWriteLine(p_coder, "}");
+
+#ifdef NOT_USED
 	for(uint32_t i = 0; t_java_class_name[i] != '\0'; i++)
 		if (t_java_class_name[i] == '/')
 			t_java_class_name[i] = '_';
@@ -1247,8 +1154,28 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "{");
 	CoderWriteLine(p_coder, "\treturn java__get_container();");
 	CoderWriteLine(p_coder, "}");
-	CoderWriteLine(p_coder, "#endif");
 	free(t_java_class_name);
+#endif
+	
+	CoderWriteLine(p_coder, "#endif");
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+extern "C" const char *g_java_support_template[];
+
+/*static struct { const char *tag; void (*generator)(InterfaceRef self, CoderRef coder); } s_sections[] =
+{
+	{ "package", InterfaceGenerateJavaPackageSection },
+};*/
+
+static bool InterfaceGenerateJava(InterfaceRef self, CoderRef p_coder)
+{
+	CoderWriteLine(p_coder, "package %s;", NameGetCString(self -> qualified_name));
+	
+	// CoderWrite(p_coder, "%s", strchr(g_java_support_template, '\n') + 1);
 	
 	return true;
 }
@@ -1263,11 +1190,23 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 	CoderRef t_coder;
 	t_coder = nil;
 	
+	char *t_native_output_filename, *t_java_output_filename;
+	if (MCCStringEndsWith(p_output, "/"))
+	{
+		MCCStringFormat(t_native_output_filename, "%s%s.lcidlc.cpp", p_output, NameGetCString(self -> name));
+		MCCStringFormat(t_java_output_filename, "%sLC.java", p_output);
+	}
+	else
+	{
+		t_native_output_filename = (char *)p_output;
+		t_java_output_filename = nil;
+	}
+
 	if (t_success)
 		t_success = !self -> invalid;
 	
 	if (t_success)
-		t_success = CoderStart(p_output, t_coder);
+		t_success = CoderStart(t_native_output_filename, t_coder);
 	
 	if (t_success)
 		t_success = InterfaceGenerateSupport(self, t_coder);
@@ -1288,6 +1227,25 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 		t_success = CoderFinish(t_coder);
 	else
 		CoderCancel(t_coder);
+	
+	if (t_success && t_java_output_filename != nil)
+	{
+		if (t_success)
+			t_success = CoderStart(t_java_output_filename, t_coder);
+		
+		if (t_success)
+			t_success = InterfaceGenerateJava(self, t_coder);
+		
+		if (t_success)
+			t_success = CoderFinish(t_coder);
+		else
+			CoderCancel(t_coder);
+	}
+	
+	if (t_native_output_filename != p_output)
+		free(t_native_output_filename);
+	
+	free(t_java_output_filename);
 	
 	return t_success;
 }

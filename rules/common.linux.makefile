@@ -6,6 +6,7 @@ DEFINES=$(CUSTOM_DEFINES) $(TYPE_DEFINES) _LINUX TARGET_PLATFORM_POSIX
 
 GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
+	$(SOLUTION_DIR)/lcidlc/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
 	$(SOLUTION_DIR)/thirdparty/headers/linux/include \

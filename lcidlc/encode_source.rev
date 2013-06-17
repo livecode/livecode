@@ -19,11 +19,15 @@ on generate
   local tInput, tOutput, tLength
   put url ("file:" & $1) into tInput
 
-  put "const char *" & $3 & " =" & return after tOutput
+  put "const char *" & $3 & "[] =" & return after tOutput
+  put "{" & return after tOutput
   repeat for each line tLine in tInput
+    replace "\" with "\\" in tLine
     replace quote with "\" & quote in tLine
-    put tab & quote & tLine & "\n" & quote & return after tOutput
+    put tab & quote & tLine & "\n" & quote & comma & return after tOutput
   end repeat
+  put tab & 0 & return after tOutput
+  put "}" & return after tOutput
   put ";" & return after tOutput
 
   put tOutput into url ("file:" & $2)

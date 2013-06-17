@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -38,8 +39,19 @@ enum InterfaceError
 	kInterfaceErrorParamAlreadyDefined,
 	kInterfaceErrorInvalidParameterType,
 	kInterfaceErrorOptionalParamImpliesIn,
-	kInterfaceErrorNoOptionalBoolean,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Error for when a non-pointer type is
+	//   optional with no default value.
+    kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue,
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] Error for when a default value is 
+	//   specified for a type that doesn't support defaulting.
+	kInterfaceErrorDefaultValueNotSupportedForType,
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Wrong constant type for default value.
+	kInterfaceErrorDefaultWrongType,
 	kInterfaceErrorUnknownType,
+	kInterfaceErrorJavaImpliesInParam,
+	kInterfaceErrorMethodsCannotHaveVariants,
+	kInterfaceErrorMethodsMustBeJava,
+	kInterfaceErrorMethodsAreAlwaysTail
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -116,8 +128,14 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorOptionalParamImpliesIn:
 		fprintf(stderr, "Optional parameters must be of 'in' type\n");
 		break;
-	case kInterfaceErrorNoOptionalBoolean:
-		fprintf(stderr, "Optional boolean parameters not yet supported\n");
+    case kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue:
+        fprintf(stderr, "Default values must be specified for non-pointer type optional parameters\n");
+        break;
+	case kInterfaceErrorDefaultValueNotSupportedForType:
+		fprintf(stderr, "Default value not supported for the given type\n");
+		break;
+    case kInterfaceErrorDefaultWrongType:
+		fprintf(stderr, "Default specified is the wrong type\n");
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
@@ -305,9 +323,9 @@ bool InterfaceDefineEnumElement(InterfaceRef self, Position p_where, StringRef p
 	return true;
 }
 
-bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, NameRef p_name)
+bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_type, HandlerAttributes p_attr, NameRef p_name)
 {
-	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand || p_type == kHandlerTypeTailCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
+	MCLog("%s - %s handler %s", PositionDescribe(p_where), p_type == kHandlerTypeCommand ? "command" : "function", StringGetCStringPtr(NameGetString(p_name)));
 	
 	Handler *t_handler;
 	t_handler = nil;
@@ -317,10 +335,28 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			t_handler = &self -> handlers[i];
 			break;
 		}
-		
+	
+	// RULE: Methods cannot have variants.
+	if (t_handler != nil &&
+			p_type == kHandlerTypeMethod)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsCannotHaveVariants, p_name);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] 'java' and 'tail' separated out - make sure
+	//   all variants have the same kind.
 	// RULE: Variants of handlers must all have the same type.
-	if (t_handler != nil && t_handler -> type != p_type)
+	if (t_handler != nil &&
+			t_handler -> type != p_type &&
+			t_handler -> is_java == ((p_attr & kHandlerAttributeIsJava) != 0) &&
+			t_handler -> is_tail == ((p_attr & kHandlerAttributeIsTail) != 0))
 		InterfaceReport(self, p_where, kInterfaceErrorCannotMixHandlerTypes, p_name);
+	
+	// RULE: Methods must specify 'java'.
+	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsJava) == 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsMustBeJava, p_name);
+	
+	// RULE: Methods must not specify 'tail' since that is their purpose.
+	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsTail) != 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsAreAlwaysTail, p_name);
 		
 	if (t_handler == nil)
 	{
@@ -329,6 +365,12 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 			
 		t_handler = &self -> handlers[self -> handler_count - 1];
 		t_handler -> type = p_type;
+		
+		// MW-2013-06-14: [[ ExternalsApiV5 ]] Set the attributes appropriate in the
+		//   handler.
+		t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;
+		t_handler -> is_tail = (p_attr & kHandlerAttributeIsTail) != 0;
+
 		t_handler -> name = ValueRetain(p_name);
 	}
 	
@@ -384,11 +426,11 @@ bool InterfaceEndHandler(InterfaceRef self)
 	return true;
 }
 
-bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, ValueRef p_default)
+bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, ParameterType p_param_type, NameRef p_name, NameRef p_type, bool p_optional, ValueRef p_default)
 {	
 	static const char *s_param_types[] = {"in", "out", "inout", "ref"};
 	MCLog("%s - %s%s parameter %s as %s", PositionDescribe(p_where),
-			p_default != nil ? "optional " : "",
+			p_optional ? "optional " : "",
 			s_param_types[p_param_type],
 			StringGetCStringPtr(NameGetString(p_name)), 
 			StringGetCStringPtr(NameGetString(p_type)));
@@ -402,11 +444,56 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// RULE: 'ref' not currently supported
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
+    
+    // RULE: only pointer types may not have a default value
+    if (p_optional && p_default == nil &&
+        (NameEqualToCString(p_type, "boolean") ||
+         NameEqualToCString(p_type, "integer") ||
+         NameEqualToCString(p_type, "real")  ||
+         NameEqualToCString(p_type, "c-data")))
+        InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
+    
+	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
+	if (p_optional && p_default != nil &&
+		NameEqualToCString(p_type, "c-data") ||
+		NameEqualToCString(p_type, "objc-data") ||
+		NameEqualToCString(p_type, "objc-dictionary") ||
+		NameEqualToCString(p_type, "objc-array"))
+		InterfaceReport(self, p_where, kInterfaceErrorDefaultValueNotSupportedForType, nil);
 	
-	// RULE: optional 'boolean' not currently supported
-	if (NameEqualToCString(p_type, "boolean") && p_default != nil)
-		InterfaceReport(self, p_where, kInterfaceErrorNoOptionalBoolean, nil);
-	
+    NativeType t_native_type;
+    t_native_type = NativeTypeFromName(p_type);
+    
+	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Check that the type of the constant is
+	//   correct for the type of the parameter.
+    // RULE: wrong default type
+    if (p_default != nil)
+    {
+        bool t_correct_type = false;
+        switch (t_native_type) {
+            case kNativeTypeBoolean:
+                t_correct_type = ValueIsBoolean(p_default);
+                break;
+            case kNativeTypeInteger:
+                t_correct_type = ValueIsInteger(p_default);
+                break;
+            case kNativeTypeReal:
+                t_correct_type = ValueIsReal(p_default) || ValueIsInteger(p_default);
+                break;
+            case kNativeTypeObjcString:
+            case kNativeTypeCString:
+            case kNativeTypeEnum:
+                t_correct_type = ValueIsString(p_default);
+                break;
+            default:
+                t_correct_type = false;
+                break;
+        }
+        
+        if (!t_correct_type)
+            InterfaceReport(self, p_where, kInterfaceErrorDefaultWrongType, nil);
+    }
+    
 	// RULE: optional parameters can only be 'in'
 	if (p_default != nil && p_param_type != kParameterTypeIn)
 		InterfaceReport(self, p_where, kInterfaceErrorOptionalParamImpliesIn, nil);
@@ -420,10 +507,17 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 		}
 		
 	// RULE: No non-optional parameters after an optional one
-	if (p_default == nil &&
+	if (!p_optional &&
 		t_variant -> parameter_count > 0 &&
-		t_variant -> parameters[t_variant -> parameter_count - 1] . default_value != nil)
+		t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional)
 		InterfaceReport(self, p_where, kInterfaceErrorParamAfterOptionalParam, nil);
+	
+	// MW-2013-06-14: [[ ExternalsApiV5 ]] New rule to check java methods have compatible
+	//   signature.
+	// RULE: If java handler, then only in parameters are allowed.
+	if (self -> current_handler -> is_java)
+		if (p_param_type != kParameterTypeIn)
+			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);
 	
 	if (!MCMemoryResizeArray(t_variant -> parameter_count + 1, t_variant -> parameters, t_variant -> parameter_count))
 		return false;
@@ -433,8 +527,9 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	t_variant -> parameters[t_variant -> parameter_count - 1] . name = ValueRetain(p_name);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . type = ValueRetain(p_type);
 	t_variant -> parameters[t_variant -> parameter_count - 1] . default_value = ValueRetain(p_default);
+	t_variant -> parameters[t_variant -> parameter_count - 1] . is_optional = p_optional;
 	
-	if (p_default == nil)
+	if (!p_optional)
 		t_variant -> minimum_parameter_count += 1;
 	
 	return true;
