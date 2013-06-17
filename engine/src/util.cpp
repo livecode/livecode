@@ -2258,7 +2258,7 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		titems[nparams].nvalue = tn;
 		nparams++;
 		break;
-	case F_STD_DEV:
+	case F_SMP_STD_DEV:
 		tn = tn - oldn;
 		n += tn * tn;
 		nparams++;

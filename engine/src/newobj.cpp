@@ -691,6 +691,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCShortFilePath;
 	case F_SIN:
 		return new MCSin;
+	case F_SMP_STD_DEV:
+		return new MCSmpStdDev;
 	case F_SOUND:
 		return new MCSound;
 	case F_SPECIAL_FOLDER_PATH:
@@ -703,8 +705,6 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCStackSpace;
 	case F_STAT_ROUND:
 		return new MCStatRound;
-	case F_STD_DEV:
-		return new MCStdDev;
 	case F_SUM:
 		return new MCSum;
 	case F_SYS_ERROR:

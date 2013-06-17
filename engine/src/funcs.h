@@ -2168,6 +2168,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCSmpStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCSmpStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCSmpStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCSqrt : public MCFunction
 {
 	MCExpression *source;
@@ -2191,19 +2204,6 @@ public:
 		source = digit = NULL;
 	}
 	virtual ~MCStatRound();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-};
-
-class MCStdDev : public MCFunction
-{
-	MCParameter *params;
-public:
-	MCStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCStdDev();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
