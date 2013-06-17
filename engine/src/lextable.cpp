@@ -879,6 +879,7 @@ LT factor_table[] =
         {"groups", TT_CLASS, CT_GROUP},
         {"grp", TT_CHUNK, CT_GROUP},
         {"grps", TT_CLASS, CT_GROUP},
+        {"harmonicmean", TT_FUNCTION, F_HAR_MEAN},
         {"hasmemory", TT_FUNCTION, F_HAS_MEMORY},
         {"hcaddressing", TT_PROPERTY, P_HC_ADDRESSING},
         {"hcimportstat", TT_PROPERTY, P_HC_IMPORT_STAT},

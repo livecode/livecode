@@ -129,10 +129,11 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 		switch (func)
 		{
 		case F_ARI_MEAN:
-			n /= nparams;
-			break;
 		case F_AVG_DEV:
 			n /= nparams;
+			break;
+		case F_HAR_MEAN:
+			n = nparams/n;
 			break;
 		case F_MEDIAN:
 			{
@@ -715,6 +716,40 @@ Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
 {
 	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_AVERAGE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+MCHarmonicMean::~MCHarmonicMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCHarmonicMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_AVERAGE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_HAR_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_AVERAGE_BADSOURCE, line, pos);

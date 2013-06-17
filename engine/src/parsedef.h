@@ -445,6 +445,7 @@ enum Functions {
     F_GEO_MEAN,
     F_GLOBAL_LOC,
     F_GLOBALS,
+    F_HAR_MEAN,
     F_HAS_MEMORY,
     F_HEAP_SPACE,
     F_HA,

@@ -2035,6 +2035,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCHarmonicMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCHarmonicMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCHarmonicMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCLn : public MCFunction
 {
 	MCExpression *source;

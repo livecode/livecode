@@ -2260,6 +2260,10 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		n *= pow(tn, tp);
 		nparams++;
 		break;
+	case F_HAR_MEAN:
+		n += 1/tn;
+		nparams++;
+		break;
 	case F_MAX:
 		if (nparams++ == 0 || tn > n)
 			n = tn;

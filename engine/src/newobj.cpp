@@ -474,6 +474,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCGlobalLoc;
 	case F_GLOBALS:
 		return new MCGlobals;
+	case F_HAR_MEAN:
+		return new MCHarmonicMean;
 	case F_HAS_MEMORY:
 		return new MCHasMemory;
 	case F_HEAP_SPACE:
