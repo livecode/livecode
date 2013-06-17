@@ -299,6 +299,12 @@ static bool ScannerConsume(ScannerRef self)
 	{
 		t_type = kTokenTypeNumber;
 		
+		// MW-2013-06-17: [[ ExternalsApiV5 ]] Since number-prefix is not a subset of
+		//   number-suffix (due to '-'), make sure we advance past the prefix before
+		//   continuing the scan.
+		self -> input_frontier += 1;
+		self -> input_column += 1;
+		
 		while(!ScannerIsEndPrefix(self) &&
 				ScannerIsIntegerSuffix(self))
 		{
