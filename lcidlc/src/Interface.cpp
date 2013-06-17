@@ -445,26 +445,26 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	if (p_param_type == kParameterTypeRef)
 		InterfaceReport(self, p_where, kInterfaceErrorInvalidParameterType, nil);
     
+    NativeType t_native_type;
+    t_native_type = NativeTypeFromName(p_type);
+    
     // RULE: only pointer types may not have a default value
     if (p_optional && p_default == nil &&
-        (NameEqualToCString(p_type, "boolean") ||
-         NameEqualToCString(p_type, "integer") ||
-         NameEqualToCString(p_type, "real")  ||
-         NameEqualToCString(p_type, "c-data")))
+        (t_native_type == kNativeTypeBoolean ||
+         t_native_type == kNativeTypeInteger ||
+         t_native_type == kNativeTypeReal ||
+         t_native_type == kNativeTypeCData))
         InterfaceReport(self, p_where, kInterfaceErrorNonPointerOptionalParameterMustHaveDefaultValue, nil);
     
 	// RULE: default values not supported for c-data, objc-data, objc-dictionary, objc-array types
 	if (p_optional && p_default != nil &&
-		NameEqualToCString(p_type, "c-data") ||
-		NameEqualToCString(p_type, "objc-data") ||
-		NameEqualToCString(p_type, "objc-dictionary") ||
-		NameEqualToCString(p_type, "objc-array"))
-		InterfaceReport(self, p_where, kInterfaceErrorDefaultValueNotSupportedForType, nil);
+		(t_native_type == kNativeTypeCData ||
+         t_native_type == kNativeTypeObjcData ||
+         t_native_type == kNativeTypeObjcArray ||
+         t_native_type == kNativeTypeObjcDictionary))
+        InterfaceReport(self, p_where, kInterfaceErrorDefaultValueNotSupportedForType, nil);
 	
-    NativeType t_native_type;
-    t_native_type = NativeTypeFromName(p_type);
-    
-	// MERG-2013-06-14: [[ ExternalsApiV5 ]] Check that the type of the constant is
+    // MERG-2013-06-14: [[ ExternalsApiV5 ]] Check that the type of the constant is
 	//   correct for the type of the parameter.
     // RULE: wrong default type
     if (p_default != nil)
