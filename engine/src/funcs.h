@@ -1877,6 +1877,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCArithmeticMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCArithmeticMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCArithmeticMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCAsin : public MCFunction
 {
 	MCExpression *source;
@@ -1913,19 +1926,6 @@ public:
 		s1 = s2 = NULL;
 	}
 	virtual ~MCAtan2();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-};
-
-class MCAverage : public MCFunction
-{
-	MCParameter *params;
-public:
-	MCAverage()
-	{
-		params = NULL;
-	}
-	virtual ~MCAverage();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };

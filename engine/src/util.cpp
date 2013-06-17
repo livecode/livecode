@@ -2239,7 +2239,7 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 {
 	switch (func)
 	{
-	case F_AVERAGE:
+	case F_ARI_MEAN:
 		n += tn;
 		nparams++;
 		break;

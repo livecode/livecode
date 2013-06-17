@@ -314,6 +314,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAlternateLanguages;
 	case F_ANNUITY:
 		return new MCAnnuity;
+	case F_ARI_MEAN:
+		return new MCArithmeticMean;
 	case F_ARRAY_DECODE:
 		return new MCArrayDecode;
 	case F_ARRAY_ENCODE:
@@ -324,8 +326,6 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAtan2;
 	case F_ATAN:
 		return new MCAtan;
-	case F_AVERAGE:
-		return new MCAverage;
 	case F_AVG_DEV:
 		return new MCAvgDev;
 	case F_BACK_SCRIPTS:

@@ -47,7 +47,7 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	MCSortnode *mditems = NULL;
 	if (func == F_AVG_DEV || func == F_POP_STD_DEV || func == F_SMP_STD_DEV)
 	{ //use recursion to get average first
-		if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
+		if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
@@ -122,7 +122,7 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	if (nparams != 0)
 		switch (func)
 		{
-		case F_AVERAGE:
+		case F_ARI_MEAN:
 			n /= nparams;
 			break;
 		case F_AVG_DEV:
@@ -263,6 +263,40 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+MCArithmeticMean::~MCArithmeticMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCArithmeticMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_AVERAGE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_AVERAGE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
 MCAsin::~MCAsin()
 {
 	delete source;
@@ -381,40 +415,6 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 		MCS_seterrno(0);
 		MCeerror->add
 		(EE_ATAN2_DOMAIN, line, pos);
-		return ES_ERROR;
-	}
-	return ES_NORMAL;
-}
-
-MCAverage::~MCAverage()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCAverage::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_AVERAGE_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCAverage::eval(MCExecPoint &ep)
-{
-	if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
