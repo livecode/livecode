@@ -1167,6 +1167,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCPopStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCPopStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCPopStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCProcessor : public MCFunction
 {
 public:

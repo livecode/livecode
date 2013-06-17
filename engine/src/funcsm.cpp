@@ -45,7 +45,7 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	real8 n, tn, oldn;
 	n = oldn = 0.0;
 	MCSortnode *mditems = NULL;
-	if (func == F_SMP_STD_DEV)
+	if (func == F_POP_STD_DEV || func == F_SMP_STD_DEV)
 	{ //use recursion to get average first
 		if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
 			return ES_ERROR;
@@ -136,6 +136,9 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 					n = (mditems[toffset].nvalue + mditems[toffset+1].nvalue)/2;
 				break;
 			}
+		case F_POP_STD_DEV:
+			n = sqrt(n/nparams);
+			break;
 		case F_SMP_STD_DEV:
 			n = sqrt(n/(nparams - 1));
 			break;
@@ -1027,6 +1030,40 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	{
 		MCeerror->add
 		(EE_MIN_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+MCPopStdDev::~MCPopStdDev()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopStdDev::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopStdDev::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;

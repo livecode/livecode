@@ -618,6 +618,8 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCPendingMessages;
 	case F_PLATFORM:
 		return new MCPlatform;
+	case F_POP_STD_DEV:
+		return new MCPopStdDev;
 	case F_PROCESSOR:
 		return new MCProcessor;
 	case F_PROCESS_ID:

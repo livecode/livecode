@@ -515,6 +515,7 @@ enum Functions {
     F_PARAM_COUNT,
     F_PENDING_MESSAGES,
     F_PLATFORM,
+    F_POP_STD_DEV,
     F_PROCESS_ID,
     F_PROCESSOR,
     F_PROPERTY_NAMES,
