@@ -1376,32 +1376,6 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HEIGHT, "height" },      // incase top,bottom are in the array
     { P_STYLE, "style" },        // changes numerous properties including text alignment
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
-    { P_FORE_COLOR, "foreColor" },
-    { P_FORE_COLOR, "foregroundColor" },
-    { P_FORE_COLOR, "textColor" },
-    { P_FORE_COLOR, "thumbColor" },
-    { P_FORE_COLOR, "fillFore" },
-    { P_FORE_COLOR, "firstColor" },
-    { P_FORE_COLOR, "fillFore" },
-    { P_FORE_COLOR, "penFore" },
-    { P_BACK_COLOR, "backColor" },
-    { P_BACK_COLOR, "backgroundColor" },
-    { P_BACK_COLOR, "secondColor" },
-    { P_HILITE_COLOR, "hiliteColor" },
-    { P_HILITE_COLOR, "markerColor" },
-    { P_HILITE_COLOR, "thirdColor" },
-    { P_BORDER_COLOR, "borderColor" },
-    { P_BORDER_COLOR, "fourthColor" },
-    { P_BORDER_COLOR, "markerFillColor" },
-    { P_TOP_COLOR, "topColor" },
-    { P_TOP_COLOR, "fifthColor" },
-    { P_BOTTOM_COLOR, "bottomColor" },
-    { P_BOTTOM_COLOR, "sixthColor" },
-    { P_SHADOW_COLOR, "shadowColor" },
-    { P_SHADOW_COLOR, "seventhColor" },
-    { P_FOCUS_COLOR, "focusColor" },
-    { P_FOCUS_COLOR, "eigthColor" },
-    { P_COLORS, "colors" },
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
@@ -1429,10 +1403,6 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
     MCHashentry *e;
     uindex_t j;
     
-    bool t_color_had_value[9];
-    for (j=0; j<9;j++)
-        t_color_had_value[j] = false;
-    
     // pre-process to ensure properties that impact others are set first
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
     for (j=0; j<t_preprocess_size; j++)
@@ -1440,15 +1410,6 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
         e = lookuphash(s_preprocess_props[j].tag,true,false);
         if (e)
         {
-            if ((Properties)s_preprocess_props[j].prop >= P_FORE_COLOR &&
-                (Properties)s_preprocess_props[j].prop <= P_COLORS)
-                t_color_had_value[(Properties)s_preprocess_props[j].prop - P_FORE_COLOR] = e -> value.is_empty();
-            
-            if ((Properties)s_preprocess_props[j].prop >= P_FORE_PATTERN &&
-                (Properties)s_preprocess_props[j].prop <= P_PATTERNS && 
-                t_color_had_value[(Properties)s_preprocess_props[j].prop - P_FORE_PATTERN])
-                continue;
-            
             e -> value . fetch(ep);
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
         }
