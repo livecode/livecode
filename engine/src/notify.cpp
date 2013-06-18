@@ -27,6 +27,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <unistd.h>
 #elif defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
+#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+#include <pthread.h>
 #endif
 
 struct MCNotifySyncEvent
@@ -34,7 +36,7 @@ struct MCNotifySyncEvent
 	MCNotifySyncEvent *next;
 #if defined(_WINDOWS)
 	HANDLE object;
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_t mutex;
 	pthread_cond_t cond;
 	bool triggered;
@@ -75,6 +77,10 @@ static bool s_notify_sent = false;
 int g_notify_pipe[2] = {-1, -1};
 static pthread_mutex_t s_notify_lock;
 static pthread_t s_main_thread;
+#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+static bool s_notify_sent = false;
+static pthread_mutex_t s_notify_lock;
+static pthread_t s_main_thread;
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -90,7 +96,7 @@ static MCNotifySyncEvent *MCNotifySyncEventCreate(void)
 
 #if defined(_WINDOWS)
 	t_event -> object = CreateEvent(NULL, FALSE, FALSE, NULL);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_init(&t_event -> mutex, 0);
 	pthread_cond_init(&t_event -> cond, 0);
 	t_event -> triggered = false;
@@ -110,7 +116,7 @@ static void MCNotifySyncEventDestroy(MCNotifySyncEvent *self, bool p_force)
 
 #if defined(_WINDOWS)
 	CloseHandle(self -> object);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_cond_destroy(&self -> cond);
 	pthread_mutex_destroy(&self -> mutex);
 #endif
@@ -122,7 +128,7 @@ static void MCNotifySyncEventTrigger(MCNotifySyncEvent *self)
 {
 #if defined(_WINDOWS)
 	SetEvent(self -> object);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_lock(&self -> mutex);
 	self -> triggered = true;
 	pthread_cond_signal(&self -> cond);
@@ -134,7 +140,7 @@ static void MCNotifySyncEventReset(MCNotifySyncEvent *self)
 {
 #if defined(_WINDOWS)
 	ResetEvent(self -> object);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_lock(&self -> mutex);
 	self -> triggered = false;
 	pthread_mutex_unlock(&self -> mutex);
@@ -145,7 +151,7 @@ static void MCNotifySyncEventWait(MCNotifySyncEvent *self)
 {
 #if defined(_WINDOWS)
 	WaitForSingleObject(self -> object, INFINITE);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_lock(&self -> mutex);
 	while(!self -> triggered)
 		pthread_cond_wait(&self -> cond, &self -> mutex);
@@ -159,7 +165,7 @@ static void MCNotifyLock(void)
 {
 #if defined(_WINDOWS)
 	EnterCriticalSection(&s_notify_lock);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_lock(&s_notify_lock);
 #endif
 }
@@ -168,7 +174,7 @@ static void MCNotifyUnlock(void)
 {
 #if defined(_WINDOWS)
 	LeaveCriticalSection(&s_notify_lock);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_unlock(&s_notify_lock);
 #endif
 }
@@ -179,7 +185,7 @@ static bool MCNotifyIsMainThread(void)
 {
 #if defined(_WINDOWS)
 	return GetCurrentThreadId() == s_main_thread_id;
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	return pthread_self() == s_main_thread;
 #endif
 }
@@ -213,6 +219,9 @@ bool MCNotifyInitialize(void)
 #elif defined(_LINUX)
 	pthread_mutex_init(&s_notify_lock, NULL);
 	pipe(g_notify_pipe);
+	s_main_thread = pthread_self();
+#elif defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
+	pthread_mutex_init(&s_notify_lock, NULL);
 	s_main_thread = pthread_self();
 #endif
 	return true;
@@ -266,7 +275,7 @@ void MCNotifyFinalize(void)
 #if defined(_WINDOWS)
 	DeleteCriticalSection(&s_notify_lock);
 	CloseHandle(g_notify_wakeup);
-#elif defined(_MACOSX)
+#elif defined(_MACOSX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	pthread_mutex_destroy(&s_notify_lock);
 #elif defined(_LINUX)
 	pthread_mutex_destroy(&s_notify_lock);
@@ -378,7 +387,7 @@ static bool MCNotifyDispatchList(MCNotification*& p_list)
 			MCNotifyLock();
 #ifdef _WINDOWS
 			ResetEvent(g_notify_wakeup);
-#elif defined(_MACOSX) || defined(_LINUX)
+#elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 			s_notify_sent = false;
 #endif
 			t_notify = MCListPopFront(p_list);
@@ -434,5 +443,11 @@ void MCNotifyPing(bool p_high_priority)
 		char t_notify_char = 1;
 		write(g_notify_pipe[1], &t_notify_char, 1);
 	}
+#elif defined(_IOS_MOBILE)
+	extern void MCIPhoneBreakWait(void);
+	MCIPhoneBreakWait();
+#elif defined(_ANDROID_MOBILE)
+	extern void MCAndroidBreakWait(void);
+	MCAndroidBreakWait();
 #endif
 }
