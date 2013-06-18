@@ -1167,6 +1167,32 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCPopulationStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCPopulationStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCPopulationStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCPopulationVariance : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCPopulationVariance()
+	{
+		params = NULL;
+	}
+	virtual ~MCPopulationVariance();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCProcessor : public MCFunction
 {
 public:
@@ -1864,6 +1890,19 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCArithmeticMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCArithmeticMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCArithmeticMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCAsin : public MCFunction
 {
 	MCExpression *source;
@@ -1904,15 +1943,15 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
-class MCAverage : public MCFunction
+class MCAvgDev : public MCFunction
 {
 	MCParameter *params;
 public:
-	MCAverage()
+	MCAvgDev()
 	{
 		params = NULL;
 	}
-	virtual ~MCAverage();
+	virtual ~MCAvgDev();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
@@ -1992,6 +2031,32 @@ public:
 		source = NULL;
 	}
 	virtual ~MCExp10();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCGeometricMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCGeometricMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCGeometricMean();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCHarmonicMean : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCHarmonicMean()
+	{
+		params = NULL;
+	}
+	virtual ~MCHarmonicMean();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
@@ -2168,6 +2233,32 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+class MCSampleStdDev : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCSampleStdDev()
+	{
+		params = NULL;
+	}
+	virtual ~MCSampleStdDev();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
+class MCSampleVariance : public MCFunction
+{
+	MCParameter *params;
+public:
+	MCSampleVariance()
+	{
+		params = NULL;
+	}
+	virtual ~MCSampleVariance();
+	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
+	virtual Exec_stat eval(MCExecPoint &);
+};
+
 class MCSqrt : public MCFunction
 {
 	MCExpression *source;
@@ -2191,19 +2282,6 @@ public:
 		source = digit = NULL;
 	}
 	virtual ~MCStatRound();
-	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
-	virtual Exec_stat eval(MCExecPoint &);
-};
-
-class MCStdDev : public MCFunction
-{
-	MCParameter *params;
-public:
-	MCStdDev()
-	{
-		params = NULL;
-	}
-	virtual ~MCStdDev();
 	virtual Parse_stat parse(MCScriptPoint &, Boolean the);
 	virtual Exec_stat eval(MCExecPoint &);
 };
