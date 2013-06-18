@@ -224,7 +224,7 @@ bool MCGContextCreate(uint32_t p_width, uint32_t p_height, bool p_alpha, MCGCont
 bool MCGContextCreateWithRaster(MCGRaster &p_raster, MCGContextRef &r_context)
 {
 	SkBitmap t_bitmap;
-	if (MCGRasterToSkBitmap(p_raster, false, t_bitmap))
+	if (MCGRasterToSkBitmap(p_raster, kMCGPixelOwnershipTypeBorrow, t_bitmap))
 		return MCGContextCreateWithBitmap(t_bitmap, r_context);
 	else
 		return false;
@@ -1345,7 +1345,7 @@ void MCGContextDrawPixels(MCGContextRef self, const MCGRaster& p_raster, MCGRect
 	
 	SkBitmap t_bitmap;
 	if (t_success)
-		t_success = MCGRasterToSkBitmap(p_raster, false, t_bitmap);
+		t_success = MCGRasterToSkBitmap(p_raster, kMCGPixelOwnershipTypeBorrow, t_bitmap);
 
 	if (t_success)
 		t_success = MCGContextDrawSkBitmap(self, t_bitmap, p_dst, p_filter);

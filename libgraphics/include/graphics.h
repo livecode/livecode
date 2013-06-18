@@ -154,6 +154,17 @@ inline MCGRectangle MCGRectangleMake(MCGFloat p_x, MCGFloat p_y, MCGFloat p_widt
 	return t_rect;
 }
 
+inline MCGRectangle MCGRectangleTranslate(MCGRectangle p_rect, MCGFloat p_dx, MCGFloat p_dy)
+{
+	MCGRectangle t_rect = p_rect;
+	t_rect.origin.x += p_dx;
+	t_rect.origin.y += p_dy;
+	
+	return t_rect;
+}
+
+MCGRectangle MCGRectangleIntersection(MCGRectangle rect_1, MCGRectangle rect_2);
+
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 {
 	MCGPoint t_point;
@@ -165,6 +176,7 @@ inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGImageCreateWithRaster(const MCGRaster& raster, MCGImageRef& r_image);
+bool MCGImageCreateWithRasterAndRelease(const MCGRaster &raster, MCGImageRef &r_image);
 bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef& r_image);
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 

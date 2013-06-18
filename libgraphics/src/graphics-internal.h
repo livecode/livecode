@@ -131,11 +131,16 @@ inline bool MCGRectangleIntersects(MCGRectangle p_rect_1, MCGRectangle p_rect_2)
 	(p_rect_2 . origin . y < (p_rect_1 . origin . y +  p_rect_1 . size . height));	
 }
 
-MCGRectangle MCGRectangleIntersection(MCGRectangle rect_1, MCGRectangle rect_2);
-
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCGRasterToSkBitmap(const MCGRaster& raster, bool copy_pixels, SkBitmap& bitmap);
+enum MCGPixelOwnershipType
+{
+	kMCGPixelOwnershipTypeBorrow,
+	kMCGPixelOwnershipTypeTake,
+	kMCGPixelOwnershipTypeCopy,
+};
+
+bool MCGRasterToSkBitmap(const MCGRaster& raster, MCGPixelOwnershipType p_ownership, SkBitmap& bitmap);
 SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode mode);
 MCGBlendMode MCGBlendModeToSkXfermode(SkXfermode* mode);
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform& transform, SkMatrix& r_matrix);

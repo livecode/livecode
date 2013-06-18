@@ -13,7 +13,7 @@ static void MCGImageDestroy(MCGImageRef self)
 	}
 }
 
-bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
+bool __MCGImageCreateWithRaster(const MCGRaster &p_raster, MCGImageRef &r_image, MCGPixelOwnershipType p_ownership)
 {
 	bool t_success;
 	t_success = true;
@@ -31,7 +31,7 @@ bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
 	}
 	
 	if (t_success)
-		t_success = MCGRasterToSkBitmap(p_raster, true, *t_bitmap);
+		t_success = MCGRasterToSkBitmap(p_raster, p_ownership, *t_bitmap);
 	
 	if (t_success)
 	{
@@ -50,6 +50,16 @@ bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
 	return t_success;	
 }
 
+bool MCGImageCreateWithRasterAndRelease(const MCGRaster &p_raster, MCGImageRef &r_image)
+{
+	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeTake);
+}
+
+bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
+{
+	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeCopy);
+}
+
 bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 {
 	if (p_image == nil)
@@ -59,12 +69,18 @@ bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)
 	if (!t_image->is_valid || t_image->bitmap == nil)
 		return false;
 
+	// IM-2013-06-18: lock pixels here to force skia to update the pixel ptr
+	// from the bitmap's pixel ref
+	t_image->bitmap->lockPixels();
+	
 	r_raster.format = MCGRasterFormatFromSkBitmapConfig(t_image->bitmap->config());
 	r_raster.width = t_image->bitmap->width();
 	r_raster.height = t_image->bitmap->height();
 	r_raster.pixels = t_image->bitmap->getPixels();
 	r_raster.stride =t_image->bitmap->rowBytes();
 
+	t_image->bitmap->unlockPixels();
+	
 	return true;
 }
 

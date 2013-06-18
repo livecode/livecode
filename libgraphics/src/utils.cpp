@@ -3,6 +3,7 @@
 
 #include <SkShader.h>
 #include <SkGradientShader.h>
+#include <SkMallocPixelRef.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -421,13 +422,11 @@ MCGBlendMode MCGBlendModeFromSkXfermode(SkXfermode *p_mode)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCGRasterToSkBitmap(const MCGRaster& p_raster, bool p_copy_pixels, SkBitmap& r_bitmap)
+bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_ownership, SkBitmap& r_bitmap)
 {
 	bool t_success;
 	t_success = true;
 	
-	void *t_pixels;
-	t_pixels = NULL;
 	if (t_success)
 	{		
 		SkBitmap::Config t_config = MCGRasterFormatToSkBitmapConfig(p_raster . format);
@@ -438,11 +437,28 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, bool p_copy_pixels, SkBitmap
 		// for premultiplied bitmaps, just set the pixels in the target directly
 		// if the copy pixels flag is set, allocate space and copy the pixels from the raster first, then set in target
 		if (p_raster . format == kMCGRasterFormat_U_ARGB)
-			t_success = r_bitmap . allocPixels();
-		else if (p_copy_pixels)
-			t_success = MCMemoryNew(p_raster . height * p_raster . stride, t_pixels);
-		else
-			t_pixels = p_raster . pixels;
+			p_ownership = kMCGPixelOwnershipTypeCopy;
+		
+		switch (p_ownership)
+		{
+			case kMCGPixelOwnershipTypeBorrow:
+				r_bitmap . setPixels(p_raster . pixels);
+				break;
+				
+			case kMCGPixelOwnershipTypeTake:
+				SkMallocPixelRef *t_pixelref;
+				t_success = nil != (t_pixelref = new SkMallocPixelRef(p_raster . pixels, p_raster . stride * p_raster . height, nil));
+				if (t_success)
+				{
+					r_bitmap . setPixelRef(t_pixelref);
+					t_pixelref -> unref();
+				}
+				break;
+				
+			case kMCGPixelOwnershipTypeCopy:
+				t_success = r_bitmap . allocPixels();
+				break;
+		}
 	}
 	
 	if (t_success)
@@ -467,12 +483,8 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, bool p_copy_pixels, SkBitmap
 				t_row_ptr += p_raster . stride;
 			}
 		}
-		else
-		{
-			if (p_copy_pixels)
-				MCMemoryCopy(t_pixels, p_raster . pixels, p_raster . height * p_raster . stride);
-			r_bitmap . setPixels(t_pixels);
-		}
+		else if (p_ownership == kMCGPixelOwnershipTypeCopy)
+			MCMemoryCopy(r_bitmap . getPixels(), p_raster . pixels, p_raster . height * p_raster . stride);
 	}
 	
 	return t_success;	
@@ -483,20 +495,15 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, bool p_copy_pixels, SkBitmap
 MCGRectangle MCGRectangleIntersection(MCGRectangle p_rect_1, MCGRectangle p_rect_2)
 {
 	MCGRectangle t_intersection;
-	t_intersection . origin . x = (p_rect_1 . origin . x > p_rect_2 . origin . x) ? p_rect_1 . origin . x : p_rect_2 . origin . x;
-	t_intersection . origin . y = (p_rect_1 . origin . y > p_rect_2 . origin . x) ? p_rect_1 . origin . y : p_rect_2 . origin . y;
+	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);
+	t_intersection . origin . y = MCMax(p_rect_1 . origin . y, p_rect_2 . origin . y);
 	
-	MCGFloat t_right_1;
-	t_right_1 = p_rect_1 . origin . x + p_rect_1 . size . width;
-	MCGFloat t_right_2;
-	t_right_2 = p_rect_2 . origin . x + p_rect_2 . size . width;	
-	t_intersection . size . width = (t_right_1 < t_right_2) ? t_right_1 - t_intersection . origin . x : t_right_2 - t_intersection . origin . x;	
+	MCGFloat t_right, t_bottom;
+	t_right = MCMin(p_rect_1 . origin . x + p_rect_1 . size . width, p_rect_2 . origin . x + p_rect_2 . size . width);
+	t_bottom = MCMin(p_rect_1 . origin . y + p_rect_1 . size . height, p_rect_2 . origin . y + p_rect_2 . size . height);
 	
-	MCGFloat t_bottom_1;
-	t_bottom_1 = p_rect_1 . origin . y + p_rect_1 . size . height;
-	MCGFloat t_bottom_2;
-	t_bottom_2 = p_rect_2 . origin . y + p_rect_2 . size . height;	
-	t_intersection . size . height = (t_bottom_1 < t_bottom_2) ? t_bottom_1 - t_intersection . origin . y : t_bottom_2 - t_intersection . origin . y;
+	t_intersection . size . width = MCMax(0.0f, t_right - t_intersection . origin . x);
+	t_intersection . size . height = MCMax(0.0f, t_bottom - t_intersection . origin . y);
 	
 	return t_intersection;
 }
