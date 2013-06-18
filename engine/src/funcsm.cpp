@@ -452,7 +452,7 @@ Parse_stat MCAvgDev::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_STDDEV_BADPARAM, line, pos);
+		(PE_AVGDEV_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -715,7 +715,7 @@ Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_AVERAGE_BADPARAM, line, pos);
+		(PE_GEO_MEAN_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -726,7 +726,7 @@ Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
 	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_AVERAGE_BADSOURCE, line, pos);
+		(EE_GEO_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -749,7 +749,7 @@ Parse_stat MCHarmonicMean::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_AVERAGE_BADPARAM, line, pos);
+		(PE_HAR_MEAN_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -760,7 +760,7 @@ Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
 	if (evalparams(F_HAR_MEAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_AVERAGE_BADSOURCE, line, pos);
+		(EE_HAR_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -1172,7 +1172,7 @@ Parse_stat MCPopulationStdDev::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_STDDEV_BADPARAM, line, pos);
+		(PE_POP_STDDEV_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -1183,7 +1183,7 @@ Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
 	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_STDDEV_BADSOURCE, line, pos);
+		(EE_POP_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -1206,7 +1206,7 @@ Parse_stat MCPopulationVariance::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_STDDEV_BADPARAM, line, pos);
+		(PE_POP_VARIANCE_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -1217,7 +1217,7 @@ Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
 	if (evalparams(F_POP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_STDDEV_BADSOURCE, line, pos);
+		(EE_POP_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -1408,7 +1408,7 @@ Parse_stat MCSampleVariance::parse(MCScriptPoint &sp, Boolean the)
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_STDDEV_BADPARAM, line, pos);
+		(PE_VARIANCE_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
@@ -1419,7 +1419,7 @@ Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
 	if (evalparams(F_SMP_VARIANCE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_STDDEV_BADSOURCE, line, pos);
+		(EE_VARIANCE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
