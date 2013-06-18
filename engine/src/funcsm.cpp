@@ -463,7 +463,7 @@ Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 	if (evalparams(F_AVG_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_STDDEV_BADSOURCE, line, pos);
+		(EE_AVGDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
