@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "metacontext.h"
 #include "printer.h"
-#include "contextscalewrapper.h"
 #include "mode.h"
 #include "region.h"
 
