@@ -1378,7 +1378,23 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HEIGHT, "height" },      // incase top,bottom are in the array
     { P_STYLE, "style" },        // changes numerous properties including text alignment
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
-};
+    { P_FORE_PATTERN, "forePattern" },
+    { P_FORE_PATTERN, "foregroundPattern" },
+    { P_FORE_PATTERN, "textPattern" },
+    { P_FORE_PATTERN, "thumbPattern" },
+    { P_BACK_PATTERN, "backPattern" },
+    { P_BACK_PATTERN, "backgroundPattern" },
+    { P_BACK_PATTERN, "fillPat" },
+    { P_HILITE_PATTERN, "hilitePattern" },
+    { P_HILITE_PATTERN, "markerPattern" },
+    { P_HILITE_PATTERN, "thirdPattern" },
+    { P_BORDER_PATTERN, "borderPattern" },
+    { P_TOP_PATTERN, "topPattern" },
+    { P_BOTTOM_PATTERN, "bottomPattern" },
+    { P_SHADOW_PATTERN, "shadowPattern" },
+    { P_FOCUS_PATTERN, "focusPattern" },
+    { P_PATTERNS, "patterns" },
+ };
 
 Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 {
@@ -1387,11 +1403,11 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCRedrawLockScreen();
 	MCerrorlock++;
     MCHashentry *e;
+    uindex_t j;
     
     // MERG-2013-05-07: [[ RevisedPropsProp ]] pre-process to ensure properties
 	//   that impact others are set first.
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
-    uindex_t j;
     for (j=0; j<t_preprocess_size; j++)
     {
         e = lookuphash(s_preprocess_props[j].tag,true,false);
