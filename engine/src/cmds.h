@@ -1354,7 +1354,6 @@ public:
 	{
 		compiled = NULL;
 	}
-	virtual ~MCRegexMatcher();
 	virtual Exec_stat compile(uint2 line, uint2 pos);
 	virtual Boolean match(char *s);
 };

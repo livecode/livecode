@@ -1128,18 +1128,13 @@ MCPatternMatcher::~MCPatternMatcher()
 	delete pattern;
 }
 
-MCRegexMatcher::~MCRegexMatcher()
-{
-	// do not delete, but nullify as MCregexcache owns the reference
-	compiled = NULL;
-}
-
 Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
 {
+	char *pstring = strdup(pattern);
 	uint2 i;
 	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
-		if (strequal(pattern, MCregexpatterns[i]))
+		if (strequal(pstring, MCregexpatterns[i]))
 		{
 			compiled = MCregexcache[i];
 			break;
@@ -1154,10 +1149,12 @@ Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
 			MCregexcache[i] = MCregexcache[i - 1];
 			MCregexpatterns[i] = MCregexpatterns[i - 1];
 		}
-		MCregexpatterns[0] = pattern;
+		MCregexpatterns[0] = pstring;
 		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
 		compiled = MCregexcache[0];
 	}
+	else
+		delete pstring;
 	if (compiled == NULL)
 	{
 		MCeerror->add
