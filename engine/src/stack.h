@@ -82,6 +82,9 @@ public:
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
 	// Unlock the target.
 	virtual void UnlockTarget(void) = 0;
+	
+	// Composite the source image onto the surface using the given blend mode & opacity
+	virtual bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_source, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend) = 0;
 };
 
 class MCStack : public MCObject

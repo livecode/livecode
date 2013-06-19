@@ -56,6 +56,7 @@ static Pixmap s_update_pixmap = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 OSStatus MCRevolutionStackViewCreate(MCStack *p_stack, ControlRef* r_control);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -952,6 +953,103 @@ void MCStack::updatewindowwithbuffer(Pixmap p_pixmap, MCRegionRef p_region)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
+{
+	CGRect t_rect;
+	t_rect.origin.x = p_rect.origin.x;
+	t_rect.origin.y = p_rect.origin.y;
+	t_rect.size.width = p_rect.size.width;
+	t_rect.size.height = p_rect.size.height;
+	
+	return t_rect;
+}
+
+static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
+{
+	switch (p_blend)
+	{
+		case kMCGBlendModeClear:
+			return kCGBlendModeClear;
+		case kMCGBlendModeCopy:
+			return kCGBlendModeCopy;
+		case kMCGBlendModeSourceOver:
+			return kCGBlendModeCopy;
+		case kMCGBlendModeSourceIn:
+			return kCGBlendModeSourceIn;
+		case kMCGBlendModeSourceOut:
+			return kCGBlendModeSourceOut;
+		case kMCGBlendModeSourceAtop:
+			return kCGBlendModeSourceAtop;
+		case kMCGBlendModeDestinationOver:
+			return kCGBlendModeDestinationOver;
+		case kMCGBlendModeDestinationIn:
+			return kCGBlendModeDestinationIn;
+		case kMCGBlendModeDestinationOut:
+			return kCGBlendModeDestinationOut;
+		case kMCGBlendModeDestinationAtop:
+			return kCGBlendModeDestinationAtop;
+		case kMCGBlendModeXor:
+			return kCGBlendModeXOR;
+		case kMCGBlendModePlusDarker:
+			return kCGBlendModePlusDarker;
+		case kMCGBlendModePlusLighter:
+			return kCGBlendModePlusLighter;
+		case kMCGBlendModeMultiply:
+			return kCGBlendModeMultiply;
+		case kMCGBlendModeScreen:
+			return kCGBlendModeScreen;
+		case kMCGBlendModeOverlay:
+			return kCGBlendModeOverlay;
+		case kMCGBlendModeDarken:
+			return kCGBlendModeDarken;
+		case kMCGBlendModeLighten:
+			return kCGBlendModeLighten;
+		case kMCGBlendModeColorDodge:
+			return kCGBlendModeColorDodge;
+		case kMCGBlendModeColorBurn:
+			return kCGBlendModeColorBurn;
+		case kMCGBlendModeSoftLight:
+			return kCGBlendModeSoftLight;
+		case kMCGBlendModeHardLight:
+			return kCGBlendModeHardLight;
+		case kMCGBlendModeDifference:
+			return kCGBlendModeDifference;
+		case kMCGBlendModeExclusion:
+			return kCGBlendModeExclusion;
+		case kMCGBlendModeHue:
+			return kCGBlendModeHue;
+		case kMCGBlendModeSaturation:
+			return kCGBlendModeSaturation;
+		case kMCGBlendModeColor:
+			return kCGBlendModeColor;
+		case kMCGBlendModeLuminosity:
+			return kCGBlendModeLuminosity;
+	}
+	
+	MCAssert(false); // unknown blend mode
+}
+
+static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+{
+	bool t_success = true;
+	
+	CGImageRef t_image = nil;
+	
+	t_success = MCGImageToCGImage(p_src, p_src_rect, false, false, t_image);
+	if (t_success)
+	{
+		CGContextSaveGState(p_target);
+
+		CGContextClipToRect(p_target, p_dst_rect);
+		CGContextSetAlpha(p_target, p_alpha);
+		CGContextSetBlendMode(p_target, MCGBlendModeToCGBlendMode(p_blend));
+		CGContextDrawImage(p_target, p_dst_rect, t_image);
+		
+		CGContextRestoreGState(p_target);
+		CGImageRelease(t_image);
+	}
+}
+
 static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void *p_bits, uint32_t p_stride, bool p_has_alpha)
 {
 	CGColorSpaceRef t_colorspace;
@@ -1135,6 +1233,31 @@ public:
 	void UnlockTarget(void)
 	{
 		CGContextRestoreGState(m_context);
+	}
+	
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		int32_t t_height;
+		t_height = m_stack -> getcurcard() -> getrect() . height;
+		
+		MCGRectangle t_src, t_dst;
+		t_src = MCGRectangleIntersection(p_src_rect, MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src)));
+		
+		if (t_src.size.width == 0 || t_src.size.height == 0 || p_dst_rect.size.width == 0 || p_dst_rect.size.height == 0)
+			return true;
+		
+		MCGFloat t_vscale, t_hscale;
+		t_hscale = p_dst_rect.size.width / p_src_rect.size.width;
+		t_vscale = p_dst_rect.size.height / p_src_rect.size.height;
+		
+		t_dst = MCGRectangleMake(p_dst_rect.origin.x + (t_src.origin.x - p_src_rect.origin.x) * t_hscale,
+								 p_dst_rect.origin.y + (t_src.origin.y - p_src_rect.origin.y) * t_vscale,
+								 p_dst_rect.size.width + (t_src.size.width - p_src_rect.size.width) * t_hscale,
+								 p_dst_rect.size.height + (t_src.size.height - p_src_rect.size.height) * t_vscale);
+		
+		CGRect t_dst_rect;
+		t_dst_rect = CGRectMake(t_dst . origin . x, t_height - (t_dst . origin . y + t_dst . size . height), t_dst . size . width, t_dst . size . height);
+		/* UNCHECKED */ MCMacRenderImageToCG(m_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
 	}
 };
 
