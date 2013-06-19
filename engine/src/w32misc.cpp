@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "stacklst.h"
 #include "stack.h"
-#include "contextscalewrapper.h"
 #include "text.h"
 
 #include "w32dc.h"
