@@ -149,40 +149,43 @@ With prerequisites installed, building the engine is quite straight-forward:
   * From a command prompt and within your <repo> folder type:
     * ./tools/build-android.osx
 
-Running the engine
-------------------
+Running the engine - IDE
+------------------------
 
-*Note:* At the moment running a engine you've built (whether it be the IDE or standalone engine) is a little more fiddly than we'd like – this is high on our list to sort out though!
+When you run the IDE engine built from the git repository (from where it is built - i.e. under _build), the IDE will detect this and automatically use all the appropriate binary components that have been built alongside it. Thus, to get a fully functioning IDE with modified components all you need to do is as follows:
 
-The procedure for running the IDE or Standalone engines on each platform is all slightly different as follows...
-
-For the IDE engines (can use either Debug or Release profiles):
-* Mac (Xcode 3.2.6):
-  * Right-click on the LiveCode-Community Executable and choose Get Info.
-  * Switch to the Arguments tab
-  * Add an environment variable REV_TOOLS_PATH with value $(SRCROOT)/../ide
-  * Make sure LiveCode-Community is the active executable and click Build and Debug.
-  * The engine should now launch using the ide folder within the local repo.
-*	Mac (Xcode 4.x):
-  * Click on the target selection drop-down and select LiveCode.
-  * Click on the target selection again and choose Edit Scheme...
-  * Choose the 'Run LiveCode-Community' section on the left.
-  * Switch tab to Arguments
-  * Make sure the Environment Variables section has a REV_TOOLS_PATH variable mapping to the full path to the ide folder within your local repo.
-  * Click 'Run' and the engine should now launch using the ide within the local repo.
-* Linux:
-  * Change directory to the top-level of the repository.
-  * Create an environment variable: export REV_TOOLS_PATH=`pwd`/ide
-  * Do:
-    * master branch: ./_build/linux/debug/engine-community
-    * develop branch: ./_build/linux/i386/debug/engine-community
+* Mac:
+  * Build 'all' in stage.xcodeproj
+  * Load the engine/engine.xcodeproj
+  * Click Run/Debug.
+ 
 * Windows:
-  * Right click on the engine target and choose Properties.
-  * Switch to the Debugging page of the dialog.
-  * Add an environment variable REV_TOOLS_PATH with value $(SOLUTION_DIR)ide
-  * Make sure the engine target is the active target and click the run button.
+  * Build the solution.
+  * Make sure the 'engine' project is the default target.
+  * Click Run.
 
-*Note:* There's no easy means (at the moment) to use the externals built within the repo in the IDE when run as above. For now, the easiest thing to do is to copy the Externals folder from an existing (installed) copy of LiveCode into the ide folder inside the repo.
+* Linux:
+  * Do 'MODE=debug make all' at top-level
+  * Run '_build/linux/<arch>/debug/engine-community'
+
+You can either choose to do a 'debug' or 'release' build - if you choose debug, then the IDE will run with all 'debug' components; if you choose release, then the IDE will run with all 'release' components.
+
+If you wish to be able to build iOS or Android standalones with the running IDE then all you need to do is ensure those components are built too:
+
+* iOS:
+  * Build 'all' in stage-mobile.xcodeproj
+
+* Android:
+  * Do 'MODE=debug ./tools/build-android.osx'
+
+Again, make sure you build the same type of components (debug or release) that you are running the IDE with.
+
+*Note:* You can only build Desktop standalones for the platform you are running on when the IDE is run in this fashion.
+
+Running the engine - Standalones
+--------------------------------
+
+Sometimes it is useful to be able to run standalones directly for debugging purposes. To do this, do the following:
 
 For the standalone engines (only works in Debug profile):
 *	Mac (Xcode 3.2.6):

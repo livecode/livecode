@@ -314,6 +314,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAlternateLanguages;
 	case F_ANNUITY:
 		return new MCAnnuity;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'arithmeticMean' (was average)
+	case F_ARI_MEAN:
+		return new MCArithmeticMean;
 	case F_ARRAY_DECODE:
 		return new MCArrayDecode;
 	case F_ARRAY_ENCODE:
@@ -324,8 +327,9 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAtan2;
 	case F_ATAN:
 		return new MCAtan;
-	case F_AVERAGE:
-		return new MCAverage;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'averageDeviation'
+	case F_AVG_DEV:
+		return new MCAvgDev;
 	case F_BACK_SCRIPTS:
 		return new MCBackScripts;
 	case F_BASE64_DECODE:
@@ -466,10 +470,16 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCGetResource;
 	case F_GET_RESOURCES:
 		return new MCGetResources;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'geometricMean'
+	case F_GEO_MEAN:
+		return new MCGeometricMean;
 	case F_GLOBAL_LOC:
 		return new MCGlobalLoc;
 	case F_GLOBALS:
 		return new MCGlobals;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'harmonicMean'
+	case F_HAR_MEAN:
+		return new MCHarmonicMean;
 	case F_HAS_MEMORY:
 		return new MCHasMemory;
 	case F_HEAP_SPACE:
@@ -618,6 +628,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCPendingMessages;
 	case F_PLATFORM:
 		return new MCPlatform;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationStdDev'
+	case F_POP_STD_DEV:
+			return new MCPopulationStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationVariance'
+	case F_POP_VARIANCE:
+		return new MCPopulationVariance;
 	case F_PROCESSOR:
 		return new MCProcessor;
 	case F_PROCESS_ID:
@@ -691,6 +707,12 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCShortFilePath;
 	case F_SIN:
 		return new MCSin;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleStdDev' (was stdDev)
+	case F_SMP_STD_DEV:
+		return new MCSampleStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleVariance'
+	case F_SMP_VARIANCE:
+		return new MCSampleVariance;
 	case F_SOUND:
 		return new MCSound;
 	case F_SPECIAL_FOLDER_PATH:
@@ -703,8 +725,6 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCStackSpace;
 	case F_STAT_ROUND:
 		return new MCStatRound;
-	case F_STD_DEV:
-		return new MCStdDev;
 	case F_SUM:
 		return new MCSum;
 	case F_SYS_ERROR:
