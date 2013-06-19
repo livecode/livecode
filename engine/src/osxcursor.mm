@@ -32,6 +32,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+////////////////////////////////////////////////////////////////////////////////
+
 enum MCCursorKind
 {
 	// The hidden cursor
@@ -95,39 +99,6 @@ static ThemeCursor theme_cursorlist[PI_NCURSORS] =
 	kThemeArrowCursor, kThemeCrossCursor, kThemeWatchCursor, kThemeArrowCursor   
 };
 
-static CGImageRef CreateCGImageFromImageBitmap(const struct MCImageBitmap *p_buffer)
-{
-	CGImageRef t_image = NULL;
-	
-	const void *t_src_ptr;
-	t_src_ptr = p_buffer -> data;
-	
-	int t_src_stride;
-	t_src_stride = p_buffer -> stride;
-	
-	CGDataProviderRef t_provider;
-	t_provider = CGDataProviderCreateWithData(NULL, t_src_ptr, t_src_stride * p_buffer -> height, NULL);
-	if (t_provider != NULL)
-	{
-		CGColorSpaceRef t_color_space;
-		t_color_space = CGColorSpaceCreateDeviceRGB();
-		
-		if (t_color_space != NULL)
-		{
-			CGBitmapInfo t_bitmap_info;
-			t_bitmap_info = kCGImageAlphaPremultipliedFirst;
-			if (MCmajorosversion >= 0x1040)
-				t_bitmap_info |= kCGBitmapByteOrder32Host;
-			t_image = CGImageCreate(p_buffer -> width, p_buffer -> height, 8, 32, t_src_stride, t_color_space, t_bitmap_info, t_provider, NULL, 0, kCGRenderingIntentDefault);
-			CGColorSpaceRelease(t_color_space);
-		}
-		
-		CGDataProviderRelease(t_provider);
-	}
-	
-	return t_image;
-}
-
 // This function expects to be called after a pool has been allocated.
 static NSImage *CreateNSImageFromCGImage(CGImageRef p_image)
 {
@@ -181,7 +152,7 @@ void MCScreenDC::resetcursors(void)
 MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
 {
 	CGImageRef t_cg_image;
-	t_cg_image = CreateCGImageFromImageBitmap(p_image);
+	/* UNCHECKED */ MCImageBitmapToCGImage(p_image, false, false, t_cg_image);
 	
 	// Convert the CGImage into an NSIMage
 	NSImage *t_cursor_image;
