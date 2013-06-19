@@ -1338,7 +1338,7 @@ protected:
 public:
 	MCPatternMatcher(char *p)
 	{
-		pattern = p;
+		pattern = strdup(p);
 	}
 	virtual ~MCPatternMatcher();
 	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
@@ -1354,6 +1354,7 @@ public:
 	{
 		compiled = NULL;
 	}
+	virtual ~MCRegexMatcher();
 	virtual Exec_stat compile(uint2 line, uint2 pos);
 	virtual Boolean match(char *s);
 };
@@ -1382,7 +1383,6 @@ class MCFilter : public MCStatement
 	MCExpression *source;
 	MCExpression *pattern;
 	Match_mode matchmode;
-	MCPatternMatcher *matcher;
 	Boolean discardmatches;
 public:
 	MCFilter()
@@ -1394,11 +1394,10 @@ public:
 		source = NULL;
 		pattern = NULL;
 		matchmode = MA_UNDEFINED;
-		matcher = NULL;
 		discardmatches = False;
 	}
 	virtual ~MCFilter();
-	char *filterdelimited(char *sstring, char delimiter);
+	char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 };

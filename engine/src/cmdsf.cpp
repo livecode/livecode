@@ -1125,6 +1125,13 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 MCPatternMatcher::~MCPatternMatcher()
 {
+	delete pattern;
+}
+
+MCRegexMatcher::~MCRegexMatcher()
+{
+	// do not delete, but nullify as MCregexcache owns the reference
+	compiled = NULL;
 }
 
 Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
@@ -1283,10 +1290,9 @@ MCFilter::~MCFilter()
 	delete it;
 	delete source;
 	delete pattern;
-	delete matcher;
 }
 
-char *MCFilter::filterdelimited(char *sstring, char delimiter)
+char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
 {
 	uint4 offset = 0;
 	char *dstring = new char[strlen(sstring) + 1];
@@ -1492,6 +1498,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	char *pptr = ep.getsvalue().clone();
 
 	// Create the pattern matcher
+	MCPatternMatcher *matcher;
 	if (matchmode == MA_REGEX)
         matcher = new MCRegexMatcher(pptr);
     else
@@ -1501,6 +1508,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	{
 		delete sptr;
 		delete pptr;
+		delete matcher;
 		return stat;
 	}
 
@@ -1512,9 +1520,10 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		delimiter = ep.getitemdel();
 
 	// Filter the data
-	char *dptr = filterdelimited(sptr, delimiter);
+	char *dptr = filterdelimited(sptr, delimiter, matcher);
 	delete sptr;
 	delete pptr;
+	delete matcher;
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
 
