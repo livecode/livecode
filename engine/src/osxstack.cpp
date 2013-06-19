@@ -52,7 +52,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // MW-2011-09-13: [[ Redraw ]] If non-nil, this pixmap is used in the next
 //   HIView update.
-static Pixmap s_update_pixmap = nil;
+// IM-2013-06-19: [[ RefactorGraphics ]] Now using callback function to update
+//   the HIView instead of a Pixmap
+static MCStackUpdateCallback s_update_callback = nil;
+static void *s_update_context = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -915,9 +918,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	}
 }
 
-// MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
-//   region but using the pixmap given.
-void MCStack::updatewindowwithbuffer(Pixmap p_pixmap, MCRegionRef p_region)
+void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	HIViewRef t_root;
 	GetRootControl((WindowPtr)window -> handle . window, &t_root);
@@ -925,12 +926,14 @@ void MCStack::updatewindowwithbuffer(Pixmap p_pixmap, MCRegionRef p_region)
 	HIViewRef t_view;
 	GetIndexedSubControl(t_root, 1, &t_view);
 	HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)p_region, TRUE);
-		
-	// Set the file-local static to the pixmap to use (stacksurface picks this up!)
-	s_update_pixmap = p_pixmap;
+	
+	// Set the file-local static to the callback to use (stacksurface picks this up!)
+	s_update_callback = p_callback;
+	s_update_context = p_context;
 	HIViewRender(t_view);
 	// Unset the file-local static.
-	s_update_pixmap = nil;
+	s_update_callback = nil;
+	s_update_context = nil;
 	
 	// MW-2011-10-18: [[ Bug 9798 ]] Make sure we force a screen update after every
 	//   update.
@@ -1445,31 +1448,13 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
+					MCMacStackSurface t_surface(t_context -> stack, (MCRegionRef)t_dirty_rgn, t_graphics);
+					
 					// If we don't have an update pixmap, then use redrawwindow.
-					if (s_update_pixmap == nil)
-					{
-						MCMacStackSurface t_surface(t_context -> stack, (MCRegionRef)t_dirty_rgn, t_graphics);
+					if (s_update_callback == nil)
 						t_context -> stack -> redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
-					}
 					else
-					{
-						int32_t t_height;
-						t_height = t_context -> stack -> getcurcard() -> getrect() . height;
-						
-						MCRectangle t_rect;
-						t_rect = MCRegionGetBoundingBox((MCRegionRef)t_dirty_rgn);
-						
-						CGRect t_area;
-						t_area = CGRectMake(t_rect . x, t_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height);
-						
-						CGContextClearRect(t_graphics, t_area);
-
-						void *t_bits;
-						uint32_t t_stride;
-						((MCScreenDC*)MCscreen) -> lockpixmap(s_update_pixmap, t_bits, t_stride);
-						MCMacRenderBitsToCG(t_graphics, t_area, t_bits, t_stride, t_context -> stack -> getwindowshape() != nil ? true : false);
-						((MCScreenDC*)MCscreen) -> unlockpixmap(s_update_pixmap, t_bits, t_stride);
-					}
+						s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
 
 					// Restore the context state
 					CGContextRestoreGState(t_graphics);

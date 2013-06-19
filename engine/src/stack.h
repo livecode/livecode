@@ -87,6 +87,8 @@ public:
 	virtual bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_source, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend) = 0;
 };
 
+typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
+
 class MCStack : public MCObject
 {
 	friend class MCHcstak;
@@ -510,11 +512,16 @@ public:
 	//   window. This is a platform-specific method which causes 'redrawwindow' to be
 	//   invoked.
 	void updatewindow(MCRegionRef region);
+	
 	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window using the presented pixmap. This is a platform-specific method - note that
 	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
 	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	void updatewindowwithbuffer(Pixmap buffer, MCRegionRef region);
+	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
+	//   version which uses a callback function to perform the actual drawing using a
+	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
+	//    for handling any window mask present.
+	void updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
