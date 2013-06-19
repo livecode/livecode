@@ -367,10 +367,13 @@ enum Functions {
     F_ALIAS_REFERENCE,
     F_ALTERNATE_LANGUAGES,
     F_ANNUITY,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'arithmeticMean' (was average)
+    F_ARI_MEAN,
     F_ASIN,
     F_ATAN,
     F_ATAN2,
-    F_AVERAGE,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'averageDeviation'
+    F_AVG_DEV,
     F_BACK_SCRIPTS,
     F_BASE_CONVERT,
     F_BASE64_DECODE,
@@ -440,8 +443,12 @@ enum Functions {
     F_FUNCTION_NAMES,
     F_GET_RESOURCE,
     F_GET_RESOURCES,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'geometricMean'
+    F_GEO_MEAN,
     F_GLOBAL_LOC,
     F_GLOBALS,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'harmonicMean'
+    F_HAR_MEAN,
     F_HAS_MEMORY,
     F_HEAP_SPACE,
     F_HA,
@@ -515,6 +522,10 @@ enum Functions {
     F_PARAM_COUNT,
     F_PENDING_MESSAGES,
     F_PLATFORM,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'populationStdDev'
+    F_POP_STD_DEV,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'populationVariance'
+    F_POP_VARIANCE,
     F_PROCESS_ID,
     F_PROCESSOR,
     F_PROPERTY_NAMES,
@@ -552,12 +563,15 @@ enum Functions {
     F_SHIFT_KEY,
     F_SHORT_FILE_PATH,
     F_SIN,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'sampleStdDev' (was stdDev)
+    F_SMP_STD_DEV,
+	// JS-2013-06-19: [[ StatsFunctions ]] Tag for 'sampleVariance'
+    F_SMP_VARIANCE,
     F_SOUND,
     F_SPECIAL_FOLDER_PATH,
     F_SQRT,
     F_STACKS,
     F_STACK_SPACE,
-    F_STD_DEV,
     F_STAT_ROUND,
     F_SUM,
     F_SYS_ERROR,
