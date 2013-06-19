@@ -314,6 +314,7 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAlternateLanguages;
 	case F_ANNUITY:
 		return new MCAnnuity;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'arithmeticMean' (was average)
 	case F_ARI_MEAN:
 		return new MCArithmeticMean;
 	case F_ARRAY_DECODE:
@@ -326,6 +327,7 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCAtan2;
 	case F_ATAN:
 		return new MCAtan;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'averageDeviation'
 	case F_AVG_DEV:
 		return new MCAvgDev;
 	case F_BACK_SCRIPTS:
@@ -468,12 +470,14 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCGetResource;
 	case F_GET_RESOURCES:
 		return new MCGetResources;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'geometricMean'
 	case F_GEO_MEAN:
 		return new MCGeometricMean;
 	case F_GLOBAL_LOC:
 		return new MCGlobalLoc;
 	case F_GLOBALS:
 		return new MCGlobals;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'harmonicMean'
 	case F_HAR_MEAN:
 		return new MCHarmonicMean;
 	case F_HAS_MEMORY:
@@ -624,8 +628,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCPendingMessages;
 	case F_PLATFORM:
 		return new MCPlatform;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationStdDev'
 	case F_POP_STD_DEV:
-		return new MCPopulationStdDev;
+			return new MCPopulationStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'populationVariance'
 	case F_POP_VARIANCE:
 		return new MCPopulationVariance;
 	case F_PROCESSOR:
@@ -701,8 +707,10 @@ MCExpression *MCN_new_function(int2 which)
 		return new MCShortFilePath;
 	case F_SIN:
 		return new MCSin;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleStdDev' (was stdDev)
 	case F_SMP_STD_DEV:
 		return new MCSampleStdDev;
+	// JS-2013-06-19: [[ StatsFunctions ]] Constructor for 'sampleVariance'
 	case F_SMP_VARIANCE:
 		return new MCSampleVariance;
 	case F_SOUND:

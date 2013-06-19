@@ -45,12 +45,14 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	real8 n, tn, oldn;
 	n = oldn = 0.0;
 	MCSortnode *mditems = NULL;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for new stats functions based on arithmeticMean
 	if (func == F_AVG_DEV || func == F_POP_STD_DEV || func == F_POP_VARIANCE || func == F_SMP_STD_DEV || func == F_SMP_VARIANCE)
 	{ //use recursion to get average first
 		if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for geometricMean
 	if (func == F_GEO_MEAN)
 	{ //use recursion to count items first
 		if (evalparams(F_UNDEFINED, params, ep) != ES_NORMAL)
@@ -125,15 +127,19 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 			tparam = tparam->getnext();
 		}
 	}
+	
 	if (nparams != 0)
 		switch (func)
-		{
+	{
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for arithmeticMean (was average)
 		case F_ARI_MEAN:
 			n /= nparams;
 			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for averageDeviation
 		case F_AVG_DEV:
 			n /= nparams;
 			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for harmonicMean
 		case F_HAR_MEAN:
 			n = nparams/n;
 			break;
@@ -148,15 +154,19 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 					n = (mditems[toffset].nvalue + mditems[toffset+1].nvalue)/2;
 				break;
 			}
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for populationStandardDeviation
 		case F_POP_STD_DEV:
 			n = sqrt(n/nparams);
 			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for populationVariance
 		case F_POP_VARIANCE:
 			n /= nparams;
 			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for sampleStandardDeviation (was stdDev)
 		case F_SMP_STD_DEV:
 			n = sqrt(n/(nparams - 1));
 			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for sampleVariance
 		case F_SMP_VARIANCE:
 			n /= nparams - 1;
 			break;
@@ -278,6 +288,7 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of arithmeticMean (was average)
 MCArithmeticMean::~MCArithmeticMean()
 {
 	while (params != NULL)
@@ -435,6 +446,7 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of averageDeviation
 MCAvgDev::~MCAvgDev()
 {
 	while (params != NULL)
@@ -698,6 +710,7 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
 MCGeometricMean::~MCGeometricMean()
 {
 	while (params != NULL)
@@ -732,6 +745,7 @@ Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of harmonicMean
 MCHarmonicMean::~MCHarmonicMean()
 {
 	while (params != NULL)
@@ -1155,6 +1169,7 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationStdDev
 MCPopulationStdDev::~MCPopulationStdDev()
 {
 	while (params != NULL)
@@ -1189,6 +1204,7 @@ Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationVariance
 MCPopulationVariance::~MCPopulationVariance()
 {
 	while (params != NULL)
@@ -1357,6 +1373,7 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
 MCSampleStdDev::~MCSampleStdDev()
 {
 	while (params != NULL)
@@ -1391,6 +1408,7 @@ Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleVariance
 MCSampleVariance::~MCSampleVariance()
 {
 	while (params != NULL)

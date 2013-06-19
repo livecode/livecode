@@ -1167,6 +1167,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of populationStdDev
 class MCPopulationStdDev : public MCFunction
 {
 	MCParameter *params;
@@ -1180,6 +1181,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of populationVariance
 class MCPopulationVariance : public MCFunction
 {
 	MCParameter *params;
@@ -1890,6 +1892,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of arithmeticMean
 class MCArithmeticMean : public MCFunction
 {
 	MCParameter *params;
@@ -1943,6 +1946,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of averageDev (was average)
 class MCAvgDev : public MCFunction
 {
 	MCParameter *params;
@@ -2035,6 +2039,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of geometricMean
 class MCGeometricMean : public MCFunction
 {
 	MCParameter *params;
@@ -2048,6 +2053,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of harmonicMean
 class MCHarmonicMean : public MCFunction
 {
 	MCParameter *params;
@@ -2233,6 +2239,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleStdDev (was stdDev)
 class MCSampleStdDev : public MCFunction
 {
 	MCParameter *params;
@@ -2246,6 +2253,7 @@ public:
 	virtual Exec_stat eval(MCExecPoint &);
 };
 
+// JS-2013-06-19: [[ StatsFunctions ]] Definition of sampleVariance
 class MCSampleVariance : public MCFunction
 {
 	MCParameter *params;

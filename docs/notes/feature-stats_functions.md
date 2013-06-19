@@ -14,11 +14,11 @@ The following synonyms for existing statistical functions were added to clarify 
 For a variable `theNumbers` containing a series of numbers:
 `2,4,4,4,5,5,7,9`
 these statistical functions return the following values:
-**averageDeviation(theNumbers)** -> `1.5`
-**populationStandardDeviation(theNumbers)** -> `2`
-**sampleStandardDeviation(theNumbers)** -> `2.13809`
-**populationVariance(theNumbers)** -> `4`
-**sampleVariance(theNumbers)** -> `4.571429`
-**arithmeticMean(theNumbers)** -> `5`
-**geometricMean(theNumbers)** -> `4.603216`
-**harmonicMean(theNumbers)** -> `4.201751`
+* **averageDeviation(theNumbers)** -> `1.5`
+* **populationStandardDeviation(theNumbers)** -> `2`
+* **sampleStandardDeviation(theNumbers)** -> `2.13809`
+* **populationVariance(theNumbers)** -> `4`
+* **sampleVariance(theNumbers)** -> `4.571429`
+* **arithmeticMean(theNumbers)** -> `5`
+* **geometricMean(theNumbers)** -> `4.603216`
+* **harmonicMean(theNumbers)** -> `4.201751`

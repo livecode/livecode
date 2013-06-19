@@ -501,6 +501,7 @@ LT factor_table[] =
 		{"antialiased", TT_PROPERTY, P_ANTI_ALIASED},
         {"any", TT_CHUNK, CT_ANY},
         {"arcangle", TT_PROPERTY, P_ARC_ANGLE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"arithmeticmean", TT_FUNCTION, F_ARI_MEAN},
         {"arm", TT_PROPERTY, P_ARM},
         {"armborder", TT_PROPERTY, P_ARM_BORDER},
@@ -523,9 +524,13 @@ LT factor_table[] =
         {"autoselect", TT_PROPERTY, P_LIST_BEHAVIOR},
         {"autotab", TT_PROPERTY, P_AUTO_TAB},
 		{"availableprinters", TT_PROPERTY, P_PRINTER_NAMES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"average", TT_FUNCTION, F_ARI_MEAN},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'averageDeviation' (aka avgDev)
         {"averagedeviation", TT_FUNCTION, F_AVG_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"avg", TT_FUNCTION, F_ARI_MEAN},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"avgdev", TT_FUNCTION, F_AVG_DEV},
         {"backcolor", TT_PROPERTY, P_BACK_COLOR},
         {"backdrop", TT_PROPERTY, P_BACK_DROP},
@@ -861,6 +866,7 @@ LT factor_table[] =
         {"ftpproxy", TT_PROPERTY, P_FTP_PROXY},
 		{"fullscreen", TT_PROPERTY, P_FULLSCREEN},
         {"functionnames", TT_FUNCTION, F_FUNCTION_NAMES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'geometricMean'
         {"geometricmean", TT_FUNCTION, F_GEO_MEAN},
         {"getresource", TT_FUNCTION, F_GET_RESOURCE},
         {"getresources", TT_FUNCTION, F_GET_RESOURCES},
@@ -879,6 +885,7 @@ LT factor_table[] =
         {"groups", TT_CLASS, CT_GROUP},
         {"grp", TT_CHUNK, CT_GROUP},
         {"grps", TT_CLASS, CT_GROUP},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'harmonicMean'
         {"harmonicmean", TT_FUNCTION, F_HAR_MEAN},
         {"hasmemory", TT_FUNCTION, F_HAS_MEMORY},
         {"hcaddressing", TT_PROPERTY, P_HC_ADDRESSING},
@@ -1064,6 +1071,7 @@ LT factor_table[] =
         {"mcisendstring", TT_FUNCTION, F_MCI_SEND_STRING},
         {"md5digest", TT_FUNCTION, F_MD5_DIGEST},
         {"me", TT_FUNCTION, F_ME},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"mean", TT_FUNCTION, F_ARI_MEAN},
         {"median", TT_FUNCTION, F_MEDIAN},
         {"mediatypes", TT_PROPERTY, P_MEDIA_TYPES},
@@ -1200,9 +1208,13 @@ LT factor_table[] =
         {"pointerfocus", TT_PROPERTY, P_POINTER_FOCUS},
         {"points", TT_PROPERTY, P_POINTS},
         {"polysides", TT_PROPERTY, P_POLY_SIDES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
         {"popstddev", TT_FUNCTION, F_POP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
         {"populationstandarddeviation", TT_FUNCTION, F_POP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationVariance' (aka popVariance)
         {"populationvariance", TT_FUNCTION, F_POP_VARIANCE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'populationStandarddDeviation' (aka popStdDev)
         {"popvariance", TT_FUNCTION, F_POP_VARIANCE},
         {"postscript", TT_PROPERTY, P_POSTSCRIPT},
         {"powerkeys", TT_PROPERTY, P_POWER_KEYS},
@@ -1340,7 +1352,9 @@ LT factor_table[] =
         {"rtftext", TT_PROPERTY, P_RTF_TEXT},
         {"samplestandarddeviation", TT_FUNCTION, F_SMP_STD_DEV},
         {"samplevariance", TT_FUNCTION, F_SMP_VARIANCE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
         {"sampstddev", TT_FUNCTION, F_SMP_STD_DEV},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleVariance' (aka sampVariance)
         {"sampvariance", TT_FUNCTION, F_SMP_VARIANCE},
         {"savecompressed", TT_PROPERTY, P_SAVE_COMPRESSED},
         {"sb", TT_CHUNK, CT_SCROLLBAR},
@@ -1465,6 +1479,7 @@ LT factor_table[] =
         {"stacks", TT_FUNCTION, F_STACKS},
         {"stacksinuse", TT_PROPERTY, P_STACKS_IN_USE},
         {"stackspace", TT_FUNCTION, F_STACK_SPACE},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
         {"standarddeviation", TT_FUNCTION, F_SMP_STD_DEV},
         {"startangle", TT_PROPERTY, P_START_ANGLE},
         {"startarrow", TT_PROPERTY, P_START_ARROW},
@@ -1476,6 +1491,7 @@ LT factor_table[] =
 		{"statusicon", TT_PROPERTY, P_STATUS_ICON},
 		{"statusiconmenu", TT_PROPERTY, P_STATUS_ICON_MENU},
 		{"statusicontooltip", TT_PROPERTY, P_STATUS_ICON_TOOLTIP},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleStandardDeviation' (aka stdDev / standardDeviation)
         {"stddev", TT_FUNCTION, F_SMP_STD_DEV},
 		{"strokegradient", TT_PROPERTY, P_GRADIENT_STROKE},
         {"style", TT_PROPERTY, P_STYLE},
@@ -1606,6 +1622,7 @@ LT factor_table[] =
 		{"uuid", TT_FUNCTION, F_UUID},
         {"value", TT_FUNCTION, F_VALUE},
         {"variablenames", TT_FUNCTION, F_VARIABLES},
+		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'sampleVariance' (aka variance)
         {"variance", TT_FUNCTION, F_SMP_VARIANCE},
         {"vc", TT_CHUNK, CT_VIDEO_CLIP},
         {"vcplayer", TT_PROPERTY, P_VC_PLAYER},

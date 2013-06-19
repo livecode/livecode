@@ -2240,15 +2240,18 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	real8 tp;
 	switch (func)
 	{
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
 	case F_ARI_MEAN:
 		n += tn;
 		nparams++;
-		break;
+			break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
 	case F_AVG_DEV:
 		tn = tn - oldn;
 		n += abs(tn);
 		nparams++;
 		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
 	case F_GEO_MEAN:
 		if (nparams == 0)
 			n = 1;
@@ -2256,6 +2259,7 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		n *= pow(tn, tp);
 		nparams++;
 		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
 	case F_HAR_MEAN:
 		n += 1/tn;
 		nparams++;
@@ -2275,6 +2279,7 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		titems[nparams].nvalue = tn;
 		nparams++;
 		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
 	case F_POP_STD_DEV:
 	case F_POP_VARIANCE:
 	case F_SMP_STD_DEV:
