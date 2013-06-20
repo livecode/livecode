@@ -635,8 +635,8 @@ class MCWindowsStackSurface: public MCStackSurface
 	MCRegionRef m_region;
 	HDC m_dc;
 
+	MCGContextRef m_locked_context;
 	MCRectangle m_locked_area;
-	MCContext *m_locked_context;
 	HBITMAP m_locked_bitmap;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
@@ -652,17 +652,17 @@ public:
 		m_locked_bitmap = nil;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
 		if (LockPixels(p_area, t_raster))
 		{
-			// Make sure we create a 'transient' dc if opacity < 255.
-			m_locked_context = new MCGraphicsContext(t_raster . width, t_raster . height, t_raster . stride, t_raster . pixels, true);
-			if (m_locked_context != nil)
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
-				m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
-				m_locked_context -> setclip(m_locked_area);
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
 				
@@ -680,7 +680,7 @@ public:
 		if (m_locked_context == nil)
 			return;
 
-		delete m_locked_context;
+		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
 		UnlockPixels(true);
@@ -761,7 +761,7 @@ class MCWindowsLayeredStackSurface: public MCStackSurface
 	MCWindowShape *m_mask;
 
 	MCRectangle m_locked_area;
-	MCContext *m_locked_context;
+	MCGContextRef m_locked_context;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
 
@@ -776,17 +776,17 @@ public:
 		m_locked_stride = 0;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
 		if (LockPixels(p_area, t_raster))
 		{
-			m_locked_context = new MCGraphicsContext(t_raster . width, t_raster . height, t_raster . stride, t_raster . pixels, true);
-			if (m_locked_context != nil)
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
-				m_locked_area = MCRegionGetBoundingBox(p_area);
-				m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
-				m_locked_context -> setclip(m_locked_area);
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
 				

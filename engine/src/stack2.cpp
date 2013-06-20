@@ -2457,10 +2457,14 @@ void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 	{
 		// If there is no tilecache, or the tilecache is invalid then fetch an
 		// MCContext for the surface and render.
-		MCContext *t_context;
+		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
-			render(t_context, MCRegionGetBoundingBox(p_region));
+			MCGraphicsContext *t_old_context = nil;
+			t_old_context = new MCGraphicsContext(t_context);
+			if (t_old_context != nil)
+				render(t_old_context, MCRegionGetBoundingBox(p_region));
+			delete t_old_context;
 			p_surface -> UnlockGraphics();
 		}
 	}

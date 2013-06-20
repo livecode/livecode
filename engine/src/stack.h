@@ -67,8 +67,8 @@ enum MCStackSurfaceTargetType
 class MCStackSurface
 {
 public:
-	// Lock the surface for access with an MCContext
-	virtual bool LockGraphics(MCRegionRef area, MCContext*& r_context) = 0;
+	// Lock the surface for access with an MCGContextRef
+	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
