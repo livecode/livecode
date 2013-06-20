@@ -631,6 +631,13 @@ void MCStack::redrawicon(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
+{
+	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCWindowsStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
@@ -755,6 +762,33 @@ public:
 	void UnlockTarget(void)
 	{
 	}
+
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+
+		t_success = MCRegionCreate(t_region);
+
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+
+		if (t_success)
+		{
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+
+		UnlockGraphics();
+
+		MCRegionDestroy(t_region);
+
+		return t_success;
+	}
 };
 
 class MCWindowsLayeredStackSurface: public MCStackSurface
@@ -853,6 +887,33 @@ public:
 	
 	void UnlockTarget(void)
 	{
+	}
+
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+
+		t_success = MCRegionCreate(t_region);
+
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+
+		if (t_success)
+		{
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+
+		UnlockGraphics();
+
+		MCRegionDestroy(t_region);
+
+		return t_success;
 	}
 };
 
