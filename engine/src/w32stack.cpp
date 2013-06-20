@@ -56,7 +56,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // MW-2011-09-14: [[ Redraw ]] If non-nil, this pixmap is used in the next
 //   onpaint update.
-static Pixmap s_update_pixmap = nil;
+// IM-2013-06-19: [[ RefactorGraphics]] replace update pixmap with callback
+static MCStackUpdateCallback s_update_callback = nil;
+static void *s_update_context = nil;
 static MCRectangle s_update_rect;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -803,7 +805,7 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		delete m_locked_context;
+		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 
 		UnlockPixels(true);
@@ -882,7 +884,6 @@ void MCStack::updatewindow(MCRegionRef p_region)
 			t_bits = t_bitmap_struct.bmBits;
 		}
 
-		if (s_update_pixmap == nil)
 		{
 			MCGRaster t_raster;
 			t_raster.width = m_window_shape->width;
@@ -892,28 +893,29 @@ void MCStack::updatewindow(MCRegionRef p_region)
 			t_raster.format = kMCGRasterFormat_ARGB;
 
 			MCWindowsLayeredStackSurface t_surface(t_raster, m_window_shape);
-			redrawwindow(&t_surface, (MCRegionRef)p_region);
+
+			if (s_update_callback == nil)
+				redrawwindow(&t_surface, (MCRegionRef)p_region);
+			else
+				s_update_callback(&t_surface, (MCRegionRef)p_region, s_update_context);
 		}
-#ifdef LIBGRAPHICS_BROKEN
-		else
-			MCscreen -> copyarea(s_update_pixmap, t_pixmap, 32, 0, 0, s_update_rect . width, s_update_rect . height, s_update_rect . x, s_update_rect . y, GXcopy);
-#endif
 
 		composite();
 	}
 }
 
-void MCStack::updatewindowwithbuffer(Pixmap p_buffer, MCRegionRef p_region)
+void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
-	s_update_pixmap = p_buffer;
+	s_update_callback = p_callback;
+	s_update_context = p_context;
 	s_update_rect = MCRegionGetBoundingBox(p_region);
 	updatewindow(p_region);
-	s_update_pixmap = nil;
+	s_update_callback = nil;
+	s_update_context = nil;
 }
 
 void MCStack::onpaint(void)
 {
-	if (s_update_pixmap == nil)
 	{
 		HRGN t_update_region;
 		t_update_region = CreateRectRgn(0, 0, 0, 0);
@@ -923,24 +925,15 @@ void MCStack::onpaint(void)
 		BeginPaint((HWND)window -> handle . window, &t_paint);
 
 		MCWindowsStackSurface t_surface(this, t_update_region, t_paint . hdc);
-		redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+
+		if (s_update_callback == nil)
+			redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+		else
+			s_update_callback(&t_surface, (MCRegionRef)t_update_region, s_update_context);
 
 		EndPaint((HWND)window -> handle . window, &t_paint);
 
 		DeleteObject(t_update_region);
-	}
-	else
-	{
-		PAINTSTRUCT t_paint;
-		BeginPaint((HWND)window -> handle . window, &t_paint);
-
-		HDC t_src_dc = ((MCScreenDC *)MCscreen) -> getsrchdc();
-		HGDIOBJ t_old_object;
-		t_old_object = SelectObject(t_src_dc, s_update_pixmap -> handle . pixmap);
-		BitBlt(t_paint . hdc, s_update_rect . x, s_update_rect . y, s_update_rect . width, s_update_rect . height, t_src_dc, 0, 0, SRCCOPY);
-		SelectObject(t_src_dc, t_old_object);
-		
-		EndPaint((HWND)window -> handle . window, &t_paint);
 	}
 }
 
