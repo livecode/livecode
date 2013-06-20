@@ -85,6 +85,12 @@ public:
 	
 	// Composite the source image onto the surface using the given blend mode & opacity
 	virtual bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_source, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend) = 0;
+
+	/* OVERHAUL - REVISIT: ideally, these methods should not be part of the public MCStackSurface interface */
+	// Prepare surface for use - do not call from within drawing code
+	virtual bool Lock(void) = 0;
+	// Atomically update target surface with drawn image - do not call from within drawing code
+	virtual void Unlock(void) = 0;
 };
 
 typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
