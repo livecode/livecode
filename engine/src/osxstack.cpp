@@ -956,6 +956,11 @@ void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallba
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
+{
+	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
 static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
 {
 	CGRect t_rect;
@@ -1092,7 +1097,7 @@ class MCMacStackSurface: public MCStackSurface
 	CGContextRef m_context;
 	
 	MCRectangle m_locked_area;
-	MCContext *m_locked_context;
+	MCGContextRef m_locked_context;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
 	
@@ -1107,21 +1112,24 @@ public:
 		m_locked_bits = nil;
 	}
 	
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
 		if (LockPixels(p_area, t_raster))
 		{
-			m_locked_context = new MCGraphicsContext(t_raster . width, t_raster . height, t_raster . stride, t_raster . pixels, true);
-			if (m_locked_context != nil)
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
-				m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
-				m_locked_context -> setclip(m_locked_area);
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
 				
 				r_context = m_locked_context;
 				
 				return true;
 			}
+			
+			UnlockPixels(false);
 		}
 		
 		return false;
@@ -1132,7 +1140,7 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		delete m_locked_context;
+		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
 		FlushBits(m_locked_bits, m_locked_stride);
@@ -1165,12 +1173,18 @@ public:
 		return false;
 	}
 	
-	void UnlockPixels(void)
+	void UnlockPixels()
+	{
+		UnlockPixels(true);
+	}
+	
+	void UnlockPixels(bool p_update)
 	{
 		if (m_locked_bits == nil)
 			return;
 		
-		FlushBits(m_locked_bits, m_locked_area . width * sizeof(uint32_t));
+		if (p_update)
+			FlushBits(m_locked_bits, m_locked_area . width * sizeof(uint32_t));
 		
 		free(m_locked_bits);
 		m_locked_bits = nil;
