@@ -423,18 +423,17 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 						if (function == F_SELECTED_LINE || function == F_SELECTED_CHUNK)
 						{}
 					}
-					else
-						if (cline != NULL || item != NULL || word != NULL
+					else if (cline != NULL || item != NULL || word != NULL
 						        || token != NULL || character != NULL)
+					{
+						sp.backup();
+						if (sp.parseexp(True, False, &source) != PS_NORMAL)
 						{
-							sp.backup();
-							if (sp.parseexp(True, False, &source) != PS_NORMAL)
-							{
-								MCperror->add(PE_CHUNK_BADEXP, sp);
-								return PS_ERROR;
-							}
-							return PS_NORMAL;
+							MCperror->add(PE_CHUNK_BADEXP, sp);
+							return PS_ERROR;
 						}
+						return PS_NORMAL;
+					}
 					desttype = DT_FUNCTION;
 					break;
 				case F_ME:
@@ -502,6 +501,12 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 							MCperror->add(PE_CHUNK_BADEXP, sp);
 							return PS_ERROR;
 						}
+						// MW-2013-06-20: [[ Bug 10966 ]] Make sure we mark the chunk as being of
+						//   'expression' type. This means 'source' will be evaluated and then parsed
+						//   as a control reference in 'getobj()' context. This has wider implications
+						//   that just 'controlAtLoc()' - it means any function used on the rhs of
+						//   'of' for properties will now function correctly.
+						desttype = DT_EXPRESSION;
 						return PS_NORMAL;
 					}
 					else
@@ -2426,15 +2431,10 @@ Exec_stat MCChunk::getobjforprop(MCExecPoint& ep, MCObject*& r_object, uint4& r_
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-	        && word == NULL && token == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		r_object = objptr;
 		r_parid = parid;
@@ -2465,15 +2465,10 @@ Exec_stat MCChunk::getprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-	        && word == NULL && token == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		// MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
 		//   prop, else its an array prop.
@@ -2532,15 +2527,10 @@ Exec_stat MCChunk::setprop(Properties which, MCExecPoint &ep, MCNameRef index, B
 		MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!tfunction && cline == NULL && item == NULL
-	        && token == NULL && word == NULL && character == NULL)
+	
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!istextchunk())
 	{
 		// MW-2011-11-23: [[ Array Chunk Props ]] If index is nil, then its just a normal
 		//   prop, else its an array prop.
@@ -2619,15 +2609,9 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 		MCeerror->add(EE_CHUNK_NOTOPEN, line, pos);
 		return ES_ERROR;
 	}
-	Boolean tfunction = False;
-	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-	        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-	        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-	        && function != F_SELECTED_IMAGE
-			&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-		tfunction = True;
-	if (!text && !tfunction && where == PT_AT && cline == NULL && item == NULL
-	        && token == NULL && word == NULL && character == NULL)
+	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+	//   the chunk can be evaluated as an object.
+	if (!text && !istextchunk())
 	{
 		if (first)
 			MCselected->clear(False);
@@ -2705,6 +2689,7 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 bool MCChunk::istextchunk(void) const
 {
 	Boolean tfunction;
+	
 	if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
         && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
         && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
@@ -2807,15 +2792,10 @@ Exec_stat MCChunk::del(MCExecPoint &ep)
 			MCeerror->add(EE_CHUNK_CANTFINDOBJECT, line, pos);
 			return ES_ERROR;
 		}
-		Boolean tfunction = False;
-		if (desttype == DT_FUNCTION && function != F_CLICK_FIELD
-		        && function != F_SELECTED_FIELD && function != F_FOUND_FIELD
-		        && function != F_MOUSE_CONTROL && function != F_FOCUSED_OBJECT
-		        && function != F_SELECTED_IMAGE
-				&& function != F_DRAG_SOURCE && function != F_DRAG_DESTINATION)
-			tfunction = True;
-		if (!tfunction && cline == NULL && item == NULL
-		        && token == NULL && word == NULL && character == NULL)
+		
+		// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
+		//   the chunk can be evaluated as an object.
+		if (!istextchunk())
 		{
 			if (!objptr->del())
 			{
