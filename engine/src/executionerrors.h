@@ -2413,6 +2413,9 @@ enum Exec_errors
 	
 	// {EE-0795} variance: error in source expression
 	EE_VARIANCE_BADSOURCE,
+	
+	// {EE-0796} group: object cannot be grouped
+	EE_GROUP_NOTGROUPABLE,
 };
 
 extern const char *MCexecutionerrors;
