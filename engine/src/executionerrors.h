@@ -2374,6 +2374,9 @@ enum Exec_errors
     
     // {EE-0779} controls don't have the same owner
 	EE_GROUP_DIFFERENTPARENT,
+	
+	// {EE-0780} group: object cannot be grouped
+	EE_GROUP_NOTGROUPABLE,
 };
 
 extern const char *MCexecutionerrors;
