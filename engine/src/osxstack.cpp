@@ -1112,6 +1112,45 @@ public:
 		m_locked_bits = nil;
 	}
 	
+	bool Lock(void)
+	{
+		CGImageRef t_mask;
+		t_mask = nil;
+		if (m_stack -> getwindowshape() != nil)
+			t_mask = (CGImageRef)m_stack -> getwindowshape() -> handle;
+		
+		if (t_mask != nil)
+		{
+			MCRectangle t_card_rect;
+			t_card_rect = m_stack -> getcurcard() -> getrect();
+			
+			MCRectangle t_rect;
+			t_rect = MCRegionGetBoundingBox(m_region);
+			CGContextClearRect(m_context, CGRectMake(t_rect . x, t_card_rect . height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
+			
+			// MW-2012-07-25: [[ Bug ]] Make sure we use signed arithmetic to
+			//   compute the y-origin otherwise it wraps to 2^32!
+			int32_t t_mask_height, t_mask_width;
+			t_mask_width = (int32_t)CGImageGetWidth(t_mask);
+			t_mask_height = (int32_t)CGImageGetHeight(t_mask);
+			
+			CGRect t_dst_rect;
+			t_dst_rect . origin . x = 0;
+			t_dst_rect . origin . y = ((int32_t)t_card_rect . height) - t_mask_height - m_stack -> getscroll();
+			t_dst_rect . size . width = t_mask_width;
+			t_dst_rect . size . height = t_mask_height;
+			CGContextClipToMask(m_context, t_dst_rect, t_mask);
+		}
+		
+		CGContextSaveGState(m_context);
+		return true;
+	}
+	
+	void Unlock(void)
+	{
+		CGContextRestoreGState(m_context);
+	}
+	
 	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
 	{
 		MCGRaster t_raster;
@@ -1212,34 +1251,6 @@ public:
 		if (p_type != kMCStackSurfaceTargetCoreGraphics)
 			return false;
 
-		CGImageRef t_mask;
-		t_mask = nil;
-		if (m_stack -> getwindowshape() != nil)
-			t_mask = (CGImageRef)m_stack -> getwindowshape() -> handle;
-		
-		if (t_mask != nil)
-		{
-			MCRectangle t_card_rect;
-			t_card_rect = m_stack -> getcurcard() -> getrect();
-			
-			MCRectangle t_rect;
-			t_rect = MCRegionGetBoundingBox(m_region);
-			CGContextClearRect(m_context, CGRectMake(t_rect . x, t_card_rect . height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
-			
-			// MW-2012-07-25: [[ Bug ]] Make sure we use signed arithmetic to
-			//   compute the y-origin otherwise it wraps to 2^32!
-			int32_t t_mask_height, t_mask_width;
-			t_mask_width = (int32_t)CGImageGetWidth(t_mask);
-			t_mask_height = (int32_t)CGImageGetHeight(t_mask);
-			
-			CGRect t_dst_rect;
-			t_dst_rect . origin . x = 0;
-			t_dst_rect . origin . y = ((int32_t)t_card_rect . height) - t_mask_height - m_stack -> getscroll();
-			t_dst_rect . size . width = t_mask_width;
-			t_dst_rect . size . height = t_mask_height;
-			CGContextClipToMask(m_context, t_dst_rect, t_mask);
-		}
-	
 		CGContextSaveGState(m_context);
 
 		r_context = m_context;
@@ -1274,7 +1285,19 @@ public:
 		
 		CGRect t_dst_rect;
 		t_dst_rect = CGRectMake(t_dst . origin . x, t_height - (t_dst . origin . y + t_dst . size . height), t_dst . size . width, t_dst . size . height);
-		/* UNCHECKED */ MCMacRenderImageToCG(m_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
+		
+		CGContextRef t_context = nil;
+		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, (void*&)t_context))
+			return false;
+		
+		bool t_success = true;
+		
+		if (t_success)
+			t_success = MCMacRenderImageToCG(t_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
+		
+		UnlockTarget();
+		
+		return t_success;
 	}
 };
 
@@ -1464,11 +1487,15 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					
 					MCMacStackSurface t_surface(t_context -> stack, (MCRegionRef)t_dirty_rgn, t_graphics);
 					
-					// If we don't have an update pixmap, then use redrawwindow.
-					if (s_update_callback == nil)
-						t_context -> stack -> redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
-					else
-						s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
+					if (t_surface.Lock())
+					{
+						// If we don't have an update pixmap, then use redrawwindow.
+						if (s_update_callback == nil)
+							t_context -> stack -> redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
+						else
+							s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
+						t_surface.Unlock();
+					}
 
 					// Restore the context state
 					CGContextRestoreGState(t_graphics);
