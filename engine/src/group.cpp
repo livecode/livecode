@@ -956,6 +956,10 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
 		break;
+	// MW-2013-06-20: [[ GrpLckUpdates ]] [[ Bug 10960 ]] Add accessor for 'the lockUpdates'
+	case P_LOCK_UPDATES:
+		ep.setboolean(m_updates_locked);
+		break;
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}

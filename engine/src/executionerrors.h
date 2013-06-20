@@ -2395,6 +2395,27 @@ enum Exec_errors
 	
 	// {EE-0789} uuid: not enough randomness available
 	EE_UUID_NORANDOMNESS,
+	
+	// {EE-0790} avgDev: error in source expression
+	EE_AVGDEV_BADSOURCE,
+	
+	// {EE-0791} geometricMean: error in source expression
+	EE_GEO_MEAN_BADSOURCE,
+
+	// {EE-0792} harmonicMean: error in source expression
+	EE_HAR_MEAN_BADSOURCE,
+
+	// {EE-0793} pStdDev: error in source expression
+	EE_POP_STDDEV_BADSOURCE,
+	
+	// {EE-0794} pVariance: error in source expression
+	EE_POP_VARIANCE_BADSOURCE,
+	
+	// {EE-0795} variance: error in source expression
+	EE_VARIANCE_BADSOURCE,
+	
+	// {EE-0796} group: object cannot be grouped
+	EE_GROUP_NOTGROUPABLE,
 };
 
 extern const char *MCexecutionerrors;
