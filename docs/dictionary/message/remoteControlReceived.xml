@@ -45,59 +45,60 @@
 
 	<references>
 		<function tag="iphoneRemoteControlEnabled">iphoneRemoteControlEnabled Function</function>
+		<command tag="iphoneEnableRemoteControl">iphoneEnableRemoteControl Command</command>
 		<command tag="iphoneDisableRemoteControl">iphoneDisableRemoteControl Command</command>
 		<command tag="iphoneSetAudioCategory">iphoneSetAudioCategory Command</command>
-		<command tag="iphoneSetRemoteControlDisplay">iphoneSetRemoteControlDisplay command</command>
+		<command tag="iphoneSetRemoteControlDisplay">iphoneSetRemoteControlDisplay Command</command>
 	</references>
 
 	<description>
 	<overview>Handle the <b>remoteControlReceived</b> message if you want to perform an action when a remote control event occurs.</overview>
 
 		<parameters>
-<parameter>
-<name>eventType</name>
-<description>A string describing the event type which occured. One of</description>
-<options option_title="">
-<option>
-<item>pause</item>
-<description></description>
-</option>
-<option>
-<item>stop</item>
-<description></description>
-</option>
-<option>
-<item>toggle play pause</item>
-<description></description>
-</option>
-<option>
-<item>next track</item>
-<description></description>
-</option>
-<option>
-<item>previous track</item>
-<description></description>
-</option>
-<option>
-<item>begin seeking forward</item>
-<description></description>
-</option>
-<option>
-<item>begin seeking backward</item>
-<description></description>
-</option>
-<option>
-<item>end seeking forward</item>
-<description></description>
-</option>
-<option>
-<item>end seeking backward</item>
-<description></description>
-</option>
-</options>
-</parameter>		</parameters>
+  <parameter>
+    <name>eventType</name>
+    <description>A string describing the event type which occured. One of</description>
+    <options option_title="">
+      <option>
+        <item>pause</item>
+        <description/>
+      </option>
+      <option>
+        <item>stop</item>
+        <description/>
+      </option>
+      <option>
+        <item>toggle play pause</item>
+        <description/>
+      </option>
+      <option>
+        <item>next track</item>
+        <description/>
+      </option>
+      <option>
+        <item>previous track</item>
+        <description/>
+      </option>
+      <option>
+        <item>begin seeking forward</item>
+        <description/>
+      </option>
+      <option>
+        <item>begin seeking backward</item>
+        <description/>
+      </option>
+      <option>
+        <item>end seeking forward</item>
+        <description/>
+      </option>
+      <option>
+        <item>end seeking backward</item>
+        <description/>
+      </option>
+    </options>
+  </parameter>		</parameters>
 
 	<value></value>
-	<comments>The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).<p></p><p>When the remote control is enabled and a remote control event occurs the <b>remoteControlReceived</b> message is send to the current card.</p><p></p><note>This functionality is only available on iOS 5.x and above.</note></comments>
+	<comments>The remote control feature on iOS allows access to the audio controls both on an external device and also on the device itself when in lock screen (via double-tapping on the Home button).<p></p><p>When the remote control is enabled and a remote control event occurs the <b>remoteControlReceived</b> message is send to the current card.</p><p></p><p></p><note>This functionality is only available on iOS 5.x and above.</note></comments>
 	</description>
 </doc>
