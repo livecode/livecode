@@ -18,9 +18,11 @@
 
 	<history>
 		<introduced version="4.6">Added.</introduced>
-		<deprecated version=""></deprecated>
+		<deprecated version="6.0">6.0</deprecated>
 		<removed version=""></removed>
-		<changed version=""></changed>
+		<changed version="6.0">Deprecated</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -52,6 +54,6 @@
 		</parameters>
 
 	<value>The iphoneSystemIdentifier function returns a string in the standard UUID/GUID format.</value>
-	<comments></comments>
+	<comments><important></important>As of version 6.0 the <b>iPhoneSystemIdentifier</b> function has been deprecated and must not be used in new code.</comments>
 	</description>
 </doc>
