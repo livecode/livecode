@@ -29,7 +29,8 @@ else
 	STATIC_LIBS+=stdc++
 endif
 
-LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
+# MDW 2013-06-20 : added -lm flag to avoid libxml linker errors
+LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -lm -Xlinker -no-undefined -static-libgcc
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME).so
 
