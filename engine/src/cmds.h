@@ -1335,10 +1335,12 @@ class MCPatternMatcher
 {
 protected:
 	char *pattern;
+	Boolean casesensitive;
 public:
-	MCPatternMatcher(char *p)
+	MCPatternMatcher(char *p, Boolean cs)
 	{
 		pattern = strdup(p);
+		casesensitive = cs;
 	}
 	virtual ~MCPatternMatcher();
 	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
@@ -1350,7 +1352,7 @@ class MCRegexMatcher : public MCPatternMatcher
 protected:
 	regexp *compiled;
 public:
-	MCRegexMatcher(char *p) : MCPatternMatcher(p)
+	MCRegexMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
 	{
 		compiled = NULL;
 	}
@@ -1360,12 +1362,9 @@ public:
 
 class MCWildcardMatcher : public MCPatternMatcher
 {
-protected:
-	Boolean casesensitive;
 public:
-	MCWildcardMatcher(char *p, Boolean cs) : MCPatternMatcher(p)
+	MCWildcardMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
 	{
-		casesensitive = cs;
 	}
 	virtual Exec_stat compile(uint2 line, uint2 pos);
 	virtual Boolean match(char *s);

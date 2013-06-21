@@ -303,9 +303,18 @@ const char *MCR_geterror()
 
 regexp *MCR_compile(char *exp)
 {
+    // JS-2013-06-21: [[ EnhancedFilter ]] case sensitive regex matching
+    return MCR_compile(exp, True);
+}
+
+// JS-2013-06-21: [[ EnhancedFilter ]] case sensitive regex matching
+regexp *MCR_compile(char *exp, Boolean casesensitive)
+{
 	regexp *re = new regexp;
 	int status;
 	int flags = REG_EXTENDED;
+    if (!casesensitive)
+        flags |= REG_ICASE;
 	status = regcomp(&re->rexp, exp, flags);
 	if (status != REG_OKAY)
 	{

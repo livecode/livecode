@@ -58,6 +58,8 @@ regexp;
 
 const char *MCR_geterror();
 regexp *MCR_compile(char *exp);
+// JS-2013-06-21: [[ EnhancedFilter ]] case sensitive regex matching
+regexp *MCR_compile(char *exp, Boolean casesensitive);
 int MCR_exec(regexp *prog, const char *string, uint4 len);
 void MCR_free(regexp *prog);
 

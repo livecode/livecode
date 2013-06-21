@@ -1150,7 +1150,7 @@ Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
 			MCregexpatterns[i] = MCregexpatterns[i - 1];
 		}
 		MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
+		MCregexcache[0] = MCR_compile(MCregexpatterns[0], casesensitive);
 		compiled = MCregexcache[0];
 	}
 	else
@@ -1497,7 +1497,7 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
 	if (matchmode == MA_REGEX)
-        matcher = new MCRegexMatcher(pptr);
+        matcher = new MCRegexMatcher(pptr, ep.getcasesensitive());
     else
 		matcher = new MCWildcardMatcher(pptr, ep.getcasesensitive());
 	stat = matcher->compile(line, pos);
