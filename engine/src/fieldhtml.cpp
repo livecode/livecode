@@ -2226,12 +2226,12 @@ MCParagraph *MCField::importhtmltext(const MCString& p_data)
 				t_ptr += 1;
 
 			if (!ctxt . preformatted)
-				while(*t_ptr == '\r' || *t_ptr == '\n')
-				{
-					if (t_ptr >= t_limit)
-						break;
+			{
+				// MW-2013-06-21: [[ Valgrind ]] Only scan t_ptr if it is within the
+				//   string.
+				while(t_ptr < t_limit && (*t_ptr == '\r' || *t_ptr == '\n'))
 					t_ptr += 1;
-				}
+			}
 			else
 				t_ptr += 1;
 

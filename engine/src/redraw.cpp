@@ -692,6 +692,12 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		if (t_before_layer_id == 0)
 			return;
 
+		// MW-2013-06-21: [[ Bug ]] If the previous layer is a sprite then this layer
+		//   will change the lower limit of the scenery layers above, thus there is
+		//   nothing to do.
+		if (p_previous -> getref() -> layer_issprite())
+			return;
+		
 		// Now insert the scenery.
 		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, p_control -> geteffectiverect());
 
@@ -755,6 +761,12 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		// The layer below us has the same id so there's nothing to do, we are
 		// removing a 'new' layer before its been redrawn.
 		if (t_before_layer_id == p_control -> layer_getid())
+			return;
+		
+		// MW-2013-06-21: [[ Bug ]] If the layer below is a sprite, then removing
+		//   this layer will increase the lower limit of the scenery stack above
+		//   thus there is nothing to do.
+		if (p_previous -> getref() -> layer_issprite())
 			return;
 
 		// The layer below us has a different id, so this is an existing layer
@@ -1011,7 +1023,7 @@ void MCCard::render(void)
 					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_control -> geteffectiverect());
 					t_layer . id = 0;
 				}
-
+				
 				t_layer . callback = testtilecache_sprite_renderer;
 				MCTileCacheRenderSprite(t_tiler, t_layer);
 			}

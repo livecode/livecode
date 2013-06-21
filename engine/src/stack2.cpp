@@ -741,6 +741,10 @@ void MCStack::ungroup(MCGroup *source)
 		MCControl *tptr = clist;
 		do
 		{
+			// MW-2013-06-21: [[ Bug ]] Make sure we uncache the object from the id
+			//   cache, otherwise its id will get bumped if it has been accessed via
+			//   id before (due to the subsequent check!).
+			uncacheobjectbyid(tptr);
 			if (getcontrolid(tptr->gettype(), tptr->getid()))
 			{
 				fprintf(stderr, "ERROR: found duplicate id %d\n", tptr->getid());
