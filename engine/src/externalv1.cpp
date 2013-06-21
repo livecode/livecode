@@ -324,11 +324,13 @@ struct MCExternalInterface
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] Method to evaluate the given expression
 	//   in the current context.
-	MCExternalError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef value, ...); // V5
+	// MW-2013-06-21: [[ ExternalsApiV5 ]] Added binds parameters for future extension.
+	MCExternalError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count, MCExternalVariableRef result); // V5
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] Method to execute the given expression
 	//   in the current context.
-	MCExternalError (*context_execute)(const char *p_expression, unsigned int options, ...); // V5
+	// MW-2013-06-21: [[ ExternalsApiV5 ]] Added binds parameters for future extension.
+	MCExternalError (*context_execute)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count); // V5
 };
 
 typedef MCExternalInfo *(*MCExternalDescribeProc)(void);
@@ -1008,7 +1010,7 @@ static MCExternalError MCExternalContextQuery(MCExternalContextQueryTag op, void
 }
 
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_evaluate method.
-MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef p_result, ...)
+MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int p_options, MCExternalVariableRef *p_binds, unsigned int p_bind_count, MCExternalVariableRef p_result)
 {
 	MCEPptr -> setsvalue(p_expression);
 	
@@ -1027,7 +1029,7 @@ MCExternalError MCExternalContextEvaluate(const char *p_expression, unsigned int
 }
 
 // MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of context_execute method.
-MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options, ...)
+MCExternalError MCExternalContextExecute(const char *p_commands, unsigned int p_options, MCExternalVariableRef *p_binds, unsigned int p_bind_count)
 {
 	MCEPptr -> setsvalue(p_commands);
 	

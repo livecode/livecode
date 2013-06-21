@@ -227,8 +227,8 @@ typedef struct MCExternalInterface
 	MCError (*object_update)(MCObjectRef object, unsigned int options, void *region);
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] New context methods for script execution.
-	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value, ...);
-	MCError (*context_execute)(const char *p_expression, unsigned int options, ...);
+	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count, MCVariableRef result);
+	MCError (*context_execute)(const char *p_expression, unsigned int options, MCExternalVariableRef *binds, unsigned int bind_count);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -1467,7 +1467,7 @@ LCError LCContextEvaluate(const char *p_expression, unsigned int p_options, void
 		t_error = (LCError)MCVariableCreate(&t_value_var);
 		
 	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, t_value_var);
+		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, nil, 0, t_value_var);
 		
 	if (t_error == kLCErrorNone)
 		t_error = LCValueFetch(t_value_var, p_options, r_value);
@@ -1483,7 +1483,7 @@ LCError LCContextExecute(const char *p_commands, unsigned int p_options)
 	if (s_interface -> version < 5)
 		return kLCErrorNotImplemented;
 		
-	return (LCError)s_interface -> context_execute(p_commands, 0);
+	return (LCError)s_interface -> context_execute(p_commands, 0, nil, 0);
 }
 
 //////////
