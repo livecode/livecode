@@ -30,13 +30,13 @@ else
 endif
 
 # MDW 2013-06-20 : added -lm flag to avoid libxml linker errors
-LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -lm -Xlinker -no-undefined -static-libgcc
+LDFLAGS=$(CUSTOM_LDFLAGS) -shared $(addprefix -Xlinker --exclude-libs -Xlinker ,$(addsuffix .a,$(addprefix lib,$(STATIC_LIBS)))) -Xlinker -no-undefined -static-libgcc
 
 TARGET_PATH=$(BUILD_DIR)/$(NAME).so
 
 $(TARGET_PATH): $(OBJECTS) $(DEPS)
 	mkdir -p $(dir $(TARGET_PATH))
-	gcc -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS))
+	gcc -fvisibility=hidden -o$(TARGET_PATH) $(LDFLAGS) $(OBJECTS) $(addsuffix .a,$(addprefix $(PRODUCT_DIR)/lib,$(LIBS))) -Wl,-Bstatic $(addprefix -l,$(STATIC_LIBS)) -Wl,-Bdynamic $(addprefix -l,$(DYNAMIC_LIBS)) -lm
 	cd $(BUILD_DIR) && \
 		objcopy --only-keep-debug "$(NAME).so" "$(NAME).so.dbg" && \
 		strip --strip-debug --strip-unneeded "$(NAME).so" && \
