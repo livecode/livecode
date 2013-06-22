@@ -207,7 +207,9 @@ void DispatchMetaCardMessage(char *messagename,char *tmessage)
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
 char mcmessage[256];
-sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into extvariable",messagename);
+// MDW 2013-06-22 : reference to extvariable should be to xmlvariable
+sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into xmlvariable",messagename);
+//sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into extvariable",messagename);
 SendCardMessage(mcmessage, &retvalue);
 }
 
@@ -303,7 +305,8 @@ extern char *strlwr(char *str);
 #endif
 
 
-#define REVXML_VERSIONSTRING "2.9.0"
+// MDW 2013-06-22 : updated the version string
+#define REVXML_VERSIONSTRING "6.1.0"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
@@ -2196,6 +2199,25 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributes", XML_ListOfAttributes)
 	EXTERNAL_DECLARE_FUNCTION("revXMLMatchingNode", XML_FindElementByAttributeValue)
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributeValues", XML_ListByAttributeValue)
+// MDW 2013-06-22 : declared preferred synonyms for consistency and sanity
+// propose deprecating the old keywords
+	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTree", XML_NewDocumentNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeWithNamespaces", XML_NewDocumentNNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFile", XML_NewDocumentFromFileNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFileWithNamespaces", XML_NewDocumentFromFileNNS)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteTree", XML_FreeDocument)
+	EXTERNAL_DECLARE_COMMAND("revXMLAppend", XML_AddXML)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteAllTrees", XML_FreeAll)
+	EXTERNAL_DECLARE_COMMAND("revXMLAddNode", XML_AddElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteNode", XML_RemoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLInsertNode", XML_InsertElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveNode", XML_MoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyNode", XML_CopyElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyRemoteNode", XML_CopyRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveRemoteNode", XML_MoveRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLPutIntoNode", XML_SetElementContents)
+	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
+
 EXTERNAL_END_DECLARATIONS
 
 
