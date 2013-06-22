@@ -170,6 +170,7 @@ static PropList groupprops[] =
         {"opaque", P_OPAQUE},
         {"radioBehavior", P_RADIO_BEHAVIOR},
         {"rect", P_RECTANGLE},
+        {"selectGroupedControls", P_SELECT_GROUPED_CONTROLS},
         {"scrollbarWidth", P_SCROLLBAR_WIDTH},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},

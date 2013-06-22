@@ -1376,6 +1376,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HEIGHT, "height" },      // incase top,bottom are in the array
     { P_STYLE, "style" },        // changes numerous properties including text alignment
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
+    { P_FILE_NAME, "filename" }, // setting image filenames to empty after setting the text will clear them
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
