@@ -1376,7 +1376,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HEIGHT, "height" },      // incase top,bottom are in the array
     { P_STYLE, "style" },        // changes numerous properties including text alignment
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
-    { P_FILE_NAME, "filename" }, // setting image filenames to empty after setting the text will clear them
+    { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
@@ -1408,7 +1408,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
     for (j=0; j<t_preprocess_size; j++)
     {
-        e = lookuphash(s_preprocess_props[j].tag,true,false);
+        e = lookuphash(s_preprocess_props[j].tag,false,false);
         if (e)
         {
             e -> value . fetch(ep);
