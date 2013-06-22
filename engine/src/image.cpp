@@ -1008,9 +1008,12 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			if (data.getlength() == 0)
 			{
-				// empty text - unset flags & set rep to nil;
-				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
-				setrep(nil);
+                if (flags & F_HAS_FILENAME)
+                {
+                    // empty text - unset flags & set rep to nil;
+                    flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+                    setrep(nil);
+                }
 			}
 			else
 			{
