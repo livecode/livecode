@@ -692,7 +692,7 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 		if (t_before_layer_id == 0)
 			return;
 
-		// MW-2013-06-21: [[ Bug ]] If the previous layer is a sprite then this layer
+		// MW-2013-06-21: [[ Bug 10974 ]] If the previous layer is a sprite then this layer
 		//   will change the lower limit of the scenery layers above, thus there is
 		//   nothing to do.
 		if (p_previous -> getref() -> layer_issprite())
@@ -763,7 +763,7 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		if (t_before_layer_id == p_control -> layer_getid())
 			return;
 		
-		// MW-2013-06-21: [[ Bug ]] If the layer below is a sprite, then removing
+		// MW-2013-06-21: [[ Bug 10974 ]] If the layer below is a sprite, then removing
 		//   this layer will increase the lower limit of the scenery stack above
 		//   thus there is nothing to do.
 		if (p_previous -> getref() -> layer_issprite())

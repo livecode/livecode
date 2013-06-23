@@ -2069,7 +2069,7 @@ bool MCImage::setfilename(const char *p_filename)
 	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
-	// MW-2013-06-21: [[ Bug ]] Make sure we construct an absolute path to use
+	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
 	//   for Rep construction.
 	if (t_success)
 	{
