@@ -1130,31 +1130,7 @@ MCPatternMatcher::~MCPatternMatcher()
 
 Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
 {
-	char *pstring = strdup(pattern);
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-	{
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			break;
-		}
-	}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0], casesensitive);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+	compiled = MCR_compile(pattern, True /* usecache */, casesensitive);
 	if (compiled == NULL)
 	{
 		MCeerror->add
@@ -1178,7 +1154,7 @@ Exec_stat MCWildcardMatcher::compile(uint2 line, uint2 pos)
 #define OPEN_BRACKET '['
 #define CLOSE_BRACKET ']'
 
-Boolean MCWildcardMatcher::match(char *s, char *p, Boolean casesensitive)
+/* static */ Boolean MCWildcardMatcher::match(char *s, char *p, Boolean casesensitive)
 {
 	uint1 scc, c;
     

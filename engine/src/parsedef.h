@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;

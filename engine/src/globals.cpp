@@ -810,11 +810,7 @@ void X_clear_globals(void)
 	MCnullmcstring = NULL;
 
 	// MW-2013-03-11: [[ Bug 10713 ]] Make sure we reset the regex cache globals to nil.
-	for(uindex_t i = 0; i < PATTERN_CACHE_SIZE; i++)
-	{
-		MCregexpatterns[i] = nil;
-		MCregexcache[i] = nil;
-	}
+	MCR_clearcache();
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 		MCcursors[i] = nil;
@@ -1091,12 +1087,8 @@ int X_close(void)
 		MCglobals = MCglobals->getnext();
 		delete tvar;
 	}
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-	{
-		delete MCregexpatterns[i];
-		MCR_free(MCregexcache[i]);
-	}
+	// JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism
+    MCR_clearcache();
 	delete MCperror;
 	delete MCeerror;
 

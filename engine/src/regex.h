@@ -24,7 +24,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define REG_OKAY 0
 
 #define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
 
 //regex structure
 typedef struct
@@ -51,17 +50,17 @@ regmatch_t;
 typedef struct _regexp
 {
 	regex_t rexp;
+    char *pattern;
+    int flags;
 	uint2 nsubs;
 	regmatch_t matchinfo[NSUBEXP];
 }
 regexp;
 
 const char *MCR_geterror();
-regexp *MCR_compile(char *exp);
-// JS-2013-06-21: [[ EnhancedFilter ]] case sensitive regex matching
-regexp *MCR_compile(char *exp, Boolean casesensitive);
+regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive);
 int MCR_exec(regexp *prog, const char *string, uint4 len);
 void MCR_free(regexp *prog);
+void MCR_clearcache();
 
-extern regexp *MCregexcache[];
 #endif
