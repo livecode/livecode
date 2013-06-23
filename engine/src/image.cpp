@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "mcerror.h"
 #include "objectstream.h"
+#include "osspec.h"
 
 #include "context.h"
 
@@ -2068,6 +2069,16 @@ bool MCImage::setfilename(const char *p_filename)
 	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
+	//   for Rep construction.
+	if (t_success)
+	{
+		char *t_resolved_filename;
+		t_resolved_filename = MCS_resolvepath(t_resolved);
+		delete t_resolved;
+		t_resolved = t_resolved_filename;
+		MCU_fix_path(t_resolved);
+	}
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
 
