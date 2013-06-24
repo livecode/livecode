@@ -13,6 +13,7 @@
 	<summary>Disables access to the remote control feature on iOS.</summary>
 
 	<examples>
+<example>iphoneDisableRemoteControl</example>
 	</examples>
 
 	<history>
@@ -57,6 +58,6 @@
 		</parameters>
 
 	<value></value>
-	<comments>Use the <b>iphoneEnableRemoteControl</b> command to stop receiving remote control events when playing audio.<p></p><note>This functionality is only available on iOS 5.x and above.</note></comments>
+	<comments>Use the <b>iphoneEnableRemoteControl</b> command to stop receiving remote control events when playing audio.<p></p><p></p><note>This functionality is only available on iOS 5.x and above.</note></comments>
 	</description>
 </doc>
