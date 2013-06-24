@@ -890,6 +890,12 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		}
 		break;
 	case P_FILE_NAME:
+		/* {for next release}
+		// MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
+		//   empty, and the filename is already empty, do nothing.
+		if ((m_rep != nil && m_rep -> GetType() == kMCImageRepReferenced && data == MCnullmcstring) ||
+			data != filename)
+		*/
 		if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
 			data != filename)
 		{
@@ -898,7 +904,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 				/* UNCHECKED */ t_filename = data.clone();
 
 			setfilename(t_filename);
-
+                
 			MCCStringFree(t_filename);
 
 			resetimage();
@@ -1009,6 +1015,17 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			if (data.getlength() == 0)
 			{
+				/* {for next release}
+				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
+				//   text to empty shouldn't have an effect; otherwise we are unsetting the
+				//   current text.
+                if (!getflag(F_HAS_FILENAME))
+                {
+                    // empty text - unset flags & set rep to nil;
+                    flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+                    setrep(nil);
+                }
+				*/
 				// empty text - unset flags & set rep to nil;
 				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
 				setrep(nil);

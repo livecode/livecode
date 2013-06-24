@@ -170,6 +170,8 @@ static PropList groupprops[] =
         {"opaque", P_OPAQUE},
         {"radioBehavior", P_RADIO_BEHAVIOR},
         {"rect", P_RECTANGLE},
+		// MERG-2013-06-24: [[ RevisedPropsProp ]] Include 'selectGroupedControls' in the group prop-list.
+        {"selectGroupedControls", P_SELECT_GROUPED_CONTROLS},
         {"scrollbarWidth", P_SCROLLBAR_WIDTH},
         {"shadowColor", P_SHADOW_COLOR},
         {"shadowPattern", P_SHADOW_PATTERN},
@@ -775,7 +777,15 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
         {
             // MERG-2013-05-07: [[ RevisedPropsProp ]] Special-case the props that could
 			//   be either Unicode or native (ensure minimal encoding is used).
+			// MERG-2013-06-24: [[ RevisedPropsProp ]] Treat the short name specially to ensure
+			//   round-tripping. If the name is empty, then return empty for 'name'.
             switch ((Properties)table[tablesize].value) {
+                case P_SHORT_NAME:
+                    if (isunnamed())
+                        ep.clear();
+                    else
+                        getprop(parid, P_SHORT_NAME, ep, effective);
+                    break;
                 case P_LABEL:
                     getprop(parid, P_UNICODE_LABEL, ep, effective);
                     if (!ep.trytoconvertutf16tonative())

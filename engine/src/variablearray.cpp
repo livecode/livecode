@@ -1378,6 +1378,8 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HEIGHT, "height" },      // incase top,bottom are in the array
     { P_STYLE, "style" },        // changes numerous properties including text alignment
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
+	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
+    { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
@@ -1410,10 +1412,19 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
     for (j=0; j<t_preprocess_size; j++)
     {
-        e = lookuphash(s_preprocess_props[j].tag,true,false);
+		// MERG-2013-06-24: [[ RevisedPropsProp ]] Make sure we do a case-insensitive search
+		//   for the property name.
+        e = lookuphash(s_preprocess_props[j].tag,false,false);
         if (e)
         {
             e -> value . fetch(ep);
+			
+			// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
+			//   'filename' of an image if it is non-empty.
+			if (s_preprocess_props[j].prop == P_FILE_NAME && optr -> gettype() == CT_IMAGE &&
+				ep . isempty())
+				continue;
+				
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
         }
     }
@@ -1433,15 +1444,35 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
                 {
                     // MERG-2013-05-07: [[ RevisedPropsProp ]] check if the key was
 					//   in the pre-processed.
+					// MW-2013-06-24: [[ RevisedPropsProp ]] set a boolean if the prop has already been
+					//   set.
+					bool t_been_preprocessed;
+					t_been_preprocessed = false;
                     for (j=0; j<t_preprocess_size; j++)
                         if (te->which == s_preprocess_props[j].prop)
-                            continue;
-					
-                    e -> value . fetch(ep);
-                    if ((Properties)te->which > P_FIRST_ARRAY_PROP)
-                        optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
-                    else
-                        optr->setprop(parid, (Properties)te->which, ep, False);
+						{
+                            t_been_preprocessed = true;
+							break;
+						}
+						
+					// MW-2013-06-24: [[ RevisedPropsProp ]] Only attempt to set the prop if it hasn't
+					//   already been processed.
+					if (!t_been_preprocessed)
+					{
+						e -> value . fetch(ep);
+						if ((Properties)te->which > P_FIRST_ARRAY_PROP)
+							optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
+						else
+						{
+							// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only
+							//   set the 'text' of an image if it is non-empty.
+							if (te -> which == P_TEXT && optr -> gettype() == CT_IMAGE &&
+								ep . isempty())
+								continue;
+								
+							optr->setprop(parid, (Properties)te->which, ep, False);
+						}
+					}
                 }
             	e = e->next;
 			}
