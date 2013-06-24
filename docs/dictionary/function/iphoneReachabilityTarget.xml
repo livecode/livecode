@@ -45,7 +45,6 @@
 	</classification>
 
 	<references>
-		<function tag=""></function>
 		<command tag="iphoneSetReachabilityTarget">iphoneReachabilitySetTarget Function</command>
 		<message tag="reachabilityChanged">reachabilityChanged Message</message>
 	</references>

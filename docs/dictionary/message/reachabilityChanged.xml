@@ -47,21 +47,20 @@
 	<references>
 		<function tag="iphoneReachabilityTarget">iphoneReachabilityTarget Function</function>
 		<command tag="iphoneSetReachabilityTarget">iphoneSetReachabilityTarget Command</command>
-		<message tag=""></message>
 	</references>
 
 	<description>
 	<overview>Handle the reachabilityChanged message if you want to perform an action when changes to network connectivity occur.</overview>
 
 		<parameters>
-<parameter>
-<name>hostNameOrAddress</name>
-<description>The server being monitored</description>
-</parameter>
-<parameter>
-<name>reachabilityInfo</name>
-<description>Comma delimited list of zero or more of the following</description>
-<options title="">
+  <parameter>
+    <name>hostNameOrAddress</name>
+    <description>The server being monitored</description>
+  </parameter>
+  <parameter>
+    <name>reachabilityInfo</name>
+    <description>Comma delimited list of zero or more of the following</description>
+    <options title="">
       <option>
         <item>transient</item>
         <description>the specified server can be reached via a transient connection</description>
@@ -94,8 +93,8 @@
         <item>is cell</item>
         <description>the specified server can be reached via an EDGE, GPRS or other 'cell' connection</description>
       </option>
-</options>
-</parameter>		</parameters>
+    </options>
+  </parameter>		</parameters>
 
 	<value></value>
 	<comments>The <b>reachabilityChanged</b> message is sent to the current card of the defaultStack when a change to network connectivity, that affects access to a server that is being monitored, occurs.</comments>
