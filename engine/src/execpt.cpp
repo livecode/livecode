@@ -981,3 +981,27 @@ bool MCExecPoint::copyasnameref(MCNameRef& r_name)
 {
 	return MCNameCreateWithOldString(getsvalue(), r_name);
 }
+
+// Assumes the contents of the ep is UTF-16 and attempts conversion to native. If
+// successful, the new contents is native and the method returns true, otherwise
+// false and the contents remains unchanged.
+bool MCExecPoint::trytoconvertutf16tonative()
+{
+    // if empty then it can be native obviously but this also avoids getsvalue returning nil
+    if (isempty())
+        return true;
+    
+    MCExecPoint t_other_ep;
+    t_other_ep . setsvalue(getsvalue());
+    t_other_ep . utf16tonative();
+    t_other_ep . nativetoutf16();
+    
+    if (getsvalue() . getlength() == t_other_ep . getsvalue() . getlength()
+        && memcmp(getsvalue() . getstring(), t_other_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
+        {
+            copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
+            return true;
+        }
+    return false;
+}
+        
