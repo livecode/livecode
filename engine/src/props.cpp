@@ -776,6 +776,12 @@ Exec_stat MCObject::getproparray(MCExecPoint &ep, uint4 parid, bool effective)
         {
             
             switch ((Properties)table[tablesize].value) {
+                case P_SHORT_NAME:
+                    if (isunnamed())
+                        ep.clear();
+                    else
+                        getprop(parid, P_SHORT_NAME, ep, effective);
+                    break;
                 case P_LABEL:
                     getprop(parid, P_UNICODE_LABEL, ep, effective);
                     if (!ep.trytoconvertutf16tonative())
