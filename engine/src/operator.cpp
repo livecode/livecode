@@ -1052,7 +1052,7 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
                     int t_length = ep.getsvalue().getlength();
                     for (int i=0; i < t_length ;i++)
                     {
-                        if (*t_string > 127 || *t_string == 0)
+                        if (*t_string > 127)
                         {
                             cond = False;
                             break;
