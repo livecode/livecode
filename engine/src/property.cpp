@@ -821,6 +821,7 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 Exec_stat MCProperty::set(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
 	Pixmap newpm;
 	int2 mx, my;
@@ -2679,10 +2680,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::set */
 }
 
 Exec_stat MCProperty::eval(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::eval */ LEGACY_EXEC
 	uint2 i = 0;
 	int2 mx, my;
 	MCExecPoint ep2(ep);
@@ -4094,6 +4097,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::eval */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

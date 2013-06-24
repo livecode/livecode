@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkBitmap.h>
 #include <SkDevice.h>
 #include <SkTypeface.h>
-#include <SkDashPathEffect.h>
+include <SkDashPathEffect.h>
 #include <SkShader.h>
 
 #define SKIA_LAYERING 0
@@ -176,7 +176,7 @@ void MCAndroidContext::begin(bool p_group)
 
 bool MCAndroidContext::begin_with_effects(MCBitmapEffectsRef p_effects, const MCRectangle &p_shape)
 {
-	MCRectangle t_layer_clip;
+MCRectangle t_layer_clip;
 	MCBitmapEffectsComputeClip(p_effects, p_shape, getclip(), t_layer_clip);
 
 	if (t_layer_clip . width == 0 || t_layer_clip . height == 0)

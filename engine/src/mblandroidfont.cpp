@@ -51,7 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef uint32_t MCAndroidFontStyle;
+ypedef uint32_t MCAndroidFontStyle;
 enum
 {
 	kMCAndroidFontStyleRegular = 1 << 0,
@@ -296,7 +296,7 @@ static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic)
+tatic MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic)
 {
     char *t_styled_name;
     t_styled_name = nil;    
@@ -328,7 +328,7 @@ static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold,
     // If we've still not found a matching font, look up based on the family and style.
     // This function will attempt to provide a closest match e.g. Arial Bold is requested but only Arial is installed.
     t_font = look_up_custom_font_by_family_and_style(p_name, p_bold, p_italic);
-    return t_font;
+   return t_font;
 }
 
 static MCAndroidCustomFont* look_up_custom_font_by_name(const char *p_name)

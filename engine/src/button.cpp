@@ -1609,6 +1609,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 
 	switch (which)
 	{
+#ifdef /* MCButton::getprop */ LEGACY_EXEC
 	case P_STYLE:
 		{
 			const char *t_style_string;
@@ -1871,6 +1872,7 @@ Exec_stat MCButton::getprop(uint4 parid, Properties which, MCExecPoint& ep, Bool
 		// Map the menustring's encoding to the requested encoding.
 		ep.mapunicode(hasunicode(), which == P_UNICODE_TEXT);
 		break;
+#endif /* MCButton::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1888,6 +1890,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 	
 	switch (p)
 	{
+#ifdef /* MCButton::setprop */ LEGACY_EXEC
 	case P_NAME:
 		if (MCObject::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
@@ -2485,6 +2488,7 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
 		return MCControl::setprop(parid, p, ep, effective);
+#endif /* MCButton::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}

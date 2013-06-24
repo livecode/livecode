@@ -129,6 +129,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 {
 	switch (which)
 	{
+#ifdef /* MCDispatch::getprop */ LEGACY_EXEC
 	case P_BACK_PIXEL:
 		ep.setint(MCscreen->background_pixel.pixel & 0xFFFFFF);
 		return ES_NORMAL;
@@ -180,6 +181,7 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 	case P_TEXT_STYLE:
 		ep.setstaticcstring(MCplainstring);
 		return ES_NORMAL;
+#endif /* MCDispatch::getprop */ 
 	default:
 		MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -188,7 +190,9 @@ Exec_stat MCDispatch::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bo
 
 Exec_stat MCDispatch::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
+#ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
+#endif /* MCDispatch::setprop */
 }
 
 // bogus "cut" call actually checks license

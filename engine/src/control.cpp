@@ -386,6 +386,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 {
 	switch (which)
 	{
+#ifdef /* MCControl::getprop */ LEGACY_EXEC
 	case P_MARGINS:
 		if (leftmargin == rightmargin && leftmargin == topmargin && leftmargin == bottommargin)
 			ep.setint(leftmargin);
@@ -447,7 +448,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 		ep.setstaticcstring(t_value);
 	}
 	break;
-
+#endif /* MCControl::getprop */ 
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -457,6 +458,7 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCControl::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
 	// MW-2009-06-09: [[ Bitmap Effects ]]
@@ -471,6 +473,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCObject::getarrayprop(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
+#endif /* MCControl::getarrayprop */
 }
 
 Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
@@ -481,6 +484,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 
 	switch (which)
 	{
+#ifdef /* MCControl::setprop */ LEGACY_EXEC
 	case P_MARGINS:
 		if (MCU_stoi2(data, i1))
 			leftmargin = rightmargin = topmargin = bottommargin = i1;
@@ -610,7 +614,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 		// Mark the layer attrs for recompute.
 		m_layer_attr_changed = true;
 		return ES_NORMAL;
-
+#endif /* MCControl::setprop */
 	default:
 		return MCObject::setprop(parid, which, ep, effective);
 	}
@@ -625,6 +629,7 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 
 Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCControl::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
 	dirty = False;
 	switch(which)
@@ -656,6 +661,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	}
 
 	return MCObject::setarrayprop(parid, which, ep, key, effective);
+#endif /* MCControl::setarrayprop */
 }
 
 void MCControl::select()
