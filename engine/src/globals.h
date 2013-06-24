@@ -155,6 +155,10 @@ extern uint2 MCiconicstacks;
 extern uint2 MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
+// TD-2013-06-20: [[ USE FONT ]] list of font files in use.
+extern MCVariableValue *MCfontsusing;
+
+
 extern Boolean MCownselection;
 extern MCUndolist *MCundos;
 extern MCSellist *MCselected;

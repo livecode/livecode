@@ -1991,6 +1991,19 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 	return false;
 }
 
+
+// TD-2013-05-29 [[ USE FONT ]]
+
+Exec_errors MCUIDC::loadfont(const char *p_path, bool p_load_globally)
+{
+	return EE_UNDEFINED;
+}
+
+Exec_errors MCUIDC::unloadfont(const char *p_path, bool p_load_globally)
+{
+	return EE_UNDEFINED;
+}
+
 //
 
 MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_allowed_actions, MCImage *p_image, const MCPoint *p_image_offset)

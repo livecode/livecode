@@ -523,6 +523,12 @@ public:
 	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 	
 	//
+    
+    // TD-2013-05-29: [[ USE FONT ]]
+	virtual Exec_errors loadfont(const char *p_path, bool p_load_globally);
+    virtual Exec_errors unloadfont(const char *p_path, bool p_load_globally);
+    
+    //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);

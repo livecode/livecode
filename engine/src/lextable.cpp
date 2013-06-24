@@ -818,6 +818,8 @@ LT factor_table[] =
         {"focuspixel", TT_PROPERTY, P_FOCUS_PIXEL},
         {"folder", TT_PROPERTY, P_DIRECTORY},
         {"folders", TT_FUNCTION, F_DIRECTORIES},
+        // TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+        {"fontfilesinuse", TT_PROPERTY, P_FONTFILES_IN_USE},
         {"fontlanguage", TT_FUNCTION, F_FONT_LANGUAGE},
         {"fontnames", TT_FUNCTION, F_FONT_NAMES},
         {"fontsizes", TT_FUNCTION, F_FONT_SIZES},
@@ -1889,6 +1891,11 @@ static LT sugar_table[] =
 		{"effects", TT_UNDEFINED, SG_EFFECTS},
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
+        
+        // TD-2013-06-14: [[ USE FONT ]] start using font theFont [globally]
+        {"font", TT_UNDEFINED, SG_FONT},
+        {"globally", TT_UNDEFINED, SG_GLOBALLY},
+        
 		{"initially", TT_UNDEFINED, SG_INITIALLY},
         {"keyword", TT_CHUNK, CT_UNDEFINED},
 		{"level", TT_UNDEFINED, SG_LEVEL},

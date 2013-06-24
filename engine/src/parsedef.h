@@ -126,7 +126,7 @@ enum Chunk_term {
     CT_PULLDOWN,
     CT_POPUP,
     CT_OPTION,
-
+    
     CT_STACK,
     CT_AUDIO_CLIP,
     CT_VIDEO_CLIP,
@@ -1095,6 +1095,9 @@ enum Properties {
     P_ADDRESS,
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
+    
+  	// TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+    P_FONTFILES_IN_USE,
 	
     // window properties
     P_NAME,
@@ -1635,6 +1638,7 @@ enum Script_point {
     SP_EXIT,
     SP_EXPORT,
     SP_FACTOR,
+    
     SP_FIND,
     SP_FLIP,
     SP_GO,
@@ -1739,6 +1743,10 @@ enum Sugar_constants {
 	SG_OPEN,
 	SG_CLOSED,
 	SG_CALLER,
+    
+    // TD-2013-06-14: [[ USE FONT ]] start using font theFont [globally]
+    SG_FONT,
+    SG_GLOBALLY
 };
 
 enum Statements {

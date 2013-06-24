@@ -328,6 +328,10 @@ public:
 	virtual bool ownsclipboard(void);
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
+    
+    // TD-2013-06-24: [[ USE FONT ]]
+    virtual Exec_errors loadfont(const char *p_pathbool, bool p_load_globally);
+    virtual Exec_errors unloadfont(const char *p_path, bool p_load_globally);
 
 	//
 

@@ -124,6 +124,58 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
+// TD-2013-06-24 [[ USE FONT ]]
+
+// p_path is a fully resolved path
+Exec_errors MCScreenDC::loadfont(const char *p_path, bool p_load_globally)
+{
+    bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_load_globally)
+        t_private = FR_PRIVATE;
+    
+	if (t_success)
+	{
+		struct _stat t_info;
+		if (_stat(p_filename, &t_info) != 0 || (t_info . st_mode & _S_IFDIR) != 0)
+			return EE_FONT_BADFILEEXP;
+	}
+	
+	if (t_success)
+	{
+		if (AddFontResourceEx(p_path, t_private, 0) == 0)
+			return EE_FONT_CANTLOAD;
+	}
+    
+	if (t_success)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return EE_UNDEFINED;
+}
+
+
+Exec_errors MCScreenDC::unloadfont(const char *p_path, bool p_load_globally)
+{
+    bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_load_globally)
+        t_private = FR_PRIVATE;
+    
+    if (t_success)
+		t_success = RemoveFontResourceEx(p_path, t_private, 0) != 0;
+    
+	if (t_success)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	if (!t_success)
+        return EE_FONT_CANTUNLOAD;
+    else
+        return EE_UNDEFINED;
+}
+
+
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 {
 	MCGDIContext *t_context;
