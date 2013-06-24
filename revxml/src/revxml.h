@@ -90,3 +90,7 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring,
 				  Bool *pass, Bool *error);
 void REVXML_INIT();
 void REVXML_QUIT();
+
+void XML_XPathInit(char *args[], int nargs, char **retstring,
+				  Bool *pass, Bool *error);
+

@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <revolution/external.h>
 #include <revolution/support.h>
+#include <libxml/xpath.h>
 
 #include "cxml.h"
 
@@ -145,6 +146,7 @@ class XMLDocumentList
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
 			CXMLDocument *curobject = (CXMLDocument *)(*theIterator);
+			xmlXPathFreeContext(curobject->GetXPathContext());
 			delete curobject;
 		}
 		doclist.clear();
@@ -2156,6 +2158,438 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
+// MDW 2013-06-22 XPath functions
+
+/**
+ * Returns 1 if the value is a NaN, 0 otherwise
+ */
+void XML_XPathIsNaN(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	double value = atol(args[0]);
+
+	if (NULL != value)
+	{
+		int result = xmlXPathIsNaN(value);
+		*retstring = (1 == result ? istrdup("true") : istrdup("false"));
+	}
+	else
+		*retstring = (char *)calloc(1,1);
+}
+
+void XML_XPathIsInf(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	double value = atol(args[0]);
+
+	if (NULL != value)
+	{
+		int result = xmlXPathIsInf(value);
+		switch (result)
+		{
+			case 0:
+				*retstring = istrdup("0");
+				break;
+			case 1:
+				*retstring = istrdup("1");
+				break;
+			case -1:
+				*retstring = istrdup("-1");
+				break;
+			default:
+				*retstring = (char *)calloc(1,1);
+		}
+	}
+	else
+		*retstring = (char *)calloc(1,1);
+}
+
+xmlXPathContextPtr XML_DocID_to_XPathContext(int docID)
+{
+	xmlXPathContextPtr xpathContext = NULL;
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)	
+		xpathContext = doclist.find(docID)->GetXPathContext();
+	return (xpathContext);
+}
+
+/**
+ * xmlXPathNewContext:
+ * @doc:  the XML document id
+ *
+ * Create a new xmlXPathContext
+ *
+ * Returns the xmlXPathContext just allocated. The caller will need to free it.
+ */
+void XML_XPathNewContext(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+	xmlDocPtr doc;
+
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
+			{
+				xmlDocument->SetXPathContext(ctx);
+				buffer = (char *)malloc(sizeof(xmlXPathContextPtr));
+				if (NULL != buffer)
+				{
+					sprintf(buffer,"%ld",(long)ctx);
+					*retstring = istrdup(buffer);
+				}
+			}
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathEvalPredicate docID, xpathObjectPtr
+ *
+ * @docID
+ * @xpathObjectPtr
+ */
+void XML_XPathEvalPredicate(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	int docID = atoi(args[0]);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
+	if (NULL != ctx)
+	{
+		xmlXPathObjectPtr res = (xmlXPathObjectPtr)atol(args[1]);
+		if (NULL != res)
+		{
+			int result = xmlXPathEvalPredicate(ctx, res);
+			*retstring = (1 == result ? istrdup("true") : istrdup("false"));
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/*
+void XML_XPathEvaluatePredicateResult(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xmlXPathParserContextPtr ctxt = (xmlXPathParserContextPtr)atol(args[0]);
+	xmlXPathObjectPtr res = (xmlXPathObjectPtr)atol(args[1]);
+	if (NULL != res && NULL != ctxt)
+	{
+		int result = xmlXPathEvaluatePredicateResult(ctxt, res);
+		*retstring = (1 == result ? istrdup("true") : istrdup("false"));
+	}
+	else
+		*retstring = istrdup("false");
+}
+*/
+
+/**
+ * XML_XPathCtxtCompile docID, str
+ *
+ * @docID
+ * @str
+ */
+void XML_XPathCtxtCompile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	int docID = atoi(args[0]);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
+	xmlChar * str = (xmlChar *)args[1];
+	if (NULL != ctx)
+	{
+		if (NULL != str)
+		{
+			xmlXPathCompExprPtr result = xmlXPathCtxtCompile(ctx, str);
+			if (NULL != result)
+			{
+				buffer = (char *)malloc(sizeof(xmlXPathCompExprPtr));
+				if (NULL != buffer)
+				{
+					sprintf(buffer,"%ld",(long)result);
+					*retstring = istrdup(buffer);
+				}
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathCompile str
+ *
+ * @str
+ */
+void XML_XPathCompile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	xmlChar * str = (xmlChar *)args[0];
+	if (NULL != str)
+	{
+		xmlXPathCompExprPtr result = xmlXPathCompile(str);
+		if (NULL != result)
+		{
+			buffer = (char *)malloc(sizeof(xmlXPathCompExprPtr));
+			if (NULL != buffer)
+			{
+				sprintf(buffer,"%ld",(long)result);
+				*retstring = istrdup(buffer);
+			}
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+}
+
+/**
+ * XML_XPathCompiledEval docID, xmlXPathCompExprPtr
+ *
+ * @docID
+ * @xmlXPathCompExprPtr
+ */
+void XML_XPathCompiledEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+	if (NULL != ctx)
+	{
+		xmlXPathCompExprPtr comp = (xmlXPathCompExprPtr)atol(args[1]);
+		if (NULL != comp)
+		{
+			xmlXPathObjectPtr result = xmlXPathCompiledEval(comp, ctx);
+			if (NULL != result)
+			{
+				buffer = (char *)malloc(sizeof(xmlXPathObjectPtr));
+				if (NULL != buffer)
+				{
+					sprintf(buffer,"%ld",(long)result);
+					*retstring = istrdup(buffer);
+				}
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathCompiledEvalToBoolean docID, xmlXPathCompExprPtr
+ *
+ * @docID
+ * @xmlXPathCompExprPtr
+ */
+void XML_XPathCompiledEvalToBoolean(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	//int docID = atoi(args[0]);
+	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+	xmlXPathCompExprPtr comp = (xmlXPathCompExprPtr)atol(args[1]);
+	if (NULL != ctx && NULL != comp)
+	{
+		int result = xmlXPathCompiledEvalToBoolean(comp, ctx);
+		if (NULL != result)
+		{
+			switch (result)
+			{
+				case 0:
+					*retstring = istrdup("0");
+					break;
+				case 1:
+					*retstring = istrdup("1");
+					break;
+				case -1:
+					*retstring = istrdup("-1");
+					break;
+			}
+		}
+		else
+			*retstring = istrdup("");
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/*
+void XML_XPathEvalExpr(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	xmlXPathParserContextPtr ctx = (xmlXPathParserContextPtr)atol(args[0]);
+	if (NULL != ctx)
+		xmlXPathEvalExpr(ctx);
+}
+*/
+
+/**
+ * XML_XPathEval docID, xmlChar *
+ *
+ * @docID
+ * @xmlChar *str
+ */
+void XML_XPathEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	//int docID = atoi(args[0]);
+	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+	if (NULL != ctx)
+	{
+		xmlChar *str = (xmlChar *)args[1];
+		if (NULL != str)
+		{
+			xmlXPathObjectPtr result = xmlXPathEval(str, ctx);
+			if (NULL != result)
+			{
+				buffer = (char *)malloc(sizeof(xmlXPathObjectPtr));
+				if (NULL != buffer)
+				{
+					sprintf(buffer,"%ld",(long)result);
+					*retstring = istrdup(buffer);
+				}
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathSetContextNode docID, xmlNodePtr
+ *
+ * @docID
+ * @xmlNodePtr
+ */
+void XML_XPathSetContextNode(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	*retstring = (char *)calloc(1,1);
+	//int docID = atoi(args[0]);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+	if (NULL != ctx)
+	{
+		xmlNodePtr comp = (xmlNodePtr)atol(args[1]);
+		if (NULL != comp)
+		{
+			int result = xmlXPathSetContextNode(comp, ctx);
+				*retstring = (0 == result ? istrdup("true") : istrdup("error"));
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathNodeEval docID, xmlNodePtr, xmlString
+ *
+ * @docID
+ * @xmlNodePtr
+ * @xmlString
+ */
+void XML_XPathNodeEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	char *buffer;
+
+	*pass = False;
+	*error = False;
+	//int docID = atoi(args[0]);
+	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
+	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+	if (NULL != ctx)
+	{
+		*retstring = (char *)calloc(1,1);
+		xmlNodePtr node = (xmlNodePtr)atol(args[1]);
+		xmlChar *str = (xmlChar *)args[2];
+		if (NULL != node && NULL != str)
+		{
+			xmlXPathObjectPtr result = xmlXPathNodeEval(node, str, ctx);
+			if (NULL != result)
+			{
+				buffer = (char *)malloc(sizeof(xmlXPathObjectPtr));
+				if (NULL != buffer)
+				{
+					sprintf(buffer,"%ld",(long)result);
+					*retstring = istrdup(buffer);
+				}
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * Create a new Xpath component
+ */
+void XML_XPathInit(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+
+	xmlXPathInit();
+	*retstring = (char *)calloc(1,1);
+}
+
 EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLinit", XML_Init)
 	EXTERNAL_DECLARE_FUNCTION("revXML_version", REVXML_Version)
@@ -2218,6 +2652,21 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_COMMAND("revXMLPutIntoNode", XML_SetElementContents)
 	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
 
+// MDW 2013-06-22 : XPath functions
+	EXTERNAL_DECLARE_COMMAND("XPathInit", XML_XPathInit)
+	EXTERNAL_DECLARE_FUNCTION("XPathIsNaN", XML_XPathIsNaN)
+	EXTERNAL_DECLARE_FUNCTION("XPathIsInf", XML_XPathIsInf)
+	EXTERNAL_DECLARE_FUNCTION("XPathNewContext", XML_XPathNewContext)
+	EXTERNAL_DECLARE_FUNCTION("XPathEvalPredicate", XML_XPathEvalPredicate)
+//	EXTERNAL_DECLARE_FUNCTION("XPathEvaluatePredicateResult", XML_XPathEvaluatePredicateResult)
+	EXTERNAL_DECLARE_FUNCTION("XPathCtxtCompile", XML_XPathCtxtCompile)
+	EXTERNAL_DECLARE_FUNCTION("XPathCompile", XML_XPathCompile)
+	EXTERNAL_DECLARE_FUNCTION("XPathCompiledEval", XML_XPathCompiledEval)
+	EXTERNAL_DECLARE_FUNCTION("XPathCompiledEvalToBoolean", XML_XPathCompiledEvalToBoolean)
+//	EXTERNAL_DECLARE_COMMAND("XPathEvalExpr", XML_XPathEvalExpr)
+	EXTERNAL_DECLARE_FUNCTION("XPathEval", XML_XPathEval)
+	EXTERNAL_DECLARE_FUNCTION("XPathSetContextNode", XML_XPathSetContextNode)
+	EXTERNAL_DECLARE_FUNCTION("XPathNodeEval", XML_XPathNodeEval)
 EXTERNAL_END_DECLARATIONS
 
 
