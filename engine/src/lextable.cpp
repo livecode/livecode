@@ -1946,6 +1946,8 @@ static LT sugar_table[] =
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
+		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
+        {"string", TT_UNDEFINED, SG_STRING},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
 		{"without", TT_PREP, PT_WITHOUT},
@@ -2041,8 +2043,10 @@ static LT validation_table[] =
     {"a", TT_UNDEFINED, IV_UNDEFINED},
     {"among", TT_UNDEFINED, IV_AMONG},
     {"an", TT_UNDEFINED, IV_UNDEFINED},
-	{"array", TT_UNDEFINED, IV_ARRAY},
-    {"boolean", TT_UNDEFINED, IV_LOGICAL},
+    {"array", TT_UNDEFINED, IV_ARRAY},
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'ascii'.
+    {"ascii", TT_UNDEFINED, IV_ASCII},
+	{"boolean", TT_UNDEFINED, IV_LOGICAL},
     {"color", TT_UNDEFINED, IV_COLOR},
     {"date", TT_UNDEFINED, IV_DATE},
     {"integer", TT_UNDEFINED, IV_INTEGER},
@@ -2050,7 +2054,7 @@ static LT validation_table[] =
     {"number", TT_UNDEFINED, IV_NUMBER},
     {"point", TT_UNDEFINED, IV_POINT},
     {"rect", TT_UNDEFINED, IV_RECT},
-    {"rectangle", TT_UNDEFINED, IV_RECT}
+    {"rectangle", TT_UNDEFINED, IV_RECT},
 };
 
 static LT visual_table[] =
