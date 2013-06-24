@@ -1,0 +1,60 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>iphoneEnableRemoteControl</name>
+	<type>command</type>
+
+	<syntax>
+		<example>iphoneEnableRemoteControl</example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Enables access to the remote control feature on iOS.</summary>
+
+	<examples>
+	</examples>
+
+	<history>
+		<introduced version="6.1">Added</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
+	</history>
+
+	<objects>
+	</objects>
+
+	<platforms>
+		<ios/>
+	</platforms>
+
+	<classes>
+		<mobile/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+	</classification>
+
+	<references>
+		<function tag="iphoneRemoteControlEnabled">iphoneRemoteControlEnabled Function</function>
+		<command tag="iphoneDisableRemoteControl">iphoneDisableRemoteControl Command</command>
+		<message tag="remoteControlReceived">remoteControlReceived Message</message>
+	</references>
+
+	<description>
+	<overview>Use the <b>iphoneEnableRemoteControl</b> command to start receiving remote control events after you start playing audio.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value></value>
+	<comments></comments>
+	</description>
+</doc>

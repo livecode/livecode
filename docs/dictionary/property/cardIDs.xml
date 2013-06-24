@@ -1,0 +1,47 @@
+<doc>
+  <legacy_id>2040</legacy_id>
+  <name>cardIDs</name>
+  <type>property</type>
+  <syntax>
+    <example>get the cardIDs of <i>stack</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <stack/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+  </classification>
+  <references>
+    <property tag="groupIDs">groupIDs Property</property>
+    <property tag="ID">ID Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Reports the <glossary tag="card">cards</glossary> in a <object tag="stack">stack</object>.</summary>
+  <examples>
+    <example>get line 2 to 5 of the cardIDs of this stack</example>
+    <example>repeat with y = 1 to the number of lines of the cardIDs of this stack</example>
+  </examples>
+  <description>
+    <p>Use the <b>cardIDs</b> <glossary tag="property">property</glossary> to find out which <glossary tag="card">cards</glossary> are in the <object tag="stack">stack</object>, or to find out which <keyword tag="card">card</keyword> <property tag="ID">ID</property>s have already been used.</p><p/><p><b>Value:</b></p><p>The <b>cardIDs</b> of a <keyword tag="card">card</keyword> or <object tag="stack">stack</object> reports a list of short <property tag="ID">ID</property> <property tag="properties">properties</property> of <glossary tag="card">cards</glossary>, one per <keyword tag="line">line</keyword>.</p><p/><p>This property is read-only and cannot be set.</p>
+  </description>
+</doc>

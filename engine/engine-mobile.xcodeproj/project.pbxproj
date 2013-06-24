@@ -257,8 +257,10 @@
 		4DABCE6115ECD4B50085E214 /* visual.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3DF1C1040AE0700CAC7EF /* visual.cpp */; };
 		4DABCE6515ECD4FF0085E214 /* libstandalone-mobile-kernel.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */; };
 		4DABCE7A15ECD62C0085E214 /* mbliphoneappview.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D839A0F1430BBE300984D5D /* mbliphoneappview.mm */; };
+		4DB322B1174BD4D100046FFE /* Security.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DB322B0174BD4D100046FFE /* Security.framework */; };
 		4DC684BE1348EAD7002469A4 /* OpenGLES.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DC684BD1348EAD7002469A4 /* OpenGLES.framework */; };
 		4DD3E17B1040BDAF00CAC7EF /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DD3E17A1040BDAF00CAC7EF /* libz.dylib */; };
+		4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE5E7E6174BBE64001AB76D /* uuid.cpp */; };
 		4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DE9499D142762490072D9C6 /* CoreText.framework */; };
 		E8111F8C1541938E00DB16E3 /* CoreMotion.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8B1541938E00DB16E3 /* CoreMotion.framework */; };
 		E8111F8E154193A500DB16E3 /* AddressBook.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E8111F8D154193A500DB16E3 /* AddressBook.framework */; };
@@ -539,6 +541,7 @@
 		4DA7BB2613251C6E00F9214A /* SystemConfiguration.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SystemConfiguration.framework; path = System/Library/Frameworks/SystemConfiguration.framework; sourceTree = SDKROOT; };
 		4DABCD8A15ECD40F0085E214 /* libstandalone-mobile-kernel.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = "libstandalone-mobile-kernel.a"; sourceTree = BUILT_PRODUCTS_DIR; };
 		4DABCEC515ECD7840085E214 /* mbliphoneembedded.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneembedded.mm; path = src/mbliphoneembedded.mm; sourceTree = "<group>"; };
+		4DB322B0174BD4D100046FFE /* Security.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Security.framework; path = System/Library/Frameworks/Security.framework; sourceTree = SDKROOT; };
 		4DB9694A135E3D8300DCAE93 /* mblandroidmail.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidmail.cpp; path = src/mblandroidmail.cpp; sourceTree = "<group>"; };
 		4DB9694B135E3D8300DCAE93 /* mblandroidorientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidorientation.cpp; path = src/mblandroidorientation.cpp; sourceTree = "<group>"; };
 		4DB983C0130BB1DF008A03DC /* mblandroid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroid.cpp; path = src/mblandroid.cpp; sourceTree = "<group>"; };
@@ -802,6 +805,8 @@
 		4DDD7F35134BA5DA009037A0 /* mcutility.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mcutility.cpp; path = src/mcutility.cpp; sourceTree = "<group>"; };
 		4DDD7F52134BA80E009037A0 /* customprinter.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = customprinter.cpp; path = src/customprinter.cpp; sourceTree = "<group>"; };
 		4DDD7F57134BA833009037A0 /* mbliphonetextlayout.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetextlayout.mm; path = src/mbliphonetextlayout.mm; sourceTree = "<group>"; };
+		4DE5E7E5174BBE64001AB76D /* uuid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = uuid.h; path = src/uuid.h; sourceTree = "<group>"; };
+		4DE5E7E6174BBE64001AB76D /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = uuid.cpp; path = src/uuid.cpp; sourceTree = "<group>"; };
 		4DE7B8641330D6F200305469 /* mbliphonepick.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonepick.mm; path = src/mbliphonepick.mm; sourceTree = "<group>"; };
 		4DE7ED6413B33CEA002634F5 /* sysspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysspec.cpp; path = src/sysspec.cpp; sourceTree = "<group>"; };
 		4DE9499D142762490072D9C6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
@@ -947,6 +952,7 @@
 				4D08A11F138EA85E0081F990 /* UIKit.framework in Frameworks */,
 				4DE9499E142762490072D9C6 /* CoreText.framework in Frameworks */,
 				E86481931439BCE100775960 /* StoreKit.framework in Frameworks */,
+				4DB322B1174BD4D100046FFE /* Security.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1207,6 +1213,7 @@
 				4D82FCD8171485CA00C48403 /* mobile-template.plist */,
 				4D82FCD9171485D000C48403 /* mobile-remote-notification-template.plist */,
 				4D82FCDA171485D600C48403 /* mobile-url-scheme-template.plist */,
+				4DB322B0174BD4D100046FFE /* Security.framework */,
 			);
 			sourceTree = "<group>";
 		};
@@ -1605,6 +1612,8 @@
 				4DD3DF0A1040ADFC00CAC7EF /* unicode.h */,
 				4DD3DF261040AE0700CAC7EF /* util.cpp */,
 				4DD3DF251040AE0700CAC7EF /* util.h */,
+				4DE5E7E6174BBE64001AB76D /* uuid.cpp */,
+				4DE5E7E5174BBE64001AB76D /* uuid.h */,
 				4DD3DF1C1040AE0700CAC7EF /* visual.cpp */,
 				4DD3DF1B1040AE0700CAC7EF /* visual.h */,
 				E84BE361170C992600807CF6 /* visualeffect.h */,
@@ -1881,6 +1890,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				4DE5E7EB174BBE89001AB76D /* uuid.cpp in Sources */,
 				4DABCD9915ECD4700085E214 /* aclip.cpp in Sources */,
 				4DABCD9A15ECD4700085E214 /* answer.cpp in Sources */,
 				4DABCD9B15ECD4700085E214 /* ask.cpp in Sources */,

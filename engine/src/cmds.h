@@ -1345,7 +1345,9 @@ public:
 	}
 	virtual ~MCFilter();
 	Boolean match(char *s, char *p, Boolean casesensitive);
-	char *filterlines(char *sstring, char *pstring, Boolean casesensitive);
+    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
+    //     pass linedelimiter as extra parameter to filterlines
+	char *filterlines(char *sstring, char *pstring, char delimiter, Boolean casesensitive);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 };

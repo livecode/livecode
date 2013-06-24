@@ -1,0 +1,45 @@
+<doc>
+  <legacy_id>2166</legacy_id>
+  <name>close driver</name>
+  <type>command</type>
+  <syntax>
+    <example>close driver <i>deviceName</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Networks &amp; Communication</category>
+  </classification>
+  <references>
+    <command tag="write to driver">write to driver Command</command>
+    <command tag="close file">close file Command</command>
+  </references>
+  <history>
+    <introduced version="1.1.1">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+    <disk access="???"/>
+  </security>
+  <summary>Closes a <glossary tag="device driver">device driver</glossary> that was opened with the <command tag="open driver">open driver</command> <glossary tag="command">command</glossary>.</summary>
+  <examples>
+    <example>close driver "USBCam1"</example>
+    <example>close driver (line 2 of it)</example>
+  </examples>
+  <description>
+    <p>Use the <b>close driver</b> <glossary tag="command">command</glossary> after you're finished communicating with a <glossary tag="peripheral device">peripheral device</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>deviceName</i> is the name of a <glossary tag="device driver">device driver</glossary> that's installed on the system and that you have previously opened with the <command tag="open driver">open driver</command> <glossary tag="command">command</glossary>.</p><p/><p><b>Comments:</b></p><p>Any device drivers you have opened are closed automatically when you quit the application.</p><p/><p>If you try to close a driver that is not already open, the <b>result</b> function is set to<code> File is not open</code><a/>.</p><p/><p><b>Changes:</b></p><p>Support for using serial drivers with OS X systems was added in version 2.0.</p>
+  </description>
+</doc>

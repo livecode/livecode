@@ -1,0 +1,39 @@
+<doc>
+  <legacy_id>3000</legacy_id>
+  <name>desktopChanged</name>
+  <type>message</type>
+  <syntax>
+    <example>desktopChanged</example>
+  </syntax>
+  <library></library>
+  <objects>
+    <card/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>The System Environment</category>
+  </classification>
+  <references>
+
+  </references>
+  <history>
+    <introduced version="2.7">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+  </classes>
+  <security>
+  </security>
+  <summary>Sent to the <glossary tag="current card">current card</glossary> of the defaultStack whenever the geometry of the screen changes.</summary>
+  <examples>
+  </examples>
+  <description>
+    <p>Handle the <b>desktopChanged</b> message to rearrange or reconfigure your layout when the user changes their screen size or layout.</p><p/><p>As this message can be sent by the OS at any time, it is recommended that you handle the message in the main-stack of your application. The LiveCode IDE broadcasts the message to all main stacks that are currently open at the time the engine receives the notification from the OS - this is to improve consistency with behaviour in standalone applications.</p>
+  </description>
+</doc>

@@ -1,0 +1,57 @@
+<doc>
+  <legacy_id>2172</legacy_id>
+  <name>properties</name>
+  <type>property</type>
+  <syntax>
+    <example>set the properties of <i>object</i> to <i>propertiesArray</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <stack/>
+    <card/>
+    <group/>
+    <field/>
+    <button/>
+    <graphic/>
+    <scrollbar/>
+    <player/>
+    <image/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Values &amp; Properties</category>
+  </classification>
+  <references>
+    <control_st tag="setProp">setProp Control Structure</control_st>
+    <function tag="keys">keys Function</function>
+    <function tag="propertyNames">propertyNames Function</function>
+    <property tag="customProperties">customProperties Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies some of an <glossary tag="object">object's</glossary> <property tag="properties">properties</property> and their current <glossary tag="value">values</glossary>.</summary>
+  <examples>
+    <example>put the properties of button 1 into myArray</example>
+    <example>set the properties of last player to the properties of player "Example"</example>
+  </examples>
+  <description>
+    <p>Use the <b>properties</b> <glossary tag="property">property</glossary> to set an <glossary tag="object">object's</glossary> built-in <property tag="properties">properties</property>, or to copy <property tag="properties">properties</property> from one <glossary tag="object">object</glossary> to another.</p><p/><p><b>Value:</b></p><p>The <b>properties</b> of an <glossary tag="object">object</glossary> is an <glossary tag="array">array</glossary> containing that <glossary tag="object">object's</glossary> significant built-in <property tag="properties">properties</property>.</p><p/><p><b>Comments:</b></p><p>Not every property is included in the <b>properties</b> <glossary tag="property">property</glossary>. The following types of <property tag="properties">properties</property> are excluded:</p><p/><p>* Read-only properties</p><p/><p>* The <b>script</b> <glossary tag="property">property</glossary> and custom properties</p><p/><p>* Synonyms: Only one synonym for each property is included.</p><p/><p>* Duplicates: Properties that are functionally duplicated by other properties are not included. For example, the <b>rectangle</b> <glossary tag="property">property</glossary> is included, but not the <property tag="height">height</property>, <property tag="width">width</property>, <keyword tag="top">top</keyword>, <property tag="bottom">bottom</property>, <constant tag="left">left</constant>, <constant tag="right">right</constant>, or <property tag="location">location</property> <property tag="properties">properties</property>, because you can derive all of them from the <glossary tag="object">object's</glossary> <keyword tag="rectangle">rectangle</keyword>.</p><p/><p>* Properties other than object properties: Global properties, local properties, properties of a character or chunk in a field, and adjectives such as <b>short</b> that are implemented internally as <property tag="properties">properties</property> are all excluded.</p><p/><p>* Others: Some other properties are excluded.</p><p/><p>The key of each element in the array is the property name. Use the following statements to obtain a list of the <b>properties</b> for a particular <glossary tag="object type">object type</glossary>:</p><p/><p><code>  put the properties of button "Example" into arrayVariable</code></p><p><code>  put the keys of arrayVariable into propertiesList</code></p><p/><p>The value of each element in the array is the value of that property for the object. For example, use this statement (after the above example) to get the object's <b>ID</b> <glossary tag="property">property</glossary>:</p><p/><p><code>  put the properties of button "Example" into arrayVariable</code></p><p><code>  put arrayVariable[ID] into myID</code></p><p/><p><code/><b>Note:</b><code/> You can't use <glossary tag="array">array</glossary> notation with an <glossary tag="expression">expression</glossary>, only with a <glossary tag="variable">variable</glossary>, so you must put the <b>properties</b> of the <glossary tag="object">object</glossary> into a <glossary tag="variable">variable</glossary> before you can access the individual <glossary tag="element">elements</glossary> of the <glossary tag="array">array</glossary>. If you want a list of <property tag="properties">properties</property> and their values, use the <command tag="combine">combine</command> <glossary tag="command">command</glossary> to create a list:</p><p/><p><code>  get the properties of field "Whatever"</code></p><p><code>  combine it using return and colon </code><code><i>-- convert from array to text list</i></code></p><p><code>  put it into myFieldPropertiesList</code></p><p/><p>If you set the <b>properties</b> of an <glossary tag="object">object</glossary> to an <glossary tag="array">array</glossary> that contains only some of the <property tag="properties">properties</property>, any <property tag="properties">properties</property> that aren't in that <glossary tag="array">array</glossary> are not changed. This means that you can <command tag="select">select</command> which <property tag="properties">properties</property> to set with the <b>properties</b> <glossary tag="property">property</glossary> .</p><p/><p>For example, suppose you want to set the <b>properties</b> of a <keyword tag="field">field</keyword> to the <b>properties</b> of another <keyword tag="field">field</keyword>, except that you want to leave the first <glossary tag="field">field's</glossary> <property tag="name">name</property> unchanged:</p><p/><p><code>  put the properties of field "My Field" into myArray</code></p><p><code>  delete variable myArray[name] </code><code><i>-- delete this element from the array</i></code></p><p><code>  set the properties of field "New Field" to myArray</code></p><p><code>  </code><code><i>-- leaves name property unchanged</i></code></p>
+  </description>
+</doc>
