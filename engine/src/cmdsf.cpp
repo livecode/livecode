@@ -829,6 +829,9 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
 	t_needs_unpremultiply = false;
+	// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
+	// with "alpha" channel set to zero. 
+	bool t_has_alpha = false;
 	if (sformat == EX_SNAPSHOT)
 	{
 		char *srect = NULL;
@@ -917,6 +920,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		if (optr != NULL)
 		{
 			/* UNCHECKED */ t_img = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			t_has_alpha = true;
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
@@ -1020,10 +1024,19 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	else
 	{
 		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
-		// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
-		if (t_needs_unpremultiply)
-			MCImageBitmapUnpremultiply(t_bitmap);
-		MCImageBitmapCheckTransparency(t_bitmap);
+		if (!t_has_alpha)
+		{
+			// IM-2013-06-21: [[ Bug 10967 ]] Set alpha of opaque image to 255
+			MCImageBitmapSetAlphaValue(t_bitmap, 255);
+		}
+		else
+		{
+			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+			if (t_needs_unpremultiply)
+				MCImageBitmapUnpremultiply(t_bitmap);
+			MCImageBitmapCheckTransparency(t_bitmap);
+		}
+
 		MCscreen->destroyimage(t_img);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
 	}
@@ -1227,7 +1240,9 @@ Boolean MCFilter::match(char *s, char *p, Boolean casesensitive)
 	return *p == 0;
 }
 
-char *MCFilter::filterlines(char *sstring, char *pstring,
+// JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
+//     pass linedelimiter as extra parameter to filterlines
+char *MCFilter::filterlines(char *sstring, char *pstring, char delimiter,
                             Boolean casesensitive)
 {
 	uint4 offset = 0;
@@ -1262,14 +1277,14 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	// Record whether or not the string was terminated with a trailing delimiter,
 	// if it was, then remove this trailing delimiter.
 	bool t_was_terminated;
-	t_was_terminated = (t_string[t_length - 1] == '\n');
+	t_was_terminated = (t_string[t_length - 1] == delimiter);
 	if (t_was_terminated)
 		t_string[t_length - 1] = '\0';
 
 	for(;;)
 	{
 		char *t_return;
-		t_return = strchr(t_string, '\n');
+		t_return = strchr(t_string, delimiter);
 
 		if (t_return != nil)
 			*t_return = '\0';
@@ -1278,7 +1293,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 		if (match(line, pstring, casesensitive) != out)
 		{
 			if (offset)
-				dstring[offset++] = '\n';
+				dstring[offset++] = delimiter;
 
 			// MW-2010-10-18: [[ Bug 7864 ]] This should be a 32-bit integer - removing 65535 char limit.
 			uint32_t length = strlen(line);
@@ -1293,7 +1308,7 @@ char *MCFilter::filterlines(char *sstring, char *pstring,
 	}
 
 	if (offset != 0 && t_was_terminated)
-		dstring[offset++] = '\n';
+		dstring[offset++] = delimiter;
 
 
 	free(t_original_string);
@@ -1352,7 +1367,9 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	char *pptr = ep.getsvalue().clone();
-	char *dptr = filterlines(sptr, pptr, ep.getcasesensitive());
+    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
+    //     pass linedelimiter as extra parameter to filterlines
+	char *dptr = filterlines(sptr, pptr, ep.getlinedel(), ep.getcasesensitive());
 	delete sptr;
 	delete pptr;
 	ep.copysvalue(dptr, strlen(dptr));
@@ -1620,6 +1637,9 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 		}
 		
+		// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
+		// with "alpha" channel set to zero. 
+		bool t_has_alpha = false;
 		MCBitmap *t_bitmap = nil;
 		if (container != NULL)
 		{
@@ -1632,6 +1652,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 		
 			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			t_has_alpha = true;
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1651,7 +1672,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		if (t_bitmap != nil)
 		{
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			iptr -> compress(t_bitmap, true, true);
+			iptr -> compress(t_bitmap, true, t_has_alpha);
 			MCscreen->destroyimage(t_bitmap);
 		}
 	

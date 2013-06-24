@@ -36,8 +36,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "mcssl.h"
 
 #include "globals.h"
+
+#ifdef MCSSL
+#include <openssl/rand.h>
+#endif
 
 #define QA_NPOINTS 10
 
@@ -2232,10 +2237,31 @@ void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
+	real8 tp;
 	switch (func)
 	{
-	case F_AVERAGE:
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
+	case F_ARI_MEAN:
 		n += tn;
+		nparams++;
+			break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
+	case F_AVG_DEV:
+		tn = tn - oldn;
+		n += abs(tn);
+		nparams++;
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
+	case F_GEO_MEAN:
+		if (nparams == 0)
+			n = 1;
+		tp = 1 / oldn;
+		n *= pow(tn, tp);
+		nparams++;
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
+	case F_HAR_MEAN:
+		n += 1/tn;
 		nparams++;
 		break;
 	case F_MAX:
@@ -2253,7 +2279,11 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		titems[nparams].nvalue = tn;
 		nparams++;
 		break;
-	case F_STD_DEV:
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
+	case F_POP_STD_DEV:
+	case F_POP_VARIANCE:
+	case F_SMP_STD_DEV:
+	case F_SMP_VARIANCE:
 		tn = tn - oldn;
 		n += tn * tn;
 		nparams++;
@@ -2543,7 +2573,9 @@ bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count)
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count)
 {
 	uint4 t_capacity;
 	if (x_length > 65536)
@@ -2786,3 +2818,23 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
+//   which uses OpenSSL if available, otherwise falls back on system support.
+bool MCU_random_bytes(size_t p_count, void *p_buffer)
+{
+#ifdef MCSSL
+	// If SSL is available, then use that.
+	static bool s_donotuse_ssl = false;
+	if (!s_donotuse_ssl)
+	{
+		if (InitSSLCrypt())
+			return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
+		
+		s_donotuse_ssl = true;
+	}
+#endif
+
+	// Otherwise use the system provided CPRNG.
+	return MCS_random_bytes(p_count, p_buffer);
+}

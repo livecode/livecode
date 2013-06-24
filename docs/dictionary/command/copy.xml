@@ -1,0 +1,69 @@
+<doc>
+  <legacy_id>1759</legacy_id>
+  <name>copy</name>
+  <type>command</type>
+  <syntax>
+    <example>copy [<i>object</i> [to {<i>card</i> |<i> group | stack</i>} ]] | [<i>chunk</i> of <i>field</i>]</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+    <category>User Interaction</category>
+  </classification>
+  <references>
+    <command tag="place">place Command</command>
+    <command tag="clone">clone Command</command>
+    <command tag="cut">cut Command</command>
+    <command tag="doMenu">doMenu Command</command>
+    <property tag="clipboardData">clipboardData Property</property>
+    <command tag="undo">undo Command</command>
+    <command tag="paste">paste Command</command>
+    <function tag="clipboard">clipboard Function</function>
+    <function tag="copyResource">copyResource Function</function>
+    <message tag="newButton">newButton Message</message>
+    <message tag="newEPS">newEPS Message</message>
+    <message tag="copyKey">copyKey Message</message>
+    <message tag="newPlayer">newPlayer Message</message>
+    <message tag="newField">newField Message</message>
+    <message tag="newScrollbar">newScrollbar Message</message>
+    <message tag="newGraphic">newGraphic Message</message>
+    <message tag="newImage">newImage Message</message>
+    <message tag="newBackground">newBackground Message</message>
+    <message tag="newCard">newCard Message</message>
+    <message tag="newGroup">newGroup Message</message>
+    <command tag="select">select Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+    <changed version="2.0"></changed>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Copies <property tag="selected">selected</property> text or an <glossary tag="object">object</glossary> to the <function tag="clipboard">clipboard</function> or to a <keyword tag="card">card</keyword>, <command tag="group">group</command>, or <object tag="stack">stack</object>.</summary>
+  <examples>
+    <example>copy <code><i>-- copies selected object or text to clipboard</i></code></example>
+    <example>copy button "Hello" <code><i>-- copies the button to the clipboard</i></code></example>
+    <example>copy this card to stack "Clippings" <code><i>-- leaves clipboard unchanged</i></code></example>
+    <example>copy word -3 to -1 of field "Help" <code><i>-- copies last three words</i></code></example>
+  </examples>
+  <description>
+    <p>Use the <b>copy</b> <glossary tag="command">command</glossary> to place <glossary tag="object">objects</glossary> or text on the <function tag="clipboard">clipboard</function>, or to make a copy of an <glossary tag="object">object</glossary> without changing the contents of the <function tag="clipboard">clipboard</function>.</p><p/><p><b>Parameters:</b></p><p>The <i>object</i> is any available <glossary tag="object">object</glossary>. If no <i>object</i> or <i>chunk</i> is specified, the <b>copy</b> <glossary tag="command">command</glossary> copies whatever is currently <property tag="selected">selected</property>.</p><p/><p>If a <i>card</i>, <i>group</i>, or <i>stack</i> is specified, the <i>object</i> is placed there instead of being placed in the <function tag="clipboard">clipboard</function>, and the <function tag="clipboard">clipboard</function> is left unchanged.</p><p/><p><b>Comments:</b></p><p>If a <i>card</i> is specified, the copied <i>object</i> must be a <keyword tag="control">control</keyword> or <command tag="group">group</command>.</p><p/><p>If a <i>group</i> is specified, the copied <i>object</i> must be a <keyword tag="control">control</keyword>.</p><p/><p>If a <i>stack</i> is specified, the copied <i>object</i> must be a <keyword tag="card">card</keyword>.</p><p/><p>If a <i>chunk</i> of a <i>field</i> is specified, the specified text is copied to the <function tag="clipboard">clipboard</function> (including text styles).</p><p/><p>If a destination <i>card</i>, <i>group</i>, or <i>stack</i> is specified, the <b>copy</b> <glossary tag="command">command</glossary> places the <property tag="ID">ID</property> <glossary tag="property">property</glossary> of the newly created <glossary tag="object">object</glossary> in the <keyword tag="it">it</keyword> <glossary tag="variable">variable</glossary>, and the appropriate <keyword tag="message box">message</keyword> is sent.</p><p/><p><code/><b>Note:</b><code/> When copying from a <glossary tag="list field">list field</glossary>, only entire lines can be copied. If you specify a <i>chunk</i> that's smaller than a <keyword tag="line">line</keyword> or that crosses <keyword tag="line">line</keyword> boundaries, the <b>copy</b> <glossary tag="command">command</glossary> copies the entire <keyword tag="line">line</keyword> or <keyword tag="lines">lines</keyword> containing the <i>chunk</i>.</p><p/><p><b>Changes:</b></p><p>The ability to copy a chunk of a field directly (without first selecting it) was added in version 2.0.</p>
+  </description>
+</doc>

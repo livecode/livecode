@@ -53,7 +53,9 @@ struct MCBitmapEffectBlurParameters
 // Note that the input pixels are ARGB (32-bit) and it is the alpha channel that
 // is being blurred, while only an output mask (8-bit values) is required.
 //
-bool MCBitmapEffectBlurBegin(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, uint32_t src_stride, MCBitmapEffectBlurRef& r_blur);
+// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
+//   ptr arithmetic and promotions in 64-bit.
+bool MCBitmapEffectBlurBegin(const MCBitmapEffectBlurParameters& params, const MCRectangle& input_rect, const MCRectangle& output_rect, uint32_t *src_pixels, int32_t src_stride, MCBitmapEffectBlurRef& r_blur);
 
 // Continue a blur effect by generating the next output scanline.
 //

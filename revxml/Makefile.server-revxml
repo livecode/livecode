@@ -1,6 +1,8 @@
 NAME=server-revxml
 TYPE=library
 
+include ../rules/environment.linux.makefile
+
 SOURCES=revxml.cpp xmlattribute.cpp xmldoc.cpp xmlelement.cpp
 
 CUSTOM_DEFINES=
@@ -8,7 +10,6 @@ CUSTOM_DEFINES=
 CUSTOM_INCLUDES=./src ../libxml/include
 
 CUSTOM_LIBS=external xml z
-CUSTOM_STATIC_LIBS=stdc++
 CUSTOM_DYNAMIC_LIBS=
 
 CUSTOM_CCFLAGS=

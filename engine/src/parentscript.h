@@ -46,6 +46,9 @@ public:
 	// it returns false and the object is unchanged.
 	bool Inherit(void);
 
+	// MW-2013-05-30: [[ InheritedPscripts ]] Return the super-use (if any).
+	MCParentScriptUse *GetSuper(void) const;
+
 	// Return the parent script
 	MCParentScript *GetParent(void) const;
 
@@ -69,11 +72,9 @@ private:
 	MCParentScriptUse *m_next_use;
 	MCParentScriptUse *m_previous_use;
 
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
 	// MW-2009-01-28: [[ Inherited parentScripts ]]
 	// The parentScript's super-parentScript.
 	MCParentScriptUse *m_super_use;
-#endif
 
 	// The associated parent script object.
 	MCParentScript *m_parent;
@@ -117,6 +118,9 @@ public:
 	// Acquire a new reference to a parent script object. This will look to see
 	// if one exists and if not, will create one.
 	static MCParentScriptUse *Acquire(MCObject *p_referrer, uint32_t p_id, MCNameRef p_stack);
+	
+	// Attempt to locate an existing parent script based on the given object.
+	static MCParentScript *Lookup(MCObject *p_object);
 
 	// Flush the reference to the given object since it is no longer valid.
 	static void FlushObject(MCObject *p_object);
@@ -152,6 +156,11 @@ public:
 	// Attach the given use to this parent script - this is used when a use is
 	// cloned or when a parent script object is acquired.
 	void Attach(MCParentScriptUse *p_use);
+	
+	// MW-2013-05-30: [[ InheritedPscripts ]] Rework the super-use chains of each use.
+	bool Reinherit(void);
+	
+	// 
 
 	// Return the id of the parent script's control
 	uint32_t GetObjectId(void) const;

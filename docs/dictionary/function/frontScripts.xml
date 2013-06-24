@@ -1,0 +1,47 @@
+<doc>
+  <legacy_id>2012</legacy_id>
+  <name>frontScripts</name>
+  <type>function</type>
+  <syntax>
+    <example>the frontScripts</example>
+    <example>frontScripts()</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+    <category>Standalone Applications</category>
+  </classification>
+  <references>
+    <command tag="remove script">remove script Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary><glossary tag="return">Returns</glossary> a list of <glossary tag="object">objects</glossary> that have been inserted into the <glossary tag="message path">message path</glossary> before the target <glossary tag="object">object</glossary>.</summary>
+  <examples>
+    <example>the frontScripts</example>
+    <example>if myID is not among the lines of the frontScripts then insertMe</example>
+  </examples>
+  <description>
+    <p>Use the <b>frontScripts</b> <control_st tag="function">function</control_st> to find out which <glossary tag="script">scripts</glossary> receive <glossary tag="message">messages</glossary> and <glossary tag="function call">function calls</glossary> before the <function tag="target">target</function> <glossary tag="object">object</glossary>.</p><p/><p><b>Value:</b></p><p>The <b>frontScripts</b> <control_st tag="function">function</control_st> <glossary tag="return">returns</glossary> a list of the long <property tag="ID">ID</property> <glossary tag="property">property</glossary> of all <glossary tag="object">objects</glossary> that have been inserted into the front, one ID per <keyword tag="line">line</keyword>.</p><p/><p><b>Comments:</b></p><p>A script inserted into the front with the <b>insert script</b> <glossary tag="command">command</glossary> receives <glossary tag="message">messages</glossary> before all <glossary tag="object">objects</glossary> in the <glossary tag="message path">message path</glossary>.</p><p/><p>This includes messages sent with the <b>send</b> <glossary tag="command">command</glossary>, so if you send a <keyword tag="message box">message</keyword> to an <glossary tag="object">object</glossary>, the <glossary tag="object">objects</glossary> in the <b>frontScripts</b> receive that <keyword tag="message box">message</keyword> before the target <glossary tag="object">object</glossary> does. If the <glossary tag="script">scripts</glossary> in the <b>frontScripts</b> do not use the <control_st tag="pass">pass</control_st> <glossary tag="control structure">control structure</glossary> to <control_st tag="pass">pass</control_st> on the <keyword tag="message box">message</keyword> to the next <glossary tag="object">object</glossary>, the target <glossary tag="object">object</glossary> never receives the <keyword tag="message box">message</keyword>.</p><p/><p>If more than one object is in the <b>frontScripts</b>, their order in the <glossary tag="message path">message path</glossary> is the same as their order in the list. For example, the first <glossary tag="object">object</glossary> in the <b>frontScripts</b> receives <glossary tag="message">messages</glossary> before the second <glossary tag="object">object</glossary>. This order is the reverse of the order in which the <glossary tag="object">objects</glossary> were added with the <command tag="insert script">insert script</command> <glossary tag="command">command</glossary>.</p><p/><p>When using the development environment, you can place as many objects as you want in the <b>frontScripts</b>. When using a <glossary tag="standalone application">standalone application</glossary>, the number of <function tag="frontScripts">frontScripts</function> that can be active at once is specified by the <function tag="scriptLimits">scriptLimits</function> <control_st tag="function">function</control_st>, and is currently ten.</p>
+  </description>
+</doc>
