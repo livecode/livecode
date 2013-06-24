@@ -646,6 +646,7 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	uint2 i = 0;
 	switch (which)
 	{
+#ifdef /* MCPlayer::getprop */ LEGACY_EXEC
 	case P_FILE_NAME:
 		if (filename == NULL)
 			ep.clear();
@@ -809,6 +810,7 @@ Exec_stat MCPlayer::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_HOT_SPOTS:
 		gethotspots(ep);
 		break;
+#endif /* MCPlayer::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -824,6 +826,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 
 	switch (p)
 	{
+#ifdef /* MCPlayer::setprop */ LEGACY_EXEC
 	case P_FILE_NAME:
 		if (filename == NULL || data != filename)
 		{
@@ -1122,6 +1125,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			return stat;
 		}
 		break;
+#endif /* MCPlayer::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

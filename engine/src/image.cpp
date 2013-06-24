@@ -611,6 +611,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 
 	switch (which)
 	{
+#ifdef /* MCImage::getprop */ LEGACY_EXEC
 	case P_XHOT:
 		ep.setint(xhot);
 		break;
@@ -856,6 +857,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	case P_ANGLE:
 		ep.setint(angle);
 		break;
+#endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -871,6 +873,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 
 	switch (p)
 	{
+#ifdef /* MCImage::setprop */ LEGACY_EXEC
 	case P_INVISIBLE:
 	case P_VISIBLE:
 		{
@@ -1258,6 +1261,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			return t_stat;
 		}
 		break;
+#endif /* MCImage::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

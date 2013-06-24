@@ -287,7 +287,7 @@ static const char *ink_names[] =
 };
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef OLD_EXEC
+#ifdef /* MCObject::getrectprop */ LEGACY_EXEC
 Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCRectangle t_rect;
@@ -338,8 +338,8 @@ Exec_stat MCObject::getrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 
 	return ES_NORMAL;
 }
+#endif /* MCObject::getrectprop */
 
-#endif
 Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'getProp <propname>' otherwise we
@@ -406,7 +406,7 @@ Exec_stat MCObject::getcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCObject::getprop */ LEGACY_EXEC
 	uint2 num = 0;
 
 	switch (which)
@@ -739,7 +739,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	}
 
 	return ES_NORMAL;
-#else
+#endif /* MCObject::getprop */
 	Exec_stat t_stat;
 	t_stat = mode_getprop(parid, which, ep, MCnullmcstring, effective);
 	if (t_stat == ES_NOT_HANDLED)
@@ -748,7 +748,6 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		return ES_ERROR;
 	}
 	return t_stat;
-#endif
 }
 
 static bool string_contains_item(const char *p_string, const char *p_item)
@@ -773,6 +772,7 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 {
 	switch(which)
 	{
+#ifdef /* MCObject::getarrayprop */ LEGACY_EXEC
 	// MW-2011-11-23: [[ Array TextStyle ]] We now treat textStyle as (potentially) an
 	//   an array.
 	case P_TEXT_STYLE:
@@ -809,6 +809,7 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 				ep.clear();
 		}
 		break;
+#endif /* MCObject::getarrayprop */
 	default:
 		{
 			Exec_stat t_stat;
@@ -825,7 +826,7 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-#ifdef OLD_EXEC
+#ifdef /* MCObject::setrectprop */ LEGACY_EXEC
 Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCString t_data;
@@ -984,7 +985,9 @@ Exec_stat MCObject::setrectprop(Properties p_which, MCExecPoint& ep, Boolean p_e
 	
 	return ES_NORMAL;
 }
+#endif /* MCObject::setrectprop */
 
+#ifdef /* MCObject::setscriptprop */ LEGACY_EXEC
 Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 {
 	if (!MCdispatcher->cut(True))
@@ -1061,7 +1064,9 @@ Exec_stat MCObject::setscriptprop(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+#endif /* MCObject::setscriptprop */
 
+#ifdef /* MCObject::setparentscriptprop */ LEGACY_EXEC
 Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 {
 	// MW-2008-10-25: Add the setting logic for parent scripts. This code is a
@@ -1179,7 +1184,9 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 
 	return t_stat;
 }
+#endif /* MCObject::setparentscriptprop */
 
+#ifdef /* MCObject::setshowfocusborderprop */ LEGACY_EXEC
 Exec_stat MCObject::setshowfocusborderprop(MCExecPoint& ep)
 {
 	MCString data;
@@ -1211,7 +1218,9 @@ Exec_stat MCObject::setshowfocusborderprop(MCExecPoint& ep)
 
 	return ES_NORMAL;
 }
+#endif /* MCObject::setshowfocusborderprop */
 
+#ifdef /* MCObject::setvisibleprop */ LEGACY_EXEC
 Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep)
 {
 	Boolean dirty;
@@ -1293,7 +1302,8 @@ Exec_stat MCObject::setvisibleprop(uint4 parid, Properties which, MCExecPoint& e
 
 	return ES_NORMAL;
 }
-#endif
+#endif /* MCObject::setvisibleprop */
+
 Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef p_prop_name)
 {
 	// If the set name is nil, then we send a 'setProp <propname> <value>'
@@ -1362,7 +1372,7 @@ Exec_stat MCObject::setcustomprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameR
 
 Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCObject::setprop */ LEGACY_EXEC
 	Boolean dirty = True;
 	Boolean newstate;
 	int2 i1;
@@ -1812,13 +1822,11 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		if (gettype() >= CT_GROUP)
 			static_cast<MCControl *>(this) -> layer_redrawall();
 	}
-#else
+	return ES_NORMAL;
+#endif /* MCObject::setprop */
 
 	MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 	return ES_ERROR;
-
-#endif
-	return ES_NORMAL; 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
@@ -1826,6 +1834,7 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 {
 	switch(which)
 	{
+#ifdef /* MCObject::setarrayprop */ LEGACY_EXEC
 	case P_TEXT_STYLE:
 	{
 		// MW-2013-05-13: [[ Bug ]] Make sure we don't co-erce to a string unless
@@ -1903,6 +1912,7 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 			p -> store(ep);
 		}
 		break;
+#endif /* MCObject::setarrayprop */
 	default:
 		{
 			Exec_stat t_stat;

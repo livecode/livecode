@@ -830,6 +830,7 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 {
 	switch (which)
 	{
+#ifdef /* MCGroup::getprop */ LEGACY_EXEC
 	case P_CANT_DELETE:
 		ep.setboolean(getflag(F_G_CANT_DELETE));
 		break;
@@ -947,6 +948,7 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
 		break;
+#endif /* MCGroup::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -961,6 +963,7 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 
 	switch (p)
 	{
+#ifdef /* MCGroup::setprop */ LEGACY_EXEC
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
 	case P_TEXT_SIZE:
@@ -1293,6 +1296,7 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		dirty = False;
 		flags ^= F_SELECT_GROUP;
 		break;
+#endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

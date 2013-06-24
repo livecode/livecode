@@ -47,32 +47,3 @@ void MCVibrateExec (MCExecContext& ctxt, int32_t p_number_of_times)
 {
     MCSystemVibrate(p_number_of_times);
 }
-
-//// MOVED TO mblhandlers.cpp
-//Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
-//{
-//    int32_t t_number_of_times = 1;
-//    MCExecPoint ep(nil, nil, nil);
-//	ep . clear();
-//    if (p_parameters)
-//    {
-//        p_parameters->eval(ep);
-//        t_number_of_times = ep . getint4();
-//    }
-//    MCSystemBeep(t_number_of_times);
-//  	return ES_NORMAL;
-//}
-//
-//Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
-//{
-//    int32_t t_number_of_times = 1;
-//    MCExecPoint ep(nil, nil, nil);
-//	ep . clear();
-//    if (p_parameters)
-//    {
-//        p_parameters->eval(ep);
-//        t_number_of_times = ep . getint4();
-//    }
-//    MCSystemVibrate(t_number_of_times);
-//	return ES_NORMAL;
-//}

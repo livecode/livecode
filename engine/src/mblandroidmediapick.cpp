@@ -81,6 +81,11 @@ bool MCSystemPickMedia(MCMediaType p_types, bool p_multiple, MCStringRef& r_resu
 
 void MCAndroidMediaDone(char *p_media_content)
 {
+#ifdef /* MCAndroidMediaDone */ LEGACY_EXEC
+    s_media_content = p_media_content;
+    //    MCLog("MCAndroidMediaDone() called %s", p_media_content);
+	s_media_status = kMCAndroidMediaDone;
+#endif /* MCAndroidMediaDone */
     s_media_content = p_media_content;
     //    MCLog("MCAndroidMediaDone() called %s", p_media_content);
 	s_media_status = kMCAndroidMediaDone;
@@ -88,6 +93,10 @@ void MCAndroidMediaDone(char *p_media_content)
 
 void MCAndroidMediaCanceled()
 {
+#ifdef /* MCAndroidMediaCanceled */ LEGACY_EXEC
+    //    MCLog("MCAndroidMediaCanceled() called", nil);
+	s_media_status = kMCAndroidMediaCanceled;
+#endif /* MCAndroidMediaCanceled */
     //    MCLog("MCAndroidMediaCanceled() called", nil);
 	s_media_status = kMCAndroidMediaCanceled;
 }

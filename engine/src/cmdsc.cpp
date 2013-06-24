@@ -102,7 +102,8 @@ Parse_stat MCClone::parse(MCScriptPoint &sp)
 // where a target is valid only if it is not locked and not protected
 Exec_stat MCClone::exec(MCExecPoint &ep)
 {
-/*	MCStack *odefaultstackptr = MCdefaultstackptr;
+#ifdef /* MCClone */ LEGACY_EXEC
+	MCStack *odefaultstackptr = MCdefaultstackptr;
 	MCObject *optr = NULL;
 	uint4 parid;
 
@@ -113,7 +114,7 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	
-/*	switch (optr->gettype())
+	switch (optr->gettype())
 	{
 	case CT_STACK:
 		{
@@ -209,7 +210,9 @@ Exec_stat MCClone::exec(MCExecPoint &ep)
 	it->set
 	(ep);
 	MCdefaultstackptr = odefaultstackptr;
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCClone */
+
 
 	MCExecContext ctxt(ep, it);
 	MCObject *optr = NULL;
@@ -289,7 +292,8 @@ Parse_stat MCClipboardCmd::parse(MCScriptPoint& sp)
 
 Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 {
-	/*// Implicit form - use current context
+#ifdef /* MCClipboardCmd */ LEGACY_EXEC
+// Implicit form - use current context
 	if (targets == NULL)
 	{
 		if (MCactivefield != NULL)
@@ -436,7 +440,9 @@ Exec_stat MCClipboardCmd::exec(MCExecPoint& ep)
 	if (t_objects != NULL)
 		free(t_objects);
 
-	return t_stat;*/
+	return t_stat;
+#endif /* MCClipboardCmd */
+
 
 	MCExecContext ctxt(ep, it);
 
@@ -587,7 +593,7 @@ void MCClipboardCmd::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 }
 
-/*
+#ifdef /* MCClipboardCmd::processtocontainer */ LEGACY_EXEC
 Exec_errors MCClipboardCmd::processtocontainer(MCObjectRef *p_objects, uint4 p_object_count, MCObject *p_dst)
 {
 	bool t_cut;
@@ -712,7 +718,8 @@ Exec_errors MCClipboardCmd::processtocontainer(MCObjectRef *p_objects, uint4 p_o
 
 	return EE_UNDEFINED;
 }
-
+#endif /* MCClipboardCmd::processtocontainer */
+#ifdef /* MCClipboardCmd::processtoclipboard */ LEGACY_EXEC
 Exec_errors MCClipboardCmd::processtoclipboard(MCObjectRef *p_objects, uint4 p_object_count)
 {
 	// Pickle the list of objects. The only reason this could fail is due to lack of
@@ -788,7 +795,7 @@ Exec_errors MCClipboardCmd::processtoclipboard(MCObjectRef *p_objects, uint4 p_o
 
 	return EE_UNDEFINED;
 }
-*/
+#endif /* MCClipboardCmd::processtoclipboard */
 ///////////////////////////////////////////////////////////////////////////////
 //
 //  Primary Verb:
@@ -1013,7 +1020,8 @@ MCControl *MCCreate::getobject(MCObject *&parent)
 
 Exec_stat MCCreate::exec(MCExecPoint &ep)
 {
-/*	if (directory)
+#ifdef /* MCCreate */ LEGACY_EXEC
+	if (directory)
 	{
 		if (MCsecuremode & MC_SECUREMODE_DISK)
 		{
@@ -1171,7 +1179,9 @@ Exec_stat MCCreate::exec(MCExecPoint &ep)
 	}
 	optr->getprop(0, P_LONG_ID, ep, False);
 	it->set(ep);
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCCreate */
+
 
 	MCExecContext ctxt(ep, it);
 	if (directory)
@@ -1495,7 +1505,8 @@ Parse_stat MCDelete::parse(MCScriptPoint &sp)
 bool MCServerDeleteSession();
 Exec_stat MCDelete::exec(MCExecPoint &ep)
 {
-	/*if (var != NULL)
+#ifdef /* MCDelete */ LEGACY_EXEC
+if (var != NULL)
 		return var->dofree(ep);
 	if (file != NULL)
 	{
@@ -1593,7 +1604,9 @@ Exec_stat MCDelete::exec(MCExecPoint &ep)
 	}
 	else
 		MCselected->del();
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCDelete */
+
 
 	MCExecContext ctxt(ep);
 	if (var != NULL)
@@ -1763,7 +1776,9 @@ Parse_stat MCChangeProp::parse(MCScriptPoint &sp)
 
 Exec_stat MCChangeProp::exec(MCExecPoint &ep)
 {
-	/*return targets->changeprop(ep, prop, value);*/
+#ifdef /* MCChangeProp */ LEGACY_EXEC
+    return targets->changeprop(ep, prop, value);
+#endif /* MCChangeProp */
 
 	MCExecContext ctxt(ep);
 	if (targets != NULL)
@@ -1907,7 +1922,8 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 //   back to current tool.
 Exec_stat MCFlip::exec(MCExecPoint &ep)
 {
-	/*bool t_created_selection;
+#ifdef /* MCFlip */ LEGACY_EXEC
+bool t_created_selection;
 	if (image != NULL)
 	{
 		MCObject *optr;
@@ -1939,7 +1955,9 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 		MCactiveimage -> endsel();
 	}
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCFlip */
+
 	MCExecContext ctxt(ep);
 	if (image != NULL)
 	{
@@ -2007,7 +2025,8 @@ Parse_stat MCGrab::parse(MCScriptPoint &sp)
 
 Exec_stat MCGrab::exec(MCExecPoint &ep)
 {
-	/*MCObject *optr;
+#ifdef /* MCGrab */ LEGACY_EXEC
+MCObject *optr;
 	uint4 parid;
 	if (control->getobj(ep, optr, parid, True) != ES_NORMAL
 	        || optr->gettype() < CT_GROUP)
@@ -2018,7 +2037,9 @@ Exec_stat MCGrab::exec(MCExecPoint &ep)
 	}
 	MCControl *cptr = (MCControl *)optr;
 	cptr->grab();
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCGrab */
+
 
 	MCObject *optr;
 	uint4 parid;
@@ -2106,7 +2127,8 @@ Parse_stat MCLaunch::parse(MCScriptPoint &sp)
 
 Exec_stat MCLaunch::exec(MCExecPoint &ep)
 {
-	/*if (MCsecuremode & MC_SECUREMODE_PROCESS)
+#ifdef /* MCLaunch */ LEGACY_EXEC
+if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
@@ -2187,7 +2209,9 @@ Exec_stat MCLaunch::exec(MCExecPoint &ep)
 			MCS_launch_document(docname);
 	}
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCLaunch */
+
 
 	MCExecContext ctxt(ep);
 	MCNewAutoNameRef t_app;
@@ -2284,7 +2308,7 @@ Parse_stat MCLoad::parse(MCScriptPoint &sp)
 
 Exec_stat MCLoad::exec(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCLoad */ LEGACY_EXEC
 	char *mptr;
 	if (message != NULL)
 	{
@@ -2307,7 +2331,9 @@ Exec_stat MCLoad::exec(MCExecPoint &ep)
 	MCS_loadurl(ep . getobj(), ep . getcstring(), mptr);
 
 	delete mptr;
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCLoad */
+
 
 	MCExecContext ctxt(ep);
 
@@ -2377,14 +2403,16 @@ Parse_stat MCUnload::parse(MCScriptPoint &sp)
 
 Exec_stat MCUnload::exec(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCUnload */ LEGACY_EXEC
 	if (url->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_UNLOAD_BADURLEXP, line, pos);
 		return ES_ERROR;
 	}
 	MCS_unloadurl(ep . getobj(), ep . getcstring());
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCUnload */
+
 
 	MCExecContext ctxt(ep);
 
@@ -2450,7 +2478,8 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 
 Exec_stat MCPost::exec(MCExecPoint &ep)
 {
-	/*if (source->eval(ep) != ES_NORMAL)
+#ifdef /* MCPost */ LEGACY_EXEC
+if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
@@ -2463,7 +2492,9 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 	}
 	MCS_posttourl(ep . getobj(), ep . getsvalue(), ep2 . getcstring());
 	MCurlresult->eval(ep);
-	return it->set(ep);*/
+	return it->set(ep);
+#endif /* MCPost */
+
 
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -2523,7 +2554,8 @@ Parse_stat MCMakeGroup::parse(MCScriptPoint &sp)
 
 Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 {
-	/*if (targets != NULL)
+#ifdef /* MCMakeGroup */ LEGACY_EXEC
+if (targets != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
@@ -2569,7 +2601,9 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 	}
 	else
 		MCselected->group();
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCMakeGroup */
+
 
 	MCExecContext ctxt(ep);
 	if (targets != NULL)
@@ -2638,7 +2672,8 @@ Parse_stat MCPasteCmd::parse(MCScriptPoint &sp)
 
 Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
 {
-	/*MCObject *optr;
+#ifdef /* MCPasteCmd */ LEGACY_EXEC
+MCObject *optr;
 	if (!MCdispatcher -> dopaste(optr, true))
 		MCresult->sets("can't paste (empty clipboard or locked destination)");
 	else
@@ -2647,7 +2682,9 @@ Exec_stat MCPasteCmd::exec(MCExecPoint &ep)
 			optr->getprop(0, P_LONG_ID, ep, False);
 			it->set(ep);
 		}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCPasteCmd */
+
 
 	MCExecContext ctxt(ep, it);
 	MCPasteboardExecPaste(ctxt);
@@ -2697,7 +2734,8 @@ Parse_stat MCPlace::parse(MCScriptPoint &sp)
 
 Exec_stat MCPlace::exec(MCExecPoint &ep)
 {
-	/*MCObject *gptr;
+#ifdef /* MCPlace */ LEGACY_EXEC
+MCObject *gptr;
 	uint4 parid;
 	if (group->getobj(ep, gptr, parid, True) != ES_NORMAL)
 	{
@@ -2740,7 +2778,9 @@ Exec_stat MCPlace::exec(MCExecPoint &ep)
 
 	cptr->newcontrol((MCControl *)gptr, True);
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCPlace */
+
 
 	MCObject *gptr;
 	uint4 parid;
@@ -2811,7 +2851,8 @@ Parse_stat MCRecord::parse(MCScriptPoint &sp)
 
 Exec_stat MCRecord::exec(MCExecPoint &ep)
 {
-	/*if (MCsecuremode & MC_SECUREMODE_PRIVACY)
+#ifdef /* MCRecord */ LEGACY_EXEC
+if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 	{
 		MCeerror->add(EE_PROCESS_NOPERM, line, pos);
 		return ES_ERROR;
@@ -2823,7 +2864,9 @@ Exec_stat MCRecord::exec(MCExecPoint &ep)
 	}
 	char *soundfile = MCS_get_canonical_path(ep.getcstring());
 	MCtemplateplayer->recordsound(soundfile);
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRecord */
+
 
 	MCExecContext ctxt(ep);
 
@@ -2937,7 +2980,8 @@ Parse_stat MCRemove::parse(MCScriptPoint &sp)
 
 Exec_stat MCRemove::exec(MCExecPoint &ep)
 {
-	/*if (all)
+#ifdef /* MCRemove */ LEGACY_EXEC
+if (all)
 	{
 		MCObjectList *listptr = where == IP_FRONT ? MCfrontscripts : MCbackscripts;
 		MCObjectList *lptr = listptr;
@@ -2996,7 +3040,9 @@ Exec_stat MCRemove::exec(MCExecPoint &ep)
 			optr -> setflag(True, F_GROUP_SHARED);
 		}
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRemove */
+
 	
 	MCExecContext ctxt(ep);
 	if (all)
@@ -3104,7 +3150,8 @@ Parse_stat MCRename::parse(MCScriptPoint &sp)
 
 Exec_stat MCRename::exec(MCExecPoint &ep)
 {
-	/* if (source->eval(ep) != ES_NORMAL)
+#ifdef /* MCRename */ LEGACY_EXEC
+ if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_RENAME_BADSOURCE, line, pos);
@@ -3125,7 +3172,9 @@ Exec_stat MCRename::exec(MCExecPoint &ep)
 		MCresult->clear(False);
 	delete s;
 	delete d;
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCRename */
+
 
 	if (source->eval(ep) != ES_NORMAL)
 	{
@@ -3298,7 +3347,8 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 
 Exec_stat MCReplace::exec(MCExecPoint &ep)
 {
-	/*MCExecPoint epp(ep);
+#ifdef /* MCReplace */ LEGACY_EXEC
+MCExecPoint epp(ep);
 	MCExecPoint epr(ep);
 	if (pattern->eval(epp) != ES_NORMAL || epp.tos() != ES_NORMAL || epp.getsvalue().getlength() < 1)
 	{
@@ -3346,7 +3396,9 @@ Exec_stat MCReplace::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCReplace */
+
 
 	if (pattern->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL || ep.getsvalue().getlength() < 1)
 	{
@@ -3396,7 +3448,8 @@ void MCReplace::compile(MCSyntaxFactoryRef ctxt)
 
 Exec_stat MCRevert::exec(MCExecPoint &ep)
 {
-	/*if (MCtopstackptr != NULL)
+#ifdef /* MCRevert */ LEGACY_EXEC
+if (MCtopstackptr != NULL)
 	{
 		Window_mode oldmode = MCtopstackptr->getmode();
 		MCRectangle oldrect = MCtopstackptr->getrect();
@@ -3422,7 +3475,9 @@ Exec_stat MCRevert::exec(MCExecPoint &ep)
 		if (sptr != NULL)
 			sptr->openrect(oldrect, oldmode, NULL, WP_DEFAULT, OP_NONE);
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRevert */
+
 
 	MCExecContext ctxt(ep);
 	MCInterfaceExecRevert(ctxt);
@@ -3476,7 +3531,8 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 {
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
 	//   editing operations are not supported yet.
-/*#ifndef _MOBILE
+#ifdef /* MCRotate */ LEGACY_EXEC
+#ifndef _MOBILE
 
 	MCImage *iptr = nil;
 
@@ -3514,7 +3570,8 @@ Exec_stat MCRotate::exec(MCExecPoint &ep)
 
 #endif
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRotate */
 
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
 	//   editing operations are not supported yet.
@@ -3620,7 +3677,8 @@ Parse_stat MCCrop::parse(MCScriptPoint &sp)
 
 Exec_stat MCCrop::exec(MCExecPoint &ep)
 {	
-	/*	if (image != NULL)
+#ifdef /* MCCrop */ LEGACY_EXEC
+	if (image != NULL)
 	{
 		MCObject *optr;
 		uint4 parid;
@@ -3657,7 +3715,9 @@ Exec_stat MCCrop::exec(MCExecPoint &ep)
 		trect.height = MCU_max(i4 - i2, 1);
 		iptr->crop(&trect);
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCCrop */
+
 
 	MCExecContext ctxt(ep);
 	MCImage *iptr;
@@ -3768,7 +3828,8 @@ Parse_stat MCSelect::parse(MCScriptPoint &sp)
 
 Exec_stat MCSelect::exec(MCExecPoint &ep)
 {
-	/*if (targets == NULL)
+#ifdef /* MCSelect */ LEGACY_EXEC
+if (targets == NULL)
 	{
 		MCselected->clear(True);
 		if (MCactivefield != NULL)
@@ -3789,7 +3850,9 @@ Exec_stat MCSelect::exec(MCExecPoint &ep)
 		}
 		tptr = tptr->next;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCSelect */
+
 
 	MCExecContext ctxt(ep);
 	if (targets == NULL)
@@ -3908,8 +3971,11 @@ void MCSelect::compile(MCSyntaxFactoryRef ctxt)
 
 Exec_stat MCUndoCmd::exec(MCExecPoint &ep)
 {
-	/*MCundos->undo();
-	return ES_NORMAL;*/
+#ifdef /* MCUndoCmd */ LEGACY_EXEC
+MCundos->undo();
+	return ES_NORMAL;
+#endif /* MCUndoCmd */
+
 	
 	MCExecContext ctxt(ep);
 	MCInterfaceExecUndo(ctxt);
@@ -3952,7 +4018,8 @@ Parse_stat MCUngroup::parse(MCScriptPoint &sp)
 
 Exec_stat MCUngroup::exec(MCExecPoint &ep)
 {
-	/*MCObject *gptr;
+#ifdef /* MCUngroup */ LEGACY_EXEC
+MCObject *gptr;
 	if (group != NULL)
 	{
 		uint4 parid;
@@ -3972,7 +4039,9 @@ Exec_stat MCUngroup::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	gptr->getstack()->ungroup((MCGroup *)gptr);
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCUngroup */
+
 
 	MCExecContext ctxt(ep);
 	if (group != NULL)

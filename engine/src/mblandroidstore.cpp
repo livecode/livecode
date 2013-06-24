@@ -571,32 +571,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//// MOVED TO mblhandlers.cpp
-//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-//
-//Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
-//{
-//    bool t_success = true;
-//    
-//    bool t_verified = true;
-//    uint32_t t_id;
-//    MCPurchase *t_purchase = nil;
-//    
-//    if (t_success)
-//        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
-//    
-//    if (t_success)
-//        t_success = MCPurchaseFindById(t_id, t_purchase);
-//    
-//    if (t_success)
-//        MCPurchaseVerify(t_purchase, t_verified);
-//    
-//    return ES_NORMAL;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 {
     // Not implemented
+    return false;
 }

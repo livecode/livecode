@@ -178,12 +178,14 @@ Exec_stat MCColors::getprop_legacy(uint4 parid, Properties which, MCExecPoint& e
 {
 	switch (which)
 	{
+#ifdef /* MCColors::getprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
 		MCColor color;
 		color.pixel = selectedcolor;
 		MCscreen->querycolor(color);
 		ep.setcolor(color);
 		break;
+#endif /* MCColors::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -197,6 +199,7 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 
 	switch (p)
 	{
+#ifdef /* MCColors::setprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
 		{
 			MCColor color;
@@ -209,6 +212,7 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			selectedcolor = color.pixel;
 		}
 		break;
+#endif /* MCColors::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

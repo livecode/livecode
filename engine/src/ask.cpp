@@ -329,7 +329,7 @@ Exec_stat MCAsk::exec(class MCExecPoint& ep)
 	return ctxt . Catch(line, pos);
 }
 
-#if OLD_EXEC
+#ifdef /* MCAsk::exec_question */ LEGACY_EXEC
 Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -366,7 +366,9 @@ Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 
 	return t_error;
 }
+#endif /* MCAsk::exec_question */
 
+#ifdef /* MCAsk::exec_password */ LEGACY_EXEC
 Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -402,7 +404,9 @@ Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
+#endif /* MCAsk::exec_password */
 
+#ifdef /* MCAsk::exec_file */ LEGACY_EXEC
 Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -467,7 +471,9 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
+#endif /* MCAsk::exec_file */
 
+#ifdef /* MCAsk::exec_custom */ LEGACY_EXEC
 Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("ask %s", p_type);
@@ -509,7 +515,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 
 	return EE_UNDEFINED;
 }
-#endif
+#endif /* MCAsk::exec_custom */
 
 void MCAsk::compile(MCSyntaxFactoryRef ctxt)
 {

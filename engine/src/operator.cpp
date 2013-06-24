@@ -97,7 +97,7 @@ void MCMultiBinaryOperator::compile(MCSyntaxFactoryRef ctxt)
 
 Exec_stat MCAnd::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAnd */ LEGACY_EXEC
 	Boolean state1;
 	Boolean state2 = False;
 
@@ -118,7 +118,8 @@ Exec_stat MCAnd::eval(MCExecPoint &ep)
 	}
 	ep.setboolean(state1 && state2);
 	return ES_NORMAL;
-	*/
+#endif /* MCAnd */
+
 
 	MCExecContext ctxt(ep);
 	bool t_result;
@@ -153,7 +154,7 @@ Exec_stat MCAnd::eval(MCExecPoint &ep)
 
 Exec_stat MCOr::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCOr */ LEGACY_EXEC
 	Boolean state1;
 	Boolean state2 = False;
 
@@ -174,7 +175,8 @@ Exec_stat MCOr::eval(MCExecPoint &ep)
 	}
 	ep.setboolean(state1 || state2);
 	return ES_NORMAL;
-	*/
+#endif /* MCOr */
+
 
 	MCExecContext ctxt(ep);
 	bool t_result;
@@ -209,7 +211,7 @@ Exec_stat MCOr::eval(MCExecPoint &ep)
 
 Exec_stat MCNot::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCNot */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_NOT_BADRIGHT, line, pos);
@@ -218,7 +220,8 @@ Exec_stat MCNot::eval(MCExecPoint &ep)
 	Boolean state = ep.getsvalue() == MCtruemcstring;
 	ep.setboolean(!state);
 	return ES_NORMAL;
-	*/
+#endif /* MCNot */
+
 
 	MCExecContext ctxt(ep);
 	bool t_result;
@@ -250,7 +253,7 @@ Exec_stat MCNot::eval(MCExecPoint &ep)
 
 Exec_stat MCAndBits::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAndBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL )
 	{
 		MCeerror->add(EE_ANDBITS_BADLEFT, line, pos);
@@ -265,7 +268,8 @@ Exec_stat MCAndBits::eval(MCExecPoint &ep)
 	uint4 ro = ep.getuint4();
 	ep.setnvalue(ro & lo);
 	return ES_NORMAL;
-	*/
+#endif /* MCAndBits */
+
 
 	MCExecContext ctxt(ep);
 	uinteger_t t_result;
@@ -298,7 +302,7 @@ Exec_stat MCAndBits::eval(MCExecPoint &ep)
 
 Exec_stat MCNotBits::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCNotBits */ LEGACY_EXEC
 	if (right->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_NOTBITS_BADRIGHT, line, pos);
@@ -306,7 +310,8 @@ Exec_stat MCNotBits::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(~ep.getuint4());
 	return ES_NORMAL;
-	*/
+#endif /* MCNotBits */
+
 
 	MCExecContext ctxt(ep);
 	uinteger_t t_result;
@@ -332,7 +337,7 @@ Exec_stat MCNotBits::eval(MCExecPoint &ep)
 
 Exec_stat MCOrBits::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCOrBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ORBITS_BADLEFT, line, pos);
@@ -347,7 +352,8 @@ Exec_stat MCOrBits::eval(MCExecPoint &ep)
 	uint4 ro = ep.getuint4();
 	ep.setnvalue(ro | lo);
 	return ES_NORMAL;
-	*/
+#endif /* MCOrBits */
+
 
 	MCExecContext ctxt(ep);
 	uinteger_t t_result;
@@ -380,7 +386,7 @@ Exec_stat MCOrBits::eval(MCExecPoint &ep)
 
 Exec_stat MCXorBits::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCXorBits */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_XORBITS_BADLEFT, line, pos);
@@ -395,7 +401,8 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 	uint4 ro = ep.getuint4();
 	ep.setnvalue(ro ^ lo);
 	return ES_NORMAL;
-	*/
+#endif /* MCXorBits */
+
 
 	MCExecContext ctxt(ep);
 	uinteger_t t_result;
@@ -433,7 +440,7 @@ Exec_stat MCXorBits::eval(MCExecPoint &ep)
 
 Exec_stat MCConcat::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCConcat */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
 	{
@@ -447,7 +454,8 @@ Exec_stat MCConcat::eval(MCExecPoint &ep)
 	}
 	ep1.appendmcstring(ep2 . getsvalue());
 	return ES_NORMAL;
-	*/
+#endif /* MCConcat */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -480,7 +488,7 @@ Exec_stat MCConcat::eval(MCExecPoint &ep)
 
 Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCConcatSpace */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (left->eval(ep1) != ES_NORMAL)
 	{
@@ -494,7 +502,8 @@ Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 	}
 	ep1.concatmcstring(ep2.getsvalue(), EC_SPACE, false);
 	return ES_NORMAL;
-	*/
+#endif /* MCConcatSpace */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -527,7 +536,7 @@ Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 
 Exec_stat MCItem::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCItem */ LEGACY_EXEC
 	if (left->eval(ep1) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ITEM_BADLEFT, line, pos);
@@ -546,7 +555,8 @@ Exec_stat MCItem::eval(MCExecPoint &ep)
 	}
 	ep1.concatmcstring(ep2.getsvalue(), EC_COMMA, false);
 	return ES_NORMAL;
-	*/
+#endif /* MCItem */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -584,7 +594,7 @@ Exec_stat MCItem::eval(MCExecPoint &ep)
 
 Exec_stat MCContains::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCContains */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (right->eval(ep1) != ES_NORMAL)
 	{
@@ -599,7 +609,8 @@ Exec_stat MCContains::eval(MCExecPoint &ep)
 	uint4 i;
 	ep1.setboolean(MCU_offset(ep1.getsvalue(), ep2.getsvalue(), i, ep1.getcasesensitive()));
 	return ES_NORMAL;
-	*/
+#endif /* MCContains */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -645,7 +656,7 @@ Parse_stat MCBeginsEndsWith::parse(MCScriptPoint& sp, Boolean the)
 
 Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 {
-	/*
+#ifdef /* MCBeginsWith */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (right->eval(ep1) != ES_NORMAL)
 	{
@@ -675,7 +686,8 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 	ep1.setboolean(t_result);
 
 	return ES_NORMAL;
-	*/
+#endif /* MCBeginsWith */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -708,7 +720,7 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 
 Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 {
-	/*
+#ifdef /* MCEndsWith */ LEGACY_EXEC
 	MCExecPoint ep2(ep1);
 	if (right->eval(ep1) != ES_NORMAL)
 	{
@@ -738,7 +750,8 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 	ep1.setboolean(t_result);
 
 	return ES_NORMAL;
-	*/
+#endif /* MCEndsWith */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_left, t_right;
@@ -778,7 +791,7 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCDiv::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCDiv */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIV_BADLEFT, line, pos);
@@ -820,7 +833,8 @@ Exec_stat MCDiv::eval(MCExecPoint &ep)
 		ep.setnvalue(floor(n));
 
 	return ES_NORMAL;
-	*/
+#endif /* MCDiv */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -888,7 +902,7 @@ void MCDiv::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) cons
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCMinus::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMinus */ LEGACY_EXEC
 	if (left == NULL)
 		ep.setnvalue(0);
 	else if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
@@ -921,7 +935,8 @@ Exec_stat MCMinus::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-	*/
+#endif /* MCMinus */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -993,7 +1008,7 @@ void MCMinus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) co
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCMod::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMod */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_MOD_BADLEFT, line, pos);
@@ -1031,7 +1046,8 @@ Exec_stat MCMod::eval(MCExecPoint &ep)
 	ep.setnvalue(fmod(ep.getnvalue(), ep2.getnvalue()));
 
 	return ES_NORMAL;
-	*/
+#endif /* MCMod */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -1099,7 +1115,7 @@ void MCMod::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) cons
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCWrap::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCWrap */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_WRAP_BADLEFT, line, pos);
@@ -1139,7 +1155,8 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 	ep . setnvalue(MCU_fwrap(ep . getnvalue(), ep2 . getnvalue()));	
 
 	return ES_NORMAL;
-	*/
+#endif /* MCWrap */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -1207,7 +1224,7 @@ void MCWrap::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) con
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCOver::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCOver */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_OVER_BADLEFT, line, pos);
@@ -1245,7 +1262,8 @@ Exec_stat MCOver::eval(MCExecPoint &ep)
 	ep.setnvalue(n);
 
 	return ES_NORMAL;
-	*/
+#endif /* MCOver */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -1313,7 +1331,7 @@ void MCOver::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) con
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCPlus::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCPlus */ LEGACY_EXEC
 	if (left == NULL)
 		ep.setnvalue(0);
 	else
@@ -1341,7 +1359,8 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-	*/
+#endif /* MCPlus */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -1413,7 +1432,7 @@ void MCPlus::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) con
 //   Here the left or right can be an array or number so we use 'tona'.
 Exec_stat MCTimes::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCTimes */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_TIMES_BADLEFT, line, pos);
@@ -1440,7 +1459,8 @@ Exec_stat MCTimes::eval(MCExecPoint &ep)
 	ep.setnvalue(n);
 
 	return ES_NORMAL;
-	*/
+#endif /* MCTimes */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoValueRef t_left, t_right;
@@ -1506,7 +1526,7 @@ void MCTimes::getmethodinfo(MCExecMethodInfo**& r_methods, uindex_t& r_count) co
 
 Exec_stat MCPow::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCPow */ LEGACY_EXEC
 	if (left->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_POW_BADLEFT, line, pos);
@@ -1528,7 +1548,8 @@ Exec_stat MCPow::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCPow */
+
 	MCExecContext ctxt(ep);
 	real64_t t_left, t_right;
 	real64_t t_result;
@@ -1863,7 +1884,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCIs::eval(MCExecPoint &ep)
 {
-#if 0
+#ifdef /* MCIs */ LEGACY_EXEC
 	// Implementation of 'is a <type>'
 	if (valid != IV_UNDEFINED)
 	{
@@ -2074,7 +2095,7 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 	}
 	ep.setboolean(match);
 	return ES_NORMAL;
-#endif
+#endif /* MCIs */
 
 	MCExecContext ctxt(ep);
 	bool t_result;
@@ -2505,7 +2526,7 @@ Parse_stat MCThere::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCThere::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCThere */ LEGACY_EXEC
 	Boolean found;
 	if (object == NULL)
 	{
@@ -2548,7 +2569,8 @@ Exec_stat MCThere::eval(MCExecPoint &ep)
 		found = !found;
 	ep.setboolean(found);
 	return ES_NORMAL;
-	*/
+#endif /* MCThere */
+
 
 	MCExecContext ctxt(ep);
 	bool t_result;

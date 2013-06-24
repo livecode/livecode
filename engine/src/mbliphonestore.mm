@@ -869,27 +869,6 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-
-//// MOVED TO mblhandlers.cpp
-//Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-//{
-//    bool t_success = true;
-//    
-//    char * t_product;
-//    MCPurchase *t_purchase = nil;
-//    
-//    if (t_success)
-//        t_success = MCParseParameters(p_parameters, "s", &t_product);
-//    
-//    if (t_success)
-//        MCStoreRequestProductDetails(t_product);
-//    
-//    return ES_NORMAL;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
 {
     // Not Implemented

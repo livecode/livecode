@@ -1129,7 +1129,7 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 Exec_stat MCProperty::set(MCExecPoint &ep)
 {
-#if OLD_EXEC
+#ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
 	Pixmap newpm;
 	int2 mx, my;
@@ -2982,7 +2982,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-#else
+#endif /* MCProperty::set */
 	
 	if (destvar != NULL && which != P_CUSTOM_VAR)
 		return set_variable(ep);
@@ -2991,7 +2991,6 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return set_global_property(ep);
 	
 	return set_object_property(ep);
-#endif
 }
 
 Exec_stat MCProperty::set_variable(MCExecPoint& ep)
@@ -3340,7 +3339,7 @@ Exec_stat MCProperty::set_object_property(MCExecPoint& ep)
 
 Exec_stat MCProperty::eval(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCProperty::eval */ LEGACY_EXEC
 	uint2 i = 0;
 	int2 mx, my;
 	MCExecPoint ep2(ep);
@@ -4753,7 +4752,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			}
 	}
 	return ES_NORMAL;
-#else
+#endif /* MCProperty::eval */
 	
 	ep . setline(line);
 
@@ -4770,7 +4769,6 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		return eval_object_property(ep);
 	
 	return eval_count(ep);
-#endif
 }
 
 Exec_stat MCProperty::eval_variable(MCExecPoint& ep)

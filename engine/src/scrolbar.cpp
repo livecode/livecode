@@ -678,6 +678,7 @@ Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 {
 	switch (which)
 	{
+#ifdef /* MCScrollbar::getprop */ LEGACY_EXEC
 	case P_STYLE:
 		if (flags & F_SCALE)
 			ep.setstaticcstring(MCscalestring);
@@ -719,6 +720,7 @@ Exec_stat MCScrollbar::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 	case P_SHOW_VALUE:
 		ep.setboolean(getflag(F_SHOW_VALUE));
 		break;
+#endif /* MCScrollbar::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -733,6 +735,7 @@ Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 
 	switch (p)
 	{
+#ifdef /* MCScrollbar::setprop */ LEGACY_EXEC
 	case P_STYLE:
 		flags &= ~F_SB_STYLE;
 		if (data == MCscalestring)
@@ -860,6 +863,7 @@ Exec_stat MCScrollbar::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 		else
 			dirty = False;
 		break;
+#endif /* MCScrollbar::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

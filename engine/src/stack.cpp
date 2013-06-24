@@ -1180,7 +1180,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 	switch (which)
 	{
-		
+#ifdef /* MCStack::getprop */ LEGACY_EXEC
 	case P_FULLSCREEN:
 		ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
 		break;
@@ -1642,7 +1642,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_DEFER_SCREEN_UPDATES:
 		ep . setboolean(effective ? m_defer_updates && m_tilecache != nil : m_defer_updates);
 		break;
-
+#endif /* MCStack::getprop */
 	default:
 	{
 		Exec_stat t_stat;
@@ -1670,6 +1670,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 	switch (which)
 	{
+#ifdef /* MCStack::setprop */ LEGACY_EXEC
 	case P_FULLSCREEN:
 		{
 			if (!MCU_stob(data, bval))
@@ -2669,7 +2670,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-	
+#endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;

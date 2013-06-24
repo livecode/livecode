@@ -101,7 +101,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCAdd::exec(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCAdd */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADSOURCE, line, pos);
@@ -169,7 +169,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-#else
+#endif /* MCAdd */
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -247,7 +247,6 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	}
 
 	return ctxt . Catch(line, pos);
-#endif
 }
 
 void MCAdd::compile(MCSyntaxFactoryRef ctxt)
@@ -314,7 +313,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCDivide::exec(MCExecPoint &ep)
 {
-#if 0
+#ifdef /* MCDivide */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIVIDE_BADSOURCE, line, pos);
@@ -407,7 +406,7 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-#else
+#endif /* MCDivide */
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -485,7 +484,6 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	}
 	
 	return ctxt . Catch(line, pos);
-#endif
 }
 
 void MCDivide::compile(MCSyntaxFactoryRef ctxt)
@@ -555,7 +553,7 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCMultiply::exec(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCMultiply */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_MULTIPLY_BADSOURCE, line, pos);
@@ -642,7 +640,7 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-#else
+#endif /* MCMultiply */
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -720,7 +718,6 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	}
 	
 	return ctxt . Catch(line, pos);
-#endif
 }
 
 void MCMultiply::compile(MCSyntaxFactoryRef ctxt)
@@ -790,7 +787,7 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCSubtract::exec(MCExecPoint &ep)
 {
-#if OLD_EXEC
+#ifdef /* MCSubtract */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUBTRACT_BADSOURCE, line, pos);
@@ -859,7 +856,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
-#else
+#endif /* MCSubtract */
 	MCAutoValueRef t_src;
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
@@ -937,7 +934,6 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	}
 	
 	return ctxt . Catch(line, pos);
-#endif
 }
 
 void MCSubtract::compile(MCSyntaxFactoryRef ctxt)
@@ -1033,6 +1029,93 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCArrayOp */ LEGACY_EXEC
+	uint1 e;
+	uint1 k = '\0';
+	uint4 chunk;
+	chunk = mode;
+	switch(chunk)
+	{
+		case TYPE_USER:
+			if (element != NULL)
+			{
+				if (element->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL
+                    || ep.getsvalue().getlength() != 1)
+				{
+					MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
+					return ES_ERROR;
+				}
+				e = ep.getsvalue().getstring()[0];
+				if (key != NULL)
+				{
+					if (key->eval(ep) != ES_NORMAL || ep.tos() != ES_NORMAL
+                        || ep.getsvalue().getlength() != 1)
+					{
+						MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
+						return ES_ERROR;
+					}
+					k = ep.getsvalue().getstring()[0];
+				}
+			}
+            break;
+		case TYPE_ROW:
+			e = ep . getrowdel();
+            break;
+		case TYPE_COLUMN:
+			e = ep . getcolumndel();
+            break;
+		case TYPE_LINE:
+			e = ep . getlinedel();
+            break;
+		case TYPE_ITEM:
+			e = ep . getitemdel();
+            break;
+		case TYPE_WORD:
+		case TYPE_TOKEN:
+		case TYPE_CHARACTER:
+		default:
+			return ES_ERROR;
+            break;
+	}
+    
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	if (destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
+		return ES_ERROR;
+	}
+    
+	if (is_combine)
+	{
+		if (form == FORM_NONE)
+		{
+			if (chunk == TYPE_COLUMN)
+				t_dst_ref -> combine_column(e, ep . getrowdel(), ep);
+			else
+				t_dst_ref -> combine(e, k, ep);
+		}
+		else
+			t_dst_ref -> combine_as_set(e, ep);
+	}
+	else
+	{
+		if (form == FORM_NONE)
+		{
+			if (chunk == TYPE_COLUMN)
+				t_dst_ref -> split_column(e, ep . getrowdel(), ep);
+			else
+				t_dst_ref -> split(e, k, ep);
+		}
+		else
+			t_dst_ref -> split_as_set(e, ep);
+	}
+    
+	if (t_dst_var != NULL)
+		t_dst_var -> synchronize(ep, True);
+    
+	return ES_NORMAL;
+#endif /* MCArrayOp */
 	MCExecContext ctxt(ep);
 
 	MCAutoStringRef t_element_del;
@@ -1218,6 +1301,55 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCSetOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSetOp */ LEGACY_EXEC
+	// ARRAYEVAL
+	if (source -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_ARRAYOP_BADEXP, line, pos);
+		return ES_ERROR;
+	}
+    
+	if (ep . getformat() != VF_ARRAY)
+		ep . clear();
+    
+	if (overlap)
+		ep . grab();
+    
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	if (destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
+	{
+		MCeerror -> add(EE_ARRAYOP_BADEXP, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCVariableValue *t_src_ref;
+	t_src_ref = ep . getarray();
+	
+	// Do nothing if source and dest are the same
+	if (t_src_ref == t_dst_ref)
+		return ES_NORMAL;
+    
+	if (intersect)
+	{
+		if (t_src_ref == NULL)
+			t_dst_ref -> assign_empty();
+		else
+			t_dst_ref -> intersectarray(*t_src_ref);
+	}
+	else
+	{
+		if (t_src_ref == NULL)
+			return ES_NORMAL;
+        
+		t_dst_ref -> unionarray(*t_src_ref);
+	}
+    
+	if (t_dst_var != NULL)
+		t_dst_var -> synchronize(ep, True);
+    
+	return ES_NORMAL;
+#endif /* MCSetOp */
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{

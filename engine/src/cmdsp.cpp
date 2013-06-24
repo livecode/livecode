@@ -323,7 +323,8 @@ Exec_stat MCPrint::evaluate_src_rect(MCExecPoint& ep, MCPoint& r_from, MCPoint& 
 
 Exec_stat MCPrint::exec(MCExecPoint &ep)
 {
-/*	if (MCsecuremode & MC_SECUREMODE_PRINT)
+#ifdef /* MCPrint */ LEGACY_EXEC
+	if (MCsecuremode & MC_SECUREMODE_PRINT)
 	{
 		MCeerror->add(EE_PRINT_NOPERM, line, pos);
 		return ES_ERROR;
@@ -658,7 +659,9 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	//   return back to the caller.
 	MCU_unwatchcursor(ep.getobj()->getstack(), True);
 	
-	return t_exec_stat;*/
+	return t_exec_stat;
+#endif /* MCPrint */
+
 
 	MCExecContext ctxt(ep);
 
