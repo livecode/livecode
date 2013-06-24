@@ -681,7 +681,7 @@ enum Is_type {
 	IT_AMONG_THE_DRAG_DATA,
 	IT_NOT_AMONG_THE_DRAG_DATA,
 	IT_AMONG_THE_CLIPBOARD_DATA,
-	IT_NOT_AMONG_THE_CLIPBOARD_DATA
+	IT_NOT_AMONG_THE_CLIPBOARD_DATA,
 };
 
 enum Is_validation {
@@ -694,7 +694,8 @@ enum Is_validation {
     IV_NUMBER,
     IV_POINT,
     IV_RECT,
-	IV_ARRAY
+	IV_ARRAY,
+    IV_ASCII,
 };
 
 enum Lock_constants {
@@ -1765,6 +1766,7 @@ enum Sugar_constants {
 	SG_OPEN,
 	SG_CLOSED,
 	SG_CALLER,
+    SG_STRING,
 };
 
 enum Statements {
