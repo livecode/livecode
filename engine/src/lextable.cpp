@@ -1946,6 +1946,7 @@ static LT sugar_table[] =
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
+		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
@@ -2043,6 +2044,7 @@ static LT validation_table[] =
     {"among", TT_UNDEFINED, IV_AMONG},
     {"an", TT_UNDEFINED, IV_UNDEFINED},
     {"array", TT_UNDEFINED, IV_ARRAY},
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'ascii'.
     {"ascii", TT_UNDEFINED, IV_ASCII},
 	{"boolean", TT_UNDEFINED, IV_LOGICAL},
     {"color", TT_UNDEFINED, IV_COLOR},

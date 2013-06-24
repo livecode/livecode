@@ -873,25 +873,16 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
             
             valid = (Is_validation)te->which;
 			
-            // check for ascii string
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Parse 'is an ascii string'.
             if (te->which == IV_ASCII)
             {
-                if (sp.next(type) != PS_NORMAL)
+				if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
                 {
-                	MCperror->add(PE_IS_NOVALIDTYPE, sp);
-                    return PS_ERROR;
-                }
-                if (sp.lookup(SP_SUGAR, te) != PS_NORMAL)
-                {
-                    MCperror->add(PE_IS_BADVALIDTYPE, sp);
-                    return PS_ERROR;
-                }
-                if (te->which != SG_STRING)
-                {
-                    MCperror->add(PE_IS_BADVALIDTYPE, sp);
+                	MCperror->add(PE_IS_BADVALIDTYPE, sp);
                     return PS_ERROR;
                 }
             }
+			
 			return PS_BREAK;
 		}
 		else
@@ -1045,20 +1036,19 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			case IV_RECT:
 				cond = MCU_stoi2x4(ep.getsvalue(), i2, i2, i2, i2);
 				break;
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+			//   check.
             case IV_ASCII:
                 {
                     cond = True;
-                    uint1* t_string = (uint1 *) ep.getcstring();
+                    uint1* t_string = (uint1 *) ep.getsvalue().getstring();
                     int t_length = ep.getsvalue().getlength();
                     for (int i=0; i < t_length ;i++)
-                    {
-                        if (*t_string > 127)
+                        if (t_string[i] > 127)
                         {
                             cond = False;
                             break;
                         }
-                        t_string++;
-                    }
                 }
                 break;
 			default:

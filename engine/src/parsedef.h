@@ -695,6 +695,7 @@ enum Is_validation {
     IV_POINT,
     IV_RECT,
 	IV_ARRAY,
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'ascii'.
     IV_ASCII,
 };
 
@@ -1766,6 +1767,8 @@ enum Sugar_constants {
 	SG_OPEN,
 	SG_CLOSED,
 	SG_CALLER,
+	
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
 };
 
