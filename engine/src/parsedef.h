@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;
@@ -719,6 +711,12 @@ enum Mark_constants {
     MC_WHERE
 };
 
+enum Match_mode {
+    MA_UNDEFINED,
+    MA_WILDCARD,
+    MA_REGEX
+};
+
 enum Move_mode {
     MM_UNDEFINED,
     MM_MESSAGES,
@@ -864,7 +862,8 @@ enum Preposition_type {
 	PT_CONTENT,
 	PT_MARKUP,
 	PT_BINARY,
-	PT_COOKIE
+	PT_COOKIE,
+    PT_MATCHING
 };
 
 enum Print_mode {
@@ -1765,6 +1764,9 @@ enum Sugar_constants {
 	SG_OPEN,
 	SG_CLOSED,
 	SG_CALLER,
+    SG_PATTERN,
+    SG_REGEX,
+    SG_WILDCARD
 };
 
 enum Statements {

@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "regex.h"
 #include "util.h"
 #include "uidc.h"
 
@@ -1331,23 +1332,71 @@ public:
 	}
 };
 
+class MCPatternMatcher
+{
+protected:
+	char *pattern;
+	Boolean casesensitive;
+public:
+	MCPatternMatcher(char *p, Boolean cs)
+	{
+		pattern = strdup(p);
+		casesensitive = cs;
+	}
+	virtual ~MCPatternMatcher();
+	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
+	virtual Boolean match(char *s) = 0;
+};
+
+class MCRegexMatcher : public MCPatternMatcher
+{
+protected:
+	regexp *compiled;
+public:
+	MCRegexMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+		compiled = NULL;
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(char *s);
+};
+
+class MCWildcardMatcher : public MCPatternMatcher
+{
+public:
+	MCWildcardMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(char *s);
+protected:
+	static Boolean match(char *s, char *p, Boolean cs);
+};
+
 class MCFilter : public MCStatement
 {
+	Chunk_term chunktype;
 	MCChunk *container;
+	MCChunk *target;
+	MCVarref *it;
+	MCExpression *source;
 	MCExpression *pattern;
-	Boolean out;
+	Match_mode matchmode;
+	Boolean discardmatches;
 public:
 	MCFilter()
 	{
+		chunktype = CT_UNDEFINED;
 		container = NULL;
+		target = NULL;
+		it = NULL;
+		source = NULL;
 		pattern = NULL;
-		out = False;
+		matchmode = MA_UNDEFINED;
+		discardmatches = False;
 	}
 	virtual ~MCFilter();
-	Boolean match(char *s, char *p, Boolean casesensitive);
-    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-    //     pass linedelimiter as extra parameter to filterlines
-	char *filterlines(char *sstring, char *pstring, char delimiter, Boolean casesensitive);
+	char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 };

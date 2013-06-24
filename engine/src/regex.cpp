@@ -296,22 +296,60 @@ int regexec(regex_t *preg, const char *string, int len, size_t nmatch,
 
 static char regexperror[100];
 
+regexp *MCregexcache[PATTERN_CACHE_SIZE];
+
 const char *MCR_geterror()
 {
 	return regexperror;
 }
 
-regexp *MCR_compile(char *exp)
+regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
 {
-	regexp *re = new regexp;
-	int status;
+	Boolean found = False;
+	regexp *re = NULL;
 	int flags = REG_EXTENDED;
-	status = regcomp(&re->rexp, exp, flags);
-	if (status != REG_OKAY)
+    if (!casesensitive)
+        flags |= REG_ICASE;
+
+	if (usecache)
 	{
-		regerror(status, NULL, regexperror, sizeof(regexperror));
-		delete re;
-		return(NULL);
+		uint2 i;
+		for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+		{
+			if (MCregexcache[i]
+				&& strequal(exp, MCregexcache[i]->pattern)
+				&& flags == MCregexcache[i]->flags)
+			{
+				found = True;
+				re = MCregexcache[i];
+				break;
+			}
+		}
+	}
+	if (re == NULL)
+	{
+		re = new regexp;
+		re->pattern = strdup(exp);
+		re->flags = flags;
+		int status;
+		status = regcomp(&re->rexp, exp, flags);
+		if (status != REG_OKAY)
+		{
+			regerror(status, NULL, regexperror, sizeof(regexperror));
+			delete re->pattern;
+			delete re;
+			return(NULL);
+		}
+	}
+	if (usecache && !found)
+	{
+		uint2 i;
+		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
+		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
+		{
+			MCregexcache[i] = MCregexcache[i - 1];
+		}
+		MCregexcache[0] = re;
 	}
 	return re;
 }
@@ -339,5 +377,14 @@ void MCR_free(regexp *prog)
 	{
 		regfree(&prog->rexp);
 		delete prog;
+	}
+}
+
+void MCR_clearcache()
+{
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+	{
+		MCR_free(MCregexcache[i]);
 	}
 }
