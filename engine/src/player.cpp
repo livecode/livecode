@@ -5022,10 +5022,6 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 
 	if (qteffect != 0)
 	{
-		void *t_ptr;
-		uint4 t_stride;
-		Rect t_bounds;
-		
 		MCGRaster t_start_raster, t_end_raster;
 		/* UNCHECKED */ MCGImageGetRaster(p_start, t_start_raster);
 		QTNewGWorldFromPtr(&s_qt_start_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_start_raster.pixels, t_start_raster.stride);
@@ -5138,8 +5134,8 @@ bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_
 	PixMapHandle t_pixmap = GetGWorldPixMap(s_qt_target_port);
 	LockPixels(t_pixmap);
 	void *t_bits = GetPixBaseAddr(t_pixmap);
-	uint32_t t_stride = GetPixRowBytes(t_pixmap);
-	
+	uint32_t t_stride = QTGetPixMapPtrRowBytes(*t_pixmap);
+
 	MCGRaster t_raster;
 	t_raster.width = drect.width;
 	t_raster.height = drect.height;
