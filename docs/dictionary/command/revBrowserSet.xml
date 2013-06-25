@@ -7,9 +7,6 @@
 		<example>revBrowserSet <i>instanceId</i>, <i>propertyName</i>, <i>propertyValue</i></example>
 		<example>XBrowser_Set<i> propertyName, propertyValue ,</i>[<i> instanceid  </i>]</example>
 	</syntax>
-	
-		<library>Browser Library</library>
-		
 
 	<synonyms>
 		<synonym>XBrowser_Set</synonym>
@@ -18,7 +15,7 @@
 	<summary>Sets a given property of a specified browser.</summary>
 
 	<examples>
-<example>revBrowserSet tBrowserId, &quot;url&quot;, &quot;http://www.runrev.com&quot;</example>
+<example>revBrowserSet tBrowserId, "url", "http://www.runrev.com"</example>
 	</examples>
 
 	<history>
@@ -26,6 +23,8 @@
 		<deprecated version=""></deprecated>
 		<removed version=""></removed>
 		<changed version="4.6.2">userAgent property added for Mac</changed>
+		<experimental version=""></experimental>
+		<nonexperimental version=""></nonexperimental>
 	</history>
 
 	<objects>
@@ -135,6 +134,10 @@
         <item>useragent</item>
         <description>MAC ONLY. If propertyValue is non-empty the browser instance uses that string instead of the default for the User-Agent header transmitted to the web server. If propertyValue is empty the browser instance uses the default user agent string (which is determined by the browser the URL that is being requested).</description>
       </option>
+<option>
+        <item>windowID</item>
+        <description>Attaches an instance of a browser to a stack</description>
+      </option>
     </options>
   </parameter>
   <parameter>
@@ -143,6 +146,6 @@
   </parameter>		</parameters>
 
 	<value>The <b>revBrowserSet</b> command puts empty into the result if successful. </value>
-	<comments><note>The &quot;advanced&quot; callback messages are: <message tag="browserClick">browserClick</message>, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>. These messages are only sent when the &quot;messages&quot; property is set to true. The other callback messages are always sent.<p></note><p></p><note>Setting the selected property selects the first instance of that text. Setting the property repeatedly to the same value will cycle through each occurrence of the value. Setting the selected to empty or to a string not present in the current document  will reset the selected text, ie subsequently setting the selected to any string will select the first occurrence again. This behavior is similar to that of the <command tag="find">find command</command>.</note><p></p><p><b>Cross Platform Caution</b>: Due to a limitation in the current browser implementation, the behavior of the scrollbars property is slightly different on Windows and OS X. In particular, under OS X, when navigating to a page for the first time after disabling scrollbars, revBrowser won't allow you to turn scrollbars back on. The way to work around this and create a browser that allows scrollbars to be toggled on both platforms is like this:</p><p></p><p>local sBrowserId</p><p></p><p>on browserOpen</p><p>  put revBrowserOpen(the windowId of me, http://www.runrev.com) into sBrowserId</p><p>  if the platform is MacOS then</p><p>    send browserDisableScrollbars to me in 1 second</p><p>  else</p><p>    revBrowserSet sBrowserId, scrollbars, false</p><p>  end if</p><p>end browserOpen</p><p></p><p>on browserDisableScrollbars</p><p>  revBrowserSet sBrowserId, scrollbars, false</p><p>end browserDisableScrollbars</p><p></p><p>on browserToggleScrollbars</p><p>  revBrowserSet sBrowserId, scrollbars, (not(revBrowserGet(sBrowserId, scrollbars)))</p><p>end browserToggleScrollbars</p><p></p><p></p><note>For general information on using the browser library, see the notes in the <function tag="revBrowserOpen">revBrowserOpen function</function> reference.</note></comments>
+	<comments><note>The "advanced" callback messages are: <message tag="browserClick">browserClick</message>, <message tag="browserOut">browserOut</message> and <message tag="browserOver">browserOver</message>. These messages are only sent when the "messages" property is set to true. The other callback messages are always sent.<p></p><note>Setting the selected property selects the first instance of that text. Setting the property repeatedly to the same value will cycle through each occurrence of the value. Setting the selected to empty or to a string not present in the current document  will reset the selected text, ie subsequently setting the selected to any string will select the first occurrence again. This behavior is similar to that of the <command tag="find">find command</command>.</note><p></p><change>There is a long standing issue with revBrowser that causes browser instances to be lost whenever the stack it is attached to has its window re-created. Previously, cases where this would occur had to be avoided when a browser was present on a stack.</note><p><p>To resolve this problem a new property was added in version 4.5.1 to browser instances &ndash; windowId. The windowId property allows the stack to which a browser instance is attached to be changed after it has been created.</change><p></p><p>If the windowId is set to 0, the browser instance is temporary hidden. If the windowId is set to a valid stack windowId, the browser instance will move to that stack.</p><p></p><p>For example, to toggle the resizable property of a stack hosting a browser use the following code:</p><p></p><p>&#9;revBrowserSet pBrowserId, "windowId", 0</p><p>&#9;set the resizable of stack pBrowserStack to pNewResizeableValue</p><p>&#9;revBrowserSet pBrowserId, "windowId", the windowId of stack pBrowserStack</p><p></p><p><b>Cross Platform Caution</b>: Due to a limitation in the current browser implementation, the behavior of the scrollbars property is slightly different on Windows and OS X. In particular, under OS X, when navigating to a page for the first time after disabling scrollbars, revBrowser won't allow you to turn scrollbars back on. The way to work around this and create a browser that allows scrollbars to be toggled on both platforms is like this:</p><p></p><p>local sBrowserId</p><p></p><p>on browserOpen</p><p>  put revBrowserOpen(the windowId of me, http://www.runrev.com) into sBrowserId</p><p>  if the platform is MacOS then</p><p>    send browserDisableScrollbars to me in 1 second</p><p>  else</p><p>    revBrowserSet sBrowserId, scrollbars, false</p><p>  end if</p><p>end browserOpen</p><p></p><p>on browserDisableScrollbars</p><p>  revBrowserSet sBrowserId, scrollbars, false</p><p>end browserDisableScrollbars</p><p></p><p>on browserToggleScrollbars</p><p>  revBrowserSet sBrowserId, scrollbars, (not(revBrowserGet(sBrowserId, scrollbars)))</p><p>end browserToggleScrollbars</p><p></p><p></p><note>For general information on using the browser library, see the notes in the <function tag="revBrowserOpen">revBrowserOpen function</function> reference.</note></comments>
 	</description>
 </doc>
