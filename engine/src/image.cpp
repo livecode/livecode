@@ -905,7 +905,9 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			resetimage();
 
-			if (m_rep != nil)
+			// MW-2013-06-25: [[ Bug 10980 ]] Only set the result to an error if we were
+			//   attempting to set a non-empty filename.
+			if (m_rep != nil || data == MCnullmcstring)
 				MCresult->clear(False);
 			else
 				MCresult->sets("could not open image");
