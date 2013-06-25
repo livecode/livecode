@@ -55,6 +55,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <Endian.h>
 #include <QuickTimeComponents.h>
 #include <ImageCodec.h>
+
+#define PIXEL_FORMAT_32 k32BGRAPixelFormat
+
 #elif defined(_MAC_DESKTOP)
 #include "osxprefix.h"
 
@@ -4833,27 +4836,15 @@ void MCPlayer::shutdown(void)
 
 #ifdef FEATURE_QUICKTIME
 
-bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, Drawable p_target, Drawable p_start, Drawable p_end, const MCRectangle& p_area);
-bool MCQTEffectStep(uint4 p_delta, uint4 p_duration);
 void MCQTEffectEnd(void);
 
-static Drawable s_qt_start_drawable = NULL;
-static PixMapHandle s_qt_start_pixmap = NULL;
+static CGrafPtr s_qt_target_port = nil;
+
+static MCGImageRef s_qt_start_image = nil;
 static CGrafPtr s_qt_start_port = NULL;
-static void *s_qt_start_ptr = NULL;
-static uint4 s_qt_start_stride = 0;
 
-static Drawable s_qt_end_drawable = NULL;
-static PixMapHandle s_qt_end_pixmap = NULL;
+static MCGImageRef s_qt_end_image = nil;
 static CGrafPtr s_qt_end_port = NULL;
-static void *s_qt_end_ptr = NULL;
-static uint4 s_qt_end_stride = 0;
-
-static Drawable s_qt_target_drawable = NULL;
-static PixMapHandle s_qt_target_pixmap = NULL;
-static CGrafPtr s_qt_target_port = NULL;
-static void *s_qt_target_ptr = NULL;
-static uint4 s_qt_target_stride = 0;
 
 static QTAtomContainer s_qt_effect_desc = NULL;
 
@@ -4944,7 +4935,7 @@ void QTEffectAddParameters(QTAtomContainer effectdescription,OSType theEffectTyp
 	}
 }
 
-bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, Drawable p_target, Drawable p_start, Drawable p_end, const MCRectangle& p_area)
+bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area)
 {
 	if (MCdontuseQTeffects || !MCtemplateplayer -> isQTinitted())
 		return false;
@@ -5027,84 +5018,25 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 	
 	Rect t_src_rect, t_dst_rect;
 	MacSetRect(&t_src_rect, 0, 0, p_area . width, p_area . height);
-	MacSetRect(&t_dst_rect, p_area . x, p_area . y, p_area . width + p_area . x, p_area . height + p_area . y);
+	MacSetRect(&t_dst_rect, 0, 0, p_area . width, p_area . height);
 
-#if defined(TARGET_PLATFORM_MACOS_X)
 	if (qteffect != 0)
 	{
 		void *t_ptr;
 		uint4 t_stride;
 		Rect t_bounds;
 		
-		s_qt_start_pixmap = GetGWorldPixMap((CGrafPtr)p_start -> handle . pixmap);
-		LockPixels(s_qt_start_pixmap);
-		GetPixBounds(s_qt_start_pixmap, &t_bounds);
-		t_ptr = GetPixBaseAddr(s_qt_start_pixmap);
-		t_stride = GetPixRowBytes(s_qt_start_pixmap);
-		QTNewGWorldFromPtr(&s_qt_start_port, PIXEL_FORMAT_32, &t_src_rect, NULL, NULL, 0, t_ptr, t_stride);
+		MCGRaster t_start_raster, t_end_raster;
+		/* UNCHECKED */ MCGImageGetRaster(p_start, t_start_raster);
+		QTNewGWorldFromPtr(&s_qt_start_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_start_raster.pixels, t_start_raster.stride);
 
-		s_qt_end_pixmap = GetGWorldPixMap((CGrafPtr)p_end -> handle . pixmap);
-		LockPixels(s_qt_end_pixmap);
-		GetPixBounds(s_qt_end_pixmap, &t_bounds);
-		t_ptr = GetPixBaseAddr(s_qt_end_pixmap);
-		t_stride = GetPixRowBytes(s_qt_end_pixmap);
-		QTNewGWorldFromPtr(&s_qt_end_port, PIXEL_FORMAT_32, &t_src_rect, NULL, NULL, 0, t_ptr, t_stride);
-
-		if (p_target -> type == DC_BITMAP)
-		{
-			s_qt_target_pixmap = GetGWorldPixMap((CGrafPtr)p_target -> handle . pixmap);
-			LockPixels(s_qt_target_pixmap);
-			
-			void *t_target_ptr;
-			uint4 t_target_stride;
-			t_target_ptr = GetPixBaseAddr(s_qt_target_pixmap);
-			t_target_stride = GetPixRowBytes(s_qt_target_pixmap);
-			
-			t_target_ptr = (uint1 *)t_target_ptr + t_target_stride * p_area . y + 4 * p_area . x;
-			QTNewGWorldFromPtr(&s_qt_target_port, PIXEL_FORMAT_32, &t_dst_rect, NULL, NULL, 0, t_target_ptr, t_target_stride);
-		}
-		else
-		{
-			s_qt_target_port = GetWindowPort((WindowPtr)p_target -> handle . window);
-			s_qt_target_pixmap = NULL;
-		}
+		/* UNCHECKED */ MCGImageGetRaster(p_end, t_end_raster);
+		QTNewGWorldFromPtr(&s_qt_end_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0, t_end_raster.pixels, t_end_raster.stride);
+		
+		QTNewGWorld(&s_qt_target_port, PIXEL_FORMAT_32, &t_src_rect, nil, nil, 0);
 	}
-#elif defined(TARGET_PLATFORM_WINDOWS)
-	if (qteffect != 0)
-	{
-#ifdef LIBGRAPHICS_BROKEN
-		MCscreen -> lockpixmap(p_start, s_qt_start_ptr, s_qt_start_stride);
-		QTNewGWorldFromPtr(&s_qt_start_port, k32BGRAPixelFormat, &t_src_rect, NULL, NULL, 0, s_qt_start_ptr, s_qt_start_stride);
-		s_qt_start_pixmap = GetGWorldPixMap(s_qt_start_port);
-		s_qt_start_drawable = p_start;
 
-		MCscreen -> lockpixmap(p_end, s_qt_end_ptr, s_qt_end_stride);
-		QTNewGWorldFromPtr(&s_qt_end_port, k32BGRAPixelFormat, &t_src_rect, NULL, NULL, 0, s_qt_end_ptr, s_qt_end_stride);
-		s_qt_end_pixmap = GetGWorldPixMap(s_qt_end_port);
-		s_qt_end_drawable = p_end;
-
-		if (p_target -> type == DC_BITMAP)
-		{
-			MCscreen -> lockpixmap(p_target, s_qt_target_ptr, s_qt_target_stride);
-
-			s_qt_target_ptr = (uint1 *)s_qt_target_ptr + p_area . y * s_qt_target_stride + p_area . x * 4;
-			QTNewGWorldFromPtr(&s_qt_target_port, k32BGRAPixelFormat, &t_dst_rect, NULL, NULL, 0, s_qt_target_ptr, s_qt_target_stride);
-			s_qt_target_pixmap = GetGWorldPixMap(s_qt_target_port);
-		}
-		else
-		{
-			CreatePortAssociation(p_target -> handle . window, NULL, kQTMLNoIdleEvents);
-			s_qt_target_port = (CGrafPtr)GetNativeWindowPort(p_target -> handle . window);
-			s_qt_target_pixmap = NULL;
-			s_qt_target_ptr = NULL;
-			s_qt_target_stride = 0;
-		}
-		s_qt_target_drawable = p_target;
-#endif
-	}
-#endif
-
-	if (s_qt_target_port != NULL && s_qt_start_port != NULL && s_qt_end_port != NULL)
+	if (s_qt_target_port != nil && s_qt_start_port != NULL && s_qt_end_port != NULL)
 	{
 		OSType effecttype;
 		if (s_qt_effect_desc == NULL)
@@ -5150,9 +5082,10 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 		ImageSequenceDataSource t_src_sequence;
 		
 		t_src_sequence = 0;
-		MakeImageDescriptionForPixMap(s_qt_start_pixmap, &s_qt_start_desc);
+		PixMapHandle t_src_pixmap = GetGWorldPixMap(s_qt_start_port);
+		MakeImageDescriptionForPixMap(t_src_pixmap, &s_qt_start_desc);
 		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcA', 1, (Handle)s_qt_start_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(s_qt_start_pixmap), (**s_qt_start_desc) . dataSize);
+		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_src_pixmap), (**s_qt_start_desc) . dataSize);
 	}
 	
 	if (s_qt_start_desc != NULL)
@@ -5160,9 +5093,10 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 		ImageSequenceDataSource t_src_sequence;
 		
 		t_src_sequence = 0;
-		MakeImageDescriptionForPixMap(s_qt_end_pixmap, &s_qt_end_desc);
+		PixMapHandle t_end_pixmap = GetGWorldPixMap(s_qt_end_port);
+		MakeImageDescriptionForPixMap(t_end_pixmap, &s_qt_end_desc);
 		CDSequenceNewDataSource(s_qt_effect_seq, &t_src_sequence, 'srcB', 1, (Handle)s_qt_end_desc, nil, 0);
-		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(s_qt_end_pixmap), (**s_qt_end_desc) . dataSize);
+		CDSequenceSetSourceData(t_src_sequence, GetPixBaseAddr(t_end_pixmap), (**s_qt_end_desc) . dataSize);
 	}
 	
 	if (s_qt_end_desc != NULL)
@@ -5181,7 +5115,7 @@ bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p
 	return true;
 }
 
-bool MCQTEffectStep(uint4 p_delta, uint4 p_duration)
+bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration)
 {
 	ICMFrameTimeRecord t_frame_time;
 	memset((char *)&t_frame_time, 0, sizeof(ICMFrameTimeRecord));
@@ -5200,6 +5134,31 @@ bool MCQTEffectStep(uint4 p_delta, uint4 p_duration)
 	HLock((Handle)s_qt_effect_desc);
 	DecompressSequenceFrameWhen(s_qt_effect_seq, *(Handle)s_qt_effect_desc, GetHandleSize((Handle)s_qt_effect_desc), 0, 0, nil, &t_frame_time);
 	HUnlock((Handle)s_qt_effect_desc);
+	
+	PixMapHandle t_pixmap = GetGWorldPixMap(s_qt_target_port);
+	LockPixels(t_pixmap);
+	void *t_bits = GetPixBaseAddr(t_pixmap);
+	uint32_t t_stride = GetPixRowBytes(t_pixmap);
+	
+	MCGRaster t_raster;
+	t_raster.width = drect.width;
+	t_raster.height = drect.height;
+	t_raster.pixels = t_bits;
+	t_raster.stride = t_stride;
+	t_raster.format = kMCGRasterFormat_xRGB;
+	
+	MCGImageRef t_image = nil;
+	/* UNCHECKED */ MCGImageCreateWithRasterNoCopy(t_raster, t_image);
+	
+	MCGRectangle t_src_rect, t_dst_rect;
+	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
+	
+	p_target->Composite(t_dst_rect, t_image, t_src_rect, 1.0, kMCGBlendModeCopy);
+	MCGImageRelease(t_image);
+	
+	UnlockPixels(t_pixmap);
+	
 	return true;
 }
 
@@ -5220,57 +5179,14 @@ void MCQTEffectEnd(void)
 	if (s_qt_sample_desc != NULL)
 		DisposeHandle((Handle)s_qt_sample_desc), s_qt_sample_desc = NULL;
 	
-	if (s_qt_target_pixmap != NULL)
-	{
-		if (s_qt_target_port != NULL)
-			DisposeGWorld(s_qt_target_port);
-#if defined(TARGET_PLATFORM_MACOS_X)
-		UnlockPixels(s_qt_target_pixmap);
-#elif defined(TARGET_PLATFORM_WINDOWS)
-#ifdef LIBGRAPHICS_BROKEN
-		MCscreen -> unlockpixmap(s_qt_target_drawable, s_qt_target_ptr, s_qt_target_stride);
-#endif
-#endif
-		s_qt_target_pixmap = NULL;
-		s_qt_target_port = NULL;
-	}
-	else if (s_qt_target_port != NULL)
-	{
-#if defined(TARGET_PLATFORM_WINDOWS)
-		DestroyPortAssociation(s_qt_target_port);
-#endif
-		s_qt_target_port = NULL;
-	}
+	if (s_qt_target_port != NULL)
+		DisposeGWorld(s_qt_target_port), s_qt_target_port = NULL;
 	
-	if (s_qt_end_pixmap != NULL)
-	{
-		if (s_qt_end_port != NULL)
-			DisposeGWorld(s_qt_end_port);
-#if defined(TARGET_PLATFORM_MACOS_X)
-		UnlockPixels(s_qt_end_pixmap);
-#elif defined(TARGET_PLATFORM_WINDOWS)
-#ifdef LIBGRAPHICS_BROKEN
-		MCscreen -> unlockpixmap(s_qt_end_drawable, s_qt_end_ptr, s_qt_end_stride);
-#endif
-#endif
-		s_qt_end_pixmap = NULL;
-		s_qt_end_port = NULL;
-	}
+	if (s_qt_end_port != NULL)
+		DisposeGWorld(s_qt_end_port), s_qt_end_port = NULL;
 	
-	if (s_qt_start_pixmap != NULL)
-	{
-		if (s_qt_start_port != NULL)
-			DisposeGWorld(s_qt_start_port);
-#if defined(TARGET_PLATFORM_MACOS_X)
-		UnlockPixels(s_qt_start_pixmap);
-#elif defined(TARGET_PLATFORM_WINDOWS)
-#ifdef LIBGRAPHICS_BROKEN
-		MCscreen -> unlockpixmap(s_qt_start_drawable, s_qt_start_ptr, s_qt_start_stride);
-#endif
-#endif
-		s_qt_start_pixmap = NULL;
-		s_qt_start_port = NULL;
-	}
+	if (s_qt_start_port != NULL)
+		DisposeGWorld(s_qt_start_port), s_qt_start_port = NULL;
 	
 	if (s_qt_effect_desc != NULL)
 	{
