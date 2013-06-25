@@ -14,9 +14,25 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+
+#include "globdefs.h"
+#include "filedefs.h"
+#include "objdefs.h"
+#include "parsedef.h"
+
+#include "stack.h"
+
+#include "graphics.h"
+#include "visualeffect.h"
+
 #include <Quartz/Quartz.h>
 
-#include "visualeffect.h"
+////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+////////////////////////////////////////////////////////////////////////////////
 
 #define OBJC_ENTER_VOID \
 	NSAutoreleasePool *__t_pool = [[NSAutoreleasePool alloc] init]; \
@@ -49,7 +65,7 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 	NSDictionary *t_attributes = nil;
 	int t_index;
 	
-	t_effect = malloc(sizeof(coreimage_visualeffect_t));
+	/* UNCHECKED */ MCMemoryNew(t_effect);
 	
 	if (t_effect != NULL)
 		t_filter = [CIFilter filterWithName: p_name];
@@ -61,7 +77,7 @@ static coreimage_visualeffect_ref_t coreimage_visualeffect_create(NSString *p_na
 		t_attributes = [t_filter attributes];
 	
 	if (t_parameters != NULL)
-		t_info = malloc(8 * [t_parameters count]);
+		/* UNCHECKED */ MCMemoryAllocate(sizeof(rei_visualeffect_info_t) + sizeof(rei_visualeffect_parameter_info_t) * [t_parameters count], t_info);
 	
 	if (t_info != NULL)
 	{
@@ -222,151 +238,52 @@ rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect
 	return t_effect != NULL;
 }
 
-static CGrafPtr sg_current_graf_port = NULL;
-static CGContextRef sg_current_cg_context = NULL;
 static CIFilter *sg_current_filter = nil;
-static CIContext *sg_current_context = nil;
 static rei_rectangle_t sg_current_area;
 
-static CIImage *qd_to_ci(CGrafPtr p_port, rei_rectangle_ref_t p_area)
+bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
-	NSMutableData *t_data = nil;
-	CIImage *t_result = nil;
-	PixMapHandle t_source_pixmap_handle;
-	PixMapPtr t_source_pixmap;
-	char *t_source_addr;
-	unsigned int t_source_row_bytes;
-	unsigned int *t_dest_addr;
-	bool t_offscreen;
+	CGImageRef t_cg_image = nil;
+	CIImage *t_ci_image = nil;
+	if (!MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), false, false, t_cg_image))
+		return false;
 	
-	t_offscreen = IsPortOffscreen(p_port);
+	bool t_success = true;
 	
-	if (!t_offscreen)
-		LockPortBits(p_port);
+	t_success = nil != (t_ci_image = [CIImage imageWithCGImage: t_cg_image]);
 	
-	t_source_pixmap_handle = t_offscreen ? GetGWorldPixMap(p_port) : GetPortPixMap(p_port);
+	CGImageRelease(t_cg_image);
 	
-	LockPixels(t_source_pixmap_handle);
-	HLock((Handle)t_source_pixmap_handle);
+	if (t_success)
+		r_image = t_ci_image;
 	
-	t_source_addr = GetPixBaseAddr(t_source_pixmap_handle);
-	t_source_pixmap = *t_source_pixmap_handle;
-	t_source_row_bytes = GetPixRowBytes(t_source_pixmap_handle); //(t_source_pixmap -> pmExt != NULL ? (*(SInt32 **)t_source_pixmap -> pmExt)[7] : t_source_pixmap -> rowBytes);
-	t_data = [NSMutableData dataWithLength: p_area -> width * p_area -> height * 4];
-
-	if (t_data != NULL)
-	{
-		int t_x, t_y;
-		Rect t_bounds;
-		GetPixBounds(t_source_pixmap_handle, &t_bounds);
-				
-		if (t_bounds . right - t_bounds . left != p_area -> width || t_bounds . bottom - t_bounds . top != p_area -> height)
-			t_source_addr += t_source_row_bytes * -t_bounds . top + 4 * -t_bounds . left;
-		
-		t_dest_addr = (unsigned int *)[t_data mutableBytes];
-		
-		switch(t_source_pixmap -> pixelFormat)
-		{
-			case k16BE555PixelFormat:
-				if (t_bounds . right - t_bounds . left != p_area -> width || t_bounds . bottom - t_bounds . top != p_area -> height)
-					t_source_addr += 2 * p_area -> x + t_source_row_bytes * p_area -> y;
-				for(t_y = 0; t_y < p_area -> height; ++t_y, t_source_addr += t_source_row_bytes)
-					for(t_x = 0; t_x < p_area -> width; ++t_x)
-						t_dest_addr[t_y * p_area -> width + t_x] =
-							  ((((((unsigned short *)t_source_addr)[t_x] >> 10) << 3) + 7) << 16)
-							| (((((((unsigned short *)t_source_addr)[t_x] >> 5) & 0x1f) << 3) + 7) << 8)
-							| (((((unsigned short *)t_source_addr)[t_x] & 0x1f) << 3) + 7);
-			break;
-			
-			case k32BGRAPixelFormat:
-			case k24BGRPixelFormat:
-				if (t_bounds . right - t_bounds . left != p_area -> width || t_bounds . bottom - t_bounds . top != p_area -> height)
-					t_source_addr += 4 * p_area -> x + t_source_row_bytes * p_area -> y;
-				for(t_y = 0; t_y < p_area -> height; ++t_y, t_source_addr += t_source_row_bytes)
-					for(t_x = 0; t_x < p_area -> width; ++t_x)
-						t_dest_addr[t_y * p_area -> width + t_x] = CFSwapInt32(((unsigned int *)t_source_addr)[t_x]); // 0xFF000000 | ((unsigned int *)t_source_addr)[t_x] & 0xFFFFFF;
-			break;
-			
-			case k24RGBPixelFormat:
-			case k32ARGBPixelFormat:
-				if (t_bounds . right - t_bounds . left != p_area -> width || t_bounds . bottom - t_bounds . top != p_area -> height)
-					t_source_addr += 4 * p_area -> x + t_source_row_bytes * p_area -> y;
-				for(t_y = 0; t_y < p_area -> height; ++t_y, t_source_addr += t_source_row_bytes)
-					for(t_x = 0; t_x < p_area -> width; ++t_x)
-						t_dest_addr[t_y * p_area -> width + t_x] = ((unsigned int *)t_source_addr)[t_x]; // 0xFF000000 | ((unsigned int *)t_source_addr)[t_x] & 0xFFFFFF;
-			break;
-		}
-	}
-	
-	HUnlock((Handle)t_source_pixmap_handle);
-	UnlockPixels(t_source_pixmap_handle);
-	
-	UnlockPortBits(p_port);
-
-	if (t_data != NULL)
-	{
-		CGColorSpaceRef t_color_space;
-		t_color_space = CGColorSpaceCreateDeviceRGB();
-		t_result = [CIImage imageWithBitmapData: t_data bytesPerRow: p_area -> width * 4 size: CGSizeMake(p_area -> width, p_area -> height) format: kCIFormatARGB8 colorSpace: t_color_space];
-		CGColorSpaceRelease(t_color_space);
-	}
-
-	return t_result;
+	return t_success;
 }
 
-rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_target, CGrafPtr p_source_a, CGrafPtr p_source_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameters_ref_t p_parameters)
+rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameter_list_ref_t p_parameters)
 {
+	bool t_success = true;
+	
 	coreimage_visualeffect_ref_t t_effect = (coreimage_visualeffect_ref_t)p_handle;
 	CIFilter *t_filter = nil;
 	CIImage *t_image_a = nil;
 	CIImage *t_image_b = nil;
-	CIContext *t_context = nil;
-	CGContextRef t_cg_context = NULL;
 	bool t_bound = false;
 	
 	OBJC_ENTER(false)
 
 	NS_DURING
 	
-	t_filter = [CIFilter filterWithName: t_effect -> name];
+	if (t_success)
+		t_success = nil != (t_filter = [CIFilter filterWithName: t_effect -> name]);
 	
-	if (t_filter != nil)
-		t_image_a = qd_to_ci(p_source_a, p_area);
+	if (t_success)
+		t_success = MCGImageToCIImage(p_image_a, t_image_a);
 		
-	if (t_image_a != nil)
-		t_image_b = qd_to_ci(p_source_b, p_area);
+	if (t_success)
+		t_success = MCGImageToCIImage(p_image_b, t_image_b);
 		
-	if (t_image_b != nil)
-	{
-		if (IsPortOffscreen(p_target))
-		{
-			PixMapHandle t_target_pixmap;
-			uint32_t t_target_stride;
-			void *t_target_ptr;
-
-			t_target_pixmap = GetGWorldPixMap(p_target);
-			LockPixels(t_target_pixmap);
-			
-			Rect t_bounds;
-			GetPixBounds(t_target_pixmap, &t_bounds);
-			t_target_stride = GetPixRowBytes(t_target_pixmap);
-			t_target_ptr = GetPixBaseAddr(t_target_pixmap);
-			(uint8_t *)t_target_ptr += t_target_stride * -t_bounds . top - t_bounds . left * 4;
-			
-			// MW-2011-10-01: [[ Bug 9769 ]] Make sure we use the correct byte order.
-			CGColorSpaceRef t_color_space;
-			t_color_space = CGColorSpaceCreateDeviceRGB();
-			t_cg_context = CGBitmapContextCreate(t_target_ptr, t_bounds . right - t_bounds . left, t_bounds . bottom - t_bounds . top, 8, t_target_stride, t_color_space, kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
-			CGColorSpaceRelease(t_color_space);
-		}
-		else if (QDBeginCGContext(p_target, &t_cg_context) != noErr)
-			t_cg_context = NULL;
-	}
-	
-	if (t_cg_context != NULL)
-		t_context = [CIContext contextWithCGContext: t_cg_context options: nil];
-	
-	if (t_context != NULL)
+	if (t_success)
 	{
 		unsigned int t_index;
 		unsigned int t_length;
@@ -411,7 +328,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_tar
 				
 					t_count = p_parameters -> entries[t_index] . value . vector . length;
 				
-					t_vector_as_float = alloca(sizeof(float) * t_count);
+					t_vector_as_float = (float*)alloca(sizeof(float) * t_count);
 					if (t_vector_as_float != NULL)
 					{
 						for(t_jndex = 0; t_jndex < t_count; ++t_jndex)
@@ -459,32 +376,16 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_tar
 		[t_filter retain];
 		sg_current_filter = t_filter;
 		
-		[t_context retain];
-		sg_current_context = t_context;
-		
-		sg_current_graf_port = p_target;
-		sg_current_cg_context = t_cg_context;
 		sg_current_area = *p_area;
 	}
 	
 	NS_HANDLER
 		t_bound = false;
 		
-		if (sg_current_context != NULL)
-			[sg_current_context release];
 		if (sg_current_filter != NULL)
 			[sg_current_filter release];
-		if (sg_current_cg_context != NULL)
-		{
-			if (IsPortOffscreen(sg_current_cg_context))
-				CGContextRelease(sg_current_cg_context);
-			else
-				QDEndCGContext(sg_current_graf_port, &sg_current_cg_context);
-		}
 	
-		sg_current_context = NULL;
 		sg_current_filter = NULL;
-		sg_current_cg_context = NULL;
 	NS_ENDHANDLER;
 	
 	OBJC_LEAVE
@@ -492,27 +393,35 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, CGrafPtr p_tar
 	return t_bound;
 }
 
-rei_boolean_t coreimage_visualeffect_step(float p_time)
+rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time)
 {
-	rei_boolean_t t_result = true;
-	Rect t_rect;
-
-	OBJC_ENTER(false)
-
-	GetPortBounds(sg_current_graf_port, &t_rect);
-
-	NS_DURING
-		CGContextClearRect(sg_current_cg_context, CGRectMake(sg_current_area . x, t_rect . bottom - (sg_current_area . y + sg_current_area . height), sg_current_area . width, sg_current_area . height));
+	CGContextRef t_cg_context = nil;
+	if (p_target->LockTarget(kMCStackSurfaceTargetCoreGraphics, (void*&)t_cg_context))
+	{
+		CIContext *t_context = nil;
+		rei_boolean_t t_result = true;
+		Rect t_rect;
+		
+		OBJC_ENTER(false)
+		
+		NS_DURING
+		t_context = [CIContext contextWithCGContext: t_cg_context options: nil];
+		CGContextClearRect(t_cg_context, CGRectMake(sg_current_area . x, sg_current_area . y, sg_current_area . width, sg_current_area . height));
 		[sg_current_filter setValue: [NSNumber numberWithFloat: p_time] forKey: @"inputTime"];
-		[sg_current_context drawImage: [sg_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(sg_current_area . x, t_rect . bottom - (sg_current_area . y + sg_current_area . height)) fromRect: CGRectMake(0, 0, sg_current_area . width, sg_current_area . height)];
-		CGContextFlush(sg_current_cg_context);
-	NS_HANDLER
+		[t_context drawImage: [sg_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(sg_current_area . x, sg_current_area . y) fromRect: CGRectMake(0, 0, sg_current_area . width, sg_current_area . height)];
+		CGContextFlush(t_cg_context);
+		NS_HANDLER
 		t_result = false;
-	NS_ENDHANDLER
+		NS_ENDHANDLER
+		
+		OBJC_LEAVE
+		
+		p_target->UnlockTarget();
+		
+		return t_result;
+	}
 	
-	OBJC_LEAVE
-	
-	return t_result;
+	return false;
 }
 
 rei_boolean_t coreimage_visualeffect_end(void)
@@ -524,17 +433,11 @@ rei_boolean_t coreimage_visualeffect_end(void)
 	NS_DURING
 		if (sg_current_filter != NULL)
 			[sg_current_filter release];
-		if (sg_current_context != NULL)
-			[sg_current_context release];
-		if (sg_current_cg_context != NULL)
-			QDEndCGContext(sg_current_graf_port, &sg_current_cg_context);
 	NS_HANDLER
 		t_result = false;
 	NS_ENDHANDLER
 	
 	sg_current_filter = NULL;
-	sg_current_context = NULL;
-	sg_current_cg_context = NULL;
 	
 	OBJC_LEAVE
 

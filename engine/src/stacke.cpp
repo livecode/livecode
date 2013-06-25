@@ -76,8 +76,8 @@ extern bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_ef
 extern bool MCQTEffectStep(uint4 p_delta, uint4 p_duration);
 extern void MCQTEffectEnd(void);
 
-extern bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_source_a, Drawable p_source_b, const MCRectangle& p_rect, MCEffectArgument *p_arguments);
-extern bool MCCoreImageEffectStep(float p_time);
+extern bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCEffectArgument *p_arguments);
+extern bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time);
 extern void MCCoreImageEffectEnd(void);
 
 extern void MCMacDisableScreenUpdates(void);
@@ -162,13 +162,13 @@ bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p
 			t_drawn = zoomeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
 			break;
 			
-#ifdef LIBGRAPHICS_BROKEN
 #ifdef _MAC_DESKTOP
 		case VE_CIEFFECT:
-			t_drawn = MCCoreImageEffectStep((float)context->delta / context->duration);
+			t_drawn = MCCoreImageEffectStep(p_target, (float)context->delta / context->duration);
 			break;
 #endif
 			
+#ifdef LIBGRAPHICS_BROKEN
 #ifdef FEATURE_QUICKTIME
 		case VE_QTEFFECT:
 			t_drawn = MCQTEffectStep(context->delta, context->duration);
@@ -346,7 +346,6 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		// Initialize the destination with the start image.
 		updatewindowwithcallback(t_effect_rgn, MCStackRenderInitial, &t_context);
 		
-#ifdef LIBGRAPHICS_BROKEN
 		// If there is a sound, then start playing it.
 		if (t_effects -> sound != NULL)
 		{
@@ -387,16 +386,19 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> type != VE_PLAIN)
 		{
 #ifdef _MAC_DESKTOP
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area, t_effects -> arguments))
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_initial_image, t_final_image, t_dst_effect_area, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
+#ifdef LIBGRAPHICS_BROKEN
 			else
 #endif
+#endif
 #ifdef FEATURE_QUICKTIME
+#ifdef LIBGRAPHICS_BROKEN
 				if (MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area))
 					t_effects -> type = VE_QTEFFECT;
 #endif
-		}
 #endif
+		}
 		
 		// Run effect
 		// Now perform the effect loop, but only if there is something to do.
@@ -468,13 +470,15 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 					t_delta = t_duration;
 			}
 		}		
-#ifdef LIBGRAPHICS_BROKEN
 #ifdef _MAC_DESKTOP
 		if (t_effects -> type == VE_CIEFFECT)
 			MCCoreImageEffectEnd();
+#ifdef LIBGRAPHICS_BROKEN
 		else
 #endif
+#endif
 #ifdef FEATURE_QUICKTIME
+#ifdef LIBGRAPHICS_BROKEN
 			if (t_effects -> type == VE_QTEFFECT)
 				MCQTEffectEnd();
 #endif

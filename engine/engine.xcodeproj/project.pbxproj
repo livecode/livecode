@@ -298,7 +298,7 @@
 		4D6A00F010C578C600FA48D2 /* customprinter.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6A00EE10C578C600FA48D2 /* customprinter.cpp */; };
 		4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
 		4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D5881C10B80C7C300200116 /* Quartz.framework */; };
-		4D7740DD1226AB35001C9150 /* osxcisupport.m in Sources */ = {isa = PBXBuildFile; fileRef = 4D5881B90B80C79600200116 /* osxcisupport.m */; };
+		4D7740DD1226AB35001C9150 /* osxcisupport.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D5881B90B80C79600200116 /* osxcisupport.mm */; };
 		4D81A4C411171F6B008AE3F1 /* objectprops.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C111171F6A008AE3F1 /* objectprops.cpp */; };
 		4D81A4C511171F6B008AE3F1 /* variablevalue.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C211171F6B008AE3F1 /* variablevalue.cpp */; };
 		4D81A4C611171F6B008AE3F1 /* osxcolor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D81A4C311171F6B008AE3F1 /* osxcolor.cpp */; };
@@ -1086,7 +1086,7 @@
 		4D5880200B80A4F800200116 /* osxdce.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxdce.cpp; path = src/osxdce.cpp; sourceTree = "<group>"; };
 		4D5880850B80BDF000200116 /* QuickTime.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = QuickTime.framework; path = /System/Library/Frameworks/QuickTime.framework; sourceTree = "<absolute>"; };
 		4D5881200B80BF1E00200116 /* IOKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = IOKit.framework; path = /System/Library/Frameworks/IOKit.framework; sourceTree = "<absolute>"; };
-		4D5881B90B80C79600200116 /* osxcisupport.m */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.objc; name = osxcisupport.m; path = src/osxcisupport.m; sourceTree = "<group>"; };
+		4D5881B90B80C79600200116 /* osxcisupport.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxcisupport.mm; path = src/osxcisupport.mm; sourceTree = "<group>"; };
 		4D5881C10B80C7C300200116 /* Quartz.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Quartz.framework; path = /System/Library/Frameworks/Quartz.framework; sourceTree = "<absolute>"; };
 		4D5883C50B80C82800200116 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = /System/Library/Frameworks/Foundation.framework; sourceTree = "<absolute>"; };
 		4D5884DB0B80D3BA00200116 /* startupstack.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = startupstack.cpp; path = src/startupstack.cpp; sourceTree = "<group>"; };
@@ -1748,7 +1748,7 @@
 				4D5880190B80A4F800200116 /* osxans.mm */,
 				4CAA94CF15EF6E64007CD4C5 /* osxansold.cpp */,
 				4D5880140B80A4F800200116 /* osxcoreimage.cpp */,
-				4D5881B90B80C79600200116 /* osxcisupport.m */,
+				4D5881B90B80C79600200116 /* osxcisupport.mm */,
 				4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */,
 				4D81A4C311171F6B008AE3F1 /* osxcolor.cpp */,
 				4D81A4C811171FD6008AE3F1 /* osxcursor.mm */,
@@ -3356,7 +3356,7 @@
 				3C03ED921134205A009DE406 /* socket_resolve.cpp in Sources */,
 				4D2A583D1198727F00135143 /* internal.cpp in Sources */,
 				4D8BEC4011B9379500DED42A /* osxicon.cpp in Sources */,
-				4D7740DD1226AB35001C9150 /* osxcisupport.m in Sources */,
+				4D7740DD1226AB35001C9150 /* osxcisupport.mm in Sources */,
 				4DADCD5B12392EAF003CD17C /* sha1.cpp in Sources */,
 				4DB98626130C09D6008A03DC /* mcutility.cpp in Sources */,
 				4DE7ED0E13B33B7F002634F5 /* dskspec.cpp in Sources */,
