@@ -2091,10 +2091,9 @@ bool MCImage::setfilename(const char *p_filename)
 	if (t_success)
 	{
 		char *t_resolved_filename;
-		t_resolved_filename = MCS_resolvepath(t_resolved);
+		t_resolved_filename = MCS_get_canonical_path(t_resolved);
 		delete t_resolved;
 		t_resolved = t_resolved_filename;
-		MCU_fix_path(t_resolved);
 	}
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
