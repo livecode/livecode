@@ -185,6 +185,9 @@ static bool MCNotifyIsMainThread(void)
 	return GetCurrentThreadId() == s_main_thread_id;
 #elif defined(_MACOSX) || defined(_LINUX)
 	return pthread_self() == s_main_thread;
+#else
+	// TODO: Implement for other platforms (inc. _WINDOWS_SERVER)
+	return true;
 #endif
 }
 
