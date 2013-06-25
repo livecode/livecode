@@ -5134,7 +5134,7 @@ bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_
 	PixMapHandle t_pixmap = GetGWorldPixMap(s_qt_target_port);
 	LockPixels(t_pixmap);
 	void *t_bits = GetPixBaseAddr(t_pixmap);
-	uint32_t t_stride = QTGetPixMapPtrRowBytes(*t_pixmap);
+	uint32_t t_stride = QTGetPixMapHandleRowBytes(t_pixmap);
 
 	MCGRaster t_raster;
 	t_raster.width = drect.width;
