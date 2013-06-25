@@ -1406,7 +1406,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCerrorlock++;
     MCHashentry *e;
     uindex_t j;
-    
+
     // MERG-2013-05-07: [[ RevisedPropsProp ]] pre-process to ensure properties
 	//   that impact others are set first.
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
@@ -1420,9 +1420,9 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
             e -> value . fetch(ep);
 			
 			// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
-			//   'filename' of an image if it is non-empty.
+			//   'filename' of an image if it is non-empty or the image has a filename.
 			if (s_preprocess_props[j].prop == P_FILE_NAME && optr -> gettype() == CT_IMAGE &&
-				ep . isempty())
+				ep . isempty() && !optr -> getflag(F_HAS_FILENAME))
 				continue;
 				
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
@@ -1465,11 +1465,11 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 						else
 						{
 							// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only
-							//   set the 'text' of an image if it is non-empty.
+							//   set the 'text' of an image if it is non-empty and doesn't have a filename.
 							if (te -> which == P_TEXT && optr -> gettype() == CT_IMAGE &&
-								ep . isempty())
+								ep . isempty() && optr -> getflag(F_HAS_FILENAME))
 								continue;
-								
+							
 							optr->setprop(parid, (Properties)te->which, ep, False);
 						}
 					}
