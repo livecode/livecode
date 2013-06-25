@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "notify.h"
 
 class MCNullPrinter: public MCPrinter
 {
@@ -745,6 +746,12 @@ Boolean MCUIDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 
 void MCUIDC::pingwait(void)
 {
+#ifdef _DESKTOP
+	// MW-2013-06-14: [[ DesktopPingWait ]] Use the notify mechanism to wake up
+	//   any running wait.
+	MCNotifyPing(false);
+#endif
+	
 }
 
 void MCUIDC::flushevents(uint2 e)
