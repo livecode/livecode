@@ -175,8 +175,15 @@ inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Create new image with pixel data copied from raster
 bool MCGImageCreateWithRaster(const MCGRaster& raster, MCGImageRef& r_image);
+
+// Create new image with pixel data provided by raster - raster retains ownership of pixel data
+bool MCGImageCreateWithRasterNoCopy(const MCGRaster &raster, MCGImageRef &r_image);
+
+// Create new image with pixel data provided by raster - new image takes ownership of pixel data
 bool MCGImageCreateWithRasterAndRelease(const MCGRaster &raster, MCGImageRef &r_image);
+
 bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef& r_image);
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 

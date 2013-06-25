@@ -55,6 +55,11 @@ bool MCGImageCreateWithRasterAndRelease(const MCGRaster &p_raster, MCGImageRef &
 	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeTake);
 }
 
+bool MCGImageCreateWithRasterNoCopy(const MCGRaster& p_raster, MCGImageRef& r_image)
+{
+	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeBorrow);
+}
+
 bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
 {
 	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeCopy);
