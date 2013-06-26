@@ -1037,6 +1037,7 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 	MCAssert(false); // unknown blend mode
 }
 
+/* UNCHECKED */
 static void MCMacRenderImageToCG(CGContextRef p_target, CGRect p_dst_rect, MCGImageRef &p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 {
 	bool t_success = true;
@@ -1182,9 +1183,7 @@ public:
 		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
-		FlushBits(m_locked_bits, m_locked_stride);
-		
-		UnlockPixels();
+		UnlockPixels(true);
 	}
 	
 	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
@@ -1293,7 +1292,7 @@ public:
 		bool t_success = true;
 		
 		if (t_success)
-			t_success = MCMacRenderImageToCG(t_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
+			MCMacRenderImageToCG(t_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
 		
 		UnlockTarget();
 		

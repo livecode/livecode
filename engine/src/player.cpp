@@ -1914,10 +1914,10 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 #else
 	setforeground(dc, DI_BACK, False);
 	dc->setbackground(MCscreen->getwhite());
-	dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
+	dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
 	dc->fillrect(rect);
 	dc->setbackground(MCzerocolor);
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 #endif
 
 	if (getflag(F_SHOW_BORDER))

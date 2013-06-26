@@ -504,6 +504,7 @@ inline uint1 MCS_toupper(uint1 p_char)
 
 struct MCFontStruct
 {
+	uint16_t size;
 	int ascent;
 	int descent;
 	Boolean unicode;

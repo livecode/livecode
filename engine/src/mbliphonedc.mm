@@ -268,25 +268,6 @@ Boolean MCScreenDC::getwindowgeometry(Window p_window, MCRectangle& r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_mask)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCIPhoneContext(t_bitmap, p_mask, true, true);
-}
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCIPhoneContext(t_bitmap, nil, true, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
 {
 	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
@@ -384,13 +365,12 @@ struct MCScreenDCDoSnapshotEnv
 	MCRectangle r;
 	uint4 window;
 	const char *displayname;
-	MCBitmap *result;
+	MCImageBitmap *result;
 };
 
 // MW-2012-08-06: [[ Fibers ]] Main fiber callback for system calls.
 static void MCScreenDCDoSnapshot(void *p_env)
 {
-#ifdef LIBGRAPHICS_BROKEN
 	MCScreenDCDoSnapshotEnv *env;
 	env = (MCScreenDCDoSnapshotEnv *)p_env;
 	
@@ -405,7 +385,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	
 	bool t_success = true;
 	
-	MCBitmap *t_bitmap = NULL;
+	MCImageBitmap *t_bitmap = NULL;
 	
 	// Use the screenRect to clip the input rect
 	MCRectangle t_screen_rect;
@@ -414,8 +394,6 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	t_screen_rect = t_displays[0] . viewport;
 	r = MCU_clip_rect(r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
 	
-	MCBitmap *t_newimage;
-	t_newimage = nil;
 	if (r.width != 0 && r.height != 0)
 	{
 		CGContextRef t_img_context = nil;
@@ -429,14 +407,11 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		}
 		
 		if (t_success)
-		{
-			t_bitmap = MCscreen->createimage(32, r.width, r.height, True, 0, False, False);
-			t_success = t_bitmap != nil;
-		}
+			t_success = MCImageBitmapCreate(r.width, r.height, t_bitmap);
 		
 		if (t_success)
 		{
-			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->bytes_per_line, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
 			t_success = t_img_context != nil;
 		}
 		
@@ -539,25 +514,20 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		if (t_img_context)
 			CGContextRelease(t_img_context);
 		
-		if (t_success)
-			t_newimage = t_bitmap;
-		else
+		if (!t_success)
 		{
 			if (t_bitmap != NULL)
 			{
-				MCscreen->destroyimage(t_bitmap);
+				MCImageFreeBitmap(t_bitmap);
 				t_bitmap = NULL;
 			}
 		}
 	}
 	
 	env -> result = t_bitmap;
-#else
-	env -> result = nil;
-#endif
 }
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;

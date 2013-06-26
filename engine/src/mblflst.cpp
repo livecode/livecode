@@ -48,6 +48,7 @@ MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
 #if defined(TARGET_SUBPLATFORM_IPHONE)
 	font = new MCFontStruct;
 	font -> charset = 0;
+	font -> size = p_size;
 	
 	char *t_comma;
 	t_comma = strchr(reqname, ',');
@@ -84,6 +85,7 @@ MCFontnode::MCFontnode(const MCString& p_name, uint2& p_size, uint2 p_style)
 #elif defined(TARGET_SUBPLATFORM_ANDROID)
 	font = new MCFontStruct;
 	font -> charset = 0;
+	font -> size = p_size;
 	
 	char *t_comma;
 	t_comma = strchr(reqname, ',');

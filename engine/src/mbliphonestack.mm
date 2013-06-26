@@ -258,46 +258,33 @@ void layer_animation_changes(UIView *p_new_view, UIView *p_old_view, uint32_t p_
 //    push     (Push)
 //    reveal   (Reveal)
 
-static UIImage *pixmap_to_uiimage(Pixmap p_pixmap)
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+static bool MCGImageToUIImage(MCGImageRef p_image, UIImage *&r_uiimage)
 {
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_pixmap -> handle . pixmap;
+	bool t_success = true;
 	
-	CGColorSpaceRef t_colorspace;
-	t_colorspace = CGColorSpaceCreateDeviceRGB();
+	CGImageRef t_cg_image = nil;
+	UIImage *t_image = nil;
 	
-	CGImageRef t_cg_image;
-	t_cg_image = nil;
+	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), false, false, t_cg_image);
 	
-	CGBitmapInfo t_flags;
-	if (t_bitmap -> is_swapped)
-		t_flags = kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast;
-	else
-		t_flags = kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst;
+	if (t_success)
+		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image]);
 	
-	CGContextRef t_context;
-	t_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, t_flags);
-	if (t_context != nil)
-	{
-		t_cg_image = CGBitmapContextCreateImage(t_context);
-		CGContextRelease(t_context);
-	}
-	CGColorSpaceRelease(t_colorspace);
-	
-	UIImage *t_image;
 	if (t_cg_image != nil)
-	{
-		t_image = [UIImage imageWithCGImage: t_cg_image];
 		CGImageRelease(t_cg_image);
-	}
 	
-	return t_image;
+	if (t_success)
+		r_uiimage = t_image;
+	
+	return t_success;
 }
 
 struct effectrect_t
 {
 	MCColor bg_color;
-	Pixmap snapshot;
+	MCGImageRef snapshot;
 	MCEffectList *effect;
 	MCRectangle effect_area;
 	UIImage *current_image;
@@ -317,7 +304,7 @@ static void effectrect_phase_1(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	ctxt -> current_image = pixmap_to_uiimage(ctxt -> snapshot);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, ctxt->current_image);
 	[ctxt -> current_image retain];
 }
 
@@ -325,7 +312,7 @@ static void effectrect_phase_2(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	ctxt -> updated_image = pixmap_to_uiimage(ctxt -> snapshot);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, ctxt->updated_image);
 	[ctxt -> updated_image retain];
 	
 	ctxt -> current_image_view = [[UIImageView alloc] initWithImage: ctxt -> current_image];
@@ -622,14 +609,14 @@ void MCStack::updatetilecache(void)
 	});
 }
 
-bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
+bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_image)
 {
 	if (m_tilecache == nil)
 		return false;
 	
 	__block bool t_result;
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		t_result = MCTileCacheSnapshot(m_tilecache, p_area, r_pixmap);
+		t_result = MCTileCacheSnapshot(m_tilecache, p_area, r_image);
 	});
 	
 	return t_result;

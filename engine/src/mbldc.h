@@ -99,10 +99,6 @@ public:
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
-	MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
-	MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	void freecontext(MCContext *p_context);
-
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
@@ -119,7 +115,7 @@ public:
 	void getbeep(uint4 property, MCExecPoint &ep);
 	void setbeep(uint4 property, int4 beep);
 
-	MCBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
