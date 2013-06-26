@@ -2611,7 +2611,9 @@ Exec_stat MCChunk::select(MCExecPoint &ep, Preposition_type where, Boolean text,
 	}
 	// MW-2013-06-20: [[ Bug 10966 ]] Use 'istextchunk()' to determine whether
 	//   the chunk can be evaluated as an object.
-	if (!text && !istextchunk())
+	// MW-2013-06-26: [[ Bug 10986 ]] Make sure we only select the object if we aren't
+	//   doing select before/after.
+	if (!text && where == PT_AT && !istextchunk())
 	{
 		if (first)
 			MCselected->clear(False);
