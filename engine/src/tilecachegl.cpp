@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "packed.h"
 #include "mbldc.h"
 
+#include <pthread.h>
+
 #if defined(_IOS_MOBILE)
 #include <CoreGraphics/CoreGraphics.h>
 #import <OpenGLES/ES1/gl.h>
@@ -187,6 +189,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	super_tile *t_super_tile;
 	if (!MCMemoryAllocate(8 + self -> super_tile_arity, t_super_tile))
 		return false;
+    
 	
 	// Generate a texture id, and bind an empty texture.
 	glGenTextures(1, &t_super_tile -> texture);
@@ -214,7 +217,7 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	
 	// Make sure we don't make redundent bind calls.
 	self -> current_texture = t_super_tile -> texture;
-	
+
 	// And compute the id (note the subtile index is 0!).
 	MCTileCacheOpenGLCompositorEncodeTile(self, t_super_tile_index, 0, r_tile);
 
@@ -254,6 +257,7 @@ static void MCTileCacheOpenGLCompositorFlushSuperTiles(MCTileCacheOpenGLComposit
 			glDeleteTextures(1, &self -> super_tiles[i] -> texture);
 			MCMemoryDelete(self -> super_tiles[i]);
 			self -> super_tiles[i] = nil;
+            
 		}
 	}
 }
@@ -278,7 +282,9 @@ bool MCTileCacheOpenGLCompositor_BeginTiling(void *p_context)
 	if (t_super_tile_arity != self -> super_tile_arity ||
 		self -> needs_flush)
 	{
-		MCTileCacheOpenGLCompositorFlushSuperTiles(self, true);
+		// MW-2013-06-26: [[ Bug 10991 ]] Don't force flushing of the tilecache, otherwise
+		//   we end up discarding tiles that are still needed after a 'compact()' operation.
+		MCTileCacheOpenGLCompositorFlushSuperTiles(self, false);
 	
 		self -> super_tile_arity = t_super_tile_arity;
 		self -> needs_flush = false;
