@@ -152,7 +152,6 @@
 		4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */ = {isa = PBXBuildFile; fileRef = F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */; };
 		4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */; };
 		4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */ = {isa = PBXBuildFile; fileRef = F68B56881541960200097647 /* mbliphonecontact.mm */; };
-		4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DE9C63D113813A00059588F /* mbliphonecontext.cpp */; };
 		4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */; };
 		4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */; };
 		4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D6F954B12AC157100026A72 /* mbliphonedialog.mm */; };
@@ -833,8 +832,6 @@
 		4DE7B8641330D6F200305469 /* mbliphonepick.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonepick.mm; path = src/mbliphonepick.mm; sourceTree = "<group>"; };
 		4DE7ED6413B33CEA002634F5 /* sysspec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = sysspec.cpp; path = src/sysspec.cpp; sourceTree = "<group>"; };
 		4DE9499D142762490072D9C6 /* CoreText.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreText.framework; path = System/Library/Frameworks/CoreText.framework; sourceTree = SDKROOT; };
-		4DE9C634113810030059588F /* mbliphonecontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mbliphonecontext.h; path = src/mbliphonecontext.h; sourceTree = "<group>"; };
-		4DE9C63D113813A00059588F /* mbliphonecontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbliphonecontext.cpp; path = src/mbliphonecontext.cpp; sourceTree = "<group>"; };
 		4DF9A3F6142E24FD0063E6FF /* executionerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = executionerrors.h; path = src/executionerrors.h; sourceTree = "<group>"; };
 		4DF9A3F7142E24FD0063E6FF /* parseerrors.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = parseerrors.h; path = src/parseerrors.h; sourceTree = "<group>"; };
 		4DF9A9AE142FABAB0063E6FF /* mbliphoneapp.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphoneapp.mm; path = src/mbliphoneapp.mm; sourceTree = "<group>"; };
@@ -1048,8 +1045,6 @@
 				F6DF4CA31559638600450B64 /* mbliphonecalendar.mm */,
 				4C7D1CF714767FD000129F01 /* mbliphonecamera.mm */,
 				F68B56881541960200097647 /* mbliphonecontact.mm */,
-				4DE9C63D113813A00059588F /* mbliphonecontext.cpp */,
-				4DE9C634113810030059588F /* mbliphonecontext.h */,
 				4D7E389B1281527500E7F80A /* mbliphonecontrol.mm */,
 				4D7E38A6128152EF00E7F80A /* mbliphonecontrol.h */,
 				4DD3E1DE10411A0A00CAC7EF /* mbliphonedc.mm */,
@@ -2063,7 +2058,6 @@
 				4DABCDF715ECD4970085E214 /* mbliphonecalendar.mm in Sources */,
 				4DABCDF815ECD4970085E214 /* mbliphonecamera.mm in Sources */,
 				4DABCDF915ECD4970085E214 /* mbliphonecontact.mm in Sources */,
-				4DABCDFA15ECD4970085E214 /* mbliphonecontext.cpp in Sources */,
 				4DABCDFB15ECD4970085E214 /* mbliphonecontrol.mm in Sources */,
 				4DABCDFC15ECD4970085E214 /* mbliphonedc.mm in Sources */,
 				4DABCDFD15ECD4970085E214 /* mbliphonedialog.mm in Sources */,
