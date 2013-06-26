@@ -1737,6 +1737,9 @@
 /* Begin PBXProject section */
 		4DD3DD7D1040AA4700CAC7EF /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0420;
+			};
 			buildConfigurationList = 4DD3DD801040AA4700CAC7EF /* Build configuration list for PBXProject "engine-mobile" */;
 			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
@@ -1864,7 +1867,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "$PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\n";
+			shellScript = "if [ $CONFIGURATION = \"Debug\" ]; then\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nelse\n  $PLATFORM_DEVELOPER_BIN_DIR/g++ -nodefaultlibs -Wl,-r -Wl,-x -arch ${ARCHS//\\ /\\ -arch\\ } -isysroot $SDKROOT -o \"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext\" \"$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME\" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,\"$SRCROOT/standalone.ios\" -Wl,-exported_symbol -Wl,_main -Wl,-exported_symbol -Wl,_load_module -Wl,-exported_symbol -Wl,_resolve_symbol\nfi\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
