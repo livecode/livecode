@@ -90,14 +90,7 @@ public:
 	void setcmap(MCStack *sptr);
 	void setgraphicsexposures(Boolean on, MCStack *sptr);
 
-	Pixmap createpixmap(uint2 width, uint2 height, uint2 depth, Boolean purge);
-	void freepixmap(Pixmap &pixmap);
-	
-	bool lockpixmap(Pixmap pixmap, void*& r_data, uint4& r_stride);
-	void unlockpixmap(Pixmap pixmap, void* p_data, uint4 p_stride);
-
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 

@@ -38,7 +38,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
 
-#include "mbliphonecontext.h"
 #include "mbliphoneview.h"
 
 ////////////////////////////////////////////////////////////////////////////////

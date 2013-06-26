@@ -597,57 +597,6 @@ void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height, uint2 depth, Boolean purge)
-{
-	_Drawable *t_pixmap;
-	t_pixmap = new _Drawable;
-	t_pixmap -> type = DC_BITMAP;
-	t_pixmap -> handle . pixmap = (MCSysBitmapHandle)MCMobileBitmapCreate(width, height, depth == 1);
-	return t_pixmap;
-}
-
-void MCScreenDC::freepixmap(Pixmap &pixmap)
-{
-	if (pixmap == NULL)
-		return;
-	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)pixmap -> handle . pixmap;
-	free(t_bitmap -> data);
-	delete t_bitmap;
-	delete pixmap;
-	
-	pixmap = nil;
-}
-
-bool MCScreenDC::lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride)
-{
-	if (p_pixmap == NULL)
-		return false;
-	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_pixmap -> handle . pixmap;
-	r_data = t_bitmap -> data;
-	r_stride = t_bitmap -> stride;
-	return true;
-}
-
-void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride)
-{
-}
-
-Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p -> handle . pixmap;
-	w = t_bitmap -> width;
-	h = t_bitmap -> height;
-	d = t_bitmap -> is_mono ? 1 : 32;
-	return True;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
 void MCScreenDC::copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop)
 {	
 	MCMobileBitmap *t_src_bitmap, *t_dst_bitmap;

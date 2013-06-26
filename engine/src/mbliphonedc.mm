@@ -50,7 +50,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <OpenGLES/ES1/glext.h>
 #import <MediaPlayer/MPMoviePlayerViewController.h>
 
-#include "mbliphonecontext.h"
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"
 
