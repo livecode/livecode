@@ -260,14 +260,14 @@ void layer_animation_changes(UIView *p_new_view, UIView *p_old_view, uint32_t p_
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 
-static bool MCGImageToUIImage(MCGImageRef p_image, UIImage *&r_uiimage)
+static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, UIImage *&r_uiimage)
 {
 	bool t_success = true;
 	
 	CGImageRef t_cg_image = nil;
 	UIImage *t_image = nil;
 	
-	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), false, false, t_cg_image);
+	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), p_copy, false, t_cg_image);
 	
 	if (t_success)
 		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image]);
@@ -304,7 +304,7 @@ static void effectrect_phase_1(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, ctxt->current_image);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, ctxt->current_image);
 	[ctxt -> current_image retain];
 }
 
@@ -312,7 +312,7 @@ static void effectrect_phase_2(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, ctxt->updated_image);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, ctxt->updated_image);
 	[ctxt -> updated_image retain];
 	
 	ctxt -> current_image_view = [[UIImageView alloc] initWithImage: ctxt -> current_image];
