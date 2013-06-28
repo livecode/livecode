@@ -2279,7 +2279,7 @@ void XML_XPathFreeObject(char *args[], int nargs, char **retstring, Bool *pass, 
  *
  * @pObject
  */
-char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
+char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *cDelimiter)
 {
 	int iBufferSize = 8192;
 	if (NULL != pObject)
@@ -2308,7 +2308,7 @@ char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 							iBufferSize = iBufferSize * 2;
 						}
 						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
-						strncat(buffer, "\n", 2);
+						strcat(buffer, cDelimiter);
 						free((char*)cPtr);
 					}
 				}
@@ -2322,7 +2322,7 @@ char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 		return(NULL);
 }
 
-char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject)
+char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
 {
 	int iBufferSize = 8192;
 	if (NULL != pObject)
@@ -2351,7 +2351,7 @@ char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject)
 							iBufferSize = iBufferSize * 2;
 						}
 						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
-						strncat(buffer, "\n", 2);
+						strcat(buffer, cDelimiter);
 						free((char*)cPtr);
 					}
 				}
@@ -2393,7 +2393,12 @@ void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
 				if (NULL != result)
 				{
-					char *xpaths = XML_ObjectPtr_to_Xpaths(result);
+					char *cDelimiter;
+					if (nargs > 2)
+						cDelimiter = args[2];
+					else
+						cDelimiter = "\n";
+					char *xpaths = XML_ObjectPtr_to_Xpaths(result, cDelimiter);
 					if (NULL != xpaths)
 					{
 						*retstring = istrdup(xpaths);
@@ -2445,7 +2450,12 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
 				if (NULL != result)
 				{
-					char *xpaths = XML_ObjectPtr_to_Data(result);
+					char *cDelimiter;
+					if (nargs > 2)
+						cDelimiter = args[2];
+					else
+						cDelimiter = "\n";
+					char *xpaths = XML_ObjectPtr_to_Data(result, cDelimiter);
 					if (NULL != xpaths)
 					{
 						*retstring = istrdup(xpaths);
@@ -2532,11 +2542,11 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
 
 // MDW 2013-06-22 : XPath functions
-//	EXTERNAL_DECLARE_FUNCTION("revXPathNewContext", XML_XPathNewContext)
-//	EXTERNAL_DECLARE_COMMAND("revXPathFreeContext", XML_XPathFreeContext)
-//	EXTERNAL_DECLARE_COMMAND("revXPathFreeObject", XML_XPathFreeObject)
-	EXTERNAL_DECLARE_FUNCTION("revEvaluateXPath", XML_EvalXPath)
-	EXTERNAL_DECLARE_FUNCTION("revDataFromXPathQuery", XML_XPathDataFromQuery)
+//	EXTERNAL_DECLARE_FUNCTION("revXMLNewXPathContext", XML_XPathNewContext)
+//	EXTERNAL_DECLARE_COMMAND("revXMLFreeXPathContext", XML_XPathFreeContext)
+//	EXTERNAL_DECLARE_COMMAND("revXMLFreeXPathObject", XML_XPathFreeObject)
+	EXTERNAL_DECLARE_FUNCTION("revXMLEvaluateXPath", XML_EvalXPath)
+	EXTERNAL_DECLARE_FUNCTION("revXMLDataFromXPathQuery", XML_XPathDataFromQuery)
 EXTERNAL_END_DECLARATIONS
 
 
