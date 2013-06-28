@@ -1298,6 +1298,8 @@ Parse_stat MCFlip::parse(MCScriptPoint &sp)
 Exec_stat MCFlip::exec(MCExecPoint &ep)
 {
 	bool t_created_selection;
+	MColdtool = MCcurtool;
+
 	if (image != NULL)
 	{
 		MCObject *optr;
@@ -1313,7 +1315,6 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		MCImage *iptr = (MCImage *)optr;
-		MColdtool = MCcurtool;
 		iptr->selimage();
 		t_created_selection = true;
 	}
@@ -1321,13 +1322,15 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 		t_created_selection = false;
 
 	if (MCactiveimage != NULL)
+	{
 		MCactiveimage->flipsel(direction == FL_HORIZONTAL);
 
-	if (t_created_selection)
-	{
-		MCcurtool = MColdtool;
-		MCactiveimage -> endsel();
+		// IM-2013-06-28: [[ Bug 10999 ]] ensure MCactiveimage is not null when calling endsel() method
+		if (t_created_selection)
+			MCactiveimage -> endsel();
 	}
+
+	MCcurtool = MColdtool;
 
 	return ES_NORMAL;
 }
