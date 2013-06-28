@@ -2205,7 +2205,7 @@ void XML_XPathNewContext(char *args[], int nargs, char **retstring, Bool *pass, 
 			if (NULL != ctx)
 			{
 				xmlDocument->SetXPathContext(ctx);
-				buffer = (char *)malloc(sizeof(xmlXPathContextPtr));
+				buffer = (char *)malloc(INTSTRSIZE);
 				if (NULL != buffer)
 				{
 					sprintf(buffer,"%ld",(long)ctx);
@@ -2281,6 +2281,7 @@ void XML_XPathFreeObject(char *args[], int nargs, char **retstring, Bool *pass, 
  */
 char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 {
+	int iBufferSize = 8192;
 	if (NULL != pObject)
 	{
 		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
@@ -2289,30 +2290,29 @@ char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
     			int i;
 			xmlNodePtr cur;
 		    	int size = (nodes) ? nodes->nodeNr : 0;
-// NOTE: BAD IDEA - it's possible to overrun the buffer this way...
-			char *buffer = (char*)malloc(8192);
+			char *buffer = (char*)malloc(iBufferSize);
 			*buffer = (char)0; // null-terminate to start things off
-			char *stringBuffer = (char*)malloc(256);
-			xmlChar *cPtr;
 
 			for(i = 0; i < size; ++i)
 			{
 				cur = nodes->nodeTab[i];
-				cPtr = xmlGetNodePath(cur);
-				if(cur->ns)
-				{ 
-					sprintf(stringBuffer, "= element node <%s:%s>\n",
-						cur->ns->href, cPtr);
-					strcat(buffer, stringBuffer);
-				}
-				else
+				if (NULL != cur)
 				{
-					strcat(buffer, (char*)cPtr);
-					strcat(buffer, "\n");
+					xmlChar *cPtr = xmlGetNodePath(cur);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							buffer = (char*)realloc(buffer, iBufferSize * 2);
+							iBufferSize = iBufferSize * 2;
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strncat(buffer, "\n", 2);
+						free((char*)cPtr);
+					}
 				}
-				free((char*)cPtr);
 			}
-			free(stringBuffer);
 			return (buffer);
 		}
 		else
@@ -2324,6 +2324,7 @@ char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 
 char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject)
 {
+	int iBufferSize = 8192;
 	if (NULL != pObject)
 	{
 		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
@@ -2332,30 +2333,29 @@ char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject)
     			int i;
 			xmlNodePtr cur;
 		    	int size = (nodes) ? nodes->nodeNr : 0;
-// NOTE: BAD IDEA - it's possible to overrun the buffer this way...
-			char *buffer = (char*)malloc(8192);
+			char *buffer = (char*)malloc(iBufferSize);
 			*buffer = (char)0; // null-terminate to start things off
-			char *stringBuffer = (char*)malloc(256);
-			xmlChar *cPtr;
 
 			for(i = 0; i < size; ++i)
 			{
 				cur = nodes->nodeTab[i];
-				cPtr = xmlNodeGetContent(cur);
-				if(cur->ns)
-				{ 
-					sprintf(stringBuffer, "= element node <%s:%s>\n",
-						cur->ns->href, cPtr);
-					strcat(buffer, stringBuffer);
-				}
-				else
+				if (NULL != cur)
 				{
-					strcat(buffer, (char*)cPtr);
-					strcat(buffer, "\n");
+					xmlChar *cPtr = xmlNodeGetContent(cur);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							buffer = (char*)realloc(buffer, iBufferSize * 2);
+							iBufferSize = iBufferSize * 2;
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strncat(buffer, "\n", 2);
+						free((char*)cPtr);
+					}
 				}
-				free((char*)cPtr);
 			}
-			free(stringBuffer);
 			return (buffer);
 		}
 		else
