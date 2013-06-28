@@ -113,6 +113,8 @@ enum XMLErrs
 	XMLERR_BADMOVE,
 	XMLERR_BADCOPY,
 	XMLERR_NOFILEPERMS,
+	XPATHERR_BADDOCCONTEXT,
+	XPATHERR_CANTRESOLVE,
 };
 
 const char *xmlerrors[] = {
@@ -126,6 +128,8 @@ const char *xmlerrors[] = {
 	"xmlerr, can't move node into itself",
 	"xmlerr, can't copy node into itself",
 	"xmlerr, file access not permitted",
+	"xmlerr, couldn't assign document context",
+	"xmlerr, can't resolve xpath",
 };
 
 //HS-2010-10-11: [[ Bug 7586 ]] Reinstate libxml2 to create name spaces. Implement new liveCode commands to suppress name space creation.
@@ -2160,52 +2164,6 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 
 // MDW 2013-06-22 XPath functions
 
-/**
- * Returns 1 if the value is a NaN, 0 otherwise
- */
-void XML_XPathIsNaN(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	*pass = False;
-	*error = False;
-	double value = atol(args[0]);
-
-	if (NULL != value)
-	{
-		int result = xmlXPathIsNaN(value);
-		*retstring = (1 == result ? istrdup("true") : istrdup("false"));
-	}
-	else
-		*retstring = istrdup("true");
-}
-
-void XML_XPathIsInf(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	*pass = False;
-	*error = False;
-	double value = atol(args[0]);
-
-	if (NULL != value)
-	{
-		int result = xmlXPathIsInf(value);
-		switch (result)
-		{
-			case 0:
-				*retstring = istrdup("0");
-				break;
-			case 1:
-				*retstring = istrdup("1");
-				break;
-			case -1:
-				*retstring = istrdup("-1");
-				break;
-			default:
-				*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-		}
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-}
-
 xmlXPathContextPtr XML_DocID_to_XPathContext(int docID)
 {
 	xmlXPathContextPtr xpathContext = NULL;
@@ -2317,66 +2275,10 @@ void XML_XPathFreeObject(char *args[], int nargs, char **retstring, Bool *pass, 
 }
 
 /**
- * XML_XPathEvalPredicate docID, xpathObjectPtr
+ * XML_ObjectPtr_to_Xpaths
  *
- * @docID
- * @xpathObjectPtr
+ * @pObject
  */
-void XML_XPathEvalPredicate(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	*pass = False;
-	*error = False;
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlXPathObjectPtr res = (xmlXPathObjectPtr)atol(args[1]);
-		if (NULL != res)
-		{
-			int result = xmlXPathEvalPredicate(ctx, res);
-			*retstring = (1 == result ? istrdup("true") : istrdup("false"));
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathEvalExpression docID, str
- *
- * @docID
- * @str
- */
-void XML_XPathEvalExpression(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlChar *str = (xmlChar *)args[1];
-		if (NULL != str)
-		{
-			xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
-			if (NULL != result)
-			{
-				buffer = (char *)malloc(256);
-				sprintf(buffer,"%ld",(long)result);
-				*retstring = istrdup(buffer);
-			}
-			else
-				*retstring = istrdup("xmlerr, couldn't evaluate expression");
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
 char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 {
 	if (NULL != pObject)
@@ -2420,19 +2322,11 @@ char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject)
 		return(NULL);
 }
 
-/**
- * XML_TreeFromXPathObject
- * @pNodeSetPtrID
- */
-void XML_TreeFromXPathObject(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject)
 {
-	*pass = False;
-	*error = False;
-	xmlXPathObjectPtr result = (xmlXPathObjectPtr)atol(args[0]);
-
-	if (NULL != result)
+	if (NULL != pObject)
 	{
-		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(result);
+		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
 		if (NULL != nodes)
 		{
     			int i;
@@ -2447,7 +2341,7 @@ void XML_TreeFromXPathObject(char *args[], int nargs, char **retstring, Bool *pa
 			for(i = 0; i < size; ++i)
 			{
 				cur = nodes->nodeTab[i];
-				cPtr = xmlGetNodePath(cur);
+				cPtr = xmlNodeGetContent(cur);
 				if(cur->ns)
 				{ 
 					sprintf(stringBuffer, "= element node <%s:%s>\n",
@@ -2461,27 +2355,29 @@ void XML_TreeFromXPathObject(char *args[], int nargs, char **retstring, Bool *pa
 				}
 				free((char*)cPtr);
 			}
-			*retstring = istrdup(buffer);
+			free(stringBuffer);
+			return (buffer);
 		}
 		else
-			*retstring = istrdup("xmlerr, bad node pointer");
+			return(NULL);
 	}
 	else
-		*retstring = istrdup("xmlerr, bad xpath object");
+		return(NULL);
 }
 
 /**
- * XML_ExecXPath
+ * XML_EvalXPath
  * @pDocID
  * @pExpression
+ *
+ * Returns a cr-separated list of paths which is the result of
+ * evaluating the expression against the xml tree
  */
-void XML_ExecXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-//	char *buffer;
-
 	*pass = False;
 	*error = False;
-	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
+
 	int docID = atoi(args[0]);
 	CXMLDocument *xmlDocument = doclist.find(docID);
 	if (NULL != xmlDocument)
@@ -2495,18 +2391,24 @@ void XML_ExecXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 				xmlChar *str = (xmlChar *)args[1];
 
 				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
-				char *xpaths = XML_ObjectPtr_to_Xpaths(result);
-				if (NULL != xpaths)
+				if (NULL != result)
 				{
-					*retstring = istrdup(xpaths);
-					free(xpaths);
+					char *xpaths = XML_ObjectPtr_to_Xpaths(result);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
 				}
-				else
-					*retstring = istrdup("xmlerr, bad xpath object");
 				xmlXPathFreeContext(ctx);
 			}
 			else
-				*retstring = istrdup("xmlerr, couldn't assign context");
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
 		}
 		else
 			*retstring = istrdup("xmlerr, bad document pointer");
@@ -2516,282 +2418,55 @@ void XML_ExecXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 }
 
 /**
- * XML_XPathCtxtCompile docID, str
+ * XML_EvalXPath
+ * @pDocID
+ * @pExpression
  *
- * @docID
- * @str
+ * Returns a cr-separated list of data which is the result of
+ * evaluating the expression against the xml tree
  */
-void XML_XPathCtxtCompile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
-	char *buffer;
-
 	*pass = False;
 	*error = False;
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	xmlChar * str = (xmlChar *)args[1];
-	if (NULL != ctx)
+
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
 	{
-		if (NULL != str)
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
 		{
-			xmlXPathCompExprPtr result = xmlXPathCtxtCompile(ctx, str);
-			if (NULL != result)
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
 			{
-				buffer = (char *)malloc(64);
-				if (NULL != buffer)
+				xmlChar *str = (xmlChar *)args[1];
+
+				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
+				if (NULL != result)
 				{
-					sprintf(buffer,"%ld",(long)result);
-					*retstring = istrdup(buffer);
+					char *xpaths = XML_ObjectPtr_to_Data(result);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
 				}
+				xmlXPathFreeContext(ctx);
 			}
 			else
-				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
 		}
 		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
+			*retstring = istrdup("xmlerr, bad document pointer");
 	}
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathCompile str
- *
- * @str
- */
-void XML_XPathCompile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	xmlChar * str = (xmlChar *)args[0];
-	if (NULL != str)
-	{
-		xmlXPathCompExprPtr result = xmlXPathCompile(str);
-		if (NULL != result)
-		{
-			buffer = (char *)malloc(64);
-			if (NULL != buffer)
-			{
-				sprintf(buffer,"%ld",(long)result);
-				*retstring = istrdup(buffer);
-			}
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-}
-
-/**
- * XML_XPathCompiledEval docID, xmlXPathCompExprPtr
- *
- * @docID
- * @xmlXPathCompExprPtr
- */
-void XML_XPathCompiledEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	*retstring = (char *)calloc(1,1);
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlXPathCompExprPtr comp = (xmlXPathCompExprPtr)atol(args[1]);
-		if (NULL != comp)
-		{
-			xmlXPathObjectPtr result = xmlXPathCompiledEval(comp, ctx);
-			if (NULL != result)
-			{
-				buffer = (char *)malloc(64);
-				if (NULL != buffer)
-				{
-					sprintf(buffer,"%ld",(long)result);
-					*retstring = istrdup(buffer);
-				}
-			}
-			else
-				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathCompiledEvalToBoolean docID, xmlXPathCompExprPtr
- *
- * @docID
- * @xmlXPathCompExprPtr
- */
-void XML_XPathCompiledEvalToBoolean(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	*retstring = (char *)calloc(1,1);
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlXPathCompExprPtr comp = (xmlXPathCompExprPtr)atol(args[1]);
-		if (NULL != comp)
-		{
-			int result = xmlXPathCompiledEvalToBoolean(comp, ctx);
-			if (NULL != result)
-			{
-				switch (result)
-				{
-					case 0:
-						*retstring = istrdup("0");
-						break;
-					case 1:
-						*retstring = istrdup("1");
-						break;
-					case -1:
-						*retstring = istrdup("-1");
-						break;
-				}
-			}
-			else
-				*retstring = istrdup("");
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathEval docID, xmlChar *
- *
- * @docID
- * @xmlChar *str
- */
-void XML_XPathEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	*retstring = (char *)calloc(1,1);
-	//int docID = atoi(args[0]);
-	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlChar *str = (xmlChar *)args[1];
-		if (NULL != str)
-		{
-			xmlXPathObjectPtr result = xmlXPathEval(str, ctx);
-			if (NULL != result)
-			{
-				buffer = (char *)malloc(sizeof(xmlXPathObjectPtr));
-				if (NULL != buffer)
-				{
-					sprintf(buffer,"%ld",(long)result);
-					*retstring = istrdup(buffer);
-				}
-			}
-			else
-				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathSetContextNode docID, xmlNodePtr
- *
- * @docID
- * @xmlNodePtr
- */
-void XML_XPathSetContextNode(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	*retstring = (char *)calloc(1,1);
-	//int docID = atoi(args[0]);
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		xmlNodePtr comp = (xmlNodePtr)atol(args[1]);
-		if (NULL != comp)
-		{
-			int result = xmlXPathSetContextNode(comp, ctx);
-				*retstring = (0 == result ? istrdup("true") : istrdup("error"));
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * XML_XPathNodeEval docID, xmlNodePtr, xmlString
- *
- * @docID
- * @xmlNodePtr
- * @xmlString
- */
-void XML_XPathNodeEval(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	char *buffer;
-
-	*pass = False;
-	*error = False;
-	//int docID = atoi(args[0]);
-	//xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(docID);
-	xmlXPathContextPtr ctx = XML_DocID_to_XPathContext(atoi(args[0]));
-	if (NULL != ctx)
-	{
-		*retstring = (char *)calloc(1,1);
-		xmlNodePtr node = (xmlNodePtr)atol(args[1]);
-		xmlChar *str = (xmlChar *)args[2];
-		if (NULL != node && NULL != str)
-		{
-			xmlXPathObjectPtr result = xmlXPathNodeEval(node, str, ctx);
-			if (NULL != result)
-			{
-				buffer = (char *)malloc(sizeof(xmlXPathObjectPtr));
-				if (NULL != buffer)
-				{
-					sprintf(buffer,"%ld",(long)result);
-					*retstring = istrdup(buffer);
-				}
-			}
-			else
-				*retstring = istrdup(xmlerrors[XMLERR_BADXML]);
-		}
-		else
-			*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
-	}
-	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
-}
-
-/**
- * Create a new Xpath component
- */
-void XML_XPathInit(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
-{
-	*pass = False;
-	*error = False;
-
-	xmlXPathInit();
-	*retstring = (char *)calloc(1,1);
 }
 
 EXTERNAL_BEGIN_DECLARATIONS("revXML")
@@ -2857,23 +2532,11 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
 
 // MDW 2013-06-22 : XPath functions
-//	EXTERNAL_DECLARE_COMMAND("revXPathInit", XML_XPathInit)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathIsNaN", XML_XPathIsNaN)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathIsInf", XML_XPathIsInf)
 //	EXTERNAL_DECLARE_FUNCTION("revXPathNewContext", XML_XPathNewContext)
 //	EXTERNAL_DECLARE_COMMAND("revXPathFreeContext", XML_XPathFreeContext)
 //	EXTERNAL_DECLARE_COMMAND("revXPathFreeObject", XML_XPathFreeObject)
-//	EXTERNAL_DECLARE_FUNCTION("revXMLTreeFromXPathObject", XML_TreeFromXPathObject)
-	EXTERNAL_DECLARE_FUNCTION("revXPathDataFromQuery", XML_ExecXPath)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathEvalPredicate", XML_XPathEvalPredicate)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathEvalExpression", XML_XPathEvalExpression)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathCtxtCompile", XML_XPathCtxtCompile)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathCompile", XML_XPathCompile)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathCompiledEval", XML_XPathCompiledEval)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathCompiledEvalToBoolean", XML_XPathCompiledEvalToBoolean)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathEval", XML_XPathEval)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathSetContextNode", XML_XPathSetContextNode)
-//	EXTERNAL_DECLARE_FUNCTION("revXPathNodeEval", XML_XPathNodeEval)
+	EXTERNAL_DECLARE_FUNCTION("revEvaluateXPath", XML_EvalXPath)
+	EXTERNAL_DECLARE_FUNCTION("revDataFromXPathQuery", XML_XPathDataFromQuery)
 EXTERNAL_END_DECLARATIONS
 
 
