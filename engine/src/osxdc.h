@@ -409,7 +409,7 @@ public:
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
     
-    // TD-2013-05-29: [[ USE FONT ]]
+    // TD-2013-05-29: [[ DynamicFonts ]]
     virtual Exec_errors loadfont(const char *p_pathbool, bool p_load_globally);
     virtual Exec_errors unloadfont(const char *p_path, bool p_load_globally);
 

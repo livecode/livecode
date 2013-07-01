@@ -1907,9 +1907,15 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
-        // TD-2013-06-12: [[ USE FONT ]] Look for font
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font
         else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
         {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
             if (sp . parseexp(False, True, &font) != PS_NORMAL)
             {
                 MCperror->add(PE_START_BADCHUNK, sp);
@@ -1950,7 +1956,7 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 {
 	if (mode == SC_USING)
 	{
-        // TD-2013-06-12: [[ USE FONT ]] Look for font.
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
         if (font != NULL)
         {
             if (MCsecuremode & MC_SECUREMODE_DISK)
@@ -2143,9 +2149,15 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
-        // TD-2013-06-20: [[ USE FONT ]] Look for font
+        // TD-2013-06-20: [[ DynamicFonts ]] Look for font
         else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
         {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
             if (sp . parseexp(False, True, &font) != PS_NORMAL)
             {
                 MCperror->add(PE_START_BADCHUNK, sp);
@@ -2240,7 +2252,7 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 		break;
 	case SC_USING:
 		{
-            // TD-2013-06-12: [[ USE FONT ]] Look for font.
+            // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
             if (font != NULL)
             {
                 if (MCfontsusing != NULL && MCfontsusing -> is_array())

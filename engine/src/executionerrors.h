@@ -2372,7 +2372,7 @@ enum Exec_errors
 	// {EE-0778} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
     
-    // TD-2013-06-24: [[ USE FONT ]]
+    // TD-2013-06-24: [[ DynamicFonts ]]
     // {EE-0782} font: couldn't find font
 	EE_FONT_BADFILEEXP,
     

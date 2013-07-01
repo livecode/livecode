@@ -1096,7 +1096,7 @@ enum Properties {
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
     
-  	// TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+  	// TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
     P_FONTFILES_IN_USE,
 	
     // window properties
@@ -1744,9 +1744,10 @@ enum Sugar_constants {
 	SG_CLOSED,
 	SG_CALLER,
     
-    // TD-2013-06-14: [[ USE FONT ]] start using font theFont [globally]
+    // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
     SG_FONT,
-    SG_GLOBALLY
+    SG_GLOBALLY,
+    SG_FILE
 };
 
 enum Statements {

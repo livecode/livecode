@@ -1992,7 +1992,7 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 }
 
 
-// TD-2013-05-29 [[ USE FONT ]]
+// TD-2013-05-29 [[ DynamicFonts ]]
 
 Exec_errors MCUIDC::loadfont(const char *p_path, bool p_load_globally)
 {

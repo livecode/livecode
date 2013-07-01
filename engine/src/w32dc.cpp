@@ -124,7 +124,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-// TD-2013-06-24 [[ USE FONT ]]
+// TD-2013-06-24 [[ DynamicFonts ]]
 
 // p_path is a fully resolved path
 Exec_errors MCScreenDC::loadfont(const char *p_path, bool p_load_globally)

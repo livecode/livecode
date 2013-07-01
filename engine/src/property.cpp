@@ -443,7 +443,7 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_RANDOM_SEED:
 	case P_ADDRESS:
 	case P_STACKS_IN_USE:
-    // TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
     case P_FONTFILES_IN_USE:
 	case P_RELAYER_GROUPED_CONTROLS:
 	case P_SELECTION_MODE:
@@ -3579,7 +3579,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 		break;
             
-    // TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+    // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
     case P_FONTFILES_IN_USE:
         ep.clear();
         if (MCfontsusing -> is_array())

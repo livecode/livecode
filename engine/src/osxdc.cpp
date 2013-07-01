@@ -21,8 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
-#include "core.h" // TD-2013-05-29: [[ USE FONT ]]
-#include "osspec.h" // TD-2013-05-29: [[ USE FONT ]]
+#include "core.h" // TD-2013-05-29: [[ DynamicFonts ]]
+#include "osspec.h" // TD-2013-05-29: [[ DynamicFonts ]]
 
 #include "dispatch.h"
 #include "image.h"
@@ -226,7 +226,7 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 	}
 }
 
-// TD-2013-05-29 [[ USE FONT ]]
+// TD-2013-05-29 [[ DynamicFonts ]]
 MCVariableValue *s_font_array;
 
 // p_path is a fully resolved path

@@ -818,7 +818,7 @@ LT factor_table[] =
         {"focuspixel", TT_PROPERTY, P_FOCUS_PIXEL},
         {"folder", TT_PROPERTY, P_DIRECTORY},
         {"folders", TT_FUNCTION, F_DIRECTORIES},
-        // TD-2013-06-20: [[ USE FONT ]] global property for list of font files
+        // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
         {"fontfilesinuse", TT_PROPERTY, P_FONTFILES_IN_USE},
         {"fontlanguage", TT_FUNCTION, F_FONT_LANGUAGE},
         {"fontnames", TT_FUNCTION, F_FONT_NAMES},
@@ -1892,7 +1892,8 @@ static LT sugar_table[] =
 		{"elevated", TT_UNDEFINED, SG_ELEVATED},
         {"empty", TT_CHUNK, CT_UNDEFINED},
         
-        // TD-2013-06-14: [[ USE FONT ]] start using font theFont [globally]
+        // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+        {"file", TT_UNDEFINED, SG_FILE},
         {"font", TT_UNDEFINED, SG_FONT},
         {"globally", TT_UNDEFINED, SG_GLOBALLY},
         
