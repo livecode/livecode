@@ -2553,9 +2553,10 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		MCGContextRelease(t_context);
 
 		if (t_success)
-			t_success = MCGImageCreateWithRaster(t_raster, m_snapshot);
+			t_success = MCGImageCreateWithRasterAndRelease(t_raster, m_snapshot);
 
-		MCMemoryDeallocate(t_raster.pixels);
+		if (!t_success)
+			MCMemoryDeallocate(t_raster.pixels);
 	}
 	
 #ifdef _ANDROID_MOBILE

@@ -2529,8 +2529,9 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 		t_raster.stride = t_snapshot->stride;
 		t_raster.format = kMCGRasterFormat_ARGB;
 
-		/* OVERHAUL - REVISIT: this is a copy operation, which may be avoidable */
-		t_success = MCGImageCreateWithRaster(t_raster, r_image);
+		t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);
+		if (t_success)
+			t_snapshot->data = nil;
 	}
 
 	MCImageFreeBitmap(t_snapshot);
