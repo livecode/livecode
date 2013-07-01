@@ -64,7 +64,8 @@ regexp;
 const char *MCR_geterror();
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Updated to manage case and allow case-insensitive matching.
-regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive);
+// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's no reason not to use the cache.
+regexp *MCR_compile(const char *exp, Boolean casesensitive);
 int MCR_exec(regexp *prog, const char *string, uint4 len);
 void MCR_free(regexp *prog);
 

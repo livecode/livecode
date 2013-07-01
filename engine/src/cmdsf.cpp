@@ -1147,7 +1147,9 @@ MCPatternMatcher::~MCPatternMatcher()
 
 Exec_stat MCRegexMatcher::compile(uint2 line, uint2 pos)
 {
-	compiled = MCR_compile(pattern, True /* usecache */, casesensitive);
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	compiled = MCR_compile(pattern, casesensitive);
 	if (compiled == NULL)
 	{
 		MCeerror->add

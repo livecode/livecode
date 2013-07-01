@@ -3197,7 +3197,9 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 	}
     // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
 	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly as MCR_compile copies pattern (if needed).
-	regexp *compiled = MCR_compile(ep.getcstring(), True /* usecache */, True /* casesensitive */);
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /* casesensitive */);
 	if (compiled == NULL)
 	{
 		MCeerror->add
@@ -4018,7 +4020,9 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
     const char *pattern = NULL;
     // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
 	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly since MCR_compile copies pattern string (if needed).
-	regexp *compiled = MCR_compile(ep.getcstring(), True /*usecache*/, True /*casesensitive*/);
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /*casesensitive*/);
     if (compiled != NULL)
         pattern = compiled->pattern;
 	if (compiled == NULL)

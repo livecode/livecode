@@ -305,7 +305,9 @@ const char *MCR_geterror()
 
 // JS-2013-07-01: [[ EnhancedFilter ]] Updated to support case-sensitivity and caching.
 // MW-2013-07-01: [[ EnhancedFilter ]] Tweak to take 'const char *' and copy pattern as required.
-regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive)
+// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+//   no reason not to use the cache.
+regexp *MCR_compile(const char *exp, Boolean casesensitive)
 {
 	Boolean found = False;
 	regexp *re = NULL;
@@ -313,20 +315,17 @@ regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive)
     if (!casesensitive)
         flags |= REG_ICASE;
 
-	// If the cache is to be used, do a search.
-	if (usecache)
+	// Search the cache.
+	uint2 i;
+	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
 	{
-		uint2 i;
-		for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
+		if (MCregexcache[i]
+			&& strequal(exp, MCregexcache[i]->pattern)
+			&& flags == MCregexcache[i]->flags)
 		{
-			if (MCregexcache[i]
-				&& strequal(exp, MCregexcache[i]->pattern)
-				&& flags == MCregexcache[i]->flags)
-			{
-				found = True;
-				re = MCregexcache[i];
-				break;
-			}
+			found = True;
+			re = MCregexcache[i];
+			break;
 		}
 	}
 	
@@ -347,8 +346,8 @@ regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive)
 		}
 	}
 	
-	// If the pattern is new and we didn't use the cache, put it there.
-	if (usecache && !found)
+	// If the pattern is new, put it in the cache.
+	if (!found)
 	{
 		uint2 i;
 		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
