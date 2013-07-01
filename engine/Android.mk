@@ -45,7 +45,9 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	sysunxdate.cpp sysspec.cpp stackcache.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
-	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
+	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp \
+	mbltextmessaging.cpp \
+	mbltheme.cpp \
 	mblandroid.cpp mblandroidalert.cpp mblandroidbrowser.cpp  mblandroidbusyindicator.cpp \
 	mblandroiddc.cpp mblandroiddialog.cpp mblandroidfont.cpp mblandroidfs.cpp mblandroidinput.cpp \
 	mblandroidcalendar.cpp mblandroidcontact.cpp mblandroidcontrol.cpp \
