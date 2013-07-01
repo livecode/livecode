@@ -2086,6 +2086,9 @@ bool MCImage::setfilename(const char *p_filename)
 	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+	// MW-2013-07-01: [[ Bug 11001 ]] Reverted for 6.1.0 - this canonicalisation doesn't
+	//   take into account URL references.
+	/*{reverted for correct fix in next release}
 	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
 	//   for Rep construction.
 	if (t_success)
@@ -2095,6 +2098,7 @@ bool MCImage::setfilename(const char *p_filename)
 		delete t_resolved;
 		t_resolved = t_resolved_filename;
 	}
+	 */
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
 
