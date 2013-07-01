@@ -659,7 +659,7 @@ enum Exec_errors
 	// {EE-0210} flip: can't find image
 	EE_FLIP_NOIMAGE,
 	
-	// {EE-0211} flip: object is not an image
+	// {EE-0211} flip: object is not an editable image
 	EE_FLIP_NOTIMAGE,
 	
 	// {EE-0212} flushEvents: bad event type
