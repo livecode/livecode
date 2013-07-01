@@ -41,7 +41,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 
 #include "mblandroidutil.h"
-#include "mblandroidcontext.h"
 #include "mblandroidjava.h"
 
 #include <jni.h>
@@ -280,25 +279,6 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 {
 	drect = android_view_get_bounds();
 	return True;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_mask)
-{
-	return NULL;
-}
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_drawable -> handle . pixmap;
-	return new MCAndroidContext(t_bitmap -> width, t_bitmap -> height, t_bitmap -> stride, t_bitmap -> data, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
