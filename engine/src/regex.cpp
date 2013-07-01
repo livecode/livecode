@@ -303,7 +303,9 @@ const char *MCR_geterror()
 	return regexperror;
 }
 
-regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
+// JS-2013-07-01: [[ EnhancedFilter ]] Updated to support case-sensitivity and caching.
+// MW-2013-07-01: [[ EnhancedFilter ]] Tweak to take 'const char *' and copy pattern as required.
+regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive)
 {
 	Boolean found = False;
 	regexp *re = NULL;
@@ -311,6 +313,7 @@ regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
     if (!casesensitive)
         flags |= REG_ICASE;
 
+	// If the cache is to be used, do a search.
 	if (usecache)
 	{
 		uint2 i;
@@ -326,10 +329,12 @@ regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
 			}
 		}
 	}
+	
+	// If the pattern isn't found with the given flags, then create a new one.
 	if (re == NULL)
 	{
-		re = new regexp;
-		re->pattern = strdup(exp);
+		/* UNCHECKED */ re = new regexp;
+		/* UNCHECKED */ re->pattern = strdup(exp);
 		re->flags = flags;
 		int status;
 		status = regcomp(&re->rexp, exp, flags);
@@ -341,6 +346,8 @@ regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
 			return(NULL);
 		}
 	}
+	
+	// If the pattern is new and we didn't use the cache, put it there.
 	if (usecache && !found)
 	{
 		uint2 i;
@@ -351,6 +358,7 @@ regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive)
 		}
 		MCregexcache[0] = re;
 	}
+	
 	return re;
 }
 
@@ -376,10 +384,13 @@ void MCR_free(regexp *prog)
 	if (prog)
 	{
 		regfree(&prog->rexp);
+		// MW-2013-07-01: [[ EnhancedFilter ]] Delete the pattern.
+		delete prog->pattern;
 		delete prog;
 	}
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Clear out the cache.
 void MCR_clearcache()
 {
 	uint2 i;

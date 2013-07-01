@@ -1136,6 +1136,10 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	return t_status;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Implementation of pattern matching classes.
+
 MCPatternMatcher::~MCPatternMatcher()
 {
 	delete pattern;
@@ -1278,6 +1282,8 @@ MCFilter::~MCFilter()
 	delete pattern;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Replacement for filterlines which takes a delimiter and
+//   pattern matching class.
 char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher)
 {
 	uint4 offset = 0;
@@ -1352,6 +1358,7 @@ char *MCFilter::filterdelimited(char *sstring, char delimiter, MCPatternMatcher 
 	return dstring;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new filter syntax.
 Parse_stat MCFilter::parse(MCScriptPoint &sp)
 {
 	// Syntax :
@@ -1410,10 +1417,10 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 			discardmatches = False;
 		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_WITHOUT) == PS_NORMAL)
 			discardmatches = True;
-		else if (sp.skip_token(SP_SUGAR, TT_PREP, PT_MATCHING) == PS_NORMAL)
+		else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
 			discardmatches = False;
 		else if (sp.skip_token(SP_FACTOR, TT_UNOP, O_NOT) == PS_NORMAL
-				 && sp.skip_token(SP_SUGAR, TT_PREP, PT_MATCHING) == PS_NORMAL)
+				 && sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_MATCHING) == PS_NORMAL)
 			discardmatches = True;
 		else
 			t_error = PE_FILTER_NOWITH;
@@ -1458,6 +1465,7 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 }
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Rewritten to support new syntax.
 Exec_stat MCFilter::exec(MCExecPoint &ep)
 {
 	Exec_stat stat;
@@ -1481,19 +1489,19 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		delete sptr;
 		return ES_ERROR;
 	}
-	char *pptr = ep.getsvalue().clone();
-
+	
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use the ep directly as the matcher
+	//   classes copy the pattern string.
 	// Create the pattern matcher
 	MCPatternMatcher *matcher;
 	if (matchmode == MA_REGEX)
-        matcher = new MCRegexMatcher(pptr, ep.getcasesensitive());
+        matcher = new MCRegexMatcher(ep.getcstring(), ep.getcasesensitive());
     else
-		matcher = new MCWildcardMatcher(pptr, ep.getcasesensitive());
+		matcher = new MCWildcardMatcher(ep.getcstring(), ep.getcasesensitive());
 	stat = matcher->compile(line, pos);
 	if (stat != ES_NORMAL)
 	{
 		delete sptr;
-		delete pptr;
 		delete matcher;
 		return stat;
 	}
@@ -1508,7 +1516,6 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	// Filter the data
 	char *dptr = filterdelimited(sptr, delimiter, matcher);
 	delete sptr;
-	delete pptr;
 	delete matcher;
 	ep.copysvalue(dptr, strlen(dptr));
 	delete dptr;
@@ -1529,6 +1536,8 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 	// Success!
 	return ES_NORMAL;
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCImport::~MCImport()
 {

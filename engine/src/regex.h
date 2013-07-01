@@ -50,7 +50,11 @@ regmatch_t;
 typedef struct _regexp
 {
 	regex_t rexp;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The pattern associated with the compiled
+	//   regexp (used by the cache).
     char *pattern;
+	// JS-2013-07-01: [[ EnhancedFilter ]] The flags used to compile the pattern
+	//   (used to implement caseSensitive option).
     int flags;
 	uint2 nsubs;
 	regmatch_t matchinfo[NSUBEXP];
@@ -58,9 +62,13 @@ typedef struct _regexp
 regexp;
 
 const char *MCR_geterror();
-regexp *MCR_compile(char *exp, Boolean usecache, Boolean casesensitive);
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Updated to manage case and allow case-insensitive matching.
+regexp *MCR_compile(const char *exp, Boolean usecache, Boolean casesensitive);
 int MCR_exec(regexp *prog, const char *string, uint4 len);
 void MCR_free(regexp *prog);
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Clear out the PCRE cache.
 void MCR_clearcache();
 
 #endif

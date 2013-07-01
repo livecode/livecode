@@ -713,6 +713,7 @@ enum Mark_constants {
     MC_WHERE
 };
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Tags for the type of pattern matcher to use.
 enum Match_mode {
     MA_UNDEFINED,
     MA_WILDCARD,
@@ -865,7 +866,6 @@ enum Preposition_type {
 	PT_MARKUP,
 	PT_BINARY,
 	PT_COOKIE,
-    PT_MATCHING
 };
 
 enum Print_mode {
@@ -1770,9 +1770,14 @@ enum Sugar_constants {
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
 	
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'pattern'.
     SG_PATTERN,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'regex'.
     SG_REGEX,
-    SG_WILDCARD
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'wildcard'.
+    SG_WILDCARD,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
+	SG_MATCHING,
 };
 
 enum Statements {

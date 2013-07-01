@@ -810,6 +810,7 @@ void X_clear_globals(void)
 	MCnullmcstring = NULL;
 
 	// MW-2013-03-11: [[ Bug 10713 ]] Make sure we reset the regex cache globals to nil.
+	// JS-2013-07-01: [[ EnhancedFilter ]] Refactored regex caching mechanism.
 	MCR_clearcache();
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)

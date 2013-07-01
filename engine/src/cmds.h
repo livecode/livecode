@@ -1332,15 +1332,19 @@ public:
 	}
 };
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Utility class and descendents handling the
+//   regex and wildcard style pattern matchers.
 class MCPatternMatcher
 {
 protected:
 	char *pattern;
 	Boolean casesensitive;
 public:
-	MCPatternMatcher(char *p, Boolean cs)
+	// MW-2013-07-01: [[ EnhancedFilter ]] Tweaked to take 'const char *' since class
+	//   copies the string.
+	MCPatternMatcher(const char *p, Boolean cs)
 	{
-		pattern = strdup(p);
+		/* UNCHECKED */ pattern = strdup(p);
 		casesensitive = cs;
 	}
 	virtual ~MCPatternMatcher();
@@ -1353,7 +1357,7 @@ class MCRegexMatcher : public MCPatternMatcher
 protected:
 	regexp *compiled;
 public:
-	MCRegexMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	MCRegexMatcher(const char *p, Boolean cs) : MCPatternMatcher(p, cs)
 	{
 		compiled = NULL;
 	}
@@ -1364,7 +1368,7 @@ public:
 class MCWildcardMatcher : public MCPatternMatcher
 {
 public:
-	MCWildcardMatcher(char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	MCWildcardMatcher(const char *p, Boolean cs) : MCPatternMatcher(p, cs)
 	{
 	}
 	virtual Exec_stat compile(uint2 line, uint2 pos);
@@ -1375,13 +1379,19 @@ protected:
 
 class MCFilter : public MCStatement
 {
+	// JS-2013-07-01: [[ EnhancedFilter ]] Type of the filter (items or lines).
 	Chunk_term chunktype;
 	MCChunk *container;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Optional output container (into ... clause).
 	MCChunk *target;
+	// JS-2013-07-01: [[ EnhancedFilter ]] 'it' reference to use if source is an expr.
 	MCVarref *it;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Source expression if source not a container.
 	MCExpression *source;
 	MCExpression *pattern;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether to use regex or wildcard pattern matcher.
 	Match_mode matchmode;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether it is 'matching' (False) or 'not matching' (True)
 	Boolean discardmatches;
 public:
 	MCFilter()
