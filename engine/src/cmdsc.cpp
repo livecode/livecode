@@ -1309,7 +1309,8 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 			MCeerror->add(EE_FLIP_NOIMAGE, line, pos);
 			return ES_ERROR;
 		}
-		if (optr->gettype() != CT_IMAGE)
+		// MW-2013-07-01: [[ Bug 10999 ]] Throw an error if the image is not editable.
+		if (optr->gettype() != CT_IMAGE || optr->getflag(F_HAS_FILENAME))
 		{
 			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
 			return ES_ERROR;
