@@ -1939,17 +1939,21 @@ static LT sugar_table[] =
 		// MM-2012-09-05: [[ Property Listener ]] Syntax: cancel listener for [object]
 		{"listener", TT_UNDEFINED, SG_LISTENER},
 #endif
+        {"matching", TT_PREP, PT_MATCHING},
         {"message", TT_CHUNK, CT_UNDEFINED},
         {"new", TT_CHUNK, CT_UNDEFINED},
 		{"nothing", TT_UNDEFINED, SG_NOTHING},
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
+		{"pattern", TT_UNDEFINED, SG_PATTERN},
+		{"regex", TT_UNDEFINED, SG_REGEX},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
 		{"unicode", TT_UNDEFINED, SG_UNICODE},
 		{"url", TT_UNDEFINED, SG_URL},
+		{"wildcard", TT_UNDEFINED, SG_WILDCARD},
 		{"without", TT_PREP, PT_WITHOUT},
     };
 

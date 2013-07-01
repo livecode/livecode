@@ -2167,7 +2167,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			else
 			{
 				regexp *t_net_int_regex;
-				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", False /* usecache */, True /* casesensitive */);
 				int t_net_int_valid;
 				t_net_int_valid = MCR_exec(t_net_int_regex, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				MCR_free(t_net_int_regex);			
