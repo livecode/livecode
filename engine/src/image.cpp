@@ -2075,21 +2075,28 @@ bool MCImage::setfilename(const char *p_filename)
 	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
-
-	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
-	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
-	//   for Rep construction.
-	if (t_success)
+		t_success = MCCStringClone(p_filename, t_filename);
+	
+	// MW-2013-07-01: [[ Bug 10975 ]] Only canonicalize the path if it isn't a url.
+	if (t_success && !MCU_couldbeurl(p_filename))
 	{
-		char *t_resolved_filename;
-		t_resolved_filename = MCS_get_canonical_path(t_resolved);
-		delete t_resolved;
-		t_resolved = t_resolved_filename;
+		if (t_success)
+			t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+
+		// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
+		//   for Rep construction.
+		if (t_success)
+		{
+			char *t_resolved_filename;
+			t_resolved_filename = MCS_get_canonical_path(t_resolved);
+			delete t_resolved;
+			t_resolved = t_resolved_filename;
+		}
 	}
+	
 	if (t_success)
-		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
+		t_success = MCImageRepGetReferenced(t_resolved != nil ? t_resolved : t_filename, t_rep);
 
 	MCCStringFree(t_resolved);
 
