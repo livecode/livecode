@@ -1922,7 +1922,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
                 return PS_ERROR;
             }
         
-            loadFontGlobally = (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_GLOBALLY) == PS_NORMAL);
+            is_globally = (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_GLOBALLY) == PS_NORMAL);
         }
 		else
         {
@@ -1976,7 +1976,7 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
                 // TODO: If font is already in use then stop using.
                 // TODO: throw error if system doesn't support loading font globally.
                 
-                t_error = MCscreen->loadfont(t_resolved_path, loadFontGlobally);
+                t_error = MCscreen->loadfont(t_resolved_path, is_globally);
                 if (t_error != EE_UNDEFINED)
                 {
                     MCeerror->add(t_error, line, pos);
@@ -2002,7 +2002,7 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
                 ep . setcstring(t_resolved_path);
                 t_font -> store_element(ep, "name");
                 
-                ep . setboolean(loadFontGlobally);
+                ep . setboolean(is_globally);
                 t_font -> store_element(ep, "global");
             }
             else

@@ -1168,7 +1168,7 @@ class MCStart : public MCStatement
 	MCExpression *stack;
     // TD-2013-06-12: [[ DynamicFonts ]] Property to store font path
     MCExpression *font;
-    bool loadFontGlobally;
+    bool is_globally;
 protected:
 	Start_constants mode;
 public:
@@ -1179,7 +1179,7 @@ public:
 		mode = SC_UNDEFINED;
         // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
         font = NULL;
-        loadFontGlobally = false;
+        is_globally = 0;
 	}
 	virtual ~MCStart();
 	virtual Parse_stat parse(MCScriptPoint &);
