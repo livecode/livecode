@@ -54,7 +54,9 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	mblandroidio.cpp mblandroidjava.cpp mblandroidmail.cpp mblandroidmisc.cpp mblandroidmm.cpp \
 	mblandroidnetwork.cpp mblandroidnotification.cpp mblandroidorientation.cpp mblandroidplayer.cpp \
 	mblandroidprocess.cpp mblandroidscroller.cpp mblandroidsensor.cpp mblandroidstore.cpp mblandroidsound.cpp \
-	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp mblandroidurl.cpp )
+	mblandroidtextlayout.cpp mblandroidtextmessaging.cpp \
+	mblandroidtypeface.cpp \
+	mblandroidurl.cpp )
 
 LOCAL_C_INCLUDES := \
 	$(LOCAL_PATH)/include \
