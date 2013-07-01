@@ -574,8 +574,6 @@
 		4DB9694B135E3D8300DCAE93 /* mblandroidorientation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidorientation.cpp; path = src/mblandroidorientation.cpp; sourceTree = "<group>"; };
 		4DB983C0130BB1DF008A03DC /* mblandroid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroid.cpp; path = src/mblandroid.cpp; sourceTree = "<group>"; };
 		4DB983C1130BB1DF008A03DC /* mblandroid.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroid.h; path = src/mblandroid.h; sourceTree = "<group>"; };
-		4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidcontext.cpp; path = src/mblandroidcontext.cpp; sourceTree = "<group>"; };
-		4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblandroidcontext.h; path = src/mblandroidcontext.h; sourceTree = "<group>"; };
 		4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddc.cpp; path = src/mblandroiddc.cpp; sourceTree = "<group>"; };
 		4DB983C7130BB1DF008A03DC /* mblandroiddialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroiddialog.cpp; path = src/mblandroiddialog.cpp; sourceTree = "<group>"; };
 		4DB983C8130BB1DF008A03DC /* mblandroidfs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidfs.cpp; path = src/mblandroidfs.cpp; sourceTree = "<group>"; };
@@ -1188,8 +1186,6 @@
 				F6436EA314D7F5FF00A4FF60 /* mblandroidbusyindicator.cpp */,
 				F6E610F4156B9D4B00E87FD6 /* mblandroidcalendar.cpp */,
 				F6D2312E1545B4CD003A19EE /* mblandroidcontact.cpp */,
-				4DB983C3130BB1DF008A03DC /* mblandroidcontext.cpp */,
-				4DB983C4130BB1DF008A03DC /* mblandroidcontext.h */,
 				E823E63114D2EA88001F73C4 /* mblandroidcontrol.cpp */,
 				E823E63314D2F2A1001F73C4 /* mblandroidcontrol.h */,
 				4DB983C6130BB1DF008A03DC /* mblandroiddc.cpp */,
