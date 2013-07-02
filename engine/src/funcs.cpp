@@ -61,9 +61,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
-char *MCregexpatterns[PATTERN_CACHE_SIZE];
-regexp *MCregexcache[PATTERN_CACHE_SIZE];
-
 #define GZIP_HEAD_CRC     0x02 /* bit 1 set: header CRC present */
 #define GZIP_EXTRA_FIELD  0x04 /* bit 2 set: extra field present */
 #define GZIP_ORIG_NAME    0x08 /* bit 3 set: original file name present */
@@ -3359,37 +3356,17 @@ Parse_stat MCMatch::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCMatch::eval(MCExecPoint &ep)
 {
 #ifdef /* MCMatch */ LEGACY_EXEC
-
 	if (params->getnext()->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_MATCH_BADPATTERN, line, pos);
 		return ES_ERROR;
 	}
-	char *pstring = ep.getsvalue().clone();
-	regexp *compiled = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly as MCR_compile copies pattern (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /* casesensitive */);
 	if (compiled == NULL)
 	{
 		MCeerror->add
@@ -3410,7 +3387,7 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 	match = MCR_exec(compiled, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 
 	MCParameter *p = params->getnext()->getnext();
-	i = 1;
+	uint2 i = 1;
 	if (chunk)
 	{
 		while (p != NULL && p->getnext() != NULL)
@@ -4287,34 +4264,14 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 		delete rstring;
 		return ES_NORMAL;
 	}
-	char *pstring = ep.getsvalue().clone();
-
-	regexp *compiled = NULL;
-	const char *pattern = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			pattern = MCregexpatterns[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		uint2 i;
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		pattern = MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+    const char *pattern = NULL;
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly since MCR_compile copies pattern string (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /*casesensitive*/);
+    if (compiled != NULL)
+        pattern = compiled->pattern;
 	if (compiled == NULL)
 	{
 		delete rstring;

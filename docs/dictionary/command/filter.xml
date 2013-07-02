@@ -3,7 +3,7 @@
   <name>filter</name>
   <type>command</type>
   <syntax>
-    <example>filter <i>container</i> {with | without} <i>filterPattern</i></example>
+    <example>filter [{lines | items} of] <i>containerOrExpression</i> {with | without | [not] matching} [{wildcard | regex} [pattern] <i>filterPattern</i>< [into <i>targetConteiner</i>]/example>
   </syntax>
   <library></library>
   <objects>
@@ -17,13 +17,14 @@
     <property tag="caseSensitive">caseSensitive Property</property>
     <function tag="matchChunk">matchChunk Function</function>
     <function tag="matchText">matchText Function</function>
+    <function tag="replaceText">replaceText Function</function>
     <command tag="replace">replace Command</command>
     <command tag="sort">sort Command</command>
-    <function tag="replaceText">replaceText Function</function>
   </references>
   <history>
     <introduced version="1.0">Added.</introduced>
     <changed version="2.1.1"></changed>
+    <changed version="6.1"></changed>
   </history>
   <platforms>
     <mac/>
@@ -40,14 +41,18 @@
   </classes>
   <security>
   </security>
-  <summary>Filters each <keyword tag="line">line</keyword> in a <glossary tag="container">container</glossary>, removing the <keyword tag="lines">lines</keyword> that do or don't match a pattern.</summary>
+  <summary>Filters each <keyword tag="line">line</keyword> or <keyword tag="item">item</keyword> in a source <glossary tag="container">container</glossary> or <glossary tag="expression">expression</glossary>, removing the <keyword tag="lines">lines</keyword> or <keyword tag="lines">items</keyword> that do or don't match a pattern.</summary>
   <examples>
     <example>filter myVariable with "A?2"</example>
     <example>filter me without "*[a-zA-Z]*"</example>
     <example>filter field 22 with "[0-9]*"</example>
     <example>filter field "Sorted Lines" with "[" &amp; mySelection &amp; "]"</example>
+    <example>filter items of theList matching regex pattern "b.*"</example>
+    <example>filter items of theList with wildcard pattern "b*" into theFilteredList</example>
+    <example>filter lines of (theFirstList & return & theSecondList) not matching "b*"</example>
+    <example>
   </examples>
   <description>
-    <p>Use the <b>filter</b> command to pick specific <keyword tag="lines">lines</keyword> in a <glossary tag="container">container</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>container</i> is any <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <glossary tag="container">container</glossary>.</p><p/><p>The <i>filterPattern</i> is an expression used to match certain <keyword tag="lines">lines</keyword>.</p><p/><p><b>Comments:</b></p><p>The filter...with form places the lines that contain a match for the specified <i>filterPattern</i> in the <i>container</i>, replacing the previous contents.</p><p/><p>The filter...without form places the lines that do not contain a match for the specified <i>filterPattern</i> in the <i>container</i>, replacing the previous contents.</p><p/><p>A <i>filterPattern</i> consists of a string of characters to match which may be combined with any number of the following special characters:</p><p/><p><b>*</b></p><p>Matches zero or more of any character. The <i>filterPattern</i> A*C matches "AC", "ABC", or "ADZXC".</p><p/><p><b>?</b></p><p>Matches exactly one character. The <i>filterPattern</i> A?C matches "ABC", but not "AC" or "ADZXC".</p><p/><p><b>[<i>chars</i>]</b></p><p>Matches any one of the characters inside the brackets. The <i>filterPattern</i> A[BC]D matches "ABD" or "ACD", but not "AD" or "ABCD".</p><p/><p><b>[<i>char</i>-<i>char</i>]</b></p><p>Matches any character whose ASCII value is between the first character and the second character.</p><p/><p><b>Changes:</b></p><p>The filter...without form was added in version 2.1.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> could be used only to retrieve <keyword tag="lines">lines</keyword> that matched a <glossary tag="wildcard">wildcard expression</glossary>.</p>
+    <p>Use the <b>filter</b> command to pick specific <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword> in a <glossary tag="container">container</glossary> or <glossary tag="expression">expression</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>container</i> is any <glossary tag="expression">expression</glossary> that <glossary tag="evaluate">evaluates</glossary> to a <glossary tag="container">container</glossary>.</p><p/><p>The <i>filterPattern</i> is an expression used to match certain <keyword tag="lines">lines</keyword> or <keyword tag="items">items</keyword>.</p><p/><p><b>Comments:</b></p><p>The filter...with form and the filter...matching form retain the lines or items that contain a match for the specified <i>filterPattern</i>.</p><p/><p>The filter...without form and the filter...not matching form discard the lines or items that do not contain a match for the specified <i>filterPattern</i>.</p><p/><p>A <glossary tag="wildcard">wildcard</glossary> <i>filterPattern</i> consists of a string of characters to match which may be combined with any number of the following special characters:</p><p/><p><b>*</b></p><p>Matches zero or more of any character. The <i>filterPattern</i> A*C matches "AC", "ABC", or "ADZXC".</p><p/><p><b>?</b></p><p>Matches exactly one character. The <i>filterPattern</i> A?C matches "ABC", but not "AC" or "ADZXC".</p><p/><p><b>[<i>chars</i>]</b></p><p>Matches any one of the characters inside the brackets. The <i>filterPattern</i> A[BC]D matches "ABD" or "ACD", but not "AD" or "ABCD".</p><p/><p><b>[<i>char</i>-<i>char</i>]</b></p><p>Matches any character whose ASCII value is between the first character and the second character.</p><p/><p><b>Changes:</b></p><p>The filter...without form was added in version 2.1.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> could be used only to retrieve <keyword tag="lines">lines</keyword> that matched a <glossary tag="wildcard">wildcard expression</glossary>.</p><p>The filter items... form was added in version 6.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> could be used only to retrieve <keyword tag="lines">lines</keyword>.</p><p>The ability to filter using a <glossary tag="regular expression">regular expression</glossary> was added in version 6.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> only supported <glossary tag="wildcard">wildcard expressions</glossary>.</p><p>The ability to filter an <glossary tag="expression">expression</glossary> was added in version 6.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> could be used only for a <glossary tag="container">container</glossary>.</p><p>The filter...[not] matching form was added in version 6.1 to clarify the pattern handling.</p><p>The filter...into form was added in version 6.1. In previous versions, the <b>filter</b> <glossary tag="command">command</glossary> always replaced the contents of the original <glossary tag="container">container</glossary>.</p>
   </description>
 </doc>

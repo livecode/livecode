@@ -1313,6 +1313,8 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 {
 #ifdef /* MCFlip */ LEGACY_EXEC
 	bool t_created_selection;
+	MColdtool = MCcurtool;
+
 	if (image != NULL)
 	{
 		MCObject *optr;
@@ -1322,13 +1324,13 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 			MCeerror->add(EE_FLIP_NOIMAGE, line, pos);
 			return ES_ERROR;
 		}
-		if (optr->gettype() != CT_IMAGE)
+		// MW-2013-07-01: [[ Bug 10999 ]] Throw an error if the image is not editable.
+		if (optr->gettype() != CT_IMAGE || optr->getflag(F_HAS_FILENAME))
 		{
 			MCeerror->add(EE_FLIP_NOTIMAGE, line, pos);
 			return ES_ERROR;
 		}
 		MCImage *iptr = (MCImage *)optr;
-		MColdtool = MCcurtool;
 		iptr->selimage();
 		t_created_selection = true;
 	}
@@ -1336,13 +1338,15 @@ Exec_stat MCFlip::exec(MCExecPoint &ep)
 		t_created_selection = false;
 
 	if (MCactiveimage != NULL)
+	{
 		MCactiveimage->flipsel(direction == FL_HORIZONTAL);
 
-	if (t_created_selection)
-	{
-		MCcurtool = MColdtool;
-		MCactiveimage -> endsel();
+		// IM-2013-06-28: [[ Bug 10999 ]] ensure MCactiveimage is not null when calling endsel() method
+		if (t_created_selection)
+			MCactiveimage -> endsel();
 	}
+
+	MCcurtool = MColdtool;
 
 	return ES_NORMAL;
 #endif /* MCFlip */

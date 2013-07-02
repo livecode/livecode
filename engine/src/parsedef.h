@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;
@@ -721,6 +713,13 @@ enum Mark_constants {
     MC_WHERE
 };
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Tags for the type of pattern matcher to use.
+enum Match_mode {
+    MA_UNDEFINED,
+    MA_WILDCARD,
+    MA_REGEX
+};
+
 enum Move_mode {
     MM_UNDEFINED,
     MM_MESSAGES,
@@ -866,7 +865,7 @@ enum Preposition_type {
 	PT_CONTENT,
 	PT_MARKUP,
 	PT_BINARY,
-	PT_COOKIE
+	PT_COOKIE,
 };
 
 enum Print_mode {
@@ -1770,6 +1769,15 @@ enum Sugar_constants {
 	
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
+	
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'pattern'.
+    SG_PATTERN,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'regex'.
+    SG_REGEX,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'wildcard'.
+    SG_WILDCARD,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
+	SG_MATCHING,
 };
 
 enum Statements {

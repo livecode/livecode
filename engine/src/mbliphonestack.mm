@@ -622,6 +622,18 @@ void MCStack::updatetilecache(void)
 	});
 }
 
+// MW-2013-06-26: [[ Bug 10990 ]] For iOS, we must run the MCTileCacheDeactivate
+//   method on the system thread.
+void MCStack::deactivatetilecache(void)
+{
+	if (m_tilecache == nil)
+		return;
+    
+	MCIPhoneRunBlockOnMainFiber(^(void) {
+		MCTileCacheDeactivate(m_tilecache);
+	});
+}
+
 bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
 {
 	if (m_tilecache == nil)

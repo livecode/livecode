@@ -2391,6 +2391,16 @@ void MCStack::updatetilecache(void)
 	MCTileCacheEndFrame(m_tilecache);
 }
 
+// MW-2013-06-26: [[ Bug 10990 ]] For non-iOS, we can run the MCTileCacheDeactivate
+//   method on the main thread.
+void MCStack::deactivatetilecache(void)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    MCTileCacheDeactivate(gettilecache());
+}
+
 bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
 {
 	if (m_tilecache == nil)

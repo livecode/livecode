@@ -2296,43 +2296,77 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	}
 }
 
+// MW-2013-06-25: [[ Bug 10983 ]] This function returns true if the given string
+//   could be a url. It checks for strings of the form:
+//     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
+// MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
+bool MCU_couldbeurl(const MCString& p_potential_url)
+{
+	uint4 t_length;
+	const char *t_url;
+	t_length = p_potential_url . getlength();
+	t_url = p_potential_url . getstring();
+	
+	// If the first char isn't a letter, then we are done.
+	if (t_length == 0 || !isalpha(t_url[0]))
+		return false;
+	
+	uint4 t_colon_index;
+	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
+	{
+		char t_char;
+		t_char = t_url[t_colon_index];
+		
+		// If we find the ':' we are done (end of scheme).
+		if (t_url[t_colon_index] == ':')
+			break;
+		
+		// If the character isn't something allowed in a scheme name, we are done.
+		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
+			return false;
+	}
+	
+	// If the scheme name < 2 chars, or there is nothing after it, we are done.
+	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
+		return false;
+	
+	// If we get here then we could well have a url.
+	return true;
+}
 
 void MCU_geturl(MCExecPoint &ep)
 {
-	if (ep.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
+	if (ep.getsvalue().getlength() > 5 &&
+			!MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
 	{
 		ep.tail(5);
 		MCS_loadfile(ep, False);
 	}
+	else if (ep.getsvalue().getlength() > 8 &&
+				!MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
+	{
+		ep.tail(8);
+		MCS_loadfile(ep, True);
+	}
+	else if (ep.getsvalue().getlength() > 8 &&
+				!MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
+	{
+		ep.tail(8);
+		MCS_loadresfile(ep);
+	}
 	else
-		if (ep.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
+	{
+		// MW-2013-06-25: [[ Bug 10983 ]] Take more care to check if we do in fact
+		//   have something that could be a url.
+		// MW-2013-07-01: [[ Bug 10975 ]] Change to use MCU_couldbeurl utility function.
+		if (MCU_couldbeurl(ep.getsvalue()))
 		{
-			ep.tail(8);
-			MCS_loadfile(ep, True);
+			MCS_geturl(ep . getobj(), ep . getcstring());
+			MCurlresult->fetch(ep);
 		}
 		else
-			if (ep.getsvalue().getlength() > 8
-			        && !MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
-			{
-				ep.tail(8);
-				MCS_loadresfile(ep);
-			}
-			else
-			{
-				// MW-2013-03-12: [[ Bug 10731 ]] Make sure that if we aren't looking at something
-				//   that looks like a URL, we clear the EP.
-				const char *sptr = ep.getsvalue().getstring();
-				uint4 l = ep.getsvalue().getlength();
-				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
-				{
-					MCS_geturl(ep . getobj(), ep . getcstring());
-					MCurlresult->fetch(ep);
-				}
-				else
-					ep . clear();
-			}
+			ep . clear();
+	}
 }
 
 
