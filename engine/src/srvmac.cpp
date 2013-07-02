@@ -1545,3 +1545,5 @@ bool MCSystemLockFile(MCSystemFileHandle *p_file, bool p_shared, bool p_wait)
 	
 	return 0 == flock(t_fd, t_op);
 }
+
+////////////////////////////////////////////////////////////////////////////////

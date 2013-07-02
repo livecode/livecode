@@ -870,7 +870,19 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 				MCperror->add(PE_IS_BADVALIDTYPE, sp);
 				return PS_ERROR;
 			}
-			valid = (Is_validation)te->which;
+            
+            valid = (Is_validation)te->which;
+			
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Parse 'is an ascii string'.
+            if (te->which == IV_ASCII)
+            {
+				if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_STRING) != PS_NORMAL)
+                {
+                	MCperror->add(PE_IS_BADVALIDTYPE, sp);
+                    return PS_ERROR;
+                }
+            }
+			
 			return PS_BREAK;
 		}
 		else
@@ -950,7 +962,7 @@ Parse_stat MCIs::parse(MCScriptPoint &sp, Boolean the)
 			}
 		return PS_NORMAL;
 	}
-	if (te->type == TT_IN)
+   	if (te->type == TT_IN)
 	{
 		rank = FR_COMPARISON;
 		if (form == IT_NOT)
@@ -1024,6 +1036,21 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 			case IV_RECT:
 				cond = MCU_stoi2x4(ep.getsvalue(), i2, i2, i2, i2);
 				break;
+			// MERG-2013-06-24: [[ IsAnAsciiString ]] Implementation for ascii string
+			//   check.
+            case IV_ASCII:
+                {
+                    cond = True;
+                    uint1* t_string = (uint1 *) ep.getsvalue().getstring();
+                    int t_length = ep.getsvalue().getlength();
+                    for (int i=0; i < t_length ;i++)
+                        if (t_string[i] > 127)
+                        {
+                            cond = False;
+                            break;
+                        }
+                }
+                break;
 			default:
 				break;
 			}

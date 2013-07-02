@@ -1,0 +1,56 @@
+<doc>
+  <legacy_id>1983</legacy_id>
+  <name>script</name>
+  <type>property</type>
+  <syntax>
+    <example>set the script of <i>object</i> to <i>string</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <stack/>
+    <card/>
+    <group/>
+    <field/>
+    <button/>
+    <graphic/>
+    <scrollbar/>
+    <player/>
+    <image/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Writing LiveCode</category>
+    <category>Standalone Applications</category>
+  </classification>
+  <references>
+    <command tag="remove script">remove script Command</command>
+    <command tag="edit">edit Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies the contents of an <glossary tag="object">object's</glossary> <property tag="script">script</property>.</summary>
+  <examples>
+    <example>set the script of button 2 to empty <code><i>-- clear out the script</i></code></example>
+    <example>set the script of field "Get It" to field "Get It Script"</example>
+  </examples>
+  <description>
+    <p>Use the <b>script</b> <glossary tag="property">property</glossary> to examine or change an <glossary tag="object">object's</glossary> <property tag="script">script</property> from inside a <glossary tag="LiveCode">LiveCode</glossary> <glossary tag="statement">statement</glossary>, instead of using the <glossary tag="script editor">script editor</glossary>.</p><p/><p><b>Value:</b></p><p>The <b>script</b> of an <glossary tag="object">object</glossary> is a <keyword tag="string">string</keyword> consisting of <glossary tag="handler">handlers</glossary> and <glossary tag="comment">comments</glossary>.</p><p/><p>By default, the <b>script</b> of a newly created <glossary tag="object">object</glossary> is empty.</p><p/><p><b>Comments:</b></p><p>An object's <b>script</b> is the code that <glossary tag="control">controls</glossary> that <glossary tag="object">object</glossary>. All of an <glossary tag="object">object's</glossary> <glossary tag="handler">handlers</glossary> are part of its <b>script</b> <glossary tag="property">property</glossary>.</p><p/><p>You can view and change a script directly by selecting the object and choosing <code/><b>Object menu<img src="202656"/>Object Script</b><code/>. Use the <b>script</b> <glossary tag="property">property</glossary> within a <glossary tag="handler">handler</glossary> to check the contents of a <property tag="script">script</property>, or change the <property tag="script">script</property>.</p><p/><p><code/><b>Note:</b><code/> When using a standalone application, an <glossary tag="object">object's</glossary> <b>script</b> <glossary tag="property">property</glossary> may not be set to a <keyword tag="string">string</keyword> containing more than ten <glossary tag="statement">statements</glossary>. This limit is set by <keyword tag="line">line</keyword> 1 of the <function tag="scriptLimits">scriptLimits</function> <control_st tag="function">function</control_st>. (This does not limit scripts that are already written: <glossary tag="standalone application">standalone applications</glossary> can run <glossary tag="script">scripts</glossary> of any length. However, if the <glossary tag="standalone application">standalone</glossary> attempts to change an <glossary tag="object">object's</glossary> <property tag="script">script</property> <glossary tag="property">property</glossary>, and the <property tag="script">script</property> contains more than the allowable number of <glossary tag="statement">statements</glossary>, the attempt to set the <property tag="script">script</property> causes an <glossary tag="error">error</glossary>.)</p><p/><p>LiveCode compiles the script immediately after it is set. This means that it is not possible to write a self-modifying handler, because the currently-executing handler would have to be changed and re-compiled while it was running.</p>
+  </description>
+</doc>

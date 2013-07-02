@@ -34,6 +34,9 @@ libopenssl:
 
 libcore:
 	$(MAKE) -C ./libcore libcore
+
+revsecurity:
+	$(MAKE) -C ./thirdparty/libopenssl -f Makefile.revsecurity revsecurity
 	
 kernel: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore
 	$(MAKE) -C ./engine -f Makefile.kernel libkernel
@@ -47,13 +50,13 @@ kernel-development: kernel
 kernel-server:
 	$(MAKE) -C ./engine -f Makefile.kernel-server libkernel-server
 
-development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development
+development: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-development revsecurity
 	$(MAKE) -C ./engine -f Makefile.development engine-community
 
-standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone
+standalone: libz libgif libjpeg libpcre libpng libopenssl libcore kernel revsecurity kernel-standalone revsecurity
 	$(MAKE) -C ./engine -f Makefile.standalone standalone-community
 
-installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
+installer: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel revsecurity
 	$(MAKE) -C ./engine -f Makefile.installer installer
 
 server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel kernel-server revsecurity
@@ -67,7 +70,7 @@ server: libz libgif libjpeg libpcre libpng libopenssl libexternal libcore kernel
 libcairopdf:
 	$(MAKE) -C ./thirdparty/libcairo libcairopdf
 
-revpdfprinter: libcairopdf
+revpdfprinter: libcairopdf libcore
 	$(MAKE) -C ./revpdfprinter revpdfprinter
 
 ###############################################################################
@@ -94,7 +97,7 @@ libiodbc:
 dbpostgresql: libpq
 	$(MAKE) -C ./revdb dbpostgresql
 
-dbmysql: libmysql libz
+dbmysql: libmysql libz libopenssl
 	$(MAKE) -C ./revdb dbmysql
 
 dbsqlite: libsqlite libexternal
@@ -165,6 +168,7 @@ revandroid: libexternalv1
 # All Targets
 
 .PHONY: all clean
+.DEFAULT_GOAL := all
 
 all: revzip server-revzip
 all: revxml server-revxml
@@ -172,4 +176,6 @@ all: revpdfprinter revandroid
 all: revdb dbodbc dbsqlite dbmysql dbpostgresql
 all: server-revdb server-dbodbc server-dbsqlite server-dbmysql server-dbpostgresql
 all: development standalone installer server
-	#
+
+clean:
+	@rm -r _build/linux _cache/linux
