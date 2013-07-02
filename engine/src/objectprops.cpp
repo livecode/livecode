@@ -772,7 +772,6 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 {
 	switch(which)
 	{
-#ifdef /* MCObject::getarrayprop */ LEGACY_EXEC
 	// MW-2011-11-23: [[ Array TextStyle ]] We now treat textStyle as (potentially) an
 	//   an array.
 	case P_TEXT_STYLE:
@@ -809,7 +808,6 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 				ep.clear();
 		}
 		break;
-#endif /* MCObject::getarrayprop */
 	default:
 		{
 			Exec_stat t_stat;
@@ -1408,7 +1406,7 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 				MCAutoNameRef t_old_name;
 				t_old_name . Clone(getname());
 				setname(t_new_name);
-				message_with_valueref_args(MCM_name_changed, t_old_name, getname());
+				message_with_args(MCM_name_changed, t_old_name, getname());
 			}
 		}
 		break;
@@ -1734,8 +1732,8 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 		dirty = False;
 		break;
 	case P_PROPERTIES:
-		if (ep.isarray())
-			return setprops(parid, ep);
+		if (ep.getformat() == VF_ARRAY)
+			return ep.getarray()->setprops(parid, this);
 		dirty = False;
 		break;
 	case P_CUSTOM_PROPERTY_SET:
@@ -1834,7 +1832,6 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 {
 	switch(which)
 	{
-#ifdef /* MCObject::setarrayprop */ LEGACY_EXEC
 	case P_TEXT_STYLE:
 	{
 		// MW-2013-05-13: [[ Bug ]] Make sure we don't co-erce to a string unless
@@ -1912,7 +1909,6 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 			p -> store(ep);
 		}
 		break;
-#endif /* MCObject::setarrayprop */
 	default:
 		{
 			Exec_stat t_stat;
@@ -1927,6 +1923,7 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 	}
 	return ES_NORMAL;
 }
+
 #ifdef OLD_EXEC
 Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
 {

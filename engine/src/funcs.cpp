@@ -595,7 +595,8 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 #ifdef /* MCBinaryDecode */ LEGACY_EXEC
 	if (params->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_BINARYD_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_BINARYD_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	char *format = ep.getsvalue().clone();
@@ -604,7 +605,8 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 	MCParameter *pptr = params->getnext();
 	if (pptr == NULL || pptr->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
+		MCeerror->add
+		(EE_BINARYD_BADPARAM, line, pos);
 		delete format;
 		return ES_ERROR;
 	}
@@ -614,8 +616,11 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 	int4 offset = 0;
 	pptr = pptr->getnext();
 	MCExecPoint ep2(ep);
-
-
+	
+	// MW-2009-01-14: Update parameters to use containers properly
+	MCVariable *t_var;
+	MCVariableValue *t_var_value;
+	
 	while (*fptr && offset < length )
 	{
 		char cmd;
@@ -624,20 +629,19 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 		MCU_gettemplate(fptr, cmd, count);
 		if (count == 0 && cmd != '@')
 			continue;
-
-		MCAutoPointer<MCContainer> t_container;
+		
 		if (cmd != 'x')
-			if (pptr == NULL || pptr -> evalcontainer(ep, &t_container) == ES_ERROR)
+			if (pptr == NULL || pptr -> evalcontainer(ep, t_var, t_var_value) == ES_ERROR)
 			{
 				MCeerror->add(EE_BINARYD_BADDEST, line, pos);
 				delete format;
 				return ES_ERROR;
 			}
-
+		
 		switch (cmd)
 		{
-		case 'a':
-		case 'A':
+			case 'a':
+			case 'A':
 			{
 				if (count == BINARY_ALL)
 					count = length - offset;
@@ -659,14 +663,14 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 				}
 				MCString s(&buffer[offset], size);
 				
-				/* UNCHECKED */ t_container -> set_oldstring(s);
-
+				t_var_value -> assign_string(s);
+				
 				done++;
 				offset += count;
 				break;
 			}
-		case 'b':
-		case 'B':
+			case 'b':
+			case 'B':
 			{
 				if (count == BINARY_ALL)
 					count = (length - offset) * 8;
@@ -677,8 +681,7 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 					break;
 				uint1 *src = (uint1 *)buffer + offset;
 				uint1 value = 0;
-				char *dest;
-				/* UNCHECKED */ ep2.reserve(count, dest);
+				char *dest = ep2.getbuffer(count);
 				if (cmd == 'b')
 					for (i = 0 ; i < count ; i++)
 					{
@@ -697,16 +700,16 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 							value = *src++;
 						*dest++ = (value & 0x80) ? '1' : '0';
 					}
-				ep2.commit(count);
-
-				/* UNCHECKED */ t_container -> set(ep2);
+				ep2.setlength(count);
+				
+				t_var_value -> assign_string(ep2.getsvalue());
 				
 				done++;
 				offset += (count + 7 ) / 8;
 				break;
 			}
-		case 'h':
-		case 'H':
+			case 'h':
+			case 'H':
 			{
 				if (count == BINARY_ALL)
 					count = (length - offset) * 2;
@@ -717,8 +720,7 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 					break;
 				uint1 *src = (uint1 *)buffer + offset;
 				uint1 value = 0;
-				char *dest;
-				/* UNCHECKED */ ep2.reserve(count, dest);
+				char *dest = ep2.getbuffer(count);
 				static char hexdigit[] = "0123456789abcdef";
 				if (cmd == 'h')
 					for (i = 0 ; i < count ; i++)
@@ -738,183 +740,178 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 							value = *src++;
 						*dest++ = hexdigit[(value >> 4) & 0xf];
 					}
+				ep2.setlength(count);
+				t_var_value -> assign_string(ep2.getsvalue());
 				
-					ep2.commit(count);
-
-				/* UNCHECKED */ t_container -> set(ep2);
-
 				done++;
 				offset += (count + 1) / 2;
 				break;
 			}
-		case 'c':
-		case 'C':
-		case 's':
-		case 'S':
-		case 'i':
-		case 'I':
-		case 'm':
-		case 'M':
-		case 'n':
-		case 'N':
-		case 'f':
-		case 'd':
-			if (count == BINARY_ALL || count == BINARY_NOCOUNT)
-				count = 1;
-			while (count--)
-			{
-				int4 oldoffset = offset;
-				switch (cmd)
+			case 'c':
+			case 'C':
+			case 's':
+			case 'S':
+			case 'i':
+			case 'I':
+			case 'm':
+			case 'M':
+			case 'n':
+			case 'N':
+			case 'f':
+			case 'd':
+				if (count == BINARY_ALL || count == BINARY_NOCOUNT)
+					count = 1;
+				while (count--)
 				{
-				case 'c':
-					if (offset + (int4)sizeof(int1) <= length)
+					int4 oldoffset = offset;
+					switch (cmd)
 					{
-						int1 c;
-						memcpy(&c, buffer + offset, sizeof(int1));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(int1);
+						case 'c':
+							if (offset + (int4)sizeof(int1) <= length)
+							{
+								int1 c;
+								memcpy(&c, buffer + offset, sizeof(int1));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(int1);
+							}
+							break;
+						case 'C':
+							if (offset + (int4)sizeof(uint1) <= length)
+							{
+								uint1 c;
+								memcpy(&c, buffer + offset, sizeof(uint1));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(uint1);
+							}
+							break;
+						case 's':
+							if (offset + (int4)sizeof(int2) <= length)
+							{
+								int2 c;
+								memcpy(&c, buffer + offset, sizeof(int2));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(int2);
+							}
+							break;
+						case 'S':
+							if (offset + (int4)sizeof(uint2) <= length)
+							{
+								uint2 c;
+								memcpy(&c, buffer + offset, sizeof(uint2));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(uint2);
+							}
+							break;
+						case 'i':
+							if (offset + (int4)sizeof(int4) <= length)
+							{
+								int4 c;
+								memcpy(&c, buffer + offset, sizeof(int4));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(int4);
+							}
+							break;
+						case 'I':
+							if (offset + (int4)sizeof(uint4) <= length)
+							{
+								uint4 c;
+								memcpy(&c, buffer + offset, sizeof(uint4));
+								t_var_value -> assign_real((double)c);
+								offset += sizeof(uint4);
+							}
+							break;
+						case 'm':
+							if (offset + (int4)sizeof(uint2) <= length)
+							{
+								uint2 c;
+								memcpy(&c, buffer + offset, sizeof(uint2));
+								t_var_value -> assign_real((double)(uint2)MCSwapInt16HostToNetwork(c));
+								offset += sizeof(int2);
+							}
+							break;
+						case 'M':
+							if (offset + (int4)sizeof(uint4) <= length)
+							{
+								uint4 c;
+								memcpy(&c, buffer + offset, sizeof(uint4));
+								t_var_value -> assign_real((double)(uint4)MCSwapInt32HostToNetwork(c));
+								offset += sizeof(uint4);
+							}
+							break;
+							
+							// MW-2007-09-11: [[ Bug 5315 ]] Make sure we coerce to signed integers
+							//   before we convert to doubles - failing to do this results in getting
+							//   unsigned results on little endian machines.
+						case 'n':
+							if (offset + (int4)sizeof(int2) <= length)
+							{
+								int2 c;
+								memcpy(&c, buffer + offset, sizeof(int2));
+								t_var_value -> assign_real((double)(int2)MCSwapInt16HostToNetwork(c));
+								offset += sizeof(int2);
+							}
+							break;
+						case 'N':
+							if (offset + (int4)sizeof(int4) <= length)
+							{
+								int4 c;
+								memcpy(&c, buffer + offset, sizeof(int4));
+								t_var_value -> assign_real((double)(int4)MCSwapInt32HostToNetwork(c));
+								offset += sizeof(int4);
+							}
+							break;
+							
+						case 'f':
+							if (offset + (int4)sizeof(float) <= length)
+							{
+								float f;
+								memcpy(&f, buffer + offset, sizeof(float));
+								t_var_value -> assign_real((double)f);
+								offset += sizeof(float);
+							}
+							break;
+						case 'd':
+							if (offset + (int4)sizeof(double) <= length)
+							{
+								double d;
+								memcpy(&d, buffer + offset, sizeof(double));
+								t_var_value -> assign_real((double)d);
+								offset += sizeof(double);
+								break;
+							}
+							break;
 					}
-					break;
-				case 'C':
-					if (offset + (int4)sizeof(uint1) <= length)
+					if (offset == oldoffset)
 					{
-						uint1 c;
-						memcpy(&c, buffer + offset, sizeof(uint1));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(uint1);
-					}
-					break;
-				case 's':
-					if (offset + (int4)sizeof(int2) <= length)
-					{
-						int2 c;
-						memcpy(&c, buffer + offset, sizeof(int2));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(int2);
-					}
-					break;
-				case 'S':
-					if (offset + (int4)sizeof(uint2) <= length)
-					{
-						uint2 c;
-						memcpy(&c, buffer + offset, sizeof(uint2));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(uint2);
-					}
-					break;
-				case 'i':
-					if (offset + (int4)sizeof(int4) <= length)
-					{
-						int4 c;
-						memcpy(&c, buffer + offset, sizeof(int4));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(int4);
-					}
-					break;
-				case 'I':
-					if (offset + (int4)sizeof(uint4) <= length)
-					{
-						uint4 c;
-						memcpy(&c, buffer + offset, sizeof(uint4));
-						/* UNCHECKED */ t_container -> set_real((double)c);
-						offset += sizeof(uint4);
-					}
-					break;
-				case 'm':
-					if (offset + (int4)sizeof(uint2) <= length)
-					{
-						uint2 c;
-						memcpy(&c, buffer + offset, sizeof(uint2));
-						/* UNCHECKED */ t_container -> set_real((double)(uint2)MCSwapInt16HostToNetwork(c));
-						offset += sizeof(int2);
-					}
-					break;
-				case 'M':
-					if (offset + (int4)sizeof(uint4) <= length)
-					{
-						uint4 c;
-						memcpy(&c, buffer + offset, sizeof(uint4));
-						/* UNCHECKED */ t_container -> set_real((double)(uint4)MCSwapInt32HostToNetwork(c));
-						offset += sizeof(uint4);
-					}
-					break;
-
-				// MW-2007-09-11: [[ Bug 5315 ]] Make sure we coerce to signed integers
-				//   before we convert to doubles - failing to do this results in getting
-				//   unsigned results on little endian machines.
-				case 'n':
-					if (offset + (int4)sizeof(int2) <= length)
-					{
-						int2 c;
-						memcpy(&c, buffer + offset, sizeof(int2));
-						/* UNCHECKED */ t_container -> set_real((double)(int2)MCSwapInt16HostToNetwork(c));
-						offset += sizeof(int2);
-					}
-					break;
-				case 'N':
-					if (offset + (int4)sizeof(int4) <= length)
-					{
-						int4 c;
-						memcpy(&c, buffer + offset, sizeof(int4));
-						/* UNCHECKED */ t_container -> set_real((double)(int4)MCSwapInt32HostToNetwork(c));
-						offset += sizeof(int4);
-					}
-					break;
-
-				case 'f':
-					if (offset + (int4)sizeof(float) <= length)
-					{
-						float f;
-						memcpy(&f, buffer + offset, sizeof(float));
-						/* UNCHECKED */ t_container -> set_real((double)f);
-						offset += sizeof(float);
-					}
-					break;
-				case 'd':
-					if (offset + (int4)sizeof(double) <= length)
-					{
-						double d;
-						memcpy(&d, buffer + offset, sizeof(double));
-						/* UNCHECKED */ t_container -> set_real((double)d);
-						offset += sizeof(double);
+						offset = length;
+						t_var_value -> clear();
 						break;
 					}
-					break;
-				}
-				if (offset == oldoffset)
-				{
-					offset = length;
-					/* UNCHECKED */ t_container -> clear();
-					break;
-				}
-				done++;
-				if (count)
-				{
-					MCContainer *t_new_container;
-					pptr = pptr->getnext();
-					if (pptr == NULL || pptr -> evalcontainer(ep, t_new_container) == ES_ERROR)
+					done++;
+					if (count)
 					{
-						MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
-						delete format;
-						return ES_ERROR;
+						pptr = pptr->getnext();
+						if (pptr == NULL || pptr -> evalcontainer(ep, t_var, t_var_value) == ES_ERROR)
+						{
+							MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
+							delete format;
+							return ES_ERROR;
+						}
 					}
-
-					t_container = t_new_container;
 				}
-			}
-			break;
-		case 'x':
-			if (count == BINARY_NOCOUNT)
-				count = 1;
-			if (count == BINARY_ALL || (count > (length - offset)))
-				offset = length;
-			else
-				offset += count;
-			break;
-		default:
-			MCeerror->add(EE_BINARYD_BADFORMAT, line, pos);
-			delete format;
-			return ES_ERROR;
+				break;
+			case 'x':
+				if (count == BINARY_NOCOUNT)
+					count = 1;
+				if (count == BINARY_ALL || (count > (length - offset)))
+					offset = length;
+				else
+					offset += count;
+				break;
+			default:
+				MCeerror->add(EE_BINARYD_BADFORMAT, line, pos);
+				delete format;
+				return ES_ERROR;
 		}
 		pptr = pptr->getnext();
 	}
@@ -922,14 +919,13 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 	ep.setnvalue(done);
 	while (pptr != NULL)
 	{
-		MCAutoPointer<MCContainer> t_last_containers;
-		if (pptr -> evalcontainer(ep, &t_last_containers) == ES_ERROR)
+		if (pptr -> evalcontainer(ep, t_var, t_var_value) == ES_ERROR)
 		{
 			MCeerror->add(EE_BINARYD_BADPARAM, line, pos);
 			return ES_ERROR;
 		}
-		t_last_containers -> clear();
-
+		t_var_value -> clear();
+		
 		pptr = pptr->getnext();
 	}
 	return ES_NORMAL;
@@ -1581,12 +1577,13 @@ Parse_stat MCByteToNum::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCByteToNum::eval(MCExecPoint &ep)
 {
 #ifdef /* MCByteToNum */ LEGACY_EXEC
-if (source->eval(ep) != ES_NORMAL || ep . getsvalue() . getlength() != 1)
+	if (source->eval(ep) != ES_NORMAL || ep . getsvalue() . getlength() != 1)
 	{
 		MCeerror->add(EE_BYTETONUM_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	ep . setnvalue(((uint1*)ep . getsvalue() . getstring())[0]);
+	return ES_NORMAL;
 #endif /* MCByteToNum */
 
 
@@ -2146,7 +2143,10 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	swap_uint4(&check);
 	memcpy(newbuffer + osize + 4, &check, 4);
 	MCswapbytes = !MCswapbytes;
-	ep.grabbuffer(newbuffer, osize + 8);
+	char *obuff = ep.getbuffer(0);
+	delete obuff;
+	ep.setbuffer(newbuffer, size);
+	ep.setlength(osize + 8);
 	return ES_NORMAL;
 #endif /* MCCompress */
 
@@ -2411,7 +2411,10 @@ Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
 		(EE_DECOMPRESS_ERROR, line, pos);
 		return ES_ERROR;
 	}
-	ep.grabbuffer(newbuffer, size);
+	char *obuff = ep.getbuffer(0);
+	delete obuff;
+	ep.setbuffer(newbuffer, size);
+	ep.setlength(size);
 	return ES_NORMAL;
 }
 #endif /* MCDecompress::do_decompress */
@@ -2558,6 +2561,11 @@ Parse_stat MCDriverNames::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCDriverNames::eval(MCExecPoint &ep)
 {
 #ifdef /* MCDriverNames */ LEGACY_EXEC
+	if (MCsecuremode & MC_SECUREMODE_DISK)
+	{
+		MCeerror->add(EE_DISK_NOPERM, line, pos);
+		return ES_ERROR;
+	}
 	if (type != NULL)
 	{
 		if (type->eval(ep) != ES_NORMAL)
@@ -2878,14 +2886,21 @@ Exec_stat MCExtents::eval(MCExecPoint &ep)
 		MCeerror->add(EE_EXTENTS_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoArrayRef t_array;
-	if (!ep . copyasarrayref(&t_array))
-		return ES_ERROR;
-
-	if (!ep . getarrayextents(*t_array))
-		return ES_ERROR;
-
+	
+	// MW-2008-07-01: [[ Bug ]] Make sure we only fetch the array if the type of
+	//   the exec point is actually ARRAY, otherwise we get strange effects...
+	if (ep . getformat() == VF_ARRAY)
+	{
+		MCVariableValue *t_array;
+		Boolean t_delete_array;
+		ep . takearray(t_array, t_delete_array);
+		t_array -> getextents(ep);
+		if (t_delete_array)
+			delete t_array;
+	}
+	else
+		ep . clear();
+	
 	return ES_NORMAL;
 #endif /* MCExtents */
 
@@ -4440,13 +4455,12 @@ Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
 #ifdef /* MCIsoToMac */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_ISOTOMAC_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_ISOTOMAC_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	char *t_buffer;
-	uint32_t t_length;
-	ep.modify(t_buffer, t_length);
-	IO_iso_to_mac(t_buffer, t_length);
+	ep.grabsvalue();
+	IO_iso_to_mac(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCIsoToMac */
 
@@ -4524,28 +4538,25 @@ Exec_stat MCKeys::eval(MCExecPoint &ep)
 #ifdef /* MCKeys */ LEGACY_EXEC
 	if (source != NULL)
 	{
-		MCExecContext ctxt(ep);
-
 		if (source -> eval(ep) != ES_NORMAL)
 		{
 			MCeerror->add(EE_KEYS_BADSOURCE, line, pos);
 			return ES_ERROR;
 		}
-
-		MCAutoArrayRef t_array;
-		if (!ep . copyasarrayref(&t_array))
-			return ES_ERROR;
-
-		MCAutoStringRef t_result;
-		MCArraysEvalKeys(ctxt, *t_array, &t_result);
-
-		if (!ctxt . HasError())
+		
+		// MW-2008-07-01: [[ Bug ]] Make sure we only fetch the array if the type of
+		//   the exec point is actually ARRAY, otherwise we get strange effects...
+		if (ep . getformat() == VF_ARRAY)
 		{
-			ep . setvalueref(*t_result);
-			return ES_NORMAL;
+			MCVariableValue *t_array;
+			Boolean t_delete_array;
+			ep . takearray(t_array, t_delete_array);
+			t_array -> getkeys(ep);
+			if (t_delete_array)
+				delete t_array;
 		}
-
-		return ES_ERROR;
+		else
+			ep . clear();
 	}
 	else
 	{
@@ -4912,13 +4923,12 @@ Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 #ifdef /* MCMacToIso */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_MACTOISO_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_MACTOISO_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	char *t_buffer;
-	uint32_t t_length;
-	ep.modify(t_buffer, t_length);
-	IO_mac_to_iso(t_buffer, t_length);
+	ep.grabsvalue();
+	IO_mac_to_iso(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
 #endif /* MCMacToIso */
 
@@ -5983,6 +5993,7 @@ Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 		char d = (char)ep.getint4();
 		ep.copysvalue(&d, 1);
 	}
+	return ES_NORMAL;
 #endif /* MCNumToChar */
 
 
@@ -6297,7 +6308,7 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 Exec_stat MCParams::eval(MCExecPoint &ep)
 {
 #ifdef /* MCParams */ LEGACY_EXEC
-	ep . setvalueref(h -> getname());
+	ep . setnameref_unsafe(h -> getname());
 	ep . appendchar(h -> gettype() == HT_FUNCTION ? '(' : ' ');
 
 	MCExecPoint ep2(ep);
@@ -6870,35 +6881,28 @@ void MCScreenRect::compile(MCSyntaxFactoryRef ctxt)
 
 	MCSyntaxFactoryEndExpression(ctxt);
 }
+
 #ifdef /* MCScreenRect::evaluate */ LEGACY_EXEC
 void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool p_effective)
 {
-	/*
 	const MCDisplay *t_displays;
 	uint4 t_count;
-
+	
 	t_count = MCscreen -> getdisplays(t_displays, p_effective);
 	ep . clear();
 	if (!p_plural)
 		t_count = 1;
-
+	
 	for(uint4 t_index = 0; t_index < t_count; ++t_index)
 	{
 		char t_buffer[U2L * 4 + 4];
 		MCRectangle t_rectangle;
 		t_rectangle =  p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
 		sprintf(t_buffer, "%d,%d,%d,%d", t_rectangle . x, t_rectangle . y,
-						t_rectangle . x + t_rectangle . width,
-						t_rectangle . y + t_rectangle . height);
+				t_rectangle . x + t_rectangle . width,
+				t_rectangle . y + t_rectangle . height);
 		ep.concatcstring(t_buffer, EC_RETURN, t_index == 0);
 	}
-	*/
-	MCExecContext ctxt(ep);
-
-	MCAutoStringRef t_result;
-    MCInterfaceEvalScreenRect(ctxt, p_working, p_plural, p_effective, &t_result);
-    
-	/* UNCHECKED */ ep . setvalueref(*t_result);
 }
 #endif /* MCScreenRect::evaluate */
 
@@ -9127,23 +9131,32 @@ Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
 		MCeerror->add(EE_QUERYREGISTRY_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoPointer<MCContainer> t_container;
+	
+	MCVariable* t_var;
+	MCVariableValue *t_var_value;
 	if (type != NULL)
 	{
-		if (type -> evalcontainer(ep, &t_container) != ES_NORMAL)
+		if (type -> evalcontainer(ep, t_var, t_var_value) != ES_NORMAL)
 		{
 			MCeerror -> add(EE_QUERYREGISTRY_BADDEST, line, pos);
 			return ES_ERROR;
 		}
 	}
-
+	else
+	{
+		t_var = NULL;
+		t_var_value = NULL;
+	}
+	
 	const char *t_type_string = NULL;
-	MCS_query_registry(ep, *t_container != NULL ? &t_type_string : NULL);
-
-	if (*t_container != NULL && t_type_string != NULL)
-		/* UNCHECKED */ t_container -> set_cstring(t_type_string);
-
+	MCS_query_registry(ep, t_var != NULL ? &t_type_string : NULL);
+	
+	if (t_var != NULL && t_type_string != NULL)
+	{
+		t_var_value -> assign_constant_string(t_type_string);
+		t_var -> synchronize(ep, True);
+	}
+	
 	return ES_NORMAL;
 #endif /* MCQueryRegistry */
 
@@ -10506,6 +10519,8 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 	}
 	else
 		t_object -> names(P_LONG_ID, ep, 0);
+	
+	return ES_NORMAL;
 #endif /* MCControlAtLoc */
 
 

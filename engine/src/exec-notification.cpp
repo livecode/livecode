@@ -90,7 +90,7 @@ void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt)
 void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_details)
 {
 #ifdef /* MCNotificationGetDetails */ LEGACY_EXEC
-    /*   MCNotification t_notification;
+	 MCNotification t_notification;
      if (MCSystemGetNotificationDetails(p_id, t_notification))
      {
      MCVariableValue *t_details = nil;
@@ -119,7 +119,7 @@ void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_d
      r_details = t_details;
      }
      
-     FreeNotification(t_notification);*/
+     FreeNotification(t_notification);
 #endif /* MCNotificationGetDetails */
 
     

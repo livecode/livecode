@@ -117,13 +117,12 @@ void MCAddressBookExecUpdateContact(MCExecContext& ctxt, MCArrayRef p_contact, M
 void MCAddressBookGetContactData(MCExecContext& ctxt, int32_t p_contact_id, MCArrayRef& r_contact_data)
 {
 #ifdef /* MCGetContactDataExec */ LEGACY_EXEC
-    
-    MCAutoArrayRef t_contact_data;
-    MCSystemGetContactData(p_ctxt, p_contact_id, &t_contact_data);
-    if (*t_contact_data == nil)
+    MCVariableValue *r_contact_data = nil;
+    MCSystemGetContactData(p_ctxt, p_contact_id, r_contact_data);
+    if (r_contact_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
-        p_ctxt.SetTheResultToValue(*t_contact_data);
+        p_ctxt.GetEP().setarray(r_contact_data, True);
 #endif /* MCGetContactDataExec */
       MCSystemGetContactData(p_contact_id, r_contact_data);
 }
@@ -146,7 +145,7 @@ void MCAddressBookExecAddContact(MCExecContext &ctxt, MCArrayRef p_contact)
 {
 #ifdef /* MCAddContactExec */ LEGACY_EXEC
 	int32_t t_result = 0;
-	MCSystemAddContact(p_contact, t_result);
+	/* UNCHECKED */ MCSystemAddContact(p_contact, t_result);
 	if (t_result > 0)
 		ctxt.SetTheResultToNumber(t_result);
 	else

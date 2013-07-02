@@ -1502,6 +1502,8 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 	case LC_SCREEN:
 		MCRedrawLockScreen();
 		break;
+	// MW-2011-09-13: [[ Effects ]] If the screen is not locked capture a snapshot
+	//   of the default stack.
 	case LC_SCREEN_FOR_EFFECT:
 		if (!MCRedrawIsScreenLocked())
 		{

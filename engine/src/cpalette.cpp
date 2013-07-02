@@ -201,17 +201,21 @@ Exec_stat MCColors::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	{
 #ifdef /* MCColors::setprop */ LEGACY_EXEC
 	case P_SELECTED_COLOR:
+	{
+		MCColor color;
+		char *colorname = NULL;
+		if (!MCscreen->parsecolor(data, &color, &colorname))
 		{
-			MCColor color;
-			if (!MCscreen->parsecolor(data, &color, nil))
-			{
-				MCeerror->add(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
-				return ES_ERROR;
-			}
-			MCscreen->alloccolor(color);
-			selectedcolor = color.pixel;
+			MCeerror->add
+			(EE_COLOR_BADSELECTEDCOLOR, 0, 0, data);
+			return ES_ERROR;
 		}
-		break;
+		if (colorname != NULL)
+			delete colorname;
+		MCscreen->alloccolor(color);
+		selectedcolor = color.pixel;
+	}
+	break;
 #endif /* MCColors::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);

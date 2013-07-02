@@ -447,6 +447,7 @@ Exec_stat MCConcat::eval(MCExecPoint &ep)
 		MCeerror->add(EE_CONCAT_BADLEFT, line, pos);
 		return ES_ERROR;
 	}
+	ep1.grabsvalue();
 	if (right->eval(ep2) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CONCAT_BADRIGHT, line, pos);
@@ -495,6 +496,7 @@ Exec_stat MCConcatSpace::eval(MCExecPoint &ep)
 		MCeerror->add(EE_CONCATSPACE_BADLEFT, line, pos);
 		return ES_ERROR;
 	}
+	ep1.grabsvalue();
 	if (right->eval(ep2) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CONCATSPACE_BADRIGHT, line, pos);
@@ -547,6 +549,7 @@ Exec_stat MCItem::eval(MCExecPoint &ep)
 		ep2.clear();
 	else
 	{
+		ep1.grabsvalue();
 		if (right->eval(ep2) != ES_NORMAL)
 		{
 			MCeerror->add(EE_ITEM_BADRIGHT, line, pos);
@@ -601,6 +604,7 @@ Exec_stat MCContains::eval(MCExecPoint &ep)
 		MCeerror->add(EE_CONTAINS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
+	ep1.grabsvalue();
 	if (left->eval(ep2) != ES_NORMAL)
 	{
 		MCeerror->add(EE_CONTAINS_BADLEFT, line, pos);
@@ -663,6 +667,7 @@ Exec_stat MCBeginsWith::eval(MCExecPoint& ep)
 		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
+	ep1.grabsvalue();
 	if (left->eval(ep2) != ES_NORMAL)
 	{
 		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
@@ -727,6 +732,7 @@ Exec_stat MCEndsWith::eval(MCExecPoint& ep)
 		MCeerror->add(EE_BEGINSENDS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
+	ep1.grabsvalue();
 	if (left->eval(ep2) != ES_NORMAL)
 	{
 		MCeerror->add(EE_BEGINSENDS_BADLEFT, line, pos);
@@ -1892,21 +1898,24 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 		Boolean cond = False;
 		if (right->eval(ep) != ES_NORMAL)
 		{
-			MCeerror->add(EE_IS_BADLEFT, line, pos);
+			MCeerror->add
+			(EE_IS_BADLEFT, line, pos);
 			return ES_ERROR;
 		}
 		// more beef up for Jan's "is an integer" bug
 		if (valid == IV_ARRAY)
-			cond = (ep . isarray());
-		else if ((ep.isstring()
-					 && !ep.isempty())
-						 || ep.isnumber())
+			cond = (ep . getformat() == VF_ARRAY);
+		else if (((ep.getformat() == VF_STRING || ep.getformat() == VF_BOTH )
+				  && ep.getsvalue().getlength())
+				 || ep.getformat() == VF_NUMBER)
 			switch (valid)
 			{
 			case IV_COLOR:
 				{
 					MCColor c;
-					cond = MCscreen->parsecolor(ep.getsvalue(), &c, nil);
+					char *cname = NULL;
+					cond = MCscreen->parsecolor(ep.getsvalue(), &c, &cname);
+					delete cname;
 				}
 				break;
 			case IV_DATE:
@@ -1944,13 +1953,15 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 
 	Boolean match = False;
 	uint4 i;
+	int2 value;
 	
 	// Implementation of 'is'
 	if (form == IT_NORMAL || form == IT_NOT)
 	{
 		if (compare(ep, value, true) != ES_NORMAL)
 		{
-			MCeerror->add(EE_IS_BADOPS, line, pos);
+			MCeerror->add
+			(EE_IS_BADOPS, line, pos);
 			return ES_ERROR;
 		}
 		if (form == IT_NORMAL)
@@ -1973,7 +1984,9 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 		MCeerror->add(EE_IS_BADLEFT, line, pos);
 		return ES_ERROR;
 	}
-
+	
+	ep.grabsvalue();
+	
 	MCExecPoint ep2(ep);
 	if (t_right != NULL)
 	{
@@ -1991,9 +2004,17 @@ Exec_stat MCIs::eval(MCExecPoint &ep)
 	case IT_NOT_AMONG:
 		if (delimiter == CT_KEY)
 		{
-			MCAutoArrayRef t_array;
-			/* UNCHECKED */ ep2 . copyasarrayref(&t_array);
-			match = ep . hasarrayelement_oldstring(*t_array, ep . getsvalue());
+			// MW-2008-06-30: [[ Bug ]] For consistency with arrays elsewhere,
+			//   any non-array should be treated as the empty array
+			if (ep2 . getformat() != VF_ARRAY)
+				match = False;
+			else
+			{
+				MCVariableValue *t_array;
+				t_array = ep2 . getarray();
+				
+				match = t_array -> has_element(ep, ep . getsvalue());
+			}
 		}
 		else if (delimiter == CT_TOKEN)
 		{

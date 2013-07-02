@@ -1938,7 +1938,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	{
 #ifdef /* MCButton::setprop */ LEGACY_EXEC
 	case P_NAME:
-		if (MCObject::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		clearmnemonic();
 		setupmnemonic();
@@ -2302,7 +2302,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 			menumode = WM_CLOSED;
 		break;
 	case P_SHOW_BORDER:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (MCaqua && menumode == WM_PULLDOWN)
 		{
@@ -2340,12 +2340,10 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	case P_ACCELERATOR_KEY:
 		if (data != MCnullmcstring)
 		{
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
 			accelkey = data.getstring()[0];
-			if (MCStringGetLength(*t_data) > 1)
+			if (data.getlength() > 1)
 			{
-				uint4 t_accelkey = MCLookupAcceleratorKeysym(*t_data);
+				uint4 t_accelkey = MCLookupAcceleratorKeysym(data);
 				if (t_accelkey != 0)
 					accelkey = t_accelkey;
 			}
@@ -2450,7 +2448,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	case P_TEXT_STYLE:
 	case P_ENABLED:
 	case P_DISABLED:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2007-07-05: [[ Bug 1292 ]] Field inside combo-box doesn't respect the button's properties
@@ -2470,7 +2468,7 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		break;
 	case P_MARGINS:
 		// MW-2007-07-05: [[ Bug 1292 ]] We pass the margins through to the combo-box field
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		if (entry != NULL)
@@ -2535,10 +2533,10 @@ Exec_stat MCButton::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		// MW-2005-09-05: [[Bug 3167]] Only set the entry's property if it exists!
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
-		return MCControl::setprop_legacy(parid, p, ep, effective);
+		return MCControl::setprop(parid, p, ep, effective);
 	default:
+		return MCControl::setprop(parid, p, ep, effective);
 #endif /* MCButton::setprop */
-		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}
 	if (dirty && opened)
 	{

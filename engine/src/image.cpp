@@ -746,12 +746,10 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 			bool t_success = true;
 			
 			uint32_t *t_data_ptr = nil;
-			char *t_buffer = nil;
-			t_success = ep.reserve(t_data_size, t_buffer);
+			t_success = nil != (t_data_ptr = (uint32_t*)ep.getbuffer(t_data_size));
 			
 			if (t_success)
 			{
-				t_data_ptr = (uint32_t*)t_buffer;
 				if (m_rep == nil)
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
@@ -773,7 +771,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				}
 			}
 			if (t_success)
-				ep.commit(t_data_size);
+				ep.setlength(t_data_size);
 		}
 		break;
 	case P_MASK_DATA:
@@ -785,12 +783,10 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 			bool t_success = true;
 			
 			uint8_t *t_data_ptr = nil;
-			char *t_buffer = nil;
-			t_success = ep . reserve(t_data_size, t_buffer);
+			t_success = nil != (t_data_ptr = (uint8_t*)ep.getbuffer(t_data_size));
 			
 			if (t_success)
 			{
-				t_data_ptr = (uint8_t*)t_buffer;
 				if (m_rep == nil)
 					MCMemoryClear(t_data_ptr, t_data_size);
 				else
@@ -823,7 +819,7 @@ Exec_stat MCImage::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 				}
 			}
 			if (t_success)
-				ep.commit(t_data_size);
+				ep.setlength(t_data_size);
 		}
 		break;
 	case P_RESIZE_QUALITY:
@@ -878,7 +874,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_VISIBLE:
 		{
 			Boolean wasvisible = isvisible();
-			Exec_stat stat = MCControl::setprop_legacy(parid, p, ep, effective);
+			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
 			if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
 			        && !isvisible() && m_rep != nil)
 				closeimage();

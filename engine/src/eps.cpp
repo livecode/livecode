@@ -262,7 +262,7 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 #ifdef /* MCEPS::setprop */ LEGACY_EXEC
 	case P_TRAVERSAL_ON:
 	case P_SHOW_BORDER:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		resetscale();
 		break;

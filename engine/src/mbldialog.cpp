@@ -358,9 +358,9 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
 
         if (t_success)
         {
-			MCAutoStringRef t_return;
-			MCStringCreateWithCString(t_return_string, &t_return);
-            p_ctxt.GetEP().setvalueref(*t_return);
+            p_ctxt.GetEP().setcstring(t_return_string);
+            // make execpoint take ownership of result string
+            p_ctxt.GetEP().grabsvalue();
         }
     }
     
@@ -370,7 +370,6 @@ void MCDialogExecPickOption(MCExecContext &p_ctxt, MCChunkType p_chunk_type, con
     FreeStringArray (t_result_choices_array);
     FreeIndexArray (t_initial_indices);
     FreeIndexArray (t_option_result);
-	delete t_return_string;
 }
 #endif /* MCDialogExecPickOption */
 

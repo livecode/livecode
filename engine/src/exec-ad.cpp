@@ -111,11 +111,10 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         }
         else if (t_ad != nil)
             t_ad->Release();
-        
-        if (!t_success)
-            ctxt.SetTheResultToStaticCString("could not create ad");
     }
     
+	if (!t_success)
+		ctxt.SetTheResultToStaticCString("could not create ad");
 #endif /* MCAdExecCreateAd */
     bool t_success;
     t_success = true;

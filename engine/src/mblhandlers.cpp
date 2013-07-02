@@ -5255,7 +5255,7 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
 {
 #ifdef /* MCMediaTypeFromCString */ LEGACY_EXEC
     const char *t_ptr = p_string;
-    MCMediaType t_media_type = kMCUnknownMediaType;
+    MCMediaType t_media_type = kMCunknownMediaType;
     
     while (true)
     {
@@ -5265,23 +5265,23 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
             break;
     	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
         if (MCCStringEqualSubstringCaseless(t_ptr, "podcasts", 7))
-            t_media_type = t_media_type | kMCMediaTypePodcasts;
+            t_media_type = t_media_type | kMCpodcasts;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "songs", 4))
-            t_media_type = t_media_type | kMCMediaTypeSongs;
+            t_media_type = t_media_type | kMCsongs;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "audiobooks", 9))
-            t_media_type = t_media_type | kMCMediaTypeAudiobooks;
+            t_media_type = t_media_type | kMCaudiobooks;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "movies", 5))
-            t_media_type = t_media_type | kMCMediaTypeMovies;
+            t_media_type = t_media_type | kMCmovies;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "musicvideos", 10))
-            t_media_type = t_media_type | kMCMediaTypeMusicVideos;
+            t_media_type = t_media_type | kMCmusicvideos;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "tv", 2))
-            t_media_type = t_media_type | kMCMediaTypeTv;
+            t_media_type = t_media_type | kMCtv;
         else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
-            t_media_type = t_media_type | kMCMediaTypeVideoPodcasts;
-        
+            t_media_type = t_media_type | kMCvideopodcasts;
+		
         while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
             t_ptr += 1;
-        
+		
     }
     return t_media_type;
 #endif /* MCMediaTypeFromCString */

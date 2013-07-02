@@ -2479,7 +2479,7 @@ Parse_stat MCPost::parse(MCScriptPoint &sp)
 Exec_stat MCPost::exec(MCExecPoint &ep)
 {
 #ifdef /* MCPost */ LEGACY_EXEC
-if (source->eval(ep) != ES_NORMAL)
+	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
@@ -3348,7 +3348,7 @@ Parse_stat MCReplace::parse(MCScriptPoint &sp)
 Exec_stat MCReplace::exec(MCExecPoint &ep)
 {
 #ifdef /* MCReplace */ LEGACY_EXEC
-MCExecPoint epp(ep);
+	MCExecPoint epp(ep);
 	MCExecPoint epr(ep);
 	if (pattern->eval(epp) != ES_NORMAL || epp.tos() != ES_NORMAL || epp.getsvalue().getlength() < 1)
 	{
@@ -3367,20 +3367,20 @@ MCExecPoint epp(ep);
 		MCeerror->add(EE_REPLACE_BADCONTAINER, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	// If both pattern and replacement are both 1 char in length, we can use
 	// the special case methods; otherwise we must use the general case.
 	if (pstring.getlength() == 1 && rstring.getlength() == 1)
 	{
 		char *t_target;
-		uindex_t t_length;
-		 UNCHECKED  ep . modify(t_target, t_length);
+		ep.grabsvalue();
+		t_target = ep.getbuffer(0);
 		// MW-2012-03-22: [[ Bug ]] char and uint8_t are different on some platforms
 		//   causing problems so we revert to coercing to uint8_t.
 		if (ep.getcasesensitive())
-			replace_char_with_char((uint8_t *)t_target, t_length, (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
+			replace_char_with_char((uint8_t *)t_target, ep.getsvalue().getlength(), (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
 		else
-			replace_char_with_char_caseless((uint8_t *)t_target, t_length, (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
+			replace_char_with_char_caseless((uint8_t *)t_target, ep.getsvalue().getlength(), (uint8_t)pstring.getstring()[0], (uint8_t)rstring.getstring()[0]);
 	}
 	else
 	{
@@ -3389,13 +3389,13 @@ MCExecPoint epp(ep);
 		replace_general(ep.getsvalue(), pstring, rstring, ep.getcasesensitive() == True, t_output, t_output_length);
 		ep.grabbuffer(t_output, t_output_length);
 	}
-
+	
 	if (container->set(ep, PT_INTO) != ES_NORMAL)
 	{
 		MCeerror->add(EE_REPLACE_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	return ES_NORMAL;
 #endif /* MCReplace */
 
@@ -3449,7 +3449,7 @@ void MCReplace::compile(MCSyntaxFactoryRef ctxt)
 Exec_stat MCRevert::exec(MCExecPoint &ep)
 {
 #ifdef /* MCRevert */ LEGACY_EXEC
-if (MCtopstackptr != NULL)
+	if (MCtopstackptr != NULL)
 	{
 		Window_mode oldmode = MCtopstackptr->getmode();
 		MCRectangle oldrect = MCtopstackptr->getrect();
@@ -3463,6 +3463,7 @@ if (MCtopstackptr != NULL)
 			return ES_ERROR;
 		}
 		sptr->getprop(0, P_FILE_NAME, ep, False);
+		ep.grabsvalue();
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		MCerrorlock++;
@@ -3529,9 +3530,9 @@ Parse_stat MCRotate::parse(MCScriptPoint &sp)
 
 Exec_stat MCRotate::exec(MCExecPoint &ep)
 {
+#ifdef /* MCRotate */ LEGACY_EXEC
 	// MW-2012-01-05: [[ Bug 9909 ]] If we are a mobile platform, the image
 	//   editing operations are not supported yet.
-#ifdef /* MCRotate */ LEGACY_EXEC
 #ifndef _MOBILE
 
 	MCImage *iptr = nil;

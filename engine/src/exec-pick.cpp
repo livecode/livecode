@@ -368,9 +368,9 @@ void MCPickExecPickOptionByIndex(MCExecContext &ctxt, int p_chunk_type, MCString
             if (t_success)
                 t_success = IndexesArrayToString (t_option_result, t_return_string, t_cancelled);
             
-			MCAutoStringRef t_string;
-			MCStringCreateWithCString(t_return_string, &t_string);
-            p_ctxt . GetEP() . setvalueref(*t_string);
+            p_ctxt.GetEP().setcstring(t_return_string);
+            // make execpoint take ownership of result string
+            p_ctxt.GetEP().grabsvalue();
         }
     }
     

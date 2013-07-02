@@ -948,7 +948,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		setselection();
 		break;
 	case P_TRAVERSAL_ON:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED && getstate(CS_PREPARED))
@@ -1002,7 +1002,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 		break;
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		setrect(rect);
 		dirty = True;
@@ -1114,7 +1114,7 @@ Exec_stat MCPlayer::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, B
 	case P_INVISIBLE:
 		{
 			uint4 oldflags = flags;
-			Exec_stat stat = MCControl::setprop_legacy(parid, p, ep, effective);
+			Exec_stat stat = MCControl::setprop(parid, p, ep, effective);
 			if (flags != oldflags && !(flags & F_VISIBLE))
 				playstop();
 #ifdef FEATURE_QUICKTIME

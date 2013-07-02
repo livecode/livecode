@@ -846,7 +846,6 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_TAB_GROUP_BEHAVIOR:
 		ep.setboolean(getflag(F_TAB_GROUP_BEHAVIOR));
 		break;
-#ifdef OLD_EXEC
 	case P_HILITED_BUTTON:
 		ep.setint(gethilited(parid));
 		break;
@@ -854,9 +853,8 @@ Exec_stat MCGroup::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		ep.setint(gethilitedid(parid));
 		break;
 	case P_HILITED_BUTTON_NAME:
-		ep.setvalueref(gethilitedname(parid));
+		ep.setnameref_unsafe(gethilitedname(parid));
 		break;
-#endif
 	case P_SHOW_NAME:
 		ep.setboolean(getflag(F_SHOW_NAME));
 		break;
@@ -967,12 +965,12 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
 	case P_TEXT_SIZE:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		dirty = computeminrect(False);
 		break;
 	case P_TEXT_HEIGHT:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		resetscrollbars(False);
 		break;
@@ -1014,7 +1012,6 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		radio(parid, kfocused);
 		radio(parid, mfocused);
 		break;
-#ifdef OLD_EXEC
 	case P_HILITED_BUTTON:
 		uint2 button;
 		if (!MCU_stoui2(data, button))
@@ -1058,7 +1055,6 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		if (dirty)
 			setchildprops(parid, p, ep);
 		break;
-#endif
 	case P_SHOW_NAME:
 		if (!MCU_matchflags(data, flags, F_SHOW_NAME, dirty))
 		{
@@ -1111,7 +1107,7 @@ Exec_stat MCGroup::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_RIGHT_MARGIN:
 	case P_TOP_MARGIN:
 	case P_BOTTOM_MARGIN:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (leftmargin == defaultmargin && rightmargin == defaultmargin
 		        && topmargin == defaultmargin && bottommargin == defaultmargin)
