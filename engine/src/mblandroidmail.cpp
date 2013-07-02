@@ -114,9 +114,9 @@ enum MCMailType
 	kMCMailTypeHtml
 };
 
+#ifdef /* array_to_attachmentAndroid */ LEGACY_EXEC
 static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
 {
-#ifdef /* array_to_attachmentAndroid */ LEGACY_EXEC
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
 	t_data = p_array -> lookuphash("data", False, False);
 	t_file = p_array -> lookuphash("file", False, False);
@@ -153,8 +153,8 @@ static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCSt
 	}
 
 	return t_success;
-#endif /* array_to_attachmentAndroid */
 }
+#endif /* array_to_attachmentAndroid */
 
 #ifdef /* MCHandleComposeMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)

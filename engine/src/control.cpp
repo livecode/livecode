@@ -458,9 +458,9 @@ Exec_stat MCControl::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-#ifdef /* MCControl::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
+#ifdef /* MCControl::getarrayprop */ LEGACY_EXEC
 	// MW-2009-06-09: [[ Bitmap Effects ]]
 	case P_BITMAP_EFFECT_DROP_SHADOW:
 	case P_BITMAP_EFFECT_INNER_SHADOW:
@@ -468,12 +468,11 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_BITMAP_EFFECT_INNER_GLOW:
 	case P_BITMAP_EFFECT_COLOR_OVERLAY:
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
-
+#endif /* MCControl::getarrayprop */
 	default:
 		return MCObject::getarrayprop(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
-#endif /* MCControl::getarrayprop */
 }
 
 Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)

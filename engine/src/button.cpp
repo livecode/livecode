@@ -2488,9 +2488,9 @@ Exec_stat MCButton::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean 
 		if (entry != NULL)
 			entry -> setprop(parid, p, ep, effective);
 		return MCControl::setprop(parid, p, ep, effective);
-#endif /* MCButton::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
+#endif /* MCButton::setprop */
 	}
 	if (dirty && opened)
 	{

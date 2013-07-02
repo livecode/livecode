@@ -1106,7 +1106,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 	case P_SHADOW:
 	case P_LOCK_LOCATION:
 	case P_TOOL_TIP:
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Card's don't have tooltips.
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Cards don't have tooltips.
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;

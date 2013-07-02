@@ -369,9 +369,9 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 
 }
 
+#ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
-#ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 	Exec_stat t_status = ES_NORMAL;
 	char *t_rsa_key = nil;
 	uint32_t t_rsa_keylength;
@@ -453,8 +453,8 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 	MCCStringFree(t_rsa_passphrase);
 
 	return t_status;
-#endif /* MCEncryptionOp::exec_rsa */
 }
+#endif /* MCEncryptionOp::exec_rsa */
 
 Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 {
