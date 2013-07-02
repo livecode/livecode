@@ -105,8 +105,6 @@ static GradientPropList gradientprops[] =
 	{"wrap", P_GRADIENT_FILL_WRAP},
 };
 
-static void compute_stop_hw_color(MCGradientFillStop *p_stop);
-
 static Exec_stat MCGradientFillLookupProperty(MCNameRef p_token, MCGradientFillProperty& r_prop)
 {
 	uint4 tablesize = ELEMENTS(gradientprops);
@@ -133,11 +131,11 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 	r_gradient->repeat = 1;
 	r_gradient->ramp = new MCGradientFillStop[2];
 	r_gradient->ramp[0].offset = 0;
-	r_gradient->ramp[0].color = 0xFF000000; //black
-	compute_stop_hw_color(&r_gradient->ramp[0]);
+	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 0, 0, 0, 255); // black
+	r_gradient->ramp[0].hw_color = MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255);
 	r_gradient->ramp[1].offset = STOP_INT_MAX;
-	r_gradient->ramp[1].color = 0xFFFFFFFF; //white
-	compute_stop_hw_color(&r_gradient->ramp[1]);
+	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 255, 255, 255, 255); // white
+	r_gradient->ramp[0].hw_color = MCGPixelPack(kMCGPixelFormatNative, 255, 255, 255, 255);
 	r_gradient->ramp[0].difference = STOP_DIFF_MULT / STOP_INT_MAX;
 	r_gradient->ramp_length = 2;
 	r_gradient->origin.x = p_rect.x + p_rect.width / 2;
@@ -589,15 +587,6 @@ int cmp_gradient_fill_stops(const void *a, const void *b)
 	return ((MCGradientFillStop*)a)->offset - ((MCGradientFillStop*)b)->offset;
 }
 
-static void compute_stop_hw_color(MCGradientFillStop *p_stop)
-{
-#if defined(_ANDROID_MOBILE)
-	p_stop -> hw_color = (p_stop -> color & 0xff00ff00) | ((p_stop -> color >> 16) & 0xff) | ((p_stop -> color & 0xff) << 16);
-#else
-	p_stop -> hw_color = p_stop -> color;
-#endif
-}
-
 Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_count, const MCString &r_data)
 {
 	Boolean allvalid = True;
@@ -624,8 +613,6 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 		else
 			a = MCU_max(0, MCU_min(255, MCU_strtol(sptr, l, ',', done2)));
 		
-		uint4 color = (a<<24) | (r<<16) | (g<<8) | b;
-
 		while (l && !isdigit((uint1)*sptr) && *sptr != '-' && *sptr != '+')
 		{
 			l--;
@@ -641,8 +628,8 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 		r_stops[t_nstops].offset = offset;
 		if (t_nstops > 0 && offset != r_stops[t_nstops-1].offset)
 			r_stops[t_nstops-1].difference = STOP_DIFF_MULT / (offset - r_stops[t_nstops-1].offset);
-		r_stops[t_nstops].color = color;
-		compute_stop_hw_color(&r_stops[t_nstops++]);
+		r_stops[t_nstops].color =  MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, a);
+		r_stops[t_nstops++].hw_color = MCGPixelPack(kMCGPixelFormatNative, r, g, b, a);
 	}
 	r_stop_count = t_nstops;
 	if (!ordered)
@@ -1363,9 +1350,14 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 			if (t_stat == IO_NORMAL)
 			{
 				p_gradient -> ramp[i] . offset = t_offset;
-				t_stat = p_stream . ReadU32(p_gradient -> ramp[i] . color);
+				
+				uint32_t t_color;
+				t_stat = p_stream . ReadU32(t_color);
 				if (t_stat == IO_NORMAL)
-					compute_stop_hw_color(&p_gradient -> ramp[i]);
+				{
+					p_gradient -> ramp[i] . color = t_color;
+					p_gradient -> ramp[i] . hw_color = MCGPixelPack(kMCGPixelFormatNative, (t_color >> 16) & 0xFF, (t_color >> 8) & 0xFF, t_color & 0xFF, (t_color >> 24) & 0xFF);
+				}
 			}
 		}
 	}

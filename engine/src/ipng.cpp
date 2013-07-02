@@ -31,6 +31,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#define NATIVE_ALPHA_BEFORE ((kMCGPixelFormatNative & kMCGPixelAlphaPositionFirst) == 1)
+#define NATIVE_ORDER_BGR ((kMCGPixelFormatNative & kMCGPixelOrderRGB) == 0)
+
+#if NATIVE_ALPHA_BEFORE
+#define MCPNG_FILLER_POSITION PNG_FILLER_BEFORE
+#else
+#define MCPNG_FILLER_POSITION PNG_FILLER_AFTER
+#endif
 
 extern "C" void fakeread(png_structp png_ptr, png_bytep data, png_size_t length)
 {
@@ -84,6 +92,17 @@ extern "C" void stream_read(png_structp png_ptr, png_bytep data, png_size_t leng
 	t_length = length;
 	if (IO_read(data, sizeof(uint1), t_length, t_stream) != IO_NORMAL)
 		png_error(png_ptr, (char *)"pnglib read error");
+}
+
+static void MCPNGSetNativePixelFormat(png_structp p_png)
+{
+#if NATIVE_ORDER_BGR
+	png_set_bgr(p_png);
+#endif
+	
+#if NATIVE_ALPHA_BEFORE
+	png_set_swap_alpha(p_png);
+#endif
 }
 
 bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
@@ -156,15 +175,12 @@ bool MCImageDecodePNG(IO_handle p_stream, MCImageBitmap *&r_bitmap)
 			t_bitmap->has_alpha = t_bitmap->has_transparency = true;
 		}
 		else if (!t_need_alpha)
-			png_set_add_alpha(t_png, 0xFF, MCswapbytes ? PNG_FILLER_AFTER : PNG_FILLER_BEFORE);
+			png_set_add_alpha(t_png, 0xFF, MCPNG_FILLER_POSITION);
 
 		if (t_bit_depth == 16)
 			png_set_strip_16(t_png);
 
-		if (MCswapbytes)
-			png_set_bgr(t_png);
-		else
-			png_set_swap_alpha(t_png);
+		MCPNGSetNativePixelFormat(t_png);
 	}
 
 	// MW-2009-12-10: Support for color profiles
@@ -439,13 +455,10 @@ bool MCImageEncodePNG(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 	{
 		png_write_info(t_png_ptr, t_info_ptr);
 
-		//32 bit compensate for byte swapped systems
 		if (t_fully_opaque)
-			png_set_filler(t_png_ptr, 0, MCswapbytes ? PNG_FILLER_AFTER : PNG_FILLER_BEFORE);
-		if (MCswapbytes)
-			png_set_bgr(t_png_ptr);
-		else
-			png_set_swap_alpha(t_png_ptr);
+			png_set_filler(t_png_ptr, 0, MCPNG_FILLER_POSITION);
+		
+		MCPNGSetNativePixelFormat(t_png_ptr);
 	}
 
 	if (t_success)

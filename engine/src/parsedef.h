@@ -300,6 +300,7 @@ enum Export_format {
 	EX_RAW_BGRA,
 	EX_RAW_RGB,
 	EX_RAW_BGR,
+	EX_RAW_BGRX,
 	EX_RAW_GRAY,
 	EX_RAW_INDEXED,
 	EX_BMP,

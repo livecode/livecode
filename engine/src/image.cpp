@@ -719,8 +719,14 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
+#if (kMCGPixelFormatNative != kMCGPixelFormatBGRA)
 						while (t_pixel_count--)
-							swap_uint4(t_data_ptr++);
+						{
+							uint8_t t_r, t_g, t_b, t_a;
+							MCGPixelUnpack(kMCGPixelFormatNative, *t_data_ptr, t_r, t_g, t_b, t_a);
+							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatBGRA, t_r, t_g, t_b, t_a);
+						}
+#endif
 					}
 					unlockbitmap(t_bitmap);
 					
@@ -1056,7 +1062,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, 0xFF000000); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
@@ -1078,8 +1084,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 						g = *t_src_row++;
 						b = *t_src_row++;
 
-						uint32_t t_pixel = (*t_dst_row & 0xFF000000) | (r << 16) | (g << 8) | b;
-						*t_dst_row++ = t_pixel;
+						*t_dst_row++ = MCGPixelPack(kMCGPixelFormatNative, r, g, b, 255);
 					}
 					t_src_ptr += t_stride;
 					t_dst_ptr += t_copy->stride;

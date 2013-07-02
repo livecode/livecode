@@ -485,14 +485,20 @@ void MCUIDC::getpaletteentry(uint4 n, MCColor &c)
 
 void MCUIDC::alloccolor(MCColor &color)
 {
-	color.pixel = (color.blue >> 8) | (color.green & 0xFF00) | (color.red & 0xFF00) << 8;
+	color.pixel = MCGPixelPack(kMCGPixelFormatNative,
+							   color.red >> 8,
+							   color.green >> 8,
+							   color.blue >> 8,
+							   255);
 }
 
 void MCUIDC::querycolor(MCColor &color)
 {
-	color.red = (color.pixel >> 16) & 0xFF;
-	color.green = (color.pixel >> 8) & 0xFF;
-	color.blue = color.pixel & 0xFF;
+	uint8_t t_r, t_g, t_b, t_a;
+	MCGPixelUnpack(kMCGPixelFormatNative, color.pixel, t_r, t_g, t_b, t_a);
+	color.red = t_r;
+	color.green = t_g;
+	color.blue = t_b;
 	color.red |= color.red << 8;
 	color.green |= color.green << 8;
 	color.blue |= color.blue << 8;
