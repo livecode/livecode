@@ -1,0 +1,46 @@
+<doc>
+  <legacy_id>2517</legacy_id>
+  <name>points</name>
+  <type>property</type>
+  <syntax>
+    <example>set the points of <i>graphic</i> to <i>vertexList</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <graphic/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Appearance &amp; Positioning</category>
+  </classification>
+  <references>
+    <property tag="relativePoints">relativePoints Property</property>
+    <property tag="dontResize">dontResize Property</property>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies where the <glossary tag="vertex">vertexes</glossary> of a <keyword tag="graphic">graphic</keyword> are located.</summary>
+  <examples>
+    <example>set the points of the selectedObject to myVertexes</example>
+  </examples>
+  <description>
+    <p>Use the <b>points</b> <glossary tag="property">property</glossary> to find the shape of a line, curve, or irregular polygon <keyword tag="graphic">graphic</keyword>, or to reshape the <keyword tag="graphic">graphic</keyword>.</p><p/><p><b>Value:</b></p><p>The <b>points</b> of a <keyword tag="graphic">graphic</keyword> is a list of <property tag="points">points</property> (two <glossary tag="integer">integers</glossary> separated by a comma), one per <keyword tag="line">line</keyword>.</p><p/><p><b>Comments:</b></p><p>Each point consists of the horizontal distance in pixels from the left edge of the stack window to the vertex, a comma, and the vertical distance in pixels from the top edge of the stack window to the vertex. (The <b>relativePoints</b> <glossary tag="property">property</glossary> is the same list, but measured from the top left of the <keyword tag="graphic">graphic</keyword> rather than the top left of the <glossary tag="stack window">stack window</glossary>.)</p><p/><p>The first line in the list is the location of the graphic's starting point. A line is drawn from the starting point to the next vertex, which is the next line in the list. If two successive lines are identical, a dot is drawn at the specified point.</p><p/><p>A blank line in the <b>points</b> indicates that the previous and next <glossary tag="vertex">vertexes</glossary> are not connected by a line--that is, the line, curve, or polygon is broken into two (or more) pieces. If the last <keyword tag="line">line</keyword> of the <b>points</b> of a polygon is blank, the <keyword tag="polygon">polygon</keyword> is not closed. A closed <glossary tag="polygon">polygon's</glossary> start point (the first <keyword tag="line">line</keyword> of its <b>points</b> <glossary tag="property">property</glossary>) is the same as its end point (the last line of its <b>points</b> <glossary tag="property">property</glossary>).</p><p/><p><code/><img src="202651"/> <b>Tip:</b><code/> When setting the <property tag="points">points</property> <glossary tag="property">property</glossary>, you can separate the individual <property tag="points">points</property> with a comma instead of a return. The <property tag="points">points</property> <glossary tag="property">property</glossary> is always reported with the <property tag="points">points</property> on separate <keyword tag="lines">lines</keyword>, however.</p><p/><p>If the <b>style</b> <glossary tag="property">property</glossary> of the <keyword tag="graphic">graphic</keyword> is not "line", "polygon" or "curve", the setting of its <b>points</b> <glossary tag="property">property</glossary> has no effect.</p><p/><p><code/><b>Note:</b><code/> The <keyword tag="rectangle">rectangle</keyword> of a <keyword tag="graphic">graphic</keyword> is drawn around all its <b>points</b> without touching them. (Usually, this makes no difference, but in some circumstances where you need to place a <glossary tag="graphic">graphic's</glossary> <glossary tag="vertex">vertex</glossary> precisely with respect to another <glossary tag="object">object's</glossary> <keyword tag="rectangle">rectangle</keyword>, you may need to take this into account.)</p>
+  </description>
+</doc>

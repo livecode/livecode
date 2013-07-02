@@ -1,0 +1,47 @@
+<doc>
+  <legacy_id>1858</legacy_id>
+  <name>undo</name>
+  <type>command</type>
+  <syntax>
+    <example>undo</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>User Interaction</category>
+  </classification>
+  <references>
+    <command tag="delete">delete Command</command>
+    <command tag="copy">copy Command</command>
+    <command tag="redo">redo Command</command>
+    <message tag="undoChanged">undoChanged Message</message>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Reverses the last user action.</summary>
+  <examples>
+    <example>undo</example>
+    <example>if it is "No! Stop! Go Back!" then undo</example>
+  </examples>
+  <description>
+    <p>Use the <b>undo</b> command to give the user an opportunity to reverse a horrible mistake.</p><p/><p><b>Parameters:</b></p><p>The <b>undo</b> <glossary tag="command">command</glossary> <glossary tag="undo">undoes</glossary> the last action performed by the user. Undoable actions include:</p><p>	* Using the paint tools</p><p>	* Deleting controls by selecting them with the Pointer tool and pressing Delete</p><p>	* Moving controls with the Pointer tool</p><p>	* Editing actions (such as typing, cutting, and pasting) in a field</p><p/><p>The <b>undo</b> <glossary tag="command">command</glossary> cannot be used to <command tag="undo">undo</command> actions performed by a <property tag="script">script</property>. Only user actions can be undone. For example, if you use a <property tag="script">script</property> to change the text in a <keyword tag="field">field</keyword>, the <b>undo</b> <glossary tag="command">command</glossary> cannot reverse that change, but if the user edits text, you can use <b>undo</b> to reverse the action.</p><p/><p>If you use the <b>undo</b> <glossary tag="command">command</glossary> twice in succession, the second <b>undo</b> <glossary tag="undo">undoes</glossary> the first one.</p><p/><p>The <b>undo</b> <glossary tag="command">command</glossary> is equivalent to choosing <a/><b/>Edit menu<img src="202656"/>Undo<important/>.</p>
+  </description>
+</doc>

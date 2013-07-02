@@ -1327,15 +1327,17 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 		delete *cname;
 		*cname = NULL;
 	}
+	
 	int2 i1, i2, i3;
 	Boolean done;
 	const char *sptr = s.getstring();
 	uint4 l = s.getlength();
 	
-	
+	// check for numeric first argument
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
+		// not numeric, check against the colornames
 		if (lookupcolor(s, color))
 		{
 			if (cname)
@@ -1344,9 +1346,15 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 		}
 		return False;
 	}
+	// check for a numeric second argument (Green value)
 	i2 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
+		// MDW-2013-06-12: [[ Bug 10950 ]] non-numeric second argument present
+		if (l != 0)
+			return False;
+		// only a single integer as the color specification,
+		// restrict it to 0-255 and get values from sccolors array
 		i1 = MCU_max(1, MCU_min(i1, 256)) - 1;
 		i3 = sccolors[i1].blue;
 		i2 = sccolors[i1].green;
@@ -1354,14 +1362,16 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 	}
 	else
 	{
+		// check for a numeric third argument (Blue value)
 		i3 = MCU_strtol(sptr, l, ',', done);
-		if (!done)
+		// MDW-2013-06-12: [[ Bug 10950 ]] third argument not present or not numeric
+		// or fourth argument present
+		if (!done || (l != 0))
 			return False;
 	}
 	color->red = (uint2)(i1 << 8) + i1;
 	color->green = (uint2)(i2 << 8) + i2;
 	color->blue = (uint2)(i3 << 8) + i3;
-	
 	
 	return True;
 }

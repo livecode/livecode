@@ -173,7 +173,9 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				// MW-2013-07-01: [[ Bug 11006 ]] Make sure we don't do charset conversion on
+				//   the title string as it is in UTF8.
+				if ((stat = IO_read_string_no_translate(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else

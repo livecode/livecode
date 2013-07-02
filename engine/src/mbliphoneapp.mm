@@ -1039,6 +1039,14 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 	MCIPhoneHandleMotionEnded(motion, [event timestamp]);
 }
 
+// MW-2013-05-30: [[ RemoteControl ]] Handle the remote control event and pass
+//   on if applicable.
+- (void)remoteControlReceivedWithEvent: (UIEvent *)event
+{
+	if ([event type] == UIEventTypeRemoteControl)
+		MCIPhoneHandleRemoteControlEvent([event subtype], [event timestamp]);
+}
+
 @end
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1388,6 +1396,7 @@ void MCiOSFilePostProtectedDataUnavailableEvent();
 - (void)viewDidAppear:(BOOL)animated
 {
 	MCLog("MainViewController: viewDidAppear\n");
+	
     // MM-2012-09-25: [[ iOS 6.0 ]] When the startup view controller is visible, it appears that didRotateFromInterfaceOrientation is not called.
     //   Set current orientation here instead.
     if (MCmajorosversion >= 600)

@@ -502,6 +502,10 @@ public:
 	void concatnameref(MCNameRef name, Exec_concat sep, bool first);
 
 	bool copyasnameref(MCNameRef& name);
+    
+	// Attempts to convert the contents of the ep from UTF-16 to native,
+	// returning true if successful and replacing the contents.
+    bool trytoconvertutf16tonative();
 
 private:
 	void dounicodetomultibyte(bool p_native, bool p_reverse);

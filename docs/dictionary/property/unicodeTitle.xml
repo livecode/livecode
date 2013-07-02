@@ -1,0 +1,46 @@
+<doc>
+  <legacy_id>3078</legacy_id>
+  <name>unicodeTitle</name>
+  <type>property</type>
+  <syntax>
+    <example>set the unicodeTitle of <i>stack</i> to <i>titleString</i></example>
+  </syntax>
+  <library></library>
+  <objects>
+    <stack/>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+  </classification>
+  <references>
+    <property tag="label">label Property</property>
+    <function tag="uniEncode">uniEncode Function</function>
+  </references>
+  <history>
+    <introduced version="2.9">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Specifies the string shown in a stack window's title bar as a unicode string.</summary>
+  <examples>
+    <example>set the unicodeTitle of stack "My Stack" to uniEncode("My Stack's Name")</example>
+    <example>set the unicodeTitle of stack "My Stack" to tUTF16EncodedString</example>
+  </examples>
+  <description>
+    <p>Use the <b>unicodeTitle</b> property to set the title of a stack's window to a unicode string, or to get the current title of a stack's window as a unicode string.</p><p/><p><font face="tahoma"><b>Value:</b></font></p><p>The <b>unicodeTitle</b><font face="tahoma"> of an object is a string of double-byte characters in the same format as returned from functions such as uniEncode.</font></p><p/><p><font face="tahoma"><img src="202652"/> <b>Cross-platform note:</b> Windows 98SE and Windows ME do not support unicode window titles. On these systems, the string displayed in the title bar will be the closest approximation possible on the running system.</font></p><p/>
+  </description>
+</doc>

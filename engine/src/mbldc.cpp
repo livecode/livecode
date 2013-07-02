@@ -472,8 +472,9 @@ void MCScreenDC::refresh_window(Window p_window)
 		t_old_stack -> setextendedstate(true, ECS_DONTDRAW);
 		
 		// MW-2011-09-13: [[ TileCache ]] Deactivate old stack's tilecache.
-		if (t_old_stack -> gettilecache() != nil)
-			MCTileCacheDeactivate(t_old_stack -> gettilecache());
+		// MW-2013-06-26: [[ Bug 10990 ]] Method now implemented differently on iOS, due to
+		//   the need to only do OpenGL calls on the main thread.
+        t_old_stack -> deactivatetilecache();
 		
 		m_current_window = nil;
 		m_current_focus = false;
