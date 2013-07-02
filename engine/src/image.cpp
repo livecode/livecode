@@ -2075,7 +2075,6 @@ bool MCImage::setfilename(const char *p_filename)
 	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
-	
 	if (t_success)
 		t_success = MCCStringClone(p_filename, t_filename);
 	
