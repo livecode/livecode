@@ -1406,7 +1406,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 	MCerrorlock++;
     MCHashentry *e;
     uindex_t j;
-    
+
     // MERG-2013-05-07: [[ RevisedPropsProp ]] pre-process to ensure properties
 	//   that impact others are set first.
     uindex_t t_preprocess_size = sizeof(s_preprocess_props) / sizeof(s_preprocess_props[0]);
