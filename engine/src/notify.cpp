@@ -64,6 +64,8 @@ static bool s_initialized = false;
 // This is true if the notification system is being shutdown
 static bool s_shutting_down = false;
 
+// MW-2013-06-25: [[ DesktopPingWait ]] Added main thread ids for all platforms
+//   so that MCNotifyPush can work correctly regardless of thread.
 #if defined(_WINDOWS)
 HANDLE g_notify_wakeup = NULL;
 static CRITICAL_SECTION s_notify_lock;
@@ -181,12 +183,17 @@ static void MCNotifyUnlock(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2013-06-25: [[ DesktopPingWait ]] Checks to see if the current thread is
+//   the main thread, returning 'true' if it so.
 static bool MCNotifyIsMainThread(void)
 {
 #if defined(_WINDOWS)
 	return GetCurrentThreadId() == s_main_thread_id;
 #elif defined(_MACOSX) || defined(_LINUX) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 	return pthread_self() == s_main_thread;
+#else
+	// TODO: Implement for other platforms (inc. _WINDOWS_SERVER)
+	return true;
 #endif
 }
 
@@ -207,6 +214,8 @@ bool MCNotifyInitialize(void)
 
 	s_initialized = true;
 
+	// MW-2013-06-25: [[ DesktopPingWait ]] Initialize the main thread references
+	//   needed by 'MCNotifyIsMainThread()'.
 #if defined(_WINDOWS)
 	g_notify_wakeup = CreateEvent(NULL, FALSE, FALSE, NULL);
 	InitializeCriticalSection(&s_notify_lock);
@@ -289,15 +298,16 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 	bool t_success;
 	t_success = true;
 
-	// The request for a blocking, non-safe notification on the main thread should just
-	// invoke the callback.
+	// MW-2013-06-25: [[ DesktopPingWait ]] The request for a blocking, non-safe notification
+	// on the main thread should just invoke the callback.
 	if (p_block && !p_safe && MCNotifyIsMainThread())
 	{
 		p_callback(p_state);
 		return true;
 	}
 	
-	// The request for a blocking, safe notification on the main thread is an error.
+	// MW-2013-06-25: [[ DesktopPingWait ]] The request for a blocking, safe notification on the
+	//   main thread is an error.
 	if (p_block && p_safe && MCNotifyIsMainThread())
 		return false;
 	
@@ -335,6 +345,7 @@ bool MCNotifyPush(void (*p_callback)(void *), void *p_state, bool p_block, bool 
 				else
 					MCListPushBack(s_notifications, t_notification);
 
+				// MW-2013-06-25: [[ DesktopPingWait ]] Moved to MCNotifyPing().
 				// Ping the main thread to make sure it knows to check for a shiny new
 				// thing.
 				MCNotifyPing(p_block);
@@ -422,7 +433,7 @@ bool MCNotifyDispatch(bool p_safe)
 	return t_dispatched;
 }
 
-// MW-2013-06-14: [[ ExternalsApiV5 ]] Wake up the event loop.
+// MW-2013-06-25: [[ DesktopPingWait ]] Wake up the event loop.
 void MCNotifyPing(bool p_high_priority)
 {
 #if defined(_WINDOWS)
