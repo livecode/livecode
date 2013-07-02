@@ -628,11 +628,11 @@ Exec_stat MCControl::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boo
 
 Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
-#ifdef /* MCControl::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
 	dirty = False;
 	switch(which)
 	{
+#ifdef /* MCControl::setarrayprop */ LEGACY_EXEC
 	case P_BITMAP_EFFECT_DROP_SHADOW:
 	case P_BITMAP_EFFECT_INNER_SHADOW:
 	case P_BITMAP_EFFECT_OUTER_GLOW:
@@ -654,13 +654,12 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		}
 	}
 	return ES_NORMAL;
-
+#endif /* MCControl::setarrayprop */
 	default:
 		break;
 	}
 
 	return MCObject::setarrayprop(parid, which, ep, key, effective);
-#endif /* MCControl::setarrayprop */
 }
 
 void MCControl::select()

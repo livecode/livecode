@@ -1593,7 +1593,6 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	ep.setbuffer(newbuffer, size);
 	ep.setlength(osize + 8);
 	return ES_NORMAL;
-
 #endif /* MCCompress */
 }
 
