@@ -13,6 +13,82 @@ typedef struct __MCGDashes *MCGDashesRef;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Pixel format (32bit)
+
+// OrderRGB flag - true if colors are ordered RGB rather than BGR
+#define kMCGPixelOrderRGB (1 << 0)
+// AlphaPositionFirst flag - true if alpha channel is in first byte rather than last
+#define kMCGPixelAlphaPositionFirst (1 << 1)
+
+// Recognised pixel formats
+#define kMCGPixelFormatBGRA (0)
+#define kMCGPixelFormatRGBA (kMCGPixelOrderRGB)
+#define kMCGPixelFormatABGR (kMCGPixelAlphaPositionFirst)
+#define kMCGPixelFormatARGB (kMCGPixelAlphaPositionFirst | kMCGPixelOrderRGB)
+
+typedef uint32_t MCGPixelFormat;
+
+#if defined(ANDROID)
+#define kMCGPixelFormatNative kMCGPixelFormatRGBA
+#else
+#define kMCGPixelFormatNative kMCGPixelFormatBGRA
+#endif
+
+static inline uint32_t __MCGPixelPackComponents(uint8_t p_1, uint8_t p_2, uint8_t p_3, uint8_t p_4)
+{
+	return p_1 | (p_2 << 8) | (p_3 << 16) | (p_4 << 24);
+}
+
+static inline uint32_t MCGPixelPack(MCGPixelFormat p_format, uint8_t p_red, uint8_t p_green, uint8_t p_blue, uint8_t p_alpha)
+{
+	switch (p_format)
+	{
+		case kMCGPixelFormatRGBA:
+			return __MCGPixelPackComponents(p_red, p_green, p_blue, p_alpha);
+			
+		case kMCGPixelFormatBGRA:
+			return __MCGPixelPackComponents(p_blue, p_green, p_red, p_alpha);
+			
+		case kMCGPixelFormatABGR:
+			return __MCGPixelPackComponents(p_alpha, p_blue, p_green, p_red);
+			
+		case kMCGPixelFormatARGB:
+			return __MCGPixelPackComponents(p_alpha, p_red, p_green, p_blue);
+	}
+}
+
+static inline void __MCGPixelUnpackComponents(uint32_t p_pixel, uint8_t &r_1, uint8_t &r_2, uint8_t &r_3, uint8_t &r_4)
+{
+	r_1 = p_pixel & 0xFF;
+	r_2 = (p_pixel >> 8) & 0xFF;
+	r_3 = (p_pixel >> 16) & 0xFF;
+	r_4 = (p_pixel >> 24) & 0xFF;
+}
+
+static inline void MCGPixelUnpack(MCGPixelFormat p_format, uint32_t p_pixel, uint8_t &r_red, uint8_t &r_green, uint8_t &r_blue, uint8_t &r_alpha)
+{
+	switch (p_format)
+	{
+		case kMCGPixelFormatRGBA:
+			__MCGPixelUnpackComponents(p_pixel, r_red, r_green, r_blue, r_alpha);
+			break;
+			
+		case kMCGPixelFormatBGRA:
+			__MCGPixelUnpackComponents(p_pixel, r_blue, r_green, r_red, r_alpha);
+			break;
+			
+		case kMCGPixelFormatABGR:
+			__MCGPixelUnpackComponents(p_pixel, r_alpha, r_blue, r_green, r_red);
+			break;
+			
+		case kMCGPixelFormatARGB:
+			__MCGPixelUnpackComponents(p_pixel, r_alpha, r_red, r_green, r_blue);
+			break;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 typedef float MCGFloat;
 typedef uint32_t MCGColor;
 

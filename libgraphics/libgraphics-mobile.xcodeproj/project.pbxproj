@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E8A554931782E96100DABC1A /* graphics-internal.h in Headers */ = {isa = PBXBuildFile; fileRef = E8A554921782E96100DABC1A /* graphics-internal.h */; };
+		E8A554961782E97E00DABC1A /* graphics.h in Headers */ = {isa = PBXBuildFile; fileRef = E8A554951782E97E00DABC1A /* graphics.h */; };
 		E8C22BCB177AEC9A003785D3 /* context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BC7177AEC9A003785D3 /* context.cpp */; };
 		E8C22BCC177AEC9A003785D3 /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BC8177AEC9A003785D3 /* image.cpp */; };
 		E8C22BCD177AEC9A003785D3 /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22BC9177AEC9A003785D3 /* path.cpp */; };
@@ -18,6 +20,8 @@
 		4DD3DF461040B04D00CAC7EF /* Debug Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Debug Mobile.xcconfig"; path = "../rules/Debug Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3DF4A1040B13E00CAC7EF /* Release Mobile.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = "Release Mobile.xcconfig"; path = "../rules/Release Mobile.xcconfig"; sourceTree = SOURCE_ROOT; };
 		4DD3E06B1040BC4700CAC7EF /* libgraphicsmobile.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgraphicsmobile.a; sourceTree = BUILT_PRODUCTS_DIR; };
+		E8A554921782E96100DABC1A /* graphics-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "graphics-internal.h"; path = "src/graphics-internal.h"; sourceTree = "<group>"; };
+		E8A554951782E97E00DABC1A /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics.h; path = include/graphics.h; sourceTree = "<group>"; };
 		E8C22BC7177AEC9A003785D3 /* context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = context.cpp; path = src/context.cpp; sourceTree = "<group>"; };
 		E8C22BC8177AEC9A003785D3 /* image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image.cpp; path = src/image.cpp; sourceTree = "<group>"; };
 		E8C22BC9177AEC9A003785D3 /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = path.cpp; path = src/path.cpp; sourceTree = "<group>"; };
@@ -39,6 +43,7 @@
 			isa = PBXGroup;
 			children = (
 				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
+				E8A554941782E96B00DABC1A /* Headers */,
 				4DD3DDAC1040ABB000CAC7EF /* Sources */,
 				4DD3DD9A1040AA9A00CAC7EF /* Products */,
 			);
@@ -56,6 +61,7 @@
 			isa = PBXGroup;
 			children = (
 				E8C22BC7177AEC9A003785D3 /* context.cpp */,
+				E8A554921782E96100DABC1A /* graphics-internal.h */,
 				E8C22BC8177AEC9A003785D3 /* image.cpp */,
 				E8C22BC9177AEC9A003785D3 /* path.cpp */,
 				E8C22BCA177AEC9A003785D3 /* utils.cpp */,
@@ -73,6 +79,14 @@
 			name = Configurations;
 			sourceTree = "<group>";
 		};
+		E8A554941782E96B00DABC1A /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				E8A554951782E97E00DABC1A /* graphics.h */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
 
 /* Begin PBXHeadersBuildPhase section */
@@ -80,6 +94,8 @@
 			isa = PBXHeadersBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E8A554931782E96100DABC1A /* graphics-internal.h in Headers */,
+				E8A554961782E97E00DABC1A /* graphics.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
