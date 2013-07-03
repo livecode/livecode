@@ -1671,13 +1671,28 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 		MCObject *optr;
 		uint4 parid;
 		MCChunk *chunkptr = targets;
+		
+		// MW-2013-06-20: [[ Bug 10863 ]] Make sure all objects have this parent, after
+		//   the first object has been resolved.
+		MCObject *t_required_parent;
+		t_required_parent = NULL;
+		
 		while (chunkptr != NULL)
 		{
-			if (chunkptr->getobj(ep, optr, parid, True) != ES_NORMAL
-			        || optr->gettype() > CT_FIELD || optr->gettype() < CT_GROUP
-			        || optr->getparent()->gettype() != CT_CARD)
+			if (chunkptr->getobj(ep, optr, parid, True) != ES_NORMAL)
 			{
 				MCeerror->add(EE_GROUP_NOOBJ, line, pos);
+				return ES_ERROR;
+			}
+			
+			// MW-2013-06-20: [[ Bug 10863 ]] Only objects which are controls, and have a
+			//   parent are groupable.
+			if (optr->gettype() > CT_FIELD ||
+				optr->gettype() < CT_GROUP ||
+				optr->getparent() == NULL ||
+				optr->getparent()->gettype() != CT_CARD)
+			{
+				MCeerror->add(EE_GROUP_NOTGROUPABLE, line, pos);
 				return ES_ERROR;
 			}
 			
@@ -1687,10 +1702,15 @@ Exec_stat MCMakeGroup::exec(MCExecPoint &ep)
 				MCeerror->add(EE_GROUP_NOBG, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-06-20: [[ Bug 10863 ]] Take the parent of the first object for
+			//   future comparisons.
+			if (t_required_parent == NULL)
+				t_required_parent = optr -> getparent();
             
 			// MERG-2013-05-07: [[ Bug 10863 ]] Make sure all objects have the same
 			//   parent.
-            if (optr->getparent() != (MCControl *)chunkptr->getdestobj()->getparent())
+            if (optr->getparent() != t_required_parent)
             {
                 MCeerror->add(EE_GROUP_DIFFERENTPARENT, line, pos);
 				return ES_ERROR;
