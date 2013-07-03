@@ -809,35 +809,44 @@ Exec_stat MCDiv::eval(MCExecPoint &ep)
 		MCeerror->add(EE_DIV_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (!ep.isarray() && ep2.getnvalue() == 0.0)
+	if (ep.getformat() != VF_ARRAY && ep2.getnvalue() == 0.0)
 	{
 		MCeerror->add(EE_DIV_ZERO, line, pos);
 		return ES_ERROR;
 	}
-
-	if (ep.isarray())
-		return ep.factorarray(ep2, O_DIV);
-
-	MCS_seterrno(0);
-	real8 n = 0.0;
-	if (ep2.isarray())
+	if (ep.getformat() == VF_ARRAY)
 	{
-		MCeerror->add(EE_DIV_MISMATCH, line, pos);
-		return ES_ERROR;
+		MCVariableValue *v = new MCVariableValue(*ep . getarray());
+		if (v->factorarray(ep2, O_DIV) != ES_NORMAL)
+		{
+			MCeerror->add(EE_DIV_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
 	}
 	else
-		n = ep.getnvalue() / ep2.getnvalue();
-	if (n == MCinfinity || MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_DIV_RANGE, line, pos);
-		return ES_ERROR;
+		real8 n = 0.0;
+		if (ep2.getformat() == VF_ARRAY)
+		{
+			MCeerror->add(EE_DIV_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+		else
+			n = ep.getnvalue() / ep2.getnvalue();
+		if (n == MCinfinity || MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_DIV_RANGE, line, pos);
+			return ES_ERROR;
+		}
+		if (n < 0.0)
+			ep.setnvalue(ceil(n));
+		else
+			ep.setnvalue(floor(n));
 	}
-	if (n < 0.0)
-		ep.setnvalue(ceil(n));
-	else
-		ep.setnvalue(floor(n));
-
 	return ES_NORMAL;
 #endif /* MCDiv */
 
@@ -922,24 +931,34 @@ Exec_stat MCMinus::eval(MCExecPoint &ep)
 		MCeerror->add(EE_MINUS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray())
-		return ep.factorarray(ep2, O_MINUS);
-
-	MCS_seterrno(0);
-	if (ep2.isarray())
+	if (ep.getformat() == VF_ARRAY)
 	{
-		MCeerror->add(EE_MINUS_MISMATCH, line, pos);
-		return ES_ERROR;
+		MCVariableValue *v = new MCVariableValue(*ep.getarray());
+		if (v->factorarray(ep2, O_MINUS) != ES_NORMAL)
+		{
+			MCeerror->add(EE_MINUS_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
 	}
 	else
-		ep.setnvalue(ep.getnvalue() - ep2.getnvalue());
-	if (MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_MINUS_RANGE, line, pos);
-		return ES_ERROR;
+		if (ep2.getformat() == VF_ARRAY)
+		{
+			MCeerror->add(EE_MINUS_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+		else
+			ep.setnvalue(ep.getnvalue() - ep2.getnvalue());
+		if (MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_MINUS_RANGE, line, pos);
+			return ES_ERROR;
+		}
 	}
-
 	return ES_NORMAL;
 #endif /* MCMinus */
 
@@ -1026,31 +1045,41 @@ Exec_stat MCMod::eval(MCExecPoint &ep)
 		MCeerror->add(EE_MOD_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (!ep.isarray() && ep2.getnvalue() == 0.0)
+	if (ep.getformat() != VF_ARRAY && ep2.getnvalue() == 0.0)
 	{
 		MCeerror->add(EE_MOD_ZERO, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray())
-		return ep . factorarray(ep2, O_MOD);
-
-	MCS_seterrno(0);
-	real8 n = 0.0;
-	if (ep2.isarray())
+	if (ep.getformat() == VF_ARRAY)
 	{
-		MCeerror->add(EE_MOD_MISMATCH, line, pos);
-		return ES_ERROR;
+		MCVariableValue *v = new MCVariableValue(*ep.getarray());
+		if (v->factorarray(ep2, O_MOD) != ES_NORMAL)
+		{
+			MCeerror->add(EE_MOD_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
 	}
 	else
-		n = ep.getnvalue() / ep2.getnvalue();
-	if (n == MCinfinity || MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_MOD_RANGE, line, pos);
-		return ES_ERROR;
+		real8 n = 0.0;
+		if (ep2.getformat() == VF_ARRAY)
+		{
+			MCeerror->add(EE_MOD_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+		else
+			n = ep.getnvalue() / ep2.getnvalue();
+		if (n == MCinfinity || MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_MOD_RANGE, line, pos);
+			return ES_ERROR;
+		}
+		ep.setnvalue(fmod(ep.getnvalue(), ep2.getnvalue()));
 	}
-	ep.setnvalue(fmod(ep.getnvalue(), ep2.getnvalue()));
-
 	return ES_NORMAL;
 #endif /* MCMod */
 
@@ -1133,33 +1162,43 @@ Exec_stat MCWrap::eval(MCExecPoint &ep)
 		MCeerror->add(EE_WRAP_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (!ep.isarray() && ep2.getnvalue() == 0.0)
+	if (ep.getformat() != VF_ARRAY && ep2.getnvalue() == 0.0)
 	{
 		MCeerror->add
 		(EE_WRAP_ZERO, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray())
-		return ep . factorarray(ep2, O_WRAP);
-
-	MCS_seterrno(0);
-	real8 n = 0.0;
-	if (ep2.isarray())
+	if (ep.getformat() == VF_ARRAY)
 	{
-		MCeerror->add(EE_WRAP_MISMATCH, line, pos);
-		return ES_ERROR;
+		MCVariableValue *v = new MCVariableValue(*ep.getarray());
+		if (v->factorarray(ep2, O_WRAP) != ES_NORMAL)
+		{
+			MCeerror->add(EE_WRAP_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
 	}
 	else
-		n = ep.getnvalue() / ep2.getnvalue();
-		
-	if (n == MCinfinity || MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_WRAP_RANGE, line, pos);
-		return ES_ERROR;
+		real8 n = 0.0;
+		if (ep2.getformat() == VF_ARRAY)
+		{
+			MCeerror->add(EE_WRAP_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+		else
+			n = ep.getnvalue() / ep2.getnvalue();
+		
+		if (n == MCinfinity || MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_WRAP_RANGE, line, pos);
+			return ES_ERROR;
+		}
+		ep . setnvalue(MCU_fwrap(ep . getnvalue(), ep2 . getnvalue()));	
 	}
-	ep . setnvalue(MCU_fwrap(ep . getnvalue(), ep2 . getnvalue()));	
-
 	return ES_NORMAL;
 #endif /* MCWrap */
 
@@ -1242,31 +1281,41 @@ Exec_stat MCOver::eval(MCExecPoint &ep)
 		MCeerror->add(EE_OVER_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (!ep.isarray() && ep2.getnvalue() == 0.0)
+	if (ep.getformat() != VF_ARRAY && ep2.getnvalue() == 0.0)
 	{
 		MCeerror->add(EE_OVER_ZERO, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray())
-		return ep . factorarray(ep2, O_OVER);
-
-	MCS_seterrno(0);
-	real8 n = 0.0;
-	if (ep2.isarray())
+	if (ep.getformat() == VF_ARRAY)
 	{
-		MCeerror->add(EE_OVER_MISMATCH, line, pos);
-		return ES_ERROR;
+		MCVariableValue *v = new MCVariableValue(*ep.getarray());
+		if (v->factorarray(ep2, O_OVER) != ES_NORMAL)
+		{
+			MCeerror->add(EE_OVER_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
 	}
 	else
-		n = ep.getnvalue() / ep2.getnvalue();
-	if (n == MCinfinity || MCS_geterrno() != 0)
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_OVER_RANGE, line, pos);
-		return ES_ERROR;
+		real8 n = 0.0;
+		if (ep2.getformat() == VF_ARRAY)
+		{
+			MCeerror->add(EE_OVER_MISMATCH, line, pos);
+			return ES_ERROR;
+		}
+		else
+			n = ep.getnvalue() / ep2.getnvalue();
+		if (n == MCinfinity || MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_OVER_RANGE, line, pos);
+			return ES_ERROR;
+		}
+		ep.setnvalue(n);
 	}
-	ep.setnvalue(n);
-
 	return ES_NORMAL;
 #endif /* MCOver */
 
@@ -1352,18 +1401,33 @@ Exec_stat MCPlus::eval(MCExecPoint &ep)
 		MCeerror->add(EE_PLUS_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray() || ep2.isarray())
-		return ep . factorarray(ep2, O_PLUS);
-
-	MCS_seterrno(0);
-	ep.setnvalue(ep.getnvalue() + ep2.getnvalue());
-	if (MCS_geterrno() != 0)
+	if (ep.getformat() == VF_ARRAY || ep2.getformat() == VF_ARRAY)
+	{
+		/* give a little slack to developer -- because addition is
+		 communicative. The first one to be an array is used as dest and
+		 the other one used as source */
+		MCVariableValue *v = new MCVariableValue(ep.getformat() == VF_ARRAY
+												 ? *ep.getarray() : *ep2.getarray());
+		if (v->factorarray(ep.getformat() == VF_ARRAY
+		                   ? ep2 : ep, O_PLUS) != ES_NORMAL)
+		{
+			MCeerror->add(EE_ADD_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
+	}
+	else
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_PLUS_RANGE, line, pos);
-		return ES_ERROR;
+		ep.setnvalue(ep.getnvalue() + ep2.getnvalue());
+		if (MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_PLUS_RANGE, line, pos);
+			return ES_ERROR;
+		}
 	}
-
 	return ES_NORMAL;
 #endif /* MCPlus */
 
@@ -1450,20 +1514,35 @@ Exec_stat MCTimes::eval(MCExecPoint &ep)
 		MCeerror->add(EE_TIMES_BADRIGHT, line, pos);
 		return ES_ERROR;
 	}
-	if (ep.isarray() || ep2.isarray())
-		return ep . factorarray(ep2, O_TIMES);
-
-	MCS_seterrno(0);
-	real8 n = 0.0;
-	n = ep.getnvalue() * ep2.getnvalue();
-	if (n == MCinfinity || MCS_geterrno() != 0)
+	if (ep.getformat() == VF_ARRAY || ep2.getformat() == VF_ARRAY)
+	{
+		/* give a little slack to developer -- because multiplication is
+		 communicative.  The first one to be an array is used as dest
+		 and the other one used as source */
+		MCVariableValue *v = new MCVariableValue(ep.getformat() == VF_ARRAY
+												 ? *ep.getarray() : *ep2.getarray());
+		if (v->factorarray(ep.getformat() == VF_ARRAY
+		                   ? ep2 : ep, O_TIMES) != ES_NORMAL)
+		{
+			MCeerror->add(EE_TIMES_BADARRAY, line, pos);
+			delete v;
+			return ES_ERROR;
+		}
+		ep.setarray(v, True);
+	}
+	else
 	{
 		MCS_seterrno(0);
-		MCeerror->add(EE_TIMES_RANGE, line, pos);
-		return ES_ERROR;
+		real8 n = 0.0;
+		n = ep.getnvalue() * ep2.getnvalue();
+		if (n == MCinfinity || MCS_geterrno() != 0)
+		{
+			MCS_seterrno(0);
+			MCeerror->add(EE_TIMES_RANGE, line, pos);
+			return ES_ERROR;
+		}
+		ep.setnvalue(n);
 	}
-	ep.setnvalue(n);
-
 	return ES_NORMAL;
 #endif /* MCTimes */
 

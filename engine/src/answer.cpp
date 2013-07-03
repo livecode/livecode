@@ -775,7 +775,7 @@ Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, cons
 	}
 	va_end(t_args);
 
-	MCdialogdata -> set(ep);
+	MCdialogdata -> store(ep, True);
 
 	MCStack *t_stack;
 	t_stack = ep . getobj() -> getstack() -> findstackname(p_stack);
@@ -791,7 +791,7 @@ Exec_errors MCAnswer::exec_custom(MCExecPoint& ep, const MCString& p_stack, cons
 	}
 	MCtrace = t_old_trace;
 
-	MCdialogdata -> eval(ep);
+	MCdialogdata -> fetch(ep);
 
 	return EE_UNDEFINED;
 }

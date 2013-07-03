@@ -2491,7 +2491,7 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	MCS_posttourl(ep . getobj(), ep . getsvalue(), ep2 . getcstring());
-	MCurlresult->eval(ep);
+	MCurlresult->fetch(ep);
 	return it->set(ep);
 #endif /* MCPost */
 

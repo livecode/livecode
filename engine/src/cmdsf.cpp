@@ -4699,7 +4699,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 Exec_stat MCWrite::exec(MCExecPoint &ep)
 {
 #ifdef /* MCWrite */ LEGACY_EXEC
-uint2 index;
+	uint2 index;
 	IO_handle stream = NULL;
 	IO_stat stat = IO_NORMAL;
 	Boolean textmode = False;
@@ -4793,10 +4793,8 @@ uint2 index;
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					MCAutoStringRef t_source;
-					ep . copyasstringref(&t_source);
 					MCresult->clear(False);
-					MCS_write_socket(*t_source, MCsockets[index], ep.getobj(), t_message_name);
+					MCS_write_socket(ep.getsvalue(), MCsockets[index], ep.getobj(), t_message_name);
 				}
 				else
 					MCresult->sets("socket is not open");

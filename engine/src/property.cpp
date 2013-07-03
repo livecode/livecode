@@ -1337,7 +1337,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		bool t_error;
 		t_error = false;
 
-		MCInterval *t_ranges;
+		MCRange *t_ranges;
 		int t_range_count;
 		t_ranges = NULL;
 
@@ -1492,7 +1492,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ES_NORMAL;
 
 	case P_DIALOG_DATA:
-		MCdialogdata->set(ep);
+		MCdialogdata->store(ep, True);
 		break;
 
 	case P_ERROR_MODE:
@@ -1746,6 +1746,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			if (ep.getsvalue() != "none" && ep.getsvalue() != "0")
 			{
 				MCColor t_colour;
+				char *t_colour_name = NULL;
 				
 				MCbackdropcolor = ep.getsvalue().clone();
 				if (!strchr(MCbackdropcolor,','))
@@ -1761,7 +1762,11 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 							MCbackdroppm = newpm;
 					}
 				}
-				if (MCbackdroppm != DNULL || !MCscreen -> parsecolor(MCbackdropcolor, &t_colour, nil))
+				if (MCbackdroppm == DNULL && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
+				{
+					delete t_colour_name;
+				}
+				else
 					t_colour . red = t_colour . green = t_colour . blue = 0;
 				MCscreen -> configurebackdrop(t_colour, MCbackdroppm, nil);
 				MCscreen -> enablebackdrop();
@@ -2733,7 +2738,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 					char *cstring = ep.getsvalue().clone();
 					if (!MCscreen->parsecolor(cstring, &color, &name))
 					{
-						MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
+						MCeerror->add
+						(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
 						delete cstring;
 						return ES_ERROR;
 					}
@@ -3601,7 +3607,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				ep . setstaticcstring("all");
 			else
 			{
-				const MCInterval *t_ranges;
+				const MCRange *t_ranges;
 				t_ranges = MCprinter -> GetJobRanges();
 				
 				ep . clear();
@@ -3728,7 +3734,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 			break;
 		case P_DIALOG_DATA:
-			MCdialogdata->eval(ep);
+			MCdialogdata->fetch(ep);
 			break;
 		case P_HC_IMPORT_STAT:
 			ep.setsvalue(MChcstat);
@@ -4436,7 +4442,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			// MW-2008-08-12: Add access to the MCurlresult internal global variable
 			//   this is set by libURL after doing DELETE, POST, PUT or GET type queries.
 		case P_URL_RESPONSE:
-			MCurlresult -> eval(ep);
+			MCurlresult -> fetch(ep);
 			break;
 			
 			// MW-2011-11-24: [[ Nice Folders ]] Handle fetching of the special folder types.
@@ -4669,7 +4675,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 					case P_ALLOW_DATAGRAM_BROADCASTS:
 						ep . setboolean(MCallowdatagrambroadcasts);
 						break;
-						
+
 					default:
 						break;
 				}

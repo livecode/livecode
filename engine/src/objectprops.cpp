@@ -419,7 +419,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_SHORT_NAME:
 	case P_ABBREV_NAME:
 	case P_LONG_NAME:
-		return names_old(which, ep, parid);
+		return names(which, ep, parid);
 	case P_ALT_ID:
 		ep.setint(altid);
 		break;
@@ -691,7 +691,7 @@ Exec_stat MCObject::getprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 	case P_PROPERTIES:
 		return getproparray(ep, parid);
 	case P_CUSTOM_PROPERTY_SET:
-		ep . setvalueref(getdefaultpropsetname());
+		ep . setnameref_unsafe(getdefaultpropsetname());
 		break;
 	case P_CUSTOM_PROPERTY_SETS:
 		listpropsets(ep);

@@ -2006,7 +2006,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 		MCeerror->add(EE_RETURN_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	MCresult -> set(ep);
+	MCresult -> store(ep, False);
 	if (url != NULL)
 	{
 		if (url->eval(ep) != ES_NORMAL)
@@ -2014,7 +2014,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 			MCeerror->add(EE_RETURN_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-		MCurlresult -> set(ep);
+		MCurlresult -> store(ep, False);
 	}
 	else
 		if (var != NULL)
@@ -2024,7 +2024,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 				MCeerror->add(EE_RETURN_BADEXP, line, pos);
 				return ES_ERROR;
 			}
-			MCurlresult->set(ep);
+			MCurlresult->store(ep, False);
 			var->dofree(ep);
 		}
 

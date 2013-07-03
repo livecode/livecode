@@ -1445,7 +1445,7 @@ Exec_stat MCCachedUrls::eval(MCExecPoint &ep)
 {
 #ifdef /* MCCachedUrls */ LEGACY_EXEC
 	ep.getobj()->message(MCM_get_cached_urls, (MCParameter*)NULL, False, True);
-	MCresult->eval(ep);
+	MCresult->fetch(ep);
 	return ES_NORMAL;
 #endif /* MCCachedUrls */
 
@@ -5384,7 +5384,7 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 			{
 				if (h->doscript(ep2, line, pos) != ES_ERROR)
 				{
-					MCresult->eval(ep2);
+					MCresult->fetch(ep2);
 					ep.insert(ep2.getsvalue(), si, ei);
 					rlength += ep2.getsvalue().getlength() - (pend - pstart);
 					MCresult->clear(False);
@@ -6737,10 +6737,10 @@ void MCReplaceText::compile(MCSyntaxFactoryRef ctxt)
 Exec_stat MCTheResult::eval(MCExecPoint &ep)
 {
 #ifdef /* MCTheResult */ LEGACY_EXEC
-	if (MCresult->eval(ep) != ES_NORMAL)
+	if (MCresult->fetch(ep) != ES_NORMAL)
 		return ES_ERROR;
+	ep.grab();
 	return ES_NORMAL;
-     
 #endif /* MCTheResult */
 
     MCExecContext ctxt(ep);
@@ -8209,7 +8209,8 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 	{
 		if (language->eval(ep) != ES_NORMAL)
 		{
-			MCeerror->add(EE_UNIDECODE_BADLANGUAGE, line, pos);
+			MCeerror->add
+			(EE_UNIDECODE_BADLANGUAGE, line, pos);
 			return ES_ERROR;
 		}
 		char *langname = ep.getsvalue().clone();
@@ -8218,7 +8219,8 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 	}
 	if (source->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_UNIDECODE_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_UNIDECODE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	char *startptr = ep.getsvalue().clone();
@@ -8226,10 +8228,9 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 	uint4 dlength = 0;
 	MCU_unicodetomultibyte(startptr,length, NULL, 0, dlength, destcharset);
 	dlength = MCU_max(length << 1, dlength);
-	char *dptr;
-	/* UNCHECKED */ ep.reserve(dlength, dptr);
+	char *dptr = ep.getbuffer(dlength);
 	MCU_unicodetomultibyte(startptr, length, dptr, dlength, dlength, destcharset);
-	ep.commit(dlength);
+	ep.setsvalue(MCString(dptr,dlength));
 	delete startptr;
 	return ES_NORMAL;
 #endif /* MCUniDecode */
@@ -8310,7 +8311,8 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 	{
 		if (language->eval(ep) != ES_NORMAL)
 		{
-			MCeerror->add(EE_UNIENCODE_BADLANGUAGE, line, pos);
+			MCeerror->add
+			(EE_UNIENCODE_BADLANGUAGE, line, pos);
 			return ES_ERROR;
 		}
 		char *langname = ep.getsvalue().clone();
@@ -8319,18 +8321,19 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 	}
 	if (source->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add(EE_UNIENCODE_BADSOURCE, line, pos);
+		MCeerror->add
+		(EE_UNIENCODE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	char *startptr = ep.getsvalue().clone();
 	uint4 length = ep.getsvalue().getlength();
 	uint4 dlength;
 	MCU_multibytetounicode(startptr, length, NULL, 0, dlength, srccharset);
-	char *dptr;
-	/* UNCHECKED */ ep.reserve(length << 1, dptr);
+	char *dptr = ep.getbuffer(length << 1);
 	MCString s(dptr, dlength);
 	MCU_multibytetounicode(startptr, length, dptr, dlength, dlength, srccharset);
-	ep.commit(dlength);
+	s.setlength(dlength);
+	ep.setsvalue(s);
 	delete startptr;
 	return ES_NORMAL;
 #endif /* MCUniEncode */
@@ -8507,10 +8510,9 @@ Exec_stat MCUrlStatus::eval(MCExecPoint &ep)
 		MCeerror->add(EE_URLSTATUS_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	MCParameter p1;
-	p1.sets_argument(ep . getsvalue());
+	MCParameter p1(ep.getsvalue());
 	ep.getobj()->message(MCM_get_url_status, &p1, False, True);
-	MCresult->eval(ep);
+	MCresult->fetch(ep);
 	return ES_NORMAL;
 #endif /* MCUrlStatus */
 
