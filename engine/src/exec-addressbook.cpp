@@ -100,7 +100,7 @@ void MCAddressBookExecUpdateContact(MCExecContext& ctxt, MCArrayRef p_contact, M
 {
 #ifdef /* MCUpdateContactExec */ LEGACY_EXEC
     int32_t r_result = 0;
-    MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
+    /* UNCHECKED */ MCSystemUpdateContact(p_contact, p_title, p_message, p_alternate_name, r_result);
     if (r_result > 0)
         p_ctxt.SetTheResultToNumber(r_result);
     else
