@@ -737,16 +737,16 @@ static Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_paramet
 }
 #endif /* MCHandleOrientationLockedIphone */
 
+#ifdef /* MCHandleLockUnlockOrientation */ LEGACY_EXEC
 static Exec_stat MCHandleLockUnlockOrientation(void *context, MCParameter *p_parameters)
 {
-#ifdef /* MCHandleLockUnlockOrientation */ LEGACY_EXEC
 	if ((bool)context)
 		[MCIPhoneGetApplication() lockOrientation];
 	else
 		[MCIPhoneGetApplication() unlockOrientation];
 	return ES_NORMAL;
-#endif /* MCHandleLockUnlockOrientation */
 }
+#endif /* MCHandleLockUnlockOrientation */
 
 #ifdef /* MCHandleSetAllowedOrientationsIphone */ LEGACY_EXEC
 static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
