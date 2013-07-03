@@ -67,6 +67,8 @@ MCImage::MCImage()
 	m_transformed = nil;
 	m_image_opened = false;
 
+	m_locked_frame = nil;
+
 	m_have_control_colors = false;
 	m_control_colors = nil;
 	m_control_color_names = nil;
@@ -87,6 +89,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_rep = nil;
 	m_transformed = nil;
 	m_image_opened = false;
+
+	m_locked_frame = nil;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
