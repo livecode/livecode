@@ -2,6 +2,7 @@
 #include "graphics-internal.h"
 
 #include <SkCanvas.h>
+#include <SkDevice.h>
 #include <SkPaint.h>
 #include <SkBitmap.h>
 #include <SkShader.h>
@@ -215,7 +216,7 @@ bool MCGContextCreate(uint32_t p_width, uint32_t p_height, bool p_alpha, MCGCont
 	t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_width, p_height);
 	t_bitmap . setIsOpaque(!p_alpha);
 	
-	if (t_bitmap . allocPixels())	
+	if (t_bitmap . allocPixels())
 		return MCGContextCreateWithBitmap(t_bitmap, r_context);
 	else
 		return false;
@@ -1405,6 +1406,16 @@ MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t 
 	t_paint . setTextSize(p_font_size);
 	t_width = (MCGFloat) t_paint . measureText(p_text, p_length);
 	return t_width;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)
+{
+	if (!MCGContextIsValid(self))
+		return false;
+	
+	return MCGImageCreateWithSkBitmap(self->canvas->getDevice()->accessBitmap(false), r_image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

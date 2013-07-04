@@ -13,25 +13,23 @@ static void MCGImageDestroy(MCGImageRef self)
 	}
 }
 
-bool __MCGImageCreateWithRaster(const MCGRaster &p_raster, MCGImageRef &r_image, MCGPixelOwnershipType p_ownership)
+bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image)
 {
 	bool t_success;
 	t_success = true;
 	
 	__MCGImage *t_image;
-	t_image = NULL;
+	t_image = nil;
 	if (t_success)
 		t_success = MCMemoryNew(t_image);
 	
 	SkBitmap *t_bitmap;
+	t_bitmap = nil;
 	if (t_success)
 	{
-		t_bitmap = new SkBitmap();
-		t_success = t_bitmap != NULL;
+		t_bitmap = new SkBitmap(p_bitmap);
+		t_success = nil != t_bitmap;
 	}
-	
-	if (t_success)
-		t_success = MCGRasterToSkBitmap(p_raster, p_ownership, *t_bitmap);
 	
 	if (t_success)
 	{
@@ -42,27 +40,51 @@ bool __MCGImageCreateWithRaster(const MCGRaster &p_raster, MCGImageRef &r_image,
 	}
 	else
 	{
-		if (t_bitmap != NULL)
+		if (t_bitmap != nil)
 			delete t_bitmap;
 		MCMemoryDelete(t_image);
-	}	
+	}
+	
+	return t_success;
+}
+
+bool MCGImageCreateWithRaster(const MCGRaster &p_raster, MCGPixelOwnershipType p_ownership, MCGImageRef &r_image)
+{
+	bool t_success;
+	t_success = true;
+	
+	__MCGImage *t_image;
+	t_image = nil;
+	
+	SkBitmap t_bitmap;
+	
+	if (t_success)
+		t_success = MCGRasterToSkBitmap(p_raster, p_ownership, t_bitmap);
+	
+	if (t_success)
+		t_success = MCGImageCreateWithSkBitmap(t_bitmap, t_image);
+	
+	if (t_success)
+		r_image = t_image;
+	else
+		MCMemoryDelete(t_image);
 	
 	return t_success;	
 }
 
 bool MCGImageCreateWithRasterAndRelease(const MCGRaster &p_raster, MCGImageRef &r_image)
 {
-	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeTake);
+	return MCGImageCreateWithRaster(p_raster, kMCGPixelOwnershipTypeTake, r_image);
 }
 
 bool MCGImageCreateWithRasterNoCopy(const MCGRaster& p_raster, MCGImageRef& r_image)
 {
-	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeBorrow);
+	return MCGImageCreateWithRaster(p_raster, kMCGPixelOwnershipTypeBorrow, r_image);
 }
 
 bool MCGImageCreateWithRaster(const MCGRaster& p_raster, MCGImageRef& r_image)
 {
-	return __MCGImageCreateWithRaster(p_raster, r_image, kMCGPixelOwnershipTypeCopy);
+	return MCGImageCreateWithRaster(p_raster, kMCGPixelOwnershipTypeCopy, r_image);
 }
 
 bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster)

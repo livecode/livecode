@@ -439,6 +439,8 @@ void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRecta
 void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size);
 MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size);
 
+bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Transforms
