@@ -510,6 +510,9 @@
 		E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */; };
 		E8AF465B174CF247000B2F9E /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
 		E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
+		E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
+		E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C10D76D16BF9BFA00D25197 /* graphicscontext.cpp */; };
+		E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8D7F8461785A99900EC051A /* srvtheme.cpp */; };
 		E8DDE5E016C2B1A7007367E4 /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */; };
 /* End PBXBuildFile section */
 
@@ -1402,6 +1405,7 @@
 		E8AF4890174D5563000B2F9E /* libskia.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = libskia.xcodeproj; path = ../thirdparty/libskia/libskia.xcodeproj; sourceTree = SOURCE_ROOT; };
 		E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = imagelist.cpp; path = src/imagelist.cpp; sourceTree = "<group>"; };
 		E8B5BB1316DF77DF00CA02FB /* imagelist.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = imagelist.h; path = src/imagelist.h; sourceTree = "<group>"; };
+		E8D7F8461785A99900EC051A /* srvtheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvtheme.cpp; path = src/srvtheme.cpp; sourceTree = "<group>"; };
 		E8DDE5DE16C2B1A7007367E4 /* image_rep.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image_rep.cpp; path = src/image_rep.cpp; sourceTree = "<group>"; };
 		E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = srvmultipart.h; path = src/srvmultipart.h; sourceTree = "<group>"; };
 		E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = srvmultipart.cpp; path = src/srvmultipart.cpp; sourceTree = "<group>"; };
@@ -2113,6 +2117,7 @@
 				4D982BF513C2E8360066119A /* srvmain.h */,
 				E8EBC31D13E04C29003F6AA3 /* srvmultipart.h */,
 				E8EBC31E13E04C29003F6AA3 /* srvmultipart.cpp */,
+				E8D7F8461785A99900EC051A /* srvtheme.cpp */,
 			);
 			name = Server;
 			sourceTree = "<group>";
@@ -3171,6 +3176,9 @@
 				4D1F9DB2171C682E0091C6CB /* irle.cpp in Sources */,
 				4D1F9DB3171C682E0091C6CB /* stackcache.cpp in Sources */,
 				4D1F9DB4171C682E0091C6CB /* stacksecurity.cpp in Sources */,
+				E8D7F8321785A88200EC051A /* imagelist.cpp in Sources */,
+				E8D7F8391785A8AC00EC051A /* graphicscontext.cpp in Sources */,
+				E8D7F8471785A99900EC051A /* srvtheme.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
