@@ -501,6 +501,12 @@
 		A71F80550F4F17C1003012FD /* LiveCode.icns in Resources */ = {isa = PBXBuildFile; fileRef = 4D5885610B80DEAC00200116 /* LiveCode.icns */; };
 		A71F80620F4F17F9003012FD /* StandaloneDoc.icns in Resources */ = {isa = PBXBuildFile; fileRef = A71F80610F4F17F9003012FD /* StandaloneDoc.icns */; };
 		E8252264174E2BF500055329 /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
+		E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
+		E8A554B21785A70600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
+		E8A554B51785A7C600DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
+		E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
+		E8A554B71785A83A00DABC1A /* libgraphics.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4C10D82916BFADB800D25197 /* libgraphics.a */; };
+		E8A554B81785A83A00DABC1A /* libskia.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8AF4895174D5563000B2F9E /* libskia.a */; };
 		E8AE876C177B3F5C0041B7E0 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8AE876B177B3F5C0041B7E0 /* cgimageutil.cpp */; };
 		E8AF465B174CF247000B2F9E /* surface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4F9DFA13CDE63000B9B15D /* surface.cpp */; };
 		E8B5BB1416DF77DF00CA02FB /* imagelist.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8B5BB1216DF77DF00CA02FB /* imagelist.cpp */; };
@@ -513,13 +519,6 @@
 			containerPortal = 4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */;
 			proxyType = 2;
 			remoteGlobalIDString = D2AAC046055464E500DB518D;
-			remoteInfo = libgraphics;
-		};
-		4C10D82A16BFADC700D25197 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */;
-			proxyType = 1;
-			remoteGlobalIDString = D2AAC045055464E500DB518D;
 			remoteInfo = libgraphics;
 		};
 		4D055BB41079F6E7007F6E13 /* PBXContainerItemProxy */ = {
@@ -773,6 +772,20 @@
 			proxyType = 1;
 			remoteGlobalIDString = 4DF42A420B048617003F2D95;
 			remoteInfo = external;
+		};
+		E8A554AC1785A6C700DABC1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = E8AF4890174D5563000B2F9E /* libskia.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libskia;
+		};
+		E8A554AF1785A6CC00DABC1A /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 4C10D82416BFADB800D25197 /* libgraphics.xcodeproj */;
+			proxyType = 1;
+			remoteGlobalIDString = D2AAC045055464E500DB518D;
+			remoteInfo = libgraphics;
 		};
 		E8AF4894174D5563000B2F9E /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
@@ -1430,11 +1443,13 @@
 				4D2A57C41198634300135143 /* libkernel.a in Frameworks */,
 				4D1F9C53171C662D0091C6CB /* libsecurity-community.a in Frameworks */,
 				4D2A57C51198634300135143 /* libcore.a in Frameworks */,
+				E8A554B51785A7C600DABC1A /* libgraphics.a in Frameworks */,
 				4DB384BE1714420A00D3F102 /* libz.a in Frameworks */,
 				4DB384BF1714420A00D3F102 /* libpng.a in Frameworks */,
 				4DB384C01714420A00D3F102 /* libjpeg.a in Frameworks */,
 				4DB384C11714420A00D3F102 /* libgif.a in Frameworks */,
 				4DB384C21714420A00D3F102 /* libpcre.a in Frameworks */,
+				E8A554B61785A7C600DABC1A /* libskia.a in Frameworks */,
 				4DB386091714423500D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CC1226AA65001C9150 /* Quartz.framework in Frameworks */,
 				4D2A57CA1198634300135143 /* QuickTime.framework in Frameworks */,
@@ -1453,17 +1468,17 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E8252264174E2BF500055329 /* libskia.a in Frameworks */,
-				4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */,
 				4DEE2C7A0FDE52770009423C /* libkernel.a in Frameworks */,
 				4D221ACB171D59ED00E7E557 /* libkernel-development.a in Frameworks */,
 				4D1F9C4E171C65CE0091C6CB /* libsecurity-community.a in Frameworks */,
 				4D055BF31079F748007F6E13 /* libcore.a in Frameworks */,
+				4C10D82C16BFADDB00D25197 /* libgraphics.a in Frameworks */,
 				4D657F9D17143B800086071B /* libz.a in Frameworks */,
 				4D657F9C17143B7A0086071B /* libpng.a in Frameworks */,
 				4D657F9B17143B770086071B /* libjpeg.a in Frameworks */,
 				4D657F9A17143B750086071B /* libgif.a in Frameworks */,
 				4D657F9917143B720086071B /* libpcre.a in Frameworks */,
+				E8252264174E2BF500055329 /* libskia.a in Frameworks */,
 				4DB385731714422E00D3F102 /* Carbon.framework in Frameworks */,
 				4DDC26C9122692B10071CB31 /* Quartz.framework in Frameworks */,
 				4D5880860B80BDF000200116 /* QuickTime.framework in Frameworks */,
@@ -1486,11 +1501,13 @@
 				4D221B00171D5F5F00E7E557 /* libkernel-standalone.a in Frameworks */,
 				4D1F9E51171C69940091C6CB /* libsecurity-community.a in Frameworks */,
 				4D055BE01079F732007F6E13 /* libcore.a in Frameworks */,
+				E8A554B11785A70600DABC1A /* libgraphics.a in Frameworks */,
 				4DB382EE1714418A00D3F102 /* libz.a in Frameworks */,
 				4DB382EF1714418A00D3F102 /* libpng.a in Frameworks */,
 				4DB382F01714418A00D3F102 /* libjpeg.a in Frameworks */,
 				4DB382F11714418A00D3F102 /* libgif.a in Frameworks */,
 				4DB382F21714418A00D3F102 /* libpcre.a in Frameworks */,
+				E8A554B21785A70600DABC1A /* libskia.a in Frameworks */,
 				4DB3856F1714422200D3F102 /* Carbon.framework in Frameworks */,
 				4D7740CB1226AA58001C9150 /* Quartz.framework in Frameworks */,
 				4DE18D870B82296A0086DB92 /* QuickTime.framework in Frameworks */,
@@ -1519,11 +1536,13 @@
 				4D1F9DC1171C68760091C6CB /* libkernel-server.a in Frameworks */,
 				4D1F9C5A171C66D70091C6CB /* libsecurity-community.a in Frameworks */,
 				4DFD495313BA2B89008DB91F /* libcore.a in Frameworks */,
+				E8A554B71785A83A00DABC1A /* libgraphics.a in Frameworks */,
 				4DB386101714426200D3F102 /* libz.a in Frameworks */,
 				4DB386111714426200D3F102 /* libpng.a in Frameworks */,
 				4DB386121714426200D3F102 /* libjpeg.a in Frameworks */,
 				4DB386131714426200D3F102 /* libgif.a in Frameworks */,
 				4DB386141714426200D3F102 /* libpcre.a in Frameworks */,
+				E8A554B81785A83A00DABC1A /* libskia.a in Frameworks */,
 				4DFD495B13BA2BC0008DB91F /* CoreFoundation.framework in Frameworks */,
 				4D982B1213C1CDC10066119A /* CoreServices.framework in Frameworks */,
 				4D982B1913C1CDD20066119A /* ApplicationServices.framework in Frameworks */,
@@ -2573,7 +2592,6 @@
 				4D1F9C49171C655E0091C6CB /* PBXTargetDependency */,
 				4DEE2B2B0FDE42E70009423C /* PBXTargetDependency */,
 				4D221ACD171D59F500E7E557 /* PBXTargetDependency */,
-				4C10D82B16BFADC700D25197 /* PBXTargetDependency */,
 			);
 			name = "LiveCode-Community";
 			productName = engine;
@@ -2616,8 +2634,10 @@
 				4D8D355F171D4B72009D9D25 /* PBXTargetDependency */,
 				4D8D3561171D4B72009D9D25 /* PBXTargetDependency */,
 				4D8D3563171D4B72009D9D25 /* PBXTargetDependency */,
+				E8A554AD1785A6C700DABC1A /* PBXTargetDependency */,
 				4D8D3565171D4B72009D9D25 /* PBXTargetDependency */,
 				4DEE2BD30FDE4A1E0009423C /* PBXTargetDependency */,
+				E8A554B01785A6CC00DABC1A /* PBXTargetDependency */,
 			);
 			name = kernel;
 			productName = kernel;
@@ -3408,11 +3428,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		4C10D82B16BFADC700D25197 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			name = libgraphics;
-			targetProxy = 4C10D82A16BFADC700D25197 /* PBXContainerItemProxy */;
-		};
 		4D1F9C49171C655E0091C6CB /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 4D1F9C2D171C64320091C6CB /* security-community */;
@@ -3557,6 +3572,16 @@
 			isa = PBXTargetDependency;
 			name = external;
 			targetProxy = 4DEE2BD20FDE4A1E0009423C /* PBXContainerItemProxy */;
+		};
+		E8A554AD1785A6C700DABC1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libskia;
+			targetProxy = E8A554AC1785A6C700DABC1A /* PBXContainerItemProxy */;
+		};
+		E8A554B01785A6CC00DABC1A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = libgraphics;
+			targetProxy = E8A554AF1785A6CC00DABC1A /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
