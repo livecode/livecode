@@ -2513,22 +2513,11 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 	{	
 		bool t_success = true;
 		// Render the current content.
-		MCGRaster t_raster;
 		MCGContextRef t_context = nil;
 		MCContext *t_gfxcontext = nil;
 
-		t_raster.width = t_effect_area.width;
-		t_raster.height = t_effect_area.height;
-		t_raster.stride = t_raster.width * sizeof(uint32_t);
-		t_raster.format = kMCGRasterFormat_ARGB;
-		t_raster.pixels = nil;
-		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);
-
 		if (t_success)
-		{
-			MCMemoryClear(t_raster.pixels, t_raster.stride * t_raster.height);
-			t_success = MCGContextCreateWithRaster(t_raster, t_context);
-		}
+			t_success = MCGContextCreate(t_effect_area.width, t_effect_area.height, true, t_context);
 
 		if (t_success)
 		{
@@ -2549,14 +2538,12 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 			
 		}
 
+		if (t_success)
+			t_success = MCGContextCopyImage(t_context, m_snapshot);
+
 		delete t_gfxcontext;
 		MCGContextRelease(t_context);
 
-		if (t_success)
-			t_success = MCGImageCreateWithRasterAndRelease(t_raster, m_snapshot);
-
-		if (!t_success)
-			MCMemoryDeallocate(t_raster.pixels);
 	}
 	
 #ifdef _ANDROID_MOBILE

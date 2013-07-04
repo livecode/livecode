@@ -174,22 +174,19 @@ private:
 	MCRectangle m_composite_rect;
 	uint32_t m_composite_scale;
 
-	// The compositing bitmap and graphics context used to render into it
-	MCImageBitmap *m_composite_bitmap;
+	// The compositing graphics context used to render into
 	MCGContextRef m_composite_context;
 };
 
 MCCustomMetaContext::MCCustomMetaContext(const MCRectangle& p_page)
 	: MCMetaContext(p_page)
 {
-	m_composite_bitmap = nil;
 	m_composite_context = nil;
 }
 
 MCCustomMetaContext::~MCCustomMetaContext(void)
 {
 	MCGContextRelease(m_composite_context);
-	MCImageFreeBitmap(m_composite_bitmap);
 }
 
 bool MCCustomMetaContext::render(MCCustomPrintingDevice *p_device, const MCPrinterRectangle& p_src_rect, const MCPrinterRectangle& p_dst_rect, const MCPrinterRectangle& p_page_rect)
@@ -524,7 +521,6 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 {
 	bool t_success = true;
 
-	MCImageBitmap *t_bitmap = nil;
 	MCGContextRef t_gcontext = nil;
 
 	// TODO: Make the rasterization scale depend in some way on current scaling,
@@ -536,21 +532,8 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	uint32_t t_width = p_mark_clip.width * t_scale;
 	uint32_t t_height = p_mark_clip.height * t_scale;
 
-	t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
-
 	if (t_success)
-	{
-		MCImageBitmapClear(t_bitmap);
-
-		MCGRaster t_raster;
-		t_raster.width = t_width;
-		t_raster.height = t_height;
-		t_raster.format = kMCGRasterFormat_ARGB;
-		t_raster.pixels = t_bitmap->data;
-		t_raster.stride = t_bitmap->stride;
-
-		t_success = MCGContextCreateWithRaster(t_raster, t_gcontext);
-	}
+		t_success = MCGContextCreate(t_width, t_height, true, t_gcontext);
 
 	MCContext *t_context = nil;
 	if (t_success)
@@ -563,7 +546,6 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	if (!t_success)
 	{
 		MCGContextRelease(t_gcontext);
-		MCImageFreeBitmap(t_bitmap);
 
 		m_execute_error = true;
 		return nil;
@@ -572,7 +554,6 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	t_context -> setprintmode();
 	t_context -> setorigin(p_mark_clip . x, p_mark_clip . y);
 
-	m_composite_bitmap = t_bitmap;
 	m_composite_context = t_gcontext;
 
 	m_composite_rect = p_mark_clip;
@@ -619,13 +600,30 @@ static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_strid
 
 void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
 {
-	/* OVERHAUL - REVISIT: Disabling the mask stuff for now, just treat the composite image as ARGB */
-
-	// Make sure the region is in logical coords.
-	//MCRegionOffset(p_clip_region, -(signed)m_composite_rect . x * m_composite_scale, -(signed)m_composite_rect . y * m_composite_scale);
-
-	if (m_composite_bitmap != nil)
+	bool t_success = true;
+	
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	t_success = nil != m_composite_context;
+	
+	if (t_success)
+		t_success = MCGContextCopyImage(m_composite_context, t_image);
+	
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
+	
+	if (t_success)
 	{
+		MCGRaster t_raster;
+		
+		MCGImageGetRaster(t_image, t_raster);
+		
+		/* OVERHAUL - REVISIT: Disabling the mask stuff for now, just treat the composite image as ARGB */
+		
+		// Make sure the region is in logical coords.
+		//MCRegionOffset(p_clip_region, -(signed)m_composite_rect . x * m_composite_scale, -(signed)m_composite_rect . y * m_composite_scale);
+		
 		// We now need to merge the region into the surface as a 1-bit mask... So first
 		// get the region as such a mask
 		//MCBitmap *t_mask;
@@ -636,47 +634,41 @@ void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_
 		//	// is resampled for display... Hmm - although the artifacts may be a cairo
 		//	// problem - doing this doesn't seem to solve the issue!
 		//	surface_merge_with_mask_preserve(t_image -> data, t_image -> bytes_per_line, t_mask -> data, t_mask -> bytes_per_line, 0, t_image -> width, t_image -> height);
-
-			// Now we have a masked image, issue an appropriate image rendering call to the
-			// device
-			MCCustomPrinterImage t_img_data;
-			t_img_data . type = kMCCustomPrinterImageRawARGB;
-			t_img_data . id = 0;
-			t_img_data . width = m_composite_bitmap -> width;
-			t_img_data . height = m_composite_bitmap -> height;
-			t_img_data . data = m_composite_bitmap -> data;
-			t_img_data . data_size = m_composite_bitmap -> stride * m_composite_bitmap -> height;
-
-			MCCustomPrinterTransform t_img_transform;
-			t_img_transform . scale_x = m_scale_x / m_composite_scale;
-			t_img_transform . scale_y = m_scale_y / m_composite_scale;
-			t_img_transform . skew_x = 0.0;
-			t_img_transform . skew_y = 0.0;
-			t_img_transform . translate_x = m_scale_x * m_composite_rect . x + m_translate_x;
-			t_img_transform . translate_y = m_scale_y * m_composite_rect . y + m_translate_y;
-
-			MCCustomPrinterRectangle t_img_clip;
-			compute_clip(m_composite_rect, t_img_clip);
-
-			if (!m_device -> DrawImage(t_img_data, t_img_transform, t_img_clip))
-				m_execute_error = true;
-
-			// Destroy our mask image
+		
+		// Now we have a masked image, issue an appropriate image rendering call to the
+		// device
+		MCCustomPrinterImage t_img_data;
+		t_img_data . type = kMCCustomPrinterImageRawARGB;
+		t_img_data . id = 0;
+		t_img_data . width = t_raster . width;
+		t_img_data . height = t_raster . height;
+		t_img_data . data = t_raster . pixels;
+		t_img_data . data_size = t_raster . stride * t_raster . height;
+		
+		MCCustomPrinterTransform t_img_transform;
+		t_img_transform . scale_x = m_scale_x / m_composite_scale;
+		t_img_transform . scale_y = m_scale_y / m_composite_scale;
+		t_img_transform . skew_x = 0.0;
+		t_img_transform . skew_y = 0.0;
+		t_img_transform . translate_x = m_scale_x * m_composite_rect . x + m_translate_x;
+		t_img_transform . translate_y = m_scale_y * m_composite_rect . y + m_translate_y;
+		
+		MCCustomPrinterRectangle t_img_clip;
+		compute_clip(m_composite_rect, t_img_clip);
+		
+		t_success = m_device -> DrawImage(t_img_data, t_img_transform, t_img_clip);
+		
+		// Destroy our mask image
 		//	MCscreen -> destroyimage(t_mask);
 		//}
 		//else
 		//	m_execute_error = true;
 	}
-	else
-		m_execute_error = true;
 
+	m_execute_error = !t_success;
+	
 	// Delete the context
 	delete p_context;
-	MCGContextRelease(m_composite_context);
-	m_composite_context = nil;
-
-	MCImageFreeBitmap(m_composite_bitmap);
-	m_composite_bitmap = nil;
 
 	// Delete the region
 	MCRegionDestroy(p_clip_region);

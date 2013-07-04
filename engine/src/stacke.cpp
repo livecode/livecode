@@ -265,18 +265,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> type != VE_PLAIN)
 		{
 			// Render the final image.
-			MCGRaster t_image_raster;
-			t_image_raster.width = t_effect_area.width;
-			t_image_raster.height = t_effect_area.height;
-			t_image_raster.pixels = nil;
-			t_image_raster.stride = t_effect_area.width * sizeof(uint32_t);
-			t_image_raster.format = kMCGRasterFormat_ARGB;
-			
-			/* UNCHECKED */ MCMemoryAllocate(t_image_raster.stride * t_image_raster.height, t_image_raster.pixels);
-			
 			MCGContextRef t_context = nil;
 			
-			/* UNCHECKED */ MCGContextCreateWithRaster(t_image_raster, t_context);
+			/* UNCHECKED */ MCGContextCreate(t_effect_area.width, t_effect_area.height, true, t_context);
 			
 			// Configure the context.
 			MCGContextTranslateCTM(t_context, -t_effect_area.x, -t_effect_area.y);
@@ -327,9 +318,8 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				}
 			}
 			
+			/* UNCHECKED */ MCGContextCopyImage(t_context, t_final_image);
 			MCGContextRelease(t_context);
-			
-			/* UNCHECKED */ MCGImageCreateWithRasterAndRelease(t_image_raster, t_final_image);
 		}
 		
 		MCStackEffectContext t_context;
