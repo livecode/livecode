@@ -2037,20 +2037,20 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 
 // MDW 2013-07-04 : allow alternate languages
 // by opening a new process and capturing the output
-void MCS_doalternatelanguage(MCString &s, const char *langname)
+void _alternate_shell(MCString &s, const char *langname)
 {
 	FILE *in;
 	char *commandLine;
 	char *buffer, *line;
 	unsigned int x;
-
-	// set up the command line string (language name + arguments)
+	
+	// set up the command line (langname + arguments)
 	x = s.getlength() + strlen(langname) + 3;
 	commandLine = (char *)malloc(x);
 	sprintf(commandLine, "%s %s", langname, s.getstring());
-
-	buffer = (char*)malloc(512);
-	line = (char*)malloc(512);
+	
+	buffer = (char *)malloc(512);
+	line = (char *)malloc(512);
 	x = 512;
 	*buffer = 0; // null-terminate the output buffer
 	in = popen(commandLine, "r");
@@ -2069,6 +2069,11 @@ void MCS_doalternatelanguage(MCString &s, const char *langname)
 	free(commandLine);
 	free(line);
 	free(buffer);
+}
+
+void MCS_doalternatelanguage(MCString &s, const char *langname)
+{
+	_alternate_shell(s, langname);
 }
 
 void abbrevdatefmt(char *sptr)
