@@ -2037,7 +2037,38 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
-	MCresult->sets("alternate language not found");
+	FILE *in;
+	char *commandLine;
+	char *buffer, *line;
+	unsigned int x;
+
+	// set up the command line string (langname + arguments)
+	x = s.getlength() + strlen(langname) + 3;
+	commandLine = (char *)malloc(x);
+	sprintf(commandLine, "%s %s", langname, s.getstring());
+
+	buffer = (char*)malloc(512);
+	line = (char*)malloc(512);
+	x = 512;
+	*buffer = 0; // null-terminate the output buffer
+	in = popen(commandLine, "r");
+	while(fgets(line, sizeof(line), in))
+	{
+		if (strlen(buffer) + strlen(line) > x)
+		{
+			x *= 2;
+			buffer = (char *)realloc(buffer, x);
+		}
+		buffer = strcat(buffer, line);
+	}
+//	MCresult->copysvalue(commandLine);
+	MCresult->copysvalue(buffer);
+	pclose(in);
+	free(commandLine);
+	free(line);
+	free(buffer);
+	
+//	MCresult->sets("alternate language not found");
 }
 
 void abbrevdatefmt(char *sptr)
