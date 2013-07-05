@@ -483,19 +483,6 @@ public:
 	}
 
 	void effectrect(const MCRectangle &drect, Boolean &abort);
-	Boolean ve_barn(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_checkerboard(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_dissolve(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_iris(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_push(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_reveal(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_scroll(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_shrink(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_stretch(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_venetian(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_wipe(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_zoom(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_qteffect(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, long sequence, void  *effectdescription, void *timebase);
 	
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
