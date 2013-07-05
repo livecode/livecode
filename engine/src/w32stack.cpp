@@ -631,6 +631,11 @@ void MCStack::redrawicon(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
+{
+	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+}
+
 static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 {
 	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
