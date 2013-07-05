@@ -467,7 +467,7 @@ bool MCTileCacheOpenGLCompositor_EndFrame(void *p_context, MCStackSurface *p_sur
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, MCImageBitmap *p_target)
+bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
@@ -507,14 +507,14 @@ bool MCTileCacheOpenGLCompositor_BeginSnapshot(void *p_context, MCRectangle p_ar
 	return true;
 }
 
-bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, MCImageBitmap *p_target)
+bool MCTileCacheOpenGLCompositor_EndSnapshot(void *p_context, MCRectangle p_area, MCGRaster &p_target)
 {
 	MCTileCacheOpenGLCompositorContext *self;
 	self = (MCTileCacheOpenGLCompositorContext *)p_context;
 	
 	/* OVERHAUL - REVISIT: check byte order? */
 	// t_bitmap -> is_swapped = true;
-	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, p_target -> data);
+	glReadPixels(0, 0, p_area . width, p_area . height, GL_RGBA, GL_UNSIGNED_BYTE, p_target . pixels);
 	
 	glBindFramebufferOES(GL_FRAMEBUFFER_OES, self -> original_framebuffer);
 

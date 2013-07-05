@@ -48,9 +48,9 @@ typedef bool (*MCTileCacheCompositeTileCallback)(void *context, int32_t x, int32
 // Composite a tile-sized rectangle at the given location.
 typedef bool (*MCTileCacheCompositeRectCallback)(void *context, int32_t x, int32_t y, uint32_t color);
 // Snapshot of the current frame has begun.
-typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, MCImageBitmap *target);
+typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 // Snapshot of the current frame has ended.
-typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, MCImageBitmap *target);
+typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 
 // The compositor description structure.
 struct MCTileCacheCompositor

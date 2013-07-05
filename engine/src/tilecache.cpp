@@ -2505,36 +2505,34 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r
 	bool t_success;
 	t_success = true;
 	
-	MCImageBitmap *t_snapshot;
-	t_snapshot = nil;
-	if (t_success)
-		t_success = MCImageBitmapCreate(p_area.width, p_area.height, t_snapshot);
+	MCGRaster t_raster;
+	t_raster.width = p_area.width;
+	t_raster.height = p_area.height;
+	t_raster.pixels = nil;
+	t_raster.stride = p_area.width * sizeof(uint32_t);
+	t_raster.format = kMCGRasterFormat_ARGB;
 	
 	if (t_success)
-		t_success = self -> compositor . begin_snapshot(self -> compositor . context, p_area, t_snapshot);
+		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);
+	
+	if (t_success)
+		t_success = self -> compositor . begin_snapshot(self -> compositor . context, p_area, t_raster);
 	
 	if (t_success)
 		t_success = MCTileCacheDoComposite(self);
 	
 	if (t_success)
-		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_snapshot);
+		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_raster);
 	
 	MCGImageRef t_image = nil;
 	if (t_success)
 	{
-		MCGRaster t_raster;
-		t_raster.width = t_snapshot->width;
-		t_raster.height = t_snapshot->height;
-		t_raster.pixels = t_snapshot->data;
-		t_raster.stride = t_snapshot->stride;
-		t_raster.format = kMCGRasterFormat_ARGB;
-
 		t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);
 		if (t_success)
-			t_snapshot->data = nil;
+			t_raster.pixels = nil;
 	}
 
-	MCImageFreeBitmap(t_snapshot);
+	MCMemoryDeallocate(t_raster.pixels);
 	
 	return t_success;
 }
