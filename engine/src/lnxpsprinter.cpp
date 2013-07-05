@@ -568,7 +568,7 @@ MCPrinterResult MCPSPrinterDevice::End(MCContext *p_context)
 	t_metacontext -> execute();
 	
 	delete t_metacontext ;
-
+	
 	return ( PRINTER_RESULT_SUCCESS ) ;
 }
 
@@ -643,6 +643,9 @@ bool MCPSPrinter::DoReset(const char *p_name)
 		m_printersettings . printername = strdup(p_name);
 	
 	FlushSettings();
+	
+	// MDW-2013-04-16: [[ x64 ]] DoReset needs to return a bool
+	return true;
 }
 
 
@@ -1128,7 +1131,7 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 			sy = p_mark -> image . sy ;
 			sw = p_mark -> image . sw ;
 			sh = p_mark -> image . sh ;
-		
+			
 			dx = p_mark -> image . dx ;
 			dy = p_mark -> image . dy ;
 			
@@ -1154,26 +1157,26 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 bool MCPSMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef &r_context)
 {
 	bool t_success = true;
-
+	
 	MCGContextRef t_context = nil;
 
 	uint4 t_scale = SCALE;
-
+	
 	uint32_t t_width, t_height;
 	t_width = p_region . width * t_scale;
 	t_height = p_region . height * t_scale;
 
 	if (t_success)
 		t_success = MCGContextCreate(t_width, t_height, true, t_context);
-	
+
 	if (t_success)
-	{
+{
 		MCGContextScaleCTM(t_context, t_scale, t_scale);
 		MCGContextTranslateCTM(t_context, -(MCGFloat)p_region . x, -(MCGFloat)p_region . y);
 
 		m_composite_context = t_context;
 		m_composite_rect = p_region;
-		
+
 		r_context = m_composite_context;
 	}
 	else
@@ -1181,14 +1184,14 @@ bool MCPSMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef 
 		MCGContextRelease(t_context);
 		m_composite_bitmap = nil;
 	}
-
+	
 	return t_success;
 }
 
 void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region )
 {
 	uint4 t_scale = SCALE;
-
+	
 	printimage ( m_composite_bitmap, m_composite_rect . x, m_composite_rect . y, t_scale, t_scale );
 	
 	delete p_context;
@@ -1412,7 +1415,8 @@ void MCPSMetaContext::printpattern(const MCGRaster &image)
 			}
 			else
 			{
-				if (c.red + c.green + c.blue > MAXUINT2 * 3 / 2)
+				// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
+				if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
 					PSwrite("F");
 				else
 					PSwrite("0");
@@ -1450,8 +1454,8 @@ void MCPSMetaContext::fillpattern ( MCGImageRef p_pattern, MCPoint p_origin )
 {
 	if ( !pattern_created ( p_pattern ) ) 
 		create_pattern ( p_pattern ) ;
-	
-	sprintf(buffer, "pattern_id_%d\n", p_pattern );
+	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
+	sprintf(buffer, "pattern_id_%ld\n", p_pattern );
 	PSwrite ( buffer );
 	sprintf(buffer, "[1 0 0 1 %d %d]\n", p_origin.x, cardheight - p_origin.y);
 	PSwrite(buffer);
@@ -1469,7 +1473,8 @@ void MCPSMetaContext::create_pattern ( MCGImageRef p_pattern )
 	MCGRaster t_raster;
 	MCGImageGetRaster(p_pattern, t_raster);
 	
-	sprintf(buffer, "/pattern_id_%d\n", p_pattern);
+	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
+	sprintf(buffer, "/pattern_id_%ld\n", p_pattern);
 	PSwrite ( buffer  ) ;
 	
 	PSwrite("<<\n");

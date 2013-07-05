@@ -576,7 +576,9 @@ public:
 
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.
-	Exec_stat getproparray(MCExecPoint &ep, uint4 parid);
+	// MERG-2013-05-07: [[ RevisedPropsProp ]] Add 'effective' option to enable 'the effective
+	//   properties of object ...'.
+	Exec_stat getproparray(MCExecPoint &ep, uint4 parid, bool effective);
 
 	MCObjectHandle *gethandle(void);
 

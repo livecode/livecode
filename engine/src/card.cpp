@@ -945,7 +945,14 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 	case P_SHARED_GROUP_IDS:
 	case P_GROUP_NAMES:
 	case P_GROUP_IDS:
-		ep.clear();
+    case P_CONTROL_NAMES:
+    case P_CONTROL_IDS:
+    case P_CHILD_CONTROL_NAMES:
+    case P_CHILD_CONTROL_IDS:
+		// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+		//   immediate and all descendent controls of a card.
+			
+        ep.clear();
 		clean();
 		if (objptrs != NULL)
 		{
@@ -955,37 +962,47 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 			bool t_want_shared;
 			t_want_shared = which == P_SHARED_GROUP_NAMES || which == P_SHARED_GROUP_IDS;
 
-			MCExecPoint ep2(ep);
-			MCObjptr *optr = objptrs;
+			MCExecPoint t_other_ep(ep);
+            MCObjptr *optr = objptrs;
 			uint2 i = 0;
+            
+            bool t_controls;
+			t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
 			do
 			{
-				// MW-2011-08-08: [[ Groups ]] Use 'getrefasgroup()' to test for groupness.
-				MCGroup *t_group;
-				t_group = optr -> getrefasgroup();
+				MCObject *t_object;
+				t_object = optr -> getref();
 
 				optr = optr -> next();
 
-				if (t_group == nil)
+                if (t_object->gettype() == CT_GROUP)
+                {
+                    if (t_want_background && !static_cast<MCGroup *>(t_object)  -> isbackground())
+                        continue;
+                    
+                    if (t_want_shared && !static_cast<MCGroup *>(t_object) -> isshared())
+                        continue;
+                }
+                else if (!t_controls)
 					continue;
-
-				if (t_want_background && !t_group -> isbackground())
-					continue;
-
-				if (t_want_shared && !t_group -> isshared())
-					continue;
-
+                
 				Properties t_prop;
-				if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES)
+				if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
 					t_prop = P_SHORT_NAME;
 				else
 					t_prop = P_SHORT_ID;
 
-				t_group->getprop(0, t_prop, ep2, False);
-
-				ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i++ == 0);
+				t_object->getprop(0, t_prop, t_other_ep, False);
+				ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                
+                if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
+                {
+                    t_object->getprop(parid, which, t_other_ep, false);
+                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
+                }
 			}
 			while (optr != objptrs);
+			
 			if (!opened)
 				clear();
 		}

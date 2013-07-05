@@ -740,6 +740,10 @@ void MCStack::ungroup(MCGroup *source)
 		MCControl *tptr = clist;
 		do
 		{
+			// MW-2013-06-21: [[ Bug 10976 ]] Make sure we uncache the object from the id
+			//   cache, otherwise its id will get bumped if it has been accessed via
+			//   id before (due to the subsequent check!).
+			uncacheobjectbyid(tptr);
 			if (getcontrolid(tptr->gettype(), tptr->getid()))
 			{
 				fprintf(stderr, "ERROR: found duplicate id %d\n", tptr->getid());
@@ -2384,6 +2388,16 @@ void MCStack::updatetilecache(void)
 	MCTileCacheBeginFrame(m_tilecache);
 	curcard -> render();
 	MCTileCacheEndFrame(m_tilecache);
+}
+
+// MW-2013-06-26: [[ Bug 10990 ]] For non-iOS, we can run the MCTileCacheDeactivate
+//   method on the main thread.
+void MCStack::deactivatetilecache(void)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    MCTileCacheDeactivate(gettilecache());
 }
 
 bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)

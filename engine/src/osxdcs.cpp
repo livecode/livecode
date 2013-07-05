@@ -671,8 +671,16 @@ void MCScreenDC::setname(Window w, const char *newname)
 {
 	CFStringRef t_title;
 	t_title = convertutf8tocf(newname);
-	SetWindowTitleWithCFString((WindowPtr)w -> handle . window, t_title);
-	CFRelease(t_title);
+	// MW-2013-07-01: [[ Bug 11006 ]] If we failed to create a CFString from the
+	//   UTF-8 it must be malformed. In theory this shouldn't happen, so as a
+	//   fallback, just create a CFString as if the string were MacRoman.
+	if (t_title == nil)
+		t_title = CFStringCreateWithCString(kCFAllocatorDefault, newname, kCFStringEncodingMacRoman);
+	if (t_title != nil)
+	{
+		SetWindowTitleWithCFString((WindowPtr)w -> handle . window, t_title);
+		CFRelease(t_title);
+	}
 }
 
 void MCScreenDC::setcmap(MCStack *sptr)

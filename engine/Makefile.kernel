@@ -1,6 +1,8 @@
 NAME=libkernel
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES=\
 	aclip.cpp block.cpp button.cpp buttondraw.cpp card.cpp cardlst.cpp \
 	cdata.cpp chunk.cpp cmds.cpp cmdsc.cpp cmdse.cpp cmdsf.cpp \
@@ -33,8 +35,8 @@ SOURCES=\
 	variablearray.cpp objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
-	externalv0.cpp externalv1.cpp \
-	dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp \
+	externalv0.cpp externalv1.cpp uuid.cpp \
+	dskspec.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	lnxpasteboard.cpp lnxtransfer.cpp lnxclipboard.cpp \
 	lnxdc.cpp lnxdce.cpp lnxdcs.cpp lnxdclnx.cpp lnxflst.cpp lnxflstold.cpp \
 	lnxstack.cpp lnxspec.cpp lnxans.cpp \
@@ -52,8 +54,6 @@ linuxstubs.cpp: src/linux.stubs
 
 include/revbuild.h: include/revbuild.h.in ../version
 	../prebuilt/bin/Revolution.lnx "./encode_version.rev" "./"
-
-include ../rules/environment.linux.makefile
 
 $(CACHE_DIR)/mcstring.o: include/revbuild.h
 

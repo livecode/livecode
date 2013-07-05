@@ -521,7 +521,9 @@ public:
 	void updatetilecache(void);
 	// MW-2013-01-08: Snapshot the contents of the tilecache (if any).
 	bool snapshottilecache(MCRectangle area, MCGImageRef& r_image);
-	
+	// MW-2013-06-26: [[ Bug 10990 ]] Deactivate the tilecache.
+    void deactivatetilecache(void);
+    
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
 	//   surface.
 	void redrawwindow(MCStackSurface *surface, MCRegionRef region);

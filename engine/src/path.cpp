@@ -162,11 +162,14 @@ void MCPath::retain(void)
 
 MCPath *MCPath::allocate(uint4 p_command_count, uint4 p_point_count)
 {
+	// MW-2013-05-02: [[ x64 ]] Make sure we use the actual size of MCPath
+	//   rather than 12 - as it changes in 64-bit (MCPath contains two
+	//   pointers).
 	MCPath *t_path;
-	t_path = (MCPath *)malloc(12 + ((p_command_count + 4) & ~3) + p_point_count * 8);
+	t_path = (MCPath *)malloc(sizeof(MCPath) + ((p_command_count + 4) & ~3) + p_point_count * 8);
 	t_path -> f_references = 1;
-	t_path -> f_commands = (uint1 *)t_path + 12;
-	t_path -> f_data = (int4 *)t_path + 3 + (((p_command_count + 4) & ~3) / 4);
+	t_path -> f_commands = (uint1 *)t_path + sizeof(MCPath);
+	t_path -> f_data = (int4 *)t_path + sizeof(MCPath) / sizeof(int4) + (((p_command_count + 4) & ~3) / 4);
 	return t_path;
 }
 

@@ -171,6 +171,10 @@ extern void MCU_unicodetomultibyte(const char *s, uint4 len, char *d,
 extern bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char *p_b, bool p_b_isunicode);
 extern double MCU_squared_distance_from_line(int4 sx, int4 sy, int4 ex, int4 ey, int4 x, int4 y);
 
+// MW-2013-05-21: [[ RandomBytes ]] Generate random bytes using either OpenSSL (if available)
+//   or platform support (if not).
+extern bool MCU_random_bytes(size_t count, void *buffer);
+
 // 
 
 struct MCRange
@@ -184,7 +188,9 @@ extern bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_elem
 
 //
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count);
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count);
 
 //
 

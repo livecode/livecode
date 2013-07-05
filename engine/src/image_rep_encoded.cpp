@@ -130,6 +130,9 @@ MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
 {
 	/* UNCHECKED */ MCCStringClone(p_file_name, m_file_name);
 	m_url_data = nil;
+	
+	// MW-2013-09-25: [[ Bug 10983 ]] No load has yet been attempted.
+	m_url_load_attempted = false;
 }
 
 MCReferencedImageRep::~MCReferencedImageRep()
@@ -143,20 +146,23 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
 		t_stream = MCS_open(m_file_name, IO_READ_MODE, false, false, 0);
-
-	if (t_stream == nil)
+	
+	// MW-2013-09-25: [[ Bug 10983 ]] Only ever try to load the rep as a url once.
+	if (t_stream == nil && !m_url_load_attempted)
 	{
-		if (m_url_data == nil)
-		{
-			MCExecPoint ep(MCdefaultstackptr, nil, nil);
-			ep.setsvalue(m_file_name);
-			MCU_geturl(ep);
-			if (ep.getsvalue().getlength() == 0)
-				return false;
+		// MW-2013-09-25: [[ Bug 10983 ]] Mark the rep has having attempted url load.
+		m_url_load_attempted = true;
+		
+		MCExecPoint ep(MCdefaultstackptr, nil, nil);
+		ep.setsvalue(m_file_name);
+		
+		MCU_geturl(ep);
+		
+		if (ep.getsvalue().getlength() == 0)
+			return false;
 
-			/* UNCHECKED */ MCMemoryAllocateCopy(ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_url_data);
-			m_url_data_size = ep.getsvalue().getlength();
-		}
+		/* UNCHECKED */ MCMemoryAllocateCopy(ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_url_data);
+		m_url_data_size = ep.getsvalue().getlength();
 
 		t_stream = MCS_fakeopen(MCString((char*)m_url_data, m_url_data_size));
 	}

@@ -3418,6 +3418,28 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 	return True;
 }
 
+// JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
+                               uint2 &tend, MCLine *&lptr)
+{
+	if (lptr == NULL)
+		lptr = lines;
+	do
+	{
+		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
+		if (lheight > theight)
+			return False;
+		theight -= lheight;
+        uint2 li, ll;
+        lptr->getindex(li, ll);
+        tend += ll;
+		lptr = lptr->next();
+	}
+	while (lptr != lines);
+	lptr = NULL;
+	return True;
+}
+
 bool MCParagraph::nativizetext(bool p_ascii_only, char *p_data, uint32_t& x_length)
 {
 	// If there's no text, there's nothing to do and the block is native (return false).

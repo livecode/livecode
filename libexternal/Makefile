@@ -1,6 +1,8 @@
 NAME=libexternal
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES=external.c unxsupport.cpp
 
 CUSTOM_DEFINES=

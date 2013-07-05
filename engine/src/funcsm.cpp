@@ -45,9 +45,17 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 	real8 n, tn, oldn;
 	n = oldn = 0.0;
 	MCSortnode *mditems = NULL;
-	if (func == F_STD_DEV)
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for new stats functions based on arithmeticMean
+	if (func == F_AVG_DEV || func == F_POP_STD_DEV || func == F_POP_VARIANCE || func == F_SMP_STD_DEV || func == F_SMP_VARIANCE)
 	{ //use recursion to get average first
-		if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
+		if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
+			return ES_ERROR;
+		oldn = ep.getnvalue();
+	}
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for geometricMean
+	if (func == F_GEO_MEAN)
+	{ //use recursion to count items first
+		if (evalparams(F_UNDEFINED, params, ep) != ES_NORMAL)
 			return ES_ERROR;
 		oldn = ep.getnvalue();
 	}
@@ -119,11 +127,21 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 			tparam = tparam->getnext();
 		}
 	}
+	
 	if (nparams != 0)
 		switch (func)
-		{
-		case F_AVERAGE:
+	{
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for arithmeticMean (was average)
+		case F_ARI_MEAN:
 			n /= nparams;
+			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for averageDeviation
+		case F_AVG_DEV:
+			n /= nparams;
+			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for harmonicMean
+		case F_HAR_MEAN:
+			n = nparams/n;
 			break;
 		case F_MEDIAN:
 			{
@@ -136,8 +154,21 @@ Exec_stat MCFunction::evalparams(Functions func, MCParameter *params,
 					n = (mditems[toffset].nvalue + mditems[toffset+1].nvalue)/2;
 				break;
 			}
-		case F_STD_DEV:
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for populationStandardDeviation
+		case F_POP_STD_DEV:
+			n = sqrt(n/nparams);
+			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for populationVariance
+		case F_POP_VARIANCE:
+			n /= nparams;
+			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for sampleStandardDeviation (was stdDev)
+		case F_SMP_STD_DEV:
 			n = sqrt(n/(nparams - 1));
+			break;
+		// JS-2013-06-19: [[ StatsFunctions ]] Support for sampleVariance
+		case F_SMP_VARIANCE:
+			n /= nparams - 1;
 			break;
 		case F_UNDEFINED:
 			n = nparams;
@@ -254,6 +285,41 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	}
 	real8 pn = ep.getnvalue();
 	ep.setnvalue((1.0 - pow(1.0 + rn, -pn)) / rn);
+	return ES_NORMAL;
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of arithmeticMean (was average)
+MCArithmeticMean::~MCArithmeticMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCArithmeticMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_AVERAGE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCArithmeticMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_ARI_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_AVERAGE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
 	return ES_NORMAL;
 }
 
@@ -380,7 +446,8 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
-MCAverage::~MCAverage()
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of averageDeviation
+MCAvgDev::~MCAvgDev()
 {
 	while (params != NULL)
 	{
@@ -390,25 +457,25 @@ MCAverage::~MCAverage()
 	}
 }
 
-Parse_stat MCAverage::parse(MCScriptPoint &sp, Boolean the)
+Parse_stat MCAvgDev::parse(MCScriptPoint &sp, Boolean the)
 {
 	initpoint(sp);
-
+	
 	if (getparams(sp, &params) != PS_NORMAL)
 	{
 		MCperror->add
-		(PE_AVERAGE_BADPARAM, line, pos);
+		(PE_AVGDEV_BADPARAM, line, pos);
 		return PS_ERROR;
 	}
 	return PS_NORMAL;
 }
 
-Exec_stat MCAverage::eval(MCExecPoint &ep)
+Exec_stat MCAvgDev::eval(MCExecPoint &ep)
 {
-	if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
+	if (evalparams(F_AVG_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add
-		(EE_AVERAGE_BADSOURCE, line, pos);
+		(EE_AVGDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -638,6 +705,76 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 		MCS_seterrno(0);
 		MCeerror->add
 		(EE_EXP10_DOMAIN, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of geometricMean
+MCGeometricMean::~MCGeometricMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCGeometricMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_GEO_MEAN_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCGeometricMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_GEO_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_GEO_MEAN_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of harmonicMean
+MCHarmonicMean::~MCHarmonicMean()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCHarmonicMean::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_HAR_MEAN_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCHarmonicMean::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_HAR_MEAN, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_HAR_MEAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
@@ -1032,6 +1169,76 @@ Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationStdDev
+MCPopulationStdDev::~MCPopulationStdDev()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopulationStdDev::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_POP_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopulationStdDev::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_POP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_POP_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of populationVariance
+MCPopulationVariance::~MCPopulationVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCPopulationVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_POP_VARIANCE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCPopulationVariance::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_POP_VARIANCE, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_POP_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
 MCRandom::~MCRandom()
 {
 	delete limit;
@@ -1166,6 +1373,76 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 	return ES_NORMAL;
 }
 
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleStdDev (was stdDev)
+MCSampleStdDev::~MCSampleStdDev()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCSampleStdDev::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_STDDEV_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCSampleStdDev::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_SMP_STD_DEV, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_STDDEV_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
+// JS-2013-06-19: [[ StatsFunctions ]] Implementation of sampleVariance
+MCSampleVariance::~MCSampleVariance()
+{
+	while (params != NULL)
+	{
+		MCParameter *tparams = params;
+		params = params->getnext();
+		delete tparams;
+	}
+}
+
+Parse_stat MCSampleVariance::parse(MCScriptPoint &sp, Boolean the)
+{
+	initpoint(sp);
+	
+	if (getparams(sp, &params) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_VARIANCE_BADPARAM, line, pos);
+		return PS_ERROR;
+	}
+	return PS_NORMAL;
+}
+
+Exec_stat MCSampleVariance::eval(MCExecPoint &ep)
+{
+	if (evalparams(F_SMP_VARIANCE, params, ep) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_VARIANCE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+	return ES_NORMAL;
+}
+
 MCSqrt::~MCSqrt()
 {
 	delete source;
@@ -1260,40 +1537,6 @@ Exec_stat MCStatRound::eval(MCExecPoint &ep)
 			value = floor(value);
 	}
 	ep.setnvalue(value / factor);
-	return ES_NORMAL;
-}
-
-MCStdDev::~MCStdDev()
-{
-	while (params != NULL)
-	{
-		MCParameter *tparams = params;
-		params = params->getnext();
-		delete tparams;
-	}
-}
-
-Parse_stat MCStdDev::parse(MCScriptPoint &sp, Boolean the)
-{
-	initpoint(sp);
-
-	if (getparams(sp, &params) != PS_NORMAL)
-	{
-		MCperror->add
-		(PE_STDDEV_BADPARAM, line, pos);
-		return PS_ERROR;
-	}
-	return PS_NORMAL;
-}
-
-Exec_stat MCStdDev::eval(MCExecPoint &ep)
-{
-	if (evalparams(F_STD_DEV, params, ep) != ES_NORMAL)
-	{
-		MCeerror->add
-		(EE_STDDEV_BADSOURCE, line, pos);
-		return ES_ERROR;
-	}
 	return ES_NORMAL;
 }
 

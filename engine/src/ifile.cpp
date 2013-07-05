@@ -205,8 +205,14 @@ void MCImage::openimage()
 {
 	if (!m_image_opened && m_rep != nil)
 	{
+		// MW-2013-06-21: [[ Valgrind ]] Initialize width/height to defaults in
+		//   case GetGeometry fails.
 		uindex_t t_width, t_height;
+		t_width = rect . width;
+		t_height = rect . height;
+		
 		/* UNCHECKED */ m_rep->GetGeometry(t_width, t_height);
+		
 		MCRectangle t_old_rect;
 		t_old_rect = rect;
 		if (t_width != rect.width || t_height != rect.height)
