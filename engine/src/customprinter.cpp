@@ -141,8 +141,9 @@ public:
 protected:
 	bool candomark(MCMark *mark);
 	void domark(MCMark *mark);
+	bool begincomposite(const MCRectangle &region, MCGContextRef &r_context);
 	MCContext *begincomposite(const MCRectangle& region);
-	void endcomposite(MCContext *context, MCRegionRef clip_region);
+	void endcomposite(MCRegionRef clip_region);
 
 	void dopathmark(MCMark *mark, MCPath *path);
 	void dorawpathmark(MCMark *mark, uint1 *commands, uint32_t command_count, int4 *ordinates, uint32_t ordinate_count, bool p_evenodd);
@@ -517,7 +518,9 @@ void MCCustomMetaContext::dolinkmark(MCMark *p_mark)
 		m_execute_error = true;
 }
 
-MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
+#define SCALE 4
+
+bool MCCustomMetaContext::begincomposite(const MCRectangle &p_mark_clip, MCGContextRef &r_context)
 {
 	bool t_success = true;
 
@@ -527,7 +530,7 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	//   after all there's no point in making a large rasterized bitmap if it ends
 	//   up being printed really really small!
 	uint4 t_scale;
-	t_scale = 4;
+	t_scale = SCALE;
 
 	uint32_t t_width = p_mark_clip.width * t_scale;
 	uint32_t t_height = p_mark_clip.height * t_scale;
@@ -539,27 +542,18 @@ MCContext *MCCustomMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
-
-		t_success = nil != (t_context = new MCGraphicsContext(t_gcontext));
+		MCGContextTranslateCTM(t_gcontext, -(MCGFloat)p_mark_clip . x, -(MCGFloat)p_mark_clip . y);
+		
+		m_composite_context = t_gcontext;
+		m_composite_rect = p_mark_clip;
+		m_composite_scale = t_scale;
+		
+		r_context = m_composite_context;
 	}
 
-	if (!t_success)
-	{
-		MCGContextRelease(t_gcontext);
-
-		m_execute_error = true;
-		return nil;
-	}
-
-	t_context -> setprintmode();
-	t_context -> setorigin(p_mark_clip . x, p_mark_clip . y);
-
-	m_composite_context = t_gcontext;
-
-	m_composite_rect = p_mark_clip;
-	m_composite_scale = t_scale;
+	m_execute_error = !t_success;
 	
-	return t_context;
+	return t_success;
 }
 
 static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height)
@@ -598,7 +592,7 @@ static void surface_merge_with_mask_preserve(void *p_pixels, uint4 p_pixel_strid
 	}
 }
 
-void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
+void MCCustomMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
 	bool t_success = true;
 	
@@ -667,9 +661,6 @@ void MCCustomMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_
 
 	m_execute_error = !t_success;
 	
-	// Delete the context
-	delete p_context;
-
 	// Delete the region
 	MCRegionDestroy(p_clip_region);
 }

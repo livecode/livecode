@@ -383,13 +383,14 @@ protected:
 	bool candomark(MCMark *mark);
 	void domark(MCMark *mark);
 
-	MCContext *begincomposite(const MCRectangle& p_region);
-	void endcomposite(MCContext *p_context, MCRegionRef p_clip_region);
+	bool begincomposite(const MCRectangle& p_region, MCGContextRef &r_context);
+	void endcomposite(MCRegionRef p_clip_region);
 
 private:
 	HDC m_dc;
 	MCRectangle m_composite_rect;
 	HBITMAP m_composite_bitmap;
+	MCGContextRef m_composite_context;
 };
 
 MCGDIMetaContext::MCGDIMetaContext(const MCRectangle& p_page)
@@ -966,15 +967,15 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 
 #define SCALE 4
 
-MCContext *MCGDIMetaContext::begincomposite(const MCRectangle& p_mark_clip)
+bool MCGDIMetaContext::begincomposite(const MCRectangle& p_mark_clip, MCGContextRef &r_context)
 {
 	bool t_success = true;
 
 	MCGContextRef t_context = nil;
-	MCContext *t_gfxcontext = nil;
 	void *t_bits = nil;
 
-	m_composite_bitmap = nil;
+	HBITMAP t_bitmap;
+	t_bitmap = nil;
 
 	uint4 t_scale = SCALE;
 
@@ -982,36 +983,34 @@ MCContext *MCGDIMetaContext::begincomposite(const MCRectangle& p_mark_clip)
 	t_width = p_mark_clip . width * t_scale;
 	t_height = p_mark_clip . height * t_scale;
 
-	t_success = create_temporary_dib(((MCScreenDC*)MCscreen)->getsrchdc(), t_width, t_height, m_composite_bitmap, t_bits);
+	t_success = create_temporary_dib(((MCScreenDC*)MCscreen)->getsrchdc(), t_width, t_height, t_bitmap, t_bits);
 
 	if (t_success)
 		t_success = MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
-	if (t_success)
-		t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 	
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_context, t_scale, t_scale);
-		t_gfxcontext -> setorigin(p_mark_clip . x, p_mark_clip . y);
+		MCGContextTranslateCTM(t_context, -(MCGFloat)p_mark_clip . x, -(MCGFloat)p_mark_clip . y);
 
+		m_composite_context = t_context;
+		m_composite_bitmap = t_bitmap;
 		m_composite_rect = p_mark_clip;
 
-		MCGContextRelease(t_context);
-
-		return t_gfxcontext;
+		r_context = m_composite_context;
 	}
-	
-	MCGContextRelease(t_context);
+	else
+	{
+		MCGContextRelease(t_context);
+		
+		if (t_bitmap != nil)
+			DeleteObject(t_bitmap);
+	}
 
-	if (m_composite_bitmap != nil)
-		DeleteObject(m_composite_bitmap);
-
-	m_composite_bitmap = nil;
-
-	return nil;
+	return t_success;
 }
 
-void MCGDIMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
+void MCGDIMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
 	POINT t_old_org;
 	SIZE t_old_ext;
@@ -1041,9 +1040,9 @@ void MCGDIMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_reg
 	SetWindowOrgEx(m_dc, t_old_org . x, t_old_org . y, NULL);
 	SetWindowExtEx(m_dc, t_old_ext . cx, t_old_ext . cy, NULL);
 
-	//MCscreen -> freecontext(t_context);
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
 
-	delete p_context;
 	DeleteObject(m_composite_bitmap);
 	m_composite_bitmap = nil;
 }

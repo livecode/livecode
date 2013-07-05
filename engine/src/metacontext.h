@@ -217,11 +217,11 @@ protected:
 
 	// Begin rendering into an offscreen buffer for a drawing operation not
 	// supported by the target device.
-	virtual MCContext *begincomposite(const MCRectangle& p_region) = 0;
+	virtual bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context) = 0;
 
 	// Render the offscreen buffer to the target device using the passed
 	// clip region.
-	virtual void endcomposite(MCContext *p_context, MCRegionRef p_clip_region) = 0;
+	virtual void endcomposite(MCRegionRef p_clip_region) = 0;
 
 private:
 	uint1 f_quality;

@@ -35,6 +35,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bitmapeffect.h"
 #include "path.h"
 
+#include "graphics.h"
+#include "graphicscontext.h"
+
 inline bool operator != (const MCColor& a, const MCColor& b)
 {
 	return a . red != b . red || a . green != b . green || a . blue != b . blue;
@@ -757,9 +760,6 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 	{
 		if (!candomark(t_mark))
 		{
-			MCContext *t_context;
-			t_context = nil;
-
 			// Compute the region of the destination we need to rasterize.
 			MCRectangle t_dst_clip;
 			if (t_mark -> type != MARK_TYPE_GROUP || t_mark -> group . effects == NULL)
@@ -770,32 +770,54 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 			// Get a raster context for the given clip - but only if there is something to
 			// render.
 			if (t_dst_clip . width != 0 && t_dst_clip . height != 0)
-				t_context = begincomposite(t_dst_clip);
-			
-			if (t_context != nil)
 			{
-				// First render just the group we are interested in, so we can clip out any pixels not
-				// affected by it.
-				mark_indirect(t_context, t_mark, nil, t_dst_clip);
-
-				// Compute the region touched by non-transparent pixels.
-				MCRegionRef t_clip_region;
-				t_clip_region = t_context -> computemaskregion();
-				t_context -> clear(nil);
-
-				// MW-2007-11-28: [[ Bug 4873 ]] Failure to reset the context state here means the first
-				//   objects rendered up until a group are all wrong!
-				t_context -> setfunction(GXcopy);
-				t_context -> setopacity(255);
-				t_context -> clearclip();
-
-				// Render all marks from the bottom up to and including the current mark - clipped
-				// by the dst bounds.
-				for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next; t_raster_mark = t_raster_mark -> next)
-					if (mark_indirect(t_context, t_raster_mark, t_mark, t_dst_clip))
-						break;
+				bool t_success;
+				t_success = true;
 				
-				endcomposite(t_context, t_clip_region);
+				MCGContextRef t_context;
+				t_context = nil;
+				
+				MCContext *t_gfx_context;
+				t_gfx_context = nil;
+				
+				MCRegionRef t_clip_region;
+				t_clip_region = nil;
+				
+				if (t_success)
+					t_success = begincomposite(t_dst_clip, t_context);
+				
+				if (t_success)
+					t_success = nil != (t_gfx_context = new MCGraphicsContext(t_context));
+				
+				if (t_success)
+				{
+					t_gfx_context -> setprintmode();
+					
+					// First render just the group we are interested in, so we can clip out any pixels not
+					// affected by it.
+					mark_indirect(t_gfx_context, t_mark, nil, t_dst_clip);
+					
+					// Compute the region touched by non-transparent pixels.
+					t_clip_region = t_gfx_context -> computemaskregion();
+					t_gfx_context -> clear(nil);
+					
+					// MW-2007-11-28: [[ Bug 4873 ]] Failure to reset the context state here means the first
+					//   objects rendered up until a group are all wrong!
+					t_gfx_context -> setfunction(GXcopy);
+					t_gfx_context -> setopacity(255);
+					t_gfx_context -> clearclip();
+					
+					// Render all marks from the bottom up to and including the current mark - clipped
+					// by the dst bounds.
+					for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next; t_raster_mark = t_raster_mark -> next)
+						if (mark_indirect(t_gfx_context, t_raster_mark, t_mark, t_dst_clip))
+							break;
+				}
+				
+				if (t_gfx_context != nil)
+					delete t_gfx_context;
+				
+				endcomposite(t_clip_region);
 			}
 		}
 		else

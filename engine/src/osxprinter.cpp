@@ -57,6 +57,7 @@ extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
 extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1110,8 +1111,8 @@ protected:
 	void domark(MCMark *p_mark);
 	bool candomark(MCMark *p_mark);
 	
-	MCContext *begincomposite(const MCRectangle& p_region);
-	void endcomposite(MCContext *p_context, MCRegionRef p_clip_region);
+	bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context);
+	void endcomposite(MCRegionRef p_clip_region);
 
 private:
 	bool m_color;
@@ -1120,7 +1121,7 @@ private:
 	
 	CGContextRef m_context;
 
-	MCImageBitmap *m_composite_bitmap;
+	MCGContextRef m_composite_context;
 	MCRectangle m_composite_rect;
 };
 
@@ -1446,12 +1447,10 @@ MCQuartzMetaContext::MCQuartzMetaContext(const MCRectangle& p_rect, int p_page_w
 	m_page_height = p_page_height;
 	m_page_width = p_page_width;
 	m_context = NULL;
-	m_composite_bitmap = nil;
 }
 
 MCQuartzMetaContext::~MCQuartzMetaContext(void)
 {
-	MCImageFreeBitmap(m_composite_bitmap);
 }
 
 void MCQuartzMetaContext::render(PMPrintSession p_session, const MCPrinterRectangle& p_src_rect, const MCPrinterRectangle& p_dst_rect, bool p_color)
@@ -1896,63 +1895,58 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 
 #define SCALE 4
 
-MCContext *MCQuartzMetaContext::begincomposite(const MCRectangle& p_region)
+bool MCQuartzMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef &r_context)
 {
 	bool t_success = true;
 	
 	uint4 t_scale = SCALE;
 	
 	MCGContextRef t_context = nil;
-	MCContext *t_gfxcontext = nil;
 	
 	uint32_t t_width = p_region.width * t_scale;
 	uint32_t t_height = p_region.height * t_scale;
 	
-	t_success = MCImageBitmapCreate(t_width, t_height, m_composite_bitmap);
-	
 	if (t_success)
-		t_success = MCGContextCreateWithPixels(t_width, t_height, m_composite_bitmap->stride, m_composite_bitmap->data, true, t_context);
-	
-	if (t_success)
-		t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+		t_success = MCGContextCreate(t_width, t_height, true, t_context);
 	
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_context, t_scale, t_scale);
-		t_gfxcontext->setorigin(p_region.x, p_region.y);
+		MCGContextTranslateCTM(t_context, -(MCGFloat)p_region.x, -(MCGFloat)p_region.y);
 		
+		m_composite_context = t_context;
 		m_composite_rect = p_region;
 		
+		r_context = m_composite_context;
+	}
+	else
+	{
 		MCGContextRelease(t_context);
-		
-		return t_gfxcontext;
 	}
 	
-	MCGContextRelease(t_context);
-		
-	MCImageFreeBitmap(m_composite_bitmap);
-	m_composite_bitmap = nil;
-	
-	return nil;
+	return t_success;
 }
 
 
-void MCQuartzMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
+void MCQuartzMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
 	OSX_CGContextClipToRegion(m_context, (RgnHandle)p_clip_region);
 	
-	CGImageRef t_image = nil;
-	/* UNCHECKED */ MCImageBitmapToCGImage(m_composite_bitmap, false, true, t_image);
+	MCGImageRef t_image;
+	t_image = nil;
 	
-	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_image);
+	/* UNCHECKED */ MCGContextCopyImage(m_composite_context, t_image);
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
 	
-	CGImageRelease(t_image);
-	delete p_context;
+	CGImageRef t_cgimage = nil;
+	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), false, true, t_cgimage);
+	
+	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_cgimage);
+	CGImageRelease(t_cgimage);
+	
+	MCGImageRelease(t_image);
 	MCRegionDestroy(p_clip_region);
-	
-	delete p_context;
-	MCImageFreeBitmap(m_composite_bitmap);
-	m_composite_bitmap = nil;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

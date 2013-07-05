@@ -404,8 +404,8 @@ public:
 protected:
 	bool candomark(MCMark *p_mark);
 	void domark(MCMark *p_mark);
-	MCContext *begincomposite(const MCRectangle& p_region);
-	void endcomposite(MCContext *p_context, MCRegionRef p_clip_region );
+	bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context);
+	void endcomposite(MCRegionRef p_clip_region);
 
 private:
 
@@ -432,7 +432,7 @@ private:
 	void create_pattern ( MCGImageRef p_pattern );
 
 	MCRectangle m_composite_rect;
-	MCImageBitmap *m_composite_bitmap;
+	MCGContextRef m_composite_context;
 };
 
 
@@ -1151,14 +1151,11 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 
 #define SCALE 4
 
-MCContext *MCPSMetaContext::begincomposite(const MCRectangle& p_region)
+bool MCPSMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef &r_context)
 {
 	bool t_success = true;
 
 	MCGContextRef t_context = nil;
-	MCContext *t_gfxcontext = nil;
-
-	m_composite_bitmap = nil;
 
 	uint4 t_scale = SCALE;
 
@@ -1166,31 +1163,26 @@ MCContext *MCPSMetaContext::begincomposite(const MCRectangle& p_region)
 	t_width = p_region . width * t_scale;
 	t_height = p_region . height * t_scale;
 
-	t_success = MCImageBitmapCreate(t_width, t_height, m_composite_bitmap);
-
 	if (t_success)
-		t_success = MCGContextCreateWithPixels(t_width, t_height, m_composite_bitmap->stride, m_composite_bitmap->data, true, t_context);
-	if (t_success)
-		t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+		t_success = MCGContextCreate(t_width, t_height, true, t_context);
 	
 	if (t_success)
 	{
 		MCGContextScaleCTM(t_context, t_scale, t_scale);
-		t_gfxcontext -> setorigin(p_region . x, p_region . y);
+		MCGContextTranslateCTM(t_context, -(MCGFloat)p_region . x, -(MCGFloat)p_region . y);
 
+		m_composite_context = t_context;
 		m_composite_rect = p_region;
-
-		MCGContextRelease(t_context);
-
-		return t_gfxcontext;
+		
+		r_context = m_composite_context;
 	}
-	
-	MCGContextRelease(t_context);
+	else
+	{
+		MCGContextRelease(t_context);
+		m_composite_bitmap = nil;
+	}
 
-	MCImageFreeBitmap(m_composite_bitmap);
-	m_composite_bitmap = nil;
-
-	return nil;
+	return t_success;
 }
 
 void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region )
