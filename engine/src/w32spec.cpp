@@ -47,6 +47,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <float.h>
 #include <iphlpapi.h>
 
+extern void MCS_alternate_shell(MCString &s, const char *langname);
+
 int *g_mainthread_errno;
 
 // MW-2004-11-28: A null FPE signal handler.
@@ -2076,47 +2078,15 @@ void MCS_resolvealias(MCExecPoint &ep)
 	}
 }
 
-void _alternate_shell(MCString &s, const char *langname)
-{
-	FILE *in;
-	char *commandLine;
-	char *buffer, *line;
-	unsigned int x;
-	
-	// set up the command line (langname + arguments)
-	x = s.getlength() + strlen(langname) + 3;
-	commandLine = (char *)malloc(x);
-	sprintf(commandLine, "%s %s", langname, s.getstring());
-	
-	buffer = (char *)malloc(512);
-	line = (char *)malloc(512);
-	x = 512;
-	*buffer = 0; // null-terminate the output buffer
-	in = popen(commandLine, "r");
-	while(fgets(line, sizeof(line), in))
-	{
-		// ensure there's room in the buffer
-		if (strlen(buffer) + strlen(line) > x)
-		{
-			x *= 2;
-			buffer = (char *)realloc(buffer, x);
-		}
-		buffer = strcat(buffer, line);
-	}
-	MCresult->copysvalue(buffer);
-	pclose(in);
-	free(commandLine);
-	free(line);
-	free(buffer);
-}
-
+// MDW 2013-07-05 : allow alternate languages
+// by opening a new process and capturing the output
+// NOTE: MCS_alternate_shell is in dskspec.cpp.
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
 	MCScriptEnvironment *t_environment;
 	t_environment = MCscreen -> createscriptenvironment(langname);
 	if (t_environment == NULL)
-		_alternate_shell(x, langname);
-//		MCresult -> sets("alternate language not found");
+		MCS_alternate_shell(x, langname);
 	else
 	{
 		MCExecPoint ep(NULL, NULL, NULL);

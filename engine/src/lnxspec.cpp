@@ -83,6 +83,7 @@ extern "C" void __attribute__ ((noreturn)) __stack_chk_fail (void)
 {
 }
 
+extern void MCS_alternate_shell(MCString &s, const char *langname);
 
 
 
@@ -2035,45 +2036,12 @@ void MCS_alternatelanguages(MCExecPoint &ep)
 	ep.clear();
 }
 
-// MDW 2013-07-04 : allow alternate languages
+// MDW 2013-07-05 : allow alternate languages
 // by opening a new process and capturing the output
-void _alternate_shell(MCString &s, const char *langname)
-{
-	FILE *in;
-	char *commandLine;
-	char *buffer, *line;
-	unsigned int x;
-	
-	// set up the command line (langname + arguments)
-	x = s.getlength() + strlen(langname) + 3;
-	commandLine = (char *)malloc(x);
-	sprintf(commandLine, "%s %s", langname, s.getstring());
-	
-	buffer = (char *)malloc(512);
-	line = (char *)malloc(512);
-	x = 512;
-	*buffer = 0; // null-terminate the output buffer
-	in = popen(commandLine, "r");
-	while(fgets(line, sizeof(line), in))
-	{
-		// ensure there's room in the buffer
-		if (strlen(buffer) + strlen(line) > x)
-		{
-			x *= 2;
-			buffer = (char *)realloc(buffer, x);
-		}
-		buffer = strcat(buffer, line);
-	}
-	MCresult->copysvalue(buffer);
-	pclose(in);
-	free(commandLine);
-	free(line);
-	free(buffer);
-}
-
+// NOTE: MCS_alternate_shell is in dskspec.cpp.
 void MCS_doalternatelanguage(MCString &s, const char *langname)
 {
-	_alternate_shell(s, langname);
+	MCS_alternate_shell(s, langname);
 }
 
 void abbrevdatefmt(char *sptr)
