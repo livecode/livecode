@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <revolution/external.h>
 #include <revolution/support.h>
+#include <libxml/xpath.h>
 
 #include "cxml.h"
 
@@ -112,6 +113,9 @@ enum XMLErrs
 	XMLERR_BADMOVE,
 	XMLERR_BADCOPY,
 	XMLERR_NOFILEPERMS,
+	XPATHERR_BADDOCCONTEXT,
+	XPATHERR_CANTRESOLVE,
+	XPATHERR_BADDOCPOINTER,
 };
 
 const char *xmlerrors[] = {
@@ -125,6 +129,9 @@ const char *xmlerrors[] = {
 	"xmlerr, can't move node into itself",
 	"xmlerr, can't copy node into itself",
 	"xmlerr, file access not permitted",
+	"xmlerr, couldn't assign document context",
+	"xmlerr, can't resolve xpath",
+	"xmlerr, bad document pointer",
 };
 
 //HS-2010-10-11: [[ Bug 7586 ]] Reinstate libxml2 to create name spaces. Implement new liveCode commands to suppress name space creation.
@@ -145,6 +152,8 @@ class XMLDocumentList
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
 			CXMLDocument *curobject = (CXMLDocument *)(*theIterator);
+			// MDW-2013-07-09: [[ free xpath context ]]
+			xmlXPathFreeContext(curobject->GetXPathContext());
 			delete curobject;
 		}
 		doclist.clear();
@@ -207,7 +216,8 @@ void DispatchMetaCardMessage(char *messagename,char *tmessage)
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
 char mcmessage[256];
-sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into extvariable",messagename);
+// MDW-2013-07-09: [[ reference to extvariable should be to xmlvariable ]]
+sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into xmlvariable",messagename);
 SendCardMessage(mcmessage, &retvalue);
 }
 
@@ -303,7 +313,8 @@ extern char *strlwr(char *str);
 #endif
 
 
-#define REVXML_VERSIONSTRING "2.9.0"
+// MDW-2013-06-22: [[ update the version string as necessary ]]
+#define REVXML_VERSIONSTRING "6.2.0"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
 		   Bool *pass, Bool *error)
@@ -2153,6 +2164,225 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
+// MDW-2013-06-22: [[ XPath functions ]]
+
+static xmlNodeSetPtr XML_Object_to_NodeSet(xmlXPathObjectPtr object)
+{
+	return object->nodesetval;
+}
+
+/**
+ * XML_ObjectPtr_to_Xpaths
+ *
+ * @pObject
+ */
+static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *cDelimiter)
+{
+	int iBufferSize = 8192;
+	if (NULL != pObject)
+	{
+		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
+		if (NULL != nodes)
+		{
+    			int i;
+			xmlNodePtr cur;
+		    	int size = (nodes) ? nodes->nodeNr : 0;
+			char *buffer = (char*)malloc(iBufferSize);
+			*buffer = (char)0; // null-terminate to start things off
+
+			for(i = 0; i < size; ++i)
+			{
+				cur = nodes->nodeTab[i];
+				if (NULL != cur)
+				{
+					xmlChar *cPtr = xmlGetNodePath(cur);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							buffer = (char*)realloc(buffer, iBufferSize * 2);
+							iBufferSize = iBufferSize * 2;
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strcat(buffer, cDelimiter);
+						free((char*)cPtr);
+					}
+				}
+			}
+			return (buffer);
+		}
+		else
+			return(NULL);
+	}
+	else
+		return(NULL);
+}
+
+static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
+{
+	int iBufferSize = 8192;
+	if (NULL != pObject)
+	{
+		xmlNodeSetPtr nodes = XML_Object_to_NodeSet(pObject);
+		if (NULL != nodes)
+		{
+    			int i;
+			xmlNodePtr cur;
+		    	int size = (nodes) ? nodes->nodeNr : 0;
+			char *buffer = (char*)malloc(iBufferSize);
+			*buffer = (char)0; // null-terminate to start things off
+
+			for(i = 0; i < size; ++i)
+			{
+				cur = nodes->nodeTab[i];
+				if (NULL != cur)
+				{
+					xmlChar *cPtr = xmlNodeGetContent(cur);
+					if (NULL != cPtr)
+					{
+						// make more room if needed
+						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
+						{
+							buffer = (char*)realloc(buffer, iBufferSize * 2);
+							iBufferSize = iBufferSize * 2;
+						}
+						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
+						strcat(buffer, cDelimiter);
+						free((char*)cPtr);
+					}
+				}
+			}
+			return (buffer);
+		}
+		else
+			return(NULL);
+	}
+	else
+		return(NULL);
+}
+
+/**
+ * XML_EvalXPath
+ * @pDocID : xml tree id
+ * @pExpression : xpath to evaluate
+ * @pDelimiter : [optional] delimiter between paths
+ *
+ * Returns a cr-separated list of paths which is the result of
+ * evaluating the expression against the xml tree
+ *
+ * Example:
+ * put revXMLEvaluateXPath(tDocID, "/bookstore/books/[price<50]", tab)
+ */
+void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
+			{
+				xmlChar *str = (xmlChar *)args[1];
+
+				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
+				if (NULL != result)
+				{
+					char *cDelimiter;
+					if (nargs > 2)
+						cDelimiter = args[2];
+					else
+						cDelimiter = "\n";
+					char *xpaths = XML_ObjectPtr_to_Xpaths(result, cDelimiter);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
+				}
+				xmlXPathFreeContext(ctx);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_XPathDataFromQuery
+ * @pDocID : xml tree id
+ * @pExpression : xpath to evaluate
+ * @pDelimiter : optional delimiter between data elements
+ *
+ * Returns a cr-separated list of data which is the result of
+ * evaluating the expression against the xml tree
+ *
+ * put revXMLDataFromXPathQuery(tDocID, "/bookstore/books/[price<30]title", tab)
+ */
+void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			xmlXPathContextPtr ctx = xmlXPathNewContext(xmlDoc);
+			if (NULL != ctx)
+			{
+				xmlChar *str = (xmlChar *)args[1];
+
+				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
+				if (NULL != result)
+				{
+					char *cDelimiter;
+					if (nargs > 2)
+						cDelimiter = args[2];
+					else
+						cDelimiter = "\n";
+					char *xpaths = XML_ObjectPtr_to_Data(result, cDelimiter);
+					if (NULL != xpaths)
+					{
+						*retstring = istrdup(xpaths);
+						free(xpaths);
+					}
+					else
+					{
+						*retstring = istrdup(xmlerrors[XPATHERR_CANTRESOLVE]);
+					}
+					xmlXPathFreeObject(result);
+				}
+				xmlXPathFreeContext(ctx);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCCONTEXT]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
 EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLinit", XML_Init)
 	EXTERNAL_DECLARE_FUNCTION("revXML_version", REVXML_Version)
@@ -2196,6 +2426,28 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributes", XML_ListOfAttributes)
 	EXTERNAL_DECLARE_FUNCTION("revXMLMatchingNode", XML_FindElementByAttributeValue)
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributeValues", XML_ListByAttributeValue)
+// MDW-2013-06-22: [[ declared preferred synonyms for consistency and sanity
+// propose deprecating the old keywords ]]
+	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTree", XML_NewDocumentNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeWithNamespaces", XML_NewDocumentNNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFile", XML_NewDocumentFromFileNS)
+    	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFileWithNamespaces", XML_NewDocumentFromFileNNS)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteTree", XML_FreeDocument)
+	EXTERNAL_DECLARE_COMMAND("revXMLAppend", XML_AddXML)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteAllTrees", XML_FreeAll)
+	EXTERNAL_DECLARE_COMMAND("revXMLAddNode", XML_AddElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLDeleteNode", XML_RemoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLInsertNode", XML_InsertElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveNode", XML_MoveElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyNode", XML_CopyElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLCopyRemoteNode", XML_CopyRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLMoveRemoteNode", XML_MoveRemoteElement)
+	EXTERNAL_DECLARE_COMMAND("revXMLPutIntoNode", XML_SetElementContents)
+	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
+
+// MDW-2013-06-22: [[ XPath functions ]]
+	EXTERNAL_DECLARE_FUNCTION("revXMLEvaluateXPath", XML_EvalXPath)
+	EXTERNAL_DECLARE_FUNCTION("revXMLDataFromXPathQuery", XML_XPathDataFromQuery)
 EXTERNAL_END_DECLARATIONS
 
 

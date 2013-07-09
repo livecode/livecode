@@ -5,12 +5,12 @@ include ../rules/environment.linux.makefile
 
 SOURCES=revxml.cpp xmlattribute.cpp xmldoc.cpp xmlelement.cpp
 
-CUSTOM_DEFINES=
+CUSTOM_DEFINES=LIBXML_XPATH_ENABLED
 
 CUSTOM_INCLUDES=./src ../libxml/include
 
 CUSTOM_LIBS=external xml z
-CUSTOM_DYNAMIC_LIBS=
+CUSTOM_DYNAMIC_LIBS=m
 
 CUSTOM_CCFLAGS=
 
