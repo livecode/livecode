@@ -441,20 +441,12 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 						if (startlength > 1)
 						{
 							if (reals)
-							{
-//								MDW 2013-06-09 : allow rounding
-//								see MCU_parsepoint and MCU_parsepoints
-								if (*(sptr+1) > '4')
-								{
-									value++;
-								}
 								do
 								{
 									sptr++;
 									l--;
 								}
 								while (l && isdigit((uint1)*sptr));
-							}
 							else
 								do
 								{
@@ -1311,7 +1303,7 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints,
 	while (l)
 	{
 		Boolean done1, done2;
-		// MDW 2013-06-09 : allow non-integer points to be set, round to ints
+		// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 		int2 i1= (int2)MCU_strtol(sptr, l, ',', done1, True);
 		int2 i2 = (int2)MCU_strtol(sptr, l, ',', done2, True);
 		while (l && !isdigit((uint1)*sptr) && *sptr != '-' && *sptr != '+')
@@ -1347,7 +1339,7 @@ Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
 	const char *sptr = data.getstring();
 	uint4 l = data.getlength();
 	Boolean done1, done2;
-	// MDW 2013-06-09 : allow non-integer points to be set, round to ints
+	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
 	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
 	int2 i2 = (int2)(MCU_strtol(sptr, l, ',', done2, True));
 	if (!done1 || !done2)
