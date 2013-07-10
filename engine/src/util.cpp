@@ -1311,8 +1311,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints,
 	while (l)
 	{
 		Boolean done1, done2;
-		int2 i1= MCU_strtol(sptr, l, ',', done1);
-		int2 i2 = MCU_strtol(sptr, l, ',', done2);
+		// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+		int2 i1= (int2)MCU_strtol(sptr, l, ',', done1, True);
+		int2 i2 = (int2)MCU_strtol(sptr, l, ',', done2, True);
 		while (l && !isdigit((uint1)*sptr) && *sptr != '-' && *sptr != '+')
 		{
 			l--;
@@ -1346,8 +1347,9 @@ Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
 	const char *sptr = data.getstring();
 	uint4 l = data.getlength();
 	Boolean done1, done2;
-	int2 i1= MCU_strtol(sptr, l, ',', done1);
-	int2 i2 = MCU_strtol(sptr, l, ',', done2);
+	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
+	int2 i2 = (int2)(MCU_strtol(sptr, l, ',', done2, True));
 	if (!done1 || !done2)
 	{
 		i1 = i2 = MININT2;
