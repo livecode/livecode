@@ -128,6 +128,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D332C95178D7BDF005DFE92 /* revtestexternal.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = revtestexternal.java; path = src/revtestexternal.java; sourceTree = "<group>"; };
 		4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.livecode.idl; path = revtestexternal.lcidl; sourceTree = "<group>"; };
 		4D405323176B3FC50097F2D6 /* lcidlc.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = lcidlc.xcodeproj; path = ../lcidlc/lcidlc.xcodeproj; sourceTree = SOURCE_ROOT; };
 		4D40532D176B3FCE0097F2D6 /* engine.xcodeproj */ = {isa = PBXFileReference; lastKnownFileType = "wrapper.pb-project"; name = engine.xcodeproj; path = ../engine/engine.xcodeproj; sourceTree = SOURCE_ROOT; };
@@ -229,6 +230,7 @@
 		E82D44EC17131E6800A10289 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				4D332C95178D7BDF005DFE92 /* revtestexternal.java */,
 				4D40528E176B3EF10097F2D6 /* revtestexternal.lcidl */,
 				E82D44ED17131E7700A10289 /* revtestexternal.cpp */,
 			);

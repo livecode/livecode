@@ -14,9 +14,11 @@ for more details.
 You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include <pthread.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdint.h>
 #include <string.h>
 
 #ifdef __OBJC__
@@ -24,14 +26,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 #include "LiveCode.h"
-
-#ifdef __WINDOWS__
-#include <windows.h>
-typedef unsigned int uint32_t;
-#else
-#include <pthread.h>
-#include <stdint.h>
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -227,8 +221,8 @@ typedef struct MCExternalInterface
 	MCError (*object_update)(MCObjectRef object, unsigned int options, void *region);
 	
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] New context methods for script execution.
-	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef *binds, unsigned int bind_count, MCVariableRef result);
-	MCError (*context_execute)(const char *p_expression, unsigned int options, MCVariableRef *binds, unsigned int bind_count);
+	MCError (*context_evaluate)(const char *p_expression, unsigned int options, MCVariableRef value, ...);
+	MCError (*context_execute)(const char *p_expression, unsigned int options, ...);
 } MCExternalInterface;
 
 typedef struct MCExternalInfo
@@ -1467,7 +1461,7 @@ LCError LCContextEvaluate(const char *p_expression, unsigned int p_options, void
 		t_error = (LCError)MCVariableCreate(&t_value_var);
 		
 	if (t_error == kLCErrorNone)
-		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, nil, 0, t_value_var);
+		t_error = (LCError)s_interface -> context_evaluate(p_expression, 0, t_value_var);
 		
 	if (t_error == kLCErrorNone)
 		t_error = LCValueFetch(t_value_var, p_options, r_value);
@@ -1483,7 +1477,7 @@ LCError LCContextExecute(const char *p_commands, unsigned int p_options)
 	if (s_interface -> version < 5)
 		return kLCErrorNotImplemented;
 		
-	return (LCError)s_interface -> context_execute(p_commands, 0, nil, 0);
+	return (LCError)s_interface -> context_execute(p_commands, 0);
 }
 
 //////////
@@ -1853,31 +1847,9 @@ struct __LCWait
 	unsigned int options;
 	bool running;
 	bool broken;
-#ifdef __WINDOWS__
-	HANDLE lock;
-#else
 	pthread_mutex_t lock;
-#endif
 };
 
-static void LCWaitLock(LCWaitRef p_wait)
-{
-#ifdef __WINDOWS__
-	WaitForSingleObject(p_wait -> lock, INFINITE);
-#else
-	pthread_mutex_lock(&p_wait -> lock);
-#endif
-}
-
-static void LCWaitUnlock(LCWaitRef p_wait)
-{
-#ifdef __WINDOWS__
-	ReleaseMutex(p_wait -> lock);
-#else
-	pthread_mutex_unlock(&p_wait -> lock);
-#endif
-}
-	
 LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 {		
 	LCWaitRef t_wait;
@@ -1889,11 +1861,7 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 	t_wait -> options = p_options;
 	t_wait -> running = false;
 	t_wait -> broken = false;
-#ifdef __WINDOWS__
-	t_wait -> lock = CreateMutex(NULL, FALSE, NULL);
-#else
 	pthread_mutex_init(&t_wait -> lock, nil);
-#endif
 	
 	*r_wait = t_wait;
 	
@@ -1902,11 +1870,7 @@ LCError LCWaitCreate(unsigned int p_options, LCWaitRef* r_wait)
 
 static void LCWaitDestroy(LCWaitRef p_wait)
 {
-#ifdef __WINDOWS__
-	CloseHandle(p_wait -> lock);
-#else
 	pthread_mutex_destroy(&p_wait -> lock);
-#endif
 	free(p_wait);
 }
 
@@ -1915,9 +1879,9 @@ LCError LCWaitRetain(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	LCWaitLock(p_wait);
+	pthread_mutex_lock(&p_wait -> lock);
 	p_wait -> references += 1;
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	return kLCErrorNone;
 }
@@ -1926,10 +1890,10 @@ LCError LCWaitRelease(LCWaitRef p_wait)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-	
-	LCWaitLock(p_wait);
+
+	pthread_mutex_lock(&p_wait -> lock);
 	p_wait -> references -= 1;
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	if (p_wait -> references == 0)
 		LCWaitDestroy(p_wait);
@@ -1941,10 +1905,10 @@ LCError LCWaitIsRunning(LCWaitRef p_wait, bool *r_running)
 {
 	if (p_wait == nil)
 		return kLCErrorNoWait;
-	
-	LCWaitLock(p_wait);
+
+	pthread_mutex_lock(&p_wait -> lock);
 	*r_running = p_wait -> running;
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	return kLCErrorNone;
 }	
@@ -1957,7 +1921,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	LCWaitLock(p_wait);
+	pthread_mutex_lock(&p_wait -> lock);
 	
 	p_wait -> running = true;
 
@@ -1968,11 +1932,11 @@ LCError LCWaitRun(LCWaitRef p_wait)
 		if (p_wait -> broken)
 			break;
 		
-		LCWaitUnlock(p_wait);
+		pthread_mutex_unlock(&p_wait -> lock);
 		
 		t_error = s_interface -> wait_run(nil, p_wait -> options & kLCWaitOptionDispatching);
 		
-		LCWaitLock(p_wait);
+		pthread_mutex_lock(&p_wait -> lock);
 		
 		if (t_error != kMCErrorNone)
 			break;
@@ -1980,7 +1944,7 @@ LCError LCWaitRun(LCWaitRef p_wait)
 
 	p_wait -> running = false;
 	
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	return (LCError)t_error;
 }
@@ -1995,13 +1959,13 @@ LCError LCWaitBreak(LCWaitRef p_wait)
 	if (p_wait == nil)
 		return kLCErrorNoWait;
 	
-	LCWaitLock(p_wait);
+	pthread_mutex_lock(&p_wait -> lock);
 	if (p_wait -> running && !p_wait -> broken)
 	{
 		p_wait -> broken = true;
 		s_interface -> wait_break(nil, 0);
 	}
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	return kLCErrorNone;
 }
@@ -2014,9 +1978,9 @@ LCError LCWaitReset(LCWaitRef p_wait)
 	if (p_wait -> running)
 		return kLCErrorWaitRunning;
 	
-	LCWaitLock(p_wait);
+	pthread_mutex_lock(&p_wait -> lock);
 	p_wait -> broken = false;
-	LCWaitUnlock(p_wait);
+	pthread_mutex_unlock(&p_wait -> lock);
 	
 	return (LCError)kMCErrorNone;
 }
@@ -2839,7 +2803,7 @@ static jobject java_from__cdata(JNIEnv *env, LCBytes p_value)
 {
 	jobject t_java_value;
 	t_java_value = (jobject)env -> NewByteArray(p_value . length);
-	env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
+	s_java_env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
 	return t_java_value;
 }
 
@@ -2948,139 +2912,198 @@ static void native_free__double(double p_value)
 {
 }
 
-/////////
-	
-static void java_lcapi__throw(JNIEnv *env, LCError p_error)
-{
-	// TODO
-}
-	
-static jlong java_lcapi_ObjectResolve(JNIEnv *env, jobject chunk)
-{
-	char *t_chunk_cstring;
-	t_chunk_cstring = java_to__cstring(env, chunk);
-	
-	LCError t_error;
-	LCObjectRef t_object;
-	t_error = LCObjectResolve(t_chunk_cstring, &t_object);
-	
-	free(t_chunk_cstring);
-
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return 0;
-	}
-	
-	return (jlong)t_object;
-}
-
-static void java_lcapi_ObjectRetain(JNIEnv *env, jlong object)
-{
-	LCError t_error;
-	t_error = LCObjectRetain((LCObjectRef)object);
-	if (t_error != kLCErrorNone)
-		java_lcapi__throw(env, t_error);
-}
-
-static void java_lcapi_ObjectRelease(JNIEnv *env, jlong object)
-{
-	LCError t_error;
-	t_error = LCObjectRelease((LCObjectRef)object);
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return;
-	}
-}
-
-static jboolean java_lcapi_ObjectExists(JNIEnv *env, jlong object)
-{
-	LCError t_error;
-	bool t_exists;
-	t_error = LCObjectExists((LCObjectRef)object, &t_exists);
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return false;
-	}
-	return t_exists;
-}
-	
-static void java_lcapi_ObjectSend(JNIEnv *env, jlong object, jobject message, jobject signature, jobject arguments)
-{
-	char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
-	
-	// TODO handle signature / arguments
-	
-	LCError t_error;
-	t_error = LCObjectSend((LCObjectRef)object, t_message_cstring, "");
-	
-	free(t_message_cstring);
-	
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return;
-	}	
-}
-
-static void java_lcapi_ObjectPost(JNIEnv *env, jlong object, jobject message, jobject signature, jobject arguments)
-{
-	char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
-	
-	// TODO handle signature / arguments
-	
-	LCError t_error;
-	t_error = LCObjectPost((LCObjectRef)object, t_message_cstring, "");
-	
-	free(t_message_cstring);
-	
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return;
-	}	
-}
-
-static jlong java_lcapi_ContextMe(JNIEnv *env)
-{
-	LCError t_error;
-	LCObjectRef t_me;
-	t_error = LCContextMe(&t_me);
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return false;
-	}
-	return (jlong)t_me;
-}
-
-static jlong java_lcapi_ContextTarget(JNIEnv *env)
-{
-	LCError t_error;
-	LCObjectRef t_target;
-	t_error = LCContextTarget(&t_target);
-	if (t_error != kLCErrorNone)
-	{
-		java_lcapi__throw(env, t_error);
-		return false;
-	}
-	return (jlong)t_target;
-}
-
-static jobject java_lcapi_InterfaceQueryActivity(JNIEnv *env)
-{
-	return java__get_activity();
-}
-	
-static jobject java_lcapi_InterfaceQueryContainer(JNIEnv *env)
-{
-	return java__get_container();
-}
-	
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
+extern bool revTestExternalStartup(void);
+extern void revTestExternalShutdown(void);
+extern void revTestExternalTestWait(void);
+extern void revTestExternalTestPost(void);
+extern void revTestExternalTestArrays(void);
+static bool variant__revTestExternalTestWait(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+#ifdef __OBJC__
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+#endif __OBJC__
+
+	bool success;
+	success = true;
+
+	if (success)
+	{
+		error__clear();
+		revTestExternalTestWait();
+		success = error__catch();
+	}
+
+	if (!success)
+		success = error__report(result);
+
+#ifdef __OBJC__
+	[t_pool release];
+#endif
+
+	return success;
+}
+static bool handler__revTestExternalTestWait(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	if (argc == 0)
+		return variant__revTestExternalTestWait(argv, argc, result);
+	return error__report_bad_parameter_count(result);
+}
+static bool variant__revTestExternalTestPost(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+#ifdef __OBJC__
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+#endif __OBJC__
+
+	bool success;
+	success = true;
+
+	if (success)
+	{
+		error__clear();
+		revTestExternalTestPost();
+		success = error__catch();
+	}
+
+	if (!success)
+		success = error__report(result);
+
+#ifdef __OBJC__
+	[t_pool release];
+#endif
+
+	return success;
+}
+static bool handler__revTestExternalTestPost(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	if (argc == 0)
+		return variant__revTestExternalTestPost(argv, argc, result);
+	return error__report_bad_parameter_count(result);
+}
+static bool variant__revTestExternalTestArrays(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+#ifdef __OBJC__
+	NSAutoreleasePool *t_pool;
+	t_pool = [[NSAutoreleasePool alloc] init];
+#endif __OBJC__
+
+	bool success;
+	success = true;
+
+	if (success)
+	{
+		error__clear();
+		revTestExternalTestArrays();
+		success = error__catch();
+	}
+
+	if (!success)
+		success = error__report(result);
+
+#ifdef __OBJC__
+	[t_pool release];
+#endif
+
+	return success;
+}
+static bool handler__revTestExternalTestArrays(MCVariableRef *argv, uint32_t argc, MCVariableRef result)
+{
+	if (argc == 0)
+		return variant__revTestExternalTestArrays(argv, argc, result);
+	return error__report_bad_parameter_count(result);
+}
+#define kMCExternalName "revtestexternal"
+#define kMCExternalStartup revTestExternalStartup
+#define kMCExternalShutdown revTestExternalShutdown
+
+MCExternalHandler kMCExternalHandlers[] =
+{
+	{ 1, "revTestExternalTestWait", handler__revTestExternalTestWait },
+	{ 1, "revTestExternalTestPost", handler__revTestExternalTestPost },
+	{ 1, "revTestExternalTestArrays", handler__revTestExternalTestArrays },
+	{ 0 }
+};
+
+extern "C" MCExternalInfo *MCExternalDescribe(void) __attribute__((visibility("default")));
+extern "C" bool MCExternalInitialize(MCExternalInterface *) __attribute__((visibility("default")));
+extern "C" void MCExternalFinalize(void) __attribute__((visibility("default")));
+
+MCExternalInfo *MCExternalDescribe(void)
+{
+	static MCExternalInfo s_info;
+	s_info . version = 1;
+	s_info . flags = 0;
+	s_info . name = kMCExternalName;
+	s_info . handlers = kMCExternalHandlers;
+	return &s_info;
+}
+
+bool MCExternalInitialize(MCExternalInterface *p_interface)
+{
+	s_interface = p_interface;
+
+#ifndef __ANDROID__
+	if (s_interface -> version < 3)
+		return false;
+#else
+	if (s_interface -> version < 5)
+		return false;
+
+	s_interface -> interface_query(kMCExternalInterfaceQueryScriptJavaEnv, &s_engine_env);
+	s_interface -> interface_query(kMCExternalInterfaceQuerySystemJavaEnv, &s_android_env);
+#endif
+
+#ifdef kMCExternalStartup
+	if (!kMCExternalStartup())
+		return false;
+#endif
+
+	return true;
+}
+
+void MCExternalFinalize(void)
+{
+#ifdef kMCExternalShutdown
+	kMCExternalShutdown();
+#endif
+}
+
+#ifdef TARGET_OS_IPHONE
+extern "C"
+{
+
+static const char *__libname = "revtestexternal";
+
+static struct MCExternalLibraryExport __libexports[] =
+{
+	{ "MCExternalDescribe", (void *)MCExternalDescribe },
+	{ "MCExternalInitialize", (void *)MCExternalInitialize },
+	{ "MCExternalFinalize", (void *)MCExternalFinalize },
+	{ 0, 0 }
+};
+
+static struct MCExternalLibraryInfo __libinfo =
+{
+	&__libname,
+	__libexports,
+};
+
+__attribute((section("__DATA,__libs"))) volatile struct MCExternalLibraryInfo *__libinfoptr_revtestexternal = &__libinfo;
+
+}
+#endif
+#ifdef __ANDROID__
+extern "C" JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved) __attribute__((visibility("default")));
+JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)
+{
+	s_java_vm = vm;
+	JavaEnv *t_java_env; s_java_vm -> GetEnv((void **)&t_java_env, JNI_VERSION_1_2);
+	s_java_class = (jclass)t_java_env -> NewGlobalRef(t_java_env -> FindClass("revtestexternal"));
+
+	return JNI_VERSION_1_2;
+}
+#endif
