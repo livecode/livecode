@@ -441,12 +441,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 						if (startlength > 1)
 						{
 							if (reals)
+							{
+								// MDW-2013-06-09: [[ Bug 10964 ]] Round integral values to nearest
+								//   (consistent with getuint4() and round()).
+								if (*(sptr+1) > '4')
+								{
+									value++;
+								}
 								do
 								{
 									sptr++;
 									l--;
 								}
 								while (l && isdigit((uint1)*sptr));
+							}
 							else
 								do
 								{
