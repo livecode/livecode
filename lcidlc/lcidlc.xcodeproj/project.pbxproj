@@ -7,8 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D332C41178D7959005DFE92 /* EncodedJavaSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D332C3F178D7959005DFE92 /* EncodedJavaSupport.c */; };
+		4D332C42178D7959005DFE92 /* EncodedSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D332C40178D7959005DFE92 /* EncodedSupport.c */; };
 		4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4051A1176B2D340097F2D6 /* NativeType.cpp */; };
-		4D9036A21398FC0800CBC7F6 /* EncodedSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036901398FC0800CBC7F6 /* EncodedSupport.c */; };
 		4D9036A31398FC0800CBC7F6 /* Error.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036911398FC0800CBC7F6 /* Error.cpp */; };
 		4D9036A41398FC0800CBC7F6 /* Interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036931398FC0800CBC7F6 /* Interface.cpp */; };
 		4D9036A51398FC0800CBC7F6 /* InterfaceGenerate.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D9036951398FC0800CBC7F6 /* InterfaceGenerate.cpp */; };
@@ -21,7 +22,6 @@
 		4D99EA3D1363A92A0056938B /* libcore.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D99EA3C1363A9220056938B /* libcore.a */; };
 		4D99EA5B1363AA530056938B /* CoreFoundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4D99EA5A1363AA530056938B /* CoreFoundation.framework */; };
 		4DBA0E7E136799A3006EEA7D /* Foundation.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 4DBA0E7D136799A3006EEA7D /* Foundation.framework */; };
-		4DED6F09176233B0001DEF0C /* EncodedJavaSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -42,12 +42,13 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D332C3F178D7959005DFE92 /* EncodedJavaSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedJavaSupport.c; path = src/EncodedJavaSupport.c; sourceTree = "<group>"; };
+		4D332C40178D7959005DFE92 /* EncodedSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedSupport.c; path = src/EncodedSupport.c; sourceTree = "<group>"; };
 		4D3B10121367E35D00E00C1E /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4D4051A1176B2D340097F2D6 /* NativeType.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = NativeType.cpp; path = src/NativeType.cpp; sourceTree = "<group>"; };
 		4D4051A2176B2D340097F2D6 /* NativeType.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NativeType.h; path = src/NativeType.h; sourceTree = "<group>"; };
 		4D40538D176B43090097F2D6 /* LiveCode.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = LiveCode.h; path = include/LiveCode.h; sourceTree = "<group>"; };
 		4D57DF461338F14B0044FFEC /* lcidlc */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = lcidlc; sourceTree = BUILT_PRODUCTS_DIR; };
-		4D9036901398FC0800CBC7F6 /* EncodedSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedSupport.c; path = src/EncodedSupport.c; sourceTree = "<group>"; };
 		4D9036911398FC0800CBC7F6 /* Error.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Error.cpp; path = src/Error.cpp; sourceTree = "<group>"; };
 		4D9036921398FC0800CBC7F6 /* Error.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Error.h; path = src/Error.h; sourceTree = "<group>"; };
 		4D9036931398FC0800CBC7F6 /* Interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Interface.cpp; path = src/Interface.cpp; sourceTree = "<group>"; };
@@ -73,7 +74,6 @@
 		4DE553EC13A4D9E200C99D11 /* lclink.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclink.sh; sourceTree = "<group>"; };
 		4DE553ED13A4D9E200C99D11 /* lclinktest.sh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.script.sh; path = lclinktest.sh; sourceTree = "<group>"; };
 		4DED6D131760ECD5001DEF0C /* Support.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; name = Support.java; path = src/Support.java; sourceTree = "<group>"; };
-		4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedJavaSupport.c; path = src/EncodedJavaSupport.c; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -153,8 +153,8 @@
 		4D9036AE1398FC1600CBC7F6 /* Derived Sources */ = {
 			isa = PBXGroup;
 			children = (
-				4DED6F08176233A2001DEF0C /* EncodedJavaSupport.c */,
-				4D9036901398FC0800CBC7F6 /* EncodedSupport.c */,
+				4D332C3F178D7959005DFE92 /* EncodedJavaSupport.c */,
+				4D332C40178D7959005DFE92 /* EncodedSupport.c */,
 			);
 			name = "Derived Sources";
 			sourceTree = "<group>";
@@ -192,6 +192,7 @@
 			buildConfigurationList = 4D57DF4B1338F14B0044FFEC /* Build configuration list for PBXNativeTarget "lcidlc" */;
 			buildPhases = (
 				4DBA0EB113679A08006EEA7D /* Encode Support */,
+				4D332C1B178D78ED005DFE92 /* Encode Java Support */,
 				4D57DF431338F14B0044FFEC /* Sources */,
 				4D57DF441338F14B0044FFEC /* Frameworks */,
 			);
@@ -247,23 +248,38 @@
 /* End PBXReferenceProxy section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		4D332C1B178D78ED005DFE92 /* Encode Java Support */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+				"$(SRCROOT)/src/Support.java",
+			);
+			name = "Encode Java Support";
+			outputPaths = (
+				"$(SRCROOT)/src/EncodedJavaSupport.c",
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.java\" \"$SRCROOT/src/EncodedJavaSupport.c\" \"g_java_support_template\"\n";
+			showEnvVarsInLog = 0;
+		};
 		4DBA0EB113679A08006EEA7D /* Encode Support */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/Support.cpp",
-				"$(SRCROOT)/Support.java",
+				"$(SRCROOT)/src/Support.mm",
 			);
 			name = "Encode Support";
 			outputPaths = (
-				"$(SRCROOT)/EncodedSupport.c",
-				"$(SRCROOT)/EncodedJavaSupport.c",
+				"$(SRCROOT)/src/EncodedSupport.c",
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.mm\" \"$SRCROOT/src/EncodedSupport.c\" \"g_support_template\"\n\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.java\" \"$SRCROOT/src/EncodedJavaSupport.c\" \"g_java_support_template\"\n";
+			shellScript = "\"$SOLUTION_DIR/prebuilt/bin/Revolution.osx\" \"$SRCROOT/encode_source.rev\" \"$SRCROOT/src/Support.mm\" \"$SRCROOT/src/EncodedSupport.c\" \"g_support_template\"\n";
 			showEnvVarsInLog = 0;
 		};
 /* End PBXShellScriptBuildPhase section */
@@ -273,8 +289,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				4DED6F09176233B0001DEF0C /* EncodedJavaSupport.c in Sources */,
-				4D9036A21398FC0800CBC7F6 /* EncodedSupport.c in Sources */,
 				4D9036A31398FC0800CBC7F6 /* Error.cpp in Sources */,
 				4D9036A41398FC0800CBC7F6 /* Interface.cpp in Sources */,
 				4D9036A51398FC0800CBC7F6 /* InterfaceGenerate.cpp in Sources */,
@@ -285,6 +299,8 @@
 				4D9036AA1398FC0800CBC7F6 /* Support.mm in Sources */,
 				4D9036AB1398FC0800CBC7F6 /* Value.cpp in Sources */,
 				4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */,
+				4D332C41178D7959005DFE92 /* EncodedJavaSupport.c in Sources */,
+				4D332C42178D7959005DFE92 /* EncodedSupport.c in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

@@ -15,7 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 // The name of the external (note external name must be all lowercase!)
-external revtestexternal
+external com.runrev.revtestexternal
 
 // This external uses C++ name mangling (by virtue of the fact the source file is obj-c++)
 use c++-naming
@@ -31,3 +31,6 @@ command revTestExternalTestWait
 command revTestExternalTestPost
 
 command revTestExternalTestArrays
+
+tail java command revTestExternalAndroidButtonCreate
+tail java command revTestExternalAndroidButtonDestroy

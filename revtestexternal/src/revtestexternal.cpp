@@ -130,6 +130,16 @@ void revTestExternalTestArrays(void)
 {
 }
 
+#ifndef __ANDROID__
+void revTestExternalAndroidButtonCreate(void)
+{
+}
+
+void revTestExternalAndroidButtonDestroy(void)
+{
+}
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This handler is called when the external is loaded. We use it to set all our

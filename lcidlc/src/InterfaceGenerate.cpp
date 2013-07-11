@@ -1134,29 +1134,56 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	CoderWriteLine(p_coder, "JNIEXPORT jint JNICALL JNI_OnLoad(JavaVM *vm, void *reserved)");
 	CoderWriteLine(p_coder, "{");
 	CoderWriteLine(p_coder, "\ts_java_vm = vm;");
-	CoderWriteLine(p_coder, "\tJavaEnv *t_java_env; s_java_vm -> GetEnv((void **)&t_java_env, JNI_VERSION_1_2);");
-	CoderWriteLine(p_coder, "\ts_java_class = (jclass)t_java_env -> NewGlobalRef(t_java_env -> FindClass(\"%s\"));", t_java_class_name);
+	CoderWriteLine(p_coder, "\tJNIEnv *t_java_env; s_java_vm -> GetEnv((void **)&t_java_env, JNI_VERSION_1_2);");
+	CoderWriteLine(p_coder, "\ts_java_class = (jclass)t_java_env -> NewGlobalRef(t_java_env -> FindClass(\"%s/%s\"));", t_java_class_name, NameGetCString(self -> name));
 	CoderWriteLine(p_coder, "");
 	CoderWriteLine(p_coder, "\treturn JNI_VERSION_1_2;");
 	CoderWriteLine(p_coder, "}");
-
-#ifdef NOT_USED
-	for(uint32_t i = 0; t_java_class_name[i] != '\0'; i++)
-		if (t_java_class_name[i] == '/')
-			t_java_class_name[i] = '_';
-	CoderWriteLine(p_coder, "extern \"C\" JNIEXPORT jobject JNICALL Java_%s_getActivity(JNIEnv *env, jobject obj) __attribute((visibility(\"default\")));", t_java_class_name);
-	CoderWriteLine(p_coder, "JNIEXPORT jobject JNICALL Java_%s_getActivity(JNIEnv *env, jobject obj)");
-	CoderWriteLine(p_coder, "{");
-	CoderWriteLine(p_coder, "\treturn java__get_activity();");
-	CoderWriteLine(p_coder, "}");
-	CoderWriteLine(p_coder, "extern \"C\" JNIEXPORT jobject JNICALL Java_%s_getContainer(JNIEnv *env, jobject obj) __attribute((visibility(\"default\")));", t_java_class_name);
-	CoderWriteLine(p_coder, "JNIEXPORT jobject JNICALL Java_%s_getContainer(JNIEnv *env, jobject obj)");
-	CoderWriteLine(p_coder, "{");
-	CoderWriteLine(p_coder, "\treturn java__get_container();");
-	CoderWriteLine(p_coder, "}");
 	free(t_java_class_name);
-#endif
-	
+
+	static struct { const char *name; const char *result; const char *signature; const char *args; } s_java_exports[] =
+	{
+		{ "InterfaceQueryActivity", "jobject", nil, nil },
+		{ "InterfaceQueryContainer", "jobject", nil, nil },
+		{ "ObjectResolve", "jlong", "jobject chunk", "chunk" },
+		{ "ObjectRetain", "void", "jlong object", "object" },
+		{ "ObjectRelease", "void", "jlong object", "object" },
+		{ "ObjectExists", "jboolean", "jlong object", "object" },
+		{ "ObjectSend", "void", "jlong object, jobject message, jobject signature, jobject arguments", "object, message, signature, arguments" },
+		{ "ObjectPost", "void", "jlong object, jobject message, jobject signature, jobject arguments", "object, message, signature, arguments" },
+		{ "ContextMe", "jlong", nil, nil },
+		{ "ContextTarget", "jlong", nil, nil },
+	};
+	t_java_class_name = strdup(NameGetCString(self -> qualified_name));
+	for(uint32_t i = 0; t_java_class_name[i] != '\0'; i++)
+		if (t_java_class_name[i] == '.')
+			t_java_class_name[i] = '_';
+	for(unsigned int i = 0; i < sizeof(s_java_exports) / sizeof(s_java_exports[0]); i++)
+	{
+		if (s_java_exports[i] . signature == nil)
+		{
+			CoderWriteLine(p_coder, "extern \"C\" JNIEXPORT %s JNICALL Java_%s_LC__1_1%s(JNIEnv *env, jobject obj) __attribute((visibility(\"default\")));", s_java_exports[i] . result, t_java_class_name, s_java_exports[i] . name);
+			CoderWriteLine(p_coder, "JNIEXPORT %s JNICALL Java_%s_LC__1_1%s(JNIEnv *env, jobject obj)", s_java_exports[i] . result, t_java_class_name, s_java_exports[i] . name);
+			CoderWriteLine(p_coder, "{");
+			if (strcmp(s_java_exports[i] . result, "void") == 0)
+				CoderWriteLine(p_coder, "  java_lcapi_%s(env);", s_java_exports[i] . name);
+			else
+				CoderWriteLine(p_coder, "  return java_lcapi_%s(env);", s_java_exports[i] . name);
+		}
+		else
+		{
+			CoderWriteLine(p_coder, "extern \"C\" JNIEXPORT %s JNICALL Java_%s_LC__1_1%s(JNIEnv *env, jobject obj, %s) __attribute((visibility(\"default\")));", s_java_exports[i] . result, t_java_class_name, s_java_exports[i] . name, s_java_exports[i] . signature);
+			CoderWriteLine(p_coder, "JNIEXPORT %s JNICALL Java_%s_LC__1_1%s(JNIEnv *env, jobject obj, %s)", s_java_exports[i] . result, t_java_class_name, s_java_exports[i] . name, s_java_exports[i] . signature);
+			CoderWriteLine(p_coder, "{");
+			if (strcmp(s_java_exports[i] . result, "void") == 0)
+				CoderWriteLine(p_coder, "  java_lcapi_%s(env, %s);", s_java_exports[i] . name, s_java_exports[i] . args);
+			else
+				CoderWriteLine(p_coder, "  return java_lcapi_%s(env, %s);", s_java_exports[i] . name, s_java_exports[i] . args);
+		}
+		CoderWriteLine(p_coder, "}");
+	}
+	free(t_java_class_name);
+
 	CoderWriteLine(p_coder, "#endif");
 	
 	return true;
@@ -1175,7 +1202,8 @@ static bool InterfaceGenerateJava(InterfaceRef self, CoderRef p_coder)
 {
 	CoderWriteLine(p_coder, "package %s;", NameGetCString(self -> qualified_name));
 	
-	// CoderWrite(p_coder, "%s", strchr(g_java_support_template, '\n') + 1);
+	for(unsigned int i = 1; g_java_support_template[i] != nil; i++)
+		CoderWrite(p_coder, "%s", g_java_support_template[i]);
 	
 	return true;
 }
@@ -1193,7 +1221,7 @@ bool InterfaceGenerate(InterfaceRef self, const char *p_output)
 	char *t_native_output_filename, *t_java_output_filename;
 	if (MCCStringEndsWith(p_output, "/"))
 	{
-		MCCStringFormat(t_native_output_filename, "%s%s.lcidlc.cpp", p_output, NameGetCString(self -> name));
+		MCCStringFormat(t_native_output_filename, "%s%s.lcidl.cpp", p_output, NameGetCString(self -> name));
 		MCCStringFormat(t_java_output_filename, "%sLC.java", p_output);
 	}
 	else
