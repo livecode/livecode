@@ -1200,6 +1200,11 @@ void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 	MCRedrawDirtyScreen();
 }
 
+MCGFloat MCResGetDeviceScale(void)
+{
+	return (MCGFloat)s_iphone_res_scale;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2012-08-06: [[ Fibers ]] Primitives for executing code on the main fiber.
@@ -1470,7 +1475,7 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 	{
 		CGPoint t_location;
 		t_location = [ t_touch locationInView: p_view ];
-		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x * s_iphone_res_scale, t_location . y * s_iphone_res_scale);
+		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x, t_location . y);
 	}
 }
 

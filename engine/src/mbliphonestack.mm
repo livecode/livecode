@@ -33,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "mbliphoneapp.h"
 
+#include "resolution.h"
+
 #include <UIKit/UIKit.h>
 #include <QuartzCore/QuartzCore.h>
 
@@ -260,7 +262,7 @@ void layer_animation_changes(UIView *p_new_view, UIView *p_old_view, uint32_t p_
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 
-static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, UIImage *&r_uiimage)
+static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, MCGFloat p_scale, UIImage *&r_uiimage)
 {
 	bool t_success = true;
 	
@@ -270,7 +272,7 @@ static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, UIImage *&r_uiim
 	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), p_copy, false, t_cg_image);
 	
 	if (t_success)
-		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image]);
+		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image scale:p_scale orientation:0.0]);
 	
 	if (t_cg_image != nil)
 		CGImageRelease(t_cg_image);
@@ -304,7 +306,7 @@ static void effectrect_phase_1(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, ctxt->current_image);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, MCResGetDeviceScale(), ctxt->current_image);
 	[ctxt -> current_image retain];
 }
 
@@ -312,7 +314,7 @@ static void effectrect_phase_2(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, ctxt->updated_image);
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, MCResGetDeviceScale(), ctxt->updated_image);
 	[ctxt -> updated_image retain];
 	
 	ctxt -> current_image_view = [[UIImageView alloc] initWithImage: ctxt -> current_image];
@@ -320,7 +322,8 @@ static void effectrect_phase_2(void *p_context)
 	ctxt -> updated_image_view = [[UIImageView alloc] initWithImage: ctxt -> updated_image];
 	[ctxt -> updated_image release];
 	
-	float t_scale = MCIPhoneGetResolutionScale();
+//	float t_scale = MCIPhoneGetResolutionScale();
+	float t_scale = 1.0;
 	
 	// MW-2011-09-27: [[ iOSApp ]] Adjust for content origin.
 	CGRect t_bounds;

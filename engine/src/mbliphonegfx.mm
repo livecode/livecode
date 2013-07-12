@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphoneview.h"
 
+#include "resolution_independence.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern UIView *MCIPhoneGetView(void);
@@ -68,11 +70,6 @@ void MCStack::updatewindow(MCRegionRef p_dirty_rgn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
 
 static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 {
@@ -238,8 +235,7 @@ public:
 		CGContextSetInterpolationQuality(m_context, kCGInterpolationNone);
 		
 		CGContextScaleCTM(m_context, 1.0, -1.0);
-		CGContextTranslateCTM(m_context, 0.0, -(m_height / MCIPhoneGetResolutionScale()));
-		CGContextScaleCTM(m_context, 1.0 / MCIPhoneGetResolutionScale(), 1.0 / MCIPhoneGetResolutionScale());
+		CGContextTranslateCTM(m_context, 0.0, -m_height);
 		CGContextSaveGState(m_context);
 		
 		r_context = m_context;
@@ -305,17 +301,23 @@ protected:
 		return;
     
     MCRectangle t_hull;
-    t_hull . x = (int)floor(rect . origin . x * MCIPhoneGetResolutionScale());
-    t_hull . y = (int)floor(rect . origin . y * MCIPhoneGetResolutionScale());
-    t_hull . width = (int)ceil((rect . origin . x + rect . size . width) * MCIPhoneGetResolutionScale()) - t_hull . x;
-    t_hull . height = (int)ceil((rect . origin . y + rect . size . height) * MCIPhoneGetResolutionScale()) - t_hull . y;
+    t_hull . x = (int)floor(rect . origin . x);
+    t_hull . y = (int)floor(rect . origin . y);
+    t_hull . width = (int)ceil(rect . origin . x + rect . size . width) - t_hull . x;
+    t_hull . height = (int)ceil(rect . origin . y + rect . size . height) - t_hull . y;
     
-	MCRegionRef t_dirty_rgn;
-	MCRegionCreate(t_dirty_rgn);
-	MCRegionSetRect(t_dirty_rgn, t_hull);
-	MCUIKitStackSurface t_surface(t_dirty_rgn, UIGraphicsGetCurrentContext(), t_stack -> getrect() . height);
-	t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
-	MCRegionDestroy(t_dirty_rgn);
+	CGContext *t_context;
+	t_context = UIGraphicsGetCurrentContext();
+	CGContextScaleCTM(t_context, 1.0 / MCIPhoneGetResolutionScale(), 1.0 / MCIPhoneGetResolutionScale());
+	
+	MCRegionRef t_device_region;
+	t_device_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_device_region);
+	/* UNCHECKED */ MCRegionSetRect(t_device_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_hull)));
+	
+	MCUIKitStackSurface t_surface(t_device_region, t_context, t_stack -> getrect() . height);
+	t_stack -> redrawwindow(&t_surface, t_device_region);
+	MCRegionDestroy(t_device_region);
 }
 
 - (void)renderInRegion: (MCRegionRef)p_region
@@ -323,8 +325,8 @@ protected:
 	MCRectangle t_visible;
 	t_visible = MCRegionGetBoundingBox(p_region);
 	
-	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetResolutionScale(), (float)t_visible . y / MCIPhoneGetResolutionScale(),
-											 (float)t_visible . width / MCIPhoneGetResolutionScale(), (float)t_visible . height / MCIPhoneGetResolutionScale()) ];
+	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x, (float)t_visible . y,
+											 (float)t_visible . width, (float)t_visible . height) ];
 	[[self layer] display];
 }
 
