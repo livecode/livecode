@@ -239,6 +239,17 @@ inline MCGRectangle MCGRectangleTranslate(MCGRectangle p_rect, MCGFloat p_dx, MC
 	return t_rect;
 }
 
+static inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
+{
+	MCGRectangle t_rect;
+	t_rect.origin.x = p_rect.origin.x * p_scale;
+	t_rect.origin.y = p_rect.origin.y * p_scale;
+	t_rect.size.width = p_rect.size.width * p_scale;
+	t_rect.size.height = p_rect.size.height * p_scale;
+	
+	return t_rect;
+}
+
 MCGRectangle MCGRectangleIntersection(MCGRectangle rect_1, MCGRectangle rect_2);
 
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)

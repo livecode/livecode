@@ -265,7 +265,7 @@
 		E84A254E1680BFFD00EA7ACC /* image_rep.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E84A254C1680BFF600EA7ACC /* image_rep.cpp */; };
 		E85A91BF16C2B4D300C07FA9 /* stackcache.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */; };
 		E86481931439BCE100775960 /* StoreKit.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = E86481921439BCE100775960 /* StoreKit.framework */; };
-		E8A5546D177B319700DABC1A /* iphone_test.rev in Resources */ = {isa = PBXBuildFile; fileRef = E8C22E76177B2C32003785D3 /* iphone_test.rev */; };
+		E8A5546D177B319700DABC1A /* iphone_test.livecode in Resources */ = {isa = PBXBuildFile; fileRef = E8C22E76177B2C32003785D3 /* iphone_test.livecode */; };
 		E8C22C46177B1700003785D3 /* cgimageutil.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E8C22C45177B1700003785D3 /* cgimageutil.cpp */; };
 		E8C22C53177B1BED003785D3 /* libgraphicsmobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C4C177B1B79003785D3 /* libgraphicsmobile.a */; };
 		E8C22C54177B1BED003785D3 /* libskiamobile.a in Frameworks */ = {isa = PBXBuildFile; fileRef = E8C22C52177B1B87003785D3 /* libskiamobile.a */; };
@@ -873,6 +873,8 @@
 		E84BE35D170C987D00807CF6 /* sha1.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = sha1.h; path = src/sha1.h; sourceTree = "<group>"; };
 		E84BE35F170C98F700807CF6 /* textbuffer.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textbuffer.h; path = src/textbuffer.h; sourceTree = "<group>"; };
 		E84BE361170C992600807CF6 /* visualeffect.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = visualeffect.h; path = src/visualeffect.h; sourceTree = "<group>"; };
+		E852D71D178F103400485363 /* resolution.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = resolution.h; path = src/resolution.h; sourceTree = "<group>"; };
+		E852D71E1790290500485363 /* graphics_util.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = graphics_util.h; path = src/graphics_util.h; sourceTree = "<group>"; };
 		E85A405A14D8470900AF2300 /* mblandroidbrowser.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidbrowser.cpp; path = src/mblandroidbrowser.cpp; sourceTree = "<group>"; };
 		E85A91BE16C2B4D300C07FA9 /* stackcache.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = stackcache.cpp; path = src/stackcache.cpp; sourceTree = "<group>"; };
 		E85D136F1461A99700219867 /* mblandroidstore.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidstore.cpp; path = src/mblandroidstore.cpp; sourceTree = "<group>"; };
@@ -901,7 +903,7 @@
 		E8C22E71177B2960003785D3 /* graphicscontext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = graphicscontext.cpp; path = src/graphicscontext.cpp; sourceTree = "<group>"; };
 		E8C22E72177B2960003785D3 /* graphicscontext.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphicscontext.h; path = src/graphicscontext.h; sourceTree = "<group>"; };
 		E8C22E74177B2B53003785D3 /* mbltheme.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mbltheme.cpp; path = src/mbltheme.cpp; sourceTree = "<group>"; };
-		E8C22E76177B2C32003785D3 /* iphone_test.rev */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.rev; path = ../../../submit/trunk/engine/tests/iphone_test.rev; sourceTree = "<group>"; };
+		E8C22E76177B2C32003785D3 /* iphone_test.livecode */ = {isa = PBXFileReference; lastKnownFileType = file; name = iphone_test.livecode; path = "../ios-testing/iphone_test.livecode"; sourceTree = "<group>"; };
 		E8C8A774147BC020003780F0 /* mblsensor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblsensor.cpp; path = src/mblsensor.cpp; sourceTree = "<group>"; };
 		E8C8A776147BCA60003780F0 /* mblsensor.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = mblsensor.h; path = src/mblsensor.h; sourceTree = "<group>"; };
 		E8D0566B14F3DB640093E16F /* PushReceiver.java */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.java; path = PushReceiver.java; sourceTree = "<group>"; };
@@ -1225,7 +1227,7 @@
 		4DD3DD7B1040AA4700CAC7EF = {
 			isa = PBXGroup;
 			children = (
-				E8C22E76177B2C32003785D3 /* iphone_test.rev */,
+				E8C22E76177B2C32003785D3 /* iphone_test.livecode */,
 				E82D43BF1712CF1A00A10289 /* Projects */,
 				E82D43BE1712CEF500A10289 /* Frameworks */,
 				4DD3DF3A1040B03B00CAC7EF /* Configurations */,
@@ -1262,6 +1264,8 @@
 		4DD3DDAC1040ABB000CAC7EF /* Sources */ = {
 			isa = PBXGroup;
 			children = (
+				E852D71E1790290500485363 /* graphics_util.h */,
+				E852D71D178F103400485363 /* resolution.h */,
 				E81AC12D170C8CCE00315861 /* Core - Foundation */,
 				E81AC137170C8E1000315861 /* Core - Graphics */,
 				E81AC13A170C8F1200315861 /* Core - Language */,
@@ -1899,7 +1903,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				E8A5546D177B319700DABC1A /* iphone_test.rev in Resources */,
+				E8A5546D177B319700DABC1A /* iphone_test.livecode in Resources */,
 				4D7E3A591281835D00E7F80A /* Default.png in Resources */,
 				4CD038F316C8FE1700EBCCBA /* Default-568h@2x.png in Resources */,
 			);
