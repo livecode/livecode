@@ -29,7 +29,19 @@ public:
     virtual void Delete(void);
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters); 
+    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+    
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
+    virtual void SetVisible(MCExecContext& ctxt, bool* p_visible);
+    virtual void SetOpaque(MCExecContext& ctxt, bool* p_opaque);
+    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha);
+    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color);
+    
+    virtual void GetRect(MCExecContext& ctxt, MCRectangle*& p_rect);
+    virtual void GetVisible(MCExecContext& ctxt, bool*& p_visible);
+    virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque);
+    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha);
+    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color);
     
     // standard event handling methods
     void PostNotifyEvent(MCNameRef p_message);

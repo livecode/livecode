@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -74,6 +75,27 @@ public:
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 	
+    virtual void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
+    virtual void SetAutoFit(MCExecContext& ctxt, bool* p_value);
+    virtual void SetDelayRequests(MCExecContext& ctxt, bool p_value);
+    virtual void SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type);
+    virtual void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value);
+    virtual void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value);
+    virtual void SetCanBounce(MCExecContext& ctxt, bool* p_value);
+    virtual void SetScrollingEnabled(MCExecContext& ctxt, bool* p_value);
+    
+    virtual void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
+    virtual void GetAutoFit(MCExecContext& ctxt, bool*& r_value);
+    virtual void GetDelayRequests(MCExecContext& ctxt, bool& r_value);
+    virtual void GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type);
+    virtual void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value);
+    virtual void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value);
+    virtual void GetCanBounce(MCExecContext& ctxt, bool*& r_value);
+    virtual void GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value);
+    
+    virtual void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
+    virtual void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
+    
 	void HandleStartEvent(void);
 	void HandleFinishEvent(void);
 	bool HandleLoadRequest(NSURLRequest *request, UIWebViewNavigationType type, bool notify);
@@ -113,6 +135,172 @@ MCNativeControlType MCNativeBrowserControl::GetType(void)
 
 bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types);
 bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list);
+
+void MCNativeBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view != nil)
+    {
+        [m_delegate setPendingRequest: true];
+        [t_view loadRequest: [NSURLRequest requestWithURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]]];
+    }
+}
+
+void MCNativeBrowserControl::SetAutoFit(MCExecContext& ctxt, bool* p_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    if (t_view != nil)
+        [t_view setScalesPageToFit: *p_value ? YES : NO];
+}
+
+void MCNativeBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
+{
+    m_delay_requests = p_value;
+}
+
+void MCNativeBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type)
+{
+/*
+    UIDataDetectorTypes t_data_types;
+    t_data_types = UIDataDetectorTypeNone;
+    if (ep.isempty() || ep.getsvalue() == "none")
+        t_data_types = UIDataDetectorTypeNone;
+    else if (ep.getsvalue() == "all")
+        t_data_types = UIDataDetectorTypeAll;
+    else
+    {
+        if (!datadetectortypes_from_string(ep.getcstring(), t_data_types))
+        {
+            MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
+            return ES_ERROR;
+        }
+    }
+    
+    [t_view setDataDetectorTypes: t_data_types];
+*/
+}
+
+void MCNativeBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    if (t_view != nil)
+        [t_view setAllowsInlineMediaPlayback: *p_value ? YES : NO];
+}
+
+void MCNativeBrowserControl::SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    if (t_view != nil)
+        [t_view setMediaPlaybackRequiresUserAction: *p_value ? YES : NO];
+}
+void MCNativeBrowserControl::SetCanBounce(MCExecContext& ctxt, bool* p_value)
+{
+    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
+    //   the UIWebView.
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    if (t_view != nil)
+        [GetScrollView() setBounces: *p_value ? YES : NO];
+}
+
+void MCNativeBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool* p_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    if (t_view != nil)
+        [GetScrollView() setScrollEnabled: *p_value ? YES : NO];
+}
+
+void MCNativeBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
+{
+    if (MCStringCreateWithCString(GetUrl(), r_url))
+        return;
+    
+    ctxt . Throw();
+}
+               
+void MCNativeBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    r_value = (t_view != nil ? [t_view canGoForward] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    r_value = (t_view != nil ? [t_view canGoBack] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetAutoFit(MCExecContext& ctxt, bool*& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    *r_value = (t_view != nil ? [t_view  scalesPageToFit] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = m_delay_requests;
+}
+
+void MCNativeBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type)
+{
+/*
+    char *t_type_list = nil;
+    if (!datadetectortypes_to_string([t_view dataDetectorTypes], t_type_list))
+    {
+        MCeerror->add(EE_UNDEFINED, 0, 0);
+        return ES_ERROR;
+    }
+    ep.grabbuffer(t_type_list, MCCStringLength(t_type_list));
+    return ES_NORMAL;
+*/
+}
+
+void MCNativeBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    *r_value = (t_view != nil ? [t_view allowsInlineMediaPlayback] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    *r_value = (t_view != nil ? [t_view mediaPlaybackRequiresUserAction] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetCanBounce(MCExecContext& ctxt, bool*& r_value)
+{
+    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
+    //   the UIWebView.
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    *r_value = (t_view != nil ? [GetScrollView() bounces] == YES : NO);
+}
+
+void MCNativeBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value)
+{
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    *r_value = (t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO);
+}
+
 Exec_stat MCNativeBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	UIWebView *t_view;

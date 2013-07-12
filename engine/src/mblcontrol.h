@@ -173,6 +173,14 @@ struct MCNativeControlEnumEntry
 	int32_t value;
 };
 
+struct MCNativeControlColor
+{
+    uint16_t r;
+    uint16_t g;
+    uint16_t b;
+    uint16_t a;
+};
+
 class MCNativeControl
 {
 public:
@@ -210,6 +218,46 @@ public:
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
+    
+    // Native control setters & getters
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect) = 0;
+    virtual void SetVisible(MCExecContext& ctxt, bool* p_visible) = 0;
+    virtual void SetOpaque(MCExecContext& ctxt, bool* p_opaque) = 0;
+    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha) = 0;
+    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color) = 0;
+    
+    virtual void GetRect(MCExecContext& ctxt, MCRectangle*& p_rect) = 0;
+    virtual void GetVisible(MCExecContext& ctxt, bool*& p_visible) = 0;
+    virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque) = 0;
+    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha) = 0;
+    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color) = 0;
+    
+    // Native browser setters & getters
+    virtual void SetUrl(MCExecContext& ctxt, MCStringRef p_url) = 0;
+    virtual void SetAutoFit(MCExecContext& ctxt, bool* p_value) = 0;
+    virtual void SetDelayRequests(MCExecContext& ctxt, bool p_value) = 0;
+    virtual void SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type) = 0;
+    virtual void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value) = 0;
+    virtual void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value) = 0;
+    virtual void SetCanBounce(MCExecContext& ctxt, bool* p_value) = 0;
+    virtual void SetScrollingEnabled(MCExecContext& ctxt, bool* p_value) = 0;
+    
+    virtual void GetUrl(MCExecContext& ctxt, MCStringRef& r_url) = 0;
+    virtual void GetAutoFit(MCExecContext& ctxt, bool*& r_value) = 0;
+    virtual void GetDelayRequests(MCExecContext& ctxt, bool& r_value) = 0;
+    virtual void GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type) = 0;
+    virtual void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value) = 0;
+    virtual void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value) = 0;
+    virtual void GetCanBounce(MCExecContext& ctxt, bool*& r_value) = 0;
+    virtual void GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value) = 0;
+    
+    // Native browser read only props
+    virtual void GetCanAdvance(MCExecContext& ctxt, bool& r_value) = 0;
+    virtual void GetCanRetreat(MCExecContext& ctxt, bool& r_value) = 0;
+    
+    void GetId(MCExecContext& ctxt, uinteger_t& r_id);
+    void GetName(MCExecContext& ctxt, MCStringRef& r_name);
+    void SetName(MCExecContext& ctxt, MCStringRef p_name);
     
 	// The current target of any message that has been dispatched
 	static MCNativeControl *ChangeTarget(MCNativeControl *target);

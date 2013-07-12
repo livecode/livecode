@@ -31,13 +31,28 @@ public:
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters); 
     
+    
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
+    virtual void SetVisible(MCExecContext& ctxt, bool* p_visible);
+    virtual void SetOpaque(MCExecContext& ctxt, bool* p_opaque);
+    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha);
+    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color);
+    
+    virtual void GetRect(MCExecContext& ctxt, MCRectangle*& r_rect);
+    virtual void GetVisible(MCExecContext& ctxt, bool*& p_visible);
+    virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque);
+    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha);
+    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color);
+    
 	// Get the native view of the instance.
 	UIView *GetView(void);
 	
 	// Various helper functions
 	static Exec_stat ParseColor(MCExecPoint& ep, UIColor*& r_color);
 	static Exec_stat FormatColor(MCExecPoint& ep, UIColor *color);
-	
+    
+    static bool ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color);
+	static bool FormatColor(const UIColor* p_color, MCNativeControlColor& r_color);
 	static bool ParseString(MCExecPoint& ep, NSString*& r_string);
 	static bool FormatString(MCExecPoint& ep, NSString *string);
 	static bool ParseUnicodeString(MCExecPoint& ep, NSString*& r_string);

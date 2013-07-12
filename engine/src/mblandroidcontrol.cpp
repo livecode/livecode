@@ -98,6 +98,66 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, p_rect -> x, p_rect -> y, p_rect -> x + p_rect -> width, p_rect->y + p_rect -> height);
+}
+
+void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool* p_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, *p_visible);
+}
+
+void MCAndroidControl::SetOpaque(MCExecContext& ctxt, bool* p_opaque)
+{
+    // NO-OP
+}
+
+void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, *p_alpha);
+}
+
+void MCAndroidControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, p_color -> r >> 8, p_color -> g >> 8, p_color -> b >> 8, p_color -> a >> 8);
+}
+
+void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle*& p_rect)
+{
+    if (m_view != nil)
+    {
+        int16_t i1, i2, i3, i4;
+        GetViewRect(m_view, i1, i2, i3, i4);
+        p_rect -> x = i1;
+        p_rect -> y = i2;
+        p_rect -> width = i3 - i1;
+        p_rect -> height = i4 - i2;
+    }
+}
+
+void MCAndroidControl::GetVisible(MCExecContext& ctxt, bool*& p_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getVisible", "b", p_visible);
+}
+
+void MCAndroidControl::GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", p_alpha);
+}
+
+void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color)
+{
+    if (m_view != nil)
+        GetViewBackgroundColor(m_view, p_color -> r, p_color -> g, p_color -> b, p_color -> a);
+}
+
 Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)

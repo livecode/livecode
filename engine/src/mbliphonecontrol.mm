@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #import <Foundation/Foundation.h>
 #import <UIKit/UIKit.h>
@@ -107,6 +108,20 @@ Exec_stat MCiOSControl::ParseColor(MCExecPoint& ep, UIColor*& r_color)
 	return ES_NORMAL;
 }
 
+bool MCiOSControl::ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color)
+{
+	float t_red, t_green, t_blue, t_alpha;
+    
+    t_red = MCColorComponentToFloat(p_color . r);
+    t_green = MCColorComponentToFloat(p_color . g);
+    t_blue = MCColorComponentToFloat(p_color . b);
+    t_alpha = MCColorComponentToFloat(p_color . a);
+	
+	r_color = [UIColor colorWithRed:t_red green:t_green blue:t_blue alpha:t_alpha];
+	
+	return true;
+}
+
 Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 {
 	CGColorRef t_bgcolor;
@@ -130,6 +145,24 @@ Exec_stat MCiOSControl::FormatColor(MCExecPoint& ep, UIColor *p_color)
 		ep.clear();
 	
 	return ES_NORMAL;
+}
+
+bool MCiOSControl::FormatColor(const UIColor* p_color, MCNativeControlColor& r_color)
+{
+	CGColorRef t_bgcolor;
+	t_bgcolor = [p_color CGColor];
+	const CGFloat *t_components;
+    
+	if (t_bgcolor != nil && CGColorSpaceGetModel(CGColorGetColorSpace(t_bgcolor)) == kCGColorSpaceModelRGB)
+	{
+		t_components = CGColorGetComponents(t_bgcolor);
+		r_color . r = MCFloatToColorComponent(t_components[0]);
+		r_color . g = MCFloatToColorComponent(t_components[1]);
+		r_color . b = MCFloatToColorComponent(t_components[2]);
+		r_color . a = MCFloatToColorComponent(t_components[3]);
+	}
+	
+	return true;
 }
 
 bool MCiOSControl::ParseString(MCExecPoint& ep, NSString*& r_string)
@@ -194,6 +227,97 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCiOSControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    if (m_view != nil)
+        [m_view setFrame: CGRectMake((float)p_rect -> x / t_scale, (float)p_rect -> y / t_scale, (float)p_rect -> width / t_scale, (float)p_rect -> height / t_scale)];
+}
+
+void MCiOSControl::SetVisible(MCExecContext& ctxt, bool* p_visible)
+{
+    if (m_view != nil)
+        [m_view setHidden: !*p_visible];
+}
+
+void MCiOSControl::SetOpaque(MCExecContext& ctxt, bool* p_opaque)
+{
+    if (m_view != nil)
+        [m_view setOpaque: *p_opaque];
+}
+
+void MCiOSControl::SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha)
+{
+    if (m_view != nil)
+        [m_view setAlpha: (float)*p_alpha / 255.0];
+}
+
+void MCiOSControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color)
+{
+    UIColor *t_color;
+    if (ParseColor(*p_color, t_color) == ES_NORMAL)
+        if (m_view != nil)
+            [m_view setBackgroundColor: t_color];
+}
+
+void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle*& r_rect)
+{
+    if (m_view != nil)
+    {
+        CGRect t_rect;
+        t_rect = [m_view frame];
+        
+        float t_scale;
+        t_scale = MCIPhoneGetNativeControlScale();
+        
+        r_rect -> x = t_rect.origin.x * t_scale;
+        r_rect -> y = t_rect.origin.y * t_scale;
+        r_rect -> width = t_rect.size.width * t_scale;
+        r_rect -> height = t_rect.size.height * t_scale;
+    }
+    else
+        r_rect = nil;
+}
+
+void MCiOSControl::GetVisible(MCExecContext& ctxt, bool*& p_visible)
+{
+    if (m_view != nil)
+        *p_visible = ![m_view isHidden] == True;
+    else
+        p_visible = nil;
+}
+
+void MCiOSControl::GetOpaque(MCExecContext& ctxt, bool*& p_opaque)
+{
+    if (m_view != nil)
+        *p_opaque = [m_view isOpaque] == True;
+    else
+        p_opaque = nil;
+}
+
+void MCiOSControl::GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha)
+{
+    if (m_view != nil)
+        *p_alpha = 255 * [m_view alpha];
+    else
+        p_alpha = nil;
+}
+
+void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color)
+{
+    if (m_view != nil)
+    {
+        if (FormatColor([m_view backgroundColor], *p_color))
+            return;
+    }
+    else
+        return;
+    
+    ctxt . Throw();
+}
+            
 Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	switch(p_property)

@@ -1337,11 +1337,10 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_ad), &(&t_type));
     
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+   MCAdTopLeft t_topleft;
 
     if (t_success)
-        t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
+        t_success = MCParseParameters(p_parameters, "uu", &t_topleft.x, &t_topleft.y);
     
     MCAutoArrayRef t_metadata;
     
@@ -1349,7 +1348,7 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
         t_success = MCParseParameters(p_parameters, "a", &(&t_metadata));
     
 	if (t_success)
-		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft_x, t_topleft_y, *t_metadata);
+		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft, *t_metadata);
     
     
     if (!ctxt . HasError())
@@ -1453,16 +1452,15 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_ad));
 	
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+    MCAdTopLeft t_topleft;
     
 	if (t_success)
-		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft);
     
     if (!ctxt . HasError())
     {
         MCAutoStringRef t_topleft_string;
-        if(MCStringFormat(&t_topleft_string, "uu", t_topleft_x, t_topleft_y))
+        if(MCStringFormat(&t_topleft_string, "%u,%u", t_topleft.x, t_topleft.y))
         {
             ctxt.SetTheResultToValue(*t_topleft_string);
             return ES_NORMAL;
@@ -1483,14 +1481,13 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
 	MCAutoStringRef t_ad;
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+    MCAdTopLeft t_topleft;
 	
     if (t_success)
-		t_success = MCParseParameters(p_parameters, "xuu", &(&t_ad), t_topleft_x, t_topleft_y);
+		t_success = MCParseParameters(p_parameters, "xuu", &(&t_ad), t_topleft.x, t_topleft.y);
     
 	if (t_success)
-		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft);
     
     if (!ctxt . HasError())
 		return ES_NORMAL;

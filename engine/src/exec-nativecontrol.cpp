@@ -23,9 +23,17 @@
 #include "mcio.h"
 #include "util.h"
 
+#include "mcerror.h"
+#include "execpt.h"
+#include "printer.h"
 #include "globals.h"
-#include "debug.h"
-#include "handler.h"
+#include "dispatch.h"
+#include "stack.h"
+#include "image.h"
+#include "player.h"
+#include "param.h"
+#include "eventqueue.h"
+#include "exec.h"
 
 #include "mblsyntax.h"
 #include "mblcontrol.h"
@@ -39,6 +47,111 @@ MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, GetProperty, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(NativeControl, Do, 0)
 MC_EXEC_DEFINE_GET_METHOD(NativeControl, Target, 1)
 MC_EXEC_DEFINE_GET_METHOD(NativeControl, ControlList, 1)
+
+//////////
+
+static bool MCParseRGBA(const MCString &p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
+{
+	bool t_success = true;
+	Boolean t_parsed;
+	uint2 r, g, b, a;
+	const char *t_data = p_data.getstring();
+	uint32_t l = p_data.getlength();
+	if (t_success)
+	{
+		r = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
+		t_success = t_parsed;
+	}
+	if (t_success)
+	{
+		g = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
+		t_success = t_parsed;
+	}
+	if (t_success)
+	{
+		b = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
+		t_success = t_parsed;
+	}
+	if (t_success)
+	{
+		a = MCU_max(0, MCU_min(255, MCU_strtol(t_data, l, ',', t_parsed)));
+		if (!t_parsed)
+		{
+			if (p_require_alpha)
+				t_success = false;
+			else
+				a = 255;
+		}
+	}
+	
+	if (t_success)
+	{
+		r_red = r;
+		r_green = g;
+		r_blue = b;
+		r_alpha = a;
+	}
+	return t_success;
+}
+
+static void MCNativeControlColorParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlColor& r_output)
+{
+    uint8_t t_r8, t_g8, t_b8, t_a8;
+    MCColor t_color;
+    if (MCParseRGBA(MCStringGetOldString(p_input), false, t_r8, t_g8, t_b8, t_a8))
+    {
+        r_output . r = (t_r8 << 8) | t_r8;
+        r_output . g = (t_g8 << 8) | t_g8;
+        r_output . b = (t_b8 << 8) | t_b8;
+        r_output . a = (t_a8 << 8) | t_a8;
+        return;
+    }
+    
+    if (MCscreen->parsecolor(p_input, t_color))
+    {
+        r_output . r = t_color.red;
+        r_output . g = t_color.green;
+        r_output . b = t_color.blue;
+        r_output . a = 0xFFFF;
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_OBJECT_BADCOLOR);
+}
+
+static void MCNativeControlColorFormat(MCExecContext& ctxt, const MCNativeControlColor& p_input, MCStringRef& r_output)
+{
+    uint16_t t_r, t_g, t_b, t_a;
+    t_r = p_input . r >> 8;
+    t_g = p_input . g >> 8;
+    t_b = p_input . b >> 8;
+    t_a = p_input . a >> 8;
+    
+    if (t_a != 255 && MCStringFormat(r_output, "%u,%u,%u,%u", t_r, t_g, t_b, t_a))
+        return;
+    
+    if (MCStringFormat(r_output, "%u,%u,%u", t_r, t_g, t_b))
+        return;
+    
+	ctxt . Throw();
+}
+
+static void MCNativeControlColorFree(MCExecContext& ctxt, MCNativeControlColor& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCNativeControlColorTypeInfo =
+{
+	"NativeControl.Color",
+	sizeof(MCNativeControlColor),
+	(void *)MCNativeControlColorParse,
+	(void *)MCNativeControlColorFormat,
+	(void *)MCNativeControlColorFree
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo = &_kMCNativeControlColorTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -118,3 +231,42 @@ void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
+{
+    r_id = m_id;
+}
+
+void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
+{
+    if (m_name != nil)
+    {
+        if (MCStringCreateWithCString(m_name, r_name))
+            return;
+    }
+    else
+    {
+        r_name = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    ctxt . Throw();
+}
+
+void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
+{
+    if (m_name != nil)
+	{
+		MCCStringFree(m_name);
+		m_name = nil;
+	}
+	
+	if (p_name != nil)
+    {
+        if (MCCStringClone(MCStringGetCString(p_name), m_name))
+            return;
+	}
+    else
+        return;
+	
+    ctxt . Throw();
+}
