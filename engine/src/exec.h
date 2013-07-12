@@ -3352,8 +3352,8 @@ extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
 
-void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uint2 p_line, uint2 p_pos);
-void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
+void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
+void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
 
 void MCDebuggingGetTraceAbort(MCExecContext& ctxtm, bool& r_value);
 void MCDebuggingSetTraceAbort(MCExecContext& ctxtm, bool p_value);
@@ -3484,6 +3484,10 @@ void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_nam
 
 ///////////
 
+struct MCAdTopLeft;
+
+extern MCExecCustomTypeInfo* kMCAdTopLeftTypeInfo;
+
 extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
 extern MCExecMethodInfo* kMCAdExecreateAdMethodInfo;
 extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
@@ -3494,12 +3498,12 @@ extern MCExecMethodInfo* kMCAdSetTopLeftOfAdMethodInfo;
 extern MCExecMethodInfo* kMCAdGetAdsMethodInfo;
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key);
-void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata);
+void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, MCAdTopLeft p_topleft, MCArrayRef p_metadata);
 void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name);
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible);
 void MCAdGetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool& r_visible);
-void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y);
-void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y);
+void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, MCAdTopLeft& r_topleft);
+void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, const MCAdTopLeft& p_topleft);
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 ///////////
