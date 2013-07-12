@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #endif
 
+#include "resolution.h"
+
 static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
@@ -994,6 +996,14 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
     if (!p_effective)
         return getrect();
     
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCRectangle t_rect = getwindowrect();
+	t_rect.x = t_rect.x / t_scale;
+	t_rect.y = t_rect.y / t_scale;
+	t_rect.width = t_rect.width / t_scale;
+	t_rect.height = t_rect.height / t_scale;
     return getwindowrect();
 }
 
@@ -1013,7 +1023,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	{
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(rect);
-		t_new_rect = t_display -> viewport;
+		t_new_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display -> viewport));
 	}
 	else
 		t_new_rect = nrect;
@@ -1480,7 +1490,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_SCREEN:
 	{
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(rect);
+		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect)));
 		ep . setint(t_display -> index + 1);
 	}
 	break;

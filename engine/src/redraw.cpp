@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "tilecache.h"
 #include "context.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method resets the layer-related attribtues to defaults and marks them
@@ -1112,7 +1114,7 @@ void MCStack::setacceleratedrendering(bool p_value)
 	MCscreen -> getdisplays(t_display, false);
 	
 	MCRectangle t_viewport;
-	t_viewport = t_display -> viewport;
+	t_viewport = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display -> viewport));
 	
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;

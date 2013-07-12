@@ -55,6 +55,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 #include "graphicscontext.h"
+#include "resolution.h"
 
 void MCStack::external_idle()
 {
@@ -565,8 +566,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 
 Boolean MCStack::setwindow(Window w)
 {
-	if (!MCscreen->getwindowgeometry(window, rect))
+	MCRectangle t_rect;
+	if (!MCscreen->getwindowgeometry(window, t_rect))
 		return False;
+	rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
 	window = w;
 	state |= CS_FOREIGN_WINDOW;
 	return True;
@@ -1840,9 +1843,11 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		MCRectangle t_rect;
 		MCU_set_rect(t_rect, rel . x + rel . width / 2, rel . y + rel . height / 2, 1, 1);
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(t_rect);
-		if (rel.y + rel.height + rect.height > t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE
-		        && rel.y - rect.height > t_display -> workarea . y + MENU_SPACE)
+		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect)));
+		MCRectangle t_workarea;
+		t_workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display -> workarea));
+		if (rel.y + rel.height + rect.height > t_workarea . y + t_workarea . height - MENU_SPACE
+		        && rel.y - rect.height > t_workarea . y + MENU_SPACE)
 			positionrel(rel, OP_ALIGN_LEFT, OP_TOP);
 		else
 			positionrel(rel, OP_ALIGN_LEFT, OP_BOTTOM);
@@ -1918,8 +1923,12 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// "bind" the stack's rect... Or in other words, make sure its within the 
 	// screens (well viewports) working area.
 	if (!(flags & F_FORMAT_FOR_PRINTING) && !(state & CS_BEEN_MOVED))
-		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS)
+	{
+		MCRectangle t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+		MCscreen->boundrect(t_rect, (!(flags & F_DECORATIONS)
 		                           || decorations & WD_TITLE), mode);
+		rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	}
 	
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
@@ -1960,31 +1969,34 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 		MCRectangle t_nearest;
 		MCU_set_rect(t_nearest, rect . x + rect . width / 2, rect . y + rect . height / 2, 1, 1);
-		t_display = MCscreen -> getnearestdisplay(t_nearest);
+		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_nearest)));
 
+		MCRectangle t_workarea;
+		t_workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display->workarea));
+		
 		// Make sure that we are not starting our menu off the top of the screen.
-		if (rect . y < t_display -> workarea . y + MENU_SPACE)
-			rect . y = t_display -> workarea . y + MENU_SPACE, oldy = rect . y;
+		if (rect . y < t_workarea . y + MENU_SPACE)
+			rect . y = t_workarea . y + MENU_SPACE, oldy = rect . y;
 
 		// Make sure that the length of the menu does not make it drop of the bottom of the screen.
-		if (rect . y + rect . height > t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE)
+		if (rect . y + rect . height > t_workarea . y + t_workarea . height - MENU_SPACE)
 		{
 			t_fullscreen_menu = true ;
-			if (rect . height > t_display -> workarea . height - ( 2 * MENU_SPACE) )
+			if (rect . height > t_workarea . height - ( 2 * MENU_SPACE) )
 			{
-				rect . y = t_display -> workarea . y + MENU_SPACE ;
-				rect . height = ( t_display -> workarea . height - ( 2 * MENU_SPACE) ) ;
+				rect . y = t_workarea . y + MENU_SPACE ;
+				rect . height = ( t_workarea . height - ( 2 * MENU_SPACE) ) ;
 			}
 			else
 			{
-				rect . y = t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE - rect . height ;
+				rect . y = t_workarea . y + t_workarea . height - MENU_SPACE - rect . height ;
 				oldy = rect . y;
 			}
 		}
 
 		// Get the middle point (Y) of the work area.
 		int t_screen_mid_y ;
-		t_screen_mid_y = ( t_display -> workarea . height / 2 ) + t_display -> workarea . y ;
+		t_screen_mid_y = ( t_workarea . height / 2 ) + t_workarea . y ;
 
 		bool t_menu_downwards = ( rel.y < t_screen_mid_y ) ;
 
@@ -2009,9 +2021,9 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				int t_adjust_y ;
 				t_adjust_y = ((rect.y + rect.height) - rel.y) ;
 				rect.y -= t_adjust_y ;
-				if ( rect.y < t_display->workarea.y + MENU_SPACE ) 
+				if ( rect.y < t_workarea.y + MENU_SPACE ) 
 				{
-					rect.y = t_display -> workarea . y + MENU_SPACE ;
+					rect.y = t_workarea . y + MENU_SPACE ;
 					rect.height = rel.y ;
 				}
 			}
@@ -2474,10 +2486,22 @@ void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
+			// p_region is in device coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
+			MCGRectangle t_user_rect;
+			t_user_rect = MCGRectangleToUserSpace(MCRectangleToMCGRectangle(MCRegionGetBoundingBox(p_region)));
+			
+			MCRectangle t_rect;
+			t_rect = MCGRectangleGetIntegerBounds(t_user_rect);
+			
+			// scale user -> device space
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
 			MCGraphicsContext *t_old_context = nil;
 			t_old_context = new MCGraphicsContext(t_context);
 			if (t_old_context != nil)
-				render(t_old_context, MCRegionGetBoundingBox(p_region));
+				render(t_old_context, t_rect);
 			delete t_old_context;
 			p_surface -> UnlockGraphics();
 		}

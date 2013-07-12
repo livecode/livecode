@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revbuild.h"
 #include "parentscript.h"
 
+#include "resolution.h"
+
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"
@@ -528,7 +530,9 @@ void MCStack::mode_load(void)
 
 void MCStack::mode_getrealrect(MCRectangle& r_rect)
 {
-	MCscreen->getwindowgeometry(window, r_rect);
+	MCRectangle t_rect;
+	MCscreen->getwindowgeometry(window, t_rect);
+	r_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
 }
 
 void MCStack::mode_takewindow(MCStack *other)
