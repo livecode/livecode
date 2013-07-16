@@ -273,7 +273,7 @@ static void InterfaceGenerateMethodStubContext(InterfaceRef self, CoderRef p_cod
 		CoderWriteLine(p_coder, "\t%s arg_%d;", t_type, i);
 	}
 	if (t_variant -> return_type != nil)
-		CoderWriteLine(p_coder, "\t%s t_result;", native_type_to_type_out_cstring(NativeTypeFromName(t_variant -> return_type)));
+		CoderWriteLine(p_coder, "\t%s result;", native_type_to_type_out_cstring(NativeTypeFromName(t_variant -> return_type)));
 	CoderWriteLine(p_coder, "};");
 	CoderWriteLine(p_coder, "");
 }
