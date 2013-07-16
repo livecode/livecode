@@ -45,15 +45,15 @@ bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCNativeBrowserControl;
+class MCiOSBrowserControl;
 
-@interface MCNativeBrowserDelegate : NSObject <UIWebViewDelegate>
+@interface MCiOSBrowserDelegate : NSObject <UIWebViewDelegate>
 {
-	MCNativeBrowserControl *m_instance;
+	MCiOSBrowserControl *m_instance;
 	bool m_pending_request;
 }
 
-- (id)initWithInstance:(MCNativeBrowserControl*)instance;
+- (id)initWithInstance:(MCiOSBrowserControl*)instance;
 
 - (void)webView:(UIWebView *)webView didFailLoadWithError:(NSError *)error;
 - (BOOL)webView:(UIWebView *)webView shouldStartLoadWithRequest:(NSURLRequest *)request navigationType:(UIWebViewNavigationType)navigationType;
@@ -64,10 +64,10 @@ class MCNativeBrowserControl;
 
 @end
 
-class MCNativeBrowserControl: public MCiOSControl
+class MCiOSBrowserControl: public MCiOSControl
 {
 public:
-	MCNativeBrowserControl(void);
+	MCiOSBrowserControl(void);
 	
 	virtual MCNativeControlType GetType(void);
 	
@@ -75,26 +75,26 @@ public:
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 	
-    virtual void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
-    virtual void SetAutoFit(MCExecContext& ctxt, bool* p_value);
-    virtual void SetDelayRequests(MCExecContext& ctxt, bool p_value);
-    virtual void SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type);
-    virtual void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value);
-    virtual void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value);
-    virtual void SetCanBounce(MCExecContext& ctxt, bool* p_value);
-    virtual void SetScrollingEnabled(MCExecContext& ctxt, bool* p_value);
+    void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
+    void SetAutoFit(MCExecContext& ctxt, bool* p_value);
+    void SetDelayRequests(MCExecContext& ctxt, bool p_value);
+    void SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type);
+    void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value);
+    void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value);
+    void SetCanBounce(MCExecContext& ctxt, bool* p_value);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool* p_value);
     
-    virtual void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
-    virtual void GetAutoFit(MCExecContext& ctxt, bool*& r_value);
-    virtual void GetDelayRequests(MCExecContext& ctxt, bool& r_value);
-    virtual void GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type);
-    virtual void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value);
-    virtual void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value);
-    virtual void GetCanBounce(MCExecContext& ctxt, bool*& r_value);
-    virtual void GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value);
+    void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
+    void GetAutoFit(MCExecContext& ctxt, bool*& r_value);
+    void GetDelayRequests(MCExecContext& ctxt, bool& r_value);
+    void GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type);
+    void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value);
+    void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value);
+    void GetCanBounce(MCExecContext& ctxt, bool*& r_value);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value);
     
-    virtual void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
-    virtual void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
+    void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
+    void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
     
 	void HandleStartEvent(void);
 	void HandleFinishEvent(void);
@@ -107,28 +107,28 @@ public:
 	UIScrollView *GetScrollView(void);
 	
 protected:
-	virtual ~MCNativeBrowserControl(void);
+	virtual ~MCiOSBrowserControl(void);
 	virtual UIView *CreateView(void);
 	virtual void DeleteView(UIView *view);
 	
 private:
-	MCNativeBrowserDelegate *m_delegate;
+	MCiOSBrowserDelegate *m_delegate;
 	bool m_delay_requests;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeBrowserControl::MCNativeBrowserControl(void)
+MCiOSBrowserControl::MCiOSBrowserControl(void)
 {
 	m_delegate = nil;
 	m_delay_requests = false;
 }
 
-MCNativeBrowserControl::~MCNativeBrowserControl(void)
+MCiOSBrowserControl::~MCiOSBrowserControl(void)
 {
 }
 
-MCNativeControlType MCNativeBrowserControl::GetType(void)
+MCNativeControlType MCiOSBrowserControl::GetType(void)
 {
 	return kMCNativeControlTypeBrowser;
 }
@@ -136,7 +136,7 @@ MCNativeControlType MCNativeBrowserControl::GetType(void)
 bool datadetectortypes_from_string(const char *p_list, UIDataDetectorTypes &r_types);
 bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list);
 
-void MCNativeBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
+void MCiOSBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -148,7 +148,7 @@ void MCNativeBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
     }
 }
 
-void MCNativeBrowserControl::SetAutoFit(MCExecContext& ctxt, bool* p_value)
+void MCiOSBrowserControl::SetAutoFit(MCExecContext& ctxt, bool* p_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -156,12 +156,12 @@ void MCNativeBrowserControl::SetAutoFit(MCExecContext& ctxt, bool* p_value)
         [t_view setScalesPageToFit: *p_value ? YES : NO];
 }
 
-void MCNativeBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
+void MCiOSBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
 {
     m_delay_requests = p_value;
 }
 
-void MCNativeBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type)
+void MCiOSBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type)
 {
 /*
     UIDataDetectorTypes t_data_types;
@@ -183,7 +183,7 @@ void MCNativeBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intenum_t
 */
 }
 
-void MCNativeBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value)
+void MCiOSBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -191,14 +191,14 @@ void MCNativeBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, b
         [t_view setAllowsInlineMediaPlayback: *p_value ? YES : NO];
 }
 
-void MCNativeBrowserControl::SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value)
+void MCiOSBrowserControl::SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
     if (t_view != nil)
         [t_view setMediaPlaybackRequiresUserAction: *p_value ? YES : NO];
 }
-void MCNativeBrowserControl::SetCanBounce(MCExecContext& ctxt, bool* p_value)
+void MCiOSBrowserControl::SetCanBounce(MCExecContext& ctxt, bool* p_value)
 {
     // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
     //   the UIWebView.
@@ -208,7 +208,7 @@ void MCNativeBrowserControl::SetCanBounce(MCExecContext& ctxt, bool* p_value)
         [GetScrollView() setBounces: *p_value ? YES : NO];
 }
 
-void MCNativeBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool* p_value)
+void MCiOSBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool* p_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -216,7 +216,7 @@ void MCNativeBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool* p_va
         [GetScrollView() setScrollEnabled: *p_value ? YES : NO];
 }
 
-void MCNativeBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
+void MCiOSBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
     if (MCStringCreateWithCString(GetUrl(), r_url))
         return;
@@ -224,7 +224,7 @@ void MCNativeBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
     ctxt . Throw();
 }
                
-void MCNativeBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
+void MCiOSBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -232,7 +232,7 @@ void MCNativeBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
     r_value = (t_view != nil ? [t_view canGoForward] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
+void MCiOSBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -240,7 +240,7 @@ void MCNativeBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
     r_value = (t_view != nil ? [t_view canGoBack] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetAutoFit(MCExecContext& ctxt, bool*& r_value)
+void MCiOSBrowserControl::GetAutoFit(MCExecContext& ctxt, bool*& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -248,12 +248,12 @@ void MCNativeBrowserControl::GetAutoFit(MCExecContext& ctxt, bool*& r_value)
     *r_value = (t_view != nil ? [t_view  scalesPageToFit] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
+void MCiOSBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
 {
     r_value = m_delay_requests;
 }
 
-void MCNativeBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type)
+void MCiOSBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type)
 {
 /*
     char *t_type_list = nil;
@@ -267,7 +267,7 @@ void MCNativeBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intenum_t
 */
 }
 
-void MCNativeBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value)
+void MCiOSBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -275,7 +275,7 @@ void MCNativeBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, b
     *r_value = (t_view != nil ? [t_view allowsInlineMediaPlayback] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value)
+void MCiOSBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -283,7 +283,7 @@ void MCNativeBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& c
     *r_value = (t_view != nil ? [t_view mediaPlaybackRequiresUserAction] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetCanBounce(MCExecContext& ctxt, bool*& r_value)
+void MCiOSBrowserControl::GetCanBounce(MCExecContext& ctxt, bool*& r_value)
 {
     // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
     //   the UIWebView.
@@ -293,7 +293,7 @@ void MCNativeBrowserControl::GetCanBounce(MCExecContext& ctxt, bool*& r_value)
     *r_value = (t_view != nil ? [GetScrollView() bounces] == YES : NO);
 }
 
-void MCNativeBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value)
+void MCiOSBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value)
 {
     UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -301,7 +301,7 @@ void MCNativeBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_v
     *r_value = (t_view != nil ? [GetScrollView() isScrollEnabled] == YES : NO);
 }
 
-Exec_stat MCNativeBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
+Exec_stat MCiOSBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -375,7 +375,7 @@ Exec_stat MCNativeBrowserControl::Set(MCNativeControlProperty p_property, MCExec
 	return MCiOSControl::Set(p_property, ep);
 }
 
-Exec_stat MCNativeBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
+Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -430,7 +430,7 @@ Exec_stat MCNativeBrowserControl::Get(MCNativeControlProperty p_property, MCExec
 	return MCiOSControl::Get(p_property, ep);
 }
 
-Exec_stat MCNativeBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
+Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -595,7 +595,7 @@ bool datadetectortypes_to_string(UIDataDetectorTypes p_types, char *&r_list)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-const char *MCNativeBrowserControl::GetUrl(void)
+const char *MCiOSBrowserControl::GetUrl(void)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -605,7 +605,7 @@ const char *MCNativeBrowserControl::GetUrl(void)
 	return [[[[t_view request] URL] absoluteString] cStringUsingEncoding: NSMacOSRomanStringEncoding];
 }
 
-bool MCNativeBrowserControl::GetDelayRequests(void)
+bool MCiOSBrowserControl::GetDelayRequests(void)
 {
 	return m_delay_requests;
 }
@@ -613,7 +613,7 @@ bool MCNativeBrowserControl::GetDelayRequests(void)
 // 
 // MW-2012-09-20: [[ Bug 10304 ]] Returns the UIScrollView which is embedded in
 //   the UIWebView.
-UIScrollView *MCNativeBrowserControl::GetScrollView(void)
+UIScrollView *MCiOSBrowserControl::GetScrollView(void)
 {
 	// For iOS5+ theres a proper accessor for it.
 	if (MCmajorosversion >= 500)
@@ -629,7 +629,7 @@ UIScrollView *MCNativeBrowserControl::GetScrollView(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNativeBrowserControl::HandleStartEvent(void)
+void MCiOSBrowserControl::HandleStartEvent(void)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -642,7 +642,7 @@ void MCNativeBrowserControl::HandleStartEvent(void)
 	}
 }
 
-void MCNativeBrowserControl::HandleFinishEvent(void)
+void MCiOSBrowserControl::HandleFinishEvent(void)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -657,7 +657,7 @@ void MCNativeBrowserControl::HandleFinishEvent(void)
 
 // MW-2011-11-03: [[ LoadRequested ]] Returns 'true' if a request was loaded. If
 //   'notify' is true, it dispatches a loadRequested message.
-bool MCNativeBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
+bool MCiOSBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -704,7 +704,7 @@ bool MCNativeBrowserControl::HandleLoadRequest(NSURLRequest *p_request, UIWebVie
 	return t_did_load;
 }
 
-void MCNativeBrowserControl::HandleLoadFailed(NSError *p_error)
+void MCiOSBrowserControl::HandleLoadFailed(NSError *p_error)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -719,7 +719,7 @@ void MCNativeBrowserControl::HandleLoadFailed(NSError *p_error)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UIView *MCNativeBrowserControl::CreateView(void)
+UIView *MCiOSBrowserControl::CreateView(void)
 {
 	UIWebView *t_view;
 	t_view = [[UIWebView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
@@ -728,13 +728,13 @@ UIView *MCNativeBrowserControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCNativeBrowserDelegate alloc] initWithInstance: this];
+	m_delegate = [[MCiOSBrowserDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
 	
 	return t_view;
 }
 
-void MCNativeBrowserControl::DeleteView(UIView *p_view)
+void MCiOSBrowserControl::DeleteView(UIView *p_view)
 {
 	[(UIWebView *)p_view setDelegate: nil];
 	[p_view release];
@@ -747,7 +747,7 @@ void MCNativeBrowserControl::DeleteView(UIView *p_view)
 class MCNativeBrowserStartFinishEvent: public MCCustomEvent
 {
 public:
-	MCNativeBrowserStartFinishEvent(MCNativeBrowserControl *p_target, bool p_finish)
+	MCNativeBrowserStartFinishEvent(MCiOSBrowserControl *p_target, bool p_finish)
 	{
 		m_target = p_target;
 		m_target -> Retain();
@@ -769,14 +769,14 @@ public:
 	}
 	
 private:
-	MCNativeBrowserControl *m_target;
+	MCiOSBrowserControl *m_target;
 	bool m_finish;
 };
 
 class MCNativeBrowserLoadRequestEvent: public MCCustomEvent
 {
 public:
-	MCNativeBrowserLoadRequestEvent(MCNativeBrowserControl *p_target, NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
+	MCNativeBrowserLoadRequestEvent(MCiOSBrowserControl *p_target, NSURLRequest *p_request, UIWebViewNavigationType p_type, bool p_notify)
 	{
 		m_target = p_target;
 		m_target -> Retain();
@@ -802,7 +802,7 @@ public:
 	}
 	
 private:
-	MCNativeBrowserControl *m_target;
+	MCiOSBrowserControl *m_target;
 	NSURLRequest *m_request;
 	UIWebViewNavigationType m_type;
 	bool m_notify;
@@ -811,7 +811,7 @@ private:
 class MCNativeBrowserLoadFailedEvent: public MCCustomEvent
 {
 public:
-	MCNativeBrowserLoadFailedEvent(MCNativeBrowserControl *p_target, NSError *p_error)
+	MCNativeBrowserLoadFailedEvent(MCiOSBrowserControl *p_target, NSError *p_error)
 	{
 		m_target = p_target;
 		m_target -> Retain();
@@ -832,16 +832,16 @@ public:
 	}
 	
 private:
-	MCNativeBrowserControl *m_target;
+	MCiOSBrowserControl *m_target;
 	NSURLRequest *m_request;
 	NSError *m_error;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCNativeBrowserDelegate
+@implementation MCiOSBrowserDelegate
 
-- (id)initWithInstance:(MCNativeBrowserControl*)instance
+- (id)initWithInstance:(MCiOSBrowserControl*)instance
 {
 	self = [super init];
 	if (self == nil)
@@ -907,7 +907,7 @@ private:
 
 bool MCNativeBrowserControlCreate(MCNativeControl*& r_control)
 {
-	r_control = new MCNativeBrowserControl;
+	r_control = new MCiOSBrowserControl;
 	return true;
 }
 

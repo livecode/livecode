@@ -149,9 +149,145 @@ static MCExecCustomTypeInfo _kMCNativeControlColorTypeInfo =
 	(void *)MCNativeControlColorFree
 };
 
+//////////
+
+void MCNativeControlDecelerationRateParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlDecelerationRate& r_output)
+{
+    if (MCStringIsEqualToCString(p_input, "normal", kMCCompareCaseless))
+    {
+        r_output . type  = kMCNativeControlDecelerationRateNormal;
+        return;
+    }
+    else if (MCStringIsEqualToCString(p_input, "fast", kMCCompareCaseless))
+    {
+        r_output . type  = kMCNativeControlDecelerationRateFast;
+        return;
+    }
+    else if (MCU_stor8(p_input, r_output . rate))
+    {
+        r_output . type = kMCNativeControlDecelerationRateCustom;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_OBJECT_NAN);
+}
+
+void MCNativeControlDecelerationRateFormat(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_input, MCStringRef& r_output)
+{
+    if (MCStringFormat(r_output, "%f", p_input . rate))
+        return;
+    
+    ctxt . Throw();
+        
+}
+
+void MCNativeControlDecelerationRateFree(MCExecContext& ctxt, MCNativeControlColor& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCNativeControlDecelerationRateTypeInfo =
+{
+	"NativeControl.DecelerationRate",
+	sizeof(MCNativeControlDecelerationRate),
+	(void *)MCNativeControlDecelerationRateParse,
+	(void *)MCNativeControlDecelerationRateFormat,
+	(void *)MCNativeControlDecelerationRateFree
+};
+
+//////////
+
+void MCNativeControlIndicatorInsetsParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIndicatorInsets& r_output)
+{
+    if (MCU_stoi2x4(p_input, r_output . top, r_output . left, r_output . right, r_output . bottom))
+        return;
+    
+    ctxt . LegacyThrow(EE_OBJECT_NAN);
+}
+
+void MCNativeControlIndicatorInsetsFormat(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_input, MCStringRef& r_output)
+{
+    if (MCStringFormat(r_output, "%d,%d,%d,%d", p_input . top, p_input . left, p_input . right, p_input . bottom))
+        return;
+    
+    ctxt . Throw();
+    
+}
+
+void MCNativeControlIndicatorInsetsFree(MCExecContext& ctxt, MCNativeControlColor& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCNativeControlIndicatorInsetsTypeInfo =
+{
+	"NativeControl.IndicatorInsets",
+	sizeof(MCNativeControlIndicatorInsets),
+	(void *)MCNativeControlIndicatorInsetsParse,
+	(void *)MCNativeControlIndicatorInsetsFormat,
+	(void *)MCNativeControlIndicatorInsetsFree
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCNativeControlIndicatorStyleElementInfo[] =
+{
+    { "", kMCNativeControlIndicatorStyleEmpty },
+    { "default", kMCNativeControlIndicatorStyleDefault },
+    { "white", kMCNativeControlIndicatorStyleWhite },
+    { "black", kMCNativeControlIndicatorStyleBlack }
+};
+
+static MCExecEnumTypeInfo _kMCNativeControlIndicatorStyleTypeInfo =
+{
+    "NativeControl.IndicatorStyle",
+    sizeof(_kMCNativeControlIndicatorStyleElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCNativeControlIndicatorStyleElementInfo
+};
+
+//////////
+
+static MCExecSetTypeElementInfo _kMCNativeControlLoadStateElementInfo[] =
+{
+    { "", kMCNativeControlLoadStateNone },
+	{ "playable", kMCNativeControlLoadStatePlayable },
+	{ "playthrough", kMCNativeControlLoadStatePlaythroughOK },
+	{ "stalled", kMCNativeControlLoadStateStalled },
+};
+
+static MCExecSetTypeInfo _kMCNativeControlLoadStateTypeInfo =
+{
+    "NativeControl.LoadState",
+    sizeof(_kMCNativeControlLoadStateElementInfo) / sizeof(MCExecSetTypeElementInfo),
+    _kMCNativeControlLoadStateElementInfo
+};
+
+//////////
+
+static MCExecEnumTypeElementInfo _kMCNativeControlPlaybackStateElementInfo[] =
+{
+    { "", kMCNativeControlPlaybackStateNone },
+	{ "stopped", kMCNativeControlPlaybackStateStopped },
+	{ "playing", kMCNativeControlPlaybackStatePlaying },
+	{ "paused", kMCNativeControlPlaybackStatePaused },
+	{ "interrupted", kMCNativeControlPlaybackStateInterrupted },
+	{ "seeking forward", kMCNativeControlPlaybackStateSeekingForward },
+	{ "seeking backward", kMCNativeControlPlaybackStateSeekingBackward },
+};
+
+static MCExecEnumTypeInfo _kMCNativeControlPlaybackStateTypeInfo =
+{
+    "NativeControl.PlaybackState",
+    sizeof(_kMCNativeControlPlaybackStateElementInfo) / sizeof(MCExecEnumTypeElementInfo),
+    _kMCNativeControlPlaybackStateElementInfo
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo = &_kMCNativeControlColorTypeInfo;
+MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo = &_kMCNativeControlDecelerationRateTypeInfo;
+MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfor = &_kMCNativeControlIndicatorInsetsTypeInfo;
+MCExecEnumTypeInfo *kMCNativeControlIndicatorStyleTypeInfo = &_kMCNativeControlIndicatorStyleTypeInfo;
+MCExecEnumTypeInfo *kMCNativeControlPlaybackStateTypeInfo = &_kMCNativeControlPlaybackStateTypeInfo;
+MCExecSetTypeInfo *kMCNativeControlLoadStateTypeInfo = &_kMCNativeControlLoadStateTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 

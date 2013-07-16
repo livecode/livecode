@@ -56,6 +56,27 @@ public:
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 
+    void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
+    void SetAutoFit(MCExecContext& ctxt, bool* p_value);
+    void SetDelayRequests(MCExecContext& ctxt, bool p_value);
+    void SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type);
+    void SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value);
+    void SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value);
+    void SetCanBounce(MCExecContext& ctxt, bool* p_value);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool* p_value);
+    
+    void GetUrl(MCExecContext& ctxt, MCStringRef& r_url);
+    void GetAutoFit(MCExecContext& ctxt, bool*& r_value);
+    void GetDelayRequests(MCExecContext& ctxt, bool& r_value);
+    void GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type);
+    void GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value);
+    void GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value);
+    void GetCanBounce(MCExecContext& ctxt, bool*& r_value);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value);
+    
+    void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
+    void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
+    
     void HandleStartEvent(const char *p_url);
 	void HandleFinishEvent(const char *p_url);
     void HandleLoadFailed(const char *p_url, const char *p_error);
@@ -89,6 +110,150 @@ MCAndroidBrowserControl::~MCAndroidBrowserControl(void)
 MCNativeControlType MCAndroidBrowserControl::GetType(void)
 {
     return kMCNativeControlTypeBrowser;
+}
+
+void MCAndroidBrowserControl::SetUrl(MCExecContext& ctxt, MCStringRef p_url)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+    {
+        MCAutoStringRef t_value;
+        /* UNCHECKED */ ep . copyasstringref(&t_value);
+        MCAndroidObjectRemoteCall(t_view, "setUrl", "vx", nil, *t_value);
+    }
+}
+
+void MCAndroidBrowserControl::SetAutoFit(MCExecContext& ctxt, bool* p_value)
+{
+    // NO-OP
+}
+
+void MCAndroidBrowserControl::SetDelayRequests(MCExecContext& ctxt, bool p_value)
+{
+    // NO-OP
+}
+
+void MCAndroidBrowserControl::SetDataDetectorTypes(MCExecContext& ctxt, intenum_t p_type)
+{
+    // NO-OP
+}
+
+void MCAndroidBrowserControl::SetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool* p_value)
+{
+    // NO-OP
+}
+
+void MCAndroidBrowserControl::SetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool* p_value)
+{
+    // NO-OP
+}
+
+void MCAndroidBrowserControl::SetCanBounce(MCExecContext& ctxt, bool* p_value)
+{
+    // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
+    //   the WebView.
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setCanBounce", "vb", nil, *p_value);
+}
+
+void MCAndroidBrowserControl::SetScrollingEnabled(MCExecContext& ctxt, bool* p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "setScrollingEnabled", "vb", nil, *p_value);
+}
+
+void MCAndroidBrowserControl::GetUrl(MCExecContext& ctxt, MCStringRef& r_url)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAutoStringRef t_url;
+    if (t_view != nil)
+    {
+        MCAndroidObjectRemoteCall(t_view, "getUrl", "x", &t_url);
+        r_url = MCValueRetain(*t_url);
+    }
+}
+
+void MCAndroidBrowserControl::GetCanAdvance(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_retreat = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "canGoForward", "b", &t_can_retreat);
+    
+    r_value = t_can_retreat;
+}
+
+void MCAndroidBrowserControl::GetCanRetreat(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_retreat = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "canGoBack", "b", &t_can_retreat);
+    
+    r_value = t_can_retreat;
+}
+
+void MCAndroidBrowserControl::GetAutoFit(MCExecContext& ctxt, bool*& r_value)
+{
+    *r_value = false;
+}
+
+void MCAndroidBrowserControl::GetDelayRequests(MCExecContext& ctxt, bool& r_value)
+{
+    r_value = false;
+}
+
+void MCAndroidBrowserControl::GetDataDetectorTypes(MCExecContext& ctxt, intenum_t& r_type)
+{
+    r_type = 0;
+}
+
+void MCAndroidBrowserControl::GetAllowsInlineMediaPlayback(MCExecContext& ctxt, bool*& r_value)
+{
+    *r_value = false;
+}
+
+void MCAndroidBrowserControl::GetMediaPlaybackRequiresUserAction(MCExecContext& ctxt, bool*& r_value)
+{
+    *r_value = false;
+}
+
+void MCAndroidBrowserControl::GetCanBounce(MCExecContext& ctxt, bool*& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_can_bounce = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getCanBounce", "b", &t_can_bounce);
+    
+    *r_value = t_can_bounce;
+}
+
+void MCAndroidBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_scroll_enabled = false;
+    if (t_view != nil)
+        MCAndroidObjectRemoteCall(t_view, "getScrollingEnabled", "b", &t_scroll_enabled);
+    
+    *r_value = t_scroll_enabled;
 }
 
 Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)

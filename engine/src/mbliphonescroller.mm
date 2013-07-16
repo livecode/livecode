@@ -27,22 +27,25 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "eventqueue.h"
 #include "util.h"
 
+#include "exec.h"
+
 #import <UIKit/UIKit.h>
 
 #include "mbliphonecontrol.h"
+#include "mblcontrol.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 	
 extern UIView *MCIPhoneGetView(void);
 
-class MCNativeScrollerControl;
+class MCiOSScrollerControl;
 
-@interface MCNativeScrollViewDelegate : NSObject <UIScrollViewDelegate>
+@interface MCiOSScrollViewDelegate : NSObject <UIScrollViewDelegate>
 {
-	MCNativeScrollerControl *m_instance;
+	MCiOSScrollerControl *m_instance;
 }
 
-- (id)initWithInstance:(MCNativeScrollerControl *)instance;
+- (id)initWithInstance:(MCiOSScrollerControl *)instance;
 @end
 
 @interface MCNativeViewEventForwarder : UIView
@@ -51,10 +54,10 @@ class MCNativeScrollerControl;
 }
 @end
 
-class MCNativeScrollerControl : public MCiOSControl
+class MCiOSScrollerControl : public MCiOSControl
 {
 public:
-	MCNativeScrollerControl(void);
+	MCiOSScrollerControl(void);
 	
 	virtual MCNativeControlType GetType(void);
 	
@@ -62,6 +65,43 @@ public:
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 	
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
+    
+    void SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect);
+    void GetContentRect(MCExecContext& ctxt, MCRectangle32*& r_rect);
+    void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
+    void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
+    void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
+    void GetVScroll(MCExecContext& ctxt, integer_t& r_scroll);
+    void SetCanBounce(MCExecContext& ctxt, bool p_value);
+    void GetCanBounce(MCExecContext& ctxt, bool& r_value);
+    void SetCanScrollToTop(MCExecContext& ctxt, bool p_value);
+    void GetCanScrollToTop(MCExecContext& ctxt, bool& r_value);
+    void SetCanCancelTouches(MCExecContext& ctxt, bool p_value);
+    void GetCanCancelTouches(MCExecContext& ctxt, bool& r_value);
+    void SetDelayTouches(MCExecContext& ctxt, bool p_value);
+    void GetDelayTouches(MCExecContext& ctxt, bool& r_value);
+    void SetScrollingEnabled(MCExecContext& ctxt, bool p_value);
+    void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
+    void SetPagingEnabled(MCExecContext& ctxt, bool p_value);
+    void GetPagingEnabled(MCExecContext& ctxt, bool& r_value);
+    void SetDecelerationRate(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_rate);
+    void GetDecelerationRate(MCExecContext& ctxt, MCNativeControlDecelerationRate& r_rate);
+    void SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style);
+    void GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style);
+    void SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets);
+    void GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets);
+    void SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value);
+    void GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value);
+    void SetShowVerticalIndicator(MCExecContext& ctxt, bool p_value);
+    void GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value);
+    void SetLockDirection(MCExecContext& ctxt, bool p_value);
+    void GetLockDirection(MCExecContext& ctxt, bool& r_value);
+    
+    void GetTracking(MCExecContext& ctxt, bool& r_value);
+    void GetDragging(MCExecContext& ctxt, bool& r_value);
+    void GetDecelerating(MCExecContext& ctxt, bool& r_value);
+    
 	void HandleEvent(MCNameRef message);
 
 	void HandleScrollEvent(void);
@@ -73,17 +113,17 @@ public:
 	bool m_post_scroll_event;
 	void UpdateForwarderBounds(void);
 protected:
-	virtual ~MCNativeScrollerControl(void);
+	virtual ~MCiOSScrollerControl(void);
 	
 private:
-	MCNativeScrollViewDelegate *m_delegate;
+	MCiOSScrollViewDelegate *m_delegate;
 	MCNativeViewEventForwarder *m_forwarder;
 	MCRectangle32 m_content_rect;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCNativeScrollerControl::MCNativeScrollerControl(void)
+MCiOSScrollerControl::MCiOSScrollerControl(void)
 {
 	m_delegate = nil;
 	m_forwarder = nil;
@@ -94,12 +134,12 @@ MCNativeScrollerControl::MCNativeScrollerControl(void)
 	m_post_scroll_event = true;
 }
 
-MCNativeScrollerControl::~MCNativeScrollerControl(void)
+MCiOSScrollerControl::~MCiOSScrollerControl(void)
 {
 	[m_forwarder release];
 }
 
-MCNativeControlType MCNativeScrollerControl::GetType(void)
+MCNativeControlType MCiOSScrollerControl::GetType(void)
 {
 	return kMCNativeControlTypeScroller;
 }
@@ -117,6 +157,415 @@ bool MCScrollViewGetContentOffset(UIScrollView *p_view, int32_t &r_x, int32_t &r
 	r_x = t_offset.x * t_scale;
 	r_y = t_offset.y * t_scale;
 	return true;
+}
+
+void MCiOSScrollerControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+{
+    MCiOSControl::SetRect(ctxt, p_rect);
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (!ctxt . HasError() && t_view != nil && m_forwarder != nil)
+        UpdateForwarderBounds();
+}
+
+void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view != nil)
+        [t_view setContentSize:CGSizeMake((float)m_content_rect.width / t_scale, (float)m_content_rect.height / t_scale)];
+}
+
+void MCiOSScrollerControl::GetContentRect(MCExecContext& ctxt, MCRectangle32*& r_rect)
+{
+    if (GetView())
+        *r_rect = m_content_rect;
+    else
+        r_rect = nil;
+}
+
+void MCiOSScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    int32_t t_x, t_y;
+    if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
+        [t_view setContentOffset: CGPointMake((float)(p_scroll - m_content_rect.x) / t_scale, (float)t_y / t_scale)];
+    
+    UpdateForwarderBounds();
+}
+
+void MCiOSScrollerControl::GetHScroll(MCExecContext& ctxt, integer_t& r_scroll)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+    {
+        float t_scale;
+        t_scale = MCIPhoneGetNativeControlScale();
+        
+        r_scroll = m_content_rect.x + [t_view contentOffset].x * t_scale;
+    }
+    else
+        r_scroll = 0;
+}
+void MCiOSScrollerControl::SetVScroll(MCExecContext& ctxt, integer_t p_scroll)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    int32_t t_x, t_y;
+    if (t_view != nil && MCScrollViewGetContentOffset(t_view, t_x, t_y))
+        [t_view setContentOffset: CGPointMake((float)t_x / t_scale, (float)(p_scroll - m_content_rect.y) / t_scale)];
+}
+
+void MCiOSScrollerControl::GetVScroll(MCExecContext& ctxt, integer_t& r_scroll)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+    {
+        float t_scale;
+        t_scale = MCIPhoneGetNativeControlScale();
+        
+        r_scroll = m_content_rect.y + [t_view contentOffset].y * t_scale;
+    }
+    else
+        r_scroll = 0;
+}
+void MCiOSScrollerControl::SetCanBounce(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setBounces: p_value];
+}
+
+void MCiOSScrollerControl::GetCanBounce(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view bounces];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::SetCanScrollToTop(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setScrollsToTop: p_value];
+}
+void MCiOSScrollerControl::GetCanScrollToTop(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view scrollsToTop];
+    else
+        r_value = false;
+}
+void MCiOSScrollerControl::SetCanCancelTouches(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setCanCancelContentTouches: p_value];
+}
+void MCiOSScrollerControl::GetCanCancelTouches(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view canCancelContentTouches];
+    else
+        r_value = false;
+}
+void MCiOSScrollerControl::SetDelayTouches(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setDelaysContentTouches: p_value];
+}
+
+void MCiOSScrollerControl::GetDelayTouches(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view delaysContentTouches];
+    else
+        r_value = false;
+}
+void MCiOSScrollerControl::SetScrollingEnabled(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setScrollEnabled: p_value];
+}
+void MCiOSScrollerControl::GetScrollingEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isScrollEnabled];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::SetPagingEnabled(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setPagingEnabled: p_value];
+}
+
+void MCiOSScrollerControl::GetPagingEnabled(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isPagingEnabled];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::SetDecelerationRate(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_rate)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    float t_deceleration;
+    switch (p_rate . type)
+    {
+        case kMCNativeControlDecelerationRateNormal:
+            t_deceleration = UIScrollViewDecelerationRateNormal;
+            break;
+        case kMCNativeControlDecelerationRateFast:
+                    t_deceleration = UIScrollViewDecelerationRateFast;
+            break;
+        case kMCNativeControlDecelerationRateCustom:
+            t_deceleration = p_rate . rate;
+            break;
+    }
+    
+    if (t_view)
+        [t_view setDecelerationRate: t_deceleration];
+}
+
+void MCiOSScrollerControl::GetDecelerationRate(MCExecContext& ctxt, MCNativeControlDecelerationRate& r_rate)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    r_rate . type = kMCNativeControlDecelerationRateCustom;
+    
+    if (t_view)
+        r_rate . rate = [t_view decelerationRate];
+    else
+        r_rate . rate = 0;
+}
+
+void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    UIScrollViewIndicatorStyle t_style;
+    
+    if (t_view)
+    {
+        switch (p_style)
+        {
+            case kMCNativeControlIndicatorStyleDefault:
+            case kMCNativeControlIndicatorStyleEmpty:
+                t_style = UIScrollViewIndicatorStyleDefault;
+                break;
+            case kMCNativeControlIndicatorStyleBlack:
+                t_style = UIScrollViewIndicatorStyleBlack;
+                break;
+            case kMCNativeControlIndicatorStyleWhite:
+                t_style = UIScrollViewIndicatorStyleWhite;
+                break;
+        }
+    
+        [t_view setIndicatorStyle: t_style];
+    }
+}
+
+void MCiOSScrollerControl::GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style)
+{
+        UIScrollView *t_view;
+        t_view = (UIScrollView*)GetView();
+    
+        if (t_view)
+        {
+            switch ([t_view indicatorStyle])
+            {
+                case UIScrollViewIndicatorStyleDefault:
+                    r_style = kMCNativeControlIndicatorStyleDefault;
+                    break;
+                case UIScrollViewIndicatorStyleBlack:
+                    r_style = kMCNativeControlIndicatorStyleBlack;
+                    break;
+                case UIScrollViewIndicatorStyleWhite:
+                    r_style = kMCNativeControlIndicatorStyleWhite;
+                    break;
+            }
+        }
+        else
+            r_style = kMCNativeControlIndicatorStyleEmpty;
+}
+
+void MCiOSScrollerControl::SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setScrollIndicatorInsets: UIEdgeInsetsMake((float)p_insets . top / t_scale, (float)p_insets . left / t_scale, (float)p_insets . bottom / t_scale, (float)p_insets . right / t_scale)];
+}
+void MCiOSScrollerControl::GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets)
+{
+    float t_scale;
+    t_scale = MCIPhoneGetNativeControlScale();
+    
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    UIEdgeInsets t_insets;
+    t_insets = [t_view scrollIndicatorInsets];
+    
+    r_insets . left = (int16_t)(t_insets.left * t_scale);
+    r_insets . top = (int16_t)(t_insets.top * t_scale);
+    r_insets . right = (int16_t)(t_insets.right * t_scale);
+    r_insets . bottom = (int16_t)(t_insets.bottom * t_scale);
+}
+
+void MCiOSScrollerControl::SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setShowsHorizontalIndicator: p_value];
+}
+void MCiOSScrollerControl::GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view showsHorizontalScrollIndicator];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::SetShowVerticalIndicator(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setShowsVerticalIndicator: p_value];
+}
+
+void MCiOSScrollerControl::GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view showsVerticalScrollIndicator];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::SetLockDirection(MCExecContext& ctxt, bool p_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        [t_view setDirectionalLockEnabled: p_value];
+}
+void MCiOSScrollerControl::GetLockDirection(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isDirectionalLockEnabled];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::GetTracking(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isTracking];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::GetDragging(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isDragging];
+    else
+        r_value = false;
+}
+
+void MCiOSScrollerControl::GetDecelerating(MCExecContext& ctxt, bool& r_value)
+{
+    UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view)
+        r_value = [t_view isDecelerating];
+    else
+        r_value = false;
 }
 
 Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_rect, MCNativeControlProperty p_property, MCExecPoint&ep)
@@ -330,7 +779,7 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCNativeScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
+Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -455,7 +904,7 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 	return ES_NOT_HANDLED;
 }
 
-Exec_stat MCNativeScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
+Exec_stat MCiOSScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView *)GetView();
@@ -468,7 +917,7 @@ Exec_stat MCNativeScrollerControl::Get(MCNativeControlProperty p_property, MCExe
 		return t_status;
 }
 
-Exec_stat MCNativeScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
+Exec_stat MCiOSScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -485,7 +934,7 @@ Exec_stat MCNativeScrollerControl::Do(MCNativeControlAction p_action, MCParamete
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNativeScrollerControl::HandleEvent(MCNameRef p_message)
+void MCiOSScrollerControl::HandleEvent(MCNameRef p_message)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -498,7 +947,7 @@ void MCNativeScrollerControl::HandleEvent(MCNameRef p_message)
 	}
 }
 
-void MCNativeScrollerControl::HandleEndDragEvent(bool p_decelerate)
+void MCiOSScrollerControl::HandleEndDragEvent(bool p_decelerate)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -511,7 +960,7 @@ void MCNativeScrollerControl::HandleEndDragEvent(bool p_decelerate)
 	}
 }
 
-void MCNativeScrollerControl::HandleScrollEvent(void)
+void MCiOSScrollerControl::HandleScrollEvent(void)
 {
 	MCObject *t_target;
 	t_target = GetOwner();
@@ -529,7 +978,7 @@ void MCNativeScrollerControl::HandleScrollEvent(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-UIView *MCNativeScrollerControl::CreateView(void)
+UIView *MCiOSScrollerControl::CreateView(void)
 {
 	UIScrollView *t_view;
 	t_view = [[UIScrollView alloc] initWithFrame: CGRectMake(0, 0, 0, 0)];
@@ -538,7 +987,7 @@ UIView *MCNativeScrollerControl::CreateView(void)
 	
 	[t_view setHidden: YES];
 	
-	m_delegate = [[MCNativeScrollViewDelegate alloc] initWithInstance: this];
+	m_delegate = [[MCiOSScrollViewDelegate alloc] initWithInstance: this];
 	[t_view setDelegate: m_delegate];
 	m_forwarder = [[MCNativeViewEventForwarder alloc] initWithFrame: CGRectMake(0,0,0,0)];
 	[t_view addSubview: m_forwarder];
@@ -546,7 +995,7 @@ UIView *MCNativeScrollerControl::CreateView(void)
 	return t_view;
 }
 
-void MCNativeScrollerControl::DeleteView(UIView *p_view)
+void MCiOSScrollerControl::DeleteView(UIView *p_view)
 {
 	[((UIScrollView*)p_view) setDelegate: nil];
 	[p_view release];
@@ -554,7 +1003,7 @@ void MCNativeScrollerControl::DeleteView(UIView *p_view)
 	[m_delegate release];
 }
 
-void MCNativeScrollerControl::UpdateForwarderBounds(void)
+void MCiOSScrollerControl::UpdateForwarderBounds(void)
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -563,10 +1012,10 @@ void MCNativeScrollerControl::UpdateForwarderBounds(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCNativeScrollerEvent : public MCCustomEvent
+class MCiOSScrollerEvent : public MCCustomEvent
 {
 public:
-	MCNativeScrollerEvent(MCNativeScrollerControl *p_target, MCNameRef p_message)
+	MCiOSScrollerEvent(MCiOSScrollerControl *p_target, MCNameRef p_message)
 	{
 		m_target = p_target;
 		m_target->Retain();
@@ -585,14 +1034,14 @@ public:
 	}
 	
 private:
-	MCNativeScrollerControl *m_target;
+	MCiOSScrollerControl *m_target;
 	MCNameRef m_message;
 };
 	
-class MCNativeScrollerEndDragEvent : public MCCustomEvent
+class MCiOSScrollerEndDragEvent : public MCCustomEvent
 {
 public:
-	MCNativeScrollerEndDragEvent(MCNativeScrollerControl *p_target, bool p_decelerate)
+	MCiOSScrollerEndDragEvent(MCiOSScrollerControl *p_target, bool p_decelerate)
 	{
 		m_target = p_target;
 		m_target->Retain();
@@ -611,15 +1060,15 @@ public:
 	}
 	
 private:
-	MCNativeScrollerControl *m_target;
+	MCiOSScrollerControl *m_target;
 	bool m_decelerate;
 };
 
 
-class MCNativeScrollerScrollEvent : public MCCustomEvent
+class MCiOSScrollerScrollEvent : public MCCustomEvent
 {
 public:
-	MCNativeScrollerScrollEvent(MCNativeScrollerControl *p_target)
+	MCiOSScrollerScrollEvent(MCiOSScrollerControl *p_target)
 	{
 		m_target = p_target;
 		m_target->Retain();
@@ -637,14 +1086,14 @@ public:
 	}
 	
 private:
-	MCNativeScrollerControl *m_target;
+	MCiOSScrollerControl *m_target;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-@implementation MCNativeScrollViewDelegate
+@implementation MCiOSScrollViewDelegate
 
-- (id)initWithInstance:(MCNativeScrollerControl*)instance
+- (id)initWithInstance:(MCiOSScrollerControl*)instance
 {
 	self = [super init];
 	if (self == nil)
@@ -658,14 +1107,14 @@ private:
 - (void)scrollViewWillBeginDragging: (UIScrollView*)scrollView
 {
 	MCCustomEvent *t_event;
-	t_event = new MCNativeScrollerEvent(m_instance, MCM_scroller_begin_drag);
+	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_begin_drag);
 	MCEventQueuePostCustom(t_event);
 }
 
 - (void)scrollViewDidEndDragging: (UIScrollView*)scrollView willDecelerate:(BOOL)decelerate
 {
 	MCCustomEvent *t_event;
-	t_event = new MCNativeScrollerEndDragEvent(m_instance, decelerate);
+	t_event = new MCiOSScrollerEndDragEvent(m_instance, decelerate);
 	MCEventQueuePostCustom(t_event);
 
 	m_instance->UpdateForwarderBounds();
@@ -677,7 +1126,7 @@ private:
 	{
 		m_instance->m_post_scroll_event = false;
 		MCCustomEvent *t_event;
-		t_event = new MCNativeScrollerScrollEvent(m_instance);
+		t_event = new MCiOSScrollerScrollEvent(m_instance);
 		MCEventQueuePostCustom(t_event);
 	}
 }
@@ -685,21 +1134,21 @@ private:
 - (void)scrollViewDidScrollToTop: (UIScrollView*)scrollView
 {
 	MCCustomEvent *t_event;
-	t_event = new MCNativeScrollerEvent(m_instance, MCM_scroller_scroll_to_top);
+	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_scroll_to_top);
 	MCEventQueuePostCustom(t_event);
 }
 
 - (void)scrollViewWillBeginDecelerating:(UIScrollView *)scrollView
 {
 	MCCustomEvent *t_event;
-	t_event = new MCNativeScrollerEvent(m_instance, MCM_scroller_begin_decelerate);
+	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_begin_decelerate);
 	MCEventQueuePostCustom(t_event);
 }
 
 - (void)scrollViewDidEndDecelerating: (UIScrollView*)scrollView
 {
 	MCCustomEvent *t_event;
-	t_event = new MCNativeScrollerEvent(m_instance, MCM_scroller_end_decelerate);
+	t_event = new MCiOSScrollerEvent(m_instance, MCM_scroller_end_decelerate);
 	MCEventQueuePostCustom(t_event);
 
 	m_instance->UpdateForwarderBounds();
@@ -711,7 +1160,7 @@ private:
 
 bool MCNativeScrollerControlCreate(MCNativeControl *&r_control)
 {
-	r_control = new MCNativeScrollerControl;
+	r_control = new MCiOSScrollerControl;
 	return true;
 }
 

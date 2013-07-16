@@ -469,7 +469,7 @@ bool MCExecPointSetRect(MCExecPoint &ep, int2 p_left, int2 p_top, int2 p_right, 
 	ep.grabbuffer(t_buffer, MCCStringLength(t_buffer));
 	return true;
 }
-/*
+
 static bool MCParseRGBA(const MCString &p_data, bool p_require_alpha, uint1 &r_red, uint1 &r_green, uint1 &r_blue, uint1 &r_alpha)
 {
 	bool t_success = true;
@@ -557,7 +557,7 @@ bool MCNativeControl::FormatColor(MCExecPoint& ep, uint16_t p_red, uint16_t p_gr
 	
 	return true;
 }
-*/
+
 bool MCNativeControl::ParseBoolean(MCExecPoint& ep, bool& r_value)
 {
 	Boolean t_bool;
