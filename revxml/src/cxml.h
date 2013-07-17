@@ -17,7 +17,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libxml/xmlmemory.h>
 #include <libxml/parser.h>
 #include <libxml/HTMLparser.h>
-// MDW-2013-07-09: [[ xpath ]]
+// MDW-2013-07-09: [[ RevXmlXPath ]]
 #include <libxml/xpath.h>
 
 #include <errno.h>
@@ -74,7 +74,7 @@ void Write(char **data,  int *length,Bool isformatted);
 Bool GetElementByPath(CXMLElement *telement, char *tpath);
 Bool GetRootElement(CXMLElement *telement);
 xmlDocPtr GetDocPtr() {return doc;}
-// MDW-2013-07-09: [[ xpath ]]
+// MDW-2013-07-09: [[ RevXmlXPath ]]
 xmlXPathContextPtr GetXPathContext() {return xpathContext;}
 void SetXPathContext(xmlXPathContextPtr ctx) {xpathContext=ctx;}
 Bool AddDTD(char *data, unsigned long tlength);
@@ -98,7 +98,7 @@ static unsigned int idcounter;
 unsigned int id;
 static char errorbuf[256];
 xmlDocPtr doc;
-// MDW-2013-07-09: [[ xpath ]]
+// MDW-2013-07-09: [[ RevXmlXPath ]]
 xmlXPathContextPtr xpathContext;
 };
 
