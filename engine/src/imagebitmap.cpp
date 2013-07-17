@@ -632,7 +632,7 @@ bool MCImageConvertBitmapToIndexed(MCImageBitmap *p_bitmap, bool p_ignore_transp
 			uint8_t *t_dst_row = t_dst_ptr;
 			for (uindex_t x = 0; t_success && x < t_indexed->width; x++)
 			{
-				uint32_t t_pixel = *t_src_ptr++;
+				uint32_t t_pixel = *t_src_row++;
 				uint8_t t_r, t_g, t_b, t_alpha;
 				MCGPixelUnpack(kMCGPixelFormatNative, t_pixel, t_r, t_g, t_b, t_alpha);
 				if (t_alpha > 0 && t_alpha < 255)
