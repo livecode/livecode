@@ -664,7 +664,7 @@ int CXMLElement::ChildCount(char *childname, int maxdepth)
 /*AttributeCount - returns total count of attributes.
 attributename - filter by attributename. NULL to count any attribute.
 */
-// MDW-2013-07-09: [[ fixed: was always returning zero ]]
+// MDW-2013-07-09: [[ xpath ]]
 int CXMLElement::AttributeCount(char *attributename)
 {
 	if (!isinited()) return 0;

@@ -152,7 +152,7 @@ class XMLDocumentList
 		VXMLDocList::iterator theIterator;
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
 			CXMLDocument *curobject = (CXMLDocument *)(*theIterator);
-			// MDW-2013-07-09: [[ free xpath context ]]
+			// MDW-2013-07-09: [[ xpath ]]
 			xmlXPathFreeContext(curobject->GetXPathContext());
 			delete curobject;
 		}
@@ -216,7 +216,7 @@ void DispatchMetaCardMessage(char *messagename,char *tmessage)
 int retvalue = 0;
 SetGlobal("xmlvariable",tmessage,&retvalue);
 char mcmessage[256];
-// MDW-2013-07-09: [[ reference to extvariable should be to xmlvariable ]]
+// MDW-2013-07-09: [[ xpath ]]
 sprintf(mcmessage,"global xmlvariable;try;send \"%s xmlvariable\" to current card of stack the topstack;catch errno;end try;put 0 into xmlvariable",messagename);
 SendCardMessage(mcmessage, &retvalue);
 }
@@ -313,7 +313,7 @@ extern char *strlwr(char *str);
 #endif
 
 
-// MDW-2013-06-22: [[ update the version string as necessary ]]
+// MDW-2013-06-22: [[ xpath ]]
 #define REVXML_VERSIONSTRING "6.2.0"
 
 void REVXML_Version(char *args[], int nargs, char **retstring,
@@ -2164,7 +2164,7 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 	*retstring = (result != NULL ? result : (char *)calloc(1,1));
 }
 
-// MDW-2013-06-22: [[ XPath functions ]]
+// MDW-2013-06-22: [[ xpath ]]
 
 static xmlNodeSetPtr XML_Object_to_NodeSet(xmlXPathObjectPtr object)
 {
@@ -2426,8 +2426,9 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributes", XML_ListOfAttributes)
 	EXTERNAL_DECLARE_FUNCTION("revXMLMatchingNode", XML_FindElementByAttributeValue)
 	EXTERNAL_DECLARE_FUNCTION("revXMLAttributeValues", XML_ListByAttributeValue)
-// MDW-2013-06-22: [[ declared preferred synonyms for consistency and sanity
-// propose deprecating the old keywords ]]
+// MDW-2013-06-22: [[ xpath ]]
+	// declared preferred synonyms for consistency and sanity
+	// propose deprecating the old keywords
 	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTree", XML_NewDocumentNS)
     	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeWithNamespaces", XML_NewDocumentNNS)
     	EXTERNAL_DECLARE_FUNCTION("revXMLCreateTreeFromFile", XML_NewDocumentFromFileNS)
@@ -2445,7 +2446,7 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_COMMAND("revXMLPutIntoNode", XML_SetElementContents)
 	EXTERNAL_DECLARE_COMMAND("revXMLSetAttribute", XML_SetAttributeValue)
 
-// MDW-2013-06-22: [[ XPath functions ]]
+// MDW-2013-06-22: [[ xpath ]]
 	EXTERNAL_DECLARE_FUNCTION("revXMLEvaluateXPath", XML_EvalXPath)
 	EXTERNAL_DECLARE_FUNCTION("revXMLDataFromXPathQuery", XML_XPathDataFromQuery)
 EXTERNAL_END_DECLARATIONS
