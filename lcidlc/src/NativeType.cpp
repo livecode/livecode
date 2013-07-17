@@ -165,6 +165,7 @@ const char *native_type_to_java_type_cstring(NativeType p_type)
 		case kNativeTypeCData:
 			return "jobject";
 		case kNativeTypeInteger:
+		case kNativeTypeEnum:
 			return "int";
 		case kNativeTypeReal:
 			return "double";
@@ -185,6 +186,7 @@ const char *native_type_to_java_sig(NativeType p_type)
 		case kNativeTypeCData:
 			return "[B";
 		case kNativeTypeInteger:
+		case kNativeTypeEnum:
 			return "I";
 		case kNativeTypeReal:
 			return "D";
@@ -205,6 +207,7 @@ const char *native_type_to_java_method_type_cstring(NativeType p_type)
 		case kNativeTypeCData:
 			return "Object";
 		case kNativeTypeInteger:
+		case kNativeTypeEnum:
 			return "Int";
 		case kNativeTypeReal:
 			return "Double";
@@ -225,6 +228,7 @@ const char *native_type_to_type_in_cstring(NativeType p_type)
 		case kNativeTypeCData:
 			return "LCBytes";
 		case kNativeTypeInteger:
+		case kNativeTypeEnum:
 			return "int";
 		case kNativeTypeReal:
 			return "double";
@@ -245,6 +249,7 @@ const char *native_type_to_type_out_cstring(NativeType p_type)
 		case kNativeTypeCData:
 			return "LCBytes";
 		case kNativeTypeInteger:
+		case kNativeTypeEnum:
 			return "int";
 		case kNativeTypeReal:
 			return "double";

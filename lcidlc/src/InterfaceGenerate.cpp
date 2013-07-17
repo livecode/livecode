@@ -578,9 +578,9 @@ static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder
 	
 	if (p_variant -> return_type != nil)
 	{
-		CoderWriteLine(p_coder, "\t%s result;", native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type)));
-		CoderWriteLine(p_coder, "\tt_result = java_to__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
-		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+		CoderWriteLine(p_coder, "\t%s t_result;", native_type_to_type_out_cstring(NativeTypeFromName(p_variant -> return_type)));
+		CoderWriteLine(p_coder, "\tt_result = java_to__%s(%s, t_java_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
+		CoderWriteLine(p_coder, "\tjava_free__%s(%s, t_java_result);", NativeTypeGetTag(NativeTypeFromName(p_variant -> return_type)), t_env_var);
 	}
 	
 	for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
