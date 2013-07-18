@@ -2554,11 +2554,18 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		MCGContextRef t_context = nil;
 		MCContext *t_gfxcontext = nil;
 
+		// IM-2013-07-18: [[ ResIndependence ]] take stack snapshot at device resolution
+		MCRectangle t_snapshot_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
 		if (t_success)
-			t_success = MCGContextCreate(t_effect_area.width, t_effect_area.height, true, t_context);
+			t_success = MCGContextCreate(t_snapshot_rect.width, t_snapshot_rect.height, true, t_context);
 
 		if (t_success)
 		{
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
 			MCGContextTranslateCTM(t_context, -(MCGFloat)t_effect_area.x, -(MCGFloat)t_effect_area.y);
 			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 		}
