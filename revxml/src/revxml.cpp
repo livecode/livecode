@@ -2166,17 +2166,302 @@ void XML_FindElementByAttributeValue(char *args[], int nargs, char **retstring, 
 
 // MDW-2013-06-22: [[ RevXmlXPath ]]
 
-static xmlNodeSetPtr XML_Object_to_NodeSet(xmlXPathObjectPtr object)
+static int xpathNodeBufGetContent(xmlBufferPtr pBuffer, xmlNodePtr cur, char *pCharDelimiter);
+
+static xmlNodeSetPtr XML_Object_to_NodeSet(xmlXPathObjectPtr pObject)
 {
-	return object->nodesetval;
+	return pObject->nodesetval;
+}
+
+/**
+ * xpathBufferCat:
+ * @buf:  the buffer to add to
+ * @str:  the #xmlChar string
+ *
+ * Append a zero terminated string to an XML buffer.
+ *
+ * Returns 0 successful, a positive error code number otherwise
+ *         and -1 in case of internal or API error.
+ */
+static int
+xpathBufferCat(xmlBufferPtr pBuf, const xmlChar *pStr, char *pCharDelimiter) {
+	if (pBuf == NULL)
+		return(-1);
+	if (pBuf->alloc == XML_BUFFER_ALLOC_IMMUTABLE)
+		return -1;
+	if (pStr == NULL)
+		return -1;
+	xmlBufferAdd(pBuf, pStr, -1);
+	return xmlBufferAdd(pBuf, (xmlChar*)pCharDelimiter, -1);
+}
+
+/**
+ * xmlNodeGetContent:
+ * @cur:  the node being read
+ *
+ * Read the value of a node, this can be either the text carried
+ * directly by this node if it's a TEXT node or the aggregate string
+ * of the values carried by this node child's (TEXT and ENTITY_REF).
+ * Entity references are substituted.
+ * Returns a new #xmlChar * or NULL if no content is available.
+ *     It's up to the caller to free the memory with xmlFree().
+ */
+static xmlChar *
+xpathNodeGetContent(xmlNodePtr cur, char *pCharDelimiter)
+{
+    if (cur == NULL)
+        return (NULL);
+    switch (cur->type) {
+        case XML_DOCUMENT_FRAG_NODE:
+        case XML_ELEMENT_NODE:{
+                xmlBufferPtr buffer;
+                xmlChar *ret;
+
+                buffer = xmlBufferCreateSize(64);
+                if (buffer == NULL)
+                    return (NULL);
+		xpathNodeBufGetContent(buffer, cur, pCharDelimiter);
+                ret = buffer->content;
+                buffer->content = NULL;
+                xmlBufferFree(buffer);
+                return (ret);
+            }
+        case XML_ATTRIBUTE_NODE:{
+                xmlAttrPtr attr = (xmlAttrPtr) cur;
+
+                if (attr->parent != NULL)
+                    return (xmlNodeListGetString
+                            (attr->parent->doc, attr->children, 1));
+                else
+                    return (xmlNodeListGetString(NULL, attr->children, 1));
+                break;
+            }
+        case XML_COMMENT_NODE:
+        case XML_PI_NODE:
+            if (cur->content != NULL)
+                return (xmlStrdup(cur->content));
+            return (NULL);
+        case XML_ENTITY_REF_NODE:{
+                xmlEntityPtr ent;
+                xmlBufferPtr buffer;
+                xmlChar *ret;
+
+                /* lookup entity declaration */
+                ent = xmlGetDocEntity(cur->doc, cur->name);
+                if (ent == NULL)
+                    return (NULL);
+
+                buffer = xmlBufferCreate();
+                if (buffer == NULL)
+                    return (NULL);
+
+                xpathNodeBufGetContent(buffer, cur, pCharDelimiter);
+
+                ret = buffer->content;
+                buffer->content = NULL;
+                xmlBufferFree(buffer);
+                return (ret);
+            }
+        case XML_ENTITY_NODE:
+        case XML_DOCUMENT_TYPE_NODE:
+        case XML_NOTATION_NODE:
+        case XML_DTD_NODE:
+        case XML_XINCLUDE_START:
+        case XML_XINCLUDE_END:
+            return (NULL);
+        case XML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+        case XML_DOCB_DOCUMENT_NODE:
+#endif
+        case XML_HTML_DOCUMENT_NODE: {
+	    xmlBufferPtr buffer;
+	    xmlChar *ret;
+
+	    buffer = xmlBufferCreate();
+	    if (buffer == NULL)
+		return (NULL);
+
+	    xpathNodeBufGetContent(buffer, (xmlNodePtr) cur, pCharDelimiter);
+
+	    ret = buffer->content;
+	    buffer->content = NULL;
+	    xmlBufferFree(buffer);
+	    return (ret);
+	}
+        case XML_NAMESPACE_DECL: {
+	    xmlChar *tmp;
+
+	    tmp = xmlStrdup(((xmlNsPtr) cur)->href);
+            return (tmp);
+	}
+        case XML_ELEMENT_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_ATTRIBUTE_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_ENTITY_DECL:
+            /* TODO !!! */
+            return (NULL);
+        case XML_CDATA_SECTION_NODE:
+        case XML_TEXT_NODE:
+            if (cur->content != NULL)
+                return (xmlStrdup(cur->content));
+            return (NULL);
+    }
+    return (NULL);
+}
+
+/**
+ * xmlNodeBufGetContent:
+ * @buffer:  a buffer
+ * @cur:  the node being read
+ *
+ * Read the value of a node @cur, this can be either the text carried
+ * directly by this node if it's a TEXT node or the aggregate string
+ * of the values carried by this node child's (TEXT and ENTITY_REF).
+ * Entity references are substituted.
+ * Fills up the buffer @buffer with this value
+ * 
+ * Returns 0 in case of success and -1 in case of error.
+ */
+static int
+xpathNodeBufGetContent(xmlBufferPtr buffer, xmlNodePtr cur, char *cDelimiter)
+{
+    if ((cur == NULL) || (buffer == NULL)) return(-1);
+    switch (cur->type) {
+        case XML_CDATA_SECTION_NODE:
+        case XML_TEXT_NODE:
+	    xpathBufferCat(buffer, cur->content, cDelimiter);
+            break;
+        case XML_DOCUMENT_FRAG_NODE:
+        case XML_ELEMENT_NODE:{
+                xmlNodePtr tmp = cur;
+
+                while (tmp != NULL) {
+                    switch (tmp->type) {
+                        case XML_CDATA_SECTION_NODE:
+                        case XML_TEXT_NODE:
+                            if (tmp->content != NULL)
+                                xpathBufferCat(buffer, tmp->content, cDelimiter);
+                            break;
+                        case XML_ENTITY_REF_NODE:
+                            xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+                            break;
+                        default:
+                            break;
+                    }
+                    /*
+                     * Skip to next node
+                     */
+                    if (tmp->children != NULL) {
+                        if (tmp->children->type != XML_ENTITY_DECL) {
+                            tmp = tmp->children;
+                            continue;
+                        }
+                    }
+                    if (tmp == cur)
+                        break;
+
+                    if (tmp->next != NULL) {
+                        tmp = tmp->next;
+                        continue;
+                    }
+
+                    do {
+                        tmp = tmp->parent;
+                        if (tmp == NULL)
+                            break;
+                        if (tmp == cur) {
+                            tmp = NULL;
+                            break;
+                        }
+                        if (tmp->next != NULL) {
+                            tmp = tmp->next;
+                            break;
+                        }
+                    } while (tmp != NULL);
+                }
+		break;
+            }
+        case XML_ATTRIBUTE_NODE:{
+                xmlAttrPtr attr = (xmlAttrPtr) cur;
+		xmlNodePtr tmp = attr->children;
+
+		while (tmp != NULL) {
+		    if (tmp->type == XML_TEXT_NODE)
+		        xpathBufferCat(buffer, tmp->content, cDelimiter);
+		    else
+		        xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+		    tmp = tmp->next;
+		}
+                break;
+            }
+        case XML_COMMENT_NODE:
+        case XML_PI_NODE:
+	    xpathBufferCat(buffer, cur->content, cDelimiter);
+            break;
+        case XML_ENTITY_REF_NODE:{
+                xmlEntityPtr ent;
+                xmlNodePtr tmp;
+
+                /* lookup entity declaration */
+                ent = xmlGetDocEntity(cur->doc, cur->name);
+                if (ent == NULL)
+                    return(-1);
+
+                /* an entity content can be any "well balanced chunk",
+                 * i.e. the result of the content [43] production:
+                 * http://www.w3.org/TR/REC-xml#NT-content
+                 * -> we iterate through child nodes and recursive call
+                 * xmlNodeGetContent() which handles all possible node types */
+                tmp = ent->children;
+                while (tmp) {
+		    xpathNodeBufGetContent(buffer, tmp, cDelimiter);
+                    tmp = tmp->next;
+                }
+		break;
+            }
+        case XML_ENTITY_NODE:
+        case XML_DOCUMENT_TYPE_NODE:
+        case XML_NOTATION_NODE:
+        case XML_DTD_NODE:
+        case XML_XINCLUDE_START:
+        case XML_XINCLUDE_END:
+            break;
+        case XML_DOCUMENT_NODE:
+#ifdef LIBXML_DOCB_ENABLED
+        case XML_DOCB_DOCUMENT_NODE:
+#endif
+        case XML_HTML_DOCUMENT_NODE:
+	    cur = cur->children;
+	    while (cur!= NULL) {
+		if ((cur->type == XML_ELEMENT_NODE) ||
+		    (cur->type == XML_TEXT_NODE) ||
+		    (cur->type == XML_CDATA_SECTION_NODE)) {
+		    xpathNodeBufGetContent(buffer, cur, cDelimiter);
+		}
+		cur = cur->next;
+	    }
+	    break;
+        case XML_NAMESPACE_DECL:
+	    xpathBufferCat(buffer, ((xmlNsPtr) cur)->href, cDelimiter);
+	    break;
+        case XML_ELEMENT_DECL:
+        case XML_ATTRIBUTE_DECL:
+        case XML_ENTITY_DECL:
+            break;
+    }
+    return(0);
 }
 
 /**
  * XML_ObjectPtr_to_Xpaths
  *
  * @pObject
+ * @pLineDelimiter : delimiter between returned lines
  */
-static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *cDelimiter)
+static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *pLineDelimiter)
 {
 	int iBufferSize = 8192;
 	if (NULL != pObject)
@@ -2205,7 +2490,7 @@ static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *cDelimiter
 							iBufferSize = iBufferSize * 2;
 						}
 						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
-						strcat(buffer, cDelimiter);
+						strcat(buffer, pLineDelimiter);
 						free((char*)cPtr);
 					}
 				}
@@ -2219,7 +2504,14 @@ static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *cDelimiter
 		return(NULL);
 }
 
-static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
+/**
+ * XML_ObjectPtr_to_Xpaths
+ *
+ * @pObject
+ * @pElementDelimiter : delimiter between returned elements
+ * @pLineDelimiter : delimiter between returned lines
+ */
+static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *pElementDelimiter, char *pLineDelimiter)
 {
 	int iBufferSize = 8192;
 	if (NULL != pObject)
@@ -2238,7 +2530,7 @@ static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
 				cur = nodes->nodeTab[i];
 				if (NULL != cur)
 				{
-					xmlChar *cPtr = xmlNodeGetContent(cur);
+					xmlChar *cPtr = xpathNodeGetContent(cur, pElementDelimiter);
 					if (NULL != cPtr)
 					{
 						// make more room if needed
@@ -2248,7 +2540,7 @@ static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
 							iBufferSize = iBufferSize * 2;
 						}
 						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
-						strcat(buffer, cDelimiter);
+						strcat(buffer, pLineDelimiter);
 						free((char*)cPtr);
 					}
 				}
@@ -2266,7 +2558,7 @@ static char *XML_ObjectPtr_to_Data(xmlXPathObjectPtr pObject, char *cDelimiter)
  * XML_EvalXPath
  * @pDocID : xml tree id
  * @pExpression : xpath to evaluate
- * @pDelimiter : [optional] delimiter between paths
+ * @pDelimiter : [optional] delimiter between paths (default="\n")
  *
  * Returns a cr-separated list of paths which is the result of
  * evaluating the expression against the xml tree
@@ -2327,12 +2619,13 @@ void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *
  * XML_XPathDataFromQuery
  * @pDocID : xml tree id
  * @pExpression : xpath to evaluate
- * @pDelimiter : optional delimiter between data elements
+ * @pElementDelimiter : ]optional] delimiter between data elements (default="\n")
+ * @pLineDelimiter : [optional] delimiter between data lines (default="\n")
  *
  * Returns a cr-separated list of data which is the result of
  * evaluating the expression against the xml tree
  *
- * put revXMLDataFromXPathQuery(tDocID, "/bookstore/books/[price<30]title", tab)
+ * put revXMLDataFromXPathQuery(tDocID, "/bookstore/books/[price<30]title", tab, cr)
  */
 void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -2354,12 +2647,17 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 				xmlXPathObjectPtr result = xmlXPathEvalExpression(str, ctx);
 				if (NULL != result)
 				{
-					char *cDelimiter;
+					char *charDelimiter;
+					char *lineDelimiter;
 					if (nargs > 2)
-						cDelimiter = args[2];
+						charDelimiter = args[2];
 					else
-						cDelimiter = "\n";
-					char *xpaths = XML_ObjectPtr_to_Data(result, cDelimiter);
+						charDelimiter = "\n";
+					if (nargs > 3)
+						lineDelimiter = args[3];
+					else
+						lineDelimiter = "\n";
+					char *xpaths = XML_ObjectPtr_to_Data(result, charDelimiter, lineDelimiter);
 					if (NULL != xpaths)
 					{
 						*retstring = istrdup(xpaths);

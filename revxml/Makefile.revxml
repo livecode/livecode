@@ -5,7 +5,7 @@ include ../rules/environment.linux.makefile
 
 SOURCES=revxml.cpp xmlattribute.cpp xmldoc.cpp xmlelement.cpp
 
-CUSTOM_DEFINES=LIBXML_XPATH_ENABLED
+CUSTOM_DEFINES=
 
 CUSTOM_INCLUDES=./src
 
