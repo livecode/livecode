@@ -917,7 +917,7 @@ float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text
 
 	iphone_font_measure_text_context_t t_context;
 	t_context . font = p_font;
-	t_context . width = 0.0f;
+t_context . width = 0.0f;
 	for_each_word(p_text, p_text_length, p_is_unicode, iphone_font_do_measure_text, &t_context);
 
 	return t_context . width;

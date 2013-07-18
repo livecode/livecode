@@ -347,7 +347,7 @@ bool MCCreatePerson(MCExecPoint &p_ep, MCVariableValue *p_contact, ABRecordRef &
 					for (uindex_t j = 0; t_success && j < ELEMENTS(s_label_map); j++)
 					{
 						if (t_prop_array->fetch_element_if_exists(ep, MCNameGetOldString(*s_label_map[j].name), false))
-						{
+					{
 							MCVariableValue *t_indexed_array = ep.getarray();
 							if (t_indexed_array != nil)
 							{
@@ -435,7 +435,7 @@ bool MCContactAddContact(MCVariableValue *p_contact, int32_t& r_chosen)
 		r_chosen = t_id;
 	
 	if (t_contact != nil)
-		CFRelease(t_contact);
+	CFRelease(t_contact);
 	if (t_address_book != nil)
 		CFRelease(t_address_book);
 	

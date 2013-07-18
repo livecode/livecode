@@ -99,6 +99,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCAdd::exec(MCExecPoint &ep)
 {
+#ifdef /* MCAdd */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -170,6 +171,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return ES_NORMAL;
+#endif /* MCAdd */
 }
 
 MCDivide::~MCDivide()
@@ -218,6 +220,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCDivide::exec(MCExecPoint &ep)
 {
+#ifdef /* MCDivide */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -309,6 +312,7 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCDivide */
 }
 
 MCMultiply::~MCMultiply()
@@ -360,6 +364,7 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCMultiply::exec(MCExecPoint &ep)
 {
+#ifdef /* MCMultiply */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -445,6 +450,7 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCMultiply */
 }
 
 MCSubtract::~MCSubtract()
@@ -496,6 +502,7 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCSubtract::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSubtract */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -564,6 +571,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCSubtract */
 }
 
 MCArrayOp::~MCArrayOp()
@@ -641,6 +649,7 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCArrayOp */ LEGACY_EXEC
 	uint1 e;
 	uint1 k = '\0';
 	uint4 chunk;
@@ -726,6 +735,7 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		t_dst_var -> synchronize(ep, True);
 
 	return ES_NORMAL;
+#endif /* MCArrayOp */
 }
 
 MCSetOp::~MCSetOp()
@@ -771,6 +781,7 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCSetOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSetOp */ LEGACY_EXEC
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{
@@ -818,4 +829,5 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 		t_dst_var -> synchronize(ep, True);
 
 	return ES_NORMAL;
+#endif /* MCSetOp */
 }

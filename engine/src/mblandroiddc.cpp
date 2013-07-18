@@ -874,7 +874,7 @@ void MCStack::preservescreenforvisualeffect(const MCRectangle& p_rect)
 		}
 		free(t_scanline);
 	}
-	t_surface . UnlockTarget();
+t_surface . UnlockTarget();
 
 	MCRegionDestroy(t_actual_region);
 }
@@ -1289,7 +1289,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		case kMCJavaTypeMCStringUnicode:
 			{
 				jstring t_java_string;
-				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+			t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
 				{
 					t_exception_thrown = true;
@@ -2004,7 +2004,7 @@ bool MCAndroidSignatureMatch(const char *p_signature)
 			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
 			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
 			{
-				return false;
+			return false;
 			}
 		}
 

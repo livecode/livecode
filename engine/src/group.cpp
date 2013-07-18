@@ -795,6 +795,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 {
 	switch (which)
 	{
+#ifdef /* MCGroup::getprop */ LEGACY_EXEC
 	case P_CANT_DELETE:
 		ep.setboolean(getflag(F_G_CANT_DELETE));
 		break;
@@ -960,6 +961,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_LOCK_UPDATES:
 		ep.setboolean(m_updates_locked);
 		break;
+#endif /* MCGroup::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -974,6 +976,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 	switch (p)
 	{
+#ifdef /* MCGroup::setprop */ LEGACY_EXEC
 	case P_SHOW_BORDER:
 	case P_BORDER_WIDTH:
 	case P_TEXT_SIZE:
@@ -1321,6 +1324,7 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		return t_stat;
 	}
 	break;
+#endif /* MCGroup::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}

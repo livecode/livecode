@@ -47,7 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 MCCompact::~MCCompact()
 {
-	delete target;
+delete target;
 }
 
 Parse_stat MCCompact::parse(MCScriptPoint &sp)
@@ -65,6 +65,7 @@ Parse_stat MCCompact::parse(MCScriptPoint &sp)
 
 Exec_stat MCCompact::exec(MCExecPoint &ep)
 {
+#ifdef /* MCCompact */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 
@@ -83,6 +84,7 @@ Exec_stat MCCompact::exec(MCExecPoint &ep)
 	MCStack *sptr = (MCStack *)optr;
 	sptr->compact();
 	return ES_NORMAL;
+#endif /* MCCompact */
 }
 
 MCGo::~MCGo()
@@ -415,7 +417,7 @@ Parse_stat MCGo::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
+#ifdef /* MCGo::findstack */ LEGACY_EXEC
 MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 {
 	MCStack *sptr = NULL;
@@ -478,9 +480,11 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr)
 			MCresult->sets("no such card");
 	return sptr;
 }
+#endif /* MCGo::findstack */
 
 Exec_stat MCGo::exec(MCExecPoint &ep)
 {
+#ifdef /* MCGo */ LEGACY_EXEC
 	MCStack *sptr = MCdefaultstackptr;
 	MCControl *bptr = NULL;
 	MCCard *cptr = NULL;
@@ -876,6 +880,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	if (MCabortscript)
 		return ES_ERROR;
 	return stat;
+#endif /* MCGo */
 }
 
 MCHide::~MCHide()
@@ -964,6 +969,7 @@ Parse_stat MCHide::parse(MCScriptPoint &sp)
 
 Exec_stat MCHide::exec(MCExecPoint &ep)
 {
+#ifdef /* MCHide */ LEGACY_EXEC
 	switch (which)
 	{
 	case SO_GROUPS:
@@ -1044,6 +1050,7 @@ Exec_stat MCHide::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCHide */
 }
 
 MCLock::~MCLock(void)
@@ -1109,6 +1116,7 @@ Parse_stat MCLock::parse(MCScriptPoint &sp)
 
 Exec_stat MCLock::exec(MCExecPoint &ep)
 {
+#ifdef /* MCLock */ LEGACY_EXEC
 	switch(which)
 	{
 	case LC_COLORMAP:
@@ -1171,6 +1179,7 @@ Exec_stat MCLock::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCLock */
 }
 
 MCPop::~MCPop()
@@ -1217,6 +1226,7 @@ Parse_stat MCPop::parse(MCScriptPoint &sp)
 
 Exec_stat MCPop::exec(MCExecPoint &ep)
 {
+#ifdef /* MCPop */ LEGACY_EXEC
 	MCCard *cptr = MCcstack->popcard();
 	if (dest == NULL)
 	{
@@ -1248,6 +1258,7 @@ Exec_stat MCPop::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCPop */
 }
 
 MCPush::~MCPush()
@@ -1295,6 +1306,7 @@ Parse_stat MCPush::parse(MCScriptPoint &sp)
 
 Exec_stat MCPush::exec(MCExecPoint &ep)
 {
+#ifdef /* MCPush */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	if (card == NULL)
@@ -1317,6 +1329,7 @@ Exec_stat MCPush::exec(MCExecPoint &ep)
 		MCcstack->pushcard((MCCard *)optr);
 	}
 	return ES_NORMAL;
+#endif /* MCPush */
 }
 
 MCSave::~MCSave()
@@ -1356,6 +1369,7 @@ Parse_stat MCSave::parse(MCScriptPoint &sp)
 
 Exec_stat MCSave::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSave */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 
@@ -1392,6 +1406,7 @@ Exec_stat MCSave::exec(MCExecPoint &ep)
 		ep.clear();
 	sptr->saveas(ep.getsvalue());
 	return ES_NORMAL;
+#endif /* MCSave */
 }
 
 MCShow::~MCShow()
@@ -1507,6 +1522,7 @@ Parse_stat MCShow::parse(MCScriptPoint &sp)
 
 Exec_stat MCShow::exec(MCExecPoint &ep)
 {
+#ifdef /* MCShow */ LEGACY_EXEC
 	uint2 count;
 	switch (which)
 	{
@@ -1626,6 +1642,7 @@ Exec_stat MCShow::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCShow */
 }
 
 MCSubwindow::~MCSubwindow()
@@ -1693,6 +1710,7 @@ Parse_stat MCSubwindow::parse(MCScriptPoint &sp)
 
 Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSubwindow */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	MCresult->clear(False);
@@ -1915,6 +1933,7 @@ Exec_stat MCSubwindow::exec(MCExecPoint &ep)
 	if (mode > WM_TOP_LEVEL)
 		MCdefaultstackptr = olddefault;
 	return ES_NORMAL;
+#endif /* MCSubwindow */
 }
 
 MCUnlock::~MCUnlock()
@@ -1964,6 +1983,7 @@ Parse_stat MCUnlock::parse(MCScriptPoint &sp)
 
 Exec_stat MCUnlock::exec(MCExecPoint &ep)
 {
+#ifdef /* MCUnlock */ LEGACY_EXEC
 	switch (which)
 	{
 	case LC_COLORMAP:
@@ -2002,4 +2022,5 @@ Exec_stat MCUnlock::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCUnlock */
 }

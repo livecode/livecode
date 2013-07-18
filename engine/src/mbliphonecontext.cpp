@@ -1103,7 +1103,7 @@ static void CGImagePatternDrawCallback(void *p_info, CGContextRef p_context)
 {
 	CGImageRef t_image;
 	t_image = (CGImageRef)p_info;
-	CGContextSaveGState(p_context);
+CGContextSaveGState(p_context);
 	CGContextTranslateCTM(p_context, 0.0, CGImageGetHeight(t_image));
 	CGContextScaleCTM(p_context, 1.0, -1.0);
 	CGContextDrawImage(p_context, CGRectMake(0, 0, CGImageGetWidth(t_image), CGImageGetHeight(t_image)), t_image);
@@ -1413,7 +1413,7 @@ static void pattern_combiner_blend(MCCombiner *_self, int4 fx, int4 tx, uint1 al
 	
 	w = self -> width;
 	x = (fx - self -> origin_x) % w;
-	
+
 	for(; fx < tx; ++fx)
 	{
 		d[fx] = packed_bilinear_bounded(s[x] | 0xFF000000, alpha, d[fx], 255 - alpha);
