@@ -98,7 +98,7 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 Exec_stat MCAccept::exec(MCExecPoint &ep)
 {
 #ifdef /* MCAccept */ LEGACY_EXEC
-// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
+	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
 	MCresult -> clear(False);
 
 	if (MCsecuremode & MC_SECUREMODE_NETWORK)
@@ -119,7 +119,7 @@ Exec_stat MCAccept::exec(MCExecPoint &ep)
 	}
 
 	MCAutoNameRef t_message_name;
-	 UNCHECKED  ep . copyasnameref(t_message_name);
+	/* UNCHECKED */ ep . copyasnameref(t_message_name);
 
 	MCSocket *s = MCS_accept(port, ep.getobj(), t_message_name, datagram, secure, secureverify, NULL);
 	if (s != NULL)
@@ -2647,7 +2647,7 @@ Parse_stat MCReply::parse(MCScriptPoint &sp)
 Exec_stat MCReply::exec(MCExecPoint &ep)
 {
 #ifdef /* MCReply */ LEGACY_EXEC
-char *k = NULL;
+	char *k = NULL;
 	if (keyword != NULL)
 	{
 		if (message->eval(ep) != ES_NORMAL)
@@ -2665,6 +2665,7 @@ char *k = NULL;
 	}
 	MCS_reply(ep.getsvalue(), k, error);
 	delete k;
+	return ES_NORMAL;
 #endif /* MCReply */
 
 	

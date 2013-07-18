@@ -62,17 +62,6 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 {
 	MCresult->sets(MCU_btos(MCCanSendMail()));
 	return ES_NORMAL;
-
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCMailGetCanSendMail(ctxt, t_result);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ES_ERROR;
 }
 #endif /* MCHandleCanSendMailAndroid */
 

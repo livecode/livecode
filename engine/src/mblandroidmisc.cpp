@@ -411,7 +411,7 @@ void MCAndroidSearchKey()
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef /* MCHandleCameraFeaturesAndroid */ LEGACY_EXEC
-Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
+static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	char *t_camera_dir = nil;
 	int32_t t_cam_count = 0;
@@ -586,12 +586,17 @@ bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
 bool MCSystemShowStatusBar()
 {
 #ifdef /* MCHandleSetStatusbarVisibility */ LEGACY_EXEC
+Exec_stat MCHandleSetStatusbarVisibility(void *context, MCParameter *parameters)
+{
+    
 	bool t_visible;
 	t_visible = ((uint32_t)context) != 0;
     
 	MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, t_visible);
     
 	return ES_NORMAL;
+    
+}
 #endif /* MCHandleSetStatusbarVisibility */
     MCAndroidEngineRemoteCall("setStatusbarVisibility", "vb", nil, true);
     
@@ -710,7 +715,7 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces)
 
 
 #ifdef /* MCHandleCurrentLocaleAndroid */ LEGACY_EXEC
-static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
+Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 {
     char *r_preferred_locale = NULL;
     MCAndroidEngineCall("getPreferredLocale", "s", &r_preferred_locale);
@@ -729,7 +734,7 @@ bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 
 
 #ifdef /* MCHandlePreferredLanguagesAndroid */ LEGACY_EXEC
-static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
 {
     char *r_preferred_languages = NULL;
     MCAndroidEngineCall("getPreferredLanguages", "s", &r_preferred_languages);

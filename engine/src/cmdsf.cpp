@@ -467,7 +467,6 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 #ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
-#ifndef _MOBILE
 	Exec_stat t_status = ES_NORMAL;
 	char *t_rsa_key = nil;
 	uint32_t t_rsa_keylength;
@@ -549,9 +548,6 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 	MCCStringFree(t_rsa_passphrase);
 
 	return t_status;
-#else
-    return ES_NORMAL;
-#endif
 }
 #endif /* MCEncryptionOp::exec_rsa */
 
@@ -2978,27 +2974,22 @@ if (go != NULL)
 				MCeerror -> add(EE_OPEN_BADNAME, line, pos);
 				t_stat = ES_ERROR;
 			}
-
+			
 			char *t_filename;
 			t_filename = nil;
 			if (t_stat == ES_NORMAL)
 				t_filename = ep . getsvalue() . clone();
-
+			
 			if (t_stat == ES_NORMAL &&
 				options != nil && options -> eval(ep) != ES_NORMAL)
 			{
 				MCeerror -> add(EE_OPEN_BADOPTIONS, line, pos);
 				t_stat = ES_ERROR;
 			}
-
-			MCAutoArrayRef t_options;
-			if (t_stat == ES_NORMAL && ep . isarray())
-				if (!ep . copyasarrayref(&t_options))
-					t_stat = ES_ERROR;
-
-			extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCArrayRef , MCPrinter*&);
+			
+			extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCVariableValue *, MCPrinter*&);
 			if (t_stat == ES_NORMAL)
-				t_stat = MCCustomPrinterCreate(destination, t_filename, *t_options, MCprinter);
+				t_stat = MCCustomPrinterCreate(destination, t_filename, ep . getformat() == VF_ARRAY ? ep . getarray() : nil, MCprinter);
 			
 			if (t_stat == ES_NORMAL)
 				MCprinter -> Open(false);
@@ -3007,17 +2998,17 @@ if (go != NULL)
 
 			return t_stat;
 		}
-
+		
 		// If 'with dialog' was specified do an 'answer printer' here. Note that
 		// we exit if 'cancel' is returned for backwards compatibility. This form
 		// the open printing command is, however, deprecated.
 		if (dialog)
 		{
-			MCAutoStringRef t_result;
-			MCprinter -> ChoosePrinter(sheet == True, &t_result);
-			if (MCStringGetLength(*t_result) > 0)
+			const char *t_result;
+			t_result = MCprinter -> ChoosePrinter(sheet == True);
+			if (t_result != NULL)
 			{
-				MCresult->setvalueref(*t_result);
+				MCresult -> sets(t_result);
 				return ES_NORMAL;
 			}
 		}
@@ -3119,8 +3110,7 @@ if (go != NULL)
 					MCeerror->add(EE_OPEN_BADMESSAGE, line, pos);
 					return ES_ERROR;
 				}
-				// UNCHECKED  
-				ep . copyasnameref(t_message_name);
+				/* UNCHECKED */ ep . copyasnameref(t_message_name);
 			}
 			// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 			MCresult -> clear(True);
@@ -3829,7 +3819,7 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 Exec_stat MCRead::exec(MCExecPoint &ep)
 {
 #ifdef /* MCRead */ LEGACY_EXEC
-IO_handle stream = NULL;
+	IO_handle stream = NULL;
 	uint2 index;
 	int4 pindex = -1;
 	IO_stat stat = IO_NORMAL;
@@ -3955,7 +3945,7 @@ IO_handle stream = NULL;
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					 UNCHECKED  ep . copyasnameref(t_message_name);
+					/* UNCHECKED */ ep . copyasnameref(t_message_name);
 				}
 				if (cond == RF_FOR)
 				{
@@ -4709,7 +4699,7 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 Exec_stat MCWrite::exec(MCExecPoint &ep)
 {
 #ifdef /* MCWrite */ LEGACY_EXEC
-uint2 index;
+	uint2 index;
 	IO_handle stream = NULL;
 	IO_stat stat = IO_NORMAL;
 	Boolean textmode = False;
@@ -4795,7 +4785,7 @@ uint2 index;
 							MCeerror->add(EE_WRITE_BADEXP, line, pos);
 							return ES_ERROR;
 						}
-						 UNCHECKED  ep . copyasnameref(t_message_name);
+						/* UNCHECKED */ ep . copyasnameref(t_message_name);
 					}
 					if (source->eval(ep) != ES_NORMAL)
 					{
@@ -4803,10 +4793,8 @@ uint2 index;
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					MCAutoStringRef t_source;
-					ep . copyasstringref(&t_source);
 					MCresult->clear(False);
-					MCS_write_socket(*t_source, MCsockets[index], ep.getobj(), t_message_name);
+					MCS_write_socket(ep.getsvalue(), MCsockets[index], ep.getobj(), t_message_name);
 				}
 				else
 					MCresult->sets("socket is not open");

@@ -244,7 +244,10 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 #ifdef /* MCSensorGetLocationOfDevice */ LEGACY_EXEC
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
-        MCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+    {
+        r_location = nil;
+        MCCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+    }
 #endif /* MCSensorGetLocationOfDevice */
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
@@ -352,7 +355,10 @@ void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
 #ifdef /* MCSensorGetHeadingOfDevice */ LEGACY_EXEC
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
-        MCStringFormat(r_heading, "%Lf", t_reading.heading);
+    {
+        r_heading = nil;
+        MCCStringFormat(r_heading, "%Lf", t_reading.heading);
+    }
 #endif /* MCSensorGetHeadingOfDevice */
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
@@ -424,7 +430,10 @@ void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceler
 #ifdef /* MCSensorGetAccelerationOfDevice */ LEGACY_EXEC
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
-        MCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+    {
+        r_acceleration = nil;
+        MCCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+    }
 #endif /* MCSensorGetAccelerationOfDevice */
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
@@ -499,7 +508,7 @@ void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotatio
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
         r_rotation_rate = nil;
-        MCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+        MCCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
     }
 #endif /* MCSensorGetRotationRateOfDevice */
     MCSensorRotationRateReading t_reading;

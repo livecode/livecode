@@ -721,14 +721,12 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch(which)
 	{
-#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	case P_GRADIENT_FILL:
 		return MCGradientFillGetProperty(m_fill_gradient, ep, key);
 	break;
 	case P_GRADIENT_STROKE:
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
-#endif /* MCGraphic::getarrayprop */
 	default:
 		return MCControl::getarrayprop(parid, which, ep, key, effective);
 	}
@@ -845,7 +843,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
 		}
-		return MCControl::setprop_legacy(parid, p, ep, effective);
+		return MCControl::setprop(parid, p, ep, effective);
 	break;
 	case P_FORE_COLOR:
 	case P_FORE_PATTERN:
@@ -854,7 +852,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 			MCGradientFillFree(m_stroke_gradient);
 			m_stroke_gradient = NULL;
 		}
-		return MCControl::setprop_legacy(parid, p, ep, effective);
+		return MCControl::setprop(parid, p, ep, effective);
 	break;
 	case P_EDIT_MODE:
 		{
@@ -1251,7 +1249,6 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	dirty = False;
 	switch(which)
 	{
-#ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
 	case P_GRADIENT_FILL:
 	{
 		if (MCGradientFillSetProperty(m_fill_gradient, ep, key, dirty, rect) == ES_ERROR)
@@ -1274,7 +1271,6 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		}
 	}
 	break;
-#endif /* MCGraphic::setarrayprop */
 	default:
 		return MCControl::setarrayprop(parid, which, ep, key, effective);
 	}

@@ -925,10 +925,10 @@ static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
 	const char *t_id_string = nil;
 	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
 	
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    
-	ctxt . SetTheResultToStaticCString(t_id_string);
+	MCExecPoint ep;
+	ep.setsvalue(t_id_string);
+	MCresult->store(ep, True);
+	
 	return ES_NORMAL;
 }
 #endif /* MCHandleCurrentLocaleIphone */
@@ -942,7 +942,7 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 	NSArray *t_preferred_langs = nil;
 	t_preferred_langs = [NSLocale preferredLanguages];
 	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
-
+    
 	MCExecPoint ep;
 	const char *t_lang_string = nil;
 	if (t_success)
@@ -956,7 +956,7 @@ static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parame
 	}
 	
 	if (t_success)
-		ctxt . SetTheResultToValue(ep . getsvalue());
+		MCresult->store(ep, True);
 	else
 		MCresult->clear();
 	

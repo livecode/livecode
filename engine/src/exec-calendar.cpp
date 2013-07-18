@@ -126,12 +126,12 @@ void MCCalendarExecUpdateEvent(MCExecContext& ctxt, MCStringRef p_id)
 void MCCalendarGetEventData(MCExecContext& ctxt, MCStringRef p_id, MCArrayRef& r_data)
 {
 #ifdef /* MCGetEventDataExec */ LEGACY_EXEC
-    MCAutoArrayRef t_event_data;
-    MCSystemGetEventData(p_ctxt, p_event_id, &t_event_data);
-    if (*t_event_data == nil)
+    MCVariableValue *r_event_data = nil;
+    MCSystemGetEventData(p_ctxt, p_event_id, r_event_data);
+    if (r_event_data == nil)
         p_ctxt.SetTheResultToEmpty();
     else
-        p_ctxt.SetTheResultToValue(*t_event_data);
+        p_ctxt.GetEP().setarray(r_event_data, True);
 #endif /* MCGetEventDataExec */
     MCSystemGetEventData(ctxt, p_id, r_data);
     if (r_data == nil)

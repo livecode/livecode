@@ -1715,13 +1715,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_HSCROLLBARID:
 		{
 			MCScrollbar *t_control;
-#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
-#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1745,13 +1739,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_VSCROLLBARID:
 		{
 			MCScrollbar *t_control;
-#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
-#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1789,7 +1777,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_WIDTH:
 	case P_HEIGHT:
 	case P_RECTANGLE:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		dirty = reset = True;
 		break;
@@ -1963,7 +1951,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_DISABLED:
 	case P_ENABLED:
 	case P_BORDER_WIDTH:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		if (p == P_3D || p == P_OPAQUE || p == P_ENABLED || p == P_DISABLED)

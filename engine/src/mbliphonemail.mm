@@ -204,10 +204,10 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 	
 	// Make sure we wait until only (presumably) the system has a reference to it.
 	// (This ensures we can call mail multiple times in the same handler).
-	while([ctxt . dialog retainCount] > 2)
+	/*while([ctxt . dialog retainCount] > 2)
 		MCscreen -> wait(0.01, False, True);
 	
-	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));
+	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
 }
 #endif /* MCIPhoneSendEmail */
 

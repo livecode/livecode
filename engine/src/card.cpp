@@ -1138,7 +1138,7 @@ Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep,
 	case P_TEXT_STYLE:
 	case P_TEXT_HEIGHT:
 		// Try to set the property.
-		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		
 		// Now dirty everything in the stack (inc. flush tilecache since

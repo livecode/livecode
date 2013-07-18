@@ -651,7 +651,7 @@ Exec_stat MCPrint::exec(MCExecPoint &ep)
 	default:
 		// What do we do here? Could get here if mode == PM_UNDEFINED, however, for now
 		// let's just put an assertion here.
-		MCUnreachable();
+		assert(false);
 	break;
 	}
 	

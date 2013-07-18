@@ -468,6 +468,11 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 		
+		if (!MCSecureModeCheckDoAlternate(line, pos))
+			return ES_ERROR;
+		
+		MCString s = ep.getsvalue();
+		MCS_doalternatelanguage(s, langname);
 		delete langname;
 		return ES_NORMAL;
 	}
@@ -1392,15 +1397,13 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 				t_kind = kMCSPutNone;
 				break;
 		}
-
-		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
-		if (!MCS_put(ep, t_kind, *t_value))
+		
+		if (!MCS_put(ep, t_kind, ep . getsvalue()))
 		{
 			MCeerror->add(EE_PUT_CANTSETINTO, line, pos);
 			return ES_ERROR;
 		}
-
+		
 		return ES_NORMAL;
 	}
 #endif /* MCPut */
@@ -2003,7 +2006,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 		MCeerror->add(EE_RETURN_BADEXP, line, pos);
 		return ES_ERROR;
 	}
-	MCresult -> set(ep);
+	MCresult -> store(ep, False);
 	if (url != NULL)
 	{
 		if (url->eval(ep) != ES_NORMAL)
@@ -2011,7 +2014,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 			MCeerror->add(EE_RETURN_BADEXP, line, pos);
 			return ES_ERROR;
 		}
-		MCurlresult -> set(ep);
+		MCurlresult -> store(ep, False);
 	}
 	else
 		if (var != NULL)
@@ -2021,7 +2024,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 				MCeerror->add(EE_RETURN_BADEXP, line, pos);
 				return ES_ERROR;
 			}
-			MCurlresult->set(ep);
+			MCurlresult->store(ep, False);
 			var->dofree(ep);
 		}
 
@@ -2133,12 +2136,13 @@ Parse_stat MCSet::parse(MCScriptPoint &sp)
 Exec_stat MCSet::exec(MCExecPoint &ep)
 {
 #ifdef /* MCSet */ LEGACY_EXEC
-if (value->eval(ep) != ES_NORMAL)
+	if (value->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_SET_BADEXP, line, pos);
 		return ES_ERROR;
 	}
+	ep.grabsvalue();
 	MCresult->clear(False);
 	if (target->set
 	        (ep) != ES_NORMAL)
@@ -2529,15 +2533,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
-
-	if (of == NULL && chunktype == CT_FIELD)
-	{
-		MCeerror->add(EE_SORT_NOTARGET, line, pos);
-		return ES_ERROR;
-	} 
 #endif /* MCSort */
-
-
 	MCExecContext ctxt(ep);
 	MCObjectPtr t_object;
 	if (of != NULL)
@@ -2920,12 +2916,9 @@ Parse_stat MCEcho::parse(MCScriptPoint& sp)
 Exec_stat MCEcho::exec(MCExecPoint& ep)
 {
 #ifdef /* MCEcho */ LEGACY_EXEC
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)data . getstring(), data . getlength(), &t_data);
-
-	if (!MCS_put(ep, kMCSPutBinaryOutput, *t_data) != IO_NORMAL)
+	if (!MCS_put(ep, kMCSPutBinaryOutput, data) != IO_NORMAL)
 		MCexitall = True;
-
+	
 	return ES_NORMAL;
 #endif /* MCEcho */
 

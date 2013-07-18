@@ -102,58 +102,60 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 Exec_stat MCAdd::exec(MCExecPoint &ep)
 {
 #ifdef /* MCAdd */ LEGACY_EXEC
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	t_dst_ref = NULL;
+	
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+	
+	if (overlap)
+		ep . grab();
+	
+	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADDEST, line, pos);
 		return ES_ERROR;
 	}
-
-	MCExecPoint ep2(ep);
-	if (*t_dst_container != nil)
+	
+	if (t_dst_ref != NULL && t_dst_ref -> is_array())
 	{
-		if (t_dst_container -> eval(ep2) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (ep2 . isarray())
+		if (t_dst_ref->factorarray(ep, O_PLUS) != ES_NORMAL)
 		{
-			if (ep2 . factorarray(ep, O_PLUS) != ES_NORMAL)
-			{
-				MCeerror->add(EE_ADD_BADARRAY, line, pos);
-				return ES_ERROR;
-			}
-			
-			return t_dst_container -> set(ep2);
+			MCeerror->add(EE_ADD_BADARRAY, line, pos);
+			return ES_ERROR;
 		}
+		return ES_NORMAL;
 	}
-
-	if (ep.isarray())
+	
+	if (ep.getformat() == VF_ARRAY)
 	{
 		MCeerror->add(EE_ADD_MISMATCH, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	// Variable case
 	real8 n1 = ep.getnvalue();
-	if (*t_dst_container != NULL)
+	if (t_dst_ref != NULL)
 	{
-		if (ep2 . ton() != ES_NORMAL)
+		real8 n2;
+		if (!t_dst_ref -> get_as_real(ep, n2))
 		{
-			MCeerror->add(EE_ADD_BADDEST, line, pos);
+			MCeerror -> add(EE_ADD_BADDEST, line, pos);
 			return ES_ERROR;
 		}
-
-		/* UNCHECKED */ t_dst_container -> set_real(n1 + ep2 . getnvalue());
-
+		
+		t_dst_ref -> assign_real(n1 + n2);
+		
+		if (t_dst_var != NULL)
+			t_dst_var -> synchronize(ep, True);
+		
 		return ES_NORMAL;
 	}
-
+	
 	// Chunk case
 	if (dest->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -167,7 +169,9 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 		MCeerror->add(EE_ADD_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-
+	
+	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
+	
 	return ES_NORMAL;
 #endif /* MCAdd */
 	MCAutoValueRef t_src;
@@ -314,55 +318,52 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 Exec_stat MCDivide::exec(MCExecPoint &ep)
 {
 #ifdef /* MCDivide */ LEGACY_EXEC
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	t_dst_ref = NULL;
+	
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIVIDE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+	
+	if (overlap)
+		ep . grab();
+	
+	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
 		return ES_ERROR;
 	}
-
-	MCExecPoint ep2(ep);
-	if (*t_dst_container != nil)
+	
+	if (t_dst_ref != NULL && t_dst_ref -> is_array())
 	{
-		if (t_dst_container -> eval(ep2) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (ep2 . isarray())
+		if (t_dst_ref->factorarray(ep, O_OVER) != ES_NORMAL)
 		{
-			if (ep2 . factorarray(ep, O_OVER) != ES_NORMAL)
-			{
-				MCeerror->add(EE_DIVIDE_BADARRAY, line, pos);
-				return ES_ERROR;
-			}
-			
-			return t_dst_container -> set(ep2);
+			MCeerror->add(EE_DIVIDE_BADARRAY, line, pos);
+			return ES_ERROR;
 		}
+		return ES_NORMAL;
 	}
-
-	if (ep.isarray())
+	
+	if (ep.getformat() == VF_ARRAY)
 	{
 		MCeerror->add(EE_DIVIDE_MISMATCH, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	// Variable case
 	real8 n2 = ep.getnvalue();
-	if (*t_dst_container != NULL)
+	if (t_dst_ref != NULL)
 	{
-		if (ep2 . ton() != ES_NORMAL)
+		real8 n1;
+		if (!t_dst_ref -> get_as_real(ep, n1))
 		{
-			MCeerror->add(EE_DIVIDE_BADDEST, line, pos);
+			MCeerror -> add(EE_ADD_BADDEST, line, pos);
 			return ES_ERROR;
 		}
-
-		double n1 = ep2 . getnvalue();
-
+		
 		MCS_seterrno(0);
 		n1 /= n2;
 		if (n1 == MCinfinity || MCS_geterrno() != 0)
@@ -374,12 +375,14 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 				MCeerror->add(EE_DIVIDE_RANGE, line, pos);
 			return ES_ERROR;
 		}
-
-		/* UNCHECKED */ t_dst_container -> set_real(n1);
-
+		t_dst_ref -> assign_real(n1);
+		
+		if (t_dst_var != NULL)
+			t_dst_var -> synchronize(ep, True);
+		
 		return ES_NORMAL;
 	}
-
+	
 	// Chunk case
 	if (dest->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -404,7 +407,7 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 		MCeerror->add(EE_DIVIDE_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	return ES_NORMAL;
 #endif /* MCDivide */
 	MCAutoValueRef t_src;
@@ -554,55 +557,52 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 Exec_stat MCMultiply::exec(MCExecPoint &ep)
 {
 #ifdef /* MCMultiply */ LEGACY_EXEC
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	t_dst_ref = NULL;
+	
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_MULTIPLY_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+	
+	if (overlap)
+		ep . grab();
+	
+	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MULTIPLY_BADDEST, line, pos);
 		return ES_ERROR;
 	}
-
-	MCExecPoint ep2(ep);
-	if (*t_dst_container != nil)
+	
+	if (t_dst_ref != NULL && t_dst_ref -> is_array())
 	{
-		if (t_dst_container -> eval(ep2) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (ep2 . isarray())
+		if (t_dst_ref->factorarray(ep, O_TIMES) != ES_NORMAL)
 		{
-			if (ep2 . factorarray(ep, O_TIMES) != ES_NORMAL)
-			{
-				MCeerror->add(EE_MULTIPLY_BADARRAY, line, pos);
-				return ES_ERROR;
-			}
-
-			return t_dst_container -> set(ep2);
+			MCeerror->add(EE_MULTIPLY_BADARRAY, line, pos);
+			return ES_ERROR;
 		}
+		return ES_NORMAL;
 	}
-
-	if (ep.isarray())
+	
+	if (ep.getformat() == VF_ARRAY)
 	{
 		MCeerror->add(EE_MULTIPLY_MISMATCH, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	// Variable case
 	real8 n2 = ep.getnvalue();
-	if (*t_dst_container != NULL)
+	if (t_dst_ref != NULL)
 	{
-		if (ep2 . ton() != ES_NORMAL)
+		real8 n1;
+		if (!t_dst_ref -> get_as_real(ep, n1))
 		{
 			MCeerror -> add(EE_MULTIPLY_BADDEST, line, pos);
 			return ES_ERROR;
 		}
 		
-		double n1 = ep2 . getnvalue();
-
 		MCS_seterrno(0);
 		n1 *= n2;
 		if (n1 == MCinfinity || MCS_geterrno() != 0)
@@ -611,12 +611,14 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 			MCeerror->add(EE_MULTIPLY_RANGE, line, pos);
 			return ES_ERROR;
 		}
-
-		/* UNCHECKED */ t_dst_container -> set_real(n1);
-
+		t_dst_ref -> assign_real(n1);
+		
+		if (t_dst_var != NULL)
+			t_dst_var -> synchronize(ep, True);
+		
 		return ES_NORMAL;
 	}
-
+	
 	// Chunk case
 	if (dest->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -638,7 +640,7 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 		MCeerror->add(EE_MULTIPLY_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	return ES_NORMAL;
 #endif /* MCMultiply */
 	MCAutoValueRef t_src;
@@ -788,59 +790,59 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 Exec_stat MCSubtract::exec(MCExecPoint &ep)
 {
 #ifdef /* MCSubtract */ LEGACY_EXEC
+	MCVariable *t_dst_var;
+	MCVariableValue *t_dst_ref;
+	t_dst_ref = NULL;
+	
 	if (source->eval(ep) != ES_NORMAL || ep.tona() != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUBTRACT_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-
-	MCAutoPointer<MCContainer> t_dst_container;
-	if (destvar != NULL && destvar -> evalcontainer(ep, &t_dst_container) != ES_NORMAL)
+	
+	if (overlap)
+		ep . grab();
+	
+	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUBTRACT_BADDEST, line, pos);
 		return ES_ERROR;
 	}
-
-	MCExecPoint ep2(ep);
-	if (*t_dst_container != nil)
+	
+	if (t_dst_ref != NULL && t_dst_ref -> is_array())
 	{
-		if (t_dst_container -> eval(ep2) != ES_NORMAL)
-			return ES_ERROR;
-
-		if (ep2 . isarray())
+		if (t_dst_ref->factorarray(ep, O_MINUS) != ES_NORMAL)
 		{
-			if (ep2 . factorarray(ep, O_MINUS) != ES_NORMAL)
-			{
-				MCeerror->add(EE_SUBTRACT_BADARRAY, line, pos);
-				return ES_ERROR;
-			}
-
-			return t_dst_container -> set(ep2);
+			MCeerror->add(EE_SUBTRACT_BADARRAY, line, pos);
+			return ES_ERROR;
 		}
+		return ES_NORMAL;
 	}
-
-	if (ep.isarray())
+	
+	if (ep.getformat() == VF_ARRAY)
 	{
 		MCeerror->add(EE_SUBTRACT_MISMATCH, line, pos);
 		return ES_ERROR;
 	}
-
 	// Variable case
 	real8 n1 = ep.getnvalue();
-	if (*t_dst_container != NULL)
+	if (t_dst_ref != NULL)
 	{
-		if (ep2 . ton() != ES_NORMAL)
+		real8 n2;
+		if (!t_dst_ref -> get_as_real(ep, n2))
 		{
-			MCeerror->add(EE_ADD_BADDEST, line, pos);
+			MCeerror -> add(EE_SUBTRACT_BADDEST, line, pos);
 			return ES_ERROR;
 		}
-
-		/* UNCHECKED */ t_dst_container -> set_real(ep2 . getnvalue() - n1);
-
+		
+		t_dst_ref -> assign_real(n2 - n1);
+		
+		if (t_dst_var != NULL)
+			t_dst_var -> synchronize(ep, True);
+		
 		return ES_NORMAL;
 	}
-
-
+	
 	// Chunk case
 	if (dest->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
@@ -854,7 +856,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 		MCeerror->add(EE_SUBTRACT_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-
+	
 	return ES_NORMAL;
 #endif /* MCSubtract */
 	MCAutoValueRef t_src;
