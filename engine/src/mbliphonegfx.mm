@@ -40,14 +40,26 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mbliphoneview.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern UIView *MCIPhoneGetView(void);
 extern float MCIPhoneGetResolutionScale(void);
+extern float MCIPhoneGetDeviceScale(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
+{
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void do_update(void *p_dirty)
 {
@@ -68,11 +80,6 @@ void MCStack::updatewindow(MCRegionRef p_dirty_rgn)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
 
 static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 {
@@ -170,7 +177,7 @@ public:
 			return;
 		
 		if (p_update)
-			FlushBits(m_locked_bits, m_locked_area . width * sizeof(uint32_t));
+			FlushBits(m_locked_bits, m_locked_stride);
 		
 		free(m_locked_bits);
 		m_locked_bits = nil;
@@ -209,14 +216,13 @@ public:
 class MCUIKitStackSurface: public MCIPhoneStackSurface
 {
 	CGContextRef m_context;
-	int32_t m_height;
 	
 public:
-	MCUIKitStackSurface(MCRegionRef p_region, CGContextRef p_context, int32_t p_height)
+	// IM-2013-07-18: remove unnecessary height parameter
+	MCUIKitStackSurface(MCRegionRef p_region, CGContextRef p_context)
 		: MCIPhoneStackSurface(MCRegionGetBoundingBox(p_region))
 	{
 		m_context = p_context;
-		m_height = p_height;
 	}
 	
 	bool Lock(void)
@@ -237,9 +243,8 @@ public:
 		//   when redrawing.
 		CGContextSetInterpolationQuality(m_context, kCGInterpolationNone);
 		
-		CGContextScaleCTM(m_context, 1.0, -1.0);
-		CGContextTranslateCTM(m_context, 0.0, -(m_height / MCIPhoneGetResolutionScale()));
-		CGContextScaleCTM(m_context, 1.0 / MCIPhoneGetResolutionScale(), 1.0 / MCIPhoneGetResolutionScale());
+		// IM-2013-07-18: Remove context transformations specific to drawing inverted images
+		
 		CGContextSaveGState(m_context);
 		
 		r_context = m_context;
@@ -259,6 +264,12 @@ protected:
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
 			return;
 		
+		// IM-2013-07-18: transform target so image draws upside-down
+		CGContextTranslateCTM(m_context, 0.0, (CGFloat)m_locked_area.y);
+		CGContextTranslateCTM(m_context, 0.0, (CGFloat)m_locked_area.height);
+		CGContextScaleCTM(m_context, 1.0, -1.0);
+		CGContextTranslateCTM(m_context, 0.0, -(CGFloat)m_locked_area.y);
+		
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateDeviceRGB();
 		
@@ -274,7 +285,7 @@ protected:
 			
 			if (t_image != nil)
 			{
-				CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)(m_height - (m_locked_area . y + m_locked_area . height)), (float)m_locked_area . width, (float)m_locked_area . height), t_image);
+				CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)m_locked_area . y, (float)m_locked_area . width, (float)m_locked_area . height), t_image);
 				CGImageRelease(t_image);
 			}
 		}
@@ -304,17 +315,30 @@ protected:
 	if (t_stack == nil)
 		return;
     
+	// IM-2013-07-18: [[ ResIndependence ]] We are now always rendering at the device resolution
+	MCGFloat t_scale;
+	t_scale = MCIPhoneGetDeviceScale();
+	
     MCRectangle t_hull;
-    t_hull . x = (int)floor(rect . origin . x * MCIPhoneGetResolutionScale());
-    t_hull . y = (int)floor(rect . origin . y * MCIPhoneGetResolutionScale());
-    t_hull . width = (int)ceil((rect . origin . x + rect . size . width) * MCIPhoneGetResolutionScale()) - t_hull . x;
-    t_hull . height = (int)ceil((rect . origin . y + rect . size . height) * MCIPhoneGetResolutionScale()) - t_hull . y;
+	t_hull = MCGRectangleGetIntegerBounds(MCGRectangleScale(MCGRectangleFromCGRect(rect), t_scale));
     
 	MCRegionRef t_dirty_rgn;
 	MCRegionCreate(t_dirty_rgn);
 	MCRegionSetRect(t_dirty_rgn, t_hull);
-	MCUIKitStackSurface t_surface(t_dirty_rgn, UIGraphicsGetCurrentContext(), t_stack -> getrect() . height);
-	t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+	
+	CGContext *t_cgcontext;
+	t_cgcontext = UIGraphicsGetCurrentContext();
+	
+	CGContextScaleCTM(t_cgcontext, 1.0 / t_scale, 1.0 / t_scale);
+	
+	MCUIKitStackSurface t_surface(t_dirty_rgn, t_cgcontext);
+	
+	if (t_surface . Lock())
+	{
+		t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+		t_surface . Unlock();
+	}
+	
 	MCRegionDestroy(t_dirty_rgn);
 }
 
@@ -539,7 +563,13 @@ protected:
 	MCRegionRef t_dirty_rgn;
 	MCRegionCreate(t_dirty_rgn);
 	MCRegionSetRect(t_dirty_rgn, MCU_make_rect(0, 0, m_backing_width, m_backing_height));
-	t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+	
+	if (t_surface . Lock())
+	{
+		t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+		t_surface . Unlock();
+	}
+	
 	MCRegionDestroy(t_dirty_rgn);
 	
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_renderbuffer);
