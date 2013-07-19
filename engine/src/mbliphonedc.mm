@@ -423,7 +423,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle t_screen_rect;
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	t_screen_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[0] . viewport));
+	t_screen_rect = t_displays[0] . viewport;
 	r = MCU_clip_rect(r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
 	
 	if (r.width != 0 && r.height != 0)
@@ -449,7 +449,6 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		
 		if (t_success)
 		{
-			int32_t t_scale = MCIPhoneGetResolutionScale();
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
 			CGContextTranslateCTM(t_img_context, 0, -r . height);
 			CGContextTranslateCTM(t_img_context, -r.x, -r.y);
@@ -487,6 +486,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			
+			float t_scale = MCIPhoneGetDeviceScale();
 			CGContextScaleCTM(t_img_context, t_scale, t_scale);
 			
 #ifndef USE_UNDOCUMENTED_METHODS
@@ -562,7 +562,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
 {
 	MCScreenDCDoSnapshotEnv env;
-	env . r = r;
+	env . r = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(r));
 	env . window = window;
 	env . displayname = displayname;
 
