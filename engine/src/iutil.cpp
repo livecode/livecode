@@ -441,7 +441,7 @@ void MCImage::crop(MCRectangle *newrect)
 
 	unlockbitmap(t_bitmap);
 
-	/* UNCHECKED */ setbitmap(t_cropimage);
+	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
 
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
@@ -485,8 +485,7 @@ void MCCalculateRotatedGeometry(uint32_t p_width, uint32_t p_height, int32_t p_a
 void MCImage::rotate_transform(int32_t p_angle)
 {
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
-	if (m_rep != nil)
-		/* UNCHECKED */ m_rep->GetGeometry(t_src_width, t_src_height);
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
 	
 	uint32_t t_trans_width = t_src_width;
 	uint32_t t_trans_height = t_src_height;
@@ -529,8 +528,7 @@ void MCImage::rotate_transform(int32_t p_angle)
 void MCImage::resize_transform()
 {
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
-	if (m_rep != nil)
-		/* UNCHECKED */ m_rep->GetGeometry(t_src_width, t_src_height);
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
 
 	if (rect.width == t_src_width && rect.height == t_src_height)
 		m_has_transform = nil;

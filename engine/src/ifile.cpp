@@ -211,7 +211,7 @@ void MCImage::openimage()
 		t_width = rect . width;
 		t_height = rect . height;
 		
-		/* UNCHECKED */ m_rep->GetGeometry(t_width, t_height);
+		/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 		
 		MCRectangle t_old_rect;
 		t_old_rect = rect;

@@ -67,6 +67,7 @@ MCImage::MCImage()
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -89,6 +90,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -103,7 +105,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	{
 		MCImageBitmap *t_bitmap = nil;
 		/* UNCHECKED */static_cast<MCMutableImageRep*>(iref.m_rep)->copy_selection(t_bitmap);
-		setbitmap(t_bitmap);
+		setbitmap(t_bitmap, 1.0);
 		MCImageFreeBitmap(t_bitmap);
 		if (static_cast<MCMutableImageRep*>(iref.m_rep)->has_selection())
 		{
@@ -649,8 +651,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_FORMATTED_HEIGHT:
 		{
 			uindex_t t_width = 0, t_height = 0;
-			if (m_rep != nil)
-				m_rep->GetGeometry(t_width, t_height);
+			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 			ep.setint(t_height);
 		}
@@ -658,8 +659,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_FORMATTED_WIDTH:
 		{
 			uindex_t t_width = 0, t_height = 0;
-			if (m_rep != nil)
-				m_rep->GetGeometry(t_width, t_height);
+			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 			ep.setint(t_width);
 		}
@@ -1045,7 +1045,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 					if (t_compressed != nil)
 						t_success = setcompressedbitmap(t_compressed);
 					else if (t_bitmap != nil)
-						t_success = setbitmap(t_bitmap);
+						t_success = setbitmap(t_bitmap, 1.0);
 				}
 
 				MCImageFreeBitmap(t_bitmap);
@@ -1108,7 +1108,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 					t_dst_ptr += t_copy->stride;
 				}
 
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1141,7 +1141,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), false);
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1174,7 +1174,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1924,8 +1924,7 @@ void MCImage::apply_transform()
 {
 	uindex_t t_width = rect.width;
 	uindex_t t_height = rect.height;
-	if (m_rep != nil)
-		m_rep->GetGeometry(t_width, t_height);
+	/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 	if (angle != 0)
 		rotate_transform(angle);
@@ -2030,7 +2029,7 @@ void MCImage::finishediting()
 
 	t_success = t_rep->LockImageFrame(0, false, t_frame);
 	if (t_success)
-		t_success = setbitmap(t_frame->image);
+		t_success = setbitmap(t_frame->image, 1.0);
 	t_rep->UnlockImageFrame(0, t_frame);
 
 	/* UNCHECKED */ MCAssert(t_success);
@@ -2053,6 +2052,7 @@ void MCImage::setrep(MCImageRep *p_rep)
 	m_rep = t_rep;
 
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
@@ -2134,7 +2134,7 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 	return t_success;
 }
 
-bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
+bool MCImage::setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry)
 {
 	bool t_success = true;
 
@@ -2149,6 +2149,9 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
 
 	if (t_success)
 	{
+		angle = 0;
+		m_scale_factor = p_scale;
+		
 		if (p_update_geometry)
 		{
 	#ifdef FEATURE_DONT_RESIZE
@@ -2157,12 +2160,12 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
 			if (!(flags & F_LOCK_LOCATION))
 	#endif
 			{
-				rect . width = p_bitmap->width;
-				rect . height = p_bitmap->height;
+				uint32_t t_width, t_height;
+				/* UNCHECKED */ getsourcegeometry(t_width, t_height);
+				rect . width = t_width;
+				rect . height = t_height;
 			}
 		}
-
-		angle = 0;
 	}
 
 	return t_success;
@@ -2336,6 +2339,15 @@ MCString MCImage::getrawdata()
 	return MCString((char*)t_data, t_size);
 }
 
+bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
+{
+	if (m_rep == nil || !m_rep->GetGeometry(r_pixwidth, r_pixheight))
+		return false;
+	
+	r_pixwidth = r_pixwidth / m_scale_factor;
+	r_pixheight = r_pixheight / m_scale_factor;
+}
+
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {
 	// while cropping
@@ -2346,7 +2358,7 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 		return;
 	}
 
-	if (m_rep != nil && m_rep->GetGeometry(r_pixwidth, r_pixheight))
+	if (getsourcegeometry(r_pixwidth, r_pixheight))
 		return;
 
 	r_pixwidth = rect.width;

@@ -287,6 +287,8 @@ class MCImage : public MCControl
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
+	// IM-2013-07-19: [[ ResIndependence ]] added scale factor for hi-res images
+	MCGFloat m_scale_factor;
 
 	MCImageNeed *m_needs;
 
@@ -322,7 +324,8 @@ class MCImage : public MCControl
 	
 public:
 	// replace the current image data with the new bitmap
-	bool setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry = false);
+	// IM-2013-07-19: [[ ResIndependence ]] add scale param for hi-res images
+	bool setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry = false);
 
 private:
 	void setrep(MCImageRep *p_rep);
@@ -405,8 +408,15 @@ public:
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
 
+	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
+	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
+	MCGFloat getscalefactor(void)
+	{
+		return m_scale_factor;
+	}
+	
 	void addneed(MCObject *p_object);
 
 	void endsel();
