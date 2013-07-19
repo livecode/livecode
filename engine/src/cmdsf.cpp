@@ -55,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#include "resolution.h"
+
 MCClose::~MCClose()
 {
 	delete fname;
@@ -1667,8 +1669,9 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			MCImageBitmapCheckTransparency(t_bitmap);
 
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+			// IM-2013-07-19: [[ ResIndependence ]] screen & object snapshots are taken at device resolution
 			if (t_bitmap != nil)
-				iptr->setbitmap(t_bitmap, true);
+				iptr->setbitmap(t_bitmap, MCResGetDeviceScale(), true);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	
