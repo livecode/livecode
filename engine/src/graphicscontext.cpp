@@ -599,6 +599,14 @@ void MCGraphicsContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int
 	MCGContextSave(m_gcontext);
 	MCGContextClipToRect(m_gcontext, t_clip);
 
+	// IM-2013-07-19: [[ ResIndependence ]] if image has a scale factor then we need to scale the context before drawing
+	if (p_image.scale_factor != 0.0 && p_image.scale_factor != 1.0)
+	{
+		MCGContextTranslateCTM(m_gcontext, t_dest.origin.x, t_dest.origin.y);
+		MCGContextScaleCTM(m_gcontext, 1.0 / p_image.scale_factor, 1.0 / p_image.scale_factor);
+		MCGContextTranslateCTM(m_gcontext, -t_dest.origin.x, -t_dest.origin.y);
+	}
+	
 	if (p_image.has_transform)
 	{
 		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-t_dest.origin.x, -t_dest.origin.y);

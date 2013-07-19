@@ -75,6 +75,9 @@ struct MCImageDescriptor
 	bool has_transform;
 	MCGAffineTransform transform;
 	MCGImageFilter filter;
+	
+	// IM-2013-07-19: [[ ResIndependence ]] add scale factor field for scaled images
+	MCGFloat scale_factor;
 
 	// The image bitmap
 	MCImageBitmap *bitmap;
