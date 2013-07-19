@@ -1597,7 +1597,27 @@ enum Parse_errors
 	
 	// {PE-0523} split/combine: bad form clause
 	PE_ARRAYOP_BADFORM,
+	
+	// {PE-0524} uuid: bad parameter list
+	PE_UUID_BADPARAM,
 
+	// {PE-0525} avgDev: bad parameters
+	PE_AVGDEV_BADPARAM,
+
+	// {PE-0526} geometricMean: bad parameters
+	PE_GEO_MEAN_BADPARAM,
+
+	// {PE-0527} harmonicMean: bad parameters
+	PE_HAR_MEAN_BADPARAM,
+
+	// {PE-0528} pStdDev: bad parameters
+	PE_POP_STDDEV_BADPARAM,
+
+	// {PE-0529} pVariance: bad parameters
+	PE_POP_VARIANCE_BADPARAM,
+
+	// {PE-0530} variance: bad parameters
+	PE_VARIANCE_BADPARAM,
 };
 
 extern const char *MCparsingerrors;

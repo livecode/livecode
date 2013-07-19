@@ -1,0 +1,49 @@
+<doc>
+  <legacy_id>2198</legacy_id>
+  <name>insert script</name>
+  <type>command</type>
+  <syntax>
+    <example>insert [the] script of <i>object </i>into {front | back}</example>
+  </syntax>
+  <library></library>
+  <objects>
+  </objects>
+  <synonyms>
+  </synonyms>
+  <classification>
+    <category>Objects &amp; Messages</category>
+    <category>Standalone Applications</category>
+  </classification>
+  <references>
+    <command tag="call">call Command</command>
+    <command tag="remove script">remove script Command</command>
+    <command tag="place">place Command</command>
+    <command tag="start using">start using Command</command>
+  </references>
+  <history>
+    <introduced version="1.0">Added.</introduced>
+  </history>
+  <platforms>
+    <mac/>
+    <windows/>
+    <linux/>
+    <ios/>
+    <android/>
+  </platforms>
+  <classes>
+    <desktop/>
+    <server/>
+    <web/>
+    <mobile/>
+  </classes>
+  <security>
+  </security>
+  <summary>Places an <glossary tag="object">object's</glossary> <property tag="script">script</property> into the <glossary tag="message path">message path</glossary>.</summary>
+  <examples>
+    <example>insert the script of button "Message Library" into back</example>
+    <example>insert the script of this card into front</example>
+  </examples>
+  <description>
+    <p>Use the <b>insert script</b> <glossary tag="command">command</glossary> to use an <glossary tag="object">object's</glossary> <property tag="script">script</property> as a <command tag="start using">library</command> for frequently-used <glossary tag="handler">handlers</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>object</i> is any <glossary tag="object">object</glossary> in an open <object tag="stack">stack</object>.</p><p/><p><b>Comments:</b></p><p>A script inserted into the front receives messages first, before the target object receives them. A script inserted into the back receives messages after all objects in the message path, just before the engine itself receives the message.</p><p/><p>Objects added to the front or back are placed at the start of the <b>frontScripts</b> or <function tag="backScripts">backScripts</function> list:  the last-inserted <glossary tag="object">object</glossary> gets <glossary tag="message">messages</glossary> first.</p><p/><p>When using a standalone application, the number of <b>frontScripts</b> or <function tag="backScripts">backScripts</function> that can be active at once is specified by the <function tag="scriptLimits">scriptLimits</function> <control_st tag="function">function</control_st>, and is currently ten <function tag="backScripts">backScripts</function> and ten <function tag="frontScripts">frontScripts</function>.</p><p/><p>In the development environment, you can insert any number of scripts into the front or back of the message path. However, inserting scripts may make it difficult to understand how a stack behaves. If you use this command for development, be sure to carefully document which scripts are inserted, where, and when.</p>
+  </description>
+</doc>

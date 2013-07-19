@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "mcerror.h"
 #include "objectstream.h"
+#include "osspec.h"
 
 #include "context.h"
 
@@ -889,6 +890,12 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		}
 		break;
 	case P_FILE_NAME:
+		/* {for next release}
+		// MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
+		//   empty, and the filename is already empty, do nothing.
+		if ((m_rep != nil && m_rep -> GetType() == kMCImageRepReferenced && data == MCnullmcstring) ||
+			data != filename)
+		*/
 		if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
 			data != filename)
 		{
@@ -896,13 +903,13 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			if (data != MCnullmcstring)
 				/* UNCHECKED */ t_filename = data.clone();
 
-			bool t_success = setfilename(t_filename);
+			setfilename(t_filename);
                 
 			MCCStringFree(t_filename);
 
 			resetimage();
 
-			if (t_success)
+			if (m_rep != nil)
 				MCresult->clear(False);
 			else
 				MCresult->sets("could not open image");
@@ -1008,12 +1015,20 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			if (data.getlength() == 0)
 			{
-                if (flags & F_HAS_FILENAME)
+				/* {for next release}
+				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
+				//   text to empty shouldn't have an effect; otherwise we are unsetting the
+				//   current text.
+                if (!getflag(F_HAS_FILENAME))
                 {
                     // empty text - unset flags & set rep to nil;
                     flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
                     setrep(nil);
                 }
+				*/
+				// empty text - unset flags & set rep to nil;
+				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+				setrep(nil);
 			}
 			else
 			{
@@ -2058,15 +2073,10 @@ bool MCImage::setfilename(const char *p_filename)
 
 	if (p_filename == nil)
 	{
-        if (flags & F_HAS_FILENAME)
-        {
-            setrep(nil);
-            flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-            flags &= ~F_HAS_FILENAME;
-            return true;
-        }
-        else
-            return false;
+		setrep(nil);
+		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+		flags &= ~F_HAS_FILENAME;
+		return true;
 	}
 
 	char *t_filename = nil;
@@ -2076,6 +2086,19 @@ bool MCImage::setfilename(const char *p_filename)
 	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+	// MW-2013-07-01: [[ Bug 11001 ]] Reverted for 6.1.0 - this canonicalisation doesn't
+	//   take into account URL references.
+	/*{reverted for correct fix in next release}
+	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
+	//   for Rep construction.
+	if (t_success)
+	{
+		char *t_resolved_filename;
+		t_resolved_filename = MCS_get_canonical_path(t_resolved);
+		delete t_resolved;
+		t_resolved = t_resolved_filename;
+	}
+	 */
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
 

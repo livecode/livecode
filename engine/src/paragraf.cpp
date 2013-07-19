@@ -1085,7 +1085,9 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 
 				// MW-2012-02-10: [[ FixedTable ]] If we have reached the final tab in fixed
 				//   table mode, we are done.
-				if (ct == nt - 2 && t[nt - 2] == t[nt - 1])
+				// MW-2013-05-20: [[ Bug 10878 ]] Tweaked conditions to work for min two tabStops
+				//   rather than 3.
+				if (ct >= nt - 2 && t[nt - 2] == t[nt - 1])
 					break;
 			}
 		}
@@ -3019,7 +3021,9 @@ void MCParagraph::getxextents(int4 &si, int4 &ei, int2 &minx, int2 &maxx)
 	ei -= gettextsizecr();
 }
 
-Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
+// MW-2013-05-21: [[ Bug 10794 ]] Changed signature to return the block the search
+//   ends up in.
+MCBlock *MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 {
 	Boolean isgroup = True;
 	Boolean found = False;
@@ -3044,10 +3048,12 @@ Boolean MCParagraph::extendup(MCBlock *bptr, uint2 &si)
 		bptr = bptr->next();
 	uint2 l;
 	bptr->getindex(si, l);
-	return found;
+	return bptr;
 }
 
-Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
+// MW-2013-05-21: [[ Bug 10794 ]] Changed signature to return the block the search
+//   ends up in.
+MCBlock *MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 {
 	Boolean isgroup = True;
 	Boolean found = False;
@@ -3073,7 +3079,7 @@ Boolean MCParagraph::extenddown(MCBlock *bptr, uint2 &ei)
 	uint2 l;
 	bptr->getindex(ei, l);
 	ei += l;
-	return found;
+	return bptr;
 }
 
 void MCParagraph::getclickindex(int2 x, int2 y,
@@ -3405,6 +3411,28 @@ Boolean MCParagraph::pageheight(uint2 fixedheight, uint2 &theight,
 		if (lheight > theight)
 			return False;
 		theight -= lheight;
+		lptr = lptr->next();
+	}
+	while (lptr != lines);
+	lptr = NULL;
+	return True;
+}
+
+// JS-2013-05-15: [[ PageRanges ]] pagerange as variant of pageheight
+Boolean MCParagraph::pagerange(uint2 fixedheight, uint2 &theight,
+                               uint2 &tend, MCLine *&lptr)
+{
+	if (lptr == NULL)
+		lptr = lines;
+	do
+	{
+		uint2 lheight = fixedheight == 0 ? lptr->getheight() : fixedheight;
+		if (lheight > theight)
+			return False;
+		theight -= lheight;
+        uint2 li, ll;
+        lptr->getindex(li, ll);
+        tend += ll;
 		lptr = lptr->next();
 	}
 	while (lptr != lines);

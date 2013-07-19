@@ -14,8 +14,8 @@
             <BuildableReference
                BuildableIdentifier = "primary"
                BlueprintIdentifier = "4DE18CED0B82296A0086DB92"
-               BuildableName = "Standalone.app"
-               BlueprintName = "standalone"
+               BuildableName = "Standalone-Community.app"
+               BlueprintName = "Standalone-Community"
                ReferencedContainer = "container:engine.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -32,8 +32,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DE18CED0B82296A0086DB92"
-            BuildableName = "Standalone.app"
-            BlueprintName = "standalone"
+            BuildableName = "Standalone-Community.app"
+            BlueprintName = "Standalone-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -51,8 +51,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DE18CED0B82296A0086DB92"
-            BuildableName = "Standalone.app"
-            BlueprintName = "standalone"
+            BuildableName = "Standalone-Community.app"
+            BlueprintName = "Standalone-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -69,8 +69,8 @@
          <BuildableReference
             BuildableIdentifier = "primary"
             BlueprintIdentifier = "4DE18CED0B82296A0086DB92"
-            BuildableName = "Standalone.app"
-            BlueprintName = "standalone"
+            BuildableName = "Standalone-Community.app"
+            BlueprintName = "Standalone-Community"
             ReferencedContainer = "container:engine.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>

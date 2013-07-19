@@ -28,4 +28,7 @@ bool MCNotifyPush(void (*callback)(void *), void *state, bool block, bool safe);
 //   otherwise only ones which are for non-script safe points will be.
 bool MCNotifyDispatch(bool safe);
 
+// MW-2013-06-14: [[ DesktopPingWait ]] Wake up any currently running 'wait'.
+void MCNotifyPing(bool p_high_priority);
+
 #endif

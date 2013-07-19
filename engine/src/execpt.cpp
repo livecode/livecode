@@ -1006,6 +1006,7 @@ bool MCExecPoint::trytoconvertutf16tonative()
             copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
             return true;
         }
+
     return false;
 }
         

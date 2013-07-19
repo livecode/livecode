@@ -881,7 +881,9 @@ static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p
 static MCExternalError MCExternalEngineRunOnMainThread(void *p_callback, void *p_callback_state, MCExternalRunOnMainThreadOptions p_options)
 {
 #if defined(_DESKTOP)
-	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, (p_options & kMCExternalRunOnMainThreadPost) == 0, true))
+	// MW-2013-06-25: [[ DesktopPingWait ]] Pass the correct parameters through
+	//   to MCNotifyPush so that LCObjectPost works.
+	if (!MCNotifyPush((MCExternalThreadOptionalCallback)p_callback, p_callback_state, (p_options & kMCExternalRunOnMainThreadPost) == 0, (p_options & kMCExternalRunOnMainThreadSafe) != 0))
 		return kMCExternalErrorOutOfMemory;
 
 	return kMCExternalErrorNone;
@@ -1860,10 +1862,9 @@ static MCExternalError MCExternalWaitRun(void *unused, unsigned int p_options)
 
 static MCExternalError MCExternalWaitBreak(void *unused, unsigned int p_options)
 {
-#ifdef TARGET_SUBPLATFORM_IPHONE
-	// MW-2011-08-16: [[ Wait ]] Tell the wait to look for more stuff to do/exit.
+	// MW-2013-06-25: [[ DesktopPingWait ]] Do a 'pingwait()' on all platforms so
+	//   that wait's and such work on all platforms.
 	MCscreen -> pingwait();
-#endif
 	return kMCExternalErrorNone;
 }
 

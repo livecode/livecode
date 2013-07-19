@@ -37,7 +37,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 	externalv0.cpp externalv1.cpp \
 	mode_standalone.cpp lextable.cpp eventqueue.cpp sha1.cpp stacke.cpp \
 	name.cpp redraw.cpp tilecache.cpp tilecachesw.cpp tilecachegl.cpp sysregion.cpp \
-	sysunxdate.cpp sysspec.cpp stackcache.cpp \
+	sysunxdate.cpp sysunxrandom.cpp sysspec.cpp stackcache.cpp uuid.cpp \
 	mblad.cpp mblalert.cpp mblbusyindicator.cpp mblcalendar.cpp mblcontact.cpp mblcontrol.cpp \
 	mbldc.cpp mbldialog.cpp mblflst.cpp mblmain.cpp mblnotification.cpp mblsensor.cpp \
 	mblspec.cpp mblsound.cpp mblstack.cpp mblstore.cpp mbltextmessaging.cpp \
@@ -85,8 +85,6 @@ LOCAL_STATIC_LIBRARIES := librevandroid-kernel libcore libjpeg libpcre libpng li
 
 LOCAL_LDLIBS += -lz -lm -llog -ljnigraphics -lGLESv1_CM
 
-ifneq ($(MODE),debug)
 LOCAL_LDFLAGS := -Wl,--script=$(LOCAL_PATH)/standalone-android.link
-endif
 
 include $(BUILD_SHARED_LIBRARY)

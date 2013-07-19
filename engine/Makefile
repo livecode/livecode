@@ -31,4 +31,3 @@ clean:
 	$(MAKE) -f Makefile.runtime clean
 	$(MAKE) -f Makefile.kernel clean
 	$(MAKE) -f Makefile.server clean
-

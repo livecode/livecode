@@ -755,12 +755,14 @@ void MCField::getlinkdata(MCRectangle &lrect, MCBlock *&sb, MCBlock *&eb)
 	
 	// MW-2011-02-26: [[ Bug 9416 ]] Make sure the linkrect and block extends to the
 	//   extremities of the link.
+	// MW-2013-05-21: [[ Bug 10794 ]] Make sure we update sb/eb with the actual blocks
+	//   the indices are within.
 	uint2 t_index;
 	t_index = (uint2)si;
-	sptr -> extendup(sb, t_index);
+	sb = sptr -> extendup(sb, t_index);
 	si = t_index;
 	t_index = (uint2)(ei - 1);
-	sptr -> extenddown(eb, t_index);
+	eb = sptr -> extenddown(eb, t_index);
 	ei = t_index;
 	
 	linksi += si;
@@ -1014,8 +1016,9 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				// making sure the ranges are adjusted to the start of the range.
 				sptr -> getflaggedranges(parid, ep, si, ei, t_index_offset);
 
-				// Increment the offset by the size of the paragraph.
-				t_index_offset += sptr -> gettextsizecr();
+				// MW-2013-05-22: [[ Bug 10908 ]] Increment the offset by the size of the
+				//   paragraph in codepoints not bytes.
+				t_index_offset += sptr -> gettextlength() + 1;
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				si = 0;
