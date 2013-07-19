@@ -64,6 +64,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphicscontext.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -2615,8 +2617,12 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		t_context_height = p_size->y;
 	}
 
+	// IM-2013-07-19: [[ ResIndependence ]] scale snapshot image to device resolution
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
 	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ MCImageBitmapCreate(t_context_width, t_context_height, t_bitmap);
+	/* UNCHECKED */ MCImageBitmapCreate(ceil(t_context_width * t_scale), ceil(t_context_height * t_scale), t_bitmap);
 	MCImageBitmapClear(t_bitmap);
 
 	MCGContextRef t_gcontext = nil;
@@ -2624,12 +2630,14 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	///* UNCHECKED */ MCGContextCreateWithRaster(t_raster, t_gcontext);
 	///* UNCHECKED */ MCGContextCreate(t_context_width, t_context_height, true, t_gcontext);
 
+	MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
+	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)
 		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
-
+	
 	MCContext *t_context = new MCGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
