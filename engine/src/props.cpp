@@ -330,7 +330,6 @@ static PropList fieldprops[] =
         {"outerGlow", P_BITMAP_EFFECT_OUTER_GLOW},
         {"opaque", P_OPAQUE},
         {"rect", P_RECTANGLE},
-        {"scroll", P_VSCROLL},
         {"scrollbarWidth", P_SCROLLBAR_WIDTH},
         {"shadow", P_SHADOW},
         {"shadowColor", P_SHADOW_COLOR},
