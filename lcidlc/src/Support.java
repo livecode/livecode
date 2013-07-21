@@ -169,10 +169,10 @@ public class LC
 			
 		//////////
 		
-		public void Post(String p_message, String p_signature, java.lang.Object[] p_arguments)
+		public void Post(String p_message, java.lang.Object[] p_arguments)
 		{
 			Check();
-			__ObjectPost(m_pointer, p_message, p_signature, p_arguments);
+			__ObjectPost(m_pointer, p_message, p_arguments);
 		}
 		
 		//////////
@@ -227,8 +227,8 @@ public class LC
 	private static native void __ObjectRetain(long object);
 	private static native void __ObjectRelease(long object);
 	private static native boolean __ObjectExists(long object);
-	private static native void __ObjectSend(long object, String message, String signature, java.lang.Object[] arguments);
-	private static native void __ObjectPost(long object, String message, String signature, java.lang.Object[] arguments);
+	private static native void __ObjectSend(long object, String message, java.lang.Object[] arguments);
+	private static native void __ObjectPost(long object, String message, java.lang.Object[] arguments);
 	/*private static native java.lang.Object __ObjectGet(long object, int options, String property, String key);
 	private static native void __ObjectSet(long object, int options, String property, String key);*/
 	
