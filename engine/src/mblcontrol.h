@@ -181,6 +181,10 @@ struct MCNativeControlColor
     uint16_t a;
 };
 
+void MCNativeControlColorParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlColor& r_output);
+void MCNativeControlColorFormat(MCExecContext& ctxt, const MCNativeControlColor& p_input, MCStringRef& r_output);
+void MCNativeControlColorFree(MCExecContext& ctxt, MCNativeControlColor& p_input);
+
 enum MCNativeControlDecelerationRateType
 {
     kMCNativeControlDecelerationRateNormal,
@@ -194,6 +198,11 @@ struct MCNativeControlDecelerationRate
     double rate;
 };
 
+
+void MCNativeControlDecelerationRateParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlDecelerationRate& r_output);
+void MCNativeControlDecelerationRateFormat(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_input, MCStringRef& r_output);
+void MCNativeControlDecelerationRateFree(MCExecContext& ctxt, MCNativeControlDecelerationRate& p_input);
+
 struct MCNativeControlIndicatorInsets
 {
     int16_t top;
@@ -201,6 +210,20 @@ struct MCNativeControlIndicatorInsets
     int16_t right;
     int16_t bottom;
 };
+
+void MCNativeControlIndicatorInsetsParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIndicatorInsets& r_output);
+void MCNativeControlIndicatorInsetsFormat(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_input, MCStringRef& r_output);
+void MCNativeControlIndicatorInsetsFree(MCExecContext& ctxt, MCNativeControlIndicatorInsets& p_input);
+
+struct MCNativeControlRange
+{
+    uint32_t start;
+    uint32_t length;
+};
+
+void MCNativeControlRangeParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlRange& r_output);
+void MCNativeControlRangeFormat(MCExecContext& ctxt, const MCNativeControlRange& p_input, MCStringRef& r_output);
+void MCNativeControlRangeFree(MCExecContext& ctxt, MCNativeControlRange& p_input);
 
 enum MCNativeControlIndicatorStyle
 {
@@ -232,6 +255,116 @@ enum MCNativeControlPlaybackState
     kMCNativeControlPlaybackStateSeekingForward,
     kMCNativeControlPlaybackStateSeekingBackward
 };
+
+enum MCNativeControlInputCapitalizationType
+{
+    kMCNativeControlInputCapitalizeNone,
+    kMCNativeControlInputCapitalizeCharacters,
+    kMCNativeControlInputCapitalizeWords,
+    kMCNativeControlInputCapitalizeSentences
+};
+
+enum MCNativeControlInputAutocorrectionType
+{
+    kMCNativeControlInputAutocorrectionDefault,
+    kMCNativeControlInputAutocorrectionNo,
+    kMCNativeControlInputAutocorrectionYes
+};
+
+enum MCNativeControlInputKeyboardType
+{
+    kMCNativeControlInputKeyboardTypeDefault,
+    kMCNativeControlInputKeyboardTypeAlphabet,
+    kMCNativeControlInputKeyboardTypeNumeric,
+    kMCNativeControlInputKeyboardTypeURL,
+    kMCNativeControlInputKeyboardTypeNumber,
+    kMCNativeControlInputKeyboardTypePhone,
+    kMCNativeControlInputKeyboardTypeContact,
+    kMCNativeControlInputKeyboardTypeEmail,
+    kMCNativeControlInputKeyboardTypeDecimal,
+};
+
+enum MCNativeControlInputKeyboardStyle
+{
+    kMCNativeControlInputKeyboardStyleDefault,
+    kMCNativeControlInputKeyboardStyleAlert
+};
+
+enum MCNativeControlInputReturnKeyType
+{
+    kMCNativeControlInputReturnKeyTypeDefault,
+    kMCNativeControlInputReturnKeyTypeGo,
+    kMCNativeControlInputReturnKeyTypeGoogle,
+    kMCNativeControlInputReturnKeyTypeJoin,
+    kMCNativeControlInputReturnKeyTypeNext,
+    kMCNativeControlInputReturnKeyTypeRoute,
+    kMCNativeControlInputReturnKeyTypeSearch,
+    kMCNativeControlInputReturnKeyTypeSend,
+    kMCNativeControlInputReturnKeyTypeYahoo,
+    kMCNativeControlInputReturnKeyTypeDone,
+    kMCNativeControlInputReturnKeyTypeEmergencyCall
+};
+
+enum MCNativeControlInputContentType
+{
+    kMCNativeControlInputContentTypePlain,
+    kMCNativeControlInputContentTypePassword
+};
+
+enum MCNativeControlInputDataDetectorType
+{
+    kMCNativeControlInputDataDetectorTypeNone = 0,
+    kMCNativeControlInputDataDetectorTypeWebUrlBit,
+    kMCNativeControlInputDataDetectorTypeWebUrl = 1 << kMCNativeControlInputDataDetectorTypeWebUrlBit,
+    kMCNativeControlInputDataDetectorTypeEmailAddressBit,
+    kMCNativeControlInputDataDetectorTypeEmailAddress = 1 << kMCNativeControlInputDataDetectorTypeEmailAddressBit,
+    kMCNativeControlInputDataDetectorTypePhoneNumberBit,
+    kMCNativeControlInputDataDetectorTypePhoneNumber = 1 << kMCNativeControlInputDataDetectorTypePhoneNumberBit,
+    kMCNativeControlInputDataDetectorTypeMapAddressBit,
+    kMCNativeControlInputDataDetectorTypeMapAddress = 1 << kMCNativeControlInputDataDetectorTypeMapAddressBit,
+    kMCNativeControlInputDataDetectorTypeCalendarEventBit,
+    kMCNativeControlInputDataDetectorTypeCalendarEvent = 1 << kMCNativeControlInputDataDetectorTypeCalendarEventBit,
+    kMCNativeControlInputDataDetectorTypeAllBit,
+    kMCNativeControlInputDataDetectorTypeAll = 1 << kMCNativeControlInputDataDetectorTypeAllBit
+};
+
+enum MCNativeControlInputTextAlign
+{
+    kMCNativeControlInputTextAlignCenter,
+    kMCNativeControlInputTextAlignLeft,
+    kMCNativeControlInputTextAlignRight,
+};
+
+enum MCNativeControlClearButtonMode
+{
+    kMCNativeControlClearButtonModeNever,
+    kMCNativeControlClearButtonModeWhileEditing,
+    kMCNativeControlClearButtonModeUnlessEditing,
+    kMCNativeControlClearButtonModeAlways,
+};
+
+enum MCNativeControlBorderStyle
+{
+    kMCNativeControlBorderStyleNone,
+    kMCNativeControlBorderStyleLine,
+    kMCNativeControlBorderStyleBezel,
+    kMCNativeControlBorderStyleRoundedRect
+};
+
+enum MCNativeControlInputVerticalAlign
+{
+    kMCNativeControlInputVerticalAlignCenter,
+    kMCNativeControlInputVerticalAlignTop,
+    kMCNativeControlInputVerticalAlignBottom,
+};
+
+struct MCExecEnumTypeInfo;
+struct MCExecSetTypeInfo;
+
+void ctxt_to_enum(MCExecContext& ctxt, MCExecEnumTypeInfo* p_enum_info, intenum_t& r_enum);
+void ctxt_to_set(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t& r_set);
+void enum_to_ctxt(MCExecContext& ctxt, MCExecEnumTypeInfo* p_enum_info, intenum_t p_enum);
+void set_to_ctxt(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t p_set);
 
 class MCNativeControl
 {
@@ -265,24 +398,28 @@ public:
 	
 	// Set the owning object of the instance
 	void SetOwner(MCObject *owner);
-	
+#ifdef LEGACY_EXEC	
 	// Set property/get property/do verb.
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
+#endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
+
+    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
     
     // Native control setters & getters
-    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect) = 0;
-    virtual void SetVisible(MCExecContext& ctxt, bool* p_visible) = 0;
-    virtual void SetOpaque(MCExecContext& ctxt, bool* p_opaque) = 0;
-    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha) = 0;
-    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color) = 0;
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect) = 0;
+    virtual void SetVisible(MCExecContext& ctxt, bool p_visible) = 0;
+    virtual void SetOpaque(MCExecContext& ctxt, bool p_opaque) = 0;
+    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha) = 0;
+    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color) = 0;
     
-    virtual void GetRect(MCExecContext& ctxt, MCRectangle*& p_rect) = 0;
-    virtual void GetVisible(MCExecContext& ctxt, bool*& p_visible) = 0;
-    virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque) = 0;
-    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha) = 0;
-    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color) = 0;
+    virtual void GetRect(MCExecContext& ctxt, MCRectangle& p_rect) = 0;
+    virtual void GetVisible(MCExecContext& ctxt, bool& p_visible) = 0;
+    virtual void GetOpaque(MCExecContext& ctxt, bool& p_opaque) = 0;
+    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha) = 0;
+    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color) = 0;
     
     void GetId(MCExecContext& ctxt, uinteger_t& r_id);
     void GetName(MCExecContext& ctxt, MCStringRef& r_name);

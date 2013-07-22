@@ -95,6 +95,7 @@ extern Boolean MCU_stobxb(const MCString& p_string, Boolean &r_left, Boolean& r_
 extern Boolean MCU_stoi4(const MCString&, int4& d);
 extern bool MCU_stoui4(MCStringRef p_string, uint4 &r_d);
 extern Boolean MCU_stoui4(const MCString&, uint4& d);
+extern bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2);
 extern bool MCU_stob(MCStringRef p_string, bool r_condition);
 extern Boolean MCU_stob(const MCString&, Boolean& condition);
 extern void MCU_lower(char *sptr, const MCString& s);

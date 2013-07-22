@@ -32,6 +32,7 @@
 
 #include "mblsyntax.h"
 #include "mblsensor.h"
+#include "mblcontrol.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3720,10 +3721,190 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	else
 		MCPickExecPickPhoto(ctxt, t_photo_source);
     
-	if (ctxt . HasError())
+	if (!ctxt . HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCAutoStringRef t_type_name;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "x", &(&t_type_name));
+	
+	MCAutoStringRef t_control_name;
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
+	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCNativeControlExecCreateControl(ctxt, *t_type_name, *t_control_name);
+    
+	if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
+}
+
+Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters)
+{
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	MCAutoStringRef t_control_name;
+	if (MCParseParameters(p_parameters, "x", &(&t_control_name)))
+        MCNativeControlExecDeleteControl(ctxt, *t_control_name);
+
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_control_name;
+	char *t_prop_name;
+	t_control_name = nil;
+	t_prop_name = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_prop_name);
+	
+	MCNativeControl *t_control;
+	MCNativeControlProperty t_property;
+	if (t_success)
+		t_success =
+		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
+		MCNativeControl::LookupProperty(t_prop_name, t_property);
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success && p_parameters != nil)
+		t_success = p_parameters -> eval(ep);
+	
+	if (t_success)
+		t_success = t_control -> Set(t_property, ep) == ES_NORMAL;
+	
+	delete t_prop_name;
+	delete t_control_name;
+	
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_control_name;
+	char *t_prop_name;
+	t_control_name = nil;
+	t_prop_name = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_prop_name);
+	
+	MCNativeControl *t_control;
+	MCNativeControlProperty t_property;
+	if (t_success)
+		t_success =
+		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
+		MCNativeControl::LookupProperty(t_prop_name, t_property);
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success)
+		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
+	
+	MCExecContext ctxt(ep);
+	if (t_success)
+	{
+		MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+        ctxt . SetTheResultToValue(*t_value);
+	}
+	else
+		ctxt . SetTheResultToEmpty();
+    
+	delete t_prop_name;
+	delete t_control_name;
+	
+	return ES_NORMAL;
+	
+}
+
+Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_control_name;
+	char *t_action_name;
+	t_control_name = nil;
+	t_action_name = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_action_name);
+	
+	MCNativeControl *t_control;
+	MCNativeControlAction t_action;
+	if (t_success)
+		t_success =
+		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
+		MCNativeControl::LookupAction(t_action_name, t_action);
+	
+	if (t_success)
+		t_success = t_control -> Do(t_action, p_parameters) == ES_NORMAL;
+	
+	delete t_action_name;
+	delete t_control_name;
+	
+	return ES_NORMAL;
+}
+
+Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
+{
+	MCNativeControl *t_target;
+	t_target = MCNativeControl::CurrentTarget();
+	if (t_target != nil)
+	{
+		if (t_target -> GetName() != nil)
+			MCresult -> copysvalue(t_target -> GetName());
+		else
+			MCresult -> setnvalue(t_target -> GetId());
+	}
+	else
+		MCresult -> clear();
+	
+	return ES_NORMAL;
+}
+
+bool list_native_controls(void *context, MCNativeControl* p_control)
+{
+	MCExecPoint *ep;
+	ep = (MCExecPoint *)context;
+	
+	if (p_control -> GetName() != nil)
+		ep -> concatcstring(p_control -> GetName(), EC_RETURN, ep -> isempty());
+	else
+		ep -> concatuint(p_control -> GetId(), EC_RETURN, ep -> isempty());
+	
+	return true;
+}
+
+Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
+{
+    
+	MCExecPoint ep(nil, nil, nil);
+	MCNativeControl::List(list_native_controls, &ep);
+    
+	MCExecContext ctxt(ep);
+	MCAutoStringRef t_value;
+    ep . copyasstringref(&t_value);
+    ctxt . SetTheResultToValue(*t_value);
+    
+	return ES_NORMAL;
+}

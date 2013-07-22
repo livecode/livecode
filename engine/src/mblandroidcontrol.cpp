@@ -98,66 +98,71 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, p_rect -> x, p_rect -> y, p_rect -> x + p_rect -> width, p_rect->y + p_rect -> height);
+        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, p_rect . x, p_rect . y, p_rect . x + p_rect . width, p_rect . y + p_rect . height);
 }
 
-void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool* p_visible)
+void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool p_visible)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, *p_visible);
+        MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, p_visible);
 }
 
-void MCAndroidControl::SetOpaque(MCExecContext& ctxt, bool* p_opaque)
+void MCAndroidControl::SetOpaque(MCExecContext& ctxt, bool p_opaque)
 {
     // NO-OP
 }
 
-void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha)
+void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, *p_alpha);
+        MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, p_alpha);
 }
 
-void MCAndroidControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color)
+void MCAndroidControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, p_color -> r >> 8, p_color -> g >> 8, p_color -> b >> 8, p_color -> a >> 8);
+        MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, p_color . r >> 8, p_color . g >> 8, p_color . b >> 8, p_color . a >> 8);
 }
 
-void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle*& p_rect)
+void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
 {
     if (m_view != nil)
     {
         int16_t i1, i2, i3, i4;
         GetViewRect(m_view, i1, i2, i3, i4);
-        p_rect -> x = i1;
-        p_rect -> y = i2;
-        p_rect -> width = i3 - i1;
-        p_rect -> height = i4 - i2;
+        r_rect . x = i1;
+        r_rect . y = i2;
+        r_rect . width = i3 - i1;
+        r_rect . height = i4 - i2;
     }
 }
 
-void MCAndroidControl::GetVisible(MCExecContext& ctxt, bool*& p_visible)
+void MCAndroidControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "getVisible", "b", p_visible);
+        MCAndroidObjectRemoteCall(m_view, "getVisible", "b", &r_visible);
+    else
+        r_visible = false;
 }
 
-void MCAndroidControl::GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha)
+void MCAndroidControl::GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha)
 {
     if (m_view != nil)
-        MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", p_alpha);
+        MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", &r_alpha);
+    else
+        r_alpha = 0;
 }
 
-void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color)
+void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color)
 {
     if (m_view != nil)
-        GetViewBackgroundColor(m_view, p_color -> r, p_color -> g, p_color -> b, p_color -> a);
+        GetViewBackgroundColor(m_view, p_color . r, p_color . g, p_color . b, p_color . a);
 }
 
+#ifdef /* MCAndroidControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -231,7 +236,64 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
     
     return ES_NOT_HANDLED;
 }
+#endif /* MCAndroidControl::Set */
 
+void MCAndroidControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyRectangle:
+        {
+            MCRectangle t_rect;
+            if (!ep . copyaslegacyrectangle(t_rect))
+                ctxt . LegacyThrow(EE_OBJECT_NAR);
+            else
+                SetRect(ctxt, t_rect);
+            return;
+        }
+            
+        case kMCNativeControlPropertyVisible:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetVisible(ctxt, t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyAlpha:
+        {
+            uint16_t t_alpha;
+            if (!ep . copyasuint(t_alpha))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetAlpha(ctxt, t_alpha);
+            return;
+        }
+            
+        case kMCNativeControlPropertyBackgroundColor:
+        {
+            MCAutoStringRef t_value;
+            /* UNCHECKED */ ep . copyasstringref(&t_value);
+            MCNativeControlColor t_color;
+            MCNativeControlColorParse(ctxt, *t_value, t_color);
+            
+            if (!ctxt . HasError())
+                SetBackgroundColor(ctxt, t_color);
+                
+            return;
+        }
+        default:
+            break;
+    }
+    
+    MCNativeControl::Set(ctxt, p_property);
+}
+
+#ifdef /* MCAndroidControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -294,6 +356,55 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
     }
     
     return ES_ERROR;
+}
+#endif /* MCAndroidControl::Get */
+
+void MCAndroidControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyRectangle:
+        {
+            MCRectangle t_rect;
+            GetRect(ctxt, t_rect);
+            ep . setrectangle(t_rect);
+            return;
+        }
+            
+        case kMCNativeControlPropertyVisible:
+        {
+            bool t_visible;
+            GetVisible(ctxt, t_visible);
+            ep . setboolean(t_visible ? True : False);
+            return;
+        }
+            
+        case kMCNativeControlPropertyAlpha:
+        {
+            int32_t t_alpha;
+            GetAlpha(ctxt, t_alpha);
+            ep . setnvalue(t_alpha);
+            return;
+        }
+            
+        case kMCNativeControlPropertyBackgroundColor:
+        {
+            MCAutoStringRef t_value;
+            MCNativeControlColor t_color;
+            GetBackgroundColor(ctxt, t_color);
+            MCNativeControlColorFormat(ctxt, t_color, &t_value)
+            if (*t_value != nil)
+                ep . setvalueref(*t_value);
+            return;
+        }
+            
+        default:
+            break;
+    }
+    
+    MCNativeControl::Get(ctxt, p_property);
 }
 
 Exec_stat MCAndroidControl::Do(MCNativeControlAction p_action, MCParameter *p_params)

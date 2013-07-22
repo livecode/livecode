@@ -60,15 +60,19 @@ public:
 	MCiOSScrollerControl(void);
 	
 	virtual MCNativeControlType GetType(void);
-	
+#ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
+#endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 	
-    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
+    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty property);
+	virtual void Get(MCExecContext& ctxt, MCNativeControlProperty property);
     
-    void SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect);
-    void GetContentRect(MCExecContext& ctxt, MCRectangle32*& r_rect);
+    virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
+    
+    void SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect);
+    void GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect);
     void SetHScroll(MCExecContext& ctxt, integer_t p_scroll);
     void GetHScroll(MCExecContext& ctxt, integer_t& r_scroll);
     void SetVScroll(MCExecContext& ctxt, integer_t p_scroll);
@@ -87,8 +91,8 @@ public:
     void GetPagingEnabled(MCExecContext& ctxt, bool& r_value);
     void SetDecelerationRate(MCExecContext& ctxt, const MCNativeControlDecelerationRate& p_rate);
     void GetDecelerationRate(MCExecContext& ctxt, MCNativeControlDecelerationRate& r_rate);
-    void SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style);
-    void GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style);
+    void SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style);
+    void GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style);
     void SetIndicatorInsets(MCExecContext& ctxt, const MCNativeControlIndicatorInsets& p_insets);
     void GetIndicatorInsets(MCExecContext& ctxt, MCNativeControlIndicatorInsets& r_insets);
     void SetShowHorizontalIndicator(MCExecContext& ctxt, bool p_value);
@@ -159,7 +163,7 @@ bool MCScrollViewGetContentOffset(UIScrollView *p_view, int32_t &r_x, int32_t &r
 	return true;
 }
 
-void MCiOSScrollerControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+void MCiOSScrollerControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
     MCiOSControl::SetRect(ctxt, p_rect);
     
@@ -170,7 +174,7 @@ void MCiOSScrollerControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
         UpdateForwarderBounds();
 }
 
-void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect)
+void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect)
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
@@ -182,12 +186,10 @@ void MCiOSScrollerControl::SetContentRect(MCExecContext& ctxt, MCRectangle32* p_
         [t_view setContentSize:CGSizeMake((float)m_content_rect.width / t_scale, (float)m_content_rect.height / t_scale)];
 }
 
-void MCiOSScrollerControl::GetContentRect(MCExecContext& ctxt, MCRectangle32*& r_rect)
+void MCiOSScrollerControl::GetContentRect(MCExecContext& ctxt, MCRectangle32& r_rect)
 {
     if (GetView())
-        *r_rect = m_content_rect;
-    else
-        r_rect = nil;
+        r_rect = m_content_rect;
 }
 
 void MCiOSScrollerControl::SetHScroll(MCExecContext& ctxt, integer_t p_scroll)
@@ -398,7 +400,7 @@ void MCiOSScrollerControl::GetDecelerationRate(MCExecContext& ctxt, MCNativeCont
         r_rate . rate = 0;
 }
 
-void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_style)
+void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle p_style)
 {
     UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
@@ -425,7 +427,7 @@ void MCiOSScrollerControl::SetIndicatorStyle(MCExecContext& ctxt, intenum_t p_st
     }
 }
 
-void MCiOSScrollerControl::GetIndicatorStyle(MCExecContext& ctxt, intenum_t& r_style)
+void MCiOSScrollerControl::GetIndicatorStyle(MCExecContext& ctxt, MCNativeControlIndicatorStyle& r_style)
 {
         UIScrollView *t_view;
         t_view = (UIScrollView*)GetView();
@@ -483,7 +485,7 @@ void MCiOSScrollerControl::SetShowHorizontalIndicator(MCExecContext& ctxt, bool 
 	t_view = (UIScrollView*)GetView();
     
     if (t_view)
-        [t_view setShowsHorizontalIndicator: p_value];
+        [t_view setShowsHorizontalScrollIndicator: p_value];
 }
 void MCiOSScrollerControl::GetShowHorizontalIndicator(MCExecContext& ctxt, bool& r_value)
 {
@@ -502,7 +504,7 @@ void MCiOSScrollerControl::SetShowVerticalIndicator(MCExecContext& ctxt, bool p_
 	t_view = (UIScrollView*)GetView();
     
     if (t_view)
-        [t_view setShowsVerticalIndicator: p_value];
+        [t_view setShowsVerticalScrollIndicator: p_value];
 }
 
 void MCiOSScrollerControl::GetShowVerticalIndicator(MCExecContext& ctxt, bool& r_value)
@@ -775,10 +777,13 @@ Exec_stat scroller_set_property(UIScrollView *p_view, MCRectangle32 &x_content_r
 				return ES_ERROR;
 			}
 			return ES_NORMAL;
+        default:
+            break;
 	}
 	return ES_NOT_HANDLED;
 }
 
+#ifdef /* MCNativeScrollerControl::Set */ LEGACY_EXEC
 Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	UIScrollView *t_view;
@@ -806,6 +811,8 @@ Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPo
 			if (t_status == ES_NORMAL)
 				UpdateForwarderBounds();
 			return t_status;
+        default:
+            break;
 	}
 	
 	Exec_stat t_state;
@@ -816,7 +823,182 @@ Exec_stat MCiOSScrollerControl::Set(MCNativeControlProperty p_property, MCExecPo
 	else
 		return t_state;
 }
+#endif /* MCNativeScrollerControl::Set */
 
+void MCiOSScrollerControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+	{
+        case kMCNativeControlPropertyRectangle:
+        {
+            MCRectangle t_rect;
+            if (!ep . copyaslegacyrectangle(t_rect))
+                ctxt . LegacyThrow(EE_OBJECT_NAR);
+            else
+                SetRect(ctxt, t_rect);
+            return;
+        }
+        case kMCNativeControlPropertyContentRectangle:
+        {
+            MCAutoStringRef t_string;
+            int32_t t_1, t_2, t_3, t_4;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            if (!MCU_stoi4x4(MCStringGetOldString(*t_string), t_1, t_2, t_3, t_4))
+                ctxt . LegacyThrow(EE_OBJECT_NAR);
+            else
+            {
+                MCRectangle32 t_rect;
+                t_rect . x = t_1;
+                t_rect . y = t_2;
+                t_rect . width = t_3 - t_1;
+                t_rect . height = t_4 - t_2;
+                SetContentRect(ctxt, t_rect);
+            }
+            return;
+        }
+        case kMCNativeControlPropertyHScroll:
+		{
+			int32_t t_hscroll;
+			if (!ep . copyasint(t_hscroll))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetHScroll(ctxt, t_hscroll);
+            return;
+		}
+		case kMCNativeControlPropertyVScroll:
+		{
+			int32_t t_vscroll;
+			if (!ep . copyasint(t_vscroll))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetVScroll(ctxt, t_vscroll);
+            return;
+		}
+            
+		case kMCNativeControlPropertyCanBounce:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetCanBounce(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyCanScrollToTop:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetCanScrollToTop(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyCanCancelTouches:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetCanCancelTouches(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyDelayTouches:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetDelayTouches(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyPagingEnabled:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetPagingEnabled(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyScrollingEnabled:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetScrollingEnabled(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyDecelerationRate:
+        {
+			MCNativeControlDecelerationRate t_rate;
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCNativeControlDecelerationRateParse(ctxt, *t_string, t_rate);
+            if (!ctxt . HasError())
+                SetDecelerationRate(ctxt, t_rate);
+            return;
+        }
+            
+		case kMCNativeControlPropertyIndicatorStyle:
+        {
+            intenum_t t_style;
+            ctxt_to_enum(ctxt, kMCNativeControlIndicatorStyleTypeInfo, t_style);
+            SetIndicatorStyle(ctxt, (MCNativeControlIndicatorStyle)t_style);
+            return;
+        }
+			
+		case kMCNativeControlPropertyIndicatorInsets:
+		{
+            MCNativeControlIndicatorInsets t_insets;
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCNativeControlIndicatorInsetsParse(ctxt, *t_string, t_insets);
+            SetIndicatorInsets(ctxt, t_insets);
+            return;
+		}
+			
+		case kMCNativeControlPropertyShowHorizontalIndicator:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetShowHorizontalIndicator(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyShowVerticalIndicator:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetShowVerticalIndicator(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyLockDirection:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetLockDirection(ctxt, t_value);
+            return;
+        }
+        default:
+            break;
+    }
+}
 Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	float t_scale;
@@ -904,6 +1086,7 @@ Exec_stat scroller_get_property(UIScrollView *p_view, const MCRectangle32 &p_con
 	return ES_NOT_HANDLED;
 }
 
+#ifdef /* MCiOSScrollerControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
 	UIScrollView *t_view;
@@ -915,6 +1098,165 @@ Exec_stat MCiOSScrollerControl::Get(MCNativeControlProperty p_property, MCExecPo
 		return MCiOSControl::Get(p_property, ep);
 	else
 		return t_status;
+}
+#endif /* MCiOSScrollerControl::Get */
+
+void MCiOSScrollerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+	switch(p_property)
+	{
+        case kMCNativeControlPropertyContentRectangle:
+        {
+            MCRectangle32 t_rect;
+            GetContentRect(ctxt, t_rect);
+            ep.setstringf("%d,%d,%d,%d", t_rect . x, t_rect . y, t_rect . width - t_rect . x, t_rect . height - t_rect . y);
+            return;
+        }
+            
+        case kMCNativeControlPropertyHScroll:
+        {
+            int32_t t_hscroll;
+            GetHScroll(ctxt, t_hscroll);
+            ep . setnvalue(t_hscroll);
+            return;
+        }
+        case kMCNativeControlPropertyVScroll:
+        {
+            int32_t t_vscroll;
+            GetVScroll(ctxt, t_vscroll);
+            ep . setnvalue(t_vscroll);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanBounce:
+        {
+            bool t_value;
+            GetCanBounce(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanScrollToTop:
+        {
+            bool t_value;
+            GetCanScrollToTop(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanCancelTouches:
+        {
+            bool t_value;
+            GetCanCancelTouches(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyDelayTouches:
+        {
+            bool t_value;
+            GetDelayTouches(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyPagingEnabled:
+        {
+            bool t_value;
+            GetPagingEnabled(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyScrollingEnabled:
+        {
+            bool t_value;
+            GetScrollingEnabled(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyDecelerationRate:
+        {
+            MCNativeControlDecelerationRate t_rate;
+            GetDecelerationRate(ctxt, t_rate);
+            MCAutoStringRef t_string;
+            MCNativeControlDecelerationRateFormat(ctxt, t_rate, &t_string);
+            if (!ctxt . HasError())
+                ep . setvalueref(*t_string);
+            return;
+        }
+            
+        case kMCNativeControlPropertyIndicatorStyle:
+        {
+            MCNativeControlIndicatorStyle t_style;
+            GetIndicatorStyle(ctxt, t_style);
+            enum_to_ctxt(ctxt, kMCNativeControlIndicatorStyleTypeInfo, (intenum_t)t_style);
+            return;
+        }
+            
+        case kMCNativeControlPropertyIndicatorInsets:
+        {
+            MCNativeControlIndicatorInsets t_insets;
+            GetIndicatorInsets(ctxt, t_insets);
+            MCAutoStringRef t_string;
+            MCNativeControlIndicatorInsetsFormat(ctxt, t_insets, &t_string);
+            if (!ctxt . HasError())
+                ep . setvalueref(*t_string);
+            return;
+        }
+            
+        case kMCNativeControlPropertyShowHorizontalIndicator:
+        {
+            bool t_value;
+            GetShowHorizontalIndicator(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyShowVerticalIndicator:
+        {
+            bool t_value;
+            GetShowVerticalIndicator(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyLockDirection:
+        {
+            bool t_value;
+            GetLockDirection(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyTracking:
+        {
+            bool t_value;
+            GetTracking(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyDragging:
+        {
+            bool t_value;
+            GetDragging(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyDecelerating:
+        {
+            bool t_value;
+            GetDecelerating(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        default:
+            break;
+    }
+    
+    MCiOSControl::Get(ctxt, p_property);
 }
 
 Exec_stat MCiOSScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)

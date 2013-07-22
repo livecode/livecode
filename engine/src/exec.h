@@ -3508,6 +3508,27 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 ///////////
 
+extern MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo;
+
+extern MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlIndicatorStyleTypeInfo;
+
+extern MCExecEnumTypeInfo *kMCNativeControlPlaybackStateTypeInfo;
+extern MCExecSetTypeInfo *kMCNativeControlLoadStateTypeInfo;
+
+extern MCExecEnumTypeInfo *kMCNativeControlInputCapitalizationTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputAutocorrectiontionTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardStyleTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputReturnKeyTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputContentTypeTypeInfo;
+extern MCExecSetTypeInfo *kMCNativeControlInputDataDetectorTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputTextAlignTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo;
+
 extern MCExecMethodInfo* kMCNativeControlExecCreateControlMethodInfo;
 extern MCExecMethodInfo* kMCNativeControlExecDeleteControlMethodInfo;
 extern MCExecMethodInfo* kMCNativeControlExecSetPropertyMethodInfo;

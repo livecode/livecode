@@ -50,11 +50,12 @@ public:
     MCAndroidPlayerControl(void);
     
     virtual MCNativeControlType GetType(void);
-    
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
+#endif
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-    
+
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
     void SetFullscreen(MCExecContext& ctxt, bool p_value);
@@ -317,6 +318,7 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_si
     r_size . y = t_height;
 }
 
+#ifdef /* MCAndroidPlayerControl::Set */
 Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
@@ -382,7 +384,56 @@ Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExec
     
     return MCAndroidControl::Set(p_property, ep);
 }
+#endif /* MCAndroidPlayerControl::Set */
 
+void MCAndroidPlayerControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyContent:
+        {
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            SetContent(ctxt, *t_string);
+            return;
+        }
+        case kMCNativeControlPropertyShowController:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetShowController(ctxt, t_value);
+            return;
+        }
+        case kMCNativeControlPropertyCurrentTime:
+        {
+            int32_t t_time;
+            if (!ep . copyasint(t_time))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetCurrentTime(ctxt, t_time);
+            return;
+        }
+        case kMCNativeControlPropertyLooping:
+        {
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetLooping(ctxt, t_value);
+            return;
+        }
+        default:
+            break;
+    }
+    
+    MCAndroidControl::Set(ctxt, p_property);
+}
+
+#ifdef /* MCAndroidPlayerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
@@ -443,6 +494,60 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
     }
     
     return MCAndroidControl::Get(p_property, ep);
+}
+#endif /* MCAndroidPlayerControl::Get */
+
+void MCAndroidPlayerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyContent:
+        {
+            MCAutoStringRef t_string;
+            GetContent(ctxt, &t_string);
+            if (*t_string != nil)
+                ep . setvalueref(*t_string);
+            return;
+        }
+        case kMCNativeControlPropertyShowController:
+        {
+            bool t_value;
+            GetShowController(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyLooping:
+        {
+            bool t_value;
+            GetLooping(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyDuration:
+        {
+            int32_t t_duration;
+            GetDuration(ctxt, t_duration);
+            ep . setnvalue(t_duration);
+            return;
+        }
+        case kMCNativeControlPropertyCurrentTime:
+        {
+            int32_t t_time;
+            GetCurrentTime(ctxt, t_time);
+            ep . setnvalue(t_time);
+            return;
+        }
+        case kMCNativeControlPropertyNaturalSize:
+        {
+            MCPoint32 t_size;
+            GetNaturalSize(ctxt, t_size);
+            ep.setstringf("%d,%d", (int32_t)t_size . x, (int32_t)t_size . y);
+        }
+        default:
+            break;
+    }
+    MCAndroidControl::Get(ctxt, p_property);
 }
 
 Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)

@@ -51,9 +51,10 @@ public:
     MCAndroidBrowserControl(void);
     
 	virtual MCNativeControlType GetType(void);
-
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
+#endif
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
@@ -256,6 +257,7 @@ void MCAndroidBrowserControl::GetScrollingEnabled(MCExecContext& ctxt, bool*& r_
     *r_value = t_scroll_enabled;
 }
 
+#ifdef /* MCAndroidBrowserControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -289,7 +291,37 @@ Exec_stat MCAndroidBrowserControl::Set(MCNativeControlProperty p_property, MCExe
     
     return MCAndroidControl::Set(p_property, ep);
 }
+#endif /* MCAndroidBrowserControl::Set */
 
+void MCAndroidBrowserControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyUrl:
+        {
+            MCAutoStringRef t_value;
+            /* UNCHECKED */ ep . copyasstringref(&t_value);
+            SetUrl(ctxt, *t_value);
+            return;
+        }
+			// MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
+			//   the WebView.
+		case kMCNativeControlPropertyCanBounce:
+            SetCanBounce(ctxt, ep.getsvalue() == MCtruemcstring);
+			return;
+		case kMCNativeControlPropertyScrollingEnabled:
+			SetScrollingEnabled(ctxt, ep.getsvalue() = MCtruemcstring);
+            return;
+        default:
+            break;
+    }
+    
+    MCAndroidControl::Set(ctxt, p_property);
+}
+
+#ifdef /* MCAndroidBrowserControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -349,6 +381,59 @@ Exec_stat MCAndroidBrowserControl::Get(MCNativeControlProperty p_property, MCExe
     }
     
     return MCAndroidControl::Get(p_property, ep);
+}
+#endif /* MCAndroidBrowserControl::Get */
+
+void MCAndroidBrowserControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+    {
+        case kMCNativeControlPropertyUrl:
+        {
+            MCAutoStringRef t_url;
+            GetUrl(ctxt, &t_url);
+            /* UNCHECKED */ ep . setvalueref(*t_url);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanRetreat:
+        {
+            bool t_can_retreat;
+            GetCanRetreat(ctxt, t_can_retreat);
+            ep.setboolean(t_can_retreat ? True : False);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanAdvance:
+        {
+            bool t_can_advance;
+            GetCanAdvance(ctxt, t_can_advance);
+            ep.setboolean(t_can_advance ? True : False);
+            return;
+        }
+            
+        case kMCNativeControlPropertyCanBounce:
+        {
+            bool t_can_bounce;
+            GetCanBounce(ctxt, t_can_bounce);
+            ep.setboolean(t_can_bounce ? True : False);
+            return;
+        }
+			
+        case kMCNativeControlPropertyScrollingEnabled:
+        {
+            bool t_scroll_enabled;
+            GetScrollingEnabled(ctxt, t_scroll_enabled);
+            ep.setboolean(t_scroll_enabled ? True : False);
+            return;
+        }
+			
+        default:
+            MCAndroidControl::Get(ctxt, p_property);
+            return;
+    }
 }
 
 Exec_stat MCAndroidBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)

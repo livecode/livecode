@@ -27,9 +27,14 @@ public:
     // overridden methods
     virtual bool Create(void);
     virtual void Delete(void);
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
+#endif
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+
+    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
     virtual void SetVisible(MCExecContext& ctxt, bool* p_visible);

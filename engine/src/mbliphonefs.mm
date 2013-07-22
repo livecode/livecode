@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
+#include "globdefs.h"
 
 #include "execpt.h"
 #include "globals.h"
@@ -27,6 +28,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "mblsyntax.h"
+#include "mbliphone.h"
 
 #include <sys/xattr.h>
 
@@ -468,3 +470,15 @@ bool MCFileGetDataProtection(MCStringRef p_filename, NSString *&r_protection)
 //    else
 //        ctxt . SetTheResultToEmpty();
 //}
+
+NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode)
+{
+	if (p_unicode)
+		return [NSString stringWithCharacters: MCStringGetCharPtr(p_string) length: MCStringGetLength(p_string)];
+	return [[[NSString alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string) encoding: NSMacOSRomanStringEncoding] autorelease];
+}
+
+bool NSStringToMCStringRef(NSString *p_string, MCStringRef& r_string)
+{
+    return MCStringCreateWithCString([p_string nativeCString], r_string);
+}

@@ -755,6 +755,7 @@ bool MCNativeControl::FormatRange(MCExecPoint &ep, uint32_t p_start, uint32_t p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
+/* moved to mblhandlers.cpp
 bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
 
 Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
@@ -899,7 +900,7 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	if (t_success)
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
 	else
@@ -978,10 +979,11 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_value;
-	/* UNCHECKED */ ep . copyasstringref(&t_value);
+    ep . copyasstringref(&t_value);
     ctxt . SetTheResultToValue(*t_value);
 
 	return ES_NORMAL;
 }
+*/
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -227,42 +227,42 @@ bool MCiOSControl::FormatRange(MCExecPoint &ep, NSRange r_range)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCiOSControl::SetRect(MCExecContext& ctxt, MCRectangle* p_rect)
+void MCiOSControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
 {
     float t_scale;
     t_scale = MCIPhoneGetNativeControlScale();
     
     if (m_view != nil)
-        [m_view setFrame: CGRectMake((float)p_rect -> x / t_scale, (float)p_rect -> y / t_scale, (float)p_rect -> width / t_scale, (float)p_rect -> height / t_scale)];
+        [m_view setFrame: CGRectMake((float)p_rect . x / t_scale, (float)p_rect . y / t_scale, (float)p_rect . width / t_scale, (float)p_rect . height / t_scale)];
 }
 
-void MCiOSControl::SetVisible(MCExecContext& ctxt, bool* p_visible)
+void MCiOSControl::SetVisible(MCExecContext& ctxt, bool p_visible)
 {
     if (m_view != nil)
-        [m_view setHidden: !*p_visible];
+        [m_view setHidden: !p_visible];
 }
 
-void MCiOSControl::SetOpaque(MCExecContext& ctxt, bool* p_opaque)
+void MCiOSControl::SetOpaque(MCExecContext& ctxt, bool p_opaque)
 {
     if (m_view != nil)
-        [m_view setOpaque: *p_opaque];
+        [m_view setOpaque: p_opaque];
 }
 
-void MCiOSControl::SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha)
+void MCiOSControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
 {
     if (m_view != nil)
-        [m_view setAlpha: (float)*p_alpha / 255.0];
+        [m_view setAlpha: (float)p_alpha / 255.0];
 }
 
-void MCiOSControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color)
+void MCiOSControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
 {
     UIColor *t_color;
-    if (ParseColor(*p_color, t_color) == ES_NORMAL)
+    if (ParseColor(p_color, t_color) == ES_NORMAL)
         if (m_view != nil)
             [m_view setBackgroundColor: t_color];
 }
 
-void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle*& r_rect)
+void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
 {
     if (m_view != nil)
     {
@@ -272,44 +272,42 @@ void MCiOSControl::GetRect(MCExecContext& ctxt, MCRectangle*& r_rect)
         float t_scale;
         t_scale = MCIPhoneGetNativeControlScale();
         
-        r_rect -> x = t_rect.origin.x * t_scale;
-        r_rect -> y = t_rect.origin.y * t_scale;
-        r_rect -> width = t_rect.size.width * t_scale;
-        r_rect -> height = t_rect.size.height * t_scale;
+        r_rect . x = t_rect.origin.x * t_scale;
+        r_rect . y = t_rect.origin.y * t_scale;
+        r_rect . width = t_rect.size.width * t_scale;
+        r_rect . height = t_rect.size.height * t_scale;
     }
-    else
-        r_rect = nil;
 }
 
-void MCiOSControl::GetVisible(MCExecContext& ctxt, bool*& p_visible)
+void MCiOSControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
 {
     if (m_view != nil)
-        *p_visible = ![m_view isHidden] == True;
+        r_visible = ![m_view isHidden] == True;
     else
-        p_visible = nil;
+        r_visible = false;
 }
 
-void MCiOSControl::GetOpaque(MCExecContext& ctxt, bool*& p_opaque)
+void MCiOSControl::GetOpaque(MCExecContext& ctxt, bool& r_opaque)
 {
     if (m_view != nil)
-        *p_opaque = [m_view isOpaque] == True;
+        r_opaque = [m_view isOpaque] == True;
     else
-        p_opaque = nil;
+        r_opaque = false;
 }
 
-void MCiOSControl::GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha)
+void MCiOSControl::GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha)
 {
     if (m_view != nil)
-        *p_alpha = 255 * [m_view alpha];
+        r_alpha = 255 * [m_view alpha];
     else
-        p_alpha = nil;
+        r_alpha = 0;
 }
 
-void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color)
+void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color)
 {
     if (m_view != nil)
     {
-        if (FormatColor([m_view backgroundColor], *p_color))
+        if (FormatColor([m_view backgroundColor], r_color))
             return;
     }
     else
@@ -317,7 +315,8 @@ void MCiOSControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*
     
     ctxt . Throw();
 }
-            
+
+#ifdef /* MCiOSControl::Set */ LEGACY_EXEC
 Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	switch(p_property)
@@ -404,7 +403,73 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCiOSControl::Set */
 
+void MCiOSControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch(p_property)
+	{
+		case kMCNativeControlPropertyRectangle:
+		{
+            MCRectangle t_rect;
+            if (!ep . copyaslegacyrectangle(t_rect))
+                ctxt . LegacyThrow(EE_OBJECT_NAR);
+            else
+                SetRect(ctxt, t_rect);
+            return;
+		}
+			
+		case kMCNativeControlPropertyVisible:
+		{
+			bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetVisible(ctxt, t_value);
+            return;
+        }
+            
+		case kMCNativeControlPropertyOpaque:
+		{
+			bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetOpaque(ctxt, t_value);
+            return;
+        }
+            
+		case kMCNativeControlPropertyAlpha:
+		{
+			uint32_t t_alpha;
+            if (!ep . copyasuint(t_alpha))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetAlpha(ctxt, t_alpha);
+            return;
+        }
+            
+		case kMCNativeControlPropertyBackgroundColor:
+		{
+			MCNativeControlColor t_color;
+            MCAutoStringRef t_string;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            MCNativeControlColorParse(ctxt, *t_string, t_color);
+            if (!ctxt . HasError())
+                SetBackgroundColor(ctxt, t_color);
+            return;
+        }
+            
+		default:
+			break;
+	}
+    
+    MCNativeControl::Set(ctxt, p_property);
+}
+
+#ifdef /* MCiOSControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
 	switch (p_property)
@@ -456,6 +521,64 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 		}
 	}
 	return ES_ERROR;
+}
+#endif /* MCiOSControl::Get */
+
+void MCiOSControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+	switch (p_property)
+	{
+		case kMCNativeControlPropertyRectangle:
+		{
+			MCRectangle t_rect;
+            GetRect(ctxt, t_rect);
+            ep . setrectangle(t_rect);
+            return;
+        }
+            
+		case kMCNativeControlPropertyVisible:
+        {
+            bool t_value;
+            GetVisible(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyOpaque:
+        {
+            bool t_value;
+            GetOpaque(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+		case kMCNativeControlPropertyAlpha:
+        {
+            uint32_t t_alpha;
+            GetAlpha(ctxt, t_alpha);
+            ep . setnvalue(t_alpha);
+            return;
+        }
+            
+			
+		case kMCNativeControlPropertyBackgroundColor:
+        {
+            MCNativeControlColor t_color;
+            GetBackgroundColor(ctxt, t_color);
+            MCAutoStringRef t_string;
+            MCNativeControlColorFormat(ctxt, t_color, &t_string);
+            if (*t_string != nil)
+                ep . setvalueref(*t_string);
+            return;
+        }
+            
+        default:
+            break;
+	}
+	
+    MCNativeControl::Get(ctxt, p_property);
 }
 
 Exec_stat MCiOSControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)

@@ -51,9 +51,10 @@ public:
     MCAndroidScrollerControl(void);
     
 	virtual MCNativeControlType GetType(void);
-    
+#ifdef LEGACY_EXEC    
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
+#endif    
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
     
     void SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect);
@@ -540,6 +541,7 @@ Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, M
 	return ES_NOT_HANDLED;
 }
 
+#ifdef /* MCAndroidScrollerControl::Set */
 Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -553,6 +555,87 @@ Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCEx
 	else
 		return t_state;
 
+}
+#endif /* MCAndroidScrollerControl::Set */
+
+void MCAndroidScrollerControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+    switch (p_property)
+	{
+        case kMCNativeControlPropertyContentRectangle:
+        {
+            MCAutoStringRef t_string;
+            int32_t t_1, t_2, t_3, t_4;
+            /* UNCHECKED */ ep . copyasstringref(&t_string);
+            if (!MCU_stoi4x4(MCStringGetOldString(*t_string), t_1, t_2, t_3, t_4))
+                ctxt . LegacyThrow(EE_OBJECT_NAR);
+            else
+            {
+                MCRectangle32 t_rect;
+                t_rect . x = t_1;
+                t_rect . y = t_2;
+                t_rect . width = t_3 - t_1;
+                t_rect . height = t_4 - t_2;
+                SetContentRect(ctxt, t_rect);
+            }
+            return;
+        }
+        case kMCNativeControlPropertyHScroll:
+		{
+			int32_t t_hscroll;
+			if (!ep . copyasint(t_hscroll))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetHScroll(ctxt, t_hscroll);
+            return;
+		}
+		case kMCNativeControlPropertyVScroll:
+		{
+			int32_t t_vscroll;
+			if (!ep . copyasint(t_vscroll))
+                ctxt . LegacyThrow(EE_OBJECT_NAN);
+            else
+                SetVScroll(ctxt, t_vscroll);
+            return;
+		}
+            
+		case kMCNativeControlPropertyScrollingEnabled:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetScrollingEnabled(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyShowHorizontalIndicator:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetShowHorizontalIndicator(ctxt, t_value);
+            return;
+        }
+			
+		case kMCNativeControlPropertyShowVerticalIndicator:
+		{
+            bool t_value;
+            if (!ep . copyasbool(t_value))
+                ctxt . LegacyThrow(EE_OBJECT_NAB);
+            else
+                SetShowVerticalIndicator(ctxt, t_value);
+            return;
+        }
+            
+        default:
+            break;
+    }
+    
+    MCAndroidControl::Set(ctxt, p_property);
 }
 
 Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_rect, MCNativeControlProperty p_property, MCExecPoint &ep)
@@ -641,6 +724,7 @@ Exec_stat scroller_get_property(jobject p_view, const MCRectangle32 &p_content_r
 	return ES_NOT_HANDLED;
 }
 
+#ifdef /* MCAndroidScrollerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;
@@ -653,6 +737,82 @@ Exec_stat MCAndroidScrollerControl::Get(MCNativeControlProperty p_property, MCEx
         return MCAndroidControl::Get(p_property, ep);
 	else
 		return t_state;
+}
+#endif /* MCAndroidScrollerControl::Get */
+
+void MCAndroidScrollerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    
+	switch(p_property)
+	{
+        case kMCNativeControlPropertyContentRectangle:
+        {
+            MCRectangle32 t_rect;
+            GetContentRect(ctxt, t_rect);
+            ep.setstringf("%d,%d,%d,%d", t_rect . x, t_rect . y, t_rect . width - t_rect . x, t_rect . height - t_rect . y);
+            return;
+        }
+            
+        case kMCNativeControlPropertyHScroll:
+        {
+            int32_t t_hscroll;
+            GetHScroll(ctxt, t_hscroll);
+            ep . setnvalue(t_hscroll);
+            return;
+        }
+        case kMCNativeControlPropertyVScroll:
+        {
+            int32_t t_vscroll;
+            GetVScroll(ctxt, t_vscroll);
+            ep . setnvalue(t_vscroll);
+            return;
+        }
+            
+        case kMCNativeControlPropertyScrollingEnabled:
+        {
+            bool t_value;
+            GetScrollingEnabled(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyShowHorizontalIndicator:
+        {
+            bool t_value;
+            GetShowHorizontalIndicator(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        case kMCNativeControlPropertyShowVerticalIndicator:
+        {
+            bool t_value;
+            GetShowVerticalIndicator(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+
+        case kMCNativeControlPropertyTracking:
+        {
+            bool t_value;
+            GetTracking(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+        case kMCNativeControlPropertyDragging:
+        {
+            bool t_value;
+            GetDragging(ctxt, t_value);
+            ep . setbool(t_value);
+            return;
+        }
+            
+        default:
+            break;
+    }
+    
+    MCAndroidControl::Get(ctxt, p_property);
 }
 
 Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
