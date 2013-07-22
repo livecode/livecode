@@ -358,7 +358,7 @@ void MCVariableArray::getextents(MCExecPoint &ep)
 	if (extents != NULL)
 		for (i = 0 ; i < dimensions ; i++)
 		{
-			char buf[U2L * 2];
+			char buf[(U4L * 2) + 1];
 			sprintf(buf, "%d,%d", extents[i].min, extents[i].max);
 			ep.concatcstring(buf, EC_RETURN, i == 0);
 		}
@@ -414,7 +414,7 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 		return ES_ERROR;
 	presethash(v.nfilled);
 	uint2 i, j;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	for (i = v.extents[COL_DIM].min; i <= v.extents[COL_DIM].max; i++)
 		for (j = v.extents[ROW_DIM].min; j <= v.extents[ROW_DIM].max; j++)
 		{
@@ -698,7 +698,7 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 		return ES_ERROR; //columns does not equal rows
 	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
 	uint2 i,j,k;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	MCHashentry *vaptr,*vbptr,*vcptr;
 	for (i = va.extents[ROW_DIM].min; i <= va.extents[ROW_DIM].max; i++)
 	{
