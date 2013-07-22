@@ -603,12 +603,16 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern bool MCIsPlatformMessage(MCNameRef handler_name);
+extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
+
 MCFuncref::MCFuncref(MCNameRef inname)
 {
 	/* UNCHECKED */ MCNameClone(inname, name);
 	handler = nil;
 	params = NULL;
 	resolved = false;
+    platform_message = false;
 }
 
 MCFuncref::~MCFuncref()
@@ -631,6 +635,12 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FUNCTION_BADPARAMS, sp);
 		return PS_ERROR;
 	}
+    if (MCIsPlatformMessage(name))
+    {
+        platform_message = true;
+        resolved = true;
+    }
+    
 	return PS_NORMAL;
 }
 
@@ -665,7 +675,7 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 			handler = t_resolved_handler;
 
 		resolved = true;
-		}
+    }
 
 	// Go through all the parameters to the function, if they are not variables, clear their current value. Each parameter stores an expression
 	// which allows its value to be re-evaluated in a given context. Re-evaluate each in the context of ep and set it to the new value.
@@ -695,7 +705,11 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 
 		tptr = tptr->getnext();
 	}
-
+    
+    if (platform_message)
+    {
+        return MCHandlePlatformMessage(MCNameGetOldString(name), params);
+    }
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
 	//   than the 'parent' field in this.
 	MCObject *p = ep.getobj();
@@ -711,33 +725,34 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 	}
 	
 	if (handler != nil)
-	{
-		// MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-		//   parent, then use a special method.
-		// MW-2009-01-28: [[ Inherited parentScripts ]]
-		// If we are in parentScript context, then pass the parentScript in use to execparenthandler.
-		if (ep . getparentscript() == NULL)
-			stat = parent -> exechandler(handler, params);
-		else
-			stat = ep.getobj() -> execparenthandler(handler, params, ep . getparentscript());
-
-		switch(stat)
-		{
-		case ES_ERROR:
-		case ES_PASS:
-			MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, handler -> getname());
-			if (MCerrorptr == NULL)
-				MCerrorptr = parent;
-			stat = ES_ERROR;
-			break;
-
-		case ES_EXIT_HANDLER:
-			stat = ES_NORMAL;
-			break;
-
-		default:
-			break;
-		}
+	{   
+        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
+        //   parent, then use a special method.
+        // MW-2009-01-28: [[ Inherited parentScripts ]]
+        // If we are in parentScript context, then pass the parentScript in use to execparenthandler.
+        if (ep . getparentscript() == NULL)
+            stat = parent -> exechandler(handler, params);
+        else
+            stat = ep.getobj() -> execparenthandler(handler, params, ep . getparentscript());
+        
+        switch(stat)
+        {
+            case ES_ERROR:
+            case ES_PASS:
+                MCeerror->add(EE_FUNCTION_BADFUNCTION, line, pos, handler -> getname());
+                if (MCerrorptr == NULL)
+                    MCerrorptr = parent;
+                stat = ES_ERROR;
+                break;
+                
+            case ES_EXIT_HANDLER:
+                stat = ES_NORMAL;
+                break;
+                
+            default:
+                break;
+        }
+        
 		MCEPptr = oldep;
 		if (added)
 			MCnexecutioncontexts--;

@@ -6608,3 +6608,359 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
     
 	return ES_NORMAL;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
+
+// MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
+//   be run on the script fiber. Otherwise it is run on the system fiber (making
+//   implementation easier).
+struct MCPlatformMessageSpec
+{
+	bool waitable;
+	const char *message;
+	MCPlatformMessageHandler handler;
+	void *context;
+};
+
+static MCPlatformMessageSpec s_platform_messages[] =
+{
+    // MM-2012-02-22: Added support for ad management
+    {false, "mobileAdRegister", MCHandleAdRegister, nil},
+    {false, "mobileAdCreate", MCHandleAdCreate, nil},
+    {false, "mobileAdDelete", MCHandleAdDelete, nil},
+    {false, "mobileAdGetVisible", MCHandleAdGetVisible, nil},
+    {false, "mobileAdSetVisible", MCHandleAdSetVisible, nil},
+    {false, "mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+    {false, "mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+    {false, "mobileAds", MCHandleAds, nil},
+    {false, "iphoneAdRegister", MCHandleAdRegister, nil},
+    {false, "iphoneAdCreate", MCHandleAdCreate, nil},
+    {false, "iphoneAdDelete", MCHandleAdDelete, nil},
+    {false, "iphoneAdGetVisible", MCHandleAdGetVisible, nil},
+    {false, "iphoneAdSetVisible", MCHandleAdSetVisible, nil},
+    {false, "iphoneAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+    {false, "iphoneAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+    {false, "iphoneAds", MCHandleAds, nil},
+	
+	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+    
+    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+    {false, "mobileSensorReading", MCHandleSensorReading, nil},
+    {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},
+    
+    // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
+	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
+	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
+    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
+    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
+	
+	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
+	/* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
+	{false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
+	{false, "iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
+    /* DEPRECATED */ {false, "mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
+    /* DEPRECATED */ {false, "mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "mobileCurrentHeading", MCHandleCurrentHeading, nil},
+    
+    /* DEPRECATED */ {false, "iphoneEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+	/* DEPRECATED */ {false, "iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+	/* DEPRECATED */ {false, "mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+	/* DEPRECATED */ {false, "mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+    
+    {false, "mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+    {false, "mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+    {false, "iphoneBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+    {false, "iphoneBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+    
+    {false, "mobileBeep", MCHandleBeep, nil},
+    {true, "mobileVibrate", MCHandleVibrate, nil},
+    {false, "iphoneBeep", MCHandleBeep, nil},
+    {true, "iphoneVibrate", MCHandleVibrate, nil},
+	
+    {true, "iphoneComposeTextMessage", MCHandleComposeTextMessage, nil},
+    {false, "iphoneCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+    {true, "mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
+    {false, "mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+    
+    {false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
+    {false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
+	{true, "iphonePickPhoto", MCHandlePickPhoto, nil},
+	{true, "mobilePickPhoto", MCHandlePickPhoto, nil},
+    
+	{true, "iphonePickDate", MCHandlePickDate, nil},
+    {true, "mobilePickDate", MCHandlePickDate, nil},
+    {true, "mobilePickTime", MCHandlePickTime, nil},
+    {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
+    
+	{true, "iphonePick", MCHandlePick, nil},
+    {true, "mobilePick", MCHandlePick, nil},
+    
+    {true, "mobilePickMedia", MCHandlePickMedia, nil},
+    {true, "iphonePickMedia", MCHandleIPhonePickMedia, nil},
+    
+	{true, "revMail", MCHandleRevMail, nil},
+	{false, "iphoneCanSendMail", MCHandleCanSendMail, nil},
+	{true, "iphoneComposeMail", MCHandleComposePlainMail, nil},
+	{true, "iphoneComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+	{true, "iphoneComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+    {false, "mobileCanSendMail", MCHandleCanSendMail, nil},
+	{true, "mobileComposeMail", MCHandleComposePlainMail, nil},
+	{true, "mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+	{true, "mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+    
+	{false, "iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
+	{false, "iphoneOrientation", MCHandleOrientation, nil},
+	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
+	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
+	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
+	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
+	{false, "mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
+	{false, "mobileOrientation", MCHandleOrientation, nil},
+	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
+	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
+	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
+    
+    {false, "mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
+    {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+    {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
+    {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+	
+	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},
+	{false, "iphoneHideStatusBar", MCHandleHideStatusBar, nil},
+    {false, "mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+	{false, "mobileShowStatusBar", MCHandleShowStatusBar, nil},
+	{false, "mobileHideStatusBar", MCHandleHideStatusBar, nil},
+    
+	{false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
+	{false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+	{false, "mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+    {false, "mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil}, // Added from androidmisc.cpp
+	
+	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
+	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
+    {false, "mobileDeviceResolution", MCHandleDeviceResolution, nil},
+    {false, "mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+    {false, "mobileDeviceScale", MCHandleDeviceScale, nil},
+    {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
+    
+	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
+	
+	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
+	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+	{false, "mobileRestorePurchases", MCHandleRestorePurchases, nil},
+	{false, "mobilePurchases", MCHandlePurchaseList, nil},
+	{false, "mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
+	{false, "mobilePurchaseState", MCHandlePurchaseState, nil},
+	{false, "mobilePurchaseError", MCHandlePurchaseError, nil},
+	{false, "mobilePurchaseGet", MCHandlePurchaseGet, nil},
+	{false, "mobilePurchaseSet", MCHandlePurchaseSet, nil},
+	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
+	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+    {false, "mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+    {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
+	
+	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
+	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
+	{false, "iphoneControlSet", MCHandleControlSet, nil},
+	{false, "iphoneControlGet", MCHandleControlGet, nil},
+	{false, "iphoneControlDo", MCHandleControlDo, nil},
+	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
+	{false, "iphoneControls", MCHandleControlList, nil},
+	{false, "mobileControlCreate", MCHandleControlCreate, nil},
+	{false, "mobileControlDelete", MCHandleControlDelete, nil},
+	{false, "mobileControlSet", MCHandleControlSet, nil},
+	{false, "mobileControlGet", MCHandleControlGet, nil},
+	{false, "mobileControlDo", MCHandleControlDo, nil},
+	{false, "mobileControlTarget", MCHandleControlTarget, nil},
+	{false, "mobileControls", MCHandleControlList, nil},
+	
+	{false, "iphonePreferredLanguages", MCHandlePreferredLanguages, nil},
+	{false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
+	{false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
+	{false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+	
+	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
+	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
+	
+	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
+	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
+    
+    // MM-2012-09-02: Add support for mobile* multi channel sound syntax
+    {false, "mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+	{false, "mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+	{false, "mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+	{false, "mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+	{false, "mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+	{false, "mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+	{false, "mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+	{false, "mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+	{false, "mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
+	{false, "mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+	{false, "mobileSoundChannels", MCHandleSoundChannels, nil},
+	{false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+	{false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+	{false, "iphoneResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+	{false, "iphoneStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+	{false, "iphoneDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+	{false, "iphoneSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+	{false, "iphoneSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+	{false, "iphoneSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+	{false, "iphoneSoundOnChannel", MCHandleSoundOnChannel, nil},
+	{false, "iphoneNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+	{false, "iphoneSoundChannels", MCHandleSoundChannels, nil},
+    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
+    {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
+    {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+    
+    {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
+    {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
+    {false, "iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
+    {false, "iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
+	
+	{false, "iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
+	{false, "mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
+	{false, "iphoneUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+	{false, "mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+	{false, "iphoneIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+	{false, "mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+    
+    {false, "mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+    {false, "mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+    {false, "mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
+    {false, "mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+    {false, "mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+    {false, "iphoneCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+    {false, "iphoneGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+    {false, "iphoneCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+    {false, "iphoneCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+    
+    {false, "iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
+    {false, "iphoneSetNotificationBadgeValue", MCHandleSetNotificationBadgeValue, nil},
+    
+	{false, "iphoneActivityIndicatorStart", MCHandleStartActivityIndicator, nil},
+	{false, "iphoneActivityIndicatorStop", MCHandleStopActivityIndicator, nil},
+	
+	{true, "iphoneExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+	{true, "mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},	
+    
+	{false, "iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
+	
+    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
+    //   or not.
+	{false, "iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil}, 
+    
+    {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController
+    {true, "mobileShowContact", MCHandleShowContact, nil},       // ABPersonViewController
+    {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
+    {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
+    {true, "mobileCreateContact", MCHandleCreateContact, nil},
+    {false, "mobileAddContact", MCHandleAddContact, nil},
+    {false, "mobileFindContact", MCHandleFindContact, nil},
+    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+    
+    {true, "mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
+    {false, "mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
+    {true, "mobileCreateEvent", MCHandleCreateEvent, nil},                 // create event in calendar // UI
+    {true, "mobileUpdateEvent", MCHandleUpdateEvent, nil},                 // edit calendar event      // UI
+    {false, "mobileAddEvent", MCHandleAddEvent, nil},                       // create calendar entry
+    {false, "mobileGetCalendarsEvent", MCHandleGetCalendarsEvent, nil}, // create reoccurring calendar entry
+    {false, "mobileFindEvent", MCHandleFindEvent, nil},                     // get calendar entry
+    {false, "mobileRemoveEvent", MCHandleRemoveEvent, nil},
+	
+	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
+	{false, "mobileClearTouches", MCHandleClearTouches, nil},
+    
+	{nil, nil, nil}    
+};
+
+bool MCIsPlatformMessage(MCNameRef handler_name)
+{
+    bool found = false;
+    
+    const char* t_nameRef = MCNameGetCString(handler_name);
+    
+    for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+    {
+        const char* t_message = s_platform_messages[i].message;
+		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
+			found = true;
+    }
+    
+    return found;
+}
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+struct handle_context_t
+{
+	MCPlatformMessageHandler handler;
+	void *context;
+	MCParameter *parameters;
+	Exec_stat result;
+};
+
+static void invoke_platform(void *p_context)
+{
+	handle_context_t *ctxt;
+	ctxt = (handle_context_t *)p_context;
+	ctxt -> result = ctxt -> handler(ctxt -> context, ctxt -> parameters);
+}
+
+extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+
+Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+{
+	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+		if (p_message == s_platform_messages[i] . message)
+		{
+			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+			//   jump to the main fiber for it.
+			if (!s_platform_messages[i] . waitable)
+			{
+				handle_context_t ctxt;
+				ctxt . handler = s_platform_messages[i] . handler;
+				ctxt . context = s_platform_messages[i] . context;
+				ctxt . parameters = p_parameters;
+				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+				return ctxt . result;
+			}
+			
+			// Execute the method as normal, in this case the method will have to jump
+			// to the main fiber to do any system stuff.
+			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+		}
+	
+	return ES_NOT_HANDLED;
+}
+#else // Android
+Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+{
+	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+    {
+		if (p_message == s_platform_messages[i] . message)
+			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+    }
+	
+	return ES_NOT_HANDLED;
+}
+#endif
+
+
+

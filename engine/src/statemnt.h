@@ -74,9 +74,10 @@ public:
 class MCComref : public MCStatement
 {
 	MCNameRef name;
-		MCHandler *handler;
+    MCHandler *handler;
 	MCParameter *params;
 	bool resolved : 1;
+    bool platform_message : 1;
 public:
 	MCComref(MCNameRef n);
 	virtual ~MCComref();

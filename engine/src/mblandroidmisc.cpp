@@ -1037,365 +1037,454 @@ static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
 #endif /* MCHandleClearTouchesAndroid */
 
 ////////////////////////////////////////////////////////////////////////////////
+//
+//extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleRevMail(void *context, MCParameter *parameters);
+//extern Exec_stat MCHandleCanSendMail(void *context, MCParameter *parameters);
+//extern Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters);
+//extern Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *parameters);
+//extern Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *parameters);
+//
+//extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleStartTrackingSensor(void *, MCParameter *);
+//extern Exec_stat MCHandleStopTrackingSensor(void *, MCParameter *);
+//extern Exec_stat MCHandleSensorReading(void *, MCParameter *);
+//extern Exec_stat MCHandleSensorAvailable(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleCurrentLocation(void *, MCParameter *);
+//extern Exec_stat MCHandleCurrentHeading(void *, MCParameter *);
+//extern Exec_stat MCHandleAccelerometerEnablement(void *, MCParameter *);
+//extern Exec_stat MCHandleCanTrackLocation(void *, MCParameter *);
+//extern Exec_stat MCHandleCanTrackHeading(void *, MCParameter *);
+//extern Exec_stat MCHandleLocationTrackingState(void *, MCParameter *);
+//extern Exec_stat MCHandleHeadingTrackingState(void *, MCParameter *);
+//
+//extern Exec_stat MCHandlePickDate(void *, MCParameter *);
+//extern Exec_stat MCHandlePickTime(void *, MCParameter *);
+//extern Exec_stat MCHandlePickDateAndTime(void *, MCParameter *);
+//extern Exec_stat MCHandlePick(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleStartBusyIndicator(void *, MCParameter *);
+//extern Exec_stat MCHandleStopBusyIndicator(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleBeep(void *, MCParameter *);
+//extern Exec_stat MCHandleVibrate(void *, MCParameter *);
+//extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
+//extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters);
+//
+//// MM-2012-02-09: Add support for multi channel sound syntax
+//extern Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *);
+//extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *);
+//extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *);
+//extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *);
+//extern Exec_stat MCHandleGetNotificationBadgeValue(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetNotificationBadgeValue(void *context, MCParameter *p_parameters);
+//
+//
+//
+//// MM-2012-02-22: Added support for ad management
+//extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAds(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
+//extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
+//extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
+//
+//extern Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleBeep(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleVibrate(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
+//
+//extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
+//
+//extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleExportImageToAlbum(void* p_context, MCParameter* p_parameter);
+//
+//extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
+//
+//extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters);
 
-extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
+//////////////////////////////////////////////////////////////////////////////////
+//
+//typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
+//
+//struct MCPlatformMessageSpec
+//{
+//	const char *message;
+//	MCPlatformMessageHandler handler;
+//	void *context;
+//};
+//
+//static MCPlatformMessageSpec s_platform_messages[] =
+//{
+//    // MM-2012-02-22: Added support for ad management
+//    {"mobileAdRegister", MCHandleAdRegister, nil},
+//    {"mobileAdCreate", MCHandleAdCreate, nil},
+//    {"mobileAdDelete", MCHandleAdDelete, nil},
+//    {"mobileAdGetVisible", MCHandleAdGetVisible, nil},
+//    {"mobileAdSetVisible", MCHandleAdSetVisible, nil},
+//    {"mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+//    {"mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+//    {"mobileAds", MCHandleAds, nil},
+//    {"iphoneAdRegister", MCHandleAdRegister, nil},
+//    {"iphoneAdCreate", MCHandleAdCreate, nil},
+//    {"iphoneAdDelete", MCHandleAdDelete, nil},
+//    {"iphoneAdGetVisible", MCHandleAdGetVisible, nil},
+//    {"iphoneAdSetVisible", MCHandleAdSetVisible, nil},
+//    {"iphoneAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+//    {"iphoneAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+//    {"iphoneAds", MCHandleAds, nil},
+//    
+//	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},    
+//    
+//    {"mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+//    {"mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+//    {"mobileSensorReading", MCHandleSensorReading, nil},
+//    {"mobileSensorAvailable", MCHandleSensorAvailable, nil},	
+//    
+//    // MM-2012-02-11: Added support old style senseor syntax
+//	/* DEPRECATED */ {"iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
+//	/* DEPRECATED */ {"iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+//	/* DEPRECATED */ {"iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+//	/* DEPRECATED */ {"iphoneCurrentLocation", MCHandleCurrentLocation, nil},
+//	/* DEPRECATED */ {"mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
+//    /* DEPRECATED */ {"mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+//	/* DEPRECATED */ {"mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+//	/* DEPRECATED */ {"mobileCurrentLocation", MCHandleCurrentLocation, nil},
+//	
+//	/* DEPRECATED */ {"iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
+//	/* DEPRECATED */ {"iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+//	/* DEPRECATED */ {"iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+//	/* DEPRECATED */ {"iphoneCurrentHeading", MCHandleCurrentHeading, nil},
+//	{"iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
+//	{"iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
+//	/* DEPRECATED */ {"mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
+//    /* DEPRECATED */ {"mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+//	/* DEPRECATED */ {"mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+//	/* DEPRECATED */ {"mobileCurrentHeading", MCHandleCurrentHeading, nil},
+//    
+//    /* DEPRECATED */ {"iphoneEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+//	/* DEPRECATED */ {"iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+//	/* DEPRECATED */ {"mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+//	/* DEPRECATED */ {"mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+//
+//    {"mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+//    {"mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+//    {"iphoneBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+//    {"iphoneBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+//    
+//    {"mobileBeep", MCHandleBeep, nil},
+//    {"mobileVibrate", MCHandleVibrate, nil},
+//    {"iphoneBeep", MCHandleBeep, nil},
+//    {"iphoneVibrate", MCHandleVibrate, nil},
+//	
+//    {"iphoneComposeTextMessage", MCHandleComposeTextMessage, nil},
+//    {"iphoneCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+//    {"mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
+//    {"mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+//    
+//    {"iphoneCameraFeatures", MCHandleCameraFeatures, nil},
+//	{"mobileCameraFeatures", MCHandleCameraFeatures, nil},
+//	{"iphonePickPhoto", MCHandlePickPhoto, nil},
+//	{"mobilePickPhoto", MCHandlePickPhoto, nil},
+//	
+//	{"iphonePickDate", MCHandlePickDate, nil},
+//    {"mobilePickDate", MCHandlePickDate, nil},
+//    {"mobilePickTime", MCHandlePickTime, nil},
+//    {"mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
+//    
+//	{"iphonePick", MCHandlePick, nil},
+//    {"mobilePick", MCHandlePick, nil},
+//    
+//    {"mobilePickMedia", MCHandlePickMedia, nil},
+//    {"iphonePickMedia", MCHandleIPhonePickMedia, nil},
+//
+//	{"revMail", MCHandleRevMail, nil},
+//	{"iphoneCanSendMail", MCHandleCanSendMail, nil},
+//	{"iphoneComposeMail", MCHandleComposePlainMail, nil},
+//	{"iphoneComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+//	{"iphoneComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+//	{"mobileCanSendMail", MCHandleCanSendMail, nil},
+//	{"mobileComposeMail", MCHandleComposePlainMail, nil},
+//	{"mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+//	{"mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+//
+//	{"iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
+//	{"iphoneOrientation", MCHandleOrientation, nil},
+//	{"iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
+//	{"iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+//	{"iphoneOrientationLocked", MCHandleOrientationLocked, nil},
+//	{"iphoneLockOrientation", MCHandleLockOrientation, nil},
+//	{"iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
+//	{"mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
+//	{"mobileOrientation", MCHandleOrientation, nil},
+//	{"mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
+//	{"mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+//	{"mobileLockOrientation", MCHandleLockOrientation, nil},
+//	{"mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
+//	{"mobileOrientationLocked", MCHandleOrientationLocked, nil},
+//    
+//    {"mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
+//    {"mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+//    {"iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
+//    {"iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+//
+//	{"iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+//	{"iphoneShowStatusBar", MCHandleShowStatusBar, nil},
+//	{"iphoneHideStatusBar", MCHandleHideStatusBar, nil},
+//    {"mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+//	{"mobileShowStatusBar", MCHandleShowStatusBar, nil},
+//	{"mobileHideStatusBar", MCHandleHideStatusBar, nil},
+//    
+//	{"iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
+//	{"iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+//    {"mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+//    {"mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+//    
+//	{"iphoneDeviceResolution", MCHandleDeviceResolution, nil},
+//	{"iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+//	{"iphoneDeviceScale", MCHandleDeviceScale, nil},
+//    {"mobileDeviceResolution", MCHandleDeviceResolution, nil},
+//    {"mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+//    {"mobileDeviceScale", MCHandleDeviceScale, nil},
+//	{"mobilePixelDensity", MCHandlePixelDensity, nil},
+//
+//	{"mobileBuildInfo", MCHandleBuildInfo, nil},
+//
+//    {"mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
+//	{"mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+//	{"mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+//	{"mobileRestorePurchases", MCHandleRestorePurchases, nil},
+//	{"mobilePurchases", MCHandlePurchaseList, nil},
+//	{"mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
+//	{"mobilePurchaseState", MCHandlePurchaseState, nil},
+//	{"mobilePurchaseError", MCHandlePurchaseError, nil},
+//	{"mobilePurchaseGet", MCHandlePurchaseGet, nil},
+//	{"mobilePurchaseSet", MCHandlePurchaseSet, nil},
+//	{"mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
+//	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+//    {"mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+//    {"iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
+//    
+//	{"iphoneControlCreate", MCHandleControlCreate, nil},
+//	{"iphoneControlDelete", MCHandleControlDelete, nil},
+//	{"iphoneControlSet", MCHandleControlSet, nil},
+//	{"iphoneControlGet", MCHandleControlGet, nil},
+//	{"iphoneControlDo", MCHandleControlDo, nil},
+//	{"iphoneControlTarget", MCHandleControlTarget, nil},
+//	{"iphoneControls", MCHandleControlList, nil},
+//	{"mobileControlCreate", MCHandleControlCreate, nil},
+//	{"mobileControlDelete", MCHandleControlDelete, nil},
+//	{"mobileControlSet", MCHandleControlSet, nil},
+//	{"mobileControlGet", MCHandleControlGet, nil},
+//	{"mobileControlDo", MCHandleControlDo, nil},
+//	{"mobileControlTarget", MCHandleControlTarget, nil},
+//	{"mobileControls", MCHandleControlList, nil},
+//
+//	{"iphonePreferredLanguages", MCHandlePreferredLanguages, nil},
+//	{"mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
+//	{"iphoneCurrentLocale", MCHandleCurrentLocale, nil},
+//	{"mobileCurrentLocale", MCHandleCurrentLocale, nil},
+//    
+//    {"iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
+//    {"iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
+//    
+//	{"iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
+//	{"iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
+//    
+//    // MM-2012-02-09: Add support for multi channel sound syntax
+//    {"mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+//	{"mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+//	{"mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+//	{"mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+//	{"mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+//	{"mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+//	{"mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+//	{"mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+//	{"mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
+//	{"mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+//	{"mobileSoundChannels", MCHandleSoundChannels, nil},
+//	{"iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+//	{"iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+//	{"iphoneResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+//	{"iphoneStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+//	{"iphoneDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+//	{"iphoneSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+//	{"iphoneSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+//	{"iphoneSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+//	{"iphoneSoundOnChannel", MCHandleSoundOnChannel, nil},
+//	{"iphoneNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+//	{"iphoneSoundChannels", MCHandleSoundChannels, nil},
+//    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.)
+//    {"iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
+//    {"mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+//    
+//    {"iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
+//    {"iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
+//    {"iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
+//    {"iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
+//    
+//	{"iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
+//	{"mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
+//	{"iphoneUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+//	{"mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+//	{"iphoneIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+//	{"mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+//    
+//    {"mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+//    {"mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+//    {"mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
+//    {"mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+//    {"mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+//    {"iphoneCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+//    {"iphoneGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+//    {"iphoneCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+//    {"iphoneCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+//    
+//    {"iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
+//    {"iphoneSetNotificationBadgeValue", MCHandleSetNotificationBadgeValue, nil},
+//    
+//	{"iphoneActivityIndicatorStart", MCHandleStartActivityIndicator, nil},
+//	{"iphoneActivityIndicatorStop", MCHandleStopActivityIndicator, nil},
+//    
+//	{"iphoneExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+//    {"mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+//    
+//	{"iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
+//	
+//    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
+//    //   or not.
+//	{"iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil},
+//
+//    {"mobilePickContact", MCHandlePickContact, nil},
+//    {"mobileShowContact", MCHandleShowContact, nil},
+//    {"mobileGetContactData", MCHandleGetContactData, nil},
+//    {"mobileUpdateContact", MCHandleUpdateContact, nil},
+//    {"mobileCreateContact", MCHandleCreateContact, nil},
+//    {"mobileAddContact", MCHandleAddContact, nil},
+//    {"mobileFindContact", MCHandleFindContact, nil},
+//    {"mobileRemoveContact", MCHandleRemoveContact, nil},
+//
+//    {"mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
+//    {"mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
+//    {"mobileCreateEvent", MCHandleCreateEvent, nil},
+//    {"mobileUpdateEvent", MCHandleUpdateEvent, nil},
+//    {"mobileAddEvent", MCHandleAddEvent, nil},
+//    {"mobileGetCalendarsEvent", MCHandleGetCalendarsEvent, nil},
+//    {"mobileFindEvent", MCHandleFindEvent, nil},
+//    {"mobileRemoveEvent", MCHandleRemoveEvent, nil},
+//	
+//	{"iphoneClearTouches", MCHandleClearTouches, nil},
+//	{"mobileClearTouches", MCHandleClearTouches, nil},
+//    
+//    {nil, nil, nil}
+//};
 
-extern Exec_stat MCHandleRevMail(void *context, MCParameter *parameters);
-extern Exec_stat MCHandleCanSendMail(void *context, MCParameter *parameters);
-extern Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters);
-extern Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *parameters);
-extern Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *parameters);
-
-extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleStartTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleStopTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleSensorReading(void *, MCParameter *);
-extern Exec_stat MCHandleSensorAvailable(void *, MCParameter *);
-
-extern Exec_stat MCHandleCurrentLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCurrentHeading(void *, MCParameter *);
-extern Exec_stat MCHandleAccelerometerEnablement(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackHeading(void *, MCParameter *);
-extern Exec_stat MCHandleLocationTrackingState(void *, MCParameter *);
-extern Exec_stat MCHandleHeadingTrackingState(void *, MCParameter *);
-
-extern Exec_stat MCHandlePickDate(void *, MCParameter *);
-extern Exec_stat MCHandlePickTime(void *, MCParameter *);
-extern Exec_stat MCHandlePickDateAndTime(void *, MCParameter *);
-extern Exec_stat MCHandlePick(void *, MCParameter *);
-
-extern Exec_stat MCHandleStartBusyIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStopBusyIndicator(void *, MCParameter *);
-
-extern Exec_stat MCHandleBeep(void *, MCParameter *);
-extern Exec_stat MCHandleVibrate(void *, MCParameter *);
-extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
-extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
-
-extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters);
-
-// MM-2012-02-09: Add support for multi channel sound syntax
-extern Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *);
-extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *);
-extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *);
-extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *);
-extern Exec_stat MCHandleGetNotificationBadgeValue(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetNotificationBadgeValue(void *context, MCParameter *p_parameters);
-
-
-
-// MM-2012-02-22: Added support for ad management
-extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAds(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
-extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
-extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
-
-extern Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleBeep(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleVibrate(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
-
-extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
-
-extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleExportImageToAlbum(void* p_context, MCParameter* p_parameter);
-
-extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
-
-extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters);
-
-////////////////////////////////////////////////////////////////////////////////
-
-typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
-
-struct MCPlatformMessageSpec
-{
-	const char *message;
-	MCPlatformMessageHandler handler;
-	void *context;
-};
-
-static MCPlatformMessageSpec s_platform_messages[] =
-{
-    // MM-2012-02-22: Added support for ad management
-    {"mobileAdRegister", MCHandleAdRegister, nil},
-    {"mobileAdCreate", MCHandleAdCreate, nil},
-    {"mobileAdDelete", MCHandleAdDelete, nil},
-    {"mobileAdGetVisible", MCHandleAdGetVisible, nil},
-    {"mobileAdSetVisible", MCHandleAdSetVisible, nil},
-    {"mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
-    {"mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
-    {"mobileAds", MCHandleAds, nil},
-    
-	{"libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},    
-    
-    {"mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
-    {"mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
-    {"mobileSensorReading", MCHandleSensorReading, nil},
-    {"mobileSensorAvailable", MCHandleSensorAvailable, nil},	
-    
-    // MM-2012-02-11: Added support old style senseor syntax
-	/* DEPRECATED */ {"mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {"mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {"mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
-	/* DEPRECATED */ {"mobileCurrentLocation", MCHandleCurrentLocation, nil},
-	
-	/* DEPRECATED */ {"mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
-    /* DEPRECATED */ {"mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
-	/* DEPRECATED */ {"mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
-	/* DEPRECATED */ {"mobileCurrentHeading", MCHandleCurrentHeading, nil},
-    
-	/* DEPRECATED */ {"mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
-	/* DEPRECATED */ {"mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
-
-    {"mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
-    {"mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
-    
-    {"mobileBeep", MCHandleBeep, nil},
-    {"mobileVibrate", MCHandleVibrate, nil},
-    {"mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
-    {"mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
-    
-	{"mobileCameraFeatures", MCHandleCameraFeatures, nil},
-	{"mobilePickPhoto", MCHandlePickPhoto, nil},
-	
-    {"mobilePickDate", MCHandlePickDate, nil},
-    {"mobilePickTime", MCHandlePickTime, nil},
-    {"mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
-    
-    {"mobilePick", MCHandlePick, nil},
-    
-    {"mobilePickMedia", MCHandlePickMedia, nil},
-
-	{"revMail", MCHandleRevMail, nil},
-	{"mobileCanSendMail", MCHandleCanSendMail, nil},
-	{"mobileComposeMail", MCHandleComposePlainMail, nil},
-	{"mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
-	{"mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
-
-	{"mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
-	{"mobileOrientation", MCHandleOrientation, nil},
-	{"mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
-	{"mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
-	{"mobileLockOrientation", MCHandleLockOrientation, nil},
-	{"mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
-	{"mobileOrientationLocked", MCHandleOrientationLocked, nil},
-    
-    {"mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
-    {"mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
-
-    {"mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
-	{"mobileShowStatusbar", MCHandleShowStatusBar, nil},
-	{"mobileHideStatusbar", MCHandleHideStatusBar, nil},
-    {"mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
-    {"mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
-    
-    
-    {"mobileDeviceResolution", MCHandleDeviceResolution, nil},
-    {"mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
-    {"mobileDeviceScale", MCHandleDeviceScale, nil},
-	{"mobilePixelDensity", MCHandlePixelDensity, nil},
-
-	{"mobileBuildInfo", MCHandleBuildInfo, nil},
-
-    {"mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
-	{"mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
-	{"mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
-	{"mobileRestorePurchases", MCHandleRestorePurchases, nil},
-	{"mobilePurchases", MCHandlePurchaseList, nil},
-	{"mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
-	{"mobilePurchaseState", MCHandlePurchaseState, nil},
-	{"mobilePurchaseError", MCHandlePurchaseError, nil},
-	{"mobilePurchaseGet", MCHandlePurchaseGet, nil},
-	{"mobilePurchaseSet", MCHandlePurchaseSet, nil},
-	{"mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
-	{"mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
-    {"mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
-    {"iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
-    
-	{"mobileControlCreate", MCHandleControlCreate, nil},
-	{"mobileControlDelete", MCHandleControlDelete, nil},
-	{"mobileControlSet", MCHandleControlSet, nil},
-	{"mobileControlGet", MCHandleControlGet, nil},
-	{"mobileControlDo", MCHandleControlDo, nil},
-	{"mobileControlTarget", MCHandleControlTarget, nil},
-	{"mobileControls", MCHandleControlList, nil},
-
-	{"mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
-	{"mobileCurrentLocale", MCHandleCurrentLocale, nil},
-    
-    {"iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
-    {"iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
-    
-	{"iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
-	{"iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
-    
-    // MM-2012-02-09: Add support for multi channel sound syntax
-    {"mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
-	{"mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
-	{"mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
-	{"mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
-	{"mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
-	{"mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
-	{"mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
-	{"mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
-	{"mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
-	{"mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
-	{"mobileSoundChannels", MCHandleSoundChannels, nil},
-    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.)
-    {"mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
-    
-    {"iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
-    {"iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
-    {"iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
-    {"iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
-    
-	{"mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
-	{"mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
-	{"mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
-    
-    {"mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
-    {"mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
-    {"mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
-    {"mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
-    {"mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
-    {"iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
-    {"iphoneSetNotificationBagdeValue", MCHandleSetNotificationBadgeValue, nil},
-    
-    {"mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
-    
-	{"iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
-	
-    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
-    //   or not.
-	{"iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil},
-
-    {"mobilePickContact", MCHandlePickContact, nil},
-    {"mobileShowContact", MCHandleShowContact, nil},
-    {"mobileGetContactData", MCHandleGetContactData, nil},
-    {"mobileUpdateContact", MCHandleUpdateContact, nil},
-    {"mobileCreateContact", MCHandleCreateContact, nil},
-    {"mobileAddContact", MCHandleAddContact, nil},
-    {"mobileFindContact", MCHandleFindContact, nil},
-    {"mobileRemoveContact", MCHandleRemoveContact, nil},
-
-    {"mobileCreateEvent", MCHandleCreateEvent, nil},
-    {"mobileUpdateEvent", MCHandleUpdateEvent, nil},
-    {"mobileAddEvent", MCHandleAddEvent, nil},
-    {"mobileGetCalendarsEvent", MCHandleGetCalendarsEvent, nil},
-    {"mobileFindEvent", MCHandleFindEvent, nil},
-    {"mobileRemoveEvent", MCHandleRemoveEvent, nil},
-	
-	{"mobileClearTouches", MCHandleClearTouches, nil},
-    
-    {nil, nil, nil}
-};
-
-Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message, MCParameter *p_parameters)
-{
-	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (p_message == s_platform_messages[i] . message)
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-	
-	return ES_NOT_HANDLED;
-}
+//Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message, MCParameter *p_parameters)
+//{
+//	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+//		if (p_message == s_platform_messages[i] . message)
+//			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+//	
+//	return ES_NOT_HANDLED;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 

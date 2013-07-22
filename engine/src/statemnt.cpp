@@ -347,7 +347,11 @@ void MCStatement::compile(MCSyntaxFactoryRef ctxt)
 	MCSyntaxFactoryEndStatement(ctxt);
 };
 
+
 ////////////////////////////////////////////////////////////////////////////////
+
+extern bool MCIsPlatformMessage(MCNameRef handler_name);
+extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
 
 MCComref::MCComref(MCNameRef n)
 {
@@ -355,6 +359,7 @@ MCComref::MCComref(MCNameRef n)
 	handler = nil;
 	params = NULL;
 	resolved = false;
+    platform_message = false;
 }
 
 MCComref::~MCComref()
@@ -376,8 +381,15 @@ Parse_stat MCComref::parse(MCScriptPoint &sp)
 		MCperror->add(PE_STATEMENT_BADPARAMS, sp);
 		return PS_ERROR;
 	}
+    if (MCIsPlatformMessage(name))
+    {
+        platform_message = true;
+        resolved = true;
+    }
+    
 	return PS_NORMAL;
 }
+
 
 Exec_stat MCComref::exec(MCExecPoint &ep)
 {
@@ -410,8 +422,13 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 			handler = t_resolved_handler;
 
 		resolved = true;
-		}
-
+    }
+    
+    if (platform_message)
+    {
+        return MCHandlePlatformMessage(MCNameGetOldString(name), params);
+    }
+    
 	Exec_stat stat;
 	MCParameter *tptr = params;
 	while (tptr != NULL)
@@ -451,30 +468,30 @@ Exec_stat MCComref::exec(MCExecPoint &ep)
 
 	if (handler != nil)
 	{
-		// MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
-		//   parent, then use a special method.
-		if (ep . getparentscript() == NULL)
-			stat = p -> exechandler(handler, params);
-		else
-			stat = p -> execparenthandler(handler, params, ep . getparentscript());
-
-		switch(stat)
-		{
-		case ES_ERROR:
-		case ES_PASS:
-			MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
-			if (MCerrorptr == NULL)
-				MCerrorptr = p;
-			stat = ES_ERROR;
-			break;
-
-		case ES_EXIT_HANDLER:
-			stat = ES_NORMAL;
-			break;
-
-		default:
-			break;
-		}
+        // MW-2008-10-28: [[ ParentScripts ]] If we are in the context of a
+        //   parent, then use a special method.
+        if (ep . getparentscript() == NULL)
+            stat = p -> exechandler(handler, params);
+        else
+            stat = p -> execparenthandler(handler, params, ep . getparentscript());
+        
+        switch(stat)
+        {
+            case ES_ERROR:
+            case ES_PASS:
+                MCeerror->add(EE_STATEMENT_BADCOMMAND, line, pos, handler -> getname());
+                if (MCerrorptr == NULL)
+                    MCerrorptr = p;
+                stat = ES_ERROR;
+                break;
+                
+            case ES_EXIT_HANDLER:
+                stat = ES_NORMAL;
+                break;
+                
+            default:
+                break;
+        }
 	}
 	else
 	{
