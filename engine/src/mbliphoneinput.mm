@@ -1758,7 +1758,7 @@ Exec_stat MCiOSInputFieldControl::Get(MCNativeControlProperty p_property, MCExec
 	
 	return MCiOSInputControl::Get(p_property, ep);
 }
-#endif /*MCNativeInputFieldControl::Get */
+#endif /* MCNativeInputFieldControl::Get */
 
 void MCiOSInputFieldControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
 {

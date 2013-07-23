@@ -543,7 +543,7 @@ Exec_stat scroller_set_property(jobject p_view, MCRectangle32 &x_content_rect, M
 	return ES_NOT_HANDLED;
 }
 
-#ifdef /* MCAndroidScrollerControl::Set */
+#ifdef /* MCAndroidScrollerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     jobject t_view;

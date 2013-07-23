@@ -324,7 +324,7 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_si
     r_size . y = t_height;
 }
 
-#ifdef /* MCAndroidPlayerControl::Set */
+#ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
