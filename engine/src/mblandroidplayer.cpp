@@ -53,8 +53,10 @@ public:
 #ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-#endif
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
+    
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -87,6 +89,10 @@ public:
     void GetLoadState(MCExecContext& ctxt, intset_t& r_state);
     void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    
+	// Player-specific actions
+	Exec_stat ExecPlay(MCExecContext& ctxt);
+	Exec_stat ExecPause(MCExecContext& ctxt);
     
     void HandlePropertyAvailableEvent(const char *property);
     
@@ -550,6 +556,7 @@ void MCAndroidPlayerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_
     MCAndroidControl::Get(ctxt, p_property);
 }
 
+#ifdef /* MCAndroidPlayerControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -574,6 +581,52 @@ Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter
     }
     
     return MCAndroidControl::Do(p_action, p_parameters);
+}
+#endif /* MCAndroidPlayerControl::Do */
+
+Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
+{
+    switch (p_action)
+    {
+        case kMCNativeControlActionPlay:
+            return ExecPlay(ctxt);
+            
+        case kMCNativeControlActionPause:
+            return ExecPause(ctxt);
+            
+        case kMCNativeControlActionStop:
+            // Handled by the parent class
+            
+        default:
+            break;
+    }
+    
+    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
+}
+
+// Player-specific actions
+Exec_stat MCAndroidPlayerControl::ExecPlay(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    MCAndroidObjectRemoteCall(t_view, "start", "v", nil);
+    return ES_NORMAL;
+}
+
+Exec_stat MCAndroidPlayerControl::ExecPause(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    MCAndroidObjectRemoteCall(t_view, "pause", "v", nil);
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -409,7 +409,28 @@ void MCAndroidControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_proper
 
 Exec_stat MCAndroidControl::Do(MCNativeControlAction p_action, MCParameter *p_params)
 {
+    switch(p_action)
+    {
+        case kMCNativeControlActionStop:
+            return ExecStop(ctxt);
+            
+        default:
+            break;
+    }
+    
     return ES_ERROR;
+}
+
+Exec_stat MCAndroidControl::ExecStop(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

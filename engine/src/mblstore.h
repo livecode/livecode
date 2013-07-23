@@ -76,8 +76,73 @@ typedef struct _mcpurchase_t
 
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity);
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseGetQuantity(MCPurchase *p_purchase, MCExecPoint &ep);
+// Android
+Exec_stat MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCExecPoint &ep);
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseGetLocalizedTitle(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetLocalizedDescription(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetLocalizedPrice(MCPurchase *p_purchase, MCExecPoint &ep);
+
+// response properties
+Exec_stat MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep);
+// iOS
+Exec_stat MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetReceipt(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCExecPoint &ep);
+// Android
+Exec_stat MCPurchaseGetSignedData(MCPurchase *p_purchase, MCExecPoint &ep);
+Exec_stat MCPurchaseGetSignature(MCPurchase *p_purchase, MCExecPoint &ep);
+
+Exec_stat MCPurchaseGetUnknown(MCPurchase *p_purchase, MCExecPoint &ep);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCPurchaseSetProductIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseSetQuantity(MCPurchase *p_purchase, uint32_t p_quantity);
+// Android
+Exec_stat MCPurchaseSetDeveloperPayload(MCPurchase *p_purchase, uint32_t p_quantity);
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseSetLocalizedTitle(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetLocalizedDescription(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetLocalizedPrice(MCPurchase *p_purchase, uint32_t p_quantity);
+
+// response properties
+Exec_stat MCPurchaseSetPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity);
+// iOS
+Exec_stat MCPurchaseSetTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetReceipt(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetOriginalTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetOriginalPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetOriginalReceipt(MCPurchase *p_purchase, uint32_t p_quantity);
+// Android
+Exec_stat MCPurchaseSetSignedData(MCPurchase *p_purchase, uint32_t p_quantity);
+Exec_stat MCPurchaseSetSignature(MCPurchase *p_purchase, uint32_t p_quantity);
+
+Exec_stat MCPurchaseSetUnknown(MCPurchase *p_purchase, uint32_t p_quantity);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseLookupProperty(MCStringRef p_property, MCPurchaseProperty &r_property);
 

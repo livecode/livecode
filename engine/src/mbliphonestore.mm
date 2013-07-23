@@ -115,26 +115,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: p_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-
-
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -222,6 +203,377 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseGet */
+
+
+Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
+{	
+	switch (p_property)
+	{
+		case kMCPurchasePropertyProductIdentifier:
+            return MCPurchaseGetProductIdentifier(p_purchase, ep);
+			
+		case kMCPurchasePropertyQuantity:
+            return MCPurchaseGetQuantity(p_purchase, ep);
+			
+		case kMCPurchasePropertyReceipt:
+            return MCPurchaseGetReceipt(p_purchase, ep);
+			
+		case kMCPurchasePropertyPurchaseDate:
+            return MCPurchaseGetPurchaseDate(p_purchase, ep);
+            
+		case kMCPurchasePropertyTransactionIdentifier:
+            return MCPurchaseGetTransactionIdentifier(p_purchase, ep);
+			
+		case kMCPurchasePropertyOriginalReceipt:
+            return MCPurchaseGetOriginalReceipt(p_purchase, ep);
+			
+		case kMCPurchasePropertyOriginalPurchaseDate:
+            return MCPurchaseGetOriginalPurchaseDate(p_purchase, ep);
+            
+		case kMCPurchasePropertyOriginalTransactionIdentifier:
+            return MCPurchaseGetOriginalTransactionIdentifier(p_purchase, ep);
+            
+		default:
+			break;
+	}
+	
+	return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.copysvalue([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    return ES_NORMAL;    
+}
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseGetQuantity(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.setuint([t_payment quantity]);
+    return ES_NORMAL;
+}
+
+// Android
+Exec_stat MCPurchaseGetDevelopmentPayload(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseGetLocalizedTitle(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetLocalizedDescription(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetLocalizedPrice(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+// response properties
+Exec_stat MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.setnvalue([[t_transaction transactionDate] timeIntervalSince1970]);
+    return ES_NORMAL;
+}
+// iOS
+Exec_stat MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.copysvalue([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetReceipt(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    NSData *t_bytes = [t_transaction transactionReceipt];
+    ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.copysvalue([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding]);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    \
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.setnvalue([[t_original_transaction transactionDate] timeIntervalSince1970]);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return ES_NOT_HANDLED;
+    
+    NSData *t_bytes = [t_original_transaction transactionReceipt];
+    ep.copysvalue((const char*)[t_bytes bytes], [t_bytes length]);
+    return ES_NORMAL;
+}
+
+// Android
+Exec_stat MCPurchaseGetSignedData(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetSignature(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetUnknown(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+	switch (p_property)
+	{
+		case kMCPurchasePropertyQuantity:
+		{
+			if (t_ios_data->payment != nil)
+				[t_ios_data->payment setQuantity: p_quantity];
+			return ES_NORMAL;
+		}
+			break;
+		default:
+			break;
+	}
+	
+	return ES_NOT_HANDLED;
+}
+#endif /* MCPurchaseSet */
+
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+	switch (p_property)
+	{
+		case kMCPurchasePropertyQuantity:
+            return MCPurchaseSetQuantity(p_purchase, p_quantity);
+		default:
+			break;
+	}
+	
+	return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetProductIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseSetQuantity(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+    if (t_ios_data->payment != nil)
+        [t_ios_data->payment setQuantity: p_quantity];
+    else
+        return ES_NOT_HANDLED;
+    
+    return ES_NORMAL;    
+}
+// Android
+Exec_stat MCPurchaseSetDeveloperPayload(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseSetLocalizedTitle(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetLocalizedDescription(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetLocalizedPrice(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// response properties
+Exec_stat MCPurchaseSetPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+// iOS
+Exec_stat MCPurchaseSetTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetReceipt(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetOriginalTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetOriginalPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetOriginalReceipt(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// Android
+Exec_stat MCPurchaseSetSignedData(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetSignature(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetUnknown(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 {

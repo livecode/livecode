@@ -402,11 +402,12 @@ public:
 	// Set property/get property/do verb.
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
+    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
 #endif
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
 
     virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
     virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter* p_parameters) = 0;
     
     // Native control setters & getters
     virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect) = 0;
@@ -421,9 +422,14 @@ public:
     virtual void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha) = 0;
     virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color) = 0;
     
+    
+	// Common actions
+	virtual Exec_stat ExecStop(MCExecContext& ctxt) = 0;
+    
     void GetId(MCExecContext& ctxt, uinteger_t& r_id);
     void GetName(MCExecContext& ctxt, MCStringRef& r_name);
     void SetName(MCExecContext& ctxt, MCStringRef p_name);
+    
     
 	// The current target of any message that has been dispatched
 	static MCNativeControl *ChangeTarget(MCNativeControl *target);

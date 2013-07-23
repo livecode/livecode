@@ -54,8 +54,10 @@ public:
 #ifdef LEGACY_EXEC    
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-#endif    
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif    
+    
+    virtual Exec_Stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
     
     void SetContentRect(MCExecContext& ctxt, MCRectangle32* p_rect);
     void GetContentRect(MCExecContext& ctxt, MCRectangle32*& r_rect);
@@ -815,6 +817,7 @@ void MCAndroidScrollerControl::Get(MCExecContext& ctxt, MCNativeControlProperty 
     MCAndroidControl::Get(ctxt, p_property);
 }
 
+#ifdef /* MCAndroidScrollerControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -827,6 +830,18 @@ Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParamet
     }
     
     return MCAndroidControl::Do(p_action, p_parameters);
+}
+#endif /* MCAndroidScrollerControl::Do */
+
+Exec_stat MCAndroidScrollerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{    
+    switch (p_action)
+    {
+        default:
+            break;
+    }
+    
+    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

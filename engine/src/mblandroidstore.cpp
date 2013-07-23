@@ -177,34 +177,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
     MCMemoryDelete(t_android_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-    /*
-    if (p_purchase->state != kMCPurchaseStateInitialized)
-        return ES_NOT_HANDLED;
-    
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    switch (p_property)
-    {
-        case kMCPurchasePropertyDeveloperPayload:
-        {
-            if (ep.getsvalue().getlength() >= 256)
-            {
-                MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            if (t_android_data->developer_payload != nil)
-                MCCStringFree(t_android_data->developer_payload);
-            MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
-            return ES_NORMAL;
-        }
-        default:
-            break;
-    }
-    */
-    return ES_NOT_HANDLED;
-}
-
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
     //MCLog("MCPurchaseGet(%p, %d, ...)", p_purchase, p_property);
@@ -253,7 +226,302 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
     
     return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseGet */
 
+Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
+{    
+    switch (p_property) {
+        case kMCPurchasePropertyProductIdentifier:
+            return MCPurchaseGetProductIdentifier(p_purchase, ep);
+            
+        case kMCPurchasePropertyDeveloperPayload:
+            return MCPurchaseGetDeveloperPayload(p_purchase, ep);
+            
+        case kMCPurchasePropertyTransactionIdentifier:
+            return MCPurchaseGetTransactionIdentifier(p_purchase, ep);
+            
+        case kMCPurchasePropertyPurchaseDate:
+            return MCPurchaseGetPurchaseDate(p_purchase, ep);
+            
+        case kMCPurchasePropertySignedData:
+            return MCPurchaseGetSignedData(p_purchase, ep);
+            
+        case kMCPurchasePropertySignature:
+            return MCPurchaseGetSignature(p_purchase, ep);
+            
+        default:
+            break;
+    }
+    
+    return ES_NOT_HANDLED;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+Exec_stat MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->product_id == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.copysvalue(t_android_data->product_id);
+    return ES_NORMAL;
+}
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseGetQuantity(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+// Android
+Exec_stat MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->developer_payload == nil)
+    {
+        ep.clear();
+        return ES_NOT_HANDLED;
+    }
+    
+    ep.copysvalue(t_android_data->developer_payload);
+    return ES_NORMAL;
+}
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseGetLocalizedTitle(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetLocalizedDescription(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetLocalizedPrice(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+// response properties
+Exec_stat MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->purchase_time == nil)
+        return ES_NOT_HANDLED;
+    
+    ep.setint64(t_android_data->purchase_time);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->order_id == nil)
+    {
+        ep.clear();
+        return ES_NOT_HANDLED;
+    }
+    
+    ep.copysvalue(t_android_data->order_id);
+    return ES_NORMAL;
+}
+
+// iOS
+Exec_stat MCPurchaseGetReceipt(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+// Android
+Exec_stat MCPurchaseGetSignedData(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->signed_data == nil)
+    {
+        ep.clear();
+        return ES_NOT_HANDLED;
+    }
+    
+    ep.copysvalue(t_android_data->signed_data);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetSignature(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->signature == nil)
+    {
+        ep.clear();
+        return ES_NOT_HANDLED;
+    }
+    
+    ep.copysvalue(t_android_data->signature);
+    return ES_NORMAL;
+}
+
+Exec_stat MCPurchaseGetUnknown(MCPurchase *p_purchase, MCExecPoint &ep)
+{
+    return ES_NOT_HANDLED;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+    /*
+     if (p_purchase->state != kMCPurchaseStateInitialized)
+     return ES_NOT_HANDLED;
+     
+     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+     switch (p_property)
+     {
+     case kMCPurchasePropertyDeveloperPayload:
+     {
+     if (ep.getsvalue().getlength() >= 256)
+     {
+     MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
+     return ES_ERROR;
+     }
+     if (t_android_data->developer_payload != nil)
+     MCCStringFree(t_android_data->developer_payload);
+     MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
+     return ES_NORMAL;
+     }
+     default:
+     break;
+     }
+     */
+    return ES_NOT_HANDLED;
+}
+#endif /* MCPurchaseSet */
+
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+    /*
+     if (p_purchase->state != kMCPurchaseStateInitialized)
+     return ES_NOT_HANDLED;
+     
+     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+     switch (p_property)
+     {
+     case kMCPurchasePropertyDeveloperPayload:
+     {
+     if (ep.getsvalue().getlength() >= 256)
+     {
+     MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
+     return ES_ERROR;
+     }
+     if (t_android_data->developer_payload != nil)
+     MCCStringFree(t_android_data->developer_payload);
+     MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
+     return ES_NORMAL;
+     }
+     default:
+     break;
+     }
+     */
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetProductIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// purchase request properties
+// iOS
+Exec_stat MCPurchaseSetQuantity(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+// Android
+Exec_stat MCPurchaseSetDeveloperPayload(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// product properties from app store
+// iOS
+Exec_stat MCPurchaseSetLocalizedTitle(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetLocalizedDescription(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetLocalizedPrice(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+// response properties
+Exec_stat MCPurchaseSetPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+// iOS
+Exec_stat MCPurchaseSetTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetReceipt(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetOriginalTransactionIdentifier(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetOriginalPurchaseDate(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetOriginalReceipt(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+// Android
+Exec_stat MCPurchaseSetSignedData(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+Exec_stat MCPurchaseSetSignature(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+Exec_stat MCPurchaseSetUnknown(MCPurchase *p_purchase, uint32_t p_quantity)
+{
+    return ES_NOT_HANDLED;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef& r_error)
 {

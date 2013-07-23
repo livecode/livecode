@@ -30,11 +30,12 @@ public:
 #ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-#endif
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+#endif
 
     virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
     virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *_parameters);
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
     virtual void SetVisible(MCExecContext& ctxt, bool* p_visible);
@@ -47,6 +48,8 @@ public:
     virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque);
     virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha);
     virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color);
+    
+    virtual Exec_stat ExecStop(MCExecContext& ctxt);
     
     // standard event handling methods
     void PostNotifyEvent(MCNameRef p_message);
