@@ -138,7 +138,11 @@ static MCCursorRef create_standard_cursor(LPCSTR p_cursor)
 {
 	MCCursorRef t_cursor;
 	t_cursor = new MCCursor;
-	t_cursor -> kind = kMCCursorStandard;
+	// IM-2013-07-17: [[ bug 9836 ]] set up the nil string as the empty 'none' cursor
+	if (p_cursor == nil)
+		t_cursor -> kind = kMCCursorNone;
+	else
+		t_cursor -> kind = kMCCursorStandard;
 	t_cursor -> standard = p_cursor;
 	return t_cursor;
 }
@@ -185,8 +189,8 @@ void MCScreenDC::resetcursors(void)
 	else
 		MCcursorbwonly = True;
 
-
-	for(uint32_t i = 1; i < PI_NCURSORS; i++)
+	// IM-2013-07-17: [[ bug 9836 ]] ensure we create an empty cursor at index 0
+	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 	{
 		freecursor(MCcursors[i]);
 		MCcursors[i] = nil;
