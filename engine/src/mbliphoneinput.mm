@@ -106,10 +106,11 @@ public:
 #ifdef LEGACY_EXEC
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
-#endif	
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif	
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *parameters);
     
     void SetEnabled(MCExecContext& ctxt, bool p_value);
     virtual void SetOpaque(MCExecContext& ctxt, bool p_value);
@@ -141,6 +142,9 @@ public:
     void GetKeyboardStyle(MCExecContext& ctxt, MCNativeControlInputKeyboardStyle& r_style);
     void GetReturnKey(MCExecContext& ctxt, MCNativeControlInputReturnKeyType& r_key);
     void GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type);
+    
+	// Input-specific actions
+	Exec_stat ExecFocus(MCExecContext& ctxt);
     
 	void HandleNotifyEvent(MCNameRef p_notification);
 
@@ -205,10 +209,11 @@ public:
 #ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
-#endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-	
+#endif
+
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
     
     void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
@@ -254,6 +259,9 @@ public:
     void GetTracking(MCExecContext& ctxt, bool& r_value);
     void GetDragging(MCExecContext& ctxt, bool& r_value);
     void GetDecelerating(MCExecContext& ctxt, bool& r_value);
+
+	// TextView-specific actions
+	Exec_stat ExecScrollRangeToVisible(MCExecContext& ctxt, int32_t p_integer1, int32_t p_integer2);
     
 	void HandleEvent(MCNameRef p_message);
 	void HandleEndDragEvent(bool p_decelerate);
@@ -1204,6 +1212,7 @@ Exec_stat MCiOSInputControl::Get(MCNativeControlProperty p_property, MCExecPoint
 }
 #endif /* MCNativeInputControl::Get */
 
+#ifdef /* MCiOSInputControl::Do */ LEGACY_EXEC
 Exec_stat MCiOSInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UITextField *t_field;
@@ -1222,6 +1231,34 @@ Exec_stat MCiOSInputControl::Do(MCNativeControlAction p_action, MCParameter *p_p
 	}
 	
 	return MCiOSControl::Do(p_action, p_parameters);
+}
+#endif /* MCiOSInputControl::Do */
+
+Exec_stat MCiOSInputControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{
+	switch(p_action)
+	{
+		case kMCNativeControlActionFocus:
+            if (ExecFocus(ctxt) != ES_NORMAL)
+                break;
+            return ES_NORMAL;
+			
+		default:
+			break;
+	}
+	
+	return MCiOSControl::Do(ctxt, p_action, p_parameters);
+}
+
+Exec_stat MCiOSInputControl::ExecFocus(MCExecContext &ctxt)
+{
+	UITextField *t_field;
+	t_field = (UITextField *)GetView();
+	if (t_field == nil)
+        return ES_NOT_HANDLED;
+    
+    [t_field becomeFirstResponder];
+    return ES_NORMAL;   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1508,7 +1545,7 @@ Exec_stat MCiOSInputFieldControl::Get(MCNativeControlProperty p_property, MCExec
 	
 	return MCiOSInputControl::Get(p_property, ep);
 }
-#endif /*MCNativeInputFieldControl::Get */
+#endif /* MCNativeInputFieldControl::Get */
 
 UIView *MCiOSInputFieldControl::CreateView(void)
 {
@@ -2207,6 +2244,7 @@ Exec_stat MCiOSMultiLineControl::Get(MCNativeControlProperty p_property, MCExecP
 }
 #endif /* MCNativeMultiLineControl::Get */
 
+#ifdef /* MCiOSMultiLineControl::Do */ LEGACY_EXEC
 Exec_stat MCiOSMultiLineControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UITextView *t_view;
@@ -2233,6 +2271,48 @@ Exec_stat MCiOSMultiLineControl::Do(MCNativeControlAction p_action, MCParameter 
 	}
 	
 	return MCiOSInputControl::Do(p_action, p_parameters);
+}
+#endif /* MCiOSMultiLineControl::Do */
+
+Exec_stat MCiOSMultiLineControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{
+	switch(p_action)
+	{
+		case kMCNativeControlActionScrollRangeToVisible:
+        {
+            int32_t t_integer1, t_integer2;
+            
+            if (!MCParseParameters(p_parameters, "ii", &t_integer1, &t_integer2))
+            {
+                MCeerror->add(EE_UNDEFINED, 0, 0);
+                return ES_ERROR;
+            }
+            
+            if (ExecScrollRangeToVisible(ctxt, t_integer1, t_integer2) != ES_NORMAL)
+                break;
+            
+            return ES_NORMAL;
+        }            
+			
+		default:
+			break;
+	}
+	
+	return MCiOSInputControl::Do(ctxt, p_action, p_parameters);
+}
+
+Exec_stat MCiOSMultiLineControl::ExecScrollRangeToVisible(MCExecContext& ctxt, int32_t p_integer1, int32_t p_integer2)
+{
+	UITextView *t_view;
+	t_view = (UITextView *)GetView();
+    
+    NSRange t_range;
+	if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    t_range = NSMakeRange(p_integer1, p_integer2);
+    [t_view scrollRangeToVisible: t_range];
+    return ES_NORMAL;
 }
 
 void MCiOSMultiLineControl::UpdateContentRect()

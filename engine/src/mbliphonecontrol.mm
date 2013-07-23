@@ -478,8 +478,26 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 }
 #endif /* MCiOSControl::Get */
 
-Exec_stat MCiOSControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
+Exec_stat MCiOSControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
 {
-	return ES_ERROR;
+    switch(p_action)
+    {
+        case kMCNativeControlActionStop:
+            return ExecStop(ctxt);
+            
+        default:
+            break;
+    }
+	
+    return ES_ERROR;
 }
 
+Exec_stat MCiOSControl::ExecStop(MCExecContext &ctxt)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view != nil)
+        [t_view stopLoading];
+    return ES_NORMAL;
+}

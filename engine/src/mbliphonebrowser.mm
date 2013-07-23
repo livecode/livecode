@@ -78,10 +78,11 @@ public:
 #ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);	
+	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);	
 #endif
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter* p_parameters);
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
@@ -103,6 +104,13 @@ public:
     
     void GetCanAdvance(MCExecContext& ctxt, bool& r_value);
     void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
+    
+	// Browser-specific actions
+	Exec_stat ExecAdvance(MCExecContext& ctxt);
+	Exec_stat ExecRetreat(MCExecContext& ctxt);
+	Exec_stat ExecReload(MCExecContext& ctxt);
+	Exec_stat ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
+	Exec_stat ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html);
     
 	void HandleStartEvent(void);
 	void HandleFinishEvent(void);
@@ -490,6 +498,7 @@ Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoi
 }
 #endif /* MCNativeBrowserControl::Get */
 
+#ifdef /* MCiOSBrowserControl::Do */ LEGACY_EXEC
 Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UIWebView *t_view;
@@ -569,6 +578,130 @@ Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p
 	}
 	
 	return MCiOSControl::Do(p_action, p_parameters);
+}
+#endif /* MCiOSBrowserControl::Do */
+
+Exec_stat MCiOSBrowserControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{	
+	switch(p_action)
+	{
+		case kMCNativeControlActionAdvance:
+            return ExecAdvance(ctxt);
+            
+		case kMCNativeControlActionRetreat:
+            return ExecRetreat(ctxt);
+            
+		case kMCNativeControlActionReload:
+            return ExecReload(ctxt);
+            
+		case kMCNativeControlActionLoad:
+		{
+			bool t_success;
+			t_success = true;
+			
+			MCAutoStringRef t_url, t_html;
+            
+			if (t_success)
+				t_success = MCParseParameters(p_parameters, "xx", &(&t_url), &(&t_html));
+			
+			// MW-2010-12-08: [[ Bug 9221 ]] Passed the wrong object type to baseURL!
+			if (!t_success)
+                return ES_NOT_HANDLED;
+            
+            return ExecLoad(ctxt, *t_url, *t_html);
+		}			
+			
+		case kMCNativeControlActionExecute:
+		{
+			bool t_success;
+			t_success = true;
+			
+			MCAutoStringRef t_script;
+			if (t_success)
+				t_success = MCParseParameters(p_parameters, "x", &(&t_script));
+			
+			if (!t_success)
+                return ES_NOT_HANDLED;
+            
+            return ExecExecute(ctxt, *t_script);
+		}
+            
+        default:
+            break;
+	}
+	
+	return MCiOSControl::Do(ctxt, p_action, p_parameters);
+}
+
+// Browser-specific actions
+Exec_stat MCiOSBrowserControl::ExecAdvance(MCExecContext& ctxt)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    [t_view goForward];
+    return ES_NORMAL;
+}
+
+Exec_stat MCiOSBrowserControl::ExecRetreat(MCExecContext& ctxt)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    [t_view goBack];
+    return ES_NORMAL;
+}
+
+Exec_stat MCiOSBrowserControl::ExecReload(MCExecContext& ctxt)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    [t_view reload];
+    return ES_NORMAL;
+}
+
+Exec_stat MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    NSString *t_result;
+    t_result = [t_view stringByEvaluatingJavaScriptFromString: [NSString stringWithCString: MCStringGetCString(p_script) encoding: NSMacOSRomanStringEncoding]];
+    
+    if (t_result == nil)
+    {
+        ctxt.SetTheResultToCString("error");
+        return ES_NOT_HANDLED;
+    }
+    
+    ctxt.SetTheResultToCString([t_result cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+    return ES_NORMAL;
+}
+
+Exec_stat MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
+{
+	UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
+    //   HTML loading doesn't divert through a loadRequested message.
+    [m_delegate setPendingRequest: true];
+    [t_view loadHTMLString: [NSString stringWithCString: MCStringGetCString(p_html) encoding: NSMacOSRomanStringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]];
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

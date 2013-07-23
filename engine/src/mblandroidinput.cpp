@@ -202,10 +202,11 @@ public:
 #ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-#endif
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
     
     void SetMultiLine(bool p_multiline);
     
@@ -240,6 +241,9 @@ public:
     void GetScrollingEnabled(MCExecContext& ctxt, bool& r_value);
     void GetDataDetectorTypes(MCExecContext& ctxt, MCNativeControlInputDataDetectorType& r_type);
     void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
+    
+	// Input-specific actions
+	Exec_stat ExecFocus(MCExecContext& ctxt);
     
 protected:
     virtual ~MCAndroidInputControl(void);
@@ -1145,6 +1149,7 @@ Exec_stat MCAndroidInputControl::Get(MCNativeControlProperty p_property, MCExecP
 }
 #endif /* MCAndroidInputControl::Get */
 
+#ifdef /* MCAndroidInputControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -1161,6 +1166,32 @@ Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter 
     }
     
     return MCAndroidControl::Do(p_action, p_parameters);
+}
+#endif /* MCAndroidInputControl::Do */
+
+Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
+{
+    switch (p_action)
+    {
+        case kMCNativeControlActionFocus:
+            
+        default:
+            break;
+    }
+    
+    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
+}
+
+Exec_stat MCAndroidInputControl::ExecFocus(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED:
+        
+    MCAndroidObjectRemoteCall(t_view, "focusControl", "v", nil);
+    return ES_NORMAL;    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

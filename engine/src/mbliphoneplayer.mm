@@ -93,13 +93,14 @@ public:
 #ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
-#endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
     
-    void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
-    void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
+    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -132,6 +133,18 @@ public:
     void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
     void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    
+    
+	// Player-specific actions
+	Exec_stat ExecPlay(MCExecContext& ctxt);
+	Exec_stat ExecPause(MCExecContext& ctxt);
+    Exec_stat ExecStop(MCExecContext& ctxt);
+	Exec_stat ExecPrepareToPlay(MCExecContext& ctxt);
+	Exec_stat ExecBeginSeekingBackward(MCExecContext& ctxt);
+	Exec_stat ExecBeginSeekingForward(MCExecContext& ctxt);
+	Exec_stat ExecEndSeeking(MCExecContext& ctxt);
+	Exec_stat ExecSnapshot(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height);
+	Exec_stat ExecSnapshotExactly(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height);
     
 	void HandlePropertyAvailableEvent(const char *p_property);
 	void HandleNotifyEvent(MCNameRef p_event);
@@ -857,39 +870,32 @@ void MCiOSPlayerControl::Play()
     [m_controller play];
 }
 
-Exec_stat MCiOSPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext ctxt(ep);
-    
-    
+Exec_stat MCiOSPlayerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{    
 	if (m_controller == nil)
-		return MCiOSControl::Do(p_action, p_parameters);
+		return MCiOSControl::Do(ctxt, p_action, p_parameters);
 	
 	switch(p_action)
 	{
 		case kMCNativeControlActionPlay:
-			//[m_controller play];
-            //MCNativeControlExecPlay(ctxt, this);
-			return ES_NORMAL;
+            return ExecPlay(ctxt);
+            
 		case kMCNativeControlActionPause:
-			[m_controller pause];
-			return ES_NORMAL;
+            return ExecPause(ctxt);
+            
 		case kMCNativeControlActionPrepareToPlay:
-			[m_controller prepareToPlay];
-			return ES_NORMAL;
+            return ExecPrepareToPlay(ctxt);
+            
 		case kMCNativeControlActionStop:
-			[m_controller stop];
-			return ES_NORMAL;
+            return ExecStop(ctxt);
+            
 		case kMCNativeControlActionBeginSeekingForward:
-			[m_controller beginSeekingForward];
-			return ES_NORMAL;
+            return ExecBeginSeekingBackward(ctxt);
+            
 		case kMCNativeControlActionBeginSeekingBackward:
-			[m_controller beginSeekingBackward];
-			return ES_NORMAL;
+            return ExecBeginSeekingBackward(ctxt);
+            
 		case kMCNativeControlActionEndSeeking:
-			[m_controller endSeeking];
-			return ES_NORMAL;
 		case kMCNativeControlActionSnapshot:
 		case kMCNativeControlActionSnapshotExactly:
 		{
@@ -907,19 +913,78 @@ Exec_stat MCiOSPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_
 			}
 			else
 				return ES_ERROR;
-				
-			UIImage *t_image;
-			t_image = [m_controller thumbnailImageAtTime: t_time / 1000.0
-											  timeOption: (p_action == kMCNativeControlActionSnapshot ? MPMovieTimeOptionNearestKeyFrame : MPMovieTimeOptionExact)];
-			if (t_image != nil)
-				MCIPhoneImportUIImage(t_image, t_max_width, t_max_height);
+            
+            return (p_action == kMCNativeControlActionSnapshot ?
+                    ExecSnapshot(ctxt, t_time, t_max_width, t_max_height) :
+                    ExecSnapshotExactly(ctxt, t_time, t_max_width, t_max_height));
 		}
-		return ES_NORMAL;
+            
 		default:
 			break;
 	}
 	
-	return MCiOSControl::Do(p_action, p_parameters);
+	return MCiOSControl::Do(ctxt, p_action, p_parameters);
+}
+
+Exec_stat MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
+{
+    [m_controller play];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
+{
+    [m_controller pause];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecPrepareToPlay(MCExecContext& ctxt)
+{
+    [m_controller prepareToPlay];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecStop(MCExecContext& ctxt)
+{
+    [m_controller stop];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecBeginSeekingBackward(MCExecContext& ctxt)
+{
+    [m_controller beginSeekingForward];
+    return ES_NORMAL;
+}
+
+Exec_stat MCiOSPlayerControl::ExecBeginSeekingForward(MCExecContext& ctxt)
+{
+    [m_controller beginSeekingBackward];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecEndSeeking(MCExecContext& ctxt)
+{    
+    [m_controller endSeeking];
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecSnapshot(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height)
+{
+    UIImage *t_image;
+    t_image = [m_controller thumbnailImageAtTime: t_time / 1000.0
+                                      timeOption: MPMovieTimeOptionNearestKeyFrame];
+    
+    if (t_image == nil)
+        return ES_NOT_HANDLED;
+    
+    MCIPhoneImportUIImage(t_image, t_max_width, t_max_height);
+    return ES_NORMAL;
+}
+Exec_stat MCiOSPlayerControl::ExecSnapshotExactly(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height)
+{
+    UIImage *t_image;
+    t_image = [m_controller thumbnailImageAtTime: t_time / 1000.0
+                                      timeOption: MPMovieTimeOptionExact];
+    
+    if (t_image == nil)
+        return ES_NOT_HANDLED;
+    
+    MCIPhoneImportUIImage(t_image, t_max_width, t_max_height);
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

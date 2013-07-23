@@ -66,10 +66,11 @@ public:
 #ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
-#endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
-	
+#endif
+
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     
@@ -107,6 +108,9 @@ public:
     void GetTracking(MCExecContext& ctxt, bool& r_value);
     void GetDragging(MCExecContext& ctxt, bool& r_value);
     void GetDecelerating(MCExecContext& ctxt, bool& r_value);
+    
+	// Scroller-specific actions
+	Exec_stat ExecFlashScrollIndicators(MCExecContext& ctxt);
     
 	void HandleEvent(MCNameRef message);
 
@@ -960,6 +964,7 @@ Exec_stat MCiOSScrollerControl::Get(MCNativeControlProperty p_property, MCExecPo
 }
 #endif /* MCiOSScrollerControl::Get */
 
+#ifdef /* MCiOSScrollerControl::Do */ LEGACY_EXEC
 Exec_stat MCiOSScrollerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
 	UIScrollView *t_view;
@@ -969,10 +974,35 @@ Exec_stat MCiOSScrollerControl::Do(MCNativeControlAction p_action, MCParameter *
 		case kMCNativeControlActionFlashScrollIndicators:
 			if (t_view)
 				[t_view flashScrollIndicators];
-			return ES_NORMAL;
-			
+			return ES_NORMAL;			
 	}
 	return MCiOSControl::Do(p_action, p_parameters);
+}
+#endif /* MCiOSScrollerControl::Do */
+
+Exec_stat MCiOSScrollerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
+{
+	switch (p_action)
+	{
+		case kMCNativeControlActionFlashScrollIndicators:
+            return ES_NORMAL;
+        
+        default:
+            break;			
+	}
+	return MCiOSControl::Do(ctxt, p_action, p_parameters);
+}
+
+Exec_stat MCiOSScrollerControl::ExecFlashScrollIndicators(MCExecContext& ctxt)
+{
+	UIScrollView *t_view;
+	t_view = (UIScrollView*)GetView();
+    
+    if (t_view == nil)
+        return ES_NOT_HANDLED;
+    
+    [t_view flashScrollIndicators];
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

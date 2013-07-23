@@ -34,10 +34,11 @@ public:
 #ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-#endif
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+#endif
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter* p_parameters);
     
     void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     void SetVisible(MCExecContext& ctxt, bool p_visible);
@@ -50,6 +51,9 @@ public:
     void GetOpaque(MCExecContext& ctxt, bool& p_opaque);
     void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha);
     void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color);
+    
+	// Common actions
+	virtual Exec_stat ExecStop(MCExecContext& ctxt);
     
 	// Get the native view of the instance.
 	UIView *GetView(void);

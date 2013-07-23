@@ -547,14 +547,18 @@ public:
 	// Set property/get property/do verb.
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep) = 0;
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep) = 0;	
+    virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
 #endif
-	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    
+	// Common actions
+	virtual Exec_stat ExecStop(MCExecContext& ctxt) = 0;
     
     void GetId(MCExecContext& ctxt, uinteger_t& r_id);
     void GetName(MCExecContext& ctxt, MCStringRef& r_name);
     void SetName(MCExecContext& ctxt, MCStringRef p_name);
+    
     
 	// The current target of any message that has been dispatched
 	static MCNativeControl *ChangeTarget(MCNativeControl *target);

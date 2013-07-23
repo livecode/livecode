@@ -3890,6 +3890,7 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlDo */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -3907,14 +3908,44 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
 		MCNativeControl::LookupAction(t_action_name, t_action);
 	
-	if (t_success)
+	if (t_succegit ss)
 		t_success = t_control -> Do(t_action, p_parameters) == ES_NORMAL;
 	
 	delete t_action_name;
 	delete t_control_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlDo */
+    
+    bool t_success;
+	t_success = true;
+	
+	char *t_control_name;
+	char *t_action_name;
+	t_control_name = nil;
+	t_action_name = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_action_name);
+	
+	MCNativeControl *t_control;
+	MCNativeControlAction t_action;
+	if (t_success)
+		t_success =
+		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
+		MCNativeControl::LookupAction(t_action_name, t_action);
+	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+//	if (t_success)
+//		t_success = t_control -> Do(ctxt, t_action) == ES_NORMAL;
+	
+	delete t_action_name;
+	delete t_control_name;
+	
+	return ES_NORMAL;
 }
+
 
 Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 {
