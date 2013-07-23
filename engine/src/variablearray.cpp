@@ -1380,6 +1380,9 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
 	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
     { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
+    // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
+    { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
+    { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },

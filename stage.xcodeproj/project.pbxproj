@@ -84,28 +84,28 @@
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB /* libkernel-server.a */;
+			remoteGlobalIDString = 4D1F9D17171C67B00091C6CB;
 			remoteInfo = "kernel-server";
 		};
 		4D87F8CE171D96F2003DBF85 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4D221A9E171D58A700E7E557 /* libkernel-development.a */;
+			remoteGlobalIDString = 4D221A9E171D58A700E7E557;
 			remoteInfo = "kernel-development";
 		};
 		4D87F8D0171D96F2003DBF85 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4D221AF6171D5EC500E7E557 /* libkernel-standalone.a */;
+			remoteGlobalIDString = 4D221AF6171D5EC500E7E557;
 			remoteInfo = "kernel-standalone";
 		};
 		4D87F8D2171D96F2003DBF85 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = E8DAE3DB1714271C00B96A87 /* engine.xcodeproj */;
 			proxyType = 2;
-			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB /* libsecurity-community.a */;
+			remoteGlobalIDString = 4D1F9C2E171C64320091C6CB;
 			remoteInfo = "security-community";
 		};
 		4D9B6AD817144CC5001349F2 /* PBXContainerItemProxy */ = {
