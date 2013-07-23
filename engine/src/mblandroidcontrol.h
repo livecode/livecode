@@ -21,6 +21,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCAndroidControl : public MCNativeControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+
 public:
     MCAndroidControl(void);
     
@@ -33,20 +37,17 @@ public:
 #endif
     virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
 
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
-    virtual void SetRect(MCExecContext& ctxt, MCRectangle* p_rect);
-    virtual void SetVisible(MCExecContext& ctxt, bool* p_visible);
-    virtual void SetOpaque(MCExecContext& ctxt, bool* p_opaque);
-    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t* p_alpha);
-    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor*& p_color);
+    void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
+    void SetVisible(MCExecContext& ctxt, bool p_visible);
+    void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);
+    void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     
-    virtual void GetRect(MCExecContext& ctxt, MCRectangle*& p_rect);
-    virtual void GetVisible(MCExecContext& ctxt, bool*& p_visible);
-    virtual void GetOpaque(MCExecContext& ctxt, bool*& p_opaque);
-    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t*& p_alpha);
-    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor*& p_color);
+    void GetRect(MCExecContext& ctxt, MCRectangle& r_rect);
+    void GetVisible(MCExecContext& ctxt, bool& r_visible);
+    void GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha);
+    void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
     
     // standard event handling methods
     void PostNotifyEvent(MCNameRef p_message);

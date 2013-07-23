@@ -67,6 +67,10 @@ class MCiOSBrowserControl;
 
 class MCiOSBrowserControl: public MCiOSControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+
 public:
 	MCiOSBrowserControl(void);
 	
@@ -77,8 +81,7 @@ public:
 #endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
     
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty property);
-	virtual void Get(MCExecContext& ctxt, MCNativeControlProperty property);
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
@@ -120,6 +123,30 @@ private:
 	MCiOSBrowserDelegate *m_delegate;
 	bool m_delay_requests;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCiOSBrowserControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Url, String, MCiOSBrowserControl, Url)
+    DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSBrowserControl, AutoFit)
+    DEFINE_RW_CTRL_PROPERTY(DelayRequests, Bool, MCiOSBrowserControl, DelayRequests)
+    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCiOSBrowserControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_PROPERTY(AllowsInlineMediaPlayback, Bool, MCiOSBrowserControl, AllowsInlineMediaPlayback)
+    DEFINE_RW_CTRL_PROPERTY(MediaPlaybackRequiresUserAction, Bool, MCiOSBrowserControl, MediaPlaybackRequiresUserAction)
+    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSBrowserControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSBrowserControl, ScrollingEnabled)
+    DEFINE_RO_CTRL_PROPERTY(CanAdvance, Bool, MCiOSBrowserControl, CanAdvance)
+    DEFINE_RO_CTRL_PROPERTY(CanRetreat, Bool, MCiOSBrowserControl, CanRetreat)
+};
+
+MCNativeControlPropertyTable MCiOSBrowserControl::kPropertyTable =
+{
+	&MCiOSControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -406,59 +433,6 @@ Exec_stat MCiOSBrowserControl::Set(MCNativeControlProperty p_property, MCExecPoi
 }
 #endif /* MCNativeBrowserControl::Set */
 
-void MCiOSBrowserControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyUrl:
-		{
-            MCAutoStringRef t_url;
-            /* UNCHECKED */ ep . copyasstringref(&t_url);
-            SetUrl(ctxt, *t_url);
-            return;
-		}
-            
-		case kMCNativeControlPropertyAutoFit:
-			SetAutoFit(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-			
-		case kMCNativeControlPropertyDelayRequests:
-			SetDelayRequests(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-			
-		case kMCNativeControlPropertyDataDetectorTypes:
-            intset_t t_types;
-            ctxt_to_set(ctxt, kMCNativeControlInputDataDetectorTypeTypeInfo, t_types);
-            SetDataDetectorTypes(ctxt, (MCNativeControlInputDataDetectorType)t_types);
-            return;
-			
-		case kMCNativeControlPropertyAllowsInlineMediaPlayback:
-			SetAllowsInlineMediaPlayback(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-			
-		case kMCNativeControlPropertyMediaPlaybackRequiresUserAction:
-			SetMediaPlaybackRequiresUserAction(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-            
-            // MW-2012-09-20: [[ Bug 10304 ]] Give access to bounce and scroll enablement of
-            //   the UIWebView.
-		case kMCNativeControlPropertyCanBounce:
-			SetCanBounce(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-		case kMCNativeControlPropertyScrollingEnabled:
-			SetScrollingEnabled(ctxt, ep . getsvalue() == MCtruemcstring);
-            return;
-			
-        default:
-            break;
-	}
-	
-	return MCiOSControl::Set(ctxt, p_property);
-    
-}
-
 #ifdef /* MCNativeBrowserControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -515,93 +489,6 @@ Exec_stat MCiOSBrowserControl::Get(MCNativeControlProperty p_property, MCExecPoi
 	return MCiOSControl::Get(p_property, ep);
 }
 #endif /* MCNativeBrowserControl::Get */
-
-void MCiOSBrowserControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyUrl:
-        {
-            MCAutoStringRef t_url;
-            GetUrl(ctxt, &t_url);
-            /* UNCHECKED */ ep . setvalueref(*t_url);
-            return;
-        }
-            
-        case kMCNativeControlPropertyCanRetreat:
-        {
-            bool t_can_retreat;
-            GetCanRetreat(ctxt, t_can_retreat);
-            ep.setboolean(t_can_retreat ? True : False);
-            return;
-        }
-            
-        case kMCNativeControlPropertyCanAdvance:
-        {
-            bool t_can_advance;
-            GetCanAdvance(ctxt, t_can_advance);
-            ep.setboolean(t_can_advance ? True : False);
-            return;
-        }
-            
-        case kMCNativeControlPropertyCanBounce:
-        {
-            bool t_can_bounce;
-            GetCanBounce(ctxt, t_can_bounce);
-            ep.setboolean(t_can_bounce ? True : False);
-            return;
-        }
-			
-        case kMCNativeControlPropertyScrollingEnabled:
-        {
-            bool t_scroll_enabled;
-            GetScrollingEnabled(ctxt, t_scroll_enabled);
-            ep.setboolean(t_scroll_enabled ? True : False);
-            return;
-        }
-        case kMCNativeControlPropertyAutoFit:
-        {
-            bool t_auto_fit;
-            GetAutoFit(ctxt, t_auto_fit);
-            ep.setboolean(t_auto_fit ? True : False);
-            return;
-        }
-		case kMCNativeControlPropertyDelayRequests:
-        {
-            bool t_delay_requests;
-            GetDelayRequests(ctxt, t_delay_requests);
-            ep.setboolean(t_delay_requests ? True : False);
-            return;
-        }
-		case kMCNativeControlPropertyDataDetectorTypes:
-		{
-            MCAutoStringRef t_string;
-            MCNativeControlInputDataDetectorType t_type;
-            GetDataDetectorTypes(ctxt, t_type);
-            set_to_ctxt(ctxt, kMCNativeControlInputDataDetectorTypeTypeInfo, t_type);
-            return;
-		}
-		case kMCNativeControlPropertyAllowsInlineMediaPlayback:
-        {
-            bool t_value;
-            GetAllowsInlineMediaPlayback(ctxt, t_value);
-            ep.setboolean(t_value ? True : False);
-            return;
-        }
-		case kMCNativeControlPropertyMediaPlaybackRequiresUserAction:
-        {
-            bool t_value;
-            GetMediaPlaybackRequiresUserAction(ctxt, t_value);
-            ep.setboolean(t_value ? True : False);
-            return;
-        }
-        default:
-            break;
-    }
-    MCiOSControl::Get(ctxt, p_property);
-}
 
 Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {

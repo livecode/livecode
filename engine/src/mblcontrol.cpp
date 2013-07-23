@@ -37,6 +37,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeControlPropertyInfo MCNativeControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Name, OptionalString, MCNativeControl, Name)
+    DEFINE_RO_CTRL_PROPERTY(Id, UInt32, MCNativeControl, Id)
+};
+
+MCNativeControlPropertyTable MCNativeControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 static MCNativeControl *s_native_controls = nil;
 static uint32_t s_last_native_control_id = 0;
 

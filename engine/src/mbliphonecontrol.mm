@@ -41,6 +41,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeControlPropertyInfo MCiOSControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Rectangle, Rectangle, MCiOSControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(Visible, Bool, MCiOSControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(Opaque, Bool, MCiOSControl, Opaque)
+    DEFINE_RW_CTRL_PROPERTY(Alpha, UInt16, MCiOSControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCiOSControl, BackgroundColor)
+};
+
+MCNativeControlPropertyTable MCiOSControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 UIView *MCIPhoneGetView(void);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -405,70 +423,6 @@ Exec_stat MCiOSControl::Set(MCNativeControlProperty p_property, MCExecPoint& ep)
 }
 #endif /* MCiOSControl::Set */
 
-void MCiOSControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-    switch(p_property)
-	{
-		case kMCNativeControlPropertyRectangle:
-		{
-            MCRectangle t_rect;
-            if (!ep . copyaslegacyrectangle(t_rect))
-                ctxt . LegacyThrow(EE_OBJECT_NAR);
-            else
-                SetRect(ctxt, t_rect);
-            return;
-		}
-			
-		case kMCNativeControlPropertyVisible:
-		{
-			bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetVisible(ctxt, t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyOpaque:
-		{
-			bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetOpaque(ctxt, t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyAlpha:
-		{
-			uint32_t t_alpha;
-            if (!ep . copyasuint(t_alpha))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetAlpha(ctxt, t_alpha);
-            return;
-        }
-            
-		case kMCNativeControlPropertyBackgroundColor:
-		{
-			MCNativeControlColor t_color;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlColorParse(ctxt, *t_string, t_color);
-            if (!ctxt . HasError())
-                SetBackgroundColor(ctxt, t_color);
-            return;
-        }
-            
-		default:
-			break;
-	}
-    
-    MCNativeControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCiOSControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -523,63 +477,6 @@ Exec_stat MCiOSControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 	return ES_ERROR;
 }
 #endif /* MCiOSControl::Get */
-
-void MCiOSControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch (p_property)
-	{
-		case kMCNativeControlPropertyRectangle:
-		{
-			MCRectangle t_rect;
-            GetRect(ctxt, t_rect);
-            ep . setrectangle(t_rect);
-            return;
-        }
-            
-		case kMCNativeControlPropertyVisible:
-        {
-            bool t_value;
-            GetVisible(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyOpaque:
-        {
-            bool t_value;
-            GetOpaque(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyAlpha:
-        {
-            uint32_t t_alpha;
-            GetAlpha(ctxt, t_alpha);
-            ep . setnvalue(t_alpha);
-            return;
-        }
-            
-			
-		case kMCNativeControlPropertyBackgroundColor:
-        {
-            MCNativeControlColor t_color;
-            GetBackgroundColor(ctxt, t_color);
-            MCAutoStringRef t_string;
-            MCNativeControlColorFormat(ctxt, t_color, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-        }
-            
-        default:
-            break;
-	}
-	
-    MCNativeControl::Get(ctxt, p_property);
-}
 
 Exec_stat MCiOSControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {

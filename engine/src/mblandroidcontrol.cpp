@@ -31,12 +31,32 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #include <jni.h>
 
 #include "mblandroidcontrol.h"
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCAndroidControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Rectangle, Rectangle, MCAndroidControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(Visible, Bool, MCAndroidControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(Alpha, UInt16, MCAndroidControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCAndroidControl, BackgroundColor)
+};
+
+MCNativeControlPropertyTable MCAndroidControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCAndroidControl::MCAndroidControl(void)
 {
@@ -108,11 +128,6 @@ void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool p_visible)
 {
     if (m_view != nil)
         MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, p_visible);
-}
-
-void MCAndroidControl::SetOpaque(MCExecContext& ctxt, bool p_opaque)
-{
-    // NO-OP
 }
 
 void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
@@ -238,61 +253,6 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
 }
 #endif /* MCAndroidControl::Set */
 
-void MCAndroidControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyRectangle:
-        {
-            MCRectangle t_rect;
-            if (!ep . copyaslegacyrectangle(t_rect))
-                ctxt . LegacyThrow(EE_OBJECT_NAR);
-            else
-                SetRect(ctxt, t_rect);
-            return;
-        }
-            
-        case kMCNativeControlPropertyVisible:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetVisible(ctxt, t_value);
-            return;
-        }
-            
-        case kMCNativeControlPropertyAlpha:
-        {
-            uint16_t t_alpha;
-            if (!ep . copyasuint(t_alpha))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetAlpha(ctxt, t_alpha);
-            return;
-        }
-            
-        case kMCNativeControlPropertyBackgroundColor:
-        {
-            MCAutoStringRef t_value;
-            /* UNCHECKED */ ep . copyasstringref(&t_value);
-            MCNativeControlColor t_color;
-            MCNativeControlColorParse(ctxt, *t_value, t_color);
-            
-            if (!ctxt . HasError())
-                SetBackgroundColor(ctxt, t_color);
-                
-            return;
-        }
-        default:
-            break;
-    }
-    
-    MCNativeControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCAndroidControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
@@ -358,54 +318,6 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
     return ES_ERROR;
 }
 #endif /* MCAndroidControl::Get */
-
-void MCAndroidControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyRectangle:
-        {
-            MCRectangle t_rect;
-            GetRect(ctxt, t_rect);
-            ep . setrectangle(t_rect);
-            return;
-        }
-            
-        case kMCNativeControlPropertyVisible:
-        {
-            bool t_visible;
-            GetVisible(ctxt, t_visible);
-            ep . setboolean(t_visible ? True : False);
-            return;
-        }
-            
-        case kMCNativeControlPropertyAlpha:
-        {
-            int32_t t_alpha;
-            GetAlpha(ctxt, t_alpha);
-            ep . setnvalue(t_alpha);
-            return;
-        }
-            
-        case kMCNativeControlPropertyBackgroundColor:
-        {
-            MCAutoStringRef t_value;
-            MCNativeControlColor t_color;
-            GetBackgroundColor(ctxt, t_color);
-            MCNativeControlColorFormat(ctxt, t_color, &t_value)
-            if (*t_value != nil)
-                ep . setvalueref(*t_value);
-            return;
-        }
-            
-        default:
-            break;
-    }
-    
-    MCNativeControl::Get(ctxt, p_property);
-}
 
 Exec_stat MCAndroidControl::Do(MCNativeControlAction p_action, MCParameter *p_params)
 {

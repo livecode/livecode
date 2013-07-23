@@ -97,6 +97,10 @@ class MCiOSInputControl;
 // superclass of text input type controls
 class MCiOSInputControl: public MCiOSControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+    
 public:
 	MCiOSInputControl(void);
 #ifdef LEGACY_EXEC
@@ -105,15 +109,14 @@ public:
 #endif	
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
     
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
     void SetEnabled(MCExecContext& ctxt, bool p_value);
     virtual void SetOpaque(MCExecContext& ctxt, bool p_value);
     void SetText(MCExecContext& ctxt, MCStringRef p_string);
     void SetTextColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     void SetFontName(MCExecContext& ctxt, MCStringRef p_font);
-    void SetFontSize(MCExecContext& ctxt, integer_t p_size);
+    void SetFontSize(MCExecContext& ctxt, uinteger_t p_size);
     void SetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign p_align);
 
     void SetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType p_type);
@@ -128,7 +131,7 @@ public:
     void GetText(MCExecContext& ctxt, MCStringRef& r_string);
     void GetTextColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
     void GetFontName(MCExecContext& ctxt, MCStringRef& r_font);
-    void GetFontSize(MCExecContext& ctxt, integer_t& r_size);
+    void GetFontSize(MCExecContext& ctxt, uinteger_t& r_size);
     void GetTextAlign(MCExecContext& ctxt, MCNativeControlInputTextAlign& r_align);
 
     void GetAutoCapitalizationType(MCExecContext& ctxt, MCNativeControlInputCapitalizationType& r_type);
@@ -152,15 +155,18 @@ protected:
 // single line input control
 class MCiOSInputFieldControl: public MCiOSInputControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+    
 public:
 	virtual MCNativeControlType GetType(void);
 #ifdef LEGACY_EXEC	
 	virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint& ep);
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
 #endif
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetMinimumFontSize(MCExecContext& ctxt, integer_t p_size);
     void SetAutoClear(MCExecContext& ctxt, bool p_value);
@@ -181,6 +187,10 @@ protected:
 // multiline input control
 class MCiOSMultiLineControl: public MCiOSInputControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+
 public:
 	MCiOSMultiLineControl(void)
 	{
@@ -198,8 +208,7 @@ public:
 #endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 	
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
     void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
@@ -386,6 +395,86 @@ static MCNativeControlEnumEntry s_verticaltextalign_enum[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeControlPropertyInfo MCiOSInputControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Enabled, Bool, MCiOSInputControl, Enabled)
+    DEFINE_RW_CTRL_PROPERTY(Text, String, MCiOSInputControl, Text)
+    DEFINE_RW_CTRL_PROPERTY(UnicodeText, String, MCiOSInputControl, Text)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(TextColor, NativeControlColor, MCiOSInputControl, TextColor)
+    DEFINE_RW_CTRL_PROPERTY(FontSize, UInt32, MCiOSInputControl, FontSize)
+    DEFINE_RW_CTRL_PROPERTY(FontName, String, MCiOSInputControl, FontName)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(TextAlign, NativeControlInputTextAlign, MCiOSInputControl, TextAlign)  
+    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCapitalizationType, NativeControlInputCapitalizationType, MCiOSInputControl, AutoCapitalizationType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(AutoCorrectionType, NativeControlInputAutocorrectionType, MCiOSInputControl, AutoCorrectionType)
+    DEFINE_RW_CTRL_PROPERTY(ManageReturnKey, Bool, MCiOSInputControl, ManageReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(KeyboardType, NativeControlInputKeyboardType, MCiOSInputControl, KeyboardType)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(KeyboardStyle, NativeControlInputKeyboardStyle, MCiOSInputControl, KeyboardStyle)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(ReturnKeyType, NativeControlInputReturnKeyType, MCiOSInputControl, ReturnKey)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(ContentType, NativeControlInputContentType, MCiOSInputControl, ContentType)
+};
+
+MCNativeControlPropertyTable MCiOSInputControl::kPropertyTable =
+{
+	&MCiOSControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCiOSInputFieldControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSInputFieldControl, AutoFit)
+    DEFINE_RW_CTRL_PROPERTY(MinimumFontSize, Int32, MCiOSInputFieldControl, MinimumFontSize)
+    DEFINE_RW_CTRL_PROPERTY(AutoClear, Bool, MCiOSInputFieldControl, AutoClear)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(ClearButtonMode, NativeControlClearButtonMode, MCiOSInputFieldControl, ClearButtonMode)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(BorderStyle, NativeControlBorderStyle, MCiOSInputFieldControl, BorderStyle)
+};
+
+MCNativeControlPropertyTable MCiOSInputFieldControl::kPropertyTable =
+{
+	&MCiOSInputControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCiOSMultiLineControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Editable, Bool, MCiOSMultiLineControl, Editable)
+    DEFINE_RW_CTRL_SET_PROPERTY(DataDetectorTypes, NativeControlInputDataDetectorType, MCiOSMultiLineControl, DataDetectorTypes)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(SelectedRange, NativeControlRange, MCiOSMultiLineControl, SelectedRange)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(VerticalTextAlign, NativeControlInputVerticalAlign, MCiOSMultiLineControl, VerticalTextAlign)
+    DEFINE_RW_CTRL_PROPERTY(ContentRectangle, Int32X4, MCiOSMultiLineControl, ContentRect)
+    DEFINE_RW_CTRL_PROPERTY(HScroll, Int32, MCiOSMultiLineControl, HScroll)
+    DEFINE_RW_CTRL_PROPERTY(VScroll, Int32, MCiOSMultiLineControl, VScroll)
+    DEFINE_RW_CTRL_PROPERTY(CanBounce, Bool, MCiOSMultiLineControl, CanBounce)
+    DEFINE_RW_CTRL_PROPERTY(CanScrollToTop, Bool, MCiOSMultiLineControl, CanScrollToTop)
+    DEFINE_RW_CTRL_PROPERTY(CanCancelTouches, Bool, MCiOSMultiLineControl, CanCancelTouches)
+    DEFINE_RW_CTRL_PROPERTY(DelayTouches, Bool, MCiOSMultiLineControl, DelayTouches)
+    DEFINE_RW_CTRL_PROPERTY(ScrollingEnabled, Bool, MCiOSMultiLineControl, ScrollingEnabled)
+    DEFINE_RW_CTRL_PROPERTY(PagingEnabled, Bool, MCiOSMultiLineControl, PagingEnabled)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(DecelerationRate, NativeControlDecelerationRate, MCiOSMultiLineControl, DecelerationRate)
+    DEFINE_RW_CTRL_ENUM_PROPERTY(IndicatorStyle, NativeControlIndicatorStyle, MCiOSMultiLineControl, IndicatorStyle)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(IndicatorInsets, NativeControlIndicatorInsets, MCiOSMultiLineControl, IndicatorInsets)
+    DEFINE_RW_CTRL_PROPERTY(ShowHorizontalIndicator, Bool, MCiOSMultiLineControl, ShowHorizontalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(ShowVerticalIndicator, Bool, MCiOSMultiLineControl, ShowVerticalIndicator)
+    DEFINE_RW_CTRL_PROPERTY(LockDirection, Bool, MCiOSMultiLineControl, LockDirection)
+    DEFINE_RO_CTRL_PROPERTY(Tracking, Bool, MCiOSMultiLineControl, Tracking)
+    DEFINE_RO_CTRL_PROPERTY(Dragging, Bool, MCiOSMultiLineControl, Dragging)
+    DEFINE_RO_CTRL_PROPERTY(Decelerating, Bool, MCiOSMultiLineControl, Decelerating)
+};
+
+MCNativeControlPropertyTable MCiOSMultiLineControl::kPropertyTable =
+{
+	&MCiOSControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCiOSInputControl::MCiOSInputControl(void)
 {
 	m_delegate = nil;
@@ -455,7 +544,7 @@ void MCiOSInputControl::SetFontName(MCExecContext& ctxt, MCStringRef p_font)
     }
 }
 
-void MCiOSInputControl::SetFontSize(MCExecContext& ctxt, integer_t p_size)
+void MCiOSInputControl::SetFontSize(MCExecContext& ctxt, uinteger_t p_size)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -724,7 +813,7 @@ void MCiOSInputControl::GetFontName(MCExecContext& ctxt, MCStringRef& r_font)
     ctxt . Throw();
 }
 
-void MCiOSInputControl::GetFontSize(MCExecContext& ctxt, integer_t& r_size)
+void MCiOSInputControl::GetFontSize(MCExecContext& ctxt, uinteger_t& r_size)
 {
     UITextField *t_field;
 	t_field = (UITextField *)GetView();
@@ -1049,137 +1138,6 @@ Exec_stat MCiOSInputControl::Set(MCNativeControlProperty p_property, MCExecPoint
 }
 #endif /* MCNativeInputControl::Set */
 
-void MCiOSInputControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyEnabled:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetEnabled(ctxt, t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyOpaque:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetOpaque(ctxt, t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyText:
-        case kMCNativeControlPropertyUnicodeText:
-        {
-            MCAutoStringRef t_text;
-            /* UNCHECKED */ ep . copyasstringref(&t_text);
-            SetText(ctxt, *t_text);
-            return;
-        }
-
-		case kMCNativeControlPropertyTextColor:
-        {
-            MCAutoStringRef t_string;
-            MCNativeControlColor t_color;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlColorParse(ctxt, *t_string, t_color);
-            if (!ctxt . HasError())
-                SetTextColor(ctxt, t_color);
-            return;
-        }
-			
-		case kMCNativeControlPropertyFontName:
-        {
-            MCAutoStringRef t_font;
-            /* UNCHECKED */ ep . copyasstringref(&t_font);
-            SetFontName(ctxt, *t_font);
-            return;
-        }
-			
-		case kMCNativeControlPropertyFontSize:
-        {
-			int32_t t_size;
-            if (!ep . copyasint(t_size))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetFontSize(ctxt, t_size);
-            return;
-        }
-			
-		case kMCNativeControlPropertyTextAlign:
-        {
-            intenum_t t_align;
-            ctxt_to_enum(ctxt, kMCNativeControlInputTextAlignTypeInfo, t_align);
-            SetTextAlign(ctxt, (MCNativeControlInputTextAlign)t_align);
-            return;
-        }
-            /////////
-			
-		case kMCNativeControlPropertyAutoCapitalizationType:
-        {
-            intenum_t t_type;
-            ctxt_to_enum(ctxt, kMCNativeControlInputCapitalizationTypeTypeInfo, t_type);
-            SetAutoCapitalizationType(ctxt, (MCNativeControlInputCapitalizationType)t_type);
-            return;
-        }
-		case kMCNativeControlPropertyAutoCorrectionType:
-        {
-            intenum_t t_type;
-            ctxt_to_enum(ctxt, kMCNativeControlInputAutocorrectiontionTypeTypeInfo, t_type);
-            SetAutoCorrectionType(ctxt, (MCNativeControlInputAutocorrectionType)t_type);
-            return;
-		}
-		case kMCNativeControlPropertyManageReturnKey:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetManageReturnKey(ctxt, t_value);
-            return;
-        }
-		case kMCNativeControlPropertyKeyboardStyle:
-        {
-            intenum_t t_style;
-            ctxt_to_enum(ctxt, kMCNativeControlInputKeyboardStyleTypeInfo, t_style);
-            SetKeyboardStyle(ctxt, (MCNativeControlInputKeyboardStyle)t_style);
-            return;
-		}
-		case kMCNativeControlPropertyKeyboardType:
-        {
-            intenum_t t_type;
-            ctxt_to_enum(ctxt, kMCNativeControlInputKeyboardTypeTypeInfo, t_type);
-            SetKeyboardType(ctxt, (MCNativeControlInputKeyboardType)t_type);
-            return;
-		}
-		case kMCNativeControlPropertyReturnKeyType:
-        {
-            intenum_t t_type;
-            ctxt_to_enum(ctxt, kMCNativeControlInputReturnKeyTypeTypeInfo, t_type);
-            SetReturnKey(ctxt, (MCNativeControlInputReturnKeyType)t_type);
-            return;
-		}
-		case kMCNativeControlPropertyContentType:
-        {
-            intenum_t t_type;
-            ctxt_to_enum(ctxt, kMCNativeControlInputContentTypeTypeInfo, t_type);
-            SetContentType(ctxt, (MCNativeControlInputContentType)t_type);
-            return;
-        }
-		default:
-			break;
-	}
-	
-	MCiOSControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCNativeInputControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSInputControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -1245,119 +1203,6 @@ Exec_stat MCiOSInputControl::Get(MCNativeControlProperty p_property, MCExecPoint
 	return MCiOSControl::Get(p_property, ep);
 }
 #endif /* MCNativeInputControl::Get */
-
-void MCiOSInputControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{	
-		case kMCNativeControlPropertyEnabled:
-        {
-            bool t_enabled;
-			GetEnabled(ctxt, t_enabled);
-            ep . setbool(t_enabled);
-            return;
-        }
-		case kMCNativeControlPropertyText:
-        case kMCNativeControlPropertyUnicodeText:
-        {
-			MCAutoStringRef t_text;
-            GetText(ctxt, &t_text);
-            if (*t_text != nil)
-                ep . setvalueref(*t_text);
-			return;
-        }
-		case kMCNativeControlPropertyTextColor:
-        {
-            MCNativeControlColor t_color;
-            MCAutoStringRef t_string;
-            GetTextColor(ctxt, t_color);
-            MCNativeControlColorFormat(ctxt, t_color, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-        }
-		case kMCNativeControlPropertyFontName:
-        {
-            MCAutoStringRef t_name;
-            GetFontName(ctxt, &t_name);
-            if (*t_name != nil)
-                ep . setvalueref(*t_name);
-            return;
-        }
-		case kMCNativeControlPropertyFontSize:
-        {
-            int32_t t_size;
-            GetFontSize(ctxt, t_size);
-            ep . setnvalue(t_size);
-            return;
-        }
-		case kMCNativeControlPropertyTextAlign:
-        {
-             MCNativeControlInputTextAlign t_align;
-             GetTextAlign(ctxt, t_align);
-             enum_to_ctxt(ctxt, kMCNativeControlInputTextAlignTypeInfo, t_align);
-             return;
-        }
-             /////////
-             
-        case kMCNativeControlPropertyAutoCapitalizationType:
-        {
-             MCNativeControlInputCapitalizationType t_type;
-             GetAutoCapitalizationType(ctxt, t_type);
-             enum_to_ctxt(ctxt, kMCNativeControlInputCapitalizationTypeTypeInfo, t_type);
-             return;
-        }
-		case kMCNativeControlPropertyAutoCorrectionType:
-        {
-            MCNativeControlInputAutocorrectionType t_type;
-            GetAutoCorrectionType(ctxt, t_type);
-            enum_to_ctxt(ctxt, kMCNativeControlInputAutocorrectiontionTypeTypeInfo, t_type);
-            return;
-        }
-		case kMCNativeControlPropertyManageReturnKey:
-        {
-            bool t_value;
-			GetManageReturnKey(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-		case kMCNativeControlPropertyKeyboardStyle:
-        {
-            MCNativeControlInputKeyboardStyle t_style;
-            GetKeyboardStyle(ctxt, t_style);
-            enum_to_ctxt(ctxt, kMCNativeControlInputKeyboardStyleTypeInfo, t_style);
-            return;
-        }
-		case kMCNativeControlPropertyKeyboardType:
-        {
-            MCNativeControlInputKeyboardType t_type;
-            GetKeyboardType(ctxt, t_type);
-            enum_to_ctxt(ctxt, kMCNativeControlInputKeyboardTypeTypeInfo, t_type);
-            return;
-        }
-		case kMCNativeControlPropertyReturnKeyType:
-        {
-            MCNativeControlInputReturnKeyType t_type;
-            GetReturnKey(ctxt, t_type);
-            enum_to_ctxt(ctxt, kMCNativeControlInputReturnKeyTypeTypeInfo, t_type);
-            return;
-        }
-		case kMCNativeControlPropertyContentType:
-        {
-            MCNativeControlInputContentType t_type;
-            GetContentType(ctxt, t_type);
-            enum_to_ctxt(ctxt, kMCNativeControlInputContentTypeTypeInfo, t_type);
-            return;
-        }
-		default:
-			break;
-	}
-	
-	MCiOSControl::Get(ctxt, p_property);
-}
-
 
 Exec_stat MCiOSInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
@@ -1628,65 +1473,6 @@ Exec_stat MCiOSInputFieldControl::Set(MCNativeControlProperty p_property, MCExec
 }
 #endif /* MCNativeInputFieldControl::Set */
 
-void MCiOSInputFieldControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyAutoFit:
-        {
-            bool t_autofit;
-            if (!ep . copyasbool(t_autofit))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetAutoFit(ctxt, t_autofit);
-            return;
-        }
-		case kMCNativeControlPropertyMinimumFontSize:
-        {
-            int32_t t_size;
-            if (!ep . copyasint(t_size))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetMinimumFontSize(ctxt, t_size);
-            return;
-        }
-			
-		case kMCNativeControlPropertyAutoClear:
-        {
-            bool t_autoclear;
-            if (!ep . copyasbool(t_autoclear))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetAutoClear(ctxt, t_autoclear);
-            return;
-        }
-			
-		case kMCNativeControlPropertyClearButtonMode:
-        {
-            intenum_t t_mode;
-            ctxt_to_enum(ctxt, kMCNativeControlClearButtonModeTypeInfo, t_mode);
-            SetClearButtonMode(ctxt, (MCNativeControlClearButtonMode)t_mode);
-            return;
-        }
-		case kMCNativeControlPropertyBorderStyle:
-        {
-            intenum_t t_style;
-            ctxt_to_enum(ctxt, kMCNativeControlBorderStyleTypeInfo, t_style);
-            SetBorderStyle(ctxt, (MCNativeControlBorderStyle)t_style);
-            return;
-        }
-			
-			/////////
-			
-		default:
-			break;
-	}
-	
-	MCiOSInputControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCNativeInputFieldControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSInputFieldControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -1723,59 +1509,6 @@ Exec_stat MCiOSInputFieldControl::Get(MCNativeControlProperty p_property, MCExec
 	return MCiOSInputControl::Get(p_property, ep);
 }
 #endif /*MCNativeInputFieldControl::Get */
-
-void MCiOSInputFieldControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyAutoFit:
-        {
-            bool t_autofit;
-            GetAutoFit(ctxt, t_autofit);
-            ep . setbool(t_autofit);
-            return;
-        }
-		case kMCNativeControlPropertyMinimumFontSize:
-        {
-            int32_t t_size;
-            GetMinimumFontSize(ctxt, t_size);
-            ep . setnvalue(t_size);
-            return;
-        }
-			
-		case kMCNativeControlPropertyAutoClear:
-        {
-            bool t_autoclear;
-            GetAutoClear(ctxt, t_autoclear);
-            ep . setbool(t_autoclear);
-            return;
-        }
-			
-		case kMCNativeControlPropertyClearButtonMode:
-        {
-            MCNativeControlClearButtonMode t_mode;
-            GetClearButtonMode(ctxt, t_mode);
-            enum_to_ctxt(ctxt, kMCNativeControlClearButtonModeTypeInfo, t_mode);
-            return;
-        }
-		case kMCNativeControlPropertyBorderStyle:
-        {
-            MCNativeControlBorderStyle t_style;
-            GetBorderStyle(ctxt, t_style);
-            enum_to_ctxt(ctxt, kMCNativeControlBorderStyleTypeInfo, t_style);
-            return;
-        }
-			
-			/////////
-			
-		default:
-			break;
-	}
-    
-    MCiOSInputControl::Set(ctxt, p_property);
-}
 
 UIView *MCiOSInputFieldControl::CreateView(void)
 {
@@ -2422,202 +2155,6 @@ Exec_stat MCiOSMultiLineControl::Set(MCNativeControlProperty p_property, MCExecP
 }
 #endif /* MCNativeMultiLineControl::Set */
 
-void MCiOSMultiLineControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-	MCExecPoint& ep = ctxt . GetEP();
-	
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyEditable:
-        {
-            bool t_editable;
-            if (!ep . copyasbool(t_editable))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetEditable(ctxt, t_editable);
-            return;
-        }
-			
-		case kMCNativeControlPropertySelectedRange:
-        {
-            MCNativeControlRange t_range;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlRangeParse(ctxt, *t_string, t_range);
-            if (!ctxt . HasError())
-                SetSelectedRange(ctxt, t_range);
-        }
-			
-			/////////
-			
-		case kMCNativeControlPropertyDataDetectorTypes:
-        {
-            intset_t t_types;
-            ctxt_to_set(ctxt, kMCNativeControlInputDataDetectorTypeTypeInfo, t_types);
-            SetDataDetectorTypes(ctxt, (MCNativeControlInputDataDetectorType)t_types);
-            return;
-        }
-            
-		case kMCNativeControlPropertyVerticalTextAlign:
-		{
-            intenum_t t_align;
-            ctxt_to_enum(ctxt, kMCNativeControlInputVerticalAlignTypeInfo, t_align);
-            SetVerticalTextAlign(ctxt, (MCNativeControlInputVerticalAlign)t_align);
-            return;
-        }
-			
-        // setting the contentRect is not supported for multiline text fields
-		case kMCNativeControlPropertyContentRectangle:
-            return;
-///////////////////////////////////////////////////////////////////////////////////////////
-/* SCROLLER PROPS */
-	
-		case kMCNativeControlPropertyHScroll:
-		{
-			int32_t t_hscroll;
-			if (!ep . copyasint(t_hscroll))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetHScroll(ctxt, t_hscroll);
-            return;
-		}
-		case kMCNativeControlPropertyVScroll:
-		{
-			int32_t t_vscroll;
-			if (!ep . copyasint(t_vscroll))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetVScroll(ctxt, t_vscroll);
-            return;
-		}
-            
-		case kMCNativeControlPropertyCanBounce:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetCanBounce(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyCanScrollToTop:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetCanScrollToTop(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyCanCancelTouches:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetCanCancelTouches(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyDelayTouches:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetDelayTouches(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyPagingEnabled:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetPagingEnabled(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyScrollingEnabled:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetScrollingEnabled(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyDecelerationRate:
-        {
-			MCNativeControlDecelerationRate t_rate;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlDecelerationRateParse(ctxt, *t_string, t_rate);
-            if (!ctxt . HasError())
-                SetDecelerationRate(ctxt, t_rate);
-            return;
-        }
-            
-		case kMCNativeControlPropertyIndicatorStyle:
-        {
-            intenum_t t_style;
-            ctxt_to_enum(ctxt, kMCNativeControlIndicatorStyleTypeInfo, t_style);
-            SetIndicatorStyle(ctxt, (MCNativeControlIndicatorStyle)t_style);
-            return;
-        }
-			
-		case kMCNativeControlPropertyIndicatorInsets:
-		{
-            MCNativeControlIndicatorInsets t_insets;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlIndicatorInsetsParse(ctxt, *t_string, t_insets);
-            SetIndicatorInsets(ctxt, t_insets);
-            return;
-		}
-			
-		case kMCNativeControlPropertyShowHorizontalIndicator:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetShowHorizontalIndicator(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyShowVerticalIndicator:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetShowVerticalIndicator(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyLockDirection:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetLockDirection(ctxt, t_value);
-            return;
-        }
- ///////////////////////////////////////////////////////////////////////////////////////////           
-            
-		default:
-			break;
-	}
-	
-    MCiOSInputControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCNativeMultiLineControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSMultiLineControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -2669,192 +2206,6 @@ Exec_stat MCiOSMultiLineControl::Get(MCNativeControlProperty p_property, MCExecP
 		return t_state;
 }
 #endif /* MCNativeMultiLineControl::Get */
-
-void MCiOSMultiLineControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyEditable:
-		{
-            bool t_value;
-            GetEditable(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-		case kMCNativeControlPropertySelectedRange:
-		{
-            MCNativeControlRange t_range;
-            GetSelectedRange(ctxt, t_range);
-            MCAutoStringRef t_string;
-            MCNativeControlRangeFormat(ctxt, t_range, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-        }
-		case kMCNativeControlPropertyDataDetectorTypes:
-		{
-            MCNativeControlInputDataDetectorType t_types;
-            GetDataDetectorTypes(ctxt, t_types);
-            set_to_ctxt(ctxt, kMCNativeControlInputDataDetectorTypeTypeInfo, t_types);
-            return;
-		}
-            
-		case kMCNativeControlPropertyVerticalTextAlign:
-		{
-            MCNativeControlInputVerticalAlign t_align;
-            GetVerticalTextAlign(ctxt, t_align);
-            enum_to_ctxt(ctxt, kMCNativeControlInputVerticalAlignTypeInfo, t_align);
-            return;
-        }
-///////////////////////////////////////////////////////////////////////////////////////////
-/* SCROLLER PROPS */
-            
-		case kMCNativeControlPropertyHScroll:
-		{
-			int32_t t_hscroll;
-			GetHScroll(ctxt, t_hscroll);
-            ep . setnvalue(t_hscroll);
-            return;
-		}
-		case kMCNativeControlPropertyVScroll:
-		{
-			int32_t t_vscroll;
-			GetVScroll(ctxt, t_vscroll);
-            ep . setnvalue(t_vscroll);
-            return;
-		}
-            
-		case kMCNativeControlPropertyCanBounce:
-		{
-            bool t_value;
-            GetCanBounce(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyCanScrollToTop:
-		{
-            bool t_value;
-            GetCanScrollToTop(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyCanCancelTouches:
-		{
-            bool t_value;
-            GetCanCancelTouches(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyDelayTouches:
-		{
-            bool t_value;
-            GetDelayTouches(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyPagingEnabled:
-        {
-            bool t_value;
-            GetPagingEnabled(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyScrollingEnabled:
-		{
-            bool t_value;
-            GetScrollingEnabled(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyDecelerationRate:
-        {
-			MCNativeControlDecelerationRate t_rate;
-            GetDecelerationRate(ctxt, t_rate);
-            MCAutoStringRef t_string;
-            MCNativeControlDecelerationRateFormat(ctxt, t_rate, &t_string);
-            if (!ctxt . HasError())
-                ep . setvalueref(*t_string);
-            return;
-        }
-            
-		case kMCNativeControlPropertyIndicatorStyle:
-        {
-            MCNativeControlIndicatorStyle t_style;
-            GetIndicatorStyle(ctxt, t_style);
-            enum_to_ctxt(ctxt, kMCNativeControlIndicatorStyleTypeInfo, (intenum_t)t_style);
-            return;
-        }
-			
-		case kMCNativeControlPropertyIndicatorInsets:
-		{
-            MCNativeControlIndicatorInsets t_insets;
-            GetIndicatorInsets(ctxt, t_insets);
-            MCAutoStringRef t_string;
-            MCNativeControlIndicatorInsetsFormat(ctxt, t_insets, &t_string);
-            if (!ctxt . HasError())
-                ep . setvalueref(*t_string);
-            return;
-		}
-			
-		case kMCNativeControlPropertyShowHorizontalIndicator:
-		{
-            bool t_value;
-            GetShowHorizontalIndicator(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyShowVerticalIndicator:
-		{
-            bool t_value;
-            GetShowVerticalIndicator(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyLockDirection:
-        {
-            bool t_value;
-            GetLockDirection(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-        case kMCNativeControlPropertyTracking:
-        {
-            bool t_value;
-            GetTracking(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-		case kMCNativeControlPropertyDragging:
-        {
-            bool t_value;
-            GetDragging(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-		case kMCNativeControlPropertyDecelerating:
-        {
-            bool t_value;
-            GetDecelerating(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-///////////////////////////////////////////////////////////////////////////////////////////
-            
-        default:
-            break;
-    }
-    MCiOSInputControl::Get(ctxt, p_property);
-}
 
 Exec_stat MCiOSMultiLineControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {

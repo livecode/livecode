@@ -17,6 +17,131 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_MOBILE_CONTROL__
 #define __MC_MOBILE_CONTROL__
 
+////////////////////////////////////////////////////////////////////////////////
+struct MCNativeControl;
+struct MCNativeControlPtr
+{
+    MCNativeControl *control;
+};
+
+template<typename C, typename A, void (C::*Method)(MCExecContext&, A)> inline void MCPropertyNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr ctrl, A arg)
+{
+	(static_cast<C *>(ctrl . control) ->* Method)(ctxt, arg);
+}
+
+#define MCPropertyNativeControlThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr,typ))MCPropertyNativeControlThunk<ctrl,typ,&ctrl::mth>
+
+#define MCPropertyNativeControlThunkGetAny(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCValueRef&)
+#define MCPropertyNativeControlThunkGetBool(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, bool&)
+#define MCPropertyNativeControlThunkGetInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t&)
+#define MCPropertyNativeControlThunkGetInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t&)
+#define MCPropertyNativeControlThunkGetInt32X2(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCPoint32&)
+#define MCPropertyNativeControlThunkGetInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle32&)
+#define MCPropertyNativeControlThunkGetUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t&)
+#define MCPropertyNativeControlThunkGetUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t&)
+#define MCPropertyNativeControlThunkGetUInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle32&)
+#define MCPropertyNativeControlThunkGetOptionalInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t*&)
+#define MCPropertyNativeControlThunkGetOptionalUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t*&)
+#define MCPropertyNativeControlThunkGetOptionalUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t*&)
+#define MCPropertyNativeControlThunkGetDouble(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, double&)
+#define MCPropertyNativeControlThunkGetString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef&)
+#define MCPropertyNativeControlThunkGetOptionalString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef&)
+#define MCPropertyNativeControlThunkGetRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle&)
+#define MCPropertyNativeControlThunkGetOptionalRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle*&)
+#define MCPropertyNativeControlThunkGetPoint(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCPoint&)
+#define MCPropertyNativeControlThunkGetCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+#define MCPropertyNativeControlThunkGetEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+#define MCPropertyNativeControlThunkGetSetType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ&)
+#define MCPropertyNativeControlThunkGetOptionalCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ*&)
+#define MCPropertyNativeControlThunkGetOptionalEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ*&)
+#define MCPropertyNativeControlThunkGetArray(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCArrayRef&)
+
+#define MCPropertyNativeControlThunkSetAny(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCValueRef)
+#define MCPropertyNativeControlThunkSetBool(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, bool)
+#define MCPropertyNativeControlThunkSetInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t)
+#define MCPropertyNativeControlThunkSetInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t)
+#define MCPropertyNativeControlThunkSetInt32X2(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCPoint32)
+#define MCPropertyNativeControlThunkSetInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle32)
+#define MCPropertyNativeControlThunkSetUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t)
+#define MCPropertyNativeControlThunkSetUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t)
+#define MCPropertyNativeControlThunkSetUInt32X4(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle32)
+#define MCPropertyNativeControlThunkSetOptionalInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, integer_t*)
+#define MCPropertyNativeControlThunkSetOptionalUInt16(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t*)
+#define MCPropertyNativeControlThunkSetOptionalUInt32(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, uinteger_t*)
+#define MCPropertyNativeControlThunkSetDouble(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, double)
+#define MCPropertyNativeControlThunkSetString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef)
+#define MCPropertyNativeControlThunkSetOptionalString(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCStringRef)
+#define MCPropertyNativeControlThunkSetRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle)
+#define MCPropertyNativeControlThunkSetOptionalRectangle(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCRectangle*)
+#define MCPropertyNativeControlThunkSetPoint(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCPoint)
+#define MCPropertyNativeControlThunkSetCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, const typ&)
+#define MCPropertyNativeControlThunkSetEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ)
+#define MCPropertyNativeControlThunkSetSetType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ)
+#define MCPropertyNativeControlThunkSetOptionalCustomType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, const typ*&)
+#define MCPropertyNativeControlThunkSetOptionalEnumType(ctrl, mth, typ) MCPropertyNativeControlThunkImp(ctrl, mth, typ*)
+#define MCPropertyNativeControlThunkSetArray(ctrl, mth) MCPropertyNativeControlThunkImp(ctrl, mth, MCArrayRef)
+
+#define DEFINE_RW_CTRL_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), (void *)MCPropertyNativeControlThunkSet##type(ctrl, Set##tag) },
+
+#define DEFINE_RO_CTRL_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyType##type, nil, (void *)MCPropertyNativeControlThunkGet##type(ctrl, Get##tag), nil },
+
+#define DEFINE_RW_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetCustomType(ctrl, Set##tag, MC##type) },
+
+#define DEFINE_RO_CTRL_CUSTOM_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeCustom, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetCustomType(ctrl, Get##tag, MC##type), nil },
+
+#define DEFINE_RO_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), nil },
+
+#define DEFINE_RW_CTRL_ENUM_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeEnum, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetEnumType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetEnumType(ctrl, Set##tag, MC##type) },
+
+#define DEFINE_UNAVAILABLE_CTRL_PROPERTY(prop) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeAny, nil, nil, nil },
+
+#define DEFINE_RW_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), (void *)MCPropertyNativeControlThunkSetSetType(ctrl, Set##tag, MC##type) },
+
+#define DEFINE_RO_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
+{ kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), nil },
+
+////////////////////////////////////////////////////////////////////////////////
+
+enum MCNativeControlPropertyType
+{
+	kMCNativeControlPropertyTypeAny,
+	kMCNativeControlPropertyTypeBool,
+	kMCNativeControlPropertyTypeInt16,
+	kMCNativeControlPropertyTypeInt32,
+	kMCNativeControlPropertyTypeUInt16,
+	kMCNativeControlPropertyTypeUInt32,
+	kMCNativeControlPropertyTypeDouble,
+	kMCNativeControlPropertyTypeChar,
+	kMCNativeControlPropertyTypeString,
+	kMCNativeControlPropertyTypeBinaryString,
+	kMCNativeControlPropertyTypeColor,
+	kMCNativeControlPropertyTypeRectangle,
+	kMCNativeControlPropertyTypePoint,
+	kMCNativeControlPropertyTypeInt16X2,
+	kMCNativeControlPropertyTypeInt16X4,
+	kMCNativeControlPropertyTypeInt32X2,
+	kMCNativeControlPropertyTypeInt32X4,
+	kMCNativeControlPropertyTypeUInt32X4,
+	kMCNativeControlPropertyTypeArray,
+	kMCNativeControlPropertyTypeSet,
+	kMCNativeControlPropertyTypeEnum,
+	kMCNativeControlPropertyTypeCustom,
+	kMCNativeControlPropertyTypeOptionalInt16,
+	kMCNativeControlPropertyTypeOptionalUInt16,
+	kMCNativeControlPropertyTypeOptionalUInt32,
+	kMCNativeControlPropertyTypeOptionalString,
+	kMCNativeControlPropertyTypeOptionalRectangle,
+	kMCNativeControlPropertyTypeOptionalEnum,
+};
+
 enum MCNativeControlType
 {
 	kMCNativeControlTypeUnknown,
@@ -233,7 +358,7 @@ enum MCNativeControlIndicatorStyle
     kMCNativeControlIndicatorStyleBlack
 };
 
-enum MCNativeControlLoadStateSet
+enum MCNativeControlLoadState
 {
     kMCNativeControlLoadStateNoneBit,
     kMCNativeControlLoadStateNone = 1 << kMCNativeControlLoadStateNoneBit,
@@ -366,8 +491,28 @@ void ctxt_to_set(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t& r
 void enum_to_ctxt(MCExecContext& ctxt, MCExecEnumTypeInfo* p_enum_info, intenum_t p_enum);
 void set_to_ctxt(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t p_set);
 
+struct MCNativeControlPropertyInfo
+{
+	MCNativeControlProperty property;
+	MCNativeControlPropertyType type;
+	void *type_info;
+	void *getter;
+	void *setter;
+};
+
+struct MCNativeControlPropertyTable
+{
+	MCNativeControlPropertyTable *parent;
+	uindex_t size;
+	MCNativeControlPropertyInfo *table;
+};
+
 class MCNativeControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+
 public:
 	// Increment/decrement reference count. This count is used to control the
 	// lifetime of the MCNativeControl instance. This prevents an instance
@@ -405,21 +550,7 @@ public:
 #endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters) = 0;
 
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    virtual void Get(MCExecContext& ctxt, MCNativeControlProperty p_property);
-    
-    // Native control setters & getters
-    virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect) = 0;
-    virtual void SetVisible(MCExecContext& ctxt, bool p_visible) = 0;
-    virtual void SetOpaque(MCExecContext& ctxt, bool p_opaque) = 0;
-    virtual void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha) = 0;
-    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color) = 0;
-    
-    virtual void GetRect(MCExecContext& ctxt, MCRectangle& p_rect) = 0;
-    virtual void GetVisible(MCExecContext& ctxt, bool& p_visible) = 0;
-    virtual void GetOpaque(MCExecContext& ctxt, bool& p_opaque) = 0;
-    virtual void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha) = 0;
-    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color) = 0;
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
     void GetId(MCExecContext& ctxt, uinteger_t& r_id);
     void GetName(MCExecContext& ctxt, MCStringRef& r_name);

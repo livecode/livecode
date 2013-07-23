@@ -83,6 +83,9 @@ class MCiOSPlayerControl;
 
 class MCiOSPlayerControl: public MCiOSControl
 {
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+
 public:
 	MCiOSPlayerControl(void);
 	
@@ -92,12 +95,11 @@ public:
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
 #endif
 	virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
     
-    virtual void Set(MCExecContext& ctxt, MCNativeControlProperty property);
-	virtual void Get(MCExecContext& ctxt, MCNativeControlProperty property);
-	
-    virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
-    virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
+    void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
@@ -127,13 +129,15 @@ public:
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value);
-    void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadStateSet& r_state);
-    void GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state);
+    void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
+    void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
     
 	void HandlePropertyAvailableEvent(const char *p_property);
 	void HandleNotifyEvent(MCNameRef p_event);
 	
+    void Play();
+    
 	MPMoviePlayerController *GetController(void);
 	
 	static bool FormatTimeInterval(MCExecPoint& ep, NSTimeInterval interval);
@@ -146,6 +150,38 @@ protected:
 private:
 	MPMoviePlayerController *m_controller;
 	MCiOSPlayerDelegate *m_delegate;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCiOSPlayerControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCiOSPlayerControl, BackgroundColor)
+    DEFINE_RW_CTRL_PROPERTY(Content, String, MCiOSPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(Fullscreen, Bool, MCiOSPlayerControl, Fullscreen)
+    DEFINE_RW_CTRL_PROPERTY(PreserveAspect, Bool, MCiOSPlayerControl, PreserveAspect)
+    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCiOSPlayerControl, Fullscreen)
+    DEFINE_RW_CTRL_PROPERTY(UseApplicationAudioSession, Bool, MCiOSPlayerControl, UseApplicationAudioSession)
+    DEFINE_RW_CTRL_PROPERTY(StartTime, Int32, MCiOSPlayerControl, StartTime)
+    DEFINE_RW_CTRL_PROPERTY(EndTime, Int32, MCiOSPlayerControl, EndTime)
+    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCiOSPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(ShouldAutoplay, Bool, MCiOSPlayerControl, ShouldAutoplay)
+    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCiOSPlayerControl, Looping)
+    DEFINE_RW_CTRL_PROPERTY(AllowsAirPlay, Bool, MCiOSPlayerControl, AllowsAirPlay)
+    DEFINE_RW_CTRL_PROPERTY(PlayRate, Double, MCiOSPlayerControl, PlayRate)
+    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCiOSPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(PlayableDuration, Int32, MCiOSPlayerControl, PlayableDuration)
+    DEFINE_RO_CTRL_PROPERTY(IsPreparedToPlay, Bool, MCiOSPlayerControl, IsPreparedToPlay)
+    DEFINE_RO_CTRL_SET_PROPERTY(LoadState, NativeControlLoadState, MCiOSPlayerControl, LoadState)
+   // DEFINE_RO_CTRL_ENUM_PROPERTY(PlaybackState, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
+    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCiOSPlayerControl, NaturalSize)
+};
+
+MCNativeControlPropertyTable MCiOSPlayerControl::kPropertyTable =
+{
+	&MCiOSControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -509,7 +545,7 @@ void MCiOSPlayerControl::GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value)
         r_value = false;
 }
 
-void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadStateSet& r_state)
+void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state)
 {
     uint32_t t_load_state;
     t_load_state = 0;
@@ -526,10 +562,10 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
         if (t_state & MPMovieLoadStateStalled)
             t_load_state |= kMCNativeControlLoadStateStalled;
     }
-    r_state = (MCNativeControlLoadStateSet)t_load_state;
+    r_state = (MCNativeControlLoadState)t_load_state;
 }
 
-void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state)
+void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state)
 {
     if (m_controller != nil)
     {
@@ -697,147 +733,6 @@ Exec_stat MCiOSPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoin
 }
 #endif /* MCNativePlayerControl::Set */
 
-void MCiOSPlayerControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-	MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyBackgroundColor:
-		{
-			MCNativeControlColor t_color;
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            MCNativeControlColorParse(ctxt, *t_string, t_color);
-            if (!ctxt . HasError())
-                SetBackgroundColor(ctxt, t_color);
-            return;
-        }
-		case kMCNativeControlPropertyContent:
-		{
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            SetContent(ctxt, *t_string);
-            return;
-		}
-			
-		case kMCNativeControlPropertyFullscreen:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetFullscreen(ctxt, t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyPreserveAspect:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetPreserveAspect(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyShowController:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetShowController(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyUseApplicationAudioSession:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetUseApplicationAudioSession(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyStartTime:
-        {
-			int32_t t_time;
-            if (!ep . copyasint(t_time))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetStartTime(ctxt, t_time);
-            return;
-        }
-            
-		case kMCNativeControlPropertyEndTime:
-        {
-			int32_t t_time;
-            if (!ep . copyasint(t_time))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetEndTime(ctxt, t_time);
-            return;
-        }
-			
-		case kMCNativeControlPropertyCurrentTime:
-        {
-			int32_t t_time;
-            if (!ep . copyasint(t_time))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetCurrentTime(ctxt, t_time);
-            return;
-        }
-			
-		case kMCNativeControlPropertyShouldAutoplay:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetShouldAutoplay(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyLooping:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetLooping(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyAllowsAirPlay:
-		{
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetAllowsAirPlay(ctxt, t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyPlayRate:
-        {
-            double t_rate;
-            if (!ep . copyasdouble(t_rate))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetPlayRate(ctxt, t_rate);
-            return;
-        }
-            
-		default:
-			break;
-	}
-	
-	MCiOSControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCNativePlayerControl::Get */ LEGACY_EXEC
 Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint& ep)
 {
@@ -957,180 +852,25 @@ Exec_stat MCiOSPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoin
 }
 #endif /* MCNativePlayerControl::Get */
 
-void MCiOSPlayerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
+void MCiOSPlayerControl::Play()
 {
-	MCExecPoint& ep = ctxt . GetEP();
-    
-	switch(p_property)
-	{
-		case kMCNativeControlPropertyBackgroundColor:
-		{
-			MCNativeControlColor t_color;
-            GetBackgroundColor(ctxt, t_color);
-            MCAutoStringRef t_string;
-            MCNativeControlColorFormat(ctxt, t_color, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-        }
-		case kMCNativeControlPropertyContent:
-		{
-            MCAutoStringRef t_string;
-            GetContent(ctxt, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-		}
-			
-		case kMCNativeControlPropertyFullscreen:
-		{
-            bool t_value;
-            GetFullscreen(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-            
-		case kMCNativeControlPropertyPreserveAspect:
-		{
-            bool t_value;
-            GetPreserveAspect(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyShowController:
-		{
-            bool t_value;
-            GetShowController(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyUseApplicationAudioSession:
-		{
-            bool t_value;
-            GetUseApplicationAudioSession(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-            
-        case kMCNativeControlPropertyDuration:
-        {
-			int32_t t_duration;
-            GetDuration(ctxt, t_duration);
-            ep . setnvalue(t_duration);
-            return;
-		}
-            
-		case kMCNativeControlPropertyPlayableDuration:
-        {
-			int32_t t_duration;
-            GetPlayableDuration(ctxt, t_duration);
-            ep . setnvalue(t_duration);
-            return;
-		}
-            
-		case kMCNativeControlPropertyStartTime:
-        {
-			int32_t t_time;
-            GetStartTime(ctxt, t_time);
-            ep . setnvalue(t_time);
-            return;
-		}
-            
-		case kMCNativeControlPropertyEndTime:
-        {
-			int32_t t_time;
-            GetEndTime(ctxt, t_time);
-            ep . setnvalue(t_time);
-            return;
-		}
-			
-		case kMCNativeControlPropertyCurrentTime:
-        {
-			int32_t t_time;
-            GetCurrentTime(ctxt, t_time);
-            ep . setnvalue(t_time);
-            return;
-		}
-			
-		case kMCNativeControlPropertyShouldAutoplay:
-		{
-            bool t_value;
-            GetShouldAutoplay(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyLooping:
-		{
-            bool t_value;
-            GetLooping(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyAllowsAirPlay:
-		{
-            bool t_value;
-            GetAllowsAirPlay(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyPlayRate:
-        {
-            double t_rate;
-            GetPlayRate(ctxt, t_rate);
-            ep . setnvalue(t_rate);
-            return;
-        }
-        case kMCNativeControlPropertyIsPreparedToPlay:
-		{
-            bool t_value;
-            GetAllowsAirPlay(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-			
-		case kMCNativeControlPropertyLoadState:
-        {
-			MCNativeControlLoadStateSet t_state;
-            GetLoadState(ctxt, t_state);
-            set_to_ctxt(ctxt, kMCNativeControlLoadStateTypeInfo, (intset_t)t_state);
-            return;
-		}
-            
-		case kMCNativeControlPropertyPlaybackState:
-        {
-            MCNativeControlPlaybackState t_state;
-            GetPlaybackState(ctxt, t_state);
-            enum_to_ctxt(ctxt, kMCNativeControlPlaybackStateTypeInfo, (intenum_t)t_state);
-        }
-			
-		case kMCNativeControlPropertyNaturalSize:
-        {
-            MCPoint32 t_size;
-            GetNaturalSize(ctxt, t_size);
-            ep.setstringf("%d,%d", (int32_t)t_size . x, (int32_t)t_size . y);
-        }
-            
-		default:
-			break;
-	}
-	
-	MCiOSControl::Get(ctxt, p_property);
+    [m_controller play];
 }
 
 Exec_stat MCiOSPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    
 	if (m_controller == nil)
 		return MCiOSControl::Do(p_action, p_parameters);
 	
 	switch(p_action)
 	{
 		case kMCNativeControlActionPlay:
-			[m_controller play];
+			//[m_controller play];
+            //MCNativeControlExecPlay(ctxt, this);
 			return ES_NORMAL;
 		case kMCNativeControlActionPause:
 			[m_controller pause];

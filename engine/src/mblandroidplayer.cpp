@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "exec.h"
 
 #include <jni.h>
 #include "mblandroidjava.h"
@@ -46,6 +47,10 @@ bool path_to_apk_path(const char *p_path, const char *&r_apk_path);
 
 class MCAndroidPlayerControl: public MCAndroidControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+    
 public:
     MCAndroidPlayerControl(void);
     
@@ -56,36 +61,18 @@ public:
 #endif
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
     void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
-    void SetFullscreen(MCExecContext& ctxt, bool p_value);
-    void GetFullscreen(MCExecContext& ctxt, bool& r_value);
-    void SetPreserveAspect(MCExecContext& ctxt, bool p_value);
-    void GetPreserveAspect(MCExecContext& ctxt, bool& r_value);
     void SetShowController(MCExecContext& ctxt, bool p_value);
     void GetShowController(MCExecContext& ctxt, bool& r_value);
-    void SetUseApplicationAudioSession(MCExecContext& ctxt, bool p_value);
-    void GetUseApplicationAudioSession(MCExecContext& ctxt, bool& r_value);
-    void SetStartTime(MCExecContext& ctxt, integer_t p_time);
-    void GetStartTime(MCExecContext& ctxt, integer_t& r_time);
-    void SetEndTime(MCExecContext& ctxt, integer_t p_time);
-    void GetEndTime(MCExecContext& ctxt, integer_t& r_time);
     void SetCurrentTime(MCExecContext& ctxt, integer_t p_time);
     void GetCurrentTime(MCExecContext& ctxt, integer_t& r_time);
-    void SetShouldAutoplay(MCExecContext& ctxt, bool p_value);
-    void GetShouldAutoplay(MCExecContext& ctxt, bool& r_value);
     void SetLooping(MCExecContext& ctxt, bool p_value);
     void GetLooping(MCExecContext& ctxt, bool& r_value);
-    void SetAllowsAirPlay(MCExecContext& ctxt, bool p_value);
-    void GetAllowsAirPlay(MCExecContext& ctxt, bool& r_value);
-    void SetPlayRate(MCExecContext& ctxt, double p_rate);
-    void GetPlayRate(MCExecContext& ctxt, double& r_rate);
     
     void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
-    void GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration);
-    void GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value);
-    void GetLoadState(MCExecContext& ctxt, intset_t& r_state);
-    void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
     
     void HandlePropertyAvailableEvent(const char *property);
@@ -97,6 +84,25 @@ protected:
     
 private:
     char *m_path;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCAndroidPlayerControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Content, String, MCAndroidPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCAndroidPlayerControl, ShowController)
+    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCAndroidPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCAndroidPlayerControl, Looping)
+    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCAndroidPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCAndroidPlayerControl, NaturalSize)
+};
+
+MCNativeControlPropertyTable MCAndroidPlayerControl::kPropertyTable =
+{
+	&MCAndroidControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -122,6 +128,9 @@ MCNativeControlType MCAndroidPlayerControl::GetType(void)
 
 void MCAndroidPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_content)
 {
+    jobject t_view;
+    t_view = GetView();
+    
     bool t_success = true;
     MCCStringFree(m_path);
     t_success = MCCStringClone(MCStringGetCString(p_content), m_path);
@@ -151,25 +160,6 @@ void MCAndroidPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_cont
     
     ctxt . Throw();
 }
-void MCAndroidPlayerControl::SetFullscreen(MCExecContext& ctxt, bool p_value)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetFullscreen(MCExecContext& ctxt, bool& r_value)
-{
-    r_value = false;
-}
-
-void MCAndroidPlayerControl::SetPreserveAspect(MCExecContext& ctxt, bool p_value)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetPreserveAspect(MCExecContext& ctxt, bool& r_value)
-{
-    r_value = false;
-}
 
 void MCAndroidPlayerControl::SetShowController(MCExecContext& ctxt, bool p_value)
 {
@@ -187,36 +177,6 @@ void MCAndroidPlayerControl::GetShowController(MCExecContext& ctxt, bool& r_valu
     MCAndroidObjectRemoteCall(t_view, "getShowController", "b", &r_value);
 }
 
-void MCAndroidPlayerControl::SetUseApplicationAudioSession(MCExecContext& ctxt, bool p_value)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetUseApplicationAudioSession(MCExecContext& ctxt, bool& r_value)
-{
-    
-    r_value = false;
-}
-
-void MCAndroidPlayerControl::SetStartTime(MCExecContext& ctxt, integer_t p_time)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetStartTime(MCExecContext& ctxt, integer_t& r_time)
-{
-    r_time = -1;
-}
-
-void MCAndroidPlayerControl::SetEndTime(MCExecContext& ctxt, integer_t p_time)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetEndTime(MCExecContext& ctxt, integer_t& r_time)
-{
-    r_time = -1;
-}
 void MCAndroidPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time)
 {
     jobject t_view;
@@ -231,16 +191,6 @@ void MCAndroidPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_ti
     t_view = GetView();
     
     MCAndroidObjectRemoteCall(t_view, "getCurrentTime", "i", &r_time);
-}
-
-void MCAndroidPlayerControl::SetShouldAutoplay(MCExecContext& ctxt, bool p_value)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetShouldAutoplay(MCExecContext& ctxt, bool& r_value)
-{
-    r_value = false;
 }
 
 void MCAndroidPlayerControl::SetLooping(MCExecContext& ctxt, bool p_value)
@@ -259,51 +209,12 @@ void MCAndroidPlayerControl::GetLooping(MCExecContext& ctxt, bool& r_value)
     MCAndroidObjectRemoteCall(t_view, "getLooping", "b", &r_value);
 }
 
-void MCAndroidPlayerControl::SetAllowsAirPlay(MCExecContext& ctxt, bool p_value)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetAllowsAirPlay(MCExecContext& ctxt, bool& r_value)
-{
-    r_value = false;
-}
-
-void MCAndroidPlayerControl::SetPlayRate(MCExecContext& ctxt, double p_rate)
-{
-    // NO-OP
-}
-
-void MCAndroidPlayerControl::GetPlayRate(MCExecContext& ctxt, double& r_rate)
-{
-    r_rate = 0;
-}
 void MCAndroidPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
 {
     jobject t_view;
     t_view = GetView();
     
     MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &r_duration);
-}
-
-void MCAndroidPlayerControl::GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration)
-{
-    r_duration = 0;
-}
-
-void MCAndroidPlayerControl::GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value)
-{
-    r_value = false;
-}
-
-void MCAndroidPlayerControl::GetLoadState(MCExecContext& ctxt, intset_t& r_state)
-{
-    r_state = kMCNativeControlLoadStateNone;
-}
-
-void MCAndroidPlayerControl::GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state)
-{
-    r_state = kMCNativeControlPlaybackStateNone;
 }
 
 void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size)
@@ -318,7 +229,7 @@ void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_si
     r_size . y = t_height;
 }
 
-#ifdef /* MCAndroidPlayerControl::Set */
+#ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
@@ -386,53 +297,6 @@ Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExec
 }
 #endif /* MCAndroidPlayerControl::Set */
 
-void MCAndroidPlayerControl::Set(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyContent:
-        {
-            MCAutoStringRef t_string;
-            /* UNCHECKED */ ep . copyasstringref(&t_string);
-            SetContent(ctxt, *t_string);
-            return;
-        }
-        case kMCNativeControlPropertyShowController:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetShowController(ctxt, t_value);
-            return;
-        }
-        case kMCNativeControlPropertyCurrentTime:
-        {
-            int32_t t_time;
-            if (!ep . copyasint(t_time))
-                ctxt . LegacyThrow(EE_OBJECT_NAN);
-            else
-                SetCurrentTime(ctxt, t_time);
-            return;
-        }
-        case kMCNativeControlPropertyLooping:
-        {
-            bool t_value;
-            if (!ep . copyasbool(t_value))
-                ctxt . LegacyThrow(EE_OBJECT_NAB);
-            else
-                SetLooping(ctxt, t_value);
-            return;
-        }
-        default:
-            break;
-    }
-    
-    MCAndroidControl::Set(ctxt, p_property);
-}
-
 #ifdef /* MCAndroidPlayerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
@@ -496,59 +360,6 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
     return MCAndroidControl::Get(p_property, ep);
 }
 #endif /* MCAndroidPlayerControl::Get */
-
-void MCAndroidPlayerControl::Get(MCExecContext& ctxt, MCNativeControlProperty p_property)
-{
-    MCExecPoint& ep = ctxt . GetEP();
-    switch (p_property)
-    {
-        case kMCNativeControlPropertyContent:
-        {
-            MCAutoStringRef t_string;
-            GetContent(ctxt, &t_string);
-            if (*t_string != nil)
-                ep . setvalueref(*t_string);
-            return;
-        }
-        case kMCNativeControlPropertyShowController:
-        {
-            bool t_value;
-            GetShowController(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-        case kMCNativeControlPropertyLooping:
-        {
-            bool t_value;
-            GetLooping(ctxt, t_value);
-            ep . setbool(t_value);
-            return;
-        }
-        case kMCNativeControlPropertyDuration:
-        {
-            int32_t t_duration;
-            GetDuration(ctxt, t_duration);
-            ep . setnvalue(t_duration);
-            return;
-        }
-        case kMCNativeControlPropertyCurrentTime:
-        {
-            int32_t t_time;
-            GetCurrentTime(ctxt, t_time);
-            ep . setnvalue(t_time);
-            return;
-        }
-        case kMCNativeControlPropertyNaturalSize:
-        {
-            MCPoint32 t_size;
-            GetNaturalSize(ctxt, t_size);
-            ep.setstringf("%d,%d", (int32_t)t_size . x, (int32_t)t_size . y);
-        }
-        default:
-            break;
-    }
-    MCAndroidControl::Get(ctxt, p_property);
-}
 
 Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {

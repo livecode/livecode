@@ -3509,6 +3509,7 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 ///////////
 
 extern MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlRangeTypeInfo;
 
 extern MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo;
 extern MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfo;
@@ -3518,7 +3519,7 @@ extern MCExecEnumTypeInfo *kMCNativeControlPlaybackStateTypeInfo;
 extern MCExecSetTypeInfo *kMCNativeControlLoadStateTypeInfo;
 
 extern MCExecEnumTypeInfo *kMCNativeControlInputCapitalizationTypeTypeInfo;
-extern MCExecEnumTypeInfo *kMCNativeControlInputAutocorrectiontionTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputAutocorrectionTypeTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardTypeTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardStyleTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlInputReturnKeyTypeTypeInfo;
@@ -3539,8 +3540,8 @@ extern MCExecMethodInfo* kMCNativeControlGetControlListMethodInfo;
 
 void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_name, MCStringRef p_control_name);
 void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name);
-void MCNativeControlExecSetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef p_value);
-void MCNativeControlExecGetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef& r_value);
+void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result);
+void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef p_value);
 void MCNativeControlExecDo(MCExecContext& ctxt);
 void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target);
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);

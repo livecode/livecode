@@ -3767,6 +3767,7 @@ Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlSet */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -3785,20 +3786,47 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 		MCNativeControl::LookupProperty(t_prop_name, t_property);
 	
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	if (t_success && p_parameters != nil)
 		t_success = p_parameters -> eval(ep);
 	
 	if (t_success)
-		t_success = t_control -> Set(t_property, ep) == ES_NORMAL;
+        t_control -> Set(ctxt, t_property);
 	
 	delete t_prop_name;
 	delete t_control_name;
 	
 	return ES_NORMAL;
+#endif /* MCHandleControlSet */
+    
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
+	t_success = true;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
+
+    if (t_success && p_parameters != nil)
+        t_success = p_parameters -> eval(ep);
+    
+    MCAutoValueRef t_value;
+    if (t_success)
+        ep . copyasvalueref(&t_value);
+    
+    if (t_success)
+        MCNativeControlExecSet(ctxt, *t_control_name, *t_property, *t_value);
+    
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleControlGet */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 	
@@ -3817,10 +3845,10 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 		MCNativeControl::LookupProperty(t_prop_name, t_property);
 	
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	if (t_success)
-		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
+		t_control -> Get(ctxt, t_property);
 	
-	MCExecContext ctxt(ep);
 	if (t_success)
 	{
 		MCAutoStringRef t_value;
@@ -3834,7 +3862,30 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	delete t_control_name;
 	
 	return ES_NORMAL;
-	
+#endif /* MCHandleControlGet */
+    
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
+	t_success = true;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
+    
+    MCAutoValueRef t_value;
+    if (t_success)
+        MCNativeControlExecGet(ctxt, *t_control_name, *t_property, &t_value);
+    
+    if (*t_value != nil)
+        ctxt . SetTheResultToValue(*t_value);
+    else
+        ctxt . SetTheResultToEmpty();
+    
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
