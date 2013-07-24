@@ -85,6 +85,8 @@ class MCiOSPlayerControl: public MCiOSControl
 {
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
 	MCiOSPlayerControl(void);
@@ -97,7 +99,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
+	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     virtual void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
     virtual void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
@@ -131,20 +133,20 @@ public:
     void GetPlayableDuration(MCExecContext& ctxt, integer_t& r_duration);
     void GetIsPreparedToPlay(MCExecContext& ctxt, bool& r_value);
     void GetLoadState(MCExecContext& ctxt, MCNativeControlLoadState& r_state);
-    void GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state);
+    void GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state);
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
     
     
 	// Player-specific actions
-	Exec_stat ExecPlay(MCExecContext& ctxt);
-	Exec_stat ExecPause(MCExecContext& ctxt);
-    Exec_stat ExecStop(MCExecContext& ctxt);
-	Exec_stat ExecPrepareToPlay(MCExecContext& ctxt);
-	Exec_stat ExecBeginSeekingBackward(MCExecContext& ctxt);
-	Exec_stat ExecBeginSeekingForward(MCExecContext& ctxt);
-	Exec_stat ExecEndSeeking(MCExecContext& ctxt);
-	Exec_stat ExecSnapshot(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height);
-	Exec_stat ExecSnapshotExactly(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height);
+	void ExecPlay(MCExecContext& ctxt);
+	void ExecPause(MCExecContext& ctxt);
+    void ExecStop(MCExecContext& ctxt);
+	void ExecPrepareToPlay(MCExecContext& ctxt);
+	void ExecBeginSeekingBackward(MCExecContext& ctxt);
+	void ExecBeginSeekingForward(MCExecContext& ctxt);
+	void ExecEndSeeking(MCExecContext& ctxt);
+	void ExecSnapshot(MCExecContext& ctxt, integer_t t_time, integer_t* t_max_width, integer_t* t_max_height);
+	void ExecSnapshotExactly(MCExecContext& ctxt, integer_t t_time, integer_t* t_max_width, integer_t* t_max_height);
     
 	void HandlePropertyAvailableEvent(const char *p_property);
 	void HandleNotifyEvent(MCNameRef p_event);
@@ -186,7 +188,7 @@ MCNativeControlPropertyInfo MCiOSPlayerControl::kProperties[] =
     DEFINE_RO_CTRL_PROPERTY(PlayableDuration, Int32, MCiOSPlayerControl, PlayableDuration)
     DEFINE_RO_CTRL_PROPERTY(IsPreparedToPlay, Bool, MCiOSPlayerControl, IsPreparedToPlay)
     DEFINE_RO_CTRL_SET_PROPERTY(LoadState, NativeControlLoadState, MCiOSPlayerControl, LoadState)
-   // DEFINE_RO_CTRL_ENUM_PROPERTY(PlaybackState, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
+    DEFINE_RO_CTRL_ENUM_PROPERTY(PlaybackState, NativeControlPlaybackState, MCiOSPlayerControl, PlaybackState)
     DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCiOSPlayerControl, NaturalSize)
 };
 
@@ -195,6 +197,28 @@ MCNativeControlPropertyTable MCiOSPlayerControl::kPropertyTable =
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSPlayerControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(Play, MCiOSPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, MCiOSPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, MCiOSPlayerControl, Stop)
+    DEFINE_CTRL_EXEC_METHOD(PrepareToPlay, MCiOSPlayerControl, PrepareToPlay)
+    DEFINE_CTRL_EXEC_METHOD(BeginSeekingForward, MCiOSPlayerControl, BeginSeekingForward)
+    DEFINE_CTRL_EXEC_METHOD(BeginSeekingBackward, MCiOSPlayerControl, BeginSeekingBackward)
+    DEFINE_CTRL_EXEC_METHOD(EndSeeking, MCiOSPlayerControl, EndSeeking)
+    DEFINE_CTRL_EXEC_TERNARY_METHOD(Snapshot, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, Snapshot)
+    DEFINE_CTRL_EXEC_TERNARY_METHOD(SnapshotExactly, MCiOSPlayerControl, Int32, OptionalInt32, OptionalInt32, SnapshotExactly)
+};
+
+MCNativeControlActionTable MCiOSPlayerControl::kActionTable =
+{
+    &MCiOSControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,7 +602,7 @@ void MCiOSPlayerControl::GetLoadState(MCExecContext& ctxt, MCNativeControlLoadSt
     r_state = (MCNativeControlLoadState)t_load_state;
 }
 
-void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, intenum_t& r_state)
+void MCiOSPlayerControl::GetPlaybackState(MCExecContext& ctxt, MCNativeControlPlaybackState& r_state)
 {
     if (m_controller != nil)
     {
@@ -870,121 +894,57 @@ void MCiOSPlayerControl::Play()
     [m_controller play];
 }
 
-Exec_stat MCiOSPlayerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{    
-	if (m_controller == nil)
-		return MCiOSControl::Do(ctxt, p_action, p_parameters);
-	
-	switch(p_action)
-	{
-		case kMCNativeControlActionPlay:
-            return ExecPlay(ctxt);
-            
-		case kMCNativeControlActionPause:
-            return ExecPause(ctxt);
-            
-		case kMCNativeControlActionPrepareToPlay:
-            return ExecPrepareToPlay(ctxt);
-            
-		case kMCNativeControlActionStop:
-            return ExecStop(ctxt);
-            
-		case kMCNativeControlActionBeginSeekingForward:
-            return ExecBeginSeekingBackward(ctxt);
-            
-		case kMCNativeControlActionBeginSeekingBackward:
-            return ExecBeginSeekingBackward(ctxt);
-            
-		case kMCNativeControlActionEndSeeking:
-		case kMCNativeControlActionSnapshot:
-		case kMCNativeControlActionSnapshotExactly:
-		{
-			int32_t t_time, t_max_width, t_max_height;
-			t_time = 0;
-			if (MCParseParameters(p_parameters, "i", &t_time))
-			{
-				if (MCParseParameters(p_parameters, "ii", &t_max_width, &t_max_height))
-				{
-					if (p_parameters != nil)
-						return ES_ERROR;
-				}
-				else
-					t_max_width = t_max_height = 0;
-			}
-			else
-				return ES_ERROR;
-            
-            return (p_action == kMCNativeControlActionSnapshot ?
-                    ExecSnapshot(ctxt, t_time, t_max_width, t_max_height) :
-                    ExecSnapshotExactly(ctxt, t_time, t_max_width, t_max_height));
-		}
-            
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Do(ctxt, p_action, p_parameters);
-}
-
-Exec_stat MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
     [m_controller play];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecPause(MCExecContext& ctxt)
 {
     [m_controller pause];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecPrepareToPlay(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecPrepareToPlay(MCExecContext& ctxt)
 {
     [m_controller prepareToPlay];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecStop(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecStop(MCExecContext& ctxt)
 {
     [m_controller stop];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecBeginSeekingBackward(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecBeginSeekingBackward(MCExecContext& ctxt)
 {
     [m_controller beginSeekingForward];
-    return ES_NORMAL;
 }
 
-Exec_stat MCiOSPlayerControl::ExecBeginSeekingForward(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecBeginSeekingForward(MCExecContext& ctxt)
 {
     [m_controller beginSeekingBackward];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecEndSeeking(MCExecContext& ctxt)
+void MCiOSPlayerControl::ExecEndSeeking(MCExecContext& ctxt)
 {    
     [m_controller endSeeking];
-    return ES_NORMAL;
 }
-Exec_stat MCiOSPlayerControl::ExecSnapshot(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height)
+void MCiOSPlayerControl::ExecSnapshot(MCExecContext& ctxt, integer_t p_time, integer_t *p_max_width, integer_t *p_max_height)
 {
     UIImage *t_image;
-    t_image = [m_controller thumbnailImageAtTime: t_time / 1000.0
+    t_image = [m_controller thumbnailImageAtTime: p_time / 1000.0
                                       timeOption: MPMovieTimeOptionNearestKeyFrame];
     
     if (t_image == nil)
-        return ES_NOT_HANDLED;
+        return;
     
-    MCIPhoneImportUIImage(t_image, t_max_width, t_max_height);
-    return ES_NORMAL;
+    p_max_width != nil ? MCIPhoneImportUIImage(t_image, *p_max_width, *p_max_height) : MCIPhoneImportUIImage(t_image, 0, 0);
 }
-Exec_stat MCiOSPlayerControl::ExecSnapshotExactly(MCExecContext& ctxt, int32_t t_time, int32_t t_max_width, int32_t t_max_height)
+
+void MCiOSPlayerControl::ExecSnapshotExactly(MCExecContext& ctxt, integer_t p_time, integer_t* p_max_width, integer_t* p_max_height)
 {
     UIImage *t_image;
-    t_image = [m_controller thumbnailImageAtTime: t_time / 1000.0
+    t_image = [m_controller thumbnailImageAtTime: p_time / 1000.0
                                       timeOption: MPMovieTimeOptionExact];
     
     if (t_image == nil)
-        return ES_NOT_HANDLED;
+        return;
     
-    MCIPhoneImportUIImage(t_image, t_max_width, t_max_height);
-    return ES_NORMAL;
+    p_max_width != nil ? MCIPhoneImportUIImage(t_image, *p_max_width, *p_max_height) : MCIPhoneImportUIImage(t_image, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

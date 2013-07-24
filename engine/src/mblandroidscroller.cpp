@@ -51,6 +51,8 @@ class MCAndroidScrollerControl: public MCAndroidControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
     
 public:
     MCAndroidScrollerControl(void);
@@ -62,7 +64,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
     
-    virtual Exec_Stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
     void SetContentRect(MCExecContext& ctxt, MCRectangle32 p_rect);
@@ -117,6 +119,19 @@ MCNativeControlPropertyTable MCAndroidScrollerControl::kPropertyTable =
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidScrollerControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidScrollerControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    0,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -588,17 +603,6 @@ Exec_stat MCAndroidScrollerControl::Do(MCNativeControlAction p_action, MCParamet
     return MCAndroidControl::Do(p_action, p_parameters);
 }
 #endif /* MCAndroidScrollerControl::Do */
-
-Exec_stat MCAndroidScrollerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{    
-    switch (p_action)
-    {
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 

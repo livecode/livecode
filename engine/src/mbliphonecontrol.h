@@ -24,6 +24,8 @@ class MCiOSControl : public MCNativeControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
     
 public:
     MCiOSControl(void);
@@ -38,7 +40,7 @@ public:
 #endif
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter* p_parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     void SetVisible(MCExecContext& ctxt, bool p_visible);
@@ -51,9 +53,6 @@ public:
     void GetOpaque(MCExecContext& ctxt, bool& p_opaque);
     void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha);
     void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color);
-    
-	// Common actions
-	virtual Exec_stat ExecStop(MCExecContext& ctxt);
     
 	// Get the native view of the instance.
 	UIView *GetView(void);

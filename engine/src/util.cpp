@@ -789,6 +789,11 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 	return True;
 }
 
+/* WRAPPER */ bool MCU_stoi4(MCStringRef p_string, int4& r_d)
+{
+    return True == MCU_stoi4(MCStringGetOldString(p_string), r_d);
+}
+
 Boolean MCU_stoi4(const MCString &s, int4 &d)
 {
 	const char *sptr = s.getstring();

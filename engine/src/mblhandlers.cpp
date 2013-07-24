@@ -3917,31 +3917,30 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 #endif /* MCHandleControlDo */
     
-    bool t_success;
-	t_success = true;
-	
-	char *t_control_name;
-	char *t_action_name;
-	t_control_name = nil;
-	t_action_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_action_name);
-	
-	MCNativeControl *t_control;
-	MCNativeControlAction t_action;
-	if (t_success)
-		t_success =
-		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
-		MCNativeControl::LookupAction(t_action_name, t_action);
-	
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
-//	if (t_success)
-//		t_success = t_control -> Do(ctxt, t_action) == ES_NORMAL;
+    bool t_success;
+	t_success = true;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
 	
-	delete t_action_name;
-	delete t_control_name;
+    MCAutoArray<MCValueRef> t_params;
+    
+    MCValueRef t_value;
+    while (t_success && p_parameters != nil)
+    {
+        p_parameters -> eval(ep);
+        ep . copyasvalueref(t_value);
+        t_success = t_params . Push(t_value);
+    }
+
+	if (t_success)
+		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
 	
 	return ES_NORMAL;
 }

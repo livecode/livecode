@@ -58,6 +58,8 @@ class MCiOSScrollerControl : public MCiOSControl
 {
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
 	MCiOSScrollerControl(void);
@@ -70,7 +72,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
+	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     virtual void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     
@@ -110,7 +112,7 @@ public:
     void GetDecelerating(MCExecContext& ctxt, bool& r_value);
     
 	// Scroller-specific actions
-	Exec_stat ExecFlashScrollIndicators(MCExecContext& ctxt);
+	void ExecFlashScrollIndicators(MCExecContext& ctxt);
     
 	void HandleEvent(MCNameRef message);
 
@@ -160,6 +162,20 @@ MCNativeControlPropertyTable MCiOSScrollerControl::kPropertyTable =
 	&MCiOSControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSScrollerControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(FlashScrollIndicators, MCiOSScrollerControl, FlashScrollIndicators)
+};
+
+MCNativeControlActionTable MCiOSScrollerControl::kActionTable =
+{
+    &MCiOSControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -980,29 +996,15 @@ Exec_stat MCiOSScrollerControl::Do(MCNativeControlAction p_action, MCParameter *
 }
 #endif /* MCiOSScrollerControl::Do */
 
-Exec_stat MCiOSScrollerControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	switch (p_action)
-	{
-		case kMCNativeControlActionFlashScrollIndicators:
-            return ES_NORMAL;
-        
-        default:
-            break;			
-	}
-	return MCiOSControl::Do(ctxt, p_action, p_parameters);
-}
-
-Exec_stat MCiOSScrollerControl::ExecFlashScrollIndicators(MCExecContext& ctxt)
+void MCiOSScrollerControl::ExecFlashScrollIndicators(MCExecContext& ctxt)
 {
 	UIScrollView *t_view;
 	t_view = (UIScrollView*)GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     [t_view flashScrollIndicators];
-    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

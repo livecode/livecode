@@ -194,6 +194,8 @@ class MCAndroidInputControl: public MCAndroidControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
     MCAndroidInputControl(void);
@@ -206,7 +208,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetMultiLine(bool p_multiline);
     
@@ -243,7 +245,7 @@ public:
     void GetSelectedRange(MCExecContext& ctxt, MCNativeControlRange& r_range);
     
 	// Input-specific actions
-	Exec_stat ExecFocus(MCExecContext& ctxt);
+	void ExecFocus(MCExecContext& ctxt);
     
 protected:
     virtual ~MCAndroidInputControl(void);
@@ -281,6 +283,19 @@ MCNativeControlPropertyTable MCAndroidInputControl::kPropertyTable =
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidInputControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidInputControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    0,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1169,29 +1184,15 @@ Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter 
 }
 #endif /* MCAndroidInputControl::Do */
 
-Exec_stat MCAndroidInputControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    switch (p_action)
-    {
-        case kMCNativeControlActionFocus:
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
-}
-
-Exec_stat MCAndroidInputControl::ExecFocus(MCExecContext& ctxt)
+void MCAndroidInputControl::ExecFocus(MCExecContext& ctxt)
 {
     jobject t_view;
     t_view = GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED:
+        return;
         
     MCAndroidObjectRemoteCall(t_view, "focusControl", "v", nil);
-    return ES_NORMAL;    
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -70,7 +70,9 @@ class MCiOSBrowserControl: public MCiOSControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
-
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+    
 public:
 	MCiOSBrowserControl(void);
 	
@@ -82,7 +84,7 @@ public:
 #endif
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter* p_parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetUrl(MCExecContext& ctxt, MCStringRef p_url);
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
@@ -106,11 +108,12 @@ public:
     void GetCanRetreat(MCExecContext& ctxt, bool& r_value);
     
 	// Browser-specific actions
-	Exec_stat ExecAdvance(MCExecContext& ctxt);
-	Exec_stat ExecRetreat(MCExecContext& ctxt);
-	Exec_stat ExecReload(MCExecContext& ctxt);
-	Exec_stat ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
-	Exec_stat ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html);
+	void ExecAdvance(MCExecContext& ctxt);
+	void ExecRetreat(MCExecContext& ctxt);
+	void ExecReload(MCExecContext& ctxt);
+    void ExecStop(MCExecContext& ctxt);
+	void ExecExecute(MCExecContext& ctxt, MCStringRef p_script);
+	void ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html);
     
 	void HandleStartEvent(void);
 	void HandleFinishEvent(void);
@@ -155,6 +158,24 @@ MCNativeControlPropertyTable MCiOSBrowserControl::kPropertyTable =
 	&kProperties[0],
 };
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSBrowserControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(Advance, MCiOSBrowserControl, Advance)
+    DEFINE_CTRL_EXEC_METHOD(Retreat, MCiOSBrowserControl, Retreat)
+    DEFINE_CTRL_EXEC_METHOD(Reload, MCiOSBrowserControl, Reload)
+    DEFINE_CTRL_EXEC_METHOD(Stop, MCiOSBrowserControl, Stop)
+    DEFINE_CTRL_EXEC_BINARY_METHOD(Load, MCiOSBrowserControl, String, String, Load)
+    DEFINE_CTRL_EXEC_UNARY_METHOD(Execute, MCiOSBrowserControl, String, Execute)
+};
+
+MCNativeControlActionTable MCiOSBrowserControl::kActionTable =
+{
+     &MCiOSControl::kActionTable,
+     sizeof(kActions) / sizeof(kActions[0]),
+     &kActions[0],
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -581,96 +602,51 @@ Exec_stat MCiOSBrowserControl::Do(MCNativeControlAction p_action, MCParameter *p
 }
 #endif /* MCiOSBrowserControl::Do */
 
-Exec_stat MCiOSBrowserControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{	
-	switch(p_action)
-	{
-		case kMCNativeControlActionAdvance:
-            return ExecAdvance(ctxt);
-            
-		case kMCNativeControlActionRetreat:
-            return ExecRetreat(ctxt);
-            
-		case kMCNativeControlActionReload:
-            return ExecReload(ctxt);
-            
-		case kMCNativeControlActionLoad:
-		{
-			bool t_success;
-			t_success = true;
-			
-			MCAutoStringRef t_url, t_html;
-            
-			if (t_success)
-				t_success = MCParseParameters(p_parameters, "xx", &(&t_url), &(&t_html));
-			
-			// MW-2010-12-08: [[ Bug 9221 ]] Passed the wrong object type to baseURL!
-			if (!t_success)
-                return ES_NOT_HANDLED;
-            
-            return ExecLoad(ctxt, *t_url, *t_html);
-		}			
-			
-		case kMCNativeControlActionExecute:
-		{
-			bool t_success;
-			t_success = true;
-			
-			MCAutoStringRef t_script;
-			if (t_success)
-				t_success = MCParseParameters(p_parameters, "x", &(&t_script));
-			
-			if (!t_success)
-                return ES_NOT_HANDLED;
-            
-            return ExecExecute(ctxt, *t_script);
-		}
-            
-        default:
-            break;
-	}
-	
-	return MCiOSControl::Do(ctxt, p_action, p_parameters);
+// Browser-specific actions
+
+void MCiOSBrowserControl::ExecStop(MCExecContext& ctxt)
+{  
+    UIWebView *t_view;
+	t_view = (UIWebView *)GetView();
+    
+    if (t_view != nil)
+        [t_view stopLoading];
 }
 
-// Browser-specific actions
-Exec_stat MCiOSBrowserControl::ExecAdvance(MCExecContext& ctxt)
+void MCiOSBrowserControl::ExecAdvance(MCExecContext& ctxt)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     [t_view goForward];
-    return ES_NORMAL;
 }
 
-Exec_stat MCiOSBrowserControl::ExecRetreat(MCExecContext& ctxt)
+void MCiOSBrowserControl::ExecRetreat(MCExecContext& ctxt)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     [t_view goBack];
-    return ES_NORMAL;
 }
 
-Exec_stat MCiOSBrowserControl::ExecReload(MCExecContext& ctxt)
+void MCiOSBrowserControl::ExecReload(MCExecContext& ctxt)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     [t_view reload];
-    return ES_NORMAL;
 }
 
-Exec_stat MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
+void MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_script)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
@@ -681,27 +657,24 @@ Exec_stat MCiOSBrowserControl::ExecExecute(MCExecContext& ctxt, MCStringRef p_sc
     if (t_result == nil)
     {
         ctxt.SetTheResultToCString("error");
-        return ES_NOT_HANDLED;
+        return;
     }
     
     ctxt.SetTheResultToCString([t_result cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-    return ES_NORMAL;
 }
 
-Exec_stat MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
+void MCiOSBrowserControl::ExecLoad(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_html)
 {
 	UIWebView *t_view;
 	t_view = (UIWebView *)GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     // MW-2012-10-01: [[ Bug 10422 ]] Make sure we mark a pending request so the
     //   HTML loading doesn't divert through a loadRequested message.
     [m_delegate setPendingRequest: true];
     [t_view loadHTMLString: [NSString stringWithCString: MCStringGetCString(p_html) encoding: NSMacOSRomanStringEncoding] baseURL: [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(p_url) encoding: NSMacOSRomanStringEncoding]]];
-    
-    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

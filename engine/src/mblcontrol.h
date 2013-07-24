@@ -108,6 +108,51 @@ template<typename C, typename A, void (C::*Method)(MCExecContext&, A)> inline vo
 #define DEFINE_RO_CTRL_SET_PROPERTY(prop, type, ctrl, tag) \
 { kMCNativeControlProperty##prop, kMCNativeControlPropertyTypeSet, kMC##type##TypeInfo, (void *)MCPropertyNativeControlThunkGetSetType(ctrl, Get##tag, MC##type), nil },
 
+template<typename C, typename X, typename Y, typename Z, void (C::*Method)(MCExecContext&, X, Y, Z)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr ctrl, X param1, Y param2, Z param3)
+{
+	(static_cast<C *>(ctrl . control) ->* Method)(ctxt, param1, param2, param3);
+}
+
+template<typename C, typename X, typename Y, void (C::*Method)(MCExecContext&, X, Y)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr ctrl, X param1, Y param2)
+{
+	(static_cast<C *>(ctrl . control) ->* Method)(ctxt, param1, param2);
+}
+
+template<typename C, typename X, void (C::*Method)(MCExecContext&, X)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr ctrl, X param1)
+{
+	(static_cast<C *>(ctrl . control) ->* Method)(ctxt, param1);
+}
+
+template<typename C, void (C::*Method)(MCExecContext&)> inline void MCExecNativeControlThunk(MCExecContext& ctxt, MCNativeControlPtr ctrl)
+{
+	(static_cast<C *>(ctrl . control) ->* Method)(ctxt);
+}
+
+#define MCExecNativeControlThunkExec(ctrl, mth) (void(*)(MCExecContext&,MCNativeControlPtr))MCExecNativeControlThunk<ctrl,&ctrl::mth>
+
+#define MCExecNativeControlUnaryThunkImp(ctrl, mth, typ) (void(*)(MCExecContext&,MCNativeControlPtr,typ))MCExecNativeControlThunk<ctrl,typ,&ctrl::mth>
+#define MCExecNativeControlThunkExecString(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, MCStringRef)
+#define MCExecNativeControlThunkExecInt32(ctrl, mth) MCExecNativeControlUnaryThunkImp(ctrl, mth, integer_t)
+
+#define MCExecNativeControlBinaryThunkImp(ctrl, mth, typ1, typ2) (void(*)(MCExecContext&,MCNativeControlPtr,typ1,typ2))MCExecNativeControlThunk<ctrl,typ1,typ2,&ctrl::mth>
+#define MCExecNativeControlThunkExecStringString(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, MCStringRef, MCStringRef)
+#define MCExecNativeControlThunkExecInt32Int32(ctrl, mth) MCExecNativeControlBinaryThunkImp(ctrl, mth, integer_t, integer_t)
+
+#define MCExecNativeControlTernaryThunkImp(ctrl, mth, typ1, typ2, typ3) (void(*)(MCExecContext&,MCNativeControlPtr,typ1,typ2,typ3))MCExecNativeControlThunk<ctrl,typ1,typ2,typ3,&ctrl::mth>
+#define MCExecNativeControlThunkExecInt32OptionalInt32OptionalInt32(ctrl, mth) MCExecNativeControlTernaryThunkImp(ctrl, mth, integer_t, integer_t*, integer_t*)
+
+#define DEFINE_CTRL_EXEC_METHOD(act, ctrl, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_UNARY_METHOD(act, ctrl, param1, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_BINARY_METHOD(act, ctrl, param1, param2, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2(ctrl, Exec##tag) },
+
+#define DEFINE_CTRL_EXEC_TERNARY_METHOD(act, ctrl, param1, param2, param3, tag) \
+{ kMCNativeControlAction##act, (void *)MCExecNativeControlThunkExec##param1##param2##param3(ctrl, Exec##tag) },
+                                                          
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCNativeControlPropertyType
@@ -483,14 +528,6 @@ enum MCNativeControlInputVerticalAlign
     kMCNativeControlInputVerticalAlignBottom,
 };
 
-struct MCExecEnumTypeInfo;
-struct MCExecSetTypeInfo;
-
-void ctxt_to_enum(MCExecContext& ctxt, MCExecEnumTypeInfo* p_enum_info, intenum_t& r_enum);
-void ctxt_to_set(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t& r_set);
-void enum_to_ctxt(MCExecContext& ctxt, MCExecEnumTypeInfo* p_enum_info, intenum_t p_enum);
-void set_to_ctxt(MCExecContext& ctxt, MCExecSetTypeInfo* p_set_info, intset_t p_set);
-
 struct MCNativeControlPropertyInfo
 {
 	MCNativeControlProperty property;
@@ -507,11 +544,27 @@ struct MCNativeControlPropertyTable
 	MCNativeControlPropertyInfo *table;
 };
 
+struct MCNativeControlActionInfo
+{
+    MCNativeControlAction action;
+    void *exec_method;
+};
+
+struct MCNativeControlActionTable
+{
+	MCNativeControlActionTable *parent;
+	uindex_t size;
+	MCNativeControlActionInfo *table;
+};
+
 class MCNativeControl
 {
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
 	// Increment/decrement reference count. This count is used to control the
@@ -551,9 +604,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    
-	// Common actions
-	virtual Exec_stat ExecStop(MCExecContext& ctxt) = 0;
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void GetId(MCExecContext& ctxt, uinteger_t& r_id);
     void GetName(MCExecContext& ctxt, MCStringRef& r_name);

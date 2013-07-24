@@ -3542,7 +3542,7 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
 void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name);
 void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result);
 void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef p_value);
-void MCNativeControlExecDo(MCExecContext& ctxt);
+void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count);
 void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target);
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);
 

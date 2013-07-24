@@ -50,6 +50,8 @@ class MCAndroidPlayerControl: public MCAndroidControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
     
 public:
     MCAndroidPlayerControl(void);
@@ -61,8 +63,7 @@ public:
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
 #endif
     
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
-
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
 
     void SetContent(MCExecContext& ctxt, MCStringRef p_content);
@@ -78,8 +79,9 @@ public:
     void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
     
 	// Player-specific actions
-	Exec_stat ExecPlay(MCExecContext& ctxt);
-	Exec_stat ExecPause(MCExecContext& ctxt);
+	void ExecPlay(MCExecContext& ctxt);
+	void ExecPause(MCExecContext& ctxt);
+    void ExecStop(MCExecContext& ctxt);
     
     void HandlePropertyAvailableEvent(const char *property);
     
@@ -109,6 +111,22 @@ MCNativeControlPropertyTable MCAndroidPlayerControl::kPropertyTable =
 	&MCAndroidControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidPlayerControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(Play, MCAndroidPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, MCAndroidPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidPlayerControl, Stop)
+};
+
+MCNativeControlActionTable MCAndroidPlayerControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -395,49 +413,38 @@ Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter
 }
 #endif /* MCAndroidPlayerControl::Do */
 
-Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-    switch (p_action)
-    {
-        case kMCNativeControlActionPlay:
-            return ExecPlay(ctxt);
-            
-        case kMCNativeControlActionPause:
-            return ExecPause(ctxt);
-            
-        case kMCNativeControlActionStop:
-            // Handled by the parent class
-            
-        default:
-            break;
-    }
-    
-    return MCAndroidControl::Do(ctxt, p_action, p_parameters);
-}
-
 // Player-specific actions
-Exec_stat MCAndroidPlayerControl::ExecPlay(MCExecContext& ctxt)
+void MCAndroidPlayerControl::ExecPlay(MCExecContext& ctxt)
 {
     jobject t_view;
     t_view = GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     MCAndroidObjectRemoteCall(t_view, "start", "v", nil);
-    return ES_NORMAL;
 }
 
-Exec_stat MCAndroidPlayerControl::ExecPause(MCExecContext& ctxt)
+void MCAndroidPlayerControl::ExecPause(MCExecContext& ctxt)
 {
     jobject t_view;
     t_view = GetView();
     
     if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     MCAndroidObjectRemoteCall(t_view, "pause", "v", nil);
-    return ES_NORMAL;
+}
+
+void MCAndroidPlayerControl::ExecStop(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

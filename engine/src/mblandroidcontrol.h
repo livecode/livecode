@@ -24,6 +24,8 @@ class MCAndroidControl : public MCNativeControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
     MCAndroidControl(void);
@@ -38,7 +40,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *_parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
     void SetVisible(MCExecContext& ctxt, bool p_visible);
@@ -49,8 +51,6 @@ public:
     void GetVisible(MCExecContext& ctxt, bool& r_visible);
     void GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha);
     void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& r_color);
-    
-    virtual Exec_stat ExecStop(MCExecContext& ctxt);
     
     // standard event handling methods
     void PostNotifyEvent(MCNameRef p_message);

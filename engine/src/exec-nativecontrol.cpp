@@ -552,10 +552,13 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
             return;
     }
     
-    // Make sure a control does not already exist with the name
-    MCNativeControl *t_control;
-    if (MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_control))
-        return;
+    if (p_control_name != nil)
+    {
+        MCNativeControl *t_control;
+        // Make sure a control does not already exist with the name
+        if (MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_control))
+            return;
+    }
     
     MCNativeControlType t_type;
     if (!MCNativeControl::LookupType(MCStringGetCString(p_type_name), t_type))
@@ -566,15 +569,15 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
     if (MCNativeControl::CreateWithType(t_type, t_new_control))
     {
         extern MCExecPoint *MCEPptr;
-        t_control -> SetOwner(MCEPptr -> getobj());
-        t_control -> SetName(p_control_name);
+        t_new_control -> SetOwner(MCEPptr -> getobj());
+        t_new_control -> SetName(p_control_name);
         ctxt . SetTheResultToNumber(t_new_control -> GetId());
         return;
     }
     else
     {
-        if (t_control != nil)
-            t_control -> Delete();
+        if (t_new_control != nil)
+            t_new_control -> Delete();
     
         ctxt . SetTheResultToEmpty();
     }
@@ -588,11 +591,6 @@ void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control
     
     t_control -> Delete();
     t_control -> Release();
-}
-
-void MCNativeControlExecDo(MCExecContext& ctxt)
-{
-    ctxt . Unimplemented();
 }
 
 void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target)
@@ -1357,39 +1355,122 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
     }
 }
 
-void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
+static MCNativeControlActionInfo *lookup_control_action(const MCNativeControlActionTable *p_table, MCNativeControlAction p_which)
 {
-    r_id = m_id;
+	for(uindex_t i = 0; i < p_table -> size; i++)
+		if (p_table -> table[i] . action == p_which)
+			return &p_table -> table[i];
+	
+	if (p_table -> parent != nil)
+		return lookup_control_action(p_table -> parent, p_which);
+	
+	return nil;
 }
 
-void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
+void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count)
 {
-    if (m_name != nil)
-    {
-        if (MCStringCreateWithCString(m_name, r_name))
-            return;
-    }
-    else
+	MCNativeControl *t_native_control;
+    if (!MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_native_control))
+        return;
+
+	MCNativeControlAction t_action;
+    if (!MCNativeControl::LookupAction(MCStringGetCString(p_action_name), t_action))
         return;
     
-    ctxt . Throw();
-}
-
-void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
-{
-    if (m_name != nil)
-	{
-		MCCStringFree(m_name);
-		m_name = nil;
-	}
-	
-	if (p_name != nil)
+    MCNativeControlActionInfo *t_info;
+    t_info = lookup_control_action(t_native_control -> getactiontable(), t_action);
+    if (t_info != nil)
     {
-        if (MCCStringClone(MCStringGetCString(p_name), m_name))
-            return;
-	}
-    else
-        return;
-	
-    ctxt . Throw();
+        MCNativeControlPtr t_control;
+        t_control . control = t_native_control;
+        
+        switch (t_info -> action)
+        {
+            // no params
+            case kMCNativeControlActionAdvance:
+            case kMCNativeControlActionRetreat:
+            case kMCNativeControlActionReload:
+            case kMCNativeControlActionStop:
+            case kMCNativeControlActionFlashScrollIndicators:
+            case kMCNativeControlActionPlay:
+            case kMCNativeControlActionPause:
+            case kMCNativeControlActionPrepareToPlay:
+            case kMCNativeControlActionBeginSeekingForward:
+            case kMCNativeControlActionBeginSeekingBackward:
+            case kMCNativeControlActionEndSeeking:
+            case kMCNativeControlActionFocus:
+            {
+                ((void(*)(MCExecContext&, MCNativeControlPtr))t_info -> exec_method)(ctxt, t_control);
+                return;
+            }
+            
+            // single string param
+            case kMCNativeControlActionExecute:
+                if (p_argument_count == 1)
+                {
+                    MCAutoStringRef t_string;
+                    &t_string = MCValueRetain((MCStringRef)p_arguments[0]);
+                    ((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef))t_info -> exec_method)(ctxt, t_control, *t_string);
+                    return;
+                }
+                break;
+                
+            // double string param
+            case kMCNativeControlActionLoad:
+                if (p_argument_count == 2)
+                {
+                    MCAutoStringRef t_url;
+                    MCAutoStringRef t_text;
+                    &t_url = MCValueRetain((MCStringRef)p_arguments[0]);
+                    &t_text = MCValueRetain((MCStringRef)p_arguments[1]);
+                    ((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef, MCStringRef))t_info -> exec_method)(ctxt, t_control, *t_url, *t_text);
+                    return;
+                }
+                break;
+            
+            // double integer param
+            case kMCNativeControlActionScrollRangeToVisible:
+                if (p_argument_count == 2)
+                {
+                    integer_t t_start;
+                    integer_t t_end;
+                    if (MCU_stoi4((MCStringRef)p_arguments[0], t_start) && MCU_stoi4((MCStringRef)p_arguments[1], t_end))
+                    {
+                        ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t))t_info -> exec_method)(ctxt, t_control, t_start, t_end);
+                        return;
+                    }
+                }
+                    break;
+            //other
+            case kMCNativeControlActionSnapshot:
+            case kMCNativeControlActionSnapshotExactly:
+            {
+                integer_t t_time;
+                if (MCU_stoi4((MCStringRef)p_arguments[0], t_time))
+                {
+                    if (p_argument_count == 1)
+                    {
+                        ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, t_control, t_time, nil, nil);
+                        return;
+                    }
+                    else if (p_argument_count == 3)
+                    {
+                        integer_t t_max_width;
+                        integer_t t_max_height;
+                        if (MCU_stoi4((MCStringRef)p_arguments[1], t_max_width) && MCU_stoi4((MCStringRef)p_arguments[2], t_max_height))
+                        {
+                            ((void(*)(MCExecContext&, MCNativeControlPtr, integer_t, integer_t*, integer_t*))t_info -> exec_method)(ctxt, t_control, t_time, &t_max_width, &t_max_height);
+                            return;
+                        }
+                    }
+                }
+            }
+                break;
+    
+            case kMCNativeControlActionUnknown:
+            default:
+                break;
+        }
+        ctxt . Throw();
+    }
 }

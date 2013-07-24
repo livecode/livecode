@@ -45,9 +45,25 @@ MCNativeControlPropertyInfo MCNativeControl::kProperties[] =
 
 MCNativeControlPropertyTable MCNativeControl::kPropertyTable =
 {
-	&MCNativeControl::kPropertyTable,
+	nil,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+MCNativeControlActionInfo MCNativeControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCNativeControl::kActionTable =
+{
+/*
+	&MCNativeControl::kActionTable,
+	sizeof(kActions) / sizeof(kActions[0]),
+	&kActions[0],
+ */
+    nil,
+    0,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1002,3 +1018,40 @@ Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
 */
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCNativeControl::GetId(MCExecContext& ctxt, uinteger_t& r_id)
+{
+    r_id = m_id;
+}
+
+void MCNativeControl::GetName(MCExecContext& ctxt, MCStringRef& r_name)
+{
+    if (m_name != nil)
+    {
+        if (MCStringCreateWithCString(m_name, r_name))
+            return;
+    }
+    else
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCNativeControl::SetName(MCExecContext& ctxt, MCStringRef p_name)
+{
+    if (m_name != nil)
+	{
+		MCCStringFree(m_name);
+		m_name = nil;
+	}
+	
+	if (p_name != nil)
+    {
+        if (MCCStringClone(MCStringGetCString(p_name), m_name))
+            return;
+	}
+    else
+        return;
+	
+    ctxt . Throw();
+}

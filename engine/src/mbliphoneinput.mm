@@ -100,6 +100,8 @@ class MCiOSInputControl: public MCiOSControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
     
 public:
 	MCiOSInputControl(void);
@@ -110,7 +112,7 @@ public:
 #endif	
     
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-    virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *parameters);
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetEnabled(MCExecContext& ctxt, bool p_value);
     virtual void SetOpaque(MCExecContext& ctxt, bool p_value);
@@ -144,7 +146,7 @@ public:
     void GetContentType(MCExecContext& ctxt, MCNativeControlInputContentType& r_type);
     
 	// Input-specific actions
-	Exec_stat ExecFocus(MCExecContext& ctxt);
+	void ExecFocus(MCExecContext& ctxt);
     
 	void HandleNotifyEvent(MCNameRef p_notification);
 
@@ -162,6 +164,8 @@ class MCiOSInputFieldControl: public MCiOSInputControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
     
 public:
 	virtual MCNativeControlType GetType(void);
@@ -170,7 +174,8 @@ public:
 	virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint& ep);
 #endif
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    
     void SetAutoFit(MCExecContext& ctxt, bool p_value);
     void SetMinimumFontSize(MCExecContext& ctxt, integer_t p_size);
     void SetAutoClear(MCExecContext& ctxt, bool p_value);
@@ -194,6 +199,8 @@ class MCiOSMultiLineControl: public MCiOSInputControl
 protected:
 	static MCNativeControlPropertyInfo kProperties[];
 	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
 
 public:
 	MCiOSMultiLineControl(void)
@@ -213,7 +220,7 @@ public:
 #endif
 
     virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
-	virtual Exec_stat Do(MCExecContext& ctxt, MCNativeControlAction action, MCParameter *parameters);
+	virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
     
     void SetEditable(MCExecContext& ctxt, bool p_value);
     void SetSelectedRange(MCExecContext& ctxt, const MCNativeControlRange& p_range);
@@ -261,7 +268,7 @@ public:
     void GetDecelerating(MCExecContext& ctxt, bool& r_value);
 
 	// TextView-specific actions
-	Exec_stat ExecScrollRangeToVisible(MCExecContext& ctxt, int32_t p_integer1, int32_t p_integer2);
+	void ExecScrollRangeToVisible(MCExecContext& ctxt, integer_t p_integer1, integer_t p_integer2);
     
 	void HandleEvent(MCNameRef p_message);
 	void HandleEndDragEvent(bool p_decelerate);
@@ -430,6 +437,20 @@ MCNativeControlPropertyTable MCiOSInputControl::kPropertyTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCNativeControlActionInfo MCiOSInputControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(Focus, MCiOSInputControl, Focus)
+};
+
+MCNativeControlActionTable MCiOSInputControl::kActionTable =
+{
+    &MCiOSControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCNativeControlPropertyInfo MCiOSInputFieldControl::kProperties[] =
 {
     DEFINE_RW_CTRL_PROPERTY(AutoFit, Bool, MCiOSInputFieldControl, AutoFit)
@@ -444,6 +465,19 @@ MCNativeControlPropertyTable MCiOSInputFieldControl::kPropertyTable =
 	&MCiOSInputControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSInputFieldControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCiOSInputFieldControl::kActionTable =
+{
+    &MCiOSInputControl::kActionTable,
+    0,
+    nil,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -476,9 +510,23 @@ MCNativeControlPropertyInfo MCiOSMultiLineControl::kProperties[] =
 
 MCNativeControlPropertyTable MCiOSMultiLineControl::kPropertyTable =
 {
-	&MCiOSControl::kPropertyTable,
+	&MCiOSInputControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCiOSMultiLineControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_BINARY_METHOD(ScrollRangeToVisible, MCiOSMultiLineControl, Int32, Int32, ScrollRangeToVisible)
+};
+
+MCNativeControlActionTable MCiOSMultiLineControl::kActionTable =
+{
+    &MCiOSInputControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1234,31 +1282,14 @@ Exec_stat MCiOSInputControl::Do(MCNativeControlAction p_action, MCParameter *p_p
 }
 #endif /* MCiOSInputControl::Do */
 
-Exec_stat MCiOSInputControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	switch(p_action)
-	{
-		case kMCNativeControlActionFocus:
-            if (ExecFocus(ctxt) != ES_NORMAL)
-                break;
-            return ES_NORMAL;
-			
-		default:
-			break;
-	}
-	
-	return MCiOSControl::Do(ctxt, p_action, p_parameters);
-}
-
-Exec_stat MCiOSInputControl::ExecFocus(MCExecContext &ctxt)
+void MCiOSInputControl::ExecFocus(MCExecContext &ctxt)
 {
 	UITextField *t_field;
 	t_field = (UITextField *)GetView();
 	if (t_field == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     [t_field becomeFirstResponder];
-    return ES_NORMAL;   
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2274,45 +2305,17 @@ Exec_stat MCiOSMultiLineControl::Do(MCNativeControlAction p_action, MCParameter 
 }
 #endif /* MCiOSMultiLineControl::Do */
 
-Exec_stat MCiOSMultiLineControl::Do(MCExecContext& ctxt, MCNativeControlAction p_action, MCParameter *p_parameters)
-{
-	switch(p_action)
-	{
-		case kMCNativeControlActionScrollRangeToVisible:
-        {
-            int32_t t_integer1, t_integer2;
-            
-            if (!MCParseParameters(p_parameters, "ii", &t_integer1, &t_integer2))
-            {
-                MCeerror->add(EE_UNDEFINED, 0, 0);
-                return ES_ERROR;
-            }
-            
-            if (ExecScrollRangeToVisible(ctxt, t_integer1, t_integer2) != ES_NORMAL)
-                break;
-            
-            return ES_NORMAL;
-        }            
-			
-		default:
-			break;
-	}
-	
-	return MCiOSInputControl::Do(ctxt, p_action, p_parameters);
-}
-
-Exec_stat MCiOSMultiLineControl::ExecScrollRangeToVisible(MCExecContext& ctxt, int32_t p_integer1, int32_t p_integer2)
+void MCiOSMultiLineControl::ExecScrollRangeToVisible(MCExecContext& ctxt, integer_t p_integer1, integer_t p_integer2)
 {
 	UITextView *t_view;
 	t_view = (UITextView *)GetView();
     
     NSRange t_range;
 	if (t_view == nil)
-        return ES_NOT_HANDLED;
+        return;
     
     t_range = NSMakeRange(p_integer1, p_integer2);
     [t_view scrollRangeToVisible: t_range];
-    return ES_NORMAL;
 }
 
 void MCiOSMultiLineControl::UpdateContentRect()
