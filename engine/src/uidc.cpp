@@ -444,7 +444,7 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
                            const char *displayname)
 {
 	return NULL;
@@ -1153,7 +1153,7 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
-	MCImageBitmap *image = snapshot(t_rect, 0, nil);
+	MCImageBitmap *image = snapshot(t_rect, 1.0, 0, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)

@@ -2576,7 +2576,7 @@ void MCObject::alloccolors()
 		MCscreen->alloccolor(maccolors[i]);
 }
 
-MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, bool p_with_effects)
+MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, MCGFloat p_scale_factor, bool p_with_effects)
 {
 	Chunk_term t_type;
 	t_type = gettype();
@@ -2617,20 +2617,15 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 		t_context_height = p_size->y;
 	}
 
-	// IM-2013-07-19: [[ ResIndependence ]] scale snapshot image to device resolution
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
 	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ MCImageBitmapCreate(ceil(t_context_width * t_scale), ceil(t_context_height * t_scale), t_bitmap);
+	/* UNCHECKED */ MCImageBitmapCreate(ceil(t_context_width * p_scale_factor), ceil(t_context_height * p_scale_factor), t_bitmap);
 	MCImageBitmapClear(t_bitmap);
 
 	MCGContextRef t_gcontext = nil;
 	/* UNCHECKED */ MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_gcontext);
-	///* UNCHECKED */ MCGContextCreateWithRaster(t_raster, t_gcontext);
-	///* UNCHECKED */ MCGContextCreate(t_context_width, t_context_height, true, t_gcontext);
 
-	MCGContextScaleCTM(t_gcontext, t_scale, t_scale);
+	// IM-2013-07-24: [[ ResIndependence ]] take snapshot at specified scale, rather than device scale
+	MCGContextScaleCTM(t_gcontext, p_scale_factor, p_scale_factor);
 	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)

@@ -572,7 +572,8 @@ public:
 	//   type.
 	Exec_stat handleparent(Handler_type type, MCNameRef message, MCParameter* parameters);
 
-	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, bool with_effects);
+	// IM-2013-07-24: [[ ResIndependence ]] Add scale factor to allow taking high-res snapshots
+	MCImageBitmap *snapshot(const MCRectangle *rect, const MCPoint *size, MCGFloat p_scale_factor, bool with_effects);
 
 	// MW-2011-01-14: [[ Bug 9288 ]] Added 'parid' to make sure 'the properties of card id ...' returns
 	//   the correct result.

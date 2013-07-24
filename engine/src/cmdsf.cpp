@@ -918,7 +918,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
@@ -935,7 +935,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, sdisp);
+			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
 			if (t_bitmap == nil)
 			{
 				delete sdisp;
@@ -1640,7 +1640,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, MCResGetDeviceScale(), with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1655,7 +1655,8 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, disp);
+			// IM-2013-07-22: [[ ResIndependence ]] Import snapshot image at device resolution
+			t_bitmap = MCscreen->snapshot(r, MCResGetDeviceScale(), w, disp);
 
 			delete disp;
 		}

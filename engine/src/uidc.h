@@ -334,7 +334,7 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
