@@ -395,6 +395,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 struct MCScreenDCDoSnapshotEnv
 {
 	MCRectangle r;
+	MCGFloat scale_factor;
 	uint4 window;
 	const char *displayname;
 	MCImageBitmap *result;
@@ -409,7 +410,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle r;
 	uint4 window;
 	const char *displayname;
-	r = env -> r;
+	
 	window = env -> window;
 	displayname = env -> displayname;
 	
@@ -423,8 +424,12 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle t_screen_rect;
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	t_screen_rect = t_displays[0] . viewport;
-	r = MCU_clip_rect(r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	t_screen_rect = MCGRectangleGetIntegerInterior(MCResDeviceToUserRect(t_displays[0] . viewport));
+	r = MCU_clip_rect(env -> r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	
+	uint32_t t_bitmap_width, t_bitmap_height;
+	t_bitmap_width = ceil(r . width * env -> scale_factor);
+	t_bitmap_height = ceil(r . height * env -> scale_factor);
 	
 	if (r.width != 0 && r.height != 0)
 	{
@@ -439,10 +444,11 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		}
 		
 		if (t_success)
-			t_success = MCImageBitmapCreate(r.width, r.height, t_bitmap);
+			t_success = MCImageBitmapCreate(t_bitmap_width, t_bitmap_height, t_bitmap);
 		
 		if (t_success)
 		{
+			MCImageBitmapClear(t_bitmap);
 			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
 			t_success = t_img_context != nil;
 		}
@@ -450,8 +456,11 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		if (t_success)
 		{
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
-			CGContextTranslateCTM(t_img_context, 0, -r . height);
-			CGContextTranslateCTM(t_img_context, -r.x, -r.y);
+			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
+			
+			CGContextScaleCTM(t_img_context, env -> scale_factor, env -> scale_factor);
+			
+			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -486,7 +495,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			
-			float t_scale = MCIPhoneGetDeviceScale();
+			float t_scale = MCIPhoneGetResolutionScale();
 			CGContextScaleCTM(t_img_context, t_scale, t_scale);
 			
 #ifndef USE_UNDOCUMENTED_METHODS
@@ -559,12 +568,13 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	env -> result = t_bitmap;
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
 {
 	MCScreenDCDoSnapshotEnv env;
-	env . r = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(r));
+	env . r = r;
 	env . window = window;
 	env . displayname = displayname;
+	env . scale_factor = p_scale_factor;
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
