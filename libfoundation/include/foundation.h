@@ -418,6 +418,7 @@ typedef struct __MCBoolean *MCBooleanRef;
 typedef struct __MCNumber *MCNumberRef;
 typedef struct __MCString *MCStringRef;
 typedef struct __MCName *MCNameRef;
+typedef struct __MCData *MCDataRef;
 typedef struct __MCArray *MCArrayRef;
 typedef struct __MCList *MCListRef;
 typedef struct __MCSet *MCSetRef;
@@ -896,6 +897,7 @@ enum
 	kMCValueTypeCodeNumber,
 	kMCValueTypeCodeName,
 	kMCValueTypeCodeString,
+    kMCValueTypeCodeData,
 	kMCValueTypeCodeArray,
 	kMCValueTypeCodeList,
 	kMCValueTypeCodeSet,
@@ -1435,6 +1437,49 @@ bool MCStringAppendFormatV(MCStringRef string, const char *format, va_list args)
 
 bool MCStringSplit(MCStringRef string, MCStringRef element_del, MCStringRef key_del, MCStringOptions options, MCArrayRef& r_array);
 bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef row_del, MCStringOptions options, MCArrayRef& r_array);
+
+
+////////////////////////////////////////////////////////////////////////////////
+//
+//  DATA DEFINITIONS
+//
+// Immutable data methods
+
+bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
+
+uindex_t MCDataGetLength(MCDataRef p_data);
+const byte_t *MCDataGetBytePtr(MCDataRef p_data);
+
+byte_t MCDataGetByteAtIndex(MCDataRef p_data, uindex_t p_index);
+
+hash_t MCDataHash(MCDataRef p_data);
+bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right);
+
+compare_t MCDataCompareTo(MCDataRef p_left, MCDataRef p_right);
+
+// Mutable data methods
+
+bool MCDataCreateMutable(uindex_t p_initial_capacity, MCDataRef& r_data);
+
+bool MCDataCopy(MCDataRef p_data, MCDataRef& r_new_data);
+bool MCDataCopyAndRelease(MCDataRef p_data, MCDataRef& r_new_data);
+bool MCDataMutableCopy(MCDataRef p_data, MCDataRef& r_mutable_data);
+bool MCDataMutableCopyAndRelease(MCDataRef p_data, MCDataRef& r_mutable_data);
+
+bool MCDataIsMutable(const MCDataRef p_data);
+
+bool MCDataAppend(MCDataRef r_data, MCDataRef p_suffix);
+bool MCDataAppendBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
+bool MCDataAppendByte(MCDataRef r_data, byte_t p_byte);
+
+bool MCDataPrepend(MCDataRef r_data, MCDataRef p_prefix);
+bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte_count);
+bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte);
+
+bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data);
+bool MCDataRemove(MCDataRef r_data, MCRange p_range);
+bool MCDataReplace(MCDataRef r_data, MCRange p_range, MCDataRef p_new_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 //
