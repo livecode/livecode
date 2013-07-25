@@ -57,6 +57,7 @@ void InterfaceDestroy(InterfaceRef interface);
 
 bool InterfaceBegin(InterfaceRef interface, Position where, NameRef name);
 bool InterfaceDefineUse(InterfaceRef interface, Position where, NameRef use);
+bool InterfaceDefineUseOnPlatform(InterfaceRef interface, Position where, NameRef type, NameRef platform);
 bool InterfaceDefineHook(InterfaceRef interface, Position where, NameRef handler, NameRef target);
 
 bool InterfaceBeginEnum(InterfaceRef interface, Position where, NameRef name);

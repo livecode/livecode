@@ -49,6 +49,25 @@ struct Enum
 	uint32_t element_count;
 };
 
+enum Platform
+{
+	kPlatformMac,
+	kPlatformWindows,
+	kPlatformLinux,
+	kPlatformIOS,
+	kPlatformAndroid,
+	
+	__kPlatformCount__,
+};
+
+enum HandlerMapping
+{
+	kHandlerMappingNone,
+	kHandlerMappingC,
+	kHandlerMappingObjC,
+	kHandlerMappingJava,
+};
+
 struct HandlerParameter
 {
 	Position where;
@@ -74,6 +93,8 @@ struct HandlerVariant
 	bool return_type_indirect;
 	
 	NameRef binding;
+	
+	HandlerMapping mappings[__kPlatformCount__];
 };
 
 struct Handler
@@ -101,6 +122,8 @@ struct Interface
 	bool use_cpp_naming : 1;
 	bool use_objc_exceptions : 1;
 	bool use_objc_objects : 1;
+	
+	HandlerMapping use_mappings[__kPlatformCount__];
 
 	NameRef startup_hook;
 	NameRef shutdown_hook;

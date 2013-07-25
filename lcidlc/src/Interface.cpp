@@ -51,7 +51,11 @@ enum InterfaceError
 	kInterfaceErrorJavaImpliesInParam,
 	kInterfaceErrorMethodsCannotHaveVariants,
 	kInterfaceErrorMethodsMustBeJava,
-	kInterfaceErrorMethodsAreAlwaysTail
+	kInterfaceErrorMethodsAreAlwaysTail,
+	kInterfaceErrorUnknownHandlerMapping,
+	kInterfaceErrorUnknownPlatform,
+	kInterfaceErrorObjCNotSupported,
+	kInterfaceErrorJavaNotSupported,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -139,6 +143,18 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 		break;
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorUnknownHandlerMapping:
+		fprintf(stderr, "Unknown handler mapping type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorUnknownPlatform:
+		fprintf(stderr, "Unknown platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;	
+	case kInterfaceErrorObjCNotSupported:
+		fprintf(stderr, "Objective-C mapping not supported on platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorJavaNotSupported:
+		fprintf(stderr, "Java mapping not supported on platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
 		break;
 	}
 
@@ -241,6 +257,47 @@ bool InterfaceDefineUse(InterfaceRef self, Position p_where, NameRef p_use)
 		self -> use_objc_objects = true;
 	else
 		return InterfaceReport(self, p_where, kInterfaceErrorUnknownUse, p_use);
+	
+	return true;
+}
+
+bool InterfaceDefineUseOnPlatform(InterfaceRef self, Position p_where, NameRef p_use, NameRef p_platform)
+{
+	MCLog("%s - use %s on %s", PositionDescribe(p_where), StringGetCStringPtr(NameGetString(p_use)), StringGetCStringPtr(NameGetString(p_platform)));
+	
+	HandlerMapping t_mapping;
+	if (NameEqualToCString(p_use, "none"))
+		t_mapping = kHandlerMappingNone;
+	else if (NameEqualToCString(p_use, "c"))
+		t_mapping = kHandlerMappingC;
+	else if (NameEqualToCString(p_use, "objc"))
+		t_mapping = kHandlerMappingObjC;
+	else if (NameEqualToCString(p_use, "java"))
+		t_mapping = kHandlerMappingJava;
+	else
+		return InterfaceReport(self, p_where, kInterfaceErrorUnknownHandlerMapping, p_use);
+	
+	Platform t_platform;
+	if (NameEqualToCString(p_platform, "mac"))
+		t_platform = kPlatformMac;
+	else if (NameEqualToCString(p_platform, "windows"))
+		t_platform = kPlatformWindows;
+	else if (NameEqualToCString(p_platform, "linux"))
+		t_platform = kPlatformLinux;
+	else if (NameEqualToCString(p_platform, "ios"))
+		t_platform = kPlatformIOS;
+	else if (NameEqualToCString(p_platform, "android"))
+		t_platform = kPlatformAndroid;
+	else
+		return InterfaceReport(self, p_where, kInterfaceErrorUnknownPlatform, p_platform);
+	
+	if (t_mapping == kHandlerMappingObjC && !(t_platform == kPlatformMac || t_platform == kPlatformIOS))
+		return InterfaceReport(self, p_where, kInterfaceErrorObjCNotSupported, p_platform);
+	
+	if (t_mapping == kHandlerMappingJava && !(t_platform == kPlatformAndroid))
+		return InterfaceReport(self, p_where, kInterfaceErrorJavaNotSupported, p_platform);
+	
+	self -> use_mappings[t_platform] = t_mapping;
 	
 	return true;
 }
@@ -376,8 +433,10 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 	
 	if (!MCMemoryResizeArray(t_handler -> variant_count + 1, t_handler -> variants, t_handler -> variant_count))
 		return false;
-		
+	
 	t_handler -> variants[t_handler -> variant_count - 1] . where = p_where;
+	
+	memcpy(t_handler -> variants[t_handler -> variant_count - 1] . mappings, self -> use_mappings, sizeof(self -> use_mappings));
 	
 	self -> current_handler = t_handler;
 	

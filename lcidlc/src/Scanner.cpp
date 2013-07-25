@@ -157,6 +157,11 @@ static bool ScannerIsStringPrefix(ScannerRef self)
 	return false;
 }
 
+static bool ScannerIsComma(ScannerRef self)
+{
+	return self -> input_buffer[self -> input_frontier] == ',';
+}
+
 static void ScannerSkipNewline(ScannerRef self)
 {
 	char t_lookahead;
@@ -355,6 +360,13 @@ static bool ScannerConsume(ScannerRef self)
 		while(t_type == kTokenTypeNone);
 		
 		t_success = StringCreateWithNativeChars(self -> input_buffer + t_start + 1, self -> input_frontier - t_start - 2, t_value);
+	}
+	else if (ScannerIsComma(self))
+	{
+		self -> input_frontier += 1;
+		self -> input_column += 1;
+		
+		t_type = kTokenTypeComma;
 	}
 	else
 	{
