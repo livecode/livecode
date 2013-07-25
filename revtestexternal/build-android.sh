@@ -12,7 +12,9 @@ SRCROOT=$PROJECT
 JAVA_SDK=`/usr/libexec/java_home`
 JCOUNT=4
 
-CLASSPATH="$ANDROID_SDK/platforms/android-8/android.jar"
+ENGINE_CLASSPATH=$PROJECT/../_build/android/$MODE/LiveCode-Community.jar
+
+CLASSPATH="$ENGINE_CLASSPATH:$ANDROID_SDK/platforms/android-8/android.jar"
 NDKBUILD=$ANDROID_NDK/ndk-build
 DSTROOT=$SRCROOT/_build/android/$MODE/$NAME
 
@@ -31,7 +33,7 @@ if [ $? != 0 ]; then
 	exit $?
 fi
 
-echo "Building java classes components…"
+echo "Building java classes components… $PROJECT/../_build/android/$MODE/LiveCode-Community.jar"
 mkdir -p "$DSTROOT/classes"
 "$JAVAC" -d "$DSTROOT/classes" -cp "$CLASSPATH" -sourcepath "$SRCROOT/src" "$SRCROOT/src/$NAME.java" "$PROJECT/derived_src/LC.java"
 if [ $? != 0 ]; then

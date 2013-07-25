@@ -215,6 +215,9 @@ enum MCExternalInterfaceQueryTag
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] Accessor to get the JavaEnv for the
 	//   system thread.
 	kMCExternalInterfaceQuerySystemJavaEnv = 7, // V5
+	
+	// MW-2013-07-25: [[ ExternalsApiV5 ]] Accessor to get the EngineApi object
+	kMCExternalInterfaceQueryEngine = 8, // V5
 };
 
 enum
@@ -1961,6 +1964,9 @@ extern void *MCAndroidGetContainer(void);
 extern void *MCAndroidGetScriptJavaEnv(void);
 extern void *MCAndroidGetSystemJavaEnv(void);
 
+// MW-2013-07-25: [[ ExternalsApiV5 ]] Method to get the Engine object.
+extern void *MCAndroidGetEngine(void);
+
 static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, void *r_value)
 {
 #if defined(TARGET_SUBPLATFORM_IPHONE)
@@ -1997,6 +2003,11 @@ static MCExternalError MCExternalInterfaceQuery(MCExternalInterfaceQueryTag op, 
 		// MW-2013-06-13: [[ ExternalsApiV5 ]] Implementation of the systen JavaEnv accessor.
 		case kMCExternalInterfaceQuerySystemJavaEnv:
 			*(void **)r_value = MCAndroidGetSystemJavaEnv();
+			break;
+
+		// MW-2013-07-25: [[ ExternalsApiV5 ]] Implementation of the Engine accessor.
+		case kMCExternalInterfaceQueryEngine:
+			*(void **)r_value = MCAndroidGetEngine();
 			break;
 
 		default:

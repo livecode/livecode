@@ -34,3 +34,7 @@ command revTestExternalTestArrays
 
 tail java command revTestExternalAndroidButtonCreate
 tail java command revTestExternalAndroidButtonDestroy
+
+java function revTestExternalRunActivity return c-string
+
+java command revTestExternalRunOnSystemThread

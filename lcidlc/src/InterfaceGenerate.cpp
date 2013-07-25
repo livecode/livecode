@@ -1145,6 +1145,7 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 	{
 		{ "InterfaceQueryActivity", "jobject", nil, nil },
 		{ "InterfaceQueryContainer", "jobject", nil, nil },
+		{ "InterfaceQueryEngine", "jobject", nil, nil },
 		{ "ObjectResolve", "jlong", "jobject chunk", "chunk" },
 		{ "ObjectRetain", "void", "jlong object", "object" },
 		{ "ObjectRelease", "void", "jlong object", "object" },
@@ -1153,6 +1154,14 @@ static bool InterfaceGenerateExports(InterfaceRef self, CoderRef p_coder)
 		{ "ObjectPost", "void", "jlong object, jobject message, jobject signature, jobject arguments", "object, message, signature, arguments" },
 		{ "ContextMe", "jlong", nil, nil },
 		{ "ContextTarget", "jlong", nil, nil },
+		{ "RunOnSystemThread", "void", "jobject runnable", "runnable" },
+		{ "WaitCreate", "jlong", "jint options", "options" },
+		{ "WaitRelease", "void", "jlong wait", "wait" },
+		{ "WaitIsRunning", "jboolean", "jlong wait", "wait" },
+		{ "WaitRun", "void", "jlong wait", "wait" },
+		{ "WaitReset", "void", "jlong wait", "wait" },
+		{ "WaitBreak", "void", "jlong wait", "wait" },
+
 	};
 	t_java_class_name = strdup(NameGetCString(self -> qualified_name));
 	for(uint32_t i = 0; t_java_class_name[i] != '\0'; i++)

@@ -6,6 +6,8 @@ import android.util.*;
 import android.app.*;
 import android.view.*;
 import android.widget.*;
+import android.content.*;
+import android.net.*;
 
 // We must export a public class with the same name as the external.
 public class revtestexternal
@@ -54,5 +56,54 @@ public class revtestexternal
 		t_container . removeView(s_button);
 		s_button = null;
 		s_target = null;
+	}
+	
+	public static String revTestExternalRunActivity()
+	{
+		Intent t_intent;
+		t_intent = new Intent(Intent . ACTION_GET_CONTENT);
+		t_intent . setType("image/*");
+		
+		final String[] t_result = new String[1];
+		LC.ActivityRun(t_intent, new LC.ActivityResultCallback() {
+			public void handleActivityResult(int p_result_code, Intent p_data)
+			{
+				if (p_result_code == Activity.RESULT_CANCELED)
+					t_result[0] = null;
+				else
+					t_result[0] = p_data . getDataString();
+			}
+		});
+		
+		if (t_result[0] == null)
+			return "";
+		
+		return t_result[0];
+	}
+	
+	public static void revTestExternalRunOnSystemThread()
+	{
+		final LC.Wait t_wait = new LC.Wait(false);
+		
+		LC.RunOnSystemThread(new Runnable() {
+			public void run()
+			{
+				AlertDialog.Builder t_dialog;
+				t_dialog = new AlertDialog.Builder(LC.InterfaceQueryActivity());
+				t_dialog . setTitle("Test Dialog");
+				t_dialog . setMessage("Hello World!");
+				t_dialog . setOnCancelListener(new DialogInterface.OnCancelListener() {
+					public void onCancel(DialogInterface p_dialog)
+					{
+						t_wait . Break();
+					}
+				});
+				t_dialog . show();
+			}
+		});
+		
+		t_wait . Run();
+		
+		t_wait . Release();
 	}
 };
