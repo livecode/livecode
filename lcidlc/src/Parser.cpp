@@ -39,7 +39,7 @@ enum ParserError
 
 enum ParserKeyword
 {
-	kParserKeywordNone,
+	kParserKeyword__None,
 	kParserKeywordExternal,
 	kParserKeywordUse,
 	kParserKeywordOn,
@@ -60,6 +60,9 @@ enum ParserKeyword
 	kParserKeywordNative,
 	kParserKeywordMethod,
 	kParserKeywordTail,
+	kParserKeywordObjc,
+	kParserKeywordC,
+	kParserKeywordNone,
 };
 
 struct Parser
@@ -99,6 +102,9 @@ static const char *s_parser_keyword_strings[] =
 	"native",
 	"method",
 	"tail",
+	"objc",
+	"c",
+	"none",
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -164,7 +170,6 @@ static bool ParserWillMatchToken(ParserRef self, TokenType p_type)
 	return true;
 }
 
-
 static bool ParserWillMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 {
 	const Token *t_token;
@@ -180,7 +185,7 @@ static bool ParserWillMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 
 static bool ParserWillMatchKeywords(ParserRef self, ParserKeyword *p_keywords)
 {
-	for(uint32_t i = 0; p_keywords[i] != kParserKeywordNone; i++)
+	for(uint32_t i = 0; p_keywords[i] != kParserKeyword__None; i++)
 		if (ParserWillMatchKeyword(self, p_keywords[i]))
 			return true;
 
@@ -342,9 +347,30 @@ static bool ParserSkipKeyword(ParserRef self, ParserKeyword p_keyword, bool& r_s
 	return true;
 }
 
+static bool ParserSkipToken(ParserRef self, TokenType p_token, bool& r_skipped)
+{
+	if (ParserWillMatchToken(self, p_token))
+	{
+		const Token *t_token;
+		if (!ScannerRetrieve(self -> scanner, t_token))
+			return false;
+		
+		if (!ScannerAdvance(self -> scanner))
+			return false;
+		
+		self -> position = t_token -> start;
+		
+		r_skipped = true;
+	}
+	else
+		r_skipped = false;
+
+	return true;
+}
+
 static bool ParserMatchKeywords(ParserRef self, ParserKeyword *p_keywords, ParserKeyword& r_matched)
 {
-	for(uint32_t i = 0; p_keywords[i] != kParserKeywordNone; i++)
+	for(uint32_t i = 0; p_keywords[i] != kParserKeyword__None; i++)
 	{
 		bool t_found;
 		if (!ParserSkipKeyword(self, p_keywords[i], t_found))
@@ -384,6 +410,7 @@ static bool ParserReduceEnumElementDefinition(ParserRef self);
 static bool ParserReduceParameterDefinition(ParserRef self);
 static bool ParserReduceReturnDefinition(ParserRef self);
 static bool ParserReduceCallDefinition(ParserRef self);
+static bool ParserReduceUseDefinition(ParserRef self);
 
 // interface
 //   : 'external' ID
@@ -414,7 +441,7 @@ static bool ParserReduceInterface(ParserRef self)
 		if (!ParserReduceHookClause(self))
 			return false;
 	
-	static ParserKeyword s_definition_keywords[] = { kParserKeywordEnum, kParserKeywordCommand, kParserKeywordFunction, kParserKeywordJava, kParserKeywordNative, kParserKeywordTail, kParserKeywordNone };
+	static ParserKeyword s_definition_keywords[] = { kParserKeywordEnum, kParserKeywordCommand, kParserKeywordFunction, kParserKeywordJava, kParserKeywordNative, kParserKeywordTail, kParserKeyword__None };
 	while(ParserWillMatchKeywords(self, s_definition_keywords))
 		if (!ParserReduceDefinition(self))
 			return false;
@@ -429,7 +456,7 @@ static bool ParserReduceInterface(ParserRef self)
 }
 
 // use-clause
-//   : 'uses' ID
+//   : 'use' ID
 //
 static bool ParserReduceUseClause(ParserRef self)
 {
@@ -441,11 +468,11 @@ static bool ParserReduceUseClause(ParserRef self)
 	Position t_position;
 	t_position = self -> position;
 
-	NameRef t_uses_name;
-	if (!ParserMatchIdentifier(self, t_uses_name))
+	NameRef t_use_name;
+	if (!ParserMatchIdentifier(self, t_use_name))
 		return false;
-		
-	if (!InterfaceDefineUse(self -> interface, t_position, t_uses_name))
+	
+	if (!InterfaceDefineUse(self -> interface, t_position, t_use_name))
 		return false;
 		
 	return true;
@@ -486,6 +513,7 @@ static bool ParserReduceHookClause(ParserRef self)
 //   | command-definition
 //   | function-definition
 //   | method-definition
+//   | use-definition
 //
 static bool ParserReduceDefinition(ParserRef self)
 {
@@ -507,7 +535,10 @@ static bool ParserReduceDefinition(ParserRef self)
 	if (ParserWillMatchKeyword(self, kParserKeywordEnum))
 		return ParserReduceEnumDefinition(self);
 	
-	static ParserKeyword s_handler_prefixes[] = { kParserKeywordCommand, kParserKeywordFunction, kParserKeywordJava, kParserKeywordNative, kParserKeywordTail, kParserKeywordNone };
+	if (ParserWillMatchKeyword(self, kParserKeywordUse))
+		return ParserReduceUseDefinition(self);
+	
+	static ParserKeyword s_handler_prefixes[] = { kParserKeywordCommand, kParserKeywordFunction, kParserKeywordTail, kParserKeyword__None };
 	if (ParserWillMatchKeywords(self, s_handler_prefixes))
 		return ParserReduceHandlerDefinition(self);
 		
@@ -573,8 +604,50 @@ static bool ParserReduceEnumElementDefinition(ParserRef self)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// use-definition
+//   : 'use' ID 'on' { ID , ',' }
+//
+static bool ParserReduceUseDefinition(ParserRef self)
+{
+	ParserMark(self);
+	
+	if (!ParserMatchKeyword(self, kParserKeywordUse))
+		return false;
+	
+	Position t_position;
+	t_position = self -> position;
+	
+	NameRef t_type_name;
+	if (!ParserMatchIdentifier(self, t_type_name))
+		return false;
+	
+	if (!ParserMatchKeyword(self, kParserKeywordOn))
+		return false;
+	
+	for(;;)
+	{
+		NameRef t_platform_name;
+		if (!ParserMatchIdentifier(self, t_platform_name))
+			return false;
+		
+		if (!InterfaceDefineUseOnPlatform(self -> interface, t_position, t_type_name, t_platform_name))
+			return false;
+		
+		bool t_skipped_comma;
+		if (!ParserSkipToken(self, kTokenTypeComma, t_skipped_comma))
+			return false;
+		
+		if (!t_skipped_comma)
+			break;
+	}
+
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // handler-definition
-//   : [ 'tail' ] [ 'java' | 'native' ] ( [ 'command' | 'function' | 'method' ] ) ) ID
+//   : [ 'tail' ] ( [ 'command' | 'function' | 'method' ] ) ) ID
 //       { parameter-definition }
 //       [ return ID ]
 //       [ call ID ]
@@ -590,11 +663,11 @@ static bool ParserReduceHandlerDefinition(ParserRef self)
 	if (!ParserSkipKeyword(self, kParserKeywordTail, t_is_tail))
 		return false;
 	
-	bool t_is_java, t_is_native;
+	/* bool t_is_java, t_is_native;
 	if (!ParserSkipKeyword(self, kParserKeywordJava, t_is_java))
 		return false;
 	if (!t_is_java && !ParserSkipKeyword(self, kParserKeywordNative, t_is_native))
-		return false;
+		return false;*/
 		
 	HandlerType t_type;
 	bool t_skipped;
@@ -602,8 +675,8 @@ static bool ParserReduceHandlerDefinition(ParserRef self)
 		t_type = kHandlerTypeCommand;
 	else if (ParserSkipKeyword(self, kParserKeywordFunction, t_skipped) && t_skipped)
 		t_type = kHandlerTypeFunction;
-	else if (ParserSkipKeyword(self, kParserKeywordMethod, t_skipped) && t_skipped)
-		t_type = kHandlerTypeMethod;
+/*	else if (ParserSkipKeyword(self, kParserKeywordMethod, t_skipped) && t_skipped)
+		t_type = kHandlerTypeMethod;*/
 	else
 		return false;
 	
@@ -613,15 +686,15 @@ static bool ParserReduceHandlerDefinition(ParserRef self)
 	
 	HandlerAttributes t_attr;
 	t_attr = 0;
-	if (t_is_java)
-		t_attr |= kHandlerAttributeIsJava;
+	/*if (t_is_java)
+		t_attr |= kHandlerAttributeIsJava;*/
 	if (t_is_tail)
 		t_attr |= kHandlerAttributeIsTail;
 		
 	if (!InterfaceBeginHandler(self -> interface, t_position, t_type, t_attr, t_name))
 		return false;
 				
-	static ParserKeyword s_parameter_prefixes[] = { kParserKeywordOptional, kParserKeywordIn, kParserKeywordOut, kParserKeywordInOut, kParserKeywordRef, kParserKeywordNone };
+	static ParserKeyword s_parameter_prefixes[] = { kParserKeywordOptional, kParserKeywordIn, kParserKeywordOut, kParserKeywordInOut, kParserKeywordRef, kParserKeyword__None };
 	while(ParserWillMatchKeywords(self, s_parameter_prefixes))
 		if (!ParserReduceParameterDefinition(self))
 			return false;
@@ -731,7 +804,7 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	Position t_position;
 	t_position = self -> position;
 		
-	static ParserKeyword s_param_type_prefixes[] = { kParserKeywordIn, kParserKeywordOut, kParserKeywordInOut, kParserKeywordRef, kParserKeywordNone };
+	static ParserKeyword s_param_type_prefixes[] = { kParserKeywordIn, kParserKeywordOut, kParserKeywordInOut, kParserKeywordRef, kParserKeyword__None };
 	ParserKeyword t_keyword;
 	if (!ParserMatchKeywords(self, s_param_type_prefixes, t_keyword))
 		return false;

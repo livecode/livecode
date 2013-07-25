@@ -187,6 +187,7 @@ typedef enum MCExternalInterfaceQuery
 	kMCExternalInterfaceQueryContainer = 5,
 	kMCExternalInterfaceQueryScriptJavaEnv = 6,
 	kMCExternalInterfaceQuerySystemJavaEnv = 7,
+	kMCExternalInterfaceQueryEngine = 8,
 } MCExternalInterfaceQuery;
 
 enum
@@ -2812,6 +2813,13 @@ static jobject java__get_container(void)
 	return t_activity;
 }
 
+static jobject java__get_engine(void)
+{
+	jobject t_activity;
+	s_interface -> interface_query(kMCExternalInterfaceQueryEngine, &t_activity);
+	return t_activity;
+}
+
 //////////
 
 static bool java_from__bool(JNIEnv *env, bool p_value)
@@ -3369,6 +3377,101 @@ static jobject java_lcapi_InterfaceQueryActivity(JNIEnv *env)
 static jobject java_lcapi_InterfaceQueryContainer(JNIEnv *env)
 {
 	return java__get_container();
+}
+
+static jobject java_lcapi_InterfaceQueryEngine(JNIEnv *env)
+{
+	return java__get_engine();
+}
+
+static void java_lcapi_RunOnSystemThread_callback(void *context)
+{
+	jclass t_class;
+	t_class = s_android_env -> GetObjectClass((jobject)context);
+	
+	jmethodID t_method;
+	t_method = s_android_env -> GetMethodID(t_class, "run", "()V");
+	
+	if (t_method != 0)
+		s_android_env -> CallVoidMethod((jobject)context, t_method);
+}		
+	
+static void java_lcapi_RunOnSystemThread(JNIEnv *env, jobject runnable)
+{
+	jobject t_global_runnable;
+	t_global_runnable = s_engine_env -> NewGlobalRef(runnable);
+	LCRunOnSystemThread(java_lcapi_RunOnSystemThread_callback, t_global_runnable);
+	s_engine_env -> DeleteGlobalRef(t_global_runnable);
+}		
+
+static jlong java_lcapi_WaitCreate(JNIEnv *env, jint options)
+{
+	LCError t_error;
+	LCWaitRef t_wait;
+	t_error = LCWaitCreate(options, &t_wait);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return false;
+	}
+	return (jlong)t_wait;
+}
+
+static void java_lcapi_WaitRelease(JNIEnv *env, jlong wait)
+{
+	LCError t_error;
+	t_error = LCWaitRelease((LCWaitRef)wait);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return;
+	}
+}
+
+static jboolean java_lcapi_WaitIsRunning(JNIEnv *env, jlong wait)
+{
+	LCError t_error;
+	bool t_running;
+	t_error = LCWaitIsRunning((LCWaitRef)wait, &t_running);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return false;
+	}
+	return t_running;
+}
+	
+static void java_lcapi_WaitRun(JNIEnv *env, jlong wait)
+{
+	LCError t_error;
+	t_error = LCWaitRun((LCWaitRef)wait);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return;
+	}
+}
+
+static void java_lcapi_WaitReset(JNIEnv *env, jlong wait)
+{
+	LCError t_error;
+	t_error = LCWaitReset((LCWaitRef)wait);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return;
+	}
+}
+
+static void java_lcapi_WaitBreak(JNIEnv *env, jlong wait)
+{
+	LCError t_error;
+	t_error = LCWaitBreak((LCWaitRef)wait);
+	if (t_error != kLCErrorNone)
+	{
+		java_lcapi__throw(env, t_error);
+		return;
+	}
 }
 	
 #endif

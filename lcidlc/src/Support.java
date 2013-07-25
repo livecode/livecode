@@ -3,6 +3,8 @@ package com.runrev.external;
 import java.lang.*;
 import android.app.*;
 import android.view.*;
+import android.content.*;
+import com.runrev.android.EngineApi;
 
 public class LC
 {
@@ -191,6 +193,65 @@ public class LC
 		//////////
 	};
 	
+	public static class Wait
+	{
+		private long m_pointer;
+		
+		public Wait(boolean p_allow_dispatch)
+		{
+			if (p_allow_dispatch)
+				m_pointer = __WaitCreate(1);
+			else
+				m_pointer = __WaitCreate(0);
+		}
+		
+		public void Release()
+		{
+			if (m_pointer == 0)
+				return;
+			
+			__WaitRelease(m_pointer);
+			
+			m_pointer = 0;
+		}
+		
+		public boolean IsRunning()
+		{
+			Check();
+			return __WaitIsRunning(m_pointer);
+		}
+		
+		public void Run()
+		{
+			Check();
+			__WaitRun(m_pointer);
+		}
+		
+		public void Break()
+		{
+			Check();
+			__WaitBreak(m_pointer);
+		}
+		
+		public void Reset()
+		{
+			Check();
+			__WaitReset(m_pointer);
+		}
+		
+		private void Check()
+		{
+			if (m_pointer == 0)
+				throw new RuntimeException();
+		}
+		
+		protected void finalize() throws java.lang.Throwable
+		{
+			Release();
+			super.finalize();
+		}
+	};
+	
 	public static Object ContextMe()
 	{
 		return new Object(__ContextMe());
@@ -201,15 +262,55 @@ public class LC
 		return new Object(__ContextTarget());
 	}
 	
+	///////////
+	
 	public static Activity InterfaceQueryActivity()
 	{
-		return __InterfaceQueryActivity();
+		return getEngineApi() . getActivity();
 	}
 	
 	public static ViewGroup InterfaceQueryContainer()
 	{
-		return __InterfaceQueryContainer();
+		return getEngineApi() . getContainer();
 	}
+	
+	//////////
+	
+	public interface ActivityResultCallback
+	{
+		public abstract void handleActivityResult(int resultCode, Intent data);
+	};
+
+	public static void ActivityRun(Intent p_intent, ActivityResultCallback p_callback)
+	{
+		final ActivityResultCallback t_callback = p_callback;
+		getEngineApi() . runActivity(p_intent, new EngineApi.ActivityResultCallback() {
+			public void handleActivityResult(int resultCode, Intent data)
+			{
+				t_callback . handleActivityResult(resultCode, data);
+			}
+		});
+	}
+	
+	//////////
+	
+	public static void RunOnSystemThread(Runnable p_callback)
+	{
+		__RunOnSystemThread(p_callback);
+	}
+	
+	//////////
+	
+	private static EngineApi s_engine_api = null;
+	
+	private static EngineApi getEngineApi()
+	{
+		if (s_engine_api == null)
+			s_engine_api = __InterfaceQueryEngine();
+		return s_engine_api;
+	}
+	
+	//////////
 	
 	/*private static native long ArrayCreate(int options);
 	private static native void ArrayRetain(long array);
@@ -246,16 +347,20 @@ public class LC
 	private static native Object __ContextResult(int options);
 	private static native Object __ContextIt(int options);
 	private static native Object __ContextEvaluate(String expression, int options);
-	private static native Object __ContextExecute(String statements, int options);
+	private static native Object __ContextExecute(String statements, int options);*/
 	
 	private static native long __WaitCreate(int options);
-	private static native long __WaitRetain(long wait);
+	//private static native long __WaitRetain(long wait);
 	private static native long __WaitRelease(long wait);
 	private static native boolean __WaitIsRunning(long wait);
 	private static native void __WaitRun(long wait);
 	private static native void __WaitBreak(long wait);
-	private static native void __WaitReset(long wait);*/
+	private static native void __WaitReset(long wait);
 	
-	private static native Activity __InterfaceQueryActivity();
-	private static native ViewGroup __InterfaceQueryContainer();
+	private static native EngineApi __InterfaceQueryEngine();
+	
+	private static native void __RunOnSystemThread(Runnable callback);
+	
+	//private static native Activity __InterfaceQueryActivity();
+	//private static native ViewGroup __InterfaceQueryContainer();
 };

@@ -25,15 +25,22 @@ enum NativeType
 {
 	kNativeTypeNone,
 	kNativeTypeBoolean,
-	kNativeTypeCString,
-	kNativeTypeCData,
 	kNativeTypeInteger,
 	kNativeTypeReal,
+	kNativeTypeCString,
+	kNativeTypeCData,
+	kNativeTypeCArray,
+	kNativeTypeCDictionary,
 	kNativeTypeObjcString,
 	kNativeTypeObjcNumber,
 	kNativeTypeObjcData,
 	kNativeTypeObjcArray,
 	kNativeTypeObjcDictionary,
+	kNativeTypeJavaString,
+	kNativeTypeJavaNumber,
+	kNativeTypeJavaData,
+	kNativeTypeJavaArray,
+	kNativeTypeJavaDictionary,
 	
 	kNativeTypeEnum
 };
