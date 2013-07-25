@@ -33,6 +33,7 @@
 #include "mblsyntax.h"
 #include "mblsensor.h"
 #include "mblcontrol.h"
+#include "mblstore.h"
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -303,6 +304,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 	
 	uint32_t t_id;
 	MCAutoStringRef t_prop_name;
+    MCAutoValueRef t_value;
 	
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "ux", &t_id, &(&t_prop_name));
@@ -311,7 +313,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
 	
 	if (t_success)
-        MCStoreGetPurchaseProperty(ctxt, t_id, &t_prop_name);
+        MCStoreExecGet(ctxt, t_id, &t_prop_name, &t_value);
 	
 	if (!ctxt . HasError())
     {
@@ -333,6 +335,7 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 	uint32_t t_id;
 	MCAutoStringRef t_prop_name;
     uint32_t t_quantity;
+    MCAutoNumberRef t_quantity_ref;
 	
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "uxu", &t_id, &(&t_prop_name), &t_quantity);
@@ -341,7 +344,10 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     
 	if (t_success)
-        MCStoreSetPurchaseProperty(ctxt, t_id, &t_prop_name, t_quantity);
+        t_success = MCNumberCreateWithInteger(t_quantity, &t_quantity_ref);
+
+    if (t_success)
+        MCStoreExecSet(ctxt, t_id, &t_prop_name, *t_quantity_ref);
 	
     if (!ctxt.HasError())
         return ES_NORMAL;

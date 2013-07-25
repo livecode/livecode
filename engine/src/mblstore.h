@@ -99,8 +99,12 @@ const MCPurchasePropertyTable *getpropertytable(void);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity);
-Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+//// No longer needed
+//Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity);
+//Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep);
+
+void MCStoreExecGet(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, MCValueRef& r_value);
+void MCStoreExecSet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name, MCValueRef r_value);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 
