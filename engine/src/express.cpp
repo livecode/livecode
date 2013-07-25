@@ -603,8 +603,10 @@ void MCExpression::compile_out(MCSyntaxFactoryRef ctxt)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#ifdef _MOBILE
 extern bool MCIsPlatformMessage(MCNameRef handler_name);
 extern Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters);
+#endif 
 
 MCFuncref::MCFuncref(MCNameRef inname)
 {
@@ -635,11 +637,13 @@ Parse_stat MCFuncref::parse(MCScriptPoint &sp, Boolean the)
 		MCperror->add(PE_FUNCTION_BADPARAMS, sp);
 		return PS_ERROR;
 	}
+#ifdef _MOBILE
     if (MCIsPlatformMessage(name))
     {
         platform_message = true;
         resolved = true;
     }
+#endif
     
 	return PS_NORMAL;
 }
@@ -705,11 +709,12 @@ Exec_stat MCFuncref::eval(MCExecPoint &ep)
 
 		tptr = tptr->getnext();
 	}
-    
+#ifdef _MOBILE
     if (platform_message)
     {
         return MCHandlePlatformMessage(MCNameGetOldString(name), params);
     }
+#endif
 	// MW-2008-12-17: [[ Bug 7463 ]] Make sure we use the object from the execpoint, rather
 	//   than the 'parent' field in this.
 	MCObject *p = ep.getobj();
