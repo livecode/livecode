@@ -28,12 +28,29 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "param.h"
+#include "exec.h"
 
 #include "eventqueue.h"
 
 #include "mblstore.h"
 
 #include <StoreKit/StoreKit.h>
+
+static MCPurchasePropertyInfo kProperties[] =
+{
+    DEFINE_RW_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
+};
+
+static MCPurchasePropertyTable kPropertyTable =
+{
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+const MCPurchasePropertyTable *getpropertytable()
+{
+    return &kPropertyTable;
+}
 
 static MCPurchase *s_purchase_request = nil;
 

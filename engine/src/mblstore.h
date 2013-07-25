@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef MBLSTORE_H
 #define MBLSTORE_H
 
+#include "exec.h"
+
 enum MCPurchaseProperty
 {
 	kMCPurchasePropertyProductIdentifier,
@@ -48,6 +50,17 @@ enum MCPurchaseProperty
 	kMCPurchasePropertyUnknown,
 };
 
+struct MCPurchasePropertyInfo
+{
+	MCPurchaseProperty property;
+	bool effective : 1;
+	MCPropertyType type;
+	void *type_info;
+	void *getter;
+	void *setter;
+	bool has_effective : 1;
+};
+
 enum MCPurchaseState
 {
 	kMCPurchaseStateInitialized,
@@ -76,6 +89,13 @@ typedef struct _mcpurchase_t
 
 typedef bool (*MCPurchaseListCallback)(void *context, MCPurchase *purchase);
 
+struct MCPurchasePropertyTable
+{
+	uindex_t size;
+	MCPurchasePropertyInfo *table;
+};
+
+const MCPurchasePropertyTable *getpropertytable(void);
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
 

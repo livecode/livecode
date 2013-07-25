@@ -70,6 +70,22 @@ typedef struct
 static bool s_can_make_purchase_returned = false;
 static bool s_can_make_purchase = false;
 
+static MCPurchasePropertyInfo kProperties[] =
+{
+    DEFINE_RW_PROPERTY(kMCPurchasePropertyDeveloperPayload, String, Purchase, DeveloperPayload)
+};
+
+static MCPurchasePropertyTable kPropertyTable =
+{
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+const MCPurchasePropertyTable *getpropertytable()
+{
+    return &kPropertyTable;
+}
+
 bool MCStoreCanMakePurchase()
 {
     bool t_result = false;
