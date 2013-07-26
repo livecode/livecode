@@ -3508,9 +3508,11 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 ///////////
 
+struct MCNativeControlIdentifier;
+
 extern MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo;
 extern MCExecCustomTypeInfo *kMCNativeControlRangeTypeInfo;
-
+extern MCExecCustomTypeInfo *kMCNativeControlIdentifierTypeInfo;
 extern MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo;
 extern MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfo;
 extern MCExecEnumTypeInfo *kMCNativeControlIndicatorStyleTypeInfo;
@@ -3543,7 +3545,7 @@ void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control
 void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result);
 void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef p_value);
 void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count);
-void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target);
+void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_target);
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);
 
 //////////

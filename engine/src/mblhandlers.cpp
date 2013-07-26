@@ -3948,19 +3948,14 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 {
-	MCNativeControl *t_target;
-	t_target = MCNativeControl::CurrentTarget();
-	if (t_target != nil)
-	{
-		if (t_target -> GetName() != nil)
-			MCresult -> copysvalue(t_target -> GetName());
-		else
-			MCresult -> setnvalue(t_target -> GetId());
-	}
-	else
-		MCresult -> clear();
-	
-	return ES_NORMAL;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    MCNativeControlIdentifier t_identifier;
+    MCNativeControlGetTarget(ctxt, t_identifier);
+    MCAutoStringRef t_string;
+    MCNativeControlIdentifierFormat(ctxt, t_identifier, &t_string);
+    if (*t_string != nil)
+        ctxt . SetTheResultToValue(*t_string);
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)

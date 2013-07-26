@@ -557,6 +557,26 @@ struct MCNativeControlActionTable
 	MCNativeControlActionInfo *table;
 };
 
+enum MCNativeControlIdentifierType
+{
+    kMCNativeControlIdentifierName,
+    kMCNativeControlIdentifierId,
+};
+
+struct MCNativeControlIdentifier
+{
+    MCNativeControlIdentifierType type;
+    union
+    {
+        MCStringRef name;
+        uint32_t id;
+    };
+};
+
+void MCNativeControlIdentifierParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIdentifier& r_output);
+void MCNativeControlIdentifierFormat(MCExecContext& ctxt, const MCNativeControlIdentifier& p_input, MCStringRef& r_output);
+void MCNativeControlIdentifierFree(MCExecContext& ctxt, MCNativeControlIdentifier& p_input);
+
 class MCNativeControl
 {
 protected:

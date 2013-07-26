@@ -260,6 +260,52 @@ static MCExecCustomTypeInfo _kMCNativeControlRangeTypeInfo =
 
 //////////
 
+void MCNativeControlIdentifierParse(MCExecContext& ctxt, MCStringRef p_input, MCNativeControlIdentifier& r_output)
+{
+    if (MCU_stoui4(p_input, r_output . id))
+    {
+        r_output . type = kMCNativeControlIdentifierId;
+        return;
+    }
+    
+    r_output . type = kMCNativeControlIdentifierName;
+    r_output . name = MCValueRetain(p_input);
+}
+
+void MCNativeControlIdentifierFormat(MCExecContext& ctxt, const MCNativeControlIdentifier& p_input, MCStringRef& r_output)
+{
+    if (p_input . type == kMCNativeControlIdentifierName)
+    {
+        if (p_input . name != nil)
+            r_output = MCValueRetain(p_input . name);
+        else
+            r_output = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    if (MCStringFormat(r_output, "%d", p_input . id))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCNativeControlIdentifierFree(MCExecContext& ctxt, MCNativeControlIdentifier& p_input)
+{
+    if (p_input . type == kMCNativeControlIdentifierName && p_input . name != nil)
+        MCValueRelease(p_input . name);
+}
+
+static MCExecCustomTypeInfo _kMCNativeControlIdentifierTypeInfo =
+{
+	"NativeControl.Identifier",
+	sizeof(MCNativeControlIdentifier),
+	(void *)MCNativeControlIdentifierParse,
+	(void *)MCNativeControlIdentifierFormat,
+	(void *)MCNativeControlIdentifierFree
+};
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCNativeControlIndicatorStyleElementInfo[] =
 {
     { "", kMCNativeControlIndicatorStyleEmpty },
@@ -515,6 +561,7 @@ static MCExecEnumTypeInfo _kMCNativeControlBorderStyleTypeInfo =
 
 MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo = &_kMCNativeControlColorTypeInfo;
 MCExecCustomTypeInfo *kMCNativeControlRangeTypeInfo = &_kMCNativeControlRangeTypeInfo;
+MCExecCustomTypeInfo *kMCNativeControlIdentifierTypeInfo = &_kMCNativeControlIdentifierTypeInfo;
 
 MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo = &_kMCNativeControlDecelerationRateTypeInfo;
 MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfo = &_kMCNativeControlIndicatorInsetsTypeInfo;
@@ -593,10 +640,29 @@ void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control
     t_control -> Release();
 }
 
-void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target)
+void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_target)
 {
-    // UNION TYPE!
-    ctxt . Unimplemented();
+	MCNativeControl *t_target;
+	t_target = MCNativeControl::CurrentTarget();
+	if (t_target != nil)
+	{
+		if (t_target -> GetName() != nil)
+        {
+            r_target . type = kMCNativeControlIdentifierName;
+			t_target -> GetName(ctxt, r_target . name);
+        }
+		else
+        {
+            r_target . type = kMCNativeControlIdentifierId;
+            t_target -> GetId(ctxt, r_target . id);
+        }
+	}
+	else
+    {
+        r_target . type = kMCNativeControlIdentifierName;
+    }
+	
+	return ES_NORMAL;
 }
 
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list)
@@ -696,15 +762,6 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
             }
                 break;
                 
-            case kMCNativeControlPropertyTypeChar:
-            {
-                char_t t_value;
-                ((void(*)(MCExecContext&, MCNativeControlPtr, char_t&))t_info -> getter)(ctxt, t_control, t_value);
-                if (!ctxt . HasError())
-                    ep . setchar((char)t_value);
-            }
-                break;
-                
             case kMCNativeControlPropertyTypeString:
             case kMCNativeControlPropertyTypeBinaryString:
             {
@@ -712,15 +769,6 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
                 ((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef&))t_info -> getter)(ctxt, t_control, &t_value);
                 if (!ctxt . HasError())
                     ep . setvalueref(*t_value);
-            }
-                break;
-                
-            case kMCNativeControlPropertyTypeColor:
-            {
-                MCColor t_value;
-                ((void(*)(MCExecContext&, MCNativeControlPtr, MCColor&))t_info -> getter)(ctxt, t_control, t_value);
-                if (!ctxt . HasError())
-                    ep . setcolor(t_value);
             }
                 break;
                 
@@ -770,17 +818,7 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
                     ep . setstringf("%d,%d,%d,%d", t_value[0], t_value[1], t_value[2], t_value[3]);
             }
                 break;
-    
-                
-            case kMCNativeControlPropertyTypeArray:
-            {
-                MCAutoArrayRef t_value;
-                ((void(*)(MCExecContext&, MCNativeControlPtr, MCArrayRef&))t_info -> getter)(ctxt, t_control, &t_value);
-                if (!ctxt . HasError())
-                    ep . setvalueref(*t_value);
-            }
-                break;
-                
+
             case kMCNativeControlPropertyTypeEnum:
             {
                 int t_value;
@@ -1048,16 +1086,6 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 					((void(*)(MCExecContext&, MCNativeControlPtr, double))t_info -> setter)(ctxt, t_control, t_value);
 			}
                 break;
-                
-			case kMCNativeControlPropertyTypeChar:
-			{
-				char_t t_value;
-				if (!ep . copyaschar(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NAC);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCNativeControlPtr, char_t))t_info -> setter)(ctxt, t_control, t_value);
-			}
-                break;
 				
 			case kMCNativeControlPropertyTypeString:
 			case kMCNativeControlPropertyTypeBinaryString:
@@ -1069,17 +1097,7 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 					((void(*)(MCExecContext&, MCNativeControlPtr, MCStringRef))t_info -> setter)(ctxt, t_control, *t_value);
 			}
                 break;
-				
-			case kMCNativeControlPropertyTypeColor:
-			{
-				MCColor t_value;
-				if (!ep . copyaslegacycolor(t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTACOLOR);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCNativeControlPtr, MCColor))t_info -> setter)(ctxt, t_control, t_value);
-			}
-                break;
-				
+                
 			case kMCNativeControlPropertyTypeRectangle:
 			{
 				MCRectangle t_value;
@@ -1148,16 +1166,6 @@ void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 					t_value[3] = d;
 					((void(*)(MCExecContext&, MCNativeControlPtr, uinteger_t[4]))t_info -> setter)(ctxt, t_control, t_value);
 				}
-			}
-                break;
-                
-			case kMCNativeControlPropertyTypeArray:
-			{
-				MCAutoArrayRef t_value;
-				if (!ep . copyasarrayref(&t_value))
-					ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
-				if (!ctxt . HasError())
-					((void(*)(MCExecContext&, MCNativeControlPtr, MCArrayRef))t_info -> setter)(ctxt, t_control, *t_value);
 			}
                 break;
                 
