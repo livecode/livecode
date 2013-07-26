@@ -43,6 +43,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
 
+#include "graphics.h"
+#include "resolution.h"
+
 #include <jni.h>
 #include <pthread.h>
 #include <android/log.h>
@@ -104,6 +107,9 @@ static bool s_schedule_wakeup_was_broken = false;
 static co_yield_callback_t s_yield_callback = nil;
 static void *s_yield_callback_context = nil;
 
+// IM-2013-07-26: [[ ResIndependence ]] the user -> device resolution scale
+static MCGFloat s_android_device_scale = 1.0;
+
 // The bitmap containing the current visible state of the view
 static jobject s_android_bitmap = nil;
 static int s_android_bitmap_width = 0;
@@ -154,6 +160,15 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
+// on screen open
+MCGFloat MCResGetDeviceScale(void)
+{
+	return s_android_device_scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Boolean MCScreenDC::open(void)
 {
 	common_open();
@@ -161,6 +176,10 @@ Boolean MCScreenDC::open(void)
 	// We don't need to do anything to initialize the view, as that is done
 	// by the Java wrapper.
 
+	// IM-2013-07-26: [[ ResIndependence ]] Use the display metrics pixel density to
+	// scale drawing
+	MCAndroidEngineCall("getPixelDensity", "f", &s_android_device_scale);
+	
 	return True;
 }
 
@@ -315,7 +334,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname)
 {
 	return NULL;
 }
@@ -479,18 +498,6 @@ static MCRectangle android_view_get_bounds(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
-
-static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
-{
-	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
-}
-
-//////////
-
 class MCAndroidStackSurface: public MCStackSurface
 {
 	MCRegionRef m_region;
@@ -624,7 +631,7 @@ public:
 		t_success = MCRegionCreate(t_region);
 		
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
 		
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -766,7 +773,7 @@ public:
 		t_success = MCRegionCreate(t_region);
 		
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
 		
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -860,7 +867,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 		// Note that as android regions are just rects at the moment, we cheat.
 		MCRectangle t_rect;
-		t_rect = MCRegionGetBoundingBox(p_region);
+		t_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region)));
 
 		MCRegionRef t_actual_region;
 		MCRegionCreate(t_actual_region);
@@ -1810,7 +1817,11 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 			return;
 	}
 
-	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)id, timestamp, x, y);
+	// IM-2013-07-26: [[ ResIndependence ]] Scale touches from device -> user coords
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)id, timestamp, x / t_scale, y / t_scale);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code)
