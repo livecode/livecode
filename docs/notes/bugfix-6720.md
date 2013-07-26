@@ -1,0 +1,1 @@
+# Scrollbar properties not returned in correct format.
