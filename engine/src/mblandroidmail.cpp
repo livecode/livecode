@@ -55,25 +55,17 @@ typedef enum
 
 static MCAndroidMailStatus s_mail_status = kMCAndroidMailWaiting;
 
-/* MOVED TO mblhandlers.cpp
+/* MOVED TO mblhandlers.cpp */
 
+#ifdef /* MCHandleCanSendMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 {
 	MCresult->sets(MCU_btos(MCCanSendMail()));
 	return ES_NORMAL;
-
-	MCExecPoint ep(nil, nil, nil);
-	MCExecContext ctxt(ep);
-
-	bool t_result;
-	MCMailGetCanSendMail(ctxt, t_result);
-
-	if (!ctxt . HasError())
-		return ES_NORMAL;
-
-	return ES_ERROR;
 }
+#endif /* MCHandleCanSendMailAndroid */
 
+#ifdef /* MCHandleRevMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
 	char *t_address, *t_cc_address, *t_subject, *t_message_body;
@@ -115,14 +107,9 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 
 	return ES_NORMAL;
 }
+#endif /* MCHandleRevMailAndroid */
 
-enum MCMailType
-{
-	kMCMailTypePlain,
-	kMCMailTypeUnicode,
-	kMCMailTypeHtml
-};
-
+#ifdef /* array_to_attachmentAndroid */ LEGACY_EXEC
 static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCString &r_file, MCString &r_type, MCString &r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
@@ -162,7 +149,9 @@ static bool array_to_attachment(MCVariableArray *p_array, MCString &r_data, MCSt
 
 	return t_success;
 }
+#endif /* array_to_attachmentAndroid */
 
+#ifdef /* MCHandleComposeMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -268,24 +257,30 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 	delete t_body . getstring();
 
 	return ES_NORMAL;
-} 
+}
+#endif /* MCHandleComposeMailAndroid */
 
+#ifdef /* MCHandleComposePlainMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *parameters)
 {
 	return MCHandleComposeMail(kMCMailTypePlain, parameters);
 }
+#endif /* MCHandleComposePlainMailAndroid */
 
+#ifdef /* MCHandleComposeUnicodeMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *parameters)
 {
 	//MCLog("MCHandleComposeUnicodeMail", nil);
 	return MCHandleComposeMail(kMCMailTypeUnicode, parameters);
 }
+#endif /* MCHandleComposeUnicodeMailAndroid */
 
+#ifdef /* MCHandleComposeHtmlMailAndroid */ LEGACY_EXEC
 Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *parameters)
 {
 	return MCHandleComposeMail(kMCMailTypeHtml, parameters);
 }
-*/
+#endif /* MCHandleComposeHtmlMailAndroid */
 
 void MCAndroidMailDone()
 {

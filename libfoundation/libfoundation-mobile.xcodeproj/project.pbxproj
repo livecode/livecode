@@ -26,6 +26,7 @@
 		BE096E2C175CD70A00F92F90 /* foundation-inline.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E28175CD70A00F92F90 /* foundation-inline.h */; };
 		BE096E2D175CD70A00F92F90 /* foundation-stdlib.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E29175CD70A00F92F90 /* foundation-stdlib.h */; };
 		BE096E2E175CD70A00F92F90 /* foundation.h in Headers */ = {isa = PBXBuildFile; fileRef = BE096E2A175CD70A00F92F90 /* foundation.h */; };
+		BE9AE948179EECAE00206A6D /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = BE9AE947179EECAE00206A6D /* foundation-data.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -52,6 +53,7 @@
 		BE096E28175CD70A00F92F90 /* foundation-inline.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-inline.h"; path = "include/foundation-inline.h"; sourceTree = "<group>"; };
 		BE096E29175CD70A00F92F90 /* foundation-stdlib.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "foundation-stdlib.h"; path = "include/foundation-stdlib.h"; sourceTree = "<group>"; };
 		BE096E2A175CD70A00F92F90 /* foundation.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = foundation.h; path = include/foundation.h; sourceTree = "<group>"; };
+		BE9AE947179EECAE00206A6D /* foundation-data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-data.cpp"; path = "src/foundation-data.cpp"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -104,6 +106,7 @@
 				BE096E15175CD6F900F92F90 /* foundation-string.cpp */,
 				BE096E16175CD6F900F92F90 /* foundation-unicodechars.cpp */,
 				BE096E17175CD6F900F92F90 /* foundation-value.cpp */,
+				BE9AE947179EECAE00206A6D /* foundation-data.cpp */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -200,6 +203,7 @@
 				BE096E24175CD6F900F92F90 /* foundation-string.cpp in Sources */,
 				BE096E25175CD6F900F92F90 /* foundation-unicodechars.cpp in Sources */,
 				BE096E26175CD6F900F92F90 /* foundation-value.cpp in Sources */,
+				BE9AE948179EECAE00206A6D /* foundation-data.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

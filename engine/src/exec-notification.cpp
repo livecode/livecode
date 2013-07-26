@@ -47,6 +47,15 @@ MC_EXEC_DEFINE_SET_METHOD(Notification, NotificationBadgeValue, 1)
 
 void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef p_alert_body, MCStringRef p_alert_action, MCStringRef p_user_info, MCDateTime p_date, bool p_play_sound, int32_t p_badge_value)
 {
+#ifdef /* MCLocalNotificationExec */ LEGACY_EXEC
+    bool t_success;
+    int32_t t_id = -1;
+    t_success = MCSystemCreateLocalNotification (p_alert_body, p_alert_action, p_user_info, p_date, p_play_sound, p_badge_value, t_id);
+    if (t_success)
+        p_ctxt.SetTheResultToNumber(t_id);
+    else
+        p_ctxt.SetTheResultToEmpty();
+#endif /* MCLocalNotificationExec */
     bool t_success;
     int32_t t_id = -1;
     t_success = MCSystemCreateLocalNotification (p_alert_body, p_alert_action, p_user_info, p_date, p_play_sound, p_badge_value, t_id);
@@ -59,6 +68,15 @@ void MCNotificationExecCreateLocalNotification(MCExecContext& ctxt, MCStringRef 
 
 void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt)
 {
+#ifdef /* MCGetRegisteredNotificationsExec */ LEGACY_EXEC
+    char *t_registered_alerts = nil;
+    bool t_success;
+    t_success = MCSystemGetRegisteredNotifications (t_registered_alerts);
+    if (t_success)
+        p_ctxt.SetTheResultToCString(t_registered_alerts);
+    else
+        p_ctxt.SetTheResultToEmpty();
+#endif /* MCGetRegisteredNotificationsExec */
     MCAutoStringRef t_registered_alerts;
     bool t_success;
     t_success = MCSystemGetRegisteredNotifications (&t_registered_alerts);
@@ -71,7 +89,8 @@ void MCNotificationGetRegisteredNotifications(MCExecContext& ctxt)
 
 void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_details)
 {
-    /*   MCNotification t_notification;
+#ifdef /* MCNotificationGetDetails */ LEGACY_EXEC
+	 MCNotification t_notification;
      if (MCSystemGetNotificationDetails(p_id, t_notification))
      {
      MCVariableValue *t_details = nil;
@@ -100,7 +119,9 @@ void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_d
      r_details = t_details;
      }
      
-     FreeNotification(t_notification);*/
+     FreeNotification(t_notification);
+#endif /* MCNotificationGetDetails */
+
     
     MCNotification t_notification;
     if (MCSystemGetNotificationDetails(p_id, t_notification))
@@ -147,6 +168,11 @@ void MCNotificationGetDetails(MCExecContext& ctxt, int32_t p_id, MCArrayRef& r_d
 
 void MCNotificationExecCancelLocalNotification(MCExecContext& ctxt, int32_t p_id)
 {
+#ifdef /* MCCancelLocalNotificationExec */ LEGACY_EXEC
+    bool t_success;
+    t_success = MCSystemCancelLocalNotification (p_id);
+    p_ctxt.SetTheResultToEmpty();
+#endif /* MCCancelLocalNotificationExec */
     bool t_success;
     t_success = MCSystemCancelLocalNotification (p_id);
     ctxt.SetTheResultToEmpty();
@@ -154,6 +180,11 @@ void MCNotificationExecCancelLocalNotification(MCExecContext& ctxt, int32_t p_id
 
 void MCNotificationExecCancelAllLocalNotifications(MCExecContext& ctxt)
 {
+#ifdef /* MCCancelAllLocalNotificationsExec */ LEGACY_EXEC
+    bool t_success;
+    t_success = MCSystemCancelAllLocalNotifications ();
+    p_ctxt.SetTheResultToEmpty();
+#endif /* MCCancelAllLocalNotificationsExec */
     bool t_success;
     t_success = MCSystemCancelAllLocalNotifications ();
     ctxt.SetTheResultToEmpty();
@@ -161,6 +192,15 @@ void MCNotificationExecCancelAllLocalNotifications(MCExecContext& ctxt)
 
 void MCNotificationGetNotificationBadgeValue(MCExecContext& ctxt)
 {
+#ifdef /* MCGetNotificationBadgeValueExec */ LEGACY_EXEC
+    uint32_t r_badge_value = 0;
+    bool t_success;
+    t_success = MCSystemGetNotificationBadgeValue (r_badge_value);
+    if (t_success)
+        p_ctxt.SetTheResultToNumber(r_badge_value);
+    else
+        p_ctxt.SetTheResultToEmpty();
+#endif /* MCGetNotificationBadgeValueExec */
     uint32_t r_badge_value = 0;
     bool t_success;
     t_success = MCSystemGetNotificationBadgeValue (r_badge_value);
@@ -172,6 +212,11 @@ void MCNotificationGetNotificationBadgeValue(MCExecContext& ctxt)
 
 void MCNotificationSetNotificationBadgeValue(MCExecContext& ctxt, uint32_t p_badge_value)
 {
+#ifdef /* MCSetNotificationBadgeValueExec */ LEGACY_EXEC
+    bool t_success;
+    t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
+    p_ctxt.SetTheResultToEmpty();
+#endif /* MCSetNotificationBadgeValueExec */
     bool t_success;
     t_success = MCSystemSetNotificationBadgeValue (p_badge_value);
     ctxt.SetTheResultToEmpty();

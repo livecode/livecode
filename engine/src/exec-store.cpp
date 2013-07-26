@@ -242,7 +242,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setvalueref(*t_any);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -254,7 +254,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setboolean(t_value ? True : False);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -267,7 +267,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setint(t_value);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -280,7 +280,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setuint(t_value);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -292,7 +292,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setnvalue(t_value);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -304,7 +304,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setchar((char)t_value);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;
@@ -317,7 +317,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 				if (!ctxt . HasError())
 				{
 					ep . setvalueref(*t_value);
-					return ES_NORMAL;
+//					return ES_NORMAL;
 				}
 			}
                 break;

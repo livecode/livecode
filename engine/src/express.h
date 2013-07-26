@@ -124,10 +124,11 @@ public:
 class MCFuncref : public MCExpression
 {
 	MCNameRef name;
-		MCHandler *handler;
+    MCHandler *handler;
 	MCObject *parent;
 	MCParameter *params;
 	bool resolved : 1;
+    bool platform_message : 1;
 public:
 	MCFuncref(MCNameRef);
 	virtual ~MCFuncref();

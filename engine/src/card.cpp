@@ -980,6 +980,7 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
 
 	switch (which)
 	{
+#ifdef /* MCCard::getprop */ LEGACY_EXEC
 	case P_NUMBER:
 	case P_LAYER:
 		getstack()->count(CT_CARD, CT_UNDEFINED, this, num);
@@ -1089,6 +1090,7 @@ Exec_stat MCCard::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep,
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;
+#endif /* MCCard::getprop */
 	default:
 		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
@@ -1103,6 +1105,7 @@ Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep,
 
 	switch (which)
 	{
+#ifdef /* MCCard::setprop */ LEGACY_EXEC
 	// MW-2011-09-20: [[ Bug 9741 ]] Make sure we update the card completely if
 	//   any of these are set.
 	case P_FORE_PIXEL:
@@ -1135,7 +1138,7 @@ Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep,
 	case P_TEXT_STYLE:
 	case P_TEXT_HEIGHT:
 		// Try to set the property.
-		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		
 		// Now dirty everything in the stack (inc. flush tilecache since
@@ -1210,6 +1213,7 @@ Exec_stat MCCard::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep,
 			return ES_ERROR;
 		}
 		break;
+#endif /* MCCard::setprop */
 	default:
 		return MCObject::setprop_legacy(parid, which, ep, effective);
 	}

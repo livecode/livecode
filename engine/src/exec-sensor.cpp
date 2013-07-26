@@ -71,6 +71,9 @@ MCExecEnumTypeInfo *kMCSensorTypeTypeInfo = &_kMCSensorTypeTypeInfo;
 
 void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bool p_loosely)
 {
+#ifdef /* MCSensorExecStartTrackingSensor */ LEGACY_EXEC
+    MCSystemStartTrackingSensor(p_sensor, p_loosely);
+#endif /* MCSensorExecStartTrackingSensor */
     MCSensorType t_sensor;
     t_sensor = (MCSensorType)p_sensor;
     
@@ -95,6 +98,9 @@ void MCSensorExecStartTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor, bo
 
 void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor)
 {
+#ifdef /* MCSensorExecStopTrackingSensor */ LEGACY_EXEC
+    MCSystemStopTrackingSensor(p_sensor);
+#endif /* MCSensorExecStopTrackingSensor */
     MCSensorType t_sensor;
     t_sensor = (MCSensorType)p_sensor;
     
@@ -119,11 +125,56 @@ void MCSensorExecStopTrackingSensor(MCExecContext& ctxt, intenum_t p_sensor)
 
 void MCSensorGetSensorAvailable(MCExecContext& ctxt, intenum_t p_sensor, bool& r_available)
 {
+#ifdef /* MCSensorGetSensorAvailable */ LEGACY_EXEC
+    MCSystemGetSensorAvailable(p_sensor, r_available);
+#endif /* MCSensorGetSensorAvailable */
     MCSystemGetSensorAvailable((MCSensorType)p_sensor, r_available);
 }
 
 void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_location)
 {
+#ifdef /* MCSensorGetDetailedLocationOfDevice */ LEGACY_EXEC
+	MCSensorLocationReading t_reading;
+    if (MCSystemGetLocationReading(t_reading, true))
+    {
+        MCVariableValue *t_location = nil;
+        t_location = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+        
+        t_location->lookup_element(ctxt.GetEP(), "latitude", t_element);
+        t_element->assign_real(t_reading.latitude);
+        
+        t_location->lookup_element(ctxt.GetEP(), "longitude", t_element);
+        t_element->assign_real(t_reading.longitude);
+        
+        t_location->lookup_element(ctxt.GetEP(), "altitude", t_element);
+        t_element->assign_real(t_reading.altitude);
+        
+        // MM-2013-02-21: Add speed and course to detailed location readings.
+        if (t_reading.speed >= 0.0f)
+        {
+            t_location->lookup_element(ctxt.GetEP(), "speed", t_element);
+            t_element->assign_real(t_reading.speed);
+        }
+        if (t_reading.course >= 0.0f)
+        {
+            t_location->lookup_element(ctxt.GetEP(), "course", t_element);
+            t_element->assign_real(t_reading.course);
+        }
+        
+        t_location->lookup_element(ctxt.GetEP(), "timestamp", t_element);
+        t_element->assign_real(t_reading.timestamp);
+        
+        t_location->lookup_element(ctxt.GetEP(), "horizontal accuracy", t_element);
+        t_element->assign_real(t_reading.horizontal_accuracy);
+        
+        t_location->lookup_element(ctxt.GetEP(), "vertical accuracy", t_element);
+        t_element->assign_real(t_reading.vertical_accuracy);
+        
+        r_detailed_location = t_location;
+    }
+#endif /* MCSensorGetDetailedLocationOfDevice */
 	MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, true))
     {
@@ -190,6 +241,14 @@ void MCSensorGetDetailedLocationOfDevice(MCExecContext& ctxt, MCArrayRef &r_deta
 
 void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 {
+#ifdef /* MCSensorGetLocationOfDevice */ LEGACY_EXEC
+    MCSensorLocationReading t_reading;
+    if (MCSystemGetLocationReading(t_reading, false))
+    {
+        r_location = nil;
+        MCCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
+    }
+#endif /* MCSensorGetLocationOfDevice */
     MCSensorLocationReading t_reading;
     if (MCSystemGetLocationReading(t_reading, false))
         MCStringFormat(r_location, "%Lf,%Lf,%Lf", t_reading.latitude, t_reading.longitude, t_reading.altitude);
@@ -197,6 +256,42 @@ void MCSensorGetLocationOfDevice(MCExecContext& ctxt, MCStringRef &r_location)
 
 void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_heading)
 {
+#ifdef /* MCSensorGetDetailedHeadingOfDevice */ LEGACY_EXEC
+    MCSensorHeadingReading t_reading;
+    if (MCSystemGetHeadingReading(t_reading, true))
+    {
+        MCVariableValue *t_heading = nil;
+        t_heading = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+        
+        t_heading->lookup_element(ctxt.GetEP(), "heading", t_element);
+        t_element->assign_real(t_reading.heading);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "magnetic heading", t_element);
+        t_element->assign_real(t_reading.magnetic_heading);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "true heading", t_element);
+        t_element->assign_real(t_reading.true_heading);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "x", t_element);
+        t_element->assign_real(t_reading.x);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "y", t_element);
+        t_element->assign_real(t_reading.y);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "z", t_element);
+        t_element->assign_real(t_reading.z);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "timestamp", t_element);
+        t_element->assign_real(t_reading.timestamp);
+        
+        t_heading->lookup_element(ctxt.GetEP(), "accuracy", t_element);
+        t_element->assign_real(t_reading.accuracy);
+        
+        r_detailed_heading = t_heading;
+    }
+#endif /* MCSensorGetDetailedHeadingOfDevice */
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
     {
@@ -257,6 +352,14 @@ void MCSensorGetDetailedHeadingOfDevice(MCExecContext& ctxt, MCArrayRef &r_detai
 
 void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
 {
+#ifdef /* MCSensorGetHeadingOfDevice */ LEGACY_EXEC
+    MCSensorHeadingReading t_reading;
+    if (MCSystemGetHeadingReading(t_reading, true))
+    {
+        r_heading = nil;
+        MCCStringFormat(r_heading, "%Lf", t_reading.heading);
+    }
+#endif /* MCSensorGetHeadingOfDevice */
     MCSensorHeadingReading t_reading;
     if (MCSystemGetHeadingReading(t_reading, true))
         MCStringFormat(r_heading, "%Lf", t_reading.heading);
@@ -264,6 +367,30 @@ void MCSensorGetHeadingOfDevice(MCExecContext& ctxt, MCStringRef &r_heading)
 
 void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_acceleration)
 {
+#ifdef /* MCSensorGetDetailedAccelerationOfDevice */ LEGACY_EXEC
+    MCSensorAccelerationReading t_reading;
+    if (MCSystemGetAccelerationReading(t_reading, true))
+    {
+        MCVariableValue *t_acceleration = nil;
+        t_acceleration = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+        
+        t_acceleration->lookup_element(ctxt.GetEP(), "x", t_element);
+        t_element->assign_real(t_reading.x);
+        
+        t_acceleration->lookup_element(ctxt.GetEP(), "y", t_element);
+        t_element->assign_real(t_reading.y);
+        
+        t_acceleration->lookup_element(ctxt.GetEP(), "z", t_element);
+        t_element->assign_real(t_reading.z);
+        
+        t_acceleration->lookup_element(ctxt.GetEP(), "timestamp", t_element);
+        t_element->assign_real(t_reading.timestamp);
+        
+        r_detailed_acceleration = t_acceleration;
+    }
+#endif /* MCSensorGetDetailedAccelerationOfDevice */
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
     {
@@ -300,6 +427,14 @@ void MCSensorGetDetailedAccelerationOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 
 void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceleration)
 {
+#ifdef /* MCSensorGetAccelerationOfDevice */ LEGACY_EXEC
+    MCSensorAccelerationReading t_reading;
+    if (MCSystemGetAccelerationReading(t_reading, true))
+    {
+        r_acceleration = nil;
+        MCCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+    }
+#endif /* MCSensorGetAccelerationOfDevice */
     MCSensorAccelerationReading t_reading;
     if (MCSystemGetAccelerationReading(t_reading, true))
         MCStringFormat(r_acceleration, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
@@ -307,6 +442,31 @@ void MCSensorGetAccelerationOfDevice(MCExecContext& ctxt, MCStringRef &r_acceler
 
 void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_detailed_rotation_rate)
 {
+#ifdef /* MCSensorGetDetailedRotationRateOfDevice */ LEGACY_EXEC
+    MCSensorRotationRateReading t_reading;
+    if (MCSystemGetRotationRateReading(t_reading, true))
+    {
+        MCVariableValue *t_rotation_rate = nil;
+        t_rotation_rate = new MCVariableValue();
+        
+        MCVariableValue *t_element = nil;
+        
+        t_rotation_rate->lookup_element(ctxt.GetEP(), "x", t_element);
+        t_element->assign_real(t_reading.x);
+        
+        t_rotation_rate->lookup_element(ctxt.GetEP(), "y", t_element);
+        t_element->assign_real(t_reading.y);
+        
+        t_rotation_rate->lookup_element(ctxt.GetEP(), "z", t_element);
+        t_element->assign_real(t_reading.x);
+        
+        t_rotation_rate->lookup_element(ctxt.GetEP(), "timestamp", t_element);
+        t_element->assign_real(t_reading.timestamp);
+        
+        r_detailed_rotation_rate = t_rotation_rate;
+    }
+    
+#endif /* MCSensorGetDetailedRotationRateOfDevice */
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
@@ -343,6 +503,14 @@ void MCSensorGetDetailedRotationRateOfDevice(MCExecContext& ctxt, MCArrayRef &r_
 
 void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotation_rate)
 {
+#ifdef /* MCSensorGetRotationRateOfDevice */ LEGACY_EXEC
+    MCSensorRotationRateReading t_reading;
+    if (MCSystemGetRotationRateReading(t_reading, true))
+    {
+        r_rotation_rate = nil;
+        MCCStringFormat(r_rotation_rate, "%Lf,%Lf,%Lf", t_reading.x, t_reading.y, t_reading.z);
+    }
+#endif /* MCSensorGetRotationRateOfDevice */
     MCSensorRotationRateReading t_reading;
     if (MCSystemGetRotationRateReading(t_reading, true))
     {
@@ -354,11 +522,17 @@ void MCSensorGetRotationRateOfDevice(MCExecContext& ctxt, MCStringRef &r_rotatio
 // MM-2012-02-11: Added support for iPhoneGet/SetCalibrationTimeout
 void MCSensorSetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t p_timeout)
 {
+#ifdef /* MCSensorSetLocationCalibration */ LEGACY_EXEC
+    MCSystemSetLocationCalibrationTimeout(p_timeout);
+#endif /* MCSensorSetLocationCalibration */
     MCSystemSetLocationCalibrationTimeout(p_timeout);
 }
 
 void MCSensorGetLocationCalibrationTimeout(MCExecContext& ctxt, int32_t& r_timeout)
 {
+#ifdef /* MCSensorGetLocationCalibration */ LEGACY_EXEC
+    MCSystemGetLocationCalibrationTimeout(r_timeout);
+#endif /* MCSensorGetLocationCalibration */
     MCSystemGetLocationCalibrationTimeout(r_timeout);
 }
 

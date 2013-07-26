@@ -1180,9 +1180,29 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 	switch (which)
 	{
-		
+#ifdef /* MCStack::getprop */ LEGACY_EXEC
 	case P_FULLSCREEN:
 		ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
+		break;
+			
+	case P_LONG_ID:
+	case P_LONG_NAME:
+		if (filename == NULL)
+		{
+			if (MCdispatcher->ismainstack(sptr))
+			{
+				if (!isunnamed())
+					ep.setstringf("stack \"%s\"", getname_cstring());
+				else
+					ep.clear();
+			}
+			else if (isunnamed())
+				ep.clear();
+			else
+				return names(P_LONG_NAME, ep, parid);
+		}
+		else
+			ep.setstringf("stack \"%s\"", filename);
 		break;
 	case P_NUMBER:
 		if (parent != NULL && !MCdispatcher->ismainstack(sptr))
@@ -1373,7 +1393,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_MAIN_STACK:
 		if (parent != NULL && !MCdispatcher->ismainstack(sptr))
 			sptr = (MCStack *)parent;
-		ep.setvalueref(sptr->getname());
+		ep.setnameref_unsafe(sptr->getname());
 		break;
 	case P_SUBSTACKS:
 		ep.clear();
@@ -1524,7 +1544,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		getstackfiles(ep);
 		break;
 	case P_MENU_BAR:
-		ep.setvalueref(getmenubar());
+		ep.setnameref_unsafe(getmenubar());
 		break;
 	case P_EDIT_MENUS:
 		ep.setboolean(getstate(CS_EDIT_MENUS));
@@ -1582,8 +1602,9 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	break;
 	case P_CURRENT_CARD:
 		if (curcard != nil)
-			return curcard -> names_old(P_SHORT_NAME, ep, parid);
-		ep . clear();
+			return curcard -> names(P_SHORT_NAME, ep, parid);
+		else
+			ep . clear();
 	break;
 	case P_MODIFIED_MARK:
 		ep . setboolean(getextendedstate(ECS_MODIFIED_MARK));
@@ -1642,7 +1663,7 @@ Exec_stat MCStack::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_DEFER_SCREEN_UPDATES:
 		ep . setboolean(effective ? m_defer_updates && m_tilecache != nil : m_defer_updates);
 		break;
-
+#endif /* MCStack::getprop */
 	default:
 	{
 		Exec_stat t_stat;
@@ -1670,6 +1691,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 	switch (which)
 	{
+#ifdef /* MCStack::setprop */ LEGACY_EXEC
 	case P_FULLSCREEN:
 		{
 			if (!MCU_stob(data, bval))
@@ -1714,7 +1736,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			if (ep . isempty())
 				ep . setstaticcstring(MCuntitledstring);
 
-			if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+			if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 				return ES_ERROR;
 
 			dirtywindowname();
@@ -1754,7 +1776,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 		dirty = True;
 
-		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		if (opened && (!(state & CS_IGNORE_CLOSE)) )
 		{
@@ -1806,7 +1828,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_TEXT_SIZE:
 	case P_TEXT_STYLE:
 	case P_TEXT_HEIGHT:
-		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		// MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
 		//   of this stack - but for now do the whole screen.
@@ -2206,7 +2228,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			return ES_ERROR;
 		if (edit)
 		{
-			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString,
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, MCnullmcstring,
 			                CT_GROUP, CT_UNDEFINED);
 			if (gptr == NULL)
 				gptr = getbackground(CT_FIRST, MCnullmcstring, CT_GROUP);
@@ -2220,12 +2242,15 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	case P_MAIN_STACK:
 		{
 			MCStack *stackptr = NULL;
+			char *sname = data.clone();
 
-			if ((stackptr = MCdispatcher->findstackname(data)) == NULL)
+			if ((stackptr = MCdispatcher->findstackname(sname)) == NULL)
 			{
 				MCeerror->add(EE_STACK_NOMAINSTACK, 0, 0, data);
+				delete sname;
 				return ES_ERROR;
 			}
+			delete sname;
 
 			if (stackptr != this && !MCdispatcher->ismainstack(stackptr))
 			{
@@ -2278,7 +2303,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 
 				// OK-2008-04-10 : Added parameters to mainstackChanged message to specify the new
 				// and old mainstack names.
-				message_with_valueref_args(MCM_main_stack_changed, t_old_stackptr -> getname(), stackptr -> getname());
+				message_with_args(MCM_main_stack_changed, t_old_stackptr -> getname(), stackptr -> getname());
 			}
 			else
 			{
@@ -2415,9 +2440,9 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 			{
 				if (linkatts != NULL)
 				{
-					MCValueRelease(linkatts->colorname);
-					MCValueRelease(linkatts->hilitecolorname);
-					MCValueRelease(linkatts->visitedcolorname);
+					delete linkatts->colorname;
+					delete linkatts->hilitecolorname;
+					delete linkatts->visitedcolorname;
 					delete linkatts;
 					linkatts = NULL;
 				}
@@ -2428,9 +2453,9 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 				{
 					linkatts = new Linkatts;
 					memcpy(linkatts, &MClinkatts, sizeof(Linkatts));
-					linkatts->colorname = (MCStringRef)MCValueRetain(MClinkatts.colorname);
-					linkatts->hilitecolorname = (MCStringRef)MCValueRetain(MClinkatts.hilitecolorname);
-					linkatts->visitedcolorname = (MCStringRef)MCValueRetain(MClinkatts.visitedcolorname);
+					linkatts->colorname = strclone(MClinkatts.colorname);
+					linkatts->hilitecolorname = strclone(MClinkatts.hilitecolorname);
+					linkatts->visitedcolorname = strclone(MClinkatts.visitedcolorname);
 					MCscreen->alloccolor(linkatts->color);
 					MCscreen->alloccolor(linkatts->hilitecolor);
 					MCscreen->alloccolor(linkatts->visitedcolor);
@@ -2524,7 +2549,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		break;
 	case P_BLEND_LEVEL:
 		old_blendlevel = blendlevel;
-		if (MCObject::setprop_legacy(parid, which, ep, effective) != ES_NORMAL)
+		if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		
 		// MW-2011-11-03: [[ Bug 9852 ]] Make sure an update is scheduled to sync the
@@ -2533,10 +2558,8 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	break;
 	case P_CURRENT_CARD:
 	{
-		MCAutoStringRef t_exp;
-		/* UNCHECKED */ ep . copyasstringref(&t_exp);
 		MCCard *t_card;
-		t_card = getchild(CT_EXPRESSION, *t_exp, CT_CARD);
+		t_card = getchild(CT_EXPRESSION, ep . getsvalue(), CT_CARD);
 		if (t_card != NULL)
 			setcard(t_card, False, False);
 	}
@@ -2669,7 +2692,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-	
+#endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;

@@ -271,73 +271,74 @@ static void export_image(void *p_context)
 	[t_data release];
 }
 
-//// MOVED TO mblhandlers.cpp
-//Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
-//{
-//	if (p_parameters == nil)
-//		return ES_NORMAL;
-//	
-//	MCExecPoint ep(nil, nil, nil);	
-//	p_parameters -> eval_argument(ep);
-//
-//	MCString t_raw_data;
-//	if (is_png_data(ep . getsvalue()) ||
-//		is_gif_data(ep . getsvalue()) ||
-//		is_jpeg_data(ep . getsvalue()))
-//		t_raw_data = ep . getsvalue();
-//	else
-//	{
-//		uint4 parid;
-//		MCObject *objptr;
-//		MCChunk *tchunk = new MCChunk(False);
-//		MCerrorlock++;
-//		MCScriptPoint sp(ep);
-//		Parse_stat stat = tchunk->parse(sp, False);
-//		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
-//		{
-//			MCresult -> sets("could not find image");
-//			MCerrorlock--;
-//			delete tchunk;
-//			return ES_NORMAL;
-//		}
-//		
-//		if (objptr -> gettype() != CT_IMAGE)
-//		{
-//			MCresult -> sets("not an image");
-//			return ES_NORMAL;
-//		}
-//		
-//		MCImage *t_image;
-//		t_image = static_cast<MCImage *>(objptr);
-//		if (t_image -> getcompression() != F_PNG &&
-//			t_image -> getcompression() != F_JPEG &&
-//			t_image -> getcompression() != F_GIF)
-//		{
-//			MCresult -> sets("not a supported format");
-//			return ES_NORMAL;
-//		}
-//		
-//		t_raw_data = t_image -> getrawdata();
-//	}
-//	
-//	export_image_t ctxt;
-//	ctxt . raw_data = t_raw_data;
-//	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
-//	
-//	MCIPhoneRunOnMainFiber(export_image, &ctxt);
-//	
-//	while(![ctxt . delegate isFinished])
-//		MCscreen -> wait(60.0, False, True);
-//	
-//	if ([ctxt . delegate isSuccessful])
-//		MCresult -> clear();
-//	else
-//		MCresult -> sets("export failed");
-//	
-//	[ctxt . delegate release];
-//	
-//	return ES_NORMAL;
-//}
+#ifdef /* MCHandleExportImageToAlbumIphone */ LEGACY_EXEC
+Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
+{
+	if (p_parameters == nil)
+		return ES_NORMAL;
+	
+	MCExecPoint ep(nil, nil, nil);	
+	p_parameters -> eval_argument(ep);
+
+	MCString t_raw_data;
+	if (is_png_data(ep . getsvalue()) ||
+		is_gif_data(ep . getsvalue()) ||
+		is_jpeg_data(ep . getsvalue()))
+		t_raw_data = ep . getsvalue();
+	else
+	{
+		uint4 parid;
+		MCObject *objptr;
+		MCChunk *tchunk = new MCChunk(False);
+		MCerrorlock++;
+		MCScriptPoint sp(ep);
+		Parse_stat stat = tchunk->parse(sp, False);
+		if (stat != PS_NORMAL || tchunk->getobj(ep, objptr, parid, True) != ES_NORMAL)
+		{
+			MCresult -> sets("could not find image");
+			MCerrorlock--;
+			delete tchunk;
+			return ES_NORMAL;
+		}
+		
+		if (objptr -> gettype() != CT_IMAGE)
+		{
+			MCresult -> sets("not an image");
+			return ES_NORMAL;
+		}
+		
+		MCImage *t_image;
+		t_image = static_cast<MCImage *>(objptr);
+		if (t_image -> getcompression() != F_PNG &&
+			t_image -> getcompression() != F_JPEG &&
+			t_image -> getcompression() != F_GIF)
+		{
+			MCresult -> sets("not a supported format");
+			return ES_NORMAL;
+		}
+		
+		t_raw_data = t_image -> getrawdata();
+	}
+	
+	export_image_t ctxt;
+	ctxt . raw_data = t_raw_data;
+	ctxt . delegate = [[MCExportImageToAlbumDelegate alloc] init];
+	
+	MCIPhoneRunOnMainFiber(export_image, &ctxt);
+	
+	while(![ctxt . delegate isFinished])
+		MCscreen -> wait(60.0, False, True);
+	
+	if ([ctxt . delegate isSuccessful])
+		MCresult -> clear();
+	else
+		MCresult -> sets("export failed");
+	
+	[ctxt . delegate release];
+	
+	return ES_NORMAL;
+}
+#endif /* MCHandleExportImageToAlbumIphone */ 
 
 bool MCSystemExportImageToAlbum(MCStringRef& r_save_result, MCStringRef p_raw_data, MCStringRef p_file_name, MCStringRef p_file_extension)
 {
@@ -498,43 +499,6 @@ bool MCIPhoneSystem::TextConvertToUnicode(uint32_t p_input_encoding, const void 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//// MOVED TO mbmlhandlers.cpp
-//static Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
-//{
-//	MCExecPoint ep(nil, nil, nil);
-//	
-//	UIStatusBarStyle t_style;
-//	t_style = UIStatusBarStyleDefault;
-//	if (p_parameters != nil)
-//	{
-//		p_parameters -> eval_argument(ep);
-//		if (ep . getsvalue() == "default")
-//			t_style = UIStatusBarStyleDefault;
-//		else if (ep . getsvalue() == "translucent")
-//			t_style = UIStatusBarStyleBlackTranslucent;
-//		else if (ep . getsvalue() == "opaque")
-//			t_style = UIStatusBarStyleBlackOpaque;
-//	}
-//	
-//	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
-//	
-//	return ES_NORMAL;
-//}
-
-//Exec_stat MCHandleShowStatusBar(void *context, MCParameter *p_parameters)
-//{
-//	[MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
-//	
-//	return ES_NORMAL;
-//}
-//
-//Exec_stat MCHandleHideStatusBar(void *context, MCParameter *p_parameters)
-//{
-//	[MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
-//	
-//	return ES_NORMAL;
-//}
-
 static UIStatusBarStyle MCMiscUIStatusBarStyleFromMCExecEnum(MCMiscStatusBarStyle p_status_bar_style)
 {
     switch(p_status_bar_style)
@@ -557,6 +521,11 @@ bool MCSystemSetStatusBarStyle(intenum_t p_status_bar_style)
 
 bool MCSystemShowStatusBar()
 {
+#ifdef /* MCHandleShowStatusBar */ LEGACY_EXEC
+	[MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
+	
+	return ES_NORMAL;
+#endif /* MCHandleShowStatusBar */
     [MCIPhoneGetApplication() switchToStatusBarVisibility: YES];
     
     return true;
@@ -564,9 +533,14 @@ bool MCSystemShowStatusBar()
 
 bool MCSystemHideStatusBar()
 {
+#ifdef /* MCHandleHideStatusBar */ LEGACY_EXEC
+	[MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
+	
+	return ES_NORMAL;
+#endif /* MCHandleHideStatusBar */
     [MCIPhoneGetApplication() switchToStatusBarVisibility: NO];
     
-    return false;
+    return true;
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -585,73 +559,8 @@ static const char *s_orientation_names[] =
 
 extern bool MCIPhonePickMedia(bool p_allow_multiple_items, MPMediaType p_media_types, NSString*& r_media_returned);
 
-/*
-// HC-2011-10-12 [[ Media Picker ]] Implementation of media picker functionality.
-static Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
-{
-	bool t_success, t_allow_multipe_items;
-	char *t_option_list;
-	MPMediaType t_media_types;
-	NSString *r_return_media_types;
-
-	t_success = true;
-	t_allow_multipe_items = false;
-	t_media_types = 0;
-	
-	t_option_list = nil;
-
-	// Get the options list.z
-	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	while (t_success)
-	{
-		if (MCCStringEqualCaseless(t_option_list, "true"))
-			t_allow_multipe_items = true;
-		else if (MCCStringEqualCaseless(t_option_list, "music"))
-			t_media_types += MPMediaTypeMusic;
-		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
-			t_media_types += MPMediaTypePodcast;
-		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
-			t_media_types += MPMediaTypeAudioBook;
-		else if (MCCStringEqualCaseless(t_option_list, "anyAudio"))
-			t_media_types += MPMediaTypeAnyAudio;
-#ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
-		{
-			if (MCCStringEqualCaseless(t_option_list, "movie"))
-				t_media_types += MPMediaTypeMovie;
-			else if (MCCStringEqualCaseless(t_option_list, "tv"))
-				t_media_types += MPMediaTypeTVShow;
-			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
-				t_media_types += MPMediaTypeVideoPodcast;
-			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
-				t_media_types += MPMediaTypeMusicVideo;
-			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
-				t_media_types += MPMediaTypeVideoITunesU;
-			else if (MCCStringEqualCaseless(t_option_list, "anyVideo"))
-				t_media_types += MPMediaTypeAnyVideo;
-		}
-#endif
-		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
-	}
-	if (t_media_types == 0)
-	{
-		t_media_types = MPMediaTypeAnyAudio;
-#ifdef __IPHONE_5_0
-		if (MCmajorosversion >= 500)
-			t_media_types += MPMediaTypeAnyVideo;
-#endif		
-	}
-	// Call MCIPhonePickMedia to process the media pick selection. 
-	t_success = MCIPhonePickMedia(t_allow_multipe_items, t_media_types, r_return_media_types);
-	
-	if (t_success && r_return_media_types != nil)
-	{
-		MCresult -> sets ([r_return_media_types cStringUsingEncoding:NSMacOSRomanStringEncoding]);
-	}
-	return ES_NORMAL;
-}
-*/
-/* moved to mblhandlers.cpp
+//moved to mblhandlers.cpp
+#ifdef /* MCHandleCameraFeaturesIphone */ LEGACY_EXEC
 static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters)
 {
 	extern Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters);
@@ -710,18 +619,33 @@ static Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters
 	t_string = [t_string substringToIndex: t_string_length];
 	MCresult -> copysvalue([t_string cStringUsingEncoding: NSMacOSRomanStringEncoding]);
 	return ES_NORMAL;
-}*/
+}
+#endif /* MCHandleCameraFeaturesIphone */
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 // We do not need this in iOS, as beep is already implemented and handled.
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {
+#ifdef /* MCSystemBeepIphone */ LEGACY_EXEC
+    return true;
+#endif /* MCSystemBeepIphone */
     return true;
 }
 
 bool MCSystemVibrate (int32_t p_number_of_vibrates)
 {
+#ifdef /* MCSystemVibrateIphone */ LEGACY_EXEC
+    for (int32_t i = 0; i < p_number_of_vibrates; i++)
+    {
+		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
+		MCIPhoneRunBlockOnMainFiber(^(void) {
+			AudioServicesPlayAlertSound(kSystemSoundID_Vibrate); // Vibrates and beeps if no vibrate is supported
+		});
+		MCscreen->wait(BEEP_INTERVAL, False, False);
+    }
+    return true;
+#endif /* MCSystemVibrateIphone */
     for (int32_t i = 0; i < p_number_of_vibrates; i++)
     {
 		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
@@ -735,25 +659,22 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
-// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
-//{
-//	UIScreenMode *t_mode;
-//	t_mode = [[UIScreen mainScreen] currentMode];
-//		
-//    // MM-2012-11-22: [[ Bug 10502 ]] Make sure the resolution is reported as width height in relation to portrait.
-//	char t_size[U4L + 1 + U4L + 1];
-//    if ([t_mode size] . width < [t_mode size] .height)
-//        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . width, (uint32_t)[t_mode size] . height);
-//    else
-//        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . height, (uint32_t)[t_mode size] . width);
-//	MCresult -> copysvalue(t_size);
-//
-//	return ES_NORMAL;
-//}
-
 bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
 {
+#ifdef /* MCHandleDeviceResolution */ LEGACY_EXEC
+	UIScreenMode *t_mode;
+	t_mode = [[UIScreen mainScreen] currentMode];
+    
+    // MM-2012-11-22: [[ Bug 10502 ]] Make sure the resolution is reported as width height in relation to portrait.
+	char t_size[U4L + 1 + U4L + 1];
+    if ([t_mode size] . width < [t_mode size] .height)
+        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . width, (uint32_t)[t_mode size] . height);
+    else
+        sprintf(t_size, "%u,%u", (uint32_t)[t_mode size] . height, (uint32_t)[t_mode size] . width);
+	MCresult -> copysvalue(t_size);
+    
+	return ES_NORMAL;
+#endif /* MCHandleDeviceResolution */
 	UIScreenMode *t_mode;
 	t_mode = [[UIScreen mainScreen] currentMode];
 
@@ -769,35 +690,6 @@ bool MCSystemGetDeviceResolution(MCStringRef& p_resolution)
 	return ES_NORMAL;
 }
 
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
-//{
-//	MCExecPoint ep(nil, nil, nil);
-//	
-//	bool t_use_device_res;
-//	t_use_device_res = false;
-//	if (p_parameters != nil)
-//	{
-//		p_parameters -> eval_argument(ep);
-//		t_use_device_res = (ep . getsvalue() == MCtruemcstring);
-//		p_parameters = p_parameters -> getnext();
-//	}
-//	
-//	bool t_use_control_device_res;
-//	t_use_control_device_res = false;
-//	if (p_parameters != nil)
-//	{
-//		p_parameters -> eval_argument(ep);
-//		t_use_control_device_res = (ep . getsvalue() == MCtruemcstring);
-//		p_parameters = p_parameters -> getnext();
-//	}
-//	
-//	
-//	MCIPhoneUseDeviceResolution(t_use_device_res, t_use_control_device_res);
-//	
-//	return ES_NORMAL;
-//}
-
 bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_device_res)
 {
     MCIPhoneUseDeviceResolution(p_use_control_device_res, p_use_control_device_res);
@@ -805,40 +697,42 @@ bool MCSystemSetDeviceUseResolution(bool p_use_device_res, bool p_use_control_de
     return true;
 }
 
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
-//{
-//	MCresult -> setnvalue(MCIPhoneGetDeviceScale());
-//	
-//	return ES_NORMAL;
-//}
-
 bool MCSystemGetDeviceScale(real64_t& r_scale)
 {
+#ifdef /* MCHandleDeviceScale */ LEGACY_EXEC
+	MCresult -> setnvalue(MCIPhoneGetDeviceScale());
+	
+	return ES_NORMAL;
+#endif /* MCHandleDeviceScale */
     r_scale = MCIPhoneGetDeviceScale();
     
     return true;
 }
 
-// Not implemented on IPhone
 bool MCSystemGetPixelDensity(real64_t& r_density)
 {
+    // Not implemented on IPhone
     return false;
 }
 
-/* MOVED TO mbliphoneorientation.mm
+/* MOVED TO mbliphoneorientation.mm */
+#ifdef /* MCHandleDeviceOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[[[UIDevice currentDevice] orientation]]);
 	return ES_NORMAL;
 }
+#endif /* MCHandleDeviceOrientationIphone */
 
+#ifdef /* MCHandleOrientationIphone */ LEGACY_EXEC
 static Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(s_orientation_names[(int)MCIPhoneGetOrientation()]);
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationIphone */
 
+#ifdef /* MCHandleAllowedOrientationsIphone */ LEGACY_EXEC
 static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	uint32_t t_orientations;
@@ -853,13 +747,17 @@ static Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_param
     
 	return ES_NORMAL;
 }
+#endif /* MCHandleAllowedOrientationsIphone */
 
+#ifdef /* MCHandleOrientationLockedIphone */ LEGACY_EXEC
 static Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters)
 {
 	MCresult -> sets(MCU_btos(((int)[MCIPhoneGetApplication() orientationLocked]) == YES));
 	return ES_NORMAL;
 }
+#endif /* MCHandleOrientationLockedIphone */
 
+#ifdef /* MCHandleLockUnlockOrientation */ LEGACY_EXEC
 static Exec_stat MCHandleLockUnlockOrientation(void *context, MCParameter *p_parameters)
 {
 	if ((bool)context)
@@ -868,7 +766,9 @@ static Exec_stat MCHandleLockUnlockOrientation(void *context, MCParameter *p_par
 		[MCIPhoneGetApplication() unlockOrientation];
 	return ES_NORMAL;
 }
+#endif /* MCHandleLockUnlockOrientation */
 
+#ifdef /* MCHandleSetAllowedOrientationsIphone */ LEGACY_EXEC
 static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters)
 {
 	bool t_success;
@@ -904,81 +804,45 @@ static Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_pa
 	
 	return ES_NORMAL;
 }
-*/
-static Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters)
-{
-	return ES_NORMAL;
-}
-
-// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
-//{
-//	char *t_url, *t_filename;
-//	t_url = nil;
-//	t_filename = nil;
-//	
-//	MCExecPoint ep(nil, nil, nil);
-//	
-//	if (p_parameters != nil)
-//	{
-//		p_parameters -> eval_argument(ep);
-//		t_url = ep . getsvalue() . clone();
-//		p_parameters = p_parameters -> getnext();
-//	}
-//	
-//	if (p_parameters != nil)
-//	{
-//		p_parameters -> eval_argument(ep);
-//		t_filename = ep . getsvalue() . clone();
-//		p_parameters = p_parameters -> getnext();
-//	}
-//	
-//	extern void MCS_downloadurl(MCObject *, const char *, const char *);
-//	MCS_downloadurl(MCtargetptr, t_url, t_filename);
-//	
-//    // IM-2012-04-04 - these were allocated but not released
-//    MCCStringFree(t_url);
-//    MCCStringFree(t_filename);
-//    
-//	return ES_NORMAL;
-//}
+#endif /* MCHandleSetAllowedOrientationsIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
-//{
-//	MCExecPoint ep(nil, nil, nil);
-//
-//	if (p_parameters != nil)
-//	{
-//		UIKeyboardType t_type;
-//		p_parameters -> eval_argument(ep);
-//		if (ep . getsvalue() == "default")
-//			t_type = UIKeyboardTypeDefault;
-//		else if (ep . getsvalue() == "alphabet")
-//			t_type = UIKeyboardTypeAlphabet;
-//		else if (ep . getsvalue() == "numeric")
-//			t_type = UIKeyboardTypeNumbersAndPunctuation;
-//		else if (ep . getsvalue() == "url")
-//			t_type = UIKeyboardTypeURL;
-//		else if (ep . getsvalue() == "number")
-//			t_type = UIKeyboardTypeNumberPad;
-//		else if (ep . getsvalue() == "phone")
-//			t_type = UIKeyboardTypePhonePad;
-//		else if (ep . getsvalue() == "contact")
-//			t_type = UIKeyboardTypeNamePhonePad;
-//		else if (ep . getsvalue() == "email")
-//			t_type = UIKeyboardTypeEmailAddress;
-//#ifdef __IPHONE_4_1
-//		else if (ep . getsvalue() == "decimal")
-//			t_type = UIKeyboardTypeDecimalPad;				
-//#endif
-//		
-//		MCIPhoneSetKeyboardType(t_type);
-//	}
-//	return ES_NORMAL;
-//}
+#ifdef /* MCHandleSetKeyboardTypeIphone */ LEGACY_EXEC
+static Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters)
+{
+	MCExecPoint ep(nil, nil, nil);
+
+	if (p_parameters != nil)
+	{
+		UIKeyboardType t_type;
+		p_parameters -> eval_argument(ep);
+		if (ep . getsvalue() == "default")
+			t_type = UIKeyboardTypeDefault;
+		else if (ep . getsvalue() == "alphabet")
+			t_type = UIKeyboardTypeAlphabet;
+		else if (ep . getsvalue() == "numeric")
+			t_type = UIKeyboardTypeNumbersAndPunctuation;
+		else if (ep . getsvalue() == "url")
+			t_type = UIKeyboardTypeURL;
+		else if (ep . getsvalue() == "number")
+			t_type = UIKeyboardTypeNumberPad;
+		else if (ep . getsvalue() == "phone")
+			t_type = UIKeyboardTypePhonePad;
+		else if (ep . getsvalue() == "contact")
+			t_type = UIKeyboardTypeNamePhonePad;
+		else if (ep . getsvalue() == "email")
+			t_type = UIKeyboardTypeEmailAddress;
+#ifdef __IPHONE_4_1
+		else if (ep . getsvalue() == "decimal")
+			t_type = UIKeyboardTypeDecimalPad;				
+#endif
+		
+		MCIPhoneSetKeyboardType(t_type);
+	}
+	return ES_NORMAL;
+}
+#endif /* MCHandleSetKeyboardTypeIphone */
 
 static UIKeyboardType MCMiscGetUIKeyboardTypeFromExecEnum(MCMiscKeyboardType p_type)
 {
@@ -1013,43 +877,6 @@ bool MCSystemSetKeyboardType(intenum_t p_type)
     
     return  true;
 }
-
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
-//{
-//	MCExecPoint ep(nil, nil, nil);
-//
-//	if (p_parameters != nil)
-//	{
-//		UIReturnKeyType t_type;
-//		p_parameters -> eval_argument(ep);
-//		if (ep . getsvalue() == "default")
-//			t_type = UIReturnKeyDefault;
-//		else if (ep . getsvalue() == "go")
-//			t_type = UIReturnKeyGo;
-//		else if (ep . getsvalue() == "google")
-//			t_type = UIReturnKeyGoogle;
-//		else if (ep . getsvalue() == "join")
-//			t_type = UIReturnKeyJoin;
-//		else if (ep . getsvalue() == "next")
-//			t_type = UIReturnKeyNext;
-//		else if (ep . getsvalue() == "route")
-//			t_type = UIReturnKeyRoute;
-//		else if (ep . getsvalue() == "search")
-//			t_type = UIReturnKeySearch;
-//		else if (ep . getsvalue() == "send")
-//			t_type = UIReturnKeySend;
-//		else if (ep . getsvalue() == "yahoo")
-//			t_type = UIReturnKeyYahoo;
-//		else if (ep . getsvalue() == "done")
-//			t_type = UIReturnKeyDone;
-//		else if (ep . getsvalue() == "emergency call")
-//			t_type = UIReturnKeyEmergencyCall;
-//
-//		MCIPhoneSetReturnKeyType(t_type);
-//	}
-//	return ES_NORMAL;
-//}
 
 static UIReturnKeyType MCMiscGetUIReturnKeyTypeFromMCExecEnum(MCMiscKeyboardReturnKey p_type)
 {
@@ -1089,50 +916,53 @@ bool MCSystemSetKeyboardReturnKey(intenum_t p_type)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
-//{
-//	NSString *t_current_locale_id = nil;
-//	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
-//	
-//	const char *t_id_string = nil;
-//	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
-//	
-//    MCExecPoint ep(nil, nil, nil);
-//    MCExecContext ctxt(ep);
-//    
-//	ctxt . SetTheResultToStaticCString(t_id_string);
-//	return ES_NORMAL;
-//}
+#ifdef /* MCHandleCurrentLocaleIphone */ LEGACY_EXEC
+static Exec_stat MCHandleCurrentLocale(void *context, MCParameter *p_parameters)
+{
+	NSString *t_current_locale_id = nil;
+	t_current_locale_id = [[NSLocale currentLocale] objectForKey: NSLocaleIdentifier];
+	
+	const char *t_id_string = nil;
+	t_id_string = [t_current_locale_id cStringUsingEncoding: NSMacOSRomanStringEncoding];
+	
+	MCExecPoint ep;
+	ep.setsvalue(t_id_string);
+	MCresult->store(ep, True);
+	
+	return ES_NORMAL;
+}
+#endif /* MCHandleCurrentLocaleIphone */
 
-//static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
-//{
-//	bool t_success;
-//	t_success = true;
-//	
-//	NSArray *t_preferred_langs = nil;
-//	t_preferred_langs = [NSLocale preferredLanguages];
-//	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
-//
-//	MCExecPoint ep;
-//	const char *t_lang_string = nil;
-//	if (t_success)
-//	{
-//		bool t_first = true;
-//		for (NSString *t_lang in t_preferred_langs)
-//		{
-//			ep.concatcstring([t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, t_first);
-//			t_first = false;
-//		}
-//	}
-//	
-//	if (t_success)
-//		ctxt . SetTheResultToValue(ep . getsvalue());
-//	else
-//		MCresult->clear();
-//	
-//	return ES_NORMAL;
-//}
+#ifdef /* MCHandlePreferredLanguagesIphone */ LEGACY_EXEC
+static Exec_stat MCHandlePreferredLanguages(void *context, MCParameter *p_parameters)
+{
+	bool t_success;
+	t_success = true;
+	
+	NSArray *t_preferred_langs = nil;
+	t_preferred_langs = [NSLocale preferredLanguages];
+	t_success = t_preferred_langs != nil && [t_preferred_langs count] != 0;
+    
+	MCExecPoint ep;
+	const char *t_lang_string = nil;
+	if (t_success)
+	{
+		bool t_first = true;
+		for (NSString *t_lang in t_preferred_langs)
+		{
+			ep.concatcstring([t_lang cStringUsingEncoding: NSMacOSRomanStringEncoding], EC_RETURN, t_first);
+			t_first = false;
+		}
+	}
+	
+	if (t_success)
+		MCresult->store(ep, True);
+	else
+		MCresult->clear();
+	
+	return ES_NORMAL;
+}
+#endif /* MCHandlePreferredLanguagesIphone */
 
 bool MCSystemGetPreferredLanguages(MCStringRef& r_preferred_languages)
 {
@@ -1181,10 +1011,51 @@ bool MCSystemGetCurrentLocale(MCStringRef& r_current_locale)
 	return true;
 }
 
+// MOVED TO mblhandlers.cpp
+#ifdef /* MCHandleLibUrlDownloadToFileIphone */ LEGACY_EXEC
+static Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
+{
+	char *t_url, *t_filename;
+	t_url = nil;
+	t_filename = nil;
+    
+	MCExecPoint ep(nil, nil, nil);
+    
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_url = ep . getsvalue() . clone();
+		p_parameters = p_parameters -> getnext();
+	}
+    
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_filename = ep . getsvalue() . clone();
+		p_parameters = p_parameters -> getnext();
+	}
+    
+	extern void MCS_downloadurl(MCObject *, const char *, const char *);
+	MCS_downloadurl(MCtargetptr, t_url, t_filename);
+    
+    // IM-2012-04-04 - these were allocated but not released
+    MCCStringFree(t_url);
+    MCCStringFree(t_filename);
+    
+	return ES_NORMAL;
+}
+#endif /* MCHandleLibUrlDownloadToFileIphone */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
 {
+#ifdef /* MCHandleSystemIdentifier */ LEGACY_EXEC
+	NSString *t_identifier = nil;
+	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
+	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	return ES_NORMAL;
+#endif /* MCHandleSystemIdentifier */
 	NSString *t_identifier = nil;
 	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
 	
@@ -1193,6 +1064,19 @@ bool MCSystemGetSystemIdentifier(MCStringRef& r_identifier)
 
 bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 {
+#ifdef /* MCHandleApplicationIdentifier */ LEGACY_EXEC
+	// Get the plist
+	NSDictionary *t_plist;
+	t_plist = [[NSBundle mainBundle] infoDictionary];
+	
+	NSString *t_identifier;
+	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
+	
+	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	
+	return ES_NORMAL;
+#endif /* MCHandleApplicationIdentifier */
+	// Get the plist
 	NSDictionary *t_plist;
 	t_plist = [[NSBundle mainBundle] infoDictionary];
 	
@@ -1204,6 +1088,14 @@ bool MCSystemGetApplicationIdentifier(MCStringRef& r_identifier)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value)
+{
+    // not implemented on Iphone
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 extern bool MCFileSetDataProtection(MCStringRef p_filename, NSString *p_protection);
 extern bool MCFileGetDataProtection(MCStringRef p_filename, NSString *&r_protection);
 extern bool MCDataProtectionFromString(MCStringRef p_string, NSString *&r_protection);
@@ -1211,6 +1103,19 @@ extern bool MCDataProtectionToString(NSString *p_protection, MCStringRef &r_stri
 
 bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup)
 {
+#ifdef /* MCiOSFileSetDoNotBackup */ LEGACY_EXEC
+    bool t_success = true;
+    if (p_no_backup)
+    {
+        uint8_t t_val = 1;
+        t_success = 0 == setxattr(p_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0);
+    }
+    else
+    {
+        t_success = 0 == removexattr(p_path, FILEATTR_DONOTBACKUP, 0);
+    }
+    return t_success;
+#endif /* MCiOSFileSetDoNotBackup */
    bool t_success = true;
     if (p_no_backup)
     {
@@ -1226,6 +1131,12 @@ bool MCSystemFileSetDoNotBackup(MCStringRef p_path, bool p_no_backup)
 
 bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup)
 {
+#ifdef /* MCiOSFileGetDoNotBackup */ LEGACY_EXEC
+    uint8_t t_val = 0;
+    if (-1 == getxattr(p_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
+        return false;
+    return t_val != 0;
+#endif /* MCiOSFileGetDoNotBackup */
     uint8_t t_val = 0;
     if (-1 == getxattr(MCStringGetCString(p_path), FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
         return false;
@@ -1275,8 +1186,10 @@ bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection
     return false;
 }
 
-/* MOVED TO mbliphoneidletimer.mm
+////////////////////////////////////////////////////////////////////////////////
 
+/* MOVED TO mbliphoneidletimer.mm */
+#ifdef /* MCHandleLockIdleTimerIphone */ LEGACY_EXEC
 static Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 {
 	g_idle_timer++;
@@ -1284,7 +1197,9 @@ static Exec_stat MCHandleLockIdleTimer(void *context, MCParameter *p_parameters)
 		[[UIApplication sharedApplication] setIdleTimerDisabled:YES];
 	return ES_NORMAL;
 }
+#endif /* MCHandleLockIdleTimerIphone */
 
+#ifdef /* MCHandleUnlockIdleTimerIphone */ LEGACY_EXEC
 static Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_paramters)
 {
 	if (g_idle_timer == 1)
@@ -1293,7 +1208,9 @@ static Exec_stat MCHandleUnlockIdleTimer(void *context, MCParameter *p_paramters
 		g_idle_timer--;	
 	return ES_NORMAL;
 }
+#endif /* MCHandleUnlockIdleTimerIphone */
 
+#ifdef /* MCHandleIdleTimerLockedIphone */ LEGACY_EXEC
 static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -1303,116 +1220,22 @@ static Exec_stat MCHandleIdleTimerLocked(void *context, MCParameter *p_paramters
 		MCresult -> sets(MCfalsestring);
 	return ES_NORMAL;
 }
- 
-*/
+#endif /* MCHandleIdleTimerLockedIphone */
+
+//////////////////////////////////////////////////////////////////////////////
+
+// MOVED TO mblhandlers.cpp
+#ifdef /* MCHandleClearTouchesIphone */ LEGACY_EXEC
+static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
+{
+	MCscreen -> wait(1/25.0, False, False);
+	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
+	MCEventQueueClearTouches();
+	return ES_NORMAL;
+}
+#endif /* MCHandleClearTouchesIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
-
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleClearTouches(void *context, MCParameter *p_parameters)
-//{
-//	MCscreen -> wait(1/25.0, False, False);
-//	static_cast<MCScreenDC *>(MCscreen) -> clear_touches();
-//	MCEventQueueClearTouches();
-//	return ES_NORMAL;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandeSystemIdentifier(void *context, MCParameter *p_parameters)
-//{
-//	NSString *t_identifier = nil;
-//	t_identifier = [[UIDevice currentDevice] uniqueIdentifier];
-//	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-//	return ES_NORMAL;	
-//}
-//
-//static Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters)
-//{
-//	// Get the plist
-//	NSDictionary *t_plist;
-//	t_plist = [[NSBundle mainBundle] infoDictionary];
-//	
-//	NSString *t_identifier;
-//	t_identifier = [t_plist objectForKey: @"CFBundleIdentifier"];
-//	
-//	MCresult -> copysvalue([t_identifier cStringUsingEncoding: NSMacOSRomanStringEncoding]);
-//	
-//	return ES_NORMAL;	
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
-//// MOVED TO exec-misc.cpp
-//extern bool MCReachabilitySetTarget(const char *hostname);
-//extern const char *MCReachabilityGetTarget(void);
-
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
-//{
-//	bool t_success;
-//	t_success = true;
-//	
-//	char *t_hostname = nil;
-//	
-//	if (t_success)
-//		t_success = MCParseParameters(p_parameters, "s", &t_hostname);
-//	
-//	if (t_success)
-//		t_success = MCReachabilitySetTarget(t_hostname);
-//	
-//	MCCStringFree(t_hostname);
-//	return t_success ? ES_NORMAL : ES_ERROR;
-//}
-//
-//static Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters)
-//{
-//	MCresult -> copysvalue(MCReachabilityGetTarget());
-//	return ES_NORMAL;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
-//// MOVED TO mblhandlers.cpp
-//static Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
-//{
-//	bool t_success;
-//	t_success = true;
-//	
-//	int32_t t_interval;
-//	if (t_success)
-//		t_success = MCParseParameters(p_parameters, "i", &t_interval);
-//	
-//	if (t_success)
-//	{
-//		if (t_interval <= 0)
-//			MCRedrawEnableScreenUpdates();
-//		else
-//			MCRedrawDisableScreenUpdates();
-//	
-//		[MCIPhoneGetApplication() setRedrawInterval: t_interval];
-//	}
-//	
-//	return ES_NORMAL;
-//}
-//
-//// MW-2012-02-15: [[ Bug 9985 ]] Handler method for the 'iphoneSetAnimateAutorotation'
-////   command.
-//static Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
-//{
-//	bool t_success;
-//	t_success = true;
-//	
-//	bool t_enabled;
-//	if (t_success)
-//		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
-//	
-//	if (t_success)
-//		[MCIPhoneGetApplication() setAnimateAutorotation: t_enabled];
-//	
-//	return ES_NORMAL;
-//}
 
 bool MCSystemSetRedrawInterval(int32_t p_interval)
 {
@@ -1435,489 +1258,496 @@ bool MCSystemSetAnimateAutorotation(bool p_enabled)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
 
-// MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
-//   be run on the script fiber. Otherwise it is run on the system fiber (making
-//   implementation easier).
-struct MCPlatformMessageSpec
-{
-	bool waitable;
-	const char *message;
-	MCPlatformMessageHandler handler;
-	void *context;
-};
-
-extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
-extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
-
-extern Exec_stat MCHandleRevMail(void *, MCParameter *);
-extern Exec_stat MCHandleCanSendMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposePlainMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposeUnicodeMail(void *, MCParameter *);
-extern Exec_stat MCHandleComposeHtmlMail(void *, MCParameter *);
-
-extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *parameters);
-
-extern Exec_stat MCHandleStartTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleStopTrackingSensor(void *, MCParameter *);
-extern Exec_stat MCHandleSensorReading(void *, MCParameter *);
-extern Exec_stat MCHandleSensorAvailable(void *, MCParameter *);
-
-// MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
-extern Exec_stat MCHandleCurrentLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCurrentHeading(void *, MCParameter *);
-extern Exec_stat MCHandleAccelerometerEnablement(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackLocation(void *, MCParameter *);
-extern Exec_stat MCHandleCanTrackHeading(void *, MCParameter *);
-extern Exec_stat MCHandleLocationTrackingState(void *, MCParameter *);
-extern Exec_stat MCHandleHeadingTrackingState(void *, MCParameter *);
-extern Exec_stat MCHandleSetHeadingCalibrationTimeout(void *, MCParameter *);
-extern Exec_stat MCHandleHeadingCalibrationTimeout(void *, MCParameter *);
-
-extern Exec_stat MCHandleStartActivityIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStopActivityIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStartBusyIndicator(void *, MCParameter *);
-extern Exec_stat MCHandleStopBusyIndicator(void *, MCParameter *);
-
-extern Exec_stat MCHandlePickDate(void *, MCParameter *);
-extern Exec_stat MCHandlePickTime(void *, MCParameter *);
-extern Exec_stat MCHandlePickDateAndTime(void *, MCParameter *);
-
-extern Exec_stat MCHandlePick(void *, MCParameter *);
-extern Exec_stat MCHandleIPhonePickMedia(void *, MCParameter *);
-
-extern Exec_stat MCHandleBeep(void *, MCParameter *);
-extern Exec_stat MCHandleVibrate(void *, MCParameter *);
-
-extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *); 
-extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *); 
-extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *); 
-extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *); 
-extern Exec_stat MCHandleGetNotificationBadgeValue(void *, MCParameter *); 
-extern Exec_stat MCHandleSetNotificationBadgeValue(void *, MCParameter *); 
-
-extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters);
-
-// MM-2012-09-02: Refactor multi channel sound into new soound channel module. 
-extern Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
-
-// MM-2012-02-22: Added support for ad management
-extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAds(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters);    // ABPeoplePickerNavigationController
-extern Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters);    // ABPersonViewController
-extern Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters); // ABNewPersonViewController
-extern Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters);  // ABUnknownPersonViewController
-extern Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters);           // ???                      // UI
-extern Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters);        // get calendar data for
-extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);         // create event in calendar // UI
-extern Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters);         // edit calendar event      // UI
-extern Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters);            // create calendar entry
-extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters);   // get the names of the calendars
-extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);           // get calendar entry
-extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleGetDeviceToken(void *, MCParameter *);
-extern Exec_stat MCHandleGetLaunchUrl(void *, MCParameter *);
-
-extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
-
-extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
-extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
-extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
-
-extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
-extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
-
-extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
-
-extern Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
-
-// MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
-extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
-extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
-
-extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
-
-static MCPlatformMessageSpec s_platform_messages[] =
-{
-    // MM-2012-02-22: Added support for ad management
-    {false, "mobileAdRegister", MCHandleAdRegister, nil},
-    {false, "mobileAdCreate", MCHandleAdCreate, nil},
-    {false, "mobileAdDelete", MCHandleAdDelete, nil},
-    {false, "mobileAdGetVisible", MCHandleAdGetVisible, nil},
-    {false, "mobileAdSetVisible", MCHandleAdSetVisible, nil},
-    {false, "mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
-    {false, "mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
-    {false, "mobileAds", MCHandleAds, nil},
-    {false, "iphoneAdRegister", MCHandleAdRegister, nil},
-    {false, "iphoneAdCreate", MCHandleAdCreate, nil},
-    {false, "iphoneAdDelete", MCHandleAdDelete, nil},
-    {false, "iphoneAdGetVisible", MCHandleAdGetVisible, nil},
-    {false, "iphoneAdSetVisible", MCHandleAdSetVisible, nil},
-    {false, "iphoneAdGetTopLeft", MCHandleAdGetTopLeft, nil},
-    {false, "iphoneAdSetTopLeft", MCHandleAdSetTopLeft, nil},
-    {false, "iphoneAds", MCHandleAds, nil},
-    
-    {false, "mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
-    {false, "mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
-    {false, "mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
-    {false, "mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
-    {false, "mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
-    {false, "iphoneCreateLocalNotification", MCHandleCreateLocalNotification, nil},
-    {false, "iphoneGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
-    {false, "iphoneCancelLocalNotification", MCHandleCancelLocalNotification, nil},
-    {false, "iphoneCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
-    
-    {false, "iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
-    {false, "iphoneSetNotificationBadgeValue", MCHandleSetNotificationBadgeValue, nil},
-    
-    {false, "mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
-    {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
-    {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
-    {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
-    
-	{false, "iphoneActivityIndicatorStart", MCHandleStartActivityIndicator, nil},
-	{false, "iphoneActivityIndicatorStop", MCHandleStopActivityIndicator, nil},
-    
-    {false, "mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
-    {false, "mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
-    {false, "iphoneBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
-    {false, "iphoneBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
-    
-    {false, "mobileBeep", MCHandleBeep, nil},
-    {true, "mobileVibrate", MCHandleVibrate, nil},
-    {false, "iphoneBeep", MCHandleBeep, nil},
-    {true, "iphoneVibrate", MCHandleVibrate, nil},
-    
-	{true, "iphonePickPhoto", MCHandlePickPhoto, nil},
-	{true, "iphonePickMedia", MCHandleIPhonePickMedia, nil},
-	{true, "mobilePickMedia", MCHandleIPhonePickMedia, nil},
-//	{false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
-	{true, "mobilePickPhoto", MCHandlePickPhoto, nil},
-//	{false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
-    
-	{false, "iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
-	{false, "mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
-	
-	{false, "iphoneOrientation", MCHandleOrientation, nil},
-	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
-	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
-	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
-	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
-	{false, "mobileOrientation", MCHandleOrientation, nil},
-	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
-	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
-	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
-	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
-	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
-	
-	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
-	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
-	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
-    {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
-    
-    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
-    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
-    {false, "mobileSensorReading", MCHandleSensorReading, nil},
-    {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},	
-    
-    // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
-	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
-	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
-	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
-    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
-    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
-	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
-	
-	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
-	/* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
-	/* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
-	{false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
-	{false, "iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
-    /* DEPRECATED */ {false, "mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
-    /* DEPRECATED */ {false, "mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
-	/* DEPRECATED */ {false, "mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
-	/* DEPRECATED */ {false, "mobileCurrentHeading", MCHandleCurrentHeading, nil},
-    
-    /* DEPRECATED */ {false, "iphoneEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
-	/* DEPRECATED */ {false, "iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
-	/* DEPRECATED */ {false, "mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
-	/* DEPRECATED */ {false, "mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
-	
-    {true, "iphoneComposeTextMessage", MCHandleComposeTextMessage, nil},
-    {false, "iphoneCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
-    {true, "mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
-    {false, "mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
-    
-	{true, "revMail", MCHandleRevMail, nil},
-	
-	{false, "iphoneCanSendMail", MCHandleCanSendMail, nil},
-	{true, "iphoneComposeMail", MCHandleComposePlainMail, nil},
-	{true, "iphoneComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
-	{true, "iphoneComposeHtmlMail", MCHandleComposeHtmlMail, nil},
-    {false, "mobileCanSendMail", MCHandleCanSendMail, nil},
-	{true, "mobileComposeMail", MCHandleComposePlainMail, nil},
-	{true, "mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
-	{true, "mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
-	
-	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
-	
-	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
-	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},
-	{false, "iphoneHideStatusBar", MCHandleHideStatusBar, nil},
-    {false, "mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
-	{false, "mobileShowStatusBar", MCHandleShowStatusBar, nil},
-	{false, "mobileHideStatusBar", MCHandleHideStatusBar, nil},
-	
-	{true, "iphonePick", MCHandlePick, nil},
-	{true, "iphonePickDate", MCHandlePickDate, nil},
-    
-    {true, "mobilePickDate", MCHandlePickDate, nil},
-    {true, "mobilePickTime", MCHandlePickTime, nil},
-    {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
-    {true, "mobilePick", MCHandlePick, nil},
-	
-	{false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
-	{false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
-	{false, "mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
-	
-	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
-	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
-	{false, "iphoneControlSet", MCHandleControlSet, nil},
-	{false, "iphoneControlGet", MCHandleControlGet, nil},
-	{false, "iphoneControlDo", MCHandleControlDo, nil},
-	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
-	{false, "iphoneControls", MCHandleControlList, nil},
-	{false, "mobileControlCreate", MCHandleControlCreate, nil},
-	{false, "mobileControlDelete", MCHandleControlDelete, nil},
-	{false, "mobileControlSet", MCHandleControlSet, nil},
-	{false, "mobileControlGet", MCHandleControlGet, nil},
-	{false, "mobileControlDo", MCHandleControlDo, nil},
-	{false, "mobileControlTarget", MCHandleControlTarget, nil},
-	{false, "mobileControls", MCHandleControlList, nil},
-	
-	{false, "iphonePreferredLanguages", MCHandlePreferredLanguages, nil},
-	{false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
-	{false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
-	{false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
-	
-	{false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
-	{false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
-	{false, "iphoneResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
-	{false, "iphoneStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
-	{false, "iphoneDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
-	{false, "iphoneSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
-	{false, "iphoneSoundChannelVolume", MCHandleSoundChannelVolume, nil},
-	{false, "iphoneSoundChannelStatus", MCHandleSoundChannelStatus, nil},
-	{false, "iphoneSoundOnChannel", MCHandleSoundOnChannel, nil},
-	{false, "iphoneNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
-	{false, "iphoneSoundChannels", MCHandleSoundChannels, nil},
-    
-    // MM-2012-09-02: Add support for mobile* multi channel sound syntax
-    {false, "mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
-	{false, "mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
-	{false, "mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
-	{false, "mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
-	{false, "mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
-	{false, "mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
-	{false, "mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
-	{false, "mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
-	{false, "mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
-	{false, "mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
-	{false, "mobileSoundChannels", MCHandleSoundChannels, nil},
-	
-	{false, "iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
-	{false, "mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
-	{false, "iphoneUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
-	{false, "mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
-	{false, "iphoneIdleTimerLocked", MCHandleIdleTimerLocked, nil},
-	{false, "mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
-	
-	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
-	{false, "mobileClearTouches", MCHandleClearTouches, nil},
-	
-	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
-	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
-	
-	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
-	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
-	
-	{true, "iphoneExportImageToAlbum", MCHandleExportImageToAlbum, nil},
-	{true, "mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
-    
-	{false, "iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
-	
-    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
-    //   or not.
-	{false, "iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil},
-	
-	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
-	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
-	{false, "mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
-	{false, "mobileRestorePurchases", MCHandleRestorePurchases, nil},
-	{false, "mobilePurchases", MCHandlePurchaseList, nil},
-	{false, "mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
-	{false, "mobilePurchaseState", MCHandlePurchaseState, nil},
-	{false, "mobilePurchaseError", MCHandlePurchaseError, nil},
-	{false, "mobilePurchaseGet", MCHandlePurchaseGet, nil},
-	{false, "mobilePurchaseSet", MCHandlePurchaseSet, nil},
-	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
-	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
-    {false, "mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
-    
-    {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
-    
-    {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController
-    {true, "mobileShowContact", MCHandleShowContact, nil},       // ABPersonViewController
-    {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
-    {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
-    {true, "mobileCreateContact", MCHandleCreateContact, nil},
-    {false, "mobileAddContact", MCHandleAddContact, nil},
-    {false, "mobileFindContact", MCHandleFindContact, nil},
-    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
-    
-    {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
-    {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
-    {false, "iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
-    {false, "iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
-    
-    {true, "mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
-    {false, "mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
-    {true, "mobileCreateEvent", MCHandleCreateEvent, nil},                 // create event in calendar // UI
-    {true, "mobileUpdateEvent", MCHandleUpdateEvent, nil},                 // edit calendar event      // UI
-    {false, "mobileAddEvent", MCHandleAddEvent, nil},                       // create calendar entry
-    {false, "mobileGetCalendars", MCHandleGetCalendarsEvent, nil}, // create reoccurring calendar entry
-    {false, "mobileFindEvent", MCHandleFindEvent, nil},                     // get calendar entry
-    {false, "mobileRemoveEvent", MCHandleRemoveEvent, nil},
-
-    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
-    {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
-    {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
-    
-	{nil, nil, nil}
-
-};
-
-struct handle_context_t
-{
-	MCPlatformMessageHandler handler;
-	void *context;
-	MCParameter *parameters;
-	Exec_stat result;
-};
-
-static void invoke_platform(void *p_context)
-{
-	handle_context_t *ctxt;
-	ctxt = (handle_context_t *)p_context;
-	ctxt -> result = ctxt -> handler(ctxt -> context, ctxt -> parameters);
-}
-
-extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
-
-Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message, MCParameter *p_parameters)
-{
-	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
-		if (p_message == s_platform_messages[i] . message)
-		{
-			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
-			//   jump to the main fiber for it.
-			if (!s_platform_messages[i] . waitable)
-			{
-				handle_context_t ctxt;
-				ctxt . handler = s_platform_messages[i] . handler;
-				ctxt . context = s_platform_messages[i] . context;
-				ctxt . parameters = p_parameters;
-				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
-				return ctxt . result;
-			}
-			
-			// Execute the method as normal, in this case the method will have to jump
-			// to the main fiber to do any system stuff.
-			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
-		}
-	
-	return ES_NOT_HANDLED;
-}
+//// Moved to mblhandlers.cpp
+//typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
+//
+//// MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
+////   be run on the script fiber. Otherwise it is run on the system fiber (making
+////   implementation easier).
+//struct MCPlatformMessageSpec
+//{
+//	bool waitable;
+//	const char *message;
+//	MCPlatformMessageHandler handler;
+//	void *context;
+//};
+//
+//extern Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleCanMakePurchase(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleEnablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDisablePurchaseUpdates(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRestorePurchases(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseList(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseState(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseError(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleComposeTextMessage(void *, MCParameter *);
+//extern Exec_stat MCHandleCanComposeTextMessage(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleRevMail(void *, MCParameter *);
+//extern Exec_stat MCHandleCanSendMail(void *, MCParameter *);
+//extern Exec_stat MCHandleComposePlainMail(void *, MCParameter *);
+//extern Exec_stat MCHandleComposeUnicodeMail(void *, MCParameter *);
+//extern Exec_stat MCHandleComposeHtmlMail(void *, MCParameter *);
+//
+//extern Exec_stat MCHandlePickPhoto(void *context, MCParameter *parameters);
+//
+//extern Exec_stat MCHandleStartTrackingSensor(void *, MCParameter *);
+//extern Exec_stat MCHandleStopTrackingSensor(void *, MCParameter *);
+//extern Exec_stat MCHandleSensorReading(void *, MCParameter *);
+//extern Exec_stat MCHandleSensorAvailable(void *, MCParameter *);
+//
+//// MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
+//extern Exec_stat MCHandleCurrentLocation(void *, MCParameter *);
+//extern Exec_stat MCHandleCurrentHeading(void *, MCParameter *);
+//extern Exec_stat MCHandleAccelerometerEnablement(void *, MCParameter *);
+//extern Exec_stat MCHandleCanTrackLocation(void *, MCParameter *);
+//extern Exec_stat MCHandleCanTrackHeading(void *, MCParameter *);
+//extern Exec_stat MCHandleLocationTrackingState(void *, MCParameter *);
+//extern Exec_stat MCHandleHeadingTrackingState(void *, MCParameter *);
+//extern Exec_stat MCHandleSetHeadingCalibrationTimeout(void *, MCParameter *);
+//extern Exec_stat MCHandleHeadingCalibrationTimeout(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleStartActivityIndicator(void *, MCParameter *);
+//extern Exec_stat MCHandleStopActivityIndicator(void *, MCParameter *);
+//extern Exec_stat MCHandleStartBusyIndicator(void *, MCParameter *);
+//extern Exec_stat MCHandleStopBusyIndicator(void *, MCParameter *);
+//
+//extern Exec_stat MCHandlePickDate(void *, MCParameter *);
+//extern Exec_stat MCHandlePickTime(void *, MCParameter *);
+//extern Exec_stat MCHandlePickDateAndTime(void *, MCParameter *);
+//
+//extern Exec_stat MCHandlePick(void *, MCParameter *);
+//extern Exec_stat MCHandleIPhonePickMedia(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleBeep(void *, MCParameter *);
+//extern Exec_stat MCHandleVibrate(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleCreateLocalNotification(void *, MCParameter *); 
+//extern Exec_stat MCHandleGetRegisteredNotifications(void *, MCParameter *); 
+//extern Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleCancelLocalNotification(void *, MCParameter *); 
+//extern Exec_stat MCHandleCancelAllLocalNotifications(void *, MCParameter *); 
+//extern Exec_stat MCHandleGetNotificationBadgeValue(void *, MCParameter *); 
+//extern Exec_stat MCHandleSetNotificationBadgeValue(void *, MCParameter *); 
+//
+//extern Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters);
+//
+//// MM-2012-09-02: Refactor multi channel sound into new soound channel module. 
+//extern Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters);
+//
+//// MM-2012-02-22: Added support for ad management
+//extern Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAds(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters);    // ABPeoplePickerNavigationController
+//extern Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters);    // ABPersonViewController
+//extern Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters); // ABNewPersonViewController
+//extern Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters);  // ABUnknownPersonViewController
+//extern Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters);           // ???                      // UI
+//extern Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters);        // get calendar data for
+//extern Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters);         // create event in calendar // UI
+//extern Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters);         // edit calendar event      // UI
+//extern Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters);            // create calendar entry
+//extern Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters);   // get the names of the calendars
+//extern Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters);           // get calendar entry
+//extern Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleGetDeviceToken(void *, MCParameter *);
+//extern Exec_stat MCHandleGetLaunchUrl(void *, MCParameter *);
+//
+//extern Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandlePixelDensity(void* p_context, MCParameter* p_parameters);
+//
+//extern Exec_stat MCHandleLockIdleTimer(void* p_context, MCParameter* p_parameters);
+//extern Exec_stat MCHandleUnlockIdleTimer(void* p_context, MCParameter* p_parameters);
+//extern Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters);
+//
+//extern Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleShowStatusBar(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleHideStatusBar(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleSetKeyboardType (void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandlePreferredLanguages(void* p_context, MCParameter* p_parameter);
+//extern Exec_stat MCHandleCurrentLocale(void* p_context, MCParameter* p_parameter);
+//
+//extern Exec_stat MCHandleClearTouches(void* p_context, MCParameter* p_parameter);
+//
+//extern Exec_stat MCHandleSystemIdentifier(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleReachabilityTarget(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters);
+//
+//// MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
+//extern Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleDeviceOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleAllowedOrientations(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleSetAllowedOrientations(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleOrientationLocked(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleLockOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters);
+//extern Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters);
+//
+//extern Exec_stat MCHandleCameraFeatures(void *context, MCParameter *p_parameters);
+//
+//static MCPlatformMessageSpec s_platform_messages[] =
+//{
+//    // MM-2012-02-22: Added support for ad management
+//    {false, "mobileAdRegister", MCHandleAdRegister, nil},
+//    {false, "mobileAdCreate", MCHandleAdCreate, nil},
+//    {false, "mobileAdDelete", MCHandleAdDelete, nil},
+//    {false, "mobileAdGetVisible", MCHandleAdGetVisible, nil},
+//    {false, "mobileAdSetVisible", MCHandleAdSetVisible, nil},
+//    {false, "mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+//    {false, "mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+//    {false, "mobileAds", MCHandleAds, nil},
+//    {false, "iphoneAdRegister", MCHandleAdRegister, nil},
+//    {false, "iphoneAdCreate", MCHandleAdCreate, nil},
+//    {false, "iphoneAdDelete", MCHandleAdDelete, nil},
+//    {false, "iphoneAdGetVisible", MCHandleAdGetVisible, nil},
+//    {false, "iphoneAdSetVisible", MCHandleAdSetVisible, nil},
+//    {false, "iphoneAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+//    {false, "iphoneAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+//    {false, "iphoneAds", MCHandleAds, nil},
+//    
+//    {false, "mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+//    {false, "mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+//    {false, "mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
+//    {false, "mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+//    {false, "mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+//    {false, "iphoneCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+//    {false, "iphoneGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+//    {false, "iphoneCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+//    {false, "iphoneCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+//    
+//    {false, "iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
+//    {false, "iphoneSetNotificationBadgeValue", MCHandleSetNotificationBadgeValue, nil},
+//    
+//    {false, "mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
+//    {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+//    {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
+//    {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+//    
+//	{false, "iphoneActivityIndicatorStart", MCHandleStartActivityIndicator, nil},
+//	{false, "iphoneActivityIndicatorStop", MCHandleStopActivityIndicator, nil},
+//    
+//    {false, "mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+//    {false, "mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+//    {false, "iphoneBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+//    {false, "iphoneBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+//    
+//    {false, "mobileBeep", MCHandleBeep, nil},
+//    {true, "mobileVibrate", MCHandleVibrate, nil},
+//    {false, "iphoneBeep", MCHandleBeep, nil},
+//    {true, "iphoneVibrate", MCHandleVibrate, nil},
+//    
+//	{true, "iphonePickPhoto", MCHandlePickPhoto, nil},
+//	{true, "iphonePickMedia", MCHandleIPhonePickMedia, nil},
+//	{true, "mobilePickMedia", MCHandleIPhonePickMedia, nil},
+////	{false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
+//	{true, "mobilePickPhoto", MCHandlePickPhoto, nil},
+////	{false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
+//    
+//	{false, "iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
+//	{false, "mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
+//	
+//	{false, "iphoneOrientation", MCHandleOrientation, nil},
+//	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
+//	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+//	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
+//	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
+//	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
+//	{false, "mobileOrientation", MCHandleOrientation, nil},
+//	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
+//	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+//	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
+//	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+//	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
+//	
+//	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
+//	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+//	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
+//    {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
+//    
+//	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
+//    
+//    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+//    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+//    {false, "mobileSensorReading", MCHandleSensorReading, nil},
+//    {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},	
+//    
+//    // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
+//	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
+//	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+//	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+//	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
+//    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
+//    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+//	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+//	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
+//	
+//	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
+//	/* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+//	/* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+//	/* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
+//	{false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
+//	{false, "iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
+//    /* DEPRECATED */ {false, "mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
+//    /* DEPRECATED */ {false, "mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+//	/* DEPRECATED */ {false, "mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+//	/* DEPRECATED */ {false, "mobileCurrentHeading", MCHandleCurrentHeading, nil},
+//    
+//    /* DEPRECATED */ {false, "iphoneEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+//	/* DEPRECATED */ {false, "iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+//	/* DEPRECATED */ {false, "mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+//	/* DEPRECATED */ {false, "mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+//	
+//    {true, "iphoneComposeTextMessage", MCHandleComposeTextMessage, nil},
+//    {false, "iphoneCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+//    {true, "mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
+//    {false, "mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+//    
+//	{true, "revMail", MCHandleRevMail, nil},
+//	
+//	{false, "iphoneCanSendMail", MCHandleCanSendMail, nil},
+//	{true, "iphoneComposeMail", MCHandleComposePlainMail, nil},
+//	{true, "iphoneComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+//	{true, "iphoneComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+//    {false, "mobileCanSendMail", MCHandleCanSendMail, nil},
+//	{true, "mobileComposeMail", MCHandleComposePlainMail, nil},
+//	{true, "mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+//	{true, "mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+//	
+//	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+//	
+//	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+//	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},
+//	{false, "iphoneHideStatusBar", MCHandleHideStatusBar, nil},
+//    {false, "mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+//	{false, "mobileShowStatusBar", MCHandleShowStatusBar, nil},
+//	{false, "mobileHideStatusBar", MCHandleHideStatusBar, nil},
+//	
+//	{true, "iphonePick", MCHandlePick, nil},
+//	{true, "iphonePickDate", MCHandlePickDate, nil},
+//    
+//    {true, "mobilePickDate", MCHandlePickDate, nil},
+//    {true, "mobilePickTime", MCHandlePickTime, nil},
+//    {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
+//    {true, "mobilePick", MCHandlePick, nil},
+//	
+//	{false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
+//	{false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+//	{false, "mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+//	
+//	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
+//	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
+//	{false, "iphoneControlSet", MCHandleControlSet, nil},
+//	{false, "iphoneControlGet", MCHandleControlGet, nil},
+//	{false, "iphoneControlDo", MCHandleControlDo, nil},
+//	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
+//	{false, "iphoneControls", MCHandleControlList, nil},
+//	{false, "mobileControlCreate", MCHandleControlCreate, nil},
+//	{false, "mobileControlDelete", MCHandleControlDelete, nil},
+//	{false, "mobileControlSet", MCHandleControlSet, nil},
+//	{false, "mobileControlGet", MCHandleControlGet, nil},
+//	{false, "mobileControlDo", MCHandleControlDo, nil},
+//	{false, "mobileControlTarget", MCHandleControlTarget, nil},
+//	{false, "mobileControls", MCHandleControlList, nil},
+//	
+//	{false, "iphonePreferredLanguages", MCHandlePreferredLanguages, nil},
+//	{false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
+//	{false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
+//	{false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+//	
+//	{false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+//	{false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+//	{false, "iphoneResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+//	{false, "iphoneStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+//	{false, "iphoneDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+//	{false, "iphoneSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+//	{false, "iphoneSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+//	{false, "iphoneSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+//	{false, "iphoneSoundOnChannel", MCHandleSoundOnChannel, nil},
+//	{false, "iphoneNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+//	{false, "iphoneSoundChannels", MCHandleSoundChannels, nil},
+//    
+//    // MM-2012-09-02: Add support for mobile* multi channel sound syntax
+//    {false, "mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+//	{false, "mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+//	{false, "mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+//	{false, "mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+//	{false, "mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+//	{false, "mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+//	{false, "mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+//	{false, "mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+//	{false, "mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
+//	{false, "mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+//	{false, "mobileSoundChannels", MCHandleSoundChannels, nil},
+//	
+//	{false, "iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
+//	{false, "mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
+//	{false, "iphoneUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+//	{false, "mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+//	{false, "iphoneIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+//	{false, "mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+//	
+//	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
+//	{false, "mobileClearTouches", MCHandleClearTouches, nil},
+//	
+//	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
+//	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
+//	
+//	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
+//	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
+//	
+//	{true, "iphoneExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+//	{true, "mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+//    
+//	{false, "iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
+//	
+//    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
+//    //   or not.
+//	{false, "iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil},
+//	
+//	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
+//	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+//	{false, "mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+//	{false, "mobileRestorePurchases", MCHandleRestorePurchases, nil},
+//	{false, "mobilePurchases", MCHandlePurchaseList, nil},
+//	{false, "mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
+//	{false, "mobilePurchaseState", MCHandlePurchaseState, nil},
+//	{false, "mobilePurchaseError", MCHandlePurchaseError, nil},
+//	{false, "mobilePurchaseGet", MCHandlePurchaseGet, nil},
+//	{false, "mobilePurchaseSet", MCHandlePurchaseSet, nil},
+//	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
+//	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+//    {false, "mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+//    
+//    {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
+//    
+//    {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController
+//    {true, "mobileShowContact", MCHandleShowContact, nil},       // ABPersonViewController
+//    {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
+//    {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
+//    {true, "mobileCreateContact", MCHandleCreateContact, nil},
+//    {false, "mobileAddContact", MCHandleAddContact, nil},
+//    {false, "mobileFindContact", MCHandleFindContact, nil},
+//    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+//    
+//    {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
+//    {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
+//    {false, "iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
+//    {false, "iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
+//    
+//    {true, "mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
+//    {false, "mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
+//    {true, "mobileCreateEvent", MCHandleCreateEvent, nil},                 // create event in calendar // UI
+//    {true, "mobileUpdateEvent", MCHandleUpdateEvent, nil},                 // edit calendar event      // UI
+//    {false, "mobileAddEvent", MCHandleAddEvent, nil},                       // create calendar entry
+//    {false, "mobileGetCalendars", MCHandleGetCalendarsEvent, nil}, // create reoccurring calendar entry
+//    {false, "mobileFindEvent", MCHandleFindEvent, nil},                     // get calendar entry
+//    {false, "mobileRemoveEvent", MCHandleRemoveEvent, nil},
+//
+//    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
+//    {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
+//    {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+//    
+//	{nil, nil, nil}
+//
+//};
+//
+//struct handle_context_t
+//{
+//	MCPlatformMessageHandler handler;
+//	void *context;
+//	MCParameter *parameters;
+//	Exec_stat result;
+//};
+//
+//static void invoke_platform(void *p_context)
+//{
+//	handle_context_t *ctxt;
+//	ctxt = (handle_context_t *)p_context;
+//	ctxt -> result = ctxt -> handler(ctxt -> context, ctxt -> parameters);
+//}
+//
+//extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+//
+//Exec_stat MCHandlePlatformMessage(Handler_type p_type, const MCString& p_message, MCParameter *p_parameters)
+//{
+//	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+//		if (p_message == s_platform_messages[i] . message)
+//		{
+//			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+//			//   jump to the main fiber for it.
+//			if (!s_platform_messages[i] . waitable)
+//			{
+//				handle_context_t ctxt;
+//				ctxt . handler = s_platform_messages[i] . handler;
+//				ctxt . context = s_platform_messages[i] . context;
+//				ctxt . parameters = p_parameters;
+//				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+//				return ctxt . result;
+//			}
+//			
+//			// Execute the method as normal, in this case the method will have to jump
+//			// to the main fiber to do any system stuff.
+//			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+//		}
+//	
+//	return ES_NOT_HANDLED;
+//}

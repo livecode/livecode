@@ -514,6 +514,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 
 	switch (which)
 	{
+#ifdef /* MCGraphic::getprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		ep.setboolean(getflag(F_G_ANTI_ALIASED));
 		break;
@@ -708,6 +709,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 			ep.mapunicode(isunicode, (which == P_UNICODE_TEXT || which == P_UNICODE_LABEL));
 		}
 		break;
+#endif /* MCGraphic::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -725,7 +727,6 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_GRADIENT_STROKE:
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
-	
 	default:
 		return MCControl::getarrayprop(parid, which, ep, key, effective);
 	}
@@ -741,6 +742,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 
 	switch (p)
 	{
+#ifdef /* MCGraphic::setprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		if (!MCU_matchflags(data, flags, F_G_ANTI_ALIASED, dirty))
 		{
@@ -841,7 +843,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 			MCGradientFillFree(m_fill_gradient);
 			m_fill_gradient = NULL;
 		}
-		return MCControl::setprop_legacy(parid, p, ep, effective);
+		return MCControl::setprop(parid, p, ep, effective);
 	break;
 	case P_FORE_COLOR:
 	case P_FORE_PATTERN:
@@ -850,7 +852,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 			MCGradientFillFree(m_stroke_gradient);
 			m_stroke_gradient = NULL;
 		}
-		return MCControl::setprop_legacy(parid, p, ep, effective);
+		return MCControl::setprop(parid, p, ep, effective);
 	break;
 	case P_EDIT_MODE:
 		{
@@ -1221,6 +1223,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 		else
 			dirty = False;
 		break;
+#endif /* MCGraphic::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

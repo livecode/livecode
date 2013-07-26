@@ -179,7 +179,8 @@ static void iphone_send_email_postwait(void *p_context)
 	
 	[ctxt -> dialog postWait];
 }
-/*
+
+#ifdef /* MCIPhoneSendEmail */ LEGACY_EXEC
 static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addresses, const char *p_subject, const char *p_body)
 {
 	if (![MCIPhoneMailComposerDialog canSendMail])
@@ -206,9 +207,11 @@ static void MCIPhoneSendEmail(const char *p_to_addresses, const char *p_cc_addre
 	/*while([ctxt . dialog retainCount] > 2)
 		MCscreen -> wait(0.01, False, True);
 	
-	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));
+	MCIPhoneCallSelectorOnMainFiber(ctxt . dialog, @selector(release));*/
 }
+#endif /* MCIPhoneSendEmail */
 
+#ifdef /* MCHandleRevMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 {
 	char *t_address, *t_cc_address, *t_subject, *t_message_body;
@@ -255,7 +258,8 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 	delete t_message_body;
 	
 	return ES_NORMAL; 
-}*/
+}
+#endif /* MCHandleRevMailIphone */
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -268,15 +272,6 @@ Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
 //     type - mime-type
 //     name - preferred filename
 //
-
-/*
-enum MCMailType
-{
-	kMCMailTypePlain,
-	kMCMailTypeUnicode,
-	kMCMailTypeHtml
-};
-*/
 
 static NSString *mcstring_to_nsstring(const MCString& p_string, bool p_unicode)
 {
@@ -301,7 +296,8 @@ static NSData *mcstringref_to_nsdata(MCStringRef p_string)
 {
 	return [[NSData alloc] initWithBytes: MCStringGetCString(p_string) length: MCStringGetLength(p_string)];
 }
-/*
+
+#ifdef /* array_to_attachmentIphone */ LEGACY_EXEC
 static bool array_to_attachment(MCVariableArray *p_array, NSData*& r_data, NSString*& r_type, NSString*& r_name)
 {
 	MCHashentry *t_data, *t_file, *t_type, *t_name;
@@ -344,7 +340,8 @@ static bool array_to_attachment(MCVariableArray *p_array, NSData*& r_data, NSStr
 		
 	return true;
 }
-*/
+#endif /* array_to_attachmentIphone */
+
 struct compose_mail_t
 {
 /*	MCMailType type;
@@ -364,7 +361,8 @@ struct compose_mail_t
 
 static void compose_mail_prewait(void *p_context)
 {
-/*	compose_mail_t *ctxt;
+#ifdef /* compose_mail_prewait */ LEGACY_EXEC
+	compose_mail_t *ctxt;
 	ctxt = (compose_mail_t *)p_context;
 	
 	bool t_success;
@@ -459,7 +457,8 @@ static void compose_mail_prewait(void *p_context)
 	MCCStringFree(t_to);
 	MCCStringFree(t_cc);
 	MCCStringFree(t_bcc);
-	delete t_body . getstring(); */
+	delete t_body . getstring();
+#endif /* compose_mail_prewait */
 
 	compose_mail_t *ctxt;
 	ctxt = (compose_mail_t *)p_context;
@@ -544,7 +543,8 @@ static void compose_mail_postwait(void *p_context)
 	
 	[ctxt -> dialog postWait];
 }
-/*
+
+#ifdef /* MCHandleComposeMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 {
 	compose_mail_t ctxt;
@@ -565,22 +565,30 @@ Exec_stat MCHandleComposeMail(MCMailType p_type, MCParameter *p_parameters)
 
 	return ES_NORMAL;
 }
+#endif /* MCHandleComposeMailIphone */
 
+#ifdef /* MCHandleComposePlainMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleComposePlainMail(void *context, MCParameter *p_parameters)
 {
 	return MCHandleComposeMail(kMCMailTypePlain, p_parameters);
 }
+#endif /* MCHandleComposePlainMailIphone */
 
+#ifdef /* MCHandleComposeUnicodeMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleComposeUnicodeMail(void *context, MCParameter *p_parameters)
 {
 	return MCHandleComposeMail(kMCMailTypeUnicode, p_parameters);
 }
+#endif /* MCHandleComposeUnicodeMailIphone */
 
+#ifdef /* MCHandleComposeHtmlMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleComposeHtmlMail(void *context, MCParameter *p_parameters)
 {
 	return MCHandleComposeMail(kMCMailTypeHtml, p_parameters);
 }
+#endif /* MCHandleComposeHtmlMailIphone */
 
+#ifdef /* MCHandleCanSendMailIphone */ LEGACY_EXEC
 Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 {
 	if (![MCIPhoneMailComposerDialog canSendMail])
@@ -593,7 +601,8 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 }
-*/
+#endif /* MCHandleCanSendMailIphone */
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSystemSendMail(MCStringRef p_to, MCStringRef p_cc, MCStringRef p_subject, MCStringRef p_body, MCStringRef& r_result)

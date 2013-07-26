@@ -34,32 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <Foundation/Foundation.h>
 
-//// MOVED TO mbliphoneextra.mm
-//#define FILEATTR_DONOTBACKUP "com.apple.MobileBackup"
-//
-//bool MCiOSFileSetDoNotBackup(const char *p_path, bool p_no_backup)
-//{
-//    bool t_success = true;
-//    if (p_no_backup)
-//    {
-//        uint8_t t_val = 1;
-//        t_success = 0 == setxattr(p_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0);
-//    }
-//    else
-//    {
-//        t_success = 0 == removexattr(p_path, FILEATTR_DONOTBACKUP, 0);
-//    }
-//    return t_success;
-//}
-//
-//bool MCiOSFileGetDoNotBackup(const char *p_path)
-//{
-//    uint8_t t_val = 0;
-//    if (-1 == getxattr(p_path, FILEATTR_DONOTBACKUP, &t_val, sizeof(t_val), 0, 0))
-//        return false;
-//    return t_val != 0;
-//}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCProtectedDataEvent : public MCCustomEvent

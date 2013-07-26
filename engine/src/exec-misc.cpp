@@ -77,6 +77,8 @@ MC_EXEC_DEFINE_SET_METHOD(Misc, DoNotBackupFile, 2)
 MC_EXEC_DEFINE_GET_METHOD(Misc, FileDateProtection, 2)
 MC_EXEC_DEFINE_SET_METHOD(Misc, FileDateProtection, 2)
 
+MC_EXEC_DEFINE_GET_METHOD(Misc, BuildInfo, 2)
+
 MC_EXEC_DEFINE_EXEC_METHOD(Misc, LibUrlDownloadToFile, 2)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -147,6 +149,15 @@ MCExecEnumTypeInfo* kMCMiscKeyboardReturnKeyTypeInfo = &_kMCMiscKeyboardReturnKe
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)
 {
+#ifdef /* MCGetDeviceTokenExec */ LEGACY_EXEC
+    char *r_device_token = nil;
+    bool t_success;
+    t_success = MCSystemGetDeviceToken (r_device_token);
+    if (t_success)
+        p_ctxt.GiveCStringToResult(r_device_token);
+    else
+        p_ctxt.SetTheResultToEmpty();
+#endif /* MCGetDeviceTokenExec */
     if(MCSystemGetDeviceToken(r_token))
         return;
     
@@ -155,6 +166,15 @@ void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token)
 
 void MCMiscGetLaunchUrl(MCExecContext& ctxt, MCStringRef& r_url)
 {
+#ifdef /* MCGetLaunchUrlExec */ LEGACY_EXEC
+    char *t_launch_url = nil;
+    bool t_success;
+    t_success = MCSystemGetLaunchUrl (t_launch_url);
+    if (t_success)
+        p_ctxt.GiveCStringToResult(t_launch_url);
+    else
+        p_ctxt.SetTheResultToEmpty();
+#endif /* MCGetLaunchUrlExec */
     if(MCSystemGetLaunchUrl(r_url))
         return;
     
@@ -474,6 +494,14 @@ void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStri
         return;
     
     ctxt.SetTheResultToValue(* t_status);
+    ctxt.Throw();
+}
+
+void MCMiscGetBuildInfo(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_value)
+{
+    if(MCSystemBuildInfo(p_key, r_value))
+        return;
+    
     ctxt.Throw();
 }
 

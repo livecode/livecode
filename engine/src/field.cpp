@@ -1245,6 +1245,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch (which)
 	{
+#ifdef /* MCField::getprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
 		break;
@@ -1439,6 +1440,7 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 	//   actually the encoding of the content.
 	case P_ENCODING:
 		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, getpgsize(nil), false);
+#endif /* MCField::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -1521,6 +1523,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	MCExecPoint *oldep;
 	switch (p)
 	{
+#ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
 		{
@@ -1712,13 +1715,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_HSCROLLBARID:
 		{
 			MCScrollbar *t_control;
-#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
-#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1742,13 +1739,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_VSCROLLBARID:
 		{
 			MCScrollbar *t_control;
-#ifdef OLD_EXEC
 			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, data, CT_SCROLLBAR, CT_UNDEFINED);
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
-			t_control = (MCScrollbar *)getcard() -> getchild(CT_ID, *t_data, CT_SCROLLBAR, CT_UNDEFINED);
-#endif
 			if (t_control == NULL)
 			{
 				MCeerror->add(EE_OBJECT_NAN, 0, 0, data);
@@ -1786,7 +1777,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_WIDTH:
 	case P_HEIGHT:
 	case P_RECTANGLE:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		dirty = reset = True;
 		break;
@@ -1960,7 +1951,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	case P_DISABLED:
 	case P_ENABLED:
 	case P_BORDER_WIDTH:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 
 		if (p == P_3D || p == P_OPAQUE || p == P_ENABLED || p == P_DISABLED)
@@ -1984,6 +1975,7 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	// MW-2012-02-08: [[ FlaggedField ]] Set the flaggedRanges of the whole field.
 	case P_FLAGGED_RANGES:
 		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, getpgsize(nil), false);
+#endif /* MCField::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

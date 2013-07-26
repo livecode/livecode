@@ -329,7 +329,7 @@ Exec_stat MCAsk::exec(class MCExecPoint& ep)
 	return ctxt . Catch(line, pos);
 }
 
-#if OLD_EXEC
+#ifdef /* MCAsk::exec_question */ LEGACY_EXEC
 Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -351,22 +351,24 @@ Exec_errors MCAsk::exec_question(MCExecPoint& ep, const char *p_title)
 #else
 	if (!t_error)
 	{
-
-		MCAutoStringRef t_result;
-		MCscreen -> popupaskdialog(AT_QUESTION, p_title, *t_prompt, *t_answer, question . hint, &t_result);
-		if (*t_result != nil)
-        /* UNCHECKED */ ep . setvalueref(*t_result);
+		char *t_result;
+		t_result = MCscreen -> popupaskdialog(AT_QUESTION, p_title, *t_prompt, *t_answer, question . hint);
+		if (t_result != nil)
+			ep . copysvalue(t_result);
 		else
 		{
 			ep.clear();
 			MCresult -> sets(MCcancelstring);
 		}
+		delete t_result;
 	}
 #endif
 
 	return t_error;
 }
+#endif /* MCAsk::exec_question */
 
+#ifdef /* MCAsk::exec_password */ LEGACY_EXEC
 Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -388,21 +390,24 @@ Exec_errors MCAsk::exec_password(MCExecPoint& ep, const char *p_title)
 #else
 	if (!t_error)
 	{
-		MCAutoStringRef t_result;
-		MCscreen -> popupaskdialog(AT_PASSWORD, p_title, *t_prompt, *t_answer, password . hint, &t_result);
-		if (*t_result != nil)
-			/* UNCHECKED */ ep . setvalueref(*t_result);
+		char *t_result;
+		t_result = MCscreen -> popupaskdialog(AT_PASSWORD, p_title, *t_prompt, *t_answer, password . hint);
+		if (t_result != nil)
+			ep . copysvalue(t_result);
 		else
 		{
 			ep.clear();
 			MCresult -> sets(MCcancelstring);
 		}
+		delete t_result;
 	}
 #endif
 	
 	return t_error;
 }
+#endif /* MCAsk::exec_password */
 
+#ifdef /* MCAsk::exec_file */ LEGACY_EXEC
 Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 {
 	Exec_errors t_error = EE_UNDEFINED;
@@ -467,7 +472,9 @@ Exec_errors MCAsk::exec_file(MCExecPoint& ep, const char *p_title)
 	
 	return t_error;
 }
+#endif /* MCAsk::exec_file */
 
+#ifdef /* MCAsk::exec_custom */ LEGACY_EXEC
 Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCString& p_stack, const char *p_type, unsigned int p_count, ...)
 {
 	ep . setstringf("ask %s", p_type);
@@ -481,7 +488,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 	}
 	va_end(t_args);
 
-	MCdialogdata -> set(ep);
+	MCdialogdata -> store(ep, True);
 
 	MCStack *t_stack;
 	t_stack = ep . getobj() -> getstack() -> findstackname(p_stack);
@@ -490,7 +497,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 	MCtrace = False;
 	if (t_stack != NULL)
 	{
-		MCdialogdata -> set(ep);
+		MCdialogdata -> store(ep, True);
 		if (MCdefaultstackptr -> getopened() || MCtopstackptr == NULL)
 			t_stack -> openrect(MCdefaultstackptr -> getrect(), sheet ? WM_SHEET : WM_MODAL, sheet ? MCdefaultstackptr: NULL, WP_DEFAULT, OP_NONE);
 		else
@@ -498,7 +505,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 	}
 	MCtrace = t_old_trace;
 
-	MCdialogdata -> eval(ep);
+	MCdialogdata -> fetch(ep);
 	if (ep . getsvalue() . getlength() == 1 && *(ep . getsvalue() . getstring()) == '\0')
 	{
 		ep . clear();
@@ -509,7 +516,7 @@ Exec_errors MCAsk::exec_custom(MCExecPoint& ep, bool& p_cancelled, const MCStrin
 
 	return EE_UNDEFINED;
 }
-#endif
+#endif /* MCAsk::exec_custom */
 
 void MCAsk::compile(MCSyntaxFactoryRef ctxt)
 {
