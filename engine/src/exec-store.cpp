@@ -166,46 +166,6 @@ void MCStoreGetPurchaseError(MCExecContext& ctxt, int p_id, MCStringRef& r_error
     
     ctxt.Throw();
 }
-/*
-void MCStoreGetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name)
-{
-	MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-    bool t_success = true;
-    
-    t_success =
-        MCPurchaseFindById(p_id, t_purchase) &&
-        MCPurchaseLookupProperty(p_prop_name, t_property);
-    
-	if (t_success)
-		t_success = MCPurchaseGet(t_purchase, t_property, ctxt. GetEP()) == ES_NORMAL;
-    
-    if (t_success)
-        return;
-    
-    ctxt . Throw();
-
-}
-
-void MCStoreSetPurchaseProperty(MCExecContext& ctxt, int p_id, MCStringRef p_prop_name, uint32_t p_quantity)
-{
-	MCPurchase *t_purchase = nil;
-	MCPurchaseProperty t_property;
-    bool t_success = true;
-    
-    t_success =
-        MCPurchaseFindById(p_id, t_purchase) &&
-        MCPurchaseLookupProperty(p_prop_name, t_property);
-    
-	if (t_success)
-		t_success = MCPurchaseSet(t_purchase, t_property, p_quantity) == ES_NORMAL;
-    
-    if (t_success)
-        return;
-    else
-        ctxt.Throw();    
-}
-*/
 
 MCPurchasePropertyInfo *lookup_purchase_property(const MCPurchasePropertyTable *p_table, MCPurchaseProperty p_which)
 {
@@ -265,8 +225,7 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			{
 				uinteger_t t_value;
 			if (((bool(*)(MCPurchase*, uinteger_t&))t_info -> getter)(t_purchase, t_value))
-				if (!ctxt . HasError())
-					ep . setuint(t_value);
+                ep . setuint(t_value);
 			}
                 break;
 				
@@ -274,7 +233,6 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			{
 				double t_value;
 				if (((bool(*)(MCPurchase*, double&))t_info -> getter)(t_purchase, t_value))
-				if (!ctxt . HasError())
 					ep . setnvalue(t_value);
 			}
                 break;
@@ -283,7 +241,6 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			{
 				char_t t_value;
 				if (((bool(*)(MCPurchase*, char_t&))t_info -> getter)(t_purchase, t_value))
-				if (!ctxt . HasError())
 					ep . setchar((char)t_value);
 			}
                 break;
@@ -293,7 +250,6 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			{
 				MCAutoStringRef t_value;
 				if (((bool(*)(MCPurchase*, MCStringRef&))t_info -> getter)(t_purchase, &t_value))
-				if (!ctxt . HasError())
 					ep . setvalueref(*t_value);
 			}
                 break;
