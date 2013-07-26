@@ -38,11 +38,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // We do not need this in iOS, as beep is already implemented and handled.
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {
+#ifdef /* MCSystemBeepIphone */ LEGACY_EXEC
     return true;
+#endif /* MCSystemBeepIphone */ LEGACY_EXEC
 }
 
 bool MCSystemVibrate (int32_t p_number_of_vibrates)
 {
+#ifdef /* MCSystemVibrateIphone */ LEGACY_EXEC
     for (int32_t i = 0; i < p_number_of_vibrates; i++)
     {
 		// MW-2012-08-06: [[ Fibers ]] Invoke the system call on the main fiber.
@@ -52,4 +55,5 @@ bool MCSystemVibrate (int32_t p_number_of_vibrates)
 		MCscreen->wait(BEEP_INTERVAL, False, False);
     }
     return true;
+#endif /* MCSystemVibrateIphone */ LEGACY_EXEC
 }

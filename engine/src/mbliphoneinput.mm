@@ -859,7 +859,7 @@ void MCNativeMultiLineControl::HandleScrollEvent(void)
 	int32_t t_x, t_y;
 	m_post_scroll_event = true;
 	if (t_target != nil && MCScrollViewGetContentOffset(GetView(), t_x, t_y))
-	{
+{
 		MCNativeControl *t_old_target;
 		t_old_target = ChangeTarget(this);
 		t_target->message_with_args(MCM_scroller_did_scroll, m_content_rect.x + t_x, m_content_rect.y + t_y);

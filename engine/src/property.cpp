@@ -821,6 +821,7 @@ Exec_stat MCProperty::resolveprop(MCExecPoint& ep, Properties& r_which, MCNameRe
 
 Exec_stat MCProperty::set(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
 	Pixmap newpm;
 	int2 mx, my;
@@ -2166,8 +2167,10 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			}
 			else
 			{
+				// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+				//   no reason not to use the cache.
 				regexp *t_net_int_regex;
-				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b");
+				t_net_int_regex = MCR_compile("\\b(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\.(25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\\b", True /* casesensitive */);
 				int t_net_int_valid;
 				t_net_int_valid = MCR_exec(t_net_int_regex, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				MCR_free(t_net_int_regex);			
@@ -2679,10 +2682,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::set */
 }
 
 Exec_stat MCProperty::eval(MCExecPoint &ep)
 {
+#ifdef /* MCProperty::eval */ LEGACY_EXEC
 	uint2 i = 0;
 	int2 mx, my;
 	MCExecPoint ep2(ep);
@@ -4094,6 +4099,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCProperty::eval */
 }
 
 ////////////////////////////////////////////////////////////////////////////////

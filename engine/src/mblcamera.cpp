@@ -42,6 +42,7 @@ MCCameraFeaturesType MCSystemGetCameraFeatures(MCCameraSourceType p_source);
 
 void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_source, int32_t p_max_width, int32_t p_max_height)
 {
+#ifdef /* MCCameraExecAcquirePhotoAndResize */ LEGACY_EXEC
 	if (!MCSystemCanAcquirePhoto(p_source))
 	{
 		ctxt . SetTheResultToStaticCString("source not available");
@@ -70,24 +71,30 @@ void MCCameraExecAcquirePhotoAndResize(MCExecContext& ctxt, MCPhotoSourceType p_
 	MCExecPoint ep(nil, nil, nil);
 	ep . setsvalue(MCString((char *)t_image_data . Borrow(), t_image_data_size));
 	iptr -> setprop(0, P_TEXT, ep, false);
+#endif /* MCCameraExecAcquirePhotoAndResize */
 }
 
 void MCCameraExecAcquirePhoto(MCExecContext& ctxt, MCPhotoSourceType p_photo)
 {
+#ifdef /* MCCameraExecAcquirePhoto */ LEGACY_EXEC
 	MCCameraExecAcquirePhotoAndResize(ctxt, p_photo, 0, 0);
+#endif /* MCCameraExecAcquirePhoto */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCCameraGetFeatures(MCExecContext& ctxt, MCCameraSourceType p_camera, MCCameraFeaturesType& r_features)
 {
+#ifdef /* MCCameraGetFeatures */ LEGACY_EXEC
 	r_features = MCSystemGetCameraFeatures(p_camera);
+#endif /* MCCameraGetFeatures */
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSpecificCameraFeatures */ LEGACY_EXEC
 	MCExecPoint ep(nil, nil, nil);
 	ep . clear();
 	
@@ -118,8 +125,10 @@ Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_paramet
 	MCresult -> store(ep, False);
 	
 	return ES_NORMAL;
+#endif /* MCHandleSpecificCameraFeatures */
 }
 
+#ifdef /* MCHandlePickPhotoIphone */ LEGACY_EXEC
 Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 {
 	MCExecPoint ep(nil, nil, nil);
@@ -187,5 +196,6 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 
 	return t_ctxt . GetStat();
 }
+#endif /* MCHandlePickPhotoIphone */
 
 ////////////////////////////////////////////////////////////////////////////////

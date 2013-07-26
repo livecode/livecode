@@ -1418,13 +1418,6 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
         if (e)
         {
             e -> value . fetch(ep);
-			
-			// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
-			//   'filename' of an image if it is non-empty or the image has a filename.
-			if (s_preprocess_props[j].prop == P_FILE_NAME && optr -> gettype() == CT_IMAGE &&
-				ep . isempty() && !optr -> getflag(F_HAS_FILENAME))
-				continue;
-				
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
         }
     }
@@ -1463,15 +1456,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 						if ((Properties)te->which > P_FIRST_ARRAY_PROP)
 							optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
 						else
-						{
-							// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only
-							//   set the 'text' of an image if it is non-empty and doesn't have a filename.
-							if (te -> which == P_TEXT && optr -> gettype() == CT_IMAGE &&
-								ep . isempty() && optr -> getflag(F_HAS_FILENAME))
-								continue;
-							
 							optr->setprop(parid, (Properties)te->which, ep, False);
-						}
 					}
                 }
             	e = e->next;

@@ -572,6 +572,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 
 	switch (which)
 	{
+#ifdef /* MCImage::getprop */ LEGACY_EXEC
 	case P_XHOT:
 		ep.setint(xhot);
 		break;
@@ -813,6 +814,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_ANGLE:
 		ep.setint(angle);
 		break;
+#endif /* MCImage::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -828,6 +830,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 	switch (p)
 	{
+#ifdef /* MCImage::setprop */ LEGACY_EXEC
 	case P_INVISIBLE:
 	case P_VISIBLE:
 		{
@@ -890,13 +893,9 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		}
 		break;
 	case P_FILE_NAME:
-		/* {for next release}
 		// MW-2013-06-24: [[ Bug 10977 ]] If we are setting the filename to
 		//   empty, and the filename is already empty, do nothing.
 		if ((m_rep != nil && m_rep -> GetType() == kMCImageRepReferenced && data == MCnullmcstring) ||
-			data != filename)
-		*/
-		if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
 			data != filename)
 		{
 			char *t_filename = nil;
@@ -909,7 +908,9 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			resetimage();
 
-			if (m_rep != nil)
+			// MW-2013-06-25: [[ Bug 10980 ]] Only set the result to an error if we were
+			//   attempting to set a non-empty filename.
+			if (m_rep != nil || data == MCnullmcstring)
 				MCresult->clear(False);
 			else
 				MCresult->sets("could not open image");
@@ -1015,7 +1016,6 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 
 			if (data.getlength() == 0)
 			{
-				/* {for next release}
 				// MERG-2013-06-24: [[ Bug 10977 ]] If we have a filename then setting the
 				//   text to empty shouldn't have an effect; otherwise we are unsetting the
 				//   current text.
@@ -1025,10 +1025,6 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
                     flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
                     setrep(nil);
                 }
-				*/
-				// empty text - unset flags & set rep to nil;
-				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
-				setrep(nil);
 			}
 			else
 			{
@@ -1232,6 +1228,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			return t_stat;
 		}
 		break;
+#endif /* MCImage::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -2082,25 +2079,28 @@ bool MCImage::setfilename(const char *p_filename)
 	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
-
-	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
-	// MW-2013-07-01: [[ Bug 11001 ]] Reverted for 6.1.0 - this canonicalisation doesn't
-	//   take into account URL references.
-	/*{reverted for correct fix in next release}
-	// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
-	//   for Rep construction.
-	if (t_success)
+		t_success = MCCStringClone(p_filename, t_filename);
+	
+	// MW-2013-07-01: [[ Bug 10975 ]] Only canonicalize the path if it isn't a url.
+	if (t_success && !MCU_couldbeurl(p_filename))
 	{
-		char *t_resolved_filename;
-		t_resolved_filename = MCS_get_canonical_path(t_resolved);
-		delete t_resolved;
-		t_resolved = t_resolved_filename;
+		if (t_success)
+			t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+
+		// MW-2013-06-21: [[ Bug 10975 ]] Make sure we construct an absolute path to use
+		//   for Rep construction.
+		if (t_success)
+		{
+			char *t_resolved_filename;
+			t_resolved_filename = MCS_get_canonical_path(t_resolved);
+			delete t_resolved;
+			t_resolved = t_resolved_filename;
+		}
 	}
-	 */
+	
 	if (t_success)
-		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
+		t_success = MCImageRepGetReferenced(t_resolved != nil ? t_resolved : t_filename, t_rep);
 
 	MCCStringFree(t_resolved);
 

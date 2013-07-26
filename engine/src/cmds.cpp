@@ -107,6 +107,7 @@ Parse_stat MCChoose::parse(MCScriptPoint &sp)
 
 Exec_stat MCChoose::exec(MCExecPoint &ep)
 {
+#ifdef /* MCChoose */ LEGACY_EXEC
 	if (etool != NULL)
 		if (etool->eval(ep) != ES_NORMAL)
 		{
@@ -115,6 +116,7 @@ Exec_stat MCChoose::exec(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	return MCU_choose_tool(ep, littool, line, pos);
+#endif /* MCChoose */
 }
 
 MCConvert::~MCConvert()
@@ -259,6 +261,7 @@ Parse_stat MCConvert::parsedtformat(MCScriptPoint &sp, Convert_form &firstform,
 
 Exec_stat MCConvert::exec(MCExecPoint &ep)
 {
+#ifdef /* MCConvert */ LEGACY_EXEC
 	MCresult->clear(False);
 	if (container != NULL)
 	{
@@ -295,6 +298,7 @@ Exec_stat MCConvert::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCConvert */
 }
 
 MCDo::~MCDo()
@@ -341,6 +345,7 @@ Parse_stat MCDo::parse(MCScriptPoint &sp)
 
 Exec_stat MCDo::exec(MCExecPoint &ep)
 {
+#ifdef /* MCDo */ LEGACY_EXEC
 	MCExecPoint *epptr;
 	if (browser)
 	{
@@ -418,6 +423,7 @@ Exec_stat MCDo::exec(MCExecPoint &ep)
 	if (added)
 		MCnexecutioncontexts--;
 	return stat;
+#endif /* MCDo */
 }
 
 typedef struct
@@ -521,6 +527,7 @@ Parse_stat MCDoMenu::parse(MCScriptPoint &sp)
 
 Exec_stat MCDoMenu::exec(MCExecPoint &ep)
 {
+#ifdef /* MCDoMenu */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -541,6 +548,7 @@ Exec_stat MCDoMenu::exec(MCExecPoint &ep)
 		ep.getobj()->domess(dstring);
 	}
 	return ES_NORMAL;
+#endif /* MCDoMenu */
 }
 
 MCEdit::~MCEdit()
@@ -573,6 +581,7 @@ Parse_stat MCEdit::parse(MCScriptPoint &sp)
 
 Exec_stat MCEdit::exec(MCExecPoint &ep)
 {
+#ifdef /* MCEdit */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	if (target->getobj(ep, optr, parid, True) != ES_NORMAL)
@@ -590,6 +599,7 @@ Exec_stat MCEdit::exec(MCExecPoint &ep)
 	MClockmessages = t_old_lock;
 
 	return ES_NORMAL;
+#endif /* MCEdit */
 }
 
 MCFind::~MCFind()
@@ -636,6 +646,7 @@ Parse_stat MCFind::parse(MCScriptPoint &sp)
 
 Exec_stat MCFind::exec(MCExecPoint &ep)
 {
+#ifdef /* MCFind */ LEGACY_EXEC
 	if (tofind->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -651,6 +662,7 @@ Exec_stat MCFind::exec(MCExecPoint &ep)
 	}
 	MCdefaultstackptr->find(ep, mode, ep.getsvalue(), field);
 	return ES_NORMAL;
+#endif /* MCFind */
 }
 
 MCGet::~MCGet()
@@ -674,6 +686,7 @@ Parse_stat MCGet::parse(MCScriptPoint &sp)
 
 Exec_stat MCGet::exec(MCExecPoint &ep)
 {
+#ifdef /* MCGet */ LEGACY_EXEC
 	if (value->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -688,6 +701,7 @@ Exec_stat MCGet::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCGet */
 }
 
 MCMarking::~MCMarking()
@@ -739,7 +753,7 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 		(PE_MARK_NOCARDS, sp);
 		return PS_ERROR;
 	}
-	if (sp.next(type) != PS_NORMAL)
+if (sp.next(type) != PS_NORMAL)
 	{
 		MCperror->add
 		(PE_MARK_NOBYORWHERE, sp);
@@ -799,6 +813,7 @@ Parse_stat MCMarking::parse(MCScriptPoint &sp)
 
 Exec_stat MCMarking::exec(MCExecPoint &ep)
 {
+#ifdef /* MCMarking */ LEGACY_EXEC
 	if (card != NULL)
 	{
 		MCObject *optr;
@@ -826,6 +841,7 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
 	}
 	return ES_NORMAL;
+#endif /* MCMarking */
 }
 
 MCPut::~MCPut()
@@ -939,7 +955,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 	if (sp.next(type) == PS_NORMAL)
 	{
 		if (sp.lookup(SP_SERVER, te) == PS_NORMAL && te -> type == TT_PREP)
-		{
+	{
 			prep = (Preposition_type)te -> which;
 			if (is_unicode && (prep == PT_HEADER || prep == PT_BINARY))
 			{
@@ -1001,6 +1017,7 @@ Parse_stat MCPut::parse(MCScriptPoint &sp)
 
 Exec_stat MCPut::exec(MCExecPoint &ep)
 {
+#ifdef /* MCPut */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_PUT_BADEXP, line, pos);
@@ -1073,8 +1090,9 @@ Exec_stat MCPut::exec(MCExecPoint &ep)
 
 		return ES_NORMAL;
 	}
+#endif /* MCPut */
 }
-
+#ifdef /* MCPut::exec_cookie */ LEGACY_EXEC
 #if defined(_SERVER)
 bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
 Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
@@ -1152,6 +1170,7 @@ Exec_stat MCPut::exec_cookie(MCExecPoint &ep)
 	return ES_ERROR;
 }
 #endif
+#endif /* MCPut::exec_cookie */
 
 MCQuit::~MCQuit()
 {
@@ -1169,6 +1188,7 @@ Parse_stat MCQuit::parse(MCScriptPoint &sp)
 
 Exec_stat MCQuit::exec(MCExecPoint &ep)
 {
+#ifdef /* MCQuit */ LEGACY_EXEC
 // MW-2011-06-22: [[ SERVER ]] Don't send messages in server-mode.
 #ifndef _SERVER
 	switch(MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
@@ -1193,6 +1213,7 @@ Exec_stat MCQuit::exec(MCExecPoint &ep)
 	MCtraceabort = True;
 	MCtracereturn = True;
 	return ES_NORMAL;
+#endif /* MCQuit */
 }
 
 Parse_stat MCReset::parse(MCScriptPoint &sp)
@@ -1220,6 +1241,7 @@ Parse_stat MCReset::parse(MCScriptPoint &sp)
 
 Exec_stat MCReset::exec(MCExecPoint &ep)
 {
+#ifdef /* MCReset */ LEGACY_EXEC
 	switch (which)
 	{
 	case RT_CURSORS:
@@ -1312,6 +1334,7 @@ Exec_stat MCReset::exec(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCReset */
 }
 
 MCReturn::~MCReturn()
@@ -1362,6 +1385,7 @@ Parse_stat MCReturn::parse(MCScriptPoint &sp)
 //   clear the result in this case. (see MCHandler::exec).
 Exec_stat MCReturn::exec(MCExecPoint &ep)
 {
+#ifdef /* MCReturn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_RETURN_BADEXP, line, pos);
@@ -1390,6 +1414,7 @@ Exec_stat MCReturn::exec(MCExecPoint &ep)
 		}
 
 	return ES_RETURN_HANDLER;
+#endif /* MCReturn */
 }
 
 uint4 MCReturn::linecount()
@@ -1437,6 +1462,7 @@ Parse_stat MCSet::parse(MCScriptPoint &sp)
 
 Exec_stat MCSet::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSet */ LEGACY_EXEC
 	if (value->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1453,6 +1479,7 @@ Exec_stat MCSet::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCSet */
 }
 
 MCSort::~MCSort()
@@ -1552,7 +1579,7 @@ Parse_stat MCSort::parse(MCScriptPoint &sp)
 	}
 	return PS_NORMAL;
 }
-
+#ifdef /* MCSort::sort_container */ LEGACY_EXEC
 Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, Sort_type p_direction, Sort_type p_form, MCExpression *p_by)
 {
 	MCSortnode *t_items;
@@ -1662,6 +1689,7 @@ Exec_stat MCSort::sort_container(MCExecPoint &p_exec_point, Chunk_term p_type, S
 	delete t_items;
 	return ES_NORMAL;
 }
+#endif /* MCSort::sort_container */
 
 void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_type form, MCString &s, MCExpression *by)
 {
@@ -1741,6 +1769,7 @@ void MCSort::additem(MCExecPoint &ep, MCSortnode *&items, uint4 &nitems, Sort_ty
 
 Exec_stat MCSort::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSort */ LEGACY_EXEC
 	if (of == NULL && chunktype == CT_FIELD)
 	{
 		MCeerror->add
@@ -1807,6 +1836,7 @@ Exec_stat MCSort::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCSort */
 }
 
 
@@ -1870,6 +1900,7 @@ Parse_stat MCWait::parse(MCScriptPoint &sp)
 
 Exec_stat MCWait::exec(MCExecPoint &ep)
 {
+#ifdef /* MCWait */ LEGACY_EXEC
 	while (True)
 	{
 		MCU_play();
@@ -1936,6 +1967,7 @@ Exec_stat MCWait::exec(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCWait */
 }
 
 MCInclude::~MCInclude(void)
@@ -1958,6 +1990,7 @@ Parse_stat MCInclude::parse(MCScriptPoint& sp)
 
 Exec_stat MCInclude::exec(MCExecPoint& ep)
 {	
+#ifdef /* MCInclude */ LEGACY_EXEC
 	if (filename -> eval(ep) != ES_NORMAL)
 	{
 		MCeerror -> add(EE_INCLUDE_BADFILENAME, line, pos);
@@ -1985,6 +2018,7 @@ Exec_stat MCInclude::exec(MCExecPoint& ep)
 	MCeerror -> add(is_require ? EE_REQUIRE_BADCONTEXT : EE_INCLUDE_BADCONTEXT, line, pos);
 	return ES_ERROR;
 #endif
+#endif /* MCInclude */
 }
 
 MCEcho::~MCEcho(void)
@@ -2000,8 +2034,10 @@ Parse_stat MCEcho::parse(MCScriptPoint& sp)
 
 Exec_stat MCEcho::exec(MCExecPoint& ep)
 {
+#ifdef /* MCEcho */ LEGACY_EXEC
 	if (!MCS_put(ep, kMCSPutBinaryOutput, data) != IO_NORMAL)
 		MCexitall = True;
 
 	return ES_NORMAL;
+#endif /* MCEcho */
 }
