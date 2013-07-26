@@ -182,7 +182,9 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		t_getprop_name = p_set_name, t_param_name = p_prop_name;
 
 	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_getprop_name)))
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_getprop_name))))
 	{
 		MCParameter p1;
 		p1.setnameref_unsafe_argument(t_param_name);
@@ -1161,8 +1163,10 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 	//   setProp pPropName, pValue
 	// The parameter list is auto-adjusted if it is of array type in MCHandler::exec.
 
-	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_setprop_name)))
+	Exec_stat t_stat = ES_NOT_HANDLED;    
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_setprop_name))))
 	{
 		MCParameter p1, p2;
 		p1.setnext(&p2);
