@@ -238,24 +238,16 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			case kMCPropertyTypeAny:
 			{
 				MCAutoValueRef t_any;
-				((void(*)(MCPurchase*, MCValueRef&))t_info -> getter)(t_purchase, &t_any);
-				if (!ctxt . HasError())
-				{
+				if (((bool(*)(MCPurchase*, MCValueRef&))t_info -> getter)(t_purchase, &t_any))
 					ep . setvalueref(*t_any);
-//					return ES_NORMAL;
-				}
 			}
                 break;
 				
 			case kMCPropertyTypeBool:
 			{
 				bool t_value;
-				((void(*)(MCPurchase*, bool&))t_info -> getter)(t_purchase, t_value);
-				if (!ctxt . HasError())
-				{
+				if (((bool(*)(MCPurchase*, bool&))t_info -> getter)(t_purchase, t_value))
 					ep . setboolean(t_value ? True : False);
-//					return ES_NORMAL;
-				}
 			}
                 break;
                 
@@ -263,12 +255,8 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			case kMCPropertyTypeInt32:
 			{
 				integer_t t_value;
-				((void(*)(MCPurchase*, integer_t&))t_info -> getter)(t_purchase, t_value);
-				if (!ctxt . HasError())
-				{
+				if (((bool(*)(MCPurchase*, integer_t&))t_info -> getter)(t_purchase, t_value))
 					ep . setint(t_value);
-//					return ES_NORMAL;
-				}
 			}
                 break;
                 
@@ -276,36 +264,27 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			case kMCPropertyTypeUInt32:
 			{
 				uinteger_t t_value;
-				((void(*)(MCPurchase*, uinteger_t&))t_info -> getter)(t_purchase, t_value);
+			if (((bool(*)(MCPurchase*, uinteger_t&))t_info -> getter)(t_purchase, t_value))
 				if (!ctxt . HasError())
-				{
 					ep . setuint(t_value);
-//					return ES_NORMAL;
-				}
 			}
                 break;
 				
 			case kMCPropertyTypeDouble:
 			{
 				double t_value;
-				((void(*)(MCPurchase*, double&))t_info -> getter)(t_purchase, t_value);
+				if (((bool(*)(MCPurchase*, double&))t_info -> getter)(t_purchase, t_value))
 				if (!ctxt . HasError())
-				{
 					ep . setnvalue(t_value);
-//					return ES_NORMAL;
-				}
 			}
                 break;
                 
 			case kMCPropertyTypeChar:
 			{
 				char_t t_value;
-				((void(*)(MCPurchase*, char_t&))t_info -> getter)(t_purchase, t_value);
+				if (((bool(*)(MCPurchase*, char_t&))t_info -> getter)(t_purchase, t_value))
 				if (!ctxt . HasError())
-				{
 					ep . setchar((char)t_value);
-//					return ES_NORMAL;
-				}
 			}
                 break;
 				
@@ -313,12 +292,9 @@ void MCStoreExecGet(MCExecContext& ctxt, integer_t p_id, MCStringRef p_prop_name
 			case kMCPropertyTypeBinaryString:
 			{
 				MCAutoStringRef t_value;
-				((void(*)(MCPurchase*, MCStringRef&))t_info -> getter)(t_purchase, &t_value);
+				if (((bool(*)(MCPurchase*, MCStringRef&))t_info -> getter)(t_purchase, &t_value))
 				if (!ctxt . HasError())
-				{
 					ep . setvalueref(*t_value);
-//					return ES_NORMAL;
-				}
 			}
                 break;
 				

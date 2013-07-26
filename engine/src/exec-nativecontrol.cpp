@@ -661,8 +661,6 @@ void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_
     {
         r_target . type = kMCNativeControlIdentifierName;
     }
-	
-	return ES_NORMAL;
 }
 
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list)
