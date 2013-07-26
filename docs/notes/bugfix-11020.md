@@ -1,1 +1,1 @@
-# revAvailableHandlers crashes community server 6.1.0
+# Setting or getting custom properties from global scope crashes server.
