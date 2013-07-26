@@ -145,7 +145,7 @@ Parse_stat MCAbsFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAbsFunction::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAbsFunction */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ABS_BADSOURCE, line, pos);
@@ -153,7 +153,8 @@ Exec_stat MCAbsFunction::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(fabs(ep.getnvalue()));
 	return ES_NORMAL;
-	*/
+#endif /* MCAbsFunction */
+
 	MCExecContext ctxt(ep);
 	real64_t t_source;
 	real64_t t_result;
@@ -195,7 +196,7 @@ Parse_stat MCAcos::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAcos::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAcos */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ACOS_BADSOURCE, line, pos);
@@ -210,7 +211,8 @@ Exec_stat MCAcos::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCAcos */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -254,7 +256,7 @@ Parse_stat MCAnnuity::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAnnuity */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ANNUITY_BADRATE, line, pos);
@@ -269,7 +271,8 @@ Exec_stat MCAnnuity::eval(MCExecPoint &ep)
 	real8 pn = ep.getnvalue();
 	ep.setnvalue((1.0 - pow(1.0 + rn, -pn)) / rn);
 	return ES_NORMAL;
-	*/
+#endif /* MCAnnuity */
+
 	MCExecContext ctxt(ep);
 	real64_t t_rate, t_periods;
 	real64_t t_result;
@@ -323,7 +326,7 @@ Parse_stat MCAsin::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAsin::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAsin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ASIN_BADSOURCE, line, pos);
@@ -338,7 +341,8 @@ Exec_stat MCAsin::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCAsin */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -381,7 +385,7 @@ Parse_stat MCAtan::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAtan::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAtan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ATAN_BADSOURCE, line, pos);
@@ -396,7 +400,8 @@ Exec_stat MCAtan::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCAtan */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -440,7 +445,7 @@ Parse_stat MCAtan2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAtan2::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAtan2 */ LEGACY_EXEC
 	if (s1->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_ATAN2_BADS1, line, pos);
@@ -463,7 +468,8 @@ Exec_stat MCAtan2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCAtan2 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_y, t_x;
@@ -523,14 +529,15 @@ Parse_stat MCAverage::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAverage::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCAverage */ LEGACY_EXEC
 	if (evalparams(F_AVERAGE, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_AVERAGE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCAverage */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -573,7 +580,7 @@ Parse_stat MCCompound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCompound::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCCompound */ LEGACY_EXEC
 	if (rate->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_COMPOUND_BADRATE, line, pos);
@@ -588,7 +595,8 @@ Exec_stat MCCompound::eval(MCExecPoint &ep)
 	real8 pn = ep.getnvalue();
 	ep.setnvalue(pow(1.0 + rn, pn));
 	return ES_NORMAL;
-	*/
+#endif /* MCCompound */
+
 	MCExecContext ctxt(ep);
 	real64_t t_rate, t_periods;
 	real64_t t_result;
@@ -642,7 +650,7 @@ Parse_stat MCCos::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCos::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCCos */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_COS_BADSOURCE, line, pos);
@@ -657,7 +665,8 @@ Exec_stat MCCos::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCCos */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -700,7 +709,7 @@ Parse_stat MCExp::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCExp */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_EXP_BADSOURCE, line, pos);
@@ -715,7 +724,8 @@ Exec_stat MCExp::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCExp */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -759,7 +769,7 @@ Parse_stat MCExp1::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp1::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCExp1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -776,7 +786,8 @@ Exec_stat MCExp1::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCExp1 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -819,7 +830,7 @@ Parse_stat MCExp2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp2::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCExp2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_EXP2_BADSOURCE, line, pos);
@@ -835,7 +846,8 @@ Exec_stat MCExp2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCExp2 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -878,7 +890,7 @@ Parse_stat MCExp10::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExp10::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCExp10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_EXP10_BADSOURCE, line, pos);
@@ -893,7 +905,8 @@ Exec_stat MCExp10::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCExp10 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -936,7 +949,7 @@ Parse_stat MCLn::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLn::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCLn */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_LN_BADSOURCE, line, pos);
@@ -951,7 +964,8 @@ Exec_stat MCLn::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCLn */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -994,7 +1008,7 @@ Parse_stat MCLn1::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLn1::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCLn1 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_LN1_BADSOURCE, line, pos);
@@ -1009,7 +1023,8 @@ Exec_stat MCLn1::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCLn1 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1052,7 +1067,7 @@ Parse_stat MCLog2::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLog2::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCLog2 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_LOG2_BADSOURCE, line, pos);
@@ -1067,7 +1082,8 @@ Exec_stat MCLog2::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCLog2 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1110,7 +1126,7 @@ Parse_stat MCLog10::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLog10::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCLog10 */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_LOG10_BADSOURCE, line, pos);
@@ -1125,7 +1141,8 @@ Exec_stat MCLog10::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCLog10 */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1168,6 +1185,55 @@ Parse_stat MCMatrixMultiply::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMatrixMultiply::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMatrixMultiply */ LEGACY_EXEC
+	if (dest -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCVariableValue *t_dst_array;
+	Boolean t_delete_dst_array;
+	ep . takearray(t_dst_array, t_delete_dst_array);
+    
+	if (source -> eval(ep) != ES_NORMAL)
+	{
+		if (t_delete_dst_array)
+			delete t_dst_array;
+        
+		MCeerror->add(EE_MATRIXMULT_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	MCVariableValue *t_src_array;
+	Boolean t_delete_src_array;
+	ep . takearray(t_src_array, t_delete_src_array);
+    
+	MCVariableValue *v = new MCVariableValue();
+	if (v->matrixmultiply(ep, *t_dst_array, *t_src_array) != ES_NORMAL)
+	{
+		MCeerror->add(EE_MATRIXMULT_MISMATCH, line, pos);
+		
+		if (t_delete_dst_array)
+			delete t_dst_array;
+        
+		if (t_delete_src_array)
+			delete t_src_array;
+        
+		delete v;
+		return ES_ERROR;
+	}
+    
+	ep.setarray(v, True);
+    
+	if (t_delete_dst_array)
+		delete t_dst_array;
+    
+	if (t_delete_src_array)
+		delete t_src_array;
+    
+	return ES_NORMAL;
+#endif /* MCMatrixMultiply */
 	MCExecContext ctxt(ep);
 
 	if (dest -> eval(ep) != ES_NORMAL)
@@ -1228,14 +1294,15 @@ Parse_stat MCMaxFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMaxFunction::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMaxFunction */ LEGACY_EXEC
 	if (evalparams(F_MAX, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MAX_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCMaxFunction */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -1282,14 +1349,15 @@ Parse_stat MCMedian::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMedian::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMedian */ LEGACY_EXEC
 	if (evalparams(F_MEDIAN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MEDIAN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCMedian */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -1331,7 +1399,7 @@ Parse_stat MCMD5Digest::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMD5Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
@@ -1344,7 +1412,8 @@ Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 	md5_finish(&state, digest);
 	ep.copysvalue((char *)digest, 16);
 	return ES_NORMAL;
-	*/
+#endif /* MCMD5Digest */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_source;
@@ -1387,7 +1456,7 @@ Parse_stat MCSHA1Digest::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCSHA1Digest */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SHA1DIGEST_BADSOURCE, line, pos);
@@ -1400,7 +1469,8 @@ Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 	sha1_finish(&state, digest);
 	ep.copysvalue((char *)digest, 20);
 	return ES_NORMAL;
-	*/
+#endif /* MCSHA1Digest */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_source;
@@ -1448,14 +1518,15 @@ Parse_stat MCMinFunction::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMinFunction::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCMinFunction */ LEGACY_EXEC
 	if (evalparams(F_MIN, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MIN_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCMinFunction */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -1499,7 +1570,7 @@ Parse_stat MCRandom::parse(MCScriptPoint &sp, Boolean the)
 //   being generated.
 Exec_stat MCRandom::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCRandom */ LEGACY_EXEC
 	Exec_stat t_stat;
 	t_stat = ES_NORMAL;
 
@@ -1523,7 +1594,8 @@ Exec_stat MCRandom::eval(MCExecPoint &ep)
 		MCeerror->add(EE_RANDOM_BADSOURCE, line, pos);
 
 	return t_stat;
-	*/
+#endif /* MCRandom */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1567,7 +1639,7 @@ Parse_stat MCRound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCRound::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCRound */ LEGACY_EXEC
 	real8 factor = 1.0;
 	if (digit != NULL)
 	{
@@ -1593,7 +1665,8 @@ Exec_stat MCRound::eval(MCExecPoint &ep)
 		value = floor(value + 0.5);
 	ep.setnvalue(value / factor);
 	return ES_NORMAL;
-	*/
+#endif /* MCRound */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source, t_digit;
@@ -1654,7 +1727,7 @@ Parse_stat MCSin::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSin::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCSin */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_SIN_BADSOURCE, line, pos);
@@ -1669,7 +1742,8 @@ Exec_stat MCSin::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCSin */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1712,7 +1786,7 @@ Parse_stat MCSqrt::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSqrt::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCSqrt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_SQRT_BADSOURCE, line, pos);
@@ -1727,7 +1801,8 @@ Exec_stat MCSqrt::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCSqrt */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -1771,7 +1846,7 @@ Parse_stat MCStatRound::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCStatRound::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCStatRound */ LEGACY_EXEC
 	real8 factor = 1.0;
 	if (digit != NULL)
 	{
@@ -1806,7 +1881,8 @@ Exec_stat MCStatRound::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(value / factor);
 	return ES_NORMAL;
-	*/
+#endif /* MCStatRound */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source, t_digit;
@@ -1872,14 +1948,15 @@ Parse_stat MCStdDev::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCStdDev::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCStdDev */ LEGACY_EXEC
 	if (evalparams(F_STD_DEV, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_STDDEV_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCStdDev */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -1926,14 +2003,15 @@ Parse_stat MCSum::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSum::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCSum */ LEGACY_EXEC
 	if (evalparams(F_SUM, params, ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SUM_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCSum */
+
 
 	MCExecContext ctxt(ep);
 	MCAutoArray<real64_t> t_values;
@@ -1975,7 +2053,7 @@ Parse_stat MCTan::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTan::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCTan */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_TAN_BADSOURCE, line, pos);
@@ -1991,7 +2069,8 @@ Exec_stat MCTan::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
-	*/
+#endif /* MCTan */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;
@@ -2033,6 +2112,43 @@ Parse_stat MCTranspose::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTranspose::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTranspose */ LEGACY_EXEC
+    // ARRAYEVAL
+	if (source -> eval(ep) != ES_NORMAL)
+	{
+		MCeerror->add(EE_TRANSPOSE_BADSOURCE, line, pos);
+		return ES_ERROR;
+	}
+    
+	if (ep . getformat() != VF_ARRAY)
+	{
+		ep . clear();
+		return ES_NORMAL;
+	}
+    
+	MCVariableValue *t_array;
+	Boolean t_delete_array;
+	ep . takearray(t_array, t_delete_array);
+    
+	MCVariableValue *v = new MCVariableValue();
+	if (v->transpose(*t_array) != ES_NORMAL)
+	{
+		MCeerror->add(EE_TRANSPOSE_MISMATCH, line, pos);
+		delete v;
+        
+		if (t_delete_array)
+			delete t_array;
+        
+		return ES_ERROR;
+	}
+    
+	ep.setarray(v, True);
+    
+	if (t_delete_array)
+		delete t_array;
+    
+	return ES_NORMAL;
+#endif /* MCTranspose */
 	MCExecContext ctxt(ep);
 
 	// ARRAYEVAL
@@ -2081,7 +2197,7 @@ Parse_stat MCTrunc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTrunc::eval(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCTrunc */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_TRUNC_BADSOURCE, line, pos);
@@ -2092,7 +2208,8 @@ Exec_stat MCTrunc::eval(MCExecPoint &ep)
 	else
 		ep.setnvalue(floor(ep.getnvalue()));
 	return ES_NORMAL;
-	*/
+#endif /* MCTrunc */
+
 
 	MCExecContext ctxt(ep);
 	real64_t t_source;

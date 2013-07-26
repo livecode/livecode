@@ -97,7 +97,8 @@ Parse_stat MCAccept::parse(MCScriptPoint &sp)
 
 Exec_stat MCAccept::exec(MCExecPoint &ep)
 {
-	/*// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
+#ifdef /* MCAccept */ LEGACY_EXEC
+	// MW-2005-01-28: Fix bug 2412 - accept doesn't clear the result.
 	MCresult -> clear(False);
 
 	if (MCsecuremode & MC_SECUREMODE_NETWORK)
@@ -118,7 +119,7 @@ Exec_stat MCAccept::exec(MCExecPoint &ep)
 	}
 
 	MCAutoNameRef t_message_name;
-	 UNCHECKED  ep . copyasnameref(t_message_name);
+	/* UNCHECKED */ ep . copyasnameref(t_message_name);
 
 	MCSocket *s = MCS_accept(port, ep.getobj(), t_message_name, datagram, secure, secureverify, NULL);
 	if (s != NULL)
@@ -128,7 +129,9 @@ Exec_stat MCAccept::exec(MCExecPoint &ep)
 		MCsockets[MCnsockets++] = s;
 	}
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCAccept */
+
 
 	MCExecContext ctxt(ep);
 	if (port->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -202,7 +205,8 @@ Parse_stat MCBeep::parse(MCScriptPoint &sp)
 
 Exec_stat MCBeep::exec(MCExecPoint &ep)
 {
-	/*uint4 i = 1;
+#ifdef /* MCBeep */ LEGACY_EXEC
+uint4 i = 1;
 	if (times != NULL)
 	{
 		if (times->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
@@ -227,7 +231,9 @@ Exec_stat MCBeep::exec(MCExecPoint &ep)
 			}
 		}
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCBeep */
+
 
 	uint4 i = 1;
 	if (times != NULL)
@@ -264,8 +270,11 @@ void MCBeep::compile(MCSyntaxFactoryRef ctxt)
 
 Exec_stat MCBreakPoint::exec(MCExecPoint &ep)
 {
-	/*MCB_break(ep, getline(), getpos());
-	return ES_NORMAL;*/
+#ifdef /* MCBreakPoint */ LEGACY_EXEC
+MCB_break(ep, getline(), getpos());
+	return ES_NORMAL;
+#endif /* MCBreakPoint */
+
 
 	MCExecContext ctxt(ep);
 	MCDebuggingExecBreakpoint(ctxt, line, pos);
@@ -310,7 +319,8 @@ Parse_stat MCCancel::parse(MCScriptPoint &sp)
 
 Exec_stat MCCancel::exec(MCExecPoint &ep)
 {
-	/*if (id == NULL)
+#ifdef /* MCCancel */ LEGACY_EXEC
+if (id == NULL)
 	{
 		MCprinter -> Cancel();
 		if (MCprinter != MCsystemprinter)
@@ -329,7 +339,9 @@ Exec_stat MCCancel::exec(MCExecPoint &ep)
 	}
 	if (ep.getuint4() != 0)
 		MCscreen->cancelmessageid(ep.getuint4());
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCCancel */
+
 	MCExecContext ctxt(ep);
 
 	if (id == NULL)
@@ -406,7 +418,8 @@ Parse_stat MCClickCmd::parse(MCScriptPoint &sp)
 
 Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 {
-	/*if (button != NULL)
+#ifdef /* MCClickCmd */ LEGACY_EXEC
+if (button != NULL)
 	{
 		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 		{
@@ -477,7 +490,9 @@ Exec_stat MCClickCmd::exec(MCExecPoint &ep)
 		MCeerror->add(EE_CLICK_ABORT, line, pos);
 		return ES_ERROR;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCClickCmd */
+
 
 	if (button != NULL)
 	{
@@ -573,7 +588,8 @@ Parse_stat MCDrag::parse(MCScriptPoint &sp)
 
 Exec_stat MCDrag::exec(MCExecPoint &ep)
 {
-/*	if (button != NULL)
+#ifdef /* MCDrag */ LEGACY_EXEC
+	if (button != NULL)
 	{
 		if (button->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 		{
@@ -681,7 +697,9 @@ Exec_stat MCDrag::exec(MCExecPoint &ep)
 		MCeerror->add(EE_DRAG_ABORT, line, pos);
 		return ES_ERROR;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCDrag */
+
 
 if (button != NULL)
 	{
@@ -775,7 +793,8 @@ Parse_stat MCFocus::parse(MCScriptPoint &sp)
 
 Exec_stat MCFocus::exec(MCExecPoint &ep)
 {
-	/*MCObject *optr;
+#ifdef /* MCFocus */ LEGACY_EXEC
+MCObject *optr;
 	uint4 parid;
 	if (object == NULL)
 	{
@@ -796,7 +815,9 @@ Exec_stat MCFocus::exec(MCExecPoint &ep)
 		}
 		optr->getstack()->kfocusset((MCControl *)optr);
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCFocus */
+
 
 	MCExecContext ctxt(ep);
 	if (object == NULL)
@@ -878,7 +899,7 @@ Parse_stat MCInsert::parse(MCScriptPoint &sp)
 
 Exec_stat MCInsert::exec(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCInsert */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	if (target->getobj(ep, optr, parid, True) != ES_NORMAL
@@ -909,7 +930,7 @@ Exec_stat MCInsert::exec(MCExecPoint &ep)
 	MCObjectList *olptr = new MCObjectList(optr);
 	olptr->insertto(listptr);
 	return ES_NORMAL;
-#endif
+#endif /* MCInsert */
 
 	MCObject *optr;
 	uint4 parid;
@@ -1002,7 +1023,7 @@ Parse_stat MCDispatchCmd::parse(MCScriptPoint& sp)
 // This method follows along the same lines as MCComref::exec
 Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 {
-#if OLD_EXEC
+#ifdef /* MCDispatchCmd */ LEGACY_EXEC
 	if (MCscreen->abortkey())
 	{
 		MCeerror->add(EE_HANDLER_ABORT, line, pos);
@@ -1146,7 +1167,7 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		MCnexecutioncontexts--;
 	
 	return stat;
-#else
+#endif /* MCDispatchCmd */
 	MCNewAutoNameRef t_message;
 	if (message -> eval(ep) != ES_NORMAL)
 	{
@@ -1206,7 +1227,6 @@ Exec_stat MCDispatchCmd::exec(MCExecPoint& ep)
 		return ES_NORMAL;
 		
 	return ctxt . Catch(line, pos);
-#endif
 }
 
 MCMessage::~MCMessage()
@@ -1267,7 +1287,7 @@ Parse_stat MCMessage::parse(MCScriptPoint &sp)
 
 Exec_stat MCMessage::exec(MCExecPoint &ep)
 {
-#if OLD_EXEC
+#ifdef /* MCMessage */ LEGACY_EXEC
 	if (program)
 	{
 		if (MCsecuremode & MC_SECUREMODE_PROCESS)
@@ -1449,7 +1469,7 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 		delete mptr;
 	}
 	return ES_NORMAL;
-#else
+#endif /* MCMessage */
 	MCExecContext ctxt(ep);
 		
 	if (program)
@@ -1535,7 +1555,6 @@ Exec_stat MCMessage::exec(MCExecPoint &ep)
 		return ES_NORMAL;
 		
 	return ctxt . Catch(line, pos);
-#endif	
 }
 
 void MCMessage::compile(MCSyntaxFactoryRef ctxt)
@@ -1641,7 +1660,8 @@ Parse_stat MCMove::parse(MCScriptPoint &sp)
 
 Exec_stat MCMove::exec(MCExecPoint &ep)
 {
-/*	MCObject *optr;
+#ifdef /* MCMove */ LEGACY_EXEC
+	MCObject *optr;
 	uint4 parid;
 	if (object->getobj(ep, optr, parid, True) != ES_NORMAL)
 	{
@@ -1741,7 +1761,9 @@ Exec_stat MCMove::exec(MCExecPoint &ep)
 		}
 		MCscreen->stopmove(optr, True);
 	}
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCMove */
+
 
 	MCExecContext ctxt(ep);
 	MCObject *optr;
@@ -2000,7 +2022,8 @@ Parse_stat MCMM::parse(MCScriptPoint &sp)
 
 Exec_stat MCMM::exec(MCExecPoint &ep)
 {
-/*	MCresult->clear(False);
+#ifdef /* MCMM */ LEGACY_EXEC
+	MCresult->clear(False);
 	if (prepare && image)
 	{
 		uint4 parid;
@@ -2334,7 +2357,9 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		if (MCacptr != NULL)
 			MCscreen->addtimer(MCacptr, MCM_internal, looping ? LOOP_RATE : PLAY_RATE);
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCMM */
+
 
 	MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2621,7 +2646,8 @@ Parse_stat MCReply::parse(MCScriptPoint &sp)
 
 Exec_stat MCReply::exec(MCExecPoint &ep)
 {
-	/*char *k = NULL;
+#ifdef /* MCReply */ LEGACY_EXEC
+	char *k = NULL;
 	if (keyword != NULL)
 	{
 		if (message->eval(ep) != ES_NORMAL)
@@ -2638,7 +2664,10 @@ Exec_stat MCReply::exec(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	MCS_reply(ep.getsvalue(), k, error);
-	delete k;*/
+	delete k;
+	return ES_NORMAL;
+#endif /* MCReply */
+
 	
 	MCAutoStringRef t_message;
 	if (message -> eval(ep) != ES_NORMAL)
@@ -2749,7 +2778,8 @@ Parse_stat MCRequest::parse(MCScriptPoint &sp)
 
 Exec_stat MCRequest::exec(MCExecPoint &ep)
 {
-	/*if (MCsecuremode & MC_SECUREMODE_PROCESS)
+#ifdef /* MCRequest */ LEGACY_EXEC
+if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add(EE_REQUEST_NOPERM, line, pos);
 		return ES_ERROR;
@@ -2792,7 +2822,9 @@ Exec_stat MCRequest::exec(MCExecPoint &ep)
 		delete result;
 	}
 	it->set(ep);
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRequest */
+
 	
 	MCExecContext ctxt(ep, it);
 	
@@ -2927,7 +2959,8 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 bool MCServerStartSession();
 Exec_stat MCStart::exec(MCExecPoint &ep)
 {
-/*	if (mode == SC_USING)
+#ifdef /* MCStart */ LEGACY_EXEC
+	if (mode == SC_USING)
 	{
 		MCStack *sptr = NULL;
 		if (target != NULL)
@@ -3016,7 +3049,9 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 			gptr->getstack()->startedit(gptr);
 		}
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCStart */
+
 
 	MCExecContext ctxt(ep);
 	if (mode == SC_USING)
@@ -3199,7 +3234,8 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 bool MCServerStopSession();
 Exec_stat MCStop::exec(MCExecPoint &ep)
 {
-	/*MCObject *optr = NULL;
+#ifdef /* MCStop */ LEGACY_EXEC
+MCObject *optr = NULL;
 	uint4 parid;
 
 	if (target != NULL)
@@ -3300,7 +3336,9 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 	default:
 		break;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCStop */
+
 
 	MCObject *optr = NULL;
 	uint4 parid;
@@ -3475,7 +3513,7 @@ Parse_stat MCType::parse(MCScriptPoint &sp)
 
 Exec_stat MCType::exec(MCExecPoint &ep)
 {
-	/*
+#ifdef /* MCType */ LEGACY_EXEC
 	if (message->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_TYPE_BADSTRINGEXP, line, pos);
@@ -3514,7 +3552,9 @@ Exec_stat MCType::exec(MCExecPoint &ep)
 		}
 	}
 	MCmodifierstate = oldstate;
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCType */
+
 
 	if (message->eval(ep) != ES_NORMAL)
 	{

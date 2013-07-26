@@ -30,6 +30,8 @@
 
 #include "exec.h"
 
+#include "util.h"
+
 #include "mblsyntax.h"
 #include "mblsensor.h"
 #include "mblcontrol.h"
@@ -49,6 +51,13 @@ static const char *s_orientation_names[] =
 
 Exec_stat MCHandleCanComposeTextMessage(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCanComposeTextMessage */ LEGACY_EXEC
+    if (MCSystemCanSendTextMessage())
+        MCresult -> sets(MCtruestring);
+	else
+        MCresult -> sets(MCfalsestring);
+	return ES_NORMAL;
+#endif /* MCHandleCanComposeTextMessage */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -68,6 +77,31 @@ Exec_stat MCHandleCanComposeTextMessage(void *p_context, MCParameter *p_paramete
 
 Exec_stat MCHandleComposeTextMessage(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleComposeTextMessage */ LEGACY_EXEC
+    char *t_recipients, *t_body;
+    bool t_success;
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	if (!MCSystemCanSendTextMessage())
+    {
+        MCresult -> sets(MCfalsestring);
+        return ES_NORMAL;
+    }
+	
+	t_success = MCParseParameters(p_parameters, "s", &t_recipients);
+    if (t_success == false)
+    {
+        MCresult -> sets(MCfalsestring);
+        return ES_NORMAL;
+    }
+	t_success = MCParseParameters(p_parameters, "s", &t_body);
+    
+    MCExecContext t_ctxt(ep);
+    
+	MCComposeTextMessageExec(t_ctxt, t_recipients, t_body);
+    
+	return ES_NORMAL;
+#endif /* MCHandleComposeTextMessage */
     MCAutoStringRef t_recipients, t_body;
     
     bool t_success;
@@ -142,6 +176,10 @@ Exec_stat MCHandleIdleTimerLocked(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandleCanMakePurchase(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandleCanMakePurchase */ LEGACY_EXEC
+	MCresult -> sets(MCU_btos( MCStoreCanMakePurchase() ));
+	return ES_NORMAL;
+#endif /* MCHandleCanMakePurchase */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -162,6 +200,10 @@ Exec_stat MCHandleCanMakePurchase(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandleEnablePurchaseUpdates(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandleEnablePurchaseUpdates */ LEGACY_EXEC
+	MCStoreEnablePurchaseUpdates();
+	return ES_NORMAL;
+#endif /* MCHandleEnablePurchaseUpdates */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -175,6 +217,10 @@ Exec_stat MCHandleEnablePurchaseUpdates(void* p_context, MCParameter* p_paramete
 
 Exec_stat MCHandleDisablePurchaseUpdates(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandleDisablePurchaseUpdates */ LEGACY_EXEC
+	MCStoreDisablePurchaseUpdates();
+	return ES_NORMAL;
+#endif /* MCHandleDisablePurchaseUpdates */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -188,6 +234,10 @@ Exec_stat MCHandleDisablePurchaseUpdates(void* p_context, MCParameter* p_paramet
     
 Exec_stat MCHandleRestorePurchases(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandleRestorePurchases */ LEGACY_EXEC
+	MCStoreRestorePurchases();
+	return ES_NORMAL;
+#endif /* MCHandleRestorePurchases */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -202,6 +252,12 @@ Exec_stat MCHandleRestorePurchases(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandlePurchaseList(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandlePurchaseList */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+	MCPurchaseList(list_purchases, &ep);
+	MCresult -> store(ep, False);
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseList */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -221,6 +277,24 @@ Exec_stat MCHandlePurchaseList(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandlePurchaseCreate(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandlePurchaseCreate */ LEGACY_EXEC
+	bool t_success = true;
+	char *t_product_id = nil;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_product_id);
+	
+	if (t_success)
+		MCPurchaseCreate(t_product_id, nil, t_purchase);
+	
+	if (t_success)
+		MCresult->setnvalue(t_purchase->id);
+	
+	MCCStringFree(t_product_id);
+    
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseCreate */
     bool t_success = true;
     MCAutoStringRef t_product_id;
     uint32_t t_id;
@@ -246,7 +320,27 @@ Exec_stat MCHandlePurchaseCreate(void* p_context, MCParameter* p_parameters)
 
 
 Exec_stat MCHandlePurchaseState(void* p_context, MCParameter* p_parameters)
-{    
+{
+#ifdef /* MCHandlePurchaseState */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	const char *t_state = nil;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+	if (t_success)
+		t_success = MCPurchaseFindById(t_id, t_purchase);
+	
+	if (t_success)
+		t_success = MCPurchaseStateToString(t_purchase->state, t_state);
+	
+	if (t_success)
+		MCresult -> sets(t_state);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseState */
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -274,6 +368,29 @@ Exec_stat MCHandlePurchaseState(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandlePurchaseError(void* p_context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandlePurchaseError */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	char *t_error = nil;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+	
+	if (t_success)
+		t_success = MCPurchaseFindById(t_id, t_purchase);
+	
+	if (t_success)
+		t_success = MCPurchaseGetError(t_purchase, t_error);
+	
+	if (t_success)
+		MCresult->grab(t_error, MCCStringLength(t_error));
+	else
+		MCCStringFree(t_error);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseError */
 	bool t_success = true;
 	
     MCStringRef t_error;
@@ -300,6 +417,36 @@ Exec_stat MCHandlePurchaseError(void* p_context, MCParameter* p_parameters)
 
 Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseGet */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	char *t_prop_name = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "us", &t_id, &t_prop_name);
+	
+	MCPurchase *t_purchase = nil;
+	MCPurchaseProperty t_property;
+	
+	if (t_success)
+		t_success =
+		MCPurchaseFindById(t_id, t_purchase) &&
+		MCPurchaseLookupProperty(t_prop_name, t_property);
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success)
+		t_success = MCPurchaseGet(t_purchase, t_property, ep) == ES_NORMAL;
+	
+	if (t_success)
+		MCresult->store(ep, True);
+	else
+		MCresult->clear();
+    
+	MCCStringFree(t_prop_name);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseGet */
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -330,6 +477,34 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseSet */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	char *t_prop_name = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "us", &t_id, &t_prop_name);
+	
+	MCPurchase *t_purchase = nil;
+	MCPurchaseProperty t_property;
+	
+	if (t_success)
+		t_success =
+		MCPurchaseFindById(t_id, t_purchase) &&
+		MCPurchaseLookupProperty(t_prop_name, t_property);
+	
+	MCExecPoint ep(nil, nil, nil);
+	if (t_success && p_parameters != nil)
+		t_success = p_parameters -> eval(ep) == ES_NORMAL;
+	
+	if (t_success)
+		t_success = MCPurchaseSet(t_purchase, t_property, ep) == ES_NORMAL;
+	
+	MCCStringFree(t_prop_name);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseSet */
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -359,6 +534,23 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseSendRequest */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+    
+	if (t_success)
+		t_success = MCPurchaseFindById(t_id, t_purchase);
+	
+	if (t_success)
+		t_success = MCPurchaseSendRequest(t_purchase);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseSendRequest */
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -380,6 +572,23 @@ Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseConfirmDelivery */ LEGACY_EXEC
+	bool t_success = true;
+	
+	uint32_t t_id;
+	MCPurchase *t_purchase = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "u", &t_id);
+	
+	if (t_success)
+		t_success = MCPurchaseFindById(t_id, t_purchase);
+	
+	if (t_success)
+		t_success = MCPurchaseConfirmDelivery(t_purchase);
+	
+	return ES_NORMAL;
+#endif /* MCHandlePurchaseConfirmDelivery */
 	bool t_success = true;
 	
 	uint32_t t_id;
@@ -402,6 +611,20 @@ Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_paramete
 
 Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRequestProductDetails */ LEGACY_EXEC
+    bool t_success = true;
+    
+    char * t_product;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "s", &t_product);
+    
+    if (t_success)
+        MCStoreRequestProductDetails(t_product);
+    
+    return ES_NORMAL;
+#endif /* MCHandleRequestProductDetails */
     MCAutoStringRef t_product;
     bool t_success = true;    
     if (t_success)
@@ -421,6 +644,24 @@ Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters
 
 Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePurchaseVerify */ LEGACY_EXEC
+    bool t_success = true;
+    
+    bool t_verified = true;
+    uint32_t t_id;
+    MCPurchase *t_purchase = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
+    
+    if (t_success)
+        t_success = MCPurchaseFindById(t_id, t_purchase);
+    
+    if (t_success)
+        MCPurchaseVerify(t_purchase, t_verified);
+    
+    return ES_NORMAL;
+#endif /* MCHandlePurchaseVerify */
     bool t_success = true;
     bool t_verified = true;
     
@@ -616,6 +857,15 @@ Exec_stat MCHandleUnlockOrientation(void *context, MCParameter *p_parameters)
 	return ES_ERROR;
 }
 
+Exec_stat MCHandleRotateInterface(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleRotateInterface */ LEGACY_EXEC
+	return ES_NORMAL;
+#endif /* MCHandleRotateInterface */
+	return ES_NORMAL;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Exec_stat MCHandleRevMail(void *context, MCParameter *p_parameters)
@@ -773,6 +1023,35 @@ Exec_stat MCHandleCanSendMail(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStartTrackingSensor */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    bool t_loosely = false;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_loosely = ep . getsvalue() == MCtruemcstring;
+    }
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    if (t_sensor != kMCSensorTypeUnknown)
+    {
+        MCSensorExecStartTrackingSensor(t_ctxt, t_sensor, t_loosely);
+    }
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleStartTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -807,6 +1086,28 @@ Exec_stat MCHandleStartTrackingSensor(void *p_context, MCParameter *p_parameters
 
 Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopTrackingSensor */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    if (t_sensor != kMCSensorTypeUnknown)
+    {
+        MCSensorExecStopTrackingSensor(t_ctxt, t_sensor);
+    }
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleStopTrackingSensor */
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -835,6 +1136,18 @@ Exec_stat MCHandleStopTrackingSensor(void *p_context, MCParameter *p_parameters)
 // MM-2012-02-11: Added support old style sensor syntax (iPhoneEnableAcceleromter etc)
 Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAccelerometerEnablement */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeAcceleration, false);
+    else
+        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeAcceleration);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAccelerometerEnablement */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -852,6 +1165,18 @@ Exec_stat MCHandleAccelerometerEnablement(void *p_context, MCParameter *p_parame
 
 Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleLocationTrackingState */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeLocation, false);
+    else
+        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeLocation);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleLocationTrackingState */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -869,6 +1194,18 @@ Exec_stat MCHandleLocationTrackingState(void *p_context, MCParameter *p_paramete
 
 Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleHeadingTrackingState */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	if ((bool)p_context)
+        MCSensorExecStartTrackingSensor(t_ctxt, kMCSensorTypeHeading, true);
+    else
+        MCSensorExecStopTrackingSensor(t_ctxt, kMCSensorTypeHeading);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleHeadingTrackingState */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -886,6 +1223,81 @@ Exec_stat MCHandleHeadingTrackingState(void *p_context, MCParameter *p_parameter
 
 Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSensorReading */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCSensorType t_sensor = kMCSensorTypeUnknown;
+    bool t_detailed = false;
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_detailed = ep . getsvalue() == MCtruemcstring;
+    }
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCVariableValue *t_detailed_reading = nil;
+    MCAutoRawCString t_reading;
+    
+    switch (t_sensor)
+    {
+        case kMCSensorTypeLocation:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedLocationOfDevice(t_ctxt, t_detailed_reading);
+            else
+                MCSensorGetLocationOfDevice(t_ctxt, t_reading);
+            break;
+        }
+        case kMCSensorTypeHeading:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedHeadingOfDevice(t_ctxt, t_detailed_reading);
+            else
+                MCSensorGetHeadingOfDevice(t_ctxt, t_reading);
+            break;
+        }
+        case kMCSensorTypeAcceleration:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedAccelerationOfDevice(t_ctxt, t_detailed_reading);
+            else
+                MCSensorGetAccelerationOfDevice(t_ctxt, t_reading);
+            break;
+        }
+        case kMCSensorTypeRotationRate:
+        {
+            if (t_detailed)
+                MCSensorGetDetailedRotationRateOfDevice(t_ctxt, t_detailed_reading);
+            else
+                MCSensorGetRotationRateOfDevice(t_ctxt, t_reading);
+            break;
+        }
+    }
+    
+    if (t_detailed)
+    {
+        if (t_detailed_reading != nil)
+            ep.setarray(t_detailed_reading, True);
+    }
+    else
+    {
+        if (t_reading.Borrow() != nil)
+            ep.copysvalue(t_reading.Borrow());
+    }
+    
+    MCresult->store(ep, False);
+    return t_ctxt.GetStat();
+#endif /* MCHandleSensorReading */
     MCExecPoint ep(nil, nil, nil);
     
     MCSensorType t_sensor = kMCSensorTypeUnknown;
@@ -971,6 +1383,19 @@ Exec_stat MCHandleSensorReading(void *p_context, MCParameter *p_parameters)
 // MM-2012-02-11: Added support old style sensor syntax (iPhoneGetCurrentLocation etc)
 Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCurrentLocation */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCVariableValue *t_detailed_reading = nil;
+    MCSensorGetDetailedLocationOfDevice(t_ctxt, t_detailed_reading);
+    if (t_detailed_reading != nil)
+        ep.setarray(t_detailed_reading, True);
+    
+    MCresult->store(ep, False);
+    return t_ctxt.GetStat();
+#endif /* MCHandleCurrentLocation */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -991,6 +1416,19 @@ Exec_stat MCHandleCurrentLocation(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCurrentHeading */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCVariableValue *t_detailed_reading = nil;
+    MCSensorGetDetailedHeadingOfDevice(t_ctxt, t_detailed_reading);
+    if (t_detailed_reading != nil)
+        ep.setarray(t_detailed_reading, True);
+    
+    MCresult->store(ep, False);
+    return t_ctxt.GetStat();
+#endif /* MCHandleCurrentHeading */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -1011,6 +1449,21 @@ Exec_stat MCHandleCurrentHeading(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetHeadingCalibrationTimeout */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    int t_timeout;
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_timeout = atoi(ep.getcstring());
+    }
+    MCSensorSetLocationCalibration(t_ctxt, t_timeout);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleSetHeadingCalibrationTimeout */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -1031,6 +1484,18 @@ Exec_stat MCHandleSetHeadingCalibrationTimeout(void *p_context, MCParameter *p_p
 
 Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleHeadingCalibrationTimeout */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    int t_timeout;
+    MCSensorGetLocationCalibration(t_ctxt, t_timeout);
+    MCresult->setnvalue(t_timeout);
+    
+    t_ctxt . SetTheResultToEmpty();
+    return t_ctxt.GetStat();
+#endif /* MCHandleHeadingCalibrationTimeout */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -1048,7 +1513,28 @@ Exec_stat MCHandleHeadingCalibrationTimeout(void *p_context, MCParameter *p_para
 
 Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
 {
-    MCExecPoint ep(nil, nil, nil);    
+#ifdef /* MCHandleSensorAvailable */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCSensorType t_sensor;
+    t_sensor = kMCSensorTypeUnknown;
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_sensor = MCSensorTypeFromCString(ep.getcstring());
+        p_parameters = p_parameters->getnext();
+    }
+    
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(t_ctxt, t_sensor, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+    return t_ctxt.GetStat();
+#endif /* MCHandleSensorAvailable */
+    MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
 
@@ -1078,7 +1564,19 @@ Exec_stat MCHandleSensorAvailable(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
 {
-    MCExecPoint ep(nil, nil, nil);    
+#ifdef /* MCHandleCanTrackLocation */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeLocation, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+    return t_ctxt.GetStat();
+#endif /* MCHandleCanTrackLocation */
+    MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
         
@@ -1099,7 +1597,19 @@ Exec_stat MCHandleCanTrackLocation(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleCanTrackHeading(void *p_context, MCParameter *p_parameters)
 {
-    MCExecPoint ep(nil, nil, nil);    
+#ifdef /* MCHandleCanTrackHeading */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    bool t_available;
+    t_available = false;
+    MCSensorGetSensorAvailable(t_ctxt, kMCSensorTypeHeading, t_available);
+    
+    MCresult->sets(MCU_btos(t_available));
+    return t_ctxt.GetStat();
+#endif /* MCHandleCanTrackHeading */
+    MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
     
@@ -1148,6 +1658,16 @@ bool MCContactParseParams(MCParameter *p_params, MCArrayRef &r_contact, char *&r
 
 Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeoplePickerNavigationController
 {
+#ifdef /* MCHandlePickContact */ LEGACY_EXEC
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCPickContactExec(t_ctxt);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandlePickContact */
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
@@ -1162,6 +1682,24 @@ Exec_stat MCHandlePickContact(void *context, MCParameter *p_parameters) // ABPeo
 
 Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPersonViewController
 {
+#ifdef /* MCHandleShowContact */ LEGACY_EXEC
+    int32_t t_contact_id = 0;
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCShowContactExec(t_ctxt, t_contact_id);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandleShowContact */
     int32_t t_contact_id = 0;
     int32_t r_result;
     MCExecPoint ep(nil, nil, nil);
@@ -1184,6 +1722,16 @@ Exec_stat MCHandleShowContact(void *context, MCParameter *p_parameters) // ABPer
 
 Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABNewPersonViewController
 {
+#ifdef /* MCHandleCreateContact */ LEGACY_EXEC
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCCreateContactExec(t_ctxt);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandleCreateContact */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 
@@ -1197,6 +1745,20 @@ Exec_stat MCHandleCreateContact(void *context, MCParameter *p_parameters) // ABN
 
 Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABUnknownPersonViewController
 {
+#ifdef /* MCHandleUpdateContact */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    // Handle parameters. We are doing that in a dedicated call
+	MCVariableValue *t_contact = nil;
+	char *t_title = nil;
+	char *t_message = nil;
+	char *t_alternate_name = nil;
+	/* UNCHECKED */ MCContactParseParams(p_parameters, t_contact, t_title, t_message, t_alternate_name);
+    // Call the Exec implementation
+    MCUpdateContactExec(ctxt, t_contact, t_title, t_message, t_alternate_name);
+    // Set return value
+	return ctxt.GetStat();
+#endif /* MCHandleUpdateContact */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 
@@ -1216,6 +1778,24 @@ Exec_stat MCHandleUpdateContact(void *context, MCParameter *p_parameters) // ABU
 
 Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetContactData */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    int32_t t_contact_id = 0;
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCGetContactDataExec(t_ctxt, t_contact_id);
+    if (MCresult->isempty())
+        MCresult->store(ep, True);
+	return t_ctxt.GetStat();
+#endif /* MCHandleGetContactData */
     MCExecPoint ep(nil, nil, nil);
 
     int32_t t_contact_id = 0;
@@ -1243,6 +1823,23 @@ Exec_stat MCHandleGetContactData(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRemoveContact */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    int32_t t_contact_id = 0;
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_id = atoi (ep.getsvalue().getstring());
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCRemoveContactExec(t_ctxt, t_contact_id);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleRemoveContact */
     MCExecPoint ep(nil, nil, nil);
 
     int32_t t_contact_id = 0;
@@ -1264,6 +1861,19 @@ Exec_stat MCHandleRemoveContact(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAddContact */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    // Handle parameters. We are doing that in a dedicated call
+	MCVariableValue *t_contact;
+	
+	/* UNCHECKED */ MCParseParameters(p_parameters, "a", &t_contact);
+    
+    MCExecContext t_ctxt(ep);
+    // Call the Exec implementation
+    MCAddContactExec(t_ctxt, t_contact);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleAddContact */
     MCExecPoint ep(nil, nil, nil);
     // Handle parameters. We are doing that in a dedicated call
 	MCAutoArrayRef t_contact;
@@ -1282,6 +1892,24 @@ Exec_stat MCHandleAddContact(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFindContact */ LEGACY_EXEC
+    const char *t_contact_name = NULL;
+    const char *r_result = NULL;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_contact_name = ep.getcstring();
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCFindContactExec(t_ctxt, t_contact_name);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleFindContact */
     MCAutoStringRef t_contact_name;
     MCExecPoint ep(nil, nil, nil);
 	ep . clear();
@@ -1308,6 +1936,26 @@ Exec_stat MCHandleFindContact(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdRegister */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_key;
+	t_key = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_key);
+	
+	if (t_success)
+		MCAdExecRegisterWithInneractive(t_ctxt, t_key);
+    
+    MCCStringFree(t_key);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdRegister */
 	bool t_success;
 	t_success = true;
     
@@ -1331,6 +1979,52 @@ Exec_stat MCHandleAdRegister(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdCreate */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_ad;
+	t_ad = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_ad);
+    
+    MCAdType t_type;
+    t_type = kMCAdTypeUnknown;
+    if (t_success)
+    {
+        char *t_type_string;
+        t_type_string = nil;
+        if (MCParseParameters(p_parameters, "s", &t_type_string))
+            t_type = MCAdTypeFromCString(t_type_string);
+        MCCStringFree(t_type_string);
+    }
+    
+    MCAdTopLeft t_top_left = {0,0};
+    if (t_success)
+    {
+        char *t_top_left_string;
+        t_top_left_string = nil;
+        if (MCParseParameters(p_parameters, "s", &t_top_left_string))
+        /* UNCHECKED */ sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
+        MCCStringFree(t_top_left_string);
+    }
+    
+    MCVariableValue *t_meta_data;
+    t_meta_data = nil;
+    if (t_success)
+        MCParseParameters(p_parameters, "a", &t_meta_data);
+    
+	if (t_success)
+		MCAdExecCreateAd(t_ctxt, t_ad, t_type, t_top_left, t_meta_data);
+    
+    MCCStringFree(t_ad);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdCreate */
 	bool t_success;
 	t_success = true;
     
@@ -1366,6 +2060,26 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdDelete */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_ad;
+	t_ad = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_ad);
+	
+	if (t_success)
+		MCAdExecDeleteAd(t_ctxt, t_ad);
+    
+    MCCStringFree(t_ad);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdDelete */
 	bool t_success;
 	t_success = true;
     
@@ -1389,6 +2103,31 @@ Exec_stat MCHandleAdDelete(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdGetVisible */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_ad;
+	t_ad = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_ad);
+	
+    bool t_visible;
+    t_visible = false;
+	if (t_success)
+		t_success = MCAdGetVisibleOfAd(t_ctxt, t_ad, t_visible);
+    
+    if (t_success)
+        MCresult->sets(MCU_btos(t_visible));
+    
+    MCCStringFree(t_ad);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdGetVisible */
 	bool t_success;
 	t_success = true;
     
@@ -1423,6 +2162,28 @@ Exec_stat MCHandleAdGetVisible(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdSetVisible */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_ad;
+	t_ad = nil;
+    bool t_visible;
+    t_visible = false;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "sb", &t_ad, &t_visible);
+	
+	if (t_success)
+		MCAdSetVisibleOfAd(t_ctxt, t_ad, t_visible);
+    
+    MCCStringFree(t_ad);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdSetVisible */
 	bool t_success;
 	t_success = true;
     
@@ -1453,7 +2214,7 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
     
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
-
+    
 	MCAutoStringRef t_ad;
     
 	if (t_success)
@@ -1480,6 +2241,33 @@ Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAdSetTopLeft */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	char *t_ad;
+	t_ad = nil;
+    char *t_top_left_string;
+    t_top_left_string = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "ss", &t_ad, &t_top_left_string);
+    
+    MCAdTopLeft t_top_left = {0,0};
+    if (t_success)
+        t_success = sscanf(t_top_left_string, "%u,%u", &t_top_left.x, &t_top_left.y);
+    
+	if (t_success)
+		MCAdSetTopLeftOfAd(t_ctxt, t_ad, t_top_left);
+    
+    MCCStringFree(t_top_left_string);
+    MCCStringFree(t_ad);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAdSetTopLeft */
 	bool t_success;
 	t_success = true;
     
@@ -1504,6 +2292,27 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAds */ LEGACY_EXEC
+    bool t_success;
+    t_success = true;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    if (t_success)
+    {
+        MCAutoRawCString t_ads;
+        t_success = MCAdGetAds(t_ctxt, t_ads);
+        if (t_success && t_ads.Borrow() != nil)
+            ep.copysvalue(t_ads.Borrow());
+    }
+    
+    if (t_success)
+        MCresult->store(ep, False);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleAds */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -1526,6 +2335,24 @@ Exec_stat MCHandleAds(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleShowEvent */ LEGACY_EXEC
+    const char* t_event_id = NULL;
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_event_id = ep.getsvalue().getstring();
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCShowEventExec(t_ctxt, t_event_id);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandleShowEvent */
     MCAutoStringRef t_id;
     bool t_success;
     t_success = true;
@@ -1553,6 +2380,24 @@ Exec_stat MCHandleShowEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleUpdateEvent */ LEGACY_EXEC
+    const char* t_event_id = NULL;
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_event_id = ep.getsvalue().getstring();
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCUpdateEventExec(t_ctxt, t_event_id);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandleUpdateEvent */
     MCAutoStringRef t_id;
     bool t_success;
     t_success = true;
@@ -1579,6 +2424,16 @@ Exec_stat MCHandleUpdateEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCreateEvent */ LEGACY_EXEC
+    int32_t r_result;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCCreateEventExec(t_ctxt);
+    // Set return value
+	return t_ctxt.GetStat();
+#endif /* MCHandleCreateEvent */
     MCAutoStringRef t_id;
     
     MCExecPoint ep(nil, nil, nil);
@@ -1595,6 +2450,24 @@ Exec_stat MCHandleCreateEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetEventData */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    const char* t_event_id = NULL;
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_event_id = ep.getsvalue().getstring();
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCGetEventDataExec(t_ctxt, t_event_id);
+    if (MCresult->isempty())
+        MCresult->store(ep, True);
+	return t_ctxt.GetStat();
+#endif /* MCHandleGetEventData */
     MCAutoStringRef t_id;
     bool t_success;
     t_success = true;
@@ -1625,6 +2498,26 @@ Exec_stat MCHandleGetEventData(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleRemoveEvent */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    const char* t_event_id = NULL;
+    bool t_reocurring = false;
+    bool t_success = true;
+    // Handle parameters.
+    t_success = MCParseParameters(p_parameters, "s", &t_event_id);
+    
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "b", &t_reocurring);
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCRemoveEventExec(t_ctxt, t_reocurring, t_event_id);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleRemoveEvent */
     MCAutoStringRef t_id;
     bool t_reocurring = false;
     bool t_success = true;
@@ -1650,6 +2543,18 @@ Exec_stat MCHandleRemoveEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleAddEvent */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    // Handle parameters. We are doing that in a dedicated call
+    MCCalendar t_new_event_data;
+    t_new_event_data = MCParameterDataToCalendar(p_parameters, t_new_event_data);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCAddEventExec(t_ctxt, t_new_event_data);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleAddEvent */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -1672,6 +2577,15 @@ Exec_stat MCHandleAddEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetCalendarsEvent */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCGetCalendarsEventExec(t_ctxt);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleGetCalendarsEvent */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
@@ -1688,6 +2602,38 @@ Exec_stat MCHandleGetCalendarsEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFindEvent */ LEGACY_EXEC
+    MCDateTime t_start_date;
+    MCDateTime t_end_date;
+    bool t_success = true;
+    const char *r_result = NULL;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    // Handle parameters.
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+    if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+        }
+    }
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    // Call the Exec implementation
+    MCFindEventExec(t_ctxt, t_start_date, t_end_date);
+    // Set return value
+    return t_ctxt.GetStat();
+#endif /* MCHandleFindEvent */
     MCDateTime t_start_date;
     MCDateTime t_end_date;
     bool t_success = true;
@@ -1727,6 +2673,40 @@ Exec_stat MCHandleFindEvent(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCreateLocalNotification */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    bool t_success = true;
+    char *t_notification_body = nil;
+    char *t_notification_action = nil;
+    char *t_notification_user_info = nil;
+    MCDateTime t_date;
+    bool t_play_sound_vibrate = true;
+    int32_t t_badge_value = 0;
+    
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "sss", &t_notification_body, &t_notification_action, &t_notification_user_info);
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_play_sound_vibrate);
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "u", &t_badge_value);
+    
+	MCLocalNotificationExec (t_ctxt, t_notification_body, t_notification_action, t_notification_user_info, t_date, t_play_sound_vibrate, t_badge_value);
+    
+    return ES_NORMAL;
+#endif /* MCHandleCreateLocalNotification */
     MCExecPoint ep(nil, nil, nil);
     
     bool t_success = true;
@@ -1766,6 +2746,14 @@ Exec_stat MCHandleCreateLocalNotification (void *context, MCParameter *p_paramet
 
 Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetRegisteredNotifications */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    MCGetRegisteredNotificationsExec (t_ctxt);
+    
+    return ES_NORMAL;
+#endif /* MCHandleGetRegisteredNotifications */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
@@ -1780,6 +2768,31 @@ Exec_stat MCHandleGetRegisteredNotifications(void *context, MCParameter *p_param
 
 Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetNotificationDetails */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success = true;
+    
+    int32_t t_id = -1;
+    MCVariableValue *t_details = nil;
+    
+    if (t_success)
+        t_success = MCParseParameters(p_parameters, "i", &t_id);
+    
+    ctxt.SetTheResultToEmpty();
+    if (t_success)
+    {
+        MCNotificationGetDetails(ctxt, t_id, t_details);
+        if (t_details != nil)
+        {
+            ep.setarray(t_details, True);
+            MCresult->store(ep, False);
+        }
+    }
+    
+    return ES_NORMAL;
+#endif /* MCHandleGetNotificationDetails */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -1807,6 +2820,18 @@ Exec_stat MCHandleGetNotificationDetails(void *context, MCParameter *p_parameter
 
 Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCancelLocalNotification */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    int32_t t_cancel_this;
+    bool t_success;
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    if (p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "i", &t_cancel_this);
+    MCCancelLocalNotificationExec (t_ctxt, t_cancel_this);
+    
+    return ES_NORMAL;
+#endif /* MCHandleCancelLocalNotification */
     MCExecPoint ep(nil, nil, nil);
     int32_t t_cancel_this;
     bool t_success;
@@ -1828,6 +2853,14 @@ Exec_stat MCHandleCancelLocalNotification(void *context, MCParameter *p_paramete
 
 Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleCancelAllLocalNotifications */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    MCCancelAllLocalNotificationsExec (t_ctxt);
+    
+    return ES_NORMAL;
+#endif /* MCHandleCancelAllLocalNotifications */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
@@ -1842,6 +2875,14 @@ Exec_stat MCHandleCancelAllLocalNotifications (void *context, MCParameter *p_par
 
 Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetNotificationBadgeValue */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    MCGetNotificationBadgeValueExec (t_ctxt);
+    
+    return ES_NORMAL;
+#endif /* MCHandleGetNotificationBadgeValue */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     ctxt.SetTheResultToEmpty();
@@ -1855,6 +2896,19 @@ Exec_stat MCHandleGetNotificationBadgeValue (void *context, MCParameter *p_param
 
 Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetNotificationBadgeValue */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    uint32_t t_badge_value;
+    bool t_success = true;
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    if (t_success && p_parameters != nil)
+		t_success = MCParseParameters (p_parameters, "i", &t_badge_value);
+    if (t_success)
+        MCSetNotificationBadgeValueExec (t_ctxt, t_badge_value);
+    
+    return ES_NORMAL;
+#endif /* MCHandleSetNotificationBadgeValue */
     MCExecPoint ep(nil, nil, nil);
     uint32_t t_badge_value;
     bool t_success = true;
@@ -1876,8 +2930,18 @@ Exec_stat MCHandleSetNotificationBadgeValue (void *context, MCParameter *p_param
 
 ////////////////
 
-static MCBusyIndicatorType MCBusyIndicatorTypeFromCString(MCStringRef p_string)
+static MCBusyIndicatorType MCBusyIndicatorTypeFromString(MCStringRef p_string)
 {
+#ifdef /* MCBusyIndicatorTypeFromCString */ LEGACY_EXEC
+    if (MCCStringEqualCaseless(p_string, "in line"))
+        return kMCBusyIndicatorInLine;
+    else if (MCCStringEqualCaseless(p_string, "square"))
+        return kMCBusyIndicatorSquare;
+    else if (MCCStringEqualCaseless(p_string, "keyboard"))
+        return kMCBusyIndicatorKeyboard;
+    
+    return kMCBusyIndicatorSquare;
+#endif /* MCBusyIndicatorTypeFromCString */
     if (MCStringIsEqualToCString(p_string, "in line", kMCCompareCaseless))
         return kMCBusyIndicatorInLine;
     else if (MCStringIsEqualToCString(p_string, "square", kMCCompareCaseless))
@@ -1888,8 +2952,22 @@ static MCBusyIndicatorType MCBusyIndicatorTypeFromCString(MCStringRef p_string)
     return kMCBusyIndicatorSquare;
 }
 
-static bool MCBusyIndicatorTypeToCString(MCSensorType p_indicator, MCStringRef& r_string)
+static bool MCBusyIndicatorTypeToString(MCSensorType p_indicator, MCStringRef& r_string)
 {
+#ifdef /* MCBusyIndicatorTypeToCString */ LEGACY_EXEC
+    switch (p_indicator)
+    {
+        case kMCBusyIndicatorInLine:
+            return MCCStringClone("in line", r_string);
+        case kMCBusyIndicatorSquare:
+            return MCCStringClone("square", r_string);
+        case kMCBusyIndicatorKeyboard:
+            return MCCStringClone("keyboard", r_string);
+        default:
+            return MCCStringClone("unknown", r_string);
+    }
+    return false;
+#endif /* MCBusyIndicatorTypeToCString */
     switch (p_indicator)
     {
         case kMCBusyIndicatorInLine:
@@ -1908,6 +2986,41 @@ static bool MCBusyIndicatorTypeToCString(MCSensorType p_indicator, MCStringRef& 
 // MM-2013-02-04: [[ Bug 10642 ]] Added new optional opacity parameter to busy indicator.
 Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStartBusyIndicator */ LEGACY_EXEC
+    MCBusyIndicatorType t_indicator_type;
+    MCExecPoint ep(nil, nil, nil);
+    
+    if (p_parameters)
+    {
+        p_parameters -> eval(ep);
+        t_indicator_type = MCBusyIndicatorTypeFromCString(ep . getcstring());
+        p_parameters = p_parameters -> getnext();
+    }
+    
+    const char *t_label;
+    t_label = nil;
+    if (p_parameters)
+    {
+        p_parameters -> eval(ep);
+        t_label = ep . getcstring();
+        p_parameters = p_parameters -> getnext();
+    }
+    
+    int32_t t_opacity;
+    t_opacity = -1;
+    if (p_parameters)
+    {
+        p_parameters -> eval(ep);
+        t_opacity = ep . getint4();
+        if (t_opacity < 0 || t_opacity > 100)
+            t_opacity = -1;
+    }
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    MCBusyIndicatorExecStart(t_ctxt, kMCBusyIndicatorSquare, t_label, t_opacity);
+    return t_ctxt.GetStat();
+#endif /* MCHandleStartBusyIndicator */
     bool t_success = true;
     MCAutoStringRef t_indicator_string;
     MCAutoStringRef t_label;    
@@ -1916,7 +3029,7 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
     
     intenum_t t_indicator;
     if(t_success)
-        t_success = MCBusyIndicatorTypeFromCString(*t_indicator_string);        
+        t_success = MCBusyIndicatorTypeFromString(*t_indicator_string);
     
     int32_t t_opacity = -1;
     if(t_success)
@@ -1939,6 +3052,16 @@ Exec_stat MCHandleStartBusyIndicator(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopBusyIndicator */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCBusyIndicatorExecStop(t_ctxt);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleStopBusyIndicator */
     MCExecPoint ep(nil, nil, nil);
     
     MCExecContext ctxt(ep);
@@ -1956,6 +3079,16 @@ Exec_stat MCHandleStopBusyIndicator(void *p_context, MCParameter *p_parameters)
 
 static MCActivityIndicatorType MCActivityIndicatorTypeFromString(MCStringRef p_string)
 {
+#ifdef /* MCActivityIndicatorTypeFromCString */ LEGACY_EXEC
+    if (MCCStringEqualCaseless(p_string, "white"))
+        return kMCActivityIndicatorWhite;
+    else if (MCCStringEqualCaseless(p_string, "large white"))
+        return kMCActivityIndicatorWhiteLarge;
+    else if (MCCStringEqualCaseless(p_string, "gray"))
+        return kMCActivityIndicatorGray;
+    
+    return kMCActivityIndicatorWhite;
+#endif /* MCActivityIndicatorTypeFromCString */
     if (MCStringIsEqualToCString(p_string, "white", kMCCompareCaseless))
         return kMCActivityIndicatorWhite;
     else if (MCStringIsEqualToCString(p_string, "large white", kMCCompareCaseless))
@@ -1968,6 +3101,20 @@ static MCActivityIndicatorType MCActivityIndicatorTypeFromString(MCStringRef p_s
 
 static bool MCActivityIndicatorTypeToString(MCSensorType p_indicator, MCStringRef& r_string)
 {
+#ifdef /* MCActivityIndicatorTypeToCString */ LEGACY_EXEC
+    switch (p_indicator)
+    {
+        case kMCActivityIndicatorWhite:
+            return MCCStringClone("white", r_string);
+        case kMCActivityIndicatorWhiteLarge:
+            return MCCStringClone("large white", r_string);
+        case kMCActivityIndicatorGray:
+            return MCCStringClone("gray", r_string);
+        default:
+            return MCCStringClone("unknown", r_string);
+    }
+    return false;
+#endif /* MCActivityIndicatorTypeToCString */
     switch (p_indicator)
     {
         case kMCActivityIndicatorWhite:
@@ -1984,7 +3131,60 @@ static bool MCActivityIndicatorTypeToString(MCSensorType p_indicator, MCStringRe
 
 Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
-    MCAutoStringRef t_style_string;    
+#ifdef /* MCHandleStartActivityIndicator */ LEGACY_EXEC
+    MCActivityIndicatorType t_indicator_type;
+    t_indicator_type = kMCActivityIndicatorWhite;
+    
+    char *t_style;
+    t_style = nil;
+    
+    MCLocation t_location;
+    t_location.x = -1;
+    t_location.y = -1;
+    
+    MCExecPoint ep(nil, nil, nil);
+    if (p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        // Provide backwards compatibility here for "whiteLarge" rather than "large white".
+        if (MCCStringEqualCaseless (ep.getsvalue().getstring(), "whiteLarge"))
+            MCCStringClone("large white", t_style);
+        else
+            t_style = ep.getsvalue().clone();
+        if (t_style != nil)
+            p_parameters = p_parameters->getnext();
+    }
+    
+    if (p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (ep.getformat() != VF_STRING || ep.ston() == ES_NORMAL)
+        {
+            t_location.x = ep.getint4();
+            p_parameters = p_parameters->getnext();
+            if (p_parameters != nil)
+            {
+                p_parameters->eval(ep);
+                if (ep.getformat() != VF_STRING || ep.ston() == ES_NORMAL)
+                {
+                    t_location.y = ep.getint4();
+                    p_parameters = p_parameters->getnext();
+                }
+            }
+        }
+        if (t_location.y == -1)
+            t_location.x = -1;
+    }
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	if (t_style != nil)
+		t_indicator_type = MCActivityIndicatorTypeFromCString(t_style);
+    MCActivityIndicatorExecStart(t_ctxt, t_indicator_type, t_location);
+    return t_ctxt.GetStat();
+#endif /* MCHandleStartActivityIndicator */
+    MCAutoStringRef t_style_string;
     MCActivityIndicatorType t_style;
     t_style = kMCActivityIndicatorWhite;
     
@@ -2035,6 +3235,17 @@ Exec_stat MCHandleStartActivityIndicator(void *p_context, MCParameter *p_paramet
 
 Exec_stat MCHandleStopActivityIndicator(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopActivityIndicator */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    MCActivityIndicatorExecStop(t_ctxt);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleStopActivityIndicator */
+
     MCExecPoint ep(nil, nil, nil);
     
     MCExecContext ctxt(ep);
@@ -2141,6 +3352,39 @@ static bool MCSoundChannelPlayTypeToString(MCSoundChannelPlayType p_type, MCStri
 
 Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePlaySoundOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_sound, *t_channel, *t_type;
+	t_sound = nil;
+	t_channel = nil;
+	t_type = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "sss", &t_sound, &t_channel, &t_type);
+	
+	if (t_success)
+	{
+		MCSoundChannelPlayType t_play_type;
+		t_play_type = kMCSoundChannelPlayNow;
+		if (MCCStringEqualCaseless(t_type, "next"))
+			t_play_type = kMCSoundChannelPlayNext;
+		else if (MCCStringEqualCaseless(t_type, "looping"))
+			t_play_type = kMCSoundChannelPlayLooping;
+		
+		MCSoundExecPlaySoundOnChannel(t_ctxt, t_channel, t_sound, t_play_type);
+	}
+    
+	delete t_sound;
+	delete t_channel;
+	delete t_type;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandlePlaySoundOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2170,6 +3414,26 @@ Exec_stat MCHandlePlaySoundOnChannel(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePausePlayingOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	if (t_success)
+		MCSoundExecPauseSoundOnChannel(t_ctxt, t_channel);
+	
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandlePausePlayingOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2193,6 +3457,26 @@ Exec_stat MCHandlePausePlayingOnChannel(void *context, MCParameter *p_parameters
 
 Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleResumePlayingOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+    
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	if (t_success)
+		MCSoundExecResumeSoundOnChannel(t_ctxt, t_channel);
+	
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleResumePlayingOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2215,6 +3499,26 @@ Exec_stat MCHandleResumePlayingOnChannel(void *context, MCParameter *p_parameter
 
 Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleStopPlayingOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	if (t_success)
+		MCSoundExecStopSoundOnChannel(t_ctxt, t_channel);
+    
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleStopPlayingOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2237,6 +3541,26 @@ Exec_stat MCHandleStopPlayingOnChannel(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleDeleteSoundChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	if (t_success)
+		MCSoundExecDeleteChannel(t_ctxt, t_channel);
+    
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleDeleteSoundChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2259,6 +3583,27 @@ Exec_stat MCHandleDeleteSoundChannel(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetSoundChannelVolume */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	int32_t t_volume;
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "su", &t_channel, &t_volume);
+	
+	if (t_success)
+		MCSoundSetVolumeOfChannel(t_ctxt, t_channel, t_volume);
+	
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleSetSoundChannelVolume */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2283,6 +3628,30 @@ Exec_stat MCHandleSetSoundChannelVolume(void *context, MCParameter *p_parameters
 
 Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSoundChannelVolume */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	int32_t t_volume;
+	if (t_success)
+		t_success = MCSoundGetVolumeOfChannel(t_ctxt, t_channel, t_volume);
+	
+	if (t_success)
+		MCresult -> setnvalue(t_volume);
+	
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleSoundChannelVolume */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2311,6 +3680,38 @@ Exec_stat MCHandleSoundChannelVolume(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSoundChannelStatus */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+	MCSoundChannelStatus t_status;
+	if (t_success)
+		t_success = MCSoundGetStatusOfChannel(t_ctxt, t_channel, t_status);
+	
+	if (t_success && t_status >= 0)
+	{
+		static const char *s_status_strings[] =
+		{
+			"stopped",
+			"paused",
+			"playing"
+		};
+		MCresult -> sets(s_status_strings[t_status]);
+	}
+	
+	delete t_channel;
+	
+    return t_ctxt.GetStat();
+#endif /* MCHandleSoundChannelStatus */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2343,6 +3744,32 @@ Exec_stat MCHandleSoundChannelStatus(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSoundOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+    MCAutoRawCString t_sound;
+	if (t_success)
+		t_success = MCSoundGetSoundOfChannel(t_ctxt, t_channel, t_sound);
+	
+    if (t_success)
+        if (t_sound.Borrow() != nil)
+            ep.copysvalue(t_sound.Borrow());
+    
+    if (t_success)
+        MCresult->store(ep, False);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleSoundOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2375,6 +3802,32 @@ Exec_stat MCHandleSoundOnChannel(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleNextSoundOnChannel */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_channel;
+	t_channel = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_channel);
+	
+    MCAutoRawCString t_sound;
+	if (t_success)
+		t_success = MCSoundGetNextSoundOfChannel(t_ctxt, t_channel, t_sound);
+	
+    if (t_success)
+        if (t_sound.Borrow() != nil)
+            ep.copysvalue(t_sound.Borrow());
+    
+    if (t_success)
+        MCresult->store(ep, False);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleNextSoundOnChannel */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2407,6 +3860,27 @@ Exec_stat MCHandleNextSoundOnChannel(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSoundChannels */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+    bool t_success;
+	t_success = true;
+    
+    MCAutoRawCString t_channels;
+	if (t_success)
+		t_success = MCSoundGetSoundChannels(t_ctxt, t_channels);
+	
+    if (t_success)
+        if (t_channels.Borrow() != nil)
+            ep.copysvalue(t_channels.Borrow());
+    
+    if (t_success)
+        MCresult->store(ep, False);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleSoundChannels */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2431,6 +3905,47 @@ Exec_stat MCHandleSoundChannels(void *context, MCParameter *p_parameters)
 // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
 Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetAudioCategory */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+	t_ctxt . SetTheResultToEmpty();
+    
+	bool t_success;
+	t_success = true;
+	
+	char *t_category_string;
+	t_category_string = nil;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_category_string);
+    
+    MCSoundAudioCategory t_category;
+    t_category = kMCMCSoundAudioCategoryUnknown;
+    if (t_success)
+    {
+        if (MCCStringEqualCaseless(t_category_string, "ambient"))
+            t_category = kMCMCSoundAudioCategoryAmbient;
+        else if (MCCStringEqualCaseless(t_category_string, "solo ambient"))
+            t_category = kMCMCSoundAudioCategorySoloAmbient;
+        else if (MCCStringEqualCaseless(t_category_string, "playback"))
+            t_category = kMCMCSoundAudioCategoryPlayback;
+        else if (MCCStringEqualCaseless(t_category_string, "record"))
+            t_category = kMCMCSoundAudioCategoryRecord;
+        else if (MCCStringEqualCaseless(t_category_string, "play and record"))
+            t_category = kMCMCSoundAudioCategoryPlayAndRecord;
+        else if (MCCStringEqualCaseless(t_category_string, "audio processing"))
+            t_category = kMCMCSoundAudioCategoryAudioProcessing;
+    }
+    
+    if (t_success)
+        t_success = MCSoundSetAudioCategory(t_ctxt, t_category);
+    
+    if (t_success)
+        MCresult->store(ep, False);
+    
+    MCCStringFree(t_category_string);
+    
+    return t_ctxt.GetStat();
+#endif /* MCHandleSetAudioCategory */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	ctxt . SetTheResultToEmpty();
@@ -2471,6 +3986,14 @@ Exec_stat MCHandleSetAudioCategory(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetDeviceToken */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    MCGetDeviceTokenExec (t_ctxt);
+    
+    return ES_NORMAL;
+#endif /* MCHandleGetDeviceToken */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2490,6 +4013,14 @@ Exec_stat MCHandleGetDeviceToken (void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleGetLaunchUrl */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    MCGetLaunchUrlExec (t_ctxt);
+    
+    return ES_NORMAL;
+#endif /* MCHandleGetLaunchUrl */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2509,6 +4040,18 @@ Exec_stat MCHandleGetLaunchUrl (void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleBeep */ LEGACY_EXEC
+    int32_t t_number_of_times = 1;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_number_of_times = ep . getint4();
+    }
+    MCSystemBeep(t_number_of_times);
+  	return ES_NORMAL;
+#endif /* MCHandleBeep */
     int32_t t_number_of_times;
     int32_t* t_number_of_times_ptr = nil;
     
@@ -2528,6 +4071,18 @@ Exec_stat MCHandleBeep(void *p_context, MCParameter *p_parameters)
 
 Exec_stat MCHandleVibrate(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleVibrate */ LEGACY_EXEC
+    int32_t t_number_of_times = 1;
+    MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+    if (p_parameters)
+    {
+        p_parameters->eval(ep);
+        t_number_of_times = ep . getint4();
+    }
+    MCSystemVibrate(t_number_of_times);
+	return ES_NORMAL;
+#endif /* MCHandleVibrate */
     int32_t t_number_of_times;
     int32_t* t_number_of_times_ptr = nil;
     
@@ -2565,6 +4120,32 @@ Exec_stat MCHandleDeviceResolution(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleUseDeviceResolution(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleUseDeviceResolution */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+	
+	bool t_use_device_res;
+	t_use_device_res = false;
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_use_device_res = (ep . getsvalue() == MCtruemcstring);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	bool t_use_control_device_res;
+	t_use_control_device_res = false;
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_use_control_device_res = (ep . getsvalue() == MCtruemcstring);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+	
+	MCIPhoneUseDeviceResolution(t_use_device_res, t_use_control_device_res);
+	
+	return ES_NORMAL;
+#endif /* MCHandleUseDeviceResolution */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2604,6 +4185,12 @@ Exec_stat MCHandleDeviceScale(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePixelDensity(void* context, MCParameter* p_parameters)
 {
+#ifdef /* MCHandlePixelDensity */ LEGACY_EXEC
+	float t_density;
+	MCAndroidEngineRemoteCall("getPixelDensity", "f", &t_density);
+	MCresult -> setnvalue(t_density);
+	return ES_NORMAL;
+#endif /* MCHandlePixelDensity */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2633,6 +4220,26 @@ static MCMiscStatusBarStyle MCMiscStatusBarStyleFromString(MCStringRef p_string)
 
 Exec_stat MCHandleSetStatusBarStyle(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetStatusBarStyle */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+	
+	UIStatusBarStyle t_style;
+	t_style = UIStatusBarStyleDefault;
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		if (ep . getsvalue() == "default")
+			t_style = UIStatusBarStyleDefault;
+		else if (ep . getsvalue() == "translucent")
+			t_style = UIStatusBarStyleBlackTranslucent;
+		else if (ep . getsvalue() == "opaque")
+			t_style = UIStatusBarStyleBlackOpaque;
+	}
+	
+	[MCIPhoneGetApplication() switchToStatusBarStyle: t_style];
+	
+	return ES_NORMAL;
+#endif /* MCHandleSetStatusBarStyle */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	
@@ -2755,6 +4362,40 @@ static MCMiscKeyboardReturnKey MCMiscKeyboardReturnKeyTypeFromString(MCStringRef
 
 Exec_stat MCHandleSetKeyboardReturnKey (void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetKeyboardReturnKey */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+    
+	if (p_parameters != nil)
+	{
+		UIReturnKeyType t_type;
+		p_parameters -> eval_argument(ep);
+		if (ep . getsvalue() == "default")
+			t_type = UIReturnKeyDefault;
+		else if (ep . getsvalue() == "go")
+			t_type = UIReturnKeyGo;
+		else if (ep . getsvalue() == "google")
+			t_type = UIReturnKeyGoogle;
+		else if (ep . getsvalue() == "join")
+			t_type = UIReturnKeyJoin;
+		else if (ep . getsvalue() == "next")
+			t_type = UIReturnKeyNext;
+		else if (ep . getsvalue() == "route")
+			t_type = UIReturnKeyRoute;
+		else if (ep . getsvalue() == "search")
+			t_type = UIReturnKeySearch;
+		else if (ep . getsvalue() == "send")
+			t_type = UIReturnKeySend;
+		else if (ep . getsvalue() == "yahoo")
+			t_type = UIReturnKeyYahoo;
+		else if (ep . getsvalue() == "done")
+			t_type = UIReturnKeyDone;
+		else if (ep . getsvalue() == "emergency call")
+			t_type = UIReturnKeyEmergencyCall;
+        
+		MCIPhoneSetReturnKeyType(t_type);
+	}
+	return ES_NORMAL;
+#endif /* MCHandleSetKeyboardReturnKey */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2862,6 +4503,21 @@ Exec_stat MCHandleApplicationIdentifier(void *context, MCParameter *p_parameters
 
 Exec_stat MCHandleSetReachabilityTarget(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetReachabilityTarget */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+	
+	char *t_hostname = nil;
+	
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "s", &t_hostname);
+	
+	if (t_success)
+		t_success = MCReachabilitySetTarget(t_hostname);
+	
+	MCCStringFree(t_hostname);
+	return t_success ? ES_NORMAL : ES_ERROR;
+#endif /* MCHandleSetReachabilityTarget */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2930,6 +4586,26 @@ Exec_stat MCHandleExportImageToAlbum(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetRedrawInterval */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+	
+	int32_t t_interval;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "i", &t_interval);
+	
+	if (t_success)
+	{
+		if (t_interval <= 0)
+			MCRedrawEnableScreenUpdates();
+		else
+			MCRedrawDisableScreenUpdates();
+        
+		[MCIPhoneGetApplication() setRedrawInterval: t_interval];
+	}
+	
+	return ES_NORMAL;
+#endif /* MCHandleSetRedrawInterval */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2951,6 +4627,19 @@ Exec_stat MCHandleSetRedrawInterval(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSetAnimateAutorotation */ LEGACY_EXEC
+	bool t_success;
+	t_success = true;
+	
+	bool t_enabled;
+	if (t_success)
+		t_success = MCParseParameters(p_parameters, "b", &t_enabled);
+	
+	if (t_success)
+		[MCIPhoneGetApplication() setAnimateAutorotation: t_enabled];
+	
+	return ES_NORMAL;
+#endif /* MCHandleSetAnimateAutorotation */
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -2972,7 +4661,33 @@ Exec_stat MCHandleSetAnimateAutorotation(void *context, MCParameter *p_parameter
 
 
 Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
-{    
+{
+#ifdef /* MCHandleFileSetDoNotBackup */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+	
+    const char *t_path = nil;
+    
+	bool t_no_backup;
+	t_no_backup = true;
+    
+    if (p_parameters != nil)
+    {
+        p_parameters->eval_argument(ep);
+        t_path = ep.getsvalue().clone();
+        p_parameters = p_parameters->getnext();
+    }
+	if (p_parameters != nil)
+	{
+		p_parameters -> eval_argument(ep);
+		t_no_backup = (ep . getsvalue() == MCtruemcstring);
+		p_parameters = p_parameters -> getnext();
+	}
+	
+    if (t_path != nil)
+        MCiOSFileSetDoNotBackup(t_path, t_no_backup);
+	
+	return ES_NORMAL;
+#endif /* MCHandleFileSetDoNotBackup */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
 	
@@ -2996,6 +4711,19 @@ Exec_stat MCHandleFileSetDoNotBackup(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleFileGetDoNotBackup */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    const char *t_path = nil;
+    if (p_parameters != nil)
+    {
+        p_parameters->eval_argument(ep);
+        t_path = ep.getcstring();
+    }
+    MCresult->sets(MCU_btos(MCiOSFileGetDoNotBackup(t_path)));
+    
+    return ES_NORMAL;
+#endif /* MCHandleFileGetDoNotBackup */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -3024,7 +4752,40 @@ Exec_stat MCHandleFileGetDoNotBackup(void *context, MCParameter *p_parameters)
 }
 
 Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters)
-{    
+{
+#ifdef /* MCHandleFileSetDataProtection */ LEGACY_EXEC
+    bool t_success = true;
+    
+    char *t_filename = nil;
+    char *t_protection_string = nil;
+    
+    NSString *t_protection = nil;
+    
+    t_success = MCParseParameters(p_parameters, "ss", &t_filename, &t_protection_string);
+    
+    if (t_success)
+    {
+        if (!MCDataProtectionFromString(t_protection_string, t_protection))
+        {
+            MCresult->sets("unknown protection type");
+            t_success = false;
+        }
+    }
+    
+    if (t_success)
+    {
+        if (!MCFileSetDataProtection(t_filename, t_protection))
+        {
+            MCresult->sets("cannot set file protection");
+            t_success = false;
+        }
+    }
+    
+    if (t_success)
+        MCresult->clear();
+    
+    return ES_NORMAL;
+#endif /* MCHandleFileSetDataProtection */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -3043,7 +4804,37 @@ Exec_stat MCHandleFileSetDataProtection(void *context, MCParameter *p_parameters
 }
 
 Exec_stat MCHandleFileGetDataProtection(void *context, MCParameter *p_parameters)
-{    
+{
+#ifdef /* MCHandleFileGetDataProtection */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    bool t_success = true;
+    
+    const char *t_filename = nil;
+    const char *t_protection_string = nil;
+    NSString *t_protection = nil;
+    
+    if (p_parameters != nil)
+    {
+        p_parameters->eval_argument(ep);
+        t_filename = ep.getcstring();
+    }
+    else
+        t_success = false;
+    
+    if (t_success)
+        t_success = MCFileGetDataProtection(t_filename, t_protection);
+    
+    if (t_success)
+        t_success = MCDataProtectionToString(t_protection, t_protection_string);
+    
+    if (t_success)
+        MCresult->sets(t_protection_string);
+    else
+        MCresult->clear();
+    
+    return ES_NORMAL;
+#endif /* MCHandleFileGetDataProtection */
 	MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
     
@@ -3083,10 +4874,89 @@ Exec_stat MCHandleLibUrlDownloadToFile(void *context, MCParameter *p_parameters)
     return ES_ERROR;
 }
 
+Exec_stat MCHandleBuildInfo(void *context, MCParameter *p_parameters)
+{
+#ifdef /* MCHandleBuildInfo */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+    
+	if (p_parameters != nil)
+	{
+		char *t_value;
+		t_value = NULL;
+        
+		char *t_key;
+		t_key = NULL;
+        
+		p_parameters -> eval_argument(ep);
+		t_key = ep . getsvalue() . clone();
+        
+		if (!MCAndroidGetBuildInfo(t_key, t_value))
+			return ES_ERROR;
+        
+		MCresult->grab(t_value, MCCStringLength(t_value));
+        
+		MCCStringFree(t_key);
+	}
+    
+	return ES_NORMAL;
+#endif /* MCHandleBuildInfo */
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCAutoStringRef t_value, t_key;
+    bool t_success;
+    
+    t_success = MCParseParameters(p_parameters, "x", &(&t_key));
+    
+    if(t_success)
+        MCMiscGetBuildInfo(ctxt, *t_key, &t_value);
+    
+    if (!ctxt.HasError())
+    {
+        ctxt.SetTheResultToValue(*t_value);
+        return ES_NORMAL;
+    }
+    
+    ctxt.SetTheResultToEmpty();
+    return ES_ERROR;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////
 
 static MCMediaType MCMediaTypeFromCString(const char *p_string)
 {
+#ifdef /* MCMediaTypeFromCString */ LEGACY_EXEC
+    const char *t_ptr = p_string;
+    MCMediaType t_media_type = kMCunknownMediaType;
+    
+    while (true)
+    {
+        while(*t_ptr == ' ' || *t_ptr == ',')
+            t_ptr += 1;
+        if (*t_ptr == '\0')
+            break;
+    	// HC-2012-02-01: [[ Bug 9983 ]] - This fix is related as the implementation in the new syntax does not produce a result
+        if (MCCStringEqualSubstringCaseless(t_ptr, "podcasts", 7))
+            t_media_type = t_media_type | kMCpodcasts;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "songs", 4))
+            t_media_type = t_media_type | kMCsongs;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "audiobooks", 9))
+            t_media_type = t_media_type | kMCaudiobooks;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "movies", 5))
+            t_media_type = t_media_type | kMCmovies;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "musicvideos", 10))
+            t_media_type = t_media_type | kMCmusicvideos;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "tv", 2))
+            t_media_type = t_media_type | kMCtv;
+        else if (MCCStringEqualSubstringCaseless(t_ptr, "videopodcasts", 12))
+            t_media_type = t_media_type | kMCvideopodcasts;
+		
+        while(*t_ptr != ' ' && *t_ptr != ',' && *t_ptr != '\0')
+            t_ptr += 1;
+		
+    }
+    return t_media_type;
+#endif /* MCMediaTypeFromCString */
     const char *t_ptr = p_string;
     MCMediaType t_media_type = kMCUnknownMediaType;
     
@@ -3125,6 +4995,64 @@ static MCMediaType MCMediaTypeFromCString(const char *p_string)
 //iphonePickMedia [multiple] [, music, podCast, audioBook, anyAudio, movie, tv, videoPodcast, musicVideo, videoITunesU, anyVideo]
 Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleIPhonePickMedia */ LEGACY_EXEC
+	bool t_success, t_allow_multipe_items;
+	char *t_option_list;
+    const char *r_return_media_types;
+	MCMediaType t_media_types;
+	
+	t_success = true;
+	t_allow_multipe_items = false;
+	t_media_types = 0;
+	
+	t_option_list = nil;
+	
+    MCExecPoint ep(nil, nil, nil);
+    
+	// Get the options list.
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	while (t_success)
+	{
+		if (MCCStringEqualCaseless(t_option_list, "true"))
+			t_allow_multipe_items = true;
+		else if (MCCStringEqualCaseless(t_option_list, "music"))
+			t_media_types += kMCsongs;
+		else if (MCCStringEqualCaseless(t_option_list, "podCast"))
+			t_media_types += kMCpodcasts;
+		else if (MCCStringEqualCaseless(t_option_list, "audioBook"))
+			t_media_types += kMCaudiobooks;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+		{
+			if (MCCStringEqualCaseless(t_option_list, "movie"))
+				t_media_types += kMCmovies;
+			else if (MCCStringEqualCaseless(t_option_list, "tv"))
+				t_media_types += kMCtv;
+			else if (MCCStringEqualCaseless(t_option_list, "videoPodcast"))
+				t_media_types += kMCvideopodcasts;
+			else if (MCCStringEqualCaseless(t_option_list, "musicVideo"))
+				t_media_types += kMCmusicvideos;
+			else if (MCCStringEqualCaseless(t_option_list, "videoITunesU"))
+				t_media_types += kMCmovies;
+		}
+#endif
+        t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	}
+	if (t_media_types == 0)
+	{
+		t_media_types = MCMediaTypeFromCString("podcast, songs, audiobook");;
+#ifdef __IPHONE_5_0
+		if (MCmajorosversion >= 500)
+			t_media_types += MCMediaTypeFromCString("movies, tv, videoPodcasts, musicVideos, videoITunesU");;
+#endif
+	}
+    MCExecContext t_ctxt(ep);
+    
+	// Call MCIPhonePickMedia to process the media pick selection.
+    MCDialogExecPickMedia(t_ctxt, &t_media_types, t_allow_multipe_items, r_return_media_types);
+	
+	return ES_NORMAL;
+#endif /* MCHandleIPhonePickMedia */
 	bool t_success, t_allow_multipe_items;
 	char *t_option_list;
     const char *r_return_media_types;
@@ -3185,6 +5113,55 @@ Exec_stat MCHandleIPhonePickMedia(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickMedia */ LEGACY_EXEC
+	bool t_success;
+    bool t_audio = false;
+    bool t_video = false;
+    char *t_option_list;
+    
+    s_media_status = kMCAndroidMediaWaiting;
+    
+	t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	while (t_success)
+	{
+		if ((MCCStringEqualCaseless(t_option_list, "music")) ||
+		    (MCCStringEqualCaseless(t_option_list, "podCast")) ||
+		    (MCCStringEqualCaseless(t_option_list, "audioBook")) ||
+            (MCCStringEqualCaseless(t_option_list, "anyAudio")))
+        {
+            t_audio = true;
+        }
+		if ((MCCStringEqualCaseless(t_option_list, "movie")) ||
+			(MCCStringEqualCaseless(t_option_list, "tv")) ||
+            (MCCStringEqualCaseless(t_option_list, "videoPodcast")) ||
+            (MCCStringEqualCaseless(t_option_list, "musicVideo")) ||
+            (MCCStringEqualCaseless(t_option_list, "videoITunesU")) ||
+            (MCCStringEqualCaseless(t_option_list, "anyVideo")))
+        {
+            t_video = true;
+		}
+		t_success = MCParseParameters(p_parameters, "s", &t_option_list);
+	}
+	if (t_audio && !t_video)
+	{
+        MCAndroidEngineCall("pickMedia", "vs", nil, "audio/*");
+	}
+	else if (!t_audio && t_video)
+	{
+        MCAndroidEngineCall("pickMedia", "vs", nil, "video/*");
+	}
+    else
+	{
+        MCAndroidEngineCall("pickMedia", "vs", nil, "audio/* video/*");
+	}
+    
+    while (s_media_status == kMCAndroidMediaWaiting)
+        MCscreen->wait(60.0, False, True);
+    MCresult -> sets (s_media_content);
+    //    MCLog("Media Types Returned: %s", s_media_content);
+    
+	return ES_NORMAL;
+#endif /* MCHandlePickMedia */
 	bool t_success;
     t_success = true;
     char *t_option_list;
@@ -3222,6 +5199,131 @@ Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePick */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
+	t_success = true;
+	t_more_optional = true;
+	t_use_checkmark = false;
+	t_use_done = false;
+	t_use_cancel = false;
+	t_use_picker = false;
+	
+    char *t_options_list = nil;
+    const_cstring_array_t *t_option_list_array = nil;
+    const_int32_array_t r_picked_options = {nil, 0};
+    
+	uint32_t t_initial_index;
+    const_int32_array_t *t_initial_index_array = nil;
+	
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    
+	t_options_list = nil;
+	// get the mandatory options list and the initial index
+    // HC-30-2011-30 [[ Bug 10036 ]] iPad pick list only returns 0.
+	t_success = MCParseParameters(p_parameters, "s", &t_options_list);
+    if (t_success)
+    {
+        t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
+        if (!t_success)
+        {
+            // Degrade gracefully, even if the second mandatory parameter is not supplied.
+            t_initial_index = 0;
+            t_success = true;
+        }
+    }
+    if (t_success)
+        
+        if (t_success)
+            t_success = MCMemoryNew(t_option_list_array);
+    if (t_success)
+    {
+        t_option_list_array->length = 0;
+        t_option_list_array->elements = nil;
+    }
+    if (t_success)
+        t_success = MCMemoryNew(t_initial_index_array);
+    if (t_success)
+    {
+        t_initial_index_array->length = 0;
+        t_initial_index_array->elements = nil;
+    }
+    
+	// get the optional option lists, initial indexes and the style
+	while (t_more_optional && t_success)
+	{
+        if (t_success)
+            t_success = MCMemoryResizeArray(t_option_list_array->length + 1, t_option_list_array->elements, t_option_list_array->length);
+        if (t_success)
+            t_option_list_array->elements[t_option_list_array->length - 1] = t_options_list;
+        
+		// convert the initial index for each component into an array entry
+        if (t_success)
+            t_success = MCMemoryResizeArray(t_initial_index_array->length + 1, t_initial_index_array->elements, t_initial_index_array->length);
+        
+        if (t_success)
+            t_initial_index_array->elements[t_initial_index_array->length - 1] = t_initial_index;
+        
+		t_success = MCParseParameters(p_parameters, "s", &t_options_list);
+        // HC-2011-09-28 [[ Picker Buttons ]] Updated parameter parsing so we do not skip more than one paramter
+		if (t_success)
+		{
+			if (t_options_list != nil && (MCCStringEqualCaseless(t_options_list, "checkmark")) ||
+				(MCCStringEqualCaseless(t_options_list, "cancel")) ||
+				(MCCStringEqualCaseless(t_options_list, "done")) ||
+				(MCCStringEqualCaseless(t_options_list, "cancelDone")) ||
+				(MCCStringEqualCaseless(t_options_list, "picker")))
+			{
+				t_more_optional = false;
+				// HC-2011-09-28 [[ Picker Buttons ]] Get the button values that are to be displayed.
+				while (t_options_list != nil)
+				{
+					t_success = true;
+					if (t_options_list != nil && MCCStringEqualCaseless(t_options_list, "checkmark"))
+						t_use_checkmark = true;
+					else if (t_options_list != nil && MCCStringEqualCaseless(t_options_list, "cancel"))
+						t_use_cancel = true;
+					else if (t_options_list != nil && MCCStringEqualCaseless(t_options_list, "done"))
+						t_use_done = true;
+					else if (t_options_list != nil && MCCStringEqualCaseless(t_options_list, "cancelDone"))
+					{
+						t_use_cancel = true;
+						t_use_done = true;
+					}
+					else if (t_options_list != nil && MCCStringEqualCaseless(t_options_list, "picker"))
+						t_use_picker = true;
+					else
+						t_success = false;
+					if (!MCParseParameters(p_parameters, "s", &t_options_list))
+						t_options_list = nil;
+				}
+			}
+			else
+				t_success = MCParseParameters(p_parameters, "u", &t_initial_index);
+		}
+		else
+		{
+			t_success = true;
+			t_more_optional = false;
+		}
+	}
+    
+	// call MCSystemPick to process the pick wheel
+	MCDialogExecPickOptionByIndex(t_ctxt, kMCLines, t_option_list_array, t_initial_index_array, t_use_checkmark, t_use_picker, t_use_cancel, t_use_done, r_picked_options, MCtargetptr->getrect());
+    
+	
+	if (t_success)
+    {
+        // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
+        // set the value of the 'it' variable
+        if (MCresult->isempty())
+            MCresult->store(ep, True);
+    }
+	
+	return t_ctxt.GetStat();
+#endif /* MCHandlePick */
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_use_cancel, t_use_done, t_use_picker, t_use_checkmark, t_more_optional, t_success;
@@ -3338,6 +5440,120 @@ Exec_stat MCHandlePick(void *context, MCParameter *p_parameters)
 // MM-2012-11-02: Temporarily refactored mobilePickDate to use the old syntax (rather than three separate pick date, pick time, pick date and time).
 Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickDate */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+    char *t_type;
+    t_type = nil;
+    
+	bool t_success, t_use_done, t_use_cancel;
+	t_success = true;
+	t_use_done = false;
+	t_use_cancel = false;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    MCDateTime t_current_date;
+    MCDateTime t_start_date;
+    MCDateTime t_end_date;
+    
+    uint32_t t_step = 1;
+    
+    if (t_success && p_parameters != nil)
+  		t_success = MCParseParameters(p_parameters, "s", &t_type);
+    
+    if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_current = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_current_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+    
+    if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_start = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_end = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+    if (t_success && p_parameters != nil)
+        t_success = MCParseParameters(p_parameters, "u", &t_step);
+    
+    if (t_success && p_parameters != nil)
+    {
+        char *t_button;
+        t_button = nil;
+		t_success = MCParseParameters(p_parameters, "s", &t_button);
+        if (t_success)
+        {
+            if (MCCStringEqualCaseless("cancel", t_button))
+                t_use_cancel = true;
+            else if (MCCStringEqualCaseless("done", t_button))
+                t_use_done = true;
+            else if (MCCStringEqualCaseless("canceldone", t_button))
+                t_use_cancel = t_use_done = true;
+        }
+        MCCStringFree(t_button);
+    }
+    
+    
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    
+    MCDateTime *t_current_date_ptr = nil;
+    MCDateTime *t_start_date_ptr = nil;
+    MCDateTime *t_end_date_ptr = nil;
+    
+    if (t_use_current)
+        t_current_date_ptr = &t_current_date;
+    if (t_use_start)
+        t_start_date_ptr = &t_start_date;
+    if (t_use_end)
+        t_end_date_ptr = &t_end_date;
+    
+	if (t_success)
+    {
+        // MM-2012-03-15: [[ Bug ]] Make sure we handle no type being passed.
+        if (t_type == nil)
+            MCDialogExecPickDate(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
+        else if (MCCStringEqualCaseless("time", t_type))
+            MCDialogExecPickTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+        else if (MCCStringEqualCaseless("datetime", t_type))
+            MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+        else
+            MCDialogExecPickDate(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_use_cancel, t_use_done, MCtargetptr->getrect());
+    }
+    
+    MCCStringFree(t_type);
+    
+    // at the moment, this is the only way to return a value from the function.  pick (date/time/...) should probably
+    // set the value of the 'it' variable
+    if (MCresult->isempty())
+        MCresult->store(ep, True);
+    
+	return t_ctxt.GetStat();
+#endif /* MCHandlePickDate */
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_success;
@@ -3434,6 +5650,88 @@ Exec_stat MCHandlePickDate(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickTime */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_success, t_use_done, t_use_cancel;
+	t_success = true;
+	t_use_done = false;
+	t_use_cancel = false;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    MCDateTime t_current_date;
+    MCDateTime t_start_date;
+    MCDateTime t_end_date;
+    
+    uint32_t t_step = 1;
+    
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_current = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_current_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_start = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_end = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+    if (t_success && p_parameters != nil)
+        t_success = MCParseParameters(p_parameters, "u", &t_step);
+    
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_cancel);
+	
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
+    
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    
+    MCDateTime *t_current_date_ptr = nil;
+    MCDateTime *t_start_date_ptr = nil;
+    MCDateTime *t_end_date_ptr = nil;
+    
+    if (t_use_current)
+        t_current_date_ptr = &t_current_date;
+    if (t_use_start)
+        t_start_date_ptr = &t_start_date;
+    if (t_use_end)
+        t_end_date_ptr = &t_end_date;
+    
+	if (t_success)
+		MCDialogExecPickTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+    
+    if (MCresult->isempty())
+        MCresult->store(ep, True);
+    
+	return t_ctxt.GetStat();
+#endif /* MCHandlePickTime */
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_success, t_use_done, t_use_cancel;
@@ -3516,6 +5814,88 @@ Exec_stat MCHandlePickTime(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandlePickDateAndTime */ LEGACY_EXEC
+    MCExecPoint ep(nil, nil, nil);
+    
+	bool t_success, t_use_done, t_use_cancel;
+	t_success = true;
+	t_use_done = false;
+	t_use_cancel = false;
+	
+    bool t_use_current = false;
+    bool t_use_start = false;
+    bool t_use_end = false;
+	
+    MCDateTime t_current_date;
+    MCDateTime t_start_date;
+    MCDateTime t_end_date;
+    
+    uint32_t t_step = 1;
+    
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_current = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_current_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_start = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_start_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+	if (t_success && p_parameters != nil)
+    {
+        p_parameters->eval(ep);
+        if (!ep.isempty())
+        {
+            t_use_end = true;
+            t_success = MCD_convert_to_datetime(ep, CF_UNDEFINED, CF_UNDEFINED, t_end_date);
+        }
+        p_parameters = p_parameters->getnext();
+    }
+	
+    if (t_success && p_parameters != nil)
+        t_success = MCParseParameters(p_parameters, "u", &t_step);
+    
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_cancel);
+	
+	if (t_success && p_parameters != nil)
+		t_success = MCParseParameters(p_parameters, "b", &t_use_done);
+    
+    MCExecContext t_ctxt(ep);
+    t_ctxt.SetTheResultToEmpty();
+    
+    MCDateTime *t_current_date_ptr = nil;
+    MCDateTime *t_start_date_ptr = nil;
+    MCDateTime *t_end_date_ptr = nil;
+    
+    if (t_use_current)
+        t_current_date_ptr = &t_current_date;
+    if (t_use_start)
+        t_start_date_ptr = &t_start_date;
+    if (t_use_end)
+        t_end_date_ptr = &t_end_date;
+    
+	if (t_success)
+		MCDialogExecPickDateAndTime(t_ctxt, t_current_date_ptr, t_start_date_ptr, t_end_date_ptr, t_step, t_use_cancel, t_use_done, MCtargetptr->getrect());
+    
+    if (MCresult->isempty())
+        MCresult->store(ep, True);
+    
+	return t_ctxt.GetStat();
+#endif /* MCHandlePickDateAndTime */
     MCExecPoint ep(nil, nil, nil);
     
 	bool t_success, t_use_done, t_use_cancel;
@@ -3597,6 +5977,38 @@ Exec_stat MCHandlePickDateAndTime(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleSpecificCameraFeatures(void *p_context, MCParameter *p_parameters)
 {
+#ifdef /* MCHandleSpecificCameraFeatures */ LEGACY_EXEC
+	MCExecPoint ep(nil, nil, nil);
+	ep . clear();
+	
+	MCCameraSourceType t_source;
+	p_parameters -> eval_argument(ep);
+	if (MCU_strcasecmp(ep . getcstring(), "front"))
+		t_source = kMCCameraSourceTypeFront;
+	else if (MCU_strcasecmp(ep . getcstring(), "rear"))
+		t_source = kMCCameraSourceTypeRear;
+	else
+		return ES_NORMAL;
+	
+	////////
+	
+	MCExecContext t_ctxt(ep);
+	
+	MCCameraFeaturesType t_features_set;
+	MCCameraGetFeatures(t_ctxt, t_source, t_features_set);
+	
+	////////
+	
+	if ((t_features_set & kMCCameraFeaturePhoto) != 0)
+		ep . concatcstring("photo", EC_COMMA, ep . isempty());
+	if ((t_features_set & kMCCameraFeatureVideo) != 0)
+		ep . concatcstring("video", EC_COMMA, ep . isempty());
+	if ((t_features_set & kMCCameraFeatureFlash) != 0)
+		ep . concatcstring("flash", EC_COMMA, ep . isempty());
+	MCresult -> store(ep, False);
+	
+	return ES_NORMAL;
+#endif /* MCHandleSpecificCameraFeatures */
 	MCExecPoint ep(nil, nil, nil);
 	ep . clear();
 	
@@ -3914,7 +6326,7 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
 		MCNativeControl::LookupAction(t_action_name, t_action);
 	
-	if (t_succegit ss)
+	if (t_success)
 		t_success = t_control -> Do(t_action, p_parameters) == ES_NORMAL;
 	
 	delete t_action_name;
@@ -3951,7 +6363,6 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 	return ES_NORMAL;
 }
 
-
 Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 {
 	MCNativeControl *t_target;
@@ -3983,15 +6394,368 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 }
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
-{
-    
+{    
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
     
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_value;
     ep . copyasstringref(&t_value);
+	/* UNCHECKED */ ep . copyasstringref(&t_value);
     ctxt . SetTheResultToValue(*t_value);
     
 	return ES_NORMAL;
 }
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+typedef Exec_stat (*MCPlatformMessageHandler)(void *context, MCParameter *parameters);
+
+// MW-2012-08-06: [[ Fibers ]] If 'waitable' is true it means the handler must
+//   be run on the script fiber. Otherwise it is run on the system fiber (making
+//   implementation easier).
+struct MCPlatformMessageSpec
+{
+	bool waitable;
+	const char *message;
+	MCPlatformMessageHandler handler;
+	void *context;
+};
+
+static MCPlatformMessageSpec s_platform_messages[] =
+{
+    // MM-2012-02-22: Added support for ad management
+    {false, "mobileAdRegister", MCHandleAdRegister, nil},
+    {false, "mobileAdCreate", MCHandleAdCreate, nil},
+    {false, "mobileAdDelete", MCHandleAdDelete, nil},
+    {false, "mobileAdGetVisible", MCHandleAdGetVisible, nil},
+    {false, "mobileAdSetVisible", MCHandleAdSetVisible, nil},
+    {false, "mobileAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+    {false, "mobileAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+    {false, "mobileAds", MCHandleAds, nil},
+    {false, "iphoneAdRegister", MCHandleAdRegister, nil},
+    {false, "iphoneAdCreate", MCHandleAdCreate, nil},
+    {false, "iphoneAdDelete", MCHandleAdDelete, nil},
+    {false, "iphoneAdGetVisible", MCHandleAdGetVisible, nil},
+    {false, "iphoneAdSetVisible", MCHandleAdSetVisible, nil},
+    {false, "iphoneAdGetTopLeft", MCHandleAdGetTopLeft, nil},
+    {false, "iphoneAdSetTopLeft", MCHandleAdSetTopLeft, nil},
+    {false, "iphoneAds", MCHandleAds, nil},
+	
+	{true, "libUrlDownloadToFile", MCHandleLibUrlDownloadToFile, nil},
+    
+    {false, "mobileStartTrackingSensor", MCHandleStartTrackingSensor, nil},
+    {false, "mobileStopTrackingSensor", MCHandleStopTrackingSensor, nil},
+    {false, "mobileSensorReading", MCHandleSensorReading, nil},
+    {false, "mobileSensorAvailable", MCHandleSensorAvailable, nil},
+    
+    // MM-2012-02-11: Added support old style senseor syntax (iPhoneEnableAcceleromter etc)
+	/* DEPRECATED */ {false, "iphoneCanTrackLocation", MCHandleCanTrackLocation, nil},
+	/* DEPRECATED */ {false, "iphoneStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "iphoneStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "iphoneCurrentLocation", MCHandleCurrentLocation, nil},
+    /* DEPRECATED */ {false, "mobileCanTrackLocation", MCHandleCanTrackLocation, nil},
+    /* DEPRECATED */ {false, "mobileStartTrackingLocation", MCHandleLocationTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "mobileStopTrackingLocation", MCHandleLocationTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "mobileCurrentLocation", MCHandleCurrentLocation, nil},
+	
+	/* DEPRECATED */ {false, "iphoneCanTrackHeading", MCHandleCanTrackHeading, nil},
+	/* DEPRECATED */ {false, "iphoneStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "iphoneStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "iphoneCurrentHeading", MCHandleCurrentHeading, nil},
+	{false, "iphoneSetHeadingCalibrationTimeout", MCHandleSetHeadingCalibrationTimeout, nil},
+	{false, "iphoneHeadingCalibrationTimeout", MCHandleHeadingCalibrationTimeout, nil},
+    /* DEPRECATED */ {false, "mobileCanTrackHeading", MCHandleCanTrackHeading, nil},
+    /* DEPRECATED */ {false, "mobileStartTrackingHeading", MCHandleHeadingTrackingState, (void *)true},
+	/* DEPRECATED */ {false, "mobileStopTrackingHeading", MCHandleHeadingTrackingState, (void *)false},
+	/* DEPRECATED */ {false, "mobileCurrentHeading", MCHandleCurrentHeading, nil},
+    
+    /* DEPRECATED */ {false, "iphoneEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+	/* DEPRECATED */ {false, "iphoneDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+	/* DEPRECATED */ {false, "mobileEnableAccelerometer", MCHandleAccelerometerEnablement, (void *)true},
+	/* DEPRECATED */ {false, "mobileDisableAccelerometer", MCHandleAccelerometerEnablement, (void *)false},
+    
+    {false, "mobileBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+    {false, "mobileBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+    {false, "iphoneBusyIndicatorStart", MCHandleStartBusyIndicator, nil},
+    {false, "iphoneBusyIndicatorStop", MCHandleStopBusyIndicator, nil},
+    
+    {false, "mobileBeep", MCHandleBeep, nil},
+    {true, "mobileVibrate", MCHandleVibrate, nil},
+    {false, "iphoneBeep", MCHandleBeep, nil},
+    {true, "iphoneVibrate", MCHandleVibrate, nil},
+	
+    {true, "iphoneComposeTextMessage", MCHandleComposeTextMessage, nil},
+    {false, "iphoneCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+    {true, "mobileComposeTextMessage", MCHandleComposeTextMessage, nil},
+    {false, "mobileCanComposeTextMessage", MCHandleCanComposeTextMessage, nil},
+    
+    {false, "iphoneCameraFeatures", MCHandleCameraFeatures, nil},
+    {false, "mobileCameraFeatures", MCHandleCameraFeatures, nil},
+	{true, "iphonePickPhoto", MCHandlePickPhoto, nil},
+	{true, "mobilePickPhoto", MCHandlePickPhoto, nil},
+    
+	{true, "iphonePickDate", MCHandlePickDate, nil},
+    {true, "mobilePickDate", MCHandlePickDate, nil},
+    {true, "mobilePickTime", MCHandlePickTime, nil},
+    {true, "mobilePickDateAndTime", MCHandlePickDateAndTime, nil},
+    
+	{true, "iphonePick", MCHandlePick, nil},
+    {true, "mobilePick", MCHandlePick, nil},
+    
+    {true, "mobilePickMedia", MCHandlePickMedia, nil},
+    {true, "iphonePickMedia", MCHandleIPhonePickMedia, nil},
+    
+	{true, "revMail", MCHandleRevMail, nil},
+	{false, "iphoneCanSendMail", MCHandleCanSendMail, nil},
+	{true, "iphoneComposeMail", MCHandleComposePlainMail, nil},
+	{true, "iphoneComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+	{true, "iphoneComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+    {false, "mobileCanSendMail", MCHandleCanSendMail, nil},
+	{true, "mobileComposeMail", MCHandleComposePlainMail, nil},
+	{true, "mobileComposeUnicodeMail", MCHandleComposeUnicodeMail, nil},
+	{true, "mobileComposeHtmlMail", MCHandleComposeHtmlMail, nil},
+    
+	{false, "iphoneDeviceOrientation", MCHandleDeviceOrientation, nil},
+	{false, "iphoneOrientation", MCHandleOrientation, nil},
+	{false, "iphoneAllowedOrientations", MCHandleAllowedOrientations, nil},
+	{false, "iphoneSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+	{false, "iphoneOrientationLocked", MCHandleOrientationLocked, nil},
+	{false, "iphoneLockOrientation", MCHandleLockOrientation, nil},
+	{false, "iphoneUnlockOrientation", MCHandleUnlockOrientation, nil},
+	{false, "mobileDeviceOrientation", MCHandleDeviceOrientation, nil},
+	{false, "mobileOrientation", MCHandleOrientation, nil},
+	{false, "mobileAllowedOrientations", MCHandleAllowedOrientations, nil},
+	{false, "mobileSetAllowedOrientations", MCHandleSetAllowedOrientations, nil},
+	{false, "mobileLockOrientation", MCHandleLockOrientation, nil},
+	{false, "mobileUnlockOrientation", MCHandleUnlockOrientation, nil},
+	{false, "mobileOrientationLocked", MCHandleOrientationLocked, nil},
+    
+    {false, "mobileGetDeviceToken", MCHandleGetDeviceToken, nil},
+    {false, "mobileGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+    {false, "iphoneGetDeviceToken", MCHandleGetDeviceToken, nil},
+    {false, "iphoneGetLaunchUrl", MCHandleGetLaunchUrl, nil},
+	
+	{false, "iphoneSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+	{false, "iphoneShowStatusBar", MCHandleShowStatusBar, nil},
+	{false, "iphoneHideStatusBar", MCHandleHideStatusBar, nil},
+    {false, "mobileSetStatusBarStyle", MCHandleSetStatusBarStyle, nil},
+	{false, "mobileShowStatusBar", MCHandleShowStatusBar, nil},
+	{false, "mobileHideStatusBar", MCHandleHideStatusBar, nil},
+    
+	{false, "iphoneSetKeyboardType", MCHandleSetKeyboardType, nil},
+	{false, "iphoneSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil},
+	{false, "mobileSetKeyboardType", MCHandleSetKeyboardType, nil},
+    {false, "mobileSetKeyboardReturnKey", MCHandleSetKeyboardReturnKey, nil}, // Added from androidmisc.cpp
+	
+	{false, "iphoneDeviceResolution", MCHandleDeviceResolution, nil},
+	{false, "iphoneUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+	{false, "iphoneDeviceScale", MCHandleDeviceScale, nil},
+    {false, "mobileDeviceResolution", MCHandleDeviceResolution, nil},
+    {false, "mobileUseDeviceResolution", MCHandleUseDeviceResolution, nil},
+    {false, "mobileDeviceScale", MCHandleDeviceScale, nil},
+    {false, "mobilePixelDensity", MCHandlePixelDensity, nil},
+    
+	{false, "mobileBuildInfo", MCHandleBuildInfo, nil},
+	
+	{false, "mobileCanMakePurchase", MCHandleCanMakePurchase, nil},
+	{false, "mobileEnablePurchaseUpdates", MCHandleEnablePurchaseUpdates, nil},
+	{false, "mobileDisablePurchaseUpdates", MCHandleDisablePurchaseUpdates, nil},
+	{false, "mobileRestorePurchases", MCHandleRestorePurchases, nil},
+	{false, "mobilePurchases", MCHandlePurchaseList, nil},
+	{false, "mobilePurchaseCreate", MCHandlePurchaseCreate, nil},
+	{false, "mobilePurchaseState", MCHandlePurchaseState, nil},
+	{false, "mobilePurchaseError", MCHandlePurchaseError, nil},
+	{false, "mobilePurchaseGet", MCHandlePurchaseGet, nil},
+	{false, "mobilePurchaseSet", MCHandlePurchaseSet, nil},
+	{false, "mobilePurchaseSendRequest", MCHandlePurchaseSendRequest, nil},
+	{false, "mobilePurchaseConfirmDelivery", MCHandlePurchaseConfirmDelivery, nil},
+    {false, "mobilePurchaseVerify", MCHandlePurchaseVerify, nil},
+    {false, "iphoneRequestProductDetails", MCHandleRequestProductDetails, nil},
+	
+	{false, "iphoneControlCreate", MCHandleControlCreate, nil},
+	{false, "iphoneControlDelete", MCHandleControlDelete, nil},
+	{false, "iphoneControlSet", MCHandleControlSet, nil},
+	{false, "iphoneControlGet", MCHandleControlGet, nil},
+	{false, "iphoneControlDo", MCHandleControlDo, nil},
+	{false, "iphoneControlTarget", MCHandleControlTarget, nil},
+	{false, "iphoneControls", MCHandleControlList, nil},
+	{false, "mobileControlCreate", MCHandleControlCreate, nil},
+	{false, "mobileControlDelete", MCHandleControlDelete, nil},
+	{false, "mobileControlSet", MCHandleControlSet, nil},
+	{false, "mobileControlGet", MCHandleControlGet, nil},
+	{false, "mobileControlDo", MCHandleControlDo, nil},
+	{false, "mobileControlTarget", MCHandleControlTarget, nil},
+	{false, "mobileControls", MCHandleControlList, nil},
+	
+	{false, "iphonePreferredLanguages", MCHandlePreferredLanguages, nil},
+	{false, "mobilePreferredLanguages", MCHandlePreferredLanguages, nil},
+	{false, "iphoneCurrentLocale", MCHandleCurrentLocale, nil},
+	{false, "mobileCurrentLocale", MCHandleCurrentLocale, nil},
+	
+	{false, "iphoneApplicationIdentifier", MCHandleApplicationIdentifier, nil},
+	{false, "iphoneSystemIdentifier", MCHandleSystemIdentifier, nil},
+	
+	{false, "iphoneSetReachabilityTarget", MCHandleSetReachabilityTarget, nil},
+	{false, "iphoneReachabilityTarget", MCHandleReachabilityTarget, nil},
+    
+    // MM-2012-09-02: Add support for mobile* multi channel sound syntax
+    {false, "mobilePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+	{false, "mobilePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+	{false, "mobileResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+	{false, "mobileStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+	{false, "mobileDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+	{false, "mobileSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+	{false, "mobileSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+	{false, "mobileSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+	{false, "mobileSoundOnChannel", MCHandleSoundOnChannel, nil},
+	{false, "mobileNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+	{false, "mobileSoundChannels", MCHandleSoundChannels, nil},
+	{false, "iphonePlaySoundOnChannel", MCHandlePlaySoundOnChannel, nil},
+	{false, "iphonePausePlayingOnChannel", MCHandlePausePlayingOnChannel},
+	{false, "iphoneResumePlayingOnChannel", MCHandleResumePlayingOnChannel},
+	{false, "iphoneStopPlayingOnChannel", MCHandleStopPlayingOnChannel, nil},
+	{false, "iphoneDeleteSoundChannel", MCHandleDeleteSoundChannel, nil},
+	{false, "iphoneSetSoundChannelVolume", MCHandleSetSoundChannelVolume, nil},
+	{false, "iphoneSoundChannelVolume", MCHandleSoundChannelVolume, nil},
+	{false, "iphoneSoundChannelStatus", MCHandleSoundChannelStatus, nil},
+	{false, "iphoneSoundOnChannel", MCHandleSoundOnChannel, nil},
+	{false, "iphoneNextSoundOnChannel", MCHandleNextSoundOnChannel, nil},
+	{false, "iphoneSoundChannels", MCHandleSoundChannels, nil},
+    // MM-2012-09-07: Added support for setting the category of the current audio session (how mute button is handled etc.
+    {false, "iphoneSetAudioCategory", MCHandleSetAudioCategory, nil},
+    {false, "mobileSetAudioCategory", MCHandleSetAudioCategory, nil},
+    
+    {false, "iphoneSetDoNotBackupFile", MCHandleFileSetDoNotBackup, nil},
+    {false, "iphoneDoNotBackupFile", MCHandleFileGetDoNotBackup, nil},
+    {false, "iphoneSetFileDataProtection", MCHandleFileSetDataProtection, nil},
+    {false, "iphoneFileDataProtection", MCHandleFileGetDataProtection, nil},
+	
+	{false, "iphoneLockIdleTimer", MCHandleLockIdleTimer, nil},
+	{false, "mobileLockIdleTimer", MCHandleLockIdleTimer, nil},
+	{false, "iphoneUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+	{false, "mobileUnlockIdleTimer", MCHandleUnlockIdleTimer, nil},
+	{false, "iphoneIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+	{false, "mobileIdleTimerLocked", MCHandleIdleTimerLocked, nil},
+    
+    {false, "mobileCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+    {false, "mobileGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+    {false, "mobileGetNotificationDetails", MCHandleGetNotificationDetails, nil},
+    {false, "mobileCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+    {false, "mobileCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+    {false, "iphoneCreateLocalNotification", MCHandleCreateLocalNotification, nil},
+    {false, "iphoneGetRegisteredNotifications", MCHandleGetRegisteredNotifications, nil},
+    {false, "iphoneCancelLocalNotification", MCHandleCancelLocalNotification, nil},
+    {false, "iphoneCancelAllLocalNotifications", MCHandleCancelAllLocalNotifications, nil},
+    
+    {false, "iphoneGetNotificationBadgeValue", MCHandleGetNotificationBadgeValue, nil},
+    {false, "iphoneSetNotificationBadgeValue", MCHandleSetNotificationBadgeValue, nil},
+    
+	{false, "iphoneActivityIndicatorStart", MCHandleStartActivityIndicator, nil},
+	{false, "iphoneActivityIndicatorStop", MCHandleStopActivityIndicator, nil},
+	
+	{true, "iphoneExportImageToAlbum", MCHandleExportImageToAlbum, nil},
+	{true, "mobileExportImageToAlbum", MCHandleExportImageToAlbum, nil},	
+    
+	{false, "iphoneSetRedrawInterval", MCHandleSetRedrawInterval, nil},
+	
+    // MW-2012-02-15: [[ Bug 9985 ]] Control whether the autorotation animation happens
+    //   or not.
+	{false, "iphoneSetAnimateAutorotation", MCHandleSetAnimateAutorotation, nil}, 
+    
+    {true, "mobilePickContact", MCHandlePickContact, nil},       // ABPeoplePickerNavigationController
+    {true, "mobileShowContact", MCHandleShowContact, nil},       // ABPersonViewController
+    {true, "mobileGetContactData", MCHandleGetContactData, nil}, // ABNewPersonViewController
+    {true, "mobileUpdateContact", MCHandleUpdateContact, nil},   // ABUnknownPersonViewController
+    {true, "mobileCreateContact", MCHandleCreateContact, nil},
+    {false, "mobileAddContact", MCHandleAddContact, nil},
+    {false, "mobileFindContact", MCHandleFindContact, nil},
+    {false, "mobileRemoveContact", MCHandleRemoveContact, nil},
+    
+    {true, "mobileShowEvent", MCHandleShowEvent, nil},                     // ???                      // UI
+    {false, "mobileGetEventData", MCHandleGetEventData, nil},               // get calendar data for
+    {true, "mobileCreateEvent", MCHandleCreateEvent, nil},                 // create event in calendar // UI
+    {true, "mobileUpdateEvent", MCHandleUpdateEvent, nil},                 // edit calendar event      // UI
+    {false, "mobileAddEvent", MCHandleAddEvent, nil},                       // create calendar entry
+    {false, "mobileGetCalendarsEvent", MCHandleGetCalendarsEvent, nil}, // create reoccurring calendar entry
+    {false, "mobileFindEvent", MCHandleFindEvent, nil},                     // get calendar entry
+    {false, "mobileRemoveEvent", MCHandleRemoveEvent, nil},
+	
+	{false, "iphoneClearTouches", MCHandleClearTouches, nil},
+	{false, "mobileClearTouches", MCHandleClearTouches, nil},
+    
+	{nil, nil, nil}    
+};
+
+bool MCIsPlatformMessage(MCNameRef handler_name)
+{
+    bool found = false;
+    
+    const char* t_nameRef = MCNameGetCString(handler_name);
+    
+    for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+    {
+        const char* t_message = s_platform_messages[i].message;
+		if (MCNameIsEqualToCString(handler_name, s_platform_messages[i].message, kMCCompareCaseless))
+			found = true;
+    }
+    
+    return found;
+}
+
+#ifdef TARGET_SUBPLATFORM_IPHONE
+struct handle_context_t
+{
+	MCPlatformMessageHandler handler;
+	void *context;
+	MCParameter *parameters;
+	Exec_stat result;
+};
+
+static void invoke_platform(void *p_context)
+{
+	handle_context_t *ctxt;
+	ctxt = (handle_context_t *)p_context;
+	ctxt -> result = ctxt -> handler(ctxt -> context, ctxt -> parameters);
+}
+
+extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+
+Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+{
+	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+		if (p_message == s_platform_messages[i] . message)
+		{
+			// MW-2012-07-31: [[ Fibers ]] If the method doesn't need script / wait, then
+			//   jump to the main fiber for it.
+			if (!s_platform_messages[i] . waitable)
+			{
+				handle_context_t ctxt;
+				ctxt . handler = s_platform_messages[i] . handler;
+				ctxt . context = s_platform_messages[i] . context;
+				ctxt . parameters = p_parameters;
+				MCIPhoneCallOnMainFiber(invoke_platform, &ctxt);
+				return ctxt . result;
+			}
+			
+			// Execute the method as normal, in this case the method will have to jump
+			// to the main fiber to do any system stuff.
+			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+		}
+	
+	return ES_NOT_HANDLED;
+}
+#else // Android
+Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_parameters)
+{
+	for(uint32_t i = 0; s_platform_messages[i] . message != nil; i++)
+    {
+		if (p_message == s_platform_messages[i] . message)
+			return s_platform_messages[i] . handler(s_platform_messages[i] . context, p_parameters);
+    }
+	
+	return ES_NOT_HANDLED;
+}
+#endif

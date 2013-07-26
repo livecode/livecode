@@ -3489,7 +3489,7 @@ struct MCAdTopLeft;
 extern MCExecCustomTypeInfo* kMCAdTopLeftTypeInfo;
 
 extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
-extern MCExecMethodInfo* kMCAdExecreateAdMethodInfo;
+extern MCExecMethodInfo* kMCAdExecCreateAdMethodInfo;
 extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
 extern MCExecMethodInfo* kMCAdSetVisibleOfAdMethodInfo;
 extern MCExecMethodInfo* kMCAdGetVisibleOfAdMethodInfo;
@@ -3729,6 +3729,7 @@ extern MCExecMethodInfo* kMCMiscSetDoNotBackupFileMethodInfo;
 extern MCExecMethodInfo* kMCMiscGetFileDataProtectionMethodInfo;
 extern MCExecMethodInfo* kMCMiscSetFileDataProtectionMethodInfo;
 extern MCExecMethodInfo* kMCMiscExecLibDownloadUrlToFileMethodInfo;
+extern MCExecMethodInfo* kMCMiscGetBuildInfoMethodInfo;
 
 
 void MCMiscGetDeviceToken(MCExecContext& ctxt, MCStringRef& r_token);
@@ -3771,5 +3772,7 @@ void MCMiscGetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStri
 void MCMiscSetFileDataProtection(MCExecContext& ctxt, MCStringRef p_path, MCStringRef p_protection_string);
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename);
+
+void MCMiscGetBuildInfo(MCExecContext& ctxt, MCStringRef p_key, MCStringRef& r_value);
 
 #endif

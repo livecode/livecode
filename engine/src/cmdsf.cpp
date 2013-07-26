@@ -113,7 +113,8 @@ Parse_stat MCClose::parse(MCScriptPoint &sp)
 
 Exec_stat MCClose::exec(MCExecPoint &ep)
 {
-	/*char *name;
+#ifdef /* MCClose */ LEGACY_EXEC
+char *name;
 	uint2 index;
 
 	switch (arg)
@@ -196,7 +197,9 @@ Exec_stat MCClose::exec(MCExecPoint &ep)
 		sptr->close();
 		sptr->checkdestroy();
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCClose */
+
 
 	MCExecContext ctxt(ep);
 	if (arg == OA_OBJECT)
@@ -461,10 +464,9 @@ Parse_stat MCEncryptionOp::parse(MCScriptPoint &sp)
 	return PS_NORMAL;
 
 }
-
+#ifdef /* MCEncryptionOp::exec_rsa */ LEGACY_EXEC
 Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 {
-#ifndef _MOBILE
 	Exec_stat t_status = ES_NORMAL;
 	char *t_rsa_key = nil;
 	uint32_t t_rsa_keylength;
@@ -546,14 +548,13 @@ Exec_stat MCEncryptionOp::exec_rsa(MCExecPoint &ep)
 	MCCStringFree(t_rsa_passphrase);
 
 	return t_status;
-#else
-    return ES_NORMAL;
-#endif
 }
+#endif /* MCEncryptionOp::exec_rsa */
 
 Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 {
-	/*MCresult->clear(False);
+#ifdef /* MCEncryptionOp */ LEGACY_EXEC
+MCresult->clear(False);
 
 	if (is_rsa)
 		return exec_rsa(ep);
@@ -662,7 +663,9 @@ Exec_stat MCEncryptionOp::exec(MCExecPoint &ep)
 	delete keystring;
 	delete saltstr;
 	delete ivstr;
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCEncryptionOp */
+
 	
 	MCresult->clear(False);
 	MCExecContext ctxt(ep, it);
@@ -1087,7 +1090,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 
 Exec_stat MCExport::exec(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCExport */ LEGACY_EXEC
 	MCBitmap *t_img = nil;
 	MCObject *optr = NULL;
 
@@ -1389,7 +1392,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 			}
 		}
 	return t_status;
-#endif
+#endif /* MCExport */
 
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_return_data;
@@ -1900,7 +1903,8 @@ Parse_stat MCFilter::parse(MCScriptPoint &sp)
 
 Exec_stat MCFilter::exec(MCExecPoint &ep)
 {
-/*	if (container->eval(ep) != ES_NORMAL)
+#ifdef /* MCFilter */ LEGACY_EXEC
+	if (container->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FILTER_CANTGET, line, pos);
 		return ES_ERROR;
@@ -1923,7 +1927,9 @@ Exec_stat MCFilter::exec(MCExecPoint &ep)
 		MCeerror->add(EE_FILTER_CANTSET, line, pos);
 		return ES_ERROR;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCFilter */
+
 
 	MCExecContext ctxt(ep);
 
@@ -2122,7 +2128,7 @@ Parse_stat MCImport::parse(MCScriptPoint &sp)
 
 Exec_stat MCImport::exec(MCExecPoint &ep)
 {
-#ifdef OLD_EXEC
+#ifdef /* MCImport */ LEGACY_EXEC
 	if (format == EX_SNAPSHOT)
 	{
 		if ((container == NULL) && (MCsecuremode & MC_SECUREMODE_PRIVACY))
@@ -2390,7 +2396,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	MCU_unwatchcursor(ep.getobj()->getstack(), True);
 	
 	return stat;
-#endif
+#endif /* MCImport */
 
 
 	MCExecContext ctxt(ep);
@@ -2680,7 +2686,8 @@ Parse_stat MCKill::parse(MCScriptPoint &sp)
 
 Exec_stat MCKill::exec(MCExecPoint &ep)
 {
-/*	if (MCsecuremode & MC_SECUREMODE_PROCESS)
+#ifdef /* MCKill */ LEGACY_EXEC
+	if (MCsecuremode & MC_SECUREMODE_PROCESS)
 	{
 		MCeerror->add
 		(EE_PROCESS_NOPERM, line, pos);
@@ -2742,7 +2749,9 @@ Exec_stat MCKill::exec(MCExecPoint &ep)
 			MCS_kill(pid, number);
 	}
 	delete name;
-	return ES_NORMAL; */
+	return ES_NORMAL; 
+#endif /* MCKill */
+
 
 	MCExecContext ctxt(ep);
 	
@@ -2940,7 +2949,8 @@ Parse_stat MCOpen::parse(MCScriptPoint &sp)
 
 Exec_stat MCOpen::exec(MCExecPoint &ep)
 {
-	/*if (go != NULL)
+#ifdef /* MCOpen */ LEGACY_EXEC
+if (go != NULL)
 		return go->exec(ep);
 
 	MCresult->clear(False);
@@ -2964,27 +2974,22 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 				MCeerror -> add(EE_OPEN_BADNAME, line, pos);
 				t_stat = ES_ERROR;
 			}
-
+			
 			char *t_filename;
 			t_filename = nil;
 			if (t_stat == ES_NORMAL)
 				t_filename = ep . getsvalue() . clone();
-
+			
 			if (t_stat == ES_NORMAL &&
 				options != nil && options -> eval(ep) != ES_NORMAL)
 			{
 				MCeerror -> add(EE_OPEN_BADOPTIONS, line, pos);
 				t_stat = ES_ERROR;
 			}
-
-			MCAutoArrayRef t_options;
-			if (t_stat == ES_NORMAL && ep . isarray())
-				if (!ep . copyasarrayref(&t_options))
-					t_stat = ES_ERROR;
-
-			extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCArrayRef , MCPrinter*&);
+			
+			extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCVariableValue *, MCPrinter*&);
 			if (t_stat == ES_NORMAL)
-				t_stat = MCCustomPrinterCreate(destination, t_filename, *t_options, MCprinter);
+				t_stat = MCCustomPrinterCreate(destination, t_filename, ep . getformat() == VF_ARRAY ? ep . getarray() : nil, MCprinter);
 			
 			if (t_stat == ES_NORMAL)
 				MCprinter -> Open(false);
@@ -2993,17 +2998,17 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 
 			return t_stat;
 		}
-
+		
 		// If 'with dialog' was specified do an 'answer printer' here. Note that
 		// we exit if 'cancel' is returned for backwards compatibility. This form
 		// the open printing command is, however, deprecated.
 		if (dialog)
 		{
-			MCAutoStringRef t_result;
-			MCprinter -> ChoosePrinter(sheet == True, &t_result);
-			if (MCStringGetLength(*t_result) > 0)
+			const char *t_result;
+			t_result = MCprinter -> ChoosePrinter(sheet == True);
+			if (t_result != NULL)
 			{
-				MCresult->setvalueref(*t_result);
+				MCresult -> sets(t_result);
 				return ES_NORMAL;
 			}
 		}
@@ -3105,8 +3110,7 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 					MCeerror->add(EE_OPEN_BADMESSAGE, line, pos);
 					return ES_ERROR;
 				}
-				// UNCHECKED  
-				ep . copyasnameref(t_message_name);
+				/* UNCHECKED */ ep . copyasnameref(t_message_name);
 			}
 			// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 			MCresult -> clear(True);
@@ -3123,7 +3127,9 @@ Exec_stat MCOpen::exec(MCExecPoint &ep)
 	default:
 		break;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCOpen */
+
 
 	MCExecContext ctxt(ep);
 
@@ -3812,7 +3818,8 @@ Parse_stat MCRead::parse(MCScriptPoint &sp)
 
 Exec_stat MCRead::exec(MCExecPoint &ep)
 {
-	/*IO_handle stream = NULL;
+#ifdef /* MCRead */ LEGACY_EXEC
+	IO_handle stream = NULL;
 	uint2 index;
 	int4 pindex = -1;
 	IO_stat stat = IO_NORMAL;
@@ -3938,7 +3945,7 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					 UNCHECKED  ep . copyasnameref(t_message_name);
+					/* UNCHECKED */ ep . copyasnameref(t_message_name);
 				}
 				if (cond == RF_FOR)
 				{
@@ -4093,7 +4100,9 @@ Exec_stat MCRead::exec(MCExecPoint &ep)
 		MCS_sync(stream);
 #endif
 
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCRead */
+
 
 	MCExecContext ctxt(ep, it);
 
@@ -4520,7 +4529,8 @@ Parse_stat MCSeek::parse(MCScriptPoint &sp)
 
 Exec_stat MCSeek::exec(MCExecPoint &ep)
 {
-/*	if (fname->eval(ep) != ES_NORMAL)
+#ifdef /* MCSeek */ LEGACY_EXEC
+	if (fname->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_SEEK_BADNAME, line, pos);
@@ -4564,7 +4574,9 @@ Exec_stat MCSeek::exec(MCExecPoint &ep)
 		(EE_SEEK_BADWHERE, line, pos, ep.getsvalue());
 		return ES_ERROR;
 	}
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCSeek */
+
 
 	MCExecContext ctxt(ep);
 	if (fname->eval(ep) != ES_NORMAL)
@@ -4686,7 +4698,8 @@ Parse_stat MCWrite::parse(MCScriptPoint &sp)
 
 Exec_stat MCWrite::exec(MCExecPoint &ep)
 {
-	/*uint2 index;
+#ifdef /* MCWrite */ LEGACY_EXEC
+	uint2 index;
 	IO_handle stream = NULL;
 	IO_stat stat = IO_NORMAL;
 	Boolean textmode = False;
@@ -4772,7 +4785,7 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 							MCeerror->add(EE_WRITE_BADEXP, line, pos);
 							return ES_ERROR;
 						}
-						 UNCHECKED  ep . copyasnameref(t_message_name);
+						/* UNCHECKED */ ep . copyasnameref(t_message_name);
 					}
 					if (source->eval(ep) != ES_NORMAL)
 					{
@@ -4780,10 +4793,8 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 						MCeerror->add(EE_WRITE_BADEXP, line, pos);
 						return ES_ERROR;
 					}
-					MCAutoStringRef t_source;
-					ep . copyasstringref(&t_source);
 					MCresult->clear(False);
-					MCS_write_socket(*t_source, MCsockets[index], ep.getobj(), t_message_name);
+					MCS_write_socket(ep.getsvalue(), MCsockets[index], ep.getobj(), t_message_name);
 				}
 				else
 					MCresult->sets("socket is not open");
@@ -4915,7 +4926,9 @@ Exec_stat MCWrite::exec(MCExecPoint &ep)
 #endif
 
 	MCresult->clear(False);
-	return ES_NORMAL;*/
+	return ES_NORMAL;
+#endif /* MCWrite */
+
 
 	MCExecContext ctxt(ep);
 	MCresult->clear(False);

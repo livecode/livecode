@@ -192,6 +192,7 @@ Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, 
 {
 	switch (which)
 	{
+#ifdef /* MCEPS::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
 		break;
@@ -241,6 +242,7 @@ Exec_stat MCEPS::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, 
 	case P_PAGE_COUNT:
 		ep.setint(MCU_max(pagecount, 1));
 		break;
+#endif /* MCEPS::getprop */
 	default:
 		return MCControl::getprop_legacy(parid, which, ep, effective);
 	}
@@ -257,9 +259,10 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 
 	switch (p)
 	{
+#ifdef /* MCEPS::setprop */ LEGACY_EXEC
 	case P_TRAVERSAL_ON:
 	case P_SHOW_BORDER:
-		if (MCControl::setprop_legacy(parid, p, ep, effective) != ES_NORMAL)
+		if (MCControl::setprop(parid, p, ep, effective) != ES_NORMAL)
 			return ES_ERROR;
 		resetscale();
 		break;
@@ -410,6 +413,7 @@ Exec_stat MCEPS::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bool
 		else
 			curpage = i;
 		break;
+#endif /* MCEPS::setprop */
 	default:
 		return MCControl::setprop_legacy(parid, p, ep, effective);
 	}

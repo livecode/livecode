@@ -82,6 +82,9 @@ MCCamerasFeaturesType MCSystemGetAllCameraFeatures()
 
 bool MCAndroidPickPhoto(const char *p_source, int32_t p_max_width, int32_t p_max_height)
 {
+#ifdef /* MCMobilePickPhoto */ LEGACY_EXEC
+	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
+#endif /* MCMobilePickPhoto */
 	MCAndroidEngineCall("showPhotoPicker", "vs", nil, p_source);
 }
 
@@ -142,6 +145,20 @@ bool MCSystemCanAcquirePhoto(MCPhotoSourceType p_source)
 
 void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
 {
+#ifdef /* MCAndroidPhotoPickDone */ LEGACY_EXEC
+	if (s_pick_photo_data != nil)
+	{
+		MCMemoryDeallocate(s_pick_photo_data);
+		s_pick_photo_data = nil;
+	}
+    
+	if (p_data != nil)
+	{
+		MCMemoryAllocateCopy(p_data, p_size, (void*&)s_pick_photo_data);
+		s_pick_photo_size = p_size;
+	}
+	s_pick_photo_returned = true;
+#endif /* MCAndroidPhotoPickDone */
 	if (s_pick_photo_data != nil)
 	{
 		MCMemoryDeallocate(s_pick_photo_data);
@@ -158,6 +175,17 @@ void MCAndroidPhotoPickDone(const char *p_data, uint32_t p_size)
 
 void MCAndroidPhotoPickError(const char *p_error)
 {
+#ifdef /* MCAndroidPhotoPickError */ LEGACY_EXEC
+	if (s_pick_photo_data != nil)
+	{
+		MCMemoryDeallocate(s_pick_photo_data);
+		s_pick_photo_data = nil;
+	}
+	if (s_pick_photo_err != nil)
+		MCCStringFree(s_pick_photo_err);
+	MCCStringClone(p_error, s_pick_photo_err);
+	s_pick_photo_returned = true;
+#endif /* MCAndroidPhotoPickError */
 	if (s_pick_photo_data != nil)
 	{
 		MCMemoryDeallocate(s_pick_photo_data);
@@ -171,5 +199,8 @@ void MCAndroidPhotoPickError(const char *p_error)
 
 void MCAndroidPhotoPickCanceled()
 {
+#ifdef /* MCAndroidPhotoPickCanceled */ LEGACY_EXEC
+	MCAndroidPhotoPickError("cancel");
+#endif /* MCAndroidPhotoPickCanceled */
 	MCAndroidPhotoPickError("cancel");
 }

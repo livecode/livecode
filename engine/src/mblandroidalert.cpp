@@ -46,15 +46,3 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <jni.h>
 
-//// MOVED TO mblandroidmisc.cpp
-//bool MCSystemBeep (int32_t p_number_of_beeps)
-//{
-//    MCAndroidEngineRemoteCall("doBeep", "vi", nil, p_number_of_beeps);
-//    return true;
-//}
-//
-//bool MCSystemVibrate (int32_t p_number_of_vibrates)
-//{
-//    MCAndroidEngineRemoteCall("doVibrate", "vi", nil, p_number_of_vibrates);
-//    return true;
-//}

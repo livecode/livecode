@@ -190,11 +190,11 @@ void MCAudioClip::timer(MCNameRef mptr, MCParameter *params)
 	}
 }
 
-#ifdef OLD_EXEC
 Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint &ep, Boolean effective)
 {
 	switch (which)
 	{
+#ifdef /* MCAudioClip::getprop */ LEGACY_EXEC
 	case P_SIZE:
 		ep.setint(size);
 		break;
@@ -254,6 +254,7 @@ Exec_stat MCAudioClip::getprop_legacy(uint4 parid, Properties which, MCExecPoint
 		else
 			ep.setint(loudness);
 		break;
+#endif /* MCAudioClip::getprop */
 	default:
 		return MCObject::getprop_legacy(parid, which, ep, effective);
 	}
@@ -267,6 +268,7 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 
 	switch (p)
 	{
+#ifdef /* MCAudioClip::setprop */ LEGACY_EXEC
 	case P_PLAY_DESTINATION:
 	case P_PLAY_LOUDNESS:
 		if (p == P_PLAY_DESTINATION)
@@ -339,12 +341,12 @@ Exec_stat MCAudioClip::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep
 
 		}
 		return ES_NORMAL;
+#endif /* MCAudioClip::setprop */
 	default:
 		break;
 	}
 	return MCObject::setprop_legacy(parid, p, ep, effective);
 }
-#endif
 
 Boolean MCAudioClip::del()
 {

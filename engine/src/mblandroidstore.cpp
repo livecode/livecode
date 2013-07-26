@@ -70,6 +70,17 @@ typedef struct
 static bool s_can_make_purchase_returned = false;
 static bool s_can_make_purchase = false;
 
+////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload);
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data);
+bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature);
+
+////////////////////////////////////////////////////////////////////////
+
 static MCPurchasePropertyInfo kProperties[] =
 {
     DEFINE_RO_PROPERTY(kMCPurchasePropertyDeveloperPayload, String, Purchase, DeveloperPayload)
@@ -77,7 +88,7 @@ static MCPurchasePropertyInfo kProperties[] =
     DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
     DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
     DEFINE_RO_PROPERTY(kMCPurchasePropertySignedData, String, Purchase, SignedData)
-    DEFINE_RO_PROPERTY(kMCPurchasePropertySignature, Signature, Purchase, Signature)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertySignature, String, Purchase, Signature)
 };
 
 static MCPurchasePropertyTable kPropertyTable =
@@ -662,32 +673,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
 
 ////////////////////////////////////////////////////////////////////////////////
 
-//// MOVED TO mblhandlers.cpp
-//bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-//
-//Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
-//{
-//    bool t_success = true;
-//    
-//    bool t_verified = true;
-//    uint32_t t_id;
-//    MCPurchase *t_purchase = nil;
-//    
-//    if (t_success)
-//        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
-//    
-//    if (t_success)
-//        t_success = MCPurchaseFindById(t_id, t_purchase);
-//    
-//    if (t_success)
-//        MCPurchaseVerify(t_purchase, t_verified);
-//    
-//    return ES_NORMAL;
-//}
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCStoreRequestProductDetails(MCStringRef p_product_id)
 {
     // Not implemented
+    return false;
 }

@@ -86,6 +86,21 @@ struct __MCString: public __MCValue
 
 //////////
 
+enum
+{
+    // The data are mutable
+    kMCDataFlagIsMutable = 1,
+};
+
+struct __MCData: public __MCValue
+{
+	uindex_t byte_count;
+	byte_t *bytes;
+	uindex_t capacity;
+};
+
+//////////
+
 struct __MCName: public __MCValue
 {
 	__MCName *next;

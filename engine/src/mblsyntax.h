@@ -467,6 +467,8 @@ bool MCSystemFileGetDoNotBackup(MCStringRef p_path, bool& r_no_backup);
 bool MCSystemFileSetDataProtection(MCStringRef p_path, MCStringRef p_protection_string, MCStringRef& r_status);
 bool MCSystemFileGetDataProtection(MCStringRef p_path, MCStringRef& r_protection_string);
 
+bool MCSystemBuildInfo(MCStringRef p_key, MCStringRef& r_value);
+
 enum MCMiscStatusBarStyle
 {
     kMCMiscStatusBarStyleDefault,

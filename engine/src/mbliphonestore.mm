@@ -36,6 +36,23 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <StoreKit/StoreKit.h>
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_productIdentifier);
+bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity);
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
+bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseSetQuantity(MCPurchase *p_purchase, integer_t p_quantity);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
 static MCPurchasePropertyInfo kProperties[] =
 {
         DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
@@ -328,7 +345,7 @@ bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
         return false;
     
     NSData *t_bytes = [t_transaction transactionReceipt];
-    return MCDataCreateWithBytes([t_bytes bytes], [t_bytes length], r_receipt);
+    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
 }
 
 bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
@@ -387,7 +404,7 @@ bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
         return false;
     
     NSData *t_bytes = [t_original_transaction transactionReceipt];
-    return MCDataCreateWithBytes([t_bytes bytes], [t_bytes length], r_receipt);
+    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -1069,27 +1086,6 @@ bool MCStorePostProductRequestResponse(SKProduct *p_product)
     
     return t_success;
 }
-
-////////////////////////////////////////////////////////////////////////////////
-
-//extern bool MCParseParameters(MCParameter*& p_parameters, const char *p_format, ...);
-
-//// MOVED TO mblhandlers.cpp
-//Exec_stat MCHandleRequestProductDetails(void *context, MCParameter *p_parameters)
-//{
-//    bool t_success = true;
-//    
-//    char * t_product;
-//    MCPurchase *t_purchase = nil;
-//    
-//    if (t_success)
-//        t_success = MCParseParameters(p_parameters, "s", &t_product);
-//    
-//    if (t_success)
-//        MCStoreRequestProductDetails(t_product);
-//    
-//    return ES_NORMAL;
-//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
