@@ -1014,9 +1014,20 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	bool t_image_locked = false;
 	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap, false);
-		t_image_locked = true;
-		t_dither = !optr->getflag(F_DONT_DITHER);
+		MCImage *t_img = static_cast<MCImage*>(optr);
+		
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (t_img->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
+		}
+		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}
 	else
 	{

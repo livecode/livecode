@@ -407,6 +407,9 @@ public:
 	// get the current (transformed) image data
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
+	
+	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image at the given scale
+	bool copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap);
 
 	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
 	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);

@@ -719,7 +719,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap, false);
+					t_success = copybitmap(1.0, false, t_bitmap);
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -732,7 +732,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 						}
 #endif
 					}
-					unlockbitmap(t_bitmap);
+					MCImageFreeBitmap(t_bitmap);
 					
 					closeimage();
 				}
@@ -762,7 +762,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap, false);
+					t_success = copybitmap(1.0, true, t_bitmap);
 					if (t_success)
 					{
 						uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -780,7 +780,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 							t_src_ptr += t_bitmap->stride;
 						}
 					}
-					unlockbitmap(t_bitmap);
+					MCImageFreeBitmap(t_bitmap);
 					
 					closeimage();
 				}
@@ -1073,11 +1073,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
@@ -1128,11 +1124,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
@@ -1161,11 +1153,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
@@ -2215,6 +2203,103 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-07-26: [[ ResIndependence ]] render the image at the requested scale,
+// with any transformations (scale, angle) applied
+bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCImageFrame *t_frame;
+	t_frame = nil;
+	
+	apply_transform();
+	
+	t_success = m_rep != nil;
+	
+	bool t_copy_pixels;
+	t_copy_pixels = !m_has_transform && p_scale == m_scale_factor;
+	
+	bool t_premultiplied;
+	t_premultiplied = p_premultiplied || !t_copy_pixels;
+	
+	if (t_success)
+		t_success = m_rep->LockImageFrame(currentframe, t_premultiplied, t_frame);
+	
+	bool t_mask, t_alpha;
+	if (t_success)
+		t_mask = MCImageBitmapHasTransparency(t_frame->image, t_alpha);
+	
+	if (t_success)
+	{
+		if (t_copy_pixels)
+		{
+			t_success = MCImageCopyBitmap(t_frame->image, r_bitmap);
+		}
+		else
+		{
+			MCGRaster t_raster;
+			t_raster.width = t_frame->image->width;
+			t_raster.height = t_frame->image->height;
+			t_raster.stride = t_frame->image->stride;
+			t_raster.pixels = t_frame->image->data;
+			t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? (t_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+			
+			uint32_t t_width, t_height;
+			t_width = ceil(rect.width * p_scale);
+			t_height = ceil(rect.height * p_scale);
+			
+			MCImageBitmap *t_bitmap;
+			t_bitmap = nil;
+			
+			t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
+			
+			if (t_success)
+				MCImageBitmapClear(t_bitmap);
+			
+			MCGContextRef t_context;
+			t_context = nil;
+			
+			if (t_success)
+				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+			
+			if (t_success)
+			{
+				MCGContextScaleCTM(t_context, p_scale, p_scale);
+				
+				if (m_has_transform)
+					MCGContextConcatCTM(t_context, m_transform);
+				
+				MCGRectangle t_dst;
+				t_dst = MCGRectangleMake(0, 0, t_frame->image->width / m_scale_factor, t_frame->image->height / m_scale_factor);
+				
+				MCGImageFilter t_filter;
+				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+				
+				MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
+				
+				MCGContextRelease(t_context);
+				
+				MCImageBitmapCheckTransparency(t_bitmap);
+				
+				if (!p_premultiplied)
+					MCImageBitmapUnpremultiply(t_bitmap);
+			}
+			
+			if (t_success)
+				r_bitmap = t_bitmap;
+			else
+				MCImageFreeBitmap(t_bitmap);
+		}
+	}
+	
+	if (m_rep != nil)
+		m_rep->UnlockImageFrame(currentframe, t_frame);
+	
+	return t_success;
+}
+
 
 bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform)
 {
