@@ -16,13 +16,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
 
+#include "core.h"
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 
 #include "field.h"
-#include "styledtext.h"
 #include "paragraf.h"
 #include "image.h"
 #include "dispatch.h"
@@ -32,11 +32,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 #include "context.h"
 #include "transfer.h"
+#include "styledtext.h"
+#include "stack.h"
 #include "mcio.h"
 
-#include "core.h"
-
 #include "osxtransfer.h"
+
+#import <Foundation/Foundation.h>
+#import <AppKit/NSAttributedString.h>
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -364,7 +367,8 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
 		MCSharedString *t_text_data;
 		if (FetchFlavor(flavorTypeHtml, t_text_data))
 		{
-			t_out_data = MCConvertHTMLToStyledText(t_text_data);
+            // SN-2013-07-26: [[ Bug 10893 ]] Convert HTML to RTF using Apple's internal class
+			t_out_data = MCConvertMacHTMLToStyledText(t_text_data);
 			t_text_data -> Release();
 		}
 	}
@@ -1077,3 +1081,26 @@ MCSharedString *MCConvertMacHFSToFiles(MCSharedString *p_data)
 	return MCSharedString::Create(ep . getsvalue());
 }
 
+
+MCSharedString *MCConvertMacHTMLToStyledText(MCSharedString *p_data)
+{
+    NSData *t_html_data;
+    t_html_data = [[NSData alloc] initWithBytes: p_data->GetBuffer() length: p_data->GetLength()];
+    
+    NSAttributedString *t_html_string;
+    t_html_string = [[NSAttributedString alloc] initWithHTML: t_html_data documentAttributes: nil];
+    
+    NSData *t_rtf_data;
+    t_rtf_data = [t_html_string RTFFromRange: NSMakeRange(0, [t_html_string length]) documentAttributes: nil];
+
+    [t_html_string release];
+    [t_html_data release];
+    
+    MCParagraph *t_paragraphs;
+	t_paragraphs = MCtemplatefield -> rtftoparagraphs(MCString((const char *)[t_rtf_data bytes], [t_rtf_data length]));
+    
+	MCStyledText t_styled_text;
+	t_styled_text . setparent(MCdefaultstackptr);
+	t_styled_text . setparagraphs(t_paragraphs);
+	return MCObject::pickle(&t_styled_text, 0);
+}
