@@ -27,6 +27,7 @@ enum NativeType
 	kNativeTypeBoolean,
 	kNativeTypeInteger,
 	kNativeTypeReal,
+	kNativeTypeEnum,
 	kNativeTypeCString,
 	kNativeTypeCData,
 	kNativeTypeCArray,
@@ -41,8 +42,6 @@ enum NativeType
 	kNativeTypeJavaData,
 	kNativeTypeJavaArray,
 	kNativeTypeJavaDictionary,
-	
-	kNativeTypeEnum
 };
 
 NativeType NativeTypeFromName(NameRef p_type);

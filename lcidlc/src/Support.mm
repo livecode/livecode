@@ -2822,141 +2822,187 @@ static jobject java__get_engine(void)
 
 //////////
 
-static bool java_from__bool(JNIEnv *env, bool p_value)
+static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
-	return p_value;
-}
+	LCError err;
+	err = kLCErrorNone;
+	
+	char *t_cstring_value;
+	t_cstring_value = nil;
+	if (err == kLCErrorNone)
+		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cstring_value);
 
-static jobject java_from__cstring(JNIEnv *env, const char *p_value)
-{
 	size_t t_char_count;
-	t_char_count = strlen(p_value);
-	
-	jchar *t_chars;
-	t_chars = (jchar *)malloc(sizeof(jchar) * t_char_count);
-	for(uint32_t i = 0; i < t_char_count; i++)
-		t_chars[i] = p_value[i];
+	jchar *t_jchar_value;
+	t_jchar_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_char_count = strlen(t_cstring_value);
+		t_jchar_value = (jchar *)malloc(sizeof(jchar) * t_char_count);
+		if (t_jchar_value == nil)
+			err = kLCErrorOutOfMemory;
+	}
 	
 	jobject t_java_value;
-	t_java_value = (jobject)env -> NewString(t_chars, t_char_count);
+	if (err == kLCErrorNone)
+	{
+		t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
+		if (t_java_value == nil || env -> ExceptionOccured() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
 	
-	return t_java_value;
+	free(t_jchar_value);
+	free(t_cstring_value);
+	
+	if (err == kLCErrorNone)
+	{
+		r_value = t_java_value;
+		return true;
+	}
+	
+	return fetch__report_error(err, arg);
 }
 
-static jobject java_from__cdata(JNIEnv *env, LCBytes p_value)
+static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
+	LCError err;
+	err = kLCErrorNone;
+	
+	LCBytes t_cdata_value;
+	t_cdata_value . buffer = nil;
+	t_cdata_value . length = 0;
+	if (err == kLCErrorNone)
+		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cdata_value);
+	
 	jobject t_java_value;
-	t_java_value = (jobject)env -> NewByteArray(p_value . length);
-	env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
-	return t_java_value;
+	t_java_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_java_value = (jobject)env -> NewByteArray(t_cdata_value . length);
+		if (t_java_value == nil || env -> ExceptionOccured() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
+	
+	if (err == kLCErrorNone)
+	{
+		env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, t_cdata_value . length, (const jbyte *)t_cdata_value . buffer);
+		if (env -> ExceptionOccured() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
+	
+	free(t_cdata_value . buffer);
+	
+	if (err == kLCErrorNone)
+	{
+		r_value = t_java_value;
+		return true;
+	}
+	
+	return fetch__report_error(err, arg);
 }
 
-static int java_from__int(JNIEnv *env, int p_value)
+static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
 {
-	return p_value;
-}
-
-static double java_from__double(JNIEnv *env, double p_value)
-{
-	return p_value;
-}
-
-//////////
-
-static bool java_to__bool(JNIEnv *env, bool p_value)
-{
-	return p_value;
-}
-
-static char *java_to__cstring(JNIEnv *env, jobject p_value)
-{
+	LCError err;
+	err = kLCErrorNone;
+	
 	const jchar *t_unichars;
 	uint32_t t_unichar_count;
-	t_unichars = env -> GetStringChars((jstring)p_value, nil);
-	t_unichar_count = env -> GetStringLength((jstring)p_value);
+	t_unichars = 0;
+	t_unichar_count = 0;
+	if (err == kLCErrorNone)
+	{
+		t_unichars = env -> GetStringChars((jstring)value, nil);
+		if (t_unichars == nil || env -> ExceptionOccured() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
 	
 	char *t_native_value;
-	t_native_value = (char *)malloc(t_unichar_count + 1);
-	for(uint32_t i = 0; i < t_unichar_count; i++)
-		t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
-	t_native_value[t_unichar_count] = 0;
+	t_native_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_unichar_count = env -> GetStringLength((jstring)value);
+		t_native_value = (char *)malloc(t_unichar_count + 1);
+		if (t_native_value == nil)
+			err = kLCErrorOutOfMemory;
+	}
 	
-	env -> ReleaseStringChars((jstring)p_value, t_unichars);
+	if (err == kLCErrorNone)
+	{
+		for(uint32_t i = 0; i < t_unichar_count; i++)
+			t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
+		t_native_value[t_unichar_count] = 0;
+	}
 	
-	return t_native_value;
+	if (err == kLCErrorNone)
+		err = LCValueStore(var, kLCValueOptionAsCString, &t_native_value);
+		
+	free(t_native_value);
+	if (t_unichars != nil)
+		env -> ReleaseStringChars((jstring)value, t_unichars);
+		
+	if (err == kLCErrorNone)
+		return true;
+		
+	return store__report_error(err);
 }
 
-static LCBytes java_to__cdata(JNIEnv *env, jobject p_value)
+static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
 {
+	LCError err;
+	err = kLCErrorNone;
+	
 	LCBytes t_native_value;
-	t_native_value . length = env -> GetArrayLength((jbyteArray)p_value);
-	t_native_value . buffer = malloc(t_native_value . length);
-	jbyte *t_bytes;
-	t_bytes = env -> GetByteArrayElements((jbyteArray)p_value, nil);
-	memcpy(t_native_value . buffer, t_bytes, t_native_value . length);
-	env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
-	return t_native_value;
+	t_native_value . buffer = nil;
+	t_native_value . length = 0;
+	if (err == kLCErrorNone)
+	{
+		t_native_value . buffer = env -> GetByteArrayElements((jbyteArray)value, nil);
+		if (t_native_value . buffer == nil || env -> ExceptionOccured() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
+	
+	if (err == kLCErrorNone)
+	{
+		t_native_value . length = env -> GetArrayLength((jbyteArray)value);
+		err = LCValueStore(var, kLCValueOptionAsCData, &t_native_value);
+	}
+	
+	if (t_unichars != nil)
+		env -> ReleaseByteArrayElements((jbyteArray)value, (jbyte *)t_native_value . buffer, 0);
+		
+	if (err == kLCErrorNone)
+		return true;
+		
+	return store__report_error(err);
 }
 
-static int java_to__int(JNIEnv *env, int p_value)
+static void free__java_string(JNIEnv *env, jobject value)
 {
-	return p_value;
+	env -> DeleteLocalRef(value);
 }
 
-static double java_to__double(JNIEnv *env, double p_value)
+static void free__java_data(JNIEnv *env, jobject value)
 {
-	return p_value;
+	env -> DeleteLocalRef(value);
 }
 
 //////////
-
-static void java_free__bool(JNIEnv *env, bool p_value)
-{
-}
-
-static void java_free__cstring(JNIEnv *env, jobject p_value)
-{
-	env -> DeleteLocalRef(p_value);
-}
-
-static void java_free__cdata(JNIEnv *env, jobject p_value)
-{
-	env -> DeleteLocalRef(p_value);
-}
-
-static void java_free__int(JNIEnv *env, int p_value)
-{
-}
-
-static void java_free__double(JNIEnv *env, double p_value)
-{
-}
-
-//////////
-
-static void native_free__bool(bool p_value)
-{
-}
-
-static void native_free__cstring(char *p_value)
-{
-	free(p_value);
-}
-
-static void native_free__cdata(LCBytes p_value)
-{
-	free(p_value . buffer);
-}
-
-static void native_free__int(int p_value)
-{
-}
-
-static void native_free__double(double p_value)
-{
-}
-
-/////////
 	
 static void java_lcapi__throw(JNIEnv *env, LCError p_error)
 {

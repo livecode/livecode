@@ -56,6 +56,7 @@ enum InterfaceError
 	kInterfaceErrorUnknownPlatform,
 	kInterfaceErrorObjCNotSupported,
 	kInterfaceErrorJavaNotSupported,
+	kInterfaceErrorJavaImpliesNonIndirectReturn,
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -144,6 +145,8 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 	case kInterfaceErrorUnknownType:
 		fprintf(stderr, "Unknown type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
 		break;
+	case kInterfaceErrorJavaImpliesInParam:
+		fprintf(stderr, "Java mapped methods can only have 'in' parameters\n");
 	case kInterfaceErrorUnknownHandlerMapping:
 		fprintf(stderr, "Unknown handler mapping type '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
 		break;
@@ -155,6 +158,9 @@ static bool InterfaceReport(InterfaceRef self, Position p_where, InterfaceError 
 		break;
 	case kInterfaceErrorJavaNotSupported:
 		fprintf(stderr, "Java mapping not supported on platform '%s'\n", StringGetCStringPtr(NameGetString((NameRef)p_hint)));
+		break;
+	case kInterfaceErrorJavaImpliesNonIndirectReturn:
+		fprintf(stderr, "Java mapped methods cannot have indirect return value\n");
 		break;
 	}
 
@@ -234,6 +240,10 @@ bool InterfaceBegin(InterfaceRef self, Position p_where, NameRef p_name)
 	
 	self -> where = p_where;
 	self -> qualified_name = ValueRetain(p_name);
+	
+	// MW-2013-07-29: [[ ExternalsApiV5 ]] Default mappings are to use C on all platforms.
+	for(Platform i = kPlatformMac; i < __kPlatformCount__; i++)
+		self -> use_mappings[i] = kHandlerMappingC;
 	
 	return true;
 }
@@ -403,13 +413,13 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 	// RULE: Variants of handlers must all have the same type.
 	if (t_handler != nil &&
 			t_handler -> type != p_type &&
-			t_handler -> is_java == ((p_attr & kHandlerAttributeIsJava) != 0) &&
+			/*t_handler -> is_java == ((p_attr & kHandlerAttributeIsJava) != 0) &&*/
 			t_handler -> is_tail == ((p_attr & kHandlerAttributeIsTail) != 0))
 		InterfaceReport(self, p_where, kInterfaceErrorCannotMixHandlerTypes, p_name);
 	
 	// RULE: Methods must specify 'java'.
-	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsJava) == 0)
-		InterfaceReport(self, p_where, kInterfaceErrorMethodsMustBeJava, p_name);
+	/*if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsJava) == 0)
+		InterfaceReport(self, p_where, kInterfaceErrorMethodsMustBeJava, p_name);*/
 	
 	// RULE: Methods must not specify 'tail' since that is their purpose.
 	if (p_type == kHandlerTypeMethod && (p_attr & kHandlerAttributeIsTail) != 0)
@@ -425,7 +435,7 @@ bool InterfaceBeginHandler(InterfaceRef self, Position p_where, HandlerType p_ty
 		
 		// MW-2013-06-14: [[ ExternalsApiV5 ]] Set the attributes appropriate in the
 		//   handler.
-		t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;
+		/*t_handler -> is_java = (p_attr & kHandlerAttributeIsJava) != 0;*/
 		t_handler -> is_tail = (p_attr & kHandlerAttributeIsTail) != 0;
 
 		t_handler -> name = ValueRetain(p_name);
@@ -574,8 +584,11 @@ bool InterfaceDefineHandlerParameter(InterfaceRef self, Position p_where, Parame
 	// MW-2013-06-14: [[ ExternalsApiV5 ]] New rule to check java methods have compatible
 	//   signature.
 	// RULE: If java handler, then only in parameters are allowed.
-	if (self -> current_handler -> is_java)
+	/*if (self -> current_handler -> is_java)
 		if (p_param_type != kParameterTypeIn)
+			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);*/
+	if (t_variant -> mappings[kPlatformAndroid] == kHandlerMappingJava &&
+		p_param_type != kParameterTypeIn)
 			InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesInParam, nil);
 	
 	if (!MCMemoryResizeArray(t_variant -> parameter_count + 1, t_variant -> parameters, t_variant -> parameter_count))
@@ -602,6 +615,13 @@ bool InterfaceDefineHandlerReturn(InterfaceRef self, Position p_where, NameRef p
 			
 	HandlerVariant *t_variant;
 	t_variant = &self -> current_handler -> variants[self -> current_handler -> variant_count - 1];
+
+	// MW-2013-07-27: [[ ExternalsApiV5 ]] New rule to check we don't use indirect on
+	//   java mapped methods.
+	// RULE: If java handler, then only non-indirect return values are allowed.
+	if (t_variant -> mappings[kPlatformAndroid] == kHandlerMappingJava &&
+		p_indirect)
+		InterfaceReport(self, p_where, kInterfaceErrorJavaImpliesNonIndirectReturn, nil);
 
 	InterfaceCheckType(self, p_where, p_type);
 	

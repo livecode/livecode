@@ -24,14 +24,14 @@ NativeType NativeTypeFromName(NameRef p_type)
 {
 	if (NameEqualToCString(p_type, "boolean"))
 		return kNativeTypeBoolean;
-	else if (NameEqualToCString(p_type, "c-string"))
-		return kNativeTypeCString;
-	else if (NameEqualToCString(p_type, "c-data"))
-		return kNativeTypeCData;
 	else if (NameEqualToCString(p_type, "integer"))
 		return kNativeTypeInteger;
 	else if (NameEqualToCString(p_type, "real"))
 		return kNativeTypeReal;
+	else if (NameEqualToCString(p_type, "c-string"))
+		return kNativeTypeCString;
+	else if (NameEqualToCString(p_type, "c-data"))
+		return kNativeTypeCData;
 	else if (NameEqualToCString(p_type, "objc-string"))
 		return kNativeTypeObjcString;
 	else if (NameEqualToCString(p_type, "objc-number"))
@@ -52,14 +52,16 @@ const char *NativeTypeGetTypedef(NativeType p_type)
 	{
         case kNativeTypeBoolean:
             return "bool";
-        case kNativeTypeCString:
-            return "char*";
-        case kNativeTypeCData:
-            return "LCBytes";
         case kNativeTypeInteger:
             return "int";
         case kNativeTypeReal:
             return "double";
+        case kNativeTypeEnum:
+            return "int";
+        case kNativeTypeCString:
+            return "char*";
+        case kNativeTypeCData:
+            return "LCBytes";
         case kNativeTypeObjcString:
             return "NSString*";
         case kNativeTypeObjcNumber:
@@ -70,8 +72,16 @@ const char *NativeTypeGetTypedef(NativeType p_type)
             return "NSArray*";
         case kNativeTypeObjcDictionary:
             return "NSDictionary*";
-        case kNativeTypeEnum:
-            return "int";
+		case kNativeTypeJavaString:
+			return "jstring";
+		case kNativeTypeJavaNumber:
+			return "jobject";
+		case kNativeTypeJavaData:
+			return "jobject";
+		case kNativeTypeJavaArray:
+			return "jobject";
+		case kNativeTypeJavaDictionary:
+			return "jobject";
         default:
             break;
 	}
@@ -108,6 +118,8 @@ const char *NativeTypeGetTag(NativeType p_type)
             return "int";
         case kNativeTypeReal:
             return "double";
+        case kNativeTypeEnum:
+            return "int";
         case kNativeTypeObjcString:
             return "objc_string";
         case kNativeTypeObjcNumber:
@@ -118,8 +130,16 @@ const char *NativeTypeGetTag(NativeType p_type)
             return "objc_array";
         case kNativeTypeObjcDictionary:
             return "objc_dictionary";
-        case kNativeTypeEnum:
-            return "int";
+		case kNativeTypeJavaString:
+			return "java_string";
+		case kNativeTypeJavaNumber:
+			return "java_number";
+		case kNativeTypeJavaData:
+			return "java_data";
+		case kNativeTypeJavaArray:
+			return "java_array";
+		case kNativeTypeJavaDictionary:
+			return "java_dictionary";
         default:
             break;
 	}
@@ -138,6 +158,11 @@ const char *NativeTypeGetInitializer(NativeType p_type)
         case kNativeTypeObjcData:
         case kNativeTypeObjcArray:
         case kNativeTypeObjcDictionary:
+		case kNativeTypeJavaString:
+		case kNativeTypeJavaNumber:
+		case kNativeTypeJavaData:
+		case kNativeTypeJavaArray:
+		case kNativeTypeJavaDictionary:
             return "nil";
         case kNativeTypeCData:
             return "{ 0, nil }";
@@ -181,8 +206,10 @@ const char *native_type_to_java_sig(NativeType p_type)
 	{
 		case kNativeTypeBoolean:
 			return "Z";
+		case kNativeTypeJavaString:
 		case kNativeTypeCString:
 			return "Ljava/lang/String;";
+		case kNativeTypeJavaData:
 		case kNativeTypeCData:
 			return "[B";
 		case kNativeTypeInteger:
