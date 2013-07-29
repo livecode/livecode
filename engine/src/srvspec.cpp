@@ -283,7 +283,7 @@ static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, 
 	MCString t_string((char *)p_buffer, p_size * p_count);
 	MCExecPoint ep;
 	ep . setsvalue(t_string);
-	MCurlresult -> append(ep, True);
+	MCurlresult -> append(ep);
 	return p_count;
 }
 

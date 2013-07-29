@@ -321,16 +321,20 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 
 	if (m_current_file != nil)
 	{
+		MCAutoStringRef t_current_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(m_current_file -> filename, &t_current_filename);
+		
 		// Set the default folder to the folder containing the current script
-		char *t_full_path;
-		t_full_path = MCsystem->LongFilePath(m_current_file->filename);
+		MCAutoStringRef t_full_path;
+		/* UNCHECKED */ MCsystem->LongFilePath(*t_current_filename, &t_full_path);
+		
 		uindex_t t_last_separator;
-		if (MCCStringLastIndexOf(t_full_path, '/', t_last_separator))
+		if (MCStringLastIndexOfChar(*t_full_path, '/', 0, kMCStringOptionCompareExact, t_last_separator))
 		{
-			t_full_path[t_last_separator] = '\0';
-			MCsystem->SetCurrentFolder(t_full_path);
+			MCAutoStringRef t_folder;
+			/* UNCHECKED */ MCStringCopySubstring(*t_full_path, MCRangeMake(0, t_last_separator), &t_folder);
+			MCsystem->SetCurrentFolder(MCStringGetCString(*t_folder));
 		}
-		MCCStringFree(t_full_path);
 	}
 
 	// Look for the file

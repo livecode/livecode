@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "sysdefs.h"
-#include "core.h"
 #include "filedefs.h"
 #include "mcio.h"
 #include "osspec.h"

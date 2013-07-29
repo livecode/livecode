@@ -549,6 +549,7 @@ static void cgi_unescape_url(const char *s, const char *l, char *&r_s, char*& r_
 
 static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint &ep, MCVariableValue *&r_var_value)
 {
+#ifdef TODO
 	MCVariableValue *t_value;
 	t_value = &p_variable -> getvalue();
 	
@@ -604,6 +605,7 @@ static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char 
 	}
 	
 	r_var_value = t_value;
+#endif
 }
 
 static void cgi_store_control_value(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint& ep)
@@ -1242,9 +1244,11 @@ bool cgi_initialize()
 	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SERVER", s_cgi_server);
 	s_cgi_server -> setnext(MCglobals);
 	MCglobals = s_cgi_server;
+	
+	MCAutoArrayRef t_vars;
+	/* UNCHECKED */ MCArrayCreateMutable(&t_vars);
 	for(uint32_t i = 0; environ[i] != NULL; i++)
 	{
-		
 		static const char *s_cgi_vars[] =
 		{
 			"GATEWAY_INTERFACE=",
@@ -1311,9 +1315,11 @@ bool cgi_initialize()
 			else
 				ep . setsvalue(t_value + 1);
 			
-			s_cgi_server -> getvalue() . store_element(ep, MCString(environ[i], t_value - environ[i]));
+			ep . storearrayelement_oldstring(*t_vars, MCString(environ[i], t_value - environ[i]));
 		}
 	}
+	
+	MCresult -> setvalueref(*t_vars);
 	
 	// Construct the GET variables by parsing the QUERY_STRING
 	
@@ -1509,12 +1515,14 @@ bool MCServerStartSession()
 		}
 	}
 	if (t_success)
-		t_session_var->getvalue().assign_empty();
+		t_session_var->clear();
 	
 	if (t_success)
 	{
+		// TODO
 		if (s_current_session->data_length > 0)
-			t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
+			t_success = false;
+			//t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
 	}
 	
 	if (t_success)
@@ -1547,8 +1555,10 @@ bool MCServerStopSession()
 	MCVariable *t_session_var;
 	t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 
+	// TODO
 	if (t_session_var != NULL)
-		t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
+		t_success = false;
+		//t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
 
 	if (t_success)
 	{
@@ -1703,7 +1713,7 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 	
 	MCExecPoint ep;
 	MCAutoStringRef t_name;
-	if (!MCS_get_session_name(&t_name) || ES_NORMAL != t_cookie_array->fetch_element(ep, MCStringGetOldString(*t_name)))
+	if (!MCS_get_session_name(&t_name) || ES_NORMAL != ep.fetcharrayelement_oldstring((MCArrayRef)t_cookie_array -> getvalueref(), MCStringGetOldString(*t_name)))
 		return false;
 	
 	// retrieve ID from cookie value
