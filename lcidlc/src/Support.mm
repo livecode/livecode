@@ -2514,6 +2514,13 @@ static bool error__report_bad_parameter_count(MCVariableRef result)
 	return false;
 }
 
+static bool error__report_not_supported(MCVariantRef result)
+{
+	const char *msg = "not supported";
+	MCVariableStore(result, kMCOptionAsCString, &msg);
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool default__cstring(const char *arg, char*& r_value)
