@@ -627,8 +627,11 @@ extern void MCServerPutUnicodeContent(const MCString& data);
 extern void MCServerPutMarkup(const MCString& data);
 extern void MCServerPutUnicodeMarkup(const MCString& data);
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
+bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
+	MCString p_data;
+	p_data = MCStringGetOldString(p_data_ref);
+
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
@@ -761,9 +764,9 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	return 0;
 }
 
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet)
+bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	return 0;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -547,9 +547,9 @@ static void cgi_unescape_url(const char *s, const char *l, char *&r_s, char*& r_
 	r_l = rl;
 }
 
+#ifdef TODO
 static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint &ep, MCVariableValue *&r_var_value)
 {
-#ifdef TODO
 	MCVariableValue *t_value;
 	t_value = &p_variable -> getvalue();
 	
@@ -605,14 +605,16 @@ static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char 
 	}
 	
 	r_var_value = t_value;
-#endif
 }
+#endif
 
 static void cgi_store_control_value(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint& ep)
 {
+#ifdef TODO
 	MCVariableValue *t_value;
 	cgi_fetch_variable_value_for_key(p_variable, p_key, p_key_length, ep, t_value);
 	t_value -> store(ep);
+#endif
 }
 
 static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
@@ -973,12 +975,16 @@ typedef struct
 	IO_handle file_handle;
 	uint32_t file_size;
 	MCMultiPartFileStatus file_status;
+#ifdef TODO
 	MCVariableValue *file_variable;
+#endif
 
 	char *boundary;
 	
+#ifdef TODO
 	MCVariableValue *post_variable;
 	MCVariableValue *post_binary_variable;
+#endif
 } cgi_multipart_context_t;
 
 static void cgi_dispose_multipart_context(cgi_multipart_context_t *p_context)
@@ -1014,6 +1020,7 @@ static void inline grab_string(char *&x_dest, char *&x_src)
 static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_header)
 {
 	bool t_success = true;
+#ifdef TODO
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	
 	if (p_header != NULL)
@@ -1074,7 +1081,7 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 			}
 		}
 	}
-	
+#endif
 	return t_success;
 }
 
@@ -1083,6 +1090,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	bool t_success = true;
 
+#ifdef TODO
 	if (cgi_context_is_form_data(t_context))
 	{
 		if (t_context->post_binary_variable != NULL)
@@ -1144,7 +1152,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 		// clear context for next part
 		cgi_dispose_multipart_context(t_context);
 	}
-	
+#endif
 	return t_success;
 }
 
