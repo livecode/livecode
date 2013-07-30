@@ -41,6 +41,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "notify.h"
+#include "dispatch.h"
 
 class MCNullPrinter: public MCPrinter
 {
@@ -1278,7 +1279,7 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 	return False;
 }
 
-void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
+void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 {
 	MCColor newcolor;
 #if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
@@ -1286,9 +1287,24 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
+
+	// IM-2013-07-30: [[ Bug 11018 ]] if the target is a window, then convert local coords to global
+	if (w != nil)
+	{
+		MCRectangle t_stack_rect;
+		MCStack *t_stack;
+		t_stack = MCdispatcher->findstackd(w);
+		if (t_stack != nil)
+		{
+			t_stack_rect = t_stack->getrect();
+			t_rect.x += t_stack_rect.x;
+			t_rect.y += t_stack_rect.y;
+		}
+	}
+	
 	MCBitmap *image = snapshot(t_rect, 0, nil);
 #else
-	MCBitmap *image = getimage(d, mx, my, 1, 1);
+	MCBitmap *image = getimage(w, mx, my, 1, 1);
 #endif
 
 	// If fetching the mouse pixel fails, then just return black.
