@@ -317,6 +317,8 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 		MCresult -> getvalue() . exchange(t_state . error);
 	}
 	
+	MCCStringFree(t_processed_url);
+	
 	t_state . object -> Release();
 }
 
