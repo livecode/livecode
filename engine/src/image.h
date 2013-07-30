@@ -126,6 +126,18 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-30: [[ ResIndependence ]] support for retrieving the density-mapped file list
+struct MCImageScaledFile
+{
+	char *filename;
+	MCGFloat scale;
+};
+
+bool MCImageGetScaledFiles(const char *p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count);
+void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(TARGET_PLATFORM_WINDOWS)
 bool MCImageBitmapToDIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
 bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);

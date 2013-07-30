@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define IMAGE_EXTRA_CONTROLCOLORS (1 << 0)
@@ -2065,13 +2067,67 @@ bool MCImage::setfilename(const char *p_filename)
 		return true;
 	}
 
+	const char *t_src_filename;
+	t_src_filename = nil;
+	
 	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	t_success = MCCStringClone(p_filename, t_filename);
+	// get list of matching scaled images
+	MCImageScaledFile *t_scaled_files;
+	t_scaled_files = nil;
+	uint32_t t_scaled_file_count;
+	t_scaled_file_count = 0;
+	
+	MCGFloat t_scale;
+	t_scale = 1.0;
+	
+	// IM-2013-07-30: [[ ResIndependence ]] search for set of density-mapped files matching given filename
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+		t_success = MCImageGetScaledFiles(p_filename, getstack(), t_scaled_files, t_scaled_file_count);
+	
+	if (t_success)
+	{
+		if (t_scaled_file_count == 0)
+		{
+			// can't find scaled files, so revert to given filename
+			t_src_filename = p_filename;
+		}
+		else
+		{
+			// use image with lowest res higher than the device scale (or highest res if all are lower)
+			MCGFloat t_device_scale;
+			t_device_scale = MCResGetDeviceScale();
+			
+			const char *t_scaled_filename;
+			t_scaled_filename = nil;
+			
+			// set scale & filename to first scaled file in list
+			t_scale = t_scaled_files[0].scale;
+			t_scaled_filename = t_scaled_files[0].filename;
+			
+			for (uint32_t i = 0; i < t_scaled_file_count; i++)
+			{
+				// if current scale is lower than device scale then take any higher-res image
+				// else if current scale is higher than device res then take any lower-res image not lower than the device res
+				if ((t_scale < t_device_scale && t_scaled_files[i].scale > t_scale) ||
+					(t_scale > t_device_scale && t_scaled_files[i].scale < t_scale && t_scaled_files[i].scale >= t_device_scale))
+				{
+					t_scale = t_scaled_files[i].scale;
+					t_scaled_filename = t_scaled_files[i].filename;
+				}
+			}
+			
+			t_src_filename = t_scaled_filename;
+		}
+	}
+	
+	if (t_success)
+		t_success = MCCStringClone(p_filename, t_filename);
+	
+	if (t_success)
+		t_success = nil != (t_resolved = getstack() -> resolve_filename(t_src_filename));
 	// MW-2013-07-01: [[ Bug 11001 ]] Reverted for 6.1.0 - this canonicalisation doesn't
 	//   take into account URL references.
 	/*{reverted for correct fix in next release}
@@ -2085,15 +2141,20 @@ bool MCImage::setfilename(const char *p_filename)
 		t_resolved = t_resolved_filename;
 	}
 	 */
+	
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
 
 	MCCStringFree(t_resolved);
+	MCImageFreeScaledFileList(t_scaled_files, t_scaled_file_count);
 
 	if (t_success)
 	{
 		setrep(t_rep);
 		t_rep->Release();
+		
+		m_scale_factor = t_scale;
+		
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
