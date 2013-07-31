@@ -233,12 +233,16 @@ bool MCS_getmachine(MCStringRef& r_string)
 	return MCsystem->GetMachine(r_string);
 }
 
-const char *MCS_getaddress(void)
+bool MCS_getaddress(MCStringRef& r_address)
 {
-	static char *t_address = nil;
-	if (t_address == nil)
-		t_address = MCsystem -> GetAddress();
-	return t_address;
+	char *t_address = MCsystem -> GetAddress();
+	
+	bool t_success;
+	t_success = MCStringCreateWithCString(t_address, r_address);
+	
+	delete t_address;
+	
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1205,21 +1209,31 @@ MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Bool
 bool MCS_ha(MCSocket *s, MCStringRef& r_string)
 {
 	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCS_pa(MCExecPoint& ep, MCSocket *p_socket)
+bool MCS_pa(MCSocket *p_socket, MCStringRef& r_string)
 {
+	r_string = MCValueRetain(kMCEmptyString);
+	return true;
 }
 
-void MCS_hn(MCExecPoint& ep)
+bool MCS_hn(MCStringRef& r_string)
 {
 	char *t_host_name;
 	t_host_name = MCsystem -> GetHostName();
 	if (t_host_name == NULL)
-		ep . clear();
-	else
-		ep . copysvalue(t_host_name, strlen(t_host_name));
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	bool t_success;
+	t_success = MCStringCreateWithCString(t_host_name, r_string);
+	
 	delete t_host_name;
+
+	return t_success;
 }
 
 static bool MCS_resolve_callback(void *p_context, MCStringRef p_host)

@@ -252,8 +252,8 @@ bool MCModeShouldLoadStacksOnStartup(void)
 void MCModeGetStartupErrorMessage(const char*& r_caption, const char *& r_text)
 {
 	r_caption = "Initialization Error";
-	if (MCresult -> getvalue() . is_string())
-		r_text = MCresult -> getvalue() . get_string() . clone();
+	if (MCValueGetTypeCode(MCresult -> getvalueref()) == kMCValueTypeCodeString)
+		r_text = strdup(MCStringGetCString((MCStringRef)MCresult -> getvalueref()));
 	else
 		r_text = "unknown reason";
 }

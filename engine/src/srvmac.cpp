@@ -445,16 +445,15 @@ struct MCMacSystem: public MCSystemInterface
 	
 	virtual void *LoadModule(const char *p_path)
 	{
-		char *t_path;
-		t_path = ResolveNativePath(p_path);
-		if (t_path != NULL)
-		{
-			void *t_result;
-			t_result = dlopen(t_path, RTLD_LAZY);
-			delete t_path;
-			return t_result;
-		}
-		return NULL;
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCreateWithCString(p_path, &t_path);
+		
+		MCAutoStringRef t_resolved_path;
+		/* UNCHECKED */ ResolveNativePath(*t_path, &t_resolved_path);
+	
+		void *t_result;
+		t_result = dlopen(MCStringGetCString(*t_resolved_path), RTLD_LAZY);
+		return t_result;
 	}
 	
 	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
@@ -519,7 +518,7 @@ struct MCMacSystem: public MCSystemInterface
 		{
 			uindex_t t_user_end;
 			if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
-				t_user_end = MCStringGetLength(p_string);
+				t_user_end = MCStringGetLength(p_path);
 			
 			// Prepend user name
 			struct passwd *t_password;
@@ -528,16 +527,16 @@ struct MCMacSystem: public MCSystemInterface
 			else
 			{
 				MCAutoStringRef t_username;
-				if (!MCStringCopySubstring(p_path, MCRange(1, t_user_end - 1), &t_username))
+				if (!MCStringCopySubstring(p_path, MCRangeMake(1U, t_user_end - 1U), &t_username))
 					return false;
 
-				t_password = getpwnam(MCStringGetCString(t_username));
+				t_password = getpwnam(MCStringGetCString(*t_username));
 			}
 			
 			if (t_password != NULL)
 			{
 				if (!MCStringCreateMutable(0, &t_tilde_path) ||
-					!MCStringAppendNativeChars(*t_tilde_path, t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+					!MCStringAppendNativeChars(*t_tilde_path, (const char_t *)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
 					!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
 					return false;
 			}
@@ -571,7 +570,7 @@ struct MCMacSystem: public MCSystemInterface
 		return MCStringCopy(p_path, r_long_path);
 	}
 	
-	bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path);
+	bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
 	{
 		return MCStringCopy(p_path, r_short_path);
 	}
@@ -891,10 +890,10 @@ struct MCMacSystem: public MCSystemInterface
 		for(uint32_t i = 0; ptr[i] != NULL; i++)
 		{
 			MCAutoStringRef t_address;
-			char *t_addr_str = inet_ntoa(*ptr[i]);
-			if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
+			const char *t_addr_str = inet_ntoa(*ptr[i]);
+			if (!MCStringCreateWithNativeChars((const char_t*)t_addr_str, MCCStringLength(t_addr_str), &t_address))
 				return false;
-			if (!p_callback(p_context, t_address))
+			if (!p_callback(p_context, *t_address))
 				return false;
 		}
 		

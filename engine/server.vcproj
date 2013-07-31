@@ -167,8 +167,8 @@
 	</Configurations>
 	<References>
 		<ProjectReference
-			ReferencedProjectIdentifier="{C4829060-830A-42FC-9CCC-64E3C68897E6}"
-			RelativePathToProject=".\libcore\libcore-server.vcproj"
+			ReferencedProjectIdentifier="{8862ADC2-BEB0-4765-A1E4-0E3493578999}"
+			RelativePathToProject=".\libfoundation\libfoundation-server.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{CB9D5492-762F-4892-A02A-0B9735C598EC}"

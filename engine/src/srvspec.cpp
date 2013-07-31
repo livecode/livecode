@@ -283,7 +283,7 @@ static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, 
 	MCString t_string((char *)p_buffer, p_size * p_count);
 	MCExecPoint ep;
 	ep . setsvalue(t_string);
-	MCurlresult -> append(ep, True);
+	MCurlresult -> append(ep);
 	return p_count;
 }
 
@@ -627,8 +627,11 @@ extern void MCServerPutUnicodeContent(const MCString& data);
 extern void MCServerPutMarkup(const MCString& data);
 extern void MCServerPutUnicodeMarkup(const MCString& data);
 
-bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, const MCString& p_data)
+bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
+	MCString p_data;
+	p_data = MCStringGetOldString(p_data_ref);
+
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
@@ -761,9 +764,9 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	return 0;
 }
 
-int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boolean sheet)
+bool MCA_color(MCStringRef title, MCColor initial_color, bool as_sheet, bool& r_chosen, MCColor& r_chosen_color)
 {
-	return 0;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

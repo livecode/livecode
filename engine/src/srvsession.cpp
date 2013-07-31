@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "sysdefs.h"
-#include "core.h"
 #include "system.h"
 #include "parsedef.h"
 #include "filedefs.h"
@@ -78,8 +77,12 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 
 	t_success = MCMemoryNew(t_index);
 	
+	MCAutoStringRef t_save_path;
 	if (t_success)
-		t_success = MCCStringClone(MCS_get_session_save_path(), t_index->save_path);
+		t_success = MCS_get_session_save_path(&t_save_path);
+	
+	if (t_success)
+		t_success = MCCStringClone(MCStringGetCString(*t_save_path), t_index->save_path);
 	
 	if (t_success)
 		t_success = MCCStringFormat(t_path, "%s/lcsessions.idx", t_index->save_path);
@@ -527,8 +530,13 @@ bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
 		{
 			t_success = MCSessionCreateSession(t_index, p_session_id, t_session);
 		}
+		
+		MCAutoStringRef t_session_name;
 		if (t_success)
-			t_success = MCServerSetCookie(MCS_get_session_name(), t_session->id, 0, NULL, NULL, false, true);
+			t_success = MCS_get_session_name(&t_session_name);
+			
+		if (t_success)
+			t_success = MCServerSetCookie(MCStringGetOldString(*t_session_name), t_session->id, 0, NULL, NULL, false, true);
 		
 		if (t_success)
 			t_success = MCSessionOpenSession(t_index, t_session);
@@ -581,11 +589,13 @@ bool MCSessionExpireSession(const char *p_id)
 
 bool MCSessionExpireCookie()
 {
-	MCString t_name(MCS_get_session_name(), MCCStringLength(MCS_get_session_name()));
+	MCAutoStringRef t_session_name;
+	/* UNCHECKED */ MCS_get_session_name(&t_session_name);
+	
 	MCString t_value("EXPIRE");
 	MCString t_path(NULL, 0);
 	MCString t_domain(NULL, 0);
-	return MCServerSetCookie(t_name, t_value, MCS_time() - 60 * 60 * 24, t_path, t_domain, false, true);
+	return MCServerSetCookie(MCStringGetOldString(*t_session_name), t_value, MCS_time() - 60 * 60 * 24, t_path, t_domain, false, true);
 }
 
 bool MCSessionExpire(const char *p_id)
@@ -672,8 +682,8 @@ bool MCSessionGenerateID(char *&r_id)
 	time_t t_time;
 	time(&t_time);
 	
-	char *t_randombytes = NULL;
-	MCCrypt_random_bytes(64, (void*&)t_randombytes);
+	MCAutoStringRef t_randombytes;
+	/* UNCHECKED */ MCCrypt_random_bytes(64, &t_randombytes);
 	
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];
@@ -681,7 +691,7 @@ bool MCSessionGenerateID(char *&r_id)
 	if (t_remote_addr != NULL)
 		md5_append(&t_state, (md5_byte_t *)t_remote_addr, MCCStringLength(t_remote_addr));
 	md5_append(&t_state, (md5_byte_t *)&t_time, sizeof(t_time));
-	md5_append(&t_state, (md5_byte_t *)t_randombytes, 64);
+	md5_append(&t_state, (md5_byte_t *)MCStringGetBytePtr(*t_randombytes), 64);
 	md5_finish(&t_state, t_digest);
 	
 	return byte_to_hex((uint8_t*)t_digest, 16, r_id);
