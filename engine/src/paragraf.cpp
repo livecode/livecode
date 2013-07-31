@@ -3316,7 +3316,7 @@ bool MCParagraph::getflagstate(uint32_t flag, uint2 si, uint2 ei, bool& r_state)
 // This method accumulates the ranges of the paragraph that have 'flagged' set
 // to true. The output is placed in ep as a return-delimited list, with indices
 // adjusted by the 'delta'.
-void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_delta)
+void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si, uint2 ei, int32_t p_paragraph_start)
 {
 	// If the paragraph is empty, there is nothing to do.
 	if (textsize == 0)
@@ -3365,10 +3365,10 @@ void MCParagraph::getflaggedranges(uint32_t p_part_id, MCExecPoint& ep, uint2 si
 				
 				// MW-2012-02-24: [[ FieldChars ]] Map the field indices back to char indices.
 				int32_t t_start, t_end;
-				t_start = t_flagged_start;
-				t_end = t_flagged_end;
+				t_start = p_paragraph_start + t_flagged_start;
+				t_end = p_paragraph_start + t_flagged_end;
 				parent -> unresolvechars(p_part_id, t_start, t_end);
-				ep.appendstringf("%d,%d", t_start + p_delta + 1, t_end + p_delta);
+				ep.appendstringf("%d,%d", t_start + 1, t_end);
 
 				t_flagged_start = t_flagged_end = -1;
 			}
