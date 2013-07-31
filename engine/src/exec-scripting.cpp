@@ -87,7 +87,7 @@ void MCScriptingExecSendToProgram(MCExecContext& ctxt, MCStringRef p_message, MC
 		return;
 	}
 	
-	MCS_send(MCStringGetOldString(p_message), MCStringGetCString(p_program), p_event_type != nil ? MCStringGetCString(p_event_type) : nil, p_wait_for_reply);
+	MCS_send(p_message, p_program, p_event_type, p_wait_for_reply);
 }
 
 void MCScriptingExecReply(MCExecContext& ctxt, MCStringRef message, MCStringRef keyword)

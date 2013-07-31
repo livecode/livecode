@@ -364,7 +364,7 @@ void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_me
 
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
-	MCS_unloadurl(ctxt . GetObject(), MCStringGetCString(p_url));
+	MCS_unloadurl(ctxt . GetObject(), p_url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -407,7 +407,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCS_saveresfile(MCStringGetOldString(*t_filename), MCnullmcstring);
 		}
 		else
-			MCS_deleteurl(ctxt . GetObject(), MCStringGetCString(p_target));
+			MCS_deleteurl(ctxt . GetObject(), p_target);
 	}
 }
 

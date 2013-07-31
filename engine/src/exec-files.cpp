@@ -743,11 +743,7 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 
 void MCFilesExecRename(MCExecContext& ctxt, MCStringRef p_from, MCStringRef p_to)
 {
-	const char *t_source;
-	t_source = MCStringGetCString(p_from);
-	const char *t_dest;
-	t_dest = MCStringGetCString(p_to);
-	if (!MCS_rename(t_source, t_dest))
+	if (!MCS_rename(p_from, p_to))
 		ctxt . SetTheResultToStaticCString("can't rename file");
 	else
 		ctxt . SetTheResultToEmpty();
@@ -787,7 +783,7 @@ void MCFilesExecLaunchUrl(MCExecContext& ctxt, MCStringRef p_url)
 
 	if (ctxt . EnsureProcessIsAllowed())
 	{
-		MCS_launch_url(MCStringGetCString(*t_new_url));
+		MCS_launch_url(*t_new_url);
 		return;
 	}
 
@@ -798,7 +794,7 @@ void MCFilesExecLaunchDocument(MCExecContext& ctxt, MCStringRef p_document)
 {
 	if (ctxt . EnsureProcessIsAllowed())
 	{
-		MCS_launch_document(MCStringGetCString(p_document));		
+		MCS_launch_document(p_document);		
 		return;
 	}
 
@@ -843,10 +839,10 @@ void MCFilesExecDeleteFile(MCExecContext& ctxt, MCStringRef p_target)
 			IO_closefile(*t_target_name);
 		}
 
-		done = MCS_unlink(MCStringGetCString(p_target));
+		done = MCS_unlink(p_target);
 	}
 	else if (MCS_exists(p_target, false))
-		done = MCS_rmdir(MCStringGetCString(p_target));
+		done = MCS_rmdir(p_target);
 
 	if (!done)
 		ctxt . SetTheResultToStaticCString("can't delete that file");
@@ -2026,7 +2022,7 @@ void MCFilesExecCreateFolder(MCExecContext& ctxt, MCStringRef p_filename)
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 	
-	if (!MCS_mkdir(MCStringGetCString(p_filename)))
+	if (!MCS_mkdir(p_filename))
 		ctxt . SetTheResultToStaticCString("can't create that directory");
 	else
 		ctxt . SetTheResultToEmpty();
@@ -2037,7 +2033,7 @@ void MCFilesExecCreateAlias(MCExecContext& ctxt, MCStringRef p_target_filename, 
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 
-	if (!MCS_createalias(MCStringGetCString(p_target_filename), MCStringGetCString(p_alias_filename)))
+	if (!MCS_createalias(p_target_filename, p_alias_filename))
 		ctxt . SetTheResultToStaticCString("can't create that alias");
 	else
 		ctxt . SetTheResultToEmpty();

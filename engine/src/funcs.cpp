@@ -10365,8 +10365,12 @@ char *MCHTTPProxyForURL::PACdnsResolve(const char* const* p_arguments, unsigned 
 	if (p_argument_count != 1)
 		return NULL;
 
-	char *t_address;
-	t_address = MCS_dnsresolve(p_arguments[0]);
+	MCAutoStringRef t_address_string;
+	MCS_dnsresolve(p_arguments[0], &t_address_string);
+	
+	char *t_address = nil;
+	if (*t_address_string != nil)
+		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
 
 	return t_address;
 }

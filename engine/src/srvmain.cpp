@@ -446,15 +446,15 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 
 static void X_load_extensions(MCServerScript *p_script)
 {
-	char *t_dir;
-	t_dir = MCS_getcurdir();
+	MCAutoStringRef t_dir;
+	MCS_getcurdir(&t_dir);
 	
 	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir("externals"))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
 	
-	MCS_setcurdir(t_dir);
-	delete t_dir;
+	MCS_setcurdir(&t_dir);
+	
 }
 
 void X_main_loop(void)

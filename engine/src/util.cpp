@@ -2357,7 +2357,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		uint4 l = MCStringGetLength(p_target);
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
-			MCS_geturl(ctxt . GetObject(), MCStringGetCString(p_target));
+			MCS_geturl(ctxt . GetObject(), p_target);
 			MCurlresult->eval(ep);
 		}
 	}

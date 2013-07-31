@@ -908,14 +908,29 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		newmask &= ~00001;
 	MCS_umask(oldmask);
 	MCS_chmod(linkname, newmask);
+/*
 	if (sptr->getfilename() != NULL && !strequal(linkname, sptr->getfilename()))
 		MCS_copyresourcefork(sptr->getfilename(), linkname);
 	else if (sptr -> getfilename() != NULL)
 		MCS_copyresourcefork(backup, linkname);
+*/
+	MCAutoStringRef t_linkname;
+	/* UNCHECKED */ MCStringCreateWithCString(linkname, &t_linkname);
+	MCAutoStringRef t_filename;
+	if (sptr -> getfilename() != nil)
+		/* UNCHECKED */ MCStringCreateWithCString(sptr->getfilename(), &t_filename);
+	MCAutoStringRef t_backup;
+	/* UNCHECKED */ MCStringCreateWithCString(backup, &t_backup);
+
+	if (*t_filename != nil && (*t_linkname == nil || !MCStringIsEqualTo(*t_filename, *t_linkname, kMCCompareExact)))
+		MCS_copyresourcefork(*t_filename, *t_linkname);
+	else if (*t_filename != nil)
+		MCS_copyresourcefork(*t_backup, *t_linkname);
+
 	sptr->setfilename(linkname);
 	if (backup != NULL)
 	{
-		MCS_unlink(backup);
+		MCS_unlink(*t_backup);
 		delete backup;
 	}
 	return IO_NORMAL;

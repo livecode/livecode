@@ -3544,7 +3544,7 @@ void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap,
 		MCS_close(t_mstream);
 	
 	if (t_delete_file)
-		MCS_unlink(MCStringGetCString(p_filename));
+		MCS_unlink(p_filename);
 }
 
 MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window)

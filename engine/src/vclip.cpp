@@ -207,7 +207,7 @@ char *MCVideoClip::getfile()
 		MCS_close(tstream);
 		if (stat != IO_NORMAL)
 		{
-			MCS_unlink(MCStringGetCString(*t_tmpfile));
+			MCS_unlink(*t_tmpfile);
 			return NULL;
 		}
 		return strclone(MCStringGetCString(*t_tmpfile));

@@ -395,7 +395,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 			MCS_close(t_stream);
 			if (stat != IO_NORMAL)
 			{
-				MCS_unlink(MCStringGetCString(*t_temp));
+				MCS_unlink(*t_temp);
 				ctxt . SetTheResultToStaticCString("error writing videoClip");
 				return;
 			}

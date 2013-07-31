@@ -338,9 +338,9 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
-    extern void MCS_downloadurl(MCObject *p_target, const char *p_url, const char *p_file);
+    extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
 
-    MCS_downloadurl(MCtargetptr, MCStringGetCString(p_url), MCStringGetCString(p_filename));
+    MCS_downloadurl(MCtargetptr, p_url, p_filename);
 }
 
 //////////////////////////////////////////////////////////////////////

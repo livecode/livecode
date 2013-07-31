@@ -365,9 +365,9 @@ struct MCWindowsSystem: public MCSystemInterface
 		return unlink(p_path) == 0;
 	}
 	
-	virtual bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name)
+	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 	{
-		return rename(p_old_name, p_new_name) == 0;
+		return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 	}
 	
 	virtual bool BackupFile(const char *p_old_name, const char *p_new_name)
@@ -635,14 +635,14 @@ struct MCWindowsSystem: public MCSystemInterface
 		return _umask(mask);
 	}
 	
-	virtual MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map)
+	virtual MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map)
 	{
 		static const char *s_modes[] = { "rb", "wb", "rb+", "ab" };
 
 		MCSystemFileHandle *t_handle;
-		t_handle = MCStdioFileHandle::Open(p_path, s_modes[p_mode & 0xff]);
+		t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), s_modes[p_mode & 0xff]);
 		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
-			t_handle = MCStdioFileHandle::Open(p_path, "wb+");
+			t_handle = MCStdioFileHandle::Open(MCStringGetCString(p_path), "wb+");
 		
 		return t_handle;
 	}
