@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 
 #include "graphicscontext.h"
+#include "resolution.h"
 
 uint2 MCScreenDC::ink_table_c[NUM_INKS] =
     {
@@ -770,10 +771,10 @@ void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_bits, uint4 p_stride)
 	UnlockPixels(t_src_pixmap);
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
-		return False;
+		return false;
 
 
 	RgnHandle r = NewRgn();
@@ -785,7 +786,7 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 
-	return True;
+	return true;
 }
 
 Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)

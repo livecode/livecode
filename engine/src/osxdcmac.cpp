@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxdc.h"
 
+#include "resolution.h"
+
 extern "C"
 {
 	OSStatus HMGetHelpMenu(MenuRef *outHelpMenu,
@@ -392,6 +394,10 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(GetWindowPort((WindowPtr)mousewindow->handle.window), GetMainDevice());
 	GlobalToLocal(&p);
 	SetGWorld(oldport, olddevice);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
+	p.v = p.v / MCResGetDeviceScale();
+	p.h = p.h / MCResGetDeviceScale();
 }
 
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)

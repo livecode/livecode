@@ -41,6 +41,12 @@ extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-08-01: [[ ResIndependence ]] OSX implementation currently returns 1.5 for testing only
+MCGFloat MCResGetDeviceScale(void)
+{
+	return 1.5;
+}
+
 MCScreenDC::MCScreenDC()
 {
 	cursorhidden = false ;

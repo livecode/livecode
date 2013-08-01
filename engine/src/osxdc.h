@@ -301,7 +301,13 @@ public:
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int2 &x, int2 &y);
+	virtual void device_setmouse(int2 x, int2 y);
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -324,7 +330,6 @@ public:
 	virtual bool lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride);
 	virtual void unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride);
 
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 	
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
@@ -346,7 +351,7 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window,
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
 	                           const char *displayname);
 
 	virtual void enablebackdrop(bool p_hard);
@@ -359,12 +364,9 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void expose();
 	virtual Boolean abortkey();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);

@@ -250,7 +250,8 @@ MCImageBitmap *getimage(CGrafPtr src)
 	return image;
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, uint32_t p_window, const char *p_display_name)
+/* OVERHAUL - REVISIT: p_scale_factor parameter currently ignored */
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle& p_rect, MCGFloat p_scale_factor, uint32_t p_window, const char *p_display_name)
 {
 	// Compute the rectangle to grab in screen co-ords.
 	MCRectangle t_screen_rect;
