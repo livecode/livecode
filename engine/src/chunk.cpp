@@ -2729,6 +2729,21 @@ bool MCChunk::islinechunk(void) const
 	return false;
 }
 
+// MW-2013-08-01: [[ Bug 10925 ]] Returns true if the chunk is just a var or indexed var.
+bool MCChunk::isvarchunk(void) const
+{
+	if (source != nil)
+		return false;
+	
+	if (cline != nil || item != nil || token != nil || word != nil || character != nil)
+		return false;
+	
+	if (destvar != nil)
+		return true;
+	
+	return false;
+}
+
 // This method works out the start and end points of the text chunk in the
 // given field.
 //
