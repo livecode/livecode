@@ -1580,6 +1580,10 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
+		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+		MCGFloat t_image_scale;
+		t_image_scale = 1.0;
+		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -1651,7 +1655,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, MCResGetDeviceScale(), with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1666,8 +1670,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			// IM-2013-07-22: [[ ResIndependence ]] Import snapshot image at device resolution
-			t_bitmap = MCscreen->snapshot(r, MCResGetDeviceScale(), w, disp);
+			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
 
 			delete disp;
 		}
@@ -1681,9 +1684,9 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			MCImageBitmapCheckTransparency(t_bitmap);
 
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			// IM-2013-07-19: [[ ResIndependence ]] screen & object snapshots are taken at device resolution
+			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
 			if (t_bitmap != nil)
-				iptr->setbitmap(t_bitmap, MCResGetDeviceScale(), true);
+				iptr->setbitmap(t_bitmap, t_image_scale, true);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	
