@@ -82,29 +82,29 @@ struct MCSystemInterface
 	virtual bool GetVersion(MCStringRef& r_string) = 0;
 	virtual bool GetMachine(MCStringRef& r_string) = 0;
 	virtual MCNameRef GetProcessor(void) = 0;
-	virtual char *GetAddress(void) = 0;
+	virtual void GetAddress(MCStringRef& r_address) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;
 	
 	virtual void Alarm(real64_t p_when) = 0;
 	virtual void Sleep(real64_t p_when) = 0;
 	
-	virtual void SetEnv(const char *name, const char *value) = 0;
-	virtual char *GetEnv(const char *name) = 0;
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value) = 0;
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
 	
-	virtual bool CreateFolder(const char *p_path) = 0;
-	virtual bool DeleteFolder(const char *p_path) = 0;
+	virtual bool CreateFolder(MCStringRef p_path) = 0;
+	virtual bool DeleteFolder(MCStringRef p_path) = 0;
 	
-	virtual bool DeleteFile(const char *p_path) = 0;
+	virtual bool DeleteFile(MCStringRef p_path) = 0;
 	
-	virtual bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name) = 0;
+	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool BackupFile(const char *p_old_name, const char *p_new_name) = 0;
-	virtual bool UnbackupFile(const char *p_old_name, const char *p_new_name) = 0;
+	virtual bool BackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
+	virtual bool UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool CreateAlias(const char *p_target, const char *p_alias) = 0;
+	virtual bool CreateAlias(MCStringRef p_target, MCStringRef p_alias) = 0;
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
-	virtual char *ResolveAlias(const char *p_target) = 0;
+	virtual void ResolveAlias(MCStringRef p_target, MCStringRef& r_dest) = 0;
 	
 	virtual bool GetCurrentFolder(MCStringRef& r_string) = 0;
 	/* LEGACY */ char *GetCurrentFolder(void);
@@ -120,7 +120,7 @@ struct MCSystemInterface
 	virtual bool ChangePermissions(const char *p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
-	virtual MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map) = 0;
+	virtual MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map) = 0;
 	virtual MCSystemFileHandle *OpenStdFile(uint32_t i) = 0;
 	virtual MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string) = 0;
 	

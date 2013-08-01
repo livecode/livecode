@@ -405,19 +405,20 @@ static const char *url_execute(const char *p_url, MCUrlExecuteCallback p_callbac
 	return t_error;
 }
 
-void MCS_geturl(MCObject *p_target, const char *p_url)
+void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
+
 	const char *t_error;
 	t_error = NULL;
 	
 	if (t_error == NULL)
 	{
-		if (strncmp(p_url, "https:", 6) != 0 && strncmp(p_url, "http:", 5) != 0 && strncmp(p_url, "ftp:", 4) != 0)
+		if (strncmp(MCStringGetCString(p_url), "https:", 6) != 0 && strncmp(MCStringGetCString(p_url), "http:", 5) != 0 && strncmp(MCStringGetCString(p_url), "ftp:", 4) != 0)
 			t_error = "unsupported protocol";
 	}
 	
 	if (t_error == NULL)
-		t_error = url_execute(p_url, NULL, NULL);
+		t_error = url_execute(MCStringGetCString(p_url), NULL, NULL);
 	
 	if (t_error != NULL)
 	{
@@ -589,8 +590,9 @@ static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 	return NULL;
 }
 
-void MCS_deleteurl(MCObject *p_target, const char *p_url)
+void MCS_deleteurl(MCObject *p_target, MCStringRef p_url_string)
 {
+	const char *p_url = MCStringGetCString(p_url_string);
 	const char *t_error;
 	t_error = NULL;
 
@@ -608,7 +610,7 @@ void MCS_deleteurl(MCObject *p_target, const char *p_url)
 	}
 }
 
-void MCS_unloadurl(MCObject *p_object, const char *p_url)
+void MCS_unloadurl(MCObject *p_object, MCStringRef p_url)
 {
 }
 

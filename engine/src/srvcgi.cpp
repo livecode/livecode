@@ -734,8 +734,19 @@ static void cgi_store_form_urlencoded(MCExecPoint& ep, MCVariable *p_variable, c
 static void cgi_fix_path_variables()
 {
 	char *t_path, *t_path_end;
-	t_path = strdup(MCS_getenv("PATH_TRANSLATED"));
+
+	
+	MCAutoStringRef message1, message2, env;
+	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &message1);
+	/* UNCHECKED */ MCStringCreateWithCString("PATH_INFO", &message2);
+	
+	MCS_getenv(*message1, &env);
+
+	t_path = strdup(MCStringGetCString(*env));
 	t_path_end = t_path + strlen(t_path);
+
+	MCAutoStringRef t_path_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
 
 #ifdef _WINDOWS_SERVER
 	for(uint32_t i = 0; t_path[i] != '\0'; i++)
@@ -746,7 +757,7 @@ static void cgi_fix_path_variables()
 	char t_sep;
 	t_sep = '\0';
 
-	while (!MCS_exists(t_path, True))
+	while (!MCS_exists(*t_path_string, True))
 	{
 		char *t_new_end;
 		t_new_end = strrchr(t_path, '/');
@@ -761,9 +772,12 @@ static void cgi_fix_path_variables()
 		*t_path_end = '\0';
 	}
 
-	MCS_setenv("PATH_TRANSLATED", t_path);
+	MCS_setenv(*message1, *t_path_string);
 	*t_path_end = t_sep;
-	MCS_setenv("PATH_INFO", t_path_end);
+	
+	MCAutoStringRef t_path_end_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
+	MCS_setenv(*message2, *t_path_end_string);
 
 	free(t_path);
 }
@@ -771,9 +785,14 @@ static void cgi_fix_path_variables()
 static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+	
+	MCAutoStringRef p_query_string;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
+	
+	MCS_getenv(*message, &p_query_string);
 
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
+	const char *t_query_string = MCStringGetCString(*p_query_string);
 	if (t_query_string != NULL)
 		cgi_store_form_urlencoded(ep, s_cgi_get, t_query_string, t_query_string + strlen(t_query_string), true);
 
@@ -785,9 +804,15 @@ static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+
+	MCAutoStringRef p_query_string;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
 	
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
+	MCS_getenv(*message, &p_query_string);
+	
+	const char *t_query_string = MCStringGetCString(*p_query_string);
+	
 	if (t_query_string != NULL)
 		s_cgi_get_raw -> copysvalue(MCString(t_query_string, strlen(t_query_string)));
 	
@@ -799,9 +824,15 @@ static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 static Exec_stat cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+
+	MCAutoStringRef p_query_string;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
 	
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
+	MCS_getenv(*message, &p_query_string);
+	
+	const char *t_query_string = MCStringGetCString(*p_query_string);
+	
 	if (t_query_string != NULL)
 		cgi_store_form_urlencoded(ep, s_cgi_get_binary, t_query_string, t_query_string + strlen(t_query_string), false);
 	
@@ -814,9 +845,15 @@ static Exec_stat cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
 	
 	bool t_success = true;
+
+	MCAutoStringRef p_content_length;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_LENGTH", &message);
 	
-	char *t_content_length;
-	t_content_length = MCS_getenv("CONTENT_LENGTH");
+	MCS_getenv(*message, &p_content_length);
+	
+	char *t_content_length = (char*) MCStringGetCString(*p_content_length);
+	
 	if (t_content_length != NULL)
 	{
 		uint32_t t_length;
@@ -852,8 +889,13 @@ static Exec_stat cgi_compute_post_variables()
 	
 	s_cgi_processed_post = true;
 	
-	char *t_content_type;
-	t_content_type = MCS_getenv("CONTENT_TYPE");
+	MCAutoStringRef p_content_type;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &message);
+	
+	MCS_getenv(*message, &p_content_type);
+	
+	char *t_content_type = (char*) MCStringGetCString(*p_content_type);
 	
 	if (t_content_type != NULL && strcasecmp(t_content_type, "application/x-www-form-urlencoded") == 0)
 	{
@@ -913,8 +955,14 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 static bool cgi_multipart_get_boundary(char *&r_boundary)
 {
 	bool t_success = true;
-	char *t_content_type;
-	t_content_type = MCS_getenv("CONTENT_TYPE");
+
+	MCAutoStringRef p_content_type;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &message);
+	
+	MCS_getenv(*message, &p_content_type);
+	
+	char *t_content_type = (char*) MCStringGetCString(*p_content_type);
 
 	char *t_params = NULL;
 	uint32_t t_index = 0;
@@ -1186,8 +1234,14 @@ static bool cgi_store_form_multipart(MCExecPoint& ep, IO_handle p_stream)
 static Exec_stat cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 {
 	bool t_success = true;
-	char *t_cookie_string;
-	t_cookie_string = MCS_getenv("HTTP_COOKIE");
+
+	MCAutoStringRef p_cookie_string;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("HTTP_COOKIE", &message);
+	
+	MCS_getenv(*message, &p_cookie_string);
+	
+	char *t_cookie_string = (char*) MCStringGetCString(*p_cookie_string);
 	
 	MCExecPoint ep;
 	
@@ -1214,7 +1268,11 @@ bool cgi_initialize()
 	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
-	MCserverinitialscript = MCsystem -> ResolvePath(MCS_getenv("PATH_TRANSLATED"));
+	MCAutoStringRef message, env;
+	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &message);
+	MCS_getenv(*message, &env);
+
+	MCserverinitialscript = MCsystem -> ResolvePath(MCStringGetCString(*env));
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;

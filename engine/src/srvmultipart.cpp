@@ -946,9 +946,11 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 void MCMultiPartRemoveTempFiles()
 {
 	MCMultiPartTempFileList *t_item;
+	MCAutoStringRef file_name_string;
+	/* UNCHECKED */ MCStringCreateWithCString(s_temp_files->file_name, &file_name_string);
 	while (s_temp_files != NULL)
 	{
-		MCS_unlink(s_temp_files->file_name);
+		MCS_unlink(*file_name_string);
 		MCCStringFree(s_temp_files->file_name);
 
 		t_item = s_temp_files;

@@ -354,7 +354,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	{
 		// Attempt to open the file
 		MCSystemFileHandle *t_handle;
-		t_handle = MCsystem -> OpenFile(t_file -> filename, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
+		MCAutoStringRef t_filename_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
+
+		t_handle = MCsystem -> OpenFile(*t_filename_string, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);

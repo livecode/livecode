@@ -364,8 +364,15 @@ bool X_init(int argc, char *argv[], char *envp[])
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
 	// engine.
-	char *t_native_home;
-	t_native_home = MCS_getenv(HOME_ENV_VAR);
+	MCAutoStringRef p_native_home;
+	MCAutoStringRef home_env_var_message;
+	/* UNCHECKED */ MCStringCreateWithCString(HOME_ENV_VAR, &home_env_var_message);
+	
+	MCS_getenv(*home_env_var_message, &p_native_home);
+	
+	char *t_native_home = (char*) MCStringGetCString(*p_native_home);
+
+
 	if (t_native_home != NULL)
 	{
 		t_native_home = MCsystem -> ResolveNativePath(t_native_home);
@@ -381,8 +388,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 	}
 
 	// Check for CGI mode.
-
-	s_server_cgi = MCS_getenv("GATEWAY_INTERFACE") != NULL;
+	MCAutoStringRef message, env;
+	/* UNCHECKED */ MCStringCreateWithCString("GATEWAY_INTERFACE", &message);
+	
+	s_server_cgi = MCS_getenv(*message, &env);
 	
 	if (s_server_cgi)
 	{
@@ -448,12 +457,15 @@ static void X_load_extensions(MCServerScript *p_script)
 {
 	MCAutoStringRef t_dir;
 	MCS_getcurdir(&t_dir);
+	MCAutoStringRef  s_server_home_string, p_message;
+	/* UNCHECKED */ MCStringCreateWithCString(s_server_home, &s_server_home_string);
+	/* UNCHECKED */ MCStringCreateWithCString("externals", &p_message);
 	
-	if (MCS_setcurdir(s_server_home) &&
-		MCS_setcurdir("externals"))
+	if (MCS_setcurdir(*s_server_home_string) &&
+		MCS_setcurdir(*p_message))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
 	
-	MCS_setcurdir(&t_dir);
+	MCS_setcurdir(*t_dir);
 	
 }
 

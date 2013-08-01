@@ -283,8 +283,14 @@ static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argume
 	if (p_argument_count != 1)
 		return NULL;
 
-	char *t_address;
-	t_address = MCS_dnsresolve(p_arguments[0]);
+	MCAutoStringRef t_address_string;
+	MCAutoStringRef p_arguments_string;
+	/*UNCHECKED*/MCStringCreateWithCString(p_arguments[0], &p_arguments_string);
+	MCS_dnsresolve(*p_arguments_string, &t_address_string);
+
+	char *t_address = nil;
+	if (*t_address_string != nil)
+		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
 
 	return t_address;
 }
@@ -294,8 +300,11 @@ static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argum
 	if (p_argument_count != 0)
 		return NULL;
 
-	char *t_address;
-	t_address = MCS_hostaddress();
+	MCAutoStringRef t_address_string;
+	MCS_hostaddress(&t_address_string);
+	char *t_address = nil;
+	if (*t_address_string != nil)
+		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
 
 	return t_address;
 }
@@ -393,7 +402,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
 		else
 			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (!MCS_unlink(MCStringGetCString(*t_filename)))
+		if (!MCS_unlink(*t_filename))
 			ctxt . SetTheResultToStaticCString("can't delete that file");
 		else
 			ctxt . SetTheResultToEmpty();

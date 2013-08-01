@@ -133,7 +133,7 @@ extern bool MCS_isfake(IO_handle stream);
 extern uint4 MCS_faketell(IO_handle stream);
 extern void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size);
 
-extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
+extern IO_handle MCS_open(MCStringRef path, MCStringRef mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_stat MCS_close(IO_handle &stream);
 
 extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);

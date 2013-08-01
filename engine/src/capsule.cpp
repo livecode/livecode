@@ -299,7 +299,10 @@ bool MCCapsuleFillFromFile(MCCapsuleRef self, const char *p_path, uint32_t p_off
 	t_stream = nil;
 	if (t_success)
 	{
-		t_stream = MCS_open(p_path, IO_READ_MODE, True, False, 0);
+		MCAutoStringRef io_read_mode_string, p_path_string;
+		/* UNCHECKED */ MCStringCreateWithCString(IO_READ_MODE, &io_read_mode_string);
+		/* UNCHECKED */ MCStringCreateWithCString(p_path, &p_path_string);
+		t_stream = MCS_open(*p_path_string, *io_read_mode_string, True, False, 0);
 		if (t_stream == nil)
 			t_success = false;
 	}

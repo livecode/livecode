@@ -304,14 +304,14 @@ struct MCWindowsSystem: public MCSystemInterface
 		return MCN_x86;
 	}
 
-	virtual char *GetAddress(void)
+	virtual void GetAddress(MCStringRef& r_address)
 	{
-		char *buffer;
+		char *buffer = (char*)MCStringGetCString(r_address);
 		buffer = new char[MAXHOSTNAMELEN + strlen(MCcmd) + 2];
 		gethostname(buffer, MAXHOSTNAMELEN);
 		strcat(buffer, ":");
 		strcat(buffer, MCcmd);
-		return buffer;
+		/* UNCHECKED */ MCStringCreateWithCString(buffer, r_address);
 	}
 	
 	virtual void Alarm(real64_t p_interval)
@@ -327,8 +327,11 @@ struct MCWindowsSystem: public MCSystemInterface
 	{
 	}
 	
-	virtual void SetEnv(const char *name, const char *value)
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
 	{
+		const char *name = MCStringGetCString(p_name);
+		const char *value = MCStringGetCString(p_value);
+
 		if (value == NULL)
 		{
 			char *dptr = new char[strlen(name) + 2];
@@ -345,23 +348,29 @@ struct MCWindowsSystem: public MCSystemInterface
 		}
 	}
 
-	virtual char *GetEnv(const char *name)
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
 	{
-		return getenv(name);
+		const char *t_env;
+		t_env = getenv(MCStringGetCString(p_name));
+		/* UNCHECKED */ MCStringCreateWithCString(t_env, r_value);
 	}
+
 	
-	virtual bool CreateFolder(const char *p_path)
+	virtual bool CreateFolder(MCStringRef p_path_string)
 	{
+		const char *p_path = MCStringGetCString(p_path_string);
 		return _mkdir(p_path) == 0;
 	}
 	
-	virtual bool DeleteFolder(const char *p_path)
+	virtual bool DeleteFolder(MCStringRef p_path_string)
 	{
+		const char *p_path = MCStringGetCString(p_path_string);
 		return _rmdir(p_path) == 0;
 	}
 	
-	virtual bool DeleteFile(const char *p_path)
+	virtual bool DeleteFile(MCStringRef p_path_string)
 	{
+		const char *p_path = MCStringGetCString(p_path_string);
 		return unlink(p_path) == 0;
 	}
 	
@@ -370,18 +379,24 @@ struct MCWindowsSystem: public MCSystemInterface
 		return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 	}
 	
-	virtual bool BackupFile(const char *p_old_name, const char *p_new_name)
+	virtual bool BackupFile(MCStringRef p_old_name_string, MCStringRef p_new_name_string)
 	{
+		const char *p_old_name = MCStringGetCString(p_old_name_string);
+		const char *p_new_name = MCStringGetCString(p_new_name_string);
 		return rename(p_old_name, p_new_name) == 0;
 	}
 	
-	virtual bool UnbackupFile(const char *p_old_name, const char *p_new_name)
+	virtual bool UnbackupFile(MCStringRef p_old_name_string, MCStringRef p_new_name_string)
 	{
+		const char *p_old_name = MCStringGetCString(p_old_name_string);
+		const char *p_new_name = MCStringGetCString(p_new_name_string);
 		return rename(p_old_name, p_new_name) == 0;
 	}
 	
-	virtual bool CreateAlias(const char *in_source, const char *dest)
+	virtual bool CreateAlias(MCStringRef p_in_source, MCStringRef p_dest)
 	{
+		const char *in_source = MCStringGetCString(p_in_source);
+		const char *dest = MCStringGetCString(p_dest);
 		char *source;
 		source = strdup(in_source);
 		HRESULT err;
@@ -394,7 +409,12 @@ struct MCWindowsSystem: public MCSystemInterface
 			IPersistFile *IPFILEvar1;
 			if (source[1] != ':' && source[0] != '/')
 			{
-				char *tpath = MCS_getcurdir(); //prepend the current dir
+				MCAutoStringRef tpath_string;
+				MCS_getcurdir(&tpath_string); //prepend the current dir
+				char *tpath;
+				if (*tpath_string != nil)
+					MCCStringClone(MCStringGetCString(*tpath_string), tpath);
+
 				strcat(tpath, "/");
 				strcat(tpath, source);
 				delete source;
@@ -423,8 +443,9 @@ struct MCWindowsSystem: public MCSystemInterface
 		return SUCCEEDED(err);
 	}
 	
-	virtual char *ResolveAlias(const char *source)
+	virtual void ResolveAlias(MCStringRef p_source, MCStringRef& r_dest)
 	{
+		const char *source = MCStringGetCString(p_source);
 		char *dest = new char[PATH_MAX];
 		HRESULT hres;
 		IShellLinkA* psl;
@@ -465,7 +486,9 @@ struct MCWindowsSystem: public MCSystemInterface
 			delete dest;
 			dest = NULL;
 		}
-		return dest;
+
+		/* UNCHECKED */ MCStringCreateWithCString(dest, r_dest);
+		
 	}
 	
 	virtual bool GetCurrentFolder(MCStringRef& r_path)
@@ -733,7 +756,16 @@ struct MCWindowsSystem: public MCSystemInterface
 	
 	char *LongFilePath(const char *p_path)
 	{
-		char *shortpath = MCS_resolvepath(p_path);
+
+		MCAutoStringRef newpath_string;
+		MCAutoStringRef p_path_string;
+		/* UNCHECKED */ MCStringCreateWithCString(p_path, &p_path_string);
+
+
+		MCS_resolvepath(&p_path_string, &newpath_string);
+
+
+		char *shortpath = (char*)MCStringGetCString(*newpath_string);
 		char *longpath = new char[PATH_MAX];
 		char *p, *pStart;
 		char buff[PATH_MAX];
@@ -811,15 +843,20 @@ struct MCWindowsSystem: public MCSystemInterface
 	char *ShortFilePath(const char *p_path)
 	{
 		char *shortpath = new char[PATH_MAX];
-		char *newpath = MCS_resolvepath(p_path);
-		if (!GetShortPathNameA(newpath, shortpath, PATH_MAX))
+		MCAutoStringRef newpath_string;
+		MCAutoStringRef p_path_string;
+		/* UNCHECKED */ MCStringCreateWithCString(p_path, &p_path_string);
+
+
+		MCS_resolvepath(&p_path_string, &newpath_string);
+		if (!GetShortPathNameA(MCStringGetCString(*newpath_string), shortpath, PATH_MAX))
 		{
 			delete shortpath;
 			shortpath = nil;
 		}
 		else
 			MCU_path2std(shortpath);
-		delete newpath;
+		
 		return shortpath;
 	}
 

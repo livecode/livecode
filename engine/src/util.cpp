@@ -2394,7 +2394,9 @@ void MCU_geturl(MCExecPoint &ep)
 				uint4 l = ep.getsvalue().getlength();
 				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 				{
-					MCS_geturl(ep . getobj(), ep . getcstring());
+					MCAutoStringRef p_url;
+					/* UNCHECKED */ MCStringCreateWithCString(ep . getcstring(), &p_url);
+					MCS_geturl(ep . getobj(), *p_url);
 					MCurlresult->eval(ep);
 				}
 				else

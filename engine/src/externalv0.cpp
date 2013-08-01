@@ -135,17 +135,22 @@ bool MCExternalV0::Prepare(void)
 	// Get the info from the main external entry point (we now this symbol exists
 	// as it is used to determine if its a V0 external!).
 
+	MCAutoStringRef p_symbol1, p_symbol2, p_symbol3;
+	/* UNCHECKED */ MCStringCreateWithCString("getXtable", &p_symbol1);
+	/* UNCHECKED */ MCStringCreateWithCString("configureSecurity", &p_symbol2);
+	/* UNCHECKED */ MCStringCreateWithCString("shutdownXtable", &p_symbol3);
+
 	GETXTABLE t_getter;
-	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, "getXtable");
+	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, *p_symbol1 );
 	t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;
-	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, "configureSecurity");
+	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, *p_symbol2);
 	if (t_conf_security != nil)
 		t_conf_security(MCsecuritycbs);
 
 	SHUTDOWNXTABLE t_shutdown;
-	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, "shutdownXtable");
+	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, *p_symbol3);
 	if (t_shutdown != nil)
 		m_shutdown = t_shutdown;
 
