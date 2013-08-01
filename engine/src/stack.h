@@ -236,8 +236,15 @@ public:
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
+	//////////
+	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
+	
+	MCRectangle device_getwindowrect() const;
+	
+	//////////
+	
     virtual MCRectangle getrectangle(bool p_effective) const;
     
 	void external_idle();

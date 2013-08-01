@@ -113,6 +113,9 @@ MCMessageList;
 struct MCDisplay
 {
 	uint4 index;
+	MCRectangle device_viewport;
+	MCRectangle device_workarea;
+	
 	MCRectangle viewport;
 	MCRectangle workarea;
 };
@@ -290,8 +293,28 @@ public:
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
-	virtual const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+////////////////////////////////////////////////////////////////////////////////
+	
+	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
+	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
+	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+	Boolean getwindowgeometry(Window w, MCRectangle &drect);
+	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void querymouse(int2 &x, int2 &y);
+	void setmouse(int2 x, int2 y);
+	
+//////////
+	
+	const MCDisplay *device_getnearestdisplay(const MCRectangle& p_rectangle);
+	
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+	
+////////////////////////////////////////////////////////////////////////////////
+	
 
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -311,8 +334,6 @@ public:
 	virtual void beep();
 
 	virtual void setinputfocus(Window window);
-
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
@@ -348,16 +369,12 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-
 	virtual void expose();
 	virtual Boolean abortkey();
 	virtual void waitconfigure(Window w);
 	virtual void waitreparent(Window w);
 	virtual void waitfocus();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);

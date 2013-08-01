@@ -3848,7 +3848,9 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	{
 		MCImageBitmap *t_mask;
 		t_mask = p_shape . mask . bits;
-		return MCU_intersect_rect(p_shape . bounds, MCU_make_rect(p_shape . mask . origin . x, p_shape . mask . origin . y, t_mask -> width, t_mask -> height));
+		MCGFloat t_scale;
+		t_scale = p_shape . mask . scale;
+		return MCU_intersect_rect(p_shape . bounds, MCU_make_rect(p_shape . mask . origin . x, p_shape . mask . origin . y, t_mask -> width / t_scale, t_mask -> height/ t_scale));
 	}
 
 	// Must be complex.

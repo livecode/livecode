@@ -4160,8 +4160,8 @@ Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
 {
 	MCDisplay const *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	MCGRectangle t_viewport = MCResDeviceToUserRect(t_displays -> viewport);
-	ep.setpoint(t_viewport . origin . x + (t_viewport . size . width / 2), t_viewport . origin . y + (t_viewport . size . height / 2));
+	MCRectangle t_viewport = t_displays -> viewport;
+	ep.setpoint(t_viewport . x + (t_viewport . width / 2), t_viewport . y + (t_viewport . height / 2));
 	return ES_NORMAL;
 }
 
@@ -4191,7 +4191,7 @@ void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool
 	{
 		char t_buffer[U2L * 4 + 4];
 		MCRectangle t_rectangle;
-		t_rectangle = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport));
+		t_rectangle = p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
 		sprintf(t_buffer, "%d,%d,%d,%d", t_rectangle . x, t_rectangle . y,
 						t_rectangle . x + t_rectangle . width,
 						t_rectangle . y + t_rectangle . height);

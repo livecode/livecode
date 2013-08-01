@@ -530,9 +530,7 @@ void MCStack::mode_load(void)
 
 void MCStack::mode_getrealrect(MCRectangle& r_rect)
 {
-	MCRectangle t_rect;
-	MCscreen->getwindowgeometry(window, t_rect);
-	r_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	MCscreen->getwindowgeometry(window, r_rect);
 }
 
 void MCStack::mode_takewindow(MCStack *other)

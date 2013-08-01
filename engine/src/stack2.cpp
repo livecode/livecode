@@ -569,7 +569,7 @@ Boolean MCStack::setwindow(Window w)
 	MCRectangle t_rect;
 	if (!MCscreen->getwindowgeometry(window, t_rect))
 		return False;
-	rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	rect = t_rect;
 	window = w;
 	state |= CS_FOREIGN_WINDOW;
 	return True;
@@ -1843,9 +1843,9 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		MCRectangle t_rect;
 		MCU_set_rect(t_rect, rel . x + rel . width / 2, rel . y + rel . height / 2, 1, 1);
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect)));
+		t_display = MCscreen -> getnearestdisplay(t_rect);
 		MCRectangle t_workarea;
-		t_workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display -> workarea));
+		t_workarea = t_display -> workarea;
 		if (rel.y + rel.height + rect.height > t_workarea . y + t_workarea . height - MENU_SPACE
 		        && rel.y - rect.height > t_workarea . y + MENU_SPACE)
 			positionrel(rel, OP_ALIGN_LEFT, OP_TOP);
@@ -1923,12 +1923,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// "bind" the stack's rect... Or in other words, make sure its within the 
 	// screens (well viewports) working area.
 	if (!(flags & F_FORMAT_FOR_PRINTING) && !(state & CS_BEEN_MOVED))
-	{
-		MCRectangle t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
-		MCscreen->boundrect(t_rect, (!(flags & F_DECORATIONS)
-		                           || decorations & WD_TITLE), mode);
-		rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
-	}
+		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS) || decorations & WD_TITLE), mode);
 	
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
@@ -1969,10 +1964,10 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 
 		MCRectangle t_nearest;
 		MCU_set_rect(t_nearest, rect . x + rect . width / 2, rect . y + rect . height / 2, 1, 1);
-		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_nearest)));
+		t_display = MCscreen -> getnearestdisplay(t_nearest);
 
 		MCRectangle t_workarea;
-		t_workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display->workarea));
+		t_workarea = t_display->workarea;
 		
 		// Make sure that we are not starting our menu off the top of the screen.
 		if (rect . y < t_workarea . y + MENU_SPACE)

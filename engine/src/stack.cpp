@@ -996,14 +996,6 @@ MCRectangle MCStack::getrectangle(bool p_effective) const
     if (!p_effective)
         return getrect();
     
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	MCRectangle t_rect = getwindowrect();
-	t_rect.x = t_rect.x / t_scale;
-	t_rect.y = t_rect.y / t_scale;
-	t_rect.width = t_rect.width / t_scale;
-	t_rect.height = t_rect.height / t_scale;
     return getwindowrect();
 }
 
@@ -1023,7 +1015,7 @@ void MCStack::setrect(const MCRectangle &nrect)
 	{
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(rect);
-		t_new_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_display -> viewport));
+		t_new_rect = t_display -> viewport;
 	}
 	else
 		t_new_rect = nrect;
@@ -1490,7 +1482,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_SCREEN:
 	{
 		const MCDisplay *t_display;
-		t_display = MCscreen -> getnearestdisplay(MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect)));
+		t_display = MCscreen -> getnearestdisplay(rect);
 		ep . setint(t_display -> index + 1);
 	}
 	break;
@@ -2986,3 +2978,15 @@ void MCStack::purgefonts()
 	dirtyall();
 #endif
 }
+
+//////////
+
+MCRectangle MCStack::getwindowrect(void) const
+{
+	MCRectangle t_rect;
+	t_rect = device_getwindowrect();
+	
+	return MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+}
+
+//////////
