@@ -1262,7 +1262,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 //   values can be used.
 // MW-2012-01-25: [[ ParaStyles ]] The 'is_line_chunk' parameter is true if the prop
 //   is being set on a line directly.
-Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line_chunk)
+Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef index, int4 si, int4 ei, bool is_line_chunk, bool dont_layout)
 {
 	// Fetch the string value of the ep as 's' for compatibility with pre-ep taking
 	// code.
@@ -1376,7 +1376,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 
 		// First ensure the flagged property is false along the whole range.
 		ep2 . setboolean(False);
-		settextatts(parid, P_FLAGGED, ep2, nil, si, ei, false);
+		
+		// MW-2013-08-01: [[ Bug 10932 ]] Don't layout this operation.
+		settextatts(parid, P_FLAGGED, ep2, nil, si, ei, false, true);
 
 		// All remaining ranges will have flagged set to true.
 		ep2 . setboolean(True);
@@ -1406,9 +1408,12 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				
 				// MW-2012-03-23: [[ Bug 10118 ]] Both range_start and range_end are already
 				//   offset from the start of the field.
-				settextatts(parid, P_FLAGGED, ep2, nil, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), false);
+				// MW-2013-08-01: [[ Bug 10932 ]] Don't layout this operation.
+				settextatts(parid, P_FLAGGED, ep2, nil, MCU_max(si, t_range_start), MCU_min(ei, t_range_end), false, true);
 			}
 		}
+		// MW-2013-08-01: [[ Bug 10932 ]] Force a full relayout.
+		settextatts(parid, P_UNDEFINED, ep2, nil, 0, 0, false, false);
 		return ES_NORMAL;
 	}
 
@@ -1419,7 +1424,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	// MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
 	//   are attached to the current card.
 	bool t_need_layout;
-	if (opened)
+	if (opened && !dont_layout)
 		t_need_layout = pgptr == paragraphs;
 	else
 		t_need_layout = false;
@@ -1453,6 +1458,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 
 	switch (which)
 	{
+	case P_UNDEFINED:
+		all = True;
+		break;
 	case P_BACK_COLOR:
 		// If we are a line chunk, then make sure we set the paragraph
 		// level value.
@@ -1625,18 +1633,21 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			pgptr->setparent(this);
 
-			if (!t_is_para_attr)
-				pgptr->setatts(si, MCU_min(ei, pgptr->gettextlength()), which, t_value);
-			else
+			if (which != P_UNDEFINED)
 			{
-				// MW-2012-01-25: [[ ParaStyles ]] If we are a paragraph style then we
-				//   set on the first para, then copy from the first on all subsequent.
-				if (pgptr == t_first_pgptr)
-					t_stat = pgptr->setparagraphattr(which, ep);
+				if (!t_is_para_attr)
+					pgptr->setatts(si, MCU_min(ei, pgptr->gettextlength()), which, t_value);
 				else
-					pgptr -> copysingleattr(which, t_first_pgptr);
+				{
+					// MW-2012-01-25: [[ ParaStyles ]] If we are a paragraph style then we
+					//   set on the first para, then copy from the first on all subsequent.
+					if (pgptr == t_first_pgptr)
+						t_stat = pgptr->setparagraphattr(which, ep);
+					else
+						pgptr -> copysingleattr(which, t_first_pgptr);
+				}
 			}
-
+				
 			if (t_need_layout && !all)
 			{
 				// MW-2012-01-25: [[ ParaStyles ]] Ask the paragraph to reflow itself.
