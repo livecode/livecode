@@ -255,7 +255,7 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
 {
 	static MCDisplay s_display;
 	memset(&s_display, 0, sizeof(MCDisplay));
@@ -269,35 +269,36 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.workarea.x = t_left;
-	s_display.workarea.y = t_top;
-	s_display.workarea.width = t_right - t_left;
-	s_display.workarea.height = t_bottom - t_top;
+	s_display.device_workarea.x = t_left;
+	s_display.device_workarea.y = t_top;
+	s_display.device_workarea.width = t_right - t_left;
+	s_display.device_workarea.height = t_bottom - t_top;
 
 	MCAndroidEngineCall("getViewportAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.viewport.x = t_left;
-	s_display.viewport.y = t_top;
-	s_display.viewport.width = t_right - t_left;
-	s_display.viewport.height = t_bottom - t_top;
+	s_display.device_viewport.x = t_left;
+	s_display.device_viewport.y = t_top;
+	s_display.device_viewport.width = t_right - t_left;
+	s_display.device_viewport.height = t_bottom - t_top;
 	if (p_effective)
-		s_display.viewport.height -= s_current_keyboard_height;
+		s_display.device_viewport.height -= s_current_keyboard_height;
 
 	MCLog("getdisplays: workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)",
-		s_display.workarea.x, s_display.workarea.y, s_display.workarea.width, s_display.workarea.height,
-		s_display.viewport.x, s_display.viewport.y, s_display.viewport.width, s_display.viewport.height);
+		s_display.device_workarea.x, s_display.device_workarea.y, s_display.device_workarea.width, s_display.device_workarea.height,
+		s_display.device_viewport.x, s_display.device_viewport.y, s_display.device_viewport.width, s_display.device_viewport.height);
 
-	p_displays = &s_display;
-	return 1;
+	r_displays = &s_display;
+	r_count = 1;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	drect = android_view_get_bounds();
-	return True;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1817,11 +1818,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobje
 			return;
 	}
 
-	// IM-2013-07-26: [[ ResIndependence ]] Scale touches from device -> user coords
-	MCGFloat t_scale;
-	t_scale = MCResGetDeviceScale();
-	
-	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)id, timestamp, x / t_scale, y / t_scale);
+	static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, (void *)id, timestamp, x, y);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code)
