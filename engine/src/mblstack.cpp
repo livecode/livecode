@@ -42,6 +42,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "resolution.h"
+
 MCStack *MCStack::findstackd(Window w)
 {
 	if (w == window)
@@ -149,7 +151,7 @@ void MCStack::clearscroll(void)
 {
 }
 
-MCRectangle MCStack::getwindowrect() const
+MCRectangle MCStack::device_getwindowrect() const
 {
-    return rect;
+    return MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
 }

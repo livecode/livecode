@@ -69,7 +69,12 @@ public:
 	uint2 getrealdepth(void);
 	uint2 getpad();
 	Window getroot();
-	uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+	
+	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void device_querymouse(int16_t &r_x, int16_t &r_y);
+	void device_setmouse(int16_t p_x, int16_t p_y);
 
 	void resetcursors(void);
 	void setcursor(Window w, MCCursorRef c);
@@ -85,12 +90,9 @@ public:
 	void setname(Window window, const char *newname);
 	void sync(Window w);
 	void setinputfocus(Window window);
-	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 
 	void setcmap(MCStack *sptr);
 	void setgraphicsexposures(Boolean on, MCStack *sptr);
-
-	Boolean getwindowgeometry(Window w, MCRectangle &drect);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
@@ -127,9 +129,7 @@ public:
 	void waitconfigure(Window w);
 	void waitreparent(Window w);
 	void waitfocus();
-	void querymouse(int2 &x, int2 &y);
 	uint2 querymods();
-	void setmouse(int2 x, int2 y);
 	Boolean getmouse(uint2 button, Boolean& r_abort);
 	Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -195,7 +195,7 @@ public:
 	void handle_key_focus(bool focused);
 	void handle_redraw(const MCRectangle& p_dirty);
 	void handle_motion(MCEventMotionType type, double timestamp);
-	void handle_touch(MCEventTouchPhase phase, void *touch, int32_t p_timestamp, int32_t p_x, int32_t p_y);
+	void handle_touch(MCEventTouchPhase phase, void *touch, int32_t p_timestamp, int32_t p_device_x, int32_t p_device_y);
 	
 	// Common window handling methods.
 	void open_window(Window p_window);

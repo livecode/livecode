@@ -277,25 +277,26 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
 	static MCDisplay s_display;
 
 	s_display . index = 0;
-	s_display . viewport = MCDeviceRectFromLogicalCGRect(MCIPhoneGetScreenBounds());
-	s_display . workarea = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
+	s_display . device_viewport = MCDeviceRectFromLogicalCGRect(MCIPhoneGetScreenBounds());
+	s_display . device_workarea = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	if (p_effective)
-		s_display . workarea . height -= s_current_keyboard_height;
+		s_display . device_workarea . height -= s_current_keyboard_height;
 	
-	p_displays = &s_display;
+	r_displays = &s_display;
+	r_count = 1;
 	
-	return 1;
+	return true;
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window p_window, MCRectangle& r_rect)
+bool MCScreenDC::device_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 {
 	r_rect = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
-	return True;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -424,7 +425,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle t_screen_rect;
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	t_screen_rect = MCGRectangleGetIntegerInterior(MCResDeviceToUserRect(t_displays[0] . viewport));
+	t_screen_rect = t_displays[0] . viewport;
 	r = MCU_clip_rect(env -> r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
 	
 	uint32_t t_bitmap_width, t_bitmap_height;
@@ -1503,7 +1504,7 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 	for(UITouch *t_touch in t_sorted_touches)
 	{
 		MCGFloat t_scale;
-		t_scale = MCIPhoneGetResolutionScale();
+		t_scale = MCIPhoneGetDeviceScale();
 		
 		CGPoint t_location;
 		t_location = [ t_touch locationInView: p_view ];
