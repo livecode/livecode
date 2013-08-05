@@ -25,6 +25,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "LiveCode.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+#undef __WINDOWS__
+#undef __LINUX__
+#undef __MAC__
+#undef __IOS__
+#undef __ANDROID__
+
+#if defined(_MSC_VER) && !defined(WINCE)
+#define __WINDOWS__ 1
+#elif defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
+#define __MAC__ 1
+#elif defined(__GNUC__) && !defined(__APPLE__) && !defined(ANDROID)
+#define __LINUX__ 1
+#elif defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(TARGET_OS_IPHONE)
+#define __IOS__ 1
+#elif defined(ANDROID)
+#define __ANDROID__ 1
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef __WINDOWS__
 #include <windows.h>
 typedef unsigned int uint32_t;
@@ -2514,7 +2536,7 @@ static bool error__report_bad_parameter_count(MCVariableRef result)
 	return false;
 }
 
-static bool error__report_not_supported(MCVariantRef result)
+static bool error__report_not_supported(MCVariableRef result)
 {
 	const char *msg = "not supported";
 	MCVariableStore(result, kMCOptionAsCString, &msg);
@@ -2854,7 +2876,7 @@ static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, 
 	if (err == kLCErrorNone)
 	{
 		t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
-		if (t_java_value == nil || env -> ExceptionOccured() != nil)
+		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
 			err = kLCErrorOutOfMemory;
@@ -2889,7 +2911,7 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	if (err == kLCErrorNone)
 	{
 		t_java_value = (jobject)env -> NewByteArray(t_cdata_value . length);
-		if (t_java_value == nil || env -> ExceptionOccured() != nil)
+		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
 			err = kLCErrorOutOfMemory;
@@ -2899,7 +2921,7 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	if (err == kLCErrorNone)
 	{
 		env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, t_cdata_value . length, (const jbyte *)t_cdata_value . buffer);
-		if (env -> ExceptionOccured() != nil)
+		if (env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
 			err = kLCErrorOutOfMemory;
@@ -2917,7 +2939,7 @@ static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jo
 	return fetch__report_error(err, arg);
 }
 
-static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
+static LCError java_to__cstring(JNIEnv *env, jobject value, char*& r_cstring)
 {
 	LCError err;
 	err = kLCErrorNone;
@@ -2929,7 +2951,7 @@ static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
 	if (err == kLCErrorNone)
 	{
 		t_unichars = env -> GetStringChars((jstring)value, nil);
-		if (t_unichars == nil || env -> ExceptionOccured() != nil)
+		if (t_unichars == nil || env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
 			err = kLCErrorOutOfMemory;
@@ -2952,13 +2974,31 @@ static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
 			t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
 		t_native_value[t_unichar_count] = 0;
 	}
+
+	if (err == kLCErrorNone)
+		r_cstring = t_native_value;
+	else
+		free(t_native_value);
+
+	if (t_unichars != nil)
+		env -> ReleaseStringChars((jstring)value, t_unichars);
+
+	return err;
+}
+
+static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
+{
+	LCError err;
+	err = kLCErrorNone;
+	
+	char *t_native_value;
+	if (err == kLCErrorNone)
+		err = java_to__cstring(env, value, t_native_value);
 	
 	if (err == kLCErrorNone)
 		err = LCValueStore(var, kLCValueOptionAsCString, &t_native_value);
 		
 	free(t_native_value);
-	if (t_unichars != nil)
-		env -> ReleaseStringChars((jstring)value, t_unichars);
 		
 	if (err == kLCErrorNone)
 		return true;
@@ -2977,7 +3017,7 @@ static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
 	if (err == kLCErrorNone)
 	{
 		t_native_value . buffer = env -> GetByteArrayElements((jbyteArray)value, nil);
-		if (t_native_value . buffer == nil || env -> ExceptionOccured() != nil)
+		if (t_native_value . buffer == nil || env -> ExceptionOccurred() != nil)
 		{
 			env -> ExceptionClear();
 			err = kLCErrorOutOfMemory;
@@ -2990,7 +3030,7 @@ static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
 		err = LCValueStore(var, kLCValueOptionAsCData, &t_native_value);
 	}
 	
-	if (t_unichars != nil)
+	if (t_native_value . buffer != nil)
 		env -> ReleaseByteArrayElements((jbyteArray)value, (jbyte *)t_native_value . buffer, 0);
 		
 	if (err == kLCErrorNone)
@@ -3018,12 +3058,18 @@ static void java_lcapi__throw(JNIEnv *env, LCError p_error)
 	
 static jlong java_lcapi_ObjectResolve(JNIEnv *env, jobject chunk)
 {
-	char *t_chunk_cstring;
-	t_chunk_cstring = java_to__cstring(env, chunk);
-	
 	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	char *t_chunk_cstring;
+	t_chunk_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, chunk, t_chunk_cstring);
+	
 	LCObjectRef t_object;
-	t_error = LCObjectResolve(t_chunk_cstring, &t_object);
+	t_object = nil;
+	if (t_error == kLCErrorNone)
+		t_error = LCObjectResolve(t_chunk_cstring, &t_object);
 	
 	free(t_chunk_cstring);
 
@@ -3070,13 +3116,18 @@ static jboolean java_lcapi_ObjectExists(JNIEnv *env, jlong object)
 	
 static void java_lcapi_ObjectSend(JNIEnv *env, jlong object, jobject message, jobject signature, jobject arguments)
 {
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
 	char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
+	t_message_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, message, t_message_cstring);
 	
 	// TODO handle signature / arguments
 	
-	LCError t_error;
-	t_error = LCObjectSend((LCObjectRef)object, t_message_cstring, "");
+	if (t_error == kLCErrorNone)
+		t_error = LCObjectSend((LCObjectRef)object, t_message_cstring, "");
 	
 	free(t_message_cstring);
 	
@@ -3089,13 +3140,18 @@ static void java_lcapi_ObjectSend(JNIEnv *env, jlong object, jobject message, jo
 
 static void java_lcapi_ObjectPost(JNIEnv *env, jlong object, jobject message, jobject signature, jobject arguments)
 {
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
 	char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
+	t_message_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, message, t_message_cstring);
 	
 	// TODO handle signature / arguments
 	
-	LCError t_error;
-	t_error = LCObjectPost((LCObjectRef)object, t_message_cstring, "");
+	if (t_error == kLCErrorNone)
+		t_error = LCObjectPost((LCObjectRef)object, t_message_cstring, "");
 	
 	free(t_message_cstring);
 	

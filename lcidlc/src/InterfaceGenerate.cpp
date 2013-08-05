@@ -152,6 +152,8 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
 class TypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType mode) = 0;
+	
 	virtual void Initialize(CoderRef coder, ParameterType mode, const char *name) = 0;
 	virtual void Fetch(CoderRef coder, ParameterType mode, const char *name, const char *source) = 0;
 	virtual void Default(CoderRef coder, ParameterType mode, const char *name, ValueRef value) = 0;
@@ -164,6 +166,11 @@ public:
 class PrimitiveTypeMapper: public TypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return GetType();
+	}
+
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "%s %s", GetType(), p_name);
@@ -283,7 +290,7 @@ public:
 	}
 
 protected:
-	virtual const char *GetType(void) const {return "NSArry*";}
+	virtual const char *GetType(void) const {return "NSArray*";}
 	virtual const char *GetInitializer(void) const {return "nil";}
 	virtual const char *GetTag(void) const {return "objc_array";}
 };
@@ -335,6 +342,11 @@ protected:
 class CStringTypeMapper: public CTypesTypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return mode == kParameterTypeIn ? "const char *" : "char *";
+	}
+	
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		if (p_mode == kParameterTypeInOut)
@@ -373,6 +385,11 @@ protected:
 class CDataTypeMapper: public CTypesTypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return "LCBytes";
+	}
+
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		if (p_mode == kParameterTypeInOut)
@@ -421,6 +438,11 @@ public:
 		m_type_default = p_default;
 	}
 
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return "int";
+	}
+
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "int %s", p_name);
@@ -456,6 +478,11 @@ private:
 class JavaStringTypeMapper: public TypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType type)
+	{
+		return "__INTERNAL_ERROR__";
+	}
+
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "jobject %s", p_name);
@@ -486,6 +513,11 @@ public:
 class JavaDataTypeMapper: public TypeMapper
 {
 public:
+	virtual const char *GetTypedef(ParameterType type)
+	{
+		return "__INTERNAL_ERROR__";
+	}
+
 	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
 	{
 		CoderWriteStatement(p_coder, "jobject %s", p_name);
@@ -559,6 +591,7 @@ static bool InterfaceGenerateImports(InterfaceRef self, CoderRef p_coder)
 	if (self -> shutdown_hook != nil)
 		CoderWriteLine(p_coder, "%s void %s(void);", t_extern, NameGetCString(self -> shutdown_hook));
 		
+#if NOT_USED
 	for(uint32_t i = 0; i < self -> handler_count; i++)
 		for(uint32_t j = 0; j < self -> handlers[i] . variant_count; j++)
 		{
@@ -590,6 +623,7 @@ static bool InterfaceGenerateImports(InterfaceRef self, CoderRef p_coder)
 			
 			CoderWriteLine(p_coder, ");");
 		}
+#endif
 		
 	return true;
 }
@@ -1070,6 +1104,57 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
 		map_parameter(self, p_mapping, &t_variant -> parameters[k], k, t_mapped_params[k]);
 	
+	// If c++ then we can use references for indirect return values.
+	const char *t_ref_char;
+	if (self -> use_cpp_naming)
+		t_ref_char = "";
+	else
+		t_ref_char = "&";
+		
+	// Get the type mapper for the return type.
+	TypeMapper *t_return_type_mapper;
+	if (t_variant -> return_type != nil)
+		t_return_type_mapper = map_parameter_type(self, p_mapping, t_variant -> return_type, nil);
+	else
+		t_return_type_mapper = nil;
+		
+	// Generate the import - but not for Java
+	if (!t_is_java)
+	{
+		CoderBeginStatement(p_coder);
+		
+		CoderWrite(p_coder, "%s %s %s(",
+							InterfaceGetExternPrefix(self), 
+							t_return_type_mapper != nil && !t_variant -> return_type_indirect ? t_return_type_mapper -> GetTypedef(kParameterTypeOut) : "void",
+							NameGetCString(t_variant -> binding));
+							
+		bool t_has_param;
+		t_has_param = false;
+		if (t_variant -> return_type_indirect)
+		{
+			CoderWrite(p_coder, "%s%s", t_return_type_mapper -> GetTypedef(kParameterTypeOut), InterfaceGetReferenceSuffix(self));
+			t_has_param = true;
+		}
+		
+		if (t_variant -> parameter_count != 0)
+			for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
+			{
+				if (t_has_param)
+					CoderWrite(p_coder, ", ");
+				CoderWrite(p_coder, "%s%s",
+						   t_mapped_params[k] . mapper -> GetTypedef(t_mapped_params[k] . mode),
+						   InterfaceGetReferenceSuffix(self));
+				t_has_param = true;
+			}
+			
+		if (!t_has_param)
+			CoderWrite(p_coder, "void");
+			
+		CoderWrite(p_coder, ")");
+		
+		CoderEndStatement(p_coder);
+	}
+	
 	CoderBegin(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(t_variant -> binding));
 	if (self -> use_objc_objects && !t_is_java)
 	{
@@ -1133,20 +1218,6 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 		
 		CoderPad(p_coder);
 	}
-	
-	// If c++ then we can use references for indirect return values.
-	const char *t_ref_char;
-	if (self -> use_cpp_naming)
-		t_ref_char = "";
-	else
-		t_ref_char = "&";
-		
-	// Get the type mapper for the return type.
-	TypeMapper *t_return_type_mapper;
-	if (t_variant -> return_type != nil)
-		t_return_type_mapper = map_parameter_type(self, p_mapping, t_variant -> return_type, nil);
-	else
-		t_return_type_mapper = nil;
 	
 	// If we have a return value, generate the initializer for it.
 	if (t_return_type_mapper != nil)
@@ -1297,7 +1368,7 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 
 static void InterfaceGenerateUnsupportedVariant(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant, HandlerMapping p_mapping)
 {
-	CoderBegin(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(t_variant -> binding));
+	CoderBegin(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(p_variant -> binding));
 	CoderWriteStatement(p_coder, "return error__report_not_supported(result)");
 	CoderEnd(p_coder, "");
 }
@@ -1346,7 +1417,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				if (t_mapping != kHandlerMappingNone)
 					InterfaceGenerateVariant(self, p_coder, t_handler, t_variant, t_mapping);
 				else
-					InterfaceGenerateUnsupportedVariant(self, p_coder, t_handler, t_variant);
+					InterfaceGenerateUnsupportedVariant(self, p_coder, t_handler, t_variant, t_mapping);
 				CoderEndPreprocessor(p_coder, "#endif");
 				
 				MCCStringFree(t_defineds);
