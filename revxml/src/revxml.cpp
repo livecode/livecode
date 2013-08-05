@@ -2486,8 +2486,8 @@ static char *XML_ObjectPtr_to_Xpaths(xmlXPathObjectPtr pObject, char *pLineDelim
 						// make more room if needed
 						if (strlen(buffer) + strlen((char*)cPtr) > iBufferSize)
 						{
-							buffer = (char*)realloc(buffer, iBufferSize * 2);
-							iBufferSize = iBufferSize * 2;
+							iBufferSize += strlen((char*)cPtr) + iBufferSize;
+							buffer = (char*)realloc(buffer, iBufferSize);
 						}
 						strncat(buffer, (char*)cPtr, strlen((char*)cPtr));
 						strcat(buffer, pLineDelimiter);
