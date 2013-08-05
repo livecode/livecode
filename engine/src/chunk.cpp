@@ -258,6 +258,18 @@ Parse_stat MCChunk::parse(MCScriptPoint &sp, Boolean doingthe)
 				break;
 			case TT_CHUNK:
 				nterm = (Chunk_term)te->which;
+				// MW-2013-08-05: [[ ThisMe ]] If 'this' is followed by 'me' we become 'this me'.
+				if (nterm == CT_THIS &&
+					sp . skip_token(SP_FACTOR, TT_FUNCTION, F_ME) == PS_NORMAL)
+				{
+					// Destination type is 'this me' handled in MCChunk::getobj()
+					desttype = DT_THIS_ME;
+					// Destination object is the script being compiled
+					destobj = sp.getobj();
+					// Nothing can come after 'this me' so return success.
+					return PS_NORMAL;
+				}
+				
 				switch (ct_class(nterm))
 				{
 				case CT_ORDINAL:
@@ -702,6 +714,12 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				objptr = destobj;
 			else
 				objptr = ep . getobj();
+			break;
+		// MW-2013-08-05: [[ ThisMe ]] 'this me' is the object of the script
+		//   currently being executed, so it is always the object the script
+		//   was compiled into.
+		case DT_THIS_ME:
+			objptr = destobj;
 			break;
 		case DT_MENU_OBJECT:
 			objptr = MCmenuobjectptr;
