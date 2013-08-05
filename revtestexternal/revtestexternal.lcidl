@@ -35,16 +35,16 @@ command revTestExternalTestPost
 
 command revTestExternalTestArrays
 
-use none on mac, linux, windows, android
-use objc on ios
+use none on linux, windows, android
+use objc on mac, ios
 
 command revTestExternalTestObjcArrays
 	in array as objc-array
 	return objc-array
 
 command revTestExternalTestObjcDictionaries
-	in dict as objc-array
-	return objc-array
+	in dict as objc-dictionary
+	return objc-dictionary
 
 use none on mac, linux, windows, android, ios
 use java on android

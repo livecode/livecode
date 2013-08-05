@@ -1143,7 +1143,7 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 					CoderWrite(p_coder, ", ");
 				CoderWrite(p_coder, "%s%s",
 						   t_mapped_params[k] . mapper -> GetTypedef(t_mapped_params[k] . mode),
-						   InterfaceGetReferenceSuffix(self));
+						   t_mapped_params[k] . mode != kParameterTypeIn ? InterfaceGetReferenceSuffix(self) : "");
 				t_has_param = true;
 			}
 			

@@ -2664,7 +2664,7 @@ static bool fetch__objc_data(const char *arg, MCVariableRef var, NSData*& r_data
 	return fetch__report_error(err, arg);
 }
 
-static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray**& r_array)
+static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray*& r_array)
 {
 	LCError err;
 	err = LCValueFetch(var, kLCValueOptionAsObjcArray, &r_array);
