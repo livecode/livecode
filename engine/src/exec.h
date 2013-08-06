@@ -2685,7 +2685,7 @@ void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_
 void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
 void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCStringRef p_data, MCStringRef p_url);
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
 void MCNetworkExecAcceptDatagramConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);

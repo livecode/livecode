@@ -356,10 +356,13 @@ bool X_init(int argc, char *argv[], char *envp[])
 	////
 
 	// Store the engine path in MCcmd.
-	char *t_native_command;
-	t_native_command = MCsystem -> ResolveNativePath(argv[0]);
-	MCcmd = MCsystem -> PathFromNative(t_native_command);
-	delete t_native_command;
+	MCAutoStringRef argv0_string, argv1_string;
+	/* UNCHECKED */ MCStringCreateWithCString(argv[0], &argv0_string);
+	/* UNCHECKED */ MCStringCreateWithCString(argv[1], &argv1_string);
+
+	MCAutoStringRef t_native_command_string;
+	MCsystem -> ResolveNativePath(*argv0_string, &t_native_command_string);
+	MCcmd = MCsystem -> PathFromNative(MCStringGetCString(*t_native_command_string));
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -367,17 +370,12 @@ bool X_init(int argc, char *argv[], char *envp[])
 	MCAutoStringRef p_native_home;
 	MCAutoStringRef home_env_var_message;
 	/* UNCHECKED */ MCStringCreateWithCString(HOME_ENV_VAR, &home_env_var_message);
-	
-	MCS_getenv(*home_env_var_message, &p_native_home);
-	
-	char *t_native_home = (char*) MCStringGetCString(*p_native_home);
 
-
-	if (t_native_home != NULL)
+	if (MCS_getenv(*home_env_var_message, &p_native_home))
 	{
-		t_native_home = MCsystem -> ResolveNativePath(t_native_home);
-		s_server_home = MCsystem -> PathFromNative(t_native_home);
-		delete t_native_home;
+		MCAutoStringRef t_resolved_home;
+		MCsystem -> ResolveNativePath(*p_native_home, &t_resolved_home);
+		s_server_home = MCsystem -> PathFromNative(MCStringGetCString(*t_resolved_home));
 	}
 	else if (MCsystem -> FolderExists(HOME_FOLDER))
 		s_server_home = strdup(HOME_FOLDER);
@@ -393,6 +391,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	s_server_cgi = MCS_getenv(*message, &env);
 	
+	if (!X_open(argc, argv, envp))
+		return False;
+
 	if (s_server_cgi)
 	{
 		MCS_set_errormode(kMCSErrorModeInline);
@@ -407,12 +408,14 @@ bool X_init(int argc, char *argv[], char *envp[])
 	else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
+		MCAutoStringRef MCserverinitialscript_string;
 		
 		// If there isn't at least one argument, we haven't got anything to run.
 		if (argc > 1)
-			MCserverinitialscript = MCsystem -> ResolveNativePath(argv[1]);
+			MCsystem -> ResolveNativePath(*argv1_string, &MCserverinitialscript_string);
 		else
-			MCserverinitialscript = NULL;
+			MCserverinitialscript_string = nil;
+		MCserverinitialscript = (char*)MCStringGetCString(*MCserverinitialscript_string);
 		
 		// Create the $<n> variables.
 		for(int i = 2; i < argc; ++i)
@@ -421,7 +424,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		create_var(nvars);
 	}
 	
-	return X_open(argc, argv, envp);
+	return True;
 }
 	
 static void IO_printf(IO_handle stream, const char *format, ...)

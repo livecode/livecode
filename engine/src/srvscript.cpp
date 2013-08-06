@@ -112,8 +112,13 @@ uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
 MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_add)
 {
 	// First resolve the filename.
+	MCAutoStringRef p_filename_string;
+	/*UNCHECKED*/MCStringCreateWithCString(p_filename, &p_filename_string);
+
 	char *t_filename;
-	t_filename = MCsystem -> ResolvePath(p_filename);
+	MCAutoStringRef t_filename_string;
+	MCsystem -> ResolvePath(*p_filename_string, &t_filename_string);
+	t_filename = (char*) MCStringGetCString(*t_filename_string);
 	
 	// Look through the file list...
 	File *t_file;
@@ -333,7 +338,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 		{
 			MCAutoStringRef t_folder;
 			/* UNCHECKED */ MCStringCopySubstring(*t_full_path, MCRangeMake(0, t_last_separator), &t_folder);
-			MCsystem->SetCurrentFolder(MCStringGetCString(*t_folder));
+			MCsystem->SetCurrentFolder(*t_folder);
 		}
 	}
 
@@ -342,7 +347,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	t_file = FindFile(p_filename, true);
 	
 	// Set back the old default folder
-	MCsystem->SetCurrentFolder(t_old_folder);
+	MCAutoStringRef t_old_folder_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_old_folder, &t_old_folder_string);
+
+	MCsystem->SetCurrentFolder(*t_old_folder_string);
 	MCCStringFree(t_old_folder);
 
 	// If we are 'requiring' and the script is already loaded, we are done.

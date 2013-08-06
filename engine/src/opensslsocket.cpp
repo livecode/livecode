@@ -211,7 +211,7 @@ int inet_aton(const char *cp, struct in_addr *inp)
 }
 #endif
 
-bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
+bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b)
 {
 	struct sockaddr_in t_host_a, t_host_b;
 
@@ -614,6 +614,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *unt
 		MCNameDelete(s->message);
 		/* UNCHECKED */ MCNameClone(mptr, s -> message);
 		s->object = ep.getobj();
+		
 	}
 	else
 	{

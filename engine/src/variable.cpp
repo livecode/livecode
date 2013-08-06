@@ -1124,6 +1124,7 @@ bool MCDeferredVariable::createwithname_cstring(const char *p_name, MCDeferredVa
 	self -> next = nil;
 	/* UNCHECKED */ MCNameCreateWithCString(p_name, self -> name);
 
+	self -> value = nil;
 	self -> is_msg = false;
 	self -> is_env = false;
 	self -> is_global = false;

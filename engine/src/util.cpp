@@ -831,6 +831,7 @@ bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 	r_d2 = MCU_strtol(sptr, l, '\0', done, True, False);
 	if (!done || l != 0)
 		return false;
+	return true;
 }
 
 /* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)
@@ -2123,8 +2124,10 @@ inline void strmove(char *p_dest, const char *p_src)
 }
 
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
-void MCU_fix_path(char *cstr)
+void MCU_fix_path(MCStringRef p_cstr)
 {
+	char *cstr = (char*) MCStringGetCString(p_cstr);
+
 	char *fptr = cstr; //pointer to search forward in curdir
 	while (*fptr)
 	{
@@ -2407,17 +2410,26 @@ void MCU_geturl(MCExecPoint &ep)
 
 void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 {
+	MCAutoStringRef f;
+	MCStringCreateWithOldString(dest.getsvalue(), &f);
+
+
 	if (dest.getsvalue().getlength() > 5
 	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
 	{
 		dest.tail(5);
-		MCS_savefile(dest.getsvalue(), data, False);
+		data . texttobinary();
+		MCAutoDataRef t_data_ref;
+		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
+		MCS_savebinaryfile(*f, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
 	{
 		dest.tail(8);
-		MCS_savefile(dest.getsvalue(), data, True);
+		MCAutoDataRef t_data_ref;
+		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
+		MCS_savebinaryfile(*f, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
@@ -2426,7 +2438,11 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		MCS_saveresfile(dest.getsvalue(), data.getsvalue());
 	}
 	else
-		MCS_putintourl(dest . getobj(), data . getsvalue(), dest . getcstring());
+	{
+		MCAutoStringRef p_url;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
+		MCS_putintourl(dest . getobj(), data . getsvalue(), *p_url);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

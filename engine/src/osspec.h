@@ -42,10 +42,10 @@ extern Boolean MCS_backup(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_unbackup(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_unlink(MCStringRef path);
 extern bool MCS_tmpnam(MCStringRef& r_path);
-/* LEGACY */ extern const char *MCS_tmpnam();
+///* LEGACY */ extern const char *MCS_tmpnam();
 extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
 ///* LEGACY */ extern char *MCS_resolvepath(const char *path);
-extern bool MCS_get_canonical_path(MCStringRef path, MCStringRef& result);
+extern bool MCS_get_canonical_path(MCStringRef path, MCStringRef& r_path);
 extern bool MCS_getcurdir(MCStringRef& r_path);
 ///* LEGACY */ extern char *MCS_getcurdir();
 extern bool MCS_setcurdir(MCStringRef p_path);
@@ -76,7 +76,7 @@ extern real8 MCS_getfreediskspace(void);
 extern bool MCS_getsystemversion(MCStringRef& r_string);
 extern void MCS_loadfile(MCExecPoint &ep, Boolean binary);
 extern void MCS_loadresfile(MCExecPoint &ep);
-extern void MCS_savefile(const MCString &f, MCExecPoint &data, Boolean b);
+extern void MCS_savebinaryfile(MCStringRef f, MCDataRef data);
 extern void MCS_saveresfile(const MCString &s, const MCString data);
 
 extern bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
@@ -89,9 +89,9 @@ extern Boolean MCS_poll(real8 delay, int fd);
 // Mac AppleEvent calls
 extern void MCS_send(MCStringRef mess, MCStringRef program,
 	                     MCStringRef eventtype, Boolean reply);
-extern void MCS_reply(const MCString &mess, const char *keyword, Boolean err);
-extern char *MCS_request_ae(const MCString &message, uint2 ae);
-extern char *MCS_request_program(const MCString &message, const char *program);
+extern void MCS_reply(MCStringRef mess, MCStringRef keyword, Boolean err);
+extern void MCS_request_ae(MCStringRef message, uint2 ae, MCStringRef&r_value);
+extern MCStringRef MCS_request_program(MCStringRef message, MCStringRef program);
 extern void MCS_copyresourcefork(MCStringRef source, MCStringRef dest);
 extern bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
 							 MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error);
@@ -154,10 +154,10 @@ bool MCS_getnetworkinterfaces(MCStringRef& r_interfaces);
 ///////////////////////////////////////////////////////////////////////////////
 
 void MCS_deleteurl(MCObject *p_target, MCStringRef p_url);
-void MCS_loadurl(MCObject *p_target, const char *p_url, const char *p_message);
+void MCS_loadurl(MCObject *p_target, MCStringRef p_url, MCNameRef p_message);
 void MCS_unloadurl(MCObject *p_target, MCStringRef p_url);
-void MCS_posttourl(MCObject *p_target, const MCString& p_data, const char *p_url);
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_url);
+void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
+void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_url);
 void MCS_geturl(MCObject *p_target, MCStringRef p_url);
 
 ///////////////////////////////////////////////////////////////////////////////

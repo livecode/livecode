@@ -93,7 +93,7 @@ static char *strndup(const char *s, uint32_t n)
 static char *s_cgi_upload_temp_dir = NULL;
 static char *s_cgi_temp_dir = NULL;
 
-bool MCS_get_temporary_folder(char *&r_temp_folder);
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
 static const char *cgi_get_upload_temp_dir()
 {
@@ -104,8 +104,11 @@ static const char *cgi_get_upload_temp_dir()
 		return s_cgi_temp_dir;
 	
 	char *t_temp_folder = NULL;
-	if (MCS_get_temporary_folder(t_temp_folder))
-		s_cgi_temp_dir = t_temp_folder;
+	MCAutoStringRef t_temp_folder_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_temp_folder, &t_temp_folder_string);
+
+	if (MCS_get_temporary_folder(&t_temp_folder_string))
+		s_cgi_temp_dir = (char*)MCStringGetCString(*t_temp_folder_string);
 	
 	return s_cgi_temp_dir;
 }
@@ -1272,7 +1275,9 @@ bool cgi_initialize()
 	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &message);
 	MCS_getenv(*message, &env);
 
-	MCserverinitialscript = MCsystem -> ResolvePath(MCStringGetCString(*env));
+	MCAutoStringRef  MCserverinitialscript_string;
+	MCsystem -> ResolvePath(*env, &MCserverinitialscript_string);
+	MCserverinitialscript = (char*) MCStringGetCString(*MCserverinitialscript_string);
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;
@@ -1282,7 +1287,10 @@ bool cgi_initialize()
 #else
 	strrchr(t_server_script_folder, '/')[0] = '\0';
 #endif
-	MCsystem -> SetCurrentFolder(t_server_script_folder);
+	MCAutoStringRef t_server_script_folder_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+
+	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
 	delete t_server_script_folder;
 	
 	// Initialize the headers.
@@ -1676,7 +1684,7 @@ void cgi_finalize_session()
 // Session properties
 
 static char *s_session_temp_dir = NULL;
-bool MCS_get_temporary_folder(char *&r_folder);
+bool MCS_get_temporary_folder(MCStringRef &r_folder);
 
 bool MCS_set_session_save_path(MCStringRef p_path)
 {
@@ -1699,8 +1707,9 @@ bool MCS_get_session_save_path(MCStringRef& r_path)
 	if (s_session_temp_dir != NULL)
 		return MCStringCreateWithCString(s_session_temp_dir, r_path);
 	
-	if (MCS_get_temporary_folder(s_session_temp_dir))
-		return MCStringCreateWithCString(s_session_temp_dir, r_path);
+	/*UNCHECKED*/MCStringCreateWithCString(s_session_temp_dir, r_path);
+	if (MCS_get_temporary_folder(r_path))
+		return true;
 	
 	r_path = MCValueRetain(kMCEmptyString);
 	return true;
