@@ -698,64 +698,71 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	bool t_can_fit;
 	t_can_fit = false;
 	
+	// MW-2013-08-01: [[ Bug 10932 ]] Optimized loop only measuring between potential break
+	//   points, rather than char by char.
 	while(i < index + size)
 	{
-		uint2 t_this_char;
-		t_this_char = (uint2)t_next_char;
-
-		if (hasunicode())
-		{
-			if (i + 2 < index + size)
-				t_next_char = *(uint2 *)&text[i + 2];
-			else
-				t_next_char = t_next_block_char;
-		}
-		else
-		{
-			if (i + 1 < index + size)
-				t_next_char = (uint2)MCUnicodeMapFromNative(text[i + 1]);
-			else
-				t_next_char = t_next_block_char;
-		}
+		uint4 initial_i;
+		initial_i = i;
 		
 		bool t_can_break;
 		t_can_break = false;
-
-		uint4 next_i;
-		next_i = i + indexincrement(i);
+		
+		uint2 t_this_char;
+		while(i < index + size)
+		{
+			t_this_char = (uint2)t_next_char;
+			
+			i += indexincrement(i);
+			
+			if (hasunicode())
+			{
+				if (i < index + size)
+					t_next_char = *(uint2 *)&text[i];
+				else
+					t_next_char = t_next_block_char;
+			}
+			else
+			{
+				if (i < index + size)
+					t_next_char = (uint2)MCUnicodeMapFromNative(text[i]);
+				else
+					t_next_char = t_next_block_char;
+			}
+			
+			if (t_this_char == '\t' ||
+				t_next_char == -1 ||
+				MCUnicodeCanBreakBetween(t_this_char, t_next_char))
+			{
+				t_can_break = true;
+				break;
+			}
+		}
 
 		if (t_this_char == '\t')
 		{
-			twidth += gettabwidth(x + twidth, text, i);
+			twidth += gettabwidth(x + twidth, text, initial_i);
 
 			t_last_break_width = twidth;
-			t_last_break_i = next_i;
-			
-			// We can always break after a tab
-			t_can_break = true;
+			t_last_break_i = i;
 		}
 		else
 		{
 #ifdef _IOS_MOBILE
 			// MW-2012-02-01: [[ Bug 9982 ]] iOS uses sub-pixel positioning, so make sure we measure
 			//   complete runs.
-			twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], next_i - t_last_break_i, hasunicode());
+			twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], i - t_last_break_i, hasunicode());
 #else
 #ifdef TARGET_PLATFORM_WINDOWS
 			// MW-2009-04-23: [[ Bug ]] For printing, we measure complete runs of text otherwise we get
 			//   positioning issues.
 			if (MCFontHasPrinterMetrics(m_font))
-				twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], next_i - t_last_break_i, hasunicode());
+				twidth = t_last_break_width + MCFontMeasureText(m_font, &text[t_last_break_i], i - t_last_break_i, hasunicode());
 			else
 #endif
-				twidth += MCFontMeasureText(m_font, &text[i], next_i - i, hasunicode());
+				twidth += MCFontMeasureText(m_font, &text[initial_i], i - initial_i, hasunicode());
 #endif
-			
-			if (t_next_char == -1 || MCUnicodeCanBreakBetween(t_this_char, t_next_char))
-				t_can_break = true;
 		}
-
-		i = next_i;
 
 		if (t_can_fit && twidth > maxwidth)
 			break;
