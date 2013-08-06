@@ -877,7 +877,7 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		break;
 	case P_SHARED_BEHAVIOR:
 		// MW-2011-08-09: [[ Groups ]] Returns whether the group is shared.
-		ep.setboolean(isshared());
+		ep.setboolean(isshared() && (parent == nil || parent -> gettype() == CT_CARD));
 		break;
 	case P_BOUNDING_RECT:
 		if (flags & F_BOUNDING_RECT)
