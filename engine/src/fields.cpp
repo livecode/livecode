@@ -1004,25 +1004,25 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			// Start with an empty result.
 			ep . clear();
 
-			// The ranges are adjusted by the index of the first char (i.e. they are
-			// relative to the start of the range.
-			int32_t t_index_offset;
-			t_index_offset = -countchars(parid, 0, si);
-
+			// MW-2013-07-31: [[ Bug 10957 ]] Keep track of the byte index of the start
+			//   of the paragraph.
+			int32_t t_paragraph_offset;
+			t_paragraph_offset = 0;
+			
 			// Loop through the paragraphs until the range is exhausted.
 			do
 			{
 				// Fetch the flagged ranges into ep between si and ei (sptr relative)
 				// making sure the ranges are adjusted to the start of the range.
-				sptr -> getflaggedranges(parid, ep, si, ei, t_index_offset);
-
-				// MW-2013-05-22: [[ Bug 10908 ]] Increment the offset by the size of the
-				//   paragraph in codepoints not bytes.
-				t_index_offset += sptr -> gettextlength() + 1;
-
+				sptr -> getflaggedranges(parid, ep, si, ei, t_paragraph_offset);
+				
+				// MW-2013-07-31: [[ Bug 10957 ]] Update the paragraph (byte) offset.
+				t_paragraph_offset += sptr -> gettextsizecr();
+				
 				// Reduce ei until we get to zero, advancing through the paras.
 				si = 0;
 				ei -= sptr -> gettextsizecr();
+				
 				sptr = sptr -> next();
 			}
 			while(ei > 0);
