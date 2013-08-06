@@ -296,6 +296,9 @@ bool MCUnicodeCharsEqualCaseless(const unichar_t *left, uindex_t left_length, co
 bool MCUnicodeCharsMapToNative(const unichar_t *uchars, uindex_t uchar_count, char_t *nchars, uindex_t& r_nchar_count, char_t invalid);
 void MCUnicodeCharsMapFromNative(const char_t *chars, uindex_t char_count, unichar_t *uchars);
 
+uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes);
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars);
+
 bool MCUnicodeCharMapToNative(unichar_t uchar, char_t& r_nchar);
 unichar_t MCUnicodeCharMapFromNative(char_t nchar);
 

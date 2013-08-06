@@ -1290,6 +1290,24 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
+// Converts the content to char_t*
+bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
+
+// Converts the content to wchar_t*
+bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
+
+// Converts the content to unicode_t*
+bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
+
+#if defined(__MAC__) || defined (__IOS__)
+// Converts the content to CFStringRef
+bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
+#endif
+
+#ifdef __WINDOWS__
+bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+#endif
+
 /////////
 
 // Returns the hash of the given string, processing as according to options.
