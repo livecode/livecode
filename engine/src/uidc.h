@@ -537,7 +537,7 @@ public:
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
 	Boolean lookupcolor(const MCString &s, MCColor *color);
-	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
+	void dropper(Window w, int2 mx, int2 my, MCColor *cptr);
 	Boolean parsecolor(const MCString &s, MCColor *color, char **cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
