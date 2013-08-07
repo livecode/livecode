@@ -661,18 +661,26 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 		else
 			ep.setstaticcstring(MCscrollbarstring);
 		break;
-	case P_THUMB_SIZE:
-		ep.setr8(thumbsize, nffw, nftrailing, nfforce);
-		break;
-	case P_THUMB_POS:
-		ep.setr8(thumbpos, nffw, nftrailing, nfforce);
-		break;
-	case P_LINE_INC:
-		ep.setr8(lineinc, nffw, nftrailing, nfforce);
-		break;
-	case P_PAGE_INC:
-		ep.setr8(pageinc, nffw, nftrailing, nfforce);
-		break;
+    case P_THUMB_SIZE:
+        ep.setr8(thumbsize, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_THUMB_POS:
+        ep.setr8(thumbpos, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_LINE_INC:
+        ep.setr8(lineinc, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_PAGE_INC:
+        ep.setr8(pageinc, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
 	case P_ORIENTATION:
 		ep.setstaticcstring(getstyleint(flags) == F_VERTICAL ? "vertical" : "horizontal");
 		break;
