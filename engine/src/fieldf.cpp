@@ -591,18 +591,34 @@ void MCField::drawcursor(MCContext *p_context, const MCRectangle &dirty)
 	}
 	else
 	{
-		// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
-		//   of background color (apart from 128,128,128!).
-		p_context->setforeground(p_context->getwhite());
-		p_context->setfunction(GXxor);
+		// MW-2013-08-07: [[ Bug 10840 ]] If the background is opaque then use XOR otherwise
+		//   just black (XORing against transparent has no effect).
+		bool t_is_opaque;
+		t_is_opaque = p_context -> changeopaque(true);
+		p_context -> changeopaque(t_is_opaque);
 		
-		// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
-		//   ink works correctly.
-		p_context->begin(false);
+		if (!t_is_opaque)
+			p_context -> setforeground(p_context -> getblack());
+		else
+		{
+			// MW-2012-08-06: Use XOR to render the caret so it remains visible regardless
+			//   of background color (apart from 128,128,128!).
+			p_context->setforeground(p_context->getwhite());
+			p_context->setfunction(GXxor);
+			
+			// MW-2012-09-19: [[ Bug 10393 ]] Draw the caret inside a layer to ensure the XOR
+			//   ink works correctly.
+			p_context->begin(false);
+		}
+		
 		p_context->drawline(cursorrect.x, cursorrect.y, cursorrect.x, cursorrect.y + cursorrect.height - 1);
-		p_context->end();
 		
-		p_context->setfunction(GXcopy);
+		if (t_is_opaque)
+		{
+			p_context->end();
+		
+			p_context->setfunction(GXcopy);
+		}
 	}
 }
 
