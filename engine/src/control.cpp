@@ -266,7 +266,8 @@ void MCControl::munfocus()
 		if (state & CS_MFOCUSED)
 		{
 			mfocus(mx, my);
-			state &= ~CS_MFOCUSED;
+			// IM-2013-08-07: [[ Bug 10671 ]] Release grabbed controls when removing focus
+			state &= ~(CS_MFOCUSED | CS_GRAB);
 			message(MCM_mouse_release);
 		}
 		else
