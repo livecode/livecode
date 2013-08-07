@@ -32,10 +32,11 @@ extern OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec);
 extern OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec);
 
 extern OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec);
-extern OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref);
-extern OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref);
+//extern OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref);
+//extern OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref);
 extern OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref);
-extern OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
+//extern OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
+extern OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
 extern bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
 extern char *MCS_fsref_to_path(FSRef& p_ref);
 

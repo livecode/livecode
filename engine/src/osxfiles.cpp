@@ -572,10 +572,10 @@ void MCS_setfiletype(const char *p_new_path)
 
 // File UNIX-related properties
 
-uint2 MCS_umask(uint2 mask)
-{
-	return 0;
-}
+//uint2 MCS_umask(uint2 mask)
+//{
+//	return 0;
+//}
 
 int4 MCS_getumask()
 {
@@ -587,37 +587,37 @@ void MCS_setumask(int4 newmask)
 	//do nothing
 }
 
-IO_stat MCS_chmod(const char *path, uint2 mask)
-{
-	return IO_NORMAL;
-}
+//IO_stat MCS_chmod(const char *path, uint2 mask)
+//{
+//	return IO_NORMAL;
+//}
 
-Boolean MCS_noperm(const char *path)
-{
-	return False;
-}
+//Boolean MCS_noperm(const char *path)
+//{
+//	return False;
+//}
 
 
 // File queries
 
-bool MCS_exists(MCStringRef p_path, bool p_is_file)
-{
-	if (MCStringGetLength(p_path) == 0)
-		return false;
-
-	MCAutoStringRef t_resolved, t_utf8_path;
-	if (!MCS_resolvepath(p_path, &t_resolved) ||
-		!MCU_nativetoutf8(*t_resolved, &t_utf8_path))
-		return false;
-
-	bool t_found;
-	struct stat buf;
-	t_found = stat(MCStringGetCString(*t_utf8_path), (struct stat *)&buf) == 0;
-	if (t_found)
-		t_found = (p_is_file == ((buf.st_mode & S_IFDIR) == 0));
-
-	return t_found;
-}
+//bool MCS_exists(MCStringRef p_path, bool p_is_file)
+//{
+//	if (MCStringGetLength(p_path) == 0)
+//		return false;
+//
+//	MCAutoStringRef t_resolved, t_utf8_path;
+//	if (!MCS_resolvepath(p_path, &t_resolved) ||
+//		!MCU_nativetoutf8(*t_resolved, &t_utf8_path))
+//		return false;
+//
+//	bool t_found;
+//	struct stat buf;
+//	t_found = stat(MCStringGetCString(*t_utf8_path), (struct stat *)&buf) == 0;
+//	if (t_found)
+//		t_found = (p_is_file == ((buf.st_mode & S_IFDIR) == 0));
+//
+//	return t_found;
+//}
 
 // File actions
 
@@ -626,133 +626,133 @@ bool MCS_exists(MCStringRef p_path, bool p_is_file)
 // MW-2007-12-12: [[ Bug 5674 ]] Unfortunately, just renaming the current stack
 //   causes all Finder meta-data to be lost, so what we will do is first try
 //   to FSExchangeObjects and if that fails, do a rename.
-Boolean MCS_backup(const char *p_src_path, const char *p_dst_path)
-{
-	bool t_error;
-	t_error = false;
-	
-	FSRef t_src_ref;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_src_path, &t_src_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-
-	FSRef t_dst_parent_ref;
-	FSRef t_dst_ref;
-	UniChar *t_dst_leaf;
-	t_dst_leaf = NULL;
-	UniCharCount t_dst_leaf_length;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_dst_path, &t_dst_ref);
-		if (t_os_error == noErr)
-			FSDeleteObject(&t_dst_ref);
-			
-		// Get the information to create the file
-		t_os_error = MCS_pathtoref_and_leaf(p_dst_path, t_dst_parent_ref, t_dst_leaf, t_dst_leaf_length);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	FSCatalogInfo t_dst_catalog;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSGetCatalogInfo(&t_src_ref, kFSCatInfoFinderInfo, &t_dst_catalog, NULL, NULL, NULL);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	if (!t_error)
-	{
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
-		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
-		((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
-	}	
-	
-	bool t_created_dst;
-	t_created_dst = false;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSCreateFileUnicode(&t_dst_parent_ref, t_dst_leaf_length, t_dst_leaf, kFSCatInfoFinderInfo, &t_dst_catalog, &t_dst_ref, NULL);
-		if (t_os_error == noErr)
-			t_created_dst = true;
-		else
-			t_error = true;
-	}
-	
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSExchangeObjects(&t_src_ref, &t_dst_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	if (t_error && t_created_dst)
-		FSDeleteObject(&t_dst_ref);
-	
-	if (t_dst_leaf != NULL)
-		delete t_dst_leaf;
-		
-	if (t_error)
-		t_error = !MCS_rename(p_src_path, p_dst_path);
-		
-	return !t_error;
-}
-
-Boolean MCS_unbackup(const char *p_src_path, const char *p_dst_path)
-{
-	bool t_error;
-	t_error = false;
-	
-	FSRef t_src_ref;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_src_path, &t_src_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	FSRef t_dst_ref;
-	if (!t_error)
-	{		
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_dst_path, &t_dst_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	// It appears that the source file here is the ~file, the backup file.
-	// So copy it over to p_dst_path, and delete it.
-	if (!t_error)
-	{	
-		OSErr t_os_error;
-		t_os_error = FSExchangeObjects(&t_src_ref, &t_dst_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSDeleteObject(&t_src_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-
-	if (t_error)
-		t_error = !MCS_rename(p_src_path, p_dst_path);
-		
-	return !t_error;
-}
+//Boolean MCS_backup(const char *p_src_path, const char *p_dst_path)
+//{
+//	bool t_error;
+//	t_error = false;
+//	
+//	FSRef t_src_ref;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_src_path, &t_src_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//
+//	FSRef t_dst_parent_ref;
+//	FSRef t_dst_ref;
+//	UniChar *t_dst_leaf;
+//	t_dst_leaf = NULL;
+//	UniCharCount t_dst_leaf_length;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_dst_path, &t_dst_ref);
+//		if (t_os_error == noErr)
+//			FSDeleteObject(&t_dst_ref);
+//			
+//		// Get the information to create the file
+//		t_os_error = MCS_pathtoref_and_leaf(p_dst_path, t_dst_parent_ref, t_dst_leaf, t_dst_leaf_length);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	FSCatalogInfo t_dst_catalog;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSGetCatalogInfo(&t_src_ref, kFSCatInfoFinderInfo, &t_dst_catalog, NULL, NULL, NULL);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	if (!t_error)
+//	{
+//		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
+//		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+//		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
+//		((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
+//	}	
+//	
+//	bool t_created_dst;
+//	t_created_dst = false;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSCreateFileUnicode(&t_dst_parent_ref, t_dst_leaf_length, t_dst_leaf, kFSCatInfoFinderInfo, &t_dst_catalog, &t_dst_ref, NULL);
+//		if (t_os_error == noErr)
+//			t_created_dst = true;
+//		else
+//			t_error = true;
+//	}
+//	
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSExchangeObjects(&t_src_ref, &t_dst_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	if (t_error && t_created_dst)
+//		FSDeleteObject(&t_dst_ref);
+//	
+//	if (t_dst_leaf != NULL)
+//		delete t_dst_leaf;
+//		
+//	if (t_error)
+//		t_error = !MCS_rename(p_src_path, p_dst_path);
+//		
+//	return !t_error;
+//}
+//
+//Boolean MCS_unbackup(const char *p_src_path, const char *p_dst_path)
+//{
+//	bool t_error;
+//	t_error = false;
+//	
+//	FSRef t_src_ref;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_src_path, &t_src_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	FSRef t_dst_ref;
+//	if (!t_error)
+//	{		
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_dst_path, &t_dst_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	// It appears that the source file here is the ~file, the backup file.
+//	// So copy it over to p_dst_path, and delete it.
+//	if (!t_error)
+//	{	
+//		OSErr t_os_error;
+//		t_os_error = FSExchangeObjects(&t_src_ref, &t_dst_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSDeleteObject(&t_src_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//
+//	if (t_error)
+//		t_error = !MCS_rename(p_src_path, p_dst_path);
+//		
+//	return !t_error;
+//}
 
 IO_stat MCS_trunc(IO_handle stream)
 {
@@ -764,38 +764,38 @@ IO_stat MCS_trunc(IO_handle stream)
 
 // Anything else
 
-bool MCS_tmpnam(MCStringRef& r_path)
-{
-	char *t_temp_file = nil;
-	FSRef t_folder_ref;
-	if (FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
-	{
-		t_temp_file = MCS_fsref_to_path(t_folder_ref);
-		MCCStringAppendFormat(t_temp_file, "/tmp.%d.XXXXXXXX", getpid());
-		
-		int t_fd;
-		t_fd = mkstemp(t_temp_file);
-		if (t_fd == -1)
-		{
-			delete t_temp_file;
-			return false;
-		}
+//bool MCS_tmpnam(MCStringRef& r_path)
+//{
+//	char *t_temp_file = nil;
+//	FSRef t_folder_ref;
+//	if (FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
+//	{
+//		t_temp_file = MCS_fsref_to_path(t_folder_ref);
+//		MCCStringAppendFormat(t_temp_file, "/tmp.%d.XXXXXXXX", getpid());
+//		
+//		int t_fd;
+//		t_fd = mkstemp(t_temp_file);
+//		if (t_fd == -1)
+//		{
+//			delete t_temp_file;
+//			return false;
+//		}
+//
+//		close(t_fd);
+//		unlink(t_temp_file);
+//	}
+//	
+//	if (t_temp_file == nil)
+//	{
+//		r_path = MCValueRetain(kMCEmptyString);
+//		return true;
+//	}
+//	
+//	bool t_success = MCStringCreateWithCString(t_temp_file, r_path);
+//	delete t_temp_file;
+//	return t_success;
+//}
 
-		close(t_fd);
-		unlink(t_temp_file);
-	}
-	
-	if (t_temp_file == nil)
-	{
-		r_path = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-	
-	bool t_success = MCStringCreateWithCString(t_temp_file, r_path);
-	delete t_temp_file;
-	return t_success;
-}
-	
 	
 /********************************************************************/
 /*                        Serial Handling                           */
@@ -931,158 +931,158 @@ static void configureSerialPort(int sRefNum)
 // MH Updating createalias to use FSRefs instead.
 // MW-2007-12-18: [[ Bug 5679 ]] 'create alias' not working on OS X
 // MW-2007-12-18: [[ Bug 1059 ]] 'create alias' doesn't work when passed a folder
-Boolean MCS_createalias(const char *p_source_path, const char *p_dest_path)
-{
-	bool t_error;
-	t_error = false;
-	
-	// Check if the destination exists already and return an error if it does
-	if (!t_error)
-	{
-		FSRef t_dst_ref;
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_dest_path, &t_dst_ref);
-		if (t_os_error == noErr)
-			return False; // we expect an error
-	}
-
-	FSRef t_src_ref;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref(p_source_path, &t_src_ref);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-
-	FSRef t_dst_parent_ref;
-	UniChar *t_dst_leaf_name;
-	UniCharCount t_dst_leaf_name_length;
-	t_dst_leaf_name = NULL;
-	t_dst_leaf_name_length = 0;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = MCS_pathtoref_and_leaf(p_dest_path, t_dst_parent_ref, t_dst_leaf_name, t_dst_leaf_name_length);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-
-	AliasHandle t_alias;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSNewAlias(NULL, &t_src_ref, &t_alias);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-	
-	IconRef t_src_icon;
-	t_src_icon = NULL;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		SInt16 t_unused_label;
-		t_os_error = GetIconRefFromFileInfo(&t_src_ref, 0, NULL, kFSCatInfoNone, NULL, kIconServicesNormalUsageFlag, &t_src_icon, &t_unused_label);
-		if (t_os_error != noErr)
-			t_src_icon = NULL;
-	}
-	
-	IconFamilyHandle t_icon_family;
-	t_icon_family = NULL;
-	if (!t_error && t_src_icon != NULL)
-	{
-		OSErr t_os_error;
-		IconRefToIconFamily(t_src_icon, kSelectorAllAvailableData, &t_icon_family);
-	}
-	
-	HFSUniStr255 t_fork_name;
-	if (!t_error)
-		FSGetResourceForkName(&t_fork_name);
-
-	FSRef t_dst_ref;
-	FSSpec t_dst_spec;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSCreateResourceFile(&t_dst_parent_ref, t_dst_leaf_name_length, t_dst_leaf_name,
-			kFSCatInfoNone, NULL, t_fork_name . length, t_fork_name . unicode, &t_dst_ref, &t_dst_spec);
-		if (t_os_error != noErr)
-			t_error = true;
-	}
-
-	ResFileRefNum t_res_file;
-	bool t_res_file_opened;
-	if (!t_error)
-	{
-		OSErr t_os_error;
-		t_os_error = FSOpenResourceFile(&t_dst_ref, t_fork_name . length, t_fork_name . unicode, 3, &t_res_file);
-		if (t_os_error != noErr)
-			t_error = true;
-		else
-			t_res_file_opened = true;
-	}
-
-	if (!t_error)
-	{
-		AddResource((Handle)t_alias, rAliasType, 0, (ConstStr255Param)"");
-		if (ResError() != noErr)
-			t_error = true;
-	}
-	
-	if (!t_error && t_icon_family != NULL)
-		AddResource((Handle)t_icon_family, 'icns', -16496, NULL);
-
-	if (t_res_file_opened)
-		CloseResFile(t_res_file);
-	
-	if (!t_error)
-	{
-		FSCatalogInfo t_info;
-		FSGetCatalogInfo(&t_dst_ref, kFSCatInfoFinderInfo, &t_info, NULL, NULL, NULL);
-		((FileInfo *)&t_info . finderInfo) -> finderFlags |= kIsAlias;
-		if (t_icon_family != NULL)
-			((FileInfo *)&t_info . finderInfo) -> finderFlags |= kHasCustomIcon;
-		FSSetCatalogInfo(&t_dst_ref, kFSCatInfoFinderInfo, &t_info);		
-	}
-
-	if (t_src_icon != NULL)
-		ReleaseIconRef(t_src_icon);
-
-	if (t_dst_leaf_name != NULL)
-		delete t_dst_leaf_name;
-	
-	if (t_error)
-	{
-		if (t_icon_family != NULL)
-			DisposeHandle((Handle)t_icon_family);
-		FSDeleteObject(&t_dst_ref);
-	}
-		
-	return !t_error;
-}
-
-bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error)
-{
-	FSRef t_fsref;
-
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, t_fsref);
-	if (t_os_error != noErr)
-		return MCStringCreateWithCString("file not found", r_error);
-	
-	Boolean t_is_folder;
-	Boolean t_is_alias;
-
-	t_os_error = FSResolveAliasFile(&t_fsref, TRUE, &t_is_folder, &t_is_alias);
-	if (t_os_error != noErr || !t_is_alias) // this always seems to be false
-		return MCStringCreateWithCString("can't get alias", r_error);
-	
-	if (!MCS_fsref_to_path(t_fsref, r_resolved))
-		return MCStringCreateWithCString("can't get alias path", r_error);
-
-	return true;
-}
+//Boolean MCS_createalias(const char *p_source_path, const char *p_dest_path)
+//{
+//	bool t_error;
+//	t_error = false;
+//	
+//	// Check if the destination exists already and return an error if it does
+//	if (!t_error)
+//	{
+//		FSRef t_dst_ref;
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_dest_path, &t_dst_ref);
+//		if (t_os_error == noErr)
+//			return False; // we expect an error
+//	}
+//
+//	FSRef t_src_ref;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref(p_source_path, &t_src_ref);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//
+//	FSRef t_dst_parent_ref;
+//	UniChar *t_dst_leaf_name;
+//	UniCharCount t_dst_leaf_name_length;
+//	t_dst_leaf_name = NULL;
+//	t_dst_leaf_name_length = 0;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = MCS_pathtoref_and_leaf(p_dest_path, t_dst_parent_ref, t_dst_leaf_name, t_dst_leaf_name_length);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//
+//	AliasHandle t_alias;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSNewAlias(NULL, &t_src_ref, &t_alias);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//	
+//	IconRef t_src_icon;
+//	t_src_icon = NULL;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		SInt16 t_unused_label;
+//		t_os_error = GetIconRefFromFileInfo(&t_src_ref, 0, NULL, kFSCatInfoNone, NULL, kIconServicesNormalUsageFlag, &t_src_icon, &t_unused_label);
+//		if (t_os_error != noErr)
+//			t_src_icon = NULL;
+//	}
+//	
+//	IconFamilyHandle t_icon_family;
+//	t_icon_family = NULL;
+//	if (!t_error && t_src_icon != NULL)
+//	{
+//		OSErr t_os_error;
+//		IconRefToIconFamily(t_src_icon, kSelectorAllAvailableData, &t_icon_family);
+//	}
+//	
+//	HFSUniStr255 t_fork_name;
+//	if (!t_error)
+//		FSGetResourceForkName(&t_fork_name);
+//
+//	FSRef t_dst_ref;
+//	FSSpec t_dst_spec;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSCreateResourceFile(&t_dst_parent_ref, t_dst_leaf_name_length, t_dst_leaf_name,
+//			kFSCatInfoNone, NULL, t_fork_name . length, t_fork_name . unicode, &t_dst_ref, &t_dst_spec);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//	}
+//
+//	ResFileRefNum t_res_file;
+//	bool t_res_file_opened;
+//	if (!t_error)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSOpenResourceFile(&t_dst_ref, t_fork_name . length, t_fork_name . unicode, 3, &t_res_file);
+//		if (t_os_error != noErr)
+//			t_error = true;
+//		else
+//			t_res_file_opened = true;
+//	}
+//
+//	if (!t_error)
+//	{
+//		AddResource((Handle)t_alias, rAliasType, 0, (ConstStr255Param)"");
+//		if (ResError() != noErr)
+//			t_error = true;
+//	}
+//	
+//	if (!t_error && t_icon_family != NULL)
+//		AddResource((Handle)t_icon_family, 'icns', -16496, NULL);
+//
+//	if (t_res_file_opened)
+//		CloseResFile(t_res_file);
+//	
+//	if (!t_error)
+//	{
+//		FSCatalogInfo t_info;
+//		FSGetCatalogInfo(&t_dst_ref, kFSCatInfoFinderInfo, &t_info, NULL, NULL, NULL);
+//		((FileInfo *)&t_info . finderInfo) -> finderFlags |= kIsAlias;
+//		if (t_icon_family != NULL)
+//			((FileInfo *)&t_info . finderInfo) -> finderFlags |= kHasCustomIcon;
+//		FSSetCatalogInfo(&t_dst_ref, kFSCatInfoFinderInfo, &t_info);		
+//	}
+//
+//	if (t_src_icon != NULL)
+//		ReleaseIconRef(t_src_icon);
+//
+//	if (t_dst_leaf_name != NULL)
+//		delete t_dst_leaf_name;
+//	
+//	if (t_error)
+//	{
+//		if (t_icon_family != NULL)
+//			DisposeHandle((Handle)t_icon_family);
+//		FSDeleteObject(&t_dst_ref);
+//	}
+//		
+//	return !t_error;
+//}
+//
+//bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error)
+//{
+//	FSRef t_fsref;
+//
+//	OSErr t_os_error;
+//	t_os_error = MCS_pathtoref(p_path, t_fsref);
+//	if (t_os_error != noErr)
+//		return MCStringCreateWithCString("file not found", r_error);
+//	
+//	Boolean t_is_folder;
+//	Boolean t_is_alias;
+//
+//	t_os_error = FSResolveAliasFile(&t_fsref, TRUE, &t_is_folder, &t_is_alias);
+//	if (t_os_error != noErr || !t_is_alias) // this always seems to be false
+//		return MCStringCreateWithCString("can't get alias", r_error);
+//	
+//	if (!MCS_fsref_to_path(t_fsref, r_resolved))
+//		return MCStringCreateWithCString("can't get alias path", r_error);
+//
+//	return true;
+//}
 
 
 
@@ -2000,74 +2000,75 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 
 // Directory creation and removal
 
-Boolean MCS_mkdir(const char *path)
-{
-
-	char *newpath = path2utf(MCS_resolvepath(path));
-	Boolean done = mkdir(newpath, 0777) == 0;
-	delete newpath;
-	return done;
-}
-
-Boolean MCS_rmdir(const char *path)
-{
-
-	char *newpath = path2utf(MCS_resolvepath(path));
-	Boolean done = rmdir(newpath) == 0;
-	delete newpath;
-	return done;
-}
-
-Boolean MCS_unlink(const char *path)
-{
-	char *newpath = path2utf(MCS_resolvepath(path));
-	Boolean done = remove(newpath) == 0;
-	delete newpath;
-	return done;
-}
+// Moved to dskmac.cpp
+//Boolean MCS_mkdir(const char *path)
+//{
+//
+//	char *newpath = path2utf(MCS_resolvepath(path));
+//	Boolean done = mkdir(newpath, 0777) == 0;
+//	delete newpath;
+//	return done;
+//}
+//
+//Boolean MCS_rmdir(const char *path)
+//{
+//
+//	char *newpath = path2utf(MCS_resolvepath(path));
+//	Boolean done = rmdir(newpath) == 0;
+//	delete newpath;
+//	return done;
+//}
+//
+//Boolean MCS_unlink(const char *path)
+//{
+//	char *newpath = path2utf(MCS_resolvepath(path));
+//	Boolean done = remove(newpath) == 0;
+//	delete newpath;
+//	return done;
+//}
 
 // Setting and Getting the current directory
 
-bool MCS_setcurdir(MCStringRef p_path)
-{
-	return MCS_setcurdir(MCStringGetCString(p_path)) == True;
-}
+//bool MCS_setcurdir(MCStringRef p_path)
+//{
+//	return MCS_setcurdir(MCStringGetCString(p_path)) == True;
+//}
 
 // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
-Boolean MCS_setcurdir(const char *path)
-{
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(path);
-	if (t_resolved_path == NULL)
-		return False;
-
-	char *newpath = NULL;
-	newpath = path2utf(t_resolved_path);
-	
-	Boolean done = chdir(newpath) == 0;
-	delete newpath;
-	if (!done)
-		return False;
-	
-	return True;
-}
-
-bool MCS_getcurdir(MCStringRef& r_path)
-{
-	char namebuf[PATH_MAX + 2];
-	if (NULL == getcwd(namebuf, PATH_MAX))
-		return false;
-
-	MCAutoNativeCharArray t_buffer;
-	if (!t_buffer.New(PATH_MAX + 1))
-		return false;
-
-	uint4 outlen;
-	outlen = PATH_MAX + 1;
-	MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
-	t_buffer.Shrink(outlen);
-	return t_buffer.CreateStringAndRelease(r_path);
-}
+//Boolean MCS_setcurdir(const char *path)
+//{
+//	char *t_resolved_path;
+//	t_resolved_path = MCS_resolvepath(path);
+//	if (t_resolved_path == NULL)
+//		return False;
+//
+//	char *newpath = NULL;
+//	newpath = path2utf(t_resolved_path);
+//	
+//	Boolean done = chdir(newpath) == 0;
+//	delete newpath;
+//	if (!done)
+//		return False;
+//	
+//	return True;
+//}
+//
+//bool MCS_getcurdir(MCStringRef& r_path)
+//{
+//	char namebuf[PATH_MAX + 2];
+//	if (NULL == getcwd(namebuf, PATH_MAX))
+//		return false;
+//
+//	MCAutoNativeCharArray t_buffer;
+//	if (!t_buffer.New(PATH_MAX + 1))
+//		return false;
+//
+//	uint4 outlen;
+//	outlen = PATH_MAX + 1;
+//	MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
+//	t_buffer.Shrink(outlen);
+//	return t_buffer.CreateStringAndRelease(r_path);
+//}
 
 // Canonical path resolution
 
@@ -2081,258 +2082,258 @@ char *MCS_get_canonical_path(const char *p_path)
 	return t_path;
 }
 
-// Special Folders
+//// Special Folders
+//
+//// MW-2012-10-10: [[ Bug 10453 ]] Added 'mactag' field which is the tag to use in FSFindFolder.
+////   This allows macfolder to be 0, which means don't alias the tag to the specified disk.
+//typedef struct
+//{
+//	MCNameRef *token;
+//	unsigned long macfolder;
+//	OSType domain;
+//	unsigned long mactag;
+//}
+//sysfolders;
+//
+//// MW-2008-01-18: [[ Bug 5799 ]] It seems that we are requesting things in the
+////   wrong domain - particularly for 'temp'. See:
+//// http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
+//
+//static sysfolders sysfolderlist[] = {
+//                                        {&MCN_apple, 'amnu', kOnAppropriateDisk, 'amnu'},
+//                                        {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
+//                                        {&MCN_control, 'ctrl', kOnAppropriateDisk, 'ctrl'},
+//                                        {&MCN_extension,'extn', kOnAppropriateDisk, 'extn'},
+//                                        {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
+//                                        {&MCN_preferences,'pref', kUserDomain, 'pref'},
+//                                        {&MCN_temporary,'temp', kUserDomain, 'temp'},
+//                                        {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
+//										// TS-2007-08-20: Added to allow a common notion of "home" between all platforms
+//									    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
+//										// MW-2007-09-11: Added for uniformity across platforms
+//										{&MCN_documents, 'docs', kUserDomain, 'docs'},
+//										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
+//										{&MCN_support, 0, kUserDomain, 'asup'},
+//                                    };
+//
+//bool MCS_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
+//{
+//	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
+//	{
+//		if (MCStringIsEqualTo(p_type, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
+//		{
+//			r_folder = sysfolderlist[i].macfolder;
+//			r_domain = sysfolderlist[i].domain;
+//            return true;
+//		}
+//	}
+//    return false;
+//}
 
-// MW-2012-10-10: [[ Bug 10453 ]] Added 'mactag' field which is the tag to use in FSFindFolder.
-//   This allows macfolder to be 0, which means don't alias the tag to the specified disk.
-typedef struct
-{
-	MCNameRef *token;
-	unsigned long macfolder;
-	OSType domain;
-	unsigned long mactag;
-}
-sysfolders;
-
-// MW-2008-01-18: [[ Bug 5799 ]] It seems that we are requesting things in the
-//   wrong domain - particularly for 'temp'. See:
-// http://lists.apple.com/archives/carbon-development/2003/Oct/msg00318.html
-
-static sysfolders sysfolderlist[] = {
-                                        {&MCN_apple, 'amnu', kOnAppropriateDisk, 'amnu'},
-                                        {&MCN_desktop, 'desk', kOnAppropriateDisk, 'desk'},
-                                        {&MCN_control, 'ctrl', kOnAppropriateDisk, 'ctrl'},
-                                        {&MCN_extension,'extn', kOnAppropriateDisk, 'extn'},
-                                        {&MCN_fonts,'font', kOnAppropriateDisk, 'font'},
-                                        {&MCN_preferences,'pref', kUserDomain, 'pref'},
-                                        {&MCN_temporary,'temp', kUserDomain, 'temp'},
-                                        {&MCN_system, 'macs', kOnAppropriateDisk, 'macs'},
-										// TS-2007-08-20: Added to allow a common notion of "home" between all platforms
-									    {&MCN_home, 'cusr', kUserDomain, 'cusr'},
-										// MW-2007-09-11: Added for uniformity across platforms
-										{&MCN_documents, 'docs', kUserDomain, 'docs'},
-										// MW-2007-10-08: [[ Bug 10277 ] Add support for the 'application support' at user level.
-										{&MCN_support, 0, kUserDomain, 'asup'},
-                                    };
-
-bool MCS_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
-{
-	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
-	{
-		if (MCStringIsEqualTo(p_type, MCNameGetString(*(sysfolderlist[i].token)), kMCStringOptionCompareCaseless))
-		{
-			r_folder = sysfolderlist[i].macfolder;
-			r_domain = sysfolderlist[i].domain;
-            return true;
-		}
-	}
-    return false;
-}
-
-// MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
-//   the sysfolderlist was being searched second.
-// MW-2008-06-18: [[ Bug 6578 ]] specialFolderPath("temp") returns empty sometimes, presumably
-//   because the folder wasn't necessarily being created.
-bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_path)
-{
-	uint32_t t_mac_folder = 0;
-	OSType t_domain = kOnAppropriateDisk;
-	bool t_found_folder = false;
-
-	if (MCS_specialfolder_to_mac_folder(p_type, t_mac_folder, t_domain))
-		t_found_folder = true;
-	else if (MCStringGetLength(p_type) == 4)
-	{
-		t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(p_type)));
-			
-		uindex_t t_i;
-		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
-			if (t_mac_folder == sysfolderlist[t_i] . macfolder)
-			{
-				t_domain = sysfolderlist[t_i] . domain;
-				t_mac_folder = sysfolderlist[t_i] . mactag;
-				t_found_folder = true;
-				break;
-			}
-	}
-
-	FSRef t_folder_ref;
-	if (t_found_folder)
-	{
-		OSErr t_os_error;
-		Boolean t_create_folder;
-		t_create_folder = t_domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
-		t_os_error = FSFindFolder(t_domain, t_mac_folder, t_create_folder, &t_folder_ref);
-		t_found_folder = t_os_error == noErr;
-	}
-
-	if (!t_found_folder)
-	{
-		r_path = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-		
-	return MCS_fsref_to_path(t_folder_ref, r_path);
-}
+//// MW-2008-06-18: [[ Bug 6577 ]] specialFolderPath("home") didn't work as it is 4 chars long and
+////   the sysfolderlist was being searched second.
+//// MW-2008-06-18: [[ Bug 6578 ]] specialFolderPath("temp") returns empty sometimes, presumably
+////   because the folder wasn't necessarily being created.
+//bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_path)
+//{
+//	uint32_t t_mac_folder = 0;
+//	OSType t_domain = kOnAppropriateDisk;
+//	bool t_found_folder = false;
+//
+//	if (MCS_specialfolder_to_mac_folder(p_type, t_mac_folder, t_domain))
+//		t_found_folder = true;
+//	else if (MCStringGetLength(p_type) == 4)
+//	{
+//		t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(p_type)));
+//			
+//		uindex_t t_i;
+//		for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
+//			if (t_mac_folder == sysfolderlist[t_i] . macfolder)
+//			{
+//				t_domain = sysfolderlist[t_i] . domain;
+//				t_mac_folder = sysfolderlist[t_i] . mactag;
+//				t_found_folder = true;
+//				break;
+//			}
+//	}
+//
+//	FSRef t_folder_ref;
+//	if (t_found_folder)
+//	{
+//		OSErr t_os_error;
+//		Boolean t_create_folder;
+//		t_create_folder = t_domain == kUserDomain ? kCreateFolder : kDontCreateFolder;
+//		t_os_error = FSFindFolder(t_domain, t_mac_folder, t_create_folder, &t_folder_ref);
+//		t_found_folder = t_os_error == noErr;
+//	}
+//
+//	if (!t_found_folder)
+//	{
+//		r_path = MCValueRetain(kMCEmptyString);
+//		return true;
+//	}
+//		
+//	return MCS_fsref_to_path(t_folder_ref, r_path);
+//}
 
 
 /********************************************************************/
 /*                  General Filesystem Handling                     */
 /********************************************************************/ 
 
-#define CATALOG_MAX_ENTRIES 16
-bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	OSStatus t_os_status;
-	
-	Boolean t_is_folder;
-	FSRef t_current_fsref;
-	
-	t_os_status = FSPathMakeRef((const UInt8 *)".", &t_current_fsref, &t_is_folder);
-	if (t_os_status != noErr || !t_is_folder)
-		return false;
-
-	// Create the iterator, pass kFSIterateFlat to iterate over the current subtree only
-	FSIterator t_catalog_iterator;
-	t_os_status = FSOpenIterator(&t_current_fsref, kFSIterateFlat, &t_catalog_iterator);
-	if (t_os_status != noErr)
-		return false;
-	
-	uint4 t_entry_count;
-	t_entry_count = 0;
-	
-	if (!p_files)
-	{
-		t_entry_count++;
-		/* UNCHECKED */ MCListAppendCString(*t_list, "..");
-	}
-	
-	ItemCount t_max_objects, t_actual_objects;
-	t_max_objects = CATALOG_MAX_ENTRIES;
-	t_actual_objects = 0;
-	FSCatalogInfo t_catalog_infos[CATALOG_MAX_ENTRIES];
-	HFSUniStr255 t_names[CATALOG_MAX_ENTRIES];
-	
-	FSCatalogInfoBitmap t_info_bitmap;
-	t_info_bitmap = kFSCatInfoAllDates |
-					kFSCatInfoPermissions |
-					kFSCatInfoUserAccess |
-					kFSCatInfoFinderInfo | 
-					kFSCatInfoDataSizes |
-					kFSCatInfoRsrcSizes |
-					kFSCatInfoNodeFlags;
-
-	MCExecPoint t_tmp_context(NULL, NULL, NULL);	
-	OSErr t_oserror;
-	do
-	{
-		t_oserror = FSGetCatalogInfoBulk(t_catalog_iterator, t_max_objects, &t_actual_objects, NULL, t_info_bitmap, t_catalog_infos, NULL, NULL, t_names);
-		if (t_oserror != noErr && t_oserror != errFSNoMoreItems)
-		{	// clean up and exit
-			FSCloseIterator(t_catalog_iterator);
-			return false;
-		}
-		
-		for(uint4 t_i = 0; t_i < (uint4)t_actual_objects; t_i++)
-		{
-			// folders
-			UInt16 t_is_folder;
-			t_is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
-			if ( (!p_files && t_is_folder) || (p_files && !t_is_folder))
-			{
-				char t_native_name[256];
-				uint4 t_native_length;
-				t_native_length = 256;
-				MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
-				
-				// MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
-				for(uint4 i = 0; i < t_native_length; ++i)
-					if (t_native_name[i] == '/')
-						t_native_name[i] = ':';
-				
-				char t_buffer[512];
-				if (p_detailed)
-				{ // the detailed|long files
-					FSPermissionInfo *t_permissions;
-					t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
-				
-					t_tmp_context . copysvalue(t_native_name, t_native_length);
-					MCU_urlencode(t_tmp_context);
-				
-					char t_filetype[9];
-					if (!t_is_folder)
-					{
-						FileInfo *t_file_info;
-						t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-						uint4 t_creator;
-						t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-						uint4 t_type;
-						t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
-						
-						if (t_file_info != NULL)
-						{
-							memcpy(t_filetype, (char*)&t_creator, 4);
-							memcpy(&t_filetype[4], (char *)&t_type, 4);
-							t_filetype[8] = '\0';
-						}
-						else
-							t_filetype[0] = '\0';
-					} else
-						strcpy(t_filetype, "????????"); // this is what the "old" getentries did	
-
-					CFAbsoluteTime t_creation_time;
-					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
-					t_creation_time += kCFAbsoluteTimeIntervalSince1970;
-
-					CFAbsoluteTime t_modification_time;
-					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
-					t_modification_time += kCFAbsoluteTimeIntervalSince1970;
-
-					CFAbsoluteTime t_access_time;
-					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
-					t_access_time += kCFAbsoluteTimeIntervalSince1970;
-
-					CFAbsoluteTime t_backup_time;
-					if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
-						t_backup_time = 0;
-					else
-					{
-						UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
-						t_backup_time += kCFAbsoluteTimeIntervalSince1970;
-					}
-
-					sprintf(t_buffer, "%*.*s,%llu,%llu,%.0lf,%.0lf,%.0lf,%.0lf,%d,%d,%03o,%.8s",
-						t_tmp_context . getsvalue() . getlength(),  
-					    t_tmp_context . getsvalue() . getlength(),  
-					   	t_tmp_context . getsvalue() . getstring(),
-						t_catalog_infos[t_i] . dataLogicalSize,
-						t_catalog_infos[t_i] . rsrcLogicalSize,
-						t_creation_time,
-						t_modification_time,
-						t_access_time,
-						t_backup_time,
-						t_permissions -> userID,
-						t_permissions -> groupID,
-						t_permissions -> mode & 0777,
-						t_filetype);
-						
-					/* UNCHECKED */ MCListAppendCString(*t_list, t_buffer);
-				}
-				else
-					/* UNCHECKED */ MCListAppendNativeChars(*t_list, (const char_t *)t_native_name, t_native_length);
-					
-				t_entry_count += 1;		
-			}
-		}	
-	} while(t_oserror != errFSNoMoreItems);
-	
-	FSCloseIterator(t_catalog_iterator);
-	return MCListCopy(*t_list, r_list);
-}
+//#define CATALOG_MAX_ENTRIES 16
+//bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	OSStatus t_os_status;
+//	
+//	Boolean t_is_folder;
+//	FSRef t_current_fsref;
+//	
+//	t_os_status = FSPathMakeRef((const UInt8 *)".", &t_current_fsref, &t_is_folder);
+//	if (t_os_status != noErr || !t_is_folder)
+//		return false;
+//
+//	// Create the iterator, pass kFSIterateFlat to iterate over the current subtree only
+//	FSIterator t_catalog_iterator;
+//	t_os_status = FSOpenIterator(&t_current_fsref, kFSIterateFlat, &t_catalog_iterator);
+//	if (t_os_status != noErr)
+//		return false;
+//	
+//	uint4 t_entry_count;
+//	t_entry_count = 0;
+//	
+//	if (!p_files)
+//	{
+//		t_entry_count++;
+//		/* UNCHECKED */ MCListAppendCString(*t_list, "..");
+//	}
+//	
+//	ItemCount t_max_objects, t_actual_objects;
+//	t_max_objects = CATALOG_MAX_ENTRIES;
+//	t_actual_objects = 0;
+//	FSCatalogInfo t_catalog_infos[CATALOG_MAX_ENTRIES];
+//	HFSUniStr255 t_names[CATALOG_MAX_ENTRIES];
+//	
+//	FSCatalogInfoBitmap t_info_bitmap;
+//	t_info_bitmap = kFSCatInfoAllDates |
+//					kFSCatInfoPermissions |
+//					kFSCatInfoUserAccess |
+//					kFSCatInfoFinderInfo | 
+//					kFSCatInfoDataSizes |
+//					kFSCatInfoRsrcSizes |
+//					kFSCatInfoNodeFlags;
+//
+//	MCExecPoint t_tmp_context(NULL, NULL, NULL);	
+//	OSErr t_oserror;
+//	do
+//	{
+//		t_oserror = FSGetCatalogInfoBulk(t_catalog_iterator, t_max_objects, &t_actual_objects, NULL, t_info_bitmap, t_catalog_infos, NULL, NULL, t_names);
+//		if (t_oserror != noErr && t_oserror != errFSNoMoreItems)
+//		{	// clean up and exit
+//			FSCloseIterator(t_catalog_iterator);
+//			return false;
+//		}
+//		
+//		for(uint4 t_i = 0; t_i < (uint4)t_actual_objects; t_i++)
+//		{
+//			// folders
+//			UInt16 t_is_folder;
+//			t_is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
+//			if ( (!p_files && t_is_folder) || (p_files && !t_is_folder))
+//			{
+//				char t_native_name[256];
+//				uint4 t_native_length;
+//				t_native_length = 256;
+//				MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
+//				
+//				// MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
+//				for(uint4 i = 0; i < t_native_length; ++i)
+//					if (t_native_name[i] == '/')
+//						t_native_name[i] = ':';
+//				
+//				char t_buffer[512];
+//				if (p_detailed)
+//				{ // the detailed|long files
+//					FSPermissionInfo *t_permissions;
+//					t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
+//				
+//					t_tmp_context . copysvalue(t_native_name, t_native_length);
+//					MCU_urlencode(t_tmp_context);
+//				
+//					char t_filetype[9];
+//					if (!t_is_folder)
+//					{
+//						FileInfo *t_file_info;
+//						t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
+//						uint4 t_creator;
+//						t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+//						uint4 t_type;
+//						t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
+//						
+//						if (t_file_info != NULL)
+//						{
+//							memcpy(t_filetype, (char*)&t_creator, 4);
+//							memcpy(&t_filetype[4], (char *)&t_type, 4);
+//							t_filetype[8] = '\0';
+//						}
+//						else
+//							t_filetype[0] = '\0';
+//					} else
+//						strcpy(t_filetype, "????????"); // this is what the "old" getentries did	
+//
+//					CFAbsoluteTime t_creation_time;
+//					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
+//					t_creation_time += kCFAbsoluteTimeIntervalSince1970;
+//
+//					CFAbsoluteTime t_modification_time;
+//					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
+//					t_modification_time += kCFAbsoluteTimeIntervalSince1970;
+//
+//					CFAbsoluteTime t_access_time;
+//					UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
+//					t_access_time += kCFAbsoluteTimeIntervalSince1970;
+//
+//					CFAbsoluteTime t_backup_time;
+//					if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
+//						t_backup_time = 0;
+//					else
+//					{
+//						UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
+//						t_backup_time += kCFAbsoluteTimeIntervalSince1970;
+//					}
+//
+//					sprintf(t_buffer, "%*.*s,%llu,%llu,%.0lf,%.0lf,%.0lf,%.0lf,%d,%d,%03o,%.8s",
+//						t_tmp_context . getsvalue() . getlength(),  
+//					    t_tmp_context . getsvalue() . getlength(),  
+//					   	t_tmp_context . getsvalue() . getstring(),
+//						t_catalog_infos[t_i] . dataLogicalSize,
+//						t_catalog_infos[t_i] . rsrcLogicalSize,
+//						t_creation_time,
+//						t_modification_time,
+//						t_access_time,
+//						t_backup_time,
+//						t_permissions -> userID,
+//						t_permissions -> groupID,
+//						t_permissions -> mode & 0777,
+//						t_filetype);
+//						
+//					/* UNCHECKED */ MCListAppendCString(*t_list, t_buffer);
+//				}
+//				else
+//					/* UNCHECKED */ MCListAppendNativeChars(*t_list, (const char_t *)t_native_name, t_native_length);
+//					
+//				t_entry_count += 1;		
+//			}
+//		}	
+//	} while(t_oserror != errFSNoMoreItems);
+//	
+//	FSCloseIterator(t_catalog_iterator);
+//	return MCListCopy(*t_list, r_list);
+//}
 
 bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
 {
@@ -2449,18 +2450,18 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 	else
 		return MCStringCopy(*t_newname, r_resolved);
 }
-
-Boolean MCS_rename(const char *oname, const char *nname)
-{ //rename a file or directory
-
-	char *oldpath = path2utf(MCS_resolvepath(oname));
-	char *newpath = path2utf(MCS_resolvepath(nname));
-	Boolean done = rename(oldpath, newpath) == 0;
-
-	delete oldpath;
-	delete newpath;
-	return done;
-}
+//
+//Boolean MCS_rename(const char *oname, const char *nname)
+//{ //rename a file or directory
+//
+//	char *oldpath = path2utf(MCS_resolvepath(oname));
+//	char *newpath = path2utf(MCS_resolvepath(nname));
+//	Boolean done = rename(oldpath, newpath) == 0;
+//
+//	delete oldpath;
+//	delete newpath;
+//	return done;
+//}
 
 bool MCS_getdrives(MCListRef& r_list)
 {
