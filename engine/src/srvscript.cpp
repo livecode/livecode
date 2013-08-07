@@ -112,32 +112,29 @@ uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
 MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_add)
 {
 	// First resolve the filename.
-	MCAutoStringRef p_filename_string;
-	/*UNCHECKED*/MCStringCreateWithCString(p_filename, &p_filename_string);
-
-	char *t_filename;
 	MCAutoStringRef t_filename_string;
-	MCsystem -> ResolvePath(*p_filename_string, &t_filename_string);
-	t_filename = (char*) MCStringGetCString(*t_filename_string);
+	/*UNCHECKED*/MCStringCreateWithCString(p_filename, &t_filename_string);
+
+	MCAutoStringRef t_resolved_filename;
+	MCsystem -> ResolvePath(*t_filename_string, &t_resolved_filename);
 	
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		if (strcmp(t_file -> filename, t_filename) == 0)
+		if (strcmp(t_file -> filename, MCStringGetCString(*t_resolved_filename)) == 0)
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
 	// adding mode, then just return nil.
 	if (t_file != NULL || !p_add)
 	{
-		delete t_filename;
 		return t_file;
 	}
 
 	// Create a new entry.
 	t_file = new File;
 	t_file -> next = m_files;
-	t_file -> filename = t_filename;
+	t_file -> filename = (char*) MCStringGetCString(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
 	t_file -> script = NULL;
 	t_file -> handle = NULL;

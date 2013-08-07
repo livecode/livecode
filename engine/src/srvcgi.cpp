@@ -849,18 +849,16 @@ static Exec_stat cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	
 	bool t_success = true;
 
-	MCAutoStringRef p_content_length;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_LENGTH", &message);
+	MCAutoStringRef t_content_length;
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_LENGTH", &t_message);
 	
-	MCS_getenv(*message, &p_content_length);
+	MCS_getenv(*t_message, &t_content_length);
 	
-	char *t_content_length = (char*) MCStringGetCString(*p_content_length);
-	
-	if (t_content_length != NULL)
+	if (MCStringGetCString(*t_content_length) != NULL)
 	{
 		uint32_t t_length;
-		t_length = atoi(t_content_length);
+		t_length = atoi(MCStringGetCString(*t_content_length));
 		
 		uint32_t t_read = 0;
 		
@@ -892,15 +890,13 @@ static Exec_stat cgi_compute_post_variables()
 	
 	s_cgi_processed_post = true;
 	
-	MCAutoStringRef p_content_type;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &message);
+	MCAutoStringRef t_content_type;
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &t_message);
 	
-	MCS_getenv(*message, &p_content_type);
+	MCS_getenv(*t_message, &t_content_type);
 	
-	char *t_content_type = (char*) MCStringGetCString(*p_content_type);
-	
-	if (t_content_type != NULL && strcasecmp(t_content_type, "application/x-www-form-urlencoded") == 0)
+	if (MCStringGetCString(*t_content_type) != NULL && strcasecmp(MCStringGetCString(*t_content_type), "application/x-www-form-urlencoded") == 0)
 	{
 		// TODO: currently we assume that urlencoded form data is small enough to fit into memory,
 		// so we fetch the contents from $_POST_RAW (which automatically reads the data from stdin).
@@ -919,7 +915,7 @@ static Exec_stat cgi_compute_post_variables()
 		}
 		delete t_raw_ref;
 	}
-	else if (t_content_type != NULL && MCCStringBeginsWithCaseless(t_content_type, "multipart/form-data;"))
+	else if (MCStringGetCString(*t_content_type) != NULL && MCCStringBeginsWithCaseless(MCStringGetCString(*t_content_type), "multipart/form-data;"))
 	{
 		// read post-data from stdin, via the stream cache
 		MCExecPoint ep;
@@ -959,14 +955,12 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 {
 	bool t_success = true;
 
-	MCAutoStringRef p_content_type;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &message);
+	MCAutoStringRef t_content_type;
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &t_message);
 	
-	MCS_getenv(*message, &p_content_type);
+	MCS_getenv(*t_message, &t_content_type);
 	
-	char *t_content_type = (char*) MCStringGetCString(*p_content_type);
-
 	char *t_params = NULL;
 	uint32_t t_index = 0;
 	
@@ -974,10 +968,10 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	char **t_values = NULL;
 	uint32_t t_param_count = 0;
 	
-	t_success = MCCStringFirstIndexOf(t_content_type, ';', t_index);
+	t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
-		t_success = MCMultiPartParseHeaderParams(t_content_type + t_index + 1, t_names, t_values, t_param_count);
+		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
 
 	r_boundary = NULL;
 	
@@ -1238,20 +1232,18 @@ static Exec_stat cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 {
 	bool t_success = true;
 
-	MCAutoStringRef p_cookie_string;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("HTTP_COOKIE", &message);
+	MCAutoStringRef t_cookie;
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringCreateWithCString("HTTP_COOKIE", &t_message);
 	
-	MCS_getenv(*message, &p_cookie_string);
-	
-	char *t_cookie_string = (char*) MCStringGetCString(*p_cookie_string);
+	MCS_getenv(*t_message, &t_cookie);
 	
 	MCExecPoint ep;
 	
-	if (t_cookie_string == NULL)
+	if (MCStringGetCString(*t_cookie) == NULL)
 		return ES_NORMAL;
 	
-	cgi_store_cookie_urlencoded(ep, s_cgi_cookie, t_cookie_string, t_cookie_string + MCCStringLength(t_cookie_string), true);
+	cgi_store_cookie_urlencoded(ep, s_cgi_cookie, MCStringGetCString(*t_cookie), MCStringGetCString(*t_cookie) + MCCStringLength(MCStringGetCString(*t_cookie)), true);
 
 	return ES_NORMAL;
 }
@@ -1271,13 +1263,13 @@ bool cgi_initialize()
 	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
-	MCAutoStringRef message, env;
-	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &message);
-	MCS_getenv(*message, &env);
+	MCAutoStringRef t_message, t_env;
+	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &t_message);
+	MCS_getenv(*t_message, &t_env);
 
-	MCAutoStringRef  MCserverinitialscript_string;
-	MCsystem -> ResolvePath(*env, &MCserverinitialscript_string);
-	MCserverinitialscript = (char*) MCStringGetCString(*MCserverinitialscript_string);
+	MCAutoStringRef  t_MCserverinitialscript_string;
+	MCsystem -> ResolvePath(*t_env, &t_MCserverinitialscript_string);
+	MCserverinitialscript = (char*) MCStringGetCString(*t_MCserverinitialscript_string);
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;

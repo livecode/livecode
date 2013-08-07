@@ -295,7 +295,7 @@ char *MCS_dnsresolve(const char *p_hostname)
 	if (!MCS_init_sockets())
 		return NULL;
 
-	char *t_name = NULL;
+	char *t_name = NULL
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;

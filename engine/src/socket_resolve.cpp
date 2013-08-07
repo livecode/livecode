@@ -426,7 +426,7 @@ bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr)
 */
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr)
 {
-	return MCS_name_to_sockaddr(MCStringGetCString(p_name), &r_addr, NULL, NULL);
+	return MCS_name_to_sockaddr(p_name, &r_addr, NULL, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
