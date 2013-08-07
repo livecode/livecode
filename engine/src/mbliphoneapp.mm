@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include <objc/runtime.h>
+#include <objc/message.h>
 #include <unistd.h>
 
 #include "mbliphoneview.h"
@@ -308,7 +309,7 @@ static UIDeviceOrientation patch_device_orientation(id self, SEL _cmd)
 		
 		// MW-2013-07-29: [[ Bug 10979 ]] Dynamically call the 'registerForRemoteNotificationTypes' to
 		//   avoid app-store warnings.
-		objc_msgSend([[UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
+		objc_msgSend([UIApplication sharedApplication], sel_getUid("registerForRemoteNotificationTypes:"), t_allowed_notifications);
     }
 }
 
