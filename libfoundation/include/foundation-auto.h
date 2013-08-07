@@ -200,6 +200,218 @@ typedef MCAutoValueRefArrayBase<MCNameRef> MCAutoNameRefArray;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCAutoStringRefAsWString
+{
+public:
+    MCAutoStringRefAsWString(void)
+    {
+        m_ref = nil;
+    }
+    
+    ~MCAutoStringRefAsWString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        if (MCStringGetCharPtr(p_string) == nil)
+        {
+            m_ref = nil;
+            return MCStringConvertToWString(p_string, m_wstring);
+        }
+        
+        m_ref = MCValueRetain(p_string);
+        // The pointer returned is not const-declared but rather cast as const before
+        // being returned, so that casting away the const is safe.
+        m_wstring = const_cast<unichar_t*>(MCStringGetCharPtr(p_string));
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        if (m_ref != nil)
+        {
+            MCValueRelease(m_ref);
+            m_ref = nil;
+        }
+        else
+            MCMemoryDeleteArray(m_wstring);
+        m_wstring = nil;
+    }
+    
+    unichar_t *operator * (void)
+    {
+        return m_wstring;
+    }
+    
+private:
+    MCStringRef m_ref;
+    unichar_t *m_wstring;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAutoStringRefAsUTF8String
+{
+public:
+    MCAutoStringRefAsUTF8String(void)
+    {
+    }
+    
+    ~MCAutoStringRefAsUTF8String(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToUTF8String(p_string, m_utf8string);
+    }
+    
+    void Unlock(void)
+    {
+        MCMemoryDeleteArray(m_utf8string);
+        m_utf8string = nil;
+    }
+    
+    char *operator * (void)
+    {
+        return m_utf8string;
+    }
+    
+private:
+    char *m_utf8string;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+#if defined(__MAC__) || defined(__IOS__)
+#include <CoreFoundation/CoreFoundation.h>
+class MCAutoStringRefAsCFString
+{
+public:
+    MCAutoStringRefAsCFString(void)
+    {}
+    
+    ~MCAutoStringRefAsCFString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToCFStringRef(p_string, m_cfstring);
+    }
+    
+    void Unlock(void)
+    {
+        CFRelease(m_cfstring);
+        m_cfstring = nil;
+    }
+    
+    CFStringRef operator * (void)
+    {
+        return m_cfstring;
+    }
+    
+private:
+    CFStringRef m_cfstring;
+};
+
+#endif // __MAC__ || __IOS__
+
+////////////////////////////////////////////////////////////////////////////////
+
+#ifdef __WINDOWS__
+#include <OleAuto.h>
+class MCAutoStringRefAsBSTR
+{
+public:
+    MCAutoStringRefAsBSTR(void)
+    {
+        m_ref = nil;
+    }
+    
+    ~MCAutoStringRefAsBSTR(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        return MCStringConvertToBSTR(p_string, m_bstr);
+    }
+    
+    void Unlock(void)
+    {
+        SysFreeString(m_bstr);        
+        m_bstr = nil;
+    }
+    
+    BSTR operator * (void)
+    {
+        return m_bstr;
+    }
+    
+private:
+    BSTR m_bstr;
+};
+#endif // __WINDOWS__
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCAutoStringRefAsCString
+{
+public:
+    MCAutoStringRefAsCString(void)
+    {
+        m_ref = nil;
+    }
+    
+    ~MCAutoStringRefAsCString(void)
+    {
+        Unlock();
+    }
+    
+    bool Lock(MCStringRef p_string)
+    {
+        if (MCStringGetNativeCharPtr(p_string) == nil)
+        {
+            m_ref = nil;
+            return MCStringConvertToCString(p_string, m_cstring);
+        }
+        
+        m_ref = MCValueRetain(p_string);
+        m_cstring = const_cast<char*>((const char*)MCStringGetNativeCharPtr(p_string));
+        
+        return true;
+    }
+    
+    void Unlock(void)
+    {
+        if (m_ref != nil)
+        {
+            MCValueRelease(m_ref);
+            m_ref = nil;
+        }
+        else
+            MCMemoryDeleteArray(m_cstring);
+        m_cstring = nil;
+    }
+    
+    char *operator * (void)
+    {
+        return m_cstring;
+    }
+    
+private:
+    MCStringRef m_ref;
+    char *m_cstring;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 template<typename T> class MCAutoPointer
 {
 public:

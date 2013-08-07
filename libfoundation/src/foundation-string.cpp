@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd
 
 This file is part of LiveCode.
 
@@ -412,7 +412,7 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
-	// Allocate an array of chars one bigger than needed. As the allocated array
+	// Allocate an array of chars one byte bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
 	char_t *t_chars;
 	if (!MCMemoryNewArray(self -> char_count + 1, t_chars))
@@ -422,6 +422,101 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 	r_chars = t_chars;
 	return true;
 }
+
+
+bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
+{
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, r_cstring))
+        return false;
+    
+    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), (char_t*)r_cstring);
+    r_cstring[t_length] = '\0';
+    
+    return true;
+}
+
+
+bool MCStringConvertToWString(MCStringRef p_string, unichar_t*& r_wstring)
+{
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, r_wstring))
+        return false;
+    
+    MCStringGetChars(p_string, MCRangeMake(0, t_length), r_wstring);
+    r_wstring[t_length] = '\0';
+    
+    return true;
+}
+
+
+bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
+{
+	// Allocate an array of chars one byte bigger than needed. As the allocated array
+	// is filled with zeros, this will naturally NUL terminate the string.
+    uindex_t t_length;
+    uindex_t t_byte_count;
+    unichar_t* t_unichars;
+    
+    if (!MCMemoryNewArray(t_length, t_unichars))
+        return false;
+    
+    uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
+    
+    t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil);
+    
+    if (!MCMemoryNewArray(t_byte_count, r_utf8string))
+        return false;
+    
+    MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string);
+    
+    // Delete temporary unichar_t array
+    MCMemoryDeleteArray(t_unichars);
+    
+    return true;
+}
+
+#if defined(__MAC__) || defined (__IOS__)
+bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
+{
+    uindex_t t_length;
+    char_t* t_chars;
+    
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, t_chars))
+        return false;
+    
+    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), t_chars);
+    r_cfstring = CFStringCreateWithCharacters(nil, (UniChar *)t_chars, t_length);
+    
+    MCMemoryDeleteArray(t_chars);
+    return r_cfstring != nil;
+}
+#endif
+
+#ifdef __WINDOWS__
+bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
+{
+    uindex_t t_length;
+    unichar_t* t_chars;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, t_chars))
+        return false;
+    
+    MCStringGetChars(p_string, MCRangeMake(0, t_length), t_chars);
+    
+    r_bstr = SysAllocString((OLECHAR*)t_chars);
+    
+    MCMemoryDeleteArray(t_chars);
+    
+    if (r_bstr == nil)
+        return false;
+    
+    return true
+}
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

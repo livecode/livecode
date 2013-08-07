@@ -49,6 +49,79 @@ void MCUnicodeCharsMapFromNative(const char_t *p_chars, uindex_t p_char_count, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// If utf8bytes is nil, returns the number of bytes needed to convert the chars
+// If utf8bytes is not nil, does the conversion
+uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes)
+{
+    uindex_t t_bytes_needed;
+    t_bytes_needed = 0;
+    
+    uindex_t t_size_in_bytes;
+    
+    for (uindex_t i = 0; i < wchar_count; ++i)
+    {
+        // According to the first byte value, we can determine the number of
+        // bytes a conversion would need
+        if (wchars[i] < 0x80)
+            t_size_in_bytes = 1;
+        
+        else if (wchars[i] < 0xE0)
+            t_size_in_bytes = 2;
+        
+        else if (wchars[i] < 0xF0)
+            t_size_in_bytes = 3;
+        
+        else
+            t_size_in_bytes = 4;
+        
+        // Performs the conversion from the Unicode character to the byte_t array
+        if (utf8bytes != nil)
+            MCMemoryCopy(utf8bytes + t_bytes_needed, wchars + i, t_size_in_bytes);
+        
+        t_bytes_needed += t_size_in_bytes;
+    }
+    
+    return t_bytes_needed;
+}
+
+// If wchars is nil, returns the size of the buffer (in wchars needed)
+// If wchars is not nil, does the conversion into wchars
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars)
+{
+    uindex_t t_wchars_needed;
+    t_wchars_needed = 0;
+    
+    uindex_t t_size_in_bytes;
+    
+    for (index_t i = 0; i < utf8byte_count;)
+    {
+        // According to the first byte value, we can determine the number of
+        // bytes a conversion would need
+        if (utf8bytes[i] < 0x80)
+            t_size_in_bytes = 1;
+        
+        else if (wchars[i] < 0xE0)
+            t_size_in_bytes = 2;
+        
+        else if (wchars[i] < 0xF0)
+            t_size_in_bytes = 3;
+        
+        else
+            t_size_in_bytes = 4;
+        
+        if (wchars != nil)
+            // Copy the bytes into the unichar_t array
+            MCMemoryCopy(wchars + t_wchars_needed, utf8bytes + i, t_size_in_bytes);
+
+        t_wchars_needed ++;
+        i += t_size_in_bytes;
+    }
+    
+    return t_wchars_needed;  
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCUnicodeCharMapToNative(unichar_t p_uchar, char_t& r_nchar)
 {
 #if defined(__WINDOWS_1252__)
