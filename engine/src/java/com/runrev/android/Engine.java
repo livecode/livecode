@@ -62,7 +62,7 @@ import java.util.*;
 // invoke methods from the native code so we wrap all this up into a single
 // view object.
 
-public class Engine extends View
+public class Engine extends View implements EngineApi
 {
 	public static final String TAG = "revandroid.Engine";
 
@@ -1741,6 +1741,10 @@ public class Engine extends View
     private static final int CREATE_CALENDAR_RESULT = 11;
     private static final int UPDATE_CALENDAR_RESULT = 12;
     private static final int SHOW_CALENDAR_RESULT = 13;
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Activity result code for activities
+	//   launched through 'runActivity' API.
+	private static final int RUN_ACTIVITY_RESULT = 14;
 
 	public void onActivityResult (int requestCode, int resultCode, Intent data)
 	{
@@ -1774,14 +1778,18 @@ public class Engine extends View
 				onShowContactResult(resultCode, data);
 				break;
 			case CREATE_CALENDAR_RESULT:
-                Log.i("revandroid", "onActivityResult - CREATE_CALENDAR_RESULT request: " + requestCode + " result: "+ resultCode);
-				onCreateCalendarEventResult(resultCode, data);
+                onCreateCalendarEventResult(resultCode, data);
 				break;
 			case UPDATE_CALENDAR_RESULT:
 				onUpdateCalendarEventResult(resultCode, data);
 				break;
 			case SHOW_CALENDAR_RESULT:
 				onShowCalendarEventResult(resultCode, data);
+				break;
+			// MW-2013-08-07: [[ ExternalsApiV5 ]] Dispatch the activity result
+			//   to the 'runActivity' handler.
+			case RUN_ACTIVITY_RESULT:
+				onRunActivityResult(resultCode, data);
 				break;
 			default:
 				break;
@@ -2653,6 +2661,75 @@ public class Engine extends View
 
     ////////////////////////////////////////////////////////////////////////////////
 
+	// EngineApi implementation
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getActivity()' API method.
+	public Activity getActivity()
+	{
+		return (LiveCodeActivity)getContext();
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'getContainer()' API method.
+	public ViewGroup getContainer()
+	{
+		return (ViewGroup)getParent();
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Implement the 'runActivity()' API method -
+	//   hooks into onActivityResult handler too.
+	private boolean m_pending_activity_running = false;
+	private int m_pending_activity_result_code = 0;
+	private Intent m_pending_activity_data = null;
+	public void runActivity(Intent p_intent, ActivityResultCallback p_callback)
+	{
+		// We aren't re-entrant, so just invoke the callback as 'cancelled' if one is
+		// already running.
+		if (m_pending_activity_running)
+		{
+			p_callback . handleActivityResult(Activity.RESULT_CANCELED, null);
+			return;
+		}
+		
+		// Mark an activity as running.
+		m_pending_activity_running = true;
+		
+		// Run the activity.
+		((LiveCodeActivity)getContext()) . startActivityForResult(p_intent, RUN_ACTIVITY_RESULT);
+		
+		// Wait until the activity returns.
+		while(m_pending_activity_running)
+			doWait(60.0, false, true);
+		
+		// Take local copies of the instance vars (to stop hanging data).
+		Intent t_data;
+		int t_result_code;
+		t_data = m_pending_activity_data;
+		t_result_code = m_pending_activity_result_code;
+		
+		// Reset the instance vars (to stop hanging data and so that the callback
+		// can start another activity if it wants).
+		m_pending_activity_data = null;
+		m_pending_activity_result_code = 0;
+		
+		p_callback . handleActivityResult(t_result_code, t_data);
+	}
+	
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Called when an activity invoked using
+	//   'runActivity()' API method returns data.
+	private void onRunActivityResult(int p_result_code, Intent p_data)
+	{
+		// Store the result details.
+		m_pending_activity_data = p_data;
+		m_pending_activity_result_code = p_result_code;
+		m_pending_activity_running = false;
+		
+		// Make sure we signal a switch back to the script thread.
+		if (m_wake_on_event)
+			doProcess(false);
+	}
+	
+    ////////////////////////////////////////////////////////////////////////////////
+
     // url launch callback
     public static native void doLaunchFromUrl(String url);
 
@@ -2694,6 +2771,10 @@ public class Engine extends View
 
     public static native String doGetCustomPropertyValue(String set, String property);
 
+	// MW-2013-08-07: [[ ExternalsApiV5 ]] Native wrapper around MCScreenDC::wait
+	//   used by runActivity() API.
+	public static native void doWait(double time, boolean dispatch, boolean anyevent);
+	
     // sensor handlers
     public static native void doLocationChanged(double p_latitude, double p_longitude, double p_altitude, float p_timestamp, float p_accuracy, double p_speed, double p_course);
     public static native void doHeadingChanged(double p_heading, double p_magnetic_heading, double p_true_heading, float p_timestamp,
