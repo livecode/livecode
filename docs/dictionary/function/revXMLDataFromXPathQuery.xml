@@ -4,14 +4,16 @@
 	<type>function</type>
 
 	<syntax>
+		<example>revXMLDataFromXPathQuery(pDocID, pXPathExpression [, charDelimiter [, lineDelimiter ] ] )</example>
 	</syntax>
 
 	<synonyms>
 	</synonyms>
 
-	<summary></summary>
+	<summary>pDocID is the xml document id returned from one of the revXMLCreate functions.<p>The charDelimiter and lineDelimiter both default to cr. If neither is specified then the items will be returned one per line:</p><p>J. K. Rowling</p><p>Harry Potter</p><p>Cory Doctorow</p><p>Little Brother</p></summary>
 
 	<examples>
+<example>put revXMLDataFromXPathQuery(2, "/bookstore/book/[price&lt;30]/title") into tBooks</example>
 	</examples>
 
 	<history>
