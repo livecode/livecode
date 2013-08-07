@@ -945,7 +945,25 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
+	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
+#if defined(TARGET_PLATFORM_WINDOWS)
+	if (MCmajorosversion >= 0x0600)
+	{
+		// Vista onwards
+		MCdispatcher -> setfontattrs("Segoe UI", 12, FA_DEFAULT_STYLE);
+	}
+	else
+	{
+		// Pre-Vista
+		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
+	}
+#elif defined(TARGET_PLATFORM_MACOS_X)
+	MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+#elif defined(TARGET_PLATFORM_LINUX)
+	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
+#else
 	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+#endif
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
