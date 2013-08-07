@@ -64,4 +64,8 @@ bool MCSecureModeCanAccessPrinter(void);
 bool MCSecureModeCanAccessDoAlternate(void);
 bool MCSecureModeCanAccessExternal(void);
 
+// MW-2013-08-07: [[ Bug 10865 ]] New check method for whether AppleScript is
+//   enabled.
+bool MCSecureModeCanAccessAppleScript(void);
+
 #endif
