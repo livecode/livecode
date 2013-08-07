@@ -752,7 +752,6 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
-	
 }
 
 void MCUIDC::flushevents(uint2 e)

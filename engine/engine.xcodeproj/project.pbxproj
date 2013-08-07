@@ -1115,6 +1115,7 @@
 		4D6F92F412AA5CC000026A72 /* w32sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32sound.cpp; path = src/w32sound.cpp; sourceTree = "<group>"; };
 		4D6F92F512AA5CC000026A72 /* w32textlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32textlayout.cpp; path = src/w32textlayout.cpp; sourceTree = "<group>"; };
 		4D6F92FA12AA5E2600026A72 /* textlayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textlayout.h; path = src/textlayout.h; sourceTree = "<group>"; };
+		4D7667AC17A137D500E692E0 /* EngineApi.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = EngineApi.java; sourceTree = "<group>"; };
 		4D7740F21226B930001C9150 /* lnxans.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxans.cpp; path = src/lnxans.cpp; sourceTree = "<group>"; };
 		4D7740F31226B930001C9150 /* lnxans.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxans.h; path = src/lnxans.h; sourceTree = "<group>"; };
 		4D7740F41226B930001C9150 /* lnxaudio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxaudio.cpp; path = src/lnxaudio.cpp; sourceTree = "<group>"; };
@@ -1989,6 +1990,7 @@
 				4DD54D1C134F591500981610 /* LiveCodeActivity.java */,
 				4DD54D1D134F591500981610 /* ShakeEventListener.java */,
 				4DD54D1E134F591500981610 /* URLLoader.java */,
+				4D7667AC17A137D500E692E0 /* EngineApi.java */,
 			);
 			path = android;
 			sourceTree = "<group>";
