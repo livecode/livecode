@@ -15,4 +15,6 @@ CUSTOM_CCFLAGS=
 
 CUSTOM_LDFLAGS=
 
+CUSTOM_DYNAMIC_LIBS=m
+
 include ../rules/library.linux.makefile
