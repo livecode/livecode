@@ -1146,6 +1146,10 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	}
 	ep . grabbuffer((char *)t_data, t_data_length);
 	
+	// MW-2013-08-07: [[ Bug 11089 ]] The MCSystem::Shell() call returns binary data,
+	//   so since uses of MCS_runcmd() expect text, we need to do EOL conversion.
+	ep . texttobinary();
+	
 	MCresult -> setnvalue(t_return_code);
 	
 	return IO_NORMAL;
