@@ -571,6 +571,8 @@ void MCGroup::munfocus()
 	{
 		MCControl *oldfocused = mfocused;
 		mfocused = NULL;
+		// IM-2013-08-07: [[ Bug 10671 ]] Release grabbed controls when removing focus
+		state &= ~CS_GRAB;
 		oldfocused->munfocus();
 	}
 	else
