@@ -1177,8 +1177,12 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
-	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
-		return False;
+    if (name == nil)
+        return False;
+    
+    // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
+	if (MCNameIsEmpty(name) && test == MCnullmcstring)
+		return True;
 
 	if (MCNameIsEqualToOldString(name, test, kMCCompareCaseless))
 		return True;
