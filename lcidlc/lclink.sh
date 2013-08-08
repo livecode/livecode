@@ -4,17 +4,21 @@ if [ "$LIVECODE_DEP_FILE" == "" ]; then
 	LIVECODE_DEP_FILE="$SRCROOT/$PRODUCT_NAME.ios"
 fi
 
-DEPS=`cat "$LIVECODE_DEP_FILE"`
-DEPS=${DEPS//library /-l}
-DEPS=${DEPS//weak-framework /-weak }
-DEPS=${DEPS//framework /-framework }
-DEPS=${DEPS//-weak /-weak_framework }
+if [ -f "$LIVECODE_DEP_FILE" ]; then
+    DEPS=`cat "$LIVECODE_DEP_FILE"`
+    DEPS=${DEPS//library /-l}
+    DEPS=${DEPS//weak-framework /-weak }
+    DEPS=${DEPS//framework /-framework }
+    DEPS=${DEPS//-weak /-weak_framework }
 
-echo $DEPS
+    echo $DEPS
 
-# At the moment, lcidlc still includes things that need objective-c, even if 'objc-objects' is not
-# used - thus we force linking to Foundation, dittor for UIKit
-DEPS="$DEPS -framework Foundation -framework UIKit"
+    # At the moment, lcidlc still includes things that need objective-c, even if 'objc-objects' is not
+    # used - thus we force linking to Foundation, dittor for UIKit
+    DEPS="$DEPS -framework Foundation -framework UIKit"
+
+    DEPS_SECTION="-Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$LIVECODE_DEP_FILE""
+fi
 
 # The list of symbols exported by an iOS external is fixed
 SYMBOLS="_MCExternalDescribe _MCExternalInitialize _MCExternalFinalize"
@@ -42,7 +46,7 @@ if [ $? != 0 ]; then
 fi
 
 # Build the 'object file' form of the external - this is used by device builds.
-"$PLATFORM_DEVELOPER_BIN_DIR/g++" -nodefaultlibs -Wl,-r -Wl,-x $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" -Wl,-sectcreate -Wl,__MISC -Wl,__deps -Wl,"$LIVECODE_DEP_FILE" -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
+"$PLATFORM_DEVELOPER_BIN_DIR/g++" -nodefaultlibs -Wl,-r -Wl,-x $ARCHS -isysroot "$SDKROOT" -o "$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.lcext" "$BUILT_PRODUCTS_DIR/$EXECUTABLE_NAME" $DEPS_SECTION -Wl,-exported_symbol -Wl,___libinfoptr_$PRODUCT_NAME
 if [ $? != 0 ]; then
 	echo "error: linking step of external object build failed"
 	exit $?
