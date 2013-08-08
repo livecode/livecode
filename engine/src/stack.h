@@ -258,7 +258,6 @@ public:
 	void configure(Boolean user);
 	void iconify();
 	void uniconify();
-	void position(const char *geometry);
 	Window_mode getmode();
 	Window_mode getrealmode()
 	{

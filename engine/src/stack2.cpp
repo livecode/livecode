@@ -233,12 +233,6 @@ void MCStack::uniconify()
 	}
 }
 
-void MCStack::position(const char *geom)
-{
-	if (MCscreen->position(geom, rect))
-		state |= CS_BEEN_MOVED;
-}
-
 Window_mode MCStack::getmode()
 {
 	if (!opened)

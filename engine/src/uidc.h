@@ -536,7 +536,6 @@ public:
 	void getcolornames(MCExecPoint &);
 	void getpaletteentry(uint4 n, MCColor &c);
 
-	Boolean position(const char *geom, MCRectangle &rect);
 	Boolean hasmessages()
 	{
 		return nmessages != 0;
