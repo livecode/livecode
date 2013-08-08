@@ -1574,9 +1574,11 @@ void MCControl::leave()
 	MCControl *oldfocused = focused;
 	if (MCdispatcher -> isdragtarget())
 	{
-		//fprintf(stderr, "In MCControl::leave() : this = %x\n", this);
+		// MW-2013-08-08: [[ Bug 10655 ]] If oldfocused is a field and has dragText set,
+		//   then make sure we unset it (otherwise the caret will continue moving around
+		//   on mouseMove).
 		if (oldfocused->gettype() == CT_FIELD
-		        && !(flags & F_LOCK_TEXT) && MCdragdata -> HasText())
+		        && oldfocused -> getstate(CS_DRAG_TEXT))
 		{
 			MCField *fptr = (MCField *)oldfocused;
 			fptr->removecursor();
