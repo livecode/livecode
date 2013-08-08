@@ -448,6 +448,23 @@ void MCUIDC::device_setmouse(int2 x, int2 y)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+
+	return device_getstackatpoint(x * t_scale, y * t_scale);
+}
+
+//////////
+
+MCStack *MCUIDC::device_getstackatpoint(int32_t x, int32_t y)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCUIDC::openwindow(Window w, Boolean override)
 { }
 void MCUIDC::closewindow(Window window)
@@ -1518,11 +1535,3 @@ char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p
 {
 	return nil;
 }
-
-//
-
-MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
-{
-	return nil;
-}
-

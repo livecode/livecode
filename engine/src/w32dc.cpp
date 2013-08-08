@@ -246,7 +246,7 @@ void MCScreenDC::listprinters(MCExecPoint& ep)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
 	POINT t_location;
 	t_location . x = x;
@@ -263,6 +263,15 @@ MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
 	d . handle . window = (MCSysWindowHandle)t_window;
 		
 	return MCdispatcher -> findstackd(&d);
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-08: [[ ResIndependence ]] Windows implementation currently returns 1.5 for testing only
+MCGFloat MCResGetDeviceScale(void)
+{
+//	return 1.0;
+	return 1.25;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -209,7 +209,13 @@ public:
 	virtual uint2 getmaxpoints();
 	virtual uint2 getvclass();
 	virtual uint2 getdepth();
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -225,8 +231,6 @@ public:
 	virtual void showtaskbar();
 	virtual void hidetaskbar();
 	virtual void setinputfocus(Window window);
-
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
@@ -252,13 +256,10 @@ public:
 
 	virtual HRGN BitmapToRegion(MCImageBitmap *p_bitmap);
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void expose();
 	virtual Boolean abortkey();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
 	virtual void getkeysdown(MCExecPoint &ep);
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
@@ -307,10 +308,6 @@ public:
 	//
 
 	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
-
-	//
-
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 
 	//
 

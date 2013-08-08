@@ -302,6 +302,9 @@ public:
 	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	void querymouse(int2 &x, int2 &y);
 	void setmouse(int2 x, int2 y);
+
+	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
+	MCStack *getstackatpoint(int32_t x, int32_t y);
 	
 //////////
 	
@@ -312,6 +315,8 @@ public:
 	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
 	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
 	
 ////////////////////////////////////////////////////////////////////////////////
 	
@@ -507,11 +512,6 @@ public:
 	
 	//
 	
-	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
-
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);

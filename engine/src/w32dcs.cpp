@@ -611,10 +611,10 @@ void MCScreenDC::setinputfocus(Window w)
 	SetFocus((HWND)w->handle.window);
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
-		return False;
+		return false;
 	RECT wrect;
 	GetClientRect((HWND)w->handle.window, &wrect);
 	POINT p;
@@ -625,7 +625,7 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 	drect.y = (int2)p.y;
 	drect.width = (uint2)(wrect.right - wrect.left);
 	drect.height = (uint2)(wrect.bottom - wrect.top);
-	return True;
+	return true;
 }
 
 void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
