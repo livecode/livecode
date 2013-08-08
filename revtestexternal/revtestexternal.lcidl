@@ -55,3 +55,5 @@ tail command revTestExternalAndroidButtonDestroy
 function revTestExternalRunActivity return c-string
 
 command revTestExternalRunOnSystemThread
+
+command revTestExternalObjectPostAndSend
