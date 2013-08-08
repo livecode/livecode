@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,159 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Support
 // Wrappers
 // Exports
-
-////////////////////////////////////////////////////////////////////////////////
-
-enum NativeType
-{
-	kNativeTypeNone,
-	kNativeTypeBoolean,
-	kNativeTypeCString,
-	kNativeTypeCData,
-	kNativeTypeInteger,
-	kNativeTypeReal,
-	kNativeTypeObjcString,
-	kNativeTypeObjcNumber,
-	kNativeTypeObjcData,
-	kNativeTypeObjcArray,
-	kNativeTypeObjcDictionary,
-	
-	kNativeTypeEnum
-};
-
-static NativeType NativeTypeFromName(NameRef p_type)
-{
-	if (NameEqualToCString(p_type, "boolean"))
-		return kNativeTypeBoolean;
-	else if (NameEqualToCString(p_type, "c-string"))
-		return kNativeTypeCString;
-	else if (NameEqualToCString(p_type, "c-data"))
-		return kNativeTypeCData;
-	else if (NameEqualToCString(p_type, "integer"))
-		return kNativeTypeInteger;
-	else if (NameEqualToCString(p_type, "real"))
-		return kNativeTypeReal;
-	else if (NameEqualToCString(p_type, "objc-string"))
-		return kNativeTypeObjcString;
-	else if (NameEqualToCString(p_type, "objc-number"))
-		return kNativeTypeObjcNumber;
-	else if (NameEqualToCString(p_type, "objc-data"))
-		return kNativeTypeObjcData;
-	else if (NameEqualToCString(p_type, "objc-array"))
-		return kNativeTypeObjcArray;
-	else if (NameEqualToCString(p_type, "objc-dictionary"))
-		return kNativeTypeObjcDictionary;
-		
-	return kNativeTypeEnum;
-}
-
-static const char *NativeTypeGetTypedef(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "bool";
-	case kNativeTypeCString:
-		return "char*";
-	case kNativeTypeCData:
-		return "LCBytes";
-	case kNativeTypeInteger:
-		return "int";
-	case kNativeTypeReal:
-		return "double";
-	case kNativeTypeObjcString:
-		return "NSString*";
-	case kNativeTypeObjcNumber:
-		return "NSNumber*";
-	case kNativeTypeObjcData:
-		return "NSData*";
-	case kNativeTypeObjcArray:
-		return "NSArray*";
-	case kNativeTypeObjcDictionary:
-		return "NSDictionary*";
-	case kNativeTypeEnum:
-		return "int";
-	default:
-		break;
-	}
-	return "<<unknown>>";
-}
-
-static const char *NativeTypeGetSecondaryPrefix(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeCString:
-	case kNativeTypeObjcString:
-	case kNativeTypeObjcNumber:
-	case kNativeTypeObjcData:
-	case kNativeTypeObjcArray:
-	case kNativeTypeObjcDictionary:
-		return "*";
-	}
-	
-	return "";
-}
-
-static const char *NativeTypeGetTag(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "bool";
-	case kNativeTypeCString:
-		return "cstring";
-	case kNativeTypeCData:
-		return "cdata";
-	case kNativeTypeInteger:
-		return "int";
-	case kNativeTypeReal:
-		return "double";
-	case kNativeTypeObjcString:
-		return "objc_string";
-	case kNativeTypeObjcNumber:
-		return "objc_number";
-	case kNativeTypeObjcData:
-		return "objc_data";
-	case kNativeTypeObjcArray:
-		return "objc_array";
-	case kNativeTypeObjcDictionary:
-		return "objc_dictionary";
-	case kNativeTypeEnum:
-		return "int";
-	default:
-		break;
-	}
-	return "<<unknown>>";
-}
-
-static const char *NativeTypeGetInitializer(NativeType p_type)
-{
-	switch(p_type)
-	{
-	case kNativeTypeBoolean:
-		return "false";
-	case kNativeTypeCString:
-	case kNativeTypeObjcString:
-	case kNativeTypeObjcNumber:
-	case kNativeTypeObjcData:
-	case kNativeTypeObjcArray:
-	case kNativeTypeObjcDictionary:
-		return "nil";
-	case kNativeTypeCData:
-		return "{ 0, nil }";
-	case kNativeTypeInteger:
-		return "0";
-	case kNativeTypeReal:
-		return "0.0";
-	case kNativeTypeEnum:
-		return "0";
-	default:
-		break;
-	}
-		
-	return nil;
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -402,106 +250,6 @@ static int64_t InterfaceResolveEnumElement(InterfaceRef self, NameRef p_name, Va
 		}
 		
 	return 0;
-}
-
-static const char *native_type_to_java_type_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "jobject";
-		case kNativeTypeCData:
-			return "jobject";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_java_sig(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "Z";
-		case kNativeTypeCString:
-			return "Ljava/lang/String;";
-		case kNativeTypeCData:
-			return "[B";
-		case kNativeTypeInteger:
-			return "I";
-		case kNativeTypeReal:
-			return "D";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_java_method_type_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "Boolean";
-		case kNativeTypeCString:
-			return "Object";
-		case kNativeTypeCData:
-			return "Object";
-		case kNativeTypeInteger:
-			return "Int";
-		case kNativeTypeReal:
-			return "Double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_type_in_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "const char *";
-		case kNativeTypeCData:
-			return "LCBytes";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
-}
-
-static const char *native_type_to_type_out_cstring(NativeType p_type)
-{
-	switch(p_type)
-	{
-		case kNativeTypeBoolean:
-			return "bool";
-		case kNativeTypeCString:
-			return "char *";
-		case kNativeTypeCData:
-			return "LCBytes";
-		case kNativeTypeInteger:
-			return "int";
-		case kNativeTypeReal:
-			return "double";
-		default:
-			break;
-	}
-	return "not_supported_type";
 }
 
 static void InterfaceGenerateMethodStubContext(InterfaceRef self, CoderRef p_coder, Handler *p_handler, bool p_in)
@@ -817,46 +565,52 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				}
 				if (t_parameter -> mode == kParameterTypeIn || t_parameter -> mode == kParameterTypeInOut)
 				{
-					CoderWriteLine(p_coder, "\tif (success)");
-					if (t_parameter -> default_value != nil)
+					CoderWriteLine(p_coder, "\tif (success)", k);
+					CoderWriteLine(p_coder, "\t{", k);
+                    if (t_parameter -> is_optional)
 					{
-						CoderWriteLine(p_coder, "\t{");
 						CoderWriteLine(p_coder, "\t\tif (argc > %d)", k);
+                        if (t_parameter -> default_value != nil)
+                            CoderWrite(p_coder, "\t\t\tsuccess = ");
+                        else
+                            CoderWrite(p_coder, "\t\t\t");
 						if (t_native_type != kNativeTypeEnum)
-							CoderWriteLine(p_coder, "\t\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
+							CoderWriteLine(p_coder, "fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
-							CoderWriteLine(p_coder, "\t\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-						CoderWriteLine(p_coder, "\t\telse");
-						switch(t_native_type)
+							CoderWriteLine(p_coder, "fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
+                        if (t_parameter -> default_value != nil)
 						{
-						case kNativeTypeBoolean:
-							// TODO: Implement boolean default values
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						case kNativeTypeObjcData:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						case kNativeTypeCString:
-						case kNativeTypeCData:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
-							break;
-						case kNativeTypeObjcString:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = @\"%s\";", t_name, StringGetCStringPtr(t_parameter -> default_value));
-							break;
-						case kNativeTypeInteger:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, NumberGetInteger(t_parameter -> default_value));
-							break;
-						case kNativeTypeReal:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %.15g;", t_name, NumberGetReal(t_parameter -> default_value));
-							break;
-						case kNativeTypeEnum:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
-							break;
-						default:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						}
-						CoderWriteLine(p_coder, "\t}");
+                            
+                            CoderWriteLine(p_coder, "\t\tif (!success)", k);
+                            switch(t_native_type)
+                            {
+                                case kNativeTypeBoolean:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, BooleanGetBool(t_parameter -> default_value) ? "true" : "false");
+                                    break;
+                                case kNativeTypeObjcData:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
+                                    break;
+                                case kNativeTypeCString:
+                                case kNativeTypeCData:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
+                                    break;
+                                case kNativeTypeObjcString:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = @\"%s\";", t_name, StringGetCStringPtr(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeInteger:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, NumberGetInteger(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeReal:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %.15g;", t_name, NumberGetReal(t_parameter -> default_value));
+                                    break;
+                                case kNativeTypeEnum:
+                                    CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
+                                    break;
+                                default:
+                                    CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
+                                    break;
+                            }
+                        }
 					}
 					else
 					{
@@ -864,8 +618,10 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 							CoderWriteLine(p_coder, "\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
 						else
 							CoderWriteLine(p_coder, "\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-					}
-				}
+                    }
+                    CoderWriteLine(p_coder, "\t}");
+                    
+                }
 				if ((t_native_type == kNativeTypeCString || t_native_type == kNativeTypeCData) && t_parameter -> mode == kParameterTypeInOut)
 				{
 					CoderWriteLine(p_coder, "\tif (success)");
@@ -1077,6 +833,8 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 				
 				if (t_variant -> minimum_parameter_count == t_variant -> parameter_count)
 					CoderWriteLine(p_coder, "\tif (env -> argc == %d)", t_variant -> parameter_count);
+				else if (t_variant -> minimum_parameter_count == 0)
+                	CoderWriteLine(p_coder, "\tif (env -> argc <= %d)", t_variant -> parameter_count);
 				else
 					CoderWriteLine(p_coder, "\tif (env -> argc >= %d && env -> argc <= %d)", t_variant -> minimum_parameter_count, t_variant -> parameter_count);
 					

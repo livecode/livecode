@@ -57,7 +57,7 @@ bool InterfaceDefineEnumElement(InterfaceRef interface, Position where, StringRe
 bool InterfaceEndEnum(InterfaceRef interface);
 
 bool InterfaceBeginHandler(InterfaceRef interface, Position where, HandlerType type, NameRef name);
-bool InterfaceDefineHandlerParameter(InterfaceRef interface, Position where, ParameterType param_type, NameRef name, NameRef type, ValueRef default_value);
+bool InterfaceDefineHandlerParameter(InterfaceRef interface, Position where, ParameterType param_type, NameRef name, NameRef type, ValueRef default_value, bool p_optional);
 bool InterfaceDefineHandlerReturn(InterfaceRef interface, Position where, NameRef type, bool indirect);
 bool InterfaceDefineHandlerBinding(InterfaceRef interface, Position where, NameRef name);
 bool InterfaceEndHandler(InterfaceRef interface);

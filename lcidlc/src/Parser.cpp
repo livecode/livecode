@@ -269,9 +269,31 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 	const Token *t_token;
 	if (!ScannerRetrieve(self -> scanner, t_token))
 		return false;
-
-	if (t_token -> type != kTokenTypeString &&
-		t_token -> type != kTokenTypeNumber)
+    
+    bool t_is_bool = t_token -> type == kTokenTypeIdentifier;
+    if (t_is_bool)
+    {
+        bool t_bool;
+        
+        if (t_is_bool)
+        {
+            t_bool = !NameEqualToCString(t_token -> value, "false");
+            t_is_bool = !t_bool;
+        }
+        
+        if (!t_is_bool)
+        {
+            t_bool = NameEqualToCString(t_token -> value, "true");
+            t_is_bool = t_bool;
+        }
+        
+        if (t_is_bool)
+            BooleanCreateWithBool(t_bool, r_value);
+    }
+    
+    if (!(t_token -> type == kTokenTypeString ||
+         t_token -> type == kTokenTypeNumber ||
+        t_is_bool))
 		return ParserReport(self, t_token -> start, kParserErrorConstantExpected, nil);
 		
 	if (!ScannerAdvance(self -> scanner))
@@ -279,7 +301,8 @@ static bool ParserMatchConstant(ParserRef self, ValueRef& r_value)
 		
 	self -> position = t_token -> start;
 	
-	r_value = t_token -> value;
+    if (!t_is_bool)
+        r_value = t_token -> value;
 	
 	return true;
 }
@@ -292,7 +315,6 @@ static bool ParserMatchKeyword(ParserRef self, ParserKeyword p_keyword)
 
 	if (t_token -> type != kTokenTypeIdentifier ||
 		!NameEqualToCString(t_token -> value, s_parser_keyword_strings[p_keyword]))
-		
 		return ParserReport(self, t_token -> start, kParserErrorKeywordExpected, &s_parser_keyword_strings[p_keyword]);
 
 	if (!ScannerAdvance(self -> scanner))
@@ -697,19 +719,19 @@ static bool ParserReduceParameterDefinition(ParserRef self)
 	NameRef t_type;
 	if (!ParserMatchIdentifier(self, t_type))
 		return false;
-		
+    
 	ValueRef t_default;
 	t_default = nil;
 	if (t_is_optional)
 	{
-		if (!ParserMatchKeyword(self, kParserKeywordDefault))
-			return false;
-			
-		if (!ParserMatchConstant(self, t_default))
-			return false;
-	}
+		bool t_is_default;
+        ParserSkipKeyword(self, kParserKeywordDefault, t_is_default);
+        if (t_is_default)
+            if (!ParserMatchConstant(self, t_default))
+                return false;
+    }
 	
-	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default))
+	if (!InterfaceDefineHandlerParameter(self -> interface, t_position, t_parameter_type, t_name, t_type, t_default, t_is_optional))
 		return false;
 
 	return true;

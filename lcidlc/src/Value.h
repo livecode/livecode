@@ -77,4 +77,7 @@ double NumberGetReal(ValueRef value);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool BooleanCreateWithBool(bool value, ValueRef& r_value);
+bool BooleanGetBool(ValueRef value);
+
 #endif

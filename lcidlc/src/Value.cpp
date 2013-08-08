@@ -96,6 +96,49 @@ void ValueRelease(ValueRef self)
 	MCMemoryDelete(self);
 }
 
+bool ValueIsEmpty(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeEmpty;
+}
+
+bool ValueIsBoolean(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeBoolean;
+}
+
+bool ValueIsInteger(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeInteger;
+}
+
+bool ValueIsReal(ValueRef self)
+{
+    if (self == nil)
+		return false;
+    return self->type == kValueTypeReal;
+}
+
+bool ValueIsString(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeString;
+}
+
+bool ValueIsName(ValueRef self)
+{
+    if (self == nil)
+		return false;
+	return self->type == kValueTypeName;
+}
+
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool NameCreateWithNativeChars(const char *p_chars, uindex_t p_char_count, ValueRef& r_value)
@@ -285,3 +328,38 @@ double NumberGetReal(NumberRef self)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+bool BooleanCreateWithBool(bool value, ValueRef& r_value)
+{
+    bool t_success;
+	t_success = true;
+	
+	Value *self;
+	self = nil;
+	if (t_success)
+		t_success = MCMemoryNew(self);
+    
+	if (t_success)
+	{
+		self -> references = 1;
+		self -> type = kValueTypeBoolean;
+        self -> boolean = value;
+        
+		r_value = self;
+	}
+	else
+	{
+		MCMemoryDelete(self);
+	}
+	
+	return t_success;
+
+}
+
+bool BooleanGetBool(ValueRef self)
+{
+    return self -> boolean;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
