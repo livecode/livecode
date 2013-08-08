@@ -112,7 +112,13 @@ public class revtestexternal
 		LC.Object t_target;
 		t_target = LC.ContextMe();
 		
-		t_target . Post("handlePost", 1, 1.0, false, "foobar");
-		t_target . Send("handleSend", 1, 1.0, false, "foobar");
+		try
+		{
+			t_target . Post("handlePost", 1, 1.0, false, "foobar", "foobaz" . getBytes("UTF-8"));
+			t_target . Send("handleSend", 1, 1.0, false, "foobar", "foobaz" . getBytes("UTF-8"));
+		}
+		catch(Exception e)
+		{
+		}
 	}
 };

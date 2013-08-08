@@ -2828,6 +2828,69 @@ static jclass s_java_class = nil;
 
 //////////
 
+enum JavaNativeType
+{
+	kJavaNativeTypeBoolean,
+	kJavaNativeTypeInteger,
+	kJavaNativeTypeDouble,
+	kJavaNativeTypeString,
+	kJavaNativeTypeData,
+};
+
+struct JavaNativeMapping
+{
+	JavaNativeType type;
+	const char *class_name; 
+	const char *method_name; 
+	const char *method_sig; 
+	jclass java_class; 
+	jmethodID java_method; 
+};
+
+static JavaNativeMapping s_native_mappings[] =
+{
+	{ kJavaNativeTypeBoolean, "java/lang/Boolean", "booleanValue", "()Z", nil, nil },
+	{ kJavaNativeTypeInteger, "java/lang/Integer", "intValue", "()I", nil, nil },
+	{ kJavaNativeTypeDouble, "java/lang/Double", "doubleValue", "()D", nil, nil },
+	{ kJavaNativeTypeString, "java/lang/String", nil, nil, nil, nil },
+	{ kJavaNativeTypeData, "[B", nil, nil, nil, nil },
+	{ kJavaNativeTypeData, "java/nio/ByteBuffer", "array", "()[B", nil, nil },
+};
+
+static bool java__initialize(JNIEnv *env)
+{
+	for(uint32_t i = 0; i < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); i++)
+	{
+		jclass t_class;
+		t_class = env -> FindClass(s_native_mappings[i] . class_name);
+		if (t_class == nil)
+			return false;
+		
+		s_native_mappings[i] . java_class = (jclass)env -> NewGlobalRef(t_class);
+		if (s_native_mappings[i] . java_class == nil)
+			return false;
+		
+		if (s_native_mappings[i] . method_name != nil)
+		{
+			s_native_mappings[i] . java_method = env -> GetMethodID(t_class, s_native_mappings[i] . method_name, s_native_mappings[i] . method_sig);
+			if (s_native_mappings[i] . java_method == nil)
+				return false;
+		}
+		else
+			s_native_mappings[i] . java_method = nil;
+	}
+	
+	return true;
+}
+	
+static void java__finalize(JNIEnv *env)
+{
+	for(uint32_t i = 0; i < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); i++)
+		env -> DeleteGlobalRef(s_native_mappings[i] . java_class);
+}
+	
+//////////
+	
 static jobject java__get_activity(void)
 {
 	jobject t_activity;
@@ -3050,7 +3113,7 @@ static void free__java_data(JNIEnv *env, jobject value)
 }
 
 //////////
-	
+
 static void java_lcapi__throw(JNIEnv *env, LCError p_error)
 {
 	// TODO
@@ -3115,7 +3178,7 @@ static jboolean java_lcapi_ObjectExists(JNIEnv *env, jlong object)
 }
 	
 static LCError java_lcapi_LCCreateArguments(JNIEnv *env, jobjectArray arguments, MCVariableRef*& r_argv, uint32_t& r_argc)
-{
+{	
     LCError t_error;
     t_error = kLCErrorNone;
     
@@ -3131,150 +3194,90 @@ static LCError java_lcapi_LCCreateArguments(JNIEnv *env, jobjectArray arguments,
         if (t_argv == nil)
             return kLCErrorOutOfMemory;
     }
-    
-    // Get all the classes we want to support
-    
-    jclass t_class_String;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_class_String = nil;
-        t_class_String = env->FindClass("java/lang/String");
-        if (t_class_String == nil)
-            t_error = kLCErrorFailed;
-    }
 
-    jclass t_class_Boolean;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_class_Boolean = nil;
-        t_class_Boolean = env->FindClass("java/lang/Boolean");
-        if (t_class_Boolean == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jclass t_class_Integer;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_class_Integer = nil;
-        t_class_Integer = env->FindClass("java/lang/Integer");
-        if (t_class_Integer == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jclass t_class_Double;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_class_Double = nil;
-        t_class_Double = env->FindClass("java/lang/Double");
-        if (t_class_Double == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jclass t_class_ByteBuffer;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_class_ByteBuffer = nil;
-        t_class_ByteBuffer = env->FindClass("java/nio/ByteBuffer");
-        if (t_class_ByteBuffer == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    // Get all the required methods so we don't need to get them multiple times
-    
-    jmethodID t_mid_Boolean_booleanValue;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_mid_Boolean_booleanValue = nil;
-        t_mid_Boolean_booleanValue = env->GetMethodID(t_class_Boolean, "booleanValue", "()Z");
-        if (t_mid_Boolean_booleanValue == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jmethodID t_mid_Integer_integerValue;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_mid_Integer_integerValue = nil;
-        t_mid_Integer_integerValue = env->GetMethodID(t_class_Integer, "intValue", "()I");
-        if (t_mid_Integer_integerValue == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jmethodID t_mid_Double_doubleValue;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_mid_Double_doubleValue = nil;
-        t_mid_Double_doubleValue = env->GetMethodID(t_class_Double, "doubleValue", "()D");
-        if (t_mid_Double_doubleValue == nil)
-            t_error = kLCErrorFailed;
-    }
-    
-    jmethodID t_mid_ByteBuffer_array;
-    
-    if (t_error == kLCErrorNone)
-    {
-        t_mid_ByteBuffer_array = nil;
-        t_mid_ByteBuffer_array = env->GetMethodID(t_class_ByteBuffer, "array", "()[B");
-        if (t_mid_ByteBuffer_array == nil)
-            t_error = kLCErrorFailed;
-    }
-    
     for (uint32_t i = 0; i < t_argc; i++)
     {
-        t_error = (LCError)MCVariableCreate(&t_argv[i]);
-		if (t_error != kLCErrorNone)
-			break;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)MCVariableCreate(&t_argv[i]);
 		
         jobject t_param;
-        if (t_error == kLCErrorNone)
+        t_param = nil;
+		if (t_error == kLCErrorNone)
         {
-            t_param = nil;
-            t_param = env->GetObjectArrayElement(arguments,i);
+            t_param = env->GetObjectArrayElement(arguments, i);
             if (t_param == nil)
                 t_error = kLCErrorFailed;
         }
                 
         if (t_error == kLCErrorNone)
         {
-            // Compare to classes we know we can use
-            if (env->IsInstanceOf(t_param, t_class_String) == JNI_TRUE)
-            {
-				char *t_cstring;
-                t_error = java_to__cstring(env, t_param, t_cstring);
-                if (t_error == kLCErrorNone)
-                {
-                    t_error = (LCError)MCVariableStore(t_argv[i], kMCOptionAsCString, &t_cstring);
-                    free(t_cstring);
-                }
-            }
-            if (env->IsInstanceOf(t_param, t_class_Boolean) == JNI_TRUE)
-            {
-                bool t_boolean = (bool) env -> CallBooleanMethod(t_param,t_mid_Boolean_booleanValue);
-                t_error = (LCError)MCVariableStore(t_argv[i], kMCOptionAsBoolean, &t_boolean);
-            }
-            if (env->IsInstanceOf(t_param, t_class_Integer) == JNI_TRUE)
-            {
-                int t_integer = (int) env -> CallIntMethod(t_param,t_mid_Integer_integerValue);
-                t_error = (LCError)MCVariableStore(t_argv[i], kMCOptionAsInteger, &t_integer);
-            }
-            if (env->IsInstanceOf(t_param, t_class_Double) == JNI_TRUE)
-            {
-                double t_double = (double) env -> CallDoubleMethod(t_param,t_mid_Double_doubleValue);
-                t_error = (LCError)MCVariableStore(t_argv[i], kMCOptionAsReal, &t_double);
-            }
-            if (env->IsInstanceOf(t_param, t_class_ByteBuffer) == JNI_TRUE)
-            {
-                //jobject t_byte_array = env -> CallObjectMethod(t_param,t_mid_ByteBuffer_array);
-                //LCBytes t_bytes = java_to__cdata(env, t_byte_array);
-                //t_error = (LCError)MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
-            }
+			for(uint32_t j = 0; j < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); j++)
+			{
+				if (!env -> IsInstanceOf(t_param, s_native_mappings[j] . java_class) == JNI_TRUE)
+					continue;
+				
+				JavaNativeMapping *t_mapping;
+				t_mapping = &s_native_mappings[j];
+				switch(t_mapping -> type)
+				{
+					case kJavaNativeTypeBoolean:
+					{
+						bool t_boolean;
+						t_boolean = (bool)env -> CallBooleanMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsBoolean, &t_boolean);
+					}
+					break;
+					case kJavaNativeTypeInteger:
+					{
+						int t_integer;
+						t_integer = (bool)env -> CallIntMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsInteger, &t_integer);
+					}
+					break;
+					case kJavaNativeTypeDouble:
+					{
+						double t_double;
+						t_double = (bool)env -> CallDoubleMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsReal, &t_double);
+					}
+					break;
+					case kJavaNativeTypeString:
+					{
+						jobject t_java_string;
+						if (t_mapping -> java_method != nil)
+							t_java_string = (jobject)env -> CallObjectMethod(t_param, t_mapping -> java_method);
+						else
+							t_java_string = t_param;
+						
+						char *t_cstring;
+						t_cstring = nil;
+						if (t_error == kLCErrorNone)
+							t_error = java_to__cstring(env, t_java_string, t_cstring);
+						if (t_error == kLCErrorNone)
+							t_error = LCValueStore(t_argv[i], kLCValueOptionAsCString, &t_cstring);
+						free(t_cstring);
+					}
+					break;
+					case kJavaNativeTypeData:
+					{
+						jobject t_java_data;
+						if (t_mapping -> java_method != nil)
+							t_java_data = (jobject)env -> CallObjectMethod(t_param, t_mapping -> java_method);
+						else
+							t_java_data = t_param;
+						
+						LCBytes t_cdata;
+						if (t_error == kLCErrorNone)
+						{
+							t_cdata . buffer = env -> GetByteArrayElements((jbyteArray)t_java_data, nil);
+							t_cdata . length = env -> GetArrayLength((jbyteArray)t_java_data);
+							t_error = LCValueStore(t_argv[i], kLCValueOptionAsCData, &t_cdata);
+							env -> ReleaseByteArrayElements((jbyteArray)t_java_data, (jbyte *)t_cdata . buffer, 0);
+						}
+					}
+					break;
+				}
+			}
 		}
 	}
     

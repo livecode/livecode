@@ -1532,6 +1532,10 @@ bool DLLEXPORT MCExternalInitialize(MCExternalInterface *p_interface)\n\
 \n\
 	s_interface -> interface_query(kMCExternalInterfaceQueryScriptJavaEnv, &s_engine_env);\n\
 	s_interface -> interface_query(kMCExternalInterfaceQuerySystemJavaEnv, &s_android_env);\n\
+\n\
+	if (!java__initialize(s_engine_env))\n\
+		return false;\n\
+\n\
 #endif\n\
 \n\
 #ifdef kMCExternalStartup\n\
@@ -1547,6 +1551,11 @@ void DLLEXPORT MCExternalFinalize(void)\n\
 #ifdef kMCExternalShutdown\n\
 	kMCExternalShutdown();\n\
 #endif\n\
+\n\
+#ifdef __ANDROID__\n\
+	java__finalize(s_engine_env);\n\
+#endif\n\
+\n\
 }\n\n\
 ";
 
