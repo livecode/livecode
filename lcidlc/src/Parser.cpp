@@ -441,7 +441,7 @@ static bool ParserReduceInterface(ParserRef self)
 		if (!ParserReduceHookClause(self))
 			return false;
 	
-	static ParserKeyword s_definition_keywords[] = { kParserKeywordEnum, kParserKeywordCommand, kParserKeywordFunction, kParserKeywordJava, kParserKeywordNative, kParserKeywordTail, kParserKeyword__None };
+	static ParserKeyword s_definition_keywords[] = { kParserKeywordEnum, kParserKeywordCommand, kParserKeywordFunction, kParserKeywordTail, kParserKeywordUse, kParserKeyword__None };
 	while(ParserWillMatchKeywords(self, s_definition_keywords))
 		if (!ParserReduceDefinition(self))
 			return false;

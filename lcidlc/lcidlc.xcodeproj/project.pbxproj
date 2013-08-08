@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		4D12FFC817A3EF0F0004F700 /* Coder.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D12FFC717A3EF0F0004F700 /* Coder.cpp */; };
 		4D332C41178D7959005DFE92 /* EncodedJavaSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D332C3F178D7959005DFE92 /* EncodedJavaSupport.c */; };
 		4D332C42178D7959005DFE92 /* EncodedSupport.c in Sources */ = {isa = PBXBuildFile; fileRef = 4D332C40178D7959005DFE92 /* EncodedSupport.c */; };
 		4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D4051A1176B2D340097F2D6 /* NativeType.cpp */; };
@@ -42,6 +43,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		4D12FFC617A3EF0F0004F700 /* Coder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Coder.h; path = src/Coder.h; sourceTree = "<group>"; };
+		4D12FFC717A3EF0F0004F700 /* Coder.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = Coder.cpp; path = src/Coder.cpp; sourceTree = "<group>"; };
 		4D332C3F178D7959005DFE92 /* EncodedJavaSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedJavaSupport.c; path = src/EncodedJavaSupport.c; sourceTree = "<group>"; };
 		4D332C40178D7959005DFE92 /* EncodedSupport.c */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.c; name = EncodedSupport.c; path = src/EncodedSupport.c; sourceTree = "<group>"; };
 		4D3B10121367E35D00E00C1E /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -146,6 +149,8 @@
 				4D9036A01398FC0800CBC7F6 /* Value.cpp */,
 				4D9036A11398FC0800CBC7F6 /* Value.h */,
 				4DED6D131760ECD5001DEF0C /* Support.java */,
+				4D12FFC617A3EF0F0004F700 /* Coder.h */,
+				4D12FFC717A3EF0F0004F700 /* Coder.cpp */,
 			);
 			name = Sources;
 			sourceTree = "<group>";
@@ -301,6 +306,7 @@
 				4D4051A3176B2D340097F2D6 /* NativeType.cpp in Sources */,
 				4D332C41178D7959005DFE92 /* EncodedJavaSupport.c in Sources */,
 				4D332C42178D7959005DFE92 /* EncodedSupport.c in Sources */,
+				4D12FFC817A3EF0F0004F700 /* Coder.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

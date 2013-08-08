@@ -36,7 +36,7 @@ public class revtestexternal
 		s_button . setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v)
 			{
-				s_target . Post("buttonPressed", "", null);
+				s_target . Post("buttonPressed");
 			}
 		});
 		
@@ -105,5 +105,20 @@ public class revtestexternal
 		t_wait . Run();
 		
 		t_wait . Release();
+	}
+	
+	public static void revTestExternalObjectPostAndSend()
+	{
+		LC.Object t_target;
+		t_target = LC.ContextMe();
+		
+		try
+		{
+			t_target . Post("handlePost", 1, 1.0, false, "foobar", "foobaz" . getBytes("UTF-8"));
+			t_target . Send("handleSend", 1, 1.0, false, "foobar", "foobaz" . getBytes("UTF-8"));
+		}
+		catch(Exception e)
+		{
+		}
 	}
 };

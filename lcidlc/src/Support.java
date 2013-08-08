@@ -171,7 +171,13 @@ public class LC
 			
 		//////////
 		
-		public void Post(String p_message, java.lang.Object[] p_arguments)
+		public void Send(String p_message, java.lang.Object... p_arguments)
+		{
+			Check();
+			__ObjectSend(m_pointer, p_message, p_arguments);
+		}
+		
+		public void Post(String p_message, java.lang.Object... p_arguments)
 		{
 			Check();
 			__ObjectPost(m_pointer, p_message, p_arguments);

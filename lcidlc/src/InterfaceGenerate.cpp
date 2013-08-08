@@ -20,6 +20,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "Interface.h"
 #include "InterfacePrivate.h"
+#include "Coder.h"
 #include "NativeType.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -30,49 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 // Support
 // Wrappers
 // Exports
-
-////////////////////////////////////////////////////////////////////////////////
-
-typedef FILE *CoderRef;
-
-static bool CoderStart(const char *p_filename, CoderRef& r_coder)
-{
-	CoderRef self;
-	self = fopen(p_filename, "w");
-	if (self == nil)
-		return false;
-		
-	r_coder = self;
-		
-	return true;
-}
-
-static bool CoderFinish(CoderRef self)
-{
-	fclose(self);
-	return true;
-}
-
-static void CoderCancel(CoderRef self)
-{
-}
-
-static void CoderWriteLine(CoderRef self, const char *p_format, ...)
-{
-	va_list t_args;
-	va_start(t_args, p_format);
-	vfprintf(self, p_format, t_args);
-	va_end(t_args);
-	fprintf(self, "\n");
-}
-
-static void CoderWrite(CoderRef self, const char *p_format, ...)
-{
-	va_list t_args;
-	va_start(t_args, p_format);
-	vfprintf(self, p_format, t_args);
-	va_end(t_args);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -175,9 +133,417 @@ static NativeType map_native_type(HandlerMapping p_mapping, NameRef p_type)
 				return kNativeTypeJavaDictionary;
 		}
 	}
+	else if (p_mapping == kHandlerMappingJava)
+	{
+		switch(NativeTypeFromName(p_type))
+		{
+		case kNativeTypeCString:
+			return kNativeTypeJavaString;
+		case kNativeTypeCData:
+			return kNativeTypeJavaData;
+		}
+	}
 	
 	return NativeTypeFromName(p_type);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+class TypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType mode) = 0;
+	
+	virtual void Initialize(CoderRef coder, ParameterType mode, const char *name) = 0;
+	virtual void Fetch(CoderRef coder, ParameterType mode, const char *name, const char *source) = 0;
+	virtual void Default(CoderRef coder, ParameterType mode, const char *name, ValueRef value) = 0;
+	virtual void Store(CoderRef coder, ParameterType mode, const char *name, const char *target) = 0;
+	virtual void Finalize(CoderRef coder, ParameterType mode, const char *name) = 0;
+};
+
+//////////
+
+class PrimitiveTypeMapper: public TypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return GetType();
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "%s %s", GetType(), p_name);
+		CoderWriteStatement(p_coder, "%s = %s", p_name, GetInitializer());
+	}
+	
+	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
+	{
+		CoderWriteStatement(p_coder, "success = fetch__%s(name__%s, %s, %s)", GetTag(), p_name, p_source, p_name);
+	}
+	
+	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
+	{
+		CoderWriteStatement(p_coder, "success = store__%s(%s, %s)", GetTag(), p_target, p_name);
+	}
+	
+	virtual void Finalize(CoderRef coder, ParameterType mode, const char *name)
+	{
+	}
+	
+protected:
+	virtual const char *GetType(void) const = 0;
+	virtual const char *GetInitializer(void) const = 0;
+	virtual const char *GetTag(void) const = 0;
+};
+
+class BooleanTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = %s", p_name, BooleanGetBool(p_value) ? "true" : "false");
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "bool";}
+	virtual const char *GetInitializer(void) const {return "false";}
+	virtual const char *GetTag(void) const {return "bool";}
+};
+
+class IntegerTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = %lld", p_name, NumberGetInteger(p_value));
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "int";}
+	virtual const char *GetInitializer(void) const {return "0";}
+	virtual const char *GetTag(void) const {return "int";}
+};
+
+class RealTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = %lf", p_name, NumberGetReal(p_value));
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "double";}
+	virtual const char *GetInitializer(void) const {return "0.0";}
+	virtual const char *GetTag(void) const {return "double";}
+};
+
+class ObjcStringTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = @\"%s\"", p_name, StringGetCStringPtr(p_value));
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "NSString*";}
+	virtual const char *GetInitializer(void) const {return "nil";}
+	virtual const char *GetTag(void) const {return "objc_string";}
+};
+
+class ObjcDataTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false");
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "NSData*";}
+	virtual const char *GetInitializer(void) const {return "nil";}
+	virtual const char *GetTag(void) const {return "objc_data";}
+};
+
+class ObjcNumberTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false");
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "NSNumber*";}
+	virtual const char *GetInitializer(void) const {return "nil";}
+	virtual const char *GetTag(void) const {return "objc_number";}
+};
+
+class ObjcArrayTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false");
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "NSArray*";}
+	virtual const char *GetInitializer(void) const {return "nil";}
+	virtual const char *GetTag(void) const {return "objc_array";}
+};
+
+class ObjcDictionaryTypeMapper: public PrimitiveTypeMapper
+{
+public:
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false");
+	}
+
+protected:
+	virtual const char *GetType(void) const {return "NSDictionary*";}
+	virtual const char *GetInitializer(void) const {return "nil";}
+	virtual const char *GetTag(void) const {return "objc_dictionary";}
+};
+
+//////////
+
+class CTypesTypeMapper : public TypeMapper
+{
+public:
+	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
+	{
+		CoderWriteStatement(p_coder, "success = fetch__%s(name__%s, %s, %s)", GetTag(), p_name, p_source, p_name);
+		CodeInOutCopy(p_coder, p_mode, p_name);
+	}
+	
+	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
+	{
+		CoderWriteStatement(p_coder, "success = store__%s(%s, %s)", GetTag(), p_target, p_name);
+	}
+
+protected:
+	virtual const char *GetTag(void) = 0;
+
+	void CodeInOutCopy(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		if (p_mode != kParameterTypeInOut)
+			return;
+			
+		CoderBeginIf(p_coder, "success");
+		CoderWriteStatement(p_coder, "original__%s = %s", p_name, p_name);
+		CoderEndIf(p_coder);
+	}
+};
+
+class CStringTypeMapper: public CTypesTypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return mode == kParameterTypeIn ? "const char *" : "char *";
+	}
+	
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderWriteStatement(p_coder, "char *%s, *original__%s", p_name, p_name);
+			CoderWriteStatement(p_coder, "original__%s = %s = nil;", p_name, p_name);
+		}
+		else
+		{
+			CoderWriteStatement(p_coder, "char *%s", p_name);
+			CoderWriteStatement(p_coder, "%s = nil", p_name);
+		}
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = default__%s(\"%s\", %s)", StringGetCStringPtr(p_value), p_name);
+		CodeInOutCopy(p_coder, p_mode, p_name);
+	}
+	
+	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "free(%s)", p_name);
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderBeginIf(p_coder, "%s != original__%s", p_name, p_name);
+			CoderWriteStatement(p_coder, "free(original__%s)", p_name);
+			CoderEndIf(p_coder);
+		}
+	}
+	
+protected:
+	const char *GetTag(void) {return "cstring";}
+};
+
+class CDataTypeMapper: public CTypesTypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return "LCBytes";
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderWriteStatement(p_coder, "LCBytes %s, original__%s", p_name, p_name);
+			CoderWriteStatement(p_coder, "original__%s . buffer = %s . buffer = nil;", p_name, p_name);
+			CoderWriteStatement(p_coder, "original__%s . length = %s . length = 0;", p_name, p_name);
+		}
+		else
+		{
+			CoderWriteStatement(p_coder, "LCBytes %s", p_name);
+			CoderWriteStatement(p_coder, "%s . buffer = nil", p_name);
+			CoderWriteStatement(p_coder, "%s . length = 0", p_name);
+		}
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false", StringGetCStringPtr(p_value), p_name);
+		CodeInOutCopy(p_coder, p_mode, p_name);
+	}
+	
+	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "free(%s . buffer)", p_name);
+		if (p_mode == kParameterTypeInOut)
+		{
+			CoderBeginIf(p_coder, "%s . buffer != original__%s . buffer", p_name, p_name);
+			CoderWriteStatement(p_coder, "free(original__%s . buffer)", p_name);
+			CoderEndIf(p_coder);
+		}
+	}
+	
+protected:
+	const char *GetTag(void) {return "cdata";}
+};
+
+//////////
+
+class EnumTypeMapper: public TypeMapper
+{
+public:
+	EnumTypeMapper(NameRef p_type_name, int64_t p_default)
+	{
+		m_type_name = p_type_name;
+		m_type_default = p_default;
+	}
+
+	virtual const char *GetTypedef(ParameterType mode)
+	{
+		return "int";
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "int %s", p_name);
+		CoderWriteStatement(p_coder, "%s = 0", p_name);
+	}
+	
+	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
+	{
+		CoderWriteStatement(p_coder, "success = fetchenum__%s(name__%s, %s, %s)", name_to_cname(m_type_name), p_name, p_source, p_name);
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = %lld", p_name, m_type_default);
+	}
+	
+	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
+	{
+		CoderWriteStatement(p_coder, "success = storeenum__%s(%s, %s);", name_to_cname(m_type_name), p_target, p_name);
+	}
+	
+	virtual void Finalize(CoderRef coder, ParameterType mode, const char *name)
+	{
+	}
+	
+private:
+	NameRef m_type_name;
+	int64_t m_type_default;
+};
+
+//////////
+
+class JavaStringTypeMapper: public TypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType type)
+	{
+		return "__INTERNAL_ERROR__";
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "jobject %s", p_name);
+		CoderWriteStatement(p_coder, "%s = nil", p_name);
+	}
+	
+	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
+	{
+		CoderWriteStatement(p_coder, "success = fetch__java_string(__java_env, name__%s, %s, %s)", p_name, p_source, p_name);
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "%s = default__java_string(__java_env, \"%s\", %s)", StringGetCStringPtr(p_value), p_name);
+	}
+	
+	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
+	{
+		CoderWriteStatement(p_coder, "success = store__java_string(__java_env, %s, %s)", p_target, p_name);
+	}
+	
+	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "free__java_string(__java_env, %s)", p_name);
+	}
+};
+
+class JavaDataTypeMapper: public TypeMapper
+{
+public:
+	virtual const char *GetTypedef(ParameterType type)
+	{
+		return "__INTERNAL_ERROR__";
+	}
+
+	virtual void Initialize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "jobject %s", p_name);
+		CoderWriteStatement(p_coder, "%s = nil", p_name);
+	}
+	
+	virtual void Fetch(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_source)
+	{
+		CoderWriteStatement(p_coder, "success = fetch__java_data(__java_env, name__%s, %s, %s)", p_name, p_source, p_name);
+	}
+	
+	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
+	{
+		CoderWriteStatement(p_coder, "success = false", StringGetCStringPtr(p_value), p_name);
+	}
+	
+	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
+	{
+		CoderWriteStatement(p_coder, "success = store__java_data(__java_env, %s, %s)", p_target, p_name);
+	}
+	
+	virtual void Finalize(CoderRef p_coder, ParameterType p_mode, const char *p_name)
+	{
+		CoderWriteStatement(p_coder, "free__java_data(__java_env, %s)", p_name);
+	}
+};
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -225,6 +591,7 @@ static bool InterfaceGenerateImports(InterfaceRef self, CoderRef p_coder)
 	if (self -> shutdown_hook != nil)
 		CoderWriteLine(p_coder, "%s void %s(void);", t_extern, NameGetCString(self -> shutdown_hook));
 		
+#if NOT_USED
 	for(uint32_t i = 0; i < self -> handler_count; i++)
 		for(uint32_t j = 0; j < self -> handlers[i] . variant_count; j++)
 		{
@@ -256,6 +623,7 @@ static bool InterfaceGenerateImports(InterfaceRef self, CoderRef p_coder)
 			
 			CoderWriteLine(p_coder, ");");
 		}
+#endif
 		
 	return true;
 }
@@ -659,330 +1027,353 @@ static void InterfaceGenerateJavaHandlerStub(InterfaceRef self, CoderRef p_coder
 
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+struct MappedParameter
+{
+	const char *name;
+	TypeMapper *mapper;
+	char *arg_name;
+	char *var_name;
+	ParameterType mode;
+	ValueRef default_value;
+	bool is_optional;
+	
+	MappedParameter(void)
+	{
+		memset(this, 0, sizeof(*this));
+	}
+	
+	~MappedParameter(void)
+	{
+		delete mapper;
+		MCCStringFree(arg_name);
+		MCCStringFree(var_name);
+	}
+};
+
+static TypeMapper *map_parameter_type(InterfaceRef self, HandlerMapping p_mapping, NameRef p_type, ValueRef p_default_value)
+{
+	NativeType t_type;
+	t_type = map_native_type(p_mapping, p_type);
+	switch(t_type)
+	{
+	case kNativeTypeBoolean: return new BooleanTypeMapper;
+	case kNativeTypeInteger: return new IntegerTypeMapper;
+	case kNativeTypeReal: return new RealTypeMapper;
+	case kNativeTypeEnum: return new EnumTypeMapper(p_type, p_default_value != nil ? InterfaceResolveEnumElement(self, p_type, p_default_value) : 0);
+	case kNativeTypeCString: return new CStringTypeMapper;
+	case kNativeTypeCData: return new CDataTypeMapper;
+	//case kNativeTypeCArray: 
+	//case kNativeTypeCDictionary:
+	case kNativeTypeObjcString: return new ObjcStringTypeMapper;
+	case kNativeTypeObjcNumber: return new ObjcNumberTypeMapper;
+	case kNativeTypeObjcData: return new ObjcDataTypeMapper;
+	case kNativeTypeObjcArray: return new ObjcArrayTypeMapper;
+	case kNativeTypeObjcDictionary: return new ObjcDictionaryTypeMapper;
+	case kNativeTypeJavaString: return new JavaStringTypeMapper;
+	case kNativeTypeJavaData: return new JavaDataTypeMapper;
+	}
+	return nil;
+}
+
+static void map_parameter(InterfaceRef self, HandlerMapping p_mapping, HandlerParameter *p_parameter, uint32_t k, MappedParameter& r_param)
+{
+	r_param . name = NameGetCString(p_parameter -> name);
+	MCCStringFormat(r_param . var_name, "param__%s", r_param . name);
+	MCCStringFormat(r_param . arg_name, "argv[%d]", k);
+	r_param . mode = p_parameter -> mode;
+	r_param . mapper = map_parameter_type(self, p_mapping, p_parameter -> type, p_parameter -> default_value);
+	r_param . default_value = p_parameter -> default_value;
+	r_param . is_optional = p_parameter -> is_optional;
+}
+
 static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant, HandlerMapping p_mapping)
-{	
+{
 	Handler *t_handler;
 	t_handler = p_handler;
 	
 	HandlerVariant *t_variant;
 	t_variant = p_variant;
 	
-	CoderWriteLine(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(t_variant -> binding));
-	CoderWriteLine(p_coder, "{");
-	if (self -> use_objc_objects)
-	{
-		CoderWriteLine(p_coder, "#ifdef __OBJC__");
-		CoderWriteLine(p_coder, "\tNSAutoreleasePool *t_pool;");
-		CoderWriteLine(p_coder, "\tt_pool = [[NSAutoreleasePool alloc] init];");
-		CoderWriteLine(p_coder, "#endif");
-		CoderWriteLine(p_coder, "");
-	}
+	bool t_is_java;
+	t_is_java = p_mapping == kHandlerMappingJava;
 	
-	CoderWriteLine(p_coder, "\tbool success;");
-	CoderWriteLine(p_coder, "\tsuccess = true;");
-	CoderWriteLine(p_coder, "");
-	
-	bool t_need_newline;
-	t_need_newline = false;
+	MappedParameter *t_mapped_params;
+	t_mapped_params = new MappedParameter[t_variant -> parameter_count];
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
-	{
-		HandlerParameter *t_parameter;
-		t_parameter = &t_variant -> parameters[k];
-		
-		const char *t_name;
-		t_name = NameGetCString(t_parameter -> name);
-		
-		NativeType t_native_type;
-		t_native_type = NativeTypeFromName(t_parameter -> type);
-		
-		if (t_parameter -> mode == kParameterTypeInOut && (t_native_type == kNativeTypeCString || t_native_type == kNativeTypeCData))
-		{
-			CoderWriteLine(p_coder, "\t%s original__%s, %sparam__%s;", NativeTypeGetTypedef(t_native_type), t_name, NativeTypeGetSecondaryPrefix(t_native_type), t_name);
-			if (t_native_type != kNativeTypeCData)
-				CoderWriteLine(p_coder, "\toriginal__%s = param__%s = %s;", t_name, t_name, NativeTypeGetInitializer(t_native_type));
-			else
-			{
-				CoderWriteLine(p_coder, "\toriginal__%s . buffer = param__%s . buffer = nil;", t_name, t_name);
-				CoderWriteLine(p_coder, "\toriginal__%s . length = param__%s . length = 0;", t_name, t_name);
-			}
-		}
-		else
-		{
-			CoderWriteLine(p_coder, "\t%s param__%s;", NativeTypeGetTypedef(t_native_type), t_name);
-			if (t_native_type != kNativeTypeCData)
-				CoderWriteLine(p_coder, "\tparam__%s = %s;", t_name, NativeTypeGetInitializer(t_native_type));
-			else
-			{
-				CoderWriteLine(p_coder, "\tparam__%s . buffer = NULL;", t_name);
-				CoderWriteLine(p_coder, "\tparam__%s . length = 0;", t_name);
-			}
-		}
-		if (t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut)
-		{
-			CoderWriteLine(p_coder, "\tif (success)", k);
-			CoderWriteLine(p_coder, "\t\tsuccess = verify__out_parameter(\"%s\", argv[%d]);", t_name, k);
-		}
-		if (t_parameter -> mode == kParameterTypeIn || t_parameter -> mode == kParameterTypeInOut)
-		{
-			CoderWriteLine(p_coder, "\tif (success)", k);
-			CoderWriteLine(p_coder, "\t{", k);
-			// MERG-2013-06-14: [[ ExternalsApiV5 ]] Changes to allow optional parameters without default value.
-			if (t_parameter -> is_optional)
-			{
-				CoderWriteLine(p_coder, "\t\tif (argc > %d)", k);
-				CoderWrite(p_coder, "\t\t\t");
-				if (t_native_type != kNativeTypeEnum)
-					CoderWriteLine(p_coder, "fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
-				else
-					CoderWriteLine(p_coder, "fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-				if (t_parameter -> default_value != nil)
-				{
-					CoderWriteLine(p_coder, "\t\telse", k);
-					switch(t_native_type)
-					{
-						case kNativeTypeBoolean:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %s;", t_name, BooleanGetBool(t_parameter -> default_value) ? "true" : "false");
-							break;
-						case kNativeTypeCString:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = default__%s(\"%s\", param__%s);", NativeTypeGetTag(t_native_type), StringGetCStringPtr(t_parameter -> default_value), t_name);
-							break;
-						case kNativeTypeObjcString:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = @\"%s\";", t_name, StringGetCStringPtr(t_parameter -> default_value));
-							break;
-						case kNativeTypeInteger:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, NumberGetInteger(t_parameter -> default_value));
-							break;
-						case kNativeTypeReal:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %.15g;", t_name, NumberGetReal(t_parameter -> default_value));
-							break;
-						case kNativeTypeEnum:
-							CoderWriteLine(p_coder, "\t\t\tparam__%s = %lld;", t_name, InterfaceResolveEnumElement(self, t_parameter -> type, t_parameter -> default_value));
-							break;
-						case kNativeTypeCData:
-						case kNativeTypeObjcData:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-						default:
-							CoderWriteLine(p_coder, "\t\t\tsuccess = false;");
-							break;
-					}
-				}
-			}
-			else
-			{
-				if (t_native_type != kNativeTypeEnum)
-					CoderWriteLine(p_coder, "\t\tsuccess = fetch__%s(\"%s\", argv[%d], param__%s);", NativeTypeGetTag(t_native_type), t_name, k, t_name);
-				else
-					CoderWriteLine(p_coder, "\t\tsuccess = fetchenum__%s(\"%s\", argv[%d], param__%s);", name_to_cname(t_parameter -> type), t_name, k, t_name);
-			}
-			CoderWriteLine(p_coder, "\t}");
-			
-		}
-		if ((t_native_type == kNativeTypeCString || t_native_type == kNativeTypeCData) && t_parameter -> mode == kParameterTypeInOut)
-		{
-			CoderWriteLine(p_coder, "\tif (success)");
-			CoderWriteLine(p_coder, "\t\toriginal__%s = param__%s", t_name, t_name);
-		}
-		
-		t_need_newline = true;
-	}
-	if (t_need_newline)
-		CoderWriteLine(p_coder, "");
+		map_parameter(self, p_mapping, &t_variant -> parameters[k], k, t_mapped_params[k]);
 	
+	// If c++ then we can use references for indirect return values.
 	const char *t_ref_char;
 	if (self -> use_cpp_naming)
 		t_ref_char = "";
 	else
 		t_ref_char = "&";
-	
-	NativeType t_native_return_type;
+		
+	// Get the type mapper for the return type.
+	TypeMapper *t_return_type_mapper;
 	if (t_variant -> return_type != nil)
-		t_native_return_type = NativeTypeFromName(t_variant -> return_type);
+		t_return_type_mapper = map_parameter_type(self, p_mapping, t_variant -> return_type, nil);
 	else
-		t_native_return_type = kNativeTypeNone;
-	
-	if (t_native_return_type != kNativeTypeNone)
+		t_return_type_mapper = nil;
+		
+	// Generate the import - but not for Java
+	if (!t_is_java)
 	{
-		CoderWriteLine(p_coder, "\t%s returnvalue;", NativeTypeGetTypedef(t_native_return_type));
-		if (t_native_return_type != kNativeTypeCData)
-			CoderWriteLine(p_coder, "\treturnvalue = %s;", NativeTypeGetInitializer(t_native_return_type));
-		else
+		CoderBeginStatement(p_coder);
+		
+		CoderWrite(p_coder, "%s %s %s(",
+							InterfaceGetExternPrefix(self), 
+							t_return_type_mapper != nil && !t_variant -> return_type_indirect ? t_return_type_mapper -> GetTypedef(kParameterTypeOut) : "void",
+							NameGetCString(t_variant -> binding));
+							
+		bool t_has_param;
+		t_has_param = false;
+		if (t_variant -> return_type_indirect)
 		{
-			CoderWriteLine(p_coder, "\treturnvalue . buffer = NULL;");
-			CoderWriteLine(p_coder, "\treturnvalue . length = 0;");
+			CoderWrite(p_coder, "%s%s", t_return_type_mapper -> GetTypedef(kParameterTypeOut), InterfaceGetReferenceSuffix(self));
+			t_has_param = true;
 		}
+		
+		if (t_variant -> parameter_count != 0)
+			for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
+			{
+				if (t_has_param)
+					CoderWrite(p_coder, ", ");
+				CoderWrite(p_coder, "%s%s",
+						   t_mapped_params[k] . mapper -> GetTypedef(t_mapped_params[k] . mode),
+						   t_mapped_params[k] . mode != kParameterTypeIn ? InterfaceGetReferenceSuffix(self) : "");
+				t_has_param = true;
+			}
+			
+		if (!t_has_param)
+			CoderWrite(p_coder, "void");
+			
+		CoderWrite(p_coder, ")");
+		
+		CoderEndStatement(p_coder);
 	}
 	
-	CoderWriteLine(p_coder, "\tif (success)");
-	CoderWriteLine(p_coder, "\t{");
-	CoderWriteLine(p_coder, "\t\terror__clear();");
-	
-	if (self -> use_cpp_exceptions)
+	CoderBegin(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(t_variant -> binding));
+	if (self -> use_objc_objects && !t_is_java)
 	{
-		CoderWriteLine(p_coder, "\t\ttry");
-		CoderWriteLine(p_coder, "\t\t{");
+		CoderBeginPreprocessor(p_coder, "#ifdef __OBJC__");
+		CoderWriteStatement(p_coder, "NSAutoreleasePool *t_pool");
+		CoderWriteStatement(p_coder, "t_pool = [[NSAutoreleasePool alloc] init]");
+		CoderEndPreprocessor(p_coder, "#endif");
+		CoderPad(p_coder);
 	}
 	
-	if (self -> use_objc_exceptions)
+	// If java, then emit a standard binding for the correct env.
+	if (t_is_java)
 	{
-		CoderWriteLine(p_coder, "#ifdef __OBJC__");
-		CoderWriteLine(p_coder, "\tNS_DURING");
-		CoderWriteLine(p_coder, "#endif");
+		CoderWriteStatement(p_coder, "JNIEnv *__java_env");
+		CoderWriteStatement(p_coder, "__java_env = %s", p_handler -> is_tail ? "s_android_env" : "s_engine_env");
+		CoderPad(p_coder);
 	}
 	
-	if (t_native_return_type != kNativeTypeNone)
-	{
-		if (!t_variant -> return_type_indirect)
-			CoderWrite(p_coder, "\t\treturnvalue = %s(", NameGetCString(t_variant -> binding));
-		else
-			CoderWrite(p_coder, "\t\t%s(%sreturnvalue", NameGetCString(t_variant -> binding), t_ref_char);
-	}
-	else
-		CoderWrite(p_coder, "\t\t%s(", NameGetCString(t_variant -> binding));
+	CoderWriteStatement(p_coder, "bool success");
+	CoderWriteStatement(p_coder, "success = true");
+	CoderPad(p_coder);
 	
 	for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
 	{
-		HandlerParameter *t_parameter;
-		t_parameter = &t_variant -> parameters[k];
+		MappedParameter *t_parameter;
+		t_parameter = &t_mapped_params[k];
 		
-		if (k > 0 || t_variant -> return_type_indirect)
-			CoderWrite(p_coder, ", ");
-		CoderWrite(p_coder, "%sparam__%s", t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut ? t_ref_char : "", NameGetCString(t_parameter -> name));
+		// Generate the name cstring (used by fetch/store for error reporting).
+		CoderWriteStatement(p_coder, "const char *name__%s = \"%s\"", t_parameter -> var_name, t_parameter -> name);
+		
+		// Generate the appropriate variable declarations and initialize.
+		t_parameter -> mapper -> Initialize(p_coder, t_parameter -> mode, t_parameter -> var_name);
+		
+		// Make sure the var is suitable for out (if out/inout).
+		if (t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut)
+		{
+			CoderBeginIf(p_coder, "success");
+			CoderWriteStatement(p_coder, "success = verify__out_parameter(name__%s, %s);", t_parameter -> name, t_parameter -> arg_name);
+			CoderEndIf(p_coder);
+		}
+		
+		// Generate the fetch (if in / inout).
+		if (t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeIn)
+		{
+			CoderBeginIf(p_coder, "success");
+			if (t_parameter -> is_optional)
+			{
+				CoderBeginIf(p_coder, "argc > %d", k);
+				t_parameter -> mapper -> Fetch(p_coder, t_parameter -> mode, t_parameter -> var_name, t_parameter -> arg_name);
+				if (t_parameter -> default_value != nil)
+				{
+					CoderElse(p_coder);
+					t_parameter -> mapper -> Default(p_coder, t_parameter -> mode, t_parameter -> var_name, t_parameter -> default_value);
+				}
+				CoderEndIf(p_coder);
+			}
+			else
+				t_parameter -> mapper -> Fetch(p_coder, t_parameter -> mode, t_parameter -> var_name, t_parameter -> arg_name);
+			CoderEndIf(p_coder);
+		}
+		
+		CoderPad(p_coder);
 	}
 	
-	CoderWrite(p_coder, ");\n");
-	CoderWriteLine(p_coder, "\t\tsuccess = error__catch();");
+	// If we have a return value, generate the initializer for it.
+	if (t_return_type_mapper != nil)
+		t_return_type_mapper -> Initialize(p_coder, kParameterTypeOut, "returnvalue");
 	
-	if (self -> use_objc_exceptions)
+	// Now generate the method call.
+	CoderBeginIf(p_coder, "success");
+	CoderWriteStatement(p_coder, "error__clear()");
+	
+	if (!t_is_java)
 	{
-		CoderWriteLine(p_coder, "#ifdef __OBJC__");
-		CoderWriteLine(p_coder, "\t\tNS_HANDLER");
-		CoderWriteLine(p_coder, "\t\t\tsuccess = error__raise([[localException reason] cStringUsingEncoding: NSMacOSRomanStringEncoding]);");
-		CoderWriteLine(p_coder, "\t\tNS_ENDHANDLER");
-		CoderWriteLine(p_coder, "#endif");
-	}
-	
-	if (self -> use_cpp_exceptions)
-	{
-		CoderWriteLine(p_coder, "\t\t}");
-		CoderWriteLine(p_coder, "\t\tcatch(std::exception& t_exception)");
-		CoderWriteLine(p_coder, "\t\t{");
-		CoderWriteLine(p_coder, "\t\t\tsuccess = error__raise(t_exception . what());");
-		CoderWriteLine(p_coder, "\t\t}");
-		CoderWriteLine(p_coder, "\t\tcatch(...)");
-		CoderWriteLine(p_coder, "\t\t{");
-		CoderWriteLine(p_coder, "\t\t\tsuccess = error__unknown();");
-		CoderWriteLine(p_coder, "\t\t}");
-	}
-	
-	CoderWriteLine(p_coder, "\t}");
-	
-	if (t_native_return_type != kNativeTypeNone)
-	{
-		CoderWriteLine(p_coder, "\tif (success)");
-		if (t_native_return_type != kNativeTypeEnum)
-			CoderWriteLine(p_coder, "\t\tsuccess = store__%s(result, returnvalue);", NativeTypeGetTag(t_native_return_type));
+		if (self -> use_cpp_exceptions)
+			CoderBegin(p_coder, "try");
+		if (self -> use_objc_exceptions)
+		{
+			CoderBeginPreprocessor(p_coder, "#ifdef __OBJC__");
+			CoderBegin(p_coder, "NS_DURING");
+			CoderEndPreprocessor(p_coder, "#endif");
+		}
+		
+		CoderBeginStatement(p_coder);
+		
+		if (t_return_type_mapper != nil)
+		{
+			if (!t_variant -> return_type_indirect)
+				CoderWrite(p_coder, "returnvalue = %s(", NameGetCString(t_variant -> binding));
+			else
+				CoderWrite(p_coder, "%s(%sreturnvalue", NameGetCString(t_variant -> binding), t_ref_char);
+		}
 		else
-			CoderWriteLine(p_coder, "\t\tsuccess = storeenum__%s(result, returnvalue);", name_to_cname(t_variant -> return_type));
+			CoderWrite(p_coder, "%s(", NameGetCString(t_variant -> binding));
+			
+		for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
+		{
+			HandlerParameter *t_parameter;
+			t_parameter = &t_variant -> parameters[k];
+			if (k > 0 || t_variant -> return_type_indirect)
+				CoderWrite(p_coder, ", ");
+			CoderWrite(p_coder, "%sparam__%s", t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut ? t_ref_char : "", NameGetCString(t_parameter -> name));
+		}
+
+		CoderWrite(p_coder, ")");
+		
+		CoderEndStatement(p_coder);
+		
+		if (self -> use_objc_exceptions)
+		{
+			CoderBeginPreprocessor(p_coder, "#ifdef __OBJC__");
+			CoderEndBegin(p_coder, "NS_HANDLER");
+			CoderWriteStatement(p_coder, "success = error__raise([[localException reason] cStringUsingEncoding: NSMacOSRomanStringEncoding])");
+			CoderEnd(p_coder, "NS_ENDHANDLER");
+			CoderEndPreprocessor(p_coder, "#endif");
+		}
+		
+		if (self -> use_cpp_exceptions)
+		{
+			CoderEndBegin(p_coder, "catch(std::exception& t_exception)");
+			CoderWriteStatement(p_coder, "success = error__raise(t_exception . what());");
+			CoderEndBegin(p_coder, "catch(...)");
+			CoderWriteStatement(p_coder, "success = error__unknown();");
+			CoderEnd(p_coder, "");
+		}
 	}
-	CoderWriteLine(p_coder, "");
+	else
+	{
+		char *t_java_signature;
+		t_java_signature = InterfaceGenerateJavaHandlerStubSignature(self, p_handler, p_variant);
+		
+		const char *t_java_method_type;
+		if (p_variant -> return_type != nil)
+			t_java_method_type = native_type_to_java_method_type_cstring(NativeTypeFromName(p_variant -> return_type));
+		else
+			t_java_method_type = "Void";
+		
+		CoderWriteStatement(p_coder, "static jmethodID s_method = 0");
+		CoderBeginIf(p_coder, "s_method == 0");
+		CoderWriteStatement(p_coder, "s_method = __java_env -> GetStaticMethodID(s_java_class, \"%s\", \"%s\")", NameGetCString(p_variant -> binding), t_java_signature);
+		CoderEndIf(p_coder);
+		CoderBeginStatement(p_coder);
+		if (t_return_type_mapper != nil)
+			CoderWrite(p_coder, "returnvalue = __java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
+		else
+			CoderWrite(p_coder, "__java_env -> CallStaticVoidMethod(s_java_class, s_method");
+		for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
+			CoderWrite(p_coder, ", t_param_%d", i);
+		CoderWrite(p_coder, ")");
+		CoderEndStatement(p_coder);
+		
+		MCCStringFree(t_java_signature);
+	}
 	
-	t_need_newline = false;
+	CoderWriteStatement(p_coder, "success = error__catch()");
+	CoderEndIf(p_coder);
+	CoderPad(p_coder);
+	
+	// Now generate the returnvalue store.
+	if (t_return_type_mapper != nil)
+	{
+		CoderBeginIf(p_coder, "success");
+		t_return_type_mapper -> Store(p_coder, kParameterTypeOut, "returnvalue", "result");
+		CoderEndIf(p_coder);
+		CoderPad(p_coder);
+	}
+	
 	for(uint32_t k = t_variant -> parameter_count; k > 0; k--)
 	{
-		HandlerParameter *t_parameter;
-		t_parameter = &t_variant -> parameters[k - 1];
+		MappedParameter *t_parameter;
+		t_parameter = &t_mapped_params[k - 1];
+		
 		if (t_parameter -> mode == kParameterTypeIn)
 			continue;
+
+		CoderBeginIf(p_coder, "success");
+		t_parameter -> mapper -> Store(p_coder, t_parameter -> mode, t_parameter -> var_name, t_parameter -> arg_name);
+		CoderEndIf(p_coder);
 		
-		const char *t_name;
-		t_name = NameGetCString(t_parameter -> name);
-		
-		NativeType t_native_type;
-		t_native_type = NativeTypeFromName(t_parameter -> type);
-		
-		CoderWriteLine(p_coder, "\tif (success)");
-		if (t_native_type != kNativeTypeEnum)
-			CoderWriteLine(p_coder, "\t\tsuccess = store__%s(argv[%d], param__%s);", NativeTypeGetTag(t_native_type), k - 1, t_name);
-		else
-			CoderWriteLine(p_coder, "\t\tsuccess = storeenum__%s(argv[%d], param__%s);", name_to_cname(t_parameter -> type), k - 1, t_name);
-		
-		t_need_newline = true;
+		CoderPad(p_coder);
 	}
-	if (t_need_newline)
-		CoderWriteLine(p_coder, "");
 	
-	CoderWriteLine(p_coder, "\tif (!success)");
-	CoderWriteLine(p_coder, "\t\tsuccess = error__report(result);");
-	CoderWriteLine(p_coder, "");
+	CoderBeginIf(p_coder, "!success");
+	CoderWriteStatement(p_coder, "success = error__report(result)");
+	CoderEndIf(p_coder);
+	CoderPad(p_coder);
 	
-	t_need_newline = false;
-	if (t_native_return_type == kNativeTypeCString)
-	{
-		CoderWriteLine(p_coder, "\tfree(returnvalue);");
-		t_need_newline = true;
-	}
-	else if (t_native_return_type == kNativeTypeCData)
-	{
-		CoderWriteLine(p_coder, "\tfree(returnvalue . buffer);");
-		t_need_newline = true;
-	}
+	if (t_return_type_mapper != nil)
+		t_return_type_mapper -> Finalize(p_coder, kParameterTypeOut, "returnvalue");
+		
 	for(uint32_t k = t_variant -> parameter_count; k > 0; k--)
+		t_mapped_params[k - 1] . mapper -> Finalize(p_coder, t_mapped_params[k - 1] . mode, t_mapped_params[k - 1] . var_name);
+		
+	CoderPad(p_coder);
+		
+	if (self -> use_objc_objects && !t_is_java)
 	{
-		HandlerParameter *t_parameter;
-		t_parameter = &t_variant -> parameters[k - 1];
-		
-		const char *t_name;
-		t_name = NameGetCString(t_parameter -> name);
-		
-		NativeType t_native_type;
-		t_native_type = NativeTypeFromName(t_parameter -> type);
-		
-		if (t_native_type == kNativeTypeCString)
-		{
-			CoderWriteLine(p_coder, "\tfree(param__%s);", t_name);
-			if (t_parameter -> mode == kParameterTypeInOut)
-			{
-				CoderWriteLine(p_coder, "\tif (param__%s != original__%s)", t_name, t_name);
-				CoderWriteLine(p_coder, "\t\tfree(original__%s);", t_name);
-			}
-			
-			t_need_newline = true;
-		}
-		else if (t_native_type == kNativeTypeCData)
-		{
-			CoderWriteLine(p_coder, "\tfree(param__%s . buffer);", t_name);
-			if (t_parameter -> mode == kParameterTypeInOut)
-			{
-				CoderWriteLine(p_coder, "\tif (param__%s . buffer != original__%s . buffer)", t_name, t_name);
-				CoderWriteLine(p_coder, "\t\tfree(original__%s . buffer);", t_name);
-			}
-			
-			t_need_newline = true;
-		}
-		
-	}
-	if (t_need_newline)
-		CoderWriteLine(p_coder, "");
-	
-	if (self -> use_objc_objects)
-	{
-		CoderWriteLine(p_coder, "#ifdef __OBJC__");
-		CoderWriteLine(p_coder, "\t[t_pool release];");
-		CoderWriteLine(p_coder, "#endif");
-		CoderWriteLine(p_coder, "");
+		CoderBeginPreprocessor(p_coder, "#ifdef __OBJC__");
+		CoderWriteStatement(p_coder, "[t_pool release]");
+		CoderEndPreprocessor(p_coder, "#endif");
+		CoderPad(p_coder);
 	}
 	
-	CoderWriteLine(p_coder, "\treturn success;");
+	CoderWriteStatement(p_coder, "return success");
 	
-	CoderWriteLine(p_coder, "}");
+	CoderEnd(p_coder, "");
 	
-	/*if (p_mapping == kHandlerMappingJava)
-	{
-		for(uint32_t i = 0; i < t_handler -> variant_count; i++)
-			InterfaceGenerateJavaHandlerStub(self, p_coder, t_handler, &t_handler -> variants[i]);
-	}*/
+	delete t_return_type_mapper;
+	delete[] t_mapped_params;
 }
+
+static void InterfaceGenerateUnsupportedVariant(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant, HandlerMapping p_mapping)
+{
+	CoderBegin(p_coder, "static bool variant__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(p_variant -> binding));
+	CoderWriteStatement(p_coder, "return error__report_not_supported(result)");
+	CoderEnd(p_coder, "");
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 {
@@ -990,25 +1381,47 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 	{
 		Handler *t_handler;
 		t_handler = &self -> handlers[i];
-		
-/*		if (t_handler -> type == kHandlerTypeMethod)
-		{
-			// Generate stub for calling Java or native method.
-			if (t_handler -> is_java)
-				InterfaceGenerateJavaMethodStub(self, p_coder, t_handler);
-#ifdef NOT_READY
-			else
-				InterfaceGenerateNativeMethodStub(self, p_coder, t_handler);
-#endif
-			continue;
-		}*/
-		
+
 		for(uint32_t j = 0; j < t_handler -> variant_count; j++)
 		{
 			HandlerVariant *t_variant;
 			t_variant = &t_handler -> variants[j];
 			
-			InterfaceGenerateVariant(self, p_coder, t_handler, t_variant, ...);
+			for(HandlerMapping t_mapping = kHandlerMappingNone; t_mapping <= kHandlerMappingJava; t_mapping++)
+			{
+				// Find all platforms requiring the current mapping type.
+				uint32_t t_platforms;
+				t_platforms = 0;
+				for(Platform t_platform = kPlatformMac; t_platform < __kPlatformCount__; t_platform++)
+					if (t_variant -> mappings[t_platform] == t_mapping)
+						t_platforms |= 1 << t_platform;
+						
+				// If there are none, there is nothing to do.
+				if (t_platforms == 0)
+					continue;
+					
+				char *t_defineds;
+				t_defineds = nil;
+				for(Platform t_platform = kPlatformMac; t_platform < __kPlatformCount__; t_platform++)
+				{
+					static const char *s_platform_macros[] = {"__MAC__", "__WINDOWS__", "__LINUX__", "__IOS__", "__ANDROID__"};
+					if ((t_platforms & (1 << t_platform)) == 0)
+						continue;
+					if (t_defineds != nil)
+						MCCStringAppend(t_defineds, " || ");
+					MCCStringAppendFormat(t_defineds, "defined(%s)", s_platform_macros[t_platform]);
+				}
+				
+				// Generate the variant
+				CoderBeginPreprocessor(p_coder, "#if %s", t_defineds);
+				if (t_mapping != kHandlerMappingNone)
+					InterfaceGenerateVariant(self, p_coder, t_handler, t_variant, t_mapping);
+				else
+					InterfaceGenerateUnsupportedVariant(self, p_coder, t_handler, t_variant, t_mapping);
+				CoderEndPreprocessor(p_coder, "#endif");
+				
+				MCCStringFree(t_defineds);
+			}
 		}
 		
 		if (t_handler -> is_tail)
@@ -1119,6 +1532,10 @@ bool DLLEXPORT MCExternalInitialize(MCExternalInterface *p_interface)\n\
 \n\
 	s_interface -> interface_query(kMCExternalInterfaceQueryScriptJavaEnv, &s_engine_env);\n\
 	s_interface -> interface_query(kMCExternalInterfaceQuerySystemJavaEnv, &s_android_env);\n\
+\n\
+	if (!java__initialize(s_engine_env))\n\
+		return false;\n\
+\n\
 #endif\n\
 \n\
 #ifdef kMCExternalStartup\n\
@@ -1134,6 +1551,11 @@ void DLLEXPORT MCExternalFinalize(void)\n\
 #ifdef kMCExternalShutdown\n\
 	kMCExternalShutdown();\n\
 #endif\n\
+\n\
+#ifdef __ANDROID__\n\
+	java__finalize(s_engine_env);\n\
+#endif\n\
+\n\
 }\n\n\
 ";
 

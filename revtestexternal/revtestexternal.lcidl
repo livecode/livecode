@@ -26,15 +26,34 @@ use objc-objects
 on startup call revTestExternalStartup
 on shutdown call revTestExternalShutdown
 
+use c on linux,windows,android
+use objc on mac,ios
+
 command revTestExternalTestWait
 
 command revTestExternalTestPost
 
 command revTestExternalTestArrays
 
-tail java command revTestExternalAndroidButtonCreate
-tail java command revTestExternalAndroidButtonDestroy
+use none on linux, windows, android
+use objc on mac, ios
 
-java function revTestExternalRunActivity return c-string
+command revTestExternalTestObjcArrays
+	in array as objc-array
+	return objc-array
 
-java command revTestExternalRunOnSystemThread
+command revTestExternalTestObjcDictionaries
+	in dict as objc-dictionary
+	return objc-dictionary
+
+use none on mac, linux, windows, android, ios
+use java on android
+
+tail command revTestExternalAndroidButtonCreate
+tail command revTestExternalAndroidButtonDestroy
+
+function revTestExternalRunActivity return c-string
+
+command revTestExternalRunOnSystemThread
+
+command revTestExternalObjectPostAndSend

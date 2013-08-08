@@ -49,7 +49,8 @@ struct Enum
 	uint32_t element_count;
 };
 
-enum Platform
+typedef uint32_t Platform;
+enum
 {
 	kPlatformMac,
 	kPlatformWindows,
@@ -60,7 +61,8 @@ enum Platform
 	__kPlatformCount__,
 };
 
-enum HandlerMapping
+typedef uint32_t HandlerMapping;
+enum
 {
 	kHandlerMappingNone,
 	kHandlerMappingC,
@@ -100,7 +102,7 @@ struct HandlerVariant
 struct Handler
 {
 	HandlerType type;
-	bool is_java : 1;
+	/*bool is_java : 1;*/
 	bool is_tail : 1;
 	
 	NameRef name;

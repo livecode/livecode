@@ -25,6 +25,28 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "LiveCode.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+#undef __WINDOWS__
+#undef __LINUX__
+#undef __MAC__
+#undef __IOS__
+#undef __ANDROID__
+
+#if defined(_MSC_VER) && !defined(WINCE)
+#define __WINDOWS__ 1
+#elif defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_MAC) && !defined(TARGET_OS_IPHONE)
+#define __MAC__ 1
+#elif defined(__GNUC__) && !defined(__APPLE__) && !defined(ANDROID)
+#define __LINUX__ 1
+#elif defined(__GNUC__) && defined(__APPLE__) && defined(TARGET_OS_MAC) && defined(TARGET_OS_IPHONE)
+#define __IOS__ 1
+#elif defined(ANDROID)
+#define __ANDROID__ 1
+#endif
+
+////////////////////////////////////////////////////////////////////////////////
+
 #ifdef __WINDOWS__
 #include <windows.h>
 typedef unsigned int uint32_t;
@@ -2514,6 +2536,13 @@ static bool error__report_bad_parameter_count(MCVariableRef result)
 	return false;
 }
 
+static bool error__report_not_supported(MCVariableRef result)
+{
+	const char *msg = "not supported";
+	MCVariableStore(result, kMCOptionAsCString, &msg);
+	return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool default__cstring(const char *arg, char*& r_value)
@@ -2635,7 +2664,7 @@ static bool fetch__objc_data(const char *arg, MCVariableRef var, NSData*& r_data
 	return fetch__report_error(err, arg);
 }
 
-static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray**& r_array)
+static bool fetch__objc_array(const char *arg, MCVariableRef var, NSArray*& r_array)
 {
 	LCError err;
 	err = LCValueFetch(var, kLCValueOptionAsObjcArray, &r_array);
@@ -2799,6 +2828,69 @@ static jclass s_java_class = nil;
 
 //////////
 
+enum JavaNativeType
+{
+	kJavaNativeTypeBoolean,
+	kJavaNativeTypeInteger,
+	kJavaNativeTypeDouble,
+	kJavaNativeTypeString,
+	kJavaNativeTypeData,
+};
+
+struct JavaNativeMapping
+{
+	JavaNativeType type;
+	const char *class_name; 
+	const char *method_name; 
+	const char *method_sig; 
+	jclass java_class; 
+	jmethodID java_method; 
+};
+
+static JavaNativeMapping s_native_mappings[] =
+{
+	{ kJavaNativeTypeBoolean, "java/lang/Boolean", "booleanValue", "()Z", nil, nil },
+	{ kJavaNativeTypeInteger, "java/lang/Integer", "intValue", "()I", nil, nil },
+	{ kJavaNativeTypeDouble, "java/lang/Double", "doubleValue", "()D", nil, nil },
+	{ kJavaNativeTypeString, "java/lang/String", nil, nil, nil, nil },
+	{ kJavaNativeTypeData, "[B", nil, nil, nil, nil },
+	{ kJavaNativeTypeData, "java/nio/ByteBuffer", "array", "()[B", nil, nil },
+};
+
+static bool java__initialize(JNIEnv *env)
+{
+	for(uint32_t i = 0; i < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); i++)
+	{
+		jclass t_class;
+		t_class = env -> FindClass(s_native_mappings[i] . class_name);
+		if (t_class == nil)
+			return false;
+		
+		s_native_mappings[i] . java_class = (jclass)env -> NewGlobalRef(t_class);
+		if (s_native_mappings[i] . java_class == nil)
+			return false;
+		
+		if (s_native_mappings[i] . method_name != nil)
+		{
+			s_native_mappings[i] . java_method = env -> GetMethodID(t_class, s_native_mappings[i] . method_name, s_native_mappings[i] . method_sig);
+			if (s_native_mappings[i] . java_method == nil)
+				return false;
+		}
+		else
+			s_native_mappings[i] . java_method = nil;
+	}
+	
+	return true;
+}
+	
+static void java__finalize(JNIEnv *env)
+{
+	for(uint32_t i = 0; i < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); i++)
+		env -> DeleteGlobalRef(s_native_mappings[i] . java_class);
+}
+	
+//////////
+	
 static jobject java__get_activity(void)
 {
 	jobject t_activity;
@@ -2822,142 +2914,206 @@ static jobject java__get_engine(void)
 
 //////////
 
-static bool java_from__bool(JNIEnv *env, bool p_value)
+static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
-	return p_value;
-}
+	LCError err;
+	err = kLCErrorNone;
+	
+	char *t_cstring_value;
+	t_cstring_value = nil;
+	if (err == kLCErrorNone)
+		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cstring_value);
 
-static jobject java_from__cstring(JNIEnv *env, const char *p_value)
-{
 	size_t t_char_count;
-	t_char_count = strlen(p_value);
-	
-	jchar *t_chars;
-	t_chars = (jchar *)malloc(sizeof(jchar) * t_char_count);
-	for(uint32_t i = 0; i < t_char_count; i++)
-		t_chars[i] = p_value[i];
+	jchar *t_jchar_value;
+	t_jchar_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_char_count = strlen(t_cstring_value);
+		t_jchar_value = (jchar *)malloc(sizeof(jchar) * t_char_count);
+		if (t_jchar_value == nil)
+			err = kLCErrorOutOfMemory;
+	}
 	
 	jobject t_java_value;
-	t_java_value = (jobject)env -> NewString(t_chars, t_char_count);
+	if (err == kLCErrorNone)
+	{
+		t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
+		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
 	
-	return t_java_value;
+	free(t_jchar_value);
+	free(t_cstring_value);
+	
+	if (err == kLCErrorNone)
+	{
+		r_value = t_java_value;
+		return true;
+	}
+	
+	return fetch__report_error(err, arg);
 }
 
-static jobject java_from__cdata(JNIEnv *env, LCBytes p_value)
+static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
+	LCError err;
+	err = kLCErrorNone;
+	
+	LCBytes t_cdata_value;
+	t_cdata_value . buffer = nil;
+	t_cdata_value . length = 0;
+	if (err == kLCErrorNone)
+		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cdata_value);
+	
 	jobject t_java_value;
-	t_java_value = (jobject)env -> NewByteArray(p_value . length);
-	env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, p_value . length, (const jbyte *)p_value . buffer);
-	return t_java_value;
+	t_java_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_java_value = (jobject)env -> NewByteArray(t_cdata_value . length);
+		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
+	
+	if (err == kLCErrorNone)
+	{
+		env -> SetByteArrayRegion((jbyteArray)t_java_value, 0, t_cdata_value . length, (const jbyte *)t_cdata_value . buffer);
+		if (env -> ExceptionOccurred() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
+	
+	free(t_cdata_value . buffer);
+	
+	if (err == kLCErrorNone)
+	{
+		r_value = t_java_value;
+		return true;
+	}
+	
+	return fetch__report_error(err, arg);
 }
 
-static int java_from__int(JNIEnv *env, int p_value)
+static LCError java_to__cstring(JNIEnv *env, jobject value, char*& r_cstring)
 {
-	return p_value;
-}
-
-static double java_from__double(JNIEnv *env, double p_value)
-{
-	return p_value;
-}
-
-//////////
-
-static bool java_to__bool(JNIEnv *env, bool p_value)
-{
-	return p_value;
-}
-
-static char *java_to__cstring(JNIEnv *env, jobject p_value)
-{
+	LCError err;
+	err = kLCErrorNone;
+	
 	const jchar *t_unichars;
 	uint32_t t_unichar_count;
-	t_unichars = env -> GetStringChars((jstring)p_value, nil);
-	t_unichar_count = env -> GetStringLength((jstring)p_value);
+	t_unichars = 0;
+	t_unichar_count = 0;
+	if (err == kLCErrorNone)
+	{
+		t_unichars = env -> GetStringChars((jstring)value, nil);
+		if (t_unichars == nil || env -> ExceptionOccurred() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
 	
 	char *t_native_value;
-	t_native_value = (char *)malloc(t_unichar_count + 1);
-	for(uint32_t i = 0; i < t_unichar_count; i++)
-		t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
-	t_native_value[t_unichar_count] = 0;
+	t_native_value = nil;
+	if (err == kLCErrorNone)
+	{
+		t_unichar_count = env -> GetStringLength((jstring)value);
+		t_native_value = (char *)malloc(t_unichar_count + 1);
+		if (t_native_value == nil)
+			err = kLCErrorOutOfMemory;
+	}
 	
-	env -> ReleaseStringChars((jstring)p_value, t_unichars);
-	
-	return t_native_value;
+	if (err == kLCErrorNone)
+	{
+		for(uint32_t i = 0; i < t_unichar_count; i++)
+			t_native_value[i] = t_unichars[i] < 256 ? t_unichars[i] : '?';
+		t_native_value[t_unichar_count] = 0;
+	}
+
+	if (err == kLCErrorNone)
+		r_cstring = t_native_value;
+	else
+		free(t_native_value);
+
+	if (t_unichars != nil)
+		env -> ReleaseStringChars((jstring)value, t_unichars);
+
+	return err;
 }
 
-static LCBytes java_to__cdata(JNIEnv *env, jobject p_value)
+static bool store__java_string(JNIEnv *env, MCVariableRef var, jobject value)
 {
+	LCError err;
+	err = kLCErrorNone;
+	
+	char *t_native_value;
+	if (err == kLCErrorNone)
+		err = java_to__cstring(env, value, t_native_value);
+	
+	if (err == kLCErrorNone)
+		err = LCValueStore(var, kLCValueOptionAsCString, &t_native_value);
+		
+	free(t_native_value);
+		
+	if (err == kLCErrorNone)
+		return true;
+		
+	return store__report_error(err);
+}
+
+static bool store__java_data(JNIEnv *env, MCVariableRef var, jobject value)
+{
+	LCError err;
+	err = kLCErrorNone;
+	
 	LCBytes t_native_value;
-	t_native_value . length = env -> GetArrayLength((jbyteArray)p_value);
-	t_native_value . buffer = malloc(t_native_value . length);
-	jbyte *t_bytes;
-	t_bytes = env -> GetByteArrayElements((jbyteArray)p_value, nil);
-	memcpy(t_native_value . buffer, t_bytes, t_native_value . length);
-	env -> ReleaseByteArrayElements((jbyteArray)p_value, t_bytes, 0);
-	return t_native_value;
-}
-
-static int java_to__int(JNIEnv *env, int p_value)
-{
-	return p_value;
-}
-
-static double java_to__double(JNIEnv *env, double p_value)
-{
-	return p_value;
-}
-
-//////////
-
-static void java_free__bool(JNIEnv *env, bool p_value)
-{
-}
-
-static void java_free__cstring(JNIEnv *env, jobject p_value)
-{
-	env -> DeleteLocalRef(p_value);
-}
-
-static void java_free__cdata(JNIEnv *env, jobject p_value)
-{
-	env -> DeleteLocalRef(p_value);
-}
-
-static void java_free__int(JNIEnv *env, int p_value)
-{
-}
-
-static void java_free__double(JNIEnv *env, double p_value)
-{
-}
-
-//////////
-
-static void native_free__bool(bool p_value)
-{
-}
-
-static void native_free__cstring(char *p_value)
-{
-	free(p_value);
-}
-
-static void native_free__cdata(LCBytes p_value)
-{
-	free(p_value . buffer);
-}
-
-static void native_free__int(int p_value)
-{
-}
-
-static void native_free__double(double p_value)
-{
-}
-
-/////////
+	t_native_value . buffer = nil;
+	t_native_value . length = 0;
+	if (err == kLCErrorNone)
+	{
+		t_native_value . buffer = env -> GetByteArrayElements((jbyteArray)value, nil);
+		if (t_native_value . buffer == nil || env -> ExceptionOccurred() != nil)
+		{
+			env -> ExceptionClear();
+			err = kLCErrorOutOfMemory;
+		}
+	}
 	
+	if (err == kLCErrorNone)
+	{
+		t_native_value . length = env -> GetArrayLength((jbyteArray)value);
+		err = LCValueStore(var, kLCValueOptionAsCData, &t_native_value);
+	}
+	
+	if (t_native_value . buffer != nil)
+		env -> ReleaseByteArrayElements((jbyteArray)value, (jbyte *)t_native_value . buffer, 0);
+		
+	if (err == kLCErrorNone)
+		return true;
+		
+	return store__report_error(err);
+}
+
+static void free__java_string(JNIEnv *env, jobject value)
+{
+	env -> DeleteLocalRef(value);
+}
+
+static void free__java_data(JNIEnv *env, jobject value)
+{
+	env -> DeleteLocalRef(value);
+}
+
+//////////
+
 static void java_lcapi__throw(JNIEnv *env, LCError p_error)
 {
 	// TODO
@@ -2965,12 +3121,18 @@ static void java_lcapi__throw(JNIEnv *env, LCError p_error)
 	
 static jlong java_lcapi_ObjectResolve(JNIEnv *env, jobject chunk)
 {
-	char *t_chunk_cstring;
-	t_chunk_cstring = java_to__cstring(env, chunk);
-	
 	LCError t_error;
+	t_error = kLCErrorNone;
+	
+	char *t_chunk_cstring;
+	t_chunk_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, chunk, t_chunk_cstring);
+	
 	LCObjectRef t_object;
-	t_error = LCObjectResolve(t_chunk_cstring, &t_object);
+	t_object = nil;
+	if (t_error == kLCErrorNone)
+		t_error = LCObjectResolve(t_chunk_cstring, &t_object);
 	
 	free(t_chunk_cstring);
 
@@ -3015,176 +3177,111 @@ static jboolean java_lcapi_ObjectExists(JNIEnv *env, jlong object)
 	return t_exists;
 }
 	
-static MCError java_lcapi_LCCreateArguments(JNIEnv *env,jobjectArray arguments,MCVariableRef*& r_argv,uint32_t& r_argc)
-{
-    MCError t_error;
-    t_error = kMCErrorNone;
+static LCError java_lcapi_LCCreateArguments(JNIEnv *env, jobjectArray arguments, MCVariableRef*& r_argv, uint32_t& r_argc)
+{	
+    LCError t_error;
+    t_error = kLCErrorNone;
     
     uint32_t t_argc;
     t_argc = env->GetArrayLength(arguments);
     
     MCVariableRef *t_argv;
     
-    if (t_error == kMCErrorNone)
+    if (t_error == kLCErrorNone)
     {
         t_argv = nil;
         t_argv = (MCVariableRef *)calloc(t_argc, sizeof(MCVariableRef));
         if (t_argv == nil)
-            return kMCErrorOutOfMemory;
-    }
-    
-    // Get all the classes we want to support
-    
-    jclass t_class_String;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_class_String = nil;
-        t_class_String = env->FindClass("java/lang/String");
-        if (t_class_String == nil)
-            t_error = kMCErrorFailed;
+            return kLCErrorOutOfMemory;
     }
 
-    jclass t_class_Boolean;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_class_Boolean = nil;
-        t_class_Boolean = env->FindClass("java/lang/Boolean");
-        if (t_class_Boolean == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jclass t_class_Integer;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_class_Integer = nil;
-        t_class_Integer = env->FindClass("java/lang/Integer");
-        if (t_class_Integer == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jclass t_class_Double;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_class_Double = nil;
-        t_class_Double = env->FindClass("java/lang/Double");
-        if (t_class_Double == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jclass t_class_ByteBuffer;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_class_ByteBuffer = nil;
-        t_class_ByteBuffer = env->FindClass("java/nio/ByteBuffer");
-        if (t_class_ByteBuffer == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    // Get all the required methods so we don't need to get them multiple times
-    
-    jmethodID t_mid_Boolean_booleanValue;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_mid_Boolean_booleanValue = nil;
-        t_mid_Boolean_booleanValue = env->GetMethodID(t_class_Boolean, "booleanValue", "()Z");
-        if (t_mid_Boolean_booleanValue == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jmethodID t_mid_Integer_integerValue;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_mid_Integer_integerValue = nil;
-        t_mid_Integer_integerValue = env->GetMethodID(t_class_Integer, "intValue", "()I");
-        if (t_mid_Integer_integerValue == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jmethodID t_mid_Double_doubleValue;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_mid_Double_doubleValue = nil;
-        t_mid_Double_doubleValue = env->GetMethodID(t_class_Double, "doubleValue", "()D");
-        if (t_mid_Double_doubleValue == nil)
-            t_error = kMCErrorFailed;
-    }
-    
-    jmethodID t_mid_ByteBuffer_array;
-    
-    if (t_error == kMCErrorNone)
-    {
-        t_mid_ByteBuffer_array = nil;
-        t_mid_ByteBuffer_array = env->GetMethodID(t_class_ByteBuffer, "array", "()[B");
-        if (t_mid_ByteBuffer_array == nil)
-            t_error = kMCErrorFailed;
-    }
-    
     for (uint32_t i = 0; i < t_argc; i++)
     {
-        t_error = MCVariableCreate(&t_argv[i]);
-		if (t_error != kMCErrorNone)
-			break;
+		if (t_error == kLCErrorNone)
+			t_error = (LCError)MCVariableCreate(&t_argv[i]);
 		
         jobject t_param;
-        if (t_error == kMCErrorNone)
+        t_param = nil;
+		if (t_error == kLCErrorNone)
         {
-            t_param = nil;
-            t_param = env->GetObjectArrayElement(arguments,i);
+            t_param = env->GetObjectArrayElement(arguments, i);
             if (t_param == nil)
-                t_error = kMCErrorFailed;
+                t_error = kLCErrorFailed;
         }
                 
-        if (t_error == kMCErrorNone)
+        if (t_error == kLCErrorNone)
         {
-            // Compare to classes we know we can use
-            if (env->IsInstanceOf(t_param, t_class_String) == JNI_TRUE)
-            {
-                char *t_cstring;
-                t_cstring = java_to__cstring(env, t_param);
-                if (t_cstring == nil)
-                    t_error = kMCErrorFailed;
-                
-                if (t_error == kMCErrorNone)
-                {
-                    t_error = MCVariableStore(t_argv[i], kMCOptionAsCString, &t_cstring);
-                    free(t_cstring);
-                }
-            }
-            if (env->IsInstanceOf(t_param, t_class_Boolean) == JNI_TRUE)
-            {
-                bool t_boolean = (bool) env -> CallBooleanMethod(t_param,t_mid_Boolean_booleanValue);
-                t_error = MCVariableStore(t_argv[i], kMCOptionAsBoolean, &t_boolean);
-            }
-            if (env->IsInstanceOf(t_param, t_class_Integer) == JNI_TRUE)
-            {
-                int t_integer = (int) env -> CallIntMethod(t_param,t_mid_Integer_integerValue);
-                t_error = MCVariableStore(t_argv[i], kMCOptionAsInteger, &t_integer);
-            }
-            if (env->IsInstanceOf(t_param, t_class_Double) == JNI_TRUE)
-            {
-                double t_double = (double) env -> CallDoubleMethod(t_param,t_mid_Double_doubleValue);
-                t_error = MCVariableStore(t_argv[i], kMCOptionAsReal, &t_double);
-            }
-            if (env->IsInstanceOf(t_param, t_class_ByteBuffer) == JNI_TRUE)
-            {
-                jobject t_byte_array = env -> CallObjectMethod(t_param,t_mid_ByteBuffer_array);
-                LCBytes t_bytes = java_to__cdata(env, t_byte_array);
-                t_error = MCVariableStore(t_argv[i], kMCOptionAsString, &t_bytes);
-            }
-    }
+			for(uint32_t j = 0; j < sizeof(s_native_mappings) / sizeof(s_native_mappings[0]); j++)
+			{
+				if (!env -> IsInstanceOf(t_param, s_native_mappings[j] . java_class) == JNI_TRUE)
+					continue;
+				
+				JavaNativeMapping *t_mapping;
+				t_mapping = &s_native_mappings[j];
+				switch(t_mapping -> type)
+				{
+					case kJavaNativeTypeBoolean:
+					{
+						bool t_boolean;
+						t_boolean = (bool)env -> CallBooleanMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsBoolean, &t_boolean);
+					}
+					break;
+					case kJavaNativeTypeInteger:
+					{
+						int t_integer;
+						t_integer = (bool)env -> CallIntMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsInteger, &t_integer);
+					}
+					break;
+					case kJavaNativeTypeDouble:
+					{
+						double t_double;
+						t_double = (bool)env -> CallDoubleMethod(t_param, t_mapping -> java_method);
+						t_error = LCValueStore(t_argv[i], kLCValueOptionAsReal, &t_double);
+					}
+					break;
+					case kJavaNativeTypeString:
+					{
+						jobject t_java_string;
+						if (t_mapping -> java_method != nil)
+							t_java_string = (jobject)env -> CallObjectMethod(t_param, t_mapping -> java_method);
+						else
+							t_java_string = t_param;
+						
+						char *t_cstring;
+						t_cstring = nil;
+						if (t_error == kLCErrorNone)
+							t_error = java_to__cstring(env, t_java_string, t_cstring);
+						if (t_error == kLCErrorNone)
+							t_error = LCValueStore(t_argv[i], kLCValueOptionAsCString, &t_cstring);
+						free(t_cstring);
+					}
+					break;
+					case kJavaNativeTypeData:
+					{
+						jobject t_java_data;
+						if (t_mapping -> java_method != nil)
+							t_java_data = (jobject)env -> CallObjectMethod(t_param, t_mapping -> java_method);
+						else
+							t_java_data = t_param;
+						
+						LCBytes t_cdata;
+						if (t_error == kLCErrorNone)
+						{
+							t_cdata . buffer = env -> GetByteArrayElements((jbyteArray)t_java_data, nil);
+							t_cdata . length = env -> GetArrayLength((jbyteArray)t_java_data);
+							t_error = LCValueStore(t_argv[i], kLCValueOptionAsCData, &t_cdata);
+							env -> ReleaseByteArrayElements((jbyteArray)t_java_data, (jbyte *)t_cdata . buffer, 0);
+						}
+					}
+					break;
+				}
+			}
+		}
+	}
     
-    
-    }
-    
-    if (t_error == kMCErrorNone)
+    if (t_error == kLCErrorNone)
     {
         r_argv = t_argv;
         r_argc = t_argc;
@@ -3197,35 +3294,37 @@ static MCError java_lcapi_LCCreateArguments(JNIEnv *env,jobjectArray arguments,M
 
 static void java_lcapi_ObjectSend(JNIEnv *env, jlong object, jobject message, jobjectArray arguments)
 {
+	LCError t_error;
+	t_error = kLCErrorNone;
+	
 	char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
-	
-    MCError t_error;
-	t_error = kMCErrorNone;
-	
+	t_message_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, message, t_message_cstring);
+
 	MCVariableRef *t_argv;
 	uint32_t t_argc;
 	t_argv = nil;
 	t_argc = 0;
-	if (t_error == kMCErrorNone)
-		t_error = java_lcapi_LCCreateArguments(env,arguments,t_argv,t_argc);
+	if (t_error == kLCErrorNone)
+		t_error = java_lcapi_LCCreateArguments(env, arguments, t_argv, t_argc);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		MCDispatchStatus t_status;
-		t_error = s_interface -> object_dispatch((MCObjectRef)object, kMCDispatchTypeCommand, t_message_cstring, t_argv, t_argc, &t_status);
-		if (t_error == kMCErrorNone)
+		t_error = (LCError)s_interface -> object_dispatch((MCObjectRef)object, kMCDispatchTypeCommand, t_message_cstring, t_argv, t_argc, &t_status);
+		if (t_error == kLCErrorNone)
 		{
 			switch(t_status)
 			{
 				case kMCDispatchStatusError:
-					t_error = kMCErrorFailed;
+					t_error = kLCErrorFailed;
 					break;
 				case kMCDispatchStatusExit:
-					t_error = kMCErrorExited;
+					t_error = kLCErrorExited;
 					break;
 				case kMCDispatchStatusAbort:
-					t_error = kMCErrorAborted;
+					t_error = kLCErrorAborted;
 					break;
 				default:
 					break;
@@ -3237,101 +3336,92 @@ static void java_lcapi_ObjectSend(JNIEnv *env, jlong object, jobject message, jo
 
 	free(t_message_cstring);
 	
-	if (t_error != kMCErrorNone)
+	if (t_error != kLCErrorNone)
 	{
-		java_lcapi__throw(env, (LCError)t_error);
+		java_lcapi__throw(env, t_error);
 		return;
 	}
 }
 
-
-
 struct java_lcapi_LCObjectPost_context
 {
     MCObjectRef object;
-    const char *message;
-    jobjectArray args;
+    char *message;
+    MCVariableRef *argv;
+	uint32_t argc;
     LCError result;
-    JNIEnv *env;
 };
 
-    
 static void java_lcapi_ObjectPost_perform(void *p_context)
 {
     java_lcapi_LCObjectPost_context *context;
 	context = (java_lcapi_LCObjectPost_context *)p_context;
     
-    MCError t_error;
-    t_error = kMCErrorNone;
-
-    MCVariableRef *t_argv;
-    uint32_t t_argc;
-    t_argv = nil;
-	t_argc = 0;
+    LCError t_error;
+    t_error = kLCErrorNone;
 	
-    if (t_error == kMCErrorNone)
-        t_error = java_lcapi_LCCreateArguments(context->env,context->args,t_argv,t_argc);
-    
 	struct LCObjectPostV_event *t_event;
 	t_event = nil;
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
 		t_event = (LCObjectPostV_event *)calloc(1, sizeof(LCObjectPostV_event));
 		if (t_event == nil)
-			t_error = kMCErrorOutOfMemory;
+			t_error = kLCErrorOutOfMemory;
 	}
 	
-	if (t_error == kMCErrorNone)
-	{
-		t_error = s_interface -> object_retain(context -> object);
-		if (t_error == kMCErrorNone)
-			t_event -> object = context -> object;
-	}
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> object_retain(context -> object);
 	
-	if (t_error == kMCErrorNone)
+	if (t_error == kLCErrorNone)
 	{
-		t_event -> message = strdup(context -> message);
-		if (t_event -> message == nil)
-			t_error = kMCErrorOutOfMemory;
-	}
-	
-	if (t_error == kMCErrorNone)
-	{
-		t_event -> argc = t_argc;
-		t_event -> argv = t_argv;
-		t_error = s_interface -> engine_run_on_main_thread((void *)LCObjectPostV_dispatch, t_event, kMCRunOnMainThreadPost | kMCRunOnMainThreadRequired | kMCRunOnMainThreadSafe | kMCRunOnMainThreadDeferred);
+		t_event -> object = context -> object;
+		t_event -> message = context -> message;
+		t_event -> argv = context -> argv;
+		t_event -> argc = context -> argc;
+		t_error = (LCError)s_interface -> engine_run_on_main_thread((void *)LCObjectPostV_dispatch, t_event, kMCRunOnMainThreadPost | kMCRunOnMainThreadRequired | kMCRunOnMainThreadSafe | kMCRunOnMainThreadDeferred);
 	}
     
-    
-	if (t_error != kMCErrorNone)
+	if (t_error != kLCErrorNone)
 	{
 		if (t_event -> object != nil)
 			s_interface -> object_release(t_event -> object);
 		free(t_event -> message);
-		LCArgumentsDestroy(t_argv, t_argc);
+		LCArgumentsDestroy(context -> argv, context -> argc);
 		free(t_event);
 	}
 
     context -> result = (LCError)t_error;
-    
 }
 
 static void java_lcapi_ObjectPost(JNIEnv *env, jlong object, jobject message, jobjectArray arguments)
 {
-	
-    char *t_message_cstring;
-	t_message_cstring = java_to__cstring(env, message);
-	
-    LCError t_error;
+	LCError t_error;
     t_error = kLCErrorNone;
     
+	// The cstring will be given to the perform method.
+	char *t_message_cstring;
+	t_message_cstring = nil;
+	if (t_error == kLCErrorNone)
+		t_error = java_to__cstring(env, message, t_message_cstring);
+
+	// Create the arguments array here to make sure we don't get JNI thread problems.
+	// (this could be called from any thread, and we want to avoid having to make 
+	//  globalref's to the arguments array). The arguments array will be freed
+	// by the perform method (to stop threading problems engine-side).
+	MCVariableRef *t_argv;
+	uint32_t t_argc;
+	t_argv = nil;
+	t_argc = 0;
+	if (t_error == kLCErrorNone)
+        t_error = java_lcapi_LCCreateArguments(env, arguments, t_argv, t_argc);
+	
     struct java_lcapi_LCObjectPost_context t_context;
-    t_context . env = env;
     t_context . object = (MCObjectRef)object;
 	t_context . message = t_message_cstring;
-	t_context . args = arguments;
-	t_error = (LCError) s_interface -> engine_run_on_main_thread((void *)java_lcapi_ObjectPost_perform, &t_context, kMCRunOnMainThreadSend | kMCRunOnMainThreadOptional | kMCRunOnMainThreadUnsafe | kMCRunOnMainThreadImmediate);
-    free(t_message_cstring);
+	t_context . argv = t_argv;
+	t_context . argc = t_argc;
+	if (t_error == kLCErrorNone)
+		t_error = (LCError)s_interface -> engine_run_on_main_thread((void *)java_lcapi_ObjectPost_perform, &t_context, kMCRunOnMainThreadSend | kMCRunOnMainThreadOptional | kMCRunOnMainThreadUnsafe | kMCRunOnMainThreadImmediate);
     
     if (t_error == kLCErrorNone)
         t_error = t_context . result;
