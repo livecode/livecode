@@ -98,6 +98,12 @@ MCControl::~MCControl()
 
 	// MW-2009-06-11: [[ Bitmap Effects ]] Destroy the bitmap effects
 	MCBitmapEffectsFinalize(m_bitmap_effects);
+    
+    // MW-2008-10-28: [[ ParentScripts ]] Flush the parent scripts table if
+	//   tsub has the state flag marked.
+	if (getstate(CS_IS_PARENTSCRIPT))
+		MCParentScript::FlushObject(this);
+
 }
 
 void MCControl::open()
@@ -112,8 +118,18 @@ void MCControl::open()
 		
 		state = (state & (CS_NO_MESSAGES | CS_NO_FILE | CS_SELECTED)) | (state & CS_KEEP_LAYER);
 	}
+    
+    // MW-2008-10-28: [[ ParentScripts ]] We have to preserve the setting of the
+	//   CS_IS_PARENTSCRIPT state.
+	if (!getstate(CS_IS_PARENTSCRIPT))
+		MCObject::open();
+    else
+	{
+        MCObject::open();
+        setstate(True, CS_IS_PARENTSCRIPT);
+	}
+
 	
-	MCObject::open();
 }
 
 void MCControl::close()
@@ -752,7 +768,7 @@ Boolean MCControl::del()
 	// MW-2008-10-28: [[ ParentScripts ]] If the object is marked as being used
 	//   as a parentScript, flush the parentScript table so we don't get any
 	//   dangling pointers.
-	if (getstate(CS_IS_PARENTSCRIPT) && gettype() == CT_BUTTON)
+	if (getstate(CS_IS_PARENTSCRIPT))
 	{
 		MCParentScript::FlushObject(this);
 		setstate(False, CS_IS_PARENTSCRIPT);
