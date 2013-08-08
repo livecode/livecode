@@ -257,7 +257,7 @@ MCPrinter *MCScreenDC::createprinter(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
+MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 {
 	Point t_location;
 	t_location . h = x;

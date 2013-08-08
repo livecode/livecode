@@ -308,6 +308,7 @@ public:
 	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void device_querymouse(int2 &x, int2 &y);
 	virtual void device_setmouse(int2 x, int2 y);
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -400,10 +401,6 @@ public:
 
 	//
 	
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
-
 	// in macdcmac.cc  screen routines that are specfic to MAC platform
 	void getmods();
 	void setmods(int2 modifiers);
