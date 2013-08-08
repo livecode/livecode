@@ -7,6 +7,8 @@ engine/src/startupstack.cpp
 engine/src/linuxstubs.cpp
 engine/include/revbuild.h
 lcidlc/src/EncodedSupport.c
+lcidlc/src/EncodedJavaSupport.c
+*/derived_src/*
 IMarketBillingService.java
 crypt.cpp
 crypt.h
@@ -64,6 +66,8 @@ Thumbs.db
 #########################
 *.pbxuser
 *.perspectivev3
+*.xcworkspace
+*.xcworkspacedata
 xcuserdata/
 *.vcproj.*.user
 *.ncb
