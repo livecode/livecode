@@ -287,14 +287,10 @@ MCExternal *MCExternal::Load(const char *p_filename)
 	if (t_success && t_external == nil)
 	{
 		// First try and load it as a new style external.
-		MCAutoStringRef t_message1, t_message2;
-		/* UNCHECKED */ MCStringCreateWithCString("MCExternalDescribe", &t_message1);
-		/* UNCHECKED */ MCStringCreateWithCString("getXtable", &t_message2);
-
-
-		if (MCS_resolvemodulesymbol(t_module, *t_message1) != nil)
+	
+		if (MCS_resolvemodulesymbol(t_module, "MCExternalDescribe") != nil)
 			t_external = MCExternalCreateV1();
-		else if (MCS_resolvemodulesymbol(t_module, *t_message2) != nil)
+		else if (MCS_resolvemodulesymbol(t_module, "getXtable") != nil)
 			t_external = MCExternalCreateV0();
 		
 		if (t_external != nil)

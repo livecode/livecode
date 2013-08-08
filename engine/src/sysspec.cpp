@@ -833,22 +833,22 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
 }
 */
 
-IO_handle MCS_open(MCStringRef path, MCStringRef p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
+IO_handle MCS_open(MCStringRef path, MCSOpenFileMode p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
 {
 	MCAutoStringRef t_resolved_path;
 	MCS_resolvepath(path, &t_resolved_path);
 
 	//const char *t_path = MCStringGetCString(path);
-	const char *mode = MCStringGetCString(p_mode);
+	//const char *mode = MCStringGetCString(p_mode);
 	
 	uint32_t t_mode;
-	if (strequal(mode, IO_READ_MODE))
+	if (p_mode == kMCSOpenFileModeRead)
 		t_mode = kMCSystemFileModeRead;
-	else if (strequal(mode, IO_WRITE_MODE))
+	else if (p_mode == kMCSOpenFileModeWrite)
 		t_mode = kMCSystemFileModeWrite;
-	else if (strequal(mode, IO_UPDATE_MODE))
+	else if (p_mode == kMCSOpenFileModeUpdate)
 		t_mode = kMCSystemFileModeUpdate;
-	else if (strequal(mode, IO_APPEND_MODE))
+	else if (p_mode == kMCSOpenFileModeAppend)
 		t_mode = kMCSystemFileModeAppend;
 	
 	MCSystemFileHandle *t_handle;
@@ -1337,7 +1337,7 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 	return (MCSysModuleHandle)MCsystem -> LoadModule(p_filename);
 }
 
-void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
+void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
 {
 	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
 }

@@ -459,8 +459,9 @@ bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
     uindex_t t_length;
     uindex_t t_byte_count;
     unichar_t* t_unichars;
+	t_length = MCStringGetLength(p_string);
     
-    if (!MCMemoryNewArray(t_length, t_unichars))
+    if (!MCMemoryNewArray(t_length + 1, t_unichars))
         return false;
     
     uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
@@ -497,7 +498,7 @@ bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
 #endif
 
 #ifdef __WINDOWS__
-bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
+bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
 {
     uindex_t t_length;
     unichar_t* t_chars;
@@ -514,7 +515,7 @@ bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
     if (r_bstr == nil)
         return false;
     
-    return true
+    return true;
 }
 #endif
 

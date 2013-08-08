@@ -129,7 +129,7 @@ struct MCSystemInterface
 	virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual void *LoadModule(MCStringRef p_path) = 0;
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol) = 0;
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
 	virtual void UnloadModule(void *p_module) = 0;
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;

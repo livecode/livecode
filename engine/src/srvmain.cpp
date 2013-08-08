@@ -415,7 +415,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCsystem -> ResolveNativePath(*t_argv1_string, &t_MCserverinitialscript_string);
 		else
 			t_MCserverinitialscript_string = nil;
-		MCserverinitialscript = (char*)MCStringGetCString(*t_MCserverinitialscript_string);
+		MCserverinitialscript = strdup(MCStringGetCString(*t_MCserverinitialscript_string));
 		
 		// Create the $<n> variables.
 		for(int i = 2; i < argc; ++i)

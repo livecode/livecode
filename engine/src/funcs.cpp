@@ -10372,7 +10372,7 @@ char *MCHTTPProxyForURL::PACdnsResolve(const char* const* p_arguments, unsigned 
 	
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -10387,7 +10387,7 @@ char *MCHTTPProxyForURL::PACmyIpAddress(const char* const* p_arguments, unsigned
 
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }

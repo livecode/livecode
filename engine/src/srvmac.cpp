@@ -457,9 +457,9 @@ struct MCMacSystem: public MCSystemInterface
 		return t_result;
 	}
 	
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
 	{
-		return dlsym(p_module, MCStringGetCString(p_symbol));
+		return dlsym(p_module, p_symbol);
 	}
 	
 	virtual void UnloadModule(void *p_module)

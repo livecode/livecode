@@ -220,7 +220,7 @@ public:
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 	bool geteffectlist(MCStringRef& r_string);
-	void recordsound(char *fname);
+	void recordsound(MCStringRef fname);
 	bool getrecordloudness(integer_t& r_loudness);
 	bool getrecordcompressionlist(MCStringRef& r_string);
 

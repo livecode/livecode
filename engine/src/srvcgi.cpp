@@ -91,7 +91,7 @@ static char *strndup(const char *s, uint32_t n)
 ////////////////////////////////////////////////////////////////////////////////
 
 static char *s_cgi_upload_temp_dir = NULL;
-static char *s_cgi_temp_dir = NULL;
+static MCStringRef s_cgi_temp_dir = kMCEmptyString;
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
@@ -100,17 +100,17 @@ static const char *cgi_get_upload_temp_dir()
 	if (s_cgi_upload_temp_dir != NULL)
 		return s_cgi_upload_temp_dir;
 	
-	if (s_cgi_temp_dir != NULL)
-		return s_cgi_temp_dir;
+	if (s_cgi_temp_dir != kMCEmptyString)
+		return MCStringGetCString(s_cgi_temp_dir);
 	
 	char *t_temp_folder = NULL;
 	MCAutoStringRef t_temp_folder_string;
 	/* UNCHECKED */ MCStringCreateWithCString(t_temp_folder, &t_temp_folder_string);
 
 	if (MCS_get_temporary_folder(&t_temp_folder_string))
-		s_cgi_temp_dir = (char*)MCStringGetCString(*t_temp_folder_string);
+		s_cgi_temp_dir = *t_temp_folder_string;
 	
-	return s_cgi_temp_dir;
+	return MCStringGetCString(s_cgi_temp_dir);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +288,7 @@ bool MCStreamCache::Read(void *p_buffer, uint32_t p_offset, uint32_t p_length, u
 
 bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_length, uint32_t &r_read)
 {
-	uint32_t t_to_read;
+//	uint32_t t_to_read;
 	if (m_cache_buffer != NULL)
 	{
 		r_read = MCMin(p_length, m_cache_length - p_offset);
@@ -299,7 +299,7 @@ bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_
 	{
 		bool t_success = true;
 		
-		IO_stat t_status;
+//		IO_stat t_status;
 		
 		t_success = (IO_NORMAL == MCS_seek_set(m_cache_file, p_offset));
 		if (t_success)
@@ -748,8 +748,7 @@ static void cgi_fix_path_variables()
 	t_path = strdup(MCStringGetCString(*env));
 	t_path_end = t_path + strlen(t_path);
 
-	MCAutoStringRef t_path_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
+	
 
 #ifdef _WINDOWS_SERVER
 	for(uint32_t i = 0; t_path[i] != '\0'; i++)
@@ -759,6 +758,9 @@ static void cgi_fix_path_variables()
 
 	char t_sep;
 	t_sep = '\0';
+
+	MCAutoStringRef t_path_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
 
 	while (!MCS_exists(*t_path_string, True))
 	{
@@ -1267,13 +1269,12 @@ bool cgi_initialize()
 	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &t_message);
 	MCS_getenv(*t_message, &t_env);
 
-	MCAutoStringRef  t_MCserverinitialscript_string;
-	MCsystem -> ResolvePath(*t_env, &t_MCserverinitialscript_string);
-	MCserverinitialscript = (char*) MCStringGetCString(*t_MCserverinitialscript_string);
+	
+	MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;
-	t_server_script_folder = strdup(MCserverinitialscript);
+	t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
 #ifdef _WINDOWS_SERVER
 	strrchr(t_server_script_folder, '\\')[0] = '\0';
 #else

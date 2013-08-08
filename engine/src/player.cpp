@@ -4534,7 +4534,7 @@ void MCPlayer::stoprecording()
 #endif
 }
 
-void MCPlayer::recordsound(char *fname)
+void MCPlayer::recordsound(MCStringRef fname)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
