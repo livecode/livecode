@@ -52,6 +52,22 @@ static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This method creates a 'constant' MCStringRef from the given c-string. At some
+// point we'll make it work 'magically' at compile/build time. For now, uniquing
+// and returning that has a similar effect (if slightly slower).
+MCStringRef MCSTR(const char *p_cstring)
+{
+	MCStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), t_string);
+	
+	MCValueRef t_unique_string;
+	/* UNCHECKED */ MCValueInter(t_string, t_unique_string);
+	
+	MCValueRelease(t_string);
+	
+	return (MCStringRef)t_unique_string;
+}
+
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
 	bool t_success;
