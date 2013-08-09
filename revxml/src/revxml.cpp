@@ -2702,11 +2702,24 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 
 	if (1 == nargs)
 	{
-		cur = xsltParseStylesheetFile((const xmlChar *)args[0]);
-		result = (char *)malloc(INTSTRSIZE);
-		sprintf(result,"%d",cur);
-		*retstring = istrdup(result);
-		free(result);
+		int docID = atoi(args[0]);
+		CXMLDocument *xmlDocument = doclist.find(docID);
+		if (NULL != xmlDocument)
+		{
+			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+			if (NULL != xmlDoc)
+			{
+				cur = xsltParseStylesheetDoc(xmlDoc);
+				result = (char *)malloc(INTSTRSIZE);
+				sprintf(result,"%d",cur);
+				*retstring = istrdup(result);
+				free(result);
+			}
+			else
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
+		else
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
 	}
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
