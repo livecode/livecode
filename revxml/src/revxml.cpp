@@ -2684,6 +2684,20 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
 }
 
+void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xsltStylesheetPtr cur = NULL;
+	char *result;
+
+	cur = xsltParseStylesheetFile((const xmlChar *)args[0]);
+	result = (char *)malloc(INTSTRSIZE);
+	sprintf(result,"%d",cur);
+	*retstring = istrdup(result);
+	free(result);
+}
+
 /**
  * XML_xsltApplyStylesheet
  * @pDocID : xml tree id (already parsed)
@@ -2694,6 +2708,62 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
  * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
  */
 void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xmlDocPtr xmlDoc, res;
+	xsltStylesheetPtr cur = NULL;
+	int nbparams = 0;
+	const char *params[16 + 1];
+	char *result;
+
+	xmlChar *doc_txt_ptr;
+	int doc_txt_len;
+
+//	XML_NewDocumentFromFile(args, nargs, retstring, pass, error);
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			//cur = xsltParseStylesheetFile((const xmlChar *)args[1]);
+			cur = (xsltStylesheetPtr)atoi(args[1]);
+			if (NULL != cur)
+			{
+				params[nbparams] = NULL;
+				res = xsltApplyStylesheet(cur, xmlDoc, params);
+
+//				xsltSaveResultToFile(stdout, res, cur);
+				xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
+
+				*retstring = istrdup((char *)doc_txt_ptr);
+
+				xsltFreeStylesheet(cur);
+				xmlFreeDoc(res);
+
+				xsltCleanupGlobals();
+				xmlCleanupParser();
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+		}
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_xsltApplyStylesheetFile
+ * @pDocID : xml tree id (already parsed)
+ * @pStylesheet : stylesheet to apply against the xml document
+ * @pParamList : ]optional] delimiter between data elements (default="\n")
+ *
+ *
+ * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
+ */
+void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
 	*pass = False;
 	*error = False;
@@ -2813,6 +2883,8 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 
 // MDW-2013-06-22: [[ RevXmlXslt ]]
 	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheet", XML_xsltApplyStylesheet)
+	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheetFile", XML_xsltApplyStylesheetFile)
+	EXTERNAL_DECLARE_FUNCTION("xsltLoadStylesheet", XML_xsltLoadStylesheet)
 EXTERNAL_END_DECLARATIONS
 
 
