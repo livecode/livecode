@@ -23,6 +23,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <revolution/external.h>
 #include <revolution/support.h>
 #include <libxml/xpath.h>
+#include <transform.h>
+#include <xsltInternals.h>
+#include <xsltutils.h>
 
 #include "cxml.h"
 
@@ -2590,7 +2593,7 @@ void XML_EvalXPath(char *args[], int nargs, char **retstring, Bool *pass, Bool *
 					if (nargs > 2)
 						cDelimiter = args[2];
 					else
-						cDelimiter = "\n";
+						cDelimiter = (char *)"\n";
 					char *xpaths = XML_ObjectPtr_to_Xpaths(result, cDelimiter);
 					if (NULL != xpaths)
 					{
@@ -2652,11 +2655,11 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 					if (nargs > 2)
 						charDelimiter = args[2];
 					else
-						charDelimiter = "\n";
+						charDelimiter = (char *)"\n";
 					if (nargs > 3)
 						lineDelimiter = args[3];
 					else
-						lineDelimiter = "\n";
+						lineDelimiter = (char *)"\n";
 					char *xpaths = XML_ObjectPtr_to_Data(result, charDelimiter, lineDelimiter);
 					if (NULL != xpaths)
 					{
@@ -2676,6 +2679,66 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 		}
 		else
 			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+	}
+	else
+		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+}
+
+/**
+ * XML_xsltApplyStylesheet
+ * @pDocID : xml tree id (already parsed)
+ * @pStylesheet : stylesheet to apply against the xml document
+ * @pParamList : ]optional] delimiter between data elements (default="\n")
+ *
+ *
+ * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
+ */
+void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
+{
+	*pass = False;
+	*error = False;
+	xmlDocPtr xmlDoc, res;
+	xsltStylesheetPtr cur = NULL;
+	int nbparams = 0;
+	const char *params[16 + 1];
+	char *result;
+
+	xmlChar *doc_txt_ptr;
+	int doc_txt_len;
+
+//	XML_NewDocumentFromFile(args, nargs, retstring, pass, error);
+	int docID = atoi(args[0]);
+	CXMLDocument *xmlDocument = doclist.find(docID);
+	if (NULL != xmlDocument)
+	{
+		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+		if (NULL != xmlDoc)
+		{
+			cur = xsltParseStylesheetFile((const xmlChar *)args[1]);
+			if (NULL != cur)
+			{
+				params[nbparams] = NULL;
+				res = xsltApplyStylesheet(cur, xmlDoc, params);
+
+//				xsltSaveResultToFile(stdout, res, cur);
+				xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
+
+//				result = (char *)malloc(INTSTRSIZE);
+//				sprintf(result,"%ld",res);
+//				*retstring = (result != NULL ? istrdup(result) : (char *)calloc(1,1));
+				*retstring = istrdup((char *)doc_txt_ptr);
+//				free(result);
+
+				xsltFreeStylesheet(cur);
+				xmlFreeDoc(res);
+//				xmlFreeDoc(doc);
+
+				xsltCleanupGlobals();
+				xmlCleanupParser();
+			}
+			else
+				*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+		}
 	}
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
@@ -2747,6 +2810,9 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 // MDW-2013-06-22: [[ RevXmlXPath ]]
 	EXTERNAL_DECLARE_FUNCTION("revXMLEvaluateXPath", XML_EvalXPath)
 	EXTERNAL_DECLARE_FUNCTION("revXMLDataFromXPathQuery", XML_XPathDataFromQuery)
+
+// MDW-2013-06-22: [[ RevXmlXslt ]]
+	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheet", XML_xsltApplyStylesheet)
 EXTERNAL_END_DECLARATIONS
 
 

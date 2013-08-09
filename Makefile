@@ -131,15 +131,18 @@ server-revdb: libexternal
 ###############################################################################
 # revXML Targets
 
-.PHONY: libxml revxml server-revxml
+.PHONY: libxml libxslt revxml server-revxml
 
 libxml:
 	$(MAKE) -C ./thirdparty/libxml libxml
 
-revxml: libxml libexternal
+libxslt:
+	$(MAKE) -C ./thirdparty/libxslt libxslt
+
+revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml revxml
 
-server-revxml: libxml libexternal
+server-revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml server-revxml
 
 ###############################################################################
