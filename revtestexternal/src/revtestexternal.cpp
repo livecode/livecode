@@ -122,15 +122,23 @@ void revTestExternalTestWait(void)
 	LCContextExecute("answer \"Done!\"", 0);
 }
 
-void revTestExternalTestPost(void)
-{
-}
 
 void revTestExternalTestArrays(void)
 {
 }
 
 #ifndef __ANDROID__
+void revTestExternalTestPostAndSend(void)
+{
+	LCObjectRef t_target;
+	LCContextMe(&t_target);
+	
+	LCObjectPost(t_target, "handlePost", "");
+	LCObjectSend(t_target, "handleSend", "");
+	
+	LCObjectRelease(t_target);
+}
+
 void revTestExternalAndroidButtonCreate(void)
 {
 }

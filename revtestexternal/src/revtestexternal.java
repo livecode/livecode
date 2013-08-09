@@ -107,7 +107,7 @@ public class revtestexternal
 		t_wait . Release();
 	}
 	
-	public static void revTestExternalObjectPostAndSend()
+	public static void revTestExternalTestPostAndSend()
 	{
 		LC.Object t_target;
 		t_target = LC.ContextMe();
