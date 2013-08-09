@@ -133,8 +133,8 @@ extern bool MCS_datetimetoseconds(const MCDateTime& p_datetime, double& r_second
 extern bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime);
 extern const MCDateTimeLocale *MCS_getdatetimelocale(void);
 
-extern void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns);
-extern void MCS_hostaddress(MCStringRef& r_host_address);
+extern bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns);
+extern bool MCS_hostaddress(MCStringRef& r_host_address);
 
 extern bool MCS_processtypeisforeground(void);
 extern bool MCS_changeprocesstype(bool to_foreground);

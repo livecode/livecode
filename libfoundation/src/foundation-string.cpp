@@ -611,6 +611,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
 	return MCNativeCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 }
 
+bool MCStringIsEmpty(MCStringRef string)
+{
+	return MCStringIsEqualTo(string, kMCEmptyString, kMCStringOptionCompareExact);
+}
+
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)
 {
 	__MCStringClampRange(self, p_sub);

@@ -365,7 +365,6 @@ Boolean MCDispatch::openstartup(const char *sname,
 	if (enginedir == nil)
 		return False;
 
-	uint4 l = MCU_max((uint4)strlen(enginedir), (uint4)strlen(startdir)) + strlen(sname) + 11;
 	MCAutoStringRef t_fullpath_string1;
 	MCStringFormat(&t_fullpath_string1, "%s/%s", startdir, sname );
 
@@ -393,17 +392,13 @@ Boolean MCDispatch::openenv(const char *sname, const char *env,
 {
 
 	MCAutoStringRef t_env;
-	MCAutoStringRef t_message;
-	/* UNCHECKED */ MCStringCreateWithCString(env, &t_message);
-
-	if (MCS_getenv(*t_message, &t_env))
+	if (MCS_getenv(MCSTR(env), &t_env))
 	{
 		env = MCStringGetCString(*t_env);
 		char *pathstring = strclone(env);
 		
 		MCAutoStringRef t_fullpath_string;
 		
-		//char *fullpath = new char[strlen(env) + strlen(sname) + 2];
 		char *eptr = pathstring;
 		while (eptr != NULL)
 		{
@@ -775,10 +770,8 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			{
 
 				MCAutoStringRef t_homename;
-				MCAutoStringRef t_message;
-				/* UNCHECKED */ MCStringCreateWithCString("HOME", &t_message);
 	
-				MCS_getenv(*t_message, &t_homename);
+				MCS_getenv(MCSTR("HOME"), &t_homename);
 	
 				char *homename = (char*) MCStringGetCString(*t_homename);
 

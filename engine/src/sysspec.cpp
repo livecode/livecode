@@ -109,8 +109,7 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	MCsystem -> GetEnv(p_name_string, r_result);
-	return true;
+	return MCsystem -> GetEnv(p_name_string, r_result);
 }
 
 real8 MCS_getfreediskspace(void)
@@ -915,7 +914,7 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 	MCAutoStringRef t_filename_string;
 	ep . copyasstringref(&t_filename_string);
 	
-	MCS_resolvepath(&t_filename_string, &t_resolved_path);
+	MCS_resolvepath(*t_filename_string, &t_resolved_path);
 	
 	MCSystemFileHandle *t_file;
 	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
@@ -1087,7 +1086,8 @@ bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 	
 	bool t_result;
 	t_result = MCS_resolvepath(p_path, r_path);
-	MCU_fix_path(r_path);
+	MCAutoStringRef t_out_path;
+	MCU_fix_path(r_path, &t_out_path);
 	
 	return t_result;
 }
@@ -1124,7 +1124,7 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	int t_return_code;
 
 	MCAutoStringRef t_filename_string;
-	/*UNCHECKED*/ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
+	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
 	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
 	{
 		MCresult -> clear(False);
@@ -1205,11 +1205,6 @@ MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_ob
 }
 
 void MCS_close_socket(MCSocket *p_socket)
-{
-}
-
-
-void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, const char *p_until, MCNameRef p_message)
 {
 }
 
@@ -1312,14 +1307,14 @@ bool MCS_getDNSservers(MCListRef& r_list)
 	return true;
 }
 
-void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
+bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
-	return ;
+	return false;
 }
 
-void MCS_hostaddress(MCStringRef& r_host_address)
+bool MCS_hostaddress(MCStringRef& r_host_address)
 {
-	return ;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1418,52 +1413,6 @@ char *MCSystemInterface::GetCurrentFolder(void)
 	return nil;
 }
 
-/*
-char *MCSystemInterface::ResolvePath(const char *p_path)
-{
-	MCAutoStringRef t_path;
-	MCAutoStringRef t_resolved;
-	char *t_cstring = nil;
-	bool t_success;
-	t_success = true;
 
-	if (t_success)
-		t_success = MCStringCreateWithCString(p_path, &t_path);
-	
-	if (t_success)
-		t_success = ResolvePath(*t_path, &t_resolved);
-	
-	if (t_success)
-		t_success = MCCStringClone(MCStringGetCString(*t_resolved), t_cstring);
-
-	if (t_success)
-		return t_cstring;
-}
-*/
-
-/*
-char *MCSystemInterface::ResolveNativePath(const char *p_path)
-{
-	MCAutoStringRef t_path;
-	MCAutoStringRef t_resolved;
-	char *t_cstring = nil;
-	bool t_success;
-	t_success = true;
-
-	if (t_success)
-		t_success = MCStringCreateWithCString(p_path, &t_path);
-	
-	if (t_success)
-		t_success = ResolveNativePath(*t_path, &t_resolved);
-	
-	if (t_success)
-		t_success = MCCStringClone(MCStringGetCString(*t_resolved), t_cstring);
-
-	if (t_success)
-		return t_cstring;
-
-	return nil;
-}
-*/
 
 ////////////////////////////////////////////////////////////////////////////////

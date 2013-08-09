@@ -810,8 +810,6 @@ void MCFilesExecLaunchApp(MCExecContext& ctxt, MCNameRef p_app, MCStringRef p_do
 	}
 
 	uindex_t index;
-	//MCAutoStringRef p_empty;
-	//* UNCHECKED */ MCStringCreateWithCString(strclone(""), &p_empty);
 
 	if (!IO_findprocess(p_app, index))
 		MCS_startprocess(p_app, 

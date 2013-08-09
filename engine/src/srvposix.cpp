@@ -966,9 +966,8 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 
 	const char *t_tmpdir = NULL;
 	int32_t t_tmpdir_len = 0;
-	MCAutoStringRef t_tmpdir_string, t_env;
-	/* UNCHECKED */ MCStringCreateWithCString("TMPDIR", &t_env);
-	MCS_getenv(*t_env, &t_tmpdir_string);
+	MCAutoStringRef t_tmpdir_string;
+	MCS_getenv(MCSTR("TMPDIR"), &t_tmpdir_string);
 
 	/* UNCHECKED */ MCStringCreateWithCString(t_tmpdir, &t_tmpdir_string);
 

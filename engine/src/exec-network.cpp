@@ -285,7 +285,7 @@ static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argume
 
 	MCAutoStringRef t_address_string;
 	MCAutoStringRef t_arguments_string;
-	/*UNCHECKED*/MCStringCreateWithCString(p_arguments[0], &t_arguments_string);
+	/* UNCHECKED */ MCStringCreateWithCString(p_arguments[0], &t_arguments_string);
 	MCS_dnsresolve(*t_arguments_string, &t_address_string);
 
 	char *t_address = nil;

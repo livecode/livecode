@@ -90,27 +90,22 @@ static char *strndup(const char *s, uint32_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *s_cgi_upload_temp_dir = NULL;
-static MCStringRef s_cgi_temp_dir = kMCEmptyString;
+static MCStringRef s_cgi_upload_temp_dir = NULL;
+static MCStringRef s_cgi_temp_dir = nil;
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
 static const char *cgi_get_upload_temp_dir()
 {
 	if (s_cgi_upload_temp_dir != NULL)
-		return s_cgi_upload_temp_dir;
+		return MCStringGetCString(s_cgi_upload_temp_dir);
 	
-	if (s_cgi_temp_dir != kMCEmptyString)
+	if (s_cgi_temp_dir != NULL)
 		return MCStringGetCString(s_cgi_temp_dir);
-	
-	char *t_temp_folder = NULL;
-	MCAutoStringRef t_temp_folder_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_temp_folder, &t_temp_folder_string);
 
-	if (MCS_get_temporary_folder(&t_temp_folder_string))
-		s_cgi_temp_dir = *t_temp_folder_string;
-	
+	/* UNCHECKED */ MCS_get_temporary_folder(s_cgi_temp_dir);
 	return MCStringGetCString(s_cgi_temp_dir);
+	
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -288,7 +283,6 @@ bool MCStreamCache::Read(void *p_buffer, uint32_t p_offset, uint32_t p_length, u
 
 bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_length, uint32_t &r_read)
 {
-//	uint32_t t_to_read;
 	if (m_cache_buffer != NULL)
 	{
 		r_read = MCMin(p_length, m_cache_length - p_offset);
@@ -299,7 +293,6 @@ bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_
 	{
 		bool t_success = true;
 		
-//		IO_stat t_status;
 		
 		t_success = (IO_NORMAL == MCS_seek_set(m_cache_file, p_offset));
 		if (t_success)
@@ -738,12 +731,9 @@ static void cgi_fix_path_variables()
 {
 	char *t_path, *t_path_end;
 
+	MCAutoStringRef env;
 	
-	MCAutoStringRef message1, message2, env;
-	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &message1);
-	/* UNCHECKED */ MCStringCreateWithCString("PATH_INFO", &message2);
-	
-	MCS_getenv(*message1, &env);
+	MCS_getenv(MCSTR("PATH_TRANSLATED"), &env);
 
 	t_path = strdup(MCStringGetCString(*env));
 	t_path_end = t_path + strlen(t_path);
@@ -777,12 +767,12 @@ static void cgi_fix_path_variables()
 		*t_path_end = '\0';
 	}
 
-	MCS_setenv(*message1, *t_path_string);
+	MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
 	*t_path_end = t_sep;
 	
 	MCAutoStringRef t_path_end_string;
 	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
-	MCS_setenv(*message2, *t_path_end_string);
+	MCS_setenv(MCSTR("PATH_INFO"), *t_path_end_string);
 
 	free(t_path);
 }
@@ -792,10 +782,8 @@ static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 	MCExecPoint ep;
 	
 	MCAutoStringRef p_query_string;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
 	
-	MCS_getenv(*message, &p_query_string);
+	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
 
 	const char *t_query_string = MCStringGetCString(*p_query_string);
 	if (t_query_string != NULL)
@@ -811,10 +799,8 @@ static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 	MCExecPoint ep;
 
 	MCAutoStringRef p_query_string;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
 	
-	MCS_getenv(*message, &p_query_string);
+	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
 	
 	const char *t_query_string = MCStringGetCString(*p_query_string);
 	
@@ -831,10 +817,8 @@ static Exec_stat cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 	MCExecPoint ep;
 
 	MCAutoStringRef p_query_string;
-	MCAutoStringRef message;
-	/* UNCHECKED */ MCStringCreateWithCString("QUERY_STRING", &message);
 	
-	MCS_getenv(*message, &p_query_string);
+	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
 	
 	const char *t_query_string = MCStringGetCString(*p_query_string);
 	
@@ -852,10 +836,8 @@ static Exec_stat cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	bool t_success = true;
 
 	MCAutoStringRef t_content_length;
-	MCAutoStringRef t_message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_LENGTH", &t_message);
 	
-	MCS_getenv(*t_message, &t_content_length);
+	MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length);
 	
 	if (MCStringGetCString(*t_content_length) != NULL)
 	{
@@ -893,10 +875,8 @@ static Exec_stat cgi_compute_post_variables()
 	s_cgi_processed_post = true;
 	
 	MCAutoStringRef t_content_type;
-	MCAutoStringRef t_message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &t_message);
 	
-	MCS_getenv(*t_message, &t_content_type);
+	MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
 	
 	if (MCStringGetCString(*t_content_type) != NULL && strcasecmp(MCStringGetCString(*t_content_type), "application/x-www-form-urlencoded") == 0)
 	{
@@ -958,10 +938,8 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	bool t_success = true;
 
 	MCAutoStringRef t_content_type;
-	MCAutoStringRef t_message;
-	/* UNCHECKED */ MCStringCreateWithCString("CONTENT_TYPE", &t_message);
 	
-	MCS_getenv(*t_message, &t_content_type);
+	MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
 	
 	char *t_params = NULL;
 	uint32_t t_index = 0;
@@ -1235,10 +1213,8 @@ static Exec_stat cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 	bool t_success = true;
 
 	MCAutoStringRef t_cookie;
-	MCAutoStringRef t_message;
-	/* UNCHECKED */ MCStringCreateWithCString("HTTP_COOKIE", &t_message);
 	
-	MCS_getenv(*t_message, &t_cookie);
+	MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie);
 	
 	MCExecPoint ep;
 	
@@ -1265,11 +1241,9 @@ bool cgi_initialize()
 	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
-	MCAutoStringRef t_message, t_env;
-	/* UNCHECKED */ MCStringCreateWithCString("PATH_TRANSLATED", &t_message);
-	MCS_getenv(*t_message, &t_env);
+	MCAutoStringRef t_env;
+	MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env);
 
-	
 	MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 	
 	// Set the current folder to be that containing the CGI file.
@@ -1700,7 +1674,7 @@ bool MCS_get_session_save_path(MCStringRef& r_path)
 	if (s_session_temp_dir != NULL)
 		return MCStringCreateWithCString(s_session_temp_dir, r_path);
 	
-	/*UNCHECKED*/MCStringCreateWithCString(s_session_temp_dir, r_path);
+	/* UNCHECKED */ MCStringCreateWithCString(s_session_temp_dir, r_path);
 	if (MCS_get_temporary_folder(r_path))
 		return true;
 	

@@ -287,15 +287,14 @@ static size_t url_write_callback(void *p_buffer, size_t p_size, size_t p_count, 
 	return p_count;
 }
 
-static void url_execute(MCStringRef p_url, MCStringRef& r_error, MCUrlExecuteCallback p_callback, void *p_state)
+static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void *p_state, MCStringRef& r_error)
 {
-	const char *t_url = MCStringGetCString(p_url);
 	const char *t_error;
 	t_error = NULL;
 	
 	bool t_is_http, t_is_https;
-	t_is_http =  strncmp(t_url, "http", 4) == 0;
-	t_is_https = strncmp(t_url, "https", 5) == 0;
+	t_is_http = MCStringBeginsWithCString(p_url, (const char_t*)"http", kMCCompareExact);
+	t_is_https = MCStringBeginsWithCString(p_url, (const char_t*)"https", kMCCompareExact);
 	
 	curl_slist *t_headers;
 	t_headers = NULL;
@@ -316,7 +315,7 @@ static void url_execute(MCStringRef p_url, MCStringRef& r_error, MCUrlExecuteCal
 	
 	if (t_error == NULL)
 	{
-		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, t_url) != CURLE_OK)
+		if (curl_easy_setopt(t_url_handle, CURLOPT_URL, MCStringGetCString(p_url)) != CURLE_OK)
 			t_error = "couldn't set url";
 	}
 	
@@ -410,26 +409,23 @@ static void url_execute(MCStringRef p_url, MCStringRef& r_error, MCUrlExecuteCal
 void MCS_geturl(MCObject *p_target, MCStringRef p_url)
 {
 
-	const char *t_error;
-	t_error = NULL;
+	MCAutoStringRef t_error;
 	
-	if (t_error == NULL)
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(MCStringGetCString(p_url), "https:", 6) != 0 && strncmp(MCStringGetCString(p_url), "http:", 5) != 0 && strncmp(MCStringGetCString(p_url), "ftp:", 4) != 0)
-			t_error = "unsupported protocol";
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"ftp:", kMCCompareExact))
+			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (t_error == NULL)
+	if (MCStringIsEmpty(*t_error))
 	{
-		MCAutoStringRef t_error_string;
-		url_execute(p_url, &t_error_string, NULL, NULL);
-		t_error = MCStringGetCString(*t_error_string);
+		url_execute(p_url, NULL, NULL, &t_error);
 	}
 	
-	if (t_error != NULL)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
-		MCresult -> sets(t_error);
+		MCresult -> sets(MCStringGetOldString(*t_error));
 	}
 }
 
@@ -465,20 +461,19 @@ static const char *url_execute_post(void *p_state, CURL *p_curl)
 void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	MCAutoStringRef t_error;
-	const char *t_url = MCStringGetCString(p_url);
 
-	if (*t_error == kMCEmptyString)
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(t_url, "https:", 6) != 0 && strncmp(t_url, "http:", 5) != 0)
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact))
 			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (*t_error == kMCEmptyString)
+	if (MCStringIsEmpty(*t_error))
 	{
-		url_execute(p_url, &t_error, url_execute_post, (void *)MCDataGetBytePtr(p_data)); 
+		url_execute(p_url, url_execute_post, (void *)MCDataGetBytePtr(p_data), &t_error); 
 	}
 
-	if (*t_error != kMCEmptyString)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
 		MCresult -> sets(MCStringGetOldString(*t_error));
@@ -530,24 +525,22 @@ static const char *url_execute_upload(void *p_state, CURL *p_curl)
 
 void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_url)
 {
-	const char *t_url = MCStringGetCString(p_url);
 	MCAutoStringRef t_error;
-	
-	
-	if (*t_error == kMCEmptyString)
+		
+	if (MCStringIsEmpty(*t_error))
 	{
-		if (strncmp(t_url, "https:", 6) != 0 && strncmp(t_url, "http:", 5) != 0 && strncmp(t_url, "ftp:", 4) != 0)
+		if (!MCStringBeginsWithCString(p_url, (const char_t*)"https:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"http:", kMCCompareExact) && !MCStringBeginsWithCString(p_url, (const char_t*)"ftp:", kMCCompareExact))
 			/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 	}
 	
-	if (*t_error == kMCEmptyString)
+	if (MCStringIsEmpty(*t_error))
 	{
 		MCString t_data;
 		t_data = p_data;
-		url_execute(p_url, &t_error, url_execute_upload, (void *)&t_data);
+		url_execute(p_url, url_execute_upload, (void *)&t_data, &t_error);
 	}
 	
-	if (*t_error != kMCEmptyString)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
 		MCresult -> sets(MCStringGetOldString(*t_error));
@@ -601,17 +594,16 @@ static const char *url_execute_ftp_delete(void *p_state, CURL *p_curl)
 
 void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 {
-	const char *t_url = MCStringGetCString(p_url);
 	MCAutoStringRef t_error;
-
-	if (strncmp(t_url, "http://", 7) == 0 || strncmp(t_url, "https://", 8) == 0)
-		url_execute(p_url,&t_error, url_execute_http_delete, NULL);
-	else if (strncmp(t_url, "ftp://", 6) == 0)
-		url_execute(p_url, &t_error, url_execute_ftp_delete, (void *)t_url);
+	
+	if (MCStringBeginsWithCString(p_url, (const char_t*)"http://", kMCCompareExact) || MCStringBeginsWithCString(p_url, (const char_t*)"https://", kMCCompareExact))
+		url_execute(p_url, url_execute_http_delete, NULL, &t_error);
+	else if (MCStringBeginsWithCString(p_url, (const char_t*)"ftp://", kMCCompareExact))
+		url_execute(p_url, url_execute_ftp_delete, (void *) MCStringGetCString(p_url), &t_error);
 	else
 		/* UNCHECKED */ MCStringCreateWithCString("unsupported protocol", &t_error);
 
-	if (*t_error != kMCEmptyString)
+	if (!MCStringIsEmpty(*t_error))
 	{
 		MCurlresult -> clear();
 		MCresult -> sets(MCStringGetOldString(*t_error));

@@ -1619,7 +1619,7 @@ if (var != NULL)
 			return ES_ERROR;
 		}
 		MCAutoStringRef t_target;
-		/*UNCHECKED*/ ep.copyasstringref(&t_target);
+		/* UNCHECKED */ ep.copyasstringref(&t_target);
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else
@@ -2863,7 +2863,7 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 		return ES_ERROR;
 	}
 	MCAutoStringRef soundfile, t_path;
-	/*UNCHECKED*/MCStringCreateWithCString(ep.getcstring(), &t_path)
+	/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), &t_path)
 	MCS_get_canonical_path(*t_path, &soundfile);
 	MCtemplateplayer->recordsound(*soundfile);
 	return ES_NORMAL;
