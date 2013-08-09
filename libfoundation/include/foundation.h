@@ -1174,6 +1174,10 @@ extern MCStringRef kMCFalseString;
 
 /////////
 
+// Creates an MCStringRef wrapping the given constant c-string. Note that
+// the c-string must be a C static string.
+MCStringRef MCSTR(const char *string);
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
