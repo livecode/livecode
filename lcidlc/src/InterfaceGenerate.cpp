@@ -363,7 +363,7 @@ public:
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
 	{
-		CoderWriteStatement(p_coder, "success = default__%s(\"%s\", %s)", StringGetCStringPtr(p_value), p_name);
+		CoderWriteStatement(p_coder, "success = default__cstring(\"%s\", %s)", StringGetCStringPtr(p_value), p_name);
 		CodeInOutCopy(p_coder, p_mode, p_name);
 	}
 	
@@ -496,7 +496,7 @@ public:
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
 	{
-		CoderWriteStatement(p_coder, "%s = default__java_string(__java_env, \"%s\", %s)", StringGetCStringPtr(p_value), p_name);
+		CoderWriteStatement(p_coder, "%s = default__java_string(__java_env, \"%s\", %s)", p_name, StringGetCStringPtr(p_value), p_name);
 	}
 	
 	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
@@ -1301,8 +1301,14 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 			CoderWrite(p_coder, "returnvalue = __java_env -> CallStatic%sMethod(s_java_class, s_method", t_java_method_type);
 		else
 			CoderWrite(p_coder, "__java_env -> CallStaticVoidMethod(s_java_class, s_method");
-		for(uindex_t i = 0; i < p_variant -> parameter_count; i++)
-			CoderWrite(p_coder, ", t_param_%d", i);
+		
+        for(uint32_t k = 0; k < p_variant -> parameter_count; k++)
+		{
+			HandlerParameter *t_parameter;
+			t_parameter = &p_variant -> parameters[k];
+			CoderWrite(p_coder, ", param__%s", NameGetCString(t_parameter -> name));
+		}
+        
 		CoderWrite(p_coder, ")");
 		CoderEndStatement(p_coder);
 		
