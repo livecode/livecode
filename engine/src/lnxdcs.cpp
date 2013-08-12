@@ -506,12 +506,12 @@ void MCScreenDC::ungrabpointer()
 	XUngrabPointer(dpy, MCeventtime);
 }
 
-uint2 MCScreenDC::getwidth()
+uint16_t MCScreenDC::device_getwidth(void)
 {
 	return DisplayWidth(dpy, getscreen());
 }
 
-uint2 MCScreenDC::getheight()
+uint16_t MCScreenDC::device_getheight(void)
 {
 	return DisplayHeight(dpy, getscreen());
 }
@@ -648,16 +648,16 @@ Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height,
 	return pm;
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	Window root, child;
 	int x, y;
 	unsigned int width, bwidth, height, depth;
 	if (!XGetGeometry(dpy, w, &root, &x, &y, &width, &height, &bwidth, &depth))
-		return False;
+		return false;
 	XTranslateCoordinates(dpy, w, root, 0, 0, &x, &y, &child);
 	MCU_set_rect(drect, x, y, width, height);
-	return True;
+	return true;
 }
 
 
@@ -1093,7 +1093,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 			r.y += y;
 		}
 	}
-	r = MCU_clip_rect(r, 0, 0, getwidth(), getheight());
+	r = MCU_clip_rect(r, 0, 0, device_getwidth(), device_getheight());
 	if (r.width == 0 || r.height == 0)
 		return NULL;
 	XImage *t_image = XGetImage(dpy, root, r.x, r.y, r.width, r.height, AllPlanes, ZPixmap);
@@ -1288,7 +1288,7 @@ void MCScreenDC::assignbackdrop(Window_mode p_mode, Window p_window)
 
 void MCScreenDC::createbackdrop(const char *color)
 {
-#ifdef LIBGRAPHICS_BORKEN
+#ifdef LIBGRAPHICS_BROKEN
 	char *cname = NULL;
 	if (MCbackdroppm == DNULL &&
 	        parsecolor(color, &backdropcolor, &cname))
@@ -1327,7 +1327,7 @@ void MCScreenDC::createbackdrop(const char *color)
 	xswa.override_redirect = True;
 	//DH
 	backdrop = XCreateWindow(dpy, RootWindow(dpy, vis->screen), 0, 0,
-	                         getwidth(), getheight(), 0, vis->depth,
+	                         device_getwidth(), device_getheight(), 0, vis->depth,
 	                         InputOutput, vis->visual, xswamask, &xswa);
 	
 	XSelectInput(dpy, backdrop,  ButtonPressMask | ButtonReleaseMask

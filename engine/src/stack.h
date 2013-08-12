@@ -232,6 +232,7 @@ public:
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
     virtual void render(MCContext *dc, const MCRectangle& dirty);
+	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font);
@@ -240,9 +241,10 @@ public:
 	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
-	
 	MCRectangle device_getwindowrect() const;
 	
+	void setgeom();
+	MCRectangle device_setgeom(const MCRectangle &p_rect);
 	//////////
 	
     virtual MCRectangle getrectangle(bool p_effective) const;
@@ -494,7 +496,6 @@ public:
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
-	void setgeom();
 	void destroywindowshape();
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
@@ -532,7 +533,7 @@ public:
     
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
 	//   surface.
-	void redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
 	
 	// MW-2011-09-08: [[ Redraw ]] Capture the contents of the given rect of the window
 	//   into a temporary buffer. The buffer is ditched at the next update.

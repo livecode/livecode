@@ -284,8 +284,6 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual uint2 getwidth();
-	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
@@ -296,6 +294,8 @@ public:
 ////////////////////////////////////////////////////////////////////////////////
 	
 	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
+	uint2 getwidth();
+	uint2 getheight();
 	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
 	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
@@ -310,6 +310,8 @@ public:
 	
 	const MCDisplay *device_getnearestdisplay(const MCRectangle& p_rectangle);
 	
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
 	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);

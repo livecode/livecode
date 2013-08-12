@@ -2983,6 +2983,9 @@ void MCStack::purgefonts()
 
 MCRectangle MCStack::getwindowrect(void) const
 {
+	if (window == nil)
+		return rect;
+		
 	MCRectangle t_rect;
 	t_rect = device_getwindowrect();
 	

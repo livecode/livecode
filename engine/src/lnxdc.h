@@ -186,8 +186,6 @@ public:
 	virtual void setcursor(Window w, MCCursorRef c);
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
-	virtual uint2 getwidth();
-	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
@@ -207,7 +205,6 @@ public:
 	virtual void freepixmap(Pixmap &pixmap);
 	virtual Pixmap createpixmap(uint2 width, uint2 height,
 	                            uint2 depth, Boolean purge);
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
@@ -256,15 +253,21 @@ public:
 	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	// IM-2013-08-12: [[ ResIndependence ]] refactored methods that return device coordinates
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+	
 	virtual void expose();
 	virtual Boolean abortkey();
 	virtual void waitconfigure(Window w);
 	virtual void waitreparent(Window w);
 	virtual void waitfocus();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -288,8 +291,6 @@ public:
 	virtual MCPasteboard *getclipboard(void);
 	virtual void flushclipboard(void);
 
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
 	void initatoms();
 	void setupcolors();
 	uint2 getscreen();
@@ -308,7 +309,6 @@ public:
 	
 	bool apply_workarea();
 	bool apply_partial_struts();
-	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
 		
 	Display *getDisplay() { return dpy; };
 	

@@ -424,6 +424,7 @@ private:
 	void drawtext(MCMark * p_mark );
 	void setfont(MCFontStruct *font) ;
 	void printpattern(const MCGRaster &image) ;
+	void printraster(const MCGRaster &p_raster, int16_t p_dx, int16_t p_dy, real64_t p_xscale, real64_t p_yscale);
 	void printimage(MCImageBitmap *image, int2 dx, int2 dy, real8 xscale, real8 yscale) ;
 	void write_scaling(const MCRectangle &rect) ;
 
@@ -1180,24 +1181,29 @@ bool MCPSMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef 
 		r_context = m_composite_context;
 	}
 	else
-	{
 		MCGContextRelease(t_context);
-		m_composite_bitmap = nil;
-	}
 	
 	return t_success;
 }
 
-void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region )
+void MCPSMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
 	uint4 t_scale = SCALE;
 	
-	printimage ( m_composite_bitmap, m_composite_rect . x, m_composite_rect . y, t_scale, t_scale );
+	MCGImageRef t_image;
+	t_image = nil;
 	
-	delete p_context;
+	/* UNCHECKED */ MCGContextCopyImage(m_composite_context, t_image);
 	
-	MCImageFreeBitmap(m_composite_bitmap);
-	m_composite_bitmap = nil;
+	MCGRaster t_raster;
+	MCGImageGetRaster(t_image, t_raster);
+	
+	printraster(t_raster, m_composite_rect.x, m_composite_rect.y, t_scale, t_scale);
+	
+	MCGImageRelease(t_image);
+
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
 	
 	if ( p_clip_region != NULL )
 		MCRegionDestroy(p_clip_region);
@@ -1283,7 +1289,9 @@ void MCPSMetaContext::write_scaling(const MCRectangle &rect)
 	
 }
 
-void MCPSMetaContext::printimage(MCImageBitmap *image, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
+// IM-2013-08-12: [[ ResIndependence ]] refactor bitmap printing to printraster method
+// *NOTE* currently assumes raster is xRGB.
+void MCPSMetaContext::printraster(const MCGRaster &p_raster, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
 {
 	MCColor c;
 	uint2 x, y;
@@ -1292,7 +1300,7 @@ void MCPSMetaContext::printimage(MCImageBitmap *image, int16_t dx, int16_t dy, r
 	bool cmapdone = False ;
 	
 	sprintf(buffer, "/tmp %d string def\n%d %d %d\n",
-			image->width * 3, image->width, image->height, 8);
+			p_raster.width * 3, p_raster.width, p_raster.height, 8);
 			
 	PSwrite(buffer);
 	sprintf(buffer, "[ %g 0 0 -%g %g %g ]\n", xscale, yscale, -dx * xscale,
@@ -1300,30 +1308,38 @@ void MCPSMetaContext::printimage(MCImageBitmap *image, int16_t dx, int16_t dy, r
 	PSwrite(buffer);
 	PSwrite("{currentfile tmp readhexstring pop}\nfalse 3\ncolorimage\n");
 
-	uint8_t *t_src_row = (uint8_t*)image->data;
-	for (y = 0 ; y < image->height ; y++)
+	uint8_t *t_src_row = (uint8_t*)p_raster.pixels;
+	for (y = 0 ; y < p_raster.height ; y++)
 	{
 		uint32_t *t_src_ptr = (uint32_t*)t_src_row;
-		for (x = 0 ; x < image->width ; x++)
+		for (x = 0 ; x < p_raster.width ; x++)
 		{
-			c.pixel = *t_src_ptr++;
-			c . blue = (c . pixel & 0xFF) << 8;
-			c . green = (c . pixel & 0xFF00);
-			c . red = (c . pixel & 0xFF0000) >> 8;
-
-			sprintf(buffer, "%02X%02X%02X", c.red >> 8,
-					c.green >> 8, c.blue >> 8);
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(*t_src_ptr++, r, g, b, a);
+			
+			sprintf(buffer, "%02X%02X%02X", r, g, b);
 			PSwrite(buffer);
 			charCount += 6;
 			
 			if (charCount % 78 == 0)
 				PSwrite("\n");
 		}
-		t_src_row += image->stride;
+		t_src_row += p_raster.stride;
 	}
 	PSwrite("\n");
 }
 
+void MCPSMetaContext::printimage(MCImageBitmap *p_image, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
+{
+	MCGRaster t_raster;
+	t_raster.width = p_image->width;
+	t_raster.height = p_image->height;
+	t_raster.pixels = p_image->data;
+	t_raster.stride = p_image->stride;
+	t_raster.format = kMCGRasterFormat_xRGB;
+	
+	printraster(t_raster, dx, dy, xscale, yscale);
+}
 
 void MCPSMetaContext::setfont(MCFontStruct *font)
 {
@@ -1402,21 +1418,18 @@ void MCPSMetaContext::printpattern(const MCGRaster &image)
 		uint32_t *t_src_ptr = (uint32_t*)t_src_row;
 		for (x = 0 ; x < image.width ; x++)
 		{
-			c.pixel = *t_src_ptr++;
-			c . red = (c . pixel & 0xFF0000) >> 8;
-			c . green = (c . pixel & 0xFF00);
-			c . blue = (c . pixel & 0xFF) << 8;
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(*t_src_ptr++, r, g, b, a);
 			if (colorprint)
 			{
-				sprintf(buffer, "%02X%02X%02X", c.red >> 8,
-						c.green >> 8, c.blue >> 8);
+				sprintf(buffer, "%02X%02X%02X", r, g, b);
 				PSwrite(buffer);
 				charCount += 6;
 			}
 			else
 			{
 				// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
-				if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
+				if ((unsigned)(r + g + b) > (unsigned)(MAXUINT1 * 3 / 2))
 					PSwrite("F");
 				else
 					PSwrite("0");

@@ -2466,7 +2466,16 @@ void MCStack::applyupdates(void)
 #endif
 }
 
-void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
+{
+	MCGraphicsContext *t_old_context = nil;
+	t_old_context = new MCGraphicsContext(p_context);
+	if (t_old_context != nil)
+		render(t_old_context, p_rect);
+	delete t_old_context;
+}
+
+void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 {
 	if (m_tilecache == nil || !MCTileCacheIsValid(m_tilecache))
 	{
@@ -2487,11 +2496,8 @@ void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 			t_scale = MCResGetDeviceScale();
 			MCGContextScaleCTM(t_context, t_scale, t_scale);
 			
-			MCGraphicsContext *t_old_context = nil;
-			t_old_context = new MCGraphicsContext(t_context);
-			if (t_old_context != nil)
-				render(t_old_context, t_rect);
-			delete t_old_context;
+			render(t_context, t_rect);
+			
 			p_surface -> UnlockGraphics();
 		}
 	}

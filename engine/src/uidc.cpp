@@ -260,14 +260,6 @@ void MCUIDC::grabpointer(Window w)
 { }
 void MCUIDC::ungrabpointer()
 { }
-uint2 MCUIDC::getwidth()
-{
-	return 1;
-}
-uint2 MCUIDC::getheight()
-{
-	return 1;
-}
 uint2 MCUIDC::getwidthmm()
 {
 	return 1;
@@ -281,6 +273,36 @@ uint2 MCUIDC::getmaxpoints()
 	return 1;
 }
 uint2 MCUIDC::getvclass()
+{
+	return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint2 MCUIDC::getwidth()
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	return ceil(device_getwidth() / t_scale) ;
+}
+
+uint2 MCUIDC::getheight()
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	return ceil(device_getheight() / t_scale);
+}
+
+//////////
+
+uint16_t MCUIDC::device_getwidth()
+{
+	return 1;
+}
+
+uint16_t MCUIDC::device_getheight()
 {
 	return 1;
 }
