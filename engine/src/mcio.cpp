@@ -34,6 +34,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #if !defined(_MOBILE) && !defined(_SERVER)
+#if 0
 void IO_set_stream(IO_handle stream, char *newptr)
 {
 	if (newptr < stream->buffer)
@@ -44,6 +45,7 @@ void IO_set_stream(IO_handle stream, char *newptr)
 		else
 			stream->ioptr = newptr;
 }
+#endif // 0
 #endif
 
 bool IO_findstream(Streamnode *p_nodes, uindex_t p_node_count, MCNameRef p_name, uindex_t& r_index)

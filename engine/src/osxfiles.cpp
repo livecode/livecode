@@ -155,40 +155,40 @@ static bool getResourceInfo(MCListRef p_list, ResType p_type);
 //
 //	return handle;
 //}
-
-IO_handle MCS_fakeopen(const MCString &data)
-{
-	return new IO_header(NULL, 0, 0, 0, (char *)data.getstring(),
-	                     data.getlength(), IO_FAKE);
-}
-
-IO_handle MCS_fakeopenwrite(void)
-{
-	return new IO_header(NULL, 0, 0, 0, NULL, 0, IO_FAKEWRITE);
-}
-
-IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
-{
-	return new IO_header(NULL, 0, 0, 0, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
-}
-
-IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
-{
-	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
-	{
-		r_buffer = NULL;
-		r_length = 0;
-		MCS_close(stream);
-		return IO_ERROR;
-	}
-
-	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
-	r_length = stream -> len;
-
-	MCS_close(stream);
-
-	return IO_NORMAL;
-}
+//
+//IO_handle MCS_fakeopen(const MCString &data)
+//{
+//	return new IO_header(NULL, 0, 0, 0, (char *)data.getstring(),
+//	                     data.getlength(), IO_FAKE);
+//}
+//
+//IO_handle MCS_fakeopenwrite(void)
+//{
+//	return new IO_header(NULL, 0, 0, 0, NULL, 0, IO_FAKEWRITE);
+//}
+//
+//IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+//{
+//	return new IO_header(NULL, 0, 0, 0, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
+//}
+//
+//IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
+//{
+//	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
+//	{
+//		r_buffer = NULL;
+//		r_length = 0;
+//		MCS_close(stream);
+//		return IO_ERROR;
+//	}
+//
+//	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
+//	r_length = stream -> len;
+//
+//	MCS_close(stream);
+//
+//	return IO_NORMAL;
+//}
 
 bool MCS_isfake(IO_handle stream)
 {
@@ -343,114 +343,114 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 //		
 //	return IO_NORMAL;
 //}
-
-IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
-{
-	if (MCabortscript || stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return IO_ERROR;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common (platform-independent) implementation
-	//   in mcio.cpp
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_read(ptr, size, n, stream);
-
-	IO_stat stat = IO_NORMAL;
-	uint4 nread;
-	if (stream->serialIn != 0)
-	{//read from serial port
-		long count = 0;  // n group of size data to be read
-
-		count = MCU_min(count, size * n);
-		if (count > 0)
-			if ((errno = FSRead(stream->serialIn, &count, ptr)) != noErr)
-				stat = IO_ERROR;
-		if ((uint4)count < size * n)
-			stat = IO_EOF;
-		n = count / size;
-	}
-	else
-		if (stream->fptr == NULL)
-		{ //read from an IO_handle's buffer
-			nread = size * n;
-			if (nread > stream->len - (stream->ioptr - stream->buffer))
-			{
-				n = stream->len - (stream->ioptr - stream->buffer) / size;
-				nread = size * n;
-				stat = IO_EOF;
-			}
-			if (nread == 1)
-			{
-				char *tptr = (char *)ptr;
-				*tptr = *stream->ioptr++;
-			}
-			else
-			{
-				memcpy(ptr, stream->ioptr, nread);
-				stream->ioptr += nread;
-			}
-		}
-		else
-		{
-			// MW-2010-08-26: Taken from the Linux source, this changes the previous code
-			//   to take into account pipes and such.
-			char *sptr = (char *)ptr;
-			uint4 nread;
-			uint4 toread = n * size;
-			uint4 offset = 0;
-			errno = 0;
-			while ((nread = fread(&sptr[offset], 1, toread, stream->fptr)) != toread)
-			{
-				offset += nread;
-				n = offset / size;
-				if (ferror(stream->fptr))
-				{
-					clearerr(stream->fptr);
-					
-					if (errno == EAGAIN)
-						return IO_NORMAL;
-					
-					if (errno == EINTR)
-					{
-						toread -= nread;
-						continue;
-					}
-					else
-						return IO_ERROR;
-				}
-				if (MCS_eof(stream))
-				{
-					return IO_EOF;
-				}
-				return IO_NONE;
-			}
-		}
-	return stat;
-}
-
-IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
-{
-	if (stream == NULL)
-		return IO_ERROR;
-	if (stream->serialOut != 0)
-	{//write to serial port
-		uint4 count = size * n;
-		errno = FSWrite(stream->serialOut, (long*)&count, ptr);
-		if (errno == noErr && count == size * n)
-			return IO_NORMAL;
-		return IO_ERROR;
-	}
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
-
-	if (fwrite(ptr, size, n, stream->fptr) != n)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
+//
+//IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
+//{
+//	if (MCabortscript || stream == NULL)
+//		return IO_ERROR;
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return IO_ERROR;
+//
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common (platform-independent) implementation
+//	//   in mcio.cpp
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_read(ptr, size, n, stream);
+//
+//	IO_stat stat = IO_NORMAL;
+//	uint4 nread;
+//	if (stream-> serialIn != 0)
+//	{//read from serial port
+//		long count = 0;  // n group of size data to be read
+//
+//		count = MCU_min(count, size * n);
+//		if (count > 0)
+//			if ((errno = FSRead(stream->serialIn, &count, ptr)) != noErr)
+//				stat = IO_ERROR;
+//		if ((uint4)count < size * n)
+//			stat = IO_EOF;
+//		n = count / size;
+//	}
+//	else
+//		if (stream->fptr == NULL)
+//		{ //read from an IO_handle's buffer
+//			nread = size * n;
+//			if (nread > stream->len - (stream->ioptr - stream->buffer))
+//			{
+//				n = stream->len - (stream->ioptr - stream->buffer) / size;
+//				nread = size * n;
+//				stat = IO_EOF;
+//			}
+//			if (nread == 1)
+//			{
+//				char *tptr = (char *)ptr;
+//				*tptr = *stream->ioptr++;
+//			}
+//			else
+//			{
+//				memcpy(ptr, stream->ioptr, nread);
+//				stream->ioptr += nread;
+//			}
+//		}
+//		else
+//		{
+//			// MW-2010-08-26: Taken from the Linux source, this changes the previous code
+//			//   to take into account pipes and such.
+//			char *sptr = (char *)ptr;
+//			uint4 nread;
+//			uint4 toread = n * size;
+//			uint4 offset = 0;
+//			errno = 0;
+//			while ((nread = fread(&sptr[offset], 1, toread, stream->fptr)) != toread)
+//			{
+//				offset += nread;
+//				n = offset / size;
+//				if (ferror(stream->fptr))
+//				{
+//					clearerr(stream->fptr);
+//					
+//					if (errno == EAGAIN)
+//						return IO_NORMAL;
+//					
+//					if (errno == EINTR)
+//					{
+//						toread -= nread;
+//						continue;
+//					}
+//					else
+//						return IO_ERROR;
+//				}
+//				if (MCS_eof(stream))
+//				{
+//					return IO_EOF;
+//				}
+//				return IO_NONE;
+//			}
+//		}
+//	return stat;
+//}
+//
+//IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
+//{
+//	if (stream == NULL)
+//		return IO_ERROR;
+//	if (stream->serialOut != 0)
+//	{//write to serial port
+//		uint4 count = size * n;
+//		errno = FSWrite(stream->serialOut, (long*)&count, ptr);
+//		if (errno == noErr && count == size * n)
+//			return IO_NORMAL;
+//		return IO_ERROR;
+//	}
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
+//
+//	if (fwrite(ptr, size, n, stream->fptr) != n)
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
 //
 //IO_stat MCS_flush(IO_handle stream)
 //{ //flush file buffer
@@ -461,13 +461,13 @@ IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 //}
 
 // File positioning
-
-Boolean MCS_eof(IO_handle stream)
-{
-	if (stream->fptr == NULL) //no dealing with real file
-		return (uint4)(stream->ioptr - stream->buffer) == stream->len;
-	return feof(stream->fptr);
-}
+//
+//Boolean MCS_eof(IO_handle stream)
+//{
+//	if (stream->fptr == NULL) //no dealing with real file
+//		return (uint4)(stream->ioptr - stream->buffer) == stream->len;
+//	return feof(stream->fptr);
+//}
 //
 //
 //IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)

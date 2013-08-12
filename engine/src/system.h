@@ -54,7 +54,7 @@ struct MCSystemFileHandle
 {
 	virtual void Close(void) = 0;
 	
-	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
+	virtual IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
 	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written) = 0;
 	virtual bool Seek(int64_t offset, int p_dir) = 0;
 	
@@ -68,6 +68,8 @@ struct MCSystemFileHandle
 	
 	virtual void *GetFilePointer(void) = 0;
 	virtual int64_t GetFileSize(void) = 0;
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length);
 };
 
 struct MCSystemInterface
@@ -125,12 +127,12 @@ struct MCSystemInterface
 	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t offset) = 0;
-	virtual IO_handle OpenStdFile(uint32_t i) = 0;
-	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, MCStringRef p_control_string) = 0;
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
+	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
+	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
-	virtual void GetTemporaryFileName(MCStringRef& r_path);
+	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual void *LoadModule(MCStringRef p_path) = 0;
@@ -158,6 +160,8 @@ struct MCSystemInterface
 
 	virtual uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset) = 0;
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used) = 0;
+    
+    virtual void CheckProcesses() = 0;
 };
 
 extern MCSystemInterface *MCsystem;

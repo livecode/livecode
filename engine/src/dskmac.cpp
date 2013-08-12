@@ -19,6 +19,7 @@
 #include "parsedef.h"
 #include "filedefs.h"
 #include "globdefs.h"
+#include "objdefs.h"
 
 #include "execpt.h"
 #include "globals.h"
@@ -27,10 +28,24 @@
 #include "util.h"
 #include "mcio.h"
 #include "stack.h"
+#include "handler.h"
+#include "dispatch.h"
+#include "card.h"
+#include "group.h"
+#include "button.h"
+#include "param.h"
+#include "mode.h"
+#include "securemode.h"
+
+#include "osxdc.h"
 
 #include <sys/stat.h>
 
 #include "foundation.h"
+
+#include <Security/Authorization.h>
+#include <Security/AuthorizationTags.h>
+
 
 #define ENTRIES_CHUNK 1024
 
@@ -41,6 +56,613 @@
 #include <pwd.h>
 
 #define USE_FSCATALOGINFO
+
+///////////////////////////////////////////////////////////////////////////////
+
+#define keyReplyErr 'errn'
+#define keyMCScript 'mcsc'  //reply from apple event
+
+#define AETIMEOUT                60.0
+
+uint1 *MClowercasingtable = NULL;
+uint1 *MCuppercasingtable = NULL;
+
+inline FourCharCode FourCharCodeFromString(const char *p_string)
+{
+	return MCSwapInt32HostToNetwork(*(FourCharCode *)p_string);
+}
+
+inline char *FourCharCodeToString(FourCharCode p_code)
+{
+	char *t_result;
+	t_result = new char[5];
+	*(FourCharCode *)t_result = MCSwapInt32NetworkToHost(p_code);
+	t_result[4] = '\0';
+	return t_result;
+}
+
+struct triplets
+{
+	AEEventClass		theEventClass;
+	AEEventID		theEventID;
+	AEEventHandlerProcPtr	theHandler;
+	AEEventHandlerUPP	theUPP;
+};
+
+typedef struct triplets triplets;
+
+typedef struct
+{
+	char compname[255];
+	OSType compsubtype;
+	ComponentInstance compinstance;
+}
+OSAcomponent;
+
+static OSAcomponent *osacomponents = NULL;
+static uint2 osancomponents = 0;
+
+//required apple event handler
+static pascal OSErr DoOpenApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
+static pascal OSErr DoOpenDoc(const AppleEvent *mess, AppleEvent *rep, long refcon);
+static pascal OSErr DoPrintDoc(const AppleEvent *m, AppleEvent *rep, long refcon);
+static pascal OSErr DoQuitApp(const AppleEvent *mess, AppleEvent *rep, long refcon);
+static pascal OSErr DoAppDied(const AppleEvent *mess, AppleEvent *rep, long refcon);
+static pascal OSErr DoAEAnswer(const AppleEvent *m, AppleEvent *rep, long refcon);
+static pascal OSErr DoAppPreferences(const AppleEvent *m, AppleEvent *rep, long refcon);
+
+#define kAEReopenApplication FOUR_CHAR_CODE('rapp')
+static triplets ourkeys[] =
+{
+	/* The following are the four required AppleEvents. */
+	{ kCoreEventClass, kAEReopenApplication, DoOpenApp,  nil },
+    { kCoreEventClass, kAEOpenApplication, DoOpenApp,  nil },
+    { kCoreEventClass, kAEOpenDocuments, DoOpenDoc,  nil },
+    { kCoreEventClass, kAEPrintDocuments, DoPrintDoc, nil },
+    { kCoreEventClass, kAEQuitApplication, DoQuitApp,  nil },
+    { kCoreEventClass, kAEApplicationDied, DoAppDied,  nil },
+    
+    { kCoreEventClass, kAEShowPreferences, DoAppPreferences,  nil },
+    
+    /*if MCS_send() command requires an reply(answer) back from the
+     *server app the following handler is used to process the
+     *reply(answer) descirption record */
+    { kCoreEventClass, kAEAnswer, DoAEAnswer, nil}
+};
+
+//static Boolean hasPPCToolbox = False;
+//static Boolean hasAppleEvents = False;
+
+#define MINIMUM_FAKE_PID (1 << 29)
+
+static int4 curpid = MINIMUM_FAKE_PID;
+static char *replymessage;       //used in DoSpecial() & other routines
+static uint4 replylength;
+static AEKeyword replykeyword;   // Use in DoSpecial & other routines
+static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
+static char *AEanswerErr; //the reply error from an AE send by MC.
+static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
+
+/***************************************************************************
+ * utility functions used by this module only		                   *
+ ***************************************************************************/
+
+static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc);
+static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine, StringPtr app, AEDesc *retDesc);
+static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result);
+static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result);
+static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address);
+
+static void getosacomponents();
+static OSErr osacompile(MCString &s, ComponentInstance compinstance, OSAID &id);
+static OSErr osaexecute(MCString &s,ComponentInstance compinstance, OSAID id);
+/***************************************************************************/
+
+///////////////////////////////////////////////////////////////////////////////
+
+EventHandlerUPP MCS_weh;
+
+bool WindowIsInControlGroup(WindowRef p_window)
+{
+	WindowGroupRef t_current_group;
+	t_current_group = GetWindowGroup(p_window);
+	if (t_current_group != NULL)
+	{
+		CFStringRef t_group_name;
+		t_group_name = NULL;
+		CopyWindowGroupName(t_current_group, &t_group_name);
+		if (t_group_name != NULL)
+		{
+			if (CFStringCompare(t_group_name, CFSTR("MCCONTROLGROUP"), 0) != 0)
+				t_current_group = NULL;
+			CFRelease(t_group_name);
+		}
+	}
+    
+	return t_current_group != NULL;
+}
+
+static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, void *userData)
+{
+    // MW-2005-09-06: userData is now the window handle, so we search for the stack
+	//   the previous method of passing the stack caused problems with takewindow
+	_Drawable t_window;
+	t_window . handle . window = (MCSysWindowHandle)userData;
+	MCStack *sptr = MCdispatcher -> findstackd(&t_window);
+	
+	if (GetEventKind(event) == kEventMouseWheelMoved)
+	{
+		if (MCmousestackptr != NULL)
+		{
+			MCObject *mfocused = MCmousestackptr->getcard()->getmfocused();
+			if (mfocused == NULL)
+				mfocused = MCmousestackptr -> getcard();
+			if (mfocused != NULL)
+			{
+				uint2 t_axis;
+				GetEventParameter(event, kEventParamMouseWheelAxis, typeMouseWheelAxis, NULL, sizeof(t_axis), NULL, &t_axis);
+				if (t_axis ==  kEventMouseWheelAxisY)
+				{
+					int4 val;
+					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
+					if (val < 0)
+						mfocused->kdown("", XK_WheelUp);
+					else
+						mfocused->kdown("", XK_WheelDown);
+				}
+				else if (t_axis ==  kEventMouseWheelAxisX)
+				{
+					int4 val;
+					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
+					if (val < 0)
+						mfocused->kdown("", XK_WheelLeft);
+					else
+						mfocused->kdown("", XK_WheelRight);
+				}
+			}
+		}
+	}
+	else   if (GetEventClass(event) == kEventClassWindow)
+	{
+		if (GetEventKind(event) == kEventWindowConstrain && sptr != NULL)
+		{
+			if (sptr == MCdispatcher -> gethome())
+			{
+				const MCDisplay *t_monitors = NULL;
+				MCDisplay *t_old_monitors = NULL;
+				
+				uint4 t_monitor_count, t_old_monitor_count;
+				bool t_changed;
+				t_old_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
+				t_old_monitors = new MCDisplay[t_old_monitor_count];
+				if (t_old_monitors != NULL)
+				{
+					memcpy(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_old_monitor_count);
+					((MCScreenDC *)MCscreen) -> s_monitor_count = 0;
+					delete[] ((MCScreenDC *)MCscreen) -> s_monitor_displays;
+					((MCScreenDC *)MCscreen) -> s_monitor_displays = NULL;
+					t_monitor_count = ((MCScreenDC *)MCscreen) -> getdisplays(t_monitors, false);
+					t_changed = t_monitor_count != t_old_monitor_count || memcmp(t_old_monitors, t_monitors, sizeof(MCDisplay) * t_monitor_count) != 0;
+					delete t_old_monitors;
+				}
+				else
+					t_changed = true;
+				if (t_changed)
+					MCscreen -> delaymessage(MCdefaultstackptr -> getcurcard(), MCM_desktop_changed);
+			}
+		}
+		else if (GetEventKind(event) == kEventWindowCollapsed && sptr != NULL)
+			sptr->iconify();
+		else if (GetEventKind(event) == kEventWindowExpanded && sptr != NULL)
+			sptr->uniconify();
+		else if (GetEventKind(event) == kEventWindowBoundsChanged && sptr != NULL)
+		{
+			UInt32 attributes;
+			GetEventParameter( event, kEventParamAttributes, typeUInt32, NULL, sizeof( UInt32) , NULL, &attributes);
+			
+			Rect t_rect;
+			GetWindowPortBounds((WindowPtr)t_window . handle . window, &t_rect);
+			
+			t_rect . right -= t_rect . left;
+			t_rect . bottom -= t_rect . top;
+			t_rect . left = 0;
+			
+			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
+			//   account the scroll.
+			t_rect . top = -sptr -> getscroll();
+			
+			ControlRef t_root_control;
+			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);
+			
+			ControlRef t_subcontrol;
+			if (GetIndexedSubControl(t_root_control, 1, &t_subcontrol) == noErr)
+				SetControlBounds(t_subcontrol, &t_rect);
+			
+			// MW-2007-08-29: [[ Bug 4846 ]] Ensure a moveStack message is sent whenever the window moves
+			if ((attributes & kWindowBoundsChangeSizeChanged) != 0 || ((attributes & kWindowBoundsChangeUserDrag) != 0 && (attributes & kWindowBoundsChangeOriginChanged) != 0))
+				sptr->configure(True);//causes a redraw and recalculation
+		}
+		else if (GetEventKind(event) == kEventWindowInit && sptr != NULL)
+		{
+			UInt32 t_value;
+			t_value = 0;
+			SetEventParameter(event, kEventParamWindowFeatures, typeUInt32, 4, &t_value);
+		}
+		else if (GetEventKind(event) == kEventWindowDrawContent)
+		{
+			EventRecord t_record;
+			t_record . message = (UInt32)userData;
+			((MCScreenDC *)MCscreen) -> doredraw(t_record, true);
+			return noErr;
+		}
+		else if (GetEventKind(event) == kEventWindowUpdate)
+		{
+			EventRecord t_record;
+			t_record . message = (UInt32)userData;
+			((MCScreenDC *)MCscreen) -> doredraw(t_record);
+			return noErr;
+		}
+		else if (GetEventKind(event) == kEventWindowFocusAcquired)
+		{
+			// OK-2009-02-17: [[Bug 3576]]
+			// OK-2009-03-12: Fixed crash where getwindow() could return null.
+			// OK-2009-03-23: Reverted as was causing at least two bugs.
+			// if (sptr != NULL && sptr -> getwindow() != NULL)
+			//	((MCScreenDC *)MCscreen) -> activatewindow(sptr -> getwindow());
+		}
+		else if (GetEventKind(event) == kEventWindowFocusRelinquish)
+		{
+			WindowRef t_window_handle;
+			t_window_handle = (WindowRef)userData;
+			
+			if (sptr != NULL)
+				sptr -> getcurcard() -> kunfocus();
+		}
+		else if (GetEventKind(event) == kEventWindowActivated)
+		{
+			if ( sptr != NULL )
+				if ( sptr -> is_fullscreen() )
+					if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
+						SetSystemUIMode(kUIModeAllHidden, kUIOptionAutoShowMenuBar);
+		}
+		else if (GetEventKind(event) == kEventWindowDeactivated)
+		{
+			if ( sptr != NULL)
+				if ( sptr -> is_fullscreen() )
+					if (!((MCScreenDC*)MCscreen)->getmenubarhidden())
+						SetSystemUIMode(kUIModeNormal, NULL);
+		}
+		else if (GetEventKind(event) == kEventWindowClose)
+		{
+			// MW-2008-02-28: [[ Bug 5934 ]] It seems that composited windows don't send WNE type
+			//   events when their close button is clicked in the background, therefore we intercept
+			//   the high-level carbon event.
+			MCdispatcher->wclose(&t_window);
+			return noErr;
+		}
+		else if (GetEventKind(event) == kEventWindowGetRegion)
+		{
+		}
+	}
+	return eventNotHandledErr;
+}
+
+static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refCon)
+{
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+    
+	OSErr err = errAEEventNotHandled;  //class, id, sender
+	DescType rType;
+	Size rSize;
+	AEEventClass aeclass;
+	AEGetAttributePtr(ae, keyEventClassAttr, typeType, &rType, &aeclass, sizeof(AEEventClass), &rSize);
+    
+	AEEventID aeid;
+	AEGetAttributePtr(ae, keyEventIDAttr, typeType, &rType, &aeid, sizeof(AEEventID), &rSize);
+    
+	if (aeclass == kTextServiceClass)
+	{
+		err = errAEEventNotHandled;
+		return err;
+	}
+	//trap for the AEAnswer event, let DoAEAnswer() to handle this event
+	if (aeclass == kCoreEventClass)
+	{
+		if (aeid == kAEAnswer)
+			return errAEEventNotHandled;
+	}
+	AEAddressDesc senderDesc;
+	//
+	char *p3val = new char[128];
+	//char *p3val = new char[kNBPEntityBufferSize + 1]; //sender's address 105 + 1
+	if (AEGetAttributeDesc(ae, keyOriginalAddressAttr,
+	                       typeWildCard, &senderDesc) == noErr)
+	{
+		getAddressFromDesc(senderDesc, p3val);
+		AEDisposeDesc(&senderDesc);
+	}
+	else
+		p3val = '\0';
+    
+	aePtr = ae; //saving the current AE pointer for use in mcs_request_ae()
+	MCParameter p1, p2, p3;
+	MCString s;
+	
+	char *t_temp;
+	
+	char t_aeclass_string[4];
+	t_temp = FourCharCodeToString(aeclass);
+	memcpy(t_aeclass_string, t_temp, 4);
+	s.set(t_aeclass_string, 4);
+	delete t_temp;
+	
+	p1.sets_argument(s);
+	p1.setnext(&p2);
+	
+	char t_aeid_string[4];
+	t_temp = FourCharCodeToString(aeid);
+	memcpy(t_aeid_string, t_temp, 4);
+	s.set(t_aeid_string, 4);
+	delete t_temp;
+	
+	p2.sets_argument(s);
+	p2.setnext(&p3);
+	p3.sets_argument(p3val);
+	/*for "appleEvent class, id, sender" message to inform script that
+     there is an AE arrived */
+	Exec_stat stat = MCdefaultstackptr->getcard()->message(MCM_apple_event, &p1);
+	if (stat != ES_PASS && stat != ES_NOT_HANDLED)
+	{ //if AE is handled by MC
+		if (stat == ES_ERROR)
+		{ //error in handling AE in MC
+			err = errAECorruptData;
+			if (reply->dataHandle != NULL)
+			{
+				short e = err;
+				AEPutParamPtr(reply, keyReplyErr, typeShortInteger, (Ptr)&e, sizeof(short));
+			}
+		}
+		else
+		{ //ES_NORMAL
+			if (replymessage == NULL) //no reply, will return no error code
+				err = noErr;
+			else
+			{
+				if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
+				{
+					err = AEPutParamPtr(reply, replykeyword, typeChar, replymessage, replylength);
+					if (err != noErr)
+					{
+						short e = err;
+						AEPutParamPtr(reply, keyReplyErr, typeShortInteger, (Ptr)&e, sizeof(short));
+					}
+				}
+			}
+		}
+		delete replymessage;
+		replymessage = NULL;
+	}
+	else
+		if (aeclass == kAEMiscStandards
+            && (aeid == kAEDoScript || aeid == 'eval'))
+		{
+			DescType rType;
+			Size rSize;  //actual size returned
+			if ((err = AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) == noErr)
+			{
+				char *sptr = new char[rSize + 1];
+				sptr[rSize] = '\0';
+				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
+				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+				if (aeid == kAEDoScript)
+				{
+					MCdefaultstackptr->getcard()->domess(sptr);
+					MCresult->eval(ep);
+					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+				}
+				else
+				{
+					MCdefaultstackptr->getcard()->eval(sptr, ep);
+					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
+				}
+				delete sptr;
+			}
+		}
+		else
+			err = errAEEventNotHandled;
+	// do nothing if the AE is not handled,
+	// let the standard AE dispacher to dispatch this AE
+	delete p3val;
+	return err;
+}
+
+//Apple event handlers table is installed in MCS_init() macspec.cpp file
+static pascal OSErr DoOpenApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{
+	return errAEEventNotHandled;
+}
+
+static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{ //Apple Event for opening documnets, in our use is to open stacks when user
+	//double clicked on a MC stack icon
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+	
+	AEDescList docList; //get a list of alias records for the documents
+	errno = AEGetParamDesc(theAppleEvent, keyDirectObject, typeAEList, &docList);
+	if (errno != noErr)
+		return errno;
+	long count;
+	//get the number of docs descriptors in the list
+	AECountItems(&docList, &count);
+	if (count < 1)     //if there is no doc to be opened
+		return errno;
+	AEKeyword rKeyword; //returned keyword
+	DescType rType;    //returned type
+	
+	FSRef t_doc_fsref;
+	
+	Size rSize;        //returned size, atual size of the docName
+	long item;
+	// get a FSSpec record, starts from count==1
+	for (item = 1; item <= count; item++)
+	{
+		errno = AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType, &t_doc_fsref, sizeof(FSRef), &rSize);
+		if (errno != noErr)
+			return errno;
+		// extract FSSpec record's info & form a file name for MC to use
+		char *fullPathName = MCS_fsref_to_path(t_doc_fsref);
+        
+		if (MCModeShouldQueueOpeningStacks())
+		{
+			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
+			MCstacknames[MCnstacks++] = strclone(fullPathName);
+		}
+		else
+		{
+			MCStack *stkptr;  //stack pointer
+			if (MCdispatcher->loadfile(fullPathName, stkptr) == IO_NORMAL)
+				stkptr->open();
+		}
+		delete fullPathName;
+	}
+	AEDisposeDesc(&docList);
+	return noErr;
+}
+
+static pascal OSErr DoPrintDoc(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+    
+	errno = errAEEventNotHandled;
+	if (reply != NULL)
+	{
+		short e = errno;
+		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
+	}
+	return errno;
+}
+
+static pascal OSErr DoQuitApp(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+    
+	errno = errAEEventNotHandled;
+	switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+	{
+        case ES_PASS:
+        case ES_NOT_HANDLED:
+            MCdefaultstackptr->getcard()->message(MCM_shut_down);
+            MCquit = True; //set MC quit flag, to invoke quitting
+            errno = noErr;
+            break;
+        default:
+            errno = userCanceledErr;
+            break;
+	}
+	if (reply != NULL)
+	{
+		short e = errno;
+		AEPutParamPtr(reply, keyReplyErr, typeShortInteger, &e, sizeof(short));
+	}
+	return errno;
+}
+
+static pascal OSErr DoAppPreferences(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+    
+	MCGroup *mb = MCmenubar != NULL ? MCmenubar : MCdefaultmenubar;
+	if (mb == NULL)
+		return errAEEventNotHandled;
+	MCButton *bptr = (MCButton *)mb->findname(CT_MENU, "Edit");
+	if (bptr == NULL)
+		return errAEEventNotHandled;
+	if (bptr != NULL)
+	{
+		bptr->message_with_args(MCM_menu_pick, "Preferences");
+	}
+	return noErr;
+}
+
+
+static pascal OSErr DoAppDied(const AppleEvent *theAppleEvent, AppleEvent *reply, long refCon)
+{
+	errno = errAEEventNotHandled;
+	DescType rType;
+	Size rSize;
+	ProcessSerialNumber sn;
+	AEGetParamPtr(theAppleEvent, keyProcessSerialNumber, typeProcessSerialNumber, &rType,	&sn, sizeof(ProcessSerialNumber), &rSize);
+	uint2 i;
+	for (i = 0 ; i < MCnprocesses ; i++)
+	{
+		Boolean result;
+		SameProcess((ProcessSerialNumber *)&MCprocesses[i].sn, &sn, &result);
+		if (result)
+		{
+			MCprocesses[i].pid = 0;
+			IO_cleanprocesses();
+			return noErr;
+		}
+	}
+	return errno;
+}
+
+static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long refCon)
+{
+	if (!MCSecureModeCheckAppleScript())
+		return errAEEventNotHandled;
+    
+    //process the repy(answer) returned from a server app. When MCS_send() with
+	// a reply, the reply is handled in this routine.
+	// This is different from MCS_reply()
+	//check if there is an error code
+	DescType rType; //returned type
+	Size rSize;
+    
+	/*If the handler returns a result code other than noErr, and if the
+     client is waiting for a reply, it is returned in the keyErrorNumber
+     parameter of the reply Apple event. */
+	if (AEGetParamPtr(ae, keyErrorString, typeChar, &rType, NULL, 0, &rSize) == noErr)
+	{
+		AEanswerErr = new char[rSize + 1];
+		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, AEanswerErr, rSize, &rSize);
+		AEanswerErr[rSize] = '\0';
+	}
+	else
+	{
+		short e;
+		if (AEGetParamPtr(ae, keyErrorNumber, typeSMInt, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
+            && e != noErr)
+		{
+			AEanswerErr = new char[35 + I2L];
+			sprintf(AEanswerErr, "Got error %d when sending Apple event", e);
+		}
+		else
+		{
+			delete AEanswerData;
+			if ((errno = AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) != noErr)
+			{
+				if (errno == errAEDescNotFound)
+				{
+					AEanswerData = MCU_empty();
+					return noErr;
+				}
+				AEanswerErr = new char[37 + I2L];
+				sprintf(AEanswerErr, "Got error %d when receiving Apple event", errno);
+				return errno;
+			}
+			AEanswerData = new char[rSize + 1];
+			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, AEanswerData, rSize, &rSize);
+			AEanswerData[rSize] = '\0';
+		}
+	}
+	return noErr;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -309,7 +931,55 @@ extern "C"
 static void configureSerialPort(int sRefNum);
 static void parseSerialControlStr(char *set, struct termios *theTermios);
 
-void MCS_setfiletype(MCStringRef newpath);
+
+static UnicodeToTextInfo unicodeconvertors[32];
+static TextToUnicodeInfo texttounicodeinfo;
+static TextToUnicodeInfo *texttounicodeconvertor = NULL;
+static UnicodeToTextInfo utf8totextinfo;
+static TextToUnicodeInfo texttoutf8info;
+
+///////////////////////////////////////////////////////////////////////////////
+
+static void init_utf8_converters(void)
+{
+	if (texttoutf8info != nil)
+		return;
+	
+	memset(unicodeconvertors, 0, sizeof(unicodeconvertors));
+	UnicodeMapping ucmapping;
+	ucmapping.unicodeEncoding = CreateTextEncoding(kTextEncodingUnicodeDefault,
+												   kTextEncodingDefaultVariant,
+												   kUnicodeUTF8Format);
+	ucmapping.otherEncoding = kTextEncodingMacRoman;
+	ucmapping.mappingVersion = -1;
+	CreateTextToUnicodeInfo(&ucmapping, &texttoutf8info);
+	CreateUnicodeToTextInfo(&ucmapping, &utf8totextinfo);
+}
+
+void MCS_utf8tonative(const char *s, uint4 len, char *d, uint4 &destlen)
+{
+	init_utf8_converters();
+	
+	ByteCount processedbytes, outlength;
+	uint4 destbufferlength;
+	destbufferlength = destlen;
+	ConvertFromUnicodeToText(utf8totextinfo, len, (UniChar *)s,kUnicodeUseFallbacksMask | kUnicodeLooseMappingsMask, 0, NULL, 0, NULL, destbufferlength, &processedbytes, &outlength, (LogicalAddress)d);
+	destlen = outlength;
+}
+
+void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
+{
+	init_utf8_converters();
+	
+	ByteCount processedbytes, outlength;
+	uint4 destbufferlength;
+	destbufferlength = destlen;
+	ConvertFromTextToUnicode(texttoutf8info, len, (LogicalAddress)s,
+	                         kUnicodeLooseMappingsMask, 0, NULL, 0, NULL,
+	                         destbufferlength, &processedbytes,
+	                         &outlength, (UniChar *)d);
+	destlen = outlength;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -412,22 +1082,139 @@ bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
 
 class MCStdioFileHandle: public MCSystemFileHandle
 {
-public:
-	static MCStdioFileHandle *Open(const char *p_path, const char *p_mode)
+public:    
+	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
 	{
-		FILE *t_stream;
-		t_stream = fopen(p_path, p_mode);
-		if (t_stream == NULL)
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
+        IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+		char *oldpath = strclone(path);
+		
+		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+		char *t_resolved_path;
+		t_resolved_path = MCS_resolvepath(path);
+		if (t_resolved_path == NULL)
 			return NULL;
 		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-		
-		return t_handle;
+		char *newpath = path2utf(t_resolved_path);
+		FILE *fptr;
+        
+		if (driver)
+		{
+			fptr = fopen(newpath,  mode );
+			if (fptr != NULL)
+			{
+				int val;
+				val = fcntl(fileno(fptr), F_GETFL, val);
+				val |= O_NONBLOCK |  O_NOCTTY;
+				fcntl(fileno(fptr), F_SETFL, val);
+				configureSerialPort((short)fileno(fptr));
+			}
+		}
+		else
+		{
+			fptr = fopen(newpath, IO_READ_MODE);
+			if (fptr == NULL)
+				fptr = fopen(oldpath, IO_READ_MODE);
+			Boolean created = True;
+			if (fptr != NULL)
+			{
+				created = False;
+				if (mode != IO_READ_MODE)
+				{
+					fclose(fptr);
+					fptr = NULL;
+				}
+			}
+			if (fptr == NULL)
+				fptr = fopen(newpath, mode);
+            
+			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+				fptr = fopen(newpath, IO_CREATE_MODE);
+			if (fptr != NULL && created)
+				MCS_setfiletype(oldpath);
+		}
+        
+		delete newpath;
+		delete oldpath;
+		if (fptr != NULL)
+		{
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+			if (offset > 0)
+				fseek(handle->fptr, offset, SEEK_SET);
+            
+			if (strequal(mode, IO_APPEND_MODE))
+				handle->flags |= IO_SEEKED;
+		}
+        
+        return handle;
+#endif /* MCS_open_dsk_mac */
+		FILE *fptr;
+        MCStdioFileHandle *t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+        Boolean created = True;
+        
+        if (fptr != NULL)
+        {
+            created = False;
+            if (p_mode == kMCSystemFileModeRead)
+            {
+                fclose(fptr);
+                fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL)
+        {
+            switch(p_mode)
+            {
+                case kMCSystemFileModeRead:
+                    fptr = fopen(*t_path_utf, IO_READ_MODE);
+                    break;
+                case kMCSystemFileModeUpdate:
+                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                    break;
+                case kMCSystemFileModeAppend:
+                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                    break;
+                case kMCSystemFileModeWrite:
+                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                    break;
+                default:
+                    fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL && p_mode == kMCSystemFileModeRead)
+            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+        
+        if (fptr != NULL && created)
+            MCS_setfiletype(p_path);
+        
+		if (fptr != NULL)
+        {
+            t_handle = new MCStdioFileHandle;
+            t_handle -> m_stream = fptr;
+            t_handle -> m_hserialInputBuff = NULL;
+            t_handle -> m_ioptr = NULL;
+            t_handle -> m_serialIn = 0;
+            t_handle -> m_serialOut = 0;
+        }
+        
+        return t_handle;
 	}
 	
-	static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
+	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
 	{
 #ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
 	IO_handle handle = NULL;
@@ -444,20 +1231,74 @@ public:
 	return handle;
 #endif /* MCS_dopen_dsk_mac */
 		FILE *t_stream;
-		t_stream = fdopen(fd, p_mode);
+        
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                t_stream = fdopen(fd, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                t_stream = fdopen(fd, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fdopen(fd, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream - fdopen(fd, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
 		if (t_stream == NULL)
 			return NULL;
 		
 		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (mode[0] == 'w')
+		if (p_mode == kMCSystemFileModeWrite)
 			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		MCStdioFileHandle *t_handle;
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
+        t_handle -> m_hserialInputBuff = NULL;
+        t_handle -> m_ioptr = NULL;
+        t_handle -> m_serialIn = 0;
+        t_handle -> m_serialOut = 0;
 		
-		return t_handle;		
+		return t_handle;
 	}
+    
+    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, const char *serialcontrolsettings)
+    {
+		FILE *fptr;
+        MCStdioFileHandle *t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+		if (fptr != NULL)
+        {
+            int val;
+            val = fcntl(fileno(fptr), F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(fileno(fptr), F_SETFL, val);
+            configureSerialPort((short)fileno(fptr));
+            
+            t_handle = new MCStdioFileHandle;
+            t_handle -> m_stream = fptr;
+            t_handle -> m_hserialInputBuff = NULL;
+            t_handle -> m_ioptr = NULL;
+            t_handle -> m_serialIn = 0;
+            t_handle -> m_serialOut = 0;
+        }
+        
+        return t_handle;
+    }
 	
 	virtual void Close(void)
 	{
@@ -490,28 +1331,181 @@ public:
         m_stream = NULL;
 	}
 	
-	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	virtual IO_stat Read(void *p_ptr, uint32_t p_size, uint32_t& r_count)
 	{
-		size_t t_amount;
-		t_amount = fread(p_buffer, 1, p_length, m_stream);
-		r_read = t_amount;
-		
-		if (t_amount < p_length)
-			return ferror(m_stream) == 0;
-		
-		return true;
+#ifdef /* MCS_read_dsk_mac */ LEGACY_SYSTEM
+	if (MCabortscript || stream == NULL)
+		return IO_ERROR;
+
+	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+		return IO_ERROR;
+
+	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+	// MW-2009-06-30: Refactored to common (platform-independent) implementation
+	//   in mcio.cpp
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_read(ptr, size, n, stream);
+
+	IO_stat stat = IO_NORMAL;
+	uint4 nread;
+	if (stream-> serialIn != 0)
+	{//read from serial port
+		long count = 0;  // n group of size data to be read
+
+		count = MCU_min(count, size * n);
+		if (count > 0)
+			if ((errno = FSRead(stream->serialIn, &count, ptr)) != noErr)
+				stat = IO_ERROR;
+		if ((uint4)count < size * n)
+			stat = IO_EOF;
+		n = count / size;
 	}
-	
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	else
+		if (stream->fptr == NULL)
+		{ //read from an IO_handle's buffer
+			nread = size * n;
+			if (nread > stream->len - (stream->ioptr - stream->buffer))
+			{
+				n = stream->len - (stream->ioptr - stream->buffer) / size;
+				nread = size * n;
+				stat = IO_EOF;
+			}
+			if (nread == 1)
+			{
+				char *tptr = (char *)ptr;
+				*tptr = *stream->ioptr++;
+			}
+			else
+			{
+				memcpy(ptr, stream->ioptr, nread);
+				stream->ioptr += nread;
+			}
+		}
+		else
+		{
+			// MW-2010-08-26: Taken from the Linux source, this changes the previous code
+			//   to take into account pipes and such.
+			char *sptr = (char *)ptr;
+			uint4 nread;
+			uint4 toread = n * size;
+			uint4 offset = 0;
+			errno = 0;
+			while ((nread = fread(&sptr[offset], 1, toread, stream->fptr)) != toread)
+			{
+				offset += nread;
+				n = offset / size;
+				if (ferror(stream->fptr))
+				{
+					clearerr(stream->fptr);
+					
+					if (errno == EAGAIN)
+						return IO_NORMAL;
+					
+					if (errno == EINTR)
+					{
+						toread -= nread;
+						continue;
+					}
+					else
+						return IO_ERROR;
+				}
+				if (MCS_eof(stream))
+				{
+					return IO_EOF;
+				}
+				return IO_NONE;
+			}
+		}
+	return stat;
+#endif /* MCS_read_dsk_mac */
+        IO_stat stat = IO_NORMAL;
+        uint4 nread;
+        int32_t toread = GetFileSize();
+        if (m_serialIn != 0)
+        {//read from serial port
+            SInt32 sint_toread = (SInt32) toread;
+            long count = 0;  // n group of size data to be read
+            
+            count = MCU_min(count, p_size * r_count);
+            if (count > 0)
+                if ((errno = FSRead(m_serialIn, &sint_toread, p_ptr)) != noErr)
+                    stat = IO_ERROR;
+            if ((uint4)count < p_size * r_count)
+                stat = IO_EOF;
+            r_count = toread / p_size;
+        }
+        else
+        {
+            // MW-2010-08-26: Taken from the Linux source, this changes the previous code
+            //   to take into account pipes and such.
+            char *sptr = (char *)p_ptr;
+            uint4 nread;
+            uint4 toread = r_count * p_size;
+            uint4 offset = 0;
+            errno = 0;
+            while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
+            {
+                offset += nread;
+                r_count = offset / p_size;
+                if (ferror(m_stream))
+                {
+                    clearerr(m_stream);
+                    
+                    if (errno == EAGAIN)
+                        return IO_NORMAL;
+                    
+                    if (errno == EINTR)
+                    {
+                        toread -= nread;
+                        continue;
+                    }
+                    else
+                        return IO_ERROR;
+                }
+                if (feof(m_stream))
+                {
+                    return IO_NORMAL;
+                }
+                return IO_NONE;
+            }
+        }
+        return stat;
+	}
+    
+	virtual bool Write(const void *p_ptr, uint32_t p_size, uint32_t& r_count)
 	{
-		size_t t_amount;
-		t_amount = fwrite(p_buffer, 1, p_length, m_stream);
-		r_written = t_amount;
-		
-		if (t_amount < p_length)
-			return false;
-		
-		return true;
+#ifdef /* MCS_write */ LEGACY_SYSTEM
+        if (stream == NULL)
+            return IO_ERROR;
+        if (stream->serialOut != 0)
+        {//write to serial port
+            uint4 count = size * n;
+            errno = FSWrite(stream->serialOut, (long*)&count, ptr);
+            if (errno == noErr && count == size * n)
+                return IO_NORMAL;
+            return IO_ERROR;
+        }
+        
+        if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+            return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
+        
+        if (fwrite(ptr, size, n, stream->fptr) != n)
+            return IO_ERROR;
+        return IO_NORMAL;
+#endif /* MCS_write */
+        uint32_t count;
+        if (m_serialOut != 0)
+        {//write to serial port
+            uint4 count = p_size * r_count;
+            errno = FSWrite(m_serialOut, (long*)&count, p_ptr);
+            if (errno == noErr && count == p_size * r_count)
+                return IO_NORMAL;
+            return IO_ERROR;
+        }
+        count = p_size * r_count;
+        if ((r_count = fwrite(p_ptr, p_size, r_count, m_stream)) != count)
+            return IO_ERROR;
+        return IO_NORMAL;
 	}
 	
 	virtual bool Seek(int64_t offset, int p_dir)
@@ -551,6 +1545,7 @@ public:
 			return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_seek_end_dsk_mac */
+        // TODO Add MCSystemFileHandle::SetStream(char *newptr) ?
 		return fseeko(m_stream, offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR)) == 0;
 	}
 	
@@ -655,6 +1650,16 @@ public:
 	{
 		return m_stream;
 	}
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        
+    }
+    
+	short m_serialIn;  //serial port Input reference number
+	short m_serialOut; //serial port output reference number
+	MCMacSysHandle m_hserialInputBuff; //handle to serial input buffer
+	char *m_ioptr;
 	
 private:
 	FILE *m_stream;
@@ -849,9 +1854,9 @@ struct MCMacDesktop: public MCSystemInterface
             setlinebuf(stderr);
         }
 #endif /* MCS_init_dsk_mac */
-        IO_stdin = new IO_header(MCStdioFileHandle::OpenFd(stdin, IO_READ_MODE), 0);
-        IO_stdout = new IO_header(MCStdioFileHandle::OpenFd(stdout, IO_WRITE_MODE), 0);
-        IO_stderr = new IO_header(MCStdioFileHandle::OpenFd(stderr, IO_WRITE_MODE), 0);
+        IO_stdin = new IO_header(MCStdioFileHandle::OpenFd(0, kMCSystemFileModeRead), 0);
+        IO_stdout = new IO_header(MCStdioFileHandle::OpenFd(1, kMCSystemFileModeWrite), 0);
+        IO_stderr = new IO_header(MCStdioFileHandle::OpenFd(2, kMCSystemFileModeWrite), 0);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -1079,11 +2084,11 @@ struct MCMacDesktop: public MCSystemInterface
         
     }
 	
-	virtual void SetEnv(MCStringRef name, MCStringRef value)
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
     {
         
     }
-	virtual void GetEnv(MCStringRef name, MCStringRef& value)
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
     {
         
     }
@@ -1127,9 +2132,9 @@ struct MCMacDesktop: public MCSystemInterface
     }
     
     /* LEGACY */
-    virtual bool DeleteFile(const char *path)
+    virtual bool DeleteFile(const char *p_path)
     {
-        char *newpath = path2utf(MCS_resolvepath(path));
+        char *newpath = path2utf(MCS_resolvepath(p_path));
         Boolean done = remove(newpath) == 0;
         delete newpath;
         return done;
@@ -2668,7 +3673,7 @@ struct MCMacDesktop: public MCSystemInterface
         if (MCStringGetLength(p_path) == 0)
         {
             MCS_getcurdir(r_resolved_path);
-            return;
+            return true;
         }
         
         MCAutoStringRef t_tilde_path;
@@ -2755,161 +3760,31 @@ struct MCMacDesktop: public MCSystemInterface
         
     }
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uin32_t offset)
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
     {
-#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
-	IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-		char *oldpath = strclone(path);
-		
-		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
-		char *t_resolved_path;
-		t_resolved_path = MCS_resolvepath(path);
-		if (t_resolved_path == NULL)
-			return NULL;
-		
-		char *newpath = path2utf(t_resolved_path);
-		FILE *fptr;
-
-		if (driver)
-		{
-			fptr = fopen(newpath,  mode );
-			if (fptr != NULL)
-			{
-				int val;
-				val = fcntl(fileno(fptr), F_GETFL, val);
-				val |= O_NONBLOCK |  O_NOCTTY;
-				fcntl(fileno(fptr), F_SETFL, val);
-				configureSerialPort((short)fileno(fptr));
-			}
-		}
-		else
-		{
-			fptr = fopen(newpath, IO_READ_MODE);
-			if (fptr == NULL)
-				fptr = fopen(oldpath, IO_READ_MODE);
-			Boolean created = True;
-			if (fptr != NULL)
-			{
-				created = False;
-				if (mode != IO_READ_MODE)
-				{
-					fclose(fptr);
-					fptr = NULL;
-				}
-			}
-			if (fptr == NULL)
-				fptr = fopen(newpath, mode);
-
-			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-				fptr = fopen(newpath, IO_CREATE_MODE);
-			if (fptr != NULL && created)
-				MCS_setfiletype(oldpath);
-		}
-
-		delete newpath;
-		delete oldpath;
-		if (fptr != NULL)
-		{
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-			if (offset > 0)
-				fseek(handle->fptr, offset, SEEK_SET);
-
-			if (strequal(mode, IO_APPEND_MODE))
-				handle->flags |= IO_SEEKED;
-		}
-
-	return handle;
-#endif /* MCS_open_dsk_mac */
-        IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
+        MCStdioFileHandle *t_handle;
+        t_handle = MCStdioFileHandle::OpenFile(p_path, p_mode);
         
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
+        if (p_offset > 0)
+            t_handle -> Seek(p_offset, SEEK_SET);
         
-		FILE *fptr;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-        Boolean created = True;
-        
-        if (fptr != NULL)
-        {
-            created = False;
-            if (p_mode == kMCSystemFileModeRead)
-            {
-                fclose(fptr);
-                fptr = NULL;
-            }
-        }
-        if (fptr == NULL)
-        {
-            switch(p_mode)
-            {
-                case kMCSystemFileModeRead:
-                    fptr = fopen(*t_path_utf, IO_READ_MODE);
-                    break;
-                case kMCSystemFileModeUpdate:
-                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
-                    break;
-                case kMCSystemFileModeAppend:
-                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
-                    break;
-                case kMCSystemFileModeWrite:
-                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
-                    break;
-                default:
-                    fptr = NULL;
-            }
-        }
-        
-        if (fptr == NULL && p_mode == kMCSystemFileModeRead)
-            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
-        
-        if (fptr != NULL && created)
-            MCS_setfiletype(p_path);
-        
-		if (fptr != NULL)
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-        
-        if (offset > 0)
-            fseek(handle->fptr, offset, SEEK_SET);
-        
-        return handle;
+        return new IO_header(t_handle, 0);
     }
     
-	virtual IO_handle OpenStdFile(uint32_t fd, const char *mode)
+	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
     {
         return new IO_header(MCStdioFileHandle::OpenFd(fd, mode), 0);
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, MCStringRef p_control_string)
+	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
     {
-        IO_handle handle = NULL;
+        MCStdioFileHandle *t_handle;
+        t_handle = MCStdioFileHandle::OpenDevice(p_path, p_control_string);
         
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
+        if (p_offset > 0)
+            t_handle -> Seek(p_offset, SEEK_SET);
         
-		FILE *fptr;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-        if (fptr != NULL)
-        {
-            int val;
-            val = fcntl(fileno(fptr), F_GETFL, val);
-            val |= O_NONBLOCK |  O_NOCTTY;
-            fcntl(fileno(fptr), F_SETFL, val);
-            configureSerialPort((short)fileno(fptr));
-            
-            handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-        }
-        
-        return handle;
+        return new IO_header(t_handle, 0);
     }
 	
 	virtual void *LoadModule(MCStringRef p_path)
@@ -2960,6 +3835,41 @@ struct MCMacDesktop: public MCSystemInterface
     {
         
     }
+    
+    virtual void CheckProcesses()
+    {
+#ifdef /* MCS_checkprocesses_dsk_mac */ LEGACY_SYSTEM
+	uint2 i;
+	int wstat;
+	for (i = 0 ; i < MCnprocesses ; i++)
+		if (MCprocesses[i].pid != 0 && MCprocesses[i].pid != -1
+		        && waitpid(MCprocesses[i].pid, &wstat, WNOHANG) > 0)
+		{
+			if (MCprocesses[i].ihandle != NULL)
+				clearerr(MCprocesses[i].ihandle->fptr);
+			MCprocesses[i].pid = 0;
+			MCprocesses[i].retcode = WEXITSTATUS(wstat);
+		}
+
+
+#endif /* MCS_checkprocesses_dsk_mac */
+        uint2 i;
+        int wstat;
+        for (i = 0 ; i < MCnprocesses ; i++)
+            if (MCprocesses[i].pid != 0 && MCprocesses[i].pid != -1
+		        && waitpid(MCprocesses[i].pid, &wstat, WNOHANG) > 0)
+            {
+                if (MCprocesses[i].ihandle != NULL)
+                {
+                    // TODO Can the handler be a MCMemoryFileHandle?
+                    MCStdioFileHandle *t_handle;
+                    t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle->handle);
+                    clearerr(t_handle -> GetStream());
+                }
+                MCprocesses[i].pid = 0;
+                MCprocesses[i].retcode = WEXITSTATUS(wstat);
+            }
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2970,7 +3880,1229 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 }
 
 
+// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
+//   to access it.
+real8 curtime;
+
+/*****************************************************************************
+ *  Apple events handler	 			 	             *
+ *****************************************************************************/
+
+// MW-2006-08-05: Vetted for Endian issues
+void MCS_send(MCStringRef message, MCStringRef program, MCStringRef eventtype, Boolean reply)
+{
+    //send "" to program "" with/without reply
+	if (!MCSecureModeCheckAppleScript())
+		return;
+    
+    
+	AEAddressDesc receiver;
+	errno = getDescFromAddress(program, &receiver);
+	if (errno != noErr)
+	{
+		AEDisposeDesc(&receiver);
+		MCresult->sets("no such program");
+		return;
+	}
+	AppleEvent ae;
+	if (eventtype == NULL)
+		MCStringCreateWithCString("miscdosc", eventtype);
+    
+	AEEventClass ac;
+	AEEventID aid;
+	
+	ac = FourCharCodeFromString(MCStringGetCString(eventtype));
+	aid = FourCharCodeFromString(&MCStringGetCString(eventtype)[4]);
+	
+	AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+	                   kAnyTransactionID, &ae);
+	AEDisposeDesc(&receiver); //dispose of the receiver description record
+	// if the ae message we are sending is 'odoc', 'pdoc' then
+	// create a document descriptor of type fypeFSS for the document
+	
+	Boolean docmessage = False; //Is this message contains a document descriptor?
+	AEDescList files_list, file_desc;
+	AliasHandle the_alias;
+    
+	if (aid == 'odoc' || aid == 'pdoc')
+	{
+		FSSpec fspec;
+		FSRef t_fsref;
+		
+		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+		{
+			AECreateList(NULL, 0, false, &files_list);
+			NewAlias(NULL, &fspec, &the_alias);
+			HLock((Handle)the_alias);
+			AECreateDesc(typeAlias, (Ptr)(*the_alias),
+			             GetHandleSize((Handle)the_alias), &file_desc);
+			HUnlock((Handle) the_alias);
+			AEPutDesc(&files_list, 0, &file_desc);
+			AEPutParamDesc(&ae, keyDirectObject, &files_list);
+			docmessage = True;
+		}
+	}
+	//non document related massge, assume it's typeChar message
+	if (!docmessage && MCStringGetLength(message))
+		AEPutParamPtr(&ae, keyDirectObject, typeChar,
+		              MCStringGetCString(message), MCStringGetLength(message));
+    
+	//Send the Apple event
+	AppleEvent answer;
+	if (reply == True)
+		errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //no reply
+	else
+		errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+	if (docmessage)
+	{
+		DisposeHandle((Handle)the_alias);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&files_list);
+		AEDisposeDesc(&file_desc);
+	}
+	AEDisposeDesc(&ae);
+	if (errno != noErr)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+		return;
+	}
+	if (reply == True)
+	{ /* wait for a reply in a loop.  The reply comes in
+       from regular event handling loop
+       and is handled by an Apple event handler*/
+		real8 endtime = curtime + AETIMEOUT;
+		while (True)
+		{
+			if (MCscreen->wait(READ_INTERVAL, False, True))
+			{
+				MCresult->sets("user interrupt");
+				return;
+			}
+			if (curtime > endtime)
+			{
+				MCresult->sets("timeout");
+				return;
+			}
+			if (AEanswerErr != NULL || AEanswerData != NULL)
+				break;
+		}
+		if (AEanswerErr != NULL)
+		{
+			MCresult->copysvalue(AEanswerErr);
+			delete AEanswerErr;
+			AEanswerErr = NULL;
+		}
+		else
+		{
+			MCresult->copysvalue(AEanswerData);
+			delete AEanswerData;
+			AEanswerData = NULL;
+		}
+		AEDisposeDesc(&answer);
+	}
+	else
+		MCresult->clear(False);
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+void MCS_reply(const MCString &message, const char *keyword, Boolean error)
+{
+	delete replymessage;
+	replylength = message.getlength();
+	replymessage = new char[replylength];
+	memcpy(replymessage, message.getstring(), replylength);
+    
+	//at any one time only either keyword or error is set
+	if (keyword != NULL)
+	{
+		replykeyword = FourCharCodeFromString(keyword);
+	}
+	else
+	{
+		if (error)
+			replykeyword = 'errs';
+		else
+			replykeyword = '----';
+	}
+}
+
+static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
+{
+	AEDescList docList; //get a list of alias records for the documents
+	long count;
+	if (AEGetParamDesc(aePtr, keyDirectObject,
+					   typeAEList, &docList) == noErr
+		&& AECountItems(&docList, &count) == noErr && count > 0)
+	{
+		AEKeyword rKeyword; //returned keyword
+		DescType rType;    //returned type
+		
+		FSRef t_doc_fsref;
+		
+		Size rSize;      //returned size, atual size of the docName
+		long item;
+		// get a FSSpec record, starts from count==1
+		for (item = 1; item <= count; item++)
+		{
+			if (AEGetNthPtr(&docList, item, typeFSRef, &rKeyword, &rType,
+							&t_doc_fsref, sizeof(FSRef), &rSize) != noErr)
+			{
+				AEDisposeDesc(&docList);
+				return false;
+			}
+			char *fullPathName = MCS_fsref_to_path(t_doc_fsref);
+			uint2 newlength = strlen(fullPathName) + 1;
+			MCU_realloc(&string, length, length + newlength, 1);
+			if (length)
+				string[length - 1] = '\n';
+			memcpy(&string[length], fullPathName, newlength);
+			length += newlength;
+			delete fullPathName;
+		}
+		string[length - 1] = '\0';
+		AEDisposeDesc(&docList);
+	}
+	return true;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+char *MCS_request_ae(const MCString &message, uint2 ae)
+{
+	if (aePtr == NULL)
+		return strdup("No current Apple event"); //as specified in HyperTalk
+	errno = noErr;
+    
+	switch (ae)
+	{
+        case AE_CLASS:
+		{
+			char *aeclass;
+			if ((errno = getAEAttributes(aePtr, keyEventClassAttr, aeclass)) == noErr)
+				return aeclass;
+			break;
+		}
+        case AE_DATA:
+		{
+			if (message.getlength() == 0)
+			{ //no keyword, get event parameter(data)
+				DescType rType;
+				Size rSize;  //actual size returned
+				/*first let's find out the size of incoming event data */
+				
+				// On Snow Leopard check for a coercion to a file list first as otherwise
+				// we get a bad URL!
+				if (MCmajorosversion >= 0x1060)
+				{
+					char *string = nil;
+					uint4 length = 0;
+					if (fetch_ae_as_fsref_list(string, length))
+						return string;
+				}
+                
+				if ((errno = AEGetParamPtr(aePtr, keyDirectObject, typeChar,
+				                           &rType, NULL, 0, &rSize)) == noErr)
+				{
+					char *info = new char[rSize + 1]; //allocate enough buffer for data
+					AEGetParamPtr(aePtr, keyDirectObject, typeChar,
+					              &rType, info, rSize, &rSize); //retrive data now
+					info[rSize] = '\0';
+					return info;
+				}
+				else
+				{
+					char *string = nil;
+					uint4 length = 0;
+					if (fetch_ae_as_fsref_list(string, length))
+						return string;
+					return strdup("file list error");
+				}
+			}
+			else
+			{
+				AEKeyword key;
+				const char *keystring = message.getstring()
+                + message.getlength() - sizeof(AEKeyword);
+				key = FourCharCodeFromString(keystring);
+				char *info;
+                
+				if (key == keyAddressAttr || key == keyEventClassAttr
+                    || key == keyEventIDAttr || key == keyEventSourceAttr
+                    || key == keyInteractLevelAttr || key == keyMissedKeywordAttr
+                    || key == keyOptionalKeywordAttr || key == keyOriginalAddressAttr
+                    || key == keyReturnIDAttr || key == keyTimeoutAttr
+                    || key == keyTransactionIDAttr)
+				{
+					if ((errno = getAEAttributes(aePtr, key, info)) == noErr)
+						return info;
+				}
+				else
+				{
+					if ((errno = getAEParams(aePtr, key, info)) == noErr)
+						return info;
+				}
+			}
+		}
+            break;
+        case AE_ID:
+		{
+			char *aeid;
+			if ((errno = getAEAttributes(aePtr, keyEventIDAttr, aeid)) == noErr)
+				return aeid;
+			break;
+		}
+        case AE_RETURN_ID:
+		{
+			char *aerid;
+			if ((errno = getAEAttributes(aePtr, keyReturnIDAttr, aerid)) == noErr)
+				return aerid;
+			break;
+		}
+        case AE_SENDER:
+		{
+			AEAddressDesc senderDesc;
+			char *sender = new char[128];
+			
+			if ((errno = AEGetAttributeDesc(aePtr, keyOriginalAddressAttr,
+			                                typeWildCard, &senderDesc)) == noErr)
+			{
+				errno = getAddressFromDesc(senderDesc, sender);
+				AEDisposeDesc(&senderDesc);
+				return sender;
+			}
+			delete sender;
+			break;
+		}
+	}  /* end switch */
+	if (errno == errAECoercionFail) //data could not display as text
+		return strclone("unknown type");
+	return strclone("not found");
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+void MCS_request_program(MCStringRef message, MCStringRef program, MCStringRef& r_value)
+{
+	AEAddressDesc receiver;
+	errno = getDescFromAddress(program, &receiver);
+	if (errno != noErr)
+	{
+		AEDisposeDesc(&receiver);
+		MCresult->sets("no such program");
+		r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	AppleEvent ae;
+	errno = AECreateAppleEvent('misc', 'eval', &receiver,
+	                           kAutoGenerateReturnID, kAnyTransactionID, &ae);
+	AEDisposeDesc(&receiver); //dispose of the receiver description record
+	//add parameters to the Apple event
+	AEPutParamPtr(&ae, keyDirectObject, typeChar,
+	              MCStringGetCString(message), MCStringGetLength(message));
+	//Send the Apple event
+	AppleEvent answer;
+	errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+	               kAEDefaultTimeout, NULL, NULL); //no reply
+	AEDisposeDesc(&ae);
+	AEDisposeDesc(&answer);
+	if (errno != noErr)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+        
+        r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	real8 endtime = curtime + AETIMEOUT;
+	while (True)
+	{
+		if (MCscreen->wait(READ_INTERVAL, False, True))
+		{
+			MCresult->sets("user interrupt");
+            r_value = MCValueRetain(kMCEmptyString);
+            return;
+		}
+		if (curtime > endtime)
+		{
+			MCresult->sets("timeout");
+            r_value = MCValueRetain(kMCEmptyString);
+            return;
+		}
+		if (AEanswerErr != NULL || AEanswerData != NULL)
+			break;
+	}
+	if (AEanswerErr != NULL)
+	{
+		MCresult->copysvalue(AEanswerErr);
+		delete AEanswerErr;
+		AEanswerErr = NULL;
+        r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	else
+	{
+		MCresult->clear(False);
+		if (!MCStringCreateWithCString(AEanswerData, r_value)) // Set empty string if the allocation fails
+            r_value = MCValueRetain(kMCEmptyString);
+        
+		AEanswerData = NULL;
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+//**************************************************************************
+// * Utility functions used by this module only
+// **************************************************************************/
+
+static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
+{
+	/* return an address descriptor based on the target address passed in
+     * * There are 3 possible forms of target string: *
+     * 1. ZONE:MACHINE:APP NAME
+     * 2. MACHINE:APP NAME(sender & receiver are in the same zone but on different machine)
+     * 3. APP NAME
+     */
+	errno = noErr;
+	retDesc->dataHandle = NULL;  /* So caller can dispose always. */
+	char *ptr = strchr(MCStringGetCString(address), ':');
+    
+	if (ptr == NULL)
+	{ //address contains application name only. Form # 3
+		char *appname = new char[MCStringGetLength(address) +1];
+		strcpy(appname, MCStringGetCString(address));
+		c2pstr(appname);  //convert c string to pascal string
+		errno = getDesc(0, NULL, NULL, (unsigned char*)appname, retDesc);
+		delete appname;
+	}
+    
+	/* CARBON doesn't support the seding apple events between systmes. Therefore no
+	 need to do the complicated location/zone searching                       */
+    
+	return errno;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine,
+                     StringPtr app, AEDesc *retDesc)
+{
+    
+	/* Carbon doesn't support the seding apple events between different
+	 * machines, plus CARBON does not support PPC Toolbox routines,
+	 * Therefore no need to do the complicated location/zone
+	 * searching. Use Process Manager's routine to get target program's
+	 * process id for the address descriptor */
+	ProcessSerialNumber psn;
+	psn.highLongOfPSN = 0;
+	psn.lowLongOfPSN = kNoProcess; //start at the beginning to do the search
+	ProcessInfoRec pInfoRec;
+	Str32 pname;
+	/* need to specify values for the processInfoLength,processName, and
+	 * processAppSpec fields of the process information record to get
+	 * info returned in those fields. Since we only want the application
+	 * name info returned, we allocate a string of 32 length as buffer
+	 * to store the process name */
+	pInfoRec.processInfoLength = sizeof(ProcessInfoRec);
+	pInfoRec.processName = pname;
+	pInfoRec.processAppSpec = NULL;
+	Boolean processFound = False;
+    
+	while (GetNextProcess(&psn) == noErr)
+	{
+		if (GetProcessInformation(&psn, &pInfoRec) == noErr)
+			if (EqualString(pInfoRec.processName, app, False, True))
+			{
+				processFound = True;
+				break;
+			}
+	}
+	if (processFound)
+		return AECreateDesc(typeProcessSerialNumber, (Ptr)&pInfoRec.processNumber,
+		                    sizeof(ProcessSerialNumber), retDesc);
+	else
+		return procNotFound; //can't find the program/process to create a descriptor
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
+{
+	DescType rType;
+	Size rSize;
+	DescType dt;
+	Size s;
+	if ((errno = AESizeOfAttribute(ae, key, &dt, &s)) == noErr)
+	{
+		switch (dt)
+		{
+            case typeBoolean:
+			{
+				Boolean b;
+				AEGetAttributePtr(ae, key, dt, &rType, &b, s, &rSize);
+				result = strclone(b ? MCtruestring : MCfalsestring);
+			}
+                break;
+            case typeChar:
+                result = new char[s + 1];
+                AEGetAttributePtr(ae, key, dt, &rType, result, s, &rSize);
+                result[s] = '\0';
+                break;
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetAttributePtr(ae, key, dt, &rType, &t_type, s, &rSize);
+				result = FourCharCodeToString(t_type);
+			}
+                break;
+            case typeShortInteger:
+			{
+				int2 i;
+				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[I2L];
+				sprintf(result, "%d", i);
+				break;
+			}
+            case typeLongInteger:
+			{
+				int4 i;
+				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[I4L];
+				sprintf(result, "%d", i);
+				break;
+			}
+            case typeShortFloat:
+			{
+				real4 f;
+				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+				result = new char[R4L];
+				sprintf(result, "%12.12g", f);
+				break;
+			}
+            case typeLongFloat:
+			{
+				real8 f;
+				AEGetAttributePtr(ae, key, dt, &rType, &f, s, &rSize);
+				result = new char[R8L];
+				sprintf(result, "%12.12g", f);
+				break;
+			}
+            case typeMagnitude:
+			{
+				uint4 i;
+				AEGetAttributePtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[U4L];
+				sprintf(result, "%u", i);
+				break;
+			}
+            case typeNull:
+                result = MCU_empty();
+                break;
+            case typeFSS:
+			{
+				FSSpec fs;
+				errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
+				result = MCS_FSSpec2path(&fs);
+			}
+                break;
+            case typeFSRef:
+			{
+				FSRef t_fs_ref;
+				errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+				result = MCS_fsref_to_path(t_fs_ref);
+			}
+                break;
+            default:
+                result = new char[18];
+                sprintf(result, "unknown type %4.4s", (char *)&dt);
+                break;
+		}
+	}
+	return errno;
+}
+
+// MW-2006-08-05: Vetted for Endian issues
+static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result)
+{
+	DescType rType;
+	Size rSize;
+	DescType dt;
+	Size s;
+	if ((errno = AESizeOfParam(ae, key, &dt, &s)) == noErr)
+	{
+		switch (dt)
+		{
+            case typeBoolean:
+			{
+				Boolean b;
+				AEGetParamPtr(ae, key, dt, &rType, &b, s, &rSize);
+				result = strclone(b ? MCtruestring : MCfalsestring);
+			}
+                break;
+            case typeChar:
+                result = new char[s + 1];
+                AEGetParamPtr(ae, key, dt, &rType, result, s, &rSize);
+                result[s] = '\0';
+                break;
+            case typeType:
+            {
+                FourCharCode t_type;
+                AEGetParamPtr(ae, key, dt, &rType, &t_type, s, &rSize);
+				result = FourCharCodeToString(t_type);
+			}
+                break;
+            case typeShortInteger:
+			{
+				int2 i;
+				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[I2L];
+				sprintf(result, "%d", i);
+				break;
+			}
+            case typeLongInteger:
+			{
+				int4 i;
+				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[I4L];
+				sprintf(result, "%d", i);
+				break;
+			}
+            case typeShortFloat:
+			{
+				real4 f;
+				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+				result = new char[R4L];
+				sprintf(result, "%12.12g", f);
+				break;
+			}
+            case typeLongFloat:
+			{
+				real8 f;
+				AEGetParamPtr(ae, key, dt, &rType, &f, s, &rSize);
+				result = new char[R8L];
+				sprintf(result, "%12.12g", f);
+				break;
+			}
+            case typeMagnitude:
+			{
+				uint4 i;
+				AEGetParamPtr(ae, key, dt, &rType, &i, s, &rSize);
+				result = new char[U4L];
+				sprintf(result, "%u", i);
+				break;
+			}
+            case typeNull:
+                result = MCU_empty();
+                break;
+            case typeFSS:
+			{
+				FSSpec fs;
+				errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
+				result = MCS_FSSpec2path(&fs);
+			}
+                break;
+            case typeFSRef:
+			{
+				FSRef t_fs_ref;
+				errno = AEGetParamPtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
+				result = MCS_fsref_to_path(t_fs_ref);
+			}
+                break;
+            default:
+                result = new char[18];
+                sprintf(result, "unknown type %4.4s", (char *)&dt);
+                break;
+		}
+	}
+	return errno;
+}
+
+static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
+{/* This function returns the zone, machine, and application name for the
+  indicated target descriptor.  */
+    
+    
+	address[0] = '\0';
+	return noErr;
+    
+}
+
+bool MCS_alternatelanguages(MCListRef& r_list)
+{
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+	
+	getosacomponents();
+	for (uindex_t i = 0; i < osancomponents; i++)
+		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
+			return false;
+	
+	return MCListCopy(*t_list, r_list);
+}
+
+static OSErr osacompile(const MCString &s, ComponentInstance compinstance,
+                        OSAID &scriptid)
+{
+	AEDesc aedscript;
+	char *buffer = s.clone();
+	char *cptr = buffer;
+	while (*cptr)
+	{
+		if (*cptr == '\n')
+			*cptr = '\r';
+		cptr++;
+	}
+	scriptid = kOSANullScript;
+	AECreateDesc(typeChar, buffer, s.getlength(), &aedscript);
+	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
+	AEDisposeDesc(&aedscript);
+	delete buffer;
+	return err;
+}
+
+static OSErr osaexecute(MCString &s, ComponentInstance compinstance,
+                        OSAID scriptid)
+{
+	OSAID scriptresult;
+	OSErr err;
+	err = OSAExecute(compinstance, scriptid, kOSANullScript,
+	                 kOSAModeNull, &scriptresult);
+	if (err != noErr)
+		return err;
+	AEDesc aedresult;
+	OSADisplay(compinstance, scriptresult, typeChar, kOSAModeNull, &aedresult);
+	uint4 tsize = AEGetDescDataSize(&aedresult);
+	char *buffer = new char[tsize];
+	err = AEGetDescData(&aedresult,buffer,tsize);
+	s.set(buffer,tsize);
+	AEDisposeDesc(&aedresult);
+	OSADispose(compinstance, scriptresult);
+	return err;
+}
+
+static void getosacomponents()
+{
+	if (osacomponents != NULL)
+		return;
+	ComponentDescription compdesc;
+	Component tcomponent = 0L;
+	Handle compname = NewHandle(0);
+	compdesc.componentType = kOSAComponentType; //scripting component
+	compdesc.componentSubType = 0L;//any
+	compdesc.componentManufacturer = 0L;
+	compdesc.componentFlags = kOSASupportsCompiling; // compile and execute
+	compdesc.componentFlagsMask = kOSASupportsCompiling;
+	uint2 compnumber = CountComponents(&compdesc);
+	if (compnumber - 1) //don't include the generic script comp
+		osacomponents = new OSAcomponent[compnumber - 1];
+	while ((tcomponent = FindNextComponent(tcomponent,&compdesc)) != NULL)
+	{
+		ComponentDescription founddesc;
+		OSErr err = GetComponentInfo(tcomponent, &founddesc, compname, NULL, NULL);
+		if (founddesc.componentSubType == kOSAGenericScriptingComponentSubtype)
+			continue;
+		if (err != noErr)
+			break;
+		//self check if return error
+		HLock(compname);
+		p2cstr((unsigned char *)*compname);
+		MCString s = *compname;
+		MCU_lower(osacomponents[osancomponents].compname, s);
+		osacomponents[osancomponents].compname[s.getlength()] = '\0';
+		osacomponents[osancomponents].compsubtype = founddesc.componentSubType;
+		osacomponents[osancomponents].compinstance = NULL;
+		HUnlock(compname);
+		osancomponents++;
+	}
+	DisposeHandle(compname);
+}
+
+void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
+{
+	getosacomponents();
+	OSAcomponent *posacomp = NULL;
+	uint2 i;
+	uint4 l = strlen(MCStringGetCString(p_language));
+	for (i = 0; i < osancomponents; i++)
+	{
+		if (l == strlen(osacomponents[i].compname)
+            && !MCU_strncasecmp(osacomponents[i].compname, MCStringGetCString(p_language), l))
+		{
+			posacomp = &osacomponents[i];
+			break;
+		}
+	}
+	if (posacomp == NULL)
+	{
+		MCresult->sets("alternate language not found");
+		return;
+	}
+	if (posacomp->compinstance == NULL)
+		posacomp->compinstance = OpenDefaultComponent(kOSAComponentType,
+                                                      posacomp->compsubtype);
+	//self check if returns error
+	OSAID scriptid;
+	if (osacompile(MCStringGetOldString(p_script), posacomp->compinstance, scriptid) != noErr)
+	{
+		MCresult->sets("compiler error");
+		return;
+	}
+	MCString rvalue;
+	OSErr err;
+	err = osaexecute(rvalue, posacomp->compinstance, scriptid);
+	if (err == noErr)
+	{
+		MCresult->copysvalue(rvalue);
+		delete rvalue.getstring();
+	}
+	else if (err == errOSAScriptError)
+	{
+        /*		MCExecPoint ep(nil, nil, nil);
+         
+         AEDesc err_str;
+         OSAScriptError(posacomp -> compinstance, kOSAErrorMessage, typeChar, &err_str);
+         
+         ep . setstring("execution error,%s",);
+         AEDisposeDesc(&err_str);*/
+		
+		MCresult->sets("execution error");
+	}
+	else
+		MCresult->sets("execution error");
+	
+	OSADispose(posacomp->compinstance, scriptid);
+}
+
+struct  LangID2Charset
+{
+	Lang_charset charset;
+	ScriptCode scriptcode;
+};
+
+static LangID2Charset scriptcodetocharsets[] = {
+    { LCH_ENGLISH, smRoman },
+    { LCH_ROMAN, smRoman },
+    { LCH_JAPANESE, smJapanese },
+    { LCH_CHINESE, smTradChinese },
+    { LCH_RUSSIAN, smCyrillic },
+    { LCH_TURKISH, smCyrillic },
+    { LCH_BULGARIAN, smCyrillic },
+    { LCH_UKRAINIAN, smCyrillic },
+    { LCH_ARABIC, smArabic },
+    { LCH_HEBREW, smHebrew },
+    { LCH_GREEK, smGreek },
+    { LCH_KOREAN, smKorean },
+    { LCH_POLISH, smCentralEuroRoman },
+    { LCH_VIETNAMESE, smVietnamese },
+    { LCH_LITHUANIAN, smCentralEuroRoman },
+    { LCH_THAI, smThai },
+    { LCH_SIMPLE_CHINESE, smSimpChinese },
+    { LCH_UNICODE, smUnicodeScript }
+};
+
+uint1 MCS_langidtocharset(uint2 scode)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(scriptcodetocharsets); i++)
+		if (scriptcodetocharsets[i].scriptcode == scode)
+			return scriptcodetocharsets[i].charset;
+	return 0;
+}
+
+uint2 MCS_charsettolangid(uint1 charset)
+{
+	uint2 i;
+	for (i = 0; i < ELEMENTS(scriptcodetocharsets); i++)
+		if (scriptcodetocharsets[i].charset == charset)
+			return scriptcodetocharsets[i].scriptcode;
+	return 0;
+}
+
+void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength, uint4 &destlen,
+                            uint1 charset)
+{
+	ScriptCode fscript = MCS_charsettolangid(charset);
+	//we cache unicode convertors for speed
+	if (!destbufferlength)
+	{
+		if (charset)
+			destlen = len << 1;
+		else
+			destlen = len >> 1;
+		return;
+	}
+	if (unicodeconvertors[fscript] == NULL)
+	{
+		TextEncoding scriptEncoding;
+		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+		                                kTextRegionDontCare, NULL,
+		                                &scriptEncoding);
+		CreateUnicodeToTextInfoByEncoding(scriptEncoding,
+		                                  &unicodeconvertors[fscript]);
+	}
+	ByteCount processedbytes, outlength;
+	destlen = 0;
+	
+	// MW-2008-06-12: [[ Bug 6313 ]] Loop through all input characters, replacing unknown
+	//   ones with ? - this mimics Windows behaviour.
+	// MW-2008-06-12: Make sure we loop until we have no pairs of bytes left otherwise
+	//   we go into an infinite loop when doing things like uniDecode("abc")
+	while(len > 1)
+	{
+		ConvertFromUnicodeToText(unicodeconvertors[fscript], len, (UniChar *)s,
+								 kUnicodeLooseMappingsMask
+								 | kUnicodeStringUnterminatedBit
+								 | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
+								 destbufferlength, &processedbytes,
+								 &outlength, (LogicalAddress)d);
+		if (processedbytes == 0)
+		{
+			*d = '?';
+			processedbytes = 2;
+			outlength = 1;
+		}
+        
+		len -= processedbytes;
+		destlen += outlength;
+		s += processedbytes;
+		d += outlength;
+	}
+}
+
+void MCS_multibytetounicode(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength,
+                            uint4 &destlen, uint1 charset)
+{
+	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
+	static int oldcharset = -1;
+	if (!destbufferlength)
+	{
+		destlen = len << 1;
+		return;
+	}
+	if (charset != oldcharset)
+	{
+		if (texttounicodeconvertor)
+			DisposeTextToUnicodeInfo(texttounicodeconvertor);
+		texttounicodeconvertor = NULL;
+		ScriptCode fscript = MCS_charsettolangid(charset);
+		TextEncoding scriptEncoding;
+		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+		                                kTextRegionDontCare, NULL,
+		                                &scriptEncoding);
+		texttounicodeconvertor = &texttounicodeinfo;
+		CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
+	}
+	ByteCount processedbytes, outlength;
+	ConvertFromTextToUnicode(*texttounicodeconvertor, len, (LogicalAddress) s,
+	                         kUnicodeLooseMappingsMask
+	                         | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
+	                         destbufferlength, &processedbytes,
+	                         &outlength, (UniChar *)d);
+	destlen = outlength;
+	oldcharset = charset;
+}
+
+void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
+{
+	uint4 t_byte_length;
+	t_byte_length = x_utf16_length * sizeof(unsigned short);
+	MCS_multibytetounicode(p_native, p_native_length, (char *)p_utf16, t_byte_length, t_byte_length, LCH_ROMAN);
+	x_utf16_length = t_byte_length / sizeof(unsigned short);
+}
+
+void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
+{
+	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
+}
+
+Boolean MCS_isleadbyte(uint1 charset, char *s)
+{
+	if (!charset)
+		return False;
+	return CharacterByteType(s, 0, MCS_charsettolangid(charset)) == smFirstByte;
+}
+
+Boolean MCS_imeisunicode()
+{
+	OSErr err;
+	long version;
+	err = Gestalt(gestaltTSMgrVersion, &version);
+	//only enable if os 9.0 or greater and TSM > 1.5
+	if ((err == noErr) && (version >= gestaltTSMgr15))
+		if (Gestalt(gestaltSystemVersion, &version) == noErr)
+			return version >= 0x900;
+	return False;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
+
+static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, char**& r_argv)
+{
+	uint32_t argc;
+	char **argv;
+	argc = 0;
+	argv = nil;
+	if (doc == NULL)
+	{
+		char *sptr = name;
+		while (*sptr)
+		{
+			while (isspace(*sptr))
+				sptr++;
+			MCU_realloc((char **)&argv, argc, argc + 2, sizeof(char *));
+			if (*sptr == '"')
+			{
+				argv[argc++] = ++sptr;
+				while (*sptr && *sptr != '"')
+					sptr++;
+			}
+			else
+			{
+				argv[argc++] = sptr;
+				while (*sptr && !isspace(*sptr))
+					sptr++;
+			}
+			if (*sptr)
+				*sptr++ = '\0';
+		}
+	}
+	else
+	{
+		argv = new char *[3];
+		argv[0] = name;
+		argv[1] = doc;
+		argc = 2;
+	}
+	
+	argv[argc] = NULL;
+	
+	r_argc = argc;
+	r_argv = argv;
+	
+	return true;
+}
+
+static bool startprocess_write_uint32_to_fd(int fd, uint32_t value)
+{
+	value = MCSwapInt32HostToNetwork(value);
+	if (write(fd, &value, sizeof(uint32_t)) != sizeof(uint32_t))
+		return false;
+	return true;
+}
+
+static bool startprocess_write_cstring_to_fd(int fd, char *string)
+{
+	if (!startprocess_write_uint32_to_fd(fd, strlen(string) + 1))
+		return false;
+	if (write(fd, string, strlen(string) + 1) != strlen(string) + 1)
+		return false;
+	return true;
+}
+
+static bool startprocess_read_uint32_from_fd(int fd, uint32_t& r_value)
+{
+	uint32_t value;
+	if (read(fd, &value, sizeof(uint32_t)) != sizeof(uint32_t))
+		return false;
+	r_value = MCSwapInt32NetworkToHost(value);
+	return true;
+}
+
+static bool startprocess_read_cstring_from_fd(int fd, char*& r_cstring)
+{
+	uint32_t t_length;
+	if (!startprocess_read_uint32_from_fd(fd, t_length))
+		return false;
+	
+	char *t_string;
+	t_string = (char *)malloc(t_length);
+	if (read(fd, t_string, t_length) != t_length)
+	{
+		free(t_string);
+		return false;
+	}
+	
+	r_cstring = t_string;
+	
+	return true;
+}
+
+bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
+{
+	// Read the argument count
+	uint32_t t_arg_count;
+	startprocess_read_uint32_from_fd(fileno(stdin), t_arg_count);
+	
+	// Read the arguments
+	char **t_args;
+	t_args = (char **)malloc(sizeof(char *) * (t_arg_count + 1));
+	for(uint32_t i = 0; i < t_arg_count; i++)
+		startprocess_read_cstring_from_fd(fileno(stdin), t_args[i]);
+    
+	t_args[t_arg_count] = nil;
+	
+	// Now send back our PID to the parent.
+	startprocess_write_uint32_to_fd(fileno(stdout), getpid());
+	
+	// Make sure stderr is also sent to stdout
+	close(2);
+	dup(1);
+	
+	// And finally exec to the new process (this does not return if successful).
+	execvp(t_args[0], t_args);
+	
+	// If we get this far then an error has occured :o(
+	return false;
+}
+
+void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode)
+{
+	LaunchParamBlockRec launchParms;
+	launchParms.launchBlockID = extendedBlock;
+	launchParms.launchEPBLength = extendedBlockLen;
+	launchParms.launchFileFlags = 0;
+	launchParms.launchControlFlags = launchContinue + launchNoFileFlags;
+	launchParms.launchAppParameters = NULL;
+	AEDesc pd, target;
+	AEDescList files_list, file_desc;
+	AliasHandle the_alias;
+	AppleEvent ae;
+	
+	FSRef t_app_fsref;
+	FSSpec t_app_fsspec;
+	errno = MCS_pathtoref(MCNameGetString(name), t_app_fsref);
+	errno = MCS_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
+	
+	uint2 i;
+    
+	if (mode == OM_NEITHER)
+	{
+		if (errno != noErr)
+		{
+			MCresult->sets("no such program");
+			return;
+		}
+        
+		FSRef t_doc_fsref;
+		
+		LSLaunchFSRefSpec inLaunchSpec;
+		FSRef launchedapp;
+		inLaunchSpec.numDocs = 0;
+		inLaunchSpec.itemRefs = NULL;
+		if (MCStringGetLength(docname))
+		{
+			if (MCS_pathtoref(docname, t_doc_fsref) != noErr)
+			{
+				MCresult->sets("no such document");
+				return;
+			}
+			inLaunchSpec.numDocs = 1;
+			inLaunchSpec.itemRefs = &t_doc_fsref;
+		}
+		inLaunchSpec.appRef = &t_app_fsref;
+		inLaunchSpec.passThruParams = NULL;
+		inLaunchSpec.launchFlags = kLSLaunchDefaults;
+		inLaunchSpec.asyncRefCon = NULL;
+		errno = LSOpenFromRefSpec(&inLaunchSpec, &launchedapp);
+		return;
+	}
+    
+	errno = connectionInvalid;
+	if (MCStringGetLength(docname))
+	{
+		for (i = 0 ; i < MCnprocesses ; i++)
+			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCCompareExact))
+				break;
+		if (i == MCnprocesses)
+		{
+			FInfo fndrInfo;
+			if ((errno = FSpGetFInfo(&t_app_fsspec, &fndrInfo)) != noErr)
+			{
+				MCresult->sets("no such program");
+				return;
+			}
+			OSType creator = fndrInfo.fdCreator;
+			AECreateDesc(typeApplSignature, (Ptr)&creator, sizeof(OSType), &target);
+		}
+		else
+			AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
+			             sizeof(ProcessSerialNumber), &target);
+		AECreateAppleEvent('aevt', 'odoc', &target, kAutoGenerateReturnID,
+		                   kAnyTransactionID, &ae);
+		FSSpec fspec;
+		FSRef t_tmp_fsref;
+		if (MCS_pathtoref(docname, t_tmp_fsref) == noErr && MCS_fsref_to_fsspec(&t_tmp_fsref, &fspec) == noErr)
+		{
+			AECreateList(NULL, 0, false, &files_list);
+			NewAlias(NULL, &fspec, &the_alias);
+			HLock((Handle)the_alias);
+			AECreateDesc(typeAlias, (Ptr)(*the_alias),
+			             GetHandleSize((Handle)the_alias), &file_desc);
+			HUnlock((Handle)the_alias);
+			AEPutDesc(&files_list, 0, &file_desc);
+			AEPutParamDesc(&ae, keyDirectObject, &files_list);
+		}
+		AppleEvent the_reply;
+		AECreateDesc(typeNull, NULL, 0, &the_reply);
+		errno = AESend(&ae, &the_reply, kAENoReply,
+		               kAENormalPriority, kNoTimeOut, NULL, NULL);
+		AEDisposeDesc(&the_reply);
+		AECoerceDesc(&ae, typeAppParameters, &pd);
+		launchParms.launchAppParameters = (AppParametersPtr)*(Handle)pd.dataHandle;
+		HLock((Handle)pd.dataHandle);
+        
+	}
+	
+	if (errno != noErr)
+	{
+		launchParms.launchAppSpec = &t_app_fsspec;
+		errno = LaunchApplication(&launchParms);
+		if (errno != noErr)
+		{
+			char buffer[7 + I2L];
+			sprintf(buffer, "error %d", errno);
+			MCresult->copysvalue(buffer);
+		}
+		else
+		{
+			MCresult->clear(False);
+			for (i = 0 ; i < MCnprocesses ; i++)
+			{
+				Boolean result;
+				SameProcess((ProcessSerialNumber *)&MCprocesses[i].sn, &launchParms.launchProcessSN, &result);
+				if (result)
+					break;
+			}
+			if (i == MCnprocesses)
+			{
+				MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
+				            sizeof(Streamnode));
+				MCprocesses[MCnprocesses].name = name;
+				MCprocesses[MCnprocesses].mode = OM_NEITHER;
+				MCprocesses[MCnprocesses].ihandle = NULL;
+				MCprocesses[MCnprocesses].ohandle = NULL;
+				MCprocesses[MCnprocesses].pid = ++curpid;
+				memcpy(&MCprocesses[MCnprocesses++].sn, &launchParms.launchProcessSN, sizeof(MCMacProcessSerialNumber));
+			}
+		}
+	}
+	if (launchParms.launchAppParameters != NULL)
+	{
+		HUnlock((Handle)pd.dataHandle);
+		AEDisposeDesc(&target);
+		AEDisposeDesc(&pd);
+		DisposeHandle((Handle)the_alias);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&files_list);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&ae);
+	}
+}
 
 
 void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
@@ -3082,13 +5214,13 @@ void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Bool
 				close(toparent[1]);
 				MCS_nodelay(toparent[0]);
 				// Store the in handle for the "process".
-				MCprocesses[index].ihandle = MCS_dopen(toparent[0], IO_READ_MODE);
+				MCprocesses[index].ihandle = MCsystem -> OpenStdFile(toparent[0], kMCSystemFileModeRead);
 			}
 			if (writing)
 			{
 				close(tochild[0]);
 				// Store the out handle for the "process".
-				MCprocesses[index].ohandle = MCS_dopen(tochild[1], IO_WRITE_MODE);
+				MCprocesses[index].ohandle = MCsystem -> OpenStdFile(tochild[1], kMCSystemFileModeWrite);
 			}
 		}
 	}
@@ -3164,10 +5296,10 @@ void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Bool
 				int t_fd;
 				t_fd = dup(fileno(t_stream));
 				MCS_nodelay(t_fd);
-				MCprocesses[index].ihandle = MCS_dopen(t_fd, IO_READ_MODE);
+				MCprocesses[index].ihandle = MCsystem -> OpenStdFile(t_fd, kMCSystemFileModeRead);
 			}
 			if (writing)
-				MCprocesses[index].ohandle = MCS_dopen(dup(fileno(t_stream)), IO_WRITE_MODE);
+				MCprocesses[index].ohandle = MCsystem -> OpenStdFile(dup(fileno(t_stream)), kMCSystemFileModeWrite);
 			
 			noerror = True;
 		}

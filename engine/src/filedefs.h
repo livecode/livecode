@@ -111,6 +111,7 @@ public:
 	{
 		return -1;
 	}
+#if 0
 #elif defined(_MAC_DESKTOP)
 	FILE *fptr;
 	short serialIn;  //serial port Input reference number
@@ -127,6 +128,20 @@ public:
 		hserialInputBuff = serialbuf;
 		ioptr = buffer = b;
 		len = l;
+		flags = iflags;
+	}
+	int getfd()
+	{
+		return -1;
+	}
+#endif
+#elif defined(_MAC_DESKTOP)
+    MCSystemFileHandle *handle;
+	char *buffer;   //buffer for read data
+	uint4 len;      //file length
+	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
+	{
+        handle = p_handle;
 		flags = iflags;
 	}
 	int getfd()

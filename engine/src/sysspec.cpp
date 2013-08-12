@@ -586,12 +586,12 @@ public:
 		delete this;
 	}
 	
-	bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
 	{
 		r_read = MCU_min(p_length, m_length - m_pointer);
 		memcpy(p_buffer, m_buffer + m_pointer, r_read);
 		m_pointer += r_read;
-		return true;
+		return IO_NORMAL;
 	}
 	
 	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
@@ -706,10 +706,29 @@ IO_handle MCS_fakeopenwrite(void)
 {
 	MCMemoryFileHandle *t_handle;
 	t_handle = new MCMemoryFileHandle();
-	return new IO_header(t_handle);
+	return new IO_header(t_handle, IO_FAKE);
 }
 
-IO_stat MCS_fakeclosewrite(IO_handle& p_stream, char*& r_buffer, uint4& r_length)
+//IO_stat MCS_fakeclosewrite(IO_handle& p_stream, char*& r_buffer, uint4& r_length)
+//{
+//	if ((p_stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
+//	{
+//		r_buffer = NULL;
+//		r_length = 0;
+//		MCS_close(p_stream);
+//		return IO_ERROR;
+//	}
+//	
+//	MCMemoryFileHandle *t_handle;
+//	t_handle = static_cast<MCMemoryFileHandle *>(p_stream -> handle);
+//	t_handle -> TakeBuffer(r_buffer, r_length);
+//	
+//	MCS_close(p_stream);
+//	
+//	return IO_NORMAL;
+//}
+
+IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length)
 {
 	if ((p_stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
 	{
@@ -718,13 +737,16 @@ IO_stat MCS_fakeclosewrite(IO_handle& p_stream, char*& r_buffer, uint4& r_length
 		MCS_close(p_stream);
 		return IO_ERROR;
 	}
-	
-	MCMemoryFileHandle *t_handle;
-	t_handle = static_cast<MCMemoryFileHandle *>(p_stream -> handle);
-	t_handle -> TakeBuffer(r_buffer, r_length);
+
+	bool t_success;
+
+    t_success = p_stream -> handle -> TakeBuffer(r_buffer, r_length);
 	
 	MCS_close(p_stream);
 	
+    if (!t_success)
+        return IO_ERROR;
+    
 	return IO_NORMAL;
 }
 
@@ -771,11 +793,12 @@ public:
 		delete this;
 	}
 	
-	bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
 	{
 		if (m_callbacks -> read == nil)
-			return false;
-		return m_callbacks -> read(m_state, p_buffer, p_length, r_read) == IO_NORMAL;
+			return IO_ERROR;
+        
+		return m_callbacks -> read(m_state, p_buffer, p_length, r_read);
 	}
 	
 	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
@@ -886,9 +909,7 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 		t_handle = MCsystem -> OpenFile(*t_resolved_path, p_mode, p_map && MCmmap, p_offset);
 	else
 	{
-		MCAutoStringRef MCserialcontrolsettings_string;
-		/* UNCHECKED */ MCStringCreateWithCString(MCserialcontrolsettings, &MCserialcontrolsettings_string);
-		t_handle = MCsystem -> OpenDevice(*t_resolved_path, p_mode, *MCserialcontrolsettings_string);
+		t_handle = MCsystem -> OpenDevice(*t_resolved_path, MCserialcontrolsettings, p_offset);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
@@ -903,7 +924,7 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	return t_handle;
 }
 
-static IO_handle MCS_dopen(uint32_t fd, const char *mode)
+static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
 {
     return MCsystem -> OpenStdFile(fd, mode);
 }
@@ -1007,7 +1028,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	
 	MCS_resolvepath(p_filename, &t_resolved_path);
 	
-	MCSystemFileHandle *t_file;
+	IO_handle t_file;
 	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeRead, false, 0);
 	
 	if (t_file == NULL)
@@ -1018,7 +1039,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	
     bool t_success;
 	uint32_t t_size;
-	t_size = (uint32_t)t_file -> GetFileSize();
+	t_size = (uint32_t)t_file -> handle -> GetFileSize();
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
@@ -1027,7 +1048,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	uint32_t t_read;
 	if (t_success)
         t_success = t_buffer.Chars() != NULL &&
-                    t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
+                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) &&
                     t_read == t_size;
 
     if (t_success)
@@ -1046,7 +1067,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         ep.clear();
     }
 
-	t_file -> Close();
+	t_file -> handle -> Close();
     
 	if (!t_success)
 	{
@@ -1069,7 +1090,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	
 	MCS_resolvepath(p_filename, &t_resolved_path);
 	
-	MCSystemFileHandle *t_file;
+	IO_handle t_file;
 	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeRead, false, 0);
 	
 	if (t_file == NULL)
@@ -1080,7 +1101,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	
     bool t_success;
 	uint32_t t_size;
-	t_size = (uint32_t)t_file -> GetFileSize();
+	t_size = (uint32_t)t_file -> handle -> GetFileSize();
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
@@ -1089,7 +1110,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	uint32_t t_read;
 	if (t_success)
         t_success = t_buffer.Chars() != NULL &&
-                    t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
+                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) &&
                     t_read == t_size;
     
     if (t_success)
@@ -1105,7 +1126,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         MCresult -> clear(False);
     }
     
-	t_file -> Close();
+	t_file -> handle -> Close();
     
 	if (!t_success)
 	{
@@ -1189,36 +1210,54 @@ int64_t MCS_fsize(IO_handle p_stream)
 	return p_stream -> handle -> GetFileSize();
 }
 
-IO_stat MCS_read(void *p_ptr, uint4 p_size, uint4& p_count, IO_handle p_stream)
+//IO_stat MCS_read(void *p_ptr, uint4 p_size, uint4& p_count, IO_handle p_stream)
+//{
+//	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
+//		return IO_ERROR;
+//	
+//	if ((p_stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return IO_ERROR;
+//	
+//	uint32_t t_to_read;
+//	t_to_read = p_size * p_count;
+//	
+//	uint32_t t_read;
+//	if (!p_stream -> handle -> Read(p_ptr, t_to_read, t_read))
+//	{
+//		p_count = t_read / p_size;
+//		return IO_ERROR;
+//	}
+//	
+//	p_count = t_read / p_size;
+//	
+//	if (t_read < t_to_read)
+//	{
+//		p_stream -> flags |= IO_ATEOF;
+//		p_count = t_read / p_size;
+//		return IO_EOF;
+//	}
+//	
+//	p_stream -> flags &= ~IO_ATEOF;
+//	
+//	return IO_NORMAL;
+//}
+
+IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream)
 {
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
 	
-	if ((p_stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+    return p_stream -> handle -> Read(p_ptr, p_size, r_count);
+}
+
+IO_stat MCS_readall(void *p_ptr, uint32_t& r_count, IO_handle p_stream)
+{
+	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
-	
-	uint32_t t_to_read;
-	t_to_read = p_size * p_count;
-	
-	uint32_t t_read;
-	if (!p_stream -> handle -> Read(p_ptr, t_to_read, t_read))
-	{
-		p_count = t_read / p_size;
-		return IO_ERROR;
-	}
-	
-	p_count = t_read / p_size;
-	
-	if (t_read < t_to_read)
-	{
-		p_stream -> flags |= IO_ATEOF;
-		p_count = t_read / p_size;
-		return IO_EOF;
-	}
-	
-	p_stream -> flags &= ~IO_ATEOF;
-	
-	return IO_NORMAL;
+    
+    r_count = p_stream -> handle -> GetFileSize();
+    
+    return p_stream -> handle -> Read(p_ptr, 1, r_count);
 }
 
 IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handle p_stream)
@@ -1338,6 +1377,7 @@ void MCS_closeprocess(uint2 p_index)
 
 void MCS_checkprocesses(void)
 {
+    MCsystem -> CheckProcesses();
 }
 
 void MCS_kill(int4 p_pid, int4 p_signal)
