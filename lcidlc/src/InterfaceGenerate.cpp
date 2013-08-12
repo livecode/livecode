@@ -496,7 +496,7 @@ public:
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
 	{
-		CoderWriteStatement(p_coder, "%s = default__java_string(__java_env, \"%s\", %s)", p_name, StringGetCStringPtr(p_value), p_name);
+		CoderWriteStatement(p_coder, "success = java_from__cstring(__java_env, \"%s\", %s) == kLCErrorNone", StringGetCStringPtr(p_value), p_name);
 	}
 	
 	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
