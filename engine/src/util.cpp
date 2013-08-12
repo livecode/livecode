@@ -2124,9 +2124,9 @@ inline void strmove(char *p_dest, const char *p_src)
 }
 
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
-void MCU_fix_path(MCStringRef p_cstr)
+void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-	char *cstr = (char*) MCStringGetCString(p_cstr);
+	char *cstr = (char*) MCStringGetCString(in);
 
 	char *fptr = cstr; //pointer to search forward in curdir
 	while (*fptr)
@@ -2166,6 +2166,8 @@ void MCU_fix_path(MCStringRef p_cstr)
 				else
 					fptr++;
 	}
+	/* UNCHECKED */ MCStringCreateWithCString(fptr, r_out);
+
 }
 
 bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);

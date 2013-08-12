@@ -52,6 +52,22 @@ static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// This method creates a 'constant' MCStringRef from the given c-string. At some
+// point we'll make it work 'magically' at compile/build time. For now, uniquing
+// and returning that has a similar effect (if slightly slower).
+MCStringRef MCSTR(const char *p_cstring)
+{
+	MCStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), t_string);
+	
+	MCValueRef t_unique_string;
+	/* UNCHECKED */ MCValueInter(t_string, t_unique_string);
+	
+	MCValueRelease(t_string);
+	
+	return (MCStringRef)t_unique_string;
+}
+
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
 	bool t_success;
@@ -459,8 +475,9 @@ bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
     uindex_t t_length;
     uindex_t t_byte_count;
     unichar_t* t_unichars;
+	t_length = MCStringGetLength(p_string);
     
-    if (!MCMemoryNewArray(t_length, t_unichars))
+    if (!MCMemoryNewArray(t_length + 1, t_unichars))
         return false;
     
     uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
@@ -497,7 +514,7 @@ bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
 #endif
 
 #ifdef __WINDOWS__
-bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
+bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
 {
     uindex_t t_length;
     unichar_t* t_chars;
@@ -514,7 +531,7 @@ bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
     if (r_bstr == nil)
         return false;
     
-    return true
+    return true;
 }
 #endif
 
@@ -592,6 +609,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
 	if (p_options != kMCStringOptionCompareExact)
 		return MCNativeCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 	return MCNativeCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+}
+
+bool MCStringIsEmpty(MCStringRef string)
+{
+	return MCStringIsEqualTo(string, kMCEmptyString, kMCStringOptionCompareExact);
 }
 
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)

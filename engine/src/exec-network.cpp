@@ -284,13 +284,13 @@ static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argume
 		return NULL;
 
 	MCAutoStringRef t_address_string;
-	MCAutoStringRef p_arguments_string;
-	/*UNCHECKED*/MCStringCreateWithCString(p_arguments[0], &p_arguments_string);
-	MCS_dnsresolve(*p_arguments_string, &t_address_string);
+	MCAutoStringRef t_arguments_string;
+	/* UNCHECKED */ MCStringCreateWithCString(p_arguments[0], &t_arguments_string);
+	MCS_dnsresolve(*t_arguments_string, &t_address_string);
 
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -304,7 +304,7 @@ static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argum
 	MCS_hostaddress(&t_address_string);
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCCStringClone(MCStringGetCString(*t_address_string), t_address);
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }

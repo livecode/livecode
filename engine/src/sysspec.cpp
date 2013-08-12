@@ -133,8 +133,7 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	MCsystem -> GetEnv(p_name_string, r_result);
-	return true;
+	return MCsystem -> GetEnv(p_name_string, r_result);
 }
 
 real8 MCS_getfreediskspace(void)
@@ -455,7 +454,7 @@ struct MCS_getentries_state
 //	return true;
 //}
 
-Boolean MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
+bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {
 	MCS_getentries_state t_state;
 	t_state . files = p_files;
@@ -971,7 +970,7 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 	MCAutoStringRef t_filename_string;
 	ep . copyasstringref(&t_filename_string);
 	
-	MCS_resolvepath(&t_filename_string, &t_resolved_path);
+	MCS_resolvepath(*t_filename_string, &t_resolved_path);
 	
 	MCSystemFileHandle *t_file;
 	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
@@ -1315,7 +1314,8 @@ bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 	
 	bool t_result;
 	t_result = MCS_resolvepath(p_path, r_path);
-	MCU_fix_path(r_path);
+	MCAutoStringRef t_out_path;
+	MCU_fix_path(r_path, &t_out_path);
 	
 	return t_result;
 }
@@ -1352,7 +1352,7 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	int t_return_code;
     
 	MCAutoStringRef t_filename_string;
-	/*UNCHECKED*/ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
+	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
 	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
 	{
 		MCresult -> clear(False);
@@ -1434,11 +1434,6 @@ MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_ob
 }
 
 void MCS_close_socket(MCSocket *p_socket)
-{
-}
-
-
-void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, const char *p_until, MCNameRef p_message)
 {
 }
 
@@ -1543,12 +1538,12 @@ bool MCS_getDNSservers(MCListRef& r_list)
 
 void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
-	return ;
+	return;
 }
 
-void MCS_hostaddress(MCStringRef& r_host_address)
+bool MCS_hostaddress(MCStringRef& r_host_address)
 {
-	return ;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1566,7 +1561,7 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 	return (MCSysModuleHandle)MCsystem -> LoadModule(p_filename);
 }
 
-void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
+void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
 {
 	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
 }

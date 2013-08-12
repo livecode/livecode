@@ -1158,8 +1158,10 @@ bool MCExecPoint::copyasmutablestringref(MCStringRef& r_string)
 
 bool MCExecPoint::copyasdataref(MCDataRef& r_data)
 {
-	// TODO
-	return false;
+	MCAutoStringRef t_string;
+	if (!copyasstringref(&t_string))
+		return false;
+	return MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
 MCValueRef MCExecPoint::getvalueref(void)

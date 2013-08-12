@@ -2046,9 +2046,7 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 #endif
 			if (t_module != nil)
 			{
-				MCAutoStringRef p_symbol;
-				/*UNCHECKED*/MCStringCreateWithCString("MCCustomPrinterCreate", &p_symbol);
-				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, *p_symbol);
+				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, "MCCustomPrinterCreate");
 			}
 			s_revpdfprinter_loaded = true;
 		}

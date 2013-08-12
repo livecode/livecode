@@ -524,9 +524,7 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 			MCAutoStringRef t_string;
 			if (ep . copyasstringref(&t_string))
 			{
-				MCAutoStringRef p_value;
-				/*UNCHECKED*/MCStringCreateWithCString(MCNameGetCString(name) + 1, &p_value);
-				MCS_setenv(*p_value, *t_string);
+				MCS_setenv(MCSTR(MCNameGetCString(name) + 1), *t_string);
 			}
 		}
 	}

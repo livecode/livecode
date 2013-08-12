@@ -85,7 +85,7 @@ public:
 	// Load the given external from within the app bundle
 	bool loadexternal(const char *p_external);
 
-	void cleanup(IO_handle stream, char *lname, char *bname);
+	void cleanup(IO_handle stream, MCStringRef lname, MCStringRef bname);
 	IO_stat savestack(MCStack *sptr, const MCStringRef);
 	IO_stat startup(void);
 

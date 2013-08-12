@@ -1264,7 +1264,6 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
  *********************************************************************/
 void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
 {
-	const char *t_source = MCStringGetCString(p_source);
 
 	const char *t_dest = nil;
 	if (p_destination != nil)
@@ -1276,7 +1275,7 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
 	SInt16 t_source_ref;
 	bool t_source_fork_opened;
 	t_source_fork_opened = false;
-	t_error = MCS_openresourcefork_with_path(t_source, fsRdPerm, false, &t_source_ref); // RESFORK
+	t_error = MCS_openresourcefork_with_path(MCStringGetCString(p_source), fsRdPerm, false, &t_source_ref); // RESFORK
 	if (t_error == NULL)
 		t_source_fork_opened = true;
 	

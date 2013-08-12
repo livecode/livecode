@@ -30,6 +30,8 @@
 #include "mbldc.h"
 #include "chunk.h"
 #include "scriptpt.h"
+#include "osspec.h"
+
 
 #include "image.h"
 
@@ -338,7 +340,7 @@ void MCMiscGetReachabilityTarget(MCExecContext& ctxt, MCStringRef& r_hostname)
 
 void MCMiscExecLibUrlDownloadToFile(MCExecContext& ctxt, MCStringRef p_url, MCStringRef p_filename)
 {
-    extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
+    //extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
 
     MCS_downloadurl(MCtargetptr, p_url, p_filename);
 }

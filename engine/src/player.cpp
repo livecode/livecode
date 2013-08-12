@@ -4534,7 +4534,7 @@ void MCPlayer::stoprecording()
 #endif
 }
 
-void MCPlayer::recordsound(char *fname)
+void MCPlayer::recordsound(MCStringRef fname)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
@@ -4547,7 +4547,7 @@ void MCPlayer::recordsound(char *fname)
 	stoprecording();//just in case
 	FSSpec fspec;
 	recordtempfile = MCS_tmpnam();
-	recordexportfile = fname;
+	recordexportfile = strdup(MCStringGetCString(fname));
 	MCS_path2FSSpec(recordtempfile, &fspec);
 	OSType compressionType, inputSource;
 	memcpy(&compressionType, MCrecordcompression, 4);

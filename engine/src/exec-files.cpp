@@ -807,12 +807,10 @@ void MCFilesExecLaunchApp(MCExecContext& ctxt, MCNameRef p_app, MCStringRef p_do
 	}
 
 	uindex_t index;
-	MCAutoStringRef p_empty;
-	/* UNCHECKED */ MCStringCreateWithCString(strclone(""), &p_empty);
 
 	if (!IO_findprocess(p_app, index))
 		MCS_startprocess(p_app, 
-							p_document == NULL ? *p_empty : p_document, 
+							p_document == NULL ? kMCEmptyString : p_document, 
 							OM_NEITHER, False);
 	else
 		ctxt . SetTheResultToStaticCString("process is already open");
@@ -863,28 +861,22 @@ void MCFilesExecPerformOpen(MCExecContext& ctxt, MCNameRef p_name, int p_mode, b
 
 	IO_handle istream = NULL;
 	IO_handle ostream = NULL;
-
-	MCAutoStringRef io_append_mode_string, io_read_mode_string, io_write_mode_string, io_update_mode_string ;
-	/* UNCHECKED */ MCStringCreateWithCString(IO_APPEND_MODE, &io_append_mode_string);
-	/* UNCHECKED */ MCStringCreateWithCString(IO_READ_MODE, &io_read_mode_string);
-	/* UNCHECKED */ MCStringCreateWithCString(IO_WRITE_MODE, &io_write_mode_string);
-	/* UNCHECKED */ MCStringCreateWithCString(IO_UPDATE_MODE, &io_update_mode_string);
 	
 	switch (p_mode)
 	{
 	case OM_APPEND:
-		ostream = MCS_open(MCNameGetString(p_name), *io_append_mode_string, False, p_is_driver, 0);
+		ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeAppend, False, p_is_driver, 0);
 		break;
 	case OM_NEITHER:
 		break;
 	case OM_READ:
-		istream = MCS_open(MCNameGetString(p_name), *io_read_mode_string, True, p_is_driver, 0);
+		istream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeRead, True, p_is_driver, 0);
 		break;
 	case OM_WRITE:
-		ostream = MCS_open(MCNameGetString(p_name), *io_write_mode_string, False, p_is_driver, 0);
+		ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeWrite, False, p_is_driver, 0);
 		break;
 	case OM_UPDATE:
-		istream = ostream = MCS_open(MCNameGetString(p_name), *io_update_mode_string, False, p_is_driver, 0);
+		istream = ostream = MCS_open(MCNameGetString(p_name), kMCSOpenFileModeUpdate, False, p_is_driver, 0);
 		break;
 	default:
 		break;

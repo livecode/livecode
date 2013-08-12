@@ -2088,9 +2088,10 @@ struct MCMacDesktop: public MCSystemInterface
     {
         
     }
-	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
+    
+	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
     {
-        
+        return false;
     }
 	
 	virtual Boolean CreateFolder(MCStringRef p_path)
@@ -3791,7 +3792,8 @@ struct MCMacDesktop: public MCSystemInterface
     {
         
     }
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+    
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
     {
         
     }

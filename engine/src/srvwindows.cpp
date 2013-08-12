@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <float.h>
 #undef GetCurrentTime
 
+
 #include "system.h"
 //#include "filesystem.h"
 
@@ -306,12 +307,9 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	virtual void GetAddress(MCStringRef& r_address)
 	{
-		char *buffer = (char*) MCStringGetCString(r_address);
-		buffer = new char[MAXHOSTNAMELEN + strlen(MCcmd) + 2];
-		gethostname(buffer, MAXHOSTNAMELEN);
-		strcat(buffer, ":");
-		strcat(buffer, MCcmd);
-		/* UNCHECKED */ MCStringCreateWithCString(buffer, r_address);
+		char t_buffer[MAXHOSTNAMELEN];
+		gethostname(t_buffer, MAXHOSTNAMELEN);
+		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", t_buffer, MCcmd);
 	}
 	
 	virtual void Alarm(real64_t p_interval)
@@ -348,9 +346,12 @@ struct MCWindowsSystem: public MCSystemInterface
 		}
 	}
 
-	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
+	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+		if (!getenv(MCStringGetCString(p_name)))
+			return /* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+		else
+			return false;
 	}
 
 	
@@ -735,9 +736,9 @@ struct MCWindowsSystem: public MCSystemInterface
 		return t_handle;
 	}
 	
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
 	{
-		return GetProcAddress((HMODULE)p_module, MCStringGetCString(p_symbol));
+		return GetProcAddress((HMODULE)p_module, p_symbol);
 	}
 	
 	virtual void UnloadModule(void *p_module)

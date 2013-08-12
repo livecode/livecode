@@ -212,7 +212,7 @@ bool MCSocketAddrToString(struct sockaddr *p_sockaddr, int p_addrlen, bool p_loo
 
 bool MCS_name_to_sockaddr(MCStringRef p_name_in, struct sockaddr_in *r_addr,
 						  MCHostNameResolveCallback p_callback, void *p_context);
-//bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr);
+
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr);
 
 

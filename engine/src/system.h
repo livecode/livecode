@@ -92,7 +92,7 @@ struct MCSystemInterface
 	virtual void Sleep(real64_t p_when) = 0;
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value) = 0;
-	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
+	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
 	
 	virtual Boolean CreateFolder(MCStringRef p_path) = 0;
 	virtual Boolean DeleteFolder(MCStringRef p_path) = 0;
@@ -109,7 +109,7 @@ struct MCSystemInterface
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
 	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest) = 0;
 	
-	virtual void GetCurrentFolder(MCStringRef& r_string) = 0;
+	virtual void GetCurrentFolder(MCStringRef& r_path) = 0;
 	///* LEGACY */ char *GetCurrentFolder(void);
 	virtual Boolean SetCurrentFolder(MCStringRef p_path) = 0;
 	
@@ -136,7 +136,7 @@ struct MCSystemInterface
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual void *LoadModule(MCStringRef p_path) = 0;
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol) = 0;
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
 	virtual void UnloadModule(void *p_module) = 0;
 	
 	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list) = 0;

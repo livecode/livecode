@@ -324,13 +324,12 @@ private:
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef __WINDOWS__
-#include <OleAuto.h>
+#include <WTypes.h>
 class MCAutoStringRefAsBSTR
 {
 public:
     MCAutoStringRefAsBSTR(void)
     {
-        m_ref = nil;
     }
     
     ~MCAutoStringRefAsBSTR(void)

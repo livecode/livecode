@@ -2394,10 +2394,13 @@ void MCStack::setfilename(char *f)
 {
 	delete filename;
 	filename = f;
-	MCAutoStringRef filename_string;
-	/*UNCHECKED*/MCStringCreateWithCString(filename, &filename_string);
+	MCAutoStringRef in_filename_string;
+	/* UNCHECKED */ MCStringCreateWithCString(filename, &in_filename_string);
 	if (f != NULL)
-		MCU_fix_path(*filename_string);
+	{
+		MCAutoStringRef out_filename_string;
+		MCU_fix_path(*in_filename_string, &out_filename_string );
+	}
 }
 
 void MCStack::loadwindowshape()

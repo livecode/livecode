@@ -95,7 +95,7 @@ bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
 {
     bool t_success = true;
     
-    for (int i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
+    for (uindex_t i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
         t_success = p_left->bytes[i] == p_right->bytes[i];
     
     return t_success;

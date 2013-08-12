@@ -36,6 +36,7 @@ extern void MCS_sleep(real8);
 extern bool MCS_getenv(MCStringRef name, MCStringRef& r_result);
 extern void MCS_setenv(MCStringRef name, MCStringRef value);
 extern void MCS_unsetenv(MCStringRef name);
+extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
 
 extern Boolean MCS_rename(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_backup(MCStringRef oname, MCStringRef nname);
@@ -52,13 +53,15 @@ extern void MCS_getcurdir(MCStringRef& r_path);
 extern Boolean MCS_setcurdir(MCStringRef p_path);
 ///* LEGACY */ extern Boolean MCS_setcurdir(const char *path);
 ///* LEGACY */ extern void MCS_getentries(MCExecPoint &p_context, bool p_files, bool p_detailed);
-extern Boolean MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list);
+extern bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list);
+
 extern bool MCS_getDNSservers(MCListRef& r_list);
 extern bool MCS_getdevices(MCListRef& r_list);
 extern bool MCS_getdrives(MCListRef& r_list);
 extern Boolean MCS_noperm(MCStringRef path);
 extern Boolean MCS_exists(MCStringRef p_path, bool p_is_file);
 /* LEGACY */ extern Boolean MCS_exists(const char *path, Boolean file);
+
 extern Boolean MCS_nodelay(int4 fd);
 
 extern IO_stat MCS_runcmd(MCExecPoint &);
@@ -125,7 +128,7 @@ extern Boolean MCS_isleadbyte(uint1 charset, char *s);
 
 extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
 /* LEGACY */ extern MCSysModuleHandle MCS_loadmodule(const char *p_filename);
-extern void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
+extern void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol);
 extern void MCS_unloadmodule(MCSysModuleHandle p_module);
 
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
@@ -136,7 +139,7 @@ extern bool MCS_secondstodatetime(double p_seconds, MCDateTime& r_datetime);
 extern const MCDateTimeLocale *MCS_getdatetimelocale(void);
 
 extern void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns);
-extern void MCS_hostaddress(MCStringRef& r_host_address);
+extern bool MCS_hostaddress(MCStringRef& r_host_address);
 
 extern bool MCS_processtypeisforeground(void);
 extern bool MCS_changeprocesstype(bool to_foreground);

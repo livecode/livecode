@@ -418,12 +418,6 @@ bool MCS_name_to_sockaddr(MCNameRef p_name_in_string, struct sockaddr_in *r_addr
 	return t_success;
 }
 
-/*
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr)
-{
-	return MCS_name_to_sockaddr(p_name_in, &r_addr, NULL, NULL);
-}
-*/
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr)
 {
 	return MCS_name_to_sockaddr(p_name, &r_addr, NULL, NULL);

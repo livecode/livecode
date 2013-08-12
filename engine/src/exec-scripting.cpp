@@ -102,15 +102,11 @@ void MCScriptingExecReplyError(MCExecContext& ctxt, MCStringRef message)
 
 void MCScriptingExecRequestAppleEvent(MCExecContext& ctxt, int p_type, MCStringRef p_program)
 {
-	//MCAutoPointer<char> t_result;
 	MCAutoStringRef t_result_value;
 	if (p_program != nil)
 		MCS_request_ae(p_program, p_type, &t_result_value);
 	else
 		MCS_request_ae(kMCEmptyString, p_type, &t_result_value);
-	
-	//MCAutoStringRef t_result_value;
-	///* UNCHECKED */ MCStringCreateWithCString(*t_result, &t_result_value);
 	
 	ctxt . SetItToValue(*t_result_value);
 }
@@ -120,10 +116,6 @@ void MCScriptingExecRequestFromProgram(MCExecContext& ctxt, MCStringRef p_messag
 	MCAutoStringRef t_result;
 	MCS_request_program(p_message, p_program, &t_result);
 	
-	//MCAutoStringRef t_result_value;
-	//* UNCHECKED */ MCStringCreateWithCString(*t_result, &t_result_value);
-	
-	//ctxt . SetItToValue(*t_result_value);
 	ctxt . SetItToValue(*t_result);
 }
 
