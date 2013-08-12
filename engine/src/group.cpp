@@ -2321,7 +2321,7 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 			minrect = MCU_reduce_rect(minrect, -borderwidth);
 	}
 	// MERG-2013-08-12: [[ ClipsToRect ]] If true group clips to the set rect rather than the rect of children
-    if (flags & F_LOCK_LOCATION || flags & F_CLIPS_TO_RECT)
+    if (flags & (F_LOCK_LOCATION | F_CLIPS_TO_RECT))
 	{
 		boundcontrols();
 		if (scrolling && flags & F_BOUNDING_RECT)
