@@ -738,16 +738,16 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 	else
 		return MCStringCopy(*t_newname, r_resolved);
 }
-
-char *MCS_get_canonical_path(const char *p_path)
-{
-	char *t_path = NULL;
-
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
-
-	return t_path;
-}
+//
+//char *MCS_get_canonical_path(const char *p_path)
+//{
+//	char *t_path = NULL;
+//
+//	t_path = MCS_resolvepath(p_path);
+//	MCU_fix_path(t_path);
+//
+//	return t_path;
+//}
 
 bool MCS_getcurdir(MCStringRef& r_path)
 {
@@ -958,7 +958,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 	return handle;
 }
 
-IO_stat MCS_close(IO_handle &stream)
+void MCS_close(IO_handle &stream)
 {
 	if (stream->fptr == NULL)
 	{
@@ -980,7 +980,6 @@ IO_stat MCS_close(IO_handle &stream)
 		fclose(stream->fptr);
 	delete stream;
 	stream = NULL;
-	return IO_NORMAL;
 }
 
 
@@ -1837,7 +1836,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	return NULL;
 }
 
-void MCS_copyresourcefork(const char *source, const char *dest)
+void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
 {}
 
 bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,

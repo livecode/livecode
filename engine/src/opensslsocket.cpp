@@ -211,7 +211,7 @@ int inet_aton(const char *cp, struct in_addr *inp)
 }
 #endif
 
-bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
+bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b)
 {
 	struct sockaddr_in t_host_a, t_host_b;
 
@@ -290,25 +290,29 @@ bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
 	return t_success;
 }
 
-char *MCS_dnsresolve(const char *p_hostname)
+void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
 	if (!MCS_init_sockets())
-		return NULL;
+	{
+		MCValueRetain(kMCEmptyString);
+		return;
+	}
 
-	char *t_name = NULL;
+	MCAutoStringRef t_name;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
 	t_success = MCS_name_to_sockaddr(p_hostname, t_addr);
 	if (t_success)
 	{
-		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, t_name);
+		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, &t_name);
 	}
 
-	if (t_success)
-		return t_name;
-	else
-		return NULL;
+	if (!t_success)
+	{
+		MCValueRetain(kMCEmptyString);
+		return;
+	}
 }
 
 bool ntoa_callback(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen)
@@ -440,7 +444,11 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCdefaultnetworkinterface, t_bind_addr))
+			// TODO change the global to MCStringRef
+			MCAutoStringRef t_default_network;
+			if (!MCStringCreateWithCString(MCdefaultnetworkinterface, &t_default_network))
+				return false;
+			if (!MCS_name_to_sockaddr(*t_default_network, t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
@@ -516,7 +524,7 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 	return false;
 }
 
-MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile)
+MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -524,7 +532,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 	struct sockaddr_in t_addr;
 	if (mess == NULL)
 	{
-		if (!MCS_name_to_sockaddr(name, t_addr))
+		if (!MCS_name_to_sockaddr(MCNameGetString(name), t_addr))
 			return NULL;
 	}
 
@@ -577,7 +585,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 			MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
-			if (!MCS_name_to_sockaddr(s->name, &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
+			if (!MCS_name_to_sockaddr(MCNameGetString(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
 			{
 				MCMemoryDelete(t_info);
 				s->name = nil;
@@ -708,16 +716,16 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	
 		if (s->shared)
 		{
-			char *portptr = strchr(s->name, ':');
+			char *portptr = strchr(MCNameGetCString(s->name), ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(s->name, (in_addr *)&to.sin_addr.s_addr)
-			        || sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
-			                  (sockaddr *)&to, sizeof(to)) < 0)
+			if (!inet_aton(MCNameGetCString(s->name), (in_addr *)&to.sin_addr.s_addr)
+				|| sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
+						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
@@ -731,7 +739,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		}
 		if (mptr != NULL)
 		{
-			MCscreen->delaymessage(optr, mptr, strclone(s->name));
+			MCscreen->delaymessage(optr, mptr, strclone(MCNameGetCString(s->name)));
 			s->added = True;
 		}
 	}
@@ -786,7 +794,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	}
 }
 
-MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify,char *sslcertfile)
+MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -841,7 +849,10 @@ MCSocket *MCS_accept(uint2 port, MCObject *object, MCNameRef message, Boolean da
 
 	char *portname = new char[U2L];
 	sprintf(portname, "%d", port);
-	return new MCSocket(portname, object, message, datagram, sock, True, False, secure);
+
+	MCNewAutoNameRef t_portname;
+	MCNameCreateWithNativeChars((char_t*)portname, U2L, &t_portname);
+	return new MCSocket(*t_portname, object, message, datagram, sock, True, False, secure);
 }
 
 // Return the IP address of the host interface that is used to connect to the
@@ -1021,9 +1032,9 @@ MCSocketwrite::~MCSocketwrite()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSocket::MCSocket(char *n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
+MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock, Boolean a, Boolean s, Boolean issecure)
 {
-	name = n;
+	name = MCValueRetain(n);
 	object = o;
 	if (m != nil)
 		/* UNCHECKED */ MCNameClone(m, message);
@@ -1211,22 +1222,25 @@ void MCSocket::readsome()
 			else
 			{
 				char *t = inet_ntoa(addr.sin_addr);
-				char *n = new char[strlen(t) + U2L];
-				sprintf(n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
-				uint2 index;
-				if (accepting && !IO_findsocket(n, index))
+				MCAutoStringRef n;
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
+				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCNameCreate(*n, &t_name);
+				uindex_t index;
+				if (accepting && !IO_findsocket(*t_name, index))
 				{
 					MCU_realloc((char **)&MCsockets, MCnsockets,
 					            MCnsockets + 1, sizeof(MCSocket *));
-					MCsockets[MCnsockets++] = new MCSocket(strclone(n), object, NULL,
+					MCsockets[MCnsockets++] = new MCSocket(*t_name, object, NULL,
 					                                       True, fd, False, True,False);
 				}
 				MCParameter *params = new MCParameter;
-				params->setbuffer(n, strlen(n));
+				params->setbuffer(strclone(MCNameGetCString(*t_name)), MCStringGetLength(MCNameGetString(*t_name)));
 				params->setnext(new MCParameter);
 				params->getnext()->setbuffer(dbuffer, l);
 				params->getnext()->setnext(new MCParameter);
-				params->getnext()->getnext()->setbuffer(strclone(name), strlen(name));
+				params->getnext()->getnext()->setbuffer(strclone(MCNameGetCString(name)), MCStringGetLength(MCNameGetString(name)));
 				MCscreen->addmessage(object, message, curtime, params);
 			}
 		}
@@ -1248,17 +1262,21 @@ void MCSocket::readsome()
 				int val = 1;
 				ioctl(newfd, FIONBIO, (char *)&val);
 				char *t = inet_ntoa(addr.sin_addr);
-				char *n = new char[strlen(t) + U2L];
-				sprintf(n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				MCAutoStringRef n;
+				MCNewAutoNameRef t_name;
+				/* UNCHECKED */ MCStringCreateMutable(strlen(t) + U2L, &n);
+				/* UNCHECKED */ MCStringAppendFormat(&n, "%s:%d", t, MCSwapInt16NetworkToHost(addr.sin_port));
+				/* UNCHECKED */ MCNameCreate(*n, &t_name);
+				uindex_t index;
 				MCU_realloc((char **)&MCsockets, MCnsockets,
 							MCnsockets + 1, sizeof(MCSocket *));
-				MCsockets[MCnsockets] = new MCSocket(n, object, NULL,
+				MCsockets[MCnsockets] = new MCSocket(*t_name, object, NULL,
 													 False, newfd, False, False,secure);
 				MCsockets[MCnsockets]->connected = True;
 				if (secure)
 					MCsockets[MCnsockets]->sslaccept();
 				MCsockets[MCnsockets++]->setselect();
-				MCscreen->delaymessage(object, message, strclone(n), strclone(name));
+				MCscreen->delaymessage(object, message, strclone(MCNameGetCString(*t_name)), strclone(MCNameGetCString(name)));
 				added = True;
 			}
 #endif
@@ -1361,13 +1379,13 @@ void MCSocket::processreadqueue()
 				MCSocketread *e = revents->remove
 				                  (revents);
 				MCParameter *params = new MCParameter;
-				params->setbuffer(strclone(name), strlen(name));
+				params->setbuffer(strclone(MCNameGetCString(name)), MCStringGetLength(MCNameGetString((name))));
 				params->setnext(new MCParameter);
 				params->getnext()->setbuffer(datacopy, size);
 				MCscreen->addmessage(e->optr, e->message, curtime, params);
 				delete e;
 				if (nread == 0 && fd == 0)
-					MCscreen->delaymessage(object, MCM_socket_closed, strclone(name));
+					MCscreen->delaymessage(object, MCM_socket_closed, strclone(MCNameGetCString(name)));
 				added = True;
 			}
 			else
@@ -1384,7 +1402,7 @@ void MCSocket::writesome()
 	if (!accepting && !connected && message != NULL)
 	{
 #endif
-		MCscreen->delaymessage(object, message, strclone(name));
+		MCscreen->delaymessage(object, message, strclone(MCNameGetCString(name)));
 		added = True;
 		MCNameDelete(message);
 		message = NULL;
@@ -1426,7 +1444,7 @@ void MCSocket::writesome()
 			{
 				MCSocketwrite *e = wevents->remove
 				                   (wevents);
-				MCscreen->delaymessage(e->optr, e->message, strclone(name));
+				MCscreen->delaymessage(e->optr, e->message, strclone(MCNameGetCString(name)));
 				added = True;
 				delete e;
 			}
@@ -1454,13 +1472,13 @@ void MCSocket::doclose()
 	{
 		if (error != NULL)
 		{
-			MCscreen->delaymessage(object, MCM_socket_error, strclone(name), error);
+			MCscreen->delaymessage(object, MCM_socket_error, strclone(MCNameGetCString(name)), error);
 			added = True;
 		}
 		else
 			if (nread == 0)
 			{
-				MCscreen->delaymessage(object, MCM_socket_closed, strclone(name));
+				MCscreen->delaymessage(object, MCM_socket_closed, strclone(MCNameGetCString(name)));
 				added = True;
 			}
 	}
@@ -1771,24 +1789,34 @@ Boolean MCSocket::initsslcontext()
 				uint2 i;
 				for (i = 0; i < ncerts; i++)
 				{
-					char *oldcertpath = certs[i].clone();
+					MCAutoStringRef t_oldcertpath;
+					if (!MCStringCreateWithOldString(certs[i], &t_oldcertpath))
+                        return False;
+
+					MCAutoStringRef t_resolvedpath;
+					if (!MCS_resolvepath(*t_oldcertpath, &t_resolvedpath))
+                        return False;
 #ifdef _MACOSX
-	
-					char *certpath = path2utf(MCS_resolvepath(oldcertpath));
+					MCAutoStringRefAsUTF8String t_utf8_string;
+					MCAutoStringRef certpath;
+					if (!t_utf8_string.Lock(*t_resolvedpath))
+                        return False;
+
+					if (!MCStringCreateWithCString(*t_utf8_string, &certpath))
+                        return False;
 #else
 	
-					char *certpath = MCS_resolvepath(oldcertpath);
+					MCAutoStringref certpath;
+					if (!MCStringCopy(*t_resolvedpath, &certpath))
+                        return False;
 #endif
-	
-					delete oldcertpath;
-					
-					t_success = (MCS_exists(certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, certpath)) ||
-							(MCS_exists(certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, certpath));
+
+					t_success = (MCS_exists(*certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, MCStringGetCString(*certpath))) ||
+					(MCS_exists(*certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, MCStringGetCString(*certpath)));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", certpath);
+                        MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", *certpath);
 					}
-					delete certpath;
 				}
 			}
 			if (certs != NULL)
@@ -2166,7 +2194,7 @@ Boolean MCSocket::sslconnect()
 		if (sslverify)
 		{
 			char *t_hostname;
-			t_hostname = strdup(name);
+			t_hostname = strdup(MCNameGetCString(name));
 			if (strchr(t_hostname, ':') != NULL)
 				strchr(t_hostname, ':')[0] = '\0';
 			else if (strchr(t_hostname, '|') != NULL)
@@ -2346,7 +2374,7 @@ Boolean MCSocket::sslaccept()
 		if (sslverify)
 		{
 			char *t_hostname;
-			t_hostname = strdup(name);
+			t_hostname = strdup(MCNameGetCString(name));
 			if (strchr(t_hostname, ':') != NULL)
 				strchr(t_hostname, ':')[0] = '\0';
 			else if (strchr(t_hostname, '|') != NULL)

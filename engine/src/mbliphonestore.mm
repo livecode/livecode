@@ -28,12 +28,53 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stack.h"
 #include "card.h"
 #include "param.h"
+#include "exec.h"
 
 #include "eventqueue.h"
 
 #include "mblstore.h"
 
 #include <StoreKit/StoreKit.h>
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_productIdentifier);
+bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity);
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
+bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseSetQuantity(MCPurchase *p_purchase, integer_t p_quantity);
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+static MCPurchasePropertyInfo kProperties[] =
+{
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
+        DEFINE_RW_PROPERTY(kMCPurchasePropertyQuantity, UInt32, Purchase, Quantity)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyReceipt, BinaryString, Purchase, Receipt)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalPurchaseDate, Int32, Purchase, OriginalPurchaseDate)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalTransactionIdentifier, String, Purchase, OriginalTransactionIdentifier)
+        DEFINE_RO_PROPERTY(kMCPurchasePropertyOriginalReceipt, BinaryString, Purchase, OriginalReceipt)
+};
+
+static MCPurchasePropertyTable kPropertyTable =
+{
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+const MCPurchasePropertyTable *getpropertytable()
+{
+    return &kPropertyTable;
+}
 
 static MCPurchase *s_purchase_request = nil;
 
@@ -115,26 +156,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
 	MCMemoryDelete(t_ios_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
-	switch (p_property)
-	{
-		case kMCPurchasePropertyQuantity:
-		{
-			if (t_ios_data->payment != nil)
-				[t_ios_data->payment setQuantity: p_quantity];
-			return ES_NORMAL;
-		}
-			break;
-		default:
-			break;
-	}
-	
-	return ES_NOT_HANDLED;
-}
-
-
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
 	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
@@ -222,6 +244,204 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
 	
 	return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseGet */
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_productIdentifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment == nil)
+        return false;
+    
+    return MCStringCreateWithCString([[t_payment productIdentifier] cStringUsingEncoding: NSMacOSRomanStringEncoding], r_productIdentifier);
+}
+
+bool MCPurchaseGetQuantity(MCPurchase *p_purchase, uinteger_t& r_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+		t_payment = [t_transaction payment];
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_payment == nil)
+        return false;
+    
+    r_quantity = [t_payment quantity];
+    return true;
+}
+
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return false;
+    
+    r_date = [[t_transaction transactionDate] timeIntervalSince1970];
+    return true;
+}
+// iOS
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return false;
+    
+    return MCStringCreateWithCString([[t_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier);
+}
+
+bool MCPurchaseGetReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPayment *t_payment = nil;
+	SKPaymentTransaction *t_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_payment = [t_transaction payment];
+	}
+	else
+		t_payment = t_ios_data->payment;
+    
+    if (t_transaction == nil)
+        return false;
+    
+    NSData *t_bytes = [t_transaction transactionReceipt];
+    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+}
+
+bool MCPurchaseGetOriginalTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return false;
+    
+    return MCStringCreateWithCString([[t_original_transaction transactionIdentifier] cStringUsingEncoding:NSMacOSRomanStringEncoding], r_identifier);
+}
+
+bool MCPurchaseGetOriginalPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    \
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return false;
+    
+    r_date = [[t_original_transaction transactionDate] timeIntervalSince1970];
+    return true;
+}
+
+bool MCPurchaseGetOriginalReceipt(MCPurchase *p_purchase, MCDataRef& r_receipt)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+	SKPaymentTransaction *t_transaction = nil;
+	SKPaymentTransaction *t_original_transaction = nil;
+	
+	if (t_ios_data->transaction != nil)
+	{
+		t_transaction = t_ios_data->transaction;
+		t_original_transaction = [t_transaction originalTransaction];
+	}
+    
+    if (t_original_transaction == nil)
+        return false;
+    
+    NSData *t_bytes = [t_original_transaction transactionReceipt];
+    return MCDataCreateWithBytes((const byte_t*)[t_bytes bytes], [t_bytes length], r_receipt);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+	switch (p_property)
+	{
+		case kMCPurchasePropertyQuantity:
+		{
+			if (t_ios_data->payment != nil)
+				[t_ios_data->payment setQuantity: p_quantity];
+			return ES_NORMAL;
+		}
+			break;
+		default:
+			break;
+	}
+	
+	return ES_NOT_HANDLED;
+}
+#endif /* MCPurchaseSet */
+
+bool MCPurchaseSetQuantity(MCPurchase *p_purchase, integer_t p_quantity)
+{
+	MCiOSPurchase *t_ios_data = (MCiOSPurchase*)p_purchase->platform_data;
+    
+    if (t_ios_data->payment == nil)
+        return false;
+    
+    [t_ios_data->payment setQuantity: p_quantity];
+    return true;
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseSendRequest(MCPurchase *p_purchase)
 {

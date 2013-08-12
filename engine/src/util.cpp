@@ -789,6 +789,11 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 	return True;
 }
 
+/* WRAPPER */ bool MCU_stoi4(MCStringRef p_string, int4& r_d)
+{
+    return True == MCU_stoi4(MCStringGetOldString(p_string), r_d);
+}
+
 Boolean MCU_stoi4(const MCString &s, int4 &d)
 {
 	const char *sptr = s.getstring();
@@ -813,6 +818,20 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 	if (!done || l != 0)
 		return False;
 	return True;
+}
+
+bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
+{
+    const char *sptr = MCStringGetCString(p_string);
+	uint4 l = MCStringGetLength(p_string);
+	Boolean done;
+	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return false;
+	r_d2 = MCU_strtol(sptr, l, '\0', done, True, False);
+	if (!done || l != 0)
+		return false;
+	return true;
 }
 
 /* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)
@@ -2105,8 +2124,10 @@ inline void strmove(char *p_dest, const char *p_src)
 }
 
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
-void MCU_fix_path(char *cstr)
+void MCU_fix_path(MCStringRef p_cstr)
 {
+	char *cstr = (char*) MCStringGetCString(p_cstr);
+
 	char *fptr = cstr; //pointer to search forward in curdir
 	while (*fptr)
 	{
@@ -2339,7 +2360,7 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 		uint4 l = MCStringGetLength(p_target);
 		if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 		{
-			MCS_geturl(ctxt . GetObject(), MCStringGetCString(p_target));
+			MCS_geturl(ctxt . GetObject(), p_target);
 			MCurlresult->eval(ep);
 		}
 	}
@@ -2376,7 +2397,9 @@ void MCU_geturl(MCExecPoint &ep)
 				uint4 l = ep.getsvalue().getlength();
 				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 				{
-					MCS_geturl(ep . getobj(), ep . getcstring());
+					MCAutoStringRef p_url;
+					/* UNCHECKED */ MCStringCreateWithCString(ep . getcstring(), &p_url);
+					MCS_geturl(ep . getobj(), *p_url);
 					MCurlresult->eval(ep);
 				}
 				else
@@ -2387,17 +2410,26 @@ void MCU_geturl(MCExecPoint &ep)
 
 void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 {
+	MCAutoStringRef f;
+	MCStringCreateWithOldString(dest.getsvalue(), &f);
+
+
 	if (dest.getsvalue().getlength() > 5
 	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
 	{
 		dest.tail(5);
-		MCS_savefile(dest.getsvalue(), data, False);
+		data . texttobinary();
+		MCAutoDataRef t_data_ref;
+		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
+		MCS_savebinaryfile(*f, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
 	{
 		dest.tail(8);
-		MCS_savefile(dest.getsvalue(), data, True);
+		MCAutoDataRef t_data_ref;
+		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
+		MCS_savebinaryfile(*f, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
@@ -2406,7 +2438,11 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		MCS_saveresfile(dest.getsvalue(), data.getsvalue());
 	}
 	else
-		MCS_putintourl(dest . getobj(), data . getsvalue(), dest . getcstring());
+	{
+		MCAutoStringRef p_url;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
+		MCS_putintourl(dest . getobj(), data . getsvalue(), *p_url);
+	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////

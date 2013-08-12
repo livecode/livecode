@@ -195,6 +195,7 @@ Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint 
 #ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
 #endif /* MCDispatch::setprop */
+	return ES_NORMAL;
 }
 
 // bogus "cut" call actually checks license
@@ -364,21 +365,27 @@ Boolean MCDispatch::openstartup(const char *sname,
 	if (enginedir == nil)
 		return False;
 
-		uint4 l = MCU_max((uint4)strlen(enginedir), (uint4)strlen(startdir)) + strlen(sname) + 11;
-		char *fullpath = new char[l];
-		sprintf(fullpath, "%s/%s", startdir, sname);
-		if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False, 0)) != NULL)
-		{
-			*outpath = fullpath;
-			return True;
-		}
-		sprintf(fullpath, "%s/%s", enginedir, sname);
-		if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False, 0)) != NULL)
-		{
-			*outpath = fullpath;
-			return True;
-		}
-		delete fullpath;
+	MCAutoStringRef t_io_read_mode_string;
+	/* UNCHECKED */ MCStringCreateWithCString(IO_READ_MODE, &t_io_read_mode_string);
+
+	uint4 l = MCU_max((uint4)strlen(enginedir), (uint4)strlen(startdir)) + strlen(sname) + 11;
+	char *fullpath = new char[l];
+	sprintf(fullpath, "%s/%s", startdir, sname);
+	MCAutoStringRef t_fullpath_string;
+	/* UNCHECKED */ MCStringCreateWithCString(fullpath, &t_fullpath_string);
+
+	if ((stream = MCS_open(*t_fullpath_string, &t_io_read_mode_string, True, False, 0)) != NULL)
+	{
+		*outpath = fullpath;
+		return True;
+	}
+	sprintf(fullpath, "%s/%s", enginedir, sname);
+	if ((stream = MCS_open(*t_fullpath_string, &t_io_read_mode_string, True, False, 0)) != NULL)
+	{
+		*outpath = fullpath;
+		return True;
+	}
+	delete fullpath;
 
 	return False;
 }
@@ -386,9 +393,18 @@ Boolean MCDispatch::openstartup(const char *sname,
 Boolean MCDispatch::openenv(const char *sname, const char *env,
                             char **outpath, IO_handle &stream, uint4 offset)
 {
-	if ((env = MCS_getenv(env)) != NULL)
+
+	MCAutoStringRef t_env;
+	MCAutoStringRef t_message;
+	/* UNCHECKED */ MCStringCreateWithCString(env, &t_message);
+
+	if (MCS_getenv(*t_message, &t_env))
 	{
+		env = MCStringGetCString(*t_env);
 		char *pathstring = strclone(env);
+		MCAutoStringRef t_io_read_mode_string;
+		MCAutoStringRef t_fullpath_string;
+		/* UNCHECKED */ MCStringCreateWithCString(IO_READ_MODE, &t_io_read_mode_string);
 		char *fullpath = new char[strlen(env) + strlen(sname) + 2];
 		char *eptr = pathstring;
 		while (eptr != NULL)
@@ -402,8 +418,8 @@ Boolean MCDispatch::openenv(const char *sname, const char *env,
 #else
 			sprintf(fullpath, "%s/%s", path, sname);
 #endif
-
-			if ((stream = MCS_open(fullpath, IO_READ_MODE, True, False,
+			/* UNCHECKED */ MCStringCreateWithCString(fullpath, &t_fullpath_string);
+			if ((stream = MCS_open(*t_fullpath_string, *t_io_read_mode_string, True, False,
 			                       offset)) != NULL)
 			{
 				delete pathstring;
@@ -710,10 +726,19 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	IO_handle stream;
 	char *openpath = NULL;
 	char *fname = strclone(inname);
-	if ((stream = MCS_open(fname, IO_READ_MODE, True, False, 0)) != NULL)
+	MCAutoStringRef t_fname_string;
+	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname_string);
+	MCAutoStringRef t_io_read_mode_string;
+	/* UNCHECKED */ MCStringCreateWithCString(IO_READ_MODE, &t_io_read_mode_string);
+	if ((stream = MCS_open(*t_fname_string, *t_io_read_mode_string, True, False, 0)) != NULL)
 		if (fname[0] != PATH_SEPARATOR && fname[1] != ':')
 		{
-			char *curpath = MCS_getcurdir();
+			MCAutoStringRef t_curpath;
+			MCS_getcurdir(&t_curpath);
+
+			char *curpath = nil;
+			if (*t_curpath != nil)
+				MCCStringClone(MCStringGetCString(*t_curpath), curpath);
 			if (curpath[strlen(curpath) - 1] == '/')
 				curpath[strlen(curpath) - 1] = '\0';
 			openpath = new char[strlen(curpath) + strlen(fname) + 2];
@@ -731,9 +756,15 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			tname = tmparray;
 		else
 			tname++;
-		if ((stream = MCS_open(tname, IO_READ_MODE, True, False, 0)) != NULL)
+		MCAutoStringRef tname_string;
+		/* UNCHECKED */ MCStringCreateWithCString(tname, &tname_string);
+		if ((stream = MCS_open(*tname_string, *t_io_read_mode_string, True, False, 0)) != NULL)
 		{
-			char *curpath = MCS_getcurdir();
+			MCAutoStringRef t_curpath;
+			MCS_getcurdir(&t_curpath);
+			char *curpath = nil;
+			if (*t_curpath != nil)
+				MCCStringClone(MCStringGetCString(*t_curpath), curpath);
 			openpath = new char[strlen(curpath) + strlen(tname) + 2];
 			sprintf(openpath, "%s/%s", curpath, tname);
 			delete curpath;
@@ -744,22 +775,32 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			        && !openenv(tname, "MCPATH", &openpath, stream, 0)
 			        && !openenv(tname, "PATH", &openpath, stream, 0))
 			{
-				char *homename;
-				if ((homename = MCS_getenv("HOME")) != NULL)
+
+				MCAutoStringRef t_homename;
+				MCAutoStringRef t_message;
+				/* UNCHECKED */ MCStringCreateWithCString("HOME", &t_message);
+	
+				MCS_getenv(*t_message, &t_homename);
+	
+				char *homename = (char*) MCStringGetCString(*t_homename);
+
+				if (homename != NULL)
 				{
 					openpath = new char[strlen(homename) + strlen(tname) + 13];
 					if (homename[strlen(homename) - 1] == '/')
 						homename[strlen(homename) - 1] = '\0';
 					sprintf(openpath, "%s/%s", homename,  tname);
-					if ((stream = MCS_open(openpath, IO_READ_MODE, True,
+					MCAutoStringRef t_openpath_string;
+					/* UNCHECKED */ MCStringCreateWithCString(openpath, &t_openpath_string);
+					if ((stream = MCS_open(*t_openpath_string, *t_io_read_mode_string, True,
 					                       False, 0)) == NULL)
 					{
 						sprintf(openpath, "%s/stacks/%s", homename, tname);
-						if ((stream = MCS_open(openpath, IO_READ_MODE, True,
+						if ((stream = MCS_open(*t_openpath_string, *t_io_read_mode_string, True,
 						                       False, 0)) == NULL)
 						{
 							sprintf(openpath, "%s/components/%s", homename, tname);
-							if ((stream = MCS_open(openpath, IO_READ_MODE, True,
+							if ((stream = MCS_open(*t_openpath_string, *t_io_read_mode_string, True,
 							                       False, 0)) == NULL)
 							{
 								delete openpath;
@@ -788,11 +829,14 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 
 void MCDispatch::cleanup(IO_handle stream, char *linkname, char *bname)
 {
+	MCAutoStringRef t_linkname_string, t_bname_string;
+	/* UNCHECKED */ MCStringCreateWithCString(linkname, &t_linkname_string);
+	/* UNCHECKED */ MCStringCreateWithCString(bname, &t_bname_string);
 	if (stream != NULL)
 		MCS_close(stream);
-	MCS_unlink(linkname);
+	MCS_unlink(*t_linkname_string);
 	if (bname != NULL)
-		MCS_unbackup(bname, linkname);
+		MCS_unbackup(*t_bname_string, *t_linkname_string);
 	delete linkname;
 	delete bname;
 }
@@ -813,6 +857,10 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	
 	char *linkname;
+	
+	MCAutoStringRef t_linkname;
+	/* UNCHECKED */ MCStringCreateWithCString(linkname, &t_linkname);
+	
 	if (MCStringGetLength(p_fname) != 0)
 		linkname = strclone(MCStringGetCString(p_fname));
 	else
@@ -826,7 +874,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		MCresult->sets("can't open stack file, bad path");
 		return IO_ERROR;
 	}
-	if (MCS_noperm(linkname))
+	if (MCS_noperm(*t_linkname))
 	{
 		MCresult->sets("can't open stack file, no permission");
 		delete linkname;
@@ -837,8 +885,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	char *backup = new char[strlen(linkname) + 2];
 	strcpy(backup, linkname);
 	strcat(backup, "~");
-	MCS_unlink(backup);
-	if (MCS_exists(linkname, True) && !MCS_backup(linkname, backup))
+	
+	
+	MCAutoStringRef t_backup;
+	/* UNCHECKED */ MCStringCreateWithCString(backup, &t_backup);
+
+	MCS_unlink(*t_backup);
+	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))
 	{
 		MCresult->sets("can't open stack backup file");
 		MCfiletype = oldfiletype;
@@ -847,7 +900,10 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	}
 	IO_handle stream;
-	if ((stream = MCS_open(linkname, IO_WRITE_MODE, True, False, 0)) == NULL)
+	MCAutoStringRef io_write_mode_string;
+	/* UNCHECKED */ MCStringCreateWithCString(IO_WRITE_MODE, &io_write_mode_string);
+
+	if ((stream = MCS_open(*t_linkname, *io_write_mode_string, True, False, 0)) == NULL)
 	{
 		MCresult->sets("can't open stack file");
 		cleanup(stream, linkname, backup);
@@ -906,15 +962,28 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	if (oldmask & 00004)
 		newmask &= ~00001;
 	MCS_umask(oldmask);
-	MCS_chmod(linkname, newmask);
+	
+	MCS_chmod(*t_linkname, newmask);
+/*
 	if (sptr->getfilename() != NULL && !strequal(linkname, sptr->getfilename()))
 		MCS_copyresourcefork(sptr->getfilename(), linkname);
 	else if (sptr -> getfilename() != NULL)
 		MCS_copyresourcefork(backup, linkname);
+*/
+	
+	MCAutoStringRef t_filename;
+	if (sptr -> getfilename() != nil)
+		/* UNCHECKED */ MCStringCreateWithCString(sptr->getfilename(), &t_filename);
+
+	if (*t_filename != nil && (*t_linkname == nil || !MCStringIsEqualTo(*t_filename, *t_linkname, kMCCompareExact)))
+		MCS_copyresourcefork(*t_filename, *t_linkname);
+	else if (*t_filename != nil)
+		MCS_copyresourcefork(*t_backup, *t_linkname);
+
 	sptr->setfilename(linkname);
 	if (backup != NULL)
 	{
-		MCS_unlink(backup);
+		MCS_unlink(*t_backup);
 		delete backup;
 	}
 	return IO_NORMAL;

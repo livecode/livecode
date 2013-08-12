@@ -67,6 +67,8 @@ typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
 typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
 
 typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
+typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -18,15 +18,29 @@
 
 #include "parsedef.h"
 #include "filedefs.h"
+#include "globdefs.h"
 
 #include "execpt.h"
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
 #include "util.h"
+#include "mcio.h"
+#include "stack.h"
+
 #include <sys/stat.h>
 
 #include "foundation.h"
+
+#define ENTRIES_CHUNK 1024
+
+#define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
+#include <termios.h>
+#define B16600 16600
+
+#include <pwd.h>
+
+#define USE_FSCATALOGINFO
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -78,6 +92,322 @@ bool MCS_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OST
     return false;
 }
 
+/********************************************************************/
+/*                        Serial Handling                           */
+/********************************************************************/
+
+// Utilities
+
+static void parseSerialControlStr(char *setting, struct termios *theTermios)
+{
+	int baud = 0;
+	char *type = setting;
+	char *value = NULL;
+	if ((value = strchr(type, '=')) != NULL)
+	{
+		*value++ = '\0';
+		if (MCU_strncasecmp(type, "baud", strlen(type)) == 0)
+		{
+			long baudrate = strtol(value, NULL, 10);
+			if (baudrate == 57600)
+				baud = B57600;
+			else if (baudrate == 38400)
+				baud = B38400;
+			else if (baudrate == 28800)
+				baud = B28800;
+			else if (baudrate == 19200)
+				baud = B19200;
+			else if (baudrate == 16600)
+				baud = B16600;
+			else if (baudrate == 14400)
+				baud = B14400;
+			else if (baudrate == 9600)
+				baud = B9600;
+			else if (baudrate == 7200)
+				baud = B7200;
+			else if (baudrate == 4800)
+				baud = B4800;
+			else if (baudrate == 3600)
+				baud = B4800;
+			else if (baudrate == 2400)
+				baud = B2400;
+			else if (baudrate == 1800)
+				baud = B1800;
+			else if (baudrate == 1200)
+				baud = B1200;
+			else if (baudrate == 600)
+				baud = B600;
+			else if (baudrate == 300)
+				baud = B300;
+			cfsetispeed(theTermios, baud);
+			cfsetospeed(theTermios, baud);
+		}
+		else if (MCU_strncasecmp(type, "parity", strlen(type)) == 0)
+		{
+			if (value[0] == 'N' || value[0] == 'n')
+				theTermios->c_cflag &= ~(PARENB | PARODD);
+			else if (value[0] == 'O' || value[0] == 'o')
+				theTermios->c_cflag |= PARENB | PARODD;
+			else if (value[0] == 'E' || value[0] == 'e')
+				theTermios->c_cflag |= PARENB;
+		}
+		else if (MCU_strncasecmp(type, "data", strlen(type)) == 0)
+		{
+			short data = atoi(value);
+			switch (data)
+			{
+                case 5:
+                    theTermios->c_cflag |= CS5;
+                    break;
+                case 6:
+                    theTermios->c_cflag |= CS6;
+                    break;
+                case 7:
+                    theTermios->c_cflag |= CS7;
+                    break;
+                case 8:
+                    theTermios->c_cflag |= CS8;
+                    break;
+			}
+		}
+		else if (MCU_strncasecmp(type, "stop", strlen(type)) == 0)
+		{
+			double stopbit = strtol(value, NULL, 10);
+			if (stopbit == 1.0)
+				theTermios->c_cflag &= ~CSTOPB;
+			else if (stopbit == 1.5)
+				theTermios->c_cflag &= ~CSTOPB;
+			else if (stopbit == 2.0)
+				theTermios->c_cflag |= CSTOPB;
+		}
+	}
+}
+
+static void configureSerialPort(int sRefNum)
+{/****************************************************************************
+  *parse MCserialcontrolstring and set the serial output port to the settings*
+  *defined by MCserialcontrolstring accordingly                              *
+  ****************************************************************************/
+	//initialize to the default setting
+	struct termios	theTermios;
+	if (tcgetattr(sRefNum, &theTermios) < 0)
+	{
+		// TODO: handle error appropriately
+	}
+	cfsetispeed(&theTermios,  B9600);
+	theTermios.c_cflag = CS8;
+    
+	char *controlptr = strclone(MCserialcontrolsettings);
+	char *str = controlptr;
+	char *each = NULL;
+	while ((each = strchr(str, ' ')) != NULL)
+	{
+		*each = '\0';
+		each++;
+		if (str != NULL)
+			parseSerialControlStr(str, &theTermios);
+		str = each;
+	}
+	delete controlptr;
+	//configure the serial output device
+	parseSerialControlStr(str,&theTermios);
+	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
+	{
+		// TODO: handle error appropriately
+	}
+	return;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MCS_setfiletype(MCStringRef p_new_path)
+{
+	FSRef t_fsref;
+    // TODO Check whether the double path resolution is an issue
+	if (MCS_pathtoref(p_new_path, t_fsref) != noErr)
+		return; // ignore errors
+    
+	FSCatalogInfo t_catalog;
+	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
+	{
+		// Set the creator and filetype of the catalog.
+		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
+		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
+		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
+        
+		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+extern "C"
+{
+#include	<CoreFoundation/CoreFoundation.h>
+#include	<IOKit/IOKitLib.h>
+#include	<IOKit/serial/IOSerialKeys.h>
+#include	<IOKit/IOBSD.h>
+}
+
+static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_port_t *masterPort)
+{
+    kern_return_t	kernResult;
+    CFMutableDictionaryRef classesToMatch;
+    if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
+        return kernResult;
+    if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
+        return kernResult;
+    CFDictionarySetValue(classesToMatch, CFSTR(kIOSerialBSDTypeKey),
+                         CFSTR(kIOSerialBSDRS232Type));
+    //kIOSerialBSDRS232Type filters KeySpan USB modems use
+    //kIOSerialBSDModemType to get 'real' serial modems for OSX
+    //computers with real serial ports - if there are any!
+    kernResult = IOServiceGetMatchingServices(*masterPort, classesToMatch,
+                                              serialIterator);
+    return kernResult;
+}
+
+static void getIOKitProp(io_object_t sObj, const char *propName,
+                         char *dest, uint2 destlen)
+{
+	CFTypeRef nameCFstring;
+	dest[0] = 0;
+	nameCFstring = IORegistryEntryCreateCFProperty(sObj,
+                                                   CFStringCreateWithCString(kCFAllocatorDefault, propName,
+                                                                             kCFStringEncodingASCII),
+                                                   kCFAllocatorDefault, 0);
+	if (nameCFstring)
+	{
+		CFStringGetCString((CFStringRef)nameCFstring, (char *)dest, (long)destlen,
+                           (unsigned long)kCFStringEncodingASCII);
+		CFRelease(nameCFstring);
+	}
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+//for setting serial port use
+typedef struct
+{
+	short baudrate;
+	short parity;
+	short stop;
+	short data;
+}
+SerialControl;
+
+//struct
+SerialControl portconfig; //serial port configuration structure
+
+extern "C"
+{
+	extern UInt32 SwapQDTextFlags(UInt32 newFlags);
+	typedef UInt32 (*SwapQDTextFlagsPtr)(UInt32 newFlags);
+}
+
+static void configureSerialPort(int sRefNum);
+static void parseSerialControlStr(char *set, struct termios *theTermios);
+
+void MCS_setfiletype(MCStringRef newpath);
+
+///////////////////////////////////////////////////////////////////////////////
+
+/* LEGACY */
+extern char *path2utf(const char *);
+
+static void handle_signal(int sig)
+{
+	MCHandler handler(HT_MESSAGE);
+	switch (sig)
+	{
+        case SIGUSR1:
+            MCsiguser1++;
+            break;
+        case SIGUSR2:
+            MCsiguser2++;
+            break;
+        case SIGTERM:
+            switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+		{
+            case ES_NORMAL:
+                return;
+            case ES_PASS:
+            case ES_NOT_HANDLED:
+                MCdefaultstackptr->getcard()->message(MCM_shut_down);
+                MCquit = True; //set MC quit flag, to invoke quitting
+                return;
+            default:
+                break;
+		}
+            MCS_killall();
+            exit(-1);
+            
+            // MW-2009-01-29: [[ Bug 6410 ]] If one of these signals occurs, we need
+            //   to return, so that the OS can CrashReport away.
+        case SIGILL:
+        case SIGBUS:
+        case SIGSEGV:
+            fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+            MCS_killall();
+            return;
+            
+        case SIGHUP:
+        case SIGINT:
+        case SIGQUIT:
+        case SIGIOT:
+            if (MCnoui)
+                exit(1);
+            MCabortscript = True;
+            break;
+        case SIGFPE:
+            errno = EDOM;
+            break;
+        case SIGCHLD:
+            MCS_checkprocesses();
+            break;
+        case SIGALRM:
+            MCalarm = True;
+            break;
+        case SIGPIPE:
+        default:
+            break;
+	}
+	return;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
+
+///////////////////////////////////////////////////////////////////////////////
+
+static Boolean hasPPCToolbox = False;
+static Boolean hasAppleEvents = False;
+
+///////////////////////////////////////////////////////////////////////////////
+
+bool MCS_is_link(MCStringRef p_path)
+{
+	struct stat buf;
+	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+}
+
+bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
+{
+	struct stat t_stat;
+	ssize_t t_size;
+	MCAutoNativeCharArray t_buffer;
+    
+	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
+		!t_buffer.New(t_stat.st_size))
+		return false;
+    
+	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+    
+	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 class MCStdioFileHandle: public MCSystemFileHandle
@@ -99,27 +429,65 @@ public:
 	
 	static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
 	{
+#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
+	IO_handle handle = NULL;
+	FILE *fptr = fdopen(fd, mode);
+	
+	if (fptr != NULL)
+	{
+		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+		if (mode[0] == 'w')
+			setvbuf(fptr, NULL, _IONBF, 0);
+
+		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
+	}	
+	return handle;
+#endif /* MCS_dopen_dsk_mac */
 		FILE *t_stream;
 		t_stream = fdopen(fd, p_mode);
 		if (t_stream == NULL)
 			return NULL;
 		
-		// MW-2011-06-27: [[ SERVER ]] Turn off buffering for output stderr / stdout
-		if (fd == 1 || fd == 2)
-			setbuf(t_stream, NULL);
+		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+		if (mode[0] == 'w')
+			setvbuf(t_stream, NULL, _IONBF, 0);
 		
 		MCStdioFileHandle *t_handle;
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
 		
-		return t_handle;
-		
+		return t_handle;		
 	}
 	
 	virtual void Close(void)
 	{
-		fclose(m_stream);
-		delete this;
+#ifdef /* MCS_close_dsk_mac */ LEGACY_SYSTEM
+	IO_stat stat = IO_NORMAL;
+	if (stream->serialIn != 0 || stream->serialOut != 0)
+	{//close the serial port
+
+	}
+	else
+		if (stream->fptr == NULL)
+		{
+			if (!(stream->flags & IO_FAKE))
+				delete stream->buffer;
+		}
+		else
+			fclose(stream->fptr);
+	delete stream;
+	stream = NULL;
+	return stat;
+#endif /* MCS_close_dsk_mac */
+        if (m_serialIn != 0 || m_serialOut != 0)
+        {//close the serial port
+            
+        }
+        else if (m_stream != NULL)
+            fclose(m_stream);
+        
+        delete m_stream;
+        m_stream = NULL;
 	}
 	
 	virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
@@ -148,16 +516,66 @@ public:
 	
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
+#ifdef /* MCS_seek_cur_dsk_mac */ LEGACY_SYSTEM
+	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_seek_cur(stream, offset);
+
+	/* seek to offset from the current file mark */
+	if (stream->fptr == NULL)
+		IO_set_stream(stream, stream->ioptr + offset);
+	else
+		if (fseeko(stream->fptr, offset, SEEK_CUR) != 0)
+			return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_seek_cur_dsk_mac */
+#ifdef /* MCS_seek_set_dsk_mac */ LEGACY_SYSTEM
+	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_seek_set(stream, offset);
+	
+	if (stream->fptr == NULL)
+		IO_set_stream(stream, stream->buffer + offset);
+	else
+		if (fseeko(stream->fptr, offset, SEEK_SET) != 0)
+			return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_seek_set_dsk_mac */
+#ifdef /* MCS_seek_end_dsk_mac */ LEGACY_SYSTEM
+    /* seek to offset from the end of the file */
+	if (stream->fptr == NULL)
+		IO_set_stream(stream, stream->buffer + stream->len + offset);
+	else
+		if (fseeko(stream->fptr, offset, SEEK_END) != 0)
+			return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_seek_end_dsk_mac */
 		return fseeko(m_stream, offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR)) == 0;
 	}
 	
 	virtual bool Truncate(void)
 	{
+#ifdef /* MCS_trunc_dsk_mac */ LEGACY_SYSTEM
+    
+	if (ftruncate(fileno(stream->fptr), ftell(stream->fptr)))
+		return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_trunc_dsk_mac */
 		return ftruncate(fileno(m_stream), ftell(m_stream)) == 0;
 	}
 	
 	virtual bool Sync(void)
 	{
+#ifdef /* MCS_sync_dsk_mac */ LEGACY_SYSTEM
+	if (stream->fptr != NULL)
+	{
+		int4 pos = ftello(stream->fptr);
+		if (fseek(stream->fptr, pos, SEEK_SET) != 0)
+			return IO_ERROR;
+	}
+	return IO_NORMAL;
+#endif /* MCS_sync_dsk_mac */
 		int64_t t_pos;
 		t_pos = ftello(m_stream);
 		return fseeko(m_stream, t_pos, SEEK_SET) == 0;
@@ -165,21 +583,63 @@ public:
 	
 	virtual bool Flush(void)
 	{
+#ifdef /* MCS_flush_dsk_mac */ LEGACY_SYSTEM
+    //flush file buffer
+	if (stream->fptr != NULL)
+		if (fflush(stream->fptr))
+			return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_flush_dsk_mac */
 		return fflush(m_stream) == 0;
 	}
 	
 	virtual bool PutBack(char p_char)
 	{
+#ifdef /* MCS_putback_dsk_mac */ LEGACY_SYSTEM
+	if (stream -> serialIn != 0 || stream -> fptr == NULL)
+		return MCS_seek_cur(stream, -1);
+	
+	if (ungetc(c, stream -> fptr) != c)
+		return IO_ERROR;
+		
+	return IO_NORMAL;
+#endif /* MCS_putback_dsk_mac */
 		return ungetc(p_char, m_stream) != EOF;
 	}
 	
 	virtual int64_t Tell(void)
 	{
+#ifdef /* MCS_tell_dsk_mac */ LEGACY_SYSTEM
+	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_tell(stream);
+
+	if (stream->fptr != NULL)
+		return ftello(stream->fptr);
+	else
+		return stream->ioptr - stream->buffer;
+#endif /* MCS_tell_dsk_mac */
 		return ftello(m_stream);
 	}
 	
 	virtual int64_t GetFileSize(void)
 	{
+#ifdef /* MCS_fsize_dsk_mac */ LEGACY_SYSTEM
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_fsize(stream);
+
+	if (stream->flags & IO_FAKE)
+		return stream->len;
+
+	// get file size of an Opened file
+	struct stat buf;
+	if (stream->fptr == NULL)
+		return stream->len;
+	int fd = fileno(stream->fptr);
+	if (fstat(fd, (struct stat *)&buf))
+		return 0;
+	return buf.st_size;
+#endif /* MCS_fsize_dsk_mac */
 		struct stat t_info;
 		if (fstat(fileno(m_stream), &t_info) != 0)
 			return 0;
@@ -204,7 +664,374 @@ struct MCMacDesktop: public MCSystemInterface
 {
 	virtual bool Initialize(void)
     {
+#ifdef /* MCS_init_dsk_mac */ LEGACY_SYSTEM
+        IO_stdin = new IO_header(stdin, 0, 0, 0, NULL, 0, 0);
+        IO_stdout = new IO_header(stdout, 0, 0, 0, NULL, 0, 0);
+        IO_stderr = new IO_header(stderr, 0, 0, 0, NULL, 0, 0);
+        struct sigaction action;
+        memset((char *)&action, 0, sizeof(action));
+        action.sa_handler = handle_signal;
+        action.sa_flags = SA_RESTART;
+        sigaction(SIGHUP, &action, NULL);
+        sigaction(SIGINT, &action, NULL);
+        sigaction(SIGQUIT, &action, NULL);
+        sigaction(SIGIOT, &action, NULL);
+        sigaction(SIGPIPE, &action, NULL);
+        sigaction(SIGALRM, &action, NULL);
+        sigaction(SIGTERM, &action, NULL);
+        sigaction(SIGUSR1, &action, NULL);
+        sigaction(SIGUSR2, &action, NULL);
+        sigaction(SIGFPE, &action, NULL);
+        action.sa_flags |= SA_NOCLDSTOP;
+        sigaction(SIGCHLD, &action, NULL);
         
+        // MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
+        //   the OS default so CrashReporter will kick in.
+        action.sa_flags = SA_RESETHAND;
+        sigaction(SIGSEGV, &action, NULL);
+        sigaction(SIGILL, &action, NULL);
+        sigaction(SIGBUS, &action, NULL);
+        
+        // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
+        //   Without this you can't poll read when a slave process.
+        if (!MCS_isatty(0))
+            MCS_nodelay(0);
+        
+        setlocale(LC_ALL, MCnullstring);
+        
+        _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
+        
+        // Initialize our case mapping tables
+        
+        MCuppercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MCuppercasingtable[i] = (uint1)i;
+        UppercaseText((char *)MCuppercasingtable, 256, smRoman);
+        
+        MClowercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MClowercasingtable[i] = (uint1)i;
+        LowercaseText((char *)MClowercasingtable, 256, smRoman);
+        
+        //
+        
+        // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
+        //   property here (otherwise it is nil in -ui mode).
+        MCshellcmd = strclone("/bin/sh");
+        
+        //
+        
+        MoreMasters();
+        InitCursor();
+        MCinfinity = HUGE_VAL;
+        
+        long response;
+        if (Gestalt(gestaltSystemVersion, &response) == noErr)
+            MCmajorosversion = response;
+		
+        MCaqua = True;
+        
+        init_utf8_converters();
+        
+        CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
+        if (theBundle != NULL)
+        {
+            if (CFBundleLoadExecutable(theBundle))
+            {
+                SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
+                if (stfptr != NULL)
+                    stfptr(kQDSupportedFlags);
+                CFBundleUnloadExecutable(theBundle);
+            }
+            CFRelease(theBundle);
+        }
+        
+        MCAutoStringRef dptr;
+        MCS_getcurdir(&dptr);
+        if (MCStringGetLength(*dptr) <= 1)
+        { // if root, then started from Finder
+            SInt16 vRefNum;
+            SInt32 dirID;
+            HGetVol(NULL, &vRefNum, &dirID);
+            FSSpec fspec;
+            FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
+            char *tpath = MCS_FSSpec2path(&fspec);
+            char *newpath = new char[strlen(tpath) + 11];
+            strcpy(newpath, tpath);
+            strcat(newpath, "/../../../");
+            MCAutoStringRef t_new_path_auto;
+            /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
+            MCS_setcurdir(*t_new_path_auto);
+            delete tpath;
+            delete newpath;
+        }
+        
+        // MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
+        //   Make sure we always use outlines - then everything looks pretty :o)
+        SetOutlinePreferred(TRUE);
+        
+        MCS_reset_time();
+        //do toolbox checking
+        long result;
+        hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
+                         ? False : result != 0);
+        hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
+                          ? False : result != 0);
+        uint1 i;
+        if (hasAppleEvents)
+        { //install required AE event handler
+            for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
+            {
+                if (!ourkeys[i].theUPP)
+                {
+                    ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
+                    AEInstallEventHandler(ourkeys[i].theEventClass,
+                                          ourkeys[i].theEventID,
+                                          ourkeys[i].theUPP, 0L, False);
+                }
+            }
+        }
+        
+        // ** MODE CHOICE
+        if (MCModeShouldPreprocessOpeningStacks())
+        {
+            EventRecord event;
+            i = 2;
+            // predispatch any openapp or opendoc events so that stacks[] array
+            // can be properly initialized
+            while (i--)
+                while (WaitNextEvent(highLevelEventMask, &event,
+                                     (unsigned long)0, (RgnHandle)NULL))
+                    AEProcessAppleEvent(&event);
+        }
+        //install special handler
+        AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
+        AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
+        
+        if (Gestalt('ICAp', &response) == noErr)
+        {
+            OSErr err;
+            ICInstance icinst;
+            ICAttr icattr;
+            err = ICStart(&icinst, 'MCRD');
+            if (err == noErr)
+            {
+                Str255 proxystr;
+                Boolean useproxy;
+                
+                long icsize = sizeof(useproxy);
+                err = ICGetPref(icinst,  kICUseHTTPProxy, &icattr, &useproxy, &icsize);
+                if (err == noErr && useproxy == True)
+                {
+                    icsize = sizeof(proxystr);
+                    err = ICGetPref(icinst, kICHTTPProxyHost ,&icattr, proxystr, &icsize);
+                    if (err == noErr)
+                    {
+                        p2cstr(proxystr);
+                        MChttpproxy = strclone((char *)proxystr);
+                    }
+                }
+                ICStop(icinst);
+            }
+        }
+        
+        
+        MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
+        
+        // MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
+        extern void MCCoreImageRegister(void);
+        if (MCmajorosversion >= 0x1040)
+            MCCoreImageRegister();
+		
+        if (!MCnoui)
+        {
+            setlinebuf(stdout);
+            setlinebuf(stderr);
+        }
+#endif /* MCS_init_dsk_mac */
+        IO_stdin = new IO_header(MCStdioFileHandle::OpenFd(stdin, IO_READ_MODE), 0);
+        IO_stdout = new IO_header(MCStdioFileHandle::OpenFd(stdout, IO_WRITE_MODE), 0);
+        IO_stderr = new IO_header(MCStdioFileHandle::OpenFd(stderr, IO_WRITE_MODE), 0);
+        struct sigaction action;
+        memset((char *)&action, 0, sizeof(action));
+        action.sa_handler = handle_signal;
+        action.sa_flags = SA_RESTART;
+        sigaction(SIGHUP, &action, NULL);
+        sigaction(SIGINT, &action, NULL);
+        sigaction(SIGQUIT, &action, NULL);
+        sigaction(SIGIOT, &action, NULL);
+        sigaction(SIGPIPE, &action, NULL);
+        sigaction(SIGALRM, &action, NULL);
+        sigaction(SIGTERM, &action, NULL);
+        sigaction(SIGUSR1, &action, NULL);
+        sigaction(SIGUSR2, &action, NULL);
+        sigaction(SIGFPE, &action, NULL);
+        action.sa_flags |= SA_NOCLDSTOP;
+        sigaction(SIGCHLD, &action, NULL);
+        
+        // MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
+        //   the OS default so CrashReporter will kick in.
+        action.sa_flags = SA_RESETHAND;
+        sigaction(SIGSEGV, &action, NULL);
+        sigaction(SIGILL, &action, NULL);
+        sigaction(SIGBUS, &action, NULL);
+        
+        // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
+        //   Without this you can't poll read when a slave process.
+        if (!MCS_isatty(0))
+            MCS_nodelay(0);
+        
+        setlocale(LC_ALL, MCnullstring);
+        
+        _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
+        
+        // Initialize our case mapping tables
+        
+        MCuppercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MCuppercasingtable[i] = (uint1)i;
+        UppercaseText((char *)MCuppercasingtable, 256, smRoman);
+        
+        MClowercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MClowercasingtable[i] = (uint1)i;
+        LowercaseText((char *)MClowercasingtable, 256, smRoman);
+        
+        //
+        
+        // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
+        //   property here (otherwise it is nil in -ui mode).
+        MCshellcmd = strclone("/bin/sh");
+        
+        //
+        
+        MoreMasters();
+        InitCursor();
+        MCinfinity = HUGE_VAL;
+        
+        long response;
+        if (Gestalt(gestaltSystemVersion, &response) == noErr)
+            MCmajorosversion = response;
+		
+        MCaqua = True;
+        
+        init_utf8_converters();
+        
+        CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
+        if (theBundle != NULL)
+        {
+            if (CFBundleLoadExecutable(theBundle))
+            {
+                SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
+                if (stfptr != NULL)
+                    stfptr(kQDSupportedFlags);
+                CFBundleUnloadExecutable(theBundle);
+            }
+            CFRelease(theBundle);
+        }
+        
+        MCAutoStringRef dptr;
+        MCS_getcurdir(&dptr);
+        if (MCStringGetLength(*dptr) <= 1)
+        { // if root, then started from Finder
+            SInt16 vRefNum;
+            SInt32 dirID;
+            HGetVol(NULL, &vRefNum, &dirID);
+            FSSpec fspec;
+            FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
+            char *tpath = MCS_FSSpec2path(&fspec);
+            char *newpath = new char[strlen(tpath) + 11];
+            strcpy(newpath, tpath);
+            strcat(newpath, "/../../../");
+            MCAutoStringRef t_new_path_auto;
+            /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
+            MCS_setcurdir(*t_new_path_auto);
+            delete tpath;
+            delete newpath;
+        }
+        
+        // MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
+        //   Make sure we always use outlines - then everything looks pretty :o)
+        SetOutlinePreferred(TRUE);
+        
+        MCS_reset_time();
+        //do toolbox checking
+        long result;
+        hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
+                         ? False : result != 0);
+        hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
+                          ? False : result != 0);
+        uint1 i;
+        if (hasAppleEvents)
+        { //install required AE event handler
+            for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
+            {
+                if (!ourkeys[i].theUPP)
+                {
+                    ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
+                    AEInstallEventHandler(ourkeys[i].theEventClass,
+                                          ourkeys[i].theEventID,
+                                          ourkeys[i].theUPP, 0L, False);
+                }
+            }
+        }
+        
+        // ** MODE CHOICE
+        if (MCModeShouldPreprocessOpeningStacks())
+        {
+            EventRecord event;
+            i = 2;
+            // predispatch any openapp or opendoc events so that stacks[] array
+            // can be properly initialized
+            while (i--)
+                while (WaitNextEvent(highLevelEventMask, &event,
+                                     (unsigned long)0, (RgnHandle)NULL))
+                    AEProcessAppleEvent(&event);
+        }
+        //install special handler
+        AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
+        AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
+        
+        if (Gestalt('ICAp', &response) == noErr)
+        {
+            OSErr err;
+            ICInstance icinst;
+            ICAttr icattr;
+            err = ICStart(&icinst, 'MCRD');
+            if (err == noErr)
+            {
+                Str255 proxystr;
+                Boolean useproxy;
+                
+                long icsize = sizeof(useproxy);
+                err = ICGetPref(icinst,  kICUseHTTPProxy, &icattr, &useproxy, &icsize);
+                if (err == noErr && useproxy == True)
+                {
+                    icsize = sizeof(proxystr);
+                    err = ICGetPref(icinst, kICHTTPProxyHost ,&icattr, proxystr, &icsize);
+                    if (err == noErr)
+                    {
+                        p2cstr(proxystr);
+                        MChttpproxy = strclone((char *)proxystr);
+                    }
+                }
+                ICStop(icinst);
+            }
+        }
+        
+        
+        MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
+        
+        // MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
+        extern void MCCoreImageRegister(void);
+        if (MCmajorosversion >= 0x1040)
+            MCCoreImageRegister();
+		
+        if (!MCnoui)
+        {
+            setlinebuf(stdout);
+            setlinebuf(stderr);
+        }        
     }
 	virtual void Finalize(void)
     {
@@ -233,7 +1060,7 @@ struct MCMacDesktop: public MCSystemInterface
     {
         
     }
-	virtual bool GetAddress(MCStringRef& r_string)
+	virtual void GetAddress(MCStringRef& r_string)
     {
         
     }
@@ -297,6 +1124,15 @@ struct MCMacDesktop: public MCSystemInterface
             return False;
         
         return True;
+    }
+    
+    /* LEGACY */
+    virtual bool DeleteFile(const char *path)
+    {
+        char *newpath = path2utf(MCS_resolvepath(path));
+        Boolean done = remove(newpath) == 0;
+        delete newpath;
+        return done;
     }
 	
 	virtual Boolean DeleteFile(MCStringRef p_path)
@@ -924,7 +1760,7 @@ struct MCMacDesktop: public MCSystemInterface
         return True;
     }
 	
-	virtual Boolean GetCurrentFolder(MCStringRef& r_path)
+	virtual void GetCurrentFolder(MCStringRef& r_path)
     {
 #ifdef /* MCS_getcurdir_dsk_mac */ LEGACY_SYSTEM
     char namebuf[PATH_MAX + 2];
@@ -941,22 +1777,24 @@ struct MCMacDesktop: public MCSystemInterface
     t_buffer.Shrink(outlen);
     return t_buffer.CreateStringAndRelease(r_path);
 #endif /* MCS_getcurdir_dsk_mac */
+        bool t_success;
         char namebuf[PATH_MAX + 2];
         if (NULL == getcwd(namebuf, PATH_MAX))
-            return false;
+            t_success = false;
         
         MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX + 1))
-            return false;
+        if (t_success)
+            t_success = t_buffer.New(PATH_MAX + 1);
         
         uint4 outlen;
         outlen = PATH_MAX + 1;
         MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
         t_buffer.Shrink(outlen);
-        if (!t_buffer.CreateStringAndRelease(r_path))
-            return False;
+        if (t_success)
+            t_success = t_buffer.CreateStringAndRelease(r_path);
         
-        return True;
+        if (!t_success)
+            r_path = MCValueRetain(kMCEmptyString);            
     }
     
     // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
@@ -978,9 +1816,10 @@ struct MCMacDesktop: public MCSystemInterface
     
     return True;
 #endif /* MCS_setcurdir_dsk_mac */
+        bool t_success;
         MCAutoStringRefAsUTF8String t_utf8_string;
         if (!t_utf8_string.Lock(p_path))
-            return false;
+            return False;
         
         if (chdir(*t_utf8_string) != 0)
             return False;
@@ -1148,6 +1987,7 @@ struct MCMacDesktop: public MCSystemInterface
 #endif /* MCS_chmodMacDsk_dsk_mac */
         return True;
     }
+    
 	virtual uint2 UMask(uint2 p_mask)
     {
 #ifdef /* MCS_umask_dsk_mac */ LEGACY_SYSTEM
@@ -1537,49 +2377,539 @@ struct MCMacDesktop: public MCSystemInterface
     
     virtual real8 GetFreeDiskSpace()
     {
+#ifdef /* MCS_getfreediskspace_dsk_mac */ LEGACY_SYSTEM
+	char t_defaultfolder[PATH_MAX + 1];
+	getcwd(t_defaultfolder, PATH_MAX);
+	
+	FSRef t_defaultfolder_fsref;
+	OSErr t_os_error;
+	if (t_defaultfolder != NULL)
+		t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
+		
+	FSCatalogInfo t_catalog_info;
+	if (t_os_error == noErr)
+		t_os_error = FSGetCatalogInfo(&t_defaultfolder_fsref, kFSCatInfoVolume, &t_catalog_info, NULL, NULL, NULL);
+	
+	FSVolumeInfo t_volume_info;
+	if (t_os_error == noErr)
+		t_os_error = FSGetVolumeInfo(t_catalog_info . volume, 0, NULL, kFSVolInfoSizes, &t_volume_info, NULL, NULL);
+		
+	real8 t_free_space;
+	t_free_space = 0.;
+	
+	// MH: freeBytes is a 64bit unsigned int, I follow previous functionality, and simply cast to real8.
+	if (t_os_error == noErr)
+		t_free_space = (real8) t_volume_info . freeBytes;
+		
+	return t_free_space;
+#endif /* MCS_getfreediskspace_dsk_mac */
+        char t_defaultfolder[PATH_MAX + 1];
+        getcwd(t_defaultfolder, PATH_MAX);
         
+        FSRef t_defaultfolder_fsref;
+        OSErr t_os_error;
+        if (t_defaultfolder != NULL)
+            t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
+		
+        FSCatalogInfo t_catalog_info;
+        if (t_os_error == noErr)
+            t_os_error = FSGetCatalogInfo(&t_defaultfolder_fsref, kFSCatInfoVolume, &t_catalog_info, NULL, NULL, NULL);
+        
+        FSVolumeInfo t_volume_info;
+        if (t_os_error == noErr)
+            t_os_error = FSGetVolumeInfo(t_catalog_info . volume, 0, NULL, kFSVolInfoSizes, &t_volume_info, NULL, NULL);
+		
+        real8 t_free_space;
+        t_free_space = 0.;
+        
+        // MH: freeBytes is a 64bit unsigned int, I follow previous functionality, and simply cast to real8.
+        if (t_os_error == noErr)
+            t_free_space = (real8) t_volume_info . freeBytes;
+		
+        return t_free_space;
     }
     
     virtual Boolean GetDevices(MCStringRef& r_devices)
     {
+#ifdef /* MCS_getdevices */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+	io_iterator_t SerialPortIterator = NULL;
+	mach_port_t masterPort = NULL;
+	io_object_t thePort;
+	if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+		return false;
+	}
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	uint2 portCount = 0;
+
+	bool t_success = true;
+	if (SerialPortIterator != 0)
+	{
+		while (t_success && (thePort = IOIteratorNext(SerialPortIterator)) != 0)
+		{
+			char ioresultbuffer[256];
+
+			MCAutoListRef t_result_list;
+			MCAutoStringRef t_result_string;
+
+			t_success = MCListCreateMutable(',', &t_result_list);
+
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//name
+			}
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+			}
+			if (t_success)
+			{
+				getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+			}
+
+			if (t_success)
+				t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+
+			if (t_success)
+				t_success = MCListAppend(*t_list, *t_result_string);
+
+			IOObjectRelease(thePort);
+			portCount++;
+		}
+		IOObjectRelease(SerialPortIterator);
+	}
+	
+	return t_success && MCListCopy(*t_list, r_list);
+#endif /* MCS_getdevices */
+        MCAutoListRef t_list;
+        io_iterator_t SerialPortIterator = NULL;
+        mach_port_t masterPort = NULL;
+        io_object_t thePort;
+        if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
+        {
+            char *buffer = new char[6 + I2L];
+            sprintf(buffer, "error %d", errno);
+            MCresult->copysvalue(buffer);
+            delete buffer;
+            return false;
+        }
+        if (!MCListCreateMutable('\n', &t_list))
+            return false;
         
+        uint2 portCount = 0;
+        
+        bool t_success = true;
+        if (SerialPortIterator != 0)
+        {
+            while (t_success && (thePort = IOIteratorNext(SerialPortIterator)) != 0)
+            {
+                char ioresultbuffer[256];
+                
+                MCAutoListRef t_result_list;
+                MCAutoStringRef t_result_string;
+                
+                t_success = MCListCreateMutable(',', &t_result_list);
+                
+                if (t_success)
+                {
+                    getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+                    t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//name
+                }
+                if (t_success)
+                {
+                    getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+                    t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+                }
+                if (t_success)
+                {
+                    getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+                    t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+                }
+                
+                if (t_success)
+                    t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+                
+                if (t_success)
+                    t_success = MCListAppend(*t_list, *t_result_string);
+                
+                IOObjectRelease(thePort);
+                portCount++;
+            }
+            IOObjectRelease(SerialPortIterator);
+        }
+        
+        if (t_success && MCListCopyAsString(*t_list, r_devices))
+            return True;
+        
+        return False;
     }
     
     virtual Boolean GetDrives(MCStringRef& r_drives)
     {
-    
+        r_drives = MCValueRetain(kMCEmptyString);
+        return True;
     }
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
     {
+        MCAutoStringRef t_resolved_path;
         
+        if (!ResolvePath(p_path, &t_resolved_path))
+            return false;
+        
+        return MCStringCopyAndRelease(*t_resolved_path, r_native);
     }
     
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
     {
+        MCAutoStringRef t_resolved_path;
         
+        if (!ResolvePath(p_native, &t_resolved_path))
+            return false;
+        
+        return MCStringCopyAndRelease(*t_resolved_path, r_path);
     }
     
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
     {
+#ifdef /* MCS_resolvepath */ LEGACY_SYSTEM
+	if (MCStringGetLength(p_path) == 0)
+		return MCS_getcurdir(r_resolved);
+
+	MCAutoStringRef t_tilde_path;
+	if (MCStringGetCharAtIndex(p_path, 0) == '~')
+	{
+		uindex_t t_user_end;
+		if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
+			t_user_end = MCStringGetLength(p_path);
+		
+		// Prepend user name
+		struct passwd *t_password;
+		if (t_user_end == 1)
+			t_password = getpwuid(getuid());
+		else
+		{
+			MCAutoStringRef t_username;
+			if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+				return false;
+
+			t_password = getpwnam(MCStringGetCString(*t_username));
+		}
+		
+		if (t_password != NULL)
+		{
+			if (!MCStringCreateMutable(0, &t_tilde_path) ||
+				!MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+				!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+				return false;
+		}
+		else
+			t_tilde_path = p_path;
+	}
+	else
+		t_tilde_path = p_path;
+
+	MCAutoStringRef t_fullpath;
+	if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
+	{
+		MCAutoStringRef t_folder;
+		if (!MCS_getcurdir(&t_folder))
+			return false;
+
+		MCAutoStringRef t_resolved;
+		if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
+			!MCStringAppendChar(*t_fullpath, '/') ||
+			!MCStringAppend(*t_fullpath, *t_tilde_path))
+			return false;
+	}
+	else
+		t_fullpath = *t_tilde_path;
+
+	if (!MCS_is_link(*t_fullpath))
+		return MCStringCopy(*t_fullpath, r_resolved);
+
+	MCAutoStringRef t_newname;
+	if (!MCS_readlink(*t_fullpath, &t_newname))
+		return false;
+
+	// IM - Should we really be using the original p_path parameter here?
+	// seems like we should use the computed t_fullpath value.
+	if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
+	{
+		MCAutoStringRef t_resolved;
+
+		uindex_t t_last_component;
+		uindex_t t_path_length;
+
+		if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
+			t_last_component++;
+		else
+			t_last_component = 0;
+
+		if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
+			!MCStringAppend(*t_resolved, *t_newname))
+			return false;
+
+		return MCStringCopy(*t_resolved, r_resolved);
+	}
+	else
+		return MCStringCopy(*t_newname, r_resolved);
+#endif /* MCS_resolvepath */
+        if (MCStringGetLength(p_path) == 0)
+        {
+            MCS_getcurdir(r_resolved_path);
+            return;
+        }
         
+        MCAutoStringRef t_tilde_path;
+        if (MCStringGetCharAtIndex(p_path, 0) == '~')
+        {
+            uindex_t t_user_end;
+            if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
+                t_user_end = MCStringGetLength(p_path);
+            
+            // Prepend user name
+            struct passwd *t_password;
+            if (t_user_end == 1)
+                t_password = getpwuid(getuid());
+            else
+            {
+                MCAutoStringRef t_username;
+                if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+                    return false;
+                
+                t_password = getpwnam(MCStringGetCString(*t_username));
+            }
+            
+            if (t_password != NULL)
+            {
+                if (!MCStringCreateMutable(0, &t_tilde_path) ||
+                    !MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+                    !MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+                    return false;
+            }
+            else
+                t_tilde_path = p_path;
+        }
+        else
+            t_tilde_path = p_path;
+        
+        MCAutoStringRef t_fullpath;
+        if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
+        {
+            MCAutoStringRef t_folder;
+            MCS_getcurdir(&t_folder);
+            
+            MCAutoStringRef t_resolved;
+            if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
+                !MCStringAppendChar(*t_fullpath, '/') ||
+                !MCStringAppend(*t_fullpath, *t_tilde_path))
+                return false;
+        }
+        else
+            t_fullpath = *t_tilde_path;
+        
+        if (!MCS_is_link(*t_fullpath))
+            return MCStringCopy(*t_fullpath, r_resolved_path);
+        
+        MCAutoStringRef t_newname;
+        if (!MCS_readlink(*t_fullpath, &t_newname))
+            return false;
+        
+        // IM - Should we really be using the original p_path parameter here?
+        // seems like we should use the computed t_fullpath value.
+        if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
+        {
+            MCAutoStringRef t_resolved;
+            
+            uindex_t t_last_component;
+            uindex_t t_path_length;
+            
+            if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
+                t_last_component++;
+            else
+                t_last_component = 0;
+            
+            if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
+                !MCStringAppend(*t_resolved, *t_newname))
+                return false;
+            
+            return MCStringCopy(*t_resolved, r_resolved_path);
+        }
+        else
+            return MCStringCopy(*t_newname, r_resolved_path);
     }
+    
 	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path)
     {
         
     }
 	
-	virtual MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map)
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uin32_t offset)
     {
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
+	IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+		char *oldpath = strclone(path);
+		
+		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+		char *t_resolved_path;
+		t_resolved_path = MCS_resolvepath(path);
+		if (t_resolved_path == NULL)
+			return NULL;
+		
+		char *newpath = path2utf(t_resolved_path);
+		FILE *fptr;
+
+		if (driver)
+		{
+			fptr = fopen(newpath,  mode );
+			if (fptr != NULL)
+			{
+				int val;
+				val = fcntl(fileno(fptr), F_GETFL, val);
+				val |= O_NONBLOCK |  O_NOCTTY;
+				fcntl(fileno(fptr), F_SETFL, val);
+				configureSerialPort((short)fileno(fptr));
+			}
+		}
+		else
+		{
+			fptr = fopen(newpath, IO_READ_MODE);
+			if (fptr == NULL)
+				fptr = fopen(oldpath, IO_READ_MODE);
+			Boolean created = True;
+			if (fptr != NULL)
+			{
+				created = False;
+				if (mode != IO_READ_MODE)
+				{
+					fclose(fptr);
+					fptr = NULL;
+				}
+			}
+			if (fptr == NULL)
+				fptr = fopen(newpath, mode);
+
+			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+				fptr = fopen(newpath, IO_CREATE_MODE);
+			if (fptr != NULL && created)
+				MCS_setfiletype(oldpath);
+		}
+
+		delete newpath;
+		delete oldpath;
+		if (fptr != NULL)
+		{
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+			if (offset > 0)
+				fseek(handle->fptr, offset, SEEK_SET);
+
+			if (strequal(mode, IO_APPEND_MODE))
+				handle->flags |= IO_SEEKED;
+		}
+
+	return handle;
+#endif /* MCS_open_dsk_mac */
+        IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
         
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+		FILE *fptr;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+        Boolean created = True;
+        
+        if (fptr != NULL)
+        {
+            created = False;
+            if (p_mode == kMCSystemFileModeRead)
+            {
+                fclose(fptr);
+                fptr = NULL;
+            }
+        }
+        if (fptr == NULL)
+        {
+            switch(p_mode)
+            {
+                case kMCSystemFileModeRead:
+                    fptr = fopen(*t_path_utf, IO_READ_MODE);
+                    break;
+                case kMCSystemFileModeUpdate:
+                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                    break;
+                case kMCSystemFileModeAppend:
+                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                    break;
+                case kMCSystemFileModeWrite:
+                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                    break;
+                default:
+                    fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL && p_mode == kMCSystemFileModeRead)
+            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+        
+        if (fptr != NULL && created)
+            MCS_setfiletype(p_path);
+        
+		if (fptr != NULL)
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+        
+        if (offset > 0)
+            fseek(handle->fptr, offset, SEEK_SET);
+        
+        return handle;
     }
-	virtual MCSystemFileHandle *OpenStdFile(uint32_t i)
+    
+	virtual IO_handle OpenStdFile(uint32_t fd, const char *mode)
     {
-        
+        return new IO_header(MCStdioFileHandle::OpenFd(fd, mode), 0);
     }
-	virtual MCSystemFileHandle *OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string)
+    
+	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, MCStringRef p_control_string)
     {
+        IO_handle handle = NULL;
         
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+		FILE *fptr;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+        if (fptr != NULL)
+        {
+            int val;
+            val = fcntl(fileno(fptr), F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(fileno(fptr), F_SETFL, val);
+            configureSerialPort((short)fileno(fptr));
+            
+            handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+        }
+        
+        return handle;
     }
 	
 	virtual void *LoadModule(MCStringRef p_path)
@@ -1604,7 +2934,7 @@ struct MCMacDesktop: public MCSystemInterface
         
     }
 	
-	virtual IO_stat MCS_runcmd(MCStringRef command, MCStringRef& r_output)
+	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode)
     {
         
     }
@@ -1637,4 +2967,226 @@ struct MCMacDesktop: public MCSystemInterface
 MCSystemInterface *MCDesktopCreateMacSystem(void)
 {
 	return new MCMacDesktop;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
+
+
+void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
+{
+	Boolean noerror = True;
+	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
+	Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
+	MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1, sizeof(Streamnode));
+    
+	// Store process information.
+	uint2 index = MCnprocesses;
+	MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(name);
+	MCprocesses[MCnprocesses].mode = mode;
+	MCprocesses[MCnprocesses].ihandle = NULL;
+	MCprocesses[MCnprocesses].ohandle = NULL;
+	MCprocesses[MCnprocesses].sn.highLongOfPSN = 0;
+	MCprocesses[MCnprocesses].sn.lowLongOfPSN = 0;
+	
+	if (!elevated)
+	{
+		int tochild[2]; // pipe to child
+		int toparent[2]; // pipe to parent
+		
+		// If we are reading, create the pipe to parent.
+		// Parent reads, child writes.
+		if (reading)
+			if (pipe(toparent) != 0)
+				noerror = False;
+		
+		// If we are writing, create the pipe to child.
+		// Parent writes, child reads.
+		if (noerror && writing)
+			if (pipe(tochild) != 0)
+			{
+				noerror = False;
+				if (reading)
+				{
+					// error, get rid of these fds
+					close(toparent[0]);
+					close(toparent[1]);
+				}
+			}
+        
+		if (noerror)
+		{
+			// Fork
+			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+			{
+				char *t_name_dup;
+				t_name_dup = strdup(MCNameGetCString(name));
+				
+				// The pid is 0, so here we are in the child process.
+				// Construct the argument string to pass to the process..
+				char **argv = NULL;
+				uint32_t argc = 0;
+				startprocess_create_argv(t_name_dup, const_cast<char*>(MCStringGetCString(doc)), argc, argv);
+				
+				// The parent is reading, so we (we are child) are writing.
+				if (reading)
+				{
+					// Don't need to read
+					close(toparent[0]);
+					
+					// Close the current stdout, and duplicate the out descriptor of toparent to stdout.
+					close(1);
+					dup(toparent[1]);
+					
+					// Redirect stderr of this child to toparent-out.
+					close(2);
+					dup(toparent[1]);
+					
+					// We no longer need this pipe, so close the output descriptor.
+					close(toparent[1]);
+				}
+				else
+				{
+					// Not reading, so close stdout and stderr.
+					close(1);
+					close(2);
+				}
+				if (writing)
+				{
+					// Parent is writing, so child needs to read. Close tochild[1], we dont need it.
+					close(tochild[1]);
+					
+					// Attach stdin to tochild[0].
+					close(0);
+					dup(tochild[0]);
+					
+					// Close, as we no longer need it.
+					close(tochild[0]);
+				}
+				else // not writing, so close stdin
+					close(0);
+                
+				// Execute a new process in a new process image.
+				execvp(argv[0], argv);
+				
+				// If we get here, an error occurred
+				_exit(-1);
+			}
+			
+			// If we get here, we are in the parent process, as the child has exited.
+			
+			MCS_checkprocesses();
+			
+			if (reading)
+			{
+				close(toparent[1]);
+				MCS_nodelay(toparent[0]);
+				// Store the in handle for the "process".
+				MCprocesses[index].ihandle = MCS_dopen(toparent[0], IO_READ_MODE);
+			}
+			if (writing)
+			{
+				close(tochild[0]);
+				// Store the out handle for the "process".
+				MCprocesses[index].ohandle = MCS_dopen(tochild[1], IO_WRITE_MODE);
+			}
+		}
+	}
+	else
+	{
+		OSStatus t_status;
+		t_status = noErr;
+		
+		AuthorizationRef t_auth;
+		t_auth = nil;
+		if (t_status == noErr)
+			t_status = AuthorizationCreate(nil, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &t_auth);
+		
+		if (t_status == noErr)
+		{
+			AuthorizationItem t_items =
+			{
+				kAuthorizationRightExecute, 0,
+				NULL, 0
+			};
+			AuthorizationRights t_rights =
+			{
+				1, &t_items
+			};
+			AuthorizationFlags t_flags =
+            kAuthorizationFlagDefaults |
+            kAuthorizationFlagInteractionAllowed |
+            kAuthorizationFlagPreAuthorize |
+            kAuthorizationFlagExtendRights;
+			t_status = AuthorizationCopyRights(t_auth, &t_rights, nil, t_flags, nil);
+		}
+		
+		FILE *t_stream;
+		t_stream = nil;
+		if (t_status == noErr)
+		{
+			char *t_arguments[] =
+			{
+				"-elevated-slave",
+				nil
+			};
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
+		}
+		
+		uint32_t t_pid;
+		t_pid = 0;
+		if (t_status == noErr)
+		{
+			char *t_name_dup;
+			t_name_dup = strdup(MCNameGetCString(name));
+			
+			// Split the arguments
+			uint32_t t_argc;
+			char **t_argv;
+			startprocess_create_argv(t_name_dup, const_cast<char *>(MCStringGetCString(doc)), t_argc, t_argv);
+			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
+			for(uint32_t i = 0; i < t_argc; i++)
+				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
+			if (!startprocess_read_uint32_from_fd(fileno(t_stream), t_pid))
+				t_status = errAuthorizationToolExecuteFailure;
+			
+			delete t_name_dup;
+			delete[] t_argv;
+		}
+		
+		if (t_status == noErr)
+		{
+			MCprocesses[MCnprocesses++].pid = t_pid;
+			MCS_checkprocesses();
+			
+			if (reading)
+			{
+				int t_fd;
+				t_fd = dup(fileno(t_stream));
+				MCS_nodelay(t_fd);
+				MCprocesses[index].ihandle = MCS_dopen(t_fd, IO_READ_MODE);
+			}
+			if (writing)
+				MCprocesses[index].ohandle = MCS_dopen(dup(fileno(t_stream)), IO_WRITE_MODE);
+			
+			noerror = True;
+		}
+		else
+			noerror = False;
+		
+		if (t_stream != nil)
+			fclose(t_stream);
+		
+		if (t_auth != nil)
+			AuthorizationFree(t_auth, kAuthorizationFlagDefaults);
+	}
+	
+	if (!noerror || MCprocesses[index].pid == -1 || MCprocesses[index].pid == 0)
+	{
+		if (noerror)
+			MCprocesses[index].pid = 0;
+		MCresult->sets("not opened");
+	}
+	else
+		MCresult->clear(False);
 }

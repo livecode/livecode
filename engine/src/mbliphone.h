@@ -108,6 +108,9 @@ public:
 	- (const char *)nativeCString;
 @end
 
+NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode);
+bool NSStringToMCStringRef(NSString *p_string, MCStringRef& r_string);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

@@ -108,6 +108,10 @@ struct MCInterfaceLayer
 	uint4 layer;
 };
 
+void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output);
+void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output);
+void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input);
+
 //////////
 
 static MCExecEnumTypeElementInfo _kMCInterfaceEncodingElementInfo[] =
@@ -123,6 +127,30 @@ static MCExecEnumTypeInfo _kMCInterfaceEncodingTypeInfo =
 	sizeof(_kMCInterfaceEncodingElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCInterfaceEncodingElementInfo
 };
+
+//////////
+
+enum MCInterfaceMarginsType
+{
+    kMCInterfaceMarginsTypeSingle,
+    kMCInterfaceMarginsTypeQuadruple
+    
+};
+
+struct MCInterfaceMargins
+{
+    MCInterfaceMarginsType type;
+    
+    union
+    {
+        int2 margin;
+        int2 margins[4];
+    };
+};
+
+void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output);
+void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output);
+void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input);
 
 //////////
 

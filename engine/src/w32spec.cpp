@@ -982,7 +982,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 	return handle;
 }
 
-IO_stat MCS_close(IO_handle &stream)
+void MCS_close(IO_handle &stream)
 {
 	if (stream->buffer != NULL)
 	{ //memory map file
@@ -996,7 +996,6 @@ IO_stat MCS_close(IO_handle &stream)
 		CloseHandle(stream->fhandle);
 	delete stream;
 	stream = NULL;
-	return IO_NORMAL;
 }
 
 /* thread created to read data from child process's pipe */
@@ -1801,7 +1800,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	return NULL;
 }
 
-void MCS_copyresourcefork(const char *source, const char *dest)
+void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
 {}
 
 bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,

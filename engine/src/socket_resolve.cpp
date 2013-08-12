@@ -356,11 +356,13 @@ bool hostname_resolve_first_sockaddr_callback(void *p_context, bool p_resolved, 
 }
 
 
-bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
+bool MCS_name_to_sockaddr(MCNameRef p_name_in_string, struct sockaddr_in *r_addr, MCHostNameResolveCallback p_callback, void *p_context)
 {
 	// get port & id if set
 	// if callback provided then start name resolve thread with that callback
 	// else start name resolve thread with our own callback and wait for thread to finish
+
+	const char* p_name_in = MCNameGetCString(p_name_in_string);
 	if (!MCS_init_sockets())
 		return false;
 
@@ -416,14 +418,15 @@ bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in *r_addr, MCH
 	return t_success;
 }
 
+/*
 bool MCS_name_to_sockaddr(const char *p_name_in, struct sockaddr_in &r_addr)
 {
 	return MCS_name_to_sockaddr(p_name_in, &r_addr, NULL, NULL);
 }
-
+*/
 bool MCS_name_to_sockaddr(MCStringRef p_name, struct sockaddr_in &r_addr)
 {
-	return MCS_name_to_sockaddr(MCStringGetCString(p_name), &r_addr, NULL, NULL);
+	return MCS_name_to_sockaddr(p_name, &r_addr, NULL, NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

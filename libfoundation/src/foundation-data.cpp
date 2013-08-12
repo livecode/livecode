@@ -286,7 +286,7 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte)
 {
-    MCDataPrependBytes(r_data, &p_byte, 1);
+    return MCDataPrependBytes(r_data, &p_byte, 1);
 }
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data)

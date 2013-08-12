@@ -2685,7 +2685,7 @@ void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_
 void MCNetworkExecOpenSecureSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message, bool p_with_verification);
 void MCNetworkExecOpenDatagramSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message);
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCStringRef p_data, MCStringRef p_url);
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url);
 
 void MCNetworkExecAcceptConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
 void MCNetworkExecAcceptDatagramConnectionsOnPort(MCExecContext& ctxt, uint2 p_port, MCNameRef p_message);
@@ -3352,8 +3352,8 @@ extern MCExecMethodInfo *kMCDebuggingGetExecutionContextsMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingGetWatchedVariablesMethodInfo;
 extern MCExecMethodInfo *kMCDebuggingSetWatchedVariablesMethodInfo;
 
-void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uint2 p_line, uint2 p_pos);
-void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos);
+void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos);
+void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos);
 
 void MCDebuggingGetTraceAbort(MCExecContext& ctxtm, bool& r_value);
 void MCDebuggingSetTraceAbort(MCExecContext& ctxtm, bool p_value);
@@ -3484,6 +3484,10 @@ void MCAddressBookExecFindContact(MCExecContext& ctxt, MCStringRef p_contact_nam
 
 ///////////
 
+struct MCAdTopLeft;
+
+extern MCExecCustomTypeInfo* kMCAdTopLeftTypeInfo;
+
 extern MCExecMethodInfo* kMCAdExecRegisterWithInteractiveMethodInfo;
 extern MCExecMethodInfo* kMCAdExecCreateAdMethodInfo;
 extern MCExecMethodInfo* kMCAdExecDeleteAdMethodInfo;
@@ -3494,15 +3498,39 @@ extern MCExecMethodInfo* kMCAdSetTopLeftOfAdMethodInfo;
 extern MCExecMethodInfo* kMCAdGetAdsMethodInfo;
 
 void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key);
-void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata);
+void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, MCAdTopLeft p_topleft, MCArrayRef p_metadata);
 void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name);
 void MCAdSetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool p_visible);
 void MCAdGetVisibleOfAd(MCExecContext& ctxt, MCStringRef p_name, bool& r_visible);
-void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y);
-void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y);
+void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, MCAdTopLeft& r_topleft);
+void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, const MCAdTopLeft& p_topleft);
 void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads);
 
 ///////////
+
+struct MCNativeControlIdentifier;
+
+extern MCExecCustomTypeInfo *kMCNativeControlColorTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlRangeTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlIdentifierTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlDecelerationRateTypeInfo;
+extern MCExecCustomTypeInfo *kMCNativeControlIndicatorInsetsTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlIndicatorStyleTypeInfo;
+
+extern MCExecEnumTypeInfo *kMCNativeControlPlaybackStateTypeInfo;
+extern MCExecSetTypeInfo *kMCNativeControlLoadStateTypeInfo;
+
+extern MCExecEnumTypeInfo *kMCNativeControlInputCapitalizationTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputAutocorrectionTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputKeyboardStyleTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputReturnKeyTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputContentTypeTypeInfo;
+extern MCExecSetTypeInfo *kMCNativeControlInputDataDetectorTypeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputTextAlignTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlInputVerticalAlignTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlClearButtonModeTypeInfo;
+extern MCExecEnumTypeInfo *kMCNativeControlBorderStyleTypeInfo;
 
 extern MCExecMethodInfo* kMCNativeControlExecCreateControlMethodInfo;
 extern MCExecMethodInfo* kMCNativeControlExecDeleteControlMethodInfo;
@@ -3514,10 +3542,10 @@ extern MCExecMethodInfo* kMCNativeControlGetControlListMethodInfo;
 
 void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_name, MCStringRef p_control_name);
 void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name);
-void MCNativeControlExecSetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef p_value);
-void MCNativeControlExecGetProperty(MCExecContext& ctxt, MCStringRef p_property, MCValueRef& r_value);
-void MCNativeControlExecDo(MCExecContext& ctxt);
-void MCNativeControlGetTarget(MCExecContext& ctxt, MCStringRef& r_target);
+void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result);
+void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef p_value);
+void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count);
+void MCNativeControlGetTarget(MCExecContext& ctxt, MCNativeControlIdentifier& r_target);
 void MCNativeControlGetControlList(MCExecContext& ctxt, MCStringRef& r_list);
 
 //////////

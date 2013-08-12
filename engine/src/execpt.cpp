@@ -1156,6 +1156,12 @@ bool MCExecPoint::copyasmutablestringref(MCStringRef& r_string)
 	return MCStringMutableCopy((MCStringRef)value, r_string);
 }
 
+bool MCExecPoint::copyasdataref(MCDataRef& r_data)
+{
+	// TODO
+	return false;
+}
+
 MCValueRef MCExecPoint::getvalueref(void)
 {
 	return value;

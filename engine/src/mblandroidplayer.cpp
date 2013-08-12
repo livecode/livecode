@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "eventqueue.h"
 #include "osspec.h"
+#include "exec.h"
 
 #include <jni.h>
 #include "mblandroidjava.h"
@@ -46,14 +47,41 @@ bool path_to_apk_path(const char *p_path, const char *&r_apk_path);
 
 class MCAndroidPlayerControl: public MCAndroidControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+    
 public:
     MCAndroidPlayerControl(void);
     
     virtual MCNativeControlType GetType(void);
-    
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty property, MCExecPoint &ep);
     virtual Exec_stat Do(MCNativeControlAction action, MCParameter *parameters);
+#endif
+    
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+
+    void SetContent(MCExecContext& ctxt, MCStringRef p_content);
+    void GetContent(MCExecContext& ctxt, MCStringRef& r_content);
+    void SetShowController(MCExecContext& ctxt, bool p_value);
+    void GetShowController(MCExecContext& ctxt, bool& r_value);
+    void SetCurrentTime(MCExecContext& ctxt, integer_t p_time);
+    void GetCurrentTime(MCExecContext& ctxt, integer_t& r_time);
+    void SetLooping(MCExecContext& ctxt, bool p_value);
+    void GetLooping(MCExecContext& ctxt, bool& r_value);
+    
+    void GetDuration(MCExecContext& ctxt, integer_t& r_duration);
+    void GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size);
+    
+	// Player-specific actions
+	void ExecPlay(MCExecContext& ctxt);
+	void ExecPause(MCExecContext& ctxt);
+    void ExecStop(MCExecContext& ctxt);
     
     void HandlePropertyAvailableEvent(const char *property);
     
@@ -64,6 +92,41 @@ protected:
     
 private:
     char *m_path;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCAndroidPlayerControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Content, String, MCAndroidPlayerControl, Content)
+    DEFINE_RW_CTRL_PROPERTY(ShowController, Bool, MCAndroidPlayerControl, ShowController)
+    DEFINE_RW_CTRL_PROPERTY(CurrentTime, Int32, MCAndroidPlayerControl, CurrentTime)
+    DEFINE_RW_CTRL_PROPERTY(Looping, Bool, MCAndroidPlayerControl, Looping)
+    DEFINE_RO_CTRL_PROPERTY(Duration, Int32, MCAndroidPlayerControl, Duration)
+    DEFINE_RO_CTRL_PROPERTY(NaturalSize, Int32X2, MCAndroidPlayerControl, NaturalSize)
+};
+
+MCNativeControlPropertyTable MCAndroidPlayerControl::kPropertyTable =
+{
+	&MCAndroidControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidPlayerControl::kActions[] =
+{
+    DEFINE_CTRL_EXEC_METHOD(Play, MCAndroidPlayerControl, Play)
+    DEFINE_CTRL_EXEC_METHOD(Pause, MCAndroidPlayerControl, Pause)
+    DEFINE_CTRL_EXEC_METHOD(Stop, MCAndroidPlayerControl, Stop)
+};
+
+MCNativeControlActionTable MCAndroidPlayerControl::kActionTable =
+{
+    &MCAndroidControl::kActionTable,
+    sizeof(kActions) / sizeof(kActions[0]),
+    &kActions[0],
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -86,6 +149,111 @@ MCNativeControlType MCAndroidPlayerControl::GetType(void)
     return kMCNativeControlTypePlayer;
 }
 
+
+void MCAndroidPlayerControl::SetContent(MCExecContext& ctxt, MCStringRef p_content)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    bool t_success = true;
+    MCCStringFree(m_path);
+    t_success = MCCStringClone(MCStringGetCString(p_content), m_path);
+    if (MCCStringBeginsWith(m_path, "http://") || MCCStringBeginsWith(m_path, "https://"))
+    {
+        MCAndroidObjectRemoteCall(t_view, "setUrl", "bs", &t_success, m_path);
+    }
+    else
+    {
+        char *t_resolved_path = nil;
+        bool t_is_asset = false;
+        const char *t_asset_path = nil;
+        
+        t_resolved_path = MCS_resolvepath(m_path);
+        t_is_asset = path_to_apk_path(t_resolved_path, t_asset_path);
+        
+        MCAndroidObjectRemoteCall(t_view, "setFile", "bsb", &t_success, t_is_asset ? t_asset_path : t_resolved_path, t_is_asset);
+        
+        MCCStringFree(t_resolved_path);
+    }
+}
+
+void MCAndroidPlayerControl::GetContent(MCExecContext& ctxt, MCStringRef& r_content)
+{
+    if (MCStringCreateWithCString(m_path, r_content))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCAndroidPlayerControl::SetShowController(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "setShowController", "vb", nil, p_value);
+}
+
+void MCAndroidPlayerControl::GetShowController(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "getShowController", "b", &r_value);
+}
+
+void MCAndroidPlayerControl::SetCurrentTime(MCExecContext& ctxt, integer_t p_time)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "setCurrentTime", "vi", nil, p_time);
+}
+
+void MCAndroidPlayerControl::GetCurrentTime(MCExecContext& ctxt, integer_t& r_time)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "getCurrentTime", "i", &r_time);
+}
+
+void MCAndroidPlayerControl::SetLooping(MCExecContext& ctxt, bool p_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "setLooping", "vb", nil, p_value);
+}
+
+void MCAndroidPlayerControl::GetLooping(MCExecContext& ctxt, bool& r_value)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "getLooping", "b", &r_value);
+}
+
+void MCAndroidPlayerControl::GetDuration(MCExecContext& ctxt, integer_t& r_duration)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    MCAndroidObjectRemoteCall(t_view, "getDuration", "i", &r_duration);
+}
+
+void MCAndroidPlayerControl::GetNaturalSize(MCExecContext& ctxt, MCPoint32& r_size)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    int32_t t_width = 0, t_height = 0;
+    MCAndroidObjectRemoteCall(t_view, "getVideoWidth", "i", &t_width);
+    MCAndroidObjectRemoteCall(t_view, "getVideoHeight", "i", &t_height);
+    r_size . x = t_width;
+    r_size . y = t_height;
+}
+
+#ifdef /* MCAndroidPlayerControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
@@ -151,7 +319,9 @@ Exec_stat MCAndroidPlayerControl::Set(MCNativeControlProperty p_property, MCExec
     
     return MCAndroidControl::Set(p_property, ep);
 }
+#endif /* MCAndroidPlayerControl::Set */
 
+#ifdef /* MCAndroidPlayerControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     bool t_bool = false;
@@ -213,7 +383,9 @@ Exec_stat MCAndroidPlayerControl::Get(MCNativeControlProperty p_property, MCExec
     
     return MCAndroidControl::Get(p_property, ep);
 }
+#endif /* MCAndroidPlayerControl::Get */
 
+#ifdef /* MCAndroidPlayerControl::Do */ LEGACY_EXEC
 Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter *p_parameters)
 {
     jobject t_view;
@@ -238,6 +410,41 @@ Exec_stat MCAndroidPlayerControl::Do(MCNativeControlAction p_action, MCParameter
     }
     
     return MCAndroidControl::Do(p_action, p_parameters);
+}
+#endif /* MCAndroidPlayerControl::Do */
+
+// Player-specific actions
+void MCAndroidPlayerControl::ExecPlay(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "start", "v", nil);
+}
+
+void MCAndroidPlayerControl::ExecPause(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "pause", "v", nil);
+}
+
+void MCAndroidPlayerControl::ExecStop(MCExecContext& ctxt)
+{
+    jobject t_view;
+    t_view = GetView();
+    
+    if (t_view == nil)
+        return;
+    
+    MCAndroidObjectRemoteCall(t_view, "stop", "v", nil);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

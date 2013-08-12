@@ -44,42 +44,42 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <sys/stat.h>
 #include <sys/utsname.h>
 
-#define ENTRIES_CHUNK 1024
-
-#define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
-#include <termios.h>
-#define B16600 16600
-
-#include <pwd.h>
-
-#define USE_FSCATALOGINFO
-
-//for setting serial port use
-typedef struct
-{
-	short baudrate;
-	short parity;
-	short stop;
-	short data;
-}
-SerialControl;
-
-//struct
-SerialControl portconfig; //serial port configuration structure
-
-extern "C"
-{
-	extern UInt32 SwapQDTextFlags(UInt32 newFlags);
-	typedef UInt32 (*SwapQDTextFlagsPtr)(UInt32 newFlags);
-}
-
-static void configureSerialPort(int sRefNum);
+//#define ENTRIES_CHUNK 1024
+//
+//#define SERIAL_PORT_BUFFER_SIZE  16384 //set new buffer size for serial input port
+//#include <termios.h>
+//#define B16600 16600
+//
+//#include <pwd.h>
+//
+//#define USE_FSCATALOGINFO
+//
+////for setting serial port use
+//typedef struct
+//{
+//	short baudrate;
+//	short parity;
+//	short stop;
+//	short data;
+//}
+//SerialControl;
+//
+////struct
+//SerialControl portconfig; //serial port configuration structure
+//
+//extern "C"
+//{
+//	extern UInt32 SwapQDTextFlags(UInt32 newFlags);
+//	typedef UInt32 (*SwapQDTextFlagsPtr)(UInt32 newFlags);
+//}
+//
+//static void configureSerialPort(int sRefNum);
 static bool getResourceInfo(MCListRef p_list, ResType p_type);
-static void parseSerialControlStr(char *set, struct termios *theTermios);
-
-char *path2utf(char *path);
-
-void MCS_setfiletype(const char *newpath);
+//static void parseSerialControlStr(char *set, struct termios *theTermios);
+//
+//char *path2utf(char *path);
+//
+//void MCS_setfiletype(const char *newpath);
 
 
 /********************************************************************/
@@ -87,74 +87,74 @@ void MCS_setfiletype(const char *newpath);
 /********************************************************************/ 
 
 // File opening and closing
-
-IO_handle MCS_open(const char *path, const char *mode,
-									 Boolean map, Boolean driver, uint4 offset)
-{
-	IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-		char *oldpath = strclone(path);
-		
-		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
-		char *t_resolved_path;
-		t_resolved_path = MCS_resolvepath(path);
-		if (t_resolved_path == NULL)
-			return NULL;
-		
-		char *newpath = path2utf(t_resolved_path);
-		FILE *fptr;
-
-		if (driver)
-		{
-			fptr = fopen(newpath,  mode );
-			if (fptr != NULL)
-			{
-				int val;
-				val = fcntl(fileno(fptr), F_GETFL, val);
-				val |= O_NONBLOCK |  O_NOCTTY;
-				fcntl(fileno(fptr), F_SETFL, val);
-				configureSerialPort((short)fileno(fptr));
-			}
-		}
-		else
-		{
-			fptr = fopen(newpath, IO_READ_MODE);
-			if (fptr == NULL)
-				fptr = fopen(oldpath, IO_READ_MODE);
-			Boolean created = True;
-			if (fptr != NULL)
-			{
-				created = False;
-				if (mode != IO_READ_MODE)
-				{
-					fclose(fptr);
-					fptr = NULL;
-				}
-			}
-			if (fptr == NULL)
-				fptr = fopen(newpath, mode);
-
-			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-				fptr = fopen(newpath, IO_CREATE_MODE);
-			if (fptr != NULL && created)
-				MCS_setfiletype(oldpath);
-		}
-
-		delete newpath;
-		delete oldpath;
-		if (fptr != NULL)
-		{
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-			if (offset > 0)
-				fseek(handle->fptr, offset, SEEK_SET);
-
-			if (strequal(mode, IO_APPEND_MODE))
-				handle->flags |= IO_SEEKED;
-		}
-
-	return handle;
-}
+// Moved to dskmac.cpp
+//IO_handle MCS_open(const char *path, const char *mode,
+//									 Boolean map, Boolean driver, uint4 offset)
+//{
+//	IO_handle handle = NULL;
+//		//opening regular files
+//		//set the file type and it's creator. These are 2 global variables
+//		char *oldpath = strclone(path);
+//		
+//		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+//		char *t_resolved_path;
+//		t_resolved_path = MCS_resolvepath(path);
+//		if (t_resolved_path == NULL)
+//			return NULL;
+//		
+//		char *newpath = path2utf(t_resolved_path);
+//		FILE *fptr;
+//
+//		if (driver)
+//		{
+//			fptr = fopen(newpath,  mode );
+//			if (fptr != NULL)
+//			{
+//				int val;
+//				val = fcntl(fileno(fptr), F_GETFL, val);
+//				val |= O_NONBLOCK |  O_NOCTTY;
+//				fcntl(fileno(fptr), F_SETFL, val);
+//				configureSerialPort((short)fileno(fptr));
+//			}
+//		}
+//		else
+//		{
+//			fptr = fopen(newpath, IO_READ_MODE);
+//			if (fptr == NULL)
+//				fptr = fopen(oldpath, IO_READ_MODE);
+//			Boolean created = True;
+//			if (fptr != NULL)
+//			{
+//				created = False;
+//				if (mode != IO_READ_MODE)
+//				{
+//					fclose(fptr);
+//					fptr = NULL;
+//				}
+//			}
+//			if (fptr == NULL)
+//				fptr = fopen(newpath, mode);
+//
+//			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+//				fptr = fopen(newpath, IO_CREATE_MODE);
+//			if (fptr != NULL && created)
+//				MCS_setfiletype(oldpath);
+//		}
+//
+//		delete newpath;
+//		delete oldpath;
+//		if (fptr != NULL)
+//		{
+//			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+//			if (offset > 0)
+//				fseek(handle->fptr, offset, SEEK_SET);
+//
+//			if (strequal(mode, IO_APPEND_MODE))
+//				handle->flags |= IO_SEEKED;
+//		}
+//
+//	return handle;
+//}
 
 IO_handle MCS_fakeopen(const MCString &data)
 {
@@ -205,6 +205,7 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
 }
 
+#ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -262,7 +263,9 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		}
 	}
 }
+#endif /* MCS_loadfile_dsk_mac */
 
+#ifdef /* MCS_savefile_dsk_mac */ LEGACY_SYSTEM
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -306,39 +309,40 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 	delete tpath;
 	delete newpath;
 }
+#endif /* MCS_savefile_dsk_mac */
 
-IO_stat MCS_close(IO_handle &stream)
-{
-	IO_stat stat = IO_NORMAL;
-	if (stream->serialIn != 0 || stream->serialOut != 0)
-	{//close the serial port
-
-	}
-	else
-		if (stream->fptr == NULL)
-		{
-			if (!(stream->flags & IO_FAKE))
-				delete stream->buffer;
-		}
-		else
-			fclose(stream->fptr);
-	delete stream;
-	stream = NULL;
-	return stat;
-}
+//IO_stat MCS_close(IO_handle &stream)
+//{
+//	IO_stat stat = IO_NORMAL;
+//	if (stream->serialIn != 0 || stream->serialOut != 0)
+//	{//close the serial port
+//
+//	}
+//	else
+//		if (stream->fptr == NULL)
+//		{
+//			if (!(stream->flags & IO_FAKE))
+//				delete stream->buffer;
+//		}
+//		else
+//			fclose(stream->fptr);
+//	delete stream;
+//	stream = NULL;
+//	return stat;
+//}
 
 // File reading and writing
-
-IO_stat MCS_putback(char c, IO_handle stream)
-{
-	if (stream -> serialIn != 0 || stream -> fptr == NULL)
-		return MCS_seek_cur(stream, -1);
-	
-	if (ungetc(c, stream -> fptr) != c)
-		return IO_ERROR;
-		
-	return IO_NORMAL;
-}
+//
+//IO_stat MCS_putback(char c, IO_handle stream)
+//{
+//	if (stream -> serialIn != 0 || stream -> fptr == NULL)
+//		return MCS_seek_cur(stream, -1);
+//	
+//	if (ungetc(c, stream -> fptr) != c)
+//		return IO_ERROR;
+//		
+//	return IO_NORMAL;
+//}
 
 IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 {
@@ -447,14 +451,14 @@ IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
 		return IO_ERROR;
 	return IO_NORMAL;
 }
-
-IO_stat MCS_flush(IO_handle stream)
-{ //flush file buffer
-	if (stream->fptr != NULL)
-		if (fflush(stream->fptr))
-			return IO_ERROR;
-	return IO_NORMAL;
-}
+//
+//IO_stat MCS_flush(IO_handle stream)
+//{ //flush file buffer
+//	if (stream->fptr != NULL)
+//		if (fflush(stream->fptr))
+//			return IO_ERROR;
+//	return IO_NORMAL;
+//}
 
 // File positioning
 
@@ -464,111 +468,111 @@ Boolean MCS_eof(IO_handle stream)
 		return (uint4)(stream->ioptr - stream->buffer) == stream->len;
 	return feof(stream->fptr);
 }
-
-
-IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
-{
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_cur(stream, offset);
-
-	/* seek to offset from the current file mark */
-	if (stream->fptr == NULL)
-		IO_set_stream(stream, stream->ioptr + offset);
-	else
-		if (fseeko(stream->fptr, offset, SEEK_CUR) != 0)
-			return IO_ERROR;
-	return IO_NORMAL;
-}
-
-IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_set(stream, offset);
-	
-	if (stream->fptr == NULL)
-		IO_set_stream(stream, stream->buffer + offset);
-	else
-		if (fseeko(stream->fptr, offset, SEEK_SET) != 0)
-			return IO_ERROR;
-	return IO_NORMAL;
-}
-
-IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
-{ /* seek to offset from the end of the file */
-	if (stream->fptr == NULL)
-		IO_set_stream(stream, stream->buffer + stream->len + offset);
-	else
-		if (fseeko(stream->fptr, offset, SEEK_END) != 0)
-			return IO_ERROR;
-	return IO_NORMAL;
-}
-
-int64_t MCS_tell(IO_handle stream)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_tell(stream);
-
-	if (stream->fptr != NULL)
-		return ftello(stream->fptr);
-	else
-		return stream->ioptr - stream->buffer;
-}
-
-
-IO_stat MCS_sync(IO_handle stream)
-{
-	if (stream->fptr != NULL)
-	{
-		int4 pos = ftello(stream->fptr);
-		if (fseek(stream->fptr, pos, SEEK_SET) != 0)
-			return IO_ERROR;
-	}
-	return IO_NORMAL;
-}
+//
+//
+//IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
+//{
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_cur(stream, offset);
+//
+//	/* seek to offset from the current file mark */
+//	if (stream->fptr == NULL)
+//		IO_set_stream(stream, stream->ioptr + offset);
+//	else
+//		if (fseeko(stream->fptr, offset, SEEK_CUR) != 0)
+//			return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_set(stream, offset);
+//	
+//	if (stream->fptr == NULL)
+//		IO_set_stream(stream, stream->buffer + offset);
+//	else
+//		if (fseeko(stream->fptr, offset, SEEK_SET) != 0)
+//			return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
+//{ /* seek to offset from the end of the file */
+//	if (stream->fptr == NULL)
+//		IO_set_stream(stream, stream->buffer + stream->len + offset);
+//	else
+//		if (fseeko(stream->fptr, offset, SEEK_END) != 0)
+//			return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//int64_t MCS_tell(IO_handle stream)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_tell(stream);
+//
+//	if (stream->fptr != NULL)
+//		return ftello(stream->fptr);
+//	else
+//		return stream->ioptr - stream->buffer;
+//}
+//
+//
+//IO_stat MCS_sync(IO_handle stream)
+//{
+//	if (stream->fptr != NULL)
+//	{
+//		int4 pos = ftello(stream->fptr);
+//		if (fseek(stream->fptr, pos, SEEK_SET) != 0)
+//			return IO_ERROR;
+//	}
+//	return IO_NORMAL;
+//}
 
 // File properties
+//
+//int64_t MCS_fsize(IO_handle stream)
+//{
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_fsize(stream);
+//
+//	if (stream->flags & IO_FAKE)
+//		return stream->len;
+//
+//	// get file size of an Opened file
+//	struct stat buf;
+//	if (stream->fptr == NULL)
+//		return stream->len;
+//	int fd = fileno(stream->fptr);
+//	if (fstat(fd, (struct stat *)&buf))
+//		return 0;
+//	return buf.st_size;
+//}
 
-int64_t MCS_fsize(IO_handle stream)
-{
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_fsize(stream);
-
-	if (stream->flags & IO_FAKE)
-		return stream->len;
-
-	// get file size of an Opened file
-	struct stat buf;
-	if (stream->fptr == NULL)
-		return stream->len;
-	int fd = fileno(stream->fptr);
-	if (fstat(fd, (struct stat *)&buf))
-		return 0;
-	return buf.st_size;
-}
-
-// TESTCASE: Callers of MCS_setfiletype
-void MCS_setfiletype(const char *p_new_path)
-{
-	FSRef t_fsref;
-	if (MCS_pathtoref(p_new_path, &t_fsref) != noErr)
-		return; // ignore errors
-		
-	FSCatalogInfo t_catalog;
-	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
-	{
-		// Set the creator and filetype of the catalog.
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
-		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
-		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
-	
-		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
-	}
-}
+//// TESTCASE: Callers of MCS_setfiletype
+//void MCS_setfiletype(const char *p_new_path)
+//{
+//	FSRef t_fsref;
+//	if (MCS_pathtoref(p_new_path, &t_fsref) != noErr)
+//		return; // ignore errors
+//		
+//	FSCatalogInfo t_catalog;
+//	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
+//	{
+//		// Set the creator and filetype of the catalog.
+//		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
+//		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+//		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
+//		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
+//	
+//		FSSetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog);
+//	}
+//}
 
 // File UNIX-related properties
 
@@ -576,16 +580,16 @@ void MCS_setfiletype(const char *p_new_path)
 //{
 //	return 0;
 //}
-
-int4 MCS_getumask()
-{
-	return 0;
-}
-
-void MCS_setumask(int4 newmask)
-{
-	//do nothing
-}
+//
+//int4 MCS_getumask()
+//{
+//	return 0;
+//}
+//
+//void MCS_setumask(int4 newmask)
+//{
+//	//do nothing
+//}
 
 //IO_stat MCS_chmod(const char *path, uint2 mask)
 //{
@@ -753,17 +757,17 @@ void MCS_setumask(int4 newmask)
 //		
 //	return !t_error;
 //}
-
-IO_stat MCS_trunc(IO_handle stream)
-{
-
-	if (ftruncate(fileno(stream->fptr), ftell(stream->fptr)))
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
+//
+//IO_stat MCS_trunc(IO_handle stream)
+//{
+//
+//	if (ftruncate(fileno(stream->fptr), ftell(stream->fptr)))
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
 // Anything else
-
+//
 //bool MCS_tmpnam(MCStringRef& r_path)
 //{
 //	char *t_temp_file = nil;
@@ -795,133 +799,133 @@ IO_stat MCS_trunc(IO_handle stream)
 //	delete t_temp_file;
 //	return t_success;
 //}
-
-	
-/********************************************************************/
-/*                        Serial Handling                           */
-/********************************************************************/ 
-
-// Utilities
-
-static void parseSerialControlStr(char *setting, struct termios *theTermios)
-{
-	int baud = 0;
-	char *type = setting;
-	char *value = NULL;
-	if ((value = strchr(type, '=')) != NULL)
-	{
-		*value++ = '\0';
-		if (MCU_strncasecmp(type, "baud", strlen(type)) == 0)
-		{
-			long baudrate = strtol(value, NULL, 10);
-			if (baudrate == 57600)
-				baud = B57600;
-			else if (baudrate == 38400)
-				baud = B38400;
-			else if (baudrate == 28800)
-				baud = B28800;
-			else if (baudrate == 19200)
-				baud = B19200;
-			else if (baudrate == 16600)
-				baud = B16600;
-			else if (baudrate == 14400)
-				baud = B14400;
-			else if (baudrate == 9600)
-				baud = B9600;
-			else if (baudrate == 7200)
-				baud = B7200;
-			else if (baudrate == 4800)
-				baud = B4800;
-			else if (baudrate == 3600)
-				baud = B4800;
-			else if (baudrate == 2400)
-				baud = B2400;
-			else if (baudrate == 1800)
-				baud = B1800;
-			else if (baudrate == 1200)
-				baud = B1200;
-			else if (baudrate == 600)
-				baud = B600;
-			else if (baudrate == 300)
-				baud = B300;
-			cfsetispeed(theTermios, baud);
-			cfsetospeed(theTermios, baud);
-		}
-		else if (MCU_strncasecmp(type, "parity", strlen(type)) == 0)
-		{
-			if (value[0] == 'N' || value[0] == 'n')
-				theTermios->c_cflag &= ~(PARENB | PARODD);
-			else if (value[0] == 'O' || value[0] == 'o')
-				theTermios->c_cflag |= PARENB | PARODD;
-			else if (value[0] == 'E' || value[0] == 'e')
-				theTermios->c_cflag |= PARENB;
-		}
-		else if (MCU_strncasecmp(type, "data", strlen(type)) == 0)
-		{
-			short data = atoi(value);
-			switch (data)
-			{
-			case 5:
-				theTermios->c_cflag |= CS5;
-				break;
-			case 6:
-				theTermios->c_cflag |= CS6;
-				break;
-			case 7:
-				theTermios->c_cflag |= CS7;
-				break;
-			case 8:
-				theTermios->c_cflag |= CS8;
-				break;
-			}
-		}
-		else if (MCU_strncasecmp(type, "stop", strlen(type)) == 0)
-		{
-			double stopbit = strtol(value, NULL, 10);
-			if (stopbit == 1.0)
-				theTermios->c_cflag &= ~CSTOPB;
-			else if (stopbit == 1.5)
-				theTermios->c_cflag &= ~CSTOPB;
-			else if (stopbit == 2.0)
-				theTermios->c_cflag |= CSTOPB;
-		}
-	}
-}
-
-static void configureSerialPort(int sRefNum)
-{/****************************************************************************
-	 *parse MCserialcontrolstring and set the serial output port to the settings*
-	 *defined by MCserialcontrolstring accordingly                              *
-	 ****************************************************************************/
-	//initialize to the default setting
-	struct termios	theTermios;
-	if (tcgetattr(sRefNum, &theTermios) < 0)
-	{
-		// TODO: handle error appropriately
-	}
-	cfsetispeed(&theTermios,  B9600);
-	theTermios.c_cflag = CS8;
-
-	char *controlptr = strclone(MCserialcontrolsettings);
-	char *str = controlptr;
-	char *each = NULL;
-	while ((each = strchr(str, ' ')) != NULL)
-	{
-		*each = '\0';
-		each++;
-		if (str != NULL)
-			parseSerialControlStr(str, &theTermios);
-		str = each;
-	}
-	delete controlptr;
-	//configure the serial output device
-	parseSerialControlStr(str,&theTermios);
-	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
-	{
-		// TODO: handle error appropriately
-	}
-	return;
-}
+//
+//	
+///********************************************************************/
+///*                        Serial Handling                           */
+///********************************************************************/ 
+//
+//// Utilities
+//
+//static void parseSerialControlStr(char *setting, struct termios *theTermios)
+//{
+//	int baud = 0;
+//	char *type = setting;
+//	char *value = NULL;
+//	if ((value = strchr(type, '=')) != NULL)
+//	{
+//		*value++ = '\0';
+//		if (MCU_strncasecmp(type, "baud", strlen(type)) == 0)
+//		{
+//			long baudrate = strtol(value, NULL, 10);
+//			if (baudrate == 57600)
+//				baud = B57600;
+//			else if (baudrate == 38400)
+//				baud = B38400;
+//			else if (baudrate == 28800)
+//				baud = B28800;
+//			else if (baudrate == 19200)
+//				baud = B19200;
+//			else if (baudrate == 16600)
+//				baud = B16600;
+//			else if (baudrate == 14400)
+//				baud = B14400;
+//			else if (baudrate == 9600)
+//				baud = B9600;
+//			else if (baudrate == 7200)
+//				baud = B7200;
+//			else if (baudrate == 4800)
+//				baud = B4800;
+//			else if (baudrate == 3600)
+//				baud = B4800;
+//			else if (baudrate == 2400)
+//				baud = B2400;
+//			else if (baudrate == 1800)
+//				baud = B1800;
+//			else if (baudrate == 1200)
+//				baud = B1200;
+//			else if (baudrate == 600)
+//				baud = B600;
+//			else if (baudrate == 300)
+//				baud = B300;
+//			cfsetispeed(theTermios, baud);
+//			cfsetospeed(theTermios, baud);
+//		}
+//		else if (MCU_strncasecmp(type, "parity", strlen(type)) == 0)
+//		{
+//			if (value[0] == 'N' || value[0] == 'n')
+//				theTermios->c_cflag &= ~(PARENB | PARODD);
+//			else if (value[0] == 'O' || value[0] == 'o')
+//				theTermios->c_cflag |= PARENB | PARODD;
+//			else if (value[0] == 'E' || value[0] == 'e')
+//				theTermios->c_cflag |= PARENB;
+//		}
+//		else if (MCU_strncasecmp(type, "data", strlen(type)) == 0)
+//		{
+//			short data = atoi(value);
+//			switch (data)
+//			{
+//			case 5:
+//				theTermios->c_cflag |= CS5;
+//				break;
+//			case 6:
+//				theTermios->c_cflag |= CS6;
+//				break;
+//			case 7:
+//				theTermios->c_cflag |= CS7;
+//				break;
+//			case 8:
+//				theTermios->c_cflag |= CS8;
+//				break;
+//			}
+//		}
+//		else if (MCU_strncasecmp(type, "stop", strlen(type)) == 0)
+//		{
+//			double stopbit = strtol(value, NULL, 10);
+//			if (stopbit == 1.0)
+//				theTermios->c_cflag &= ~CSTOPB;
+//			else if (stopbit == 1.5)
+//				theTermios->c_cflag &= ~CSTOPB;
+//			else if (stopbit == 2.0)
+//				theTermios->c_cflag |= CSTOPB;
+//		}
+//	}
+//}
+//
+//static void configureSerialPort(int sRefNum)
+//{/****************************************************************************
+//	 *parse MCserialcontrolstring and set the serial output port to the settings*
+//	 *defined by MCserialcontrolstring accordingly                              *
+//	 ****************************************************************************/
+//	//initialize to the default setting
+//	struct termios	theTermios;
+//	if (tcgetattr(sRefNum, &theTermios) < 0)
+//	{
+//		// TODO: handle error appropriately
+//	}
+//	cfsetispeed(&theTermios,  B9600);
+//	theTermios.c_cflag = CS8;
+//
+//	char *controlptr = strclone(MCserialcontrolsettings);
+//	char *str = controlptr;
+//	char *each = NULL;
+//	while ((each = strchr(str, ' ')) != NULL)
+//	{
+//		*each = '\0';
+//		each++;
+//		if (str != NULL)
+//			parseSerialControlStr(str, &theTermios);
+//		str = each;
+//	}
+//	delete controlptr;
+//	//configure the serial output device
+//	parseSerialControlStr(str,&theTermios);
+//	if (tcsetattr(sRefNum, TCSANOW, &theTermios) < 0)
+//	{
+//		// TODO: handle error appropriately
+//	}
+//	return;
+//}
 
 
 /********************************************************************/
@@ -1258,15 +1262,21 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
  * MCS_getresources()						     *
  * MCS_setresource()						     *
  *********************************************************************/
-void MCS_copyresourcefork(const char *p_source, const char *p_destination)
+void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
 {
+	const char *t_source = MCStringGetCString(p_source);
+
+	const char *t_dest = nil;
+	if (p_destination != nil)
+		t_dest = MCStringGetCString(p_destination);
+
 	const char *t_error;
 	t_error = NULL;
 	
 	SInt16 t_source_ref;
 	bool t_source_fork_opened;
 	t_source_fork_opened = false;
-	t_error = MCS_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref); // RESFORK
+	t_error = MCS_openresourcefork_with_path(t_source, fsRdPerm, false, &t_source_ref); // RESFORK
 	if (t_error == NULL)
 		t_source_fork_opened = true;
 	
@@ -1274,7 +1284,7 @@ void MCS_copyresourcefork(const char *p_source, const char *p_destination)
 	bool t_dest_fork_opened;
 	t_dest_fork_opened = false;
 	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref); // RESFORK
+		t_error = MCS_openresourcefork_with_path(t_dest, fsWrPerm, true, &t_dest_ref); // RESFORK
 	if (t_error == NULL)
 		t_dest_fork_opened = true;
 
@@ -1410,47 +1420,55 @@ void MCS_closeresourcefile(SInt16 p_ref)
 	t_err = ResError();
 }
 
-const char *MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
+void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
 {
-	const char *t_error;
-	t_error = NULL;
+    bool t_success;
+    t_success = true;
 	
 	HFSUniStr255 t_resource_fork_name;
-	if (t_error == NULL)
+	if (t_success)
 	{
 		OSErr t_os_error;
 		t_os_error = FSGetResourceForkName(&t_resource_fork_name);
 		if (t_os_error != noErr)
-			t_error = "couldn't get resource fork name";
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("couldn't get resource fork name", r_error);
+        }
 	}
 	
 	// Attempt to create a resource fork if required.
-	if (t_error == NULL && p_create)
+	if (t_success && p_create)
 	{
 		OSErr t_os_error;
 		t_os_error = FSCreateResourceFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, 0);
 		if (t_os_error != noErr && t_os_error != errFSForkExists)
-			t_error = "can't create resource fork";
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("can't create resource fork", r_error);
+        }
 	}
 	
 	// Open it..
 	SInt16 t_fork_ref;
 	bool t_fork_opened;
 	t_fork_opened = false;
-	if (t_error == NULL)
+	if (t_success)
 	{
 		OSErr t_os_error;
 		t_os_error = FSOpenFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, p_permission, &t_fork_ref);
 		if (t_os_error == noErr)
 			t_fork_opened = true;
 		else
-			t_error = "can't open resource fork";
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("can't open resource fork", r_error);
+        }
 	}
 	
 	*r_fork_ref = t_fork_ref;
-	return t_error;
 }
-
+/*
 const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
 {
 	const char *t_error;
@@ -1472,6 +1490,21 @@ const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permissio
 		
 	return t_error;	
 }
+*/
+
+void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
+{
+	FSRef t_ref;
+	OSErr t_os_error;
+	t_os_error = MCS_pathtoref(p_path, t_ref);
+	if (t_os_error != noErr)
+    {
+		/* UNCHECKED */ MCStringCreateWithCString("can't open file", r_error);
+        return;
+    }
+		
+	MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref, r_error);
+}
 
 bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
 {
@@ -1488,45 +1521,47 @@ bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool
 	
 	return MCS_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
 }
-
-const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
-{
-	const char *t_error;
-	t_error = NULL;
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(strdup(p_path));
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, &t_ref);
-	if (t_os_error != noErr)
-		t_error = "can't open file";
-		
-	if (t_error == NULL)
-		t_error = MCS_openresourcefile_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
-		
-	delete t_utf8_path;
-		
-	return t_error;	
-}
-
-const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
-{
-	const char *t_error;
-	t_error = NULL;
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, &t_ref);
-	if (t_os_error != noErr)
-		t_error = "can't open file";
-		
-	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
-		
-	return t_error;	
-}
+//
+//
+//const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
+//{
+//	const char *t_error;
+//	t_error = NULL;
+//	
+//	char *t_utf8_path;
+//	t_utf8_path = path2utf(strdup(p_path));
+//	
+//	FSRef t_ref;
+//	OSErr t_os_error;
+//	t_os_error = MCS_pathtoref(p_path, &t_ref);
+//	if (t_os_error != noErr)
+//		t_error = "can't open file";
+//		
+//	if (t_error == NULL)
+//		t_error = MCS_openresourcefile_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
+//		
+//	delete t_utf8_path;
+//		
+//	return t_error;	
+//}
+//
+//
+//const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
+//{
+//	const char *t_error;
+//	t_error = NULL;
+//	
+//	FSRef t_ref;
+//	OSErr t_os_error;
+//	t_os_error = MCS_pathtoref(p_path, &t_ref);
+//	if (t_os_error != noErr)
+//		t_error = "can't open file";
+//		
+//	if (t_error == NULL)
+//		t_error = MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
+//		
+//	return t_error;	
+//}
 
 void MCS_loadresfile(MCExecPoint &ep)
 {
@@ -1536,19 +1571,28 @@ void MCS_loadresfile(MCExecPoint &ep)
 		MCresult->sets("can't open file");
 		return;
 	}
-
+	/*
 	char *t_path = ep.getsvalue().clone();
 	ep.clear();
 	
 	const char *t_open_res_error;
 	t_open_res_error = NULL;
-	
+	*/
+	MCAutoStringRef t_open_res_error_string;
+	MCAutoStringRef t_path_string;
+	/* UNCHECKED */ ep . copyasstringref(&t_path_string);
+
 	short fRefNum;
-	t_open_res_error = MCS_openresourcefork_with_path(t_path, fsRdPerm, false, &fRefNum); // RESFORK
+	MCS_openresourcefork_with_path(*t_path_string, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+
+	const char *t_open_res_error = nil;
+	if (MCStringGetLength(*t_open_res_error_string) != 0)
+		t_open_res_error =  MCStringGetCString(*t_open_res_error_string);
+	
 	if (t_open_res_error != NULL)
 	{
 		MCresult -> sets(t_open_res_error);
-		delete t_path;
+		
 		return;
 	}
 		
@@ -1579,7 +1623,6 @@ void MCS_loadresfile(MCExecPoint &ep)
 	
 	FSCloseFork(fRefNum);
 
-	delete t_path;
 }
 
 // MH-2007-04-02: [[ Bug 705 ]] resfile: URLs do not work with long filenames...
@@ -2071,16 +2114,16 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 //}
 
 // Canonical path resolution
-
-char *MCS_get_canonical_path(const char *p_path)
-{
-	char *t_path = NULL;
-	
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
-	
-	return t_path;
-}
+//
+//char *MCS_get_canonical_path(const char *p_path)
+//{
+//	char *t_path = NULL;
+//	
+//	t_path = MCS_resolvepath(p_path);
+//	MCU_fix_path(t_path);
+//	
+//	return t_path;
+//}
 
 //// Special Folders
 //
@@ -2345,111 +2388,111 @@ bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 	return MCStringCopy(p_path, r_short_path);
 }
 
-bool MCS_is_link(MCStringRef p_path)
-{
-	struct stat buf;
-	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
-}
+//bool MCS_is_link(MCStringRef p_path)
+//{
+//	struct stat buf;
+//	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+//}
+//
+//bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
+//{
+//	struct stat t_stat;
+//	ssize_t t_size;
+//	MCAutoNativeCharArray t_buffer;
+//    
+//	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
+//		!t_buffer.New(t_stat.st_size))
+//		return false;
+//    
+//	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+//    
+//	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+//}
 
-bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
-{
-	struct stat t_stat;
-	ssize_t t_size;
-	MCAutoNativeCharArray t_buffer;
-    
-	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
-		!t_buffer.New(t_stat.st_size))
-		return false;
-    
-	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
-    
-	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
-}
-
-bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
-{
-	if (MCStringGetLength(p_path) == 0)
-		return MCS_getcurdir(r_resolved);
-
-	MCAutoStringRef t_tilde_path;
-	if (MCStringGetCharAtIndex(p_path, 0) == '~')
-	{
-		uindex_t t_user_end;
-		if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
-			t_user_end = MCStringGetLength(p_path);
-		
-		// Prepend user name
-		struct passwd *t_password;
-		if (t_user_end == 1)
-			t_password = getpwuid(getuid());
-		else
-		{
-			MCAutoStringRef t_username;
-			if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
-				return false;
-
-			t_password = getpwnam(MCStringGetCString(*t_username));
-		}
-		
-		if (t_password != NULL)
-		{
-			if (!MCStringCreateMutable(0, &t_tilde_path) ||
-				!MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
-				!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
-				return false;
-		}
-		else
-			t_tilde_path = p_path;
-	}
-	else
-		t_tilde_path = p_path;
-
-	MCAutoStringRef t_fullpath;
-	if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
-	{
-		MCAutoStringRef t_folder;
-		if (!MCS_getcurdir(&t_folder))
-			return false;
-
-		MCAutoStringRef t_resolved;
-		if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
-			!MCStringAppendChar(*t_fullpath, '/') ||
-			!MCStringAppend(*t_fullpath, *t_tilde_path))
-			return false;
-	}
-	else
-		t_fullpath = *t_tilde_path;
-
-	if (!MCS_is_link(*t_fullpath))
-		return MCStringCopy(*t_fullpath, r_resolved);
-
-	MCAutoStringRef t_newname;
-	if (!MCS_readlink(*t_fullpath, &t_newname))
-		return false;
-
-	// IM - Should we really be using the original p_path parameter here?
-	// seems like we should use the computed t_fullpath value.
-	if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
-	{
-		MCAutoStringRef t_resolved;
-
-		uindex_t t_last_component;
-		uindex_t t_path_length;
-
-		if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
-			t_last_component++;
-		else
-			t_last_component = 0;
-
-		if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
-			!MCStringAppend(*t_resolved, *t_newname))
-			return false;
-
-		return MCStringCopy(*t_resolved, r_resolved);
-	}
-	else
-		return MCStringCopy(*t_newname, r_resolved);
-}
+//bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
+//{
+//	if (MCStringGetLength(p_path) == 0)
+//		return MCS_getcurdir(r_resolved);
+//
+//	MCAutoStringRef t_tilde_path;
+//	if (MCStringGetCharAtIndex(p_path, 0) == '~')
+//	{
+//		uindex_t t_user_end;
+//		if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
+//			t_user_end = MCStringGetLength(p_path);
+//		
+//		// Prepend user name
+//		struct passwd *t_password;
+//		if (t_user_end == 1)
+//			t_password = getpwuid(getuid());
+//		else
+//		{
+//			MCAutoStringRef t_username;
+//			if (!MCStringCopySubstring(p_path, MCRangeMake(1, t_user_end - 1), &t_username))
+//				return false;
+//
+//			t_password = getpwnam(MCStringGetCString(*t_username));
+//		}
+//		
+//		if (t_password != NULL)
+//		{
+//			if (!MCStringCreateMutable(0, &t_tilde_path) ||
+//				!MCStringAppendNativeChars(*t_tilde_path, (char_t*)t_password->pw_dir, MCCStringLength(t_password->pw_dir)) ||
+//				!MCStringAppendSubstring(*t_tilde_path, p_path, MCRangeMake(t_user_end, MCStringGetLength(p_path) - t_user_end)))
+//				return false;
+//		}
+//		else
+//			t_tilde_path = p_path;
+//	}
+//	else
+//		t_tilde_path = p_path;
+//
+//	MCAutoStringRef t_fullpath;
+//	if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
+//	{
+//		MCAutoStringRef t_folder;
+//		if (!MCS_getcurdir(&t_folder))
+//			return false;
+//
+//		MCAutoStringRef t_resolved;
+//		if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
+//			!MCStringAppendChar(*t_fullpath, '/') ||
+//			!MCStringAppend(*t_fullpath, *t_tilde_path))
+//			return false;
+//	}
+//	else
+//		t_fullpath = *t_tilde_path;
+//
+//	if (!MCS_is_link(*t_fullpath))
+//		return MCStringCopy(*t_fullpath, r_resolved);
+//
+//	MCAutoStringRef t_newname;
+//	if (!MCS_readlink(*t_fullpath, &t_newname))
+//		return false;
+//
+//	// IM - Should we really be using the original p_path parameter here?
+//	// seems like we should use the computed t_fullpath value.
+//	if (MCStringGetCharAtIndex(*t_newname, 0) != '/')
+//	{
+//		MCAutoStringRef t_resolved;
+//
+//		uindex_t t_last_component;
+//		uindex_t t_path_length;
+//
+//		if (MCStringLastIndexOfChar(p_path, '/', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_last_component))
+//			t_last_component++;
+//		else
+//			t_last_component = 0;
+//
+//		if (!MCStringMutableCopySubstring(p_path, MCRangeMake(0, t_last_component), &t_resolved) ||
+//			!MCStringAppend(*t_resolved, *t_newname))
+//			return false;
+//
+//		return MCStringCopy(*t_resolved, r_resolved);
+//	}
+//	else
+//		return MCStringCopy(*t_newname, r_resolved);
+//}
 //
 //Boolean MCS_rename(const char *oname, const char *nname)
 //{ //rename a file or directory

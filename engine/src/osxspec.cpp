@@ -135,8 +135,8 @@ static triplets ourkeys[] =
   { kCoreEventClass, kAEAnswer, DoAEAnswer, nil}
 };
 
-static Boolean hasPPCToolbox = False;
-static Boolean hasAppleEvents = False;
+//static Boolean hasPPCToolbox = False;
+//static Boolean hasAppleEvents = False;
 
 #define MINIMUM_FAKE_PID (1 << 29)
 
@@ -159,7 +159,7 @@ static TextToUnicodeInfo texttoutf8info;
  * utility functions used by this module only		                   *
  ***************************************************************************/
 
-static OSErr getDescFromAddress(const char *address, AEDesc *retDesc);
+static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc);
 static OSErr getDesc(short locKind, StringPtr zone, StringPtr machine, StringPtr app, AEDesc *retDesc);
 static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result);
 static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result);
@@ -789,190 +789,192 @@ char *path2utf(char *path)
 	return tutfpath;
 }
 
-void MCS_init()
-{
-	IO_stdin = new IO_header(stdin, 0, 0, 0, NULL, 0, 0);
-	IO_stdout = new IO_header(stdout, 0, 0, 0, NULL, 0, 0);
-	IO_stderr = new IO_header(stderr, 0, 0, 0, NULL, 0, 0);
-	struct sigaction action;
-	memset((char *)&action, 0, sizeof(action));
-	action.sa_handler = handle_signal;
-	action.sa_flags = SA_RESTART;
-	sigaction(SIGHUP, &action, NULL);
-	sigaction(SIGINT, &action, NULL);
-	sigaction(SIGQUIT, &action, NULL);
-	sigaction(SIGIOT, &action, NULL);
-	sigaction(SIGPIPE, &action, NULL);
-	sigaction(SIGALRM, &action, NULL);
-	sigaction(SIGTERM, &action, NULL);
-	sigaction(SIGUSR1, &action, NULL);
-	sigaction(SIGUSR2, &action, NULL);
-	sigaction(SIGFPE, &action, NULL);
-	action.sa_flags |= SA_NOCLDSTOP;
-	sigaction(SIGCHLD, &action, NULL);
-
-	// MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
-	//   the OS default so CrashReporter will kick in.
-	action.sa_flags = SA_RESETHAND;
-	sigaction(SIGSEGV, &action, NULL);
-	sigaction(SIGILL, &action, NULL);
-	sigaction(SIGBUS, &action, NULL);
-	
-	// MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
-	//   Without this you can't poll read when a slave process.
-	if (!MCS_isatty(0))
-		MCS_nodelay(0);
-	
-	setlocale(LC_ALL, MCnullstring);
-
-	_CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
-
-	// Initialize our case mapping tables
-	
-	MCuppercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MCuppercasingtable[i] = (uint1)i;
-	UppercaseText((char *)MCuppercasingtable, 256, smRoman);
-
-	MClowercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MClowercasingtable[i] = (uint1)i;
-	LowercaseText((char *)MClowercasingtable, 256, smRoman);
-	
-	//
-	
-	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
-	//   property here (otherwise it is nil in -ui mode).
-	MCshellcmd = strclone("/bin/sh");
-	
-	//
-
-	MoreMasters();
-	InitCursor();
-	MCinfinity = HUGE_VAL;
-
-	long response;
-	if (Gestalt(gestaltSystemVersion, &response) == noErr)
-		MCmajorosversion = response;
-		
-	MCaqua = True;
-	
-	init_utf8_converters();
-
-	CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
-	if (theBundle != NULL)
-	{
-		if (CFBundleLoadExecutable(theBundle))
-		{
-			SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
-			if (stfptr != NULL)
-				stfptr(kQDSupportedFlags);
-			CFBundleUnloadExecutable(theBundle);
-		}
-		CFRelease(theBundle);
-	}
-	
-	char *dptr = MCS_getcurdir();
-	if (strlen(dptr) <= 1)
-	{ // if root, then started from Finder
-		SInt16 vRefNum;
-		SInt32 dirID;
-		HGetVol(NULL, &vRefNum, &dirID);
-		FSSpec fspec;
-		FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
-		char *tpath = MCS_FSSpec2path(&fspec);
-		char *newpath = new char[strlen(tpath) + 11];
-		strcpy(newpath, tpath);
-		strcat(newpath, "/../../../");
-		MCS_setcurdir(newpath);
-		delete tpath;
-		delete newpath;
-	}
-	delete dptr;
-
-	// MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
-	//   Make sure we always use outlines - then everything looks pretty :o)
-	SetOutlinePreferred(TRUE);
-
-	MCS_reset_time();
-	//do toolbox checking
-	long result;
-	hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
-	                 ? False : result != 0);
-	hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
-	                  ? False : result != 0);
-	uint1 i;
-	if (hasAppleEvents)
-	{ //install required AE event handler
-		for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
-		{
-			if (!ourkeys[i].theUPP)
-			{
-				ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
-				AEInstallEventHandler(ourkeys[i].theEventClass,
-				                      ourkeys[i].theEventID,
-				                      ourkeys[i].theUPP, 0L, False);
-			}
-		}
-	}
-
-// ** MODE CHOICE
-	if (MCModeShouldPreprocessOpeningStacks())
-	{
-		EventRecord event;
-		i = 2;
-		// predispatch any openapp or opendoc events so that stacks[] array
-		// can be properly initialized
-		while (i--)
-			while (WaitNextEvent(highLevelEventMask, &event,
-								 (unsigned long)0, (RgnHandle)NULL))
-				AEProcessAppleEvent(&event);
-	}
-	//install special handler
-	AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
-	AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
-
-	if (Gestalt('ICAp', &response) == noErr)
-	{
-		OSErr err;
-		ICInstance icinst;
-		ICAttr icattr;
-		err = ICStart(&icinst, 'MCRD');
-		if (err == noErr)
-		{
-			Str255 proxystr;
-			Boolean useproxy;
-
-			long icsize = sizeof(useproxy);
-			err = ICGetPref(icinst,  kICUseHTTPProxy, &icattr, &useproxy, &icsize);
-			if (err == noErr && useproxy == True)
-			{
-				icsize = sizeof(proxystr);
-				err = ICGetPref(icinst, kICHTTPProxyHost ,&icattr, proxystr, &icsize);
-				if (err == noErr)
-				{
-					p2cstr(proxystr);
-					MChttpproxy = strclone((char *)proxystr);
-				}
-			}
-			ICStop(icinst);
-		}
-	}
-
-
-	MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
-
-	// MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
-	extern void MCCoreImageRegister(void);
-	if (MCmajorosversion >= 0x1040)
-		MCCoreImageRegister();
-		
-	if (!MCnoui)
-	{
-		setlinebuf(stdout);
-		setlinebuf(stderr);
-	}
-}
+//void MCS_init()
+//{
+//	IO_stdin = new IO_header(stdin, 0, 0, 0, NULL, 0, 0);
+//	IO_stdout = new IO_header(stdout, 0, 0, 0, NULL, 0, 0);
+//	IO_stderr = new IO_header(stderr, 0, 0, 0, NULL, 0, 0);
+//	struct sigaction action;
+//	memset((char *)&action, 0, sizeof(action));
+//	action.sa_handler = handle_signal;
+//	action.sa_flags = SA_RESTART;
+//	sigaction(SIGHUP, &action, NULL);
+//	sigaction(SIGINT, &action, NULL);
+//	sigaction(SIGQUIT, &action, NULL);
+//	sigaction(SIGIOT, &action, NULL);
+//	sigaction(SIGPIPE, &action, NULL);
+//	sigaction(SIGALRM, &action, NULL);
+//	sigaction(SIGTERM, &action, NULL);
+//	sigaction(SIGUSR1, &action, NULL);
+//	sigaction(SIGUSR2, &action, NULL);
+//	sigaction(SIGFPE, &action, NULL);
+//	action.sa_flags |= SA_NOCLDSTOP;
+//	sigaction(SIGCHLD, &action, NULL);
+//
+//	// MW-2009-01-29: [[ Bug 6410 ]] Make sure we cause the handlers to be reset to
+//	//   the OS default so CrashReporter will kick in.
+//	action.sa_flags = SA_RESETHAND;
+//	sigaction(SIGSEGV, &action, NULL);
+//	sigaction(SIGILL, &action, NULL);
+//	sigaction(SIGBUS, &action, NULL);
+//	
+//	// MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
+//	//   Without this you can't poll read when a slave process.
+//	if (!MCS_isatty(0))
+//		MCS_nodelay(0);
+//	
+//	setlocale(LC_ALL, MCnullstring);
+//
+//	_CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
+//
+//	// Initialize our case mapping tables
+//	
+//	MCuppercasingtable = new uint1[256];
+//	for(uint4 i = 0; i < 256; ++i)
+//		MCuppercasingtable[i] = (uint1)i;
+//	UppercaseText((char *)MCuppercasingtable, 256, smRoman);
+//
+//	MClowercasingtable = new uint1[256];
+//	for(uint4 i = 0; i < 256; ++i)
+//		MClowercasingtable[i] = (uint1)i;
+//	LowercaseText((char *)MClowercasingtable, 256, smRoman);
+//	
+//	//
+//	
+//	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
+//	//   property here (otherwise it is nil in -ui mode).
+//	MCshellcmd = strclone("/bin/sh");
+//	
+//	//
+//
+//	MoreMasters();
+//	InitCursor();
+//	MCinfinity = HUGE_VAL;
+//
+//	long response;
+//	if (Gestalt(gestaltSystemVersion, &response) == noErr)
+//		MCmajorosversion = response;
+//		
+//	MCaqua = True;
+//	
+//	init_utf8_converters();
+//
+//	CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
+//	if (theBundle != NULL)
+//	{
+//		if (CFBundleLoadExecutable(theBundle))
+//		{
+//			SwapQDTextFlagsPtr stfptr = (SwapQDTextFlagsPtr)CFBundleGetFunctionPointerForName(theBundle, CFSTR("SwapQDTextFlags"));
+//			if (stfptr != NULL)
+//				stfptr(kQDSupportedFlags);
+//			CFBundleUnloadExecutable(theBundle);
+//		}
+//		CFRelease(theBundle);
+//	}
+//	
+//	MCAutoStringRef dptr;
+//    MCS_getcurdir(&dptr);
+//	if (MCStringGetLength(*dptr) <= 1)
+//	{ // if root, then started from Finder
+//		SInt16 vRefNum;
+//		SInt32 dirID;
+//		HGetVol(NULL, &vRefNum, &dirID);
+//		FSSpec fspec;
+//		FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
+//		char *tpath = MCS_FSSpec2path(&fspec);
+//		char *newpath = new char[strlen(tpath) + 11];
+//		strcpy(newpath, tpath);
+//		strcat(newpath, "/../../../");
+//        MCAutoStringRef t_new_path_auto;
+//        /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
+//		MCS_setcurdir(*t_new_path_auto);
+//		delete tpath;
+//		delete newpath;
+//	}
+//
+//	// MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
+//	//   Make sure we always use outlines - then everything looks pretty :o)
+//	SetOutlinePreferred(TRUE);
+//
+//	MCS_reset_time();
+//	//do toolbox checking
+//	long result;
+//	hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
+//	                 ? False : result != 0);
+//	hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
+//	                  ? False : result != 0);
+//	uint1 i;
+//	if (hasAppleEvents)
+//	{ //install required AE event handler
+//		for (i = 0; i < (sizeof(ourkeys) / sizeof(triplets)); ++i)
+//		{
+//			if (!ourkeys[i].theUPP)
+//			{
+//				ourkeys[i].theUPP = NewAEEventHandlerUPP(ourkeys[i].theHandler);
+//				AEInstallEventHandler(ourkeys[i].theEventClass,
+//				                      ourkeys[i].theEventID,
+//				                      ourkeys[i].theUPP, 0L, False);
+//			}
+//		}
+//	}
+//
+//// ** MODE CHOICE
+//	if (MCModeShouldPreprocessOpeningStacks())
+//	{
+//		EventRecord event;
+//		i = 2;
+//		// predispatch any openapp or opendoc events so that stacks[] array
+//		// can be properly initialized
+//		while (i--)
+//			while (WaitNextEvent(highLevelEventMask, &event,
+//								 (unsigned long)0, (RgnHandle)NULL))
+//				AEProcessAppleEvent(&event);
+//	}
+//	//install special handler
+//	AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
+//	AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
+//
+//	if (Gestalt('ICAp', &response) == noErr)
+//	{
+//		OSErr err;
+//		ICInstance icinst;
+//		ICAttr icattr;
+//		err = ICStart(&icinst, 'MCRD');
+//		if (err == noErr)
+//		{
+//			Str255 proxystr;
+//			Boolean useproxy;
+//
+//			long icsize = sizeof(useproxy);
+//			err = ICGetPref(icinst,  kICUseHTTPProxy, &icattr, &useproxy, &icsize);
+//			if (err == noErr && useproxy == True)
+//			{
+//				icsize = sizeof(proxystr);
+//				err = ICGetPref(icinst, kICHTTPProxyHost ,&icattr, proxystr, &icsize);
+//				if (err == noErr)
+//				{
+//					p2cstr(proxystr);
+//					MChttpproxy = strclone((char *)proxystr);
+//				}
+//			}
+//			ICStop(icinst);
+//		}
+//	}
+//
+//
+//	MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
+//
+//	// MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
+//	extern void MCCoreImageRegister(void);
+//	if (MCmajorosversion >= 0x1040)
+//		MCCoreImageRegister();
+//		
+//	if (!MCnoui)
+//	{
+//		setlinebuf(stdout);
+//		setlinebuf(stderr);
+//	}
+//}
 
 void MCS_shutdown()
 {
@@ -1018,19 +1020,20 @@ void MCS_alarm(real8 seconds)
 //   MCS_startprocess is called by MCLaunch with a docname
 //   MCS_startprocess is called by MCOpen without a docname
 // Thus, we will fork two methods - and dispatch from MCS_startprocess
-void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Boolean elevated);
-void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode);
+void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
+void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
 
-void MCS_startprocess(MCNameRef name, const char *docname, Open_mode mode, Boolean elevated)
+void MCS_startprocess(MCNameRef name, MCStringRef docname, Open_mode mode, Boolean elevated)
 {
-	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || docname != NULL)
+	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0)
 	  MCS_startprocess_launch(name, docname, mode);
 	else
-	  MCS_startprocess_unix(name, NULL, mode, elevated);
+	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
 }
 
-void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode)
+void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode)
 {
+#ifdef /* MCS_startprocess_launch */ LEGACY_SYSTEM
 	LaunchParamBlockRec launchParms;
 	launchParms.launchBlockID = extendedBlock;
 	launchParms.launchEPBLength = extendedBlockLen;
@@ -1044,14 +1047,14 @@ void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode
 	
 	FSRef t_app_fsref;
 	FSSpec t_app_fsspec;
-	errno = MCS_pathtoref(MCNameGetCString(name), &t_app_fsref);
+	errno = MCS_pathtoref(name, &t_app_fsref);
 	errno = MCS_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
 	
 	uint2 i;
-
+    
 	if (docname != NULL && *docname == '\0')
 		docname = NULL;
-
+    
 	if (mode == OM_NEITHER)
 	{
 		if (errno != noErr)
@@ -1059,7 +1062,7 @@ void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode
 			MCresult->sets("no such program");
 			return;
 		}
-
+        
 		FSRef t_doc_fsref;
 		
 		LSLaunchFSRefSpec inLaunchSpec;
@@ -1083,7 +1086,7 @@ void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode
 		errno = LSOpenFromRefSpec(&inLaunchSpec, &launchedapp);
 		return;
 	}
-
+    
 	errno = connectionInvalid;
 	if (docname != NULL && *docname != '\0')
 	{
@@ -1127,7 +1130,148 @@ void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode
 		AECoerceDesc(&ae, typeAppParameters, &pd);
 		launchParms.launchAppParameters = (AppParametersPtr)*(Handle)pd.dataHandle;
 		HLock((Handle)pd.dataHandle);
-
+        
+	}
+	
+	if (errno != noErr)
+	{
+		launchParms.launchAppSpec = &t_app_fsspec;
+		errno = LaunchApplication(&launchParms);
+		if (errno != noErr)
+		{
+			char buffer[7 + I2L];
+			sprintf(buffer, "error %d", errno);
+			MCresult->copysvalue(buffer);
+		}
+		else
+		{
+			MCresult->clear(False);
+			for (i = 0 ; i < MCnprocesses ; i++)
+			{
+				Boolean result;
+				SameProcess((ProcessSerialNumber *)&MCprocesses[i].sn, &launchParms.launchProcessSN, &result);
+				if (result)
+					break;
+			}
+			if (i == MCnprocesses)
+			{
+				MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
+				            sizeof(Streamnode));
+				MCprocesses[MCnprocesses].name = name;
+				MCprocesses[MCnprocesses].mode = OM_NEITHER;
+				MCprocesses[MCnprocesses].ihandle = NULL;
+				MCprocesses[MCnprocesses].ohandle = NULL;
+				MCprocesses[MCnprocesses].pid = ++curpid;
+				memcpy(&MCprocesses[MCnprocesses++].sn, &launchParms.launchProcessSN, sizeof(MCMacProcessSerialNumber));
+			}
+		}
+	}
+	if (launchParms.launchAppParameters != NULL)
+	{
+		HUnlock((Handle)pd.dataHandle);
+		AEDisposeDesc(&target);
+		AEDisposeDesc(&pd);
+		DisposeHandle((Handle)the_alias);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&files_list);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&ae);
+	}
+#endif /* MCS_startprocess_launch */
+	LaunchParamBlockRec launchParms;
+	launchParms.launchBlockID = extendedBlock;
+	launchParms.launchEPBLength = extendedBlockLen;
+	launchParms.launchFileFlags = 0;
+	launchParms.launchControlFlags = launchContinue + launchNoFileFlags;
+	launchParms.launchAppParameters = NULL;
+	AEDesc pd, target;
+	AEDescList files_list, file_desc;
+	AliasHandle the_alias;
+	AppleEvent ae;
+	
+	FSRef t_app_fsref;
+	FSSpec t_app_fsspec;
+	errno = MCS_pathtoref(MCNameGetString(name), t_app_fsref);
+	errno = MCS_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
+	
+	uint2 i;
+    
+	if (mode == OM_NEITHER)
+	{
+		if (errno != noErr)
+		{
+			MCresult->sets("no such program");
+			return;
+		}
+        
+		FSRef t_doc_fsref;
+		
+		LSLaunchFSRefSpec inLaunchSpec;
+		FSRef launchedapp;
+		inLaunchSpec.numDocs = 0;
+		inLaunchSpec.itemRefs = NULL;
+		if (MCStringGetLength(docname))
+		{
+			if (MCS_pathtoref(docname, t_doc_fsref) != noErr)
+			{
+				MCresult->sets("no such document");
+				return;
+			}
+			inLaunchSpec.numDocs = 1;
+			inLaunchSpec.itemRefs = &t_doc_fsref;
+		}
+		inLaunchSpec.appRef = &t_app_fsref;
+		inLaunchSpec.passThruParams = NULL;
+		inLaunchSpec.launchFlags = kLSLaunchDefaults;
+		inLaunchSpec.asyncRefCon = NULL;
+		errno = LSOpenFromRefSpec(&inLaunchSpec, &launchedapp);
+		return;
+	}
+    
+	errno = connectionInvalid;
+	if (MCStringGetLength(docname))
+	{
+		for (i = 0 ; i < MCnprocesses ; i++)
+			if (MCNameIsEqualTo(name, MCprocesses[i].name, kMCCompareExact))
+				break;
+		if (i == MCnprocesses)
+		{
+			FInfo fndrInfo;
+			if ((errno = FSpGetFInfo(&t_app_fsspec, &fndrInfo)) != noErr)
+			{
+				MCresult->sets("no such program");
+				return;
+			}
+			OSType creator = fndrInfo.fdCreator;
+			AECreateDesc(typeApplSignature, (Ptr)&creator, sizeof(OSType), &target);
+		}
+		else
+			AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
+			             sizeof(ProcessSerialNumber), &target);
+		AECreateAppleEvent('aevt', 'odoc', &target, kAutoGenerateReturnID,
+		                   kAnyTransactionID, &ae);
+		FSSpec fspec;
+		FSRef t_tmp_fsref;
+		if (MCS_pathtoref(docname, t_tmp_fsref) == noErr && MCS_fsref_to_fsspec(&t_tmp_fsref, &fspec) == noErr)
+		{
+			AECreateList(NULL, 0, false, &files_list);
+			NewAlias(NULL, &fspec, &the_alias);
+			HLock((Handle)the_alias);
+			AECreateDesc(typeAlias, (Ptr)(*the_alias),
+			             GetHandleSize((Handle)the_alias), &file_desc);
+			HUnlock((Handle)the_alias);
+			AEPutDesc(&files_list, 0, &file_desc);
+			AEPutParamDesc(&ae, keyDirectObject, &files_list);
+		}
+		AppleEvent the_reply;
+		AECreateDesc(typeNull, NULL, 0, &the_reply);
+		errno = AESend(&ae, &the_reply, kAENoReply,
+		               kAENormalPriority, kNoTimeOut, NULL, NULL);
+		AEDisposeDesc(&the_reply);
+		AECoerceDesc(&ae, typeAppParameters, &pd);
+		launchParms.launchAppParameters = (AppParametersPtr)*(Handle)pd.dataHandle;
+		HLock((Handle)pd.dataHandle);
+        
 	}
 	
 	if (errno != noErr)
@@ -1176,21 +1320,21 @@ void MCS_startprocess_launch(MCNameRef name, const char *docname, Open_mode mode
 	}
 }
 
-static IO_handle MCS_dopen(int4 fd, const char *mode)
-{
-	IO_handle handle = NULL;
-	FILE *fptr = fdopen(fd, mode);
-	
-	if (fptr != NULL)
-	{
-		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (mode[0] == 'w')
-			setvbuf(fptr, NULL, _IONBF, 0);
-
-		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
-	}	
-	return handle;
-}
+//static IO_handle MCS_dopen(int4 fd, const char *mode)
+//{
+//	IO_handle handle = NULL;
+//	FILE *fptr = fdopen(fd, mode);
+//	
+//	if (fptr != NULL)
+//	{
+//		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+//		if (mode[0] == 'w')
+//			setvbuf(fptr, NULL, _IONBF, 0);
+//
+//		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
+//	}	
+//	return handle;
+//}
 
 static void MCS_launch_set_result_from_lsstatus(void)
 {
@@ -1242,14 +1386,14 @@ static void MCS_launch_set_result_from_lsstatus(void)
 
 }
 
-void MCS_launch_document(const char *p_document)
+void MCS_launch_document(MCStringRef p_document)
 {
 	int t_error = 0;
 	
 	FSRef t_document_ref;
 	if (t_error == 0)
 	{
-		errno = MCS_pathtoref(p_document, &t_document_ref);
+		errno = MCS_pathtoref(p_document, t_document_ref);
 		if (errno != noErr)
 		{
 			// MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
@@ -1429,48 +1573,48 @@ int4 MCS_rawclose(int4 fd)
 	return 0;
 }
 
-extern "C"
-{
-#include	<CoreFoundation/CoreFoundation.h>
-#include	<IOKit/IOKitLib.h>
-#include	<IOKit/serial/IOSerialKeys.h>
-#include	<IOKit/IOBSD.h>
-}
-
-static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_port_t *masterPort)
-{
-	kern_return_t	kernResult;
-	CFMutableDictionaryRef classesToMatch;
-	if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
-		return kernResult;
-	if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
-		return kernResult;
-	CFDictionarySetValue(classesToMatch, CFSTR(kIOSerialBSDTypeKey),
-											 CFSTR(kIOSerialBSDRS232Type));
-	//kIOSerialBSDRS232Type filters KeySpan USB modems use
-	//kIOSerialBSDModemType to get 'real' serial modems for OSX
-	//computers with real serial ports - if there are any!
-	kernResult = IOServiceGetMatchingServices(*masterPort, classesToMatch,
-							 serialIterator);
-	return kernResult;
-}
-
-static void getIOKitProp(io_object_t sObj, const char *propName,
-												 char *dest, uint2 destlen)
-{
-	CFTypeRef nameCFstring;
-	dest[0] = 0;
-	nameCFstring = IORegistryEntryCreateCFProperty(sObj,
-								 CFStringCreateWithCString(kCFAllocatorDefault, propName,
-																					 kCFStringEncodingASCII),
-								 kCFAllocatorDefault, 0);
-	if (nameCFstring)
-	{
-		CFStringGetCString((CFStringRef)nameCFstring, (char *)dest, (long)destlen,
-											 (unsigned long)kCFStringEncodingASCII);
-		CFRelease(nameCFstring);
-	}
-}
+//extern "C"
+//{
+//#include	<CoreFoundation/CoreFoundation.h>
+//#include	<IOKit/IOKitLib.h>
+//#include	<IOKit/serial/IOSerialKeys.h>
+//#include	<IOKit/IOBSD.h>
+//}
+//
+//static kern_return_t FindSerialPortDevices(io_iterator_t *serialIterator, mach_port_t *masterPort)
+//{
+//	kern_return_t	kernResult;
+//	CFMutableDictionaryRef classesToMatch;
+//	if ((kernResult = IOMasterPort(NULL, masterPort)) != KERN_SUCCESS)
+//		return kernResult;
+//	if ((classesToMatch = IOServiceMatching(kIOSerialBSDServiceValue)) == NULL)
+//		return kernResult;
+//	CFDictionarySetValue(classesToMatch, CFSTR(kIOSerialBSDTypeKey),
+//											 CFSTR(kIOSerialBSDRS232Type));
+//	//kIOSerialBSDRS232Type filters KeySpan USB modems use
+//	//kIOSerialBSDModemType to get 'real' serial modems for OSX
+//	//computers with real serial ports - if there are any!
+//	kernResult = IOServiceGetMatchingServices(*masterPort, classesToMatch,
+//							 serialIterator);
+//	return kernResult;
+//}
+//
+//static void getIOKitProp(io_object_t sObj, const char *propName,
+//												 char *dest, uint2 destlen)
+//{
+//	CFTypeRef nameCFstring;
+//	dest[0] = 0;
+//	nameCFstring = IORegistryEntryCreateCFProperty(sObj,
+//								 CFStringCreateWithCString(kCFAllocatorDefault, propName,
+//																					 kCFStringEncodingASCII),
+//								 kCFAllocatorDefault, 0);
+//	if (nameCFstring)
+//	{
+//		CFStringGetCString((CFStringRef)nameCFstring, (char *)dest, (long)destlen,
+//											 (unsigned long)kCFStringEncodingASCII);
+//		CFRelease(nameCFstring);
+//	}
+//}
 
 
 #define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
@@ -1489,67 +1633,67 @@ bool MCS_getDNSservers(MCListRef& r_list)
 		MCListCopy(*t_list, r_list);
 }
 
-bool MCS_getdevices(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	io_iterator_t SerialPortIterator = NULL;
-	mach_port_t masterPort = NULL;
-	io_object_t thePort;
-	if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
-	{
-		char *buffer = new char[6 + I2L];
-		sprintf(buffer, "error %d", errno);
-		MCresult->copysvalue(buffer);
-		delete buffer;
-		return false;
-	}
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	uint2 portCount = 0;
-
-	bool t_success = true;
-	if (SerialPortIterator != 0)
-	{
-		while (t_success && (thePort = IOIteratorNext(SerialPortIterator)) != 0)
-		{
-			char ioresultbuffer[256];
-
-			MCAutoListRef t_result_list;
-			MCAutoStringRef t_result_string;
-
-			t_success = MCListCreateMutable(',', &t_result_list);
-
-			if (t_success)
-			{
-				getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//name
-			}
-			if (t_success)
-			{
-				getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
-			}
-			if (t_success)
-			{
-				getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
-				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
-			}
-
-			if (t_success)
-				t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
-
-			if (t_success)
-				t_success = MCListAppend(*t_list, *t_result_string);
-
-			IOObjectRelease(thePort);
-			portCount++;
-		}
-		IOObjectRelease(SerialPortIterator);
-	}
-	
-	return t_success && MCListCopy(*t_list, r_list);
-}
+//bool MCS_getdevices(MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//	io_iterator_t SerialPortIterator = NULL;
+//	mach_port_t masterPort = NULL;
+//	io_object_t thePort;
+//	if (FindSerialPortDevices(&SerialPortIterator, &masterPort) != KERN_SUCCESS)
+//	{
+//		char *buffer = new char[6 + I2L];
+//		sprintf(buffer, "error %d", errno);
+//		MCresult->copysvalue(buffer);
+//		delete buffer;
+//		return false;
+//	}
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	uint2 portCount = 0;
+//
+//	bool t_success = true;
+//	if (SerialPortIterator != 0)
+//	{
+//		while (t_success && (thePort = IOIteratorNext(SerialPortIterator)) != 0)
+//		{
+//			char ioresultbuffer[256];
+//
+//			MCAutoListRef t_result_list;
+//			MCAutoStringRef t_result_string;
+//
+//			t_success = MCListCreateMutable(',', &t_result_list);
+//
+//			if (t_success)
+//			{
+//				getIOKitProp(thePort, kIOTTYDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+//				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//name
+//			}
+//			if (t_success)
+//			{
+//				getIOKitProp(thePort, kIODialinDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+//				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+//			}
+//			if (t_success)
+//			{
+//				getIOKitProp(thePort, kIOCalloutDeviceKey, ioresultbuffer, sizeof(ioresultbuffer));
+//				t_success = MCListAppendCString(*t_result_list, ioresultbuffer);//TTY file
+//			}
+//
+//			if (t_success)
+//				t_success = MCListCopyAsStringAndRelease(*t_result_list, &t_result_string);
+//
+//			if (t_success)
+//				t_success = MCListAppend(*t_list, *t_result_string);
+//
+//			IOObjectRelease(thePort);
+//			portCount++;
+//		}
+//		IOObjectRelease(SerialPortIterator);
+//	}
+//	
+//	return t_success && MCListCopy(*t_list, r_list);
+//}
 
 
 Boolean MCS_nodelay(int4 fd)
@@ -1754,33 +1898,33 @@ MCNameRef MCS_getprocessor()
 #endif
 }
 
-real8 MCS_getfreediskspace(void)
-{
-	char t_defaultfolder[PATH_MAX + 1];
-	getcwd(t_defaultfolder, PATH_MAX);
-	
-	FSRef t_defaultfolder_fsref;
-	OSErr t_os_error;
-	if (t_defaultfolder != NULL)
-		t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
-		
-	FSCatalogInfo t_catalog_info;
-	if (t_os_error == noErr)
-		t_os_error = FSGetCatalogInfo(&t_defaultfolder_fsref, kFSCatInfoVolume, &t_catalog_info, NULL, NULL, NULL);
-	
-	FSVolumeInfo t_volume_info;
-	if (t_os_error == noErr)
-		t_os_error = FSGetVolumeInfo(t_catalog_info . volume, 0, NULL, kFSVolInfoSizes, &t_volume_info, NULL, NULL);
-		
-	real8 t_free_space;
-	t_free_space = 0.;
-	
-	// MH: freeBytes is a 64bit unsigned int, I follow previous functionality, and simply cast to real8.
-	if (t_os_error == noErr)
-		t_free_space = (real8) t_volume_info . freeBytes;
-		
-	return t_free_space;	
-}
+//real8 MCS_getfreediskspace(void)
+//{
+//	char t_defaultfolder[PATH_MAX + 1];
+//	getcwd(t_defaultfolder, PATH_MAX);
+//	
+//	FSRef t_defaultfolder_fsref;
+//	OSErr t_os_error;
+//	if (t_defaultfolder != NULL)
+//		t_os_error = FSPathMakeRef((const UInt8 *)t_defaultfolder, &t_defaultfolder_fsref, NULL);
+//		
+//	FSCatalogInfo t_catalog_info;
+//	if (t_os_error == noErr)
+//		t_os_error = FSGetCatalogInfo(&t_defaultfolder_fsref, kFSCatInfoVolume, &t_catalog_info, NULL, NULL, NULL);
+//	
+//	FSVolumeInfo t_volume_info;
+//	if (t_os_error == noErr)
+//		t_os_error = FSGetVolumeInfo(t_catalog_info . volume, 0, NULL, kFSVolInfoSizes, &t_volume_info, NULL, NULL);
+//		
+//	real8 t_free_space;
+//	t_free_space = 0.;
+//	
+//	// MH: freeBytes is a 64bit unsigned int, I follow previous functionality, and simply cast to real8.
+//	if (t_os_error == noErr)
+//		t_free_space = (real8) t_volume_info . freeBytes;
+//		
+//	return t_free_space;	
+//}
 
 bool MCS_getsystemversion(MCStringRef& r_string)
 {
@@ -1907,9 +2051,10 @@ Boolean MCS_poll(real8 delay, int fd)
  *****************************************************************************/
  
 // MW-2006-08-05: Vetted for Endian issues
-void MCS_send(const MCString &message, const char *program,
-              const char *eventtype, Boolean needReply)
-{ //send "" to program "" with/without reply
+void MCS_send(MCStringRef message, MCStringRef program, MCStringRef eventtype, Boolean reply)
+{
+#ifdef /* MCS_send */ LEGACY_SYSTEM
+    //send "" to program "" with/without reply
 	if (!MCSecureModeCheckAppleScript())
 		return;
 
@@ -1948,7 +2093,7 @@ void MCS_send(const MCString &message, const char *program,
 		FSRef t_fsref;
 		
 		char *doc = message.clone();
-		if (MCS_pathtoref(doc, &t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+        if (MCS_pathtoref(doc, &t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
 		{
 			AECreateList(NULL, 0, false, &files_list);
 			NewAlias(NULL, &fspec, &the_alias);
@@ -1960,7 +2105,7 @@ void MCS_send(const MCString &message, const char *program,
 			AEPutParamDesc(&ae, keyDirectObject, &files_list);
 			docmessage = True;
 		}
-		delete doc;
+        delete doc;
 	}
 	//non document related massge, assume it's typeChar message
 	if (!docmessage && message.getlength())
@@ -1995,6 +2140,123 @@ void MCS_send(const MCString &message, const char *program,
 	{ /* wait for a reply in a loop.  The reply comes in
 				      from regular event handling loop
 				      and is handled by an Apple event handler*/
+		real8 endtime = curtime + AETIMEOUT;
+		while (True)
+		{
+			if (MCscreen->wait(READ_INTERVAL, False, True))
+			{
+				MCresult->sets("user interrupt");
+				return;
+			}
+			if (curtime > endtime)
+			{
+				MCresult->sets("timeout");
+				return;
+			}
+			if (AEanswerErr != NULL || AEanswerData != NULL)
+				break;
+		}
+		if (AEanswerErr != NULL)
+		{
+			MCresult->copysvalue(AEanswerErr);
+			delete AEanswerErr;
+			AEanswerErr = NULL;
+		}
+		else
+		{
+			MCresult->copysvalue(AEanswerData);
+			delete AEanswerData;
+			AEanswerData = NULL;
+		}
+		AEDisposeDesc(&answer);
+	}
+	else
+		MCresult->clear(False);
+#endif /* MCS_send */
+    //send "" to program "" with/without reply
+	if (!MCSecureModeCheckAppleScript())
+		return;
+    
+    
+	AEAddressDesc receiver;
+	errno = getDescFromAddress(program, &receiver);
+	if (errno != noErr)
+	{
+		AEDisposeDesc(&receiver);
+		MCresult->sets("no such program");
+		return;
+	}
+	AppleEvent ae;
+	if (eventtype == NULL)
+		MCStringCreateWithCString("miscdosc", eventtype);
+    
+	AEEventClass ac;
+	AEEventID aid;
+	
+	ac = FourCharCodeFromString(MCStringGetCString(eventtype));
+	aid = FourCharCodeFromString(&MCStringGetCString(eventtype)[4]);
+	
+	AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+	                   kAnyTransactionID, &ae);
+	AEDisposeDesc(&receiver); //dispose of the receiver description record
+	// if the ae message we are sending is 'odoc', 'pdoc' then
+	// create a document descriptor of type fypeFSS for the document
+	
+	Boolean docmessage = False; //Is this message contains a document descriptor?
+	AEDescList files_list, file_desc;
+	AliasHandle the_alias;
+    
+	if (aid == 'odoc' || aid == 'pdoc')
+	{
+		FSSpec fspec;
+		FSRef t_fsref;
+		
+		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+		{
+			AECreateList(NULL, 0, false, &files_list);
+			NewAlias(NULL, &fspec, &the_alias);
+			HLock((Handle)the_alias);
+			AECreateDesc(typeAlias, (Ptr)(*the_alias),
+			             GetHandleSize((Handle)the_alias), &file_desc);
+			HUnlock((Handle) the_alias);
+			AEPutDesc(&files_list, 0, &file_desc);
+			AEPutParamDesc(&ae, keyDirectObject, &files_list);
+			docmessage = True;
+		}
+	}
+	//non document related massge, assume it's typeChar message
+	if (!docmessage && MCStringGetLength(message))
+		AEPutParamPtr(&ae, keyDirectObject, typeChar,
+		              MCStringGetCString(message), MCStringGetLength(message));
+    
+	//Send the Apple event
+	AppleEvent answer;
+	if (reply == True)
+		errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //no reply
+	else
+		errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+	if (docmessage)
+	{
+		DisposeHandle((Handle)the_alias);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&files_list);
+		AEDisposeDesc(&file_desc);
+	}
+	AEDisposeDesc(&ae);
+	if (errno != noErr)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+		return;
+	}
+	if (reply == True)
+	{ /* wait for a reply in a loop.  The reply comes in
+       from regular event handling loop
+       and is handled by an Apple event handler*/
 		real8 endtime = curtime + AETIMEOUT;
 		while (True)
 		{
@@ -2204,8 +2466,9 @@ char *MCS_request_ae(const MCString &message, uint2 ae)
 }
 
 // MW-2006-08-05: Vetted for Endian issues
-char *MCS_request_program(const MCString &message, const char *program)
+void MCS_request_program(MCStringRef message, MCStringRef program, MCStringRef& r_value)
 {
+#ifdef /* MCS_request_program_dsk_mac */ LEGACY_SYSTEM
 	AEAddressDesc receiver;
 	errno = getDescFromAddress(program, &receiver);
 	if (errno != noErr)
@@ -2264,6 +2527,73 @@ char *MCS_request_program(const MCString &message, const char *program)
 		char *retval = AEanswerData;
 		AEanswerData = NULL;
 		return retval;
+	}
+#endif /* MCS_request_program_dsk_mac */
+	AEAddressDesc receiver;
+	errno = getDescFromAddress(program, &receiver);
+	if (errno != noErr)
+	{
+		AEDisposeDesc(&receiver);
+		MCresult->sets("no such program");
+		r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	AppleEvent ae;
+	errno = AECreateAppleEvent('misc', 'eval', &receiver,
+	                           kAutoGenerateReturnID, kAnyTransactionID, &ae);
+	AEDisposeDesc(&receiver); //dispose of the receiver description record
+	//add parameters to the Apple event
+	AEPutParamPtr(&ae, keyDirectObject, typeChar,
+	              MCStringGetCString(message), MCStringGetLength(message));
+	//Send the Apple event
+	AppleEvent answer;
+	errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+	               kAEDefaultTimeout, NULL, NULL); //no reply
+	AEDisposeDesc(&ae);
+	AEDisposeDesc(&answer);
+	if (errno != noErr)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+        
+        r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	real8 endtime = curtime + AETIMEOUT;
+	while (True)
+	{
+		if (MCscreen->wait(READ_INTERVAL, False, True))
+		{
+			MCresult->sets("user interrupt");
+            r_value = MCValueRetain(kMCEmptyString);
+            return;
+		}
+		if (curtime > endtime)
+		{
+			MCresult->sets("timeout");
+            r_value = MCValueRetain(kMCEmptyString);
+            return;
+		}
+		if (AEanswerErr != NULL || AEanswerData != NULL)
+			break;
+	}
+	if (AEanswerErr != NULL)
+	{
+		MCresult->copysvalue(AEanswerErr);
+		delete AEanswerErr;
+		AEanswerErr = NULL;
+        r_value = MCValueRetain(kMCEmptyString);
+        return;
+	}
+	else
+	{
+		MCresult->clear(False);
+		if (!MCStringCreateWithCString(AEanswerData, r_value)) // Set empty string if the allocation fails
+            r_value = MCValueRetain(kMCEmptyString);
+
+		AEanswerData = NULL;
 	}
 }
 
@@ -2336,7 +2666,7 @@ bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
 		MCU_utf8tonative(*t_utf8_path, r_path);
 }
 
-#ifdef /* MCS_fsref_to_path */ LEGACY_EXEC
+#ifdef /* MCS_fsref_to_path */ LEGACY_SYSTEM
 char *MCS_fsref_to_path(FSRef& p_ref)
 {
 	char *t_path;
@@ -2417,7 +2747,7 @@ char *MCS_fsref_to_path(FSRef& p_ref)
 
 OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
 {
-#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_EXEC
+#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_SYSTEM
 	OSErr t_error;
 	t_error = noErr;
     
@@ -2540,22 +2870,22 @@ OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
 }
 
 //Updated to MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
-//OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref)
-//{
-//	char *t_cstring_path;
-//	t_cstring_path = p_path . clone();
-//	
-//	OSErr t_error;
-//	t_error = MCS_pathtoref(t_cstring_path, r_ref);
-//	
-//	delete t_cstring_path;
-//	
-//	return t_error;
-//}
+OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref)
+{
+	char *t_cstring_path;
+	t_cstring_path = p_path . clone();
+	
+	OSErr t_error;
+	t_error = MCS_pathtoref(t_cstring_path, r_ref);
+	
+	delete t_cstring_path;
+	
+	return t_error;
+}
 
 OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
-#ifdef /* MCS_pathtoref */ LEGACY_EXEC
+#ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
 	char *t_resolved_path;
 	t_resolved_path = MCS_resolvepath(p_path);
 	
@@ -2571,20 +2901,19 @@ OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
 	// delete t_resolved_path;
 	
 	return t_error;
-#endif /* MCS_pathtoref */
+#endif /* MCS_pathtoref_dsk_mac */
     MCAutoStringRef t_auto_path;
     MCAutoStringRefAsUTF8String t_path;
     
     if (!MCS_resolvepath(p_path, &t_auto_path))
         // TODO assign relevant error code
-        return fnfErr;
+        return memFullErr;
     
     if (!t_path.Lock(*t_auto_path))
         // TODO assign relevant error code
-        return fnfErr;
+        return memFullErr;
     
 	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
-//	return MCS_pathtoref(MCStringGetCString(p_path), &r_ref);
 }
 
 // Updated to MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
@@ -2610,9 +2939,10 @@ OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
 // based on MoreFiles (Apple DTS)
 OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 {
-	char *path = MCS_resolvepath(MCStringGetCString(p_filename));
+#ifdef /* MCS_path2FSSpec */ LEGACY_SYSTEM
+	char *path = MCS_resolvepath(p_filename));
 	memset(fspec, 0, sizeof(FSSpec));
-
+    
 	char *f2 = strrchr(path, '/');
 	if (f2 != NULL && f2 != path)
 		*f2++ = '\0';
@@ -2642,6 +2972,44 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	delete fspecname;
 	delete path;
 	return errno;
+#endif /* MCS_path2FSSpec */
+    MCAutoStringRef t_resolved_path;
+    MCAutoStringRefAsUTF8String t_utf_path;
+    
+	if (!MCS_resolvepath(p_filename, &t_resolved_path))
+        return memFullErr;
+    
+	memset(fspec, 0, sizeof(FSSpec));
+
+	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
+	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+		*f2++ = '\0';
+	char *fspecname = strclone(f2);
+    if (!t_utf_path.Lock(*t_resolved_path))
+        return memFullErr;
+    
+	FSRef ref;
+	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
+	{
+		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
+		                              NULL, NULL, fspec, NULL)) == noErr)
+		{
+			CInfoPBRec cpb;
+			memset(&cpb, 0, sizeof(CInfoPBRec));
+			cpb.dirInfo.ioNamePtr = fspec->name;
+			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
+			cpb.dirInfo.ioDrDirID = fspec->parID;
+			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
+			{
+				return errno;
+			}
+			c2pstr((char *)fspecname);
+			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
+			                     (unsigned char *)fspecname, fspec);
+		}
+	}
+	delete fspecname;
+	return errno;
 }
 
 OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
@@ -2655,7 +3023,7 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
  * Utility functions used by this module only
  **************************************************************************/
 
-static OSErr getDescFromAddress(const char *address, AEDesc *retDesc)
+static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
 {
 	/* return an address descriptor based on the target address passed in
 	  * * There are 3 possible forms of target string: *
@@ -2665,12 +3033,12 @@ static OSErr getDescFromAddress(const char *address, AEDesc *retDesc)
 	  */
 	errno = noErr;
 	retDesc->dataHandle = NULL;  /* So caller can dispose always. */
-	char *ptr = strchr(address, ':');
+	char *ptr = strchr(MCStringGetCString(address), ':');
 
 	if (ptr == NULL)
 	{ //address contains application name only. Form # 3
-		char *appname = new char[strlen(address) +1];
-		strcpy(appname, address);
+		char *appname = new char[MCStringGetLength(address) +1];
+		strcpy(appname, MCStringGetCString(address));
 		c2pstr(appname);  //convert c string to pascal string
 		errno = getDesc(0, NULL, NULL, (unsigned char*)appname, retDesc);
 		delete appname;
@@ -3246,6 +3614,49 @@ MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 	
 	if (t_url == NULL)
 		return NULL;
+    
+	MCSysModuleHandle t_result;
+	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+	
+	CFRelease(t_url);
+	
+	return (MCSysModuleHandle)t_result;
+}
+
+MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
+{
+#ifdef /* MCS_loadmodule_dsk_mac */ LEGACY_SYSTEM
+	char *t_native_path;
+	t_native_path = path2utf(MCS_resolvepath(p_filename));
+	
+	CFURLRef t_url;
+	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)t_native_path, strlen(t_native_path), False);
+	delete t_native_path;
+	
+	if (t_url == NULL)
+		return NULL;
+    
+	MCSysModuleHandle t_result;
+	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+	
+	CFRelease(t_url);
+	
+	return (MCSysModuleHandle)t_result;
+#endif /* MCS_loadmodule_dsk_mac */
+	MCAutoStringRef t_resolved_path;
+    MCAutoStringRefAsUTF8String t_utf_path;
+    
+    if (!MCS_resolvepath(p_filename, &t_resolved_path))
+        return NULL;
+    
+    if (!t_utf_path.Lock(*t_resolved_path))
+        return NULL;
+	
+	CFURLRef t_url;
+	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_utf_path, strlen(*t_utf_path), False);
+	
+	if (t_url == NULL)
+		return NULL;
 		
 	MCSysModuleHandle t_result;
 	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
@@ -3494,220 +3905,220 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 	return false;
 }
 
-void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Boolean elevated)
-{
-	Boolean noerror = True;
-	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
-	Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
-	MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1, sizeof(Streamnode));
-				
-	// Store process information.
-	uint2 index = MCnprocesses;
-	MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(name);
-	MCprocesses[MCnprocesses].mode = mode;
-	MCprocesses[MCnprocesses].ihandle = NULL;
-	MCprocesses[MCnprocesses].ohandle = NULL;
-	MCprocesses[MCnprocesses].sn.highLongOfPSN = 0;
-	MCprocesses[MCnprocesses].sn.lowLongOfPSN = 0;
-	
-	if (!elevated)
-	{
-		int tochild[2]; // pipe to child
-		int toparent[2]; // pipe to parent
-		
-		// If we are reading, create the pipe to parent.
-		// Parent reads, child writes.
-		if (reading)
-			if (pipe(toparent) != 0)
-				noerror = False;
-		
-		// If we are writing, create the pipe to child.
-		// Parent writes, child reads.
-		if (noerror && writing)
-			if (pipe(tochild) != 0)
-			{
-				noerror = False;
-				if (reading)
-				{
-					// error, get rid of these fds
-					close(toparent[0]);
-					close(toparent[1]);
-				}
-			}
-			
-		if (noerror)
-		{
-			// Fork
-			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
-			{
-				char *t_name_dup;
-				t_name_dup = strdup(MCNameGetCString(name));
-				
-				// The pid is 0, so here we are in the child process.
-				// Construct the argument string to pass to the process..
-				char **argv = NULL;
-				uint32_t argc = 0;
-				startprocess_create_argv(t_name_dup, (char *)doc, argc, argv);
-				
-				// The parent is reading, so we (we are child) are writing.
-				if (reading)
-				{
-					// Don't need to read
-					close(toparent[0]);
-					
-					// Close the current stdout, and duplicate the out descriptor of toparent to stdout.
-					close(1);
-					dup(toparent[1]);
-					
-					// Redirect stderr of this child to toparent-out.
-					close(2);
-					dup(toparent[1]);
-					
-					// We no longer need this pipe, so close the output descriptor.
-					close(toparent[1]);
-				}
-				else
-				{
-					// Not reading, so close stdout and stderr.
-					close(1);
-					close(2);
-				}
-				if (writing)
-				{
-					// Parent is writing, so child needs to read. Close tochild[1], we dont need it.
-					close(tochild[1]);
-					
-					// Attach stdin to tochild[0].
-					close(0);
-					dup(tochild[0]);
-					
-					// Close, as we no longer need it.
-					close(tochild[0]);
-				}
-				else // not writing, so close stdin
-					close(0);
-					
-				// Execute a new process in a new process image.
-				execvp(argv[0], argv);
-				
-				// If we get here, an error occurred
-				_exit(-1);
-			}
-			
-			// If we get here, we are in the parent process, as the child has exited.
-			
-			MCS_checkprocesses();
-			
-			if (reading)
-			{
-				close(toparent[1]);
-				MCS_nodelay(toparent[0]);
-				// Store the in handle for the "process".
-				MCprocesses[index].ihandle = MCS_dopen(toparent[0], IO_READ_MODE); 
-			}
-			if (writing)
-			{
-				close(tochild[0]);
-				// Store the out handle for the "process".
-				MCprocesses[index].ohandle = MCS_dopen(tochild[1], IO_WRITE_MODE); 
-			}
-		}
-	}
-	else
-	{
-		OSStatus t_status;
-		t_status = noErr;
-		
-		AuthorizationRef t_auth;
-		t_auth = nil;
-		if (t_status == noErr)
-			t_status = AuthorizationCreate(nil, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &t_auth);
-		
-		if (t_status == noErr)
-		{
-			AuthorizationItem t_items = 
-			{
-				kAuthorizationRightExecute, 0,
-				NULL, 0
-			};
-			AuthorizationRights t_rights =
-			{
-				1, &t_items
-			};
-			AuthorizationFlags t_flags =
-				kAuthorizationFlagDefaults |
-				kAuthorizationFlagInteractionAllowed |
-				kAuthorizationFlagPreAuthorize |
-				kAuthorizationFlagExtendRights;
-			t_status = AuthorizationCopyRights(t_auth, &t_rights, nil, t_flags, nil);
-		}
-		
-		FILE *t_stream;
-		t_stream = nil;
-		if (t_status == noErr)
-		{
-			char *t_arguments[] =
-			{
-				"-elevated-slave",
-				nil
-			};
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
-		}
-		
-		uint32_t t_pid;
-		t_pid = 0;
-		if (t_status == noErr)
-		{
-			char *t_name_dup;
-			t_name_dup = strdup(MCNameGetCString(name));
-			
-			// Split the arguments
-			uint32_t t_argc;
-			char **t_argv;
-			startprocess_create_argv(t_name_dup, (char *)doc, t_argc, t_argv);
-			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
-			for(uint32_t i = 0; i < t_argc; i++)
-				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
-			if (!startprocess_read_uint32_from_fd(fileno(t_stream), t_pid))
-				t_status = errAuthorizationToolExecuteFailure;
-			
-			delete t_name_dup;
-			delete[] t_argv;
-		}
-		
-		if (t_status == noErr)
-		{
-			MCprocesses[MCnprocesses++].pid = t_pid;
-			MCS_checkprocesses();
-			
-			if (reading)
-			{
-				int t_fd;
-				t_fd = dup(fileno(t_stream));
-				MCS_nodelay(t_fd);
-				MCprocesses[index].ihandle = MCS_dopen(t_fd, IO_READ_MODE);
-			}
-			if (writing)
-				MCprocesses[index].ohandle = MCS_dopen(dup(fileno(t_stream)), IO_WRITE_MODE);
-			
-			noerror = True;
-		}
-		else
-			noerror = False;
-		
-		if (t_stream != nil)
-			fclose(t_stream);
-		
-		if (t_auth != nil)
-			AuthorizationFree(t_auth, kAuthorizationFlagDefaults);
-	}
-	
-	if (!noerror || MCprocesses[index].pid == -1 || MCprocesses[index].pid == 0)
-	{
-		if (noerror)
-			MCprocesses[index].pid = 0;
-		MCresult->sets("not opened");
-	}
-	else
-		MCresult->clear(False);
-}
+//void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
+//{
+//	Boolean noerror = True;
+//	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
+//	Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
+//	MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1, sizeof(Streamnode));
+//				
+//	// Store process information.
+//	uint2 index = MCnprocesses;
+//	MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(name);
+//	MCprocesses[MCnprocesses].mode = mode;
+//	MCprocesses[MCnprocesses].ihandle = NULL;
+//	MCprocesses[MCnprocesses].ohandle = NULL;
+//	MCprocesses[MCnprocesses].sn.highLongOfPSN = 0;
+//	MCprocesses[MCnprocesses].sn.lowLongOfPSN = 0;
+//	
+//	if (!elevated)
+//	{
+//		int tochild[2]; // pipe to child
+//		int toparent[2]; // pipe to parent
+//		
+//		// If we are reading, create the pipe to parent.
+//		// Parent reads, child writes.
+//		if (reading)
+//			if (pipe(toparent) != 0)
+//				noerror = False;
+//		
+//		// If we are writing, create the pipe to child.
+//		// Parent writes, child reads.
+//		if (noerror && writing)
+//			if (pipe(tochild) != 0)
+//			{
+//				noerror = False;
+//				if (reading)
+//				{
+//					// error, get rid of these fds
+//					close(toparent[0]);
+//					close(toparent[1]);
+//				}
+//			}
+//			
+//		if (noerror)
+//		{
+//			// Fork
+//			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+//			{
+//				char *t_name_dup;
+//				t_name_dup = strdup(MCNameGetCString(name));
+//				
+//				// The pid is 0, so here we are in the child process.
+//				// Construct the argument string to pass to the process..
+//				char **argv = NULL;
+//				uint32_t argc = 0;
+//				startprocess_create_argv(t_name_dup, const_cast<char*>(MCStringGetCString(doc)), argc, argv);
+//				
+//				// The parent is reading, so we (we are child) are writing.
+//				if (reading)
+//				{
+//					// Don't need to read
+//					close(toparent[0]);
+//					
+//					// Close the current stdout, and duplicate the out descriptor of toparent to stdout.
+//					close(1);
+//					dup(toparent[1]);
+//					
+//					// Redirect stderr of this child to toparent-out.
+//					close(2);
+//					dup(toparent[1]);
+//					
+//					// We no longer need this pipe, so close the output descriptor.
+//					close(toparent[1]);
+//				}
+//				else
+//				{
+//					// Not reading, so close stdout and stderr.
+//					close(1);
+//					close(2);
+//				}
+//				if (writing)
+//				{
+//					// Parent is writing, so child needs to read. Close tochild[1], we dont need it.
+//					close(tochild[1]);
+//					
+//					// Attach stdin to tochild[0].
+//					close(0);
+//					dup(tochild[0]);
+//					
+//					// Close, as we no longer need it.
+//					close(tochild[0]);
+//				}
+//				else // not writing, so close stdin
+//					close(0);
+//					
+//				// Execute a new process in a new process image.
+//				execvp(argv[0], argv);
+//				
+//				// If we get here, an error occurred
+//				_exit(-1);
+//			}
+//			
+//			// If we get here, we are in the parent process, as the child has exited.
+//			
+//			MCS_checkprocesses();
+//			
+//			if (reading)
+//			{
+//				close(toparent[1]);
+//				MCS_nodelay(toparent[0]);
+//				// Store the in handle for the "process".
+//				MCprocesses[index].ihandle = MCS_dopen(toparent[0], IO_READ_MODE); 
+//			}
+//			if (writing)
+//			{
+//				close(tochild[0]);
+//				// Store the out handle for the "process".
+//				MCprocesses[index].ohandle = MCS_dopen(tochild[1], IO_WRITE_MODE); 
+//			}
+//		}
+//	}
+//	else
+//	{
+//		OSStatus t_status;
+//		t_status = noErr;
+//		
+//		AuthorizationRef t_auth;
+//		t_auth = nil;
+//		if (t_status == noErr)
+//			t_status = AuthorizationCreate(nil, kAuthorizationEmptyEnvironment, kAuthorizationFlagDefaults, &t_auth);
+//		
+//		if (t_status == noErr)
+//		{
+//			AuthorizationItem t_items = 
+//			{
+//				kAuthorizationRightExecute, 0,
+//				NULL, 0
+//			};
+//			AuthorizationRights t_rights =
+//			{
+//				1, &t_items
+//			};
+//			AuthorizationFlags t_flags =
+//				kAuthorizationFlagDefaults |
+//				kAuthorizationFlagInteractionAllowed |
+//				kAuthorizationFlagPreAuthorize |
+//				kAuthorizationFlagExtendRights;
+//			t_status = AuthorizationCopyRights(t_auth, &t_rights, nil, t_flags, nil);
+//		}
+//		
+//		FILE *t_stream;
+//		t_stream = nil;
+//		if (t_status == noErr)
+//		{
+//			char *t_arguments[] =
+//			{
+//				"-elevated-slave",
+//				nil
+//			};
+//			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
+//		}
+//		
+//		uint32_t t_pid;
+//		t_pid = 0;
+//		if (t_status == noErr)
+//		{
+//			char *t_name_dup;
+//			t_name_dup = strdup(MCNameGetCString(name));
+//			
+//			// Split the arguments
+//			uint32_t t_argc;
+//			char **t_argv;
+//			startprocess_create_argv(t_name_dup, const_cast<char *>(MCStringGetCString(doc)), t_argc, t_argv);
+//			startprocess_write_uint32_to_fd(fileno(t_stream), t_argc);
+//			for(uint32_t i = 0; i < t_argc; i++)
+//				startprocess_write_cstring_to_fd(fileno(t_stream), t_argv[i]);
+//			if (!startprocess_read_uint32_from_fd(fileno(t_stream), t_pid))
+//				t_status = errAuthorizationToolExecuteFailure;
+//			
+//			delete t_name_dup;
+//			delete[] t_argv;
+//		}
+//		
+//		if (t_status == noErr)
+//		{
+//			MCprocesses[MCnprocesses++].pid = t_pid;
+//			MCS_checkprocesses();
+//			
+//			if (reading)
+//			{
+//				int t_fd;
+//				t_fd = dup(fileno(t_stream));
+//				MCS_nodelay(t_fd);
+//				MCprocesses[index].ihandle = MCS_dopen(t_fd, IO_READ_MODE);
+//			}
+//			if (writing)
+//				MCprocesses[index].ohandle = MCS_dopen(dup(fileno(t_stream)), IO_WRITE_MODE);
+//			
+//			noerror = True;
+//		}
+//		else
+//			noerror = False;
+//		
+//		if (t_stream != nil)
+//			fclose(t_stream);
+//		
+//		if (t_auth != nil)
+//			AuthorizationFree(t_auth, kAuthorizationFlagDefaults);
+//	}
+//	
+//	if (!noerror || MCprocesses[index].pid == -1 || MCprocesses[index].pid == 0)
+//	{
+//		if (noerror)
+//			MCprocesses[index].pid = 0;
+//		MCresult->sets("not opened");
+//	}
+//	else
+//		MCresult->clear(False);
+//}

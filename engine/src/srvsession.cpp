@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "sysdefs.h"
-#include "core.h"
 #include "system.h"
 #include "parsedef.h"
 #include "filedefs.h"
@@ -78,15 +77,20 @@ bool MCSessionOpenIndex(MCSessionIndexRef &r_index)
 
 	t_success = MCMemoryNew(t_index);
 	
+	MCAutoStringRef t_save_path;
 	if (t_success)
-		t_success = MCCStringClone(MCS_get_session_save_path(), t_index->save_path);
+		t_success = MCS_get_session_save_path(&t_save_path);
 	
 	if (t_success)
-		t_success = MCCStringFormat(t_path, "%s/lcsessions.idx", t_index->save_path);
+		t_success = MCCStringClone(MCStringGetCString(*t_save_path), t_index->save_path);
+	
+	MCAutoStringRef t_path_string;
+	if (t_success)
+		t_success = MCStringFormat(&t_path_string, "%s/lcsessions.idx", t_index->save_path);
 	
 	// open file
 	if (t_success)
-		t_success = NULL != (t_index->file = MCsystem->OpenFile(t_path, kMCSystemFileModeUpdate, false));
+		t_success = NULL != (t_index->file = MCsystem->OpenFile(*t_path_string, kMCSystemFileModeUpdate, false));
 
 	// lock file
 	if (t_success)
@@ -341,8 +345,15 @@ bool MCSessionReadSession(MCSession *p_session)
 
 bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, const char *p_session_id, MCSession *&r_session)
 {
+	MCAutoStringRef p_remote_addr;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &message);
+	
+	MCS_getenv(*message, &p_remote_addr);
+	
 	const char *t_remote_addr = NULL;
-	t_remote_addr = MCS_getenv("REMOTE_ADDR");
+	t_remote_addr = MCStringGetCString(*p_remote_addr);
+
 	if (t_remote_addr == NULL)
 		t_remote_addr = "";
 
@@ -362,20 +373,17 @@ bool MCSessionOpenSession(MCSessionIndexRef p_index, MCSession *p_session)
 {
 	bool t_success = true;
 	
-	char *t_path = NULL;
-	
-	t_success = MCCStringFormat(t_path, "%s/%s", p_index->save_path, p_session->filename);
+	MCAutoStringRef t_path_string;
+	t_success = MCStringFormat(&t_path_string, "%s/%s", p_index->save_path, p_session->filename);
 	
 	if (t_success)
-		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(t_path, kMCSystemFileModeUpdate, false));
+		t_success = NULL != (p_session->filehandle = MCsystem->OpenFile(*t_path_string, kMCSystemFileModeUpdate, false));
 	
 	if (t_success)
 		t_success = MCSystemLockFile(p_session->filehandle, false, true);
 	
 	if (t_success && p_session->filehandle->GetFileSize() > 0 && p_session->expires > MCS_time())
 		t_success = MCSessionReadSession(p_session);
-	
-	MCCStringFree(t_path);
 	
 	return t_success;
 }
@@ -385,8 +393,14 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, const char *p_session_id,
 	bool t_success = true;
 	
 	MCSession *t_session = NULL;
+
+	MCAutoStringRef t_remote_addr_string;
+	MCAutoStringRef tmp;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &tmp);
+	MCS_getenv(*tmp, &t_remote_addr_string);
 	char *t_remote_addr;
-	t_remote_addr = MCS_getenv("REMOTE_ADDR");
+	if (*t_remote_addr_string != nil)
+		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
 	
 	t_success = MCMemoryNew(t_session);
 	
@@ -527,8 +541,13 @@ bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
 		{
 			t_success = MCSessionCreateSession(t_index, p_session_id, t_session);
 		}
+		
+		MCAutoStringRef t_session_name;
 		if (t_success)
-			t_success = MCServerSetCookie(MCS_get_session_name(), t_session->id, 0, NULL, NULL, false, true);
+			t_success = MCS_get_session_name(&t_session_name);
+			
+		if (t_success)
+			t_success = MCServerSetCookie(MCStringGetOldString(*t_session_name), t_session->id, 0, NULL, NULL, false, true);
 		
 		if (t_success)
 			t_success = MCSessionOpenSession(t_index, t_session);
@@ -581,11 +600,13 @@ bool MCSessionExpireSession(const char *p_id)
 
 bool MCSessionExpireCookie()
 {
-	MCString t_name(MCS_get_session_name(), MCCStringLength(MCS_get_session_name()));
+	MCAutoStringRef t_session_name;
+	/* UNCHECKED */ MCS_get_session_name(&t_session_name);
+	
 	MCString t_value("EXPIRE");
 	MCString t_path(NULL, 0);
 	MCString t_domain(NULL, 0);
-	return MCServerSetCookie(t_name, t_value, MCS_time() - 60 * 60 * 24, t_path, t_domain, false, true);
+	return MCServerSetCookie(MCStringGetOldString(*t_session_name), t_value, MCS_time() - 60 * 60 * 24, t_path, t_domain, false, true);
 }
 
 bool MCSessionExpire(const char *p_id)
@@ -610,10 +631,10 @@ bool MCSessionCleanup(void)
 			bool t_deleted = false;
 			// check file not locked
 			MCSystemFileHandle *t_file;
-			char *t_full_path = NULL;
-			if (MCCStringFormat(t_full_path, "%s/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(t_full_path, True))
+			MCAutoStringRef t_full_path_string;
+			if (MCStringFormat(&t_full_path_string, "%s/%s", t_index->save_path, t_index->session[i]->filename)  && MCS_exists(*t_full_path_string, True))
 			{
-				t_file = MCsystem->OpenFile(t_full_path, kMCSystemFileModeRead, false);
+				t_file = MCsystem->OpenFile(*t_full_path_string, kMCSystemFileModeRead, false);
 				if (t_file != NULL)
 				{
 					bool t_locked = false;
@@ -621,7 +642,7 @@ bool MCSessionCleanup(void)
 					t_file->Close();
 					
 					if (t_locked)
-						t_deleted = MCsystem->DeleteFile(t_full_path);
+						t_deleted = MCsystem->DeleteFile(*t_full_path_string);
 				}
 			}
 			else
@@ -629,8 +650,6 @@ bool MCSessionCleanup(void)
 
 			if (t_deleted)
 				MCSessionIndexRemoveSession(t_index, t_index->session[i]);
-			
-			MCCStringFree(t_full_path);
 		}
 	}
 	
@@ -666,14 +685,20 @@ bool MCSessionGenerateID(char *&r_id)
 {
 	// php calculates session ids by hashing a string composed of REMOTE_ADDR, time in seconds & milliseconds, and a random value
 
+	MCAutoStringRef t_remote_addr_string;
+	MCAutoStringRef tmp;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &tmp);
+	MCS_getenv(*tmp, &t_remote_addr_string);
 	char *t_remote_addr;
-	t_remote_addr = MCS_getenv("REMOTE_ADDR");
+	if (*t_remote_addr_string != nil)
+		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
+	
 	
 	time_t t_time;
 	time(&t_time);
 	
-	char *t_randombytes = NULL;
-	MCCrypt_random_bytes(64, (void*&)t_randombytes);
+	MCAutoStringRef t_randombytes;
+	/* UNCHECKED */ MCCrypt_random_bytes(64, &t_randombytes);
 	
 	md5_state_t t_state;
 	md5_byte_t t_digest[16];
@@ -681,7 +706,7 @@ bool MCSessionGenerateID(char *&r_id)
 	if (t_remote_addr != NULL)
 		md5_append(&t_state, (md5_byte_t *)t_remote_addr, MCCStringLength(t_remote_addr));
 	md5_append(&t_state, (md5_byte_t *)&t_time, sizeof(t_time));
-	md5_append(&t_state, (md5_byte_t *)t_randombytes, 64);
+	md5_append(&t_state, (md5_byte_t *)MCStringGetBytePtr(*t_randombytes), 64);
 	md5_finish(&t_state, t_digest);
 	
 	return byte_to_hex((uint8_t*)t_digest, 16, r_id);

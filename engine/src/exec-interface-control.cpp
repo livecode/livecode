@@ -45,12 +45,59 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //////////
 
+static void MCInterfaceMarginsParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceMargins& r_output)
+{
+    if (MCU_stoi2(p_input, r_output . margin))
+    {
+        r_output . type = kMCInterfaceMarginsTypeSingle;
+        return;
+    }
+
+    if (MCU_stoi2x4(p_input, r_output . margins[0], r_output . margins[1], r_output . margins[2], r_output . margins[3]))
+    {
+        r_output . type = kMCInterfaceMarginsTypeQuadruple;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_OBJECT_MARGINNAN);
+}
+
+static void MCInterfaceMarginsFormat(MCExecContext& ctxt, const MCInterfaceMargins& p_input, MCStringRef& r_output)
+{
+    bool t_success;
+    
+    if (p_input . type == kMCInterfaceMarginsTypeSingle)
+        t_success = MCStringFormat(r_output, "%d", p_input . margin);
+    else
+        t_success = MCStringFormat(r_output, "%d,%d,%d,%d", p_input . margins[0], p_input . margins[1], p_input . margins[2], p_input . margins[3]);
+
+    if (t_success)
+        return;
+    
+    ctxt . Throw();
+}
+
+static void MCInterfaceMarginsFree(MCExecContext& ctxt, MCInterfaceMargins& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceMarginsTypeInfo =
+{
+	"Interface.Margins",
+	sizeof(MCInterfaceMargins),
+	(void *)MCInterfaceMarginsParse,
+	(void *)MCInterfaceMarginsFormat,
+	(void *)MCInterfaceMarginsFree
+};
+
+//////////
+
 static MCExecEnumTypeElementInfo _kMCInterfaceLayerModeElementInfo[] =
-{	
-	{ "static", kMCLayerModeHintStatic, false },
-	{ "dynamic", kMCLayerModeHintDynamic, false },
-	{ "scrolling", kMCLayerModeHintScrolling, false },
-	{ "container", kMCLayerModeHintContainer, false },
+{
+	{ "static", kMCLayerModeHintStatic },
+    { "dynamic", kMCLayerModeHintDynamic },
+	{ "scrolling", kMCLayerModeHintScrolling },
+	{ "container", kMCLayerModeHintContainer }
 };
 
 static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
@@ -62,6 +109,7 @@ static MCExecEnumTypeInfo _kMCInterfaceLayerModeTypeInfo =
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCExecCustomTypeInfo *kMCInterfaceMarginsTypeInfo = &_kMCInterfaceMarginsTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceLayerModeTypeInfo = &_kMCInterfaceLayerModeTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -332,4 +380,34 @@ void MCControl::SetLayerMode(MCExecContext& ctxt, intenum_t p_mode)
 void MCControl::GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode)
 {
 	r_mode = (intenum_t)layer_geteffectivemode();
+}
+
+void MCControl::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins)
+{
+    if (p_margins . type == kMCInterfaceMarginsTypeSingle)
+        leftmargin = rightmargin = topmargin = bottommargin = p_margins . margin;
+    else
+    {
+        leftmargin = p_margins . margins[0];
+        rightmargin = p_margins . margins[1];
+        topmargin = p_margins . margins[2];
+        bottommargin = p_margins . margins[3];
+    }    
+}
+
+void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
+{
+    if (leftmargin == rightmargin == topmargin == bottommargin)
+    {
+        r_margins . type = kMCInterfaceMarginsTypeSingle;
+        r_margins . margin = leftmargin;
+    }
+    else
+    {
+        r_margins . type = kMCInterfaceMarginsTypeQuadruple;
+        r_margins . margins[0] = leftmargin;
+        r_margins . margins[1] = rightmargin;
+        r_margins . margins[2] = topmargin;
+        r_margins . margins[3] = bottommargin;
+    }
 }

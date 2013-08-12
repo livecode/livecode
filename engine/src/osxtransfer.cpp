@@ -915,7 +915,9 @@ bool MCConvertFilesToMacHFS(MCStringRef p_input, MCStringRef& r_output)
 		FSCatalogInfo t_info;
 		
 		OSErr t_err;
-		t_err = MCS_pathtoref(MCString(t_start, t_buffer - t_start), &t_ref);
+        MCAutoStringRef t_path;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*) t_start, t_buffer - t_start, &t_path);
+		/* UNCHECKED */ MCS_pathtoref(*t_path, t_ref);
 		if (t_err == noErr)
 			t_err = FSGetCatalogInfo(&t_ref, kFSCatInfoFinderInfo | kFSCatInfoNodeFlags, &t_info, NULL, &t_spec, NULL);
 		

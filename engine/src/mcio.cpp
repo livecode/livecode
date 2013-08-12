@@ -187,7 +187,7 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, strclone(s->name));
+				MCscreen->delaymessage(s->object, MCM_socket_timeout, strclone(MCNameGetCString(s->name)));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
@@ -199,10 +199,9 @@ real8 IO_cleansockets(real8 ctime)
 
 bool IO_findsocket(MCNameRef p_name, uindex_t& r_index)
 {
-	/* TODO - update MCSocket to use MCNameRef */
 	IO_cleansockets(MCS_time());
 	for (r_index = 0 ; r_index < MCnsockets ; r_index++)
-		if (MCStringIsEqualToCString(MCNameGetString(p_name), MCsockets[r_index]->name, kMCCompareExact))
+		if (MCNameIsEqualTo(p_name, MCsockets[r_index]->name))
 			return true;
 	return false;
 }

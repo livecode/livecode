@@ -2501,8 +2501,8 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
 	}
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ ep . copyasstringref(&t_data);
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ ep . copyasdataref(&t_data);
 
 	if (dest->eval(ep) != ES_NORMAL)
 	{

@@ -530,6 +530,8 @@ public:
 	bool copyasstringref(MCStringRef& r_string);
 	bool copyasmutablestringref(MCStringRef& r_string);
 
+	bool copyasdataref(MCDataRef& r_data);
+
 	bool copyaslegacypoint(MCPoint& r_point);
 	bool copyaslegacyrectangle(MCRectangle& r_rectangle);
 	bool copyaslegacycolor(MCColor& r_color);

@@ -198,16 +198,18 @@ char *MCVideoClip::getfile()
 	if (frames != NULL)
 	{
         MCAutoStringRef t_tmpfile;
-        /* UNCHECKED */ MCS_tmpnam(&t_tmpfile);
+        MCS_tmpnam(&t_tmpfile);
 		//char *tmpfile = strclone(MCS_tmpnam());
+		MCAutoStringRef io_write_mode_string;
+		/* UNCHECKED */ MCStringCreateWithCString(IO_WRITE_MODE, &io_write_mode_string);
 		IO_handle tstream;
-		if ((tstream = MCS_open(MCStringGetCString(*t_tmpfile), IO_WRITE_MODE, False, False, 0)) == NULL)
+		if ((tstream = MCS_open(*t_tmpfile, &io_write_mode_string, False, False, 0)) == NULL)
 			return NULL;
 		IO_stat stat = IO_write(frames, sizeof(int1), size, tstream);
 		MCS_close(tstream);
 		if (stat != IO_NORMAL)
 		{
-			MCS_unlink(MCStringGetCString(*t_tmpfile));
+			MCS_unlink(*t_tmpfile);
 			return NULL;
 		}
 		return strclone(MCStringGetCString(*t_tmpfile));

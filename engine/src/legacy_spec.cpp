@@ -28,8 +28,9 @@ char *MCS_getcurdir(void)
 {
 	MCAutoStringRef t_current;
 	char *t_cstring;
-	if (MCS_getcurdir(&t_current) && 
-		MCCStringClone(MCStringGetCString(*t_current), t_cstring))
+    MCS_getcurdir(&t_current);
+	if (MCStringGetLength(*t_current) &&
+        MCCStringClone(MCStringGetCString(*t_current), t_cstring))
 		return t_cstring;
 	return NULL;
 }
@@ -60,8 +61,8 @@ const char *MCS_tmpnam()
 	}
 
 	MCAutoStringRef t_tmpname;
-	if (MCS_tmpnam(&t_tmpname))
-		fname = strclone(MCStringGetCString(*t_tmpname));
+	MCS_tmpnam(&t_tmpname);
+    fname = strclone(MCStringGetCString(*t_tmpname));
 
 	return fname;
 }
