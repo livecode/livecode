@@ -937,7 +937,18 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	MCObject *t_object;
+	if (!getAVname(type, *t_name, t_object))
+		return nil;
+    
+	return t_object;
+}
+
+bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 {
 	MCObject *objs;
 	if (type == CT_AUDIO_CLIP)
@@ -945,16 +956,19 @@ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
 	else
 		objs = vclips;
 	if (objs == NULL)
-		return NULL;
+		return false;
 	MCObject *tobj = objs;
 	do
 	{
-		if (MCU_matchname(s, type, tobj->getname()))
-			return tobj;
+		if (MCU_matchname(p_name, type, tobj->getname()))
+        {
+			r_object = tobj;
+            return true;
+        }
 		tobj = (MCControl *)tobj->next();
 	}
 	while (tobj != objs);
-	return NULL;
+	return false;
 }
 
 Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
@@ -1200,19 +1214,19 @@ bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
 	return t_stack;
 }
 
-MCStack *MCStack::findsubstackname(const MCString &s)
+bool MCStack::findsubstackname(MCNameRef p_name, MCStack *&r_stack)
 {
-	if (findname(CT_STACK, s) != NULL)
+	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
 		return this;
-
+    
 	MCStack *sptr = this;
 	uint2 num = 0;
-	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(s, num))
+	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(MCNameGetString(p_name), num))
 		sptr = parent->getstack();
 	if (sptr->substacks != NULL)
 	{
 		MCStack *tptr = sptr->substacks;
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(MCNameGetString(p_name), num))
 		{
 			while (--num)
 			{
@@ -1225,13 +1239,24 @@ MCStack *MCStack::findsubstackname(const MCString &s)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, s) != NULL)
+				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
-			while (tptr != sptr->substacks);
+        while (tptr != sptr->substacks);
 	}
 	return NULL;
+}
+
+/* LEGACY */ MCStack *MCStack::findsubstackname(const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	MCStack *t_stack;
+	if (!findsubstackname(*t_name, t_stack))
+		return nil;
+    
+	return t_stack;
 }
 
 MCStack *MCStack::findstackid(uint4 fid)

@@ -64,6 +64,8 @@ enum MCStackSurfaceTargetType
 	kMCStackSurfaceTargetPixmap,
 };
 
+struct MCInterfaceDecoration;
+
 class MCStackSurface
 {
 public:
@@ -389,12 +391,14 @@ public:
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
 	MCControl *getcontrolname(Chunk_term type, const MCString &);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	MCObject *getAVname(Chunk_term type, const MCString &);
+	/* LEGACY */ MCObject *getAVname(Chunk_term type, const MCString &);
+    bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
 	MCStack *findstackfile(const MCString &s);
 	bool findstackname(MCNameRef p_name, MCStack *&r_stack);
 	/* LEGACY */ MCStack *findstackname(const MCString &);
-	MCStack *findsubstackname(const MCString &);
+    bool findsubstackname(MCNameRef p_name, MCStack *&r_stack);
+	/* LEGACY */ MCStack *findsubstackname(const MCString &);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findsubstackid(uint4 fid);
 	void translatecoords(MCStack *dest, int2 &x, int2 &y);
@@ -822,7 +826,9 @@ public:
 	void GetDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
 	void SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value);
 	void GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
-
+    void SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value);
+    void GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value);
+    
 	void GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t p_size);
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
