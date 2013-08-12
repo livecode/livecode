@@ -108,15 +108,141 @@ static MCExecEnumTypeInfo _kMCInterfaceCompositorTypeTypeInfo =
 
 struct MCInterfaceDecoration
 {
-	uint2 decoration;
+    bool has_decorations;
+	uint2 decorations;
 };
 
 static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceDecoration& r_output)
 {
+    // TODO
+    uint2 decorations;
+    uint4 flags;
+    decorations = WD_CLEAR;
+    
+    if (MCStringIsEqualToCString(p_input, MCdefaultstring, kMCCompareCaseless))
+        r_output . has_decorations = false;
+    else
+    {
+        r_output . has_decorations = true;
+        uint2 i1;
+        if (MCU_stoui2(p_input, i1))
+            decorations = i1 | WD_WDEF;
+        else
+        {
+            uint4 l = MCStringGetLength(p_input);
+            const char *sptr = MCStringGetCString(p_input);
+            MCU_skip_spaces(sptr, l);
+            if (decorations & WD_WDEF)
+                decorations |= ~WD_WDEF;
+            else
+            {
+                while (l != 0)
+                {
+                    const char *startptr = sptr;
+                    if (!MCU_strchr(sptr, l, ','))
+                    {
+                        sptr += l;
+                        l = 0;
+                    }
+                    MCString tdata(startptr, sptr - startptr);
+                    MCU_skip_char(sptr, l);
+                    MCU_skip_spaces(sptr, l);
+                    if (tdata == MCtitlestring)
+                    {
+                        decorations |= WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmenustring)
+                    {
+                        decorations |= WD_MENU | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCminimizestring)
+                    {
+                        decorations |= WD_MINIMIZE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmaximizestring)
+                    {
+                        decorations |= WD_MAXIMIZE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCclosestring)
+                    {
+                        decorations |= WD_CLOSE | WD_TITLE;
+                        continue;
+                    }
+                    if (tdata == MCmetalstring)
+                    {
+                        decorations |= WD_METAL; //metal can not have title
+                        continue;
+                    }
+                    if (tdata == MCutilitystring)
+                    {
+                        decorations |= WD_UTILITY;
+                        continue;
+                    }
+                    if (tdata == MCnoshadowstring)
+                    {
+                        decorations |= WD_NOSHADOW;
+                        continue;
+                    }
+                    if (tdata == MCforcetaskbarstring)
+                    {
+                        decorations |= WD_FORCETASKBAR;
+                        continue;
+                    }
+                    ctxt . LegacyThrow(EE_STACK_BADDECORATION);
+                    return;
+                }
+            }
+        }
+        
+    }
 }
 
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
 {
+    if (p_input . has_decorations)
+    {
+        if (p_input . decorations & WD_WDEF)
+        {
+            if (MCStringFormat(r_output, "%d", (p_input . decorations & ~WD_WDEF)))
+                return;
+        }
+        else
+        {
+            uindex_t j = 0;
+            MCExecPoint ep(nil, nil, nil);
+            if (p_input . decorations & WD_TITLE)
+                ep.concatcstring(MCtitlestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MENU)
+                ep.concatcstring(MCmenustring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MINIMIZE)
+                ep.concatcstring(MCminimizestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_MAXIMIZE)
+                ep.concatcstring(MCmaximizestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_CLOSE)
+                ep.concatcstring(MCclosestring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_METAL)
+                ep.concatcstring(MCmetalstring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_UTILITY)
+                ep.concatcstring(MCutilitystring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_NOSHADOW)
+                ep.concatcstring(MCnoshadowstring, EC_COMMA, j++ == 0);
+            if (p_input . decorations & WD_FORCETASKBAR)
+                ep.concatcstring(MCforcetaskbarstring, EC_COMMA, j++ == 0);
+            if (ep . copyasstringref(r_output))
+                return;
+        }
+    }
+    else
+    {
+        if (MCStringCreateWithCString(MCdefaultstring, r_output))
+            return;
+    }
+    
+    ctxt . Throw();
 }
 
 static void MCInterfaceDecorationFree(MCExecContext& ctxt, MCInterfaceDecoration& p_input)
@@ -1887,6 +2013,41 @@ void MCStack::SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value)
 void MCStack::GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value)
 {
 	r_value = m_defer_updates && m_tilecache != nil;
+}
+
+void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value)
+{
+    uint2 olddec = decorations;
+    uint4 oldflags = flags;
+    
+    if (p_value . has_decorations)
+        flags |= F_DECORATIONS;
+    else
+        flags &= ~F_DECORATIONS;
+    
+    decorations = p_value . decorations;
+    
+    if (flags != oldflags || decorations != olddec)
+    {
+        if (opened)
+            reopenwindow();
+        else
+        {
+            if (window != DNULL)
+            {
+                stop_externals();
+                MCscreen->destroywindow(window);
+                delete titlestring;
+                titlestring = NULL;
+            }
+        }
+    }
+}
+
+void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value)
+{
+    r_value . has_decorations = (flags & F_DECORATIONS) == True;
+    r_value . decorations = decorations;
 }
 
 /*
