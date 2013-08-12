@@ -132,10 +132,10 @@ void MCGradientFillInit(MCGradientFill *&r_gradient, MCRectangle p_rect)
 	r_gradient->ramp = new MCGradientFillStop[2];
 	r_gradient->ramp[0].offset = 0;
 	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 0, 0, 0, 255); // black
-	r_gradient->ramp[0].hw_color = MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255);
+	r_gradient->ramp[0].hw_color = MCGPixelPackNative(0, 0, 0, 255);
 	r_gradient->ramp[1].offset = STOP_INT_MAX;
 	r_gradient->ramp[0].color = MCGPixelPack(kMCGPixelFormatBGRA, 255, 255, 255, 255); // white
-	r_gradient->ramp[0].hw_color = MCGPixelPack(kMCGPixelFormatNative, 255, 255, 255, 255);
+	r_gradient->ramp[0].hw_color = MCGPixelPackNative(255, 255, 255, 255);
 	r_gradient->ramp[0].difference = STOP_DIFF_MULT / STOP_INT_MAX;
 	r_gradient->ramp_length = 2;
 	r_gradient->origin.x = p_rect.x + p_rect.width / 2;
@@ -629,7 +629,7 @@ Boolean MCGradientFillRampParse(MCGradientFillStop* &r_stops, uint1 &r_stop_coun
 		if (t_nstops > 0 && offset != r_stops[t_nstops-1].offset)
 			r_stops[t_nstops-1].difference = STOP_DIFF_MULT / (offset - r_stops[t_nstops-1].offset);
 		r_stops[t_nstops].color =  MCGPixelPack(kMCGPixelFormatBGRA, r, g, b, a);
-		r_stops[t_nstops++].hw_color = MCGPixelPack(kMCGPixelFormatNative, r, g, b, a);
+		r_stops[t_nstops++].hw_color = MCGPixelPackNative(r, g, b, a);
 	}
 	r_stop_count = t_nstops;
 	if (!ordered)
@@ -1356,7 +1356,10 @@ IO_stat MCGradientFillUnserialize(MCGradientFill *p_gradient, MCObjectInputStrea
 				if (t_stat == IO_NORMAL)
 				{
 					p_gradient -> ramp[i] . color = t_color;
-					p_gradient -> ramp[i] . hw_color = MCGPixelPack(kMCGPixelFormatNative, (t_color >> 16) & 0xFF, (t_color >> 8) & 0xFF, t_color & 0xFF, (t_color >> 24) & 0xFF);
+					
+					uint8_t r, g, b, a;
+					MCGPixelUnpack(kMCGPixelFormatBGRA, t_color, r, g, b, a);
+					p_gradient -> ramp[i] . hw_color = MCGPixelPackNative(r, g, b, a);
 				}
 			}
 		}

@@ -406,7 +406,7 @@ bool MCImageGenerateOptimalPaletteWithWeightedPixels(MCImageBitmap *p_bitmap, ui
 			r_colours[i].red = t_colourmap[i].channel[0] << 8 | t_colourmap[i].channel[0];
 			r_colours[i].green = t_colourmap[i].channel[1] << 8 | t_colourmap[i].channel[1];
 			r_colours[i].blue = t_colourmap[i].channel[2] << 8 | t_colourmap[i].channel[2];
-			r_colours[i].pixel = MCGPixelPack(kMCGPixelFormatNative,
+			r_colours[i].pixel = MCGPixelPackNative(
 											  r_colours[i].red >> 8,
 											  r_colours[i].green >> 8,
 											  r_colours[i].blue,

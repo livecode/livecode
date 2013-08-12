@@ -612,7 +612,7 @@ void MCUIDC::getpaletteentry(uint4 n, MCColor &c)
 
 void MCUIDC::alloccolor(MCColor &color)
 {
-	color.pixel = MCGPixelPack(kMCGPixelFormatNative,
+	color.pixel = MCGPixelPackNative(
 							   color.red >> 8,
 							   color.green >> 8,
 							   color.blue >> 8,
@@ -622,7 +622,7 @@ void MCUIDC::alloccolor(MCColor &color)
 void MCUIDC::querycolor(MCColor &color)
 {
 	uint8_t t_r, t_g, t_b, t_a;
-	MCGPixelUnpack(kMCGPixelFormatNative, color.pixel, t_r, t_g, t_b, t_a);
+	MCGPixelUnpackNative(color.pixel, t_r, t_g, t_b, t_a);
 	color.red = t_r;
 	color.green = t_g;
 	color.blue = t_b;

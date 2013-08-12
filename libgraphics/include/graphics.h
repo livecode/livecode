@@ -57,6 +57,11 @@ static inline uint32_t MCGPixelPack(MCGPixelFormat p_format, uint8_t p_red, uint
 	}
 }
 
+static inline uint32_t MCGPixelPackNative(uint8_t p_red, uint8_t p_green, uint8_t p_blue, uint8_t p_alpha)
+{
+	return MCGPixelPack(kMCGPixelFormatNative, p_red, p_green, p_blue, p_alpha);
+}
+
 static inline void __MCGPixelUnpackComponents(uint32_t p_pixel, uint8_t &r_1, uint8_t &r_2, uint8_t &r_3, uint8_t &r_4)
 {
 	r_1 = p_pixel & 0xFF;
@@ -85,6 +90,11 @@ static inline void MCGPixelUnpack(MCGPixelFormat p_format, uint32_t p_pixel, uin
 			__MCGPixelUnpackComponents(p_pixel, r_alpha, r_red, r_green, r_blue);
 			break;
 	}
+}
+
+static inline void MCGPixelUnpackNative(uint32_t p_pixel, uint8_t &r_red, uint8_t &r_green, uint8_t &r_blue, uint8_t &r_alpha)
+{
+	return MCGPixelUnpack(kMCGPixelFormatNative, p_pixel, r_red, r_green, r_blue, r_alpha);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

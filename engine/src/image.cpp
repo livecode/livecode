@@ -554,14 +554,14 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 		for (uindex_t x = 0; x < t_width; x++)
 		{
 			uint8_t t_r, t_g, t_b, t_alpha;
-			MCGPixelUnpack(kMCGPixelFormatNative, *t_dst_row, t_r, t_g, t_b, t_alpha);
+			MCGPixelUnpackNative(*t_dst_row, t_r, t_g, t_b, t_alpha);
 			
 			t_alpha = *t_src_row++;
 			
 			// with maskdata, nonzero is fully opaque
 			if (!p_is_alpha && t_alpha > 0)
 				t_alpha = 0xFF;
-			*t_dst_row++ = MCGPixelPack(kMCGPixelFormatNative, t_r, t_g, t_b, t_alpha);
+			*t_dst_row++ = MCGPixelPackNative(t_r, t_g, t_b, t_alpha);
 		}
 		t_src_ptr += t_mask_stride;
 		t_dst_ptr += p_bitmap->stride;
@@ -729,7 +729,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 						while (t_pixel_count--)
 						{
 							uint8_t t_r, t_g, t_b, t_a;
-							MCGPixelUnpack(kMCGPixelFormatNative, *t_data_ptr, t_r, t_g, t_b, t_a);
+							MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
 							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatBGRA, t_r, t_g, t_b, t_a);
 						}
 #endif
@@ -1081,7 +1081,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255)); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
@@ -1103,7 +1103,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 						g = *t_src_row++;
 						b = *t_src_row++;
 
-						*t_dst_row++ = MCGPixelPack(kMCGPixelFormatNative, r, g, b, 255);
+						*t_dst_row++ = MCGPixelPackNative(r, g, b, 255);
 					}
 					t_src_ptr += t_stride;
 					t_dst_ptr += t_copy->stride;
@@ -1132,7 +1132,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255)); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
@@ -1161,7 +1161,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255)); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
