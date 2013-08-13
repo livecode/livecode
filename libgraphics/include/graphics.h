@@ -8,6 +8,7 @@
 typedef struct __MCGContext *MCGContextRef;
 typedef struct __MCGPath *MCGPathRef;
 typedef struct __MCGImage *MCGImageRef;
+typedef struct __MCGMask *MCGMaskRef;
 
 typedef struct __MCGDashes *MCGDashesRef;
 
@@ -200,6 +201,13 @@ enum MCGGradientTileMode
 	kMCGGradientTileModeMirror,	
 };
 
+enum MCGMaskFormat
+{
+	kMCGMaskFormat_A1,
+	kMCGMaskFormat_A8,
+	kMCGMaskFormat_LCD32,
+};
+
 struct MCGRaster
 {
 	MCGRasterFormat format;
@@ -216,6 +224,52 @@ struct MCGStrokeAttr
 	MCGCapStyle cap_style;
 	MCGFloat miter_limit;
 	MCGDashesRef dashes;
+};
+
+struct MCGLayerEffect
+{
+	MCGColor color;
+	MCGBlendMode blend_mode;
+};
+
+struct MCGShadowEffect
+{
+	MCGColor color;
+	MCGBlendMode blend_mode;
+	MCGFloat size;
+	MCGFloat x_offset;
+	MCGFloat y_offset;
+	bool knockout : 1;
+};
+
+struct MCGGlowEffect
+{
+	MCGColor color;
+	MCGBlendMode blend_mode;
+	MCGFloat size;
+	bool inverted : 1;
+};
+
+struct MCGBitmapEffects
+{
+	bool has_color_overlay : 1;
+	bool has_inner_glow : 1;
+	bool has_inner_shadow : 1;
+	bool has_outer_glow : 1;
+	bool has_drop_shadow : 1;
+	
+	MCGLayerEffect color_overlay;
+	MCGGlowEffect inner_glow;
+	MCGShadowEffect inner_shadow;
+	MCGGlowEffect outer_glow;
+	MCGShadowEffect drop_shadow;
+};
+
+struct MCGDeviceMaskInfo
+{
+	MCGMaskFormat format;
+	int32_t x, y, width, height;
+	void *data;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -274,7 +328,7 @@ bool MCGImageCreateWithRasterAndRelease(const MCGRaster &raster, MCGImageRef &r_
 bool MCGImageCreateWithData(const void *bytes, uindex_t byte_count, MCGImageRef& r_image);
 bool MCGImageCreateWithFilename(const char *filename, MCGImageRef& r_image);
 
-bool MCGImageGetRaster(MCGImageRef p_image, MCGRaster &r_raster);
+bool MCGImageGetRaster(MCGImageRef image, MCGRaster &r_raster);
 
 MCGImageRef MCGImageRetain(MCGImageRef image);
 void MCGImageRelease(MCGImageRef image);
@@ -285,6 +339,11 @@ int32_t MCGImageGetWidth(MCGImageRef image);
 int32_t MCGImageGetHeight(MCGImageRef image);
 
 MCGSize MCImageGetSize(MCGImageRef image);
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& info, MCGMaskRef& r_mask);
+void MCGMaskRelease(MCGMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -336,9 +395,9 @@ void MCGPathSimplify(MCGPathRef path, MCGPathRef& r_simple_path);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCGContextCreate(uint32_t p_width, uint32_t p_height, bool p_alpha, MCGContextRef& r_context);
-bool MCGContextCreateWithPixels(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha, MCGContextRef& r_context);
-bool MCGContextCreateWithRaster(MCGRaster &p_raster, MCGContextRef &r_context);
+bool MCGContextCreate(uint32_t width, uint32_t height, bool alpha, MCGContextRef& r_context);
+bool MCGContextCreateWithPixels(uint32_t width, uint32_t height, uint32_t stride, void *pixels, bool alpha, MCGContextRef& r_context);
+bool MCGContextCreateWithRaster(const MCGRaster& raster, MCGContextRef& r_context);
 
 MCGContextRef MCGContextRetain(MCGContextRef context);
 void MCGContextRelease(MCGContextRef context);
@@ -361,10 +420,11 @@ void MCGContextSetOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetBlendMode(MCGContextRef context, MCGBlendMode mode);
 
 void MCGContextBegin(MCGContextRef context);
+void MCGContextBeginWithEffects(MCGContextRef context, const MCGBitmapEffects &effects);
 void MCGContextEnd(MCGContextRef context);
 
 void MCGContextClipToRect(MCGContextRef context, MCGRectangle rect);
-void MCGContextResetClip(MCGContextRef context);
+MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef context);
 
 // Fill attributes
 void MCGContextSetFillRule(MCGContextRef context, MCGFillRule rule);
@@ -390,6 +450,7 @@ void MCGContextRotateCTM(MCGContextRef context, MCGFloat angle);
 void MCGContextTranslateCTM(MCGContextRef context, MCGFloat xoffset, MCGFloat yoffset);
 void MCGContextScaleCTM(MCGContextRef context, MCGFloat xscale, MCGFloat yscale);
 void MCGContextResetCTM(MCGContextRef context);
+MCGAffineTransform MCGContextGetDeviceTransform(MCGContextRef context);
 
 // Shape primitives - these add to the current path.
 void MCGContextAddRectangle(MCGContextRef context, MCGRectangle bounds);
@@ -449,6 +510,8 @@ void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRecta
 
 void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size);
 MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size);
+
+void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);
 
 bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 

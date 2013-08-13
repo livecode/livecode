@@ -364,6 +364,12 @@ int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_o
 	return 0;
 }
 
+// MM
+bool MCUIDC::textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask)
+{
+	return false;
+}
+
 uint2 MCUIDC::getrealdepth(void)
 {
 	//fprintf(stderr,"UIDC::getrealdepth() called\n");

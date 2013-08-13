@@ -363,6 +363,52 @@ bool MCGDashesToSkDashPathEffect(MCGDashesRef self, SkDashPathEffect*& r_path_ef
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& p_info, MCGMaskRef& r_mask)
+{
+	bool t_success;
+	t_success = true;
+	
+	__MCGMask *t_mask;
+	t_mask = NULL;
+	if (t_success)
+		t_success = MCMemoryNew(t_mask);	
+	
+	if (t_success)
+	{
+		switch (p_info . format)
+		{
+			case kMCGMaskFormat_A1:
+				t_mask -> mask . fFormat = SkMask::kBW_Format;
+				t_mask -> mask . fRowBytes = p_info . width;
+				break;
+				
+			case kMCGMaskFormat_A8:
+				t_mask -> mask . fFormat = SkMask::kA8_Format;
+				t_mask -> mask . fRowBytes = p_info . width;
+				break;
+				
+			case kMCGMaskFormat_LCD32:
+				t_mask -> mask . fFormat = SkMask::kLCD32_Format;
+				t_mask -> mask . fRowBytes = p_info . width * 4;
+				break;				
+		}		
+		
+		t_mask -> mask . fBounds . setXYWH(p_info . x, p_info . y, p_info . width, p_info . height);
+		t_mask -> mask . fImage = (uint8_t *)p_info . data;
+		
+		r_mask = t_mask;
+	}
+	
+	return t_success;
+}
+
+void MCGMaskRelease(MCGMaskRef self)
+{
+	MCMemoryDelete(self);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static SkXfermode** s_skia_blend_modes = NULL;
 
 SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
@@ -575,15 +621,25 @@ MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const 
 
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform &p_transform, SkMatrix &r_matrix)
 {
-	r_matrix.setAll(MCGFloatToSkScalar(p_transform . a),
-		MCGFloatToSkScalar(p_transform . c),
-		MCGFloatToSkScalar(p_transform . tx),
-		MCGFloatToSkScalar(p_transform . b),
-		MCGFloatToSkScalar(p_transform . d),
-		MCGFloatToSkScalar(p_transform . ty),
-		SkIntToScalar(0),
-		SkIntToScalar(0),
-		SK_Scalar1);
+	r_matrix . setAll(MCGFloatToSkScalar(p_transform . a),
+					  MCGFloatToSkScalar(p_transform . c),
+					  MCGFloatToSkScalar(p_transform . tx),
+					  MCGFloatToSkScalar(p_transform . b),
+					  MCGFloatToSkScalar(p_transform . d),
+					  MCGFloatToSkScalar(p_transform . ty),
+					  SkIntToScalar(0),
+					  SkIntToScalar(0),
+					  SK_Scalar1);
+}
+
+void MCGAffineTransformFromSkMatrix(const SkMatrix &p_matrix, MCGAffineTransform &r_transform)
+{
+	r_transform . a = p_matrix[0];
+	r_transform . c = p_matrix[1];
+	r_transform . tx = p_matrix[2];
+	r_transform . b = p_matrix[3];
+	r_transform . d = p_matrix[4];
+	r_transform . ty = p_matrix[5];
 }
 
 MCGAffineTransform MCGAffineTransformMake(MCGFloat p_a, MCGFloat p_b, MCGFloat p_c, MCGFloat p_d, MCGFloat p_tx, MCGFloat p_ty)

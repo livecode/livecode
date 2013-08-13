@@ -225,6 +225,206 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_length, MCFontStruct *p_font, CGContextRef p_cg_context, MCRectangle& r_bounds)
+{	
+	OSStatus t_err;
+	t_err = noErr;	
+		
+	ATSUFontID t_font_id;
+	Fixed t_font_size;
+	t_font_size = p_font -> size << 16;	
+	
+	ATSUAttributeTag t_tags[] =
+	{
+		kATSUFontTag,
+		kATSUSizeTag,
+	};
+	ByteCount t_sizes[] =
+	{
+		sizeof(ATSUFontID),
+		sizeof(Fixed),
+	};
+	ATSUAttributeValuePtr t_attrs[] =
+	{
+		&t_font_id,
+		&t_font_size,
+	};	
+
+	ATSLineLayoutOptions t_layout_options;
+	ATSUAttributeTag t_layout_tags[] =
+	{
+		kATSULineLayoutOptionsTag,
+		kATSUCGContextTag,
+	};
+	ByteCount t_layout_sizes[] =
+	{
+		sizeof(ATSLineLayoutOptions),
+		sizeof(CGContextRef),
+	};
+	ATSUAttributeValuePtr t_layout_attrs[] =
+	{
+		&t_layout_options,
+		&p_cg_context,
+	};	
+	
+	if (t_err == noErr)
+		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font -> fid, p_font -> style, &t_font_id);
+	
+	ATSUStyle t_style;
+	t_style = nil;
+	if (t_err == noErr)
+		t_err = ATSUCreateStyle(&t_style);
+	if (t_err == noErr)
+		t_err = ATSUSetAttributes(t_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
+	
+	ATSUTextLayout t_layout;
+	t_layout = nil;
+	if (t_err == noErr)
+	{
+		UniCharCount t_run;
+		t_run = p_length / 2;
+		t_err = ATSUCreateTextLayoutWithTextPtr((const UniChar *)p_text, 0, p_length / 2, p_length / 2, 1, &t_run, &t_style, &t_layout);
+	}
+	if (t_err == noErr)
+		t_err = ATSUSetTransientFontMatching(t_layout, true);
+	if (t_err == noErr)
+	{
+		t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+		t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	}	
+
+	MCRectangle t_bounds;
+	if (p_cg_context == nil)
+	{
+		ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+		if (t_err == noErr)
+			t_err = ATSUGetUnjustifiedBounds(t_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+		
+		if (t_err == noErr)
+		{
+			t_ascent = (t_ascent + 0xffff) >> 16;
+			t_descent = (t_descent + 0xffff) >> 16;
+			t_after = (t_after + 0xffff) >> 16;
+			
+			t_bounds . x = x;
+			t_bounds . y = y - p_font -> ascent;
+			t_bounds . width = t_after;
+			t_bounds . height = t_descent + t_ascent;
+			
+			r_bounds = t_bounds;
+		}
+	}
+	
+	if (t_err == noErr)
+		if (p_cg_context != nil)
+			t_err = ATSUDrawText(t_layout, 0, p_length / 2, x << 16, y << 16);
+	
+	if (t_layout != nil)
+		ATSUDisposeTextLayout(t_layout);
+	if (t_style != nil)
+		ATSUDisposeStyle(t_style);
+	
+	return t_err == noErr;	
+}
+
+bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCExecPoint ep;
+	uint2 t_length;
+	const void *t_text;
+	t_text = nil;
+	if (t_success)
+	{
+		if (p_font -> unicode || p_unicode_override)
+		{
+			t_text = p_text;
+			t_length = p_length;
+		}
+		else
+		{
+			ep . setsvalue(MCString(p_text, p_length));
+			ep . nativetoutf16();
+			t_text =  ep . getsvalue() . getstring();
+			t_length =  ep . getsvalue() . getlength();
+		}
+		t_success = t_text != nil;
+	}
+	
+	MCRectangle t_bounds;
+	if (t_success)
+		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, nil, t_bounds);
+	
+	if (t_success)
+	{
+		MCGRectangle t_gbounds;
+		t_gbounds = MCGRectangleMake(t_bounds . x, t_bounds . y, t_bounds . width, t_bounds . height);
+		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
+		
+		t_bounds . x = floor(t_gbounds . origin .x);
+		t_bounds . y = floor(t_gbounds . origin . y);
+		t_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_bounds . x;
+		t_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_bounds . y;
+		
+		t_bounds = MCU_intersect_rect(t_bounds, p_clip);
+		
+		if (t_bounds . width == 0 || t_bounds . height == 0)
+		{
+			r_mask = nil;
+			return true;
+		}
+	}
+	
+	void *t_data;
+	t_data = nil;
+	if (t_success)
+		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
+	
+	CGContextRef t_cgcontext;
+	t_cgcontext = nil;
+	if (t_success)
+	{
+		t_cgcontext = CGBitmapContextCreate(t_data, t_bounds . width, t_bounds . height, 8, t_bounds . width, nil, kCGImageAlphaOnly);
+		t_success = t_cgcontext != nil;
+	}
+		
+	if (t_success)
+	{
+		CGContextTranslateCTM(t_cgcontext, -t_bounds . x, -t_bounds . y);
+		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
+		
+		CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
+		CGContextFillRect(t_cgcontext, CGRectMake(t_bounds . x, t_bounds . y, t_bounds . width, t_bounds . height));
+		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
+	}
+	
+	if (t_success)
+		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, t_cgcontext, t_bounds);
+	
+	MCGMaskRef t_mask;
+	if (t_success)
+	{
+		MCGDeviceMaskInfo t_mask_info;
+		t_mask_info . format = kMCGMaskFormat_A8;
+		t_mask_info . x = t_bounds . x;
+		t_mask_info . y = t_bounds . y;
+		t_mask_info . width = t_bounds . width;
+		t_mask_info . height = t_bounds . height;
+		t_mask_info . data = t_data;
+		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
+	}
+	
+	if (t_success)
+		r_mask = t_mask;
+	
+	CGContextRelease(t_cgcontext);	
+	return t_success;	
+}	
+
+///////////////////////////////////////////////////////////////////////////////
+
 void MCScreenDC::listprinters(MCExecPoint& ep)
 {
 	ep . clear();

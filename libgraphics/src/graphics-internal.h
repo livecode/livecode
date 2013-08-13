@@ -4,6 +4,7 @@
 #include "graphics.h"
 #include <SkCanvas.h>
 #include <SkDashPathEffect.h>
+#include <SkMask.h>
 
 #ifndef M_PI
 #define M_PI 3.141592653589793238462643
@@ -85,6 +86,11 @@ struct __MCGImage
 	uint32_t	references;
 };
 
+struct __MCGMask
+{
+	SkMask	mask;
+};
+
 struct __MCGPath
 {
 	SkPath		*path;
@@ -144,6 +150,7 @@ bool MCGRasterToSkBitmap(const MCGRaster& raster, MCGPixelOwnershipType p_owners
 SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode mode);
 MCGBlendMode MCGBlendModeToSkXfermode(SkXfermode* mode);
 void MCGAffineTransformToSkMatrix(const MCGAffineTransform& transform, SkMatrix& r_matrix);
+void MCGAffineTransformFromSkMatrix(const SkMatrix &matrix, MCGAffineTransform &r_transform);
 
 ////////////////////////////////////////////////////////////////////////////////
 
