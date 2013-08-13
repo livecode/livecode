@@ -647,6 +647,11 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
 }
 
+bool MCStringCreateWithCStringAndRelease(const char* p_cstring, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeCharsAndRelease((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
+}
+
 const char *MCStringGetCString(MCStringRef p_string)
 {
     if (p_string == nil)
