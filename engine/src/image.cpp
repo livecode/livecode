@@ -120,7 +120,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		xhot = iref.xhot;
 		yhot = iref.yhot;
 		if (iref . m_rep != nil)
+		{
 			m_rep = iref . m_rep->Retain();
+			m_scale_factor = iref.m_scale_factor;
+		}
 	}
 
 	if (iref.flags & F_HAS_FILENAME)
