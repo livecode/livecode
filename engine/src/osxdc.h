@@ -318,13 +318,13 @@ public:
 	virtual void ungrabpointer();
 	
 	virtual const char *getdisplayname();
-	virtual uint2 getwidth(void);
-	virtual uint2 getheight(void);
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
 	
 	// IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
 	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
 	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);

@@ -526,9 +526,6 @@ void MCStack::sethints()
 
 MCRectangle MCStack::device_getwindowrect() const
 {
-    if (window == DNULL)
-        return rect;
-    
     MCRectangle t_rect;
     Rect t_winrect;
     RgnHandle t_rgn;
@@ -1421,13 +1418,25 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 		{
 			GetEventParameter(p_event, 'Stak', typeVoidPtr, NULL, sizeof(void *), NULL, &t_context -> stack);
 			
-			Rect t_bounds;
-			t_bounds . left = 0;
 			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
 			//   account the scroll.
-			t_bounds . top = -t_context -> stack -> getscroll();
-			t_bounds . right = t_context -> stack -> getrect() . width;
-			t_bounds . bottom = t_context -> stack -> getrect() . height;
+			
+			// IM-2013-08-13: [[ ResIndependence ]] scale new stack window size to device space
+			MCRectangle t_stack_rect;
+			t_stack_rect = t_context->stack->getrect();
+			
+			int32_t t_scroll;
+			t_scroll = t_context->stack->getscroll();
+			
+			MCRectangle t_rect;
+			t_rect = MCRectangleMake(0, -t_scroll, t_stack_rect.width, t_stack_rect.height + t_scroll);
+			
+			MCRectangle t_device_rect;
+			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
+			
+			Rect t_bounds;
+			t_bounds = MCRectToMacRect(t_device_rect);
+
 			SetControlBounds((ControlRef)t_context -> view, &t_bounds);
 			
 			t_status = noErr;
@@ -1527,7 +1536,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					{
 						// If we don't have an update pixmap, then use redrawwindow.
 						if (s_update_callback == nil)
-							t_context -> stack -> redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
+							t_context -> stack -> device_redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
 						else
 							s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
 						t_surface.Unlock();

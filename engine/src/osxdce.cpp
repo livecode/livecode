@@ -121,7 +121,7 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& p_displays, u
 		static MCDisplay t_display;
 		Rect t_workarea;
 		
-		MCU_set_rect(t_display . device_viewport, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_display . device_viewport, 0, 0, device_getwidth(), device_getheight());
 		GetAvailableWindowPositioningBounds(GetMainDevice(), &t_workarea);
 		t_display . index = 0;
 		t_display . device_workarea . x = t_workarea . left;

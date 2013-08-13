@@ -350,7 +350,7 @@ void MCScreenDC::ungrabpointer()
 	grabbed = False;
 }
 
-uint2 MCScreenDC::getwidth()
+uint16_t MCScreenDC::device_getwidth(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -360,7 +360,7 @@ uint2 MCScreenDC::getwidth()
 	return swidth;
 }
 
-uint2 MCScreenDC::getheight()
+uint16_t MCScreenDC::device_getheight(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -964,7 +964,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	if (!t_error)
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 		
 		MCstacks -> refresh();
@@ -1004,7 +1004,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 	else
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 	}
 }
@@ -1020,7 +1020,7 @@ bool MCScreenDC::initialisebackdrop(void)
 	t_error = false;
 
 	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, getwidth(), getheight());
+	SetRect(&t_bounds, 0, 0, device_getwidth(), device_getheight());
 	t_error = CreateNewWindow(kPlainWindowClass, kWindowNoAttributes, &t_bounds, &backdrop_window) != noErr;
 	if (!t_error)
 		t_error = CreateWindowGroup(kWindowGroupAttrLayerTogether | kWindowGroupAttrSelectAsLayer, &backdrop_group);
@@ -1104,7 +1104,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_patter
 		if (backdrop_active || backdrop_hard)
 		{
 			MCRectangle t_rect;
-			MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+			MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 	
 			updatebackdrop(t_rect);
 		}
