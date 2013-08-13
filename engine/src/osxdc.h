@@ -151,6 +151,28 @@ extern pascal OSErr DragReceiveHandler(WindowPtr theWindow, void *hRefCon,
 extern uint4 MCMacGlyphToKeysym(uint2 glyph);
 extern uint2 MCMacKeysymToGlyph(uint4 key);
 
+static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
+{
+	Rect t_rect;
+	t_rect.left = p_rect.x;
+	t_rect.top = p_rect.y;
+	t_rect.right = p_rect.x + p_rect.width;
+	t_rect.bottom = p_rect.y + p_rect.height;
+	
+	return t_rect;
+}
+
+static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
+{
+	MCRectangle t_rect;
+	t_rect.x = p_rect.left;
+	t_rect.y = p_rect.top;
+	t_rect.width = p_rect.right - p_rect.left;
+	t_rect.height = p_rect.bottom - p_rect.top;
+	
+	return t_rect;
+}
+
 class MCScreenDC : public MCUIDC
 {
 	Boolean ownselection;
@@ -415,8 +437,6 @@ public:
 	               Boolean &abort, Boolean &reset);
 	void waitmessage(Window w, int event_type);
 	void activatewindow(Window window);
-	void MCRect2MacRect(const MCRectangle &mc, Rect &macR);
-	void MacRect2MCRect(const Rect &macR, MCRectangle &mcR);
 	void doredraw(EventRecord &event, bool p_update_called = false);
 
 

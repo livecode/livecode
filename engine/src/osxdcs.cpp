@@ -782,7 +782,7 @@ bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 	Rect windowRect;
 	GetRegionBounds(r, &windowRect);
 	DisposeRgn(r);
-	MacRect2MCRect(windowRect, drect);
+	drect = MCMacRectToMCRect(windowRect);
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 

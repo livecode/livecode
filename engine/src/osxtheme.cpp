@@ -981,7 +981,7 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 	t_info.dest = p_rect;
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	t_info . focus_rect . focused = True;
-	pms->MCRect2MacRect(trect, t_info . focus_rect . bounds);
+	t_info . focus_rect . bounds = MCRectToMacRect(trect);
 	p_context -> drawtheme(THEME_DRAW_TYPE_FOCUS_RECT, &t_info);
 	
 	return true;

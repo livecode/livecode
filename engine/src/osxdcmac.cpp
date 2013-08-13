@@ -1305,22 +1305,6 @@ void MCScreenDC::activatewindow(Window window)
 	MCdispatcher->wkfocus(activewindow);
 }
 
-void MCScreenDC::MCRect2MacRect(const MCRectangle &mcR, Rect &macR)
-{ //convert MCRectangle to Mac's Rect structure
-	macR.top = mcR.y;
-	macR.left = mcR.x;
-	macR.bottom = mcR.y + mcR.height;
-	macR.right = mcR.x + mcR.width;
-}
-
-void MCScreenDC::MacRect2MCRect(const Rect &macR, MCRectangle &mcR)
-{ //convert MCRectangle to Mac's Rect structure
-	mcR.x = macR.left;
-	mcR.y = macR.top;
-	mcR.width = macR.right - macR.left;
-	mcR.height = macR.bottom - macR.top;
-}
-
 void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 {
 	if ((WindowPtr)event.message != backdrop_window)
@@ -1342,7 +1326,7 @@ void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 		Rect vrect;
 		GetRegionBounds(r, &vrect);
 		MCRectangle dirtyRect;
-		MacRect2MCRect(vrect, dirtyRect);
+		dirtyRect = MCMacRectToMCRect(vrect);
 		updatebackdrop(dirtyRect);
 	}
 	else

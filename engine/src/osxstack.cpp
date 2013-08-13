@@ -320,8 +320,7 @@ void MCStack::realize()
 		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
 		
 		Rect wrect;
-		MCScreenDC *psdc = (MCScreenDC *)MCscreen;
-		psdc->MCRect2MacRect(t_device_rect, wrect);
+		wrect = MCRectToMacRect(t_device_rect);
 		window = new _Drawable;
 		window->type = DC_WINDOW;
 		window->handle.window = 0;
@@ -444,7 +443,7 @@ void MCStack::realize()
 					GetRegionBounds(r, &tRect);
 					DisposeRgn(r);
 					MCRectangle drawerwindowrect;
-					psdc->MacRect2MCRect(tRect, drawerwindowrect);
+					drawerwindowrect = MCMacRectToMCRect(tRect);
 					if (wposition == WP_PARENTTOP || wposition == WP_PARENTBOTTOM)
 					{
 						wspace = parentwindowrect.width - drawerwindowrect.width;
