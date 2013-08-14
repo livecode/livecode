@@ -703,14 +703,27 @@ typedef  _Drawable *        Pixmap;
 typedef  _Drawable *        Drawable;
 #else
 
+// MDW-2013-04-15: [[ x64 ]] added 64-bit-safe typedefs
 #ifndef __LP64__
-typedef unsigned long Window;
-typedef unsigned long Pixmap;
-typedef unsigned long Drawable;
+	#if !defined(Window)
+		typedef unsigned long Window;
+	#endif
+	#if !defined(Pixmap)
+		typedef unsigned long Pixmap;
+	#endif
+	#if !defined(Drawable)
+		typedef unsigned long Drawable;
+	#endif
 #else
-typedef unsigned int Window;
-typedef unsigned int Pixmap;
-typedef unsigned int Drawable;
+	#if !defined(Window)
+		typedef unsigned long int Window;
+	#endif
+	#if !defined(Pixmap)
+		typedef unsigned long int Pixmap;
+	#endif
+	#if !defined(Drawable)
+		typedef unsigned long int Drawable;
+	#endif
 #endif
 
 #endif

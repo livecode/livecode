@@ -1,0 +1,68 @@
+<doc>
+	<legacy_id></legacy_id>
+	<name>unicodePlainText</name>
+	<type>property</type>
+
+	<syntax>
+		<example>set the unicodePlainText of [<i>chunk</i> of] <i>field </i>to <i>string</i></example>
+		<example>get the unicodePlainText of [<i>chunk</i> of] <i>field</i></example>
+	</syntax>
+
+	<synonyms>
+	</synonyms>
+
+	<summary>Returns the contents of a field chunk as plain text.</summary>
+
+	<examples>
+<example>write the unicodePlainText of field 1 to file myTextFile</example>
+<example>put word 1 to 3 of the unicodePlainText of field &quot;lorem&quot; into tFirstThreeWords</example>
+	</examples>
+
+	<history>
+		<introduced version="4.6">Added.</introduced>
+		<deprecated version=""></deprecated>
+		<removed version=""></removed>
+		<changed version="5.5">Now works at field chunk level</changed>
+	</history>
+
+	<objects>
+		<field/>
+	</objects>
+
+	<platforms>
+		<mac/>
+		<windows/>
+		<linux/>
+	</platforms>
+
+	<classes>
+		<desktop/>
+		<server/>
+		<web/>
+	</classes>
+
+	<security>
+	</security>
+
+
+	<classification>
+		<category>Text and Data Processing</category>
+	</classification>
+
+	<references>
+		<property tag="dontWrap">dontWrap Property</property>
+		<property tag="formattedText">formattedText Property</property>
+		<property tag="unicodeFormattedText">unicodeFormattedText Property</property>
+		<property tag="plainText">plainText Property</property>
+	</references>
+
+	<description>
+	<overview>Use the <b>unicodePlainText</b> <glossary tag="property">property</glossary> to get the content of a field as plain text with any listStyle properties being converted appropriately into plain-text for the paragraphs the affect.</overview>
+
+		<parameters>
+		</parameters>
+
+	<value>The <b>unicodePlainText</b> of a <keyword tag="field">field</keyword> is a string.</value>
+	<comments>When you get a field's <b>unicodePlainText</b>, the <glossary tag="field">field's</glossary> text is converted to plain text with any listStyle property being converted appropriately into plain-text.<p></p><p>Any paragraphs with listStyle set are prefixed by an appropriate plain-text form of the bullet or index. The property returns text encoded in UTF-16 in host byte-order.</p></comments>
+	</description>
+</doc>

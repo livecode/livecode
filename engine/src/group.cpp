@@ -69,6 +69,10 @@ MCGroup::MCGroup()
 	scrollx = scrolly = 0;
 	scrollbarwidth = MCscrollbarwidth;
 	minrect.x = minrect.y = minrect.width = minrect.height = 0;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
+	//   when created.
+    m_updates_locked = false;
 }
 
 MCGroup::MCGroup(const MCGroup &gref) : MCControl(gref)
@@ -139,6 +143,10 @@ MCGroup::MCGroup(const MCGroup &gref, bool p_copy_ids) : MCControl(gref)
 	scrollx = gref.scrollx;
 	scrolly = gref.scrolly;
 	scrollbarwidth = gref.scrollbarwidth;
+	
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Make sure the group's updates are unlocked
+	//   when cloned.
+    m_updates_locked = false;
 }
 
 MCGroup::~MCGroup()
@@ -881,17 +889,25 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		ep.setpoint(rect.width, rect.height);
 		break;
 	case P_CARD_NAMES:
+    case P_CARD_IDS:
 		{
+			// MERG-2013-05-01: [[ GrpCardIds ]] Add 'the cardIds' property to
+			//   groups (returns ids rather than names).
 			ep.clear();
 			MCExecPoint ep2(ep);
 			MCCard *startcard = getstack()->getcards();
 			MCCard *cptr = startcard;
 			uint2 j = 0;
-			do
+            Properties t_prop;
+            if (which == P_CARD_NAMES)
+                t_prop = P_SHORT_NAME;
+            else
+                t_prop = P_SHORT_ID;
+            do
 			{
 				if (cptr->countme(obj_id, False))
 				{
-					cptr->getprop(0, P_SHORT_NAME, ep2, False);
+					cptr->getprop(0, t_prop, ep2, False);
 					ep.concatmcstring(ep2.getsvalue(), EC_RETURN, j++ == 0);
 				}
 				cptr = cptr->next();
@@ -899,36 +915,36 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			while (cptr != startcard);
 		}
 		break;
-        case P_CONTROL_NAMES:
-        case P_CONTROL_IDS:
-        case P_CHILD_CONTROL_NAMES:
-        case P_CHILD_CONTROL_IDS:
+	case P_CONTROL_NAMES:
+	case P_CONTROL_IDS:
+	case P_CHILD_CONTROL_NAMES:
+	case P_CHILD_CONTROL_IDS:
         {
+			// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+			//   immediate and all descendent controls of a group.
+		
             ep.clear();
-			MCExecPoint t_ep_child_prop(ep);
-			MCExecPoint t_ep_getprop(ep);
-            
+		
+			MCExecPoint t_other_ep(ep);	
             MCObject *t_object = controls;
             MCObject *t_start_object = t_object;
             uint2 i = 0;
             do
             {
-                
                 Properties t_prop;
                 if (which == P_CHILD_CONTROL_NAMES)
                     t_prop = P_SHORT_NAME;
                 else
                     t_prop = P_SHORT_ID;
                 
-                t_object->getprop(0, t_prop, t_ep_child_prop, False);
+                t_object->getprop(0, t_prop, t_other_ep, False);
                 
-                ep.concatmcstring(t_ep_child_prop.getsvalue(), EC_RETURN, i++ == 0);
-                
+                ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 
                 if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
                 {
-                    t_object->getprop(parid, which, t_ep_getprop, false);
-                    ep.concatmcstring(t_ep_getprop.getsvalue(), EC_RETURN, i++ == 0);
+                    t_object->getprop(parid, which, t_other_ep, false);
+                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 }
                 
                 t_object = t_object -> next();
@@ -939,6 +955,10 @@ Exec_stat MCGroup::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
         break;
 	case P_SELECT_GROUPED_CONTROLS:
 		ep.setboolean(!(flags & F_SELECT_GROUP));
+		break;
+	// MW-2013-06-20: [[ GrpLckUpdates ]] [[ Bug 10960 ]] Add accessor for 'the lockUpdates'
+	case P_LOCK_UPDATES:
+		ep.setboolean(m_updates_locked);
 		break;
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
@@ -1284,6 +1304,23 @@ Exec_stat MCGroup::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		dirty = False;
 		flags ^= F_SELECT_GROUP;
 		break;
+	// MERG-2013-06-02: [[ GrpLckUpdates ]] Handle setting of the lockUpdates property.
+    case P_LOCK_UPDATES:
+	{
+		Exec_stat t_stat;
+		Boolean t_lock;
+		
+		t_stat = ep.getboolean(t_lock, 0, 0, EE_PROPERTY_NAB);
+		if (t_stat == ES_NORMAL)
+			m_updates_locked = (t_lock == True);
+			
+		// When the lock is turned off, make sure we update the group.
+		if (!t_lock)
+			computeminrect(True);
+			
+		return t_stat;
+	}
+	break;
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}

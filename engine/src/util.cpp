@@ -36,8 +36,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mcerror.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "mcssl.h"
 
 #include "globals.h"
+
+#ifdef MCSSL
+#include <openssl/rand.h>
+#endif
 
 #define QA_NPOINTS 10
 
@@ -2232,10 +2237,31 @@ void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c)
 void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
                 real8 tn, real8 oldn, MCSortnode *titems)
 {
+	real8 tp;
 	switch (func)
 	{
-	case F_AVERAGE:
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'arithmeticMean' (was average)
+	case F_ARI_MEAN:
 		n += tn;
+		nparams++;
+			break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'averageDeviation'
+	case F_AVG_DEV:
+		tn = tn - oldn;
+		n += abs(tn);
+		nparams++;
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'geometricMean'
+	case F_GEO_MEAN:
+		if (nparams == 0)
+			n = 1;
+		tp = 1 / oldn;
+		n *= pow(tn, tp);
+		nparams++;
+		break;
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'harmonicMean'
+	case F_HAR_MEAN:
+		n += 1/tn;
 		nparams++;
 		break;
 	case F_MAX:
@@ -2253,7 +2279,11 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 		titems[nparams].nvalue = tn;
 		nparams++;
 		break;
-	case F_STD_DEV:
+	// JS-2013-06-19: [[ StatsFunctions ]] Support for 'populationStdDev', 'populationVariance', 'sampleStdDev' (was stdDev), 'sampleVariance'
+	case F_POP_STD_DEV:
+	case F_POP_VARIANCE:
+	case F_SMP_STD_DEV:
+	case F_SMP_VARIANCE:
 		tn = tn - oldn;
 		n += tn * tn;
 		nparams++;
@@ -2266,43 +2296,72 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 	}
 }
 
+// MW-2013-06-25: [[ Bug 10983 ]] This function returns true if the given string
+//   could be a url. It checks for strings of the form:
+//     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
+static bool could_be_url(const char *p_url, uint4 p_length)
+{
+	// If the first char isn't a letter, then we are done.
+	if (p_length == 0 || !isalpha(p_url[0]))
+		return false;
+	
+	uint4 t_colon_index;
+	for(t_colon_index = 0; t_colon_index < p_length; t_colon_index++)
+	{
+		char t_char;
+		t_char = p_url[t_colon_index];
+		
+		// If we find the ':' we are done (end of scheme).
+		if (p_url[t_colon_index] == ':')
+			break;
+		
+		// If the character isn't something allowed in a scheme name, we are done.
+		if (!isalpha(t_char) && !isdigit(t_char) && t_char != '+' && t_char != '.' && t_char != '-')
+			return false;
+	}
+	
+	// If the scheme name < 2 chars, or there is nothing after it, we are done.
+	if (t_colon_index < 2 || t_colon_index + 1 == p_length)
+		return false;
+	
+	// If we get here then we could well have a url.
+	return true;
+}
 
 void MCU_geturl(MCExecPoint &ep)
 {
-	if (ep.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
+	if (ep.getsvalue().getlength() > 5 &&
+			!MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
 	{
 		ep.tail(5);
 		MCS_loadfile(ep, False);
 	}
+	else if (ep.getsvalue().getlength() > 8 &&
+				!MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
+	{
+		ep.tail(8);
+		MCS_loadfile(ep, True);
+	}
+	else if (ep.getsvalue().getlength() > 8 &&
+				!MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
+	{
+		ep.tail(8);
+		MCS_loadresfile(ep);
+	}
 	else
-		if (ep.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
+	{
+		// MW-2013-06-25: [[ Bug 10983 ]] Take more care to check if we do in fact
+		//   have something that could be a url.
+		const char *sptr = ep.getsvalue().getstring();
+		uint4 l = ep.getsvalue().getlength();
+		if (could_be_url(sptr, l))
 		{
-			ep.tail(8);
-			MCS_loadfile(ep, True);
+			MCS_geturl(ep . getobj(), ep . getcstring());
+			MCurlresult->fetch(ep);
 		}
 		else
-			if (ep.getsvalue().getlength() > 8
-			        && !MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
-			{
-				ep.tail(8);
-				MCS_loadresfile(ep);
-			}
-			else
-			{
-				// MW-2013-03-12: [[ Bug 10731 ]] Make sure that if we aren't looking at something
-				//   that looks like a URL, we clear the EP.
-				const char *sptr = ep.getsvalue().getstring();
-				uint4 l = ep.getsvalue().getlength();
-				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
-				{
-					MCS_geturl(ep . getobj(), ep . getcstring());
-					MCurlresult->fetch(ep);
-				}
-				else
-					ep . clear();
-			}
+			ep . clear();
+	}
 }
 
 
@@ -2543,7 +2602,9 @@ bool MCU_disjointrangecontains(MCRange* p_ranges, int p_count, int p_element)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCU_dofakewrite(char*& x_buffer, uint4& x_length, const void *p_data, uint4 p_size, uint4 p_count)
+// MW-2013-05-02: [[ x64 ]] The 'x_length' parameter is always IO_header::len
+//   which is now size_t, so match it.
+IO_stat MCU_dofakewrite(char*& x_buffer, size_t& x_length, const void *p_data, uint4 p_size, uint4 p_count)
 {
 	uint4 t_capacity;
 	if (x_length > 65536)
@@ -2786,3 +2847,23 @@ bool MCU_compare_strings_native(const char *p_a, bool p_a_isunicode, const char 
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// MW-2013-05-21: [[ RandomBytes ]] Utility function for generating random bytes
+//   which uses OpenSSL if available, otherwise falls back on system support.
+bool MCU_random_bytes(size_t p_count, void *p_buffer)
+{
+#ifdef MCSSL
+	// If SSL is available, then use that.
+	static bool s_donotuse_ssl = false;
+	if (!s_donotuse_ssl)
+	{
+		if (InitSSLCrypt())
+			return RAND_bytes((unsigned char *)p_buffer, p_count) == 1;
+		
+		s_donotuse_ssl = true;
+	}
+#endif
+
+	// Otherwise use the system provided CPRNG.
+	return MCS_random_bytes(p_count, p_buffer);
+}

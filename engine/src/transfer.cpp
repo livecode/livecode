@@ -779,50 +779,17 @@ bool MCDragData::Set(MCPasteboard *p_pasteboard)
 
 bool MCFormatImageIsJPEG(MCSharedString *p_in)
 {
-	const unsigned char *t_data;
-	t_data = (const unsigned char *)p_in -> GetBuffer();
-
-	uint4 t_length;
-	t_length = p_in -> GetLength();
-
-	if (t_length < 9)
-		return false;
-
-	if (t_data[0] != 0xFF || t_data[1] != 0xE0)
-		return false;
-
-	if (memcmp(t_data + 4, "JFIF", 5) != 0)
-		return false;
-
-	return true;
+    return MCImageDataIsJPEG(p_in -> Get());
 }
 
 bool MCFormatImageIsPNG(MCSharedString *p_in)
 {
-	const char *t_data;
-	t_data = (const char *)p_in -> GetBuffer();
-
-	uint4 t_length;
-	t_length = p_in -> GetLength();
-
-	if (t_length < 8)
-		return false;
-
-	return memcmp(t_data, "\x89PNG\x0d\x0a\x1a\x0a", 8) == 0;
+    return MCImageDataIsPNG(p_in -> Get());
 }
 
 bool MCFormatImageIsGIF(MCSharedString *p_in)
 {
-	const char *t_data;
-	t_data = (const char *)p_in -> GetBuffer();
-
-	uint4 t_length;
-	t_length = p_in -> GetLength();
-
-	if (t_length < 6)
-		return false;
-
-	return memcmp(t_data, "GIF87a", 6) == 0 || memcmp(t_data, "GIF89a", 6) == 0;
+    return MCImageDataIsGIF(p_in -> Get());
 }
 
 bool MCFormatStyledTextIsUnicode(MCSharedString *p_in)

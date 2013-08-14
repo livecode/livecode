@@ -950,6 +950,9 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
     case P_CONTROL_IDS:
     case P_CHILD_CONTROL_NAMES:
     case P_CHILD_CONTROL_IDS:
+		// MERG-2015-05-01: [[ ChildControlProps ]] Add ability to list both
+		//   immediate and all descendent controls of a card.
+			
         ep.clear();
 		clean();
 		if (objptrs != NULL)
@@ -960,12 +963,12 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 			bool t_want_shared;
 			t_want_shared = which == P_SHARED_GROUP_NAMES || which == P_SHARED_GROUP_IDS;
 
-			MCExecPoint t_ep_child_prop(ep);
-			MCExecPoint t_ep_getprop(ep);
+			MCExecPoint t_other_ep(ep);
             MCObjptr *optr = objptrs;
 			uint2 i = 0;
             
-            bool t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
+            bool t_controls;
+			t_controls = which == P_CHILD_CONTROL_NAMES ||  which == P_CHILD_CONTROL_IDS || which == P_CONTROL_NAMES || which == P_CONTROL_IDS;
 			do
 			{
 				MCObject *t_object;
@@ -975,7 +978,6 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 
                 if (t_object->gettype() == CT_GROUP)
                 {
-                    
                     if (t_want_background && !static_cast<MCGroup *>(t_object)  -> isbackground())
                         continue;
                     
@@ -983,7 +985,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
                         continue;
                 }
                 else if (!t_controls)
-                        continue;
+					continue;
                 
 				Properties t_prop;
 				if (which == P_BACKGROUND_NAMES || which == P_SHARED_GROUP_NAMES || which == P_GROUP_NAMES || which == P_CONTROL_NAMES || which == P_CHILD_CONTROL_NAMES)
@@ -991,18 +993,17 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 				else
 					t_prop = P_SHORT_ID;
 
-				t_object->getprop(0, t_prop, t_ep_child_prop, False);
-
-				ep.concatmcstring(t_ep_child_prop.getsvalue(), EC_RETURN, i++ == 0);
+				t_object->getprop(0, t_prop, t_other_ep, False);
+				ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 
                 if (t_object->gettype() == CT_GROUP && (which == P_CONTROL_IDS || which == P_CONTROL_NAMES))
                 {
-                    t_object->getprop(parid, which, t_ep_getprop, false);
-                    ep.concatmcstring(t_ep_getprop.getsvalue(), EC_RETURN, i++ == 0);
+                    t_object->getprop(parid, which, t_other_ep, false);
+                    ep.concatmcstring(t_other_ep.getsvalue(), EC_RETURN, i++ == 0);
                 }
-                
 			}
 			while (optr != objptrs);
+			
 			if (!opened)
 				clear();
 		}

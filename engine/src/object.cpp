@@ -979,12 +979,10 @@ Exec_stat MCObject::handleparent(Handler_type p_handler_type, MCNameRef p_messag
 			}
 		}
 
-		// Move to the next parentScript in the chain.
-		t_parentscript = t_parent_object -> parent_script;
-
-#ifndef FEATURE_INHERITED_PARENTSCRIPTS
-		break;
-#endif
+		// MW-2013-05-30: [[ InheritedPscripts] Move to the next parentScript in
+		//   the chain (making sure we use the parallel 'use' chain for this
+		//   instance).
+		t_parentscript = t_parentscript -> GetSuper();
 	}
 	
 	return t_stat;
@@ -1205,16 +1203,22 @@ Boolean MCObject::resizeparent()
 	if (parent != NULL && parent->gettype() == CT_GROUP)
 	{
 		MCGroup *gptr = (MCGroup *)parent;
-		// MM-2012-09-05: [[ Property Listener ]] Moving/resizing an object within a group will potentially effect the location/rect properties of the group.
-		if (gptr->computeminrect((state & (CS_MOVE | CS_SIZE)) != 0))
+        
+		// MERG-2013-06-02: [[ GrpLckUpdates ]] Only recalculate the group if not locked.
+        if (!gptr -> islocked())
 		{
-			if (state & CS_MOVE)
-				gptr -> signallisteners(P_LOCATION);
-			else
-				gptr -> signallisteners(P_RECTANGLE);
-			return True;
-		} else 
-			return False;
+            // MM-2012-09-05: [[ Property Listener ]] Moving/resizing an object within a group will potentially effect the location/rect properties of the group.
+            if (gptr->computeminrect((state & (CS_MOVE | CS_SIZE)) != 0))
+            {
+                if (state & CS_MOVE)
+                    gptr -> signallisteners(P_LOCATION);
+                else
+                    gptr -> signallisteners(P_RECTANGLE);
+                return True;
+            }
+			else 
+                return False;
+        }
 	}
 	return False;
 }
@@ -3489,9 +3493,8 @@ IO_stat MCObject::extendedload(MCObjectInputStream& p_stream, const char *p_vers
 
 // MW-2008-10-28: [[ ParentScripts ]] This method attempts to resolve the
 //   parentscript reference for this object (if any).
-// MW-2009-01-28: [[ Inherited parentScripts ]]
-// This method returns false if there was not enough memory to complete the
-// resolution.
+// MW-2013-05-30: [[ InheritedPscripts ]] This method returns false if there
+//   was not enough memory to complete the resolution.
 bool MCObject::resolveparentscript(void)
 {
 	// If there is no parent script, just return.
@@ -3522,18 +3525,16 @@ bool MCObject::resolveparentscript(void)
 	{
 		t_script -> Resolve(t_control);
 
-		// MW-2009-01-28: [[ Inherited parentScripts ]]
-		// Next we must ensure the existence of the inheritence hierarchy, so
-		// resolve the parentScript's parentScript.
+		// MW-2015-05-30: [[ InheritedPscripts ]] Next we must ensure the
+		//   existence of the inheritence hierarchy, so resolve the parentScript's
+		//   parentScript.
 		if (!t_control -> resolveparentscript())
 			return false;
 
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
-		// Finally, call the use's inherit method to create its chain of super's -
-		// if this fails, it means memory is exhausted so return false.
+		// MW-2015-05-30: [[ InheritedPscripts ]] And then make sure it creates its
+		//   super-use chain.
 		if (!parent_script -> Inherit())
 			return false;
-#endif
 	}
 	else
 		t_script -> Block();
@@ -3588,13 +3589,10 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 				t_control = t_behavior_stack -> getcontrolname(CT_IMAGE, p_name);
 			if (t_control != NULL)
 				break;
-			
-#ifdef FEATURE_INHERITED_PARENTSCRIPTS
-			// Step to the next behavior in the chain.
+
+			// MW-2013-05-30: [[ InheritedPscripts ]] Step to the next behavior
+			//   in the chain.
 			t_behavior = t_behavior_object -> getparentscript();
-#else
-			break;
-#endif
 		}
 		
 		// If we found the control, break.
@@ -3923,7 +3921,8 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 		// What we setup depends on whether the mask is depth 1 or 8 and the threshold.
 		// If the threshold is not 1, we use soft bits if they are available.
 		r_mask . fill = compute_objectshapescanline_soft;
-		r_mask . bits = p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x;
+		// IM-2013-05-10: fix wrong bit pointer offset due to adding stride (in bytes) to data (4-byte word pointer)
+		r_mask . bits = (uint8_t*)p_shape . mask . bits -> data + t_obj_rect . y * p_shape . mask . bits -> stride + t_obj_rect . x * sizeof(uint32_t);
 		r_mask . stride = p_shape . mask . bits -> stride;
 		r_mask . offset = 0;
 		
@@ -4043,7 +4042,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		
 		// Now check for overlap!
 		t_intersects = false;
-		for(int32_t y = 0; y < t_rect . height; y++)
+		// IM-2013-05-10: optimize - exit from outer loop if intersect found
+		for(int32_t y = 0; !t_intersects && y < t_rect . height; y++)
 		{
 			// Fill the scanline for this.
 			if (t_this_mask . fill != nil)
@@ -4060,12 +4060,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 			}
 			
 			// Check to see if they intersect.
-			for(int32_t x = 0; x < t_scanline_width; x++)
-				if ((t_this_scanline[x] & t_other_scanline[x]) != 0)
-				{
-					t_intersects = true;
-					break;
-				}
+			for(int32_t x = 0; !t_intersects && x < t_scanline_width; x++)
+				t_intersects = (t_this_scanline[x] & t_other_scanline[x]) != 0;
 		}
 		
 		// Scanlines aren't needed anymore.

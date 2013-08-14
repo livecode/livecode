@@ -180,6 +180,10 @@ protected:
 	// hold data from remote image
 	void *m_url_data;
 	uindex_t m_url_data_size;
+	
+	// MW-2013-09-25: [[ Bug 10983 ]] Indicates whether an attempt has been made
+	//   to load the url data before.
+	bool m_url_load_attempted : 1;
 };
 
 //////////

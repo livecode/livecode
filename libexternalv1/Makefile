@@ -1,6 +1,8 @@
 NAME=libexternalv1
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES=external.c
 
 CUSTOM_DEFINES=
