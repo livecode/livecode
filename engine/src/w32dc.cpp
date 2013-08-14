@@ -124,43 +124,41 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-// TD-2013-06-24 [[ DynamicFonts ]]
-
-// p_path is a fully resolved path
-Exec_errors MCScreenDC::loadfont(const char *p_path, bool p_load_globally)
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-    bool t_success = true;
+	bool t_success = true;
     DWORD t_private = NULL;
     
-    if (p_load_globally)
+    if (p_globally)
         t_private = FR_PRIVATE;
     
 	if (t_success)
 	{
 		struct _stat t_info;
-		if (_stat(p_filename, &t_info) != 0 || (t_info . st_mode & _S_IFDIR) != 0)
-			return EE_FONT_BADFILEEXP;
+		if (_stat(p_path, &t_info) != 0 || (t_info . st_mode & _S_IFDIR) != 0)
+			return false; //EE_FONT_BADFILEEXP;
 	}
 	
 	if (t_success)
 	{
 		if (AddFontResourceEx(p_path, t_private, 0) == 0)
-			return EE_FONT_CANTLOAD;
+			return false; //EE_FONT_CANTLOAD;
 	}
     
 	if (t_success)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
-	return EE_UNDEFINED;
+	return true; // EE_UNDEFINED;
 }
 
 
-Exec_errors MCScreenDC::unloadfont(const char *p_path, bool p_load_globally)
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
     bool t_success = true;
     DWORD t_private = NULL;
     
-    if (p_load_globally)
+    if (p_globally)
         t_private = FR_PRIVATE;
     
     if (t_success)
@@ -169,10 +167,10 @@ Exec_errors MCScreenDC::unloadfont(const char *p_path, bool p_load_globally)
 	if (t_success)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
-	if (!t_success)
-        return EE_FONT_CANTUNLOAD;
-    else
-        return EE_UNDEFINED;
+	return t_success;
+//        return EE_FONT_CANTUNLOAD;
+  //  else
+    //    return EE_UNDEFINED;
 }
 
 

@@ -1976,7 +1976,7 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
                 // TODO: If font is already in use then stop using.
                 // TODO: throw error if system doesn't support loading font globally.
                 
-                t_error = MCscreen->loadfont(t_resolved_path, is_globally);
+               // t_error = MCscreen->loadfont(t_resolved_path, is_globally);
                 if (t_error != EE_UNDEFINED)
                 {
                     MCeerror->add(t_error, line, pos);
@@ -2290,7 +2290,7 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
                             //if (ep . getboolean(t_new_value, 0, 0, EE_PROPERTY_NAB) != ES_NORMAL)
                                 //return false;
                             
-                            t_error = MCscreen->unloadfont(t_resolved_path, t_load_globally);
+                            //t_error = MCscreen->unloadfont(t_resolved_path, t_load_globally);
                             if (t_error != EE_UNDEFINED)
                             {
                                 MCeerror->add(t_error, line, pos);

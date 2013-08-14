@@ -1992,16 +1992,15 @@ bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
 }
 
 
-// TD-2013-05-29 [[ DynamicFonts ]]
-
-Exec_errors MCUIDC::loadfont(const char *p_path, bool p_load_globally)
+// TD-2013-07-01: [[ DynamicFonts ]]
+bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {
-	return EE_UNDEFINED;
+	return false;
 }
 
-Exec_errors MCUIDC::unloadfont(const char *p_path, bool p_load_globally)
+bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-	return EE_UNDEFINED;
+	return NULL;
 }
 
 //

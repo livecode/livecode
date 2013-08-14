@@ -3582,7 +3582,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
     // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
     case P_FONTFILES_IN_USE:
         ep.clear();
-        if (MCfontsusing -> is_array())
+        /*
+         ORIGINAL IMPLEMENTATION
+         if (MCfontsusing -> is_array())
         {
             for(uint32_t i = 1; i <= MCfontsusing -> get_array() -> getnfilled(); i++)
             {
@@ -3597,7 +3599,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
                 
                 ep.concatmcstring(ep2.getcstring(), EC_RETURN, i == 1);
             }
-        }
+        }*/
         break;
             
 	case P_RELAYER_GROUPED_CONTROLS:

@@ -525,8 +525,8 @@ public:
 	//
     
     // TD-2013-05-29: [[ DynamicFonts ]]
-	virtual Exec_errors loadfont(const char *p_path, bool p_load_globally);
-    virtual Exec_errors unloadfont(const char *p_path, bool p_load_globally);
+	virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
     
     //
 

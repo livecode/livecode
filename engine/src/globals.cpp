@@ -230,9 +230,6 @@ uint2 MCiconicstacks;
 uint2 MCwaitdepth;
 uint4 MCrecursionlimit = 400000; // actual max is about 480K on OSX
 
-// TD-2013-06-20: [[ DynamicFonts ]] list of font files in use.
-MCVariableValue *MCfontsusing;
-
 MCClipboardData *MCclipboarddata;
 MCSelectionData *MCselectiondata;
 
@@ -811,9 +808,6 @@ void X_clear_globals(void)
 	MCtruemcstring = MCtruestring;
 	MCfalsemcstring = MCfalsestring;
 	MCnullmcstring = NULL;
-    
-    // TD-2013-06-20: [[ DynamicFonts ]] list of font files in use.
-    MCfontsusing = NULL;
 
 	// MW-2013-03-11: [[ Bug 10713 ]] Make sure we reset the regex cache globals to nil.
 	for(uindex_t i = 0; i < PATTERN_CACHE_SIZE; i++)

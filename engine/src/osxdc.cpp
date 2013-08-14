@@ -226,11 +226,8 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 	}
 }
 
-// TD-2013-05-29 [[ DynamicFonts ]]
-MCVariableValue *s_font_array;
-
-// p_path is a fully resolved path
-Exec_errors MCScreenDC::loadfont(const char *p_path, bool p_load_globally)
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
 {	
 	FSRef t_ref;
     FSSpec t_fsspec;
@@ -238,78 +235,36 @@ Exec_errors MCScreenDC::loadfont(const char *p_path, bool p_load_globally)
 
 	t_os_error = MCS_pathtoref(p_path, &t_ref); // resolves and converts to UTF8.
 	if (t_os_error != noErr)
-		return EE_FONT_BADFILEEXP;
+		return false; //EE_FONT_BADFILEEXP;
     
     t_os_error = MCS_fsref_to_fsspec(&t_ref, &t_fsspec);
     if (t_os_error != noErr)
-		return EE_FONT_BADFILEEXP;
+		return false; //EE_FONT_BADFILEEXP;
     
     ATSFontContext t_context = kATSFontContextLocal;
-    if (p_load_globally)
+    if (p_globally)
         t_context = kATSFontContextGlobal;
     
-    // create array to store container.
-    if (s_font_array == NULL)
-    {
-        s_font_array = new MCVariableValue;
-        if (s_font_array == NULL)
-            return EE_FONT_CANTLOAD;
-    }
-    
     ATSFontContainerRef t_container = NULL;
-   
+    
     // Note: ATSFontActivateFromFileReference should be used from 10.5 onward.
     //       ATSFontActivateFromFileSpecification deprecated in 10.5.
     t_os_error = ATSFontActivateFromFileSpecification(&t_fsspec, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
     if (t_os_error != noErr)
-        return EE_FONT_CANTLOAD;
+        return false; //EE_FONT_CANTLOAD;
     
-    // Add font to list of fonts
-    MCVariableValue *t_font;
-    uint32_t index = 1;
-    if (s_font_array -> is_array())
-        index = s_font_array -> get_array() -> getnfilled() + 1;
+    // TODO: store t_container in r_loaded_font_handle
     
-    MCExecPoint *t_ep = new MCExecPoint();
-    
-    s_font_array -> lookup_index(*t_ep, index, t_font);
-    
-    t_ep -> setcstring(p_path);
-    t_font -> store_element(*t_ep, "name");
-    
-   // s_font_map . insert(make_pair(std::string(t_resolved_path), t_container));
-    
-    return EE_UNDEFINED;
+    return true;
 }
 
 
-Exec_errors MCScreenDC::unloadfont(const char *p_path, bool p_load_globally)
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
-   /* const char *t_error;
-	t_error = NULL;
+    OSStatus t_status;
+    t_status = ATSFontDeactivate((ATSFontContainerRef)r_loaded_font_handle, NULL, kATSOptionFlagsDefault);
     
-    // Get resolved path for storage in t_container (should this be UTF8 version of path?)
-    char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_filename);
-    
-    ATSFontContainerRef t_container;
-	t_container = NULL;
-    
-    if (t_error == NULL)
-    {
-        t_container = s_font_map[t_resolved_path];
-		if (t_container == NULL)
-			t_error = "couldn't unload font";
-    }
-    
-    if (t_error == NULL)
-	{
-		OSStatus t_status;
-		t_status = ATSFontDeactivate(t_container, NULL, kATSOptionFlagsDefault);
-		s_font_map . erase(t_resolved_path);
-	}
-    */
-    return EE_UNDEFINED;
+    return (t_status == noErr);
 }
 
 //
