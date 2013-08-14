@@ -56,6 +56,7 @@ import java.nio.*;
 import java.nio.charset.*;
 import java.lang.reflect.*;
 import java.util.*;
+import java.text.Collator;
 
 // This is the main class that interacts with the engine. Although only one
 // instance of the engine is allowed, we still need an object on which we can
@@ -105,6 +106,9 @@ public class Engine extends View
     private NotificationModule m_notification_module;
 
     private PowerManager.WakeLock m_wake_lock;
+    
+    // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+    private Collator m_collator;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -182,6 +186,9 @@ public class Engine extends View
 
 		// But we do have a bitmap view.
 		m_bitmap_view = new BitmapView(getContext());
+        
+        // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+        m_collator = Collator.getInstance(Locale.getDefault());
 	}
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2651,6 +2658,13 @@ public class Engine extends View
         }
 	}
 
+    // AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+    public int compareInternational(String left, String right)
+    {
+        Log.i("revandroid", "compareInternational"); 
+        return m_collator.compare(left, right);
+    }
+    
     ////////////////////////////////////////////////////////////////////////////////
 
     // url launch callback
