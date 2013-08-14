@@ -114,7 +114,7 @@ public:
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
-	void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
+	void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	void hidemenu();

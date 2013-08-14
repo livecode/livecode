@@ -147,8 +147,8 @@ public:
 	virtual void setforeground(const MCColor& c) = 0;
 	virtual void setbackground(const MCColor& c) = 0;
 	virtual void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes) = 0;
-	virtual void setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y) = 0;
-	virtual void getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y) = 0;
+	virtual void setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y) = 0;
+	virtual void getfillstyle(uint2& style, MCPatternRef &p, int2& x, int2& y) = 0;
 	virtual void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle) = 0;
 	virtual void setmiterlimit(real8 p_limit) = 0;
 	virtual void setgradient(MCGradientFill *p_gradient) = 0;

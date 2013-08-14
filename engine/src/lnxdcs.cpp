@@ -1234,7 +1234,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 
 void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
 {
-#ifdef LIBGRAPHICS_BORKEN
+#ifdef LIBGRAPHICS_BROKEN
 	if ( backdrop == DNULL ) 
 		createbackdrop_window();
 	

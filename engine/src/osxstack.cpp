@@ -534,10 +534,7 @@ MCRectangle MCStack::device_getwindowrect() const
     GetRegionBounds(t_rgn, &t_winrect);
     DisposeRgn(t_rgn);
     
-    t_rect.x = t_winrect.left;
-    t_rect.y = t_winrect.top;
-    t_rect.width = t_winrect.right - t_winrect.left;
-    t_rect.height = t_winrect.bottom - t_winrect.top;
+	t_rect = MCMacRectToMCRect(t_winrect);
     
     return t_rect;
 }
@@ -679,10 +676,8 @@ void MCStack::syncscroll(void)
 		t_device_bounds = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_bounds));
 		
 		Rect t_bounds;
-		t_bounds . left = t_device_bounds.x;
-		t_bounds . top = t_device_bounds.y;
-		t_bounds . right = t_device_bounds.x + t_device_bounds.width;
-		t_bounds . bottom = t_device_bounds.y + t_device_bounds.height;
+		t_bounds = MCRectToMacRect(t_device_bounds);
+
 		SetControlBounds(t_subcontrol, &t_bounds);
 	}
 	

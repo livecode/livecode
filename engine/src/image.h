@@ -216,8 +216,8 @@ public:
 	void stroke_path(MCGPathRef p_path);
 	void draw_path(MCGPathRef p_path);
 	void apply_stroke_style(MCGContextRef p_context, bool p_miter);
-	void apply_fill_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color);
-	void apply_stroke_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color);
+	void apply_fill_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
+	void apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
 
 	void battson(MCContext *ctxt, uint2 depth);
 
@@ -474,7 +474,7 @@ public:
 
 	MCCursorRef createcursor();
 	MCCursorRef getcursor(bool p_is_default = false);
-	bool createpattern(MCGImageRef &r_pattern);
+	bool createpattern(MCPatternRef &r_pattern);
 	// in ifile.cc
 	Boolean noblack();
 	void recompress();

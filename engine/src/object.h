@@ -175,7 +175,7 @@ protected:
 	MCColor *colors;
 	char **colornames;
 	uint4 *patternids;
-	MCGImageRef *patterns;
+	MCPatternRef *patterns;
 	char *script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
@@ -476,7 +476,7 @@ public:
 	Boolean isvisible();
 	Boolean resizeparent();
 	Boolean getforecolor(uint2 di, Boolean reversed, Boolean hilite, MCColor &c,
-	                     MCGImageRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
+	                     MCPatternRef &r_pattern, int2 &x, int2 &y, MCDC *dc, MCObject *o);
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);

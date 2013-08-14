@@ -1558,10 +1558,16 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			};
 		
 			CGImageRef t_tile_image;
-			/* UNCHECKED */ MCGImageToCGImage(p_mark -> fill -> pattern, t_tile_image);
+			/* UNCHECKED */ MCGImageToCGImage(p_mark -> fill -> pattern -> image, t_tile_image);
+			
+			// IM-2013-08-14: [[ ResIndependence ]] Append pattern image scale to pattern transform
+			MCGFloat t_scale;
+			t_scale = 1.0 / p_mark -> fill -> pattern -> scale;
 			
 			CGAffineTransform t_transform;
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), CGContextGetCTM(m_context));
+			t_transform = CGContextGetCTM(m_context);
+			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_transform);
+			t_transform = CGAffineTransformConcat(CGAffineTransformMakeScale(t_scale, t_scale), t_transform);
 			
 			CGPatternRef t_pattern;
 			t_pattern = CGPatternCreate(

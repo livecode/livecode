@@ -1443,7 +1443,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 						MCbackdroppmid = tmp;
 						if (MCbackdroppmid < PI_END)
 							MCbackdroppmid += PI_PATTERNS;
-						MCGImageRef t_new_pattern = MCpatternlist->allocpat(MCbackdroppmid, parent);
+						MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbackdroppmid, parent);
 						if (t_new_pattern != nil)
 							MCbackdroppattern = t_new_pattern;
 					}
@@ -2382,7 +2382,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 						return ES_ERROR;
 					if (MCbrushpmid < PI_END)
 						MCbrushpmid += PI_PATTERNS;
-					MCGImageRef t_new_pattern = MCpatternlist->allocpat(MCbrushpmid, parent);
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbrushpmid, parent);
 					if (t_new_pattern == None)
 					{
 						MCeerror->add(EE_PROPERTY_BRUSHPATNOIMAGE, line, pos, ep.getsvalue());
@@ -2400,7 +2400,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 						return ES_ERROR;
 					if (MCpenpmid < PI_END)
 						MCpenpmid += PI_PATTERNS;
-					MCGImageRef t_new_pattern = MCpatternlist->allocpat(MCpenpmid, parent);
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCpenpmid, parent);
 					if (t_new_pattern == None)
 					{
 						MCeerror->add(EE_PROPERTY_PENPATNOIMAGE, line, pos, ep.getsvalue());

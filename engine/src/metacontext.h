@@ -157,8 +157,8 @@ public:
 	void setforeground(const MCColor& c);
 	void setbackground(const MCColor& c);
 	void setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes);
-	void setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y);
-	void getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y);
+	void setfillstyle(uint2 style, MCPatternRef p_pattern, int2 x, int2 y);
+	void getfillstyle(uint2& style, MCPatternRef& r_pattern, int2& x, int2& y);
 	void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle);
 	void setmiterlimit(real8 p_limit);
 	void setgradient(MCGradientFill *p_gradient);
@@ -373,7 +373,7 @@ struct MCMarkFill
 {
 	uint2 style;
 	MCColor colour;
-	MCGImageRef pattern;
+	MCPatternRef pattern;
 	MCPoint origin;
 	MCGradientFill *gradient;
 

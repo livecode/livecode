@@ -67,13 +67,13 @@ MCMetaContext::~MCMetaContext(void)
 
 	while (f_fill_foreground != nil)
 	{
-		MCGImageRelease(f_fill_foreground -> pattern);
+		MCPatternRelease(f_fill_foreground -> pattern);
 		f_fill_foreground = f_fill_foreground -> previous;
 	}
 
 	while (f_fill_background != nil)
 	{
-		MCGImageRelease(f_fill_background -> pattern);
+		MCPatternRelease(f_fill_background -> pattern);
 		f_fill_background = f_fill_background -> previous;
 	}
 }
@@ -262,7 +262,7 @@ void MCMetaContext::setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes)
 	}
 }
 
-void MCMetaContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
+void MCMetaContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y)
 {
 	if (f_fill_foreground == NULL || style != f_fill_foreground -> style || p != f_fill_foreground -> pattern || x != f_fill_foreground -> origin . x || y != f_fill_foreground -> origin . y)
 	{
@@ -273,8 +273,8 @@ void MCMetaContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
 			if (style != FillTiled || p != NULL)
 			{
 				f_fill_foreground -> style = style;
-				MCGImageRelease(f_fill_foreground -> pattern);
-				f_fill_foreground -> pattern = MCGImageRetain(p);
+				MCPatternRelease(f_fill_foreground -> pattern);
+				f_fill_foreground -> pattern = MCPatternRetain(p);
 				f_fill_foreground -> origin . x = x;
 				f_fill_foreground -> origin . y = y;
 			}
@@ -289,7 +289,7 @@ void MCMetaContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
 	}
 }
 
-void MCMetaContext::getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y)
+void MCMetaContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
 {
 	if (f_fill_foreground != NULL)
 	{

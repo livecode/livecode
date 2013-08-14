@@ -212,7 +212,7 @@ class MCScreenDC : public MCUIDC
 	WindowGroupRef backdrop_document_group;
 	WindowGroupRef backdrop_palette_group;
 	MCColor backdrop_colour;
-	MCGImageRef backdrop_pattern;
+	MCPatternRef backdrop_pattern;
 	MCImage *backdrop_badge;
 	
 	MenuRef f_icon_menu;
@@ -379,7 +379,7 @@ public:
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
-	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 	
 	virtual void hidemenu();

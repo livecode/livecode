@@ -12,6 +12,61 @@
 
 #include "globals.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-14: [[ ResIndependence ]] pattern create / retain / release functions
+
+bool MCPatternCreate(MCGImageRef p_image, MCGFloat p_scale, MCPatternRef &r_pattern)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCPatternRef t_pattern;
+	t_pattern = nil;
+	
+	t_success = MCMemoryNew(t_pattern);
+	
+	if (t_success)
+	{
+		t_pattern -> image = MCGImageRetain(p_image);
+		t_pattern -> scale = p_scale;
+		t_pattern -> references = 1;
+		
+		r_pattern = t_pattern;
+	}
+	else
+	{
+		MCMemoryDelete(t_pattern);
+	}
+	
+	return t_success;
+}
+
+MCPatternRef MCPatternRetain(MCPatternRef p_pattern)
+{
+	if (p_pattern == nil)
+		return nil;
+	
+	p_pattern->references++;
+	
+	return p_pattern;
+}
+
+void MCPatternRelease(MCPatternRef p_pattern)
+{
+	if (p_pattern == nil)
+		return;
+	
+	p_pattern->references--;
+	if (p_pattern->references == 0)
+	{
+		MCGImageRelease(p_pattern->image);
+		MCMemoryDelete(p_pattern);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 // MW-2009-02-02: [[ Improved image search ]]
 // The pixmap list provides a reference counted wrapper around Pixmaps that have been
 // derived from resolved images. In order to provide the improved image search, we
@@ -30,10 +85,10 @@ MCImageListNode::MCImageListNode(MCImage *p_source)
 
 MCImageListNode::~MCImageListNode()
 {
-	MCGImageRelease(image);
+	MCPatternRelease(image);
 }
 
-bool MCImageListNode::allocimage(MCImage* p_source, MCGImageRef &r_image)
+bool MCImageListNode::allocimage(MCImage* p_source, MCPatternRef &r_image)
 {
 	if (p_source == source)
 	{
@@ -47,7 +102,7 @@ bool MCImageListNode::allocimage(MCImage* p_source, MCGImageRef &r_image)
 		return false;
 }
 
-bool MCImageListNode::freeimage(MCGImageRef p_image)
+bool MCImageListNode::freeimage(MCPatternRef p_image)
 {
 	if (image == p_image)
 	{
@@ -77,7 +132,7 @@ MCImageList::~MCImageList()
 	}
 }
 
-MCGImageRef MCImageList::allocpat(uint4 id, MCObject *optr)
+MCPatternRef MCImageList::allocpat(uint4 id, MCObject *optr)
 {
 	// MW-2009-02-02: [[ Improved image search ]]
 	// Search for the appropriate image object using the standard method - here we
@@ -87,7 +142,7 @@ MCGImageRef MCImageList::allocpat(uint4 id, MCObject *optr)
 	if (newim == nil)
 		return nil;
 	
-	MCGImageRef pat;
+	MCPatternRef pat;
 	MCImageListNode *tptr = images;
 	if (tptr != nil)
 		do
@@ -98,13 +153,13 @@ MCGImageRef MCImageList::allocpat(uint4 id, MCObject *optr)
 		}
 	while (tptr != images);
 	
-	tptr = new MCImageListNode(newim);
+	/* UNCHECKED */ tptr = new MCImageListNode(newim);
 	tptr->appendto(images);
 	tptr->allocimage(newim, pat);
 	return pat;
 }
 
-void MCImageList::freepat(MCGImageRef &p_image)
+void MCImageList::freepat(MCPatternRef &p_image)
 {
 	if (p_image == nil)
 		return;

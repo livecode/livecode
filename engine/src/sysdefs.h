@@ -1146,6 +1146,8 @@ typedef struct ssl_ctx_st SSL_CTX;
 
 class MCContext;
 typedef class MCContext MCDC;
+struct MCPattern;
+typedef MCPattern *MCPatternRef;
 
 class MCSharedString;
 struct MCPickleContext;

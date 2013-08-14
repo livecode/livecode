@@ -708,7 +708,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 }
 

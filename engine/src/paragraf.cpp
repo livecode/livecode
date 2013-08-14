@@ -946,7 +946,7 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 					//   list labels.
 					if (IsMacLF() && !parent->isautoarm())
 					{
-						MCGImageRef t_pattern;
+						MCPatternRef t_pattern;
 						int2 x, y;
 						MCColor fc, hc;
 						parent->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, parent);

@@ -60,7 +60,7 @@ MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32
 
 MCGraphicsContext::~MCGraphicsContext()
 {
-	MCGImageRelease(m_pattern);
+	MCPatternRelease(m_pattern);
 	MCGContextRelease(m_gcontext);
 }
 
@@ -257,16 +257,23 @@ void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, ui
 	MCMemoryDeleteArray(t_lengths);	
 }
 
-void MCGraphicsContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
+void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y)
 {
-	MCGImageRelease(m_pattern);
+	MCPatternRelease(m_pattern);
 	m_pattern = nil;
 
 	if (style == FillTiled && p != NULL)
 	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(x, y);
-		MCGContextSetFillPattern(m_gcontext, p, t_transform, kMCGImageFilterBilinear);
-		m_pattern = MCGImageRetain(p);
+		// IM-2013-08-14: [[ ResIndependence ]] apply pattern image scale to transform
+		MCGFloat t_scale;
+		t_scale = 1.0 / p->scale;
+		
+		MCGAffineTransform t_transform;
+		t_transform = MCGAffineTransformMakeScale(t_scale, t_scale);
+		t_transform = MCGAffineTransformTranslate(t_transform, x, y);
+
+		MCGContextSetFillPattern(m_gcontext, p->image, t_transform, kMCGImageFilterBilinear);
+		m_pattern = MCPatternRetain(p);
 		m_pattern_x = x;
 		m_pattern_y = y;
 	}
@@ -277,7 +284,7 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCGImageRef p, int2 x, int2 y)
 	}
 }
 
-void MCGraphicsContext::getfillstyle(uint2& style, MCGImageRef& p, int2& x, int2& y)
+void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
 {
 	p = m_pattern;
 	x = m_pattern_x;

@@ -790,7 +790,7 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 		{
 			// Fetch the size of the tile, and its data.
 			MCGRaster t_tile_raster;
-			if (MCGImageGetRaster(p_mark -> fill -> pattern, t_tile_raster))
+			if (MCGImageGetRaster(p_mark -> fill -> pattern -> image, t_tile_raster))
 			{
 				// Construct the paint pattern.
 				t_paint . type = kMCCustomPrinterPaintPattern;
@@ -800,8 +800,8 @@ void MCCustomMetaContext::dorawpathmark(MCMark *p_mark, uint1 *p_commands, uint3
 				t_paint . pattern . image . height = t_tile_raster . height;
 				t_paint . pattern . image . data = t_tile_raster . pixels;
 				t_paint . pattern . image . data_size = t_tile_raster . stride * t_tile_raster . height;
-				t_paint . pattern . transform . scale_x = 1.0;
-				t_paint . pattern . transform . scale_y = 1.0;
+				t_paint . pattern . transform . scale_x = 1.0 / p_mark -> fill -> pattern -> scale;
+				t_paint . pattern . transform . scale_y = 1.0 / p_mark -> fill -> pattern -> scale;
 				t_paint . pattern . transform . skew_x = 0.0;
 				t_paint . pattern . transform . skew_y = 0.0;
 				t_paint . pattern . transform . translate_x = p_mark -> fill -> origin . x;

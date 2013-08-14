@@ -606,7 +606,7 @@ void MCUIDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCUIDC::configurebackdrop(const MCColor&, MCGImageRef p_pattern, MCImage *)
+void MCUIDC::configurebackdrop(const MCColor&, MCPatternRef p_pattern, MCImage *)
 {
 }
 

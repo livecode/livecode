@@ -184,11 +184,11 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	npatterns = oref.npatterns;
 	if (npatterns > 0)
 	{
-		patternids = new uint4[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
 		uint2 i;
 		for (i = 0 ; i < npatterns ; i++)
 			patternids[i] = oref.patternids[i];
-		/* UNCHECKED */ patterns = new MCGImageRef[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 	}
 	else
 	{
@@ -277,8 +277,8 @@ MCObject::~MCObject()
 			delete colornames[ncolors];
 		delete colornames;
 	}
-	delete patternids;
-	delete patterns;
+	MCMemoryDeleteArray(patternids);
+	MCMemoryDeleteArray(patterns);
 	delete script;
 	deletepropsets();
 	delete tooltip;
@@ -1223,7 +1223,7 @@ Boolean MCObject::resizeparent()
 }
 
 Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
-                               MCColor &c, MCGImageRef &r_pattern,
+                               MCColor &c, MCPatternRef &r_pattern,
                                int2 &x, int2 &y, MCDC *dc, MCObject *o)
 {
 	uint2 i;
@@ -1286,7 +1286,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 #ifdef _MACOSX
 		if (IsMacLFAM() && dc -> gettype() != CONTEXT_TYPE_PRINTER)
 		{
-			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageRef &r_pattern);
+			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern);
 			x = 0;
 			y = 0;
 			
@@ -1338,7 +1338,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 
 	MCColor color;
-	MCGImageRef t_pattern = nil;
+	MCPatternRef t_pattern = nil;
 	int2 x, y;
 	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
 	{
@@ -1623,11 +1623,11 @@ Boolean MCObject::getpindex(uint2 di, uint2 &i)
 
 uint2 MCObject::createpindex(uint2 di)
 {
-	uint4 *oldpatternids =patternids;
-	MCGImageRef *oldpatterns = patterns;
+	uint4 *oldpatternids = patternids;
+	MCPatternRef *oldpatterns = patterns;
 	npatterns++;
-	patternids = new uint4[npatterns];
-	patterns = new MCGImageRef[npatterns];
+	/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
+	/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 p = 0;
@@ -1649,8 +1649,8 @@ uint2 MCObject::createpindex(uint2 di)
 		i++;
 		m <<= 1;
 	}
-	delete oldpatternids;
-	delete oldpatterns;
+	MCMemoryDeleteArray(oldpatternids);
+	MCMemoryDeleteArray(oldpatterns);
 	return ri;
 }
 
@@ -2808,11 +2808,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	npatterns &= 0x0F;
 	if (npatterns > 0)
 	{
-		patternids = new uint4[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
 		for (i = 0 ; i < npatterns ; i++)
 			if ((stat = IO_read_uint4(&patternids[i], stream)) != IO_NORMAL)
 				return stat;
-		patterns = new MCGImageRef[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
 		return stat;
