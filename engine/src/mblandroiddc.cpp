@@ -205,12 +205,12 @@ void MCScreenDC::getvendorstring(MCExecPoint &ep)
 	ep . setsvalue("android");
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	return 320;
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	return 480;
 }

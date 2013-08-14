@@ -59,8 +59,6 @@ public:
 	bool hasfeature(MCPlatformFeature feature);
 	const char *getdisplayname(void);
 	void getvendorstring(MCExecPoint &ep);
-	uint2 getwidth();
-	uint2 getheight();
 	uint2 getwidthmm();
 	uint2 getheightmm();
 	uint2 getmaxpoints();
@@ -70,6 +68,8 @@ public:
 	uint2 getpad();
 	Window getroot();
 	
+	uint16_t device_getwidth();
+	uint16_t device_getheight();
 	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);

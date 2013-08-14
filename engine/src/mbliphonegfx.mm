@@ -81,13 +81,6 @@ void MCStack::updatewindow(MCRegionRef p_dirty_rgn)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
-{
-	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
-}
-
-//////////
-
 class MCIPhoneStackSurface: public MCStackSurface
 {
 protected:
@@ -193,7 +186,7 @@ public:
 		t_success = MCRegionCreate(t_region);
 		
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
 		
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -335,7 +328,7 @@ protected:
 	
 	if (t_surface . Lock())
 	{
-		t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
 		t_surface . Unlock();
 	}
 	
@@ -566,7 +559,7 @@ protected:
 	
 	if (t_surface . Lock())
 	{
-		t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
 		t_surface . Unlock();
 	}
 	

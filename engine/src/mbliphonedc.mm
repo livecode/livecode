@@ -227,12 +227,12 @@ void MCScreenDC::getvendorstring(MCExecPoint &ep)
 	ep . setsvalue("iphone");
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	return 320 * MCIPhoneGetResolutionScale();
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	return 480 * MCIPhoneGetResolutionScale();
 }
