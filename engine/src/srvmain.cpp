@@ -63,7 +63,8 @@ static char *s_server_home = NULL;
 static bool s_server_cgi = false;
 
 // The main script the server engine will run.
-char *MCserverinitialscript = NULL;
+
+MCStringRef MCserverinitialscript = nil;
 
 // The root server script object.
 MCServerScript *MCserverscript = NULL;
@@ -386,7 +387,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 	// Check for CGI mode.
 	MCAutoStringRef t_env;
 	
-	s_server_cgi = MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env);
+	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
+		s_server_cgi = true;
+	else
+		s_server_cgi = false;
 	
 	if (!X_open(argc, argv, envp))
 		return False;
@@ -405,14 +409,12 @@ bool X_init(int argc, char *argv[], char *envp[])
 	else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
-		MCAutoStringRef t_MCserverinitialscript_string;
 		
 		// If there isn't at least one argument, we haven't got anything to run.
 		if (argc > 1)
-			MCsystem -> ResolveNativePath(*t_argv1_string, &t_MCserverinitialscript_string);
+			MCsystem -> ResolveNativePath(*t_argv1_string, MCserverinitialscript);
 		else
-			t_MCserverinitialscript_string = nil;
-		MCserverinitialscript = strdup(MCStringGetCString(*t_MCserverinitialscript_string));
+			MCserverinitialscript = nil;
 		
 		// Create the $<n> variables.
 		for(int i = 2; i < argc; ++i)
@@ -474,7 +476,7 @@ void X_main_loop(void)
 	int i;
 	MCstackbottom = (char *)&i;
 
-	if (MCserverinitialscript == NULL)
+	if (MCserverinitialscript == nil)
 		return;
 	
 	MCperror -> clear();
@@ -521,7 +523,7 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
+	if (!MCserverscript -> Include(ep, MCStringGetCString(MCserverinitialscript), false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
 		char *t_eerror, *t_efiles;

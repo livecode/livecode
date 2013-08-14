@@ -351,18 +351,7 @@ bool MCS_setcurdir(MCStringRef p_path)
 	return false;
 }
 
-/*
-Boolean MCS_setcurdir(const char *p_folder)
-{
-	char *t_resolved_folder;
-	t_resolved_folder = MCS_resolvepath(p_folder);
-	
-	bool t_success;
-	t_success = MCsystem -> SetCurrentFolder(t_resolved_folder);
-	delete t_resolved_folder;
-	return t_success;
-}
-*/
+
 
 bool MCS_getcurdir(MCStringRef& r_path)
 {
