@@ -2416,6 +2416,10 @@ enum Exec_errors
 	
 	// {EE-0796} group: object cannot be grouped
 	EE_GROUP_NOTGROUPABLE,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {EE-0797} measureText: no object
+    EE_MEASURE_TEXT_NOOBJECT
 };
 
 extern const char *MCexecutionerrors;
