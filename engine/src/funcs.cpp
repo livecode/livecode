@@ -6467,6 +6467,13 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
     MCFontRef t_font;
 	t_font = t_object_ptr -> getfontref();
     
+    if (!t_font)
+    {
+		MCeerror->add
+		(EE_MEASURE_TEXT_NOOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
     if (m_text -> eval(ep) != ES_NORMAL)
     {
         MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
