@@ -184,18 +184,88 @@ uint16_t MCFontStyleToTextStyle(MCFontStyle p_font_style)
 }
 
 
+static MCLoadedFont *s_loaded_fonts = nil;
+
 // TD-2013-07-02: [[ DynamicFonts ]]
+// MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCLoadedFont
 Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally)
 {
-    // TODO
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
+    bool t_load = true;
+    
+    if (t_stat == ES_NORMAL)
+    {
+        // check if already loaded and unload if globally is not the same as loaded version
+        bool t_load = true;
+        for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+            if (!strcmp(t_font -> path,p_path) && t_font -> is_global != p_globally)
+            {
+                t_stat = MCFontUnload(ep,p_path);
+            }
+            else
+                t_load = false;
+    }
+    
+    if (t_stat == ES_NORMAL && t_load)
+    {
+        void * t_loaded_font_handle;
+        
+        if (!MCscreen -> loadfont(p_path, p_globally, t_loaded_font_handle))
+            return ES_ERROR;
+    
+        MCLoadedFontRef self;
+        if (!MCMemoryNew(self))
+            return ES_ERROR;
+        
+        self -> is_global = p_globally;
+        self -> handle = t_loaded_font_handle;
+        self -> path = strdup(p_path);
+        
+        if (s_loaded_fonts)
+            self -> next = s_loaded_fonts;
+        else
+            self -> next = nil;
+        
+        s_loaded_fonts = self;
+        
+    }
+    return t_stat;
 }
+
 Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
 {
-    // TODO
+    MCLoadedFont * t_parent_font;
+    t_parent_font = nil;
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+    {
+        if (!strcmp(t_font -> path,p_path))
+        {
+            if (!MCscreen -> unloadfont(p_path, t_font -> is_global, t_font -> handle))
+                return ES_ERROR;
+            
+            if (t_parent_font)
+                t_parent_font -> next = t_font -> next;
+            else
+                s_loaded_fonts = t_font -> next;
+            
+            MCMemoryDelete(t_font);
+            break;
+        }
+        t_parent_font = t_font;
+    }
+    
+    return ES_NORMAL;
 }
+
 Exec_stat MCFontListLoaded(MCExecPoint& ep)
 {
-    // TODO
+    ep.clear();
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+        ep.concatcstring(t_font -> path, EC_RETURN, t_font == s_loaded_fonts);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

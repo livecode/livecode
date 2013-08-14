@@ -50,6 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "redraw.h"
+#include "font.h"
 
 #include "mctheme.h"
 
@@ -3577,32 +3578,14 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			MCusing[i]->getprop(0, P_SHORT_NAME, ep2, effective);
 			ep.concatmcstring(ep2.getsvalue(), EC_RETURN, i == MCnusing - 1);
 		}
-		break;
+        break;
             
     // TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
     case P_FONTFILES_IN_USE:
-        ep.clear();
-        /*
-         ORIGINAL IMPLEMENTATION
-         if (MCfontsusing -> is_array())
-        {
-            for(uint32_t i = 1; i <= MCfontsusing -> get_array() -> getnfilled(); i++)
-            {
-                MCHashentry *t_entry;
-                t_entry = MCfontsusing -> get_array() -> lookupindex(i, False);
-                
-                // Fetch the value of the entry.
-                MCVariableValue *t_value;
-                t_value = &t_entry -> value;
-                
-                t_value -> fetch_element(ep2, "name", false);
-                
-                ep.concatmcstring(ep2.getcstring(), EC_RETURN, i == 1);
-            }
-        }*/
+        // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontListLoaded
+        return MCFontListLoaded(ep);
         break;
-            
-	case P_RELAYER_GROUPED_CONTROLS:
+    case P_RELAYER_GROUPED_CONTROLS:
 		ep.setboolean(MCrelayergrouped);
 		break;
 	case P_SELECTION_MODE:

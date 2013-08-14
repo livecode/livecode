@@ -84,6 +84,8 @@ uint2 MCLogicalFontTableMap(MCNameRef p_textfont, uint2 p_textstyle, uint2 p_tex
 void MCLogicalFontTableLookup(uint2 index, MCNameRef& r_textfont, uint2& r_textstyle, uint2& r_textsize, bool& r_unicode);
 
 
+typedef struct MCLoadedFont *MCLoadedFontRef;
+
 // TD-2013-07-01: [[ DynamicFonts ]]
 struct MCLoadedFont
 {

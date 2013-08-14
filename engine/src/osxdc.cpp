@@ -253,7 +253,7 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
     if (t_os_error != noErr)
         return false; //EE_FONT_CANTLOAD;
     
-    // TODO: store t_container in r_loaded_font_handle
+    r_loaded_font_handle = (void *)t_container;
     
     return true;
 }

@@ -168,9 +168,6 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
 	return t_success;
-//        return EE_FONT_CANTUNLOAD;
-  //  else
-    //    return EE_UNDEFINED;
 }
 
 

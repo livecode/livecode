@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "image.h"
+#include "font.h"
 
 #include "globals.h"
 
@@ -1965,45 +1966,36 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
                 return ES_ERROR;
             }
             
+            // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
             if (font->eval(ep) == ES_NORMAL)
 			{
-                Exec_errors t_error;
-                t_error = EE_UNDEFINED;
+                Exec_stat t_error;
+                t_error = ES_NORMAL;
                 
                 char *t_resolved_path;
-                t_resolved_path = MCS_resolvepath(ep . getcstring());
+                t_resolved_path = nil;
                 
-                // TODO: If font is already in use then stop using.
-                // TODO: throw error if system doesn't support loading font globally.
-                
-               // t_error = MCscreen->loadfont(t_resolved_path, is_globally);
-                if (t_error != EE_UNDEFINED)
+                if (t_error == ES_NORMAL)
                 {
-                    MCeerror->add(t_error, line, pos);
-                    return ES_ERROR;
-                }
-                
-                // Initialize global
-                if (MCfontsusing == NULL)
-                {
-                    MCfontsusing = new MCVariableValue;
-                    if (MCfontsusing == NULL)
+                    t_resolved_path = MCS_resolvepath(ep . getcstring());
+                    if (!t_resolved_path)
+                    {
+                        MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
                         return ES_ERROR;
+                    }
                 }
                 
-                // Add font to list of fonts
-                MCVariableValue *t_font;
-                uint32_t index = 1;
-                if (MCfontsusing -> is_array())
-                    index = MCfontsusing -> get_array() -> getnfilled() + 1;
+                if (t_error == ES_NORMAL)
+                {
+                    t_error = MCFontLoad(ep, t_resolved_path , is_globally);
+                }
                 
-                MCfontsusing -> lookup_index(ep, index, t_font);
+                if (t_error != ES_NORMAL)
+                {
+                    MCeerror->add(EE_FONT_CANTLOAD, line, pos);
+                    return t_error;
+                }
                 
-                ep . setcstring(t_resolved_path);
-                t_font -> store_element(ep, "name");
-                
-                ep . setboolean(is_globally);
-                t_font -> store_element(ep, "global");
             }
             else
             {
@@ -2255,52 +2247,47 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
             // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
             if (font != NULL)
             {
-                if (MCfontsusing != NULL && MCfontsusing -> is_array())
+                // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
+                Exec_stat t_stat;
+                t_stat = ES_NORMAL;
+                
+                char *t_resolved_path;
+                t_resolved_path = nil;
+                
+                if (font->eval(ep) == ES_NORMAL)
                 {
-                    font->eval(ep);
-                    MCExecPoint t_ep1(ep);
-                    MCExecPoint ep2(ep);
+                    Exec_stat t_error;
+                    t_error = ES_NORMAL;
                     
-                    for(uint32_t i = 1; i <= MCfontsusing -> get_array() -> getnfilled(); i++)
+                    char *t_resolved_path;
+                    t_resolved_path = nil;
+                    
+                    if (t_error == ES_NORMAL)
                     {
-                        MCHashentry *t_entry;
-                        t_entry = MCfontsusing -> get_array() -> lookupindex(i, False);
-                        
-                        // Fetch the value of the entry.
-                        MCVariableValue *t_value;
-                        t_value = &t_entry -> value;
-                        
-                        t_value -> fetch_element(ep2, "name", false);
-
-                        // is this the font being unloaded?
-                        if (font -> compare_values(t_ep1, ep2, &ep, false) == 0)
+                        t_resolved_path = MCS_resolvepath(ep . getcstring());
+                        if (!t_resolved_path)
                         {
-                            Exec_errors t_error;
-                            t_error = EE_UNDEFINED;
-                            
-                            const char *t_resolved_path;
-                            
-                            t_value -> fetch_element(ep2, "name", false);
-                            t_resolved_path = ep2 . getcstring();
-                            
-                            t_value -> fetch_element(ep2, "global", false);
-                            
-                            Boolean t_load_globally;
-                            ep2 . getboolean(t_load_globally, 0, 0, EE_PROPERTY_NAB);
-                            //if (ep . getboolean(t_new_value, 0, 0, EE_PROPERTY_NAB) != ES_NORMAL)
-                                //return false;
-                            
-                            //t_error = MCscreen->unloadfont(t_resolved_path, t_load_globally);
-                            if (t_error != EE_UNDEFINED)
-                            {
-                                MCeerror->add(t_error, line, pos);
-                                return ES_ERROR;
-                            }
-                            
-                            MCfontsusing -> remove_hash(t_entry);
-                            break;
+                            MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+                            return ES_ERROR;
                         }
                     }
+                    
+                    if (t_stat == ES_NORMAL)
+                    {
+                        t_stat = MCFontUnload(ep, t_resolved_path);
+                    }
+                    
+                    if (t_error != ES_NORMAL)
+                    {
+                        MCeerror->add(EE_FONT_CANTUNLOAD, line, pos);
+                        return t_error;
+                    }
+                    
+                }
+                else
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
                 }
 
             }

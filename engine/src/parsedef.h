@@ -1666,7 +1666,6 @@ enum Script_point {
     SP_EXIT,
     SP_EXPORT,
     SP_FACTOR,
-    
     SP_FIND,
     SP_FLIP,
     SP_GO,
@@ -1771,6 +1770,9 @@ enum Sugar_constants {
 	SG_OPEN,
 	SG_CLOSED,
 	SG_CALLER,
+	
+	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
+    SG_STRING,
     
     // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
     SG_FONT,
