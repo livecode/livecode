@@ -496,7 +496,7 @@ public:
 	
 	virtual void Default(CoderRef p_coder, ParameterType p_mode, const char *p_name, ValueRef p_value)
 	{
-		CoderWriteStatement(p_coder, "success = java_from__cstring(__java_env, \"%s\", %s) == kLCErrorNone", StringGetCStringPtr(p_value), p_name);
+		CoderWriteStatement(p_coder, "success = default__java_string(__java_env, \"%s\", %s)", StringGetCStringPtr(p_value), p_name);
 	}
 	
 	virtual void Store(CoderRef p_coder, ParameterType p_mode, const char *p_name, const char *p_target)
@@ -1249,17 +1249,11 @@ static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 		}
 		else
 			CoderWrite(p_coder, "%s(", NameGetCString(t_variant -> binding));
+        
+        for(uint32_t k = 0; k < p_variant -> parameter_count; k++)
+            CoderWrite(p_coder, ", %s", t_mapped_params[k] . var_name);
 			
-		for(uint32_t k = 0; k < t_variant -> parameter_count; k++)
-		{
-			HandlerParameter *t_parameter;
-			t_parameter = &t_variant -> parameters[k];
-			if (k > 0 || t_variant -> return_type_indirect)
-				CoderWrite(p_coder, ", ");
-			CoderWrite(p_coder, "%sparam__%s", t_parameter -> mode == kParameterTypeInOut || t_parameter -> mode == kParameterTypeOut ? t_ref_char : "", NameGetCString(t_parameter -> name));
-		}
-
-		CoderWrite(p_coder, ")");
+        CoderWrite(p_coder, ")");
 		
 		CoderEndStatement(p_coder);
 		

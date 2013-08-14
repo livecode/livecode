@@ -2913,6 +2913,7 @@ static jobject java__get_engine(void)
 }
 
 //////////
+    
 
 static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_value)
 {
@@ -2955,7 +2956,13 @@ static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_v
     return err;
 }
 
-
+static bool default__java_string(JNIEnv *env, const char *p_value, jobject& r_java_value)
+{
+    if (java_from__cstring(env, p_value, r_java_value))
+        return true;
+    return error__out_of_memory();
+}
+    
 static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
 	LCError err;
