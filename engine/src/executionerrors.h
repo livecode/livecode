@@ -2372,50 +2372,15 @@ enum Exec_errors
 	// {EE-0781} image cache limit: not a number
 	EE_PROPERTY_BADIMAGECACHELIMIT,
     
-    // {EE-0782} controls don't have the same owner
-	EE_GROUP_DIFFERENTPARENT,
-	
-	// {EE-0783} uuid: bad type expression
-	EE_UUID_BADTYPE,
-	
-	// {EE-0784} uuid: wrong number of arguments for specified type
-	EE_UUID_TOOMANYPARAMS,
-	
-	// {EE-0785} uuid: unsupported type
-	EE_UUID_UNKNOWNTYPE,
-	
-	// {EE-0786} uuid: bad namespace expression
-	EE_UUID_BADNAMESPACEID,
-	
-	// {EE-0787} uuid: namespace not a uuid
-	EE_UUID_NAMESPACENOTAUUID,
-	
-	// {EE-0788} uuid: bad name expression
-	EE_UUID_BADNAME,
-	
-	// {EE-0789} uuid: not enough randomness available
-	EE_UUID_NORANDOMNESS,
-	
-	// {EE-0790} avgDev: error in source expression
-	EE_AVGDEV_BADSOURCE,
-	
-	// {EE-0791} geometricMean: error in source expression
-	EE_GEO_MEAN_BADSOURCE,
-
-	// {EE-0792} harmonicMean: error in source expression
-	EE_HAR_MEAN_BADSOURCE,
-
-	// {EE-0793} pStdDev: error in source expression
-	EE_POP_STDDEV_BADSOURCE,
-	
-	// {EE-0794} pVariance: error in source expression
-	EE_POP_VARIANCE_BADSOURCE,
-	
-	// {EE-0795} variance: error in source expression
-	EE_VARIANCE_BADSOURCE,
-	
-	// {EE-0796} group: object cannot be grouped
-	EE_GROUP_NOTGROUPABLE,
+    // TD-2013-06-24: [[ DynamicFonts ]]
+    // {EE-0782} font: couldn't find font
+	EE_FONT_BADFILEEXP,
+    
+    // {EE-0783} font: can't load font file
+	EE_FONT_CANTLOAD,
+    
+    // {EE-0784} font: can't unload font file
+    EE_FONT_CANTUNLOAD,
 };
 
 extern const char *MCexecutionerrors;

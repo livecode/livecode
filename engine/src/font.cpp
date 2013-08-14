@@ -183,6 +183,21 @@ uint16_t MCFontStyleToTextStyle(MCFontStyle p_font_style)
 	return t_style;
 }
 
+
+// TD-2013-07-02: [[ DynamicFonts ]]
+Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally)
+{
+    // TODO
+}
+Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
+{
+    // TODO
+}
+Exec_stat MCFontListLoaded(MCExecPoint& ep)
+{
+    // TODO
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static const char *weightstrings[] =

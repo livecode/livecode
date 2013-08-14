@@ -523,6 +523,12 @@ public:
 	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
 	
 	//
+    
+    // TD-2013-05-29: [[ DynamicFonts ]]
+	virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+    
+    //
 
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);

@@ -1166,6 +1166,9 @@ class MCStart : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-12: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
+    bool is_globally;
 protected:
 	Start_constants mode;
 public:
@@ -1174,6 +1177,9 @@ public:
 		target = NULL;
 		stack = NULL;
 		mode = SC_UNDEFINED;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
+        is_globally = 0;
 	}
 	virtual ~MCStart();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1193,12 +1199,16 @@ class MCStop : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
 	Start_constants mode;
 public:
 	MCStop()
 	{
 		target = NULL;
 		stack = NULL;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
 	}
 	virtual ~MCStop();
 	virtual Parse_stat parse(MCScriptPoint &);

@@ -21,6 +21,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "core.h" // TD-2013-05-29: [[ DynamicFonts ]]
+#include "osspec.h" // TD-2013-05-29: [[ DynamicFonts ]]
+
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
@@ -32,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "osxcontext.h"
 #include "osxprinter.h"
+#include "securemode.h"
+#include "mcerror.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -220,6 +225,49 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 		}
 	}
 }
+
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{	
+	FSRef t_ref;
+    FSSpec t_fsspec;
+	OSErr t_os_error;
+
+	t_os_error = MCS_pathtoref(p_path, &t_ref); // resolves and converts to UTF8.
+	if (t_os_error != noErr)
+		return false; //EE_FONT_BADFILEEXP;
+    
+    t_os_error = MCS_fsref_to_fsspec(&t_ref, &t_fsspec);
+    if (t_os_error != noErr)
+		return false; //EE_FONT_BADFILEEXP;
+    
+    ATSFontContext t_context = kATSFontContextLocal;
+    if (p_globally)
+        t_context = kATSFontContextGlobal;
+    
+    ATSFontContainerRef t_container = NULL;
+    
+    // Note: ATSFontActivateFromFileReference should be used from 10.5 onward.
+    //       ATSFontActivateFromFileSpecification deprecated in 10.5.
+    t_os_error = ATSFontActivateFromFileSpecification(&t_fsspec, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
+    if (t_os_error != noErr)
+        return false; //EE_FONT_CANTLOAD;
+    
+    // TODO: store t_container in r_loaded_font_handle
+    
+    return true;
+}
+
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+{
+    OSStatus t_status;
+    t_status = ATSFontDeactivate((ATSFontContainerRef)r_loaded_font_handle, NULL, kATSOptionFlagsDefault);
+    
+    return (t_status == noErr);
+}
+
+//
 
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 {
