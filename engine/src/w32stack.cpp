@@ -1106,7 +1106,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		if (t_surface.Lock())
 		{
 			if (s_update_callback == nil)
-				redrawwindow(&t_surface, (MCRegionRef)p_region);
+				device_redrawwindow(&t_surface, (MCRegionRef)p_region);
 			else
 				s_update_callback(&t_surface, (MCRegionRef)p_region, s_update_context);
 
@@ -1142,7 +1142,7 @@ void MCStack::onpaint(void)
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+			device_redrawwindow(&t_surface, (MCRegionRef)t_update_region);
 		else
 			s_update_callback(&t_surface, (MCRegionRef)t_update_region, s_update_context);
 

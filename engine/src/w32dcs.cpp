@@ -351,7 +351,7 @@ void MCScreenDC::ungrabpointer()
 	}
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	HDC winhdc = GetDC(NULL);
 	uint2 width = (uint2)GetDeviceCaps(winhdc, HORZRES);
@@ -359,7 +359,7 @@ uint2 MCScreenDC::getwidth()
 	return width;
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	HDC winhdc = GetDC(NULL);
 	uint2 height = (uint2)GetDeviceCaps(winhdc, VERTRES);
@@ -921,7 +921,7 @@ MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 		}
 	}
 	SetWindowPos(hwndsnap, HWND_TOPMOST,
-				 0, 0, getwidth(), getheight(), SWP_HIDEWINDOW
+				 0, 0, device_getwidth(), device_getheight(), SWP_HIDEWINDOW
 				 | SWP_DEFERERASE | SWP_NOREDRAW);
 	if (t_is_composited)
 		ReleaseDC(NULL, snaphdc);

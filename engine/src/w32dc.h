@@ -202,14 +202,14 @@ public:
 	virtual void ungrabpointer();
 	
 	virtual const char *getdisplayname();
-	virtual uint2 getwidth();
-	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
 	virtual uint2 getvclass();
 	virtual uint2 getdepth();
 
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
 	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
 	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
 	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);

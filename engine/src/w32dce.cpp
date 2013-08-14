@@ -134,7 +134,7 @@ bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, ui
 		static MCDisplay t_monitor;
 		RECT r;
 		SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
-		MCU_set_rect(t_monitor . device_viewport, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_monitor . device_viewport, 0, 0, device_getwidth(), device_getheight());
 		MCU_set_rect(t_monitor . device_workarea, 0, 0, uint2(r . right - r . left), uint2(r . bottom - r . top));
 		r_displays = &t_monitor;
 		r_count = 1;
