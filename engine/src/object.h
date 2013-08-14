@@ -164,6 +164,12 @@ struct MCObjectFontAttrs
 	uint2 size;
 };
 
+struct MCPatternInfo
+{
+	uint32_t id;
+	MCPatternRef pattern;
+};
+
 class MCObject : public MCDLlist
 {
 protected:
@@ -174,8 +180,7 @@ protected:
 	MCRectangle rect;
 	MCColor *colors;
 	char **colornames;
-	uint4 *patternids;
-	MCPatternRef *patterns;
+	MCPatternInfo *patterns;
 	char *script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;

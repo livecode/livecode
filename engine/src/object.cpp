@@ -103,7 +103,6 @@ MCObject::MCObject()
 	colors = NULL;
 	colornames = NULL;
 	npatterns = 0;
-	patternids = NULL;
 	patterns = NULL;
 	opened = 0;
 	script = NULL;
@@ -184,15 +183,13 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	npatterns = oref.npatterns;
 	if (npatterns > 0)
 	{
-		/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 		uint2 i;
 		for (i = 0 ; i < npatterns ; i++)
-			patternids[i] = oref.patternids[i];
-		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
+			patterns[i].id = oref.patterns[i].id;
 	}
 	else
 	{
-		patternids = NULL;
 		patterns = NULL;
 	}
 	opened = 0;
@@ -277,7 +274,6 @@ MCObject::~MCObject()
 			delete colornames[ncolors];
 		delete colornames;
 	}
-	MCMemoryDeleteArray(patternids);
 	MCMemoryDeleteArray(patterns);
 	delete script;
 	deletepropsets();
@@ -340,7 +336,7 @@ void MCObject::open()
 		MCscreen->alloccolor(colors[i]);
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
-		patterns[i] = MCpatternlist->allocpat(patternids[i], this);
+		patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 }
 
 void MCObject::close()
@@ -352,7 +348,7 @@ void MCObject::close()
 		closemenu(False, True);
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
-		MCpatternlist->freepat(patterns[i]);
+		MCpatternlist->freepat(patterns[i].pattern);
 
 	// MW-2012-02-14: [[ FontRefs ]] Unmap the object's font.
 	unmapfont();
@@ -1238,7 +1234,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 		else
 			if (getpindex(di, i))
 			{
-				r_pattern = patterns[i];
+				r_pattern = patterns[i].pattern;
 
 				if (gettype() == CT_STACK)
 					x = y = 0;
@@ -1408,7 +1404,7 @@ Boolean MCObject::setcolor(uint2 index, const MCString &data)
 		{
 			if (opened)
 
-				MCpatternlist->freepat(patterns[j]);
+				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
 		if (opened)
@@ -1439,7 +1435,7 @@ Boolean MCObject::setcolors(const MCString &data)
 			if (getpindex(index, j))
 			{
 				if (opened)
-					MCpatternlist->freepat(patterns[j]);
+					MCpatternlist->freepat(patterns[j].pattern);
 				destroypindex(index, j);
 			}
 		}
@@ -1483,7 +1479,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 		if (getpindex(newpixmap, i))
 		{
 			if (t_isopened)
-				MCpatternlist->freepat(patterns[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 			destroypindex(newpixmap, i);
 		}
 	}
@@ -1500,12 +1496,12 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 			i = createpindex(newpixmap);
 		else
 			if (t_isopened)
-				MCpatternlist->freepat(patterns[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 		if (newid < PI_PATTERNS)
 			newid += PI_PATTERNS;
-		patternids[i] = newid;
+		patterns[i].id = newid;
 		if (t_isopened)
-			patterns[i] = MCpatternlist->allocpat(patternids[i], this);
+			patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 		if (getcindex(newpixmap, i))
 			destroycindex(newpixmap, i);
 		}
@@ -1623,10 +1619,8 @@ Boolean MCObject::getpindex(uint2 di, uint2 &i)
 
 uint2 MCObject::createpindex(uint2 di)
 {
-	uint4 *oldpatternids = patternids;
-	MCPatternRef *oldpatterns = patterns;
+	MCPatternInfo *oldpatterns = patterns;
 	npatterns++;
-	/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
 	/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 	uint2 ri = 0;
 	uint2 i = 0;
@@ -1642,14 +1636,10 @@ uint2 MCObject::createpindex(uint2 di)
 		}
 		else
 			if (dflags & m)
-			{
-				patternids[p] = oldpatternids[op];
 				patterns[p++] = oldpatterns[op++];
-			}
 		i++;
 		m <<= 1;
 	}
-	MCMemoryDeleteArray(oldpatternids);
 	MCMemoryDeleteArray(oldpatterns);
 	return ri;
 }
@@ -1659,7 +1649,6 @@ void MCObject::destroypindex(uint2 di, uint2 i)
 	npatterns--;
 	while (i < npatterns)
 	{
-		patternids[i] = patternids[i + 1];
 		patterns[i] = patterns[i + 1];
 		i++;
 	}
@@ -2808,11 +2797,10 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	npatterns &= 0x0F;
 	if (npatterns > 0)
 	{
-		/* UNCHECKED */ MCMemoryNewArray(npatterns, patternids);
-		for (i = 0 ; i < npatterns ; i++)
-			if ((stat = IO_read_uint4(&patternids[i], stream)) != IO_NORMAL)
-				return stat;
 		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
+		for (i = 0 ; i < npatterns ; i++)
+			if ((stat = IO_read_uint4(&patterns[i].id, stream)) != IO_NORMAL)
+				return stat;
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
 		return stat;
@@ -3099,7 +3087,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(addflags, stream)) != IO_NORMAL)
 		return stat;
 	for (i = 0 ; i < npatterns ; i++)
-		if ((stat = IO_write_uint4(patternids[i], stream)) != IO_NORMAL)
+		if ((stat = IO_write_uint4(patterns[i].id, stream)) != IO_NORMAL)
 			return stat;
 	// MW-2012-02-22; [[ NoScrollSave ]] Adjust the rect by the current group offset.
 	if ((stat = IO_write_int2(rect.x + MCgroupedobjectoffset . x, stream)) != IO_NORMAL)
