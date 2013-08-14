@@ -25,6 +25,7 @@
 #include "globals.h"
 #include "system.h"
 #include "osspec.h"
+#include "mcerror.h"
 #include "util.h"
 #include "mcio.h"
 #include "stack.h"
@@ -36,10 +37,14 @@
 #include "param.h"
 #include "mode.h"
 #include "securemode.h"
+#include "text.h"
 
 #include "osxdc.h"
 
 #include <sys/stat.h>
+#include <sys/utsname.h>
+#include <sys/time.h>
+#include <sys/ioctl.h>
 
 #include "foundation.h"
 
@@ -154,8 +159,8 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result);
 static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address);
 
 static void getosacomponents();
-static OSErr osacompile(MCString &s, ComponentInstance compinstance, OSAID &id);
-static OSErr osaexecute(MCString &s,ComponentInstance compinstance, OSAID id);
+static OSErr osacompile(MCStringRef s, ComponentInstance compinstance, OSAID &id);
+static OSErr osaexecute(MCStringRef& r_string,ComponentInstance compinstance, OSAID id);
 /***************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -666,6 +671,95 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static void MCS_launch_set_result_from_lsstatus(void)
+{
+	int t_error;
+	t_error = 0;
+    
+	switch(errno)
+	{
+		case kLSUnknownErr:
+		case kLSNotAnApplicationErr:
+		case kLSLaunchInProgressErr:
+		case kLSServerCommunicationErr:
+#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
+		case kLSAppInTrashErr:
+		case kLSIncompatibleSystemVersionErr:
+		case kLSNoLaunchPermissionErr:
+		case kLSNoExecutableErr:
+		case kLSNoClassicEnvironmentErr:
+		case kLSMultipleSessionsNotSupportedErr:
+#endif
+			t_error = 2;
+            break;
+            
+		case kLSDataUnavailableErr:
+		case kLSApplicationNotFoundErr:
+		case kLSDataErr:
+			t_error = 3;
+            break;
+	}
+	
+	switch(t_error)
+	{
+        case 0:
+            MCresult -> clear();
+            break;
+            
+        case 1:
+            MCresult -> sets("can't open file");
+            break;
+            
+        case 2:
+            MCresult -> sets("request failed");
+            break;
+            
+        case 3:
+            MCresult -> sets("no association");
+            break;
+	}
+    
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
+{
+	MCshellfd = fd;
+	size = 0;
+	while (True)
+	{
+		int readsize = 0;
+		ioctl(fd, FIONREAD, (char *)&readsize);
+		readsize += READ_PIPE_SIZE;
+		if (size + readsize > buffersize)
+		{
+			MCU_realloc((char **)&buffer, buffersize,
+                        buffersize + readsize + 1, sizeof(char));
+			buffersize += readsize;
+		}
+		errno = 0;
+		int4 amount = read(fd, &buffer[size], readsize);
+		if (amount <= 0)
+		{
+			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+				break;
+			if (!MCS_poll(SHELL_INTERVAL, 0))
+				if (!MCnoui && MCscreen->wait(SHELL_INTERVAL, False, True))
+				{
+					MCshellfd = -1;
+					return IO_ERROR;
+				}
+		}
+		else
+			size += amount;
+	}
+	MCshellfd = -1;
+	return IO_NORMAL;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 // Special Folders
 
 // MW-2012-10-10: [[ Bug 10453 ]] Added 'mactag' field which is the tag to use in FSFindFolder.
@@ -842,6 +936,62 @@ static void configureSerialPort(int sRefNum)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+////////////////////////////////////////////////////////////////////////////////
+//
+//  REFACTORED FROM TEXT.CPP
+//
+
+struct UnicodeInfoRecord
+{
+	UnicodeInfoRecord *next;
+	TextEncoding encoding;
+	TextToUnicodeInfo info;
+};
+
+static TextToUnicodeInfo fetch_unicode_info(TextEncoding p_encoding)
+{
+	static UnicodeInfoRecord *s_records = NULL;
+	
+	UnicodeInfoRecord *t_previous, *t_current;
+	for(t_previous = NULL, t_current = s_records; t_current != NULL; t_previous = t_current, t_current = t_current -> next)
+		if (t_current -> encoding == p_encoding)
+			break;
+    
+	if (t_current == NULL)
+	{
+		UnicodeMapping t_mapping;
+		t_mapping . unicodeEncoding = CreateTextEncoding(kTextEncodingUnicodeDefault, kUnicodeNoSubset, kUnicode16BitFormat);
+		t_mapping . otherEncoding = CreateTextEncoding(p_encoding, kTextEncodingDefaultVariant, kTextEncodingDefaultFormat);
+		t_mapping . mappingVersion = kUnicodeUseLatestMapping;
+		
+		TextToUnicodeInfo t_info;
+		OSErr t_err;
+		t_err = CreateTextToUnicodeInfo(&t_mapping, &t_info);
+		if (t_err != noErr)
+			t_info = NULL;
+		
+		UnicodeInfoRecord *t_record;
+		t_record = new UnicodeInfoRecord;
+		t_record -> next = s_records;
+		t_record -> encoding = p_encoding;
+		t_record -> info = t_info;
+		s_records = t_record;
+		
+		return t_record -> info;
+	}
+	
+	if (t_previous != NULL)
+	{
+		t_previous -> next = t_current -> next;
+		t_current -> next = s_records;
+		s_records = t_current;
+	}
+	
+	return s_records -> info;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
 void MCS_setfiletype(MCStringRef p_new_path)
 {
 	FSRef t_fsref;
@@ -929,6 +1079,7 @@ extern "C"
 }
 
 static void configureSerialPort(int sRefNum);
+static bool getResourceInfo(MCListRef p_list, ResType p_type);
 static void parseSerialControlStr(char *set, struct termios *theTermios);
 
 
@@ -984,7 +1135,7 @@ void MCS_nativetoutf8(const char *s, uint4 len, char *d, uint4 &destlen)
 ///////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
-extern char *path2utf(const char *);
+extern char *path2utf(char *);
 
 static void handle_signal(int sig)
 {
@@ -1048,12 +1199,23 @@ static void handle_signal(int sig)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// MW-2005-08-15: We have two types of process starting in MacOS X it seems:
+//   MCS_startprocess is called by MCLaunch with a docname
+//   MCS_startprocess is called by MCOpen without a docname
+// Thus, we will fork two methods - and dispatch from MCS_startprocess
 void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
+void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 static Boolean hasPPCToolbox = False;
 static Boolean hasAppleEvents = False;
+
+///////////////////////////////////////////////////////////////////////////////
+
+// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
+//   to access it.
+real8 curtime;
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1077,6 +1239,105 @@ bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
     
 	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+// Resource utility functions
+
+static bool getResourceInfo(MCListRef p_list, ResType searchType)
+{ /* get info of resources of a resource type and build a list of
+   * <resName>, <resID>, <resType>, <resSize> on each line */
+	Handle rh;
+	short rid;
+	ResType rtype;
+	Str255 rname;  //Pascal string
+	char cstr[256];  //C string
+	char typetmp[5]; //buffer for storing type string in c format
+	short total = Count1Resources(searchType);
+	if (ResError() != noErr)
+	{
+		errno = ResError();
+		return false;
+	}
+	char buffer[4 + U2L + 255 + U4L + 6];
+	for (uindex_t i = 1 ; i <= total ; i++)
+	{
+		if ((rh = Get1IndResource(searchType, i)) == NULL)
+			continue;
+		GetResInfo(rh, &rid, &rtype, rname);
+		p2cstrcpy(cstr, rname); //convert to C string
+		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+		rtype = (ResType)MCSwapInt32NetworkToHost(rtype);
+		memcpy(typetmp, (char*)&rtype, 4);
+		typetmp[4] = '\0';
+		//format res info into "type, id, name, size, attributes" string --
+		short flags = GetResAttrs(rh);
+		char fstring[7];
+		char *sptr = fstring;
+		if (flags & resSysHeap)
+			*sptr++ = 'S';
+		if (flags & resPurgeable)
+			*sptr++ = 'U';
+		if (flags & resLocked)
+			*sptr++ = 'L';
+		if (flags & resProtected)
+			*sptr++ = 'P';
+		if (flags & resPreload)
+			*sptr++ = 'R';
+		if (flags & resChanged)
+			*sptr++ = 'C';
+		*sptr = '\0';
+		
+		MCAutoStringRef t_string;
+		if (!MCStringFormat(&t_string, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
+                            GetMaxResourceSize(rh), fstring))
+			return false;
+		if (!MCListAppend(p_list, *t_string))
+			return false;
+	}
+	
+	return true;
+}
+
+/********************************************************************/
+/*                       Resource Handling                          */
+/********************************************************************/
+
+class MCAutoResourceFileHandle
+{
+public:
+	MCAutoResourceFileHandle()
+	{
+		m_res_file = 0;
+	}
+	
+	~MCAutoResourceFileHandle()
+	{
+		if (m_res_file != 0)
+			MCS_closeresourcefile(m_res_file);
+	}
+	
+	short operator = (short p_res_file)
+	{
+		MCAssert(m_res_file == 0);
+		m_res_file = p_res_file;
+		return m_res_file;
+	}
+	
+	short operator * (void)
+	{
+		return m_res_file;
+	}
+	
+	short& operator & (void)
+	{
+		MCAssert(m_res_file == 0);
+		return m_res_file;
+	}
+	
+private:
+	short m_res_file;
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1432,7 +1693,7 @@ public:
                     stat = IO_ERROR;
             if ((uint4)count < p_size * r_count)
                 stat = IO_EOF;
-            r_count = toread / p_size;
+            r_count = sint_toread / p_size;
         }
         else
         {
@@ -1653,7 +1914,7 @@ public:
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
     {
-        
+        return false;
     }
     
 	short m_serialIn;  //serial port Input reference number
@@ -1663,6 +1924,1355 @@ public:
 	
 private:
 	FILE *m_stream;
+};
+
+struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDesktop
+{
+    virtual bool SetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name, MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
+    {
+#ifdef /* MCS_setresource */ LEGACY_SYSTEM
+        short newflags = 0; // parse up the attributes
+        if (strlen(attrib) != 0)
+        {
+            const char *sptr = attrib;
+            do
+            {
+                switch (*sptr++)
+                {
+                    case 'S':
+                    case 's':
+                        newflags |= resSysHeap;
+                        break;
+                    case 'U':
+                    case 'u':
+                        newflags |= resPurgeable;
+                        break;
+                    case 'L':
+                    case 'l':
+                        newflags |= resLocked;
+                        break;
+                    case 'P':
+                    case 'p':
+                        newflags |= resProtected;
+                        break;
+                    case 'R':
+                    case 'r':
+                        newflags |= resPreload;
+                        break;
+                    case 'C':
+                    case 'c':
+                        newflags |= resChanged;
+                        break;
+                }
+            }
+            while (*sptr);
+        }
+        else
+            newflags |= resChanged;
+        
+        ResType rtype;
+        memcpy((char *)&rtype, type, 4);
+        // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+        rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+        short rid = 0;
+        if (strlen(id) != 0)
+        {
+            const char *eptr;
+            rid = (short)strtol(id, (char **)&eptr, 10);
+        }
+        short resFileRefNum; //open resource fork for read and write permission
+        const char *t_open_res_error;
+        t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &resFileRefNum); // RESFILE
+        if (t_open_res_error != NULL)
+        {
+            MCresult -> sets(t_open_res_error);
+            return;
+        }
+        
+        Handle rh = NULL;
+        if (rid != 0)
+            rh = Get1Resource(rtype, rid);
+        else
+        {
+            char *whichres = strclone(name);
+            unsigned char *rname = c2pstr(whichres); //resource name in Pascal
+            rh = Get1NamedResource(rtype, rname);
+            delete whichres;
+        }
+        
+        Str255 newname;
+        strcpy((char *)newname, name);
+        c2pstr((char *)newname);
+        if (rh != NULL)
+        {
+            SInt16 tid;
+            ResType ttype;
+            Str255 tname;
+            GetResInfo(rh, &tid, &ttype, tname);
+            if (strlen(name) == 0)
+                pStrcpy(newname, tname);
+            else
+                if (strlen(id) == 0)
+                    rid = tid;
+            if (strlen(attrib) == 0)
+                newflags = GetResAttrs(rh) | resChanged;
+            SetResAttrs(rh, 0); // override protect flag
+            RemoveResource(rh);
+            DisposeHandle(rh);
+        }
+        if (rid == 0)
+            rid = UniqueID(rtype);
+        
+        uint4 len = s.getlength();
+        rh = NewHandle(len);
+        
+        if (rh == NULL)
+            MCresult->sets("can't create resource handle");
+        else
+        {
+            memcpy(*rh, s.getstring(), len);
+            AddResource(rh, rtype, rid, newname);
+            if ((errno = ResError()) != noErr)
+            {
+                DisposeHandle(rh);
+                MCresult->sets("can't add resource");
+            }
+            else
+                SetResAttrs(rh, newflags);
+        }
+        MCS_closeresourcefile(resFileRefNum);
+#endif /* MCS_setresource */
+        short newflags = 0; // parse up the attributes
+        if (MCStringGetLength(p_flags) != 0)
+        {
+            const char *sptr = MCStringGetCString(p_flags);
+            do
+            {
+                switch (*sptr++)
+                {
+                    case 'S':
+                    case 's':
+                        newflags |= resSysHeap;
+                        break;
+                    case 'U':
+                    case 'u':
+                        newflags |= resPurgeable;
+                        break;
+                    case 'L':
+                    case 'l':
+                        newflags |= resLocked;
+                        break;
+                    case 'P':
+                    case 'p':
+                        newflags |= resProtected;
+                        break;
+                    case 'R':
+                    case 'r':
+                        newflags |= resPreload;
+                        break;
+                    case 'C':
+                    case 'c':
+                        newflags |= resChanged;
+                        break;
+                }
+            }
+            while (*sptr);
+        }
+        else
+            newflags |= resChanged;
+        
+        ResType rtype;
+        memcpy((char *)&rtype, MCStringGetCString(p_type), 4);
+        // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+        rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+        short rid = 0;
+        if (MCStringGetLength(p_id) != 0)
+        {
+            const char *eptr;
+            rid = (short)strtol(MCStringGetCString(p_id), (char **)&eptr, 10);
+        }
+        SInt16 resFileRefNum; //open resource fork for read and write permission
+        if (!MCS_openresourcefile_with_path(p_source, fsRdWrPerm, true, resFileRefNum, r_error))
+        {
+            return MCresult -> setvalueref(r_error);
+        }
+        
+        
+        Handle rh = NULL;
+        if (rid != 0)
+            rh = Get1Resource(rtype, rid);
+        else
+        {
+            char *whichres = strclone(MCStringGetCString(p_name));
+            unsigned char *rname = c2pstr(whichres); //resource name in Pascal
+            rh = Get1NamedResource(rtype, rname);
+            delete whichres;
+        }
+        
+        Str255 newname;
+        strcpy((char *)newname, MCStringGetCString(p_name));
+        c2pstr((char *)newname);
+        if (rh != NULL)
+        {
+            SInt16 tid;
+            ResType ttype;
+            Str255 tname;
+            GetResInfo(rh, &tid, &ttype, tname);
+            if (MCStringGetLength(p_name) == 0)
+                pStrcpy(newname, tname);
+            else
+                if (MCStringGetLength(p_id) == 0)
+                    rid = tid;
+            if (MCStringGetLength(p_flags) == 0)
+                newflags = GetResAttrs(rh) | resChanged;
+            SetResAttrs(rh, 0); // override protect flag
+            RemoveResource(rh);
+            DisposeHandle(rh);
+        }
+        if (rid == 0)
+            rid = UniqueID(rtype);
+        
+        uint4 len = MCStringGetLength(p_value);
+        
+        rh = NewHandle(len);
+        if (rh == NULL)
+        {
+            MCresult -> sets("can't create resource handle");
+        }
+        else
+        {
+            memcpy(*rh, MCStringGetCString(p_value), len);
+            AddResource(rh, rtype, rid, newname);
+            if ((errno = ResError()) != noErr)
+            {
+                DisposeHandle(rh);
+                MCresult -> sets("can't add resource");
+            }
+            else
+                SetResAttrs(rh, newflags);
+        }
+        MCS_closeresourcefile(resFileRefNum);
+        
+        if (!MCresult -> isclear())
+        {
+            return MCStringCopy((MCStringRef)MCresult -> getvalueref(), r_error);
+        }
+        
+        return true;
+    }
+    
+    virtual bool GetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
+    {
+#ifdef /* MCS_getresource */ LEGACY_SYSTEM
+	short resFileRefNum;
+	const char *t_open_res_error;
+	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdPerm, true, &resFileRefNum); // RESFILE
+	if (t_open_res_error != NULL)
+	{	
+		MCresult -> sets(t_open_res_error);
+		return;
+	}
+
+	ResType rtype;
+	memcpy((char *)&rtype, restype, 4);
+	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+	rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+
+	/* test to see if "name" is a resource name or an id */
+	char *whichres = strclone(name);
+	const char *eptr = (char *)name;
+	long rid = strtol(whichres, (char **)&eptr, 10);
+
+	unsigned char *rname;
+	Handle rh = NULL; //resource handle
+	if (eptr == whichres)
+	{  /* conversion failed, so 'name' is resource name*/
+		rname = c2pstr((char *)whichres); //resource name in Pascal
+		rh = Get1NamedResource(rtype, rname);
+	}
+	else //we got an resrouce id, the 'name' specifies an resource id
+		rh = Get1Resource(rtype, rid);
+	delete whichres;
+
+	if (rh == NULL)
+	{
+		errno = ResError();
+		MCresult->sets("can't find specified resource");
+		MCS_closeresourcefile(resFileRefNum);
+		return;
+	}
+	//getting the the resource's size throuth the resource handle
+	int4 resLength = GetHandleSize(rh);
+	if (resLength <= 0)
+	{
+		MCresult->sets("can't get resouce length.");
+		MCS_closeresourcefile(resFileRefNum);
+		return;
+	}
+	// store the resource into ep and return
+	ep.copysvalue((const char *)*rh, resLength);
+	MCresult->clear();
+	MCS_closeresourcefile(resFileRefNum);
+
+#endif /* MCS_getresource */
+        SInt16 resFileRefNum;
+        Handle rh = NULL; //resource handle
+        
+        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, resFileRefNum, r_error))
+        {
+            return MCresult -> setvalueref(r_error);
+        }
+        
+        ResType rtype;
+        memcpy((char *)&rtype, MCStringGetCString(p_type), 4);
+        // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+        rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+        
+        /* test to see if "name" is a resource name or an id */
+        char *whichres = strclone(MCStringGetCString(p_name));
+        const char *eptr = MCStringGetCString(p_name);
+        long rid = strtol(whichres, (char **)&eptr, 10);
+        
+        if (eptr == whichres)
+        {  /* conversion failed, so 'name' is resource name*/
+            unsigned char *rname;
+            rname = c2pstr((char *)whichres); //resource name in Pascal
+            rh = Get1NamedResource(rtype, rname);
+        }
+        else //we got an resrouce id, the 'name' specifies an resource id
+            rh = Get1Resource(rtype, rid);
+        delete[] whichres;
+        
+        if (rh == NULL)
+        {
+            errno = ResError();
+            MCS_closeresourcefile(resFileRefNum);
+            MCresult -> sets("can't find specified resource");
+        }
+        
+        bool t_success = true;
+        if (MCresult -> isclear())
+        {
+            //getting the the resource's size throuth the resource handle
+            int4 resLength = GetHandleSize(rh);
+            if (resLength <= 0)
+            {
+                MCresult -> sets("can't get resouce length.");
+            }
+            else
+                t_success = MCStringCreateWithNativeChars((char_t*)(*rh), resLength, r_value);
+            
+            MCS_closeresourcefile(resFileRefNum);
+        }
+        
+        if (!MCresult -> isclear())
+        {
+            return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+        }
+        
+        return t_success;
+    }
+    
+    virtual bool GetResources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
+    {
+#ifdef /* MCS_getresources */ LEGACY_SYSTEM
+    /* get resources from the resource fork of file 'path',
+	   * if resource type is not empty, only resources of the specified type
+	   * are listed. otherwise lists all resources from the
+	   * resource fork.					    */
+
+	MCAutoResourceFileHandle resFileRefNum;
+	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
+		return false;
+	if (r_error != nil)
+		return true;
+	
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	SetResLoad(False);
+	//since most recently opened file is place on the top of the search
+	//path, no need to call UseResFile() to set this resource file as
+	//the current file
+	
+	bool t_success = true;
+	errno = noErr;
+	
+	ResType rtype, type;
+	if (p_type != nil)
+	{ //get the resource info specified by the resource type
+		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+		rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+		t_success = getResourceInfo(*t_list, rtype);
+	}
+	else
+	{               //rtype is NULL, return All the resources
+		short typeCount = Count1Types(); //find out how many resource type there is
+		if (ResError() != noErr)
+		{
+			errno = ResError();
+			t_success = false;
+		}
+		for (uindex_t i = 1; t_success && i <= typeCount; i++)
+		{
+			Get1IndType(&type, i);
+			if (ResError() != noErr || type == 0)
+				continue;
+			t_success = getResourceInfo(*t_list, type);
+		}
+	}
+	SetResLoad(True);
+	
+	if (t_success)
+	{
+		return MCListCopy(*t_list, r_resources);
+	}
+	else if (errno != noErr)
+	{
+		r_resources = MCValueRetain(kMCEmptyList);
+		r_error = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return false;
+#endif /* MCS_getresources */
+        /* get resources from the resource fork of file 'path',
+         * if resource type is not empty, only resources of the specified type
+         * are listed. otherwise lists all resources from the
+         * resource fork.					    */
+        
+        MCAutoResourceFileHandle resFileRefNum;
+        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
+            return false;
+        if (r_error != nil)
+            return true;
+        
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return false;
+        
+        SetResLoad(False);
+        //since most recently opened file is place on the top of the search
+        //path, no need to call UseResFile() to set this resource file as
+        //the current file
+        
+        bool t_success = true;
+        errno = noErr;
+        
+        ResType rtype, type;
+        if (p_type != nil)
+        { //get the resource info specified by the resource type
+            // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+            rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+            t_success = getResourceInfo(*t_list, rtype);
+        }
+        else
+        {               //rtype is NULL, return All the resources
+            short typeCount = Count1Types(); //find out how many resource type there is
+            if (ResError() != noErr)
+            {
+                errno = ResError();
+                t_success = false;
+            }
+            for (uindex_t i = 1; t_success && i <= typeCount; i++)
+            {
+                Get1IndType(&type, i);
+                if (ResError() != noErr || type == 0)
+                    continue;
+                t_success = getResourceInfo(*t_list, type);
+            }
+        }
+        SetResLoad(True);
+        
+        if (t_success)
+        {
+            return MCListCopy(*t_list, r_list);
+        }
+        else if (errno != noErr)
+        {
+            r_list = MCValueRetain(kMCEmptyList);
+            r_error = MCValueRetain(kMCEmptyString);
+            return true;
+        }
+        
+        return false;
+    }
+    
+    
+    /*************************************************************************
+     * 'which' param can be an id or a name of a resource. If the dest       *
+     * file does not have a  resource fork we will create one for it         *
+     *************************************************************************/
+    virtual bool CopyResource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type, MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
+    {
+#ifdef /* MCS_copyresource */ LEGACY_SYSTEM
+	short prev_res_file = CurResFile(); //save the current resource fork
+	MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
+	
+	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
+		return false;
+	if (r_error != nil)
+		return true;
+		
+	// exclusive read/write permission for the dest file
+	// and do not set result if there is error
+	if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
+		return false;
+	if (r_error != nil)
+		return true;
+	
+	UseResFile(*destFileRefNum);
+	
+	if (MCStringGetLength(p_type) != 4)
+	{ 
+		//copying the entire resource file
+		short resTypeCount = Count1Types();
+		short resCount;
+		ResType resourceType;
+		Handle hres;
+		for (uindex_t i = 1; i <= resTypeCount; i++)
+		{
+			UseResFile(*srcFileRefNum);
+			Get1IndType(&resourceType, i);
+			resCount = Count1Resources(resourceType);
+			Str255 rname;
+			short id;
+			ResType type;
+			for (uindex_t j = 1; j <= resCount; j++)
+			{
+				UseResFile(*srcFileRefNum);
+				hres = Get1IndResource(resourceType, j);
+				if (hres != NULL)
+				{
+					GetResInfo(hres, &id, &type, rname);
+					DetachResource(hres);
+					UseResFile(*destFileRefNum);
+					AddResource(hres, type, id, rname);
+				}
+			}	//loop through each res within each res type
+		} //loop through each res type
+		
+		UseResFile(prev_res_file); //restore the original state
+		return true;
+	}
+	
+	//copy only one resource, specified either by id or name
+	UseResFile(*srcFileRefNum); //set the source resource file as the current file
+	
+	ResType restype;
+	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+	restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+
+	Str255 t_resname;
+	
+	const char *whichres = MCStringGetCString(p_name);
+	const char *eptr = whichres;    /* find out whichres is a name or an id */
+	
+	long rid = strtol(whichres, (char **)&eptr, 10); // if can't convert, then the value
+	// passed in is a resource name
+	Boolean hasResName = False;
+	Handle rh = NULL;
+	
+	if (eptr == whichres)
+	{  /*did not do the conversion, use resource name */
+		c2pstrcpy(t_resname, MCStringGetCString(p_name));
+		rh = Get1NamedResource(restype, t_resname);
+		hasResName = True;
+	}
+	else //we got an resource id
+		rh = Get1Resource(restype, rid);
+	if (rh == NULL || *rh == 0)
+	{//bail out if resource handle is bad
+		errno = ResError();
+		
+		UseResFile(prev_res_file); //restore to the original state
+		return MCStringCreateWithCString("can't find the resource specified", r_error);
+	}
+	
+	unsigned char resourceName[255];
+	short srcID;        //let's get it's resource name.
+	ResType srcType;
+	if (!hasResName) //No name specified for the resource to be copied
+		GetResInfo(rh, &srcID, &srcType, resourceName);
+	
+	//detach the src res file, and select the dest res file
+	DetachResource(rh);
+	UseResFile(*destFileRefNum);
+	unsigned long newResID;
+	if (p_newid == NULL)
+		newResID = srcID; //use the resource id of the src file's resource
+	else
+		newResID = strtoul(MCStringGetCString(p_newid), (char **)&eptr, 10); //use the id passed in
+	
+	//delete the resource by id to be copied in the destination file, if it existed
+	Handle rhandle = Get1Resource(restype, newResID);
+	if (rhandle != NULL && ResError() != resNotFound)
+		RemoveResource(rhandle);
+	
+	//now, let's copy the resource to the dest file
+	if (!hasResName)
+		AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
+	else
+		AddResource(rh, restype, (short)newResID, t_resname);
+	//errno = ResError();//if errno == 0 means O.K.
+	OSErr t_os_error = ResError();
+	
+	UseResFile(prev_res_file); //restore to the original state
+	
+	return true;
+#endif /* MCS_copyresource */
+        short prev_res_file = CurResFile(); //save the current resource fork
+        MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
+        
+        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
+            return false;
+        if (r_error != nil)
+            return true;
+		
+        // exclusive read/write permission for the dest file
+        // and do not set result if there is error
+        if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
+            return false;
+        if (r_error != nil)
+            return true;
+        
+        UseResFile(*destFileRefNum);
+        
+        if (MCStringGetLength(p_type) != 4)
+        {
+            //copying the entire resource file
+            short resTypeCount = Count1Types();
+            short resCount;
+            ResType resourceType;
+            Handle hres;
+            for (uindex_t i = 1; i <= resTypeCount; i++)
+            {
+                UseResFile(*srcFileRefNum);
+                Get1IndType(&resourceType, i);
+                resCount = Count1Resources(resourceType);
+                Str255 rname;
+                short id;
+                ResType type;
+                for (uindex_t j = 1; j <= resCount; j++)
+                {
+                    UseResFile(*srcFileRefNum);
+                    hres = Get1IndResource(resourceType, j);
+                    if (hres != NULL)
+                    {
+                        GetResInfo(hres, &id, &type, rname);
+                        DetachResource(hres);
+                        UseResFile(*destFileRefNum);
+                        AddResource(hres, type, id, rname);
+                    }
+                }	//loop through each res within each res type
+            } //loop through each res type
+            
+            UseResFile(prev_res_file); //restore the original state
+            return true;
+        }
+        
+        //copy only one resource, specified either by id or name
+        UseResFile(*srcFileRefNum); //set the source resource file as the current file
+        
+        ResType restype;
+        // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+        restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+        
+        Str255 t_resname;
+        
+        const char *whichres = MCStringGetCString(p_name);
+        const char *eptr = whichres;    /* find out whichres is a name or an id */
+        
+        long rid = strtol(whichres, (char **)&eptr, 10); // if can't convert, then the value
+        // passed in is a resource name
+        Boolean hasResName = False;
+        Handle rh = NULL;
+        
+        if (eptr == whichres)
+        {  /*did not do the conversion, use resource name */
+            c2pstrcpy(t_resname, MCStringGetCString(p_name));
+            rh = Get1NamedResource(restype, t_resname);
+            hasResName = True;
+        }
+        else //we got an resource id
+            rh = Get1Resource(restype, rid);
+        if (rh == NULL || *rh == 0)
+        {//bail out if resource handle is bad
+            errno = ResError();
+            
+            UseResFile(prev_res_file); //restore to the original state
+            return MCStringCreateWithCString("can't find the resource specified", r_error);
+        }
+        
+        unsigned char resourceName[255];
+        short srcID;        //let's get it's resource name.
+        ResType srcType;
+        if (!hasResName) //No name specified for the resource to be copied
+            GetResInfo(rh, &srcID, &srcType, resourceName);
+        
+        //detach the src res file, and select the dest res file
+        DetachResource(rh);
+        UseResFile(*destFileRefNum);
+        unsigned long newResID;
+        if (p_newid == NULL)
+            newResID = srcID; //use the resource id of the src file's resource
+        else
+            newResID = strtoul(MCStringGetCString(p_newid), (char **)&eptr, 10); //use the id passed in
+        
+        //delete the resource by id to be copied in the destination file, if it existed
+        Handle rhandle = Get1Resource(restype, newResID);
+        if (rhandle != NULL && ResError() != resNotFound)
+            RemoveResource(rhandle);
+        
+        //now, let's copy the resource to the dest file
+        if (!hasResName)
+            AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
+        else
+            AddResource(rh, restype, (short)newResID, t_resname);
+        //errno = ResError();//if errno == 0 means O.K.
+        OSErr t_os_error = ResError();
+        
+        UseResFile(prev_res_file); //restore to the original state
+        
+        return true;
+    }
+    
+    virtual bool DeleteResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
+    {
+#ifdef /* MCS_deleteresource */ LEGACY_SYSTEM
+	ResType restype;
+	short rfRefNum;
+	memcpy((char *)&restype, rtype, 4); /* let's get the resource type first */
+	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+	restype = (ResType)MCSwapInt32HostToNetwork(restype);
+
+	const char *t_open_res_error;
+	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &rfRefNum); // RESFILE
+	if (t_open_res_error != NULL)
+	{
+		MCresult -> sets(t_open_res_error);
+		return;
+	}
+
+	Handle rh = NULL;
+	const char *eptr = (char *)which;     /* find out if we got a name or an id */
+	long rid = strtol(which, (char **)&eptr, 10);
+	if (eptr == which)
+	{     /* did not do conversion, so use resource name */
+		unsigned char *pname = c2pstr((char *)which);
+		rh = Get1NamedResource(restype, pname);
+	}
+	else                  /* 'which' param is an resrouce id */
+		rh = Get1Resource(restype, rid);
+	if (rh == NULL)
+		MCresult->sets("can't find the resource specified");
+	else
+	{
+		SetResAttrs(rh, 0); // override protect flag
+		RemoveResource(rh);
+		if ((errno = ResError()) != noErr)
+			MCresult->sets("can't remove the resource specified");
+		DisposeHandle(rh);
+	}
+	
+	MCS_closeresourcefile(rfRefNum);
+#endif /* MCS_deleteresource */
+        ResType restype;
+        short rfRefNum;
+        memcpy((char *)&restype, MCStringGetCString(p_type), 4); /* let's get the resource type first */
+        // MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+        restype = (ResType)MCSwapInt32HostToNetwork(restype);
+        
+        MCAutoStringRef t_error;
+        if (!MCS_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
+        {
+            return MCresult -> setvalueref(*t_error);
+        }
+        
+        Handle rh = NULL;
+        const char *eptr = MCStringGetCString(p_name);     /* find out if we got a name or an id */
+        long rid = strtol(MCStringGetCString(p_name), (char **)&eptr, 10);
+        if (eptr == MCStringGetCString(p_name))
+        {     /* did not do conversion, so use resource name */
+            char* tname = strclone(MCStringGetCString(p_name));
+            unsigned char *pname = c2pstr(tname);
+            rh = Get1NamedResource(restype, pname);
+            delete[] tname;
+        }
+        else                  /* 'which' param is an resrouce id */
+            rh = Get1Resource(restype, rid);
+        if (rh == NULL)
+            MCresult->sets("can't find the resource specified");
+        else
+        {
+            SetResAttrs(rh, 0); // override protect flag
+            RemoveResource(rh);
+            if ((errno = ResError()) != noErr)
+                MCresult->sets("can't remove the resource specified");
+            DisposeHandle(rh);
+        }
+        
+        MCS_closeresourcefile(rfRefNum);
+        if (MCresult->isclear())
+            return true;
+        
+        MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+        
+        return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+    }
+    
+    virtual void CopyResourceFork(MCStringRef p_source, MCStringRef p_destination)
+    {
+#ifdef /* MCS_copyresourcefork */ LEGACY_SYSTEM
+	MCAutoStringRef t_error;
+	
+	SInt16 t_source_ref;
+	bool t_source_fork_opened;
+	t_source_fork_opened = false;
+
+	MCS_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
+    if (MCStringGetLength(*t_error) == 0)
+		t_source_fork_opened = true;
+	
+	SInt16 t_dest_ref;
+	bool t_dest_fork_opened;
+	t_dest_fork_opened = false;
+
+	if (t_source_fork_opened)
+    {
+        MCS_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
+        if (MCStringGetLength(*t_error))
+            t_dest_fork_opened = true;
+    }
+
+	// In block sizes of 1k, copy over the data from source to destination..
+	char *t_buffer = new char[65536];
+	if (t_source_fork_opened && t_dest_fork_opened)
+	{
+		OSErr t_os_read_error, t_os_write_error;
+		do {
+			ByteCount t_actual_read, t_actual_write;
+			t_os_read_error = FSReadFork(t_source_ref, fsFromMark, 0, 65536, t_buffer, &t_actual_read);
+			if (t_os_read_error == noErr || t_os_read_error == eofErr)
+			{
+				t_os_write_error = FSWriteFork(t_dest_ref, fsFromMark, 0, t_actual_read, t_buffer, &t_actual_write);
+				if (t_os_write_error != noErr || t_actual_write != t_actual_read)
+					/* UNCHECKED */ MCStringCreateWithCString("can't copy resource", &t_error);
+			}
+		} while(MCStringGetLength(*t_error) && t_os_read_error == noErr);
+	}
+	
+	delete t_buffer;
+	if (t_source_fork_opened)
+		FSCloseFork(t_source_ref);
+	if (t_dest_fork_opened)
+		FSCloseFork(t_dest_ref);
+#endif /* MCS_copyresourcefork */
+        MCAutoStringRef t_error;
+        
+        SInt16 t_source_ref;
+        bool t_source_fork_opened;
+        t_source_fork_opened = false;
+        
+        MCS_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
+        if (MCStringGetLength(*t_error) == 0)
+            t_source_fork_opened = true;
+        
+        SInt16 t_dest_ref;
+        bool t_dest_fork_opened;
+        t_dest_fork_opened = false;
+        
+        if (t_source_fork_opened)
+        {
+            MCS_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
+            if (MCStringGetLength(*t_error))
+                t_dest_fork_opened = true;
+        }
+        
+        // In block sizes of 1k, copy over the data from source to destination..
+        char *t_buffer = new char[65536];
+        if (t_source_fork_opened && t_dest_fork_opened)
+        {
+            OSErr t_os_read_error, t_os_write_error;
+            do {
+                ByteCount t_actual_read, t_actual_write;
+                t_os_read_error = FSReadFork(t_source_ref, fsFromMark, 0, 65536, t_buffer, &t_actual_read);
+                if (t_os_read_error == noErr || t_os_read_error == eofErr)
+                {
+                    t_os_write_error = FSWriteFork(t_dest_ref, fsFromMark, 0, t_actual_read, t_buffer, &t_actual_write);
+                    if (t_os_write_error != noErr || t_actual_write != t_actual_read)
+					/* UNCHECKED */ MCStringCreateWithCString("can't copy resource", &t_error);
+                }
+            } while(MCStringGetLength(*t_error) && t_os_read_error == noErr);
+        }
+        
+        delete t_buffer;
+        if (t_source_fork_opened)
+            FSCloseFork(t_source_ref);
+        if (t_dest_fork_opened)
+            FSCloseFork(t_dest_ref);
+    }
+    
+    virtual void LoadResFile(MCStringRef p_filename, MCStringRef& r_data)
+    {
+#ifdef /* MCS_loadresfile */ LEGACY_SYSTEM
+	if (!MCSecureModeCanAccessDisk())
+	{
+		r_data = MCValueRetain(kMCEmptyString);
+		MCresult->sets("can't open file");
+		return;
+	}
+    
+	MCAutoStringRef t_open_res_error_string;
+
+	short fRefNum;
+	MCS_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+
+	const char *t_open_res_error = nil;
+	if (MCStringGetLength(*t_open_res_error_string) != 0)
+		t_open_res_error =  MCStringGetCString(*t_open_res_error_string);
+	
+	if (t_open_res_error != NULL)
+	{
+		MCresult -> sets(t_open_res_error);
+		
+		return;
+	}
+		
+	//file mark should be pointing to 0 which is the begining of the file
+	//let's get the end of file mark to determine the file size
+	long fsize, toread;
+	if ((errno = GetEOF(fRefNum, &fsize)) != noErr)
+		MCresult->sets("can't get file size");
+	else
+	{
+		toread = fsize;
+		char *buffer;
+		buffer = new char[fsize];
+		if (buffer == NULL)
+			MCresult->sets("can't create data buffer");
+		else
+		{
+			errno = FSRead(fRefNum, &toread, buffer);
+			if (toread != fsize) //did not read bytes as specified
+				MCresult->sets("error reading file");
+			else
+			{
+				/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+				MCresult->clear(False);
+			}
+		}
+	}
+	
+	FSCloseFork(fRefNum);
+
+#endif /* MCS_loadresfile */
+        if (!MCSecureModeCanAccessDisk())
+        {
+            r_data = MCValueRetain(kMCEmptyString);
+            MCresult->sets("can't open file");
+            return;
+        }
+        
+        MCAutoStringRef t_open_res_error_string;
+        
+        short fRefNum;
+        MCS_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+        
+        const char *t_open_res_error = nil;
+        if (MCStringGetLength(*t_open_res_error_string) != 0)
+            t_open_res_error =  MCStringGetCString(*t_open_res_error_string);
+        
+        if (t_open_res_error != NULL)
+        {
+            MCresult -> sets(t_open_res_error);
+            
+            return;
+        }
+		
+        //file mark should be pointing to 0 which is the begining of the file
+        //let's get the end of file mark to determine the file size
+        long fsize, toread;
+        if ((errno = GetEOF(fRefNum, &fsize)) != noErr)
+            MCresult->sets("can't get file size");
+        else
+        {
+            toread = fsize;
+            char *buffer;
+            buffer = new char[fsize];
+            if (buffer == NULL)
+                MCresult->sets("can't create data buffer");
+            else
+            {
+                errno = FSRead(fRefNum, &toread, buffer);
+                if (toread != fsize) //did not read bytes as specified
+                    MCresult->sets("error reading file");
+                else
+                {
+                    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+                    MCresult->clear(False);
+                }
+            }
+        }
+        
+        FSCloseFork(fRefNum);
+    }
+    
+    // MH-2007-04-02: [[ Bug 705 ]] resfile: URLs do not work with long filenames...
+    virtual void SaveResFile(MCStringRef p_path, MCDataRef p_data)
+    {
+#ifdef /* MCS_saveresfile */ LEGACY_SYSTEM
+	MCAutoStringRef t_error;
+
+	if (!MCSecureModeCanAccessDisk())
+		/* UNCHECKED */ MCStringCreateWithCString("can't open file", &t_error);
+	
+	SInt16 t_fork_ref;
+	bool t_fork_opened;
+	t_fork_opened = false;
+	
+	if (MCStringGetLength(*t_error) == 0)
+	{
+		MCS_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
+		if (MCStringGetLength(*t_error))
+			t_fork_opened = true;
+	}
+	
+	if (MCStringGetLength(*t_error) == 0)
+	{
+		OSErr t_os_error;
+		ByteCount t_actual_count;
+		t_os_error = FSWriteFork(t_fork_ref, fsFromStart, 0, MCDataGetLength(p_data), (const void *)MCDataGetBytePtr(p_data), &t_actual_count);
+		if (t_os_error == noErr && t_actual_count == (ByteCount)MCDataGetLength(p_data))
+			FSSetForkSize(t_fork_ref, fsFromStart, t_actual_count);
+		else
+			/* UNCHECKED */ MCStringCreateWithCString("error writing file", &t_error);
+	}
+	
+	if (t_fork_opened)
+		FSCloseFork(t_fork_ref);
+	
+	if (MCStringGetLength(*t_error) != 0)
+		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
+	else
+		MCresult -> clear(False);
+#endif /* MCS_saveresfile */
+        MCAutoStringRef t_error;
+        
+        if (!MCSecureModeCanAccessDisk())
+		/* UNCHECKED */ MCStringCreateWithCString("can't open file", &t_error);
+        
+        SInt16 t_fork_ref;
+        bool t_fork_opened;
+        t_fork_opened = false;
+        
+        if (MCStringGetLength(*t_error) == 0)
+        {
+            MCS_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
+            if (MCStringGetLength(*t_error))
+                t_fork_opened = true;
+        }
+        
+        if (MCStringGetLength(*t_error) == 0)
+        {
+            OSErr t_os_error;
+            ByteCount t_actual_count;
+            t_os_error = FSWriteFork(t_fork_ref, fsFromStart, 0, MCDataGetLength(p_data), (const void *)MCDataGetBytePtr(p_data), &t_actual_count);
+            if (t_os_error == noErr && t_actual_count == (ByteCount)MCDataGetLength(p_data))
+                FSSetForkSize(t_fork_ref, fsFromStart, t_actual_count);
+            else
+			/* UNCHECKED */ MCStringCreateWithCString("error writing file", &t_error);
+        }
+        
+        if (t_fork_opened)
+            FSCloseFork(t_fork_ref);
+        
+        if (MCStringGetLength(*t_error) != 0)
+		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
+        else
+            MCresult -> clear(False);
+    }
+    
+    // MW-2006-08-05: Vetted for Endian issues
+    virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply)
+    {
+#ifdef /* MCS_send */ LEGACY_SYSTEM
+    //send "" to program "" with/without reply
+	if (!MCSecureModeCheckAppleScript())
+		return;
+    
+    
+	AEAddressDesc receiver;
+	errno = getDescFromAddress(program, &receiver);
+	if (errno != noErr)
+	{
+		AEDisposeDesc(&receiver);
+		MCresult->sets("no such program");
+		return;
+	}
+	AppleEvent ae;
+	if (eventtype == NULL)
+		MCStringCreateWithCString("miscdosc", eventtype);
+    
+	AEEventClass ac;
+	AEEventID aid;
+	
+	ac = FourCharCodeFromString(MCStringGetCString(eventtype));
+	aid = FourCharCodeFromString(&MCStringGetCString(eventtype)[4]);
+	
+	AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+	                   kAnyTransactionID, &ae);
+	AEDisposeDesc(&receiver); //dispose of the receiver description record
+	// if the ae message we are sending is 'odoc', 'pdoc' then
+	// create a document descriptor of type fypeFSS for the document
+	
+	Boolean docmessage = False; //Is this message contains a document descriptor?
+	AEDescList files_list, file_desc;
+	AliasHandle the_alias;
+    
+	if (aid == 'odoc' || aid == 'pdoc')
+	{
+		FSSpec fspec;
+		FSRef t_fsref;
+		
+		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+		{
+			AECreateList(NULL, 0, false, &files_list);
+			NewAlias(NULL, &fspec, &the_alias);
+			HLock((Handle)the_alias);
+			AECreateDesc(typeAlias, (Ptr)(*the_alias),
+			             GetHandleSize((Handle)the_alias), &file_desc);
+			HUnlock((Handle) the_alias);
+			AEPutDesc(&files_list, 0, &file_desc);
+			AEPutParamDesc(&ae, keyDirectObject, &files_list);
+			docmessage = True;
+		}
+	}
+	//non document related massge, assume it's typeChar message
+	if (!docmessage && MCStringGetLength(message))
+		AEPutParamPtr(&ae, keyDirectObject, typeChar,
+		              MCStringGetCString(message), MCStringGetLength(message));
+    
+	//Send the Apple event
+	AppleEvent answer;
+	if (reply == True)
+		errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //no reply
+	else
+		errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+		               kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+	if (docmessage)
+	{
+		DisposeHandle((Handle)the_alias);
+		AEDisposeDesc(&file_desc);
+		AEDisposeDesc(&files_list);
+		AEDisposeDesc(&file_desc);
+	}
+	AEDisposeDesc(&ae);
+	if (errno != noErr)
+	{
+		char *buffer = new char[6 + I2L];
+		sprintf(buffer, "error %d", errno);
+		MCresult->copysvalue(buffer);
+		delete buffer;
+		return;
+	}
+	if (reply == True)
+	{ /* wait for a reply in a loop.  The reply comes in
+       from regular event handling loop
+       and is handled by an Apple event handler*/
+		real8 endtime = curtime + AETIMEOUT;
+		while (True)
+		{
+			if (MCscreen->wait(READ_INTERVAL, False, True))
+			{
+				MCresult->sets("user interrupt");
+				return;
+			}
+			if (curtime > endtime)
+			{
+				MCresult->sets("timeout");
+				return;
+			}
+			if (AEanswerErr != NULL || AEanswerData != NULL)
+				break;
+		}
+		if (AEanswerErr != NULL)
+		{
+			MCresult->copysvalue(AEanswerErr);
+			delete AEanswerErr;
+			AEanswerErr = NULL;
+		}
+		else
+		{
+			MCresult->copysvalue(AEanswerData);
+			delete AEanswerData;
+			AEanswerData = NULL;
+		}
+		AEDisposeDesc(&answer);
+	}
+	else
+		MCresult->clear(False);
+#endif /* MCS_send */
+        //send "" to program "" with/without reply
+        if (!MCSecureModeCheckAppleScript())
+            return;
+        
+        
+        AEAddressDesc receiver;
+        errno = getDescFromAddress(p_program, &receiver);
+        if (errno != noErr)
+        {
+            AEDisposeDesc(&receiver);
+            MCresult->sets("no such program");
+            return;
+        }
+        AppleEvent ae;
+        if (p_eventtype == NULL)
+            MCStringCreateWithCString("miscdosc", p_eventtype);
+        
+        AEEventClass ac;
+        AEEventID aid;
+        
+        ac = FourCharCodeFromString(MCStringGetCString(p_eventtype));
+        aid = FourCharCodeFromString(&MCStringGetCString(p_eventtype)[4]);
+        
+        AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
+                           kAnyTransactionID, &ae);
+        AEDisposeDesc(&receiver); //dispose of the receiver description record
+        // if the ae message we are sending is 'odoc', 'pdoc' then
+        // create a document descriptor of type fypeFSS for the document
+        
+        Boolean docmessage = False; //Is this message contains a document descriptor?
+        AEDescList files_list, file_desc;
+        AliasHandle the_alias;
+        
+        if (aid == 'odoc' || aid == 'pdoc')
+        {
+            FSSpec fspec;
+            FSRef t_fsref;
+            
+            if (MCS_pathtoref(p_message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+            {
+                AECreateList(NULL, 0, false, &files_list);
+                NewAlias(NULL, &fspec, &the_alias);
+                HLock((Handle)the_alias);
+                AECreateDesc(typeAlias, (Ptr)(*the_alias),
+                             GetHandleSize((Handle)the_alias), &file_desc);
+                HUnlock((Handle) the_alias);
+                AEPutDesc(&files_list, 0, &file_desc);
+                AEPutParamDesc(&ae, keyDirectObject, &files_list);
+                docmessage = True;
+            }
+        }
+        //non document related massge, assume it's typeChar message
+        if (!docmessage && MCStringGetLength(p_message))
+            AEPutParamPtr(&ae, keyDirectObject, typeChar,
+                          MCStringGetCString(p_message), MCStringGetLength(p_message));
+        
+        //Send the Apple event
+        AppleEvent answer;
+        if (p_reply == True)
+            errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                           kAEDefaultTimeout, NULL, NULL); //no reply
+        else
+            errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
+                           kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
+        if (docmessage)
+        {
+            DisposeHandle((Handle)the_alias);
+            AEDisposeDesc(&file_desc);
+            AEDisposeDesc(&files_list);
+            AEDisposeDesc(&file_desc);
+        }
+        AEDisposeDesc(&ae);
+        if (errno != noErr)
+        {
+            char *buffer = new char[6 + I2L];
+            sprintf(buffer, "error %d", errno);
+            MCresult->copysvalue(buffer);
+            delete buffer;
+            return;
+        }
+        if (p_reply == True)
+        { /* wait for a reply in a loop.  The reply comes in
+           from regular event handling loop
+           and is handled by an Apple event handler*/
+            real8 endtime = curtime + AETIMEOUT;
+            while (True)
+            {
+                if (MCscreen->wait(READ_INTERVAL, False, True))
+                {
+                    MCresult->sets("user interrupt");
+                    return;
+                }
+                if (curtime > endtime)
+                {
+                    MCresult->sets("timeout");
+                    return;
+                }
+                if (AEanswerErr != NULL || AEanswerData != NULL)
+                    break;
+            }
+            if (AEanswerErr != NULL)
+            {
+                MCresult->copysvalue(AEanswerErr);
+                delete AEanswerErr;
+                AEanswerErr = NULL;
+            }
+            else
+            {
+                MCresult->copysvalue(AEanswerData);
+                delete AEanswerData;
+                AEanswerData = NULL;
+            }
+            AEDisposeDesc(&answer);
+        }
+        else
+            MCresult->clear(False);
+    }
+    
+    // MW-2006-08-05: Vetted for Endian issues
+    virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
+    {
+#ifdef /* MCS_reply_dsk_mac */ LEGACY_SYSTEM
+	delete replymessage;
+	replylength = message.getlength();
+	replymessage = new char[replylength];
+	memcpy(replymessage, message.getstring(), replylength);
+    
+	//at any one time only either keyword or error is set
+	if (keyword != NULL)
+	{
+		replykeyword = FourCharCodeFromString(keyword);
+	}
+	else
+	{
+		if (error)
+			replykeyword = 'errs';
+		else
+			replykeyword = '----';
+	}
+#endif /* MCS_reply_dsk_mac */
+        delete replymessage;
+        replylength = MCStringGetLength(p_message);
+        replymessage = new char[replylength];
+        memcpy(replymessage, MCStringGetCString(p_message), replylength);
+        
+        //at any one time only either keyword or error is set
+        if (p_keyword != NULL)
+        {
+            replykeyword = FourCharCodeFromString(MCStringGetCString(p_keyword));
+        }
+        else
+        {
+            if (p_error)
+                replykeyword = 'errs';
+            else
+                replykeyword = '----';
+        }
+    }
 };
 
 struct MCMacDesktop: public MCSystemInterface
@@ -2036,13 +3646,21 @@ struct MCMacDesktop: public MCSystemInterface
         {
             setlinebuf(stdout);
             setlinebuf(stderr);
-        }        
+        }
     }
+    
 	virtual void Finalize(void)
     {
         
     }
 	
+    virtual MCServiceInterface *QueryService(MCServiceType p_type)
+    {
+        if (p_type == kMCServiceTypeMacSystem)
+            return (MCMacSystemServiceInterface *)this;
+        return nil;
+    }
+    
 	virtual void Debug(MCStringRef p_string)
     {
         
@@ -2050,7 +3668,22 @@ struct MCMacDesktop: public MCSystemInterface
     
 	virtual real64_t GetCurrentTime(void)
     {
+#ifdef /* MCS_time */ LEGACY_SYSTEM
+	struct timezone tz;
+	struct timeval tv;
+
+	gettimeofday(&tv, &tz);
+	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
+
+	return curtime;
+#endif /* MCS_time */
+        struct timezone tz;
+        struct timeval tv;
         
+        gettimeofday(&tv, &tz);
+        curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
+        
+        return curtime;
     }
     
 	virtual bool GetVersion(MCStringRef& r_string)
@@ -2059,29 +3692,85 @@ struct MCMacDesktop: public MCSystemInterface
     }
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-        
+#ifdef /* MCS_getmachine */ LEGACY_SYSTEM
+	static Str255 machineName;
+	long response;
+	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
+	{
+		GetIndString(machineName, kMachineNameStrID, response);
+		if (machineName != nil)
+		{
+			p2cstr(machineName);
+			return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
+		}
+	}
+	return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+#endif /* MCS_getmachine */
+        static Str255 machineName;
+        long response;
+        if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
+        {
+            GetIndString(machineName, kMachineNameStrID, response);
+            if (machineName != nil)
+            {
+                p2cstr(machineName);
+                return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
+            }
+        }
+        return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
     }
 	virtual MCNameRef GetProcessor(void)
     {
-        
+#ifdef /* MCS_getprocessor */ LEGACY_SYSTEM//get machine processor
+#ifdef __LITTLE_ENDIAN__
+	return MCN_x86;
+#else
+    return MCN_motorola_powerpc;
+#endif
+#endif /* MCS_getprocessor *///get machine processor
+#ifdef __LITTLE_ENDIAN__
+        return MCN_x86;
+#else
+        return MCN_motorola_powerpc;
+#endif
     }
-	virtual void GetAddress(MCStringRef& r_string)
+	virtual bool GetAddress(MCStringRef& r_address)
     {
-        
+#ifdef /* MCS_getaddress */ LEGACY_SYSTEM
+	static struct utsname u;
+	uname(&u);
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+#endif /* MCS_getaddress */
+        static struct utsname u;
+        uname(&u);
+        return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
     }
     
 	virtual uint32_t GetProcessId(void)
     {
-        
+#ifdef /* MCS_getpid */ LEGACY_SYSTEM
+	return getpid();
+#endif /* MCS_getpid */
+        return getpid();
     }
 	
 	virtual void Alarm(real64_t p_when)
     {
-        
+#ifdef /* MCS_alarm */ LEGACY_SYSTEM
+    //is used for checking event loop periodically
+	// InsTime() or
+	//PrimeTime(pass handle to a function, in the function set MCalarm to True)
+#endif /* MCS_alarm */
     }
-	virtual void Sleep(real64_t p_when)
+    
+	virtual void Sleep(real64_t p_duration)
     {
-        
+#ifdef /* MCS_sleep */ LEGACY_SYSTEM
+	unsigned long finalTicks;
+	Delay((unsigned long)duration * 60, &finalTicks);
+#endif /* MCS_sleep */
+        unsigned long finalTicks;
+        Delay((unsigned long)p_duration * 60, &finalTicks);
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
@@ -3562,8 +5251,80 @@ struct MCMacDesktop: public MCSystemInterface
     
     virtual Boolean GetDrives(MCStringRef& r_drives)
     {
-        r_drives = MCValueRetain(kMCEmptyString);
-        return True;
+#ifdef /* MCS_getdrives */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	OSErr t_err;
+	ItemCount t_index;
+	bool t_first;
+	
+	t_index = 1;
+	t_err = noErr;
+	t_first = true;
+	
+	// To list all the mounted volumes on the system we use the FSGetVolumeInfo
+	// API with first parameter kFSInvalidVolumeRefNum and an index in the
+	// second parameter.
+	// This call will return nsvErr when it reaches the end of the list of
+	// volumes, other errors being returned if there's a problem getting the
+	// information.
+	// Due to this, it is perfectly possible that the first index will not be
+	// the first volume we put into the list - so we need a boolean flag (t_first)
+	while(t_err != nsvErr)
+	{
+		HFSUniStr255 t_unicode_name;
+		t_err = FSGetVolumeInfo(kFSInvalidVolumeRefNum, t_index, NULL, kFSVolInfoNone, NULL, &t_unicode_name, NULL);
+		if (t_err == noErr)
+		{
+			MCAutoStringRef t_volume_name;
+			if (!MCStringCreateWithChars(t_unicode_name . unicode, t_unicode_name . length, &t_volume_name))
+				return false;
+			if (!MCListAppend(*t_list, *t_volume_name))
+				return false;
+		}
+		t_index += 1;
+	}
+	
+	return MCListCopy(*t_list, r_list);
+#endif /* MCS_getdrives */
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return false;
+        
+        OSErr t_err;
+        ItemCount t_index;
+        bool t_first;
+        
+        t_index = 1;
+        t_err = noErr;
+        t_first = true;
+        
+        // To list all the mounted volumes on the system we use the FSGetVolumeInfo
+        // API with first parameter kFSInvalidVolumeRefNum and an index in the
+        // second parameter.
+        // This call will return nsvErr when it reaches the end of the list of
+        // volumes, other errors being returned if there's a problem getting the
+        // information.
+        // Due to this, it is perfectly possible that the first index will not be
+        // the first volume we put into the list - so we need a boolean flag (t_first)
+        while(t_err != nsvErr)
+        {
+            HFSUniStr255 t_unicode_name;
+            t_err = FSGetVolumeInfo(kFSInvalidVolumeRefNum, t_index, NULL, kFSVolInfoNone, NULL, &t_unicode_name, NULL);
+            if (t_err == noErr)
+            {
+                MCAutoStringRef t_volume_name;
+                if (!MCStringCreateWithChars(t_unicode_name . unicode, t_unicode_name . length, &t_volume_name))
+                    return false;
+                if (!MCListAppend(*t_list, *t_volume_name))
+                    return false;
+            }
+            t_index += 1;
+        }
+        
+        return MCListCopyAsString(*t_list, r_drives) ? True : False;
     }
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -3788,18 +5549,83 @@ struct MCMacDesktop: public MCSystemInterface
         return new IO_header(t_handle, 0);
     }
 	
-	virtual void *LoadModule(MCStringRef p_path)
+	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
     {
+#ifdef /* MCS_loadmodule_dsk_mac */ LEGACY_SYSTEM
+	char *t_native_path;
+	t_native_path = path2utf(MCS_resolvepath(p_filename));
+	
+	CFURLRef t_url;
+	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)t_native_path, strlen(t_native_path), False);
+	delete t_native_path;
+	
+	if (t_url == NULL)
+		return NULL;
+    
+	MCSysModuleHandle t_result;
+	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+	
+	CFRelease(t_url);
+	
+	return (MCSysModuleHandle)t_result;
+#endif /* MCS_loadmodule_dsk_mac */
+        MCAutoStringRef t_resolved_path;
+        MCAutoStringRefAsUTF8String t_utf_path;
         
+        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+            return NULL;
+        
+        if (!t_utf_path.Lock(*t_resolved_path))
+            return NULL;
+        
+        CFURLRef t_url;
+        t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_utf_path, strlen(*t_utf_path), False);
+        
+        if (t_url == NULL)
+            return NULL;
+		
+        MCSysModuleHandle t_result;
+        t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+        
+        CFRelease(t_url);
+        
+        return (MCSysModuleHandle)t_result;
     }
     
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, const char *p_symbol)
     {
+#ifdef /* MCS_resolvemodulesymbol */ LEGACY_SYSTEM
+	CFStringRef t_cf_symbol;
+	t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
+	if (t_cf_symbol == NULL)
+		return NULL;
+	
+	void *t_symbol_ptr;
+	t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
+	
+	CFRelease(t_cf_symbol);
+	
+	return t_symbol_ptr;
+#endif /* MCS_resolvemodulesymbol */
+        CFStringRef t_cf_symbol;
+        t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
+        if (t_cf_symbol == NULL)
+            return NULL;
         
+        void *t_symbol_ptr;
+        t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
+        
+        CFRelease(t_cf_symbol);
+        
+        return t_symbol_ptr;
     }
-	virtual void UnloadModule(void *p_module)
+    
+	virtual void UnloadModule(MCSysModuleHandle p_module)
     {
-        
+#ifdef /* MCS_unloadmodule */ LEGACY_SYSTEM
+	CFRelease((CFBundleRef)p_module);
+#endif /* MCS_unloadmodule */
+        CFRelease((CFBundleRef)p_module);        
     }
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -3829,16 +5655,257 @@ struct MCMacDesktop: public MCSystemInterface
         
     }
     
-	virtual uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset)
+	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
+//        (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
+#ifdef /* MCS_multibytetounicode */ LEGACY_SYSTEM
+        // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
+        static int oldcharset = -1;
+        if (!destbufferlength)
+        {
+            destlen = len << 1;
+            return;
+        }
+        if (charset != oldcharset)
+        {
+            if (texttounicodeconvertor)
+                DisposeTextToUnicodeInfo(texttounicodeconvertor);
+            texttounicodeconvertor = NULL;
+            ScriptCode fscript = MCS_charsettolangid(charset);
+            TextEncoding scriptEncoding;
+            UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+                                            kTextRegionDontCare, NULL,
+                                            &scriptEncoding);
+            texttounicodeconvertor = &texttounicodeinfo;
+            CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
+        }
+        ByteCount processedbytes, outlength;
+        ConvertFromTextToUnicode(*texttounicodeconvertor, len, (LogicalAddress) s,
+                                 kUnicodeLooseMappingsMask
+                                 | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
+                                 destbufferlength, &processedbytes,
+                                 &outlength, (UniChar *)d);
+        destlen = outlength;
+        oldcharset = charset;
+#endif /* MCS_multibytetounicode */
+#ifdef /* MCS_unicodetomultibyte */ LEGACY_SYSTEM
+	ScriptCode fscript = MCS_charsettolangid(charset);
+	//we cache unicode convertors for speed
+	if (!destbufferlength)
+	{
+		if (charset)
+			destlen = len << 1;
+		else
+			destlen = len >> 1;
+		return;
+	}
+	if (unicodeconvertors[fscript] == NULL)
+	{
+		TextEncoding scriptEncoding;
+		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+		                                kTextRegionDontCare, NULL,
+		                                &scriptEncoding);
+		CreateUnicodeToTextInfoByEncoding(scriptEncoding,
+		                                  &unicodeconvertors[fscript]);
+	}
+	ByteCount processedbytes, outlength;
+	destlen = 0;
+	
+	// MW-2008-06-12: [[ Bug 6313 ]] Loop through all input characters, replacing unknown
+	//   ones with ? - this mimics Windows behaviour.
+	// MW-2008-06-12: Make sure we loop until we have no pairs of bytes left otherwise
+	//   we go into an infinite loop when doing things like uniDecode("abc")
+	while(len > 1)
+	{
+		ConvertFromUnicodeToText(unicodeconvertors[fscript], len, (UniChar *)s,
+								 kUnicodeLooseMappingsMask
+								 | kUnicodeStringUnterminatedBit
+								 | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
+								 destbufferlength, &processedbytes,
+								 &outlength, (LogicalAddress)d);
+		if (processedbytes == 0)
+		{
+			*d = '?';
+			processedbytes = 2;
+			outlength = 1;
+		}
         
-    }
-	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
-    {
-        
+		len -= processedbytes;
+		destlen += outlength;
+		s += processedbytes;
+		d += outlength;
+	}
+#endif /* MCS_unicodetomultibyte */
+        // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
+//        TODO IMPLEMENT
+//        static int oldcharset = -1;
+//        if (!p_buffer_length)
+//        {
+//            destlen = len << 1;
+//            return;
+//        }
+//        if (charset != oldcharset)
+//        {
+//            if (texttounicodeconvertor)
+//                DisposeTextToUnicodeInfo(texttounicodeconvertor);
+//            texttounicodeconvertor = NULL;
+//            ScriptCode fscript = MCS_charsettolangid(charset);
+//            TextEncoding scriptEncoding;
+//            UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+//                                            kTextRegionDontCare, NULL,
+//                                            &scriptEncoding);
+//            texttounicodeconvertor = &texttounicodeinfo;
+//            CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
+//        }
+//        ByteCount processedbytes, outlength;
+//        ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) s,
+//                                 kUnicodeLooseMappingsMask
+//                                 | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
+//                                 destbufferlength, &processedbytes,
+//                                 &outlength, (UniChar *)d);
+//        destlen = outlength;
+//        oldcharset = charset;
     }
     
-    virtual void CheckProcesses()
+	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
+    {
+#ifdef /* MCSTextConvertToUnicode */ LEGACY_SYSTEM
+	if (p_input_length == 0)
+	{
+		r_used = 0;
+		return true;
+	}
+
+	int4 t_encoding;
+	t_encoding = -1;
+	
+	if (p_input_encoding >= kMCTextEncodingWindowsNative)
+	{
+		struct { uint4 codepage; int4 encoding; } s_codepage_map[] =
+		{
+			{437, kTextEncodingDOSLatinUS },
+			{850, kTextEncodingDOSLatinUS },
+			{932, kTextEncodingDOSJapanese },
+			{949, kTextEncodingDOSKorean },
+			{1361, kTextEncodingWindowsKoreanJohab },
+			{936, kTextEncodingDOSChineseSimplif },
+			{950, kTextEncodingDOSChineseTrad },
+			{1253, kTextEncodingWindowsGreek },
+			{1254, kTextEncodingWindowsLatin5 },
+			{1258, kTextEncodingWindowsVietnamese },
+			{1255, kTextEncodingWindowsHebrew },
+			{1256, kTextEncodingWindowsArabic },
+			{1257, kTextEncodingWindowsBalticRim },
+			{1251, kTextEncodingWindowsCyrillic },
+			{874, kTextEncodingDOSThai },
+			{1250, kTextEncodingWindowsLatin2 },
+			{1252, kTextEncodingWindowsLatin1 }
+		};
+		
+		for(uint4 i = 0; i < sizeof(s_codepage_map) / sizeof(s_codepage_map[0]); ++i)
+			if (s_codepage_map[i] . codepage == p_input_encoding - kMCTextEncodingWindowsNative)
+			{
+				t_encoding = s_codepage_map[i] . encoding;
+				break;
+			}
+			
+		// MW-2008-03-24: [[ Bug 6187 ]] RTF parser doesn't like ansicpg1000
+		if (t_encoding == -1 && (p_input_encoding - kMCTextEncodingWindowsNative >= 10000))
+			t_encoding = p_input_encoding - kMCTextEncodingWindowsNative - 10000;
+			
+	}
+	else if (p_input_encoding >= kMCTextEncodingMacNative)
+		t_encoding = p_input_encoding - kMCTextEncodingMacNative;
+	
+	TextToUnicodeInfo t_info;
+	t_info = fetch_unicode_info(t_encoding);
+	
+	if (t_info == NULL)
+	{
+		r_used = 0;
+		return true;
+	}
+	
+	ByteCount t_source_read, t_unicode_length;
+	if (ConvertFromTextToUnicode(t_info, p_input_length, p_input, 0, 0, (ByteOffset *)NULL, (ItemCount *)NULL, NULL, p_output_length, &t_source_read, &t_unicode_length, (UniChar *)p_output) != noErr)
+	{
+		r_used = 4 * p_input_length;
+		return false;
+	}
+
+	r_used = t_unicode_length;
+	
+	return true;
+#endif /* MCSTextConvertToUnicode */
+        if (p_input_length == 0)
+        {
+            r_used = 0;
+            return true;
+        }
+        
+        int4 t_encoding;
+        t_encoding = -1;
+        
+        if (p_input_encoding >= kMCTextEncodingWindowsNative)
+        {
+            struct { uint4 codepage; int4 encoding; } s_codepage_map[] =
+            {
+                {437, kTextEncodingDOSLatinUS },
+                {850, kTextEncodingDOSLatinUS },
+                {932, kTextEncodingDOSJapanese },
+                {949, kTextEncodingDOSKorean },
+                {1361, kTextEncodingWindowsKoreanJohab },
+                {936, kTextEncodingDOSChineseSimplif },
+                {950, kTextEncodingDOSChineseTrad },
+                {1253, kTextEncodingWindowsGreek },
+                {1254, kTextEncodingWindowsLatin5 },
+                {1258, kTextEncodingWindowsVietnamese },
+                {1255, kTextEncodingWindowsHebrew },
+                {1256, kTextEncodingWindowsArabic },
+                {1257, kTextEncodingWindowsBalticRim },
+                {1251, kTextEncodingWindowsCyrillic },
+                {874, kTextEncodingDOSThai },
+                {1250, kTextEncodingWindowsLatin2 },
+                {1252, kTextEncodingWindowsLatin1 }
+            };
+            
+            for(uint4 i = 0; i < sizeof(s_codepage_map) / sizeof(s_codepage_map[0]); ++i)
+                if (s_codepage_map[i] . codepage == p_input_encoding - kMCTextEncodingWindowsNative)
+                {
+                    t_encoding = s_codepage_map[i] . encoding;
+                    break;
+                }
+			
+            // MW-2008-03-24: [[ Bug 6187 ]] RTF parser doesn't like ansicpg1000
+            if (t_encoding == -1 && (p_input_encoding - kMCTextEncodingWindowsNative >= 10000))
+                t_encoding = p_input_encoding - kMCTextEncodingWindowsNative - 10000;
+			
+        }
+        else if (p_input_encoding >= kMCTextEncodingMacNative)
+            t_encoding = p_input_encoding - kMCTextEncodingMacNative;
+        
+        TextToUnicodeInfo t_info;
+        t_info = fetch_unicode_info(t_encoding);
+        
+        if (t_info == NULL)
+        {
+            r_used = 0;
+            return true;
+        }
+        
+        ByteCount t_source_read, t_unicode_length;
+        if (ConvertFromTextToUnicode(t_info, p_input_length, p_input, 0, 0, (ByteOffset *)NULL, (ItemCount *)NULL, NULL, p_output_length, &t_source_read, &t_unicode_length, (UniChar *)p_output) != noErr)
+        {
+            r_used = 4 * p_input_length;
+            return false;
+        }
+        
+        r_used = t_unicode_length;
+        
+        return true;
+    }
+    
+    virtual void CheckProcesses(void)
     {
 #ifdef /* MCS_checkprocesses_dsk_mac */ LEGACY_SYSTEM
 	uint2 i;
@@ -3872,6 +5939,764 @@ struct MCMacDesktop: public MCSystemInterface
                 MCprocesses[i].retcode = WEXITSTATUS(wstat);
             }
     }
+    
+    virtual void SystemAlert(MCStringRef p_title, MCStringRef p_message)
+    {
+#ifdef /* MCS_system_alert */ LEGACY_SYSTEM
+	CFStringRef t_cf_title, t_cf_message;
+	t_cf_title = CFStringCreateWithCString(NULL, p_title, kCFStringEncodingMacRoman);
+	t_cf_message = CFStringCreateWithCString(NULL, p_message, kCFStringEncodingMacRoman);
+	DialogRef t_alert;
+	CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
+	
+	DialogItemIndex t_result;
+	RunStandardAlert(t_alert, NULL, &t_result);
+	CFRelease(t_cf_title);
+	CFRelease(t_cf_message);
+#endif /* MCS_system_alert */
+        CFStringRef t_cf_title, t_cf_message;
+        t_cf_title = CFStringCreateWithCString(NULL, MCStringGetCString(p_title), kCFStringEncodingMacRoman);
+        t_cf_message = CFStringCreateWithCString(NULL, MCStringGetCString(p_message), kCFStringEncodingMacRoman);
+        DialogRef t_alert;
+        CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
+        
+        DialogItemIndex t_result;
+        RunStandardAlert(t_alert, NULL, &t_result);
+        CFRelease(t_cf_title);
+        CFRelease(t_cf_message);        
+    }
+    
+    virtual uint32_t GetSystemError(void)
+    {
+#ifdef /* MCS_getsyserror */ LEGACY_SYSTEM
+	return errno;
+#endif /* MCS_getsyserror */
+        return errno;
+    }
+    
+    virtual bool IsATTY(int fd)
+    {
+#ifdef /* MCS_isatty */ LEGACY_SYSTEM
+	return isatty(fd) != 0;
+#endif /* MCS_isatty */
+        return isatty(fd) != 0;
+    }
+    
+    virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output)
+    {
+#ifdef /* MCS_runcmd */ LEGACY_SYSTEM
+
+	IO_cleanprocesses();
+	int tochild[2];
+	int toparent[2];
+	int4 index = MCnprocesses;
+	if (pipe(tochild) == 0)
+	{
+		if (pipe(toparent) == 0)
+		{
+			MCU_realloc((char **)&MCprocesses, MCnprocesses,
+									MCnprocesses + 1, sizeof(Streamnode));
+			MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
+			MCprocesses[MCnprocesses].mode = OM_NEITHER;
+			MCprocesses[MCnprocesses].ohandle = NULL;
+			MCprocesses[MCnprocesses].ihandle = NULL;
+			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+			{
+				close(tochild[1]);
+				close(0);
+				dup(tochild[0]);
+				close(tochild[0]);
+				close(toparent[0]);
+				close(1);
+				dup(toparent[1]);
+				close(2);
+				dup(toparent[1]);
+				close(toparent[1]);
+				execl(MCshellcmd, MCshellcmd, "-s", NULL);
+				_exit(-1);
+			}
+			MCS_checkprocesses();
+			close(tochild[0]);
+			char *str = path2utf(ep.getsvalue().clone());
+			write(tochild[1], str, strlen(str));
+			delete str;
+			write(tochild[1], "\n", 1);
+			close(tochild[1]);
+			close(toparent[1]);
+			MCS_nodelay(toparent[0]);
+			if (MCprocesses[index].pid == -1)
+			{
+				if (MCprocesses[index].pid > 0)
+					MCS_kill(MCprocesses[index].pid, SIGKILL);
+				MCprocesses[index].pid = 0;
+				MCeerror->add
+				(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+				return IO_ERROR;
+			}
+		}
+		else
+		{
+			close(tochild[0]);
+			close(tochild[1]);
+			MCeerror->add
+			(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+			return IO_ERROR;
+		}
+	}
+	else
+	{
+		MCeerror->add
+		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+		return IO_ERROR;
+	}
+	char *buffer;
+	uint4 buffersize;
+	buffer = (char *)malloc(4096);
+	buffersize = 4096;
+	uint4 size = 0;
+	if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
+	{
+		MCeerror->add(EE_SHELL_ABORT, 0, 0);
+		close(toparent[0]);
+		if (MCprocesses[index].pid != 0)
+			MCS_kill(MCprocesses[index].pid, SIGKILL);
+		ep.grabbuffer(buffer, size);
+		return IO_ERROR;
+	}
+	ep.grabbuffer(buffer, size);
+	close(toparent[0]);
+	MCS_checkprocesses();
+	if (MCprocesses[index].pid != 0)
+	{
+		uint2 count = SHELL_COUNT;
+		while (count--)
+		{
+			if (MCscreen->wait(SHELL_INTERVAL, False, False))
+			{
+				if (MCprocesses[index].pid != 0)
+					MCS_kill(MCprocesses[index].pid, SIGKILL);
+				return IO_ERROR;
+			}
+			if (MCprocesses[index].pid == 0)
+				break;
+		}
+		if (MCprocesses[index].pid != 0)
+		{
+			MCprocesses[index].retcode = -1;
+			MCS_kill(MCprocesses[index].pid, SIGKILL);
+		}
+	}
+	if (MCprocesses[index].retcode)
+	{
+		MCExecPoint ep2(ep);
+		ep2.setint(MCprocesses[index].retcode);
+		MCresult->set(ep2);
+	}
+	else
+		MCresult->clear(False);
+
+
+	return IO_NORMAL;
+#endif /* MCS_runcmd */
+        
+        IO_cleanprocesses();
+        int tochild[2];
+        int toparent[2];
+        int4 index = MCnprocesses;
+        if (pipe(tochild) == 0)
+        {
+            if (pipe(toparent) == 0)
+            {
+                MCU_realloc((char **)&MCprocesses, MCnprocesses,
+                            MCnprocesses + 1, sizeof(Streamnode));
+                MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
+                MCprocesses[MCnprocesses].mode = OM_NEITHER;
+                MCprocesses[MCnprocesses].ohandle = NULL;
+                MCprocesses[MCnprocesses].ihandle = NULL;
+                if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+                {
+                    close(tochild[1]);
+                    close(0);
+                    dup(tochild[0]);
+                    close(tochild[0]);
+                    close(toparent[0]);
+                    close(1);
+                    dup(toparent[1]);
+                    close(2);
+                    dup(toparent[1]);
+                    close(toparent[1]);
+                    execl(MCshellcmd, MCshellcmd, "-s", NULL);
+                    _exit(-1);
+                }
+                MCS_checkprocesses();
+                close(tochild[0]);
+                
+                MCAutoStringRefAsUTF8String t_utf_path;
+                /* UNCHECKED */ t_utf_path . Lock(p_command);
+                write(tochild[1], *t_utf_path, strlen(*t_utf_path));
+
+                write(tochild[1], "\n", 1);
+                close(tochild[1]);
+                close(toparent[1]);
+                MCS_nodelay(toparent[0]);
+                if (MCprocesses[index].pid == -1)
+                {
+                    if (MCprocesses[index].pid > 0)
+                        MCS_kill(MCprocesses[index].pid, SIGKILL);
+                    MCprocesses[index].pid = 0;
+                    MCeerror->add
+                    (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
+                    return IO_ERROR;
+                }
+            }
+            else
+            {
+                close(tochild[0]);
+                close(tochild[1]);
+                MCeerror->add
+                (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
+                return IO_ERROR;
+            }
+        }
+        else
+        {
+            MCeerror->add
+            (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
+            return IO_ERROR;
+        }
+        char *buffer;
+        uint4 buffersize;
+        buffer = (char *)malloc(4096);
+        buffersize = 4096;
+        uint4 size = 0;
+        if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
+        {
+            MCeerror->add(EE_SHELL_ABORT, 0, 0);
+            close(toparent[0]);
+            if (MCprocesses[index].pid != 0)
+                MCS_kill(MCprocesses[index].pid, SIGKILL);
+            /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
+            return IO_ERROR;
+        }
+        /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
+        close(toparent[0]);
+        MCS_checkprocesses();
+        if (MCprocesses[index].pid != 0)
+        {
+            uint2 count = SHELL_COUNT;
+            while (count--)
+            {
+                if (MCscreen->wait(SHELL_INTERVAL, False, False))
+                {
+                    if (MCprocesses[index].pid != 0)
+                        MCS_kill(MCprocesses[index].pid, SIGKILL);
+                    return IO_ERROR;
+                }
+                if (MCprocesses[index].pid == 0)
+                    break;
+            }
+            if (MCprocesses[index].pid != 0)
+            {
+                MCprocesses[index].retcode = -1;
+                MCS_kill(MCprocesses[index].pid, SIGKILL);
+            }
+        }
+        if (MCprocesses[index].retcode)
+        {
+            MCExecPoint ep(nil, nil, nil);
+            ep.setint(MCprocesses[index].retcode);
+            MCresult->set(ep);
+        }
+        else
+            MCresult->clear(False);
+        
+        
+        return IO_NORMAL;
+    }
+    
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+    {
+#ifdef /* MCS_startprocess */ LEGACY_SYSTEM
+	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0)
+	  MCS_startprocess_launch(name, docname, mode);
+	else
+	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
+#endif /* MCS_startprocess */
+        if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(p_doc) != 0)
+            MCS_startprocess_launch(p_name, p_doc, p_mode);
+        else
+            MCS_startprocess_unix(p_name, kMCEmptyString, p_mode, p_elevated);
+    }
+    
+    virtual bool ProcessTypeIsForeground(void)
+    {
+#ifdef /* MCS_processtypeisforeground */ LEGACY_SYSTEM
+	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+	
+	CFDictionaryRef t_info;
+	t_info = ProcessInformationCopyDictionary(&t_psn, kProcessDictionaryIncludeAllInformationMask);
+	
+	bool t_result;
+	t_result = true;
+	if (t_info != NULL)
+	{
+		CFBooleanRef t_value;
+		t_value = (CFBooleanRef)CFDictionaryGetValue(t_info, CFSTR("LSBackgroundOnly"));
+		if (t_value != NULL && CFBooleanGetValue(t_value) == TRUE)
+			t_result = false;
+		CFRelease(t_info);
+	}
+	
+	return t_result;
+#endif /* MCS_processtypeisforeground */
+        ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+        
+        CFDictionaryRef t_info;
+        t_info = ProcessInformationCopyDictionary(&t_psn, kProcessDictionaryIncludeAllInformationMask);
+        
+        bool t_result;
+        t_result = true;
+        if (t_info != NULL)
+        {
+            CFBooleanRef t_value;
+            t_value = (CFBooleanRef)CFDictionaryGetValue(t_info, CFSTR("LSBackgroundOnly"));
+            if (t_value != NULL && CFBooleanGetValue(t_value) == TRUE)
+                t_result = false;
+            CFRelease(t_info);
+        }
+        
+        return t_result;
+    }
+    
+    virtual bool ChangeProcessType(bool p_to_foreground)
+    {
+#ifdef /* MCS_changeprocesstype */ LEGACY_SYSTEM
+	// We can only switch from background to foreground. So check to see if
+	// we are foreground already, we are only asking to go to foreground.
+	if (MCS_processtypeisforeground())
+	{
+		if (to_foreground)
+			return true;
+		return false;
+	}
+	
+	// Actually switch to foreground.
+	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+	TransformProcessType(&t_psn, kProcessTransformToForegroundApplication);
+	SetFrontProcess(&t_psn);
+	
+	return true;
+#endif /* MCS_changeprocesstype */
+        // We can only switch from background to foreground. So check to see if
+        // we are foreground already, we are only asking to go to foreground.
+        if (MCS_processtypeisforeground())
+        {
+            if (p_to_foreground)
+                return true;
+            return false;
+        }
+        
+        // Actually switch to foreground.
+        ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+        TransformProcessType(&t_psn, kProcessTransformToForegroundApplication);
+        SetFrontProcess(&t_psn);
+        
+        return true;
+    }
+    
+    virtual void CloseProcess(uint2 p_index)
+    {
+#ifdef /* MCS_closeprocess */ LEGACY_SYSTEM
+	if (MCprocesses[index].ihandle != NULL)
+	{
+		MCS_close(MCprocesses[index].ihandle);
+		MCprocesses[index].ihandle = NULL;
+	}
+	if (MCprocesses[index].ohandle != NULL)
+	{
+		MCS_close(MCprocesses[index].ohandle);
+		MCprocesses[index].ohandle = NULL;
+	}
+	MCprocesses[index].mode = OM_NEITHER;
+#endif /* MCS_closeprocess */
+        if (MCprocesses[p_index].ihandle != NULL)
+        {
+            MCS_close(MCprocesses[p_index].ihandle);
+            MCprocesses[p_index].ihandle = NULL;
+        }
+        if (MCprocesses[p_index].ohandle != NULL)
+        {
+            MCS_close(MCprocesses[p_index].ohandle);
+            MCprocesses[p_index].ohandle = NULL;
+        }
+        MCprocesses[p_index].mode = OM_NEITHER;
+    }
+    
+    virtual void Kill(int4 p_pid, int4 p_sig)
+    {
+#ifdef /* MCS_kill */ LEGACY_SYSTEM
+	if (pid == 0)
+		return;
+
+	uint2 i;
+  for (i = 0 ; i < MCnprocesses ; i++)
+    if (pid == MCprocesses[i].pid && (MCprocesses[i].sn.highLongOfPSN != 0 || MCprocesses[i].sn.lowLongOfPSN != 0))
+		{
+      AppleEvent ae, answer;
+      AEDesc pdesc;
+      AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
+		   sizeof(ProcessSerialNumber), &pdesc);
+      AECreateAppleEvent('aevt', 'quit', &pdesc, kAutoGenerateReturnID,
+			 kAnyTransactionID, &ae);
+      AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+	     kAEDefaultTimeout, NULL, NULL);
+      AEDisposeDesc(&ae);
+      AEDisposeDesc(&answer);
+      return;
+    }
+
+	kill(pid, sig);
+#endif /* MCS_kill */
+        if (p_pid == 0)
+            return;
+        
+        uint2 i;
+        for (i = 0 ; i < MCnprocesses ; i++)
+            if (p_pid == MCprocesses[i].pid && (MCprocesses[i].sn.highLongOfPSN != 0 || MCprocesses[i].sn.lowLongOfPSN != 0))
+            {
+                AppleEvent ae, answer;
+                AEDesc pdesc;
+                AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
+                             sizeof(ProcessSerialNumber), &pdesc);
+                AECreateAppleEvent('aevt', 'quit', &pdesc, kAutoGenerateReturnID,
+                                   kAnyTransactionID, &ae);
+                AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+                       kAEDefaultTimeout, NULL, NULL);
+                AEDisposeDesc(&ae);
+                AEDisposeDesc(&answer);
+                return;
+            }
+        
+        kill(p_pid, p_sig);
+    }
+    
+    virtual void KillAll(void)
+    {
+#ifdef /* MCS_killall */ LEGACY_SYSTEM
+	struct sigaction action;
+	memset((char *)&action, 0, sizeof(action));
+	action.sa_handler = (void (*)(int))SIG_IGN;
+	sigaction(SIGCHLD, &action, NULL);
+	while (MCnprocesses--)
+	{
+		MCNameDelete(MCprocesses[MCnprocesses] . name);
+		MCprocesses[MCnprocesses] . name = nil;
+		if (MCprocesses[MCnprocesses].pid != 0
+		        && (MCprocesses[MCnprocesses].ihandle != NULL
+		            || MCprocesses[MCnprocesses].ohandle != NULL))
+		{
+			kill(MCprocesses[MCnprocesses].pid, SIGKILL);
+			waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
+		}
+	}
+#endif /* MCS_killall */
+        struct sigaction action;
+        memset((char *)&action, 0, sizeof(action));
+        action.sa_handler = (void (*)(int))SIG_IGN;
+        sigaction(SIGCHLD, &action, NULL);
+        while (MCnprocesses--)
+        {
+            MCNameDelete(MCprocesses[MCnprocesses] . name);
+            MCprocesses[MCnprocesses] . name = nil;
+            if (MCprocesses[MCnprocesses].pid != 0
+		        && (MCprocesses[MCnprocesses].ihandle != NULL
+		            || MCprocesses[MCnprocesses].ohandle != NULL))
+            {
+                kill(MCprocesses[MCnprocesses].pid, SIGKILL);
+                waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
+            }
+        }
+    }
+    
+    virtual int GetErrno()
+    {
+#ifdef /* MCS_geterrno */ LEGACY_SYSTEM
+	return errno;
+#endif /* MCS_geterrno */
+        return errno;
+    }
+    virtual void SetErrno(int p_errno)
+    {
+#ifdef /* MCS_seterrno */ LEGACY_SYSTEM
+	errno = value;
+#endif /* MCS_seterrno */
+        errno = p_errno;
+    }
+    
+    virtual bool GetSystemVersion(MCStringRef& r_version)
+    {
+#ifdef /* MCS_getsystemversion */ LEGACY_SYSTEM
+	long t_major, t_minor, t_bugfix;
+	Gestalt(gestaltSystemVersionMajor, &t_major);
+	Gestalt(gestaltSystemVersionMinor, &t_minor);
+	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
+#endif /* MCS_getsystemversion */
+        long t_major, t_minor, t_bugfix;
+        Gestalt(gestaltSystemVersionMajor, &t_major);
+        Gestalt(gestaltSystemVersionMinor, &t_minor);
+        Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+        return MCStringFormat(r_version, "%d.%d.%d", t_major, t_minor, t_bugfix);
+    }
+    
+    virtual void LaunchDocument(MCStringRef p_document)
+    {
+#ifdef /* MCS_launch_document */ LEGACY_SYSTEM
+	int t_error = 0;
+	
+	FSRef t_document_ref;
+	if (t_error == 0)
+	{
+		errno = MCS_pathtoref(p_document, t_document_ref);
+		if (errno != noErr)
+		{
+			// MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
+			MCresult -> sets("can't open file");
+			t_error = 1;
+		}
+	}
+
+	if (t_error == 0)
+	{
+		errno = LSOpenFSRef(&t_document_ref, NULL);
+		MCS_launch_set_result_from_lsstatus();
+	}
+#endif /* MCS_launch_document */
+        int t_error = 0;
+        
+        FSRef t_document_ref;
+        if (t_error == 0)
+        {
+            errno = MCS_pathtoref(p_document, t_document_ref);
+            if (errno != noErr)
+            {
+                // MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
+                MCresult -> sets("can't open file");
+                t_error = 1;
+            }
+        }
+        
+        if (t_error == 0)
+        {
+            errno = LSOpenFSRef(&t_document_ref, NULL);
+            MCS_launch_set_result_from_lsstatus();
+        }
+    }
+    
+    virtual void LaunchUrl(MCStringRef p_document)
+    {
+#ifdef /* MCS_launch_url */ LEGACY_SYSTEM
+	bool t_success;
+	t_success = true;
+
+	CFStringRef t_cf_document;
+	t_cf_document = NULL;
+	if (t_success)
+	{
+		t_cf_document = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, p_document, kCFStringEncodingMacRoman, kCFAllocatorNull);
+		if (t_cf_document == NULL)
+			t_success = false;
+	}
+	
+	CFURLRef t_cf_url;
+	t_cf_url = NULL;
+	if (t_success)
+	{
+		t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
+		if (t_cf_url == NULL)
+			t_success = false;
+	}
+
+	if (t_success)
+	{
+		errno = LSOpenCFURLRef(t_cf_url, NULL);
+		MCS_launch_set_result_from_lsstatus();
+	}
+	
+	if (t_cf_url != NULL)
+		CFRelease(t_cf_url);
+		
+	if (t_cf_document != NULL)
+		CFRelease(t_cf_document);
+#endif /* MCS_launch_url */
+        bool t_success;
+        t_success = true;
+        
+        CFStringRef t_cf_document;
+        t_cf_document = NULL;
+        if (t_success)
+        {
+            t_cf_document = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, MCStringGetCString(p_document), kCFStringEncodingMacRoman, kCFAllocatorNull);
+            if (t_cf_document == NULL)
+                t_success = false;
+        }
+        
+        CFURLRef t_cf_url;
+        t_cf_url = NULL;
+        if (t_success)
+        {
+            t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
+            if (t_cf_url == NULL)
+                t_success = false;
+        }
+        
+        if (t_success)
+        {
+            errno = LSOpenCFURLRef(t_cf_url, NULL);
+            MCS_launch_set_result_from_lsstatus();
+        }
+        
+        if (t_cf_url != NULL)
+            CFRelease(t_cf_url);
+		
+        if (t_cf_document != NULL)
+            CFRelease(t_cf_document);
+    }
+    
+    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
+    {
+#ifdef /* MCS_doalternatelanguage_dsk_mac */ LEGACY_SYSTEM
+	getosacomponents();
+	OSAcomponent *posacomp = NULL;
+	uint2 i;
+	uint4 l = strlen(MCStringGetCString(p_language));
+	for (i = 0; i < osancomponents; i++)
+	{
+		if (l == strlen(osacomponents[i].compname)
+            && !MCU_strncasecmp(osacomponents[i].compname, MCStringGetCString(p_language), l))
+		{
+			posacomp = &osacomponents[i];
+			break;
+		}
+	}
+	if (posacomp == NULL)
+	{
+		MCresult->sets("alternate language not found");
+		return;
+	}
+	if (posacomp->compinstance == NULL)
+		posacomp->compinstance = OpenDefaultComponent(kOSAComponentType,
+                                                      posacomp->compsubtype);
+	//self check if returns error
+	OSAID scriptid;
+	if (osacompile(MCStringGetOldString(p_script), posacomp->compinstance, scriptid) != noErr)
+	{
+		MCresult->sets("compiler error");
+		return;
+	}
+	MCString rvalue;
+	OSErr err;
+	err = osaexecute(rvalue, posacomp->compinstance, scriptid);
+	if (err == noErr)
+	{
+		MCresult->copysvalue(rvalue);
+		delete rvalue.getstring();
+	}
+	else if (err == errOSAScriptError)
+	{
+        /*		MCExecPoint ep(nil, nil, nil);
+         
+         AEDesc err_str;
+         OSAScriptError(posacomp -> compinstance, kOSAErrorMessage, typeChar, &err_str);
+         
+         ep . setstring("execution error,%s",);
+         AEDisposeDesc(&err_str);*/
+		
+		MCresult->sets("execution error");
+	}
+	else
+		MCresult->sets("execution error");
+	
+	OSADispose(posacomp->compinstance, scriptid);
+#endif /* MCS_doalternatelanguage_dsk_mac */
+        getosacomponents();
+        OSAcomponent *posacomp = NULL;
+        uint2 i;
+        uint4 l = strlen(MCStringGetCString(p_language));
+        for (i = 0; i < osancomponents; i++)
+        {
+            if (l == strlen(osacomponents[i].compname)
+                && !MCU_strncasecmp(osacomponents[i].compname, MCStringGetCString(p_language), l))
+            {
+                posacomp = &osacomponents[i];
+                break;
+            }
+        }
+        if (posacomp == NULL)
+        {
+            MCresult->sets("alternate language not found");
+            return;
+        }
+        if (posacomp->compinstance == NULL)
+            posacomp->compinstance = OpenDefaultComponent(kOSAComponentType,
+                                                          posacomp->compsubtype);
+        //self check if returns error
+        OSAID scriptid;
+        if (osacompile(p_script, posacomp->compinstance, scriptid) != noErr)
+        {
+            MCresult->sets("compiler error");
+            return;
+        }
+        MCAutoStringRef rvalue;
+        OSErr err;
+        err = osaexecute(&rvalue, posacomp->compinstance, scriptid);
+        if (err == noErr)
+        {
+            /* UNCHECKED */ MCresult->setvalueref(*rvalue);
+        }
+        else if (err == errOSAScriptError)
+        {
+            /*		MCExecPoint ep(nil, nil, nil);
+             
+             AEDesc err_str;
+             OSAScriptError(posacomp -> compinstance, kOSAErrorMessage, typeChar, &err_str);
+             
+             ep . setstring("execution error,%s",);
+             AEDisposeDesc(&err_str);*/
+            
+            MCresult->sets("execution error");
+        }
+        else
+            MCresult->sets("execution error");
+        
+        OSADispose(posacomp->compinstance, scriptid);
+    }
+    
+    virtual bool AlternateLanguage(MCListRef& r_list)
+    {
+#ifdef /* MCS_alternatelanguages */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+	
+	getosacomponents();
+	for (uindex_t i = 0; i < osancomponents; i++)
+		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
+			return false;
+	
+	return MCListCopy(*t_list, r_list);
+#endif /* MCS_alternatelanguages */
+        MCAutoListRef t_list;
+        if (!MCListCreateMutable('\n', &t_list))
+            return false;
+        
+        getosacomponents();
+        for (uindex_t i = 0; i < osancomponents; i++)
+            if (!MCListAppendCString(*t_list, osacomponents[i].compname))
+                return false;
+        
+        return MCListCopy(*t_list, r_list);
+    }
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3882,156 +6707,10 @@ MCSystemInterface *MCDesktopCreateMacSystem(void)
 }
 
 
-// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
-//   to access it.
-real8 curtime;
-
 /*****************************************************************************
  *  Apple events handler	 			 	             *
  *****************************************************************************/
 
-// MW-2006-08-05: Vetted for Endian issues
-void MCS_send(MCStringRef message, MCStringRef program, MCStringRef eventtype, Boolean reply)
-{
-    //send "" to program "" with/without reply
-	if (!MCSecureModeCheckAppleScript())
-		return;
-    
-    
-	AEAddressDesc receiver;
-	errno = getDescFromAddress(program, &receiver);
-	if (errno != noErr)
-	{
-		AEDisposeDesc(&receiver);
-		MCresult->sets("no such program");
-		return;
-	}
-	AppleEvent ae;
-	if (eventtype == NULL)
-		MCStringCreateWithCString("miscdosc", eventtype);
-    
-	AEEventClass ac;
-	AEEventID aid;
-	
-	ac = FourCharCodeFromString(MCStringGetCString(eventtype));
-	aid = FourCharCodeFromString(&MCStringGetCString(eventtype)[4]);
-	
-	AECreateAppleEvent(ac, aid, &receiver, kAutoGenerateReturnID,
-	                   kAnyTransactionID, &ae);
-	AEDisposeDesc(&receiver); //dispose of the receiver description record
-	// if the ae message we are sending is 'odoc', 'pdoc' then
-	// create a document descriptor of type fypeFSS for the document
-	
-	Boolean docmessage = False; //Is this message contains a document descriptor?
-	AEDescList files_list, file_desc;
-	AliasHandle the_alias;
-    
-	if (aid == 'odoc' || aid == 'pdoc')
-	{
-		FSSpec fspec;
-		FSRef t_fsref;
-		
-		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
-		{
-			AECreateList(NULL, 0, false, &files_list);
-			NewAlias(NULL, &fspec, &the_alias);
-			HLock((Handle)the_alias);
-			AECreateDesc(typeAlias, (Ptr)(*the_alias),
-			             GetHandleSize((Handle)the_alias), &file_desc);
-			HUnlock((Handle) the_alias);
-			AEPutDesc(&files_list, 0, &file_desc);
-			AEPutParamDesc(&ae, keyDirectObject, &files_list);
-			docmessage = True;
-		}
-	}
-	//non document related massge, assume it's typeChar message
-	if (!docmessage && MCStringGetLength(message))
-		AEPutParamPtr(&ae, keyDirectObject, typeChar,
-		              MCStringGetCString(message), MCStringGetLength(message));
-    
-	//Send the Apple event
-	AppleEvent answer;
-	if (reply == True)
-		errno = AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
-		               kAEDefaultTimeout, NULL, NULL); //no reply
-	else
-		errno = AESend(&ae, &answer, kAENoReply, kAENormalPriority,
-		               kAEDefaultTimeout, NULL, NULL); //reply comes in event queue
-	if (docmessage)
-	{
-		DisposeHandle((Handle)the_alias);
-		AEDisposeDesc(&file_desc);
-		AEDisposeDesc(&files_list);
-		AEDisposeDesc(&file_desc);
-	}
-	AEDisposeDesc(&ae);
-	if (errno != noErr)
-	{
-		char *buffer = new char[6 + I2L];
-		sprintf(buffer, "error %d", errno);
-		MCresult->copysvalue(buffer);
-		delete buffer;
-		return;
-	}
-	if (reply == True)
-	{ /* wait for a reply in a loop.  The reply comes in
-       from regular event handling loop
-       and is handled by an Apple event handler*/
-		real8 endtime = curtime + AETIMEOUT;
-		while (True)
-		{
-			if (MCscreen->wait(READ_INTERVAL, False, True))
-			{
-				MCresult->sets("user interrupt");
-				return;
-			}
-			if (curtime > endtime)
-			{
-				MCresult->sets("timeout");
-				return;
-			}
-			if (AEanswerErr != NULL || AEanswerData != NULL)
-				break;
-		}
-		if (AEanswerErr != NULL)
-		{
-			MCresult->copysvalue(AEanswerErr);
-			delete AEanswerErr;
-			AEanswerErr = NULL;
-		}
-		else
-		{
-			MCresult->copysvalue(AEanswerData);
-			delete AEanswerData;
-			AEanswerData = NULL;
-		}
-		AEDisposeDesc(&answer);
-	}
-	else
-		MCresult->clear(False);
-}
-
-// MW-2006-08-05: Vetted for Endian issues
-void MCS_reply(const MCString &message, const char *keyword, Boolean error)
-{
-	delete replymessage;
-	replylength = message.getlength();
-	replymessage = new char[replylength];
-	memcpy(replymessage, message.getstring(), replylength);
-    
-	//at any one time only either keyword or error is set
-	if (keyword != NULL)
-	{
-		replykeyword = FourCharCodeFromString(keyword);
-	}
-	else
-	{
-		if (error)
-			replykeyword = 'errs';
-		else
-			replykeyword = '----';
-	}
-}
 
 static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 {
@@ -4531,25 +7210,11 @@ static OSErr getAddressFromDesc(AEAddressDesc targetDesc, char *address)
     
 }
 
-bool MCS_alternatelanguages(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	
-	getosacomponents();
-	for (uindex_t i = 0; i < osancomponents; i++)
-		if (!MCListAppendCString(*t_list, osacomponents[i].compname))
-			return false;
-	
-	return MCListCopy(*t_list, r_list);
-}
-
-static OSErr osacompile(const MCString &s, ComponentInstance compinstance,
+static OSErr osacompile(MCStringRef s, ComponentInstance compinstance,
                         OSAID &scriptid)
 {
 	AEDesc aedscript;
-	char *buffer = s.clone();
+	char *buffer = strclone(MCStringGetCString(s));
 	char *cptr = buffer;
 	while (*cptr)
 	{
@@ -4558,14 +7223,14 @@ static OSErr osacompile(const MCString &s, ComponentInstance compinstance,
 		cptr++;
 	}
 	scriptid = kOSANullScript;
-	AECreateDesc(typeChar, buffer, s.getlength(), &aedscript);
+	AECreateDesc(typeChar, buffer, MCStringGetLength(s), &aedscript);
 	OSErr err = OSACompile(compinstance, &aedscript, kOSAModeNull, &scriptid);
 	AEDisposeDesc(&aedscript);
-	delete buffer;
+	delete[] buffer;
 	return err;
 }
 
-static OSErr osaexecute(MCString &s, ComponentInstance compinstance,
+static OSErr osaexecute(MCStringRef& r_string, ComponentInstance compinstance,
                         OSAID scriptid)
 {
 	OSAID scriptresult;
@@ -4579,7 +7244,7 @@ static OSErr osaexecute(MCString &s, ComponentInstance compinstance,
 	uint4 tsize = AEGetDescDataSize(&aedresult);
 	char *buffer = new char[tsize];
 	err = AEGetDescData(&aedresult,buffer,tsize);
-	s.set(buffer,tsize);
+    /* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, tsize, r_string);
 	AEDisposeDesc(&aedresult);
 	OSADispose(compinstance, scriptresult);
 	return err;
@@ -4620,62 +7285,6 @@ static void getosacomponents()
 		osancomponents++;
 	}
 	DisposeHandle(compname);
-}
-
-void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
-{
-	getosacomponents();
-	OSAcomponent *posacomp = NULL;
-	uint2 i;
-	uint4 l = strlen(MCStringGetCString(p_language));
-	for (i = 0; i < osancomponents; i++)
-	{
-		if (l == strlen(osacomponents[i].compname)
-            && !MCU_strncasecmp(osacomponents[i].compname, MCStringGetCString(p_language), l))
-		{
-			posacomp = &osacomponents[i];
-			break;
-		}
-	}
-	if (posacomp == NULL)
-	{
-		MCresult->sets("alternate language not found");
-		return;
-	}
-	if (posacomp->compinstance == NULL)
-		posacomp->compinstance = OpenDefaultComponent(kOSAComponentType,
-                                                      posacomp->compsubtype);
-	//self check if returns error
-	OSAID scriptid;
-	if (osacompile(MCStringGetOldString(p_script), posacomp->compinstance, scriptid) != noErr)
-	{
-		MCresult->sets("compiler error");
-		return;
-	}
-	MCString rvalue;
-	OSErr err;
-	err = osaexecute(rvalue, posacomp->compinstance, scriptid);
-	if (err == noErr)
-	{
-		MCresult->copysvalue(rvalue);
-		delete rvalue.getstring();
-	}
-	else if (err == errOSAScriptError)
-	{
-        /*		MCExecPoint ep(nil, nil, nil);
-         
-         AEDesc err_str;
-         OSAScriptError(posacomp -> compinstance, kOSAErrorMessage, typeChar, &err_str);
-         
-         ep . setstring("execution error,%s",);
-         AEDisposeDesc(&err_str);*/
-		
-		MCresult->sets("execution error");
-	}
-	else
-		MCresult->sets("execution error");
-	
-	OSADispose(posacomp->compinstance, scriptid);
 }
 
 struct  LangID2Charset
@@ -4721,92 +7330,6 @@ uint2 MCS_charsettolangid(uint1 charset)
 		if (scriptcodetocharsets[i].charset == charset)
 			return scriptcodetocharsets[i].scriptcode;
 	return 0;
-}
-
-void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength, uint4 &destlen,
-                            uint1 charset)
-{
-	ScriptCode fscript = MCS_charsettolangid(charset);
-	//we cache unicode convertors for speed
-	if (!destbufferlength)
-	{
-		if (charset)
-			destlen = len << 1;
-		else
-			destlen = len >> 1;
-		return;
-	}
-	if (unicodeconvertors[fscript] == NULL)
-	{
-		TextEncoding scriptEncoding;
-		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
-		                                kTextRegionDontCare, NULL,
-		                                &scriptEncoding);
-		CreateUnicodeToTextInfoByEncoding(scriptEncoding,
-		                                  &unicodeconvertors[fscript]);
-	}
-	ByteCount processedbytes, outlength;
-	destlen = 0;
-	
-	// MW-2008-06-12: [[ Bug 6313 ]] Loop through all input characters, replacing unknown
-	//   ones with ? - this mimics Windows behaviour.
-	// MW-2008-06-12: Make sure we loop until we have no pairs of bytes left otherwise
-	//   we go into an infinite loop when doing things like uniDecode("abc")
-	while(len > 1)
-	{
-		ConvertFromUnicodeToText(unicodeconvertors[fscript], len, (UniChar *)s,
-								 kUnicodeLooseMappingsMask
-								 | kUnicodeStringUnterminatedBit
-								 | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
-								 destbufferlength, &processedbytes,
-								 &outlength, (LogicalAddress)d);
-		if (processedbytes == 0)
-		{
-			*d = '?';
-			processedbytes = 2;
-			outlength = 1;
-		}
-        
-		len -= processedbytes;
-		destlen += outlength;
-		s += processedbytes;
-		d += outlength;
-	}
-}
-
-void MCS_multibytetounicode(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength,
-                            uint4 &destlen, uint1 charset)
-{
-	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-	static int oldcharset = -1;
-	if (!destbufferlength)
-	{
-		destlen = len << 1;
-		return;
-	}
-	if (charset != oldcharset)
-	{
-		if (texttounicodeconvertor)
-			DisposeTextToUnicodeInfo(texttounicodeconvertor);
-		texttounicodeconvertor = NULL;
-		ScriptCode fscript = MCS_charsettolangid(charset);
-		TextEncoding scriptEncoding;
-		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
-		                                kTextRegionDontCare, NULL,
-		                                &scriptEncoding);
-		texttounicodeconvertor = &texttounicodeinfo;
-		CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
-	}
-	ByteCount processedbytes, outlength;
-	ConvertFromTextToUnicode(*texttounicodeconvertor, len, (LogicalAddress) s,
-	                         kUnicodeLooseMappingsMask
-	                         | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
-	                         destbufferlength, &processedbytes,
-	                         &outlength, (UniChar *)d);
-	destlen = outlength;
-	oldcharset = charset;
 }
 
 void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)

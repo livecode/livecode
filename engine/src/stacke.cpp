@@ -244,7 +244,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, t_effects->sound)) == NULL)
 			{
 				IO_handle stream;
-				if ((stream = MCS_open(t_effects->sound, IO_READ_MODE, True, False, 0)) != NULL)
+                MCAutoStringRef t_sound_string;
+                /* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound_string);
+				if ((stream = MCS_open(*t_sound_string, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 				{
 					acptr = new MCAudioClip;
 					acptr->setdisposable();

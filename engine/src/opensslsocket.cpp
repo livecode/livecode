@@ -585,7 +585,7 @@ MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameR
 			MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
-			if (!MCS_name_to_sockaddr(MCNameGetString(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
+			if (!MCS_name_to_sockaddr(MCNameGetString(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, (void*)t_info))
 			{
 				MCMemoryDelete(t_info);
 				s->name = nil;

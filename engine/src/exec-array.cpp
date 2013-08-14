@@ -283,7 +283,7 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 	uint32_t t_length;
 	t_buffer = nil;
 	t_length = 0;
-	if (MCS_fakeclosewrite(t_stream_handle, t_buffer, t_length) != IO_NORMAL)
+	if (MCS_closetakingbuffer(t_stream_handle, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_length)) != IO_NORMAL)
 		t_success = false;
 
 	if (t_success)
@@ -303,10 +303,14 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArra
 	t_success = true;
 
 	IO_handle t_stream_handle;
+    MCAutoDataRef t_data;
 	t_stream_handle = nil;
 	if (t_success)
-	{
-		t_stream_handle = MCS_fakeopen(MCStringGetOldString(p_encoding));
+        t_success = MCDataCreateWithBytes(MCStringGetBytePtr(p_encoding), MCStringGetLength(p_encoding), &t_data);
+    
+    if (t_success)
+    {
+		t_stream_handle = MCS_fakeopen(*t_data);
 		if (t_stream_handle == nil)
 			t_success = false;
 	}

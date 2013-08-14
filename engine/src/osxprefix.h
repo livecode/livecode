@@ -38,15 +38,16 @@ extern OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref);
 //extern OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
 extern OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length);
 extern bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
-extern char *MCS_fsref_to_path(FSRef& p_ref);
+/* LEGACY */ extern char *MCS_fsref_to_path(FSRef& p_ref);
 
 extern Boolean MCS_imeisunicode();
 extern Boolean MCS_handle_sockets();
 
-extern const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
-extern const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+///* LEGACY */ extern const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+///* LEGACY */ extern const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+extern void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16* r_fork_ref, MCStringRef& r_error);
 extern bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error);
-extern const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
+///* LEGACY */ extern const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
 extern bool MCS_openresourcefile_with_fsref(FSRef& p_fsref, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error);
 extern const char *MCS_openresourcefile_with_fsref(FSRef *p_fsref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref);
 extern void MCS_closeresourcefile(SInt16 p_fork_ref);

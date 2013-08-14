@@ -56,15 +56,16 @@ extern Boolean MCS_setcurdir(MCStringRef p_path);
 extern bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list);
 
 extern bool MCS_getDNSservers(MCListRef& r_list);
-extern bool MCS_getdevices(MCListRef& r_list);
-extern bool MCS_getdrives(MCListRef& r_list);
+extern Boolean MCS_getdevices(MCStringRef& r_list);
+extern Boolean MCS_getdrives(MCStringRef& r_list);
 extern Boolean MCS_noperm(MCStringRef path);
 extern Boolean MCS_exists(MCStringRef p_path, bool p_is_file);
 /* LEGACY */ extern Boolean MCS_exists(const char *path, Boolean file);
 
 extern Boolean MCS_nodelay(int4 fd);
 
-extern IO_stat MCS_runcmd(MCExecPoint &);
+///* LEGACY */ extern IO_stat MCS_runcmd(MCExecPoint &);
+extern IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output);
 extern uint2 MCS_umask(uint2 mask);
 extern Boolean MCS_chmod(MCStringRef path, uint2 mask);
 extern int4 MCS_getumask();
@@ -78,10 +79,14 @@ extern bool MCS_getmachine(MCStringRef& r_string);
 extern MCNameRef MCS_getprocessor();
 extern real8 MCS_getfreediskspace(void);
 extern bool MCS_getsystemversion(MCStringRef& r_string);
-extern void MCS_loadfile(MCExecPoint &ep, Boolean binary);
-extern void MCS_loadresfile(MCExecPoint &ep);
-extern void MCS_savebinaryfile(MCStringRef f, MCDataRef data);
-extern void MCS_saveresfile(const MCString &s, const MCString data);
+extern bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text);
+extern bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data);
+///* LEGACY */ extern void MCS_loadfile(MCExecPoint &ep, Boolean binary);
+///* LEGACY */ extern void MCS_loadresfile(MCExecPoint &ep);
+extern void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data);
+extern bool MCS_savebinaryfile(MCStringRef f, MCDataRef data);
+extern bool MCS_savetextfile(MCStringRef f, MCStringRef data);
+extern void MCS_saveresfile(MCStringRef p_path, MCDataRef data);
 
 extern bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
 ///* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
@@ -104,12 +109,12 @@ extern bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRe
 extern bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error);
 extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
 							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error);
-extern bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& r_path);
+extern Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path);
 ///* LEGACY */ extern void MCS_getspecialfolder(MCExecPoint &ep);
 extern bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path);
 extern bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path);
 extern Boolean MCS_createalias(MCStringRef srcpath, MCStringRef dstpath);
-extern bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error);
+extern Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved);
 extern void MCS_doalternatelanguage(MCStringRef script, MCStringRef language);
 extern bool MCS_alternatelanguages(MCListRef& r_list);
 extern uint1 MCS_langidtocharset(uint2 langid);
@@ -150,7 +155,7 @@ extern bool MCS_isnan(double value);
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 
 // Called by trial timeout function in MCDispatch to pop-up a system dialog.
-void MCS_system_alert(const char *title, const char *message);
+void MCS_system_alert(MCStringRef title, MCStringRef message);
 
 bool MCS_generate_uuid(char buffer[128]);
 
@@ -162,7 +167,7 @@ void MCS_deleteurl(MCObject *p_target, MCStringRef p_url);
 void MCS_loadurl(MCObject *p_target, MCStringRef p_url, MCNameRef p_message);
 void MCS_unloadurl(MCObject *p_target, MCStringRef p_url);
 void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, MCStringRef p_url);
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url);
 void MCS_geturl(MCObject *p_target, MCStringRef p_url);
 
 ///////////////////////////////////////////////////////////////////////////////

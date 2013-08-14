@@ -226,7 +226,7 @@ Boolean MCVideoClip::import(const char *fname, IO_handle fstream)
 	setname_cstring(tname);
 	size = (uint4)MCS_fsize(fstream);
 	frames = new uint1[size];
-	if (MCS_read(frames, sizeof(int1), size, fstream) != IO_NORMAL)
+	if (MCS_readfixed(frames, sizeof(int1), size, fstream) != IO_NORMAL)
 		return False;
 	return True;
 }

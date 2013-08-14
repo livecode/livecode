@@ -306,24 +306,21 @@ public:
 		bool t_success;
 		t_success = true;
 
-		char *t_old_filename;
-		t_old_filename = nil;
+		MCAutoStringRef t_old_filename;
 		if (t_success && m_old_file -> eval(ep) == ES_NORMAL)
-			t_old_filename = ep . getsvalue() . clone();
+			t_old_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
 		else
 			t_success = false;
 
-		char *t_new_filename;
-		t_new_filename = nil;
+		MCAutoStringRef t_new_filename;
 		if (t_success && m_new_file -> eval(ep) == ES_NORMAL)
-			t_new_filename = ep . getsvalue() . clone();
+			t_new_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
 		else
 			t_success = false;
 
-		char *t_patch_filename;
-		t_patch_filename = nil;
+		MCAutoStringRef t_patch_filename;
 		if (t_success && m_patch_file -> eval(ep) == ES_NORMAL)
-			t_patch_filename = ep . getsvalue() . clone();
+			t_patch_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
 		else
 			t_success = false;
 
@@ -331,7 +328,7 @@ public:
 		t_old_handle = nil;
 		if (t_success)
 		{
-			t_old_handle = MCS_open(t_old_filename, IO_READ_MODE, False, False, 0);
+			t_old_handle = MCS_open(*t_old_filename, kMCSOpenFileModeRead, False, False, 0);
 			if (t_old_handle == nil)
 				t_success = false;
 		}
@@ -340,7 +337,7 @@ public:
 		t_new_handle = nil;
 		if (t_success)
 		{
-			t_new_handle = MCS_open(t_new_filename, IO_READ_MODE, False, False, 0);
+			t_new_handle = MCS_open(*t_new_filename, kMCSOpenFileModeRead, False, False, 0);
 			if (t_new_handle == nil)
 				t_success = false;
 		}
@@ -349,7 +346,7 @@ public:
 		t_patch_handle = nil;
 		if (t_success)
 		{
-			t_patch_handle = MCS_open(t_patch_filename, IO_WRITE_MODE, False, False, 0);
+			t_patch_handle = MCS_open(*t_patch_filename, kMCSOpenFileModeWrite, False, False, 0);
 			if (t_patch_handle == nil)
 				t_success = false;
 		}
@@ -375,10 +372,6 @@ public:
 			MCS_close(t_new_handle);
 		if (t_old_handle != nil)
 			MCS_close(t_old_handle);
-
-		delete t_patch_filename;
-		delete t_new_filename;
-		delete t_old_filename;
 		
 		return ES_NORMAL;
 	}

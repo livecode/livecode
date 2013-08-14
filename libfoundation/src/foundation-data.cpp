@@ -436,3 +436,20 @@ static bool __MCDataExpandAt(MCDataRef r_data, uindex_t p_at, uindex_t p_count)
 	// We succeeded.
 	return true;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCDataRef kMCEmptyData;
+
+bool __MCDataInitialize(void)
+{
+    if (!MCDataCreateWithBytes(nil, 0, kMCEmptyData))
+        return false;
+    
+    return true;
+}
+
+void __MCDataFinalize(void)
+{
+    MCValueRelease(kMCEmptyData);
+}

@@ -1468,6 +1468,8 @@ bool MCStringSplitColumn(MCStringRef string, MCStringRef col_del, MCStringRef ro
 //
 // Immutable data methods
 
+extern MCDataRef kMCEmptyData;
+
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 

@@ -70,10 +70,10 @@ const char *MCS_tmpnam()
 void MCS_getspecialfolder(MCExecPoint &ep)
 {
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_path;
+	MCNewAutoNameRef t_path;
 	MCAutoStringRef t_special_folder_path;
-	/* UNCHECKED */ ep.copyasstring(&t_path);
-	if (!MCS_getspecialfolder(ctxt, *t_path, &t_special_folder_path))
+	/* UNCHECKED */ ep.copyasnameref(&t_path);
+	if (!MCS_getspecialfolder(*t_path, &t_special_folder_path))
 	{
 		MCresult->sets("folder not found");
 		ep.clear();

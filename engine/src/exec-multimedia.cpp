@@ -474,13 +474,15 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 		        || (stream = MCS_open(p_clip, kMCSOpenFileModeRead, True, False, 0)) == NULL)
 		{
 			MCAutoStringRef t_url;
+            MCAutoDataRef t_data;
 			MCU_geturl(ctxt, p_clip, &t_url);
 			if (MCStringGetLength(*t_url) == 0)
 			{
 				ctxt . SetTheResultToStaticCString("no data in audioClip");
 				return;
 			}
-			stream = MCS_fakeopen(MCStringGetOldString(*t_url));
+            /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(*t_url), MCStringGetLength(*t_url), &t_data);
+			stream = MCS_fakeopen(*t_data);
 		}
 		MCacptr = new MCAudioClip;
 		MCacptr->setdisposable();

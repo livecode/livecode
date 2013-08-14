@@ -203,7 +203,7 @@ int gif_readFunc(GifFileType *p_gif, GifByteType *p_buffer, int p_byte_count)
 	{
 	IO_handle t_stream = (IO_handle)p_gif->UserData;
 	uindex_t t_byte_count = p_byte_count;
-	/* UNCHECKED */	MCS_read(p_buffer, sizeof(GifByteType), t_byte_count, t_stream);
+	/* UNCHECKED */	MCS_readfixed(p_buffer, sizeof(GifByteType), t_byte_count, t_stream);
 	return t_byte_count;
 	}
 

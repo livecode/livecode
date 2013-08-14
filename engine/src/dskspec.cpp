@@ -27,12 +27,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "param.h"
 #include "osspec.h"
 
-void MCS_deleteurl(MCObject *p_target, const char *p_url)
+void MCS_deleteurl(MCObject *p_target, MCStringRef p_url)
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = False;
 	MCParameter p1;
-	p1 . sets_argument(p_url);
+	p1 . setvalueref_argument(p_url);
 	p_target -> message(MCM_delete_url, &p1, False, True);
 	MClockmessages = oldlock;
 }
@@ -48,10 +48,10 @@ void MCS_loadurl(MCObject *p_target, MCStringRef p_url, MCNameRef p_message)
 	p_target -> message(MCM_load_url, &p1, True, True);
 }
 
-void MCS_unloadurl(MCObject *p_target, const char *p_url)
+void MCS_unloadurl(MCObject *p_target, MCStringRef p_url)
 {
 	MCParameter p1;
-	p1 . sets_argument(p_url);
+	p1 . setvalueref_argument(p_url);
 	p_target -> message(MCM_unload_url, &p1, False, True);
 }
 
@@ -65,14 +65,14 @@ void MCS_posttourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 	p_target -> message(MCM_post_url, &p1, False, True);
 }
 
-void MCS_putintourl(MCObject *p_target, const MCString& p_data, const char *p_url)
+void MCS_putintourl(MCObject *p_target, MCDataRef p_data, MCStringRef p_url)
 {
 	Boolean oldlock = MClockmessages;
 	MClockmessages = False;
 	MCParameter p1;
-	p1 . sets_argument(p_data);
+	p1 . setvalueref_argument(p_data);
 	MCParameter p2;
-	p2 . sets_argument(p_url);
+	p2 . setvalueref_argument(p_url);
 	p1.setnext(&p2);
 	p_target -> message(MCM_put_url, &p1, False, True);
 	MClockmessages = oldlock;

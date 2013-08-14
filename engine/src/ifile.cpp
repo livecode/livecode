@@ -69,8 +69,9 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 				 t_success = MCImageEncodePNG(p_bitmap, t_stream, t_size);
 			 }
 		}
+
 		if (t_stream != nil)
-			MCS_fakeclosewrite(t_stream, t_buffer, t_size);
+			t_success = MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_size)) == IO_NORMAL;
 
 		if (t_success)
 			t_success = MCImageCreateCompressedBitmap(t_compression, r_compressed);
@@ -151,14 +152,18 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 	IO_handle t_stream = nil;
 	MCImageFrame *t_frames = nil;
 	uindex_t t_frame_count = 1;
+    MCAutoDataRef t_data;
 
 	// create single frame for non-animated formats
 	if (t_success && p_compressed->compression != F_GIF)
 		t_success = MCMemoryNewArray(1, t_frames);
 
 	// create stream for non-rle compressed images
+    if (t_success)
+        t_success = MCDataCreateWithBytes((byte_t*)p_compressed->data, p_compressed->size, &t_data);
+        
 	if (t_success && p_compressed->compression != F_RLE)
-		t_success = nil != (t_stream = MCS_fakeopen(MCString((char*)p_compressed->data, p_compressed->size)));
+		t_success = nil != (t_stream = MCS_fakeopen(*t_data));
 
 	if (t_success)
 	{

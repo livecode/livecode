@@ -1544,6 +1544,7 @@
 		A04643F60BAAA63A0030A830 /* w32theme.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = w32theme.cpp; path = src/w32theme.cpp; sourceTree = "<group>"; };
 		A71F80530F4F178C003012FD /* Standalone.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = Standalone.icns; path = rsrc/Standalone.icns; sourceTree = "<group>"; };
 		A71F80610F4F17F9003012FD /* StandaloneDoc.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; name = StandaloneDoc.icns; path = rsrc/StandaloneDoc.icns; sourceTree = "<group>"; };
+		BEF2C0EF17BA493A00E96459 /* socket.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = socket.h; path = src/socket.h; sourceTree = "<group>"; };
 		BEFE81D317B2B32800C9D14F /* dskmac.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = dskmac.cpp; path = src/dskmac.cpp; sourceTree = "<group>"; };
 		E8189EB515D17E8000194F25 /* exec-logic.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "exec-logic.cpp"; path = "src/exec-logic.cpp"; sourceTree = "<group>"; };
 		E864B41F15BDAB3F00F5361C /* legacy_spec.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacy_spec.cpp; path = src/legacy_spec.cpp; sourceTree = "<group>"; };
@@ -2734,6 +2735,7 @@
 				4D587E3E0B8096FD00200116 /* mcstring.cpp */,
 				4D587E060B8096E600200116 /* mcstring.h */,
 				4DB98625130C09D6008A03DC /* mcutility.cpp */,
+				BEF2C0EF17BA493A00E96459 /* socket.h */,
 				4D587DD80B8096E600200116 /* mcutility.h */,
 				4DAB7D270FF3A0100009F91E /* md5.cpp */,
 				4DFECEFF13CEE55B00288995 /* md5.h */,
@@ -3980,6 +3982,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
+				GCC_VERSION = 4.2;
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Debug;
@@ -3991,6 +3994,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
+				GCC_VERSION = 4.2;
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Release;

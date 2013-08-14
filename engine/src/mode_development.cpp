@@ -241,8 +241,11 @@ IO_stat MCDispatch::startup(void)
 	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
+    
+    MCAutoDataRef t_data;
+    /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(t_decompressed), MCStringGetLength(t_decompressed), &t_data);
 
-	IO_handle stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+	IO_handle stream = MCS_fakeopen(*t_data);
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{
 		MCS_close(stream);
@@ -360,7 +363,10 @@ bool MCDispatch::isolatedsend(const char *p_stack_data, uint32_t p_stack_data_le
 	IO_handle t_stream;
 	t_success = false;
 	t_stack = nil;
-	t_stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
+    MCAutoDataRef t_data;
+    
+    /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(t_decompressed), MCStringGetLength(t_decompressed), &t_data);
+	t_stream = MCS_fakeopen(*t_data);
 
 	if (MCdispatcher -> readfile(NULL, NULL, t_stream, t_stack) == IO_NORMAL)
 	{

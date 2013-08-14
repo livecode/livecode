@@ -531,7 +531,7 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	for (uindex_t i = 0; t_success && i < p_color_count; i++)
 	{
 		uindex_t t_byte_count = t_color_size;
-		t_success = IO_NORMAL == MCS_read(t_color, sizeof(uint8_t), t_byte_count, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_color, sizeof(uint8_t), t_byte_count, p_stream);
 		*t_dst_ptr++ = t_color[0] | (t_color[1] << 8) | (t_color[2] << 16) | 0xFF000000;
 	}
 
@@ -569,7 +569,7 @@ bool bmp_read_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
 		if (t_success)
 		{
 			uint8_t *t_src_row = t_src_buffer;
@@ -689,7 +689,7 @@ bool bmp_read_bitfield_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImage
 
 	for (uindex_t y = 0; t_success && y < p_bitmap->height; y++)
 	{
-		t_success = IO_NORMAL == MCS_read(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
+		t_success = IO_NORMAL == MCS_readfixed(t_src_buffer, sizeof(uint8_t), t_src_stride, p_stream);
 		if (t_success)
 			bmp_convert_bitfield_row((uint32_t*)t_dst_ptr, t_src_buffer, p_bitmap->width, p_depth, p_a_mask, p_r_mask, p_g_mask, p_b_mask);
 
@@ -1028,7 +1028,7 @@ private:
 			m_start = 0;
 		}
 
-		if (IO_NORMAL != MCS_read(m_buffer + m_end, sizeof(uint8_t), p_count, m_stream))
+		if (IO_NORMAL != MCS_readfixed(m_buffer + m_end, sizeof(uint8_t), p_count, m_stream))
 			return false;
 
 		m_end += p_count;

@@ -133,20 +133,21 @@ struct MCFakeOpenCallbacks
 };
 extern IO_handle MCS_fakeopencustom(struct MCFakeOpenCallbacks *callbacks, void *state);
 
-extern IO_handle MCS_fakeopen(const MCString &data);
+extern IO_handle MCS_fakeopen(MCDataRef data);
 extern IO_handle MCS_fakeopenwrite(void);
-extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
-
-extern bool MCS_isfake(IO_handle stream);
-extern uint4 MCS_faketell(IO_handle stream);
-extern void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size);
+///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
+extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
 
 /* LEGACY */ extern IO_handle MCS_open(const char *path, const char *mode, Boolean map, Boolean driver, uint4 offset);
 extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean driver, uint4 offset);
 extern void MCS_close(IO_handle &stream);
 
-extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream);
+extern IO_stat MCS_readall(void *p_ptr, uint32_t& r_count, IO_handle p_stream);
 extern IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream);
+extern IO_stat MCS_writeat(const void *buffer, uint32_t size, uint32_t pos, IO_handle stream);
+
 
 // MW-2008-08-15: Put the given character back at the head of the stream.
 extern IO_stat MCS_putback(char p_char, IO_handle stream);

@@ -502,7 +502,7 @@ boolean srcmgr_fill_input_buffer(j_decompress_ptr p_jpeg)
 {
 	MCJPEGSrcManager *t_src = (MCJPEGSrcManager*)p_jpeg->src;
 	uindex_t t_bytes_read = JPEG_BUF_SIZE;
-	IO_stat t_stat = MCS_read(t_src->buffer, sizeof(uint8_t), t_bytes_read, t_src->stream);
+	IO_stat t_stat = MCS_readfixed(t_src->buffer, sizeof(uint8_t), t_bytes_read, t_src->stream);
 	if (t_stat == IO_ERROR)
 		ERREXIT(p_jpeg, JERR_FILE_READ);
 

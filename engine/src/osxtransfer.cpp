@@ -1222,8 +1222,7 @@ bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
 		uindex_t t_byte_count = 0;
 
 		/* UNCHECKED */ MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
-
-		MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count);
+		/* UNCHECKED */ MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count));
 
 #ifdef SHARED_STRING
 		t_success = nil != (t_out_data = MCSharedString::Create(t_bytes, t_byte_count));

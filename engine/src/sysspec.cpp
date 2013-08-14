@@ -58,10 +58,6 @@ static volatile int *s_mainthread_errno;
 static int *s_mainthread_errno;
 #endif
 
-
-uint1 *MClowercasingtable = NULL;
-uint1 *MCuppercasingtable = NULL;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
@@ -143,14 +139,12 @@ real8 MCS_getfreediskspace(void)
 
 void MCS_launch_document(MCStringRef p_document)
 {
-	MCresult -> sets("not supported");
+    MCsystem -> LaunchDocument(p_document);
 }
 
 void MCS_launch_url(MCStringRef p_document_string)
 {
-	MCresult -> clear();
-	if (!MCSystemLaunchUrl(p_document_string))
-		MCresult -> sets("no association");
+    MCsystem -> LaunchUrl(p_document_string);
 }
 
 /* WRAPPER */
@@ -161,23 +155,24 @@ Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
 
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
-	MCresult -> sets("not supported");
+    MCsystem -> DoAlternateLanguage(p_script, p_language);
 }
 
 bool MCS_alternatelanguages(MCListRef& r_list)
 {
-	r_list = MCValueRetain(kMCEmptyList);
-	return true;
+    return MCsystem -> AlternateLanguage(r_list);
 }
 
 void MCS_seterrno(int value)
 {
-	*s_mainthread_errno = value;
+//	*s_mainthread_errno = value;
+    MCsystem -> SetErrno(value);
 }
 
 int MCS_geterrno(void)
 {
-	return *s_mainthread_errno;
+//	return *s_mainthread_errno;
+    return MCsystem -> GetErrno();
 }
 
 void MCS_sleep(real8 p_delay)
@@ -201,31 +196,50 @@ uint32_t MCS_getpid(void)
 // the system interface we just implement them as is in srvwindows.cpp, providing
 // the default 'dummy' functions here.
 
-#ifndef _WINDOWS_SERVER
+// Fixed by using MCServiceInterface
 bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
 {
-	/* RESULT */ //MCresult->sets("not supported");
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+        return t_service -> QueryRegistry(p_key, r_value, r_type, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
 bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
 {
-	/* RESULT */ //MCresult->sets("not supported");
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+        return t_service -> SetRegistry(p_key, p_value, p_type, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
 bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
 {
-	/* RESULT */ //MCresult->sets("not supported");
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+        return t_service -> DeleteRegistry(p_key, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
 bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
 {
-	/* RESULT */ //MCresult -> sets("not supported");
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+        return t_service -> ListRegistry(p_path, r_list, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
-#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -246,8 +260,7 @@ bool MCS_getmachine(MCStringRef& r_string)
 
 bool MCS_getaddress(MCStringRef& r_address)
 {
-	MCsystem -> GetAddress(r_address);
-	return true;
+	return MCsystem -> GetAddress(r_address);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -327,14 +340,24 @@ Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved)
 	return MCsystem -> ResolveAlias(p_path, r_resolved);
 }
 
-extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
 							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        return t_service -> SetResource(p_source, p_source, p_id, p_name, p_flags, p_value, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
 bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        return t_service -> GetResource(p_source, p_type, p_name, r_value, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
@@ -346,16 +369,46 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
 
 void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        t_service -> CopyResourceFork(p_source, p_dst);
 }
 
 bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        return t_service -> DeleteResource(p_source, p_type, p_name, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
 bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        return t_service -> GetResources(p_source, p_type, r_list, r_error);
+    
 	return MCStringCreateWithCString("not supported", r_error);
+}
+
+void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
+{
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        t_service -> LoadResFile(p_filename, r_data);
+}
+
+void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
+{
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+        t_service -> SaveResFile(p_path, p_data);
 }
 
 bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
@@ -554,23 +607,25 @@ public:
 		m_capacity = 0;
 	}
 	
-	MCMemoryFileHandle(const MCString& p_data)
+	MCMemoryFileHandle(MCDataRef p_data)
 	{
-		m_buffer = (char *)p_data . getstring();
+		m_buffer = (char *)MCDataGetBytePtr(p_data);
 		m_pointer = 0;
-		m_length = p_data . getlength();
+		m_length = MCDataGetLength(p_data);
 		m_capacity = 0;
 	}
 	
-	void TakeBuffer(char*& r_buffer, uint32_t& r_length)
+	bool TakeBuffer(void*& r_buffer, size_t& r_length)
 	{
 		r_buffer = (char *)realloc(m_buffer, m_length);
-		r_length = m_length;
+		r_length = (size_t)m_length;
         
 		m_buffer = NULL;
 		m_length = 0;
 		m_capacity = 0;
 		m_pointer = 0;
+        
+        return (r_buffer != nil);
 	}
 	
 	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
@@ -694,7 +749,7 @@ private:
 	uint32_t m_capacity;
 };
 
-IO_handle MCS_fakeopen(const MCString& p_data)
+IO_handle MCS_fakeopen(MCDataRef p_data)
 {
 	MCMemoryFileHandle *t_handle;
 	t_handle = new MCMemoryFileHandle(p_data);
@@ -748,22 +803,40 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
     
 	return IO_NORMAL;
 }
+//
+//uint32_t MCS_faketell(IO_handle stream)
+//{
+//	return (uint32_t)static_cast<MCSystemFileHandle *>(stream -> handle) -> Tell();
+//}
+//
+//bool MCS_isfake(IO_handle p_stream)
+//{
+//	return (p_stream -> flags & IO_FAKEWRITE) != 0;
+//}
 
-uint32_t MCS_faketell(IO_handle stream)
+IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
 {
-	return (uint32_t)static_cast<MCSystemFileHandle *>(stream -> handle) -> Tell();
-}
-
-bool MCS_isfake(IO_handle p_stream)
-{
-	return (p_stream -> flags & IO_FAKEWRITE) != 0;
-}
-
-void MCS_fakewriteat(IO_handle p_stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
-{
-	MCMemoryFileHandle *t_handle;
-	t_handle = static_cast<MCMemoryFileHandle *>(p_stream -> handle);
-	t_handle -> WriteAt(p_pos, p_buffer, p_size);
+    uint64_t t_old_pos;
+    uint32_t t_written;
+    bool t_success;
+    
+    t_old_pos = p_stream -> handle -> Tell();
+    
+    t_success = p_stream -> handle -> Seek(p_pos, SEEK_SET);
+    
+    if (t_success)
+        t_success = p_stream -> handle -> Write(p_buffer, p_size, t_written);
+    
+    if (t_success)
+        t_success = (t_written == p_size);
+    
+    if (t_success)
+        t_success = p_stream -> handle -> Seek(t_old_pos, SEEK_SET);
+    
+    if (!t_success)
+        return IO_ERROR;
+    
+    return IO_NORMAL;
 }
 
 void MCS_tmpnam(MCStringRef& r_path)
@@ -813,6 +886,11 @@ public:
 			return m_callbacks -> seek_set(m_state, p_offset) == IO_NORMAL;
 		return false;
 	}
+    
+    bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
 	
 	bool PutBack(char c)
 	{
@@ -1136,7 +1214,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
     return true;
 }
 
-void MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
+bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 {
 	MCAutoStringRef t_resolved_path;
 	
@@ -1148,27 +1226,30 @@ void MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	if (t_file == NULL)
 	{
 		MCresult -> sets("can't open file");
-		return;
+		return false;
 	}
     
     // Need to convert the string to a binary string
     MCAutoStringRef t_string;
     MCExecPoint ep(nil, nil, nil);
-    ep . setvalueref(p_string);
+    /* UNCHECKED */ ep . setvalueref(p_string);
     ep . texttobinary();
-    ep . copyasstring(&t_string);
+    /* UNCHECKED */ ep . copyasstring(&t_string);
     
 	uint32_t t_written;
 	if (!t_file -> handle -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), t_written) ||
 		MCStringGetLength(*t_string) != t_written)
 		MCresult -> sets("error writing file");
-	else
-		MCresult -> clear();
 	
 	t_file -> handle -> Close();
+    
+    if (!MCresult -> isclear())
+        return false;
+    
+    return true;
 }
 
-void MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
+bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
 	MCAutoStringRef t_resolved_path;
 	
@@ -1180,29 +1261,32 @@ void MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	if (t_file == NULL)
 	{
 		MCresult -> sets("can't open file");
-		return;
+		return false;
 	}
     
 	uint32_t t_written;
 	if (!t_file -> handle -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), t_written) ||
 		MCDataGetLength(p_data) != t_written)
 		MCresult -> sets("error writing file");
-	else
-		MCresult -> clear();
 	
 	t_file -> handle -> Close();
+	
+    if (!MCresult -> isclear())
+		return false;
+    
+    return true;
 }
 
-void MCS_loadresfile(MCExecPoint& ep)
-{
-	ep . clear();
-	MCresult -> sets("not supported");
-}
+//void MCS_loadresfile(MCExecPoint& ep)
+//{
+//	ep . clear();
+//	MCresult -> sets("not supported");
+//}
 
-void MCS_saveresfile(const MCString& p_filename, const MCString p_data)
-{
-	MCresult -> sets("not supported");
-}
+//void MCS_saveresfile(const MCString& p_filename, const MCString p_data)
+//{
+//	MCresult -> sets("not supported");
+//}
 
 int64_t MCS_fsize(IO_handle p_stream)
 {
@@ -1278,6 +1362,18 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	return IO_NORMAL;
 }
 
+//IO_handle MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
+//{
+//    IO_stat stat;
+//    stat = p_stream -> handle -> Seek(p_pos, SEEK_SET);
+//    if (stat == IO_NORMAL)
+//        stat = p_stream -> handle -> Write(p_buffer, p_size, <#uint32_t &r_written#>)
+//    if (stat == IO_NORMAL)
+//        stat = MCS_seek_set(stream, t_cur_offset);
+//    
+//    return stat;
+//}
+
 IO_stat MCS_flush(IO_handle p_stream)
 {
 	if (!p_stream -> handle -> Flush())
@@ -1306,7 +1402,7 @@ IO_stat MCS_sync(IO_handle p_stream)
 
 Boolean MCS_eof(IO_handle p_stream)
 {
-	return (p_stream -> flags & IO_ATEOF) != 0;
+	return (p_stream -> handle -> Tell() == p_stream -> handle ->  GetFileSize());
 }
 
 bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
@@ -1324,6 +1420,12 @@ bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 
 void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean reply)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    
+    if (t_service != nil)
+        t_service -> Send(p_message, p_program, p_eventtype, reply);
+    
 	MCresult->sets("not supported");
 }
 
@@ -1345,34 +1447,40 @@ MCStringRef MCS_request_program(MCStringRef p_message, MCStringRef p_program)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCS_runcmd(MCExecPoint& ep)
+//IO_stat MCS_runcmd(MCExecPoint& ep)
+//{
+//	void *t_data;
+//	uint32_t t_data_length;
+//	int t_return_code;
+//    
+//	MCAutoStringRef t_filename_string;
+//	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
+//	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
+//	{
+//		MCresult -> clear(False);
+//		MCeerror -> add(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+//		return IO_ERROR;
+//	}
+//	ep . grabbuffer((char *)t_data, t_data_length);
+//	
+//	MCresult -> setnvalue(t_return_code);
+//	
+//	return IO_NORMAL;
+//}
+
+IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
 {
-	void *t_data;
-	uint32_t t_data_length;
-	int t_return_code;
-    
-	MCAutoStringRef t_filename_string;
-	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
-	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
-	{
-		MCresult -> clear(False);
-		MCeerror -> add(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-		return IO_ERROR;
-	}
-	ep . grabbuffer((char *)t_data, t_data_length);
-	
-	MCresult -> setnvalue(t_return_code);
-	
-	return IO_NORMAL;
+    return MCsystem -> RunCommand(p_command, r_output);
 }
 
 void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
 {
-	MCresult -> sets("not opened");
+    MCsystem -> StartProcess(p_app, p_doc, p_mode, p_elevated);
 }
 
 void MCS_closeprocess(uint2 p_index)
 {
+    MCsystem -> CloseProcess(p_index);
 }
 
 void MCS_checkprocesses(void)
@@ -1382,10 +1490,12 @@ void MCS_checkprocesses(void)
 
 void MCS_kill(int4 p_pid, int4 p_signal)
 {
+    MCsystem -> Kill(p_pid, p_signal);
 }
 
 void MCS_killall(void)
 {
+    MCsystem -> KillAll();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1407,139 +1517,139 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSocket::~MCSocket(void)
-{
-}
-
-MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock,Boolean a, Boolean s, Boolean issecure)
-{
-}
-
-void MCSocket::close(void)
-{
-}
-
-void MCSocket::doclose(void)
-{
-}
-
-Boolean MCSocket::init(MCSocketHandle newfd)
-{
-	return False;
-}
+//MCSocket::~MCSocket(void)
+//{
+//}
+//
+//MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHandle sock,Boolean a, Boolean s, Boolean issecure)
+//{
+//}
+//
+//void MCSocket::close(void)
+//{
+//}
+//
+//void MCSocket::doclose(void)
+//{
+//}
+//
+//Boolean MCSocket::init(MCSocketHandle newfd)
+//{
+//	return False;
+//}
 
 MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
 {
 	return NULL;
 }
-
-void MCS_close_socket(MCSocket *p_socket)
-{
-}
-
-
-void MCS_read_socket(MCSocket *p_socket, MCObject *p_object, MCStringRef p_until, MCNameRef p_message, MCDataRef& r_read_data)
-{
-}
-
-void MCS_write_socket(const MCStringRef p_data, MCSocket *p_socket, MCObject *p_object, MCNameRef p_message)
-{
-}
-
-MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
-{
-	return NULL;
-}
-
-bool MCS_ha(MCSocket *s, MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
-
-bool MCS_pa(MCSocket *p_socket, MCStringRef& r_string)
-{
-	r_string = MCValueRetain(kMCEmptyString);
-	return true;
-}
-
-bool MCS_hn(MCStringRef& r_string)
-{
-	char *t_host_name;
-	t_host_name = MCsystem -> GetHostName();
-	if (t_host_name == NULL)
-	{
-		r_string = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-	
-	bool t_success;
-	t_success = MCStringCreateWithCString(t_host_name, r_string);
-	
-	delete t_host_name;
-    
-	return t_success;
-}
-
-static bool MCS_resolve_callback(void *p_context, MCStringRef p_host)
-{
-	MCListRef t_list = (MCListRef)p_context;
-	return MCListAppend(t_list, p_host);
-}
-
-bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
-{
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	if (!MCsystem -> AddressToHostName(p_address, MCS_resolve_callback, *t_list))
-	{
-		r_name = MCValueRetain(kMCEmptyString);
-		MCresult -> sets("invalid host address");
-	}
-	else
-	{
-		MCresult -> clear();
-		return MCListCopyAsString(*t_list, r_name);
-	}
-	return true;
-}
-
-bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr)
-{
-	if (!MCNameIsEqualTo(p_message, kMCEmptyName))
-	{
-		MCresult -> sets("not supported");
-		r_addr = MCValueRetain(kMCEmptyList);
-		return true;
-	}
-	
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-	if (!MCsystem -> HostNameToAddress(p_hostname, MCS_resolve_callback, *t_list))
-	{
-		r_addr = MCValueRetain(kMCEmptyList);
-		MCresult -> sets("invalid host name");
-	}
-	else
-	{
-		MCresult -> clear();
-		return MCListCopy(*t_list, r_addr);
-	}
-	return true;
-}
-
-bool MCS_getDNSservers(MCListRef& r_list)
-{
-	r_list = MCValueRetain(kMCEmptyList);
-	return true;
-}
-
-void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
-{
-	return;
-}
+//
+//void MCS_close_socket(MCSocket *p_socket)
+//{
+//}
+//
+//
+//void MCS_read_socket(MCSocket *p_socket, MCObject *p_object, MCStringRef p_until, MCNameRef p_message, MCDataRef& r_read_data)
+//{
+//}
+//
+//void MCS_write_socket(const MCStringRef p_data, MCSocket *p_socket, MCObject *p_object, MCNameRef p_message)
+//{
+//}
+//
+//MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
+//{
+//	return NULL;
+//}
+//
+//bool MCS_ha(MCSocket *s, MCStringRef& r_string)
+//{
+//	r_string = MCValueRetain(kMCEmptyString);
+//	return true;
+//}
+//
+//bool MCS_pa(MCSocket *p_socket, MCStringRef& r_string)
+//{
+//	r_string = MCValueRetain(kMCEmptyString);
+//	return true;
+//}
+//
+//bool MCS_hn(MCStringRef& r_string)
+//{
+//	char *t_host_name;
+//	t_host_name = MCsystem -> GetHostName();
+//	if (t_host_name == NULL)
+//	{
+//		r_string = MCValueRetain(kMCEmptyString);
+//		return true;
+//	}
+//	
+//	bool t_success;
+//	t_success = MCStringCreateWithCString(t_host_name, r_string);
+//	
+//	delete t_host_name;
+//    
+//	return t_success;
+//}
+//
+//static bool MCS_resolve_callback(void *p_context, MCStringRef p_host)
+//{
+//	MCListRef t_list = (MCListRef)p_context;
+//	return MCListAppend(t_list, p_host);
+//}
+//
+//bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
+//{
+//	MCAutoListRef t_list;
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//	if (!MCsystem -> AddressToHostName(p_address, MCS_resolve_callback, *t_list))
+//	{
+//		r_name = MCValueRetain(kMCEmptyString);
+//		MCresult -> sets("invalid host address");
+//	}
+//	else
+//	{
+//		MCresult -> clear();
+//		return MCListCopyAsString(*t_list, r_name);
+//	}
+//	return true;
+//}
+//
+//bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr)
+//{
+//	if (!MCNameIsEqualTo(p_message, kMCEmptyName))
+//	{
+//		MCresult -> sets("not supported");
+//		r_addr = MCValueRetain(kMCEmptyList);
+//		return true;
+//	}
+//	
+//	MCAutoListRef t_list;
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//	if (!MCsystem -> HostNameToAddress(p_hostname, MCS_resolve_callback, *t_list))
+//	{
+//		r_addr = MCValueRetain(kMCEmptyList);
+//		MCresult -> sets("invalid host name");
+//	}
+//	else
+//	{
+//		MCresult -> clear();
+//		return MCListCopy(*t_list, r_addr);
+//	}
+//	return true;
+//}
+//
+//bool MCS_getDNSservers(MCListRef& r_list)
+//{
+//	r_list = MCValueRetain(kMCEmptyList);
+//	return true;
+//}
+//
+//void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
+//{
+//	return;
+//}
 
 bool MCS_hostaddress(MCStringRef& r_host_address)
 {
@@ -1548,17 +1658,17 @@ bool MCS_hostaddress(MCStringRef& r_host_address)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Boolean MCS_poll(real8 p_delay, int fd)
-{
-	MCsystem -> Sleep(p_delay);
-	return False;
-}
+//Boolean MCS_poll(real8 p_delay, int fd)
+//{
+//	MCsystem -> Sleep(p_delay);
+//	return False;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
-	return (MCSysModuleHandle)MCsystem -> LoadModule(p_filename);
+	return MCsystem -> LoadModule(p_filename);
 }
 
 void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
@@ -1575,36 +1685,41 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 
 bool MCS_changeprocesstype(bool x)
 {
-	return x;
+    return MCsystem -> ChangeProcessType(x);
 }
 
 bool MCS_processtypeisforeground(void)
 {
-	return true;
+    return MCsystem -> ProcessTypeIsForeground();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_isatty(int fd)
 {
-	return false;
+	return MCsystem -> IsATTY(fd);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-void MCS_system_alert(const char *p_title, const char *p_message)
-{
-}
+//
+//void MCS_system_alert(const char *p_title, const char *p_message)
+//{
+//}
 
 uint32_t MCS_getsyserror(void)
 {
-	return errno;
+    return MCsystem -> GetSystemError();
 }
 
 bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 {
-	r_error = false;
-	return MCStringCreateWithCString("not supported", r_result);
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+        return t_service -> MCISendString(p_command, r_result, r_error);
+	
+    return MCStringCreateWithCString("not supported", r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

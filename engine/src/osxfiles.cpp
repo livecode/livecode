@@ -74,7 +74,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //}
 //
 //static void configureSerialPort(int sRefNum);
-static bool getResourceInfo(MCListRef p_list, ResType p_type);
+//static bool getResourceInfo(MCListRef p_list, ResType p_type);
 //static void parseSerialControlStr(char *set, struct termios *theTermios);
 //
 //char *path2utf(char *path);
@@ -190,20 +190,20 @@ static bool getResourceInfo(MCListRef p_list, ResType p_type);
 //	return IO_NORMAL;
 //}
 
-bool MCS_isfake(IO_handle stream)
-{
-	return (stream -> flags & IO_FAKEWRITE) != 0;
-}
+//bool MCS_isfake(IO_handle stream)
+//{
+//	return (stream -> flags & IO_FAKEWRITE) != 0;
+//}
+//
+//uint4 MCS_faketell(IO_handle stream)
+//{
+//	return stream -> len;
+//}
 
-uint4 MCS_faketell(IO_handle stream)
-{
-	return stream -> len;
-}
-
-void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
-{
-	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
-}
+//void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
+//{
+//	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
+//}
 
 #ifdef /* MCS_loadfile_dsk_mac */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
@@ -1088,170 +1088,170 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 //	return true;
 //}
 
-
-
-/********************************************************************/
-/*                       Resource Handling                          */
-/********************************************************************/ 
-
-class MCAutoResourceFileHandle
-{
-public:
-	MCAutoResourceFileHandle()
-	{
-		m_res_file = 0;
-	}
-	
-	~MCAutoResourceFileHandle()
-	{
-		if (m_res_file != 0)
-			MCS_closeresourcefile(m_res_file);
-	}
-	
-	short operator = (short p_res_file)
-	{
-		MCAssert(m_res_file == 0);
-		m_res_file = p_res_file;
-		return m_res_file;
-	}
-	
-	short operator * (void)
-	{
-		return m_res_file;
-	}
-	
-	short& operator & (void)
-	{
-		MCAssert(m_res_file == 0);
-		return m_res_file;
-	}
-	
-private:
-	short m_res_file;
-};
-
-/*************************************************************************
- * 'which' param can be an id or a name of a resource. If the dest       *
- * file does not have a  resource fork we will create one for it         *
- *************************************************************************/
-bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
-					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
-{
-	short prev_res_file = CurResFile(); //save the current resource fork
-	MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
-	
-	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
-		return false;
-	if (r_error != nil)
-		return true;
-		
-	// exclusive read/write permission for the dest file
-	// and do not set result if there is error
-	if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
-		return false;
-	if (r_error != nil)
-		return true;
-	
-	UseResFile(*destFileRefNum);
-	
-	if (MCStringGetLength(p_type) != 4)
-	{ 
-		//copying the entire resource file
-		short resTypeCount = Count1Types();
-		short resCount;
-		ResType resourceType;
-		Handle hres;
-		for (uindex_t i = 1; i <= resTypeCount; i++)
-		{
-			UseResFile(*srcFileRefNum);
-			Get1IndType(&resourceType, i);
-			resCount = Count1Resources(resourceType);
-			Str255 rname;
-			short id;
-			ResType type;
-			for (uindex_t j = 1; j <= resCount; j++)
-			{
-				UseResFile(*srcFileRefNum);
-				hres = Get1IndResource(resourceType, j);
-				if (hres != NULL)
-				{
-					GetResInfo(hres, &id, &type, rname);
-					DetachResource(hres);
-					UseResFile(*destFileRefNum);
-					AddResource(hres, type, id, rname);
-				}
-			}	//loop through each res within each res type
-		} //loop through each res type
-		
-		UseResFile(prev_res_file); //restore the original state
-		return true;
-	}
-	
-	//copy only one resource, specified either by id or name
-	UseResFile(*srcFileRefNum); //set the source resource file as the current file
-	
-	ResType restype;
-	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-	restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
-
-	Str255 t_resname;
-	
-	const char *whichres = MCStringGetCString(p_name);
-	const char *eptr = whichres;    /* find out whichres is a name or an id */
-	
-	long rid = strtol(whichres, (char **)&eptr, 10); // if can't convert, then the value
-	// passed in is a resource name
-	Boolean hasResName = False;
-	Handle rh = NULL;
-	
-	if (eptr == whichres)
-	{  /*did not do the conversion, use resource name */
-		c2pstrcpy(t_resname, MCStringGetCString(p_name));
-		rh = Get1NamedResource(restype, t_resname);
-		hasResName = True;
-	}
-	else //we got an resource id
-		rh = Get1Resource(restype, rid);
-	if (rh == NULL || *rh == 0)
-	{//bail out if resource handle is bad
-		errno = ResError();
-		
-		UseResFile(prev_res_file); //restore to the original state
-		return MCStringCreateWithCString("can't find the resource specified", r_error);
-	}
-	
-	unsigned char resourceName[255];
-	short srcID;        //let's get it's resource name.
-	ResType srcType;
-	if (!hasResName) //No name specified for the resource to be copied
-		GetResInfo(rh, &srcID, &srcType, resourceName);
-	
-	//detach the src res file, and select the dest res file
-	DetachResource(rh);
-	UseResFile(*destFileRefNum);
-	unsigned long newResID;
-	if (p_newid == NULL)
-		newResID = srcID; //use the resource id of the src file's resource
-	else
-		newResID = strtoul(MCStringGetCString(p_newid), (char **)&eptr, 10); //use the id passed in
-	
-	//delete the resource by id to be copied in the destination file, if it existed
-	Handle rhandle = Get1Resource(restype, newResID);
-	if (rhandle != NULL && ResError() != resNotFound)
-		RemoveResource(rhandle);
-	
-	//now, let's copy the resource to the dest file
-	if (!hasResName)
-		AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
-	else
-		AddResource(rh, restype, (short)newResID, t_resname);
-	//errno = ResError();//if errno == 0 means O.K.
-	OSErr t_os_error = ResError();
-	
-	UseResFile(prev_res_file); //restore to the original state
-	
-	return true;
-}
+//
+//
+///********************************************************************/
+///*                       Resource Handling                          */
+///********************************************************************/ 
+//
+//class MCAutoResourceFileHandle
+//{
+//public:
+//	MCAutoResourceFileHandle()
+//	{
+//		m_res_file = 0;
+//	}
+//	
+//	~MCAutoResourceFileHandle()
+//	{
+//		if (m_res_file != 0)
+//			MCS_closeresourcefile(m_res_file);
+//	}
+//	
+//	short operator = (short p_res_file)
+//	{
+//		MCAssert(m_res_file == 0);
+//		m_res_file = p_res_file;
+//		return m_res_file;
+//	}
+//	
+//	short operator * (void)
+//	{
+//		return m_res_file;
+//	}
+//	
+//	short& operator & (void)
+//	{
+//		MCAssert(m_res_file == 0);
+//		return m_res_file;
+//	}
+//	
+//private:
+//	short m_res_file;
+//};
+//
+///*************************************************************************
+// * 'which' param can be an id or a name of a resource. If the dest       *
+// * file does not have a  resource fork we will create one for it         *
+// *************************************************************************/
+//bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+//					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
+//{
+//	short prev_res_file = CurResFile(); //save the current resource fork
+//	MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
+//	
+//	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
+//		return false;
+//	if (r_error != nil)
+//		return true;
+//		
+//	// exclusive read/write permission for the dest file
+//	// and do not set result if there is error
+//	if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
+//		return false;
+//	if (r_error != nil)
+//		return true;
+//	
+//	UseResFile(*destFileRefNum);
+//	
+//	if (MCStringGetLength(p_type) != 4)
+//	{ 
+//		//copying the entire resource file
+//		short resTypeCount = Count1Types();
+//		short resCount;
+//		ResType resourceType;
+//		Handle hres;
+//		for (uindex_t i = 1; i <= resTypeCount; i++)
+//		{
+//			UseResFile(*srcFileRefNum);
+//			Get1IndType(&resourceType, i);
+//			resCount = Count1Resources(resourceType);
+//			Str255 rname;
+//			short id;
+//			ResType type;
+//			for (uindex_t j = 1; j <= resCount; j++)
+//			{
+//				UseResFile(*srcFileRefNum);
+//				hres = Get1IndResource(resourceType, j);
+//				if (hres != NULL)
+//				{
+//					GetResInfo(hres, &id, &type, rname);
+//					DetachResource(hres);
+//					UseResFile(*destFileRefNum);
+//					AddResource(hres, type, id, rname);
+//				}
+//			}	//loop through each res within each res type
+//		} //loop through each res type
+//		
+//		UseResFile(prev_res_file); //restore the original state
+//		return true;
+//	}
+//	
+//	//copy only one resource, specified either by id or name
+//	UseResFile(*srcFileRefNum); //set the source resource file as the current file
+//	
+//	ResType restype;
+//	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//	restype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+//
+//	Str255 t_resname;
+//	
+//	const char *whichres = MCStringGetCString(p_name);
+//	const char *eptr = whichres;    /* find out whichres is a name or an id */
+//	
+//	long rid = strtol(whichres, (char **)&eptr, 10); // if can't convert, then the value
+//	// passed in is a resource name
+//	Boolean hasResName = False;
+//	Handle rh = NULL;
+//	
+//	if (eptr == whichres)
+//	{  /*did not do the conversion, use resource name */
+//		c2pstrcpy(t_resname, MCStringGetCString(p_name));
+//		rh = Get1NamedResource(restype, t_resname);
+//		hasResName = True;
+//	}
+//	else //we got an resource id
+//		rh = Get1Resource(restype, rid);
+//	if (rh == NULL || *rh == 0)
+//	{//bail out if resource handle is bad
+//		errno = ResError();
+//		
+//		UseResFile(prev_res_file); //restore to the original state
+//		return MCStringCreateWithCString("can't find the resource specified", r_error);
+//	}
+//	
+//	unsigned char resourceName[255];
+//	short srcID;        //let's get it's resource name.
+//	ResType srcType;
+//	if (!hasResName) //No name specified for the resource to be copied
+//		GetResInfo(rh, &srcID, &srcType, resourceName);
+//	
+//	//detach the src res file, and select the dest res file
+//	DetachResource(rh);
+//	UseResFile(*destFileRefNum);
+//	unsigned long newResID;
+//	if (p_newid == NULL)
+//		newResID = srcID; //use the resource id of the src file's resource
+//	else
+//		newResID = strtoul(MCStringGetCString(p_newid), (char **)&eptr, 10); //use the id passed in
+//	
+//	//delete the resource by id to be copied in the destination file, if it existed
+//	Handle rhandle = Get1Resource(restype, newResID);
+//	if (rhandle != NULL && ResError() != resNotFound)
+//		RemoveResource(rhandle);
+//	
+//	//now, let's copy the resource to the dest file
+//	if (!hasResName)
+//		AddResource(rh, restype, (short)newResID, (unsigned char*)resourceName);
+//	else
+//		AddResource(rh, restype, (short)newResID, t_resname);
+//	//errno = ResError();//if errno == 0 means O.K.
+//	OSErr t_os_error = ResError();
+//	
+//	UseResFile(prev_res_file); //restore to the original state
+//	
+//	return true;
+//}
 
 
 /*********************************************************************
@@ -1262,54 +1262,52 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
  * MCS_getresources()						     *
  * MCS_setresource()						     *
  *********************************************************************/
-void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
-{
-
-	const char *t_dest = nil;
-	if (p_destination != nil)
-		t_dest = MCStringGetCString(p_destination);
-
-	const char *t_error;
-	t_error = NULL;
-	
-	SInt16 t_source_ref;
-	bool t_source_fork_opened;
-	t_source_fork_opened = false;
-	t_error = MCS_openresourcefork_with_path(MCStringGetCString(p_source), fsRdPerm, false, &t_source_ref); // RESFORK
-	if (t_error == NULL)
-		t_source_fork_opened = true;
-	
-	SInt16 t_dest_ref;
-	bool t_dest_fork_opened;
-	t_dest_fork_opened = false;
-	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_path(t_dest, fsWrPerm, true, &t_dest_ref); // RESFORK
-	if (t_error == NULL)
-		t_dest_fork_opened = true;
-
-	// In block sizes of 1k, copy over the data from source to destination..
-	char *t_buffer = new char[65536];
-	if (t_error == NULL)
-	{
-		OSErr t_os_read_error, t_os_write_error;
-		do {
-			ByteCount t_actual_read, t_actual_write;
-			t_os_read_error = FSReadFork(t_source_ref, fsFromMark, 0, 65536, t_buffer, &t_actual_read);
-			if (t_os_read_error == noErr || t_os_read_error == eofErr)
-			{
-				t_os_write_error = FSWriteFork(t_dest_ref, fsFromMark, 0, t_actual_read, t_buffer, &t_actual_write);
-				if (t_os_write_error != noErr || t_actual_write != t_actual_read)
-					t_error = "can't copy resource";
-			}
-		} while(t_error == NULL && t_os_read_error == noErr);
-	}
-	
-	delete t_buffer;
-	if (t_source_fork_opened)
-		FSCloseFork(t_source_ref);
-	if (t_dest_fork_opened)
-		FSCloseFork(t_dest_ref);
-}
+//void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
+//{
+//	MCAutoStringRef t_error;
+//	
+//	SInt16 t_source_ref;
+//	bool t_source_fork_opened;
+//	t_source_fork_opened = false;
+//
+//	MCS_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
+//    if (MCStringGetLength(*t_error) == 0)
+//		t_source_fork_opened = true;
+//	
+//	SInt16 t_dest_ref;
+//	bool t_dest_fork_opened;
+//	t_dest_fork_opened = false;
+//
+//	if (t_source_fork_opened)
+//    {
+//        MCS_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
+//        if (MCStringGetLength(*t_error))
+//            t_dest_fork_opened = true;
+//    }
+//
+//	// In block sizes of 1k, copy over the data from source to destination..
+//	char *t_buffer = new char[65536];
+//	if (t_source_fork_opened && t_dest_fork_opened)
+//	{
+//		OSErr t_os_read_error, t_os_write_error;
+//		do {
+//			ByteCount t_actual_read, t_actual_write;
+//			t_os_read_error = FSReadFork(t_source_ref, fsFromMark, 0, 65536, t_buffer, &t_actual_read);
+//			if (t_os_read_error == noErr || t_os_read_error == eofErr)
+//			{
+//				t_os_write_error = FSWriteFork(t_dest_ref, fsFromMark, 0, t_actual_read, t_buffer, &t_actual_write);
+//				if (t_os_write_error != noErr || t_actual_write != t_actual_read)
+//					/* UNCHECKED */ MCStringCreateWithCString("can't copy resource", &t_error);
+//			}
+//		} while(MCStringGetLength(*t_error) && t_os_read_error == noErr);
+//	}
+//	
+//	delete t_buffer;
+//	if (t_source_fork_opened)
+//		FSCloseFork(t_source_ref);
+//	if (t_dest_fork_opened)
+//		FSCloseFork(t_dest_ref);
+//}
 
 // MH-2007-04-02 rewriting this function to support FSRefs, long filenames in particular.
 // This function is quite specific to the older API resource routines, so the prototype needs to be adjusted.
@@ -1491,7 +1489,7 @@ const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permissio
 }
 */
 
-void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
+void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
 {
 	FSRef t_ref;
 	OSErr t_os_error;
@@ -1509,7 +1507,7 @@ bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool
 {
 //	MCAutoStringRef t_utf8_path;
 //	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
-//		return false;
+//		return false;`
 	
 	FSRef t_ref;
 	OSErr t_os_error;
@@ -1561,479 +1559,507 @@ bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool
 //		
 //	return t_error;	
 //}
+//
+//void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
+//{
+//	if (!MCSecureModeCanAccessDisk())
+//	{
+//		r_data = MCValueRetain(kMCEmptyString);
+//		MCresult->sets("can't open file");
+//		return;
+//	}
+//    
+//	MCAutoStringRef t_open_res_error_string;
+//
+//	short fRefNum;
+//	MCS_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+//
+//	const char *t_open_res_error = nil;
+//	if (MCStringGetLength(*t_open_res_error_string) != 0)
+//		t_open_res_error =  MCStringGetCString(*t_open_res_error_string);
+//	
+//	if (t_open_res_error != NULL)
+//	{
+//		MCresult -> sets(t_open_res_error);
+//		
+//		return;
+//	}
+//		
+//	//file mark should be pointing to 0 which is the begining of the file
+//	//let's get the end of file mark to determine the file size
+//	long fsize, toread;
+//	if ((errno = GetEOF(fRefNum, &fsize)) != noErr)
+//		MCresult->sets("can't get file size");
+//	else
+//	{
+//		toread = fsize;
+//		char *buffer;
+//		buffer = new char[fsize];
+//		if (buffer == NULL)
+//			MCresult->sets("can't create data buffer");
+//		else
+//		{
+//			errno = FSRead(fRefNum, &toread, buffer);
+//			if (toread != fsize) //did not read bytes as specified
+//				MCresult->sets("error reading file");
+//			else
+//			{
+//				/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t*)buffer, toread, r_data);
+//				MCresult->clear(False);
+//			}
+//		}
+//	}
+//	
+//	FSCloseFork(fRefNum);
+//
+//}
 
-void MCS_loadresfile(MCExecPoint &ep)
-{
-	if (!MCSecureModeCanAccessDisk())
-	{
-		ep.clear();
-		MCresult->sets("can't open file");
-		return;
-	}
-	/*
-	char *t_path = ep.getsvalue().clone();
-	ep.clear();
-	
-	const char *t_open_res_error;
-	t_open_res_error = NULL;
-	*/
-	MCAutoStringRef t_open_res_error_string;
-	MCAutoStringRef t_path_string;
-	/* UNCHECKED */ ep . copyasstringref(&t_path_string);
+//// MH-2007-04-02: [[ Bug 705 ]] resfile: URLs do not work with long filenames...
+//void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
+//{
+//	MCAutoStringRef t_error;
+//
+//	if (!MCSecureModeCanAccessDisk())
+//		/* UNCHECKED */ MCStringCreateWithCString("can't open file", &t_error);
+//	
+//	SInt16 t_fork_ref;
+//	bool t_fork_opened;
+//	t_fork_opened = false;
+//	
+//	if (MCStringGetLength(*t_error) == 0)
+//	{
+//		MCS_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
+//		if (MCStringGetLength(*t_error))
+//			t_fork_opened = true;
+//	}
+//	
+//	if (MCStringGetLength(*t_error) == 0)
+//	{
+//		OSErr t_os_error;
+//		ByteCount t_actual_count;
+//		t_os_error = FSWriteFork(t_fork_ref, fsFromStart, 0, MCDataGetLength(p_data), (const void *)MCDataGetBytePtr(p_data), &t_actual_count);
+//		if (t_os_error == noErr && t_actual_count == (ByteCount)MCDataGetLength(p_data))
+//			FSSetForkSize(t_fork_ref, fsFromStart, t_actual_count);
+//		else
+//			/* UNCHECKED */ MCStringCreateWithCString("error writing file", &t_error);
+//	}
+//	
+//	if (t_fork_opened)
+//		FSCloseFork(t_fork_ref);
+//	
+//	if (MCStringGetLength(*t_error) != 0)
+//		/* UNCHECKED */ MCresult -> setvalueref(*t_error);
+//	else
+//		MCresult -> clear(False);
+//}
 
-	short fRefNum;
-	MCS_openresourcefork_with_path(*t_path_string, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+//void MCS_deleteresource(const char *resourcefile, const char *rtype,
+//                        const char *which)
+//{
+//	ResType restype;
+//	short rfRefNum;
+//	memcpy((char *)&restype, rtype, 4); /* let's get the resource type first */
+//	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//	restype = (ResType)MCSwapInt32HostToNetwork(restype);
+//
+//	const char *t_open_res_error;
+//	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &rfRefNum); // RESFILE
+//	if (t_open_res_error != NULL)
+//	{
+//		MCresult -> sets(t_open_res_error);
+//		return;
+//	}
+//
+//	Handle rh = NULL;
+//	const char *eptr = (char *)which;     /* find out if we got a name or an id */
+//	long rid = strtol(which, (char **)&eptr, 10);
+//	if (eptr == which)
+//	{     /* did not do conversion, so use resource name */
+//		unsigned char *pname = c2pstr((char *)which);
+//		rh = Get1NamedResource(restype, pname);
+//	}
+//	else                  /* 'which' param is an resrouce id */
+//		rh = Get1Resource(restype, rid);
+//	if (rh == NULL)
+//		MCresult->sets("can't find the resource specified");
+//	else
+//	{
+//		SetResAttrs(rh, 0); // override protect flag
+//		RemoveResource(rh);
+//		if ((errno = ResError()) != noErr)
+//			MCresult->sets("can't remove the resource specified");
+//		DisposeHandle(rh);
+//	}
+//	
+//	MCS_closeresourcefile(rfRefNum);
+//}
+//
+///* WRAPPER */
+//bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
+//{
+//	ResType restype;
+//	short rfRefNum;
+//	memcpy((char *)&restype, MCStringGetCString(p_type), 4); /* let's get the resource type first */
+//	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//	restype = (ResType)MCSwapInt32HostToNetwork(restype);
+//    
+//	MCAutoStringRef t_error;
+//	if (!MCS_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
+//	{
+//		return MCresult -> setvalueref(*t_error);
+//	}
+//    
+//	Handle rh = NULL;
+//	const char *eptr = MCStringGetCString(p_name);     /* find out if we got a name or an id */
+//	long rid = strtol(MCStringGetCString(p_name), (char **)&eptr, 10);
+//	if (eptr == MCStringGetCString(p_name))
+//	{     /* did not do conversion, so use resource name */
+//        char* tname = strclone(MCStringGetCString(p_name));
+//		unsigned char *pname = c2pstr(tname);
+//		rh = Get1NamedResource(restype, pname);
+//        delete[] tname;
+//	}
+//	else                  /* 'which' param is an resrouce id */
+//		rh = Get1Resource(restype, rid);
+//	if (rh == NULL)
+//		MCresult->sets("can't find the resource specified");
+//	else
+//	{
+//		SetResAttrs(rh, 0); // override protect flag
+//		RemoveResource(rh);
+//		if ((errno = ResError()) != noErr)
+//			MCresult->sets("can't remove the resource specified");
+//		DisposeHandle(rh);
+//	}
+//	
+//	MCS_closeresourcefile(rfRefNum);
+//	if (MCresult->isclear())
+//		return true;
+//
+//	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+//
+//	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+//}
+//
+//void MCS_getresource(const char *resourcefile, const char *restype,
+//                     const char *name, MCExecPoint &ep)
+//{
+//	short resFileRefNum;
+//	const char *t_open_res_error;
+//	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdPerm, true, &resFileRefNum); // RESFILE
+//	if (t_open_res_error != NULL)
+//	{	
+//		MCresult -> sets(t_open_res_error);
+//		return;
+//	}
+//
+//	ResType rtype;
+//	memcpy((char *)&rtype, restype, 4);
+//	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//	rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+//
+//	/* test to see if "name" is a resource name or an id */
+//	char *whichres = strclone(name);
+//	const char *eptr = (char *)name;
+//	long rid = strtol(whichres, (char **)&eptr, 10);
+//
+//	unsigned char *rname;
+//	Handle rh = NULL; //resource handle
+//	if (eptr == whichres)
+//	{  /* conversion failed, so 'name' is resource name*/
+//		rname = c2pstr((char *)whichres); //resource name in Pascal
+//		rh = Get1NamedResource(rtype, rname);
+//	}
+//	else //we got an resrouce id, the 'name' specifies an resource id
+//		rh = Get1Resource(rtype, rid);
+//	delete whichres;
+//
+//	if (rh == NULL)
+//	{
+//		errno = ResError();
+//		MCresult->sets("can't find specified resource");
+//		MCS_closeresourcefile(resFileRefNum);
+//		return;
+//	}
+//	//getting the the resource's size throuth the resource handle
+//	int4 resLength = GetHandleSize(rh);
+//	if (resLength <= 0)
+//	{
+//		MCresult->sets("can't get resouce length.");
+//		MCS_closeresourcefile(resFileRefNum);
+//		return;
+//	}
+//	// store the resource into ep and return
+//	ep.copysvalue((const char *)*rh, resLength);
+//	MCresult->clear();
+//	MCS_closeresourcefile(resFileRefNum);
+//}
+//
+///* WRAPPER */
+//bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
+//{
+//	MCExecPoint ep(nil, nil, nil);
+//	MCS_getresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_name), ep);
+//	if (MCresult->isclear())
+//		return ep.copyasstringref(r_value);
+//	
+//	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+//
+////	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+//}
 
-	const char *t_open_res_error = nil;
-	if (MCStringGetLength(*t_open_res_error_string) != 0)
-		t_open_res_error =  MCStringGetCString(*t_open_res_error_string);
-	
-	if (t_open_res_error != NULL)
-	{
-		MCresult -> sets(t_open_res_error);
-		
-		return;
-	}
-		
-	//file mark should be pointing to 0 which is the begining of the file
-	//let's get the end of file mark to determine the file size
-	long fsize, toread;
-	if ((errno = GetEOF(fRefNum, &fsize)) != noErr)
-		MCresult->sets("can't get file size");
-	else
-	{
-		toread = fsize;
-		char *buffer;
-		/* UNCHECKED */ ep . reserve(fsize, buffer);
-		if (buffer == NULL)
-			MCresult->sets("can't create data buffer");
-		else
-		{
-			errno = FSRead(fRefNum, &toread, buffer);
-			if (toread != fsize) //did not read bytes as specified
-				MCresult->sets("error reading file");
-			else
-			{
-				ep . commit(fsize);
-				MCresult->clear(False);
-			}
-		}
-	}
-	
-	FSCloseFork(fRefNum);
-
-}
-
-// MH-2007-04-02: [[ Bug 705 ]] resfile: URLs do not work with long filenames...
-void MCS_saveresfile(const MCString& p_path, const MCString p_data)
-{
-	const char *t_error;
-	t_error = NULL;
-
-	if (!MCSecureModeCanAccessDisk())
-		t_error = "can't open file";
-	
-	SInt16 t_fork_ref;
-	bool t_fork_opened;
-	t_fork_opened = false;
-	
-	if (t_error == NULL)
-	{
-		t_error = MCS_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref); // RESFORK
-		if (t_error == NULL)
-			t_fork_opened = true;
-	}
-	
-	if (t_error == NULL)
-	{
-		OSErr t_os_error;
-		ByteCount t_actual_count;
-		t_os_error = FSWriteFork(t_fork_ref, fsFromStart, 0, p_data . getlength(), (const void *)p_data . getstring(), &t_actual_count);
-		if (t_os_error == noErr && t_actual_count == (ByteCount)p_data . getlength())
-			FSSetForkSize(t_fork_ref, fsFromStart, t_actual_count);
-		else
-			t_error = "error writing file";
-	}
-	
-	if (t_fork_opened)
-		FSCloseFork(t_fork_ref);
-	
-	if (t_error != NULL)
-		MCresult -> sets(t_error);
-	else
-		MCresult -> clear(False);
-}
-
-void MCS_deleteresource(const char *resourcefile, const char *rtype,
-                        const char *which)
-{
-	ResType restype;
-	short rfRefNum;
-	memcpy((char *)&restype, rtype, 4); /* let's get the resource type first */
-	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-	restype = (ResType)MCSwapInt32HostToNetwork(restype);
-
-	const char *t_open_res_error;
-	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &rfRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{
-		MCresult -> sets(t_open_res_error);
-		return;
-	}
-
-	Handle rh = NULL;
-	const char *eptr = (char *)which;     /* find out if we got a name or an id */
-	long rid = strtol(which, (char **)&eptr, 10);
-	if (eptr == which)
-	{     /* did not do conversion, so use resource name */
-		unsigned char *pname = c2pstr((char *)which);
-		rh = Get1NamedResource(restype, pname);
-	}
-	else                  /* 'which' param is an resrouce id */
-		rh = Get1Resource(restype, rid);
-	if (rh == NULL)
-		MCresult->sets("can't find the resource specified");
-	else
-	{
-		SetResAttrs(rh, 0); // override protect flag
-		RemoveResource(rh);
-		if ((errno = ResError()) != noErr)
-			MCresult->sets("can't remove the resource specified");
-		DisposeHandle(rh);
-	}
-	
-	MCS_closeresourcefile(rfRefNum);
-}
-
-/* WRAPPER */
-bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
-{
-	MCS_deleteresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_name));
-	if (MCresult->isclear())
-		return true;
-
-	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
-
-	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
-}
-
-void MCS_getresource(const char *resourcefile, const char *restype,
-                     const char *name, MCExecPoint &ep)
-{
-	short resFileRefNum;
-	const char *t_open_res_error;
-	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdPerm, true, &resFileRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{	
-		MCresult -> sets(t_open_res_error);
-		return;
-	}
-
-	ResType rtype;
-	memcpy((char *)&rtype, restype, 4);
-	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-	rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
-
-	/* test to see if "name" is a resource name or an id */
-	char *whichres = strclone(name);
-	const char *eptr = (char *)name;
-	long rid = strtol(whichres, (char **)&eptr, 10);
-
-	unsigned char *rname;
-	Handle rh = NULL; //resource handle
-	if (eptr == whichres)
-	{  /* conversion failed, so 'name' is resource name*/
-		rname = c2pstr((char *)whichres); //resource name in Pascal
-		rh = Get1NamedResource(rtype, rname);
-	}
-	else //we got an resrouce id, the 'name' specifies an resource id
-		rh = Get1Resource(rtype, rid);
-	delete whichres;
-
-	if (rh == NULL)
-	{
-		errno = ResError();
-		MCresult->sets("can't find specified resource");
-		MCS_closeresourcefile(resFileRefNum);
-		return;
-	}
-	//getting the the resource's size throuth the resource handle
-	int4 resLength = GetHandleSize(rh);
-	if (resLength <= 0)
-	{
-		MCresult->sets("can't get resouce length.");
-		MCS_closeresourcefile(resFileRefNum);
-		return;
-	}
-	// store the resource into ep and return
-	ep.copysvalue((const char *)*rh, resLength);
-	MCresult->clear();
-	MCS_closeresourcefile(resFileRefNum);
-}
-
-/* WRAPPER */
-bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
-{
-	MCExecPoint ep(nil, nil, nil);
-	MCS_getresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_name), ep);
-	if (MCresult->isclear())
-		return ep.copyasstringref(r_value);
-	
-	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
-	
-	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
-}
-
-bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_resources, MCStringRef& r_error)
-{ /* get resources from the resource fork of file 'path',
-	   * if resource type is not empty, only resources of the specified type
-	   * are listed. otherwise lists all resources from the
-	   * resource fork.					    */
-
-	MCAutoResourceFileHandle resFileRefNum;
-	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
-		return false;
-	if (r_error != nil)
-		return true;
-	
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	SetResLoad(False);
-	//since most recently opened file is place on the top of the search
-	//path, no need to call UseResFile() to set this resource file as
-	//the current file
-	
-	bool t_success = true;
-	errno = noErr;
-	
-	ResType rtype, type;
-	if (p_type != nil)
-	{ //get the resource info specified by the resource type
-		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-		rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
-		t_success = getResourceInfo(*t_list, rtype);
-	}
-	else
-	{               //rtype is NULL, return All the resources
-		short typeCount = Count1Types(); //find out how many resource type there is
-		if (ResError() != noErr)
-		{
-			errno = ResError();
-			t_success = false;
-		}
-		for (uindex_t i = 1; t_success && i <= typeCount; i++)
-		{
-			Get1IndType(&type, i);
-			if (ResError() != noErr || type == 0)
-				continue;
-			t_success = getResourceInfo(*t_list, type);
-		}
-	}
-	SetResLoad(True);
-	
-	if (t_success)
-	{
-		return MCListCopy(*t_list, r_resources);
-	}
-	else if (errno != noErr)
-	{
-		r_resources = MCValueRetain(kMCEmptyList);
-		r_error = MCValueRetain(kMCEmptyString);
-		return true;
-	}
-	
-	return false;
-}
-
-void MCS_setresource(const char *resourcefile, const char *type,
-                     const char *id, const char *name, const char *attrib,
-                     const MCString &s)
-/* set a resource in the file specified.  either name or id can be empty,
- * attrib is the attributes of the resource. It's a ";" seperated list */
-{
-	short newflags = 0; // parse up the attributes
-	if (strlen(attrib) != 0)
-	{
-		const char *sptr = attrib;
-		do
-		{
-			switch (*sptr++)
-			{
-			case 'S':
-			case 's':
-				newflags |= resSysHeap;
-				break;
-			case 'U':
-			case 'u':
-				newflags |= resPurgeable;
-				break;
-			case 'L':
-			case 'l':
-				newflags |= resLocked;
-				break;
-			case 'P':
-			case 'p':
-				newflags |= resProtected;
-				break;
-			case 'R':
-			case 'r':
-				newflags |= resPreload;
-				break;
-			case 'C':
-			case 'c':
-				newflags |= resChanged;
-				break;
-			}
-		}
-		while (*sptr);
-	}
-	else
-		newflags |= resChanged;
-
-	ResType rtype;
-	memcpy((char *)&rtype, type, 4);
-	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-	rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
-	short rid = 0;
-	if (strlen(id) != 0)
-	{
-		const char *eptr;
-		rid = (short)strtol(id, (char **)&eptr, 10);
-	}
-	short resFileRefNum; //open resource fork for read and write permission
-	const char *t_open_res_error;
-	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &resFileRefNum); // RESFILE
-	if (t_open_res_error != NULL)
-	{	
-		MCresult -> sets(t_open_res_error);
-		return;
-	}
-
-	Handle rh = NULL;
-	if (rid != 0)
-		rh = Get1Resource(rtype, rid);
-	else
-	{
-		char *whichres = strclone(name);
-		unsigned char *rname = c2pstr(whichres); //resource name in Pascal
-		rh = Get1NamedResource(rtype, rname);
-		delete whichres;
-	}
-
-	Str255 newname;
-	strcpy((char *)newname, name);
-	c2pstr((char *)newname);
-	if (rh != NULL)
-	{
-		SInt16 tid;
-		ResType ttype;
-		Str255 tname;
-		GetResInfo(rh, &tid, &ttype, tname);
-		if (strlen(name) == 0)
-			pStrcpy(newname, tname);
-		else
-			if (strlen(id) == 0)
-				rid = tid;
-		if (strlen(attrib) == 0)
-			newflags = GetResAttrs(rh) | resChanged;
-		SetResAttrs(rh, 0); // override protect flag
-		RemoveResource(rh);
-		DisposeHandle(rh);
-	}
-	if (rid == 0)
-		rid = UniqueID(rtype);
-
-	uint4 len = s.getlength();
-	rh = NewHandle(len);
-
-	if (rh == NULL)
-		MCresult->sets("can't create resource handle");
-	else
-	{
-		memcpy(*rh, s.getstring(), len);
-		AddResource(rh, rtype, rid, newname);
-		if ((errno = ResError()) != noErr)
-		{
-			DisposeHandle(rh);
-			MCresult->sets("can't add resource");
-		}
-		else
-			SetResAttrs(rh, newflags);
-	}
-	MCS_closeresourcefile(resFileRefNum);
-}
-
-/* WRAPPER */
-extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
-							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
-{
-	MCS_setresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_id), MCStringGetCString(p_name), MCStringGetCString(p_flags), MCStringGetOldString(p_value));
-	if (MCresult->isclear())
-		return true;
-	
-	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
-	
-	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
-}
+//bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_resources, MCStringRef& r_error)
+//{ /* get resources from the resource fork of file 'path',
+//	   * if resource type is not empty, only resources of the specified type
+//	   * are listed. otherwise lists all resources from the
+//	   * resource fork.					    */
+//
+//	MCAutoResourceFileHandle resFileRefNum;
+//	if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
+//		return false;
+//	if (r_error != nil)
+//		return true;
+//	
+//	MCAutoListRef t_list;
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	SetResLoad(False);
+//	//since most recently opened file is place on the top of the search
+//	//path, no need to call UseResFile() to set this resource file as
+//	//the current file
+//	
+//	bool t_success = true;
+//	errno = noErr;
+//	
+//	ResType rtype, type;
+//	if (p_type != nil)
+//	{ //get the resource info specified by the resource type
+//		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//		rtype = MCSwapInt32HostToNetwork(*(uint32_t*)MCStringGetNativeCharPtr(p_type));
+//		t_success = getResourceInfo(*t_list, rtype);
+//	}
+//	else
+//	{               //rtype is NULL, return All the resources
+//		short typeCount = Count1Types(); //find out how many resource type there is
+//		if (ResError() != noErr)
+//		{
+//			errno = ResError();
+//			t_success = false;
+//		}
+//		for (uindex_t i = 1; t_success && i <= typeCount; i++)
+//		{
+//			Get1IndType(&type, i);
+//			if (ResError() != noErr || type == 0)
+//				continue;
+//			t_success = getResourceInfo(*t_list, type);
+//		}
+//	}
+//	SetResLoad(True);
+//	
+//	if (t_success)
+//	{
+//		return MCListCopy(*t_list, r_resources);
+//	}
+//	else if (errno != noErr)
+//	{
+//		r_resources = MCValueRetain(kMCEmptyList);
+//		r_error = MCValueRetain(kMCEmptyString);
+//		return true;
+//	}
+//	
+//	return false;
+//}
+//
+//void MCS_setresource(const char *resourcefile, const char *type,
+//                     const char *id, const char *name, const char *attrib,
+//                     const MCString &s)
+///* set a resource in the file specified.  either name or id can be empty,
+// * attrib is the attributes of the resource. It's a ";" seperated list */
+//{
+//	short newflags = 0; // parse up the attributes
+//	if (strlen(attrib) != 0)
+//	{
+//		const char *sptr = attrib;
+//		do
+//		{
+//			switch (*sptr++)
+//			{
+//			case 'S':
+//			case 's':
+//				newflags |= resSysHeap;
+//				break;
+//			case 'U':
+//			case 'u':
+//				newflags |= resPurgeable;
+//				break;
+//			case 'L':
+//			case 'l':
+//				newflags |= resLocked;
+//				break;
+//			case 'P':
+//			case 'p':
+//				newflags |= resProtected;
+//				break;
+//			case 'R':
+//			case 'r':
+//				newflags |= resPreload;
+//				break;
+//			case 'C':
+//			case 'c':
+//				newflags |= resChanged;
+//				break;
+//			}
+//		}
+//		while (*sptr);
+//	}
+//	else
+//		newflags |= resChanged;
+//
+//	ResType rtype;
+//	memcpy((char *)&rtype, type, 4);
+//	// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//	rtype = (ResType)MCSwapInt32HostToNetwork(rtype);
+//	short rid = 0;
+//	if (strlen(id) != 0)
+//	{
+//		const char *eptr;
+//		rid = (short)strtol(id, (char **)&eptr, 10);
+//	}
+//	short resFileRefNum; //open resource fork for read and write permission
+//	const char *t_open_res_error;
+//	t_open_res_error = MCS_openresourcefile_with_path(resourcefile, fsRdWrPerm, true, &resFileRefNum); // RESFILE
+//	if (t_open_res_error != NULL)
+//	{	
+//		MCresult -> sets(t_open_res_error);
+//		return;
+//	}
+//
+//	Handle rh = NULL;
+//	if (rid != 0)
+//		rh = Get1Resource(rtype, rid);
+//	else
+//	{
+//		char *whichres = strclone(name);
+//		unsigned char *rname = c2pstr(whichres); //resource name in Pascal
+//		rh = Get1NamedResource(rtype, rname);
+//		delete whichres;
+//	}
+//
+//	Str255 newname;
+//	strcpy((char *)newname, name);
+//	c2pstr((char *)newname);
+//	if (rh != NULL)
+//	{
+//		SInt16 tid;
+//		ResType ttype;
+//		Str255 tname;
+//		GetResInfo(rh, &tid, &ttype, tname);
+//		if (strlen(name) == 0)
+//			pStrcpy(newname, tname);
+//		else
+//			if (strlen(id) == 0)
+//				rid = tid;
+//		if (strlen(attrib) == 0)
+//			newflags = GetResAttrs(rh) | resChanged;
+//		SetResAttrs(rh, 0); // override protect flag
+//		RemoveResource(rh);
+//		DisposeHandle(rh);
+//	}
+//	if (rid == 0)
+//		rid = UniqueID(rtype);
+//
+//	uint4 len = s.getlength();
+//	rh = NewHandle(len);
+//
+//	if (rh == NULL)
+//		MCresult->sets("can't create resource handle");
+//	else
+//	{
+//		memcpy(*rh, s.getstring(), len);
+//		AddResource(rh, rtype, rid, newname);
+//		if ((errno = ResError()) != noErr)
+//		{
+//			DisposeHandle(rh);
+//			MCresult->sets("can't add resource");
+//		}
+//		else
+//			SetResAttrs(rh, newflags);
+//	}
+//	MCS_closeresourcefile(resFileRefNum);
+//}
+//
+///* WRAPPER */
+//extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+//							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
+///* set a resource in the file specified.  either name or id can be empty,
+// * attrib is the attributes of the resource. It's a ";" seperated list */
+//{
+//	MCS_setresource(MCStringGetCString(p_source), MCStringGetCString(p_type), MCStringGetCString(p_id), MCStringGetCString(p_name), MCStringGetCString(p_flags), MCStringGetOldString(p_value));
+//	if (MCresult->isclear())
+//		return true;
+//	
+//	MCAssert(MCValueGetTypeCode(MCresult->getvalueref()) == kMCValueTypeCodeString);
+//	
+//	return MCStringCopy((MCStringRef)MCresult->getvalueref(), r_error);
+//}
 
 // Resource utility functions
-
-static bool getResourceInfo(MCListRef p_list, ResType searchType)
-{ /* get info of resources of a resource type and build a list of
-	   * <resName>, <resID>, <resType>, <resSize> on each line */
-	Handle rh;
-	short rid;
-	ResType rtype;
-	Str255 rname;  //Pascal string
-	char cstr[256];  //C string
-	char typetmp[5]; //buffer for storing type string in c format
-	short total = Count1Resources(searchType);
-	if (ResError() != noErr)
-	{
-		errno = ResError();
-		return false;
-	}
-	char buffer[4 + U2L + 255 + U4L + 6];
-	for (uindex_t i = 1 ; i <= total ; i++)
-	{
-		if ((rh = Get1IndResource(searchType, i)) == NULL)
-			continue;
-		GetResInfo(rh, &rid, &rtype, rname);
-		p2cstrcpy(cstr, rname); //convert to C string
-		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
-		rtype = (ResType)MCSwapInt32NetworkToHost(rtype);
-		memcpy(typetmp, (char*)&rtype, 4);
-		typetmp[4] = '\0';
-		//format res info into "type, id, name, size, attributes" string --
-		short flags = GetResAttrs(rh);
-		char fstring[7];
-		char *sptr = fstring;
-		if (flags & resSysHeap)
-			*sptr++ = 'S';
-		if (flags & resPurgeable)
-			*sptr++ = 'U';
-		if (flags & resLocked)
-			*sptr++ = 'L';
-		if (flags & resProtected)
-			*sptr++ = 'P';
-		if (flags & resPreload)
-			*sptr++ = 'R';
-		if (flags & resChanged)
-			*sptr++ = 'C';
-		*sptr = '\0';
-		
-		MCAutoStringRef t_string;
-		if (!MCStringFormat(&t_string, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
-		        GetMaxResourceSize(rh), fstring))
-			return false;
-		if (!MCListAppend(p_list, *t_string))
-			return false;
-	}
-	
-	return true;
-}
+//
+//static bool getResourceInfo(MCListRef p_list, ResType searchType)
+//{ /* get info of resources of a resource type and build a list of
+//	   * <resName>, <resID>, <resType>, <resSize> on each line */
+//	Handle rh;
+//	short rid;
+//	ResType rtype;
+//	Str255 rname;  //Pascal string
+//	char cstr[256];  //C string
+//	char typetmp[5]; //buffer for storing type string in c format
+//	short total = Count1Resources(searchType);
+//	if (ResError() != noErr)
+//	{
+//		errno = ResError();
+//		return false;
+//	}
+//	char buffer[4 + U2L + 255 + U4L + 6];
+//	for (uindex_t i = 1 ; i <= total ; i++)
+//	{
+//		if ((rh = Get1IndResource(searchType, i)) == NULL)
+//			continue;
+//		GetResInfo(rh, &rid, &rtype, rname);
+//		p2cstrcpy(cstr, rname); //convert to C string
+//		// MH-2007-03-22: [[ Bug 4267 ]] Endianness not dealt with correctly in Mac OS resource handling functions.
+//		rtype = (ResType)MCSwapInt32NetworkToHost(rtype);
+//		memcpy(typetmp, (char*)&rtype, 4);
+//		typetmp[4] = '\0';
+//		//format res info into "type, id, name, size, attributes" string --
+//		short flags = GetResAttrs(rh);
+//		char fstring[7];
+//		char *sptr = fstring;
+//		if (flags & resSysHeap)
+//			*sptr++ = 'S';
+//		if (flags & resPurgeable)
+//			*sptr++ = 'U';
+//		if (flags & resLocked)
+//			*sptr++ = 'L';
+//		if (flags & resProtected)
+//			*sptr++ = 'P';
+//		if (flags & resPreload)
+//			*sptr++ = 'R';
+//		if (flags & resChanged)
+//			*sptr++ = 'C';
+//		*sptr = '\0';
+//		
+//		MCAutoStringRef t_string;
+//		if (!MCStringFormat(&t_string, "%4s,%d,%s,%ld,%s\n", typetmp, rid, cstr,
+//		        GetMaxResourceSize(rh), fstring))
+//			return false;
+//		if (!MCListAppend(p_list, *t_string))
+//			return false;
+//	}
+//	
+//	return true;
+//}
 
 
 /********************************************************************/
@@ -2376,17 +2402,17 @@ static bool getResourceInfo(MCListRef p_list, ResType searchType)
 //	FSCloseIterator(t_catalog_iterator);
 //	return MCListCopy(*t_list, r_list);
 //}
-
-bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
-{
-	return MCStringCopy(p_path, r_long_path);
-}
-
-bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
-{
-	return MCStringCopy(p_path, r_short_path);
-}
-
+//
+//bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
+//{
+//	return MCStringCopy(p_path, r_long_path);
+//}
+//
+//bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
+//{
+//	return MCStringCopy(p_path, r_short_path);
+//}
+//
 //bool MCS_is_link(MCStringRef p_path)
 //{
 //	struct stat buf;
@@ -2407,7 +2433,7 @@ bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 //    
 //	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
 //}
-
+//
 //bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 //{
 //	if (MCStringGetLength(p_path) == 0)
@@ -2504,43 +2530,43 @@ bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 //	delete newpath;
 //	return done;
 //}
-
-bool MCS_getdrives(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	OSErr t_err;
-	ItemCount t_index;
-	bool t_first;
-	
-	t_index = 1;
-	t_err = noErr;
-	t_first = true;
-	
-	// To list all the mounted volumes on the system we use the FSGetVolumeInfo
-	// API with first parameter kFSInvalidVolumeRefNum and an index in the
-	// second parameter.
-	// This call will return nsvErr when it reaches the end of the list of
-	// volumes, other errors being returned if there's a problem getting the
-	// information.
-	// Due to this, it is perfectly possible that the first index will not be
-	// the first volume we put into the list - so we need a boolean flag (t_first)
-	while(t_err != nsvErr)
-	{
-		HFSUniStr255 t_unicode_name;
-		t_err = FSGetVolumeInfo(kFSInvalidVolumeRefNum, t_index, NULL, kFSVolInfoNone, NULL, &t_unicode_name, NULL);
-		if (t_err == noErr)
-		{
-			MCAutoStringRef t_volume_name;
-			if (!MCStringCreateWithChars(t_unicode_name . unicode, t_unicode_name . length, &t_volume_name))
-				return false;
-			if (!MCListAppend(*t_list, *t_volume_name))
-				return false;
-		}
-		t_index += 1;
-	}
-	
-	return MCListCopy(*t_list, r_list);
-}
+//
+//bool MCS_getdrives(MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	OSErr t_err;
+//	ItemCount t_index;
+//	bool t_first;
+//	
+//	t_index = 1;
+//	t_err = noErr;
+//	t_first = true;
+//	
+//	// To list all the mounted volumes on the system we use the FSGetVolumeInfo
+//	// API with first parameter kFSInvalidVolumeRefNum and an index in the
+//	// second parameter.
+//	// This call will return nsvErr when it reaches the end of the list of
+//	// volumes, other errors being returned if there's a problem getting the
+//	// information.
+//	// Due to this, it is perfectly possible that the first index will not be
+//	// the first volume we put into the list - so we need a boolean flag (t_first)
+//	while(t_err != nsvErr)
+//	{
+//		HFSUniStr255 t_unicode_name;
+//		t_err = FSGetVolumeInfo(kFSInvalidVolumeRefNum, t_index, NULL, kFSVolInfoNone, NULL, &t_unicode_name, NULL);
+//		if (t_err == noErr)
+//		{
+//			MCAutoStringRef t_volume_name;
+//			if (!MCStringCreateWithChars(t_unicode_name . unicode, t_unicode_name . length, &t_volume_name))
+//				return false;
+//			if (!MCListAppend(*t_list, *t_volume_name))
+//				return false;
+//		}
+//		t_index += 1;
+//	}
+//	
+//	return MCListCopy(*t_list, r_list);
+//}

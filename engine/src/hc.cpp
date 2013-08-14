@@ -2140,7 +2140,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	{
 		fullbuffer = new char[rsize];
 		MCS_seek_set(stream, roffset);
-		if (MCS_read(fullbuffer, sizeof(char), rsize, stream) != IO_NORMAL)
+		if (MCS_readfixed(fullbuffer, sizeof(char), rsize, stream) != IO_NORMAL)
 			return IO_ERROR;
 	}
 	else

@@ -2341,20 +2341,29 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 	if (MCStringGetLength(p_target) > 5 && MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless))
 	{
 		MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
-		ep . setvalueref(*t_filename);
-		MCS_loadfile(ep, False);
+		if (!MCS_loadtextfile(*t_filename, r_output))
+            r_output = MCValueRetain(kMCEmptyString);
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
 	{
+        MCAutoDataRef t_data;
 		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		ep . setvalueref(*t_filename);
-		MCS_loadfile(ep, True);
+		if (!MCS_loadbinaryfile(*t_filename, &t_data))
+        {
+            r_output = MCValueRetain(kMCEmptyString);
+            return;
+        }
+        
+        MCExecPoint ep(nil, nil, nil);
+        ep . setvalueref(*t_data);
+        ep . binarytotext();
+        r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 	{
-		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		ep . setvalueref(*t_filename);		
-		MCS_loadresfile(ep);
+		MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);	
+		MCS_loadresfile(*t_filename, r_output);
+        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
 	else
 	{
@@ -2365,31 +2374,49 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 			MCS_geturl(ctxt . GetObject(), p_target);
 			MCurlresult->eval(ep);
 		}
+        /* UNCHECKED */ ep . copyasstringref(r_output);
 	}
-	/* UNCHECKED */ ep . copyasstringref(r_output);
 }
 
 void MCU_geturl(MCExecPoint &ep)
 {
-	if (ep.getsvalue().getlength() > 5
-	        && !MCU_strncasecmp(ep.getsvalue().getstring(), "file:", 5))
+    MCAutoStringRef t_filename;
+    MCStringCreateWithOldString(ep.getsvalue(), &t_filename);
+    
+	if (MCStringGetLength(*t_filename) > 5
+	        && MCStringBeginsWithCString(*t_filename, (const char_t*)"file:", kMCCompareCaseless))
 	{
-		ep.tail(5);
-		MCS_loadfile(ep, False);
+        MCAutoStringRef t_output;
+		MCStringCopySubstring(*t_filename, MCRangeMake(5, MCStringGetLength(*t_filename)-8), &t_filename);
+		if (!MCS_loadtextfile(*t_filename, &t_output))
+        {
+            MCurlresult -> setvalueref(kMCEmptyString);
+            return;
+        }
+        MCurlresult -> setvalueref(*t_output);
 	}
 	else
-		if (ep.getsvalue().getlength() > 8
-		        && !MCU_strncasecmp(ep.getsvalue().getstring(), "binfile:", 8))
+		if (MCStringGetLength(*t_filename) > 8
+		        && MCStringBeginsWithCString(*t_filename, (const char_t*)"binfile:", kMCCompareCaseless))
 		{
-			ep.tail(8);
-			MCS_loadfile(ep, True);
+            MCAutoDataRef t_output;
+            MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
+            if (!MCS_loadbinaryfile(*t_filename, &t_output))
+            {
+                MCurlresult -> setvalueref(kMCEmptyData);
+                return;
+            }
+            MCurlresult -> setvalueref(*t_output);
 		}
 		else
-			if (ep.getsvalue().getlength() > 8
-			        && !MCU_strncasecmp(ep.getsvalue().getstring(), "resfile:", 8))
+			if (MCStringGetLength(*t_filename) > 8
+			        && MCStringBeginsWithCString(*t_filename, (const char_t*)"resfile:", kMCCompareCaseless))
 			{
-				ep.tail(8);
-				MCS_loadresfile(ep);
+                MCAutoStringRef t_output;
+                MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
+                MCS_loadresfile(*t_filename, &t_output);
+                
+                MCurlresult -> setvalueref(*t_output);
 			}
 			else
 			{
@@ -2437,13 +2464,15 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
 	{
 		dest.tail(8);
-		MCS_saveresfile(dest.getsvalue(), data.getsvalue());
+		/* UNCHECKED */ MCS_saveresfile((MCStringRef)dest.getvalueref(), (MCDataRef)data.getvalueref());
 	}
 	else
 	{
 		MCAutoStringRef p_url;
+        MCAutoDataRef t_data;
 		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &p_url);
-		MCS_putintourl(dest . getobj(), data . getsvalue(), *p_url);
+        /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)data.getcstring(), data.getsvalue().getlength(), &t_data);
+		MCS_putintourl(dest . getobj(), *t_data, *p_url);
 	}
 }
 

@@ -471,7 +471,7 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
 		{
 			uint32_t t_count;
 			t_count = t_file_size - t_bytes_read;
-			t_read_stat = MCS_read(t_buffer + t_bytes_read, 1, t_count, t_font_file_handle);
+			t_read_stat = MCS_readfixed(t_buffer + t_bytes_read, 1, t_count, t_font_file_handle);
 			t_bytes_read += t_count;
 			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_file_size));
 		}

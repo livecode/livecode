@@ -999,37 +999,37 @@ char *path2utf(char *path)
 //
 //	DisposeEventHandlerUPP(MCS_weh);
 //}
+//
+//void MCS_seterrno(int value)
+//{
+//	errno = value;
+//}
+//
+//int MCS_geterrno()
+//{
+//	return errno;
+//}
+//
+//void MCS_alarm(real8 seconds)
+//{ //is used for checking event loop periodically
+//	// InsTime() or
+//	//PrimeTime(pass handle to a function, in the function set MCalarm to True)
+//}
 
-void MCS_seterrno(int value)
-{
-	errno = value;
-}
+//// MW-2005-08-15: We have two types of process starting in MacOS X it seems:
+////   MCS_startprocess is called by MCLaunch with a docname
+////   MCS_startprocess is called by MCOpen without a docname
+//// Thus, we will fork two methods - and dispatch from MCS_startprocess
+//void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
+//void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
 
-int MCS_geterrno()
-{
-	return errno;
-}
-
-void MCS_alarm(real8 seconds)
-{ //is used for checking event loop periodically
-	// InsTime() or
-	//PrimeTime(pass handle to a function, in the function set MCalarm to True)
-}
-
-// MW-2005-08-15: We have two types of process starting in MacOS X it seems:
-//   MCS_startprocess is called by MCLaunch with a docname
-//   MCS_startprocess is called by MCOpen without a docname
-// Thus, we will fork two methods - and dispatch from MCS_startprocess
-void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
-void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
-
-void MCS_startprocess(MCNameRef name, MCStringRef docname, Open_mode mode, Boolean elevated)
-{
-	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0)
-	  MCS_startprocess_launch(name, docname, mode);
-	else
-	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
-}
+//void MCS_startprocess(MCNameRef name, MCStringRef docname, Open_mode mode, Boolean elevated)
+//{
+//	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0)
+//	  MCS_startprocess_launch(name, docname, mode);
+//	else
+//	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
+//}
 //
 //void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode)
 //{
@@ -1190,115 +1190,115 @@ void MCS_startprocess(MCNameRef name, MCStringRef docname, Open_mode mode, Boole
 //	}	
 //	return handle;
 //}
-
-static void MCS_launch_set_result_from_lsstatus(void)
-{
-	int t_error;
-	t_error = 0;
-
-	switch(errno)
-	{
-		case kLSUnknownErr:
-		case kLSNotAnApplicationErr:
-		case kLSLaunchInProgressErr:
-		case kLSServerCommunicationErr:
-#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
-		case kLSAppInTrashErr:
-		case kLSIncompatibleSystemVersionErr:
-		case kLSNoLaunchPermissionErr:
-		case kLSNoExecutableErr:
-		case kLSNoClassicEnvironmentErr:
-		case kLSMultipleSessionsNotSupportedErr:
-#endif
-			t_error = 2;
-		break;
-		
-		case kLSDataUnavailableErr:
-		case kLSApplicationNotFoundErr:
-		case kLSDataErr:
-			t_error = 3;
-		break;
-	}
-	
-	switch(t_error)
-	{
-	case 0:
-		MCresult -> clear();
-	break;
-
-	case 1:
-		MCresult -> sets("can't open file");
-	break;
-	
-	case 2:
-		MCresult -> sets("request failed");
-	break;
-	
-	case 3:
-		MCresult -> sets("no association");
-	break;
-	}
-
-}
-
-void MCS_launch_document(MCStringRef p_document)
-{
-	int t_error = 0;
-	
-	FSRef t_document_ref;
-	if (t_error == 0)
-	{
-		errno = MCS_pathtoref(p_document, t_document_ref);
-		if (errno != noErr)
-		{
-			// MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
-			MCresult -> sets("can't open file");
-			t_error = 1;
-		}
-	}
-
-	if (t_error == 0)
-	{
-		errno = LSOpenFSRef(&t_document_ref, NULL);
-		MCS_launch_set_result_from_lsstatus();
-	}
-}
-
-void MCS_launch_url(const char *p_document)
-{
-	bool t_success;
-	t_success = true;
-
-	CFStringRef t_cf_document;
-	t_cf_document = NULL;
-	if (t_success)
-	{
-		t_cf_document = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, p_document, kCFStringEncodingMacRoman, kCFAllocatorNull);
-		if (t_cf_document == NULL)
-			t_success = false;
-	}
-	
-	CFURLRef t_cf_url;
-	t_cf_url = NULL;
-	if (t_success)
-	{
-		t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
-		if (t_cf_url == NULL)
-			t_success = false;
-	}
-
-	if (t_success)
-	{
-		errno = LSOpenCFURLRef(t_cf_url, NULL);
-		MCS_launch_set_result_from_lsstatus();
-	}
-	
-	if (t_cf_url != NULL)
-		CFRelease(t_cf_url);
-		
-	if (t_cf_document != NULL)
-		CFRelease(t_cf_document);
-}
+//
+//static void MCS_launch_set_result_from_lsstatus(void)
+//{
+//	int t_error;
+//	t_error = 0;
+//
+//	switch(errno)
+//	{
+//		case kLSUnknownErr:
+//		case kLSNotAnApplicationErr:
+//		case kLSLaunchInProgressErr:
+//		case kLSServerCommunicationErr:
+//#if MAC_OS_X_VERSION_MIN_REQUIRED >= 1040
+//		case kLSAppInTrashErr:
+//		case kLSIncompatibleSystemVersionErr:
+//		case kLSNoLaunchPermissionErr:
+//		case kLSNoExecutableErr:
+//		case kLSNoClassicEnvironmentErr:
+//		case kLSMultipleSessionsNotSupportedErr:
+//#endif
+//			t_error = 2;
+//		break;
+//		
+//		case kLSDataUnavailableErr:
+//		case kLSApplicationNotFoundErr:
+//		case kLSDataErr:
+//			t_error = 3;
+//		break;
+//	}
+//	
+//	switch(t_error)
+//	{
+//	case 0:
+//		MCresult -> clear();
+//	break;
+//
+//	case 1:
+//		MCresult -> sets("can't open file");
+//	break;
+//	
+//	case 2:
+//		MCresult -> sets("request failed");
+//	break;
+//	
+//	case 3:
+//		MCresult -> sets("no association");
+//	break;
+//	}
+//
+//}
+//
+//void MCS_launch_document(MCStringRef p_document)
+//{
+//	int t_error = 0;
+//	
+//	FSRef t_document_ref;
+//	if (t_error == 0)
+//	{
+//		errno = MCS_pathtoref(p_document, t_document_ref);
+//		if (errno != noErr)
+//		{
+//			// MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
+//			MCresult -> sets("can't open file");
+//			t_error = 1;
+//		}
+//	}
+//
+//	if (t_error == 0)
+//	{
+//		errno = LSOpenFSRef(&t_document_ref, NULL);
+//		MCS_launch_set_result_from_lsstatus();
+//	}
+//}
+//
+//void MCS_launch_url(const char *p_document)
+//{
+//	bool t_success;
+//	t_success = true;
+//
+//	CFStringRef t_cf_document;
+//	t_cf_document = NULL;
+//	if (t_success)
+//	{
+//		t_cf_document = CFStringCreateWithCStringNoCopy(kCFAllocatorDefault, p_document, kCFStringEncodingMacRoman, kCFAllocatorNull);
+//		if (t_cf_document == NULL)
+//			t_success = false;
+//	}
+//	
+//	CFURLRef t_cf_url;
+//	t_cf_url = NULL;
+//	if (t_success)
+//	{
+//		t_cf_url = CFURLCreateWithString(kCFAllocatorDefault, t_cf_document, NULL);
+//		if (t_cf_url == NULL)
+//			t_success = false;
+//	}
+//
+//	if (t_success)
+//	{
+//		errno = LSOpenCFURLRef(t_cf_url, NULL);
+//		MCS_launch_set_result_from_lsstatus();
+//	}
+//	
+//	if (t_cf_url != NULL)
+//		CFRelease(t_cf_url);
+//		
+//	if (t_cf_document != NULL)
+//		CFRelease(t_cf_document);
+//}
 //
 //void MCS_checkprocesses()
 //{
@@ -1315,91 +1315,91 @@ void MCS_launch_url(const char *p_document)
 //		}
 //
 //}
-
-void MCS_closeprocess(uint2 index)
-{
-	if (MCprocesses[index].ihandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ihandle);
-		MCprocesses[index].ihandle = NULL;
-	}
-	if (MCprocesses[index].ohandle != NULL)
-	{
-		MCS_close(MCprocesses[index].ohandle);
-		MCprocesses[index].ohandle = NULL;
-	}
-	MCprocesses[index].mode = OM_NEITHER;
-}
-
-void MCS_kill(int4 pid, int4 sig)
-{
-	if (pid == 0)
-		return;
-
-	uint2 i;
-  for (i = 0 ; i < MCnprocesses ; i++)
-    if (pid == MCprocesses[i].pid && (MCprocesses[i].sn.highLongOfPSN != 0 || MCprocesses[i].sn.lowLongOfPSN != 0))
-		{
-      AppleEvent ae, answer;
-      AEDesc pdesc;
-      AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
-		   sizeof(ProcessSerialNumber), &pdesc);
-      AECreateAppleEvent('aevt', 'quit', &pdesc, kAutoGenerateReturnID,
-			 kAnyTransactionID, &ae);
-      AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
-	     kAEDefaultTimeout, NULL, NULL);
-      AEDisposeDesc(&ae);
-      AEDisposeDesc(&answer);
-      return;
-    }
-
-	kill(pid, sig);
-}
-
-void MCS_killall()
-{
-	struct sigaction action;
-	memset((char *)&action, 0, sizeof(action));
-	action.sa_handler = (void (*)(int))SIG_IGN;
-	sigaction(SIGCHLD, &action, NULL);
-	while (MCnprocesses--)
-	{
-		MCNameDelete(MCprocesses[MCnprocesses] . name);
-		MCprocesses[MCnprocesses] . name = nil;
-		if (MCprocesses[MCnprocesses].pid != 0
-		        && (MCprocesses[MCnprocesses].ihandle != NULL
-		            || MCprocesses[MCnprocesses].ohandle != NULL))
-		{
-			kill(MCprocesses[MCnprocesses].pid, SIGKILL);
-			waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
-		}
-	}
-}
-
-// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
-//   to access it.
-real8 curtime;
-
-real8 MCS_time()
-{
-	struct timezone tz;
-	struct timeval tv;
-
-	gettimeofday(&tv, &tz);
-	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
-
-	return curtime;
-}
+//
+//void MCS_closeprocess(uint2 index)
+//{
+//	if (MCprocesses[index].ihandle != NULL)
+//	{
+//		MCS_close(MCprocesses[index].ihandle);
+//		MCprocesses[index].ihandle = NULL;
+//	}
+//	if (MCprocesses[index].ohandle != NULL)
+//	{
+//		MCS_close(MCprocesses[index].ohandle);
+//		MCprocesses[index].ohandle = NULL;
+//	}
+//	MCprocesses[index].mode = OM_NEITHER;
+//}
+//
+//void MCS_kill(int4 pid, int4 sig)
+//{
+//	if (pid == 0)
+//		return;
+//
+//	uint2 i;
+//  for (i = 0 ; i < MCnprocesses ; i++)
+//    if (pid == MCprocesses[i].pid && (MCprocesses[i].sn.highLongOfPSN != 0 || MCprocesses[i].sn.lowLongOfPSN != 0))
+//		{
+//      AppleEvent ae, answer;
+//      AEDesc pdesc;
+//      AECreateDesc(typeProcessSerialNumber, &MCprocesses[i].sn,
+//		   sizeof(ProcessSerialNumber), &pdesc);
+//      AECreateAppleEvent('aevt', 'quit', &pdesc, kAutoGenerateReturnID,
+//			 kAnyTransactionID, &ae);
+//      AESend(&ae, &answer, kAEQueueReply, kAENormalPriority,
+//	     kAEDefaultTimeout, NULL, NULL);
+//      AEDisposeDesc(&ae);
+//      AEDisposeDesc(&answer);
+//      return;
+//    }
+//
+//	kill(pid, sig);
+//}
+//
+//void MCS_killall()
+//{
+//	struct sigaction action;
+//	memset((char *)&action, 0, sizeof(action));
+//	action.sa_handler = (void (*)(int))SIG_IGN;
+//	sigaction(SIGCHLD, &action, NULL);
+//	while (MCnprocesses--)
+//	{
+//		MCNameDelete(MCprocesses[MCnprocesses] . name);
+//		MCprocesses[MCnprocesses] . name = nil;
+//		if (MCprocesses[MCnprocesses].pid != 0
+//		        && (MCprocesses[MCnprocesses].ihandle != NULL
+//		            || MCprocesses[MCnprocesses].ohandle != NULL))
+//		{
+//			kill(MCprocesses[MCnprocesses].pid, SIGKILL);
+//			waitpid(MCprocesses[MCnprocesses].pid, NULL, 0);
+//		}
+//	}
+//}
+//
+//// MW-2005-02-22: Make this global scope for now to enable opensslsocket.cpp
+////   to access it.
+//real8 curtime;
+//
+//real8 MCS_time()
+//{
+//	struct timezone tz;
+//	struct timeval tv;
+//
+//	gettimeofday(&tv, &tz);
+//	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
+//
+//	return curtime;
+//}
 
 void MCS_reset_time()
 {
 }
-
-void MCS_sleep(real8 duration)
-{
-	unsigned long finalTicks;
-	Delay((unsigned long)duration * 60, &finalTicks);
-}
+//
+//void MCS_sleep(real8 duration)
+//{
+//	unsigned long finalTicks;
+//	Delay((unsigned long)duration * 60, &finalTicks);
+//}
 
 char *MCS_getenv(const char *name)
 {
@@ -1556,202 +1556,202 @@ Boolean MCS_nodelay(int4 fd)
 	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
 				 >= 0;
 }
-
-IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
-{
-	MCshellfd = fd;
-	size = 0;
-	while (True)
-	{
-		int readsize = 0;
-		ioctl(fd, FIONREAD, (char *)&readsize);
-		readsize += READ_PIPE_SIZE;
-		if (size + readsize > buffersize)
-		{
-			MCU_realloc((char **)&buffer, buffersize,
-									buffersize + readsize + 1, sizeof(char));
-			buffersize += readsize;
-		}
-		errno = 0;
-		int4 amount = read(fd, &buffer[size], readsize);
-		if (amount <= 0)
-		{
-			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
-				break;
-			if (!MCS_poll(SHELL_INTERVAL, 0))
-				if (!MCnoui && MCscreen->wait(SHELL_INTERVAL, False, True))
-				{
-					MCshellfd = -1;
-					return IO_ERROR;
-				}
-		}
-		else
-			size += amount;
-	}
-	MCshellfd = -1;
-	return IO_NORMAL;
-}
-
-
-IO_stat MCS_runcmd(MCExecPoint &ep)
-{
-
-	IO_cleanprocesses();
-	int tochild[2];
-	int toparent[2];
-	int4 index = MCnprocesses;
-	if (pipe(tochild) == 0)
-	{
-		if (pipe(toparent) == 0)
-		{
-			MCU_realloc((char **)&MCprocesses, MCnprocesses,
-									MCnprocesses + 1, sizeof(Streamnode));
-			MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
-			MCprocesses[MCnprocesses].mode = OM_NEITHER;
-			MCprocesses[MCnprocesses].ohandle = NULL;
-			MCprocesses[MCnprocesses].ihandle = NULL;
-			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
-			{
-				close(tochild[1]);
-				close(0);
-				dup(tochild[0]);
-				close(tochild[0]);
-				close(toparent[0]);
-				close(1);
-				dup(toparent[1]);
-				close(2);
-				dup(toparent[1]);
-				close(toparent[1]);
-				execl(MCshellcmd, MCshellcmd, "-s", NULL);
-				_exit(-1);
-			}
-			MCS_checkprocesses();
-			close(tochild[0]);
-			char *str = path2utf(ep.getsvalue().clone());
-			write(tochild[1], str, strlen(str));
-			delete str;
-			write(tochild[1], "\n", 1);
-			close(tochild[1]);
-			close(toparent[1]);
-			MCS_nodelay(toparent[0]);
-			if (MCprocesses[index].pid == -1)
-			{
-				if (MCprocesses[index].pid > 0)
-					MCS_kill(MCprocesses[index].pid, SIGKILL);
-				MCprocesses[index].pid = 0;
-				MCeerror->add
-				(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-				return IO_ERROR;
-			}
-		}
-		else
-		{
-			close(tochild[0]);
-			close(tochild[1]);
-			MCeerror->add
-			(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-			return IO_ERROR;
-		}
-	}
-	else
-	{
-		MCeerror->add
-		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
-		return IO_ERROR;
-	}
-	char *buffer;
-	uint4 buffersize;
-	buffer = (char *)malloc(4096);
-	buffersize = 4096;
-	uint4 size = 0;
-	if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
-	{
-		MCeerror->add(EE_SHELL_ABORT, 0, 0);
-		close(toparent[0]);
-		if (MCprocesses[index].pid != 0)
-			MCS_kill(MCprocesses[index].pid, SIGKILL);
-		ep.grabbuffer(buffer, size);
-		return IO_ERROR;
-	}
-	ep.grabbuffer(buffer, size);
-	close(toparent[0]);
-	MCS_checkprocesses();
-	if (MCprocesses[index].pid != 0)
-	{
-		uint2 count = SHELL_COUNT;
-		while (count--)
-		{
-			if (MCscreen->wait(SHELL_INTERVAL, False, False))
-			{
-				if (MCprocesses[index].pid != 0)
-					MCS_kill(MCprocesses[index].pid, SIGKILL);
-				return IO_ERROR;
-			}
-			if (MCprocesses[index].pid == 0)
-				break;
-		}
-		if (MCprocesses[index].pid != 0)
-		{
-			MCprocesses[index].retcode = -1;
-			MCS_kill(MCprocesses[index].pid, SIGKILL);
-		}
-	}
-	if (MCprocesses[index].retcode)
-	{
-		MCExecPoint ep2(ep);
-		ep2.setint(MCprocesses[index].retcode);
-		MCresult->set(ep2);
-	}
-	else
-		MCresult->clear(False);
-
-
-	return IO_NORMAL;
-}
+//
+//IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
+//{
+//	MCshellfd = fd;
+//	size = 0;
+//	while (True)
+//	{
+//		int readsize = 0;
+//		ioctl(fd, FIONREAD, (char *)&readsize);
+//		readsize += READ_PIPE_SIZE;
+//		if (size + readsize > buffersize)
+//		{
+//			MCU_realloc((char **)&buffer, buffersize,
+//									buffersize + readsize + 1, sizeof(char));
+//			buffersize += readsize;
+//		}
+//		errno = 0;
+//		int4 amount = read(fd, &buffer[size], readsize);
+//		if (amount <= 0)
+//		{
+//			if (errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)
+//				break;
+//			if (!MCS_poll(SHELL_INTERVAL, 0))
+//				if (!MCnoui && MCscreen->wait(SHELL_INTERVAL, False, True))
+//				{
+//					MCshellfd = -1;
+//					return IO_ERROR;
+//				}
+//		}
+//		else
+//			size += amount;
+//	}
+//	MCshellfd = -1;
+//	return IO_NORMAL;
+//}
+//
+//
+//IO_stat MCS_runcmd(MCExecPoint &ep)
+//{
+//
+//	IO_cleanprocesses();
+//	int tochild[2];
+//	int toparent[2];
+//	int4 index = MCnprocesses;
+//	if (pipe(tochild) == 0)
+//	{
+//		if (pipe(toparent) == 0)
+//		{
+//			MCU_realloc((char **)&MCprocesses, MCnprocesses,
+//									MCnprocesses + 1, sizeof(Streamnode));
+//			MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(MCM_shell);
+//			MCprocesses[MCnprocesses].mode = OM_NEITHER;
+//			MCprocesses[MCnprocesses].ohandle = NULL;
+//			MCprocesses[MCnprocesses].ihandle = NULL;
+//			if ((MCprocesses[MCnprocesses++].pid = fork()) == 0)
+//			{
+//				close(tochild[1]);
+//				close(0);
+//				dup(tochild[0]);
+//				close(tochild[0]);
+//				close(toparent[0]);
+//				close(1);
+//				dup(toparent[1]);
+//				close(2);
+//				dup(toparent[1]);
+//				close(toparent[1]);
+//				execl(MCshellcmd, MCshellcmd, "-s", NULL);
+//				_exit(-1);
+//			}
+//			MCS_checkprocesses();
+//			close(tochild[0]);
+//			char *str = path2utf(ep.getsvalue().clone());
+//			write(tochild[1], str, strlen(str));
+//			delete str;
+//			write(tochild[1], "\n", 1);
+//			close(tochild[1]);
+//			close(toparent[1]);
+//			MCS_nodelay(toparent[0]);
+//			if (MCprocesses[index].pid == -1)
+//			{
+//				if (MCprocesses[index].pid > 0)
+//					MCS_kill(MCprocesses[index].pid, SIGKILL);
+//				MCprocesses[index].pid = 0;
+//				MCeerror->add
+//				(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+//				return IO_ERROR;
+//			}
+//		}
+//		else
+//		{
+//			close(tochild[0]);
+//			close(tochild[1]);
+//			MCeerror->add
+//			(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+//			return IO_ERROR;
+//		}
+//	}
+//	else
+//	{
+//		MCeerror->add
+//		(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
+//		return IO_ERROR;
+//	}
+//	char *buffer;
+//	uint4 buffersize;
+//	buffer = (char *)malloc(4096);
+//	buffersize = 4096;
+//	uint4 size = 0;
+//	if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
+//	{
+//		MCeerror->add(EE_SHELL_ABORT, 0, 0);
+//		close(toparent[0]);
+//		if (MCprocesses[index].pid != 0)
+//			MCS_kill(MCprocesses[index].pid, SIGKILL);
+//		ep.grabbuffer(buffer, size);
+//		return IO_ERROR;
+//	}
+//	ep.grabbuffer(buffer, size);
+//	close(toparent[0]);
+//	MCS_checkprocesses();
+//	if (MCprocesses[index].pid != 0)
+//	{
+//		uint2 count = SHELL_COUNT;
+//		while (count--)
+//		{
+//			if (MCscreen->wait(SHELL_INTERVAL, False, False))
+//			{
+//				if (MCprocesses[index].pid != 0)
+//					MCS_kill(MCprocesses[index].pid, SIGKILL);
+//				return IO_ERROR;
+//			}
+//			if (MCprocesses[index].pid == 0)
+//				break;
+//		}
+//		if (MCprocesses[index].pid != 0)
+//		{
+//			MCprocesses[index].retcode = -1;
+//			MCS_kill(MCprocesses[index].pid, SIGKILL);
+//		}
+//	}
+//	if (MCprocesses[index].retcode)
+//	{
+//		MCExecPoint ep2(ep);
+//		ep2.setint(MCprocesses[index].retcode);
+//		MCresult->set(ep2);
+//	}
+//	else
+//		MCresult->clear(False);
+//
+//
+//	return IO_NORMAL;
+//}
 
 
 /**************** Socket Code  *********************************/
 
 // MW-2005-02-22: Moved to opensslsocket.cpp
 
-
-uint4 MCS_getpid()
-{
-	return getpid();
-}
-
-bool MCS_getaddress(MCStringRef& r_address)
-{
-	static struct utsname u;
-	uname(&u);
-	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
-}
-
-bool MCS_getmachine(MCStringRef& r_string)
-{
-	static Str255 machineName;
-	long response;
-	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
-	{
-		GetIndString(machineName, kMachineNameStrID, response);
-		if (machineName != nil)
-		{
-			p2cstr(machineName);
-			return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
-		}
-	}
-	return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
-}
-
-// MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
-MCNameRef MCS_getprocessor()
-{ //get machine processor
-#ifdef __LITTLE_ENDIAN__
-	return MCN_x86;
-#else
-    return MCN_motorola_powerpc;
-#endif
-}
+//
+//uint4 MCS_getpid()
+//{
+//	return getpid();
+//}
+//
+//bool MCS_getaddress(MCStringRef& r_address)
+//{
+//	static struct utsname u;
+//	uname(&u);
+//	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+//}
+//
+//bool MCS_getmachine(MCStringRef& r_string)
+//{
+//	static Str255 machineName;
+//	long response;
+//	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
+//	{
+//		GetIndString(machineName, kMachineNameStrID, response);
+//		if (machineName != nil)
+//		{
+//			p2cstr(machineName);
+//			return MCStringCreateWithNativeChars((const char_t *)machineName, MCCStringLength((const char *)machineName), r_string);
+//		}
+//	}
+//	return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
+//}
+//
+//// MW-2006-05-03: [[ Bug 3524 ]] - Make sure processor returns something appropriate in Intel
+//MCNameRef MCS_getprocessor()
+//{ //get machine processor
+//#ifdef __LITTLE_ENDIAN__
+//	return MCN_x86;
+//#else
+//    return MCN_motorola_powerpc;
+//#endif
+//}
 
 //real8 MCS_getfreediskspace(void)
 //{
@@ -1780,39 +1780,39 @@ MCNameRef MCS_getprocessor()
 //		
 //	return t_free_space;	
 //}
-
-bool MCS_getsystemversion(MCStringRef& r_string)
-{
-	long t_major, t_minor, t_bugfix;
-	Gestalt(gestaltSystemVersionMajor, &t_major);
-	Gestalt(gestaltSystemVersionMinor, &t_minor);
-	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
-}
-
-bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult -> sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
+//
+//bool MCS_getsystemversion(MCStringRef& r_string)
+//{
+//	long t_major, t_minor, t_bugfix;
+//	Gestalt(gestaltSystemVersionMajor, &t_major);
+//	Gestalt(gestaltSystemVersionMinor, &t_minor);
+//	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+//	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
+//}
+//
+//bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult -> sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
 
 Boolean MCS_poll(real8 delay, int fd)
 {
@@ -2340,7 +2340,7 @@ bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
 		MCU_utf8tonative(*t_utf8_path, r_path);
 }
 
-#ifdef /* MCS_fsref_to_path */ LEGACY_SYSTEM
+/* LEGACY */
 char *MCS_fsref_to_path(FSRef& p_ref)
 {
 	char *t_path;
@@ -2359,7 +2359,6 @@ char *MCS_fsref_to_path(FSRef& p_ref)
 	
 	return t_macroman_path;
 }
-#endif /* MCS_fsref_to_path */
 
 //OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
 //{
@@ -3276,150 +3275,107 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //			return version >= 0x900;
 //	return False;
 //}
-
-MCSysModuleHandle MCS_loadmodule(const char *p_filename)
-{
-	char *t_native_path;
-	t_native_path = path2utf(MCS_resolvepath(p_filename));
-	
-	CFURLRef t_url;
-	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)t_native_path, strlen(t_native_path), False);
-	delete t_native_path;
-	
-	if (t_url == NULL)
-		return NULL;
-    
-	MCSysModuleHandle t_result;
-	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
-	
-	CFRelease(t_url);
-	
-	return (MCSysModuleHandle)t_result;
-}
-
-MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
-{
-#ifdef /* MCS_loadmodule_dsk_mac */ LEGACY_SYSTEM
-	char *t_native_path;
-	t_native_path = path2utf(MCS_resolvepath(p_filename));
-	
-	CFURLRef t_url;
-	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)t_native_path, strlen(t_native_path), False);
-	delete t_native_path;
-	
-	if (t_url == NULL)
-		return NULL;
-    
-	MCSysModuleHandle t_result;
-	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
-	
-	CFRelease(t_url);
-	
-	return (MCSysModuleHandle)t_result;
-#endif /* MCS_loadmodule_dsk_mac */
-	MCAutoStringRef t_resolved_path;
-    MCAutoStringRefAsUTF8String t_utf_path;
-    
-    if (!MCS_resolvepath(p_filename, &t_resolved_path))
-        return NULL;
-    
-    if (!t_utf_path.Lock(*t_resolved_path))
-        return NULL;
-	
-	CFURLRef t_url;
-	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)*t_utf_path, strlen(*t_utf_path), False);
-	
-	if (t_url == NULL)
-		return NULL;
-		
-	MCSysModuleHandle t_result;
-	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
-	
-	CFRelease(t_url);
-	
-	return (MCSysModuleHandle)t_result;
-}
-
-void MCS_unloadmodule(MCSysModuleHandle p_module)
-{
-	CFRelease((CFBundleRef)p_module);
-}
-
-void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
-{
-	CFStringRef t_cf_symbol;
-	t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
-	if (t_cf_symbol == NULL)
-		return NULL;
-	
-	void *t_symbol_ptr;
-	t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
-	
-	CFRelease(t_cf_symbol);
-	
-	return t_symbol_ptr;
-}
-
-bool MCS_processtypeisforeground(void)
-{
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	
-	CFDictionaryRef t_info;
-	t_info = ProcessInformationCopyDictionary(&t_psn, kProcessDictionaryIncludeAllInformationMask);
-	
-	bool t_result;
-	t_result = true;
-	if (t_info != NULL)
-	{
-		CFBooleanRef t_value;
-		t_value = (CFBooleanRef)CFDictionaryGetValue(t_info, CFSTR("LSBackgroundOnly"));
-		if (t_value != NULL && CFBooleanGetValue(t_value) == TRUE)
-			t_result = false;
-		CFRelease(t_info);
-	}
-	
-	return t_result;
-}
-
-bool MCS_changeprocesstype(bool to_foreground)
-{
-	// We can only switch from background to foreground. So check to see if
-	// we are foreground already, we are only asking to go to foreground.
-	if (MCS_processtypeisforeground())
-	{
-		if (to_foreground)
-			return true;
-		return false;
-	}
-	
-	// Actually switch to foreground.
-	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
-	TransformProcessType(&t_psn, kProcessTransformToForegroundApplication);
-	SetFrontProcess(&t_psn);
-	
-	return true;
-}
-
-bool MCS_isatty(int fd)
-{
-	return isatty(fd) != 0;
-}
+//
+//MCSysModuleHandle MCS_loadmodule(const char *p_filename)
+//{
+//	char *t_native_path;
+//	t_native_path = path2utf(MCS_resolvepath(p_filename));
+//	
+//	CFURLRef t_url;
+//	t_url = CFURLCreateFromFileSystemRepresentation(NULL, (const UInt8 *)t_native_path, strlen(t_native_path), False);
+//	delete t_native_path;
+//	
+//	if (t_url == NULL)
+//		return NULL;
+//    
+//	MCSysModuleHandle t_result;
+//	t_result = (MCSysModuleHandle)CFBundleCreate(NULL, t_url);
+//	
+//	CFRelease(t_url);
+//	
+//	return (MCSysModuleHandle)t_result;
+//}
+//
+//void MCS_unloadmodule(MCSysModuleHandle p_module)
+//{
+//	CFRelease((CFBundleRef)p_module);
+//}
+//
+//void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
+//{
+//	CFStringRef t_cf_symbol;
+//	t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
+//	if (t_cf_symbol == NULL)
+//		return NULL;
+//	
+//	void *t_symbol_ptr;
+//	t_symbol_ptr = CFBundleGetFunctionPointerForName((CFBundleRef)p_module, t_cf_symbol);
+//	
+//	CFRelease(t_cf_symbol);
+//	
+//	return t_symbol_ptr;
+//}
+//
+//bool MCS_processtypeisforeground(void)
+//{
+//	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+//	
+//	CFDictionaryRef t_info;
+//	t_info = ProcessInformationCopyDictionary(&t_psn, kProcessDictionaryIncludeAllInformationMask);
+//	
+//	bool t_result;
+//	t_result = true;
+//	if (t_info != NULL)
+//	{
+//		CFBooleanRef t_value;
+//		t_value = (CFBooleanRef)CFDictionaryGetValue(t_info, CFSTR("LSBackgroundOnly"));
+//		if (t_value != NULL && CFBooleanGetValue(t_value) == TRUE)
+//			t_result = false;
+//		CFRelease(t_info);
+//	}
+//	
+//	return t_result;
+//}
+//
+//bool MCS_changeprocesstype(bool to_foreground)
+//{
+//	// We can only switch from background to foreground. So check to see if
+//	// we are foreground already, we are only asking to go to foreground.
+//	if (MCS_processtypeisforeground())
+//	{
+//		if (to_foreground)
+//			return true;
+//		return false;
+//	}
+//	
+//	// Actually switch to foreground.
+//	ProcessSerialNumber t_psn = { 0, kCurrentProcess };
+//	TransformProcessType(&t_psn, kProcessTransformToForegroundApplication);
+//	SetFrontProcess(&t_psn);
+//	
+//	return true;
+//}
+//
+//bool MCS_isatty(int fd)
+//{
+//	return isatty(fd) != 0;
+//}
 
 bool MCS_isnan(double v)
 {
 	return isnan(v);
 }
-
-uint32_t MCS_getsyserror(void)
-{
-	return errno;
-}
-
-bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
-{
-	r_error = false;
-	return MCStringCreateWithCString("not supported", r_result);
-}
+//
+//uint32_t MCS_getsyserror(void)
+//{
+//	return errno;
+//}
+//
+//bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
+//{
+//	r_error = false;
+//	return MCStringCreateWithCString("not supported", r_result);
+//}
 
 void MCS_system_alert(const char *p_title, const char *p_message)
 {

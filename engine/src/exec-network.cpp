@@ -389,10 +389,10 @@ void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p
 void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 {
 	MCAutoStringRef t_filename;
-	if (MCStringGetLength(p_target) > 5 &&
-		MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless) ||
-		MCStringGetLength(p_target) > 8 &&
-		MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
+	if ((MCStringGetLength(p_target) > 5 &&
+		MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless)) ||
+		(MCStringGetLength(p_target) > 8 &&
+		MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless)))
 	{
 		// Check the disk access here since MCS_unlink is used more
 		// generally.
@@ -413,7 +413,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 		{
 			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-			MCS_saveresfile(MCStringGetOldString(*t_filename), MCnullmcstring);
+			MCS_saveresfile(*t_filename, kMCEmptyData);
 		}
 		else
 			MCS_deleteurl(ctxt . GetObject(), p_target);

@@ -69,11 +69,53 @@ struct MCSystemFileHandle
 	virtual void *GetFilePointer(void) = 0;
 	virtual int64_t GetFileSize(void) = 0;
     
-    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length);
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+};
+
+enum MCServiceType
+{
+    kMCServiceTypeMacSystem,
+    kMCServiceTypeWindowsSystem,
+    kMCServiceTypeLinuxSystem,
+};
+
+struct MCServiceInterface
+{
+};
+
+struct MCMacSystemServiceInterface: public MCServiceInterface
+{
+    virtual bool SetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name, MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error) = 0;    
+    virtual bool GetResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error) = 0;    
+    virtual bool GetResources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error) = 0;    
+    virtual bool CopyResource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type, MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error) = 0;
+    virtual bool DeleteResource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error) = 0;
+    virtual void CopyResourceFork(MCStringRef p_source, MCStringRef p_destination) = 0;
+    virtual void LoadResFile(MCStringRef p_filename, MCStringRef& r_data) = 0;
+    virtual void SaveResFile(MCStringRef p_path, MCDataRef p_data) = 0;
+    
+    virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
+    virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
+};
+
+struct MCWindowsSystemServiceInterface: public MCServiceInterface
+{
+    virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error) = 0;
+    
+    virtual bool QueryRegistry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error) = 0;
+    virtual bool SetRegistry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error) = 0;
+    virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error) = 0;
+    virtual bool ListRegistry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error) = 0;
+};
+
+struct MCLinuxSystemServiceInterface
+{
 };
 
 struct MCSystemInterface
 {
+    virtual MCServiceInterface *QueryService(MCServiceType type) = 0;
+    
 	virtual bool Initialize(void) = 0;
 	virtual void Finalize(void) = 0;
 	
@@ -84,7 +126,7 @@ struct MCSystemInterface
 	virtual bool GetVersion(MCStringRef& r_string) = 0;
 	virtual bool GetMachine(MCStringRef& r_string) = 0;
 	virtual MCNameRef GetProcessor(void) = 0;
-	virtual void GetAddress(MCStringRef& r_address) = 0;
+	virtual bool GetAddress(MCStringRef& r_address) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;
 	
@@ -135,9 +177,9 @@ struct MCSystemInterface
 	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
-	virtual void *LoadModule(MCStringRef p_path) = 0;
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
-	virtual void UnloadModule(void *p_module) = 0;
+	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, const char *p_symbol) = 0;
+	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
 	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list) = 0;
     
@@ -158,10 +200,34 @@ struct MCSystemInterface
 	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
 	virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
 
-	virtual uint32_t TextConvert(const void *string, uint32_t string_length, void *buffer, uint32_t buffer_length, uint32_t from_charset, uint32_t to_charset) = 0;
-	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used) = 0;
+	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset) = 0;
+	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used) = 0;
     
-    virtual void CheckProcesses() = 0;
+    virtual void CheckProcesses(void) = 0;
+    
+    virtual void SystemAlert(MCStringRef p_title, MCStringRef p_message) = 0;
+    virtual uint32_t GetSystemError(void) = 0;
+    virtual bool IsATTY(int fd) = 0;
+    
+    virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
+    
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated) = 0;
+    virtual bool ProcessTypeIsForeground(void) = 0;
+    virtual bool ChangeProcessType(bool p_to_foreground) = 0;
+    virtual void CloseProcess(uint2 p_index) = 0;
+    virtual void Kill(int4 p_pid, int4 p_sig) = 0;
+    virtual void KillAll(void) = 0;
+    
+    virtual int GetErrno(void) = 0;
+    virtual void SetErrno(int p_errno) = 0;
+    
+    virtual bool GetSystemVersion(MCStringRef& r_version) = 0;
+    
+    virtual void LaunchDocument(MCStringRef p_document) = 0;
+    virtual void LaunchUrl(MCStringRef p_document) = 0;
+    
+    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language) = 0;
+    virtual bool AlternateLanguage(MCListRef& r_list) = 0;
 };
 
 extern MCSystemInterface *MCsystem;
