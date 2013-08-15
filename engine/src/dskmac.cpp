@@ -1505,7 +1505,7 @@ public:
                 t_stream = fdopen(fd, IO_UPDATE_MODE);
                 break;
             case kMCSystemFileModeWrite:
-                t_stream - fdopen(fd, IO_WRITE_MODE);
+                t_stream = fdopen(fd, IO_WRITE_MODE);
                 break;
             default:
                 break;
@@ -1592,7 +1592,7 @@ public:
         m_stream = NULL;
 	}
 	
-	virtual IO_stat Read(void *p_ptr, uint32_t p_size, uint32_t& r_count)
+	virtual IO_stat Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
 	{
 #ifdef /* MCS_read_dsk_mac */ LEGACY_SYSTEM
 	if (MCabortscript || stream == NULL)
@@ -1681,19 +1681,15 @@ public:
 #endif /* MCS_read_dsk_mac */
         IO_stat stat = IO_NORMAL;
         uint4 nread;
-        int32_t toread = GetFileSize();
         if (m_serialIn != 0)
         {//read from serial port
-            SInt32 sint_toread = (SInt32) toread;
-            long count = 0;  // n group of size data to be read
+            SInt32 sint_toread = (SInt32) p_length;
+            if ((errno = FSRead(m_serialIn, &sint_toread, p_ptr)) != noErr)
+                stat = IO_ERROR;
             
-            count = MCU_min(count, p_size * r_count);
-            if (count > 0)
-                if ((errno = FSRead(m_serialIn, &sint_toread, p_ptr)) != noErr)
-                    stat = IO_ERROR;
-            if ((uint4)count < p_size * r_count)
+            if ((uint32_t)sint_toread < p_length)
                 stat = IO_EOF;
-            r_count = sint_toread / p_size;
+            r_read = sint_toread;
         }
         else
         {
@@ -1701,13 +1697,13 @@ public:
             //   to take into account pipes and such.
             char *sptr = (char *)p_ptr;
             uint4 nread;
-            uint4 toread = r_count * p_size;
+            uint4 toread = p_length;
             uint4 offset = 0;
             errno = 0;
             while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
             {
                 offset += nread;
-                r_count = offset / p_size;
+                r_read = offset / p_length;
                 if (ferror(m_stream))
                 {
                     clearerr(m_stream);
@@ -1733,7 +1729,7 @@ public:
         return stat;
 	}
     
-	virtual bool Write(const void *p_ptr, uint32_t p_size, uint32_t& r_count)
+	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
 	{
 #ifdef /* MCS_write */ LEGACY_SYSTEM
         if (stream == NULL)
@@ -1754,19 +1750,20 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write */
-        uint32_t count;
+
         if (m_serialOut != 0)
         {//write to serial port
-            uint4 count = p_size * r_count;
-            errno = FSWrite(m_serialOut, (long*)&count, p_ptr);
-            if (errno == noErr && count == p_size * r_count)
-                return IO_NORMAL;
-            return IO_ERROR;
+            uint4 count = p_length;
+            errno = FSWrite(m_serialOut, (long*)&count, p_buffer);
+            r_written = count;
+            if (errno != noErr || count != p_length)
+                return false;
+            return true;
         }
-        count = p_size * r_count;
-        if ((r_count = fwrite(p_ptr, p_size, r_count, m_stream)) != count)
-            return IO_ERROR;
-        return IO_NORMAL;
+
+        if ((r_written = fwrite(p_buffer, 1, p_length, m_stream)) != p_length)
+            return false;
+        return true;
 	}
 	
 	virtual bool Seek(int64_t offset, int p_dir)
@@ -3464,9 +3461,6 @@ struct MCMacDesktop: public MCSystemInterface
             setlinebuf(stderr);
         }
 #endif /* MCS_init_dsk_mac */
-        IO_stdin = new IO_header(MCStdioFileHandle::OpenFd(0, kMCSystemFileModeRead), 0);
-        IO_stdout = new IO_header(MCStdioFileHandle::OpenFd(1, kMCSystemFileModeWrite), 0);
-        IO_stderr = new IO_header(MCStdioFileHandle::OpenFd(2, kMCSystemFileModeWrite), 0);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -3499,20 +3493,6 @@ struct MCMacDesktop: public MCSystemInterface
         setlocale(LC_ALL, MCnullstring);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
-        
-        // Initialize our case mapping tables
-        
-        MCuppercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MCuppercasingtable[i] = (uint1)i;
-        UppercaseText((char *)MCuppercasingtable, 256, smRoman);
-        
-        MClowercasingtable = new uint1[256];
-        for(uint4 i = 0; i < 256; ++i)
-            MClowercasingtable[i] = (uint1)i;
-        LowercaseText((char *)MClowercasingtable, 256, smRoman);
-        
-        //
         
         // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
         //   property here (otherwise it is nil in -ui mode).
@@ -5434,7 +5414,7 @@ struct MCMacDesktop: public MCSystemInterface
 #endif /* MCS_resolvepath */
         if (MCStringGetLength(p_path) == 0)
         {
-            MCS_getcurdir(r_resolved_path);
+            GetCurrentFolder(r_resolved_path);
             return true;
         }
         
@@ -5475,7 +5455,7 @@ struct MCMacDesktop: public MCSystemInterface
         if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
         {
             MCAutoStringRef t_folder;
-            MCS_getcurdir(&t_folder);
+            GetCurrentFolder(&t_folder);
             
             MCAutoStringRef t_resolved;
             if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||

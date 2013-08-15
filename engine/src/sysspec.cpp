@@ -64,6 +64,28 @@ extern MCSystemInterface *MCDesktopCreateMacSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCS_common_init(void)
+{
+	s_mainthread_errno = &errno;
+	
+	MCsystem -> Initialize();
+	
+    IO_stdin = MCsystem -> OpenStdFile(0, kMCSystemFileModeRead);
+    IO_stdout = MCsystem -> OpenStdFile(1, kMCSystemFileModeWrite);
+    IO_stderr = MCsystem -> OpenStdFile(2, kMCSystemFileModeWrite);
+	
+	MCinfinity = HUGE_VAL; 
+
+	MCuppercasingtable = new uint1[256];
+	for(uint4 i = 0; i < 256; ++i)
+		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
+	
+	MClowercasingtable = new uint1[256];
+	for(uint4 i = 0; i < 256; ++i)
+		MClowercasingtable[i] = (uint1)tolower((uint1)i);
+
+}
+
 void MCS_init(void)
 {
 #if defined(_WINDOWS_SERVER)
@@ -101,8 +123,8 @@ void MCS_init(void)
 	signal(SIGABRT, handle_signal);
 	signal(SIGFPE, handle_signal);
     
-	MCS_common_init();
 #endif // _SERVER
+	MCS_common_init();
 }
 
 void MCS_shutdown(void)
@@ -674,7 +696,7 @@ public:
 		m_pointer += p_length;
 		m_length = MCU_max(m_pointer, m_length);
 		r_written = p_length;
-		
+        
 		return true;
 	}
 	
@@ -865,12 +887,12 @@ public:
 		delete this;
 	}
 	
-	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	IO_stat Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_blockcount)
 	{
 		if (m_callbacks -> read == nil)
 			return IO_ERROR;
         
-		return m_callbacks -> read(m_state, p_buffer, p_length, r_read);
+		return m_callbacks -> read(m_state, p_buffer, p_blocksize, r_blockcount);
 	}
 	
 	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
@@ -1327,10 +1349,15 @@ int64_t MCS_fsize(IO_handle p_stream)
 
 IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream)
 {
-	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
+	if (MCabortscript || p_ptr == NULL || p_stream -> handle == NULL)
 		return IO_ERROR;
 	
-    return p_stream -> handle -> Read(p_ptr, p_size, r_count);
+    IO_stat t_stat;
+    uint32_t t_read;
+    t_stat = p_stream -> handle -> Read(p_ptr, p_size * r_count, t_read);
+    char * t_t = (char*)p_ptr;
+    r_count = t_read / p_size;
+    return t_stat;
 }
 
 IO_stat MCS_readall(void *p_ptr, uint32_t& r_count, IO_handle p_stream)
@@ -1356,7 +1383,7 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	
 	uint32_t t_written;
 	if (!p_stream -> handle -> Write(p_ptr, t_to_write, t_written) ||
-		t_to_write != t_written)
+		t_to_write != t_written) // redundant
 		return IO_ERROR;
 	
 	return IO_NORMAL;

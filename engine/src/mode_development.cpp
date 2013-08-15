@@ -243,7 +243,7 @@ IO_stat MCDispatch::startup(void)
 	MCValueRelease(t_compressed);
     
     MCAutoDataRef t_data;
-    /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(t_decompressed), MCStringGetLength(t_decompressed), &t_data);
+    MCDataCreateWithBytes(MCStringGetBytePtr(t_decompressed), MCStringGetLength(t_decompressed), &t_data);
 
 	IO_handle stream = MCS_fakeopen(*t_data);
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)

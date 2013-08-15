@@ -1840,11 +1840,11 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 	
 	MCFilesExecWriteGetStream(ctxt, p_file, p_is_end, p_at, t_stream, t_textmode, t_stat);		
 	
-	if (t_stream == NULL)
+	if (t_stream -> handle == NULL)
 		return;
 
 	if (t_stat != IO_NORMAL)
-	{	
+	{
 		ctxt . SetTheResultToStaticCString("error seeking in file");
 		return;
 	}

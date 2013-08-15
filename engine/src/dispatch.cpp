@@ -430,7 +430,7 @@ Boolean MCDispatch::openenv(const char *sname, const char *env,
 IO_stat readheader(IO_handle& stream, char *version)
 {
 	char tnewheader[NEWHEADERSIZE];
-	uint4 size = NEWHEADERSIZE;
+	uint4 size = (uint4)NEWHEADERSIZE;
 
 	if (IO_read(tnewheader, sizeof(char), size, stream) == IO_NORMAL)
 	{
