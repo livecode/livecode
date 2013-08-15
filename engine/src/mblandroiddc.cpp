@@ -877,7 +877,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		MCAndroidStackSurface t_surface(t_actual_region);
 		if (t_surface.Lock())
 		{
-			redrawwindow(&t_surface, t_actual_region);
+			device_redrawwindow(&t_surface, t_actual_region);
 			t_surface.Unlock();
 		}
 
@@ -911,7 +911,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		
 		if (t_surface.Lock())
 		{
-			redrawwindow(&t_surface, t_dirty_rgn);
+			device_redrawwindow(&t_surface, t_dirty_rgn);
 			t_surface.Unlock();
 		}
 		
