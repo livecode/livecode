@@ -1825,11 +1825,6 @@ void MCGContextDrawDeviceMask(MCGContextRef self, MCGMaskRef p_mask, int32_t p_t
 	t_paint . setXfermode(t_blend_mode);
 	if (t_blend_mode != NULL)
 		t_blend_mode -> unref();
-	
-	SkIRect t_clip;
-	self -> canvas -> getClipDeviceBounds(&t_clip);
-	p_tx -= t_clip . fLeft;
-	p_ty -= t_clip . fTop;
 
 	p_mask -> mask . fBounds . offset(p_tx, p_ty);
 	self -> canvas -> drawDevMask(p_mask -> mask, t_paint);

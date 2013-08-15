@@ -210,9 +210,9 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 	{
 		MCGRectangle t_gbounds;
 		t_gbounds . origin . x = 0;
-		t_gbounds . origin . y = -p_font -> ascent;
+		t_gbounds . origin . y = -t_metrics . tmAscent;
 		t_gbounds . size . width = t_size . cx;
-		t_gbounds . size . height = p_font -> ascent + p_font -> descent;
+		t_gbounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
 		
 		t_bounds . x = floor(t_gbounds . origin . x);
@@ -280,11 +280,6 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 
 	if (t_success)
 	{
-		POINT t_origin;
-		t_origin . x = 0;
-		t_origin . y = 0;
-		DPtoLP(t_gdicontext, &t_origin, 1);
-
 		SetTextColor(t_gdicontext, 0x00FFFFFF);
 		SetBkColor(t_gdicontext, 0x00000000);
 		SetBkMode(t_gdicontext, OPAQUE);
@@ -308,16 +303,14 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		t_mask_info . y = t_bounds . y;
 		t_mask_info . width = t_bounds . width;
 		t_mask_info . height = t_bounds . height;
-		t_mask_info . data = t_data;
+		t_mask_info . data = memdup(t_data, t_bounds . width * t_bounds . height * 4);
 		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
 	}
 
 	if (t_success)
-	{
 		r_mask = t_mask;
-		// clean up bitmap object and take ownership of pixels
-	}
-	else
+
+	if (t_gdibitmap != NULL)
 		DeleteObject(t_gdibitmap);
 
 	DeleteDC(t_gdicontext);

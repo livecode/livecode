@@ -404,6 +404,7 @@ bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& p_info, MCGMaskRef
 
 void MCGMaskRelease(MCGMaskRef self)
 {
+	MCMemoryDelete(self -> mask . fImage);
 	MCMemoryDelete(self);
 }
 
