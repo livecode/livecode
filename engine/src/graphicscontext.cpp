@@ -773,6 +773,7 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 	bool t_success;
 	t_success = true;
 	
+	MCGFloat t_tx, t_ty;
 	MCGMaskRef t_mask;
 	t_mask = nil;
 	if (t_success)
@@ -788,9 +789,20 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		
 		MCGAffineTransform t_gtransform;
 		t_gtransform = MCGContextGetDeviceTransform(m_gcontext);
-		t_gtransform . tx += x;
-		t_gtransform . ty += y;		
+
+		MCGPoint t_text_origin;
+		t_text_origin = MCGPointApplyAffineTransform(MCGPointMake(x, y), t_gtransform);
+
+		MCGFloat t_offset_x, t_offset_y;
+		MCGFloat t_temp;
+		t_offset_x = modf(t_text_origin . x, &t_tx);
+		t_offset_y = modf(t_text_origin . y, &t_ty);
+		t_gtransform . tx = t_offset_x;
+		t_gtransform . ty = t_offset_y;
 		
+		//t_tx -= t_clip . x;
+		//t_ty -= t_clip . y;
+
 		t_success = MCscreen -> textmask(f, s, length, p_unicode_override, t_clip, t_gtransform, t_mask);
 	}
 	
@@ -799,7 +811,7 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		if (image)
 		{
 		}
-		MCGContextDrawDeviceMask(m_gcontext, t_mask, 0, 0);	
+		MCGContextDrawDeviceMask(m_gcontext, t_mask, t_tx, t_ty);	
 		MCGMaskRelease(t_mask);
 	}
 }

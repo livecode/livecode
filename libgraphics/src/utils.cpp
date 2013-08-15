@@ -572,7 +572,7 @@ MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const 
 		// we are just translating or scaling (or both) the rectangle
 		// so the basic rectangle shape remains the same, we just need to translate the origin and scale the width and height
 		t_transformed_rect . origin . x = p_rect . origin . x + p_transform . tx;
-		t_transformed_rect . origin . y = p_rect . origin . x + p_transform . ty;
+		t_transformed_rect . origin . y = p_rect . origin . y + p_transform . ty;
 		t_transformed_rect . size . width = p_rect . size . width * p_transform . a;
 		t_transformed_rect . size . height = p_rect . size . height * p_transform . d;
 	}

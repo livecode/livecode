@@ -187,6 +187,9 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 	}
 	
 	if (t_success)
+		t_success = SetGraphicsMode(t_gdicontext, GM_ADVANCED) != 0;
+
+	if (t_success)
 		t_success = SelectObject(t_gdicontext, p_font -> fid) != NULL;
 
 	SIZE t_size;
@@ -206,18 +209,18 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 	if (t_success)
 	{
 		MCGRectangle t_gbounds;
-		t_gbounds . origin . x = -t_size . cy;
-		t_gbounds . origin . y = -t_metrics . tmAscent;
-		t_gbounds . size . width = t_size . cx + t_size . cy * 2;
-		t_gbounds . size . height = t_size . cy;
+		t_gbounds . origin . x = 0;
+		t_gbounds . origin . y = -p_font -> ascent;
+		t_gbounds . size . width = t_size . cx;
+		t_gbounds . size . height = p_font -> ascent + p_font -> descent;
 		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
 		
-		t_bounds . x = floor(t_gbounds . origin .x);
+		t_bounds . x = floor(t_gbounds . origin . x);
 		t_bounds . y = floor(t_gbounds . origin . y);
 		t_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_bounds . x;
 		t_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_bounds . y;
 		
-		t_bounds = MCU_intersect_rect(t_bounds, p_clip);
+		//t_bounds = MCU_intersect_rect(t_bounds, p_clip);
 		
 		if (t_bounds . width == 0 || t_bounds . height == 0)
 		{
@@ -250,16 +253,18 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 
 	HBRUSH t_brush;
 	t_brush = NULL;
-	if (t_success)
+	/*if (t_success)
 	{
-		t_brush = CreateSolidBrush(0x00000000);
+		t_brush = CreateSolidBrush(0x00ffffff);
 		t_success = t_brush != NULL;
 	}
 	if (t_success)
 		t_success = SelectObject(t_gdicontext, t_brush) != NULL;
 	if (t_success)
 		t_success = Rectangle(t_gdicontext, 0, 0, t_bounds . width, t_bounds . height);
-	DeleteObject(t_brush);
+	DeleteObject(t_brush);*/
+	if (t_success)
+		memset(t_data, 0x00, t_bounds . width * t_bounds . height * 4);
 
 	if (t_success)
 	{
@@ -268,14 +273,19 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		t_transform . eM12 = p_transform . b;
 		t_transform . eM21 = p_transform . c;
 		t_transform . eM22 = p_transform . d;
-		t_transform . eDx = p_transform . tx - t_bounds . x;
-		t_transform . eDy = p_transform . ty - t_bounds . y;
+		t_transform . eDx = p_transform . tx /*- t_bounds . x*/;
+		t_transform . eDy = p_transform . ty /*- t_bounds . y*/;
 		t_success = SetWorldTransform(t_gdicontext, &t_transform);
 	}
 
 	if (t_success)
 	{
-		SetTextColor(t_gdicontext, 0x000000FF);
+		POINT t_origin;
+		t_origin . x = 0;
+		t_origin . y = 0;
+		DPtoLP(t_gdicontext, &t_origin, 1);
+
+		SetTextColor(t_gdicontext, 0x00FFFFFF);
 		SetBkColor(t_gdicontext, 0x00000000);
 		SetBkMode(t_gdicontext, OPAQUE);
 
