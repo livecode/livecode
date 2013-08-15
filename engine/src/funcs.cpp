@@ -58,6 +58,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "stacksecurity.h"
 #include "uuid.h"
+#include "font.h"
 
 #include "core.h"
 
@@ -6384,4 +6385,114 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 	ep . copysvalue(t_uuid_buffer);
 	
 	return ES_NORMAL;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+MCMeasureText::~MCMeasureText(void)
+{
+	delete m_object;
+	delete m_text;
+	delete m_mode;
+}
+
+// Syntax:
+// measure[Unicode]Text(<text>,<object>,[<mode>])
+Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
+{
+    initpoint(sp);
+    
+	if (sp.skip_token(SP_FACTOR, TT_LPAREN) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_FACTOR_NOLPAREN, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.parseexp(True, False, &m_text) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_BADTEXT, sp);
+		return PS_ERROR;
+	}
+	
+	Symbol_type type;
+	m_object = new MCChunk(False);
+	if (sp.next(type) != PS_NORMAL || type != ST_SEP
+        || m_object->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_NOOBJECT, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+    {
+        MCperror->add
+        (PE_FACTOR_NORPAREN, sp);
+        return PS_ERROR;
+    }
+    if (type == ST_SEP)
+    {
+        if (sp.parseexp(True, False, &m_mode) != PS_NORMAL)
+        {
+            MCperror->add
+            (PE_MEASURE_TEXT_BADMODE, sp);
+            return PS_ERROR;
+        }
+        
+        if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+        {
+            MCperror->add
+            (PE_FACTOR_NORPAREN, sp);
+            return PS_ERROR;
+        }
+    }
+
+	return PS_NORMAL;
+}
+
+Exec_stat MCMeasureText::eval(MCExecPoint &ep)
+{
+    MCObject *t_object_ptr;
+	uint4 parid;
+	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_MEASURE_TEXT_NOOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
+    if (m_text -> eval(ep) != ES_NORMAL)
+    {
+        MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCRectangle t_bounds = t_object_ptr -> measuretext(ep.getsvalue(), m_is_unicode);
+    
+    if (m_mode)
+    {
+        if (m_mode -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep.getsvalue() == "size")
+        {
+            ep.setpoint(t_bounds . width,t_bounds . height);
+            return ES_NORMAL;
+        }
+        
+        if(ep.getsvalue() == "bounds")
+        {
+            ep.setrectangle(t_bounds);
+            return ES_NORMAL;
+        }
+    }
+    
+    ep.setuint(t_bounds . width);
+    return ES_NORMAL;
 }

@@ -4407,6 +4407,28 @@ void MCObject::scheduledelete(void)
 		getstack() -> uncacheobjectbyid(this);
 }
 
+MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
+{
+    bool t_mapped_font;
+    t_mapped_font = false;
+    if (!opened && m_font == nil)
+    {
+        mapfont();
+        t_mapped_font = true;
+    }
+    
+    MCRectangle t_bounds;
+    t_bounds . x = 0;
+    t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+    t_bounds . y = -MCFontGetAscent(m_font);
+    t_bounds . height = MCFontGetDescent(m_font) + MCFontGetAscent(m_font);
+    
+    if (t_mapped_font)
+        unmapfont();
+    
+    return t_bounds;
+}
+
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCObject::visit(MCVisitStyle p_style, uint32_t p_part, MCObjectVisitor *p_visitor)

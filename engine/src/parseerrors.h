@@ -1618,6 +1618,17 @@ enum Parse_errors
 
 	// {PE-0530} variance: bad parameters
 	PE_VARIANCE_BADPARAM,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    // {PE-0531} measureText: no object
+    PE_MEASURE_TEXT_NOOBJECT,
+
+    // {PE-0532} measureText: bad text parameter
+    PE_MEASURE_TEXT_BADTEXT,
+
+    // {PE-0533} measureText: bad mode parameter
+    PE_MEASURE_TEXT_BADMODE,
+
 };
 
 extern const char *MCparsingerrors;

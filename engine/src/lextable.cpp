@@ -1073,6 +1073,9 @@ LT factor_table[] =
         {"me", TT_FUNCTION, F_ME},
 		// JS-2013-06-19: [[ StatsFunctions ]] Token for 'arithmeticMean' (aka mean / average / avg)
         {"mean", TT_FUNCTION, F_ARI_MEAN},
+        // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+        {"measuretext", TT_FUNCTION, F_MEASURE_TEXT},
+        {"measureunicodetext", TT_FUNCTION, F_MEASURE_UNICODE_TEXT},
         {"median", TT_FUNCTION, F_MEDIAN},
         {"mediatypes", TT_PROPERTY, P_MEDIA_TYPES},
         {"menu", TT_CHUNK, CT_MENU},
