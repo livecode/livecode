@@ -695,6 +695,8 @@ public:
 	{
 		return false;
 	}
+    
+    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
 
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);

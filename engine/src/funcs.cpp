@@ -6464,23 +6464,13 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
     
-    MCFontRef t_font;
-	t_font = t_object_ptr -> getfontref();
-    
-    if (!t_font)
-    {
-		MCeerror->add
-		(EE_MEASURE_TEXT_NOOBJECT, line, pos);
-		return ES_ERROR;
-	}
-    
     if (m_text -> eval(ep) != ES_NORMAL)
     {
         MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
         return ES_ERROR;
     }
     
-    uint16_t t_width = MCFontMeasureText(t_font, ep.getsvalue().getstring(), ep.getsvalue().getlength(), m_is_unicode);
+    MCRectangle t_bounds = t_object_ptr -> measuretext(ep.getsvalue(), m_is_unicode);
     
     if (m_mode)
     {
@@ -6492,23 +6482,17 @@ Exec_stat MCMeasureText::eval(MCExecPoint &ep)
         
         if (ep.getsvalue() == "size")
         {
-            ep.setpoint(t_width,MCFontGetAscent(t_font)+MCFontGetDescent(t_font));
+            ep.setpoint(t_bounds . width,t_bounds . height);
             return ES_NORMAL;
         }
         
         if(ep.getsvalue() == "bounds")
         {
-            MCRectangle t_bounds;
-            t_bounds . x = 0;
-            t_bounds . width = t_width;
-            t_bounds . y = -MCFontGetAscent(t_font);
-            t_bounds . height = MCFontGetDescent(t_font) + MCFontGetAscent(t_font);
-            
             ep.setrectangle(t_bounds);
             return ES_NORMAL;
         }
     }
     
-    ep.setuint(t_width);
+    ep.setuint(t_bounds . width);
     return ES_NORMAL;
 }
