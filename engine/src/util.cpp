@@ -2126,7 +2126,7 @@ inline void strmove(char *p_dest, const char *p_src)
 // MW-2004-11-26: Replace strcpy with strmov - overalapping regions (VG)
 void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 {
-	char *cstr = (char*) MCStringGetCString(in);
+	char *cstr = strdup(MCStringGetCString(in));
 
 	char *fptr = cstr; //pointer to search forward in curdir
 	while (*fptr)
@@ -2166,7 +2166,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCString(fptr, r_out);
+	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)fptr, r_out);
 
 }
 
@@ -2427,7 +2427,7 @@ void MCU_geturl(MCExecPoint &ep)
 				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
 				{
 					MCAutoStringRef p_url;
-					/* UNCHECKED */ MCStringCreateWithCString(ep . getcstring(), &p_url);
+					/* UNCHECKED */ ep . copyasstringref(&p_url);
 					MCS_geturl(ep . getobj(), *p_url);
 					MCurlresult->eval(ep);
 				}

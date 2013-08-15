@@ -344,22 +344,42 @@ Boolean MCS_unlink(MCStringRef p_path)
 
 Boolean MCS_backup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return MCsystem -> BackupFile(p_old_name, p_new_name);
+    MCAutoStringRef t_old_resolved, t_new_resolved;
+    
+    if (!MCS_resolvepath(p_old_name, &t_old_resolved) || !MCS_resolvepath(p_new_name, &t_new_resolved))
+        return False;
+        
+	return MCsystem -> BackupFile(*t_old_resolved, *t_new_resolved);
 }
 
 Boolean MCS_unbackup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	return MCsystem -> UnbackupFile(p_old_name, p_new_name);
+    MCAutoStringRef t_old_resolved, t_new_resolved;
+    
+    if (!MCS_resolvepath(p_old_name, &t_old_resolved) || !MCS_resolvepath(p_new_name, &t_new_resolved))
+        return False;
+    
+	return MCsystem -> UnbackupFile(*t_old_resolved, *t_new_resolved);
 }
 
 Boolean MCS_createalias(MCStringRef p_target, MCStringRef p_alias)
 {
-	return MCsystem -> CreateAlias(p_target, p_alias);
+    MCAutoStringRef t_target_resolved;
+    
+    if (!MCS_resolvepath(p_target, &t_target_resolved))
+        return False;
+    
+	return MCsystem -> CreateAlias(*t_target_resolved, p_alias);
 }
 
 Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved)
 {
-	return MCsystem -> ResolveAlias(p_path, r_resolved);
+    MCAutoStringRef t_resolved_path;
+    
+    if (!MCS_resolvepath(p_path, &t_resolved_path))
+        return False;
+    
+	return MCsystem -> ResolveAlias(*t_resolved_path, r_resolved);
 }
 
 bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
@@ -446,10 +466,10 @@ bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 Boolean MCS_setcurdir(MCStringRef p_path)
 {
 	MCAutoStringRef t_new_path;
-	if (MCS_resolvepath(p_path, &t_new_path))
-		return MCsystem -> SetCurrentFolder(*t_new_path);
+	if (!MCS_resolvepath(p_path, &t_new_path))
+        return False;
     
-	return False;
+    return MCsystem -> SetCurrentFolder(*t_new_path);
 }
 
 
@@ -1349,7 +1369,7 @@ int64_t MCS_fsize(IO_handle p_stream)
 
 IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream)
 {
-	if (MCabortscript || p_ptr == NULL || p_stream -> handle == NULL)
+	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
 	
     IO_stat t_stat;

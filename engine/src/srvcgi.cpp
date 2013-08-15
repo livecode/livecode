@@ -733,10 +733,11 @@ static void cgi_fix_path_variables()
 
 	MCAutoStringRef env;
 	
-	MCS_getenv(MCSTR("PATH_TRANSLATED"), &env);
-
-	t_path = strdup(MCStringGetCString(*env));
-	t_path_end = t_path + strlen(t_path);
+	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &env))
+	{
+		t_path = strdup(MCStringGetCString(*env));
+		t_path_end = t_path + strlen(t_path);
+	}
 
 	
 
@@ -781,13 +782,13 @@ static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
 	
-	MCAutoStringRef p_query_string;
-	
-	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
+	MCAutoStringRef t_query_string;
 
-	const char *t_query_string = MCStringGetCString(*p_query_string);
-	if (t_query_string != NULL)
-		cgi_store_form_urlencoded(ep, s_cgi_get, t_query_string, t_query_string + strlen(t_query_string), true);
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		const char *t_query = MCStringGetCString(*t_query_string);
+		cgi_store_form_urlencoded(ep, s_cgi_get, t_query, t_query + strlen(t_query), true);
+	}
 
 	return ES_NORMAL;
 }
@@ -837,9 +838,7 @@ static Exec_stat cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 
 	MCAutoStringRef t_content_length;
 	
-	MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length);
-	
-	if (MCStringGetCString(*t_content_length) != NULL)
+	if (MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length))
 	{
 		uint32_t t_length;
 		t_length = atoi(MCStringGetCString(*t_content_length));
@@ -875,10 +874,9 @@ static Exec_stat cgi_compute_post_variables()
 	s_cgi_processed_post = true;
 	
 	MCAutoStringRef t_content_type;
-	
-	MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
-	
-	if (MCStringGetCString(*t_content_type) != NULL && strcasecmp(MCStringGetCString(*t_content_type), "application/x-www-form-urlencoded") == 0)
+
+	bool gotenv = MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
+	if (gotenv && MCStringIsEqualToCString(*t_content_type, "application/x-www-form-urlencoded", kMCCompareCaseless))
 	{
 		// TODO: currently we assume that urlencoded form data is small enough to fit into memory,
 		// so we fetch the contents from $_POST_RAW (which automatically reads the data from stdin).
@@ -897,7 +895,7 @@ static Exec_stat cgi_compute_post_variables()
 		}
 		delete t_raw_ref;
 	}
-	else if (MCStringGetCString(*t_content_type) != NULL && MCCStringBeginsWithCaseless(MCStringGetCString(*t_content_type), "multipart/form-data;"))
+	else if (gotenv && MCStringBeginsWithCString(*t_content_type, (const char_t *)"multipart/form-data;", kMCStringOptionCompareCaseless))
 	{
 		// read post-data from stdin, via the stream cache
 		MCExecPoint ep;
@@ -948,7 +946,8 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	char **t_values = NULL;
 	uint32_t t_param_count = 0;
 	
-	t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
+	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
+	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
 		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
@@ -1214,13 +1213,10 @@ static Exec_stat cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 
 	MCAutoStringRef t_cookie;
 	
-	MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie);
-	
-	MCExecPoint ep;
-	
-	if (MCStringGetCString(*t_cookie) == NULL)
+	if (MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie))
 		return ES_NORMAL;
-	
+
+	MCExecPoint ep;
 	cgi_store_cookie_urlencoded(ep, s_cgi_cookie, MCStringGetCString(*t_cookie), MCStringGetCString(*t_cookie) + MCCStringLength(MCStringGetCString(*t_cookie)), true);
 
 	return ES_NORMAL;
@@ -1242,9 +1238,9 @@ bool cgi_initialize()
 
 	// Resolve the main script that has been requested by the CGI interface.
 	MCAutoStringRef t_env;
-	MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env);
 
-	MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
+	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env))
+		MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;

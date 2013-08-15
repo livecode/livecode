@@ -4377,6 +4377,7 @@ struct MCMacDesktop: public MCSystemInterface
         
         return True;
     }
+    
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
 	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_resolved_path)
     {
@@ -5523,6 +5524,9 @@ struct MCMacDesktop: public MCSystemInterface
         MCStdioFileHandle *t_handle;
         t_handle = MCStdioFileHandle::OpenFile(p_path, p_mode);
         
+        if (t_handle == nil)
+            return nil;
+        
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
@@ -5531,13 +5535,22 @@ struct MCMacDesktop: public MCSystemInterface
     
 	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
     {
-        return new IO_header(MCStdioFileHandle::OpenFd(fd, mode), 0);
+        MCStdioFileHandle *t_handle;
+        t_handle = MCStdioFileHandle::OpenFd(fd, mode);
+        
+        if (t_handle == nil)
+            return nil;
+        
+        return new IO_header(t_handle, 0);
     }
     
 	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
     {
         MCStdioFileHandle *t_handle;
         t_handle = MCStdioFileHandle::OpenDevice(p_path, p_control_string);
+        
+        if (t_handle == nil)
+            return nil;
         
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);

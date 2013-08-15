@@ -2026,11 +2026,8 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 			const char *t_engine_dir_end;
 			t_engine_dir_end = strrchr(MCcmd, '/');
 			MCAutoStringRef t_module_path;
-            
-            /* UNCHECKED */ MCStringCreateMutable(0, &t_module_path);
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
+			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
 			t_module = MCS_loadmodule(*t_module_path);
-			MCCStringFree(t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			const char *t_engine_dir_end;
 			t_engine_dir_end = strrchr(MCcmd, '/');
@@ -2040,6 +2037,7 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 			t_module = MCS_loadmodule(*t_module_path);
 			MCCStringFree(t_module_path);
 #elif defined(_SERVER)
+			
 			t_module = nil;
 #endif
 			if (t_module != nil)

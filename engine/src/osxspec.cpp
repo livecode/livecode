@@ -2583,7 +2583,6 @@ OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
         return memFullErr;
     
     if (!t_path.Lock(*t_auto_path))
-        // TODO assign relevant error code
         return memFullErr;
     
 	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
