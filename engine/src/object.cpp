@@ -3751,11 +3751,7 @@ struct object_mask_info
 	uint32_t stride;
 	
 	// This is freed after processing.
-	struct
-	{
-		uint8_t *data;
-		uint32_t stride;
-	} temp_bits;
+	MCImageBitmap *temp_bitmap;
 };
 
 // This method fills a scanline for comparison from a soft mask.
@@ -3843,39 +3839,6 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	return p_shape . bounds;
 }
 
-static bool compute_objectshape_copycontextmask(MCImageBitmap *p_bitmap, MCRectangle& p_rect, uint32_t p_threshold, uint8_t *&r_mask_bits, uint32_t &r_mask_stride)
-{
-	uint8_t *t_mask_bits = nil;
-	uint32_t t_mask_stride = (p_rect.width + 7) / 8;
-	if (!MCMemoryAllocate(t_mask_stride * p_rect.height, t_mask_bits))
-		return false;
-
-	MCMemoryClear(t_mask_bits, t_mask_stride * p_rect.height);
-
-	void *t_src_ptr;
-	uint4 t_src_stride;
-	t_src_ptr = p_bitmap -> data;
-	t_src_stride = p_bitmap -> stride;
-	
-	uint8_t *t_bits_ptr;
-	t_bits_ptr = t_mask_bits;
-
-	for(uint4 y = p_rect . height; y > 0; --y, t_bits_ptr += t_mask_stride, t_src_ptr = (uint8_t *)t_src_ptr + t_src_stride)
-	{
-		uint1 t_mask = 0x80;
-		for(uint4 x = 0; x < p_rect . width; ++x)
-		{
-			if ((((uint4 *)t_src_ptr)[x] >> 24) >= p_threshold)
-				t_bits_ptr[x >> 3] |= t_mask;
-			t_mask = t_mask >> 1;
-			if (t_mask == 0)
-				t_mask = 0x80;
-		}
-	}
-	
-	return true;
-}
-
 // This method computes the mask details for a given shape, rasterizing the object
 // if necessary in the process.
 static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape, MCRectangle& p_rect, uint32_t p_threshold, object_mask_info& r_mask)
@@ -3946,17 +3909,15 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	delete t_gfxcontext;
 	MCGContextRelease(t_context);
 
-	// Fetch the context's mask.
-	/* UNCHECKED */ compute_objectshape_copycontextmask(t_snapshot, p_rect, p_threshold, r_mask . temp_bits . data, r_mask . temp_bits . stride);
-
+	// IM-2013-08-15: [[ ResIndependence ]] Use bitmap as soft mask instead of extracting sharp mask
+	r_mask . temp_bitmap = t_snapshot;
+	
 	// Now set up the mask structure.
-	r_mask . fill = compute_objectshapescanline_sharp;
-	r_mask . bits = r_mask . temp_bits . data;
-	r_mask . stride = r_mask . temp_bits . stride;
+	r_mask . fill = compute_objectshapescanline_soft;
+	r_mask . bits = r_mask . temp_bitmap -> data;
+	r_mask . stride = r_mask . temp_bitmap -> stride;
 	r_mask . width = p_rect . width;
 	r_mask . offset = 0;
-	
-	MCImageFreeBitmap(t_snapshot);
 	
 	return;
 }
@@ -4059,8 +4020,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		MCMemoryDeleteArray(t_other_scanline);
 		
 		// Free the temporary masks that were generated (if any).
-		MCMemoryDeallocate(t_this_mask . temp_bits . data);
-		MCMemoryDeallocate(t_other_mask . temp_bits . data);
+		MCImageFreeBitmap(t_this_mask . temp_bitmap);
+		MCImageFreeBitmap(t_other_mask . temp_bitmap);
 	}
 	
 	p_other -> unlockshape(t_other_shape);

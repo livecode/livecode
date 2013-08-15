@@ -1353,6 +1353,14 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 		unlockbitmap(t_bitmap);
 		return true;
 	}
+	
+	// IM-2013-08-15: [[ ResIndependence ]] soft-mask doesn't work with scaled images so for now use the complex mask type
+	if (m_scale_factor != 1.0)
+	{
+		r_shape . type = kMCObjectShapeComplex;
+		r_shape . bounds = getrect();
+		return true;
+	}
 	else
 	{
 		// Otherwise we have a nice mask to pass back!
