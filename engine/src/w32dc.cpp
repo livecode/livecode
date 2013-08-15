@@ -205,6 +205,7 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 	if (t_success)
 		t_success = GetTextMetricsA(t_gdicontext, &t_metrics);
 
+	MCRectangle t_transformed_bounds;
 	MCRectangle t_bounds;
 	if (t_success)
 	{
@@ -215,12 +216,12 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		t_gbounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
 		
-		t_bounds . x = floor(t_gbounds . origin . x);
-		t_bounds . y = floor(t_gbounds . origin . y);
-		t_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_bounds . x;
-		t_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_bounds . y;
+		t_transformed_bounds . x = floor(t_gbounds . origin . x);
+		t_transformed_bounds . y = floor(t_gbounds . origin . y);
+		t_transformed_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_transformed_bounds . x;
+		t_transformed_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_transformed_bounds . y;
 		
-		//t_bounds = MCU_intersect_rect(t_bounds, p_clip);
+		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
 		
 		if (t_bounds . width == 0 || t_bounds . height == 0)
 		{
@@ -273,8 +274,8 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		t_transform . eM12 = p_transform . b;
 		t_transform . eM21 = p_transform . c;
 		t_transform . eM22 = p_transform . d;
-		t_transform . eDx = p_transform . tx /*- t_bounds . x*/;
-		t_transform . eDy = p_transform . ty /*- t_bounds . y*/;
+		t_transform . eDx = p_transform . tx - (t_bounds . x - t_transformed_bounds . x);
+		t_transform . eDy = p_transform . ty - (t_bounds . y - t_transformed_bounds . y);
 		t_success = SetWorldTransform(t_gdicontext, &t_transform);
 	}
 

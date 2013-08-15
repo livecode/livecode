@@ -778,15 +778,6 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 	t_mask = nil;
 	if (t_success)
 	{		
-		MCGRectangle t_gclip;
-		t_gclip = MCGContextGetDeviceClipBounds(m_gcontext);
-		
-		MCRectangle t_clip;		
-		t_clip . x = floor(t_gclip . origin . x);
-		t_clip . y = floor(t_gclip . origin . y);
-		t_clip . width = ceil(t_gclip . origin . x + t_gclip . size . width) - t_clip . x;
-		t_clip . height = ceil(t_gclip . origin . y + t_gclip . size . height) - t_clip . y;		
-		
 		MCGAffineTransform t_gtransform;
 		t_gtransform = MCGContextGetDeviceTransform(m_gcontext);
 
@@ -799,6 +790,18 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		t_offset_y = modf(t_text_origin . y, &t_ty);
 		t_gtransform . tx = t_offset_x;
 		t_gtransform . ty = t_offset_y;
+
+		MCGRectangle t_gclip;
+		t_gclip = MCGContextGetDeviceClipBounds(m_gcontext);
+		
+		MCRectangle t_clip;		
+		t_clip . x = floor(t_gclip . origin . x);
+		t_clip . y = floor(t_gclip . origin . y);
+		t_clip . width = ceil(t_gclip . origin . x + t_gclip . size . width) - t_clip . x;
+		t_clip . height = ceil(t_gclip . origin . y + t_gclip . size . height) - t_clip . y;		
+		
+		t_clip . x -= t_tx;
+		t_clip . y -= t_ty;
 		
 		//t_tx -= t_clip . x;
 		//t_ty -= t_clip . y;
