@@ -5306,26 +5306,42 @@ struct MCMacDesktop: public MCSystemInterface
         
         return MCListCopyAsString(*t_list, r_drives) ? True : False;
     }
-    
-	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
-    {
-        MCAutoStringRef t_resolved_path;
+	
+	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
+	{ // Copied from srvmac.cpp
+		CFStringRef t_cf_path;
+		t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingMacRoman);
+		
+		CFIndex t_used;
+		t_used = CFStringGetMaximumSizeOfFileSystemRepresentation(t_cf_path);
+		
+		MCAutoNativeCharArray t_native;
+		if (!t_native.New(t_used))
+			return false;
         
-        if (!ResolvePath(p_path, &t_resolved_path))
-            return false;
+		CFStringGetFileSystemRepresentation(t_cf_path, (char*)t_native.Chars(), t_used);
+		t_native.Shrink(MCCStringLength((char*)t_native.Chars()));
+		
+		return t_native.CreateStringAndRelease(r_native);
+	}
+	
+	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
+	{ // Copied from srvmac.cpp
+		CFStringRef t_cf_path;
+		t_cf_path = CFStringCreateWithFileSystemRepresentation(NULL, MCStringGetCString(p_native));
+		
+		CFIndex t_used;
+		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
+		
+		MCAutoNativeCharArray t_path;
+		if (!t_path.New(t_used + 1))
+			return false;;
         
-        return MCStringCopyAndRelease(*t_resolved_path, r_native);
-    }
-    
-	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
-    {
-        MCAutoStringRef t_resolved_path;
-        
-        if (!ResolvePath(p_native, &t_resolved_path))
-            return false;
-        
-        return MCStringCopyAndRelease(*t_resolved_path, r_path);
-    }
+		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
+		t_path.Chars()[t_used] = '\0';
+		
+		return t_path.CreateStringAndRelease(r_path);
+	}
     
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
     {

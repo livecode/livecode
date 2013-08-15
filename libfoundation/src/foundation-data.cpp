@@ -50,7 +50,9 @@ bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataR
 		t_success = MCMemoryNewArray(p_byte_count, self -> bytes);
     
 	if (t_success)
-	{        
+	{
+        MCMemoryCopy(self -> bytes, p_bytes, p_byte_count);
+        self -> byte_count = p_byte_count;
 		r_data = self;
 	}
 	else

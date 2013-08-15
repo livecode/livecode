@@ -1401,22 +1401,22 @@ void MCS_reset_time()
 //	Delay((unsigned long)duration * 60, &finalTicks);
 //}
 
-char *MCS_getenv(const char *name)
-{
-	return getenv(name); //always returns NULL under CodeWarrier env.
-}
-
-extern void MCS_setenv(const char *name, const char *value)
-{
-	setenv(name, value, True);
-
-}
-
-extern void MCS_unsetenv(const char *name)
-{
-	unsetenv(name);
-
-}
+//char *MCS_getenv(const char *name)
+//{
+//	return getenv(name); //always returns NULL under CodeWarrier env.
+//}
+//
+//extern void MCS_setenv(const char *name, const char *value)
+//{
+//	setenv(name, value, True);
+//
+//}
+//
+//extern void MCS_unsetenv(const char *name)
+//{
+//	unsetenv(name);
+//
+//}
 
 int4 MCS_rawopen(const char *path, int flags)
 {//this call is for unix audio device only.
