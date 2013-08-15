@@ -786,8 +786,8 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 
 		MCGFloat t_offset_x, t_offset_y;
 		MCGFloat t_temp;
-		t_offset_x = modf(t_text_origin . x, &t_tx);
-		t_offset_y = modf(t_text_origin . y, &t_ty);
+		t_offset_x = modff(t_text_origin . x, &t_tx);
+		t_offset_y = modff(t_text_origin . y, &t_ty);
 		t_gtransform . tx = t_offset_x;
 		t_gtransform . ty = t_offset_y;
 

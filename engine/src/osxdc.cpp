@@ -363,12 +363,12 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		t_gbounds = MCGRectangleMake(t_bounds . x, t_bounds . y, t_bounds . width, t_bounds . height);
 		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
 		
-		t_bounds . x = floor(t_gbounds . origin .x);
+		t_bounds . x = floor(t_gbounds . origin . x);
 		t_bounds . y = floor(t_gbounds . origin . y);
 		t_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_bounds . x;
 		t_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_bounds . y;
 		
-		t_bounds = MCU_intersect_rect(t_bounds, p_clip);
+		//t_bounds = MCU_intersect_rect(t_bounds, p_clip);
 		
 		if (t_bounds . width == 0 || t_bounds . height == 0)
 		{
@@ -392,7 +392,7 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -t_bounds . x, -t_bounds . y);
+		CGContextTranslateCTM(t_cgcontext, -t_bounds . x, t_bounds . height + t_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
 		
 		CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
