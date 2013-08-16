@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mctheme.h"
 
+#include <sys/stat.h>
+
 MCScreenDC::MCScreenDC()
 {
 	f_src_dc = NULL;
@@ -142,7 +144,7 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 	
 	if (t_success)
 	{
-		if (AddFontResourceEx(p_path, t_private, 0) == 0)
+		if (AddFontResourceExA(p_path, t_private, 0) == 0)
 			return false; //EE_FONT_CANTLOAD;
 	}
     
@@ -162,7 +164,7 @@ bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_
         t_private = FR_PRIVATE;
     
     if (t_success)
-		t_success = RemoveFontResourceEx(p_path, t_private, 0) != 0;
+		t_success = RemoveFontResourceExA(p_path, t_private, 0) != 0;
     
 	if (t_success)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
