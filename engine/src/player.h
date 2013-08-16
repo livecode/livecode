@@ -107,8 +107,8 @@ class MCPlayer : public MCControl
 	static QTEffect *qteffects;
 	static uint2 neffects;
 	static void *sgSoundComp;
-	static const char  *recordtempfile;
-	static char  *recordexportfile;
+	static MCStringRef recordtempfile;
+	static MCStringRef recordexportfile;
 	static long sgSndDriver;
 	static MCPlayer *s_ephemeral_player;
 

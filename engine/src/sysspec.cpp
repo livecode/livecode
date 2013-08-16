@@ -109,7 +109,11 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	return MCsystem -> GetEnv(p_name_string, r_result);
+	MCsystem -> GetEnv(p_name_string, r_result);
+    if (r_result != nil)
+        return true;
+    return false;
+        
 }
 
 real8 MCS_getfreediskspace(void)
@@ -963,8 +967,8 @@ void MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
 
 	uint32_t t_written;
-	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), t_written) ||
-		MCDataGetLength(p_data) != t_written)
+	if (!t_file -> Write(MCDataGetBytePtr(p_data), (uint32_t) MCDataGetLength(p_data), t_written) ||
+		(uint32_t) MCDataGetLength(p_data) != t_written)
 		MCresult -> sets("error writing file");
 	else
 		MCresult -> clear();

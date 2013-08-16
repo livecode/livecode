@@ -90,7 +90,7 @@ struct MCSystemInterface
 	virtual void Sleep(real64_t p_when) = 0;
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value) = 0;
-	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
 	
 	virtual bool CreateFolder(MCStringRef p_path) = 0;
 	virtual bool DeleteFolder(MCStringRef p_path) = 0;

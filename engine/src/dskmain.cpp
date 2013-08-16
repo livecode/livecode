@@ -151,7 +151,11 @@ bool X_init(int argc, char *argv[], char *envp[])
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
 	if (MCcmd[0] != '/')
 	{//not c:/mc/xxx, not /mc/xxx
-		char *tpath = MCS_getcurdir();
+        MCAutoStringRef tpath_str;
+		
+        /* UNCHECKED */ MCS_getcurdir(&tpath_str);
+        char *tpath = strdup(MCStringGetCString(*tpath_str));
+        
 		if (tpath && strlen(MCcmd) + strlen(tpath) < PATH_MAX)
 		{
 			strcpy(apppath,tpath);

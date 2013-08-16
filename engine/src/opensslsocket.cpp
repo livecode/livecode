@@ -1774,8 +1774,9 @@ Boolean MCSocket::initsslcontext()
 				{
 					char *oldcertpath = certs[i].clone();
 #ifdef _MACOSX
-	
-					char *certpath = path2utf(MCS_resolvepath(oldcertpath));
+                    MCAutoStringRef t_certpath_temp, t_certpath;
+                    if (MCS_resolvepath(MCSTR(oldcertpath), &t_certpath_temp))
+                        path2utf(*t_certpath_temp, &t_certpath);
 #else
 					MCAutoStringRef t_certpath;
 					MCS_resolvepath(MCSTR(oldcertpath), &t_certpath);
