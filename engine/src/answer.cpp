@@ -208,7 +208,13 @@ Parse_errors MCAnswer::parse_colour(MCScriptPoint& sp)
 	if (sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL)
 		if (sp . parseexp(False, True, &colour . initial) != PS_NORMAL)
 			t_error = PE_ANSWER_BADRESPONSE;
-			
+	
+	if (t_error == PE_UNDEFINED && sp . skip_token(SP_REPEAT, TT_UNDEFINED, RF_WITH) == PS_NORMAL && 
+		sp . skip_token(SP_FACTOR, TT_PROPERTY, P_COLORS) == PS_NORMAL)
+	{
+			if (sp . parseexp(False, True, &colour . custom) != PS_NORMAL)
+			t_error = PE_ANSWER_BADRESPONSE;
+	}
 	return t_error;
 }
 
@@ -430,8 +436,11 @@ Exec_errors MCAnswer::exec_colour(MCExecPoint& ep, const char *p_title)
 	{
 		MCresult -> clear(False);
 
+		Meta::cstring_value t_custom_colors;
+		Exec_errors t_custom = Meta::evaluate(ep, colour . custom, t_custom_colors, EE_ANSWER_BADQUESTION);
+
 		if (MCsystemCS && MCscreen -> hasfeature ( PLATFORM_FEATURE_OS_COLOR_DIALOGS ) )
-			MCA_color(ep, p_title, t_initial, sheet);
+			MCA_color(ep, p_title, t_initial, t_custom_colors, sheet);
 		else
 			t_error = exec_custom(ep, MCcsnamestring, "color", 2, p_title, *t_initial);
 		

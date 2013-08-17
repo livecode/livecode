@@ -846,7 +846,7 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 }
 
 // MW-2005-05-15: Updated for new answer command restructuring
-int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boolean sheet)
+int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, const char *p_colors, Boolean sheet)
 {
 	ep . setsvalue(p_initial);
 
@@ -864,6 +864,9 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 		delete cname;
 	}
 
+	
+	
+
 	if (!MCModeMakeLocalWindows())
 	{
 		MCRemoteColorDialog(ep, p_title, oldcolor.red >> 8, oldcolor.green >> 8, oldcolor.blue >> 8);
@@ -872,6 +875,25 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 
 	CHOOSECOLORA chooseclr ;
 	static COLORREF custclr[16]; //save custom colors
+	uint8_t i;
+		
+	if (p_colors != NULL)
+	{
+		MCColor t_colors[16];
+		char *t_colornames[16];
+		for (i = 0 ; i < 16 ; i++)
+			t_colornames[i] = NULL;
+		MCscreen->parsecolors(p_colors, t_colors, t_colornames, 16);
+		for(i=0;i < 16;i++)
+		{
+			if (t_colors[i] . flags != 0)
+				custclr[i] = RGB(t_colors[i].red >> 8, t_colors[i].green >> 8,
+	                          t_colors[i].blue >> 8);
+		}
+
+	}
+
+
 	memset(&chooseclr, 0, sizeof(CHOOSECOLORA));
 	chooseclr.lStructSize = sizeof (CHOOSECOLORA);
 	chooseclr.lpCustColors = (LPDWORD)custclr;
@@ -897,7 +919,22 @@ int MCA_color(MCExecPoint &ep, const char *p_title, const char *p_initial, Boole
 		ep.clear();
 	}
 	else
+	{
 		ep.setcolor(GetRValue(chooseclr.rgbResult), GetGValue(chooseclr.rgbResult), GetBValue(chooseclr.rgbResult));
+		MCExecPoint t_ep(ep);
+		t_ep.clear();
+		MCExecPoint t_ep2(t_ep);
+
+		for(i=0;i < 16;i++)
+		{
+			t_ep2.clear();
+			if (custclr[i] != 0)
+				t_ep2.setcolor(GetRValue(custclr[i]), GetGValue(custclr[i]), GetBValue(custclr[i]));
+			
+			t_ep.concatmcstring(t_ep2.getsvalue(), EC_RETURN, i==0);
+		}
+		MCdialogdata -> store(t_ep, True);
+	} 
 
 	//  SMR 1880 clear shift and button state
 	waitonbutton();
