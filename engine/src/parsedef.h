@@ -1579,6 +1579,9 @@ enum Properties {
     P_CONTROL_NAMES,
 	P_CHILD_CONTROL_IDS,
     P_CHILD_CONTROL_NAMES,
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	P_COLOR_DIALOG_COLORS,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,

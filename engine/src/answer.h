@@ -45,7 +45,6 @@ class MCAnswer : public MCStatement
 		struct
 		{
 			MCExpression *initial;
-			MCExpression *custom;
 		} colour;
 		struct
 		{
@@ -78,7 +77,6 @@ public:
 		notify . prompt = NULL;
 		notify . buttons = NULL;
 		notify . button_count = 0;
-		colour . custom = NULL;
 	}
 	virtual ~MCAnswer();
 	
