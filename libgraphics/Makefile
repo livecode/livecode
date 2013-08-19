@@ -1,6 +1,8 @@
 NAME=libgraphics
 TYPE=archive
 
+include ../rules/environment.linux.makefile
+
 SOURCES=context.cpp image.cpp path.cpp utils.cpp
 
 CUSTOM_DEFINES=
