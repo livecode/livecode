@@ -994,15 +994,19 @@ bool MCExecPoint::trytoconvertutf16tonative()
     MCExecPoint t_other_ep;
     t_other_ep . setsvalue(getsvalue());
     t_other_ep . utf16tonative();
-    t_other_ep . nativetoutf16();
     
-    if (getsvalue() . getlength() == t_other_ep . getsvalue() . getlength() &&
-		memcmp(getsvalue() . getstring(), t_other_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
-	{
-		copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
-		return true;
-	}
-	
+    // MERG-2013-05-07: [[ Bug 8884 ]] If returning true the function setting back to utf16 instead of to native
+    MCExecPoint t_temp_ep;
+    t_temp_ep . setsvalue(t_other_ep . getsvalue());
+    t_temp_ep . nativetoutf16();
+    
+    if (getsvalue() . getlength() == t_temp_ep . getsvalue() . getlength()
+        && memcmp(getsvalue() . getstring(), t_temp_ep . getsvalue() . getstring(), getsvalue() . getlength()) == 0)
+        {
+            copysvalue(t_other_ep . getsvalue(). getstring(), t_other_ep . getsvalue(). getlength());
+            return true;
+        }
+
     return false;
 }
         

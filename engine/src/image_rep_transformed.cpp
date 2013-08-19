@@ -84,7 +84,11 @@ bool MCTransformedImageRep::LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r
 	
 	t_frame_count = m_source->GetFrameCount();
 	
-	t_success = MCMemoryNewArray(t_frame_count, t_frames);
+	// IM-2013-07-03: [[ Bug 11018 ]] fail here if the source has no frames
+	t_success = t_frame_count != 0;
+
+	if (t_success)
+		t_success = MCMemoryNewArray(t_frame_count, t_frames);
 	
 	for (uindex_t i = 0; t_success && i < t_frame_count; i++)
 	{

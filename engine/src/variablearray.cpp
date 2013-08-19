@@ -358,7 +358,7 @@ void MCVariableArray::getextents(MCExecPoint &ep)
 	if (extents != NULL)
 		for (i = 0 ; i < dimensions ; i++)
 		{
-			char buf[U2L * 2];
+			char buf[(U4L * 2) + 1];
 			sprintf(buf, "%d,%d", extents[i].min, extents[i].max);
 			ep.concatcstring(buf, EC_RETURN, i == 0);
 		}
@@ -414,7 +414,7 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 		return ES_ERROR;
 	presethash(v.nfilled);
 	uint2 i, j;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	for (i = v.extents[COL_DIM].min; i <= v.extents[COL_DIM].max; i++)
 		for (j = v.extents[ROW_DIM].min; j <= v.extents[ROW_DIM].max; j++)
 		{
@@ -698,7 +698,7 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 		return ES_ERROR; //columns does not equal rows
 	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
 	uint2 i,j,k;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	MCHashentry *vaptr,*vbptr,*vcptr;
 	for (i = va.extents[ROW_DIM].min; i <= va.extents[ROW_DIM].max; i++)
 	{
@@ -1380,6 +1380,9 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
 	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
     { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
+    // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
+    { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
+    { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },

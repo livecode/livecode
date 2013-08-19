@@ -182,7 +182,9 @@ Exec_stat MCObject::sendgetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 		t_getprop_name = p_set_name, t_param_name = p_prop_name;
 
 	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_getprop_name)))
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_getprop_name))))
 	{
 		MCParameter p1;
 		p1.setnameref_unsafe_argument(t_param_name);
@@ -959,11 +961,34 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 	// Check that the object is a button
 	if (t_stat == ES_NORMAL && t_object -> gettype() != CT_BUTTON)
 		t_stat = ES_ERROR;
-
-	// MW-2009-01-28: [[ Bug ]] Make sure we aren't setting the parentScript of
-	//   an object to itself.
-	if (t_stat == ES_NORMAL && t_object == this)
-		t_stat = ES_ERROR;
+	
+	// MW-2013-07-18: [[ Bug 11037 ]] Make sure the object isn't in the hierarchy
+	//   of the parentScript.
+	bool t_is_cyclic;
+	t_is_cyclic = false;
+	if (t_stat == ES_NORMAL)
+	{
+		MCObject *t_parent_object;
+		t_parent_object = t_object;
+		while(t_parent_object != nil)
+		{
+			if (t_parent_object == this)
+			{
+				t_is_cyclic = true;
+				break;
+			}
+			
+			MCParentScript *t_super_parent_script;
+			t_super_parent_script = t_parent_object -> getparentscript();
+			if (t_super_parent_script != nil)
+				t_parent_object = t_super_parent_script -> GetObject();
+			else
+				t_parent_object = nil;
+		}
+		
+		if (t_is_cyclic)
+			t_stat = ES_ERROR;
+	}
 
 	if (t_stat == ES_NORMAL)
 	{
@@ -1023,7 +1048,14 @@ Exec_stat MCObject::setparentscriptprop(MCExecPoint& ep)
 		}
 	}
 	else
-		MCeerror -> add(EE_PARENTSCRIPT_BADOBJECT, 0, 0, data);
+	{
+		// MW-2013-07-18: [[ Bug 11037 ]] Report an appropriate error if the hierarchy
+		//   is cyclic.
+		if (!t_is_cyclic)
+			MCeerror -> add(EE_PARENTSCRIPT_BADOBJECT, 0, 0, data);
+		else
+			MCeerror -> add(EE_PARENTSCRIPT_CYCLICOBJECT, 0, 0, data);
+	}
 
 	// Delete our temporary chunk object.
 	delete t_chunk;
@@ -1161,8 +1193,10 @@ Exec_stat MCObject::sendsetprop(MCExecPoint& ep, MCNameRef p_set_name, MCNameRef
 	//   setProp pPropName, pValue
 	// The parameter list is auto-adjusted if it is of array type in MCHandler::exec.
 
-	Exec_stat t_stat = ES_NOT_HANDLED;
-	if (!MClockmessages && (ep.getobj() != this || !ep.gethandler()->hasname(t_setprop_name)))
+	Exec_stat t_stat = ES_NOT_HANDLED;    
+    // SN-2013-07-26: [[ Bug 11020 ]] ep.gethandler() result was not checked
+    // before calling hasname and caused a crash with undefined properties
+	if (!MClockmessages && (ep.getobj() != this || (ep.gethandler() != nil && !ep.gethandler()->hasname(t_setprop_name))))
 	{
 		MCParameter p1, p2;
 		p1.setnext(&p2);

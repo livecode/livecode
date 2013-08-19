@@ -457,7 +457,7 @@
 		4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801C0B80A4F800200116 /* osxspec.cpp */; };
 		4DEE2AE90FDE42710009423C /* osxstack.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D58801B0B80A4F800200116 /* osxstack.cpp */; };
 		4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D5880180B80A4F800200116 /* osxtheme.cpp */; };
-		4DEE2AEB0FDE42710009423C /* osxtransfer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9A0CCF74C800D74FDB /* osxtransfer.cpp */; };
+		4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */ = {isa = PBXBuildFile; fileRef = 4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */; };
 		4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E690B8096FD00200116 /* paragraf.cpp */; };
 		4DEE2AED0FDE42710009423C /* param.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D587E5B0B8096FD00200116 /* param.cpp */; };
 		4DEE2AEE0FDE42710009423C /* parentscript.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4DCA5E6D0EB879AD005197A1 /* parentscript.cpp */; };
@@ -1097,7 +1097,7 @@
 		4D5A21F0170343FD003C62E2 /* encodederrors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = encodederrors.cpp; path = src/encodederrors.cpp; sourceTree = "<group>"; };
 		4D61BD980CCF74C800D74FDB /* osxclipboard.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxclipboard.cpp; path = src/osxclipboard.cpp; sourceTree = "<group>"; };
 		4D61BD990CCF74C800D74FDB /* osxscript.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxscript.cpp; path = src/osxscript.cpp; sourceTree = "<group>"; };
-		4D61BD9A0CCF74C800D74FDB /* osxtransfer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = osxtransfer.cpp; path = src/osxtransfer.cpp; sourceTree = "<group>"; };
+		4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.objcpp; name = osxtransfer.mm; path = src/osxtransfer.mm; sourceTree = "<group>"; };
 		4D61BD9B0CCF74C800D74FDB /* pickle.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = pickle.cpp; path = src/pickle.cpp; sourceTree = "<group>"; };
 		4D61BD9C0CCF74C800D74FDB /* styledtext.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = styledtext.cpp; path = src/styledtext.cpp; sourceTree = "<group>"; };
 		4D61BD9D0CCF74C800D74FDB /* transfer.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = transfer.cpp; path = src/transfer.cpp; sourceTree = "<group>"; };
@@ -1115,6 +1115,7 @@
 		4D6F92F412AA5CC000026A72 /* w32sound.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32sound.cpp; path = src/w32sound.cpp; sourceTree = "<group>"; };
 		4D6F92F512AA5CC000026A72 /* w32textlayout.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32textlayout.cpp; path = src/w32textlayout.cpp; sourceTree = "<group>"; };
 		4D6F92FA12AA5E2600026A72 /* textlayout.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = textlayout.h; path = src/textlayout.h; sourceTree = "<group>"; };
+		4D7667AC17A137D500E692E0 /* EngineApi.java */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.java; path = EngineApi.java; sourceTree = "<group>"; };
 		4D7740F21226B930001C9150 /* lnxans.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxans.cpp; path = src/lnxans.cpp; sourceTree = "<group>"; };
 		4D7740F31226B930001C9150 /* lnxans.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = lnxans.h; path = src/lnxans.h; sourceTree = "<group>"; };
 		4D7740F41226B930001C9150 /* lnxaudio.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxaudio.cpp; path = src/lnxaudio.cpp; sourceTree = "<group>"; };
@@ -1757,7 +1758,7 @@
 				4DCFFD1B10CE8F5800FA2262 /* osxtextlayout.cpp */,
 				4D5880180B80A4F800200116 /* osxtheme.cpp */,
 				4D4F9E4D13CDF6EA00B9B15D /* osxtheme.h */,
-				4D61BD9A0CCF74C800D74FDB /* osxtransfer.cpp */,
+				4D61BD9A0CCF74C800D74FDB /* osxtransfer.mm */,
 				4D61BDAA0CCF74EF00D74FDB /* osxtransfer.h */,
 			);
 			name = "Desktop - Mac";
@@ -1989,6 +1990,7 @@
 				4DD54D1C134F591500981610 /* LiveCodeActivity.java */,
 				4DD54D1D134F591500981610 /* ShakeEventListener.java */,
 				4DD54D1E134F591500981610 /* URLLoader.java */,
+				4D7667AC17A137D500E692E0 /* EngineApi.java */,
 			);
 			path = android;
 			sourceTree = "<group>";
@@ -3275,7 +3277,7 @@
 				4DEE2AE80FDE42710009423C /* osxspec.cpp in Sources */,
 				4DEE2AE90FDE42710009423C /* osxstack.cpp in Sources */,
 				4DEE2AEA0FDE42710009423C /* osxtheme.cpp in Sources */,
-				4DEE2AEB0FDE42710009423C /* osxtransfer.cpp in Sources */,
+				4DEE2AEB0FDE42710009423C /* osxtransfer.mm in Sources */,
 				4DEE2AEC0FDE42710009423C /* paragraf.cpp in Sources */,
 				4DEE2AED0FDE42710009423C /* param.cpp in Sources */,
 				4DEE2AEE0FDE42710009423C /* parentscript.cpp in Sources */,
