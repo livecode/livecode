@@ -967,7 +967,7 @@ void MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
 
 	uint32_t t_written;
-	if (!t_file -> Write(MCDataGetBytePtr(p_data), (uint32_t) MCDataGetLength(p_data), t_written) ||
+	if (!t_file -> Write((const void *)MCDataGetBytePtr(p_data), (uint32_t) MCDataGetLength(p_data), t_written) ||
 		(uint32_t) MCDataGetLength(p_data) != t_written)
 		MCresult -> sets("error writing file");
 	else
@@ -1202,7 +1202,7 @@ void MCS_close_socket(MCSocket *p_socket)
 }
 
 
-void MCS_read_socket(MCSocket *p_socket, MCObject *p_object, MCStringRef p_until, MCNameRef p_message, MCDataRef& r_read_data)
+void MCS_read_socket(MCSocket *p_socket, MCExecPoint &ep, uint4 length, const char *p_until, MCNameRef p_message )
 {
 }
 

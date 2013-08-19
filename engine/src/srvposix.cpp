@@ -960,7 +960,7 @@ bool MCS_isnan(double v)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_get_temporary_folder(char *&r_temp_folder)
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;
 
@@ -982,10 +982,11 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 
 	if (t_success)
 	{
+        char *t_temp_folder = strdup(MCStringGetCString(r_temp_folder));
 		if (t_tmpdir[t_tmpdir_len - 1] == '/')
-			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, r_temp_folder);
+			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, t_temp_folder);
 		else
-			t_success = MCCStringClone(t_tmpdir, r_temp_folder);
+			t_success = MCCStringClone(t_tmpdir, t_temp_folder);
 	}
 
 	return t_success;

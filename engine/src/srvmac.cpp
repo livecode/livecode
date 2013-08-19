@@ -1493,7 +1493,7 @@ bool MCS_isnan(double v)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_get_temporary_folder(char *&r_temp_folder)
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;
 
@@ -1516,31 +1516,29 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 
 	if (t_success)
 	{
+        char *t_temp_folder = strdup(MCStringGetCString(r_temp_folder));
 		if (t_tmpdir[t_tmpdir_len - 1] == '/')
-			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, r_temp_folder);
+			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, t_temp_folder);
 		else
-			t_success = MCCStringClone(t_tmpdir, r_temp_folder);
+			t_success = MCCStringClone(t_tmpdir, t_temp_folder);
 	}
 
 	return t_success;
 }
 
-bool MCS_create_temporary_file(const char *p_path, const char *p_prefix, IO_handle &r_file, char *&r_name)
+bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-	char *t_temp_file = NULL;
-	if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", p_path, p_prefix))
+	if (!MCStringFormat(r_name, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
 		return false;
 	
 	int t_fd;
-	t_fd = mkstemp(t_temp_file);
+	t_fd = mkstemp(strdup(MCStringGetCString(r_name)));
 	if (t_fd == -1)
 	{
-		MCCStringFree(t_temp_file);
 		return false;
 	}
 	
-	r_name = t_temp_file;
-	r_file = new IO_header(MCStdioFileHandle :: OpenFd(t_fd, "w+"), 0);
+    r_file = new IO_header(MCStdioFileHandle :: OpenFd(t_fd, "w+"), 0);
 	
 	return true;
 }
