@@ -267,11 +267,10 @@ MCStack *MCScreenDC::device_getstackatpoint(int32_t x, int32_t y)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-// IM-2013-08-08: [[ ResIndependence ]] Windows implementation currently returns 1.5 for testing only
+// IM-2013-08-08: [[ ResIndependence ]] Windows implementation currently returns 1.0
 MCGFloat MCResGetDeviceScale(void)
 {
-//	return 1.0;
-	return 1.25;
+	return 1.0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
