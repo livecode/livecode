@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxcontext.h"
 #include "osxtheme.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM STACKLST.CPP
@@ -489,6 +491,13 @@ void MCButton::macopenmenu(void)
 			tmenuy = trect.y;
 			break;
 	}
+	
+	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	tmenux = tmenux * t_scale;
+	tmenuy = tmenuy * t_scale;
 	
 	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
 	//   that the mdown actually did result in a menu being popped up!
