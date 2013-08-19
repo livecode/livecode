@@ -31,6 +31,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "system.h"
 
 #include "mblandroidutil.h"
+#include "mblandroidtypeface.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -488,21 +489,6 @@ static bool create_custom_font_from_path(const char *p_path, FT_Library p_librar
     
     return t_success;
 }
-
-struct __MCAndroidTypeface;
-typedef __MCAndroidTypeface *MCAndroidTypefaceRef;
-
-struct MCAndroidFont
-{
-	uint32_t size;
-	MCAndroidTypefaceRef typeface;
-};
-
-extern bool MCAndroidTypefaceCreateWithData(void *p_data, uint32_t p_length, MCAndroidTypefaceRef &r_typeface);
-extern bool MCAndroidTypefaceCreateWithName(const char *p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface);
-extern void MCAndroidTypefaceRelease(MCAndroidTypefaceRef p_typeface);
-extern bool MCAndroidTypefaceGetMetrics(MCAndroidTypefaceRef p_typeface, uint32_t p_size, float &r_ascent, float &r_descent);
-extern bool MCAndroidTypefaceMeasureText(MCAndroidTypefaceRef p_typeface, uint32_t p_size, const char *p_text, uint32_t p_text_length, bool p_utf16, float &r_length);
 
 static bool create_font_face_from_custom_font_name_and_style(const char *p_name, bool p_bold, bool p_italic, MCAndroidTypefaceRef &r_typeface)
 {    

@@ -100,6 +100,8 @@ static float s_current_keyboard_height = 0.0f;
 static bool MCIPhoneWait(double sleep);
 
 static float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
+static void iphone_font_draw_text(void *p_font, CGContextRef p_context, CGFloat x, CGFloat y, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
+
 
 MCRectangle MCRectangleFromLogicalCGRect(const CGRect p_cg_rect)
 {
@@ -270,6 +272,86 @@ Boolean MCScreenDC::getwindowgeometry(Window p_window, MCRectangle& r_rect)
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
 {
 	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
+}
+
+// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
+{
+	bool t_success;
+	t_success = true;
+	    
+    MCRectangle t_transformed_bounds;
+	MCRectangle t_bounds;
+	if (t_success)
+	{
+		MCGRectangle t_gbounds;
+        t_gbounds . origin . x = 0;
+        t_gbounds . origin . y = -p_font -> ascent;
+        t_gbounds . size . width = textwidth(p_font, p_text, p_length, p_unicode_override);
+        t_gbounds . size . height = p_font -> ascent + p_font -> descent;
+		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
+		
+		t_transformed_bounds . x = floor(t_gbounds . origin . x);
+		t_transformed_bounds . y = floor(t_gbounds . origin . y);
+		t_transformed_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_transformed_bounds . x;
+		t_transformed_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_transformed_bounds . y;
+		
+		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
+		
+		if (t_bounds . width == 0 || t_bounds . height == 0)
+		{
+			r_mask = nil;
+			return true;
+		}
+	}
+	
+	void *t_data;
+	t_data = nil;
+	if (t_success)
+		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
+	
+	CGContextRef t_cgcontext;
+	t_cgcontext = nil;
+	if (t_success)
+	{
+		t_cgcontext = CGBitmapContextCreate(t_data, t_bounds . width, t_bounds . height, 8, t_bounds . width, nil, kCGImageAlphaOnly);
+		t_success = t_cgcontext != nil;
+	}
+    
+    MCGMaskRef t_mask;
+	t_mask = nil;
+	if (t_success)
+	{
+        CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
+		CGContextFillRect(t_cgcontext, CGRectMake(0, 0, t_bounds . width, t_bounds . height));
+		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
+        
+		CGContextTranslateCTM(t_cgcontext, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y));
+		CGContextTranslateCTM(t_cgcontext, 0, t_transformed_bounds . height + t_transformed_bounds . y);
+		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
+        CGContextScaleCTM(t_cgcontext, 1.0, -1.0);                
+        
+        iphone_font_draw_text(p_font -> fid, t_cgcontext, 0, 0, p_text, p_length, p_unicode_override || p_font -> unicode);
+        
+        CGContextFlush(t_cgcontext);
+        
+		MCGDeviceMaskInfo t_mask_info;
+		t_mask_info . format = kMCGMaskFormat_A8;
+		t_mask_info . x = t_bounds . x;
+		t_mask_info . y = t_bounds . y;
+		t_mask_info . width = t_bounds . width;
+		t_mask_info . height = t_bounds . height;
+		t_mask_info . data = t_data;
+		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
+	}
+	
+	if (t_success)
+		r_mask = t_mask;
+	else
+		MCMemoryDelete(t_data);
+	
+	CGContextRelease(t_cgcontext);
+	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -910,7 +992,7 @@ static void iphone_font_do_draw_text(void *p_context, const void *p_text, uint32
 	t_font = (UIFont *)t_context -> font;
 	
 	CGSize t_size;
-	t_size = [ t_string drawAtPoint: CGPointMake(t_context -> x, t_context -> y - ceilf([ t_font ascender ])) withFont: t_font ];
+	t_size = [t_string drawAtPoint: CGPointMake(t_context -> x, t_context -> y - ceilf([ t_font ascender ])) withFont: t_font];
 	
 	t_context -> x += ceil(t_size . width);
 	

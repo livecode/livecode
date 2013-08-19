@@ -63,6 +63,7 @@ struct MCBitmapEffectLayer
 void MCBitmapEffectsRender(MCBitmapEffectsRef self, const MCRectangle& shape, MCBitmapEffectLayer& dst, MCBitmapEffectLayer& src);
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored effect types from bitmapeffect.cpp. Used by graphicscontext.
 
 // The list of all possible bitmap effect types.
 enum MCBitmapEffectType
@@ -137,6 +138,7 @@ enum
 };
 
 ////////////////////////////////////////////////////////////////////////////////
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored effect structs from bitmapeffect.cpp. Used by graphicscontext.
 
 // Fields common to all effects
 struct MCLayerEffect

@@ -136,100 +136,16 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-extern int4 OSX_DrawUnicodeText(int2 x, int2 y, const void *p_text, uint4 p_text_byte_length, MCFontStruct *f, bool p_fill_background, bool p_measure_only = false);
-
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
-{
-	if (len == 0)
-		return 0;
-	if (f->unicode || p_unicode_override)
-	{
-		if (MCmajorosversion >= 0x1050)
-		{
-			return OSX_DrawUnicodeText(0, 0, s, len, f, false, true);
-		}
-		else
-		{
-			int4 fwidth;
-			short oldfid = GetPortTextFont(GetQDGlobalsThePort());
-			short oldsize = GetPortTextSize(GetQDGlobalsThePort());
-			short oldstyle = GetPortTextFace(GetQDGlobalsThePort());
-			TextFont((short)(intptr_t)f->fid);
-			TextSize(f->size);
-			TextFace(f->style);
-
-
-			SInt16  baseline;
-			CFStringRef cfstring;
-
-			char *tempbuffer = NULL;
-
-
-			if (len)
-			{
-				uint2 *testchar = (uint2 *)s;
-				if (testchar[(len - 2 )>> 1] == 12398)
-				{
-					tempbuffer = new char[len+2];
-					memcpy(tempbuffer,s,len);
-					uint2 *tchar = (uint2 *)&tempbuffer[len];
-					*tchar = 0;
-				}
-			}
-
-
-			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? tempbuffer: s), (tempbuffer != NULL? len + 2:len) >> 1,
-					   kCFAllocatorNull);
-			Point dimensions = {0, 0};
-			GetThemeTextDimensions(cfstring, kThemeCurrentPortFont, kThemeStateActive, false, &dimensions, &baseline);
-			fwidth = dimensions.h;
-			CFRelease(cfstring);
-			if (tempbuffer)
-				delete tempbuffer;
-
-			TextFont(oldfid);
-			TextSize(oldsize);
-			TextFace(oldstyle);
-			return fwidth;
-		}
-	}
-	else
-	{
-		// MW-2012-09-21: [[ Bug 3884 ]] If the font is wide, measure using OS routine.
-		if (f -> wide)
-		{
-			int4 fwidth;
-			short oldfid = GetPortTextFont(GetQDGlobalsThePort());
-			short oldsize = GetPortTextSize(GetQDGlobalsThePort());
-			short oldstyle = GetPortTextFace(GetQDGlobalsThePort());
-			TextFont((short)(intptr_t)f->fid);
-			TextSize(f->size);
-			TextFace(f->style);
-
-			fwidth = TextWidth(s, 0, len);
-
-			TextFont(oldfid);
-			TextSize(oldsize);
-			TextFace(oldstyle);
-			return fwidth;
-		}
-		else
-		{
-			int4 iwidth = 0;
-			while (len--)
-				iwidth += f->widths[(uint1)*s++];
-			return iwidth;
-		}
-	}
-}
 
 ///////////////////////////////////////////////////////////////////////////////
 
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored from previous ATSUI drawing method.
+//	If context is NULL, the bounds of the text is calculated. Otherwise, the text is rendered into the context at the given location.
 static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_length, MCFontStruct *p_font, CGContextRef p_cg_context, MCRectangle& r_bounds)
 {	
 	OSStatus t_err;
 	t_err = noErr;	
-		
+	
 	ATSUFontID t_font_id;
 	Fixed t_font_size;
 	t_font_size = p_font -> size << 16;	
@@ -249,7 +165,7 @@ static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_leng
 		&t_font_id,
 		&t_font_size,
 	};	
-
+	
 	ATSLineLayoutOptions t_layout_options;
 	ATSUAttributeTag t_layout_tags[] =
 	{
@@ -292,7 +208,7 @@ static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_leng
 		t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
 		t_err = ATSUSetLayoutControls(t_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
 	}	
-
+	
 	MCRectangle t_bounds;
 	if (p_cg_context == nil)
 	{
@@ -327,6 +243,47 @@ static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_leng
 	return t_err == noErr;	
 }
 
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored to use drawtexttocgcontext to measure the bounds of the text.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
+{
+	if (p_length == 0)
+		return 0;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCExecPoint ep;
+	uint2 t_length;
+	const void *t_text;
+	t_text = nil;
+	if (t_success)
+	{
+		if (p_font -> unicode || p_unicode_override)
+		{
+			t_text = p_text;
+			t_length = p_length;
+		}
+		else
+		{
+			ep . setsvalue(MCString(p_text, p_length));
+			ep . nativetoutf16();
+			t_text =  ep . getsvalue() . getstring();
+			t_length =  ep . getsvalue() . getlength();
+		}
+		t_success = t_text != nil;
+	}
+	
+	MCRectangle t_bounds;
+	if (t_success)
+		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, nil, t_bounds);
+	
+	if (t_success)
+		return t_bounds . width;
+	else
+		return 0;
+}
+
+// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
 bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
 {
 	bool t_success;
@@ -394,21 +351,23 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 		
 	if (t_success)
 	{
+		CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
+		CGContextFillRect(t_cgcontext, CGRectMake(0, 0, t_bounds . width, t_bounds . height));
+		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
+		
 		CGContextTranslateCTM(t_cgcontext, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y));
 		CGContextTranslateCTM(t_cgcontext, 0, t_transformed_bounds . height + t_transformed_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
 		
-		CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
-		CGContextFillRect(t_cgcontext, CGRectMake(t_bounds . x, t_bounds . y, t_bounds . width, t_bounds . height));
-		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
+		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, t_cgcontext, t_bounds);
 	}
 	
-	if (t_success)
-		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, t_cgcontext, t_bounds);
-	
 	MCGMaskRef t_mask;
+	t_mask = nil;
 	if (t_success)
 	{
+		CGContextFlush(t_cgcontext);
+		
 		MCGDeviceMaskInfo t_mask_info;
 		t_mask_info . format = kMCGMaskFormat_A8;
 		t_mask_info . x = t_bounds . x;
@@ -421,10 +380,12 @@ bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_leng
 	
 	if (t_success)
 		r_mask = t_mask;
+	else
+		MCMemoryDelete(t_data);
 	
 	CGContextRelease(t_cgcontext);	
 	return t_success;	
-}	
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 

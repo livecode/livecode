@@ -32,7 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxflst.h"
 #include "packed.h"
 
-#include <pango/pangoxft.h>
+#include <pango/pangoft2.h>
+#include <glib.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -82,55 +83,50 @@ public:
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
 	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context);
+	
+	// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+	virtual bool ctxt_textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
 
 private:
-	void setuptarget(Pixmap pixmap, uint32_t color);
-
 	MCNewFontStruct *m_fonts;
 
 	PangoContext *m_pango;
 	PangoLayout *m_layout;
-	PangoRenderer *m_renderer;
-
-	XftDraw *m_target;
-	XftColor m_target_color;
-	XftColor m_target_bg_color;
-	uint32_t m_target_color_pixel;
+	PangoFontMap *m_font_map;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNewFontlist::MCNewFontlist()
 {
+	m_font_map = nil;
 	m_pango = nil;
 	m_layout = nil;
-	m_target = nil;
 	m_fonts = nil;
-	m_target_color_pixel = 0;
 }
 
 MCNewFontlist::~MCNewFontlist()
 {
-	if (m_target != nil)
-	{
-		XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_bg_color);
-		XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_color);
-		XftDrawDestroy(m_target);
-	}
+	if (m_font_map != nil)
+		g_object_unref(m_font_map);
 	if (m_layout != nil)
 		g_object_unref(m_layout);
+	if (m_pango != nil)
+		g_object_unref(m_pango);
 }
 
 bool MCNewFontlist::create(void)
 {
-	if (initialise_weak_link_xft() == 0 ||
-		initialise_weak_link_pango() == 0 ||
-		initialise_weak_link_pangoxft() == 0 ||
+	if (initialise_weak_link_pango() == 0 ||
 		initialise_weak_link_pangoft2() == 0)
 		return false;
 
-	// MW-2011-03-12: [[ Bug 9439 ]] Make sure we pass the appropriate 'screen' through.
-	m_pango = pango_xft_get_context(MCdpy, ((MCScreenDC *)MCscreen) -> getscreen());
+	m_font_map = pango_ft2_font_map_new();
+	if (m_font_map == nil)
+		return false;
+	
+	//m_pango = pango_font_map_create_context(m_font_map);
+	m_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) m_font_map);
 	if (m_pango == nil)
 		return false;
 
@@ -144,47 +140,6 @@ bool MCNewFontlist::create(void)
 void MCNewFontlist::destroy(void)
 {
 	delete this;
-}
-
-void MCNewFontlist::setuptarget(Pixmap p_pixmap, uint32_t p_color)
-{
-	bool t_change_color;
-	t_change_color = false;
-	if (m_target == nil)
-	{
-		XRenderColor t_xr_color;
-		t_xr_color . red = 0;
-		t_xr_color . green = 0;
-		t_xr_color . blue = 0;
-		t_xr_color . alpha = 0xffff;
-		XftColorAllocValue(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &t_xr_color, &m_target_bg_color);
-		
-		m_target = XftDrawCreate(MCdpy, p_pixmap, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32());
-		
-		t_change_color = true;
-	}
-	else
-	{
-		XftDrawChange(m_target, p_pixmap);
-		if (p_color != m_target_color_pixel)
-		{
-			XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_color);
-			t_change_color = true;
-		}
-	}
-
-	if (t_change_color)
-	{
-		XRenderColor t_xr_color;
-		t_xr_color . red = (p_color & 0x00ff0000) >> 8;
-		t_xr_color . red |= t_xr_color . red >> 8;
-		t_xr_color . green = (p_color & 0x0000ff00) ;
-		t_xr_color . green |= t_xr_color . green >> 8;
-		t_xr_color . blue =  (p_color & 0x000000ff) << 8 ;
-		t_xr_color . blue |= t_xr_color . blue >> 8;
-		t_xr_color . alpha = 0xffff ;
-		XftColorAllocValue(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &t_xr_color, &m_target_color);
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -531,6 +486,108 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 
 	return t_success;
 }
+
+// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+bool MCNewFontlist::ctxt_textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
+{
+	bool t_success;
+	t_success = true;
+	
+	char *t_utf8_text;
+	t_utf8_text = nil;
+	if (t_success)
+	{
+		if (p_font -> unicode || p_unicode_override)
+			t_success = MCCStringFromUnicodeSubstring((const unichar_t *)p_text, p_length / 2, t_utf8_text);
+		else
+			t_success = MCCStringFromNativeSubstring(p_text, p_length, t_utf8_text);
+	}
+
+	PangoLayoutLine *t_line;
+	t_line = nil;
+	if (t_success)
+	{
+		PangoMatrix t_ptransform;		
+		t_ptransform . xx = p_transform . a;
+		t_ptransform . xy = p_transform . b;
+		t_ptransform . yx = p_transform . c;
+		t_ptransform . yy = p_transform . d;
+		t_ptransform . x0 = p_transform . tx;
+		t_ptransform . y0 = p_transform . ty;
+		pango_context_set_matrix(m_pango, &t_ptransform);
+
+		pango_layout_set_font_description(m_layout, static_cast<MCNewFontStruct *>(p_font) -> description);
+		pango_layout_set_text(m_layout, t_utf8_text, -1);
+		MCCStringFree(t_utf8_text);
+		
+		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
+		if (pango_layout_get_line_readonly_ptr != nil)
+			t_line = pango_layout_get_line_readonly_ptr(m_layout, 0);
+		else
+			t_line = pango_layout_get_line(m_layout, 0);
+		t_success = t_line != nil;
+	}
+		
+	MCRectangle t_transformed_bounds;
+	MCRectangle t_bounds;
+	if (t_success)
+	{
+		PangoRectangle t_pbounds;
+		pango_layout_line_get_extents(t_line, NULL, &t_pbounds);
+		
+		t_transformed_bounds . x = floor(t_pbounds . x / PANGO_SCALE);
+		t_transformed_bounds . y = floor(t_pbounds . y / PANGO_SCALE);
+		t_transformed_bounds . width = ceil(t_pbounds . x / PANGO_SCALE + t_pbounds . width / PANGO_SCALE) - t_transformed_bounds . x;
+		t_transformed_bounds . height = ceil(t_pbounds . y / PANGO_SCALE + t_pbounds . height / PANGO_SCALE) - t_transformed_bounds . y;
+				
+		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
+				
+		if (t_bounds . width == 0 || t_bounds . height == 0)
+		{
+			r_mask = nil;
+			return true;
+		}	
+	}
+		
+	void *t_data;
+	t_data = nil;
+	if (t_success)
+		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
+	
+	MCGMaskRef t_mask;
+	t_mask = nil;
+	if (t_success)
+	{
+		FT_Bitmap t_bitmap;
+		t_bitmap . rows = t_bounds . height;
+		t_bitmap . width = t_bounds . width;
+		t_bitmap . pitch = t_bounds . width;
+		t_bitmap . buffer = (unsigned char*) t_data;
+		t_bitmap . num_grays = 256;
+		t_bitmap . pixel_mode = FT_PIXEL_MODE_GRAY;
+		t_bitmap . palette_mode = 0;
+		t_bitmap . palette = nil;
+				
+		pango_ft2_render_layout_line(&t_bitmap, t_line, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y) - t_transformed_bounds . y);
+		
+		MCGDeviceMaskInfo t_mask_info;
+		t_mask_info . format = kMCGMaskFormat_A8;
+		t_mask_info . x = t_bounds . x;
+		t_mask_info . y = t_bounds . y;
+		t_mask_info . width = t_bounds . width;
+		t_mask_info . height = t_bounds . height;
+		t_mask_info . data = t_data;
+		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
+	}
+			
+	if (t_success)
+		r_mask = t_mask;
+	else
+		MCMemoryDelete(t_data);
+	
+	pango_context_set_matrix(m_pango, nil);
+	return t_success;
+}	
 
 ////////////////////////////////////////////////////////////////////////////////
 

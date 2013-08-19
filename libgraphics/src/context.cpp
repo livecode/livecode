@@ -14,6 +14,7 @@
 #include <SkSingleInputImageFilter.h>
 #include <SkOffsetImageFilter.h>
 #include <SkBlurImageFilter.h>
+#include <SkTypeface.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -2041,7 +2042,7 @@ void MCGContextDrawDeviceMask(MCGContextRef self, MCGMaskRef p_mask, int32_t p_t
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_length, MCGPoint p_location, uint32_t p_font_size)
+void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_length, MCGPoint p_location, uint32_t p_font_size, void *p_typeface)
 {	
 	if (!MCGContextIsValid(self))
 		return;	
@@ -2051,7 +2052,7 @@ void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_lengt
 	t_paint . setAntiAlias(true);
 	t_paint . setColor(MCGColorToSkColor(self -> state -> fill_color));
 	t_paint . setTextSize(p_font_size);
-
+	
 	SkXfermode *t_blend_mode;
 	t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
 	if (t_blend_mode != NULL)
@@ -2059,6 +2060,14 @@ void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_lengt
 		t_paint . setXfermode(t_blend_mode);
 		t_blend_mode -> unref();
 	}		
+	
+	if (p_typeface != NULL)
+	{
+		SkTypeface *t_typeface;
+		t_typeface = (SkTypeface *) p_typeface;
+		t_typeface -> ref();
+		t_paint . setTypeface(t_typeface);
+	}
 	
 	self -> layer -> canvas -> drawText(p_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 }
