@@ -515,6 +515,10 @@ void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx
 
 bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 
+void MCGContextDrawPlatformText(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, MCGPoint location, void *font);
+void MCGContextDrawPlatformTextAssumingOpaque(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, MCGPoint location, void *font);
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, void *font);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // Transforms

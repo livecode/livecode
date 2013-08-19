@@ -77,6 +77,16 @@ struct __MCGContextState
 	MCGContextStateRef	parent;
 };
 
+typedef struct __MCGContextLayer *MCGContextLayerRef;
+
+struct __MCGContextLayer
+{
+	SkCanvas *canvas;
+	uint32_t nesting;
+	int32_t origin_x, origin_y;
+	MCGContextLayerRef parent;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct __MCGImage
@@ -101,11 +111,10 @@ struct __MCGPath
 
 struct __MCGContext
 {
-	SkCanvas			*canvas;
-	
-	uint32_t			width;
-	uint32_t			height;
+	//uint32_t			width;
+	//uint32_t			height;
 	MCGContextStateRef	state;
+	MCGContextLayerRef  layer;
 	MCGPathRef			path;
 	
 	bool				is_valid;

@@ -126,6 +126,44 @@ static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static void MCGContextLayerDestroy(MCGContextLayerRef self)
+{
+	if (self == nil)
+		return;
+		
+	self -> canvas -> unref();
+	
+	MCMemoryDelete(self);
+}
+
+static bool MCGContextLayerCreate(SkCanvas *p_canvas, MCGContextLayerRef& r_layer)
+{
+	bool t_success;
+	t_success = true;
+	
+	__MCGContextLayer *t_layer;
+	t_layer = NULL;
+	if (t_success)
+		t_success = MCMemoryNew(t_layer);
+		
+	if (t_success)
+	{
+		p_canvas -> ref();
+		t_layer -> canvas = p_canvas;
+		t_layer -> nesting = 0;
+		t_layer -> parent = nil;
+	}
+	
+	if (t_success)
+		r_layer = t_layer;
+	else
+		MCGContextLayerDestroy(t_layer);
+		
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCGContextPushState(MCGContextRef self)
 {
 	bool t_success;
@@ -173,11 +211,19 @@ static void MCGContextDestroy(MCGContextRef self)
 			MCGContextStateDestroy(self -> state);
 			self -> state = t_tmp_state;
 		}
-		if (self -> canvas != NULL)
-			delete self -> canvas;
+		
+		while(self -> layer != NULL)
+		{
+			MCGContextLayerRef t_tmp_layer;
+			t_tmp_layer = self -> layer -> parent;
+			MCGContextLayerDestroy(self -> layer);
+			self -> layer = t_tmp_layer;
+		}
+
 		if (self -> path != NULL)
 			MCGPathRelease(self -> path);
 	}
+	
 	MCMemoryDelete(self);
 }
 
@@ -191,19 +237,24 @@ static bool MCGContextCreateWithBitmap(SkBitmap& p_bitmap, MCGContextRef& r_cont
 	if (t_success)
 		t_success = MCMemoryNew(t_context);
 	
+	SkCanvas *t_canvas;
+	t_canvas = nil;
 	if (t_success)
 	{
-		t_context -> canvas = new SkCanvas(p_bitmap);
-		t_success = t_context -> canvas != NULL;
+		t_canvas = new SkCanvas(p_bitmap);
+		t_success = t_canvas != NULL;
 	}
+	
+	if (t_success)
+		t_success = MCGContextLayerCreate(t_canvas, t_context -> layer);
 	
 	if (t_success)
 		t_success = MCGContextStateCreate(t_context -> state);
 	
 	if (t_success)
 	{
-		t_context -> width = p_bitmap . width();
-		t_context -> height = p_bitmap . height();
+		//t_context -> width = p_bitmap . width();
+		//t_context -> height = p_bitmap . height();
 		t_context -> references = 1;
 		t_context -> path = NULL;
 		t_context -> is_valid = true;		
@@ -213,6 +264,9 @@ static bool MCGContextCreateWithBitmap(SkBitmap& p_bitmap, MCGContextRef& r_cont
 		r_context = t_context;
 	else
 		MCGContextDestroy(t_context);
+	
+	if (t_canvas != nil)
+		t_canvas -> unref();
 	
 	return t_success;
 }
@@ -289,7 +343,7 @@ void MCGContextSave(MCGContextRef self)
 	if (t_success)
 	{
 		// we use skia to manage the clip and matrix between states, everything else is held in the state directly 		
-		self -> canvas -> save((SkCanvas::SaveFlags) (SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));		
+		self -> layer -> canvas -> save((SkCanvas::SaveFlags) (SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));		
 		t_success = MCGContextPushState(self);
 	}
 	
@@ -314,7 +368,7 @@ void MCGContextRestore(MCGContextRef self)
 	
 	// we use skia to maintain a state's clip and transform, so calling restore ensures that the parent state's clip and CTM are restored properly 
 	if (t_success)
-		self -> canvas -> restore();	
+		self -> layer -> canvas -> restore();	
 	
 	self -> is_valid = t_success;	
 }
@@ -467,6 +521,7 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // Layer attributes and manipulation - bitmap effect options would be added here also.
 
+#if 0
 static bool MCGContextConfigureLayerPaint(MCGColor p_color, MCGBlendMode p_blend_mode, bool p_should_antialias, SkPaint *r_paint)
 {
 	bool t_success;
@@ -520,7 +575,7 @@ void MCGContextBegin(MCGContextRef self)
 			t_paint . setXfermode(t_blend_mode);
 			t_blend_mode -> unref();
 		}		
-		self -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
+		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
 																		   SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
 		
 		// flag the current state so that we know point to restore to on ending the layer
@@ -724,7 +779,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_ef
 			t_blend_mode -> unref();
 		}	
 		
-		self -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
+		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
 																		   SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
 		
 		// flag the current state so that we know point to restore to on ending the layer
@@ -756,13 +811,164 @@ void MCGContextEnd(MCGContextRef self)
 
 			// we use skia to maintain a state's clip and transform, so calling restore ensures that the parent state's clip and CTM are restored properly 
 			if (t_success)
-				self -> canvas -> restore();			
+				self -> layer -> canvas -> restore();			
 		}
 	
 	if (t_success)
 		self -> state -> is_layer_begin_pt = false;
 	
 	self -> is_valid = t_success;	
+}
+#endif
+
+// Now replay the clip from the parent layer.
+class CanvasClipVisitor: public SkCanvas::ClipVisitor
+{
+public:
+	CanvasClipVisitor(SkCanvas *p_target_canvas)
+	{
+		m_target_canvas = p_target_canvas;
+	}
+
+	void clipRect(const SkRect& p_rect, SkRegion::Op p_op, bool p_antialias)
+	{
+		m_target_canvas -> clipRect(p_rect, p_op, p_antialias);
+	}
+	
+	void clipPath(const SkPath& p_path, SkRegion::Op p_op, bool p_antialias)
+	{
+		m_target_canvas -> clipPath(p_path, p_op, p_antialias);
+	}
+	
+private:
+	SkCanvas *m_target_canvas;
+};
+	
+void MCGContextBegin(MCGContextRef self)
+{
+	if (!MCGContextIsValid(self))
+		return;
+	
+	// If we are blending sourceOver
+	/*if (self -> state -> blend_mode == kMCGBlendModeSourceOver && self -> state -> opacity == 1.0)
+	{
+		self -> layer -> nesting += 1;
+		return;
+	}*/
+	
+	// Fetch the bounds of the current clip in device co-ords and if the
+	// clip is empty, then just increase the nesting level.
+	SkIRect t_device_clip;
+	if (!self -> layer -> canvas -> getClipDeviceBounds(&t_device_clip))
+	{
+		self -> layer -> nesting += 1;
+		return;
+	}
+	
+	// Fetch the total matrix of the canvas.
+	SkMatrix t_device_matrix;
+	t_device_matrix = self -> layer -> canvas -> getTotalMatrix();
+	
+	// Create a suitable bitmap.
+	SkBitmap t_new_bitmap;
+	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_device_clip . width(), t_device_clip . height());
+	t_new_bitmap . setIsOpaque(false);
+	if (!t_new_bitmap . allocPixels())
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	// Clear the pixel buffer.
+	memset(t_new_bitmap . getPixels(), 0, t_new_bitmap . rowBytes() * t_new_bitmap . height());
+	
+	// We now create a canvas the same size as the device clip.
+	SkRefPtr<SkCanvas> t_new_canvas;
+	t_new_canvas = new SkCanvas(t_new_bitmap);
+	if (t_new_canvas == nil)
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	// Next translate the canvas by the translation factor of the matrix.
+	t_new_canvas -> translate(-t_device_clip . x(), -t_device_clip . y());
+	
+	// Replay the clip.
+	CanvasClipVisitor t_clip_visitor(t_new_canvas . get());
+	self -> layer -> canvas -> replayClips(&t_clip_visitor);
+	
+	// Set the matrix.
+	t_new_canvas -> concat(t_device_matrix);
+	
+	// Make a save point in the new canvas.
+	t_new_canvas -> save();
+	
+	// Set the current state as the layer being pt.
+	self -> state -> is_layer_begin_pt = true;
+	
+	// Push the current state onto the attribute stack.
+	MCGContextPushState(self);
+	self -> state -> opacity = 1.0;
+	self -> state -> blend_mode = kMCGBlendModeSourceOver;
+	
+	// Now create the layer.
+	MCGContextLayerRef t_new_layer;
+	if (!MCGContextLayerCreate(t_new_canvas . get(), t_new_layer))
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	t_new_layer -> parent = self -> layer;
+	t_new_layer -> origin_x = t_device_clip . x();
+	t_new_layer -> origin_y = t_device_clip . y();
+	self -> layer = t_new_layer;
+}
+
+void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects& effects)
+{
+}
+
+void MCGContextEnd(MCGContextRef self)
+{
+	if (!MCGContextIsValid(self))
+		return;
+		
+	if (self -> layer -> nesting > 0)
+	{
+		self -> layer -> nesting -= 1;
+		return;
+	}
+	
+	if (self -> layer -> parent == nil)
+		return;
+		
+	// Pop pack the attribute stack to the top state for the previous layer.
+	while(!self -> state -> is_layer_begin_pt)
+		MCGContextPopState(self);
+	self -> state -> is_layer_begin_pt = false;
+	
+	MCGContextLayerRef t_child_layer;
+	t_child_layer = self -> layer;
+	self -> layer = self -> layer -> parent;
+	
+	const SkBitmap& t_child_bitmap = t_child_layer -> canvas -> getTopDevice() -> accessBitmap(false);
+	
+	SkPaint t_paint;
+	t_paint . setAlpha((U8CPU)(self -> state -> opacity * 255));
+
+	SkXfermode *t_blend_mode;
+	t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
+	if (t_blend_mode != NULL)
+	{
+		t_paint . setXfermode(t_blend_mode);
+		t_blend_mode -> unref();
+	}		
+	
+	self -> layer -> canvas -> drawSprite(t_child_bitmap, t_child_layer -> origin_x, t_child_layer -> origin_y, &t_paint);
+	
+	MCGContextLayerDestroy(t_child_layer);
 }
 
 void MCGContextSetOpacity(MCGContextRef self, MCGFloat p_opacity)
@@ -791,9 +997,10 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	
 	// we use skia to manage the clip entirely rather than storing in state
 	// this means any transforms to the clip are handled by skia allowing for more complex clips (rather than just a rect)
-	self -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
+	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
 }
 
+#if 0
 void MCGContextResetClip(MCGContextRef self)
 {
 	if (!MCGContextIsValid(self))
@@ -801,14 +1008,15 @@ void MCGContextResetClip(MCGContextRef self)
 	
 	// TODO: Take into account the state's tranformation.
 	//	(we store the clip in local coords so for a transformed state, 0,0 is no longer the origin).
-	self -> canvas -> clipRect(SkRect::MakeXYWH(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(self -> width), SkIntToScalar(self -> height)),
+	self -> layer -> canvas -> clipRect(SkRect::MakeXYWH(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(self -> width), SkIntToScalar(self -> height)),
 							   SkRegion::kReplace_Op, self -> state -> should_antialias);
 }
+#endif
 
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef self)
 {
 	SkIRect t_clip;
-	self -> canvas -> getClipDeviceBounds(&t_clip);
+	self -> layer -> canvas -> getClipDeviceBounds(&t_clip);
 	return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
 }
 
@@ -994,7 +1202,7 @@ inline static bool MCGContextSetCTM(MCGContextRef self, MCGAffineTransform p_tra
 {
 	SkMatrix t_matrix;
 	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-	self -> canvas -> setMatrix(t_matrix);
+	self -> layer -> canvas -> setMatrix(t_matrix);
 	
 	// no need to transform the clip at this point as this is handled internally by skia
 	return true;
@@ -1007,7 +1215,7 @@ void MCGContextConcatCTM(MCGContextRef self, MCGAffineTransform p_transform)
 	
 	SkMatrix t_matrix;
 	MCGAffineTransformToSkMatrix(p_transform, t_matrix);
-	self -> canvas -> concat(t_matrix);
+	self -> layer -> canvas -> concat(t_matrix);
 }
 
 void MCGContextRotateCTM(MCGContextRef self, MCGFloat p_angle)
@@ -1045,7 +1253,7 @@ void MCGContextResetCTM(MCGContextRef self)
 MCGAffineTransform MCGContextGetDeviceTransform(MCGContextRef self)
 {
 	MCGAffineTransform t_transform;
-	MCGAffineTransformFromSkMatrix(self -> canvas -> getTotalMatrix(), t_transform);
+	MCGAffineTransformFromSkMatrix(self -> layer -> canvas -> getTotalMatrix(), t_transform);
 	return t_transform;
 }
 
@@ -1514,7 +1722,7 @@ static bool MCGContextFillPath(MCGContextRef self, MCGPathRef p_path)
 	{
 		// should probably be careful of setting the fill type and path mutability here
 		p_path -> path -> setFillType(MCGFillRuleToSkFillType(self -> state -> fill_rule));	
-		self -> canvas -> drawPath(*p_path -> path, t_paint);		
+		self -> layer -> canvas -> drawPath(*p_path -> path, t_paint);		
 	}
 	
 	return t_success;
@@ -1529,7 +1737,7 @@ static bool MCGContextStrokePath(MCGContextRef self, MCGPathRef p_path)
 	t_success = MCGContextSetupStrokePaint(self, t_paint);
 
 	if (t_success)
-		self -> canvas -> drawPath(*p_path -> path, t_paint);
+		self -> layer -> canvas -> drawPath(*p_path -> path, t_paint);
 		
 	return t_success;
 }
@@ -1632,7 +1840,7 @@ void MCGContextClip(MCGContextRef self)
 		return;
 	
 	self -> path -> path -> setFillType(MCGFillRuleToSkFillType(self -> state -> fill_rule));
-	self -> canvas -> clipPath(*self -> path -> path, SkRegion::kIntersect_Op, self -> state -> should_antialias);
+	self -> layer -> canvas -> clipPath(*self -> path -> path, SkRegion::kIntersect_Op, self -> state -> should_antialias);
 	MCGPathRelease(self -> path);
 	self -> path = NULL;
 }
@@ -1768,7 +1976,7 @@ static bool MCGContextDrawSkBitmap(MCGContextRef self, const SkBitmap &p_bitmap,
 			t_src_rect_ptr = &t_src_rect;
 		}
 
-		self -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
+		self -> layer -> canvas -> drawBitmapRectToRect(p_bitmap, t_src_rect_ptr, MCGRectangleToSkRect(p_dst), &t_paint);
 	}
 	
 	return t_success;
@@ -1827,7 +2035,7 @@ void MCGContextDrawDeviceMask(MCGContextRef self, MCGMaskRef p_mask, int32_t p_t
 		t_blend_mode -> unref();
 
 	p_mask -> mask . fBounds . offset(p_tx, p_ty);
-	self -> canvas -> drawDevMask(p_mask -> mask, t_paint);
+	self -> layer -> canvas -> drawDevMask(p_mask -> mask, t_paint);
 	p_mask -> mask . fBounds . offset(-p_tx, -p_ty);
 }
 
@@ -1852,7 +2060,7 @@ void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_lengt
 		t_blend_mode -> unref();
 	}		
 	
-	self -> canvas -> drawText(p_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
+	self -> layer -> canvas -> drawText(p_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 }
 
 MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t p_length, uint32_t p_font_size)
@@ -1876,7 +2084,7 @@ bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)
 	if (!MCGContextIsValid(self))
 		return false;
 	
-	return MCGImageCreateWithSkBitmap(self->canvas->getDevice()->accessBitmap(false), r_image);
+	return MCGImageCreateWithSkBitmap(self->layer->canvas->getDevice()->accessBitmap(false), r_image);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
