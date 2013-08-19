@@ -902,7 +902,7 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
 
-	char *controlptr = strclone(MCserialcontrolsettings);
+	char *controlptr = MCStringGetCString(MCserialcontrolsettings);
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)

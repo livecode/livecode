@@ -799,15 +799,12 @@ static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
 
-	MCAutoStringRef p_query_string;
+	MCAutoStringRef t_query_string;
 	
-	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
-	
-	const char *t_query_string = MCStringGetCString(*p_query_string);
-	
-	if (t_query_string != NULL)
-		s_cgi_get_raw -> copysvalue(MCString(t_query_string, strlen(t_query_string)));
-	
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		s_cgi_get_raw -> copysvalue(MCString(MCStringGetCString(*t_query_string), strlen(MCStringGetCString(*t_query_string))));
+	}
 	return ES_NORMAL;
 }
 
@@ -817,15 +814,13 @@ static Exec_stat cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
 
-	MCAutoStringRef p_query_string;
+	MCAutoStringRef t_query_string;	
 	
-	MCS_getenv(MCSTR("QUERY_STRING"), &p_query_string);
-	
-	const char *t_query_string = MCStringGetCString(*p_query_string);
-	
-	if (t_query_string != NULL)
-		cgi_store_form_urlencoded(ep, s_cgi_get_binary, t_query_string, t_query_string + strlen(t_query_string), false);
-	
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		const char *t_query = MCStringGetCString(*t_query_string);
+		cgi_store_form_urlencoded(ep, s_cgi_get_binary, t_query, t_query + strlen(t_query), false);
+	}
 	return ES_NORMAL;
 }
 

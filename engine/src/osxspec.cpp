@@ -843,7 +843,7 @@ void MCS_init()
 	
 	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
 	//   property here (otherwise it is nil in -ui mode).
-	MCshellcmd = strclone("/bin/sh");
+	MCshellcmd = MCSTR("/bin/sh");
 	
 	//
 
@@ -1623,7 +1623,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				close(2);
 				dup(toparent[1]);
 				close(toparent[1]);
-				execl(MCshellcmd, MCshellcmd, "-s", NULL);
+				execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
 				_exit(-1);
 			}
 			MCS_checkprocesses();

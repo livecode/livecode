@@ -92,7 +92,7 @@ int MCidleRate = 200;
 Boolean MCaqua;
 char *MCcmd;
 char *MCfiletype;
-char *MCstackfiletype;
+MCStringRef MCstackfiletype;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -165,7 +165,7 @@ Boolean MCvcshm;
 Boolean MCmmap = True;
 Boolean MCshmpix;
 Boolean MCnoui;
-char *MCdisplayname = NULL;
+MCStringRef MCdisplayname = NULL;
 Boolean MCshmoff;
 Boolean MCshmon;
 uint4 MCvisualid;
@@ -296,7 +296,7 @@ MCUIDC *MCscreen;
 MCPrinter *MCprinter;
 MCPrinter *MCsystemprinter;
 
-char *MCscriptfont;
+MCStringRef MCscriptfont;
 uint2 MCscriptsize;
 uint2 MCscrollbarwidth = DEFAULT_SB_WIDTH;
 uint2 MCfocuswidth = 2;
@@ -333,17 +333,17 @@ Boolean MCsystemCS = True;
 Boolean MCsystemPS = True;
 Boolean MChidewindows;
 Boolean MCbufferimages;
-char *MCserialcontrolsettings;
-char *MCshellcmd;
-char *MCvcplayer;
+MCStringRef MCserialcontrolsettings;
+MCStringRef MCshellcmd;
+MCStringRef MCvcplayer;
 
-char *MCftpproxyhost;
+MCStringRef MCftpproxyhost;
 uint2 MCftpproxyport;
 
 char *MChttpproxy;
 
-char *MClongdateformat;
-char *MCshortdateformat;
+MCStringRef MClongdateformat;
+MCStringRef MCshortdateformat;
 char *MChttpheaders;
 int4 MCrandomseed;
 Boolean MCshowinvisibles;
@@ -360,7 +360,7 @@ MCVariable *MCmb;
 MCVariable *MCeach;
 MCVariable *MCdialogdata;
 char *MChcstat;
-char *MCcurdir;
+MCStringRef MCcurdir;
 MCVariable *MCresult;
 MCVariable *MCurlresult;
 Boolean MCexitall;
@@ -377,18 +377,18 @@ uint1 MCrightmasks[8] = {0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
 
 #if defined(_WINDOWS)
 uint2 MClook = LF_WIN95;
-const char *MCttbgcolor = "255,255,231";
-const char *MCttfont = "MS Sans Serif";
+MCStringRef MCttbgcolor = MCSTR("255,255,231");
+MCStringRef MCttfont = MCSTR("MS Sans Serif");
 uint2 MCttsize = 12;
 #elif defined(_MACOSX)
 uint2 MClook = LF_MAC;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Lucida Grande";
+StringRef MCttbgcolor = MCSTR("255,255,207");
+MCStringRef MCttfont = MCSTR("Lucida Grande");
 uint2 MCttsize = 11;
 #else
 uint2 MClook = LF_MOTIF;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Helvetica";
+MCStringRef MCttbgcolor = MCSTR("255,255,207");
+MCStringRef MCttfont = MCSTR("Helvetica");
 uint2 MCttsize = 12;
 #endif
 uint2 MCtrylock;
@@ -736,8 +736,8 @@ void X_clear_globals(void)
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
 	MClook = LF_MOTIF;
-	MCttbgcolor = "255,255,207";
-	MCttfont = "Helvetica";
+	MCttbgcolor = MCSTR("255,255,207");
+	MCttfont = MCSTR("Helvetica");
 	MCttsize = 12;
 	MCtrylock = 0;
 	MCerrorlock = 0;
@@ -899,9 +899,10 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCcstack = new MCCardlist;
 
 #ifdef _LINUX_DESKTOP
-	MCvcplayer = strclone("xanim");
+	//MCvcplayer = strclone("xanim");
+	MCvplayer = MCSTR("xanim");
 #else
-	MCvcplayer = strclone("");
+	MCvcplayer = MCSTR("");
 #endif
 
 	MCfiletype = strclone("ttxtTEXT");
@@ -911,10 +912,10 @@ bool X_open(int argc, char *argv[], char *envp[])
 	else
 		tname++;
 	if (MCU_strncasecmp(tname, "rev", 3))
-		MCstackfiletype = strclone("MCRDMSTK");
+		MCstackfiletype = MCSTR("MCRDMSTK");
 	else
-		MCstackfiletype = strclone("RevoRSTK");
-	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
+		MCstackfiletype = MCSTR("RevoRSTK");
+	MCserialcontrolsettings = MCSTR("baud=9600 parity=N data=8 stop=1");
 
 	MCdispatcher = new MCDispatch;
 
@@ -1013,8 +1014,8 @@ int X_close(void)
 	MCValueRelease(MChilitecolorname);
 	MCValueRelease(MCaccentcolorname);
 	MCValueRelease(MCselectioncolorname);
-	delete MClongdateformat;
-	delete MCshortdateformat;
+	//delete MClongdateformat;
+	//delete MCshortdateformat;
 
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
@@ -1070,10 +1071,10 @@ int X_close(void)
 	delete MCurlresult;
 	delete MCdialogdata;
 	delete MChcstat;
-	delete MCcurdir;
+	//delete MCcurdir;
 	delete MCusing;
 	delete MChttpheaders;
-	delete MCscriptfont;
+	//delete MCscriptfont;
 	MCValueRelease(MClinkatts . colorname);
 	MCValueRelease(MClinkatts . hilitecolorname);
 	MCValueRelease(MClinkatts . visitedcolorname);
@@ -1099,11 +1100,11 @@ int X_close(void)
 	delete MCdragdata;
 	delete MCselectiondata;
 
-	delete MCshellcmd;
-	delete MCvcplayer;
+	MCValueRelease(MCshellcmd);
+	MCValueRelease(MCvcplayer);
 	delete MCfiletype;
-	delete MCstackfiletype;
-	delete MCserialcontrolsettings;
+	MCValueRelease(MCstackfiletype);
+	MCValueRelease(MCserialcontrolsettings);
 	
 	MCprinter -> Finalize();
 	delete MCprinter;

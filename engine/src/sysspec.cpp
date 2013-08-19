@@ -848,9 +848,7 @@ IO_handle MCS_open(MCStringRef path, MCSOpenFileMode p_mode, Boolean p_map, Bool
 		t_handle = MCsystem -> OpenFile(*t_resolved_path, t_mode, p_map && MCmmap);
 	else
 	{
-		MCAutoStringRef MCserialcontrolsettings_string;
-		/* UNCHECKED */ MCStringCreateWithCString(MCserialcontrolsettings, &MCserialcontrolsettings_string);
-		t_handle = MCsystem -> OpenDevice(*t_resolved_path, t_mode, *MCserialcontrolsettings_string);
+		t_handle = MCsystem -> OpenDevice(*t_resolved_path, t_mode, MCserialcontrolsettings);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.

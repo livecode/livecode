@@ -656,6 +656,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 {
+	
 	if (MCftpproxyhost == nil)
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
@@ -663,7 +664,7 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 	}
 	else
 	{
-		if (MCStringFormat(r_value, "%s:%d", MCftpproxyhost, MCftpproxyport))
+		if (MCStringFormat(r_value, "%s:%d", MCStringGetCString(MCftpproxyhost), MCftpproxyport))
 			return;
 	}
 
@@ -672,14 +673,15 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCftpproxyhost;
+	MCValueRelease(MCftpproxyhost);
+	//delete MCftpproxyhost;
 	if (MCStringGetLength(p_value) == 0)
 		MCftpproxyhost = NULL;
 	else
 	{
 		char *eptr = NULL;
-		MCftpproxyhost = strclone(MCStringGetCString(p_value));
-		if ((eptr = strchr(MCftpproxyhost, ':')) != NULL)
+		MCftpproxyhost = MCValueRetain(p_value);
+		if ((eptr = strchr(strdup(MCStringGetCString(MCftpproxyhost)), ':')) != NULL)
 		{
 			*eptr++ = '\0';
 			MCftpproxyport = (uint2)strtol(eptr, NULL, 10);

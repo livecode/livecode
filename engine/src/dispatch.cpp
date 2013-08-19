@@ -945,7 +945,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	}
 	char *oldfiletype = MCfiletype;
-	MCfiletype = MCstackfiletype;
+	MCfiletype = strdup(MCStringGetCString(MCstackfiletype));
 	
 	MCAutoStringRef t_backup;
 	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", linkname); 

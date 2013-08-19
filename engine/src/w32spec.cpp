@@ -931,7 +931,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 	{
 		DCB dcb;
 		dcb . DCBlength = sizeof(DCB);
-		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCStringGetCString(MCserialcontrolsettings), &dcb)
 		        || !SetCommState(hf, &dcb))
 		{
 			MCS_seterrno(GetLastError());

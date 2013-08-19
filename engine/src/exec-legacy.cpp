@@ -494,15 +494,17 @@ void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCscriptfont, r_value))
+	r_value = MCValueRetain(MCscriptfont);
+	if (MCStringIsEqualTo(r_value, MCscriptfont, kMCStringOptionCompareExact))
 		return;
 
 	ctxt . Throw();
 }
 
+
 void MCLegacySetScriptTextFont(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCCStringClone(MCStringGetCString(p_value), MCscriptfont))
+	if (MCStringCopy(p_value, MCscriptfont))
 		return;
 
 	ctxt . Throw();
@@ -832,7 +834,8 @@ void MCLegacySetVcSharedMemory(MCExecContext& ctxt, bool p_value)
 
 void MCLegacyGetVcPlayer(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCvcplayer, r_value))
+	r_value = MCValueRetain(MCvcplayer);
+	if (MCStringIsEqualTo(r_value, MCvcplayer, kMCStringOptionCompareExact))
 		return;
 
 	ctxt . Throw();
@@ -840,8 +843,10 @@ void MCLegacyGetVcPlayer(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCLegacySetVcPlayer(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCvcplayer;
-	MCvcplayer = strclone(MCStringGetCString(p_value));
+	//delete MCvcplayer;
+	//MCvcplayer = strclone(MCStringGetCString(p_value));
+	MCValueRelease(MCvcplayer);
+	MCvcplayer = MCValueRetain(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
