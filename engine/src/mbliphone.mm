@@ -871,8 +871,8 @@ bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef &
 	
 	if (t_success)
 	{
-		r_data = (MCDataRef) realloc(t_data, t_length);
-		//r_data_length = t_length;
+		/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)realloc(t_data, t_length), t_length, r_data);
+		
 		r_retcode = WEXITSTATUS(t_wait_stat);
 	}
 	else

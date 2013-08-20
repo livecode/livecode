@@ -210,7 +210,7 @@ char MCrecordinput[5] = "dflt";
 Boolean MCuselzw;
 
 real8 MCinfinity = 0.0;
-char *MCstackbottom;
+MCStringRef MCstackbottom;
 Boolean MCcheckstack = True;
 Boolean MCswapbytes;
 Boolean MCtranslatechars;
@@ -342,8 +342,6 @@ uint2 MCftpproxyport;
 
 char *MChttpproxy;
 
-MCStringRef MClongdateformat;
-MCStringRef MCshortdateformat;
 char *MChttpheaders;
 int4 MCrandomseed;
 Boolean MCshowinvisibles;
@@ -360,7 +358,7 @@ MCVariable *MCmb;
 MCVariable *MCeach;
 MCVariable *MCdialogdata;
 char *MChcstat;
-MCStringRef MCcurdir;
+
 MCVariable *MCresult;
 MCVariable *MCurlresult;
 Boolean MCexitall;
@@ -711,8 +709,6 @@ void X_clear_globals(void)
 	MCftpproxyhost = nil;
 	MCftpproxyport = 0;
 	MChttpproxy = nil;
-	MClongdateformat = nil;
-	MCshortdateformat = nil;
 	MChttpheaders = nil;
 	MCrandomseed = 0;
 	MCshowinvisibles = False;
@@ -726,7 +722,7 @@ void X_clear_globals(void)
 	MCeach = nil;
 	MCdialogdata = nil;
 	MChcstat = nil;
-	MCcurdir = nil;
+	
 	MCresult = nil;
 	MCurlresult = nil;
 	MCexitall = False;
@@ -1014,8 +1010,6 @@ int X_close(void)
 	MCValueRelease(MChilitecolorname);
 	MCValueRelease(MCaccentcolorname);
 	MCValueRelease(MCselectioncolorname);
-	//delete MClongdateformat;
-	//delete MCshortdateformat;
 
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
@@ -1071,10 +1065,10 @@ int X_close(void)
 	delete MCurlresult;
 	delete MCdialogdata;
 	delete MChcstat;
-	//delete MCcurdir;
+
 	delete MCusing;
 	delete MChttpheaders;
-	//delete MCscriptfont;
+	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
 	MCValueRelease(MClinkatts . hilitecolorname);
 	MCValueRelease(MClinkatts . visitedcolorname);

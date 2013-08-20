@@ -1646,8 +1646,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		MChcstat = ep.getsvalue().clone();
 		break;
 	case P_SCRIPT_TEXT_FONT:
-		delete MCscriptfont;
-		MCscriptfont = ep.getsvalue().clone();
+		MCValueRelease(MCscriptfont);
+		MCscriptfont = MCSTR(ep.getsvalue());
 		break;
 	case P_SCRIPT_TEXT_SIZE:
 		return ep.getuint2(MCscriptsize, line, pos, EE_PROPERTY_NAN);
@@ -2271,9 +2271,9 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		if (ep.getuint4(MCrecursionlimit, line, pos, EE_PROPERTY_NAN) != ES_NORMAL)
 			return ES_ERROR;
 #ifdef _WINDOWS
-		MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(MCstackbottom - (char *)&stat) * 3)));
+		MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) * 3)));
 #else
-		MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(MCstackbottom - (char *)&stat) * 3); // fudge to 3x current stack depth
+		MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) * 3); // fudge to 3x current stack depth
 #endif
 		break;
 	case P_REPEAT_RATE:
@@ -3742,7 +3742,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep.setsvalue(MChcstat);
 			break;
 		case P_SCRIPT_TEXT_FONT:
-			ep.setsvalue(MCscriptfont);
+			ep.setsvalue(MCStringGetCString(MCscriptfont));
 			break;
 		case P_SCRIPT_TEXT_SIZE:
 			if (MCscriptsize == 0)

@@ -134,7 +134,7 @@ extern char MCrecordinput[5];
 extern Boolean MCuselzw;
 
 extern real8 MCinfinity;
-extern char *MCstackbottom;
+extern MCStringRef MCstackbottom;
 extern Boolean MCcheckstack;
 extern Boolean MCswapbytes;
 extern Boolean MCtranslatechars;
@@ -256,8 +256,6 @@ extern uint2 MCftpproxyport;
 
 extern char *MChttpproxy;
 
-extern MCStringRef MClongdateformat;
-extern MCStringRef MCshortdateformat;
 extern char *MChttpheaders;
 extern int4 MCrandomseed;
 extern Boolean MCshowinvisibles;
@@ -276,7 +274,6 @@ extern MCVariable *MCurlresult;
 extern MCVariable *MCglobals;
 extern MCVariable *MCdialogdata;
 extern char *MChcstat;
-extern MCStringRef MCcurdir;
 extern Boolean MCexitall;
 extern int4 MCretcode;
 extern Boolean MCrecording;

@@ -932,7 +932,7 @@ static void *mobile_main(void *arg)
 
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
-	MCstackbottom = (char *)&i;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
 
 	// Make sure when a 'SIGINT' is sent to this thread, it causes any system
 	// calls to be interrupted (this thread will spend much of its time in a
