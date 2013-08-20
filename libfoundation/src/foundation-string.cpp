@@ -475,8 +475,9 @@ bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
     uindex_t t_length;
     uindex_t t_byte_count;
     unichar_t* t_unichars;
+	t_length = MCStringGetLength(p_string);
     
-    if (!MCMemoryNewArray(t_length, t_unichars))
+    if (!MCMemoryNewArray(t_length + 1, t_unichars))
         return false;
     
     uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
@@ -512,8 +513,9 @@ bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
 }
 #endif
 
+#if 0
 #ifdef __WINDOWS__
-bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
+bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
 {
     uindex_t t_length;
     unichar_t* t_chars;
@@ -530,8 +532,9 @@ bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr)
     if (r_bstr == nil)
         return false;
     
-    return true
+    return true;
 }
+#endif
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -608,6 +611,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
 	if (p_options != kMCStringOptionCompareExact)
 		return MCNativeCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 	return MCNativeCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+}
+
+bool MCStringIsEmpty(MCStringRef string)
+{
+	return MCStringIsEqualTo(string, kMCEmptyString, kMCStringOptionCompareExact);
 }
 
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)
@@ -745,6 +753,9 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
 
 bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+	// Make sure the after index is in range.
+	p_after = MCMin(p_after, self -> char_count);
+
 	// Similar to contains, we loop through checking for a shared prefix of the
 	// length of needle - notice that we start at 'after', though.
 	for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
@@ -771,6 +782,9 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
 {
 	// We only support ASCII for now.
 	MCAssert(p_needle < 128);
+
+	// Make sure the after index is in range.
+	p_after = MCMin(p_after, self -> char_count);
 
 	char_t t_char;
 	t_char = (char_t)p_needle;
@@ -800,6 +814,9 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
 	// we go. Notice that t_offset here tracks the end of char (rather than the
 	// start).
 
+	// Make sure the before index is in range.
+	p_before = MCMin(p_before, self -> char_count);
+
 	for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
 	{
 		// Compute the length of the shared prefix *before* offset - this means
@@ -826,6 +843,9 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
 {
 	// We only support ASCII for now.
 	MCAssert(p_needle < 128);
+
+	// Make sure the before index is in range.
+	p_before = MCMin(p_before, self -> char_count);
 
 	char_t t_char;
 	t_char = (char_t)p_needle;

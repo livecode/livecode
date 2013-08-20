@@ -24,6 +24,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "exec.h"
 
+#ifdef _SERVER
+#include "srvscript.h"
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 
 MC_EXEC_DEFINE_EXEC_METHOD(Server, PutHeader, 2)
@@ -65,7 +69,7 @@ static MCExecEnumTypeElementInfo _kMCServerErrorModeTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerErrorModeTypeInfo =
 {
 	"Server.ErrorMode",
-	sizeof(_kMCServerErrorModeTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerErrorModeTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerErrorModeTypeElementInfo
 };
 
@@ -81,7 +85,7 @@ static MCExecEnumTypeElementInfo _kMCServerOutputLineEndingsTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerOutputLineEndingsTypeInfo =
 {
 	"Server.OutputLineEndings",
-	sizeof(_kMCServerOutputLineEndingsTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerOutputLineEndingsTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerOutputLineEndingsTypeElementInfo
 };
 
@@ -104,7 +108,7 @@ static MCExecEnumTypeElementInfo _kMCServerOutputTextEncodingTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerOutputTextEncodingTypeInfo =
 {
 	"Server.OutputTextEncoding",
-	sizeof(_kMCServerOutputTextEncodingTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerOutputTextEncodingTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerOutputTextEncodingTypeElementInfo
 };
 
@@ -206,6 +210,7 @@ void MCServerExecPutMarkup(MCExecContext& ctxt, MCStringRef p_value, bool is_uni
 		ctxt . LegacyThrow(EE_PUT_CANTSETINTO);
 }
 
+bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only);
 void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_value, uinteger_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_is_secure, bool p_http_only)
 {
 #ifdef _SERVER
@@ -214,7 +219,7 @@ void MCServerExecPutCookie(MCExecContext& ctxt, MCStringRef p_name, MCStringRef 
 	t_value = p_value != nil ? MCStringGetOldString(p_value) : MCnullmcstring;
 	t_path = p_path != nil ? MCStringGetOldString(p_path) : MCnullmcstring;
 	t_domain = p_domain != nil ? MCStringGetOldString(p_domain) : MCnullmcstring;
-	MCServerSetCookie(t_name, t_value, t_expires, t_path, t_domain, p_is_secure, p_is_httponly);
+	MCServerSetCookie(t_name, t_value, p_expires, t_path, t_domain, p_is_secure, p_http_only);
 #endif
 }
 

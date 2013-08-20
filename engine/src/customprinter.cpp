@@ -2011,28 +2011,28 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 #if defined(_WINDOWS)
 			t_module = MCS_loadmodule("revpdfprinter.dll");
 #elif defined(_MACOSX)
-			char *t_module_path;
+			//char *t_module_path;
+            MCAutoStringRef t_module_path_str1;
 			
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%s/../revpdfprinter.bundle", MCcmd);
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+			//t_module_path = nil;
+			MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCcmd);
+			t_module = MCS_loadmodule(*t_module_path_str1);
+		//	MCStringFree(t_module_path);
 			
 			if (t_module == nil)
 			{
-				t_module_path = nil;
-				MCCStringFormat(t_module_path, "%s/../../../../revpdfprinter.bundle", MCcmd);
-				t_module = MCS_loadmodule(t_module_path);
-				MCCStringFree(t_module_path);
+                MCAutoStringRef t_module_path_str2;
+				//t_module_path = nil;
+				MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCcmd);
+				t_module = MCS_loadmodule(*t_module_path_str2);
+				//MCCStringFree(t_module_path);
 			}
 #elif defined(_LINUX)
 			const char *t_engine_dir_end;
 			t_engine_dir_end = strrchr(MCcmd, '/');
-			char *t_module_path;
-			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
-			t_module = MCS_loadmodule(t_module_path);
-			MCCStringFree(t_module_path);
+			MCAutoStringRef t_module_path;
+			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
+			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			const char *t_engine_dir_end;
 			t_engine_dir_end = strrchr(MCcmd, '/');
@@ -2042,10 +2042,13 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 			t_module = MCS_loadmodule(t_module_path);
 			MCCStringFree(t_module_path);
 #elif defined(_SERVER)
+			
 			t_module = nil;
 #endif
 			if (t_module != nil)
+			{
 				s_revpdfprinter_create = (MCCustomPrinterCreateProc)MCS_resolvemodulesymbol(t_module, "MCCustomPrinterCreate");
+			}
 			s_revpdfprinter_loaded = true;
 		}
 

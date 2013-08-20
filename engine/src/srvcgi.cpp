@@ -90,24 +90,22 @@ static char *strndup(const char *s, uint32_t n)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static char *s_cgi_upload_temp_dir = NULL;
-static char *s_cgi_temp_dir = NULL;
+static MCStringRef s_cgi_upload_temp_dir = NULL;
+static MCStringRef s_cgi_temp_dir = nil;
 
-bool MCS_get_temporary_folder(char *&r_temp_folder);
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
 static const char *cgi_get_upload_temp_dir()
 {
 	if (s_cgi_upload_temp_dir != NULL)
-		return s_cgi_upload_temp_dir;
+		return MCStringGetCString(s_cgi_upload_temp_dir);
 	
 	if (s_cgi_temp_dir != NULL)
-		return s_cgi_temp_dir;
+		return MCStringGetCString(s_cgi_temp_dir);
+
+	/* UNCHECKED */ MCS_get_temporary_folder(s_cgi_temp_dir);
+	return MCStringGetCString(s_cgi_temp_dir);
 	
-	char *t_temp_folder = NULL;
-	if (MCS_get_temporary_folder(t_temp_folder))
-		s_cgi_temp_dir = t_temp_folder;
-	
-	return s_cgi_temp_dir;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -285,7 +283,6 @@ bool MCStreamCache::Read(void *p_buffer, uint32_t p_offset, uint32_t p_length, u
 
 bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_length, uint32_t &r_read)
 {
-	uint32_t t_to_read;
 	if (m_cache_buffer != NULL)
 	{
 		r_read = MCMin(p_length, m_cache_length - p_offset);
@@ -296,7 +293,6 @@ bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_
 	{
 		bool t_success = true;
 		
-		IO_stat t_status;
 		
 		t_success = (IO_NORMAL == MCS_seek_set(m_cache_file, p_offset));
 		if (t_success)
@@ -547,6 +543,7 @@ static void cgi_unescape_url(const char *s, const char *l, char *&r_s, char*& r_
 	r_l = rl;
 }
 
+#ifdef TODO
 static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint &ep, MCVariableValue *&r_var_value)
 {
 	MCVariableValue *t_value;
@@ -605,12 +602,15 @@ static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char 
 	
 	r_var_value = t_value;
 }
+#endif
 
 static void cgi_store_control_value(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint& ep)
 {
+#ifdef TODO
 	MCVariableValue *t_value;
 	cgi_fetch_variable_value_for_key(p_variable, p_key, p_key_length, ep, t_value);
 	t_value -> store(ep);
+#endif
 }
 
 static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
@@ -730,8 +730,16 @@ static void cgi_store_form_urlencoded(MCExecPoint& ep, MCVariable *p_variable, c
 static void cgi_fix_path_variables()
 {
 	char *t_path, *t_path_end;
-	t_path = strdup(MCS_getenv("PATH_TRANSLATED"));
-	t_path_end = t_path + strlen(t_path);
+
+	MCAutoStringRef env;
+	
+	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &env))
+	{
+		t_path = strdup(MCStringGetCString(*env));
+		t_path_end = t_path + strlen(t_path);
+	}
+
+	
 
 #ifdef _WINDOWS_SERVER
 	for(uint32_t i = 0; t_path[i] != '\0'; i++)
@@ -742,7 +750,10 @@ static void cgi_fix_path_variables()
 	char t_sep;
 	t_sep = '\0';
 
-	while (!MCS_exists(t_path, True))
+	MCAutoStringRef t_path_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_path, &t_path_string);
+
+	while (!MCS_exists(*t_path_string, True))
 	{
 		char *t_new_end;
 		t_new_end = strrchr(t_path, '/');
@@ -757,9 +768,12 @@ static void cgi_fix_path_variables()
 		*t_path_end = '\0';
 	}
 
-	MCS_setenv("PATH_TRANSLATED", t_path);
+	MCS_setenv(MCSTR("PATH_TRANSLATED"), *t_path_string);
 	*t_path_end = t_sep;
-	MCS_setenv("PATH_INFO", t_path_end);
+	
+	MCAutoStringRef t_path_end_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_path_end, &t_path_end_string);
+	MCS_setenv(MCSTR("PATH_INFO"), *t_path_end_string);
 
 	free(t_path);
 }
@@ -767,11 +781,14 @@ static void cgi_fix_path_variables()
 static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+	
+	MCAutoStringRef t_query_string;
 
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
-	if (t_query_string != NULL)
-		cgi_store_form_urlencoded(ep, s_cgi_get, t_query_string, t_query_string + strlen(t_query_string), true);
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		const char *t_query = MCStringGetCString(*t_query_string);
+		cgi_store_form_urlencoded(ep, s_cgi_get, t_query, t_query + strlen(t_query), true);
+	}
 
 	return ES_NORMAL;
 }
@@ -781,12 +798,13 @@ static Exec_stat cgi_compute_get_var(void *p_context, MCVariable *p_var)
 static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+
+	MCAutoStringRef t_query_string;
 	
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
-	if (t_query_string != NULL)
-		s_cgi_get_raw -> copysvalue(MCString(t_query_string, strlen(t_query_string)));
-	
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		s_cgi_get_raw -> copysvalue(MCString(MCStringGetCString(*t_query_string), strlen(MCStringGetCString(*t_query_string))));
+	}
 	return ES_NORMAL;
 }
 
@@ -795,12 +813,14 @@ static Exec_stat cgi_compute_get_raw_var(void *p_context, MCVariable *p_var)
 static Exec_stat cgi_compute_get_binary_var(void *p_context, MCVariable *p_var)
 {
 	MCExecPoint ep;
+
+	MCAutoStringRef t_query_string;	
 	
-	const char *t_query_string;
-	t_query_string = MCS_getenv("QUERY_STRING");
-	if (t_query_string != NULL)
-		cgi_store_form_urlencoded(ep, s_cgi_get_binary, t_query_string, t_query_string + strlen(t_query_string), false);
-	
+	if (MCS_getenv(MCSTR("QUERY_STRING"), &t_query_string))
+	{
+		const char *t_query = MCStringGetCString(*t_query_string);
+		cgi_store_form_urlencoded(ep, s_cgi_get_binary, t_query, t_query + strlen(t_query), false);
+	}
 	return ES_NORMAL;
 }
 
@@ -810,13 +830,13 @@ static Exec_stat cgi_compute_post_raw_var(void *p_context, MCVariable *p_var)
 	MCCacheHandle *t_stdin = new MCCacheHandle(s_cgi_stdin_cache);
 	
 	bool t_success = true;
+
+	MCAutoStringRef t_content_length;
 	
-	char *t_content_length;
-	t_content_length = MCS_getenv("CONTENT_LENGTH");
-	if (t_content_length != NULL)
+	if (MCS_getenv(MCSTR("CONTENT_LENGTH"), &t_content_length))
 	{
 		uint32_t t_length;
-		t_length = atoi(t_content_length);
+		t_length = atoi(MCStringGetCString(*t_content_length));
 		
 		uint32_t t_read = 0;
 		
@@ -848,10 +868,10 @@ static Exec_stat cgi_compute_post_variables()
 	
 	s_cgi_processed_post = true;
 	
-	char *t_content_type;
-	t_content_type = MCS_getenv("CONTENT_TYPE");
-	
-	if (t_content_type != NULL && strcasecmp(t_content_type, "application/x-www-form-urlencoded") == 0)
+	MCAutoStringRef t_content_type;
+
+	bool gotenv = MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
+	if (gotenv && MCStringIsEqualToCString(*t_content_type, "application/x-www-form-urlencoded", kMCCompareCaseless))
 	{
 		// TODO: currently we assume that urlencoded form data is small enough to fit into memory,
 		// so we fetch the contents from $_POST_RAW (which automatically reads the data from stdin).
@@ -870,7 +890,7 @@ static Exec_stat cgi_compute_post_variables()
 		}
 		delete t_raw_ref;
 	}
-	else if (t_content_type != NULL && MCCStringBeginsWithCaseless(t_content_type, "multipart/form-data;"))
+	else if (gotenv && MCStringBeginsWithCString(*t_content_type, (const char_t *)"multipart/form-data;", kMCStringOptionCompareCaseless))
 	{
 		// read post-data from stdin, via the stream cache
 		MCExecPoint ep;
@@ -909,9 +929,11 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 static bool cgi_multipart_get_boundary(char *&r_boundary)
 {
 	bool t_success = true;
-	char *t_content_type;
-	t_content_type = MCS_getenv("CONTENT_TYPE");
 
+	MCAutoStringRef t_content_type;
+	
+	MCS_getenv(MCSTR("CONTENT_TYPE"), &t_content_type);
+	
 	char *t_params = NULL;
 	uint32_t t_index = 0;
 	
@@ -919,10 +941,11 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	char **t_values = NULL;
 	uint32_t t_param_count = 0;
 	
-	t_success = MCCStringFirstIndexOf(t_content_type, ';', t_index);
+	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
+	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
-		t_success = MCMultiPartParseHeaderParams(t_content_type + t_index + 1, t_names, t_values, t_param_count);
+		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
 
 	r_boundary = NULL;
 	
@@ -971,12 +994,16 @@ typedef struct
 	IO_handle file_handle;
 	uint32_t file_size;
 	MCMultiPartFileStatus file_status;
+#ifdef TODO
 	MCVariableValue *file_variable;
+#endif
 
 	char *boundary;
 	
+#ifdef TODO
 	MCVariableValue *post_variable;
 	MCVariableValue *post_binary_variable;
+#endif
 } cgi_multipart_context_t;
 
 static void cgi_dispose_multipart_context(cgi_multipart_context_t *p_context)
@@ -1012,6 +1039,7 @@ static void inline grab_string(char *&x_dest, char *&x_src)
 static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_header)
 {
 	bool t_success = true;
+#ifdef TODO
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	
 	if (p_header != NULL)
@@ -1072,7 +1100,7 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 			}
 		}
 	}
-	
+#endif
 	return t_success;
 }
 
@@ -1081,6 +1109,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	bool t_success = true;
 
+#ifdef TODO
 	if (cgi_context_is_form_data(t_context))
 	{
 		if (t_context->post_binary_variable != NULL)
@@ -1142,7 +1171,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 		// clear context for next part
 		cgi_dispose_multipart_context(t_context);
 	}
-	
+#endif
 	return t_success;
 }
 
@@ -1176,15 +1205,14 @@ static bool cgi_store_form_multipart(MCExecPoint& ep, IO_handle p_stream)
 static Exec_stat cgi_compute_cookie_var(void *p_context, MCVariable *p_var)
 {
 	bool t_success = true;
-	char *t_cookie_string;
-	t_cookie_string = MCS_getenv("HTTP_COOKIE");
+
+	MCAutoStringRef t_cookie;
 	
-	MCExecPoint ep;
-	
-	if (t_cookie_string == NULL)
+	if (MCS_getenv(MCSTR("HTTP_COOKIE"), &t_cookie))
 		return ES_NORMAL;
-	
-	cgi_store_cookie_urlencoded(ep, s_cgi_cookie, t_cookie_string, t_cookie_string + MCCStringLength(t_cookie_string), true);
+
+	MCExecPoint ep;
+	cgi_store_cookie_urlencoded(ep, s_cgi_cookie, MCStringGetCString(*t_cookie), MCStringGetCString(*t_cookie) + MCCStringLength(MCStringGetCString(*t_cookie)), true);
 
 	return ES_NORMAL;
 }
@@ -1204,17 +1232,23 @@ bool cgi_initialize()
 	cgi_fix_path_variables();
 
 	// Resolve the main script that has been requested by the CGI interface.
-	MCserverinitialscript = MCsystem -> ResolvePath(MCS_getenv("PATH_TRANSLATED"));
+	MCAutoStringRef t_env;
+
+	if (MCS_getenv(MCSTR("PATH_TRANSLATED"), &t_env))
+		MCsystem -> ResolvePath(*t_env, MCserverinitialscript);
 	
 	// Set the current folder to be that containing the CGI file.
 	char *t_server_script_folder;
-	t_server_script_folder = strdup(MCserverinitialscript);
+	t_server_script_folder = strdup(MCStringGetCString(MCserverinitialscript));
 #ifdef _WINDOWS_SERVER
 	strrchr(t_server_script_folder, '\\')[0] = '\0';
 #else
 	strrchr(t_server_script_folder, '/')[0] = '\0';
 #endif
-	MCsystem -> SetCurrentFolder(t_server_script_folder);
+	MCAutoStringRef t_server_script_folder_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_server_script_folder, &t_server_script_folder_string);
+
+	MCsystem -> SetCurrentFolder(*t_server_script_folder_string);
 	delete t_server_script_folder;
 	
 	// Initialize the headers.
@@ -1242,9 +1276,11 @@ bool cgi_initialize()
 	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SERVER", s_cgi_server);
 	s_cgi_server -> setnext(MCglobals);
 	MCglobals = s_cgi_server;
+	
+	MCAutoArrayRef t_vars;
+	/* UNCHECKED */ MCArrayCreateMutable(&t_vars);
 	for(uint32_t i = 0; environ[i] != NULL; i++)
 	{
-		
 		static const char *s_cgi_vars[] =
 		{
 			"GATEWAY_INTERFACE=",
@@ -1311,9 +1347,11 @@ bool cgi_initialize()
 			else
 				ep . setsvalue(t_value + 1);
 			
-			s_cgi_server -> getvalue() . store_element(ep, MCString(environ[i], t_value - environ[i]));
+			ep . storearrayelement_oldstring(*t_vars, MCString(environ[i], t_value - environ[i]));
 		}
 	}
+	
+	MCresult -> setvalueref(*t_vars);
 	
 	// Construct the GET variables by parsing the QUERY_STRING
 	
@@ -1509,12 +1547,14 @@ bool MCServerStartSession()
 		}
 	}
 	if (t_success)
-		t_session_var->getvalue().assign_empty();
+		t_session_var->clear();
 	
 	if (t_success)
 	{
+		// TODO
 		if (s_current_session->data_length > 0)
-			t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
+			t_success = false;
+			//t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
 	}
 	
 	if (t_success)
@@ -1547,8 +1587,10 @@ bool MCServerStopSession()
 	MCVariable *t_session_var;
 	t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 
+	// TODO
 	if (t_session_var != NULL)
-		t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
+		t_success = false;
+		//t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
 
 	if (t_success)
 	{
@@ -1600,7 +1642,7 @@ void cgi_finalize_session()
 // Session properties
 
 static char *s_session_temp_dir = NULL;
-bool MCS_get_temporary_folder(char *&r_folder);
+bool MCS_get_temporary_folder(MCStringRef &r_folder);
 
 bool MCS_set_session_save_path(MCStringRef p_path)
 {
@@ -1623,8 +1665,9 @@ bool MCS_get_session_save_path(MCStringRef& r_path)
 	if (s_session_temp_dir != NULL)
 		return MCStringCreateWithCString(s_session_temp_dir, r_path);
 	
-	if (MCS_get_temporary_folder(s_session_temp_dir))
-		return MCStringCreateWithCString(s_session_temp_dir, r_path);
+	/* UNCHECKED */ MCStringCreateWithCString(s_session_temp_dir, r_path);
+	if (MCS_get_temporary_folder(r_path))
+		return true;
 	
 	r_path = MCValueRetain(kMCEmptyString);
 	return true;
@@ -1703,7 +1746,7 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 	
 	MCExecPoint ep;
 	MCAutoStringRef t_name;
-	if (!MCS_get_session_name(&t_name) || ES_NORMAL != t_cookie_array->fetch_element(ep, MCStringGetOldString(*t_name)))
+	if (!MCS_get_session_name(&t_name) || ES_NORMAL != ep.fetcharrayelement_oldstring((MCArrayRef)t_cookie_array -> getvalueref(), MCStringGetOldString(*t_name)))
 		return false;
 	
 	// retrieve ID from cookie value

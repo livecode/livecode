@@ -42,42 +42,42 @@ public:
 	
 	void Alarm(real64_t p_when);
 	void Sleep(real64_t p_when);
+
+	void SetEnv(MCStringRef name, MCStringRef value);
+	void GetEnv(MCStringRef name, MCStringRef& r_env);
 	
-	void SetEnv(const char *name, const char *value);
-	char *GetEnv(const char *name);
-	
-	bool CreateFolder(const char *p_path);
-	bool DeleteFolder(const char *p_path);
+	bool CreateFolder(MCStringRef p_path);
+	bool DeleteFolder(MCStringRef p_path);
 	
 	bool DeleteFile(const char *p_path);
 	
-	bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name);
+	bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name);
 	
-	bool BackupFile(const char *p_old_name, const char *p_new_name);
-	bool UnbackupFile(const char *p_old_name, const char *p_new_name);
+	bool BackupFile(MCStringRef p_old_name, MCStringRef p_new_name);
+	bool UnbackupFile(MCSTringRef p_old_name, MCStringRef p_new_name);
 	
-	bool CreateAlias(const char *p_target, const char *p_alias);
+	bool CreateAlias(MCStringRef p_target, MCStringRef p_alias);
 	char *ResolveAlias(const char *p_target);
 	
 	bool GetCurrentFolder(MCStringRef& r_path);
-	bool SetCurrentFolder(const char *p_path);
+	bool SetCurrentFolder(MCStringRef p_path);
 	
 	bool FileExists(const char *p_path);
 	bool FolderExists(const char *p_path);
-	bool FileNotAccessible(const char *p_path);
+	bool FileNotAccessible(MCStringRef p_path);
 	
-	bool ChangePermissions(const char *p_path, uint2 p_mask);
+	bool ChangePermissions(MCStringRef p_path, uint2 p_mask);
 	uint2 UMask(uint2 p_mask);
 	
-	MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map);
+	MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map);
 	MCSystemFileHandle *OpenStdFile(uint32_t i);
-	MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string);
+	MCSystemFileHandle *OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string);
 	
 	char *GetTemporaryFileName(void);
 	char *GetStandardFolder(const char *folder);
 	
-	void *LoadModule(const char *p_path);
-	void *ResolveModuleSymbol(void *p_module, const char *p_symbol);
+	void *LoadModule(MCStringRef p_path);
+	void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol);
 	void UnloadModule(void *p_module);
 	
 	bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path);
@@ -90,7 +90,7 @@ public:
 	
 	bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context);
 	
-	bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode);
+	bool Shell(MCStringRef p_cmd, MCDataRef& r_data, int& r_retcode);
 	
 	char *GetHostName(void);
 	bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context);
@@ -107,6 +107,9 @@ public:
 @interface NSString (com_runrev_livecode_NSStringAdditions)
 	- (const char *)nativeCString;
 @end
+
+NSString *MCStringRefToNSString(MCStringRef p_string, bool p_unicode);
+bool NSStringToMCStringRef(NSString *p_string, MCStringRef& r_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 

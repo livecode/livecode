@@ -38,7 +38,7 @@ extern int MCidleRate;
 extern Boolean MCaqua;
 extern char *MCcmd;
 extern char *MCfiletype;
-extern char *MCstackfiletype;
+extern MCStringRef MCstackfiletype;
 
 extern Boolean MCuseXft ;
 extern Boolean MCuselibgnome ;
@@ -92,7 +92,7 @@ extern Boolean MCshmpix ;
 extern Boolean MCvcshm;
 extern Boolean MCmmap;
 extern Boolean MCnoui;
-extern char *MCdisplayname;
+extern MCStringRef MCdisplayname;
 extern Boolean MCshmoff;
 extern Boolean MCshmon;
 extern uint4 MCvisualid;
@@ -211,7 +211,7 @@ extern MCUIDC *MCscreen;
 extern MCPrinter *MCprinter;
 extern MCPrinter *MCsystemprinter;
 
-extern char *MCscriptfont;
+extern MCStringRef MCscriptfont;
 extern uint2 MCscriptsize;
 extern uint2 MCfocuswidth;
 extern uint2 MCsizewidth;
@@ -247,17 +247,17 @@ extern Boolean MCsystemCS;
 extern Boolean MCsystemPS;
 extern Boolean MChidewindows;
 extern Boolean MCbufferimages;
-extern char *MCserialcontrolsettings;
-extern char *MCshellcmd;
-extern char *MCvcplayer;
+extern MCStringRef MCserialcontrolsettings;
+extern MCStringRef MCshellcmd;
+extern MCStringRef MCvcplayer;
 
-extern char *MCftpproxyhost;
+extern MCStringRef MCftpproxyhost;
 extern uint2 MCftpproxyport;
 
 extern char *MChttpproxy;
 
-extern char *MClongdateformat;
-extern char *MCshortdateformat;
+extern MCStringRef MClongdateformat;
+extern MCStringRef MCshortdateformat;
 extern char *MChttpheaders;
 extern int4 MCrandomseed;
 extern Boolean MCshowinvisibles;
@@ -276,7 +276,7 @@ extern MCVariable *MCurlresult;
 extern MCVariable *MCglobals;
 extern MCVariable *MCdialogdata;
 extern char *MChcstat;
-extern char *MCcurdir;
+extern MCStringRef MCcurdir;
 extern Boolean MCexitall;
 extern int4 MCretcode;
 extern Boolean MCrecording;
@@ -296,8 +296,8 @@ extern Boolean MCmainstackschanged;
 // global properties
 
 extern uint2 MClook;
-extern const char *MCttbgcolor;
-extern const char *MCttfont;
+extern MCStringRef MCttbgcolor;
+extern MCStringRef MCttfont;
 extern uint2 MCttsize;
 extern uint2 MCtrylock;
 extern uint2 MCerrorlock;

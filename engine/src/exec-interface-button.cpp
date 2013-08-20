@@ -163,6 +163,60 @@ static MCExecSetTypeInfo _kMCInterfaceButtonAcceleratorModifiersTypeInfo =
 
 //////////
 
+enum MCInterfaceButtonIconType
+{
+    kMCInterfaceButtonIconId,
+    kMCInterfaceButtonIconCustom
+};
+
+struct MCInterfaceButtonIcon
+{
+    MCInterfaceButtonIconType type;
+    
+    union
+    {
+        MCStringRef custom;
+        uint4 id;
+    };
+};
+
+static void MCInterfaceButtonIconParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceButtonIcon& r_output)
+{
+    if (MCU_stoui4(p_input, r_output . id))
+        r_output . type = kMCInterfaceButtonIconId;
+    else
+    {
+        r_output . type = kMCInterfaceButtonIconCustom;
+        r_output . custom = MCValueRetain(p_input);
+    }
+}
+
+static void MCInterfaceButtonIconFormat(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_input, MCStringRef& r_output)
+{
+    if (MCStringFormat(r_output, "%d", p_input . id))
+        return;
+    
+    ctxt . Throw();
+}
+
+static void MCInterfaceButtonIconFree(MCExecContext& ctxt, MCInterfaceButtonIcon& p_input)
+{
+    if (p_input . type == kMCInterfaceButtonIconCustom && p_input . custom != nil)
+        MCValueRelease(p_input . custom);
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
+{
+	"Interface.ButtonIcon",
+	sizeof(MCInterfaceButtonIcon),
+	(void *)MCInterfaceButtonIconParse,
+	(void *)MCInterfaceButtonIconFormat,
+	(void *)MCInterfaceButtonIconFree
+};
+
+//////////
+
+
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
@@ -353,37 +407,41 @@ void MCButton::SetArm(MCExecContext& ctxt, bool setting)
 		Redraw();
 }
 
-/*
-void MCButton::GetIcon(MCExecContext& ctxt, Current_icon which, uinteger_t& r_icon)
+void MCButton::DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon)
 {
-	r_icon = icons == NULL ? 0 : icons->iconids[which];
+    r_icon . type = kMCInterfaceButtonIconId;
+	r_icon . id = icons == NULL ? 0 : icons->iconids[which];
 }
 
-void MCButton::SetIconByName(MCExecContext& ctxt, Properties which, uinteger_t p_icon)
-void MCButton::SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon)
+void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon)
 {
+    uint4 t_id;
+    
 	if (icons == NULL)
 	{
 		icons = new iconlist;
 		memset(icons, 0, sizeof(iconlist));
 	}
-	if (!MCU_stoui4(data, newid))
+    
+	if (p_icon . type == kMCInterfaceButtonIconCustom)
 	{
 		// MW-2013-03-06: [[ Bug 10695 ]] When searching for the image to resolve to an id,
 		//   make sure we use the behavior aware search function.
-		MCImage *ticon = resolveimagename(data);
+		MCImage *ticon = resolveimagename(MCStringGetOldString(p_icon . custom));
 		if (ticon != NULL)
-			newid = ticon->getid();
+			t_id = ticon->getid();
 		else
-			newid = 0;
+			t_id = 0;
 	}
-	if (icons->iconids[p - P_ARMED_ICON] != newid)
+    else
+    {
+        t_id = p_icon . id;
+    }
+    
+	if (icons->iconids[which] != t_id)
 	{
-		icons->iconids[p - P_ARMED_ICON] = newid;
-		dirty = True;
-	}
-	if (dirty)
-	{
+		icons->iconids[which] = t_id;
+
 		if (icons->iconids[CI_ARMED] == 0 && icons->iconids[CI_DISABLED] == 0
 		        && icons->iconids[CI_HILITED] == 0 && icons->iconids[CI_DEFAULT] == 0
 						&& icons->iconids[CI_VISITED] == 0 && icons->iconids[CI_HOVER] == 0)
@@ -403,7 +461,66 @@ void MCButton::SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon)
 		}
 	}
 }
-*/
+
+void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_ARMED, p_icon);
+}
+
+void MCButton::GetArmedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_ARMED, r_icon);
+}
+
+void MCButton::SetDisabledIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_DISABLED, p_icon);
+}
+
+void MCButton::GetDisabledIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_DISABLED, r_icon);    
+}
+
+void MCButton::SetIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_DEFAULT, p_icon);
+}
+
+void MCButton::GetIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_DEFAULT, r_icon);    
+}
+
+void MCButton::SetHiliteIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_HILITED, p_icon);
+}
+
+void MCButton::GetHiliteIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_HILITED, r_icon);    
+}
+
+void MCButton::SetVisitedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_VISITED, p_icon);
+}
+
+void MCButton::GetVisitedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_VISITED, r_icon);    
+}
+
+void MCButton::SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
+{
+    DoSetIcon(ctxt, CI_HOVER, p_icon);
+}
+
+void MCButton::GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon)
+{
+    DoGetIcon(ctxt, CI_HOVER, r_icon);    
+}
 
 void MCButton::GetSharedHilite(MCExecContext& ctxt, bool& r_setting)
 {
@@ -1093,4 +1210,12 @@ void MCButton::SetCantSelect(MCExecContext& ctxt, bool setting)
 	if (entry != NULL)
 		entry -> SetCantSelect(ctxt, setting);
 	MCObject::SetCantSelect(ctxt, setting);
+}
+
+void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins)
+{
+    MCControl::SetMargins(ctxt, p_margins);
+    
+    if (entry != nil)
+        entry -> SetMargins(ctxt, p_margins);
 }

@@ -31,12 +31,45 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "player.h"
 #include "param.h"
 #include "eventqueue.h"
+#include "exec.h"
 
 #include <jni.h>
 
 #include "mblandroidcontrol.h"
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlPropertyInfo MCAndroidControl::kProperties[] =
+{
+    DEFINE_RW_CTRL_PROPERTY(Rectangle, Rectangle, MCAndroidControl, Rect)
+    DEFINE_RW_CTRL_PROPERTY(Visible, Bool, MCAndroidControl, Visible)
+    DEFINE_RW_CTRL_PROPERTY(Alpha, UInt16, MCAndroidControl, Alpha)
+    DEFINE_RW_CTRL_CUSTOM_PROPERTY(BackgroundColor, NativeControlColor, MCAndroidControl, BackgroundColor)
+};
+
+MCNativeControlPropertyTable MCAndroidControl::kPropertyTable =
+{
+	&MCNativeControl::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCNativeControlActionInfo MCAndroidControl::kActions[] =
+{
+};
+
+MCNativeControlActionTable MCAndroidControl::kActionTable =
+{
+    &MCNativeControl::kActionTable,
+    0,
+    nil,
+};
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCAndroidControl::MCAndroidControl(void)
 {
@@ -98,6 +131,66 @@ bool MCAndroidControl::GetViewBackgroundColor(jobject p_view, uint16_t &r_red, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCAndroidControl::SetRect(MCExecContext& ctxt, MCRectangle p_rect)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setRect", "viiii", nil, p_rect . x, p_rect . y, p_rect . x + p_rect . width, p_rect . y + p_rect . height);
+}
+
+void MCAndroidControl::SetVisible(MCExecContext& ctxt, bool p_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setVisible", "vb", nil, p_visible);
+}
+
+void MCAndroidControl::SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setAlpha", "vi", nil, p_alpha);
+}
+
+void MCAndroidControl::SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "setBackgroundColor", "viiii", nil, p_color . r >> 8, p_color . g >> 8, p_color . b >> 8, p_color . a >> 8);
+}
+
+void MCAndroidControl::GetRect(MCExecContext& ctxt, MCRectangle& r_rect)
+{
+    if (m_view != nil)
+    {
+        int16_t i1, i2, i3, i4;
+        GetViewRect(m_view, i1, i2, i3, i4);
+        r_rect . x = i1;
+        r_rect . y = i2;
+        r_rect . width = i3 - i1;
+        r_rect . height = i4 - i2;
+    }
+}
+
+void MCAndroidControl::GetVisible(MCExecContext& ctxt, bool& r_visible)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getVisible", "b", &r_visible);
+    else
+        r_visible = false;
+}
+
+void MCAndroidControl::GetAlpha(MCExecContext& ctxt, uinteger_t& r_alpha)
+{
+    if (m_view != nil)
+        MCAndroidObjectRemoteCall(m_view, "getAlpha", "i", &r_alpha);
+    else
+        r_alpha = 0;
+}
+
+void MCAndroidControl::GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color)
+{
+    if (m_view != nil)
+        GetViewBackgroundColor(m_view, p_color . r, p_color . g, p_color . b, p_color . a);
+}
+
+#ifdef /* MCAndroidControl::Set */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -171,7 +264,9 @@ Exec_stat MCAndroidControl::Set(MCNativeControlProperty p_property, MCExecPoint 
     
     return ES_NOT_HANDLED;
 }
+#endif /* MCAndroidControl::Set */
 
+#ifdef /* MCAndroidControl::Get */ LEGACY_EXEC
 Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint &ep)
 {
     switch (p_property)
@@ -235,11 +330,7 @@ Exec_stat MCAndroidControl::Get(MCNativeControlProperty p_property, MCExecPoint 
     
     return ES_ERROR;
 }
-
-Exec_stat MCAndroidControl::Do(MCNativeControlAction p_action, MCParameter *p_params)
-{
-    return ES_ERROR;
-}
+#endif /* MCAndroidControl::Get */
 
 ////////////////////////////////////////////////////////////////////////////////
 

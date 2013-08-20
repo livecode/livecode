@@ -35,6 +35,8 @@
 #include "mblsyntax.h"
 #include "mblsensor.h"
 #include "mblcontrol.h"
+#include "mblstore.h"
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -449,6 +451,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
 	
 	uint32_t t_id;
 	MCAutoStringRef t_prop_name;
+    MCAutoValueRef t_value;
 	
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "ux", &t_id, &(&t_prop_name));
@@ -457,7 +460,7 @@ Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
 	
 	if (t_success)
-        MCStoreGetPurchaseProperty(ctxt, t_id, &t_prop_name);
+        MCStoreExecGet(ctxt, t_id, &t_prop_name, &t_value);
 	
 	if (!ctxt . HasError())
     {
@@ -507,6 +510,7 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
 	uint32_t t_id;
 	MCAutoStringRef t_prop_name;
     uint32_t t_quantity;
+    MCAutoNumberRef t_quantity_ref;
 	
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "uxu", &t_id, &(&t_prop_name), &t_quantity);
@@ -515,7 +519,10 @@ Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters)
     MCExecContext ctxt(ep);
     
 	if (t_success)
-        MCStoreSetPurchaseProperty(ctxt, t_id, &t_prop_name, t_quantity);
+        t_success = MCNumberCreateWithInteger(t_quantity, &t_quantity_ref);
+
+    if (t_success)
+        MCStoreExecSet(ctxt, t_id, &t_prop_name, *t_quantity_ref);
 	
     if (!ctxt.HasError())
         return ES_NORMAL;
@@ -2031,11 +2038,10 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "xx", &(&t_ad), &(&t_type));
     
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+   MCAdTopLeft t_topleft;
 
     if (t_success)
-        t_success = MCParseParameters(p_parameters, "uu", &t_topleft_x, &t_topleft_y);
+        t_success = MCParseParameters(p_parameters, "uu", &t_topleft.x, &t_topleft.y);
     
     MCAutoArrayRef t_metadata;
     
@@ -2043,7 +2049,7 @@ Exec_stat MCHandleAdCreate(void *context, MCParameter *p_parameters)
         t_success = MCParseParameters(p_parameters, "a", &(&t_metadata));
     
 	if (t_success)
-		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft_x, t_topleft_y, *t_metadata);
+		MCAdExecCreateAd(ctxt, *t_ad, *t_type, t_topleft, *t_metadata);
     
     
     if (!ctxt . HasError())
@@ -2203,60 +2209,26 @@ Exec_stat MCHandleAdSetVisible(void *context, MCParameter *p_parameters)
 
 Exec_stat MCHandleAdGetTopLeft(void *context, MCParameter *p_parameters)
 {
-#ifdef /* MCHandleAdGetTopLeft */ LEGACY_EXEC
-	bool t_success;
-	t_success = true;
-    
-    MCExecPoint ep(nil, nil, nil);
-    MCExecContext t_ctxt(ep);
-	t_ctxt . SetTheResultToEmpty();
-    
-	char *t_ad;
-	t_ad = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_ad);
-	
-    MCAdTopLeft t_top_left = {0,0};
-	if (t_success)
-		t_success = MCAdGetTopLeftOfAd(t_ctxt, t_ad, t_top_left);
-    
-    if (t_success)
-    {
-        MCAutoRawCString t_top_left_string;
-        t_success = MCCStringFormat(t_top_left_string, "%u,%u", t_top_left.x, t_top_left.y);
-        if (t_success)
-            if (t_top_left_string.Borrow() != nil)
-                ep.copysvalue(t_top_left_string.Borrow());
-    }
-    
-    if (t_success)
-        MCresult->store(ep, False);
-    
-    MCCStringFree(t_ad);
-    
-    return t_ctxt.GetStat();
-#endif /* MCHandleAdGetTopLeft */
 	bool t_success;
 	t_success = true;
     
     MCExecPoint ep(nil, nil, nil);
     MCExecContext ctxt(ep);
-
+    
 	MCAutoStringRef t_ad;
     
 	if (t_success)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_ad));
 	
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+    MCAdTopLeft t_topleft;
     
 	if (t_success)
-		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+		MCAdGetTopLeftOfAd(ctxt, *t_ad, t_topleft);
     
     if (!ctxt . HasError())
     {
         MCAutoStringRef t_topleft_string;
-        if(MCStringFormat(&t_topleft_string, "uu", t_topleft_x, t_topleft_y))
+        if(MCStringFormat(&t_topleft_string, "%u,%u", t_topleft.x, t_topleft.y))
         {
             ctxt.SetTheResultToValue(*t_topleft_string);
             return ES_NORMAL;
@@ -2304,14 +2276,13 @@ Exec_stat MCHandleAdSetTopLeft(void *context, MCParameter *p_parameters)
 	ctxt . SetTheResultToEmpty();
     
 	MCAutoStringRef t_ad;
-    uint32_t t_topleft_x;
-    uint32_t t_topleft_y;
+    MCAdTopLeft t_topleft;
 	
     if (t_success)
-		t_success = MCParseParameters(p_parameters, "xuu", &(&t_ad), t_topleft_x, t_topleft_y);
+		t_success = MCParseParameters(p_parameters, "xuu", &(&t_ad), t_topleft.x, t_topleft.y);
     
 	if (t_success)
-		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft_x, t_topleft_y);
+		MCAdSetTopLeftOfAd(ctxt, *t_ad, t_topleft);
     
     if (!ctxt . HasError())
 		return ES_NORMAL;
@@ -6168,7 +6139,7 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 	else
 		MCPickExecPickPhoto(ctxt, t_photo_source);
     
-	if (ctxt . HasError())
+	if (!ctxt . HasError())
         return ES_NORMAL;
     
     return ES_ERROR;
@@ -6176,71 +6147,8 @@ Exec_stat MCHandlePickPhoto(void *p_context, MCParameter *p_parameters)
 
 //////////////////////////////////////////////////////////////////////////////////////
 
-
 Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 {
-#ifdef /* MCHandleControlCreate */ LEGACY_EXEC
-	bool t_success;
-	t_success = true;
-	
-	char *t_type_name;
-	t_type_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_type_name);
-	
-	char *t_control_name;
-	t_control_name = nil;
-	if (t_success && p_parameters != nil)
-		t_success = MCParseParameters(p_parameters, "s", &t_control_name);
-	
-	// Make sure the name is valid.
-	if (t_success && t_control_name != nil)
-	{
-		if (MCCStringIsEmpty(t_control_name))
-		{
-			delete t_control_name;
-			t_control_name = nil;
-		}
-		else
-			t_success = !MCCStringIsInteger(t_control_name);
-	}
-	
-	// Make sure a control does not already exist with the name
-	if (t_success && t_control_name != nil)
-	{
-		MCNativeControl *t_control;
-		t_success = !MCNativeControl::FindByNameOrId(t_control_name, t_control);
-	}
-	
-	MCNativeControlType t_type;
-	if (t_success)
-		t_success = MCNativeControl::LookupType(t_type_name, t_type);
-	
-	MCNativeControl *t_control;
-	t_control = nil;
-	if (t_success)
-		t_success = MCNativeControl::CreateWithType(t_type, t_control);
-	
-	if (t_success)
-	{
-		extern MCExecPoint *MCEPptr;
-		t_control -> SetOwner(MCEPptr -> getobj());
-		t_control -> SetName(t_control_name);
-		MCresult -> setnvalue(t_control -> GetId());
-	}
-	else
-	{
-		if (t_control != nil)
-			t_control -> Delete();
-		
-		MCresult -> clear();
-	}
-	
-	delete t_control_name;
-	delete t_type_name;
-	
-	return ES_NORMAL;
-#endif /* MCHandleControlCreate */
 	bool t_success;
 	t_success = true;
 	
@@ -6252,96 +6160,26 @@ Exec_stat MCHandleControlCreate(void *context, MCParameter *p_parameters)
 	if (t_success && p_parameters != nil)
 		t_success = MCParseParameters(p_parameters, "x", &(&t_control_name));
 	
-	// Make sure the name is valid.
-	if (t_success && *t_control_name != nil)
-	{
-		if (MCStringIsEqualTo(*t_control_name, kMCEmptyString, kMCCompareCaseless))
-			t_success = false;
-		else
-		{
-			int2 t_integer;
-			t_success = !MCU_stoi2(*t_control_name, t_integer);
-		}
-	}
-	
-	// Make sure a control does not already exist with the name
-	if (t_success && *t_control_name != nil)
-	{
-		MCNativeControl *t_control;
-		t_success = !MCNativeControl::FindByNameOrId(MCStringGetCString(*t_control_name), t_control);
-	}
-	
-	MCNativeControlType t_type;
-	if (t_success)
-		t_success = MCNativeControl::LookupType(MCStringGetCString(*t_type_name), t_type);
-	
-	MCNativeControl *t_control;
-	t_control = nil;
-	if (t_success)
-		t_success = MCNativeControl::CreateWithType(t_type, t_control);
-	
-	if (t_success)
-	{
-		extern MCExecPoint *MCEPptr;
-		t_control -> SetOwner(MCEPptr -> getobj());
-		t_control -> SetName(*t_control_name);
-		MCresult -> setnvalue(t_control -> GetId());
-	}
-	else
-	{
-		if (t_control != nil)
-			t_control -> Delete();
-		
-		MCresult -> clear();
-	}
-	return ES_NORMAL;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    MCNativeControlExecCreateControl(ctxt, *t_type_name, *t_control_name);
+    
+	if (!ctxt . HasError())
+        return ES_NORMAL;
+    
+    return ES_ERROR;
 }
 
 Exec_stat MCHandleControlDelete(void *context, MCParameter *p_parameters)
 {
-#ifdef /* MCHandleControlDelete */ LEGACY_EXEC
-	bool t_success;
-	t_success = true;
-	
-	char *t_control_name;
-	t_control_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_control_name);
-	
-	MCNativeControl *t_control;
-	if (t_success)
-		t_success = MCNativeControl::FindByNameOrId(t_control_name, t_control);
-	
-	if (t_success)
-	{
-		t_control -> Delete();
-		t_control -> Release();
-	}
-	
-	delete t_control_name;
-	
-	return ES_NORMAL;
-#endif /* MCHandleControlDelete */
-	bool t_success;
-	t_success = true;
-	
-	char *t_control_name;
-	t_control_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "s", &t_control_name);
-	
-	MCNativeControl *t_control;
-	if (t_success)
-		t_success = MCNativeControl::FindByNameOrId(t_control_name, t_control);
-	
-	if (t_success)
-	{
-		t_control -> Delete();
-		t_control -> Release();
-	}
-	
-	delete t_control_name;
-	
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+	MCAutoStringRef t_control_name;
+	if (MCParseParameters(p_parameters, "x", &(&t_control_name)))
+        MCNativeControlExecDeleteControl(ctxt, *t_control_name);
+
 	return ES_NORMAL;
 }
 
@@ -6366,45 +6204,42 @@ Exec_stat MCHandleControlSet(void *context, MCParameter *p_parameters)
 		MCNativeControl::LookupProperty(t_prop_name, t_property);
 	
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	if (t_success && p_parameters != nil)
 		t_success = p_parameters -> eval(ep);
 	
 	if (t_success)
-		t_success = t_control -> Set(t_property, ep) == ES_NORMAL;
+        t_control -> Set(ctxt, t_property);
 	
 	delete t_prop_name;
 	delete t_control_name;
 	
 	return ES_NORMAL;
 #endif /* MCHandleControlSet */
-	bool t_success;
+    
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
 	t_success = true;
-	
-	char *t_control_name;
-	char *t_prop_name;
-	t_control_name = nil;
-	t_prop_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_prop_name);
-	
-	MCNativeControl *t_control;
-	MCNativeControlProperty t_property;
-	if (t_success)
-		t_success =
-		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
-		MCNativeControl::LookupProperty(t_prop_name, t_property);
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success && p_parameters != nil)
-		t_success = p_parameters -> eval(ep);
-	
-	if (t_success)
-		t_success = t_control -> Set(t_property, ep) == ES_NORMAL;
-	
-	delete t_prop_name;
-	delete t_control_name;
-	
-	return ES_NORMAL;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
+
+    if (t_success && p_parameters != nil)
+        t_success = p_parameters -> eval(ep);
+    
+    MCAutoValueRef t_value;
+    if (t_success)
+        ep . copyasvalueref(&t_value);
+    
+    if (t_success)
+        MCNativeControlExecSet(ctxt, *t_control_name, *t_property, *t_value);
+    
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
@@ -6428,45 +6263,14 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 		MCNativeControl::LookupProperty(t_prop_name, t_property);
 	
 	MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
 	if (t_success)
-		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
+		t_control -> Get(ctxt, t_property);
 	
-	if (t_success)
-		MCresult -> store(ep, True);
-	else
-		MCresult -> clear();
-	
-	delete t_prop_name;
-	delete t_control_name;
-	
-	return ES_NORMAL;
-#endif /* MCHandleControlGet */
-	bool t_success;
-	t_success = true;
-	
-	char *t_control_name;
-	char *t_prop_name;
-	t_control_name = nil;
-	t_prop_name = nil;
-	if (t_success)
-		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_prop_name);
-	
-	MCNativeControl *t_control;
-	MCNativeControlProperty t_property;
-	if (t_success)
-		t_success =
-		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
-		MCNativeControl::LookupProperty(t_prop_name, t_property);
-	
-	MCExecPoint ep(nil, nil, nil);
-	if (t_success)
-		t_success = t_control -> Get(t_property, ep) == ES_NORMAL;
-	
-	MCExecContext ctxt(ep);
 	if (t_success)
 	{
 		MCAutoStringRef t_value;
-		/* UNCHECKED */ ep . copyasstringref(&t_value);
+        ep . copyasstringref(&t_value);
         ctxt . SetTheResultToValue(*t_value);
 	}
 	else
@@ -6476,7 +6280,30 @@ Exec_stat MCHandleControlGet(void *context, MCParameter *p_parameters)
 	delete t_control_name;
 	
 	return ES_NORMAL;
-	
+#endif /* MCHandleControlGet */
+    
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
+	t_success = true;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
+    
+    MCAutoValueRef t_value;
+    if (t_success)
+        MCNativeControlExecGet(ctxt, *t_control_name, *t_property, &t_value);
+    
+    if (*t_value != nil)
+        ctxt . SetTheResultToValue(*t_value);
+    else
+        ctxt . SetTheResultToEmpty();
+    
+    return ES_NORMAL;
 }
 
 Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
@@ -6507,77 +6334,49 @@ Exec_stat MCHandleControlDo(void *context, MCParameter *p_parameters)
 	
 	return ES_NORMAL;
 #endif /* MCHandleControlDo */
-	bool t_success;
+    
+    MCAutoStringRef t_control_name;
+    MCAutoStringRef t_property;
+    
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    
+    bool t_success;
 	t_success = true;
+    
+    if (t_success)
+		t_success = MCParseParameters(p_parameters, "xx", &(&t_control_name), &(&t_property));
 	
-	char *t_control_name;
-	char *t_action_name;
-	t_control_name = nil;
-	t_action_name = nil;
+    MCAutoArray<MCValueRef> t_params;
+    
+    MCValueRef t_value;
+    while (t_success && p_parameters != nil)
+    {
+        p_parameters -> eval(ep);
+        ep . copyasvalueref(t_value);
+        t_success = t_params . Push(t_value);
+    }
+
 	if (t_success)
-		t_success = MCParseParameters(p_parameters, "ss", &t_control_name, &t_action_name);
-	
-	MCNativeControl *t_control;
-	MCNativeControlAction t_action;
-	if (t_success)
-		t_success =
-		MCNativeControl::FindByNameOrId(t_control_name, t_control) &&
-		MCNativeControl::LookupAction(t_action_name, t_action);
-	
-	if (t_success)
-		t_success = t_control -> Do(t_action, p_parameters) == ES_NORMAL;
-	
-	delete t_action_name;
-	delete t_control_name;
+		MCNativeControlExecDo(ctxt, *t_control_name, *t_property, t_params . Ptr(), t_params . Size());
 	
 	return ES_NORMAL;
 }
 
 Exec_stat MCHandleControlTarget(void *context, MCParameter *p_parameters)
 {
-#ifdef /* MCHandleControlTarget */ LEGACY_EXEC
-	MCNativeControl *t_target;
-	t_target = MCNativeControl::CurrentTarget();
-	if (t_target != nil)
-	{
-		if (t_target -> GetName() != nil)
-			MCresult -> copysvalue(t_target -> GetName());
-		else
-			MCresult -> setnvalue(t_target -> GetId());
-	}
-	else
-		MCresult -> clear();
-	
-	return ES_NORMAL;
-#endif /* MCHandleControlTarget */
-	MCNativeControl *t_target;
-	t_target = MCNativeControl::CurrentTarget();
-	if (t_target != nil)
-	{
-		if (t_target -> GetName() != nil)
-			MCresult -> copysvalue(t_target -> GetName());
-		else
-			MCresult -> setnvalue(t_target -> GetId());
-	}
-	else
-		MCresult -> clear();
-	
-	return ES_NORMAL;
+    MCExecPoint ep(nil, nil, nil);
+    MCExecContext ctxt(ep);
+    MCNativeControlIdentifier t_identifier;
+    MCNativeControlGetTarget(ctxt, t_identifier);
+    MCAutoStringRef t_string;
+    MCNativeControlIdentifierFormat(ctxt, t_identifier, &t_string);
+    if (*t_string != nil)
+        ctxt . SetTheResultToValue(*t_string);
 }
 
 bool list_native_controls(void *context, MCNativeControl* p_control)
 {
-#ifdef /* list_native_controls */ LEGACY_EXEC
-	MCExecPoint *ep;
-	ep = (MCExecPoint *)context;
-	
-	if (p_control -> GetName() != nil)
-		ep -> concatcstring(p_control -> GetName(), EC_RETURN, ep -> isempty());
-	else
-		ep -> concatuint(p_control -> GetId(), EC_RETURN, ep -> isempty());
-	
-	return true;
-#endif /* list_native_controls */
 	MCExecPoint *ep;
 	ep = (MCExecPoint *)context;
 	
@@ -6590,19 +6389,13 @@ bool list_native_controls(void *context, MCNativeControl* p_control)
 }
 
 Exec_stat MCHandleControlList(void *context, MCParameter *p_parameters)
-{
-#ifdef /* MCHandleControlList */ LEGACY_EXEC
-	MCExecPoint ep(nil, nil, nil);
-	MCNativeControl::List(list_native_controls, &ep);
-	MCresult -> store(ep, False);
-	return ES_NORMAL;
-#endif /* MCHandleControlList */
-    
+{    
 	MCExecPoint ep(nil, nil, nil);
 	MCNativeControl::List(list_native_controls, &ep);
     
 	MCExecContext ctxt(ep);
 	MCAutoStringRef t_value;
+    ep . copyasstringref(&t_value);
 	/* UNCHECKED */ ep . copyasstringref(&t_value);
     ctxt . SetTheResultToValue(*t_value);
     
@@ -6961,6 +6754,3 @@ Exec_stat MCHandlePlatformMessage(const MCString& p_message, MCParameter *p_para
 	return ES_NOT_HANDLED;
 }
 #endif
-
-
-

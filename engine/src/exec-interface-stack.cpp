@@ -125,11 +125,42 @@ static void MCInterfaceDecorationFree(MCExecContext& ctxt, MCInterfaceDecoration
 
 static MCExecCustomTypeInfo _kMCInterfaceDecorationTypeInfo =
 {
-	"Interface.TextStyle",
-	sizeof(MCInterfaceTextStyle),
+	"Interface.Decoration",
+	sizeof(MCInterfaceDecoration),
 	(void *)MCInterfaceDecorationParse,
 	(void *)MCInterfaceDecorationFormat,
 	(void *)MCInterfaceDecorationFree
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCInterfaceStackPassword
+{
+    MCStringRef password;
+    bool password_set;
+};
+
+static void MCInterfaceStackPasswordParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceStackPassword& r_output)
+{
+
+}
+
+static void MCInterfaceStackPasswordFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output)
+{
+
+}
+
+static void MCInterfaceStackPasswordFree(MCExecContext& ctxt, MCInterfaceLayer& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceStackPasswordTypeInfo =
+{
+	"Interface.StackPassword",
+	sizeof(MCInterfaceStackPassword),
+	(void *)MCInterfaceStackPasswordParse,
+	(void *)MCInterfaceStackPasswordFormat,
+	(void *)MCInterfaceStackPasswordFree
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -138,6 +169,7 @@ MCExecEnumTypeInfo *kMCInterfaceStackStyleTypeInfo = &_kMCInterfaceStackStyleTyp
 MCExecEnumTypeInfo *kMCInterfaceCharsetTypeInfo = &_kMCInterfaceCharsetTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceCompositorTypeTypeInfo = &_kMCInterfaceCompositorTypeTypeInfo;
 MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo = &_kMCInterfaceDecorationTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceStackPasswordTypeInfo = &_kMCInterfaceStackPasswordTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 

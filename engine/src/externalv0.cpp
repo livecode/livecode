@@ -136,7 +136,7 @@ bool MCExternalV0::Prepare(void)
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
-	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, "getXtable");
+	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, "getXtable" );
 	t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;

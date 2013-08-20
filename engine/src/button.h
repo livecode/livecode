@@ -88,6 +88,8 @@ typedef struct
 }
 iconlist;
 
+struct MCInterfaceButtonIcon;
+
 #define MENUCONTROL_NONE 0
 #define MENUCONTROL_ITEM 1
 #define MENUCONTROL_SEPARATOR 2
@@ -363,6 +365,8 @@ public:
 	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef& r_label);
 	void DoSetLabel(MCExecContext& ctxt, MCStringRef p_label);
 	void DoSetText(MCExecContext& ctxt, MCStringRef p_label);
+    void DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon);
+    void DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon);
 	void UpdateIconAndMenus(void);
 
 	////////// PROPERTY ACCESSORS
@@ -439,8 +443,19 @@ public:
 	void GetUnicodeText(MCExecContext& ctxt, MCStringRef& r_text);
 	void SetUnicodeText(MCExecContext& ctxt, MCStringRef p_text);
 	virtual void SetCantSelect(MCExecContext& ctxt, bool setting);
-
-
+    void SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetArmedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetDisabledIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetDisabledIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetHiliteIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetHiliteIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetVisitedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetVisitedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
+    void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
 private:
 	int4 formattedtabwidth(void);
 

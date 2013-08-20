@@ -307,10 +307,10 @@ static void do_system_load_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context)
 {
 	load_url_t ctxt;
-	ctxt . url = p_url;
+	ctxt . url = MCStringGetCString(p_url);
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;
 	
@@ -442,11 +442,11 @@ static void do_post_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	post_url_t ctxt;
-	ctxt . url = p_url;
-	/* UNCHECKED */ MCStringCreateWithCString((const char *)p_data, ctxt . data);
+	ctxt . url = MCStringGetCString(p_url);
+
 	ctxt . length = p_length;
 	ctxt . callback = p_callback;
 	ctxt . context = p_context;

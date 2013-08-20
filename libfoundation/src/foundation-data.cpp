@@ -95,7 +95,7 @@ bool MCDataIsEqualTo(MCDataRef p_left, MCDataRef p_right)
 {
     bool t_success = true;
     
-    for (int i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
+    for (uindex_t i = 0 ; i < p_left->byte_count && i < p_right->byte_count && t_success ; ++i)
         t_success = p_left->bytes[i] == p_right->bytes[i];
     
     return t_success;
@@ -286,7 +286,7 @@ bool MCDataPrependBytes(MCDataRef r_data, const byte_t *p_bytes, uindex_t p_byte
 
 bool MCDataPrependByte(MCDataRef r_data, byte_t p_byte)
 {
-    MCDataPrependBytes(r_data, &p_byte, 1);
+    return MCDataPrependBytes(r_data, &p_byte, 1);
 }
 
 bool MCDataInsert(MCDataRef r_data, uindex_t p_at, MCDataRef p_new_data)

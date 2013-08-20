@@ -42,17 +42,17 @@ void MCAndroidSystem::Debug(const char *p_cstring)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void *MCAndroidSystem::LoadModule(const char *p_path)
+void *MCAndroidSystem::LoadModule(MCStringRef p_path)
 {
 	void *t_result;
-	t_result = dlopen(p_path, RTLD_LAZY);
-	MCLog("LoadModule(%s) - %p\n", p_path, t_result);
+	t_result = dlopen(MCStringGetCString(p_path), RTLD_LAZY);
+	MCLog("LoadModule(%s) - %p\n", MCStringGetCString(p_path), t_result);
 	return t_result;
 }
 
-void *MCAndroidSystem::ResolveModuleSymbol(void *p_module, const char *p_symbol)
+void *MCAndroidSystem::ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
 {
-	return dlsym(p_module, p_symbol);
+	return dlsym(p_module, MCStringGetCString(p_symbol));
 }
 
 void MCAndroidSystem::UnloadModule(void *p_module)

@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "prefix.h"
 
 #include "sysdefs.h"
-#include "core.h"
 #include "filedefs.h"
 #include "mcio.h"
 #include "osspec.h"
@@ -899,7 +898,7 @@ void MCMultiPartCleanTempFolder(const char *p_temp_folder)
 ////////////////////////////////////////////////////////////////////////////////
 
 #define TEMP_PREFIX "livecode_"
-bool MCS_create_temporary_file(const char *p_path, const char *p_prefix, IO_handle &r_file, char *&r_name);
+bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name);
 
 typedef struct _mcmultiparttempfilelist
 {
@@ -914,6 +913,7 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 {
 	bool t_success = true;
 	bool t_blocked = true;
+	MCAutoStringRef t_temp_folder_string, t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;
 	char *t_temp_name = NULL;
@@ -924,7 +924,12 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 		t_success = MCMemoryNew(t_list_item);
 	
 	if (t_success)
-		t_success = MCS_create_temporary_file(p_temp_folder, TEMP_PREFIX, t_file_handle, t_temp_name);
+	{
+		/* UNCHECKED */ MCStringCreateWithCString(p_temp_folder, &t_temp_folder_string);
+		/* UNCHECKED */ MCStringCreateWithCString(t_temp_name, &t_temp_name_string);
+
+		t_success = MCS_create_temporary_file(*t_temp_folder_string, MCSTR(TEMP_PREFIX), t_file_handle, &t_temp_name_string);
+	}
 
 	if (t_success)
 	{
@@ -946,12 +951,15 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 
 void MCMultiPartRemoveTempFiles()
 {
-	MCMultiPartTempFileList *t_item;
 	while (s_temp_files != NULL)
 	{
-		MCS_unlink(s_temp_files->file_name);
+		MCAutoStringRef file_name_string;
+		/* UNCHECKED */ MCStringCreateWithCString(s_temp_files->file_name, &file_name_string);
+
+		MCS_unlink(*file_name_string);
 		MCCStringFree(s_temp_files->file_name);
 
+		MCMultiPartTempFileList *t_item;
 		t_item = s_temp_files;
 		s_temp_files = s_temp_files->next;
 		MCMemoryDelete(t_item);
