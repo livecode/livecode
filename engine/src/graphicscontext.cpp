@@ -192,7 +192,7 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 	else
 		t_effects . has_drop_shadow = false;	
 		
-	MCGContextBeginWithEffects(m_gcontext, t_effects);
+	MCGContextBeginWithEffects(m_gcontext, MCGRectangleMake(p_shape . x, p_shape . y, p_shape . width, p_shape . height), t_effects);
 	return true;
 }
 

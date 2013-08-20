@@ -17,6 +17,61 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+inline int32_t min(int32_t x, int32_t y)
+{
+	return x < y ? x : y;
+}
+
+inline int32_t max(int32_t x, int32_t y)
+{
+	return x > y ? x : y;
+}
+
+struct MCGIRectangle
+{
+	int32_t left;
+	int32_t top;
+	int32_t right;
+	int32_t bottom;
+};
+
+MCGIRectangle MCGIRectangleMake(int32_t left, int32_t top, int32_t right, int32_t bottom)
+{
+	MCGIRectangle r;
+	r . left = left;
+	r . top = top;
+	r . right = right;
+	r . bottom = bottom;
+	return r;
+}
+
+MCGIRectangle MCGRectangleComputeHull(const MCGRectangle& self)
+{
+	return MCGIRectangleMake((int)floor(self . origin . x), (int)floor(self . origin . y), (int)ceil(self . origin . x + self . size . width), (int)ceil(self . origin . y + self . size . height));
+}
+
+MCGIRectangle MCGIRectangleUnion(const MCGIRectangle& left, const MCGIRectangle& right)
+{
+	return MCGIRectangleMake(min(left . left, right . left), min(left . top, right . top), max(left . right, right . right), max(left . bottom, right . bottom));
+}
+
+MCGIRectangle MCGIRectangleIntersect(const MCGIRectangle& left, const MCGIRectangle& right)
+{
+	return MCGIRectangleMake(max(left . left, right . left), max(left . top, right . top), min(left . right, right . right), min(left . bottom, right . bottom));
+}
+
+MCGIRectangle MCGIRectangleOffset(const MCGIRectangle& self, int32_t dx, int32_t dy)
+{
+	return MCGIRectangleMake(self . left + dx, self . top + dy, self . right + dx, self . bottom + dy);
+}
+
+MCGIRectangle MCGIRectangleExpand(const MCGIRectangle& self, int32_t dx, int32_t dy)
+{
+	return MCGIRectangleMake(self . left - dx, self . top - dy, self . right + dx, self . bottom + dy);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static void MCGContextStateDestroy(MCGContextStateRef self)
 {
 	if (self != NULL)
@@ -832,12 +887,12 @@ public:
 
 	void clipRect(const SkRect& p_rect, SkRegion::Op p_op, bool p_antialias)
 	{
-		m_target_canvas -> clipRect(p_rect, p_op, p_antialias);
+		m_target_canvas -> clipRect(p_rect, p_op, false);
 	}
 	
 	void clipPath(const SkPath& p_path, SkRegion::Op p_op, bool p_antialias)
 	{
-		m_target_canvas -> clipPath(p_path, p_op, p_antialias);
+		m_target_canvas -> clipPath(p_path, p_op, false);
 	}
 	
 private:
@@ -926,8 +981,123 @@ void MCGContextBegin(MCGContextRef self)
 	self -> layer = t_new_layer;
 }
 
-void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects& effects)
+static MCGIRectangle compute_glow_clip(const MCGGlowEffect& self, const MCGIRectangle& p_shape, const MCGIRectangle& p_clip, const MCGAffineTransform& p_transform)
 {
+	MCGSize t_radii;
+	t_radii . width = self . size;
+	t_radii . height = self . size;
+	
+	MCGSize t_transformed_radii;
+	t_transformed_radii = MCGSizeApplyAffineTransform(t_radii, p_transform);
+	
+	return MCGIRectangleExpand(MCGIRectangleIntersect(p_shape, p_clip), ceil(t_radii . width), ceil(t_radii . height));
+}
+
+static MCGIRectangle compute_shadow_clip(const MCGShadowEffect& self, const MCGIRectangle& p_shape, const MCGIRectangle& p_clip, const MCGAffineTransform& p_transform)
+{
+	MCGSize t_offset;
+	t_offset . width = self . x_offset; //self . distance * cos(self . angle * M_PI / 180.0);
+	t_offset . height =  self . y_offset; //self . distance * sin(self . angle * M_PI / 180.0);
+	
+	MCGSize t_transformed_offset;
+	t_transformed_offset = MCGSizeApplyAffineTransform(t_offset, p_transform);
+	
+	MCGSize t_radii;
+	t_radii . width = self . size;
+	t_radii . height = self . size;
+	
+	MCGSize t_transformed_radii;
+	t_transformed_radii = MCGSizeApplyAffineTransform(t_radii, p_transform);
+	
+	return MCGIRectangleExpand(
+				MCGIRectangleIntersect(
+					p_shape,
+					MCGIRectangleUnion(
+						MCGIRectangleOffset(p_clip, floor(t_offset . width), floor(t_offset . height)),
+						MCGIRectangleOffset(p_clip, ceil(t_offset . width), ceil(t_offset . height)))),
+				ceil(t_radii . width), ceil(t_radii . height));
+}
+
+void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const MCGBitmapEffects& p_effects)
+{
+	if (!MCGContextIsValid(self))
+		return;
+		
+	MCGAffineTransform t_device_transform;
+	t_device_transform = MCGContextGetDeviceTransform(self);
+	
+	MCGIRectangle t_device_clip;
+	t_device_clip = MCGRectangleComputeHull(MCGContextGetDeviceClipBounds(self));
+
+	// First transform the shape rect by the total transform to get it's rectangle in device space.
+	MCGIRectangle t_device_shape;
+	t_device_shape = MCGRectangleComputeHull(MCGRectangleApplyAffineTransform(p_shape, t_device_transform));
+	
+	MCGIRectangle t_layer_clip;
+	t_layer_clip = MCGIRectangleIntersect(t_device_clip, t_device_shape);
+	
+	if (p_effects . has_drop_shadow)
+		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . drop_shadow, t_device_shape, t_device_clip, t_device_transform));
+	if (p_effects . has_inner_shadow)
+		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . inner_shadow, t_device_shape, t_device_clip, t_device_transform));
+	if (p_effects . has_outer_glow)
+		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . outer_glow, t_device_shape, t_device_clip, t_device_transform));
+	if (p_effects . has_inner_glow)
+		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . inner_glow, t_device_shape, t_device_clip, t_device_transform));
+		
+	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
+	
+	// Create a suitable bitmap.
+	SkBitmap t_new_bitmap;
+	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_device_clip . right - t_device_clip . left, t_device_clip . right - t_device_clip . left);
+	t_new_bitmap . setIsOpaque(false);
+	if (!t_new_bitmap . allocPixels())
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	// Clear the pixel buffer.
+	memset(t_new_bitmap . getPixels(), 0, t_new_bitmap . rowBytes() * t_new_bitmap . height());
+	
+	// We now create a canvas the same size as the device clip.
+	SkRefPtr<SkCanvas> t_new_canvas;
+	t_new_canvas = new SkCanvas(t_new_bitmap);
+	if (t_new_canvas == nil)
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	// Next translate the canvas by the translation factor of the matrix.
+	t_new_canvas -> translate(-t_device_clip . left, -t_device_clip . top);
+	
+	// Set the matrix.
+	t_new_canvas -> concat(self -> layer -> canvas -> getTotalMatrix());
+	
+	// Make a save point in the new canvas.
+	t_new_canvas -> save();
+	
+	// Set the current state as the layer being pt.
+	self -> state -> is_layer_begin_pt = true;
+	
+	// Push the current state onto the attribute stack.
+	MCGContextPushState(self);
+	self -> state -> opacity = 1.0;
+	self -> state -> blend_mode = kMCGBlendModeSourceOver;
+	
+	// Now create the layer.
+	MCGContextLayerRef t_new_layer;
+	if (!MCGContextLayerCreate(t_new_canvas . get(), t_new_layer))
+	{
+		self -> is_valid = false;
+		return;
+	}
+	
+	t_new_layer -> parent = self -> layer;
+	t_new_layer -> origin_x = t_device_clip . left;
+	t_new_layer -> origin_y = t_device_clip . top;
+	self -> layer = t_new_layer;
 }
 
 void MCGContextEnd(MCGContextRef self)

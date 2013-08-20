@@ -420,7 +420,7 @@ void MCGContextSetOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetBlendMode(MCGContextRef context, MCGBlendMode mode);
 
 void MCGContextBegin(MCGContextRef context);
-void MCGContextBeginWithEffects(MCGContextRef context, const MCGBitmapEffects &effects);
+void MCGContextBeginWithEffects(MCGContextRef context, MCGRectangle shape, const MCGBitmapEffects &effects);
 void MCGContextEnd(MCGContextRef context);
 
 void MCGContextClipToRect(MCGContextRef context, MCGRectangle rect);
@@ -535,6 +535,7 @@ MCGAffineTransform MCGAffineTransformInvert(const MCGAffineTransform& transform)
 
 MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTransform& p_transform);
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform);
+MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_size, const MCGAffineTransform& p_transform);
 
 ////////////////////////////////////////////////////////////////////////////////
 

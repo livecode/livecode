@@ -565,6 +565,14 @@ MCGPoint MCGPointApplyAffineTransform(const MCGPoint& p_point, const MCGAffineTr
 	return t_transformed_pt;
 }
 
+MCGSize MCGSizeApplyAffineTransform(const MCGSize& p_point, const MCGAffineTransform& p_transform)
+{
+	MCGSize t_transformed_pt;
+	t_transformed_pt . width = p_transform . a * p_point . width + p_transform . c * p_point . height;
+	t_transformed_pt . height = p_transform . b * p_point . width + p_transform . d * p_point . height;
+	return t_transformed_pt;
+}
+
 MCGRectangle MCGRectangleApplyAffineTransform(const MCGRectangle& p_rect, const MCGAffineTransform& p_transform)
 {
 	MCGRectangle t_transformed_rect;
