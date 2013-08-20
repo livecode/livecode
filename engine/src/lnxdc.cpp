@@ -152,11 +152,20 @@ GC MCScreenDC::getgc(void)
 	return ( destdepth == 1 ? gc1 : gc );
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
 	return MCFontlistGetCurrent() -> ctxt_textwidth(f, s, l, p_unicode_override);
 }
+
+// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+bool MCScreenDC::textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask)
+{
+	return MCFontlistGetCurrent() -> ctxt_textmask(f, s, len, p_unicode_override, clip, transform, r_mask);
+}
+
+///////////////////////////////////////////////////////////////////////////////
 
 bool MCScreenDC::apply_workarea()
 {

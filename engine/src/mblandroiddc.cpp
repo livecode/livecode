@@ -288,6 +288,13 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length
 	return android_font_measure_text(f->fid, p_string, p_length, f->unicode || p_unicode_override);
 }
 
+// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+//  Not currently use on Android - we use Skia to draw text.
+bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
+{
+    return false;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::beep(void)

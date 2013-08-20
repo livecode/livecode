@@ -344,6 +344,7 @@ MCGSize MCImageGetSize(MCGImageRef image);
 
 bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& info, MCGMaskRef& r_mask);
 void MCGMaskRelease(MCGMaskRef mask);
+MCGRectangle MCGMaskGetBounds(MCGMaskRef mask);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -508,7 +509,7 @@ void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRec
 void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter);
 
-void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size);
+void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
 MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size);
 
 void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);

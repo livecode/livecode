@@ -89,18 +89,21 @@ MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
 {
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
+	m_background = getblack();
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p_alpha)
 {
 	/* UNCHECKED */ MCGContextCreate(p_width, p_height, p_alpha, m_gcontext);
 	m_pattern = nil;
+	m_background = getblack();
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, uint32_t p_stride, void *p_pixels, bool p_alpha)
 {
 	/* UNCHECKED */ MCGContextCreateWithPixels(p_width, p_height, p_stride, p_pixels, p_alpha, m_gcontext);
 	m_pattern = nil;
+	m_background = getblack();
 }
 
 MCGraphicsContext::~MCGraphicsContext()
@@ -354,7 +357,7 @@ void MCGraphicsContext::setforeground(const MCColor& c)
 
 void MCGraphicsContext::setbackground(const MCColor& c)
 {
-
+	m_background = c;
 }
 
 void MCGraphicsContext::setdashes(uint16_t p_offset, const uint8_t *p_dashes, uint16_t p_length)
@@ -754,22 +757,50 @@ void MCGraphicsContext::setfont(const char *fontname, uint2 fontsize, uint2 font
 {
 }
 
+void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
+{
+}
+
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include "mblandroidtypeface.h"
+
+// On Android, uses Skia's drawing routines directly to render text.
 void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
 {
-	/*MCExecPoint ep;
+	MCExecPoint ep;
 	ep . setsvalue(MCString(s, length));	
 	if (f -> unicode || p_unicode_override)
 		ep . utf16toutf8();
 	else
-		ep . nativetoutf8();	
-	const MCString &t_utf_string = ep . getsvalue();	
+		ep . nativetoutf8();
 	
-	MCGPoint t_loc;
-	t_loc . x = x;
-	t_loc . y = y;
-	
-	MCGContextDrawText(m_gcontext, t_utf_string . getstring(), t_utf_string . getlength(), t_loc, f -> size);*/
-	
+	MCAndroidFont *t_font;
+	t_font = (MCAndroidFont*)f -> fid;
+	MCGContextDrawText(m_gcontext, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font -> size, t_font -> typeface);
+}
+
+int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
+{
+	MCExecPoint ep;
+	ep . setsvalue(MCString(s, length));	
+	if (f -> unicode || p_unicode_override)
+		ep . utf16toutf8();
+	else
+		ep . nativetoutf8();
+    
+    MCAndroidFont *t_font;
+	t_font = (MCAndroidFont*)f -> fid;
+	return MCGContextMeasureText(m_gcontext, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font -> size);
+}
+
+#else
+
+// On all other platforms, use platform specific routines to render the text into a mask
+// making sure to take into account the context's current transform and clip.
+// Then render the mask into the current graphics context.
+void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
+{
 	bool t_success;
 	t_success = true;
 	
@@ -780,17 +811,16 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 	{		
 		MCGAffineTransform t_gtransform;
 		t_gtransform = MCGContextGetDeviceTransform(m_gcontext);
-
+		
 		MCGPoint t_text_origin;
 		t_text_origin = MCGPointApplyAffineTransform(MCGPointMake(x, y), t_gtransform);
-
+		
 		MCGFloat t_offset_x, t_offset_y;
-		MCGFloat t_temp;
 		t_offset_x = modff(t_text_origin . x, &t_tx);
 		t_offset_y = modff(t_text_origin . y, &t_ty);
 		t_gtransform . tx = t_offset_x;
 		t_gtransform . ty = t_offset_y;
-
+		
 		MCGRectangle t_gclip;
 		t_gclip = MCGContextGetDeviceClipBounds(m_gcontext);
 		
@@ -803,38 +833,35 @@ void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MC
 		t_clip . x -= t_tx;
 		t_clip . y -= t_ty;
 		
-		//t_tx -= t_clip . x;
-		//t_ty -= t_clip . y;
-
 		t_success = MCscreen -> textmask(f, s, length, p_unicode_override, t_clip, t_gtransform, t_mask);
 	}
 	
-	if (t_success && t_mask!= nil)
+	if (t_success && t_mask != nil)
 	{
 		if (image)
 		{
+			MCGRectangle t_bounds;
+			t_bounds = MCGMaskGetBounds(t_mask);
+			t_bounds . origin . x += t_tx;
+			t_bounds . origin . y += t_ty;
+			
+			MCGContextSave(m_gcontext);
+			MCGContextSetFillRGBAColor(m_gcontext, (m_background . red >> 8) / 255.0f, (m_background . green >> 8) / 255.0f, (m_background . blue >> 8) / 255.0f, 1.0f);
+			MCGContextAddRectangle(m_gcontext, t_bounds);
+			MCGContextFill(m_gcontext);
+			MCGContextRestore(m_gcontext);
 		}
 		MCGContextDrawDeviceMask(m_gcontext, t_mask, t_tx, t_ty);	
 		MCGMaskRelease(t_mask);
 	}
 }
 
-void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
-{
-}
-
 int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
 {
-	MCExecPoint ep;
-	ep . setsvalue(MCString(s, length));	
-	if (f -> unicode || p_unicode_override)
-		ep . utf16toutf8();
-	else
-		ep . nativetoutf8();	
-	const MCString &t_utf_string = ep . getsvalue();
-	
-	return MCGContextMeasureText(m_gcontext, t_utf_string . getstring(), t_utf_string . getlength(), f -> size);
+	return MCscreen -> textwidth(f, s, length, p_unicode_override);
 }
+
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

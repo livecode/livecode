@@ -404,8 +404,23 @@ bool MCGMaskCreateWithInfoAndRelease(const MCGDeviceMaskInfo& p_info, MCGMaskRef
 
 void MCGMaskRelease(MCGMaskRef self)
 {
-	MCMemoryDelete(self -> mask . fImage);
+	if (self != NULL && self -> mask . fImage != NULL)
+		SkMask::FreeImage(self -> mask . fImage);
 	MCMemoryDelete(self);
+}
+
+MCGRectangle MCGMaskGetBounds(MCGMaskRef self)
+{
+	if (self == NULL)
+		return MCGRectangleMake(0.0f, 0.0f, 0.0f, 0.0f);
+	
+	MCGRectangle t_bounds;
+	t_bounds . origin . x = (MCGFloat)self -> mask . fBounds . x();
+	t_bounds . origin . y = (MCGFloat)self -> mask . fBounds . y();
+	t_bounds . size . width = (MCGFloat)self -> mask . fBounds . width();
+	t_bounds . size . height = (MCGFloat)self -> mask . fBounds . height();
+	
+	return t_bounds;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

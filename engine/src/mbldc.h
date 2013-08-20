@@ -93,6 +93,9 @@ public:
 	Boolean getwindowgeometry(Window w, MCRectangle &drect);
 
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
+    
+    // MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
+    bool textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
 
