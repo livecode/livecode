@@ -172,7 +172,11 @@ void MCS_launch_url(MCStringRef p_document_string)
 /* WRAPPER */
 Boolean MCS_getspecialfolder(MCNameRef p_type, MCStringRef& r_path)
 {
-    return MCsystem -> GetStandardFolder(p_type, r_path);
+    MCAutoStringRef t_path;
+    if (!MCsystem -> GetStandardFolder(p_type, &t_path))
+        return False;
+    
+    return MCS_pathfromnative(*t_path, r_path);
 }
 
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
@@ -230,6 +234,25 @@ bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
+/* LEGACY */
+void MCS_query_registry(MCExecPoint &dest)
+{
+	MCAutoStringRef t_key;
+	/* UNCHECKED */ dest.copyasstringref(&t_key);
+	MCAutoStringRef t_value, t_type, t_error;
+	/* UNCHECKED */ MCS_query_registry(*t_key, &t_value, &t_type, &t_error);
+	if (*t_error != nil)
+	{
+		dest.clear();
+		/* UNCHECKED */ MCresult->setvalueref(*t_error);
+	}
+	else
+	{
+		dest.setvalueref(*t_value);
+		MCresult->clear();
+	}
+}
+
 bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
 {
     MCWindowsSystemServiceInterface *t_service;
@@ -258,7 +281,13 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
     t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
     
     if (t_service != nil)
-        return t_service -> ListRegistry(p_path, r_list, r_error);
+    {
+        MCAutoStringRef t_native_path;
+        if (!MCS_pathtonative(p_path, &t_native_path))
+            return false;
+        
+        return t_service -> ListRegistry(*t_native_path, r_list, r_error);        
+    }
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
@@ -289,54 +318,66 @@ bool MCS_getaddress(MCStringRef& r_address)
 
 Boolean MCS_mkdir(MCStringRef p_path)
 {
+    MCAutoStringRef t_native_path;
 	MCAutoStringRef t_resolved_path;
     
     if (!MCS_resolvepath(p_path, &t_resolved_path))
         return False;
-	
-	return MCsystem -> CreateFolder(*t_resolved_path);
+    
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
+        return False;
+    
+	if (MCsystem -> CreateFolder(*t_native_path) == False)
+        return False;
 }
 
 Boolean MCS_rmdir(MCStringRef p_path)
 {
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
     
 	if (!MCS_resolvepath(p_path, &t_resolved_path))
         return False;
+    
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
+        return False;
 	
-	return MCsystem -> DeleteFolder(*t_resolved_path);
+	return MCsystem -> DeleteFolder(*t_native_path);
 }
 
 Boolean MCS_rename(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
+    MCAutoStringRef t_old_native_path, t_new_native_path;
     
 	if (!MCS_resolvepath(p_old_name, &t_old_resolved_path) || !MCS_resolvepath(p_new_name, &t_new_resolved_path))
         return False;
+    
+    if (!MCS_pathtonative(*t_old_resolved_path, &t_old_native_path) || !MCS_pathtonative(*t_new_resolved_path, &t_new_native_path))
+        return False;
 	
-	return MCsystem -> RenameFileOrFolder(*t_old_resolved_path, *t_new_resolved_path);
+	return MCsystem -> RenameFileOrFolder(*t_old_native_path, *t_new_native_path);
 }
 
 /* LEGACY */
 bool MCS_unlink(const char *p_path)
 {
-    
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
+	MCAutoStringRef t_resolved_path;
+	if (!MCStringCreateWithCString(p_path, &t_resolved_path))
+        return false;
 	
-	bool t_result;
-	t_result = MCsystem -> DeleteFile(t_resolved_path);
-	
-	delete t_resolved_path;
-	
-	return t_result;
+	return MCS_unlink(*t_resolved_path);
 }
 
 Boolean MCS_unlink(MCStringRef p_path)
 {
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
     
 	if (!MCS_resolvepath(p_path, &t_resolved_path))
+        return False;
+    
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return False;
 	
 	return MCsystem -> DeleteFile(*t_resolved_path);
@@ -345,18 +386,26 @@ Boolean MCS_unlink(MCStringRef p_path)
 Boolean MCS_backup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
     MCAutoStringRef t_old_resolved, t_new_resolved;
+    MCAutoStringRef t_old_native, t_new_native;
     
     if (!MCS_resolvepath(p_old_name, &t_old_resolved) || !MCS_resolvepath(p_new_name, &t_new_resolved))
         return False;
+    
+    if (!MCS_pathtonative(*t_old_resolved, &t_old_native) || !MCS_pathtonative(*t_new_resolved, &t_new_native))
+        return False;
         
-	return MCsystem -> BackupFile(*t_old_resolved, *t_new_resolved);
+	return MCsystem -> BackupFile(*t_old_native, *t_new_native);
 }
 
 Boolean MCS_unbackup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
     MCAutoStringRef t_old_resolved, t_new_resolved;
+    MCAutoStringRef t_old_native, t_new_native;
     
     if (!MCS_resolvepath(p_old_name, &t_old_resolved) || !MCS_resolvepath(p_new_name, &t_new_resolved))
+        return False;
+    
+    if (!MCS_pathtonative(*t_old_resolved, &t_old_native) || !MCS_pathtonative(*t_new_resolved, &t_new_native))
         return False;
     
 	return MCsystem -> UnbackupFile(*t_old_resolved, *t_new_resolved);
@@ -364,19 +413,27 @@ Boolean MCS_unbackup(MCStringRef p_old_name, MCStringRef p_new_name)
 
 Boolean MCS_createalias(MCStringRef p_target, MCStringRef p_alias)
 {
-    MCAutoStringRef t_target_resolved;
+    MCAutoStringRef t_target_resolved, t_alias_resolved;
+    MCAutoStringRef t_target_native, t_alias_native;
     
-    if (!MCS_resolvepath(p_target, &t_target_resolved))
+    if (!MCS_resolvepath(p_target, &t_target_resolved) || !MCS_resolvepath(p_target, &t_alias_resolved))
         return False;
     
-	return MCsystem -> CreateAlias(*t_target_resolved, p_alias);
+    if (!MCS_pathtonative(*t_target_resolved, &t_target_native) || !MCS_pathtonative(*t_alias_resolved, &t_alias_native))
+        return False;
+    
+	return MCsystem -> CreateAlias(*t_target_resolved, *t_alias_resolved);
 }
 
 Boolean MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
     
     if (!MCS_resolvepath(p_path, &t_resolved_path))
+        return False;
+    
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
         return False;
     
 	return MCsystem -> ResolveAlias(*t_resolved_path, r_resolved);
@@ -388,7 +445,14 @@ bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id,
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        return t_service -> SetResource(p_source, p_source, p_id, p_name, p_flags, p_value, r_error);
+    {
+        MCAutoStringRef t_native_path;
+        
+        if (!MCS_pathtonative(p_source, &t_native_path))
+            return false;
+        
+        return t_service -> SetResource(*t_native_path, p_type, p_id, p_name, p_flags, p_value, r_error);
+    }
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
@@ -398,7 +462,14 @@ bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_nam
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        return t_service -> GetResource(p_source, p_type, p_name, r_value, r_error);
+    {
+        MCAutoStringRef t_native_path;
+        
+        if (!MCS_pathtonative(p_source, &t_native_path))
+            return false;
+        
+        return t_service -> GetResource(*t_native_path, p_type, p_name, r_value, r_error);
+    }
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
@@ -406,6 +477,18 @@ bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_nam
 bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
 					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
 {
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    if (t_service != nil)
+    {
+        MCAutoStringRef t_native_source, t_native_dest;
+        
+        if (!MCS_pathtonative(p_source, &t_native_source) || !MCS_pathtonative(p_dest, &t_native_dest))
+            return false;
+        
+        return t_service -> CopyResource(*t_native_source, *t_native_dest, p_type, p_name, p_newid, r_error);
+    }
+    
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
@@ -414,7 +497,14 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        t_service -> CopyResourceFork(p_source, p_dst);
+    {
+        MCAutoStringRef t_native_source, t_native_dest;
+        
+        if (!MCS_pathtonative(p_source, &t_native_source) || !MCS_pathtonative(p_dst, &t_native_dest))
+            return;
+        
+        t_service -> CopyResourceFork(*t_native_source, *t_native_dest);
+    }
 }
 
 bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
@@ -422,7 +512,14 @@ bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        return t_service -> DeleteResource(p_source, p_type, p_name, r_error);
+    {
+        MCAutoStringRef t_native_source;
+        
+        if (!MCS_pathtonative(p_source, &t_native_source))
+            return false;
+        
+        return t_service -> DeleteResource(*t_native_source, p_type, p_name, r_error);
+    }
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
@@ -432,7 +529,14 @@ bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_lis
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        return t_service -> GetResources(p_source, p_type, r_list, r_error);
+    {
+        MCAutoStringRef t_native_path;
+        
+        if (!MCS_pathtonative(p_source, &t_native_path))
+            return false;
+        
+        return t_service -> GetResources(*t_native_path, p_type, r_list, r_error);
+    }
     
 	return MCStringCreateWithCString("not supported", r_error);
 }
@@ -442,7 +546,15 @@ void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        t_service -> LoadResFile(p_filename, r_data);
+    {
+        MCAutoStringRef t_resolved_path;
+        MCAutoStringRef t_native_path;
+        
+        if (!MCS_resolvepath(p_filename, &t_resolved_path) || !MCS_pathtonative(*t_resolved_path, &t_native_path))
+            return;
+        
+        t_service -> LoadResFile(*t_native_path, r_data);
+    }
 }
 
 void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
@@ -450,26 +562,55 @@ void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     if (t_service != nil)
-        t_service -> SaveResFile(p_path, p_data);
+    {
+        MCAutoStringRef t_resolved_path;
+        MCAutoStringRef t_native_path;
+        
+        if (!MCS_resolvepath(p_path, &t_resolved_path) || !MCS_pathtonative(*t_resolved_path, &t_native_path))
+            return;
+        
+        t_service -> SaveResFile(*t_native_path, p_data);
+    }
 }
 
 bool MCS_longfilepath(MCStringRef p_path, MCStringRef& r_long_path)
 {
-	return MCsystem->LongFilePath(p_path, r_long_path);
+    MCAutoStringRef t_native_path, t_native_long_path;
+    
+    if (!MCS_pathtonative(p_path, &t_native_path))
+        return false;
+    
+    if (!MCsystem->LongFilePath(*t_native_path, &t_native_long_path))
+        return false;
+    
+    return MCS_pathfromnative(*t_native_long_path, r_long_path);
 }
 
 bool MCS_shortfilepath(MCStringRef p_path, MCStringRef& r_short_path)
 {
-	return MCsystem->ShortFilePath(p_path, r_short_path);
+    MCAutoStringRef t_native_path, t_native_long_path;
+    
+    if (!MCS_pathtonative(p_path, &t_native_path))
+        return false;
+    
+    if (!MCsystem->ShortFilePath(*t_native_path, &t_native_long_path))
+        return false;
+    
+    return MCS_pathfromnative(*t_native_long_path, r_short_path);
 }
 
 Boolean MCS_setcurdir(MCStringRef p_path)
 {
-	MCAutoStringRef t_new_path;
-	if (!MCS_resolvepath(p_path, &t_new_path))
+	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
+    
+	if (!MCS_resolvepath(p_path, &t_resolved_path))
         return False;
     
-    return MCsystem -> SetCurrentFolder(*t_new_path);
+    if (!MCS_pathtonative(*t_resolved_path, &t_native_path))
+        return False;
+    
+    return MCsystem -> SetCurrentFolder(*t_native_path);
 }
 
 
@@ -486,9 +627,11 @@ Boolean MCS_setcurdir(MCStringRef p_path)
 
 void MCS_getcurdir(MCStringRef& r_path)
 {
-	MCAutoStringRef t_current;
-    MCsystem->GetCurrentFolder(&t_current);
-    MCsystem->PathFromNative(*t_current, r_path);
+	MCAutoStringRef t_current_native;
+    MCsystem->GetCurrentFolder(&t_current_native);
+    
+    if (!MCsystem->PathFromNative(*t_current_native, r_path))
+        r_path = MCValueRetain(kMCEmptyString);
 }
 
 struct MCS_getentries_state
@@ -551,6 +694,9 @@ struct MCS_getentries_state
 
 bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {
+    MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
+    
 	MCS_getentries_state t_state;
 	t_state . files = p_files;
 	t_state . details = p_detailed;
@@ -569,7 +715,13 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 
 Boolean MCS_chmod(MCStringRef p_path, uint2 p_mask)
 {
-	return MCsystem -> ChangePermissions(p_path, p_mask);
+    MCAutoStringRef t_resolved;
+    MCAutoStringRef t_native;
+    
+    if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
+        return False;
+    
+	return MCsystem -> ChangePermissions(*t_native, p_mask);
 }
 
 int4 MCS_getumask(void)
@@ -589,13 +741,15 @@ uint2 MCS_umask(uint2 p_mask)
 Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 {
 	MCAutoStringRef t_resolved;
-	if (!MCS_resolvepath(p_path, &t_resolved))
+    MCAutoStringRef t_native;
+	if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
 		return False;
+    
     bool t_success;
 	if (p_is_file)
-		t_success = MCsystem->FileExists(*t_resolved);
+		t_success = MCsystem->FileExists(*t_native);
 	else
-		t_success = MCsystem->FolderExists(*t_resolved);
+		t_success = MCsystem->FolderExists(*t_native);
     
     if (!t_success)
         return False;
@@ -605,7 +759,12 @@ Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 
 Boolean MCS_noperm(MCStringRef p_path)
 {
-	return MCsystem -> FileNotAccessible(p_path);
+    MCAutoStringRef t_resolved;
+    MCAutoStringRef t_native;
+    if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
+        return False;
+    
+	return MCsystem -> FileNotAccessible(*t_native);
 }
 
 Boolean MCS_getdrives(MCStringRef& r_drives)
@@ -623,7 +782,16 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 #ifdef /* MCS_resolvepath */ LEGACY_SYSTEM
 	return MCsystem -> ResolvePath(p_path, r_resolved);
 #endif /* MCS_resolvepath */
-	return MCsystem -> ResolvePath(p_path, r_resolved);
+    MCAutoStringRef t_native;
+    MCAutoStringRef t_native_resolved;
+    
+    if (!MCS_pathtonative(p_path, &t_native))
+        return false;
+    
+	if (!MCsystem -> ResolvePath(*t_native, &t_native_resolved))
+        return false;
+    
+    return MCS_pathfromnative(*t_native_resolved, r_resolved);
 }
 
 bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path)
@@ -1020,15 +1188,18 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
 
 IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_driver, uint32_t p_offset)
 {
-	MCAutoStringRef t_resolved_path;
-	MCS_resolvepath(path, &t_resolved_path);
+	MCAutoStringRef t_resolved;
+    MCAutoStringRef t_native;
+    
+	if (!(MCS_resolvepath(path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
+        return NULL;
 	
 	IO_handle t_handle;
 	if (!p_driver)
-		t_handle = MCsystem -> OpenFile(*t_resolved_path, p_mode, p_map && MCmmap, p_offset);
+		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap, p_offset);
 	else
 	{
-		t_handle = MCsystem -> OpenDevice(*t_resolved_path, MCserialcontrolsettings, p_offset);
+		t_handle = MCsystem -> OpenDevice(*t_native, MCserialcontrolsettings, p_offset);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
@@ -1051,8 +1222,6 @@ static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
 void MCS_close(IO_handle& p_stream)
 {
 	p_stream -> handle -> Close();
-	delete p_stream;
-	p_stream = NULL;
 }
 
 IO_stat MCS_putback(char p_char, IO_handle p_stream)
@@ -1144,11 +1313,13 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	}
     
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
 	
-	MCS_resolvepath(p_filename, &t_resolved_path);
+	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+        return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
 	
 	if (t_file == NULL)
 	{
@@ -1206,11 +1377,13 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	}
     
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
 	
-	MCS_resolvepath(p_filename, &t_resolved_path);
+	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+        return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
 	
 	if (t_file == NULL)
 	{
@@ -1259,11 +1432,13 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 {
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
 	
-	MCS_resolvepath(p_filename, &t_resolved_path);
+	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+        return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
 	
 	if (t_file == NULL)
 	{
@@ -1294,11 +1469,13 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
 	MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
 	
-	MCS_resolvepath(p_filename, &t_resolved_path);
+	if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+        return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
 	
 	if (t_file == NULL)
 	{
@@ -1454,7 +1631,7 @@ Boolean MCS_eof(IO_handle p_stream)
 
 bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 {
-	
+
 	bool t_result;
 	t_result = MCS_resolvepath(p_path, r_path);
 	MCAutoStringRef t_out_path;
@@ -1715,10 +1892,16 @@ bool MCS_hostaddress(MCStringRef& r_host_address)
 
 MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
-	return MCsystem -> LoadModule(p_filename);
+    MCAutoStringRef t_resolved_path;
+    MCAutoStringRef t_native_path;
+    
+    if (!(MCS_resolvepath(p_filename, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
+        return NULL;
+    
+	return MCsystem -> LoadModule(*t_native_path);
 }
 
-void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol)
+void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
 	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
 }

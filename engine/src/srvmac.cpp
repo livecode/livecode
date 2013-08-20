@@ -64,10 +64,28 @@ extern "C" CFStringRef CFStringCreateWithBytesNoCopy(CFAllocatorRef alloc, const
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCStdioFileHandle *Open(const char *p_path, const char *p_mode)
+	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
 	{
 		FILE *t_stream;
-		t_stream = fopen(p_path, p_mode);
+        
+        switch(p_mode)
+        {
+            case kMCSystemFileModeRead:
+                t_stream = fopen(*t_path_utf, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fopen(*t_path_utf, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeAppend:
+                t_stream = fopen(*t_path_utf, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fopen(*t_path_utf, IO_WRITE_MODE);
+                break;
+            default:
+                t_stream = NULL;
+        }
+        
 		if (t_stream == NULL)
 			return NULL;
 		
@@ -78,10 +96,28 @@ public:
 		return t_handle;
 	}
 	
-	static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
+	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
 	{
 		FILE *t_stream;
-		t_stream = fdopen(fd, p_mode);
+        
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                t_stream = fdopen(fd, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                t_stream = fdopen(fd, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fdopen(fd, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fdopen(fd, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
+        
 		if (t_stream == NULL)
 			return NULL;
 		
@@ -94,7 +130,6 @@ public:
 		t_handle -> m_stream = t_stream;
 		
 		return t_handle;
-		
 	}
 	
 	virtual void Close(void)
@@ -318,9 +353,9 @@ struct MCMacSystem: public MCSystemInterface
 		return rmdir(MCStringGetCString(p_path)) == 0;
 	}
 	
-	virtual bool DeleteFile(const char *p_path)
+	virtual bool DeleteFile(MCStringRef p_path)
 	{
-		return unlink(p_path) == 0;
+		return unlink(MCStringGetCString(p_path)) == 0;
 	}
 	
 	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
@@ -457,9 +492,9 @@ struct MCMacSystem: public MCSystemInterface
 		return t_result;
 	}
 	
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle* p_module, MCStringRef p_symbol)
 	{
-		return dlsym(p_module, p_symbol);
+		return dlsym((void *)p_module, MCStringGetCString(p_symbol));
 	}
 	
 	virtual void UnloadModule(void *p_module)

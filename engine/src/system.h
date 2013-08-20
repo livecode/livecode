@@ -106,10 +106,16 @@ struct MCWindowsSystemServiceInterface: public MCServiceInterface
     virtual bool SetRegistry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error) = 0;
     virtual bool DeleteRegistry(MCStringRef p_key, MCStringRef& r_error) = 0;
     virtual bool ListRegistry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error) = 0;
+    
+    virtual void ResetTime() = 0;
 };
 
 struct MCLinuxSystemServiceInterface
 {
+    virtual bool ExecCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
+    virtual bool LocaleDateInfo(MCStringRef &r_dateInfo) = 0;
+    virtual bool RawClose() = 0;
+    virtual bool RawOpen(MCStringRef& p_path) = 0;
 };
 
 struct MCSystemInterface
@@ -139,7 +145,7 @@ struct MCSystemInterface
 	virtual Boolean CreateFolder(MCStringRef p_path) = 0;
 	virtual Boolean DeleteFolder(MCStringRef p_path) = 0;
 	
-	/* LEGACY */ virtual bool DeleteFile(const char *p_path) = 0;
+//	/* LEGACY */ virtual bool DeleteFile(const char *p_path) = 0;
 	virtual Boolean DeleteFile(MCStringRef p_path) = 0;
 	
 	virtual Boolean RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
@@ -178,7 +184,7 @@ struct MCSystemInterface
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;
-	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, const char *p_symbol) = 0;
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
 	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list) = 0;

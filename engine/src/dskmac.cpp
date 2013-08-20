@@ -1829,9 +1829,13 @@ public:
 	}
 	return IO_NORMAL;
 #endif /* MCS_sync_dsk_mac */
-		int64_t t_pos;
-		t_pos = ftello(m_stream);
-		return fseeko(m_stream, t_pos, SEEK_SET) == 0;
+        if (m_stream != NULL)
+        {
+            int64_t t_pos;
+            t_pos = ftello(m_stream);
+            return fseeko(m_stream, t_pos, SEEK_SET) == 0;
+        }
+        return true;
 	}
 	
 	virtual bool Flush(void)
@@ -1843,7 +1847,10 @@ public:
 			return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_flush_dsk_mac */
-		return fflush(m_stream) == 0;
+        if (m_stream != NULL)
+            return fflush(m_stream) == 0;
+        
+        return true;
 	}
 	
 	virtual bool PutBack(char p_char)
@@ -1857,7 +1864,13 @@ public:
 		
 	return IO_NORMAL;
 #endif /* MCS_putback_dsk_mac */
-		return ungetc(p_char, m_stream) != EOF;
+        if (m_serialIn != 0 || m_stream == NULL)
+            return Seek(-1, 0);
+        
+        if (ungetc(p_char, m_stream) != p_char)
+            return false;
+        
+        return true;
 	}
 	
 	virtual int64_t Tell(void)
@@ -2148,7 +2161,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             else
                 SetResAttrs(rh, newflags);
         }
-        MCS_closeresourcefile(resFileRefNum);
+        CloseResFile(resFileRefNum);
         
         if (!MCresult -> isclear())
         {
@@ -2243,7 +2256,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         if (rh == NULL)
         {
             errno = ResError();
-            MCS_closeresourcefile(resFileRefNum);
+            CloseResFile(resFileRefNum);
             MCresult -> sets("can't find specified resource");
         }
         
@@ -2259,7 +2272,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             else
                 t_success = MCStringCreateWithNativeChars((char_t*)(*rh), resLength, r_value);
             
-            MCS_closeresourcefile(resFileRefNum);
+            CloseResFile(resFileRefNum);
         }
         
         if (!MCresult -> isclear())
@@ -2710,7 +2723,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             DisposeHandle(rh);
         }
         
-        MCS_closeresourcefile(rfRefNum);
+        CloseResFile(rfRefNum);
         if (MCresult->isclear())
             return true;
         
@@ -3487,7 +3500,7 @@ struct MCMacDesktop: public MCSystemInterface
         
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
-        if (!MCS_isatty(0))
+        if (!IsATTY(0))
             MCS_nodelay(0);
         
         setlocale(LC_ALL, MCnullstring);
@@ -3526,7 +3539,7 @@ struct MCMacDesktop: public MCSystemInterface
         }
         
         MCAutoStringRef dptr;
-        MCS_getcurdir(&dptr);
+        GetCurrentFolder(&dptr);
         if (MCStringGetLength(*dptr) <= 1)
         { // if root, then started from Finder
             SInt16 vRefNum;
@@ -3540,7 +3553,7 @@ struct MCMacDesktop: public MCSystemInterface
             strcat(newpath, "/../../../");
             MCAutoStringRef t_new_path_auto;
             /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
-            MCS_setcurdir(*t_new_path_auto);
+            /* UNCHECKED */ SetCurrentFolder(*t_new_path_auto);
             delete tpath;
             delete newpath;
         }
@@ -3648,7 +3661,7 @@ struct MCMacDesktop: public MCSystemInterface
     
 	virtual real64_t GetCurrentTime(void)
     {
-#ifdef /* MCS_time */ LEGACY_SYSTEM
+#ifdef /* MCS_time_dsk_mac */ LEGACY_SYSTEM
 	struct timezone tz;
 	struct timeval tv;
 
@@ -3656,7 +3669,7 @@ struct MCMacDesktop: public MCSystemInterface
 	curtime = tv.tv_sec + (real8)tv.tv_usec / 1000000.0;
 
 	return curtime;
-#endif /* MCS_time */
+#endif /* MCS_time_dsk_mac */
         struct timezone tz;
         struct timeval tv;
         
@@ -3672,7 +3685,7 @@ struct MCMacDesktop: public MCSystemInterface
     }
 	virtual bool GetMachine(MCStringRef& r_string)
     {
-#ifdef /* MCS_getmachine */ LEGACY_SYSTEM
+#ifdef /* MCS_getmachine_dsk_mac */ LEGACY_SYSTEM
 	static Str255 machineName;
 	long response;
 	if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
@@ -3685,7 +3698,7 @@ struct MCMacDesktop: public MCSystemInterface
 		}
 	}
 	return MCStringCopy(MCNameGetString(MCN_unknown), r_string);
-#endif /* MCS_getmachine */
+#endif /* MCS_getmachine_dsk_mac */
         static Str255 machineName;
         long response;
         if ((errno = Gestalt(gestaltMachineType, &response)) == noErr)
@@ -3701,13 +3714,13 @@ struct MCMacDesktop: public MCSystemInterface
     }
 	virtual MCNameRef GetProcessor(void)
     {
-#ifdef /* MCS_getprocessor */ LEGACY_SYSTEM//get machine processor
+#ifdef /* MCS_getprocessor_dsk_mac */ LEGACY_SYSTEM//get machine processor
 #ifdef __LITTLE_ENDIAN__
 	return MCN_x86;
 #else
     return MCN_motorola_powerpc;
 #endif
-#endif /* MCS_getprocessor *///get machine processor
+#endif /* MCS_getprocessor_dsk_mac *///get machine processor
 #ifdef __LITTLE_ENDIAN__
         return MCN_x86;
 #else
@@ -3716,11 +3729,11 @@ struct MCMacDesktop: public MCSystemInterface
     }
 	virtual bool GetAddress(MCStringRef& r_address)
     {
-#ifdef /* MCS_getaddress */ LEGACY_SYSTEM
+#ifdef /* MCS_getaddress_dsk_mac */ LEGACY_SYSTEM
 	static struct utsname u;
 	uname(&u);
 	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
-#endif /* MCS_getaddress */
+#endif /* MCS_getaddress_dsk_mac */
         static struct utsname u;
         uname(&u);
         return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
@@ -3728,39 +3741,50 @@ struct MCMacDesktop: public MCSystemInterface
     
 	virtual uint32_t GetProcessId(void)
     {
-#ifdef /* MCS_getpid */ LEGACY_SYSTEM
+#ifdef /* MCS_getpid_dsk_mac */ LEGACY_SYSTEM
 	return getpid();
-#endif /* MCS_getpid */
+#endif /* MCS_getpid_dsk_mac */
         return getpid();
     }
 	
 	virtual void Alarm(real64_t p_when)
     {
-#ifdef /* MCS_alarm */ LEGACY_SYSTEM
+#ifdef /* MCS_alarm_dsk_mac */ LEGACY_SYSTEM
     //is used for checking event loop periodically
 	// InsTime() or
 	//PrimeTime(pass handle to a function, in the function set MCalarm to True)
-#endif /* MCS_alarm */
+#endif /* MCS_alarm_dsk_mac */
     }
     
 	virtual void Sleep(real64_t p_duration)
     {
-#ifdef /* MCS_sleep */ LEGACY_SYSTEM
+#ifdef /* MCS_sleep_dsk_mac */ LEGACY_SYSTEM
 	unsigned long finalTicks;
 	Delay((unsigned long)duration * 60, &finalTicks);
-#endif /* MCS_sleep */
+#endif /* MCS_sleep_dsk_mac */
         unsigned long finalTicks;
         Delay((unsigned long)p_duration * 60, &finalTicks);
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
     {
-        
+#ifdef /* MCS_setenv_dsk_mac */ LEGACY_SYSTEM
+	setenv(name, value, True);
+
+#endif /* MCS_setenv_dsk_mac */
+#ifdef /* MCS_unsetenv_dsk_mac */ LEGACY_SYSTEM
+	unsetenv(name);
+
+#endif /* MCS_unsetenv_dsk_mac */
+        setenv(MCStringGetCString(p_name), MCStringGetCString(p_value), True);
     }
     
 	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
     {
-        return false;
+#ifdef /* MCS_getenv_dsk_mac */ LEGACY_SYSTEM
+	return getenv(name); //always returns NULL under CodeWarrier env.
+#endif /* MCS_getenv_dsk_mac */
+        return MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value); //always returns NULL under CodeWarrier env.
     }
 	
 	virtual Boolean CreateFolder(MCStringRef p_path)
@@ -3801,14 +3825,14 @@ struct MCMacDesktop: public MCSystemInterface
         return True;
     }
     
-    /* LEGACY */
-    virtual bool DeleteFile(const char *p_path)
-    {
-        char *newpath = path2utf(MCS_resolvepath(p_path));
-        Boolean done = remove(newpath) == 0;
-        delete newpath;
-        return done;
-    }
+//    /* LEGACY */
+//    virtual bool DeleteFile(const char *p_path)
+//    {
+//        char *newpath = path2utf(MCS_resolvepath(p_path));
+//        Boolean done = remove(newpath) == 0;
+//        delete newpath;
+//        return done;
+//    }
 	
 	virtual Boolean DeleteFile(MCStringRef p_path)
     {
@@ -4107,7 +4131,7 @@ struct MCMacDesktop: public MCSystemInterface
         }
         
         if (t_error)
-            t_error = !MCS_rename(p_old_name, p_new_name);
+            t_error = !RenameFileOrFolder(p_old_name, p_new_name);
 		
         if (t_error)
             return False;
@@ -4658,9 +4682,9 @@ struct MCMacDesktop: public MCSystemInterface
 	
 	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask)
     {
-#ifdef /* MCS_chmodMacDsk_dsk_mac */ LEGACY_SYSTEM
+#ifdef /* MCS_chmod_dsk_mac */ LEGACY_SYSTEM
     return IO_NORMAL;
-#endif /* MCS_chmodMacDsk_dsk_mac */
+#endif /* MCS_chmod_dsk_mac */
         return True;
     }
     
@@ -5581,7 +5605,7 @@ struct MCMacDesktop: public MCSystemInterface
         MCAutoStringRef t_resolved_path;
         MCAutoStringRefAsUTF8String t_utf_path;
         
-        if (!MCS_resolvepath(p_filename, &t_resolved_path))
+        if (!ResolvePath(p_filename, &t_resolved_path))
             return NULL;
         
         if (!t_utf_path.Lock(*t_resolved_path))
@@ -5601,7 +5625,7 @@ struct MCMacDesktop: public MCSystemInterface
         return (MCSysModuleHandle)t_result;
     }
     
-	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, const char *p_symbol)
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
     {
 #ifdef /* MCS_resolvemodulesymbol */ LEGACY_SYSTEM
 	CFStringRef t_cf_symbol;
@@ -5617,7 +5641,7 @@ struct MCMacDesktop: public MCSystemInterface
 	return t_symbol_ptr;
 #endif /* MCS_resolvemodulesymbol */
         CFStringRef t_cf_symbol;
-        t_cf_symbol = CFStringCreateWithCString(NULL, p_symbol, CFStringGetSystemEncoding());
+        t_cf_symbol = CFStringCreateWithCString(NULL, MCStringGetCString(p_symbol), CFStringGetSystemEncoding());
         if (t_cf_symbol == NULL)
             return NULL;
         
@@ -6137,7 +6161,7 @@ struct MCMacDesktop: public MCSystemInterface
                     execl(MCshellcmd, MCshellcmd, "-s", NULL);
                     _exit(-1);
                 }
-                MCS_checkprocesses();
+                CheckProcesses();
                 close(tochild[0]);
                 
                 MCAutoStringRefAsUTF8String t_utf_path;
@@ -6151,7 +6175,7 @@ struct MCMacDesktop: public MCSystemInterface
                 if (MCprocesses[index].pid == -1)
                 {
                     if (MCprocesses[index].pid > 0)
-                        MCS_kill(MCprocesses[index].pid, SIGKILL);
+                        Kill(MCprocesses[index].pid, SIGKILL);
                     MCprocesses[index].pid = 0;
                     MCeerror->add
                     (EE_SHELL_BADCOMMAND, 0, 0, MCStringGetCString(p_command));
@@ -6183,13 +6207,13 @@ struct MCMacDesktop: public MCSystemInterface
             MCeerror->add(EE_SHELL_ABORT, 0, 0);
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
-                MCS_kill(MCprocesses[index].pid, SIGKILL);
+                Kill(MCprocesses[index].pid, SIGKILL);
             /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
             return IO_ERROR;
         }
         /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
         close(toparent[0]);
-        MCS_checkprocesses();
+        CheckProcesses();
         if (MCprocesses[index].pid != 0)
         {
             uint2 count = SHELL_COUNT;
@@ -6198,7 +6222,7 @@ struct MCMacDesktop: public MCSystemInterface
                 if (MCscreen->wait(SHELL_INTERVAL, False, False))
                 {
                     if (MCprocesses[index].pid != 0)
-                        MCS_kill(MCprocesses[index].pid, SIGKILL);
+                        Kill(MCprocesses[index].pid, SIGKILL);
                     return IO_ERROR;
                 }
                 if (MCprocesses[index].pid == 0)
@@ -6207,7 +6231,7 @@ struct MCMacDesktop: public MCSystemInterface
             if (MCprocesses[index].pid != 0)
             {
                 MCprocesses[index].retcode = -1;
-                MCS_kill(MCprocesses[index].pid, SIGKILL);
+                Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
         if (MCprocesses[index].retcode)
@@ -6298,7 +6322,7 @@ struct MCMacDesktop: public MCSystemInterface
 #endif /* MCS_changeprocesstype */
         // We can only switch from background to foreground. So check to see if
         // we are foreground already, we are only asking to go to foreground.
-        if (MCS_processtypeisforeground())
+        if (ProcessTypeIsForeground())
         {
             if (p_to_foreground)
                 return true;
@@ -6330,12 +6354,12 @@ struct MCMacDesktop: public MCSystemInterface
 #endif /* MCS_closeprocess */
         if (MCprocesses[p_index].ihandle != NULL)
         {
-            MCS_close(MCprocesses[p_index].ihandle);
+            MCprocesses[p_index].ihandle -> handle -> Close();
             MCprocesses[p_index].ihandle = NULL;
         }
         if (MCprocesses[p_index].ohandle != NULL)
         {
-            MCS_close(MCprocesses[p_index].ohandle);
+            MCprocesses[p_index].ohandle -> handle -> Close();
             MCprocesses[p_index].ohandle = NULL;
         }
         MCprocesses[p_index].mode = OM_NEITHER;
@@ -6444,13 +6468,13 @@ struct MCMacDesktop: public MCSystemInterface
     
     virtual bool GetSystemVersion(MCStringRef& r_version)
     {
-#ifdef /* MCS_getsystemversion */ LEGACY_SYSTEM
+#ifdef /* MCS_getsystemversion_dsk_mac */ LEGACY_SYSTEM
 	long t_major, t_minor, t_bugfix;
 	Gestalt(gestaltSystemVersionMajor, &t_major);
 	Gestalt(gestaltSystemVersionMinor, &t_minor);
 	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
 	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
-#endif /* MCS_getsystemversion */
+#endif /* MCS_getsystemversion_dsk_mac */
         long t_major, t_minor, t_bugfix;
         Gestalt(gestaltSystemVersionMajor, &t_major);
         Gestalt(gestaltSystemVersionMinor, &t_minor);

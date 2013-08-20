@@ -1551,29 +1551,29 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 }
 
 
-bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult -> sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
+//bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult -> sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
 
 double MCS_getfreediskspace(void)
 {
@@ -2130,11 +2130,11 @@ uint32_t MCS_getsyserror(void)
 	return errno;
 }
 
-bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
-{
-	r_error = true;
-	return true;
-}
+//bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
+//{
+//	r_error = true;
+//	return true;
+//}
 
 void MCS_system_alert(const char *p_title, const char *p_message)
 	{

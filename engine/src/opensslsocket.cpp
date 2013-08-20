@@ -1056,7 +1056,7 @@ MCSocket::MCSocket(MCNameRef n, MCObject *o, MCNameRef m, Boolean d, MCSocketHan
 
 MCSocket::~MCSocket()
 {
-	delete name;
+	MCNameDelete(name);
 	MCNameDelete(message);
 	deletereads();
 	deletewrites();

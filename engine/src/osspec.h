@@ -38,6 +38,9 @@ extern void MCS_setenv(MCStringRef name, MCStringRef value);
 extern void MCS_unsetenv(MCStringRef name);
 extern void MCS_downloadurl(MCObject *p_target, MCStringRef p_url, MCStringRef p_file);
 
+extern bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path);
+extern bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path);
+
 extern Boolean MCS_rename(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_backup(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_unbackup(MCStringRef oname, MCStringRef nname);
@@ -89,7 +92,7 @@ extern bool MCS_savetextfile(MCStringRef f, MCStringRef data);
 extern void MCS_saveresfile(MCStringRef p_path, MCDataRef data);
 
 extern bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error);
-///* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
+/* LEGACY */ extern void MCS_query_registry(MCExecPoint &dest);
 extern bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error);
 extern bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error);
 extern bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error);
@@ -133,7 +136,7 @@ extern Boolean MCS_isleadbyte(uint1 charset, char *s);
 
 extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
 /* LEGACY */ extern MCSysModuleHandle MCS_loadmodule(const char *p_filename);
-extern void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, const char *p_symbol);
+extern void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
 extern void MCS_unloadmodule(MCSysModuleHandle p_module);
 
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
