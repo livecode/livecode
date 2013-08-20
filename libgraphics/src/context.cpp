@@ -979,6 +979,7 @@ void MCGContextBegin(MCGContextRef self)
 	t_new_layer -> parent = self -> layer;
 	t_new_layer -> origin_x = t_device_clip . x();
 	t_new_layer -> origin_y = t_device_clip . y();
+	t_new_layer -> has_effects = false;
 	self -> layer = t_new_layer;
 }
 
@@ -991,7 +992,7 @@ static MCGIRectangle compute_glow_clip(const MCGGlowEffect& self, const MCGIRect
 	MCGSize t_transformed_radii;
 	t_transformed_radii = MCGSizeApplyAffineTransform(t_radii, p_transform);
 	
-	return MCGIRectangleExpand(MCGIRectangleIntersect(p_shape, p_clip), ceil(t_radii . width), ceil(t_radii . height));
+	return MCGIRectangleExpand(MCGIRectangleIntersect(p_shape, p_clip), ceil(t_transformed_radii . width), ceil(t_transformed_radii . height));
 }
 
 static MCGIRectangle compute_shadow_clip(const MCGShadowEffect& self, const MCGIRectangle& p_shape, const MCGIRectangle& p_clip, const MCGAffineTransform& p_transform)
@@ -1014,10 +1015,22 @@ static MCGIRectangle compute_shadow_clip(const MCGShadowEffect& self, const MCGI
 				MCGIRectangleIntersect(
 					p_shape,
 					MCGIRectangleUnion(
-						MCGIRectangleOffset(p_clip, floor(t_offset . width), floor(t_offset . height)),
-						MCGIRectangleOffset(p_clip, ceil(t_offset . width), ceil(t_offset . height)))),
-				ceil(t_radii . width), ceil(t_radii . height));
+						MCGIRectangleOffset(p_clip, -floor(t_transformed_offset . width), -floor(t_transformed_offset . height)),
+						MCGIRectangleOffset(p_clip, -ceil(t_transformed_offset . width), -ceil(t_transformed_offset . height)))),
+				ceil(t_transformed_radii . width), ceil(t_transformed_radii . height));
 }
+
+// The 'shape' parameter is the rectangle in user-space of the area to which the effect
+// is to be applied.
+//
+// This shape is unrelated to the current clip, and the resulting rect of the layer which
+// is to be rendered into must be big enough to ensure that any pixels rendered as a result
+// of the bitmap effects have source pixels to operate on.
+//
+// The resulting clipping region is a union of regions:
+//    - the intersection of the shape with the clip (these are the non-bitmap effect pixels which must be redrawn).
+//    - if there is a drop-shadow, then a blurred mask will be drawn at offset(expand(shape, ds-radius), ds-offset)
+//    - if there is an outer-glow, then a blurred mask will be drawn at expand(shape, ds-radius)
 
 void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const MCGBitmapEffects& p_effects)
 {
@@ -1034,23 +1047,67 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	MCGIRectangle t_device_shape;
 	t_device_shape = MCGRectangleComputeHull(MCGRectangleApplyAffineTransform(p_shape, t_device_transform));
 	
+	// This is the rectangle of pixels not related to bitmap effects which are needed.
 	MCGIRectangle t_layer_clip;
 	t_layer_clip = MCGIRectangleIntersect(t_device_clip, t_device_shape);
 	
+	// This calculates the rect of pixels needed from the layer to draw the drop shadow.
+	// We offset the shape by the drop shadow x/y and intersect with the clip.
+	// We then offset it back and expand by the blur radius.
+	// We then intersect with the shape.
+	// Finally add this rectangle to the layer clip (union).
 	if (p_effects . has_drop_shadow)
+	{
+		// TODO: Transform offset and radii.
+		t_layer_clip = MCGIRectangleUnion(
+							t_layer_clip,
+							MCGIRectangleIntersect(
+								t_device_shape,
+								MCGIRectangleExpand(
+									MCGIRectangleOffset(
+										MCGIRectangleIntersect(
+											t_device_clip,
+											MCGIRectangleOffset(
+													t_device_shape,
+													p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset)),
+										-p_effects . drop_shadow . x_offset, -p_effects . drop_shadow . y_offset),
+									p_effects . drop_shadow . size, p_effects . drop_shadow . size)));
+	}
+	
+	
+	// Next process the inner shadow.
+	// We intersect the shape with the clip to determine the visible pixels (as inner shadow only works internally).
+	// We then offset it by the inner shadow x/y (to work out what source pixels are needed)
+	// We then expand by the blur radius.
+	// We then intersect with the shape.
+	// Finally add this rectangle to the layer clip (union).
+	if (p_effects . has_inner_shadow)
+		t_layer_clip = MCGIRectangleUnion(
+							t_layer_clip,
+							MCGIRectangleIntersect(
+								t_device_shape,
+								MCGIRectangleExpand(
+									MCGIRectangleOffset(
+										MCGIRectangleIntersect(
+											t_device_shape,
+											t_device_clip),
+										-p_effects . inner_shadow . x_offset, -p_effects . inner_shadow . y_offset),
+									p_effects . inner_shadow . size, p_effects . inner_shadow . size)));
+	
+	/*if (p_effects . has_drop_shadow)
 		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . drop_shadow, t_device_shape, t_device_clip, t_device_transform));
 	if (p_effects . has_inner_shadow)
 		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . inner_shadow, t_device_shape, t_device_clip, t_device_transform));
 	if (p_effects . has_outer_glow)
 		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . outer_glow, t_device_shape, t_device_clip, t_device_transform));
 	if (p_effects . has_inner_glow)
-		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . inner_glow, t_device_shape, t_device_clip, t_device_transform));
+		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . inner_glow, t_device_shape, t_device_clip, t_device_transform));*/
 		
 	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
 	
 	// Create a suitable bitmap.
 	SkBitmap t_new_bitmap;
-	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_device_clip . right - t_device_clip . left, t_device_clip . right - t_device_clip . left);
+	t_new_bitmap . setConfig(SkBitmap::kARGB_8888_Config, t_layer_clip . right - t_layer_clip . left, t_layer_clip . bottom - t_layer_clip . top);
 	t_new_bitmap . setIsOpaque(false);
 	if (!t_new_bitmap . allocPixels())
 	{
@@ -1059,7 +1116,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	}
 	
 	// Clear the pixel buffer.
-	memset(t_new_bitmap . getPixels(), 0, t_new_bitmap . rowBytes() * t_new_bitmap . height());
+	memset(t_new_bitmap . getPixels(), 0x00, t_new_bitmap . rowBytes() * t_new_bitmap . height());
 	
 	// We now create a canvas the same size as the device clip.
 	SkRefPtr<SkCanvas> t_new_canvas;
@@ -1071,7 +1128,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	}
 	
 	// Next translate the canvas by the translation factor of the matrix.
-	t_new_canvas -> translate(-t_device_clip . left, -t_device_clip . top);
+	t_new_canvas -> translate(-t_layer_clip . left, -t_layer_clip . top);
 	
 	// Set the matrix.
 	t_new_canvas -> concat(self -> layer -> canvas -> getTotalMatrix());
@@ -1096,9 +1153,71 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	}
 	
 	t_new_layer -> parent = self -> layer;
-	t_new_layer -> origin_x = t_device_clip . left;
-	t_new_layer -> origin_y = t_device_clip . top;
+	t_new_layer -> origin_x = t_layer_clip . left;
+	t_new_layer -> origin_y = t_layer_clip . top;
+	t_new_layer -> has_effects = true;
+	t_new_layer -> effects = p_effects;
 	self -> layer = t_new_layer;
+}
+
+extern bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkMask& r_dst);
+
+static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_child, const MCGBitmapEffects& p_effects)
+{
+	const SkBitmap& t_child_bitmap = p_child -> canvas -> getTopDevice() -> accessBitmap(false);
+	
+	SkMask t_child_mask;
+	t_child_mask . fFormat = SkMask::kA8_Format;
+	t_child_mask . fBounds . set(p_child -> origin_x, p_child -> origin_y, p_child -> origin_x + t_child_bitmap . width(), p_child -> origin_y + t_child_bitmap . height());
+	t_child_mask . fRowBytes = t_child_mask . fBounds . width();
+	t_child_mask . fImage = SkMask::AllocImage(t_child_mask . computeImageSize());
+	for(int y = 0; y < t_child_bitmap . height(); y++)
+		for(int x = 0; x < t_child_bitmap . width(); x++)
+			t_child_mask . fImage[y * t_child_mask . fRowBytes + x] = *(((uint32_t *)t_child_bitmap . getPixels()) + y * t_child_bitmap . rowBytes() / 4 + x) >> 24;
+	
+	if (p_effects . has_drop_shadow)
+	{
+		SkPaint t_paint;
+		t_paint . setStyle(SkPaint::kFill_Style);
+		t_paint . setColor(MCGColorToSkColor(p_effects . drop_shadow . color));
+		
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
+		t_paint . setXfermode(t_blend_mode);
+		if (t_blend_mode != NULL)
+			t_blend_mode -> unref();
+		
+		SkMask t_blur_mask;
+		if (MCGBlurBox(t_child_mask, p_effects . drop_shadow . size, p_effects . drop_shadow . size, t_blur_mask))
+		{
+			t_blur_mask . fBounds . offset(p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset);
+			self -> layer -> canvas -> drawDevMask(t_blur_mask, t_paint);
+			SkMask::FreeImage(t_blur_mask . fImage);
+		}
+	}
+	
+	if (p_effects . has_outer_glow)
+	{
+	}
+	
+	// Render the layer itself (using the layer's alpha and blend mode - well, if we can agree that's a good change!).
+	if (true)
+		self -> layer -> canvas -> drawSprite(t_child_bitmap, p_child -> origin_x, p_child -> origin_y, NULL);
+	
+	if (p_effects . has_inner_shadow)
+	{
+	}
+	
+	if (p_effects . has_inner_glow)
+	{
+	}
+	
+	if (p_effects . has_color_overlay)
+	{
+		// Should be able to do this with a shader
+	}
+	
+	SkMask::FreeImage(t_child_mask . fImage);
 }
 
 void MCGContextEnd(MCGContextRef self)
@@ -1128,16 +1247,30 @@ void MCGContextEnd(MCGContextRef self)
 	
 	SkPaint t_paint;
 	t_paint . setAlpha((U8CPU)(self -> state -> opacity * 255));
-
+	
 	SkXfermode *t_blend_mode;
 	t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
 	if (t_blend_mode != NULL)
 	{
 		t_paint . setXfermode(t_blend_mode);
 		t_blend_mode -> unref();
-	}		
+	}
 	
-	self -> layer -> canvas -> drawSprite(t_child_bitmap, t_child_layer -> origin_x, t_child_layer -> origin_y, &t_paint);
+	if (t_child_layer -> has_effects)
+	{
+		bool t_in_layer;
+		t_in_layer = false;	
+		if (self -> state -> opacity != 255 || self -> state -> blend_mode != kMCGBlendModeSourceOver)
+		{
+			self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag));
+			t_in_layer = true;
+		}
+		MCGContextRenderEffects(self, t_child_layer, t_child_layer -> effects);
+		if (t_in_layer)
+			self -> layer -> canvas -> restore();
+	}
+	else
+		self -> layer -> canvas -> drawSprite(t_child_bitmap, t_child_layer -> origin_x, t_child_layer -> origin_y, &t_paint);
 	
 	MCGContextLayerDestroy(t_child_layer);
 }

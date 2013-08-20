@@ -11,6 +11,7 @@
 		4C4463D816C3ACBD00C5CE3C /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D516C3ACBD00C5CE3C /* image.cpp */; };
 		4C4463D916C3ACBD00C5CE3C /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D616C3ACBD00C5CE3C /* path.cpp */; };
 		4C9A538216D6786A0041F9A3 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C9A538116D6786A0041F9A3 /* utils.cpp */; };
+		4D6762EC17C3B3D600EE62C2 /* blur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6762EB17C3B3D600EE62C2 /* blur.cpp */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -32,6 +33,7 @@
 		4C4463D616C3ACBD00C5CE3C /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = path.cpp; path = src/path.cpp; sourceTree = "<group>"; };
 		4C4463DA16C3ACE900C5CE3C /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics.h; path = include/graphics.h; sourceTree = "<group>"; };
 		4C9A538116D6786A0041F9A3 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = src/utils.cpp; sourceTree = "<group>"; };
+		4D6762EB17C3B3D600EE62C2 /* blur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blur.cpp; path = src/blur.cpp; sourceTree = "<group>"; };
 		4DCDCA230B80890D0040D436 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA240B80890D0040D436 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
 		4DCDCA320B8089D00040D436 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
@@ -68,6 +70,7 @@
 				4C4463D516C3ACBD00C5CE3C /* image.cpp */,
 				4C4463D616C3ACBD00C5CE3C /* path.cpp */,
 				4C9A538116D6786A0041F9A3 /* utils.cpp */,
+				4D6762EB17C3B3D600EE62C2 /* blur.cpp */,
 			);
 			name = Source;
 			sourceTree = "<group>";
@@ -151,6 +154,7 @@
 				4C4463D816C3ACBD00C5CE3C /* image.cpp in Sources */,
 				4C4463D916C3ACBD00C5CE3C /* path.cpp in Sources */,
 				4C9A538216D6786A0041F9A3 /* utils.cpp in Sources */,
+				4D6762EC17C3B3D600EE62C2 /* blur.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

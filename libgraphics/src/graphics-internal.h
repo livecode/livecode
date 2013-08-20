@@ -82,8 +82,14 @@ typedef struct __MCGContextLayer *MCGContextLayerRef;
 struct __MCGContextLayer
 {
 	SkCanvas *canvas;
+	
 	uint32_t nesting;
+	
 	int32_t origin_x, origin_y;
+	
+	bool has_effects : 1;
+	MCGBitmapEffects effects;
+	
 	MCGContextLayerRef parent;
 };
 
