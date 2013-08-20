@@ -831,7 +831,7 @@ MCStack *MCObject::getstack()
 Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 {
 	Exec_stat stat;
-	if (MCcheckstack && MCU_abs(MCstackbottom - (char *)&stat) > MCrecursionlimit)
+	if (MCcheckstack && MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) > MCrecursionlimit)
 	{
 		MCeerror->add(EE_RECURSION_LIMIT, 0, 0);
 		MCerrorptr = this;
@@ -885,7 +885,7 @@ Exec_stat MCObject::exechandler(MCHandler *hptr, MCParameter *params)
 Exec_stat MCObject::execparenthandler(MCHandler *hptr, MCParameter *params, MCParentScriptUse *parentscript)
 {
 	Exec_stat stat;
-	if (MCcheckstack && MCU_abs(MCstackbottom - (char *)&stat) > MCrecursionlimit)
+	if (MCcheckstack && MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) > MCrecursionlimit)
 	{
 		MCeerror->add(EE_RECURSION_LIMIT, 0, 0);
 		MCerrorptr = this;

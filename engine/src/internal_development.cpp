@@ -326,12 +326,20 @@ public:
 			t_patch_filename = ep . getsvalue() . clone();
 		else
 			t_success = false;
+        
+        MCAutoStringRef t_old_filename_str;
+        MCAutoStringRef t_new_filename_str;
+        MCAutoStringRef t_patch_filename_str;
+        
+        /* UNCHECKED */ MCStringCreateWithCString(t_old_filename, &t_old_filename_str);
+        /* UNCHECKED */ MCStringCreateWithCString(t_new_filename, &t_new_filename_str);
+        /* UNCHECKED */ MCStringCreateWithCString(t_patch_filename, &t_patch_filename_str);
 
 		IO_handle t_old_handle;
 		t_old_handle = nil;
 		if (t_success)
 		{
-			t_old_handle = MCS_open(t_old_filename, IO_READ_MODE, False, False, 0);
+			t_old_handle = MCS_open(*t_old_filename_str, kMCSOpenFileModeRead, False, False, 0);
 			if (t_old_handle == nil)
 				t_success = false;
 		}
@@ -340,7 +348,7 @@ public:
 		t_new_handle = nil;
 		if (t_success)
 		{
-			t_new_handle = MCS_open(t_new_filename, IO_READ_MODE, False, False, 0);
+			t_new_handle = MCS_open(*t_new_filename_str, kMCSOpenFileModeRead, False, False, 0);
 			if (t_new_handle == nil)
 				t_success = false;
 		}
@@ -349,7 +357,7 @@ public:
 		t_patch_handle = nil;
 		if (t_success)
 		{
-			t_patch_handle = MCS_open(t_patch_filename, IO_WRITE_MODE, False, False, 0);
+			t_patch_handle = MCS_open(*t_patch_filename_str, kMCSOpenFileModeWrite, False, False, 0);
 			if (t_patch_handle == nil)
 				t_success = false;
 		}

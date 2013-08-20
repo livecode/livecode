@@ -1174,6 +1174,10 @@ extern MCStringRef kMCFalseString;
 
 /////////
 
+// Creates an MCStringRef wrapping the given constant c-string. Note that
+// the c-string must be a C static string.
+MCStringRef MCSTR(const char *string);
+
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
@@ -1290,6 +1294,24 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
 
+// Converts the content to char_t*
+bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);
+
+// Converts the content to wchar_t*
+bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
+
+// Converts the content to unicode_t*
+bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
+
+#if defined(__MAC__) || defined (__IOS__)
+// Converts the content to CFStringRef
+bool MCStringConvertToCFStringRef(MCStringRef string, CFStringRef& r_cfstring);
+#endif
+
+#ifdef __WINDOWS__
+bool MCStringConvertToBSTR(MCStringRef string, BSTR& r_bstr);
+#endif
+
 /////////
 
 // Returns the hash of the given string, processing as according to options.
@@ -1299,6 +1321,7 @@ hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the substring is equal to the other, according to options
 bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);

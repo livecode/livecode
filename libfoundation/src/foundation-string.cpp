@@ -1,4 +1,4 @@
-/* Copyright (C) 2003-2013 Runtime Revolution Ltd.
+/* Copyright (C) 2003-2013 Runtime Revolution Ltd
 
 This file is part of LiveCode.
 
@@ -51,6 +51,22 @@ static void __MCStringShrinkAt(MCStringRef string, uindex_t at, uindex_t count);
 static void __MCStringClampRange(MCStringRef string, MCRange& x_range);
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// This method creates a 'constant' MCStringRef from the given c-string. At some
+// point we'll make it work 'magically' at compile/build time. For now, uniquing
+// and returning that has a similar effect (if slightly slower).
+MCStringRef MCSTR(const char *p_cstring)
+{
+	MCStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_cstring, strlen(p_cstring), t_string);
+	
+	MCValueRef t_unique_string;
+	/* UNCHECKED */ MCValueInter(t_string, t_unique_string);
+	
+	MCValueRelease(t_string);
+	
+	return (MCStringRef)t_unique_string;
+}
 
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
@@ -412,7 +428,7 @@ bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r
 
 bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_char_count)
 {
-	// Allocate an array of chars one bigger than needed. As the allocated array
+	// Allocate an array of chars one byte bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
 	char_t *t_chars;
 	if (!MCMemoryNewArray(self -> char_count + 1, t_chars))
@@ -422,6 +438,104 @@ bool MCStringConvertToNative(MCStringRef self, char_t*& r_chars, uindex_t& r_cha
 	r_chars = t_chars;
 	return true;
 }
+
+
+bool MCStringConvertToCString(MCStringRef p_string, char*& r_cstring)
+{
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, r_cstring))
+        return false;
+    
+    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), (char_t*)r_cstring);
+    r_cstring[t_length] = '\0';
+    
+    return true;
+}
+
+
+bool MCStringConvertToWString(MCStringRef p_string, unichar_t*& r_wstring)
+{
+    uindex_t t_length;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, r_wstring))
+        return false;
+    
+    MCStringGetChars(p_string, MCRangeMake(0, t_length), r_wstring);
+    r_wstring[t_length] = '\0';
+    
+    return true;
+}
+
+
+bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
+{
+	// Allocate an array of chars one byte bigger than needed. As the allocated array
+	// is filled with zeros, this will naturally NUL terminate the string.
+    uindex_t t_length;
+    uindex_t t_byte_count;
+    unichar_t* t_unichars;
+	t_length = MCStringGetLength(p_string);
+    
+    if (!MCMemoryNewArray(t_length + 1, t_unichars))
+        return false;
+    
+    uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
+    
+    t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil);
+    
+    if (!MCMemoryNewArray(t_byte_count, r_utf8string))
+        return false;
+    
+    MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string);
+    
+    // Delete temporary unichar_t array
+    MCMemoryDeleteArray(t_unichars);
+    
+    return true;
+}
+
+#if defined(__MAC__) || defined (__IOS__)
+bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
+{
+    uindex_t t_length;
+    char_t* t_chars;
+    
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, t_chars))
+        return false;
+    
+    MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), t_chars);
+    r_cfstring = CFStringCreateWithCharacters(nil, (UniChar *)t_chars, t_length);
+    
+    MCMemoryDeleteArray(t_chars);
+    return r_cfstring != nil;
+}
+#endif
+
+#if 0
+#ifdef __WINDOWS__
+bool MCStringConvertToBSTR(MCStringRef p_string, BSTR& r_bstr)
+{
+    uindex_t t_length;
+    unichar_t* t_chars;
+    t_length = MCStringGetLength(p_string);
+    if (!MCMemoryNewArray(t_length + 1, t_chars))
+        return false;
+    
+    MCStringGetChars(p_string, MCRangeMake(0, t_length), t_chars);
+    
+    r_bstr = SysAllocString((OLECHAR*)t_chars);
+    
+    MCMemoryDeleteArray(t_chars);
+    
+    if (r_bstr == nil)
+        return false;
+    
+    return true;
+}
+#endif
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -497,6 +611,11 @@ bool MCStringIsEqualTo(MCStringRef self, MCStringRef p_other, MCStringOptions p_
 	if (p_options != kMCStringOptionCompareExact)
 		return MCNativeCharsEqualCaseless(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
 	return MCNativeCharsEqualExact(self -> chars, self -> char_count, p_other -> chars, p_other -> char_count);
+}
+
+bool MCStringIsEmpty(MCStringRef string)
+{
+	return MCStringIsEqualTo(string, kMCEmptyString, kMCStringOptionCompareExact);
 }
 
 bool MCStringSubstringIsEqualTo(MCStringRef self, MCRange p_sub, MCStringRef p_other, MCStringOptions p_options)
@@ -634,6 +753,9 @@ bool MCStringSubstringContains(MCStringRef self, MCRange p_range, MCStringRef p_
 
 bool MCStringFirstIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_after, MCStringOptions p_options, uindex_t& r_offset)
 {
+	// Make sure the after index is in range.
+	p_after = MCMin(p_after, self -> char_count);
+
 	// Similar to contains, we loop through checking for a shared prefix of the
 	// length of needle - notice that we start at 'after', though.
 	for(uindex_t t_offset = p_after; t_offset < self -> char_count; t_offset += 1)
@@ -660,6 +782,9 @@ bool MCStringFirstIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p
 {
 	// We only support ASCII for now.
 	MCAssert(p_needle < 128);
+
+	// Make sure the after index is in range.
+	p_after = MCMin(p_after, self -> char_count);
 
 	char_t t_char;
 	t_char = (char_t)p_needle;
@@ -689,6 +814,9 @@ bool MCStringLastIndexOf(MCStringRef self, MCStringRef p_needle, uindex_t p_befo
 	// we go. Notice that t_offset here tracks the end of char (rather than the
 	// start).
 
+	// Make sure the before index is in range.
+	p_before = MCMin(p_before, self -> char_count);
+
 	for(uindex_t t_offset = p_before; t_offset > 0; t_offset -= 1)
 	{
 		// Compute the length of the shared prefix *before* offset - this means
@@ -715,6 +843,9 @@ bool MCStringLastIndexOfChar(MCStringRef self, codepoint_t p_needle, uindex_t p_
 {
 	// We only support ASCII for now.
 	MCAssert(p_needle < 128);
+
+	// Make sure the before index is in range.
+	p_before = MCMin(p_before, self -> char_count);
 
 	char_t t_char;
 	t_char = (char_t)p_needle;

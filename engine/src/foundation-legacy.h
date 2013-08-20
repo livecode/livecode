@@ -37,7 +37,9 @@ bool MCValueConvertToStringForSave(MCValueRef value, MCStringRef& r_string);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCStringCreateWithCString(const char* cstring, MCStringRef& r_string);
+bool MCStringCreateWithCString(const char *cstring, MCStringRef& r_string);
+bool MCStringCreateWithOldString(const MCString& string, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char_t * cstring, MCStringRef& r_string);
 
 const char *MCStringGetCString(MCStringRef p_string);
 MCString MCStringGetOldString(MCStringRef p_string);

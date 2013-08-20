@@ -266,7 +266,7 @@ void MCS_init()
 	if (!MCS_isatty(0))
 		MCS_nodelay(0);
 
-	MCshellcmd = strclone("/bin/sh");
+	MCshellcmd = MCSTR("/bin/sh");
 
 	// Initialize our case mapping tables
 	
@@ -586,7 +586,7 @@ void MCS_unsetenv(const char *name)
 	unsetenv(name);
 #endif
 }
-
+/*
 int4 MCS_rawopen(const char *path, int flags)
 {
 	char *newpath = MCS_resolvepath(path);
@@ -594,51 +594,52 @@ int4 MCS_rawopen(const char *path, int flags)
 	delete newpath;
 	return fd;
 }
-
+*/
+/*
 int4 MCS_rawclose(int4 fd)
 {
 	return close(fd);
 }
-
-Boolean MCS_rename(const char *oname, const char *nname)
+*/
+Boolean MCS_rename(MCStringRef p_oname, MCStringRef p_nname)
 {
-	char *oldpath = MCS_resolvepath(oname);
-	char *newpath = MCS_resolvepath(nname);
+	MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
+    MCS_resolvepath(p_oname, &t_old_resolved_path);
+	MCS_resolvepath(p_nname, &t_new_resolved_path);
 #ifndef NORENAME
 
-	Boolean done = rename(oldpath, newpath) == 0;
+	Boolean done = rename(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) == 0;
 #else
 	// doesn't work on directories
 	Boolean done = True;
-	if (link(oldpath, newpath) != 0)
+	if (link(MCStringGetCString(*t_old_resolved_path), MCStringGetCString(*t_new_resolved_path)) != 0)
 		done = False;
 	else
-		if (unlink(oldpath) != 0)
+		if (unlink(MCStringGetCString(*t_old_resolved_path)) != 0)
 		{
-			unlink(newpath);
+			unlink(MCStringGetCString(*t_new_resolved_path));
 			done = False;
 		}
 #endif
-	delete oldpath;
-	delete newpath;
+	
 	return done;
 }
 
-Boolean MCS_backup(const char *oname, const char *nname)
+Boolean MCS_backup(MCStringRef p_oname, MCStringRef p_nname)
 {
-	return MCS_rename(oname, nname);
+	return MCS_rename(p_oname, p_nname);
 }
 
-Boolean MCS_unbackup(const char *oname, const char *nname)
+Boolean MCS_unbackup(MCStringRef p_oname, MCStringRef p_nname)
 {
-	return MCS_rename(oname, nname);
+	return MCS_rename(p_oname, p_nname);
 }
 
-Boolean MCS_unlink(const char *path)
+Boolean MCS_unlink(MCStringRef p_path)
 {
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = unlink(newpath) == 0;
-	delete newpath;
+	MCAutoStringRef t_resolved_path;
+	MCS_resolvepath(p_path, &t_resolved_path);
+	Boolean done = unlink(MCStringGetCString(*t_resolved_path)) == 0;
 	return done;
 }
 
@@ -739,14 +740,15 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 		return MCStringCopy(*t_newname, r_resolved);
 }
 
-char *MCS_get_canonical_path(const char *p_path)
+bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 {
-	char *t_path = NULL;
-
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
-
-	return t_path;
+	
+	bool t_result;
+	t_result = MCS_resolvepath(p_path, r_path);
+	MCAutoStringRef t_out_path;
+	MCU_fix_path(r_path, &t_out_path);
+	
+	return t_result;
 }
 
 bool MCS_getcurdir(MCStringRef& r_path)
@@ -770,13 +772,6 @@ bool MCS_setcurdir(MCStringRef p_path)
 	return false;
 }
 
-Boolean MCS_setcurdir(const char *path)
-{
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = chdir(newpath) == 0;
-	delete newpath;
-	return done;
-}
 
 bool MCS_getentries(bool files, bool islong, MCListRef& r_list)
 {
@@ -914,16 +909,17 @@ Boolean MCS_nodelay(int4 fd)
 	       >= 0;
 }
 
-IO_handle MCS_open(const char *path, const char *mode,
+IO_handle MCS_open(MCStringRef path, MCSOpenFileMode p_mode,
                    Boolean map, Boolean driver, uint4 offset)
 {
-	char *newpath = MCS_resolvepath(path);
+	MCAutoStringRef t_resolved_path;
+	MCS_resolvepath(path, &t_resolved_path);
 	IO_handle handle = NULL;
 #ifndef NOMMAP
 
-	if (map && MCmmap && !driver && strequal(mode, IO_READ_MODE))
+	if (map && MCmmap && !driver && p_mode == kMCSOpenFileModeRead)
 	{
-		int fd = open(newpath, O_RDONLY);
+		int fd = open(MCStringGetCString(*t_resolved_path), O_RDONLY);
 		struct stat64 buf;
 		if (fd != -1 && !fstat64(fd, &buf))
 		{
@@ -934,7 +930,6 @@ IO_handle MCS_open(const char *path, const char *mode,
 				                            fd, offset);
 				if ((int)buffer != -1)
 				{
-					delete newpath;
 					handle = new IO_header(NULL, buffer, len, fd, 0);
 					return handle;
 				}
@@ -943,18 +938,28 @@ IO_handle MCS_open(const char *path, const char *mode,
 		}
 	}
 #endif
-	FILE *fptr = fopen(newpath, mode);
-	if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-		fptr = fopen(newpath, IO_CREATE_MODE);
+	const char *t_mode;
+	if (p_mode == kMCSOpenFileModeRead)
+		t_mode = IO_READ_MODE;
+	else if (p_mode == kMCSOpenFileModeWrite)
+		t_mode = IO_WRITE_MODE;
+	else if (p_mode == kMCSOpenFileModeUpdate)
+		t_mode = IO_UPDATE_MODE;
+	else if (p_mode == kMCSOpenFileModeAppend)
+		t_mode = IO_APPEND_MODE;
+
+	FILE *fptr = fopen(MCStringGetCString(*t_resolved_path), t_mode);
+	if (fptr == NULL && !strequal(t_mode, IO_READ_MODE))
+		fptr = fopen(MCStringGetCString(*t_resolved_path), IO_CREATE_MODE);
 	if (driver)
 		configureSerialPort((short)fileno(fptr));
-	delete newpath;
 	if (fptr != NULL)
 	{
 		handle = new IO_header(fptr, NULL, 0, 0, 0);
 		if (offset > 0)
 			fseek(handle->fptr, offset, SEEK_SET);
 	}
+	delete t_mode;
 	return handle;
 }
 
@@ -1047,7 +1052,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				close(2);
 				dup(toparent[1]);
 				close(toparent[1]);
-				execl(MCshellcmd, MCshellcmd, "-s", NULL);
+				execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
 				_exit(-1);
 			}
 			MCS_checkprocesses();
@@ -1161,20 +1166,22 @@ void MCS_setumask(int4 newmask)
 	umask(newmask);
 }
 
-Boolean MCS_mkdir(const char *path)
+Boolean MCS_mkdir(MCStringRef p_path)
 {
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = mkdir(path, 0777) == 0;
-	delete newpath;
-	return done;
+	MCAutoStringRef t_resolved_path_string;
+	if (MCS_resolvepath(p_path, &t_resolved_path_string))
+		return mkdir(MCStringGetCString(*t_resolved_path_string, 0777)) == 0;
+	
+	return false;
 }
 
-Boolean MCS_rmdir(const char *path)
+Boolean MCS_rmdir(MCStringRef p_path)
 {
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = rmdir(path) == 0;
-	delete newpath;
-	return done;
+	MCAutoStringRef t_resolved_path_string;
+	if (MCS_resolvepath(p_path, &t_resolved_path_string))
+		return rmdir(MCStringGetCString(*t_resolved_path_string)) == 0;
+	
+	return false;
 }
 
 IO_stat MCS_trunc(IO_handle stream)
@@ -1393,12 +1400,12 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		MCresult->sets("can't open file");
 		return;
 	}
-	char *tpath = ep.getsvalue().clone();
-	char *newpath = MCS_resolvepath(tpath);
-	delete tpath;
-	int fd = open(newpath, O_RDONLY);
+	MCAutoStringRef t_path, t_newpath;
+	ep . copyasstringref(&t_path);
+	MCS_resolvepath(*t_path, &t_newpath);
+
+	int fd = open(MCStringGetCString(*t_newpath), O_RDONLY);
 	ep.clear();
-	delete newpath;
 	if (fd == -1)
 		MCresult->sets("can't open file");
 	else
@@ -1464,6 +1471,8 @@ void MCS_loadresfile(MCExecPoint &ep)
 	ep.clear();
 	MCresult->sets("error writing file");
 }
+
+
 
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean b)
 {
@@ -1837,7 +1846,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	return NULL;
 }
 
-void MCS_copyresourcefork(const char *source, const char *dest)
+void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
 {}
 
 bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
@@ -1959,7 +1968,7 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
 
-	char *controlptr = strclone(MCserialcontrolsettings);
+	char *controlptr = MCStringGetCString(MCserialcontrolsettings);
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)

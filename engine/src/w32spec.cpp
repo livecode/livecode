@@ -931,7 +931,7 @@ IO_handle MCS_open(const char *path, const char *mode,
 	{
 		DCB dcb;
 		dcb . DCBlength = sizeof(DCB);
-		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCStringGetCString(MCserialcontrolsettings), &dcb)
 		        || !SetCommState(hf, &dcb))
 		{
 			MCS_seterrno(GetLastError());
@@ -1801,7 +1801,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	return NULL;
 }
 
-void MCS_copyresourcefork(const char *source, const char *dest)
+void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
 {}
 
 bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,

@@ -40,7 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern bool MCSystemLaunchUrl(const char *p_document);
+extern bool MCSystemLaunchUrl(MCStringRef p_document);
 extern char *MCSystemGetVersion(void);
 extern MCNameRef MCSystemGetProcessor(void);
 extern char *MCSystemGetAddress(void);
@@ -97,19 +97,23 @@ real8 MCS_time(void)
 	return MCsystem -> GetCurrentTime();
 }
 
-void MCS_setenv(const char *p_name, const char *p_value)
+void MCS_setenv(MCStringRef p_name_string, MCStringRef p_value_string)
 {
-	MCsystem -> SetEnv(p_name, p_value);
+	MCsystem -> SetEnv(p_name_string, p_value_string);
 }
 
-void MCS_unsetenv(const char *p_name)
+void MCS_unsetenv(MCStringRef p_name_string)
 {
-	MCsystem -> SetEnv(p_name, NULL);
+	MCsystem -> SetEnv(p_name_string, NULL);
 }
 
-char *MCS_getenv(const char *p_name)
+bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	return MCsystem -> GetEnv(p_name);
+	MCsystem -> GetEnv(p_name_string, r_result);
+    if (r_result != nil)
+        return true;
+    return false;
+        
 }
 
 real8 MCS_getfreediskspace(void)
@@ -117,15 +121,15 @@ real8 MCS_getfreediskspace(void)
 	return 0.0;
 }
 
-void MCS_launch_document(const char *p_document)
+void MCS_launch_document(MCStringRef p_document)
 {
 	MCresult -> sets("not supported");
 }
 
-void MCS_launch_url(const char *p_document)
+void MCS_launch_url(MCStringRef p_document_string)
 {
 	MCresult -> clear();
-	if (!MCSystemLaunchUrl(p_document))
+	if (!MCSystemLaunchUrl(p_document_string))
 		MCresult -> sets("no association");
 }
 
@@ -148,7 +152,7 @@ bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_type, MCStringRef& 
 	}
 }
 
-void MCS_doalternatelanguage(MCStringRef script, MCStringRef language)
+void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
 	MCresult -> sets("not supported");
 }
@@ -235,95 +239,70 @@ bool MCS_getmachine(MCStringRef& r_string)
 
 bool MCS_getaddress(MCStringRef& r_address)
 {
-	char *t_address = MCsystem -> GetAddress();
-	
-	bool t_success;
-	t_success = MCStringCreateWithCString(t_address, r_address);
-	
-	delete t_address;
-	
-	return t_success;
+	MCsystem -> GetAddress(r_address);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Boolean MCS_mkdir(const char *p_path)
+Boolean MCS_mkdir(MCStringRef p_path)
 {
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
+	MCAutoStringRef t_resolved_path_string;
+	MCS_resolvepath(p_path, &t_resolved_path_string);
 	
-	bool t_result;
-	t_result = MCsystem -> CreateFolder(t_resolved_path);
+	return MCsystem -> CreateFolder(*t_resolved_path_string);
 	
-	delete t_resolved_path;
-	
-	return t_result;
 }
 
-Boolean MCS_rmdir(const char *p_path)
+Boolean MCS_rmdir(MCStringRef p_path)
 {
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
+	MCAutoStringRef t_resolved_path_string;
+	MCS_resolvepath(p_path, &t_resolved_path_string);
 	
-	bool t_result;
-	t_result = MCsystem -> DeleteFolder(t_resolved_path);
-	
-	delete t_resolved_path;
-	
-	return t_result;
+	return MCsystem -> DeleteFolder(*t_resolved_path_string);
 }
 
-Boolean MCS_rename(const char *p_old_name, const char *p_new_name)
+Boolean MCS_rename(MCStringRef p_old_name, MCStringRef p_new_name)
 {
-	char *t_old_resolved_path, *t_new_resolved_path;
-	t_old_resolved_path = MCS_resolvepath(p_old_name);
-	t_new_resolved_path = MCS_resolvepath(p_new_name);
+	MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
+    MCS_resolvepath(p_old_name, &t_old_resolved_path);
+	MCS_resolvepath(p_new_name, &t_new_resolved_path);
+
+	return MCsystem -> RenameFileOrFolder(*t_old_resolved_path,*t_new_resolved_path);
 	
-	bool t_result;
-	t_result = MCsystem -> RenameFileOrFolder(t_old_resolved_path, t_new_resolved_path);
 	
-	delete t_old_resolved_path;
-	delete t_new_resolved_path;
-	
-	return t_result;
 }
 
-Boolean MCS_unlink(const char *p_path)
+Boolean MCS_unlink(MCStringRef p_path)
 {
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
-	
-	bool t_result;
-	t_result = MCsystem -> DeleteFile(t_resolved_path);
-	
-	delete t_resolved_path;
-	
-	return t_result;
+	MCAutoStringRef t_resolved_path;
+	MCS_resolvepath(p_path, &t_resolved_path);
+		
+	return MCsystem -> DeleteFile(*t_resolved_path);
 }
 
-Boolean MCS_backup(const char *p_old_name, const char *p_new_name)
+Boolean MCS_backup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	return MCsystem -> BackupFile(p_old_name, p_new_name);
 }
 
-Boolean MCS_unbackup(const char *p_old_name, const char *p_new_name)
+Boolean MCS_unbackup(MCStringRef p_old_name, MCStringRef p_new_name)
 {
 	return MCsystem -> UnbackupFile(p_old_name, p_new_name);
 }
 	
-Boolean MCS_createalias(const char *p_target, const char *p_alias)
+Boolean MCS_createalias(MCStringRef p_target, MCStringRef p_alias)
 {
 	return MCsystem -> CreateAlias(p_target, p_alias);
 }
 
 bool MCS_resolvealias(MCStringRef p_path, MCStringRef& r_resolved, MCStringRef& r_error)
 {
-	MCAutoPointer<char> t_resolved_alias;
-	t_resolved_alias = MCsystem -> ResolveAlias(MCStringGetCString(p_path));
-	if (*t_resolved_alias == NULL)
+	MCsystem -> ResolveAlias(p_path, r_resolved);
+	if (r_resolved == nil)
 		return MCStringCreateWithCString("can't get", r_error);
 
-	return MCStringCreateWithCString(*t_resolved_alias, r_resolved);
+	return true;
 }
 
 extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
@@ -343,7 +322,7 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
-void MCS_copyresourcefork(const char *source, const char *dst)
+void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
 {
 }
 
@@ -371,21 +350,12 @@ bool MCS_setcurdir(MCStringRef p_path)
 {
 	MCAutoStringRef t_new_path;
 	if (MCS_resolvepath(p_path, &t_new_path))
-		return MCsystem -> SetCurrentFolder(MCStringGetCString(*t_new_path));
+		return MCsystem -> SetCurrentFolder(*t_new_path);
 
 	return false;
 }
 
-Boolean MCS_setcurdir(const char *p_folder)
-{
-	char *t_resolved_folder;
-	t_resolved_folder = MCS_resolvepath(p_folder);
-	
-	bool t_success;
-	t_success = MCsystem -> SetCurrentFolder(t_resolved_folder);
-	delete t_resolved_folder;
-	return t_success;
-}
+
 
 bool MCS_getcurdir(MCStringRef& r_path)
 {
@@ -467,7 +437,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	return MCListCopy(*t_state . list, r_list);
 }
 
-IO_stat MCS_chmod(const char *p_path, uint2 p_mask)
+IO_stat MCS_chmod(MCStringRef p_path, uint2 p_mask)
 {
 	if (!MCsystem -> ChangePermissions(p_path, p_mask))
 		return IO_ERROR;
@@ -501,7 +471,7 @@ bool MCS_exists(MCStringRef p_path, bool p_is_file)
 		return MCsystem->FolderExists(MCStringGetCString(*t_resolved));
 }
 
-Boolean MCS_noperm(const char *p_path)
+Boolean MCS_noperm(MCStringRef p_path)
 {
 	return MCsystem -> FileNotAccessible(p_path);
 }
@@ -820,6 +790,7 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 	return new IO_header(t_handle, 0);
 }
 
+/*
 IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
 {
 	char *t_resolved_path;
@@ -843,6 +814,45 @@ IO_handle MCS_open(const char *p_path, const char *p_mode, Boolean p_map, Boolea
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
 	delete t_resolved_path;
+	
+	if (t_handle == NULL)
+		return NULL;
+	
+	if (p_offset != 0)
+		t_handle -> Seek(p_offset, 1);
+	
+	return new IO_header(t_handle, 0);;
+}
+*/
+
+IO_handle MCS_open(MCStringRef path, MCSOpenFileMode p_mode, Boolean p_map, Boolean p_driver, uint4 p_offset)
+{
+	MCAutoStringRef t_resolved_path;
+	MCS_resolvepath(path, &t_resolved_path);
+
+	//const char *t_path = MCStringGetCString(path);
+	//const char *mode = MCStringGetCString(p_mode);
+	
+	uint32_t t_mode;
+	if (p_mode == kMCSOpenFileModeRead)
+		t_mode = kMCSystemFileModeRead;
+	else if (p_mode == kMCSOpenFileModeWrite)
+		t_mode = kMCSystemFileModeWrite;
+	else if (p_mode == kMCSOpenFileModeUpdate)
+		t_mode = kMCSystemFileModeUpdate;
+	else if (p_mode == kMCSOpenFileModeAppend)
+		t_mode = kMCSystemFileModeAppend;
+	
+	MCSystemFileHandle *t_handle;
+	if (!p_driver)
+		t_handle = MCsystem -> OpenFile(*t_resolved_path, t_mode, p_map && MCmmap);
+	else
+	{
+		t_handle = MCsystem -> OpenDevice(*t_resolved_path, t_mode, MCserialcontrolsettings);
+	}
+	
+	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
+//	delete t_resolved_path;
 	
 	if (t_handle == NULL)
 		return NULL;
@@ -891,15 +901,15 @@ IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 
 void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 {
-	const char *t_filename;
-	t_filename = ep . getcstring();
+	MCAutoStringRef t_resolved_path;
+	MCAutoStringRef t_filename_string;
+	ep . copyasstringref(&t_filename_string);
 	
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(t_filename);
+	MCS_resolvepath(*t_filename_string, &t_resolved_path);
 	
 	MCSystemFileHandle *t_file;
-	t_file = MCsystem -> OpenFile(t_resolved_path, kMCSystemFileModeRead, false);
-	delete t_resolved_path;
+	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
+	
 	if (t_file == NULL)
 	{
 		// MW-2011-05-23: [[ Bug 9549 ]] Make sure we empty the result if opening the file
@@ -939,30 +949,24 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 	t_file -> Close();
 }
 
-void MCS_savefile(const MCString& p_filename, MCExecPoint& p_data, Boolean p_binary)
+void MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 {
-	char *t_filename;
-	t_filename = p_filename . clone();
+	MCAutoStringRef t_resolved_path;
 	
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(t_filename);
-	delete t_filename;
+	MCS_resolvepath(p_filename, &t_resolved_path);
 	
 	MCSystemFileHandle *t_file;
-	t_file = MCsystem -> OpenFile(t_resolved_path, kMCSystemFileModeWrite, false);
-	delete t_resolved_path;
+	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeWrite, false);
+	
 	if (t_file == NULL)
 	{
 		MCresult -> sets("can't open file");
 		return;
 	}
-	
-	if (!p_binary)
-		p_data . binarytotext();
-	
+
 	uint32_t t_written;
-	if (!t_file -> Write(p_data . getsvalue() . getstring(), p_data . getsvalue() . getlength(), t_written) ||
-		p_data . getsvalue() . getlength() != t_written)
+	if (!t_file -> Write((const void *)MCDataGetBytePtr(p_data), (uint32_t) MCDataGetLength(p_data), t_written) ||
+		(uint32_t) MCDataGetLength(p_data) != t_written)
 		MCresult -> sets("error writing file");
 	else
 		MCresult -> clear();
@@ -1068,35 +1072,35 @@ Boolean MCS_eof(IO_handle p_stream)
 	return (p_stream -> flags & IO_ATEOF) != 0;
 }
 
-char *MCS_get_canonical_path(const char *p_path)
+bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
 {
-	char *t_path = NULL;
 	
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
+	bool t_result;
+	t_result = MCS_resolvepath(p_path, r_path);
+	MCAutoStringRef t_out_path;
+	MCU_fix_path(r_path, &t_out_path);
 	
-	return t_path;
+	return t_result;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCS_send(const MCString &message, const char *program, const char *eventtype, Boolean reply)
+void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean reply)
 {
 	MCresult->sets("not supported");
 }
 
-void MCS_reply(const MCString &message, const char *keyword, Boolean error)
+void MCS_reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
 {
 	MCresult->sets("not supported");
 }
 
-char *MCS_request_ae(const MCString &message, uint2 ae)
+void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
 {
 	MCresult->sets("not supported");
-	return NULL;
 }
 
-char *MCS_request_program(const MCString &message, const char *program)
+MCStringRef MCS_request_program(MCStringRef p_message, MCStringRef p_program)
 {
 	MCresult->sets("not supported");
 	return NULL;
@@ -1110,7 +1114,9 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	uint32_t t_data_length;
 	int t_return_code;
 
-	if (!MCsystem -> Shell(ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_data, t_data_length, t_return_code))
+	MCAutoStringRef t_filename_string;
+	/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . getstring(), &t_filename_string);
+	if (!MCsystem -> Shell(*t_filename_string,(MCDataRef &) t_data, t_return_code))
 	{
 		MCresult -> clear(False);
 		MCeerror -> add(EE_SHELL_BADCOMMAND, 0, 0, ep.getsvalue());
@@ -1123,7 +1129,7 @@ IO_stat MCS_runcmd(MCExecPoint& ep)
 	return IO_NORMAL;
 }
 
-void MCS_startprocess(MCNameRef app, const char *doc, Open_mode mode, Boolean elevated)
+void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
 {
 	MCresult -> sets("not opened");
 }
@@ -1184,7 +1190,7 @@ Boolean MCSocket::init(MCSocketHandle newfd)
 	return False;
 }
 
-MCSocket *MCS_open_socket(char *p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
+MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
 {
 	return NULL;
 }
@@ -1193,7 +1199,8 @@ void MCS_close_socket(MCSocket *p_socket)
 {
 }
 
-void MCS_read_socket(MCSocket *p_socket, MCExecPoint& ep, uint4 p_length, const char *p_until, MCNameRef p_message)
+
+void MCS_read_socket(MCSocket *p_socket, MCExecPoint &ep, uint4 length, const char *p_until, MCNameRef p_message )
 {
 }
 
@@ -1201,7 +1208,7 @@ void MCS_write_socket(const MCStringRef p_data, MCSocket *p_socket, MCObject *p_
 {
 }
 
-MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, char *p_ssl_cert_file)
+MCSocket *MCS_accept(uint2 p_port, MCObject* p_object, MCNameRef p_message, Boolean p_datagram, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
 {
 	return NULL;
 }
@@ -1291,14 +1298,14 @@ bool MCS_getDNSservers(MCListRef& r_list)
 	return true;
 }
 
-char *MCS_dnsresolve(const char *p_hostname)
+bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
-	return NULL;
+	return false;
 }
 
-char *MCS_hostaddress(void)
+bool MCS_hostaddress(MCStringRef& r_host_address)
 {
-	return NULL;
+	return false;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1311,7 +1318,7 @@ Boolean MCS_poll(real8 p_delay, int fd)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCSysModuleHandle MCS_loadmodule(const char *p_filename)
+MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 {
 	return (MCSysModuleHandle)MCsystem -> LoadModule(p_filename);
 }
@@ -1397,28 +1404,6 @@ char *MCSystemInterface::GetCurrentFolder(void)
 	return nil;
 }
 
-char *MCSystemInterface::ResolvePath(const char *p_path)
-{
-	MCAutoStringRef t_path;
-	MCAutoStringRef t_resolved;
-	char *t_cstring = nil;
-	if (MCStringCreateWithCString(p_path, &t_path) &&
-		ResolvePath(*t_path, &t_resolved) &&
-		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
-		return t_cstring;
-	return nil;
-}
 
-char *MCSystemInterface::ResolveNativePath(const char *p_path)
-{
-	MCAutoStringRef t_path;
-	MCAutoStringRef t_resolved;
-	char *t_cstring = nil;
-	if (MCStringCreateWithCString(p_path, &t_path) &&
-		ResolveNativePath(*t_path, &t_resolved) &&
-		MCCStringClone(MCStringGetCString(*t_resolved), t_cstring))
-		return t_cstring;
-	return nil;
-}
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -283,8 +283,14 @@ static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argume
 	if (p_argument_count != 1)
 		return NULL;
 
-	char *t_address;
-	t_address = MCS_dnsresolve(p_arguments[0]);
+	MCAutoStringRef t_address_string;
+	MCAutoStringRef t_arguments_string;
+	/* UNCHECKED */ MCStringCreateWithCString(p_arguments[0], &t_arguments_string);
+	MCS_dnsresolve(*t_arguments_string, &t_address_string);
+
+	char *t_address = nil;
+	if (*t_address_string != nil)
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -294,8 +300,11 @@ static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argum
 	if (p_argument_count != 0)
 		return NULL;
 
-	char *t_address;
-	t_address = MCS_hostaddress();
+	MCAutoStringRef t_address_string;
+	MCS_hostaddress(&t_address_string);
+	char *t_address = nil;
+	if (*t_address_string != nil)
+		MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -359,19 +368,19 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 
 void MCNetworkExecLoadUrl(MCExecContext& ctxt, MCStringRef p_url, MCNameRef p_message)
 {
-	MCS_loadurl(ctxt . GetObject(), MCStringGetCString(p_url), MCNameGetCString(p_message));
+	MCS_loadurl(ctxt . GetObject(), p_url, p_message);
 }
 
 void MCNetworkExecUnloadUrl(MCExecContext& ctxt, MCStringRef p_url)
 {
-	MCS_unloadurl(ctxt . GetObject(), MCStringGetCString(p_url));
+	MCS_unloadurl(ctxt . GetObject(), p_url);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCStringRef p_data, MCStringRef p_url)
+void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p_url)
 {
-	MCS_posttourl(ctxt . GetObject(), MCStringGetOldString(p_data), MCStringGetCString(p_url));
+	MCS_posttourl(ctxt . GetObject(), p_data, p_url);
 	ctxt . SetItToValue(MCurlresult -> getvalueref());
 }
 
@@ -393,7 +402,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCStringCopySubstring(p_target, MCRangeMake(5, MCStringGetLength(p_target)-5), &t_filename);
 		else
 			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-		if (!MCS_unlink(MCStringGetCString(*t_filename)))
+		if (!MCS_unlink(*t_filename))
 			ctxt . SetTheResultToStaticCString("can't delete that file");
 		else
 			ctxt . SetTheResultToEmpty();
@@ -407,7 +416,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCS_saveresfile(MCStringGetOldString(*t_filename), MCnullmcstring);
 		}
 		else
-			MCS_deleteurl(ctxt . GetObject(), MCStringGetCString(p_target));
+			MCS_deleteurl(ctxt . GetObject(), p_target);
 	}
 }
 
@@ -428,17 +437,12 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 	MCresult -> clear(True);
 
-	char *t_name_cstring;
-	t_name_cstring = strclone(MCNameGetCString(p_name));
-
-	MCSocket *s = MCS_open_socket(t_name_cstring, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, NULL);
+	MCSocket *s = MCS_open_socket(MCNameGetString(p_name), p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
 		MCsockets[MCnsockets++] = s;
 	}
-	else
-		delete t_name_cstring;
 }
 
 void MCNetworkExecOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNameRef p_message)
@@ -480,7 +484,7 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
-	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram, p_secure, p_with_verification, NULL);
+	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram, p_secure, p_with_verification, kMCEmptyString);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets,
@@ -509,7 +513,6 @@ void MCNetworkExecAcceptSecureConnectionsOnPort(MCExecContext& ctxt, uint2 p_por
 void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 p_count, MCStringRef p_sentinel, MCNameRef p_message)
 {
 	uindex_t t_index;
-	MCAutoStringRef t_output;
 	if (IO_findsocket(p_socket, t_index))
 	{
 		if (MCsockets[t_index] -> datagram && (p_message == nil || p_message == kMCEmptyName))
@@ -520,15 +523,17 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
+
+		MCObject *t_object = ctxt . GetObject();
+		MCAutoDataRef t_data;
+		
+
 		if (p_sentinel != nil)
 			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), p_count, MCStringGetCString(p_sentinel), p_message);
 		else
 			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), 0, nil, p_message);
-		if (p_message == NULL)
-		{
-			ctxt . GetEP() . copyasstringref(&t_output);
-			ctxt . SetItToValue(*t_output);
-		}
+		if (p_message == nil && *t_data != nil)
+			ctxt . SetItToValue(*t_data);
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");
@@ -651,6 +656,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 {
+	
 	if (MCftpproxyhost == nil)
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
@@ -658,7 +664,7 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 	}
 	else
 	{
-		if (MCStringFormat(r_value, "%s:%d", MCftpproxyhost, MCftpproxyport))
+		if (MCStringFormat(r_value, "%s:%d", MCStringGetCString(MCftpproxyhost), MCftpproxyport))
 			return;
 	}
 
@@ -667,14 +673,15 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCftpproxyhost;
+	MCValueRelease(MCftpproxyhost);
+	//delete MCftpproxyhost;
 	if (MCStringGetLength(p_value) == 0)
 		MCftpproxyhost = NULL;
 	else
 	{
 		char *eptr = NULL;
-		MCftpproxyhost = strclone(MCStringGetCString(p_value));
-		if ((eptr = strchr(MCftpproxyhost, ':')) != NULL)
+		MCftpproxyhost = MCValueRetain(p_value);
+		if ((eptr = strchr(strdup(MCStringGetCString(MCftpproxyhost)), ':')) != NULL)
 		{
 			*eptr++ = '\0';
 			MCftpproxyport = (uint2)strtol(eptr, NULL, 10);
