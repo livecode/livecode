@@ -52,8 +52,13 @@ static void create_var(char *v)
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
 
-	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	MCstacknames[MCnstacks++] = v;
+	MCStringRef *t_MCstacknames;
+	t_MCstacknames = (MCStringRef *)realloc(MCstacknames, sizeof(MCStringRef) * (MCnstacks + 1));
+	//MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
+	//MCstacknames[MCnstacks++] = v;
+	MCstacknames = t_MCstacknames;
+	MCstacknames[MCnstacks] = nil;
+	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
 static void create_var(uint4 p_v)

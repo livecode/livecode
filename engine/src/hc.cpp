@@ -168,6 +168,7 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	uint1 *startptr = sptr;
 	uint2 repcount = 1;
 	uint2 line = 0;
+	char *MChcstat_cstring;
 	while (dptr < deptr)
 	{
 		uint2 hrepcount = bpl;
@@ -272,7 +273,10 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 			case 0x7:
 				sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
-				MCU_addline(MChcstat, hcbuffer, False);
+				MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+				MCU_addline(MChcstat_cstring, hcbuffer, False);
+				/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
+				delete MChcstat_cstring;
 				return newdata;
 			}
 			repcount = 1;
@@ -280,7 +284,10 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 		case 0x90:
 			sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 			        opcode, (int)(sptr - startptr), line);
-			MCU_addline(MChcstat, hcbuffer, False);
+			MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+			MCU_addline(MChcstat_cstring, hcbuffer, False);
+			/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
+			delete MChcstat_cstring;
 			return newdata;
 		case 0xA0:
 		case 0xB0:
@@ -361,7 +368,10 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	{
 		sprintf(hcbuffer, "Error: ran off end of image at offset %d line %d",
 		        (int)(sptr - startptr), line);
-		MCU_addline(MChcstat, hcbuffer, False);
+		MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+		MCU_addline(MChcstat_cstring, hcbuffer, False);
+		/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
+		delete MChcstat_cstring;
 	}
 	return newdata;
 }
@@ -1331,6 +1341,7 @@ IO_stat MCHccard::parse(char *sptr)
 	maxid = MCU_max(id, maxid);
 	uint2 ntext;
 	uint4 offset;
+	char *MChcstat_cstring;
 	if (version == 1)
 	{
 		bmapid = swap_uint4(&uint4ptr[3]);
@@ -1376,7 +1387,9 @@ IO_stat MCHccard::parse(char *sptr)
 		default:
 			sprintf(hcbuffer, "Error: Unknown object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
+			MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+			MCU_addline(MChcstat_cstring, hcbuffer, False);
+			/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -1401,6 +1414,7 @@ IO_stat MCHccard::parse(char *sptr)
 	if (sptr[offset])
 		name = strclone(&sptr[offset]);
 	script = convert_script(&sptr[offset + strlen(&sptr[offset]) + 1]);
+	delete MChcstat_cstring;
 	return IO_NORMAL;
 }
 
@@ -1547,6 +1561,7 @@ IO_stat MCHcbkgd::parse(char *sptr)
 	maxid = MCU_max(id, maxid);
 	uint4 offset;
 	uint2 ntext;
+	char *MChcstat_cstring;
 	if (version == 1)
 	{
 		bmapid = swap_uint4(&uint4ptr[3]);
@@ -1590,7 +1605,9 @@ IO_stat MCHcbkgd::parse(char *sptr)
 		default:
 			sprintf(hcbuffer, "Error: bad object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
+			MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+			MCU_addline(MChcstat_cstring, hcbuffer, False);
+			/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -1858,6 +1875,7 @@ void MCHcstak::getatts(uint2 aid, const char *&font,
 IO_stat MCHcstak::read(IO_handle stream)
 {
 	char header[HC_HEADER_SIZE];
+	char *MChcstat_cstring;
 	uint4 boffset = 0;
 	uint4 roffset = 0;
 	uint4 rsize = 0;
@@ -2117,7 +2135,9 @@ IO_stat MCHcstak::read(IO_handle stream)
 			break;
 		default:
 			sprintf(hcbuffer, "Error: unknown section type -> %x", type);
-			MCU_addline(MChcstat, hcbuffer, False);
+			MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+			MCU_addline(MChcstat_cstring, hcbuffer, False);
+			/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
 			if (filetype == HC_BINHEX)
 				return IO_ERROR;
 			break;
@@ -2201,7 +2221,11 @@ IO_stat MCHcstak::read(IO_handle stream)
 			default:
 				sprintf(hcbuffer, "Not converting %4.4s id %5d \"%s\"",
 				        (char *)&type, id, tname);
-				MCU_addline(MChcstat, hcbuffer, False);
+				MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+				MCU_addline(MChcstat_cstring, hcbuffer, False);
+				/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
+				
+
 				delete tname;
 				break;
 			}
@@ -2398,19 +2422,23 @@ MCStack *MCHcstak::build()
 IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 {
 	maxid = 0;
-	delete MChcstat;
-	MChcstat = MCU_empty();
+	MCValueRelease(MChcstat);
+	/* UNCHECKED */ MCStringCreateWithCString(MCU_empty(), MChcstat);
 	hcbuffer = new char[HC_MESSAGE_LENGTH];
 	MCHcstak *hcstak = new MCHcstak(strclone(name));
 	sprintf(hcbuffer, "Loading stack %s...", name);
-	MCU_addline(MChcstat, hcbuffer, True);
+
+	char *MChcstat_cstring = strdup(MCStringGetCString(MChcstat));
+	MCU_addline(MChcstat_cstring, hcbuffer, True);
+	/* UNCHECKED */ MCStringCreateWithCString(MChcstat_cstring, MChcstat);
+
 	uint2 startlen = strlen(hcbuffer);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();
 	delete hcbuffer;
 	delete hcstak;
-	if (!MClockerrors && strlen(MChcstat) != startlen)
+	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
 		MCStack *tptr = MCdefaultstackptr->findstackname(MChcstatnamestring);
 		if (tptr != NULL)

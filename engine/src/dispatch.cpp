@@ -910,8 +910,8 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		delete linkname;
 		return IO_ERROR;
 	}
-	char *oldfiletype = MCfiletype;
-	MCfiletype = strdup(MCStringGetCString(MCstackfiletype));
+	char *oldfiletype = strdup(MCStringGetCString(MCfiletype));
+	MCfiletype = MCValueRetain(MCstackfiletype);
 	
 	MCAutoStringRef t_backup;
 	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", linkname); 
@@ -920,7 +920,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))
 	{
 		MCresult->sets("can't open stack backup file");
-		MCfiletype = oldfiletype;
+		/* UNCHECKED */ MCStringCreateWithCString(oldfiletype, MCfiletype);
 		delete linkname;
 
 		return IO_ERROR;
@@ -931,10 +931,10 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	{
 		MCresult->sets("can't open stack file");
 		cleanup(stream, *t_linkname, *t_backup);
-		MCfiletype = oldfiletype;
+		/* UNCHECKED */ MCStringCreateWithCString(oldfiletype, MCfiletype);
 		return IO_ERROR;
 	}
-	MCfiletype = oldfiletype;
+	/* UNCHECKED */ MCStringCreateWithCString(oldfiletype, MCfiletype);
 	MCString errstring = "Error writing stack (disk full?)";
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.

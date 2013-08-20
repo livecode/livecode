@@ -2138,14 +2138,15 @@ void MCFilesSetUMask(MCExecContext& ctxt, uinteger_t p_value)
 }
 void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCfiletype, r_value))
+	r_value = MCValueRetain(MCfiletype);
+	if (MCStringIsEqualTo(MCfiletype, r_value, kMCStringOptionCompareExact))
 		return;
 
 	ctxt . Throw();
 }
 void MCFilesSetFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCfiletype = strclone(MCStringGetCString(p_value));
+	MCfiletype = MCValueRetain(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

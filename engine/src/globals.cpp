@@ -91,7 +91,7 @@ int MCidleRate = 200;
 
 Boolean MCaqua;
 char *MCcmd;
-char *MCfiletype;
+MCStringRef MCfiletype;
 MCStringRef MCstackfiletype;
 
 
@@ -108,7 +108,7 @@ Boolean MCuseXft = True;
 Boolean MCuselibgnome = False ;
 Boolean MCuseESD = False ;
 
-char **MCstacknames = NULL;
+MCStringRef *MCstacknames = NULL;
 int2 MCnstacks = 0;
 
 Boolean MCnofiles = False;
@@ -340,9 +340,9 @@ MCStringRef MCvcplayer;
 MCStringRef MCftpproxyhost;
 uint2 MCftpproxyport;
 
-char *MChttpproxy;
+MCStringRef MChttpproxy;
 
-char *MChttpheaders;
+MCStringRef MChttpheaders;
 int4 MCrandomseed;
 Boolean MCshowinvisibles;
 MCObjectList *MCbackscripts;
@@ -357,7 +357,7 @@ MCVariable *MCglobals;
 MCVariable *MCmb;
 MCVariable *MCeach;
 MCVariable *MCdialogdata;
-char *MChcstat;
+MCStringRef MChcstat;
 
 MCVariable *MCresult;
 MCVariable *MCurlresult;
@@ -901,7 +901,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCvcplayer = MCSTR("");
 #endif
 
-	MCfiletype = strclone("ttxtTEXT");
+	MCfiletype = MCSTR("ttxtTEXT");
 	const char *tname = strrchr(MCcmd, PATH_SEPARATOR);
 	if (tname == NULL)
 		tname = MCcmd;
@@ -1004,7 +1004,7 @@ int X_close(void)
 	delete MCtooltip;
 	MCtooltip = NULL;
 
-	delete MChttpproxy;
+	MCValueRelease(MChttpproxy);
 	MCValueRelease(MCpencolorname);
 	MCValueRelease(MCbrushcolorname);
 	MCValueRelease(MChilitecolorname);
@@ -1064,10 +1064,10 @@ int X_close(void)
 	delete MCresult;
 	delete MCurlresult;
 	delete MCdialogdata;
-	delete MChcstat;
+	MCValueRelease(MChcstat);
 
 	delete MCusing;
-	delete MChttpheaders;
+	MCValueRelease(MChttpheaders);
 	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
 	MCValueRelease(MClinkatts . hilitecolorname);
@@ -1096,7 +1096,7 @@ int X_close(void)
 
 	MCValueRelease(MCshellcmd);
 	MCValueRelease(MCvcplayer);
-	delete MCfiletype;
+	MCValueRelease(MCfiletype);
 	MCValueRelease(MCstackfiletype);
 	MCValueRelease(MCserialcontrolsettings);
 	
@@ -1146,7 +1146,8 @@ int X_close(void)
 	MCValueRelease(MClicenseparameters . addons);
 
 	// Cleanup the startup stacks list
-	delete MCstacknames;
+	for(uint4 i = 0; i < MCnstacks; ++i)
+		MCValueRelease(MCstacknames[i]);
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();

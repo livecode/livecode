@@ -300,7 +300,7 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	t_headers = NULL;
 	if (t_error == NULL && MChttpheaders != NULL && t_is_http)
 	{
-		if (!url_build_header_list(MChttpheaders, t_headers))
+		if (!url_build_header_list(MCStringGetCString(MChttpheaders), t_headers))
 			t_error = "couldn't build header list";
 	}
 	

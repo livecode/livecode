@@ -526,8 +526,13 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 		if (MCModeShouldQueueOpeningStacks())
 		{
-			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-			MCstacknames[MCnstacks++] = strclone(fullPathName);
+			MCStringRef *t_MCstacknames;
+			t_MCstacknames = (MCStringRef *)realloc(MCstacknames, sizeof(MCStringRef) * (MCnstacks + 1));
+			//MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
+			//MCstacknames[MCnstacks++] = strclone(fullPathName);
+			MCstacknames = t_MCstacknames;
+			MCstacknames[MCnstacks] = nil;
+			/* UNCHECHED */ MCStringCreateWithCString(fullPathName, MCstacknames[MCnstacks++]);
 		}
 		else
 		{
@@ -952,7 +957,7 @@ void MCS_init()
 				if (err == noErr)
 				{
 					p2cstr(proxystr);
-					MChttpproxy = strclone((char *)proxystr);
+					/* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, MChttpproxy);
 				}
 			}
 			ICStop(icinst);

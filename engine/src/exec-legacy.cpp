@@ -478,7 +478,8 @@ void MCLegacySetRevRuntimeBehaviour(MCExecContext& ctxt, uint4 p_value)
 
 void MCLegacyGetHcImportStat(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MChcstat, r_value))
+	r_value = MCValueRetain(MChcstat);
+	if (MCStringIsEqualTo(MChcstat, r_value, kMCStringOptionCompareExact))
 		return;
 
 	ctxt . Throw();
@@ -486,7 +487,7 @@ void MCLegacyGetHcImportStat(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCCStringClone(MCStringGetCString(p_value), MChcstat))
+	if (MCStringCopy(p_value, MChcstat))
 		return;
 
 	ctxt . Throw();

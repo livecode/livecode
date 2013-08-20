@@ -102,7 +102,7 @@ void MCS_init()
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
 		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
-			MChttpproxy = ep . getsvalue() . clone();
+			/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . clone(), MChttpproxy);
 	}
 	else
 	{
@@ -118,7 +118,7 @@ void MCS_init()
 			ep.ston();
 			t_port = ep.getint4();
 			ep.setstringf("%s:%d", t_host, t_port);
-			MChttpproxy = ep . getsvalue() . clone();
+			/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . clone(), MChttpproxy);
 			delete t_host;
 		}
 	}

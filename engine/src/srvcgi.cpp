@@ -1641,7 +1641,7 @@ void cgi_finalize_session()
 
 // Session properties
 
-static char *s_session_temp_dir = NULL;
+static MCStringRef s_session_temp_dir = NULL;
 bool MCS_get_temporary_folder(MCStringRef &r_folder);
 
 bool MCS_set_session_save_path(MCStringRef p_path)
@@ -1663,9 +1663,13 @@ bool MCS_get_session_save_path(MCStringRef& r_path)
 		return MCStringCreateWithCString(MCsessionsavepath, r_path);
 	
 	if (s_session_temp_dir != NULL)
-		return MCStringCreateWithCString(s_session_temp_dir, r_path);
+	{
+		r_path = MCValueRetain(s_session_temp_dir);
+		return MCStringIsEqualTo(s_session_temp_dir, r_path, kMCStringOptionCompareExact);
+	}
 	
-	/* UNCHECKED */ MCStringCreateWithCString(s_session_temp_dir, r_path);
+	r_path = MCValueRetain(s_session_temp_dir);
+	
 	if (MCS_get_temporary_folder(r_path))
 		return true;
 	
