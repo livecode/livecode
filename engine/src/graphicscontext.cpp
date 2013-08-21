@@ -20,6 +20,50 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include "mblandroidtypeface.h"
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCAndroidFont *t_android_font;
+	t_android_font = (MCAndroidFont*)p_font-> fid;
+	
+	MCGFont t_font;
+	t_font . size = t_android_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = t_android_font -> typeface;
+	return t_font;
+}
+
+#elif defined(TARGET_PLATFORM_MACOS_X)
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . style = p_font -> style;
+	t_font . fid = p_font -> fid;
+	return t_font;
+}
+
+#else
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = p_font -> fid;
+	return t_font;
+}
+
+#endif
+
 static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
 {
 	MCGRectangle t_rect;
@@ -762,44 +806,35 @@ void MCGraphicsContext::drawlink(const char *link, const MCRectangle& region)
 {
 }
 
-#if defined(TARGET_SUBPLATFORM_ANDROID)
 
-#include "mblandroidtypeface.h"
-
-// On Android, uses Skia's drawing routines directly to render text.
 void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
 {
+	MCGFont t_font;
+	t_font = MCFontStructToMCGFont(f);
+	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(s, length));	
-	if (f -> unicode || p_unicode_override)
-		ep . utf16toutf8();
-	else
-		ep . nativetoutf8();
+	if (!f -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
 	
-	MCAndroidFont *t_font;
-	t_font = (MCAndroidFont*)f -> fid;
-	MCGContextDrawText(m_gcontext, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font -> size, t_font -> typeface);
-}
+	MCGContextDrawPlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), MCGPointMake(x, y), t_font);
+}	
 
 int4 MCGraphicsContext::textwidth(MCFontStruct *f, const char *s, uint2 length, bool p_unicode_override)
 {
+	MCGFont t_font;
+	t_font = MCFontStructToMCGFont(f);
+	
 	MCExecPoint ep;
 	ep . setsvalue(MCString(s, length));	
-	if (f -> unicode || p_unicode_override)
-		ep . utf16toutf8();
-	else
-		ep . nativetoutf8();
-    
-    MCAndroidFont *t_font;
-	t_font = (MCAndroidFont*)f -> fid;
-	return MCGContextMeasureText(m_gcontext, ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font -> size);
+	if (!f -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(m_gcontext, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
-#else
+#if 0
 
-// On all other platforms, use platform specific routines to render the text into a mask
-// making sure to take into account the context's current transform and clip.
-// Then render the mask into the current graphics context.
 void MCGraphicsContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override)
 {
 	bool t_success;

@@ -2272,18 +2272,23 @@ void MCGContextDrawText(MCGContextRef self, const char *p_text, uindex_t p_lengt
 	self -> layer -> canvas -> drawText(p_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 }
 
-MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t p_length, uint32_t p_font_size)
+MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t p_length, uint32_t p_font_size, void *p_typeface)
 {
-	MCGFloat t_width;
-	t_width = 0.0f;
-	
 	if (!MCGContextIsValid(self))
-		return t_width;
+		return 0.0;
 	
 	SkPaint t_paint;
 	t_paint . setTextSize(p_font_size);
-	t_width = (MCGFloat) t_paint . measureText(p_text, p_length);
-	return t_width;
+	
+	if (p_typeface != NULL)
+	{
+		SkTypeface *t_typeface;
+		t_typeface = (SkTypeface *) p_typeface;
+		t_typeface -> ref();
+		t_paint . setTypeface(t_typeface);
+	}
+	
+	return (MCGFloat) t_paint . measureText(p_text, p_length);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
