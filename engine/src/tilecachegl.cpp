@@ -199,13 +199,8 @@ static bool MCTileCacheOpenGLCompositorCreateTile(MCTileCacheOpenGLCompositorCon
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     
-    // MW-2011-10-07: iOS 5 doesn't like an inconsistency in input format between
-    //   TexImage2D and TexSubImage2D.
-#ifdef _IOS_MOBILE
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_BGRA, GL_UNSIGNED_BYTE, nil);
-#else
+	// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, kSuperTileSize, kSuperTileSize, 0, GL_RGBA, GL_UNSIGNED_BYTE, nil);
-#endif
     
 	// Fill in the free list - subtile 0 is the one we will allocate.
 	for(uint32_t i = 1; i < self -> super_tile_arity; i++)
@@ -358,11 +353,8 @@ bool MCTileCacheOpenGLCompositor_AllocateTile(void *p_context, int32_t p_size, c
 		t_y = t_sub_tile_index / (kSuperTileSize / self -> tile_size);
 		
 		// Fill the texture.
-#ifdef _IOS_MOBILE
-		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_BGRA, GL_UNSIGNED_BYTE, t_data);
-#else
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
 		glTexSubImage2D(GL_TEXTURE_2D, 0, t_x * self -> tile_size, t_y * self -> tile_size, self -> tile_size, self -> tile_size, GL_RGBA, GL_UNSIGNED_BYTE, t_data);
-#endif
 
 		// Set the tile id.
 		t_tile = (void *)t_tile_id;

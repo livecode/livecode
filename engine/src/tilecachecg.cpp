@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+
 typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint4 p_src_stride, uint4 p_width, uint4 p_height, uint1 p_opacity);
 extern surface_combiner_t s_surface_combiners_nda[];
 
@@ -82,9 +84,13 @@ bool MCTileCacheCoreGraphicsCompositor_AllocateTile(void *p_context, int32_t p_s
 	CGImageRef t_tile;
 	t_tile = nil;
 	if (t_data != nil)
-	{	
+	{
+		// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+		CGBitmapInfo t_bm_info;
+		t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
+		
 		CGContextRef t_cgcontext;
-		t_cgcontext = CGBitmapContextCreate((void *)t_data, p_size, p_size, 8, p_size * sizeof(uint32_t), self -> colorspace, kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst);
+		t_cgcontext = CGBitmapContextCreate((void *)t_data, p_size, p_size, 8, p_size * sizeof(uint32_t), self -> colorspace, t_bm_info);
 		if (t_cgcontext != nil)
 		{
 			t_tile = CGBitmapContextCreateImage(t_cgcontext);

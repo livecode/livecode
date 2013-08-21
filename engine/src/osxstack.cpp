@@ -61,6 +61,8 @@ static void *s_update_context = nil;
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+
 OSStatus MCRevolutionStackViewCreate(MCStack *p_stack, ControlRef* r_control);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1094,26 +1096,21 @@ static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void
 	t_colorspace = CGColorSpaceCreateDeviceRGB();
 	if (t_colorspace != nil)
 	{
-		// MM-2013-02-07: Adjust byte order of bitmap to match that of Skia (for new graphics context)
-		// MM-2013-02-13: Reverted back and altered Skia's native byte ordering instead.
-		CGBitmapInfo t_bitmap_info;
-		t_bitmap_info = kCGBitmapByteOrder32Host;
-		t_bitmap_info |= p_has_alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
+		MCGRaster t_raster;
+		t_raster.width = p_area.size.width;
+		t_raster.height = p_area.size.height;
+		t_raster.pixels = const_cast<void*>(p_bits);
+		t_raster.stride = p_stride;
+		t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
 		
-		CGContextRef t_cgcontext;
-		t_cgcontext = CGBitmapContextCreate((void *)p_bits, p_area . size . width, p_area . size . height, 8, p_stride, t_colorspace, t_bitmap_info);
-		if (t_cgcontext != nil)
+		CGImageRef t_image;
+		t_image = nil;
+		
+		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, t_raster.width, t_raster.height), t_colorspace, false, false, t_image))
 		{
-			CGImageRef t_image;
-			t_image = CGBitmapContextCreateImage(t_cgcontext);
-			CGContextRelease(t_cgcontext);
-			
-			if (t_image != nil)
-			{
-				CGContextClipToRect((CGContextRef)p_target, p_area);
-				CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
-				CGImageRelease(t_image);
-			}
+			CGContextClipToRect((CGContextRef)p_target, p_area);
+			CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
+			CGImageRelease(t_image);
 		}
 		
 		CGColorSpaceRelease(t_colorspace);

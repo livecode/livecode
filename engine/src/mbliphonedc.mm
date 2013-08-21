@@ -66,6 +66,8 @@ extern void setup_simulator_hooks(void);
 
 @class com_runrev_livecode_MCIPhoneBreakWaitHelper;
 
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 Boolean tripleclick = False;
@@ -450,7 +452,10 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		if (t_success)
 		{
 			MCImageBitmapClear(t_bitmap);
-			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+			// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+			CGBitmapInfo t_bm_info;
+			t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, false);
+			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bm_info);
 			t_success = t_img_context != nil;
 		}
 		

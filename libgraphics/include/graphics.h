@@ -28,7 +28,8 @@ typedef struct __MCGDashes *MCGDashesRef;
 
 typedef uint32_t MCGPixelFormat;
 
-#if defined(ANDROID)
+// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+#if defined(ANDROID) || defined(TARGET_SUBPLATFORM_IPHONE)
 #define kMCGPixelFormatNative kMCGPixelFormatRGBA
 #else
 #define kMCGPixelFormatNative kMCGPixelFormatBGRA

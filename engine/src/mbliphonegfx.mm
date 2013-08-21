@@ -48,6 +48,8 @@ extern UIView *MCIPhoneGetView(void);
 extern float MCIPhoneGetResolutionScale(void);
 extern float MCIPhoneGetDeviceScale(void);
 
+bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
@@ -266,22 +268,23 @@ protected:
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateDeviceRGB();
 		
-		CGContextRef t_context;
-		t_context = CGBitmapContextCreate(p_bits, m_locked_area . width, m_locked_area . height, 8, p_stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
-		CGColorSpaceRelease(t_colorspace);
+		CGImageRef t_image;
+		t_image = nil;
 		
-		if (t_context != nil)
+		MCGRaster t_raster;
+		t_raster.width = m_locked_area.width;
+		t_raster.height = m_locked_area.height;
+		t_raster.pixels = p_bits;
+		t_raster.stride = p_stride;
+		t_raster.format = kMCGRasterFormat_ARGB;
+		
+		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, m_locked_area.width, m_locked_area.height), t_colorspace, false, false, t_image))
 		{
-			CGImageRef t_image;
-			t_image = CGBitmapContextCreateImage(t_context);
-			CGContextRelease(t_context);
-			
-			if (t_image != nil)
-			{
-				CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)m_locked_area . y, (float)m_locked_area . width, (float)m_locked_area . height), t_image);
-				CGImageRelease(t_image);
-			}
+			CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)m_locked_area . y, (float)m_locked_area . width, (float)m_locked_area . height), t_image);
+			CGImageRelease(t_image);
 		}
+		
+		CGColorSpaceRelease(t_colorspace);
 		
 		UnlockTarget();
 	}
@@ -396,9 +399,8 @@ protected:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
-        // MW-2011-10-07: iOS 5 doesn't like an inconsistency in input format between
-        //   TexImage2D and TexSubImage2D.
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -431,7 +433,8 @@ protected:
 				
 				// Fill the texture scanline by scanline
 				for(int32_t s = 0; s < t_th; s++)
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, s, t_tw, 1, GL_BGRA, GL_UNSIGNED_BYTE, (uint8_t *)p_bits + (y * 256 + s) * p_stride + x * 256 * sizeof(uint32_t));
+					// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, s, t_tw, 1, GL_RGBA, GL_UNSIGNED_BYTE, (uint8_t *)p_bits + (y * 256 + s) * p_stride + x * 256 * sizeof(uint32_t));
 				
 				int32_t t_px, t_py;
 				t_px = x * 256;
