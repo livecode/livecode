@@ -1012,7 +1012,7 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 		case kMCGBlendModeCopy:
 			return kCGBlendModeCopy;
 		case kMCGBlendModeSourceOver:
-			return kCGBlendModeCopy;
+			return kCGBlendModeNormal;
 		case kMCGBlendModeSourceIn:
 			return kCGBlendModeSourceIn;
 		case kMCGBlendModeSourceOut:
