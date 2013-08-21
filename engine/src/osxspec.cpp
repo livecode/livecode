@@ -673,67 +673,67 @@ extern "C"
 //	}
 //	return noErr;
 //}
-
-
-static void handle_signal(int sig)
-{
-	MCHandler handler(HT_MESSAGE);
-	switch (sig)
-	{
-	case SIGUSR1:
-		MCsiguser1++;
-		break;
-	case SIGUSR2:
-		MCsiguser2++;
-		break;
-	case SIGTERM:
-		switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
-		{
-		case ES_NORMAL:
-			return;
-		case ES_PASS:
-		case ES_NOT_HANDLED:
-			MCdefaultstackptr->getcard()->message(MCM_shut_down);
-			MCquit = True; //set MC quit flag, to invoke quitting
-			return;
-		default:
-			break;
-		}
-		MCS_killall();
-		exit(-1);
-		
-	// MW-2009-01-29: [[ Bug 6410 ]] If one of these signals occurs, we need
-	//   to return, so that the OS can CrashReport away.
-	case SIGILL:
-	case SIGBUS:
-	case SIGSEGV:
-		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
-		MCS_killall();
-		return;
-
-	case SIGHUP:
-	case SIGINT:
-	case SIGQUIT:
-	case SIGIOT:
-		if (MCnoui)
-			exit(1);
-		MCabortscript = True;
-		break;
-	case SIGFPE:
-		errno = EDOM;
-		break;
-	case SIGCHLD:
-		MCS_checkprocesses();
-		break;
-	case SIGALRM:
-		MCalarm = True;
-		break;
-	case SIGPIPE:
-	default:
-		break;
-	}
-	return;
-}
+//
+//
+//static void handle_signal(int sig)
+//{
+//	MCHandler handler(HT_MESSAGE);
+//	switch (sig)
+//	{
+//	case SIGUSR1:
+//		MCsiguser1++;
+//		break;
+//	case SIGUSR2:
+//		MCsiguser2++;
+//		break;
+//	case SIGTERM:
+//		switch (MCdefaultstackptr->getcard()->message(MCM_shut_down_request))
+//		{
+//		case ES_NORMAL:
+//			return;
+//		case ES_PASS:
+//		case ES_NOT_HANDLED:
+//			MCdefaultstackptr->getcard()->message(MCM_shut_down);
+//			MCquit = True; //set MC quit flag, to invoke quitting
+//			return;
+//		default:
+//			break;
+//		}
+//		MCS_killall();
+//		exit(-1);
+//		
+//	// MW-2009-01-29: [[ Bug 6410 ]] If one of these signals occurs, we need
+//	//   to return, so that the OS can CrashReport away.
+//	case SIGILL:
+//	case SIGBUS:
+//	case SIGSEGV:
+//		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+//		MCS_killall();
+//		return;
+//
+//	case SIGHUP:
+//	case SIGINT:
+//	case SIGQUIT:
+//	case SIGIOT:
+//		if (MCnoui)
+//			exit(1);
+//		MCabortscript = True;
+//		break;
+//	case SIGFPE:
+//		errno = EDOM;
+//		break;
+//	case SIGCHLD:
+//		MCS_checkprocesses();
+//		break;
+//	case SIGALRM:
+//		MCalarm = True;
+//		break;
+//	case SIGPIPE:
+//	default:
+//		break;
+//	}
+//	return;
+//}
 //
 //static void init_utf8_converters(void)
 //{
@@ -1813,93 +1813,93 @@ Boolean MCS_nodelay(int4 fd)
 //	/* RESULT */ //MCresult -> sets("not supported");
 //	return MCStringCreateWithCString("not supported", r_error);
 //}
-
-Boolean MCS_poll(real8 delay, int fd)
-{
-	Boolean handled = False;
-	fd_set rmaskfd, wmaskfd, emaskfd;
-	FD_ZERO(&rmaskfd);
-	FD_ZERO(&wmaskfd);
-	FD_ZERO(&emaskfd);
-	int4 maxfd = 0;
-	if (!MCnoui)
-	{
-		if (fd != 0)
-			FD_SET(fd, &rmaskfd);
-		maxfd = fd;
-	}
-	if (MCshellfd != -1)
-	{
-		FD_SET(MCshellfd, &rmaskfd);
-		if (MCshellfd > maxfd)
-			maxfd = MCshellfd;
-	}
-
-	uint2 i;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		int fd = MCsockets[i]->fd;
-		if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
-				MCsockets[i]->resolve_state == kMCSocketStateError)
-			continue;
-		if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-			FD_SET(fd, &rmaskfd);
-		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-			FD_SET(fd, &wmaskfd);
-		FD_SET(fd, &emaskfd);
-		if (fd > maxfd)
-			maxfd = fd;
-		if (MCsockets[i]->added)
-		{
-			delay = 0.0;
-			MCsockets[i]->added = False;
-			handled = True;
-		}
-	}
-
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
-	int n = 0;
-	
-	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
-
-	if (n <= 0)
-		return handled;
-
-	if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
-		return True;
-
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		int fd = MCsockets[i]->fd;
-		if (FD_ISSET(fd, &emaskfd) && fd != 0)
-		{
-
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-
-		}
-		else
-		{
-			if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
-			{
-				MCsockets[i]->readsome();
-			}
-			if (FD_ISSET(fd, &wmaskfd))
-			{
-				MCsockets[i]->writesome();
-			}
-		}
-		MCsockets[i]->setselect();
-	}
-
-	return True;
-}
+//
+//Boolean MCS_poll(real8 delay, int fd)
+//{
+//	Boolean handled = False;
+//	fd_set rmaskfd, wmaskfd, emaskfd;
+//	FD_ZERO(&rmaskfd);
+//	FD_ZERO(&wmaskfd);
+//	FD_ZERO(&emaskfd);
+//	int4 maxfd = 0;
+//	if (!MCnoui)
+//	{
+//		if (fd != 0)
+//			FD_SET(fd, &rmaskfd);
+//		maxfd = fd;
+//	}
+//	if (MCshellfd != -1)
+//	{
+//		FD_SET(MCshellfd, &rmaskfd);
+//		if (MCshellfd > maxfd)
+//			maxfd = MCshellfd;
+//	}
+//
+//	uint2 i;
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		int fd = MCsockets[i]->fd;
+//		if (!fd || MCsockets[i]->resolve_state == kMCSocketStateResolving ||
+//				MCsockets[i]->resolve_state == kMCSocketStateError)
+//			continue;
+//		if (MCsockets[i]->connected && !MCsockets[i]->closing
+//		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
+//			FD_SET(fd, &rmaskfd);
+//		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+//			FD_SET(fd, &wmaskfd);
+//		FD_SET(fd, &emaskfd);
+//		if (fd > maxfd)
+//			maxfd = fd;
+//		if (MCsockets[i]->added)
+//		{
+//			delay = 0.0;
+//			MCsockets[i]->added = False;
+//			handled = True;
+//		}
+//	}
+//
+//	struct timeval timeoutval;
+//	timeoutval.tv_sec = (long)delay;
+//	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+//	int n = 0;
+//	
+//	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+//
+//	if (n <= 0)
+//		return handled;
+//
+//	if (MCshellfd != -1 && FD_ISSET(MCshellfd, &rmaskfd))
+//		return True;
+//
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		int fd = MCsockets[i]->fd;
+//		if (FD_ISSET(fd, &emaskfd) && fd != 0)
+//		{
+//
+//			if (!MCsockets[i]->waiting)
+//			{
+//				MCsockets[i]->error = strclone("select error");
+//				MCsockets[i]->doclose();
+//			}
+//
+//		}
+//		else
+//		{
+//			if (FD_ISSET(fd, &rmaskfd) && !MCsockets[i]->shared)
+//			{
+//				MCsockets[i]->readsome();
+//			}
+//			if (FD_ISSET(fd, &wmaskfd))
+//			{
+//				MCsockets[i]->writesome();
+//			}
+//		}
+//		MCsockets[i]->setselect();
+//	}
+//
+//	return True;
+//}
 //
 ///*****************************************************************************
 // *  Apple events handler	 			 	             *
@@ -3359,11 +3359,11 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //{
 //	return isatty(fd) != 0;
 //}
-
-bool MCS_isnan(double v)
-{
-	return isnan(v);
-}
+//
+//bool MCS_isnan(double v)
+//{
+//	return isnan(v);
+//}
 //
 //uint32_t MCS_getsyserror(void)
 //{
@@ -3375,43 +3375,43 @@ bool MCS_isnan(double v)
 //	r_error = false;
 //	return MCStringCreateWithCString("not supported", r_result);
 //}
-
-void MCS_system_alert(const char *p_title, const char *p_message)
-{
-	CFStringRef t_cf_title, t_cf_message;
-	t_cf_title = CFStringCreateWithCString(NULL, p_title, kCFStringEncodingMacRoman);
-	t_cf_message = CFStringCreateWithCString(NULL, p_message, kCFStringEncodingMacRoman);
-	DialogRef t_alert;
-	CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
-	
-	DialogItemIndex t_result;
-	RunStandardAlert(t_alert, NULL, &t_result);
-	CFRelease(t_cf_title);
-	CFRelease(t_cf_message);
-}
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-	CFUUIDRef t_uuid;
-	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-	if (t_uuid != NULL)
-	{
-		CFStringRef t_uuid_string;
-		
-		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-		if (t_uuid_string != NULL)
-		{
-			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-			CFRelease(t_uuid_string);
-		}
-		
-		CFRelease(t_uuid);
-
-		return true;
-	}
-
-	return false;
-}
+//
+//void MCS_system_alert(const char *p_title, const char *p_message)
+//{
+//	CFStringRef t_cf_title, t_cf_message;
+//	t_cf_title = CFStringCreateWithCString(NULL, p_title, kCFStringEncodingMacRoman);
+//	t_cf_message = CFStringCreateWithCString(NULL, p_message, kCFStringEncodingMacRoman);
+//	DialogRef t_alert;
+//	CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
+//	
+//	DialogItemIndex t_result;
+//	RunStandardAlert(t_alert, NULL, &t_result);
+//	CFRelease(t_cf_title);
+//	CFRelease(t_cf_message);
+//}
+//
+//bool MCS_generate_uuid(char p_buffer[128])
+//{
+//	CFUUIDRef t_uuid;
+//	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
+//	if (t_uuid != NULL)
+//	{
+//		CFStringRef t_uuid_string;
+//		
+//		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
+//		if (t_uuid_string != NULL)
+//		{
+//			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
+//			CFRelease(t_uuid_string);
+//		}
+//		
+//		CFRelease(t_uuid);
+//
+//		return true;
+//	}
+//
+//	return false;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////
 

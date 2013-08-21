@@ -135,8 +135,7 @@ extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *p_n
 extern Boolean MCS_isleadbyte(uint1 charset, char *s);
 
 extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
-/* LEGACY */ extern MCSysModuleHandle MCS_loadmodule(const char *p_filename);
-extern void *MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
+extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
 extern void MCS_unloadmodule(MCSysModuleHandle p_module);
 
 extern void MCS_getlocaldatetime(MCDateTime& x_datetime);
@@ -153,7 +152,7 @@ extern bool MCS_processtypeisforeground(void);
 extern bool MCS_changeprocesstype(bool to_foreground);
 
 extern bool MCS_isatty(int);
-extern bool MCS_isnan(double value);
+extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
 

@@ -96,6 +96,8 @@ struct MCMacSystemServiceInterface: public MCServiceInterface
     
     virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
+    virtual void RequestAE(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value) = 0;
+    virtual void RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
 };
 
 struct MCWindowsSystemServiceInterface: public MCServiceInterface
@@ -184,7 +186,7 @@ struct MCSystemInterface
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;
-	virtual void *ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
+	virtual MCSysModuleHandle ResolveModuleSymbol(MCSysModuleHandle p_module, MCStringRef p_symbol) = 0;
 	virtual void UnloadModule(MCSysModuleHandle p_module) = 0;
 	
 	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list) = 0;
@@ -199,6 +201,7 @@ struct MCSystemInterface
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
+    virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path) = 0;
 
 	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
 
@@ -211,9 +214,12 @@ struct MCSystemInterface
     
     virtual void CheckProcesses(void) = 0;
     
+    virtual bool GenerateUUID(char p_buffer[128]) = 0;
+    
     virtual void SystemAlert(MCStringRef p_title, MCStringRef p_message) = 0;
     virtual uint32_t GetSystemError(void) = 0;
     virtual bool IsATTY(int fd) = 0;
+    virtual bool IsNaN(double p_value) = 0;
     
     virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
     
@@ -223,6 +229,7 @@ struct MCSystemInterface
     virtual void CloseProcess(uint2 p_index) = 0;
     virtual void Kill(int4 p_pid, int4 p_sig) = 0;
     virtual void KillAll(void) = 0;
+    virtual Boolean Poll(real8 p_delay, int p_fd) = 0;
     
     virtual int GetErrno(void) = 0;
     virtual void SetErrno(int p_errno) = 0;
