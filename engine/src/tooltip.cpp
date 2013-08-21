@@ -128,9 +128,9 @@ void MCTooltip::opentip()
 	if (!MCModeMakeLocalWindows())
 	{
 		MCColor t_color;
-		MCscreen -> parsecolor(MCttbgcolor, &t_color, nil);
+		MCscreen -> parsecolor(MCStringGetCString(MCttbgcolor),&t_color, nil);
 		MCModeShowToolTip(trect . x, trect . y + 16,
-				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCttfont,
+				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCStringGetCString(MCttfont),
 				tooltip);
 		MCscreen->addtimer(this, MCM_internal2, MCtooltime);
 		openrect(trect, WM_TOOLTIP, NULL, WP_DEFAULT,OP_NONE);
@@ -144,7 +144,7 @@ void MCTooltip::opentip()
 	// MW-2012-02-17: [[ LogFonts ]] Convert the tooltip font string to
 	//   a name and create the font.
 	MCAutoNameRef t_tt_font;
-	t_tt_font . CreateWithCString(MCttfont);
+	t_tt_font . CreateWithCString(MCStringGetCString(MCttfont));
 	/* UNCHECKED */ MCFontCreate(t_tt_font, MCFontStyleFromTextStyle(FA_DEFAULT_STYLE), MCttsize, m_font);
 
 	rect.width = 0;

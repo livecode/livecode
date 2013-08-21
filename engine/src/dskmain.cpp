@@ -79,7 +79,7 @@ static char apppath[PATH_MAX];
 bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
-	MCstackbottom = (char *)&i;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
 
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -151,7 +151,11 @@ bool X_init(int argc, char *argv[], char *envp[])
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
 	if (MCcmd[0] != '/')
 	{//not c:/mc/xxx, not /mc/xxx
-		char *tpath = MCS_getcurdir();
+        MCAutoStringRef tpath_str;
+		
+        /* UNCHECKED */ MCS_getcurdir(&tpath_str);
+        char *tpath = strdup(MCStringGetCString(*tpath_str));
+        
 		if (tpath && strlen(MCcmd) + strlen(tpath) < PATH_MAX)
 		{
 			strcpy(apppath,tpath);
@@ -313,7 +317,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 void X_main_loop_iteration()
 {
 	int i;
-	MCstackbottom = (char *)&i;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
 
 	////
 

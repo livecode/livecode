@@ -45,6 +45,40 @@ MC_EXEC_DEFINE_SET_METHOD(Ad, TopLeftOfAd, 3)
 MC_EXEC_DEFINE_GET_METHOD(Ad, TopLeftOfAd, 3)
 MC_EXEC_DEFINE_GET_METHOD(Ad, Ads, 1)
 
+//////////
+
+static void MCAdTopLeftParse(MCExecContext& ctxt, MCStringRef p_input, MCAdTopLeft& r_output)
+{
+    if (sscanf(MCStringGetCString(p_input), "%u,%u", &r_output.x, &r_output.y))
+        return;
+    
+    ctxt . Throw();
+}
+
+static void MCAdTopLeftFormat(MCExecContext& ctxt, const MCAdTopLeft& p_input, MCStringRef& r_output)
+{
+    if (MCStringFormat(r_output, "%u,%u", p_input . x, p_input . y))
+        return;
+    
+    ctxt . Throw();
+}
+
+static void MCAdTopLeftFree(MCExecContext& ctxt, MCAdTopLeft& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCAdTopLeftTypeInfo =
+{
+	"Ad.TopLeft",
+	sizeof(MCAdTopLeft),
+	(void *)MCAdTopLeftParse,
+	(void *)MCAdTopLeftFormat,
+	(void *)MCAdTopLeftFree
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCExecCustomTypeInfo *kMCAdTopLeftTypeInfo = &_kMCAdTopLeftTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -60,7 +94,7 @@ void MCAdExecRegisterWithInneractive(MCExecContext& ctxt, MCStringRef p_key)
     ctxt.Throw();
 }
 
-void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, uint32_t p_topleft_x, uint32_t p_topleft_y, MCArrayRef p_metadata)
+void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_type, MCAdTopLeft p_topleft, MCArrayRef p_metadata)
 {
 #ifdef /* MCAdExecCreateAd */ LEGACY_EXEC
     bool t_success;
@@ -158,13 +192,7 @@ void MCAdExecCreateAd(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_typ
         }
         
         if (t_success)
-        {
-            MCAdTopLeft t_topleft;
-            t_topleft.x = p_topleft_x;
-            t_topleft.y = p_topleft_y;
-            
-            t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, t_type, p_topleft_x, p_topleft_y, t_timeout, p_metadata);
-        }
+            t_success = MCSystemInneractiveAdCreate(ctxt, t_ad, t_type, p_topleft.x, p_topleft.y, t_timeout, p_metadata);
         
         if (t_success)
             t_success = t_ad->Create();
@@ -221,7 +249,7 @@ void MCAdExecDeleteAd(MCExecContext& ctxt, MCStringRef p_name)
     ctxt.Throw();
 }
 
-void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_topleft_x, uint32_t& r_topleft_y)
+void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, MCAdTopLeft& r_topleft)
 {
 #ifdef /* MCAdGetTopLeftOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
@@ -253,8 +281,7 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_top
     t_ad = nil;
     if (MCAd::FindByNameOrId(p_name, t_ad))
     {
-        r_topleft_x = t_ad->GetTopLeft().x;
-        r_topleft_y = t_ad->GetTopLeft().y;
+        r_topleft = t_ad->GetTopLeft();
         return;
     }
     
@@ -262,7 +289,7 @@ void MCAdGetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t& r_top
     ctxt.Throw();
 }
 
-void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topleft_x, uint32_t p_topleft_y)
+void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, const MCAdTopLeft& p_topleft)
 {
 #ifdef /* MCAdSetTopLeftOfAd */ LEGACY_EXEC
     if (s_inneractive_ad_key == nil || MCCStringLength(s_inneractive_ad_key) == 0)
@@ -288,10 +315,7 @@ void MCAdSetTopLeftOfAd(MCExecContext& ctxt, MCStringRef p_name, uint32_t p_topl
     t_ad = nil;
     if (MCAd::FindByNameOrId(p_name, t_ad))
     {
-        MCAdTopLeft t_topleft;
-        t_topleft.x = p_topleft_x;
-        t_topleft.y = p_topleft_y;
-        t_ad->SetTopLeft(t_topleft);
+        t_ad->SetTopLeft(p_topleft);
         
         return;
     }

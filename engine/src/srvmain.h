@@ -23,7 +23,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCServerScript;
 
-extern char *MCserverinitialscript;
+extern MCStringRef MCserverinitialscript;
 extern MCServerScript *MCserverscript;
 extern MCSErrorMode MCservererrormode;
 extern MCSOutputTextEncoding MCserveroutputtextencoding;

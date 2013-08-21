@@ -303,24 +303,27 @@ struct MCPosixSystem: public MCSystemInterface
 	{
 	}
 	
-	virtual void SetEnv(const char *name, const char *value)
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
 	{
-		setenv(name, value, 1);
+		const char *t_name = MCStringGetCString(p_name);
+		const char *t_value = MCStringGetCString(p_value);
+		setenv(t_name, t_value, 1);
 	}
 	
-	virtual char *GetEnv(const char *name)
+	virtual void GetEnv(MCStringRef name, MCStringRef &r_env)
 	{
-		return getenv(name);
+		const char *t_name = MCStringGetCString(name);
+		/* UNCHECKED */ MCStringCreateWithCString(getenv(t_name), r_env);
 	}
 	
-	virtual bool CreateFolder(const char *p_path)
+	virtual bool CreateFolder(MCStringRef p_path)
 	{
-		return mkdir(p_path, 0777) == 0;
+		return mkdir(MCStringGetCString(p_path), 0777) == 0;
 	}
 	
-	virtual bool DeleteFolder(const char *p_path)
+	virtual bool DeleteFolder(MCStringRef p_path)
 	{
-		return rmdir(p_path) == 0;
+		return rmdir(MCStringGetCString(p_path)) == 0;
 	}
 	
 	virtual bool DeleteFile(const char *p_path)
@@ -328,24 +331,24 @@ struct MCPosixSystem: public MCSystemInterface
 		return unlink(p_path) == 0;
 	}
 	
-	virtual bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name)
+	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name)
 	{
-		return rename(p_old_name, p_new_name) == 0;
+		return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 	}
 	
-	virtual bool BackupFile(const char *p_old_name, const char *p_new_name)
+	virtual bool BackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 	{
-		return rename(p_old_name, p_new_name) == 0;
+		return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 	}
 	
-	virtual bool UnbackupFile(const char *p_old_name, const char *p_new_name)
+	virtual bool UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name)
 	{
-		return rename(p_old_name, p_new_name) == 0;
+		return rename(MCStringGetCString(p_old_name), MCStringGetCString(p_new_name)) == 0;
 	}
 	
-	virtual bool CreateAlias(const char *p_target, const char *p_alias)
+	virtual bool CreateAlias(MCStringRef p_target, MCStringRef p_alias)
 	{
-		return symlink(p_target, p_alias) == 0;
+		return symlink(MCStringGetCString(p_target), MCStringGetCString(p_alias)) == 0;
 	}
 	
 	virtual char *ResolveAlias(const char *p_target)
@@ -362,9 +365,9 @@ struct MCPosixSystem: public MCSystemInterface
 		return MCStringCreateWithCString(*t_folder, r_path);
 	}
 	
-	virtual bool SetCurrentFolder(const char *p_path)
+	virtual bool SetCurrentFolder(MCStringRef p_path)
 	{
-		return chdir(p_path) == 0;
+		return chdir(MCStringGetCString(p_path)) == 0;
 	}
 	
 	virtual char *GetStandardFolder(const char *name)
@@ -396,10 +399,10 @@ struct MCPosixSystem: public MCSystemInterface
 		return false;
 	}
 	
-	virtual bool FileNotAccessible(const char *p_path)
+	virtual bool FileNotAccessible(MCStringRef p_path)
 	{
 		struct stat64 t_info;
-		if (stat64(p_path, &t_info) != 0)
+		if (stat64(MCStringGetCString(p_path), &t_info) != 0)
 			return false;
 		
 		if ((t_info . st_mode & S_IFDIR) != 0)
@@ -411,9 +414,9 @@ struct MCPosixSystem: public MCSystemInterface
 		return false;
 	}
 	
-	virtual bool ChangePermissions(const char *p_path, uint2 p_mask)
+	virtual bool ChangePermissions(MCStringRef p_path, uint2 p_mask)
 	{
-		return chmod(p_path, p_mask) == 0;
+		return chmod(MCStringGetCString(p_path), p_mask) == 0;
 	}
 	
 	virtual uint2 UMask(uint2 p_mask)
@@ -421,14 +424,15 @@ struct MCPosixSystem: public MCSystemInterface
 		return umask(p_mask);
 	}
 	
-	virtual MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map)
+	virtual MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map)
 	{
 		static const char *s_modes[] = { "r", "w", "r+", "a" };
+		const char *t_path = MCStringGetCString(p_path);
 
 		MCSystemFileHandle *t_handle;
-		t_handle = MCStdioFileHandle::Open(p_path, s_modes[p_mode & 0xff]);
+		t_handle = MCStdioFileHandle::Open(t_path, s_modes[p_mode & 0xff]);
 		if (t_handle == NULL && p_mode == kMCSystemFileModeUpdate)
-			t_handle = MCStdioFileHandle::Open(p_path, "w+");
+			t_handle = MCStdioFileHandle::Open(t_path, "w+");
 		
 		return t_handle;
 	}
@@ -439,7 +443,7 @@ struct MCPosixSystem: public MCSystemInterface
 		return MCStdioFileHandle::OpenFd(i, s_modes[i]);
 	}
 	
-	virtual MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string)
+	virtual MCSystemFileHandle *OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string)
 	{
 		return NULL;
 	}
@@ -451,10 +455,11 @@ struct MCPosixSystem: public MCSystemInterface
 	
 	//////////
 	
-	virtual void *LoadModule(const char *p_path)
+	virtual void *LoadModule(MCStringRef p_path)
 	{
-		char *t_path;
-		t_path = ResolveNativePath(p_path);
+		MCAutoStringRef t_path_string;
+		ResolveNativePath(p_path, &t_path_string);
+		char *t_path = (char*)MCStringGetCString(*t_path_string);
 		if (t_path != NULL)
 		{
 			void *t_result;
@@ -501,7 +506,7 @@ struct MCPosixSystem: public MCSystemInterface
 		{
 			uindex_t t_user_end;
 			if (!MCStringFirstIndexOfChar(p_path, '/', 0, kMCStringOptionCompareExact, t_user_end))
-				t_user_end = MCStringGetLength(p_string);
+				t_user_end = MCStringGetLength(p_path);
 			
 			// Prepend user name
 			struct passwd *t_password;
@@ -513,7 +518,7 @@ struct MCPosixSystem: public MCSystemInterface
 				if (!MCStringCopySubstring(p_path, MCRange(1, t_user_end - 1), &t_username))
 					return false;
 
-				t_password = getpwnam(MCStringGetCString(t_username));
+				t_password = getpwnam(MCStringGetCString(*t_username));
 			}
 			
 			if (t_password != NULL)
@@ -955,13 +960,16 @@ bool MCS_isnan(double v)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_get_temporary_folder(char *&r_temp_folder)
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;
 
 	const char *t_tmpdir = NULL;
 	int32_t t_tmpdir_len = 0;
-	t_tmpdir = MCS_getenv("TMPDIR");
+	MCAutoStringRef t_tmpdir_string;
+	MCS_getenv(MCSTR("TMPDIR"), &t_tmpdir_string);
+
+	/* UNCHECKED */ MCStringCreateWithCString(t_tmpdir, &t_tmpdir_string);
 
 	if (t_tmpdir == NULL)
 		t_tmpdir = "/tmp";
@@ -974,10 +982,11 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 
 	if (t_success)
 	{
+        char *t_temp_folder = strdup(MCStringGetCString(r_temp_folder));
 		if (t_tmpdir[t_tmpdir_len - 1] == '/')
-			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, r_temp_folder);
+			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, t_temp_folder);
 		else
-			t_success = MCCStringClone(t_tmpdir, r_temp_folder);
+			t_success = MCCStringClone(t_tmpdir, t_temp_folder);
 	}
 
 	return t_success;

@@ -42,6 +42,8 @@ enum MCLayerModeHint
 	kMCLayerModeHintContainer
 };
 
+struct MCInterfaceMargins;
+
 class MCControl : public MCObject
 {
 protected:
@@ -347,6 +349,8 @@ public:
 	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
 	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
 	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
+    void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins);
 
 };
 #endif

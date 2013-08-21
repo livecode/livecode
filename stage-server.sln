@@ -1,7 +1,5 @@
 Microsoft Visual Studio Solution File, Format Version 9.00
 # Visual Studio 2005
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libcore", "libcore\libcore-server.vcproj", "{C4829060-830A-42FC-9CCC-64E3C68897E6}"
-EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpcre", "thirdparty\libpcre\libpcre-server.vcproj", "{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}"
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libpng", "thirdparty\libpng\libpng-server.vcproj", "{7E895BBC-4578-437D-A275-B58CA9F2DCB7}"
@@ -11,7 +9,6 @@ EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "server", "engine\server.vcproj", "{2762D978-34D0-459A-A602-34CA050A69D3}"
 	ProjectSection(ProjectDependencies) = postProject
 		{279EE836-3C2C-4BBB-8EBF-BEA4833957FA} = {279EE836-3C2C-4BBB-8EBF-BEA4833957FA}
-		{C4829060-830A-42FC-9CCC-64E3C68897E6} = {C4829060-830A-42FC-9CCC-64E3C68897E6}
 		{CB9D5492-762F-4892-A02A-0B9735C598EC} = {CB9D5492-762F-4892-A02A-0B9735C598EC}
 		{7E895BBC-4578-437D-A275-B58CA9F2DCB7} = {7E895BBC-4578-437D-A275-B58CA9F2DCB7}
 		{6EB3A0E5-D25F-4AAB-9FFE-4E123838B44D} = {6EB3A0E5-D25F-4AAB-9FFE-4E123838B44D}
@@ -31,16 +28,14 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libgif", "thirdparty\libgif
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "kernel-server", "engine\kernel-server.vcproj", "{BFB6C63F-C119-45D6-96EB-23D717727D58}"
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "libfoundation", "libfoundation\libfoundation-server.vcproj", "{8862ADC2-BEB0-4765-A1E4-0E3493578999}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{C4829060-830A-42FC-9CCC-64E3C68897E6}.Debug|Win32.ActiveCfg = Debug|Win32
-		{C4829060-830A-42FC-9CCC-64E3C68897E6}.Debug|Win32.Build.0 = Debug|Win32
-		{C4829060-830A-42FC-9CCC-64E3C68897E6}.Release|Win32.ActiveCfg = Release|Win32
-		{C4829060-830A-42FC-9CCC-64E3C68897E6}.Release|Win32.Build.0 = Release|Win32
 		{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}.Debug|Win32.Build.0 = Debug|Win32
 		{279EE836-3C2C-4BBB-8EBF-BEA4833957FA}.Release|Win32.ActiveCfg = Release|Win32
@@ -85,6 +80,10 @@ Global
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Debug|Win32.Build.0 = Debug|Win32
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Release|Win32.ActiveCfg = Release|Win32
 		{BFB6C63F-C119-45D6-96EB-23D717727D58}.Release|Win32.Build.0 = Release|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Debug|Win32.ActiveCfg = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Debug|Win32.Build.0 = Debug|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Release|Win32.ActiveCfg = Release|Win32
+		{8862ADC2-BEB0-4765-A1E4-0E3493578999}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -100,7 +100,7 @@ static long post_connection_check(SSL *ssl, char *host);
 static int verify_callback(int ok, X509_STORE_CTX *store);
 
 #ifdef _MACOSX
-extern char *path2utf(char *path);
+extern bool path2utf(MCStringRef p_path, MCStringRef& r_utf);
 #endif
 
 #ifdef _WINDOWS
@@ -211,7 +211,7 @@ int inet_aton(const char *cp, struct in_addr *inp)
 }
 #endif
 
-bool MCS_compare_host_domain(const char *p_host_a, const char *p_host_b)
+bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b)
 {
 	struct sockaddr_in t_host_a, t_host_b;
 
@@ -290,25 +290,25 @@ bool MCS_aton(MCStringRef p_address, MCStringRef& r_name)
 	return t_success;
 }
 
-char *MCS_dnsresolve(const char *p_hostname)
+bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 {
 	if (!MCS_init_sockets())
-		return NULL;
+		return false;
 
-	char *t_name = NULL;
+	//char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
 	t_success = MCS_name_to_sockaddr(p_hostname, t_addr);
 	if (t_success)
 	{
-		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, t_name);
+		t_success = MCS_sockaddr_to_string((sockaddr*)&t_addr, sizeof(t_addr), false, r_dns);
 	}
 
 	if (t_success)
-		return t_name;
+		return true;
 	else
-		return NULL;
+		return false;
 }
 
 bool ntoa_callback(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen)
@@ -440,7 +440,7 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCdefaultnetworkinterface, t_bind_addr))
+			if (!MCS_name_to_sockaddr(MCSTR(MCdefaultnetworkinterface), t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
@@ -524,7 +524,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 	struct sockaddr_in t_addr;
 	if (mess == NULL)
 	{
-		if (!MCS_name_to_sockaddr(name, t_addr))
+		if (!MCS_name_to_sockaddr(MCSTR(name), t_addr))
 			return NULL;
 	}
 
@@ -577,7 +577,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 			MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
-			if (!MCS_name_to_sockaddr(s->name, &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
+			if (!MCS_name_to_sockaddr(MCSTR(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
 			{
 				MCMemoryDelete(t_info);
 				s->name = nil;
@@ -614,6 +614,7 @@ void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *unt
 		MCNameDelete(s->message);
 		/* UNCHECKED */ MCNameClone(mptr, s -> message);
 		s->object = ep.getobj();
+		
 	}
 	else
 	{
@@ -1773,22 +1774,23 @@ Boolean MCSocket::initsslcontext()
 				{
 					char *oldcertpath = certs[i].clone();
 #ifdef _MACOSX
-	
-					char *certpath = path2utf(MCS_resolvepath(oldcertpath));
+                    MCAutoStringRef t_certpath_temp, t_certpath;
+                    if (MCS_resolvepath(MCSTR(oldcertpath), &t_certpath_temp))
+                        path2utf(*t_certpath_temp, &t_certpath);
 #else
-	
-					char *certpath = MCS_resolvepath(oldcertpath);
+					MCAutoStringRef t_certpath;
+					MCS_resolvepath(MCSTR(oldcertpath), &t_certpath);
 #endif
 	
 					delete oldcertpath;
 					
-					t_success = (MCS_exists(certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, certpath)) ||
-							(MCS_exists(certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, certpath));
+					t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, MCStringGetCString(*t_certpath))) ||
+							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, MCStringGetCString(*t_certpath)));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", certpath);
+						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
 					}
-					delete certpath;
+					
 				}
 			}
 			if (certs != NULL)
@@ -1950,7 +1952,7 @@ bool MCSocket::ssl_set_default_certificates()
 	t_path_count = sizeof(s_ssl_bundle_paths) / sizeof(const char*);
 	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
 	{
-		if (MCS_exists(s_ssl_bundle_paths[i], true))
+		if (MCS_exists(MCSTR(s_ssl_bundle_paths[i]), true))
 		{
 			t_success = load_ssl_ctx_certs_from_file(_ssl_context, s_ssl_bundle_paths[i]);
 			if (t_success)
@@ -1961,7 +1963,7 @@ bool MCSocket::ssl_set_default_certificates()
 	t_path_count = sizeof(s_ssl_hash_dir_paths) / sizeof(const char*);
 	for (uint32_t i = 0; t_success && !t_found && i < t_path_count; i++)
 	{
-		if (MCS_exists(s_ssl_hash_dir_paths[i], false))
+		if (MCS_exists(MCSTR(s_ssl_hash_dir_paths[i]), false))
 		{
 			t_success = load_ssl_ctx_certs_from_folder(_ssl_context, s_ssl_bundle_paths[i]);
 			if (t_success)

@@ -1501,9 +1501,9 @@ void MCEngineSetRecursionLimit(MCExecContext& ctxt, uinteger_t p_value)
 
 	MCrecursionlimit = p_value;
 #ifdef _WINDOWS
-	MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(MCstackbottom - (char *)&t_stat) * 3)));
+	MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&t_stat) * 3)));
 #else
-	MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(MCstackbottom - (char *)&t_stat) * 3); // fudge to 3x current stack depth
+	MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&t_stat) * 3); // fudge to 3x current stack depth
 #endif
 }
 

@@ -47,7 +47,9 @@ extern void MCServerDebugVariableChanged(MCExecPoint& ep, MCNameRef name);
 
 // Notify the server-side debugger that the given variable *value* has
 // changed.
+#ifdef TODO
 extern void MCServerDebugVariableValueChanged(MCVariableValue *p_value);
+#endif
 
 ////////////////////////////////////////////////////////////////////////
 //

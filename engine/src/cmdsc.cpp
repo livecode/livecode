@@ -1619,7 +1619,7 @@ if (var != NULL)
 			return ES_ERROR;
 		}
 		MCAutoStringRef t_target;
-		/*UNCHECKED*/ ep.copyasstringref(&t_target);
+		/* UNCHECKED */ ep.copyasstringref(&t_target);
 		if (url)
 			MCNetworkExecDeleteUrl(ctxt, *t_target);
 		else
@@ -2501,8 +2501,8 @@ Exec_stat MCPost::exec(MCExecPoint &ep)
 		MCeerror->add(EE_POST_BADSOURCEEXP, line, pos);
 		return ES_ERROR;
 	}
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ ep . copyasstringref(&t_data);
+	MCAutoDataRef t_data;
+	/* UNCHECKED */ ep . copyasdataref(&t_data);
 
 	if (dest->eval(ep) != ES_NORMAL)
 	{
@@ -2862,8 +2862,10 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 		MCeerror->add(EE_RECORD_BADFILE, line, pos);
 		return ES_ERROR;
 	}
-	char *soundfile = MCS_get_canonical_path(ep.getcstring());
-	MCtemplateplayer->recordsound(soundfile);
+	MCAutoStringRef soundfile, t_path;
+	/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), &t_path)
+	MCS_get_canonical_path(*t_path, &soundfile);
+	MCtemplateplayer->recordsound(*soundfile);
 	return ES_NORMAL;
 #endif /* MCRecord */
 

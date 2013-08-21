@@ -63,7 +63,8 @@ static char *s_server_home = NULL;
 static bool s_server_cgi = false;
 
 // The main script the server engine will run.
-char *MCserverinitialscript = NULL;
+
+MCStringRef MCserverinitialscript = nil;
 
 // The root server script object.
 MCServerScript *MCserverscript = NULL;
@@ -331,7 +332,7 @@ extern void MCU_initialize_names();
 bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
-	MCstackbottom = (char *)&i;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
 
 	////
 	
@@ -346,7 +347,6 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	////
 	
-	MCNameInitialize();
 	MCU_initialize_names();
 	
 	// MW-2012-02-23: [[ FontRefs ]] Initialize the font module.
@@ -357,21 +357,24 @@ bool X_init(int argc, char *argv[], char *envp[])
 	////
 
 	// Store the engine path in MCcmd.
-	char *t_native_command;
-	t_native_command = MCsystem -> ResolveNativePath(argv[0]);
-	MCcmd = MCsystem -> PathFromNative(t_native_command);
-	delete t_native_command;
+	MCAutoStringRef t_argv0_string, t_argv1_string;
+	/* UNCHECKED */ MCStringCreateWithCString(argv[0], &t_argv0_string);
+	/* UNCHECKED */ MCStringCreateWithCString(argv[1], &t_argv1_string);
+
+	MCAutoStringRef t_native_command_string;
+	MCsystem -> ResolveNativePath(*t_argv0_string, &t_native_command_string);
+	MCcmd = MCsystem -> PathFromNative(MCStringGetCString(*t_native_command_string));
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
 	// engine.
-	char *t_native_home;
-	t_native_home = MCS_getenv(HOME_ENV_VAR);
-	if (t_native_home != NULL)
+	MCAutoStringRef t_native_home;
+
+	if (MCS_getenv(MCSTR(HOME_ENV_VAR), &t_native_home))
 	{
-		t_native_home = MCsystem -> ResolveNativePath(t_native_home);
-		s_server_home = MCsystem -> PathFromNative(t_native_home);
-		delete t_native_home;
+		MCAutoStringRef t_resolved_home;
+		MCsystem -> ResolveNativePath(*t_native_home, &t_resolved_home);
+		s_server_home = MCsystem -> PathFromNative(MCStringGetCString(*t_resolved_home));
 	}
 	else if (MCsystem -> FolderExists(HOME_FOLDER))
 		s_server_home = strdup(HOME_FOLDER);
@@ -382,9 +385,16 @@ bool X_init(int argc, char *argv[], char *envp[])
 	}
 
 	// Check for CGI mode.
-
-	s_server_cgi = MCS_getenv("GATEWAY_INTERFACE") != NULL;
+	MCAutoStringRef t_env;
 	
+	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
+		s_server_cgi = true;
+	else
+		s_server_cgi = false;
+	
+	if (!X_open(argc, argv, envp))
+		return False;
+
 	if (s_server_cgi)
 	{
 		MCS_set_errormode(kMCSErrorModeInline);
@@ -402,9 +412,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 		
 		// If there isn't at least one argument, we haven't got anything to run.
 		if (argc > 1)
-			MCserverinitialscript = MCsystem -> ResolveNativePath(argv[1]);
+			MCsystem -> ResolveNativePath(*t_argv1_string, MCserverinitialscript);
 		else
-			MCserverinitialscript = NULL;
+			MCserverinitialscript = nil;
 		
 		// Create the $<n> variables.
 		for(int i = 2; i < argc; ++i)
@@ -413,7 +423,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		create_var(nvars);
 	}
 	
-	return X_open(argc, argv, envp);
+	return True;
 }
 	
 static void IO_printf(IO_handle stream, const char *format, ...)
@@ -447,23 +457,27 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 
 static void X_load_extensions(MCServerScript *p_script)
 {
-	char *t_dir;
-	t_dir = MCS_getcurdir();
+	MCAutoStringRef t_dir;
+	MCS_getcurdir(&t_dir);
+	MCAutoStringRef  t_s_server_home_string;
+	/* UNCHECKED */ MCStringCreateWithCString(s_server_home, &t_s_server_home_string);
 	
-	if (MCS_setcurdir(s_server_home) &&
-		MCS_setcurdir("externals"))
+	
+	if (MCS_setcurdir(*t_s_server_home_string) &&
+		MCS_setcurdir(MCSTR("externals")))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
 	
-	MCS_setcurdir(t_dir);
-	delete t_dir;
+	MCS_setcurdir(*t_dir);
+	
 }
 
 void X_main_loop(void)
 {
 	int i;
-	MCstackbottom = (char *)&i;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	
 
-	if (MCserverinitialscript == NULL)
+	if (MCserverinitialscript == nil)
 		return;
 	
 	MCperror -> clear();
@@ -510,7 +524,7 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
+	if (!MCserverscript -> Include(ep, MCStringGetCString(MCserverinitialscript), false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
 		char *t_eerror, *t_efiles;

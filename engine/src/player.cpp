@@ -1301,7 +1301,9 @@ void MCPlayer::freetmp()
 {
 	if (istmpfile)
 	{
-		MCS_unlink(filename);
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(filename, &t_filename);
+		MCS_unlink(*t_filename);
 		delete filename;
 		filename = NULL;
 	}
@@ -2657,16 +2659,19 @@ Boolean MCPlayer::qt_prepare(void)
 	{
 #if defined(TARGET_PLATFORM_MACOS_X)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
-		char *t_filename;
-		t_filename = getstack() -> resolve_filename(filename);
+        MCAutoStringRef t_filename_str;
+        /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(filename), &t_filename_str);
+		//char *t_filename;
+		//t_filename = getstack() -> resolve_filename(filename);
 
-		char *t_resolved_filename;
-		t_resolved_filename = MCS_resolvepath(t_filename);
+		//char *t_resolved_filename;
+        MCAutoStringRef t_resolved_filename_str;
+		//t_resolved_filename = MCS_resolvepath(t_filename);
 		
 		CFStringRef t_cf_filename;
 		t_cf_filename = NULL;
-		if (t_resolved_filename != NULL)
-			t_cf_filename = CFStringCreateWithCString(kCFAllocatorDefault, t_resolved_filename, CFStringGetSystemEncoding());
+		if (MCS_resolvepath(*t_filename_str, &t_resolved_filename_str))
+			t_cf_filename = CFStringCreateWithCString(kCFAllocatorDefault, MCStringGetCString(*t_resolved_filename_str), CFStringGetSystemEncoding());
 		
 		OSErr t_error;
 		Handle t_data_ref;
@@ -2687,11 +2692,11 @@ Boolean MCPlayer::qt_prepare(void)
 		if (t_cf_filename != NULL)
 			CFRelease(t_cf_filename);
 			
-		if (t_resolved_filename != NULL)
-			delete t_resolved_filename;
+//		if (t_resolved_filename != NULL)
+//			delete t_resolved_filename;
 
-		if (t_filename != NULL)
-			delete t_filename;
+//		if (t_filename != NULL)
+//			delete t_filename;
 
 #elif defined(_WINDOWS_DESKTOP)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
@@ -4352,8 +4357,8 @@ void MCPlayer::queryeffects(void **effectatomptr)
 // Related class variables
 void *MCPlayer::sgSoundComp = NULL;
 long MCPlayer::sgSndDriver = 0;
-const char *MCPlayer::recordtempfile = NULL;
-char *MCPlayer::recordexportfile = NULL;
+MCStringRef MCPlayer::recordtempfile = nil;
+MCStringRef MCPlayer::recordexportfile = nil;
 
 // Utility functions
 static SampleDescriptionHandle scanSoundTracks(Movie tmovie)
@@ -4407,11 +4412,15 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	ComponentResult result = 0;
 	Movie tmovie = nil;
 
-	char *t_src_resolved = NULL;
-	char *t_dst_resolved = NULL;
-	t_src_resolved = MCS_resolvepath(sourcefile);
-	t_dst_resolved = MCS_resolvepath(destfile);
-	t_success = (t_src_resolved != NULL && t_dst_resolved != NULL);
+	//char *t_src_resolved = NULL;
+	//char *t_dst_resolved = NULL;
+    MCAutoStringRef t_src_resolved_str, t_dst_resolved_str;
+    MCAutoStringRef t_sourcefile, t_destfile;
+    /* UNCHECKED */ MCStringCreateWithCString(sourcefile, &t_sourcefile);
+    /* UNCHECKED */ MCStringCreateWithCString(destfile, &t_destfile);
+	MCS_resolvepath(*t_sourcefile, &t_src_resolved_str);
+	MCS_resolvepath(*t_destfile, &t_dst_resolved_str);
+	t_success = (MCS_resolvepath(*t_sourcefile, &t_src_resolved_str) && MCS_resolvepath(*t_destfile, &t_dst_resolved_str));
 
 	DataReferenceRecord t_src_rec, t_dst_rec;
 	t_src_rec.dataRef = NULL;
@@ -4419,12 +4428,12 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	
 	if (t_success)
 	{
-		t_success = path_to_dataref(t_src_resolved, t_src_rec) &&
-			path_to_dataref(t_dst_resolved, t_dst_rec);
+		t_success = path_to_dataref(MCStringGetCString(*t_src_resolved_str), t_src_rec) &&
+			path_to_dataref(MCStringGetCString(*t_dst_resolved_str), t_dst_rec);
 	}
 
-	free(t_src_resolved);
-	free(t_dst_resolved);
+	//free(t_src_resolved);
+	//free(t_dst_resolved);
 
 	Boolean isActive = true;
 	QTVisualContextRef aVisualContext = NULL;
@@ -4518,21 +4527,21 @@ void MCPlayer::stoprecording()
 		}
 #ifdef _WINDOWS
 		if (MCrecordformat == EX_MOVIE)
-			CopyFileA(recordtempfile,recordexportfile,False);
+			CopyFileA(MCStringGetCString(recordtempfile), MCStringGetCString(recordexportfile),False);
 		else
 #endif
 		{
 			MCS_unlink(recordexportfile);
-			exportToSoundFile(recordtempfile, recordexportfile);
+			exportToSoundFile(MCStringGetCString(recordtempfile), MCStringGetCString(recordexportfile));
 			MCS_unlink(recordtempfile);
 		}
 		recordexportfile = NULL;
-		delete recordexportfile;
+		//delete recordexportfile;
 	}
 #endif
 }
 
-void MCPlayer::recordsound(char *fname)
+void MCPlayer::recordsound(MCStringRef fname)
 {
 #ifdef FEATURE_QUICKTIME
 	if (qtstate != QT_INITTED)
@@ -4544,9 +4553,12 @@ void MCPlayer::recordsound(char *fname)
 	}
 	stoprecording();//just in case
 	FSSpec fspec;
-	recordtempfile = MCS_tmpnam();
+    MCAutoStringRef t_name;
+    if (MCS_tmpnam(&t_name)) 
+        recordtempfile = *t_name;
+    
 	recordexportfile = fname;
-	MCS_path2FSSpec(recordtempfile, &fspec);
+	MCS_path2FSSpec(MCStringGetCString(recordtempfile), &fspec);
 	OSType compressionType, inputSource;
 	memcpy(&compressionType, MCrecordcompression, 4);
 	compressionType = EndianU32_NtoB(compressionType);
@@ -4579,7 +4591,7 @@ void MCPlayer::recordsound(char *fname)
 		// MW-2008-03-15: [[ Bug 6076 ]] Make sure we create the file before we start recording to it
 		//   otherwise no recording happens.
 		FILE *t_file;
-		t_file = fopen(recordtempfile, "w");
+		t_file = fopen(MCStringGetCString(recordtempfile), "w");
 		if (t_file != NULL)
 			fclose(t_file);
 

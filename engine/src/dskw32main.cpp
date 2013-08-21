@@ -101,7 +101,7 @@ static void CALLBACK InitializeFiberRoutine(void *p_context)
 static void CALLBACK LoopFiberRoutine(void *p_parameter)
 {
 	void *t_bottom;
-	MCstackbottom = (char *)&t_bottom;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&t_bottom, MCstackbottom);
 
 	g_mainthread_errno = _errno();
 	
@@ -277,7 +277,8 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	// MW-2011-08-19: [[ Bug ]] Make sure we reset the 'bottom' of the stack and
 	//   errno pointer (we're executing script on a different fiber than before).
 	void *t_bottom;
-	MCstackbottom = (char *)&t_bottom;
+	/* UNCHECKED */ MCStringCreateWithCString((char *)&t_bottom, MCstackbottom);
+	
 	g_mainthread_errno = _errno();
 	int r = X_close();
 
