@@ -3654,7 +3654,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
     }
 };
 
-struct MCMacDesktop: public MCSystemInterface
+struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 {
 	virtual bool Initialize(void)
     {
@@ -3869,7 +3869,7 @@ struct MCMacDesktop: public MCSystemInterface
         
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
-        if (!IsATTY(0))
+        if (!MCS_isatty(0))
             MCS_nodelay(0);
         
         setlocale(LC_ALL, MCnullstring);
@@ -4059,7 +4059,7 @@ struct MCMacDesktop: public MCSystemInterface
 	
     virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
-        if (p_type == kMCServiceTypeMacSystem)
+        if ((p_type & kMCServiceTypeMacSystem) == kMCServiceTypeLinuxSystem)
             return (MCMacSystemServiceInterface *)this;
         return nil;
     }
@@ -4089,9 +4089,28 @@ struct MCMacDesktop: public MCSystemInterface
         return curtime;
     }
     
-	virtual bool GetVersion(MCStringRef& r_string)
+    virtual void ResetTime(void)
     {
+#ifdef /* MCS_reset_time_dsk_mac */ LEGACY_SYSTEM
         
+#endif /* MCS_reset_time_dsk_mac */
+        // Nothing
+    }
+    
+	virtual bool GetVersion(MCStringRef& r_version)
+    {
+#ifdef /* MCS_getsystemversion_dsk_mac */ LEGACY_SYSTEM
+        long t_major, t_minor, t_bugfix;
+        Gestalt(gestaltSystemVersionMajor, &t_major);
+        Gestalt(gestaltSystemVersionMinor, &t_minor);
+        Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+        return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
+#endif /* MCS_getsystemversion_dsk_mac */
+        long t_major, t_minor, t_bugfix;
+        Gestalt(gestaltSystemVersionMajor, &t_major);
+        Gestalt(gestaltSystemVersionMinor, &t_minor);
+        Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
+        return MCStringFormat(r_version, "%d.%d.%d", t_major, t_minor, t_bugfix);
     }
 	virtual bool GetMachine(MCStringRef& r_string)
     {
@@ -6116,7 +6135,6 @@ struct MCMacDesktop: public MCSystemInterface
     
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
-//        (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
 #ifdef /* MCS_multibytetounicode */ LEGACY_SYSTEM
         // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
         static int oldcharset = -1;
@@ -6195,35 +6213,91 @@ struct MCMacDesktop: public MCSystemInterface
 		d += outlength;
 	}
 #endif /* MCS_unicodetomultibyte */
-        // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
-//        TODO IMPLEMENT
-//        static int oldcharset = -1;
-//        if (!p_buffer_length)
-//        {
-//            destlen = len << 1;
-//            return;
-//        }
-//        if (charset != oldcharset)
-//        {
-//            if (texttounicodeconvertor)
-//                DisposeTextToUnicodeInfo(texttounicodeconvertor);
-//            texttounicodeconvertor = NULL;
-//            ScriptCode fscript = MCS_charsettolangid(charset);
-//            TextEncoding scriptEncoding;
-//            UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
-//                                            kTextRegionDontCare, NULL,
-//                                            &scriptEncoding);
-//            texttounicodeconvertor = &texttounicodeinfo;
-//            CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
-//        }
-//        ByteCount processedbytes, outlength;
-//        ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) s,
-//                                 kUnicodeLooseMappingsMask
-//                                 | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
-//                                 destbufferlength, &processedbytes,
-//                                 &outlength, (UniChar *)d);
-//        destlen = outlength;
-//        oldcharset = charset;
+        uint32_t t_return_size;
+        if (p_from_charset == LCH_UNICODE) // Unicode to multibyte
+        {
+//            TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
+            //            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
+            char* t_dest_ptr = (char*) r_buffer;
+            ScriptCode fscript = MCS_charsettolangid(p_to_charset);
+            //we cache unicode convertors for speed
+            if (!p_buffer_length)
+            {
+                if (p_to_charset)
+                    t_return_size = p_string_length << 1;
+                else
+                    t_return_size = p_string_length >> 1;
+                return t_return_size;
+            }
+            if (unicodeconvertors[fscript] == NULL)
+            {
+                TextEncoding scriptEncoding;
+                UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+                                                kTextRegionDontCare, NULL,
+                                                &scriptEncoding);
+                CreateUnicodeToTextInfoByEncoding(scriptEncoding,
+                                                  &unicodeconvertors[fscript]);
+            }
+            ByteCount processedbytes, outlength;
+            t_return_size = 0;
+            
+            // MW-2008-06-12: [[ Bug 6313 ]] Loop through all input characters, replacing unknown
+            //   ones with ? - this mimics Windows behaviour.
+            // MW-2008-06-12: Make sure we loop until we have no pairs of bytes left otherwise
+            //   we go into an infinite loop when doing things like uniDecode("abc")
+            while(p_string_length > 1)
+            {
+                ConvertFromUnicodeToText(unicodeconvertors[fscript], p_string_length, (UniChar *)p_string,
+                                         kUnicodeLooseMappingsMask
+                                         | kUnicodeStringUnterminatedBit
+                                         | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
+                                         p_buffer_length, &processedbytes,
+                                         &outlength, (LogicalAddress)r_buffer);
+                if (processedbytes == 0)
+                {
+                    *t_dest_ptr = '?';
+                    processedbytes = 2;
+                    outlength = 1;
+                }
+                
+                p_string_length -= processedbytes;
+                t_return_size += outlength;
+                p_string_length += processedbytes;
+                t_dest_ptr += outlength;
+            }
+        }
+        else if (p_to_charset == LCH_UNICODE) // Multibyte to unicode
+        {
+//            (const char *s, uint4 len, char *d, uint4 destbufferlength, uint4 &destlen, uint1 charset)
+            // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
+            static int oldcharset = -1;
+            if (!p_buffer_length)
+            {
+                return p_string_length << 1;
+            }
+            if (p_from_charset != oldcharset)
+            {
+                if (texttounicodeconvertor)
+                    DisposeTextToUnicodeInfo(texttounicodeconvertor);
+                texttounicodeconvertor = NULL;
+                ScriptCode fscript = MCS_charsettolangid(p_from_charset);
+                TextEncoding scriptEncoding;
+                UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+                                                kTextRegionDontCare, NULL,
+                                                &scriptEncoding);
+                texttounicodeconvertor = &texttounicodeinfo;
+                CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
+            }
+            ByteCount processedbytes, outlength;
+            ConvertFromTextToUnicode(*texttounicodeconvertor, p_string_length, (LogicalAddress) p_string_length,
+                                     kUnicodeLooseMappingsMask
+                                     | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
+                                     p_buffer_length, &processedbytes,
+                                     &outlength, (UniChar *)r_buffer);
+            t_return_size = outlength;
+            oldcharset = p_from_charset;
+        }
+        return t_return_size;
     }
     
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
@@ -6399,98 +6473,12 @@ struct MCMacDesktop: public MCSystemInterface
             }
     }
     
-    virtual void SystemAlert(MCStringRef p_title, MCStringRef p_message)
-    {
-#ifdef /* MCS_system_alert_dsk_mac */ LEGACY_SYSTEM
-	CFStringRef t_cf_title, t_cf_message;
-	t_cf_title = CFStringCreateWithCString(NULL, p_title, kCFStringEncodingMacRoman);
-	t_cf_message = CFStringCreateWithCString(NULL, p_message, kCFStringEncodingMacRoman);
-	DialogRef t_alert;
-	CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
-	
-	DialogItemIndex t_result;
-	RunStandardAlert(t_alert, NULL, &t_result);
-	CFRelease(t_cf_title);
-	CFRelease(t_cf_message);
-#endif /* MCS_system_alert_dsk_mac */
-        CFStringRef t_cf_title, t_cf_message;
-        t_cf_title = CFStringCreateWithCString(NULL, MCStringGetCString(p_title), kCFStringEncodingMacRoman);
-        t_cf_message = CFStringCreateWithCString(NULL, MCStringGetCString(p_message), kCFStringEncodingMacRoman);
-        DialogRef t_alert;
-        CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
-        
-        DialogItemIndex t_result;
-        RunStandardAlert(t_alert, NULL, &t_result);
-        CFRelease(t_cf_title);
-        CFRelease(t_cf_message);        
-    }
-    
     virtual uint32_t GetSystemError(void)
     {
 #ifdef /* MCS_getsyserror_dsk_mac */ LEGACY_SYSTEM
 	return errno;
 #endif /* MCS_getsyserror_dsk_mac */
         return errno;
-    }
-    
-    virtual bool GenerateUUID(char p_buffer[128])
-    {
-#ifdef /* MCS_generate_uuid_dsk_mac */ LEGACY_SYSTEM
-	CFUUIDRef t_uuid;
-	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-	if (t_uuid != NULL)
-	{
-		CFStringRef t_uuid_string;
-		
-		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-		if (t_uuid_string != NULL)
-		{
-			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-			CFRelease(t_uuid_string);
-		}
-		
-		CFRelease(t_uuid);
-
-		return true;
-	}
-
-	return false;
-#endif /* MCS_generate_uuid_dsk_mac */
-        CFUUIDRef t_uuid;
-        t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-        if (t_uuid != NULL)
-        {
-            CFStringRef t_uuid_string;
-            
-            t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-            if (t_uuid_string != NULL)
-            {
-                CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-                CFRelease(t_uuid_string);
-            }
-            
-            CFRelease(t_uuid);
-            
-            return true;
-        }
-        
-        return false;
-    }
-    
-    virtual bool IsATTY(int fd)
-    {
-#ifdef /* MCS_isatty_dsk_mac */ LEGACY_SYSTEM
-	return isatty(fd) != 0;
-#endif /* MCS_isatty_dsk_mac */
-        return isatty(fd) != 0;
-    }
-    
-    virtual bool IsNaN(double p_value)
-    {
-#ifdef /* MCS_isnan_dsk_mac */ LEGACY_SYSTEM
-	return isnan(v);
-#endif /* MCS_isnan_dsk_mac */
-        return isnan(p_value);
     }
 
     virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output)
@@ -7116,22 +7104,6 @@ struct MCMacDesktop: public MCSystemInterface
         errno = p_errno;
     }
     
-    virtual bool GetSystemVersion(MCStringRef& r_version)
-    {
-#ifdef /* MCS_getsystemversion_dsk_mac */ LEGACY_SYSTEM
-	long t_major, t_minor, t_bugfix;
-	Gestalt(gestaltSystemVersionMajor, &t_major);
-	Gestalt(gestaltSystemVersionMinor, &t_minor);
-	Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-	return MCStringFormat(r_string, "%d.%d.%d", t_major, t_minor, t_bugfix);
-#endif /* MCS_getsystemversion_dsk_mac */
-        long t_major, t_minor, t_bugfix;
-        Gestalt(gestaltSystemVersionMajor, &t_major);
-        Gestalt(gestaltSystemVersionMinor, &t_minor);
-        Gestalt(gestaltSystemVersionBugFix, &t_bugfix);
-        return MCStringFormat(r_version, "%d.%d.%d", t_major, t_minor, t_bugfix);
-    }
-    
     virtual void LaunchDocument(MCStringRef p_document)
     {
 #ifdef /* MCS_launch_document_dsk_mac */ LEGACY_SYSTEM
@@ -7355,7 +7327,7 @@ struct MCMacDesktop: public MCSystemInterface
         OSADispose(posacomp->compinstance, scriptid);
     }
     
-    virtual bool AlternateLanguage(MCListRef& r_list)
+    virtual bool AlternateLanguages(MCListRef& r_list)
     {
 #ifdef /* MCS_alternatelanguages_dsk_mac */ LEGACY_SYSTEM
 	MCAutoListRef t_list;
@@ -7379,6 +7351,31 @@ struct MCMacDesktop: public MCSystemInterface
                 return false;
         
         return MCListCopy(*t_list, r_list);
+    }
+    
+#define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
+if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
+delete last char of it; return it"
+    virtual bool GetDNSservers(MCListRef& r_list)
+    {
+#ifdef /* MCS_getDNSservers_dsk_mac */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+
+	MCresult->clear();
+	MCdefaultstackptr->domess(DNS_SCRIPT);
+
+	return MCListCreateMutable('\n', &t_list) &&
+		MCListAppend(*t_list, MCresult->getvalueref()) &&
+		MCListCopy(*t_list, r_list);
+#endif /* MCS_getDNSservers_dsk_mac */
+        MCAutoListRef t_list;
+        
+        MCresult->clear();
+        MCdefaultstackptr->domess(DNS_SCRIPT);
+        
+        return MCListCreateMutable('\n', &t_list) &&
+            MCListAppend(*t_list, MCresult->getvalueref()) &&
+            MCListCopy(*t_list, r_list);
     }
 };
 
@@ -7831,6 +7828,92 @@ uint2 MCS_charsettolangid(uint1 charset)
 	return 0;
 }
 
+void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength, uint4 &destlen,
+                            uint1 charset)
+{
+	ScriptCode fscript = MCS_charsettolangid(charset);
+	//we cache unicode convertors for speed
+	if (!destbufferlength)
+	{
+		if (charset)
+			destlen = len << 1;
+		else
+			destlen = len >> 1;
+		return;
+	}
+	if (unicodeconvertors[fscript] == NULL)
+	{
+		TextEncoding scriptEncoding;
+		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+		                                kTextRegionDontCare, NULL,
+		                                &scriptEncoding);
+		CreateUnicodeToTextInfoByEncoding(scriptEncoding,
+		                                  &unicodeconvertors[fscript]);
+	}
+	ByteCount processedbytes, outlength;
+	destlen = 0;
+
+	// MW-2008-06-12: [[ Bug 6313 ]] Loop through all input characters, replacing unknown
+	//   ones with ? - this mimics Windows behaviour.
+	// MW-2008-06-12: Make sure we loop until we have no pairs of bytes left otherwise
+	//   we go into an infinite loop when doing things like uniDecode("abc")
+	while(len > 1)
+	{
+		ConvertFromUnicodeToText(unicodeconvertors[fscript], len, (UniChar *)s,
+								 kUnicodeLooseMappingsMask
+								 | kUnicodeStringUnterminatedBit
+								 | kUnicodeUseFallbacksBit, 0, NULL, 0, NULL,
+								 destbufferlength, &processedbytes,
+								 &outlength, (LogicalAddress)d);
+		if (processedbytes == 0)
+		{
+			*d = '?';
+			processedbytes = 2;
+			outlength = 1;
+		}
+
+		len -= processedbytes;
+		destlen += outlength;
+		s += processedbytes;
+		d += outlength;
+	}
+}
+
+void MCS_multibytetounicode(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength,
+                            uint4 &destlen, uint1 charset)
+{
+	// MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
+	static int oldcharset = -1;
+	if (!destbufferlength)
+	{
+		destlen = len << 1;
+		return;
+	}
+	if (charset != oldcharset)
+	{
+		if (texttounicodeconvertor)
+			DisposeTextToUnicodeInfo(texttounicodeconvertor);
+		texttounicodeconvertor = NULL;
+		ScriptCode fscript = MCS_charsettolangid(charset);
+		TextEncoding scriptEncoding;
+		UpgradeScriptInfoToTextEncoding(fscript, kTextLanguageDontCare,
+		                                kTextRegionDontCare, NULL,
+		                                &scriptEncoding);
+		texttounicodeconvertor = &texttounicodeinfo;
+		CreateTextToUnicodeInfoByEncoding(scriptEncoding, texttounicodeconvertor);
+	}
+	ByteCount processedbytes, outlength;
+	ConvertFromTextToUnicode(*texttounicodeconvertor, len, (LogicalAddress) s,
+	                         kUnicodeLooseMappingsMask
+	                         | kUnicodeUseFallbacksMask, 0, NULL, 0, NULL,
+	                         destbufferlength, &processedbytes,
+	                         &outlength, (UniChar *)d);
+	destlen = outlength;
+	oldcharset = charset;
+}
+
 void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned short *p_utf16, uint4& x_utf16_length)
 {
 	uint4 t_byte_length;
@@ -7842,13 +7925,6 @@ void MCS_nativetoutf16(const char *p_native, uint4 p_native_length, unsigned sho
 void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char *p_native, uint4& p_native_length)
 {
 	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
-}
-
-Boolean MCS_isleadbyte(uint1 charset, char *s)
-{
-	if (!charset)
-		return False;
-	return CharacterByteType(s, 0, MCS_charsettolangid(charset)) == smFirstByte;
 }
 
 Boolean MCS_imeisunicode()

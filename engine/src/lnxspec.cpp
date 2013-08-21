@@ -586,21 +586,7 @@ void MCS_unsetenv(const char *name)
 	unsetenv(name);
 #endif
 }
-/*
-int4 MCS_rawopen(const char *path, int flags)
-{
-	char *newpath = MCS_resolvepath(path);
-	int4 fd = open(newpath, flags);
-	delete newpath;
-	return fd;
-}
-*/
-/*
-int4 MCS_rawclose(int4 fd)
-{
-	return close(fd);
-}
-*/
+
 Boolean MCS_rename(MCStringRef p_oname, MCStringRef p_nname)
 {
 	MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
@@ -1580,19 +1566,6 @@ double MCS_getfreediskspace(void)
 	return 1.0;
 }
 
-void MCS_exec_command ( char * command ) 
-{
-	MCExecPoint ep;
-	ep.copysvalue(command);
-	if (MCS_runcmd(ep) != IO_NORMAL)
-	{
-		MCeerror->add(EE_PRINT_ERROR, 0, 0);
-	}
-	else
-		MCresult->sets(ep.getsvalue());
-	
-}
-
 void MCS_launch_document(const char *p_document)
 {
 	
@@ -2053,23 +2026,6 @@ void abbrevdatefmt(char *sptr)
 	}
 }
 
-void MCS_localedateinfo(uint2 which, char *dest)
-{
-#ifndef NOLANG
-	strcpy(dest, nl_langinfo(which == P_SHORT? D_FMT: D_T_FMT));
-	if (which == P_ABBREVIATE)
-		abbrevdatefmt(dest);
-#else
-
-	dest[0] = '\0';
-#endif
-}
-
-Boolean MCS_isleadbyte(uint1 charset, char *s)
-{
-	return False;
-}
-
 
 // MW-2005-02-08: Implementation of multibyte conversion routines.
 //   These are naive at the moment - only providing conversion to and from
@@ -2135,11 +2091,6 @@ uint32_t MCS_getsyserror(void)
 //	r_error = true;
 //	return true;
 //}
-
-void MCS_system_alert(const char *p_title, const char *p_message)
-	{
-	fprintf(stderr, "%s", p_message);
-	}
 
 bool MCS_generate_uuid(char p_buffer[128])
 {

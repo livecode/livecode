@@ -65,7 +65,7 @@ extern Boolean MCS_noperm(MCStringRef path);
 extern Boolean MCS_exists(MCStringRef p_path, bool p_is_file);
 /* LEGACY */ extern Boolean MCS_exists(const char *path, Boolean file);
 
-extern Boolean MCS_nodelay(int4 fd);
+extern Boolean MCS_nodelay(int4 p_fd);
 
 ///* LEGACY */ extern IO_stat MCS_runcmd(MCExecPoint &);
 extern IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output);
@@ -132,7 +132,7 @@ extern void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_lengt
 extern void MCS_nativetoutf8(const char *p_native, uint4 p_native_length, char *p_utf8, uint4& p_utf16_length);
 extern void MCS_utf8tonative(const char *p_utf8, uint4 p_uitf8_length, char *p_native, uint4& p_native_length);
 
-extern Boolean MCS_isleadbyte(uint1 charset, char *s);
+///* NO LONGER USED */ extern Boolean MCS_isleadbyte(uint1 charset, char *s);
 
 extern MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename);
 extern MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol);
@@ -155,9 +155,6 @@ extern bool MCS_isatty(int);
 extern bool MCS_isnan(double p_value);
 
 extern bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error);
-
-// Called by trial timeout function in MCDispatch to pop-up a system dialog.
-void MCS_system_alert(MCStringRef title, MCStringRef message);
 
 bool MCS_generate_uuid(char buffer[128]);
 

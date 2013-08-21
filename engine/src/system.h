@@ -74,9 +74,9 @@ struct MCSystemFileHandle
 
 enum MCServiceType
 {
-    kMCServiceTypeMacSystem,
-    kMCServiceTypeWindowsSystem,
-    kMCServiceTypeLinuxSystem,
+    kMCServiceTypeMacSystem = 1,
+    kMCServiceTypeWindowsSystem = 2 << 1,
+    kMCServiceTypeLinuxSystem = 3 << 1,
 };
 
 struct MCServiceInterface
@@ -93,6 +93,9 @@ struct MCMacSystemServiceInterface: public MCServiceInterface
     virtual void CopyResourceFork(MCStringRef p_source, MCStringRef p_destination) = 0;
     virtual void LoadResFile(MCStringRef p_filename, MCStringRef& r_data) = 0;
     virtual void SaveResFile(MCStringRef p_path, MCDataRef p_data) = 0;
+    
+    virtual bool ProcessTypeIsForeground(void) = 0;
+    virtual bool ChangeProcessType(bool p_to_foreground) = 0;
     
     virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
@@ -130,6 +133,7 @@ struct MCSystemInterface
 	virtual void Debug(MCStringRef p_string) = 0;
 
 	virtual real64_t GetCurrentTime(void) = 0;
+    virtual void ResetTime(void) = 0;
 
 	virtual bool GetVersion(MCStringRef& r_string) = 0;
 	virtual bool GetMachine(MCStringRef& r_string) = 0;
@@ -214,18 +218,11 @@ struct MCSystemInterface
     
     virtual void CheckProcesses(void) = 0;
     
-    virtual bool GenerateUUID(char p_buffer[128]) = 0;
-    
-    virtual void SystemAlert(MCStringRef p_title, MCStringRef p_message) = 0;
     virtual uint32_t GetSystemError(void) = 0;
-    virtual bool IsATTY(int fd) = 0;
-    virtual bool IsNaN(double p_value) = 0;
     
     virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated) = 0;
-    virtual bool ProcessTypeIsForeground(void) = 0;
-    virtual bool ChangeProcessType(bool p_to_foreground) = 0;
     virtual void CloseProcess(uint2 p_index) = 0;
     virtual void Kill(int4 p_pid, int4 p_sig) = 0;
     virtual void KillAll(void) = 0;
@@ -234,13 +231,13 @@ struct MCSystemInterface
     virtual int GetErrno(void) = 0;
     virtual void SetErrno(int p_errno) = 0;
     
-    virtual bool GetSystemVersion(MCStringRef& r_version) = 0;
-    
     virtual void LaunchDocument(MCStringRef p_document) = 0;
     virtual void LaunchUrl(MCStringRef p_document) = 0;
     
     virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language) = 0;
-    virtual bool AlternateLanguage(MCListRef& r_list) = 0;
+    virtual bool AlternateLanguages(MCListRef& r_list) = 0;
+    
+    virtual bool GetDNSservers(MCListRef& r_list) = 0;
 };
 
 extern MCSystemInterface *MCsystem;

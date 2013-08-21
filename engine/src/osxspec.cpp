@@ -1390,10 +1390,10 @@ char *path2utf(char *path)
 //
 //	return curtime;
 //}
-
-void MCS_reset_time()
-{
-}
+//
+//void MCS_reset_time()
+//{
+//}
 //
 //void MCS_sleep(real8 duration)
 //{
@@ -1417,16 +1417,6 @@ void MCS_reset_time()
 //	unsetenv(name);
 //
 //}
-
-int4 MCS_rawopen(const char *path, int flags)
-{//this call is for unix audio device only.
-	return 0;
-}
-
-int4 MCS_rawclose(int4 fd)
-{//this call is for unix audio device only.
-	return 0;
-}
 
 //extern "C"
 //{
@@ -1471,22 +1461,22 @@ int4 MCS_rawclose(int4 fd)
 //	}
 //}
 
-
-#define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
-if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
-delete last char of it; return it"
-
-bool MCS_getDNSservers(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-
-	MCresult->clear();
-	MCdefaultstackptr->domess(DNS_SCRIPT);
-
-	return MCListCreateMutable('\n', &t_list) &&
-		MCListAppend(*t_list, MCresult->getvalueref()) &&
-		MCListCopy(*t_list, r_list);
-}
+//
+//#define DNS_SCRIPT "repeat for each line l in url \"binfile:/etc/resolv.conf\";\
+//if word 1 of l is \"nameserver\" then put word 2 of l & cr after it; end repeat;\
+//delete last char of it; return it"
+//
+//bool MCS_getDNSservers(MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//
+//	MCresult->clear();
+//	MCdefaultstackptr->domess(DNS_SCRIPT);
+//
+//	return MCListCreateMutable('\n', &t_list) &&
+//		MCListAppend(*t_list, MCresult->getvalueref()) &&
+//		MCListCopy(*t_list, r_list);
+//}
 
 //bool MCS_getdevices(MCListRef& r_list)
 //{
@@ -3256,13 +3246,6 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
 //}
 //
-//Boolean MCS_isleadbyte(uint1 charset, char *s)
-//{
-//	if (!charset)
-//		return False;
-//	return CharacterByteType(s, 0, MCS_charsettolangid(charset)) == smFirstByte;
-//}
-//
 //Boolean MCS_imeisunicode()
 //{
 //	OSErr err;
@@ -3354,16 +3337,16 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //	
 //	return true;
 //}
-//
-//bool MCS_isatty(int fd)
-//{
-//	return isatty(fd) != 0;
-//}
-//
-//bool MCS_isnan(double v)
-//{
-//	return isnan(v);
-//}
+
+bool MCS_isatty(int fd)
+{
+	return isatty(fd) != 0;
+}
+
+bool MCS_isnan(double v)
+{
+	return isnan(v);
+}
 //
 //uint32_t MCS_getsyserror(void)
 //{
@@ -3375,43 +3358,29 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //	r_error = false;
 //	return MCStringCreateWithCString("not supported", r_result);
 //}
-//
-//void MCS_system_alert(const char *p_title, const char *p_message)
-//{
-//	CFStringRef t_cf_title, t_cf_message;
-//	t_cf_title = CFStringCreateWithCString(NULL, p_title, kCFStringEncodingMacRoman);
-//	t_cf_message = CFStringCreateWithCString(NULL, p_message, kCFStringEncodingMacRoman);
-//	DialogRef t_alert;
-//	CreateStandardAlert(kAlertStopAlert, t_cf_title, t_cf_message, NULL, &t_alert);
-//	
-//	DialogItemIndex t_result;
-//	RunStandardAlert(t_alert, NULL, &t_result);
-//	CFRelease(t_cf_title);
-//	CFRelease(t_cf_message);
-//}
-//
-//bool MCS_generate_uuid(char p_buffer[128])
-//{
-//	CFUUIDRef t_uuid;
-//	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
-//	if (t_uuid != NULL)
-//	{
-//		CFStringRef t_uuid_string;
-//		
-//		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
-//		if (t_uuid_string != NULL)
-//		{
-//			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
-//			CFRelease(t_uuid_string);
-//		}
-//		
-//		CFRelease(t_uuid);
-//
-//		return true;
-//	}
-//
-//	return false;
-//}
+
+bool MCS_generate_uuid(char p_buffer[128])
+{
+	CFUUIDRef t_uuid;
+	t_uuid = CFUUIDCreate(kCFAllocatorDefault);
+	if (t_uuid != NULL)
+	{
+		CFStringRef t_uuid_string;
+		
+		t_uuid_string = CFUUIDCreateString(kCFAllocatorDefault, t_uuid);
+		if (t_uuid_string != NULL)
+		{
+			CFStringGetCString(t_uuid_string, p_buffer, 127, kCFStringEncodingMacRoman);
+			CFRelease(t_uuid_string);
+		}
+		
+		CFRelease(t_uuid);
+
+		return true;
+	}
+
+	return false;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

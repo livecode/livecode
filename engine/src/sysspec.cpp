@@ -139,6 +139,11 @@ real8 MCS_time(void)
 	return MCsystem -> GetCurrentTime();
 }
 
+void MCS_reset_time(void)
+{
+    MCsystem -> ResetTime();
+}
+
 void MCS_setenv(MCStringRef p_name_string, MCStringRef p_value_string)
 {
 	MCsystem -> SetEnv(p_name_string, p_value_string);
@@ -186,7 +191,7 @@ void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 
 bool MCS_alternatelanguages(MCListRef& r_list)
 {
-    return MCsystem -> AlternateLanguage(r_list);
+    return MCsystem -> AlternateLanguages(r_list);
 }
 
 void MCS_seterrno(int value)
@@ -1740,18 +1745,6 @@ void MCS_killall(void)
     MCsystem -> KillAll();
 }
 
-////////////////////////////////////////////////////////////////////////////////
-
-void MCS_multibytetounicode(const char *p_mb_string, uint4 p_mb_length, char *p_buffer, uint4 p_available, uint4& r_used, uint1 p_charset)
-{
-	r_used = MCsystem -> TextConvert(p_mb_string, p_mb_length, p_buffer, p_available, p_charset, LCH_UNICODE);
-}
-
-void MCS_unicodetomultibyte(const char *p_u_string, uint4 p_u_length, char *p_buffer, uint4 p_available, uint4& r_used, uint1 p_charset)
-{
-	r_used = MCsystem -> TextConvert(p_u_string, p_u_length, p_buffer, p_available, LCH_UNICODE, p_charset);
-}
-
 bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4 p_output_length, uint4& r_used)
 {
 	return MCsystem -> TextConvertToUnicode(p_encoding, p_input, p_input_length, p_output, p_output_length, r_used);
@@ -1881,12 +1874,11 @@ MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_ob
 //	}
 //	return true;
 //}
-//
-//bool MCS_getDNSservers(MCListRef& r_list)
-//{
-//	r_list = MCValueRetain(kMCEmptyList);
-//	return true;
-//}
+
+bool MCS_getDNSservers(MCListRef& r_list)
+{
+    return MCsystem -> GetDNSservers(r_list);
+}
 //
 //void MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 //{
@@ -1932,39 +1924,31 @@ void MCS_unloadmodule(MCSysModuleHandle p_module)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_changeprocesstype(bool x)
+bool MCS_changeprocesstype(bool p_to_foreground)
 {
-    return MCsystem -> ChangeProcessType(x);
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    
+    if (!t_service != nil)
+        return t_service -> ChangeProcessType(p_to_foreground);
+    
+    MCresult -> sets("not supported");
+    return true;
 }
 
 bool MCS_processtypeisforeground(void)
 {
-    return MCsystem -> ProcessTypeIsForeground();
+    MCMacSystemServiceInterface *t_service;
+    t_service = (MCMacSystemServiceInterface*) MCsystem -> QueryService(kMCServiceTypeMacSystem);
+    
+    if (!t_service != nil)
+        return t_service -> ProcessTypeIsForeground();
+    
+    MCresult -> sets("not supported");
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCS_isatty(int fd)
-{
-	return MCsystem -> IsATTY(fd);
-}
-
-bool MCS_isnan(double p_value)
-{
-    return MCsystem -> IsNaN(p_value);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-//
-void MCS_system_alert(MCStringRef p_title, MCStringRef p_message)
-{
-    MCsystem -> SystemAlert(p_title, p_message);
-}
-
-bool MCS_generate_uuid(char p_buffer[128])
-{
-    return MCsystem -> GenerateUUID(p_buffer);
-}
 
 uint32_t MCS_getsyserror(void)
 {
