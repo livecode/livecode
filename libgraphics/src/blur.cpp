@@ -1,7 +1,16 @@
+/*
+ * Copyright 2006 The Android Open Source Project
+ *
+ * Use of this source code is governed by a BSD-style license that can be
+ * found in the LICENSE file.
+ */
+
 #include "graphics.h"
+#include "graphics-internal.h"
 
 #include <SkMath.h>
 #include <SkMask.h>
+#include <SkColorPriv.h>
 
 #define kBlurRadiusFudgeFactor SkFloatToScalar( .57735f )
 
@@ -316,7 +325,7 @@ static void get_adjusted_radii(SkScalar passRadius, int *loRadius, int *hiRadius
 // radius -= p1_radius
 // pass 2 is (radius + (3 - 2 - 1)) / (3 - 2) = (radius + 0) / 1  (3)
 
-bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkMask& r_dst)
+bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_spread, SkMask& r_dst)
 {
 	int t_pass_count;
 	t_pass_count = 3;
@@ -332,9 +341,6 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 	int wx, wy;
 	wx = 255 - SkScalarRound((SkIntToScalar(rx) - px) * 255);
 	wy = 255 - SkScalarRound((SkIntToScalar(ry) - py) * 255);
-	
-	if (rx <= 0 || ry <= 0)
-		return false;
 	
 	int t_pad_x, t_pad_y;
 	t_pad_x = rx;
@@ -445,7 +451,7 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			
 			int ry_lo, ry_hi;
 			ry_lo = ry_hi = sry;
-			//get_adjusted_radii(py, &ry_lo, &ry_hi);
+			
 			h = boxBlur(tp, h, dp, ry_lo, ry_hi, h, w, false);
 			
 			sry = (r + 1) / 2;

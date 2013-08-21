@@ -77,7 +77,7 @@ static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectB
 	}
 }
 
-static void MCGraphicsContextAngleAndDistanceToXYOffset(uint8_t p_angle, uint8_t p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
+static void MCGraphicsContextAngleAndDistanceToXYOffset(int p_angle, int p_distance, MCGFloat &r_x_offset, MCGFloat &r_y_offset)
 {
 	r_x_offset = floor(0.5f + p_distance * cos(p_angle * M_PI / 180.0));
 	r_y_offset = floor(0.5f + p_distance * sin(p_angle * M_PI / 180.0));
@@ -191,10 +191,11 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 													t_x_offset, t_y_offset);
 		t_effects . drop_shadow . x_offset = t_x_offset;
 		t_effects . drop_shadow . y_offset = t_y_offset;
+		t_effects . drop_shadow . knockout = p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . knockout;
 	}
 	else
-		t_effects . has_drop_shadow = false;	
-		
+		t_effects . has_drop_shadow = false;
+	
 	MCGContextBeginWithEffects(m_gcontext, MCGRectangleMake(p_shape . x, p_shape . y, p_shape . width, p_shape . height), t_effects);
 	return true;
 }

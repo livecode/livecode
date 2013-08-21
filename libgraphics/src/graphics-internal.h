@@ -394,4 +394,16 @@ bool MCGImageCreateWithSkBitmap(const SkBitmap &p_bitmap, MCGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+enum MCGBlurType
+{
+	kMCGBlurTypeNormal,
+	kMCGBlurTypeInner,
+	kMCGBlurTypeInvertedInner,
+	kMCGBlurTypeOuter,
+};
+
+bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_spread, SkMask& r_dst);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

@@ -15,6 +15,7 @@
 #include <SkOffsetImageFilter.h>
 #include <SkBlurImageFilter.h>
 #include <SkTypeface.h>
+#include <SkColorPriv.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -317,7 +318,9 @@ static bool MCGContextCreateWithBitmap(SkBitmap& p_bitmap, MCGContextRef& r_cont
 	}
 	
 	if (t_success)
+	{
 		r_context = t_context;
+	}
 	else
 		MCGContextDestroy(t_context);
 	
@@ -577,306 +580,6 @@ protected:
 ////////////////////////////////////////////////////////////////////////////////
 // Layer attributes and manipulation - bitmap effect options would be added here also.
 
-#if 0
-static bool MCGContextConfigureLayerPaint(MCGColor p_color, MCGBlendMode p_blend_mode, bool p_should_antialias, SkPaint *r_paint)
-{
-	bool t_success;
-	t_success = true;
-	
-	SkColorFilter *t_color_filter;
-	if (t_success)
-	{
-		t_color_filter = SkColorFilter::CreateModeFilter(MCGColorToSkColor(p_color), SkXfermode::kSrcIn_Mode);
-		t_success = t_color_filter != NULL;
-	}
-	
-	if (t_success)
-	{
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(p_blend_mode);
-		
-		r_paint -> setXfermode(t_blend_mode);
-		r_paint -> setColorFilter(t_color_filter);
-		r_paint -> setAntiAlias(p_should_antialias);
-		
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();
-	}
-	
-	if (t_color_filter != NULL)
-		t_color_filter -> unref();
-	
-	return t_success;	
-}
-
-void MCGContextBegin(MCGContextRef self)
-{	
-	if (!MCGContextIsValid(self))
-		return;
-	
-	bool t_success;
-	t_success = true;	
-	
-	if (t_success)
-	{		
-		// use the current state's blending properties to composite the layer before creating a new state
-		SkPaint t_paint;
-		t_paint . setAntiAlias(self -> state -> should_antialias);
-		t_paint . setAlpha((U8CPU) (self -> state -> opacity * 255));
-		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-		if (t_blend_mode != NULL)
-		{
-			t_paint . setXfermode(t_blend_mode);
-			t_blend_mode -> unref();
-		}		
-		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
-																		   SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
-		
-		// flag the current state so that we know point to restore to on ending the layer
-		self -> state -> is_layer_begin_pt = true;
-		t_success = MCGContextPushState(self);
-	}
-	
-	self -> is_valid = t_success;
-}
-
-void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_effects)
-{	
-	if (!MCGContextIsValid(self))
-		return;
-	
-	bool t_success;
-	t_success = true;	
-	
-	SkLayerDrawLooper *t_looper;
-	SkLayerDrawLooper::LayerInfo t_layer_info;
-	if (t_success)
-	{
-		t_layer_info . fFlagsMask = 0;
-		t_layer_info . fPaintBits = SkLayerDrawLooper::kEntirePaint_Bits;
-		t_layer_info . fColorMode = SkXfermode::kSrc_Mode;	
-		
-		t_looper = new SkLayerDrawLooper;
-		t_success = t_looper != NULL;
-	}
-	
-	if (p_effects . has_color_overlay)
-	{		
-		SkPaint *t_layer_paint;
-		if (t_success)
-		{
-			t_layer_paint = t_looper -> addLayer(t_layer_info);
-			t_success = t_layer_paint != NULL;
-		}
-		
-		if (t_success)
-			t_success = MCGContextConfigureLayerPaint(p_effects . color_overlay . color, p_effects . color_overlay . blend_mode, self -> state -> should_antialias, t_layer_paint);
-	}
-	
-	if (p_effects . has_inner_glow && p_effects . inner_glow . size > 0)
-	{
-		SkPaint *t_layer_paint;
-		if (t_success)
-		{
-			t_layer_paint = t_looper -> addLayer(t_layer_info);
-			t_success = t_layer_paint != NULL;
-		}
-		
-		if (t_success)
-			t_success = MCGContextConfigureLayerPaint(p_effects . inner_glow . color, p_effects . inner_glow . blend_mode, self -> state -> should_antialias, t_layer_paint);
-		
-		SkMaskFilter *t_blur_mask_filter;
-		if (t_success)
-		{
-			SkBlurMaskFilter::BlurStyle t_blur_style;
-			//if (!p_effects . inner_glow . inverted)
-			t_blur_style = SkBlurMaskFilter::kInner_BlurStyle;
-			//else
-			//	t_blur_style = SkBlurMaskFilter::kOuter_BlurStyle;
-			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . inner_glow . size), 
-														  t_blur_style, SkBlurMaskFilter::kHighQuality_BlurFlag);
-			t_success = t_blur_mask_filter != NULL;
-		}
-		
-		SkImageFilter *t_blur_image_filter;
-		if (t_success)
-		{			
-			SkImageFilter *t_blur = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
-			SkImageFilter *t_invert = new MCGMaskInvertImageFilter(t_blur);
-			t_blur_image_filter = t_invert;
-			
-			
-			//t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, p_effects . inner_glow . inverted, NULL);
-			//t_success = t_blur_image_filter != NULL;
-		}
-		
-		if (t_success)
-			t_layer_paint -> setImageFilter(t_blur_image_filter);
-		
-		if (t_blur_mask_filter != NULL)
-			t_blur_mask_filter -> unref();
-		if (t_blur_image_filter != NULL)
-			t_blur_image_filter -> unref();		
-	}
-	
-	if (p_effects . has_inner_shadow)
-	{
-		SkPaint *t_layer_paint;
-		if (t_success)
-		{
-			t_layer_paint = t_looper -> addLayer(t_layer_info);
-			t_success = t_layer_paint != NULL;
-		}
-		
-		if (t_success)
-			t_success = MCGContextConfigureLayerPaint(p_effects . inner_shadow . color, p_effects . inner_shadow . blend_mode, self -> state -> should_antialias, t_layer_paint);
-	}
-	
-	if (t_success)
-		t_looper -> addLayer();
-	
-	if (p_effects . has_outer_glow && p_effects . outer_glow . size > 0)
-	{
-		SkPaint *t_layer_paint;
-		if (t_success)
-		{
-			t_layer_paint = t_looper -> addLayer(t_layer_info);
-			t_success = t_layer_paint != NULL;
-		}
-		
-		if (t_success)
-			t_success = MCGContextConfigureLayerPaint(p_effects . outer_glow . color, p_effects . outer_glow . blend_mode, self -> state -> should_antialias, t_layer_paint);
-		
-		SkMaskFilter *t_blur_mask_filter;
-		if (t_success)
-		{
-			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . outer_glow . size), 
-														  SkBlurMaskFilter::kOuter_BlurStyle, SkBlurMaskFilter::kHighQuality_BlurFlag);
-			t_success = t_blur_mask_filter != NULL;
-		}
-		
-		SkImageFilter *t_blur_image_filter;
-		if (t_success)
-		{
-			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
-			t_success = t_blur_image_filter != NULL;
-		}
-		
-		if (t_success)
-			t_layer_paint -> setImageFilter(t_blur_image_filter);
-		
-		if (t_blur_mask_filter != NULL)
-			t_blur_mask_filter -> unref();
-		if (t_blur_image_filter != NULL)
-			t_blur_image_filter -> unref();		
-	}
-	
-	if (p_effects . has_drop_shadow && p_effects . drop_shadow . size > 0)
-	{
-		SkPaint *t_layer_paint;
-		if (t_success)
-		{
-			t_layer_paint = t_looper -> addLayer(t_layer_info);
-			t_success = t_layer_paint != NULL;
-		}
-		
-		if (t_success)
-			t_success = MCGContextConfigureLayerPaint(p_effects . drop_shadow . color, p_effects . drop_shadow . blend_mode, self -> state -> should_antialias, t_layer_paint);
-		
-		SkMaskFilter *t_blur_mask_filter;
-		if (t_success)
-		{
-			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . drop_shadow . size), 
-														  SkBlurMaskFilter::kNormal_BlurStyle, SkBlurMaskFilter::kHighQuality_BlurFlag);
-			t_success = t_blur_mask_filter != NULL;
-		}
-		
-		SkImageFilter *t_blur_image_filter;
-		if (t_success)
-		{
-			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
-			t_success = t_blur_image_filter != NULL;
-		}
-		
-		SkImageFilter *t_offset_image_filter;
-		if (t_success)
-		{
-			t_offset_image_filter = new SkOffsetImageFilter(MCGFloatToSkScalar(p_effects . drop_shadow . x_offset), 
-															MCGFloatToSkScalar(p_effects . drop_shadow . y_offset), t_blur_image_filter);
-			t_success = t_offset_image_filter != NULL;
-		}
-		
-		if (t_success)
-			t_layer_paint -> setImageFilter(t_offset_image_filter);
-		
-		if (t_blur_mask_filter != NULL)
-			t_blur_mask_filter -> unref();
-		if (t_blur_image_filter != NULL)
-			t_blur_image_filter -> unref();
-		if (t_offset_image_filter != NULL)
-			t_offset_image_filter -> unref();
-	}
-	
-	if (t_success)
-	{
-		// use the current state's blending properties to composite the layer before creating a new state
-		SkPaint t_paint;
-		t_paint . setAntiAlias(self -> state -> should_antialias);
-		t_paint . setAlpha((U8CPU) (self -> state -> opacity * 255));
-		t_paint . setLooper(t_looper);
-		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-		if (t_blend_mode != NULL)
-		{
-			t_paint . setXfermode(t_blend_mode);
-			t_blend_mode -> unref();
-		}	
-		
-		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
-																		   SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
-		
-		// flag the current state so that we know point to restore to on ending the layer
-		self -> state -> is_layer_begin_pt = true;
-		t_success = MCGContextPushState(self);		
-	}
-	
-	if (t_looper != NULL)
-		t_looper -> unref();
-	self -> is_valid = t_success;
-}
-
-void MCGContextEnd(MCGContextRef self)
-{	
-	if (!MCGContextIsValid(self))
-		return;
-	
-	bool t_success;
-	t_success = true;	
-	
-	if (t_success)
-		t_success = self -> state -> parent != NULL;
-	
-	// keep on popping off states until we reach the state we were in when the layer was begun
-	if (t_success)
-		while (t_success && !self -> state -> is_layer_begin_pt)
-		{
-			t_success = MCGContextPopState(self);
-
-			// we use skia to maintain a state's clip and transform, so calling restore ensures that the parent state's clip and CTM are restored properly 
-			if (t_success)
-				self -> layer -> canvas -> restore();			
-		}
-	
-	if (t_success)
-		self -> state -> is_layer_begin_pt = false;
-	
-	self -> is_valid = t_success;	
-}
-#endif
-
 // Now replay the clip from the parent layer.
 class CanvasClipVisitor: public SkCanvas::ClipVisitor
 {
@@ -1036,7 +739,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 {
 	if (!MCGContextIsValid(self))
 		return;
-		
+	
 	MCGAffineTransform t_device_transform;
 	t_device_transform = MCGContextGetDeviceTransform(self);
 	
@@ -1058,20 +761,31 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	// Finally add this rectangle to the layer clip (union).
 	if (p_effects . has_drop_shadow)
 	{
-		// TODO: Transform offset and radii.
+		MCGSize t_radii, t_offset;
+		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . drop_shadow . size, p_effects . drop_shadow . size), t_device_transform);
+		t_offset = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset), t_device_transform);
+		
 		t_layer_clip = MCGIRectangleUnion(
 							t_layer_clip,
 							MCGIRectangleIntersect(
 								t_device_shape,
 								MCGIRectangleExpand(
-									MCGIRectangleOffset(
-										MCGIRectangleIntersect(
-											t_device_clip,
-											MCGIRectangleOffset(
+									MCGIRectangleUnion(
+										MCGIRectangleOffset(
+											MCGIRectangleIntersect(
+												t_device_clip,
+												MCGIRectangleOffset(
 													t_device_shape,
-													p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset)),
-										-p_effects . drop_shadow . x_offset, -p_effects . drop_shadow . y_offset),
-									p_effects . drop_shadow . size, p_effects . drop_shadow . size)));
+													floor(t_offset . width), floor(t_offset . height))),
+											-floor(t_offset . width), -floor(t_offset . height)),
+										MCGIRectangleOffset(
+											MCGIRectangleIntersect(
+												t_device_clip,
+												MCGIRectangleOffset(
+													t_device_shape,
+													ceil(t_offset . width), ceil(t_offset . height))),
+											-ceil(t_offset . width), -ceil(t_offset . height))),
+										ceil(t_radii . width), ceil(t_radii . height))));
 	}
 	
 	
@@ -1082,17 +796,65 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	// We then intersect with the shape.
 	// Finally add this rectangle to the layer clip (union).
 	if (p_effects . has_inner_shadow)
+	{
+		MCGSize t_radii, t_offset;
+		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . inner_shadow . size, p_effects . inner_shadow . size), t_device_transform);
+		t_offset = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . inner_shadow . x_offset, p_effects . inner_shadow . y_offset), t_device_transform);
+		
 		t_layer_clip = MCGIRectangleUnion(
 							t_layer_clip,
 							MCGIRectangleIntersect(
 								t_device_shape,
 								MCGIRectangleExpand(
-									MCGIRectangleOffset(
-										MCGIRectangleIntersect(
+									MCGIRectangleUnion(
+										MCGIRectangleOffset(
+											MCGIRectangleIntersect(t_device_shape, t_device_clip),
+											floor(t_offset . width), floor(t_offset . height)),
+										MCGIRectangleOffset(
+											MCGIRectangleIntersect(t_device_shape, t_device_clip),
+											ceil(t_offset . width), ceil(t_offset . height))),
+									ceil(t_radii . width), ceil(t_radii . height))));
+	}
+	
+	// Next process outer glow.
+	// We expand the shape by the radii.
+	// We then intersect with the device clip to see what is needed.
+	// We then intersect with the device shape to restrict to renderable pixels.
+	// Finally we add this rectangle to the layer clip (union).
+	if (p_effects . has_outer_glow)
+	{
+		MCGSize t_radii;
+		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . outer_glow . size, p_effects . outer_glow . size), t_device_transform);
+		
+		t_layer_clip = MCGIRectangleUnion(
+							t_layer_clip,
+							MCGIRectangleIntersect(
+									t_device_shape,
+									MCGIRectangleIntersect(
+										t_device_clip,
+										MCGIRectangleExpand(
 											t_device_shape,
-											t_device_clip),
-										-p_effects . inner_shadow . x_offset, -p_effects . inner_shadow . y_offset),
-									p_effects . inner_shadow . size, p_effects . inner_shadow . size)));
+											ceil(t_radii . width), ceil(t_radii . height)))));
+	}
+	
+	// Next process inner glow.
+	// We intersect the shape with the clip to determine visible pixels (inner glow only works internally).
+	// We then expand by the radii.
+	// We then intersect with the shape
+	// Finally we add this rectangle to the layer clip (union).
+	if (p_effects . has_inner_glow)
+	{
+		MCGSize t_radii;
+		t_radii = MCGSizeApplyAffineTransform(MCGSizeMake(p_effects . outer_glow . size, p_effects . outer_glow . size), t_device_transform);
+		
+		t_layer_clip = MCGIRectangleUnion(
+							t_layer_clip,
+							MCGIRectangleIntersect(
+									t_device_shape,
+									MCGIRectangleExpand(
+											MCGIRectangleIntersect(t_device_clip, t_device_shape),
+											ceil(t_radii . width), ceil(t_radii . height))));
+	}
 	
 	/*if (p_effects . has_drop_shadow)
 		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . drop_shadow, t_device_shape, t_device_clip, t_device_transform));
@@ -1160,7 +922,137 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	self -> layer = t_new_layer;
 }
 
-extern bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkMask& r_dst);
+static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCGSize p_radii, MCGSize p_offset, MCGFloat p_spread, MCGBlurType p_attenuation, MCGColor p_color, MCGBlendMode p_blend)
+{
+	// Get the device transform.
+	MCGAffineTransform t_transform;
+	t_transform = MCGContextGetDeviceTransform(self);
+	
+	// Compute the transforms of the radii and offset.
+	MCGSize t_transformed_radii, t_transformed_offset;
+	t_transformed_radii = MCGSizeApplyAffineTransform(p_radii, t_transform);
+	t_transformed_offset = MCGSizeApplyAffineTransform(p_offset, t_transform);
+	
+	// Now blur the mask.
+	SkMask t_blurred_mask;
+	if (!MCGBlurBox(p_mask, t_transformed_radii . width, t_transformed_radii . height, p_spread, t_blurred_mask))
+		return;
+	
+	// Offset the blur mask appropriately.
+	// TODO: Handle sub-pixel case!
+	t_blurred_mask . fBounds . offset(t_transformed_offset . width, t_transformed_offset . height);
+	
+	// Now process the mask according to the attenuation.
+	switch(p_attenuation)
+	{
+		case kMCGBlurTypeNormal:
+			// Nothing to do.
+			break;
+			
+		case kMCGBlurTypeInner:
+		{
+			// We process the generated mask so that the mask consists only of pixels
+			// in the intersection of blur-mask and mask.
+			SkIRect t_inside;
+			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			{
+				uint8_t *t_blur_ptr, *t_mask_ptr;
+				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
+				t_mask_ptr = p_mask . getAddr8(t_inside . x(), t_inside . y());
+				for(int y = 0; y < t_inside . height(); y++)
+				{
+					for(int x = 0; x < t_inside . width(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(t_mask_ptr[x]));
+					
+					t_blur_ptr += t_blurred_mask . fRowBytes;
+					t_mask_ptr += p_mask . fRowBytes;
+				}
+				
+				t_blurred_mask . fImage = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
+				t_blurred_mask . fBounds = t_inside;
+			}
+		}
+		break;
+			
+		case kMCGBlurTypeInvertedInner:
+		{
+			// We process the generated mask so that the mask consists only of pixels
+			// in the intersection of not(blur-mask) and mask.
+			SkIRect t_inside;
+			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			{
+				SkMask t_tmp_mask;
+				t_tmp_mask . fFormat = p_mask . fFormat;
+				t_tmp_mask . fBounds = p_mask . fBounds;
+				t_tmp_mask . fRowBytes = p_mask . fRowBytes;
+				t_tmp_mask . fImage = SkMask::AllocImage(p_mask . computeImageSize());
+				memcpy(t_tmp_mask . fImage, p_mask . fImage, p_mask . computeImageSize());
+				
+				uint8_t *t_blur_ptr, *t_tmp_mask_ptr;
+				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
+				t_tmp_mask_ptr = t_tmp_mask . getAddr8(t_inside . x(), t_inside . y());
+				for(int y = 0; y < t_inside . height(); y++)
+				{
+					for(int x = 0; x < t_inside . width(); x++)
+						t_tmp_mask_ptr[x] = SkAlphaMul(255 - t_blur_ptr[x], SkAlpha255To256(t_tmp_mask_ptr[x]));
+					
+					t_blur_ptr += t_blurred_mask . fRowBytes;
+					t_tmp_mask_ptr += t_tmp_mask . fRowBytes;
+				}
+				
+				SkMask::FreeImage(t_blurred_mask . fImage);
+				
+				t_blurred_mask . fImage = t_tmp_mask . fImage;
+				t_blurred_mask . fBounds = t_tmp_mask . fBounds;
+				t_blurred_mask . fRowBytes = t_tmp_mask . fRowBytes;
+			}
+		}
+		break;
+			
+			
+		case kMCGBlurTypeOuter:
+		{
+			// We process the generated mask so that the mask consists only of pixels
+			// in the intersection of blur-mask and not(mask).
+			SkIRect t_inside;
+			if (t_inside . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+			{
+				uint8_t *t_blur_ptr, *t_mask_ptr;
+				t_blur_ptr = t_blurred_mask . getAddr8(t_inside . x(), t_inside . y());
+				t_mask_ptr = p_mask . getAddr8(t_inside . x(), t_inside . y());
+				for(int y = 0; y < t_inside . height(); y++)
+				{
+					for(int x = 0; x < t_inside . width(); x++)
+						t_blur_ptr[x] = SkAlphaMul(t_blur_ptr[x], SkAlpha255To256(255 - t_mask_ptr[x]));
+					
+					t_blur_ptr += t_blurred_mask . fRowBytes;
+					t_mask_ptr += p_mask . fRowBytes;
+				}
+			}
+		}
+		break;
+			
+		default:
+			break;
+	}
+	// Configure the paint.
+	SkPaint t_paint;
+	t_paint . setStyle(SkPaint::kFill_Style);
+	t_paint . setColor(MCGColorToSkColor(p_color));
+	
+	SkXfermode *t_blend_mode;
+	t_blend_mode = MCGBlendModeToSkXfermode(p_blend);
+	t_paint . setXfermode(t_blend_mode);
+	if (t_blend_mode != NULL)
+		t_blend_mode -> unref();
+	
+	// Now paint.
+	//t_blurred_mask . fBounds . offset(t_transformed_offset . width, t_transformed_offset . height);
+	self -> layer -> canvas -> drawDevMask(t_blurred_mask, t_paint);
+	
+	// Free the blurred mask.
+	SkMask::FreeImage(t_blurred_mask . fImage);
+}
 
 static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_child, const MCGBitmapEffects& p_effects)
 {
@@ -1176,45 +1068,63 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 			t_child_mask . fImage[y * t_child_mask . fRowBytes + x] = *(((uint32_t *)t_child_bitmap . getPixels()) + y * t_child_bitmap . rowBytes() / 4 + x) >> 24;
 	
 	if (p_effects . has_drop_shadow)
-	{
-		SkPaint t_paint;
-		t_paint . setStyle(SkPaint::kFill_Style);
-		t_paint . setColor(MCGColorToSkColor(p_effects . drop_shadow . color));
-		
-		SkXfermode *t_blend_mode;
-		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
-		t_paint . setXfermode(t_blend_mode);
-		if (t_blend_mode != NULL)
-			t_blend_mode -> unref();
-		
-		SkMask t_blur_mask;
-		if (MCGBlurBox(t_child_mask, p_effects . drop_shadow . size, p_effects . drop_shadow . size, t_blur_mask))
-		{
-			t_blur_mask . fBounds . offset(p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset);
-			self -> layer -> canvas -> drawDevMask(t_blur_mask, t_paint);
-			SkMask::FreeImage(t_blur_mask . fImage);
-		}
-	}
+		MCGContextRenderEffect(self,
+							   t_child_mask,
+							   MCGSizeMake(p_effects . drop_shadow . size, p_effects . drop_shadow . size),
+							   MCGSizeMake(p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset),
+							   /*p_effects . outer_glow . spread*/ 0.0,
+							   p_effects . drop_shadow . knockout ? kMCGBlurTypeOuter : kMCGBlurTypeNormal,
+							   p_effects . drop_shadow . color,
+							   p_effects . drop_shadow . blend_mode);
 	
 	if (p_effects . has_outer_glow)
-	{
-	}
+		MCGContextRenderEffect(self,
+							   t_child_mask,
+							   MCGSizeMake(p_effects . outer_glow . size, p_effects . outer_glow . size),
+							   MCGSizeMake(0.0, 0.0),
+							   /*p_effects . outer_glow . spread*/ 0.0,
+							   kMCGBlurTypeNormal,
+							   p_effects . outer_glow . color,
+							   p_effects . outer_glow . blend_mode);
+							   
 	
 	// Render the layer itself (using the layer's alpha and blend mode - well, if we can agree that's a good change!).
 	if (true)
 		self -> layer -> canvas -> drawSprite(t_child_bitmap, p_child -> origin_x, p_child -> origin_y, NULL);
 	
 	if (p_effects . has_inner_shadow)
-	{
-	}
+		MCGContextRenderEffect(self,
+							   t_child_mask,
+							   MCGSizeMake(p_effects . inner_shadow . size, p_effects . inner_shadow . size),
+							   MCGSizeMake(p_effects . inner_shadow . x_offset, p_effects . inner_shadow . y_offset),
+							   /*p_effects . inner_shadow . spread*/ 0.0,
+							   kMCGBlurTypeInvertedInner,
+							   p_effects . inner_shadow . color,
+							   p_effects . inner_shadow . blend_mode);
 	
 	if (p_effects . has_inner_glow)
-	{
-	}
+		MCGContextRenderEffect(self,
+							   t_child_mask,
+							   MCGSizeMake(p_effects . inner_glow . size, p_effects . inner_glow . size),
+							   MCGSizeMake(0.0, 0.0),
+							   /*p_effects . inner_shadow . spread*/ 0.0,
+							   p_effects . inner_glow . inverted ? kMCGBlurTypeInvertedInner : kMCGBlurTypeInner,
+							   p_effects . inner_glow . color,
+							   p_effects . inner_glow . blend_mode);
 	
 	if (p_effects . has_color_overlay)
 	{
-		// Should be able to do this with a shader
+		SkPaint t_paint;
+		t_paint . setStyle(SkPaint::kFill_Style);
+		t_paint . setColor(MCGColorToSkColor(p_effects . color_overlay . color));
+		
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(p_effects . color_overlay . blend_mode);
+		t_paint . setXfermode(t_blend_mode);
+		if (t_blend_mode != NULL)
+			t_blend_mode -> unref();
+
+		self -> layer -> canvas -> drawDevMask(t_child_mask, t_paint);
 	}
 	
 	SkMask::FreeImage(t_child_mask . fImage);
@@ -1303,19 +1213,6 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	// this means any transforms to the clip are handled by skia allowing for more complex clips (rather than just a rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
 }
-
-#if 0
-void MCGContextResetClip(MCGContextRef self)
-{
-	if (!MCGContextIsValid(self))
-		return;
-	
-	// TODO: Take into account the state's tranformation.
-	//	(we store the clip in local coords so for a transformed state, 0,0 is no longer the origin).
-	self -> layer -> canvas -> clipRect(SkRect::MakeXYWH(SkIntToScalar(0), SkIntToScalar(0), SkIntToScalar(self -> width), SkIntToScalar(self -> height)),
-							   SkRegion::kReplace_Op, self -> state -> should_antialias);
-}
-#endif
 
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef self)
 {
@@ -2400,3 +2297,303 @@ bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+#if 0
+static bool MCGContextConfigureLayerPaint(MCGColor p_color, MCGBlendMode p_blend_mode, bool p_should_antialias, SkPaint *r_paint)
+{
+	bool t_success;
+	t_success = true;
+	
+	SkColorFilter *t_color_filter;
+	if (t_success)
+	{
+		t_color_filter = SkColorFilter::CreateModeFilter(MCGColorToSkColor(p_color), SkXfermode::kSrcIn_Mode);
+		t_success = t_color_filter != NULL;
+	}
+	
+	if (t_success)
+	{
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(p_blend_mode);
+		
+		r_paint -> setXfermode(t_blend_mode);
+		r_paint -> setColorFilter(t_color_filter);
+		r_paint -> setAntiAlias(p_should_antialias);
+		
+		if (t_blend_mode != NULL)
+			t_blend_mode -> unref();
+	}
+	
+	if (t_color_filter != NULL)
+		t_color_filter -> unref();
+	
+	return t_success;	
+}
+
+void MCGContextBegin(MCGContextRef self)
+{	
+	if (!MCGContextIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;	
+	
+	if (t_success)
+	{		
+		// use the current state's blending properties to composite the layer before creating a new state
+		SkPaint t_paint;
+		t_paint . setAntiAlias(self -> state -> should_antialias);
+		t_paint . setAlpha((U8CPU) (self -> state -> opacity * 255));
+		
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
+		if (t_blend_mode != NULL)
+		{
+			t_paint . setXfermode(t_blend_mode);
+			t_blend_mode -> unref();
+		}		
+		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
+																					SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
+		
+		// flag the current state so that we know point to restore to on ending the layer
+		self -> state -> is_layer_begin_pt = true;
+		t_success = MCGContextPushState(self);
+	}
+	
+	self -> is_valid = t_success;
+}
+
+void MCGContextBeginWithEffects(MCGContextRef self, const MCGBitmapEffects &p_effects)
+{	
+	if (!MCGContextIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;	
+	
+	SkLayerDrawLooper *t_looper;
+	SkLayerDrawLooper::LayerInfo t_layer_info;
+	if (t_success)
+	{
+		t_layer_info . fFlagsMask = 0;
+		t_layer_info . fPaintBits = SkLayerDrawLooper::kEntirePaint_Bits;
+		t_layer_info . fColorMode = SkXfermode::kSrc_Mode;	
+		
+		t_looper = new SkLayerDrawLooper;
+		t_success = t_looper != NULL;
+	}
+	
+	if (p_effects . has_color_overlay)
+	{		
+		SkPaint *t_layer_paint;
+		if (t_success)
+		{
+			t_layer_paint = t_looper -> addLayer(t_layer_info);
+			t_success = t_layer_paint != NULL;
+		}
+		
+		if (t_success)
+			t_success = MCGContextConfigureLayerPaint(p_effects . color_overlay . color, p_effects . color_overlay . blend_mode, self -> state -> should_antialias, t_layer_paint);
+	}
+	
+	if (p_effects . has_inner_glow && p_effects . inner_glow . size > 0)
+	{
+		SkPaint *t_layer_paint;
+		if (t_success)
+		{
+			t_layer_paint = t_looper -> addLayer(t_layer_info);
+			t_success = t_layer_paint != NULL;
+		}
+		
+		if (t_success)
+			t_success = MCGContextConfigureLayerPaint(p_effects . inner_glow . color, p_effects . inner_glow . blend_mode, self -> state -> should_antialias, t_layer_paint);
+		
+		SkMaskFilter *t_blur_mask_filter;
+		if (t_success)
+		{
+			SkBlurMaskFilter::BlurStyle t_blur_style;
+			//if (!p_effects . inner_glow . inverted)
+			t_blur_style = SkBlurMaskFilter::kInner_BlurStyle;
+			//else
+			//	t_blur_style = SkBlurMaskFilter::kOuter_BlurStyle;
+			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . inner_glow . size), 
+														  t_blur_style, SkBlurMaskFilter::kHighQuality_BlurFlag);
+			t_success = t_blur_mask_filter != NULL;
+		}
+		
+		SkImageFilter *t_blur_image_filter;
+		if (t_success)
+		{			
+			SkImageFilter *t_blur = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			SkImageFilter *t_invert = new MCGMaskInvertImageFilter(t_blur);
+			t_blur_image_filter = t_invert;
+			
+			
+			//t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, p_effects . inner_glow . inverted, NULL);
+			//t_success = t_blur_image_filter != NULL;
+		}
+		
+		if (t_success)
+			t_layer_paint -> setImageFilter(t_blur_image_filter);
+		
+		if (t_blur_mask_filter != NULL)
+			t_blur_mask_filter -> unref();
+		if (t_blur_image_filter != NULL)
+			t_blur_image_filter -> unref();		
+	}
+	
+	if (p_effects . has_inner_shadow)
+	{
+		SkPaint *t_layer_paint;
+		if (t_success)
+		{
+			t_layer_paint = t_looper -> addLayer(t_layer_info);
+			t_success = t_layer_paint != NULL;
+		}
+		
+		if (t_success)
+			t_success = MCGContextConfigureLayerPaint(p_effects . inner_shadow . color, p_effects . inner_shadow . blend_mode, self -> state -> should_antialias, t_layer_paint);
+	}
+	
+	if (t_success)
+		t_looper -> addLayer();
+	
+	if (p_effects . has_outer_glow && p_effects . outer_glow . size > 0)
+	{
+		SkPaint *t_layer_paint;
+		if (t_success)
+		{
+			t_layer_paint = t_looper -> addLayer(t_layer_info);
+			t_success = t_layer_paint != NULL;
+		}
+		
+		if (t_success)
+			t_success = MCGContextConfigureLayerPaint(p_effects . outer_glow . color, p_effects . outer_glow . blend_mode, self -> state -> should_antialias, t_layer_paint);
+		
+		SkMaskFilter *t_blur_mask_filter;
+		if (t_success)
+		{
+			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . outer_glow . size), 
+														  SkBlurMaskFilter::kOuter_BlurStyle, SkBlurMaskFilter::kHighQuality_BlurFlag);
+			t_success = t_blur_mask_filter != NULL;
+		}
+		
+		SkImageFilter *t_blur_image_filter;
+		if (t_success)
+		{
+			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			t_success = t_blur_image_filter != NULL;
+		}
+		
+		if (t_success)
+			t_layer_paint -> setImageFilter(t_blur_image_filter);
+		
+		if (t_blur_mask_filter != NULL)
+			t_blur_mask_filter -> unref();
+		if (t_blur_image_filter != NULL)
+			t_blur_image_filter -> unref();		
+	}
+	
+	if (p_effects . has_drop_shadow && p_effects . drop_shadow . size > 0)
+	{
+		SkPaint *t_layer_paint;
+		if (t_success)
+		{
+			t_layer_paint = t_looper -> addLayer(t_layer_info);
+			t_success = t_layer_paint != NULL;
+		}
+		
+		if (t_success)
+			t_success = MCGContextConfigureLayerPaint(p_effects . drop_shadow . color, p_effects . drop_shadow . blend_mode, self -> state -> should_antialias, t_layer_paint);
+		
+		SkMaskFilter *t_blur_mask_filter;
+		if (t_success)
+		{
+			t_blur_mask_filter = SkBlurMaskFilter::Create(MCGFloatToSkScalar(p_effects . drop_shadow . size), 
+														  SkBlurMaskFilter::kNormal_BlurStyle, SkBlurMaskFilter::kHighQuality_BlurFlag);
+			t_success = t_blur_mask_filter != NULL;
+		}
+		
+		SkImageFilter *t_blur_image_filter;
+		if (t_success)
+		{
+			t_blur_image_filter = new MCGMaskExtractImageFilter(t_blur_mask_filter, false, NULL);
+			t_success = t_blur_image_filter != NULL;
+		}
+		
+		SkImageFilter *t_offset_image_filter;
+		if (t_success)
+		{
+			t_offset_image_filter = new SkOffsetImageFilter(MCGFloatToSkScalar(p_effects . drop_shadow . x_offset), 
+															MCGFloatToSkScalar(p_effects . drop_shadow . y_offset), t_blur_image_filter);
+			t_success = t_offset_image_filter != NULL;
+		}
+		
+		if (t_success)
+			t_layer_paint -> setImageFilter(t_offset_image_filter);
+		
+		if (t_blur_mask_filter != NULL)
+			t_blur_mask_filter -> unref();
+		if (t_blur_image_filter != NULL)
+			t_blur_image_filter -> unref();
+		if (t_offset_image_filter != NULL)
+			t_offset_image_filter -> unref();
+	}
+	
+	if (t_success)
+	{
+		// use the current state's blending properties to composite the layer before creating a new state
+		SkPaint t_paint;
+		t_paint . setAntiAlias(self -> state -> should_antialias);
+		t_paint . setAlpha((U8CPU) (self -> state -> opacity * 255));
+		t_paint . setLooper(t_looper);
+		
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
+		if (t_blend_mode != NULL)
+		{
+			t_paint . setXfermode(t_blend_mode);
+			t_blend_mode -> unref();
+		}	
+		
+		self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag |
+																					SkCanvas::kMatrix_SaveFlag | SkCanvas::kClip_SaveFlag));	
+		
+		// flag the current state so that we know point to restore to on ending the layer
+		self -> state -> is_layer_begin_pt = true;
+		t_success = MCGContextPushState(self);		
+	}
+	
+	if (t_looper != NULL)
+		t_looper -> unref();
+	self -> is_valid = t_success;
+}
+
+void MCGContextEnd(MCGContextRef self)
+{	
+	if (!MCGContextIsValid(self))
+		return;
+	
+	bool t_success;
+	t_success = true;	
+	
+	if (t_success)
+		t_success = self -> state -> parent != NULL;
+	
+	// keep on popping off states until we reach the state we were in when the layer was begun
+	if (t_success)
+		while (t_success && !self -> state -> is_layer_begin_pt)
+		{
+			t_success = MCGContextPopState(self);
+			
+			// we use skia to maintain a state's clip and transform, so calling restore ensures that the parent state's clip and CTM are restored properly 
+			if (t_success)
+				self -> layer -> canvas -> restore();			
+		}
+	
+	if (t_success)
+		self -> state -> is_layer_begin_pt = false;
+	
+	self -> is_valid = t_success;	
+}
+#endif
