@@ -1293,36 +1293,39 @@ public:
 		int32_t t_height;
 		t_height = m_stack -> getcurcard() -> getrect() . height;
 		
-		MCGRectangle t_src, t_dst;
-		t_src = MCGRectangleIntersection(p_src_rect, MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src)));
+		// IM-2013-08-21: [[ RefactorGraphics]] Rework to fix positioning of composited src image
+		// compute transform from src rect to dst rect
+		MCGFloat t_sx, t_sy, t_dx, t_dy;
+		t_sx = p_dst_rect.size.width / p_src_rect.size.width;
+		t_sy = p_dst_rect.size.height / p_src_rect.size.height;
 		
-		if (t_src.size.width == 0 || t_src.size.height == 0 || p_dst_rect.size.width == 0 || p_dst_rect.size.height == 0)
-			return true;
+		t_dx = p_dst_rect.origin.x - (p_src_rect.origin.x * t_sx);
+		t_dy = p_dst_rect.origin.y - (p_src_rect.origin.y * t_sy);
 		
-		MCGFloat t_vscale, t_hscale;
-		t_hscale = p_dst_rect.size.width / p_src_rect.size.width;
-		t_vscale = p_dst_rect.size.height / p_src_rect.size.height;
-		
-		t_dst = MCGRectangleMake(p_dst_rect.origin.x + (t_src.origin.x - p_src_rect.origin.x) * t_hscale,
-								 p_dst_rect.origin.y + (t_src.origin.y - p_src_rect.origin.y) * t_vscale,
-								 p_dst_rect.size.width + (t_src.size.width - p_src_rect.size.width) * t_hscale,
-								 p_dst_rect.size.height + (t_src.size.height - p_src_rect.size.height) * t_vscale);
-		
-		CGRect t_dst_rect;
-		t_dst_rect = CGRectMake(t_dst . origin . x, t_height - (t_dst . origin . y + t_dst . size . height), t_dst . size . width, t_dst . size . height);
+		// apply transformation to rect (0, 0, image width, image height)
+		MCGRectangle t_dst_rect, t_src_rect;
+		t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
+		t_dst_rect = MCGRectangleMake(t_dx, t_dy, t_src_rect.size.width * t_sx, t_src_rect.size.height * t_sy);
 		
 		CGContextRef t_context = nil;
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, (void*&)t_context))
 			return false;
 		
-		bool t_success = true;
+		// clip to dst rect
+		MCRectangle t_bounds;
+		t_bounds = MCGRectangleGetIntegerBounds(p_dst_rect);
+		CGRect t_dst_clip;
+		t_dst_clip = CGRectMake(t_bounds . x, t_height - (t_bounds . y + t_bounds . height), t_bounds . width, t_bounds . height);
+		CGContextClipToRect(t_context, t_dst_clip);
 		
-		if (t_success)
-			MCMacRenderImageToCG(t_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
+		// render image to transformed rect
+		CGRect t_dst_cgrect;
+		t_dst_cgrect = CGRectMake(t_dst_rect . origin . x, t_height - (t_dst_rect . origin . y + t_dst_rect . size . height), t_dst_rect . size . width, t_dst_rect . size . height);
+		MCMacRenderImageToCG(t_context, t_dst_cgrect, p_src, t_src_rect, p_alpha, p_blend);
 		
 		UnlockTarget();
 		
-		return t_success;
+		return true;
 	}
 };
 
