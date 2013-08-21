@@ -24,6 +24,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "textlayout.h"
 
+#include <pango/pangoft2.h>
+
 class MCX11Context;
 
 class MCFontlist
@@ -49,5 +51,18 @@ MCFontlist *MCFontlistCreateOld(void);
 MCFontlist *MCFontlistCreateNew(void);
 
 MCFontlist *MCFontlistGetCurrent(void);
+
+struct MCNewFontStruct: public MCFontStruct
+{
+	// The requested details of the font
+	char *family;
+	uint16_t style;
+	
+	// The pango description
+	PangoFontDescription *description;
+	
+	// The link to the next one.
+	MCNewFontStruct *next;
+};
 
 #endif

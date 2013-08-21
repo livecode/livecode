@@ -52,19 +52,6 @@ extern "C" int initialise_weak_link_pangoft2();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCNewFontStruct: public MCFontStruct
-{
-	// The requested details of the font
-	char *family;
-	uint16_t style;
-
-	// The pango description
-	PangoFontDescription *description;
-
-	// The link to the next one.
-	MCNewFontStruct *next;
-};
-
 class MCNewFontlist: public MCFontlist
 {
 public:

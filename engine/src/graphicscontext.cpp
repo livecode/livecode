@@ -51,6 +51,20 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
+#elif defined(TARGET_PLATFORM_LINUX)
+
+#include "lnxflst.h"
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
+	return t_font;
+}
+
 #else
 
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
