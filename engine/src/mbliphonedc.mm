@@ -73,7 +73,7 @@ uint4 g_current_background_colour = 0;
 
 // These are used by the MCScreenDC 'beep' methods.
 static SystemSoundID s_system_sound = 0;
-static char *s_system_sound_name = nil;
+static MCStringRef s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
 static int32_t s_iphone_res_scale = 1;
@@ -323,7 +323,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = 0;
 		s_system_sound_name = nil;
@@ -346,10 +346,10 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = t_new_sound;
-		s_system_sound_name = t_sound_path;
+		/* UNCHECKED */ MCStringCreateWithCString(t_sound_path, s_system_sound_name);
 	}
 	else
 		delete t_sound_path;
@@ -371,7 +371,10 @@ bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
 	if (s_system_sound_name != nil)
-		return MCStringCreateWithCString(s_system_sound_name, r_beep_sound);
+	{
+		r_beep_sound = MCValueRetain(s_system_sound_name);
+		return MCStringIsEqualTo(s_system_sound_name, r_beep_sound, kMCStringOptionCompareExact);
+	}
 	else
 	{
 		r_beep_sound = MCValueRetain(kMCEmptyString);

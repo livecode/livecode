@@ -46,7 +46,7 @@ static uint4 version;
 static uint2 iconx, icony;
 static uint2 cursorx, cursory;
 
-static char *hcbuffer;
+static MCStringRef hcbuffer;
 
 static uint2 hc_icons[HC_NICONS] =
     {
@@ -270,17 +270,17 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 				xorcode = opcode;
 				break;
 			case 0x7:
-				sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
+				/* UNCHECKED */ MCStringFormat(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
-				MCU_addline(MChcstat, hcbuffer, False);
+				MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 				return newdata;
 			}
 			repcount = 1;
 			continue;
 		case 0x90:
-			sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
+			/* UNCHECKED */ MCStringFormat(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
 			        opcode, (int)(sptr - startptr), line);
-			MCU_addline(MChcstat, hcbuffer, False);
+			MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 			return newdata;
 		case 0xA0:
 		case 0xB0:
@@ -359,9 +359,9 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	}
 	if (dptr > deptr)
 	{
-		sprintf(hcbuffer, "Error: ran off end of image at offset %d line %d",
+		/* UNCHECKED */ MCStringFormat(hcbuffer, "Error: ran off end of image at offset %d line %d",
 		        (int)(sptr - startptr), line);
-		MCU_addline(MChcstat, hcbuffer, False);
+		MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 	}
 	return newdata;
 }
@@ -1374,9 +1374,9 @@ IO_stat MCHccard::parse(char *sptr)
 			}
 			break;
 		default:
-			sprintf(hcbuffer, "Error: Unknown object type %x",
+			/* UNCHECKED */ MCStringFormat(hcbuffer, "Error: Unknown object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
+			MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -1588,9 +1588,9 @@ IO_stat MCHcbkgd::parse(char *sptr)
 			}
 			break;
 		default:
-			sprintf(hcbuffer, "Error: bad object type %x",
+			/* UNCHECKED */ MCStringFormat(hcbuffer, "Error: bad object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
+			MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -2116,8 +2116,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 		case HC_TAIL:
 			break;
 		default:
-			sprintf(hcbuffer, "Error: unknown section type -> %x", type);
-			MCU_addline(MChcstat, hcbuffer, False);
+			/* UNCHECKED */ MCStringFormat(hcbuffer, "Error: unknown section type -> %x", type);
+			MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 			if (filetype == HC_BINHEX)
 				return IO_ERROR;
 			break;
@@ -2199,9 +2199,9 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				break;
 			default:
-				sprintf(hcbuffer, "Not converting %4.4s id %5d \"%s\"",
+				/* UNCHECKED */ MCStringFormat(hcbuffer, "Not converting %4.4s id %5d \"%s\"",
 				        (char *)&type, id, tname);
-				MCU_addline(MChcstat, hcbuffer, False);
+				MCU_addline(MChcstat, MCStringGetCString(hcbuffer), False);
 				delete tname;
 				break;
 			}
@@ -2400,15 +2400,15 @@ IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 	maxid = 0;
 	delete MChcstat;
 	MChcstat = MCU_empty();
-	hcbuffer = new char[HC_MESSAGE_LENGTH];
+	//hcbuffer = new char[HC_MESSAGE_LENGTH];
 	MCHcstak *hcstak = new MCHcstak(strclone(name));
-	sprintf(hcbuffer, "Loading stack %s...", name);
-	MCU_addline(MChcstat, hcbuffer, True);
-	uint2 startlen = strlen(hcbuffer);
+	/* UNCHECKED */ MCStringFormat(hcbuffer, "Loading stack %s...", name);
+	MCU_addline(MChcstat, MCStringGetCString(hcbuffer), True);
+	uint2 startlen = MCStringGetLength(hcbuffer);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();
-	delete hcbuffer;
+	MCValueRelease(hcbuffer);
 	delete hcstak;
 	if (!MClockerrors && strlen(MChcstat) != startlen)
 	{

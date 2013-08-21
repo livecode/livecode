@@ -133,12 +133,12 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static char *s_command_path = NULL;
+static MCStringRef s_command_path = NULL;
 
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
+	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{
@@ -203,7 +203,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
     MCAutoStringRef t_command_path;
     MCS_resolvepath(MCSTR(MCcmd), &t_command_path);
 	
-	s_command_path = strdup(MCStringGetCString(*t_command_path));
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
 	

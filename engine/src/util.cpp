@@ -382,7 +382,7 @@ real8 MCU_drand()
 }
 
 // custom strtok that only skips single delimiters
-static char *olds = NULL;
+static MCStringRef olds = NULL;
 char *MCU_strtok(char *s, const char *delim)
 {
 	if (s == NULL)
@@ -393,7 +393,7 @@ char *MCU_strtok(char *s, const char *delim)
 			return NULL;
 		}
 		else
-			s = olds;
+			s = strdup(MCStringGetCString(olds));
 	}
 	if (*s == '\0')
 	{
@@ -407,7 +407,9 @@ char *MCU_strtok(char *s, const char *delim)
 	else
 	{
 		*s = '\0';
-		olds = s + 1;
+		MCAutoStringRef t_olds;
+		/* UNCHECKED */ MCStringCopySubstring(olds, MCRangeMake(1, MCStringGetLength(olds)), &t_olds);
+		olds = MCValueRetain(*t_olds);
 	}
 	return token;
 }

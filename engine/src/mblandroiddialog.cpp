@@ -58,7 +58,7 @@ typedef enum
 
 static bool s_in_popup_dialog = false;
 static int s_popup_dialog_action = -1;
-static char *s_popup_dialog_text = nil;
+static MCStringRef s_popup_dialog_text = nil;
 static MCDialogResult s_dialog_result;
 
 int32_t MCScreenDC::popupanswerdialog(const char *p_buttons[], uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
@@ -124,7 +124,8 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char
     
 	if (s_popup_dialog_text != nil)
 	{
-		t_success = MCStringCreateWithCString(s_popup_dialog_text, r_result);
+		r_result = MCValueRetain(s_popup_dialog_text);
+		t_success = MCStringIsEqualTo(s_popup_dialog_text, r_result, kMCStringOptionCompareExact);
 		s_popup_dialog_text = nil;
 	}
 	return t_success;
@@ -137,7 +138,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *en
 
 	if (s_popup_dialog_text != nil)
 	{
-		MCCStringFree(s_popup_dialog_text);
+		MCValueRelease(s_popup_dialog_text);
 		s_popup_dialog_text = nil;
 	}
 
@@ -147,7 +148,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *en
 		const char *t_utfchars = nil;
 		t_utfchars = env->GetStringUTFChars(result, nil);
 		if (t_utfchars != nil)
-			MCCStringClone(t_utfchars, s_popup_dialog_text);
+			s_popup_dialog_text = MCSTR(t_utfchars);
+
 		env->ReleaseStringUTFChars(result, t_utfchars);
 	}
 	MCAndroidBreakWait();

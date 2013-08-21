@@ -1855,17 +1855,17 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTextCanceled(JNIEnv *env
 	MCAndroidTextCanceled();
 }
 
-void MCAndroidMediaDone(char *s_media_content);
+void MCAndroidMediaDone(MCStringRef s_media_content);
 void MCAndroidMediaCanceled();
 
-static char *s_media_content = nil;
+static MCStringRef s_media_content = nil;
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content)
 {
 	MCLog("doMediaDone called - passing arg", 0);
 
     if (s_media_content != nil)
-        MCCStringFree (s_media_content);
+        MCValueRelease(s_media_content);
     s_media_content = nil;
     
     if (p_media_content != nil)
@@ -1873,7 +1873,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, j
 		const char *t_utfchars = nil;
 		t_utfchars = env->GetStringUTFChars(p_media_content, nil);
 		if (t_utfchars != nil)
-			MCCStringClone(t_utfchars, s_media_content);
+			/* UNCHECKED */ MCStringCreateWithCString(t_utfchars, s_media_content);
 		env->ReleaseStringUTFChars(p_media_content, t_utfchars);
 	}
 

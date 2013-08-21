@@ -57,7 +57,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 // The server engine installation's home folder.
-static char *s_server_home = NULL;
+static MCStringRef s_server_home = NULL;
 
 // If true, the server engine is running in CGI mode
 static bool s_server_cgi = false;
@@ -374,14 +374,21 @@ bool X_init(int argc, char *argv[], char *envp[])
 	{
 		MCAutoStringRef t_resolved_home;
 		MCsystem -> ResolveNativePath(*t_native_home, &t_resolved_home);
-		s_server_home = MCsystem -> PathFromNative(MCStringGetCString(*t_resolved_home));
+		MCsystem -> PathFromNative(*t_resolved_home, s_server_home);
 	}
 	else if (MCsystem -> FolderExists(HOME_FOLDER))
-		s_server_home = strdup(HOME_FOLDER);
+		s_server_home = MCSTR(HOME_FOLDER);
 	else
 	{
-		s_server_home = strdup(MCcmd);
-		(strrchr(s_server_home, '/'))[0] = '\0';
+		/* UNCHECKED */ MCStringCreateWithCString(strdup(MCcmd), s_server_home);
+		//(strrchr(s_server_home, '/'))[0] = '\0';
+
+		uindex_t t_last_separator;
+		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, 0, kMCStringOptionCompareExact, t_last_separator);
+
+		MCAutoStringRef tmp_s_server_home;
+		/* UNCHECKED */ MCStringCopySubstring(s_server_home, MCRangeMake(0, t_last_separator - 1), &tmp_s_server_home);
+		s_server_home = MCValueRetain(*tmp_s_server_home);
 	}
 
 	// Check for CGI mode.
@@ -445,7 +452,7 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 		return true;
 	
 	char *t_filename;
-	if (!MCCStringFormat(t_filename, "%s/externals/%s", s_server_home, p_entry -> name))
+	if (!MCCStringFormat(t_filename, "%s/externals/%s", MCStringGetCString(s_server_home), p_entry -> name))
 		return false;
 
 	MCdispatcher -> loadexternal(t_filename);
@@ -459,11 +466,8 @@ static void X_load_extensions(MCServerScript *p_script)
 {
 	MCAutoStringRef t_dir;
 	MCS_getcurdir(&t_dir);
-	MCAutoStringRef  t_s_server_home_string;
-	/* UNCHECKED */ MCStringCreateWithCString(s_server_home, &t_s_server_home_string);
 	
-	
-	if (MCS_setcurdir(*t_s_server_home_string) &&
+	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir(MCSTR("externals")))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
 	

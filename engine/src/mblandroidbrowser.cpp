@@ -89,8 +89,8 @@ public:
 	void HandleFinishEvent(const char *p_url);
     void HandleLoadFailed(const char *p_url, const char *p_error);
 
-    static char *s_js_tag;
-    static char *s_js_result;
+    static MCStringRef s_js_tag;
+    static MCStringRef s_js_result;
 
 protected:
     virtual ~MCAndroidBrowserControl(void);
@@ -139,8 +139,8 @@ MCNativeControlActionTable MCAndroidBrowserControl::kActionTable =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-char *MCAndroidBrowserControl::s_js_tag = nil;
-char *MCAndroidBrowserControl::s_js_result = nil;
+MCStringRef MCAndroidBrowserControl::s_js_tag = nil;
+MCStringRef MCAndroidBrowserControl::s_js_result = nil;
 
 MCAndroidBrowserControl::MCAndroidBrowserControl(void)
 {
@@ -525,7 +525,7 @@ char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
     if (s_js_tag != nil)
         return nil;
     
-    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "ss", &s_js_tag, p_script);
+    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "ss", &(MCStringGetCString(s_js_tag)), p_script);
     
     // wait for result, timeout after 30 seconds    
     real8 t_current_time = MCS_time();
@@ -540,12 +540,12 @@ char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
     if (s_js_tag != nil)
     {
         // timeout
-        MCCStringFree(s_js_tag);
+        MCValueRelease(s_js_tag);
         s_js_tag = nil;
         return nil;
     }
     
-    t_result = s_js_result;
+    t_result = strdup(MCStringGetCString(s_js_result));
     s_js_result = nil;
     
     return t_result;
@@ -558,13 +558,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJS
     bool t_match = true;
     char *t_tag = nil;
     MCJavaStringToNative(MCJavaGetThreadEnv(), tag, t_tag);
-    if (t_tag == nil || MCAndroidBrowserControl::s_js_tag == nil || !MCCStringEqual(t_tag, MCAndroidBrowserControl::s_js_tag))
+	MCAutoStringRef t_tag_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_tag, t_tag_string);
+    if (t_tag == nil || MCAndroidBrowserControl::s_js_tag == nil || !MCStringIsEqualTo(t_tag_string, MCAndroidBrowserControl::s_js_tag, kMCStringOptionCompareExact))
         t_match = false;
     
     if (t_match)
     {
-        MCJavaStringToNative(MCJavaGetThreadEnv(), result, MCAndroidBrowserControl::s_js_result);
-        MCCStringFree(MCAndroidBrowserControl::s_js_tag);
+        MCJavaStringToNative(MCJavaGetThreadEnv(), result, strdup(MCStringGetCString(MCAndroidBrowserControl::s_js_result)));
+        MCValueRelease(MCAndroidBrowserControl::s_js_tag);
         MCAndroidBrowserControl::s_js_tag = nil;
     }
     

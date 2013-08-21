@@ -141,11 +141,11 @@ static Boolean hasAppleEvents = False;
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
-static char *replymessage;       //used in DoSpecial() & other routines
+static MCStringRef replymessage;       //used in DoSpecial() & other routines
 static uint4 replylength;
 static AEKeyword replykeyword;   // Use in DoSpecial & other routines
-static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
-static char *AEanswerErr; //the reply error from an AE send by MC.
+static MCStringRef AEanswerData;// used by DoAEAnswer() & MCS_send()
+static MCStringRef AEanswerErr; //the reply error from an AE send by MC.
 static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
 
 
@@ -441,7 +441,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 			{
 				if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
 				{
-					err = AEPutParamPtr(reply, replykeyword, typeChar, replymessage, replylength);
+					err = AEPutParamPtr(reply, replykeyword, typeChar, MCStringGetCString(replymessage), replylength);
 					if (err != noErr)
 					{
 						short e = err;
@@ -450,7 +450,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 			}
 		}
-		delete replymessage;
+		MCValueRelease(replymessage);
 		replymessage = NULL;
 	}
 	else
@@ -639,9 +639,9 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	parameter of the reply Apple event. */
 	if (AEGetParamPtr(ae, keyErrorString, typeChar, &rType, NULL, 0, &rSize) == noErr)
 	{
-		AEanswerErr = new char[rSize + 1];
-		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, AEanswerErr, rSize, &rSize);
-		AEanswerErr[rSize] = '\0';
+		
+		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, MCStringGetCString(AEanswerErr), rSize, &rSize);
+		/* UNCHECKED */ MCStringAppendNativeChar(AEanswerErr, '\0');
 	}
 	else
 	{
@@ -649,26 +649,26 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 		if (AEGetParamPtr(ae, keyErrorNumber, typeSMInt, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
 		        && e != noErr)
 		{
-			AEanswerErr = new char[35 + I2L];
-			sprintf(AEanswerErr, "Got error %d when sending Apple event", e);
+			/* UNCHECKED */ MCStringFormat(AEanswerErr, "Got error %d when sending Apple event", e);
 		}
 		else
 		{
-			delete AEanswerData;
+			MCValueRelease(AEanswerData);
 			if ((errno = AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) != noErr)
 			{
 				if (errno == errAEDescNotFound)
 				{
-					AEanswerData = MCU_empty();
+					//AEanswerData = MCU_empty();
+					AEanswerData = MCValueRetain(kMCEmptyString);
 					return noErr;
 				}
-				AEanswerErr = new char[37 + I2L];
-				sprintf(AEanswerErr, "Got error %d when receiving Apple event", errno);
+
+				/* UNCHECKED */ MCStringFormat(AEanswerErr, "Got error %d when receiving Apple event", errno);
 				return errno;
 			}
-			AEanswerData = new char[rSize + 1];
-			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, AEanswerData, rSize, &rSize);
-			AEanswerData[rSize] = '\0';
+			
+			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, MCStringGetCString(AEanswerData), rSize, &rSize);
+			/* UNCHECKED */ MCStringAppendNativeChar(AEanswerData, '\0');
 		}
 	}
 	return noErr;
@@ -2013,14 +2013,14 @@ void MCS_send(const MCString &message, const char *program,
 		}
 		if (AEanswerErr != NULL)
 		{
-			MCresult->copysvalue(AEanswerErr);
-			delete AEanswerErr;
+			MCresult->copysvalue(MCStringGetcstring(AEanswerErr));
+			MCValueRelease(AEanswerErr);
 			AEanswerErr = NULL;
 		}
 		else
 		{
-			MCresult->copysvalue(AEanswerData);
-			delete AEanswerData;
+			MCresult->copysvalue(MCStringGetCString(AEanswerData));
+			MCValueRelease(AEanswerData);
 			AEanswerData = NULL;
 		}
 		AEDisposeDesc(&answer);
@@ -2032,10 +2032,13 @@ void MCS_send(const MCString &message, const char *program,
 // MW-2006-08-05: Vetted for Endian issues
 void MCS_reply(const MCString &message, const char *keyword, Boolean error)
 {
-	delete replymessage;
+	MCValueRelease(replymessage);
 	replylength = message.getlength();
-	replymessage = new char[replylength];
-	memcpy(replymessage, message.getstring(), replylength);
+
+	//replymessage = new char[replylength];
+	//memcpy(replymessage, message.getstring(), replylength);
+
+	/* UNCHECKED */ MCStringCreateWithCString(message.getstring(), replymessage);
 
 	//at any one time only either keyword or error is set
 	if (keyword != NULL)
@@ -2253,15 +2256,15 @@ char *MCS_request_program(const MCString &message, const char *program)
 	}
 	if (AEanswerErr != NULL)
 	{
-		MCresult->copysvalue(AEanswerErr);
-		delete AEanswerErr;
+		MCresult->copysvalue(MCStringGetCString(AEanswerErr));
+		MCValueRelease(AEanswerErr);
 		AEanswerErr = NULL;
 		return MCU_empty();
 	}
 	else
 	{
 		MCresult->clear(False);
-		char *retval = AEanswerData;
+		char *retval = strdup(MCStringGetCString(AEanswerData));
 		AEanswerData = NULL;
 		return retval;
 	}
