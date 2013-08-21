@@ -1122,11 +1122,14 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	
 	if (!t_error)
 	{
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+		const char *MCfiletype_cstring = MCStringGetCString(MCfiletype);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype_cstring[4], 4);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype_cstring, 4);
+		
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
 	}	
+	MCStringChar
 	
 	bool t_created_dst;
 	t_created_dst = false;
