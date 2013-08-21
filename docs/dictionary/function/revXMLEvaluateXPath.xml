@@ -4,14 +4,16 @@
 	<type>function</type>
 
 	<syntax>
+		<example>revXMLEvaluateXPath(pDocID, pXPathExpression [, charDelimiter ] )</example>
 	</syntax>
 
 	<synonyms>
 	</synonyms>
 
-	<summary></summary>
+	<summary>The charDelimiter defaults to cr. If not specified then the items will be returned one per line:<p>J. K. Rowling</p><p>Harry Potter</p><p>Cory Doctorow</p><p>Little Brother</p></summary>
 
 	<examples>
+<example><p>put "/bookstore/book/[price&lt;40]/" into pXPathExpression</p><p>put revXMLEvaluateXPath(pDocID, pXPathExpression)</p></example>
 	</examples>
 
 	<history>
