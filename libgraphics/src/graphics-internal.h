@@ -152,6 +152,24 @@ inline bool MCGRectangleIntersects(MCGRectangle p_rect_1, MCGRectangle p_rect_2)
 	(p_rect_2 . origin . y < (p_rect_1 . origin . y +  p_rect_1 . size . height));	
 }
 
+struct MCGIntRectangle
+{
+	int32_t x;
+	int32_t y;
+	uint32_t width;
+	uint32_t height;
+};
+
+inline MCGIntRectangle MCGRecangleIntegerBounds(const MCGRectangle &p_rect)
+{
+	MCGIntRectangle t_bounds;
+	t_bounds .  x = floor(p_rect . origin . x);
+	t_bounds .  y = floor(p_rect . origin . y);
+	t_bounds . width = ceil(p_rect . origin . x + p_rect . size . width) - t_bounds . x;
+	t_bounds . height = ceil(p_rect . origin . y + p_rect . size . height) - t_bounds . y;
+	return t_bounds;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum MCGPixelOwnershipType

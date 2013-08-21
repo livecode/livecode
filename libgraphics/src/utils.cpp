@@ -554,7 +554,7 @@ bool MCGRasterToSkBitmap(const MCGRaster& p_raster, MCGPixelOwnershipType p_owne
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCGRectangle MCGRectangleIntersection(MCGRectangle p_rect_1, MCGRectangle p_rect_2)
+MCGRectangle MCGRectangleIntersection(const MCGRectangle &p_rect_1, const MCGRectangle &p_rect_2)
 {
 	MCGRectangle t_intersection;
 	t_intersection . origin . x = MCMax(p_rect_1 . origin . x, p_rect_2 . origin . x);

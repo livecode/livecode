@@ -272,6 +272,15 @@ struct MCGDeviceMaskInfo
 	void *data;
 };
 
+struct MCGFont
+{
+	void		*fid;
+	uint16_t	size;
+	int32_t		ascent;
+	int32_t		descent;
+	uint8_t		style;
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 
 inline MCGRectangle MCGRectangleMake(MCGFloat p_x, MCGFloat p_y, MCGFloat p_width, MCGFloat p_height)
@@ -304,7 +313,7 @@ inline MCGRectangle MCGRectangleScale(MCGRectangle p_rect, MCGFloat p_scale)
 	return t_rect;
 }
 
-MCGRectangle MCGRectangleIntersection(MCGRectangle rect_1, MCGRectangle rect_2);
+MCGRectangle MCGRectangleIntersection(const MCGRectangle &rect_1, const MCGRectangle &rect_2);
 
 inline MCGPoint MCGPointMake(MCGFloat p_x, MCGFloat p_y)
 {
@@ -517,17 +526,14 @@ void MCGContextSimplify(MCGContextRef context);
 void MCGContextDrawPixels(MCGContextRef context, const MCGRaster& raster, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawImage(MCGContextRef context, MCGImageRef image, MCGRectangle dst_rect, MCGImageFilter filter);
 void MCGContextDrawRectOfImage(MCGContextRef self, MCGImageRef p_image, MCGRectangle p_src, MCGRectangle p_dst, MCGImageFilter p_filter);
-
-void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
-MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size);
-
 void MCGContextDrawDeviceMask(MCGContextRef context, MCGMaskRef mask, int32_t tx, int32_t ty);
 
 bool MCGContextCopyImage(MCGContextRef context, MCGImageRef &r_image);
 
-void MCGContextDrawPlatformText(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, MCGPoint location, void *font);
-void MCGContextDrawPlatformTextAssumingOpaque(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, MCGPoint location, void *font);
-MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const char *text, uindex_t length, bool is_unicode, void *font);
+void MCGContextDrawText(MCGContextRef context, const char* text, uindex_t length, MCGPoint location, uint32_t font_size, void *typeface);
+MCGFloat MCGContextMeasureText(MCGContextRef context, const char *text, uindex_t length, uint32_t font_size, void *typeface);
+void MCGContextDrawPlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, MCGPoint location, const MCGFont &font);
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef context, const unichar_t *text, uindex_t length, const MCGFont &p_font);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -126,7 +126,7 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{24B711E0-E67B-4EC7-9EC5-913BE3D6A047}"
-			RelativePathToProject=".\libskia\libskia.vcproj"
+			RelativePathToProject=".\thirdparty\libskia\libskia.vcproj"
 		/>
 	</References>
 	<Files>
@@ -135,6 +135,10 @@
 			Filter="cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx"
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
+			<File
+				RelativePath=".\src\blur.cpp"
+				>
+			</File>
 			<File
 				RelativePath=".\src\context.cpp"
 				>
@@ -149,6 +153,10 @@
 			</File>
 			<File
 				RelativePath=".\src\utils.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\src\w32text.cpp"
 				>
 			</File>
 		</Filter>

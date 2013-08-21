@@ -11,6 +11,8 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 		image.cpp \
 		path.cpp \
 		utils.cpp \
+		blur.cpp \
+		mblandroidtext.cpp \
 	)
 
 LOCAL_C_INCLUDES := \
