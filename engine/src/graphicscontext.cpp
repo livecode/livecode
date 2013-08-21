@@ -17,10 +17,11 @@
 
 #include "graphicscontext.h"
 #include "graphics.h"
+#include "graphics_util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
+/*static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
 {
 	MCGRectangle t_rect;
 	t_rect . origin . x = (MCGFloat) p_rect . x;
@@ -28,7 +29,7 @@ static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
 	t_rect . size . width = (MCGFloat) p_rect . width;
 	t_rect . size . height = (MCGFloat) p_rect . height;
 	return t_rect;
-}
+}*/
 
 static inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
 {
@@ -218,13 +219,13 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
-	m_clip = p_clip;
+	//m_clip = p_clip;
 	MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
 }
 
 const MCRectangle& MCGraphicsContext::getclip(void) const
 {
-	return m_clip;
+	return MCGRectangleGetIntegerBounds(MCGContextGetClipBounds(m_gcontext));
 }
 
 void MCGraphicsContext::clearclip(void)

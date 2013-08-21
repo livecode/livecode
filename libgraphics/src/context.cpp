@@ -6,6 +6,7 @@
 #include <SkPaint.h>
 #include <SkBitmap.h>
 #include <SkShader.h>
+#include <SkColorShader.h>
 #include <SkLayerDrawLooper.h>
 #include <SkBlurMaskFilter.h>
 #include <SkColorFilter.h>
@@ -16,6 +17,7 @@
 #include <SkBlurImageFilter.h>
 #include <SkTypeface.h>
 #include <SkColorPriv.h>
+#include <SkUtils.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -730,11 +732,6 @@ static MCGIRectangle compute_shadow_clip(const MCGShadowEffect& self, const MCGI
 // is to be rendered into must be big enough to ensure that any pixels rendered as a result
 // of the bitmap effects have source pixels to operate on.
 //
-// The resulting clipping region is a union of regions:
-//    - the intersection of the shape with the clip (these are the non-bitmap effect pixels which must be redrawn).
-//    - if there is a drop-shadow, then a blurred mask will be drawn at offset(expand(shape, ds-radius), ds-offset)
-//    - if there is an outer-glow, then a blurred mask will be drawn at expand(shape, ds-radius)
-
 void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const MCGBitmapEffects& p_effects)
 {
 	if (!MCGContextIsValid(self))
@@ -922,6 +919,136 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	self -> layer = t_new_layer;
 }
 
+#if 0
+class MCGContextEffectShader: public SkShader
+{
+public:
+	MCGContextEffectShader(const SkMask *mask, const SkMask *blurred_mask, SkShader *color)
+	{
+		m_mask = mask;
+		m_blurred_mask = blurred_mask;
+		m_color = color;
+	}
+	
+	~MCGContextEffectShader(void)
+	{
+	}
+	
+	virtual bool setContext(const SkBitmap& p_bitmap, const SkPaint& p_paint, const SkMatrix& p_matrix)
+	{
+		if (!SkShader::setContext(p_bitmap, p_paint, p_matrix))
+			return false;
+		if (!m_color -> setContext(p_bitmap, p_paint, p_matrix))
+			return false;
+	}
+	
+	virtual void endContext(void)
+	{
+		m_color -> endContext();
+		SkShader::endContext();
+	}		
+	
+    virtual Factory getFactory() { return nil; }
+	
+protected:
+	const SkMask *m_mask;
+	const SkMask *m_blurred_mask;
+	SkShader *m_color;
+};
+
+class MCGContextEffectInnerShader: public SkShader
+{
+public:
+	MCGContextEffectInnerShader(const SkMask *mask, const SkMask *blurred_mask, SkShader *color)
+		: MCGContextEffectShader(mask, blurred_mask, color)
+	{
+	}
+	
+	~MCGContextEffectInnerShader(void)
+	{
+	}
+
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count)
+	{
+		if (y < m_mask -> fBounds . top() || y >= m_mask -> fBounds . bottom() ||
+			x >= m_mask -> fBounds . right() || x + count < m_mask -> fBounds . left())
+		{
+			sk_memset32(dstC, 0, count);
+			return;
+		}
+		
+		if (x < m_mask -> fBounds . left())
+		{
+			sk_memset32(dstC, 0, m_mask -> fBounds . left() - x);
+			dstC += m_mask -> fBounds . left() - x;
+			x = m_mask -> fBounds . left();
+		}
+		
+		if (x + count > m_mask -> fBounds . right())
+		{
+			sk_memset32(dstC + m_mask -> fBounds . right() - (x + count), 0, x + count - m_mask -> fBounds . right());
+			count -= (m_mask -> fBounds . right() - (x + count));
+		}
+		
+		// First fill the span with the shader's colors.
+		m_color -> shadeSpan(x, y, dstC, count);
+			
+		// Now apply the mask.
+		uint8_t *t_mask_ptr, *t_blurred_mask_ptr;
+		t_mask_ptr = m_mask -> getAddr8(x, y);
+		t_blurred_mask_ptr = m_blurred_mask -> getAddr8(x, y);
+		for(int i = 0; i < count; i++)
+			dstC[i] = SkAlphaMulQ(dstC[i], SkAlpha255To256(SkAlphaMul(t_blurred_mask_ptr[i], SkAlpha255To256(t_mask_ptr[i]))));
+	}
+};
+
+class MCGContextEffectInvertedInnerShader: public SkShader
+{
+public:
+	MCGContextEffectInvertedInnerShader(const SkMask *mask, const SkMask *blurred_mask, SkShader *color)
+		: MCGContextEffectShader(mask, blurred_mask, color)
+	{
+	}
+	
+	~MCGContextEffectInvertedInnerShader(void)
+	{
+	}
+	
+    virtual void shadeSpan(int x, int y, SkPMColor dstC[], int count)
+	{
+		if (y < m_mask -> fBounds . top() || y >= m_mask -> fBounds . bottom() ||
+			x >= m_mask -> fBounds . right() || x + count < m_mask -> fBounds . left())
+		{
+			sk_memset32(dstC, 0, count);
+			return;
+		}
+		
+		if (x < m_mask -> fBounds . left())
+		{
+			sk_memset32(dstC, 0, m_mask -> fBounds . left() - x);
+			dstC += m_mask -> fBounds . left() - x;
+			x = m_mask -> fBounds . left();
+		}
+		
+		if (x + count > m_mask -> fBounds . right())
+		{
+			sk_memset32(dstC + m_mask -> fBounds . right() - (x + count), 0, x + count - m_mask -> fBounds . right());
+			count -= (m_mask -> fBounds . right() - (x + count));
+		}
+		
+		// First fill the span with the shader's colors.
+		m_color -> shadeSpan(x, y, dstC, count);
+		
+		// Now apply the mask.
+		uint8_t *t_mask_ptr, *t_blurred_mask_ptr;
+		t_mask_ptr = m_mask -> getAddr8(x, y);
+		t_blurred_mask_ptr = m_blurred_mask -> getAddr8(x, y);
+		for(int i = 0; i < count; i++)
+			dstC[i] = SkAlphaMulQ(dstC[i], SkAlpha255To256(SkAlphaMul(t_blurred_mask_ptr[i], SkAlpha255To256(t_mask_ptr[i]))));
+	}
+};
+#endif
+
 static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCGSize p_radii, MCGSize p_offset, MCGFloat p_spread, MCGBlurType p_attenuation, MCGColor p_color, MCGBlendMode p_blend)
 {
 	// Get the device transform.
@@ -943,6 +1070,8 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	t_blurred_mask . fBounds . offset(t_transformed_offset . width, t_transformed_offset . height);
 	
 	// Now process the mask according to the attenuation.
+	uint8_t *t_old_blurred_mask_fImage;
+	t_old_blurred_mask_fImage = t_blurred_mask . fImage;
 	switch(p_attenuation)
 	{
 		case kMCGBlurTypeNormal:
@@ -1005,10 +1134,10 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 				t_blurred_mask . fImage = t_tmp_mask . fImage;
 				t_blurred_mask . fBounds = t_tmp_mask . fBounds;
 				t_blurred_mask . fRowBytes = t_tmp_mask . fRowBytes;
+				t_old_blurred_mask_fImage = t_blurred_mask . fImage;
 			}
 		}
 		break;
-			
 			
 		case kMCGBlurTypeOuter:
 		{
@@ -1035,10 +1164,17 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 		default:
 			break;
 	}
+	
+#if 0
+	SkColorShader t_color_shader;
+	MCGContextEffectInnerShader t_shader(&p_mask, &t_blurred_mask, &t_color_shader);
+#endif
+	
 	// Configure the paint.
 	SkPaint t_paint;
 	t_paint . setStyle(SkPaint::kFill_Style);
 	t_paint . setColor(MCGColorToSkColor(p_color));
+	//t_paint . setShader(&t_shader);
 	
 	SkXfermode *t_blend_mode;
 	t_blend_mode = MCGBlendModeToSkXfermode(p_blend);
@@ -1046,12 +1182,27 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	if (t_blend_mode != NULL)
 		t_blend_mode -> unref();
 	
+#if 0
+	SkIRect t_region;
+	if (t_region . intersect(p_mask . fBounds, t_blurred_mask . fBounds))
+	{
+		SkRect t_region_user;
+		t_region_user . set(t_region);
+		
+		SkMatrix t_matrix;
+		if (self -> layer -> canvas -> getTotalMatrix() . invert(&t_matrix))
+		{
+			t_matrix . mapRect(&t_region_user);
+			self -> layer -> canvas -> drawRect(t_region_user, t_paint);
+		}
+	}
+#endif
+
 	// Now paint.
-	//t_blurred_mask . fBounds . offset(t_transformed_offset . width, t_transformed_offset . height);
 	self -> layer -> canvas -> drawDevMask(t_blurred_mask, t_paint);
 	
 	// Free the blurred mask.
-	SkMask::FreeImage(t_blurred_mask . fImage);
+	SkMask::FreeImage(t_old_blurred_mask_fImage);
 }
 
 static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_child, const MCGBitmapEffects& p_effects)
@@ -1170,7 +1321,7 @@ void MCGContextEnd(MCGContextRef self)
 	{
 		bool t_in_layer;
 		t_in_layer = false;	
-		if (self -> state -> opacity != 255 || self -> state -> blend_mode != kMCGBlendModeSourceOver)
+		if (self -> state -> opacity != 1.0f || self -> state -> blend_mode != kMCGBlendModeSourceOver)
 		{
 			self -> layer -> canvas -> saveLayer(NULL, &t_paint, (SkCanvas::SaveFlags) (SkCanvas::kHasAlphaLayer_SaveFlag | SkCanvas::kFullColorLayer_SaveFlag));
 			t_in_layer = true;
@@ -1212,6 +1363,13 @@ void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 	// we use skia to manage the clip entirely rather than storing in state
 	// this means any transforms to the clip are handled by skia allowing for more complex clips (rather than just a rect)
 	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
+}
+
+MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
+{	
+	SkRect t_clip;
+	self -> layer -> canvas -> getClipBounds(&t_clip);
+	return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
 }
 
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef self)
