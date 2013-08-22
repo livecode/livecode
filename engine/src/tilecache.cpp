@@ -1575,7 +1575,11 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 			bool t_success = true;
 			t_success = MCImageBitmapCreate(t_required_rect.width, t_required_rect.height, t_bitmap);
 			if (t_success)
+			{
+				// IM-2013-08-22: [[ RefactorGraphics ]] clear sprite bitmap before rendering to it
+				MCImageBitmapClear(t_bitmap);
 				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+			}
 
 			if (!t_success)
 				MCTileCacheInvalidate(self);
