@@ -281,7 +281,7 @@ void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 	MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
 }
 
-const MCRectangle& MCGraphicsContext::getclip(void) const
+MCRectangle MCGraphicsContext::getclip(void) const
 {
 	return MCGRectangleGetIntegerBounds(MCGContextGetClipBounds(m_gcontext));
 }

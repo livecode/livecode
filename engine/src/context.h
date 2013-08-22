@@ -130,7 +130,7 @@ public:
 	virtual void setprintmode(void) = 0;
 
 	virtual void setclip(const MCRectangle& rect) = 0;
-	virtual const MCRectangle& getclip(void) const = 0;
+	virtual MCRectangle getclip(void) const = 0;
 	virtual void clearclip(void) = 0;
 
 	virtual void setorigin(int2 x, int2 y) = 0;

@@ -183,7 +183,7 @@ void MCMetaContext::setclip(const MCRectangle& rect)
 	f_clip = rect;
 }
 
-const MCRectangle& MCMetaContext::getclip(void) const
+MCRectangle MCMetaContext::getclip(void) const
 {
 	return f_clip;
 }
