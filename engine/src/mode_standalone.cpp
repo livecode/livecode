@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxprefix.h"
 #endif
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Globals specific to STANDALONE mode

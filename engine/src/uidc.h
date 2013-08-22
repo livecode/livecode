@@ -113,6 +113,9 @@ MCMessageList;
 struct MCDisplay
 {
 	uint4 index;
+	MCRectangle device_viewport;
+	MCRectangle device_workarea;
+	
 	MCRectangle viewport;
 	MCRectangle workarea;
 };
@@ -285,8 +288,6 @@ public:
 	virtual void grabpointer(Window w);
 	virtual void ungrabpointer();
 	
-	virtual uint2 getwidth();
-	virtual uint2 getheight();
 	virtual uint2 getwidthmm();
 	virtual uint2 getheightmm();
 	virtual uint2 getmaxpoints();
@@ -294,8 +295,37 @@ public:
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
-	virtual const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+////////////////////////////////////////////////////////////////////////////////
+	
+	// IM-2013-07-31: [[ ResIndependence ]] refactor logical coordinate based methods
+	uint2 getwidth();
+	uint2 getheight();
+	uint4 getdisplays(MCDisplay const *& p_displays, bool effective);
+	const MCDisplay *getnearestdisplay(const MCRectangle& p_rectangle);
+	Boolean getwindowgeometry(Window w, MCRectangle &drect);
+	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void querymouse(int2 &x, int2 &y);
+	void setmouse(int2 x, int2 y);
+
+	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
+	MCStack *getstackatpoint(int32_t x, int32_t y);
+	
+//////////
+	
+	const MCDisplay *device_getnearestdisplay(const MCRectangle& p_rectangle);
+	
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int16_t &r_x, int16_t &r_y);
+	virtual void device_setmouse(int16_t p_x, int16_t p_y);
+
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
+	
+////////////////////////////////////////////////////////////////////////////////
+	
 
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -315,8 +345,6 @@ public:
 	virtual void beep();
 
 	virtual void setinputfocus(Window window);
-
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
 	virtual void copyarea(Drawable source, Drawable dest, int2 depth,
@@ -338,11 +366,11 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
-	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	virtual void hidemenu();
@@ -352,16 +380,12 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
-
 	virtual void expose();
 	virtual Boolean abortkey();
 	virtual void waitconfigure(Window w);
 	virtual void waitreparent(Window w);
 	virtual void waitfocus();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual void addmessage(MCObject *optr, MCNameRef name, real8 time, MCParameter *params);
@@ -494,11 +518,6 @@ public:
 	
 	//
 	
-	// MW-2012-10-08: [[ HitTest ]] Get the stack at the given screen location.
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
-
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
@@ -523,7 +542,6 @@ public:
 	void getcolornames(MCExecPoint &);
 	void getpaletteentry(uint4 n, MCColor &c);
 
-	Boolean position(const char *geom, MCRectangle &rect);
 	Boolean hasmessages()
 	{
 		return nmessages != 0;

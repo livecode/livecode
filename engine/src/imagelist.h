@@ -16,10 +16,31 @@
 #include "dllst.h"
 #include "graphics.h"
 
+////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-14: [[ ResIndependence ]] MCPattern struct which associates an image with a scale
+struct MCPattern
+{
+	MCGImageRef image;
+	MCGFloat scale;
+	
+	uint32_t references;
+};
+
+typedef MCPattern *MCPatternRef;
+
+//////////
+
+extern bool MCPatternCreate(MCGImageRef p_image, MCGFloat p_scale, MCPatternRef &r_pattern);
+extern MCPatternRef MCPatternRetain(MCPatternRef p_pattern);
+extern void MCPatternRelease(MCPatternRef p_pattern);
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCImageListNode : public MCDLlist
 {
 	MCImage *source;
-	MCGImageRef image;
+	MCPatternRef image;
 	uint32_t refcount;
 
 public:
@@ -29,8 +50,8 @@ public:
 	// MW-2009-02-02: [[ Improved image search ]]
 	// Previously, the MCPixmapnodes were keyed on image id, however they are now
 	// keyed on MCImage*'s since ids are not necessarily unique.
-	bool allocimage(MCImage* source, MCGImageRef &r_image);
-	bool freeimage(MCGImageRef image);
+	bool allocimage(MCImage* source, MCPatternRef &r_image);
+	bool freeimage(MCPatternRef image);
 	bool unreferenced();
 	
 	MCImageListNode *next()
@@ -73,7 +94,7 @@ class MCImageList
 public:
 	MCImageList();
 	~MCImageList();
-	MCGImageRef allocpat(uint4 id, MCObject *optr);
-	void freepat(MCGImageRef &pat);
+	MCPatternRef allocpat(uint4 id, MCObject *optr);
+	void freepat(MCPatternRef &pat);
 };
 #endif

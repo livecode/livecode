@@ -53,6 +53,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbliphoneapp.h"
 #include "mbliphoneview.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern Bool X_init(int argc, char *argv[], char *envp[]);
@@ -63,6 +65,8 @@ extern void send_startup_message(bool p_do_relaunch = true);
 extern void setup_simulator_hooks(void);
 
 @class com_runrev_livecode_MCIPhoneBreakWaitHelper;
+
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -76,7 +80,8 @@ static SystemSoundID s_system_sound = 0;
 static char *s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
-static int32_t s_iphone_res_scale = 1;
+static bool s_iphone_use_device_resolution = false;
+static MCGFloat s_iphone_device_scale = 1;
 static int32_t s_iphone_control_res_scale = 1;
 
 // The main fiber on which all other code is executed.
@@ -97,28 +102,55 @@ static float s_current_keyboard_height = 0.0f;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
+// then 1 pixel == 1 point, otherwise scale
+MCGFloat MCResGetDeviceScale()
+{
+	return s_iphone_use_device_resolution ? 1.0 : s_iphone_device_scale;
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] if using the device resolution
+// then stack size == view size, otherwise scale
+float MCIPhoneGetResolutionScale(void)
+{
+	return s_iphone_use_device_resolution ? s_iphone_device_scale : 1.0;
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] return the device scale
+float MCIPhoneGetDeviceScale()
+{
+	return s_iphone_device_scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool MCIPhoneWait(double sleep);
 
 static float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
 static void iphone_font_draw_text(void *p_font, CGContextRef p_context, CGFloat x, CGFloat y, const char *p_text, uint32_t p_text_length, bool p_is_unicode);
 
 
-MCRectangle MCRectangleFromLogicalCGRect(const CGRect p_cg_rect)
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
 {
-	return MCU_make_rect(
-				(int2)(p_cg_rect . origin . x * s_iphone_res_scale),
-				(int2)(p_cg_rect . origin . y * s_iphone_res_scale),
-				(uint2)(p_cg_rect . size . width * s_iphone_res_scale),
-				(uint2)(p_cg_rect . size . height * s_iphone_res_scale));
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
 }
 
-CGRect MCRectangleToLogicalCGRect(const MCRectangle p_rect)
+static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
 {
-	return CGRectMake(
-				p_rect . x / (CGFloat)s_iphone_res_scale,
-				p_rect . y / (CGFloat)s_iphone_res_scale,
-				p_rect . width / (CGFloat)s_iphone_res_scale,
-				p_rect . height / (CGFloat)s_iphone_res_scale);
+	return CGRectMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+// IM-2013-07-18: [[ ResIndependence ]] rename these functions to more accurately describe their new purpose
+MCRectangle MCDeviceRectFromLogicalCGRect(const CGRect p_cg_rect)
+{
+	return MCGRectangleGetIntegerBounds(MCGRectangleScale(MCGRectangleFromCGRect(p_cg_rect), s_iphone_device_scale));
+}
+
+CGRect MCUserRectToLogicalCGRect(const MCRectangle p_rect)
+{
+	return MCGRectangleToCGRect(MCGRectangleScale(MCRectangleToMCGRectangle(p_rect), 1.0 / MCIPhoneGetResolutionScale()));
 }
 
 // MW-2012-08-06: [[ Fibers ]] Primitive calls for executing selectors on
@@ -173,6 +205,9 @@ Boolean MCScreenDC::open(void)
 {
 	common_open();
 	
+	// IM-2013-07-18: [[ ResIndependence ]] store the device scale in our new static variable
+	s_iphone_device_scale = [[UIScreen mainScreen] scale];
+	
 	return True;
 }
 
@@ -196,14 +231,14 @@ void MCScreenDC::getvendorstring(MCExecPoint &ep)
 	ep . setsvalue("iphone");
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
-	return 320 * s_iphone_res_scale;
+	return 320 * MCIPhoneGetResolutionScale();
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
-	return 480 * s_iphone_res_scale;
+	return 480 * MCIPhoneGetResolutionScale();
 }
 
 uint2 MCScreenDC::getwidthmm()
@@ -246,25 +281,26 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
 	static MCDisplay s_display;
 
 	s_display . index = 0;
-	s_display . viewport = MCRectangleFromLogicalCGRect(MCIPhoneGetScreenBounds());
-	s_display . workarea = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
+	s_display . device_viewport = MCDeviceRectFromLogicalCGRect(MCIPhoneGetScreenBounds());
+	s_display . device_workarea = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	if (p_effective)
-		s_display . workarea . height -= s_current_keyboard_height;
+		s_display . device_workarea . height -= s_current_keyboard_height;
 	
-	p_displays = &s_display;
+	r_displays = &s_display;
+	r_count = 1;
 	
-	return 1;
+	return true;
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window p_window, MCRectangle& r_rect)
+bool MCScreenDC::device_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 {
-	r_rect = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
-	return True;
+	r_rect = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -444,6 +480,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 struct MCScreenDCDoSnapshotEnv
 {
 	MCRectangle r;
+	MCGFloat scale_factor;
 	uint4 window;
 	const char *displayname;
 	MCImageBitmap *result;
@@ -458,7 +495,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	MCRectangle r;
 	uint4 window;
 	const char *displayname;
-	r = env -> r;
+	
 	window = env -> window;
 	displayname = env -> displayname;
 	
@@ -473,7 +510,11 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	const MCDisplay *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
 	t_screen_rect = t_displays[0] . viewport;
-	r = MCU_clip_rect(r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	r = MCU_clip_rect(env -> r, t_screen_rect . x, t_screen_rect . y, t_screen_rect . width, t_screen_rect . height);
+	
+	uint32_t t_bitmap_width, t_bitmap_height;
+	t_bitmap_width = ceil(r . width * env -> scale_factor);
+	t_bitmap_height = ceil(r . height * env -> scale_factor);
 	
 	if (r.width != 0 && r.height != 0)
 	{
@@ -488,20 +529,26 @@ static void MCScreenDCDoSnapshot(void *p_env)
 		}
 		
 		if (t_success)
-			t_success = MCImageBitmapCreate(r.width, r.height, t_bitmap);
+			t_success = MCImageBitmapCreate(t_bitmap_width, t_bitmap_height, t_bitmap);
 		
 		if (t_success)
 		{
-			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
+			MCImageBitmapClear(t_bitmap);
+			// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+			CGBitmapInfo t_bm_info;
+			t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, false);
+			t_img_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bm_info);
 			t_success = t_img_context != nil;
 		}
 		
 		if (t_success)
 		{
-			int32_t t_scale = s_iphone_res_scale;
 			CGContextScaleCTM(t_img_context, 1.0, -1.0);
-			CGContextTranslateCTM(t_img_context, 0, -r . height);
-			CGContextTranslateCTM(t_img_context, -r.x, -r.y);
+			CGContextTranslateCTM(t_img_context, 0, -(CGFloat)t_bitmap_height);
+			
+			CGContextScaleCTM(t_img_context, env -> scale_factor, env -> scale_factor);
+			
+			CGContextTranslateCTM(t_img_context, -(CGFloat)r.x, -(CGFloat)r.y);
 			
 			bool t_is_rotated;
 			CGSize t_offset;
@@ -536,6 +583,7 @@ static void MCScreenDCDoSnapshot(void *p_env)
 			CGContextRotateCTM(t_img_context, t_angle);
 			CGContextTranslateCTM(t_img_context, -t_offset . width, -t_offset . height);
 			
+			float t_scale = MCIPhoneGetResolutionScale();
 			CGContextScaleCTM(t_img_context, t_scale, t_scale);
 			
 #ifndef USE_UNDOCUMENTED_METHODS
@@ -608,12 +656,13 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	env -> result = t_bitmap;
 }
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
 	env . displayname = displayname;
+	env . scale_factor = p_scale_factor;
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
@@ -745,7 +794,7 @@ void MCScreenDC::do_fit_window(bool p_immediate_resize, bool p_post_message)
 		return;
 	
 	MCRectangle t_view_bounds;
-	t_view_bounds = MCRectangleFromLogicalCGRect(MCIPhoneGetViewBounds());
+	t_view_bounds = MCDeviceRectFromLogicalCGRect(MCIPhoneGetViewBounds());
 	
 	m_window_left = t_view_bounds . x;
 	m_window_top = t_view_bounds . y;
@@ -1226,7 +1275,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = true;
 		MCIPhoneRunBlockOnMainFiber(^(void) {
 			MCIPhoneSwitchViewToOpenGL();
-			MCIPhoneConfigureContentScale(s_iphone_res_scale);
+			// IM-2013-08-21: [[ ResIndependence ]] switch to device scale for hi-res rendering
+			MCIPhoneConfigureContentScale(MCIPhoneGetDeviceScale());
 		});
 	}
 	else if (!s_ensure_opengl && s_is_opengl_display)
@@ -1241,16 +1291,6 @@ void MCIPhoneSyncDisplayClass(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-float MCIPhoneGetDeviceScale(void)
-{
-	return [[UIScreen mainScreen] scale];
-}
-
-float MCIPhoneGetResolutionScale(void)
-{
-	return (float)s_iphone_res_scale;
-}
-
 float MCIPhoneGetNativeControlScale(void)
 {
 	return s_iphone_control_res_scale;
@@ -1259,19 +1299,20 @@ float MCIPhoneGetNativeControlScale(void)
 // Only called from mobile extra calls so on main thread.
 void MCIPhoneUseDeviceResolution(bool p_use, bool p_controls_too)
 {
+	
 	if (p_use)
 	{
-		s_iphone_res_scale = (int32_t)[[UIScreen mainScreen] scale];
+		s_iphone_use_device_resolution = true;
 		if (p_controls_too)
-			s_iphone_control_res_scale = s_iphone_res_scale;
+			s_iphone_control_res_scale = s_iphone_device_scale;
 	}
 	else
 	{
-		s_iphone_res_scale = 1;
+		s_iphone_use_device_resolution = false;
 		s_iphone_control_res_scale = 1;
 	}
 	
-	MCIPhoneConfigureContentScale(s_iphone_res_scale);
+	MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
 	
 	// This doesn't do an immediate resize, so is fine for the main thread. (no
 	// script called).
@@ -1550,9 +1591,12 @@ void MCIPhoneHandleTouches(UIView *p_view, NSSet *p_touches, UITouchPhase p_phas
 	
 	for(UITouch *t_touch in t_sorted_touches)
 	{
+		MCGFloat t_scale;
+		t_scale = MCIPhoneGetDeviceScale();
+		
 		CGPoint t_location;
 		t_location = [ t_touch locationInView: p_view ];
-		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x * s_iphone_res_scale, t_location . y * s_iphone_res_scale);
+		static_cast<MCScreenDC *>(MCscreen) -> handle_touch(t_phase, t_touch, [t_touch timestamp] * 1000, t_location . x * t_scale, t_location . y * t_scale);
 	}
 }
 

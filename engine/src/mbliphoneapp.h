@@ -379,8 +379,8 @@ UIInterfaceOrientation MCIPhoneGetOrientation(void);
 bool MCIPhoneIsEmbedded(void);
 void MCIPhoneBreakWait(void);
 
-MCRectangle MCRectangleFromLogicalCGRect(const CGRect cgrect);
-CGRect MCRectangleToLogicalCGRect(const MCRectangle rect);
+MCRectangle MCDeviceRectFromLogicalCGRect(const CGRect cgrect);
+CGRect MCUserRectToLogicalCGRect(const MCRectangle rect);
 
 ////////////////////////////////////////////////////////////////////////////////
 

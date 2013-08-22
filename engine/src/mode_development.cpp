@@ -59,6 +59,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "revbuild.h"
 #include "parentscript.h"
 
+#include "resolution.h"
+
 #if defined(_WINDOWS_DESKTOP)
 #include "w32prefix.h"
 #include "w32dc.h"

@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "graphicscontext.h"
+#include "resolution.h"
 
 #include "osxdc.h"
 
@@ -60,6 +61,8 @@ static void *s_update_context = nil;
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+
 OSStatus MCRevolutionStackViewCreate(MCStack *p_stack, ControlRef* r_control);
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -314,9 +317,12 @@ void MCStack::realize()
 				SetSystemUIMode(kUIModeNormal, NULL);
 		}
 
+		// IM-2013-08-01: [[ ResIndependence ]] scale stack rect to device coords
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+		
 		Rect wrect;
-		MCScreenDC *psdc = (MCScreenDC *)MCscreen;
-		psdc->MCRect2MacRect(rect, wrect);
+		wrect = MCRectToMacRect(t_device_rect);
 		window = new _Drawable;
 		window->type = DC_WINDOW;
 		window->handle.window = 0;
@@ -431,7 +437,7 @@ void MCStack::realize()
 				if (walignment)
 				{
 					MCRectangle parentwindowrect;
-					MCscreen->getwindowgeometry(pwindow, parentwindowrect);
+					MCscreen->device_getwindowgeometry(pwindow, parentwindowrect);
 					int2 wspace = 0;
 					RgnHandle r = NewRgn();
 					GetWindowRegion((WindowPtr)window->handle.window, kWindowStructureRgn, r);
@@ -439,7 +445,7 @@ void MCStack::realize()
 					GetRegionBounds(r, &tRect);
 					DisposeRgn(r);
 					MCRectangle drawerwindowrect;
-					psdc->MacRect2MCRect(tRect, drawerwindowrect);
+					drawerwindowrect = MCMacRectToMCRect(tRect);
 					if (wposition == WP_PARENTTOP || wposition == WP_PARENTBOTTOM)
 					{
 						wspace = parentwindowrect.width - drawerwindowrect.width;
@@ -520,11 +526,8 @@ void MCStack::sethints()
 	}
 }
 
-MCRectangle MCStack::getwindowrect() const
+MCRectangle MCStack::device_getwindowrect() const
 {
-    if (window == DNULL)
-        return rect;
-    
     MCRectangle t_rect;
     Rect t_winrect;
     RgnHandle t_rgn;
@@ -533,12 +536,27 @@ MCRectangle MCStack::getwindowrect() const
     GetRegionBounds(t_rgn, &t_winrect);
     DisposeRgn(t_rgn);
     
-    t_rect.x = t_winrect.left;
-    t_rect.y = t_winrect.top;
-    t_rect.width = t_winrect.right - t_winrect.left;
-    t_rect.height = t_winrect.bottom - t_winrect.top;
+	t_rect = MCMacRectToMCRect(t_winrect);
     
     return t_rect;
+}
+
+void MCStackGetWindowRect(WindowPtr p_window, MCRectangle &r_rect)
+{
+	Rect t_winrect;
+	GetPortBounds(GetWindowPort(p_window), &t_winrect);
+	SetGWorld(GetWindowPort(p_window), GetMainDevice());
+	
+	Point t_topleft;
+	t_topleft.h = t_winrect.left;
+	t_topleft.v = t_winrect.top;
+	
+	LocalToGlobal(&t_topleft);
+	
+	r_rect.x = t_topleft.h;
+	r_rect.y = t_topleft.v;
+	r_rect.width = t_winrect.right - t_winrect.left;
+	r_rect.height = t_winrect.bottom - t_winrect.top;
 }
 
 void MCStack::setgeom()
@@ -563,39 +581,39 @@ void MCStack::setgeom()
 	// MW-2011-09-12: [[ MacScroll ]] Make sure we apply the current scroll setting.
 	applyscroll();
 	
-	Rect windRect;
-	GetPortBounds(GetWindowPort((WindowPtr)window->handle.window), &windRect);
-	SetGWorld(GetWindowPort((WindowPtr)window->handle.window), GetMainDevice());
-	Point p;
-	p.h = windRect.left;
-	p.v = windRect.top;
-	LocalToGlobal(&p);
-	int2 curWidth = windRect.right - windRect.left;
-	int2 curHeight = windRect.bottom - windRect.top;
+	// IM-2013-08-01: [[ ResIndependence ]] scale to device res when updating window size
+	MCRectangle t_rect_scaled;
+	t_rect_scaled = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	
+	MCRectangle t_win_rect;
+	MCStackGetWindowRect((WindowPtr)window->handle.window, t_win_rect);
+	
+	MCRectangle t_win_rect_scaled;
+	t_win_rect_scaled = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_win_rect));
+	
 	if (IsWindowVisible((WindowPtr)window->handle.window))
 	{
 		if (mode != WM_SHEET && mode != WM_DRAWER
-		        && (rect.x != p.h || rect.y != p.v))
+		        && (t_rect_scaled.x != t_win_rect.x || t_rect_scaled.y != t_win_rect.y))
 		{
-			MoveWindow((WindowPtr)window->handle.window, rect.x, rect.y, False);
+			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
 			state |= CS_BEEN_MOVED;
 		}
-		if (rect.width != curWidth || rect.height != curHeight)
+		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
 		{
-			SizeWindow((WindowPtr)window->handle.window, rect.width, rect.height, True);
-			resize(curWidth, curHeight + getscroll());
+			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
+			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
 		}
 		state &= ~CS_NEED_RESIZE;
 	}
 	else
 	{
 		if (mode != WM_SHEET && mode != WM_DRAWER)
-			MoveWindow((WindowPtr)window->handle.window, rect.x, rect.y, False);
-		if (rect.width != curWidth || rect.height != curHeight)
+			MoveWindow((WindowPtr)window->handle.window, t_rect_scaled.x, t_rect_scaled.y, False);
+		if (t_rect_scaled.width != t_win_rect.width || t_rect_scaled.height != t_win_rect.height)
 		{
-			SizeWindow((WindowPtr)window->handle.window, rect.width, rect.height, True);
-			resize(curWidth, curHeight + getscroll());
-
+			SizeWindow((WindowPtr)window->handle.window, t_rect_scaled.width, t_rect_scaled.height, True);
+			resize(t_win_rect_scaled.width, t_win_rect_scaled.height + getscroll());
 		}
 		state &= ~(CS_BEEN_MOVED | CS_NEED_RESIZE);
 	}
@@ -654,11 +672,14 @@ void MCStack::syncscroll(void)
 	ControlRef t_subcontrol;
 	if (GetIndexedSubControl(t_root_control, 1, &t_subcontrol) == noErr)
 	{
+		// IM-2013-08-01: [[ ResIndependence ]] scale control bounds to device res
+		MCRectangle t_user_bounds, t_device_bounds;
+		t_user_bounds = MCU_make_rect(0, -m_scroll, rect.width, rect.height + m_scroll);
+		t_device_bounds = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_bounds));
+		
 		Rect t_bounds;
-		t_bounds . left = 0;
-		t_bounds . top = -m_scroll;
-		t_bounds . right = rect . width;
-		t_bounds . bottom = rect . height;
+		t_bounds = MCRectToMacRect(t_device_bounds);
+
 		SetControlBounds(t_subcontrol, &t_bounds);
 	}
 	
@@ -890,7 +911,15 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	// MW-2011-10-07: [[ Bug 9792 ]] If the mask hasn't changed, use the update region,
 	//   else redraw the whole view.
 	if (!getextendedstate(ECS_MASK_CHANGED))
-		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)p_region, TRUE);
+	{
+		// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
+		MCRegionRef t_dev_region;
+		t_dev_region = nil;
+		/* UNCHECKED */ MCRegionCreate(t_dev_region);
+		MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
+		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)t_dev_region, TRUE);
+		MCRegionDestroy(t_dev_region);
+	}
 	else
 	{
 		HIViewSetNeedsDisplay(t_view, TRUE);
@@ -925,7 +954,14 @@ void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallba
 	
 	HIViewRef t_view;
 	GetIndexedSubControl(t_root, 1, &t_view);
-	HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)p_region, TRUE);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
+	MCRegionRef t_dev_region;
+	t_dev_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_dev_region);
+	MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
+	HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)t_dev_region, TRUE);
+	MCRegionDestroy(t_dev_region);
 	
 	// Set the file-local static to the callback to use (stacksurface picks this up!)
 	s_update_callback = p_callback;
@@ -956,11 +992,6 @@ void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallba
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
-
 static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
 {
 	CGRect t_rect;
@@ -981,7 +1012,7 @@ static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 		case kMCGBlendModeCopy:
 			return kCGBlendModeCopy;
 		case kMCGBlendModeSourceOver:
-			return kCGBlendModeCopy;
+			return kCGBlendModeNormal;
 		case kMCGBlendModeSourceIn:
 			return kCGBlendModeSourceIn;
 		case kMCGBlendModeSourceOut:
@@ -1065,26 +1096,21 @@ static void MCMacRenderBitsToCG(CGContextRef p_target, CGRect p_area, const void
 	t_colorspace = CGColorSpaceCreateDeviceRGB();
 	if (t_colorspace != nil)
 	{
-		// MM-2013-02-07: Adjust byte order of bitmap to match that of Skia (for new graphics context)
-		// MM-2013-02-13: Reverted back and altered Skia's native byte ordering instead.
-		CGBitmapInfo t_bitmap_info;
-		t_bitmap_info = kCGBitmapByteOrder32Host;
-		t_bitmap_info |= p_has_alpha ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaNoneSkipFirst;
+		MCGRaster t_raster;
+		t_raster.width = p_area.size.width;
+		t_raster.height = p_area.size.height;
+		t_raster.pixels = const_cast<void*>(p_bits);
+		t_raster.stride = p_stride;
+		t_raster.format = p_has_alpha ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
 		
-		CGContextRef t_cgcontext;
-		t_cgcontext = CGBitmapContextCreate((void *)p_bits, p_area . size . width, p_area . size . height, 8, p_stride, t_colorspace, t_bitmap_info);
-		if (t_cgcontext != nil)
+		CGImageRef t_image;
+		t_image = nil;
+		
+		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, t_raster.width, t_raster.height), t_colorspace, false, false, t_image))
 		{
-			CGImageRef t_image;
-			t_image = CGBitmapContextCreateImage(t_cgcontext);
-			CGContextRelease(t_cgcontext);
-			
-			if (t_image != nil)
-			{
-				CGContextClipToRect((CGContextRef)p_target, p_area);
-				CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
-				CGImageRelease(t_image);
-			}
+			CGContextClipToRect((CGContextRef)p_target, p_area);
+			CGContextDrawImage((CGContextRef)p_target, p_area, t_image);
+			CGImageRelease(t_image);
 		}
 		
 		CGColorSpaceRelease(t_colorspace);
@@ -1267,36 +1293,39 @@ public:
 		int32_t t_height;
 		t_height = m_stack -> getcurcard() -> getrect() . height;
 		
-		MCGRectangle t_src, t_dst;
-		t_src = MCGRectangleIntersection(p_src_rect, MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src)));
+		// IM-2013-08-21: [[ RefactorGraphics]] Rework to fix positioning of composited src image
+		// compute transform from src rect to dst rect
+		MCGFloat t_sx, t_sy, t_dx, t_dy;
+		t_sx = p_dst_rect.size.width / p_src_rect.size.width;
+		t_sy = p_dst_rect.size.height / p_src_rect.size.height;
 		
-		if (t_src.size.width == 0 || t_src.size.height == 0 || p_dst_rect.size.width == 0 || p_dst_rect.size.height == 0)
-			return true;
+		t_dx = p_dst_rect.origin.x - (p_src_rect.origin.x * t_sx);
+		t_dy = p_dst_rect.origin.y - (p_src_rect.origin.y * t_sy);
 		
-		MCGFloat t_vscale, t_hscale;
-		t_hscale = p_dst_rect.size.width / p_src_rect.size.width;
-		t_vscale = p_dst_rect.size.height / p_src_rect.size.height;
-		
-		t_dst = MCGRectangleMake(p_dst_rect.origin.x + (t_src.origin.x - p_src_rect.origin.x) * t_hscale,
-								 p_dst_rect.origin.y + (t_src.origin.y - p_src_rect.origin.y) * t_vscale,
-								 p_dst_rect.size.width + (t_src.size.width - p_src_rect.size.width) * t_hscale,
-								 p_dst_rect.size.height + (t_src.size.height - p_src_rect.size.height) * t_vscale);
-		
-		CGRect t_dst_rect;
-		t_dst_rect = CGRectMake(t_dst . origin . x, t_height - (t_dst . origin . y + t_dst . size . height), t_dst . size . width, t_dst . size . height);
+		// apply transformation to rect (0, 0, image width, image height)
+		MCGRectangle t_dst_rect, t_src_rect;
+		t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
+		t_dst_rect = MCGRectangleMake(t_dx, t_dy, t_src_rect.size.width * t_sx, t_src_rect.size.height * t_sy);
 		
 		CGContextRef t_context = nil;
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, (void*&)t_context))
 			return false;
 		
-		bool t_success = true;
+		// clip to dst rect
+		MCRectangle t_bounds;
+		t_bounds = MCGRectangleGetIntegerBounds(p_dst_rect);
+		CGRect t_dst_clip;
+		t_dst_clip = CGRectMake(t_bounds . x, t_height - (t_bounds . y + t_bounds . height), t_bounds . width, t_bounds . height);
+		CGContextClipToRect(t_context, t_dst_clip);
 		
-		if (t_success)
-			MCMacRenderImageToCG(t_context, t_dst_rect, p_src, t_src, p_alpha, p_blend);
+		// render image to transformed rect
+		CGRect t_dst_cgrect;
+		t_dst_cgrect = CGRectMake(t_dst_rect . origin . x, t_height - (t_dst_rect . origin . y + t_dst_rect . size . height), t_dst_rect . size . width, t_dst_rect . size . height);
+		MCMacRenderImageToCG(t_context, t_dst_cgrect, p_src, t_src_rect, p_alpha, p_blend);
 		
 		UnlockTarget();
 		
-		return t_success;
+		return true;
 	}
 };
 
@@ -1384,13 +1413,25 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 		{
 			GetEventParameter(p_event, 'Stak', typeVoidPtr, NULL, sizeof(void *), NULL, &t_context -> stack);
 			
-			Rect t_bounds;
-			t_bounds . left = 0;
 			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
 			//   account the scroll.
-			t_bounds . top = -t_context -> stack -> getscroll();
-			t_bounds . right = t_context -> stack -> getrect() . width;
-			t_bounds . bottom = t_context -> stack -> getrect() . height;
+			
+			// IM-2013-08-13: [[ ResIndependence ]] scale new stack window size to device space
+			MCRectangle t_stack_rect;
+			t_stack_rect = t_context->stack->getrect();
+			
+			int32_t t_scroll;
+			t_scroll = t_context->stack->getscroll();
+			
+			MCRectangle t_rect;
+			t_rect = MCRectangleMake(0, -t_scroll, t_stack_rect.width, t_stack_rect.height + t_scroll);
+			
+			MCRectangle t_device_rect;
+			t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(t_rect));
+			
+			Rect t_bounds;
+			t_bounds = MCRectToMacRect(t_device_rect);
+
 			SetControlBounds((ControlRef)t_context -> view, &t_bounds);
 			
 			t_status = noErr;
@@ -1490,7 +1531,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					{
 						// If we don't have an update pixmap, then use redrawwindow.
 						if (s_update_callback == nil)
-							t_context -> stack -> redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
+							t_context -> stack -> device_redrawwindow(&t_surface, (MCRegionRef)t_dirty_rgn);
 						else
 							s_update_callback(&t_surface, (MCRegionRef)t_dirty_rgn, s_update_context);
 						t_surface.Unlock();

@@ -671,7 +671,7 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 			{
 				for (uindex_t x = 0; x < t_jpeg.output_width; x++)
 				{
-					*t_dst_ptr++ = MCGPixelPack(kMCGPixelFormatNative, t_src_ptr[0], t_src_ptr[1], t_src_ptr[2], 255);
+					*t_dst_ptr++ = MCGPixelPackNative(t_src_ptr[0], t_src_ptr[1], t_src_ptr[2], 255);
 					t_src_ptr += 3;
 				}
 			}
@@ -724,7 +724,7 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 					t_r = ((255 - (p & 0xff)) * k / 255);
 					t_g = ((255 - ((p >> 8) & 0xff)) * k / 255);
 					t_b = ((255 - ((p >> 16) & 0xff)) * k / 255);
-					*dptr++ = MCGPixelPack(kMCGPixelFormatNative, t_r, t_g, t_b, 255);
+					*dptr++ = MCGPixelPackNative(t_r, t_g, t_b, 255);
 				}
 				t_img_ptr += t_image->stride;
 			}
@@ -886,7 +886,7 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_b
 			uint8_t t_alpha;
 			for (uindex_t x = 0; x < p_image->width; x++)
 			{
-				MCGPixelUnpack(kMCGPixelFormatNative, *t_src_ptr++, t_dst_ptr[0], t_dst_ptr[1], t_dst_ptr[2], t_alpha);
+				MCGPixelUnpackNative(*t_src_ptr++, t_dst_ptr[0], t_dst_ptr[1], t_dst_ptr[2], t_alpha);
 
 				t_dst_ptr += 3;
 			}

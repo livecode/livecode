@@ -126,6 +126,18 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-30: [[ ResIndependence ]] support for retrieving the density-mapped file list
+struct MCImageScaledFile
+{
+	char *filename;
+	MCGFloat scale;
+};
+
+bool MCImageGetScaledFiles(const char *p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count);
+void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count);
+
+////////////////////////////////////////////////////////////////////////////////
+
 #if defined(TARGET_PLATFORM_WINDOWS)
 bool MCImageBitmapToDIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
 bool MCImageBitmapToV5DIB(MCImageBitmap *p_bitmap, MCWinSysHandle &r_dib);
@@ -204,8 +216,8 @@ public:
 	void stroke_path(MCGPathRef p_path);
 	void draw_path(MCGPathRef p_path);
 	void apply_stroke_style(MCGContextRef p_context, bool p_miter);
-	void apply_fill_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color);
-	void apply_stroke_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color);
+	void apply_fill_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
+	void apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color);
 
 	void battson(MCContext *ctxt, uint2 depth);
 
@@ -287,6 +299,8 @@ class MCImage : public MCControl
 
 	bool m_has_transform;
 	MCGAffineTransform m_transform;
+	// IM-2013-07-19: [[ ResIndependence ]] added scale factor for hi-res images
+	MCGFloat m_scale_factor;
 
 	MCImageNeed *m_needs;
 
@@ -322,7 +336,8 @@ class MCImage : public MCControl
 	
 public:
 	// replace the current image data with the new bitmap
-	bool setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry = false);
+	// IM-2013-07-19: [[ ResIndependence ]] add scale param for hi-res images
+	bool setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry = false);
 
 private:
 	void setrep(MCImageRep *p_rep);
@@ -404,9 +419,19 @@ public:
 	// get the current (transformed) image data
 	bool lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform = true);
 	void unlockbitmap(MCImageBitmap *p_bitmap);
+	
+	// IM-2013-07-26: [[ ResIndependence ]] create bitmap copy of transformed image at the given scale
+	bool copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap);
 
+	// IM-2013-07-19: [[ ResIndependence ]] get image source size (in points)
+	bool getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 	void getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight);
 
+	MCGFloat getscalefactor(void)
+	{
+		return m_scale_factor;
+	}
+	
 	void addneed(MCObject *p_object);
 
 	void endsel();
@@ -449,7 +474,7 @@ public:
 
 	MCCursorRef createcursor();
 	MCCursorRef getcursor(bool p_is_default = false);
-	bool createpattern(MCGImageRef &r_pattern);
+	bool createpattern(MCPatternRef &r_pattern);
 	// in ifile.cc
 	Boolean noblack();
 	void recompress();

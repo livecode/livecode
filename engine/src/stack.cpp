@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #endif
 
+#include "resolution.h"
+
 static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
@@ -2513,7 +2515,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			if (m_tilecache == nil)
 			{
 				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-				MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
+				// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+				MCRectangle t_device_rect;
+				t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
+				MCTileCacheSetViewport(m_tilecache, t_device_rect);
 			}
 		
 			MCTileCacheSetCompositor(m_tilecache, t_type);
@@ -2976,3 +2981,18 @@ void MCStack::purgefonts()
 	dirtyall();
 #endif
 }
+
+//////////
+
+MCRectangle MCStack::getwindowrect(void) const
+{
+	if (window == nil)
+		return rect;
+		
+	MCRectangle t_rect;
+	t_rect = device_getwindowrect();
+	
+	return MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+}
+
+//////////

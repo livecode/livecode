@@ -160,7 +160,7 @@ static MCIPhoneImagePickerDialog *s_image_picker = nil;
 		{
 			MCRectangle t_mc_rect;
 			t_mc_rect = MCtargetptr -> getrect();
-			t_rect = MCRectangleToLogicalCGRect(t_mc_rect);
+			t_rect = MCUserRectToLogicalCGRect(t_mc_rect);
 		}
 		else
 			t_rect = [[t_main_controller view] frame];

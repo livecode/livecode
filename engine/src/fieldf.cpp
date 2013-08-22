@@ -826,7 +826,7 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 		return;
 	
 	uint2 t_current_style;
-	MCGImageRef t_current_pixmap;
+	MCPatternRef t_current_pixmap;
 	int2 t_current_x;
 	int2 t_current_y;
 	dc -> getfillstyle(t_current_style, t_current_pixmap, t_current_x, t_current_y);
@@ -840,8 +840,8 @@ void MCField::adjustpixmapoffset(MCContext *dc, uint2 index, int4 dy)
 	if (MCU_abs(t_offset_y) > 32767 || MCU_abs(t_offset_x) > 32767)
 	{
 		uint2 t_width, t_height, t_depth;
-		t_width = MCGImageGetWidth(t_current_pixmap);
-		t_height = MCGImageGetHeight(t_current_pixmap);
+		t_width = MCGImageGetWidth(t_current_pixmap->image) / t_current_pixmap->scale;
+		t_height = MCGImageGetHeight(t_current_pixmap->image) / t_current_pixmap->scale;
 
 		t_offset_x %= t_width;
 		if (t_offset_x < 0)

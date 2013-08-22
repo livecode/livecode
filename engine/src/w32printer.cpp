@@ -897,11 +897,15 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		RECT t_clip;
 		GetClipBox(t_dc, &t_clip);
 
+		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
+		MCGFloat t_scale;
+		t_scale = p_mark -> fill -> pattern -> scale;
+
 		// Now create a suitable pattern by tiling out the selected pattern to be
 		// at least 32x32
 		int32_t t_src_width, t_src_height;
-		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern);
-		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern);
+		t_src_width = MCGImageGetWidth(p_mark -> fill -> pattern -> image) / t_scale;
+		t_src_height = MCGImageGetHeight(p_mark -> fill -> pattern -> image) / t_scale;
 
 		int32_t t_width, t_height;
 		t_width = t_src_width;
@@ -921,14 +925,10 @@ void MCGDIMetaContext::domark(MCMark *p_mark)
 		MCGContextRef t_context = nil;
 		/* UNCHECKED */ MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
-		for (uint32_t y = 0; y < t_height; y += t_src_height)
-		{
-			for (uint32_t x = 0; x < t_width; x += t_src_width)
-			{
-				MCGRectangle t_dst = MCGRectangleMake(x, y, t_src_width, t_src_height);
-				MCGContextDrawImage(t_context, p_mark->fill->pattern, t_dst, kMCGImageFilterNearest);
-			}
-		}
+		// IM-2013-08-14: [[ ResIndependence ]] Apply pattern scale factor
+		MCGContextSetFillPattern(t_context, p_mark->fill->pattern->image, MCGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale), kMCGImageFilterNearest);
+		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+		MCGContextFill(t_context);
 
 		MCGContextRelease(t_context);
 		

@@ -43,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphicscontext.h"
 
+#include "resolution.h"
+
 class MCNullPrinter: public MCPrinter
 {
 protected:
@@ -258,14 +260,6 @@ void MCUIDC::grabpointer(Window w)
 { }
 void MCUIDC::ungrabpointer()
 { }
-uint2 MCUIDC::getwidth()
-{
-	return 1;
-}
-uint2 MCUIDC::getheight()
-{
-	return 1;
-}
 uint2 MCUIDC::getwidthmm()
 {
 	return 1;
@@ -282,12 +276,81 @@ uint2 MCUIDC::getvclass()
 {
 	return 1;
 }
-uint4 MCUIDC::getdisplays(const MCDisplay*& p_rectangles, bool p_effective)
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint2 MCUIDC::getwidth()
 {
-	return 0;
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	return ceil(device_getwidth() / t_scale) ;
 }
 
+uint2 MCUIDC::getheight()
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	return ceil(device_getheight() / t_scale);
+}
+
+//////////
+
+uint16_t MCUIDC::device_getwidth()
+{
+	return 1;
+}
+
+uint16_t MCUIDC::device_getheight()
+{
+	return 1;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+uint4 MCUIDC::getdisplays(const MCDisplay*& p_rectangles, bool p_effective)
+{
+	MCDisplay *t_displays;
+	t_displays = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	if (!device_getdisplays(p_effective, t_displays, t_count))
+		return 0;
+	
+	for (uint32_t i = 0; i < t_count; i++)
+	{
+		t_displays[i].viewport = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_viewport));
+		t_displays[i].workarea = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_displays[i].device_workarea));
+	}
+	
+	p_rectangles = t_displays;
+	
+	return t_count;
+}
+
+//////////
+
+bool MCUIDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
+{
+	return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
+{
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_rectangle));
+	
+	return device_getnearestdisplay(t_device_rect);
+}
+
+//////////
+
+const MCDisplay *MCUIDC::device_getnearestdisplay(const MCRectangle& p_rectangle)
 {
 	MCDisplay const *t_displays;
 	uint4 t_display_count;
@@ -301,14 +364,17 @@ const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 	t_max_distance = MAXUINT4;
 	for(uint4 t_display = 0; t_display < t_display_count; ++t_display)
 	{
+		MCRectangle t_workarea;
+		t_workarea = t_displays[t_display] . device_workarea;
+		
 		MCRectangle t_intersection;
 		uint4 t_area, t_distance;
-		t_intersection = MCU_intersect_rect(p_rectangle, t_displays[t_display] . workarea);
+		t_intersection = MCU_intersect_rect(p_rectangle, t_workarea);
 		t_area = t_intersection . width * t_intersection . height;
 
 		uint4 t_dx, t_dy;
-		t_dx = (t_displays[t_display] . workarea . x + t_displays[t_display] . workarea . width / 2) - (p_rectangle . x + p_rectangle . width / 2);
-		t_dy = (t_displays[t_display] . workarea . y + t_displays[t_display] . workarea . height / 2) - (p_rectangle . y + p_rectangle . height / 2);
+		t_dx = (t_workarea . x + t_workarea . width / 2) - (p_rectangle . x + p_rectangle . width / 2);
+		t_dy = (t_workarea . y + t_workarea . height / 2) - (p_rectangle . y + p_rectangle . height / 2);
 		t_distance = t_dx * t_dx + t_dy * t_dy;
 
 		if (t_area > t_max_area)
@@ -331,6 +397,95 @@ const MCDisplay *MCUIDC::getnearestdisplay(const MCRectangle& p_rectangle)
 
 	return &t_displays[t_home];
 }
+
+////////////////////////////////////////////////////////////////////////////////
+
+Boolean MCUIDC::getwindowgeometry(Window p_window, MCRectangle &r_rect)
+{
+	MCRectangle t_rect;
+	if (!device_getwindowgeometry(p_window, t_rect))
+		return False;
+	
+	r_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+	return True;
+}
+
+//////////
+
+bool MCUIDC::device_getwindowgeometry(Window p_window, MCRectangle &r_rect)
+{
+	r_rect = MCU_make_rect(0, 0, 32, 32);
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUIDC::boundrect(MCRectangle &x_rect, Boolean p_title, Window_mode p_mode)
+{
+	MCRectangle t_rect;
+	t_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(x_rect));
+	
+	MCscreen->device_boundrect(t_rect, p_title, p_mode);
+	
+	x_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+}
+
+//////////
+
+void MCUIDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUIDC::querymouse(int2 &x, int2 &y)
+{
+	int16_t t_x, t_y;
+	device_querymouse(t_x, t_y);
+	
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	x = t_x / t_scale;
+	y = t_y / t_scale;
+}
+
+//////////
+
+void MCUIDC::device_querymouse(int2 &x, int2 &y)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCUIDC::setmouse(int2 x, int2 y)
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	device_setmouse(x * t_scale, y * t_scale);
+}
+
+//////////
+
+void MCUIDC::device_setmouse(int2 x, int2 y)
+{ }
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+
+	return device_getstackatpoint(x * t_scale, y * t_scale);
+}
+
+//////////
+
+MCStack *MCUIDC::device_getstackatpoint(int32_t x, int32_t y)
+{
+	return nil;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 void MCUIDC::openwindow(Window w, Boolean override)
 { }
@@ -379,13 +534,6 @@ uint2 MCUIDC::getrealdepth(void)
 uint2 MCUIDC::getdepth(void)
 {
 	return 0;
-}
-
-Boolean MCUIDC::getwindowgeometry(Window w, MCRectangle &drect)
-{
-	drect.x = drect.y = 0;
-	drect.width = drect.height = 32;
-	return True;
 }
 
 void MCUIDC::setgraphicsexposures(Boolean on, MCStack *sptr)
@@ -451,7 +599,7 @@ Window MCUIDC::getroot()
 	return (Window)1;
 }
 
-MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
+MCImageBitmap *MCUIDC::snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
                            const char *displayname)
 {
 	return NULL;
@@ -465,7 +613,7 @@ void MCUIDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCUIDC::configurebackdrop(const MCColor&, MCGImageRef p_pattern, MCImage *)
+void MCUIDC::configurebackdrop(const MCColor&, MCPatternRef p_pattern, MCImage *)
 {
 }
 
@@ -493,7 +641,7 @@ void MCUIDC::getpaletteentry(uint4 n, MCColor &c)
 
 void MCUIDC::alloccolor(MCColor &color)
 {
-	color.pixel = MCGPixelPack(kMCGPixelFormatNative,
+	color.pixel = MCGPixelPackNative(
 							   color.red >> 8,
 							   color.green >> 8,
 							   color.blue >> 8,
@@ -503,7 +651,7 @@ void MCUIDC::alloccolor(MCColor &color)
 void MCUIDC::querycolor(MCColor &color)
 {
 	uint8_t t_r, t_g, t_b, t_a;
-	MCGPixelUnpack(kMCGPixelFormatNative, color.pixel, t_r, t_g, t_b, t_a);
+	MCGPixelUnpackNative(color.pixel, t_r, t_g, t_b, t_a);
 	color.red = t_r;
 	color.green = t_g;
 	color.blue = t_b;
@@ -517,8 +665,6 @@ MCColor *MCUIDC::getaccentcolors()
 	return NULL;
 }
 
-void MCUIDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
-{ }
 void MCUIDC::expose()
 { }
 Boolean MCUIDC::abortkey()
@@ -532,14 +678,10 @@ void MCUIDC::waitreparent(Window w)
 { }
 void MCUIDC::waitfocus()
 { }
-void MCUIDC::querymouse(int2 &x, int2 &y)
-{ }
 uint2 MCUIDC::querymods()
 {
 	return 0;
 }
-void MCUIDC::setmouse(int2 x, int2 y)
-{ }
 Boolean MCUIDC::getmouse(uint2 button, Boolean& r_abort)
 {
 	r_abort = False;
@@ -1160,7 +1302,7 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
-	MCImageBitmap *image = snapshot(t_rect, 0, nil);
+	MCImageBitmap *image = snapshot(t_rect, 1.0, 0, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
 	if (image == NULL)
@@ -1316,102 +1458,6 @@ void MCUIDC::getcolornames(MCExecPoint &ep)
 		ep.concatcstring(color_table[i].token, EC_RETURN, i == 0);
 }
 
-static int ReadInteger(const char *string, const char **NextString)
-{
-	int Result = 0;
-	int Sign = 1;
-	if (*string == '+')
-		string++;
-	else
-		if (*string == '-')
-		{
-			string++;
-			Sign = -1;
-		}
-	for (; (*string >= '0') && (*string <= '9'); string++)
-		Result = (Result * 10) + (*string - '0');
-	*NextString = string;
-	if (Sign >= 0)
-		return Result;
-	else
-		return -Result;
-}
-
-Boolean MCUIDC::position(const char *geom, MCRectangle &rect)
-{
-	unsigned int tempWidth, tempHeight;
-	int tempX, tempY;
-	const char *nextCharacter;
-
-	if (geom == NULL || *geom == '\0')
-		return False;
-	if (*geom == '=')
-		geom++;  /* ignore possible '=' at beg of geometry spec */
-
-	if (*geom != '+' && *geom != '-' && *geom != 'x')
-	{
-		tempWidth = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.width = tempWidth;
-	}
-	if (*geom == 'x' || *geom == 'X')
-	{
-		geom++;
-		tempHeight = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.height = tempHeight;
-	}
-	if (*geom == '+' || *geom == '-')
-	{
-		if (*geom == '-')
-		{
-			geom++;
-			tempX = -ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = MCscreen->getwidth() - rect.width + tempX;
-		}
-		else
-		{
-			geom++;
-			tempX = ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = tempX;
-		}
-		if (*geom == '+' || *geom == '-')
-		{
-			if (*geom == '-')
-			{
-				geom++;
-				tempY = -ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = MCscreen->getheight() - rect.height + tempY;
-			}
-			else
-			{
-				geom++;
-				tempY = ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = tempY;
-			}
-		}
-	}
-	if (*geom != '\0')
-		return False;
-	return True;
-}
-
 void MCUIDC::seticon(uint4 p_icon)
 {
 }
@@ -1518,11 +1564,3 @@ char *MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p
 {
 	return nil;
 }
-
-//
-
-MCStack *MCUIDC::getstackatpoint(int32_t x, int32_t y)
-{
-	return nil;
-}
-

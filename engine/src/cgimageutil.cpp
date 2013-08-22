@@ -32,6 +32,43 @@ void __CGDataProviderDeallocate(void *info, const void *data, size_t size)
 	MCMemoryDeallocate(const_cast<void*>(data));
 }
 
+// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha)
+{
+	CGBitmapInfo t_bm_info;
+	
+	bool t_alpha_first;
+	switch (p_pixel_format)
+	{
+		case kMCGPixelFormatBGRA:
+			t_bm_info = kCGBitmapByteOrder32Little;
+			t_alpha_first = true;
+			break;
+			
+		case kMCGPixelFormatABGR:
+			t_bm_info = kCGBitmapByteOrder32Little;
+			t_alpha_first = false;
+			break;
+			
+		case kMCGPixelFormatRGBA:
+			t_bm_info = kCGBitmapByteOrder32Big;
+			t_alpha_first = false;
+			break;
+			
+		case kMCGPixelFormatARGB:
+			t_bm_info = kCGBitmapByteOrder32Big;
+			t_alpha_first = true;
+			break;
+	}
+	
+	if (p_alpha)
+		t_bm_info |= t_alpha_first ? kCGImageAlphaPremultipliedFirst : kCGImageAlphaPremultipliedLast;
+	else
+		t_bm_info |= t_alpha_first ? kCGImageAlphaNoneSkipFirst : kCGImageAlphaNoneSkipLast;
+	
+	return t_bm_info;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image)
@@ -100,7 +137,9 @@ bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGCo
 		
 	}
 	
-	CGBitmapInfo t_bm_info = kCGImageAlphaPremultipliedFirst | kCGBitmapByteOrder32Little;
+	// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
+	CGBitmapInfo t_bm_info;
+	t_bm_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
 	
 	if (t_success)
 		t_success = nil != (t_image = CGImageCreate(t_width, t_height, 8, 32, t_dst_stride, p_colorspace, t_bm_info, t_data_provider, nil, true, kCGRenderingIntentDefault));

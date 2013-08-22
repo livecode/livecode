@@ -151,6 +151,28 @@ extern pascal OSErr DragReceiveHandler(WindowPtr theWindow, void *hRefCon,
 extern uint4 MCMacGlyphToKeysym(uint2 glyph);
 extern uint2 MCMacKeysymToGlyph(uint4 key);
 
+static inline Rect MCRectToMacRect(const MCRectangle &p_rect)
+{
+	Rect t_rect;
+	t_rect.left = p_rect.x;
+	t_rect.top = p_rect.y;
+	t_rect.right = p_rect.x + p_rect.width;
+	t_rect.bottom = p_rect.y + p_rect.height;
+	
+	return t_rect;
+}
+
+static inline MCRectangle MCMacRectToMCRect(const Rect &p_rect)
+{
+	MCRectangle t_rect;
+	t_rect.x = p_rect.left;
+	t_rect.y = p_rect.top;
+	t_rect.width = p_rect.right - p_rect.left;
+	t_rect.height = p_rect.bottom - p_rect.top;
+	
+	return t_rect;
+}
+
 class MCScreenDC : public MCUIDC
 {
 	Boolean ownselection;
@@ -190,7 +212,7 @@ class MCScreenDC : public MCUIDC
 	WindowGroupRef backdrop_document_group;
 	WindowGroupRef backdrop_palette_group;
 	MCColor backdrop_colour;
-	MCGImageRef backdrop_pattern;
+	MCPatternRef backdrop_pattern;
 	MCImage *backdrop_badge;
 	
 	MenuRef f_icon_menu;
@@ -299,12 +321,19 @@ public:
 	virtual void ungrabpointer();
 	
 	virtual const char *getdisplayname();
-	virtual uint2 getwidth(void);
-	virtual uint2 getheight(void);
 	virtual uint2 getmaxpoints(void);
 	virtual uint2 getvclass(void);
 	virtual uint2 getdepth(void);
-	virtual uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] refactored methods that return device coordinates
+	virtual uint16_t device_getwidth(void);
+	virtual uint16_t device_getheight(void);
+	virtual bool device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count);
+	virtual bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	virtual void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	virtual void device_querymouse(int2 &x, int2 &y);
+	virtual void device_setmouse(int2 x, int2 y);
+	virtual MCStack *device_getstackatpoint(int32_t x, int32_t y);
 	
 	virtual void openwindow(Window w, Boolean override);
 	virtual void closewindow(Window window);
@@ -327,7 +356,6 @@ public:
 	virtual bool lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride);
 	virtual void unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride);
 
-	virtual Boolean getwindowgeometry(Window w, MCRectangle &drect);
 	virtual Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
 	
 	virtual void setgraphicsexposures(Boolean on, MCStack *sptr);
@@ -349,12 +377,12 @@ public:
 	virtual void getvendorstring(MCExecPoint &ep);
 	virtual uint2 getpad();
 	virtual Window getroot();
-	virtual MCImageBitmap *snapshot(MCRectangle &r, uint4 window,
+	virtual MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window,
 	                           const char *displayname);
 
 	virtual void enablebackdrop(bool p_hard);
 	virtual void disablebackdrop(bool p_hard);
-	virtual void configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge);
+	virtual void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	virtual void assignbackdrop(Window_mode p_mode, Window p_window);
 	
 	virtual void hidemenu();
@@ -362,12 +390,9 @@ public:
 
 	virtual MCColor *getaccentcolors();
 
-	virtual void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 	virtual void expose();
 	virtual Boolean abortkey();
-	virtual void querymouse(int2 &x, int2 &y);
 	virtual uint2 querymods();
-	virtual void setmouse(int2 x, int2 y);
 	virtual Boolean getmouse(uint2 button, Boolean& r_abort);
 	virtual Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	virtual Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -401,10 +426,6 @@ public:
 
 	//
 	
-	virtual MCStack *getstackatpoint(int32_t x, int32_t y);
-	
-	//
-
 	// in macdcmac.cc  screen routines that are specfic to MAC platform
 	void getmods();
 	void setmods(int2 modifiers);
@@ -419,8 +440,6 @@ public:
 	               Boolean &abort, Boolean &reset);
 	void waitmessage(Window w, int event_type);
 	void activatewindow(Window window);
-	void MCRect2MacRect(const MCRectangle &mc, Rect &macR);
-	void MacRect2MCRect(const Rect &macR, MCRectangle &mcR);
 	void doredraw(EventRecord &event, bool p_update_called = false);
 
 

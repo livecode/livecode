@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "core.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // A utility class used to manage a stack of windows.
@@ -186,7 +188,12 @@ void MCScreenDC::handle_mouse_press(uint32_t p_time, uint32_t p_modifiers, int32
 	{
 		m_mouse_x = x;
 		m_mouse_y = y;
-		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
+
+		// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
+		MCGFloat t_scale;
+		t_scale = MCResGetDeviceScale();
+		
+		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 	}
 	
 	MCEventQueuePostMousePress((MCStack *)m_current_window, p_time, p_modifiers, p_state, p_button);
@@ -202,7 +209,12 @@ void MCScreenDC::handle_mouse_move(uint32_t p_time, uint32_t p_modifiers, int32_
 	
 	m_mouse_x = x;
 	m_mouse_y = y;
-	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
+
+	// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 }
 
 void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code)
@@ -270,7 +282,11 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 	t_touch -> y = p_y;
 	t_touch -> timestamp = p_timestamp;
 	
-	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x, p_y);
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	// IM-2013-08-02: [[ ResIndependence]] scale touch coords to user space
+	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x / t_scale, p_y / t_scale);
 	
 	if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
 	{
@@ -404,7 +420,7 @@ void MCScreenDC::setinputfocus(Window p_window)
 		focus_window(p_window);
 }
 
-void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 }
 
@@ -547,7 +563,7 @@ MCMobileBitmap *MCMobileBitmapCreate(uint32_t width, uint32_t height, bool mono)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::querymouse(int2 &x, int2 &y)
+void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	// These co-ords should be in screen co-ords, so adjust the view-based current co-ords
 	// by the view top-left.
@@ -692,7 +708,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 }
 
@@ -753,7 +769,7 @@ uint2 MCScreenDC::querymods()
 	return 0;
 }
 
-void MCScreenDC::setmouse(int2 x, int2 y)
+void MCScreenDC::device_setmouse(int2 x, int2 y)
 {
 }
 

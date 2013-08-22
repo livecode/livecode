@@ -441,7 +441,7 @@ void MCImage::crop(MCRectangle *newrect)
 
 	unlockbitmap(t_bitmap);
 
-	/* UNCHECKED */ setbitmap(t_cropimage);
+	/* UNCHECKED */ setbitmap(t_cropimage, 1.0);
 
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
@@ -485,8 +485,7 @@ void MCCalculateRotatedGeometry(uint32_t p_width, uint32_t p_height, int32_t p_a
 void MCImage::rotate_transform(int32_t p_angle)
 {
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
-	if (m_rep != nil)
-		/* UNCHECKED */ m_rep->GetGeometry(t_src_width, t_src_height);
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
 	
 	uint32_t t_trans_width = t_src_width;
 	uint32_t t_trans_height = t_src_height;
@@ -529,8 +528,7 @@ void MCImage::rotate_transform(int32_t p_angle)
 void MCImage::resize_transform()
 {
 	uint32_t t_src_width = rect.width, t_src_height = rect.height;
-	if (m_rep != nil)
-		/* UNCHECKED */ m_rep->GetGeometry(t_src_width, t_src_height);
+	/* UNCHECKED */ getsourcegeometry(t_src_width, t_src_height);
 
 	if (rect.width == t_src_width && rect.height == t_src_height)
 		m_has_transform = nil;
@@ -734,7 +732,7 @@ MCCursorRef MCImage::getcursor(bool p_is_default)
 	return cursor;
 }
 
-bool MCImage::createpattern(MCGImageRef &r_image)
+bool MCImage::createpattern(MCPatternRef &r_image)
 {
 	bool t_success = true;
 
@@ -742,6 +740,9 @@ bool MCImage::createpattern(MCGImageRef &r_image)
 	MCImageBitmap *t_blank = nil;
 
 	MCGImageRef t_image = nil;
+	
+	MCPatternRef t_pattern;
+	t_pattern = nil;
 
 	openimage();
 
@@ -770,15 +771,21 @@ bool MCImage::createpattern(MCGImageRef &r_image)
 		t_success = MCGImageCreateWithRaster(t_raster, t_image);
 	}
 
+	// IM-2013-08-14: [[ ResIndependence ]] Wrap image in MCPattern with scale factor
+	if (t_success)
+		t_success = MCPatternCreate(t_image, m_scale_factor, t_pattern);
+		
 	if (t_blank != nil)
 		MCImageFreeBitmap(t_blank);
 	else
 		unlockbitmap(t_bitmap);
 
-		closeimage();
-
+	closeimage();
+	
+	MCGImageRelease(t_image);
+	
 	if (t_success)
-		r_image = t_image;
+		r_image = t_pattern;
 
 	return t_success;
 }

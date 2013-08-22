@@ -69,6 +69,8 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 
 				t_image.has_transform = m_has_transform;
 				t_image.transform = m_transform;
+				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
+				t_image.scale_factor = m_scale_factor;
 
 				switch (resizequality)
 				{

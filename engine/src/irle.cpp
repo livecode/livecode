@@ -52,7 +52,7 @@ bool rle_true_encode(const uint4 *sptr, uint4 ssize, uint1 *&dptr, uint4 &dsize)
 			destptr[dsize++] = run | 0x80;
 			// pixels encoded as ARGB
 			uint8_t t_r, t_g, t_b, t_a;
-			MCGPixelUnpack(kMCGPixelFormatNative, pixel, t_r, t_g, t_b, t_a);
+			MCGPixelUnpackNative(pixel, t_r, t_g, t_b, t_a);
 			destptr[dsize++] = t_a;
 			destptr[dsize++] = t_r;
 			destptr[dsize++] = t_g;
@@ -69,7 +69,7 @@ bool rle_true_encode(const uint4 *sptr, uint4 ssize, uint1 *&dptr, uint4 &dsize)
 			{
 				// pixels encoded as ARGB
 				uint8_t t_r, t_g, t_b, t_a;
-				MCGPixelUnpack(kMCGPixelFormatNative, *sptr++, t_r, t_g, t_b, t_a);
+				MCGPixelUnpackNative(*sptr++, t_r, t_g, t_b, t_a);
 				destptr[dsize++] = t_a;
 				destptr[dsize++] = t_r;
 				destptr[dsize++] = t_g;
@@ -169,7 +169,7 @@ bool rle_true_decode(const uint8_t *sptr, uindex_t ssize, uint32_t *dptr, uindex
 		{
 			// pixels encoded as ARGB
 			uint32_t t_pixel;
-			t_pixel = MCGPixelPack(kMCGPixelFormatNative, sptr[1], sptr[2], sptr[3], sptr[0]);
+			t_pixel = MCGPixelPackNative(sptr[1], sptr[2], sptr[3], sptr[0]);
 			while (count--)
 				*dptr++ = t_pixel;
 		}
@@ -178,7 +178,7 @@ bool rle_true_decode(const uint8_t *sptr, uindex_t ssize, uint32_t *dptr, uindex
 			const uint8_t *t_src_ptr = sptr;
 			while (count--)
 			{
-				*dptr++ = MCGPixelPack(kMCGPixelFormatNative, t_src_ptr[1], t_src_ptr[2], t_src_ptr[3], t_src_ptr[0]);
+				*dptr++ = MCGPixelPackNative(t_src_ptr[1], t_src_ptr[2], t_src_ptr[3], t_src_ptr[0]);
 				t_src_ptr += 4;
 			}
 		}
@@ -411,7 +411,12 @@ bool MCImageCompressRLE(MCImageIndexedBitmap *p_indexed, MCImageCompressedBitmap
 				uindex_t t_mask_plane_stride = 0;
 				t_success = rle_split_planes(p_indexed, p_indexed->transparent_index, 1, t_mask_plane, t_mask_plane_stride);
 				if (t_success)
+				{
+					// IM-2013-07-23: Invert bits of mask (split plane will produce transparent == 1, opaque == 0 bitmap)
+					for (uint32_t i = 0; i < t_mask_plane_stride * p_indexed->height; i++)
+						t_mask_plane[i] ^= 0xFF;
 					t_success = rle_plane_encode(t_mask_plane, t_mask_plane_stride, p_indexed->height, t_compressed->mask, t_compressed->mask_size);
+				}
 				MCMemoryDeleteArray(t_mask_plane);
 			}
 		}
@@ -545,7 +550,7 @@ bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *
 				if (t_success)
 				{
 					uint32_t t_pixel;
-					t_pixel = MCGPixelPack(kMCGPixelFormatNative,
+					t_pixel = MCGPixelPackNative(
 										   p_compressed->colors[i].red >> 8,
 										   p_compressed->colors[i].green >> 8,
 										   p_compressed->colors[i].blue >> 8,
@@ -594,7 +599,7 @@ bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *
 						uint32_t t_pixel = 0;
 						if (t_value < p_compressed->color_count)
 						{
-							t_pixel = MCGPixelPack(kMCGPixelFormatNative,
+							t_pixel = MCGPixelPackNative(
 												   p_compressed->colors[t_value].red >> 8,
 												   p_compressed->colors[t_value].green >> 8,
 												   p_compressed->colors[t_value].blue >> 8,

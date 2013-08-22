@@ -1186,24 +1186,24 @@ void MCMutableImageRep::apply_stroke_style(MCGContextRef p_context, bool p_miter
 	MCGContextSetStrokeWidth(p_context, MClinesize == 0 ? 1 : MClinesize);
 }
 
-void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color)
+void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
 {
 	if (erasing)
 		MCGContextSetFillRGBAColor(p_context, 0, 0, 0, 0);
 	else if (p_pattern == nil)
 		MCGContextSetFillRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-		MCGContextSetFillPattern(p_context, p_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNearest);
+		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
 }
 
-void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCGImageRef p_pattern, const MCColor &p_color)
+void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
 {
 	if (erasing)
 		MCGContextSetStrokeRGBAColor(p_context, 0, 0, 0, 0);
 	else if (p_pattern == nil)
 		MCGContextSetStrokeRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
 	else
-		MCGContextSetStrokePattern(p_context, p_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNearest);
+		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
 }
 
 void MCMutableImageRep::fill_path(MCGPathRef p_path)

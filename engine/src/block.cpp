@@ -1192,7 +1192,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		{
 			if (IsMacLF() && !f->isautoarm())
 			{
-				MCGImageRef t_pattern;
+				MCPatternRef t_pattern;
 				int2 x, y;
 				MCColor fc, hc;
 				f->getforecolor(DI_FORE, False, True, fc, t_pattern, x, y, dc, f);

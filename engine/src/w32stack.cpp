@@ -52,6 +52,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "w32text.h"
 #include "w32dnd.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // MW-2011-09-14: [[ Redraw ]] If non-nil, this pixmap is used in the next
@@ -468,7 +470,7 @@ void MCStack::sethints()
 		SetWindowLongA((HWND)window->handle.window, 0, (LONG)sptr->getw()->handle.window);
 }
 
-MCRectangle MCStack::getwindowrect() const
+MCRectangle MCStack::device_getwindowrect() const
 {
 	if (window == DNULL)
 		return rect;
@@ -482,6 +484,11 @@ MCRectangle MCStack::getwindowrect() const
 	t_rect.height = wrect.bottom - wrect.top;
 
 	return t_rect;
+}
+
+static inline MCRectangle MCWinRectToMCRect(RECT p_rect)
+{
+	return MCRectangleMake(p_rect.left, p_rect.top, p_rect.right - p_rect.left, p_rect.bottom - p_rect.top);
 }
 
 void MCStack::setgeom()
@@ -502,21 +509,30 @@ void MCStack::setgeom()
 		return;
 	}
 
+	// IM-2013-08-08: [[ ResIndependence ]] Scale stack rect to device space
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+
 	uint32_t wstyle, exstyle;
 	getstyle(wstyle, exstyle);
-	RECT newrect = getwrect(rect, wstyle, exstyle);
+	RECT newrect = getwrect(t_device_rect, wstyle, exstyle);
 	RECT wrect;
 	GetWindowRect((HWND)window->handle.window, &wrect);
 	LONG cx = newrect.right - newrect.left;
 	LONG cy = newrect.bottom - newrect.top;
 	state &= ~CS_NEED_RESIZE;
-	if (wrect.right - wrect.left != cx || wrect.bottom - wrect.top != cy
-	        || newrect.left != wrect.left || newrect.top != wrect.top)
+
+	// IM-2013-08-08: [[ ResIndependence ]] Scale old window rect to user space for comparison
+	MCRectangle t_old_user_rect;
+	t_old_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(MCWinRectToMCRect(wrect)));
+
+	if (t_old_user_rect.x != rect.x || t_old_user_rect.y != rect.y
+	        || t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
 	{
 		state |= CS_NO_CONFIG;
 		MoveWindow((HWND)window->handle.window, newrect.left, newrect.top, cx, cy, True);
-		if (wrect.right - wrect.left != cx || wrect.bottom - wrect.top != cy)
-			resize(uint2(wrect.right - wrect.left), uint2(wrect.bottom - wrect.top));
+		if (t_old_user_rect.width != rect.width || t_old_user_rect.height != rect.height)
+			resize(t_old_user_rect.width, t_old_user_rect.height);
 		state &= ~CS_NO_CONFIG;
 	}
 }
@@ -630,11 +646,6 @@ void MCStack::redrawicon(void)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
 
 static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 {
@@ -1053,8 +1064,14 @@ void MCStack::updatewindow(MCRegionRef p_region)
 {
 	if (m_window_shape == nil || m_window_shape -> is_sharp)
 	{
-		InvalidateRgn((HWND)window -> handle . window, (HRGN)p_region, FALSE);
+		// IM-2013-08-08: [[ ResIndependence ]] Scale update region to device space
+		MCRegionRef t_device_region;
+		t_device_region = nil;
+		/* UNCHECKED */ MCRegionCreate(t_device_region);
+		/* UNCHECKED */ MCRegionSetRect(t_device_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
+		InvalidateRgn((HWND)window -> handle . window, (HRGN)t_device_region, FALSE);
 		UpdateWindow((HWND)window -> handle . window);
+		MCRegionDestroy(t_device_region);
 	}
 	else
 	{
@@ -1089,7 +1106,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		if (t_surface.Lock())
 		{
 			if (s_update_callback == nil)
-				redrawwindow(&t_surface, (MCRegionRef)p_region);
+				device_redrawwindow(&t_surface, (MCRegionRef)p_region);
 			else
 				s_update_callback(&t_surface, (MCRegionRef)p_region, s_update_context);
 
@@ -1104,7 +1121,8 @@ void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallba
 {
 	s_update_callback = p_callback;
 	s_update_context = p_context;
-	s_update_rect = MCRegionGetBoundingBox(p_region);
+	// IM-2013-08-08: [[ ResIndependence ]] Scale update region to device space
+	s_update_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region)));
 	updatewindow(p_region);
 	s_update_callback = nil;
 	s_update_context = nil;
@@ -1124,7 +1142,7 @@ void MCStack::onpaint(void)
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			redrawwindow(&t_surface, (MCRegionRef)t_update_region);
+			device_redrawwindow(&t_surface, (MCRegionRef)t_update_region);
 		else
 			s_update_callback(&t_surface, (MCRegionRef)t_update_region, s_update_context);
 

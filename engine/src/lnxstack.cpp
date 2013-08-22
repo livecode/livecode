@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxdc.h"
 #include "graphicscontext.h"
 
+#include "resolution.h"
+
 static uint2 calldepth;
 static uint2 nwait;
 
@@ -204,29 +206,41 @@ void MCStack::sethints()
 {
 	if (!opened || MCnoui || window == DNULL)
 		return;
+		
+	// IM-2013-08-12: [[ ResIndependence ]] Use device coordinates when setting WM hints
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
+	t_minwidth = minwidth * t_scale;
+	t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
+	t_minheight = minheight * t_scale;
+	t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
+	
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	
 	if (flags & F_RESIZABLE)
 	{
-		rect.width = MCU_max(minwidth, rect.width);
-		rect.width = MCU_min(maxwidth, rect.width);
-		rect.width = MCU_min(MCscreen->getwidth(), rect.width);
-		rect.height = MCU_max(minheight, rect.height);
-		rect.height = MCU_min(maxheight, rect.height);
-		rect.height = MCU_min(MCscreen->getheight(), rect.height);
+		t_device_rect.width = MCMin(t_maxwidth, MCMax(t_minwidth, (uint32_t)t_device_rect.width));
+		t_device_rect.height = MCMin(t_maxheight, MCMax(t_minheight, (uint32_t)t_device_rect.height));
+		
+		rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
 	}
 	if (opened)
 	{
 		XSizeHints hints;
 		if (flags & F_RESIZABLE )
 		{
-			hints.min_width = minwidth;
-			hints.min_height = minheight;
-			hints.max_width = MCU_min(maxwidth, MCscreen->getwidth());
-			hints.max_height = MCU_min(maxheight, MCscreen->getheight());
+			hints.min_width = t_minwidth;
+			hints.min_height = t_minheight;
+			hints.max_width = t_maxwidth;
+			hints.max_height = t_maxheight;
 		}
 		else
 		{
-			hints.min_width = hints.max_width = rect.width;
-			hints.min_height = hints.max_height = rect.height;
+			hints.min_width = hints.max_width = t_device_rect.width;
+			hints.min_height = hints.max_height = t_device_rect.height;
 		}
 		hints.width_inc = hints.height_inc = 1;
 		hints.win_gravity = StaticGravity;
@@ -305,7 +319,7 @@ void MCStack::sethints()
 	case WM_PALETTE:
 	case WM_DRAWER:
 		mwmhints.decorations |= MWM_DECOR_MENU;
-		if (mode != WM_PALETTE && rect.width > DECORATION_MINIMIZE_WIDTH)
+		if (mode != WM_PALETTE && t_device_rect.width > DECORATION_MINIMIZE_WIDTH)
 		//if (rect.width > DECORATION_MINIMIZE_WIDTH)
 		{
 			mwmhints.decorations |= MWM_DECOR_MINIMIZE;
@@ -457,11 +471,8 @@ void MCStack::destroywindowshape()
 	m_window_shape = nil;
 }
 
-MCRectangle MCStack::getwindowrect(void) const
+MCRectangle MCStack::device_getwindowrect(void) const
 {
-	if (window == DNULL)
-		return rect;
-
 	Window t_root, t_child, t_parent;
 	Window *t_children;
 	int32_t t_win_x, t_win_y, t_x_offset, t_y_offset;
@@ -490,6 +501,73 @@ MCRectangle MCStack::getwindowrect(void) const
 	return t_rect;
 }
 
+// IM-2013-08-12: [[ ResIndependence ]] factor out device-specific window-sizing code
+// set window rect to p_rect, returns old window rect
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	Window t_root, t_child;
+	int t_win_x, t_win_y;
+	unsigned int t_width, t_height, t_border_width, t_depth;
+	
+	XGetGeometry(MCdpy, window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
+
+	XTranslateCoordinates(MCdpy, window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
+	
+	MCRectangle t_old_rect;
+	t_old_rect = MCU_make_rect(t_win_x, t_win_y, t_width, t_height);
+	
+	if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
+	{
+		XSizeHints hints;
+		hints.x = p_rect.x;
+		hints.y = p_rect.y;
+		hints.width = p_rect.width;
+		hints.height = p_rect.height;
+		if (flags & F_RESIZABLE )
+		{
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
+			t_minwidth = minwidth * t_scale;
+			t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
+			t_minheight = minheight * t_scale;
+			t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
+			
+			hints.min_width = t_minwidth;
+			hints.min_height = t_minheight;
+			hints.max_width = t_maxwidth;
+			hints.max_height = t_maxheight;
+		}
+		else
+		{
+			hints.min_width = hints.max_width = p_rect.width;
+			hints.min_height = hints.max_height = p_rect.height;
+		}
+		hints.width_inc = hints.height_inc = 1;
+		hints.win_gravity = StaticGravity;
+		hints.flags = USSize | PMaxSize | PMinSize | PResizeInc | PWinGravity;
+		if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
+			hints.flags |= USPosition;
+		XSetWMNormalHints(MCdpy, window, &hints);
+	}
+	
+	if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED) && (t_win_x != p_rect.x || t_win_y != p_rect.y))
+	{
+		if (t_width != p_rect.width || t_height != p_rect.height)
+			XMoveResizeWindow(MCdpy, window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+		else
+			XMoveWindow(MCdpy, window, p_rect.x, p_rect.y);
+	}
+	else
+	{
+		if (t_width != p_rect.width || t_height != p_rect.height)
+			XResizeWindow(MCdpy, window, p_rect.width, p_rect.height);
+	}
+	
+	return t_old_rect;
+}
+
 void MCStack::setgeom()
 {
 	if (MCnoui || !opened)
@@ -506,60 +584,19 @@ void MCStack::setgeom()
 		return;
 	}
 
-	Window t_root, t_child;
-	int t_win_x, t_win_y;
-	unsigned int t_width, t_height, t_border_width, t_depth;
+	MCRectangle t_device_rect, t_old_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
 	
-	XGetGeometry(MCdpy, window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
-
-	XTranslateCoordinates(MCdpy, window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
-	
-	if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-	{
-		XSizeHints hints;
-		hints.x = rect.x;
-		hints.y = rect.y;
-		hints.width = rect.width;
-		hints.height = rect.height;
-		if (flags & F_RESIZABLE )
-		{
-			hints.min_width = minwidth;
-			hints.min_height = minheight;
-			hints.max_width = MCU_min(maxwidth, MCscreen->getwidth());
-			hints.max_height = MCU_min(maxheight, MCscreen->getheight());
-		}
-		else
-		{
-			hints.min_width = hints.max_width = rect.width;
-			hints.min_height = hints.max_height = rect.height;
-		}
-		hints.width_inc = hints.height_inc = 1;
-		hints.win_gravity = StaticGravity;
-		hints.flags = USSize | PMaxSize | PMinSize | PResizeInc | PWinGravity;
-		if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-			hints.flags |= USPosition;
-		XSetWMNormalHints(MCdpy, window, &hints);
-	}
-	
+	t_old_device_rect = device_setgeom(t_device_rect);
 	
 	state &= ~CS_NEED_RESIZE;
-	if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-	        && (t_win_x != rect.x || t_win_y != rect.y))
+	
+	if (t_old_device_rect.width != t_device_rect.width || t_old_device_rect.height != t_device_rect.height)
 	{
-		if (t_width != rect.width || t_height != rect.height)
-		{
-			XMoveResizeWindow(MCdpy, window, rect.x, rect.y, rect.width, rect.height);
-			resize(t_width, t_height);
-		}
-		else
-			XMoveWindow(MCdpy, window, rect.x, rect.y);
+		MCRectangle t_old_rect;
+		t_old_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_old_device_rect));
+		resize(t_old_rect.width, t_old_rect.height);
 	}
-	else
-		if (t_width != rect.width || t_height != rect.height)
-		{
-			XResizeWindow(MCdpy, window, rect.width, rect.height);
-			resize(t_width, t_height);
-		}
 		
 	state &= ~CS_ISOPENING;
 }
@@ -647,11 +684,6 @@ void MCBitmapClearRegion(MCBitmap *p_image, int32_t p_x, int32_t p_y, uint32_t p
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static inline MCGRectangle MCRectangleToMCGRectangle(const MCRectangle &p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
 
 static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
 {
@@ -875,6 +907,13 @@ public:
 
 void MCStack::updatewindow(MCRegionRef p_region)
 {
+	MCRegionRef t_device_region;
+	t_device_region = nil;
+	
+	// IM-2012-08-12: [[ ResIndependence ]] Scale update region to device coords
+	/* UNCHECKED */ MCRegionCreate(t_device_region);
+	/* UNCHECKED */ MCRegionSetRect(t_device_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
+	
 	MCRegionRef t_update_region;
 	t_update_region = nil;
 
@@ -891,13 +930,13 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	}
 
 	if (t_update_region != nil)
-		MCRegionUnion(t_update_region, t_update_region, p_region);
+		MCRegionUnion(t_update_region, t_update_region, t_device_region);
 	else
-		t_update_region = p_region;
+		t_update_region = t_device_region;
 
 	onexpose(t_update_region);
 
-	if (t_update_region != p_region)
+	if (t_update_region != t_device_region)
 		MCRegionDestroy(t_update_region);
 }
 
@@ -916,7 +955,7 @@ void MCStack::onexpose(MCRegionRef p_region)
 	if (t_surface.Lock())
 	{
 		if (s_update_callback == nil)
-			redrawwindow(&t_surface, p_region);
+			device_redrawwindow(&t_surface, p_region);
 		else
 			s_update_callback(&t_surface, p_region, s_update_context);
 			

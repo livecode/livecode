@@ -43,6 +43,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblandroidutil.h"
 #include "mblandroidjava.h"
 
+#include "graphics.h"
+#include "resolution.h"
+
 #include <jni.h>
 #include <pthread.h>
 #include <android/log.h>
@@ -104,6 +107,9 @@ static bool s_schedule_wakeup_was_broken = false;
 static co_yield_callback_t s_yield_callback = nil;
 static void *s_yield_callback_context = nil;
 
+// IM-2013-07-26: [[ ResIndependence ]] the user -> device resolution scale
+static MCGFloat s_android_device_scale = 1.0;
+
 // The bitmap containing the current visible state of the view
 static jobject s_android_bitmap = nil;
 static int s_android_bitmap_width = 0;
@@ -154,6 +160,15 @@ static bool revandroid_getAssetOffsetAndLength(JNIEnv *env, jobject object, cons
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-07-26: [[ ResIndependence ]] return the device scale - this is initialised
+// on screen open
+MCGFloat MCResGetDeviceScale(void)
+{
+	return s_android_device_scale;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 Boolean MCScreenDC::open(void)
 {
 	common_open();
@@ -161,6 +176,10 @@ Boolean MCScreenDC::open(void)
 	// We don't need to do anything to initialize the view, as that is done
 	// by the Java wrapper.
 
+	// IM-2013-07-26: [[ ResIndependence ]] Use the display metrics pixel density to
+	// scale drawing
+	MCAndroidEngineCall("getPixelDensity", "f", &s_android_device_scale);
+	
 	return True;
 }
 
@@ -186,12 +205,12 @@ void MCScreenDC::getvendorstring(MCExecPoint &ep)
 	ep . setsvalue("android");
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	return 320;
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	return 480;
 }
@@ -236,7 +255,7 @@ Window MCScreenDC::getroot()
 	return NULL;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *& r_displays, uint32_t &r_count)
 {
 	static MCDisplay s_display;
 	memset(&s_display, 0, sizeof(MCDisplay));
@@ -250,35 +269,36 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	MCAndroidEngineCall("getWorkareaAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.workarea.x = t_left;
-	s_display.workarea.y = t_top;
-	s_display.workarea.width = t_right - t_left;
-	s_display.workarea.height = t_bottom - t_top;
+	s_display.device_workarea.x = t_left;
+	s_display.device_workarea.y = t_top;
+	s_display.device_workarea.width = t_right - t_left;
+	s_display.device_workarea.height = t_bottom - t_top;
 
 	MCAndroidEngineCall("getViewportAsString", "s", &t_rect_string);
 	MCU_stoi2x4(t_rect_string, t_left, t_top, t_right, t_bottom);
 
-	s_display.viewport.x = t_left;
-	s_display.viewport.y = t_top;
-	s_display.viewport.width = t_right - t_left;
-	s_display.viewport.height = t_bottom - t_top;
+	s_display.device_viewport.x = t_left;
+	s_display.device_viewport.y = t_top;
+	s_display.device_viewport.width = t_right - t_left;
+	s_display.device_viewport.height = t_bottom - t_top;
 	if (p_effective)
-		s_display.viewport.height -= s_current_keyboard_height;
+		s_display.device_viewport.height -= s_current_keyboard_height;
 
 	MCLog("getdisplays: workarea(%d,%d,%d,%d) viewport(%d,%d,%d,%d)",
-		s_display.workarea.x, s_display.workarea.y, s_display.workarea.width, s_display.workarea.height,
-		s_display.viewport.x, s_display.viewport.y, s_display.viewport.width, s_display.viewport.height);
+		s_display.device_workarea.x, s_display.device_workarea.y, s_display.device_workarea.width, s_display.device_workarea.height,
+		s_display.device_viewport.x, s_display.device_viewport.y, s_display.device_viewport.width, s_display.device_viewport.height);
 
-	p_displays = &s_display;
-	return 1;
+	r_displays = &s_display;
+	r_count = 1;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {
 	drect = android_view_get_bounds();
-	return True;
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -322,7 +342,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, MCGFloat p_scale, uint4 window, const char *displayname)
 {
 	return NULL;
 }
@@ -486,18 +506,6 @@ static MCRectangle android_view_get_bounds(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake(p_rect.x, p_rect.y, p_rect.width, p_rect.height);
-}
-
-static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
-{
-	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
-}
-
-//////////
-
 class MCAndroidStackSurface: public MCStackSurface
 {
 	MCRegionRef m_region;
@@ -631,7 +639,7 @@ public:
 		t_success = MCRegionCreate(t_region);
 		
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
 		
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -773,7 +781,7 @@ public:
 		t_success = MCRegionCreate(t_region);
 		
 		if (t_success)
-			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
 		
 		if (t_success)
 			t_success = LockGraphics(t_region, t_context);
@@ -867,7 +875,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 		// Note that as android regions are just rects at the moment, we cheat.
 		MCRectangle t_rect;
-		t_rect = MCRegionGetBoundingBox(p_region);
+		t_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region)));
 
 		MCRegionRef t_actual_region;
 		MCRegionCreate(t_actual_region);
@@ -876,7 +884,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		MCAndroidStackSurface t_surface(t_actual_region);
 		if (t_surface.Lock())
 		{
-			redrawwindow(&t_surface, t_actual_region);
+			device_redrawwindow(&t_surface, t_actual_region);
 			t_surface.Unlock();
 		}
 
@@ -910,7 +918,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		
 		if (t_surface.Lock())
 		{
-			redrawwindow(&t_surface, t_dirty_rgn);
+			device_redrawwindow(&t_surface, t_dirty_rgn);
 			t_surface.Unlock();
 		}
 		

@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 
 #include "graphicscontext.h"
+#include "resolution.h"
 
 uint2 MCScreenDC::ink_table_c[NUM_INKS] =
     {
@@ -349,7 +350,7 @@ void MCScreenDC::ungrabpointer()
 	grabbed = False;
 }
 
-uint2 MCScreenDC::getwidth()
+uint16_t MCScreenDC::device_getwidth(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -359,7 +360,7 @@ uint2 MCScreenDC::getwidth()
 	return swidth;
 }
 
-uint2 MCScreenDC::getheight()
+uint16_t MCScreenDC::device_getheight(void)
 {
 	GDHandle mainScreen = GetMainDevice();
 	HLock((Handle)mainScreen);
@@ -770,10 +771,10 @@ void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_bits, uint4 p_stride)
 	UnlockPixels(t_src_pixmap);
 }
 
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
-		return False;
+		return false;
 
 
 	RgnHandle r = NewRgn();
@@ -781,11 +782,11 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 	Rect windowRect;
 	GetRegionBounds(r, &windowRect);
 	DisposeRgn(r);
-	MacRect2MCRect(windowRect, drect);
+	drect = MCMacRectToMCRect(windowRect);
 	if (drect.height == 0)
 		drect.x = drect.y = -1; // windowshaded, so don't move it
 
-	return True;
+	return true;
 }
 
 Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
@@ -963,7 +964,7 @@ void MCScreenDC::enablebackdrop(bool p_hard)
 	if (!t_error)
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 		
 		MCstacks -> refresh();
@@ -1003,7 +1004,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 	else
 	{
 		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 		updatebackdrop(t_rect);
 	}
 }
@@ -1019,7 +1020,7 @@ bool MCScreenDC::initialisebackdrop(void)
 	t_error = false;
 
 	Rect t_bounds;
-	SetRect(&t_bounds, 0, 0, getwidth(), getheight());
+	SetRect(&t_bounds, 0, 0, device_getwidth(), device_getheight());
 	t_error = CreateNewWindow(kPlainWindowClass, kWindowNoAttributes, &t_bounds, &backdrop_window) != noErr;
 	if (!t_error)
 		t_error = CreateWindowGroup(kWindowGroupAttrLayerTogether | kWindowGroupAttrSelectAsLayer, &backdrop_group);
@@ -1090,7 +1091,7 @@ void MCScreenDC::finalisebackdrop(void)
 	}
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 	if (backdrop_badge != p_badge || backdrop_pattern != p_pattern || backdrop_colour . red != p_colour . red || backdrop_colour . green != p_colour . green || backdrop_colour . blue != p_colour . blue)
 	{
@@ -1103,7 +1104,7 @@ void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_patter
 		if (backdrop_active || backdrop_hard)
 		{
 			MCRectangle t_rect;
-			MCU_set_rect(t_rect, 0, 0, getwidth(), getheight());
+			MCU_set_rect(t_rect, 0, 0, device_getwidth(), device_getheight());
 	
 			updatebackdrop(t_rect);
 		}

@@ -35,6 +35,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxcontext.h"
 #include "osxtheme.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  REFACTORED FROM STACKLST.CPP
@@ -490,6 +492,13 @@ void MCButton::macopenmenu(void)
 			break;
 	}
 	
+	// IM-2013-08-16: [[ ResIndependence ]] scale menu location to device coords
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	tmenux = tmenux * t_scale;
+	tmenuy = tmenuy * t_scale;
+	
 	// MW-2007-12-11: [[ Bug 5670 ]] Make sure we notify things higher up in the call chain
 	//   that the mdown actually did result in a menu being popped up!
 	extern bool MCosxmenupoppedup;
@@ -722,11 +731,11 @@ void MCMacScaleImageBox(void *p_src_ptr, uint4 p_src_stride, void *p_dst_ptr, ui
 //  MISC 
 //
 
-bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageRef &r_pattern)
+bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern)
 {
 	bool t_success = true;
 	
-	static MCGImageRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
+	static MCPatternRef s_patterns[8] = {nil, nil, nil, nil, nil, nil, nil, nil};
 	
 	ThemeBrush t_themebrush = 0;
 	uint32_t t_index = 0;
@@ -820,6 +829,9 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageR
 	t_bits = GetPixBaseAddr(t_pixmap);
 	t_stride = GetPixRowBytes(t_pixmap);
 	
+	MCGImageRef t_image;
+	t_image = nil;
+	
 	MCGRaster t_raster;
 	t_raster.width = t_bounds.right - t_bounds.left;
 	t_raster.height = t_bounds.bottom - t_bounds.top;
@@ -827,8 +839,14 @@ bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageR
 	t_raster.stride = t_stride;
 	t_raster.format = kMCGRasterFormat_ARGB;
 	
-	t_success = MCGImageCreateWithRaster(t_raster, r_pattern);
+	t_success = MCGImageCreateWithRaster(t_raster, t_image);
 
+	// IM-2013-08-14: [[ ResIndependence ]] create MCPattern wrapper
+	if (t_success)
+		t_success = MCPatternCreate(t_image, 1.0, r_pattern);
+
+	MCGImageRelease(t_image);
+	
 	if (t_success)
 		s_patterns[t_index] = r_pattern;
 	

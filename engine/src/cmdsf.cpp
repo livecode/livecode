@@ -55,6 +55,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#include "resolution.h"
+
 MCClose::~MCClose()
 {
 	delete fname;
@@ -916,7 +918,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
@@ -933,7 +935,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, sdisp);
+			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
 			if (t_bitmap == nil)
 			{
 				delete sdisp;
@@ -1012,9 +1014,20 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	bool t_image_locked = false;
 	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap, false);
-		t_image_locked = true;
-		t_dither = !optr->getflag(F_DONT_DITHER);
+		MCImage *t_img = static_cast<MCImage*>(optr);
+		
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (t_img->getscalefactor() == 1.0)
+		{
+			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
+		}
+		else
+		{
+			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
+		}
+		t_dither = !t_img->getflag(F_DONT_DITHER);
 	}
 	else
 	{
@@ -1567,6 +1580,10 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
+		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+		MCGFloat t_image_scale;
+		t_image_scale = 1.0;
+		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -1638,7 +1655,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1653,7 +1670,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, disp);
+			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
 
 			delete disp;
 		}
@@ -1667,8 +1684,9 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			MCImageBitmapCheckTransparency(t_bitmap);
 
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
+			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
 			if (t_bitmap != nil)
-				iptr->setbitmap(t_bitmap, true);
+				iptr->setbitmap(t_bitmap, t_image_scale, true);
 			MCImageFreeBitmap(t_bitmap);
 		}
 	

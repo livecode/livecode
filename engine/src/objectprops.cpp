@@ -415,11 +415,11 @@ Exec_stat MCObject::getprop(uint4 parid, Properties which, MCExecPoint &ep, Bool
 	{
 		uint2 i;
 		if (getpindex(which - P_FORE_PATTERN, i))
-			if (patternids[i] < PI_END && patternids[i] > PI_PATTERNS)
-				ep.setint(patternids[i] - PI_PATTERNS);
+			if (patterns[i].id < PI_END && patterns[i].id > PI_PATTERNS)
+				ep.setint(patterns[i].id - PI_PATTERNS);
 
 			else
-				ep.setint(patternids[i]);
+				ep.setint(patterns[i].id);
 		else
 			if (effective && parent != NULL)
 				return parent->getprop(parid, which, ep, effective);

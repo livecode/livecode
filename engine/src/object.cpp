@@ -64,6 +64,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphicscontext.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 uint1 MCObject::dashlist[2] = {4, 4};
@@ -101,7 +103,6 @@ MCObject::MCObject()
 	colors = NULL;
 	colornames = NULL;
 	npatterns = 0;
-	patternids = NULL;
 	patterns = NULL;
 	opened = 0;
 	script = NULL;
@@ -182,15 +183,13 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	npatterns = oref.npatterns;
 	if (npatterns > 0)
 	{
-		patternids = new uint4[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 		uint2 i;
 		for (i = 0 ; i < npatterns ; i++)
-			patternids[i] = oref.patternids[i];
-		/* UNCHECKED */ patterns = new MCGImageRef[npatterns];
+			patterns[i].id = oref.patterns[i].id;
 	}
 	else
 	{
-		patternids = NULL;
 		patterns = NULL;
 	}
 	opened = 0;
@@ -275,8 +274,7 @@ MCObject::~MCObject()
 			delete colornames[ncolors];
 		delete colornames;
 	}
-	delete patternids;
-	delete patterns;
+	MCMemoryDeleteArray(patterns);
 	delete script;
 	deletepropsets();
 	delete tooltip;
@@ -338,7 +336,7 @@ void MCObject::open()
 		MCscreen->alloccolor(colors[i]);
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
-		patterns[i] = MCpatternlist->allocpat(patternids[i], this);
+		patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 }
 
 void MCObject::close()
@@ -350,7 +348,7 @@ void MCObject::close()
 		closemenu(False, True);
 
 	for (uint32_t i = 0 ; i < npatterns ; i++)
-		MCpatternlist->freepat(patterns[i]);
+		MCpatternlist->freepat(patterns[i].pattern);
 
 	// MW-2012-02-14: [[ FontRefs ]] Unmap the object's font.
 	unmapfont();
@@ -1221,7 +1219,7 @@ Boolean MCObject::resizeparent()
 }
 
 Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
-                               MCColor &c, MCGImageRef &r_pattern,
+                               MCColor &c, MCPatternRef &r_pattern,
                                int2 &x, int2 &y, MCDC *dc, MCObject *o)
 {
 	uint2 i;
@@ -1236,7 +1234,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 		else
 			if (getpindex(di, i))
 			{
-				r_pattern = patterns[i];
+				r_pattern = patterns[i].pattern;
 
 				if (gettype() == CT_STACK)
 					x = y = 0;
@@ -1284,7 +1282,7 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 #ifdef _MACOSX
 		if (IsMacLFAM() && dc -> gettype() != CONTEXT_TYPE_PRINTER)
 		{
-			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCGImageRef &r_pattern);
+			extern bool MCMacThemeGetBackgroundPattern(Window_mode p_mode, bool p_active, MCPatternRef &r_pattern);
 			x = 0;
 			y = 0;
 			
@@ -1336,7 +1334,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 
 	MCColor color;
-	MCGImageRef t_pattern = nil;
+	MCPatternRef t_pattern = nil;
 	int2 x, y;
 	if (getforecolor(idi, rev, hilite, color, t_pattern, x, y, dc, this))
 	{
@@ -1406,7 +1404,7 @@ Boolean MCObject::setcolor(uint2 index, const MCString &data)
 		{
 			if (opened)
 
-				MCpatternlist->freepat(patterns[j]);
+				MCpatternlist->freepat(patterns[j].pattern);
 			destroypindex(index, j);
 		}
 		if (opened)
@@ -1437,7 +1435,7 @@ Boolean MCObject::setcolors(const MCString &data)
 			if (getpindex(index, j))
 			{
 				if (opened)
-					MCpatternlist->freepat(patterns[j]);
+					MCpatternlist->freepat(patterns[j].pattern);
 				destroypindex(index, j);
 			}
 		}
@@ -1481,7 +1479,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 		if (getpindex(newpixmap, i))
 		{
 			if (t_isopened)
-				MCpatternlist->freepat(patterns[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 			destroypindex(newpixmap, i);
 		}
 	}
@@ -1498,12 +1496,12 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 			i = createpindex(newpixmap);
 		else
 			if (t_isopened)
-				MCpatternlist->freepat(patterns[i]);
+				MCpatternlist->freepat(patterns[i].pattern);
 		if (newid < PI_PATTERNS)
 			newid += PI_PATTERNS;
-		patternids[i] = newid;
+		patterns[i].id = newid;
 		if (t_isopened)
-			patterns[i] = MCpatternlist->allocpat(patternids[i], this);
+			patterns[i].pattern = MCpatternlist->allocpat(patterns[i].id, this);
 		if (getcindex(newpixmap, i))
 			destroycindex(newpixmap, i);
 		}
@@ -1621,11 +1619,9 @@ Boolean MCObject::getpindex(uint2 di, uint2 &i)
 
 uint2 MCObject::createpindex(uint2 di)
 {
-	uint4 *oldpatternids =patternids;
-	MCGImageRef *oldpatterns = patterns;
+	MCPatternInfo *oldpatterns = patterns;
 	npatterns++;
-	patternids = new uint4[npatterns];
-	patterns = new MCGImageRef[npatterns];
+	/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 p = 0;
@@ -1640,15 +1636,11 @@ uint2 MCObject::createpindex(uint2 di)
 		}
 		else
 			if (dflags & m)
-			{
-				patternids[p] = oldpatternids[op];
 				patterns[p++] = oldpatterns[op++];
-			}
 		i++;
 		m <<= 1;
 	}
-	delete oldpatternids;
-	delete oldpatterns;
+	MCMemoryDeleteArray(oldpatterns);
 	return ri;
 }
 
@@ -1657,7 +1649,6 @@ void MCObject::destroypindex(uint2 di, uint2 i)
 	npatterns--;
 	while (i < npatterns)
 	{
-		patternids[i] = patternids[i + 1];
 		patterns[i] = patterns[i + 1];
 		i++;
 	}
@@ -2574,7 +2565,7 @@ void MCObject::alloccolors()
 		MCscreen->alloccolor(maccolors[i]);
 }
 
-MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, bool p_with_effects)
+MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_size, MCGFloat p_scale_factor, bool p_with_effects)
 {
 	Chunk_term t_type;
 	t_type = gettype();
@@ -2616,20 +2607,21 @@ MCImageBitmap *MCObject::snapshot(const MCRectangle *p_clip, const MCPoint *p_si
 	}
 
 	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ MCImageBitmapCreate(t_context_width, t_context_height, t_bitmap);
+	/* UNCHECKED */ MCImageBitmapCreate(ceil(t_context_width * p_scale_factor), ceil(t_context_height * p_scale_factor), t_bitmap);
 	MCImageBitmapClear(t_bitmap);
 
 	MCGContextRef t_gcontext = nil;
 	/* UNCHECKED */ MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_gcontext);
-	///* UNCHECKED */ MCGContextCreateWithRaster(t_raster, t_gcontext);
-	///* UNCHECKED */ MCGContextCreate(t_context_width, t_context_height, true, t_gcontext);
 
+	// IM-2013-07-24: [[ ResIndependence ]] take snapshot at specified scale, rather than device scale
+	MCGContextScaleCTM(t_gcontext, p_scale_factor, p_scale_factor);
+	
 	MCGAffineTransform t_transform = MCGAffineTransformMakeTranslation(-r.x, -r.y);
 	if (p_size != nil)
 		t_transform = MCGAffineTransformScale(t_transform, p_size->x / (float)r.width, p_size->y / (float)r.height);
 
 	MCGContextConcatCTM(t_gcontext, t_transform);
-
+	
 	MCContext *t_context = new MCGraphicsContext(t_gcontext);
 	t_context -> setclip(r);
 
@@ -2805,11 +2797,10 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	npatterns &= 0x0F;
 	if (npatterns > 0)
 	{
-		patternids = new uint4[npatterns];
+		/* UNCHECKED */ MCMemoryNewArray(npatterns, patterns);
 		for (i = 0 ; i < npatterns ; i++)
-			if ((stat = IO_read_uint4(&patternids[i], stream)) != IO_NORMAL)
+			if ((stat = IO_read_uint4(&patterns[i].id, stream)) != IO_NORMAL)
 				return stat;
-		patterns = new MCGImageRef[npatterns];
 	}
 	if ((stat = IO_read_int2(&rect.x, stream)) != IO_NORMAL)
 		return stat;
@@ -3096,7 +3087,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(addflags, stream)) != IO_NORMAL)
 		return stat;
 	for (i = 0 ; i < npatterns ; i++)
-		if ((stat = IO_write_uint4(patternids[i], stream)) != IO_NORMAL)
+		if ((stat = IO_write_uint4(patterns[i].id, stream)) != IO_NORMAL)
 			return stat;
 	// MW-2012-02-22; [[ NoScrollSave ]] Adjust the rect by the current group offset.
 	if ((stat = IO_write_int2(rect.x + MCgroupedobjectoffset . x, stream)) != IO_NORMAL)
@@ -3760,11 +3751,7 @@ struct object_mask_info
 	uint32_t stride;
 	
 	// This is freed after processing.
-	struct
-	{
-		uint8_t *data;
-		uint32_t stride;
-	} temp_bits;
+	MCImageBitmap *temp_bitmap;
 };
 
 // This method fills a scanline for comparison from a soft mask.
@@ -3852,39 +3839,6 @@ static MCRectangle compute_objectshape_rect(MCObjectShape& p_shape)
 	return p_shape . bounds;
 }
 
-static bool compute_objectshape_copycontextmask(MCImageBitmap *p_bitmap, MCRectangle& p_rect, uint32_t p_threshold, uint8_t *&r_mask_bits, uint32_t &r_mask_stride)
-{
-	uint8_t *t_mask_bits = nil;
-	uint32_t t_mask_stride = (p_rect.width + 7) / 8;
-	if (!MCMemoryAllocate(t_mask_stride * p_rect.height, t_mask_bits))
-		return false;
-
-	MCMemoryClear(t_mask_bits, t_mask_stride * p_rect.height);
-
-	void *t_src_ptr;
-	uint4 t_src_stride;
-	t_src_ptr = p_bitmap -> data;
-	t_src_stride = p_bitmap -> stride;
-	
-	uint8_t *t_bits_ptr;
-	t_bits_ptr = t_mask_bits;
-
-	for(uint4 y = p_rect . height; y > 0; --y, t_bits_ptr += t_mask_stride, t_src_ptr = (uint8_t *)t_src_ptr + t_src_stride)
-	{
-		uint1 t_mask = 0x80;
-		for(uint4 x = 0; x < p_rect . width; ++x)
-		{
-			if ((((uint4 *)t_src_ptr)[x] >> 24) >= p_threshold)
-				t_bits_ptr[x >> 3] |= t_mask;
-			t_mask = t_mask >> 1;
-			if (t_mask == 0)
-				t_mask = 0x80;
-		}
-	}
-	
-	return true;
-}
-
 // This method computes the mask details for a given shape, rasterizing the object
 // if necessary in the process.
 static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape, MCRectangle& p_rect, uint32_t p_threshold, object_mask_info& r_mask)
@@ -3955,17 +3909,15 @@ static void compute_objectshape_mask(MCObject *p_object, MCObjectShape& p_shape,
 	delete t_gfxcontext;
 	MCGContextRelease(t_context);
 
-	// Fetch the context's mask.
-	/* UNCHECKED */ compute_objectshape_copycontextmask(t_snapshot, p_rect, p_threshold, r_mask . temp_bits . data, r_mask . temp_bits . stride);
-
+	// IM-2013-08-15: [[ ResIndependence ]] Use bitmap as soft mask instead of extracting sharp mask
+	r_mask . temp_bitmap = t_snapshot;
+	
 	// Now set up the mask structure.
-	r_mask . fill = compute_objectshapescanline_sharp;
-	r_mask . bits = r_mask . temp_bits . data;
-	r_mask . stride = r_mask . temp_bits . stride;
+	r_mask . fill = compute_objectshapescanline_soft;
+	r_mask . bits = r_mask . temp_bitmap -> data;
+	r_mask . stride = r_mask . temp_bitmap -> stride;
 	r_mask . width = p_rect . width;
 	r_mask . offset = 0;
-	
-	MCImageFreeBitmap(t_snapshot);
 	
 	return;
 }
@@ -4068,8 +4020,8 @@ bool MCObject::intersects(MCObject *p_other, uint32_t p_threshold)
 		MCMemoryDeleteArray(t_other_scanline);
 		
 		// Free the temporary masks that were generated (if any).
-		MCMemoryDeallocate(t_this_mask . temp_bits . data);
-		MCMemoryDeallocate(t_other_mask . temp_bits . data);
+		MCImageFreeBitmap(t_this_mask . temp_bitmap);
+		MCImageFreeBitmap(t_other_mask . temp_bitmap);
 	}
 	
 	p_other -> unlockshape(t_other_shape);

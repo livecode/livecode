@@ -39,6 +39,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #define IMAGE_EXTRA_CONTROLCOLORS (1 << 0)
@@ -67,6 +69,7 @@ MCImage::MCImage()
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -89,6 +92,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_transformed_bitmap = nil;
 	m_image_opened = false;
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	m_have_control_colors = false;
 	m_control_colors = nil;
@@ -103,7 +107,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	{
 		MCImageBitmap *t_bitmap = nil;
 		/* UNCHECKED */static_cast<MCMutableImageRep*>(iref.m_rep)->copy_selection(t_bitmap);
-		setbitmap(t_bitmap);
+		setbitmap(t_bitmap, 1.0);
 		MCImageFreeBitmap(t_bitmap);
 		if (static_cast<MCMutableImageRep*>(iref.m_rep)->has_selection())
 		{
@@ -116,7 +120,10 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 		xhot = iref.xhot;
 		yhot = iref.yhot;
 		if (iref . m_rep != nil)
+		{
 			m_rep = iref . m_rep->Retain();
+			m_scale_factor = iref.m_scale_factor;
+		}
 	}
 
 	if (iref.flags & F_HAS_FILENAME)
@@ -549,12 +556,15 @@ void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_ma
 		uint32_t *t_dst_row = (uint32_t*)t_dst_ptr;
 		for (uindex_t x = 0; x < t_width; x++)
 		{
-			uint32_t t_alpha = *t_src_row++;
+			uint8_t t_r, t_g, t_b, t_alpha;
+			MCGPixelUnpackNative(*t_dst_row, t_r, t_g, t_b, t_alpha);
+			
+			t_alpha = *t_src_row++;
+			
 			// with maskdata, nonzero is fully opaque
 			if (!p_is_alpha && t_alpha > 0)
 				t_alpha = 0xFF;
-			uint32_t t_pixel = (*t_dst_row & 0x00FFFFFF) | (t_alpha << 24);
-			*t_dst_row++ = t_pixel;
+			*t_dst_row++ = MCGPixelPackNative(t_r, t_g, t_b, t_alpha);
 		}
 		t_src_ptr += t_mask_stride;
 		t_dst_ptr += p_bitmap->stride;
@@ -649,8 +659,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_FORMATTED_HEIGHT:
 		{
 			uindex_t t_width = 0, t_height = 0;
-			if (m_rep != nil)
-				m_rep->GetGeometry(t_width, t_height);
+			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 			ep.setint(t_height);
 		}
@@ -658,8 +667,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 	case P_FORMATTED_WIDTH:
 		{
 			uindex_t t_width = 0, t_height = 0;
-			if (m_rep != nil)
-				m_rep->GetGeometry(t_width, t_height);
+			/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 			ep.setint(t_width);
 		}
@@ -716,7 +724,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap, false);
+					t_success = copybitmap(1.0, false, t_bitmap);
 					if (t_success)
 					{
 						MCMemoryCopy(t_data_ptr, t_bitmap->data, t_data_size);
@@ -724,12 +732,12 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 						while (t_pixel_count--)
 						{
 							uint8_t t_r, t_g, t_b, t_a;
-							MCGPixelUnpack(kMCGPixelFormatNative, *t_data_ptr, t_r, t_g, t_b, t_a);
+							MCGPixelUnpackNative(*t_data_ptr, t_r, t_g, t_b, t_a);
 							*t_data_ptr++ = MCGPixelPack(kMCGPixelFormatBGRA, t_r, t_g, t_b, t_a);
 						}
 #endif
 					}
-					unlockbitmap(t_bitmap);
+					MCImageFreeBitmap(t_bitmap);
 					
 					closeimage();
 				}
@@ -759,7 +767,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 					
 					MCImageBitmap *t_bitmap = nil;
 					
-					t_success = lockbitmap(t_bitmap, false);
+					t_success = copybitmap(1.0, true, t_bitmap);
 					if (t_success)
 					{
 						uint8_t *t_src_ptr = (uint8_t*)t_bitmap->data;
@@ -777,7 +785,7 @@ Exec_stat MCImage::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 							t_src_ptr += t_bitmap->stride;
 						}
 					}
-					unlockbitmap(t_bitmap);
+					MCImageFreeBitmap(t_bitmap);
 					
 					closeimage();
 				}
@@ -1045,7 +1053,7 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 					if (t_compressed != nil)
 						t_success = setcompressedbitmap(t_compressed);
 					else if (t_bitmap != nil)
-						t_success = setbitmap(t_bitmap);
+						t_success = setbitmap(t_bitmap, 1.0);
 				}
 
 				MCImageFreeBitmap(t_bitmap);
@@ -1070,17 +1078,13 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, MCGPixelPack(kMCGPixelFormatNative, 0, 0, 0, 255)); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
@@ -1102,13 +1106,13 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 						g = *t_src_row++;
 						b = *t_src_row++;
 
-						*t_dst_row++ = MCGPixelPack(kMCGPixelFormatNative, r, g, b, 255);
+						*t_dst_row++ = MCGPixelPackNative(r, g, b, 255);
 					}
 					t_src_ptr += t_stride;
 					t_dst_ptr += t_copy->stride;
 				}
 
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1125,23 +1129,19 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, 0xFF000000); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), false);
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1158,23 +1158,19 @@ Exec_stat MCImage::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 			MCImageBitmap *t_copy = nil;
 			if (m_rep != nil)
 			{
-				MCImageBitmap *t_bitmap = nil;
-				t_success = lockbitmap(t_bitmap, false);
-				if (t_success)
-					t_success = MCImageCopyBitmap(t_bitmap, t_copy);
-				unlockbitmap(t_bitmap);
+				t_success = copybitmap(1.0, false, t_copy);
 			}
 			else
 			{
 				t_success = MCImageBitmapCreate(rect.width, rect.height, t_copy);
 				if (t_success)
-					MCImageBitmapSet(t_copy, 0xFF000000); // set to opaque black
+					MCImageBitmapSet(t_copy, MCGPixelPackNative(0, 0, 0, 255)); // set to opaque black
 			}
 
 			if (t_success)
 			{
 				MCImageSetMask(t_copy, (uint8_t*)data.getstring(), data.getlength(), true);
-				setbitmap(t_copy);
+				setbitmap(t_copy, 1.0);
 			}
 
 			MCImageFreeBitmap(t_copy);
@@ -1355,6 +1351,14 @@ bool MCImage::lockshape(MCObjectShape& r_shape)
 		r_shape . bounds = getrect();
 		r_shape . rectangle = r_shape . bounds;
 		unlockbitmap(t_bitmap);
+		return true;
+	}
+	
+	// IM-2013-08-15: [[ ResIndependence ]] soft-mask doesn't work with scaled images so for now use the complex mask type
+	if (m_scale_factor != 1.0)
+	{
+		r_shape . type = kMCObjectShapeComplex;
+		r_shape . bounds = getrect();
 		return true;
 	}
 	else
@@ -1924,8 +1928,7 @@ void MCImage::apply_transform()
 {
 	uindex_t t_width = rect.width;
 	uindex_t t_height = rect.height;
-	if (m_rep != nil)
-		m_rep->GetGeometry(t_width, t_height);
+	/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 
 	if (angle != 0)
 		rotate_transform(angle);
@@ -2030,7 +2033,7 @@ void MCImage::finishediting()
 
 	t_success = t_rep->LockImageFrame(0, false, t_frame);
 	if (t_success)
-		t_success = setbitmap(t_frame->image);
+		t_success = setbitmap(t_frame->image, 1.0);
 	t_rep->UnlockImageFrame(0, t_frame);
 
 	/* UNCHECKED */ MCAssert(t_success);
@@ -2053,6 +2056,7 @@ void MCImage::setrep(MCImageRep *p_rep)
 	m_rep = t_rep;
 
 	m_has_transform = false;
+	m_scale_factor = 1.0;
 
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
@@ -2074,13 +2078,67 @@ bool MCImage::setfilename(const char *p_filename)
 		return true;
 	}
 
+	const char *t_src_filename;
+	t_src_filename = nil;
+	
 	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	t_success = MCCStringClone(p_filename, t_filename);
+	// get list of matching scaled images
+	MCImageScaledFile *t_scaled_files;
+	t_scaled_files = nil;
+	uint32_t t_scaled_file_count;
+	t_scaled_file_count = 0;
+	
+	MCGFloat t_scale;
+	t_scale = 1.0;
+	
+	// IM-2013-07-30: [[ ResIndependence ]] search for set of density-mapped files matching given filename
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+		t_success = MCImageGetScaledFiles(p_filename, getstack(), t_scaled_files, t_scaled_file_count);
+	
+	if (t_success)
+	{
+		if (t_scaled_file_count == 0)
+		{
+			// can't find scaled files, so revert to given filename
+			t_src_filename = p_filename;
+		}
+		else
+		{
+			// use image with lowest res higher than the device scale (or highest res if all are lower)
+			MCGFloat t_device_scale;
+			t_device_scale = MCResGetDeviceScale();
+			
+			const char *t_scaled_filename;
+			t_scaled_filename = nil;
+			
+			// set scale & filename to first scaled file in list
+			t_scale = t_scaled_files[0].scale;
+			t_scaled_filename = t_scaled_files[0].filename;
+			
+			for (uint32_t i = 0; i < t_scaled_file_count; i++)
+			{
+				// if current scale is lower than device scale then take any higher-res image
+				// else if current scale is higher than device res then take any lower-res image not lower than the device res
+				if ((t_scale < t_device_scale && t_scaled_files[i].scale > t_scale) ||
+					(t_scale > t_device_scale && t_scaled_files[i].scale < t_scale && t_scaled_files[i].scale >= t_device_scale))
+				{
+					t_scale = t_scaled_files[i].scale;
+					t_scaled_filename = t_scaled_files[i].filename;
+				}
+			}
+			
+			t_src_filename = t_scaled_filename;
+		}
+	}
+	
+	if (t_success)
+		t_success = MCCStringClone(p_filename, t_filename);
+	
+	if (t_success)
+		t_success = nil != (t_resolved = getstack() -> resolve_filename(t_src_filename));
 	// MW-2013-07-01: [[ Bug 11001 ]] Reverted for 6.1.0 - this canonicalisation doesn't
 	//   take into account URL references.
 	/*{reverted for correct fix in next release}
@@ -2094,15 +2152,20 @@ bool MCImage::setfilename(const char *p_filename)
 		t_resolved = t_resolved_filename;
 	}
 	 */
+	
 	if (t_success)
 		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
 
 	MCCStringFree(t_resolved);
+	MCImageFreeScaledFileList(t_scaled_files, t_scaled_file_count);
 
 	if (t_success)
 	{
 		setrep(t_rep);
 		t_rep->Release();
+		
+		m_scale_factor = t_scale;
+		
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
@@ -2134,7 +2197,7 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 	return t_success;
 }
 
-bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
+bool MCImage::setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry)
 {
 	bool t_success = true;
 
@@ -2149,6 +2212,9 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
 
 	if (t_success)
 	{
+		angle = 0;
+		m_scale_factor = p_scale;
+		
 		if (p_update_geometry)
 		{
 	#ifdef FEATURE_DONT_RESIZE
@@ -2157,12 +2223,12 @@ bool MCImage::setbitmap(MCImageBitmap *p_bitmap, bool p_update_geometry)
 			if (!(flags & F_LOCK_LOCATION))
 	#endif
 			{
-				rect . width = p_bitmap->width;
-				rect . height = p_bitmap->height;
+				uint32_t t_width, t_height;
+				/* UNCHECKED */ getsourcegeometry(t_width, t_height);
+				rect . width = t_width;
+				rect . height = t_height;
 			}
 		}
-
-		angle = 0;
 	}
 
 	return t_success;
@@ -2209,6 +2275,103 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-07-26: [[ ResIndependence ]] render the image at the requested scale,
+// with any transformations (scale, angle) applied
+bool MCImage::copybitmap(MCGFloat p_scale, bool p_premultiplied, MCImageBitmap *&r_bitmap)
+{
+	bool t_success;
+	t_success = true;
+	
+	MCImageFrame *t_frame;
+	t_frame = nil;
+	
+	apply_transform();
+	
+	t_success = m_rep != nil;
+	
+	bool t_copy_pixels;
+	t_copy_pixels = !m_has_transform && p_scale == m_scale_factor;
+	
+	bool t_premultiplied;
+	t_premultiplied = p_premultiplied || !t_copy_pixels;
+	
+	if (t_success)
+		t_success = m_rep->LockImageFrame(currentframe, t_premultiplied, t_frame);
+	
+	bool t_mask, t_alpha;
+	if (t_success)
+		t_mask = MCImageBitmapHasTransparency(t_frame->image, t_alpha);
+	
+	if (t_success)
+	{
+		if (t_copy_pixels)
+		{
+			t_success = MCImageCopyBitmap(t_frame->image, r_bitmap);
+		}
+		else
+		{
+			MCGRaster t_raster;
+			t_raster.width = t_frame->image->width;
+			t_raster.height = t_frame->image->height;
+			t_raster.stride = t_frame->image->stride;
+			t_raster.pixels = t_frame->image->data;
+			t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? (t_premultiplied ? kMCGRasterFormat_ARGB : kMCGRasterFormat_U_ARGB) : kMCGRasterFormat_xRGB;
+			
+			uint32_t t_width, t_height;
+			t_width = ceil(rect.width * p_scale);
+			t_height = ceil(rect.height * p_scale);
+			
+			MCImageBitmap *t_bitmap;
+			t_bitmap = nil;
+			
+			t_success = MCImageBitmapCreate(t_width, t_height, t_bitmap);
+			
+			if (t_success)
+				MCImageBitmapClear(t_bitmap);
+			
+			MCGContextRef t_context;
+			t_context = nil;
+			
+			if (t_success)
+				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+			
+			if (t_success)
+			{
+				MCGContextScaleCTM(t_context, p_scale, p_scale);
+				
+				if (m_has_transform)
+					MCGContextConcatCTM(t_context, m_transform);
+				
+				MCGRectangle t_dst;
+				t_dst = MCGRectangleMake(0, 0, t_frame->image->width / m_scale_factor, t_frame->image->height / m_scale_factor);
+				
+				MCGImageFilter t_filter;
+				t_filter = resizequality == INTERPOLATION_BICUBIC ? kMCGImageFilterBicubic : (resizequality == INTERPOLATION_BILINEAR ? kMCGImageFilterBilinear : kMCGImageFilterNearest);
+				
+				MCGContextDrawPixels(t_context, t_raster, t_dst, t_filter);
+				
+				MCGContextRelease(t_context);
+				
+				MCImageBitmapCheckTransparency(t_bitmap);
+				
+				if (!p_premultiplied)
+					MCImageBitmapUnpremultiply(t_bitmap);
+			}
+			
+			if (t_success)
+				r_bitmap = t_bitmap;
+			else
+				MCImageFreeBitmap(t_bitmap);
+		}
+	}
+	
+	if (m_rep != nil)
+		m_rep->UnlockImageFrame(currentframe, t_frame);
+	
+	return t_success;
+}
+
 
 bool MCImage::lockbitmap(MCImageBitmap *&r_bitmap, bool p_premultiplied, bool p_update_transform)
 {
@@ -2336,6 +2499,15 @@ MCString MCImage::getrawdata()
 	return MCString((char*)t_data, t_size);
 }
 
+bool MCImage::getsourcegeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
+{
+	if (m_rep == nil || !m_rep->GetGeometry(r_pixwidth, r_pixheight))
+		return false;
+	
+	r_pixwidth = r_pixwidth / m_scale_factor;
+	r_pixheight = r_pixheight / m_scale_factor;
+}
+
 void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 {
 	// while cropping
@@ -2346,7 +2518,7 @@ void MCImage::getgeometry(uint32_t &r_pixwidth, uint32_t &r_pixheight)
 		return;
 	}
 
-	if (m_rep != nil && m_rep->GetGeometry(r_pixwidth, r_pixheight))
+	if (getsourcegeometry(r_pixwidth, r_pixheight))
 		return;
 
 	r_pixwidth = rect.width;

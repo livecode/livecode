@@ -981,7 +981,7 @@ bool MCNativeTheme::drawfocusborder(MCContext *p_context, const MCRectangle& p_d
 	t_info.dest = p_rect;
 	MCScreenDC *pms = (MCScreenDC *)MCscreen;
 	t_info . focus_rect . focused = True;
-	pms->MCRect2MacRect(trect, t_info . focus_rect . bounds);
+	t_info . focus_rect . bounds = MCRectToMacRect(trect);
 	p_context -> drawtheme(THEME_DRAW_TYPE_FOCUS_RECT, &t_info);
 	
 	return true;
@@ -1028,6 +1028,8 @@ MCTheme *MCThemeCreateNative(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern CGBitmapInfo MCGPixelFormatToCGBitmapInfo(uint32_t p_pixel_format, bool p_alpha);
+
 bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info_ptr)
 {
 	bool t_success = true;
@@ -1046,8 +1048,9 @@ bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInf
 	
 	if (t_success)
 	{
+		// IM-2013-08-21: [[ RefactorGraphics ]] Refactor CGImage creation code to be pixel-format independent
 		CGBitmapInfo t_bitmap_info;
-		t_bitmap_info = kCGBitmapByteOrder32Host | kCGImageAlphaPremultipliedFirst;
+		t_bitmap_info = MCGPixelFormatToCGBitmapInfo(kMCGPixelFormatNative, true);
 
 		MCImageBitmapClear(t_bitmap);
 		t_success = nil != (t_cgcontext = CGBitmapContextCreate(t_bitmap->data, t_bitmap->width, t_bitmap->height, 8, t_bitmap->stride, t_colorspace, t_bitmap_info));

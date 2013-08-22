@@ -40,12 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "graphicscontext.h"
 
-////////////////////////////////////////////////////////////////////////////////
-
-static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	return MCGRectangleMake((MCGFloat) p_rect . x, (MCGFloat) p_rect . y, (MCGFloat) p_rect . width, (MCGFloat) p_rect . height);
-}
+#include "graphics.h"
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -237,11 +233,15 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	// By default, we have not aborted.
 	r_abort = False;
 	
-	MCGImageRef t_initial_image = nil;
+	MCGImageRef t_initial_image;
 	t_initial_image = MCGImageRetain(m_snapshot);
 	
 	MCRectangle t_dst_effect_area;
 	t_dst_effect_area = t_effect_area;
+	
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
 	while(t_effects != nil)
 	{
 		uint32_t t_duration;
@@ -261,17 +261,26 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		// Render into surface based on t_effects -> image
 		MCGImageRef t_final_image = nil;
 		
+		// IM-2013-08-21: [[ ResIndependence ]] Scale effect aea to device coords
+		// Align snapshot rect to device pixels
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
+		MCRectangle t_user_rect;
+		t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
+		
 		// If this isn't a plain effect, then we must fetch first and last images.
 		if (t_effects -> type != VE_PLAIN)
 		{
 			// Render the final image.
 			MCGContextRef t_context = nil;
 			
-			/* UNCHECKED */ MCGContextCreate(t_effect_area.width, t_effect_area.height, true, t_context);
+			/* UNCHECKED */ MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+			
+			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
 			
 			// Configure the context.
-			MCGContextTranslateCTM(t_context, -t_effect_area.x, -t_effect_area.y);
-			MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_effect_area));
+			MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_user_rect));
 			
 			// Render an appropriate image
 			switch(t_effects -> image)
@@ -280,12 +289,12 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 					{
 						MCContext *t_old_context = nil;
 						/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
-						curcard->draw(t_old_context, t_effect_area, false);
+						curcard->draw(t_old_context, t_user_rect, false);
 						delete t_old_context;
 						
 						MCGContextSetFillRGBAColor(t_context, 1.0, 1.0, 1.0, 1.0);
 						MCGContextSetBlendMode(t_context, kMCGBlendModeDifference);
-						MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_effect_area));
+						MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
 						MCGContextFill(t_context);
 						
 					}
@@ -293,19 +302,19 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 					
 				case VE_BLACK:
 					MCGContextSetFillRGBAColor(t_context, 0.0, 0.0, 0.0, 1.0);
-					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_effect_area));
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
 					MCGContextFill(t_context);
 					break;
 					
 				case VE_WHITE:
 					MCGContextSetFillRGBAColor(t_context, 1.0, 1.0, 1.0, 1.0);
-					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_effect_area));
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
 					MCGContextFill(t_context);
 					break;
 					
 				case VE_GRAY:
 					MCGContextSetFillRGBAColor(t_context, 0.5, 0.5, 0.5, 1.0);
-					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_effect_area));
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
 					MCGContextFill(t_context);
 					break;
 					
@@ -313,7 +322,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				{
 					MCContext *t_old_context = nil;
 					/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
-					curcard->draw(t_old_context, t_effect_area, false);
+					curcard->draw(t_old_context, t_user_rect, false);
 					delete t_old_context;
 				}
 			}
@@ -326,7 +335,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		t_context.delta = t_delta;
 		t_context.duration = t_duration;
 		t_context.effect = t_effects;
-		t_context.effect_area = t_dst_effect_area;
+		t_context.effect_area = t_device_rect;
 		t_context.initial_image = t_initial_image;
 		t_context.final_image = t_final_image;
 		
@@ -495,6 +504,8 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		}
 	}
 
+	MCRegionDestroy(t_effect_rgn);
+	
 	MCGImageRelease(m_snapshot);
 	m_snapshot = nil;
 	
