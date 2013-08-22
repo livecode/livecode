@@ -32,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxtheme.h"
 
 #include "resolution.h"

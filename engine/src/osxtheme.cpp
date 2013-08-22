@@ -29,7 +29,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "context.h"
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxtheme.h"
 
 #ifndef _IOS_MOBILE
@@ -241,8 +240,6 @@ const char  *MCNativeTheme::getname()
 
 Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCRectangle &drect)
 {
-	MCQuickDrawContext *t_qd_context = (MCQuickDrawContext *)dc;
-
 	MCRectangle trect = drect;
 	switch (winfo.type)
 {
@@ -309,7 +306,7 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 			else
 				t_info . frame . state = kThemeStateActive;
 			t_info . frame . is_list = false;
-			t_qd_context -> drawtheme(THEME_DRAW_TYPE_FRAME, &t_info);
+			dc -> drawtheme(THEME_DRAW_TYPE_FRAME, &t_info);
 		}
 		break;
 	case WTHEME_TYPE_GROUP_FILL:
@@ -335,7 +332,7 @@ Boolean MCNativeTheme::drawwidget(MCDC *dc, const MCWidgetInfo &winfo, const MCR
 			t_info . group . is_secondary = (winfo . type == WTHEME_TYPE_SECONDARYGROUP_FILL || winfo . type == WTHEME_TYPE_SECONDARYGROUP_FRAME);
 			t_info . group . is_filled = (winfo . type == WTHEME_TYPE_GROUP_FILL || winfo . type == WTHEME_TYPE_SECONDARYGROUP_FILL);
 			
-			t_qd_context -> drawtheme(THEME_DRAW_TYPE_GROUP, &t_info);
+			dc -> drawtheme(THEME_DRAW_TYPE_GROUP, &t_info);
 		}
 		break;
 	}
@@ -457,7 +454,7 @@ static void drawthemebutton(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRe
 	else
 		t_info . button . animation_start = t_info . button . animation_current = 0;
 		
-	((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
+	dc -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
 }
 
 
@@ -472,7 +469,7 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 		
 		t_info . tab_pane . state = (widgetinfo.state & WTHEME_STATE_DISABLED) != 0 ? kThemeStateInactive: kThemeStateActive;
 
-		((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_TAB_PANE, &t_info);
+		dc -> drawtheme(THEME_DRAW_TYPE_TAB_PANE, &t_info);
 		}
 		else
 		{
@@ -484,7 +481,7 @@ static void drawthemetabs(MCDC *dc, const MCWidgetInfo &widgetinfo, const MCRect
 		t_info . tab . is_pressed = (widgetinfo . state & WTHEME_STATE_PRESSED) != 0;
 		t_info . tab . is_first = (widgetinfo . attributes & WTHEME_ATT_FIRSTTAB) != 0;
 		t_info . tab . is_last = (widgetinfo . attributes & WTHEME_ATT_LASTTAB) != 0;
-		((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_TAB, &t_info);
+		dc -> drawtheme(THEME_DRAW_TYPE_TAB, &t_info);
 		}
 			}
 
@@ -561,7 +558,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 			t_info . slider . count = (uint2)(fabs(sbinfo->endvalue - sbinfo->startvalue) / (sbinfo->pageinc - sbinfo->lineinc));
 		else
 			t_info . slider . count = 0;
-		((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_SLIDER, &t_info);
+		dc -> drawtheme(THEME_DRAW_TYPE_SLIDER, &t_info);
 	}
 	else if (t_info.slider.info.kind == kThemeScrollBar || t_info.slider.info.kind == kThemeSmallScrollBar)
 	{
@@ -584,12 +581,12 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 			t_info . button . info . adornment = kThemeAdornmentNone;
 			t_info . button . info . value = kThemeButtonOff;
 			t_info . button . kind = kThemeIncDecButton;
-			((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
+			dc -> drawtheme(THEME_DRAW_TYPE_BUTTON, &t_info);
 		}
 		else
 		{
 			t_info . scrollbar . horizontal = drect . width > drect . height;
-			((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_SCROLLBAR, &t_info);
+			dc -> drawtheme(THEME_DRAW_TYPE_SCROLLBAR, &t_info);
 		}
 	}
 	else
@@ -602,7 +599,7 @@ static void DrawMacAMScrollControls(MCDC *dc, const MCWidgetInfo &winfo, const M
 		// MW-2012-10-01: [[ Bug 10419 ]] Wrap phase at 256 as more frames on Lion+
 		//   animation than in Snow Leopard.
 		t_info . progress . info . trackInfo . progress . phase = ((int32_t)((MCScreenDC::s_animation_current_time - MCScreenDC::s_animation_start_time) * 1000)) / t_millisecs_per_step % 256;
-		((MCQuickDrawContext *)dc) -> drawtheme(THEME_DRAW_TYPE_PROGRESS, &t_info);
+		dc -> drawtheme(THEME_DRAW_TYPE_PROGRESS, &t_info);
 	}
 }
 

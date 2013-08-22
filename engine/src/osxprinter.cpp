@@ -34,7 +34,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "region.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxprinter.h"
 #include "sserialize_osx.h"
 

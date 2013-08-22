@@ -30,7 +30,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "notify.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxprinter.h"
 
 #include "graphicscontext.h"
