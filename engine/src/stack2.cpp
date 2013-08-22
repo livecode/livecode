@@ -2550,30 +2550,34 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 		MCContext *t_gfxcontext = nil;
 
 		// IM-2013-07-18: [[ ResIndependence ]] take stack snapshot at device resolution
-		MCRectangle t_snapshot_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
+		// IM-2013-08-21: [[ ResIndependence ]] Align snapshots to device pixel boundaries
+		MCRectangle t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
+		MCRectangle t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
+		
 		if (t_success)
-			t_success = MCGContextCreate(t_snapshot_rect.width, t_snapshot_rect.height, true, t_context);
+			t_success = MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
 
 		if (t_success)
 		{
+			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			
 			MCGFloat t_scale;
 			t_scale = MCResGetDeviceScale();
 			
 			MCGContextScaleCTM(t_context, t_scale, t_scale);
 			
-			MCGContextTranslateCTM(t_context, -(MCGFloat)t_effect_area.x, -(MCGFloat)t_effect_area.y);
 			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 		}
 
 		if (t_success)
 		{
-			t_gfxcontext -> setclip(t_effect_area);
-			render(t_gfxcontext, t_effect_area);
+			t_gfxcontext -> setclip(t_user_rect);
+			render(t_gfxcontext, t_user_rect);
 			
 			if (m_window_shape != nil && !m_window_shape -> is_sharp)
 			{
-				t_gfxcontext -> setclip(t_effect_area);
-				t_gfxcontext -> applywindowshape(m_window_shape, t_effect_area . width, t_effect_area . height);
+				t_gfxcontext -> setclip(t_user_rect);
+				t_gfxcontext -> applywindowshape(m_window_shape, t_user_rect . width, t_user_rect . height);
 			}
 			
 		}
