@@ -3428,6 +3428,18 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 				else
 					return ES_ERROR;
 		*/
+        
+        // binary stack, hmmm...
+        if (stack -> etype == CT_EXPRESSION)
+        {
+            url -> startpos -> compile(ctxt);
+            // hopefully that's the binary data
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBinaryStackMethodInfo);
+        }
+        else
+        {
+            // I think this is an error
+        }
 	}
 	else
 		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsObjectMethodInfo);
@@ -3493,52 +3505,53 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	// 
 	if (object != nil && (object -> otype == CT_AUDIO_CLIP || object -> otype == CT_VIDEO_CLIP))
 	{
-/*		if (ct_class(object->etype) == CT_ORDINAL)
-			objptr = sptr->getAV(object->etype, MCnullmcstring, object->otype);
-		else
-		{
-			if (object->startpos->eval(ep2) != ES_NORMAL)
-			{
-				MCeerror->add(EE_CHUNK_BADOBJECTEXP, line, pos);
-				return ES_ERROR;
-			}
-			objptr = sptr->getAV(object->etype, ep2.getsvalue(), object->otype);
-			if (objptr == NULL)
-				objptr = sptr->getobjname(object->otype, ep2.getsvalue());
-		}
-		if (objptr == NULL)
-		{
-			// Lookup the name we are searching for. If it doesn't exist, then no object can
-			// have it as a name.
-			MCNameRef t_obj_name;
-			t_obj_name = MCNameLookupWithOldString(ep2.getsvalue(), kMCCompareCaseless);
-			if (t_obj_name != nil)
-			{
-			if (object->otype == CT_VIDEO_CLIP)
-			{
-				IO_cleanprocesses();
-				MCPlayer *tptr = MCplayers;
-				while (tptr != NULL)
-				{
-						if (tptr -> hasname(t_obj_name))
-					{
-						objptr = tptr;
-						break;
-					}
-					tptr = tptr->getnextplayer();
-				}
-			}
-				else if (MCacptr != NULL && MCacptr -> hasname(t_obj_name))
-					objptr = MCacptr;
-			}
-		}
-		if (objptr == NULL)
-		{
-			MCeerror->add(EE_CHUNK_NOOBJECT, line, pos, ep2.getsvalue());
-			return ES_ERROR;
-		}*/
-		return ES_NORMAL;
-	}
+        if (object -> otype == CT_AUDIO_CLIP)
+        {
+            switch (ct_class(object -> etype))
+            {
+                case CT_ORDINAL:
+                    MCSyntaxFactoryEvalConstantUInt(ctxt, object -> etype);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalAudioClipOfStackByOrdinalMethodInfo);
+                    break;
+                case CT_ID:
+                    object -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalAudioClipOfStackByIdMethodInfo);
+                    break;
+                case CT_EXPRESSION:
+                    object -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalAudioClipOfStackByNameMethodInfo);
+                default:
+                    // ERROR
+                    break;
+            }
+            // if the clip is nil here, it's an error.
+            // otherwise we're done
+            MCSyntaxFactoryEvalMethod(ctxt, kMCEvalVideoClipAsObjectMethodInfo);
+        }
+        else
+        {
+            switch (ct_class(object -> etype))
+            {
+                case CT_ORDINAL:
+                    MCSyntaxFactoryEvalConstantUInt(ctxt, object -> etype);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalVideoClipOfStackByOrdinalMethodInfo);
+                    break;
+                case CT_ID:
+                    object -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalVideoClipOfStackByIdMethodInfo);
+                    break;
+                case CT_EXPRESSION:
+                    object -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalVideoClipOfStackByNameMethodInfo);
+                default:
+                    // ERROR
+                    break;
+            }
+            // if the clip is nil here, it's an error.
+            // otherwise we're done
+            MCSyntaxFactoryEvalMethod(ctxt, kMCEvalVideoClipAsObjectMethodInfo);
+        }
+    }
 	
 	// IF no bg, card, group, object then return obj as sptr.
 
@@ -3567,7 +3580,9 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	}
 	
 	// IF no card, group, object then return obj as bptr.
-
+    if (card == nil && group == nil && object == nil)
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundAsObjectMethodInfo);
+               
 	if (card != nil)
 	{
 		MCSyntaxFactoryEvalConstantBool(ctxt, marked);
@@ -3595,8 +3610,174 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	}
 	else if (background == nil)
 	{
-		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEval
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfStackMethodInfo);
 	}
+               
+    // cptr != nil CHECK
+               
+    // if no group or object then return obj as cptr
+    if (group == nil && object == nil)
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalCardAsObjectMethodInfo);
+               
+               
+    // group number/name/id of <group of><group of>... stack
+               
+    if (group != nil)
+    {
+        switch (ct_class(group -> etype))
+        {
+            case CT_ORDINAL:
+                MCSyntaxFactoryEvalConstantUInt(ctxt, group -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                group -> startpos -> compile(ctxt);
+                if (card == nil && stack != nil)
+                    // MW-2011-08-09: [[ Groups ]] If there was an explicit stack reference,
+                    //   but no explicit card, we search the stack directly for the CT_ID
+                    //   case.
+                    // (Assuming the group wasn't found on the card)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardOrStackByIdMethodInfo);
+                else
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                group -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByNameMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+        }
+        
+        MCCRef *tgptr = group -> next;
+        while (tgptr != nil)
+        {
+            switch (ct_class(tgptr -> etype))
+            {
+                case CT_ORDINAL:
+                    MCSyntaxFactoryEvalConstantUInt(ctxt, tgptr -> etype);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByOrdinalMethodInfo);
+                    break;
+                case CT_ID:
+                    tgptr -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByIdMethodInfo);
+                    break;
+                case CT_EXPRESSION:
+                    tgptr -> startpos -> compile(ctxt);
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByNameMethodInfo);
+                    break;
+                default:
+                    // ERROR
+                    break;
+            }
+            tgptr = tgptr -> next;
+        }
+    }
+               
+    // gptr could be nil?
+    
+    // if no object then return obj as gptr
+    if (object == nil)
+        // gptr can't be nil here if object is.
+        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupAsObjectMethodInfo);
+               
+    // MW-2011-08-08: [[ Bug ]] Loop through chain of object chunks. This allows
+    //   things like field ... of control ... of.
+               
+    if (object != nil)
+    {
+        // it seems as though we need to know whether to expect a group reference or not, although some kind of EvalObjectAsGroup might work too.
+        bool t_of_group;
+        t_of_group = object -> next != nil;
+
+        while (toptr -> next != nil)
+        {
+            switch (ct_class(toptr -> etype))
+            {
+                case CT_ORDINAL:
+                    MCSyntaxFactoryEvalConstantUInt(ctxt, toptr -> etype);
+                    if (toptr -> otype == CT_MENU)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfMenubarByOrdinalMethodInfo);
+                    else if (group == nil)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByOrdinalMethodInfo);
+                    else
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByOrdinalMethodInfo);
+                    break;
+                case CT_ID:
+                    toptr -> startpos -> compile(ctxt);
+                    if (toptr -> otype == CT_MENU)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfMenubarByIdMethodInfo);
+                    // If we are in stack override mode, then search the stack *after*
+                    // searching the card as searching the stack will take longer.
+                    else if (group == nil && card == nil && stack != nil)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardOrStackByIdMethodInfo);
+                    else if (group == nil)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByIdMethodInfo);
+                    else
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByIdMethodInfo);
+                    break;
+                case CT_EXPRESSION:
+                    toptr -> startpos -> compile(ctxt);
+                    if (toptr -> otype == CT_MENU)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfMenubarByNameMethodInfo);
+                    else if (group == nil)
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfCardByNameMethodInfo);
+                    else
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalGroupOfGroupByNameMethodInfo);
+                    break;
+                default:
+                    // ERROR
+                    break;
+            }
+            toptr = toptr -> next;
+        }
+
+        switch (ct_class(toptr -> etype))
+        {
+            case CT_ORDINAL:
+                MCSyntaxFactoryEvalConstantUInt(ctxt, toptr -> etype);
+                if (toptr -> otype == CT_MENU)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfMenubarByOrdinalMethodInfo);
+                else if (group == nil && !t_of_group)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByOrdinalMethodInfo);
+                else
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfGroupByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                toptr -> startpos -> compile(ctxt);
+                if (toptr -> otype == CT_MENU)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfMenubarByIdMethodInfo);
+                // This clause handles the case of 'control id ...' where there is no card
+                // reference. It enables access to top-level objects in the stack via id.
+                if (!t_of_group && group == nil && background == nil && card == nil)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfStackByIdMethodInfo);
+                // If we are in stack override mode, then search the stack *after*
+                // searching the card as searching the stack will take longer.
+                else if (group == nil && card == nil && stack != nil)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardOrStackByIdMethodInfo);
+                else if (group == nil && !t_of_group)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByIdMethodInfo);
+                else
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfGroupByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                toptr -> startpos -> compile(ctxt);
+                if (toptr -> otype == CT_MENU)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfMenubarByNameMethodInfo);
+                else if (group == nil && !t_of_group)
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfCardByIdMethodInfo);
+                else
+                    MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalObjectOfGroupByIdMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+        }
+    }
+        
+    // objptr != nil CHECK
+               
 #endif
 }
 								  
