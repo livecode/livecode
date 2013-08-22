@@ -789,6 +789,11 @@ Boolean MCU_stoi4x4(const MCString &s, int32_t &d1, int32_t &d2, int32_t &d3, in
 	return True;
 }
 
+/* WRAPPER */ bool MCU_stoi4(MCStringRef p_string, int4& r_d)
+{
+    return True == MCU_stoi4(MCStringGetOldString(p_string), r_d);
+}
+
 Boolean MCU_stoi4(const MCString &s, int4 &d)
 {
 	const char *sptr = s.getstring();
@@ -813,6 +818,19 @@ Boolean MCU_stoui4(const MCString &s, uint4 &d)
 	if (!done || l != 0)
 		return False;
 	return True;
+}
+
+bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
+{
+    const char *sptr = MCStringGetCString(p_string);
+	uint4 l = MCStringGetLength(p_string);
+	Boolean done;
+	r_d1 = MCU_strtol(sptr, l, ',', done, True, False);
+	if (!done || l == 0)
+		return false;
+	r_d2 = MCU_strtol(sptr, l, '\0', done, True, False);
+	if (!done || l != 0)
+		return false;
 }
 
 /* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)

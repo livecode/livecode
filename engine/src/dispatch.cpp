@@ -195,6 +195,7 @@ Exec_stat MCDispatch::setprop_legacy(uint4 parid, Properties which, MCExecPoint 
 #ifdef /* MCDispatch::setprop */ LEGACY_EXEC
 	return ES_NORMAL;
 #endif /* MCDispatch::setprop */
+	return ES_NORMAL;
 }
 
 // bogus "cut" call actually checks license

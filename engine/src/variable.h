@@ -266,6 +266,7 @@ inline uint32_t MCVariableArray::getnfilled(void) const
 #define kMCEncodedValueTypeNumber 4
 #define kMCEncodedValueTypeArray 5
 
+#ifdef LEGACY_EXEC
 class MCVariableValue
 {
 public:
@@ -548,6 +549,8 @@ inline MCHashentry *MCHashentry::Create(const MCString& p_key, uint32_t p_hash)
 #undef redef_new
 #define new new(__FILE__, __LINE__)
 #endif
+#endif
+
 #endif
 
 class MCVariable

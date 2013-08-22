@@ -58,7 +58,7 @@ MC_EXEC_DEFINE_SET_METHOD(Debugging, WatchedVariables, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, int p_line, int p_pos)
+void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, uinteger_t p_line, uinteger_t p_pos)
 {
 	MCExecPoint& ep = ctxt . GetEP();
 
@@ -85,7 +85,7 @@ void MCDebuggingExecDebugDo(MCExecContext& ctxt, MCStringRef p_script, int p_lin
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uint2 p_line, uint2 p_pos)
+void MCDebuggingExecBreakpoint(MCExecContext& ctxt, uinteger_t p_line, uinteger_t p_pos)
 {
 	MCB_break(ctxt . GetEP(), p_line, p_pos);
 }

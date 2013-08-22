@@ -70,6 +70,38 @@ typedef struct
 static bool s_can_make_purchase_returned = false;
 static bool s_can_make_purchase = false;
 
+////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload);
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date);
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier);
+bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data);
+bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature);
+
+////////////////////////////////////////////////////////////////////////
+
+static MCPurchasePropertyInfo kProperties[] =
+{
+    DEFINE_RO_PROPERTY(kMCPurchasePropertyDeveloperPayload, String, Purchase, DeveloperPayload)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertyProductIdentifier, String, Purchase, ProductIdentifier)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertyTransactionIdentifier, String, Purchase, TransactionIdentifier)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertyPurchaseDate, Int32, Purchase, PurchaseDate)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertySignedData, String, Purchase, SignedData)
+    DEFINE_RO_PROPERTY(kMCPurchasePropertySignature, String, Purchase, Signature)
+};
+
+static MCPurchasePropertyTable kPropertyTable =
+{
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+const MCPurchasePropertyTable *getpropertytable()
+{
+    return &kPropertyTable;
+}
+
 bool MCStoreCanMakePurchase()
 {
     bool t_result = false;
@@ -177,34 +209,7 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
     MCMemoryDelete(t_android_data);
 }
 
-Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
-{
-    /*
-    if (p_purchase->state != kMCPurchaseStateInitialized)
-        return ES_NOT_HANDLED;
-    
-    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
-    switch (p_property)
-    {
-        case kMCPurchasePropertyDeveloperPayload:
-        {
-            if (ep.getsvalue().getlength() >= 256)
-            {
-                MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
-                return ES_ERROR;
-            }
-            if (t_android_data->developer_payload != nil)
-                MCCStringFree(t_android_data->developer_payload);
-            MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
-            return ES_NORMAL;
-        }
-        default:
-            break;
-    }
-    */
-    return ES_NOT_HANDLED;
-}
-
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
     //MCLog("MCPurchaseGet(%p, %d, ...)", p_purchase, p_property);
@@ -253,7 +258,104 @@ Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, M
     
     return ES_NOT_HANDLED;
 }
+#endif /* MCPurchaseGet */
 
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->product_id == nil)
+        return false;
+    
+    return MCStringCreateWithCString(t_android_data->product_id, r_identifier);
+}
+
+bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->developer_payload == nil)
+        return false;
+    
+    return MCStringCreateWithCString(t_android_data->developer_payload, r_payload);
+}
+
+bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->purchase_time == nil)
+        return false;
+    
+    r_date = (integer_t)(t_android_data->purchase_time);
+    return true;
+}
+
+bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_identifier)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->order_id == nil)
+        return false;
+    
+    return MCStringCreateWithCString(t_android_data->order_id, r_identifier);
+}
+
+bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->signed_data == nil)
+        return false;
+    
+    return MCStringCreateWithCString(t_android_data->signed_data, r_data);
+}
+
+bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature)
+{
+    MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+    
+    if (t_android_data->signature == nil)
+        return false;
+    
+    return MCStringCreateWithCString(t_android_data->signature, r_signature);
+}
+
+///////////////////////////////////////////////////////////////////////////////////////////////
+
+#ifdef /* MCPurchaseSet */ LEGACY_EXEC
+Exec_stat MCPurchaseSet(MCPurchase *p_purchase, MCPurchaseProperty p_property, uint32_t p_quantity)
+{
+    /*
+     if (p_purchase->state != kMCPurchaseStateInitialized)
+     return ES_NOT_HANDLED;
+     
+     MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)p_purchase->platform_data;
+     switch (p_property)
+     {
+     case kMCPurchasePropertyDeveloperPayload:
+     {
+     if (ep.getsvalue().getlength() >= 256)
+     {
+     MCeerror->add(EE_UNDEFINED, 0, 0, ep.getsvalue());
+     return ES_ERROR;
+     }
+     if (t_android_data->developer_payload != nil)
+     MCCStringFree(t_android_data->developer_payload);
+     MCCStringCloneSubstring(ep.getsvalue().getstring(), ep.getsvalue().getlength(), t_android_data->developer_payload);
+     return ES_NORMAL;
+     }
+     default:
+     break;
+     }
+     */
+    return ES_NOT_HANDLED;
+}
+#endif /* MCPurchaseSet */
+
+///////////////////////////////////////////////////////////////////////////////////////////////
 
 bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef& r_error)
 {

@@ -17,7 +17,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SERVER_MULTIPART__
 #define __MC_SERVER_MULTIPART__
 
-#include "core.h"
 #include "filedefs.h"
 
 typedef enum

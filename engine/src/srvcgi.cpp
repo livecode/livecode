@@ -547,6 +547,7 @@ static void cgi_unescape_url(const char *s, const char *l, char *&r_s, char*& r_
 	r_l = rl;
 }
 
+#ifdef TODO
 static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint &ep, MCVariableValue *&r_var_value)
 {
 	MCVariableValue *t_value;
@@ -605,12 +606,15 @@ static void cgi_fetch_variable_value_for_key(MCVariable *p_variable, const char 
 	
 	r_var_value = t_value;
 }
+#endif
 
 static void cgi_store_control_value(MCVariable *p_variable, const char *p_key, uint32_t p_key_length, MCExecPoint& ep)
 {
+#ifdef TODO
 	MCVariableValue *t_value;
 	cgi_fetch_variable_value_for_key(p_variable, p_key, p_key_length, ep, t_value);
 	t_value -> store(ep);
+#endif
 }
 
 static bool MCConvertNativeFromUTF16(const uint16_t *p_chars, uint32_t p_char_count, uint8_t*& r_output, uint32_t& r_output_length);
@@ -971,12 +975,16 @@ typedef struct
 	IO_handle file_handle;
 	uint32_t file_size;
 	MCMultiPartFileStatus file_status;
+#ifdef TODO
 	MCVariableValue *file_variable;
+#endif
 
 	char *boundary;
 	
+#ifdef TODO
 	MCVariableValue *post_variable;
 	MCVariableValue *post_binary_variable;
+#endif
 } cgi_multipart_context_t;
 
 static void cgi_dispose_multipart_context(cgi_multipart_context_t *p_context)
@@ -1012,6 +1020,7 @@ static void inline grab_string(char *&x_dest, char *&x_src)
 static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_header)
 {
 	bool t_success = true;
+#ifdef TODO
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	
 	if (p_header != NULL)
@@ -1072,7 +1081,7 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 			}
 		}
 	}
-	
+#endif
 	return t_success;
 }
 
@@ -1081,6 +1090,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 	cgi_multipart_context_t *t_context = (cgi_multipart_context_t*)p_context;
 	bool t_success = true;
 
+#ifdef TODO
 	if (cgi_context_is_form_data(t_context))
 	{
 		if (t_context->post_binary_variable != NULL)
@@ -1142,7 +1152,7 @@ static bool cgi_multipart_body_callback(void *p_context, const char *p_data, uin
 		// clear context for next part
 		cgi_dispose_multipart_context(t_context);
 	}
-	
+#endif
 	return t_success;
 }
 
@@ -1242,9 +1252,11 @@ bool cgi_initialize()
 	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SERVER", s_cgi_server);
 	s_cgi_server -> setnext(MCglobals);
 	MCglobals = s_cgi_server;
+	
+	MCAutoArrayRef t_vars;
+	/* UNCHECKED */ MCArrayCreateMutable(&t_vars);
 	for(uint32_t i = 0; environ[i] != NULL; i++)
 	{
-		
 		static const char *s_cgi_vars[] =
 		{
 			"GATEWAY_INTERFACE=",
@@ -1311,9 +1323,11 @@ bool cgi_initialize()
 			else
 				ep . setsvalue(t_value + 1);
 			
-			s_cgi_server -> getvalue() . store_element(ep, MCString(environ[i], t_value - environ[i]));
+			ep . storearrayelement_oldstring(*t_vars, MCString(environ[i], t_value - environ[i]));
 		}
 	}
+	
+	MCresult -> setvalueref(*t_vars);
 	
 	// Construct the GET variables by parsing the QUERY_STRING
 	
@@ -1509,12 +1523,14 @@ bool MCServerStartSession()
 		}
 	}
 	if (t_success)
-		t_session_var->getvalue().assign_empty();
+		t_session_var->clear();
 	
 	if (t_success)
 	{
+		// TODO
 		if (s_current_session->data_length > 0)
-			t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
+			t_success = false;
+			//t_success = t_session_var->getvalue().decode(MCString(s_current_session->data, s_current_session->data_length));
 	}
 	
 	if (t_success)
@@ -1547,8 +1563,10 @@ bool MCServerStopSession()
 	MCVariable *t_session_var;
 	t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 
+	// TODO
 	if (t_session_var != NULL)
-		t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
+		t_success = false;
+		//t_success = t_session_var->getvalue().encode((void*&)t_data, t_data_length);
 
 	if (t_success)
 	{
@@ -1703,7 +1721,7 @@ bool MCServerGetSessionIdFromCookie(char *&r_id)
 	
 	MCExecPoint ep;
 	MCAutoStringRef t_name;
-	if (!MCS_get_session_name(&t_name) || ES_NORMAL != t_cookie_array->fetch_element(ep, MCStringGetOldString(*t_name)))
+	if (!MCS_get_session_name(&t_name) || ES_NORMAL != ep.fetcharrayelement_oldstring((MCArrayRef)t_cookie_array -> getvalueref(), MCStringGetOldString(*t_name)))
 		return false;
 	
 	// retrieve ID from cookie value

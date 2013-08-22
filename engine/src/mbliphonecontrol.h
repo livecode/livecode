@@ -21,15 +21,38 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCiOSControl : public MCNativeControl
 {
+protected:
+	static MCNativeControlPropertyInfo kProperties[];
+	static MCNativeControlPropertyTable kPropertyTable;
+    static MCNativeControlActionInfo kActions[];
+	static MCNativeControlActionTable kActionTable;
+    
 public:
     MCiOSControl(void);
     
     // overridden methods
     virtual bool Create(void);
     virtual void Delete(void);
+#ifdef LEGACY_EXEC
     virtual Exec_stat Set(MCNativeControlProperty p_property, MCExecPoint &ep);
     virtual Exec_stat Get(MCNativeControlProperty p_property, MCExecPoint &ep);
-    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters); 
+    virtual Exec_stat Do(MCNativeControlAction p_action, MCParameter *_parameters);
+#endif
+    
+    virtual const MCNativeControlPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    virtual const MCNativeControlActionTable *getactiontable(void) const { return &kActionTable; }
+    
+    void SetRect(MCExecContext& ctxt, MCRectangle p_rect);
+    void SetVisible(MCExecContext& ctxt, bool p_visible);
+    void SetOpaque(MCExecContext& ctxt, bool p_opaque);
+    void SetAlpha(MCExecContext& ctxt, uinteger_t p_alpha);
+    void SetBackgroundColor(MCExecContext& ctxt, const MCNativeControlColor& p_color);
+    
+    void GetRect(MCExecContext& ctxt, MCRectangle& r_rect);
+    void GetVisible(MCExecContext& ctxt, bool& p_visible);
+    void GetOpaque(MCExecContext& ctxt, bool& p_opaque);
+    void GetAlpha(MCExecContext& ctxt, uinteger_t& p_alpha);
+    void GetBackgroundColor(MCExecContext& ctxt, MCNativeControlColor& p_color);
     
 	// Get the native view of the instance.
 	UIView *GetView(void);
@@ -37,7 +60,9 @@ public:
 	// Various helper functions
 	static Exec_stat ParseColor(MCExecPoint& ep, UIColor*& r_color);
 	static Exec_stat FormatColor(MCExecPoint& ep, UIColor *color);
-	
+    
+    static bool ParseColor(const MCNativeControlColor& p_color, UIColor*& r_color);
+	static bool FormatColor(const UIColor* p_color, MCNativeControlColor& r_color);
 	static bool ParseString(MCExecPoint& ep, NSString*& r_string);
 	static bool FormatString(MCExecPoint& ep, NSString *string);
 	static bool ParseUnicodeString(MCExecPoint& ep, NSString*& r_string);
@@ -58,5 +83,5 @@ private:
 };
 
 float MCIPhoneGetNativeControlScale(void);
-
+bool MCScrollViewGetContentOffset(UIScrollView *p_view, int32_t &r_x, int32_t &r_y);
 #endif

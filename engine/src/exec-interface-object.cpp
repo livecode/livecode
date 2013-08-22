@@ -546,7 +546,7 @@ static PropList videoclipprops[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output)
+void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceLayer& r_output)
 {
 	uint4 layer;
 	if (MCStringIsEqualToCString(p_input, MCtopstring, kMCCompareCaseless))
@@ -559,7 +559,7 @@ static void MCInterfaceLayerParse(MCExecContext& ctxt, MCStringRef p_input, MCIn
 		ctxt . LegacyThrow(EE_OBJECT_LAYERNAN);
 }
 
-static void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output)
+void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& p_input, MCStringRef& r_output)
 {
 	if (MCStringFormat(r_output, "%d", p_input . layer))
 		return;
@@ -567,7 +567,7 @@ static void MCInterfaceLayerFormat(MCExecContext& ctxt, const MCInterfaceLayer& 
 	ctxt . Throw();
 }
 
-static void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input)
+void MCInterfaceLayerFree(MCExecContext& ctxt, MCInterfaceLayer& p_input)
 {
 }
 

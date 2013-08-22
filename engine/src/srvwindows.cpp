@@ -45,7 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #undef GetCurrentTime
 
 #include "system.h"
-#include "filesystem.h"
+//#include "filesystem.h"
 
 #include <fcntl.h>
 #include <crtdbg.h>
@@ -299,7 +299,7 @@ struct MCWindowsSystem: public MCSystemInterface
 		return MCStringCopy(MCNameGetString(MCN_x86), r_string);
 	}
 
-	virtual char *GetProcessor(void)
+	virtual MCNameRef GetProcessor(void)
 	{
 		return MCN_x86;
 	}
@@ -707,13 +707,14 @@ struct MCWindowsSystem: public MCSystemInterface
 	
 	virtual void *LoadModule(const char *p_path)
 	{
-		char *t_native_path;
-		t_native_path = ResolvePath(p_path);
-
-		HMODULE t_handle;
-		t_handle = LoadLibraryExA(t_native_path, NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+		MCAutoStringRef t_path;
+		/* UNCHECKED */ MCStringCreateWithCString(p_path, &t_path);
 		
-		free(t_native_path);
+		MCAutoStringRef t_resolved_path;
+		/* UNCHECKED */ ResolveNativePath(*t_path, &t_resolved_path);
+	
+		HMODULE t_handle;
+		t_handle = LoadLibraryExA(MCStringGetCString(*t_resolved_path), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
 
 		return t_handle;
 	}
@@ -845,7 +846,7 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved)
 	{
-		return ResolveNativePath(p_path);
+		return ResolveNativePath(p_path, r_resolved);
 	}
 	
 	bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved)
@@ -876,7 +877,11 @@ struct MCWindowsSystem: public MCSystemInterface
 		uint4 t_entry_count;
 		t_entry_count = 0;
 		Boolean ok = False;
-		char *tpath = GetCurrentFolder();
+
+		MCAutoStringRef tpath_ref;
+		/* UNCHECKED */ GetCurrentFolder(&tpath_ref);
+
+		char *tpath = strdup(MCStringGetCString(*tpath_ref));
 		char *spath = new char [strlen(tpath) + 5];//path to be searched
 		strcpy(spath, tpath);
 		if (tpath[strlen(tpath) - 1] != '\\')
@@ -1064,9 +1069,9 @@ struct MCWindowsSystem: public MCSystemInterface
 		{
 			MCAutoStringRef t_address;
 			char *t_addr_str = inet_ntoa(*ptr[i]);
-			if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_add_str), &t_address))
+			if (!MCStringCreateWithNativeChars((char_t*)t_addr_str, MCCStringLength(t_addr_str), &t_address))
 				return false;
-			if (!p_callback(p_context, t_address))
+			if (!p_callback(p_context, *t_address))
 				return false;
 		}
 		
@@ -1197,11 +1202,8 @@ bool MCS_isnan(double v)
 
 bool MCS_get_temporary_folder(char *&r_temp_folder)
 {
-	WCHAR t_tmpdir[MAX_PATH];
-	int32_t t_tmpdir_len = 0;
-	t_tmpdir_len = GetTempPath(MAX_PATH, t_tmpdir);
-
-	return MCFileSystemPathFromNative(t_tmpdir, r_temp_folder);
+	r_temp_folder = MCsystem -> GetStandardFolder("temporary");
+	return true;
 }
 
 bool MCS_create_temporary_file(const char *p_path, const char *p_prefix, IO_handle &r_file, char *&r_name)
