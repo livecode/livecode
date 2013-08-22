@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 typedef struct MCTileCache *MCTileCacheRef;
 
 // The callback type required to render layers.
-typedef bool (*MCTileCacheRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+typedef bool (*MCTileCacheRenderCallback)(void *context, MCGContextRef target, const MCRectangle& region);
 
 // The compositor cleanup callback
 typedef void (*MCTileCacheCleanupCallback)(void *context);

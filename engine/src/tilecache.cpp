@@ -1495,7 +1495,7 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 #endif
 }
 
-static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCContext *p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCGContextRef p_context, const MCRectangle& p_rect)
 {
 	MCTileCacheSprite *t_sprite;
 	t_sprite = MCTileCacheGetSprite(self, p_sprite_id);
@@ -1567,7 +1567,6 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 						(t_required_tiles . bottom - t_required_tiles . top) * self -> tile_size);
 
 		// Create a memory context of the appropriate size.
-		MCContext *t_gfxcontext = nil;
 		MCGContextRef t_context = nil;
 		MCImageBitmap *t_bitmap = nil;
 
@@ -1577,8 +1576,6 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 			t_success = MCImageBitmapCreate(t_required_rect.width, t_required_rect.height, t_bitmap);
 			if (t_success)
 				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
-			if (t_success)
-				t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 
 			if (!t_success)
 				MCTileCacheInvalidate(self);
@@ -1586,10 +1583,9 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 
 		// Invoke the sprite renderer to draw it.
 		if (self -> valid)
-			MCTileCacheDrawSprite(self, t_sprite_id, t_gfxcontext, t_required_rect);
+			MCTileCacheDrawSprite(self, t_sprite_id, t_context, t_required_rect);
 
 		// Get rid of the temporary context.
-		delete t_gfxcontext;
 		MCGContextRelease(t_context);
 
 		// Now extract each of the required tiles.
@@ -1655,7 +1651,7 @@ static int MCTileCacheSortRenderListByIncreasingYThenX(void *p_context, const vo
 	return d;
 }
 
-static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCContext *p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCGContextRef p_context, const MCRectangle& p_rect)
 {
 	if (!self -> scenery_renderers[p_layer_id] . callback(self -> scenery_renderers[p_layer_id] . context, p_context, p_rect))
 		MCTileCacheInvalidate(self);
@@ -1741,17 +1737,12 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 	// Create a memory context of the appropriate size.
 	MCImageBitmap *t_bitmap = nil;
 	MCGContextRef t_context = nil;
-
-	MCContext *t_gfxcontext;
-	t_gfxcontext = nil;
 	if (self -> valid)
 	{
 		bool t_success = true;
 		t_success = MCImageBitmapCreate(t_required_rect.width, t_required_rect.height, t_bitmap);
 		if (t_success)
 			t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
-		if (t_success)
-			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
 
 		if (!t_success)
 			MCTileCacheInvalidate(self);
@@ -1759,7 +1750,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 
 	// Configure the context.
 	if (self -> valid)
-		t_gfxcontext -> setorigin(t_required_rect . x, t_required_rect . y);
+	MCGContextTranslateCTM(t_context, -t_required_rect . x, -t_required_rect . y);
 
 	// Now we use the original render list in reverse to determine what layers
 	// to render, siphoning off tiles as we reach them in the sorted render
@@ -1810,7 +1801,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 		{
 			// Render the current layer - but only if there are tiles from it we need.
 			if (t_output_index < t_render_list_length)
-				MCTileCacheDrawScenery(self, t_layer, t_gfxcontext, t_required_rect);
+				MCTileCacheDrawScenery(self, t_layer, t_context, t_required_rect);
 
 			// Extract any tiles that are now ready.
 			while(t_output_index < t_render_list_length)
@@ -1841,7 +1832,6 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 	}
 
 	// Get rid of the context.
-	delete t_gfxcontext;
 	MCGContextRelease(t_context);
 	MCImageFreeBitmap(t_bitmap);
 

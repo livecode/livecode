@@ -40,6 +40,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "tilecache.h"
 #include "context.h"
 
+#include "graphicscontext.h"
+
 #include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -834,6 +836,25 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// IM-2013-08-21: [[ ResIndependence ]] callback wrapper function to create scaled MCContext
+typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle)
+{
+	MCGContextSave(p_target);
+	
+	MCGraphicsContext *t_gfx_context;
+	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	
+	bool t_success;
+	t_success = p_callback(p_context, t_gfx_context, p_rectangle);
+	
+	delete t_gfx_context;
+	
+	MCGContextRestore(p_target);
+	
+	return t_success;
+}
+
 static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
 	MCControl *t_control;
@@ -868,6 +889,11 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 	return true;
 }
 
+static bool testtilecache_device_sprite_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle);
+}
+
 static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
 	MCControl *t_control;
@@ -895,6 +921,11 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 	return true;
 }
 
+static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle);
+}
+
 bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
@@ -913,6 +944,11 @@ bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRec
 	p_target->setbackground(MCzerocolor);
 
 	return true;
+}
+
+bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::render_foreground, p_context, p_target, p_rectangle);
 }
 
 bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
@@ -936,6 +972,11 @@ bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRec
 	return true;
 }
 
+bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::render_background, p_context, p_target, p_rectangle);
+}
+
 void MCCard::render(void)
 {
 	MCTileCacheRef t_tiler;
@@ -952,7 +993,7 @@ void MCCard::render(void)
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
 		t_fg_layer . ink = GXblendSrcOver;
-		t_fg_layer . callback = render_foreground;
+		t_fg_layer . callback = device_render_foreground;
 		t_fg_layer . context = this;
 		MCTileCacheRenderScenery(t_tiler, t_fg_layer);
 		m_fg_layer_id = t_fg_layer . id;
@@ -1026,7 +1067,7 @@ void MCCard::render(void)
 					t_layer . id = 0;
 				}
 				
-				t_layer . callback = testtilecache_sprite_renderer;
+				t_layer . callback = testtilecache_device_sprite_renderer;
 				MCTileCacheRenderSprite(t_tiler, t_layer);
 			}
 			else
@@ -1039,7 +1080,7 @@ void MCCard::render(void)
 					t_layer . id = 0;
 				}
 
-				t_layer . callback = testtilecache_scenery_renderer;
+				t_layer . callback = testtilecache_device_scenery_renderer;
 				MCTileCacheRenderScenery(t_tiler, t_layer);
 			}
 			
@@ -1062,7 +1103,7 @@ void MCCard::render(void)
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
-	t_bg_layer . callback = render_background;
+	t_bg_layer . callback = device_render_background;
 	t_bg_layer . context = this;
 	MCTileCacheRenderScenery(t_tiler, t_bg_layer);
 	m_bg_layer_id = t_bg_layer . id;
@@ -1114,7 +1155,7 @@ void MCStack::setacceleratedrendering(bool p_value)
 	MCscreen -> getdisplays(t_display, false);
 	
 	MCRectangle t_viewport;
-	t_viewport = t_display -> viewport;
+	t_viewport = t_display -> device_viewport;
 	
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
