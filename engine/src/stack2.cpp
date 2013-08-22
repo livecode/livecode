@@ -2406,7 +2406,10 @@ bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)
 	if (m_tilecache == nil)
 		return false;
 	
-	return MCTileCacheSnapshot(m_tilecache, p_area, r_pixmap);
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
+	return MCTileCacheSnapshot(m_tilecache, t_device_rect, r_pixmap);
 }
 
 #endif

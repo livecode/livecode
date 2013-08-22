@@ -643,9 +643,12 @@ bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_image)
 	if (m_tilecache == nil)
 		return false;
 	
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
 	__block bool t_result;
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		t_result = MCTileCacheSnapshot(m_tilecache, p_area, r_image);
+		t_result = MCTileCacheSnapshot(m_tilecache, t_device_rect, r_image);
 	});
 	
 	return t_result;

@@ -2515,7 +2515,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			if (m_tilecache == nil)
 			{
 				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-				MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
+				// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+				MCRectangle t_device_rect;
+				t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
+				MCTileCacheSetViewport(m_tilecache, t_device_rect);
 			}
 		
 			MCTileCacheSetCompositor(m_tilecache, t_type);

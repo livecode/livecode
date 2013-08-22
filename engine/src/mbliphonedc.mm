@@ -1193,7 +1193,8 @@ void MCIPhoneSyncDisplayClass(void)
 		s_is_opengl_display = true;
 		MCIPhoneRunBlockOnMainFiber(^(void) {
 			MCIPhoneSwitchViewToOpenGL();
-			MCIPhoneConfigureContentScale(MCIPhoneGetResolutionScale());
+			// IM-2013-08-21: [[ ResIndependence ]] switch to device scale for hi-res rendering
+			MCIPhoneConfigureContentScale(MCIPhoneGetDeviceScale());
 		});
 	}
 	else if (!s_ensure_opengl && s_is_opengl_display)
