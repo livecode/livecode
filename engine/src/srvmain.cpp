@@ -368,7 +368,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	MCAutoStringRef t_native_command_string;
 	MCsystem -> ResolveNativePath(*t_argv0_string, &t_native_command_string);
-	MCcmd = MCsystem -> PathFromNative(MCStringGetCString(*t_native_command_string));
+	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -385,10 +385,8 @@ bool X_init(int argc, char *argv[], char *envp[])
 		s_server_home = MCSTR(HOME_FOLDER);
 	else
 	{
+		s_server_home = MCValueRetain(MCcmd);
 
-		/* UNCHECKED */ MCStringCreateWithCString(strdup(MCcmd), s_server_home);
-		//(strrchr(s_server_home, '/'))[0] = '\0';
-		
 		uindex_t t_last_separator;
 		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, 0, kMCStringOptionCompareExact, t_last_separator);
 

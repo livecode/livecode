@@ -36,7 +36,7 @@ extern int MCidleRate;
 
 
 extern Boolean MCaqua;
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 extern MCStringRef MCfiletype;
 extern MCStringRef MCstackfiletype;
 

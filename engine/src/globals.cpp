@@ -90,7 +90,7 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-char *MCcmd;
+MCStringRef MCcmd;
 MCStringRef MCfiletype;
 MCStringRef MCstackfiletype;
 
@@ -902,9 +902,9 @@ bool X_open(int argc, char *argv[], char *envp[])
 #endif
 
 	MCfiletype = MCSTR("ttxtTEXT");
-	const char *tname = strrchr(MCcmd, PATH_SEPARATOR);
+	const char *tname = strrchr(MCStringGetCString(MCcmd), PATH_SEPARATOR);
 	if (tname == NULL)
-		tname = MCcmd;
+		tname = MCStringGetCString(MCcmd);
 	else
 		tname++;
 	if (MCU_strncasecmp(tname, "rev", 3))

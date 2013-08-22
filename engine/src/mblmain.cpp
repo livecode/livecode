@@ -111,7 +111,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 	
-	MCcmd = MCsystem -> PathFromNative(argv[0]);
+	/* UNCHECKED */ MCStringCreateWithCString(MCsystem -> PathFromNative(argv[0]), MCcmd);
 	
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)

@@ -544,7 +544,7 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
 	t_stack -> setparent(this);
-	t_stack -> setfilename(strclone(MCcmd));
+	t_stack -> setfilename(strdup(MCStringGetCString(MCcmd)));
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
 	        || type != OT_STACK && type != OT_ENCRYPT_STACK
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
@@ -1666,7 +1666,7 @@ bool MCDispatch::loadexternal(const char *p_external)
 		if (!MCCStringClone(p_external, t_filename))
 			return false;
 	}
-	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCcmd, '/') - MCcmd, MCcmd, p_external))
+	else if (!MCCStringFormat(t_filename, "%.*s/%s", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), p_external))
 		return false;
 #else
 	if (!MCCStringClone(p_external, t_filename))

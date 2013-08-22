@@ -139,41 +139,41 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	////
 	
-	MCcmd = argv[0];
+	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
 
 #if defined(_MAC_DESKTOP)
 	{
 		char *t_new_cmd;
 		uint4 t_length;
-		t_length = strlen(MCcmd);
+		t_length = MCStringGetLength(MCcmd);
 		t_new_cmd = new char[t_length + 1];
-		MCS_utf8tonative(MCcmd, t_length, t_new_cmd, t_length);
+		MCS_utf8tonative(MCStringGetCString(MCcmd), t_length, t_new_cmd, t_length);
 		t_new_cmd[t_length] = 0;
-		MCcmd = t_new_cmd;
+		/* UNCHECKED */ MCStringCreateWithCString(t_new_cmd, MCcmd);
 	}
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
-	if (MCcmd[0] != '/')
+	if (!(MCStringBeginsWithCString(MCcmd, (const char_t*)"/", kMCCompareExact)))
 	{//not c:/mc/xxx, not /mc/xxx
         MCAutoStringRef tpath_str;
 		
         /* UNCHECKED */ MCS_getcurdir(&tpath_str);
         char *tpath = strdup(MCStringGetCString(*tpath_str));
         
-		if (tpath && strlen(MCcmd) + strlen(tpath) < PATH_MAX)
+		if (tpath && MCStringGetLength(MCcmd) + strlen(tpath) < PATH_MAX)
 		{
 			strcpy(apppath,tpath);
 			strcat(apppath, "/");
-			char *tempmccmd = MCcmd;
+			char *tempmccmd = strdup(MCStringGetCString(MCcmd));
 			if (*tempmccmd == '.' && tempmccmd[1] != '.')
 				tempmccmd++;
 			if (*tempmccmd == '/')
 				tempmccmd++;
 			strcat(apppath,  tempmccmd);
-			if (MCcmd != argv[0])
-				delete[] MCcmd;
-			MCcmd = apppath;
+			if (strdup(MCStringGetCString(MCcmd)) != argv[0])
+				MCValueRelease(MCcmd);
+			/* UNCHECKED */ MCStringCreateWithCString(appath, MCcmd);
 			delete tpath;
 		}
 	}
@@ -189,7 +189,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		{
 			if (++i >= argc || *argv[i] == '-')
 			{
-				fprintf(stderr, "%s: bad display name\n", MCcmd);
+				fprintf(stderr, "%s: bad display name\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			MCdisplayname = argv[i];
@@ -208,7 +208,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			char *geometry = NULL;
 			if (++i >= argc)
 			{
-				fprintf(stderr, "%s: bad geometry\n", MCcmd);
+				fprintf(stderr, "%s: bad geometry\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			geometry = argv[i];
@@ -266,7 +266,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			uint4 visualid = 0;
 			if (++i >= argc || *argv[i] == '-' || !MCU_stoui4(argv[i], visualid))
 			{
-				fprintf(stderr, "%s: bad visual id\n", MCcmd);
+				fprintf(stderr, "%s: bad visual id\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			MCvisualid = visualid;
@@ -288,7 +288,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			        [-u[i]] (don't create graphical user interface)\n\
 			        [-v[isualid] n] (use visual id n as listed from xdpyinfo)\n\
 			        [-w[indowid] n] (watch window id n for commands)\n\
-			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCcmd);
+			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCStringGetCString(MCcmd));
 			return False;
 		}
 		if (argv[i] != NULL && strlen(argv[i]) > 0)

@@ -58,10 +58,10 @@ MCNameRef MCAndroidSystem::GetProcessor(void)
 
 char *MCAndroidSystem::GetAddress(void)
 {
-	extern char *MCcmd;
+	extern MCStringRef MCcmd;
 	char *t_address;
-	t_address = new char[strlen(MCcmd) + strlen("android:") + 1];
-	sprintf(t_address, "android:%s", MCcmd);
+	t_address = new char[MCStringGetLength(MCcmd) + strlen("android:") + 1];
+	sprintf(t_address, "android:%s", MCStringGetCString(MCcmd));
 	return t_address;
 }
 
