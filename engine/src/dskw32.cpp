@@ -14,6 +14,8 @@
  You should have received a copy of the GNU General Public License
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
+#include "prefix.h"
+
 #include "parsedef.h"
 #include "filedefs.h"
 #include "globdefs.h"
@@ -38,11 +40,18 @@
 #include "mode.h"
 #include "securemode.h"
 #include "text.h"
+#include "notify.h"
 
 #include <sys/stat.h>
-#include <sys/utsname.h>
-#include <sys/time.h>
-#include <sys/ioctl.h>
+#include <time.h>
+#include <Winsock2.h>
+#include <Mstcpip.h>
+#include <Mswsock.h>
+#include <Shlobj.h>
+#include <sys\Timeb.h>
+#include <Iphlpapi.h>
+#include <process.h>
+#include <io.h> 
 
 
 //////////////////////////////////////////////////////////////////////////////////
@@ -95,6 +104,237 @@ DWORD RegDeleteKeyNT(HKEY hStartKey, const char *pKeyName)
 
 //////////////////////////////////////////////////////////////////////////////////
 
+extern Boolean wsainit();
+
+extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
+
+//////////////////////////////////////////////////////////////////////////////////
+
+static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
+{
+	uint32_t t_amount;
+	DWORD t_read;
+	if (!ReadFile(p_pipe, &t_amount, sizeof(uint32_t), &t_read, NULL) ||
+		t_read != sizeof(uint32_t))
+		return false;
+
+	void *t_buffer;
+	t_buffer = malloc(t_amount);
+	if (t_buffer == nil)
+		return false;
+
+	if (!ReadFile(p_pipe, t_buffer, t_amount, &t_read, NULL) ||
+		t_read != t_amount)
+		return false;
+
+	r_data = t_buffer;
+	r_data_length = t_amount;
+
+	return true;
+}
+
+static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
+{
+	DWORD t_written;
+	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
+		t_written != 4)
+		return false;
+	if (!WriteFile(p_pipe, p_data, p_count, &t_written, NULL) ||
+		t_written != p_count)
+		return false;
+	return true;
+}
+
+// MW-2010-05-11: This call is only present on Vista and above, which is the place we
+//   need it - so weakly bind.
+typedef DWORD (APIENTRY *GetProcessIdOfThreadPtr)(HANDLE thread);
+static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
+{
+	// We can safely assume that the kernel dll is loaded!
+	HMODULE t_module;
+	t_module = GetModuleHandleA("Kernel32.dll");
+	if (t_module == NULL)
+		return -1;
+
+	// Resolve the symbol
+	void *t_ptr;
+	t_ptr = GetProcAddress(t_module, "GetProcessIdOfThread");
+	if (t_ptr == NULL)
+		return -1;
+
+	// Call it
+	return ((GetProcessIdOfThreadPtr)t_ptr)(p_thread);
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+typedef struct
+{ //struct for WIN registry
+	const char *token;
+	HKEY key;
+	uint32_t mode;
+}
+reg_keytype;
+
+static reg_keytype Regkeys[] = {  //WIN registry root keys struct
+                                   {"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT, 0},
+                                   {"HKEY_CURRENT_USER", HKEY_CURRENT_USER, 0},
+                                   {"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE, 0},
+                                   {"HKEY_LOCAL_MACHINE_32", HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY},
+                                   {"HKEY_LOCAL_MACHINE_64", HKEY_LOCAL_MACHINE, KEY_WOW64_64KEY},
+                                   {"HKEY_USERS", HKEY_USERS, 0},
+                                   {"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA, 0},
+                                   {"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG, 0},
+                                   {"HKEY_DYN_DATA", HKEY_DYN_DATA, 0}
+                               };
+
+typedef struct
+{
+	const char *token;
+	DWORD type;
+}
+reg_datatype;
+
+static reg_datatype RegDatatypes[] = {  //WIN registry value types struct
+                                         {"binary", REG_BINARY},
+                                         {"dword", REG_DWORD},
+                                         {"dwordlittleendian", REG_DWORD_LITTLE_ENDIAN},
+                                         {"dwordbigendian", REG_DWORD_BIG_ENDIAN},
+                                         {"expandsz", REG_EXPAND_SZ},
+                                         {"link", REG_LINK},
+                                         {"multisz", REG_MULTI_SZ},
+                                         {"none", REG_NONE},
+                                         {"resourcelist", REG_RESOURCE_LIST},
+                                         {"string", REG_SZ},
+                                         {"sz", REG_SZ}
+                                     };
+
+bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key)
+{
+	uindex_t t_length = MCStringGetLength(p_path);
+	uindex_t t_offset = t_length;
+	if (!MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_offset))
+	{
+		t_offset = t_length;
+	}
+	return MCStringCopySubstring(p_path, MCRangeMake(0, t_offset), r_root) &&
+		MCStringCopySubstring(p_path, MCRangeMake(t_offset + 1, t_length), r_key);
+}
+
+bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key, MCStringRef& r_value)
+{
+	// only copy components out if they are present - <ROOT>\<KEY>\<VALUE>, <ROOT>\<VALUE>, <ROOT>
+	// (components may be empty)
+	bool t_success = true;
+	uindex_t t_length = MCStringGetLength(p_path);
+	uindex_t t_path_offset = t_length;
+	uindex_t t_value_offset = t_length;
+	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
+	{
+		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
+		{
+			if (t_value_offset > t_path_offset)
+				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+			else
+				t_value_offset = t_length;
+		}
+		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
+	}
+	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
+}
+
+bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+	{
+		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+		{
+			r_hkey = Regkeys[i].key;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey, uint32_t& x_access_mode)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+	{
+		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+		{
+			r_hkey = Regkeys[i].key;
+			if (MCmajorosversion >= 0x0501)
+				x_access_mode |= Regkeys[i].mode;
+			return true;
+		}
+	}
+	return false;
+}
+
+bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
+{
+	for (uindex_t i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
+	{
+		if (p_type == RegDatatypes[i].type)
+		{
+			return MCStringCreateWithCString(RegDatatypes[i].token, r_string);
+		}
+	}
+
+	return false;
+}
+
+DWORD MCS_registry_type_from_string(MCStringRef p_string)
+{
+	if (p_string != nil)
+	{
+		for (uindex_t i = 0; i < ELEMENTS(RegDatatypes); i++)
+		{
+			if (MCStringIsEqualToCString(p_string, RegDatatypes[i].token, kMCCompareCaseless))
+				return RegDatatypes[i].type;
+		}
+	}
+
+	return REG_SZ;
+}
+
+class MCAutoRegistryKey
+{
+public:
+	MCAutoRegistryKey(void)
+	{
+		m_key = NULL;
+	}
+
+	~MCAutoRegistryKey(void)
+	{
+		if (m_key != NULL)
+			RegCloseKey(m_key);
+	}
+
+	HKEY operator = (HKEY value)
+	{
+		MCAssert(m_key == NULL);
+		m_key = value;
+		return m_key;
+	}
+
+	HKEY* operator & (void)
+	{
+		MCAssert(m_key == NULL);
+		return &m_key;
+	}
+
+	HKEY operator * (void) const
+	{
+		return m_key;
+	}
+
+private:
+	HKEY m_key;
+};
+
+//////////////////////////////////////////////////////////////////////////////////
 static MMRESULT tid;
 
 void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
@@ -136,6 +376,103 @@ bool MCS_specialfolder_to_csidl(MCNameRef p_folder, MCNumberRef& r_csidl)
 }
 
 //////////////////////////////////////////////////////////////////////////////////
+
+/* thread created to read data from child process's pipe */
+static bool s_finished_reading = false;
+
+static void readThreadDone(void *param)
+{
+	s_finished_reading = true;
+}
+
+static DWORD readThread(Streamnode *process)
+{
+	IO_handle ihandle;
+	ihandle = process -> ihandle;
+
+	DWORD nread;
+	ihandle->buffer = new char[READ_PIPE_SIZE];
+	uint4 bsize = READ_PIPE_SIZE;
+	ihandle->ioptr = ihandle->buffer;   //set ioptr member
+	ihandle->len = 0; //set len member
+	while (ihandle->fhandle != NULL)
+	{
+		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
+			break;
+		if (nread == 0)
+		{
+			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+				break;
+			Sleep(100);
+			continue;
+		}
+		if (ihandle->len + nread >= bsize)
+		{
+			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
+			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
+			bsize = newsize;
+			ihandle->ioptr = ihandle->buffer;
+		}
+		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
+		              nread, &nread, NULL)
+		        || nread == 0)
+		{
+			ihandle->len += nread;
+			break;
+		}
+		ihandle->len += nread;
+		ihandle->flags = 0;
+		if (ihandle->ioptr != ihandle->buffer)
+		{
+			ihandle->len -= ihandle->ioptr - ihandle->buffer;
+			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
+			ihandle->ioptr = ihandle->buffer;
+		}
+	}
+	MCNotifyPush(readThreadDone, nil, false, false);
+	return 0;
+}
+
+//////////////////////////////////////////////////////////////////////////////////
+// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
+bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
+{
+	// If the path conversion was not succesful, then
+	// we revert back to using the original path.
+	MCAutoStringRef t_long_path;
+	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
+	{
+		r_long_path = MCValueRetain(*t_long_path);
+		return true;
+	}
+
+	return MCStringCopy(p_short_path, r_long_path);
+}
+
+bool MCS_getcurdir_native(MCStringRef& r_path)
+{
+	MCAutoNativeCharArray t_buffer;
+	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
+	if (t_path_len == 0 || !t_buffer.New(t_path_len))
+		return false;
+	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
+		return false;
+
+	t_buffer.Shrink(t_path_len - 1);
+	return t_buffer.CreateStringAndRelease(r_path);
+}
+
+bool MCS_native_path_exists(MCStringRef p_path, bool p_is_file)
+{
+	// MW-2010-10-22: [[ Bug 8259 ]] Use a proper Win32 API function - otherwise network shares don't work.
+	DWORD t_attrs;
+	t_attrs = GetFileAttributesA(MCStringGetCString(p_path));
+
+	if (t_attrs == INVALID_FILE_ATTRIBUTES)
+		return false;
+
+	return p_is_file == ((t_attrs & FILE_ATTRIBUTE_DIRECTORY) == 0);
+}
 
 bool MCS_path_exists(MCStringRef p_path, bool p_is_file)
 {
@@ -330,7 +667,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         r_value = r_error = nil;
         
         //key = full path info such as: HKEY_LOCAL_MACHINE\\Software\\..\\valuename
-        if (!RegistrySplitKey(p_key, &t_root, &t_key, &t_value))
+		if (!MCS_registry_split_key(p_key, &t_root, &t_key, &t_value))
             return false;
         
         if (*t_value == nil)
@@ -347,7 +684,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         
         uint32_t t_access_mode = KEY_READ;
         
-        if (!RegistryRootToHKey(*t_root, t_hkey, t_access_mode) ||
+		if (!MCS_registry_root_to_hkey(*t_root, t_hkey, t_access_mode) ||
             (RegOpenKeyExA(t_hkey, MCStringGetCString(*t_key), 0, t_access_mode, &t_regkey) != ERROR_SUCCESS))
         {
             /* RESULT */ //MCresult->sets("bad key");
@@ -381,7 +718,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
                 
                 t_buffer.Shrink(t_len);
                 return t_buffer.CreateStringAndRelease(r_value) &&
-                RegistryTypeToString(t_type, r_type);
+					MCS_registry_type_to_string(t_type, r_type);
             }
         }
         else
@@ -400,10 +737,10 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         MCAutoStringRef t_root, t_key, t_value;
         HKEY t_root_hkey;
         
-        if (!RegistrySplitKey(p_key, &t_root, &t_key, &t_value))
+		if (!MCS_registry_split_key(p_key, &t_root, &t_key, &t_value))
             return false;
         
-        if (!RegistryRootToHKey(*t_root, t_root_hkey))
+        if (!MCS_registry_root_to_hkey(*t_root, t_root_hkey))
         {
             /* RESULT */ //MCresult->sets("bad key");
             return MCStringCreateWithCString("bad key", r_error);
@@ -437,7 +774,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         else
         {
             DWORD t_type;
-            t_type = RegistryTypeFromString(p_type);
+            t_type = MCS_registry_type_from_string(p_type);
             
             const BYTE *t_byte_ptr = MCStringGetBytePtr(p_value);
             uint32_t t_length = MCStringGetLength(p_value);
@@ -461,7 +798,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
     {
         MCAutoStringRef t_root, t_key;
         
-        if (!RegistrySplitKey(p_key, &t_root, &t_key))
+        if (!MCS_registry_split_key(p_key, &t_root, &t_key))
             return false;
         
         HKEY hkey = NULL;
@@ -472,7 +809,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
             return MCStringCreateWithCString("no key", r_error);
         }
         
-        if (!RegistryRootToHKey(*t_root, hkey))
+		if (!MCS_registry_root_to_hkey(*t_root, hkey))
         {
             /* RESULT */ //MCresult->sets("bad key");
             return MCStringCreateWithCString("bad key", r_error);
@@ -498,9 +835,9 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         HKEY t_hkey;
         MCAutoRegistryKey t_regkey;
         
-        if (!RegistrySplitKey(p_path, &t_root, &t_key))
+        if (!MCS_registry_split_key(p_path, &t_root, &t_key))
             return false;
-        if (!RegistryRootToHKey(*t_root, t_hkey) ||
+        if (!MCS_registry_root_to_hkey(*t_root, t_hkey) ||
             RegOpenKeyExA(t_hkey, MCStringGetCString(*t_key), 0, KEY_READ, &t_regkey) != ERROR_SUCCESS)
         {
             return MCStringCreateWithCString("bad key", r_error);
@@ -547,28 +884,18 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
     //  Windows-specific functions (using Windows-specific parameters)
     ////////////////////////////////////////////////////
     
-    virtual bool RegistryRootToHKey()
-    {
-    }
-    virtual bool RegistrySplitKey()
-    {
-    }
-    virtual bool RegistryTypeFromString()
-    {
-    }
-    virtual bool RegistryTypeToString()
-    {
-    }
-    
     virtual bool GetCurrentDirNative()
     {
     }
+
     virtual bool GetLongFilePath(MCStringRef& r_path)
     {
     }
+
     virtual Boolean NativePathExists()
     {
     }
+
     virtual bool PathAppend(MCStringRef p_path)
     {
     }
@@ -585,9 +912,9 @@ static DWORD startcount;
 
 struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 {
-    virtual MCServiceInterface *QueryService(MCServiceType type)
+    virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
-        if ((p_type  & kMCServiceTypeWindowsSystem) == kMCServiceTypeWindowsSystem)
+        if (p_type == kMCServiceTypeWindowsSystem)
             return (MCWindowsSystemServiceInterface *)this;
         return nil;
     }
@@ -603,7 +930,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual void Debug(MCStringRef p_string) = 0;
     
-	virtual real64_t GetCurrentTime(void)
+	virtual real64_t GetCurrentTime()
     {
 #ifdef /* MCS_time_dsk_w32 */ LEGACY_SYSTEM
 	if (startcount)
@@ -727,7 +1054,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_alarm_dsk_w32 */
         //no action
         if (!MCnoui)
-            if (secs == 0)
+            if (p_when == 0)
             {
                 if (tid != 0)
                 {
@@ -737,7 +1064,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             }
             else
                 if (tid == 0)
-                    tid = timeSetEvent((UINT)(secs * 1000.0), 100, MCS_tp,
+                    tid = timeSetEvent((UINT)(p_when * 1000.0), 100, MCS_tp,
                                        0, TIME_PERIODIC);
     }
     
@@ -746,7 +1073,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_sleep_dsk_w32 */ LEGACY_SYSTEM
 	Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
 #endif /* MCS_sleep_dsk_w32 */
-        Sleep((DWORD)(delay * 1000.0));  //takes milliseconds as parameter
+        Sleep((DWORD)(p_when * 1000.0));  //takes milliseconds as parameter
     }
 	
 	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value)
@@ -857,7 +1184,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         { // bug in NT serving: can't delete full path from current dir
             char dir[PATH_MAX];
             GetCurrentDirectoryA(PATH_MAX, dir);
-            if (p[0] == '\\' && p[1] == '\\' && dir[0] == '\\' && dir[1] == '\\')
+            if (MCStringGetNativeCharAtIndex(p_path, 0) == '\\' && MCStringGetNativeCharAtIndex(p_path, 1) == '\\' && dir[0] == '\\' && dir[1] == '\\')
             {
                 SetCurrentDirectoryA("C:\\");
                 done = remove(MCStringGetCString(p_path)) == 0;
@@ -944,7 +1271,8 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	return SUCCEEDED(err);
 #endif /* MCS_createalias_dsk_w32 */
         HRESULT err;
-        MCAutoStringRef t_src_path = p_target;
+        MCAutoStringRef t_src_path;
+		t_src_path = p_target;
         IShellLinkA *ISHLNKvar1;
         err = CoCreateInstance(CLSID_ShellLink, NULL,
                                CLSCTX_INPROC_SERVER, IID_IShellLinkA,
@@ -952,20 +1280,21 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (SUCCEEDED(err))
         {
             IPersistFile *IPFILEvar1;
-            if (MCStringGetNativeChatAtIndex(*t_src_path, 1) != ':' && MCStringGetNativeCharAtIndex(*t_src_path, 0) != '/')
+            if (MCStringGetNativeCharAtIndex(*t_src_path, 1) != ':' && MCStringGetNativeCharAtIndex(*t_src_path, 0) != '/')
             {
                 MCAutoStringRef t_path;
-                MCStringCreateMutable(0, t_path);
+                /* UNCHECKED */ MCStringCreateMutable(0, &t_path);
                 /* UNCHECKED */ GetCurrentFolder(&t_path); //prepend the current dir
-                /* UNCHECKED */ MCStringAppendFormat(t_path, "/%x", p_target);
-                /* UNCHECKED */ MCU_path2native(t_path, &t_src_path);
+                /* UNCHECKED */ MCStringAppendFormat(*t_path, "/%x", p_target);
+                /* UNCHECKED */ MCU_path2native(*t_path, &t_src_path);
             }
-            ISHLNKvar1->SetPath(MCStringGetCString(*t_src_source));
-            char *buffer = strrchr(MCStringGetCString(*t_src_path), '\\' );
+            ISHLNKvar1->SetPath(MCStringGetCString(*t_src_path));
+			char *t_src_path_char = strclone(MCStringGetCString(*t_src_path));
+			char *buffer = strrchr(t_src_path_char, '\\' );
             if (buffer != NULL)
             {
                 *(buffer+1) = '\0';
-                ISHLNKvar1->SetWorkingDirectory(MCStringGetCString(*t_src_source));
+				ISHLNKvar1->SetWorkingDirectory(t_src_path_char);
             }
             err = ISHLNKvar1->QueryInterface(IID_IPersistFile, (void **)&IPFILEvar1);
             if (SUCCEEDED(err))
@@ -977,6 +1306,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
                 IPFILEvar1->Release();
             }
             ISHLNKvar1->Release();
+			delete[] t_src_path_char;
         }
         return SUCCEEDED(err);
     }
@@ -1036,7 +1366,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_resolvealias_dsk_w32 */
         MCAutoStringRef t_resolved_path;
         
-        if (!ResolvePath(p_path, &t_resolved_path))
+        if (!ResolvePath(p_target, &t_resolved_path))
             return false;
         
         MCAutoNativeCharArray t_dest;
@@ -1075,12 +1405,14 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         {
             MCAutoStringRef t_std_path;
             t_dest.Shrink(MCCStringLength((char*)t_dest.Chars()));
-            return t_dest.CreateStringAndRelease(&t_std_path) && MCU_path2std(*t_std_path, r_resolved);
+            return t_dest.CreateStringAndRelease(&t_std_path) && MCU_path2std(*t_std_path, r_dest);
         }
         else
         {
             MCS_seterrno(GetLastError());
-            return MCStringCreateWithCString("can't get", r_error);
+            //return MCStringCreateWithCString("can't get", r_error);
+			MCresult -> sets("can't get");
+			return true;
         }
     }
 	
@@ -1093,7 +1425,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_getcurdir_dsk_w32 */
         MCAutoStringRef t_path;
         MCS_getcurdir_native(&t_path);
-		return MCU_path2std(*t_path, r_path);
+		/* UNCHECKED */ MCU_path2std(*t_path, r_path);
     }
 	///* LEGACY */ char *GetCurrentFolder(void);
     
@@ -1218,8 +1550,8 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         //}
         else
         {
-            if (MCNumberParse(p_special, &t_special_folder) ||
-                MCS_specialfolder_to_csidl(p_special, &t_special_folder))
+            if (MCNumberParse(MCNameGetString(p_type), &t_special_folder) ||
+                MCS_specialfolder_to_csidl(p_type, &t_special_folder))
             {
                 LPITEMIDLIST lpiil;
                 MCAutoNativeCharArray t_buffer;
@@ -1246,11 +1578,11 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             // OK-2009-01-28: [[Bug 7452]]
             // And call the function to expand the path - if cannot convert to a longfile path,
             // we should return what we already had!
-            return MCS_getlongfilepath(*t_standard_path, r_path);
+            return MCS_getlongfilepath(*t_standard_path, r_folder);
         }
         else
         {
-            r_path = MCValueRetain(kMCEmptyString);
+            r_folder = MCValueRetain(kMCEmptyString);
             return true;
         }
     }
@@ -1282,7 +1614,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	return False;
 #endif /* MCS_noperm_dsk_w32 */
         struct stat buf;
-        if (stat(MCStringGetCString(&p_path), &buf))
+        if (stat(MCStringGetCString(p_path), &buf))
             return False;
         if (buf.st_mode & S_IFDIR)
             return True;
@@ -1298,7 +1630,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_chmod_dsk_w32 */
-        if (_chmod(MCStringGetCString(p_path), mask) != 0)
+        if (_chmod(MCStringGetCString(p_path), p_mask) != 0)
             return IO_ERROR;
         return IO_NORMAL;
     }
@@ -1307,7 +1639,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_umask_dsk_w32 */ LEGACY_SYSTEM
 	return _umask(mask);
 #endif /* MCS_umask_dsk_w32 */
-        return _umask(mask);
+        return _umask(p_mask);
     }
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
@@ -1493,15 +1825,21 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (!MCStringCreateWithNativeChars((const char_t*)*t_fname, t_length, &t_path) ||
             !MCU_path2std(*t_path, &t_stdpath) ||
             !LongFilePath(*t_stdpath, &t_long_path))
-            return false;
+		{
+			r_tmp_name = MCValueRetain(kMCEmptyString);
+            return;
+		}
         
         if (t_ptr == nil)
-            return MCStringCopy(*t_long_path, r_string);
+		{
+			/* UNCHECKED */ MCStringCopy(*t_long_path, r_tmp_name);
+			return;
+		}
         
         MCAutoStringRef t_tmp_name;
-        return MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
-		MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
-		MCStringCopy(*t_tmp_name, r_string);
+        /* UNCHECKED */ MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
+			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
+			MCStringCopy(*t_tmp_name, r_tmp_name);
     }
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
@@ -1530,7 +1868,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         // MW-2011-02-28: [[ Bug 9410 ]] Use the Ex form of LoadLibrary and ask it to try
         //   to resolve dependent DLLs from the folder containing the DLL first.
         HMODULE t_handle;
-        t_handle = LoadLibraryExA(MCStringGetCString(t_native_filename), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
+        t_handle = LoadLibraryExA(MCStringGetCString(p_path), NULL, LOAD_WITH_ALTERED_SEARCH_PATH);
         
         return (MCSysModuleHandle)t_handle;
     }
@@ -2044,9 +2382,11 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         siStartInfo.hStdInput = hChildStdinRd;
         siStartInfo.hStdOutput = hChildStdoutWr;
         
-        ep.insert(" /C ", 0, 0);
-        ep.insert(MCshellcmd, 0, 0);
-        char *pname = ep.getsvalue().clone();
+		MCAutoStringRef t_mutable_cmd;
+
+		/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_cmd);
+		/* UNCHECKED */ MCStringFormat(&t_mutable_cmd, "%s%s%x", " /C ", MCshellcmd, p_command);
+        char *pname = strclone(MCStringGetCString(*t_mutable_cmd));
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
         uint4 index = MCnprocesses;
@@ -2125,18 +2465,22 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
         if (MCprocesses[index].retcode)
         {
-            MCExecPoint ep2(ep);
-            ep2.setint(MCprocesses[index].retcode);
-            MCresult->set(ep2);
+			MCExecPoint t_ep(nil, nil, nil);
+			t_ep.setint(MCprocesses[index].retcode);
+			MCresult -> set(t_ep);
         }
         else
             MCresult->clear(False);
-        ep.copysvalue(MCprocesses[index].ihandle->buffer, MCprocesses[index].ihandle->len);
-        delete MCprocesses[index].ihandle->buffer;
+
+		MCExecPoint t_ep;
+        t_ep.copysvalue(MCprocesses[index].ihandle->buffer, MCprocesses[index].ihandle->len);
+
         MCS_close(MCprocesses[index].ihandle);
         IO_cleanprocesses();
         delete pname;
-        ep.texttobinary();
+        t_ep.texttobinary();
+
+		r_output = (MCStringRef) MCValueRetain(t_ep.getvalueref());
         return IO_NORMAL;
     }
     
@@ -2358,12 +2702,12 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)t_process_handle;
 	}
 #endif /* MCS_startprocess_dsk_w32 */
-        Boolean reading = mode == OM_READ || mode == OM_UPDATE;
-        Boolean writing = mode == OM_APPEND || mode == OM_WRITE || mode == OM_UPDATE;
+        Boolean reading = p_mode == OM_READ || p_mode == OM_UPDATE;
+        Boolean writing = p_mode == OM_APPEND || p_mode == OM_WRITE || p_mode == OM_UPDATE;
         MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
                     sizeof(Streamnode));
         MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(p_name);
-        MCprocesses[MCnprocesses].mode = mode;
+        MCprocesses[MCnprocesses].mode = p_mode;
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
         MCprocesses[MCnprocesses].phandle = NULL; //process handle
@@ -2384,13 +2728,16 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             MCAutoStringRef t_cmdline;
-            if (doc != nil && *doc != '\0')
-			/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), doc);
+            if (MCStringGetLength(p_doc) != nil && MCStringGetNativeCharAtIndex(p_doc, 0) != '\0')
+			{
+				/* UNCHECKED */ MCStringCreateMutable(0, &t_cmdline);
+				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), MCStringGetCString(p_doc));
+			}
             else
-                t_cmdline = MCNameGetString(p_name);
+                t_cmdline = (MCStringRef) MCValueRetain(MCNameGetString(p_name));
             
             // There's no such thing as Elevation before Vista (majorversion 6)
-            if (!elevated || MCmajorosversion < 0x0600)
+            if (!p_elevated || MCmajorosversion < 0x0600)
             {
                 HANDLE hChildStdinRd = NULL;
                 HANDLE hChildStdoutWr = NULL;
@@ -2685,10 +3032,8 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #ifdef /* MCS_seterrno_dsk_w32 */ LEGACY_SYSTEM
 	*g_mainthread_errno = value;
 #endif /* MCS_seterrno_dsk_w32 */
-        *g_mainthread_errno = value;
+        *g_mainthread_errno = p_errno;
     }
-    
-    virtual bool GetVersion(MCStringRef& r_version) = 0;
     
     virtual void LaunchDocument(MCStringRef p_document) = 0;
     virtual void LaunchUrl(MCStringRef p_document) = 0;
@@ -2718,3 +3063,169 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         return dns_servers_from_registry(r_list);
     }
 };
+
+// MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess
+//   via 'ShellExecute' 'runas'.
+int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+{
+	bool t_success;
+	t_success = true;
+
+	// Fetch the thread id (present immediately after '-elevated-slave' as hex).
+	uint32_t t_parent_thread_id;
+	if (t_success)
+	{
+		char *t_end;
+		t_parent_thread_id = strtoul(lpCmdLine + 15, &t_end, 16);
+		if (t_end != lpCmdLine + strlen(lpCmdLine))
+			t_success = false;
+	}
+
+	// Open the parent's thread
+	HANDLE t_parent_thread;
+	t_parent_thread = nil;
+	if (t_success)
+	{
+		t_parent_thread = OpenThread(SYNCHRONIZE | THREAD_QUERY_INFORMATION, FALSE, t_parent_thread_id);
+		if (t_parent_thread == nil)
+			t_success = false;
+	}
+
+	// Open the parent's process
+	HANDLE t_parent_process;
+	t_parent_process = nil;
+	if (t_success)
+	{
+		t_parent_process = OpenProcess(SYNCHRONIZE | PROCESS_DUP_HANDLE, FALSE, DoGetProcessIdOfThread(t_parent_thread));
+		if (t_parent_process == nil)
+			t_success = false;
+	}
+
+	// Create a pipe the write end of which we will give to the parent
+	HANDLE t_fromparent_read, t_fromparent_write;
+	HANDLE t_toparent_read, t_toparent_write;
+	HANDLE t_toparent_write_dup;
+	t_fromparent_read = t_fromparent_write = nil;
+	t_toparent_read = t_toparent_write = nil;
+	t_toparent_write_dup = nil;
+	if (t_success)
+	{
+		SECURITY_ATTRIBUTES t_attr;
+		t_attr . nLength = sizeof(SECURITY_ATTRIBUTES);
+		t_attr . bInheritHandle = TRUE;
+		t_attr . lpSecurityDescriptor = NULL;
+		if (!CreatePipe(&t_fromparent_read, &t_fromparent_write, &t_attr, 0) ||
+			!CreatePipe(&t_toparent_read, &t_toparent_write, &t_attr, 0) ||
+			!DuplicateHandle(GetCurrentProcess(), t_toparent_write, GetCurrentProcess(), &t_toparent_write_dup, 0, TRUE, DUPLICATE_SAME_ACCESS))
+			t_success = false;
+	}
+
+	// Make sure the ends we are duplicating are not inheritable
+	if (t_success)
+	{
+		SetHandleInformation(t_fromparent_write, HANDLE_FLAG_INHERIT, 0);
+		SetHandleInformation(t_toparent_read, HANDLE_FLAG_INHERIT, 0);
+	}
+
+	// Duplicate the appropriate ends into the parent
+	HANDLE t_parent_data_write, t_parent_data_read;
+	t_parent_data_write = nil;
+	t_parent_data_read = nil;
+	if (t_success)
+	{
+		if (!DuplicateHandle(GetCurrentProcess(), t_fromparent_write, t_parent_process, &t_parent_data_write, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE) ||
+			!DuplicateHandle(GetCurrentProcess(), t_toparent_read, t_parent_process, &t_parent_data_read, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
+			t_success = false;
+	}
+
+	// Post the pipe handles to the parent
+	if (t_success)
+		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
+
+	// Now we must read the command line and env strings
+	uint32_t t_cmd_line_length;
+	void *t_cmd_line;
+	t_cmd_line_length = 0;
+	t_cmd_line = nil;
+	if (t_success)
+		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
+
+	uint32_t t_env_strings_length;
+	void *t_env_strings;
+	t_env_strings_length = 0;
+	t_env_strings = nil;
+	if (t_success)
+		t_success = read_blob_from_pipe(t_fromparent_read, t_env_strings, t_env_strings_length);
+
+	// If we succeeded in reading those, we are all set to create the process
+	HANDLE t_process_handle, t_thread_handle;
+	DWORD t_process_id;
+	t_thread_handle = NULL;
+	t_process_handle = NULL;
+	t_process_id = 0;
+	if (t_success)
+	{
+		PROCESS_INFORMATION piProcInfo;
+		STARTUPINFOA siStartInfo;
+		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
+		siStartInfo.cb = sizeof(STARTUPINFOA);
+		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+		siStartInfo.wShowWindow = SW_HIDE;
+		siStartInfo.hStdInput = t_fromparent_read;
+		siStartInfo.hStdOutput = t_toparent_write;
+		siStartInfo.hStdError = t_toparent_write_dup;
+		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+		{
+			t_process_handle = piProcInfo . hProcess;
+			t_process_id = piProcInfo . dwProcessId;
+			t_thread_handle = piProcInfo . hThread;
+		}
+		else
+		{
+			DWORD t_error;
+			t_error = GetLastError();
+			t_success = false;
+		}
+	}
+
+	// If the process started, then try to duplicate its handle into the parent
+	HANDLE t_parent_process_handle;
+	t_parent_process_handle = NULL;
+	if (t_success)
+	{
+		if (!DuplicateHandle(GetCurrentProcess(), t_process_handle, t_parent_process, &t_parent_process_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+			t_success = false;
+	}
+
+	// Now tell the parent process about the handle and id
+	if (t_success)
+		PostThreadMessage(t_parent_thread_id, WM_USER + 10, (WPARAM)t_process_id, (LPARAM)t_parent_process_handle);
+
+	// If everything happened as we expected, resume the process. Otherwise we
+	// terminate it.
+	if (t_success)
+		ResumeThread(t_thread_handle);
+	else
+		TerminateProcess(t_process_handle, 0);
+
+	// Free up our resources
+	free(t_env_strings);
+	free(t_cmd_line);
+	if (t_thread_handle != nil)
+		CloseHandle(t_thread_handle);
+	if (t_process_handle != nil)
+		CloseHandle(t_process_handle);
+	if (t_fromparent_read != nil)
+		CloseHandle(t_fromparent_read);
+	if (t_toparent_write != nil)
+		CloseHandle(t_toparent_write);
+	if (t_toparent_write_dup != nil)
+		CloseHandle(t_toparent_write_dup);
+	if (t_parent_thread != nil)
+		CloseHandle(t_parent_thread);
+	if (t_parent_process != nil)
+		CloseHandle(t_parent_process);
+
+	return 0;
+}
+

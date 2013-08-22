@@ -1443,6 +1443,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\dskw32.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\dskw32main.cpp"
 				>
 				<FileConfiguration
@@ -6232,28 +6236,6 @@
 			</File>
 			<File
 				RelativePath=".\src\sysw32region.cpp"
-				>
-				<FileConfiguration
-					Name="Debug|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-				<FileConfiguration
-					Name="Release|Win32"
-					>
-					<Tool
-						Name="VCCLCompilerTool"
-						PrecompiledHeaderThrough="w32prefix.h"
-						PrecompiledHeaderFile="$(IntDir)\w32$(TargetName).pch"
-					/>
-				</FileConfiguration>
-			</File>
-			<File
-				RelativePath=".\src\sysw32registry.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"

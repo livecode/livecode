@@ -304,16 +304,16 @@ void MCS_init()
 //	starttime = timebuffer.time + timebuffer.millitm / 1000.0;
 //	return starttime;
 //}
-
-void MCS_reset_time()
-{
-	if (!MClowrestimers)
-	{
-		startcount = 0;
-		MCS_time();
-		startcount = timeGetTime();
-	}
-}
+//
+//void MCS_reset_time()
+//{
+//	if (!MClowrestimers)
+//	{
+//		startcount = 0;
+//		MCS_time();
+//		startcount = timeGetTime();
+//	}
+//}
 //
 //void MCS_sleep(real8 delay)
 //{
@@ -428,78 +428,78 @@ static inline bool is_legal_drive(char p_char)
 {
 	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
 }
-
-char *MCS_get_canonical_path(const char *path)
-{
-	char *t_path = NULL;
-	char *t_curdir = NULL;
-
-	if (path == NULL)
-		return NULL;
-
-	if (path[0] == '/' && path[1] != '/')
-	{
-		// path in root of current drive
-		t_curdir = MCS_getcurdir();
-
-		int t_path_len;
-		t_path_len = strlen(path);
-		while (path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-		
-		t_path = (char*)malloc(3 + t_path_len + 1);
-		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-		strcpy(t_path + 3, path);
-	}
-	else if (is_legal_drive(path[0]) && path[1] == ':')
-	{
-		// absolute path
-		t_path = strclone(path);
-	}
-	else
-	{
-		// relative to current folder
-		t_curdir = MCS_getcurdir();
-		int t_curdir_len;
-		t_curdir_len = strlen(t_curdir);
-
-		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
-			t_curdir_len--;
-
-		int t_path_len;
-		t_path_len = strlen(path);
-
-		while (t_path_len > 0 && path[0] == '/')
-		{
-			path ++;
-			t_path_len --;
-		}
-
-		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
-		memcpy(t_path, t_curdir, t_curdir_len);
-		t_path[t_curdir_len] = '/';
-		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
-	}
-
-	MCU_fix_path(t_path);
-	return t_path;
-}
-
-bool MCS_getcurdir_native(MCStringRef& r_path)
-{
-	MCAutoNativeCharArray t_buffer;
-	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
-	if (t_path_len == 0 || !t_buffer.New(t_path_len))
-		return false;
-	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
-		return false;
-
-	t_buffer.Shrink(t_path_len - 1);
-	return t_buffer.CreateStringAndRelease(r_path);
-}
+//
+//char *MCS_get_canonical_path(const char *path)
+//{
+//	char *t_path = NULL;
+//	char *t_curdir = NULL;
+//
+//	if (path == NULL)
+//		return NULL;
+//
+//	if (path[0] == '/' && path[1] != '/')
+//	{
+//		// path in root of current drive
+//		t_curdir = MCS_getcurdir();
+//
+//		int t_path_len;
+//		t_path_len = strlen(path);
+//		while (path[0] == '/')
+//		{
+//			path ++;
+//			t_path_len --;
+//		}
+//		
+//		t_path = (char*)malloc(3 + t_path_len + 1);
+//		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
+//		strcpy(t_path + 3, path);
+//	}
+//	else if (is_legal_drive(path[0]) && path[1] == ':')
+//	{
+//		// absolute path
+//		t_path = strclone(path);
+//	}
+//	else
+//	{
+//		// relative to current folder
+//		t_curdir = MCS_getcurdir();
+//		int t_curdir_len;
+//		t_curdir_len = strlen(t_curdir);
+//
+//		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+//			t_curdir_len--;
+//
+//		int t_path_len;
+//		t_path_len = strlen(path);
+//
+//		while (t_path_len > 0 && path[0] == '/')
+//		{
+//			path ++;
+//			t_path_len --;
+//		}
+//
+//		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
+//		memcpy(t_path, t_curdir, t_curdir_len);
+//		t_path[t_curdir_len] = '/';
+//		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
+//	}
+//
+//	MCU_fix_path(t_path);
+//	return t_path;
+//}
+//
+//bool MCS_getcurdir_native(MCStringRef& r_path)
+//{
+//	MCAutoNativeCharArray t_buffer;
+//	DWORD t_path_len = GetCurrentDirectoryA(0, NULL);
+//	if (t_path_len == 0 || !t_buffer.New(t_path_len))
+//		return false;
+//	if (t_path_len - 1 != GetCurrentDirectoryA(t_path_len, (LPSTR)t_buffer.Chars()))
+//		return false;
+//
+//	t_buffer.Shrink(t_path_len - 1);
+//	return t_buffer.CreateStringAndRelease(r_path);
+//}
 //
 //bool MCS_getcurdir(MCStringRef& r_path)
 //{
@@ -987,62 +987,62 @@ void MCS_close(IO_handle &stream)
 	delete stream;
 	stream = NULL;
 }
-
-/* thread created to read data from child process's pipe */
-static bool s_finished_reading = false;
-
-static void readThreadDone(void *param)
-{
-	s_finished_reading = true;
-}
-
-static DWORD readThread(Streamnode *process)
-{
-	IO_handle ihandle;
-	ihandle = process -> ihandle;
-
-	DWORD nread;
-	ihandle->buffer = new char[READ_PIPE_SIZE];
-	uint4 bsize = READ_PIPE_SIZE;
-	ihandle->ioptr = ihandle->buffer;   //set ioptr member
-	ihandle->len = 0; //set len member
-	while (ihandle->fhandle != NULL)
-	{
-		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
-			break;
-		if (nread == 0)
-		{
-			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
-				break;
-			Sleep(100);
-			continue;
-		}
-		if (ihandle->len + nread >= bsize)
-		{
-			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
-			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
-			bsize = newsize;
-			ihandle->ioptr = ihandle->buffer;
-		}
-		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
-		              nread, &nread, NULL)
-		        || nread == 0)
-		{
-			ihandle->len += nread;
-			break;
-		}
-		ihandle->len += nread;
-		ihandle->flags = 0;
-		if (ihandle->ioptr != ihandle->buffer)
-		{
-			ihandle->len -= ihandle->ioptr - ihandle->buffer;
-			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
-			ihandle->ioptr = ihandle->buffer;
-		}
-	}
-	MCNotifyPush(readThreadDone, nil, false, false);
-	return 0;
-}
+//
+///* thread created to read data from child process's pipe */
+//static bool s_finished_reading = false;
+//
+//static void readThreadDone(void *param)
+//{
+//	s_finished_reading = true;
+//}
+//
+//static DWORD readThread(Streamnode *process)
+//{
+//	IO_handle ihandle;
+//	ihandle = process -> ihandle;
+//
+//	DWORD nread;
+//	ihandle->buffer = new char[READ_PIPE_SIZE];
+//	uint4 bsize = READ_PIPE_SIZE;
+//	ihandle->ioptr = ihandle->buffer;   //set ioptr member
+//	ihandle->len = 0; //set len member
+//	while (ihandle->fhandle != NULL)
+//	{
+//		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
+//			break;
+//		if (nread == 0)
+//		{
+//			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+//				break;
+//			Sleep(100);
+//			continue;
+//		}
+//		if (ihandle->len + nread >= bsize)
+//		{
+//			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
+//			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
+//			bsize = newsize;
+//			ihandle->ioptr = ihandle->buffer;
+//		}
+//		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
+//		              nread, &nread, NULL)
+//		        || nread == 0)
+//		{
+//			ihandle->len += nread;
+//			break;
+//		}
+//		ihandle->len += nread;
+//		ihandle->flags = 0;
+//		if (ihandle->ioptr != ihandle->buffer)
+//		{
+//			ihandle->len -= ihandle->ioptr - ihandle->buffer;
+//			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
+//			ihandle->ioptr = ihandle->buffer;
+//		}
+//	}
+//	MCNotifyPush(readThreadDone, nil, false, false);
+//	return 0;
+//}
 //
 //IO_stat MCS_runcmd(MCExecPoint &ep)
 //{
@@ -1594,7 +1594,7 @@ real8 MCS_getfreediskspace(void)
 //
 //bool MCS_getsystemversion(MCStringRef& r_string)
 //{
-	return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
+	//return MCStringFormat(r_string, "NT %d.%d", (MCmajorosversion >> 8) & 0xFF, MCmajorosversion & 0xFF);
 //}
 
 
@@ -1851,21 +1851,21 @@ extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRe
 //
 //	return false;
 //}
-
-// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
-bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
-{
-	// If the path conversion was not succesful, then
-	// we revert back to using the original path.
-	MCAutoStringRef t_long_path;
-	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
-	{
-		r_long_path = MCValueRetain(*t_long_path);
-		return true;
-	}
-
-	return MCStringCopy(p_short_path, r_long_path);
-}
+//
+//// OK-2009-01-28: [[Bug 7452]] - SpecialFolderPath not working with redirected My Documents folder on Windows.
+//bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
+//{
+//	// If the path conversion was not succesful, then
+//	// we revert back to using the original path.
+//	MCAutoStringRef t_long_path;
+//	if (MCS_longfilepath(p_short_path, &t_long_path) && MCStringGetLength(*t_long_path) > 0)
+//	{
+//		r_long_path = MCValueRetain(*t_long_path);
+//		return true;
+//	}
+//
+//	return MCStringCopy(p_short_path, r_long_path);
+//}
 //
 //// return kMCEmptyString if path not found
 //bool MCS_getspecialfolder(MCExecContext& ctxt, MCStringRef p_special, MCStringRef& r_path)
@@ -2434,65 +2434,65 @@ bool MCS_generate_uuid(char p_buffer[128])
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
-{
-	uint32_t t_amount;
-	DWORD t_read;
-	if (!ReadFile(p_pipe, &t_amount, sizeof(uint32_t), &t_read, NULL) ||
-		t_read != sizeof(uint32_t))
-		return false;
-
-	void *t_buffer;
-	t_buffer = malloc(t_amount);
-	if (t_buffer == nil)
-		return false;
-
-	if (!ReadFile(p_pipe, t_buffer, t_amount, &t_read, NULL) ||
-		t_read != t_amount)
-		return false;
-
-	r_data = t_buffer;
-	r_data_length = t_amount;
-
-	return true;
-}
-
-static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
-{
-	DWORD t_written;
-	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
-		t_written != 4)
-		return false;
-	if (!WriteFile(p_pipe, p_data, p_count, &t_written, NULL) ||
-		t_written != p_count)
-		return false;
-	return true;
-}
-
-// MW-2010-05-11: This call is only present on Vista and above, which is the place we
-//   need it - so weakly bind.
-typedef DWORD (APIENTRY *GetProcessIdOfThreadPtr)(HANDLE thread);
-static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
-{
-	// We can safely assume that the kernel dll is loaded!
-	HMODULE t_module;
-	t_module = GetModuleHandleA("Kernel32.dll");
-	if (t_module == NULL)
-		return -1;
-
-	// Resolve the symbol
-	void *t_ptr;
-	t_ptr = GetProcAddress(t_module, "GetProcessIdOfThread");
-	if (t_ptr == NULL)
-		return -1;
-
-	// Call it
-	return ((GetProcessIdOfThreadPtr)t_ptr)(p_thread);
-}
-
+//
+//static bool read_blob_from_pipe(HANDLE p_pipe, void*& r_data, uint32_t& r_data_length)
+//{
+//	uint32_t t_amount;
+//	DWORD t_read;
+//	if (!ReadFile(p_pipe, &t_amount, sizeof(uint32_t), &t_read, NULL) ||
+//		t_read != sizeof(uint32_t))
+//		return false;
+//
+//	void *t_buffer;
+//	t_buffer = malloc(t_amount);
+//	if (t_buffer == nil)
+//		return false;
+//
+//	if (!ReadFile(p_pipe, t_buffer, t_amount, &t_read, NULL) ||
+//		t_read != t_amount)
+//		return false;
+//
+//	r_data = t_buffer;
+//	r_data_length = t_amount;
+//
+//	return true;
+//}
+//
+//static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_data)
+//{
+//	DWORD t_written;
+//	if (!WriteFile(p_pipe, &p_count, sizeof(p_count), &t_written, NULL) ||
+//		t_written != 4)
+//		return false;
+//	if (!WriteFile(p_pipe, p_data, p_count, &t_written, NULL) ||
+//		t_written != p_count)
+//		return false;
+//	return true;
+//}
+//
+//// MW-2010-05-11: This call is only present on Vista and above, which is the place we
+////   need it - so weakly bind.
+//typedef DWORD (APIENTRY *GetProcessIdOfThreadPtr)(HANDLE thread);
+//static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
+//{
+//	// We can safely assume that the kernel dll is loaded!
+//	HMODULE t_module;
+//	t_module = GetModuleHandleA("Kernel32.dll");
+//	if (t_module == NULL)
+//		return -1;
+//
+//	// Resolve the symbol
+//	void *t_ptr;
+//	t_ptr = GetProcAddress(t_module, "GetProcessIdOfThread");
+//	if (t_ptr == NULL)
+//		return -1;
+//
+//	// Call it
+//	return ((GetProcessIdOfThreadPtr)t_ptr)(p_thread);
+//}
+//
 ////////////////////////////////////////////////////////////////////////////////
-
+//
 //// MW-2010-05-09: Updated to add 'elevated' parameter for executing binaries
 ////   at increased privilege level.
 //void MCS_startprocess(MCNameRef p_name, const char *doc, Open_mode mode, Boolean elevated)
@@ -2710,170 +2710,170 @@ static DWORD DoGetProcessIdOfThread(HANDLE p_thread)
 //		MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)t_process_handle;
 //	}
 //}
-
-// MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess
-//   via 'ShellExecute' 'runas'.
-int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
-{
-	bool t_success;
-	t_success = true;
-
-	// Fetch the thread id (present immediately after '-elevated-slave' as hex).
-	uint32_t t_parent_thread_id;
-	if (t_success)
-	{
-		char *t_end;
-		t_parent_thread_id = strtoul(lpCmdLine + 15, &t_end, 16);
-		if (t_end != lpCmdLine + strlen(lpCmdLine))
-			t_success = false;
-	}
-
-	// Open the parent's thread
-	HANDLE t_parent_thread;
-	t_parent_thread = nil;
-	if (t_success)
-	{
-		t_parent_thread = OpenThread(SYNCHRONIZE | THREAD_QUERY_INFORMATION, FALSE, t_parent_thread_id);
-		if (t_parent_thread == nil)
-			t_success = false;
-	}
-
-	// Open the parent's process
-	HANDLE t_parent_process;
-	t_parent_process = nil;
-	if (t_success)
-	{
-		t_parent_process = OpenProcess(SYNCHRONIZE | PROCESS_DUP_HANDLE, FALSE, DoGetProcessIdOfThread(t_parent_thread));
-		if (t_parent_process == nil)
-			t_success = false;
-	}
-
-	// Create a pipe the write end of which we will give to the parent
-	HANDLE t_fromparent_read, t_fromparent_write;
-	HANDLE t_toparent_read, t_toparent_write;
-	HANDLE t_toparent_write_dup;
-	t_fromparent_read = t_fromparent_write = nil;
-	t_toparent_read = t_toparent_write = nil;
-	t_toparent_write_dup = nil;
-	if (t_success)
-	{
-		SECURITY_ATTRIBUTES t_attr;
-		t_attr . nLength = sizeof(SECURITY_ATTRIBUTES);
-		t_attr . bInheritHandle = TRUE;
-		t_attr . lpSecurityDescriptor = NULL;
-		if (!CreatePipe(&t_fromparent_read, &t_fromparent_write, &t_attr, 0) ||
-			!CreatePipe(&t_toparent_read, &t_toparent_write, &t_attr, 0) ||
-			!DuplicateHandle(GetCurrentProcess(), t_toparent_write, GetCurrentProcess(), &t_toparent_write_dup, 0, TRUE, DUPLICATE_SAME_ACCESS))
-			t_success = false;
-	}
-
-	// Make sure the ends we are duplicating are not inheritable
-	if (t_success)
-	{
-		SetHandleInformation(t_fromparent_write, HANDLE_FLAG_INHERIT, 0);
-		SetHandleInformation(t_toparent_read, HANDLE_FLAG_INHERIT, 0);
-	}
-
-	// Duplicate the appropriate ends into the parent
-	HANDLE t_parent_data_write, t_parent_data_read;
-	t_parent_data_write = nil;
-	t_parent_data_read = nil;
-	if (t_success)
-	{
-		if (!DuplicateHandle(GetCurrentProcess(), t_fromparent_write, t_parent_process, &t_parent_data_write, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE) ||
-			!DuplicateHandle(GetCurrentProcess(), t_toparent_read, t_parent_process, &t_parent_data_read, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
-			t_success = false;
-	}
-
-	// Post the pipe handles to the parent
-	if (t_success)
-		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
-
-	// Now we must read the command line and env strings
-	uint32_t t_cmd_line_length;
-	void *t_cmd_line;
-	t_cmd_line_length = 0;
-	t_cmd_line = nil;
-	if (t_success)
-		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
-
-	uint32_t t_env_strings_length;
-	void *t_env_strings;
-	t_env_strings_length = 0;
-	t_env_strings = nil;
-	if (t_success)
-		t_success = read_blob_from_pipe(t_fromparent_read, t_env_strings, t_env_strings_length);
-
-	// If we succeeded in reading those, we are all set to create the process
-	HANDLE t_process_handle, t_thread_handle;
-	DWORD t_process_id;
-	t_thread_handle = NULL;
-	t_process_handle = NULL;
-	t_process_id = 0;
-	if (t_success)
-	{
-		PROCESS_INFORMATION piProcInfo;
-		STARTUPINFOA siStartInfo;
-		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
-		siStartInfo.cb = sizeof(STARTUPINFOA);
-		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
-		siStartInfo.wShowWindow = SW_HIDE;
-		siStartInfo.hStdInput = t_fromparent_read;
-		siStartInfo.hStdOutput = t_toparent_write;
-		siStartInfo.hStdError = t_toparent_write_dup;
-		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
-		{
-			t_process_handle = piProcInfo . hProcess;
-			t_process_id = piProcInfo . dwProcessId;
-			t_thread_handle = piProcInfo . hThread;
-		}
-		else
-		{
-			DWORD t_error;
-			t_error = GetLastError();
-			t_success = false;
-		}
-	}
-
-	// If the process started, then try to duplicate its handle into the parent
-	HANDLE t_parent_process_handle;
-	t_parent_process_handle = NULL;
-	if (t_success)
-	{
-		if (!DuplicateHandle(GetCurrentProcess(), t_process_handle, t_parent_process, &t_parent_process_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
-			t_success = false;
-	}
-
-	// Now tell the parent process about the handle and id
-	if (t_success)
-		PostThreadMessage(t_parent_thread_id, WM_USER + 10, (WPARAM)t_process_id, (LPARAM)t_parent_process_handle);
-
-	// If everything happened as we expected, resume the process. Otherwise we
-	// terminate it.
-	if (t_success)
-		ResumeThread(t_thread_handle);
-	else
-		TerminateProcess(t_process_handle, 0);
-
-	// Free up our resources
-	free(t_env_strings);
-	free(t_cmd_line);
-	if (t_thread_handle != nil)
-		CloseHandle(t_thread_handle);
-	if (t_process_handle != nil)
-		CloseHandle(t_process_handle);
-	if (t_fromparent_read != nil)
-		CloseHandle(t_fromparent_read);
-	if (t_toparent_write != nil)
-		CloseHandle(t_toparent_write);
-	if (t_toparent_write_dup != nil)
-		CloseHandle(t_toparent_write_dup);
-	if (t_parent_thread != nil)
-		CloseHandle(t_parent_thread);
-	if (t_parent_process != nil)
-		CloseHandle(t_parent_process);
-
-	return 0;
-}
+//
+//// MW-2010-05-09: This is bootstrap 'main' that effectively implemented a CreateProcess
+////   via 'ShellExecute' 'runas'.
+//int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow)
+//{
+//	bool t_success;
+//	t_success = true;
+//
+//	// Fetch the thread id (present immediately after '-elevated-slave' as hex).
+//	uint32_t t_parent_thread_id;
+//	if (t_success)
+//	{
+//		char *t_end;
+//		t_parent_thread_id = strtoul(lpCmdLine + 15, &t_end, 16);
+//		if (t_end != lpCmdLine + strlen(lpCmdLine))
+//			t_success = false;
+//	}
+//
+//	// Open the parent's thread
+//	HANDLE t_parent_thread;
+//	t_parent_thread = nil;
+//	if (t_success)
+//	{
+//		t_parent_thread = OpenThread(SYNCHRONIZE | THREAD_QUERY_INFORMATION, FALSE, t_parent_thread_id);
+//		if (t_parent_thread == nil)
+//			t_success = false;
+//	}
+//
+//	// Open the parent's process
+//	HANDLE t_parent_process;
+//	t_parent_process = nil;
+//	if (t_success)
+//	{
+//		t_parent_process = OpenProcess(SYNCHRONIZE | PROCESS_DUP_HANDLE, FALSE, DoGetProcessIdOfThread(t_parent_thread));
+//		if (t_parent_process == nil)
+//			t_success = false;
+//	}
+//
+//	// Create a pipe the write end of which we will give to the parent
+//	HANDLE t_fromparent_read, t_fromparent_write;
+//	HANDLE t_toparent_read, t_toparent_write;
+//	HANDLE t_toparent_write_dup;
+//	t_fromparent_read = t_fromparent_write = nil;
+//	t_toparent_read = t_toparent_write = nil;
+//	t_toparent_write_dup = nil;
+//	if (t_success)
+//	{
+//		SECURITY_ATTRIBUTES t_attr;
+//		t_attr . nLength = sizeof(SECURITY_ATTRIBUTES);
+//		t_attr . bInheritHandle = TRUE;
+//		t_attr . lpSecurityDescriptor = NULL;
+//		if (!CreatePipe(&t_fromparent_read, &t_fromparent_write, &t_attr, 0) ||
+//			!CreatePipe(&t_toparent_read, &t_toparent_write, &t_attr, 0) ||
+//			!DuplicateHandle(GetCurrentProcess(), t_toparent_write, GetCurrentProcess(), &t_toparent_write_dup, 0, TRUE, DUPLICATE_SAME_ACCESS))
+//			t_success = false;
+//	}
+//
+//	// Make sure the ends we are duplicating are not inheritable
+//	if (t_success)
+//	{
+//		SetHandleInformation(t_fromparent_write, HANDLE_FLAG_INHERIT, 0);
+//		SetHandleInformation(t_toparent_read, HANDLE_FLAG_INHERIT, 0);
+//	}
+//
+//	// Duplicate the appropriate ends into the parent
+//	HANDLE t_parent_data_write, t_parent_data_read;
+//	t_parent_data_write = nil;
+//	t_parent_data_read = nil;
+//	if (t_success)
+//	{
+//		if (!DuplicateHandle(GetCurrentProcess(), t_fromparent_write, t_parent_process, &t_parent_data_write, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE) ||
+//			!DuplicateHandle(GetCurrentProcess(), t_toparent_read, t_parent_process, &t_parent_data_read, 0, FALSE, DUPLICATE_SAME_ACCESS | DUPLICATE_CLOSE_SOURCE))
+//			t_success = false;
+//	}
+//
+//	// Post the pipe handles to the parent
+//	if (t_success)
+//		PostThreadMessageA(t_parent_thread_id, WM_USER + 10, (WPARAM)t_parent_data_read, (LPARAM)t_parent_data_write);
+//
+//	// Now we must read the command line and env strings
+//	uint32_t t_cmd_line_length;
+//	void *t_cmd_line;
+//	t_cmd_line_length = 0;
+//	t_cmd_line = nil;
+//	if (t_success)
+//		t_success = read_blob_from_pipe(t_fromparent_read, t_cmd_line, t_cmd_line_length);
+//
+//	uint32_t t_env_strings_length;
+//	void *t_env_strings;
+//	t_env_strings_length = 0;
+//	t_env_strings = nil;
+//	if (t_success)
+//		t_success = read_blob_from_pipe(t_fromparent_read, t_env_strings, t_env_strings_length);
+//
+//	// If we succeeded in reading those, we are all set to create the process
+//	HANDLE t_process_handle, t_thread_handle;
+//	DWORD t_process_id;
+//	t_thread_handle = NULL;
+//	t_process_handle = NULL;
+//	t_process_id = 0;
+//	if (t_success)
+//	{
+//		PROCESS_INFORMATION piProcInfo;
+//		STARTUPINFOA siStartInfo;
+//		memset(&siStartInfo, 0, sizeof(STARTUPINFOA));
+//		siStartInfo.cb = sizeof(STARTUPINFOA);
+//		siStartInfo.dwFlags = STARTF_USESTDHANDLES | STARTF_USESHOWWINDOW;
+//		siStartInfo.wShowWindow = SW_HIDE;
+//		siStartInfo.hStdInput = t_fromparent_read;
+//		siStartInfo.hStdOutput = t_toparent_write;
+//		siStartInfo.hStdError = t_toparent_write_dup;
+//		if (CreateProcessA(NULL, (LPSTR)t_cmd_line, NULL, NULL, TRUE, CREATE_NEW_CONSOLE | CREATE_SUSPENDED, t_env_strings, NULL, &siStartInfo, &piProcInfo))
+//		{
+//			t_process_handle = piProcInfo . hProcess;
+//			t_process_id = piProcInfo . dwProcessId;
+//			t_thread_handle = piProcInfo . hThread;
+//		}
+//		else
+//		{
+//			DWORD t_error;
+//			t_error = GetLastError();
+//			t_success = false;
+//		}
+//	}
+//
+//	// If the process started, then try to duplicate its handle into the parent
+//	HANDLE t_parent_process_handle;
+//	t_parent_process_handle = NULL;
+//	if (t_success)
+//	{
+//		if (!DuplicateHandle(GetCurrentProcess(), t_process_handle, t_parent_process, &t_parent_process_handle, 0, FALSE, DUPLICATE_SAME_ACCESS))
+//			t_success = false;
+//	}
+//
+//	// Now tell the parent process about the handle and id
+//	if (t_success)
+//		PostThreadMessage(t_parent_thread_id, WM_USER + 10, (WPARAM)t_process_id, (LPARAM)t_parent_process_handle);
+//
+//	// If everything happened as we expected, resume the process. Otherwise we
+//	// terminate it.
+//	if (t_success)
+//		ResumeThread(t_thread_handle);
+//	else
+//		TerminateProcess(t_process_handle, 0);
+//
+//	// Free up our resources
+//	free(t_env_strings);
+//	free(t_cmd_line);
+//	if (t_thread_handle != nil)
+//		CloseHandle(t_thread_handle);
+//	if (t_process_handle != nil)
+//		CloseHandle(t_process_handle);
+//	if (t_fromparent_read != nil)
+//		CloseHandle(t_fromparent_read);
+//	if (t_toparent_write != nil)
+//		CloseHandle(t_toparent_write);
+//	if (t_toparent_write_dup != nil)
+//		CloseHandle(t_toparent_write_dup);
+//	if (t_parent_thread != nil)
+//		CloseHandle(t_parent_thread);
+//	if (t_parent_process != nil)
+//		CloseHandle(t_parent_process);
+//
+//	return 0;
+//}
 
 ////////////////////////////////////////////////////////////////////////////////

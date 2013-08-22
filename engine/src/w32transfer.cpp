@@ -1311,7 +1311,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 			t_success = MCImageEncodePNG(t_bitmap, t_stream, t_byte_count);
 
 		if (t_success)
-			t_success = IO_NORMAL == MCS_fakeclosewrite(t_stream, t_buffer, t_length);
+			t_success = IO_NORMAL == MCS_closetakingbuffer(t_stream, *(void**)(&t_buffer), t_length);
 
 		if (t_success)
 		{
@@ -1421,7 +1421,7 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 
 			MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
 
-			MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count);
+			/* UNCHECKED */ MCS_closetakingbuffer(t_stream, *(void**)(&t_bytes), t_byte_count);
 
 #ifdef SHARED_STRING
 			t_out_data = MCSharedString::Create(t_bytes, t_byte_count);

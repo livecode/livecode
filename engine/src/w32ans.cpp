@@ -302,20 +302,25 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 
 	if (*p_initial != '\0')
 	{
-		char *t_initial_clone;
-		t_initial_clone = strdup(p_initial);
-		MCU_w32path2std(t_initial_clone);
-		MCU_fix_path(t_initial_clone);
+		MCAutoStringRef t_initial_clone;
+		MCAutoStringRef t_std_path;
+		MCAutoStringRef t_fixed_path;
+		char* t_initial_char_clone;
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_clone);
+		/* UNCHECKED */ MCS_pathfromnative(*t_initial_clone, &t_std_path);
+		/* UNCHECKED */ MCU_fix_path(*t_std_path, &t_fixed_path);
 
-		if (MCS_exists(t_initial_clone, False))
-			t_initial_folder = t_initial_clone;
+		t_initial_char_clone = strclone(MCStringGetCString(*t_fixed_path));
+
+		if (MCS_exists(*t_fixed_path, False))
+			t_initial_folder = t_initial_char_clone;
 		else if ((p_options & MCA_OPTION_SAVE_DIALOG) != 0)
 		{
-			t_initial_file = strrchr(t_initial_clone, '/');
+			t_initial_file = strrchr(t_initial_char_clone, '/');
 			if (t_initial_file == NULL)
 			{
-				if (strlen(t_initial_clone) != 0)
-					t_initial_file = t_initial_clone;
+				if (strlen(t_initial_char_clone) != 0)
+					t_initial_file = t_initial_char_clone;
 			}
 			else
 			{
@@ -325,26 +330,26 @@ static int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *
 				if (t_initial_file[0] == '\0')
 					t_initial_file = NULL;
 
-				if (MCS_exists(t_initial_clone, False))
-					t_initial_folder = t_initial_clone;
+				if (MCS_exists(*t_fixed_path, False))
+					t_initial_folder = t_initial_char_clone;
 			}
 		}
 		else
 		{
 			char *t_leaf;
-			t_leaf = strrchr(t_initial_clone, '/');
+			t_leaf = strrchr(t_initial_char_clone, '/');
 			if (t_leaf != NULL)
 			{
 				*t_leaf = '\0';
-				if (MCS_exists(t_initial_clone, False))
-					t_initial_folder = t_initial_clone;
+				if (MCS_exists(*t_fixed_path, False))
+					t_initial_folder = t_initial_char_clone;
 			}
 		}
 
 		t_initial_file = strdup(t_initial_file);
 		t_initial_folder = MCS_resolvepath(t_initial_folder);
 
-		delete t_initial_clone;
+		delete[] t_initial_char_clone;
 	}
 
 	if (!MCModeMakeLocalWindows())

@@ -710,21 +710,22 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	
 		if (s->shared)
 		{
-			char *portptr = strchr(MCNameGetCString(s->name), ':');
+			char* t_name_copy_ptr = strclone(MCNameGetCString(s->name));
+			char *portptr = strchr(t_name_copy_ptr, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(MCNameGetCString(s->name), (in_addr *)&to.sin_addr.s_addr)
+			if (!inet_aton(t_name_copy_ptr, (in_addr *)&to.sin_addr.s_addr)
 				|| sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-			*portptr = ':';
+			delete[] t_name_copy_ptr;
 		}
 		else if (send(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0) < 0)
 		{
@@ -1163,11 +1164,13 @@ void MCSocket::acceptone()
 		sprintf(n, "%s:%d", t, newfd);
 		MCU_realloc((char **)&MCsockets, MCnsockets,
 		            MCnsockets + 1, sizeof(MCSocket *));
-		MCsockets[MCnsockets] = new MCSocket(n, object, NULL,
+		MCNameRef t_name;
+		MCNameCreateWithCString(n, t_name);
+		MCsockets[MCnsockets] = new MCSocket(t_name, object, NULL,
 		                                     False, newfd, False, False,False);
 		MCsockets[MCnsockets]->connected = True;
 		MCsockets[MCnsockets++]->setselect();
-		MCscreen->delaymessage(object, message, strclone(n), strclone(name));
+		MCscreen->delaymessage(object, message, strclone(n), strclone(MCNameGetCString(name)));
 		added = True;
 	}
 }
@@ -1790,9 +1793,9 @@ Boolean MCSocket::initsslcontext()
 					MCAutoStringRef t_resolvedpath;
 					if (!MCS_resolvepath(*t_oldcertpath, &t_resolvedpath))
                         return False;
+					MCAutoStringRef certpath;
 #ifdef _MACOSX
 					MCAutoStringRefAsUTF8String t_utf8_string;
-					MCAutoStringRef certpath;
 					if (!t_utf8_string.Lock(*t_resolvedpath))
                         return False;
 
@@ -1800,7 +1803,6 @@ Boolean MCSocket::initsslcontext()
                         return False;
 #else
                     
-					MCAutoStringref certpath;
 					if (!MCStringCopy(*t_resolvedpath, &certpath))
                         return False;
 #endif

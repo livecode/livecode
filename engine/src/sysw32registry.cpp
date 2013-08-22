@@ -33,171 +33,171 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-typedef struct
-{ //struct for WIN registry
-	const char *token;
-	HKEY key;
-	uint32_t mode;
-}
-reg_keytype;
-
-static reg_keytype Regkeys[] = {  //WIN registry root keys struct
-                                   {"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT, 0},
-                                   {"HKEY_CURRENT_USER", HKEY_CURRENT_USER, 0},
-                                   {"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE, 0},
-                                   {"HKEY_LOCAL_MACHINE_32", HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY},
-                                   {"HKEY_LOCAL_MACHINE_64", HKEY_LOCAL_MACHINE, KEY_WOW64_64KEY},
-                                   {"HKEY_USERS", HKEY_USERS, 0},
-                                   {"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA, 0},
-                                   {"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG, 0},
-                                   {"HKEY_DYN_DATA", HKEY_DYN_DATA, 0}
-                               };
-
-typedef struct
-{
-	const char *token;
-	DWORD type;
-}
-reg_datatype;
-
-static reg_datatype RegDatatypes[] = {  //WIN registry value types struct
-                                         {"binary", REG_BINARY},
-                                         {"dword", REG_DWORD},
-                                         {"dwordlittleendian", REG_DWORD_LITTLE_ENDIAN},
-                                         {"dwordbigendian", REG_DWORD_BIG_ENDIAN},
-                                         {"expandsz", REG_EXPAND_SZ},
-                                         {"link", REG_LINK},
-                                         {"multisz", REG_MULTI_SZ},
-                                         {"none", REG_NONE},
-                                         {"resourcelist", REG_RESOURCE_LIST},
-                                         {"string", REG_SZ},
-                                         {"sz", REG_SZ}
-                                     };
-
-bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	uindex_t t_offset = t_length;
-	if (!MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_offset))
-	{
-		t_offset = t_length;
-	}
-	return MCStringCopySubstring(p_path, MCRangeMake(0, t_offset), r_root) &&
-		MCStringCopySubstring(p_path, MCRangeMake(t_offset + 1, t_length), r_key);
-}
-
-bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key, MCStringRef& r_value)
-{
-	// only copy components out if they are present - <ROOT>\<KEY>\<VALUE>, <ROOT>\<VALUE>, <ROOT>
-	// (components may be empty)
-	bool t_success = true;
-	uindex_t t_length = MCStringGetLength(p_path);
-	uindex_t t_path_offset = t_length;
-	uindex_t t_value_offset = t_length;
-	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
-	{
-		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
-		{
-			if (t_value_offset > t_path_offset)
-				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
-			else
-				t_value_offset = t_length;
-		}
-		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
-	}
-	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
-}
-
-bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey)
-{
-	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
-	{
-		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
-		{
-			r_hkey = Regkeys[i].key;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey, uint32_t& x_access_mode)
-{
-	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
-	{
-		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
-		{
-			r_hkey = Regkeys[i].key;
-			if (MCmajorosversion >= 0x0501)
-				x_access_mode |= Regkeys[i].mode;
-			return true;
-		}
-	}
-	return false;
-}
-
-bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
-{
-	for (uindex_t i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
-	{
-		if (p_type == RegDatatypes[i].type)
-		{
-			return MCStringCreateWithCString(RegDatatypes[i].token, r_string);
-		}
-	}
-
-	return false;
-}
-
-DWORD MCS_registry_type_from_string(MCStringRef p_string)
-{
-	if (p_string != nil)
-	{
-		for (uindex_t i = 0; i < ELEMENTS(RegDatatypes); i++)
-		{
-			if (MCStringIsEqualToCString(p_string, RegDatatypes[i].token, kMCCompareCaseless))
-				return RegDatatypes[i].type;
-		}
-	}
-
-	return REG_SZ;
-}
-
-class MCAutoRegistryKey
-{
-public:
-	MCAutoRegistryKey(void)
-	{
-		m_key = NULL;
-	}
-
-	~MCAutoRegistryKey(void)
-	{
-		if (m_key != NULL)
-			RegCloseKey(m_key);
-	}
-
-	HKEY operator = (HKEY value)
-	{
-		MCAssert(m_key == NULL);
-		m_key = value;
-		return m_key;
-	}
-
-	HKEY* operator & (void)
-	{
-		MCAssert(m_key == NULL);
-		return &m_key;
-	}
-
-	HKEY operator * (void) const
-	{
-		return m_key;
-	}
-
-private:
-	HKEY m_key;
-};
+//typedef struct
+//{ //struct for WIN registry
+//	const char *token;
+//	HKEY key;
+//	uint32_t mode;
+//}
+//reg_keytype;
+//
+//static reg_keytype Regkeys[] = {  //WIN registry root keys struct
+//                                   {"HKEY_CLASSES_ROOT", HKEY_CLASSES_ROOT, 0},
+//                                   {"HKEY_CURRENT_USER", HKEY_CURRENT_USER, 0},
+//                                   {"HKEY_LOCAL_MACHINE", HKEY_LOCAL_MACHINE, 0},
+//                                   {"HKEY_LOCAL_MACHINE_32", HKEY_LOCAL_MACHINE, KEY_WOW64_32KEY},
+//                                   {"HKEY_LOCAL_MACHINE_64", HKEY_LOCAL_MACHINE, KEY_WOW64_64KEY},
+//                                   {"HKEY_USERS", HKEY_USERS, 0},
+//                                   {"HKEY_PERFORMANCE_DATA", HKEY_PERFORMANCE_DATA, 0},
+//                                   {"HKEY_CURRENT_CONFIG", HKEY_CURRENT_CONFIG, 0},
+//                                   {"HKEY_DYN_DATA", HKEY_DYN_DATA, 0}
+//                               };
+//
+//typedef struct
+//{
+//	const char *token;
+//	DWORD type;
+//}
+//reg_datatype;
+//
+//static reg_datatype RegDatatypes[] = {  //WIN registry value types struct
+//                                         {"binary", REG_BINARY},
+//                                         {"dword", REG_DWORD},
+//                                         {"dwordlittleendian", REG_DWORD_LITTLE_ENDIAN},
+//                                         {"dwordbigendian", REG_DWORD_BIG_ENDIAN},
+//                                         {"expandsz", REG_EXPAND_SZ},
+//                                         {"link", REG_LINK},
+//                                         {"multisz", REG_MULTI_SZ},
+//                                         {"none", REG_NONE},
+//                                         {"resourcelist", REG_RESOURCE_LIST},
+//                                         {"string", REG_SZ},
+//                                         {"sz", REG_SZ}
+//                                     };
+//
+//bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key)
+//{
+//	uindex_t t_length = MCStringGetLength(p_path);
+//	uindex_t t_offset = t_length;
+//	if (!MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_offset))
+//	{
+//		t_offset = t_length;
+//	}
+//	return MCStringCopySubstring(p_path, MCRangeMake(0, t_offset), r_root) &&
+//		MCStringCopySubstring(p_path, MCRangeMake(t_offset + 1, t_length), r_key);
+//}
+//
+//bool MCS_registry_split_key(MCStringRef p_path, MCStringRef& r_root, MCStringRef& r_key, MCStringRef& r_value)
+//{
+//	// only copy components out if they are present - <ROOT>\<KEY>\<VALUE>, <ROOT>\<VALUE>, <ROOT>
+//	// (components may be empty)
+//	bool t_success = true;
+//	uindex_t t_length = MCStringGetLength(p_path);
+//	uindex_t t_path_offset = t_length;
+//	uindex_t t_value_offset = t_length;
+//	if (MCStringLastIndexOfChar(p_path, '\\', MCStringGetLength(p_path), kMCStringOptionCompareExact, t_value_offset))
+//	{
+//		if (MCStringFirstIndexOfChar(p_path, '\\', 0, kMCStringOptionCompareExact, t_path_offset))
+//		{
+//			if (t_value_offset > t_path_offset)
+//				t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_path_offset + 1, t_value_offset - t_path_offset - 1), r_key);
+//			else
+//				t_value_offset = t_length;
+//		}
+//		t_success = t_success && MCStringCopySubstring(p_path, MCRangeMake(t_value_offset + 1, t_length), r_value);
+//	}
+//	return t_success && MCStringCopySubstring(p_path, MCRangeMake(0, t_path_offset), r_root);
+//}
+//
+//bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey)
+//{
+//	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+//	{
+//		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+//		{
+//			r_hkey = Regkeys[i].key;
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//bool MCS_registry_root_to_hkey(MCStringRef p_root, HKEY& r_hkey, uint32_t& x_access_mode)
+//{
+//	for (uindex_t i = 0 ; i < ELEMENTS(Regkeys) ; i++)
+//	{
+//		if (MCStringIsEqualToCString(p_root, Regkeys[i].token, kMCCompareCaseless))
+//		{
+//			r_hkey = Regkeys[i].key;
+//			if (MCmajorosversion >= 0x0501)
+//				x_access_mode |= Regkeys[i].mode;
+//			return true;
+//		}
+//	}
+//	return false;
+//}
+//
+//bool MCS_registry_type_to_string(uint32_t p_type, MCStringRef& r_string)
+//{
+//	for (uindex_t i = 0 ; i < ELEMENTS(RegDatatypes) ; i++)
+//	{
+//		if (p_type == RegDatatypes[i].type)
+//		{
+//			return MCStringCreateWithCString(RegDatatypes[i].token, r_string);
+//		}
+//	}
+//
+//	return false;
+//}
+//
+//DWORD MCS_registry_type_from_string(MCStringRef p_string)
+//{
+//	if (p_string != nil)
+//	{
+//		for (uindex_t i = 0; i < ELEMENTS(RegDatatypes); i++)
+//		{
+//			if (MCStringIsEqualToCString(p_string, RegDatatypes[i].token, kMCCompareCaseless))
+//				return RegDatatypes[i].type;
+//		}
+//	}
+//
+//	return REG_SZ;
+//}
+//
+//class MCAutoRegistryKey
+//{
+//public:
+//	MCAutoRegistryKey(void)
+//	{
+//		m_key = NULL;
+//	}
+//
+//	~MCAutoRegistryKey(void)
+//	{
+//		if (m_key != NULL)
+//			RegCloseKey(m_key);
+//	}
+//
+//	HKEY operator = (HKEY value)
+//	{
+//		MCAssert(m_key == NULL);
+//		m_key = value;
+//		return m_key;
+//	}
+//
+//	HKEY* operator & (void)
+//	{
+//		MCAssert(m_key == NULL);
+//		return &m_key;
+//	}
+//
+//	HKEY operator * (void) const
+//	{
+//		return m_key;
+//	}
+//
+//private:
+//	HKEY m_key;
+//};
 //
 //bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
 //{
