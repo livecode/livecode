@@ -19,6 +19,7 @@
   </references>
   <history>
     <introduced version="1.1">Added.</introduced>
+    <introduced version="6.2">Milt-dimensional array support.</introduced>
   </history>
   <platforms>
     <mac/>

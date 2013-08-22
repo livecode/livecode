@@ -602,7 +602,9 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 			MCHashentry *e = table[i];
 			while (e != NULL)
 			{
-				if (v.lookuphash(e->string, False, False) == NULL)
+                // MERG-2013-08-22: [[ Bug 11117 ]] Support multi-dimensional arrays
+                MCHashentry *t_entry = v.lookuphash(e->string, False, False);
+				if (t_entry == NULL)
 				{
 					if (last == NULL)
 						table[i] = e->next;
@@ -619,6 +621,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 				}
 				else
 				{
+                    if (t_entry -> value . is_array() && e -> value . is_array())
+                        e -> value . intersectarray(t_entry -> value);
 					last = e;
 					e = e->next;
 				}
@@ -637,12 +641,17 @@ Exec_stat MCVariableArray::unionarray(MCVariableArray& v)
 			MCHashentry *e = v.table[i];
 			while (e != NULL)
 			{
-				if (lookuphash(e->string, False, False) == NULL)
+                // MERG-2013-08-22: [[ Bug 11117 ]] Support multi-dimensional arrays
+                MCHashentry *t_entry = lookuphash(e->string, False, False);
+                if (t_entry == NULL)
 				{
 					MCHashentry *ne = lookuphash(e->string, False, True);
 					ne -> value . assign(e -> value);
 				}
-				e = e->next;
+                else if (e -> value . is_array())
+                    t_entry -> value . unionarray(e ->value);
+               
+                e = e->next;
 			}
 		}
 	return ES_NORMAL;
