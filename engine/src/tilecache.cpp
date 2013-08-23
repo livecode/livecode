@@ -946,13 +946,8 @@ static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCImageBi
 		t_tile -> constant = 1;
 		t_tile -> alpha = t_or_bits >> 24;
 
-		// MW-2011-10-28: [[ Bug 9837 ]] The 'bits' value are native bitmap byte
-		//   order, so make sure we swap on Android!
-#ifdef TARGET_SUBPLATFORM_ANDROID
-		t_tile -> data = (void *)((t_or_bits & 0xff00ff00) | ((t_or_bits & 0x00ff0000) >> 16) | ((t_or_bits & 0x000000ff) << 16));
-#else
+		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
 		t_tile -> data = (void *)t_or_bits;
-#endif
 	}
 	else if (MCTileCacheEnsureTile(self))
 	{

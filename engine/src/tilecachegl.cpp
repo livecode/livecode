@@ -637,7 +637,12 @@ bool MCTileCacheOpenGLCompositor_CompositeRect(void *p_context, int32_t p_x, int
 		// MW-2012-08-30: [[ Bug 10341 ]] Premultiply the color value as that's how
 		//   our blending function is set up.
 		t_new_color = packed_scale_bounded((t_new_color & 0xffffff) | 0xff000000, t_new_color >> 24);
-		glvColor4ub(self -> opengl_version, (t_new_color >> 16) & 0xff, (t_new_color >> 8) & 0xff, (t_new_color >> 0) & 0xff, (t_new_color >> 24) & 0xff);
+		
+		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
+		uint8_t a, r, g, b;
+		MCGPixelUnpackNative(t_new_color, r, g, b, a);
+		
+		glvColor4ub(self -> opengl_version, r, g, b, a);
 	}
 	
     GLshort *v;

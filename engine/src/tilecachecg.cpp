@@ -229,11 +229,15 @@ bool MCTileCacheCoreGraphicsCompositor_CompositeRect(void *p_context, int32_t p_
 	MCTileCacheCoreGraphicsCompositorContext *self;
 	self = (MCTileCacheCoreGraphicsCompositorContext *)p_context;
 	
+	// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
+	uint8_t r, g, b, a;
+	MCGPixelUnpackNative(p_color, r, g, b, a);
+	
 	CGFloat t_red, t_green, t_blue, t_alpha;
-	t_red = ((p_color >> 16) & 0xff) / 255.0;
-	t_green = ((p_color >> 8) & 0xff) / 255.0;
-	t_blue = ((p_color >> 0) & 0xff) / 255.0;
-	t_alpha = ((p_color >> 24) & 0xff) / 255.0;
+	t_red = r / 255.0;
+	t_green = g / 255.0;
+	t_blue = b / 255.0;
+	t_alpha = a / 255.0;
 	
 	if (t_alpha != 1.0)
 	{
