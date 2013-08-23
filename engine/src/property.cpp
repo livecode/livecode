@@ -2003,8 +2003,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_DRAG_DELTA:
 		return ep.getuint2(MCdragdelta, line, pos, EE_PROPERTY_BADDRAGDELTA);
 	case P_STACK_FILE_TYPE:
-		MCValueRelease(MCstackfiletype);
-		MCstackfiletype = MCSTR(ep.getsvalue());
+		delete MCstackfiletype;
+        MCstackfiletype = ep.getsvalue().clone();
 		return ES_NORMAL;
 	case P_STACK_FILE_VERSION:
 		{
@@ -2033,8 +2033,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		MCsecuremode = MC_SECUREMODE_ALL;
 		return ES_NORMAL;
 	case P_SERIAL_CONTROL_STRING:
-		MCValueRelease(MCserialcontrolsettings);
-		MCserialcontrolsettings = MCSTR(ep.getsvalue());
+		delete MCserialcontrolsettings;
+		MCserialcontrolsettings = ep.getsvalue().clone();
 		return ES_NORMAL;
 	case P_EDIT_SCRIPTS:
 	case P_COLOR_WORLD:
@@ -2045,14 +2045,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_HIDE_CONSOLE_WINDOWS:
 		return ep.getboolean(MChidewindows, line, pos, EE_PROPERTY_NAB);
 	case P_FTP_PROXY:
-		//delete MCftpproxyhost;
-		MCValueRelease(MCftpproxyhost);
+		delete MCftpproxyhost;
+		
 		if (ep.getsvalue().getlength() == 0)
 			MCftpproxyhost = NULL;
 		else
 		{
-			MCftpproxyhost = MCSTR(ep.getsvalue());
-			if ((eptr = strchr(MCStringGetCString(MCftpproxyhost), ':')) != NULL)
+			MCftpproxyhost = ep.getsvalue().clone();
+			if ((eptr = strchr(MCftpproxyhost, ':')) != NULL)
 			{
 				*eptr++ = '\0';
 				MCftpproxyport = (uint2)strtol(eptr, NULL, 10);
@@ -2271,9 +2271,9 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		if (ep.getuint4(MCrecursionlimit, line, pos, EE_PROPERTY_NAN) != ES_NORMAL)
 			return ES_ERROR;
 #ifdef _WINDOWS
-		MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) * 3)));
+		MCrecursionlimit = MCU_min(MCstacklimit - MC_UNCHECKED_STACKSIZE, MCU_max(MCrecursionlimit, MCU_max(MC_UNCHECKED_STACKSIZE, MCU_abs(MCstackbottom - (char *)&stat) * 3)));
 #else
-		MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(strdup(MCStringGetCString(MCstackbottom)) - (char *)&stat) * 3); // fudge to 3x current stack depth
+		MCrecursionlimit = MCU_max(MCrecursionlimit, MCU_abs(MCstackbottom - (char *)&stat) * 3); // fudge to 3x current stack depth
 #endif
 		break;
 	case P_REPEAT_RATE:
@@ -2370,15 +2370,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_VC_SHARED_MEMORY:
 		return ep.getboolean(MCvcshm, line, pos, EE_PROPERTY_NAB);
 	case P_VC_PLAYER:
-		//delete MCvcplayer;
-		MCValueRelease(MCvplayer);
-		MCvcplayer = MCSTR(ep.getsvalue());
+		delete MCvcplayer;
+		MCvcplayer = ep.getsvalue().clone();
 		break;
 	case P_SCREEN_GAMMA:
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
 	case P_SHELL_COMMAND:
-		MCValueRelease(MCshellcmd);
-		MCshellcmd = MCSTR(ep.getsvalue());
+		delete MCshellcmd;
+		MCshellcmd = ep.getsvalue().clone();
 		break;
 	case P_SOUND_CHANNEL:
 		return ep.getuint2(MCsoundchannel, line, pos, EE_PROPERTY_NAN);
@@ -3742,7 +3741,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep.setsvalue(MChcstat);
 			break;
 		case P_SCRIPT_TEXT_FONT:
-			ep.setsvalue(MCStringGetCString(MCscriptfont));
+			ep.setsvalue(MCscriptfont);
 			break;
 		case P_SCRIPT_TEXT_SIZE:
 			if (MCscriptsize == 0)
@@ -3833,7 +3832,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep.setsvalue(MCfiletype);
 			break;
 		case P_STACK_FILE_TYPE:
-			ep.setsvalue(MCStringGetCString(MCstackfiletype));
+			ep.setsvalue(MCstackfiletype);
 			break;
 		case P_STACK_FILE_VERSION:
 		{
@@ -3873,7 +3872,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 		}
 			break;
 		case P_SERIAL_CONTROL_STRING:
-			ep.setsvalue(MCStringGetCString(MCserialcontrolsettings));
+			ep.setsvalue(MCserialcontrolsettings);
 			break;
 		case P_COLOR_WORLD:
 			ep.setboolean(MCscreen->getdepth() > 1);
@@ -3893,7 +3892,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			if (MCftpproxyhost == NULL)
 				ep.clear();
 			else
-				ep.setstringf("%s:%d", MCStringGetCString(MCftpproxyhost), MCftpproxyport);
+				ep.setstringf("%s:%d", MCftpproxyhost, MCftpproxyport);
 			break;
 		case P_HTTP_HEADERS:
 			if (MChttpheaders == NULL)
@@ -4218,13 +4217,13 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep.setboolean(MCvcshm);
 			break;
 		case P_VC_PLAYER:
-			ep.setsvalue(MCStringGetCString(MCvcplayer));
+			ep.setsvalue(MCvcplayer);
 			break;
 		case P_SCREEN_GAMMA:
 			ep.setr8(MCgamma, ep.getnffw(), ep.getnftrailing(), ep.getnfforce());
 			break;
 		case P_SHELL_COMMAND:
-			ep.setsvalue(MCStringGetCString(MCshellcmd));
+			ep.setsvalue(MCshellcmd);
 			break;
 		case P_SOUND_CHANNEL:
 			ep.setint(MCsoundchannel);

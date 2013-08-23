@@ -114,7 +114,7 @@ void MCScriptingExecRequestAppleEvent(MCExecContext& ctxt, int p_type, MCStringR
 void MCScriptingExecRequestFromProgram(MCExecContext& ctxt, MCStringRef p_message, MCStringRef p_program)
 {
 	MCAutoStringRef t_result;
-	t_result = MCS_request_program(p_message, p_program);
+	/* UNCHECHED */ MCS_request_program(p_message, p_program, &t_result);
 	
 	ctxt . SetItToValue(*t_result);
 }

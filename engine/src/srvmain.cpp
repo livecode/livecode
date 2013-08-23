@@ -332,7 +332,7 @@ extern void MCU_initialize_names();
 bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 
 	////
 	
@@ -474,7 +474,7 @@ static void X_load_extensions(MCServerScript *p_script)
 void X_main_loop(void)
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 	
 
 	if (MCserverinitialscript == nil)

@@ -79,7 +79,7 @@ static char apppath[PATH_MAX];
 bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
@@ -317,7 +317,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 void X_main_loop_iteration()
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 
 	////
 
