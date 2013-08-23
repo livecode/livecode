@@ -644,7 +644,7 @@ void MCGContextBegin(MCGContextRef self)
 	memset(t_new_bitmap . getPixels(), 0, t_new_bitmap . rowBytes() * t_new_bitmap . height());
 	
 	// We now create a canvas the same size as the device clip.
-	SkRefPtr<SkCanvas> t_new_canvas;
+	SkCanvas *t_new_canvas;
 	t_new_canvas = new SkCanvas(t_new_bitmap);
 	if (t_new_canvas == nil)
 	{
@@ -656,7 +656,7 @@ void MCGContextBegin(MCGContextRef self)
 	t_new_canvas -> translate(-t_device_clip . x(), -t_device_clip . y());
 	
 	// Replay the clip.
-	CanvasClipVisitor t_clip_visitor(t_new_canvas . get());
+	CanvasClipVisitor t_clip_visitor(t_new_canvas);
 	self -> layer -> canvas -> replayClips(&t_clip_visitor);
 	
 	// Set the matrix.
@@ -675,9 +675,10 @@ void MCGContextBegin(MCGContextRef self)
 	
 	// Now create the layer.
 	MCGContextLayerRef t_new_layer;
-	if (!MCGContextLayerCreate(t_new_canvas . get(), t_new_layer))
+	if (!MCGContextLayerCreate(t_new_canvas, t_new_layer))
 	{
 		self -> is_valid = false;
+		delete t_new_canvas;
 		return;
 	}
 	
@@ -878,7 +879,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	memset(t_new_bitmap . getPixels(), 0x00, t_new_bitmap . rowBytes() * t_new_bitmap . height());
 	
 	// We now create a canvas the same size as the device clip.
-	SkRefPtr<SkCanvas> t_new_canvas;
+	SkCanvas *t_new_canvas;
 	t_new_canvas = new SkCanvas(t_new_bitmap);
 	if (t_new_canvas == nil)
 	{
@@ -905,9 +906,10 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	
 	// Now create the layer.
 	MCGContextLayerRef t_new_layer;
-	if (!MCGContextLayerCreate(t_new_canvas . get(), t_new_layer))
+	if (!MCGContextLayerCreate(t_new_canvas, t_new_layer))
 	{
 		self -> is_valid = false;
+		delete t_new_canvas;
 		return;
 	}
 	
