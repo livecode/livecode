@@ -559,6 +559,7 @@ bool MCImageDecompressRLE(MCImageCompressedBitmap *p_compressed, MCImageBitmap *
 					MCImageBitmapApplyPlane(t_bitmap, t_plane, t_stride, t_pixel);
 				}
 			}
+			MCMemoryDeallocate(t_plane);
 		}
 		else
 		{
