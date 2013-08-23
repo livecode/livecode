@@ -1741,7 +1741,9 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 
 		// MW-2012-08-29: [[ Bug 10325 ]] Use 32-bit int to compute the width, then clamp
 		//   to 65535 - this means that we force wrapping when the line is too long.
-		uint4 twidth = 0;
+		// MW-2013-08-08: [[ Bug 10654 ]] Make sure we use a signed integer here, otherwise
+		//   we get incorrect clamping when converted to unsigned.
+		int4 twidth = 0;
 		if (flags & F_HAS_TAB)
 		{
 			const char *eptr;
@@ -1765,9 +1767,9 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 			}
 		}
 		if (dc == NULL)
-			return MCU_min(65535U, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
 		else
-			return MCU_min(65535U, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
+			return MCU_min(65535, twidth + MCFontMeasureText(m_font, sptr, l, hasunicode()));
 	}
 }
 
