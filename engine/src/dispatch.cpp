@@ -847,12 +847,6 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		MCresult -> sets("stack does not have filename");
 		return IO_ERROR;
 	}
-
-	if (*t_linkname == NULL)
-	{
-		MCresult->sets("can't open stack file, bad path");
-		return IO_ERROR;
-	}
 	
 	if (MCS_noperm(*t_linkname))
 	{
@@ -860,7 +854,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	}
 	char *oldfiletype = MCfiletype;
-	MCfiletype = strdup(MCStringGetCString(MCstackfiletype));
+	MCfiletype = (char *) MCStringGetCString(MCstackfiletype);
 	
 	MCAutoStringRef t_backup;
 	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", MCStringGetCString(*t_linkname)); 
@@ -935,13 +929,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCS_umask(oldmask);
 	
 	MCS_chmod(*t_linkname, newmask);
-/*
-	if (sptr->getfilename() != NULL && !strequal(linkname, sptr->getfilename()))
-		MCS_copyresourcefork(sptr->getfilename(), linkname);
-	else if (sptr -> getfilename() != NULL)
-		MCS_copyresourcefork(backup, linkname);
-*/
-	
+
 	MCAutoStringRef t_filename;
 	if (sptr -> getfilename() != nil)
 		/* UNCHECKED */ MCStringCreateWithCString(sptr->getfilename(), &t_filename);

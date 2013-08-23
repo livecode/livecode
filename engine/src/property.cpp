@@ -1646,8 +1646,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		MChcstat = ep.getsvalue().clone();
 		break;
 	case P_SCRIPT_TEXT_FONT:
-		MCValueRelease(MCscriptfont);
-		MCscriptfont = MCSTR(ep.getsvalue());
+		delete MCscriptfont;
+		MCscriptfont = ep.getsvalue();
 		break;
 	case P_SCRIPT_TEXT_SIZE:
 		return ep.getuint2(MCscriptsize, line, pos, EE_PROPERTY_NAN);

@@ -200,36 +200,33 @@ static char *folder_path_from_intial_path(const char *p_path)
 	char *t_path;
 	t_path = nil;
     MCAutoStringRef t_path_str;
+    if (strrchr(p_path, '/') != nil)
+    {
+		MCAutoStringRef t_original_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_path, &t_original_path)
+        if (*p_path != '/')
+            MCS_resolvepath(t_original_path, &t_path_str);
+        else
+			t_path_str = t_original_path;
+    }
+
+    char *t_folder;
+    t_folder = nil;
     
-	if (strrchr(p_path, '/') != nil)
-	{
-		if (*p_path != '/')
-		{
-			MCAutoStringRef temp_path;
-			/* UNCHECKED */ MCStringCreateWithCString(p_path, &temp_path);
-			/* UNCHECKED */ MCS_resolvepath(*temp_path, &t_path_str);
+    if (MCS_exists(*t_path_str, false))
+        /* UNCHECKED */ t_folder = strdup(MCStringGetCString(*t_path_str));
+    else
+    {
+		uindex_t t_index;
+        if (MCStringLastIndexOfLastChar(*t_path_str, '/', kMCStringCompareExact, UINDEX_MAX, t_index))
+        {
+			MCAutoStringRef t_folder_str;
+            /* UNCHECKED */ MCStringCopySubstring(*t_path_str, MCRangeMake(0, t_index), &t_folder_str);
+			t_folder = strdup(MCStringGetCString(*t_folder_str));
 		}
-		else
-            /* UNCHECKED */ MCCStringClone(p_path, t_path);
-	}
-	
-	char *t_folder;
-	t_folder = nil;
-	if (t_path != nil || *t_path_str != nil)
-	{
-		if (MCS_exists(*t_path_str, false))
-		/* UNCHECKED */ MCCStringClone(t_path, t_folder);
-    
-		else {
-			char *t_last_slash;
-			t_last_slash = strrchr(t_path, '/');
-			if (t_last_slash != nil)
-			/* UNCHECKED */ MCCStringCloneSubstring(t_path, t_last_slash - t_path, t_folder);
-		}
-	}
-	
-	/* UNCHECKED */ MCCStringFree(t_path);
-	return t_folder;	
+    }
+
+    return t_folder;    
 }
 
 static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t &r_type_count)

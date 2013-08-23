@@ -1085,7 +1085,9 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	if (!t_error)
 	{
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_src_path), &t_src_ref);
+		MCAutoStringRef t_src_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_src_path, &t_src_path_str);
+		t_os_error = do_nativepathtoref(*t_src_path_str, &t_src_ref);
 		if (t_os_error != noErr)
 			t_error = true;
 	}
@@ -1098,7 +1100,9 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	if (!t_error)
 	{
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_dst_path), &t_dst_ref);
+		MCAutoStringRef t_dst_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_dst_path, &t_dst_path_str);
+		t_os_error = do_nativepathtoref(*t_dst_path_str, &t_dst_ref);
 		if (t_os_error == noErr)
 			FSDeleteObject(&t_dst_ref);
 		

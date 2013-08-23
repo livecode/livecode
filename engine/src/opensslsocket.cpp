@@ -1781,9 +1781,13 @@ Boolean MCSocket::initsslcontext()
 					/* UNCHECKED */ MCStringCreateWithCString(certs[i].clone(), &t_oldcertpath_string);
 #ifdef _MACOSX
                     MCAutoStringRef t_certpath_string_tmp, t_certpath;
+					char *utf8str = NULL;
                     if (MCS_resolvepath(*t_oldcertpath_string, &t_certpath_string_tmp))
-                        path2utf(*t_certpath_string_tmp, &t_certpath);
+					{
+						/* UNCHECKED */ MCStringConvertToUTF8String(*t_certpath_string_tmp, utf8str);
+					}
 #else
+
 					MCAutoStringRef t_certpath;
 					MCS_resolvepath(*t_oldcertpath_string, &t_certpath);
 #endif
