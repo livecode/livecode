@@ -180,7 +180,7 @@ MCContextType MCGraphicsContext::gettype() const
 
 void MCGraphicsContext::begin(bool p_group)
 {
-	MCGContextBegin(m_gcontext);
+	MCGContextBegin(m_gcontext, p_group);
 }
 
 bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const MCRectangle &p_shape)

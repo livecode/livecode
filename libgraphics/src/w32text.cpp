@@ -43,11 +43,20 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		t_success = t_rgb_bitmap != NULL && t_rgb_data != NULL;
 	}
 
+	HGDIOBJ t_old_object;
 	if (t_success)
-		t_success = SelectObject(p_gdicontext, t_rgb_bitmap) != NULL;
+	{
+		t_old_object = SelectObject(p_gdicontext, t_rgb_bitmap);
+		t_success = t_old_object != NULL;
+	}
+
+	bool t_nearest_white;
+	if (t_success)
+		t_nearest_white = (0.3 * (p_context -> state -> fill_color & 0xff) + 0.59 * ((p_context -> state -> fill_color >> 8) & 0xff) + 0.11 * ((p_context -> state -> fill_color >> 16) & 0xff)) >= 127.0;
 
 	uint32_t *t_rgb_pxls, *t_context_pxls;
-	uint32_t t_context_width, t_x_offset, t_y_offset;
+	uint32_t t_context_width;
+	int32_t t_x_offset, t_y_offset;
 	if (t_success)
 	{
 		t_rgb_pxls = (uint32_t *) t_rgb_data;
@@ -67,7 +76,7 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 				if (((t_context_pxl >> 24) & 0xFF) == 0xFF)
 					*(t_rgb_pxls + y * p_bounds . width + x) = t_context_pxl;
 				else
-					*(t_rgb_pxls + y * p_bounds . width + x) = 0x00FFFFFF;
+					*(t_rgb_pxls + y * p_bounds . width + x) = t_nearest_white ? 0x000000 : 0xffffff;
 			}
 		}
 
@@ -87,23 +96,50 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 			{
 				uint32_t *t_context_pxl;
 				t_context_pxl = t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset;
+				uint32_t *t_rgb_pxl;
+				t_rgb_pxl = t_rgb_pxls + y * p_bounds . width + x;
 				if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
-					*t_context_pxl = *(t_rgb_pxls + y * p_bounds . width + x) | 0xFF000000;
+					*t_rgb_pxl = *t_rgb_pxl | 0xFF000000;
 				else
 				{
 					uint32_t t_lcd32_val;
 					t_lcd32_val = *(t_rgb_pxls + y * p_bounds . width + x);
 					
 					uint8_t t_a8_val;
-					t_a8_val = 255 - ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
+					t_a8_val = ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
 					
-					*t_context_pxl = packed_bilinear_bounded(*t_context_pxl, 255 - t_a8_val, p_context -> state -> fill_color, t_a8_val);;
+					if (!t_nearest_white)
+						t_a8_val = 255 - t_a8_val;
+
+					*t_rgb_pxl = packed_bilinear_bounded(*t_context_pxl, 255 - t_a8_val, p_context -> state -> fill_color, t_a8_val);
 				}
 			}
 		}
+
+		SkPaint t_paint;
+		t_paint . setStyle(SkPaint::kFill_Style);	
+		t_paint . setAntiAlias(p_context -> state -> should_antialias);
+		t_paint . setColor(MCGColorToSkColor(p_context -> state -> fill_color));
+		
+		SkXfermode *t_blend_mode;
+		t_blend_mode = MCGBlendModeToSkXfermode(p_context -> state -> blend_mode);
+		t_paint . setXfermode(t_blend_mode);
+		if (t_blend_mode != NULL)
+			t_blend_mode -> unref();		
+		
+		SkBitmap t_bitmap;
+		t_bitmap . setConfig(SkBitmap::kARGB_8888_Config, p_bounds . width, p_bounds . height);
+		t_bitmap . setIsOpaque(false);
+		t_bitmap . setPixels(t_rgb_data);
+		p_context -> layer -> canvas -> drawSprite(t_bitmap, p_bounds . x + p_location . x, p_bounds . y + p_location . y, &t_paint);
 	}
 
-	DeleteObject(t_rgb_bitmap);
+	if (t_rgb_bitmap != NULL)
+	{
+		SelectObject(p_gdicontext, t_old_object);
+		DeleteObject(t_rgb_bitmap);
+	}
+
 	return t_success;
 }
 

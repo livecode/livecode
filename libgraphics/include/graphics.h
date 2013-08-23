@@ -448,7 +448,7 @@ void MCGContextSetShouldAntialias(MCGContextRef context, bool should_antialias);
 void MCGContextSetOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetBlendMode(MCGContextRef context, MCGBlendMode mode);
 
-void MCGContextBegin(MCGContextRef context);
+void MCGContextBegin(MCGContextRef context, bool p_need_layer);
 void MCGContextBeginWithEffects(MCGContextRef context, MCGRectangle shape, const MCGBitmapEffects &effects);
 void MCGContextEnd(MCGContextRef context);
 

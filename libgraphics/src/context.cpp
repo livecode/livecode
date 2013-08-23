@@ -595,17 +595,17 @@ private:
 	SkCanvas *m_target_canvas;
 };
 	
-void MCGContextBegin(MCGContextRef self)
+void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 {
 	if (!MCGContextIsValid(self))
 		return;
 	
 	// If we are blending sourceOver
-	/*if (self -> state -> blend_mode == kMCGBlendModeSourceOver && self -> state -> opacity == 1.0)
+	if (!p_need_layer && self -> state -> blend_mode == kMCGBlendModeSourceOver && self -> state -> opacity == 1.0)
 	{
 		self -> layer -> nesting += 1;
 		return;
-	}*/
+	}
 	
 	// Fetch the bounds of the current clip in device co-ords and if the
 	// clip is empty, then just increase the nesting level.
