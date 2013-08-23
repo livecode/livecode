@@ -2027,7 +2027,65 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
     }
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
-	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
+	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_livecode_path)
+	{
+#ifdef /* MCU_path2std */ LEGACY_SYSTEM
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_stdpath);
+
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+#ifdef _MACOSX
+		if (t_src[i] == '/')
+			t_dst[i] = ':';
+		else if (t_src[i] == ':')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+#else
+		if (t_src[i] == '/')
+			t_dst[i] = '\\';
+		else if (t_src[i] == '\\')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+#endif
+	}
+
+	return t_path.CreateStringAndRelease(r_stdpath);
+#endif /* MCU_path2std */
+		uindex_t t_length = MCStringGetLength(p_native);
+		if (t_length == 0)
+			return MCStringCopy(p_native, r_livecode_path);
+
+		MCAutoNativeCharArray t_path;
+		if (!t_path.New(t_length))
+			return false;
+
+		const char_t *t_src = MCStringGetNativeCharPtr(p_native);
+		char_t *t_dst = t_path.Chars();
+
+		for (uindex_t i = 0; i < t_length; i++)
+		{
+			if (t_src[i] == '/')
+				t_dst[i] = '\\';
+			else if (t_src[i] == '\\')
+				t_dst[i] = '/';
+			else
+				t_dst[i] = t_src[i];
+		}
+
+		return t_path.CreateStringAndRelease(r_livecode_path);
+	}
+
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
     
 	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
@@ -2385,7 +2443,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		MCAutoStringRef t_mutable_cmd;
 
 		/* UNCHECKED */ MCStringCreateMutable(0, &t_mutable_cmd);
-		/* UNCHECKED */ MCStringFormat(&t_mutable_cmd, "%s%s%x", " /C ", MCshellcmd, p_command);
+		/* UNCHECKED */ MCStringFormat(&t_mutable_cmd, "%s\"%s\"%x", " /C ", MCshellcmd, p_command);
         char *pname = strclone(MCStringGetCString(*t_mutable_cmd));
         MCU_realloc((char **)&MCprocesses, MCnprocesses,
                     MCnprocesses + 1, sizeof(Streamnode));
