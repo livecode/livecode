@@ -1820,14 +1820,14 @@ void MCGroup::setsbrects()
 	{
 		// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 		//   calculate the label height.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fheight;
-		fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+		fheight = t_font_metrics . height;
 		grect.y += fheight >> 1;
 		grect.height -= fheight >> 1;
-		if (!opened && m_font == nil)
-			unmapfont();
 	}
 	if (flags & F_HSCROLLBAR)
 	{
@@ -2250,12 +2250,13 @@ MCRectangle MCGroup::getgrect()
 		//   the font mapped (i.e. not open) so map/unmap the font as required.
 		// MW-2012-03-16: [[ Bug ]] Make sure we only map/unmap a font if the group is
 		//   closed *and* has no font since hscroll/vscroll set opened to 0 temporarily.
-		if (!opened && m_font == nil)
-			mapfont();
+		// MW-2013-08-23: [[ MeasureText ]] Update to use measuretext() method for
+		//   better encapsulation.
+		MCRectangle t_font_metrics;
+		t_font_metrics = measuretext(MCnullmcstring, false);
+		
 		int32_t fascent;
-		fascent = MCFontGetAscent(m_font);
-		if (!opened && m_font == nil)
-			unmapfont();
+		fascent = -t_font_metrics . y;
 		
 		grect.y += fascent;
 		grect.height -= fascent;
@@ -2330,14 +2331,14 @@ Boolean MCGroup::computeminrect(Boolean scrolling)
 		{
 			// MW-2012-03-16: [[ Bug ]] Make sure we have a font to use to
 			//   calculate the label height.
-			if (!opened && m_font == nil)
-				mapfont();
+			// MW-2013-08-22: [[ MeasureText ]] Update to use new object method.
+			MCRectangle t_font_metrics;
+			t_font_metrics = measuretext(MCnullmcstring, false);
+			
 			int32_t fheight;
-			fheight = MCFontGetAscent(m_font) + MCFontGetDescent(m_font);
+			fheight = t_font_metrics . height;
 			rect.y -= fheight - borderwidth;
 			rect.height += fheight - borderwidth;
-			if (!opened && m_font == nil)
-				unmapfont();
 		}
 		if (flags & F_HSCROLLBAR)
 			rect.height += scrollbarwidth;

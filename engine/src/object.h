@@ -695,6 +695,8 @@ public:
 	{
 		return false;
 	}
+    
+    MCRectangle measuretext(const MCString& p_text, bool p_is_unicode);
 
 protected:
 	IO_stat defaultextendedsave(MCObjectOutputStream& p_stream, uint4 p_part);
@@ -707,10 +709,6 @@ protected:
 	//   This method is protected as MCStack needs to call it to resolve its
 	//   font attrs after the font table loads.
 	void loadfontattrs(uint2 index);
-	
-	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
-	void mapfont(void);
-	void unmapfont(void);
 	
 private:
 	Exec_stat getrectprop(Properties which, MCExecPoint& ep, Boolean effective);
@@ -762,6 +760,12 @@ private:
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
 	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	
+	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
+	// MW-2013-08-23: [[ MeasureText ]] Made private as external uses of them can be
+	//   done via measuretext() in a safe way.
+	void mapfont(void);
+	void unmapfont(void);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 
