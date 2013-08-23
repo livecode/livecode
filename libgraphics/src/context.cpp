@@ -652,6 +652,8 @@ void MCGContextBegin(MCGContextRef self)
 		return;
 	}
 	
+	SkAutoUnref t_canvas_au(t_new_canvas);
+	
 	// Next translate the canvas by the translation factor of the matrix.
 	t_new_canvas -> translate(-t_device_clip . x(), -t_device_clip . y());
 	
@@ -678,7 +680,6 @@ void MCGContextBegin(MCGContextRef self)
 	if (!MCGContextLayerCreate(t_new_canvas, t_new_layer))
 	{
 		self -> is_valid = false;
-		delete t_new_canvas;
 		return;
 	}
 	
@@ -881,11 +882,14 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	// We now create a canvas the same size as the device clip.
 	SkCanvas *t_new_canvas;
 	t_new_canvas = new SkCanvas(t_new_bitmap);
+	
 	if (t_new_canvas == nil)
 	{
 		self -> is_valid = false;
 		return;
 	}
+	
+	SkAutoUnref t_canvas_au(t_new_canvas);
 	
 	// Next translate the canvas by the translation factor of the matrix.
 	t_new_canvas -> translate(-t_layer_clip . left, -t_layer_clip . top);
@@ -909,7 +913,6 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	if (!MCGContextLayerCreate(t_new_canvas, t_new_layer))
 	{
 		self -> is_valid = false;
-		delete t_new_canvas;
 		return;
 	}
 	
