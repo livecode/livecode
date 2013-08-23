@@ -211,13 +211,15 @@ public:
 class MCUIKitStackSurface: public MCIPhoneStackSurface
 {
 	CGContextRef m_context;
+	int32_t m_height;
 	
 public:
-	// IM-2013-07-18: remove unnecessary height parameter
-	MCUIKitStackSurface(MCRegionRef p_region, CGContextRef p_context)
+	// IM-2013-08-23: [[ RefactorGraphics ]] Reinstate surface height parameter
+	MCUIKitStackSurface(MCRegionRef p_region, int32_t p_height, CGContextRef p_context)
 		: MCIPhoneStackSurface(MCRegionGetBoundingBox(p_region))
 	{
 		m_context = p_context;
+		m_height = p_height;
 	}
 	
 	bool Lock(void)
@@ -238,7 +240,10 @@ public:
 		//   when redrawing.
 		CGContextSetInterpolationQuality(m_context, kCGInterpolationNone);
 		
-		// IM-2013-07-18: Remove context transformations specific to drawing inverted images
+		// IM-2013-08-23: [[ RefactorGraphics ]] Flip the surface so the origin is the
+		// bottom-left, as expected by the MCTileCacheCoreGraphicsCompositor
+		CGContextScaleCTM(m_context, 1.0, -1.0);
+		CGContextTranslateCTM(m_context, 0.0, -m_height);
 		
 		CGContextSaveGState(m_context);
 		
@@ -259,11 +264,8 @@ protected:
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
 			return;
 		
-		// IM-2013-07-18: transform target so image draws upside-down
-		CGContextTranslateCTM(m_context, 0.0, (CGFloat)m_locked_area.y);
-		CGContextTranslateCTM(m_context, 0.0, (CGFloat)m_locked_area.height);
-		CGContextScaleCTM(m_context, 1.0, -1.0);
-		CGContextTranslateCTM(m_context, 0.0, -(CGFloat)m_locked_area.y);
+		// IM-2013-07-18: [[ RefactorGraphics ]] remove previous image flip transformation as now entire
+		// CGContext will be flipped. Instead, we draw the image at an offset from the bottom
 		
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateDeviceRGB();
@@ -280,7 +282,7 @@ protected:
 		
 		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, m_locked_area.width, m_locked_area.height), t_colorspace, false, false, t_image))
 		{
-			CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)m_locked_area . y, (float)m_locked_area . width, (float)m_locked_area . height), t_image);
+			CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)(m_height - (m_locked_area . y + m_locked_area . height)), (float)m_locked_area . width, (float)m_locked_area . height), t_image);
 			CGImageRelease(t_image);
 		}
 		
@@ -327,7 +329,11 @@ protected:
 	
 	CGContextScaleCTM(t_cgcontext, 1.0 / t_scale, 1.0 / t_scale);
 	
-	MCUIKitStackSurface t_surface(t_dirty_rgn, t_cgcontext);
+	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_stack->getrect()));
+	
+	MCUIKitStackSurface t_surface(t_dirty_rgn, t_device_rect.height, t_cgcontext);
 	
 	if (t_surface . Lock())
 	{
