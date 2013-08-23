@@ -2526,6 +2526,9 @@ public class Engine extends View implements EngineApi
 		s_running = true;
 		if (m_text_editor_visible)
 			showKeyboard();
+		
+		// IM-2013-08-16: [[ Bugfix 11103 ]] dispatch any remote notifications received while paused
+		dispatchNotifications();
 	}
 
 	public void onDestroy()
