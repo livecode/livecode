@@ -1123,15 +1123,18 @@ class MCMacStackSurface: public MCStackSurface
 	MCRegionRef m_region;
 	CGContextRef m_context;
 	
+	int32_t m_surface_height;
+	
 	MCRectangle m_locked_area;
 	MCGContextRef m_locked_context;
 	void *m_locked_bits;
 	uint32_t m_locked_stride;
 	
 public:
-	MCMacStackSurface(MCStack *p_stack, MCRegionRef p_region, CGContextRef p_context)
+	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, MCRegionRef p_region, CGContextRef p_context)
 	{
 		m_stack = p_stack;
+		m_surface_height = p_surface_height;
 		m_region = p_region;
 		m_context = p_context;
 		
@@ -1148,12 +1151,9 @@ public:
 		
 		if (t_mask != nil)
 		{
-			MCRectangle t_card_rect;
-			t_card_rect = m_stack -> getcurcard() -> getrect();
-			
 			MCRectangle t_rect;
 			t_rect = MCRegionGetBoundingBox(m_region);
-			CGContextClearRect(m_context, CGRectMake(t_rect . x, t_card_rect . height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
+			CGContextClearRect(m_context, CGRectMake(t_rect . x, m_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
 			
 			// MW-2012-07-25: [[ Bug ]] Make sure we use signed arithmetic to
 			//   compute the y-origin otherwise it wraps to 2^32!
@@ -1163,7 +1163,7 @@ public:
 			
 			CGRect t_dst_rect;
 			t_dst_rect . origin . x = 0;
-			t_dst_rect . origin . y = ((int32_t)t_card_rect . height) - t_mask_height - m_stack -> getscroll();
+			t_dst_rect . origin . y = m_surface_height - t_mask_height - (m_stack -> getscroll() * t_scale);
 			t_dst_rect . size . width = t_mask_width;
 			t_dst_rect . size . height = t_mask_height;
 			CGContextClipToMask(m_context, t_dst_rect, t_mask);
@@ -1260,11 +1260,8 @@ public:
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
 			return;
 		
-		int32_t t_height;
-		t_height = m_stack -> getcurcard() -> getrect() . height;
-		
 		CGRect t_dst_rect;
-		t_dst_rect = CGRectMake(m_locked_area . x, t_height - (m_locked_area . y + m_locked_area . height), m_locked_area . width, m_locked_area . height);
+		t_dst_rect = CGRectMake(m_locked_area . x, m_surface_height - (m_locked_area . y + m_locked_area . height), m_locked_area . width, m_locked_area . height);
 		
 		MCMacRenderBitsToCG(m_context, t_dst_rect, p_bits, p_stride, false);
 		
@@ -1290,9 +1287,6 @@ public:
 	
 	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
 	{
-		int32_t t_height;
-		t_height = m_stack -> getcurcard() -> getrect() . height;
-		
 		// IM-2013-08-21: [[ RefactorGraphics]] Rework to fix positioning of composited src image
 		// compute transform from src rect to dst rect
 		MCGFloat t_sx, t_sy, t_dx, t_dy;
@@ -1315,12 +1309,12 @@ public:
 		MCRectangle t_bounds;
 		t_bounds = MCGRectangleGetIntegerBounds(p_dst_rect);
 		CGRect t_dst_clip;
-		t_dst_clip = CGRectMake(t_bounds . x, t_height - (t_bounds . y + t_bounds . height), t_bounds . width, t_bounds . height);
+		t_dst_clip = CGRectMake(t_bounds . x, m_surface_height - (t_bounds . y + t_bounds . height), t_bounds . width, t_bounds . height);
 		CGContextClipToRect(t_context, t_dst_clip);
 		
 		// render image to transformed rect
 		CGRect t_dst_cgrect;
-		t_dst_cgrect = CGRectMake(t_dst_rect . origin . x, t_height - (t_dst_rect . origin . y + t_dst_rect . size . height), t_dst_rect . size . width, t_dst_rect . size . height);
+		t_dst_cgrect = CGRectMake(t_dst_rect . origin . x, m_surface_height - (t_dst_rect . origin . y + t_dst_rect . size . height), t_dst_rect . size . width, t_dst_rect . size . height);
 		MCMacRenderImageToCG(t_context, t_dst_cgrect, p_src, t_src_rect, p_alpha, p_blend);
 		
 		UnlockTarget();
@@ -1517,15 +1511,22 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 				// draw something.
 				if (t_graphics != nil)
 				{
+					// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
+					MCRectangle t_device_rect;
+					t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_context->stack->getcurcard()->getrect()));
+					
+					int32_t t_surface_height;
+					t_surface_height = t_device_rect.height;
+					
 					// HIView gives us a context in top-left origin mode which isn't so good
 					// for our CG rendering so, revert back to bottom-left.
 					CGContextScaleCTM(t_graphics, 1.0, -1.0);
-					CGContextTranslateCTM(t_graphics, 0.0, -t_context -> stack -> getcurcard() -> getrect() . height);
+					CGContextTranslateCTM(t_graphics, 0.0, -t_surface_height);
 					
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{
