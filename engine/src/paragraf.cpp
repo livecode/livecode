@@ -1018,10 +1018,12 @@ void MCParagraph::draw(MCDC *dc, int2 x, int2 y, uint2 fixeda,
 				//   sure we adjust the prev inner rect for padding.
 				// MW-2012-03-19: [[ Bug 10069 ]] Make sure the appropriate h/v padding is used to
 				//   adjust the rect.
-				t_prev_inner . x = t_inner_rect . x - prev() -> gethpadding();
-				t_prev_inner . width = t_inner_rect . width + 2 * prev() -> gethpadding();
-				t_prev_inner . y = t_inner_rect . y - prev() -> getvpadding();
-				t_prev_inner . height = t_inner_rect . height + 2 * prev() -> getvpadding();
+				// MW-2013-08-08: [[ Bug 10616 ]] Previously was making t_prev_inner equal to t_inner_rect
+				//   adjusted for padding, causing incorrect length of hline.
+				t_prev_inner . x = t_prev_inner . x - prev() -> gethpadding();
+				t_prev_inner . width = t_prev_inner . width + 2 * prev() -> gethpadding();
+				t_prev_inner . y = t_prev_inner . y - prev() -> getvpadding();
+				t_prev_inner . height = t_prev_inner . height + 2 * prev() -> getvpadding();
 				
 				// MW-2012-02-10: [[ FixedTable ]] Adjust the outer rect to take into account any
 				//   fixed width table mode.
