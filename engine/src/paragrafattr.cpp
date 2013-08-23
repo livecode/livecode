@@ -1017,7 +1017,9 @@ void MCParagraph::copysingleattr(Properties which, MCParagraph *other)
 				attrs -> hidden = other -> attrs -> hidden;
 			else if (attrs != nil)
 				attrs -> hidden = false;
-			if (!attrs -> hidden)
+			// MW-2013-08-20: [[ Bug 11108 ]] If we don't have attributes, then don't tweak
+			//   the flags.
+			if (attrs != nil && !attrs -> hidden)
 				attrs -> flags &= ~PA_HAS_HIDDEN;
 		}
 		break;
