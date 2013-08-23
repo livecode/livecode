@@ -4419,7 +4419,12 @@ MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
     
     MCRectangle t_bounds;
     t_bounds . x = 0;
-    t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
+	//   getting the font ascent/descent (as used in MCGroup methods).
+	if (p_text . getlength() != 0)
+		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+	else
+		t_bounds . width = 0;
     t_bounds . y = -MCFontGetAscent(m_font);
     t_bounds . height = MCFontGetDescent(m_font) + MCFontGetAscent(m_font);
     
