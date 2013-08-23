@@ -572,6 +572,9 @@ void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)
 
 		MCGContextSetFillGradient(m_gcontext, t_function, t_stops, t_colors, p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
 		MCGContextSetStrokeGradient(m_gcontext, t_function, t_stops, t_colors, p_gradient -> ramp_length, p_gradient -> mirror, p_gradient -> wrap, p_gradient -> repeat, t_transform, t_filter);
+		
+		MCMemoryDeleteArray(t_stops);
+		MCMemoryDeleteArray(t_colors);
 	}
 }
 

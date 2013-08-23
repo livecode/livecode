@@ -130,7 +130,7 @@ bool MCGGradientCreate(MCGGradientFunction p_function, const MCGFloat* p_stops, 
 		r_gradient = t_gradient;
 	}
 	else
-		MCMemoryDelete(t_gradient);
+		MCGGradientDestroy(t_gradient);
 	
 	return t_success;
 }
