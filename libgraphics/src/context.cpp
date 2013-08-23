@@ -21,16 +21,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-inline int32_t min(int32_t x, int32_t y)
-{
-	return x < y ? x : y;
-}
-
-inline int32_t max(int32_t x, int32_t y)
-{
-	return x > y ? x : y;
-}
-
 struct MCGIRectangle
 {
 	int32_t left;
@@ -56,12 +46,12 @@ MCGIRectangle MCGRectangleComputeHull(const MCGRectangle& self)
 
 MCGIRectangle MCGIRectangleUnion(const MCGIRectangle& left, const MCGIRectangle& right)
 {
-	return MCGIRectangleMake(min(left . left, right . left), min(left . top, right . top), max(left . right, right . right), max(left . bottom, right . bottom));
+	return MCGIRectangleMake(SkMin32(left . left, right . left), SkMin32(left . top, right . top), SkMax32(left . right, right . right), SkMax32(left . bottom, right . bottom));
 }
 
 MCGIRectangle MCGIRectangleIntersect(const MCGIRectangle& left, const MCGIRectangle& right)
 {
-	return MCGIRectangleMake(max(left . left, right . left), max(left . top, right . top), min(left . right, right . right), min(left . bottom, right . bottom));
+	return MCGIRectangleMake(SkMax32(left . left, right . left), SkMax32(left . top, right . top), SkMin32(left . right, right . right), SkMin32(left . bottom, right . bottom));
 }
 
 MCGIRectangle MCGIRectangleOffset(const MCGIRectangle& self, int32_t dx, int32_t dy)

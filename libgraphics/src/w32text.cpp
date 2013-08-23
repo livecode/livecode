@@ -25,45 +25,6 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 	bool t_success;
 	t_success = true;
 
-	void *t_mask_data;
-	t_mask_data = NULL;
-	HBITMAP t_mask_bitmap;
-	t_mask_bitmap = NULL;
-	if (t_success)
-	{
-		BITMAPINFO t_bitmapinfo;
-		MCMemoryClear(&t_bitmapinfo, sizeof(BITMAPINFO));
-		t_bitmapinfo . bmiHeader . biSize = sizeof(BITMAPINFOHEADER);
-		t_bitmapinfo . bmiHeader . biCompression = BI_RGB;
-		t_bitmapinfo . bmiHeader . biWidth = p_bounds . width;
-		t_bitmapinfo . bmiHeader . biHeight = -p_bounds . height;
-		t_bitmapinfo . bmiHeader . biPlanes = 1;
-		t_bitmapinfo . bmiHeader . biBitCount = 1;
-		t_bitmapinfo . bmiHeader . biSizeImage = p_bounds . height * ((p_bounds . width + 31) & ~31) / 8;
-
-		t_bitmapinfo . bmiColors[0] . rgbRed = t_bitmapinfo . bmiColors[0] . rgbGreen = t_bitmapinfo . bmiColors[0] . rgbBlue = 0xFF;
-		t_bitmapinfo . bmiColors[1] . rgbRed = t_bitmapinfo . bmiColors[1] . rgbGreen = t_bitmapinfo . bmiColors[1] . rgbBlue = 0x00;
-		t_bitmapinfo . bmiColors[0] . rgbReserved = 0;
-		t_bitmapinfo . bmiColors[1] . rgbReserved = 0;
-
-		t_mask_bitmap = CreateDIBSection(p_gdicontext, &t_bitmapinfo, DIB_RGB_COLORS, &t_mask_data, NULL, 0);
-		t_success = t_mask_bitmap != NULL && t_mask_data != NULL;
-	}
-	
-	if (t_success)
-		t_success = SelectObject(p_gdicontext, t_mask_bitmap) != NULL;
-
-	if (t_success)
-	{
-		SetTextColor(p_gdicontext, 0x00000000);
-		SetBkColor(p_gdicontext, 0x00FFFFFF);
-		SetBkMode(p_gdicontext, OPAQUE);		
-		t_success = TextOutW(p_gdicontext, 0, 0, (LPCWSTR)p_text, p_length >> 1);
-	}
-	
-	if (t_success)
-		t_success = GdiFlush();
-
 	void *t_rgb_data;
 	t_rgb_data = NULL;
 	HBITMAP t_rgb_bitmap;
@@ -85,13 +46,10 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 	if (t_success)
 		t_success = SelectObject(p_gdicontext, t_rgb_bitmap) != NULL;
 
-	uint8_t *t_mask_pxls;
 	uint32_t *t_rgb_pxls, *t_context_pxls;
-	uint32_t t_mask_stride, t_context_width, t_x_offset, t_y_offset;
+	uint32_t t_context_width, t_x_offset, t_y_offset;
 	if (t_success)
 	{
-		t_mask_stride = ((p_bounds . width + 31) & ~31) / 8;
-		t_mask_pxls = (uint8_t *) t_mask_data;
 		t_rgb_pxls = (uint32_t *) t_rgb_data;
 
 		t_context_pxls = (uint32_t *) p_context -> layer -> canvas -> getTopDevice() -> accessBitmap(false) . getPixels();
@@ -104,17 +62,12 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		{
 			for(uint32_t x = 0; x < p_bounds . width; x++)
 			{
-				uint8_t t_mask_pxl;
-				t_mask_pxl = *(t_mask_pxls + y * t_mask_stride + (x >> 3));
-				if ((t_mask_pxl & (1 << (7 - (x % 8)))) != 0)//)*(t_mask_pxls + y * t_mask_stride + (x >> 3)) != 0xFF)
-				{
-					uint32_t t_context_pxl;
-					t_context_pxl = *(t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset);
-					if (((t_context_pxl >> 24) & 0xFF) == 0xFF)
-						*(t_rgb_pxls + y * p_bounds . width + x) = t_context_pxl;
-					else
-						*(t_rgb_pxls + y * p_bounds . width + x) = 0x00FFFFFF;
-				}
+				uint32_t t_context_pxl;
+				t_context_pxl = *(t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset);
+				if (((t_context_pxl >> 24) & 0xFF) == 0xFF)
+					*(t_rgb_pxls + y * p_bounds . width + x) = t_context_pxl;
+				else
+					*(t_rgb_pxls + y * p_bounds . width + x) = 0x00FFFFFF;
 			}
 		}
 
@@ -132,30 +85,24 @@ static bool w32_draw_text_using_mask_to_context_at_device_location(MCGContextRef
 		{
 			for(uint32_t x = 0; x < p_bounds . width; x++)
 			{
-				uint8_t t_mask_pxl;
-				t_mask_pxl = *(t_mask_pxls + y * t_mask_stride + (x >> 3));
-				if ((t_mask_pxl & (1 << (7 - (x % 8)))) != 0)
+				uint32_t *t_context_pxl;
+				t_context_pxl = t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset;
+				if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
+					*t_context_pxl = *(t_rgb_pxls + y * p_bounds . width + x) | 0xFF000000;
+				else
 				{
-					uint32_t *t_context_pxl;
-					t_context_pxl = t_context_pxls + (y + t_y_offset) * t_context_width + x + t_x_offset;
-					if (((*t_context_pxl >> 24) & 0xFF) == 0xFF)
-						*t_context_pxl = *(t_rgb_pxls + y * p_bounds . width + x) | 0xFF000000;
-					else
-					{
-						uint32_t t_lcd32_val;
-						t_lcd32_val = *(t_rgb_pxls + y * p_bounds . width + x);
-						
-						uint8_t t_a8_val;
-						t_a8_val = 255 - ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
-						
-						*t_context_pxl = packed_bilinear_bounded(*t_context_pxl, 255 - t_a8_val, p_context -> state -> fill_color, t_a8_val);;
-					}
+					uint32_t t_lcd32_val;
+					t_lcd32_val = *(t_rgb_pxls + y * p_bounds . width + x);
+					
+					uint8_t t_a8_val;
+					t_a8_val = 255 - ((t_lcd32_val & 0xFF) + ((t_lcd32_val & 0xFF00) >> 8) + ((t_lcd32_val & 0xFF0000) >> 16)) / 3;
+					
+					*t_context_pxl = packed_bilinear_bounded(*t_context_pxl, 255 - t_a8_val, p_context -> state -> fill_color, t_a8_val);;
 				}
 			}
 		}
 	}
 
-	DeleteObject(t_mask_bitmap);
 	DeleteObject(t_rgb_bitmap);
 	return t_success;
 }
