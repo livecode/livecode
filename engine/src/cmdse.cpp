@@ -1969,13 +1969,13 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
             // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
             if (font->eval(ep) == ES_NORMAL)
 			{
-                Exec_stat t_error;
-                t_error = ES_NORMAL;
+                Exec_stat t_stat;
+                t_stat = ES_NORMAL;
                 
                 char *t_resolved_path;
                 t_resolved_path = nil;
                 
-                if (t_error == ES_NORMAL)
+                if (t_stat == ES_NORMAL)
                 {
                     t_resolved_path = MCS_resolvepath(ep . getcstring());
                     if (!t_resolved_path)
@@ -1985,16 +1985,15 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
                     }
                 }
                 
-                if (t_error == ES_NORMAL)
+                if (t_stat == ES_NORMAL)
                 {
-                    t_error = MCFontLoad(ep, t_resolved_path , is_globally);
+                    t_stat = MCFontLoad(ep, t_resolved_path , is_globally);
                 }
                 
-                if (t_error != ES_NORMAL)
-                {
-                    MCeerror->add(EE_FONT_CANTLOAD, line, pos);
-                    return t_error;
-                }
+                if (t_stat != ES_NORMAL)
+                    MCresult -> sets("can't load font file");
+                else
+                    MCresult -> clear();
                 
             }
             else
@@ -2256,13 +2255,11 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
                 
                 if (font->eval(ep) == ES_NORMAL)
                 {
-                    Exec_stat t_error;
-                    t_error = ES_NORMAL;
                     
                     char *t_resolved_path;
                     t_resolved_path = nil;
                     
-                    if (t_error == ES_NORMAL)
+                    if (t_stat == ES_NORMAL)
                     {
                         t_resolved_path = MCS_resolvepath(ep . getcstring());
                         if (!t_resolved_path)
@@ -2277,12 +2274,11 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
                         t_stat = MCFontUnload(ep, t_resolved_path);
                     }
                     
-                    if (t_error != ES_NORMAL)
-                    {
-                        MCeerror->add(EE_FONT_CANTUNLOAD, line, pos);
-                        return t_error;
-                    }
-                    
+                    if (t_stat != ES_NORMAL)
+                        MCresult -> sets("can't unload font file");
+                    else
+                        MCresult -> clear();
+                        
                 }
                 else
                 {

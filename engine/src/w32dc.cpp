@@ -139,19 +139,19 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 	{
 		struct _stat t_info;
 		if (_stat(p_path, &t_info) != 0 || (t_info . st_mode & _S_IFDIR) != 0)
-			return false; //EE_FONT_BADFILEEXP;
+			return false;
 	}
 	
 	if (t_success)
 	{
 		if (AddFontResourceExA(p_path, t_private, 0) == 0)
-			return false; //EE_FONT_CANTLOAD;
+			return false;
 	}
     
 	if (t_success)
 		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
     
-	return true; // EE_UNDEFINED;
+	return true;
 }
 
 

@@ -2418,14 +2418,8 @@ enum Exec_errors
 	EE_GROUP_NOTGROUPABLE,
 
     // TD-2013-06-24: [[ DynamicFonts ]]
-    // {EE-0782} font: couldn't find font
+    // {EE-0797} font: couldn't find font
 	EE_FONT_BADFILEEXP,
-    
-    // {EE-0783} font: can't load font file
-	EE_FONT_CANTLOAD,
-    
-    // {EE-0784} font: can't unload font file
-    EE_FONT_CANTUNLOAD,
 };
 
 extern const char *MCexecutionerrors;

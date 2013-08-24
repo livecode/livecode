@@ -235,11 +235,11 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 
 	t_os_error = MCS_pathtoref(p_path, &t_ref); // resolves and converts to UTF8.
 	if (t_os_error != noErr)
-		return false; //EE_FONT_BADFILEEXP;
+		return false;
     
     t_os_error = MCS_fsref_to_fsspec(&t_ref, &t_fsspec);
     if (t_os_error != noErr)
-		return false; //EE_FONT_BADFILEEXP;
+		return false;
     
     ATSFontContext t_context = kATSFontContextLocal;
     if (p_globally)
@@ -251,7 +251,7 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
     //       ATSFontActivateFromFileSpecification deprecated in 10.5.
     t_os_error = ATSFontActivateFromFileSpecification(&t_fsspec, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
     if (t_os_error != noErr)
-        return false; //EE_FONT_CANTLOAD;
+        return false;
     
     r_loaded_font_handle = (void *)t_container;
     
