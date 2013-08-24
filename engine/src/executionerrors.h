@@ -2416,6 +2416,10 @@ enum Exec_errors
 	
 	// {EE-0796} group: object cannot be grouped
 	EE_GROUP_NOTGROUPABLE,
+
+    // TD-2013-06-24: [[ DynamicFonts ]]
+    // {EE-0797} font: couldn't find font
+	EE_FONT_BADFILEEXP,
 };
 
 extern const char *MCexecutionerrors;
