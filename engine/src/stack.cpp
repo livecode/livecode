@@ -2695,6 +2695,41 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 	}
 	break;
 #endif /* MCStack::setprop */
+        case P_FORE_PIXEL:
+        case P_BACK_PIXEL:
+        case P_HILITE_PIXEL:
+        case P_BORDER_PIXEL:
+        case P_TOP_PIXEL:
+        case P_BOTTOM_PIXEL:
+        case P_SHADOW_PIXEL:
+        case P_FOCUS_PIXEL:
+        case P_FORE_COLOR:
+        case P_BACK_COLOR:
+        case P_HILITE_COLOR:
+        case P_BORDER_COLOR:
+        case P_TOP_COLOR:
+        case P_BOTTOM_COLOR:
+        case P_SHADOW_COLOR:
+        case P_FOCUS_COLOR:
+        case P_COLORS:
+        case P_FORE_PATTERN:
+        case P_BACK_PATTERN:
+        case P_HILITE_PATTERN:
+        case P_BORDER_PATTERN:
+        case P_TOP_PATTERN:
+        case P_BOTTOM_PATTERN:
+        case P_SHADOW_PATTERN:
+        case P_FOCUS_PATTERN:
+        case P_TEXT_FONT:
+        case P_TEXT_SIZE:
+        case P_TEXT_STYLE:
+        case P_TEXT_HEIGHT:
+            if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+                return ES_ERROR;
+            // MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
+            //   of this stack - but for now do the whole screen.
+            MCRedrawDirtyScreen();
+            return ES_NORMAL;
 	default:
 	{
 		Exec_stat t_stat;

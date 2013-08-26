@@ -355,8 +355,16 @@ public:
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
 #ifdef OLD_EXEC
 	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
-#endif
-	MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+#endif  
+    MCCard *getchildbyordinal(Chunk_term p_ordinal);
+    MCCard *getchildbyid(uinteger_t p_id);
+    MCCard *getchildbyname(MCNameRef p_name);
+    
+	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+    
+    MCGroup *getbackgroundbyordinal(Chunk_term otype);
+    MCGroup *getbackgroundbyid(uinteger_t p_id);
+    MCGroup *getbackgroundbyname(MCNameRef p_name);
 	void addneed(MCButton *bptr);
 	void removeneed(MCButton *bptr);
 	void addmnemonic(MCButton *button, uint1 key);

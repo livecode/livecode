@@ -2003,6 +2003,97 @@ MCControl *MCGroup::getchild(Chunk_term etype, const MCString &expression,
 }
 #endif
 
+MCControl *MCGroup::getchildbyordinal(Chunk_term p_ordinal_type, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    
+	uint2 num = 0;
+    
+	switch (p_ordinal_type)
+	{
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal_type - CT_FIRST;
+            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(p_object_type, NULL, num);
+            // MW-2007-08-30: [[ Bug 4152 ]] If we're counting groups, we get one too many as it
+            //   includes the owner - thus we adjust (this means you can do 'the last group of group ...')
+            if (p_object_type == CT_GROUP)
+                num--;
+            switch (p_ordinal_type)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            return nil;
+    }
+	do
+	{
+		MCControl *foundobj;
+		if ((foundobj = cptr->findnum(p_object_type, num)) != NULL)
+			return foundobj;
+		cptr = cptr->next();
+	}
+	while (cptr != controls);
+	return nil;
+}
+
+MCControl *MCGroup::getchildbyid(uinteger_t p_id, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    do
+    {
+        MCControl *foundobj;
+        if ((foundobj = cptr->findid(p_object_type, p_id, True)) != nil)
+            return foundobj;
+        cptr = cptr->next();
+    }
+    while (cptr != controls);
+    return nil;
+}
+
+MCControl *MCGroup::getchildbyname(MCNameRef p_name, Chunk_term p_object_type)
+{
+    MCControl *cptr = controls;
+    if (cptr == nil)
+        return nil;
+    do
+    {
+        MCControl *foundobj;
+        if ((foundobj = cptr->findname(p_object_type, MCNameGetOldString(p_name))) != NULL)
+            return foundobj;
+        cptr = cptr->next();
+    }
+    while (cptr != controls);
+    return nil;
+}
+
 void MCGroup::makegroup(MCControl *newcontrols, MCObject *newparent)
 {
 	if (parent->getstack() != newparent->getstack())

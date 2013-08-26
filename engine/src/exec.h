@@ -638,6 +638,11 @@ public:
 		m_ep.setparentscript(p_parentscript);
 	}
 
+    MCParentScriptUse *GetParentScript(void)
+	{
+		return m_ep.getparentscript();
+	}
+    
     // MM-2011-02-16: Added ability to get handle of current object
     MCObjectHandle *GetObjectHandle(void);
 	void SetTheResultToEmpty(void);
@@ -1421,6 +1426,57 @@ extern MCExecMethodInfo *kMCInterfaceSetToolMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenRectMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceGetScreenRectsMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceEvalHelpStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalHomeStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalStackByValueMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSelectedObjectAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalTopStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalClickStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalMouseStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalClickFieldAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSelectedFieldAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSelectedImageAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalFoundFieldAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalMouseControlAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalFocusedObjectAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalBinaryStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalDefaultStackAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalStackOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalStackOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalAudioClipOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalVideoClipOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalBackgroundOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfStackMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfBackgroundByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfCardOrStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalGroupOfGroupByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalMenubarAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfGroupByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardOrStackByIdMethodInfo;
+
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
 
@@ -2002,6 +2058,9 @@ extern MCExecMethodInfo *kMCPasteboardEvalIsAmongTheKeysOfTheClipboardDataMethod
 extern MCExecMethodInfo *kMCPasteboardEvalIsNotAmongTheKeysOfTheClipboardDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalIsAmongTheKeysOfTheDragDataMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardEvalIsNotAmongTheKeysOfTheDragDataMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalDragSourceAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCPasteboardEvalDragDestinationAsObjectMethodInfo;
+
 extern MCExecMethodInfo *kMCPasteboardExecPasteMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardExecCopyMethodInfo;
 extern MCExecMethodInfo *kMCPasteboardExecCopyTextToClipboardMethodInfo;
@@ -2035,6 +2094,9 @@ void MCPasteboardEvalIsAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNam
 void MCPasteboardEvalIsNotAmongTheKeysOfTheClipboardData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
 void MCPasteboardEvalIsAmongTheKeysOfTheDragData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
 void MCPasteboardEvalIsNotAmongTheKeysOfTheDragData(MCExecContext& ctxt, MCNameRef p_key, bool& r_result);
+
+void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
 void MCPasteboardExecPaste(MCExecContext& ctxt);
 
@@ -2098,6 +2160,15 @@ extern MCExecMethodInfo *kMCEngineEvalScriptLimitsMethodInfo;
 extern MCExecMethodInfo *kMCEngineEvalSysErrorMethodInfo;
 extern MCExecMethodInfo *kMCEngineEvalValueMethodInfo;
 extern MCExecMethodInfo *kMCEngineEvalValueWithObjectMethodInfo;
+
+extern MCExecMethodInfo *kMCEngineEvalValueAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalOwnerAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalTemplateAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalMeAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalMenuObjectAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalTargetAsObjectMethodInfo;
+extern MCExecMethodInfo *kMCEngineEvalErrorObjectAsObjectMethodInfo;
+
 extern MCExecMethodInfo *kMCEngineExecGetMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutIntoVariableMethodInfo;
 extern MCExecMethodInfo *kMCEngineExecPutOutputMethodInfo;
@@ -2205,6 +2276,14 @@ void MCEngineEvalSysError(MCExecContext& ctxt, uinteger_t& r_error);
 
 void MCEngineEvalValue(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 void MCEngineEvalValueWithObject(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_object, MCValueRef& r_value);
+
+void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object);
+void MCEngineEvalOwnerAsObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_owner);
+void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_type, MCObjectPtr& r_object);
+void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
+void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object);
 
 void MCEngineExecGet(MCExecContext& ctxt, MCValueRef value);
 void MCEngineExecPutIntoVariable(MCExecContext& ctxt, MCValueRef value, int where, MCVariableChunkPtr t_target);
