@@ -46,7 +46,7 @@ extern Boolean MCS_backup(MCStringRef oname, MCStringRef nname);
 extern Boolean MCS_unbackup(MCStringRef oname, MCStringRef nname);
 /* LEGACY */ extern bool MCS_unlink(const char *path);
 extern Boolean MCS_unlink(MCStringRef path);
-extern void MCS_tmpnam(MCStringRef& r_path);
+extern bool MCS_tmpnam(MCStringRef& r_path);
 /* LEGACY */ extern const char *MCS_tmpnam();
 extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
 /* LEGACY */ extern char *MCS_resolvepath(const char *path);

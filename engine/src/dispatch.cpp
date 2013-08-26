@@ -478,9 +478,7 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 IO_stat readheader(IO_handle& stream, char *version)
 {
 	char tnewheader[NEWHEADERSIZE];
-	uint4 size = (uint4)NEWHEADERSIZE;
-
-	if (IO_read(tnewheader, sizeof(char), size, stream) == IO_NORMAL)
+	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
@@ -497,11 +495,10 @@ IO_stat readheader(IO_handle& stream, char *version)
 		else
 		{
 			char theader[HEADERSIZE + 1];
-			uint4 size = HEADERSIZE - NEWHEADERSIZE;
 			theader[HEADERSIZE] = '\0';
 			uint4 offset;
 			strncpy(theader, tnewheader, NEWHEADERSIZE);
-			if (IO_read(theader + NEWHEADERSIZE, sizeof(char), size, stream) == IO_NORMAL
+			if (IO_read(theader + NEWHEADERSIZE, HEADERSIZE - NEWHEADERSIZE, stream) == IO_NORMAL
 		        && MCU_offset(SIGNATURE, theader, offset))
 			{
 				if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
@@ -740,7 +737,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			char *script = new char[size + 2];
 			script[size] = '\n';
 			script[size + 1] = '\0';
-			if (IO_read(script, sizeof(char), size, stream) != IO_NORMAL
+			if (IO_read(script, size, stream) != IO_NORMAL
 			        || !stacks->setscript(script))
 			{
 				delete script;

@@ -525,7 +525,7 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool 
 	uint4 offset;
 	if (MCU_offset(SIGNATURE, ep.getsvalue(), offset) || (ep . getsvalue() . getlength() > 8 && strncmp(ep . getsvalue() . getstring(), "REVO", 4) == 0))
 	{
-		IO_handle stream = MCS_fakeopen((MCDataRef)ep.getvalueref());
+		IO_handle stream = MCS_fakeopen(ep.getsvalue());
 		if (MCdispatcher->readfile(NULL, NULL, stream, sptr) != IO_NORMAL)
 		{
 			MCS_close(stream);

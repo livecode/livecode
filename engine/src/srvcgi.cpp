@@ -296,7 +296,7 @@ bool MCStreamCache::ReadFromCache(void *p_buffer, uint32_t p_offset, uint32_t p_
 		
 		t_success = (IO_NORMAL == MCS_seek_set(m_cache_file, p_offset));
 		if (t_success)
-			t_success = (IO_ERROR != MCS_readfixed(p_buffer, 1, p_length, m_cache_file));
+			t_success = (IO_ERROR != MCS_readfixed(p_buffer, 1, p_length, m_cache_file)); // ?? readall ??
 		
 		if (t_success)
 		{

@@ -95,7 +95,7 @@ IO_stat MCStackSecurityWrite(const char *p_string, uint32_t p_length, IO_handle 
 IO_stat MCStackSecurityRead(char *r_string, uint32_t p_length, IO_handle p_stream)
 {
 	IO_stat t_stat;
-	t_stat = MCS_readfixed(r_string, sizeof(char), p_length, p_stream);
+	t_stat = MCS_readfixed(r_string, p_length, p_stream);
 	
 	return t_stat;
 }

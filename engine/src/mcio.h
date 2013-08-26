@@ -69,7 +69,7 @@ extern bool IO_findsocket(MCNameRef p_name, uindex_t& r_index);
 /* LEGACY */ extern Boolean IO_findsocket(char *name, uint2 &i);
 extern real8 IO_cleansockets(real8 ctime);
 extern void IO_freeobject(MCObject *o);
-extern IO_stat IO_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
+extern IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream);
 extern IO_stat IO_write(const void *ptr, uint4 s, uint4 n, IO_handle stream);
 extern IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep);
 extern IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream);
@@ -133,7 +133,7 @@ struct MCFakeOpenCallbacks
 };
 extern IO_handle MCS_fakeopencustom(struct MCFakeOpenCallbacks *callbacks, void *state);
 
-extern IO_handle MCS_fakeopen(MCDataRef data);
+extern IO_handle MCS_fakeopen(const MCString& data);
 extern IO_handle MCS_fakeopenwrite(void);
 ///* LEGACY */ extern IO_stat MCS_fakeclosewrite(IO_handle &stream, char*& r_buffer, uint4& r_length);
 extern IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_length);
@@ -143,7 +143,7 @@ extern IO_handle MCS_open(MCStringRef path, intenum_t mode, Boolean map, Boolean
 extern void MCS_close(IO_handle &stream);
 
 ///* LEGACY */ extern IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream);
-extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream);
+extern IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream);
 extern IO_stat MCS_readall(void *p_ptr, uint32_t& r_count, IO_handle p_stream);
 extern IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream);
 extern IO_stat MCS_writeat(const void *buffer, uint32_t size, uint32_t pos, IO_handle stream);

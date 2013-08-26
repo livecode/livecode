@@ -5126,7 +5126,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
-	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name)
+	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
 #ifdef /* MCS_tmpnam_dsk_mac */ LEGACY_SYSTEM
 	char *t_temp_file = nil;
@@ -5158,44 +5158,47 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	delete t_temp_file;
 	return t_success;
 #endif /* MCS_tmpnam_dsk_mac */
-        bool t_error = false;
+        bool t_success = false;
         MCAutoStringRef t_temp_file_auto;
         FSRef t_folder_ref;
         char* t_temp_file_chars;
         
         t_temp_file_chars = nil;        
-        t_error = !MCStringCreateMutable(0, &t_temp_file_auto);
+        t_success = MCStringCreateMutable(0, &t_temp_file_auto);
         
-        if (!t_error && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
+        if (t_success && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
         {
             int t_fd;
-            t_error = !MCS_fsref_to_path(t_folder_ref, &t_temp_file_auto);
+            t_success = MCS_fsref_to_path(t_folder_ref, &t_temp_file_auto);
             
-            if (!t_error)
-                t_error = MCStringAppendFormat(&t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
+            if (t_success)
+                t_success = MCStringAppendFormat(&t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
             
-            t_error = MCMemoryAllocateCopy(MCStringGetCString(*t_temp_file_auto), MCStringGetLength(*t_temp_file_auto) + 1, t_temp_file_chars);
+            if (t_success)
+                t_success = MCMemoryAllocateCopy(MCStringGetCString(*t_temp_file_auto), MCStringGetLength(*t_temp_file_auto) + 1, t_temp_file_chars);
             
-            if (!t_error)
+            if (t_success)
             {
                 t_fd = mkstemp(t_temp_file_chars);
-                t_error = t_fd != -1;
+                t_success = t_fd != -1;
             }
             
-            if (!t_error)
+            if (t_success)
             {
                 close(t_fd);
-                t_error = unlink(t_temp_file_chars) != 0;
+                t_success = unlink(t_temp_file_chars) == 0;
             }
         }
         
-        if (!t_error)
-            t_error = !MCStringCreateWithCString(t_temp_file_chars, r_tmp_name);
+        if (t_success)
+            t_success = MCStringCreateWithCString(t_temp_file_chars, r_tmp_name);
         
-        if (t_error)
+        if (!t_success)
             r_tmp_name = MCValueRetain(kMCEmptyString);
         
         MCMemoryDeallocate(t_temp_file_chars);
+        
+        return t_success;
     }
     
 #define CATALOG_MAX_ENTRIES 16

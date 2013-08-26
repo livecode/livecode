@@ -345,10 +345,7 @@ IO_stat MCObjectInputStream::Fill(void)
 	uint32_t t_available;
 	t_available = MCU_min(m_remaining, 16384 - m_bound);
 
-	uint32_t t_count;
-	t_count = 1;
-
-	t_stat = IO_read((char *)m_buffer + m_bound, t_available, t_count, m_stream);
+	t_stat = MCS_readfixed((char *)m_buffer + m_bound, t_available, m_stream);
 	if (t_stat != IO_NORMAL)
 		return t_stat;
 
