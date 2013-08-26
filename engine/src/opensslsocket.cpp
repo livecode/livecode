@@ -1777,28 +1777,20 @@ Boolean MCSocket::initsslcontext()
 				uint2 i;
 				for (i = 0; i < ncerts; i++)
 				{
-					MCAutoStringRef t_oldcertpath_string;
-					/* UNCHECKED */ MCStringCreateWithCString(certs[i].clone(), &t_oldcertpath_string);
-#ifdef _MACOSX
-                    MCAutoStringRef t_certpath_string_tmp, t_certpath;
-					char *utf8str = NULL;
-                    if (MCS_resolvepath(*t_oldcertpath_string, &t_certpath_string_tmp))
-					{
-						/* UNCHECKED */ MCStringConvertToUTF8String(*t_certpath_string_tmp, utf8str);
-					}
-#else
-
 					MCAutoStringRef t_certpath;
-					MCS_resolvepath(*t_oldcertpath_string, &t_certpath);
-#endif
+					/* UNCHECKED */ MCStringCreateWithOldString(certs[i].getsvalue(), &t_certpath);
+
+					MCAutoPointer<char> t_utf8_certpath;
+					MCAutoStringRef t_resolved_certpath;
+                    if (MCS_resolvepath(*t_certpath, &t_resolved_certpath))
+						/* UNCHECKED */ MCStringConvertToUTF8String(*t_resolved_certpath, &t_utf8_certpath);
 					
-					t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, MCStringGetCString(*t_certpath))) ||
-							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, MCStringGetCString(*t_certpath)));
+					t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, *t_utf8_certpath)) ||
+							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_utf8_certpath));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
+						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", utf8str);
 					}
-					
 				}
 			}
 			if (certs != NULL)
