@@ -1170,6 +1170,189 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 	return ctxt . Catch(line, pos);
 }
 
+void MCGo::compile(MCSyntaxFactoryRef ctxt)
+{
+    MCSyntaxFactoryBeginStatement(ctxt, line, pos);
+    
+    bool t_is_home, t_is_relative;
+    t_is_home = false;
+    t_is_relative = false;
+    
+    switch (stack->etype)
+    {
+        case CT_HELP:
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalHelpStackAsObjectMethodInfo);
+		case CT_HOME:
+            t_is_home = true;
+			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalHomeStackAsObjectMethodInfo);
+        case CT_THIS:
+        case CT_ID:
+        case CT_EXPRESSION:
+            if (stack  -> etype == CT_THIS)
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsObjectMethodInfo);
+            else
+            {
+                stack -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackByValueMethodInfo);
+            }
+            
+            if (stack -> next != nil)
+            {
+                switch (stack->next->etype)
+				{
+                    case CT_ID:
+                        stack -> next -> startpos -> compile(ctxt);
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByIdMethodInfo);
+                        break;
+                    case CT_EXPRESSION:
+                        stack -> next -> startpos -> compile(ctxt);
+                        MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByNameMethodInfo);
+                        break;
+                    default:
+                        // ERROR
+                        break;
+				}
+
+            }
+        default:
+            MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsObjectMethodInfo);
+    }
+
+    // resolved stack is top of stack.
+    
+	if (background != nil)
+	{
+		switch(ct_class(background -> etype))
+        {
+            case CT_ORDINAL:
+                MCSyntaxFactoryEvalConstantUInt(ctxt, background -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                background -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                background -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalBackgroundOfStackByNameMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+        }
+    }
+    else
+        MCSyntaxFactoryEvalConstantNil(ctxt);
+    
+    if (card != nil)
+	{
+		switch(ct_class(card -> etype))
+		{
+            case CT_DIRECT:
+                t_is_relative = true;
+                switch (card->etype)
+                {
+                case CT_BACKWARD:
+                case CT_FORWARD:
+                    MCSyntaxFactoryEvalConstantBool(ctxt, card->etype == CT_FORWARD);
+                    if (card -> startpos != nil)
+                        card -> startpos -> compile(ctxt);
+                    else
+                        MCSyntaxFactoryEvalConstantInt(ctxt, 1);
+                    return;
+                case CT_START:
+                case CT_FINISH:
+                    MCSyntaxFactoryEvalConstantBool(ctxt, card->etype == CT_START);
+
+                    break;
+                default:
+                    // ERROR
+                    break;
+                }
+                break;
+            case CT_ORDINAL:
+                if (card -> etype == CT_RECENT)
+                    t_is_relative = true;
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                MCSyntaxFactoryEvalConstantUInt(ctxt, card -> etype);
+                MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByOrdinalMethodInfo : kMCInterfaceEvalCardOfBackgroundByOrdinalMethodInfo);
+                break;
+            case CT_ID:
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                card -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByIdMethodInfo : kMCInterfaceEvalCardOfBackgroundByIdMethodInfo);
+                break;
+            case CT_EXPRESSION:
+                MCSyntaxFactoryEvalConstantBool(ctxt, marked);
+                card -> startpos -> compile(ctxt);
+                MCSyntaxFactoryEvalMethod(ctxt, background == nil ? kMCInterfaceEvalCardOfStackByNameMethodInfo : kMCInterfaceEvalCardOfBackgroundByNameMethodInfo);
+                break;
+            default:
+                // ERROR
+                break;
+		}
+	}
+	else if (background == nil)
+	{
+		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfStackMethodInfo);
+	}
+    
+	if (stack != nil && t_is_home)
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoHomeMethodInfo);
+	else if (card != nil && t_is_relative)
+	{
+		switch (ct_class(card->etype))
+		{
+            case CT_DIRECT:
+                switch (card->etype)
+			{
+                case CT_BACKWARD:
+                case CT_FORWARD:
+                    MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardRelativeMethodInfo);
+                    break;
+                case CT_START:
+                case CT_FINISH:
+                    MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardEndMethodInfo);
+                    break;
+                default:
+                    break;
+			}
+                break;
+            case CT_ORDINAL:
+                MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoRecentCardMethodInfo);
+                break;
+            default:
+                break;
+		}
+	}
+    else
+    {
+        if (window != nil)
+        {
+            if (!thisstack)
+                window -> compile(ctxt);
+            else
+                MCSyntaxFactoryEvalConstantNil(ctxt);
+        }
+        else
+            MCSyntaxFactoryEvalConstantUInt(ctxt, mode);
+        
+        MCSyntaxFactoryEvalConstantBool(ctxt, background != nil);
+        MCSyntaxFactoryEvalConstantBool(ctxt, marked == True);
+        MCSyntaxFactoryEvalConstantBool(ctxt, thisstack == True);
+        MCSyntaxFactoryEvalConstantBool(ctxt, visible == True);
+        
+        // stack, background, card, window, mode, has_background, marked, this_stack, visible, binary fail
+        
+        if (window != nil)
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardInWindowMethodInfo);
+        else
+            MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoCardAsModeMethodInfo);
+    }
+
+    MCSyntaxFactoryEndStatement(ctxt);
+}
+
 MCHide::~MCHide()
 {
 	delete object;
