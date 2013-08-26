@@ -134,7 +134,7 @@ extern char MCrecordinput[5];
 extern Boolean MCuselzw;
 
 extern real8 MCinfinity;
-extern MCStringRef MCstackbottom;
+extern char* MCstackbottom;
 extern Boolean MCcheckstack;
 extern Boolean MCswapbytes;
 extern Boolean MCtranslatechars;

@@ -2154,10 +2154,6 @@ void MCFilesSetFileType(MCExecContext& ctxt, MCStringRef p_value)
 void MCFilesGetSerialControlString(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	r_value = MCValueRetain(MCserialcontrolsettings);
-	if (MCStringIsEqualTo(MCserialcontrolsettings, r_value, kMCStringOptionCompareExact))
-		return;
-
-	ctxt . Throw();
 }
 
 void MCFilesSetSerialControlString(MCExecContext& ctxt, MCStringRef p_value)
@@ -2181,10 +2177,6 @@ void MCFilesSetHideConsoleWindows(MCExecContext& ctxt, bool p_value)
 void MCFilesGetShellCommand(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	r_value = MCValueRetain(MCshellcmd);
-	if (MCStringIsEqualTo(MCshellcmd, r_value, kMCStringOptionCompareExact))
-		return;
-
-	ctxt . Throw();
 }
 
 void MCFilesSetShellCommand(MCExecContext& ctxt, MCStringRef p_value)

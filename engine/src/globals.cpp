@@ -210,7 +210,7 @@ char MCrecordinput[5] = "dflt";
 Boolean MCuselzw;
 
 real8 MCinfinity = 0.0;
-MCStringRef MCstackbottom;
+char *MCstackbottom;
 Boolean MCcheckstack = True;
 Boolean MCswapbytes;
 Boolean MCtranslatechars;
@@ -895,8 +895,7 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCcstack = new MCCardlist;
 
 #ifdef _LINUX_DESKTOP
-	//MCvcplayer = strclone("xanim");
-	MCvplayer = MCSTR("xanim");
+	MCvcplayer = MCSTR("xanim");
 #else
 	MCvcplayer = MCSTR("");
 #endif

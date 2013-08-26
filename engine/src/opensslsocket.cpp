@@ -295,7 +295,6 @@ bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 	if (!MCS_init_sockets())
 		return false;
 
-	//char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
@@ -440,7 +439,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCSTR(MCdefaultnetworkinterface), t_bind_addr))
+			MCAutoStringRef MCdefaultnetworkinterface_string;
+			/* UNCHECKED */ MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string);
+			if (!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
@@ -524,7 +525,9 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 	struct sockaddr_in t_addr;
 	if (mess == NULL)
 	{
-		if (!MCS_name_to_sockaddr(MCSTR(name), t_addr))
+		MCAutoStringRef t_name_string;
+		/* UNCHECKED */ MCStringCreateWithCString(name, &t_name_string);
+		if (!MCS_name_to_sockaddr(*t_name_string, t_addr))
 			return NULL;
 	}
 
@@ -577,7 +580,9 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 			MCMemoryNew(t_info);
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
-			if (!MCS_name_to_sockaddr(MCSTR(s->name), &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
+			MCAutoStringRef t_sname_string;
+			/* UNCHECKED */ MCStringCreateCString(s->name, &t_sname_string);
+			if (!MCS_name_to_sockaddr(*t_sname_string, &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
 			{
 				MCMemoryDelete(t_info);
 				s->name = nil;
@@ -1772,25 +1777,20 @@ Boolean MCSocket::initsslcontext()
 				uint2 i;
 				for (i = 0; i < ncerts; i++)
 				{
-					char *oldcertpath = certs[i].clone();
-#ifdef _MACOSX
-                    MCAutoStringRef t_certpath_temp, t_certpath;
-                    if (MCS_resolvepath(MCSTR(oldcertpath), &t_certpath_temp))
-                        path2utf(*t_certpath_temp, &t_certpath);
-#else
 					MCAutoStringRef t_certpath;
-					MCS_resolvepath(MCSTR(oldcertpath), &t_certpath);
-#endif
-	
-					delete oldcertpath;
+					/* UNCHECKED */ MCStringCreateWithOldString(certs[i].getsvalue(), &t_certpath);
+
+					MCAutoPointer<char> t_utf8_certpath;
+					MCAutoStringRef t_resolved_certpath;
+                    if (MCS_resolvepath(*t_certpath, &t_resolved_certpath))
+						/* UNCHECKED */ MCStringConvertToUTF8String(*t_resolved_certpath, &t_utf8_certpath);
 					
-					t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, MCStringGetCString(*t_certpath))) ||
-							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, MCStringGetCString(*t_certpath)));
+					t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, *t_utf8_certpath)) ||
+							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_utf8_certpath));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
+						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", utf8str);
 					}
-					
 				}
 			}
 			if (certs != NULL)

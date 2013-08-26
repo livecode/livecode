@@ -1278,7 +1278,7 @@ static void MCIPhoneDoDidBecomeActive(void *)
 	
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 	
 	NSAutoreleasePool *t_pool;
 	t_pool = [[NSAutoreleasePool alloc] init];

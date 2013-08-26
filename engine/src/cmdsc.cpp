@@ -2862,10 +2862,8 @@ if (MCsecuremode & MC_SECUREMODE_PRIVACY)
 		MCeerror->add(EE_RECORD_BADFILE, line, pos);
 		return ES_ERROR;
 	}
-	MCAutoStringRef soundfile, t_path;
-	/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), &t_path)
-	MCS_get_canonical_path(*t_path, &soundfile);
-	MCtemplateplayer->recordsound(*soundfile);
+	char *soundfile = MCS_get_canonical_path(ep.getcstring());
+-   MCtemplateplayer->recordsound(soundfile);
 	return ES_NORMAL;
 #endif /* MCRecord */
 

@@ -200,32 +200,33 @@ static char *folder_path_from_intial_path(const char *p_path)
 	char *t_path;
 	t_path = nil;
     MCAutoStringRef t_path_str;
+    if (strrchr(p_path, '/') != nil)
+    {
+		MCAutoStringRef t_original_path;
+        /* UNCHECKED */ MCStringCreateWithCString(p_path, &t_original_path)
+        if (*p_path != '/')
+            MCS_resolvepath(t_original_path, &t_path_str);
+        else
+			t_path_str = t_original_path;
+    }
+
+    char *t_folder;
+    t_folder = nil;
     
-	if (strrchr(p_path, '/') != nil)
-	{
-		if (*p_path != '/')
-			/* UNCHECKED */ MCS_resolvepath(MCSTR(p_path), &t_path_str);
-		else
-            /* UNCHECKED */ MCCStringClone(p_path, t_path);
-	}
-	
-	char *t_folder;
-	t_folder = nil;
-	if (t_path != nil || *t_path_str != nil)
-	{
-		if (MCS_exists(*t_path_str, false))
-		/* UNCHECKED */ MCCStringClone(t_path, t_folder);
-    
-		else {
-			char *t_last_slash;
-			t_last_slash = strrchr(t_path, '/');
-			if (t_last_slash != nil)
-			/* UNCHECKED */ MCCStringCloneSubstring(t_path, t_last_slash - t_path, t_folder);
+    if (MCS_exists(*t_path_str, false))
+        /* UNCHECKED */ t_folder = strdup(MCStringGetCString(*t_path_str));
+    else
+    {
+		uindex_t t_index;
+        if (MCStringLastIndexOfLastChar(*t_path_str, '/', kMCStringCompareExact, UINDEX_MAX, t_index))
+        {
+			MCAutoStringRef t_folder_str;
+            /* UNCHECKED */ MCStringCopySubstring(*t_path_str, MCRangeMake(0, t_index), &t_folder_str);
+			t_folder = strdup(MCStringGetCString(*t_folder_str));
 		}
-	}
-	
-	/* UNCHECKED */ MCCStringFree(t_path);
-	return t_folder;	
+    }
+
+    return t_folder;    
 }
 
 static bool filter_to_type_list(const char *p_filter, char ***r_types, uint32_t &r_type_count)
@@ -548,7 +549,9 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
     if (!MCModeMakeLocalWindows())
 	{
         MCAutoStringRef t_resolved_initial_str;
-        MCS_resolvepath(MCSTR(p_initial), &t_resolved_initial_str);
+        MCAutoStringRef t_initial_string;
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_string);
+        MCS_resolvepath(*t_initial_string, &t_resolved_initial_str);
         MCRemoteFileDialog(ep, p_title, p_prompt, p_types, p_type_count, nil, MCStringGetCString(*t_resolved_initial_str), t_is_save, t_is_plural);
 	}
     else
@@ -560,7 +563,9 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 		
 		const char *t_initial_file;
 		t_initial_file = nil;	
-		if (t_is_save && p_initial != nil && !MCS_exists(MCSTR(p_initial), false))
+		MCAutoStringRef t_initial_string;
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_string);
+		if (t_is_save && p_initial != nil && !MCS_exists(*t_initial_string, false))
 		{
 			char *t_last_slash;
 			t_last_slash = strrchr(p_initial, '/');
@@ -594,7 +599,8 @@ int MCA_do_file_dialog(MCExecPoint& ep, const char *p_title, const char *p_promp
 		}
 		else
 			[t_panel setTitle: [NSString stringWithCString: p_prompt encoding: NSMacOSRomanStringEncoding]];
-		//[t_panel setDelegate: t_accessory];
+			
+		[t_panel setDelegate: t_accessory];
 		
 		if (p_type_count > 1)
 		{
@@ -727,8 +733,9 @@ int MCA_folder(MCExecPoint& ep, const char *p_title, const char *p_prompt, const
 	{
 		if (!MCModeMakeLocalWindows())
 		{
-            MCAutoStringRef t_resolved_initial_str;
-			/* UNCHECKED */ MCS_resolvepath(MCSTR(p_initial), &t_resolved_initial_str);
+            MCAutoStringRef t_unresolved_initial_str, t_resolved_initial_str;
+            /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_initial_str);
+			/* UNCHECKED */ MCS_resolvepath(*t_unresolved_initial_str, &t_resolved_initial_str);
 			MCRemoteFolderDialog(ep, p_title, p_prompt, MCStringGetCString(*t_resolved_initial_str));
 		}
 		else

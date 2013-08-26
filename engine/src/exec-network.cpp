@@ -290,7 +290,7 @@ static char *PACdnsResolve(const char* const* p_arguments, unsigned int p_argume
 
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCStringConvertToCString(*t_address_string, t_address);
+		/* UNCHECKED */ MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -304,7 +304,7 @@ static char *PACmyIpAddress(const char* const* p_arguments, unsigned int p_argum
 	MCS_hostaddress(&t_address_string);
 	char *t_address = nil;
 	if (*t_address_string != nil)
-		MCStringConvertToCString(*t_address_string, t_address);
+		/* UNCHECKED */ MCStringConvertToCString(*t_address_string, t_address);
 
 	return t_address;
 }
@@ -437,7 +437,7 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 	MCresult -> clear(True);
 
-	MCSocket *s = MCS_open_socket(MCNameGetString(p_name), p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString);
+	MCSocket *s = MCS_open_socket(MCNameGetString(p_name), p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, NULL);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -484,7 +484,7 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
-	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram, p_secure, p_with_verification, kMCEmptyString);
+	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram, p_secure, p_with_verification, NULL);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets,
@@ -524,16 +524,18 @@ void MCNetworkExecReadFromSocket(MCExecContext& ctxt, MCNameRef p_socket, uint4 
 		// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 		ctxt . SetTheResultToEmpty();
 
-		MCObject *t_object = ctxt . GetObject();
 		MCAutoDataRef t_data;
 		
-
 		if (p_sentinel != nil)
 			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), p_count, MCStringGetCString(p_sentinel), p_message);
 		else
 			MCS_read_socket(MCsockets[t_index], ctxt . GetEP(), 0, nil, p_message);
-		if (p_message == nil && *t_data != nil)
+
+		if (p_message == NULL)
+		{
+			ctxt . GetEP() . copyasdataref(&t_data);
 			ctxt . SetItToValue(*t_data);
+		}
 	}
 	else
 		ctxt . SetTheResultToStaticCString("socket is not open");
@@ -674,18 +676,15 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
 	MCValueRelease(MCftpproxyhost);
-	//delete MCftpproxyhost;
 	if (MCStringGetLength(p_value) == 0)
 		MCftpproxyhost = NULL;
 	else
 	{
 		char *eptr = NULL;
-		MCftpproxyhost = MCValueRetain(p_value);
-		if ((eptr = strchr(strdup(MCStringGetCString(MCftpproxyhost)), ':')) != NULL)
-		{
-			*eptr++ = '\0';
-			MCftpproxyport = (uint2)strtol(eptr, NULL, 10);
-		}
+		MCAutoStringRef t_port_string;
+		/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareCaseless, MCftpproxyhost, &t_port_string);
+        if (*t_port_string != nil)
+			MCftpproxyport = (uint2)strtol(MCStringGetCString(*t_port_string), NULL, 10);
 		else
 			MCftpproxyport = 80;
 	}
