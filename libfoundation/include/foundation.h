@@ -1321,6 +1321,7 @@ hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
+bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the substring is equal to the other, according to options
 bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);

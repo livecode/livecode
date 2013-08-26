@@ -55,3 +55,5 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 //
 extern HINSTANCE MChInst;
+
+#undef GetCurrentTime

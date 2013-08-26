@@ -112,27 +112,29 @@ uint4 MCServerScript::FindFileIndex(const char *p_filename, bool p_add)
 MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_add)
 {
 	// First resolve the filename.
-	char *t_filename;
-	t_filename = MCsystem -> ResolvePath(p_filename);
+	MCAutoStringRef t_filename_string;
+	/* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_filename_string);
+
+	MCAutoStringRef t_resolved_filename;
+	MCsystem -> ResolvePath(*t_filename_string, &t_resolved_filename);
 	
 	// Look through the file list...
 	File *t_file;
 	for(t_file = m_files; t_file != NULL; t_file = t_file -> next)
-		if (strcmp(t_file -> filename, t_filename) == 0)
+		if (strcmp(t_file -> filename, MCStringGetCString(*t_resolved_filename)) == 0)
 			break;
 	
 	// If we are here the file doesn't exist (yet). If we aren't in
 	// adding mode, then just return nil.
 	if (t_file != NULL || !p_add)
 	{
-		delete t_filename;
 		return t_file;
 	}
 
 	// Create a new entry.
 	t_file = new File;
 	t_file -> next = m_files;
-	t_file -> filename = t_filename;
+	t_file -> filename = (char*) MCStringGetCString(*t_resolved_filename);
 	t_file -> index = m_files == NULL ? 1 : m_files -> index + 1;
 	t_file -> script = NULL;
 	t_file -> handle = NULL;
@@ -333,7 +335,7 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 		{
 			MCAutoStringRef t_folder;
 			/* UNCHECKED */ MCStringCopySubstring(*t_full_path, MCRangeMake(0, t_last_separator), &t_folder);
-			MCsystem->SetCurrentFolder(MCStringGetCString(*t_folder));
+			MCsystem->SetCurrentFolder(*t_folder);
 		}
 	}
 
@@ -342,7 +344,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	t_file = FindFile(p_filename, true);
 	
 	// Set back the old default folder
-	MCsystem->SetCurrentFolder(t_old_folder);
+	MCAutoStringRef t_old_folder_string;
+	/* UNCHECKED */ MCStringCreateWithCString(t_old_folder, &t_old_folder_string);
+
+	MCsystem->SetCurrentFolder(*t_old_folder_string);
 	MCCStringFree(t_old_folder);
 
 	// If we are 'requiring' and the script is already loaded, we are done.
@@ -354,7 +359,10 @@ bool MCServerScript::Include(MCExecPoint& outer_ep, const char *p_filename, bool
 	{
 		// Attempt to open the file
 		MCSystemFileHandle *t_handle;
-		t_handle = MCsystem -> OpenFile(t_file -> filename, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
+		MCAutoStringRef t_filename_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_file -> filename, &t_filename_string);
+
+		t_handle = MCsystem -> OpenFile(*t_filename_string, kMCSystemFileModeRead | kMCSystemFileModeNulTerminate, true);
 		if (t_handle == NULL)
 		{
 			MCeerror -> add(EE_INCLUDE_FILENOTFOUND, 0, 0, t_file -> filename);

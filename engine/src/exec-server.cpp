@@ -69,7 +69,7 @@ static MCExecEnumTypeElementInfo _kMCServerErrorModeTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerErrorModeTypeInfo =
 {
 	"Server.ErrorMode",
-	sizeof(_kMCServerErrorModeTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerErrorModeTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerErrorModeTypeElementInfo
 };
 
@@ -85,7 +85,7 @@ static MCExecEnumTypeElementInfo _kMCServerOutputLineEndingsTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerOutputLineEndingsTypeInfo =
 {
 	"Server.OutputLineEndings",
-	sizeof(_kMCServerOutputLineEndingsTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerOutputLineEndingsTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerOutputLineEndingsTypeElementInfo
 };
 
@@ -108,7 +108,7 @@ static MCExecEnumTypeElementInfo _kMCServerOutputTextEncodingTypeElementInfo[] =
 static MCExecEnumTypeInfo _kMCServerOutputTextEncodingTypeInfo =
 {
 	"Server.OutputTextEncoding",
-	sizeof(_kMCServerOutputTextEncodingTypeInfo) / sizeof(MCExecEnumTypeElementInfo),
+	sizeof(_kMCServerOutputTextEncodingTypeElementInfo) / sizeof(MCExecEnumTypeElementInfo),
 	_kMCServerOutputTextEncodingTypeElementInfo
 };
 

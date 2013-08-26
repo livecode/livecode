@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		1D17A9C617C22DD30024CCA8 /* foundation-data.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */; };
 		4D7FA79D1594E09500EEF440 /* foundation-array.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA78F1594E09500EEF440 /* foundation-array.cpp */; };
 		4D7FA79E1594E09500EEF440 /* foundation-core.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7901594E09500EEF440 /* foundation-core.cpp */; };
 		4D7FA79F1594E09500EEF440 /* foundation-debug.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D7FA7911594E09500EEF440 /* foundation-debug.cpp */; };
@@ -36,6 +37,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-data.cpp"; path = "src/foundation-data.cpp"; sourceTree = "<group>"; };
 		4D7FA78F1594E09500EEF440 /* foundation-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-array.cpp"; path = "src/foundation-array.cpp"; sourceTree = "<group>"; };
 		4D7FA7901594E09500EEF440 /* foundation-core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-core.cpp"; path = "src/foundation-core.cpp"; sourceTree = "<group>"; };
 		4D7FA7911594E09500EEF440 /* foundation-debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-debug.cpp"; path = "src/foundation-debug.cpp"; sourceTree = "<group>"; };
@@ -114,6 +116,7 @@
 		4DF42A570B048683003F2D95 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */,
 				4D7FA78F1594E09500EEF440 /* foundation-array.cpp */,
 				4D7FA7901594E09500EEF440 /* foundation-core.cpp */,
 				4D7FA7911594E09500EEF440 /* foundation-debug.cpp */,
@@ -197,6 +200,7 @@
 				4D7FA7A81594E09500EEF440 /* foundation-unicodechars.cpp in Sources */,
 				4D7FA7A91594E09500EEF440 /* foundation-value.cpp in Sources */,
 				4DB3EBE416A5C00800E90D30 /* foundation-string-cf.cpp in Sources */,
+				1D17A9C617C22DD30024CCA8 /* foundation-data.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
