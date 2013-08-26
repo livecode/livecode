@@ -1642,17 +1642,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	break;
 	case P_HC_IMPORT_STAT:
-		MCValueRelease(MChcstat);
-		/* UNCHECHED */ MCStringCreateWithCString(ep.getsvalue().clone(), MChcstat)
+		delete MChcstat;
+		MChcstat = ep.getsvalue().clone();
 		break;
 	case P_SCRIPT_TEXT_FONT:
-<<<<<<< HEAD
-		MCValueRelease(MCscriptfont);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCscriptfont); 
-=======
 		delete MCscriptfont;
 		MCscriptfont = ep.getsvalue();
->>>>>>> upstream/refactor-syntax_unicode
 		break;
 	case P_SCRIPT_TEXT_SIZE:
 		return ep.getuint2(MCscriptsize, line, pos, EE_PROPERTY_NAN);
@@ -1809,8 +1804,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getboolean(MCsystemPS, line, pos, EE_PROPERTY_NAB);
 		
 	case P_FILE_TYPE:
-		MCValueRelease(MCfiletype);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCfiletype);
+		delete MCfiletype;
+		MCfiletype = ep.getsvalue().clone();
 		return ES_NORMAL;
 		
 	case P_RECORD_FORMAT:
@@ -2008,13 +2003,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_DRAG_DELTA:
 		return ep.getuint2(MCdragdelta, line, pos, EE_PROPERTY_BADDRAGDELTA);
 	case P_STACK_FILE_TYPE:
-<<<<<<< HEAD
-		MCValueRelease(MCstackfiletype);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCstackfiletype); 
-=======
 		delete MCstackfiletype;
         MCstackfiletype = ep.getsvalue().clone();
->>>>>>> upstream/refactor-syntax_unicode
 		return ES_NORMAL;
 	case P_STACK_FILE_VERSION:
 		{
@@ -2043,13 +2033,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		MCsecuremode = MC_SECUREMODE_ALL;
 		return ES_NORMAL;
 	case P_SERIAL_CONTROL_STRING:
-<<<<<<< HEAD
-		MCValueRelease(MCserialcontrolsettings);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCserialcontrolsettings); 
-=======
 		delete MCserialcontrolsettings;
 		MCserialcontrolsettings = ep.getsvalue().clone();
->>>>>>> upstream/refactor-syntax_unicode
 		return ES_NORMAL;
 	case P_EDIT_SCRIPTS:
 	case P_COLOR_WORLD:
@@ -2060,23 +2045,13 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_HIDE_CONSOLE_WINDOWS:
 		return ep.getboolean(MChidewindows, line, pos, EE_PROPERTY_NAB);
 	case P_FTP_PROXY:
-<<<<<<< HEAD
-		MCValueRelease(MCftpproxyhost);
-=======
 		delete MCftpproxyhost;
-		
->>>>>>> upstream/refactor-syntax_unicode
 		if (ep.getsvalue().getlength() == 0)
 			MCftpproxyhost = NULL;
 		else
 		{
-<<<<<<< HEAD
-			/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCftpproxyhost); 
-			if ((eptr = strchr(MCStringGetCString(MCftpproxyhost), ':')) != NULL)
-=======
 			MCftpproxyhost = ep.getsvalue().clone();
 			if ((eptr = strchr(MCftpproxyhost, ':')) != NULL)
->>>>>>> upstream/refactor-syntax_unicode
 			{
 				*eptr++ = '\0';
 				MCftpproxyport = (uint2)strtol(eptr, NULL, 10);
@@ -2086,18 +2061,18 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		}
 		break;
 	case P_HTTP_HEADERS:
-		MCValueRelease(MChttpheaders);
+		delete MChttpheaders;
 		if (ep.getsvalue().getlength() == 0)
 			MChttpheaders = NULL;
 		else
-			/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MChttpheaders);
+			MChttpheaders = ep.getsvalue().clone();
 		break;
 	case P_HTTP_PROXY:
-		MCValueRelease(MChttpproxy);
+		delete MChttpproxy;
 		if (ep . getsvalue() . getlength() == 0)
 			MChttpproxy = NULL;
 		else
-			/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . clone(), MChttpproxy);
+			MChttpproxy = ep . getsvalue() . clone();
 		break;
 	case P_SHOW_INVISIBLES:
 		stat = ep.getboolean(MCshowinvisibles, line, pos, EE_PROPERTY_NAB);
@@ -2394,24 +2369,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_VC_SHARED_MEMORY:
 		return ep.getboolean(MCvcshm, line, pos, EE_PROPERTY_NAB);
 	case P_VC_PLAYER:
-<<<<<<< HEAD
-		MCValueRelease(MCvplayer);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCvplayer); 
-=======
 		delete MCvcplayer;
 		MCvcplayer = ep.getsvalue().clone();
->>>>>>> upstream/refactor-syntax_unicode
 		break;
 	case P_SCREEN_GAMMA:
 		return ep.getreal8(MCgamma, line, pos, EE_PROPERTY_NAN);
 	case P_SHELL_COMMAND:
-<<<<<<< HEAD
-		MCValueRelease(MCshellcmd);
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getsvalue().clone(), MCshellcmd); 
-=======
 		delete MCshellcmd;
 		MCshellcmd = ep.getsvalue().clone();
->>>>>>> upstream/refactor-syntax_unicode
 		break;
 	case P_SOUND_CHANNEL:
 		return ep.getuint2(MCsoundchannel, line, pos, EE_PROPERTY_NAN);

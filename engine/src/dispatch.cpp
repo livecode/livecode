@@ -853,13 +853,9 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		MCresult->sets("can't open stack file, no permission");
 		return IO_ERROR;
 	}
-<<<<<<< HEAD
+
 	char *oldfiletype = strdup(MCStringGetCString(MCfiletype));
 	MCfiletype = MCValueRetain(MCstackfiletype);
-=======
-	char *oldfiletype = MCfiletype;
-	MCfiletype = (char *) MCStringGetCString(MCstackfiletype);
->>>>>>> upstream/refactor-syntax_unicode
 	
 	MCAutoStringRef t_backup;
 	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", MCStringGetCString(*t_linkname)); 
@@ -868,13 +864,8 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	if (MCS_exists(*t_linkname, True) && !MCS_backup(*t_linkname, *t_backup))
 	{
 		MCresult->sets("can't open stack backup file");
-<<<<<<< HEAD
-		/* UNCHECKED */ MCStringCreateWithCString(oldfiletype, MCfiletype);
-		delete linkname;
 
-=======
-		MCfiletype = oldfiletype;
->>>>>>> upstream/refactor-syntax_unicode
+		/* UNCHECKED */ MCStringCreateWithCString(oldfiletype, MCfiletype);
 		return IO_ERROR;
 	}
 	IO_handle stream;
