@@ -2122,7 +2122,7 @@ bool MCAndroidLoadDeviceConfiguration()
 		{
 			uint32_t t_count;
 			t_count = t_filesize - t_bytes_read;
-			t_read_stat = MCS_readfixed(t_file_buffer + t_bytes_read, 1, t_count, t_filehandle);
+			t_read_stat = MCS_readfixed(t_file_buffer + t_bytes_read, 1, t_count, t_filehandle); // ??? readall ???
 			t_bytes_read += t_count;
 			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_filesize));
 		}

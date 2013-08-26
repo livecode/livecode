@@ -693,12 +693,9 @@ MCObject *MCObject::unpickle(MCStringRef p_data, MCStack *p_stack)
 		IO_handle t_stream;
 		t_stream = NULL;
         
-        if (t_success)
-            t_success = MCDataCreateWithBytes((byte_t*)t_buffer, t_chunk_length, &t_data);
-        
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(*t_data);
+			t_stream = MCS_fakeopen(MCString((const char *)t_buffer, t_chunk_length));
 			if (t_stream == NULL)
 				t_success = false;
 		}

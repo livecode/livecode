@@ -226,7 +226,7 @@ Boolean MCVideoClip::import(const char *fname, IO_handle fstream)
 	setname_cstring(tname);
 	size = (uint4)MCS_fsize(fstream);
 	frames = new uint1[size];
-	if (MCS_readfixed(frames, sizeof(int1), size, fstream) != IO_NORMAL)
+	if (MCS_readfixed(frames, size, fstream) != IO_NORMAL)
 		return False;
 	return True;
 }
@@ -273,7 +273,7 @@ IO_stat MCVideoClip::load(IO_handle stream, const char *version)
 	if (size != 0)
 	{
 		frames = new uint1[size];
-		if ((stat = IO_read(frames, sizeof(uint1), size, stream)) != IO_NORMAL)
+		if ((stat = IO_read(frames, size, stream)) != IO_NORMAL)
 			return stat;
 	}
 	if (flags & F_FRAME_RATE)

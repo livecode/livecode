@@ -279,17 +279,17 @@ void MCArraysEvalArrayEncode(MCExecContext& ctxt, MCArrayRef p_array, MCStringRe
 
 	//////////
 
-	char *t_buffer;
-	uint32_t t_length;
+	void *t_buffer;
+	size_t t_length;
 	t_buffer = nil;
 	t_length = 0;
-	if (MCS_closetakingbuffer(t_stream_handle, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_length)) != IO_NORMAL)
+	if (MCS_closetakingbuffer(t_stream_handle, t_buffer, t_length) != IO_NORMAL)
 		t_success = false;
 
 	if (t_success)
 		t_success = MCStringCreateWithNativeChars((const char_t *)t_buffer, t_length, r_encoding);
 
-	delete t_buffer;
+	free(t_buffer);
 
 	if (t_success)
 		return;
@@ -303,14 +303,10 @@ void MCArraysEvalArrayDecode(MCExecContext& ctxt, MCStringRef p_encoding, MCArra
 	t_success = true;
 
 	IO_handle t_stream_handle;
-    MCAutoDataRef t_data;
 	t_stream_handle = nil;
-	if (t_success)
-        t_success = MCDataCreateWithBytes(MCStringGetBytePtr(p_encoding), MCStringGetLength(p_encoding), &t_data);
-    
     if (t_success)
     {
-		t_stream_handle = MCS_fakeopen(*t_data);
+		t_stream_handle = MCS_fakeopen(MCStringGetOldString(p_encoding));
 		if (t_stream_handle == nil)
 			t_success = false;
 	}

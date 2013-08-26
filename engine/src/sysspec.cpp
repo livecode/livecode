@@ -819,163 +819,10 @@ bool MCS_pathfromnative(MCStringRef p_native_path, MCStringRef& r_livecode_path)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCMemoryFileHandle: public MCSystemFileHandle
-{
-public:
-	MCMemoryFileHandle(void)
-	{
-		m_buffer = NULL;
-		m_pointer = 0;
-		m_length = 0;
-		m_capacity = 0;
-	}
-	
-	MCMemoryFileHandle(MCDataRef p_data)
-	{
-		m_buffer = (char *)MCDataGetBytePtr(p_data);
-		m_pointer = 0;
-		m_length = MCDataGetLength(p_data);
-		m_capacity = 0;
-	}
-	
-	bool TakeBuffer(void*& r_buffer, size_t& r_length)
-	{
-		r_buffer = (char *)realloc(m_buffer, m_length);
-		r_length = (size_t)m_length;
-        
-		m_buffer = NULL;
-		m_length = 0;
-		m_capacity = 0;
-		m_pointer = 0;
-        
-        return (r_buffer != nil);
-	}
-	
-	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
-	{
-		memcpy(m_buffer + p_pos, p_buffer, p_length);
-	}
-	
-	void Close(void)
-	{
-		if (m_capacity != 0)
-			free(m_buffer);
-		delete this;
-	}
-	
-	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
-	{
-		r_read = MCU_min(p_length, m_length - m_pointer);
-		memcpy(p_buffer, m_buffer + m_pointer, r_read);
-		m_pointer += r_read;
-		return IO_NORMAL;
-	}
-	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
-	{
-		// If we aren't writable then its an error (writable buffers start off with
-		// nil buffer pointer, and 0 capacity).
-		if (m_buffer != NULL && m_capacity == 0)
-			return false;
-		
-		// If there isn't enough room, extend
-		if (m_pointer + p_length > m_capacity)
-		{
-			uint32_t t_new_capacity;
-			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
-			
-			void *t_new_buffer;
-			t_new_buffer = realloc(m_buffer, t_new_capacity);
-			if (t_new_buffer == NULL)
-				return false;
-			
-			m_buffer = static_cast<char *>(t_new_buffer);
-			m_capacity = t_new_capacity;
-		}
-		
-		memcpy(m_buffer + m_pointer, p_buffer, p_length);
-		m_pointer += p_length;
-		m_length = MCU_max(m_pointer, m_length);
-		r_written = p_length;
-        
-		return true;
-	}
-	
-	bool Seek(int64_t p_offset, int p_dir)
-	{
-		int64_t t_base;
-		if (p_dir == 0)
-			t_base = m_pointer;
-		else if (p_dir < 0)
-			t_base = m_length;
-		else
-			t_base = 0;
-		
-		int64_t t_new_offset;
-		t_new_offset = p_offset + t_base;
-		if (t_new_offset < 0 || t_new_offset > m_length)
-			return false;
-		
-		m_pointer = (uint32_t)t_new_offset;
-		return true;
-	}
-	
-	bool PutBack(char c)
-	{
-		if (m_pointer == 0)
-			return false;
-		
-		m_pointer -= 1;
-		return true;
-	}
-	
-	int64_t Tell(void)
-	{
-		return m_pointer;
-	}
-	
-	int64_t GetFileSize(void)
-	{
-		return m_length;
-	}
-	
-	void *GetFilePointer(void)
-	{
-		return m_buffer;
-	}
-	
-	bool Truncate(void)
-	{
-		if (m_capacity != 0)
-		{
-			m_length = m_pointer;
-			return true;
-		}
-        
-		return false;
-	}
-	
-	bool Sync(void)
-	{
-		return true;
-	}
-	
-	bool Flush(void)
-	{
-		return true;
-	}
-	
-private:
-	char *m_buffer;
-	uint32_t m_pointer;
-	uint32_t m_length;
-	uint32_t m_capacity;
-};
-
-IO_handle MCS_fakeopen(MCDataRef p_data)
+IO_handle MCS_fakeopen(const MCString& data)
 {
 	MCMemoryFileHandle *t_handle;
-	t_handle = new MCMemoryFileHandle(p_data);
+	t_handle = new MCMemoryFileHandle(data . getstring(), data . getlength());
 	return new IO_header(t_handle, IO_FAKE);
 }
 
@@ -1054,98 +901,12 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     return IO_NORMAL;
 }
 
-void MCS_tmpnam(MCStringRef& r_path)
+bool MCS_tmpnam(MCStringRef& r_path)
 {
-	MCsystem->GetTemporaryFileName(r_path);
+	return MCsystem->GetTemporaryFileName(r_path);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-class MCCustomFileHandle: public MCSystemFileHandle
-{
-public:
-	MCCustomFileHandle(MCFakeOpenCallbacks *p_callbacks, void *p_state)
-	{
-		m_state = p_state;
-		m_callbacks = p_callbacks;
-	}
-	
-	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
-	{
-	}
-	
-	void Close(void)
-	{
-		// MW-2011-06-12: Fix memory leak - Close() should delete the handle.
-		delete this;
-	}
-	
-	IO_stat Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_blockcount)
-	{
-		if (m_callbacks -> read == nil)
-			return IO_ERROR;
-        
-		return m_callbacks -> read(m_state, p_buffer, p_blocksize, r_blockcount);
-	}
-	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
-	{
-		return false;
-	}
-	
-	bool Seek(int64_t p_offset, int p_dir)
-	{
-		if (p_dir == 0)
-			return m_callbacks -> seek_cur(m_state, p_offset) == IO_NORMAL;
-		else if (p_dir > 0)
-			return m_callbacks -> seek_set(m_state, p_offset) == IO_NORMAL;
-		return false;
-	}
-    
-    bool TakeBuffer(void*& r_buffer, size_t& r_length)
-    {
-        return false;
-    }
-	
-	bool PutBack(char c)
-	{
-		return false;
-	}
-	
-	int64_t Tell(void)
-	{
-		return m_callbacks -> tell(m_state);
-	}
-	
-	int64_t GetFileSize(void)
-	{
-		return 0;
-	}
-	
-	void *GetFilePointer(void)
-	{
-		return nil;
-	}
-	
-	bool Truncate(void)
-	{
-		return false;
-	}
-	
-	bool Sync(void)
-	{
-		return true;
-	}
-	
-	bool Flush(void)
-	{
-		return true;
-	}
-	
-private:
-	void *m_state;
-	MCFakeOpenCallbacks *m_callbacks;
-};
 
 IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
@@ -1153,6 +914,8 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 	t_handle = new MCCustomFileHandle(p_callbacks, p_state);
 	return new IO_header(t_handle, 0);
 }
+
+////////////////////////////////////////////////////////////////////////////////
 
 /* LEGACY */
 #ifdef /* MCS_open */ LEGACY_SYSTEM
@@ -1431,7 +1194,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         return false;
 	}
     
-    return true;
+    return true;	
 }
 
 bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
@@ -1549,15 +1312,18 @@ int64_t MCS_fsize(IO_handle p_stream)
 //	return IO_NORMAL;
 //}
 
-IO_stat MCS_readfixed(void *p_ptr, uint32_t p_size, uint32_t& r_count, IO_handle p_stream)
+IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream)
 {
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
 	
     IO_stat t_stat;
     uint32_t t_read;
-    t_stat = p_stream -> handle -> Read(p_ptr, p_size * r_count, t_read);
-    r_count = t_read / p_size;
+    t_stat = p_stream -> handle -> Read(p_ptr, p_byte_size, t_read);
+    if (t_stat == IO_NORMAL)
+        return t_stat;
+    if (t_read != p_byte_size)
+        return IO_ERROR;
     return t_stat;
 }
 

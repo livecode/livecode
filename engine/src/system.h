@@ -17,6 +17,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef __MC_SYSTEM__
 #define __MC_SYSTEM__
 
+#include "mcio.h"
+
 enum
 {
 	kMCSystemFileModeRead = 0,
@@ -70,6 +72,249 @@ struct MCSystemFileHandle
 	virtual int64_t GetFileSize(void) = 0;
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMemoryFileHandle: public MCSystemFileHandle
+{
+public:
+	MCMemoryFileHandle(void)
+	{
+		m_buffer = NULL;
+		m_pointer = 0;
+		m_length = 0;
+		m_capacity = 0;
+	}
+	
+	MCMemoryFileHandle(const void *p_data, size_t p_length)
+	{
+		m_buffer = (char *)p_data;
+		m_pointer = 0;
+		m_length = p_length;
+		m_capacity = 0;
+	}
+	
+	bool TakeBuffer(void*& r_buffer, size_t& r_length)
+	{
+		r_buffer = (char *)realloc(m_buffer, m_length);
+		r_length = (size_t)m_length;
+        
+		m_buffer = NULL;
+		m_length = 0;
+		m_capacity = 0;
+		m_pointer = 0;
+        
+        return (r_buffer != nil);
+	}
+	
+	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
+	{
+		memcpy(m_buffer + p_pos, p_buffer, p_length);
+	}
+	
+	void Close(void)
+	{
+		if (m_capacity != 0)
+			free(m_buffer);
+		delete this;
+	}
+	
+	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	{
+		r_read = MCU_min(p_length, m_length - m_pointer);
+		memcpy(p_buffer, m_buffer + m_pointer, r_read);
+		m_pointer += r_read;
+		return IO_NORMAL;
+	}
+	
+	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	{
+		// If we aren't writable then its an error (writable buffers start off with
+		// nil buffer pointer, and 0 capacity).
+		if (m_buffer != NULL && m_capacity == 0)
+			return false;
+		
+		// If there isn't enough room, extend
+		if (m_pointer + p_length > m_capacity)
+		{
+			uint32_t t_new_capacity;
+			t_new_capacity = (m_pointer + p_length + 4096) & ~4095;
+			
+			void *t_new_buffer;
+			t_new_buffer = realloc(m_buffer, t_new_capacity);
+			if (t_new_buffer == NULL)
+				return false;
+			
+			m_buffer = static_cast<char *>(t_new_buffer);
+			m_capacity = t_new_capacity;
+		}
+		
+		memcpy(m_buffer + m_pointer, p_buffer, p_length);
+		m_pointer += p_length;
+		m_length = MCU_max(m_pointer, m_length);
+		r_written = p_length;
+        
+		return true;
+	}
+	
+	bool Seek(int64_t p_offset, int p_dir)
+	{
+		int64_t t_base;
+		if (p_dir == 0)
+			t_base = m_pointer;
+		else if (p_dir < 0)
+			t_base = m_length;
+		else
+			t_base = 0;
+		
+		int64_t t_new_offset;
+		t_new_offset = p_offset + t_base;
+		if (t_new_offset < 0 || t_new_offset > m_length)
+			return false;
+		
+		m_pointer = (uint32_t)t_new_offset;
+		return true;
+	}
+	
+	bool PutBack(char c)
+	{
+		if (m_pointer == 0)
+			return false;
+		
+		m_pointer -= 1;
+		return true;
+	}
+	
+	int64_t Tell(void)
+	{
+		return m_pointer;
+	}
+	
+	int64_t GetFileSize(void)
+	{
+		return m_length;
+	}
+	
+	void *GetFilePointer(void)
+	{
+		return m_buffer;
+	}
+	
+	bool Truncate(void)
+	{
+		if (m_capacity != 0)
+		{
+			m_length = m_pointer;
+			return true;
+		}
+        
+		return false;
+	}
+	
+	bool Sync(void)
+	{
+		return true;
+	}
+	
+	bool Flush(void)
+	{
+		return true;
+	}
+	
+private:
+	char *m_buffer;
+	uint32_t m_pointer;
+	uint32_t m_length;
+	uint32_t m_capacity;
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCCustomFileHandle: public MCSystemFileHandle
+{
+public:
+	MCCustomFileHandle(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+	{
+		m_state = p_state;
+		m_callbacks = p_callbacks;
+	}
+	
+	void WriteAt(uint32_t p_pos, const void *p_buffer, uint32_t p_length)
+	{
+	}
+	
+	void Close(void)
+	{
+		// MW-2011-06-12: Fix memory leak - Close() should delete the handle.
+		delete this;
+	}
+	
+	IO_stat Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_blockcount)
+	{
+		if (m_callbacks -> read == nil)
+			return IO_ERROR;
+        
+		return m_callbacks -> read(m_state, p_buffer, p_blocksize, r_blockcount);
+	}
+	
+	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	{
+		return false;
+	}
+	
+	bool Seek(int64_t p_offset, int p_dir)
+	{
+		if (p_dir == 0)
+			return m_callbacks -> seek_cur(m_state, p_offset) == IO_NORMAL;
+		else if (p_dir > 0)
+			return m_callbacks -> seek_set(m_state, p_offset) == IO_NORMAL;
+		return false;
+	}
+    
+    bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+	
+	bool PutBack(char c)
+	{
+		return false;
+	}
+	
+	int64_t Tell(void)
+	{
+		return m_callbacks -> tell(m_state);
+	}
+	
+	int64_t GetFileSize(void)
+	{
+		return 0;
+	}
+	
+	void *GetFilePointer(void)
+	{
+		return nil;
+	}
+	
+	bool Truncate(void)
+	{
+		return false;
+	}
+	
+	bool Sync(void)
+	{
+		return true;
+	}
+	
+	bool Flush(void)
+	{
+		return true;
+	}
+	
+private:
+	void *m_state;
+	MCFakeOpenCallbacks *m_callbacks;
 };
 
 enum MCServiceType
@@ -186,7 +431,7 @@ struct MCSystemInterface
 	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
-	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
+	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
 	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_path) = 0;

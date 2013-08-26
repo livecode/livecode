@@ -307,22 +307,22 @@ public:
 		t_success = true;
 
 		MCAutoStringRef t_old_filename;
-		if (t_success && m_old_file -> eval(ep) == ES_NORMAL)
-			t_old_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
-		else
-			t_success = false;
+		if (t_success)
+            t_success = m_old_file -> eval(ep) == ES_NORMAL;
+        if (t_success)
+            t_success = ep . copyasstringref(&t_old_filename);
 
 		MCAutoStringRef t_new_filename;
-		if (t_success && m_new_file -> eval(ep) == ES_NORMAL)
-			t_new_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
-		else
-			t_success = false;
+		if (t_success)
+            t_success = m_new_file -> eval(ep) == ES_NORMAL;
+        if (t_success)
+            t_success = ep . copyasstringref(&t_new_filename);
 
 		MCAutoStringRef t_patch_filename;
-		if (t_success && m_patch_file -> eval(ep) == ES_NORMAL)
-			t_patch_filename = (MCStringRef)MCValueRetain(ep . getvalueref());
-		else
-			t_success = false;
+		if (t_success)
+            t_success = m_patch_file -> eval(ep) == ES_NORMAL;
+        else
+            t_success = ep . copyasstringref(&t_patch_filename);
 
 		IO_handle t_old_handle;
 		t_old_handle = nil;

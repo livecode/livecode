@@ -159,11 +159,8 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 		t_success = MCMemoryNewArray(1, t_frames);
 
 	// create stream for non-rle compressed images
-    if (t_success)
-        t_success = MCDataCreateWithBytes((byte_t*)p_compressed->data, p_compressed->size, &t_data);
-        
 	if (t_success && p_compressed->compression != F_RLE)
-		t_success = nil != (t_stream = MCS_fakeopen(*t_data));
+		t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)p_compressed -> data, p_compressed -> size)));
 
 	if (t_success)
 	{

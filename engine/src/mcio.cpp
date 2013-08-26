@@ -243,9 +243,9 @@ void IO_freeobject(MCObject *o)
 #endif
 }
 
-IO_stat IO_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
+IO_stat IO_read(void *ptr, uint4 byte_size, IO_handle stream)
 {
-	return MCS_readfixed(ptr, size, n, stream);
+	return MCS_readfixed(ptr, byte_size, stream);
 }
 
 IO_stat IO_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
@@ -259,7 +259,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
 	char *dptr;
 	/* UNCHECKED */ ep.reserve(nread, dptr);
-	/* UNCHECKED */ MCS_readfixed(dptr, 1, nread, stream);
+	/* UNCHECKED */ MCS_readfixed(dptr, nread, stream); // ?? readall ??
 	ep.commit(nread);
 	return IO_NORMAL;
 }
@@ -267,7 +267,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 {
 	uint4 bytes = length;
-	if (MCS_readfixed(ptr, sizeof(uint1), bytes, stream) == IO_ERROR)
+	if (MCS_readfixed(ptr, bytes, stream) == IO_ERROR) // readall ??
 		return IO_ERROR;
 	ptr[bytes - 1] = '\0';
 	strtok(ptr, "\n");
@@ -280,20 +280,17 @@ IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 
 IO_stat IO_read_real8(real8 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_readfixed(dest, sizeof(real8), n, stream);
+	return MCS_readfixed(dest, sizeof(real8), stream);
 }
 
 IO_stat IO_read_real4(real4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_readfixed(dest, sizeof(real4), n, stream);
+	return MCS_readfixed(dest, sizeof(real4), stream);
 }
 
 IO_stat IO_read_uint4(uint4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), stream);
 	if (stat != IO_ERROR)
 		swap_uint4(dest);
 	return stat;
@@ -301,8 +298,7 @@ IO_stat IO_read_uint4(uint4 *dest, IO_handle stream)
 
 IO_stat IO_read_int4(int4 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint4), stream);
 	if (stat != IO_ERROR)
 		swap_int4(dest);
 	return stat;
@@ -310,8 +306,7 @@ IO_stat IO_read_int4(int4 *dest, IO_handle stream)
 
 IO_stat IO_read_uint2(uint2 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_readfixed(dest, sizeof(uint2), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(uint2), stream);
 	if (stat != IO_ERROR)
 		swap_uint2(dest);
 	return stat;
@@ -319,8 +314,7 @@ IO_stat IO_read_uint2(uint2 *dest, IO_handle stream)
 
 IO_stat IO_read_int2(int2 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	IO_stat stat = MCS_readfixed(dest, sizeof(int2), n, stream);
+	IO_stat stat = MCS_readfixed(dest, sizeof(int2), stream);
 	if (stat != IO_ERROR)
 		swap_int2(dest);
 	return stat;
@@ -328,14 +322,12 @@ IO_stat IO_read_int2(int2 *dest, IO_handle stream)
 
 IO_stat IO_read_uint1(uint1 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_readfixed(dest, sizeof(uint1), n, stream);
+	return MCS_readfixed(dest, sizeof(uint1), stream);
 }
 
 IO_stat IO_read_int1(int1 *dest, IO_handle stream)
 {
-	uint4 n = 1;
-	return MCS_readfixed(dest, sizeof(int1), n, stream);
+	return MCS_readfixed(dest, sizeof(int1), stream);
 }
 
 IO_stat IO_write_real8(real8 dest, IO_handle stream)
@@ -584,12 +576,7 @@ IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
 //   not enough to satisfy the request.
 IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream)
 {
-	uint4 n;
-	n = 1;
-	if (MCS_readfixed(ptr, size, n, stream) != IO_NORMAL ||
-		n != 1)
-		return IO_ERROR;
-	return IO_NORMAL;
+	return MCS_readfixed(ptr, size, stream);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
