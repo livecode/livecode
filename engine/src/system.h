@@ -74,9 +74,9 @@ struct MCSystemFileHandle
 
 enum MCServiceType
 {
-    kMCServiceTypeMacSystem = 1,
-    kMCServiceTypeWindowsSystem = 2 << 1,
-    kMCServiceTypeLinuxSystem = 3 << 1,
+    kMCServiceTypeMacSystem,
+    kMCServiceTypeWindowsSystem,
+    kMCServiceTypeLinuxSystem,
 };
 
 struct MCServiceInterface

@@ -344,6 +344,13 @@ void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
 
 //////////////////////////////////////////////////////////////////////////////////
 
+#define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+        EXTERN_C const GUID DECLSPEC_SELECTANY name \
+                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+// {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
+DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
+
+//////////////////////////////////////////////////////////////////////////////////
 typedef struct
 {
 	MCNameRef *token;
@@ -375,7 +382,7 @@ bool MCS_specialfolder_to_csidl(MCNameRef p_folder, MCNumberRef& r_csidl)
 	return false;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 /* thread created to read data from child process's pipe */
 static bool s_finished_reading = false;
@@ -387,8 +394,8 @@ static void readThreadDone(void *param)
 
 static DWORD readThread(Streamnode *process)
 {
-	IO_handle ihandle;
-	ihandle = process -> ihandle;
+	MCMemoryFileHandle ihandle;
+	ihandle = process -> ihandle -> handle;
 
 	DWORD nread;
 	ihandle->buffer = new char[READ_PIPE_SIZE];
@@ -644,6 +651,48 @@ bool dns_servers_from_registry(MCListRef& r_list)
 
 //////////////////////////////////////////////////////////////////////////////////
 
+static void MCS_do_launch(MCStringRef p_document)
+{
+	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
+	//   things always appear on top...
+	int t_result;
+	t_result = (int)ShellExecuteA(NULL, "open", MCStringGetCString(p_document), NULL, NULL, SW_SHOWNORMAL);
+
+	if (t_result < 32)
+	{
+		switch(t_result)
+		{
+		case ERROR_BAD_FORMAT:
+		case SE_ERR_ACCESSDENIED:
+		case SE_ERR_FNF:
+		case SE_ERR_PNF:
+		case SE_ERR_SHARE:
+		case SE_ERR_DLLNOTFOUND:
+			MCresult -> sets("can't open file");
+		break;
+
+		case SE_ERR_ASSOCINCOMPLETE:
+		case SE_ERR_NOASSOC:
+			MCresult -> sets("no association");
+		break;
+
+		case SE_ERR_DDEBUSY:
+		case SE_ERR_DDEFAIL:
+		case SE_ERR_DDETIMEOUT:
+			MCresult -> sets("request failed");
+		break;
+
+		case 0:
+		case SE_ERR_OOM:
+			MCresult -> sets("no memory");
+		break;
+		}
+	}
+	else
+		MCresult -> clear();
+}
+
+//////////////////////////////////////////////////////////////////////////////////
 struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 {
     virtual bool MCISendString(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
@@ -903,6 +952,527 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
     {
     }
     //MCS_windows_elevation_bootstrap_main
+};
+
+
+struct MCStdioFileHandle: public MCSystemFileHandle
+{
+	virtual void Close(void)
+	{
+#ifdef /* MCS_close_dsk_w32 */ LEGACY_SYSTEM
+	if (stream->buffer != NULL)
+	{ //memory map file
+		if (stream->mhandle != NULL)
+		{
+			UnmapViewOfFile(stream->buffer);
+			CloseHandle(stream->mhandle);
+		}
+	}
+	if (!(stream->flags & IO_FAKE))
+		CloseHandle(stream->fhandle);
+	delete stream;
+	stream = NULL;
+#endif /* MCS_close_dsk_w32 */
+		CloseHandle(fhandle);
+		delete this;
+		this = NULL;
+	}
+	
+	virtual IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	{
+#ifdef /* MCS_read_dsk_w32 */ LEGACY_SYSTEM
+	if (MCabortscript || ptr == NULL || stream == NULL)
+		return IO_ERROR;
+
+	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+		return IO_ERROR;
+
+	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+	// MW-2009-06-30: Refactored to common (platform-independent) implementation
+	//   in mcio.cpp
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_read(ptr, size, n, stream);
+
+	LPVOID sptr = ptr;
+	DWORD nread;
+	Boolean result = False;
+	IO_stat istat = IO_NORMAL;
+
+	if (stream->buffer != NULL)
+	{ //memory map file or process with a thread
+		uint4 nread = size * n;     //into the IO_handle's buffer
+		if (nread > stream->len - (stream->ioptr - stream->buffer))
+		{
+			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
+			nread = size * n;
+			istat = IO_EOF;
+		}
+		if (nread == 1)
+		{
+			char *tptr = (char *)ptr;
+			*tptr = *stream->ioptr++;
+		}
+		else
+		{
+			memcpy(ptr, stream->ioptr, nread);
+			stream->ioptr += nread;
+		}
+		return istat;
+	}
+	
+	if (stream -> fhandle == 0)
+	{
+		MCS_seterrno(GetLastError());
+		n = 0;
+		return IO_ERROR;
+	}
+	
+	// If this is named pipe, handle things differently -- we first peek to see how
+	// much is available to read.
+	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
+	if (stream -> is_pipe)
+	{
+		// See how much data is available - if this fails then return eof or an error
+		// depending on 'GetLastError()'.
+		uint32_t t_available;
+		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
+		{
+			n = 0;
+
+			DWORD t_error;
+			t_error = GetLastError();
+			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
+			{
+				stream -> flags |= IO_ATEOF;
+				return IO_EOF;
+			}
+
+			MCS_seterrno(GetLastError());
+			return IO_ERROR;
+		}
+
+		// Adjust for putback
+		int32_t t_adjust;
+		t_adjust = 0;
+		if (stream -> putback != -1)
+			t_adjust = 1;
+
+		// Calculate how many elements we can read, and how much we need to read
+		// to make them.
+		uint32_t t_count, t_byte_count;
+		t_count = MCU_min((t_available + t_adjust) / size, n);
+		t_byte_count = t_count * size;
+
+		// Copy in the putback char if any
+		uint1 *t_dst_ptr;
+		t_dst_ptr = (uint1*)sptr;
+		if (stream -> putback != -1)
+		{
+			*t_dst_ptr++ = (uint1)stream -> putback;
+			stream -> putback = -1;
+		}
+
+		// Now read all the data we can - here we check for EOF also.
+		uint32_t t_amount_read;
+		IO_stat t_stat;
+		t_stat = IO_NORMAL;
+		t_amount_read = 0;
+		if (t_byte_count - t_adjust > 0)
+			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
+			{
+				if (GetLastError() == ERROR_HANDLE_EOF)
+				{
+					stream -> flags |= IO_ATEOF;
+					t_stat = IO_EOF;
+				}
+				else
+				{
+					MCS_seterrno(GetLastError());
+					t_stat = IO_ERROR;
+				}
+			}
+
+		// Return the number of objects of 'size' bytes that were read.
+		n = (t_amount_read + t_adjust) / size;
+
+		return t_stat;
+	}
+
+	if (stream -> putback != -1)
+	{
+		*((uint1 *)sptr) = (uint1)stream -> putback;
+		stream -> putback = -1;
+		
+		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
+		{
+			MCS_seterrno(GetLastError());
+			n = (nread + 1) / size;
+			return IO_ERROR;
+		}
+		
+		nread += 1;
+	}
+	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
+	{
+		MCS_seterrno(GetLastError());
+		n = nread / size;
+		return IO_ERROR;
+	}
+
+	if (nread < size * n)
+	{
+		stream->flags |= IO_ATEOF;
+		n = nread / size;
+		return IO_EOF;
+	}
+	else
+		stream->flags &= ~IO_ATEOF;
+
+	n = nread / size;
+	return IO_NORMAL;
+#endif /* MCS_read_dsk_w32 */
+		LPVOID sptr = ptr;
+		DWORD nread;
+		Boolean result = False;
+		IO_stat istat = IO_NORMAL;
+		
+		if (m_handle == 0)
+		{
+			MCS_seterrno(GetLastError());
+			n = 0;
+			return IO_ERROR;
+		}
+		
+		// If this is named pipe, handle things differently -- we first peek to see how
+		// much is available to read.
+		// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
+		if (m_is_pipe)
+		{
+			// See how much data is available - if this fails then return eof or an error
+			// depending on 'GetLastError()'.
+			uint32_t t_available;
+			if (!PeekNamedPipe(m_handle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
+			{
+				n = 0;
+
+				DWORD t_error;
+				t_error = GetLastError();
+				if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
+					return IO_EOF;
+
+				MCS_seterrno(GetLastError());
+				return IO_ERROR;
+			}
+
+			// Adjust for putback
+			int32_t t_adjust;
+			t_adjust = 0;
+			if (m_putback != -1)
+				t_adjust = 1;
+
+			// Calculate how many elements we can read, and how much we need to read
+			// to make them.
+			uint32_t t_byte_count;
+			t_byte_count = MCU_min((t_available + t_adjust), p_byte_size);
+
+			// Copy in the putback char if any
+			uint1 *t_dst_ptr;
+			t_dst_ptr = (uint1*)sptr;
+			if (m_putback != -1)
+			{
+				*t_dst_ptr++ = (uint1)m_putback;
+				m_putback = -1;
+			}
+
+			// Now read all the data we can - here we check for EOF also.
+			uint32_t t_amount_read;
+			IO_stat t_stat;
+			t_stat = IO_NORMAL;
+			t_amount_read = 0;
+			if (t_byte_count - t_adjust > 0)
+				if (!ReadFile(m_handle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
+				{
+					if (GetLastError() == ERROR_HANDLE_EOF)
+					{
+						t_stat = IO_EOF;
+					}
+					else
+					{
+						MCS_seterrno(GetLastError());
+						t_stat = IO_ERROR;
+					}
+				}
+
+			// Return the number of bytes that were read.
+			r_read = (t_amount_read + t_adjust);
+
+			return t_stat;
+		}
+
+		if (m_putback != -1)
+		{
+			*((uint1 *)sptr) = (uint1)m_putback;
+			m_putback = -1;
+			
+			if (!ReadFile(m_handle, (LPVOID)((char *)sptr + 1), (DWORD)p_byte_size - 1, &nread, NULL))
+			{
+				MCS_seterrno(GetLastError());
+				r_read = (nread + 1);
+				return IO_ERROR;
+			}
+			
+			nread += 1;
+		}
+		else if (!ReadFile(m_handle, (LPVOID)sptr, (DWORD)p_byte_size, &nread, NULL))
+		{
+			MCS_seterrno(GetLastError());
+			r_read = nread;
+			return IO_ERROR;
+		}
+
+		if (nread < p_byte_size)
+		{
+			r_read = nread;
+			return IO_EOF;
+		}
+
+		r_read = nread;
+		return IO_NORMAL;
+	}
+
+	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	{
+#ifdef /* MCS_write_dsk_w32 */ LEGACY_SYSTEM
+	if (stream == IO_stdin)
+		return IO_NORMAL;
+
+	if (stream == NULL)
+		return IO_ERROR;
+
+	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
+
+	if (stream -> fhandle == 0)
+		return IO_ERROR;
+
+	DWORD nwrote;
+	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
+	               &nwrote, NULL))
+	{
+		MCS_seterrno(GetLastError());
+		return IO_ERROR;
+	}
+	if (nwrote != size * n)
+		return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_write_dsk_w32 */
+		if (this == IO_stdin -> handle)
+			return true; // Shouldn't it return false???
+
+		if (m_handle == NULL)
+			return false;
+
+		if (!WriteFile(m_handle, (LPVOID)ptr, (DWORD)p_length,
+					   &r_written, NULL))
+		{
+			MCS_seterrno(GetLastError());
+			return false;
+		}
+		if (r_written != p_length)
+			return false;
+
+		return true;
+	}
+
+	virtual bool Seek(int64_t p_offset, int p_dir)
+	{
+#ifdef /* MCS_seek_cur_dsk_w32 */ LEGACY_SYSTEM
+	IO_stat is = IO_NORMAL;
+
+	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_seek_cur(stream, offset);
+
+	if (stream->buffer != NULL)
+		IO_set_stream(stream, stream->ioptr + offset);
+	else
+		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
+	return is;
+#endif /* MCS_seek_cur_dsk_w32 */
+#ifdef /* MCS_seek_set_dsk_w32 */ LEGACY_SYSTEM
+	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_seek_set(stream, offset);
+
+	IO_stat is = IO_NORMAL;
+	if (stream->buffer != NULL)
+		IO_set_stream(stream, stream->buffer + offset);
+	else
+		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
+	return is;
+#endif /* MCS_seek_set_dsk_w32 */
+#ifdef /* MCS_seek_end_dsk_w32 */ LEGACY_SYSTEM
+	IO_stat is = IO_NORMAL;
+	if (stream->buffer != NULL)
+		IO_set_stream(stream, stream->buffer + stream->len + offset);
+	else
+		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
+	return is;
+#endif /* MCS_seek_end_dsk_w32 */
+#ifdef /* MCS_seek_do_dsk_w32 */ LEGACY_SYSTEM
+	LONG high_offset;
+	high_offset = (LONG)(p_offset >> 32);
+	DWORD fp;
+	fp = SetFilePointer(p_file, (LONG)(p_offset & 0xFFFFFFFF),
+	                   &high_offset, p_type);
+	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+		return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_seek_do_dsk_w32 */
+		LONG high_offset;
+		high_offset = (LONG)(p_offset >> 32);
+		DWORD fp;
+
+		fp = SetFilePointer(m_handle, (LONG)(p_offset & 0xFFFFFFFF),
+			&high_offset, t_type > 0 ? FILE_BEGIN : (t_type < 0 ? FILE_END : FILE_CURRENT));
+
+		if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+			return false;
+
+		return true;
+	}
+	
+	virtual bool Truncate(void)
+	{
+#ifdef /* MCS_trunc_dsk_w32 */ LEGACY_SYSTEM
+	if (SetEndOfFile(stream->fhandle))
+		return IO_NORMAL;
+	else
+		return IO_ERROR;
+#endif /* MCS_trunc_dsk_w32 */
+		return SetEndOfFile(m_handle);
+	}
+
+	virtual bool Sync(void)
+	{
+#ifdef /* MCS_sync_dsk_w32 */ LEGACY_SYSTEM
+	//get the current file position pointer
+	LONG fph;
+	fph = 0;
+	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
+	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+		return IO_ERROR;
+	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
+	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+		return IO_ERROR;
+	else
+		return IO_NORMAL;
+#endif /* MCS_sync_dsk_w32 */
+		//get the current file position pointer
+		LONG fph;
+		fph = 0;
+		DWORD fp = SetFilePointer(m_handle, 0, &fph, FILE_CURRENT);
+		if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+			return false;
+		DWORD nfp = SetFilePointer(m_handle, fp, &fph, FILE_BEGIN);
+		if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+			return false;
+		
+		return true;
+	}
+
+	virtual bool Flush(void)
+	{
+#ifdef /* MCS_flush_dsk_w32 */ LEGACY_SYSTEM 
+	//flush output buffer
+	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
+		return IO_ERROR;
+	return IO_NORMAL;
+#endif /* MCS_flush_dsk_w32 */ //flush output buffer
+		if (FlushFileBuffers(m_handle) != NO_ERROR)
+			return false;
+
+		return true;
+	}
+	
+	virtual bool PutBack(char p_char)
+	{
+#ifdef /* MCS_putback_dsk_w32 */ LEGACY_SYSTEM
+	if (stream -> buffer != NULL)
+		return MCS_seek_cur(stream, -1);
+
+	if (stream -> putback != -1)
+		return IO_ERROR;
+		
+	stream -> putback = c;
+	
+	return IO_NORMAL;
+#endif /* MCS_putback_dsk_w32 */
+		if (m_putback != -1)
+			return false;
+			
+		m_putback = c;
+		
+		return true;
+	}
+	
+	virtual int64_t Tell(void)
+	{
+#ifdef /* MCS_tell_dsk_w32 */ LEGACY_SYSTEM
+	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_tell(stream);
+
+	if (stream->buffer != NULL)
+		return stream->ioptr - stream->buffer;
+
+	DWORD low;
+	LONG high;
+	high = 0;
+	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
+	return low | ((int64_t)high << 32);
+#endif /* MCS_tell_dsk_w32 */
+		DWORD low;
+		LONG high;
+		high = 0;
+		low = SetFilePointer(m_handle, 0, &high, FILE_CURRENT);
+		return low | ((int64_t)high << 32);
+	}
+	
+	virtual void *GetFilePointer(void) = 0;
+	virtual int64_t GetFileSize(void)
+	{
+#ifdef /* MCS_fsize_dsk_w32 */ LEGACY_SYSTEM
+	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+		return MCS_fake_fsize(stream);
+
+	if (stream->flags & IO_FAKE)
+		return stream->len;
+	else
+	{
+		DWORD t_high_word, t_low_word;
+		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
+		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
+			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+	}
+	return 0;
+#endif /* MCS_fsize_dsk_w32 */
+		DWORD t_high_word, t_low_word;
+		t_low_word = GetFileSize(m_handle, &t_high_word);
+		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
+			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+
+		return 0;
+	}
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+private:
+	MCWinSysHandle m_handle;
+	char *m_ioptr;
+	int m_putback;
+	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
+	bool m_is_pipe;
 };
 
 // MW-2005-02-22: Make this global for now so it is accesible by opensslsocket.cpp
@@ -1587,9 +2157,84 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
     }
 	
-    virtual real8 GetFreeDiskSpace() = 0;
-    virtual Boolean GetDevices(MCStringRef& r_devices) = 0;
-    virtual Boolean GetDrives(MCStringRef& r_drives) = 0;
+    virtual real8 GetFreeDiskSpace()
+	{
+#ifdef /* MCS_getfreediskspace_dsk_w32 */ LEGACY_SYSTEM
+	DWORD sc, bs, fc, tc;
+	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
+	return ((real8)bs * (real8)sc * (real8)fc);
+#endif /* MCS_getfreediskspace_dsk_w32 */
+		DWORD sc, bs, fc, tc;
+		GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
+		return ((real8)bs * (real8)sc * (real8)fc);
+	}
+
+    virtual Boolean GetDevices(MCStringRef& r_devices)
+	{
+#ifdef /* MCS_getdevices_dsk_w32 */ LEGACY_SYSTEM
+	r_list = MCValueRetain(kMCEmptyList);
+	return true;
+#endif /* MCS_getdevices_dsk_w32 */
+		r_devices = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+
+    virtual Boolean GetDrives(MCStringRef& r_drives)
+	{
+#ifdef /* MCS_getdrives_dsk_w32 */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+	MCAutoBlock<char_t> t_buffer;
+	DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
+	if (!t_buffer . Allocate(maxsize) || !MCListCreateMutable('\n', &t_list))
+		return false;
+
+	char_t *sptr = *t_buffer;
+	char_t *dptr = sptr;
+	GetLogicalDriveStringsA(maxsize, (LPSTR)sptr);
+	while (True)
+	{
+		if (*sptr == '\\')
+			sptr++;
+		else
+		{
+			*dptr = *sptr++;
+			if (*dptr++ == '\0')
+				if (*sptr == '\0')
+					break;
+				else
+					*(dptr - 1) = '\n';
+		}
+	}
+	return MCListAppendNativeChars(*t_list, *t_buffer, dptr - 1 - *t_buffer) &&
+		MCListCopy(*t_list, r_list);
+//	return MCStringCreateWithNativeChars(*t_buffer, dptr - 1 - *t_buffer, r_string);
+#endif /* MCS_getdrives_dsk_w32 */
+		MCAutoListRef t_list;
+		MCAutoBlock<char_t> t_buffer;
+		DWORD maxsize = GetLogicalDriveStringsA(0, NULL);
+		if (!t_buffer . Allocate(maxsize) || !MCListCreateMutable('\n', &t_list))
+			return false;
+
+		char_t *sptr = *t_buffer;
+		char_t *dptr = sptr;
+		GetLogicalDriveStringsA(maxsize, (LPSTR)sptr);
+		while (True)
+		{
+			if (*sptr == '\\')
+				sptr++;
+			else
+			{
+				*dptr = *sptr++;
+				if (*dptr++ == '\0')
+					if (*sptr == '\0')
+						break;
+					else
+						*(dptr - 1) = '\n';
+			}
+		}
+		return MCListAppendNativeChars(*t_list, *t_buffer, dptr - 1 - *t_buffer) &&
+			MCListCopyAsString(*t_list, r_drives);
+	}
     
 	virtual Boolean FileExists(MCStringRef p_path)
     {
@@ -1777,7 +2422,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
 	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset) = 0;
 	
-	// NOTE: 'GetTemporaryFileName' returns a native path.
+	// NOTE: 'GetTemporaryFileName' returns a non-native path.
 	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
 #ifdef /* MCS_tmpnam_dsk_w32 */ LEGACY_SYSTEM
@@ -1841,7 +2486,6 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
 			MCStringCopy(*t_tmp_name, r_tmp_name);
     }
-	///* LEGACY */ virtual char *GetTemporaryFileName(void) = 0;
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_path)
     {
@@ -2220,6 +2864,122 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         return t_buffer.CreateStringAndRelease(&t_short_path) &&
 		MCU_path2std(*t_short_path, r_short_path);
     }
+
+	virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path)
+	{
+#ifdef /* MCS_get_canonical_path_dsk_w32 */ LEGACY_SYSTEM
+	char *t_path = NULL;
+	char *t_curdir = NULL;
+
+	if (path == NULL)
+		return NULL;
+
+	if (path[0] == '/' && path[1] != '/')
+	{
+		// path in root of current drive
+		t_curdir = MCS_getcurdir();
+
+		int t_path_len;
+		t_path_len = strlen(path);
+		while (path[0] == '/')
+		{
+			path ++;
+			t_path_len --;
+		}
+		
+		t_path = (char*)malloc(3 + t_path_len + 1);
+		t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
+		strcpy(t_path + 3, path);
+	}
+	else if (is_legal_drive(path[0]) && path[1] == ':')
+	{
+		// absolute path
+		t_path = strclone(path);
+	}
+	else
+	{
+		// relative to current folder
+		t_curdir = MCS_getcurdir();
+		int t_curdir_len;
+		t_curdir_len = strlen(t_curdir);
+
+		while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+			t_curdir_len--;
+
+		int t_path_len;
+		t_path_len = strlen(path);
+
+		while (t_path_len > 0 && path[0] == '/')
+		{
+			path ++;
+			t_path_len --;
+		}
+
+		t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
+		memcpy(t_path, t_curdir, t_curdir_len);
+		t_path[t_curdir_len] = '/';
+		memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
+	}
+
+	MCU_fix_path(t_path);
+	return t_path;
+#endif /* MCS_get_canonical_path_dsk_w32 */
+		char *t_path = NULL;
+		char *t_curdir = NULL;
+
+		if (path == NULL)
+			return NULL;
+
+		if (path[0] == '/' && path[1] != '/')
+		{
+			// path in root of current drive
+			t_curdir = MCS_getcurdir();
+
+			int t_path_len;
+			t_path_len = strlen(path);
+			while (path[0] == '/')
+			{
+				path ++;
+				t_path_len --;
+			}
+			
+			t_path = (char*)malloc(3 + t_path_len + 1);
+			t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
+			strcpy(t_path + 3, path);
+		}
+		else if (is_legal_drive(path[0]) && path[1] == ':')
+		{
+			// absolute path
+			t_path = strclone(path);
+		}
+		else
+		{
+			// relative to current folder
+			t_curdir = MCS_getcurdir();
+			int t_curdir_len;
+			t_curdir_len = strlen(t_curdir);
+
+			while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+				t_curdir_len--;
+
+			int t_path_len;
+			t_path_len = strlen(path);
+
+			while (t_path_len > 0 && path[0] == '/')
+			{
+				path ++;
+				t_path_len --;
+			}
+
+			t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
+			memcpy(t_path, t_curdir, t_curdir_len);
+			t_path[t_curdir_len] = '/';
+			memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
+		}
+
+		MCU_fix_path(t_path);
+		return t_path;
+	}
     
 	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
     
@@ -2268,7 +3028,13 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 #endif /* MCS_checkprocesses_dsk_w32 */
     }
     
-    virtual uint32_t GetSystemError(void) = 0;
+	virtual uint32_t GetSystemError(void)
+	{
+#ifdef /* MCS_getsyserror_dsk_w32 */ LEGACY_SYSTEM
+	return GetLastError();
+#endif /* MCS_getsyserror_dsk_w32 */
+		return GetLastError();
+	}
     
     virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output)
     {
@@ -3074,6 +3840,138 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCprocesses[i].phandle = NULL;
         }
     }
+
+	virtual Poll(real8 p_delay, int p_fd)
+	{
+#ifdef /* MCS_poll_dsk_w32 */ LEGACY_SYSTEM
+	Boolean handled = False;
+	int4 n;
+	uint2 i;
+	fd_set rmaskfd, wmaskfd, emaskfd;
+	FD_ZERO(&rmaskfd);
+	FD_ZERO(&wmaskfd);
+	FD_ZERO(&emaskfd);
+	uint4 maxfd = 0;
+	if (!MCnoui)
+	{
+		FD_SET(fd, &rmaskfd);
+		maxfd = fd;
+	}
+	for (i = 0 ; i < MCnsockets ; i++)
+	{
+		if (MCsockets[i]->doread)
+		{
+			MCsockets[i]->readsome();
+			i = 0;
+		}
+	}
+	for (i = 0 ; i < MCnsockets ; i++)
+	{
+		if (MCsockets[i]->connected && !MCsockets[i]->closing
+		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
+			FD_SET(MCsockets[i]->fd, &rmaskfd);
+		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+			FD_SET(MCsockets[i]->fd, &wmaskfd);
+		FD_SET(MCsockets[i]->fd, &emaskfd);
+		if (MCsockets[i]->fd > maxfd)
+			maxfd = MCsockets[i]->fd;
+		if (MCsockets[i]->added)
+		{
+			delay = 0.0;
+			MCsockets[i]->added = False;
+			handled = True;
+		}
+	}
+	struct timeval timeoutval;
+	timeoutval.tv_sec = (long)delay;
+	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+	if (n <= 0)
+		return handled;
+	for (i = 0 ; i < MCnsockets ; i++)
+	{
+		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
+		{
+			if (!MCsockets[i]->waiting)
+			{
+				MCsockets[i]->error = strclone("select error");
+				MCsockets[i]->doclose();
+			}
+		}
+		else
+		{
+			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
+				MCsockets[i]->writesome();
+			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
+				MCsockets[i]->readsome();
+		}
+	}
+	return n != 0;
+#endif /* MCS_poll_dsk_w32 */
+		Boolean handled = False;
+		int4 n;
+		uint2 i;
+		fd_set rmaskfd, wmaskfd, emaskfd;
+		FD_ZERO(&rmaskfd);
+		FD_ZERO(&wmaskfd);
+		FD_ZERO(&emaskfd);
+		uint4 maxfd = 0;
+		if (!MCnoui)
+		{
+			FD_SET(p_fd, &rmaskfd);
+			maxfd = p_fd;
+		}
+		for (i = 0 ; i < MCnsockets ; i++)
+		{
+			if (MCsockets[i]->doread)
+			{
+				MCsockets[i]->readsome();
+				i = 0;
+			}
+		}
+		for (i = 0 ; i < MCnsockets ; i++)
+		{
+			if (MCsockets[i]->connected && !MCsockets[i]->closing
+					&& !MCsockets[i]->shared || MCsockets[i]->accepting)
+				FD_SET(MCsockets[i]->fd, &rmaskfd);
+			if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+				FD_SET(MCsockets[i]->fd, &wmaskfd);
+			FD_SET(MCsockets[i]->fd, &emaskfd);
+			if (MCsockets[i]->fd > maxfd)
+				maxfd = MCsockets[i]->fd;
+			if (MCsockets[i]->added)
+			{
+				p_delay = 0.0;
+				MCsockets[i]->added = False;
+				handled = True;
+			}
+		}
+		struct timeval timeoutval;
+		timeoutval.tv_sec = (long)p_delay;
+		timeoutval.tv_usec = (long)((p_delay - floor(p_delay)) * 1000000.0);
+		n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+		if (n <= 0)
+			return handled;
+		for (i = 0 ; i < MCnsockets ; i++)
+		{
+			if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
+			{
+				if (!MCsockets[i]->waiting)
+				{
+					MCsockets[i]->error = strclone("select error");
+					MCsockets[i]->doclose();
+				}
+			}
+			else
+			{
+				if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
+					MCsockets[i]->writesome();
+				if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
+					MCsockets[i]->readsome();
+			}
+		}
+		return n != 0;
+	}
     
     virtual int GetErrno(void)
     {
@@ -3093,11 +3991,172 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         *g_mainthread_errno = p_errno;
     }
     
-    virtual void LaunchDocument(MCStringRef p_document) = 0;
-    virtual void LaunchUrl(MCStringRef p_document) = 0;
+    virtual void LaunchDocument(MCStringRef p_document)
+	{
+#ifdef /* MCS_launch_document_dsk_w32 */ LEGACY_SYSTEM
+	char *t_native_document;
+
+	t_native_document = MCS_resolvepath(p_document);
+
+	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
+	//   pointer to do_launch!
+	MCS_do_launch(t_native_document);
+
+	delete t_native_document;
+#endif /* MCS_launch_document_dsk_w32 */
+		MCS_do_launch(p_document);
+	}
+
+    virtual void LaunchUrl(MCStringRef p_document)
+	{
+#ifdef /* MCS_launch_url_dsk_w32 */ LEGACY_SYSTEM
+//	MCS_do_launch(p_document);
+#endif /* MCS_launch_url_dsk_w32 */
+		MCS_do_launch(p_document);
+	}
     
-    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language) = 0;
-    virtual bool AlternateLanguage(MCListRef& r_list) = 0;
+    virtual void DoAlternateLanguage(MCStringRef p_script, MCStringRef p_language)
+	{
+#ifdef /* MCS_doalternatelanguage_dsk_w32 */ LEGACY_SYSTEM
+	MCScriptEnvironment *t_environment;
+	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+	if (t_environment == NULL)
+		MCresult -> sets("alternate language not found");
+	else
+	{
+		MCExecPoint ep(NULL, NULL, NULL);
+		ep . setsvalue(MCStringGetOldString(p_script));
+		ep . nativetoutf8();
+		
+		char *t_result;
+		t_result = t_environment -> Run(ep . getcstring());
+		t_environment -> Release();
+
+		if (t_result != NULL)
+		{
+			ep . setsvalue(t_result);
+			ep . utf8tonative();
+			MCresult -> copysvalue(ep . getsvalue());
+		}
+		else
+			MCresult -> sets("execution error");
+	}
+#endif /* MCS_doalternatelanguage_dsk_w32 */
+		MCScriptEnvironment *t_environment;
+		t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+		if (t_environment == NULL)
+			MCresult -> sets("alternate language not found");
+		else
+		{
+			MCAutoStringRefAsUTF8String t_utf8;
+			/* UNCHECKED */ t_utf8.Lock(p_script);
+			
+			char *t_result;
+			t_result = t_environment -> Run(*t_utf8);
+			t_environment -> Release();
+
+			if (t_result != NULL)
+			{
+				ep . setsvalue(t_result);
+				ep . utf8tonative();
+				MCresult -> copysvalue(ep . getsvalue());
+			}
+			else
+				MCresult -> sets("execution error");
+		}
+	}
+
+    virtual bool AlternateLanguage(MCListRef& r_list)
+	{
+#ifdef /* MCS_alternatelanguages_dsk_w32 */ LEGACY_SYSTEM
+	MCAutoListRef t_list;
+	
+	if (!MCListCreateMutable('\n', &t_list))
+		return false;
+
+	bool t_success = true;
+	HRESULT t_result;
+	t_result = S_OK;
+
+	ICatInformation *t_cat_info;
+	t_cat_info = NULL;
+	if (t_result == S_OK)
+		t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
+	
+	IEnumCLSID *t_cls_enum;
+	t_cls_enum = NULL;
+	if (t_result == S_OK)
+		t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
+
+	if (t_result == S_OK)
+	{
+		GUID t_cls_uuid;
+
+		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
+		{
+			LPOLESTR t_prog_id;
+			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
+			{
+				MCAutoStringRef t_string;
+				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
+
+				CoTaskMemFree(t_prog_id);
+			}
+		}
+	}
+
+	if (t_cls_enum != NULL)
+		t_cls_enum -> Release();
+
+	if (t_cat_info != NULL)
+		t_cat_info -> Release();
+	
+	return t_success && MCListCopy(*t_list, r_list);
+#endif /* MCS_alternatelanguages_dsk_w32 */
+		MCAutoListRef t_list;
+		
+		if (!MCListCreateMutable('\n', &t_list))
+			return false;
+
+		bool t_success = true;
+		HRESULT t_result;
+		t_result = S_OK;
+
+		ICatInformation *t_cat_info;
+		t_cat_info = NULL;
+		if (t_result == S_OK)
+			t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
+		
+		IEnumCLSID *t_cls_enum;
+		t_cls_enum = NULL;
+		if (t_result == S_OK)
+			t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
+
+		if (t_result == S_OK)
+		{
+			GUID t_cls_uuid;
+
+			while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
+			{
+				LPOLESTR t_prog_id;
+				if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
+				{
+					MCAutoStringRef t_string;
+					t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
+
+					CoTaskMemFree(t_prog_id);
+				}
+			}
+		}
+
+		if (t_cls_enum != NULL)
+			t_cls_enum -> Release();
+
+		if (t_cat_info != NULL)
+			t_cat_info -> Release();
+		
+		return t_success && MCListCopy(*t_list, r_list);
+	}
     
     virtual bool GetDNSservers(MCListRef& r_list)
     {

@@ -88,7 +88,7 @@ struct MCSystemFileHandle;
 class IO_header
 {
 public:
-#if defined(_WINDOWS_DESKTOP)
+#if 0 && defined(_WINDOWS_DESKTOP)
 	MCWinSysHandle fhandle;
 	char *buffer;
 	uint4 len;
@@ -106,6 +106,20 @@ public:
 		flags = f;
 		putback = -1;
 		is_pipe = false;
+	}
+	int getfd()
+	{
+		return -1;
+	}
+#endif
+#if defined(_WINDOWS_DESKTOP)
+    MCSystemFileHandle *handle;
+	char *buffer;   //buffer for read data
+	uint4 len;      //file length
+	IO_header(MCSystemFileHandle *p_handle, uint2 iflags)
+	{
+        handle = p_handle;
+		flags = iflags;
 	}
 	int getfd()
 	{

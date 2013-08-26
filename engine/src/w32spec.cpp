@@ -785,23 +785,23 @@ bool MCS_getdrives(MCListRef& r_list)
 //
 //	return MCS_native_path_exists(*t_resolved, p_is_file);
 //}
-
-int64_t MCS_fsize(IO_handle stream)
-{
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_fsize(stream);
-
-	if (stream->flags & IO_FAKE)
-		return stream->len;
-	else
-	{
-		DWORD t_high_word, t_low_word;
-		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
-		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
-			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
-	}
-	return 0;
-}
+//
+//int64_t MCS_fsize(IO_handle stream)
+//{
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_fsize(stream);
+//
+//	if (stream->flags & IO_FAKE)
+//		return stream->len;
+//	else
+//	{
+//		DWORD t_high_word, t_low_word;
+//		t_low_word = GetFileSize(stream -> fhandle, &t_high_word);
+//		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
+//			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
+//	}
+//	return 0;
+//}
 
 Boolean MCS_nodelay(int4 fd)
 {
@@ -1225,35 +1225,35 @@ void MCS_close(IO_handle &stream)
 //	delete tpath;
 //	return result;
 //}
-
-IO_stat MCS_flush(IO_handle stream)
-{  //flush output buffer
-	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
-IO_stat MCS_sync(IO_handle stream)
-{
-	//get the current file position pointer
-	LONG fph;
-	fph = 0;
-	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
-	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
-	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
-		return IO_ERROR;
-	else
-		return IO_NORMAL;
-}
-
-Boolean MCS_eof(IO_handle stream)
-{
-	if (stream->buffer != NULL)
-		return stream->ioptr - stream->buffer >= (int4)stream->len;
-	return (stream->flags & IO_ATEOF) != 0;
-}
+//
+//IO_stat MCS_flush(IO_handle stream)
+//{  //flush output buffer
+//	if (FlushFileBuffers(stream->fhandle) != NO_ERROR)
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//IO_stat MCS_sync(IO_handle stream)
+//{
+//	//get the current file position pointer
+//	LONG fph;
+//	fph = 0;
+//	DWORD fp = SetFilePointer(stream->fhandle, 0, &fph, FILE_CURRENT);
+//	if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+//		return IO_ERROR;
+//	DWORD nfp = SetFilePointer(stream->fhandle, fp, &fph, FILE_BEGIN);
+//	if (nfp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
+//		return IO_ERROR;
+//	else
+//		return IO_NORMAL;
+//}
+//
+//Boolean MCS_eof(IO_handle stream)
+//{
+//	if (stream->buffer != NULL)
+//		return stream->ioptr - stream->buffer >= (int4)stream->len;
+//	return (stream->flags & IO_ATEOF) != 0;
+//}
 
 static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 {
@@ -1266,62 +1266,62 @@ static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 		return IO_ERROR;
 	return IO_NORMAL;
 }
-
-IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
-{
-	IO_stat is = IO_NORMAL;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_cur(stream, offset);
-
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->ioptr + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
-	return is;
-}
-
-IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_seek_set(stream, offset);
-
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
-	return is;
-}
-
-IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
-{
-	IO_stat is = IO_NORMAL;
-	if (stream->buffer != NULL)
-		IO_set_stream(stream, stream->buffer + stream->len + offset);
-	else
-		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
-	return is;
-}
-
-int64_t MCS_tell(IO_handle stream)
-{
-	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_tell(stream);
-
-	if (stream->buffer != NULL)
-		return stream->ioptr - stream->buffer;
-
-	DWORD low;
-	LONG high;
-	high = 0;
-	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
-	return low | ((int64_t)high << 32);
-}
+//
+//IO_stat MCS_seek_cur(IO_handle stream, int64_t offset)
+//{
+//	IO_stat is = IO_NORMAL;
+//
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common implementation in mcio.cpp.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_cur(stream, offset);
+//
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->ioptr + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_CURRENT);
+//	return is;
+//}
+//
+//IO_stat MCS_seek_set(IO_handle stream, int64_t offset)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_seek_set(stream, offset);
+//
+//	IO_stat is = IO_NORMAL;
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->buffer + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_BEGIN);
+//	return is;
+//}
+//
+//IO_stat MCS_seek_end(IO_handle stream, int64_t offset)
+//{
+//	IO_stat is = IO_NORMAL;
+//	if (stream->buffer != NULL)
+//		IO_set_stream(stream, stream->buffer + stream->len + offset);
+//	else
+//		is = MCS_seek_do(stream -> fhandle, offset, FILE_END);
+//	return is;
+//}
+//
+//int64_t MCS_tell(IO_handle stream)
+//{
+//	// MW-2009-06-30: If this is a custom stream, call the appropriate callback.
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_tell(stream);
+//
+//	if (stream->buffer != NULL)
+//		return stream->ioptr - stream->buffer;
+//
+//	DWORD low;
+//	LONG high;
+//	high = 0;
+//	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
+//	return low | ((int64_t)high << 32);
+//}
 
 IO_stat MCS_putback(char c, IO_handle stream)
 {
@@ -1336,195 +1336,195 @@ IO_stat MCS_putback(char c, IO_handle stream)
 	return IO_NORMAL;
 }
 
-IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
-{
-	if (MCabortscript || ptr == NULL || stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return IO_ERROR;
-
-	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
-	// MW-2009-06-30: Refactored to common (platform-independent) implementation
-	//   in mcio.cpp
-	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
-		return MCS_fake_read(ptr, size, n, stream);
-
-	LPVOID sptr = ptr;
-	DWORD nread;
-	Boolean result = False;
-	IO_stat istat = IO_NORMAL;
-
-	if (stream->buffer != NULL)
-	{ //memory map file or process with a thread
-		uint4 nread = size * n;     //into the IO_handle's buffer
-		if (nread > stream->len - (stream->ioptr - stream->buffer))
-		{
-			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
-			nread = size * n;
-			istat = IO_EOF;
-		}
-		if (nread == 1)
-		{
-			char *tptr = (char *)ptr;
-			*tptr = *stream->ioptr++;
-		}
-		else
-		{
-			memcpy(ptr, stream->ioptr, nread);
-			stream->ioptr += nread;
-		}
-		return istat;
-	}
-	
-	if (stream -> fhandle == 0)
-	{
-		MCS_seterrno(GetLastError());
-		n = 0;
-		return IO_ERROR;
-	}
-	
-	// If this is named pipe, handle things differently -- we first peek to see how
-	// much is available to read.
-	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
-	if (stream -> is_pipe)
-	{
-		// See how much data is available - if this fails then return eof or an error
-		// depending on 'GetLastError()'.
-		uint32_t t_available;
-		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-		{
-			n = 0;
-
-			DWORD t_error;
-			t_error = GetLastError();
-			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
-			{
-				stream -> flags |= IO_ATEOF;
-				return IO_EOF;
-			}
-
-			MCS_seterrno(GetLastError());
-			return IO_ERROR;
-		}
-
-		// Adjust for putback
-		int32_t t_adjust;
-		t_adjust = 0;
-		if (stream -> putback != -1)
-			t_adjust = 1;
-
-		// Calculate how many elements we can read, and how much we need to read
-		// to make them.
-		uint32_t t_count, t_byte_count;
-		t_count = MCU_min((t_available + t_adjust) / size, n);
-		t_byte_count = t_count * size;
-
-		// Copy in the putback char if any
-		uint1 *t_dst_ptr;
-		t_dst_ptr = (uint1*)sptr;
-		if (stream -> putback != -1)
-		{
-			*t_dst_ptr++ = (uint1)stream -> putback;
-			stream -> putback = -1;
-		}
-
-		// Now read all the data we can - here we check for EOF also.
-		uint32_t t_amount_read;
-		IO_stat t_stat;
-		t_stat = IO_NORMAL;
-		t_amount_read = 0;
-		if (t_byte_count - t_adjust > 0)
-			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
-			{
-				if (GetLastError() == ERROR_HANDLE_EOF)
-				{
-					stream -> flags |= IO_ATEOF;
-					t_stat = IO_EOF;
-				}
-				else
-				{
-					MCS_seterrno(GetLastError());
-					t_stat = IO_ERROR;
-				}
-			}
-
-		// Return the number of objects of 'size' bytes that were read.
-		n = (t_amount_read + t_adjust) / size;
-
-		return t_stat;
-	}
-
-	if (stream -> putback != -1)
-	{
-		*((uint1 *)sptr) = (uint1)stream -> putback;
-		stream -> putback = -1;
-		
-		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
-		{
-			MCS_seterrno(GetLastError());
-			n = (nread + 1) / size;
-			return IO_ERROR;
-		}
-		
-		nread += 1;
-	}
-	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		n = nread / size;
-		return IO_ERROR;
-	}
-
-	if (nread < size * n)
-	{
-		stream->flags |= IO_ATEOF;
-		n = nread / size;
-		return IO_EOF;
-	}
-	else
-		stream->flags &= ~IO_ATEOF;
-
-	n = nread / size;
-	return IO_NORMAL;
-}
-
-
-IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
-{
-	if (stream == IO_stdin)
-		return IO_NORMAL;
-
-	if (stream == NULL)
-		return IO_ERROR;
-
-	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
-		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
-
-	if (stream -> fhandle == 0)
-		return IO_ERROR;
-
-	DWORD nwrote;
-	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
-	               &nwrote, NULL))
-	{
-		MCS_seterrno(GetLastError());
-		return IO_ERROR;
-	}
-	if (nwrote != size * n)
-		return IO_ERROR;
-	return IO_NORMAL;
-}
-
-bool MCS_isfake(IO_handle stream)
-{
-	return (stream -> flags & IO_FAKEWRITE) != 0;
-}
-
-uint4 MCS_faketell(IO_handle stream)
-{
-	return stream -> len;
-}
+//IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
+//{
+//	if (MCabortscript || ptr == NULL || stream == NULL)
+//		return IO_ERROR;
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return IO_ERROR;
+//
+//	// MW-2009-06-25: If this is a custom stream, call the appropriate callback.
+//	// MW-2009-06-30: Refactored to common (platform-independent) implementation
+//	//   in mcio.cpp
+//	if ((stream -> flags & IO_FAKECUSTOM) == IO_FAKECUSTOM)
+//		return MCS_fake_read(ptr, size, n, stream);
+//
+//	LPVOID sptr = ptr;
+//	DWORD nread;
+//	Boolean result = False;
+//	IO_stat istat = IO_NORMAL;
+//
+//	if (stream->buffer != NULL)
+//	{ //memory map file or process with a thread
+//		uint4 nread = size * n;     //into the IO_handle's buffer
+//		if (nread > stream->len - (stream->ioptr - stream->buffer))
+//		{
+//			n = (stream->len - (stream->ioptr - stream->buffer)) / size;
+//			nread = size * n;
+//			istat = IO_EOF;
+//		}
+//		if (nread == 1)
+//		{
+//			char *tptr = (char *)ptr;
+//			*tptr = *stream->ioptr++;
+//		}
+//		else
+//		{
+//			memcpy(ptr, stream->ioptr, nread);
+//			stream->ioptr += nread;
+//		}
+//		return istat;
+//	}
+//	
+//	if (stream -> fhandle == 0)
+//	{
+//		MCS_seterrno(GetLastError());
+//		n = 0;
+//		return IO_ERROR;
+//	}
+//	
+//	// If this is named pipe, handle things differently -- we first peek to see how
+//	// much is available to read.
+//	// MW-2012-09-10: [[ Bug 10230 ]] If this stream is a pipe then handle that case.
+//	if (stream -> is_pipe)
+//	{
+//		// See how much data is available - if this fails then return eof or an error
+//		// depending on 'GetLastError()'.
+//		uint32_t t_available;
+//		if (!PeekNamedPipe(stream -> fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
+//		{
+//			n = 0;
+//
+//			DWORD t_error;
+//			t_error = GetLastError();
+//			if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
+//			{
+//				stream -> flags |= IO_ATEOF;
+//				return IO_EOF;
+//			}
+//
+//			MCS_seterrno(GetLastError());
+//			return IO_ERROR;
+//		}
+//
+//		// Adjust for putback
+//		int32_t t_adjust;
+//		t_adjust = 0;
+//		if (stream -> putback != -1)
+//			t_adjust = 1;
+//
+//		// Calculate how many elements we can read, and how much we need to read
+//		// to make them.
+//		uint32_t t_count, t_byte_count;
+//		t_count = MCU_min((t_available + t_adjust) / size, n);
+//		t_byte_count = t_count * size;
+//
+//		// Copy in the putback char if any
+//		uint1 *t_dst_ptr;
+//		t_dst_ptr = (uint1*)sptr;
+//		if (stream -> putback != -1)
+//		{
+//			*t_dst_ptr++ = (uint1)stream -> putback;
+//			stream -> putback = -1;
+//		}
+//
+//		// Now read all the data we can - here we check for EOF also.
+//		uint32_t t_amount_read;
+//		IO_stat t_stat;
+//		t_stat = IO_NORMAL;
+//		t_amount_read = 0;
+//		if (t_byte_count - t_adjust > 0)
+//			if (!ReadFile(stream -> fhandle, (LPVOID)t_dst_ptr, t_byte_count - t_adjust, (DWORD *)&t_amount_read, NULL))
+//			{
+//				if (GetLastError() == ERROR_HANDLE_EOF)
+//				{
+//					stream -> flags |= IO_ATEOF;
+//					t_stat = IO_EOF;
+//				}
+//				else
+//				{
+//					MCS_seterrno(GetLastError());
+//					t_stat = IO_ERROR;
+//				}
+//			}
+//
+//		// Return the number of objects of 'size' bytes that were read.
+//		n = (t_amount_read + t_adjust) / size;
+//
+//		return t_stat;
+//	}
+//
+//	if (stream -> putback != -1)
+//	{
+//		*((uint1 *)sptr) = (uint1)stream -> putback;
+//		stream -> putback = -1;
+//		
+//		if (!ReadFile(stream -> fhandle, (LPVOID)((char *)sptr + 1), (DWORD)size * n - 1, &nread, NULL))
+//		{
+//			MCS_seterrno(GetLastError());
+//			n = (nread + 1) / size;
+//			return IO_ERROR;
+//		}
+//		
+//		nread += 1;
+//	}
+//	else if (!ReadFile(stream->fhandle, (LPVOID)sptr, (DWORD)size * n, &nread, NULL))
+//	{
+//		MCS_seterrno(GetLastError());
+//		n = nread / size;
+//		return IO_ERROR;
+//	}
+//
+//	if (nread < size * n)
+//	{
+//		stream->flags |= IO_ATEOF;
+//		n = nread / size;
+//		return IO_EOF;
+//	}
+//	else
+//		stream->flags &= ~IO_ATEOF;
+//
+//	n = nread / size;
+//	return IO_NORMAL;
+//}
+//
+//
+//IO_stat MCS_write(const void *ptr, uint4 size, uint4 n, IO_handle stream)
+//{
+//	if (stream == IO_stdin)
+//		return IO_NORMAL;
+//
+//	if (stream == NULL)
+//		return IO_ERROR;
+//
+//	if ((stream -> flags & IO_FAKEWRITE) == IO_FAKEWRITE)
+//		return MCU_dofakewrite(stream -> buffer, stream -> len, ptr, size, n);
+//
+//	if (stream -> fhandle == 0)
+//		return IO_ERROR;
+//
+//	DWORD nwrote;
+//	if (!WriteFile(stream->fhandle, (LPVOID)ptr, (DWORD)size * n,
+//	               &nwrote, NULL))
+//	{
+//		MCS_seterrno(GetLastError());
+//		return IO_ERROR;
+//	}
+//	if (nwrote != size * n)
+//		return IO_ERROR;
+//	return IO_NORMAL;
+//}
+//
+//bool MCS_isfake(IO_handle stream)
+//{
+//	return (stream -> flags & IO_FAKEWRITE) != 0;
+//}
+//
+//uint4 MCS_faketell(IO_handle stream)
+//{
+//	return stream -> len;
+//}
 
 void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
 {
@@ -1598,7 +1598,7 @@ real8 MCS_getfreediskspace(void)
 //}
 
 
-
+#ifdef /* MCS_loadfile_dsk_w32 */ LEGACY_SYSTEM
 void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1645,6 +1645,7 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		CloseHandle(hf);
 	}
 }
+#endif /* MCS_loadfile_dsk_w32 */
 
 void MCS_loadresfile(MCExecPoint &ep)
 {
@@ -1696,73 +1697,73 @@ void MCS_saveresfile(const MCString &s, const MCString data)
 {
 	MCresult->sets("not supported");
 }
-
-Boolean MCS_poll(real8 delay, int fd)
-{
-	Boolean handled = False;
-	int4 n;
-	uint2 i;
-	fd_set rmaskfd, wmaskfd, emaskfd;
-	FD_ZERO(&rmaskfd);
-	FD_ZERO(&wmaskfd);
-	FD_ZERO(&emaskfd);
-	uint4 maxfd = 0;
-	if (!MCnoui)
-	{
-		FD_SET(fd, &rmaskfd);
-		maxfd = fd;
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->doread)
-		{
-			MCsockets[i]->readsome();
-			i = 0;
-		}
-	}
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (MCsockets[i]->connected && !MCsockets[i]->closing
-		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
-			FD_SET(MCsockets[i]->fd, &rmaskfd);
-		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
-			FD_SET(MCsockets[i]->fd, &wmaskfd);
-		FD_SET(MCsockets[i]->fd, &emaskfd);
-		if (MCsockets[i]->fd > maxfd)
-			maxfd = MCsockets[i]->fd;
-		if (MCsockets[i]->added)
-		{
-			delay = 0.0;
-			MCsockets[i]->added = False;
-			handled = True;
-		}
-	}
-	struct timeval timeoutval;
-	timeoutval.tv_sec = (long)delay;
-	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
-	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
-	if (n <= 0)
-		return handled;
-	for (i = 0 ; i < MCnsockets ; i++)
-	{
-		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
-		{
-			if (!MCsockets[i]->waiting)
-			{
-				MCsockets[i]->error = strclone("select error");
-				MCsockets[i]->doclose();
-			}
-		}
-		else
-		{
-			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
-				MCsockets[i]->writesome();
-			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
-				MCsockets[i]->readsome();
-		}
-	}
-	return n != 0;
-}
+//
+//Boolean MCS_poll(real8 delay, int fd)
+//{
+//	Boolean handled = False;
+//	int4 n;
+//	uint2 i;
+//	fd_set rmaskfd, wmaskfd, emaskfd;
+//	FD_ZERO(&rmaskfd);
+//	FD_ZERO(&wmaskfd);
+//	FD_ZERO(&emaskfd);
+//	uint4 maxfd = 0;
+//	if (!MCnoui)
+//	{
+//		FD_SET(fd, &rmaskfd);
+//		maxfd = fd;
+//	}
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (MCsockets[i]->doread)
+//		{
+//			MCsockets[i]->readsome();
+//			i = 0;
+//		}
+//	}
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (MCsockets[i]->connected && !MCsockets[i]->closing
+//		        && !MCsockets[i]->shared || MCsockets[i]->accepting)
+//			FD_SET(MCsockets[i]->fd, &rmaskfd);
+//		if (!MCsockets[i]->connected || MCsockets[i]->wevents != NULL)
+//			FD_SET(MCsockets[i]->fd, &wmaskfd);
+//		FD_SET(MCsockets[i]->fd, &emaskfd);
+//		if (MCsockets[i]->fd > maxfd)
+//			maxfd = MCsockets[i]->fd;
+//		if (MCsockets[i]->added)
+//		{
+//			delay = 0.0;
+//			MCsockets[i]->added = False;
+//			handled = True;
+//		}
+//	}
+//	struct timeval timeoutval;
+//	timeoutval.tv_sec = (long)delay;
+//	timeoutval.tv_usec = (long)((delay - floor(delay)) * 1000000.0);
+//	n = select(maxfd + 1, &rmaskfd, &wmaskfd, &emaskfd, &timeoutval);
+//	if (n <= 0)
+//		return handled;
+//	for (i = 0 ; i < MCnsockets ; i++)
+//	{
+//		if (FD_ISSET(MCsockets[i]->fd, &emaskfd))
+//		{
+//			if (!MCsockets[i]->waiting)
+//			{
+//				MCsockets[i]->error = strclone("select error");
+//				MCsockets[i]->doclose();
+//			}
+//		}
+//		else
+//		{
+//			if (FD_ISSET(MCsockets[i]->fd, &wmaskfd))
+//				MCsockets[i]->writesome();
+//			if (FD_ISSET(MCsockets[i]->fd, &rmaskfd) && !MCsockets[i]->shared)
+//				MCsockets[i]->readsome();
+//		}
+//	}
+//	return n != 0;
+//}
 
 
 
@@ -2120,86 +2121,86 @@ extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRe
 //		return MCStringCreateWithCString("can't get", r_error);
 //	}
 //}
-
-void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
-{
-	MCScriptEnvironment *t_environment;
-	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
-	if (t_environment == NULL)
-		MCresult -> sets("alternate language not found");
-	else
-	{
-		MCExecPoint ep(NULL, NULL, NULL);
-		ep . setsvalue(MCStringGetOldString(p_script));
-		ep . nativetoutf8();
-		
-		char *t_result;
-		t_result = t_environment -> Run(ep . getcstring());
-		t_environment -> Release();
-
-		if (t_result != NULL)
-		{
-			ep . setsvalue(t_result);
-			ep . utf8tonative();
-			MCresult -> copysvalue(ep . getsvalue());
-		}
-		else
-			MCresult -> sets("execution error");
-	}
-}
-
-#define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
-        EXTERN_C const GUID DECLSPEC_SELECTANY name \
-                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
-// {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
-DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
-
-bool MCS_alternatelanguages(MCListRef& r_list)
-{
-	MCAutoListRef t_list;
-	
-	if (!MCListCreateMutable('\n', &t_list))
-		return false;
-
-	bool t_success = true;
-	HRESULT t_result;
-	t_result = S_OK;
-
-	ICatInformation *t_cat_info;
-	t_cat_info = NULL;
-	if (t_result == S_OK)
-		t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
-	
-	IEnumCLSID *t_cls_enum;
-	t_cls_enum = NULL;
-	if (t_result == S_OK)
-		t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
-
-	if (t_result == S_OK)
-	{
-		GUID t_cls_uuid;
-
-		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
-		{
-			LPOLESTR t_prog_id;
-			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
-			{
-				MCAutoStringRef t_string;
-				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
-
-				CoTaskMemFree(t_prog_id);
-			}
-		}
-	}
-
-	if (t_cls_enum != NULL)
-		t_cls_enum -> Release();
-
-	if (t_cat_info != NULL)
-		t_cat_info -> Release();
-	
-	return t_success && MCListCopy(*t_list, r_list);
-}
+//
+//void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
+//{
+//	MCScriptEnvironment *t_environment;
+//	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+//	if (t_environment == NULL)
+//		MCresult -> sets("alternate language not found");
+//	else
+//	{
+//		MCExecPoint ep(NULL, NULL, NULL);
+//		ep . setsvalue(MCStringGetOldString(p_script));
+//		ep . nativetoutf8();
+//		
+//		char *t_result;
+//		t_result = t_environment -> Run(ep . getcstring());
+//		t_environment -> Release();
+//
+//		if (t_result != NULL)
+//		{
+//			ep . setsvalue(t_result);
+//			ep . utf8tonative();
+//			MCresult -> copysvalue(ep . getsvalue());
+//		}
+//		else
+//			MCresult -> sets("execution error");
+//	}
+//}
+//
+//#define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
+//        EXTERN_C const GUID DECLSPEC_SELECTANY name \
+//                = { l, w1, w2, { b1, b2,  b3,  b4,  b5,  b6,  b7,  b8 } }
+//// {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
+//DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
+//
+//bool MCS_alternatelanguages(MCListRef& r_list)
+//{
+//	MCAutoListRef t_list;
+//	
+//	if (!MCListCreateMutable('\n', &t_list))
+//		return false;
+//
+//	bool t_success = true;
+//	HRESULT t_result;
+//	t_result = S_OK;
+//
+//	ICatInformation *t_cat_info;
+//	t_cat_info = NULL;
+//	if (t_result == S_OK)
+//		t_result = CoCreateInstance(CLSID_StdComponentCategoriesMgr, NULL, CLSCTX_INPROC_SERVER, IID_ICatInformation, (void **)&t_cat_info);
+//	
+//	IEnumCLSID *t_cls_enum;
+//	t_cls_enum = NULL;
+//	if (t_result == S_OK)
+//		t_result = t_cat_info -> EnumClassesOfCategories(1, &CATID_ActiveScriptParse, (ULONG)-1, NULL, &t_cls_enum);
+//
+//	if (t_result == S_OK)
+//	{
+//		GUID t_cls_uuid;
+//
+//		while(t_success && t_cls_enum -> Next(1, &t_cls_uuid, NULL) == S_OK)
+//		{
+//			LPOLESTR t_prog_id;
+//			if (ProgIDFromCLSID(t_cls_uuid, &t_prog_id) == S_OK)
+//			{
+//				MCAutoStringRef t_string;
+//				t_success = MCStringCreateWithChars(t_prog_id, wcslen(t_prog_id), &t_string) && MCListAppend(*t_list, *t_string);
+//
+//				CoTaskMemFree(t_prog_id);
+//			}
+//		}
+//	}
+//
+//	if (t_cls_enum != NULL)
+//		t_cls_enum -> Release();
+//
+//	if (t_cat_info != NULL)
+//		t_cat_info -> Release();
+//	
+//	return t_success && MCListCopy(*t_list, r_list);
+//}
 
 struct  LangID2Charset
 {
@@ -2282,65 +2283,65 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 	uint2 codepage = (uint2)strtoul(szLocaleData, NULL, 10);
 	return IsDBCSLeadByteEx(codepage, *s);
 }
-
-static void MCS_do_launch(const char *p_document)
-{
-	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
-	//   things always appear on top...
-	int t_result;
-	t_result = (int)ShellExecuteA(NULL, "open", p_document, NULL, NULL, SW_SHOWNORMAL);
-
-	if (t_result < 32)
-	{
-		switch(t_result)
-		{
-		case ERROR_BAD_FORMAT:
-		case SE_ERR_ACCESSDENIED:
-		case SE_ERR_FNF:
-		case SE_ERR_PNF:
-		case SE_ERR_SHARE:
-		case SE_ERR_DLLNOTFOUND:
-			MCresult -> sets("can't open file");
-		break;
-
-		case SE_ERR_ASSOCINCOMPLETE:
-		case SE_ERR_NOASSOC:
-			MCresult -> sets("no association");
-		break;
-
-		case SE_ERR_DDEBUSY:
-		case SE_ERR_DDEFAIL:
-		case SE_ERR_DDETIMEOUT:
-			MCresult -> sets("request failed");
-		break;
-
-		case 0:
-		case SE_ERR_OOM:
-			MCresult -> sets("no memory");
-		break;
-		}
-	}
-	else
-		MCresult -> clear();
-}
-
-void MCS_launch_document(const char *p_document)
-{
-	char *t_native_document;
-
-	t_native_document = MCS_resolvepath(p_document);
-
-	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
-	//   pointer to do_launch!
-	MCS_do_launch(t_native_document);
-
-	delete t_native_document;
-}
-
-void MCS_launch_url(const char *p_document)
-{
-	MCS_do_launch(p_document);
-}
+//
+//static void MCS_do_launch(const char *p_document)
+//{
+//	// MW-2011-02-01: [[ Bug 9332 ]] Adjust the 'show' hint to normal to see if that makes
+//	//   things always appear on top...
+//	int t_result;
+//	t_result = (int)ShellExecuteA(NULL, "open", p_document, NULL, NULL, SW_SHOWNORMAL);
+//
+//	if (t_result < 32)
+//	{
+//		switch(t_result)
+//		{
+//		case ERROR_BAD_FORMAT:
+//		case SE_ERR_ACCESSDENIED:
+//		case SE_ERR_FNF:
+//		case SE_ERR_PNF:
+//		case SE_ERR_SHARE:
+//		case SE_ERR_DLLNOTFOUND:
+//			MCresult -> sets("can't open file");
+//		break;
+//
+//		case SE_ERR_ASSOCINCOMPLETE:
+//		case SE_ERR_NOASSOC:
+//			MCresult -> sets("no association");
+//		break;
+//
+//		case SE_ERR_DDEBUSY:
+//		case SE_ERR_DDEFAIL:
+//		case SE_ERR_DDETIMEOUT:
+//			MCresult -> sets("request failed");
+//		break;
+//
+//		case 0:
+//		case SE_ERR_OOM:
+//			MCresult -> sets("no memory");
+//		break;
+//		}
+//	}
+//	else
+//		MCresult -> clear();
+//}
+//
+//void MCS_launch_document(const char *p_document)
+//{
+//	char *t_native_document;
+//
+//	t_native_document = MCS_resolvepath(p_document);
+//
+//	// MW-2007-12-13: [[ Bug 5680 ]] Might help if we actually passed the correct
+//	//   pointer to do_launch!
+//	MCS_do_launch(t_native_document);
+//
+//	delete t_native_document;
+//}
+//
+//void MCS_launch_url(const char *p_document)
+//{
+//	MCS_do_launch(p_document);
+//}
 //
 //MCSysModuleHandle MCS_loadmodule(const char *p_filename)
 //{
@@ -2395,11 +2396,11 @@ bool MCS_isnan(double v)
 {
 	return _isnan(v) != 0;
 }
-
-uint32_t MCS_getsyserror(void)
-{
-	return GetLastError();
-}
+//
+//uint32_t MCS_getsyserror(void)
+//{
+//	return GetLastError();
+//}
 
 //bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
 //{
