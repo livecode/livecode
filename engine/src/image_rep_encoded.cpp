@@ -139,9 +139,12 @@ MCReferencedImageRep::~MCReferencedImageRep()
 
 bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 {
+	MCAutoStringRef m_file_name_string;
+	/* UNCHECKED */ MCStringCreateWithCString(m_file_name, &m_file_name_string);
+
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
-		t_stream = MCS_open(m_file_name, IO_READ_MODE, false, false, 0);
+		t_stream = MCS_open(*m_file_name_string, kMCSOpenFileModeRead, false, false, 0);
 
 	if (t_stream == nil)
 	{

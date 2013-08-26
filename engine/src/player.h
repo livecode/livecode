@@ -107,8 +107,8 @@ class MCPlayer : public MCControl
 	static QTEffect *qteffects;
 	static uint2 neffects;
 	static void *sgSoundComp;
-	static const char  *recordtempfile;
-	static char  *recordexportfile;
+	static MCStringRef recordtempfile;
+	static MCStringRef recordexportfile;
 	static long sgSndDriver;
 	static MCPlayer *s_ephemeral_player;
 
@@ -220,7 +220,7 @@ public:
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 	bool geteffectlist(MCStringRef& r_string);
-	void recordsound(char *fname);
+	void recordsound(MCStringRef fname);
 	bool getrecordloudness(integer_t& r_loudness);
 	bool getrecordcompressionlist(MCStringRef& r_string);
 

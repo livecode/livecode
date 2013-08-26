@@ -82,53 +82,53 @@ struct MCSystemInterface
 	virtual bool GetVersion(MCStringRef& r_string) = 0;
 	virtual bool GetMachine(MCStringRef& r_string) = 0;
 	virtual MCNameRef GetProcessor(void) = 0;
-	virtual char *GetAddress(void) = 0;
+	virtual void GetAddress(MCStringRef& r_address) = 0;
 
 	virtual uint32_t GetProcessId(void) = 0;
 	
 	virtual void Alarm(real64_t p_when) = 0;
 	virtual void Sleep(real64_t p_when) = 0;
 	
-	virtual void SetEnv(const char *name, const char *value) = 0;
-	virtual char *GetEnv(const char *name) = 0;
+	virtual void SetEnv(MCStringRef p_name, MCStringRef p_value) = 0;
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value) = 0;
 	
-	virtual bool CreateFolder(const char *p_path) = 0;
-	virtual bool DeleteFolder(const char *p_path) = 0;
+	virtual bool CreateFolder(MCStringRef p_path) = 0;
+	virtual bool DeleteFolder(MCStringRef p_path) = 0;
 	
-	virtual bool DeleteFile(const char *p_path) = 0;
+	virtual bool DeleteFile(MCStringRef p_path) = 0;
 	
-	virtual bool RenameFileOrFolder(const char *p_old_name, const char *p_new_name) = 0;
+	virtual bool RenameFileOrFolder(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool BackupFile(const char *p_old_name, const char *p_new_name) = 0;
-	virtual bool UnbackupFile(const char *p_old_name, const char *p_new_name) = 0;
+	virtual bool BackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
+	virtual bool UnbackupFile(MCStringRef p_old_name, MCStringRef p_new_name) = 0;
 	
-	virtual bool CreateAlias(const char *p_target, const char *p_alias) = 0;
+	virtual bool CreateAlias(MCStringRef p_target, MCStringRef p_alias) = 0;
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
-	virtual char *ResolveAlias(const char *p_target) = 0;
+	virtual void ResolveAlias(MCStringRef p_target, MCStringRef& r_dest) = 0;
 	
 	virtual bool GetCurrentFolder(MCStringRef& r_string) = 0;
 	/* LEGACY */ char *GetCurrentFolder(void);
-	virtual bool SetCurrentFolder(const char *p_path) = 0;
+	virtual bool SetCurrentFolder(MCStringRef p_path) = 0;
 	
 	// NOTE: 'GetStandardFolder' returns a standard (not native) path.
 	virtual char *GetStandardFolder(const char *p_folder) = 0;
 	
 	virtual bool FileExists(const char *p_path) = 0;
 	virtual bool FolderExists(const char *p_path) = 0;
-	virtual bool FileNotAccessible(const char *p_path) = 0;
+	virtual bool FileNotAccessible(MCStringRef p_path) = 0;
 	
-	virtual bool ChangePermissions(const char *p_path, uint2 p_mask) = 0;
+	virtual bool ChangePermissions(MCStringRef p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
-	virtual MCSystemFileHandle *OpenFile(const char *p_path, uint32_t p_mode, bool p_map) = 0;
+	virtual MCSystemFileHandle *OpenFile(MCStringRef p_path, uint32_t p_mode, bool p_map) = 0;
 	virtual MCSystemFileHandle *OpenStdFile(uint32_t i) = 0;
-	virtual MCSystemFileHandle *OpenDevice(const char *p_path, uint32_t p_mode, const char *p_control_string) = 0;
+	virtual MCSystemFileHandle *OpenDevice(MCStringRef p_path, uint32_t p_mode, MCStringRef p_control_string) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	bool GetTemporaryFileName(MCStringRef& r_path);
 	virtual char *GetTemporaryFileName(void) = 0;
 	
-	virtual void *LoadModule(const char *p_path) = 0;
+	virtual void *LoadModule(MCStringRef p_path) = 0;
 	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol) = 0;
 	virtual void UnloadModule(void *p_module) = 0;
 	
@@ -139,13 +139,13 @@ struct MCSystemInterface
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
 	/* LEGACY */ char *PathFromNative(const char *p_rev_path);
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	/* LEGACY */ char *ResolvePath(const char *p_rev_path);
+	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
 	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	/* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
+	///* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
 	
 	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *p_context) = 0;
 	
-	virtual bool Shell(const char *p_cmd, uint32_t p_cmd_length, void*& r_data, uint32_t& r_data_length, int& r_retcode) = 0;
+	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
 
 	virtual char *GetHostName(void) = 0;
 	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
@@ -178,10 +178,10 @@ enum MCSystemUrlOperation
 	kMCSystemUrlOperationStrip = (1 << 0), // remove whitespace from the beginning / end of url string
 };
 
-bool MCSystemProcessUrl(const char *p_url, MCSystemUrlOperation p_operations, char *&r_processed_url);
-bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context);
-bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemProcessUrl(MCStringRef p_url, MCSystemUrlOperation p_operations, MCStringRef &r_processed_url);
+bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
+bool MCSystemPutUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context);
 
 //////////
 

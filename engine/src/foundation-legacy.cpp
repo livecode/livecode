@@ -647,9 +647,15 @@ bool MCStringCreateWithCString(const char* p_cstring, MCStringRef& r_string)
 	return MCStringCreateWithNativeChars((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
 }
 
-bool MCStringCreateWithCStringAndRelease(const char* p_cstring, MCStringRef& r_string)
+
+bool MCStringCreateWithOldString(const MCString& p_old_string, MCStringRef& r_string)
 {
-	return MCStringCreateWithNativeCharsAndRelease((const char_t*)p_cstring, MCCStringLength(p_cstring), r_string);
+	return MCStringCreateWithNativeChars((const char_t *)p_old_string . getstring(), p_old_string . getlength(), r_string);
+}
+
+bool MCStringCreateWithCStringAndRelease(char_t* p_cstring, MCStringRef& r_string)
+{
+	return MCStringCreateWithNativeCharsAndRelease(p_cstring, MCCStringLength((const char *)p_cstring), r_string);
 }
 
 const char *MCStringGetCString(MCStringRef p_string)

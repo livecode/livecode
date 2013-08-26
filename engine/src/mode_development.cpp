@@ -187,7 +187,9 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		return ES_NORMAL;
 	}
 	
-	if (!MCS_unlink(MClicenseparameters . license_token))
+	MCAutoStringRef license_token_string;
+	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
+	if (!MCS_unlink(*license_token_string));
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;
@@ -199,8 +201,11 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracestackptr = NULL;
 	MCtraceabort = True;
 	MCtracereturn = True;
+    
+    MCAutoStringRef t_command_path;
+    MCS_resolvepath(MCSTR(MCcmd), &t_command_path);
 	
-	s_command_path = MCS_resolvepath(MCcmd);
+	s_command_path = strdup(MCStringGetCString(*t_command_path));
 
 	atexit(restart_revolution);
 	
@@ -225,8 +230,10 @@ IO_stat MCDispatch::startup(void)
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
+    MCAutoStringRef t_startdir;
+    MCS_getcurdir(&t_startdir);
 	
-	startdir = MCS_getcurdir();
+	startdir = strdup(MCStringGetCString(*t_startdir));
 	enginedir = strclone(MCcmd);
 
 	char *eptr;

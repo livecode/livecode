@@ -1647,7 +1647,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		break;
 	case P_SCRIPT_TEXT_FONT:
 		delete MCscriptfont;
-		MCscriptfont = ep.getsvalue().clone();
+		MCscriptfont = ep.getsvalue();
 		break;
 	case P_SCRIPT_TEXT_SIZE:
 		return ep.getuint2(MCscriptsize, line, pos, EE_PROPERTY_NAN);
@@ -2004,7 +2004,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getuint2(MCdragdelta, line, pos, EE_PROPERTY_BADDRAGDELTA);
 	case P_STACK_FILE_TYPE:
 		delete MCstackfiletype;
-		MCstackfiletype = ep.getsvalue().clone();
+        MCstackfiletype = ep.getsvalue().clone();
 		return ES_NORMAL;
 	case P_STACK_FILE_VERSION:
 		{
@@ -2046,6 +2046,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getboolean(MChidewindows, line, pos, EE_PROPERTY_NAB);
 	case P_FTP_PROXY:
 		delete MCftpproxyhost;
+		
 		if (ep.getsvalue().getlength() == 0)
 			MCftpproxyhost = NULL;
 		else

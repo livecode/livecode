@@ -135,53 +135,53 @@ bool removeURLInfo(MCUrlInfo *p_info)
 extern char *MChttpheaders;
 extern real8 MCsockettimeout;
 
-bool MCSystemLoadUrl(const char *p_url, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemLoadUrl(MCStringRef p_url, MCSystemUrlCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 	
 	MCUrlInfo *t_info = nil;
-	t_success = storeURLInfo(p_url, p_callback, p_context, t_info);
+	t_success = storeURLInfo(MCStringGetCString(p_url), p_callback, p_context, t_info);
 
 	if (t_success)
 	{
 		MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-		MCAndroidEngineCall("loadURL", "biss", &t_success, t_info->id, p_url, MChttpheaders);
+		MCAndroidEngineCall("loadURL", "biss", &t_success, t_info->id, MCStringGetCString(p_url), MChttpheaders);
 	}
 
 	return t_success;
 }
 
-bool MCSystemPostUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPostUrl(MCStringRef p_url, MCDataRef p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
 	bool t_success = true;
 
 	MCUrlInfo *t_info = nil;
-	t_success = storeURLInfo(p_url, p_callback, p_context, t_info);
+	t_success = storeURLInfo(MCStringGetCString(p_url), p_callback, p_context, t_info);
 
 	if (t_success)
 	{
-		MCString t_data((const char*)p_data, p_length);
+		MCString t_data((const char*)MCDataGetBytePtr(p_data), p_length);
 		MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-		MCAndroidEngineCall("postURL", "bissd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+		MCAndroidEngineCall("postURL", "bissd", &t_success, t_info->id, MCStringGetCString(p_url), MChttpheaders, &t_data);
 	}
 
 	return t_success;
 }
 
-bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
+bool MCSystemPutUrl(MCStringRef p_url, const void *p_data, uint32_t p_length, MCSystemUrlCallback p_callback, void *p_context)
 {
     bool t_success = true;
     
     MCUrlInfo *t_info = nil;
-    t_success = storeURLInfo(p_url, p_callback, p_context, t_info);
+    t_success = storeURLInfo(MCStringGetCString(p_url), p_callback, p_context, t_info);
     
     if (t_success)
     {
         t_info->upload_byte_count = p_length;
         
-        MCString t_data((const char*)p_data, p_length);
+        MCString t_data((const char*)MCDataGetBytePtr(p_data), p_length);
         MCAndroidEngineCall("setURLTimeout", "vi", nil, (int32_t)MCsockettimeout);
-        MCAndroidEngineCall("putURL", "bissd", &t_success, t_info->id, p_url, MChttpheaders, &t_data);
+        MCAndroidEngineCall("putURL", "bissd", &t_success, t_info->id, MCStringGetCString(p_url), MChttpheaders, &t_data);
     }
     
     return t_success;
@@ -189,9 +189,9 @@ bool MCSystemPutUrl(const char *p_url, const void *p_data, uint32_t p_length, MC
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
-	MCAndroidEngineCall("launchUrl", "vs", nil, p_url);
+	MCAndroidEngineCall("launchUrl", "vs", nil, MCStringGetCString(p_url));
 	return true;
 }
 

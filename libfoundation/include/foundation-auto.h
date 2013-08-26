@@ -67,6 +67,8 @@ typedef MCAutoValueRefBase<MCBooleanRef> MCAutoBooleanRef;
 typedef MCAutoValueRefBase<MCSetRef> MCAutoSetRef;
 
 typedef MCAutoValueRefBase<MCNameRef> MCNewAutoNameRef;
+typedef MCAutoValueRefBase<MCDataRef> MCAutoDataRef;
+
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -321,14 +323,14 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if 0
 #ifdef __WINDOWS__
-#include <OleAuto.h>
+#include <WTypes.h>
 class MCAutoStringRefAsBSTR
 {
 public:
     MCAutoStringRefAsBSTR(void)
     {
-        m_ref = nil;
     }
     
     ~MCAutoStringRefAsBSTR(void)
@@ -356,6 +358,7 @@ private:
     BSTR m_bstr;
 };
 #endif // __WINDOWS__
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////
 

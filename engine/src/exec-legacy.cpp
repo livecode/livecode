@@ -421,7 +421,7 @@ void MCLegacyExecImport(MCExecContext& ctxt, MCStringRef p_filename, bool p_is_s
 	MCU_watchcursor(ctxt.GetObject()->getstack(), True);
 	IO_handle t_stream;
 	
-	if ((t_stream = MCS_open(MCStringGetCString(p_filename), IO_READ_MODE, True, False, 0)) == NULL)
+	if ((t_stream = MCS_open(p_filename, kMCSOpenFileModeRead, True, False, 0)) == NULL)
 	{
 		ctxt . LegacyThrow(EE_IMPORT_CANTOPEN);		
 		// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
@@ -494,18 +494,14 @@ void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCscriptfont, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCscriptfont);
 }
+
 
 void MCLegacySetScriptTextFont(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCCStringClone(MCStringGetCString(p_value), MCscriptfont))
-		return;
-
-	ctxt . Throw();
+	MCValueRelease(MCscriptfont);
+	MCscriptfont = MCValueRetain(p_value);
 }
 
 void MCLegacyGetScriptTextSize(MCExecContext& ctxt, uinteger_t &r_value)
@@ -832,16 +828,13 @@ void MCLegacySetVcSharedMemory(MCExecContext& ctxt, bool p_value)
 
 void MCLegacyGetVcPlayer(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCvcplayer, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCvcplayer);
 }
 
 void MCLegacySetVcPlayer(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCvcplayer;
-	MCvcplayer = strclone(MCStringGetCString(p_value));
+	MCValueRelease(MCvcplayer);
+	MCvcplayer = MCValueRetain(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -2962,7 +2962,10 @@ char *MCStack::resolve_filename(const char *filename)
 
 				strcpy(t_filename + (t_last_separator - t_stack_filename + 1), t_leaf);
 
-				if (MCS_exists(t_filename, True))
+				MCAutoStringRef t_filename_string;
+				/* UNCHECKED */ MCStringCreateWithCString(t_filename, &t_filename_string);
+
+				if (MCS_exists(*t_filename_string, True))
 					return t_filename;
 				else if (t_filename != NULL)
 					delete t_filename;

@@ -15,14 +15,12 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
-
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
 #include "parsedef.h"
 #include "mcio.h"
 #include "sysdefs.h"
-
 #include "globals.h"
 #include "object.h"
 #include "stack.h"
@@ -34,7 +32,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "card.h"
 #include "exec.h"
 #include "player.h"
-
 #include "exec-interface.h"
 
 ////////////////////////////////////////////////////////////////////////////////

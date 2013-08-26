@@ -87,39 +87,36 @@ void MCScriptingExecSendToProgram(MCExecContext& ctxt, MCStringRef p_message, MC
 		return;
 	}
 	
-	MCS_send(MCStringGetOldString(p_message), MCStringGetCString(p_program), p_event_type != nil ? MCStringGetCString(p_event_type) : nil, p_wait_for_reply);
+	MCS_send(p_message, p_program, p_event_type, p_wait_for_reply);
 }
 
 void MCScriptingExecReply(MCExecContext& ctxt, MCStringRef message, MCStringRef keyword)
 {
-	MCS_reply(MCStringGetCString(message), keyword != nil ? MCStringGetCString(keyword) : nil, False);
+	MCS_reply(message, keyword != nil ? keyword : nil, False);
 }
 
 void MCScriptingExecReplyError(MCExecContext& ctxt, MCStringRef message)
 {
-	MCS_reply(MCStringGetCString(message), nil, True);
+	MCS_reply(message, nil, True);
 }
 
 void MCScriptingExecRequestAppleEvent(MCExecContext& ctxt, int p_type, MCStringRef p_program)
 {
-	MCAutoPointer<char> t_result;
-	t_result = MCS_request_ae(p_program != nil ? MCStringGetOldString(p_program) : MCnullmcstring, p_type);
-	
 	MCAutoStringRef t_result_value;
-	/* UNCHECKED */ MCStringCreateWithCString(*t_result, &t_result_value);
+	if (p_program != nil)
+		MCS_request_ae(p_program, p_type, &t_result_value);
+	else
+		MCS_request_ae(kMCEmptyString, p_type, &t_result_value);
 	
 	ctxt . SetItToValue(*t_result_value);
 }
 
 void MCScriptingExecRequestFromProgram(MCExecContext& ctxt, MCStringRef p_message, MCStringRef p_program)
 {
-	MCAutoPointer<char> t_result;
-	t_result = MCS_request_program(MCStringGetOldString(p_message), MCStringGetCString(p_program));
+	MCAutoStringRef t_result;
+	/* UNCHECHED */ MCS_request_program(p_message, p_program, &t_result);
 	
-	MCAutoStringRef t_result_value;
-	/* UNCHECKED */ MCStringCreateWithCString(*t_result, &t_result_value);
-	
-	ctxt . SetItToValue(*t_result_value);
+	ctxt . SetItToValue(*t_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -3354,7 +3354,7 @@ void MCInterfaceExecImportGetStream(MCExecContext& ctxt, MCStringRef p_filename,
 		return;
 	}
 
-	r_stream = MCS_open(MCStringGetCString(p_filename), IO_READ_MODE, True, False, 0);
+	r_stream = MCS_open(p_filename, kMCSOpenFileModeRead, True, False, 0);
 }
 
 void MCInterfaceExecImportAudioClip(MCExecContext& ctxt, MCStringRef p_filename)
@@ -3496,18 +3496,19 @@ void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap,
 {
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
-	
+
 	IO_handle t_mstream = nil;
 	if (p_mask_filename != nil)
 	{
-		if ((t_mstream = MCS_open(MCStringGetCString(p_mask_filename), IO_WRITE_MODE, False, False, 0)) == nil)
+		
+		if ((t_mstream = MCS_open(p_mask_filename, kMCSOpenFileModeWrite, False, False, 0)) == nil)
 		{
 			ctxt . LegacyThrow(EE_EXPORT_CANTOPEN);
 			return;
 		}
 	}
 	IO_handle t_fstream;
-	if ((t_fstream = MCS_open(MCStringGetCString(p_filename), IO_WRITE_MODE, False, False, 0)) == nil)
+	if ((t_fstream = MCS_open(p_filename, kMCSOpenFileModeWrite, False, False, 0)) == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_CANTOPEN);
 		if (t_mstream != nil)
@@ -3544,7 +3545,7 @@ void MCInterfaceExportBitmapToFile(MCExecContext& ctxt, MCImageBitmap *p_bitmap,
 		MCS_close(t_mstream);
 	
 	if (t_delete_file)
-		MCS_unlink(MCStringGetCString(p_filename));
+		MCS_unlink(p_filename);
 }
 
 MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_display, MCRectangle *p_region, uint4 p_window)
