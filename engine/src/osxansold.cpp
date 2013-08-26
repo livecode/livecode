@@ -318,7 +318,7 @@ int MCA_do_file_dialog_tiger(MCExecPoint& ep, const char *p_title, const char *p
 		build_types_from_filter_records(p_filters, p_filter_count, t_types, t_type_count);
         
         MCAutoStringRef t_unresolved_path_str, t_resolved_path_str;
-		/* UNCHECKED */ MCStringCreateWithCstring(p_initial, &t_unresolved_path_str);
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_path_str);
         MCS_resolvepath(*t_unresolved_path_str, &t_resolved_path_str);
         
 		MCRemoteFileDialog(ep, p_title, p_prompt, t_types, p_filter_count, NULL, MCStringGetCString(*t_resolved_path_str), t_save, t_plural);
