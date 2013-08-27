@@ -664,8 +664,8 @@ void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 	}
 	else
 	{
-		if (MCStringCreateWithCString(label, r_string))
-			return;
+		r_string = MCValueRetain(label);
+		return;
 	}
 
 	ctxt . Throw();
@@ -673,8 +673,18 @@ void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCField::SetLabel(MCExecContext& ctxt, MCStringRef p_string)
 {
-	delete label;
-	label = strclone(MCStringGetCString(p_string));
+	if (label != nil)
+		MCValueRelease(label);
+	if (p_string != nil)
+	{
+		label = MCValueRetain(p_string);
+		return;
+	}
+
+	// Should this instead be
+	//	label = MCValueRetain(kMCEmptyString)
+	// or should setting to an empty string be explicit?
+	ctxt.Throw();
 }
 
 void MCField::GetToggleHilite(MCExecContext& ctxt, bool& r_setting)
