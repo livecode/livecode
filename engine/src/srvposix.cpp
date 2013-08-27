@@ -279,15 +279,12 @@ struct MCPosixSystem: public MCSystemInterface
 #endif
 	}
 
-	virtual char *GetAddress(void)
+	virtual void GetAddress(MCStringRef& r_address)
 	{
-		extern char *MCcmd;
-		char *buffer;
+		extern MCStringRef MCcmd;
 		utsname u;
 		uname(&u);
-		buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
-		sprintf(buffer, "%s:%s", u.nodename, MCcmd);
-		return buffer;
+		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_when)

@@ -1210,8 +1210,7 @@ void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCValueRelease(MCstackfiletype);
-	MCstackfiletype = MCValueRetain(p_value);
+	MCValueAssign(MCstackfiletype, p_value);
 }
 
 

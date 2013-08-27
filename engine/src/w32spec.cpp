@@ -102,7 +102,11 @@ void MCS_init()
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
 		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
-			MChttpproxy = ep . getsvalue() . clone();
+		{
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
+		}
 	}
 	else
 	{
@@ -118,13 +122,15 @@ void MCS_init()
 			ep.ston();
 			t_port = ep.getint4();
 			ep.setstringf("%s:%d", t_host, t_port);
-			MChttpproxy = ep . getsvalue() . clone();
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
 			delete t_host;
 		}
 	}
 
 	// On NT systems 'cmd.exe' is the command processor
-	MCshellcmd = strclone("cmd.exe");
+	MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
 
 	// MW-2005-05-26: Store a global variable containing major OS version...
 	OSVERSIONINFOA osv;
@@ -137,12 +143,12 @@ void MCS_init()
 	if (MCmajorosversion >= 0x0500)
 	{
 		MCttsize = 11;
-		MCttfont = "Tahoma";
+		MCValueAssign(MCttfont, MCSTR("Tahoma"));
 	}
 	else if (MCmajorosversion >= 0x0600)
 	{
 		MCttsize = 11;
-		MCttfont = "Segoe UI";
+		MCValueAssign(MCttfont, MCSTR("Segoe UI"));
 	}
 
 	OleInitialize(NULL); //for drag & drop
@@ -1583,7 +1589,7 @@ bool MCS_getaddress(MCStringRef& r_address)
 
 	char *buffer = new char[MAXHOSTNAMELEN + 1];
 	gethostname(buffer, MAXHOSTNAMELEN);
-	return MCStringFormat(r_address, "%s:&d", buffer, MCcmd);
+	return MCStringFormat(r_address, "%s:&d", buffer, MCStringGetCString(MCcmd));
 }
 
 bool MCS_getmachine(MCStringRef& r_string)
@@ -2615,7 +2621,7 @@ void MCS_startprocess(MCNameRef p_name, const char *doc, Open_mode mode, Boolean
 			t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
 			t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
 			t_info . lpVerb = "runas";
-			t_info . lpFile = MCcmd;
+			t_info . lpFile = MCStringGetCString(MCcmd);
 			t_info . lpParameters = t_parameters;
 			t_info . nShow = SW_HIDE;
 			if (ShellExecuteExA(&t_info) && (uintptr_t)t_info . hInstApp > 32)
