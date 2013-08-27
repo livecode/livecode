@@ -656,34 +656,17 @@ void MCField::SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStri
 
 void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (label == NULL)
-	{
-		if (!selectedtext(r_string))
-			r_string = MCValueRetain(kMCEmptyString);
-		return;
-	}
-	else
-	{
-		r_string = MCValueRetain(label);
-		return;
-	}
-
-	ctxt . Throw();
+	r_string = MCValueRetain(label);
 }
 
 void MCField::SetLabel(MCExecContext& ctxt, MCStringRef p_string)
 {
-	if (label != nil)
-		MCValueRelease(label);
 	if (p_string != nil)
 	{
-		label = MCValueRetain(p_string);
+		MCValueAssign(label, p_string);
 		return;
 	}
-
-	// Should this instead be
-	//	label = MCValueRetain(kMCEmptyString)
-	// or should setting to an empty string be explicit?
+	
 	ctxt.Throw();
 }
 

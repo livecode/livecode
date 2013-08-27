@@ -145,7 +145,7 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
-	label = nil;
+	label = MCValueRetain(kMCEmptyString);
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
