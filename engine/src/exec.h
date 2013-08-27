@@ -1723,8 +1723,8 @@ void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, in
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool);
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_target, MCCard *p_card, MCControl *p_background, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCControl *p_background, MCCard *p_card, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_target, MCControl *p_background, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt);
 void MCInterfaceExecGoCardRelative(MCExecContext& ctxt, bool p_forward, real8 p_amount);
 void MCInterfaceExecGoCardEnd(MCExecContext& ctxt, bool p_is_start);

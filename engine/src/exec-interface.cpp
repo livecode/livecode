@@ -4181,12 +4181,12 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 		ctxt . Throw();
 }
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCControl *p_background, MCCard *p_card, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
 {
 	MCInterfaceExecGo(ctxt, p_stack, p_card, p_background, nil, p_mode, p_with_background, p_marked, p_this_stack, p_visible, p_binary_fail);
 }
 
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_stack, MCControl *p_background, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
 {
 	MCInterfaceExecGo(ctxt, p_stack, p_card, p_background, p_window, WM_MODELESS, p_with_background, p_marked, p_this_stack, p_visible, p_binary_fail);
 }
