@@ -3842,7 +3842,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stdout);
             setlinebuf(stderr);
         }
-#endif /* MCS_init_dsk_mac */
+#endif /* MCS_init_dsk_mac */        
+        IO_stdin = MCsystem -> OpenStdFile(0, kMCSystemFileModeRead);
+        IO_stdout = MCsystem -> OpenStdFile(1, kMCSystemFileModeWrite);
+        IO_stderr = MCsystem -> OpenStdFile(2, kMCSystemFileModeWrite);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -3875,6 +3878,18 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         setlocale(LC_ALL, MCnullstring);
         
         _CurrentRuneLocale->__runetype[202] = _CurrentRuneLocale->__runetype[201];
+        
+        // Initialize our case mapping tables
+        
+        MCuppercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MCuppercasingtable[i] = (uint1)i;
+        UppercaseText((char *)MCuppercasingtable, 256, smRoman);
+        
+        MClowercasingtable = new uint1[256];
+        for(uint4 i = 0; i < 256; ++i)
+            MClowercasingtable[i] = (uint1)i;
+        LowercaseText((char *)MClowercasingtable, 256, smRoman);
         
         // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
         //   property here (otherwise it is nil in -ui mode).
