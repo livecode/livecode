@@ -303,8 +303,8 @@ static void create_var(char *v)
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
 
-	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	MCstacknames[MCnstacks++] = v;
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
 static void create_var(uint4 p_v)
@@ -332,7 +332,7 @@ extern void MCU_initialize_names();
 bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 
 	////
 	
@@ -363,7 +363,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 
 	MCAutoStringRef t_native_command_string;
 	MCsystem -> ResolveNativePath(*t_argv0_string, &t_native_command_string);
-	MCcmd = MCsystem -> PathFromNative(MCStringGetCString(*t_native_command_string));
+	MCsystem -> PathFromNative(*t_native_command_string, MCcmd);
 	
 	// Fetch the home folder (for resources and such) - this is either that which
 	// is specified by REV_HOME environment variable, or the folder containing the
@@ -380,8 +380,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		s_server_home = MCSTR(HOME_FOLDER);
 	else
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(strdup(MCcmd), s_server_home);
-		//(strrchr(s_server_home, '/'))[0] = '\0';
+		s_server_home = MCValueRetain(MCcmd);
 
 		uindex_t t_last_separator;
 		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, 0, kMCStringOptionCompareExact, t_last_separator);
@@ -466,7 +465,6 @@ static void X_load_extensions(MCServerScript *p_script)
 {
 	MCAutoStringRef t_dir;
 	MCS_getcurdir(&t_dir);
-	
 	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir(MCSTR("externals")))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
@@ -478,7 +476,7 @@ static void X_load_extensions(MCServerScript *p_script)
 void X_main_loop(void)
 {
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 	
 
 	if (MCserverinitialscript == nil)

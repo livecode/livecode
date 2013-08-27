@@ -36,8 +36,8 @@ extern int MCidleRate;
 
 
 extern Boolean MCaqua;
-extern char *MCcmd;
-extern char *MCfiletype;
+extern MCStringRef MCcmd;
+extern MCStringRef MCfiletype;
 extern MCStringRef MCstackfiletype;
 
 extern Boolean MCuseXft ;
@@ -54,7 +54,7 @@ extern Boolean MCXVideo ;
 extern Window MClastvideowindow ;
 #endif
 
-extern char **MCstacknames;
+extern MCStringRef *MCstacknames;
 
 extern int2 MCnstacks;
 extern Boolean MCnofiles;
@@ -92,7 +92,7 @@ extern Boolean MCshmpix ;
 extern Boolean MCvcshm;
 extern Boolean MCmmap;
 extern Boolean MCnoui;
-extern MCStringRef MCdisplayname;
+extern char *MCdisplayname;
 extern Boolean MCshmoff;
 extern Boolean MCshmon;
 extern uint4 MCvisualid;
@@ -134,7 +134,7 @@ extern char MCrecordinput[5];
 extern Boolean MCuselzw;
 
 extern real8 MCinfinity;
-extern MCStringRef MCstackbottom;
+extern char* MCstackbottom;
 extern Boolean MCcheckstack;
 extern Boolean MCswapbytes;
 extern Boolean MCtranslatechars;
@@ -254,9 +254,9 @@ extern MCStringRef MCvcplayer;
 extern MCStringRef MCftpproxyhost;
 extern uint2 MCftpproxyport;
 
-extern char *MChttpproxy;
+extern MCStringRef MChttpproxy;
 
-extern char *MChttpheaders;
+extern MCStringRef MChttpheaders;
 extern int4 MCrandomseed;
 extern Boolean MCshowinvisibles;
 extern MCObjectList *MCbackscripts;
@@ -273,7 +273,7 @@ extern MCVariable *MCresult;
 extern MCVariable *MCurlresult;
 extern MCVariable *MCglobals;
 extern MCVariable *MCdialogdata;
-extern char *MChcstat;
+extern MCStringRef MChcstat;
 extern Boolean MCexitall;
 extern int4 MCretcode;
 extern Boolean MCrecording;

@@ -895,7 +895,7 @@ IO_handle android_get_mainstack_stream(void)
 	char *t_asset_filename;
 	t_asset_filename = nil;
 
-	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCcmd))
+	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCStringGetCString(MCcmd)))
 		return nil;
 
 	IO_handle t_stream;
@@ -932,7 +932,7 @@ static void *mobile_main(void *arg)
 
 	// MW-2011-08-11: [[ Bug 9671 ]] Make sure we initialize MCstackbottom.
 	int i;
-	/* UNCHECKED */ MCStringCreateWithCString((char *)&i, MCstackbottom);
+	MCstackbottom = (char *)&i;
 
 	// Make sure when a 'SIGINT' is sent to this thread, it causes any system
 	// calls to be interrupted (this thread will spend much of its time in a
@@ -2075,7 +2075,7 @@ bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
 // identify device / android version by:
 //    MANUFACTURER|MODEL|DEVICE|VERSION.RELEASE|VERSION.INCREMENTAL
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 bool MCAndroidLoadDeviceConfiguration()
 {
@@ -2099,7 +2099,7 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCcmd);
+		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
 
 	if (t_success)
 	{

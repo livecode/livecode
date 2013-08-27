@@ -1100,7 +1100,7 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
 	MCresult->sets("not supported");
 }
 
-MCStringRef MCS_request_program(MCStringRef p_message, MCStringRef p_program)
+bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result)
 {
 	MCresult->sets("not supported");
 	return NULL;

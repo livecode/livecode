@@ -1206,16 +1206,11 @@ void MCInterfaceSetDragDelta(MCExecContext& ctxt, uinteger_t p_value)
 void MCInterfaceGetStackFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	r_value = MCValueRetain(MCstackfiletype);
-	if (MCStringIsEqualTo(MCstackfiletype, r_value, kMCStringOptionCompareExact))
-		return;
-
-	ctxt . Throw();
 }
 
 void MCInterfaceSetStackFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCValueRelease(MCstackfiletype);
-	MCstackfiletype = MCValueRetain(p_value);
+	MCValueAssign(MCstackfiletype, p_value);
 }
 
 

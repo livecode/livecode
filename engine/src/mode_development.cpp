@@ -143,13 +143,13 @@ static void restart_revolution(void)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #elif defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #else
 #error restart not defined
@@ -187,7 +187,9 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		return ES_NORMAL;
 	}
 	
-	if (!MCS_unlink(MCSTR(MClicenseparameters . license_token)))
+	MCAutoStringRef license_token_string;
+	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
+	if (!MCS_unlink(*license_token_string));
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;
@@ -201,9 +203,13 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracereturn = True;
     
     MCAutoStringRef t_command_path;
-    MCS_resolvepath(MCSTR(MCcmd), &t_command_path);
+    MCS_resolvepath(MCcmd, &t_command_path);
 	
+<<<<<<< HEAD
 	s_command_path = MCValueRetain(*t_command_path);
+=======
+	s_command_path = MCValueRetain(*t_command_path));
+>>>>>>> upstream/refactor-syntax_unicode
 
 	atexit(restart_revolution);
 	
@@ -232,7 +238,7 @@ IO_stat MCDispatch::startup(void)
     MCS_getcurdir(&t_startdir);
 	
 	startdir = strdup(MCStringGetCString(*t_startdir));
-	enginedir = strclone(MCcmd);
+	enginedir = strdup(MCStringGetCString(MCcmd));
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -268,7 +274,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
+	sptr -> setfilename(strdup(MCStringGetCString(MCcmd)));
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{

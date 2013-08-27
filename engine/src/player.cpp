@@ -2661,18 +2661,13 @@ Boolean MCPlayer::qt_prepare(void)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
         MCAutoStringRef t_filename_str;
         /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(filename), &t_filename_str);
-		//char *t_filename;
-		//t_filename = getstack() -> resolve_filename(filename);
-
-		//char *t_resolved_filename;
+		
         MCAutoStringRef t_resolved_filename_str;
-		//t_resolved_filename = MCS_resolvepath(t_filename);
 		
 		CFStringRef t_cf_filename;
 		t_cf_filename = NULL;
 		if (MCS_resolvepath(*t_filename_str, &t_resolved_filename_str))
-			t_cf_filename = CFStringCreateWithCString(kCFAllocatorDefault, MCStringGetCString(*t_resolved_filename_str), CFStringGetSystemEncoding());
-		
+			/* UNCHECKED */ MCStringConvertToCFStringRef(*t_resolved_filename_str, t_cf_filename);
 		OSErr t_error;
 		Handle t_data_ref;
 		OSType t_data_ref_type;
@@ -2691,12 +2686,6 @@ Boolean MCPlayer::qt_prepare(void)
 			
 		if (t_cf_filename != NULL)
 			CFRelease(t_cf_filename);
-			
-//		if (t_resolved_filename != NULL)
-//			delete t_resolved_filename;
-
-//		if (t_filename != NULL)
-//			delete t_filename;
 
 #elif defined(_WINDOWS_DESKTOP)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
@@ -4412,8 +4401,6 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 	ComponentResult result = 0;
 	Movie tmovie = nil;
 
-	//char *t_src_resolved = NULL;
-	//char *t_dst_resolved = NULL;
     MCAutoStringRef t_src_resolved_str, t_dst_resolved_str;
     MCAutoStringRef t_sourcefile, t_destfile;
     /* UNCHECKED */ MCStringCreateWithCString(sourcefile, &t_sourcefile);
@@ -4431,9 +4418,6 @@ static void exportToSoundFile(const char *sourcefile, const char *destfile)
 		t_success = path_to_dataref(MCStringGetCString(*t_src_resolved_str), t_src_rec) &&
 			path_to_dataref(MCStringGetCString(*t_dst_resolved_str), t_dst_rec);
 	}
-
-	//free(t_src_resolved);
-	//free(t_dst_resolved);
 
 	Boolean isActive = true;
 	QTVisualContextRef aVisualContext = NULL;

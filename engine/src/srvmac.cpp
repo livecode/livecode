@@ -273,13 +273,10 @@ struct MCMacSystem: public MCSystemInterface
 	
 	virtual void GetAddress(MCStringRef& r_address)
 	{
-		extern char *MCcmd;
-		//char *buffer;
+		extern MCStringRef MCcmd;	
 		utsname u;
 		uname(&u);
-		//buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
-		MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
-		//return buffer;
+		MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_when)
@@ -1088,7 +1085,9 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	if (!t_error)
 	{
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_src_path), &t_src_ref);
+		MCAutoStringRef t_src_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_src_path, &t_src_path_str);
+		t_os_error = do_nativepathtoref(*t_src_path_str, &t_src_ref);
 		if (t_os_error != noErr)
 			t_error = true;
 	}
@@ -1101,7 +1100,9 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	if (!t_error)
 	{
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_dst_path), &t_dst_ref);
+		MCAutoStringRef t_dst_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_dst_path, &t_dst_path_str);
+		t_os_error = do_nativepathtoref(*t_dst_path_str, &t_dst_ref);
 		if (t_os_error == noErr)
 			FSDeleteObject(&t_dst_ref);
 		
@@ -1122,11 +1123,14 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	
 	if (!t_error)
 	{
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+		const char *MCfiletype_cstring = MCStringGetCString(MCfiletype);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype_cstring[4], 4);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype_cstring, 4);
+		
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
 	}	
+	MCStringChar
 	
 	bool t_created_dst;
 	t_created_dst = false;
@@ -1225,7 +1229,9 @@ static Boolean do_createalias(const char *p_source_path, const char *p_dest_path
 	{
 		FSRef t_dst_ref;
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_dest_path), &t_dst_ref);
+		MCAutoStringRef t_dest_path;
+		/* UNCHECKED */ MCStringCreateWithCString(p_dest_path, &t_dest_path);
+		t_os_error = do_nativepathtoref(*t_dest_path, &t_dst_ref);
 		if (t_os_error == noErr)
 			return False; // we expect an error
 	}
@@ -1234,7 +1240,9 @@ static Boolean do_createalias(const char *p_source_path, const char *p_dest_path
 	if (!t_error)
 	{
 		OSErr t_os_error;
-		t_os_error = do_nativepathtoref(MCSTR(p_source_path), &t_src_ref);
+		MCAutoStringRef t_source_path;
+		/* UNCHECKED */ MCStringCreateWithCString(p_source_path, &t_source_path);
+		t_os_error = do_nativepathtoref(*t_source_path, &t_src_ref);
 		if (t_os_error != noErr)
 			t_error = true;
 	}
@@ -1349,7 +1357,9 @@ static Boolean do_createalias(const char *p_source_path, const char *p_dest_path
 static char *do_resolvealias(const char *p_path)
 {
 	FSRef t_fsref;
-	if (do_nativepathtoref(MCSTR(p_path), &t_fsref) != noErr)
+	MCAutoStringRef t_path;
+	/* UNCHECKED */ MCStringCreateWithCString(p_path, &t_path);
+	if (do_nativepathtoref(*t_path, &t_fsref) != noErr)
 		return NULL;
 	
 	Boolean t_is_folder;
@@ -1528,11 +1538,14 @@ bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 
 bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_handle &r_file, MCStringRef &r_name)
 {
-	if (!MCStringFormat(r_name, "%s/%sXXXXXXXX", MCStringGetCString(p_path), MCStringGetCString(p_prefix)))
+	char *t_temp_file = NULL;
+	if (!MCCStringFormat(t_temp_file, "%s/%sXXXXXXXX", p_path, MCStringGetCString(p_prefix)))
 		return false;
 	
 	int t_fd;
-	t_fd = mkstemp(strdup(MCStringGetCString(r_name)));
+	t_fd = mkstemp(t_temp_file);
+	/* UNCHECKED */ MCStringCreateWithCString(t_temp_file, r_name);
+	MCCStringFree(t_temp_file);
 	if (t_fd == -1)
 	{
 		return false;

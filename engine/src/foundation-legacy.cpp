@@ -689,6 +689,36 @@ bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstrin
 	return MCStringIsEqualToNativeChars(p_string, (const char_t *)p_oldstring . getstring(), p_oldstring . getlength(), p_options);
 }
 
+bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
+{
+	char *t_end;
+	t_end = nil;
+	
+	integer_t t_value;
+	t_value = strtol(MCStringGetCString(p_string), &t_end, 10);
+	
+	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+		return false;
+	
+	r_integer = t_value;
+	return true;
+}
+
+bool MCStringToDouble(MCStringRef p_string, double& r_real)
+{
+	char *t_end;
+	t_end = nil;
+	
+	double t_value;
+	t_value = strtod(MCStringGetCString(p_string), &t_end);
+	
+	if (t_end != MCStringGetCString(p_string) + strlen(MCStringGetCString(p_string)))
+		return false;
+	
+	r_real = t_value;
+	return true;
+}
+
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 bool MCCStringToCFString(const char *p_cstring, CFStringRef& r_cfstring)
 {

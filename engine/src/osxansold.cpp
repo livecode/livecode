@@ -317,12 +317,12 @@ int MCA_do_file_dialog_tiger(MCExecPoint& ep, const char *p_title, const char *p
 		char **t_types = NULL;
 		build_types_from_filter_records(p_filters, p_filter_count, t_types, t_type_count);
         
-        MCAutoStringRef t_resolved_path_str;
-        MCS_resolvepath(MCSTR(p_initial), &t_resolved_path_str);
+        MCAutoStringRef t_unresolved_path_str, t_resolved_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_path_str);
+        MCS_resolvepath(*t_unresolved_path_str, &t_resolved_path_str);
         
 		MCRemoteFileDialog(ep, p_title, p_prompt, t_types, p_filter_count, NULL, MCStringGetCString(*t_resolved_path_str), t_save, t_plural);
-	//	if (t_resolved_path != NULL)
-	//		delete [] t_resolved_path;
+	
 		if (t_types != NULL)
 		{
 			for (uint32_t i = 0; i < p_filter_count; i++)
@@ -370,7 +370,9 @@ int MCA_do_file_dialog_tiger(MCExecPoint& ep, const char *p_title, const char *p
 	
 	// Determine wheter the initial location is a folder
 	bool t_initial_is_folder;
-	if (p_initial != NULL && MCS_exists(MCSTR(p_initial), False))
+	MCAutoStringRef t_initial_loc_str;
+	/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_loc_str);
+	if (p_initial != NULL && MCS_exists(*t_initial_loc_str, False))
 		t_initial_is_folder = true;
 	else
 		t_initial_is_folder = false;

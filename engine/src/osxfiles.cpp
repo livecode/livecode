@@ -902,7 +902,7 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
 
-	char *controlptr = MCStringGetCString(MCserialcontrolsettings);
+	char *controlptr = strdup(MCStringGetCString(MCserialcontrolsettings));
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)
@@ -1260,11 +1260,6 @@ bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_ty
  *********************************************************************/
 void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
 {
-
-	const char *t_dest = nil;
-	if (p_destination != nil)
-		t_dest = MCStringGetCString(p_destination);
-
 	const char *t_error;
 	t_error = NULL;
 	
@@ -1279,7 +1274,7 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_destination)
 	bool t_dest_fork_opened;
 	t_dest_fork_opened = false;
 	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_path(t_dest, fsWrPerm, true, &t_dest_ref); // RESFORK
+		t_error = MCS_openresourcefork_with_path(MCStringGetCString(p_destination), fsWrPerm, true, &t_dest_ref); // RESFORK
 	if (t_error == NULL)
 		t_dest_fork_opened = true;
 
@@ -1455,29 +1450,6 @@ const char *MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bo
 	*r_fork_ref = t_fork_ref;
 	return t_error;
 }
-/*
-const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
-{
-	const char *t_error;
-	t_error = NULL;
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(strdup(p_path));
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, &t_ref);
-	if (t_os_error != noErr)
-		t_error = "can't open file";
-		
-	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
-		
-	delete t_utf8_path;
-		
-	return t_error;	
-}
-*/
 
 void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
 {
@@ -1509,30 +1481,6 @@ bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool
 	return MCS_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
 }
 
-/*
-const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
-{
-	const char *t_error;
-	t_error = NULL;
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(strdup(p_path));
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, &t_ref);
-	if (t_os_error != noErr)
-		t_error = "can't open file";
-		
-	if (t_error == NULL)
-		t_error = MCS_openresourcefile_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
-		
-	delete t_utf8_path;
-		
-	return t_error;	
-}
-*/
-
 const char *MCS_openresourcefork_with_path(const MCString& p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
 {
 	const char *t_error;
@@ -1558,27 +1506,17 @@ void MCS_loadresfile(MCExecPoint &ep)
 		MCresult->sets("can't open file");
 		return;
 	}
-	/*
-	char *t_path = ep.getsvalue().clone();
-	ep.clear();
 	
-	const char *t_open_res_error;
-	t_open_res_error = NULL;
-	*/
 	MCAutoStringRef t_open_res_error_string;
 	MCAutoStringRef t_path_string;
 	/* UNCHECKED */ ep . copyasstringref(&t_path_string);
 
 	short fRefNum;
 	MCS_openresourcefork_with_path(*t_path_string, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
-
-	const char *t_open_res_error = nil;
-	if (t_open_res_error_string != nil)
-		t_open_res_error =  MCStringGetCString(p_open_res_error_string);
 	
-	if (t_open_res_error != NULL)
+	if (*t_open_res_error_string != NULL)
 	{
-		MCresult -> sets(t_open_res_error);
+		MCresult -> sets(MCStringGetCString(*t_open_res_error_string));
 		
 		return;
 	}
