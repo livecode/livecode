@@ -380,7 +380,7 @@ MCStringRef MCttfont = MCSTR("MS Sans Serif");
 uint2 MCttsize = 12;
 #elif defined(_MACOSX)
 uint2 MClook = LF_MAC;
-StringRef MCttbgcolor = MCSTR("255,255,207");
+MCStringRef MCttbgcolor = MCSTR("255,255,207");
 MCStringRef MCttfont = MCSTR("Lucida Grande");
 uint2 MCttsize = 11;
 #else

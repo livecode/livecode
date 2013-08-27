@@ -203,9 +203,9 @@ static char *folder_path_from_intial_path(const char *p_path)
     if (strrchr(p_path, '/') != nil)
     {
 		MCAutoStringRef t_original_path;
-        /* UNCHECKED */ MCStringCreateWithCString(p_path, &t_original_path)
+        /* UNCHECKED */ MCStringCreateWithCString(p_path, &t_original_path);
         if (*p_path != '/')
-            MCS_resolvepath(t_original_path, &t_path_str);
+            MCS_resolvepath(*t_original_path, &t_path_str);
         else
 			t_path_str = t_original_path;
     }
@@ -218,7 +218,7 @@ static char *folder_path_from_intial_path(const char *p_path)
     else
     {
 		uindex_t t_index;
-        if (MCStringLastIndexOfLastChar(*t_path_str, '/', kMCStringCompareExact, UINDEX_MAX, t_index))
+        if (MCStringLastIndexOfChar(*t_path_str, '/', kMCStringOptionCompareExact, UINDEX_MAX, t_index))
         {
 			MCAutoStringRef t_folder_str;
             /* UNCHECKED */ MCStringCopySubstring(*t_path_str, MCRangeMake(0, t_index), &t_folder_str);

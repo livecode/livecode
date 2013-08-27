@@ -1001,6 +1001,14 @@ template<typename T> inline T MCValueRetain(T value)
 	return (T)MCValueRetain((MCValueRef)value);
 }
 
+// Utility function for assigning to MCValueRef vars.
+template<typename T> inline void MCValueAssign(T& dst, T src)
+{
+	MCValueRetain(src);
+	MCValueRelease(dst);
+	dst = src;
+}
+
 template<typename T> inline bool MCValueInter(T value, T& r_value)
 {
 	MCValueRef t_unique_value;

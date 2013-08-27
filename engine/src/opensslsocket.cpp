@@ -581,7 +581,7 @@ MCSocket *MCS_open_socket(char *name, Boolean datagram, MCObject *o, MCNameRef m
 			t_info->m_socket = s;
 			s->resolve_state = kMCSocketStateResolving;
 			MCAutoStringRef t_sname_string;
-			/* UNCHECKED */ MCStringCreateCString(s->name, &t_sname_string);
+			/* UNCHECKED */ MCStringCreateWithCString(s->name, &t_sname_string);
 			if (!MCS_name_to_sockaddr(*t_sname_string, &t_info->m_sockaddr, open_socket_resolve_callback, t_info))
 			{
 				MCMemoryDelete(t_info);
@@ -1778,7 +1778,7 @@ Boolean MCSocket::initsslcontext()
 				for (i = 0; i < ncerts; i++)
 				{
 					MCAutoStringRef t_certpath;
-					/* UNCHECKED */ MCStringCreateWithOldString(certs[i].getsvalue(), &t_certpath);
+					/* UNCHECKED */ MCStringCreateWithOldString(certs[i], &t_certpath);
 
 					MCAutoPointer<char> t_utf8_certpath;
 					MCAutoStringRef t_resolved_certpath;
@@ -1789,7 +1789,7 @@ Boolean MCSocket::initsslcontext()
 							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_utf8_certpath));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", utf8str);
+						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", t_utf8_certpath);
 					}
 				}
 			}
