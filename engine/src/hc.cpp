@@ -1565,7 +1565,6 @@ IO_stat MCHcbkgd::parse(char *sptr)
 	maxid = MCU_max(id, maxid);
 	uint4 offset;
 	uint2 ntext;
-	char *MChcstat_cstring;
 	if (version == 1)
 	{
 		bmapid = swap_uint4(&uint4ptr[3]);
@@ -1876,7 +1875,6 @@ void MCHcstak::getatts(uint2 aid, const char *&font,
 IO_stat MCHcstak::read(IO_handle stream)
 {
 	char header[HC_HEADER_SIZE];
-	char *MChcstat_cstring;
 	uint4 boffset = 0;
 	uint4 roffset = 0;
 	uint4 rsize = 0;

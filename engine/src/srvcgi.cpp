@@ -1665,7 +1665,7 @@ bool MCS_get_session_save_path(MCStringRef& r_path)
 	if (s_session_temp_dir != NULL)
 	{
 		r_path = MCValueRetain(s_session_temp_dir);
-		return MCStringIsEqualTo(s_session_temp_dir, r_path, kMCStringOptionCompareExact);
+		return true;
 	}
 	
 	r_path = MCValueRetain(s_session_temp_dir);
