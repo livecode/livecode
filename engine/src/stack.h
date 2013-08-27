@@ -40,8 +40,8 @@ Fontcache;
 
 typedef struct
 {
-	char *stackname;
-	char *filename;
+	MCStringRef stackname;
+	MCStringRef filename;
 }
 MCStackfile;
 

@@ -401,8 +401,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		stackfiles = new MCStackfile[ts];
 		while (ts--)
 		{
-			stackfiles[ts].stackname = strclone(sref.stackfiles[ts].stackname);
-			stackfiles[ts].filename = strclone(sref.stackfiles[ts].filename);
+			stackfiles[ts].stackname = MCValueRetain(sref.stackfiles[ts].stackname);
+			stackfiles[ts].filename = MCValueRetain(sref.stackfiles[ts].filename);
 		}
 	}
 	else
@@ -539,8 +539,8 @@ MCStack::~MCStack()
 	{
 		while (nstackfiles--)
 		{
-			delete stackfiles[nstackfiles].stackname;
-			delete stackfiles[nstackfiles].filename;
+			MCValueRelease(stackfiles[nstackfiles].stackname);
+			MCValueRelease(stackfiles[nstackfiles].filename);
 		}
 		delete stackfiles;
 	}

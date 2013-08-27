@@ -1396,7 +1396,7 @@ void MCStack::GetStackFiles(MCExecContext& ctxt, MCStringRef& r_files)
 		MCAutoStringRef t_filename;
 
 		if (t_success)
-			t_success = MCStringFormat(&t_filename, "%s,%s", stackfiles[i].stackname, stackfiles[i].filename);
+			t_success = MCStringFormat(&t_filename, "%s,%s", MCStringGetCString(stackfiles[i].stackname), MCStringGetCString(stackfiles[i].filename));
 
 		if (t_success)
 			t_success = MCListAppend(*t_file_list, *t_filename);
@@ -1415,8 +1415,8 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 {
 	while (nstackfiles--)
 	{
-		delete stackfiles[nstackfiles].stackname;
-		delete stackfiles[nstackfiles].filename;
+		MCValueRelease(stackfiles[nstackfiles].stackname);
+		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
 
@@ -1452,8 +1452,8 @@ void MCStack::SetStackFiles(MCExecContext& ctxt, MCStringRef p_files)
 			if (t_success && MCStringGetLength(*t_file_name) != 0)
 			{
 				MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-				newsf[nnewsf].stackname = strclone(MCStringGetCString(*t_stack_name));
-				newsf[nnewsf].filename = strclone(MCStringGetCString(*t_file_name));
+				newsf[nnewsf].stackname = MCValueRetain(*t_stack_name);
+				newsf[nnewsf].filename = MCValueRetain(*t_file_name);
 				nnewsf++;
 			}
 		}

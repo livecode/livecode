@@ -2321,8 +2321,8 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 		uint2 i;
 		for (i = 0 ; i < nstackfiles ; i++)
 		{
-			ep.concatcstring(stackfiles[i].stackname, EC_RETURN, i == 0);
-			ep.concatcstring(stackfiles[i].filename, EC_COMMA, false);
+			ep.concat(stackfiles[i].stackname, EC_RETURN, i == 0);
+			ep.concat(stackfiles[i].filename, EC_COMMA, false);
 		}
 	}
 }
@@ -2339,8 +2339,8 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 		{
 			*cptr++ = '\0';
 			MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-			newsf[nnewsf].stackname = strclone(eptr);
-			newsf[nnewsf].filename = strclone(cptr);
+			newsf[nnewsf].stackname = MCValueRetain(eptr);
+			newsf[nnewsf].filename = MCValueRetain(cptr);
 			nnewsf++;
 		}
 		eptr = NULL;
@@ -2353,8 +2353,8 @@ void MCStack::setstackfiles(const MCString &s)
 {
 	while (nstackfiles--)
 	{
-		delete stackfiles[nstackfiles].stackname;
-		delete stackfiles[nstackfiles].filename;
+		MCValueRelease(stackfiles[nstackfiles].stackname);
+		MCValueRelease(stackfiles[nstackfiles].filename);
 	}
 	delete stackfiles;
 	char *d = s.clone();
@@ -2364,17 +2364,19 @@ void MCStack::setstackfiles(const MCString &s)
 
 char *MCStack::getstackfile(const MCString &s)
 {
+	MCAutoStringRef tmp_s;
+	MCStringCreateWithOldString(s, &tmp_s);
 	if (stackfiles != NULL)
 	{
 		uint2 i;
 		for (i = 0 ; i < nstackfiles ; i++)
-			if (s == stackfiles[i].stackname)
+			if (MCStringIsEqualTo(stackfiles[i].stackname, *tmp_s, kMCStringOptionCompareExact)
 			{
-				if (filename == NULL || stackfiles[i].filename[0] == '/' || stackfiles[i].filename[1] == ':')
-					return strclone(stackfiles[i].filename);
+				if (filename == NULL || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 1) == ':')
+					return strclone(MCStringGetCString(stackfiles[i].filename));
 
 				// OK-2007-11-13 : Fix for crash caused by strcpy writing over sptr. sptr extended by 1 byte to cover null termination char.
-				char *sptr = new char[strlen(filename) + strlen(stackfiles[i].filename) + 1];
+				char *sptr = new char[strlen(filename) + MCStringGetLength(stackfiles[i].filename) + 1];
 				strcpy(sptr, filename);
 				char *eptr = strrchr(sptr, PATH_SEPARATOR);
 
@@ -2383,7 +2385,7 @@ char *MCStack::getstackfile(const MCString &s)
 				else
 					eptr++;
 
-				strcpy(eptr, stackfiles[i].filename);
+				strcpy(eptr, MCStringGetCString(stackfiles[i].filename));
 				return sptr;
 			}
 	}
