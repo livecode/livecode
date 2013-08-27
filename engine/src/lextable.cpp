@@ -1945,6 +1945,8 @@ static LT sugar_table[] =
 		{"open", TT_UNDEFINED, SG_OPEN},
 		{"optimized", TT_UNDEFINED, SG_OPTIMIZED},
 		{"options", TT_UNDEFINED, SG_OPTIONS},
+        // MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},

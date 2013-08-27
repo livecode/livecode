@@ -591,7 +591,8 @@ Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 	return ES_NORMAL;
 }
 
-Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
+// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+Exec_stat MCVariableArray::intersectarray(MCVariableArray& v, bool p_recursive)
 {
 	uint4 i;
 	MCHashentry *last;
@@ -602,7 +603,6 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 			MCHashentry *e = table[i];
 			while (e != NULL)
 			{
-                // MERG-2013-08-22: [[ Bug 11117 ]] Support multi-dimensional arrays
                 MCHashentry *t_entry = v.lookuphash(e->string, False, False);
 				if (t_entry == NULL)
 				{
@@ -621,8 +621,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 				}
 				else
 				{
-                    if (t_entry -> value . is_array() && e -> value . is_array())
-                        e -> value . intersectarray(t_entry -> value);
+                    if (t_entry -> value . is_array() && e -> value . is_array() && p_recursive)
+                        e -> value . intersectarray(t_entry -> value, p_recursive);
 					last = e;
 					e = e->next;
 				}
@@ -632,7 +632,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 	return ES_NORMAL;
 }
 
-Exec_stat MCVariableArray::unionarray(MCVariableArray& v)
+// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+Exec_stat MCVariableArray::unionarray(MCVariableArray& v, bool p_recursive)
 {
 	uint4 i;
 	for (i = 0 ; i < v.tablesize ; i++)
@@ -641,15 +642,14 @@ Exec_stat MCVariableArray::unionarray(MCVariableArray& v)
 			MCHashentry *e = v.table[i];
 			while (e != NULL)
 			{
-                // MERG-2013-08-22: [[ Bug 11117 ]] Support multi-dimensional arrays
                 MCHashentry *t_entry = lookuphash(e->string, False, False);
                 if (t_entry == NULL)
 				{
 					MCHashentry *ne = lookuphash(e->string, False, True);
 					ne -> value . assign(e -> value);
 				}
-                else if (e -> value . is_array())
-                    t_entry -> value . unionarray(e ->value);
+                else if (e -> value . is_array() && p_recursive)
+                    t_entry -> value . unionarray(e ->value, p_recursive);
                
                 e = e->next;
 			}
