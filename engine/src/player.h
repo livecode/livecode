@@ -89,14 +89,14 @@ class MCPlayer : public MCControl
 	real8 rate;
 	uint4 starttime;
 	uint4 endtime;
-	char *userCallbackStr;  //string contains user movie callbacks
+	MCStringRef userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;
 	int4 lasttime;
 
 #ifdef FEATURE_MPLAYER
-	char *command;
+	MCStringRef command;
 	Atom atom;
 	MPlayer *m_player ;
 #endif
@@ -258,9 +258,9 @@ public:
 	bool stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result);
 
 #ifdef _LINUX_DESKTOP
-	const char *getcommand()
+	void getcommand(MCStringRef& r_command)
 	{
-		return command;
+		r_command = MCValueRetain(command);
 	}
 	Boolean syncxanim();
 #endif
