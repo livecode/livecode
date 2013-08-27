@@ -2050,7 +2050,50 @@ void MCStack::GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value
     r_value . decorations = decorations;
 }
 
-/*
-void MCStack::Set: uint/GetCompositorTileSize: optional-uint
-void MCStack::Set: uint/GetCompositorCacheLimit: optional-uint
-*/
+void MCStack::SetCompositorTileSize(MCExecContext& ctxt, uinteger_t *p_value)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    if (MCIsPowerOfTwo(*p_value) && *p_value >= 16 && *p_value <= 256)
+    {
+        MCTileCacheSetTileSize(m_tilecache, *p_value);
+        dirtyall();
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_COMPOSITOR_INVALIDTILESIZE);
+}
+
+void MCStack::GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& r_value)
+{
+    if (m_tilecache == nil)
+        r_value = nil;
+    else
+    {
+        uint32_t t_value;
+        t_value = MCTileCacheGetTileSize(m_tilecache);
+        *r_value = t_value;
+    }
+}
+
+void MCStack::SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t *p_value)
+{
+    if (m_tilecache == nil)
+        return;
+    
+    MCTileCacheSetCacheLimit(m_tilecache, *p_value);
+    dirtyall();
+}
+
+void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
+{
+    if (m_tilecache == nil)
+        r_value = nil;
+    else
+    {
+        uint32_t t_value;
+        t_value = MCTileCacheGetCacheLimit(m_tilecache);
+        *r_value = t_value;
+    }
+}

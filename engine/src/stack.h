@@ -838,9 +838,9 @@ public:
     void GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value);
     
 	void GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t* p_size);
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
 private:
 	void loadexternals(void);
