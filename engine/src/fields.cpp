@@ -995,7 +995,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				// Reduce ei until we get to zero, advancing through the paras.
 				ei -= sptr->gettextsizecr();
+				
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			
@@ -1036,6 +1042,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				si = 0;
 				ei -= sptr -> gettextsizecr();
 				sptr = sptr -> next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 		}
@@ -1088,6 +1099,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 
 				ei -= sptr->gettextsizecr();
 				sptr = sptr->next();
+				
+				// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+				//   then set ei to 0 as we are done.
+				if (sptr == pgptr)
+					ei = 0;
 			}
 			while(ei > 0);
 			break;
@@ -1199,6 +1215,11 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			ei -= sptr->gettextsizecr();
 			si = 0;
 			sptr = sptr->next();
+			
+			// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+			//   then set ei to 0 as we are done.
+			if (sptr == pgptr)
+				ei = 0;
 		}
 		while (ei > 0);
 
@@ -1439,7 +1460,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		return ES_NORMAL;
 	}
 
-	MCParagraph *pgptr = getcarddata(fdata, parid, True)->getparagraphs();
+	// MW-2013-08-27: [[ Bug 11129 ]] Use 'resolveparagraphs()' so we get the same behavior
+	//   as elsewhere.
+	MCParagraph *pgptr = resolveparagraphs(parid);
 
 	// MW-2013-03-20: [[ Bug 10764 ]] We only need to layout if the paragraphs
 	//   are attached to the current card.
@@ -1672,6 +1695,11 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		si = MCU_max(0, si - l);
 		ei -= l;
 		pgptr = pgptr->next();
+		
+		// MW-2013-08-27: [[ Bug 11129 ]] If we reach the end of the paragraphs
+		//   then set ei to 0 as we are done.
+		if (pgptr == t_first_pgptr)
+			ei = 0;
 	}
 	while(ei > 0 && t_stat == ES_NORMAL);
 	if (t_need_layout)
