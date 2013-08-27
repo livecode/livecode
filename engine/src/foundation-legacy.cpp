@@ -691,7 +691,7 @@ bool MCStringIsEqualToOldString(MCStringRef p_string, const MCString& p_oldstrin
 
 bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
 {
-	const char *t_end;
+	char *t_end;
 	t_end = nil;
 	
 	integer_t t_value;
@@ -706,7 +706,7 @@ bool MCStringToInteger(MCStringRef p_string, integer_t& r_integer)
 
 bool MCStringToDouble(MCStringRef p_string, double& r_real)
 {
-	const char *t_end;
+	char *t_end;
 	t_end = nil;
 	
 	double t_value;
