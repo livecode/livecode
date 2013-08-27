@@ -526,8 +526,8 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 		if (MCModeShouldQueueOpeningStacks())
 		{
-			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-			MCstacknames[MCnstacks++] = strclone(fullPathName);
+			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+			/* UNCHECHED */ MCStringCreateWithCString(fullPathName, MCstacknames[MCnstacks++]);
 		}
 		else
 		{
@@ -707,7 +707,7 @@ static void handle_signal(int sig)
 	case SIGILL:
 	case SIGBUS:
 	case SIGSEGV:
-		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+		fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
 		MCS_killall();
 		return;
 
@@ -843,7 +843,7 @@ void MCS_init()
 	
 	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
 	//   property here (otherwise it is nil in -ui mode).
-	MCshellcmd = MCSTR("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 	
 	//
 
@@ -952,7 +952,9 @@ void MCS_init()
 				if (err == noErr)
 				{
 					p2cstr(proxystr);
-					MChttpproxy = strclone((char *)proxystr);
+					MCAutoStringRef t_proxystr;
+					/* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, &t_proxystr);
+					MCValueAssign(MChttpproxy, *t_proxystr);
 				}
 			}
 			ICStop(icinst);
@@ -1725,7 +1727,7 @@ bool MCS_getaddress(MCStringRef& r_address)
 {
 	static struct utsname u;
 	uname(&u);
-	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 }
 
 bool MCS_getmachine(MCStringRef& r_string)
@@ -3504,7 +3506,7 @@ void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Bool
 				"-elevated-slave",
 				nil
 			};
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCStringGetCString(MCcmd), kAuthorizationFlagDefaults, t_arguments, &t_stream);
 		}
 		
 		uint32_t t_pid;

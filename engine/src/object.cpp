@@ -1951,7 +1951,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCcmd, line, pos);
+			        MCStringGetCString(MCcmd), line, pos);
 		}
 		else
 			if (!send)

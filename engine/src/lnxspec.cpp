@@ -141,7 +141,7 @@ static void handle_signal(int sig)
 	case SIGILL:
 	case SIGBUS:
 	case SIGSEGV:
-		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+		fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
 		MCS_killall();
 		exit(-1);
 	case SIGHUP:
@@ -266,7 +266,7 @@ void MCS_init()
 	if (!MCS_isatty(0))
 		MCS_nodelay(0);
 
-	MCshellcmd = MCSTR("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 
 	// Initialize our case mapping tables
 	
@@ -1372,7 +1372,7 @@ bool MCS_getaddress(MCStringRef& r_address)
 {
 	static struct utsname u;
 	uname(&u);
-	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 }
 
 bool MCS_getmachine(MCStringRef& r_string)
