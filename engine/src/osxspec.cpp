@@ -526,12 +526,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 		if (MCModeShouldQueueOpeningStacks())
 		{
-			MCStringRef *t_MCstacknames;
-			t_MCstacknames = (MCStringRef *)realloc(MCstacknames, sizeof(MCStringRef) * (MCnstacks + 1));
-			//MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-			//MCstacknames[MCnstacks++] = strclone(fullPathName);
-			MCstacknames = t_MCstacknames;
-			MCstacknames[MCnstacks] = nil;
+			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
 			/* UNCHECHED */ MCStringCreateWithCString(fullPathName, MCstacknames[MCnstacks++]);
 		}
 		else
@@ -848,7 +843,7 @@ void MCS_init()
 	
 	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
 	//   property here (otherwise it is nil in -ui mode).
-	MCshellcmd = MCSTR("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 	
 	//
 

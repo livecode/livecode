@@ -266,7 +266,7 @@ void MCS_init()
 	if (!MCS_isatty(0))
 		MCS_nodelay(0);
 
-	MCshellcmd = MCSTR("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 
 	// Initialize our case mapping tables
 	

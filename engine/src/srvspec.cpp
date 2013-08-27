@@ -298,7 +298,7 @@ static void url_execute(MCStringRef p_url, MCUrlExecuteCallback p_callback, void
 	
 	curl_slist *t_headers;
 	t_headers = NULL;
-	if (t_error == NULL && MChttpheaders != NULL && t_is_http)
+	if (t_error == NULL && !MCStringIsEmpty(MChttpheaders) && t_is_http)
 	{
 		if (!url_build_header_list(MCStringGetCString(MChttpheaders), t_headers))
 			t_error = "couldn't build header list";

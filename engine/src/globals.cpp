@@ -165,7 +165,7 @@ Boolean MCvcshm;
 Boolean MCmmap = True;
 Boolean MCshmpix;
 Boolean MCnoui;
-MCStringRef MCdisplayname = NULL;
+char *MCdisplayname = NULL;
 Boolean MCshmoff;
 Boolean MCshmon;
 uint4 MCvisualid;
@@ -508,8 +508,8 @@ void X_clear_globals(void)
 	MCquitisexplicit = False;
 	MCidleRate = 200;
 	MCcmd = nil;
-	MCfiletype = nil;
-	MCstackfiletype = nil;
+	MCfiletype = MCValueRetain(kMCEmptyString);
+	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
 	MCnstacks = 0;
 	MCnofiles = False;
@@ -544,7 +544,7 @@ void X_clear_globals(void)
 	MCmmap = True;
 	MCshmpix = False;
 	MCnoui = False;
-	MCdisplayname = nil;
+	MCdisplayname = NULL;
 	MCshmoff = False;
 	MCshmon = False;
 	MCvisualid = 0;
@@ -666,7 +666,7 @@ void X_clear_globals(void)
 	MCscreen = nil;
 	MCsystemprinter = nil;
 	MCprinter = nil;
-	MCscriptfont = nil;
+	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
 	uint2 MCfocuswidth = 2;
@@ -703,13 +703,13 @@ void X_clear_globals(void)
 	MCsystemPS = True;
 	MChidewindows = False;
 	MCbufferimages = False;
-	MCserialcontrolsettings = nil;
-	MCshellcmd = nil;
-	MCvcplayer = nil;
-	MCftpproxyhost = nil;
+	MCserialcontrolsettings = MCValueRetain(kMCEmptyString);
+	MCshellcmd = MCValueRetain(kMCEmptyString);
+	MCvcplayer = MCValueRetain(kMCEmptyString);
+	MCftpproxyhost = MCValueRetain(kMCEmptyString);
 	MCftpproxyport = 0;
-	MChttpproxy = nil;
-	MChttpheaders = nil;
+	MChttpproxy = MCValueRetain(kMCEmptyString);
+	MChttpheaders = MCValueRetain(kMCEmptyString);
 	MCrandomseed = 0;
 	MCshowinvisibles = False;
 	MCbackscripts = nil;
@@ -895,22 +895,22 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCcstack = new MCCardlist;
 
 #ifdef _LINUX_DESKTOP
-	MCvcplayer = MCSTR("xanim");
+	MCValueAssign(MCvcplayer, MCSTR("xanim"));
 #else
-	MCvcplayer = MCSTR("");
+	MCValueAssign(MCvcplayer, MCSTR(""));
 #endif
 
-	MCfiletype = MCSTR("ttxtTEXT");
+	MCValueAssign(MCfiletype, MCSTR("ttxtTEXT"));
 	const char *tname = strrchr(MCStringGetCString(MCcmd), PATH_SEPARATOR);
 	if (tname == NULL)
 		tname = MCStringGetCString(MCcmd);
 	else
 		tname++;
 	if (MCU_strncasecmp(tname, "rev", 3))
-		MCstackfiletype = MCSTR("MCRDMSTK");
+		MCValueAssign(MCstackfiletype, MCSTR("MCRDMSTK"));
 	else
-		MCstackfiletype = MCSTR("RevoRSTK");
-	MCserialcontrolsettings = MCSTR("baud=9600 parity=N data=8 stop=1");
+		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
+	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
 	MCdispatcher = new MCDispatch;
 
@@ -1147,6 +1147,8 @@ int X_close(void)
 	// Cleanup the startup stacks list
 	for(uint4 i = 0; i < MCnstacks; ++i)
 		MCValueRelease(MCstacknames[i]);
+
+	delete MCstacknames;
 
 	// Cleanup the parentscript stuff
 	MCParentScript::Cleanup();

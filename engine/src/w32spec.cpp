@@ -102,7 +102,11 @@ void MCS_init()
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
 		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
-			/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . clone(), MChttpproxy);
+		{
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
+		}
 	}
 	else
 	{
@@ -118,13 +122,15 @@ void MCS_init()
 			ep.ston();
 			t_port = ep.getint4();
 			ep.setstringf("%s:%d", t_host, t_port);
-			/* UNCHECKED */ MCStringCreateWithCString(ep . getsvalue() . clone(), MChttpproxy);
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
 			delete t_host;
 		}
 	}
 
 	// On NT systems 'cmd.exe' is the command processor
-	MCshellcmd = strclone("cmd.exe");
+	MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
 
 	// MW-2005-05-26: Store a global variable containing major OS version...
 	OSVERSIONINFOA osv;
@@ -137,12 +143,12 @@ void MCS_init()
 	if (MCmajorosversion >= 0x0500)
 	{
 		MCttsize = 11;
-		MCttfont = "Tahoma";
+		MCValueAssign(MCttfont, MCSTR("Tahoma"));
 	}
 	else if (MCmajorosversion >= 0x0600)
 	{
 		MCttsize = 11;
-		MCttfont = "Segoe UI";
+		MCValueAssign(MCttfont, MCSTR("Segoe UI"));
 	}
 
 	OleInitialize(NULL); //for drag & drop

@@ -52,13 +52,8 @@ static void create_var(char *v)
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
 
-	MCStringRef *t_MCstacknames;
-	t_MCstacknames = (MCStringRef *)realloc(MCstacknames, sizeof(MCStringRef) * (MCnstacks + 1));
-	//MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	//MCstacknames[MCnstacks++] = v;
-	MCstacknames = t_MCstacknames;
-	MCstacknames[MCnstacks] = nil;
-	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+	/* UNCHECKED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
 static void create_var(uint4 p_v)
@@ -154,28 +149,11 @@ bool X_init(int argc, char *argv[], char *envp[])
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
-	if (!(MCStringBeginsWithCString(MCcmd, (const char_t*)"/", kMCCompareExact)))
-	{//not c:/mc/xxx, not /mc/xxx
-        MCAutoStringRef tpath_str;
-		
-        /* UNCHECKED */ MCS_getcurdir(&tpath_str);
-        char *tpath = strdup(MCStringGetCString(*tpath_str));
-        
-		if (tpath && MCStringGetLength(MCcmd) + strlen(tpath) < PATH_MAX)
-		{
-			strcpy(apppath,tpath);
-			strcat(apppath, "/");
-			char *tempmccmd = strdup(MCStringGetCString(MCcmd));
-			if (*tempmccmd == '.' && tempmccmd[1] != '.')
-				tempmccmd++;
-			if (*tempmccmd == '/')
-				tempmccmd++;
-			strcat(apppath,  tempmccmd);
-			if (strdup(MCStringGetCString(MCcmd)) != argv[0])
-				MCValueRelease(MCcmd);
-			/* UNCHECKED */ MCStringCreateWithCString(appath, MCcmd);
-			delete tpath;
-		}
+	{
+      MCAutoStringRef t_resolved_cmd;
+      MCS_resolvepath(MCcmd, &t_resolved_cmd);
+      MCValueRelease(MCcmd);
+      MCcmd = MCValueRetain(*t_resolved_cmd);
 	}
 #endif
 

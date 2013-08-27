@@ -92,7 +92,7 @@ extern Boolean MCshmpix ;
 extern Boolean MCvcshm;
 extern Boolean MCmmap;
 extern Boolean MCnoui;
-extern MCStringRef MCdisplayname;
+extern char *MCdisplayname;
 extern Boolean MCshmoff;
 extern Boolean MCshmon;
 extern uint4 MCvisualid;

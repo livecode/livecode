@@ -303,12 +303,7 @@ static void create_var(char *v)
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
 
-	MCStringRef *t_MCstacknames;
-	t_MCstacknames = (MCStringRef *)realloc(MCstacknames, sizeof(MCStringRef) * (MCnstacks + 1));
-	//MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	//MCstacknames[MCnstacks++] = v;
-	MCstacknames = t_MCstacknames;
-	MCstacknames[MCnstacks] = nil;
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
 	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
