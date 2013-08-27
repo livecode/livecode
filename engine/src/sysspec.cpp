@@ -70,20 +70,7 @@ void MCS_common_init(void)
 	
 	MCsystem -> Initialize();
 	
-    IO_stdin = MCsystem -> OpenStdFile(0, kMCSystemFileModeRead);
-    IO_stdout = MCsystem -> OpenStdFile(1, kMCSystemFileModeWrite);
-    IO_stderr = MCsystem -> OpenStdFile(2, kMCSystemFileModeWrite);
-	
-	MCinfinity = HUGE_VAL; 
-
-	MCuppercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
-	
-	MClowercasingtable = new uint1[256];
-	for(uint4 i = 0; i < 256; ++i)
-		MClowercasingtable[i] = (uint1)tolower((uint1)i);
-
+	MCinfinity = HUGE_VAL;
 }
 
 void MCS_init(void)
@@ -124,7 +111,12 @@ void MCS_init(void)
 	signal(SIGFPE, handle_signal);
     
 #endif // _SERVER
+    
+#if defined(_SERVER) || defined(_MOBILE)
 	MCS_common_init();
+#else
+    MCsystem -> Initialize();
+#endif
 }
 
 void MCS_shutdown(void)
