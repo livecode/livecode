@@ -138,7 +138,7 @@ static MCStringRef s_command_path = NULL;
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, strdup(MCStringGetCString(s_command_path)), strdup(MCStringGetCString(s_command_path)), NULL);
+	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{

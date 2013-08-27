@@ -131,21 +131,11 @@ bool X_init(int argc, char *argv[], char *envp[])
 	delete MCeerror;
 	delete MCresult;
 #endif
-
-	////
 	
 	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
 
 #if defined(_MAC_DESKTOP)
-	{
-		char *t_new_cmd;
-		uint4 t_length;
-		t_length = MCStringGetLength(MCcmd);
-		t_new_cmd = new char[t_length + 1];
-		MCS_utf8tonative(MCStringGetCString(MCcmd), t_length, t_new_cmd, t_length);
-		t_new_cmd[t_length] = 0;
-		/* UNCHECKED */ MCStringCreateWithCString(t_new_cmd, MCcmd);
-	}
+	/* UNCHECKED */ MCStringCreateWithBytes(argv[0], strlen(argv[0]), kMCStringEncodingUTF8, MCcmd);
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath

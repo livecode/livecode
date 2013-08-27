@@ -952,7 +952,9 @@ void MCS_init()
 				if (err == noErr)
 				{
 					p2cstr(proxystr);
-					/* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, MChttpproxy);
+					MCAutoStringRef t_proxystr;
+					/* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, &t_proxystr);
+					MCValueAssign(MChttpproxy, *t_proxystr);
 				}
 			}
 			ICStop(icinst);

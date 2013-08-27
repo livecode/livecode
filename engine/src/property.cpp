@@ -3737,7 +3737,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			MCdialogdata->fetch(ep);
 			break;
 		case P_HC_IMPORT_STAT:
-			ep.setsvalue(MCStringGetCString(MChcstat));
+			ep.setsvalue(MChcstat);
 			break;
 		case P_SCRIPT_TEXT_FONT:
 			ep.setsvalue(MCscriptfont);
@@ -3828,7 +3828,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			ep.setboolean(MCsystemPS);
 			break;
 		case P_FILE_TYPE:
-			ep.setsvalue(MCStringGetCString(MCfiletype));
+			ep.setsvalue(MCfiletype);
 			break;
 		case P_STACK_FILE_TYPE:
 			ep.setsvalue(MCstackfiletype);
@@ -3897,13 +3897,13 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 			if (MChttpheaders == NULL)
 				ep.clear();
 			else
-				ep.setsvalue(MCStringGetCString(MChttpheaders));
+				ep.setsvalue(MChttpheaders);
 			break;
 		case P_HTTP_PROXY:
 			if (MChttpproxy == NULL)
 				ep . clear();
 			else
-				ep . copysvalue(MCStringGetCString(MChttpproxy));
+				ep . copysvalue(MChttpproxy);
 			break;
 		case P_SHOW_INVISIBLES:
 			ep.setboolean(MCshowinvisibles);

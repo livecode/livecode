@@ -189,7 +189,6 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	uint1 *startptr = sptr;
 	uint2 repcount = 1;
 	uint2 line = 0;
-	char *MChcstat_cstring;
 	while (dptr < deptr)
 	{
 		uint2 hrepcount = bpl;
@@ -1350,7 +1349,6 @@ IO_stat MCHccard::parse(char *sptr)
 	maxid = MCU_max(id, maxid);
 	uint2 ntext;
 	uint4 offset;
-	char *MChcstat_cstring;
 	if (version == 1)
 	{
 		bmapid = swap_uint4(&uint4ptr[3]);
@@ -1420,7 +1418,7 @@ IO_stat MCHccard::parse(char *sptr)
 	if (sptr[offset])
 		name = strclone(&sptr[offset]);
 	script = convert_script(&sptr[offset + strlen(&sptr[offset]) + 1]);
-	delete MChcstat_cstring;
+	
 	return IO_NORMAL;
 }
 
