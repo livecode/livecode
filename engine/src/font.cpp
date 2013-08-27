@@ -136,9 +136,21 @@ int32_t MCFontGetDescent(MCFontRef self)
 	return self -> fontstruct -> descent;
 }
 
+int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
+{
+	// Wrapper. Needs MCStringIsUnicode
+	return MCFontMeasureText(p_font, (const char *)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text), false);
+}
+
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
 {
 	return MCscreen -> textwidth(font -> fontstruct, chars, char_count, is_unicode);
+}
+
+void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
+{
+	// Wrapper. Needs MCStringIsUnicode
+	MCFontDrawText(font, (const char *)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text), false, context, x, y, image);
 }
 
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image)
