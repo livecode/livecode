@@ -90,7 +90,7 @@ MCPropertyInfo MCImage::kProperties[] =
 
 MCObjectPropertyTable MCImage::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };

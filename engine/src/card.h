@@ -125,6 +125,11 @@ public:
 #ifdef OLD_EXEC
 	MCControl *getchild(Chunk_term e, const MCString &, Chunk_term o, Chunk_term p);
 #endif
+    
+    MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o, Chunk_term p);
+    MCControl *getchildbyid(uinteger_t p_id, Chunk_term o, Chunk_term p);
+    MCControl *getchildbyname(MCNameRef p_name, Chunk_term o, Chunk_term p);
+    
 	Boolean getchildid(uint4 inid);
 	Exec_stat groupmessage(MCNameRef message, MCCard *other);
 	void installaccels(MCStack *stack);

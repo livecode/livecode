@@ -129,6 +129,10 @@ public:
 #ifdef OLD_EXEC
 	MCControl *getchild(Chunk_term etype, const MCString &,Chunk_term otype, Chunk_term ptype);
 #endif
+    MCControl *getchildbyordinal(Chunk_term p_ordinal, Chunk_term o);
+    MCControl *getchildbyid(uinteger_t p_id, Chunk_term o);
+    MCControl *getchildbyname(MCNameRef p_name, Chunk_term o);
+    
 	void makegroup(MCControl *newcontrols, MCObject *newparent);
 	MCControl *getcontrols();
 	void setcontrols(MCControl *newcontrols);

@@ -937,7 +937,18 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	MCObject *t_object;
+	if (!getAVname(type, *t_name, t_object))
+		return nil;
+    
+	return t_object;
+}
+
+bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 {
 	MCObject *objs;
 	if (type == CT_AUDIO_CLIP)
@@ -945,16 +956,19 @@ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
 	else
 		objs = vclips;
 	if (objs == NULL)
-		return NULL;
+		return false;
 	MCObject *tobj = objs;
 	do
 	{
-		if (MCU_matchname(s, type, tobj->getname()))
-			return tobj;
+		if (MCU_matchname(p_name, type, tobj->getname()))
+        {
+			r_object = tobj;
+            return true;
+        }
 		tobj = (MCControl *)tobj->next();
 	}
 	while (tobj != objs);
-	return NULL;
+	return false;
 }
 
 Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
@@ -1151,7 +1165,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile(const MCString &s)
+MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 {
 	char *fname;
 	if ((fname = getstackfile(s)) != NULL)
@@ -1161,7 +1175,7 @@ MCStack *MCStack::findstackfile(const MCString &s)
 		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
 		{
 			delete fname;
-			MCStack *stackptr = tstk->findsubstackname(s);
+			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1181,38 +1195,35 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
+MCStack *MCStack::findstackname(MCNameRef p_name)
 {
-	if (nil != (r_stack = findsubstackname(MCNameGetOldString(p_name))))
-		return true;
+	MCStack *foundstk;
+	if ((foundstk = findsubstackname(p_name)) != NULL)
+		return foundstk;
 	else
-		return nil != (r_stack = MCdispatcher->findstackname(MCNameGetOldString(p_name)));
+		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
 }
 
-/* LEGACY */ MCStack *MCStack::findstackname(const MCString &s)
+/* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
 {
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	MCStack *t_stack;
-	if (!findstackname(*t_name, t_stack))
-		return nil;
-
-	return t_stack;
+	return findstackname(*t_name);
 }
 
-MCStack *MCStack::findsubstackname(const MCString &s)
+MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, s) != NULL)
+	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
 		return this;
-
+    
 	MCStack *sptr = this;
 	uint2 num = 0;
-	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(s, num))
+	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(MCNameGetString(p_name), num))
 		sptr = parent->getstack();
 	if (sptr->substacks != NULL)
 	{
 		MCStack *tptr = sptr->substacks;
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(MCNameGetString(p_name), num))
 		{
 			while (--num)
 			{
@@ -1225,13 +1236,20 @@ MCStack *MCStack::findsubstackname(const MCString &s)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, s) != NULL)
+				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
-			while (tptr != sptr->substacks);
+        while (tptr != sptr->substacks);
 	}
 	return NULL;
+}
+
+/* LEGACY */ MCStack *MCStack::findsubstackname_oldstring(const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	return findsubstackname(*t_name);
 }
 
 MCStack *MCStack::findstackid(uint4 fid)
