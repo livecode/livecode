@@ -2139,7 +2139,10 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 		{
 			MCStack *t_this;
 			t_this = static_cast<MCStack *>(this);
-			if (t_this -> getfilename() == NULL)
+			MCAutoStringRef t_filename;
+			t_this -> getfilename(&t_filename);
+
+			if (*t_filename == nil)
 			{
 				if (MCdispatcher->ismainstack(t_this))
 				{
@@ -2156,7 +2159,7 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", t_this -> getfilename());
+				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(*t_filename));
 		}
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).

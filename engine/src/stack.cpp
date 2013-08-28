@@ -299,13 +299,13 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	vclips = NULL;
 	backgroundid = 0;
 	iconid = 0;
-	title = strclone(sref.title);
+	title = MCValueRetain(sref.title);
 	titlestring = NULL;
 	minwidth = sref.minwidth;
 	minheight = sref.minheight;
 	maxwidth = sref.maxwidth;
 	maxheight = sref.maxheight;
-	externalfiles = strclone(sref.externalfiles);
+	externalfiles = MCValueRetain(sref.externalfiles);
 	idlefunc = NULL;
 	windowshapeid = sref.windowshapeid;
 
@@ -480,8 +480,8 @@ MCStack::~MCStack()
 	if (parentwindow != DNULL)
 		setparentwindow(DNULL);
 	delete mnemonics;
-	delete title;
-	delete titlestring;
+	MCValueRelease(title);
+	MCValueRelease(titlestring);
 
 	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
 	{
@@ -515,7 +515,7 @@ MCStack::~MCStack()
 		               (cards);
 		delete cptr;
 	}
-	delete externalfiles;
+	MCValueRelease(externalfiles);
 
 	uint2 i = 0;
 	while (i < MCnusing)
@@ -551,7 +551,7 @@ MCStack::~MCStack()
 		MCValueRelease(linkatts->visitedcolorname);
 		delete linkatts;
 	}
-	delete filename;
+	MCValueRelease(filename);
 
 	MCNameDelete(_menubar);
 
@@ -702,7 +702,7 @@ void MCStack::close()
 			MCscreen->destroywindow(window);
 			window = DNULL;
 			cursor = None;
-			delete titlestring;
+			MCValueRelease(titlestring);
 			titlestring = NULL;
 			state &= ~CS_BEEN_MOVED;
 		}
@@ -2883,7 +2883,7 @@ void MCStack::loadexternals(void)
 
 	m_externals = new MCExternalHandlerList;
 
-	char *ename = strclone(externalfiles);
+	char *ename = strdup(MCStringGetCString(externalfiles));
 	char *sptr = ename;
 	while (*sptr)
 	{
@@ -2924,55 +2924,61 @@ void MCStack::unloadexternals(void)
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-char *MCStack::resolve_filename(const char *filename)
+void MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	char *t_mode_filename;
-	t_mode_filename = mode_resolve_filename(filename);
-	if (t_mode_filename != NULL)
-		return t_mode_filename;
+	MCAutoStringRef t_mode_filename;
+	mode_resolve_filename(filename, &t_mode_filename);
+	if (*t_mode_filename != NULL)
+		r_resolved = MCValueRetain(*t_mode_filename);
 
-	if (filename != NULL && filename[0] != '\0' && filename[0] != '/' && filename[1] != ':')
+	if (filename != NULL && MCStringGetNativeCharAtIndex(filename, 0) != '\0' && MCStringGetNativeCharAtIndex(filename, 0) != '/' && MCStringGetNativeCharAtIndex(filename, 1) != ':')
 	{
-		const char *t_stack_filename;
-		t_stack_filename = getfilename();
-		if (t_stack_filename == NULL)
+		MCAutoStringRef t_stack_filename;
+		//const char *t_stack_filename;
+		getfilename(&t_stack_filename);
+		//t_stack_filename = getfilename();
+		if (*t_stack_filename == nil)
 		{
 			MCStack *t_parent_stack;
 			t_parent_stack = static_cast<MCStack *>(getparent());
 			if (t_parent_stack != NULL)
-				t_stack_filename = t_parent_stack -> getfilename();
+			{
+				MCAutoStringRef tmp; 
+				t_parent_stack -> getfilename(&tmp);
+				t_stack_filename = tmp;
+			}
 		}
-		if (t_stack_filename != NULL)
+		if (*t_stack_filename != nil)
 		{
 			const char *t_last_separator;
-			t_last_separator = strrchr(t_stack_filename, '/');
+			t_last_separator = strrchr(MCStringGetCString(*t_stack_filename), '/');
 			if (t_last_separator != NULL)
 			{
 				char *t_filename;
-				t_filename = new char[strlen(t_stack_filename) + strlen(filename) + 2];
-				strcpy(t_filename, t_stack_filename);
+				t_filename = new char[MCStringGetLength(*t_stack_filename) + MCStringGetLength(filename) + 2];
+				strcpy(t_filename, MCStringGetCString(*t_stack_filename));
 
 				// If the relative path begins with "./" or ".\", we must remove this, otherwise
 				// certain system calls will get confused by the path.
 				const char *t_leaf;
-				if (filename[0] == '.' && (filename[1] == '/' || filename[1] == '\\'))
-					t_leaf = filename + 2;
+				if (MCStringGetNativeCharAtIndex(filename, 0) == '.' && (MCStringGetNativeCharAtIndex(filename, 1) == '/' || MCStringGetNativeCharAtIndex(filename, 1) == '\\'))
+					t_leaf = MCStringGetCString(filename) + 2;
 				else
-					t_leaf = filename;
+					t_leaf = MCStringGetCString(filename);
 
-				strcpy(t_filename + (t_last_separator - t_stack_filename + 1), t_leaf);
+				strcpy(t_filename + (t_last_separator - MCStringGetCString(*t_stack_filename) + 1), t_leaf);
 
 				MCAutoStringRef t_filename_string;
 				/* UNCHECKED */ MCStringCreateWithCString(t_filename, &t_filename_string);
 
 				if (MCS_exists(*t_filename_string, True))
-					return t_filename;
+					r_resolved = MCValueRetain(*t_filename_string);
 				else if (t_filename != NULL)
 					delete t_filename;
 			}
 		}
 	}
-	return strdup(filename);
+	r_resolved = MCValueRetain(filename);
 }
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)

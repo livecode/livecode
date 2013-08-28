@@ -300,7 +300,7 @@ public:
 	virtual void uniconifywindow(Window window);
 
 	// Set the name of 'window' to the UTF-8 string 'newname'
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 
 	virtual void sync(Window w);

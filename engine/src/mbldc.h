@@ -82,7 +82,7 @@ public:
 	void raisewindow(Window window);
 	void iconifywindow(Window window);
 	void uniconifywindow(Window window);
-	void setname(Window window, const char *newname);
+	void setname(Window window, MCStringRef newname);
 	void sync(Window w);
 	void setinputfocus(Window window);
 	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);

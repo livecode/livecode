@@ -110,8 +110,8 @@ protected:
 	MCButton **needs;
 
 	// These fields are now UTF8
-	char *title;
-	char *titlestring;
+	MCStringRef title;
+	MCStringRef titlestring;
 	
 	uint4 iconid;
 	uint4 windowshapeid;
@@ -131,8 +131,8 @@ protected:
 	uint1 old_blendlevel;
 	MCStackfile *stackfiles;
 	Linkatts *linkatts;
-	char *externalfiles;
-	char *filename;
+	MCStringRef externalfiles;
+	MCStringRef filename;
 	MCNameRef _menubar;
 	void (*idlefunc)();
 	
@@ -273,7 +273,7 @@ public:
 	void extraopen(bool p_force);
 	void extraclose(bool p_force);
 
-	char *resolve_filename(const char *filename);
+	void resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 
 	void setopacity(uint1 p_value);
 	
@@ -371,7 +371,7 @@ public:
 	void stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf);
 	void setstackfiles(const MCString &);
 	char *getstackfile(const MCString &);
-	void setfilename(char *f);
+	void setfilename(MCStringRef f);
 
 	virtual IO_stat load(IO_handle stream, const char *version, uint1 type);
 	IO_stat load_stack(IO_handle stream, const char *version);
@@ -437,13 +437,16 @@ public:
 	{
 		return (flags & F_CANT_ABORT) != 0;
 	}
-	const char *getfilename()
+	void getfilename(MCStringRef& r_filename)
 	{
-		return filename;
+		r_filename = MCValueRetain(filename);
 	}
-	const char *gettitletext()
+	void gettitletext(MCStringRef& r_title)
 	{
-		return title != NULL ? title : MCNameGetCString(_name);
+		if(title != NULL)
+			r_title = MCValueRetain(title);
+		else
+			r_title = MCNameGetString(_name);	
 	}
 	MCControl *getcontrols()
 	{
@@ -844,7 +847,7 @@ private:
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
 
-	char *mode_resolve_filename(const char *filename);
+	void mode_resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);
 	void mode_takefocus(void);

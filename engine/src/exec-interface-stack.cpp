@@ -313,15 +313,12 @@ void MCStack::GetFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
 	if (filename == NULL)
 		return;
 
-	if (MCStringCreateWithCString(filename, r_file_name))
-		return;
-
-	ctxt . Throw();
+	r_file_name = MCValueRetain(filename);
 }
 
 void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
 {
-	delete filename;
+	MCValueRelease(filename);
 	// MW-2007-03-15: [[ Bug 616 ]] Throw an error if you try and set the filename of a substack
 	if (!MCdispatcher->ismainstack(this))
 	{
@@ -332,7 +329,7 @@ void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
 	if (p_file_name == nil)
 		filename = NULL;
 	else
-		filename = strclone(MCStringGetCString(p_file_name));
+		filename = MCValueRetain(p_file_name);
 }
 
 void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
@@ -345,10 +342,7 @@ void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name
 		return;
 	}
 
-	if (MCStringCreateWithCString(filename, r_file_name))
-		return;
-
-	ctxt . Throw();
+	r_file_name = MCValueRetain(filename);
 }
 
 void MCStack::GetSaveCompressed(MCExecContext& ctxt, bool& r_setting)
@@ -506,8 +500,7 @@ void MCStack::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 	if (title == nil)
 		return;
 
-	MCAutoStringRef t_title;
-	if (MCStringCreateWithCString(title, &t_title) && MCU_utf8tonative(*t_title, r_label))
+	if (MCU_utf8tonative(title, r_label))
 		return;
 
 	ctxt . Throw();
@@ -517,20 +510,18 @@ void MCStack::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
 	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
 	//   stored as a UTF-8 string.
-	delete title;
-	title = NULL;
+	MCValueRelease(title);
+	title = nil;
 
 	bool t_success;
 	t_success = true;
 
 	if (p_label != nil)
 	{
-		MCAutoStringRef t_title;
 		if (t_success)
-			t_success = MCU_nativetoutf8(p_label, &t_title);
+			t_success = MCU_nativetoutf8(p_label, title);
 		if (t_success)
 		{
-			title = strclone(MCStringGetCString(*t_title));
 			flags |= F_TITLE;
 		}
 	}
@@ -551,8 +542,7 @@ void MCStack::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
 	if (title == nil)
 		return;
 
-	MCAutoStringRef t_title;
-	if (MCStringCreateWithCString(title, &t_title) && MCU_multibytetounicode(*t_title, LCH_UTF8, r_label))
+	if (MCU_multibytetounicode(title, LCH_UTF8, r_label))
 		return;
 
 	ctxt . Throw();
@@ -562,20 +552,18 @@ void MCStack::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
 	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
 	//   stored as a UTF-8 string.
-	delete title;
-	title = NULL;
+	MCValueRelease(title);
+	title = nil;
 	
 	bool t_success;
 	t_success = true;
 
 	if (p_label != nil)
 	{
-		MCAutoStringRef t_title;
 		if (t_success)
-			t_success = MCU_unicodetomultibyte(p_label, LCH_UTF8, &t_title);
+			t_success = MCU_unicodetomultibyte(p_label, LCH_UTF8, title);
 		if (t_success)
 		{
-			title = strclone(MCStringGetCString(*t_title));
 			flags |= F_TITLE;
 		}
 	}
@@ -1278,20 +1266,12 @@ void MCStack::GetExternals(MCExecContext& ctxt, MCStringRef& r_externals)
 	if (externalfiles == nil)
 		return;
 
-	if (MCStringCreateWithCString(externalfiles, r_externals))
-		return;
-
-	ctxt . Throw();
+	r_externals = MCValueRetain(externalfiles);
 }
 
 void MCStack::SetExternals(MCExecContext& ctxt, MCStringRef p_externals)
 {
-	delete externalfiles;
-
-	if (p_externals != nil)
-		externalfiles = strclone(MCStringGetCString(p_externals));
-	else
-		externalfiles = NULL;
+	MCValueAssign(externalfiles, p_externals);
 }
 
 void MCStack::GetExternalCommands(MCExecContext& ctxt, MCStringRef& r_commands)

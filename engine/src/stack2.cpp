@@ -522,10 +522,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 		stop_externals();
 		MCscreen->destroywindow(window);
 		cursor = None;
-		delete titlestring;
+		MCValueRelease(titlestring);
 		titlestring = NULL;
 	}
-	delete sptr->titlestring;
+	MCValueRelease(sptr->titlestring);
 	sptr->titlestring = NULL;
 	window = sptr->window;
 	iconid = sptr->iconid;
@@ -691,7 +691,7 @@ MCStack *MCStack::findname(Chunk_term type, const MCString &findname)
 		
 		MCAutoNameRef t_filename_name;
 		if (filename != nil)
-			t_filename_name . CreateWithCString(filename);
+			MCNameCreate(filename, t_filename_name);
 
 		if (MCU_matchname(findname, CT_STACK, t_filename_name))
 			return this;
@@ -1697,7 +1697,7 @@ void MCStack::setwindowname()
 		tptr = t_utf8_name;
 	}
 	else
-		tptr = title;
+		tptr = MCStringGetCString(title);
 
 	char *newname = NULL;
 	if (editing != NULL)
@@ -1736,10 +1736,11 @@ void MCStack::setwindowname()
 			else
 				strcpy(newname, tptr);
 	}
-	if (!strequal(newname, titlestring))
+	if (!strequal(newname, MCStringGetCString(titlestring)))
 	{
-		delete titlestring;
-		titlestring = newname;
+		MCAutoStringRef t_newname;
+		/* UNCHECKED */ MCStringCreateWithCString(newname, &t_newname);
+		MCValueAssign(titlestring, *t_newname);
 		MCscreen->setname(window, titlestring);
 	}
 	else
@@ -1763,7 +1764,7 @@ void MCStack::reopenwindow()
 
 	MCscreen->destroywindow(window);
 
-	delete titlestring;
+	MCValueRelease(titlestring);
 	titlestring = NULL;
 	if (getstyleint(flags) != 0)
 		mode = (Window_mode)(getstyleint(flags) + WM_TOP_LEVEL_LOCKED);
@@ -1880,7 +1881,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	{
 		stop_externals();
 		MCscreen->destroywindow(window);
-		delete titlestring;
+		MCValueRelease(titlestring);
 		titlestring = NULL;
 	}
 	mode = wm;
@@ -2321,8 +2322,8 @@ void MCStack::getstackfiles(MCExecPoint &ep)
 		uint2 i;
 		for (i = 0 ; i < nstackfiles ; i++)
 		{
-			ep.concat(stackfiles[i].stackname, EC_RETURN, i == 0);
-			ep.concat(stackfiles[i].filename, EC_COMMA, false);
+			ep.concatcstring(MCStringGetCString(stackfiles[i].stackname), EC_RETURN, i == 0);
+			ep.concatcstring(MCStringGetCString(stackfiles[i].filename), EC_COMMA, false);
 		}
 	}
 }
@@ -2339,8 +2340,8 @@ void MCStack::stringtostackfiles(char *d, MCStackfile **sf, uint2 &nf)
 		{
 			*cptr++ = '\0';
 			MCU_realloc((char **)&newsf, nnewsf, nnewsf + 1, sizeof(MCStackfile));
-			newsf[nnewsf].stackname = MCValueRetain(eptr);
-			newsf[nnewsf].filename = MCValueRetain(cptr);
+			/* UNCHECED */ MCStringCreateWithCString(eptr, newsf[nnewsf].stackname);
+			/* UNCHECED */ MCStringCreateWithCString(cptr, newsf[nnewsf].filename);
 			nnewsf++;
 		}
 		eptr = NULL;
@@ -2370,14 +2371,14 @@ char *MCStack::getstackfile(const MCString &s)
 	{
 		uint2 i;
 		for (i = 0 ; i < nstackfiles ; i++)
-			if (MCStringIsEqualTo(stackfiles[i].stackname, *tmp_s, kMCStringOptionCompareExact)
+			if (MCStringIsEqualTo(stackfiles[i].stackname, *tmp_s, kMCStringOptionCompareExact))
 			{
 				if (filename == NULL || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 0) == '/' || MCStringGetNativeCharAtIndex(stackfiles[i].filename, 1) == ':')
 					return strclone(MCStringGetCString(stackfiles[i].filename));
 
 				// OK-2007-11-13 : Fix for crash caused by strcpy writing over sptr. sptr extended by 1 byte to cover null termination char.
-				char *sptr = new char[strlen(filename) + MCStringGetLength(stackfiles[i].filename) + 1];
-				strcpy(sptr, filename);
+				char *sptr = new char[MCStringGetLength(filename) + MCStringGetLength(stackfiles[i].filename) + 1];
+				strcpy(sptr, MCStringGetCString(filename));
 				char *eptr = strrchr(sptr, PATH_SEPARATOR);
 
 				if (eptr == NULL)
@@ -2392,16 +2393,14 @@ char *MCStack::getstackfile(const MCString &s)
 	return NULL;
 }
 
-void MCStack::setfilename(char *f)
+void MCStack::setfilename(MCStringRef f)
 {
-	delete filename;
-	filename = f;
-	MCAutoStringRef in_filename_string;
-	/* UNCHECKED */ MCStringCreateWithCString(filename, &in_filename_string);
+	MCValueAssign(filename, f);
+	
 	if (f != NULL)
 	{
 		MCAutoStringRef out_filename_string;
-		MCU_fix_path(*in_filename_string, &out_filename_string );
+		MCU_fix_path(filename, &out_filename_string );
 	}
 }
 
@@ -2511,7 +2510,7 @@ void MCStack::dirtyall(void)
 void MCStack::dirtywindowname(void)
 {
 	state |= CS_TITLE_CHANGED;
-	delete titlestring;
+	MCValueRelease(titlestring);
 	titlestring = NULL;
 
 	MCRedrawScheduleUpdateForStack(this);
