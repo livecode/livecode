@@ -14,6 +14,37 @@
 
 #define kBlurRadiusFudgeFactor SkFloatToScalar( .57735f )
 
+static int dilateMask(const uint8_t *src, int src_y_stride, uint8_t *dst, int radius, int width, int height, bool transpose)
+{
+	int new_width = width + radius * 2;
+    int dst_x_stride = transpose ? height : 1;
+    int dst_y_stride = transpose ? 1 : new_width;
+	for(int y = 0; y < height; ++y)
+	{
+		uint8_t *dptr;
+		dptr = dst + y * dst_y_stride;
+		const uint8_t *sptr;
+		sptr = src + y * src_y_stride;
+		for(int x = -radius; x < width + radius; x++)
+		{
+			uint8_t v;
+			v = 0;
+			for(int z = x - radius; z < x + radius; z++)
+			{
+				if (z < 0)
+					continue;
+				if (z >= width)
+					continue;
+				if (sptr[z] > v)
+					v = sptr[z];
+			}
+			*dptr = v;
+			dptr += dst_x_stride;
+		}
+	}
+	return new_width;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  Low / Normal quality blurs - box-blur technique.
@@ -330,6 +361,13 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 	int t_pass_count;
 	t_pass_count = 3;
 	
+	int x_spread, y_spread;
+	x_spread = SkScalarFloor(p_x_radius * p_spread);
+	y_spread = SkScalarFloor(p_y_radius * p_spread);
+	
+	p_x_radius -= x_spread;
+	p_y_radius -= y_spread;
+	
 	int rx, ry;
 	rx = SkScalarCeil(p_x_radius);
 	ry = SkScalarCeil(p_y_radius);
@@ -343,8 +381,8 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 	wy = 255 - SkScalarRound((SkIntToScalar(ry) - py) * 255);
 	
 	int t_pad_x, t_pad_y;
-	t_pad_x = rx;
-	t_pad_y = ry;
+	t_pad_x = rx + x_spread;
+	t_pad_y = ry + y_spread;
 	
 	r_dst . fBounds . set(p_src . fBounds . fLeft - t_pad_x, p_src . fBounds . fTop - t_pad_y,
 						  p_src . fBounds . fRight + t_pad_x, p_src . fBounds . fBottom + t_pad_y);
@@ -390,6 +428,15 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			int r;
 			r = rx;
 			
+			bool t_has_spread;
+			t_has_spread = false;
+			if (x_spread != 0 || y_spread != 0)
+			{
+				w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
+				h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				t_has_spread = true;
+			}
+			
 			int trx;
 			trx = (r + 2) / 3; 
 			r -= trx;
@@ -397,7 +444,7 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			int rx_lo, rx_hi;
 			rx_lo = rx_hi = trx;
 			
-			w = boxBlur(sp, p_src . fRowBytes, tp, rx_lo, rx_hi, w, h, false);
+			w = boxBlur(t_has_spread ? dp : sp, t_has_spread ? w : p_src . fRowBytes, tp, rx_lo, rx_hi, w, h, false);
 			
 			trx = (r + 1) / 2;
 			r -= trx;
@@ -419,11 +466,20 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 			int r;
 			r = rx;
 			
+			bool t_has_spread;
+			t_has_spread = false;
+			if (x_spread != 0 || y_spread != 0)
+			{
+				w = dilateMask(sp, p_src . fRowBytes, tp, x_spread, w, h, true);
+				h = dilateMask(tp, h, dp, y_spread, h, w, true);
+				t_has_spread = true;
+			}
+			
 			int trx;
 			trx = (r + 2) / 3; 
 			r -= trx;
 			
-			w = boxBlurInterp(sp, p_src . fRowBytes, tp, trx, w, h, false, wx);
+			w = boxBlurInterp(t_has_spread ? dp : sp, t_has_spread ? w : p_src . fRowBytes, tp, trx, w, h, false, wx);
 			
 			trx = (r + 1) / 2;
 			r -= trx;

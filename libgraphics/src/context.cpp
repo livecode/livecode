@@ -1057,7 +1057,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	
 	// Now blur the mask.
 	SkMask t_blurred_mask;
-	if (!MCGBlurBox(p_mask, t_transformed_radii . width, t_transformed_radii . height, p_spread, t_blurred_mask))
+	if (!MCGBlurBox(p_mask, t_transformed_radii . width, t_transformed_radii . height, 1.0, t_blurred_mask))
 		return;
 	
 	// Offset the blur mask appropriately.
