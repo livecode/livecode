@@ -39,9 +39,12 @@
 #include "param.h"
 #include "mode.h"
 #include "securemode.h"
+#include "scriptenvironment.h"
 #include "text.h"
 #include "notify.h"
 
+#include "socket.h"
+#include <locale.h>
 #include <sys/stat.h>
 #include <time.h>
 #include <Winsock2.h>
@@ -51,8 +54,16 @@
 #include <sys\Timeb.h>
 #include <Iphlpapi.h>
 #include <process.h>
+#include <signal.h>
+#include <locale.h>
 #include <io.h> 
 
+#ifdef DeleteFile
+#undef DeleteFile
+#endif // DeleteFile
+#ifdef GetCurrentTime
+#undef GetCurrentTime
+#endif // GetCurrentTime
 
 //////////////////////////////////////////////////////////////////////////////////
 
@@ -144,6 +155,22 @@ static bool write_blob_to_pipe(HANDLE p_pipe, uint32_t p_count, const void *p_da
 		t_written != p_count)
 		return false;
 	return true;
+}
+
+// MW-2004-11-28: A null FPE signal handler.
+static void handle_fp_exception(int p_signal)
+{
+	p_signal = p_signal;
+}
+
+static bool handle_is_pipe(MCWinSysHandle p_handle)
+{
+	DWORD t_flags;
+
+	int t_result;
+	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
+
+	return t_result != 0;
 }
 
 // MW-2010-05-11: This call is only present on Vista and above, which is the place we
@@ -334,7 +361,7 @@ private:
 	HKEY m_key;
 };
 
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 static MMRESULT tid;
 
 void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
@@ -342,7 +369,7 @@ void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
 	MCalarm = True;
 }
 
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
 
 #define DEFINE_GUID_(name, l, w1, w2, b1, b2, b3, b4, b5, b6, b7, b8) \
         EXTERN_C const GUID DECLSPEC_SELECTANY name \
@@ -350,7 +377,8 @@ void CALLBACK MCS_tp(UINT id, UINT msg, DWORD user, DWORD dw1, DWORD dw2)
 // {F0B7A1A2-9847-11cf-8F20-00805F2CD064}
 DEFINE_GUID_(CATID_ActiveScriptParse, 0xf0b7a1a2, 0x9847, 0x11cf, 0x8f, 0x20, 0x00, 0x80, 0x5f, 0x2c, 0xd0, 0x64);
 
-//////////////////////////////////////////////////////////////////////////////////
+///////////////////////////////////////////////////////////////////////////////
+
 typedef struct
 {
 	MCNameRef *token;
@@ -394,49 +422,49 @@ static void readThreadDone(void *param)
 
 static DWORD readThread(Streamnode *process)
 {
-	MCMemoryFileHandle ihandle;
-	ihandle = process -> ihandle -> handle;
+	//MCMemoryFileHandle ihandle;
+	//ihandle = process -> ihandle -> handle;
 
-	DWORD nread;
-	ihandle->buffer = new char[READ_PIPE_SIZE];
-	uint4 bsize = READ_PIPE_SIZE;
-	ihandle->ioptr = ihandle->buffer;   //set ioptr member
-	ihandle->len = 0; //set len member
-	while (ihandle->fhandle != NULL)
-	{
-		if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
-			break;
-		if (nread == 0)
-		{
-			if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
-				break;
-			Sleep(100);
-			continue;
-		}
-		if (ihandle->len + nread >= bsize)
-		{
-			uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
-			MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
-			bsize = newsize;
-			ihandle->ioptr = ihandle->buffer;
-		}
-		if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
-		              nread, &nread, NULL)
-		        || nread == 0)
-		{
-			ihandle->len += nread;
-			break;
-		}
-		ihandle->len += nread;
-		ihandle->flags = 0;
-		if (ihandle->ioptr != ihandle->buffer)
-		{
-			ihandle->len -= ihandle->ioptr - ihandle->buffer;
-			memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
-			ihandle->ioptr = ihandle->buffer;
-		}
-	}
-	MCNotifyPush(readThreadDone, nil, false, false);
+	//DWORD nread;
+	//ihandle->buffer = new char[READ_PIPE_SIZE];
+	//uint4 bsize = READ_PIPE_SIZE;
+	//ihandle->ioptr = ihandle->buffer;   //set ioptr member
+	//ihandle->len = 0; //set len member
+	//while (ihandle->fhandle != NULL)
+	//{
+	//	if (!PeekNamedPipe(ihandle->fhandle, NULL, 0, NULL, &nread, NULL))
+	//		break;
+	//	if (nread == 0)
+	//	{
+	//		if (WaitForSingleObject(process -> phandle, 0) != WAIT_TIMEOUT)
+	//			break;
+	//		Sleep(100);
+	//		continue;
+	//	}
+	//	if (ihandle->len + nread >= bsize)
+	//	{
+	//		uint4 newsize = ihandle->len + nread + READ_PIPE_SIZE;
+	//		MCU_realloc(&ihandle->buffer, bsize, newsize, 1);
+	//		bsize = newsize;
+	//		ihandle->ioptr = ihandle->buffer;
+	//	}
+	//	if (!ReadFile(ihandle->fhandle, (LPVOID)&ihandle->buffer[ihandle->len],
+	//	              nread, &nread, NULL)
+	//	        || nread == 0)
+	//	{
+	//		ihandle->len += nread;
+	//		break;
+	//	}
+	//	ihandle->len += nread;
+	//	ihandle->flags = 0;
+	//	if (ihandle->ioptr != ihandle->buffer)
+	//	{
+	//		ihandle->len -= ihandle->ioptr - ihandle->buffer;
+	//		memcpy(ihandle->buffer, ihandle->ioptr, ihandle->len);
+	//		ihandle->ioptr = ihandle->buffer;
+	//	}
+	//}
+	//MCNotifyPush(readThreadDone, nil, false, false);
 	return 0;
 }
 
@@ -563,6 +591,12 @@ bool MCS_path_append(MCStringRef p_base, unichar_t p_separator, MCStringRef p_co
 
 //////////////////////////////////////////////////////////////////////////////////
 
+static inline bool is_legal_drive(char p_char)
+{
+	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
+}
+
+//////////////////////////////////////////////////////////////////////////////////
 bool dns_servers_from_network_params(MCListRef& r_list)
 {
 	MCAutoListRef t_list;
@@ -924,39 +958,293 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
         r_error = nil;
         return MCListCopy(*t_list, r_list);
     }
-    
-    virtual void ResetTime()
-    {
-    }
-    
-    ////////////////////////////////////////////////////
-    //  Windows-specific functions (using Windows-specific parameters)
-    ////////////////////////////////////////////////////
-    
-    virtual bool GetCurrentDirNative()
-    {
-    }
-
-    virtual bool GetLongFilePath(MCStringRef& r_path)
-    {
-    }
-
-    virtual Boolean NativePathExists()
-    {
-    }
-
-    virtual bool PathAppend(MCStringRef p_path)
-    {
-    }
-    virtual bool SpecialFolderToCSIDL(MCStringRef p_folder, MCStringRef& CSIDL)
-    {
-    }
-    //MCS_windows_elevation_bootstrap_main
 };
 
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
+	static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
+	{
+#ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
+	Boolean appendmode = False;
+	DWORD omode = 0;		//file open mode
+	DWORD createmode = OPEN_ALWAYS;
+	DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
+	char *newpath = MCS_resolvepath(path);
+	HANDLE hf = NULL;
+	IO_handle handle;
+
+	bool t_device = false;
+	bool t_serial_device = false;
+
+	// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
+	//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
+	uint4 t_path_len;
+	t_path_len = strlen(newpath);
+	if (*newpath != '\0' && newpath[t_path_len - 1] == ':')
+	{
+		if (MCU_strncasecmp(newpath, "COM", 3) == 0)
+		{
+			// If the path length > 4 then it means it must have double digits so rewrite
+			if (t_path_len > 4)
+			{
+				char *t_rewritten_path;
+				t_rewritten_path = new char[t_path_len + 4 + 1];
+				sprintf(t_rewritten_path, "\\\\.\\%s", newpath);
+				delete newpath;
+				newpath = t_rewritten_path;
+				t_path_len += 4;
+			}
+			
+			// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
+			newpath[t_path_len - 1] = '\0';
+
+			t_serial_device = true;
+		}
+		
+		t_device = true;
+	}
+
+	if (strequal(mode, IO_READ_MODE))
+	{
+		omode = GENERIC_READ;
+		createmode = OPEN_EXISTING;
+	}
+	if (strequal(mode, IO_WRITE_MODE))
+	{
+		omode = GENERIC_WRITE;
+		createmode = CREATE_ALWAYS;
+	}
+	if (strequal(mode, IO_UPDATE_MODE))
+		omode = GENERIC_WRITE | GENERIC_READ;
+	if (strequal(mode, IO_APPEND_MODE))
+	{
+		omode = GENERIC_WRITE;
+		appendmode = True;
+	}
+
+	DWORD sharemode;
+	if (t_device)
+	{
+		createmode = OPEN_EXISTING;
+		sharemode = 0;
+	}
+	else
+		sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+	if ((hf = CreateFileA(newpath, omode, sharemode, NULL,
+	                     createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
+	{
+		delete newpath;
+		return NULL;
+	}
+	delete newpath;
+
+	if (t_serial_device)
+	{
+		DCB dcb;
+		dcb . DCBlength = sizeof(DCB);
+		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+		        || !SetCommState(hf, &dcb))
+		{
+			MCS_seterrno(GetLastError());
+			CloseHandle(hf);
+			MCresult->sets("SetCommState error");
+			return NULL;
+		}
+		COMMTIMEOUTS timeout;         //set timeout to prevent blocking
+		memset(&timeout, 0, sizeof(COMMTIMEOUTS));
+		timeout.ReadIntervalTimeout = MAXDWORD;
+		timeout.WriteTotalTimeoutConstant = 2000;
+		if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
+		{
+			MCS_seterrno(GetLastError());
+			CloseHandle(hf);
+			MCresult->sets("SetCommTimeouts error");
+			return NULL;
+		}
+		map = False;
+	}
+
+	handle = new IO_header((MCWinSysHandle)hf, NULL, 0, 0);
+
+	if (appendmode) //if append mode, move file ptr to the end of file
+		SetFilePointer(hf, 0, NULL, FILE_END);
+
+	if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
+	        && (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
+	                                                0, 0, NULL)) != NULL)
+	{
+		handle->len = GetFileSize(hf, NULL);
+		handle->buffer = (char*)MapViewOfFile(handle->mhandle,
+		                                      FILE_MAP_READ, 0, 0, 0);
+		handle->ioptr = handle->buffer;
+		if (handle->buffer == NULL)
+		{
+			CloseHandle(handle->mhandle);
+			if (offset != 0) //move file ptr to the offset position
+				SetFilePointer(hf, offset, NULL, FILE_BEGIN);
+		}
+		else
+			handle->ioptr += offset;
+	}
+	else
+		if (offset != 0) //move file ptr to the offset position
+			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
+
+	return handle;
+#endif /* MCS_open_dsk_w32 */
+		Boolean appendmode = False;
+		DWORD omode = 0;		//file open mode
+		DWORD createmode = OPEN_ALWAYS;
+		DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
+		MCAutoNativeCharArray t_newpath;
+		char *t_char_ptr;
+		HANDLE hf = NULL;
+		MCStdioFileHandle *t_handle;
+
+		bool t_device = false;
+		bool t_serial_device = false;
+
+		// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
+		//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
+		uint4 t_path_len;
+		t_path_len = MCStringGetLength(p_path);
+		/* UNCHECKED */ t_newpath . New(t_path_len + 1);
+		t_char_ptr = (char*)t_newpath . Chars();
+		memcpy(t_char_ptr, MCStringGetNativeCharPtr(p_path), t_path_len);
+
+		if (t_char_ptr != '\0' && t_char_ptr[t_path_len - 1] == ':')
+		{
+			if (MCU_strncasecmp(t_char_ptr, "COM", 3) == 0)
+			{
+				// If the path length > 4 then it means it must have double digits so rewrite
+				if (t_path_len > 4)
+				{
+					t_newpath . Resize(t_path_len + 4 + 1);
+					t_char_ptr = (char*)t_newpath . Chars();
+					memmove(t_char_ptr + 4, t_char_ptr, t_path_len);
+					strcpy(t_char_ptr, "\\\\.\\");
+					t_path_len += 4;
+				}
+				
+				// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
+				t_char_ptr[t_path_len - 1] = '\0';
+
+				t_serial_device = true;
+			}
+			
+			t_device = true;
+		}
+
+		if (p_mode == kMCSystemFileModeRead)
+		{
+			omode = GENERIC_READ;
+			createmode = OPEN_EXISTING;
+		}
+		if (p_mode == kMCSystemFileModeWrite)
+		{
+			omode = GENERIC_WRITE;
+			createmode = CREATE_ALWAYS;
+		}
+		if (p_mode == kMCSystemFileModeUpdate)
+			omode = GENERIC_WRITE | GENERIC_READ;
+		if (p_mode == kMCSystemFileModeAppend)
+		{
+			omode = GENERIC_WRITE;
+			appendmode = True;
+		}
+
+		DWORD sharemode;
+		if (t_device)
+		{
+			createmode = OPEN_EXISTING;
+			sharemode = 0;
+		}
+		else
+			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		if ((hf = CreateFileA(t_char_ptr, omode, sharemode, NULL,
+							 createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
+		{
+			return NULL;
+		}
+
+		if (t_serial_device)
+		{
+			DCB dcb;
+			dcb . DCBlength = sizeof(DCB);
+			if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+					|| !SetCommState(hf, &dcb))
+			{
+				MCS_seterrno(GetLastError());
+				CloseHandle(hf);
+				MCresult->sets("SetCommState error");
+				return NULL;
+			}
+			COMMTIMEOUTS timeout;         //set timeout to prevent blocking
+			memset(&timeout, 0, sizeof(COMMTIMEOUTS));
+			timeout.ReadIntervalTimeout = MAXDWORD;
+			timeout.WriteTotalTimeoutConstant = 2000;
+			if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
+			{
+				MCS_seterrno(GetLastError());
+				CloseHandle(hf);
+				MCresult->sets("SetCommTimeouts error");
+				return NULL;
+			}
+			//TODO Implement map = False;
+		}
+
+		t_handle = new MCStdioFileHandle;
+		t_handle -> m_handle = (MCWinSysHandle)hf;
+		t_handle -> m_is_pipe = false;
+		t_handle -> m_ioptr = NULL;
+		t_handle -> m_putback = 0;
+
+		// TODO Implement
+		//if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
+		//		&& (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
+		//												0, 0, NULL)) != NULL)
+		//{
+		//	handle->len = GetFileSize(hf, NULL);
+		//	handle->buffer = (char*)MapViewOfFile(handle->mhandle,
+		//										  FILE_MAP_READ, 0, 0, 0);
+		//	handle->ioptr = handle->buffer;
+		//	if (handle->buffer == NULL)
+		//	{
+		//		CloseHandle(handle->mhandle);
+		//		if (offset != 0) //move file ptr to the offset position
+		//			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
+		//	}
+		//	else
+		//		handle->ioptr += offset;
+		//}
+
+		if (appendmode) //if append mode, move file ptr to the end of file
+			t_handle -> Seek(0, -1);
+
+		return t_handle;
+	}
+
+	static MCStdioFileHandle *OpenFd(DWORD p_fd)
+	{
+		MCStdioFileHandle *t_stdio_handle;
+		HANDLE t_handle;
+
+		// No need to open p_fd, as on Windows only STD_INPUT_HANDLE, STD_OUTPUT_HANDLE 
+		// and STD_ERROR_HANDLE can be processed by GetStdHandle
+		t_handle = GetStdHandle(p_fd);  
+
+		if (t_handle == INVALID_HANDLE_VALUE)
+			return nil;
+
+		t_stdio_handle = new MCStdioFileHandle;
+		t_stdio_handle -> m_handle = (MCWinSysHandle)t_handle;
+		t_stdio_handle -> m_is_pipe = handle_is_pipe((MCWinSysHandle)t_handle);
+		t_stdio_handle -> m_ioptr = NULL;
+
+		return t_stdio_handle;
+	}
+
 	virtual void Close(void)
 	{
 #ifdef /* MCS_close_dsk_w32 */ LEGACY_SYSTEM
@@ -973,12 +1261,11 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	delete stream;
 	stream = NULL;
 #endif /* MCS_close_dsk_w32 */
-		CloseHandle(fhandle);
+		CloseHandle(m_handle);
 		delete this;
-		this = NULL;
 	}
 	
-	virtual IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	virtual IO_stat Read(void *p_buffer, uint32_t p_byte_size, uint32_t& r_read)
 	{
 #ifdef /* MCS_read_dsk_w32 */ LEGACY_SYSTEM
 	if (MCabortscript || ptr == NULL || stream == NULL)
@@ -1131,7 +1418,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	n = nread / size;
 	return IO_NORMAL;
 #endif /* MCS_read_dsk_w32 */
-		LPVOID sptr = ptr;
+		LPVOID sptr = p_buffer;
 		DWORD nread;
 		Boolean result = False;
 		IO_stat istat = IO_NORMAL;
@@ -1139,7 +1426,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (m_handle == 0)
 		{
 			MCS_seterrno(GetLastError());
-			n = 0;
+			r_read = 0;
 			return IO_ERROR;
 		}
 		
@@ -1153,7 +1440,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			uint32_t t_available;
 			if (!PeekNamedPipe(m_handle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
 			{
-				n = 0;
+				r_read = 0;
 
 				DWORD t_error;
 				t_error = GetLastError();
@@ -1240,7 +1527,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return IO_NORMAL;
 	}
 
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_byte_size, uint32_t& r_written)
 	{
 #ifdef /* MCS_write_dsk_w32 */ LEGACY_SYSTEM
 	if (stream == IO_stdin)
@@ -1272,13 +1559,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (m_handle == NULL)
 			return false;
 
-		if (!WriteFile(m_handle, (LPVOID)ptr, (DWORD)p_length,
-					   &r_written, NULL))
+		if (!WriteFile(m_handle, (LPVOID)p_buffer, (DWORD)p_byte_size,
+					   (LPDWORD)&r_written, NULL))
 		{
 			MCS_seterrno(GetLastError());
 			return false;
 		}
-		if (r_written != p_length)
+		if (r_written != p_byte_size)
 			return false;
 
 		return true;
@@ -1335,7 +1622,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		DWORD fp;
 
 		fp = SetFilePointer(m_handle, (LONG)(p_offset & 0xFFFFFFFF),
-			&high_offset, t_type > 0 ? FILE_BEGIN : (t_type < 0 ? FILE_END : FILE_CURRENT));
+			&high_offset, p_dir > 0 ? FILE_BEGIN : (p_dir < 0 ? FILE_END : FILE_CURRENT));
 
 		if (fp == INVALID_SET_FILE_POINTER && GetLastError() != NO_ERROR)
 			return false;
@@ -1351,7 +1638,10 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	else
 		return IO_ERROR;
 #endif /* MCS_trunc_dsk_w32 */
-		return SetEndOfFile(m_handle);
+		if (!SetEndOfFile(m_handle))
+			return false;
+
+		return false;
 	}
 
 	virtual bool Sync(void)
@@ -1412,7 +1702,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (m_putback != -1)
 			return false;
 			
-		m_putback = c;
+		m_putback = p_char;
 		
 		return true;
 	}
@@ -1440,7 +1730,11 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return low | ((int64_t)high << 32);
 	}
 	
-	virtual void *GetFilePointer(void) = 0;
+	virtual void *GetFilePointer(void)
+	{
+		return m_handle;
+	}
+
 	virtual int64_t GetFileSize(void)
 	{
 #ifdef /* MCS_fsize_dsk_w32 */ LEGACY_SYSTEM
@@ -1459,14 +1753,19 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	return 0;
 #endif /* MCS_fsize_dsk_w32 */
 		DWORD t_high_word, t_low_word;
-		t_low_word = GetFileSize(m_handle, &t_high_word);
+		t_low_word = ::GetFileSize(m_handle, &t_high_word);
 		if (t_low_word != INVALID_FILE_SIZE || GetLastError() == NO_ERROR)
 			return (int64_t)t_low_word | (int64_t)t_high_word << 32;
 
 		return 0;
 	}
     
-    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length) = 0;
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+	{
+		// TODO Implement
+		return false;
+	}
+
 private:
 	MCWinSysHandle m_handle;
 	char *m_ioptr;
@@ -1480,7 +1779,7 @@ real8 curtime;
 static real8 starttime;
 static DWORD startcount;
 
-struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
+struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 {
     virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
@@ -1489,7 +1788,161 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         return nil;
     }
     
-	virtual bool Initialize(void) = 0;
+	virtual bool Initialize(void)
+	{
+#ifdef /* MCS_init_dsk_w32 */ LEGACY_SYSTEM
+	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
+	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
+	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
+	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
+	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
+	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
+
+	setlocale(LC_CTYPE, MCnullstring);
+	setlocale(LC_COLLATE, MCnullstring);
+
+	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
+	((unsigned short *)_pctype)[160] &= ~_SPACE;
+
+	MCinfinity = HUGE_VAL;
+	MCS_time(); // force init
+	if (timeBeginPeriod(1) == TIMERR_NOERROR)
+		MCS_reset_time();
+	else
+		MClowrestimers = True;
+	MCExecPoint ep;
+	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
+	MCS_query_registry(ep);
+	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+	{
+		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
+		MCS_query_registry(ep);
+		if (ep.getsvalue().getlength())
+			MChttpproxy = ep . getsvalue() . clone();
+	}
+	else
+	{
+		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+		MCS_query_registry(ep);
+		if (ep.getsvalue().getlength())
+		{
+			char *t_host;
+			int4 t_port;
+			t_host = ep.getsvalue().clone();
+			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
+			MCS_query_registry(ep);
+			ep.ston();
+			t_port = ep.getint4();
+			ep.setstringf("%s:%d", t_host, t_port);
+			MChttpproxy = ep . getsvalue() . clone();
+			delete t_host;
+		}
+	}
+
+	// On NT systems 'cmd.exe' is the command processor
+	MCshellcmd = strclone("cmd.exe");
+
+	// MW-2005-05-26: Store a global variable containing major OS version...
+	OSVERSIONINFOA osv;
+	memset(&osv, 0, sizeof(OSVERSIONINFOA));
+	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+	GetVersionExA(&osv);
+	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
+
+	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
+	if (MCmajorosversion >= 0x0500)
+	{
+		MCttsize = 11;
+		MCttfont = "Tahoma";
+	}
+	else if (MCmajorosversion >= 0x0600)
+	{
+		MCttsize = 11;
+		MCttfont = "Segoe UI";
+	}
+
+	OleInitialize(NULL); //for drag & drop
+
+	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
+	//   so it *should* be unnecessary but Win9x plays with the FP control word.
+	signal(SIGFPE, handle_fp_exception);
+#endif /* MCS_init_dsk_w32 */
+	IO_stdin = MCsystem -> OpenStdFile(STD_INPUT_HANDLE, kMCSystemFileModeRead);
+		IO_stdout = MCsystem -> OpenStdFile(STD_OUTPUT_HANDLE, kMCSystemFileModeWrite);
+		IO_stderr = MCsystem -> OpenStdFile(STD_ERROR_HANDLE, kMCSystemFileModeWrite);
+
+		setlocale(LC_CTYPE, MCnullstring);
+		setlocale(LC_COLLATE, MCnullstring);
+
+		// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
+		((unsigned short *)_pctype)[160] &= ~_SPACE;
+
+		MCinfinity = HUGE_VAL;
+		MCS_time(); // force init
+		if (timeBeginPeriod(1) == TIMERR_NOERROR)
+			MCS_reset_time();
+		else
+			MClowrestimers = True;
+		MCExecPoint ep;
+		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
+		MCS_query_registry(ep);
+		if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+		{
+			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
+			/* UNCHECKED */ MCS_query_registry(ep);
+			if (ep.getsvalue().getlength())
+				MChttpproxy = ep . getsvalue() . clone();
+		}
+		else
+		{
+			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+			/* UNCHECKED */ MCS_query_registry(ep);
+			if (ep.getsvalue().getlength())
+			{
+				char *t_host;
+				int4 t_port;
+				t_host = ep.getsvalue().clone();
+				ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
+				MCS_query_registry(ep);
+				ep.ston();
+				t_port = ep.getint4();
+				ep.setstringf("%s:%d", t_host, t_port);
+				MChttpproxy = ep . getsvalue() . clone();
+				delete t_host;
+			}
+		}
+
+		// On NT systems 'cmd.exe' is the command processor
+		MCshellcmd = strclone("cmd.exe");
+
+		// MW-2005-05-26: Store a global variable containing major OS version...
+		OSVERSIONINFOA osv;
+		memset(&osv, 0, sizeof(OSVERSIONINFOA));
+		osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+		GetVersionExA(&osv);
+		MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
+
+		// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
+		if (MCmajorosversion >= 0x0500)
+		{
+			MCttsize = 11;
+			MCttfont = "Tahoma";
+		}
+		else if (MCmajorosversion >= 0x0600)
+		{
+			MCttsize = 11;
+			MCttfont = "Segoe UI";
+		}
+
+		OleInitialize(NULL); //for drag & drop
+
+		// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
+		//   so it *should* be unnecessary but Win9x plays with the FP control word.
+		signal(SIGFPE, handle_fp_exception);
+
+		return true;
+	}
+
 	virtual void Finalize(void)
     {
 #ifdef /* MCS_shutdown_dsk_w32 */ LEGACY_SYSTEM
@@ -1498,8 +1951,10 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         OleUninitialize();
     }
 	
-	virtual void Debug(MCStringRef p_string) = 0;
-    
+	virtual void Debug(MCStringRef p_string)
+	{
+	}
+
 	virtual real64_t GetCurrentTime()
     {
 #ifdef /* MCS_time_dsk_w32 */ LEGACY_SYSTEM
@@ -1518,7 +1973,6 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	_ftime(&timebuffer);
 	starttime = timebuffer.time + timebuffer.millitm / 1000.0;
 	return starttime;
-        return starttime;
 #endif /* MCS_time_dsk_w32 */
         if (startcount)
         {
@@ -1534,6 +1988,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         struct _timeb timebuffer;
         _ftime(&timebuffer);
         starttime = timebuffer.time + timebuffer.millitm / 1000.0;
+		return starttime;
     }
     
     virtual void ResetTime(void)
@@ -1975,7 +2430,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         {
             MCAutoStringRef t_std_path;
             t_dest.Shrink(MCCStringLength((char*)t_dest.Chars()));
-            return t_dest.CreateStringAndRelease(&t_std_path) && MCU_path2std(*t_std_path, r_dest);
+            return t_dest.CreateString(&t_std_path) && MCU_path2std(*t_std_path, r_dest);
         }
         else
         {
@@ -1986,18 +2441,15 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
     }
 	
-	virtual void GetCurrentFolder(MCStringRef& r_path)
+	virtual bool GetCurrentFolder(MCStringRef& r_path)
     {
 #ifdef /* MCS_getcurdir_dsk_w32 */ LEGACY_SYSTEM
 	MCAutoStringRef t_path;
 	return MCS_getcurdir_native(&t_path) &&
 		MCU_path2std(*t_path, r_path);
 #endif /* MCS_getcurdir_dsk_w32 */
-        MCAutoStringRef t_path;
-        MCS_getcurdir_native(&t_path);
-		/* UNCHECKED */ MCU_path2std(*t_path, r_path);
+        return MCS_getcurdir_native(r_path);
     }
-	///* LEGACY */ char *GetCurrentFolder(void);
     
 	virtual Boolean SetCurrentFolder(MCStringRef p_path)
     {
@@ -2120,7 +2572,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         //}
         else
         {
-            if (MCNumberParse(MCNameGetString(p_type), &t_special_folder) ||
+			if (MCNumberParseUnicodeChars(MCStringGetCharPtr(MCNameGetString(p_type)), MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
                 MCS_specialfolder_to_csidl(p_type, &t_special_folder))
             {
                 LPITEMIDLIST lpiil;
@@ -2169,6 +2621,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return ((real8)bs * (real8)sc * (real8)fc);
 	}
 
+
     virtual Boolean GetDevices(MCStringRef& r_devices)
 	{
 #ifdef /* MCS_getdevices_dsk_w32 */ LEGACY_SYSTEM
@@ -2178,6 +2631,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		r_devices = MCValueRetain(kMCEmptyString);
 		return true;
 	}
+
 
     virtual Boolean GetDrives(MCStringRef& r_drives)
 	{
@@ -2279,6 +2733,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             return IO_ERROR;
         return IO_NORMAL;
     }
+	
 	virtual uint2 UMask(uint2 p_mask)
     {
 #ifdef /* MCS_umask_dsk_w32 */ LEGACY_SYSTEM
@@ -2289,141 +2744,38 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
     {
-#ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
-	Boolean appendmode = False;
-	DWORD omode = 0;		//file open mode
-	DWORD createmode = OPEN_ALWAYS;
-	DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
-	char *newpath = MCS_resolvepath(path);
-	HANDLE hf = NULL;
-	IO_handle handle;
+		MCStdioFileHandle *t_handle;
+		t_handle = MCStdioFileHandle::Open(p_path, p_mode);
 
-	bool t_device = false;
-	bool t_serial_device = false;
-
-	// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
-	//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
-	uint4 t_path_len;
-	t_path_len = strlen(newpath);
-	if (*newpath != '\0' && newpath[t_path_len - 1] == ':')
-	{
-		if (MCU_strncasecmp(newpath, "COM", 3) == 0)
-		{
-			// If the path length > 4 then it means it must have double digits so rewrite
-			if (t_path_len > 4)
-			{
-				char *t_rewritten_path;
-				t_rewritten_path = new char[t_path_len + 4 + 1];
-				sprintf(t_rewritten_path, "\\\\.\\%s", newpath);
-				delete newpath;
-				newpath = t_rewritten_path;
-				t_path_len += 4;
-			}
-			
-			// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
-			newpath[t_path_len - 1] = '\0';
-
-			t_serial_device = true;
-		}
-		
-		t_device = true;
-	}
-
-	if (strequal(mode, IO_READ_MODE))
-	{
-		omode = GENERIC_READ;
-		createmode = OPEN_EXISTING;
-	}
-	if (strequal(mode, IO_WRITE_MODE))
-	{
-		omode = GENERIC_WRITE;
-		createmode = CREATE_ALWAYS;
-	}
-	if (strequal(mode, IO_UPDATE_MODE))
-		omode = GENERIC_WRITE | GENERIC_READ;
-	if (strequal(mode, IO_APPEND_MODE))
-	{
-		omode = GENERIC_WRITE;
-		appendmode = True;
-	}
-
-	DWORD sharemode;
-	if (t_device)
-	{
-		createmode = OPEN_EXISTING;
-		sharemode = 0;
-	}
-	else
-		sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-	if ((hf = CreateFileA(newpath, omode, sharemode, NULL,
-	                     createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
-	{
-		delete newpath;
-		return NULL;
-	}
-	delete newpath;
-
-	if (t_serial_device)
-	{
-		DCB dcb;
-		dcb . DCBlength = sizeof(DCB);
-		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
-		        || !SetCommState(hf, &dcb))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommState error");
-			return NULL;
-		}
-		COMMTIMEOUTS timeout;         //set timeout to prevent blocking
-		memset(&timeout, 0, sizeof(COMMTIMEOUTS));
-		timeout.ReadIntervalTimeout = MAXDWORD;
-		timeout.WriteTotalTimeoutConstant = 2000;
-		if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommTimeouts error");
-			return NULL;
-		}
-		map = False;
-	}
-
-	handle = new IO_header((MCWinSysHandle)hf, NULL, 0, 0);
-
-	if (appendmode) //if append mode, move file ptr to the end of file
-		SetFilePointer(hf, 0, NULL, FILE_END);
-
-	if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
-	        && (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
-	                                                0, 0, NULL)) != NULL)
-	{
-		handle->len = GetFileSize(hf, NULL);
-		handle->buffer = (char*)MapViewOfFile(handle->mhandle,
-		                                      FILE_MAP_READ, 0, 0, 0);
-		handle->ioptr = handle->buffer;
-		if (handle->buffer == NULL)
-		{
-			CloseHandle(handle->mhandle);
-			if (offset != 0) //move file ptr to the offset position
-				SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-		}
-		else
-			handle->ioptr += offset;
-	}
-	else
-		if (offset != 0) //move file ptr to the offset position
-			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-
-	return handle;
-#endif /* MCS_open_dsk_w32 */
+        if (t_handle == nil)
+            return nil;
+        
+        if (p_offset > 0)
+            t_handle -> Seek(p_offset, SEEK_SET);
+        
+        return new IO_header(t_handle, 0);
     }
     
-	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
-	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset) = 0;
+	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
+	{
+        MCStdioFileHandle *t_handle;
+		// No opening mode for Windows since only stdin, stdout and stderr can be opened
+		// with a file descriptor
+        t_handle = MCStdioFileHandle::OpenFd(fd);
+        
+        if (t_handle == nil)
+            return nil;
+        
+        return new IO_header(t_handle, 0);
+	}
+
+	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
+	{
+		return nil;
+	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
-	virtual void GetTemporaryFileName(MCStringRef& r_tmp_name)
+	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name)
     {
 #ifdef /* MCS_tmpnam_dsk_w32 */ LEGACY_SYSTEM
 	MCAutoStringRef t_path;
@@ -2472,17 +2824,16 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             !LongFilePath(*t_stdpath, &t_long_path))
 		{
 			r_tmp_name = MCValueRetain(kMCEmptyString);
-            return;
+            return true;
 		}
         
         if (t_ptr == nil)
 		{
-			/* UNCHECKED */ MCStringCopy(*t_long_path, r_tmp_name);
-			return;
+			return MCStringCopy(*t_long_path, r_tmp_name);
 		}
         
         MCAutoStringRef t_tmp_name;
-        /* UNCHECKED */ MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
+        return MCStringMutableCopy(*t_long_path, &t_tmp_name) &&
 			MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
 			MCStringCopy(*t_tmp_name, r_tmp_name);
     }
@@ -2670,7 +3021,63 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         return MCListCopy(*t_list, r_list);
     }
     
-	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
+	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
+	{
+#ifdef /* MCU_path2native */ LEGACY_SYSTEM
+bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
+{
+#ifdef _WIN32
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_native_path);
+
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		if (t_src[i] == '/')
+			t_dst[i] = '\\';
+		else if (t_src[i] == '\\')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+	}
+
+	return t_path.CreateStringAndRelease(r_native_path);
+#else
+	return MCStringCopy(p_path, r_native_path);
+#endif
+}
+#endif /* MCS_path2native */
+		uindex_t t_length = MCStringGetLength(p_path);
+		if (t_length == 0)
+			return MCStringCopy(p_path, r_native);
+
+		MCAutoNativeCharArray t_path;
+		if (!t_path.New(t_length))
+			return false;
+
+		const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+		char_t *t_dst = t_path.Chars();
+
+		for (uindex_t i = 0; i < t_length; i++)
+		{
+			if (t_src[i] == '/')
+				t_dst[i] = '\\';
+			else if (t_src[i] == '\\')
+				t_dst[i] = '/';
+			else
+				t_dst[i] = t_src[i];
+		}
+
+		return t_path.CreateStringAndRelease(r_native);
+	}
+
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_livecode_path)
 	{
 #ifdef /* MCU_path2std */ LEGACY_SYSTEM
@@ -2730,11 +3137,26 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		return t_path.CreateStringAndRelease(r_livecode_path);
 	}
 
-	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
+	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
+	{
+#ifdef /* MCS_resolvepath_dsk_w32 */ LEGACY_SYSTEM
+	if (MCStringGetLength(p_path) == 0)
+		return MCS_getcurdir_native(r_resolved_path);
+
+	return MCU_path2native(p_path, r_resolved_path);
+#endif /* MCS_resolvepath_dsk_w32 */
+		// Parameters for MCSystemInterface functions are always native paths
+		return ResolveNativePath(p_path, r_resolved_path);
+	}
     
-	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
-	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	///* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
+	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path)
+	{
+		if (MCStringGetLength(p_path) == 0)
+			return MCS_getcurdir_native(r_resolved_path);
+
+		MCU_fix_path(p_path, r_resolved_path);
+		return true;
+	}
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path)
     {
@@ -2924,120 +3346,78 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 	MCU_fix_path(t_path);
 	return t_path;
 #endif /* MCS_get_canonical_path_dsk_w32 */
-		char *t_path = NULL;
-		char *t_curdir = NULL;
+		MCAutoNativeCharArray t_path_native;
+		MCAutoStringRef t_current;
+		MCAutoStringRef t_path, t_fixed_path;
+		char* t_char_ptr;
 
-		if (path == NULL)
-			return NULL;
+		if (p_path == NULL)
+		{
+			r_canonical_path = MCValueRetain(kMCEmptyString);
+			return;
+		}
 
-		if (path[0] == '/' && path[1] != '/')
+		if (MCStringGetNativeCharAtIndex(p_path, 0) == '/' && MCStringGetNativeCharAtIndex(p_path, 1) != '/')
 		{
 			// path in root of current drive
-			t_curdir = MCS_getcurdir();
+			MCS_getcurdir(&t_current);
 
 			int t_path_len;
-			t_path_len = strlen(path);
-			while (path[0] == '/')
+			t_path_len = MCStringGetLength(p_path);
+			int i = 0;
+			while (MCStringGetNativeCharAtIndex(p_path, 0) == '/')
 			{
-				path ++;
+				i ++;
 				t_path_len --;
 			}
 			
-			t_path = (char*)malloc(3 + t_path_len + 1);
-			t_path[0] = t_curdir[0]; t_path[1] = ':'; t_path[2] = '/';
-			strcpy(t_path + 3, path);
+			t_path_native.New(3 + t_path_len + 1);
+			t_char_ptr = (char*)t_path_native.Chars();
+			t_char_ptr[0] = MCStringGetNativeCharAtIndex(*t_current, 0); 
+			t_char_ptr[1] = ':'; 
+			t_char_ptr[2] = '/';
+			memcpy(t_char_ptr + 3, MCStringGetCString(p_path) + i, t_path_len);
 		}
-		else if (is_legal_drive(path[0]) && path[1] == ':')
+		else if (is_legal_drive(MCStringGetNativeCharAtIndex(p_path, 0)) && MCStringGetNativeCharAtIndex(p_path, 1) == ':')
 		{
 			// absolute path
-			t_path = strclone(path);
+			t_path_native.New(MCStringGetLength(p_path) + 1);
+			memcpy(t_path_native.Chars(), MCStringGetCString(p_path), MCStringGetLength(p_path));
 		}
 		else
 		{
 			// relative to current folder
-			t_curdir = MCS_getcurdir();
+			MCS_getcurdir(&t_current);
 			int t_curdir_len;
-			t_curdir_len = strlen(t_curdir);
+			t_curdir_len = MCStringGetLength(*t_current);
 
-			while (t_curdir_len > 0 && t_curdir[t_curdir_len - 1] == '/')
+			while (t_curdir_len > 0 && MCStringGetNativeCharAtIndex(*t_current, t_curdir_len - 1) == '/')
 				t_curdir_len--;
 
 			int t_path_len;
-			t_path_len = strlen(path);
+			t_path_len = MCStringGetLength(p_path);
 
-			while (t_path_len > 0 && path[0] == '/')
+			int i = 0;
+			while (t_path_len > 0 && MCStringGetNativeCharAtIndex(p_path, i) == '/')
 			{
-				path ++;
 				t_path_len --;
+				i++;
 			}
 
-			t_path = (char*)malloc(t_curdir_len + 1 + t_path_len + 1);
-			memcpy(t_path, t_curdir, t_curdir_len);
-			t_path[t_curdir_len] = '/';
-			memcpy(t_path + t_curdir_len + 1, path, t_path_len + 1);
+			char *t_char_ptr;
+			t_path_native.New(t_curdir_len + 1 + t_path_len + 1);
+			t_char_ptr = (char*)t_path_native.Chars();
+			memcpy(t_char_ptr, MCStringGetCString(*t_current), t_curdir_len);
+			t_char_ptr[t_curdir_len] = '/';
+			memcpy(t_char_ptr + t_curdir_len + 1, MCStringGetCString(p_path) + i, t_path_len + 1);
 		}
 
-		MCU_fix_path(t_path);
-		return t_path;
+		/* UNCHECkED */ t_path_native.CreateStringAndRelease(&t_path);
+		MCU_fix_path(*t_path, &t_fixed_path);
 	}
     
-	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
-    
-	virtual char *GetHostName(void) = 0;
-	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-	virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-    
-	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset) = 0;
-	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used) = 0;
-    
-    virtual void CheckProcesses(void)
-    {
-#ifdef /* MCS_checkprocesses_dsk_w32 */ LEGACY_SYSTEM
-	uint2 i;
-	for (i = 0 ; i < MCnprocesses ; i++)
-		if (MCprocesses[i].phandle != NULL)
-		{
-			DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
-			if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
-			{
-				// MW-2010-05-17: Make sure we keep the process around long enough to
-				//   read in all its data.
-				uint32_t t_available;
-				if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
-					t_available = 0;
-				if (t_available != 0)
-					continue;
-
-				// MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
-				if (MCprocesses[i] . ihandle != nil)
-					MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
-
-				DWORD retcode;
-				GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
-				MCprocesses[i].retcode = retcode;
-				MCprocesses[i].pid = 0;
-				MCprocesses[i].phandle = NULL;
-				Sleep(0);
-				if (MCprocesses[i].thandle != NULL)
-				{
-					TerminateThread(MCprocesses[i].thandle, 0);
-					MCprocesses[i].thandle = NULL;
-				}
-			}
-		}
-#endif /* MCS_checkprocesses_dsk_w32 */
-    }
-    
-	virtual uint32_t GetSystemError(void)
+	virtual bool Shell(MCStringRef p_command, MCDataRef& r_data, int& r_retcode)
 	{
-#ifdef /* MCS_getsyserror_dsk_w32 */ LEGACY_SYSTEM
-	return GetLastError();
-#endif /* MCS_getsyserror_dsk_w32 */
-		return GetLastError();
-	}
-    
-    virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output)
-    {
 #ifdef /* MCS_runcmd_dsk_w32 */ LEGACY_SYSTEM
 	IO_cleanprocesses();
 	SECURITY_ATTRIBUTES saAttr;
@@ -3217,9 +3597,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         MCprocesses[index].name = (MCNameRef)MCValueRetain(MCM_shell);
         MCprocesses[index].mode = OM_NEITHER;
         MCprocesses[index].ohandle = NULL;
-        MCprocesses[index].ihandle = new IO_header((MCWinSysHandle)hChildStdoutRd, NULL, 0, 0);
-        // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-        MCprocesses[index].ihandle -> is_pipe = true;
+		// TODO Implement MCprocesses[index].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
         if (created)
         {
             HANDLE phandle = GetCurrentProcess();
@@ -3254,7 +3632,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             Sleep(0);
             MCeerror->add(EE_SHELL_BADCOMMAND, 0, 0, pname);
             delete pname;
-            return IO_ERROR;
+            return false;
         }
         
         s_finished_reading = false;
@@ -3275,7 +3653,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
                 MCS_close(MCprocesses[index].ihandle);
                 IO_cleanprocesses();
                 delete pname;
-                return IO_ERROR;
+                return false;
             }
         }
         while(!s_finished_reading);
@@ -3304,9 +3682,181 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         delete pname;
         t_ep.texttobinary();
 
-		r_output = (MCStringRef) MCValueRetain(t_ep.getvalueref());
-        return IO_NORMAL;
+		return t_ep.copyasdataref(r_data);
     }
+    
+	//virtual char *GetHostName(void)
+	//{
+	//	// Implemented in opensslsocket.cpp
+	//}
+
+	//virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
+	//{
+	//	// Implemented in opensslsocket.cpp
+	//}
+
+	//virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
+	//{
+	//	// Implemented in opensslsocket.cpp
+	//}
+    
+	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
+	{
+#ifdef /* MCS_multibytetounicode_dsk_w32 */ LEGACY_SYSTEM
+	char szLocaleData[6];
+	uint2 codepage = 0;
+	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
+	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
+	                                   destbufferlength >> 1);
+	destlen = dsize << 1;
+#endif /* MCS_multibytetounicode_dsk_w32 */
+#ifdef /* MCS_unicodetomultibyte_dsk_w32 */ LEGACY_SYSTEM
+	char szLocaleData[6];
+	uint2 codepage = 0;
+	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
+	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
+	                                   d, destbufferlength, NULL, NULL);
+	destlen = dsize;
+#endif /* MCS_unicodetomultibyte_dsk_w32 */
+		char szLocaleData[6];
+		uint2 codepage = 0;
+		GetLocaleInfoA(MAKELCID(MCS_charsettolangid(p_to_charset), SORT_DEFAULT)
+					   , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+		codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+		uint4 dsize;
+		const char *t_string_ptr = (char*)p_string;
+		const char *t_buffer_ptr = (char*)r_buffer;
+		if (p_from_charset == LCH_UNICODE)
+			dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)t_string_ptr, p_string_length >> 1,
+										   (LPSTR)t_buffer_ptr, p_buffer_length, NULL, NULL);
+		else
+			dsize = MultiByteToWideChar( codepage, 0, (LPCSTR)t_string_ptr, p_string_length, (LPWSTR)t_buffer_ptr,
+										   p_buffer_length >> 1);
+
+		return dsize;
+	}
+
+	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
+	{
+#ifdef /* MCSTextConvertToUnicode_dsk_w32 */ LEGACY_SYSTEM
+	if (p_input_length == 0)
+	{
+		r_used = 0;
+		return true;
+	}
+
+	UINT t_codepage;
+	if (p_input_encoding >= kMCTextEncodingWindowsNative)
+		t_codepage = p_input_encoding - kMCTextEncodingWindowsNative;
+	else if (p_input_encoding >= kMCTextEncodingMacNative)
+		t_codepage = 10000 + p_input_encoding - kMCTextEncodingMacNative;
+	else
+	{
+		r_used = 0;
+		return true;
+	}
+
+	// MW-2009-08-27: It is possible for t_codepage == 65001 which means UTF-8. In this case we can't
+	//   use the precomposed flag...
+
+	int t_required_size;
+	t_required_size = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, NULL, 0);
+	if (t_required_size > (int)p_output_length / 2)
+	{
+		r_used = t_required_size * 2;
+		return false;
+	}
+
+	int t_used;
+	t_used = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, (LPWSTR)p_output, p_output_length);
+	r_used = t_used * 2;
+
+	return true; 
+#endif /* MCSTextConvertToUnicode_dsk_w32 */
+		if (p_input_length == 0)
+		{
+			r_used = 0;
+			return true;
+		}
+
+		UINT t_codepage;
+		if (p_input_encoding >= kMCTextEncodingWindowsNative)
+			t_codepage = p_input_encoding - kMCTextEncodingWindowsNative;
+		else if (p_input_encoding >= kMCTextEncodingMacNative)
+			t_codepage = 10000 + p_input_encoding - kMCTextEncodingMacNative;
+		else
+		{
+			r_used = 0;
+			return true;
+		}
+
+		// MW-2009-08-27: It is possible for t_codepage == 65001 which means UTF-8. In this case we can't
+		//   use the precomposed flag...
+
+		int t_required_size;
+		t_required_size = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, NULL, 0);
+		if (t_required_size > (int)p_output_length / 2)
+		{
+			r_used = t_required_size * 2;
+			return false;
+		}
+
+		int t_used;
+		t_used = MultiByteToWideChar(t_codepage, t_codepage == 65001 ? 0 : MB_PRECOMPOSED, (LPCSTR)p_input, p_input_length, (LPWSTR)p_output, p_output_length);
+		r_used = t_used * 2;
+
+		return true; 
+	}
+    
+    virtual void CheckProcesses(void)
+    {
+#ifdef /* MCS_checkprocesses_dsk_w32 */ LEGACY_SYSTEM
+	uint2 i;
+	for (i = 0 ; i < MCnprocesses ; i++)
+		if (MCprocesses[i].phandle != NULL)
+		{
+			DWORD err = WaitForSingleObject(MCprocesses[i].phandle, 0);
+			if (err == WAIT_OBJECT_0 || err == WAIT_FAILED)
+			{
+				// MW-2010-05-17: Make sure we keep the process around long enough to
+				//   read in all its data.
+				uint32_t t_available;
+				if (MCprocesses[i].ihandle == NULL || !PeekNamedPipe(MCprocesses[i].ihandle->fhandle, NULL, 0, NULL, (DWORD *)&t_available, NULL))
+					t_available = 0;
+				if (t_available != 0)
+					continue;
+
+				// MW-2010-10-25: [[ Bug 9134 ]] Make sure the we mark the stream as 'ATEOF'
+				if (MCprocesses[i] . ihandle != nil)
+					MCprocesses[i] . ihandle -> flags |= IO_ATEOF;
+
+				DWORD retcode;
+				GetExitCodeProcess(MCprocesses[i].phandle, &retcode);
+				MCprocesses[i].retcode = retcode;
+				MCprocesses[i].pid = 0;
+				MCprocesses[i].phandle = NULL;
+				Sleep(0);
+				if (MCprocesses[i].thandle != NULL)
+				{
+					TerminateThread(MCprocesses[i].thandle, 0);
+					MCprocesses[i].thandle = NULL;
+				}
+			}
+		}
+#endif /* MCS_checkprocesses_dsk_w32 */
+    }
+    
+	virtual uint32_t GetSystemError(void)
+	{
+#ifdef /* MCS_getsyserror_dsk_w32 */ LEGACY_SYSTEM
+	return GetLastError();
+#endif /* MCS_getsyserror_dsk_w32 */
+		return GetLastError();
+	}
     
     // MW-2010-05-09: Updated to add 'elevated' parameter for executing binaries
     //   at increased privilege level.
@@ -3712,19 +4262,14 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (created)
         {
             if (writing)
-            {
-                MCprocesses[MCnprocesses].ohandle = new IO_header((MCWinSysHandle)hChildStdinWr, NULL, 0, 0);
-                // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-                MCprocesses[MCnprocesses].ohandle -> is_pipe = true;
-            }
+				// TODO implement MCprocesses[MCnprocesses].ohandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdinWr);
+			{}
             else
                 CloseHandle(hChildStdinWr);
+
             if (reading)
-            {
-                MCprocesses[MCnprocesses].ihandle = new IO_header((MCWinSysHandle)hChildStdoutRd, NULL, 0, 0);
-                // MW-2012-09-10: [[ Bug 10230 ]] Make sure we mark this IO handle as a pipe.
-                MCprocesses[MCnprocesses].ihandle -> is_pipe = true;
-            }
+				// TODO implement MCprocesses[MCnprocesses].ihandle = MCStdioFileHandle::OpenStdFile((MCWinSysHandle)hChildStdoutRd);
+			{}
             else
                 CloseHandle(hChildStdoutRd);
         }
@@ -3741,6 +4286,11 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCprocesses[MCnprocesses].pid = t_process_id;
             MCprocesses[MCnprocesses++].phandle = (MCWinSysHandle)t_process_handle;
         }
+
+		if (!created)
+			return False;
+
+		return True;
     }
     
     virtual void CloseProcess(uint2 p_index)
@@ -3841,7 +4391,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
         }
     }
 
-	virtual Poll(real8 p_delay, int p_fd)
+	virtual Boolean Poll(real8 p_delay, int p_fd)
 	{
 #ifdef /* MCS_poll_dsk_w32 */ LEGACY_SYSTEM
 	Boolean handled = False;
@@ -4057,6 +4607,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 
 			if (t_result != NULL)
 			{
+				MCExecPoint ep(nil, nil, nil);
 				ep . setsvalue(t_result);
 				ep . utf8tonative();
 				MCresult -> copysvalue(ep . getsvalue());
@@ -4066,7 +4617,7 @@ struct MCWindowDesktop: public MCSystemInterface, public MCWindowsSystemService
 		}
 	}
 
-    virtual bool AlternateLanguage(MCListRef& r_list)
+    virtual bool AlternateLanguages(MCListRef& r_list)
 	{
 #ifdef /* MCS_alternatelanguages_dsk_w32 */ LEGACY_SYSTEM
 	MCAutoListRef t_list;
@@ -4344,5 +4895,38 @@ int MCS_windows_elevation_bootstrap_main(HINSTANCE hInstance, HINSTANCE hPrevIns
 		CloseHandle(t_parent_process);
 
 	return 0;
+}
+
+void MCS_multibytetounicode(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength, uint4 &destlen,
+                            uint1 charset)
+{
+	char szLocaleData[6];
+	uint2 codepage = 0;
+	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
+	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
+	                                   destbufferlength >> 1);
+	destlen = dsize << 1;
+}
+
+void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
+                            uint4 destbufferlength, uint4 &destlen,
+                            uint1 charset)
+{
+	char szLocaleData[6];
+	uint2 codepage = 0;
+	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
+	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
+	                                   d, destbufferlength, NULL, NULL);
+	destlen = dsize;
+}
+
+MCSystemInterface *MCDesktopCreateWindowsSystem(void)
+{
+	return new MCWindowsDesktop;
 }
 

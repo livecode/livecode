@@ -1290,12 +1290,12 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 		uindex_t t_byte_count = 0;
 		char *t_buffer = nil;
 		uint32_t t_length = 0;
-        MCAutoDataRef t_data;
+        MCAutoStringRef t_string_data;
         
-        t_success = MCDataCreateWithBytes((byte_t*)t_in_ptr, t_in_length, &t_data);
+		t_success = MCStringCreateWithNativeChars((char_t*)t_in_ptr, t_in_length, &t_string_data);
 
         if (t_success)
-            t_success = nil != (t_stream = MCS_fakeopen(*t_data));
+            t_success = nil != (t_stream = MCS_fakeopen(MCStringGetOldString(*t_string_data)));
 
 		if (t_success)
 			t_success = MCImageDecodeBMPStruct(t_stream, t_byte_count, t_bitmap);
@@ -1320,11 +1320,6 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 #else
 			t_success = MCStringCreateWithNativeCharsAndRelease((char_t*)t_buffer, t_length, &t_out_data);
 #endif
-		}
-
-		if (!t_success)
-		{
-			MCMemoryDeallocate(t_buffer);
 		}
 
 		MCImageFreeBitmap(t_bitmap);

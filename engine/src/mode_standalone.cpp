@@ -47,6 +47,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "property.h"
 #include "osspec.h"
 
+#include "system.h"
 #include "globals.h"
 #include "license.h"
 #include "mode.h"
@@ -451,7 +452,9 @@ IO_stat MCDispatch::startup(void)
 	{
 		MCStack *t_stack;
 		IO_handle t_stream;
-		t_stream = MCS_open(getenv("TEST_STACK"), IO_READ_MODE, False, False, 0);
+		MCAutoStringRef t_env;
+		/* UNCHECKED */ MCS_getenv(MCSTR("TEST_STACK"), &t_env);
+		t_stream = MCS_open(*t_env, kMCSystemFileModeRead, False, False, 0);
 		if (MCdispatcher -> readstartupstack(t_stream, t_stack) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone stack");

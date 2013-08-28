@@ -165,15 +165,15 @@
 	<References>
 		<ProjectReference
 			ReferencedProjectIdentifier="{3BD92092-335B-4A08-B724-F739DA8C81B8}"
-			RelativePathToProject=".\libmysql\libmysql.vcproj"
+			RelativePathToProject=".\thirdparty\libmysql\libmysql.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{81FB1E54-0DBF-4D7D-92F5-A7774E531CE2}"
-			RelativePathToProject=".\libz\libz.vcproj"
+			RelativePathToProject=".\thirdparty\libz\libz.vcproj"
 		/>
 		<ProjectReference
 			ReferencedProjectIdentifier="{0FC47D0C-58FE-41D6-A473-E7AFFA33CEEE}"
-			RelativePathToProject=".\libopenssl\libopenssl.vcproj"
+			RelativePathToProject=".\thirdparty\libopenssl\libopenssl.vcproj"
 		/>
 	</References>
 	<Files>

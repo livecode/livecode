@@ -61,6 +61,8 @@ static int *s_mainthread_errno;
 ////////////////////////////////////////////////////////////////////////////////
 
 extern MCSystemInterface *MCDesktopCreateMacSystem(void);
+extern MCSystemInterface *MCDesktopCreateWindowsSystem(void);
+extern MCSystemInterface *MCDesktopCreateLinuxSystem(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,6 +77,7 @@ void MCS_common_init(void)
 	
 	MCinfinity = HUGE_VAL;
     
+#if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
 	MCuppercasingtable = new uint1[256];
 	for(uint4 i = 0; i < 256; ++i)
 		MCuppercasingtable[i] = (uint1)toupper((uint1)i);
@@ -84,6 +87,7 @@ void MCS_common_init(void)
 		MClowercasingtable[i] = (uint1)tolower((uint1)i);
 	
 	MCStackSecurityInit();
+#endif
 }
 
 void MCS_init(void)
@@ -142,11 +146,6 @@ void MCS_shutdown(void)
 real8 MCS_time(void)
 {
 	return MCsystem -> GetCurrentTime();
-}
-
-void MCS_reset_time(void)
-{
-    MCsystem -> ResetTime();
 }
 
 void MCS_setenv(MCStringRef p_name_string, MCStringRef p_value_string)
@@ -302,6 +301,19 @@ bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_err
 	return MCStringCreateWithCString("not supported", r_error);
 }
 
+void MCS_reset_time(void)
+{
+    MCWindowsSystemServiceInterface *t_service;
+    t_service = (MCWindowsSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeWindowsSystem);
+    
+    if (t_service != nil)
+    {
+		t_service -> ResetTime();
+	}
+
+	MCresult -> sets("not supported");
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCS_getsystemversion(MCStringRef& r_string)
@@ -339,6 +351,8 @@ Boolean MCS_mkdir(MCStringRef p_path)
     
 	if (MCsystem -> CreateFolder(*t_native_path) == False)
         return False;
+
+	return True;
 }
 
 Boolean MCS_rmdir(MCStringRef p_path)
@@ -1488,7 +1502,15 @@ void MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
 
 IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
 {
-    return MCsystem -> RunCommand(p_command, r_output);
+	int t_retcode;
+	MCAutoDataRef t_data;
+    if (!MCsystem -> Shell(p_command, &t_data, t_retcode))
+		return IO_ERROR;
+	
+	if (!MCStringCreateWithNativeChars(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), r_output))
+		return IO_ERROR;
+
+	return IO_NORMAL;
 }
 
 void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)

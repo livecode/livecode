@@ -54,103 +54,103 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 extern bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 extern bool MCStringsSplit(MCStringRef p_string, codepoint_t p_separator, MCStringRef*&r_strings, uindex_t& r_count);
 
-bool MCS_getcurdir_native(MCStringRef& r_path);
-bool MCS_path_append(MCStringRef p_base, MCStringRef p_component, codepoint_t p_separator, MCStringRef& r_path);
-
-// MW-2004-11-28: A null FPE signal handler.
-static void handle_fp_exception(int p_signal)
-{
-	p_signal = p_signal;
-}
-
-static bool handle_is_pipe(MCWinSysHandle p_handle)
-{
-	DWORD t_flags;
-
-	int t_result;
-	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
-
-	return t_result != 0;
-}
-
-void MCS_init()
-{
-	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
-	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
-	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
-	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
-	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
-	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
-
-	setlocale(LC_CTYPE, MCnullstring);
-	setlocale(LC_COLLATE, MCnullstring);
-
-	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
-	((unsigned short *)_pctype)[160] &= ~_SPACE;
-
-	MCinfinity = HUGE_VAL;
-	MCS_time(); // force init
-	if (timeBeginPeriod(1) == TIMERR_NOERROR)
-		MCS_reset_time();
-	else
-		MClowrestimers = True;
-	MCExecPoint ep;
-	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
-	MCS_query_registry(ep);
-	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
-	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength())
-			MChttpproxy = ep . getsvalue() . clone();
-	}
-	else
-	{
-		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
-		MCS_query_registry(ep);
-		if (ep.getsvalue().getlength())
-		{
-			char *t_host;
-			int4 t_port;
-			t_host = ep.getsvalue().clone();
-			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
-			MCS_query_registry(ep);
-			ep.ston();
-			t_port = ep.getint4();
-			ep.setstringf("%s:%d", t_host, t_port);
-			MChttpproxy = ep . getsvalue() . clone();
-			delete t_host;
-		}
-	}
-
-	// On NT systems 'cmd.exe' is the command processor
-	MCshellcmd = strclone("cmd.exe");
-
-	// MW-2005-05-26: Store a global variable containing major OS version...
-	OSVERSIONINFOA osv;
-	memset(&osv, 0, sizeof(OSVERSIONINFOA));
-	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
-	GetVersionExA(&osv);
-	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
-
-	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
-	if (MCmajorosversion >= 0x0500)
-	{
-		MCttsize = 11;
-		MCttfont = "Tahoma";
-	}
-	else if (MCmajorosversion >= 0x0600)
-	{
-		MCttsize = 11;
-		MCttfont = "Segoe UI";
-	}
-
-	OleInitialize(NULL); //for drag & drop
-
-	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
-	//   so it *should* be unnecessary but Win9x plays with the FP control word.
-	signal(SIGFPE, handle_fp_exception);
-}
+//bool MCS_getcurdir_native(MCStringRef& r_path);
+//bool MCS_path_append(MCStringRef p_base, MCStringRef p_component, codepoint_t p_separator, MCStringRef& r_path);
+//
+//// MW-2004-11-28: A null FPE signal handler.
+//static void handle_fp_exception(int p_signal)
+//{
+//	p_signal = p_signal;
+//}
+//
+//static bool handle_is_pipe(MCWinSysHandle p_handle)
+//{
+//	DWORD t_flags;
+//
+//	int t_result;
+//	t_result = GetNamedPipeInfo((HANDLE)p_handle, &t_flags, NULL, NULL, NULL);
+//
+//	return t_result != 0;
+//}
+//
+//void MCS_init()
+//{
+//	IO_stdin = new IO_header((MCWinSysHandle)GetStdHandle(STD_INPUT_HANDLE), NULL, 0, 0);
+//	IO_stdin -> is_pipe = handle_is_pipe(IO_stdin -> fhandle);
+//	IO_stdout = new IO_header((MCWinSysHandle)GetStdHandle(STD_OUTPUT_HANDLE), NULL, 0, 0);
+//	IO_stdout -> is_pipe = handle_is_pipe(IO_stdout -> fhandle);
+//	IO_stderr = new IO_header((MCWinSysHandle)GetStdHandle(STD_ERROR_HANDLE), NULL, 0, 0);
+//	IO_stderr -> is_pipe = handle_is_pipe(IO_stderr -> fhandle);
+//
+//	setlocale(LC_CTYPE, MCnullstring);
+//	setlocale(LC_COLLATE, MCnullstring);
+//
+//	// MW-2004-11-28: The ctype array seems to have changed in the latest version of VC++
+//	((unsigned short *)_pctype)[160] &= ~_SPACE;
+//
+//	MCinfinity = HUGE_VAL;
+//	MCS_time(); // force init
+//	if (timeBeginPeriod(1) == TIMERR_NOERROR)
+//		MCS_reset_time();
+//	else
+//		MClowrestimers = True;
+//	MCExecPoint ep;
+//	ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyEnable");
+//	MCS_query_registry(ep);
+//	if (ep.getsvalue().getlength() && ep.getsvalue().getstring()[0])
+//	{
+//		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
+//		MCS_query_registry(ep);
+//		if (ep.getsvalue().getlength())
+//			MChttpproxy = ep . getsvalue() . clone();
+//	}
+//	else
+//	{
+//		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_Proxy");
+//		MCS_query_registry(ep);
+//		if (ep.getsvalue().getlength())
+//		{
+//			char *t_host;
+//			int4 t_port;
+//			t_host = ep.getsvalue().clone();
+//			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Netscape\\Netscape Navigator\\Proxy Information\\HTTP_ProxyPort");
+//			MCS_query_registry(ep);
+//			ep.ston();
+//			t_port = ep.getint4();
+//			ep.setstringf("%s:%d", t_host, t_port);
+//			MChttpproxy = ep . getsvalue() . clone();
+//			delete t_host;
+//		}
+//	}
+//
+//	// On NT systems 'cmd.exe' is the command processor
+//	MCshellcmd = strclone("cmd.exe");
+//
+//	// MW-2005-05-26: Store a global variable containing major OS version...
+//	OSVERSIONINFOA osv;
+//	memset(&osv, 0, sizeof(OSVERSIONINFOA));
+//	osv.dwOSVersionInfoSize = sizeof(OSVERSIONINFOA);
+//	GetVersionExA(&osv);
+//	MCmajorosversion = osv . dwMajorVersion << 8 | osv . dwMinorVersion;
+//
+//	// MW-2012-09-19: [[ Bug ]] Adjustment to tooltip metrics for Windows.
+//	if (MCmajorosversion >= 0x0500)
+//	{
+//		MCttsize = 11;
+//		MCttfont = "Tahoma";
+//	}
+//	else if (MCmajorosversion >= 0x0600)
+//	{
+//		MCttsize = 11;
+//		MCttfont = "Segoe UI";
+//	}
+//
+//	OleInitialize(NULL); //for drag & drop
+//
+//	// MW-2004-11-28: Install a signal handler for FP exceptions - these should be masked
+//	//   so it *should* be unnecessary but Win9x plays with the FP control word.
+//	signal(SIGFPE, handle_fp_exception);
+//}
 //
 //void MCS_shutdown()
 //{
@@ -414,20 +414,20 @@ void MCS_init()
 //		MCStringAppendFormat(*t_tmp_name, "/%s", t_ptr + 1) &&
 //		MCStringCopy(*t_tmp_name, r_string);
 //}
-
-// returns in native path format
-bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
-{
-	if (MCStringGetLength(p_path) == 0)
-		return MCS_getcurdir_native(r_resolved_path);
-
-	return MCU_path2native(p_path, r_resolved_path);
-}
-
-static inline bool is_legal_drive(char p_char)
-{
-	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
-}
+//
+//// returns in native path format
+//bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path)
+//{
+//	if (MCStringGetLength(p_path) == 0)
+//		return MCS_getcurdir_native(r_resolved_path);
+//
+//	return MCU_path2native(p_path, r_resolved_path);
+//}
+//
+//static inline bool is_legal_drive(char p_char)
+//{
+//	return (p_char >= 'a' && p_char <= 'z') || (p_char >= 'A' && p_char <= 'Z');
+//}
 //
 //char *MCS_get_canonical_path(const char *path)
 //{
@@ -807,39 +807,39 @@ Boolean MCS_nodelay(int4 fd)
 {
 	return True;
 }
-
-IO_handle MCS_fakeopen(const MCString &data)
-{
-	return new IO_header(NULL, (char *)data.getstring(), data.getlength(), IO_FAKE);
-}
-
-IO_handle MCS_fakeopenwrite(void)
-{
-	return new IO_header(NULL, NULL, 0, IO_FAKEWRITE);
-}
-
-IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
-{
-	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
-}
-
-IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
-{
-	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
-	{
-		r_buffer = NULL;
-		r_length = 0;
-		MCS_close(stream);
-		return IO_ERROR;
-	}
-
-	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
-	r_length = stream -> len;
-
-	MCS_close(stream);
-
-	return IO_NORMAL;
-}
+//
+//IO_handle MCS_fakeopen(const MCString &data)
+//{
+	//return new IO_header(NULL, (char *)data.getstring(), data.getlength(), IO_FAKE);
+//}
+//
+//IO_handle MCS_fakeopenwrite(void)
+//{
+//	return new IO_header(NULL, NULL, 0, IO_FAKEWRITE);
+//}
+//
+//IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
+//{
+//	return new IO_header(NULL, (char *)p_state, (uint32_t)p_callbacks, IO_FAKECUSTOM);
+//}
+//
+//IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
+//{
+//	if ((stream -> flags & IO_FAKEWRITE) != IO_FAKEWRITE)
+//	{
+//		r_buffer = NULL;
+//		r_length = 0;
+//		MCS_close(stream);
+//		return IO_ERROR;
+//	}
+//
+//	r_buffer = (char *)realloc(stream -> buffer, stream -> len);
+//	r_length = stream -> len;
+//
+//	MCS_close(stream);
+//
+//	return IO_NORMAL;
+//}
 //
 //IO_handle MCS_open(const char *path, const char *mode,
 //                   Boolean map, Boolean driver, uint4 offset)
@@ -971,22 +971,22 @@ IO_stat MCS_fakeclosewrite(IO_handle& stream, char*& r_buffer, uint4& r_length)
 //
 //	return handle;
 //}
-
-void MCS_close(IO_handle &stream)
-{
-	if (stream->buffer != NULL)
-	{ //memory map file
-		if (stream->mhandle != NULL)
-		{
-			UnmapViewOfFile(stream->buffer);
-			CloseHandle(stream->mhandle);
-		}
-	}
-	if (!(stream->flags & IO_FAKE))
-		CloseHandle(stream->fhandle);
-	delete stream;
-	stream = NULL;
-}
+//
+//void MCS_close(IO_handle &stream)
+//{
+//	if (stream->buffer != NULL)
+//	{ //memory map file
+//		if (stream->mhandle != NULL)
+//		{
+//			UnmapViewOfFile(stream->buffer);
+//			CloseHandle(stream->mhandle);
+//		}
+//	}
+//	if (!(stream->flags & IO_FAKE))
+//		CloseHandle(stream->fhandle);
+//	delete stream;
+//	stream = NULL;
+//}
 //
 ///* thread created to read data from child process's pipe */
 //static bool s_finished_reading = false;
@@ -1322,20 +1322,20 @@ static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 //	low = SetFilePointer(stream -> fhandle, 0, &high, FILE_CURRENT);
 //	return low | ((int64_t)high << 32);
 //}
-
-IO_stat MCS_putback(char c, IO_handle stream)
-{
-	if (stream -> buffer != NULL)
-		return MCS_seek_cur(stream, -1);
-
-	if (stream -> putback != -1)
-		return IO_ERROR;
-		
-	stream -> putback = c;
-	
-	return IO_NORMAL;
-}
-
+//
+//IO_stat MCS_putback(char c, IO_handle stream)
+//{
+//	if (stream -> buffer != NULL)
+//		return MCS_seek_cur(stream, -1);
+//
+//	if (stream -> putback != -1)
+//		return IO_ERROR;
+//		
+//	stream -> putback = c;
+//	
+//	return IO_NORMAL;
+//}
+//
 //IO_stat MCS_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 //{
 //	if (MCabortscript || ptr == NULL || stream == NULL)
@@ -1584,13 +1584,13 @@ Boolean wsainit()
 //{
 //	return MCN_x86;
 //}
-
-real8 MCS_getfreediskspace(void)
-{
-	DWORD sc, bs, fc, tc;
-	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
-	return ((real8)bs * (real8)sc * (real8)fc);
-}
+//
+//real8 MCS_getfreediskspace(void)
+//{
+//	DWORD sc, bs, fc, tc;
+//	GetDiskFreeSpace(NULL, &sc, &bs, &fc, &tc);
+//	return ((real8)bs * (real8)sc * (real8)fc);
+//}
 //
 //bool MCS_getsystemversion(MCStringRef& r_string)
 //{
@@ -1768,58 +1768,58 @@ void MCS_saveresfile(const MCString &s, const MCString data)
 
 
 //FILE and APPLEEVENT
-void MCS_send(const MCString &message, const char *program,
-              const char *eventtype, Boolean reply)
-{
-	MCresult->sets("not supported");
-}
-
-void MCS_reply(const MCString &message, const char *keyword, Boolean error)
-{
-	MCresult->sets("not supported");
-}
-
-char *MCS_request_ae(const MCString &message, uint2 ae)
-{
-	MCresult->sets("not supported");
-	return NULL;
-}
-
-char *MCS_request_program(const MCString &message, const char *program)
-{
-	MCresult->sets("not supported");
-	return NULL;
-}
-
-void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
-{}
-
-bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
-					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
-							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
-{
-	return MCStringCreateWithCString("not supported", r_error);
-}
+//void MCS_send(const MCString &message, const char *program,
+//              const char *eventtype, Boolean reply)
+//{
+//	MCresult->sets("not supported");
+//}
+//
+//void MCS_reply(const MCString &message, const char *keyword, Boolean error)
+//{
+//	MCresult->sets("not supported");
+//}
+//
+//char *MCS_request_ae(const MCString &message, uint2 ae)
+//{
+//	MCresult->sets("not supported");
+//	return NULL;
+//}
+//
+//char *MCS_request_program(const MCString &message, const char *program)
+//{
+//	MCresult->sets("not supported");
+//	return NULL;
+//}
+//
+//void MCS_copyresourcefork(MCStringRef source, MCStringRef dest)
+//{}
+//
+//bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
+//					  MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_deleteresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_getresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_name, MCStringRef& r_value, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_getresources(MCStringRef p_source, MCStringRef p_type, MCListRef& r_list, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//extern bool MCS_setresource(MCStringRef p_source, MCStringRef p_type, MCStringRef p_id, MCStringRef p_name,
+//							MCStringRef p_flags, MCStringRef p_value, MCStringRef& r_error)
+//{
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
 //
 //typedef struct
 //{
@@ -2244,34 +2244,34 @@ uint2 MCS_charsettolangid(uint1 charset)
 			return langidtocharsets[i].langid;
 	return 0;
 }
-
-void MCS_multibytetounicode(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength, uint4 &destlen,
-                            uint1 charset)
-{
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
-	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
-	                                   destbufferlength >> 1);
-	destlen = dsize << 1;
-}
-
-void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
-                            uint4 destbufferlength, uint4 &destlen,
-                            uint1 charset)
-{
-	char szLocaleData[6];
-	uint2 codepage = 0;
-	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
-	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
-	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
-	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
-	                                   d, destbufferlength, NULL, NULL);
-	destlen = dsize;
-}
+//
+//void MCS_multibytetounicode(const char *s, uint4 len, char *d,
+//                            uint4 destbufferlength, uint4 &destlen,
+//                            uint1 charset)
+//{
+//	char szLocaleData[6];
+//	uint2 codepage = 0;
+//	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT) ,
+//	               LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+//	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+//	uint4 dsize = MultiByteToWideChar( codepage, 0, s, len, (LPWSTR)d,
+//	                                   destbufferlength >> 1);
+//	destlen = dsize << 1;
+//}
+//
+//void MCS_unicodetomultibyte(const char *s, uint4 len, char *d,
+//                            uint4 destbufferlength, uint4 &destlen,
+//                            uint1 charset)
+//{
+//	char szLocaleData[6];
+//	uint2 codepage = 0;
+//	GetLocaleInfoA(MAKELCID(MCS_charsettolangid(charset), SORT_DEFAULT)
+//	               , LOCALE_IDEFAULTANSICODEPAGE, szLocaleData, 6);
+//	codepage = (uint2)strtoul(szLocaleData, NULL, 10);
+//	uint4 dsize = WideCharToMultiByte( codepage, 0, (LPCWSTR)s, len >> 1,
+//	                                   d, destbufferlength, NULL, NULL);
+//	destlen = dsize;
+//}
 
 Boolean MCS_isleadbyte(uint1 charset, char *s)
 {
@@ -2374,18 +2374,18 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 //{
 //	return GetProcAddress((HMODULE)p_module, p_symbol);
 //}
-
-bool MCS_processtypeisforeground(void)
-{
-	return true;
-}
-
-bool MCS_changeprocesstype(bool to_foreground)
-{
-	if (!to_foreground)
-		return false;
-	return true;
-}
+//
+//bool MCS_processtypeisforeground(void)
+//{
+//	return true;
+//}
+//
+//bool MCS_changeprocesstype(bool to_foreground)
+//{
+//	if (!to_foreground)
+//		return false;
+//	return true;
+//}
 
 bool MCS_isatty(int fd)
 {
