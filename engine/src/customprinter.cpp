@@ -2013,27 +2013,27 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 #elif defined(_MACOSX)
             MCAutoStringRef t_module_path_str1;
 
-			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCcmd);
+			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCStringGetCString(MCcmd));
 			t_module = MCS_loadmodule(*t_module_path_str1);
 			
 			if (t_module == nil)
 			{
                 MCAutoStringRef t_module_path_str2;
-				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCcmd);
+				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCStringGetCString(MCcmd));
 				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
 			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
+			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
 			MCAutoStringRef t_module_path;
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
+			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
 			char *t_module_path;
 			t_module_path = nil;
-			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCcmd, MCcmd);
+			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
 			t_module = MCS_loadmodule(t_module_path);
 			MCCStringFree(t_module_path);
 #elif defined(_SERVER)
