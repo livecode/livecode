@@ -648,7 +648,11 @@ Boolean MCS_setcurdir(MCStringRef p_path)
 void MCS_getcurdir(MCStringRef& r_path)
 {
 	MCAutoStringRef t_current_native;
-    MCsystem->GetCurrentFolder(&t_current_native);
+    if (!MCsystem->GetCurrentFolder(&t_current_native))
+    {
+        r_path = MCValueRetain(kMCEmptyString);
+        return;
+    }
     
     if (!MCsystem->PathFromNative(*t_current_native, r_path))
         r_path = MCValueRetain(kMCEmptyString);
@@ -802,6 +806,7 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 {
     MCAutoStringRef t_native;
     MCAutoStringRef t_native_resolved;
+    MCAutoStringRef t_std_resolved;
     
     if (!MCS_pathtonative(p_path, &t_native))
         return false;
@@ -809,7 +814,11 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 	if (!MCsystem -> ResolvePath(*t_native, &t_native_resolved))
         return false;
     
-    return MCS_pathfromnative(*t_native_resolved, r_resolved);
+    if (!MCS_pathfromnative(*t_native_resolved, &t_std_resolved))
+        return false;
+    
+    MCU_fix_path(*t_std_resolved, r_resolved);
+    return true;
 }
 
 bool MCS_pathtonative(MCStringRef p_livecode_path, MCStringRef& r_native_path)
@@ -1182,8 +1191,8 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
     {
         MCAutoStringRef t_string;
 		t_buffer . Shrink(t_size);
-        t_success = MCStringCreateWithNativeChars(t_buffer.Chars(), t_buffer.CharCount(), &t_string);
-        t_success &= MCDataCreateWithBytes(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), r_data);
+        t_success = t_buffer.CreateString(&t_string) &&
+                    MCDataCreateWithBytes(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), r_data);
     }
     
     if (t_success)
@@ -1488,7 +1497,19 @@ void MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
 
 IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
 {
-    return MCsystem -> RunCommand(p_command, r_output);
+    // TODO Change to MCDataRef or change Shell to MCStringRef
+    MCAutoDataRef t_data;
+    
+    int t_retcode;
+    if (!MCsystem -> Shell(p_command, &t_data, t_retcode))
+        return IO_ERROR;
+    
+    MCresult -> setnvalue(t_retcode);
+    if (!MCStringCreateWithNativeChars((char_t*)MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data), r_output))
+    {
+        r_output = MCValueRetain(kMCEmptyString);
+    }
+    return IO_NORMAL;
 }
 
 void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)

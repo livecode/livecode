@@ -408,7 +408,7 @@ struct MCSystemInterface
 	// NOTE: 'ResolveAlias' returns a standard (not native) path.
 	virtual Boolean ResolveAlias(MCStringRef p_target, MCStringRef& r_dest) = 0;
 	
-	virtual void GetCurrentFolder(MCStringRef& r_path) = 0;
+	virtual bool GetCurrentFolder(MCStringRef& r_path) = 0;
 	///* LEGACY */ char *GetCurrentFolder(void);
 	virtual Boolean SetCurrentFolder(MCStringRef p_path) = 0;
 	
@@ -464,8 +464,6 @@ struct MCSystemInterface
     virtual void CheckProcesses(void) = 0;
     
     virtual uint32_t GetSystemError(void) = 0;
-    
-    virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
     
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated) = 0;
     virtual void CloseProcess(uint2 p_index) = 0;
