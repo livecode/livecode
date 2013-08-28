@@ -1314,6 +1314,7 @@ bool MCStringConvertToWString(MCStringRef string, unichar_t*& r_wstring);
 
 // Converts the content to unicode_t*
 bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string);
+bool MCStringConvertToUTF8String(MCStringRef string, char*& r_utf8string, uindex_t& r_utf8_count);
 
 #if defined(__MAC__) || defined (__IOS__)
 // Converts the content to CFStringRef
