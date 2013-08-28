@@ -818,44 +818,27 @@ void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 
 void MCButton::GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text)
 {
-	if (acceltext == nil)
-		r_text = MCValueRetain(kMCEmptyString);
-
-	MCString atext;
-	atext . set(acceltext, acceltextsize);
-
-	if (MCU_mapunicode(atext, hasunicode(), false, r_text))
-		return;
-
-	ctxt . Throw();
+	r_text = MCValueRetain(acceltext);
 }
 
 void MCButton::SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text)
 {
-	delete acceltext;
-	acceltext = NULL;
-	acceltextsize = 0;
-	if (p_text != nil)
-	{
-		acceltextsize  = MCStringGetLength(p_text);
-		acceltext = new char[acceltextsize];
-		memcpy(acceltext, MCStringGetCString(p_text), acceltextsize);
-	}
+	if (MCStringIsEqualTo(acceltext, p_text, kMCStringOptionCompareExact))
+		return;
+	MCValueAssign(acceltext, p_text);
 	Redraw();
 }
 
-void MCButton::GetUnicodeAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text)
+void MCButton::GetUnicodeAcceleratorText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-	if (acceltext == nil)
+	MCDataRef t_text = nil;
+	if (MCStringEncode(acceltext, kMCStringEncodingUTF16, false, t_text))
+	{
+		r_text = t_text;
 		return;
-
-	MCString atext;
-	atext . set(acceltext, acceltextsize);
-
-	if (MCU_mapunicode(atext, hasunicode(), true, r_text))
-		return;
-
-	ctxt . Throw();
+	}
+	
+	ctxt.Throw();
 }
 
 void MCButton::GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_key)

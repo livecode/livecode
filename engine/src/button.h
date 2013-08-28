@@ -108,8 +108,7 @@ class MCButton : public MCControl
 	char *menustring;
 	MCField *entry;
 	MCStack *menu;
-	char *acceltext;
-	uint2 acceltextsize;
+	MCStringRef acceltext;
 	char *seltext;
 	MCString *tabs;
 	uint2 ntabs;
@@ -421,7 +420,7 @@ public:
 	virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
 	void GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
 	void SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text);
-	void GetUnicodeAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
+	void GetUnicodeAcceleratorText(MCExecContext& ctxt, MCDataRef& r_text);
 	void GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_text);
 	void SetAcceleratorKey(MCExecContext& ctxt, MCStringRef p_text);
 	void GetAcceleratorModifiers(MCExecContext& ctxt, intset_t& r_mods);

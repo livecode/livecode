@@ -264,7 +264,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_BUTTON, UInt16, MCButton, MenuButton)
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_NAME, OptionalString, MCButton, MenuName)
 	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATOR_TEXT, String, MCButton, AcceleratorText)
-	DEFINE_RO_OBJ_PROPERTY(P_UNICODE_ACCELERATOR_TEXT, String, MCButton, UnicodeAcceleratorText)
+	DEFINE_RO_OBJ_PROPERTY(P_UNICODE_ACCELERATOR_TEXT, BinaryString, MCButton, UnicodeAcceleratorText)
 	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATOR_KEY, OptionalString, MCButton, AcceleratorKey)
 
 	DEFINE_RW_OBJ_SET_PROPERTY(P_ACCELERATOR_MODIFIERS, InterfaceButtonAcceleratorModifiers, MCButton, AcceleratorModifiers)
@@ -314,8 +314,7 @@ MCButton::MCButton()
 	entry = NULL;
 	tabs = NULL;
 	ntabs = 0;
-	acceltext = NULL;
-	acceltextsize = 0;
+	acceltext = MCValueRetain(kMCEmptyString);
 	accelkey = accelmods = 0;
 	mnemonic = 0;
 	family = 0;
@@ -364,14 +363,7 @@ MCButton::MCButton(const MCButton &bref) : MCControl(bref)
 	entry = NULL;
 	tabs = NULL;
 	ntabs = 0;
-	acceltext = NULL;
-	acceltextsize = 0;
-	if (bref.acceltext)
-	{
-		acceltextsize = bref.acceltextsize;
-		acceltext = new char[acceltextsize];
-		memcpy(acceltext, bref.acceltext, acceltextsize);
-	}
+	acceltext = MCValueRetain(bref.acceltext);
 	accelkey = bref.accelkey;
 	accelmods = bref.accelmods;
 	mnemonic = bref.mnemonic;
@@ -410,7 +402,7 @@ MCButton::~MCButton()
 	delete icons;
 	freemenu(True);
 	delete label;
-	delete acceltext;
+	MCValueRelease(acceltext);
 	delete menuname;
 	delete menustring;
 	delete tabs;
@@ -3321,68 +3313,36 @@ public:
 					{
 						uint2 t_accelkey = (t_key <= 255) ? MCS_tolower(t_key) : t_key;
 						MCstacks->addaccelerator(parent, parent->getstack(), t_accelkey, t_mods);
-
-						uint4 t_acceltextlen;
-						if (t_keyname != NULL)
-							t_acceltextlen = strlen(t_keyname) + 1;
-						else
-							t_acceltextlen = 2;
-
-						if (t_mods & MS_MAC_CONTROL)
-							t_acceltextlen += 5;
-						if (MS_MAC_CONTROL != MS_CONTROL && t_mods & MS_CONTROL)
-							t_acceltextlen += 4;
-						if (t_mods & MS_ALT)
-							t_acceltextlen += 4;
-						if (t_mods & MS_SHIFT)
-							t_acceltextlen += 6;
-
-						newbutton->acceltext = new char[t_acceltextlen];
 						newbutton->accelkey = t_accelkey;
 						newbutton->accelmods = t_mods;
-						char *t_acceltext = newbutton->acceltext;
+
+						// ******
+						// The following text requires localization
+						// ******
+						MCStringRef t_acceltext = nil;
+						/* UNCHECKED */ MCStringCreateMutable(0, t_acceltext);
 						if (t_mods & MS_MAC_CONTROL)
-						{
-							sprintf(t_acceltext, "Ctrl+");
-							t_acceltext += 5;
-						}
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Ctrl+");
 						if (MS_MAC_CONTROL != MS_CONTROL && t_mods & MS_CONTROL)
-						{
-							sprintf(t_acceltext, "Cmd+");
-							t_acceltext += 4;
-						}
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Cmd+");
 						if (t_mods & MS_ALT)
-						{
-							sprintf(t_acceltext, "Alt+");
-							t_acceltext += 4;
-						}
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Alt+");
 						if (t_mods & MS_SHIFT)
-						{
-							sprintf(t_acceltext, "Shift+");
-							t_acceltext += 6;
-						}
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "Shift+");
 						if (t_keyname != NULL)
-							sprintf(t_acceltext, "%s", t_keyname);
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%s", t_keyname);
 						else
-							sprintf(t_acceltext, "%c", t_key);
-						newbutton->acceltextsize = strlen(newbutton->acceltext);
-						if (p_menuitem->is_unicode)
-						{
-							int t_unicodebuffersize = newbutton->acceltextsize * MCU_charsize(True);
-							char *t_unicodetext = new char[t_unicodebuffersize];
-							uint4 tlen;
-							MCU_multibytetounicode( newbutton->acceltext , newbutton->acceltextsize , (char *)t_unicodetext, t_unicodebuffersize,  tlen , 0);
-							delete newbutton->acceltext;
-							newbutton->acceltext = t_unicodetext;
-							newbutton->acceltextsize = tlen;
-						}
+							/* UNCHECKED */ MCStringAppendFormat(t_acceltext, "%c", t_key);
+
+						MCValueRelease(newbutton->acceltext);
+						/* UNCHECKED */ MCStringCopyAndRelease(t_acceltext, newbutton->acceltext);
 					}
 				}
 			}
 			uint2 t_labellength = p_menuitem->label.getlength();
 			uint2 width = MCFontMeasureText(fontref, p_menuitem->label.getstring(), t_labellength, p_menuitem -> is_unicode);
-			if (newbutton->acceltext != NULL)
-				bstack[stackdepth] . maxaccelwidth = MCU_max(bstack[stackdepth].maxaccelwidth, MCFontMeasureText(fontref, newbutton->acceltext, newbutton->acceltextsize, p_menuitem -> is_unicode));
+			if (!MCStringIsEmpty(newbutton->acceltext))
+				bstack[stackdepth].maxaccelwidth = MCU_max(bstack[stackdepth].maxaccelwidth, MCFontMeasureText(fontref, newbutton->acceltext));
 			if (width > bstack[stackdepth].maxwidth)
 				bstack[stackdepth].maxwidth = width;
 			newbutton->labelsize = t_labellength;
@@ -4249,7 +4209,6 @@ void MCButton::switchunicode(bool p_to_unicode)
 
 	switchunicodeofstring(p_to_unicode, menustring, menusize);
 	switchunicodeofstring(p_to_unicode, label, labelsize);
-	switchunicodeofstring(p_to_unicode, acceltext, acceltextsize);
 	
 	if (p_to_unicode)
 		m_font_flags |= FF_HAS_UNICODE;
@@ -4277,8 +4236,7 @@ void MCButton::trytochangetonative(void)
 		return;
 
 	if (canconverttonative(menustring, menusize) &&
-		canconverttonative(label, labelsize) &&
-		canconverttonative(acceltext, acceltextsize))
+		canconverttonative(label, labelsize))
 		switchunicode(false);
 }
 
@@ -4395,9 +4353,8 @@ IO_stat MCButton::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(menulines, stream)) != IO_NORMAL)
 			return stat;
 
-	if ((stat = IO_write_string(acceltext, acceltextsize, stream, hasunicode())) != IO_NORMAL)
+	if ((stat = IO_write_stringref(acceltext, stream, hasunicode())) != IO_NORMAL)
 		return stat;
-
 
 	if ((stat = IO_write_uint2(accelkey, stream)) != IO_NORMAL)
 		return stat;
@@ -4530,11 +4487,9 @@ IO_stat MCButton::load(IO_handle stream, const char *version)
 		if ((stat = IO_read_uint2(&menulines, stream)) != IO_NORMAL)
 			return stat;
 
-	uint4 tacceltextsize;
-	if ((stat = IO_read_string(acceltext, tacceltextsize, stream, hasunicode())) != IO_NORMAL)
+	if ((stat = IO_read_stringref(acceltext, stream, hasunicode())) != IO_NORMAL)
 		return stat;
-
-	acceltextsize = tacceltextsize;
+	uint4 tacceltextsize;
 
 	if ((stat = IO_read_uint2(&accelkey, stream)) != IO_NORMAL)
 		return stat;

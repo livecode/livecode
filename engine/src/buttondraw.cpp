@@ -572,14 +572,16 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	            && menumode == WM_OPTION))
 		sy--;
 	MCFontDrawText(m_font, s.getstring(), s.getlength(), isunicode, dc, sx, sy, False);
-	if (acceltext != NULL)
+	
+	if (!MCStringIsEmpty(acceltext))
 	{
-		uint2 awidth = MCFontMeasureText(m_font, acceltext, acceltextsize, isunicode);
+		uint2 awidth = MCFontMeasureText(m_font, acceltext);
 		if (rightmargin == defaultmargin || menucontrol == MENUCONTROL_ITEM)
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin - awidth, sy, False);
+			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin - awidth, sy, False);
 		else
-			MCFontDrawText(m_font, acceltext, acceltextsize, hasunicode(), dc, srect.x + srect.width - rightmargin, sy, False);
+			MCFontDrawText(m_font, acceltext, dc, srect.x + srect.width - rightmargin, sy, False);
 	}
+
 	if (fstyle & FA_UNDERLINE)
 		dc->drawline(sx, sy + 1, sx + twidth, sy + 1);
 	if (fstyle & FA_STRIKEOUT)
