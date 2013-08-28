@@ -1210,6 +1210,8 @@ bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_str
 		return true;
 	case kMCValueTypeCodeString:
 		return MCStringCopy((MCStringRef)p_value, r_string);
+    case kMCValueTypeCodeData:
+            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
 	case kMCValueTypeCodeNumber:
 	{
 		if (MCNumberIsInteger((MCNumberRef)p_value))

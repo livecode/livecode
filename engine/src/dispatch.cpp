@@ -764,12 +764,11 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 {
 	IO_handle stream;
 	char *openpath = NULL;
-	char *fname = strclone(inname);
 
 	MCAutoStringRef t_open_path;
 
 	MCAutoStringRef t_fname_string;
-	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname_string);
+	/* UNCHECKED */ MCStringCreateWithCString(inname, &t_fname_string);
 
 	bool t_found;
 	t_found = false;
@@ -778,7 +777,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 		if ((stream = MCS_open(*t_fname_string, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			// This should probably use resolvepath().
-			if (fname[0] != PATH_SEPARATOR && fname[1] != ':')
+			if (inname[0] != PATH_SEPARATOR && inname[1] != ':')
 			{
 				MCAutoStringRef t_curpath;
 				
@@ -793,7 +792,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 				//delete curpath;
 			}
 			else
-				t_open_path = t_fname_string;
+				t_open_path = *t_fname_string;
 				//openpath = strclone(fname);
 
 			t_found = true;
@@ -807,7 +806,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 		if (MCStringLastIndexOfChar(*t_fname_string, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
 			/* UNCHECKED */ MCStringCopySubstring(*t_fname_string, MCRangeMake(t_leaf_index + 1, MCStringGetLength(*t_fname_string) - (t_leaf_index + 1)), &t_leaf_name);
 		else
-			t_leaf_name = t_fname_string;
+			t_leaf_name = *t_fname_string;
 		/*char *tmparray = new char[strlen(fname) + 1];
 		strcpy(tmparray, fname);
 		char *tname = strrchr(tmparray, PATH_SEPARATOR);
@@ -860,7 +859,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			if (MCStringGetNativeCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
 				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
 			else
-				t_trimmed_homename = t_homename;
+				t_trimmed_homename = *t_homename;
 
 			/* UNCHECKED */ 
 			//char *homename = strdup(MCStringGetCString(*t_homename));
@@ -884,10 +883,8 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 	{
 		//if (openpath != NULL)
 		//	delete openpath;
-		delete fname;
 		return IO_ERROR;
 	}
-	delete fname;
 	IO_stat stat = readfile(MCStringGetCString(*t_open_path), inname, stream, sptr);
 	MCS_close(stream);
 	return stat;

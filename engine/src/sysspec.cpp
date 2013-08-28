@@ -1001,9 +1001,11 @@ static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
     return MCsystem -> OpenStdFile(fd, mode);
 }
 
-void MCS_close(IO_handle& p_stream)
+void MCS_close(IO_handle &x_stream)
 {
-	p_stream -> handle -> Close();
+	x_stream -> handle -> Close();
+    delete x_stream;
+    x_stream = NULL;
 }
 
 IO_stat MCS_putback(char p_char, IO_handle p_stream)
@@ -1565,10 +1567,10 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 //	return False;
 //}
 
-MCSocket *MCS_open_socket(MCStringRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
-{
-	return NULL;
-}
+//MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
+//{
+//	return NULL;
+//}
 //
 //void MCS_close_socket(MCSocket *p_socket)
 //{

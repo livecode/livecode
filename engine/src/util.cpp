@@ -2171,7 +2171,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)fptr, r_out);
+	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)cstr, r_out);
 
 }
 

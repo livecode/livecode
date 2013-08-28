@@ -2631,6 +2631,7 @@ char *MCStack::getstackfile(const MCString &s)
 
 void MCStack::setfilename(char *f)
 {
+#if 0
 	delete filename;
 	filename = f;
 	MCAutoStringRef in_filename_string;
@@ -2640,6 +2641,22 @@ void MCStack::setfilename(char *f)
 		MCAutoStringRef out_filename_string;
 		MCU_fix_path(*in_filename_string, &out_filename_string );
 	}
+#endif
+    
+    if (f == nil)
+    {
+        delete filename;
+        filename = nil;
+        return;
+    }
+    
+    MCAutoStringRef t_in_filename_string;
+	/* UNCHECKED */ MCStringCreateWithCString(f, &t_in_filename_string);
+    MCAutoStringRef t_out_filename_string;
+    MCU_fix_path(*t_in_filename_string, &t_out_filename_string);
+    
+    delete filename;
+    filename = strclone(MCStringGetCString(*t_out_filename_string));
 }
 
 void MCStack::loadwindowshape()

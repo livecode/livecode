@@ -1432,7 +1432,7 @@ public:
         if (fptr != NULL)
         {
             created = False;
-            if (p_mode == kMCSystemFileModeRead)
+            if (p_mode != kMCSystemFileModeRead)
             {
                 fclose(fptr);
                 fptr = NULL;
@@ -1460,7 +1460,7 @@ public:
             }
         }
         
-        if (fptr == NULL && p_mode == kMCSystemFileModeRead)
+        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
             fptr = fopen(*t_path_utf, IO_CREATE_MODE);
         
         if (fptr != NULL && created)
@@ -1592,7 +1592,7 @@ public:
         else if (m_stream != NULL)
             fclose(m_stream);
         
-        delete m_stream;
+        //delete m_stream;
         m_stream = NULL;
 	}
 	
@@ -4926,11 +4926,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return false;
         
         MCAutoNativeCharArray t_buffer;
-        if (!t_buffer.New(PATH_MAX + 1))
+        if (!t_buffer.New(PATH_MAX))
             return false;
         
         uint4 outlen;
-        outlen = PATH_MAX + 1;
+        outlen = PATH_MAX;
         MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
         t_buffer.Shrink(outlen);
         
@@ -5088,7 +5088,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR);
+            t_found = ((buf.st_mode & S_IFDIR) == 0);
         
         if (!t_found)
             return False;
@@ -5109,7 +5109,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         struct stat buf;
         t_found = stat(*t_utf8_path, (struct stat *)&buf) == 0;
         if (t_found)
-            t_found = (buf.st_mode & S_IFDIR) == 0;
+            t_found = (buf.st_mode & S_IFDIR) != 0;
         
         if (!t_found)
             return False;
@@ -5807,11 +5807,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
 		
 		MCAutoNativeCharArray t_path;
-		if (!t_path.New(t_used + 1))
+		if (!t_path.New(t_used))
 			return false;;
         
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
-		t_path.Chars()[t_used] = '\0';
 		
 		return t_path.CreateStringAndRelease(r_path);
 	}
@@ -6720,12 +6719,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
     {
 #ifdef /* MCS_startprocess_dsk_mac */ LEGACY_SYSTEM
-	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0)
+	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0))
 	  MCS_startprocess_launch(name, docname, mode);
 	else
 	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
 #endif /* MCS_startprocess_dsk_mac */
-        if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(p_doc) != 0)
+        if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || (p_doc != nil && MCStringGetLength(p_doc) != 0))
             MCS_startprocess_launch(p_name, p_doc, p_mode);
         else
             MCS_startprocess_unix(p_name, kMCEmptyString, p_mode, p_elevated);

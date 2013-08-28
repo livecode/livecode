@@ -2474,29 +2474,21 @@ OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf,
     if (!MCS_resolvepath(p_path, &t_resolved_path))
         // TODO assign relevant error code
         t_error = fnfErr;
-	
-	char *t_resolved_path_leaf;
-    MCAutoStringRef t_resolved_path_leaf_auto;
-	t_resolved_path_leaf = NULL;
-	if (t_error == noErr)
-	{
-		t_resolved_path_leaf = strrchr(MCStringGetCString(*t_resolved_path), '/');
-		if (t_resolved_path_leaf != NULL)
-		{
-			t_resolved_path_leaf[0] = '\0';
-			t_resolved_path_leaf += 1;
-            if (!MCStringCreateWithCString(t_resolved_path_leaf, &t_resolved_path_leaf_auto))
-                // TODO assign relevant error code
-                t_error = fnfErr;
-		}
-		else
-			t_error = fnfErr;
-	}
     
+    MCAutoStringRef t_folder, t_leaf;
+    uindex_t t_leaf_index;
+    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+    {
+        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
+            t_error = memFullErr;
+    }
+    else
+        t_error = fnfErr;
+        
 	MCAutoStringRefAsUTF8String t_utf8_auto;
     
     if (t_error != noErr)
-        if (!t_utf8_auto.Lock(*t_resolved_path_leaf_auto))
+        if (!t_utf8_auto.Lock(*t_folder))
             t_error = fnfErr;
     
 	if (t_error == noErr)
@@ -2505,19 +2497,12 @@ OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf,
 	// Convert the leaf from MacRoman to UTF16.
 	if (t_error == noErr)
 	{
-		unsigned short *t_utf16_leaf;
+		unichar_t *t_utf16_leaf;
 		uint4 t_utf16_leaf_length;
-		
-		t_utf16_leaf = new unsigned short[256];
-		t_utf16_leaf_length = 256;
-		MCS_nativetoutf16(t_resolved_path_leaf, strlen(t_resolved_path_leaf), t_utf16_leaf, t_utf16_leaf_length);
-        
+        /* UNCHECKED */ MCStringConvertToUnicode(*t_leaf, t_utf16_leaf, t_utf16_leaf_length);
 		r_leaf = (UniChar *)t_utf16_leaf;
 		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
 	}
-	
-    if (t_resolved_path_leaf != nil)
-        MCCStringFree(t_resolved_path_leaf);
     
 	return t_error;
 }

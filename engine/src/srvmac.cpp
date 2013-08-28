@@ -531,11 +531,10 @@ struct MCMacSystem: public MCSystemInterface
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
 		
 		MCAutoNativeCharArray t_path;
-		if (!t_path.New(t_used + 1))
+		if (!t_path.New(t_used))
 			return false;;
 
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
-		t_path.Chars()[t_used] = '\0';
 		
 		return t_path.CreateStringAndRelease(r_path);
 	}
