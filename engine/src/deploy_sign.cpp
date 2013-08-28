@@ -906,8 +906,7 @@ static bool MCDeploySignWindowsAddTimeStamp(const MCDeploySignParameters& p_para
 	if (t_success)
 	{
 		// Set the HTTP headers appropriately to make sure no unpleasant caching goes on.
-		delete MChttpheaders;
-		MChttpheaders = strdup("Content-Type: application/octet-stream\nAccept: application/octet-stream\nUser-Agent: Transport\nCache-Control: no-cache");
+		MCValueAssign(MChttpheaders, MCSTR("Content-Type: application/octet-stream\nAccept: application/octet-stream\nUser-Agent: Transport\nCache-Control: no-cache"));
 
 		// Use libURL to do the post - we attempt this 5 times with increasing sleep
 		// periods. This is because it looks like the timestamping service is a little

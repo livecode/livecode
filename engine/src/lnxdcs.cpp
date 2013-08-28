@@ -152,7 +152,7 @@ Boolean MCScreenDC::open()
 	if ((dpy = XOpenDisplay(MCdisplayname)) == NULL)
 	{
 		fprintf(stderr, "%s: Can't open display %s\n",
-		        MCcmd, XDisplayName(MCdisplayname));
+		        MCStringGetCString(MCcmd), XDisplayName(MCdisplayname));
 		return False;
 	}
 	fcntl(ConnectionNumber(dpy), F_SETFD, 1);
@@ -186,7 +186,7 @@ Boolean MCScreenDC::open()
 		                     &vis_template, &nitems);
 		if (nitems != 1)
 		{
-			fprintf(stderr, "%s: Bad visual id %x\n", MCcmd, MCvisualid);
+			fprintf(stderr, "%s: Bad visual id %x\n", MCStringGetCString(MCcmd), MCvisualid);
 			MCvisualid = 0;
 		}
 		else
