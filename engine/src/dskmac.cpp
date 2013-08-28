@@ -3923,7 +3923,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         }
         
         MCAutoStringRef dptr;
-        GetCurrentFolder(&dptr);
+        /* UNCHECKED */ GetCurrentFolder(&dptr);
         if (MCStringGetLength(*dptr) <= 1)
         { // if root, then started from Finder
             SInt16 vRefNum;
@@ -4904,7 +4904,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return True;
     }
 	
-	virtual void GetCurrentFolder(MCStringRef& r_path)
+	virtual bool GetCurrentFolder(MCStringRef& r_path)
     {
 #ifdef /* MCS_getcurdir_dsk_mac */ LEGACY_SYSTEM
     char namebuf[PATH_MAX + 2];
@@ -4921,24 +4921,25 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     t_buffer.Shrink(outlen);
     return t_buffer.CreateStringAndRelease(r_path);
 #endif /* MCS_getcurdir_dsk_mac */
-        bool t_success;
         char namebuf[PATH_MAX + 2];
         if (NULL == getcwd(namebuf, PATH_MAX))
-            t_success = false;
+            return false;
         
         MCAutoNativeCharArray t_buffer;
-        if (t_success)
-            t_success = t_buffer.New(PATH_MAX + 1);
+        if (!t_buffer.New(PATH_MAX + 1))
+            return false;
         
         uint4 outlen;
         outlen = PATH_MAX + 1;
         MCS_utf8tonative(namebuf, strlen(namebuf), (char*)t_buffer.Chars(), outlen);
         t_buffer.Shrink(outlen);
-        if (t_success)
-            t_success = t_buffer.CreateStringAndRelease(r_path);
         
-        if (!t_success)
-            r_path = MCValueRetain(kMCEmptyString);            
+        if (!t_buffer.CreateStringAndRelease(r_path))
+        {
+            r_path = MCValueRetain(kMCEmptyString);
+            return false;
+        }
+        return true;
     }
     
     // MW-2006-04-07: Bug 3201 - MCS_resolvepath returns NULL if unable to find a ~<username> folder.
@@ -5901,10 +5902,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 		return MCStringCopy(*t_newname, r_resolved);
 #endif /* MCS_resolvepath_dsk_mac */
         if (MCStringGetLength(p_path) == 0)
-        {
-            GetCurrentFolder(r_resolved_path);
-            return true;
-        }
+            return GetCurrentFolder(r_resolved_path);
         
         MCAutoStringRef t_tilde_path;
         if (MCStringGetCharAtIndex(p_path, 0) == '~')
@@ -5943,7 +5941,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (MCStringGetCharAtIndex(*t_tilde_path, 0) != '/')
         {
             MCAutoStringRef t_folder;
-            GetCurrentFolder(&t_folder);
+            /* UNCHECKED */ GetCurrentFolder(&t_folder);
             
             MCAutoStringRef t_resolved;
             if (!MCStringMutableCopy(*t_folder, &t_fullpath) ||
@@ -6132,16 +6130,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_get_canonical_path_dsk_mac */
         MCU_fix_path(p_path, r_canonical_path);
     }
-	
-	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode)
-    {
-        
-    }
     
 	virtual char *GetHostName(void)
     {
         
     }
+    
 	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
     {
         
@@ -6499,7 +6493,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return errno;
     }
 
-    virtual IO_stat RunCommand(MCStringRef p_command, MCStringRef& r_output)
+    virtual bool Shell(MCStringRef p_command, MCDataRef& r_data, int& r_retcode)
     {
 #ifdef /* MCS_runcmd_dsk_mac */ LEGACY_SYSTEM
 
@@ -6615,7 +6609,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 
 	return IO_NORMAL;
 #endif /* MCS_runcmd_dsk_mac */
-        
         IO_cleanprocesses();
         int tochild[2];
         int toparent[2];
@@ -6692,10 +6685,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             close(toparent[0]);
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
-            /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
-            return IO_ERROR;
+            /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
+            return false;
         }
-        /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*)buffer, size, r_output);
+        /* UNCHECKED */ MCDataCreateWithBytes((char_t*)buffer, size, r_data);
         close(toparent[0]);
         CheckProcesses();
         if (MCprocesses[index].pid != 0)
@@ -6718,15 +6711,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 Kill(MCprocesses[index].pid, SIGKILL);
             }
         }
-        if (MCprocesses[index].retcode)
-        {
-            MCExecPoint ep(nil, nil, nil);
-            ep.setint(MCprocesses[index].retcode);
-            MCresult->set(ep);
-        }
-        else
-            MCresult->clear(False);
         
+        r_retcode = MCprocesses[index].retcode;        
         
         return IO_NORMAL;
     }
