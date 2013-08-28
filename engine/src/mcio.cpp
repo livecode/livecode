@@ -806,11 +806,14 @@ IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 si
 IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
 {
 	// Convert the string to UTF-8 encoding before writing it out
+	IO_stat stat;
 	char *t_bytes = nil;
 	uindex_t t_length = 0;
-	if (!MCStringConvertToUTF8String(p_string, t_bytes, t_length))
+	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
 		return IO_ERROR;
-	return IO_write_string(t_bytes, t_length, stream, false, size);
+	stat = IO_write_string(t_bytes, t_length, stream, false, size);
+	MCMemoryDeleteArray(t_bytes);
+	return stat;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
