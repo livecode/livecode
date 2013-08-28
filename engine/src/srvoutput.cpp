@@ -423,13 +423,13 @@ void MCServerPutOutput(const MCString& s)
 	MCServerOutputNativeChars(s . getstring(), s . getlength());
 }
 
-void MCServerPutHeader(const MCString& s, bool p_new)
+void MCServerPutHeader(const MCStringRef p_s, bool p_new)
 {
 	// Find where the ':' is
 	const char *t_loc;
-	t_loc = s . getstring();
+	t_loc = MCStringGetCString(p_s);
 	uint4 t_loc_len;
-	t_loc_len = s . getlength();
+	t_loc_len = MCStringGetLength(p_s);
 	if (!MCU_strchr(t_loc, t_loc_len, ':', False))
 		return;
 	
@@ -440,20 +440,21 @@ void MCServerPutHeader(const MCString& s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(s . getstring(), MCservercgiheaders[i - 1], t_loc - s . getstring()) == 0)
+			if (MCU_strncasecmp(MCStringGetCString(p_s), MCStringGetCString(MCservercgiheaders[i - 1]), t_loc - MCStringGetCString(p_s)) == 0)
 				break;
 		}
 	
 	if (i == 0)
 	{
-		MCservercgiheaders = (char **)realloc(MCservercgiheaders, sizeof(char *) * (MCservercgiheadercount + 1));
+		MCservercgiheaders = (MCStringRef*)realloc(MCservercgiheaders, sizeof(MCStringRef) * (MCservercgiheadercount + 1));
 		MCservercgiheadercount += 1;
 		i = MCservercgiheadercount;
 	}
 	else
-		free(MCservercgiheaders[i - 1]);
+		MCValueRelease(MCservercgiheaders[i - 1]);
 	
-	MCCStringCloneSubstring(s . getstring(), s . getlength(), MCservercgiheaders[i - 1]);
+	MCStringCopySubstring(p_s, MCRangeMake(0, MCStringGetLength(p_s)), MCservercgiheaders[i - 1]);
+
 }
 
 void MCServerPutContent(const MCString& s)

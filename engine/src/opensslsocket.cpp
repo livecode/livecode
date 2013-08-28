@@ -2181,8 +2181,9 @@ Boolean MCSocket::sslconnect()
 
 			if (rc != X509_V_OK)
 			{
-				const char *t_message = X509_verify_cert_error_string(rc);
-				sslerror = MCSTR(t_message);
+				MCAutoStringRef t_message;
+				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+				sslerror = MCValueRetain(*t_message);
 				errno = EPIPE;
 				return False;
 			}

@@ -79,7 +79,7 @@ MCSOutputTextEncoding MCserveroutputtextencoding = kMCSOutputTextEncodingNative;
 MCSOutputLineEndings MCserveroutputlineendings = kMCSOutputLineEndingsNative;
 
 // The array of current CGI headers (if any).
-char **MCservercgiheaders = NULL;
+MCStringRef *MCservercgiheaders = NULL;
 uint32_t MCservercgiheadercount = 0;
 
 // The array of set cookies
@@ -87,16 +87,16 @@ struct mcservercookie_t *MCservercgicookies = NULL;
 uint32_t MCservercgicookiecount = 0;
 
 // The current document root of the CGI execution.
-char *MCservercgidocumentroot = NULL;
+MCStringRef MCservercgidocumentroot = MCValueRetain(kMCEmptyString);
 
 // The session data save path
-char *MCsessionsavepath = NULL;
+MCStringRef MCsessionsavepath = MCValueRetain(kMCEmptyString);
 
 // The session cookie name
-char *MCsessionname = NULL;
+MCStringRef MCsessionname = MCValueRetain(kMCEmptyString);
 
 // The session ID of the current session
-char *MCsessionid = NULL;
+MCStringRef MCsessionid = MCValueRetain(kMCEmptyString);
 
 // The lifetime of session data in seconds.  default = 24mins
 uint32_t MCsessionlifetime = 60 * 24;

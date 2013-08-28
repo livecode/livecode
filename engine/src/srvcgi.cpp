@@ -1256,7 +1256,9 @@ bool cgi_initialize()
 	MCservercgiheaders_sent = false;
 	
 	// Get the document root
-	MCservercgidocumentroot = getenv("DOCUMENT_ROOT");
+	MCAutoStringRef t_servercgidocumentroot;
+	/* UNCHECKED */ MCStringCreateWithCString(getenv("DOCUMENT_ROOT"), &t_servercgidocumentroot);
+	MCservercgidocumentroot = MCValueRetain(*t_servercgidocumentroot);
 	
 	// Initialize the input wrapper.  This creates a cache of the input stream
 	// which is filled as the stream is read from.  this allows stdin to be used
@@ -1464,9 +1466,9 @@ static bool cgi_send_headers(void)
 	
 	for(uint32_t i = 0; i < MCservercgiheadercount; i++)
 	{
-		if (strncasecmp("Content-Type:", MCservercgiheaders[i], 13) == 0)
+		if (strncasecmp("Content-Type:", MCStringGetCString(MCservercgiheaders[i]), 13) == 0)
 			t_sent_content = true;
-		if (MCS_write(MCservercgiheaders[i], 1, strlen(MCservercgiheaders[i]), IO_stdout) != IO_NORMAL)
+		if (MCS_write(MCStringGetCString(MCservercgiheaders[i]), 1, MCStringGetLength(MCservercgiheaders[i]), IO_stdout) != IO_NORMAL)
 			return false;
 		if (MCS_write("\n", 1, 1, IO_stdout) != IO_NORMAL)
 			return false;
@@ -1520,7 +1522,7 @@ bool MCServerStartSession()
 	const char *t_session_id = NULL;
 	char *t_cookie_id = NULL;
 	
-	t_session_id = MCsessionid;
+	t_session_id = MCStringGetCString(MCsessionid);
 	
 	if (t_session_id == NULL)
 	{
@@ -1560,8 +1562,7 @@ bool MCServerStartSession()
 	if (t_success)
 	{
 		// clear MCsessionid - now associated with open session
-		MCCStringFree(MCsessionid);
-		MCsessionid = NULL;
+		MCValueAssign(MCsessionid, kMCEmptyString);
 	}
 	else
 	{
@@ -1641,28 +1642,24 @@ void cgi_finalize_session()
 
 // Session properties
 
-static MCStringRef s_session_temp_dir = NULL;
+static MCStringRef s_session_temp_dir = MCValueRetain(kMCEmptyString);
 bool MCS_get_temporary_folder(MCStringRef &r_folder);
 
 bool MCS_set_session_save_path(MCStringRef p_path)
 {
-	char *t_save_path = nil;
-	
-	if (!MCCStringClone(MCStringGetCString(p_path), t_save_path))
-		return false;
-	
-	MCCStringFree(MCsessionsavepath);
-	MCsessionsavepath = t_save_path;
-	
+	MCValueAssign(MCsessionsavepath, p_path);
 	return true;
 }
 
 bool MCS_get_session_save_path(MCStringRef& r_path)
 {
-	if (MCsessionsavepath != NULL && MCCStringLength(MCsessionsavepath) > 0)
-		return MCStringCreateWithCString(MCsessionsavepath, r_path);
+	if (!MCStringIsEmpty(MCsessionsavepath) && MCStringGetLength(MCsessionsavepath) > 0)
+	{
+		r_path = MCValueRetain(MCsessionsavepath);
+		return true;
+	}
 	
-	if (s_session_temp_dir != NULL)
+	if (!MCStringIsEmpty(s_session_temp_dir))
 	{
 		r_path = MCValueRetain(s_session_temp_dir);
 		return true;
@@ -1690,39 +1687,31 @@ uint32_t MCS_get_session_lifetime(void)
 
 bool MCS_set_session_name(MCStringRef p_name)
 {
-	char *t_name = nil;
-	
-	if (!MCCStringClone(MCStringGetCString(p_name), t_name))
-		return false;
-	
-	MCCStringFree(MCsessionname);
-	MCsessionname = t_name;
-	
+	MCValueAssign(MCsessionname, p_name);
 	return true;
 }
 
 bool MCS_get_session_name(MCStringRef &r_name)
 {
-	if (MCsessionname != NULL && MCCStringLength(MCsessionname) > 0)
-		return MCStringCreateWithCString(MCsessionname, r_name);
+	if (!MCStringIsEmpty(MCsessionname) && MCStringGetLength(MCsessionname) > 0)
+		r_name = MCValueRetain(MCsessionname);
 	
-	return MCStringCreateWithCString("LCSESSION", r_name);
+	else
+		r_name = MCValueRetain(MCSTR("LCSESSION"));
+
+	return true;
 }
 
 bool MCS_set_session_id(MCStringRef p_id)
 {
-	char *t_id = nil;
-	
 	if (s_current_session != NULL)
 		return false;
-	
-	if (!MCCStringClone(MCStringGetCString(p_id), t_id))
-		return false;
-	
-	MCCStringFree(MCsessionid);
-	MCsessionid = t_id;
-	
-	return true;
+
+	else
+	{
+		MCValueAssign(MCsessionid, p_id);
+		return true;
+	}
 }
 
 bool MCS_get_session_id(MCStringRef& r_id)
@@ -1730,7 +1719,11 @@ bool MCS_get_session_id(MCStringRef& r_id)
 	if (s_current_session != NULL)
 		return MCStringCreateWithCString(s_current_session->id, r_id);
 	
-	return MCStringCreateWithCString(MCsessionid, r_id);
+	else
+	{
+		r_id = MCValueRetain(MCsessionid);
+		return true;
+	}
 }
 
 bool MCServerGetSessionIdFromCookie(char *&r_id)

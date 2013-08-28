@@ -133,7 +133,7 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static MCStringRef s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
@@ -205,11 +205,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
     MCAutoStringRef t_command_path;
     MCS_resolvepath(MCcmd, &t_command_path);
 	
-<<<<<<< HEAD
 	s_command_path = MCValueRetain(*t_command_path);
-=======
-	s_command_path = MCValueRetain(*t_command_path));
->>>>>>> upstream/refactor-syntax_unicode
 
 	atexit(restart_revolution);
 	

@@ -623,7 +623,7 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 extern void MCServerPutOutput(const MCString& data);
 extern void MCServerPutUnicodeOutput(const MCString& data);
 extern void MCServerPutBinaryOutput(const MCString& data);
-extern void MCServerPutHeader(const MCString& data, bool add);
+extern void MCServerPutHeader(const MCStringRef data, bool add);
 extern void MCServerPutContent(const MCString& data);
 extern void MCServerPutUnicodeContent(const MCString& data);
 extern void MCServerPutMarkup(const MCString& data);
@@ -633,6 +633,7 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
 	MCString p_data;
 	p_data = MCStringGetOldString(p_data_ref);
+	MCAutoStringRef t_data;
 
 	switch(p_kind)
 	{
@@ -652,11 +653,13 @@ bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data, false);
+		/* UNCHECKED */ MCStringCreateWithOldString(p_data, &t_data);
+		MCServerPutHeader(*t_data, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data, true);
+		/* UNCHECKED */ MCStringCreateWithOldString(p_data, &t_data);
+		MCServerPutHeader(*t_data, true);
 		break;
 
 	case kMCSPutContent:
