@@ -295,22 +295,40 @@ void MCControl::GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
 	r_tooltip = MCValueRetain(tooltip);
 }
 
-/*void MCControl::GetUnicodeToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
+void MCControl::GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip)
 {
-	if (tooltip == nil)
-		return;
-
-	MCAutoStringRef t_tooltip;
-	if (MCStringCreateWithCString(tooltip, &t_tooltip) && MCU_multibytetounicode(*t_tooltip, LCH_UTF8, r_tooltip))
-		return;
+	// Convert the tooltip string into UTF-16 data
+	unichar_t *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (MCStringConvertToUnicode(tooltip, t_bytes, t_length))
+	{
+		if (MCDataCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, r_tooltip))
+			return;
+	}
 	
-	ctxt . Throw();
+	ctxt.Throw();
 }
 
-void MCControl::SetUnicodeToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
+void MCControl::SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip)
 {
-	SetToolTip(ctxt, p_tooltip, true);
-}*/
+	// Convert the supplied UTF-16 data into a string
+	if (p_tooltip != nil)
+	{
+		unichar_t *t_bytes = (unichar_t *)MCDataGetBytePtr(p_tooltip);
+		uindex_t t_length = MCDataGetLength(p_tooltip);
+		if (t_bytes != nil && t_length > 0)
+		{
+			MCStringRef t_tooltip = nil;
+			if (MCStringCreateWithChars(t_bytes, t_length, t_tooltip))
+			{
+				SetToolTip(ctxt, t_tooltip);
+				return;
+			}
+		}
+	}
+	
+	ctxt.Throw();
+}
 
 void MCControl::GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode)
 {
