@@ -740,6 +740,56 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
 	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
 }
 
+IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
+{
+	IO_stat stat = IO_NORMAL;
+	if (as_unicode)
+	{
+		// String is stored as UTF-16
+		uint4 t_length = 0;
+		char *t_bytes = nil;
+		if ((stat = IO_read_string(t_bytes, t_length, stream, true, size)) != IO_NORMAL)
+			return stat;
+		if (!MCStringCreateWithChars((unichar_t *)t_bytes, t_length, r_string))
+			return IO_ERROR;
+		return IO_NORMAL;
+	}
+	
+	// String is stored in native format
+	uint4 t_length = 0;
+	char *t_bytes = nil;
+	if ((stat = IO_read_string(t_bytes, t_length, stream, false, size)) != IO_NORMAL)
+		return stat;
+	if (!MCStringCreateWithNativeChars((char_t *)t_bytes, t_length, r_string))
+		return IO_ERROR;
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unicode, uint1 size)
+{	
+	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_string));
+	if (as_unicode)
+	{
+		// Write the string as UTF-16, regardless of underlying encoding
+		uindex_t t_length = 0;
+		unichar_t *t_bytes = nil;
+		if (!MCStringConvertToUnicode(p_string, t_bytes, t_length))
+			return IO_ERROR;
+		IO_stat stat = IO_write_string((const char *)t_bytes, t_length * sizeof(unichar_t), stream, true, size);
+		MCMemoryDeleteArray(t_bytes);
+		return stat;
+	}
+	
+	// Write the string in the native encoding, even if it is UTF-16
+	uindex_t t_length = 0;
+	char_t *t_bytes = nil;
+	if (!MCStringConvertToNative(p_string, t_bytes, t_length))
+		return IO_ERROR;
+	IO_stat stat = IO_write_string((const char *)t_bytes, t_length * sizeof(char_t), stream, false, size);
+	MCMemoryDeleteArray(t_bytes);
+	return stat;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int64_t MCS_fake_fsize(IO_handle stream)

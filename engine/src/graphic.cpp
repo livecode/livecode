@@ -74,12 +74,12 @@ MCPropertyInfo MCGraphic::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_SHOW_NAME, Bool, MCGraphic, ShowName)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_LABEL, String, MCGraphic, Label)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCGraphic, UnicodeLabel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, String, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_LABEL, BinaryString, MCGraphic, UnicodeLabel)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_TEXT, String, MCGraphic, Label)
-	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, String, MCGraphic, UnicodeLabel)
-	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, String, MCGraphic, UnicodeLabel)
+	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, BinaryString, MCGraphic, UnicodeLabel)
+	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, BinaryString, MCGraphic, UnicodeLabel)
 	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
 	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
 };
@@ -134,9 +134,7 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	for (i = 0 ; i < nmarkerpoints ; i++)
 		markerpoints[i] = gref.markerpoints[i];
 	oldpoints = NULL;
-	label = nil;
-	if (gref.label)
-		label = MCValueRetain(gref.label);
+	MCValueAssign(label, gref.label);
 
 	m_fill_gradient = MCGradientFillCopy(gref.m_fill_gradient);
 	m_stroke_gradient = MCGradientFillCopy(gref.m_stroke_gradient);
@@ -171,7 +169,7 @@ void MCGraphic::initialise(void)
 	realpoints = NULL;
 	markerpoints = NULL;
 	oldpoints = NULL;
-	label = nil;
+	label = MCValueRetain(kMCEmptyString);
 
 	setfillrule(kMCFillRuleNone);
 	m_fill_gradient = NULL;
@@ -1758,16 +1756,12 @@ void MCGraphic::closepolygon(MCPoint *&pts, uint2 &npts)
 	}
 }
 
-void MCGraphic::getlabeltext(MCStringRef &r_text)
+MCStringRef MCGraphic::getlabeltext()
 {
-	if (label != nil)
-	{
-		r_text = MCValueRetain(label);
-	}
-	else
-	{
-		r_text = MCNameGetString(getname());
-	}
+	if (!MCStringIsEmpty(label))
+		return label;
+	
+	return MCNameGetString(getname());
 }
 
 void MCGraphic::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef &s, uint2 fstyle)
@@ -1971,18 +1965,15 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			MCU_offset_points(markerpoints, nmarkerpoints,
 			                  -realpoints[last].x, -realpoints[last].y);
 	}
-	MCStringRef slabel;
-	getlabeltext(slabel);
-	if (flags & F_G_SHOW_NAME &&  slabel != nil)
+	MCStringRef slabel = getlabeltext();
+	if (flags & F_G_SHOW_NAME &&  !MCStringIsEmpty(slabel))
 	{
 		setforeground(dc, DI_FORE, False);
 
 		// Split the string on newlines
-		MCArrayRef lines = nil;
-		MCStringRef delim = MCSTR("\n");
-		MCStringSplit(slabel, delim, nil, kMCCompareExact, lines);
-		MCValueRelease(delim);
-		uindex_t nlines = MCArrayGetCount(lines);
+		MCAutoArrayRef lines;
+		/* UNCHECKED */ MCStringSplit(slabel, MCSTR("\n"), nil, kMCCompareExact, &lines);
+		uindex_t nlines = MCArrayGetCount(*lines);
 		
 		uint2 fheight;
 		fheight = gettextheight();
@@ -2006,7 +1997,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		{
 			// Note: 'lines' is an array of strings
 			MCValueRef lineval = nil;
-			MCArrayFetchValueAtIndex(lines, i, lineval);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, lineval);
 			MCStringRef line = (MCStringRef)(lineval);
 			twidth = MCFontMeasureText(m_font, line);
 			
@@ -2029,6 +2020,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			}
 			drawlabel(dc, sx, sy, twidth, trect, line, fontstyle);
 			sy += fheight;
+			MCValueRelease(line);
 		}
 		if (state & CS_KFOCUSED)
 		{
@@ -2041,7 +2033,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			dc->drawrect(trect);
 			dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 		}
-		delete lines;
 	}
 	dc->setlineatts(0, LineSolid, CapButt, JoinBevel);
 
@@ -2381,6 +2372,21 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	uint2 i;
 	IO_stat stat;
 
+	// Ensure that the F_G_LABEL and FF_HAS_UNICODE flags is set correctly
+	if (MCStringIsEmpty(label))
+	{
+		flags &= ~F_G_LABEL;
+	}
+	else 
+	{
+		flags |= F_G_LABEL;
+		if (MCStringIsNative(label))
+			m_font_flags &= ~FF_HAS_UNICODE;
+		else
+			m_font_flags |= FF_HAS_UNICODE;
+	}
+
+	
 	if ((stat = IO_write_uint1(OT_GRAPHIC, stream)) != IO_NORMAL)
 		return stat;
 
@@ -2463,7 +2469,7 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 				return stat;
 	}
 	if (flags & F_G_LABEL)
-		if ((stat = IO_write_stringref(label, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(label, stream, hasunicode())) != IO_NORMAL)
 			return stat;
 	return savepropsets(stream);
 }
@@ -2574,7 +2580,7 @@ IO_stat MCGraphic::load(IO_handle stream, const char *version)
 	}
 	if (flags & F_G_LABEL)
 	{
-		if ((stat = IO_read_stringref(label, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(label, stream, hasunicode())) != IO_NORMAL)
 			return stat;
 	}
 	return loadpropsets(stream);
