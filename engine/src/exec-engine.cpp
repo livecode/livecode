@@ -973,7 +973,7 @@ void MCEngineExecStartUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStartUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_name))) == NULL ||
+	if ((sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_name))) == NULL ||
 		!sptr->parsescript(True))
 		{
 			ctxt . LegacyThrow(EE_START_BADTARGET);
@@ -1004,7 +1004,7 @@ void MCEngineExecStopUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_name))) == NULL)
+	if ((sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_name))) == NULL)
 		{
 			ctxt . LegacyThrow(EE_START_BADTARGET);
 			return;

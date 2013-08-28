@@ -540,7 +540,7 @@ MCStack *MCGo::findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool 
 	if (etype == CT_ID)
 		sptr = MCdefaultstackptr->findstackid(ep.getuint4());
 	else
-		sptr = MCdefaultstackptr->findstackname(ep.getsvalue());
+		sptr = MCdefaultstackptr->findstackname_oldstring(ep.getsvalue());
 	if (sptr != NULL)
 		return sptr;
 	MCObject *objptr;
@@ -993,7 +993,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 		switch (stack->etype)
 		{
 		case CT_HELP:
-			sptr = MCdefaultstackptr->findstackname(MChelpnamestring);
+			sptr = MCdefaultstackptr->findstackname_oldstring(MChelpnamestring);
 			break;
 		case CT_HOME:
 			t_is_home = true;
@@ -1027,7 +1027,7 @@ Exec_stat MCGo::exec(MCExecPoint &ep)
 					if (stack->next->etype == CT_ID)
 						sptr = sptr->findsubstackid(ep.getuint4());
 					else
-						sptr = sptr->findsubstackname(ep.getsvalue());
+						sptr = sptr->findsubstackname_oldstring(ep.getsvalue());
 					break;
 				default:
 					MCeerror->add(EE_CHUNK_BADSTACKEXP, line, pos);

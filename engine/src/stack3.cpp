@@ -1165,7 +1165,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile(const MCString &s)
+MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 {
 	char *fname;
 	if ((fname = getstackfile(s)) != NULL)
@@ -1175,7 +1175,7 @@ MCStack *MCStack::findstackfile(const MCString &s)
 		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
 		{
 			delete fname;
-			MCStack *stackptr = tstk->findsubstackname(s);
+			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1195,26 +1195,23 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
+MCStack *MCStack::findstackname(MCNameRef p_name)
 {
-	if (nil != (r_stack = findsubstackname(MCNameGetOldString(p_name))))
-		return true;
+	MCStack *foundstk;
+	if ((foundstk = findsubstackname(p_name)) != NULL)
+		return foundstk;
 	else
-		return nil != (r_stack = MCdispatcher->findstackname(MCNameGetOldString(p_name)));
+		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
 }
 
-/* LEGACY */ MCStack *MCStack::findstackname(const MCString &s)
+/* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
 {
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	MCStack *t_stack;
-	if (!findstackname(*t_name, t_stack))
-		return nil;
-
-	return t_stack;
+	return findstackname(*t_name);
 }
 
-bool MCStack::findsubstackname(MCNameRef p_name, MCStack *&r_stack)
+MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
 	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
 		return this;
@@ -1248,15 +1245,11 @@ bool MCStack::findsubstackname(MCNameRef p_name, MCStack *&r_stack)
 	return NULL;
 }
 
-/* LEGACY */ MCStack *MCStack::findsubstackname(const MCString &s)
+/* LEGACY */ MCStack *MCStack::findsubstackname_oldstring(const MCString &s)
 {
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	MCStack *t_stack;
-	if (!findsubstackname(*t_name, t_stack))
-		return nil;
-    
-	return t_stack;
+	return findsubstackname(*t_name);
 }
 
 MCStack *MCStack::findstackid(uint4 fid)

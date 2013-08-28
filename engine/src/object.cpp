@@ -3584,8 +3584,8 @@ bool MCObject::resolveparentscript(void)
 
 	// We have a parent script, so use MCdispatcher to try and find the
 	// stack.
-	MCStack *t_stack = nil;
-	/* UNCHECKED */ getstack()->findstackname(t_script->GetObjectStack(), t_stack);
+	MCStack *t_stack;
+	t_stack = getstack() -> findstackname(t_script -> GetObjectStack());
 
 	// Next search for the control we need.
 	MCControl *t_control;

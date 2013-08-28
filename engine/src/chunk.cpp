@@ -971,7 +971,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 			if (stack->etype == CT_ID)
 				sptr = sptr->findstackid(ep2.getuint4());
 			else
-				sptr = sptr->findstackname(ep2.getsvalue());
+				sptr = sptr->findstackname_oldstring(ep2.getsvalue());
 			break;
 		case CT_THIS:
 			break;
@@ -993,7 +993,7 @@ Exec_stat MCChunk::getobj(MCExecPoint &ep, MCObject *&objptr,
 				if (stack->next->etype == CT_ID)
 					sptr = sptr->findsubstackid(ep2.getuint4());
 				else
-					sptr = sptr->findsubstackname(ep2.getsvalue());
+					sptr = sptr->findsubstackname_oldstring(ep2.getsvalue());
 				break;
 			case CT_THIS:
 				break;

@@ -402,11 +402,12 @@ public:
 	/* LEGACY */ MCObject *getAVname(Chunk_term type, const MCString &);
     bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	MCStack *findstackfile(const MCString &s);
-	bool findstackname(MCNameRef p_name, MCStack *&r_stack);
-	/* LEGACY */ MCStack *findstackname(const MCString &);
-    bool findsubstackname(MCNameRef p_name, MCStack *&r_stack);
-	/* LEGACY */ MCStack *findsubstackname(const MCString &);
+	MCStack *findstackfile_oldstring(const MCString &s);
+	MCStack *findstackname_oldstring(const MCString &);
+	MCStack *findsubstackname_oldstring(const MCString &);
+	MCStack *findstackfile(MCNameRef name);
+	MCStack *findstackname(MCNameRef name);
+	MCStack *findsubstackname(MCNameRef name);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findsubstackid(uint4 fid);
 	void translatecoords(MCStack *dest, int2 &x, int2 &y);

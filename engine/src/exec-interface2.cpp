@@ -1428,7 +1428,7 @@ void MCInterfaceGetDefaultStack(MCExecContext& ctxt, MCStringRef& r_value)
 void MCInterfaceSetDefaultStack(MCExecContext& ctxt, MCStringRef p_value)
 {
 	MCStack *sptr;
-	sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_value));
+	sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_value));
 	
 	if (sptr == nil)
 	{
@@ -2083,12 +2083,13 @@ void MCInterfaceGetScreenRects(MCExecContext& ctxt, bool p_working, bool p_effec
 void MCInterfaceEvalHelpStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
 {
     MCStack *t_stack;
-    MCdefaultstackptr->findstackname(MCM_help, t_stack);
+    t_stack = MCdefaultstackptr->findstackname(MCM_help);
     
     if (t_stack != nil)
     {
         r_object . object = t_stack;
         r_object . part_id = 0;
+		return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
@@ -2103,6 +2104,7 @@ void MCInterfaceEvalHomeStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_object
     {
         r_object . object = t_stack;
         r_object . part_id = 0;
+		return;
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
@@ -2273,14 +2275,15 @@ void MCInterfaceEvalDefaultStackAsObject(MCExecContext& ctxt, MCObjectPtr& r_obj
 void MCInterfaceEvalStackOfStackByName(MCExecContext& ctxt, MCNameRef p_name, MCObjectPtr p_parent, MCObjectPtr& r_stack)
 {
     MCStack *t_stack;
-    
-    if (static_cast<MCStack *>(p_parent . object) -> findstackname(p_name, t_stack))
+    t_stack = static_cast<MCStack *>(p_parent . object) -> findstackname(p_name);
+    if (t_stack != nil)
     {
         r_stack . object = t_stack;
         r_stack . part_id = p_parent . part_id;
         return;
     }
     
+    ctxt . LegacyThrow(EE_CHUNK_NOSTACK);
 }
 
 void MCInterfaceEvalStackOfStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
@@ -2321,7 +2324,8 @@ void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObje
         }
     }
     
-    if (MCdefaultstackptr -> findstackname((MCNameRef)p_value, t_stack))
+	t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
+	if (t_stack != nil)
     {
         r_stack . object = t_stack;
         r_stack . part_id = 0;
@@ -2333,9 +2337,9 @@ void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObje
 
 void MCInterfaceEvalSubstackOfStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
 {
-
     MCStack *t_stack;
-    if (static_cast<MCStack *>(p_parent . object) -> findsubstackname(p_name, t_stack))
+	t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackname(p_name);
+    if (t_stack != nil)
     {
         r_stack . object = t_stack;
         r_stack . part_id = p_parent . part_id;

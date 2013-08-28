@@ -3416,7 +3416,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		if (menu == NULL)
 		{
 			MCerrorlock++;
-			menu = getstack()->findstackname(menuname);
+			menu = getstack()->findstackname_oldstring(menuname);
 			MCerrorlock--;
 			if (menu != NULL)
 				menu->addneed(this);

@@ -1298,7 +1298,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findsubstackname(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findsubstackname_oldstring(s)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1311,7 +1311,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findstackfile(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findstackfile_oldstring(s)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}

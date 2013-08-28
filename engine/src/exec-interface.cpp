@@ -2724,7 +2724,7 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 
 void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
-	MCStack *parentptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_parent_name));
+	MCStack *parentptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_parent_name));
 	if (parentptr == nil)
 	{
 		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
@@ -2755,7 +2755,7 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
 void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -2808,7 +2808,7 @@ void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_name, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -2853,7 +2853,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCStringRef p_name, MCPoint *p_at, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -4035,7 +4035,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 			if (MCU_stoui4(p_window, win) && MCscreen->uint4towindow(win, w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
-				oldstack = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_window));
+				oldstack = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_window));
 		}
 		
 		if (oldstack == NULL || !oldstack->getopened())

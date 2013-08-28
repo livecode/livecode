@@ -459,12 +459,12 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 
 	MCStack *t_stack;
 	if (t_success)
-		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+		t_stack = ctxt.GetObject()->getstack()->findstackname(p_stack);
+	
+	Boolean t_old_trace = MCtrace;
+	MCtrace = False;
 
-	bool t_old_trace = MCtrace == True;
-	MCtrace = false;
-
-	if (t_success)
+	if (t_success && t_stack != nil)
 	{
 		MCStack *t_parent_stack = nil;
 
@@ -745,12 +745,12 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	
 	MCStack *t_stack;
 	if (t_success)
-		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+		t_stack = ctxt.GetObject()->getstack()->findstackname(p_stack);
 	
-	bool t_old_trace = MCtrace == True;
-	MCtrace = false;
+	Boolean t_old_trace = MCtrace;
+	MCtrace = False;
 	
-	if (t_success)
+	if (t_success && t_stack != nil)
 	{
 		MCStack *t_parent_stack = nil;
 		
