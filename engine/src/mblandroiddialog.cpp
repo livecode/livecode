@@ -118,17 +118,13 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char
 
 	while(s_in_popup_dialog)
 		MCscreen -> wait(60.0, True, True);
-
-	bool t_success;
-    t_success = false;
     
 	if (s_popup_dialog_text != nil)
 	{
 		r_result = MCValueRetain(s_popup_dialog_text);
-		t_success = MCStringIsEqualTo(s_popup_dialog_text, r_result, kMCStringOptionCompareExact);
 		s_popup_dialog_text = nil;
 	}
-	return t_success;
+	return true;
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *env, jobject object, jstring result) __attribute__((visibility("default")));
@@ -144,13 +140,8 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAskDialogDone(JNIEnv *en
 
 	if (result != nil)
 	{
-		// TODO - java -> native string conversion
-		const char *t_utfchars = nil;
-		t_utfchars = env->GetStringUTFChars(result, nil);
-		if (t_utfchars != nil)
-			s_popup_dialog_text = MCSTR(t_utfchars);
-
-		env->ReleaseStringUTFChars(result, t_utfchars);
+		MCJavaStringToStringRef(env, result, s_popup_dialog_text);
+		// TODO - java -> stringref conversion
 	}
 	MCAndroidBreakWait();
 }

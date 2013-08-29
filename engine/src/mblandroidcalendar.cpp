@@ -128,7 +128,7 @@ bool MCSystemUpdateEvent(MCStringRef p_new_calendar_event_data, MCStringRef& r_r
 	r_result = MCValueRetain(s_calendar_event_selected);
     MCLog("MCSystemUpdateCalendarEvent - finished", NULL);
 
-    return MCStringIsEqualTo(s_calendar_event_selected, r_result, kMCStringOptionCompareExact);
+    return true;
 }
 
 void MCAndroidUpdateCalendarEventDone(MCStringRef p_calendar_event_id)
@@ -163,7 +163,7 @@ bool MCSystemRemoveEvent(MCStringRef p_calendar_event_id, bool p_reoccurring, MC
     MCAndroidEngineRemoteCall("removeCalendarEvent", "xx", r_calendar_event_id_deleted, p_calendar_event_id);
     
 	r_calendar_event_id_deleted = MCValueRetain(s_calendar_event_selected);
-    return MCStringIsEqualTo(s_calendar_event_selected, r_calendar_event_id_deleted, kMCStringOptionCompareExact);
+    return true;
 }
 
 bool MCSystemAddEvent(MCCalendar p_new_calendar_event_data, MCStringRef& r_result)
@@ -181,7 +181,7 @@ bool MCSystemAddEvent(MCCalendar p_new_calendar_event_data, MCStringRef& r_resul
                               p_new_calendar_event_data.mcfrequencyinterval, p_new_calendar_event_data.mccalendar);  
 
 	r_result = MCValueRetain(s_calendar_event_selected);
-    return MCStringIsEqualTo(s_calendar_event_selected, r_result, kMCStringOptionCompareExact);
+    return true;
     
 }
 
@@ -189,13 +189,8 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringR
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
 	r_result = MCValueRetain(s_calendar_events_selected);
-    if(MCStringIsEqualTo(s_calendar_events_selected, r_result, kMCStringOptionCompareExact));
-    {
-        MCLog("MCSystemFindCalendarEvent result: %s", r_result);
-        return true;
-    }
-    
-    return false;
+    MCLog("MCSystemFindCalendarEvent result: %s", r_result);
+    return true;
 }
 
 bool MCSystemGetCalendarsEvent(MCStringRef& r_result)
@@ -234,125 +229,84 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doGetCalendarEventData(JNI
                                                                              jstring p_frequency, jint p_frequencycount,
                                                                              jint p_frequencyinterval, jstring p_calendar)
 {
-    char *t_temp_string;
-    
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_eventid, t_temp_string);
-//    s_calendar_event_data.mceventid = t_temp_string;
     MCValueRelease(s_calendar_event_data.mceventid);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mceventid);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_eventid, s_calendar_event_data.mceventid);
     
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_title, t_temp_string);
-//    s_calendar_event_data.mctitle = t_temp_string;
     MCValueRelease(s_calendar_event_data.mctitle);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mctitle);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_title, s_calendar_event_data.mctitle);
     
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_note, t_temp_string);
-//    s_calendar_event_data.mcnote = t_temp_string;
     MCValueRelease(s_calendar_event_data.mcnote);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mcnote);
-    
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_location, t_temp_string);
-//    s_calendar_event_data.mclocation = t_temp_string;
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_note, s_calendar_event_data.mcnote);
+	
     MCValueRelease(s_calendar_event_data.mclocation);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mclocation);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_location, s_calendar_event_data.mclocation);
     
     s_calendar_event_data.mcalert1 = p_alert1;
     s_calendar_event_data.mcalert2 = p_alert2;
     
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_frequency, t_temp_string);
-//    s_calendar_event_data.mcfrequency = t_temp_string;
     MCValueRelease(s_calendar_event_data.mcfrequency);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mcfrequency);
-    
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_frequency, s_calendar_event_data.mcfrequency);
+      
     s_calendar_event_data.mcfrequencycount = p_frequencycount;
     s_calendar_event_data.mcfrequencyinterval = p_frequencyinterval;
     
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar, t_temp_string);
-//    s_calendar_event_data.mccalendar = t_temp_string;
     MCValueRelease(s_calendar_event_data.mccalendar);
-    MCStringCreateWithCString(t_temp_string, s_calendar_event_data.mccalendar);
-    
-    MCCStringFree(t_temp_string);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar, s_calendar_event_data.mccalendar);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
+    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidUpdateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doUpdateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
+    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidUpdateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidCreateCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreateCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidCreateCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShowCalendarEventDone(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidShowCalendarEventDone(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doShowCalendarEventCanceled(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
     MCAutoStringRef t_mcstring;
-    /* UNCHECKED */ MCStringCreateWithCString(t_temp_string, &t_mcstring);
-    MCAndroidCreateCalendarEventDone (*t_mcstring);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, &t_mcstring);
+    MCAndroidShowCalendarEventCanceled(*t_mcstring);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doAddCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-	/* UNCHECKED */ MCStringCreateWithCString(t_temp_string, s_calendar_event_selected);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, s_calendar_event_selected);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doFindCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_events_found)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_events_found, t_temp_string);
-	/* UNCHECKED */ MCStringCreateWithCString(t_temp_string, s_calendar_events_selected);
-    MCCStringFree(t_temp_string);
+	MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_events_found, s_calendar_events_selected);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRemoveCalendarEvent(JNIEnv *env, jobject object, jstring p_calendar_event_id)
 {
-    char *t_temp_string;
-    MCJavaStringToNative(MCJavaGetThreadEnv(), p_calendar_event_id, t_temp_string);
-	/* UNCHECKED */ MCStringCreateWithCString(t_temp_string, s_calendar_event_selected);
-    MCCStringFree(t_temp_string);
+    MCJavaStringToStringRef(MCJavaGetThreadEnv(), p_calendar_event_id, s_calendar_event_selected);
 }

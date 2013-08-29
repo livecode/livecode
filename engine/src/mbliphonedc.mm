@@ -333,11 +333,13 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	
 	SystemSoundID t_new_sound;
 	
-	char *t_sound_path;
-	t_sound_path = MCS_resolvepath(env -> sound);
+	MCAutoStringRef t_sound_path;
+	MCAutoStringRef t_env_sound;
+	/* UNCHECKED */ MCStringCreateWithCString(env -> sound, &t_env_sound);
+	MCS_resolvepath(*t_env_sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_sound_path encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(*t_sound_path) encoding: NSMacOSRomanStringEncoding]];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
@@ -349,10 +351,10 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = t_new_sound;
-		/* UNCHECKED */ MCStringCreateWithCString(t_sound_path, s_system_sound_name);
+		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
 	else
-		delete t_sound_path;
+		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }
@@ -371,15 +373,10 @@ bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
 	if (s_system_sound_name != nil)
-	{
 		r_beep_sound = MCValueRetain(s_system_sound_name);
-		return MCStringIsEqualTo(s_system_sound_name, r_beep_sound, kMCStringOptionCompareExact);
-	}
 	else
-	{
 		r_beep_sound = MCValueRetain(kMCEmptyString);
-		return true;
-	}
+	return true;
 }
 
 void MCScreenDC::getbeep(uint4 property, int4& r_value)

@@ -67,13 +67,15 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 		s_sound_file = nil;
 	}
     
-	/* UNCHECKED */ MCS_resolvepath(MCSTR(p_file), s_sound_file);
+	MCAutoStringRef t_file;
+	/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
+	/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
     
 	const char *t_apk_file = nil;
 	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))
 		MCAndroidEngineCall("playSound", "bsbb", &t_success, t_apk_file, true, p_looping);
 	else
-		MCAndroidEngineCall("playSound", "bsbb", &t_success, MCStringGetCString(s_sound_file), false, p_looping);
+		MCAndroidEngineCall("playSound", "bxbb", &t_success, s_sound_file, false, p_looping);
 	if (!t_success)
 	{
 		MCValueRelease(s_sound_file);

@@ -525,7 +525,7 @@ char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
     if (s_js_tag != nil)
         return nil;
     
-    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "ss", &(MCStringGetCString(s_js_tag)), p_script);
+    MCAndroidObjectRemoteCall(GetView(), "executeJavaScript", "xs", &s_js_tag, p_script);
     
     // wait for result, timeout after 30 seconds    
     real8 t_current_time = MCS_time();
@@ -546,7 +546,8 @@ char *MCAndroidBrowserControl::ExecuteJavaScript(const char *p_script)
     }
     
     t_result = strdup(MCStringGetCString(s_js_result));
-    s_js_result = nil;
+    MCValueRelease(s_js_result);
+	s_js_result = nil;
     
     return t_result;
 }
@@ -558,14 +559,14 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJS
     bool t_match = true;
     char *t_tag = nil;
     MCJavaStringToNative(MCJavaGetThreadEnv(), tag, t_tag);
-	MCAutoStringRef t_tag_string;
-	/* UNCHECKED */ MCStringCreateWithCString(t_tag, t_tag_string);
-    if (t_tag == nil || MCAndroidBrowserControl::s_js_tag == nil || !MCStringIsEqualTo(t_tag_string, MCAndroidBrowserControl::s_js_tag, kMCStringOptionCompareExact))
+	
+    if (t_tag == nil || MCAndroidBrowserControl::s_js_tag == nil || !MCStringIsEqualToCString(s_js_tag, t_tag))
         t_match = false;
     
     if (t_match)
     {
-        MCJavaStringToNative(MCJavaGetThreadEnv(), result, strdup(MCStringGetCString(MCAndroidBrowserControl::s_js_result)));
+        MCJavaStringToStringRef(MCJavaGetThreadEnv(), result, MCAndroidBrowserControl::s_js_result);
+		bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef& r_stringref);
         MCValueRelease(MCAndroidBrowserControl::s_js_tag);
         MCAndroidBrowserControl::s_js_tag = nil;
     }

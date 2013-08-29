@@ -1705,7 +1705,7 @@ char *MCSocket::sslgraberror()
 
 	if (!sslinited)
 		return strclone("cannot load SSL library");
-	if (MCStringGetCString(sslerror))
+	if (sslerror != nil)
 	{
 		terror = strdup(MCStringGetCString(sslerror));
 		sslerror = NULL;
@@ -1789,7 +1789,7 @@ Boolean MCSocket::initsslcontext()
 							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_utf8_certpath));
 					if (!t_success)
 					{
-						MCStringFormat(sslerror, "Error loading CA file and/or directory %s", t_utf8_certpath);
+						MCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
 
 					}
 				}
@@ -2411,18 +2411,17 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 		int  depth = X509_STORE_CTX_get_error_depth(store);
 		int  err = X509_STORE_CTX_get_error(store);
 		
-		int certlen = MCStringGetLength(sslerror);
-		/* UNCHECKED */ MCStringFormat(sslerror, "-Error with certificate at depth: %i\n", depth);
+		/* UNCHECKED */ MCStringCreateMutable(0, sslerror);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "-Error with certificate at depth: %i\n", depth);
 		X509_NAME_oneline(X509_get_issuer_name(cert), data, 256);
-		certlen = MCStringGetLength(sslerror);
 		
 		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  issuer   = %s\n", data);
 		X509_NAME_oneline(X509_get_subject_name(cert), data, 256);
-		certlen = MCStringGetLength(sslerror);
 		
 		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  subject  = %s\n", data);
-		certlen = MCStringGetLength(sslerror);
-		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		/* UNCHECKED */ MCStringAppendFormat(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringCopyAndRelease(sslerror, sslerror);
 	}
 
 	return ok;

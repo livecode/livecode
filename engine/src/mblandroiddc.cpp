@@ -1870,11 +1870,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, j
     
     if (p_media_content != nil)
 	{
-		const char *t_utfchars = nil;
-		t_utfchars = env->GetStringUTFChars(p_media_content, nil);
-		if (t_utfchars != nil)
-			/* UNCHECKED */ MCStringCreateWithCString(t_utfchars, s_media_content);
-		env->ReleaseStringUTFChars(p_media_content, t_utfchars);
+		MCJavaStringToStringRef(env, p_media_content, s_media_content);
 	}
 
 	MCAndroidMediaDone(s_media_content);

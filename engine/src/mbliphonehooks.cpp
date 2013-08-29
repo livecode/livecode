@@ -39,8 +39,8 @@ struct redirect_t
 
 static uint32_t s_redirect_count = 0;
 static redirect_t *s_redirects = nil;
-static MCStringRef s_redirect_base = nil;
-static MCStringRef s_redirect_cwd = nil;
+static char *s_redirect_base = nil;
+static char *s_redirect_cwd = nil;
 
 void add_simulator_redirect(const char *p_redirect_def)
 {
@@ -53,11 +53,8 @@ void add_simulator_redirect(const char *p_redirect_def)
 		return;
 	
 	if (s_redirect_base == nil)
-<<<<<<< HEAD
-		MCCStringCloneSubstring(MCcmd, strrchr(MCcmd, '/') - MCcmd, MCStringGetCString(s_redirect_base));
-=======
 		MCCStringCloneSubstring(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), s_redirect_base);
->>>>>>> upstream/refactor-syntax_unicode
+
 	
 	MCCStringCloneSubstring(p_redirect_def, t_dst_offset - p_redirect_def, s_redirects[s_redirect_count - 1] . src);
 	
@@ -122,10 +119,10 @@ static void compute_simulator_redirect(const char *p_input, char*& r_output)
 	
 	r_output = t_resolved_input;
 	
-	if (MCCStringBeginsWith(t_resolved_input, MCStringGetCString(s_redirect_base)))
+	if (MCCStringBeginsWith(t_resolved_input, s_redirect_base))
 	{
 		const char *t_input_leaf;
-		t_input_leaf = t_resolved_input + MCStringGetLength(s_redirect_base) + 1;
+		t_input_leaf = t_resolved_input + strlen(s_redirect_base) + 1;
 		for(uint32_t i = 0; i < s_redirect_count; i++)
 		{
 			if (MCCStringEqual(s_redirects[i] . src, t_input_leaf))
@@ -238,7 +235,7 @@ static DIR* opendir_wrapper(const char *dirname)
 	char *t_resolved_path;
 	compute_simulator_redirect(dirname, t_resolved_path);
 	
-	if (s_redirect_base != nil && MCCStringEqual(t_resolved_path, MCStringGetCString(s_redirect_base)))
+	if (s_redirect_base != nil && MCCStringEqual(t_resolved_path, s_redirect_base))
 	{
 		DIR *t_sys_dir;
 		t_sys_dir = opendir_trampoline(t_resolved_path);
@@ -336,7 +333,7 @@ static int readdir_r_wrapper(DIR *dirp, struct dirent *entry, struct dirent **re
 		}
 		
 		char *t_item_path;
-		MCCStringFormat(t_item_path, "%s/%s", MCStringGetCString(s_redirect_base), t_wrapper -> entries[t_wrapper -> index]);
+		MCCStringFormat(t_item_path, "%s/%s", s_redirect_base, t_wrapper -> entries[t_wrapper -> index]);
 		struct stat t_stat;
 		lstat(t_item_path, &t_stat);
 		MCCStringFree(t_item_path);
@@ -448,16 +445,16 @@ static char *getcwd_wrapper(char *buf, size_t size)
 	if (s_redirect_cwd != nil)
 	{
 		if (buf == nil)
-			return strdup(MCStringGetCString(s_redirect_cwd));
+			return strdup(s_redirect_cwd);
 		
-		if (MCStringGetLength(s_redirect_cwd) >= size)
+		if (strlen(s_redirect_cwd) >= size)
 		{
 			*buf = 0;
 			errno = ERANGE;
 			return NULL;
 		}
 		
-		strcpy(buf, MCStringGetCString(s_redirect_cwd));
+		strcpy(buf, s_redirect_cwd);
 		return buf;
 	}
 	
@@ -476,11 +473,11 @@ static int chdir_wrapper(const char *path)
 	
 	if (t_result == 0)
 	{
-		MCValueRelease(s_redirect_cwd);
+		free(s_redirect_cwd);
 		s_redirect_cwd = nil;
 		
 		if (t_resolved_path != path)
-			/* UNCHECKED */ MCStringCreateWithCString(strdup(t_resolved_path), s_redirect_cwd);
+			s_redirect_cwd = strdup(t_resolved_path);
 	}
 	
 	if (t_resolved_path != path)

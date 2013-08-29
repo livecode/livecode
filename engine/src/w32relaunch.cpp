@@ -44,8 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #define CWM_RELAUNCH (WM_USER + 3)
 
 static HANDLE s_relaunch_pid_handle = NULL;
-static MCStringRef s_relaunch_pid_folder = NULL;
-static MCStringRef s_relaunch_pid_filename = NULL;
+static char *s_relaunch_pid_folder = NULL;
+static char *s_relaunch_pid_filename = NULL;
 
 struct instance_t
 {
@@ -68,7 +68,7 @@ struct message_t
 extern void md5_compute(const char *p_data, unsigned int p_length, void *p_buffer);
 extern char *MCcmdline;
 
-static MCStringRef s_previous_folder = NULL;
+static char *s_previous_folder = NULL;
 
 char *strndup(const char *p_string, unsigned int p_length)
 {
@@ -86,8 +86,8 @@ static bool push_folder(const char *p_folder)
 
 	DWORD t_length;
 	t_length = GetCurrentDirectoryA(0, NULL);
-	//s_previous_folder = (char *)malloc(t_length);
-	GetCurrentDirectoryA(t_length, MCStringGetCString(s_previous_folder));
+	s_previous_folder = (char *)malloc(t_length);
+	GetCurrentDirectoryA(t_length, s_previous_folder);
 
 	return SetCurrentDirectoryA(p_folder) == TRUE;
 }
@@ -97,8 +97,8 @@ static void pop_folder(void)
 	if (s_previous_folder == NULL)
 		assert(FALSE);
 
-	SetCurrentDirectoryA((LPCSTR)MCStringGetCString(s_previous_folder));
-	MCValueRelease(s_previous_folder);
+	SetCurrentDirectoryA(s_previous_folder);
+	free(s_previous_folder);
 	s_previous_folder = NULL;
 }
 
@@ -280,13 +280,13 @@ void relaunch_end_instance(void)
 		CloseHandle(s_relaunch_pid_handle);
 		s_relaunch_pid_handle = NULL;
 
-		push_folder(MCStringGetCString(s_relaunch_pid_folder));
-		DeleteFileA(MCStringGetCString(s_relaunch_pid_filename));
+		push_folder(s_relaunch_pid_folder);
+		DeleteFileA(s_relaunch_pid_filename);
 		pop_folder();
 
-		MCValueRelease(s_relaunch_pid_folder);
+		delete s_relaunch_pid_folder;
 		s_relaunch_pid_folder = NULL;
-		MCValueRelease(s_relaunch_pid_filename);
+		delete s_relaunch_pid_filename;
 		s_relaunch_pid_filename = NULL;
 	}
 }
@@ -321,8 +321,8 @@ bool relaunch_begin_instance(const char *p_instance_folder, const instance_t& p_
 
 	if (!t_error)
 	{
-		s_relaunch_pid_folder = MCSTR(p_instance_folder);
-		s_relaunch_pid_filename = MCSTR(t_pid_file);
+		s_relaunch_pid_folder = strdup(p_instance_folder);
+		s_relaunch_pid_filename = strdup(t_pid_file);
 		atexit(relaunch_end_instance);
 	}
 	else

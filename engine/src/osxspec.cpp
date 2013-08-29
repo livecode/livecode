@@ -450,8 +450,11 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 			}
 		}
-		MCValueRelease(replymessage);
-		replymessage = NULL;
+		if (replymessage != nil)
+		{
+			MCValueRelease(replymessage);
+			replymessage = nil;
+		}
 	}
 	else
 		if (aeclass == kAEMiscStandards
@@ -639,9 +642,10 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	parameter of the reply Apple event. */
 	if (AEGetParamPtr(ae, keyErrorString, typeChar, &rType, NULL, 0, &rSize) == noErr)
 	{
-		
-		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, MCStringGetCString(AEanswerErr), rSize, &rSize);
-		/* UNCHECKED */ MCStringAppendNativeChar(AEanswerErr, '\0');
+		char *t_buffer;
+		t_buffer = new char[rSize + 1];
+		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, t_buffer, rSize, &rSize);
+		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, rSize, AEanswerErr);
 	}
 	else
 	{
@@ -667,8 +671,10 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 				return errno;
 			}
 			
-			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, MCStringGetCString(AEanswerData), rSize, &rSize);
-			/* UNCHECKED */ MCStringAppendNativeChar(AEanswerData, '\0');
+			char *t_buffer;
+			t_buffer = new char[rSize + 1];
+			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, t_buffer, rSize, &rSize);
+			/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, rSize, AEanswerData);
 		}
 	}
 	return noErr;
@@ -2015,13 +2021,13 @@ void MCS_send(const MCString &message, const char *program,
 		}
 		if (AEanswerErr != NULL)
 		{
-			MCresult->copysvalue(MCStringGetcstring(AEanswerErr));
+			MCresult->setvalueref(AEanswerErr);
 			MCValueRelease(AEanswerErr);
 			AEanswerErr = NULL;
 		}
 		else
 		{
-			MCresult->copysvalue(MCStringGetCString(AEanswerData));
+			MCresult->setvalueref(AEanswerData);
 			MCValueRelease(AEanswerData);
 			AEanswerData = NULL;
 		}
@@ -2035,12 +2041,8 @@ void MCS_send(const MCString &message, const char *program,
 void MCS_reply(const MCString &message, const char *keyword, Boolean error)
 {
 	MCValueRelease(replymessage);
-	replylength = message.getlength();
 
-	//replymessage = new char[replylength];
-	//memcpy(replymessage, message.getstring(), replylength);
-
-	/* UNCHECKED */ MCStringCreateWithCString(message.getstring(), replymessage);
+	/* UNCHECKED */ MCStringCreateWithOldString(message, replymessage);
 
 	//at any one time only either keyword or error is set
 	if (keyword != NULL)
@@ -2258,7 +2260,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	}
 	if (AEanswerErr != NULL)
 	{
-		MCresult->copysvalue(MCStringGetCString(AEanswerErr));
+		MCresult->setvalueref(AEanswerErr);
 		MCValueRelease(AEanswerErr);
 		AEanswerErr = NULL;
 		return MCU_empty();
@@ -2267,6 +2269,7 @@ char *MCS_request_program(const MCString &message, const char *program)
 	{
 		MCresult->clear(False);
 		char *retval = strdup(MCStringGetCString(AEanswerData));
+		MCValueRelease(AEanswerData);
 		AEanswerData = NULL;
 		return retval;
 	}

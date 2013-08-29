@@ -89,7 +89,9 @@ bool apk_get_file_offset(const char *p_apk_path, int32_t &r_offset)
 
 const char *apk_get_current_folder()
 {
-	return MCStringGetCString(s_current_apk_folder);
+	if (s_current_apk_folder != nil)
+		return MCStringGetCString(s_current_apk_folder);
+	return nil;
 }
 
 bool apk_set_current_folder(const char *p_apk_path)
@@ -104,12 +106,12 @@ bool apk_set_current_folder(const char *p_apk_path)
 	if (!apk_folder_exists(p_apk_path))
 		return false;
 
-	char *t_new_path = nil;
-	if (!MCCStringClone(p_apk_path, t_new_path))
+	MCStringRef t_new_path;
+	if (!MCStringCreateWithCString(p_apk_path, t_new_path))
 		return false;
-
-	MCValueRelease(s_current_apk_folder);
-	/* UNCHECKED */ MCStringCreateWithCString(t_new_path, s_current_apk_folder);
+	if (s_current_apk_folder != nil)
+		MCValueRelease(s_current_apk_folder);
+	s_current_apk_folder = t_new_path;
 	return true;
 }
 

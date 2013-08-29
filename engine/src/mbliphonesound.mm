@@ -311,12 +311,14 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
         // Check if we are playing an ipod file or a resource file.
         if (strncmp(p_file, "ipod-library://", 15) == 0)
         {
-            s_sound_file = MCSTR(p_file);
+            /* UNCHECKED */ MCStringCreateWithCString(p_file, s_sound_file);
             t_url = [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSMacOSRomanStringEncoding]];
         }
         else
         {
-			/* UNCHECKED */ MCS_resolvepath(MCSTR(p_file), s_sound_file);
+			MCAutoStringRef t_file;
+			/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
+			/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
             t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSUTF8StringEncoding]];
         }
         t_success = t_url != nil;
@@ -348,7 +350,10 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 
 bool MCSystemGetPlayingSound(const char *& r_sound)
 {
-	r_sound = MCStringGetCString(s_sound_file);
+	if (s_sound_file != nil)
+		r_sound = MCStringGetCString(s_sound_file);
+	else
+		r_sound = nil;
 	return true;
 }
 

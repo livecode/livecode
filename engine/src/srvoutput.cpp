@@ -440,7 +440,7 @@ void MCServerPutHeader(const MCStringRef p_s, bool p_new)
 	else
 		for(i = MCservercgiheadercount; i > 0; i--)
 		{
-			if (MCU_strncasecmp(MCStringGetCString(p_s), MCStringGetCString(MCservercgiheaders[i - 1]), t_loc - MCStringGetCString(p_s)) == 0)
+			if (MCStringIsEqualTo(p_s, MCservercgiheaders[i - 1], kMCStringOptionCompareCaseless))
 				break;
 		}
 	
