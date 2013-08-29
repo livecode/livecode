@@ -414,10 +414,9 @@ public:
 	MCObject *getobjname(Chunk_term type, const MCString &);
 	void createmenu(MCControl *nc, uint2 width, uint2 height);
 	void menuset(uint2 button, uint2 defy);
-	void menumup(uint2 which, MCString &s, uint2 &selline);
-	void menukdown(const char *string, KeySym key,
-	               MCString &s, uint2 &selline);
-	void findaccel(uint2 key, MCString &tpick, bool &r_disabled);
+	void menumup(uint2 which, MCStringRef &r_string, uint2 &selline);
+	void menukdown(const char *string, KeySym key, MCStringRef &r_string, uint2 &selline);
+	void findaccel(uint2 key, MCStringRef &r_pick, bool &r_disabled);
 	void raise();
 	void enter();
 	void flip(uint2 count);

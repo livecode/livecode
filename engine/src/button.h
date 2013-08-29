@@ -101,8 +101,7 @@ class MCButton : public MCControl
 	friend class MCHcbutton;
 	MCCdata *bdata;
 	iconlist *icons;
-	char *label;
-	uint2 labelsize;
+	MCStringRef label;
 	uint2 menusize;
 	char *menuname;
 	char *menustring;
@@ -238,9 +237,7 @@ public:
 		return entry;
 	}
 	
-	// MW-2012-02-16: [[ IntrinsicUnicode ]] 'unicode' parameter is true if 's' is
-	//   UTF-16.
-	void getlabeltext(MCString &s, bool& r_unicode);
+	MCStringRef getlabeltext();
 
 	void getmenustring(MCString &s)
 	{
@@ -285,7 +282,7 @@ public:
 	
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
-	void docascade(MCString &pick);
+	void docascade(MCStringRef &x_pick);
 	void getmenuptrs(const char *&sptr, const char *&eptr);
 	void setupmenu();
 	bool selectedchunk(MCStringRef& r_string);
@@ -302,7 +299,7 @@ public:
 	bool tabselectonmouseup();
 	// MW-2011-09-06: [[ Redraw ]] Added 'sprite' option - if true, ink and opacity are not set.
 	virtual void draw(MCDC *dc, const MCRectangle &dirty, bool p_isolated, bool p_sprite);
-	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 t, const MCRectangle &srect, const MCString &lptr, bool isunicode, uint2 fstyle);
+	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 t, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle);
 	void drawcheck(MCDC *dc, MCRectangle &srect, Boolean white);
 	void drawradio(MCDC *dc, MCRectangle &srect, Boolean white);
 	void drawoption(MCDC *dc, MCRectangle &srect, MCRectangle& r_content_rect);
@@ -319,7 +316,7 @@ public:
 	Bool macfindmenu(bool p_just_for_accel);
 	void macopenmenu(void);
 	void macfreemenu(void);
-	static void getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu);
+	static void getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu);
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}
@@ -361,8 +358,6 @@ public:
 
 	void GetIcon(MCExecContext& ctxt, Properties which, uinteger_t& r_icon);
 	void SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon);
-	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef& r_label);
-	void DoSetLabel(MCExecContext& ctxt, MCStringRef p_label);
 	void DoSetText(MCExecContext& ctxt, MCStringRef p_label);
     void DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon);
     void DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon);
@@ -397,10 +392,10 @@ public:
 	void SetShowName(MCExecContext& ctxt, bool setting);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
 	void GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
 	void GetLabelWidth(MCExecContext& ctxt, uinteger_t& r_width);
 	void SetLabelWidth(MCExecContext& ctxt, uinteger_t p_width);
 	void GetFamily(MCExecContext& ctxt, uinteger_t& r_family);
