@@ -516,7 +516,7 @@ bool MCSessionCloseSession(MCSession *p_session, bool p_update)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
+bool MCSessionStart(MCStringRef p_session_id, MCSessionRef &r_session)
 {
 	bool t_success = true;
 	
@@ -528,13 +528,13 @@ bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
 	
 	if (t_success)
 	{
-		if (p_session_id != NULL  && MCSessionFindMatchingSession(t_index, p_session_id, t_index_session))
+		if (p_session_id != NULL  && MCSessionFindMatchingSession(t_index, MCStringGetCString(p_session_id), t_index_session))
 		{
 			t_success = MCSessionCopySession(t_index_session, t_session);
 		}
 		else
 		{
-			t_success = MCSessionCreateSession(t_index, p_session_id, t_session);
+			t_success = MCSessionCreateSession(t_index, MCStringGetCString(p_session_id), t_session);
 		}
 		
 		MCAutoStringRef t_session_name;

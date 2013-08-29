@@ -87,16 +87,16 @@ struct mcservercookie_t *MCservercgicookies = NULL;
 uint32_t MCservercgicookiecount = 0;
 
 // The current document root of the CGI execution.
-MCStringRef MCservercgidocumentroot = nil;
+MCStringRef MCservercgidocumentroot;
 
 // The session data save path
-MCStringRef MCsessionsavepath = nil;
+MCStringRef MCsessionsavepath;
 
 // The session cookie name
-MCStringRef MCsessionname = nil;
+MCStringRef MCsessionname;
 
 // The session ID of the current session
-MCStringRef MCsessionid = nil;
+MCStringRef MCsessionid;
 
 // The lifetime of session data in seconds.  default = 24mins
 uint32_t MCsessionlifetime = 60 * 24;
