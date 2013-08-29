@@ -190,7 +190,7 @@ class MCField : public MCControl
 	int4 foundoffset;
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
-	char *label;
+	MCStringRef label;
 	
 	static int2 clickx;
 	static int2 clicky;

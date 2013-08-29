@@ -563,34 +563,31 @@ void MCGraphic::SetShowName(MCExecContext& ctxt, bool setting)
 
 void MCGraphic::DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string)
 {
-	// Fetch the label, taking note of its encoding.
-	MCString slabel;
-	bool is_unicode;
 	if (effective)
-		getlabeltext(slabel, is_unicode);
-	else
-		slabel.set(label,labelsize), is_unicode = hasunicode();
-
-	// If the label's encoding doesn't match the request, map.
-	if (MCU_mapunicode(slabel, is_unicode, to_unicode, r_string))
+	{
+		getlabeltext(r_string);
 		return;
-
-	ctxt . Throw();
+	}
+	else if (label != nil)
+	{
+		r_string = MCValueRetain(label);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCGraphic::DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label)
 {
 	if (label == NULL || p_label == nil ||
-		MCStringIsEqualToOldString(p_label, MCString(label, labelsize), kMCCompareExact) ||
+		MCStringIsEqualTo(p_label, label, kMCCompareExact) ||
 		to_unicode != hasunicode())
 	{
-		delete label;
-		label = NULL;
+		MCValueRelease(label);
+		label = nil;
 		if (p_label != nil)
 		{
-			labelsize = MCStringGetLength(p_label);
-			label = new char[labelsize];
-			memcpy(label, MCStringGetCString(p_label), labelsize);
+			label = MCValueRetain(label);
 			flags |= F_G_LABEL;
 
 			// If we are setting the unicode label we become unicode; else we revert
@@ -602,7 +599,6 @@ void MCGraphic::DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_l
 		}
 		else
 		{
-			labelsize = 0;
 			flags &= ~F_G_LABEL;
 		}
 		Redraw();
