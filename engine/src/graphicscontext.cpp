@@ -207,6 +207,7 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 		t_effects . inner_glow . color = p_effects -> effects[kMCBitmapEffectTypeInnerGlow] . glow . color;
 		t_effects . inner_glow . blend_mode = MCBitmapEffectBlendModeToMCGBlendMode((MCBitmapEffectBlendMode) p_effects -> effects[kMCBitmapEffectTypeInnerGlow] . glow . blend_mode);
 		t_effects . inner_glow . size = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeInnerGlow] . glow . size;
+		t_effects . inner_glow . spread = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeInnerGlow] . glow . spread / 255.0f;
 		t_effects . inner_glow . inverted = p_effects -> effects[kMCBitmapEffectTypeInnerGlow] . glow . source == kMCBitmapEffectSourceEdge;
 	}
 	else
@@ -218,6 +219,7 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 		t_effects . inner_shadow . color = p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . color;
 		t_effects . inner_shadow . blend_mode = MCBitmapEffectBlendModeToMCGBlendMode((MCBitmapEffectBlendMode) p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . blend_mode);
 		t_effects . inner_shadow . size = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . size;
+		t_effects . inner_shadow . spread = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . spread / 255.0f;
 		
 		MCGFloat t_x_offset, t_y_offset;
 		MCGraphicsContextAngleAndDistanceToXYOffset(p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . angle, p_effects -> effects[kMCBitmapEffectTypeInnerShadow] . shadow . distance,
@@ -234,6 +236,7 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 		t_effects . outer_glow . color = p_effects -> effects[kMCBitmapEffectTypeOuterGlow] . glow . color;
 		t_effects . outer_glow . blend_mode = MCBitmapEffectBlendModeToMCGBlendMode((MCBitmapEffectBlendMode) p_effects -> effects[kMCBitmapEffectTypeOuterGlow] . glow . blend_mode);
 		t_effects . outer_glow . size = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeOuterGlow] . glow . size;
+		t_effects . outer_glow . spread = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeOuterGlow] . glow . spread / 255.0f;
 	}
 	else
 		t_effects . has_outer_glow = false;
@@ -244,6 +247,7 @@ bool MCGraphicsContext::begin_with_effects(MCBitmapEffectsRef p_effects, const M
 		t_effects . drop_shadow . color = p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . color;
 		t_effects . drop_shadow . blend_mode = MCBitmapEffectBlendModeToMCGBlendMode((MCBitmapEffectBlendMode) p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . blend_mode);
 		t_effects . drop_shadow . size = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . size;
+		t_effects . drop_shadow . spread = (MCGFloat) p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . spread / 255.0f;
 		
 		MCGFloat t_x_offset, t_y_offset;
 		MCGraphicsContextAngleAndDistanceToXYOffset(p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . angle, p_effects -> effects[kMCBitmapEffectTypeDropShadow] . shadow . distance,

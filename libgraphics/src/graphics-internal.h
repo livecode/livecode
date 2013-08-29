@@ -420,7 +420,7 @@ enum MCGBlurType
 	kMCGBlurTypeOuter,
 };
 
-bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_spread, SkMask& r_dst);
+bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_x_spread, SkScalar p_y_spread, SkMask& r_dst);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -356,14 +356,14 @@ static void get_adjusted_radii(SkScalar passRadius, int *loRadius, int *hiRadius
 // radius -= p1_radius
 // pass 2 is (radius + (3 - 2 - 1)) / (3 - 2) = (radius + 0) / 1  (3)
 
-bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_spread, SkMask& r_dst)
+bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, SkScalar p_x_spread, SkScalar p_y_spread, SkMask& r_dst)
 {
 	int t_pass_count;
 	t_pass_count = 3;
 	
 	int x_spread, y_spread;
-	x_spread = SkScalarFloor(p_x_radius * p_spread);
-	y_spread = SkScalarFloor(p_y_radius * p_spread);
+	x_spread = SkScalarFloor(p_x_radius * p_x_spread);
+	y_spread = SkScalarFloor(p_y_radius * p_y_spread);
 	
 	p_x_radius -= x_spread;
 	p_y_radius -= y_spread;

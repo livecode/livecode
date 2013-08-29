@@ -248,6 +248,7 @@ struct MCGShadowEffect
 	MCGColor color;
 	MCGBlendMode blend_mode;
 	MCGFloat size;
+	MCGFloat spread;
 	MCGFloat x_offset;
 	MCGFloat y_offset;
 	bool knockout : 1;
@@ -258,6 +259,7 @@ struct MCGGlowEffect
 	MCGColor color;
 	MCGBlendMode blend_mode;
 	MCGFloat size;
+	MCGFloat spread;
 	bool inverted : 1;
 };
 

@@ -680,6 +680,7 @@ void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 	self -> layer = t_new_layer;
 }
 
+#if 0
 static MCGIRectangle compute_glow_clip(const MCGGlowEffect& self, const MCGIRectangle& p_shape, const MCGIRectangle& p_clip, const MCGAffineTransform& p_transform)
 {
 	MCGSize t_radii;
@@ -716,6 +717,7 @@ static MCGIRectangle compute_shadow_clip(const MCGShadowEffect& self, const MCGI
 						MCGIRectangleOffset(p_clip, -ceil(t_transformed_offset . width), -ceil(t_transformed_offset . height)))),
 				ceil(t_transformed_radii . width), ceil(t_transformed_radii . height));
 }
+#endif
 
 // The 'shape' parameter is the rectangle in user-space of the area to which the effect
 // is to be applied.
@@ -806,8 +808,8 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 	}
 	
 	// Next process outer glow.
-	// We expand the shape by the radii.
-	// We then intersect with the device clip to see what is needed.
+	// We intersect the shape with the clip to determine visible pixels
+	// We then expand by the radii.
 	// We then intersect with the device shape to restrict to renderable pixels.
 	// Finally we add this rectangle to the layer clip (union).
 	if (p_effects . has_outer_glow)
@@ -819,11 +821,9 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 							t_layer_clip,
 							MCGIRectangleIntersect(
 									t_device_shape,
-									MCGIRectangleIntersect(
-										t_device_clip,
-										MCGIRectangleExpand(
-											t_device_shape,
-											ceil(t_radii . width), ceil(t_radii . height)))));
+									MCGIRectangleExpand(
+										MCGIRectangleIntersect(t_device_shape, t_device_clip),
+										ceil(t_radii . width), ceil(t_radii . height))));
 	}
 	
 	// Next process inner glow.
@@ -844,16 +844,7 @@ void MCGContextBeginWithEffects(MCGContextRef self, MCGRectangle p_shape, const 
 											MCGIRectangleIntersect(t_device_clip, t_device_shape),
 											ceil(t_radii . width), ceil(t_radii . height))));
 	}
-	
-	/*if (p_effects . has_drop_shadow)
-		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . drop_shadow, t_device_shape, t_device_clip, t_device_transform));
-	if (p_effects . has_inner_shadow)
-		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_shadow_clip(p_effects . inner_shadow, t_device_shape, t_device_clip, t_device_transform));
-	if (p_effects . has_outer_glow)
-		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . outer_glow, t_device_shape, t_device_clip, t_device_transform));
-	if (p_effects . has_inner_glow)
-		t_layer_clip = MCGIRectangleUnion(t_layer_clip, compute_glow_clip(p_effects . inner_glow, t_device_shape, t_device_clip, t_device_transform));*/
-		
+
 	t_layer_clip = MCGIRectangleIntersect(t_layer_clip, t_device_shape);
 	
 	// Create a suitable bitmap.
@@ -1057,7 +1048,7 @@ static void MCGContextRenderEffect(MCGContextRef self, const SkMask& p_mask, MCG
 	
 	// Now blur the mask.
 	SkMask t_blurred_mask;
-	if (!MCGBlurBox(p_mask, t_transformed_radii . width, t_transformed_radii . height, 1.0, t_blurred_mask))
+	if (!MCGBlurBox(p_mask, t_transformed_radii . width, t_transformed_radii . height, p_spread, p_spread, t_blurred_mask))
 		return;
 	
 	// Offset the blur mask appropriately.
@@ -1218,7 +1209,7 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 							   t_child_mask,
 							   MCGSizeMake(p_effects . drop_shadow . size, p_effects . drop_shadow . size),
 							   MCGSizeMake(p_effects . drop_shadow . x_offset, p_effects . drop_shadow . y_offset),
-							   /*p_effects . outer_glow . spread*/ 0.0,
+							   p_effects . drop_shadow . spread,
 							   p_effects . drop_shadow . knockout ? kMCGBlurTypeOuter : kMCGBlurTypeNormal,
 							   p_effects . drop_shadow . color,
 							   p_effects . drop_shadow . blend_mode);
@@ -1228,7 +1219,7 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 							   t_child_mask,
 							   MCGSizeMake(p_effects . outer_glow . size, p_effects . outer_glow . size),
 							   MCGSizeMake(0.0, 0.0),
-							   /*p_effects . outer_glow . spread*/ 0.0,
+							   p_effects . outer_glow . spread,
 							   kMCGBlurTypeNormal,
 							   p_effects . outer_glow . color,
 							   p_effects . outer_glow . blend_mode);
@@ -1243,7 +1234,7 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 							   t_child_mask,
 							   MCGSizeMake(p_effects . inner_shadow . size, p_effects . inner_shadow . size),
 							   MCGSizeMake(p_effects . inner_shadow . x_offset, p_effects . inner_shadow . y_offset),
-							   /*p_effects . inner_shadow . spread*/ 0.0,
+							   p_effects . inner_shadow . spread,
 							   kMCGBlurTypeInvertedInner,
 							   p_effects . inner_shadow . color,
 							   p_effects . inner_shadow . blend_mode);
@@ -1253,7 +1244,7 @@ static void MCGContextRenderEffects(MCGContextRef self, MCGContextLayerRef p_chi
 							   t_child_mask,
 							   MCGSizeMake(p_effects . inner_glow . size, p_effects . inner_glow . size),
 							   MCGSizeMake(0.0, 0.0),
-							   /*p_effects . inner_shadow . spread*/ 0.0,
+							   p_effects . inner_glow . spread,
 							   p_effects . inner_glow . inverted ? kMCGBlurTypeInvertedInner : kMCGBlurTypeInner,
 							   p_effects . inner_glow . color,
 							   p_effects . inner_glow . blend_mode);
