@@ -568,14 +568,11 @@ void MCGraphic::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 
 void MCGraphic::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	if (p_label != nil)
-	{
-		MCValueAssign(label, p_label);
-		Redraw();
+	if (MCStringIsEqualTo(p_label, label, kMCStringOptionCompareExact))
 		return;
-	}
 	
-	ctxt.Throw();
+	MCValueAssign(label, p_label);
+	Redraw();
 }
 
 void MCGraphic::GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label)
