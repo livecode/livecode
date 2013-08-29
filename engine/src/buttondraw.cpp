@@ -416,6 +416,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			
 			dc -> setclip(MCU_intersect_rect(dirty, t_content_rect));
 			
+			uindex_t t_totallen = 0;
 			for (i = 0 ; i < nlines ; i++)
 			{
 				// Note: 'lines' is an array of strings
@@ -423,6 +424,12 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
 				twidth = MCFontMeasureText(m_font, line);
+				
+				// Mnemonic position calculation
+				uindex_t t_mnemonic = 0;
+				uindex_t t_linelen = MCStringGetLength(line);
+				if (mnemonic > t_totallen && mnemonic <= t_totallen + t_linelen)
+					t_mnemonic = mnemonic - t_totallen;
 				
 				switch (flags & F_ALIGNMENT)
 				{
@@ -468,7 +475,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				fontstyle = gettextstyle();
 				if ((flags & F_DISABLED) != 0 && !t_themed_menu && MClook == LF_WIN95)
 				{
-					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, line, fontstyle);
+					drawlabel(dc, sx + 1 + loff, sy + 1 + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 					if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE)
 					{
 						shadowrect.x++;
@@ -479,13 +486,14 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 					}
 					setforeground(dc, DI_BOTTOM, False);
 				}
-				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle);
+				drawlabel(dc, sx + loff, sy + loff, twidth, shadowrect, line, fontstyle, t_mnemonic);
 				if (getstyleint(flags) == F_MENU && menumode == WM_CASCADE && !t_themed_menu)
 					drawcascade(dc, shadowrect); // draw arrow in text color
 				if (flags & F_DISABLED && MClook == LF_WIN95 || t_themed_menu)
 					setforeground(dc, DI_TOP, False);
 				sy += fheight;
 				
+				t_totallen += t_linelen;
 				MCValueRelease(line);
 			}
 
@@ -566,7 +574,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 	}
 }
 
-void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle)
+void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, MCStringRef p_label, uint2 fstyle, uindex_t p_mnemonic)
 {
 	if (getstyleint(flags) == F_MENU && menumode == WM_OPTION
 	        && MClook != LF_WIN95)
@@ -596,26 +604,16 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 	}
 	if (!IsMacLF() && mnemonic)
 	{
-		// The 'mnemonic' field is the offset into the label of the character to mark as the mnemonic.
-		// However, by this point, the string has been split into lines and no longer (necessarily) uses
-		// the same underlying storage to pointer comparisons can't be used...
-
-		// Drawing of the mnemonic underline is disable for now
-		/*
-		MCString slabel;
-		bool isunicode;
-		getlabeltext(slabel, isunicode);
-		const char *lptr = slabel.getstring();
-		if (mnemonic > (uint1)(s.getstring() - lptr) &&
-		        mnemonic <= (uint1)(s.getstring() + s.getlength() - lptr))
+		if (p_mnemonic > 0)
 		{
-			uint2 moffset = mnemonic - (s.getstring() - lptr) - 1;
-			uint2 mstart = sx + MCFontMeasureText(m_font, s.getstring(), moffset, isunicode);
-			uint2 mwidth = MCFontMeasureText(m_font, s.getstring() + moffset, 1, isunicode);
+			MCRange t_before = MCRangeMake(0, mnemonic - 1);
+			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
+			
+			int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, t_before, p_label);
+			int32_t mwidth = MCFontMeasureTextSubstring(m_font, t_letter, p_label);
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}
-		 */
 	}
 }
 
