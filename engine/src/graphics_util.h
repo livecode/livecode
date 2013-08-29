@@ -61,4 +61,12 @@ inline MCRectangle MCGRectangleGetIntegerInterior(MCGRectangle p_rect)
 	return t_rect;
 }
 
+inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
+{
+	MCGPoint t_point;
+	t_point . x = (MCGFloat) p_point . x;
+	t_point . y = (MCGFloat) p_point . y;
+	return t_point;
+}
+
 #endif // __GRAPHICS_UTIL_H_

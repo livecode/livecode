@@ -66,12 +66,14 @@ struct __MCGContextState
 	MCGFillRule			fill_rule;
 	MCGPatternRef		fill_pattern;
 	MCGGradientRef		fill_gradient;
+	MCGPaintStyle		fill_style;
 	
 	MCGColor			stroke_color;
 	MCGFloat			stroke_opacity;
 	MCGStrokeAttr		stroke_attr;
 	MCGPatternRef		stroke_pattern;
 	MCGGradientRef		stroke_gradient;
+	MCGPaintStyle		stroke_style;
 	
 	bool				is_layer_begin_pt;
 	MCGContextStateRef	parent;
@@ -156,8 +158,8 @@ struct MCGIntRectangle
 {
 	int32_t x;
 	int32_t y;
-	uint32_t width;
-	uint32_t height;
+	int32_t width;
+	int32_t height;
 };
 
 inline MCGIntRectangle MCGRecangleIntegerBounds(const MCGRectangle &p_rect)

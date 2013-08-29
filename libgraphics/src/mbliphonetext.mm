@@ -200,8 +200,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	if (t_success)
 	{
-		CGContextTranslateCTM(t_cgcontext, -(t_clipped_bounds . x - t_text_bounds . x), -(t_clipped_bounds . y - t_text_bounds . y));
-		CGContextTranslateCTM(t_cgcontext, 0, t_text_bounds . height + t_text_bounds . y);
+		CGContextTranslateCTM(t_cgcontext, -(t_clipped_bounds . x - t_text_bounds . x), t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
         CGContextScaleCTM(t_cgcontext, 1.0, -1.0);                
 		

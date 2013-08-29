@@ -280,7 +280,7 @@ static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, MCGFloat p_scale
 	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), p_copy, false, t_cg_image);
 	
 	if (t_success)
-		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image scale:p_scale orientation:0.0]);
+		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image scale:p_scale orientation:/*0.0*/UIImageOrientationUp]);
 	
 	if (t_cg_image != nil)
 		CGImageRelease(t_cg_image);

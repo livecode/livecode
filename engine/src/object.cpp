@@ -1226,7 +1226,8 @@ Boolean MCObject::getforecolor(uint2 di, Boolean rev, Boolean hilite,
 	if (dc->getdepth() > 1)
 	{
 		Boolean hasindex = getcindex(di, i);
-		if (hasindex && colors[i].pixel != MAXUINT4)
+        // MM-2013-08-28: [[ RefactorGraphics ]] We now pack alpha values into pixels meaning checking against MAXUNIT4 means white will always be ignored. Not sure why this check was here previously.
+		if (hasindex) // && colors[i].pixel != MAXUINT4)
 		{
 			c = colors[i];
 			return True;

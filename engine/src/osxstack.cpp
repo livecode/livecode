@@ -966,34 +966,35 @@ static inline CGRect MCGRectangleToCGRect(MCGRectangle p_rect)
 
 static inline CGBlendMode MCGBlendModeToCGBlendMode(MCGBlendMode p_blend)
 {
+	// MM-2013-08-28: [[ RefactorGraphics ]] Tweak for 10.4 SDK support.
 	switch (p_blend)
 	{
 		case kMCGBlendModeClear:
-			return kCGBlendModeClear;
+			return (CGBlendMode) 16; //kCGBlendModeClear;
 		case kMCGBlendModeCopy:
-			return kCGBlendModeCopy;
+			return (CGBlendMode) 17; //kCGBlendModeCopy;
+		case kMCGBlendModeSourceIn:
+			return (CGBlendMode) 18; //kCGBlendModeSourceIn;
+		case kMCGBlendModeSourceOut:
+			return (CGBlendMode) 19; //kCGBlendModeSourceOut;
+		case kMCGBlendModeSourceAtop:
+			return (CGBlendMode) 20; //kCGBlendModeSourceAtop;
+		case kMCGBlendModeDestinationOver:
+			return (CGBlendMode) 21; //kCGBlendModeDestinationOver;
+		case kMCGBlendModeDestinationIn:
+			return (CGBlendMode) 22; //kCGBlendModeDestinationIn;
+		case kMCGBlendModeDestinationOut:
+			return (CGBlendMode) 23; //kCGBlendModeDestinationOut;
+		case kMCGBlendModeDestinationAtop:
+			return (CGBlendMode) 24; //kCGBlendModeDestinationAtop;
+		case kMCGBlendModeXor:
+			return (CGBlendMode) 25; //kCGBlendModeXOR;
+		case kMCGBlendModePlusDarker:
+			return (CGBlendMode) 26; //kCGBlendModePlusDarker;
+		case kMCGBlendModePlusLighter:
+			return (CGBlendMode) 27; //kCGBlendModePlusLighter;
 		case kMCGBlendModeSourceOver:
 			return kCGBlendModeNormal;
-		case kMCGBlendModeSourceIn:
-			return kCGBlendModeSourceIn;
-		case kMCGBlendModeSourceOut:
-			return kCGBlendModeSourceOut;
-		case kMCGBlendModeSourceAtop:
-			return kCGBlendModeSourceAtop;
-		case kMCGBlendModeDestinationOver:
-			return kCGBlendModeDestinationOver;
-		case kMCGBlendModeDestinationIn:
-			return kCGBlendModeDestinationIn;
-		case kMCGBlendModeDestinationOut:
-			return kCGBlendModeDestinationOut;
-		case kMCGBlendModeDestinationAtop:
-			return kCGBlendModeDestinationAtop;
-		case kMCGBlendModeXor:
-			return kCGBlendModeXOR;
-		case kMCGBlendModePlusDarker:
-			return kCGBlendModePlusDarker;
-		case kMCGBlendModePlusLighter:
-			return kCGBlendModePlusLighter;
 		case kMCGBlendModeMultiply:
 			return kCGBlendModeMultiply;
 		case kMCGBlendModeScreen:

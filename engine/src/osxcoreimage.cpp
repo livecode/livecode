@@ -48,7 +48,7 @@ static bool s_coreimage_initialized = false;
 extern rei_boolean_t coreimage_visualeffect_initialise(void);
 extern void coreimage_visualeffect_finalise(void);
 extern rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
-extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, CGFloat p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
+extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
 extern rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time);
 extern rei_boolean_t coreimage_visualeffect_end(void);
 

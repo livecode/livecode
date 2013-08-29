@@ -65,6 +65,18 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	return t_font;
 }
 
+#elif defined(_SERVER)
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = nil;
+	return t_font;
+}
+
 #else
 
 static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
@@ -78,24 +90,6 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 }
 
 #endif
-
-/*static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
-{
-	MCGRectangle t_rect;
-	t_rect . origin . x = (MCGFloat) p_rect . x;
-	t_rect . origin . y = (MCGFloat) p_rect . y;
-	t_rect . size . width = (MCGFloat) p_rect . width;
-	t_rect . size . height = (MCGFloat) p_rect . height;
-	return t_rect;
-}*/
-
-static inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
-{
-	MCGPoint t_point;
-	t_point . x = (MCGFloat) p_point . x;
-	t_point . y = (MCGFloat) p_point . y;
-	return t_point;
-}
 
 static inline MCGBlendMode MCBitmapEffectBlendModeToMCGBlendMode(MCBitmapEffectBlendMode p_blend_mode)
 {
@@ -331,6 +325,7 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			t_blend_mode = kMCGBlendModeSourceOver;
 			break;
 		case GXblendDstOver:
+		case GXor:
 			t_blend_mode = kMCGBlendModeDestinationOver;
 			break;
 		case GXblendSrcIn:
@@ -352,6 +347,7 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			t_blend_mode = kMCGBlendModeDestinationAtop;
 			break;
 		case GXblendXor:
+		case GXxor:
 			t_blend_mode = kMCGBlendModeXor;
 			break;
 		case GXblendPlus:
@@ -456,11 +452,12 @@ void MCGraphicsContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y
 		m_pattern_x = x;
 		m_pattern_y = y;
 	}
+	else if (style == FillStippled)
+		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleStippled);
+	else if (style == FillOpaqueStippled)
+		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleStippled);
 	else
-	{
-		MCGAffineTransform t_transform = MCGAffineTransformMakeIdentity();
-		MCGContextSetFillPattern(m_gcontext, NULL, t_transform, kMCGImageFilterNearest);
-	}
+		MCGContextSetFillPaintStyle(m_gcontext, kMCGPaintStyleOpaque);
 }
 
 void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)

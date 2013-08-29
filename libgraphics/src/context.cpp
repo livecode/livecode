@@ -18,6 +18,7 @@
 #include <SkTypeface.h>
 #include <SkColorPriv.h>
 #include <SkUtils.h>
+#include <SkStippleMaskFilter.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -105,6 +106,7 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 		t_state -> fill_rule = kMCGFillRuleNonZero;
 		t_state -> fill_pattern = NULL;
 		t_state -> fill_gradient= NULL;
+		t_state -> fill_style = kMCGPaintStyleOpaque;
 		
 		t_state -> stroke_color = MCGColorMakeRGBA(0.0f, 0.0f, 0.0f, 1.0f);
 		t_state -> stroke_opacity = 0.0f;
@@ -115,6 +117,8 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 		t_state -> stroke_attr . cap_style = kMCGCapStyleButt;
 		t_state -> stroke_attr . miter_limit = 0.0f;
 		t_state -> stroke_attr . dashes = NULL;
+		t_state -> stroke_style = kMCGPaintStyleOpaque;
+		
 		
 		t_state -> is_layer_begin_pt = false;
 		t_state -> parent = NULL;		
@@ -127,6 +131,7 @@ static bool MCGContextStateCreate(MCGContextStateRef& r_state)
 	
 	return t_success;
 }
+
 
 static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& r_new_state)
 {
@@ -150,6 +155,7 @@ static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& 
 		t_state -> fill_rule = p_state -> fill_rule;
 		t_state -> fill_pattern = MCGPatternRetain(p_state -> fill_pattern);
 		t_state -> fill_gradient = MCGGradientRetain(p_state -> fill_gradient);
+		t_state -> fill_style = p_state -> fill_style;
 		
 		t_state -> stroke_color = p_state -> stroke_color;
 		t_state -> stroke_opacity = p_state -> stroke_opacity;
@@ -160,6 +166,7 @@ static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& 
 		t_state -> stroke_attr . cap_style = p_state -> stroke_attr . cap_style;
 		t_state -> stroke_attr . miter_limit = p_state -> stroke_attr . miter_limit;
 		t_state -> stroke_attr . dashes = MCGDashesRetain(p_state -> stroke_attr . dashes);
+		t_state -> stroke_style = p_state -> stroke_style;
 		
 		t_state -> is_layer_begin_pt = false;
 		t_state -> parent = NULL;		
@@ -172,7 +179,6 @@ static bool MCGContextStateCopy(MCGContextStateRef p_state, MCGContextStateRef& 
 	
 	return t_success;
 }
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static void MCGContextLayerDestroy(MCGContextLayerRef self)
@@ -1355,6 +1361,8 @@ MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
 {	
 	SkRect t_clip;
 	self -> layer -> canvas -> getClipBounds(&t_clip);
+	// Skia outsets the clip returned by 1 pixel to take account of anti-aliasing (it appears)
+	t_clip . inset(1, 1);
 	return MCGRectangleMake(t_clip . x(), t_clip . y(), t_clip . width(), t_clip . height());
 }
 
@@ -1430,6 +1438,18 @@ void MCGContextSetFillGradient(MCGContextRef self, MCGGradientFunction p_functio
 	
 	if (p_stops != NULL && p_colors != NULL)
 		self -> is_valid = MCGGradientCreate(p_function, p_stops, p_colors, p_ramp_length, p_mirror, p_wrap, p_repeats, p_transform, p_filter, self -> state -> fill_gradient);	
+}
+
+void MCGContextSetFillPaintStyle(MCGContextRef self, MCGPaintStyle p_paint_style)
+{
+	if (!MCGContextIsValid(self))
+		return;
+	
+	MCGPatternRelease(self -> state -> fill_pattern);
+	self -> state -> fill_pattern = NULL;
+	MCGGradientRelease(self -> state -> fill_gradient);
+	self -> state -> fill_gradient = NULL;	
+	self -> state -> fill_style = p_paint_style;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1538,6 +1558,18 @@ void MCGContextSetStrokeDashes(MCGContextRef self, MCGFloat p_phase, const MCGFl
 	}	
 		
 	self -> is_valid = t_success;	
+}
+
+void MCGContextSetStrokePaintStyle(MCGContextRef self, MCGPaintStyle p_paint_style)
+{
+	if (!MCGContextIsValid(self))
+		return;
+	
+	MCGPatternRelease(self -> state -> stroke_pattern);
+	self -> state -> stroke_pattern = NULL;
+	MCGGradientRelease(self -> state -> stroke_gradient);
+	self -> state -> stroke_gradient = NULL;	
+	self -> state -> stroke_style = p_paint_style;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1944,7 +1976,7 @@ void MCGContextAddPath(MCGContextRef self, MCGPathRef p_path)
 ////////////////////////////////////////////////////////////////////////////////
 // Paint setup
 
-static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, SkPaint &r_paint)
+static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRef p_pattern, MCGGradientRef p_gradient, MCGPaintStyle p_paint_style, SkPaint &r_paint)
 {
 	// TODO: Refactor color, pattern and gradients into ref counted (copy on write?) paint type.
 	bool t_success;
@@ -1952,9 +1984,12 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRe
 	
 	SkShader *t_shader;
 	t_shader = NULL;
+	SkMaskFilter *t_stipple;
+	t_stipple = NULL;
 	MCGImageFilter t_filter;
 	t_filter = kMCGImageFilterNearest;
 	if (t_success)
+	{
 		if (p_gradient != NULL)
 		{
 			t_filter = p_gradient -> filter;
@@ -1965,11 +2000,18 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRe
 			t_filter = p_pattern -> filter;
 			t_success = MCGPatternToSkShader(p_pattern, t_shader);
 		}
+		else if (p_paint_style == kMCGPaintStyleStippled)
+		{
+			t_stipple = new SkStippleMaskFilter();
+			t_success = t_stipple != NULL;			
+		}
+	}	
 	
 	if (t_success)
 	{
 		r_paint . setColor(MCGColorToSkColor(p_color));
 		r_paint . setShader(t_shader);
+		r_paint . setMaskFilter(t_stipple);
 		
 		switch (t_filter)
 		{
@@ -1988,6 +2030,8 @@ static bool MCGContextApplyPaintSettingsToSkPaint(MCGColor p_color, MCGPatternRe
 	
 	if (t_shader != NULL)
 		t_shader -> unref();
+	if (t_stipple != NULL)
+		t_stipple -> unref();
 	
 	return t_success;
 }
@@ -1996,14 +2040,14 @@ static bool MCGContextSetupFillPaint(MCGContextRef self, SkPaint &r_paint)
 {
 	bool t_success;
 	t_success = true;
-
+	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> fill_color, self -> state -> fill_pattern, self -> state -> fill_gradient, self -> state -> fill_style, r_paint);
 	
 	if (t_success)
 	{		
 		r_paint . setStyle(SkPaint::kFill_Style);
-		r_paint . setAntiAlias(self -> state -> should_antialias);
+		r_paint . setAntiAlias(self -> state -> should_antialias);		
 		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);				
@@ -2019,9 +2063,9 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 {
 	bool t_success;
 	t_success = true;
-		
+	
 	if (t_success)
-		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, r_paint);
+		t_success = MCGContextApplyPaintSettingsToSkPaint(self -> state -> stroke_color, self -> state -> stroke_pattern, self -> state -> stroke_gradient, self -> state -> stroke_style, r_paint);
 	
 	SkDashPathEffect *t_dash_effect;
 	t_dash_effect = NULL;
@@ -2038,7 +2082,7 @@ static bool MCGContextSetupStrokePaint(MCGContextRef self, SkPaint &r_paint)
 		r_paint . setStrokeJoin(MCGJoinStyleToSkJoinStyle(self -> state -> stroke_attr . join_style));
 		r_paint . setStrokeCap(MCGCapStyleToSkCapStyle(self -> state -> stroke_attr . cap_style));	
 		r_paint . setPathEffect(t_dash_effect);
-
+		
 		SkXfermode *t_blend_mode;
 		t_blend_mode = MCGBlendModeToSkXfermode(self -> state -> blend_mode);
 		r_paint . setXfermode(t_blend_mode);

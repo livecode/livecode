@@ -37,7 +37,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		self -> layer -> canvas -> drawText(p_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
+		self -> layer -> canvas -> drawText(t_text, p_length, MCGCoordToSkCoord(p_location . x), MCGCoordToSkCoord(p_location . y), t_paint);
 	}
 	
 	MCCStringFree(t_text);
@@ -71,7 +71,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		t_typeface = (SkTypeface *) p_font . fid;
 		t_paint . setTypeface(t_typeface);
 		
-		t_width =  (MCGFloat) t_paint . measureText(p_text, p_length);
+		t_width =  (MCGFloat) t_paint . measureText(t_text, p_length);
 	}
 	
 	MCCStringFree(t_text);

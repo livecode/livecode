@@ -6,6 +6,51 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static PangoFontMap *s_font_map = NULL;
+static PangoContext *s_pango = NULL;
+static PangoLayout *s_layout = NULL;
+
+static bool lnx_pango_initialize(void)
+{
+	bool t_success;
+	t_success = true;
+
+	if (t_success)
+		if (s_font_map == NULL)
+		{
+			s_font_map = pango_ft2_font_map_new();
+			t_success = s_font_map != NULL;
+		}
+	
+	if (t_success)
+		if (s_pango == NULL)
+		{
+			s_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) s_font_map);
+			t_success = s_pango != nil;
+		}	
+	
+	if (t_success)		
+		if (s_layout == NULL)
+		{
+			s_layout = pango_layout_new(s_pango);
+			t_success = s_layout != NULL;
+		}
+	
+	return t_success;
+}
+
+static void lnx_pango_finalize(void)
+{
+	if (s_layout != NULL)
+		g_object_unref(s_layout);
+	if (s_pango != NULL)
+		g_object_unref(s_pango);
+	if (s_font_map != NULL)
+		g_object_unref(s_font_map);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))
@@ -13,28 +58,9 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	
 	bool t_success;
 	t_success = true;
-	
-	PangoFontMap *t_font_map;
-	t_font_map = NULL;
+
 	if (t_success)
-	{
-		t_font_map = pango_ft2_font_map_new();
-		t_success = t_font_map != NULL;
-	}	
-	PangoContext *t_pango;
-	t_pango = NULL;
-	if (t_success)
-	{
-		t_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) t_font_map);
-		t_success = t_pango != nil;
-	}	
-	PangoLayout *t_layout;
-	t_layout = NULL;
-	if (t_success)
-	{
-		t_layout = pango_layout_new(t_pango);
-		t_success = t_layout != NULL;
-	}	
+		t_success = lnx_pango_initialize();
 	
 	char *t_text;
 	t_text = nil;
@@ -59,17 +85,17 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_ptransform . yy = t_transform . d;
 		t_ptransform . x0 = t_transform . tx;
 		t_ptransform . y0 = t_transform . ty;
-		pango_context_set_matrix(t_pango, &t_ptransform);
+		pango_context_set_matrix(s_pango, &t_ptransform);
 		
-		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
-		pango_layout_set_text(t_layout, t_text, -1);
+		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
+		pango_layout_set_text(s_layout, t_text, -1);
 		MCCStringFree(t_text);
 		
 		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
 		if (pango_layout_get_line_readonly_ptr != nil)
-			t_line = pango_layout_get_line_readonly_ptr(t_layout, 0);
+			t_line = pango_layout_get_line_readonly_ptr(s_layout, 0);
 		else
-			t_line = pango_layout_get_line(t_layout, 0);
+			t_line = pango_layout_get_line(s_layout, 0);
 		t_success = t_line != nil;
 	}
 	
@@ -98,15 +124,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_clipped_bounds = MCGRecangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
-		{
-			if (t_font_map != NULL)
-				g_object_unref(t_font_map);
-			if (t_layout != NULL)
-				g_object_unref(t_layout);
-			if (t_pango != NULL)
-				g_object_unref(t_pango);
 			return;
-		}
 	}
 	
 	void *t_data;
@@ -147,12 +165,6 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 											  t_clipped_bounds . y + t_device_location . y, &t_paint);
 	}
 	
-	if (t_font_map != NULL)
-		g_object_unref(t_font_map);
-	if (t_layout != NULL)
-		g_object_unref(t_layout);
-	if (t_pango != NULL)
-		g_object_unref(t_pango);
 	MCMemoryDelete(t_data);
 	self -> is_valid = t_success;
 }
@@ -165,27 +177,8 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	bool t_success;
 	t_success = true;		
 	
-	PangoFontMap *t_font_map;
-	t_font_map = NULL;
 	if (t_success)
-	{
-		t_font_map = pango_ft2_font_map_new();
-		t_success = t_font_map != NULL;
-	}	
-	PangoContext *t_pango;
-	t_pango = NULL;
-	if (t_success)
-	{
-		t_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) t_font_map);
-		t_success = t_pango != nil;
-	}	
-	PangoLayout *t_layout;
-	t_layout = NULL;
-	if (t_success)
-	{
-		t_layout = pango_layout_new(t_pango);
-		t_success = t_layout != NULL;
-	}
+		t_success = lnx_pango_initialize();
 	
 	char *t_text;
 	t_text = nil;
@@ -196,20 +189,14 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	t_width = 0.0;
 	if (t_success)
 	{
-		pango_layout_set_text(t_layout, t_text, -1);		
-		pango_layout_set_font_description(t_layout, (PangoFontDescription *) p_font . fid);
+		pango_layout_set_text(s_layout, t_text, -1);		
+		pango_layout_set_font_description(s_layout, (PangoFontDescription *) p_font . fid);
 		
 		PangoRectangle t_bounds;
-		pango_layout_get_pixel_extents(t_layout, NULL, &t_bounds);
+		pango_layout_get_pixel_extents(s_layout, NULL, &t_bounds);
 		t_width = t_bounds . width;		
 	}
 	
-	if (t_font_map != NULL)
-		g_object_unref(t_font_map);
-	if (t_layout != NULL)
-		g_object_unref(t_layout);
-	if (t_pango != NULL)
-		g_object_unref(t_pango);
 	MCCStringFree(t_text);
 	self -> is_valid = t_success;
 

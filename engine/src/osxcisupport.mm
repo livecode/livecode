@@ -241,7 +241,7 @@ rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect
 static CIFilter *sg_current_filter = nil;
 static rei_rectangle_t sg_current_area;
 // IM-2013-08-29: [[ RefactorGraphics ]] Record surface height so we can transform image location to flipped context
-static CGFloat sg_current_height;
+static float sg_current_height;
 
 bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
@@ -262,7 +262,7 @@ bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 	return t_success;
 }
 
-rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, CGFloat p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters)
+rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, float p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters)
 {
 	bool t_success = true;
 	

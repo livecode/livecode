@@ -131,7 +131,13 @@ struct MCGAffineTransform
 enum MCGFillRule
 {
 	kMCGFillRuleNonZero,
-	kMCGFillRuleEvenOdd
+	kMCGFillRuleEvenOdd,
+};
+
+enum MCGPaintStyle
+{
+	kMCGPaintStyleOpaque,
+	kMCGPaintStyleStippled,
 };
 
 enum MCGBlendMode
@@ -464,6 +470,7 @@ void MCGContextSetFillOpacity(MCGContextRef context, MCGFloat opacity);
 void MCGContextSetFillRGBAColor(MCGContextRef context, MCGFloat red, MCGFloat green, MCGFloat blue, MCGFloat alpha);
 void MCGContextSetFillPattern(MCGContextRef context, MCGImageRef image, MCGAffineTransform transform, MCGImageFilter filter);
 void MCGContextSetFillGradient(MCGContextRef context, MCGGradientFunction function, const MCGFloat* stops, const MCGColor* colors, uindex_t ramp_length, bool mirror, bool wrap, uint32_t repeats, MCGAffineTransform transform, MCGImageFilter filter);
+void MCGContextSetFillPaintStyle(MCGContextRef context, MCGPaintStyle style);
 
 // Stroke attributes
 void MCGContextSetStrokeOpacity(MCGContextRef context, MCGFloat opacity);
@@ -475,6 +482,7 @@ void MCGContextSetStrokeMiterLimit(MCGContextRef context, MCGFloat limit);
 void MCGContextSetStrokeJoinStyle(MCGContextRef context, MCGJoinStyle style);
 void MCGContextSetStrokeCapStyle(MCGContextRef context, MCGCapStyle style);
 void MCGContextSetStrokeDashes(MCGContextRef context, MCGFloat phase, const MCGFloat *lengths, uindex_t arity);
+void MCGContextSetStrokePaintStyle(MCGContextRef context, MCGPaintStyle style);
 
 // Transforms - concatenated with the current CTM.
 void MCGContextConcatCTM(MCGContextRef context, MCGAffineTransform transform);
