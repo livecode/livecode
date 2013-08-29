@@ -49,7 +49,10 @@ bool MCFontHasPrinterMetrics(MCFontRef font);
 int32_t MCFontGetAscent(MCFontRef font);
 int32_t MCFontGetDescent(MCFontRef font);
 
+int32_t MCFontMeasureText(MCFontRef font, MCStringRef p_text);
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode);
+
+void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image);
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image);
 
 MCFontStyle MCFontStyleFromTextStyle(uint2 text_style);
