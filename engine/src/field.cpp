@@ -145,7 +145,7 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
-	label = NULL;
+	label = MCValueRetain(kMCEmptyString);
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -206,7 +206,9 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		}
 		while (fptr != fref.fdata);
 	}
-	label = strclone(fref.label);
+	if (fref.label != nil)
+		MCValueRetain(fref.label);
+	label = fref.label;
 	state &= ~CS_KFOCUSED;
 }
 
@@ -248,7 +250,7 @@ MCField::~MCField()
 
 	delete tabs;
 
-	delete label;
+	MCValueRelease(label);
 }
 
 Chunk_term MCField::gettype() const
