@@ -205,7 +205,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
     MCAutoStringRef t_command_path;
     MCS_resolvepath(MCcmd, &t_command_path);
 	
-	s_command_path = MCValueRetain(*t_command_path));
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
 	
@@ -1208,7 +1208,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext(0, ep . getsvalue(), False);
+			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
 		}
 		else
 		{
