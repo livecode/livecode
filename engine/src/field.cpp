@@ -206,8 +206,7 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		}
 		while (fptr != fref.fdata);
 	}
-	if (fref.label != nil)
-		MCValueRetain(fref.label);
+	MCValueRetain(fref.label);
 	label = fref.label;
 	state &= ~CS_KFOCUSED;
 }

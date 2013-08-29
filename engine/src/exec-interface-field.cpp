@@ -661,13 +661,7 @@ void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCField::SetLabel(MCExecContext& ctxt, MCStringRef p_string)
 {
-	if (p_string != nil)
-	{
-		MCValueAssign(label, p_string);
-		return;
-	}
-	
-	ctxt.Throw();
+	MCValueAssign(label, p_string);
 }
 
 void MCField::GetToggleHilite(MCExecContext& ctxt, bool& r_setting)
