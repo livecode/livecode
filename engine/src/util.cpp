@@ -2361,7 +2361,6 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
         
         MCExecPoint ep(nil, nil, nil);
         ep . setvalueref(*t_data);
-        ep . binarytotext();
         r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
@@ -2385,60 +2384,14 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 
 void MCU_geturl(MCExecPoint &ep)
 {
-    MCAutoStringRef t_filename;
+    MCAutoStringRef t_filename, t_output;
     MCStringCreateWithOldString(ep.getsvalue(), &t_filename);
     
-	if (MCStringGetLength(*t_filename) > 5
-	        && MCStringBeginsWithCString(*t_filename, (const char_t*)"file:", kMCCompareCaseless))
-	{
-        MCAutoStringRef t_output;
-		MCStringCopySubstring(*t_filename, MCRangeMake(5, MCStringGetLength(*t_filename)-8), &t_filename);
-		if (!MCS_loadtextfile(*t_filename, &t_output))
-        {
-            MCurlresult -> setvalueref(kMCEmptyString);
-            return;
-        }
-        MCurlresult -> setvalueref(*t_output);
-	}
-	else
-		if (MCStringGetLength(*t_filename) > 8
-		        && MCStringBeginsWithCString(*t_filename, (const char_t*)"binfile:", kMCCompareCaseless))
-		{
-            MCAutoDataRef t_output;
-            MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
-            if (!MCS_loadbinaryfile(*t_filename, &t_output))
-            {
-                MCurlresult -> setvalueref(kMCEmptyData);
-                return;
-            }
-            MCurlresult -> setvalueref(*t_output);
-		}
-		else
-			if (MCStringGetLength(*t_filename) > 8
-			        && MCStringBeginsWithCString(*t_filename, (const char_t*)"resfile:", kMCCompareCaseless))
-			{
-                MCAutoStringRef t_output;
-                MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
-                MCS_loadresfile(*t_filename, &t_output);
-                
-                MCurlresult -> setvalueref(*t_output);
-			}
-			else
-			{
-				// MW-2013-03-12: [[ Bug 10731 ]] Make sure that if we aren't looking at something
-				//   that looks like a URL, we clear the EP.
-				const char *sptr = ep.getsvalue().getstring();
-				uint4 l = ep.getsvalue().getlength();
-				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
-				{
-					MCAutoStringRef p_url;
-					/* UNCHECKED */ ep . copyasstringref(&p_url);
-					MCS_geturl(ep . getobj(), *p_url);
-					MCurlresult->eval(ep);
-				}
-				else
-					ep . clear();
-			}
+    MCExecContext ctxt(ep);
+    
+    MCU_geturl(ctxt, *t_filename, &t_output);
+    
+    ep.setvalueref(*t_output);
 }
 
 

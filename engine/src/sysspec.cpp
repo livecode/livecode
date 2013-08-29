@@ -1122,7 +1122,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	uint32_t t_read;
 	if (t_success)
         t_success = t_buffer.Chars() != NULL &&
-                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) &&
+                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) == IO_NORMAL &&
                     t_read == t_size;
 
     if (t_success)
@@ -1134,7 +1134,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 		t_success = t_buffer . CreateStringAndRelease(&t_string);
         
         ep . setvalueref(*t_string);
-        ep . binarytotext();
+        ep . texttobinary();
         
         t_success = ep.copyasstring(r_text);
         MCresult -> clear(False);
@@ -1234,7 +1234,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     MCAutoStringRef t_string;
     MCExecPoint ep(nil, nil, nil);
     /* UNCHECKED */ ep . setvalueref(p_string);
-    ep . texttobinary();
+    ep . binarytotext();
     /* UNCHECKED */ ep . copyasstring(&t_string);
     
 	uint32_t t_written;

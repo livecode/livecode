@@ -1707,7 +1707,7 @@ public:
             while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
             {
                 offset += nread;
-                r_read = offset / p_length;
+                r_read = offset;
                 if (ferror(m_stream))
                 {
                     clearerr(m_stream);
@@ -1729,6 +1729,7 @@ public:
                 }
                 return IO_NONE;
             }
+            r_read = p_length;
         }
         return stat;
 	}
