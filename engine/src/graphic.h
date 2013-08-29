@@ -62,8 +62,8 @@ class MCGraphic : public MCControl
 	MCPoint *oldpoints;
 	MCRectangle oldrect;
 	MCRectangle minrect;
-	char *label;
-	uint2 labelsize;
+	MCStringRef label;
+	//uint2 _labelsize;
 
 	MCGradientFill *m_fill_gradient;
 	MCGradientFill *m_stroke_gradient;
@@ -126,8 +126,8 @@ public:
 	virtual MCRectangle geteffectiverect(void) const;
 	void delpoints();
 	void closepolygon(MCPoint *&pts, uint2 &npts);
-	void getlabeltext(MCString &s, bool& isunicode);
-	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle);
+	MCStringRef getlabeltext();
+	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef& s, uint2 fstyle);
 
 	MCGradientFill *getgradient();
 	MCPoint *getpoints();
@@ -147,8 +147,6 @@ public:
 
 	void Redraw(MCRectangle drect);
 	void Redraw(void);
-	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string);
-	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
 
 	////////// PROPERTY ACCESSORS
 
@@ -199,9 +197,9 @@ public:
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
 	void GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
+	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
 	void GetFilled(MCExecContext& ctxt, bool& r_setting);
 	void SetFilled(MCExecContext& ctxt, bool setting);
 };

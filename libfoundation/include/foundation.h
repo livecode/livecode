@@ -1301,6 +1301,10 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
+// Returns true if the the string is stored as native chars internally or false if
+// it is encoded in UTF-16.
+bool MCStringIsNative(MCStringRef string);
+
 /////////
 
 // Converts the contents of the string to unicode. The caller takes ownership of the
@@ -1312,6 +1316,11 @@ bool MCStringConvertToUnicode(MCStringRef string, unichar_t*& r_chars, uindex_t&
 // The caller takes ownership of the char array. Note that the returned array is NUL
 // terminated, but this is not reflected in the char count.
 bool MCStringConvertToNative(MCStringRef string, char_t*& r_chars, uindex_t& r_char_count);
+
+// Converts the contents of the string to UTF-8. The caller takes ownership of the
+// char array. Note that the returned array is NUL terminated but this is not
+// reflected in the char count.
+bool MCStringConvertToUTF8(MCStringRef string, char*& r_chars, uindex_t& r_char_count);
 
 // Converts the content to char_t*
 bool MCStringConvertToCString(MCStringRef string, char*& r_cstring);

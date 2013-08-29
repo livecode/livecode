@@ -223,7 +223,7 @@ protected:
 	// IM-2013-04-16: [[ BZ 10848 ]] // flag to record encrypted state of object script
 	bool m_script_encrypted : 1;
 	
-	char *tooltip;
+	MCStringRef tooltip;
 	
 	// MW-2008-10-20: Pointer to the parent script's weak object reference.
 	MCParentScriptUse *parent_script;

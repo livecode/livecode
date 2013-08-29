@@ -118,6 +118,14 @@ extern IO_stat IO_write_nameref(MCNameRef name, IO_handle stream, uint1 size = 2
 extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
 extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, uint1 size = 2);
 
+// String IO requesting explicit Unicode or native encoding
+extern IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size = 2);
+extern IO_stat IO_write_stringref(MCStringRef string, IO_handle stream, bool as_unicode, uint1 size = 2);
+
+// String IO for UTF-8 formatted strings
+extern IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size = 2);
+extern IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size = 2);
+
 // MW-2009-06-30: This method reads the given number of bytes and fails
 //   if that is not possible.
 extern IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream);

@@ -561,82 +561,76 @@ void MCGraphic::SetShowName(MCExecContext& ctxt, bool setting)
 		Redraw();
 }
 
-void MCGraphic::DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string)
-{
-	// Fetch the label, taking note of its encoding.
-	MCString slabel;
-	bool is_unicode;
-	if (effective)
-		getlabeltext(slabel, is_unicode);
-	else
-		slabel.set(label,labelsize), is_unicode = hasunicode();
-
-	// If the label's encoding doesn't match the request, map.
-	if (MCU_mapunicode(slabel, is_unicode, to_unicode, r_string))
-		return;
-
-	ctxt . Throw();
-}
-
-void MCGraphic::DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label)
-{
-	if (label == NULL || p_label == nil ||
-		MCStringIsEqualToOldString(p_label, MCString(label, labelsize), kMCCompareExact) ||
-		to_unicode != hasunicode())
-	{
-		delete label;
-		label = NULL;
-		if (p_label != nil)
-		{
-			labelsize = MCStringGetLength(p_label);
-			label = new char[labelsize];
-			memcpy(label, MCStringGetCString(p_label), labelsize);
-			flags |= F_G_LABEL;
-
-			// If we are setting the unicode label we become unicode; else we revert
-			// to native.
-			if (to_unicode)
-				m_font_flags |= FF_HAS_UNICODE;
-			else
-				m_font_flags &= ~FF_HAS_UNICODE;
-		}
-		else
-		{
-			labelsize = 0;
-			flags &= ~F_G_LABEL;
-		}
-		Redraw();
-	}
-}
-
 void MCGraphic::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	DoGetLabel(ctxt, false, false, r_label);
+	r_label = MCValueRetain(label);
 }
 
 void MCGraphic::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	DoSetLabel(ctxt, false, p_label);
+	if (p_label != nil)
+	{
+		MCValueAssign(label, p_label);
+		Redraw();
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCGraphic::GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	DoGetLabel(ctxt, false, true, r_label);
+	r_label = MCValueRetain(getlabeltext());
 }
 
-void MCGraphic::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCGraphic::GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
 {
-	DoGetLabel(ctxt, true, false, r_label);
+	MCStringRef t_label = nil;
+	GetLabel(ctxt, t_label);
+	unichar_t *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (MCStringConvertToUnicode(t_label, t_bytes, t_length))
+	{
+		if (MCDataCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, r_label))
+			return;
+	}
+	
+	ctxt.Throw();
 }
 
-void MCGraphic::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
+void MCGraphic::SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label)
 {
-	DoSetLabel(ctxt, true, p_label);
+	if (p_label != nil)
+	{
+		unichar_t *t_bytes = (unichar_t*)MCDataGetBytePtr(p_label);
+		uindex_t t_length = MCDataGetLength(p_label);
+		if (t_bytes != nil && t_length > 0)
+		{
+			MCStringRef t_label = nil;
+			if (MCStringCreateWithChars(t_bytes, t_length, t_label))
+			{
+				SetLabel(ctxt, t_label);
+				return;
+			}
+		}
+	}
+	
+	ctxt.Throw();
 }
 
-void MCGraphic::GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCGraphic::GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
 {
-	DoGetLabel(ctxt, true, true, r_label);
+	MCStringRef t_label = nil;
+	GetEffectiveLabel(ctxt, t_label);
+	unichar_t *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (MCStringConvertToUnicode(t_label, t_bytes, t_length))
+	{
+		if (MCDataCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, r_label))
+			return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCGraphic::GetFilled(MCExecContext& ctxt, bool& r_setting)
