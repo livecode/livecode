@@ -2487,7 +2487,7 @@ OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf,
         
 	MCAutoStringRefAsUTF8String t_utf8_auto;
     
-    if (t_error != noErr)
+    if (t_error == noErr)
         if (!t_utf8_auto.Lock(*t_folder))
             t_error = fnfErr;
     

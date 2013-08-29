@@ -484,7 +484,7 @@ bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
     
     t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil);
     
-    if (!MCMemoryNewArray(t_byte_count, r_utf8string))
+    if (!MCMemoryNewArray(t_byte_count + 1, r_utf8string))
         return false;
     
     MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string);
