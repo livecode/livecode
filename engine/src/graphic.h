@@ -62,8 +62,8 @@ class MCGraphic : public MCControl
 	MCPoint *oldpoints;
 	MCRectangle oldrect;
 	MCRectangle minrect;
-	char *label;
-	uint2 labelsize;
+	MCStringRef label;
+	//uint2 _labelsize;
 
 	MCGradientFill *m_fill_gradient;
 	MCGradientFill *m_stroke_gradient;
@@ -126,8 +126,8 @@ public:
 	virtual MCRectangle geteffectiverect(void) const;
 	void delpoints();
 	void closepolygon(MCPoint *&pts, uint2 &npts);
-	void getlabeltext(MCString &s, bool& isunicode);
-	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCString &s, bool isunicode, uint2 fstyle);
+	void getlabeltext(MCStringRef &r_text);
+	void drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectangle &srect, const MCStringRef& s, uint2 fstyle);
 
 	MCGradientFill *getgradient();
 	MCPoint *getpoints();

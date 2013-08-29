@@ -656,25 +656,18 @@ void MCField::SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStri
 
 void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (label == NULL)
-	{
-		if (!selectedtext(r_string))
-			r_string = MCValueRetain(kMCEmptyString);
-		return;
-	}
-	else
-	{
-		if (MCStringCreateWithCString(label, r_string))
-			return;
-	}
-
-	ctxt . Throw();
+	r_string = MCValueRetain(label);
 }
 
 void MCField::SetLabel(MCExecContext& ctxt, MCStringRef p_string)
 {
-	delete label;
-	label = strclone(MCStringGetCString(p_string));
+	if (p_string != nil)
+	{
+		MCValueAssign(label, p_string);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCField::GetToggleHilite(MCExecContext& ctxt, bool& r_setting)
