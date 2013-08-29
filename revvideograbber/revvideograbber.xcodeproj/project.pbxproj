@@ -156,9 +156,9 @@
 				B28449861799E9F100E27E26 /* libkernel-development.a */,
 				B28449881799E9F100E27E26 /* libkernel-standalone.a */,
 				B284498A1799E9F100E27E26 /* libsecurity-community.a */,
-				4D5151960BCF96B700F73C6E /* LiveCode.app */,
-				4D5151A00BCF96B700F73C6E /* Standalone.app */,
-				E88527651704974200CEFCC5 /* server */,
+				4D5151960BCF96B700F73C6E /* LiveCode-Community.app */,
+				4D5151A00BCF96B700F73C6E /* Standalone-Community.app */,
+				E88527651704974200CEFCC5 /* Server-Community */,
 				4D41477E120431AE0088006F /* Installer.app */,
 			);
 			name = Products;
@@ -316,14 +316,14 @@
 			remoteRef = 4D414781120431AE0088006F /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4D5151960BCF96B700F73C6E /* LiveCode.app */ = {
+		4D5151960BCF96B700F73C6E /* LiveCode-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = "LiveCode-Community.app";
 			remoteRef = 4D5151950BCF96B700F73C6E /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		4D5151A00BCF96B700F73C6E /* Standalone.app */ = {
+		4D5151A00BCF96B700F73C6E /* Standalone-Community.app */ = {
 			isa = PBXReferenceProxy;
 			fileType = wrapper.application;
 			path = "Standalone-Community.app";
@@ -365,7 +365,7 @@
 			remoteRef = B55AFA1D0BCE905300E1F7F0 /* PBXContainerItemProxy */;
 			sourceTree = BUILT_PRODUCTS_DIR;
 		};
-		E88527651704974200CEFCC5 /* server */ = {
+		E88527651704974200CEFCC5 /* Server-Community */ = {
 			isa = PBXReferenceProxy;
 			fileType = "compiled.mach-o.executable";
 			path = "Server-Community";

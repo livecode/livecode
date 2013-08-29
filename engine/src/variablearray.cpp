@@ -1386,6 +1386,8 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
     { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
     { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure button text has precedence over label and menuHistory
+    { P_TEXT, "text" }, 
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
