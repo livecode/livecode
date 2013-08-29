@@ -422,7 +422,7 @@ static char *set_field_by_name(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext(fptr->getcard()->getid(), arg3, False);
+		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -436,7 +436,7 @@ static char *set_field_by_num(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext(fptr->getcard()->getid(), arg3, False);
+		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
 		*retval = xresSucc;
 	}
 	return NULL;
@@ -450,7 +450,7 @@ static char *set_field_by_id(const char *arg1, const char *arg2,
 		*retval = xresFail;
 	else
 	{
-		fptr->settext(fptr->getcard()->getid(), arg3, False);
+		fptr->settext_oldstring(fptr->getcard()->getid(), arg3, False);
 		*retval = xresSucc;
 	}
 	return NULL;
