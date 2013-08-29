@@ -380,7 +380,8 @@ public:
 	MCParagraph *resolveparagraphs(uint4 parid);
 
 	void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-	Exec_stat settext(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
+	Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
+	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
 	Exec_stat settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool asunicode = false);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);

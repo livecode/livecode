@@ -146,7 +146,7 @@ void MCB_setmsg(MCExecPoint &ep)
 			MCCard *cptr = MCmbstackptr->getchild(CT_THIS, kMCEmptyString, CT_CARD);
 			MCField *fptr = (MCField *)cptr->getchild(CT_FIRST, kMCEmptyString, CT_FIELD, CT_CARD);
 			if (fptr != NULL)
-				fptr->settext(0, ep.getsvalue(), False);
+				fptr->settext_oldstring(0, ep.getsvalue(), False);
 		}
 	}
 }
