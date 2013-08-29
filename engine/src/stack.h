@@ -511,7 +511,10 @@ public:
 	// MW-2011-09-10: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window. This is a platform-specific method which causes 'redrawwindow' to be
 	//   invoked.
+	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
+	//   device_updatewindow takes a region in device coordinates.
 	void updatewindow(MCRegionRef region);
+	void device_updatewindow(MCRegionRef p_region);
 	
 	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window using the presented pixmap. This is a platform-specific method - note that
@@ -521,7 +524,9 @@ public:
 	//   version which uses a callback function to perform the actual drawing using a
 	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
 	//    for handling any window mask present.
-	void updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
+	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
+	//   device_updatewindowwithcallback takes a region in device coordinates.
+	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.

@@ -900,7 +900,7 @@ void MCStack::enablewindow(bool p_enable)
 
 // MW-2011-09-11: [[ Redraw ]] Force an immediate update of the window within the given
 //   region. The actual rendering is done by deferring to the 'redrawwindow' method.
-void MCStack::updatewindow(MCRegionRef p_region)
+void MCStack::device_updatewindow(MCRegionRef p_region)
 {
 	HIViewRef t_root;
 	GetRootControl((WindowPtr)window -> handle . window, &t_root);
@@ -910,16 +910,8 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	
 	// MW-2011-10-07: [[ Bug 9792 ]] If the mask hasn't changed, use the update region,
 	//   else redraw the whole view.
-	if (!getextendedstate(ECS_MASK_CHANGED))
-	{
-		// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
-		MCRegionRef t_dev_region;
-		t_dev_region = nil;
-		/* UNCHECKED */ MCRegionCreate(t_dev_region);
-		MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
-		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)t_dev_region, TRUE);
-		MCRegionDestroy(t_dev_region);
-	}
+	if (!getextendedstate(ECS_MASK_CHANGED) || s_update_callback != nil)
+		HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)p_region, TRUE);
 	else
 	{
 		HIViewSetNeedsDisplay(t_view, TRUE);
@@ -947,47 +939,16 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	}
 }
 
-void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
-	HIViewRef t_root;
-	GetRootControl((WindowPtr)window -> handle . window, &t_root);
-	
-	HIViewRef t_view;
-	GetIndexedSubControl(t_root, 1, &t_view);
-	
-	// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
-	MCRegionRef t_dev_region;
-	t_dev_region = nil;
-	/* UNCHECKED */ MCRegionCreate(t_dev_region);
-	MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
-	HIViewSetNeedsDisplayInRegion(t_view, (RgnHandle)t_dev_region, TRUE);
-	MCRegionDestroy(t_dev_region);
-	
 	// Set the file-local static to the callback to use (stacksurface picks this up!)
 	s_update_callback = p_callback;
 	s_update_context = p_context;
-	HIViewRender(t_view);
+	// IM-2013-08-29: [[ RefactorGraphics ]] simplify by calling device_updatewindow, which performs the same actions
+	device_updatewindow(p_region);
 	// Unset the file-local static.
 	s_update_callback = nil;
 	s_update_context = nil;
-	
-	// MW-2011-10-18: [[ Bug 9798 ]] Make sure we force a screen update after every
-	//   update.
-	// MW-2012-09-10: [[ Revert Bug 10333 ]] Delayed until IDE issues can be resolved.
-	// HIWindowFlush((WindowPtr)window -> handle . window);
-	
-	// Update the shadow, if required.
-	if (getextendedstate(ECS_MASK_CHANGED))
-	{
-		// MW-2012-09-10: [[ Revert Bug 10333 ]] Delayed until IDE issues can be resolved.
-		HIWindowFlush((WindowPtr)window -> handle . window);
-		
-		HIWindowInvalidateShadow((WindowPtr)window -> handle . window);
-		
-		EnableScreenUpdates();
-		
-		setextendedstate(False, ECS_MASK_CHANGED);
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1124,6 +1085,7 @@ class MCMacStackSurface: public MCStackSurface
 	CGContextRef m_context;
 	
 	int32_t m_surface_height;
+	int32_t m_surface_scroll;
 	
 	MCRectangle m_locked_area;
 	MCGContextRef m_locked_context;
@@ -1131,10 +1093,11 @@ class MCMacStackSurface: public MCStackSurface
 	uint32_t m_locked_stride;
 	
 public:
-	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, MCRegionRef p_region, CGContextRef p_context)
+	MCMacStackSurface(MCStack *p_stack, int32_t p_surface_height, int32_t p_surface_scroll, MCRegionRef p_region, CGContextRef p_context)
 	{
 		m_stack = p_stack;
 		m_surface_height = p_surface_height;
+		m_surface_scroll = p_surface_scroll;
 		m_region = p_region;
 		m_context = p_context;
 		
@@ -1155,15 +1118,17 @@ public:
 			t_rect = MCRegionGetBoundingBox(m_region);
 			CGContextClearRect(m_context, CGRectMake(t_rect . x, m_surface_height - (t_rect . y + t_rect . height), t_rect . width, t_rect . height));
 			
-			// MW-2012-07-25: [[ Bug ]] Make sure we use signed arithmetic to
-			//   compute the y-origin otherwise it wraps to 2^32!
-			int32_t t_mask_height, t_mask_width;
-			t_mask_width = (int32_t)CGImageGetWidth(t_mask);
-			t_mask_height = (int32_t)CGImageGetHeight(t_mask);
+			// IM-2013-08-29: [[ ResIndependence ]] scale mask to device coords
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			MCGFloat t_mask_height, t_mask_width;
+			t_mask_width = CGImageGetWidth(t_mask) * t_scale;
+			t_mask_height = CGImageGetHeight(t_mask) * t_scale;
 			
 			CGRect t_dst_rect;
 			t_dst_rect . origin . x = 0;
-			t_dst_rect . origin . y = m_surface_height - t_mask_height - (m_stack -> getscroll() * t_scale);
+			t_dst_rect . origin . y = m_surface_height - t_mask_height - m_surface_scroll;
 			t_dst_rect . size . width = t_mask_width;
 			t_dst_rect . size . height = t_mask_height;
 			CGContextClipToMask(m_context, t_dst_rect, t_mask);
@@ -1512,11 +1477,15 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 				if (t_graphics != nil)
 				{
 					// IM-2013-08-23: [[ ResIndependence ]] provide surface height in device scale
-					MCRectangle t_device_rect;
-					t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_context->stack->getcurcard()->getrect()));
+					MCGFloat t_scale;
+					t_scale = MCResGetDeviceScale();
 					
 					int32_t t_surface_height;
-					t_surface_height = t_device_rect.height;
+					t_surface_height = floor(t_context->stack->getcurcard()->getrect().height * t_scale);
+					
+					// IM-2013-08-29: [[ ResIndependence ]] also provide scroll value at device scale
+					int32_t t_surface_scroll;
+					t_surface_scroll = ceil(t_context->stack->getscroll() * t_scale);
 					
 					// HIView gives us a context in top-left origin mode which isn't so good
 					// for our CG rendering so, revert back to bottom-left.
@@ -1526,7 +1495,7 @@ OSStatus HIRevolutionStackViewHandler(EventHandlerCallRef p_call_ref, EventRef p
 					// Save the context state
 					CGContextSaveGState(t_graphics);
 					
-					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, (MCRegionRef)t_dirty_rgn, t_graphics);
+					MCMacStackSurface t_surface(t_context -> stack, t_surface_height, t_surface_scroll, (MCRegionRef)t_dirty_rgn, t_graphics);
 					
 					if (t_surface.Lock())
 					{

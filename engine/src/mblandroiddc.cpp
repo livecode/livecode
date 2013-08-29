@@ -865,7 +865,7 @@ protected:
 	}
 };
 
-void MCStack::updatewindow(MCRegionRef p_region)
+void MCStack::device_updatewindow(MCRegionRef p_region)
 {
 	if (!s_android_opengl_enabled)
 	{
@@ -875,7 +875,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 		// Note that as android regions are just rects at the moment, we cheat.
 		MCRectangle t_rect;
-		t_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region)));
+		t_rect = MCRegionGetBoundingBox(p_region);
 
 		MCRegionRef t_actual_region;
 		MCRegionCreate(t_actual_region);
@@ -933,7 +933,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 			// MW-2011-12-12: [[ Bug 9908 ]] Make sure both front and back buffers hold the same image
 			//   to prevent a flicker back to an old frame when making the opengl layer visible.
-			updatewindow(p_region);
+			device_updatewindow(p_region);
 
 			MCAndroidEngineRemoteCall("hideBitmapView", "v", nil);
 		}
@@ -941,7 +941,7 @@ void MCStack::updatewindow(MCRegionRef p_region)
 
 }
 
-void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	MCRectangle t_rect;
 	t_rect = MCRegionGetBoundingBox(p_region);
