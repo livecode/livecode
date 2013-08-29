@@ -267,27 +267,20 @@ void MCControl::SetBottomMargin(MCExecContext& ctxt, integer_t p_margin)
 
 void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	bool t_dirty = true;
-	bool t_success = false;
+	bool t_dirty;
+	t_dirty = true;
 
 	if (!MCStringIsEqualTo(tooltip, MCtooltip->gettip(), kMCStringOptionCompareExact))
 		t_dirty = false;
 
-	if (p_tooltip != nil)
+	MCValueAssign(tooltip, p_tooltip);
+	if (t_dirty && focused == this)
 	{
-		MCValueAssign(tooltip, p_tooltip);
-		if (t_dirty && focused == this)
-		{
-			MCtooltip->settip(tooltip);
-			t_dirty = false;
-		}
-		else if (t_dirty)
-			Redraw();
-		
-		return;
+		MCtooltip->settip(tooltip);
+		t_dirty = false;
 	}
-
-	ctxt.Throw();
+	else if (t_dirty)
+		Redraw();
 }
 
 void MCControl::GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
@@ -304,6 +297,8 @@ void MCControl::GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip)
 		r_tooltip = t_tooltip;
 		return;
 	}
+	
+	ctxt.Throw();
 }
 
 void MCControl::SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip)

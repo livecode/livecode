@@ -87,12 +87,22 @@ void MCTooltip::clearmatch(MCCard *c)
 		card = NULL;
 }
 
+
+void MCTooltip::cleartip()
+{
+	if (!MCStringIsEmpty(tip))
+	{
+		state &= ~CS_NO_FOCUS;
+		if (opened && !(state & CS_IGNORE_CLOSE))
+			close();
+		MCscreen->cancelmessageobject(this, NULL);
+	}
+	MCValueAssign(tip, kMCEmptyString);
+}
+
+
 void MCTooltip::settip(MCStringRef p_tip)
 {
-	// ****
-	// What to do if p_tip == null?
-	// *****
-	
 	if (!MCStringIsEqualTo(tip, p_tip, kMCStringOptionCompareExact))
 	{
 		MCValueAssign(tip, p_tip);

@@ -41,6 +41,7 @@ public:
 	void clearmatch(MCCard *c);
 	void opentip();
 	void closetip();
+	void cleartip();
 	void settip(MCStringRef p_tip);
 	MCStringRef gettip()
 	{
