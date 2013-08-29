@@ -1060,18 +1060,12 @@ public:
 	}
 };
 
-void MCStack::updatewindow(MCRegionRef p_region)
+void MCStack::device_updatewindow(MCRegionRef p_region)
 {
 	if (m_window_shape == nil || m_window_shape -> is_sharp)
 	{
-		// IM-2013-08-08: [[ ResIndependence ]] Scale update region to device space
-		MCRegionRef t_device_region;
-		t_device_region = nil;
-		/* UNCHECKED */ MCRegionCreate(t_device_region);
-		/* UNCHECKED */ MCRegionSetRect(t_device_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region))));
-		InvalidateRgn((HWND)window -> handle . window, (HRGN)t_device_region, FALSE);
+		InvalidateRgn((HWND)window -> handle . window, (HRGN)p_region, FALSE);
 		UpdateWindow((HWND)window -> handle . window);
-		MCRegionDestroy(t_device_region);
 	}
 	else
 	{
@@ -1117,13 +1111,12 @@ void MCStack::updatewindow(MCRegionRef p_region)
 	}
 }
 
-void MCStack::updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
+void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
 	s_update_callback = p_callback;
 	s_update_context = p_context;
-	// IM-2013-08-08: [[ ResIndependence ]] Scale update region to device space
-	s_update_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCRegionGetBoundingBox(p_region)));
-	updatewindow(p_region);
+	s_update_rect = MCRegionGetBoundingBox(p_region);
+	device_updatewindow(p_region);
 	s_update_callback = nil;
 	s_update_context = nil;
 }

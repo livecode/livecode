@@ -240,6 +240,8 @@ rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect
 
 static CIFilter *sg_current_filter = nil;
 static rei_rectangle_t sg_current_area;
+// IM-2013-08-29: [[ RefactorGraphics ]] Record surface height so we can transform image location to flipped context
+static CGFloat sg_current_height;
 
 bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 {
@@ -260,7 +262,7 @@ bool MCGImageToCIImage(MCGImageRef p_image, CIImage *&r_image)
 	return t_success;
 }
 
-rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameter_list_ref_t p_parameters)
+rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, CGFloat p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters)
 {
 	bool t_success = true;
 	
@@ -377,6 +379,7 @@ rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_
 		sg_current_filter = t_filter;
 		
 		sg_current_area = *p_area;
+		sg_current_height = p_surface_height;
 	}
 	
 	NS_HANDLER
@@ -408,7 +411,7 @@ rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time
 		t_context = [CIContext contextWithCGContext: t_cg_context options: nil];
 		CGContextClearRect(t_cg_context, CGRectMake(sg_current_area . x, sg_current_area . y, sg_current_area . width, sg_current_area . height));
 		[sg_current_filter setValue: [NSNumber numberWithFloat: p_time] forKey: @"inputTime"];
-		[t_context drawImage: [sg_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(sg_current_area . x, sg_current_area . y) fromRect: CGRectMake(0, 0, sg_current_area . width, sg_current_area . height)];
+		[t_context drawImage: [sg_current_filter valueForKey: @"outputImage"] atPoint: CGPointMake(sg_current_area . x, sg_current_height - (sg_current_area . y + sg_current_area . height)) fromRect: CGRectMake(0, 0, sg_current_area . width, sg_current_area . height)];
 		CGContextFlush(t_cg_context);
 		NS_HANDLER
 		t_result = false;

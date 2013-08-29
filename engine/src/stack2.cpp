@@ -2614,3 +2614,21 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCStack::updatewindow(MCRegionRef p_region)
+{
+	MCRectangle t_update_rect;
+	t_update_rect = MCRegionGetBoundingBox(p_region);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
+	MCRegionRef t_dev_region;
+	t_dev_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_dev_region);
+	MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_update_rect)));
+	
+	device_updatewindow(t_dev_region);
+	
+	MCRegionDestroy(t_dev_region);
+}
+
+////////////////////////////////////////////////////////////////////////////////

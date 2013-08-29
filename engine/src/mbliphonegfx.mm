@@ -68,7 +68,7 @@ static void do_update(void *p_dirty)
 	[MCIPhoneGetDisplayView() renderInRegion: (MCRegionRef)p_dirty];
 }
 
-void MCStack::updatewindow(MCRegionRef p_dirty_rgn)
+void MCStack::device_updatewindow(MCRegionRef p_dirty_rgn)
 {
 	// MW-2011-09-13: [[ Redraw ]] Only perform an update if the window should
 	//   draw (i.e. if it is top-most).
@@ -349,8 +349,8 @@ protected:
 	MCRectangle t_visible;
 	t_visible = MCRegionGetBoundingBox(p_region);
 	
-	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetResolutionScale(), (float)t_visible . y / MCIPhoneGetResolutionScale(),
-											 (float)t_visible . width / MCIPhoneGetResolutionScale(), (float)t_visible . height / MCIPhoneGetResolutionScale()) ];
+	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetDeviceScale(), (float)t_visible . y / MCIPhoneGetDeviceScale(),
+											 (float)t_visible . width / MCIPhoneGetDeviceScale(), (float)t_visible . height / MCIPhoneGetDeviceScale()) ];
 	[[self layer] display];
 }
 

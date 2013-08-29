@@ -126,7 +126,7 @@ void MCStack::updatemodifiedmark(void)
 {
 }
 
-void MCStack::updatewindow(MCRegionRef region)
+void MCStack::device_updatewindow(MCRegionRef region)
 {
 }
 

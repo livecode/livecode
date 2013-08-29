@@ -48,7 +48,7 @@ static bool s_coreimage_initialized = false;
 extern rei_boolean_t coreimage_visualeffect_initialise(void);
 extern void coreimage_visualeffect_finalise(void);
 extern rei_boolean_t coreimage_visualeffect_lookup(const char *p_name, rei_visualeffect_info_ref_t *r_info);
-extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, rei_visualeffect_parameter_list_ref_t p_parameters);
+extern rei_boolean_t coreimage_visualeffect_begin(rei_handle_t p_handle, MCGImageRef p_image_a, MCGImageRef p_image_b, rei_rectangle_ref_t p_area, CGFloat p_surface_height, rei_visualeffect_parameter_list_ref_t p_parameters);
 extern rei_boolean_t coreimage_visualeffect_step(MCStackSurface *p_target, float p_time);
 extern rei_boolean_t coreimage_visualeffect_end(void);
 
@@ -66,7 +66,8 @@ void MCCoreImageUnregister(void)
 	}
 }
 
-bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCEffectArgument *p_arguments)
+// IM-2013-08-29: [[ RefactorGraphics ]] add surface height param to pass through to coreimage_visualeffect_begin
+bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCGFloat p_surface_height, MCEffectArgument *p_arguments)
 {	
 	if (!s_coreimage_initialized)
 		return false;
@@ -229,7 +230,7 @@ bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImage
 	}
 	else
 	{
-	  if (!coreimage_visualeffect_begin(t_info -> handle, p_source_a, p_source_b, &t_rect, t_parameters))
+	  if (!coreimage_visualeffect_begin(t_info -> handle, p_source_a, p_source_b, &t_rect, p_surface_height, t_parameters))
 			return false;
 	}
 	
