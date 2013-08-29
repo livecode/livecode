@@ -191,8 +191,7 @@ void MCGraphic::finalise(void)
 	delete realpoints;
 	delete markerpoints;
 	delete oldpoints;
-	if (label != nil)
-		MCValueRelease(label);
+	MCValueRelease(label);
 
 	if (m_fill_gradient != NULL)
 		MCGradientFillFree(m_fill_gradient);
@@ -2374,17 +2373,14 @@ IO_stat MCGraphic::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	// Ensure that the F_G_LABEL and FF_HAS_UNICODE flags is set correctly
 	if (MCStringIsEmpty(label))
-	{
 		flags &= ~F_G_LABEL;
-	}
 	else 
-	{
 		flags |= F_G_LABEL;
-		if (MCStringIsNative(label))
-			m_font_flags &= ~FF_HAS_UNICODE;
-		else
-			m_font_flags |= FF_HAS_UNICODE;
-	}
+		
+	if (MCStringIsNative(label))
+		m_font_flags &= ~FF_HAS_UNICODE;
+	else
+		m_font_flags |= FF_HAS_UNICODE;
 
 	
 	if ((stat = IO_write_uint1(OT_GRAPHIC, stream)) != IO_NORMAL)

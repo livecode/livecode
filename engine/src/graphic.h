@@ -63,7 +63,6 @@ class MCGraphic : public MCControl
 	MCRectangle oldrect;
 	MCRectangle minrect;
 	MCStringRef label;
-	//uint2 _labelsize;
 
 	MCGradientFill *m_fill_gradient;
 	MCGradientFill *m_stroke_gradient;
