@@ -5,6 +5,122 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static ATSUStyle s_style = NULL;
+static ATSUTextLayout s_layout = NULL;
+
+static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFont &p_font)
+{
+    OSStatus t_err;
+	t_err = noErr;
+    
+	if (t_err == noErr)
+		if (s_layout == NULL)
+			t_err = ATSUCreateTextLayout(&s_layout);
+
+	if (t_err == noErr)
+		if (s_style == NULL)
+			t_err = ATSUCreateStyle(&s_style);
+	
+	ATSUFontID t_font_id;
+	Fixed t_font_size;
+    if (t_err == noErr)
+    {
+        t_font_size = p_font . size << 16;
+		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id);
+    }
+	ATSUAttributeTag t_tags[] =
+	{
+		kATSUFontTag,
+		kATSUSizeTag,
+	};
+	ByteCount t_sizes[] =
+	{
+		sizeof(ATSUFontID),
+		sizeof(Fixed),
+	};
+	ATSUAttributeValuePtr t_attrs[] =
+	{
+		&t_font_id,
+		&t_font_size,
+	};
+	if (t_err == noErr)
+		t_err = ATSUSetAttributes(s_style, sizeof(t_tags) / sizeof(ATSUAttributeTag), t_tags, t_sizes, t_attrs);
+    
+	ATSLineLayoutOptions t_layout_options;
+    t_layout_options = kATSLineUseDeviceMetrics | kATSLineFractDisable;
+	ATSUAttributeTag t_layout_tags[] =
+	{
+		kATSULineLayoutOptionsTag,
+	};
+	ByteCount t_layout_sizes[] =
+	{
+		sizeof(ATSLineLayoutOptions),
+	};
+	ATSUAttributeValuePtr t_layout_attrs[] =
+	{
+		&t_layout_options,
+	};
+	if (t_err == noErr)
+		t_err = ATSUSetTextPointerLocation(s_layout, (const UniChar *) p_text, 0, p_length / 2, p_length / 2);
+	if (t_err == noErr)
+		t_err = ATSUSetRunStyle(s_layout, s_style, 0, p_length / 2);
+	if (t_err == noErr)
+		t_err = ATSUSetTransientFontMatching(s_layout, true);
+	if (t_err == noErr)
+		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+	
+	return t_err == noErr;
+}
+
+static bool osx_measure_text_substring_width(uindex_t p_length, int32_t &r_width)
+{
+	if (s_layout == NULL || s_style == NULL)
+		return false;
+	
+    OSStatus t_err;
+	t_err = noErr;
+    
+    ATSUTextMeasurement t_before, t_after, t_ascent, t_descent;
+    if (t_err == noErr)
+        t_err = ATSUGetUnjustifiedBounds(s_layout, 0, p_length / 2, &t_before, &t_after, &t_ascent, &t_descent);
+    
+    if (t_err == noErr)         
+        r_width = (t_after + 0xffff) >> 16;
+    
+    return t_err == noErr;
+}
+
+static bool osx_draw_text_substring_to_cgcontext_at_location(uindex_t p_length, CGContextRef p_cgcontext, MCGPoint p_location)
+{
+	if (s_layout == NULL || s_style == NULL)
+		return false;
+
+    OSStatus t_err;
+	t_err = noErr;
+
+	ATSUAttributeTag t_layout_tags[] =
+	{
+		kATSUCGContextTag,
+	};
+	ByteCount t_layout_sizes[] =
+	{
+		sizeof(CGContextRef),
+	};
+	ATSUAttributeValuePtr t_layout_attrs[] =
+	{
+		&p_cgcontext,
+	};
+	if (t_err == noErr)
+		t_err = ATSUSetLayoutControls(s_layout, sizeof(t_layout_tags) / sizeof(ATSUAttributeTag), t_layout_tags, t_layout_sizes, t_layout_attrs);
+
+    if (t_err == noErr)
+        t_err = ATSUDrawText(s_layout, 0, p_length / 2, ((int32_t)p_location . x) << 16, ((int32_t)p_location . y) << 16);
+    
+    return t_err == noErr;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 static bool osx_draw_text_to_cgcontext_at_location(const void *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font, CGContextRef p_cgcontext, MCGIntRectangle &r_bounds)
 {	
 	OSStatus t_err;
@@ -117,9 +233,18 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	bool t_success;
 	t_success = true;
 	
+    if (t_success)
+        t_success = osx_prepare_text(p_text, p_length, p_font);
+    
 	MCGIntRectangle t_text_bounds;
 	if (t_success)
-		t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
+    {
+        t_text_bounds . x = 0;
+        t_text_bounds . y = 0 - p_font . ascent;
+        t_text_bounds . height = p_font . descent + p_font . ascent;
+        t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
+		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
+    }
 	
 	MCGIntRectangle t_clipped_bounds;
 	MCGAffineTransform t_transform;
@@ -165,7 +290,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		CGContextTranslateCTM(t_cgcontext, -(t_clipped_bounds . x - t_text_bounds . x), t_clipped_bounds . height + t_clipped_bounds . y);
 		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(t_transform . a, t_transform . b, t_transform . c, t_transform . d, t_transform . tx, t_transform . ty));
 		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
-		t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
+		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, t_cgcontext, t_clipped_bounds);
+        t_success = osx_draw_text_substring_to_cgcontext_at_location(p_length, t_cgcontext, MCGPointMake(0.0, 0.0));
 	}
 	
 	if (t_success)
@@ -197,19 +323,32 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 }
 
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
-{
-	if (!MCGContextIsValid(self))
-		return 0.0;
-	
+{	
 	bool t_success;
 	t_success = true;
 	
+    if (t_success)
+        t_success = osx_prepare_text(p_text, p_length, p_font);
+
+    int32_t t_width;
+    t_width = 0;
+    if (t_success)
+        t_success = osx_measure_text_substring_width(p_length, t_width);
+    
+    return (MCGFloat) t_width;
+    
+	/*//if (!MCGContextIsValid(self))
+	//	return 0.0;
+	
+	bool t_success;
+	t_success = true;
+
 	MCGIntRectangle t_bounds;
 	if (t_success)
 		t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_bounds);
 	
-	self -> is_valid = t_success;
-	return (MCGFloat) t_bounds . width;
+	//self -> is_valid = t_success;
+	return (MCGFloat) t_bounds . width;*/
 }
 
 ////////////////////////////////////////////////////////////////////////////////
