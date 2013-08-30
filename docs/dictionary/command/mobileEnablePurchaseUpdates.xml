@@ -55,6 +55,7 @@
 		<command tag="mobilePurchaseSendRequest">mobilePurchaseSendRequest Command</command>
 		<command tag="mobilePurchaseConfirmDelivery">mobilePurchaseConfirmDelivery Command</command>
 		<command tag="mobilePurchaseVerify">mobilePurchaseVerify Command</command>
+		<command tag="iphoneRequestProductDetails">iphoneRequestProductDetails Command</command>
 		<message tag="purchaseStateUpdate">purchaseStateUpdate Message</message>
 	</references>
 
