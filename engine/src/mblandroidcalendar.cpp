@@ -54,10 +54,27 @@ typedef enum
     kMCAndroidCalendarEventCanceled,
 } MCAndroidCalendarEventStatus;
 
+
+bool MCAndroidCalendarInitialize(void)
+{
+   ... initialize statics as appropriate ...
+}
 static MCAndroidCalendarEventStatus s_calendar_event_status = kMCAndroidCalendarEventWaiting; 
-static MCStringRef s_calendar_event_selected = kMCEmptyString;
-static MCStringRef s_calendar_events_selected = kMCEmptyString;
+static MCStringRef s_calendar_event_selected;
+static MCStringRef s_calendar_events_selected;
 static MCCalendar s_calendar_event_data;
+
+bool MCAndroidCalendarInitialize(void)
+{
+	s_calendar_event_selected = nil;
+	s_calendar_events_selected = nil;
+}
+
+void MCAndroidCalendarFinalize(void)
+{
+	MCValueRelease(s_calendar_event_selected);
+	MCValuerelease(s_calendar_events_selected);
+}
 
 bool MCSystemShowEvent(MCStringRef p_calendar_event_id, MCStringRef& r_result)
 {
