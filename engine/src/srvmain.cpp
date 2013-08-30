@@ -63,8 +63,7 @@ static MCStringRef s_server_home = NULL;
 static bool s_server_cgi = false;
 
 // The main script the server engine will run.
-
-MCStringRef MCserverinitialscript = nil;
+char *MCserverinitialscript = NULL;
 
 // The root server script object.
 MCServerScript *MCserverscript = NULL;
@@ -79,7 +78,7 @@ MCSOutputTextEncoding MCserveroutputtextencoding = kMCSOutputTextEncodingNative;
 MCSOutputLineEndings MCserveroutputlineendings = kMCSOutputLineEndingsNative;
 
 // The array of current CGI headers (if any).
-MCStringRef *MCservercgiheaders = NULL;
+char **MCservercgiheaders = NULL;
 uint32_t MCservercgiheadercount = 0;
 
 // The array of set cookies
@@ -87,16 +86,16 @@ struct mcservercookie_t *MCservercgicookies = NULL;
 uint32_t MCservercgicookiecount = 0;
 
 // The current document root of the CGI execution.
-MCStringRef MCservercgidocumentroot;
+char *MCservercgidocumentroot = NULL;
 
 // The session data save path
-MCStringRef MCsessionsavepath;
+char *MCsessionsavepath = NULL;
 
 // The session cookie name
-MCStringRef MCsessionname;
+char *MCsessionname = NULL;
 
 // The session ID of the current session
-MCStringRef MCsessionid;
+char *MCsessionid = NULL;
 
 // The lifetime of session data in seconds.  default = 24mins
 uint32_t MCsessionlifetime = 60 * 24;
@@ -381,7 +380,6 @@ bool X_init(int argc, char *argv[], char *envp[])
 	else
 	{
 		s_server_home = MCValueRetain(MCcmd);
-
 		uindex_t t_last_separator;
 		MCStringLastIndexOfChar(s_server_home, PATH_SEPARATOR, 0, kMCStringOptionCompareExact, t_last_separator);
 
@@ -391,12 +389,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 	}
 
 	// Check for CGI mode.
-	MCAutoStringRef t_env;
+	MCAutoStringRef t_message, t_env;
+	/* UNCHECKED */ MCStringCreateWithCString("GATEWAY_INTERFACE", &t_message);
 	
-	if (MCS_getenv(MCSTR("GATEWAY_INTERFACE"), &t_env))
-		s_server_cgi = true;
-	else
-		s_server_cgi = false;
+	s_server_cgi = MCS_getenv(*t_message, &t_env);
 	
 	if (!X_open(argc, argv, envp))
 		return False;
@@ -415,12 +411,14 @@ bool X_init(int argc, char *argv[], char *envp[])
 	else
 	{
 		MCS_set_errormode(kMCSErrorModeStderr);
+		MCAutoStringRef t_MCserverinitialscript_string;
 		
 		// If there isn't at least one argument, we haven't got anything to run.
 		if (argc > 1)
-			MCsystem -> ResolveNativePath(*t_argv1_string, MCserverinitialscript);
+			MCsystem -> ResolveNativePath(*t_argv1_string, &t_MCserverinitialscript_string);
 		else
-			MCserverinitialscript = nil;
+			t_MCserverinitialscript_string = nil;
+		MCserverinitialscript = (char*)MCStringGetCString(*t_MCserverinitialscript_string);
 		
 		// Create the $<n> variables.
 		for(int i = 2; i < argc; ++i)
@@ -451,7 +449,7 @@ static bool load_extension_callback(void *p_context, const MCSystemFolderEntry *
 		return true;
 	
 	char *t_filename;
-	if (!MCCStringFormat(t_filename, "%s/externals/%s", MCStringGetCString(s_server_home), p_entry -> name))
+	if (!MCCStringFormat(t_filename, "%s/externals/%s", s_server_home, p_entry -> name))
 		return false;
 
 	MCdispatcher -> loadexternal(t_filename);
@@ -468,18 +466,17 @@ static void X_load_extensions(MCServerScript *p_script)
 	if (MCS_setcurdir(s_server_home) &&
 		MCS_setcurdir(MCSTR("externals")))
 		MCsystem -> ListFolderEntries(load_extension_callback, p_script);
-	
+
 	MCS_setcurdir(*t_dir);
-	
+
 }
 
 void X_main_loop(void)
 {
 	int i;
 	MCstackbottom = (char *)&i;
-	
 
-	if (MCserverinitialscript == nil)
+	if (MCserverinitialscript == NULL)
 		return;
 	
 	MCperror -> clear();
@@ -526,7 +523,7 @@ void X_main_loop(void)
 #endif
 	
 	MCExecPoint ep;
-	if (!MCserverscript -> Include(ep, MCStringGetCString(MCserverinitialscript), false) &&
+	if (!MCserverscript -> Include(ep, MCserverinitialscript, false) &&
 		MCS_get_errormode() != kMCSErrorModeDebugger)
 	{
 		char *t_eerror, *t_efiles;

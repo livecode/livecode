@@ -23,18 +23,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 class MCServerScript;
 
-extern MCStringRef MCserverinitialscript;
+extern char *MCserverinitialscript;
 extern MCServerScript *MCserverscript;
 extern MCSErrorMode MCservererrormode;
 extern MCSOutputTextEncoding MCserveroutputtextencoding;
 extern MCSOutputLineEndings MCserveroutputlineendings;
 
-extern MCStringRef MCsessionsavepath;
-extern MCStringRef MCsessionname;
-extern MCStringRef MCsessionid;
+extern char *MCsessionsavepath;
+extern char *MCsessionname;
+extern char *MCsessionid;
 extern uint32_t MCsessionlifetime;
 
-extern MCStringRef *MCservercgiheaders;
+extern char **MCservercgiheaders;
 extern uint32_t MCservercgiheadercount;
 
 typedef struct mcservercookie_t
@@ -51,6 +51,6 @@ typedef struct mcservercookie_t
 extern MCServerCookie *MCservercgicookies;
 extern uint32_t MCservercgicookiecount;
 
-extern MCStringRef MCservercgidocumentroot;
+extern char *MCservercgidocumentroot;
 
 #endif

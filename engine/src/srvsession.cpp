@@ -345,14 +345,17 @@ bool MCSessionReadSession(MCSession *p_session)
 
 bool MCSessionFindMatchingSession(MCSessionIndexRef p_index, const char *p_session_id, MCSession *&r_session)
 {
-	MCAutoStringRef t_remote_addr_str;
+	MCAutoStringRef p_remote_addr;
+	MCAutoStringRef message;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &message);
+	
+	MCS_getenv(*message, &p_remote_addr);
 	
 	const char *t_remote_addr = NULL;
+	t_remote_addr = MCStringGetCString(*p_remote_addr);
 
-	if (!MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_str))
+	if (t_remote_addr == NULL)
 		t_remote_addr = "";
-	else
-		t_remote_addr = MCStringGetCString(*t_remote_addr_str);
 
 	for (uint32_t i = 0; i < p_index->session_count; i++)
 	{
@@ -392,9 +395,11 @@ bool MCSessionCreateSession(MCSessionIndexRef p_index, const char *p_session_id,
 	MCSession *t_session = NULL;
 
 	MCAutoStringRef t_remote_addr_string;
+	MCAutoStringRef tmp;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &tmp);
+	MCS_getenv(*tmp, &t_remote_addr_string);
 	char *t_remote_addr;
-
-	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
+	if (*t_remote_addr_string != nil)
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
 	
 	t_success = MCMemoryNew(t_session);
@@ -516,7 +521,7 @@ bool MCSessionCloseSession(MCSession *p_session, bool p_update)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCSessionStart(MCStringRef p_session_id, MCSessionRef &r_session)
+bool MCSessionStart(const char *p_session_id, MCSessionRef &r_session)
 {
 	bool t_success = true;
 	
@@ -528,13 +533,13 @@ bool MCSessionStart(MCStringRef p_session_id, MCSessionRef &r_session)
 	
 	if (t_success)
 	{
-		if (p_session_id != NULL  && MCSessionFindMatchingSession(t_index, MCStringGetCString(p_session_id), t_index_session))
+		if (p_session_id != NULL  && MCSessionFindMatchingSession(t_index, p_session_id, t_index_session))
 		{
 			t_success = MCSessionCopySession(t_index_session, t_session);
 		}
 		else
 		{
-			t_success = MCSessionCreateSession(t_index, MCStringGetCString(p_session_id), t_session);
+			t_success = MCSessionCreateSession(t_index, p_session_id, t_session);
 		}
 		
 		MCAutoStringRef t_session_name;
@@ -681,11 +686,14 @@ bool MCSessionGenerateID(char *&r_id)
 	// php calculates session ids by hashing a string composed of REMOTE_ADDR, time in seconds & milliseconds, and a random value
 
 	MCAutoStringRef t_remote_addr_string;
+	MCAutoStringRef tmp;
+	/* UNCHECKED */ MCStringCreateWithCString("REMOTE_ADDR", &tmp);
+	MCS_getenv(*tmp, &t_remote_addr_string);
 	char *t_remote_addr;
-
-	if (MCS_getenv(MCSTR("REMOTE_ADDR"), &t_remote_addr_string))
+	if (*t_remote_addr_string != nil)
 		MCCStringClone(MCStringGetCString(*t_remote_addr_string), t_remote_addr);
-		
+	
+	
 	time_t t_time;
 	time(&t_time);
 	

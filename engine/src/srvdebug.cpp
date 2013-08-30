@@ -64,7 +64,7 @@ static uint32_t s_current_context = 0;
 
 extern MCSErrorMode g_server_error_mode;
 extern MCServerScript *MCserverscript;
-extern MCStringRef MCservercgidocumentroot;
+extern char *MCservercgidocumentroot;
 
 ////////////////////////////////////////////////////////////////////////
 //
@@ -120,11 +120,11 @@ static const char *GetFileForContext(MCExecPoint& ep)
 {
 	const char *t_file;
 	t_file = MCserverscript -> GetFileForContext(ep);
-
-	if (strncmp(t_file, MCStringGetCString(MCservercgidocumentroot), MCStringGetLength(MCservercgidocumentroot)) != 0)
+	
+	if (strncmp(t_file, MCservercgidocumentroot, strlen(MCservercgidocumentroot)) != 0)
 		return t_file;
 	
-	return t_file + MCStringGetLength(MCservercgidocumentroot);
+	return t_file + strlen(MCservercgidocumentroot);
 }
 
 ////////////////////////////////////////////////////////////////////////
@@ -383,8 +383,8 @@ void MCServerDebugBreakpoint(const char *p_action, const char *p_file, uint32_t 
 	
 	// Construct the absolute file path.
 	char *t_filename;
-	t_filename = new char[strlen(p_file) + MCStringGetLength(MCservercgidocumentroot) + 2];
-	strcpy(t_filename, MCStringGetCString(MCservercgidocumentroot));
+	t_filename = new char[strlen(p_file) + strlen(MCservercgidocumentroot) + 2];
+	strcpy(t_filename, MCservercgidocumentroot);
 	if (p_file[0] != '/')
 		strcat(t_filename, "/");
 	strcat(t_filename, p_file);

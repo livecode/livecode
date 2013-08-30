@@ -189,7 +189,7 @@ bool MCSystemFindEvent(MCDateTime p_start_date, MCDateTime p_end_date, MCStringR
 {
 	// TODO - IMPLEMENT SUPPORT FOR API LEVEL 14
 	r_result = MCValueRetain(s_calendar_events_selected);
-    MCLog("MCSystemFindCalendarEvent result: %s", r_result);
+    MCLog("MCSystemFindCalendarEvent result: %s", MCStringGetCString(r_result));
     return true;
 }
 

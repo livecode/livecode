@@ -566,7 +566,6 @@ JNIEXPORT void JNICALL Java_com_runrev_android_nativecontrol_BrowserControl_doJS
     if (t_match)
     {
         MCJavaStringToStringRef(MCJavaGetThreadEnv(), result, MCAndroidBrowserControl::s_js_result);
-		bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef& r_stringref);
         MCValueRelease(MCAndroidBrowserControl::s_js_tag);
         MCAndroidBrowserControl::s_js_tag = nil;
     }

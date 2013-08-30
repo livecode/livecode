@@ -121,7 +121,7 @@ bool MCScreenDC::popupaskdialog(uint32_t p_type, const char *p_title, const char
     
 	if (s_popup_dialog_text != nil)
 	{
-		r_result = MCValueRetain(s_popup_dialog_text);
+		r_result = s_popup_dialog_text;
 		s_popup_dialog_text = nil;
 	}
 	return true;

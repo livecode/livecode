@@ -913,7 +913,7 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 {
 	bool t_success = true;
 	bool t_blocked = true;
-	MCAutoStringRef t_temp_folder_string, t_temp_name_string;
+	MCAutoStringRef p_temp_folder_string, temp_prefix_string, t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;
 	char *t_temp_name = NULL;
@@ -925,10 +925,11 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 	
 	if (t_success)
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(p_temp_folder, &t_temp_folder_string);
+		/* UNCHECKED */ MCStringCreateWithCString(p_temp_folder, &p_temp_folder_string);
+		/* UNCHECKED */ MCStringCreateWithCString(TEMP_PREFIX, &temp_prefix_string);
 		/* UNCHECKED */ MCStringCreateWithCString(t_temp_name, &t_temp_name_string);
 
-		t_success = MCS_create_temporary_file(*t_temp_folder_string, MCSTR(TEMP_PREFIX), t_file_handle, &t_temp_name_string);
+		t_success = MCS_create_temporary_file(*p_temp_folder_string, *temp_prefix_string, t_file_handle, &t_temp_name_string);
 	}
 
 	if (t_success)
