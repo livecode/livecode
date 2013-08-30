@@ -411,6 +411,11 @@ uindex_t MCStringGetNativeChars(MCStringRef self, MCRange p_range, char_t *p_cha
 	return t_count;
 }
 
+bool MCStringIsNative(MCStringRef string)
+{
+	return !(MCStringGetNativeCharPtr(string) == nil);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r_char_count)

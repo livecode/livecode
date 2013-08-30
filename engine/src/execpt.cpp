@@ -1161,7 +1161,8 @@ bool MCExecPoint::copyasdataref(MCDataRef& r_data)
 	MCAutoStringRef t_string;
 	if (!copyasstringref(&t_string))
 		return false;
-	return MCDataCreateWithBytes(MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
+    
+	return MCDataCreateWithBytes((const byte_t *)MCStringGetNativeCharPtr(*t_string), MCStringGetLength(*t_string), r_data);
 }
 
 MCValueRef MCExecPoint::getvalueref(void)

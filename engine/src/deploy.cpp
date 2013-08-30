@@ -355,7 +355,12 @@ static Exec_stat fetch_opt_filepath(MCExecPoint& ep, MCArrayRef array, const cha
 	if (ep . getsvalue() == MCnullmcstring)
 		r_result = NULL;
 	else
-		r_result = MCS_resolvepath(ep . getcstring());
+    {
+        MCAutoStringRef t_resolved_path, t_ep_str;
+		/* UNCHECKED */ ep . copyasstringref(&t_ep_str);
+        MCS_resolvepath(*t_ep_str, &t_resolved_path);
+		r_result = strdup(MCStringGetCString(*t_resolved_path));
+    }
 	return ES_NORMAL;
 }
 
@@ -414,10 +419,11 @@ static Exec_stat fetch_filepath_array(MCExecPoint& ep, MCArrayRef array, const c
 	if (t_success)
 		for(uint32_t i = 0; i < t_path_count; i++)
 		{
-			char *t_unresolved_path;
-			t_unresolved_path = t_paths[i];
-			t_paths[i] = MCS_resolvepath(t_unresolved_path);
-			MCCStringFree(t_unresolved_path);
+			MCAutoStringRef t_unresolved_path;
+			/* UNCHECKED */ MCStringCreateWithCString(t_paths[i], &t_unresolved_path);
+            MCAutoStringRef t_paths_str;
+            MCS_resolvepath(*t_unresolved_path, &t_paths_str);
+			t_paths[i] = strdup(MCStringGetCString(*t_paths_str));
 		}
 	
 	if (t_success)

@@ -161,7 +161,11 @@ void MCS_unsetenv(MCStringRef p_name_string)
 
 bool MCS_getenv(MCStringRef p_name_string, MCStringRef& r_result)
 {
-	return MCsystem -> GetEnv(p_name_string, r_result);
+	MCsystem -> GetEnv(p_name_string, r_result);
+    if (r_result != nil)
+        return true;
+    return false;
+        
 }
 
 real8 MCS_getfreediskspace(void)
@@ -1463,7 +1467,7 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
 	MCresult->sets("not supported");
 }
 
-void MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result)
+bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result)
 {
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
@@ -1566,7 +1570,7 @@ bool MCSTextConvertToUnicode(MCTextEncoding p_encoding, const void *p_input, uin
 //{
 //	return False;
 //}
-
+//
 //MCSocket *MCS_open_socket(MCNameRef p_name, Boolean p_datagram, MCObject *p_object, MCNameRef p_message, Boolean p_secure, Boolean p_ssl_verify, MCStringRef p_ssl_cert_file)
 //{
 //	return NULL;

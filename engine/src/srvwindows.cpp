@@ -309,7 +309,7 @@ struct MCWindowsSystem: public MCSystemInterface
 	{
 		char t_buffer[MAXHOSTNAMELEN];
 		gethostname(t_buffer, MAXHOSTNAMELEN);
-		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", t_buffer, MCcmd);
+		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", t_buffer, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_interval)
@@ -346,12 +346,12 @@ struct MCWindowsSystem: public MCSystemInterface
 		}
 	}
 
-	virtual bool GetEnv(MCStringRef p_name, MCStringRef& r_value)
+	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
 	{
 		if (!getenv(MCStringGetCString(p_name)))
-			return /* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+			/* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
 		else
-			return false;
+			return;
 	}
 
 	

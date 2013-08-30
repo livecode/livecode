@@ -2124,30 +2124,24 @@ void MCFilesSetUMask(MCExecContext& ctxt, uinteger_t p_value)
 }
 void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCfiletype, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCfiletype);
 }
 void MCFilesSetFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCfiletype = strclone(MCStringGetCString(p_value));
+    MCValueRelease(MCfiletype);
+	MCfiletype = MCValueRetain(p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCFilesGetSerialControlString(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCserialcontrolsettings, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCserialcontrolsettings);
 }
 
 void MCFilesSetSerialControlString(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCserialcontrolsettings;
-	MCserialcontrolsettings = strclone(MCStringGetCString(p_value));
+	MCValueAssign(MCserialcontrolsettings, p_value);
 }
 
 void MCFilesGetHideConsoleWindows(MCExecContext& ctxt, bool& r_value)
@@ -2164,16 +2158,12 @@ void MCFilesSetHideConsoleWindows(MCExecContext& ctxt, bool p_value)
 
 void MCFilesGetShellCommand(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MCshellcmd, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MCshellcmd);
 }
 
 void MCFilesSetShellCommand(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MCshellcmd;
-	MCshellcmd = strclone(MCStringGetCString(p_value));	
+	MCValueAssign(MCshellcmd, p_value);	
 }
 
 void MCFilesGetCurrentFolder(MCExecContext& ctxt, MCStringRef& r_value)

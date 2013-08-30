@@ -1337,8 +1337,10 @@ bool MCS_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_c
 		}
 		else
 		{
-			t_creator = MCSwapInt32NetworkToHost(*(OSType*)MCfiletype);
-			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(MCfiletype + 4));
+            const char *t_char_ptr;
+            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
+			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
 		}
 		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
 		
@@ -1384,8 +1386,10 @@ const char *MCS_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool
 			}
 			else
 			{
-				memcpy((char*)&creator, MCfiletype, 4);
-				memcpy((char*)&ftype, &MCfiletype[4], 4);
+                const char *t_char_ptr;
+                t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+				memcpy((char*)&creator, t_char_ptr, 4);
+				memcpy((char*)&ftype, t_char_ptr + 4, 4);
 				creator = MCSwapInt32NetworkToHost(creator);
 				ftype = MCSwapInt32NetworkToHost(ftype);
 			}

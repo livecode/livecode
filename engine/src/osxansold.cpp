@@ -316,10 +316,13 @@ int MCA_do_file_dialog_tiger(MCExecPoint& ep, const char *p_title, const char *p
 		uint32_t t_type_count;
 		char **t_types = NULL;
 		build_types_from_filter_records(p_filters, p_filter_count, t_types, t_type_count);
-		char *t_resolved_path = MCS_resolvepath(p_initial);
-		MCRemoteFileDialog(ep, p_title, p_prompt, t_types, p_filter_count, NULL, t_resolved_path, t_save, t_plural);
-		if (t_resolved_path != NULL)
-			delete [] t_resolved_path;
+        
+        MCAutoStringRef t_unresolved_path_str, t_resolved_path_str;
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_unresolved_path_str);
+        MCS_resolvepath(*t_unresolved_path_str, &t_resolved_path_str);
+        
+		MCRemoteFileDialog(ep, p_title, p_prompt, t_types, p_filter_count, NULL, MCStringGetCString(*t_resolved_path_str), t_save, t_plural);
+	
 		if (t_types != NULL)
 		{
 			for (uint32_t i = 0; i < p_filter_count; i++)
@@ -367,7 +370,9 @@ int MCA_do_file_dialog_tiger(MCExecPoint& ep, const char *p_title, const char *p
 	
 	// Determine wheter the initial location is a folder
 	bool t_initial_is_folder;
-	if (p_initial != NULL && MCS_exists(p_initial, False))
+	MCAutoStringRef t_initial_loc_str;
+	/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial_loc_str);
+	if (p_initial != NULL && MCS_exists(*t_initial_loc_str, False))
 		t_initial_is_folder = true;
 	else
 		t_initial_is_folder = false;
@@ -916,11 +921,13 @@ int MCA_folder_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt,
 	
 	if (!MCModeMakeLocalWindows())
 	{
-		char *t_resolved_initial_path = MCS_resolvepath(p_initial);
+        MCAutoStringRef t_resolved_initial_path_str;
+        
+        MCS_resolvepath(MCSTR(p_initial), &t_resolved_initial_path_str);
 		
-		MCRemoteFolderDialog(ep, p_title, p_prompt, t_resolved_initial_path);
-		if (t_resolved_initial_path != NULL)
-			free(t_resolved_initial_path);
+		MCRemoteFolderDialog(ep, p_title, p_prompt, MCStringGetCString(*t_resolved_initial_path_str));
+	//	if (t_resolved_initial_path != NULL)
+	//		free(t_resolved_initial_path);
 		return 0;
 	}
 	

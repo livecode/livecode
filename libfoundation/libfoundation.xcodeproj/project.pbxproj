@@ -37,6 +37,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-data.cpp"; path = "src/foundation-data.cpp"; sourceTree = "<group>"; };
 		4D7FA78F1594E09500EEF440 /* foundation-array.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-array.cpp"; path = "src/foundation-array.cpp"; sourceTree = "<group>"; };
 		4D7FA7901594E09500EEF440 /* foundation-core.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-core.cpp"; path = "src/foundation-core.cpp"; sourceTree = "<group>"; };
 		4D7FA7911594E09500EEF440 /* foundation-debug.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = "foundation-debug.cpp"; path = "src/foundation-debug.cpp"; sourceTree = "<group>"; };
@@ -116,6 +117,7 @@
 		4DF42A570B048683003F2D95 /* Source */ = {
 			isa = PBXGroup;
 			children = (
+				1D17A9C517C22DD30024CCA8 /* foundation-data.cpp */,
 				4D7FA78F1594E09500EEF440 /* foundation-array.cpp */,
 				4D7FA7901594E09500EEF440 /* foundation-core.cpp */,
 				BEF2C0ED17BA2E1300E96459 /* foundation-data.cpp */,

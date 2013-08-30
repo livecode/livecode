@@ -141,7 +141,7 @@ static void handle_signal(int sig)
 	case SIGILL:
 	case SIGBUS:
 	case SIGSEGV:
-		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+		fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
 		MCS_killall();
 		exit(-1);
 	case SIGHUP:
@@ -266,7 +266,7 @@ void MCS_init()
 	if (!MCS_isatty(0))
 		MCS_nodelay(0);
 
-	MCshellcmd = strclone("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 
 	// Initialize our case mapping tables
 	
@@ -1037,7 +1037,7 @@ IO_stat MCS_runcmd(MCExecPoint &ep)
 				close(2);
 				dup(toparent[1]);
 				close(toparent[1]);
-				execl(MCshellcmd, MCshellcmd, "-s", NULL);
+				execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
 				_exit(-1);
 			}
 			MCS_checkprocesses();
@@ -1151,20 +1151,22 @@ void MCS_setumask(int4 newmask)
 	umask(newmask);
 }
 
-Boolean MCS_mkdir(const char *path)
+Boolean MCS_mkdir(MCStringRef p_path)
 {
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = mkdir(path, 0777) == 0;
-	delete newpath;
-	return done;
+	MCAutoStringRef t_resolved_path_string;
+	if (MCS_resolvepath(p_path, &t_resolved_path_string))
+		return mkdir(MCStringGetCString(*t_resolved_path_string, 0777)) == 0;
+	
+	return false;
 }
 
-Boolean MCS_rmdir(const char *path)
+Boolean MCS_rmdir(MCStringRef p_path)
 {
-	char *newpath = MCS_resolvepath(path);
-	Boolean done = rmdir(path) == 0;
-	delete newpath;
-	return done;
+	MCAutoStringRef t_resolved_path_string;
+	if (MCS_resolvepath(p_path, &t_resolved_path_string))
+		return rmdir(MCStringGetCString(*t_resolved_path_string)) == 0;
+	
+	return false;
 }
 
 IO_stat MCS_trunc(IO_handle stream)
@@ -1355,7 +1357,7 @@ bool MCS_getaddress(MCStringRef& r_address)
 {
 	static struct utsname u;
 	uname(&u);
-	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 }
 
 bool MCS_getmachine(MCStringRef& r_string)
@@ -1383,12 +1385,12 @@ void MCS_loadfile(MCExecPoint &ep, Boolean binary)
 		MCresult->sets("can't open file");
 		return;
 	}
-	char *tpath = ep.getsvalue().clone();
-	char *newpath = MCS_resolvepath(tpath);
-	delete tpath;
-	int fd = open(newpath, O_RDONLY);
+	MCAutoStringRef t_path, t_newpath;
+	ep . copyasstringref(&t_path);
+	MCS_resolvepath(*t_path, &t_newpath);
+
+	int fd = open(MCStringGetCString(*t_newpath), O_RDONLY);
 	ep.clear();
-	delete newpath;
 	if (fd == -1)
 		MCresult->sets("can't open file");
 	else
@@ -1454,6 +1456,8 @@ void MCS_loadresfile(MCExecPoint &ep)
 	ep.clear();
 	MCresult->sets("error writing file");
 }
+
+
 
 void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean b)
 {
@@ -1936,7 +1940,7 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
 
-	char *controlptr = strclone(MCserialcontrolsettings);
+	char *controlptr = MCStringGetCString(MCserialcontrolsettings);
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)

@@ -52,8 +52,8 @@ static void create_var(char *v)
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
 
-	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	MCstacknames[MCnstacks++] = v;
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+	/* UNCHECKED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
 static void create_var(uint4 p_v)
@@ -131,42 +131,18 @@ bool X_init(int argc, char *argv[], char *envp[])
 	delete MCeerror;
 	delete MCresult;
 #endif
-
-	////
 	
-	MCcmd = argv[0];
+	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
 
 #if defined(_MAC_DESKTOP)
-	{
-		char *t_new_cmd;
-		uint4 t_length;
-		t_length = strlen(MCcmd);
-		t_new_cmd = new char[t_length + 1];
-		MCS_utf8tonative(MCcmd, t_length, t_new_cmd, t_length);
-		t_new_cmd[t_length] = 0;
-		MCcmd = t_new_cmd;
-	}
+	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)argv[0], strlen(argv[0]), kMCStringEncodingUTF8, MCcmd);
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
-	if (MCcmd[0] != '/')
-	{//not c:/mc/xxx, not /mc/xxx
-		char *tpath = MCS_getcurdir();
-		if (tpath && strlen(MCcmd) + strlen(tpath) < PATH_MAX)
-		{
-			strcpy(apppath,tpath);
-			strcat(apppath, "/");
-			char *tempmccmd = MCcmd;
-			if (*tempmccmd == '.' && tempmccmd[1] != '.')
-				tempmccmd++;
-			if (*tempmccmd == '/')
-				tempmccmd++;
-			strcat(apppath,  tempmccmd);
-			if (MCcmd != argv[0])
-				delete[] MCcmd;
-			MCcmd = apppath;
-			delete tpath;
-		}
+	{
+      MCStringRef t_resolved_cmd;
+      MCS_resolvepath(MCcmd, t_resolved_cmd);
+      MCValueAssign(MCcmd, t_resolved_cmd);
 	}
 #endif
 
@@ -180,7 +156,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		{
 			if (++i >= argc || *argv[i] == '-')
 			{
-				fprintf(stderr, "%s: bad display name\n", MCcmd);
+				fprintf(stderr, "%s: bad display name\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			MCdisplayname = argv[i];
@@ -199,7 +175,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			char *geometry = NULL;
 			if (++i >= argc)
 			{
-				fprintf(stderr, "%s: bad geometry\n", MCcmd);
+				fprintf(stderr, "%s: bad geometry\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			geometry = argv[i];
@@ -257,7 +233,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			uint4 visualid = 0;
 			if (++i >= argc || *argv[i] == '-' || !MCU_stoui4(argv[i], visualid))
 			{
-				fprintf(stderr, "%s: bad visual id\n", MCcmd);
+				fprintf(stderr, "%s: bad visual id\n", MCStringGetCString(MCcmd));
 				return False;
 			}
 			MCvisualid = visualid;
@@ -279,7 +255,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 			        [-u[i]] (don't create graphical user interface)\n\
 			        [-v[isualid] n] (use visual id n as listed from xdpyinfo)\n\
 			        [-w[indowid] n] (watch window id n for commands)\n\
-			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCcmd);
+			        [stackname(s) | argument(s)]\n", MCNameGetCString(MCN_version_string), MCStringGetCString(MCcmd));
 			return False;
 		}
 		if (argv[i] != NULL && strlen(argv[i]) > 0)
@@ -299,7 +275,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 		for(int i = 0 ; i < MCnstacks ; i++)
 		{
 			MCStack *sptr;
-			if (MCdispatcher->loadfile(MCstacknames[i], sptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(MCStringGetCString(MCstacknames[i]), sptr) == IO_NORMAL)
 				sptr->open();
 		}
 		delete MCstacknames;

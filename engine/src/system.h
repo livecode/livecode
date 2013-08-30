@@ -428,7 +428,7 @@ struct MCSystemInterface
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
 	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
-	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset) = 0;
+	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;

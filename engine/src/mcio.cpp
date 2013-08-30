@@ -728,6 +728,41 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
 	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
 }
 
+IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
+{
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	uint4 t_length;
+	char *t_bytes;
+	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
+		return stat;
+		
+	if (!MCStringCreateWithBytesAndRelease((const byte_t *)t_bytes, t_length, t_encoding, r_string))
+	{
+		delete t_bytes;
+		return IO_ERROR;
+	}
+		
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unicode, uint1 size)
+{	
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	MCDataRef t_data = nil;
+	if (!MCStringEncode(p_string, t_encoding, false, t_data))
+		return IO_ERROR;
+	
+	uindex_t t_length = MCDataGetLength(t_data);
+	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
+	MCValueRelease(t_data);
+	return stat;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 int64_t MCS_fake_fsize(IO_handle stream)

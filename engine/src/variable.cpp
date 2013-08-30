@@ -365,7 +365,9 @@ Exec_stat MCVariable::remove(MCExecPoint& ep, MCNameRef *p_path, uindex_t p_leng
 		{
 			if (!isdigit(MCNameGetCharAtIndex(name, 1)) && MCNameGetCharAtIndex(name, 1) != '#')
 			{
-				MCS_unsetenv(MCNameGetString(name));
+				MCAutoStringRef t_env;
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				MCS_unsetenv(*t_env);
 			}
 		}
 	}
@@ -522,7 +524,9 @@ void MCVariable::synchronize(MCExecPoint& ep, Boolean notify)
 			MCAutoStringRef t_string;
 			if (ep . copyasstringref(&t_string))
 			{
-				MCS_setenv(MCNameGetString(name), *t_string);
+				MCAutoStringRef t_env;
+				/* UNCHECKED */ MCStringCopySubstring(MCNameGetString(name), MCRangeMake(1, MCStringGetLength(MCNameGetString(name))), &t_env);
+				MCS_setenv(*t_env, *t_string);
 			}
 		}
 	}

@@ -439,7 +439,7 @@ static bool load_custom_font_file_into_buffer_from_path(const char *p_path, char
     char *t_font_path;
     t_font_path = nil;
     if (t_success)
-        t_success = MCCStringFormat(t_font_path, "%s/%s%s", MCcmd, s_font_folder, p_path);
+        t_success = MCCStringFormat(t_font_path, "%s/%s%s", MCStringGetCString(MCcmd), s_font_folder, p_path);
     
     if (t_success)
         t_success = MCS_exists(t_font_path, true);

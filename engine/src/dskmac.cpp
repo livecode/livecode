@@ -521,20 +521,20 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 		if (errno != noErr)
 			return errno;
 		// extract FSSpec record's info & form a file name for MC to use
-		char *fullPathName = MCS_fsref_to_path(t_doc_fsref);
+        MCAutoStringRef t_full_path_name;
+		MCS_fsref_to_path(t_doc_fsref, &t_full_path_name);
         
 		if (MCModeShouldQueueOpeningStacks())
 		{
-			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-			MCstacknames[MCnstacks++] = strclone(fullPathName);
+			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+			MCValueAssign(MCstacknames[MCnstacks++], *t_full_path_name);
 		}
 		else
 		{
 			MCStack *stkptr;  //stack pointer
-			if (MCdispatcher->loadfile(fullPathName, stkptr) == IO_NORMAL)
+			if (MCdispatcher->loadfile(MCStringGetCString(*t_full_path_name), stkptr) == IO_NORMAL)
 				stkptr->open();
 		}
-		delete fullPathName;
 	}
 	AEDisposeDesc(&docList);
 	return noErr;
@@ -917,7 +917,7 @@ static void configureSerialPort(int sRefNum)
 	cfsetispeed(&theTermios,  B9600);
 	theTermios.c_cflag = CS8;
     
-	char *controlptr = strclone(MCserialcontrolsettings);
+	char *controlptr = strclone(MCStringGetCString(MCserialcontrolsettings));
 	char *str = controlptr;
 	char *each = NULL;
 	while ((each = strchr(str, ' ')) != NULL)
@@ -1007,8 +1007,10 @@ void MCS_setfiletype(MCStringRef p_new_path)
 	if (FSGetCatalogInfo(&t_fsref, kFSCatInfoFinderInfo, &t_catalog, NULL, NULL, NULL) == noErr)
 	{
 		// Set the creator and filetype of the catalog.
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+        const char *t_char_ptr;
+        t_char_ptr = MCStringGetCString(MCfiletype);
+		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileType, t_char_ptr + 4, 4);
+		memcpy(&((FileInfo *) t_catalog . finderInfo) -> fileCreator, t_char_ptr, 4);
 		((FileInfo *) t_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileType);
 		((FileInfo *) t_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_catalog . finderInfo) -> fileCreator);
         
@@ -1173,7 +1175,7 @@ static void handle_signal(int sig)
         case SIGILL:
         case SIGBUS:
         case SIGSEGV:
-            fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+            fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
             MCS_killall();
             return;
             
@@ -1532,7 +1534,7 @@ public:
 		return t_handle;
 	}
     
-    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, const char *serialcontrolsettings)
+    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, MCStringRef serialcontrolsettings)
     {
 		FILE *fptr;
         MCStdioFileHandle *t_handle;
@@ -3894,7 +3896,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
         //   property here (otherwise it is nil in -ui mode).
-        MCshellcmd = strclone("/bin/sh");
+        MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
         
         //
         
@@ -4005,7 +4007,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     if (err == noErr)
                     {
                         p2cstr(proxystr);
-                        MChttpproxy = strclone((char *)proxystr);
+                        /* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, MChttpproxy);
                     }
                 }
                 ICStop(icinst);
@@ -4181,7 +4183,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_getaddress_dsk_mac */
         static struct utsname u;
         uname(&u);
-        return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+        return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
     }
     
 	virtual uint32_t GetProcessId(void)
@@ -4448,8 +4450,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         if (!t_error)
         {
-            memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-            memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+            const char *t_char_ptr;
+            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+            memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, t_char_ptr + 4, 4);
+            memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, t_char_ptr, 4);
             ((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
             ((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
         }
@@ -6013,7 +6017,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return new IO_header(t_handle, 0);
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset)
     {
         MCStdioFileHandle *t_handle;
         t_handle = MCStdioFileHandle::OpenDevice(p_path, p_control_string);
@@ -6635,7 +6639,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                     close(2);
                     dup(toparent[1]);
                     close(toparent[1]);
-                    execl(MCshellcmd, MCshellcmd, "-s", NULL);
+                    execl(MCStringGetCString(MCshellcmd), MCStringGetCString(MCshellcmd), "-s", NULL);
                     _exit(-1);
                 }
                 CheckProcesses();
@@ -8366,7 +8370,7 @@ void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Bool
 				"-elevated-slave",
 				nil
 			};
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCStringGetCString(MCcmd), kAuthorizationFlagDefaults, t_arguments, &t_stream);
 		}
 		
 		uint32_t t_pid;

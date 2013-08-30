@@ -103,7 +103,7 @@ extern void MCS_send(MCStringRef mess, MCStringRef program,
 	                     MCStringRef eventtype, Boolean reply);
 extern void MCS_reply(MCStringRef mess, MCStringRef keyword, Boolean err);
 extern void MCS_request_ae(MCStringRef message, uint2 ae, MCStringRef&r_value);
-extern void MCS_request_program(MCStringRef message, MCStringRef program, MCStringRef& r_value);
+extern bool MCS_request_program(MCStringRef message, MCStringRef program, MCStringRef& r_result);
 extern void MCS_copyresourcefork(MCStringRef source, MCStringRef dest);
 extern bool MCS_copyresource(MCStringRef p_source, MCStringRef p_dest, MCStringRef p_type,
 							 MCStringRef p_name, MCStringRef p_newid, MCStringRef& r_error);

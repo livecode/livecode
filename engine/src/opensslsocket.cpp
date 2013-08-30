@@ -296,7 +296,6 @@ bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 	if (!MCS_init_sockets())
 		return false;
 
-	//char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
@@ -442,7 +441,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCSTR(MCdefaultnetworkinterface), t_bind_addr))
+			MCAutoStringRef MCdefaultnetworkinterface_string;
+			/* UNCHECKED */ MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string);
+			if (!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
