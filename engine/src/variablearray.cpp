@@ -1372,6 +1372,9 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 //   to ensure other properties don't set them differently.
 static struct { Properties prop; const char *tag; } s_preprocess_props[] =
 {
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure lockLocation of groups is set before rectangle
+    { P_LOCK_LOCATION, "lockLocation" },
+    { P_LOCK_LOCATION, "lockLoc" },
     { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
     { P_RECTANGLE, "rect" },     // synonym
     { P_WIDTH, "width" },        // incase left,right are in the array
@@ -1380,6 +1383,12 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
 	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
     { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
+    // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
+    { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
+    { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure button text has precedence over label and menuHistory
+    { P_TEXT, "text" }, 
+    { P_MENU_HISTORY, "menuHistory" },
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
