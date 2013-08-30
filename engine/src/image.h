@@ -326,7 +326,7 @@ class MCImage : public MCControl
 	int2 repeatcount;
 	int2 irepeatcount;
 	uint1 resizequality;
-	MCStringRef filename;
+	char *filename;
 	static int2 magmx;
 	static int2 magmy;
 	static MCRectangle magrect;

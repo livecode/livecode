@@ -157,7 +157,7 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	}
 
 	if (iref.flags & F_HAS_FILENAME)
-		filename = MCValueRetain(iref.filename);
+		/* UNCHECKED */ MCCStringClone(iref.filename, filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -186,7 +186,7 @@ MCImage::~MCImage()
 	}
 
 	if (filename != nil)
-		MCValueRelease(filename);
+		MCCStringFree(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -1673,7 +1673,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -2161,11 +2161,9 @@ bool MCImage::setfilename(const char *p_filename)
 		flags |= F_HAS_FILENAME;
 
 		if (filename != nil)
-		{
-			MCAutoStringRef tmp_fname;
-			/* UNCHECKED */ MCStringCreateWithCString(t_filename, &tmp_fname);
-			MCValueAssign(filename, *tmp_fname);
-		}
+			MCCStringFree(filename);
+		filename = t_filename;
+	
 	}
 	else
 		MCCStringFree(t_filename);
