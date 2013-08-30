@@ -313,6 +313,21 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardByName, 5)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, ObjectOfCardOrStackById, 5)
 MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackByValue, 2)
 
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HomeStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, HelpStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, DefaultStackAsOptionalObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, StackOfOptionalStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, SubstackOfOptionalStackById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByOrdinal, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundById, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, OptionalStackWithBackgroundByName, 3)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByOrdinal, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackById, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, CardOfOptionalStackByName, 4)
+MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
+
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
@@ -2237,18 +2252,33 @@ void MCInterfaceEvalFocusedObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_ob
     ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }
 
-void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
+static MCStack *MCInterfaceTryToEvalBinaryStack(MCStringRef p_data, bool& r_binary_fail)
 {
     uint4 offset;
     MCStack *t_stack;
+    bool t_binary_fail;
+    
     t_stack = nil;
+    t_binary_fail = false;
     
     if (MCU_offset(SIGNATURE, MCStringGetCString(p_data), offset) && (MCStringGetLength(p_data) > 8 && strncmp(MCStringGetCString(p_data), "REVO", 4) == 0))
     {
         IO_handle stream = MCS_fakeopen(MCStringGetOldString(p_data));
         /* UNCHECKED */ MCdispatcher->readfile(NULL, NULL, stream, t_stack);
         MCS_close(stream);
+        t_binary_fail = t_stack == nil;
     }
+
+    r_binary_fail = t_binary_fail;
+    return t_stack;
+}
+                                           
+void MCInterfaceEvalBinaryStackAsObject(MCExecContext& ctxt, MCStringRef p_data, MCObjectPtr& r_object)
+{
+    MCStack *t_stack;
+    bool t_binary_fail;
+    
+    t_stack = MCInterfaceTryToEvalBinaryStack(p_data, t_binary_fail);
     
     if (t_stack != nil)
     {
@@ -2312,7 +2342,7 @@ void MCInterfaceEvalStackByValue(MCExecContext& ctxt, MCValueRef p_value, MCObje
     
     MCStack *t_stack;
     
-    integer_t t_id;
+    integer_t t_id;                            
     if (MCU_stoi4((MCStringRef)p_value, t_id))
     {
         t_stack = MCdefaultstackptr -> findstackid(t_id);
@@ -2924,4 +2954,255 @@ void MCInterfaceEvalObjectOfCardByName(MCExecContext& ctxt, MCObjectPtr p_card, 
     }
     
     ctxt . LegacyThrow(EE_CHUNK_NOOBJECT);
+}
+
+// The following are used by MCGo, and do not throw any errors. If the incoming object pointer is nil, they return nil.
+
+void MCInterfaceEvalDefaultStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdefaultstackptr;
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalHomeStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdispatcher -> gethome();
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalHelpStackAsOptionalObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    r_object . object = MCdefaultstackptr->findstackname(MCM_help);
+    r_object . part_id = 0;
+}
+
+void MCInterfaceEvalStackOfOptionalStackByName(MCExecContext& ctxt, MCNameRef p_name, MCObjectPtr p_parent, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+    {
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findstackname(p_name);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+}
+
+void MCInterfaceEvalStackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findstackid(p_id);
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+}
+
+void MCInterfaceEvalOptionalStackOrCardByValue(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
+{
+    ctxt . SetTheResultToEmpty();
+    
+    MCStack *t_stack;
+    bool t_binary_fail;
+    
+    t_stack = MCInterfaceTryToEvalBinaryStack((MCStringRef)p_value, t_binary_fail);
+    
+    if (t_binary_fail)
+    {
+        ctxt . SetTheResultToStaticCString("can't build stack from string");
+        r_object . object = nil;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    if (t_stack == nil)
+    {
+        integer_t t_id;
+        if (MCU_stoi4((MCStringRef)p_value, t_id))
+            t_stack = MCdefaultstackptr -> findstackid(t_id);
+    }
+    
+    if (t_stack == nil)
+        t_stack = MCdefaultstackptr -> findstackname((MCNameRef)p_value);
+    
+    if (t_stack != nil)
+    {
+        r_object . object = t_stack;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    bool t_parse_error;
+    
+    if (!MCEngineEvalValueAsObject(p_value, false, r_object, t_parse_error))
+    {
+        if (t_parse_error)
+            ctxt . SetTheResultToStaticCString("no such card");
+        r_object . object = nil;
+        r_object . part_id = 0;
+    }
+}
+
+void MCInterfaceEvalSubstackOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_parent, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackname(p_name);
+
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+
+}
+
+void MCInterfaceEvalSubstackOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_parent, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_parent . object != nil)
+        t_stack = static_cast<MCStack *>(p_parent . object) -> findsubstackid(p_id);
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_parent . part_id;
+    return;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, Chunk_term p_ordinal_type, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background = t_stack -> getbackgroundbyordinal(p_ordinal_type);
+        t_stack -> setbackground(t_background);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundById(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_id, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background =  t_stack -> getbackgroundbyid(p_id);
+        t_stack -> setbackground(t_background);
+    }
+    
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalOptionalStackWithBackgroundByName(MCExecContext& ctxt, MCObjectPtr p_stack, MCNameRef p_name, MCObjectPtr& r_stack)
+{
+    MCStack *t_stack;
+    t_stack = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCGroup *t_background;
+        
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        t_background = t_stack -> getbackgroundbyname(p_name);
+    }
+        
+    r_stack . object = t_stack;
+    r_stack . part_id = p_stack . part_id;
+}
+
+void MCInterfaceEvalCardOfOptionalStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, Chunk_term p_ordinal_type, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        if (p_ordinal_type == CT_RECENT)
+            t_card = MCrecent->getrel(-1);
+        else
+        {
+            MCStack *t_stack;
+            t_stack = static_cast<MCStack *>(p_stack . object);
+            if (p_marked)
+                t_stack -> setmark();
+            t_card = t_stack -> getchild(CT_ID, kMCEmptyString, p_ordinal_type);
+            t_stack -> clearmark();
+            t_stack -> clearbackground();
+        }
+    }
+    
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+}
+
+void MCInterfaceEvalThisCardOfOptionalStack(MCExecContext& ctxt, MCObjectPtr p_stack, MCObjectPtr& r_card)
+{
+    MCInterfaceEvalCardOfOptionalStackByOrdinal(ctxt, p_stack, false, CT_THIS, r_card);
+}
+
+void MCInterfaceEvalCardOfOptionalStackById(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, uinteger_t p_id, MCObjectPtr& r_card)
+{
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        
+        if (p_marked)
+            t_stack -> setmark();
+        t_card = t_stack -> getchildbyid(p_id);
+        t_stack -> clearmark();
+        t_stack -> clearbackground();
+    }
+    
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
+}
+
+void MCInterfaceEvalCardOfOptionalStackByName(MCExecContext& ctxt, MCObjectPtr p_stack, bool p_marked, MCNameRef p_name, MCObjectPtr& r_card)
+{
+    if (MCStringIsEqualToCString(MCNameGetString(p_name), "window", kMCCompareExact))
+    {
+        MCInterfaceEvalThisCardOfOptionalStack(ctxt, p_stack, r_card);
+        return;
+    }
+    
+    MCCard *t_card;
+    t_card = nil;
+    
+    if (p_stack . object != nil)
+    {
+        MCStack *t_stack;
+        t_stack = static_cast<MCStack *>(p_stack . object);
+        
+        if (p_marked)
+            t_stack -> setmark();
+        r_card . object = t_stack -> getchildbyname(p_name);
+        t_stack -> clearmark();
+        t_stack -> clearbackground();
+    }
+
+    r_card . object = t_card;
+    r_card . part_id = t_card != nil ? t_card -> getid() : p_stack . part_id;
 }

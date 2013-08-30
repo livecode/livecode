@@ -1554,7 +1554,7 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
+bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error)
 {
     MCExecPoint ep(nil,nil,nil);
     ep . setvalueref(p_value);
@@ -1564,15 +1564,23 @@ void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObject
     Symbol_type type;
     Exec_stat stat;
     
-    if (tchunk->parse(sp, False) == PS_NORMAL
-        && sp.next(type) == PS_EOF)
+    bool t_parse_error;
+    t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
+    if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
         stat = ES_NORMAL;
     MCerrorlock--;
     if (stat == ES_NORMAL)
         stat = tchunk->getobj(ep, r_object, False);
     delete tchunk;
     
-    if (stat != ES_NORMAL)
+    r_parse_error = t_parse_error;
+    return stat == ES_NORMAL;
+}
+
+void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
+{
+    bool t_parse_error;
+    if (MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
         ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
 }
 
