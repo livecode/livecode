@@ -83,7 +83,7 @@ public:
 	static void RemoveRep(MCCachedImageRep *p_rep);
 	static void MoveRepToHead(MCCachedImageRep *p_rep);
 
-	static bool FindReferencedWithFilename(const char *p_filename, MCCachedImageRep *&r_rep);
+	static bool FindReferencedWithFilename(MCStringRef p_filename, MCCachedImageRep *&r_rep);
 
 	static void FlushCache();
 	static void FlushCacheToLimit();
@@ -164,9 +164,9 @@ public:
 
 	//////////
 
-	const char *GetFilename()
+	void GetFilename(MCStringRef& r_fname)
 	{
-		return m_file_name;
+		r_fname = MCValueRetain(m_file_name);
 	}
 
 	//////////
@@ -175,7 +175,7 @@ protected:
 	// open a datastream to the referenced image file
 	bool GetDataStream(IO_handle &r_stream);
 
-	char *m_file_name;
+	MCStringRef m_file_name;
 
 	// hold data from remote image
 	void *m_url_data;
@@ -304,7 +304,7 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
+bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);

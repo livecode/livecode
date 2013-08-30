@@ -233,7 +233,7 @@ void MCGraphicsExecPrepareImageFile(MCExecContext& ctxt, MCStringRef p_filename)
 	//		MCU_fix_path(t_filename);
 	
 	MCImageRep *t_rep;
-	MCImageRepGetReferenced(MCStringGetCString(*t_resolved), t_rep);
+	MCImageRepGetReferenced(*t_resolved, t_rep);
 	
 	if (t_rep != nil)
 	{

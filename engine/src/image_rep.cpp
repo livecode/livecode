@@ -231,12 +231,14 @@ void MCCachedImageRep::init()
 	s_cache_limit = DEFAULT_IMAGE_REP_CACHE_SIZE;
 }
 
-bool MCCachedImageRep::FindReferencedWithFilename(const char *p_filename, MCCachedImageRep *&r_rep)
+bool MCCachedImageRep::FindReferencedWithFilename(MCStringRef p_filename, MCCachedImageRep *&r_rep)
 {
 	for (MCCachedImageRep *t_rep = s_head; t_rep != nil; t_rep = t_rep->m_next)
 	{
+		MCAutoStringRef t_filename;
+		static_cast<MCReferencedImageRep*>(t_rep)->GetFilename(&t_filename);
 		if (t_rep->GetType() == kMCImageRepReferenced &&
-			MCCStringEqual(static_cast<MCReferencedImageRep*>(t_rep)->GetFilename(), p_filename))
+			MCStringIsEqualTo(*t_filename, p_filename, kMCStringOptionCompareExact))
 		{
 			r_rep = t_rep;
 			return true;
@@ -281,7 +283,7 @@ void MCCachedImageRep::MoveRepToHead(MCCachedImageRep *p_rep)
 ////////////////////////////////////////////////////////////////////////////////
 
 //stand-in implementation which just returns a new image rep
-bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
+bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 {
 	bool t_success = true;
 	
@@ -294,7 +296,7 @@ bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep)
 		return true;
 	}
 	
-	t_rep = new MCReferencedImageRep(p_filename);
+	t_rep = new MCReferencedImageRep(MCStringGetCString(p_filename));
 	
 	t_success = t_rep != nil;
 	if (t_success)

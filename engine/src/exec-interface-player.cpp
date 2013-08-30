@@ -242,24 +242,21 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 	if (filename == nil)
 		return;
 	
-	if (MCStringCreateWithCString(filename, r_name))
-		return;
-
-	ctxt . Throw();
+	r_name = MCValueRetain(filename);
 }
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == NULL || p_name == nil ||
-		!MCStringIsEqualToCString(p_name, filename, kMCCompareExact))
+	if (filename == nil || p_name == nil ||
+		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
-		delete filename;
+		MCValueRelease(filename);
 		filename = NULL;
 		playstop();
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
 		if (p_name != nil)
-			filename = strclone(MCStringGetCString(p_name));
+			filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
 		Redraw();
 	}
