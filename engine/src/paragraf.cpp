@@ -616,13 +616,6 @@ void MCParagraph::noflow(void)
 			MCLine *lptr = lines->remove(lines);
 			delete lptr;
 		}
-	MCBlock *bptr = blocks;
-	do
-	{
-		bptr->reset();
-		bptr = bptr->next();
-	}
-	while (bptr != blocks);
 	lines->appendall(blocks);
 
 	// MW-2012-02-10: [[ FixedTable ]] If there is a non-zero table width then
