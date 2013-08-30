@@ -643,5 +643,9 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    
+    void GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines); // List type
+    void SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines); // List type
+    
 };
 #endif

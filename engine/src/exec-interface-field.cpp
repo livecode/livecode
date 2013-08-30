@@ -739,3 +739,27 @@ void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encod
 	else
 		r_encoding = 2;
 }
+
+////////////////////////////////////////////////////////////////////////////////////////
+// TODO:: list types
+
+void MCField::GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    hilitedlines(ep);
+    ep . copyasstringref(r_lines);
+}
+
+void MCField::SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines)
+{
+    if (!opened)
+        return;
+    if (flags & F_LIST_BEHAVIOR)
+        if (sethilitedlines(MCStringGetOldString(p_lines)) != ES_NORMAL)
+        {
+            ctxt . Throw();
+            return;
+        }
+    // MW-2011-08-18: [[ Layers ]] Just redraw the content (we don't need a recompute).
+    layer_redrawall();
+}
