@@ -1388,6 +1388,7 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
     // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure button text has precedence over label and menuHistory
     { P_TEXT, "text" }, 
+    { P_MENU_HISTORY, "menuHistory" },
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
