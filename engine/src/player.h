@@ -96,7 +96,7 @@ class MCPlayer : public MCControl
 	int4 lasttime;
 
 #ifdef FEATURE_MPLAYER
-	MCStringRef command;
+	char *command;
 	Atom atom;
 	MPlayer *m_player ;
 #endif
@@ -258,9 +258,9 @@ public:
 	bool stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result);
 
 #ifdef _LINUX_DESKTOP
-	void getcommand(MCStringRef& r_command)
+	const char *getcommand()
 	{
-		r_command = MCValueRetain(command);
+		return command;
 	}
 	Boolean syncxanim();
 #endif

@@ -214,7 +214,7 @@ MCPlayer::MCPlayer()
 	loudness = 100;
 
 #ifdef FEATURE_MPLAYER
-	command = MCValueRetain(kMCEmptyString);
+	command = NULL;
 	m_player = NULL ;
 #endif
 
@@ -254,7 +254,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	loudness = sref.loudness;
 
 #ifdef FEATURE_MPLAYER
-	command = MCValueRetain(kMCEmptyString);
+	command = NULL;
 	m_player = NULL ;
 #endif
 
@@ -4511,7 +4511,7 @@ void MCPlayer::stoprecording()
 		}
 #ifdef _WINDOWS
 		if (MCrecordformat == EX_MOVIE)
-			CopyFileW(MCStringGetCString(recordtempfile), MCStringGetCString(recordexportfile),False);
+			CopyFileA(MCStringGetCString(recordtempfile), MCStringGetCString(recordexportfile),False);
 		else
 #endif
 		{
