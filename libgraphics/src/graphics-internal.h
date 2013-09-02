@@ -167,8 +167,15 @@ inline MCGIntRectangle MCGRecangleIntegerBounds(const MCGRectangle &p_rect)
 	MCGIntRectangle t_bounds;
 	t_bounds .  x = floor(p_rect . origin . x);
 	t_bounds .  y = floor(p_rect . origin . y);
-	t_bounds . width = ceil(p_rect . origin . x + p_rect . size . width) - t_bounds . x;
-	t_bounds . height = ceil(p_rect . origin . y + p_rect . size . height) - t_bounds . y;
+	// IM-2013-09-02: [[ RefactorGraphics ]] don't expand size if width or height is zero
+	if (p_rect . size . width == 0.0)
+		t_bounds . width = 0;
+	else
+		t_bounds . width = ceil(p_rect . origin . x + p_rect . size . width) - t_bounds . x;
+	if (p_rect . size . height == 0.0)
+		t_bounds . height = 0;
+	else
+		t_bounds . height = ceil(p_rect . origin . y + p_rect . size . height) - t_bounds . y;
 	return t_bounds;
 }
 

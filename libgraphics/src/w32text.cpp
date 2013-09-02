@@ -334,12 +334,29 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_float_text_bounds . size . height = t_metrics . tmAscent + t_metrics . tmDescent;
 		
 		t_transform = MCGContextGetDeviceTransform(self);
-		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);		
-		t_transform . tx = modff(t_device_location . x, &t_device_location . x);
-		t_transform . ty = modff(t_device_location . y, &t_device_location . y);
+		t_device_location = MCGPointApplyAffineTransform(p_location, t_transform);
+
+		// IM-2013-09-02: [[ RefactorGraphics ]] modff will round to zero rather than
+		// negative infinity (which we need) so calculate manually
+		MCGFloat t_int_x, t_int_y;
+		t_int_x = floor(t_device_location.x);
+		t_int_y = floor(t_device_location.y);
+
+		t_transform . tx = t_device_location . x - t_int_x;
+		t_transform . ty = t_device_location . y - t_int_y;
+		t_device_location . x = t_int_x;
+		t_device_location . y = t_int_y;
 		
+		// IM-2013-09-02: [[ RefactorGraphics ]] constrain device clip rect to device bounds
+		SkISize t_device_size;
+		t_device_size = self->layer->canvas->getDeviceSize();
+
+		MCGRectangle t_device_bounds;
+		t_device_bounds = MCGRectangleMake(0, 0, t_device_size.width(), t_device_size.height());
+
 		MCGRectangle t_device_clip;
-		t_device_clip = MCGContextGetDeviceClipBounds(self);
+		t_device_clip = MCGRectangleIntersection(MCGContextGetDeviceClipBounds(self), t_device_bounds);
+
 		t_device_clip . origin . x -= t_device_location . x;
 		t_device_clip . origin . y -= t_device_location . y;
 		
