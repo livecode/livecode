@@ -1189,11 +1189,11 @@ MCStringRef MCSTR(const char *string);
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
-bool MCStringCreateWithBytesAndRelease(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
+bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
 bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
-bool MCStringCreateWithCharsAndRelease(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+bool MCStringCreateWithCharsAndRelease(unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given NUL terminated unicode char sequence.
 bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
