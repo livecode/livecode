@@ -609,8 +609,8 @@ void MCButton::drawlabel(MCDC *dc, int2 sx, int sy, uint2 twidth, const MCRectan
 			MCRange t_before = MCRangeMake(0, mnemonic - 1);
 			MCRange t_letter = MCRangeMake(mnemonic - 1, 1);
 			
-			int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, t_before, p_label);
-			int32_t mwidth = MCFontMeasureTextSubstring(m_font, t_letter, p_label);
+			int32_t mstart = sx + MCFontMeasureTextSubstring(m_font, p_label, t_before);
+			int32_t mwidth = MCFontMeasureTextSubstring(m_font, p_label, t_letter);
 			sy += mnemonicoffset;
 			dc->drawline(mstart, sy, mstart + mwidth, sy);
 		}

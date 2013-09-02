@@ -139,7 +139,7 @@ int32_t MCFontGetDescent(MCFontRef self)
 int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontMeasureTextSubstring(p_font, t_range, p_text);
+	return MCFontMeasureTextSubstring(p_font, p_text, t_range);
 }
 
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)
@@ -147,7 +147,7 @@ int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count
 	return MCscreen -> textwidth(font -> fontstruct, chars, char_count, is_unicode);
 }
 
-int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCRange p_range, MCStringRef p_text)
+int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange p_range)
 {
 	const char_t *t_native_text;
 	t_native_text = MCStringGetNativeCharPtr(p_text);
