@@ -100,28 +100,26 @@ void MCTooltip::cleartip()
 	MCValueAssign(tip, kMCEmptyString);
 }
 
-
 void MCTooltip::settip(MCStringRef p_tip)
-{
-	if (!MCStringIsEqualTo(tip, p_tip, kMCStringOptionCompareExact))
+{	
+	if (MCStringIsEqualTo(tip, p_tip, kMCStringOptionCompareExact))
+		return;
+	
+	if (MCStringIsEmpty(p_tip))
 	{
-		MCValueAssign(tip, p_tip);
-		state &= ~CS_NO_FOCUS;
-		if (opened && !(state & CS_IGNORE_CLOSE))
-		{
-			close();
-			if (MCStringIsEmpty(tip))
-				MCscreen->cancelmessageobject(this, NULL);
-			else
-				opentip();
-		}
-		else
-			if (MCStringIsEmpty(tip))
-				MCscreen->cancelmessageobject(this, NULL);
-			else
-				if (MCtooltipdelay != 0)
-					MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
+		cleartip();
+		return;
 	}
+	
+	MCValueAssign(tip, p_tip);
+	state &= ~CS_NO_FOCUS;
+	if (opened && !(state & CS_IGNORE_CLOSE))
+	{
+		close();
+		opentip();
+	}
+	else if (MCtooltipdelay != 0)
+		MCscreen->addtimer(this, MCM_internal, MCtooltipdelay);
 }
 
 void MCTooltip::opentip()
