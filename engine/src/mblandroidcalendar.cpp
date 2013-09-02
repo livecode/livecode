@@ -55,10 +55,6 @@ typedef enum
 } MCAndroidCalendarEventStatus;
 
 
-bool MCAndroidCalendarInitialize(void)
-{
-   ... initialize statics as appropriate ...
-}
 static MCAndroidCalendarEventStatus s_calendar_event_status = kMCAndroidCalendarEventWaiting; 
 static MCStringRef s_calendar_event_selected;
 static MCStringRef s_calendar_events_selected;
