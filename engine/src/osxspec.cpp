@@ -2586,7 +2586,7 @@ OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
 // based on MoreFiles (Apple DTS)
 OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 {
-#ifdef /* MCS_path2FSSpec */ LEGACY_SYSTEM
+#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM
 	char *path = MCS_resolvepath(p_filename));
 	memset(fspec, 0, sizeof(FSSpec));
     
@@ -2619,7 +2619,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	delete fspecname;
 	delete path;
 	return errno;
-#endif /* MCS_path2FSSpec */
+#endif /* MCS_path2FSSpec_dsk_mac */
     MCAutoStringRef t_resolved_path;
     MCAutoStringRefAsUTF8String t_utf_path;
     

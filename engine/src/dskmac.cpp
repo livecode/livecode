@@ -4161,13 +4161,15 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
 	virtual MCNameRef GetProcessor(void)
     {
-#ifdef /* MCS_getprocessor_dsk_mac */ LEGACY_SYSTEM//get machine processor
+#ifdef /* MCS_getprocessor_dsk_mac */ LEGACY_SYSTEM
+//get machine processor
 #ifdef __LITTLE_ENDIAN__
 	return MCN_x86;
 #else
     return MCN_motorola_powerpc;
 #endif
-#endif /* MCS_getprocessor_dsk_mac *///get machine processor
+#endif /* MCS_getprocessor_dsk_mac */
+//get machine processor
 #ifdef __LITTLE_ENDIAN__
         return MCN_x86;
 #else
@@ -5177,7 +5179,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	bool t_success = MCStringCreateWithCString(t_temp_file, r_path);
 	delete t_temp_file;
-	return t_success;
+        return t_success;
 #endif /* MCS_tmpnam_dsk_mac */
         bool t_success = false;
         MCAutoStringRef t_temp_file_auto;
@@ -6151,7 +6153,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
-#ifdef /* MCS_multibytetounicode */ LEGACY_SYSTEM
+#ifdef /* MCS_multibytetounicode_dsk_mac */ LEGACY_SYSTEM
         // MW-2012-06-14: [[ Bug ]] If used for charset 0 before any other, causes a crash.
         static int oldcharset = -1;
         if (!destbufferlength)
@@ -6180,8 +6182,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                                  &outlength, (UniChar *)d);
         destlen = outlength;
         oldcharset = charset;
-#endif /* MCS_multibytetounicode */
-#ifdef /* MCS_unicodetomultibyte */ LEGACY_SYSTEM
+#endif /* MCS_multibytetounicode_dsk_mac */
+#ifdef /* MCS_unicodetomultibyte_dsk_mac */ LEGACY_SYSTEM
 	ScriptCode fscript = MCS_charsettolangid(charset);
 	//we cache unicode convertors for speed
 	if (!destbufferlength)
@@ -6228,7 +6230,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 		s += processedbytes;
 		d += outlength;
 	}
-#endif /* MCS_unicodetomultibyte */
+#endif /* MCS_unicodetomultibyte_dsk_mac */
         uint32_t t_return_size;
         if (p_from_charset == LCH_UNICODE) // Unicode to multibyte
         {
@@ -6318,7 +6320,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used)
     {
-#ifdef /* MCSTextConvertToUnicode */ LEGACY_SYSTEM
+#ifdef /* MCSTextConvertToUnicode_dsk_mac */ LEGACY_SYSTEM
 	if (p_input_length == 0)
 	{
 		r_used = 0;
@@ -6385,7 +6387,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	r_used = t_unicode_length;
 	
 	return true;
-#endif /* MCSTextConvertToUnicode */
+#endif /* MCSTextConvertToUnicode_dsk_mac */
         if (p_input_length == 0)
         {
             r_used = 0;

@@ -1040,7 +1040,7 @@ IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 	return IO_NORMAL;
 }
 
-#ifdef /* MCS_loadfile */ LEGACY_SYSTEM
+#if 0
 void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
 {
 	MCAutoStringRef t_resolved_path;
@@ -1090,7 +1090,7 @@ void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
     
 	t_file -> Close();
 }
-#endif /* MCS_loadfile */
+#endif // 0
 
 bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 {
