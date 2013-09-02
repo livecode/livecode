@@ -162,6 +162,17 @@ bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MC
 	return t_success;
 }
 
+bool MCStringCreateWithCharsAndRelease(unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
+{
+    if (MCStringCreateWithChars(p_chars, p_char_count, r_string))
+    {
+        free(p_chars);
+        return true;
+    }
+    
+    return false;
+}
+
 bool MCStringCreateWithWString(const unichar_t *p_wstring, MCStringRef& r_string)
 {
 	uindex_t t_length;
