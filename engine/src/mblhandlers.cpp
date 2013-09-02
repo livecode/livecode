@@ -5157,7 +5157,7 @@ Exec_stat MCHandlePickMedia(void *context, MCParameter *p_parameters)
     
     while (s_media_status == kMCAndroidMediaWaiting)
         MCscreen->wait(60.0, False, True);
-    MCresult -> sets (s_media_content);
+    MCresult -> setvalueref(s_media_content);
     //    MCLog("Media Types Returned: %s", s_media_content);
     
 	return ES_NORMAL;

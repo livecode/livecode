@@ -1189,12 +1189,15 @@ MCStringRef MCSTR(const char *string);
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
 bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
+bool MCStringCreateWithBytesAndRelease(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
 bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
+bool MCStringCreateWithCharsAndRelease(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
 
 // Create an immutable string from the given NUL terminated unicode char sequence.
 bool MCStringCreateWithWString(const unichar_t *wstring, MCStringRef& r_string);
+bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_string);
 
 // Create an immutable string from the given native char sequence.
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
@@ -1203,12 +1206,20 @@ bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count,
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
 bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
+bool MCStringCreateWithCFStringAndRelease(CFStringRef cf_string, MCStringRef& r_string);
 #endif
 
 // Create a mutable string with the given initial capacity. Note that the
 // initial capacity is only treated as a hint, the string will extend itself
 // as necessary.
 bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
+
+/////////
+
+bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 /////////
 
@@ -1289,6 +1300,10 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // returns the number of chars generated. If 'chars' is nil, just the number of chars
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
+
+// Returns true if the the string is stored as native chars internally or false if
+// it is encoded in UTF-16.
+bool MCStringIsNative(MCStringRef string);
 
 /////////
 

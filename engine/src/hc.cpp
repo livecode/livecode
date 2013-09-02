@@ -46,8 +46,6 @@ static uint4 version;
 static uint2 iconx, icony;
 static uint2 cursorx, cursory;
 
-static char *hcbuffer;
-
 static uint2 hc_icons[HC_NICONS] =
     {
         24694, 2002, 1000, 1001, 1002, 1003,
@@ -154,6 +152,29 @@ static uint1 h2[256] =
         0xc8, 0xc9, 0xcf, 0xce, 0xcd, 0xcc, };
 
 static uint1 patbytes[8] = {0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55, 0xaa, 0x55};
+
+void hcstat_append(const char *msg, ...)
+{
+	// Build the new message string (msg is printf format string)
+	va_list t_args;
+	va_start(t_args, msg);
+	MCAutoStringRef t_new_line;
+	/* UNCHECKED */ MCStringFormatV(&t_new_line, msg, t_args);
+	
+	// Turn the current MChcstat stringref into a mutable stringref
+	MCAutoStringRef t_mutable_hcstat;
+	/* UNCHECKED */ MCStringMutableCopyAndRelease(MChcstat, &t_mutable_hcstat);
+
+	// If the string isn't empty, it needs a return char
+	if (!MCStringIsEmpty(*t_mutable_hcstat))
+		/* UNCHECKED */ MCStringAppendChar(*t_mutable_hcstat, '\n');
+
+	// Append the new line
+	/* UNCHECKED */ MCStringAppend(*t_mutable_hcstat, *t_new_line);
+
+	// We've released the previous MChcstat var above so just copy as immutable into MChcstat.
+	/* UNCHECKED */ MCStringCopy(*t_mutable_hcstat, MChcstat);
+}
 
 static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 {
@@ -270,17 +291,17 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 				xorcode = opcode;
 				break;
 			case 0x7:
-				sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
+
+				hcstat_append("Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
-				MCU_addline(MChcstat, hcbuffer, False);
+
 				return newdata;
 			}
 			repcount = 1;
 			continue;
 		case 0x90:
-			sprintf(hcbuffer, "Unknown BMAP opcode %x at offset %d, line %d",
+			hcstat_append("Unknown BMAP opcode %x at offset %d, line %d",
 			        opcode, (int)(sptr - startptr), line);
-			MCU_addline(MChcstat, hcbuffer, False);
 			return newdata;
 		case 0xA0:
 		case 0xB0:
@@ -359,9 +380,8 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 	}
 	if (dptr > deptr)
 	{
-		sprintf(hcbuffer, "Error: ran off end of image at offset %d line %d",
+		hcstat_append("Error: ran off end of image at offset %d line %d",
 		        (int)(sptr - startptr), line);
-		MCU_addline(MChcstat, hcbuffer, False);
 	}
 	return newdata;
 }
@@ -1374,9 +1394,8 @@ IO_stat MCHccard::parse(char *sptr)
 			}
 			break;
 		default:
-			sprintf(hcbuffer, "Error: Unknown object type %x",
+			hcstat_append("Error: Unknown object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -1401,6 +1420,7 @@ IO_stat MCHccard::parse(char *sptr)
 	if (sptr[offset])
 		name = strclone(&sptr[offset]);
 	script = convert_script(&sptr[offset + strlen(&sptr[offset]) + 1]);
+	
 	return IO_NORMAL;
 }
 
@@ -1588,9 +1608,8 @@ IO_stat MCHcbkgd::parse(char *sptr)
 			}
 			break;
 		default:
-			sprintf(hcbuffer, "Error: bad object type %x",
+			hcstat_append("Error: bad object type %x",
 			        swap_uint2(&uint2ptr[offset]));
-			MCU_addline(MChcstat, hcbuffer, False);
 			break;
 		}
 		offset += swap_uint2(&uint2ptr[offset]) >> 1;
@@ -2116,8 +2135,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 		case HC_TAIL:
 			break;
 		default:
-			sprintf(hcbuffer, "Error: unknown section type -> %x", type);
-			MCU_addline(MChcstat, hcbuffer, False);
+			hcstat_append("Error: unknown section type -> %x", type);
+
 			if (filetype == HC_BINHEX)
 				return IO_ERROR;
 			break;
@@ -2199,9 +2218,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 				}
 				break;
 			default:
-				sprintf(hcbuffer, "Not converting %4.4s id %5d \"%s\"",
+				hcstat_append("Not converting %4.4s id %5d \"%s\"",
 				        (char *)&type, id, tname);
-				MCU_addline(MChcstat, hcbuffer, False);
 				delete tname;
 				break;
 			}
@@ -2398,19 +2416,17 @@ MCStack *MCHcstak::build()
 IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 {
 	maxid = 0;
-	delete MChcstat;
-	MChcstat = MCU_empty();
-	hcbuffer = new char[HC_MESSAGE_LENGTH];
+	MCValueAssign(MChcstat, kMCEmptyString);
+
 	MCHcstak *hcstak = new MCHcstak(strclone(name));
-	sprintf(hcbuffer, "Loading stack %s...", name);
-	MCU_addline(MChcstat, hcbuffer, True);
-	uint2 startlen = strlen(hcbuffer);
+	hcstat_append("Loading stack %s...", name);
+	uint2 startlen = MCStringGetLength(MChcstat);
 	IO_stat stat;
 	if ((stat = hcstak->read(stream)) == IO_NORMAL)
 		sptr = hcstak->build();
-	delete hcbuffer;
+	
 	delete hcstak;
-	if (!MClockerrors && strlen(MChcstat) != startlen)
+	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
 		MCStack *tptr = MCdefaultstackptr->findstackname(MChcstatnamestring);
 		if (tptr != NULL)
@@ -2422,3 +2438,5 @@ IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 	}
 	return stat;
 }
+
+

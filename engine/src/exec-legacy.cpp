@@ -478,18 +478,12 @@ void MCLegacySetRevRuntimeBehaviour(MCExecContext& ctxt, uint4 p_value)
 
 void MCLegacyGetHcImportStat(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MCStringCreateWithCString(MChcstat, r_value))
-		return;
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MChcstat);
 }
 
 void MCLegacySetHcImportStat(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCCStringClone(MCStringGetCString(p_value), MChcstat))
-		return;
-
-	ctxt . Throw();
+	MCValueAssign(MChcstat, p_value);
 }
 
 void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value)
@@ -500,8 +494,7 @@ void MCLegacyGetScriptTextFont(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCLegacySetScriptTextFont(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCValueRelease(MCscriptfont);
-	MCscriptfont = MCValueRetain(p_value);
+	MCValueAssign(MCscriptfont, p_value);
 }
 
 void MCLegacyGetScriptTextSize(MCExecContext& ctxt, uinteger_t &r_value)
@@ -833,8 +826,7 @@ void MCLegacyGetVcPlayer(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCLegacySetVcPlayer(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCValueRelease(MCvcplayer);
-	MCvcplayer = MCValueRetain(p_value);
+	MCValueAssign(MCvcplayer, p_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

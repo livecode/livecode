@@ -80,12 +80,12 @@ Boolean MCStack::setscript(char *newscript)
 		uint2 line, pos;
 		MCperror->geterrorloc(line, pos);
 		fprintf(stderr, "%s: Script parsing error at line %d, column %d\n",
-		        MCcmd, line, pos);
+		        MCStringGetCString(MCcmd), line, pos);
 		return False;
 	}
 	if (!hlist->hashandlers())
 	{
-		fprintf(stderr, "%s: Script has no handlers\n", MCcmd);
+		fprintf(stderr, "%s: Script has no handlers\n", MCStringGetCString(MCcmd));
 		return False;
 	}
 	return True;

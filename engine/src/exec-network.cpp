@@ -659,7 +659,7 @@ void MCNetworkGetUrlResponse(MCExecContext& ctxt, MCStringRef& r_value)
 void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 {
 	
-	if (MCftpproxyhost == nil)
+	if (MCStringIsEmpty(MCftpproxyhost))
 	{
 		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
 		return;
@@ -675,69 +675,35 @@ void MCNetworkGetFtpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 
 void MCNetworkSetFtpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCValueRelease(MCftpproxyhost);
-	if (MCStringGetLength(p_value) == 0)
-		MCftpproxyhost = NULL;
+	
+	MCAutoStringRef t_host, t_port;
+	/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareCaseless, &t_host, &t_port);
+	if (*t_port != nil)
+		/* UNCHECKED */ MCStringToUInt16(*t_port, MCftpproxyport);
 	else
-	{
-		char *eptr = NULL;
-		MCAutoStringRef t_port_string;
-		/* UNCHECKED */ MCStringDivideAtChar(p_value, ':', kMCCompareCaseless, MCftpproxyhost, &t_port_string);
-        if (*t_port_string != nil)
-			MCftpproxyport = (uint2)strtol(MCStringGetCString(*t_port_string), NULL, 10);
-		else
-			MCftpproxyport = 80;
-	}
+		MCftpproxyport = 80;
+	MCValueAssign(MCftpproxyhost, *t_host);
+		
 }
 
 void MCNetworkGetHttpProxy(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MChttpproxy == nil)
-	{
-		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
-		return;
-	}
-	else
-	{
-		if (MCStringCreateWithCString(MChttpproxy, r_value))
-			return;
-	}
-
-	ctxt . Throw();
+	r_value = MCValueRetain(MChttpproxy);
 }
 
 void MCNetworkSetHttpProxy(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MChttpproxy;
-	if (MCStringGetLength(p_value) == 0)
-		MChttpproxy = NULL;
-	else
-		MChttpproxy = strclone(MCStringGetCString(p_value));
+	MCValueAssign(MChttpproxy, p_value);
 }
 
 void MCNetworkGetHttpHeaders(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (MChttpheaders == nil)
-	{
-		r_value = (MCStringRef)MCValueRetain(kMCEmptyString);
-		return;
-	}
-	else
-	{
-		if (MCStringCreateWithCString(MChttpheaders, r_value))
-			return;
-	}
-
-	ctxt . Throw();
+		r_value = MCValueRetain(MChttpheaders);
 }
 
 void MCNetworkSetHttpHeaders(MCExecContext& ctxt, MCStringRef p_value)
 {
-	delete MChttpheaders;
-	if (MCStringGetLength(p_value) == 0)
-		MChttpheaders = NULL;
-	else
-		MChttpheaders = strclone(MCStringGetCString(p_value));
+	MCValueAssign(MChttpheaders, p_value);
 }
 
 void MCNetworkGetSocketTimeout(MCExecContext& ctxt, double& r_value)

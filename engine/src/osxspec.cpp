@@ -141,11 +141,11 @@ static Boolean hasAppleEvents = False;
 #define MINIMUM_FAKE_PID (1 << 29)
 
 static int4 curpid = MINIMUM_FAKE_PID;
-static char *replymessage;       //used in DoSpecial() & other routines
+static MCStringRef replymessage;       //used in DoSpecial() & other routines
 static uint4 replylength;
 static AEKeyword replykeyword;   // Use in DoSpecial & other routines
-static char *AEanswerData;// used by DoAEAnswer() & MCS_send()
-static char *AEanswerErr; //the reply error from an AE send by MC.
+static MCStringRef AEanswerData;// used by DoAEAnswer() & MCS_send()
+static MCStringRef AEanswerErr; //the reply error from an AE send by MC.
 static const AppleEvent *aePtr; //current apple event for mcs_request_ae()
 
 
@@ -441,7 +441,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 			{
 				if (reply->descriptorType != typeNull && reply->dataHandle != NULL)
 				{
-					err = AEPutParamPtr(reply, replykeyword, typeChar, replymessage, replylength);
+					err = AEPutParamPtr(reply, replykeyword, typeChar, MCStringGetCString(replymessage), replylength);
 					if (err != noErr)
 					{
 						short e = err;
@@ -450,8 +450,11 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 			}
 		}
-		delete replymessage;
-		replymessage = NULL;
+		if (replymessage != nil)
+		{
+			MCValueRelease(replymessage);
+			replymessage = nil;
+		}
 	}
 	else
 		if (aeclass == kAEMiscStandards
@@ -526,8 +529,8 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 
 		if (MCModeShouldQueueOpeningStacks())
 		{
-			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-			MCstacknames[MCnstacks++] = strclone(fullPathName);
+			MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+			/* UNCHECHED */ MCStringCreateWithCString(fullPathName, MCstacknames[MCnstacks++]);
 		}
 		else
 		{
@@ -639,9 +642,10 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	parameter of the reply Apple event. */
 	if (AEGetParamPtr(ae, keyErrorString, typeChar, &rType, NULL, 0, &rSize) == noErr)
 	{
-		AEanswerErr = new char[rSize + 1];
-		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, AEanswerErr, rSize, &rSize);
-		AEanswerErr[rSize] = '\0';
+		char *t_buffer;
+		t_buffer = new char[rSize + 1];
+		AEGetParamPtr(ae, keyErrorString, typeChar, &rType, t_buffer, rSize, &rSize);
+		/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, rSize, AEanswerErr);
 	}
 	else
 	{
@@ -649,26 +653,28 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 		if (AEGetParamPtr(ae, keyErrorNumber, typeSMInt, &rType, (Ptr)&e, sizeof(short), &rSize) == noErr
 		        && e != noErr)
 		{
-			AEanswerErr = new char[35 + I2L];
-			sprintf(AEanswerErr, "Got error %d when sending Apple event", e);
+			/* UNCHECKED */ MCStringFormat(AEanswerErr, "Got error %d when sending Apple event", e);
 		}
 		else
 		{
-			delete AEanswerData;
+			MCValueRelease(AEanswerData);
 			if ((errno = AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, NULL, 0, &rSize)) != noErr)
 			{
 				if (errno == errAEDescNotFound)
 				{
-					AEanswerData = MCU_empty();
+					//AEanswerData = MCU_empty();
+					AEanswerData = MCValueRetain(kMCEmptyString);
 					return noErr;
 				}
-				AEanswerErr = new char[37 + I2L];
-				sprintf(AEanswerErr, "Got error %d when receiving Apple event", errno);
+
+				/* UNCHECKED */ MCStringFormat(AEanswerErr, "Got error %d when receiving Apple event", errno);
 				return errno;
 			}
-			AEanswerData = new char[rSize + 1];
-			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, AEanswerData, rSize, &rSize);
-			AEanswerData[rSize] = '\0';
+			
+			char *t_buffer;
+			t_buffer = new char[rSize + 1];
+			AEGetParamPtr(ae, keyDirectObject, typeChar, &rType, t_buffer, rSize, &rSize);
+			/* UNCHECKED */ MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, rSize, AEanswerData);
 		}
 	}
 	return noErr;
@@ -707,7 +713,7 @@ static void handle_signal(int sig)
 	case SIGILL:
 	case SIGBUS:
 	case SIGSEGV:
-		fprintf(stderr, "%s exiting on signal %d\n", MCcmd, sig);
+		fprintf(stderr, "%s exiting on signal %d\n", MCStringGetCString(MCcmd), sig);
 		MCS_killall();
 		return;
 
@@ -843,7 +849,7 @@ void MCS_init()
 	
 	// MW-2013-03-22: [[ Bug 10772 ]] Make sure we initialize the shellCommand
 	//   property here (otherwise it is nil in -ui mode).
-	MCshellcmd = MCSTR("/bin/sh");
+	MCValueAssign(MCshellcmd, MCSTR("/bin/sh"));
 	
 	//
 
@@ -952,7 +958,9 @@ void MCS_init()
 				if (err == noErr)
 				{
 					p2cstr(proxystr);
-					MChttpproxy = strclone((char *)proxystr);
+					MCAutoStringRef t_proxystr;
+					/* UNCHECKED */ MCStringCreateWithCString((char *)proxystr, &t_proxystr);
+					MCValueAssign(MChttpproxy, *t_proxystr);
 				}
 			}
 			ICStop(icinst);
@@ -1725,7 +1733,7 @@ bool MCS_getaddress(MCStringRef& r_address)
 {
 	static struct utsname u;
 	uname(&u);
-	return MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+	return MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 }
 
 bool MCS_getmachine(MCStringRef& r_string)
@@ -2013,14 +2021,14 @@ void MCS_send(const MCString &message, const char *program,
 		}
 		if (AEanswerErr != NULL)
 		{
-			MCresult->copysvalue(AEanswerErr);
-			delete AEanswerErr;
+			MCresult->setvalueref(AEanswerErr);
+			MCValueRelease(AEanswerErr);
 			AEanswerErr = NULL;
 		}
 		else
 		{
-			MCresult->copysvalue(AEanswerData);
-			delete AEanswerData;
+			MCresult->setvalueref(AEanswerData);
+			MCValueRelease(AEanswerData);
 			AEanswerData = NULL;
 		}
 		AEDisposeDesc(&answer);
@@ -2032,10 +2040,9 @@ void MCS_send(const MCString &message, const char *program,
 // MW-2006-08-05: Vetted for Endian issues
 void MCS_reply(const MCString &message, const char *keyword, Boolean error)
 {
-	delete replymessage;
-	replylength = message.getlength();
-	replymessage = new char[replylength];
-	memcpy(replymessage, message.getstring(), replylength);
+	MCValueRelease(replymessage);
+
+	/* UNCHECKED */ MCStringCreateWithOldString(message, replymessage);
 
 	//at any one time only either keyword or error is set
 	if (keyword != NULL)
@@ -2253,15 +2260,16 @@ char *MCS_request_program(const MCString &message, const char *program)
 	}
 	if (AEanswerErr != NULL)
 	{
-		MCresult->copysvalue(AEanswerErr);
-		delete AEanswerErr;
+		MCresult->setvalueref(AEanswerErr);
+		MCValueRelease(AEanswerErr);
 		AEanswerErr = NULL;
 		return MCU_empty();
 	}
 	else
 	{
 		MCresult->clear(False);
-		char *retval = AEanswerData;
+		char *retval = strdup(MCStringGetCString(AEanswerData));
+		MCValueRelease(AEanswerData);
 		AEanswerData = NULL;
 		return retval;
 	}
@@ -3504,7 +3512,7 @@ void MCS_startprocess_unix(MCNameRef name, const char *doc, Open_mode mode, Bool
 				"-elevated-slave",
 				nil
 			};
-			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCcmd, kAuthorizationFlagDefaults, t_arguments, &t_stream);
+			t_status = AuthorizationExecuteWithPrivileges(t_auth, MCStringGetCString(MCcmd), kAuthorizationFlagDefaults, t_arguments, &t_stream);
 		}
 		
 		uint32_t t_pid;

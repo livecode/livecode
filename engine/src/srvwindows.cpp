@@ -309,7 +309,7 @@ struct MCWindowsSystem: public MCSystemInterface
 	{
 		char t_buffer[MAXHOSTNAMELEN];
 		gethostname(t_buffer, MAXHOSTNAMELEN);
-		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", t_buffer, MCcmd);
+		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", t_buffer, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_interval)

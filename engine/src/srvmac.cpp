@@ -273,10 +273,10 @@ struct MCMacSystem: public MCSystemInterface
 	
 	virtual void GetAddress(MCStringRef& r_address)
 	{
-		extern char *MCcmd;
+		extern MCStringRef MCcmd;	
 		utsname u;
 		uname(&u);
-		MCStringFormat(r_address, "%s:%s", u.nodename, MCcmd);
+		MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_when)
@@ -1123,11 +1123,14 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	
 	if (!t_error)
 	{
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype[4], 4);
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype, 4);
+		const char *MCfiletype_cstring = MCStringGetCString(MCfiletype);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype_cstring[4], 4);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype_cstring, 4);
+		
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator);
 	}	
+	MCStringChar
 	
 	bool t_created_dst;
 	t_created_dst = false;

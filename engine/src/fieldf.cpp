@@ -2249,7 +2249,7 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	fontheight = fheight;
 	topmargin = bottommargin = 6;
 	borderwidth = 0;
-	settext(0, s, False, isunicode);
+	settext_oldstring(0, s, False, isunicode);
 
 	// MW-2008-03-14: [[ Bug 5750 ]] Fix to focus border problem in fields used as menu lists in
 	//   (for example) option menus. Set this as a menufield.
@@ -2274,7 +2274,7 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 		topmargin = 6;
 	flags = F_VISIBLE | F_SHOW_BORDER | F_3D | F_OPAQUE | F_FIXED_HEIGHT
 		| F_TRAVERSAL_ON | F_AUTO_TAB | F_DONT_WRAP | F_SHARED_TEXT;
-	settext(0, s, False, isunicode);
+	settext_oldstring(0, s, False, isunicode);
 }
 
 void MCField::typetext(const MCString &newtext)

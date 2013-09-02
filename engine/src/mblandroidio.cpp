@@ -138,7 +138,7 @@ private:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
 bool apk_file_exists(const char *p_apk_path);
 bool apk_get_file_length(const char *p_apk_path, int32_t &r_length);
@@ -159,7 +159,7 @@ public:
 			return NULL;
 
 		FILE *t_stream;
-		t_stream = fopen(MCcmd, p_mode);
+		t_stream = fopen(MCStringGetCString(MCcmd), p_mode);
 		if (t_stream == NULL)
 			return NULL;
 		

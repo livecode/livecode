@@ -2168,6 +2168,7 @@ bool MCImage::setfilename(const char *p_filename)
 		if (filename != nil)
 			MCCStringFree(filename);
 		filename = t_filename;
+	
 	}
 	else
 		MCCStringFree(t_filename);

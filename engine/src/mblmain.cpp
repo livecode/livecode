@@ -51,9 +51,9 @@ static void create_var(char *v)
 	MCVariable *tvar;
 	/* UNCHECKED */ MCVariable::ensureglobal_cstring(vname, tvar);
 	tvar->copysvalue(v);
-
-	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(char *));
-	MCstacknames[MCnstacks++] = v;
+	
+	MCU_realloc((char **)&MCstacknames, MCnstacks, MCnstacks + 1, sizeof(MCStringRef));
+	/* UNCHECHED */ MCStringCreateWithCString(v, MCstacknames[MCnstacks++]);
 }
 
 static void create_var(uint4 p_v)
@@ -106,7 +106,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	
 	////
 	
-	MCcmd = MCsystem -> PathFromNative(argv[0]);
+	/* UNCHECKED */ MCStringCreateWithCString(MCsystem -> PathFromNative(argv[0]), MCcmd);
 	
 	// Create the $<n> variables.
 	for(uint32_t i = 2; i < argc; ++i)

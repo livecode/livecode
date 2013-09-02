@@ -133,23 +133,23 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static char *s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
+	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #elif defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #else
 #error restart not defined
@@ -203,9 +203,9 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracereturn = True;
     
     MCAutoStringRef t_command_path;
-    MCS_resolvepath(MCSTR(MCcmd), &t_command_path);
+    MCS_resolvepath(MCcmd, &t_command_path);
 	
-	s_command_path = strdup(MCStringGetCString(*t_command_path));
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
 	
@@ -234,7 +234,7 @@ IO_stat MCDispatch::startup(void)
     MCS_getcurdir(&t_startdir);
 	
 	startdir = strdup(MCStringGetCString(*t_startdir));
-	enginedir = strclone(MCcmd);
+	enginedir = strdup(MCStringGetCString(MCcmd));
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -270,7 +270,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
+	sptr -> setfilename(strdup(MCStringGetCString(MCcmd)));
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -1208,7 +1208,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext(0, ep . getsvalue(), False);
+			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
 		}
 		else
 		{

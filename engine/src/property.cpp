@@ -2046,7 +2046,6 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getboolean(MChidewindows, line, pos, EE_PROPERTY_NAB);
 	case P_FTP_PROXY:
 		delete MCftpproxyhost;
-		
 		if (ep.getsvalue().getlength() == 0)
 			MCftpproxyhost = NULL;
 		else
