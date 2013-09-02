@@ -2933,7 +2933,7 @@ static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_v
     
     if (err == kLCErrorNone)
     {
-        for(uint32_t i = 0; i <= t_char_count; i++)
+        for(uint32_t i = 0; i < t_char_count; i++)
             t_jchar_value[i] = p_value[i];
     }
     
@@ -2958,9 +2958,15 @@ static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_v
 
 static bool default__java_string(JNIEnv *env, const char *p_value, jobject& r_java_value)
 {
-    if (java_from__cstring(env, p_value, r_java_value))
+    LCError err;
+    err = kLCErrorNone;
+    
+    err = java_from__cstring(env, p_value, r_java_value);
+    
+    if (err == kLCErrorNone)
         return true;
-    return error__out_of_memory();
+    else
+        return error__out_of_memory();
 }
     
 static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
