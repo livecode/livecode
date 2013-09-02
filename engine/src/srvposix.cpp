@@ -279,15 +279,12 @@ struct MCPosixSystem: public MCSystemInterface
 #endif
 	}
 
-	virtual char *GetAddress(void)
+	virtual void GetAddress(MCStringRef& r_address)
 	{
-		extern char *MCcmd;
-		char *buffer;
+		extern MCStringRef MCcmd;
 		utsname u;
 		uname(&u);
-		buffer = new char[strlen(u.nodename) + strlen(MCcmd) + 4];
-		sprintf(buffer, "%s:%s", u.nodename, MCcmd);
-		return buffer;
+		/* UNCHECKED */ MCStringFormat(r_address, "%s:%s", u.nodename, MCStringGetCString(MCcmd));
 	}
 	
 	virtual void Alarm(real64_t p_when)
@@ -470,9 +467,9 @@ struct MCPosixSystem: public MCSystemInterface
 		return NULL;
 	}
 	
-	virtual void *ResolveModuleSymbol(void *p_module, MCStringRef p_symbol)
+	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
 	{
-		return dlsym(p_module, MCStringGetCString(p_symbol));
+		return dlsym(p_module, p_symbol);
 	}
 	
 	virtual void UnloadModule(void *p_module)
@@ -960,15 +957,14 @@ bool MCS_isnan(double v)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCS_get_temporary_folder(char *&r_temp_folder)
+bool MCS_get_temporary_folder(MCStringRef &r_temp_folder)
 {
 	bool t_success = true;
 
 	const char *t_tmpdir = NULL;
 	int32_t t_tmpdir_len = 0;
-	MCAutoStringRef t_tmpdir_string, t_env;
-	/* UNCHECKED */ MCStringCreateWithCString("TMPDIR", &t_env);
-	MCS_getenv(*t_env, &t_tmpdir_string);
+	MCAutoStringRef t_tmpdir_string;
+	MCS_getenv(MCSTR("TMPDIR"), &t_tmpdir_string);
 
 	/* UNCHECKED */ MCStringCreateWithCString(t_tmpdir, &t_tmpdir_string);
 
@@ -983,10 +979,11 @@ bool MCS_get_temporary_folder(char *&r_temp_folder)
 
 	if (t_success)
 	{
+        char *t_temp_folder = strdup(MCStringGetCString(r_temp_folder));
 		if (t_tmpdir[t_tmpdir_len - 1] == '/')
-			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, r_temp_folder);
+			t_success = MCCStringCloneSubstring(t_tmpdir, t_tmpdir_len - 1, t_temp_folder);
 		else
-			t_success = MCCStringClone(t_tmpdir, r_temp_folder);
+			t_success = MCCStringClone(t_tmpdir, t_temp_folder);
 	}
 
 	return t_success;

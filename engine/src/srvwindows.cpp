@@ -44,6 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <float.h>
 #undef GetCurrentTime
 
+
 #include "system.h"
 //#include "filesystem.h"
 
@@ -347,7 +348,10 @@ struct MCWindowsSystem: public MCSystemInterface
 
 	virtual void GetEnv(MCStringRef p_name, MCStringRef& r_value)
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+		if (!getenv(MCStringGetCString(p_name)))
+			/* UNCHECKED */ MCStringCreateWithCString(getenv(MCStringGetCString(p_name)), r_value);
+		else
+			return;
 	}
 
 	

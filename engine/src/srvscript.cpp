@@ -113,7 +113,7 @@ MCServerScript::File *MCServerScript::FindFile(const char *p_filename, bool p_ad
 {
 	// First resolve the filename.
 	MCAutoStringRef t_filename_string;
-	/*UNCHECKED*/MCStringCreateWithCString(p_filename, &t_filename_string);
+	/* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_filename_string);
 
 	MCAutoStringRef t_resolved_filename;
 	MCsystem -> ResolvePath(*t_filename_string, &t_resolved_filename);
