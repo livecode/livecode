@@ -135,7 +135,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
 
 #if defined(_MAC_DESKTOP)
-	/* UNCHECKED */ MCStringCreateWithBytes(argv[0], strlen(argv[0]), kMCStringEncodingUTF8, MCcmd);
+	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)argv[0], strlen(argv[0]), kMCStringEncodingUTF8, false, MCcmd);
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
