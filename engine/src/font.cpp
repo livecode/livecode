@@ -160,7 +160,7 @@ int32_t MCFontMeasureTextSubstring(MCFontRef p_font, MCStringRef p_text, MCRange
 void MCFontDrawText(MCFontRef font, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
 {
 	MCRange t_range = MCRangeMake(0, MCStringGetLength(p_text));
-	return MCFontDrawTextSubstring(font, t_range, p_text, context, x, y, image);
+	return MCFontDrawTextSubstring(font, p_text, t_range, context, x, y, image);
 }
 
 void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode, MCContext *context, int32_t x, int32_t y, bool image)
@@ -168,7 +168,7 @@ void MCFontDrawText(MCFontRef font, const char *chars, uint32_t char_count, bool
 	context -> drawtext(x, y, chars, char_count, font -> fontstruct, image, is_unicode);
 }
 
-void MCFontDrawTextSubstring(MCFontRef font, MCRange p_range, MCStringRef p_text, MCContext *context, int32_t x, int32_t y, bool image)
+void MCFontDrawTextSubstring(MCFontRef font, MCStringRef p_text, MCRange p_range, MCContext *context, int32_t x, int32_t y, bool image)
 {
 	const char_t *t_native_text;
 	t_native_text = MCStringGetNativeCharPtr(p_text);
