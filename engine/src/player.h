@@ -89,7 +89,7 @@ class MCPlayer : public MCControl
 	real8 rate;
 	uint4 starttime;
 	uint4 endtime;
-	char *userCallbackStr;  //string contains user movie callbacks
+	MCStringRef userCallbackStr;  //string contains user movie callbacks
 	uint2 formattedwidth;
 	uint2 formattedheight;
 	uint2 loudness;

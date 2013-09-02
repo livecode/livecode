@@ -156,7 +156,7 @@ Exec_stat MCField::sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 			newtext[tlength] = '\0';
 		}
 		delete itemtext;
-		settext(parid, newtext, False);
+		settext_oldstring(parid, newtext, False);
 		delete newtext;
 	}
 	else if (nitems > 0)
@@ -504,7 +504,17 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 		fptr->setparagraphs(newpgptr);
 }
 
-Exec_stat MCField::settext(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
+Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
+{
+	const char *t_bytes = (const char*)MCStringGetNativeCharPtr(p_text);
+	uindex_t t_length = MCStringGetLength(p_text);
+	if (t_bytes != nil)
+		return settext_oldstring(parid, MCString(t_bytes, t_length), p_formatted, false);
+	else
+		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), t_length * sizeof(unichar_t)), p_formatted, true);
+}
+
+Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
 {
 	state &= ~CS_CHANGED;
 	if (opened)

@@ -54,6 +54,7 @@ void add_simulator_redirect(const char *p_redirect_def)
 	
 	if (s_redirect_base == nil)
 		MCCStringCloneSubstring(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), s_redirect_base);
+
 	
 	MCCStringCloneSubstring(p_redirect_def, t_dst_offset - p_redirect_def, s_redirects[s_redirect_count - 1] . src);
 	

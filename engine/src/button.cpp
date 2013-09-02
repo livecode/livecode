@@ -752,7 +752,7 @@ Boolean MCButton::kdown(const char *string, KeySym key)
 					labelsize = pick.getlength();
 					flags |= F_LABEL;
 					if (entry != NULL)
-						entry->settext(0, pick, False, hasunicode());
+						entry->settext_oldstring(0, pick, False, hasunicode());
 					Exec_stat es = message_with_args(MCM_menu_pick, pick);
 					if (es == ES_NOT_HANDLED || es == ES_PASS)
 						message_with_args(MCM_mouse_up, menubutton);
@@ -1344,7 +1344,7 @@ Boolean MCButton::mup(uint2 which)
 					labelsize = pick.getlength();
 					flags |= F_LABEL;
 					if (entry != NULL)
-						entry->settext(0, pick, False, hasunicode());
+						entry->settext_oldstring(0, pick, False, hasunicode());
 				}
 				docascade(pick);
 			}
@@ -3839,7 +3839,7 @@ bool MCButton::resetlabel()
 			label = NULL;
 			labelsize = 0;
 			if (entry != NULL)
-				entry->settext(0, MCnullmcstring, False, hasunicode());
+				entry->settext_oldstring(0, MCnullmcstring, False, hasunicode());
 
 			flags &= ~F_LABEL;
 
@@ -3863,7 +3863,7 @@ bool MCButton::resetlabel()
 				memcpy(label, sptr, labelsize);
 			}
 			if (entry != NULL)
-				entry->settext(0, MCString(label, labelsize), False, hasunicode());
+				entry->settext_oldstring(0, MCString(label, labelsize), False, hasunicode());
 
 			flags |= F_LABEL;
 

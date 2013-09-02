@@ -128,6 +128,7 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 	}
 
 	r_name = MCValueRetain(filename);
+
 }
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)

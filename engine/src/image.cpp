@@ -2167,6 +2167,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		if (filename != nil)
 			MCValueRelease(filename);
 		filename = MCValueRetain(*t_filename);
+
 	}
 
 	return t_success;
