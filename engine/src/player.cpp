@@ -209,7 +209,7 @@ MCPlayer::MCPlayer()
 	lasttime = 0;
 	starttime = endtime = MAXUINT4;
 	disposable = istmpfile = False;
-	userCallbackStr = NULL;
+	userCallbackStr = MCValueRetain(kMCEmptyString);
 	formattedwidth = formattedheight = 0;
 	loudness = 100;
 
@@ -249,7 +249,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	starttime = sref.starttime;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
-	userCallbackStr = strclone(sref.userCallbackStr);
+	MCValueAssign(userCallbackStr, sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
 
@@ -324,7 +324,7 @@ MCPlayer::~MCPlayer()
 #endif
 
 	delete filename;
-	delete userCallbackStr;
+	MCValueRelease(userCallbackStr);
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -1189,7 +1189,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_int4((int4)(rate / 10.0 * MAXINT4),
 		                          stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_string(userCallbackStr, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(userCallbackStr, stream)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream);
@@ -1211,7 +1211,7 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
 	rate = (real8)trate * 10.0 / MAXINT4;
-	if ((stat = IO_read_string(userCallbackStr, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(userCallbackStr, stream)) != IO_NORMAL)
 		return stat;
 	return loadpropsets(stream);
 }
@@ -4059,9 +4059,9 @@ Boolean MCPlayer::installUserCallbacks(void)
 {
 	// parse the user callback string and install callback funcs
 	// if movie is prepared,
-	if (userCallbackStr == NULL)
+	if (MCStringIsEmpty(userCallbackStr))
 		return True;
-	char *cblist = strclone(userCallbackStr);
+	char *cblist = strclone(MCStringGetCString(userCallbackStr));
 	char *str;
 	str = cblist;
 	while (*str)

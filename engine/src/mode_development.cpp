@@ -133,7 +133,7 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static MCStringRef s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
@@ -1337,7 +1337,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 		MCscreen -> clearIME(p_stack -> getwindow());
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 
