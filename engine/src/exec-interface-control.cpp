@@ -267,20 +267,13 @@ void MCControl::SetBottomMargin(MCExecContext& ctxt, integer_t p_margin)
 
 void MCControl::SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	bool t_dirty;
-	t_dirty = true;
-
-	if (!MCStringIsEqualTo(tooltip, MCtooltip->gettip(), kMCStringOptionCompareExact))
-		t_dirty = false;
-
+	if (MCStringIsEqualTo(tooltip, p_tooltip, kMCStringOptionCompareExact))
+		return;
+	
 	MCValueAssign(tooltip, p_tooltip);
-	if (t_dirty && focused == this)
-	{
+	
+	if (focused == this)
 		MCtooltip->settip(tooltip);
-		t_dirty = false;
-	}
-	else if (t_dirty)
-		Redraw();
 }
 
 void MCControl::GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip)
