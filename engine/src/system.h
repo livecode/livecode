@@ -55,9 +55,22 @@ typedef bool (*MCSystemHostResolveCallback)(void *p_context, MCStringRef p_host)
 struct MCSystemFileHandle
 {
 	virtual void Close(void) = 0;
-	
-	virtual IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written) = 0;
+    
+    // Returns true if an attempt has been made to read past the end of the
+    // stream.
+    virtual bool IsExhausted(void) = 0;
+    
+    // Read <length> bytes into buffer. If <length> bytes is not available
+    // or an io error occurs, it returns false.
+	virtual bool Read(void *p_buffer, uint32_t p_length) = 0;
+    
+    // Read at most <length> bytes into buffer. If an io error occurs, false is returned
+    // otherwise, as many bytes as possible will be read. If the stream hits EOF through
+    // doing so, the EOF flag of the stream is set.
+    virtual bool ReadAvailable(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
+    
+	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
+    
 	virtual bool Seek(int64_t offset, int p_dir) = 0;
 	
 	virtual bool Truncate(void) = 0;
@@ -120,15 +133,16 @@ public:
 		delete this;
 	}
 	
-	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+	bool Read(void *p_buffer, uint32_t p_length)
 	{
-		r_read = MCU_min(p_length, m_length - m_pointer);
-		memcpy(p_buffer, m_buffer + m_pointer, r_read);
-		m_pointer += r_read;
+        uint32_t t_read;
+		t_read = MCU_min(p_length, m_length - m_pointer);
+		memcpy(p_buffer, m_buffer + m_pointer, t_read);
+		m_pointer += t_read;
 		return IO_NORMAL;
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		// If we aren't writable then its an error (writable buffers start off with
 		// nil buffer pointer, and 0 capacity).
@@ -153,7 +167,6 @@ public:
 		memcpy(m_buffer + m_pointer, p_buffer, p_length);
 		m_pointer += p_length;
 		m_length = MCU_max(m_pointer, m_length);
-		r_written = p_length;
         
 		return true;
 	}

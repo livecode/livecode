@@ -905,10 +905,7 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     t_success = p_stream -> handle -> Seek(p_pos, SEEK_SET);
     
     if (t_success)
-        t_success = p_stream -> handle -> Write(p_buffer, p_size, t_written);
-    
-    if (t_success)
-        t_success = (t_written == p_size);
+        t_success = p_stream -> handle -> Write(p_buffer, p_size);
     
     if (t_success)
         t_success = p_stream -> handle -> Seek(t_old_pos, SEEK_SET);
@@ -1121,13 +1118,10 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
-	//t_buffer = ep . getbuffer(t_size);
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = t_buffer.Chars() != NULL &&
-                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) == IO_NORMAL &&
-                    t_read == t_size;
+        t_success = t_file -> handle -> Read(t_buffer.Chars(), t_size) == IO_NORMAL;
 
     if (t_success)
     {
@@ -1185,13 +1179,10 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
-	//t_buffer = ep . getbuffer(t_size);
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = t_buffer.Chars() != NULL &&
-                    t_file -> handle -> Read(t_buffer.Chars(), t_size, t_read) &&
-                    t_read == t_size;
+        t_success = t_file -> handle -> Read(t_buffer.Chars(), t_size);
     
     if (t_success)
     {
@@ -1241,9 +1232,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     ep . binarytotext();
     /* UNCHECKED */ ep . copyasstring(&t_string);
     
-	uint32_t t_written;
-	if (!t_file -> handle -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), t_written) ||
-		MCStringGetLength(*t_string) != t_written)
+	if (!t_file -> handle -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
 		MCresult -> sets("error writing file");
 	
 	t_file -> handle -> Close();
@@ -1272,8 +1261,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
     
 	uint32_t t_written;
-	if (!t_file -> handle -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), t_written) ||
-		MCDataGetLength(p_data) != t_written)
+	if (!t_file -> handle -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
 		MCresult -> sets("error writing file");
 	
 	t_file -> handle -> Close();
@@ -1337,24 +1325,24 @@ IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream)
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
 	
-    IO_stat t_stat;
-    uint32_t t_read;
-    t_stat = p_stream -> handle -> Read(p_ptr, p_byte_size, t_read);
-    if (t_stat == IO_NORMAL)
-        return t_stat;
-    if (t_read != p_byte_size)
+    if (!p_stream -> handle -> Read(p_ptr, p_byte_size))
         return IO_ERROR;
-    return t_stat;
+    
+    return IO_NORMAL;
 }
 
-IO_stat MCS_readall(void *p_ptr, uint32_t& r_count, IO_handle p_stream)
+IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint32_t& r_bytes_read)
 {
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
-    r_count = p_stream -> handle -> GetFileSize();
+    if (!p_stream -> handle -> ReadAvailable(p_ptr, p_byte_count, r_bytes_read))
+        return IO_ERROR;
     
-    return p_stream -> handle -> Read(p_ptr, 1, r_count);
+    if (p_stream -> handle -> IsExhausted())
+        return IO_EOF;
+    
+    return IO_NORMAL;
 }
 
 IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handle p_stream)
@@ -1369,8 +1357,7 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	t_to_write = p_size * p_count;
 	
 	uint32_t t_written;
-	if (!p_stream -> handle -> Write(p_ptr, t_to_write, t_written) ||
-		t_to_write != t_written) // redundant
+	if (!p_stream -> handle -> Write(p_ptr, t_to_write))
 		return IO_ERROR;
 	
 	return IO_NORMAL;

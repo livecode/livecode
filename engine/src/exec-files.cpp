@@ -1003,7 +1003,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	{
 		uint4 rsize = size - tsize;
 		uint4 fullsize = rsize;
-		r_stat = MCS_readfixed(t_current.Chars() + tsize, rsize, p_stream); // ??? readall ???
+		r_stat = MCS_readall(t_current.Chars() + tsize, rsize, p_stream, rsize);
 		tsize += rsize;
 		if (rsize < fullsize)
 		{
@@ -1221,7 +1221,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_readfixed(t_buffer.Chars() + size, rsize, p_stream); // ??? readall ???
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, p_stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -1289,7 +1289,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 						{
 							uint1 term;
 							uint4 nread = 1;
-							if (MCS_readfixed(&term, nread, p_stream) == IO_NORMAL) // ??? readall ???
+							if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
                             {
 								if (term != '\n')
 									MCS_putback(term, p_stream);
@@ -1346,7 +1346,7 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_readfixed(t_buffer.Chars() + size, rsize, stream); // ??? readall ???
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
