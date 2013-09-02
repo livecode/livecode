@@ -177,7 +177,7 @@ void MCTooltip::opentip()
 	{
 		MCStringRef t_line = nil;
 		MCValueRef t_lineval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, t_lineval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
 		t_line = (MCStringRef)t_lineval;
 		rect.width = MCU_max(MCFontMeasureText(m_font, t_line) + 8, rect.width);
 		rect.height += t_fheight +3;
@@ -234,7 +234,7 @@ void MCTooltip::render(MCContext *dc, const MCRectangle &dirty)
 	{
 		MCStringRef t_line = nil;
 		MCValueRef t_lineval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, t_lineval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, t_lineval);
 		t_line = (MCStringRef)t_lineval;
 		MCFontDrawText(m_font, t_line, dc, 4, t_y + t_fheight, False);
 		t_y += t_fheight + 3;
