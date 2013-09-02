@@ -68,6 +68,38 @@ MCStringRef MCSTR(const char *p_cstring)
 	return (MCStringRef)t_unique_string;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+// Create an immutable string from the given bytes, interpreting them using
+// the specified encoding.
+bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, MCStringRef& r_string)
+{
+    bool t_success;
+    MCStringRef t_string;
+    
+    switch (p_encoding)
+    {
+    default:
+        t_success = false;
+    }
+    return t_success;
+}
+
+bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, MCStringRef& r_string)
+{
+    MCStringRef t_string;
+    
+    if (!MCStringCreateWithBytes(p_bytes, p_byte_count, p_encoding, t_string))
+        return false;
+    
+    r_string = t_string;
+    free(p_bytes);
+    
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCStringCreateWithChars(const unichar_t *p_chars, uindex_t p_char_count, MCStringRef& r_string)
 {
 	bool t_success;
@@ -172,6 +204,86 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 	}
 
 	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
+{
+    bool t_success;
+    MCAutoDataRef t_data;
+    
+    switch (p_encoding)
+    {
+    case kMCStringEncodingASCII:
+        t_success = MCDataCreateWithBytes(MCStringGetBytePtr(p_string), MCStringGetLength(p_string), &t_data);
+        break;
+    case kMCStringEncodingISO8859_1:
+        break;
+    case kMCStringEncodingWindows1252:
+        break;
+    case kMCStringEncodingUTF16:
+        break;
+    case kMCStringEncodingUTF32:
+        break;
+    case kMCStringEncodingUTF8:
+        break;
+    }
+    
+    return t_success;
+}
+
+bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
+{    
+    MCDataRef t_data;
+    
+    if (!MCStringEncode(p_string, p_encoding, p_is_external_rep, t_data))
+        return false;
+    
+    MCValueRelease(p_string);
+    r_data = t_data;
+    
+    return true;
+}
+
+bool MCStringDecode(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
+{
+    bool t_success;
+    MCAutoStringRef t_string;
+    
+    switch (p_encoding)
+    {
+        case kMCStringEncodingASCII:
+            t_success = MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
+            break;
+        case kMCStringEncodingISO8859_1:
+            break;
+        case kMCStringEncodingNative:
+            break;
+        case kMCStringEncodingUTF16:
+            break;
+        case kMCStringEncodingUTF32:
+            break;
+        case kMCStringEncodingUTF8:
+            break;
+        case kMCStringEncodingWindows1252:
+            break;
+    }
+    
+    return t_success;
+}
+
+bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
+{
+    MCStringRef t_string;
+    
+    if (!MCStringDecode(p_data, p_encoding, p_is_external_rep, t_string))
+        return false;
+    
+    MCValueRelease(p_data);
+    r_string = t_string;
+    
+    return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
