@@ -1188,8 +1188,8 @@ MCStringRef MCSTR(const char *string);
 
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
-bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
-bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, MCStringRef& r_string);
+bool MCStringCreateWithBytes(const byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
+bool MCStringCreateWithBytesAndRelease(byte_t *bytes, uindex_t byte_count, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
 // Create an immutable string from the given unicode char sequence.
 bool MCStringCreateWithChars(const unichar_t *chars, uindex_t char_count, MCStringRef& r_string);
@@ -1306,6 +1306,11 @@ uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars
 bool MCStringIsNative(MCStringRef string);
 
 /////////
+
+// Converts the contents of the string to bytes using the given encoding. The caller
+// takes ownership of the byte array. Note that the returned array is NUL terminated,
+// but this is not reflected in the byte count.
+bool MCStringConvertToBytes(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count);
 
 // Converts the contents of the string to unicode. The caller takes ownership of the
 // char array. Note that the returned array is NUL terminated, but this is not

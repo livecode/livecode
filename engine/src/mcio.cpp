@@ -750,7 +750,7 @@ IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unico
 	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
 		return stat;
 		
-	if (!MCStringCreateWithBytesAndRelease((const byte_t *)t_bytes, t_length, t_encoding, r_string))
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
 	{
 		delete t_bytes;
 		return IO_ERROR;
@@ -783,7 +783,7 @@ IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 si
 	uint4 t_length = 0;
 	if ((stat = IO_read_string(t_bytes, t_length, stream, false, size)) != IO_NORMAL)
 		return stat;
-	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, kMCStringEncodingUTF8, r_string))
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, kMCStringEncodingUTF8, false, r_string))
 	{
 		delete[] t_bytes;
 		return IO_ERROR;

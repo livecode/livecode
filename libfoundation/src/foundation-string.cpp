@@ -72,24 +72,57 @@ MCStringRef MCSTR(const char *p_cstring)
 
 // Create an immutable string from the given bytes, interpreting them using
 // the specified encoding.
-bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, MCStringRef& r_string)
+bool MCStringCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-    bool t_success;
-    MCStringRef t_string;
+    assert(!p_is_external_rep);
     
     switch (p_encoding)
     {
-    default:
-        t_success = false;
+        case kMCStringEncodingASCII:
+        case kMCStringEncodingNative:
+            return MCStringCreateWithNativeChars(p_bytes, p_byte_count, r_string);
+        case kMCStringEncodingUTF16:
+            return MCStringCreateWithChars((unichar_t *)p_bytes, p_byte_count / 2, r_string);
+        case kMCStringEncodingUTF8:
+        {
+            unichar_t *t_chars;
+            uindex_t t_char_count;
+            t_char_count = MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, nil, 0);
+            if (!MCMemoryNewArray(t_char_count, t_chars))
+                return false;
+            MCUnicodeCharsMapFromUTF8(p_bytes, p_byte_count, t_chars, t_char_count);
+            if (!MCStringCreateWithCharsAndRelease(t_chars, t_char_count, r_string))
+            {
+                MCMemoryDeleteArray(t_chars);
+                return false;
+            }
+            return true;
+        }
+        break;
+        case kMCStringEncodingUTF32:
+            break;
+#ifndef __LINUX__
+        case kMCStringEncodingISO8859_1:
+            break;
+#endif
+#ifndef __WINDOWS__
+        case kMCStringEncodingWindows1252:
+            break;
+#endif
+#ifndef __MAC__
+        case kMCStringEncodingMacRoman:
+            break;
+#endif
     }
-    return t_success;
+    
+    return false;
 }
 
-bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, MCStringRef& r_string)
+bool MCStringCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
     MCStringRef t_string;
     
-    if (!MCStringCreateWithBytes(p_bytes, p_byte_count, p_encoding, t_string))
+    if (!MCStringCreateWithBytes(p_bytes, p_byte_count, p_encoding, p_is_external_rep, t_string))
         return false;
     
     r_string = t_string;
@@ -210,27 +243,18 @@ bool MCStringCreateMutable(uindex_t p_initial_capacity, MCStringRef& r_string)
 
 bool MCStringEncode(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
 {
-    bool t_success;
-    MCAutoDataRef t_data;
+    byte_t *t_bytes;
+    uindex_t t_byte_count;
+    if (!MCStringConvertToBytes(p_string, p_encoding, p_is_external_rep, t_bytes, t_byte_count))
+        return false;
     
-    switch (p_encoding)
+    if (!MCDataCreateWithBytesAndRelease(t_bytes, t_byte_count, r_data))
     {
-    case kMCStringEncodingASCII:
-        t_success = MCDataCreateWithBytes(MCStringGetBytePtr(p_string), MCStringGetLength(p_string), &t_data);
-        break;
-    case kMCStringEncodingISO8859_1:
-        break;
-    case kMCStringEncodingWindows1252:
-        break;
-    case kMCStringEncodingUTF16:
-        break;
-    case kMCStringEncodingUTF32:
-        break;
-    case kMCStringEncodingUTF8:
-        break;
+        free(t_bytes);
+        return false;
     }
-    
-    return t_success;
+
+    return true;
 }
 
 bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding, bool p_is_external_rep, MCDataRef& r_data)
@@ -248,29 +272,7 @@ bool MCStringEncodeAndRelease(MCStringRef p_string, MCStringEncoding p_encoding,
 
 bool MCStringDecode(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
 {
-    bool t_success;
-    MCAutoStringRef t_string;
-    
-    switch (p_encoding)
-    {
-        case kMCStringEncodingASCII:
-            t_success = MCStringCreateWithNativeChars(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), &t_string);
-            break;
-        case kMCStringEncodingISO8859_1:
-            break;
-        case kMCStringEncodingNative:
-            break;
-        case kMCStringEncodingUTF16:
-            break;
-        case kMCStringEncodingUTF32:
-            break;
-        case kMCStringEncodingUTF8:
-            break;
-        case kMCStringEncodingWindows1252:
-            break;
-    }
-    
-    return t_success;
+    return MCStringCreateWithBytes(MCDataGetBytePtr(p_data), MCDataGetLength(p_data), p_encoding, p_is_external_rep, r_string);
 }
 
 bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, bool p_is_external_rep, MCStringRef& r_string)
@@ -530,6 +532,38 @@ bool MCStringIsNative(MCStringRef string)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCStringConvertToBytes(MCStringRef self, MCStringEncoding p_encoding, bool p_is_external_rep, byte_t*& r_bytes, uindex_t& r_byte_count)
+{
+    assert(!p_is_external_rep);
+    
+    switch(p_encoding)
+    {
+    case kMCStringEncodingASCII:
+    case kMCStringEncodingNative:
+        return MCStringConvertToNative(self, (char_t*&)r_bytes, r_byte_count);
+    case kMCStringEncodingUTF16:
+        return MCStringConvertToUnicode(self, (unichar_t*&)r_bytes, r_byte_count);
+    case kMCStringEncodingUTF8:
+        return MCStringConvertToUTF8(self, (char*&)r_bytes, r_byte_count);
+    case kMCStringEncodingUTF32:
+        break;
+#ifndef __LINUX__
+    case kMCStringEncodingISO8859_1:
+        break;
+#endif
+#ifndef __WINDOWS__
+    case kMCStringEncodingWindows1252:
+        break;
+#endif
+#ifndef __MAC__
+    case kMCStringEncodingMacRoman:
+        break;
+#endif
+    }
+    
+    return false;
+}
+
 bool MCStringConvertToUnicode(MCStringRef self, unichar_t*& r_chars, uindex_t& r_char_count)
 {
 	// Allocate an array of chars one bigger than needed. As the allocated array
@@ -604,12 +638,12 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
     
     uindex_t t_char_count = MCStringGetChars(p_string, MCRangeMake(0, t_length), t_unichars);
     
-    t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil);
+    t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil, 0);
     
     if (!MCMemoryNewArray(t_byte_count, r_utf8string))
         return false;
     
-    MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string);
+    MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string, t_byte_count);
 	r_utf8_chars = t_byte_count;
     
     // Delete temporary unichar_t array

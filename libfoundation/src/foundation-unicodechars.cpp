@@ -49,10 +49,215 @@ void MCUnicodeCharsMapFromNative(const char_t *p_chars, uindex_t p_char_count, u
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// Convert the given UTF-8 string to Unicode. Both counts are in bytes.
+// Returns the number of bytes used.
+static int32_t UTF8ToUnicode(const byte_t *p_src, int32_t p_src_count, uint16_t *p_dst, int32_t p_dst_count)
+{
+	int32_t t_made;
+	t_made = 0;
+	
+	for(;;)
+	{
+		if (p_src_count == 0)
+			break;
+		
+		uint32_t t_consumed;
+		t_consumed = 0;
+		
+		uint32_t t_codepoint;
+		if ((p_src[0] & 0x80) == 0)
+		{
+			t_codepoint = p_src[0];
+			t_consumed = 1;
+		}
+		else if ((p_src[0] & 0x40) == 0)
+		{
+			// This is an error
+		}
+		else if ((p_src[0] & 0x20) == 0)
+		{
+			if (p_src_count >= 2)
+			{
+				t_codepoint = (p_src[0] & 0x1f) << 6;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f);
+					t_consumed = 2;
+				}
+			}
+		}
+		else if ((p_src[0] & 0x10) == 0)
+		{
+			if (p_src_count >= 3)
+			{
+				t_codepoint = (p_src[0] & 0x0f) << 12;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f) << 6;
+					if ((p_src[2] & 0xc0) == 0x80)
+					{
+						t_codepoint |= (p_src[2] & 0x3f);
+						t_consumed = 3;
+					}
+				}
+			}
+		}
+		else if ((p_src[0] & 0x08) == 0)
+		{
+			if (p_src_count >= 4)
+			{
+				t_codepoint = (p_src[0] & 0x07) << 18;
+				if ((p_src[1] & 0xc0) == 0x80)
+				{
+					t_codepoint |= (p_src[1] & 0x3f) << 12;
+					if ((p_src[2] & 0xc0) == 0x80)
+					{
+						t_codepoint |= (p_src[2] & 0x3f) << 6;
+						if ((p_src[3] & 0xc0) == 0x80)
+						{
+							t_codepoint |= p_src[3] & 0x3f;
+							t_consumed = 4;
+						}
+					}
+				}
+			}
+		}
+		
+		if (t_consumed != 0)
+		{
+			if (t_codepoint < 65536)
+			{
+				if (p_dst_count != 0)
+				{
+					if ((t_made + 1) * 2 > p_dst_count)
+						break;
+					
+					p_dst[t_made] = t_codepoint;
+					
+				}
+				t_made += 1;
+			}
+			else
+			{
+				if (p_dst_count != 0)
+				{
+					if ((t_made + 2) * 2 > p_dst_count)
+						break;
+					
+					t_codepoint -= 0x10000;
+					
+					p_dst[t_made + 0] = 0xD800 + (t_codepoint >> 10);
+					p_dst[t_made + 1] = 0xDC00 + (t_codepoint & 0x03ff);
+				}
+				
+				t_made += 2;
+			}
+		}
+		else
+			t_consumed = 1;
+		
+		p_src += t_consumed;
+		p_src_count -= t_consumed;
+	}
+	
+	return t_made * 2;
+}
+
+// Converts the given UTF-16 string to UTF-8. Both counts are in bytes.
+// Returns the number of bytes generated.
+static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t *p_dst, int32_t p_dst_count)
+{
+	int32_t t_made;
+	t_made = 0;
+	
+	for(;;)
+	{
+		if (p_src_count < 2)
+			break;
+		
+		uint32_t t_codepoint;
+		t_codepoint = p_src[0];
+		if (t_codepoint < 0xD800 ||
+			t_codepoint >= 0xDC00 ||
+			p_src_count < 4 ||
+			p_src[1] < 0xDC00 ||
+			p_src[1] >= 0xE000)
+		{
+			p_src_count -= 2;
+			p_src += 1;
+		}
+		else
+		{
+			t_codepoint = 0x10000 + ((t_codepoint - 0xD800) << 10) + (p_src[1] - 0xDC00);
+			p_src_count -= 4;
+			p_src += 2;
+		}
+		
+		if (t_codepoint < 128)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 1 > p_dst_count)
+					break;
+				
+				p_dst[t_made] = t_codepoint;
+			}
+			
+			t_made += 1;
+		}
+		else if (t_codepoint < 0x0800)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 2 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xc0 | (t_codepoint >> 6);
+				p_dst[t_made + 1] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 2;
+		}
+		else if (t_codepoint < 0x10000)
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 3 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xe0 | (t_codepoint >> 12);
+				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 6) & 0x3f);
+				p_dst[t_made + 2] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 3;
+		}
+		else
+		{
+			if (p_dst_count != 0)
+			{
+				if (t_made + 4 > p_dst_count)
+					break;
+				
+				p_dst[t_made + 0] = 0xf0 | (t_codepoint >> 18);
+				p_dst[t_made + 1] = 0x80 | ((t_codepoint >> 12) & 0x3f);
+				p_dst[t_made + 2] = 0x80 | ((t_codepoint >> 6) & 0x3f);
+				p_dst[t_made + 3] = 0x80 | (t_codepoint & 0x3f);
+			}
+			
+			t_made += 4;
+		}
+	}
+	
+	return t_made;
+}
+
 // If utf8bytes is nil, returns the number of bytes needed to convert the chars
 // If utf8bytes is not nil, does the conversion
-uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes)
+uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count)
 {
+    return UnicodeToUTF8(wchars, wchar_count, utf8bytes, utf8byte_count);
+#if 0
     uindex_t t_bytes_needed;
     t_bytes_needed = 0;
     
@@ -82,12 +287,15 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
     }
     
     return t_bytes_needed;
+#endif
 }
 
 // If wchars is nil, returns the size of the buffer (in wchars needed)
 // If wchars is not nil, does the conversion into wchars
-uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars)
+uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
 {
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count);
+#if 0
     uindex_t t_wchars_needed;
     t_wchars_needed = 0;
     
@@ -98,12 +306,17 @@ uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_co
         // According to the first byte value, we can determine the number of
         // bytes a conversion would need
         if (utf8bytes[i] < 0x80)
+        {
             t_size_in_bytes = 1;
-        
+            t_wchars_needed += 1;
+        }
         else if (wchars[i] < 0xE0)
+        {
             t_size_in_bytes = 2;
-        
+            t_wchars_needed += 1;
+        }
         else if (wchars[i] < 0xF0)
+        {
             t_size_in_bytes = 3;
         
         else
@@ -117,7 +330,8 @@ uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_co
         i += t_size_in_bytes;
     }
     
-    return t_wchars_needed;  
+    return t_wchars_needed;
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////
