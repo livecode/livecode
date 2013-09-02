@@ -2419,7 +2419,7 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 		X509_NAME_oneline(X509_get_subject_name(cert), data, 256);
 		
 		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  subject  = %s\n", data);
-		/* UNCHECKED */ MCStringAppendFormat(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  err %i:%s\n", err, X509_verify_cert_error_string(err));
 		
 		/* UNCHECKED */ MCStringCopyAndRelease(sslerror, sslerror);
 	}
