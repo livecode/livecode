@@ -202,7 +202,7 @@ MCPlayer::MCPlayer()
 	flags |= F_TRAVERSAL_ON;
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
-	filename = nil;
+	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
 	scale = 1.0;
 	rate = 1.0;
@@ -1303,8 +1303,7 @@ void MCPlayer::freetmp()
 	if (istmpfile)
 	{
 		MCS_unlink(filename);
-		MCValueRelease(filename);
-		filename = nil;
+		MCValueAssign(filename, kMCEmptyString);
 	}
 }
 
@@ -1494,7 +1493,7 @@ Boolean MCPlayer::prepare(const char *options)
 {
 	Boolean ok = False;
 
-	if (state & CS_PREPARED || filename == nil)
+	if (state & CS_PREPARED || MCStringIsEmpty(filename))
 		return True;
 	
 	if (!opened)

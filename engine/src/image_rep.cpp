@@ -235,10 +235,8 @@ bool MCCachedImageRep::FindReferencedWithFilename(MCStringRef p_filename, MCCach
 {
 	for (MCCachedImageRep *t_rep = s_head; t_rep != nil; t_rep = t_rep->m_next)
 	{
-		MCAutoStringRef t_filename;
-		static_cast<MCReferencedImageRep*>(t_rep)->GetFilename(&t_filename);
 		if (t_rep->GetType() == kMCImageRepReferenced &&
-			MCStringIsEqualTo(*t_filename, p_filename, kMCStringOptionCompareExact))
+			MCStringIsEqualTo(static_cast<MCReferencedImageRep*>(t_rep)->GetFilename(), p_filename, kMCStringOptionCompareExact))
 		{
 			r_rep = t_rep;
 			return true;
@@ -296,7 +294,7 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 		return true;
 	}
 	
-	t_rep = new MCReferencedImageRep(MCStringGetCString(p_filename));
+	t_rep = new MCReferencedImageRep(p_filename);
 	
 	t_success = t_rep != nil;
 	if (t_success)

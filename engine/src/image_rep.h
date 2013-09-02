@@ -157,16 +157,16 @@ protected:
 class MCReferencedImageRep : public MCEncodedImageRep
 {
 public:
-	MCReferencedImageRep(const char *p_filename);
+	MCReferencedImageRep(MCStringRef p_filename);
 	~MCReferencedImageRep();
 
 	MCImageRepType GetType() { return kMCImageRepReferenced; }
 
 	//////////
 
-	void GetFilename(MCStringRef& r_fname)
+	MCStringRef GetFilename()
 	{
-		r_fname = MCValueRetain(m_file_name);
+		return m_file_name;
 	}
 
 	//////////

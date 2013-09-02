@@ -134,7 +134,7 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
-		p_name == nil || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
+		MCStringIsEmpty(p_name) || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
 		setfilename(p_name);
 		resetimage();

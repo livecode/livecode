@@ -125,11 +125,9 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
+MCReferencedImageRep::MCReferencedImageRep(MCStringRef p_file_name)
 {
-	MCAutoStringRef t_file_name;
-	/* UNCHECKED */ MCStringCreateWithCString(p_file_name, &t_file_name);
-	m_file_name = MCValueRetain(*t_file_name);
+	m_file_name = MCValueRetain(p_file_name);
 	m_url_data = nil;
 }
 
@@ -150,7 +148,7 @@ bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 		if (m_url_data == nil)
 		{
 			MCExecPoint ep(MCdefaultstackptr, nil, nil);
-			ep.setsvalue(MCStringGetCString(m_file_name));
+			ep.setvalueref(m_file_name);
 			MCU_geturl(ep);
 			if (ep.getsvalue().getlength() == 0)
 				return false;

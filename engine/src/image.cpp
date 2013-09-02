@@ -113,7 +113,7 @@ MCImage::MCImage()
 
 	m_needs = nil;
 
-	filename = nil;
+	filename = MCValueRetain(kMCEmptyString);
 
 	xhot = yhot = 1;
 	currentframe = 0;
@@ -156,8 +156,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 			m_rep = iref . m_rep->Retain();
 	}
 
-	if (iref.flags & F_HAS_FILENAME)
-		filename = MCValueRetain(iref.filename);
+	
+	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -185,8 +185,8 @@ MCImage::~MCImage()
 		m_transformed = nil;
 	}
 
-	if (filename != nil)
-		MCValueRelease(filename);
+	
+	MCValueRelease(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -1587,6 +1587,11 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 
 IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
+	if (MCStringIsEmpty(filename))
+		flags |= F_HAS_FILENAME;
+	else
+		flags &= ~F_HAS_FILENAME;
+
 	IO_stat stat;
 
 	recompress();
@@ -1774,7 +1779,6 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			return stat;
 
 		/* UNCHECKED */ setfilename(*t_filename);
-		MCValueRelease(*t_filename);
 	}
 	else
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
@@ -2133,7 +2137,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 {
 	bool t_success = true;
 
-	if (p_filename == nil)
+	if (MCStringIsEmpty(p_filename))
 	{
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
@@ -2164,10 +2168,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
-		if (filename != nil)
-			MCValueRelease(filename);
-		filename = MCValueRetain(*t_filename);
-
+		MCValueAssign(filename, *t_filename);
 	}
 
 	return t_success;
