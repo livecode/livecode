@@ -21,22 +21,18 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 struct MCMenuItem
 {
 	int4 depth;
-	MCString label;
-	bool is_unicode;
+	MCStringRef label;
 	bool is_disabled;
 	bool is_radio;
 	bool is_hilited;
 	uint4 accelerator;
-	const char *accelerator_name;
+	MCStringRef accelerator_name;
 	uint1 modifiers;
 	uint4 mnemonic;
-	MCString tag;
+	MCStringRef tag;
 	uint1 menumode;
 	
-	void assignFrom(MCMenuItem *p_from)
-	{
-		memcpy(this, p_from, sizeof(MCMenuItem));
-	}
+	void assignFrom(MCMenuItem *p_from);
 };
 
 class IParseMenuCallback
@@ -47,7 +43,7 @@ public:
 	virtual bool End(bool p_has_tags) {return false;}
 };
 
-extern bool MCParseMenuString(MCString &r_string, IParseMenuCallback *p_callback, bool isunicode, uint1 p_menumode);
+extern void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, uint1 p_menumode);
 extern uint4 MCLookupAcceleratorKeysym(MCStringRef p_name);
 extern const char *MCLookupAcceleratorName(uint4 p_keysym);
 

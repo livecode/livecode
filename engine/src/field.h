@@ -346,7 +346,7 @@ public:
 	void fcenter(Field_translations function, const char *string, KeySym key);
 	void fmove(Field_translations function, const char *string, KeySym key);
 	void fscroll(Field_translations function, const char *string, KeySym key);
-	void setupmenu(const MCString &s, uint2 fheight, Boolean scrolling, Boolean isunicode);
+	void setupmenu(MCStringRef p_string, uint2 fheight, Boolean scrolling);
 	void setupentry(MCButton *bptr, const MCString &s, Boolean isunicode);
 	void typetext(const MCString &newtext);
 	void startcomposition();

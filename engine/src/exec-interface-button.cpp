@@ -271,7 +271,10 @@ void MCButton::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 		if (menumode == WM_COMBO)
 			createentry();
 		if (menumode == WM_TOP_LEVEL)
-			MCU_break_string(MCString(menustring, menusize), tabs, ntabs, hasunicode());
+		{
+			MCValueRelease(tabs);
+			/* UNCHECKED */ MCStringSplit(menustring, MCSTR("\n"), nil, kMCStringOptionCompareExact, tabs);
+		}
 		break;
 	case kMCButtonStyleCheck:
 		flags |= F_CHECK | F_ALIGN_LEFT;
@@ -575,6 +578,8 @@ void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 		return;
 	
 	MCValueAssign(label, p_label);
+	clearmnemonic();
+	setupmnemonic();
 	Redraw();
 }
 
@@ -717,37 +722,30 @@ void MCButton::SetMenuMode(MCExecContext& ctxt, intenum_t p_mode)
 	else if (p_mode == WM_TOP_LEVEL)
 	{
 		if (getstyleint(flags) == F_MENU)
-			MCU_break_string(MCString(menustring, menusize), tabs, ntabs, hasunicode());
+		{
+			MCValueRelease(tabs);
+			/* UNCHECKED */ MCStringSplit(menustring, MCSTR("\n"), nil, kMCStringOptionCompareExact, tabs);
+		}
 	}
 	
 	Redraw();
 }
 
-void MCButton::GetMenuName(MCExecContext& ctxt, MCStringRef& r_name)
+void MCButton::GetMenuName(MCExecContext& ctxt, MCNameRef& r_name)
 {
-	if (menuname == NULL)
-		return;
-
-	if (MCStringCreateWithCString(menuname, r_name))
-		return;
-
-	ctxt . Throw();
+	r_name = MCValueRetain(menuname);
 }
-void MCButton::SetMenuName(MCExecContext& ctxt, MCStringRef p_name)
+
+void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 {
 	freemenu(False);
-	delete menuname;
-	if (p_name != nil)
+	MCValueAssign(menuname, p_name);
+
+	if (opened)
 	{
-		menuname = strclone(MCStringGetCString(p_name));
-		if (opened)
-		{
-			if (findmenu(true))
-				menu->installaccels(getstack());
-		}
+		if (findmenu(true))
+			menu->installaccels(getstack());
 	}
-	else
-		menuname = NULL;
 }
 
 void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
@@ -1030,105 +1028,53 @@ void MCButton::SetDisabled(MCExecContext& ctxt, uint32_t part, bool flag)
 	}
 }
 
-void MCButton::DoSetText(MCExecContext& ctxt, MCStringRef p_text)
-{
-	bool t_dirty;
-	t_dirty = true;
-
-	// If nothing has changed then just reset the label; otherwise change the text.
-	if (menustring != NULL && p_text != nil && MCStringIsEqualToOldString(p_text, menustring, kMCCompareExact))
-	{
-		// Try to coerce everything back to native.
-		trytochangetonative();
-		t_dirty = resetlabel();
-	}
-	else
-	{
-		freemenu(False);
-		delete menustring;
-
-		if (p_text != nil)
-		{
-			flags |= F_MENU_STRING;
-			menusize = MCStringGetLength(p_text);
-			menustring = new char[menusize];
-			memcpy(menustring, MCStringGetCString(p_text), menusize);
-		}
-		else
-		{
-			flags &= ~F_MENU_STRING;
-			menustring = NULL;
-			menusize = 0;
-		}
-
-		// Now that we've updated the text, try to coerce everything back to native.
-		trytochangetonative();
-		
-		if (getflag(F_MENU_STRING))
-			findmenu(true);
-
-		menuhistory = 1;
-		t_dirty = resetlabel() || menumode == WM_TOP_LEVEL;
-		if (parent != NULL && parent->gettype() == CT_GROUP)
-		{
-			parent->setstate(True, CS_NEED_UPDATE);
-			if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
-				MCscreen->updatemenubar(True);
-		}
-	}
-
-	if (t_dirty)
-		Redraw();
-}
-
 void MCButton::GetText(MCExecContext& ctxt, MCStringRef& r_text)
 {
-	MCString mtext;
-	mtext . set(menustring, menusize);
-
-	if (MCU_mapunicode(mtext, hasunicode(), false, r_text))
-		return;
-
-	ctxt . Throw();
+	r_text = MCValueRetain(menustring);
 }
 
 void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
 {
-	if (hasunicode() && p_text != nil)
-	{
-		MCAutoStringRef t_text;
-		if (MCU_multibytetounicode(p_text, LCH_ROMAN, &t_text))
-		{
-			DoSetText(ctxt, *t_text);
-			return;
-		}
-	}
-	else
-	{
-		DoSetText(ctxt, p_text);	
+	if (MCStringIsEqualTo(menustring, p_text, kMCStringOptionCompareExact))
 		return;
+	
+	freemenu(False);
+	MCValueAssign(menustring, p_text);
+	if (!MCStringIsEmpty(p_text))
+		findmenu(true);
+	
+	menuhistory = 1;
+	if (parent != NULL && parent->gettype() == CT_GROUP)
+	{
+		parent->setstate(True, CS_NEED_UPDATE);
+		if ((parent == MCmenubar || parent == MCdefaultmenubar) && !MClockmenus)
+			MCscreen->updatemenubar(True);
 	}
-
-	ctxt . Throw();
+	
+	Redraw();
 }
 
-void MCButton::GetUnicodeText(MCExecContext& ctxt, MCStringRef& r_text)
+void MCButton::GetUnicodeText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-	MCString mtext;
-	mtext . set(menustring, menusize);
-
-	if (MCU_mapunicode(mtext, hasunicode(), true, r_text))
+	MCStringRef t_text = nil;
+	GetText(ctxt, t_text);
+	if (MCStringEncodeAndRelease(t_text, kMCStringEncodingUTF16, false, r_text))
 		return;
-
-	ctxt . Throw();
+	MCValueRelease(t_text);
+	
+	ctxt.Throw();
 }
 
-void MCButton::SetUnicodeText(MCExecContext& ctxt, MCStringRef p_text)
+void MCButton::SetUnicodeText(MCExecContext& ctxt, MCDataRef p_text)
 {
-	if (!hasunicode())
-		switchunicode(true);
-
-	DoSetText(ctxt, p_text);
+	MCAutoStringRef t_new_text;
+	if (MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_new_text))
+	{
+		SetText(ctxt, *t_new_text);
+		return;
+	}
+	
+	ctxt.Throw();
 }
 
 void MCButton::SetCantSelect(MCExecContext& ctxt, bool setting)

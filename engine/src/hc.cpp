@@ -989,11 +989,10 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		}
 		else
 		{
-			bptr->flags |= F_MENU_STRING;
-			if (bptr->menustring != NULL)
-				delete bptr->menustring;
-			bptr->menustring = tptr->buildm();
-			bptr->menusize = strlen(bptr->menustring);
+			MCStringRef t_menustring = nil;
+			/* UNCHECKED */ MCStringCreateWithCString(tptr->buildm(), t_menustring);
+			MCValueAssign(bptr->menustring, t_menustring);
+			MCValueRelease(t_menustring);
 		}
 		delete tptr;
 	}

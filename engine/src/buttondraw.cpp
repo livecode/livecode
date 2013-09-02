@@ -1206,19 +1206,25 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 	MCWidgetInfo tabwinfo;
 	tabwinfo.type = WTHEME_TYPE_TAB;
 	getwidgetthemeinfo(tabwinfo);
-	for (i = 0 ; i < ntabs ; i++)
+	
+	uindex_t t_ntabs;
+	t_ntabs = MCArrayGetCount(tabs);
+	for (i = 0 ; i < t_ntabs ; i++)
 	{
 		Boolean disabled = False;
-		const char *sptr = tabs[i].getstring();
-		uint2 length = tabs[i].getlength();
-		if (MCU_comparechar(sptr, '(', hasunicode()))
+		MCValueRef t_tabval = nil;
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		MCStringRef t_tab;
+		t_tab = (MCStringRef)t_tabval;
+		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_tab));
+		if (MCStringGetCharAtIndex(t_tab, 0) == '(')
 		{
 			disabled = True;
-			sptr++;
-			length--;
+			t_range.offset++;
+			t_range.length--;
 		}
 		uint2 textx; //x coord of the begining of the button text
-		uint2 twidth = MCFontMeasureText(m_font, sptr, length, hasunicode());
+		uint2 twidth = MCFontMeasureTextSubstring(m_font, t_tab, t_range);
 		if (MCcurtheme && MCcurtheme->iswidgetsupported(WTHEME_TYPE_TABPANE) &&
 		        MCcurtheme->iswidgetsupported(WTHEME_TYPE_TAB))
 		{
@@ -1275,7 +1281,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 
 			if (i==0)
 				tabwinfo.attributes |= WTHEME_ATT_FIRSTTAB;
-			else if (i == (ntabs-1))
+			else if (i == (t_ntabs - 1))
 				tabwinfo.attributes |= WTHEME_ATT_LASTTAB;
 			MCRectangle tabrect = MCU_compute_rect(curx, srect.y + yoffset, curx + twidth, srect.y + theight);
 			if (MCcurtheme->getthemeid() != LF_NATIVEGTK || (srect.x + srect.width > curx + twidth + 5 &&
@@ -1476,7 +1482,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				break;
 			default:
 				setforeground(dc, DI_TOP, False);
-				MCFontDrawText(m_font, sptr, length, hasunicode(), dc, textx, cury + yoffset + 1, False);
+				MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset + 1, False);
 				setforeground(dc, DI_BOTTOM, False);
 				break;
 			}
@@ -1486,7 +1492,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 				setforeground(dc, DI_BACK, False, True);
 			else
 				setforeground(dc, DI_FORE, False);
-		MCFontDrawText(m_font, sptr, length, hasunicode(), dc, textx, cury + yoffset, False);
+		MCFontDrawTextSubstring(m_font, t_tab, t_range, dc, textx, cury + yoffset, False);
 		if ((disabled || flags & F_DISABLED) && MClook == LF_MOTIF)
 			dc->setfillstyle(FillSolid, DNULL, 0 , 0);
 		curx += twidth;

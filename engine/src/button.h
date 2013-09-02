@@ -102,15 +102,13 @@ class MCButton : public MCControl
 	MCCdata *bdata;
 	iconlist *icons;
 	MCStringRef label;
-	uint2 menusize;
-	char *menuname;
-	char *menustring;
+	MCNameRef menuname;
+	MCStringRef menustring;
 	MCField *entry;
 	MCStack *menu;
 	MCStringRef acceltext;
 	char *seltext;
-	MCString *tabs;
-	uint2 ntabs;
+	MCArrayRef tabs;
 	uint2 menuhistory;
 	uint2 menulines;
 	uint2 accelkey;
@@ -239,9 +237,13 @@ public:
 	
 	MCStringRef getlabeltext();
 
-	void getmenustring(MCString &s)
+	MCStringRef getmenustring()
 	{
-		s.set(menustring, menusize);
+		return menustring;
+	}
+	void setmenustring(MCStringRef p_string)
+	{
+		MCValueAssign(menustring, p_string);
 	}
 	uint1 getmenumode()
 	{
@@ -283,7 +285,7 @@ public:
 	void openmenu(Boolean grab);
 	void freemenu(Boolean force);
 	void docascade(MCStringRef &x_pick);
-	void getmenuptrs(const char *&sptr, const char *&eptr);
+	MCRange getmenurange();
 	void setupmenu();
 	bool selectedchunk(MCStringRef& r_string);
 	bool selectedline(MCStringRef& r_string);
@@ -358,7 +360,6 @@ public:
 
 	void GetIcon(MCExecContext& ctxt, Properties which, uinteger_t& r_icon);
 	void SetIcon(MCExecContext& ctxt, Properties which, uinteger_t p_icon);
-	void DoSetText(MCExecContext& ctxt, MCStringRef p_label);
     void DoGetIcon(MCExecContext& ctxt, Current_icon which, MCInterfaceButtonIcon& r_icon);
     void DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterfaceButtonIcon& p_icon);
 	void UpdateIconAndMenus(void);
@@ -410,8 +411,8 @@ public:
 	void SetMenuButton(MCExecContext& ctxt, uinteger_t p_button);
 	void GetMenuMode(MCExecContext& ctxt, intenum_t& r_mode);
 	void SetMenuMode(MCExecContext& ctxt, intenum_t p_mode);
-	void GetMenuName(MCExecContext& ctxt, MCStringRef& r_name);
-	void SetMenuName(MCExecContext& ctxt, MCStringRef p_name);
+	void GetMenuName(MCExecContext& ctxt, MCNameRef& r_name);
+	void SetMenuName(MCExecContext& ctxt, MCNameRef p_name);
 	virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
 	void GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text);
 	void SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text);
@@ -434,8 +435,8 @@ public:
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
 	void SetText(MCExecContext& ctxt, MCStringRef p_text);
-	void GetUnicodeText(MCExecContext& ctxt, MCStringRef& r_text);
-	void SetUnicodeText(MCExecContext& ctxt, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, MCDataRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, MCDataRef p_text);
 	virtual void SetCantSelect(MCExecContext& ctxt, bool setting);
     void SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetArmedIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);

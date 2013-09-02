@@ -153,6 +153,7 @@ enum MCPropertyType
 	kMCPropertyTypeOptionalString,
 	kMCPropertyTypeOptionalRectangle,
 	kMCPropertyTypeOptionalEnum,
+	kMCPropertyTypeName,
 };
 
 struct MCPropertyInfo
@@ -201,6 +202,7 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, A)>
 #define MCPropertyObjectThunkGetOptionalCustomType(obj, mth, typ) MCPropertyObjectThunkImp(obj, mth, typ*&)
 #define MCPropertyObjectThunkGetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*&)
 #define MCPropertyObjectThunkGetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef&)
+#define MCPropertyObjectThunkGetName(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCNameRef&)
 
 #define MCPropertyObjectThunkSetAny(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCValueRef)
 #define MCPropertyObjectThunkSetBool(obj, mth) MCPropertyObjectThunkImp(obj, mth, bool)
@@ -224,6 +226,7 @@ template<typename O, typename A, void (O::*Method)(MCExecContext&, uint32_t, A)>
 #define MCPropertyObjectThunkSetOptionalCustomType(obj, mth, typ) MCPropertyObjectThunkImp(obj, mth, const typ*&)
 #define MCPropertyObjectThunkSetOptionalEnumType(obj, mth) MCPropertyObjectThunkImp(obj, mth, intenum_t*)
 #define MCPropertyObjectThunkSetArray(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCArrayRef)
+#define MCPropertyObjectThunkSetName(obj, mth) MCPropertyObjectThunkImp(obj, mth, MCNameRef)
 
 #define MCPropertyObjectPartThunkGetAny(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, MCValueRef&)
 #define MCPropertyObjectPartThunkGetBool(obj, mth) MCPropertyObjectPartThunkImp(obj, mth, bool&)
