@@ -133,7 +133,7 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static MCStringRef s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {

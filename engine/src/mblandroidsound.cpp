@@ -55,7 +55,7 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 	return true;
 }
 
-static char *s_sound_file = nil;
+static MCStringRef s_sound_file = nil;
 
 bool MCSystemPlaySound(const char *p_file, bool p_looping)
 {
@@ -63,20 +63,22 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 	bool t_success;
 	if (s_sound_file != nil)
 	{
-		MCCStringFree(s_sound_file);
+		MCValueRelease(s_sound_file);
 		s_sound_file = nil;
 	}
     
-	s_sound_file = MCS_resolvepath(p_file);
+	MCAutoStringRef t_file;
+	/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
+	/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
     
 	const char *t_apk_file = nil;
-	if (path_to_apk_path(s_sound_file, t_apk_file))
+	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))
 		MCAndroidEngineCall("playSound", "bsbb", &t_success, t_apk_file, true, p_looping);
 	else
-		MCAndroidEngineCall("playSound", "bsbb", &t_success, s_sound_file, false, p_looping);
+		MCAndroidEngineCall("playSound", "bxbb", &t_success, s_sound_file, false, p_looping);
 	if (!t_success)
 	{
-		MCCStringFree(s_sound_file);
+		MCValueRelease(s_sound_file);
 		s_sound_file = nil;
 	}
     
@@ -85,7 +87,7 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 
 bool MCSystemGetPlayingSound(const char *& r_sound)
 {
-	r_sound = s_sound_file;
+	r_sound = MCStringGetCString(s_sound_file);
 	return true;
 }
 
@@ -240,7 +242,7 @@ JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundStopped(JNIEnv
 	//MCLog("doSoundStopped", nil);
 	if (s_sound_file != nil)
 	{
-		MCCStringFree(s_sound_file);
+		MCValueRelease(s_sound_file);
 		s_sound_file = nil;
 	}
 }
