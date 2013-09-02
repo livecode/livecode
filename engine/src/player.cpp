@@ -1189,7 +1189,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_int4((int4)(rate / 10.0 * MAXINT4),
 		                          stream)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(userCallbackStr, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
 			return stat;
 	}
 	return savepropsets(stream);
@@ -1211,7 +1211,7 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_int4(&trate, stream)) != IO_NORMAL)
 		return stat;
 	rate = (real8)trate * 10.0 / MAXINT4;
-	if ((stat = IO_read_stringref(userCallbackStr, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(userCallbackStr, stream, false)) != IO_NORMAL)
 		return stat;
 	return loadpropsets(stream);
 }
