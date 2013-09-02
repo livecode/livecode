@@ -103,7 +103,7 @@ MCObject::MCObject()
 	ncolors = 0;
 
 	colors = NULL;
-	colornames = NULL;
+	colornames = nil;
 	npixmaps = 0;
 	pixmapids = NULL;
 	pixmaps = NULL;
@@ -170,18 +170,18 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			colors[i] = oref.colors[i];
-			colornames[i] = strclone(oref.colornames[i]);
+			colornames[i] = MCValueRetain(oref.colornames[i]);
 		}
 	}
 	else
 	{
 		colors = NULL;
-		colornames = NULL;
+		colornames = nil;
 	}
 	npixmaps = oref.npixmaps;
 	if (npixmaps > 0)
@@ -273,10 +273,10 @@ MCObject::~MCObject()
 	delete hlist;
 	MCNameDelete(_name);
 	delete colors;
-	if (colornames != NULL)
+	if (colornames != nil)
 	{
 		while (ncolors--)
-			delete colornames[ncolors];
+			MCValueRelease(colornames[ncolors]);
 		delete colornames;
 	}
 	delete pixmapids;
@@ -1433,6 +1433,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
+#ifdef  LEGACY EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -1526,6 +1527,7 @@ Boolean MCObject::setcolors(const MCString &data)
 	}
 	return True;
 }
+#endif
 
 Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 {
@@ -1609,10 +1611,10 @@ Boolean MCObject::getcindex(uint2 di, uint2 &i)
 uint2 MCObject::createcindex(uint2 di)
 {
 	MCColor *oldcolors = colors;
-	char **oldnames = colornames;
+	MCStringRef *oldnames = colornames;
 	ncolors++;
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+	colornames = new MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -1623,14 +1625,14 @@ uint2 MCObject::createcindex(uint2 di)
 		if (i == di)
 		{
 			dflags |= m;
-			colornames[c] = NULL;
+			colornames[c] = nil;
 			ri = c++;
 		}
 		else
 			if (dflags & m)
 			{
 				colors[c] = oldcolors[oc];
-				colornames[c++] = oldnames[oc++];
+				colornames[c++] = MCValueRetain(oldnames[oc++]);
 			}
 		i++;
 		m <<= 1;
@@ -1645,12 +1647,12 @@ uint2 MCObject::createcindex(uint2 di)
 
 void MCObject::destroycindex(uint2 di, uint2 i)
 {
-	delete colornames[i];
+	MCValueRelease(colornames[i]);
 	ncolors--;
 	while (i < ncolors)
 	{
 		colors[i] = colors[i + 1];
-		colornames[i] = colornames[i + 1];
+		colornames[i] = MCValueRetain(colornames[i + 1]);
 		i++;
 	}
 	uint2 m = DF_FORE_COLOR;
@@ -2867,19 +2869,19 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
 				break;
-			if ((stat = IO_read_string(colornames[i], stream)) != IO_NORMAL)
+			if ((stat = IO_read_stringref(colornames[i], stream)) != IO_NORMAL)
 				break;
 			colors[i].pixel = i;
 		}
 		if (stat != IO_NORMAL)
 		{
 			while (i < ncolors)
-				colornames[i++] = NULL;
+				colornames[i++] = nil;
 			return stat;
 		}
 	}
@@ -3147,7 +3149,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		return stat;
 	for (i = 0 ; i < ncolors ; i++)
 		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL
-		        || (stat = IO_write_string(colornames[i], stream)) != IO_NORMAL)
+		        || (stat = IO_write_stringref(colornames[i], stream)) != IO_NORMAL)
 			return stat;
 	if (props != NULL)
 		addflags |= AF_CUSTOM_PROPS;

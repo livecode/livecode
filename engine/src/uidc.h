@@ -239,7 +239,7 @@ protected:
 	uint2 nmessages;
 	uint2 maxmessages;
 	MCColor *colors;
-	char **colornames;
+	MCStringRef *colornames;
 	int2 *allocs;
 	int2 ncolors;
 	Boolean modalclosed;

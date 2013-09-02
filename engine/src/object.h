@@ -186,7 +186,7 @@ protected:
 	uint4 flags;
 	MCRectangle rect;
 	MCColor *colors;
-	char **colornames;
+	MCStringRef *colornames;
 	uint4 *pixmapids;
 	Pixmap *pixmaps;
 	char *script;

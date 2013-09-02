@@ -193,7 +193,7 @@ MCUIDC::MCUIDC()
 	ncolors = 0;
 	colors = NULL;
 	allocs = NULL;
-	colornames = NULL;
+	colornames = nil;
 	lockmods = False;
 
 	m_sound_internal = NULL ;
@@ -1387,7 +1387,7 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 }
 
 
-
+#ifdef LEGACY EXEC
 Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
                             char *cnames[], uint2 ncolors)
 {
@@ -1431,17 +1431,20 @@ Boolean MCUIDC::parsecolors(const MCString &s, MCColor *colors,
 	delete data;
 	return True;
 }
+#endif
 
 Boolean MCUIDC::getcolors(MCExecPoint &ep)
 {
 		ep.setstaticcstring("fixed");
 		return True;
-	}
+}
 
+#ifdef LEGACY EXEC
 Boolean MCUIDC::setcolors(const MCString &values)
 {
 		return False;
-		}
+}
+#endif
 
 bool MCUIDC::getcolornames(MCStringRef& r_string)
 {

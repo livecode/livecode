@@ -315,7 +315,7 @@ class MCImage : public MCControl
 
 	bool m_have_control_colors;
 	MCColor *m_control_colors;
-	char **m_control_color_names;
+	MCStringRef *m_control_color_names;
 	uint16_t m_control_color_count;
 	uint16_t m_control_color_flags;
 	

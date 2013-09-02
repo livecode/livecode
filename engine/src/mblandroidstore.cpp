@@ -439,7 +439,9 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
         else
         {
             p_purchase->state = kMCPurchaseStateError;
+
             MCCStringClone("unable to verify message from billing service", t_android_data->error);
+
             MCPurchaseNotifyUpdate(p_purchase);
             MCPurchaseRelease(p_purchase);
         }
