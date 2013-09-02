@@ -45,8 +45,8 @@ class MCScrollbar : public MCControl
 	uint2 nffw;
 	uint2 nftrailing;
 	uint2 nfforce;
-	char *startstring;
-	char *endstring;
+	MCStringRef startstring;
+	MCStringRef endstring;
 	real8 startvalue;
 	real8 endvalue;
 	uint1 hover_part;
