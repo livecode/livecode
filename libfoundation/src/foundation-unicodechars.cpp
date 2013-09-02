@@ -256,7 +256,7 @@ static int32_t UnicodeToUTF8(const uint16_t *p_src, int32_t p_src_count, byte_t 
 // If utf8bytes is not nil, does the conversion
 uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, byte_t *utf8bytes, uindex_t utf8byte_count)
 {
-    return UnicodeToUTF8(wchars, wchar_count, utf8bytes, utf8byte_count);
+    return UnicodeToUTF8(wchars, wchar_count * 2, utf8bytes, utf8byte_count);
 #if 0
     uindex_t t_bytes_needed;
     t_bytes_needed = 0;
@@ -294,7 +294,7 @@ uindex_t MCUnicodeCharsMapToUTF8(const unichar_t *wchars, uindex_t wchar_count, 
 // If wchars is not nil, does the conversion into wchars
 uindex_t MCUnicodeCharsMapFromUTF8(const byte_t *utf8bytes, uindex_t utf8byte_count, unichar_t *wchars, uindex_t wchar_count)
 {
-    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count);
+    return UTF8ToUnicode(utf8bytes, utf8byte_count, wchars, wchar_count * 2) / 2;
 #if 0
     uindex_t t_wchars_needed;
     t_wchars_needed = 0;

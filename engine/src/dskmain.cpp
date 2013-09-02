@@ -72,6 +72,7 @@ static Boolean byte_swapped()
 ////////////////////////////////////////////////////////////////////////////////
 
 bool X_open(int argc, char *argv[], char *envp[]);
+void X_clear_globals();
 extern void MCU_initialize_names();
 
 static char apppath[PATH_MAX];
@@ -90,7 +91,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 #endif
 
 	////
-
+    
+	X_clear_globals();
+    
 #ifndef _WINDOWS_DESKTOP
 	MCS_init();
 #endif
@@ -135,7 +138,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 	/* UNCHECKED */ MCStringCreateWithCString(argv[0], MCcmd);
 
 #if defined(_MAC_DESKTOP)
-	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)argv[0], strlen(argv[0]), kMCStringEncodingUTF8, MCcmd);
+	/* UNCHECKED */ MCStringCreateWithBytes((byte_t*)argv[0], strlen(argv[0]), kMCStringEncodingUTF8, false, MCcmd);
 #endif
 		
 #if defined(_LINUX_DESKTOP) || defined(_MAC_DESKTOP)   //get fullpath
