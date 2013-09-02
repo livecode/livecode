@@ -133,7 +133,7 @@ bool X_main_loop_iteration(void)
 	MCabortscript = False;
 	if (!MCtodestroy->isempty() || MCtodelete != NULL)
 	{
-		MCtooltip->settip(NULL);
+		MCtooltip->cleartip();
 		while (MCtodelete != NULL)
 		{
 			MCObject *optr = MCtodelete->remove(MCtodelete);
