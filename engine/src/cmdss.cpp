@@ -1310,7 +1310,7 @@ void MCGo::compile(MCSyntaxFactoryRef ctxt)
 		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfOptionalStackMethodInfo);
     
 	if (stack != nil && t_is_home)
-		MCSyntaxFactoryExecMethodWithArgs(ctxt, kMCInterfaceExecGoHomeMethodInfo, 0, 2); // skip background parameter
+		MCSyntaxFactoryExecMethod(ctxt, kMCInterfaceExecGoHomeMethodInfo); // skip background parameter
 	else if (card != nil && t_is_relative)
 	{
 		switch (ct_class(card->etype))
