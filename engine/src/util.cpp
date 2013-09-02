@@ -2271,19 +2271,22 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
 	MCColor color;
-	char *name = NULL;
-	char *cstring = ep.getsvalue().clone();
-	if (!MCscreen->parsecolor(cstring, &color, &name))
+	//char *name = NULL;
+	MCStringRef t_name;
+	MCAutoStringRef string;
+	ep . copyasstringref(&string);
+	//char *cstring = ep.getsvalue().clone();
+	if (!MCscreen->parsecolor(*string, color, &t_name))
 	{
-		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
-		delete cstring;
+		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
+		//delete cstring;
 		return ES_ERROR;
 	}
-	delete cstring;
+	//delete cstring;
 	MCscreen->alloccolor(color);
 	c = color;
 	delete n;
-	n = name;
+	n = strdup(MCStringGetCString(t_name));
 	return ES_NORMAL;
 }
 

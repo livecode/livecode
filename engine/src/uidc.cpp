@@ -1337,29 +1337,29 @@ void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
 /* WRAPPER */
 bool MCUIDC::parsecolor(MCStringRef p_string, MCColor& r_color)
 {
-	return True == parsecolor(MCStringGetOldString(p_string), &r_color, nil);
+	return True == parsecolor(p_string, r_color, nil);
 }
 
-Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
+Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 {
 	if (cname)
 	{
-		delete *cname;
-		*cname = NULL;
+		MCValueRelease(*cname);
+		*cname = nil;
 	}
 	int2 i1, i2, i3;
 	Boolean done;
-	const char *sptr = s.getstring();
-	uint4 l = s.getlength();
+	const char *sptr = MCStringGetCString(s);
+	uint4 l = MCStringGetLength(s);
 	
 	
 	i1 = MCU_strtol(sptr, l, ',', done);
 	if (!done)
 	{
-		if (lookupcolor(s, color))
+		if (lookupcolor(MCStringGetOldString(s), &color))
 		{
 			if (cname)
-				*cname = s.clone();
+				*cname = MCValueRetain(s);
 			return True;
 		}
 		return False;
@@ -1378,9 +1378,9 @@ Boolean MCUIDC::parsecolor(const MCString &s, MCColor *color, char **cname)
 		if (!done)
 			return False;
 	}
-	color->red = (uint2)(i1 << 8) + i1;
-	color->green = (uint2)(i2 << 8) + i2;
-	color->blue = (uint2)(i3 << 8) + i3;
+	color.red = (uint2)(i1 << 8) + i1;
+	color.green = (uint2)(i2 << 8) + i2;
+	color.blue = (uint2)(i3 << 8) + i3;
 	
 	
 	return True;

@@ -273,24 +273,15 @@ void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInte
 	}
 
 	MCColor t_color;
-	MCAutoPointer<char> t_color_name;
-	if (!MCscreen -> parsecolor(MCStringGetOldString(p_input), &t_color, &(&t_color_name)))
+	MCStringRef t_color_name;
+	if (!MCscreen -> parsecolor(p_input, t_color, &t_color_name))
 	{
 		 ctxt . LegacyThrow(EE_PROPERTY_BADCOLOR);
 		 return;
 	}
 	
-	MCStringRef t_color_name_ref;
-	t_color_name_ref = nil;
-	if (*t_color_name != nil &&
-		!MCStringCreateWithCString(*t_color_name, t_color_name_ref))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	r_output . color = t_color;
-	r_output . name = t_color_name_ref;
+	r_output . name = t_color_name;
 }
 
 void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColor& p_input, MCStringRef& r_output)

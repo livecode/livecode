@@ -1243,6 +1243,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+
 Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
@@ -1255,6 +1256,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_fill_gradient != NULL)
 		{
+			//needs fixing here (setcolor), I get a linking error
 			setcolor(P_BACK_COLOR - P_FORE_COLOR, MCnullmcstring);
 			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, MCnullmcstring);
 		}
@@ -1266,6 +1268,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_stroke_gradient != NULL)
 		{
+			//needs fixing here (setcolor), I get a linking error
 			setcolor(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
 			setpattern(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
 		}
@@ -1283,6 +1286,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	
 	return ES_NORMAL;
 }
+
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {

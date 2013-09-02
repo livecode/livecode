@@ -1569,12 +1569,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
 				t_stat = p_stream . ReadColor(m_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-			{
-				MCAutoNameRef r_value;
-				/* UNCHECKED */ MCNameCreate(m_control_color_names[i], r_value);
-				t_stat = p_stream . ReadNameRef(r_value);
-				m_control_color_names[i] = MCNameGetString(r_value);
-			}
+				t_stat = p_stream . ReadStringRef(m_control_color_names[i]);
 		}
 
 		if (t_stat == IO_NORMAL)

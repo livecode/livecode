@@ -275,6 +275,22 @@ IO_stat MCObjectInputStream::ReadNameRef(MCNameRef& r_value)
 	return t_stat;
 }
 
+IO_stat MCObjectInputStream::ReadStringRef(MCStringRef& r_value)
+{
+	char *t_name_cstring;
+	t_name_cstring = nil;
+
+	IO_stat t_stat;
+	t_stat = ReadCString(t_name_cstring);
+	if (t_stat == IO_NORMAL &&
+		!MCStringCreateWithCString(t_name_cstring != nil ? t_name_cstring : MCnullstring, r_value))
+		t_stat = IO_ERROR;
+
+	free(t_name_cstring);
+
+	return t_stat;
+}
+
 IO_stat MCObjectInputStream::ReadColor(MCColor &r_color)
 {
 	IO_stat t_stat = IO_NORMAL;

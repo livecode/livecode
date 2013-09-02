@@ -540,7 +540,7 @@ public:
 	Boolean lookupcolor(const MCString &s, MCColor *color);
 	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
 	bool parsecolor(MCStringRef p_string, MCColor& r_color);
-	Boolean parsecolor(const MCString &s, MCColor *color, char **cname);
+	Boolean parsecolor(MCStringRef s, MCColor& r_color, MCStringRef *cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);
 	void alloccolor(MCColor &color);
