@@ -472,8 +472,13 @@ bool MCStringConvertToWString(MCStringRef p_string, unichar_t*& r_wstring)
     return true;
 }
 
-
 bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
+{
+	uindex_t length_is_ignored;
+	return MCStringConvertToUTF8(p_string, r_utf8string, length_is_ignored);
+}
+
+bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& r_utf8_chars)
 {
 	// Allocate an array of chars one byte bigger than needed. As the allocated array
 	// is filled with zeros, this will naturally NUL terminate the string.
@@ -493,6 +498,7 @@ bool MCStringConvertToUTF8String(MCStringRef p_string, char*& r_utf8string)
         return false;
     
     MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string);
+	r_utf8_chars = t_byte_count;
     
     // Delete temporary unichar_t array
     MCMemoryDeleteArray(t_unichars);

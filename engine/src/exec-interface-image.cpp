@@ -130,7 +130,7 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 	if (MCStringCreateWithCString(filename, r_name))
 		return;
 
-	ctxt . Throw();
+    ctxt . Throw();
 }
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)

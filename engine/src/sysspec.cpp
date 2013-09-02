@@ -1712,6 +1712,7 @@ MCSysModuleHandle MCS_loadmodule(MCStringRef p_filename)
 
 MCSysModuleHandle MCS_resolvemodulesymbol(MCSysModuleHandle p_module, MCStringRef p_symbol)
 {
+
 	return MCsystem -> ResolveModuleSymbol(p_module, p_symbol);
 }
 

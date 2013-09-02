@@ -291,8 +291,10 @@ static MCBitmap *convert_bitmap(uint1 *sptr, uint2 width, uint2 height)
 				xorcode = opcode;
 				break;
 			case 0x7:
+
 				hcstat_append("Unknown BMAP opcode %x at offset %d, line %d",
 				        opcode, (int)(sptr - startptr), line);
+
 				return newdata;
 			}
 			repcount = 1;
@@ -2133,6 +2135,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			break;
 		default:
 			hcstat_append("Error: unknown section type -> %x", type);
+
 			if (filetype == HC_BINHEX)
 				return IO_ERROR;
 			break;

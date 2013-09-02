@@ -74,8 +74,9 @@ MCScrollbar::MCScrollbar()
 	thumbsize = 8192.0;
 	pageinc = thumbsize;
 	lineinc = 512.0;
-	startstring = NULL;
-	endstring = NULL;
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Initialize the members to kMCEmptyString.
+	startstring = MCValueRetain(kMCEmptyString);
+	endstring = MCValueRetain(kMCEmptyString);
 	startvalue = 0.0;
 	endvalue = 65535.0;
 	nffw = 0;
@@ -95,8 +96,9 @@ MCScrollbar::MCScrollbar(const MCScrollbar &sref) : MCControl(sref)
 	thumbsize = sref.thumbsize;
 	pageinc = sref.pageinc;
 	lineinc = sref.lineinc;
-	startstring = strclone(sref.startstring);
-	endstring = strclone(sref.endstring);
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Initialize the members to the other scrollbars values
+	startstring = MCValueRetain(sref . startstring);
+	endstring = MCValueRetain(sref . endstring);
 	startvalue = sref.startvalue;
 	endvalue = sref.endvalue;
 	nffw = sref.nffw;
@@ -114,8 +116,9 @@ MCScrollbar::~MCScrollbar()
 {
 	if (linked_control != NULL)
 		linked_control -> unlink(this);
-	delete startstring;
-	delete endstring;
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Release the string members.
+	MCValueRelease(startstring);
+	MCValueRelease(endstring);
 }
 
 Chunk_term MCScrollbar::gettype() const
@@ -894,13 +897,13 @@ void MCScrollbar::compute_barsize()
 		{
 			uint2 twidth = rect.width;
 			barsize = MCU_max(nffw, 1);
-			if (startstring != NULL && (uint2)strlen(startstring) > barsize)
-				barsize = strlen(startstring);
-			if (endstring == NULL)
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Use MCString primitives.
+			if (MCStringGetLength(startstring) > barsize)
+				barsize = MCStringGetLength(startstring);
+			if (MCStringIsEmpty(endstring))
 				barsize = MCU_max(barsize, 5);
 			else
-				if ((uint2)strlen(endstring) > barsize)
-					barsize = strlen(endstring);
+				barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
 			barsize *= MCFontMeasureText(m_font, "0", 1, false);
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
@@ -1202,16 +1205,9 @@ void MCScrollbar::reset()
 	flags &= ~F_HAS_VALUES;
 	startvalue = 0.0;
 	endvalue = 65535.0;
-	if (startstring != NULL)
-	{
-		delete startstring;
-		startstring = NULL;
-	}
-	if (endstring != NULL)
-	{
-		delete endstring;
-		endstring = NULL;
-	}
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Reset the string values to the empty string.
+	MCValueAssign(startstring, kMCEmptyString);
+	MCValueAssign(endstring, kMCEmptyString);
 }
 
 void MCScrollbar::redrawarrow(uint2 oldmode)
@@ -1294,9 +1290,10 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if (flags & F_HAS_VALUES)
 		{
-			if ((stat = IO_write_string(startstring, stream)) != IO_NORMAL)
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			if ((stat = IO_write_stringref(startstring, stream)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_string(endstring, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref(endstring, stream)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1332,14 +1329,18 @@ IO_stat MCScrollbar::load(IO_handle stream, const char *version)
 		pageinc = (real8)i2;
 		if (flags & F_HAS_VALUES)
 		{
-			if ((stat = IO_read_string(startstring, stream)) != IO_NORMAL)
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			if ((stat = IO_read_stringref(startstring, stream)) != IO_NORMAL)
 				return stat;
-			if (startstring != NULL)
-				startvalue = strtod(startstring, NULL);
-			if ((stat = IO_read_string(endstring, stream)) != IO_NORMAL)
+			if (!MCStringToDouble(startstring, startvalue))
+				startvalue = 0.0;
+			
+			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
+			if ((stat = IO_read_stringref(endstring, stream)) != IO_NORMAL)
 				return stat;
-			if (endstring != NULL)
-				endvalue = strtod(endstring, NULL);
+			if (!MCStringToDouble(endstring, endvalue))
+				endvalue = 0.0;
+			
 			real8 range = (endvalue - startvalue) / 65535.0;
 			thumbpos = thumbpos * range + startvalue;
 			thumbsize *= range;
