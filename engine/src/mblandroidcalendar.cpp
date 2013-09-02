@@ -62,14 +62,14 @@ static MCCalendar s_calendar_event_data;
 
 bool MCAndroidCalendarInitialize(void)
 {
-	s_calendar_event_selected = nil;
-	s_calendar_events_selected = nil;
+	s_calendar_event_selected = MCValueRetain(kMCEmptyString);
+	s_calendar_events_selected = MCValueRetain(kMCEmptyString);
 }
 
 void MCAndroidCalendarFinalize(void)
 {
 	MCValueRelease(s_calendar_event_selected);
-	MCValuerelease(s_calendar_events_selected);
+	MCValueRelease(s_calendar_events_selected);
 }
 
 bool MCSystemShowEvent(MCStringRef p_calendar_event_id, MCStringRef& r_result)
