@@ -598,7 +598,7 @@ Boolean MCCard::mfocus(int2 x, int2 y)
 				tptr = tptr->prev();
 		}
 		while (freed || tptr != objptrs->prev());
-		MCtooltip->settip(NULL);
+		MCtooltip->cleartip();
 		// MW-2007-07-09: [[ Bug 3726 ]] dragMove is not sent to a card during
 		//   a drag-drop operation.
 		if (MCdispatcher -> isdragtarget())
@@ -634,7 +634,7 @@ void MCCard::mfocustake(MCControl *target)
 
 void MCCard::munfocus()
 {
-	MCtooltip->settip(NULL);
+	MCtooltip->cleartip();
 	state &= ~CS_INSIDE;
 	if (mfocused != NULL && !mgrabbed)
 	{

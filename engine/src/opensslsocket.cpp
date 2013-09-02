@@ -95,7 +95,7 @@ extern bool MCNetworkGetHostFromSocketId(MCStringRef p_socket, MCStringRef& r_ho
 
 extern real8 curtime;
 
-static char *sslerror = NULL;
+static MCStringRef sslerror = NULL;
 static long post_connection_check(SSL *ssl, char *host);
 static int verify_callback(int ok, X509_STORE_CTX *store);
 
@@ -1705,9 +1705,9 @@ char *MCSocket::sslgraberror()
 
 	if (!sslinited)
 		return strclone("cannot load SSL library");
-	if (sslerror)
+	if (sslerror != nil)
 	{
-		terror = sslerror;
+		terror = strdup(MCStringGetCString(sslerror));
 		sslerror = NULL;
 	}
 	else
@@ -1789,7 +1789,8 @@ Boolean MCSocket::initsslcontext()
 							(MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_utf8_certpath));
 					if (!t_success)
 					{
-						MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", t_utf8_certpath);
+						MCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
+
 					}
 				}
 			}
@@ -1800,7 +1801,7 @@ Boolean MCSocket::initsslcontext()
 		{
 			if (!ssl_set_default_certificates())
 			{
-				MCCStringClone("Error loading default CAs", sslerror);
+				sslerror = MCSTR("Error loading default CAs");
 				
 				t_success = false;
 			}
@@ -2180,8 +2181,9 @@ Boolean MCSocket::sslconnect()
 
 			if (rc != X509_V_OK)
 			{
-				const char *t_message = X509_verify_cert_error_string(rc);
-				sslerror = strdup(t_message);
+				MCAutoStringRef t_message;
+				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+				sslerror = MCValueRetain(*t_message);
 				errno = EPIPE;
 				return False;
 			}
@@ -2408,17 +2410,18 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 		X509 *cert = X509_STORE_CTX_get_current_cert(store);
 		int  depth = X509_STORE_CTX_get_error_depth(store);
 		int  err = X509_STORE_CTX_get_error(store);
-		sslerror = new char[3000];
-		int certlen = strlen(sslerror);
-		sprintf(sslerror, "-Error with certificate at depth: %i\n", depth);
+		
+		/* UNCHECKED */ MCStringCreateMutable(0, sslerror);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "-Error with certificate at depth: %i\n", depth);
 		X509_NAME_oneline(X509_get_issuer_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  issuer   = %s\n", data);
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  issuer   = %s\n", data);
 		X509_NAME_oneline(X509_get_subject_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  subject  = %s\n", data);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  subject  = %s\n", data);
+		/* UNCHECKED */ MCStringAppendFormat(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringCopyAndRelease(sslerror, sslerror);
 	}
 
 	return ok;

@@ -453,16 +453,7 @@ void MCPlayer::SetShowSelection(MCExecContext& ctxt, bool setting)
 
 void MCPlayer::GetCallbacks(MCExecContext& ctxt, MCStringRef& r_callbacks)
 {
-	if (userCallbackStr == nil)
-	{
-		r_callbacks = MCValueRetain(kMCEmptyString);
-		return;
-	}
-
-	if (MCStringCreateWithCString(userCallbackStr, r_callbacks))
-		return;
-
-	ctxt . Throw();
+	r_callbacks = MCValueRetain(userCallbackStr);
 }
 
 void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
@@ -470,16 +461,11 @@ void MCPlayer::SetCallbacks(MCExecContext& ctxt, MCStringRef p_callbacks)
 #ifdef FEATURE_QUICKTIME
 	deleteUserCallbacks(); //delete all callbacks for this player
 #endif
-	delete userCallbackStr;
-	if (MCStringGetLength(p_callbacks) == 0)
-		userCallbackStr = NULL;
-	else
-	{
-		userCallbackStr = strclone(MCStringGetCString(p_callbacks));
+		MCValueAssign(userCallbackStr, p_callbacks);
 #ifdef FEATURE_QUICKTIME
 		installUserCallbacks(); //install all callbacks for this player
 #endif
-	}
+	
 }
 
 void MCPlayer::GetTimeScale(MCExecContext& ctxt, uinteger_t& r_scale)
