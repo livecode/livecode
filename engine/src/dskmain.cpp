@@ -72,6 +72,7 @@ static Boolean byte_swapped()
 ////////////////////////////////////////////////////////////////////////////////
 
 bool X_open(int argc, char *argv[], char *envp[]);
+extern void X_clear_globals(void);
 extern void MCU_initialize_names();
 
 static char apppath[PATH_MAX];
@@ -80,7 +81,7 @@ bool X_init(int argc, char *argv[], char *envp[])
 {
 	int i;
 	MCstackbottom = (char *)&i;
-
+	
 #ifdef _WINDOWS_DESKTOP
 	// MW-2011-07-26: Make sure errno pointer is initialized - this won't be
 	//   if the engine is running through the plugin.
@@ -89,6 +90,10 @@ bool X_init(int argc, char *argv[], char *envp[])
 		g_mainthread_errno = _errno();
 #endif
 
+	////
+	
+	X_clear_globals();
+	
 	////
 
 #ifndef _WINDOWS_DESKTOP
