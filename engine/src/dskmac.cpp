@@ -1472,6 +1472,7 @@ public:
         {
             t_handle = new MCStdioFileHandle;
             t_handle -> m_stream = fptr;
+            t_handle -> m_is_eof = False;
             t_handle -> m_hserialInputBuff = NULL;
             t_handle -> m_ioptr = NULL;
             t_handle -> m_serialIn = 0;
@@ -1526,6 +1527,7 @@ public:
 		MCStdioFileHandle *t_handle;
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
+        t_handle -> m_is_eof = False;
         t_handle -> m_hserialInputBuff = NULL;
         t_handle -> m_ioptr = NULL;
         t_handle -> m_serialIn = 0;
@@ -1558,6 +1560,7 @@ public:
             
             t_handle = new MCStdioFileHandle;
             t_handle -> m_stream = fptr;
+            t_handle -> m_is_eof = False;
             t_handle -> m_hserialInputBuff = NULL;
             t_handle -> m_ioptr = NULL;
             t_handle -> m_serialIn = 0;
@@ -1598,7 +1601,7 @@ public:
         m_stream = NULL;
 	}
 	
-	virtual IO_stat Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
+	virtual bool Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
 	{
 #ifdef /* MCS_read_dsk_mac */ LEGACY_SYSTEM
 	if (MCabortscript || stream == NULL)
@@ -1685,7 +1688,7 @@ public:
 		}
 	return stat;
 #endif /* MCS_read_dsk_mac */
-        IO_stat stat = IO_NORMAL;
+        bool stat = true;
         uint4 nread;
         if (m_serialIn != 0)
         {//read from serial port
@@ -1702,7 +1705,6 @@ public:
             // MW-2010-08-26: Taken from the Linux source, this changes the previous code
             //   to take into account pipes and such.
             char *sptr = (char *)p_ptr;
-            uint4 nread;
             uint4 toread = p_length;
             uint4 offset = 0;
             errno = 0;
@@ -1715,7 +1717,7 @@ public:
                     clearerr(m_stream);
                     
                     if (errno == EAGAIN)
-                        return IO_NORMAL;
+                        return false;
                     
                     if (errno == EINTR)
                     {
@@ -1723,20 +1725,23 @@ public:
                         continue;
                     }
                     else
-                        return IO_ERROR;
+                        return false;
                 }
                 if (feof(m_stream))
                 {
-                    return IO_NORMAL;
+                    m_is_eof = True;
+                    return true;
                 }
-                return IO_NONE;
+                
+                m_is_eof = false;                
+                return false;
             }
-            r_read = p_length;
+            r_read = nread;
         }
         return stat;
 	}
     
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 #ifdef /* MCS_write_dsk_mac */ LEGACY_SYSTEM
         if (stream == NULL)
@@ -1762,16 +1767,25 @@ public:
         {//write to serial port
             uint4 count = p_length;
             errno = FSWrite(m_serialOut, (long*)&count, p_buffer);
-            r_written = count;
+
             if (errno != noErr || count != p_length)
                 return false;
             return true;
         }
 
-        if ((r_written = fwrite(p_buffer, 1, p_length, m_stream)) != p_length)
+        if (fwrite(p_buffer, 1, p_length, m_stream) != p_length)            
             return false;
+        
         return true;
 	}
+    
+    virtual bool IsExhausted(void)
+    {
+        if (m_is_eof)
+            return true;
+        
+        return false;
+    }
 	
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
@@ -1941,6 +1955,7 @@ public:
 	
 private:
 	FILE *m_stream;
+    Boolean m_is_eof;
 };
 
 struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDesktop
@@ -6481,7 +6496,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 if (MCprocesses[i].ihandle != NULL)
                 {
-                    // TODO Can the handler be a MCMemoryFileHandle?
                     MCStdioFileHandle *t_handle;
                     t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle->handle);
                     clearerr(t_handle -> GetStream());

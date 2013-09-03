@@ -60,14 +60,7 @@ struct MCSystemFileHandle
     // stream.
     virtual bool IsExhausted(void) = 0;
     
-    // Read <length> bytes into buffer. If <length> bytes is not available
-    // or an io error occurs, it returns false.
-	virtual bool Read(void *p_buffer, uint32_t p_length) = 0;
-    
-    // Read at most <length> bytes into buffer. If an io error occurs, false is returned
-    // otherwise, as many bytes as possible will be read. If the stream hits EOF through
-    // doing so, the EOF flag of the stream is set.
-    virtual bool ReadAvailable(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
     
 	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
     
@@ -132,15 +125,20 @@ public:
 			free(m_buffer);
 		delete this;
 	}
-	
-	bool Read(void *p_buffer, uint32_t p_length)
-	{
-        uint32_t t_read;
-		t_read = MCU_min(p_length, m_length - m_pointer);
-		memcpy(p_buffer, m_buffer + m_pointer, t_read);
-		m_pointer += t_read;
-		return IO_NORMAL;
-	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_pointer == m_length;
+    }
+    
+    bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        r_read = MCU_min(p_length, m_length - m_pointer);
+        
+        memcpy(p_buffer, m_buffer + m_pointer, r_read);
+        m_pointer += r_read;
+        return true;
+    }
 	
 	bool Write(const void *p_buffer, uint32_t p_length)
 	{
@@ -262,16 +260,36 @@ public:
 		// MW-2011-06-12: Fix memory leak - Close() should delete the handle.
 		delete this;
 	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_is_eof;
+    }
 	
-	IO_stat Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_blockcount)
+	bool Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_read)
 	{
 		if (m_callbacks -> read == nil)
 			return IO_ERROR;
         
-		return m_callbacks -> read(m_state, p_buffer, p_blocksize, r_blockcount);
+        IO_stat t_stat;
+        
+        t_stat = m_callbacks -> read(m_state, p_buffer, p_blocksize, r_read);
+        
+        if (t_stat == IO_EOF)
+        {
+            m_is_eof = true;
+            return false;
+        }
+        
+        m_is_eof = false;
+        
+		if (!t_stat == IO_NORMAL)
+            return false;
+        
+        return true;
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		return false;
 	}
@@ -328,6 +346,7 @@ public:
 private:
 	void *m_state;
 	MCFakeOpenCallbacks *m_callbacks;
+    bool m_is_eof;
 };
 
 enum MCServiceType

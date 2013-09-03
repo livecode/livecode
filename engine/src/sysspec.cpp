@@ -1121,7 +1121,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = t_file -> handle -> Read(t_buffer.Chars(), t_size) == IO_NORMAL;
+        t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
 
     if (t_success)
     {
@@ -1182,7 +1182,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = t_file -> handle -> Read(t_buffer.Chars(), t_size);
+        t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
     
     if (t_success)
     {
@@ -1324,8 +1324,11 @@ IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream)
 {
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
+    
+    uint32_t t_read;
 	
-    if (!p_stream -> handle -> Read(p_ptr, p_byte_size))
+    if (!p_stream -> handle -> Read(p_ptr, p_byte_size, t_read) ||
+        t_read != p_byte_size)
         return IO_ERROR;
     
     return IO_NORMAL;
@@ -1336,7 +1339,7 @@ IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
-    if (!p_stream -> handle -> ReadAvailable(p_ptr, p_byte_count, r_bytes_read))
+    if (!p_stream -> handle -> Read(p_ptr, p_byte_count, r_bytes_read))
         return IO_ERROR;
     
     if (p_stream -> handle -> IsExhausted())
