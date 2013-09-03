@@ -990,28 +990,8 @@ extern Exec_stat MCHandlePurchaseSet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseGet(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseSendRequest(void *context, MCParameter *p_parameters);
 extern Exec_stat MCHandlePurchaseConfirmDelivery(void *context, MCParameter *p_parameters);
-/* 
-void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verify);
-static Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters)
-{
-    bool t_success = true;
-    
-    bool t_verified = true;
-    uint32_t t_id;
-    MCPurchase *t_purchase = nil;
-    
-    if (t_success)
-        t_success = MCParseParameters(p_parameters, "ub", &t_id, &t_verified);
-    
-    if (t_success)
-        t_success = MCPurchaseFindById(t_id, t_purchase);
-    
-    if (t_success)
-        MCPurchaseVerify(t_purchase, t_verified);
-    
-    return ES_NORMAL;
-}
-*/
+extern Exec_stat MCHandlePurchaseVerify(void *context, MCParameter *p_parameters);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #ifdef /* MCHandleClearTouchesAndroid */ LEGACY_EXEC

@@ -49,7 +49,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 bool MCSystemBeep (int32_t p_number_of_beeps)
 {
-ifdef /* MCSystemBeepAndroid */ LEGACY_EXEC
+#ifdef /* MCSystemBeepAndroid */ LEGACY_EXEC
     MCAndroidEngineRemoteCall("doBeep", "vi", nil, p_number_of_beeps);
     return true;
 #endif /* MCSystemBeepAndroid */
