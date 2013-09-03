@@ -57,7 +57,7 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 
 static MCStringRef s_sound_file = nil;
 
-bool MCSystemPlaySound(const char *p_file, bool p_looping)
+bool MCSystemPlaySound(MCStringRef p_file, bool p_looping)
 {
 	//MCLog("MCSystemPlaySound(%s, %s)", p_file, p_looping?"true":"false");
 	bool t_success;
@@ -66,10 +66,8 @@ bool MCSystemPlaySound(const char *p_file, bool p_looping)
 		MCValueRelease(s_sound_file);
 		s_sound_file = nil;
 	}
-    
-	MCAutoStringRef t_file;
-	/* UNCHECKED */ MCStringCreateWithCString(p_file, &t_file);
-	/* UNCHECKED */ MCS_resolvepath(*t_file, s_sound_file);
+	
+	/* UNCHECKED */ MCS_resolvepath(p_file, s_sound_file);
     
 	const char *t_apk_file = nil;
 	if (path_to_apk_path(MCStringGetCString(s_sound_file), t_apk_file))

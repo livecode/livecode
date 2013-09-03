@@ -459,8 +459,8 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 	if (!MCtemplateaudio->issupported())
 	{
 #ifdef _MOBILE
-		extern bool MCSystemPlaySound(const char *p_filename, bool p_looping);
-		if (!MCSystemPlaySound(MCStringGetCString(p_clip), p_looping))
+		extern bool MCSystemPlaySound(MCStringRef p_string, bool p_looping);
+		if (!MCSystemPlaySound(p_clip, p_looping))
 		MCresult->sets("no sound support");
 #endif
 		return;

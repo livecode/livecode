@@ -2313,9 +2313,12 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		if (!MCtemplateaudio->issupported())
 		{
 #ifdef _MOBILE
-			extern bool MCSystemPlaySound(const char *p_filename, bool p_looping);
-			if (!MCSystemPlaySound(ep.getcstring(), looping == True))
-			MCresult->sets("no sound support");
+			MCStringRef t_sound = nil;
+			/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), t_sound);
+			extern bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping);
+			if (!MCSystemPlaySound(t_sound, looping == True))
+				MCresult->sets("no sound support");
+			MCValueRelease(t_sound);
 #endif
 			return ES_NORMAL;
 		}
