@@ -2756,7 +2756,7 @@ EXTERNAL_END_DECLARATIONS
 extern void REVXML_INIT();
 extern void REVXML_QUIT();
 
-extern "C" BOOL WINAPI xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
+extern "C" BOOL XMLCALL xmlDllMain(HINSTANCE hinstDLL, DWORD fdwReason, LPVOID lpvReserved);
 
 BOOL WINAPI DllMain(HINSTANCE tInstance, DWORD dwReason, LPVOID lpReserved)
 {
