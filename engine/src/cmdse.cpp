@@ -2116,11 +2116,13 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 	if (video)
 	{
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(const char *p_filename);
+		extern bool MCSystemPlayVideo(MCStringRef p_video);
+		MCAutoStringRef t_video;
+		/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), &t_video);
 		MCExecPoint *t_old_ep;
 		t_old_ep = MCEPptr;
 		MCEPptr = &ep;
-		if (!MCSystemPlayVideo(ep.getcstring()))
+		if (!MCSystemPlayVideo(*t_video))
 			MCresult->sets("no video support");
 		MCEPptr = t_old_ep;
 		return ES_NORMAL;

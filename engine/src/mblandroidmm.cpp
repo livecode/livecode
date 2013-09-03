@@ -42,29 +42,28 @@ bool path_to_apk_path(const char * p_path, const char *&r_apk_path);
 
 static bool s_video_playing = false;
 
-bool MCSystemPlayVideo(const char *p_file)
+bool MCSystemPlayVideo(MCStringRef p_video)
 {
 	if (s_video_playing)
 		return false;
 
 	//MCLog("MCSystemplayVideo(\"%s\")", p_file);
 	bool t_success;
-	const char *t_video_path = nil;
-
-	char *t_resolved_path = nil;
+	MCStringRef t_video_path = nil;
+	MCStringRef t_resolved_path = nil;
 
 	bool t_is_url = false;
 	bool t_is_asset = false;
 
-
-	if (MCCStringBeginsWith(p_file, "http://") || MCCStringBeginsWith(p_file, "https://"))
+	if (MCStringBeginsWith(p_video, MCSTR("http://"), kMCStringOptionCompareExact)
+		|| MCStringBeginsWith(p_video, MCSTR("https://"), kMCStringOptionCompareExact)
 	{
 		t_is_url = true;
 		t_video_path = p_file;
 	}
 	else
 	{
-		t_resolved_path = MCS_resolvepath(p_file);
+		/* UNCHECKED */ MCS_resolvepath(p_video, t_resolved_path);
 		t_video_path = t_resolved_path;
 		t_is_asset = path_to_apk_path(t_resolved_path, t_video_path);
 	}
@@ -75,7 +74,7 @@ bool MCSystemPlayVideo(const char *p_file)
 	t_show_controller = MCtemplateplayer -> getflag(F_SHOW_CONTROLLER) == True;
 
 	s_video_playing = true;
-	MCAndroidEngineRemoteCall("playVideo", "bsbbbb", &t_success, t_video_path, t_is_asset, t_is_url, t_looping, t_show_controller);
+	MCAndroidEngineRemoteCall("playVideo", "bsbbbb", &t_success, MCStringGetCString(t_video_path), t_is_asset, t_is_url, t_looping, t_show_controller);
 
 	if (!t_success)
 		s_video_playing = false;
@@ -86,7 +85,8 @@ bool MCSystemPlayVideo(const char *p_file)
 
 	s_video_playing = false;
 
-	MCCStringFree(t_resolved_path);
+	if (t_resolved_path != nil)
+		MCValueRelease(t_resolved_path);
 	return t_success;
 }
 

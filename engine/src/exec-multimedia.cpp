@@ -544,8 +544,8 @@ void MCMultimediaExecPlayOperation(MCExecContext& ctxt, MCPlayer *p_player, int 
 void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p_chunk_type, MCStringRef p_clip, bool p_looping, MCPoint *p_at, MCStringRef p_options)
 {
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(const char *p_filename);
-		if (!MCSystemPlayVideo(MCStringGetCString(p_clip)))
+		extern bool MCSystemPlayVideo(MCStringRef p_video);
+		if (!MCSystemPlayVideo(p_video))
 			MCresult->sets("no video support");
 		return;
 #endif
