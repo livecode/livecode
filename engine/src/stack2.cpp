@@ -1618,12 +1618,17 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 	return NULL;
 }
 
-void MCStack::addmnemonic(MCButton *button, uint1 key)
+void MCStack::addmnemonic(MCButton *button, KeySym p_key)
 {
 	MCU_realloc((char **)&mnemonics, nmnemonics,
 	            nmnemonics + 1, sizeof(Mnemonic));
 	mnemonics[nmnemonics].button = button;
-	mnemonics[nmnemonics].key = MCS_tolower(key);
+	
+	// Ensure that letter mnemonics are added case-insensitively
+	// (the shift state is handled by the button)
+	KeySym t_key;
+	t_key = KeySymToLower(p_key);
+	mnemonics[nmnemonics].key = t_key;
 	nmnemonics++;
 }
 
@@ -1659,11 +1664,13 @@ void MCStack::removeneed(MCButton *bptr)
 		}
 }
 
-MCButton *MCStack::findmnemonic(char which)
+MCButton *MCStack::findmnemonic(KeySym p_key)
 {
 	uint2 i;
+	KeySym t_key;
+	t_key = KeySymToLower(p_key);
 	for (i = 0 ; i < nmnemonics ; i++)
-		if (mnemonics[i].key == MCS_tolower(which))
+		if (mnemonics[i].key == t_key)
 			return mnemonics[i].button;
 	return NULL;
 }

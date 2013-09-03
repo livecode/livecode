@@ -91,8 +91,8 @@ public:
 	void wclose(Window w);
 	void wkfocus(Window w);
 	void wkunfocus(Window w);
-	Boolean wkdown(Window w, const char *string, KeySym key);
-	void wkup(Window w, const char *string, KeySym key);
+	Boolean wkdown(Window w, MCStringRef p_string, KeySym key);
+	void wkup(Window w, MCStringRef p_string, KeySym key);
 
 	void wmfocus(Window w, int2 x, int2 y);
 	void wmunfocus(Window w);

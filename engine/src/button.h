@@ -164,8 +164,8 @@ public:
 	virtual Boolean kfocusnext(Boolean top);
 	virtual Boolean kfocusprev(Boolean bottom);
 	virtual void kunfocus();
-	virtual Boolean kdown(const char *string, KeySym key);
-	virtual Boolean kup(const char *string, KeySym key);
+	virtual Boolean kdown(MCStringRef p_string, KeySym key);
+	virtual Boolean kup(MCStringRef p_string, KeySym key);
 	virtual Boolean mfocus(int2 x, int2 y);
 	virtual void munfocus();
 	virtual Boolean mdown(uint2 which);
@@ -206,7 +206,7 @@ public:
 	virtual void getwidgetthemeinfo(MCWidgetInfo &widgetinfo);
 	
 	// MCButton functions
-	void activate(Boolean notify, uint2 key);
+	void activate(Boolean notify, KeySym p_key);
 	void clearmnemonic();
 	void setupmnemonic();
 	MCCdata *getbptr(uint4 cardid);
@@ -318,7 +318,7 @@ public:
 	Bool macfindmenu(bool p_just_for_accel);
 	void macopenmenu(void);
 	void macfreemenu(void);
-	static void getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu);
+	static void getmacmenuitemtextfromaccelerator(short menuid, KeySym key, uint1 mods, MCStringRef &r_string, bool issubmenu);
 #endif
 
 	MCCdata *getcdata(void) {return bdata;}

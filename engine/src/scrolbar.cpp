@@ -155,10 +155,10 @@ void MCScrollbar::open()
 	compute_barsize();
 }
 
-Boolean MCScrollbar::kdown(const char *string, KeySym key)
+Boolean MCScrollbar::kdown(MCStringRef p_string, KeySym key)
 {
 	if (!(state & CS_NO_MESSAGES))
-		if (MCObject::kdown(string, key))
+		if (MCObject::kdown(p_string, key))
 			return True;
 	Boolean done = False;
 	switch (key)

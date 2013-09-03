@@ -216,18 +216,18 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelUp);
+						mfocused->kdown(kMCEmptyString, XK_WheelUp);
 					else
-						mfocused->kdown("", XK_WheelDown);
+						mfocused->kdown(kMCEmptyString, XK_WheelDown);
 				}
 				else if (t_axis ==  kEventMouseWheelAxisX)
 				{
 					int4 val;
 					GetEventParameter(event, kEventParamMouseWheelDelta, typeLongInteger, NULL, sizeof(val), NULL, &val);
 					if (val < 0)
-						mfocused->kdown("", XK_WheelLeft);
+						mfocused->kdown(kMCEmptyString, XK_WheelLeft);
 					else
-						mfocused->kdown("", XK_WheelRight);
+						mfocused->kdown(kMCEmptyString, XK_WheelRight);
 				}	
 			}
 		}

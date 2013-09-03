@@ -104,7 +104,7 @@ static uint4 shift_keysyms[] = {
 
 typedef struct
 {
-	uint4 keysym;
+	KeySym keysym;
 	uint2 glyph;
 }
 KeyGlyph;
@@ -609,6 +609,7 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 	Boolean handled = False;
 	MCeventtime = event.when * 1000 / 60;
 	WindowPtr oldactive, oldlast;
+	MCStringRef t_string = nil;
 	
 	switch (event.what)
 	{
@@ -668,7 +669,18 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 
 								if (UCKeyTranslate(t_uchrdata, (event.message & keyCodeMask) >> 8, kUCKeyActionDown, (shiftKey >> 8) & 0xFF, LMGetKbdType(), 0, &t_deadkeystate, t_maxlength, &t_actuallength, t_unicodestring) == noErr)
 								{
+									// The range U+FF00 to U+FFFF is a valid Unicode range but overlaps with the XK_*
+									// special key values. Translate any non-ASCII codepoints to the Unicode keysyms
 									keysym = t_unicodestring[0];
+									if (keysym > 0x7F)
+										keysym |= XK_Class_codepoint;
+									
+									// As below, filter out the C0 and C1 control characters except '\t'
+									if ((t_unicodestring[0] < 32 && t_unicodestring[0] != '\t')			/* C0 controls */
+										|| (t_unicodestring[0] >= 0x80 && t_unicodestring[0] <= 0x9F))	/* C1 controls */
+										t_actuallength = 0;
+									
+									/* UNCHECKED */ MCStringCreateWithChars(t_unicodestring, t_actuallength, t_string);
 								}
 							}
 						} 
@@ -695,7 +707,13 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 				if ((((unsigned)buffer[0]) < 32 && ((unsigned)buffer[0] != 9)) || ((unsigned)buffer[0]) == 127)
 					buffer[0] = '\0';
 			}
-			if (!MCdispatcher->wkdown(activewindow, buffer, keysym))
+			
+			// If the key string hasn't already been created, do it now
+			if (t_string == nil)
+				/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, XLOOKUPSTRING_SIZE, t_string);
+			
+			if (!MCdispatcher->wkdown(activewindow, t_string, keysym))
+			{
 				if (event.modifiers & cmdKey)
 				{
 					long which;
@@ -710,6 +728,8 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 						HiliteMenu(0);
 					}
 				}
+			}
+			MCValueRelease(t_string);
 			reset = True;
 		}
 		else
@@ -737,7 +757,9 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 					keysym = shift_keysyms[(event.message & keyCodeMask) >> 8];
 				else
 					keysym = keysyms[(event.message & keyCodeMask) >> 8];
-			MCdispatcher->wkup(activewindow, buffer, keysym);
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)buffer, XLOOKUPSTRING_SIZE, t_string);
+			MCdispatcher->wkup(activewindow, t_string, keysym);
+			MCValueRelease(t_string);
 			reset = True;
 		}
 		else
@@ -771,12 +793,10 @@ Boolean MCScreenDC::dispatchevent(EventRecord &event, Boolean dispatch,
 						clearmdown(event.modifiers & controlKey ? 3 : 1);
 					if (grabbed)
 					{
-						buffer[0] = 0x1B;
-						buffer[1] = '\0';
 						Boolean oldlock = MClockmessages;
 						MClockmessages = True;
-						MCdispatcher->wkdown(mousewindow, buffer, XK_Escape);
-						MCdispatcher->wkup(mousewindow, buffer, XK_Escape);
+						MCdispatcher->wkdown(mousewindow, MCSTR("\x1B"), XK_Escape);
+						MCdispatcher->wkup(mousewindow, MCSTR("\x1B"), XK_Escape);
 						MClockmessages = oldlock;
 						handled = True;
 						grabbed = False;
@@ -1536,7 +1556,7 @@ static void SetMacMenuItemText(MenuHandle mh, uint2 mitem, char *mitemtext, uint
 	CFRelease(cfmenuitemstring);
 }
 
-uint2 MCMacKeysymToGlyph(uint4 key)
+uint2 MCMacKeysymToGlyph(KeySym key)
 {
 	for (int i = 0; key_glyphs[i].glyph != 0; i++)
 	{
@@ -1548,7 +1568,7 @@ uint2 MCMacKeysymToGlyph(uint4 key)
 	return kMenuNullGlyph;
 }
 
-uint4 MCMacGlyphToKeysym(uint2 glyph)
+KeySym MCMacGlyphToKeysym(uint2 glyph)
 {
 	for (int i = 0; key_glyphs[i].glyph != 0; i++)
 	{
@@ -2182,6 +2202,7 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 	}
 	if (!MCS_imeisunicode())
 	{
+		MCStringRef t_string = nil;
 		uint4 unicodelen;
 		char *unicodeimetext = new char[imetextsize << 1];
 		uint2 charset = MCS_langidtocharset(GetScriptManagerVariable(smKeyScript));;
@@ -2194,20 +2215,19 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 				fixLength = -1;
 			}
 			MCactivefield->stopcomposition(True,False);
-			MCU_multibytetounicode(imetext, commitedLen, unicodeimetext,
-			                       imetextsize << 1, unicodelen, charset);
-			MCString unicodestr(unicodeimetext, unicodelen);
-			MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
+
+			/* UNCHECKED */ MCU_multibytetounicode(MCString(imetext, commitedLen), charset, t_string);
+			MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
+			MCValueRelease(t_string);
 		}
 		if (fixLength != -1)
 			if (imetextsize != fixLength)
 			{
 				MCactivefield->startcomposition();
-				MCU_multibytetounicode(&imetext[commitedLen], imetextsize-commitedLen,
-				                       unicodeimetext, imetextsize << 1,
-				                       unicodelen, charset);
-				MCString unicodestr(unicodeimetext, unicodelen);
-				MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, 0, true);
+
+				/* UNCHECKED */ MCU_multibytetounicode(MCString(imetext + commitedLen, imetextsize - commitedLen), charset, t_string);
+				MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
+				MCValueRelease(t_string);
 			}
 			else if (imetextsize == 0 && fixLength == 0)
 				MCactivefield->stopcomposition(True,False);
@@ -2248,23 +2268,26 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 		if (commitedLen == 2 && MCUnicodeMapToNative((const uint2 *)imetext, 1, t_char))
 		{
 			// MW-2012-10-30: [[ Bug 10501 ]] Make sure we stop composing
-				MCactivefield->stopcomposition(True,False);
+			MCactivefield->stopcomposition(True,False);
 				
-				// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
-				//   for MacRoman characters entered using the default IME.
-			char tbuf[2];
-			tbuf[0] = t_char;
-			tbuf[1] = 0;
-				MCdispatcher->wkdown(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
-				MCdispatcher->wkup(MCactivefield -> getstack() -> getwindow(), tbuf, ((unsigned char *)tbuf)[0]);
-			}
-			else
-			{
+			// MW-2008-08-21: [[ Bug 6700 ]] Make sure we generate synthentic keyUp/keyDown events
+			//   for MacRoman characters entered using the default IME.
+			MCStringRef t_buf;
+			/* UNCHECKED */ MCStringFormat(t_buf, "%c", t_char); 
+			MCdispatcher->wkdown(MCactivefield -> getstack() -> getwindow(), t_buf, t_char);
+			MCdispatcher->wkup(MCactivefield -> getstack() -> getwindow(), t_buf, t_char);
+			MCValueRelease(t_buf);
+		}
+		else
+		{
 			if (commitedLen != 0)
 			{
 				MCactivefield->stopcomposition(True,False);
-				MCString unicodestr(imetext, commitedLen);
-				MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
+				MCStringRef t_string = nil;
+				/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)imetext, commitedLen/sizeof(unichar_t), t_string);
+				MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
+				MCValueRelease(t_string);
+				
 			}
 		}
 		
@@ -2272,8 +2295,11 @@ pascal OSErr TSMUpdateHandler(const AppleEvent *theAppleEvent,
 			if (imetextsize != fixLength)
 			{
 				MCactivefield->startcomposition();
-				MCString unicodestr(&imetext[commitedLen], imetextsize-commitedLen);
-				MCactivefield->finsertnew( FT_IMEINSERT, unicodestr, 0, true);
+				MCStringRef t_string = nil;
+				/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)(imetext + commitedLen), 
+														(imetextsize - commitedLen)/sizeof(unichar_t), t_string);
+				MCactivefield->finsertnew(FT_IMEINSERT, t_string, 0);
+				MCValueRelease(t_string);
 			}
 			else if (imetextsize == 0 && fixLength == 0)
 				MCactivefield->stopcomposition(True,False);
@@ -2460,9 +2486,10 @@ pascal OSErr TSMUnicodeNotFromInputHandler(const AppleEvent *theAppleEvent,
 			}
 		}
 		MCactivefield->stopcomposition(True,False);
-		MCString unicodestr(imetext, imetextsize);
+		MCStringRef t_string = nil;
+		/* UNCHECKED */ MCStringCreateWithChars((const unichar_t *)imetext, imetextsize/sizeof(unichar_t), t_string);
 		// we pass charset as keysym to avoid changing keyboards
-		MCactivefield->finsertnew(FT_IMEINSERT, unicodestr, charset, true);
+		MCactivefield->finsertnew(FT_IMEINSERT, t_string, charset);
 	}
 	delete imetext;
 	AEDisposeDesc(&text);

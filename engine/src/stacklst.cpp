@@ -294,12 +294,19 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 {
 	if (stacks == NULL)
 		return False;
-	if (key < 256 && isupper((uint1)key))
-		key = MCS_tolower((uint1)key);
+	
+	codepoint_t t_char = 0;
+	if (key < 0x7f)
+		t_char = key;
+	else if ((key & XK_Class_mask) == XK_Class_codepoint)
+		t_char = key & XK_Codepoint_mask;
+
 	uint2 t_mod_mask = MS_CONTROL | MS_MAC_CONTROL | MS_MOD1;
 
-	if ((key >= 'a' && key <= 'z') || (key & 0xFF00) == 0xFF00)
+	// The shift state is important for lower-case letters and special keys
+	if (islower(t_char) || t_char == 0)
 		t_mod_mask |= MS_SHIFT;
+	
 	// There are numerous issues with menu accelerators at the moment. I belive these
 	// problems are caused by two things:
 	//   * No mousedown sent to the current menu bar before an accelerator search
@@ -321,17 +328,17 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 		//   first.
 		for(uint2 i = 0; i < naccelerators; i++)
 		{
-			if (key == (KeySym)accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
+			if (key == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 			{
 				t_menubar -> message_with_args(MCM_mouse_down, "");
 
 				// We now need to re-search for the accelerator, since it could have gone/been deleted in the mouseDown
 				for(uint2 i = 0; i < naccelerators; i++)
 				{
-					if (key == (KeySym)accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
+					if (key == accelerators[i] . key && (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask) && accelerators[i] . button -> getparent() == t_menubar)
 					{
 						MCmodifierstate &= t_mod_mask;
-						accelerators[i] . button -> activate(True, (uint2)key);
+						accelerators[i] . button -> activate(True, key);
 						return True;
 					}
 				}
@@ -347,7 +354,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 	// found a matching accelerator.
 	for (uint2 i = 0 ; i < naccelerators ; i++)
 	{
-		if (key == (KeySym)accelerators[i].key
+		if (key == accelerators[i].key
 				&& (MCmodifierstate & t_mod_mask) == (accelerators[i].mods & t_mod_mask))
 		{
 			MCStacknode *tptr = stacks;
@@ -360,7 +367,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 					)
 				{
 					MCmodifierstate &= t_mod_mask;
-					accelerators[i].button->activate(True, (uint2)key);
+					accelerators[i].button->activate(True, key);
 					return True;
 				}
 				tptr = tptr->next();
@@ -372,7 +379,7 @@ Boolean MCStacklist::doaccelerator(KeySym key)
 }
 
 void MCStacklist::addaccelerator(MCButton *button, MCStack *stack,
-                                 uint2 key, uint1 mods)
+                                 KeySym key, uint1 mods)
 {
 	MCU_realloc((char **)&accelerators, naccelerators, naccelerators + 1,
 	            sizeof(Accelerator));
@@ -401,7 +408,7 @@ void MCStacklist::deleteaccelerator(MCButton *button, MCStack *stack)
 			i++;
 }
 
-void MCStacklist::changeaccelerator(MCButton *button, uint2 key, uint1 mods)
+void MCStacklist::changeaccelerator(MCButton *button, KeySym key, uint1 mods)
 {
 	uint2 i;
 	for (i = 0 ; i < naccelerators ; i++)
@@ -414,14 +421,14 @@ void MCStacklist::changeaccelerator(MCButton *button, uint2 key, uint1 mods)
 	addaccelerator(button, button->getstack(), key, mods);
 }
 
-MCButton *MCStacklist::findmnemonic(char key)
+MCButton *MCStacklist::findmnemonic(KeySym p_key)
 {
 	MCStacknode *tptr = stacks;
 	do
 	{
 		uint2 i;
 		for (i = 0 ; i < nmenus ; i++)
-			if (menus[i].key == MCS_tolower(key)
+			if (menus[i].key == p_key
 			        && menus[i].button->getstack() == tptr->getstack())
 			{
 				return menus[i].button;
@@ -432,11 +439,11 @@ MCButton *MCStacklist::findmnemonic(char key)
 	return NULL;
 }
 
-void MCStacklist::addmenu(MCButton *button, char key)
+void MCStacklist::addmenu(MCButton *button, KeySym p_key)
 {
 	MCU_realloc((char **)&menus, nmenus, nmenus + 1, sizeof(Mnemonic));
 	menus[nmenus].button = button;
-	menus[nmenus].key = MCS_tolower(key);
+	menus[nmenus].key = p_key;
 	nmenus++;
 }
 

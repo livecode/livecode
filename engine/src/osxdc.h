@@ -148,8 +148,8 @@ extern pascal OSErr DragTrackingHandler(DragTrackingMessage message,
 extern pascal OSErr DragReceiveHandler(WindowPtr theWindow, void *hRefCon,
 	                                       DragReference theDrag);
 
-extern uint4 MCMacGlyphToKeysym(uint2 glyph);
-extern uint2 MCMacKeysymToGlyph(uint4 key);
+extern KeySym MCMacGlyphToKeysym(uint2 glyph);
+extern uint2 MCMacKeysymToGlyph(KeySym key);
 
 class MCScreenDC : public MCUIDC
 {

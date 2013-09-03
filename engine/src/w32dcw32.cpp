@@ -957,8 +957,8 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					buffer[1] = '\0';
 					Boolean oldlock = MClockmessages;
 					MClockmessages = True;
-					sptr->kdown(buffer, XK_Escape);
-					sptr->kup(buffer, XK_Escape);
+					sptr->kdown(MCSTR("\x1B"), XK_Escape);
+					sptr->kup(MCSTR("\x1B"), XK_Escape);
 					MClockmessages = oldlock;
 					sptr->munfocus();
 					pms->setgrabbed(False);
@@ -1358,16 +1358,16 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 				if (msg == WM_MOUSEWHEEL)
 				{
 					if (val < 0)
-						mfocused->kdown("", XK_WheelUp);
+						mfocused->kdown(kMCEmptyString, XK_WheelUp);
 					else
-						mfocused->kdown("", XK_WheelDown);
+						mfocused->kdown(kMCEmptyString, XK_WheelDown);
 				}
 				else if (msg == WM_MOUSEHWHEEL)
 				{
 					if (val < 0)
-						mfocused->kdown("", XK_WheelLeft);
+						mfocused->kdown(kMCEmptyString, XK_WheelLeft);
 					else
-						mfocused->kdown("", XK_WheelRight);
+						mfocused->kdown(kMCEmptyString, XK_WheelRight);
 				}
 			}
 		}

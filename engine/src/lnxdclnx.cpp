@@ -627,9 +627,9 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 						if (mfocused != NULL)
 						{
 							if (bpevent->button == Button4)
-								mfocused->kdown("", XK_WheelDown);
+								mfocused->kdown(kMCEmptyString, XK_WheelDown);
 							else
-								mfocused->kdown("", XK_WheelUp);
+								mfocused->kdown(kMCEmptyString, XK_WheelUp);
 						}
 					}
 					else

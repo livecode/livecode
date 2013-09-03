@@ -439,21 +439,21 @@ void MCCard::kunfocus()
 	}
 }
 
-Boolean MCCard::kdown(const char *string, KeySym key)
+Boolean MCCard::kdown(MCStringRef p_string, KeySym key)
 {
 	MCtooltip->closetip();
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kdown(string, key);
-	if (MCObject::kdown(string, key))
+		return kfocused->getref()->kdown(p_string, key);
+	if (MCObject::kdown(p_string, key))
 		return True;
 	return False;
 }
 
-Boolean MCCard::kup(const char *string, KeySym key)
+Boolean MCCard::kup(MCStringRef p_string, KeySym key)
 {
 	if (kfocused != NULL && getstack()->gettool(this) == T_BROWSE)
-		return kfocused->getref()->kup(string, key);
-	return MCObject::kup(string, key);
+		return kfocused->getref()->kup(p_string, key);
+	return MCObject::kup(p_string, key);
 }
 
 void MCCard::mdrag(void)
