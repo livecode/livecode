@@ -216,7 +216,7 @@ public:
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);
-	Boolean setenabledtracks(const MCString &s);
+	Boolean setenabledtracks(MCStringRef s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 	bool geteffectlist(MCStringRef& r_string);
@@ -347,16 +347,22 @@ public:
 	{
 		scale = s;
 	}
-	Boolean prepare(const char *options);
+	Boolean prepare(MCStringRef options);
+	/*
 	bool prepare(MCStringRef p_options)
 	{
 		return True == prepare(MCStringGetCString(p_options));
 	}
-	Boolean playstart(const char *options);
+	*/
+
+	Boolean playstart(MCStringRef options);
+	/*
+
 	bool playstart(MCStringRef p_options)
 	{
 		return True == playstart(MCStringGetCString(p_options));
 	}
+	*/
 	Boolean playpause(Boolean on);
 	void playstepforward();
 	void playstepback();

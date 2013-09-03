@@ -346,7 +346,7 @@ void MCPlayer::open()
 {
 	MCControl::open();
 	if (flags & F_ALWAYS_BUFFER && !isbuffering())
-		prepare(MCnullstring);
+		prepare(kMCEmptyString);
 }
 
 void MCPlayer::close()
@@ -1491,7 +1491,7 @@ void MCPlayer::showcontroller(Boolean show)
 #endif
 }
 
-Boolean MCPlayer::prepare(const char *options)
+Boolean MCPlayer::prepare(MCStringRef options)
 {
 	Boolean ok = False;
 
@@ -1543,7 +1543,7 @@ Boolean MCPlayer::prepare(const char *options)
 	return ok;
 }
 
-Boolean MCPlayer::playstart(const char *options)
+Boolean MCPlayer::playstart(MCStringRef options)
 {
 	if (!prepare(options))
 		return False;
@@ -1783,18 +1783,18 @@ void MCPlayer::getenabledtracks(MCExecPoint &ep)
 #endif
 }
 
-Boolean MCPlayer::setenabledtracks(const MCString &s)
+Boolean MCPlayer::setenabledtracks(MCStringRef s)
 {
 	if (getstate(CS_PREPARED))
 #ifdef FEATURE_QUICKTIME
 		if (qtstate == QT_INITTED)
-			return qt_setenabledtracks(s);
+			return qt_setenabledtracks(MCStringGetCString(s));
 #ifdef TARGET_PLATFORM_WINDOWS
 		else
-			return avi_setenabledtracks(s);
+			return avi_setenabledtracks(MCStringGetCString(s));
 #endif
 #elif defined(X11)
-		return x11_setenabledtracks(s);
+		return x11_setenabledtracks(MCStringGetCString(s));
 #else
 		0 == 0;
 #endif

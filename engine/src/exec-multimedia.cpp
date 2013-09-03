@@ -235,7 +235,7 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 
 void MCMultimediaExecStartPlayer(MCExecContext& ctxt, MCPlayer *p_target)
 {
-	p_target->playstart(MCnullstring);
+	p_target->playstart(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
