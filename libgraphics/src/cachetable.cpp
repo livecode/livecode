@@ -91,7 +91,7 @@ bool MGCCacheTableCreate(uindex_t p_size, MCGCacheTableRef &r_cache_table)
 
 void MGCCacheTableDestroy(MCGCacheTableRef self)
 {
-	if (self = NULL)
+	if (self == NULL)
 		return;
 	
 	if (self -> pairs != NULL)
@@ -120,11 +120,11 @@ static uindex_t MCGCacheTableLookup(MCGCacheTableRef self, void *p_key, uint32_t
 			__MCGCacheTableEntry *t_pair;
 			t_pair = &self -> pairs[t_probe];
 			
-			if (t_pair -> value == NULL || t_pair -> hash == p_hash && t_pair -> key_length == p_key_length && MCMemoryEqual(p_key, t_pair -> key, p_key_length))
+			if (t_pair -> value == NULL || (t_pair -> hash == p_hash && t_pair -> key_length == p_key_length && MCMemoryEqual(p_key, t_pair -> key, p_key_length)))
 				return t_probe;
 			
 			t_probe++;
-			if (t_probe > self -> total_buckets)
+			if (t_probe >= self -> total_buckets)
 				t_probe -= self -> total_buckets;
 		}
 	}
