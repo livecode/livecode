@@ -1153,12 +1153,12 @@ Boolean MCButton::mdown(uint2 which)
 					uindex_t t_ntabs;
 					t_ntabs = MCArrayGetCount(tabs);
 					MCValueRef t_tab = nil;
-					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab, t_tab);
+					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab + 1, t_tab);
 					if (starttab < t_ntabs && starttab + 1 != menuhistory
 					        && MCStringGetCharAtIndex((MCStringRef)t_tab, 0) != '(')
 					{
 						MCValueRef t_oldhist = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_oldhist);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_oldhist);
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
@@ -1394,14 +1394,14 @@ Boolean MCButton::mup(uint2 which)
 					uindex_t t_ntabs;
 					MCValueRef t_tab = nil;
 					t_ntabs = MCArrayGetCount(tabs);
-					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab, t_tab);
+					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab + 1, t_tab);
 					int2 curx = rect.x + 2;
 					if (getmousetab(curx) == starttab && starttab < t_ntabs
 					        && starttab + 1 != menuhistory
 					        && MCStringGetCharAtIndex((MCStringRef)t_tab, 0) != '(')
 					{
 						MCValueRef t_oldhist = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_oldhist);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_oldhist);
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
@@ -3411,7 +3411,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 					for (uindex_t i = 0 ; i < t_ntabs ; i++)
 					{
 						MCValueRef t_tabval = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 						MCStringRef t_tab;
 						t_tab = (MCStringRef)t_tabval;
 						if (MCStringGetCharAtIndex(t_tab, 0) == '!'
@@ -3422,7 +3422,6 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 							menuflags |= F_CHECK;
 							break;
 						}
-						MCValueRelease(t_tab);
 					}
 
 					ButtonMenuCallback t_callback(this, menuflags);
@@ -3964,8 +3963,8 @@ void MCButton::setmenuhistory(int2 newline)
 		{
 			MCValueRef t_menuhistory = nil;
 			MCValueRef t_oldline = nil;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_menuhistory);
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline - 1, t_oldline);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_menuhistory);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline, t_oldline);
 			message_with_valueref_args(MCM_menu_pick, t_menuhistory, t_oldline);
 		}
 		resetlabel();
@@ -3991,7 +3990,7 @@ uint2 MCButton::getmousetab(int2 &curx)
 		for (i = 0 ; i < MCArrayGetCount(tabs) ; i++)
 		{
 			MCValueRef t_tabval;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 			MCStringRef t_tab;
 			t_tab = (MCStringRef)t_tabval;
 			
@@ -4003,7 +4002,6 @@ uint2 MCButton::getmousetab(int2 &curx)
 				t_range.length--;
 			}
 			totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range) + 23;
-			MCValueRelease(t_tab);
 		}
 		if (totalwidth < rect.width)
 			curx += rect.width - totalwidth >> 1;
@@ -4031,7 +4029,7 @@ uint2 MCButton::getmousetab(int2 &curx)
 	for (i = 0 ; i < t_ntabs ; i++)
 	{
 		MCValueRef t_tabval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
 		if (MCcurtheme)
@@ -4044,7 +4042,6 @@ uint2 MCButton::getmousetab(int2 &curx)
 				tx += MCFontMeasureText(m_font, t_tab) + 12;
 
 		}
-		MCValueRelease(t_tab);
 		if (mx < tx)
 			break;
 	}
@@ -4072,7 +4069,7 @@ int4 MCButton::formattedtabwidth(void)
 	for (uint4 i = 0 ; i < t_ntabs ; i++)
 	{
 		MCValueRef t_tabval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
 		if (MCcurtheme)
@@ -4085,7 +4082,6 @@ int4 MCButton::formattedtabwidth(void)
 				tx += MCFontMeasureText(m_font, t_tab) + 12;
 
 		}
-		MCValueRelease(t_tab);
 	}
 	if (t_ntabs > 0)
 		tx += taboverlap + tabrightmargin;

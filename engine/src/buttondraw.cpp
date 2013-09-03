@@ -1212,7 +1212,7 @@ void MCButton::drawtabs(MCDC *dc, MCRectangle &srect)
 	{
 		Boolean disabled = False;
 		MCValueRef t_tabval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
 		MCRange t_range = MCRangeMake(0, MCStringGetLength(t_tab));

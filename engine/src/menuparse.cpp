@@ -265,13 +265,12 @@ void MCParseMenuString(MCStringRef &x_string, IParseMenuCallback *p_callback, ui
 		t_menuitem.menumode = p_menumode;
 
 		MCValueRef t_lineval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i, t_lineval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(*t_lines, i + 1, t_lineval);
 		MCStringRef t_line;
 		t_line = (MCStringRef)t_lineval;
 		
 		MCStringRef t_new_line = nil;
 		ParseMenuItemString(t_line, t_new_line, &t_menuitem);
-		MCValueRelease(t_line);
 		MCStringAppend(t_new_string, t_new_line);
 		MCValueRelease(t_new_line);
 
