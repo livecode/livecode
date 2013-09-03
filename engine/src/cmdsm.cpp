@@ -760,6 +760,9 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 		MCperror->add(PE_ARRAYOP_BADEXP, sp);
 		return PS_ERROR;
 	}
+    
+    // MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+    recursive = sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RECURSIVELY) == PS_NORMAL;
 
 	MCVarref *t_src_ref, *t_dst_ref;
 	t_src_ref = source -> getrootvarref();
@@ -804,14 +807,16 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 		if (t_src_ref == NULL)
 			t_dst_ref -> assign_empty();
 		else
-			t_dst_ref -> intersectarray(*t_src_ref);
+			// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+            t_dst_ref -> intersectarray(*t_src_ref,recursive);
 	}
 	else
 	{
 		if (t_src_ref == NULL)
 			return ES_NORMAL;
 
-		t_dst_ref -> unionarray(*t_src_ref);
+		// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+        t_dst_ref -> unionarray(*t_src_ref,recursive);
 	}
 
 	if (t_dst_var != NULL)
