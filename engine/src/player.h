@@ -348,21 +348,7 @@ public:
 		scale = s;
 	}
 	Boolean prepare(MCStringRef options);
-	/*
-	bool prepare(MCStringRef p_options)
-	{
-		return True == prepare(MCStringGetCString(p_options));
-	}
-	*/
-
 	Boolean playstart(MCStringRef options);
-	/*
-
-	bool playstart(MCStringRef p_options)
-	{
-		return True == playstart(MCStringGetCString(p_options));
-	}
-	*/
 	Boolean playpause(Boolean on);
 	void playstepforward();
 	void playstepback();
