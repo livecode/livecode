@@ -373,22 +373,10 @@ uint4 MCstackfileversion = 5500;
 uint1 MCleftmasks[8] = {0xFF, 0x7F, 0x3f, 0x1F, 0x0F, 0x07, 0x03, 0x01};
 uint1 MCrightmasks[8] = {0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
 
-#if defined(_WINDOWS)
-uint2 MClook = LF_WIN95;
-MCStringRef MCttbgcolor = MCSTR("255,255,231");
-MCStringRef MCttfont = MCSTR("MS Sans Serif");
-uint2 MCttsize = 12;
-#elif defined(_MACOSX)
-uint2 MClook = LF_MAC;
-MCStringRef MCttbgcolor = MCSTR("255,255,207");
-MCStringRef MCttfont = MCSTR("Lucida Grande");
-uint2 MCttsize = 11;
-#else
-uint2 MClook = LF_MOTIF;
-MCStringRef MCttbgcolor = MCSTR("255,255,207");
-MCStringRef MCttfont = MCSTR("Helvetica");
-uint2 MCttsize = 12;
-#endif
+uint2 MClook;
+MCStringRef MCttbgcolor;
+MCStringRef MCttfont;
+uint2 MCttsize;
 uint2 MCtrylock;
 uint2 MCerrorlock;
 Boolean MCwatchcursor;
@@ -731,10 +719,22 @@ void X_clear_globals(void)
 	MCantialiasedtextworkaround = False;
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
-	MClook = LF_MOTIF;
-	MCttbgcolor = MCSTR("255,255,207");
-	MCttfont = MCSTR("Helvetica");
-	MCttsize = 12;
+#if defined(_WINDOWS)
+    MClook = LF_WIN95;
+    MCttbgcolor = MCSTR("255,255,231");
+    MCttfont = MCSTR("MS Sans Serif");
+    MCttsize = 12;
+#elif defined(_MACOSX)
+    MClook = LF_MAC;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Lucida Grande");
+    MCttsize = 11;
+#else
+    MClook = LF_MOTIF;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Helvetica");
+    MCttsize = 12;
+#endif
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
