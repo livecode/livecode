@@ -457,4 +457,34 @@ void MCGPlatformInitialize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class MCGLegacyBlendMode : public SkXfermode
+{
+public:
+	MCGLegacyBlendMode(MCGBlendMode blend_mode);
+	
+    virtual void xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+    virtual void xfer16(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+    virtual void xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+    virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
+	
+	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
+	virtual bool asMode(Mode* mode) const;
+	
+    virtual Factory getFactory() { return CreateProc; }
+    virtual void flatten(SkFlattenableWriteBuffer&);
+	
+protected:
+    MCGLegacyBlendMode(SkFlattenableReadBuffer& rb);
+	
+private:
+	uint32_t m_function;
+	
+    static SkFlattenable* CreateProc(SkFlattenableReadBuffer& buffer)
+	{
+		return SkNEW_ARGS(MCGLegacyBlendMode, (buffer));
+	}
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 #endif

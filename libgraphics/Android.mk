@@ -14,6 +14,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 		blur.cpp \
 		mblandroidtext.cpp \
 		cachetable.cpp \
+		legacyblendmodes.cpp \
 	)
 
 LOCAL_C_INCLUDES := \
