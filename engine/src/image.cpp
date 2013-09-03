@@ -1678,7 +1678,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1775,7 +1775,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	if (flags & F_HAS_FILENAME)
 	{
 		MCAutoStringRef t_filename;
-		if ((stat = IO_read_stringref(&t_filename, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(&t_filename, stream, false)) != IO_NORMAL)
 			return stat;
 
 		/* UNCHECKED */ setfilename(*t_filename);
