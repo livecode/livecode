@@ -140,6 +140,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\cachetable.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\context.cpp"
 				>
 			</File>
