@@ -470,6 +470,9 @@ void MCGraphicsContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int
 
 void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle)
 {
+	// IM-2013-09-03: [[ RefactorGraphics ]] track the current linewidth setting
+	m_line_width = linesize;
+	
 	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize);
 	
 	switch (capstyle)
@@ -694,8 +697,19 @@ void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
 
 void MCGraphicsContext::drawrect(const MCRectangle& rect)
 {
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
+	
+	// IM-2013-09-03: [[ RefactorGraphics ]] convert zero-linewidth rect to libgraphics coordinate system
+	if (m_line_width == 0)
+	{
+		t_rect.size.width = MCMax(0.0, t_rect.size.width - 1.0);
+		t_rect.size.height = MCMax(0.0, t_rect.size.height - 1.0);
+		t_rect.origin.x += 0.5;
+		t_rect.origin.y += 0.5;
+	}
+	
 	MCGContextBeginPath(m_gcontext);
-	MCGContextAddRectangle(m_gcontext, MCRectangleToMCGRectangle(rect));
+	MCGContextAddRectangle(m_gcontext, t_rect);
 	MCGContextStroke(m_gcontext);
 }
 
