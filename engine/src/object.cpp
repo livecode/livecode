@@ -2338,20 +2338,42 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 			break;
 		}
 	case LF_MOTIF:
-		for (i = 0 ; i < bwidth ; i++)
-		{
-			uint2 j = i << 1;
-			t[j].x1 = t[j].x2 = t[j + 1].x1 = lx++;
-			b[j].x1 = lx;
-			b[j].x2 = b[j + 1].x1 = b[j + 1].x2 = t[j + 1].x2 = rx--;
-			t[j].y2 = t[j + 1].y1 = t[j + 1].y2 = ty++;
-			b[j + 1].y2 = ty;
-			b[j].y1 = b[j].y2 = b[j + 1].y1 = t[j].y1 = by--;
-		}
+		// IM-2013-09-03: [[ RefactorGraphics ]] render Motif 3D border using polygons instead of line segments
+		rx++;
+		by++;
+		
+		MCPoint t_top_points[6];
+		t_top_points[0].x = lx;
+		t_top_points[0].y = ty;
+		t_top_points[1].x = rx;
+		t_top_points[1].y = ty;
+		t_top_points[2].x = rx - bwidth;
+		t_top_points[2].y = ty + bwidth;
+		t_top_points[3].x = lx + bwidth;
+		t_top_points[3].y = ty + bwidth;
+		t_top_points[4].x = lx + bwidth;
+		t_top_points[4].y = by - bwidth;
+		t_top_points[5].x = lx;
+		t_top_points[5].y = by;
+		
+		MCPoint t_bottom_points[6];
+		t_bottom_points[0].x = rx;
+		t_bottom_points[0].y = by;
+		t_bottom_points[1].x = lx;
+		t_bottom_points[1].y = by;
+		t_bottom_points[2].x = lx + bwidth;
+		t_bottom_points[2].y = by - bwidth;
+		t_bottom_points[3].x = rx - bwidth;
+		t_bottom_points[3].y = by - bwidth;
+		t_bottom_points[4].x = rx - bwidth;
+		t_bottom_points[4].y = ty + bwidth;
+		t_bottom_points[5].x = rx;
+		t_bottom_points[5].y = ty;
+
 		setforeground(dc, DI_BOTTOM, reversed);
-		dc->drawsegments(b, 2 * bwidth);
+		dc->fillpolygon(t_bottom_points, 6);
 		setforeground(dc, DI_TOP, reversed);
-		dc->drawsegments(t, 2 * bwidth);
+		dc->fillpolygon(t_top_points, 6);
 		break;
 	}
 	if (t != tb)
