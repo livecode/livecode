@@ -523,7 +523,7 @@ void MCField::GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
 
 void MCField::SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 {
-	settext(part, MCStringGetOldString(p_text), False);
+	settext(part, p_text, False);
 }
 
 void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
@@ -636,7 +636,7 @@ void MCField::GetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& 
 
 void MCField::SetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string)
 {
-	settext(part, MCStringGetOldString(p_string), True);
+	settext(part, p_string, True);
 	Redraw(true);
 }
 
@@ -650,31 +650,18 @@ void MCField::GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStri
 
 void MCField::SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string)
 {
-	settext(part, MCStringGetOldString(p_string), True, True);
+	settext(part, p_string, True);
 	Redraw(true);
 }
 
 void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (label == NULL)
-	{
-		if (!selectedtext(r_string))
-			r_string = MCValueRetain(kMCEmptyString);
-		return;
-	}
-	else
-	{
-		if (MCStringCreateWithCString(label, r_string))
-			return;
-	}
-
-	ctxt . Throw();
+	r_string = MCValueRetain(label);
 }
 
 void MCField::SetLabel(MCExecContext& ctxt, MCStringRef p_string)
 {
-	delete label;
-	label = strclone(MCStringGetCString(p_string));
+	MCValueAssign(label, p_string);
 }
 
 void MCField::GetToggleHilite(MCExecContext& ctxt, bool& r_setting)

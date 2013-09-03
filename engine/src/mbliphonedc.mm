@@ -73,7 +73,7 @@ uint4 g_current_background_colour = 0;
 
 // These are used by the MCScreenDC 'beep' methods.
 static SystemSoundID s_system_sound = 0;
-static char *s_system_sound_name = nil;
+static MCStringRef s_system_sound_name = nil;
 
 // These control the mapping of LiveCode pixel values to iOS pixels.
 static int32_t s_iphone_res_scale = 1;
@@ -323,7 +323,7 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = 0;
 		s_system_sound_name = nil;
@@ -333,11 +333,13 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 	
 	SystemSoundID t_new_sound;
 	
-	char *t_sound_path;
-	t_sound_path = MCS_resolvepath(env -> sound);
+	MCAutoStringRef t_sound_path;
+	MCAutoStringRef t_env_sound;
+	/* UNCHECKED */ MCStringCreateWithCString(env -> sound, &t_env_sound);
+	MCS_resolvepath(*t_env_sound, &t_sound_path);
 	
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_sound_path encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: MCStringGetCString(*t_sound_path) encoding: NSMacOSRomanStringEncoding]];
 	
 	OSStatus t_status;
 	t_status = AudioServicesCreateSystemSoundID((CFURLRef)t_url, &t_new_sound);
@@ -346,13 +348,13 @@ static void MCScreenDCDoSetBeepSound(void *p_env)
 		if (s_system_sound_name != nil)
 		{
 			AudioServicesDisposeSystemSoundID(s_system_sound);
-			delete s_system_sound_name;
+			MCValueRelease(s_system_sound_name);
 		}
 		s_system_sound = t_new_sound;
-		s_system_sound_name = t_sound_path;
+		s_system_sound_name = MCValueRetain(*t_sound_path);
 	}
 	else
-		delete t_sound_path;
+		MCValueRelease(*t_sound_path);
 	
 	env -> result = t_status == noErr;
 }
@@ -371,12 +373,10 @@ bool MCScreenDC::setbeepsound(MCStringRef p_beep_sound)
 bool MCScreenDC::getbeepsound(MCStringRef& r_beep_sound)
 {
 	if (s_system_sound_name != nil)
-		return MCStringCreateWithCString(s_system_sound_name, r_beep_sound);
+		r_beep_sound = MCValueRetain(s_system_sound_name);
 	else
-	{
 		r_beep_sound = MCValueRetain(kMCEmptyString);
-		return true;
-	}
+	return true;
 }
 
 void MCScreenDC::getbeep(uint4 property, int4& r_value)
