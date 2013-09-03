@@ -1472,7 +1472,7 @@ public:
         {
             t_handle = new MCStdioFileHandle;
             t_handle -> m_stream = fptr;
-            t_handle -> m_is_eof = False;
+            t_handle -> m_is_eof = false;
         }
         
         return t_handle;
@@ -1495,6 +1495,7 @@ public:
 	return handle;
 #endif /* MCS_dopen_dsk_mac */
 		FILE *t_stream;
+        t_stream = NULL;
         
         switch (p_mode)
         {
@@ -1523,7 +1524,7 @@ public:
 		MCStdioFileHandle *t_handle;
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
-        t_handle -> m_is_eof = False;
+        t_handle -> m_is_eof = false;
 		
 		return t_handle;
 	}
@@ -1912,7 +1913,8 @@ public:
             
             t_handle = new MCSerialPortFileHandle;
             t_handle -> m_serial_port = t_serial_in;
-            t_handle -> m_is_eof = False;
+            t_handle -> m_is_eof = false;
+            t_handle -> m_cur_pos = 0;
         }
         
         return t_handle;
@@ -1933,11 +1935,10 @@ public:
     
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
     {
-        bool stat = true;
         SInt32 sint_toread = (SInt32) p_length;
         
         if ((errno = FSRead(m_serial_port, &sint_toread, p_buffer)) != noErr)
-            stat = false;
+            return ;
         
         if (sint_toread < p_length)
         {
@@ -1947,8 +1948,8 @@ public:
         r_read = sint_toread;
         return stat;
 #if 0
-        // FSRead is deprecated from OSX 10.4 onwards, switch to read(int fd, size_t size, void* ptr) on the same fashion
-        // it was done for MCStdioFileHandle? This would allow interruption handling and such
+        // FSRead is deprecated since OSX 10.4, FSReaFork since OSX 10.8, update to read(int fd, size_t size, void* ptr) on the same fashion
+        // it was done for MCStdioFileHandle? This would allow interruption handling and such as well
         uint4 nread;
         
         // MW-2010-08-26: Taken from the Linux source, this changes the previous code
@@ -1983,11 +1984,13 @@ public:
             m_is_eof = false;
             offset += nread;
             r_read = offset;
+            m_cur_pos += offset;
         }
         
         m_is_eof = false;
         r_read = offset + nread;
         
+        m_cur_pos += nread;
         return true;
 #endif // 0
     }
@@ -1998,7 +2001,7 @@ public:
         errno = FSWrite(m_serial_port, (long*)&t_count, p_buffer);
         
 #if 0
-        // Same here, update to write() ?
+        // Same here, FSWrite is deprecated since OSX 10.4, FSWriteFork deprecated since OSX 10.8, update to write() as suggested on developer.apple.com?
         uint32_t t_count;
         t_count = write(m_serial_port, p_buffer, p_length);
 #endif // 0
@@ -2006,27 +2009,35 @@ public:
         if (errno != noErr || t_count != p_length)
             return false;
         
+        m_cur_pos += t_count;
         return true;
     }
     
-	virtual bool Seek(int64_t offset, int p_dir)
+	virtual bool Seek(int64_t p_offset, int p_dir)
     {
-        return false;
+        off_t t_new_pos;
+        t_new_pos = lseek(m_serial_port, p_offset, p_dir);
+        
+        if (t_new_pos == (off_t)-1)
+            return false;
+        
+        m_cur_pos = t_new_pos;
+        return true;
     }
 	
 	virtual bool Truncate(void)
     {
-        return false;
+        return ftruncate(m_serial_port, m_cur_pos) != -1;
     }
     
 	virtual bool Sync(void)
     {
-        return false;
+        return fsync(m_serial_port) == 0;
     }
     
 	virtual bool Flush(void)
     {
-        return false;
+        return fsync(m_serial_port) == 0; // fsync flushes the data, same as sync?
     }
 	
 	virtual bool PutBack(char p_char)
@@ -2036,7 +2047,7 @@ public:
 	
 	virtual int64_t Tell(void)
     {
-        return false;
+        return m_cur_pos;
     }
 	
 	virtual void *GetFilePointer(void)
@@ -2046,7 +2057,12 @@ public:
     
 	virtual int64_t GetFileSize(void)
     {
-        return 0;
+        struct stat64 t_stat;
+        
+        if (fstat64(m_serial_port, &t_stat) != 0)
+            return 0;
+        
+        return t_stat.st_size;
     }
     
     virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
@@ -2057,7 +2073,7 @@ public:
 private:
 	int m_serial_port;  //serial port Input reference number
     bool m_is_eof;
-    
+    off_t m_cur_pos; // current position
 };
 
 struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDesktop
