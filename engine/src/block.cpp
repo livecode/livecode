@@ -131,7 +131,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 		uint32_t t_size;
 		if ((stat = IO_read_uint2or4(&t_size, stream)) != IO_NORMAL)
 			return stat;
-		
+
 		// The end is the current stream position + the size of the attrs.
 		t_attr_end = MCS_tell(stream) + t_size;
 	}
@@ -143,7 +143,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   metadata flag.
 	if (!is_ext)
 		flags &= ~F_HAS_METADATA;
-	
+
 	// MW-2012-01-26: [[ FlaggedField ]] Make sure we ignore the setting of FLAGGED flag.
 	flags &= ~F_FLAGGED;
 
@@ -254,7 +254,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	if (is_ext)
 		if ((stat = MCS_seek_set(stream, t_attr_end)) != IO_NORMAL)
 			return stat;
-	
+
 	if ((stat = IO_read_uint2(&index, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint2(&size, stream)) != IO_NORMAL)
@@ -298,7 +298,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	//   tag.
 	if ((stat = IO_write_uint1(t_is_ext ? OT_BLOCK_EXT : OT_BLOCK, stream)) != IO_NORMAL)
 		return stat;
-	
+
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then write out
 	//   the length of the attrs.
 	if (t_is_ext)
@@ -311,7 +311,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	//   the metadata flag.
 	if (!t_is_ext)
 		flags &= ~F_HAS_METADATA;
-		
+
 	flags &= ~F_VISITED;
 	// MW-2012-01-26: [[ FlaggedField ]] Make sure we don't save the flagged flag.
 	flags &= ~F_FLAGGED;
@@ -329,7 +329,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 
 	if ((stat = IO_write_uint4(flags, stream)) != IO_NORMAL)
 		return stat;
-		
+
 	flags = oldflags;
 
 	// MW-2012-02-17: [[ SplitTextAttrs ]] If any one of the font attrs are set, or we
@@ -366,7 +366,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	if (flags & F_HAS_IMAGE)
 		if ((stat = IO_write_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
 			return stat;
-	
+
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
 	//   new attributes.
 	if (t_is_ext)
@@ -375,7 +375,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 			if ((stat = IO_write_stringref(atts -> metadata, stream, false)) != IO_NORMAL)
 				return stat;
 	}
-	
+
 	if ((stat = IO_write_uint2(index, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_write_uint2(size, stream)) != IO_NORMAL)
@@ -531,7 +531,7 @@ Boolean MCBlock::sameatts(MCBlock *bptr, bool p_persistent_only)
 	// iff they are the same pointer.
 	if (getlinktext() != bptr -> getlinktext())
 		return False;
-	
+
 	// If the metadatas are not the same, the blocks are different. Notice that
 	// we do a pointer comparison - the metadata fields are unique values so this
 	// is sufficient to check for equality.
@@ -568,19 +568,19 @@ static bool MCUnicodeCanBreakBetween(uint2 x, uint2 y)
 
 	bool t_xid;
 	t_xid = MCUnicodeCodepointIsIdeographic(x);
-	
+
 	bool t_yid;
 	t_yid = MCUnicodeCodepointIsIdeographic(y);
-	
+
 	if (!t_xid && !t_yid)
 		return false;
 
 	bool t_prohibit_break_after_x;
 	t_prohibit_break_after_x = (MCUnicodeCodepointGetBreakClass(x) & 2) != 0;
-	
+
 	bool t_prohibit_break_before_y;
 	t_prohibit_break_before_y = (MCUnicodeCodepointGetBreakClass(y) & 1) != 0;
-	
+
 	return !t_prohibit_break_after_x && !t_prohibit_break_before_y;
 }
 
@@ -596,14 +596,14 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 		r_break_index = index;
 		return true;
 	}
-			
+
 	if ((flags & F_HAS_IMAGE) && atts -> image != NULL)
 	{
 		r_break_index = index + size;
 		r_break_fits = getwidth(NULL, x) <= maxwidth;
 		return r_break_fits;
 	}
-	
+
 	const char *text;
 	text = parent -> gettext();
 
@@ -644,7 +644,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 				return true;
 			}
 		}
-			
+
 		// Compute the last possible break position in the block by looping
 		// back over the characters;
 		if (t_break_index > index)
@@ -653,7 +653,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			{
 				uint2 i;
 				i = t_break_index;
-				
+
 				uint2 t_prev_char;
 				if (hasunicode())
 				{
@@ -665,22 +665,22 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 					i -= 1;
 					t_prev_char = MCUnicodeMapFromNative(text[i]);
 				}
-				
+
 				if (MCUnicodeCanBreakBetween(t_prev_char, t_last_char))
 					break;
-				
+
 				t_break_index = i;
-				
+
 				t_last_char = t_prev_char;
 			}
 			while(t_break_index > index);
 		}
-		
+
 		r_break_index = t_break_index;
 		r_break_fits = true;
 		return true;
 	}
-	
+
 	// We don't completely fit within maxwidth, so compute the last break point in
 	// the block by measuring
 	int4 twidth;
@@ -692,22 +692,22 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	t_last_break_width = 0;
 	uint2 t_last_break_i;
 	t_last_break_i = index;
-	
+
 	uint2 i;
 	i = index;
-	
+
 	int4 t_next_char;
 	if (hasunicode())
 		t_next_char = *(uint2 *)&text[i];
 	else
 		t_next_char = (uint2)MCUnicodeMapFromNative(text[i]);
-	
+
 	uint2 t_break_index;
 	t_break_index = index;
 
 	bool t_can_fit;
 	t_can_fit = false;
-	
+
 	while(i < index + size)
 	{
 		uint2 t_this_char;
@@ -727,7 +727,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 			else
 				t_next_char = t_next_block_char;
 		}
-		
+
 		bool t_can_break;
 		t_can_break = false;
 
@@ -740,7 +740,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 
 			t_last_break_width = twidth;
 			t_last_break_i = next_i;
-			
+
 			// We can always break after a tab
 			t_can_break = true;
 		}
@@ -760,7 +760,7 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 #endif
 				twidth += MCFontMeasureText(m_font, &text[i], next_i - i, hasunicode());
 #endif
-			
+
 			if (t_next_char == -1 || MCUnicodeCanBreakBetween(t_this_char, t_next_char))
 				t_can_break = true;
 		}
@@ -787,10 +787,10 @@ bool MCBlock::fit(int2 x, uint2 maxwidth, uint2& r_break_index, bool& r_break_fi
 	// any suitable run of spaces.
 	while(t_break_index < index + size && textisspace(&text[t_break_index]))
 		t_break_index += indexincrement(t_break_index);
-		
+
 	r_break_fits = t_can_fit;
 	r_break_index = t_break_index;
-	
+
 	return false;
 }
 
@@ -932,7 +932,7 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 	int32_t t_ascent, t_descent;
 	t_ascent = MCFontGetAscent(m_font);
 	t_descent = MCFontGetDescent(m_font);
-	
+
 	// MW-2012-01-25: [[ ParaStyles ]] Fetch the vGrid setting from the owning paragraph.
 	if (parent -> getvgrid())
 	{
@@ -1026,20 +1026,20 @@ void MCBlock::drawstring(MCDC *dc, int2 x, int2 cx, int2 y, uint2 start, uint2 l
 		uint2 size;
 		sptr = parent -> gettext() + start;
 		size = length;
-		
+
 		// MW-2012-02-21: [[ LineBreak ]] Trim the block slightly if there is an explicit line break
 		//   at the end of the block.
 		// MW-2013-02-12: [[ Bug 10662 ]] Make sure we take into account unicode chars.
 		if (size > 0 && textcomparechar(sptr + size - getcharsize(), 11))
 			size -= 1;
-		
+
 		// If we need an underline/strikeout then compute the start and width.
 		int32_t t_line_width, t_line_x;
 		t_line_width = 0;
 		t_line_x = x;
 		if ((style & (FA_UNDERLINE | FA_STRIKEOUT)) != 0)
 			t_line_width = getsubwidth(dc, cx, start, size);
-		
+
 		if (flags & F_HAS_TAB)
 		{
 			const char *eptr;
@@ -1134,7 +1134,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 
 	if (t_foreground_color != NULL)
 		dc -> setforeground(*t_foreground_color);
-	
+
 	uint32_t t_style;
 	t_style = 0;
 	if (fontstyle & FA_UNDERLINE || fontstyle & FA_LINK && ull)
@@ -1145,7 +1145,7 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		t_style |= FA_3D_BOX;
 	if (fontstyle & FA_BOX)
 		t_style |= FA_BOX;
-	
+
 	// If there is no selection, or the entire block is outside the selection, then
 	// just draw normally. Otherwise use clipping to make change the hilite color of
 	// the selected portion of text, thus stopping drawing the selection changing the
@@ -1157,20 +1157,20 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		// Save the current clip.
 		MCRectangle t_old_clip;
 		t_old_clip = dc -> getclip();
-		
+
 		// This will hold the clip for the selection.
 		MCRectangle t_sel_clip;
 		t_sel_clip = t_old_clip;
-		
+
 		// If there is some unselected text at the start of the block, then render it.
 		if (si > index)
 		{
 			int2 t_start_dx;
 			t_start_dx = getsubwidth(dc, cx, index, si - index);
-			
+
 			t_sel_clip . x = x + t_start_dx;
 			t_sel_clip . width = (t_old_clip . x + t_old_clip . width) - t_sel_clip . x;
-			
+
 			MCRectangle t_clip;
 			t_clip = t_old_clip;
 			t_clip . width = (x + t_start_dx) - t_clip . x;
@@ -1183,9 +1183,9 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 		{
 			int32_t t_end_dx;
 			t_end_dx = getsubwidth(dc, cx, index, ei - index);
-			
+
 			t_sel_clip . width = (x + t_end_dx) - t_sel_clip . x;
-			
+
 			MCRectangle t_clip;
 			t_clip = t_old_clip;
 			t_clip . x = x + t_end_dx;
@@ -1193,10 +1193,10 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			dc -> setclip(t_clip);
 			drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
 		}
-		
+
 		// Now use the clip rect we've computed for the selected portion.
 		dc -> setclip(t_sel_clip);
-		
+
 		// Change the hilite color (if necessary).
 		if (!(flags & F_HAS_COLOR) || atts->color->pixel == MAXUINT4)
 		{
@@ -1213,10 +1213,10 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			else
 				f->setforeground(dc, DI_BACK, False, True);
 		}
-		
+
 		// Draw the selected text.
 		drawstring(dc, x, cx, y, index, size, (flags & F_HAS_BACK_COLOR) != 0, t_style);
-		
+
 		// Revert to the previous clip and foreground color.
 		if (t_foreground_color != NULL)
 			dc->setforeground(*t_foreground_color);
@@ -1224,36 +1224,36 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			f->setforeground(dc, DI_FORE, False, True);
 		dc-> setclip(t_old_clip);
 	}
-	
+
 	// MW-2012-01-25: [[ ParaStyles ]] Use the owning paragraph to test for vGrid-ness.
 	if (!parent -> getvgrid() && (fontstyle & (FA_BOX | FA_3D_BOX)) != 0)
 	{
 		// MW-2012-02-27: [[ Bug 2939 ]] Setup a clipping rect so that we can clip out
 		//   the left and/or right edge of the box style as determined by 'flags'.
-		
+
 		// Save the current clip setting.
 		MCRectangle t_old_clip;
 		t_old_clip = dc -> getclip();
-		
+
 		// Compute the width of the block.
 		int32_t t_width;
 		t_width = getwidth(dc, cx);
-		
+
 		// Start off with the clip being that which it was previously.
 		MCRectangle t_clip;
 		t_clip = t_old_clip;
-		
+
 		// If we aren't drawing the left edge, move it inwards.
 		if ((p_border_flags & DBF_DRAW_LEFT_EDGE) == 0)
 			t_clip . x = x, t_clip . width = t_old_clip . x + t_old_clip . width - x;
-		
+
 		// If we aren't drawing the right edge, move it inwards.
 		if ((p_border_flags & DBF_DRAW_RIGHT_EDGE) == 0)
 			t_clip . width = x + t_width - t_clip . x;
-		
+
 		// Set the clip temporarily.
 		dc -> setclip(t_clip);
-		
+
 		if (fontstyle & FA_BOX)
 		{
 			// MW-2012-09-04: [[ Bug 9759 ]] Adjust any pattern origin to scroll with text.
@@ -1269,11 +1269,11 @@ void MCBlock::draw(MCDC *dc, int2 x, int2 cx, int2 y, uint2 si, uint2 ei, const 
 			f->draw3d(dc, trect, ETCH_RAISED, 1);
 			f->setforeground(dc, DI_FORE, False, True);
 		}
-		
+
 		// Revert the clip back to the previous setting.
 		dc -> setclip(t_old_clip);
 	}
-	
+
 	if (flags & F_HAS_BACK_COLOR && atts->backcolor->pixel != MAXUINT4)
 		dc->setbackground(MCzerocolor);
 
@@ -1465,7 +1465,7 @@ void MCBlock::setatts(Properties which, void *value)
 		if (value != nil)
 			if (atts == nil)
 				atts = new Blockatts;
-		
+
 		// MW-2012-02-17: [[ SplitTextAttrs ]] Update the appropriate text attr.
 		switch(which)
 		{
@@ -1674,21 +1674,21 @@ uint2 MCBlock::getcursorindex(int2 x, int2 cx, Boolean chunk, Boolean last)
 	{		
 		int32_t t_new_i;
 		t_new_i = i + indexincrement(i);
-		
+
 		int32_t t_new_width;
 		t_new_width = getcursorx(x, t_new_i);
-		
+
 		int32_t t_pos;
 		if (chunk)
 			t_pos = t_new_width;
 		else
 			t_pos = (t_last_width + t_new_width) / 2;
-			
+
 		if (cx < t_pos)
 			break;
-			
+
 		t_last_width = t_new_width;
-		
+
 		i = t_new_i;
 	}
 #else
@@ -1737,7 +1737,7 @@ uint2 MCBlock::getsubwidth(MCDC *dc, int2 x, uint2 i, uint2 l)
 	{
 		const char *tptr = parent->gettext();
 		const char *sptr = parent->gettext() + i;
-		
+
 		// MW-2012-02-12: [[ Bug 10662 ]] If the last char is a VTAB then ignore it.
 		if (textcomparechar(sptr + l - getcharsize(), 11))
 			l -= getcharsize();
@@ -2135,15 +2135,15 @@ uint4 MCBlock::getcharatindex(int4 p_index)
 		if (t_block == parent -> getblocks() -> prev())
 			return 0xffffffff;
 	}
-	
-	
+
+
 	// MW-2008-07-25: [[ Bug 6830 ]] The code to fetch the correct unicode character
 	//   was previously completely wrong. I think its correct now...
 	if (getflag(F_HAS_UNICODE))
 	{
 		if (t_block -> index + t_block -> size - p_index >= 2)
 			return *((uint2 *)(parent -> gettext() + p_index));
-		
+
 		return parent -> gettext()[p_index];
 	}
 
@@ -2156,10 +2156,10 @@ MCBlock *MCBlock::retreatindex(uint2& p_index)
 {
 	MCBlock *t_block;
 	t_block = this;
-	
+
 	if (p_index == 0)
 		return NULL;
-	
+
 	// MW-2012-08-29: [[ Bug 10322 ]] If we are at the start of the block, then we must
 	//   move back a block before doing anything.
 	if (p_index == index)
@@ -2170,7 +2170,7 @@ MCBlock *MCBlock::retreatindex(uint2& p_index)
 		}
 		while(t_block -> size == 0 && t_block -> prev() != parent -> getblocks() -> prev());
 	}
-		
+
 	if (t_block -> getflag(F_HAS_UNICODE))
 		p_index -= 2;
 	else
@@ -2192,7 +2192,7 @@ MCBlock *MCBlock::advanceindex(uint2& p_index)
 {
 	MCBlock *t_block;
 	t_block = this;
-	
+
 	// MW-2012-08-29: [[ Bug 10322 ]] If we are at the end of the block, then we must
 	//   move forward a block before doing anything.
 	if (p_index == index + size)
@@ -2203,7 +2203,7 @@ MCBlock *MCBlock::advanceindex(uint2& p_index)
 		}
 		while(t_block -> size == 0 && t_block -> next() != parent -> getblocks());
 	}
-	
+
 	if (t_block -> getflag(F_HAS_UNICODE) && p_index < index + size - 1)
 		p_index += 2;
 	else
@@ -2320,11 +2320,11 @@ uint32_t measure_nameref(MCNameRef p_name)
 {
 	const char *t_cstring;
 	t_cstring = MCNameGetCString(p_name);
-	
+
 	// If the cstring is nil, then it's just a size field.
 	if (t_cstring == nil)
 		return 2;
-		
+
 	// Otherwise its the length of it nul terminated plus the 2 byte size.
 	return 2 + MCU_min(strlen(t_cstring) + 1, MAXUINT2);
 }
@@ -2348,7 +2348,7 @@ uint32_t MCBlock::measureattrs(void)
 
 	uint32_t t_size;
 	t_size = 0;
-	
+
 	// The flags field.
 	t_size = 4;
 	// The font index (if any)
@@ -2382,7 +2382,7 @@ bool MCBlock::getfirstlinebreak(uint2& r_index)
 
 	r_index = t_break - parent -> gettext();
 	advanceindex(r_index);
-	
+
 	return true;
 }
 
@@ -2397,4 +2397,3 @@ bool MCBlock::imagechanged(MCImage *p_image, bool p_deleting)
 
 	return false;
 }
-
