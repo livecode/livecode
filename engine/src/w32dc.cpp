@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mctheme.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 MCScreenDC::MCScreenDC()
 {
