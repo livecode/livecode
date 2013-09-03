@@ -1181,7 +1181,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1202,7 +1202,7 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_stringref(filename, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(filename, stream, false)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
