@@ -177,10 +177,10 @@ public:
             switch(m_event)
             {
                 case kMCAdEventTypeReceive:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCFalseString);
+                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCFalse);
                     break;
                 case kMCAdEventTypeReceiveDefault:
-                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCTrueString);
+                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCTrue);
                     break;
                 case kMCAdEventTypeReceiveFailed:
                     t_object->Get()->message_with_valueref_args(MCM_ad_load_failed, m_target->GetName());
