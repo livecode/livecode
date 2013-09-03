@@ -233,10 +233,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	self -> is_valid = t_success;
 }
 
-MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {
-	if (!MCGContextIsValid(self))
-		return 0.0;
+	//if (!MCGContextIsValid(self))
+	//	return 0.0;
 
 	return iphone_measure_text(p_font . fid, p_text, p_length, true);
 }

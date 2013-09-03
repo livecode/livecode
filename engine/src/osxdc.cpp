@@ -33,6 +33,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxprinter.h"
 
 #include "graphicscontext.h"
+#include "graphics_util.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -248,9 +249,27 @@ static bool drawtexttocgcontext(int2 x, int2 y, const void *p_text, uint4 p_leng
 	return t_err == noErr;	
 }
 
-// MM-2013-08-16: [[ RefactorGraphics ]] Refactored to use drawtexttocgcontext to measure the bounds of the text.
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
 int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
 {
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+} 
+
+#if 0
+// MM-2013-08-16: [[ RefactorGraphics ]] Refactored to use drawtexttocgcontext to measure the bounds of the text.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
+
 	if (p_length == 0)
 		return 0;
 	
@@ -287,6 +306,8 @@ int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_len
 	else
 		return 0;
 }
+#endif
+
 
 // MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
 bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)

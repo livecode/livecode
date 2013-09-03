@@ -44,10 +44,10 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	self -> is_valid = t_success;
 }
 
-MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {	
-	if (!MCGContextIsValid(self))
-		return 0.0;
+	//if (!MCGContextIsValid(self))
+	//	return 0.0;
 	
 	bool t_success;
 	t_success = true;	
@@ -75,7 +75,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	}
 	
 	MCCStringFree(t_text);
-	self -> is_valid = t_success;
+	//self -> is_valid = t_success;
 	return t_width;
 }
 

@@ -322,8 +322,11 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	self -> is_valid = t_success;
 }
 
-MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {	
+	//if (!MCGContextIsValid(self))
+	//	return 0.0;
+
 	bool t_success;
 	t_success = true;
 	
@@ -335,20 +338,9 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
     if (t_success)
         t_success = osx_measure_text_substring_width(p_length, t_width);
     
-    return (MCGFloat) t_width;
-    
-	/*//if (!MCGContextIsValid(self))
-	//	return 0.0;
-	
-	bool t_success;
-	t_success = true;
-
-	MCGIntRectangle t_bounds;
-	if (t_success)
-		t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_bounds);
-	
 	//self -> is_valid = t_success;
-	return (MCGFloat) t_bounds . width;*/
+	
+    return (MCGFloat) t_width;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

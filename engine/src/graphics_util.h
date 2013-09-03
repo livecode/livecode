@@ -69,4 +69,74 @@ inline MCGPoint MCPointToMCGPoint(MCPoint p_point)
 	return t_point;
 }
 
+#if defined(TARGET_SUBPLATFORM_ANDROID)
+
+#include "mblandroidtypeface.h"
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCAndroidFont *t_android_font;
+	t_android_font = (MCAndroidFont*)p_font-> fid;
+	
+	MCGFont t_font;
+	t_font . size = t_android_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = t_android_font -> typeface;
+	return t_font;
+}
+
+#elif defined(TARGET_PLATFORM_MACOS_X)
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . style = p_font -> style;
+	t_font . fid = p_font -> fid;
+	return t_font;
+}
+
+#elif defined(TARGET_PLATFORM_LINUX)
+
+#include "lnxflst.h"
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
+	return t_font;
+}
+
+#elif defined(_SERVER)
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = nil;
+	return t_font;
+}
+
+#else
+
+static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
+{
+	MCGFont t_font;
+	t_font . size = p_font -> size;
+	t_font . ascent = p_font -> ascent;
+	t_font . descent = p_font -> descent;
+	t_font . fid = p_font -> fid;
+	return t_font;
+}
+
+#endif
+
 #endif // __GRAPHICS_UTIL_H_

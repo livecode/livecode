@@ -13,6 +13,7 @@ LOCAL_SRC_FILES := $(addprefix src/,\
 		utils.cpp \
 		blur.cpp \
 		mblandroidtext.cpp \
+		cachetable.cpp \
 	)
 
 LOCAL_C_INCLUDES := \

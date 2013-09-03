@@ -126,6 +126,24 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
+{
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
+}	
+
+#if 0
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
 {
 	if (len == 0)
@@ -170,6 +188,7 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 		return iwidth;
 	}
 }
+#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 

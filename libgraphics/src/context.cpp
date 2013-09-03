@@ -2481,6 +2481,79 @@ MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static MCGCacheTableRef s_measure_cache = NULL;
+
+MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
+{		
+	if (p_length == 0 || p_text == NULL)
+		return 0.0;
+	
+	bool t_success;
+	t_success = true;
+	
+	if (t_success)
+		if (s_measure_cache == NULL)
+			t_success = MGCCacheTableCreate(kMCGTextMeasuerCacheSize, s_measure_cache);
+	
+	void *t_key;
+	t_key = NULL;
+	uint32_t t_key_length;
+	if (t_success)
+	{
+		t_key_length = p_length + sizeof(p_length) + sizeof(p_font . fid) + sizeof(p_font . size) + sizeof(p_font . style);
+		t_success = MCMemoryNew(t_key_length, t_key);
+	}
+	
+	MCGFloat *t_width;
+	t_width = NULL;
+	if (t_success)
+	{
+		uint8_t *t_key_ptr;
+		t_key_ptr = (uint8_t *)t_key;
+		
+		MCMemoryCopy(t_key_ptr, p_text, p_length);
+		t_key_ptr += p_length;
+		MCMemoryCopy(t_key_ptr, &p_length, sizeof(p_length));
+		t_key_ptr += sizeof(p_length);
+		MCMemoryCopy(t_key_ptr, &p_font . fid, sizeof(p_font . fid));
+		t_key_ptr += sizeof(p_font . fid);
+		MCMemoryCopy(t_key_ptr, &p_font . size, sizeof(p_font . size));
+		t_key_ptr += sizeof(p_font . size);
+		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
+		t_key_ptr += sizeof(p_font . style);
+		
+		t_width = (MCGFloat *) MCGCacheTableGet(s_measure_cache, t_key, t_key_length);
+		
+		if (t_width != NULL)
+		{
+			MCMemoryDelete(t_key);
+			return *t_width;
+		}		
+	}	
+	
+	if (t_success)
+		t_success = MCMemoryNew(t_width);
+	
+	if (t_success)
+	{
+		*t_width = (MCGFloat) __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, t_width);
+	}
+	
+	if (!t_success)
+	{
+		MCMemoryDelete(t_width);
+		MCMemoryDelete(t_key);
+	}
+    	
+	if (t_width != NULL)
+		return *t_width;
+	else
+		return 0.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCGContextCopyImage(MCGContextRef self, MCGImageRef &r_image)
 {
 	if (!MCGContextIsValid(self))

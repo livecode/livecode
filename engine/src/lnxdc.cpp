@@ -46,6 +46,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <X11/extensions/Xinerama.h>
 
+#include "graphics_util.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static Boolean pserror;
@@ -166,9 +168,28 @@ GC MCScreenDC::getgc(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#if 0
 int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
 	return MCFontlistGetCurrent() -> ctxt_textwidth(f, s, l, p_unicode_override);
+}
+#endif
+
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
+{
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
 // MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
