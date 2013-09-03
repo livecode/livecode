@@ -55,7 +55,6 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				IgnoreAllDefaultLibraries="false"
 			/>
 			<Tool
 				Name="VCALinkTool"
@@ -918,10 +917,6 @@
 			</File>
 			<File
 				RelativePath=".\src\aclip.h"
-				>
-			</File>
-			<File
-				RelativePath=".\src\block.cpp"
 				>
 			</File>
 			<File
