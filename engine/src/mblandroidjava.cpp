@@ -349,11 +349,13 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native)
 
 bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_string)
 {
-	char* t_native;
-	t_native = nil;
-	if(MCJavaStringToNative(env, p_java_string, t_native)
-		return MCStringCreateWithCStringAndRelease(t_native, r_string);
-
+	char *t_native;
+	if (MCJavaStringToNative(env, p_java_string, t_native))
+	{
+		if (MCStringCreateWithCStringAndRelease(t_native, r_string))
+			return true;
+		MCCStringFree(t_native);
+	}
 	return false;
 }
 
