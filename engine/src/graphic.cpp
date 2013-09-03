@@ -2019,7 +2019,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			}
 			drawlabel(dc, sx, sy, twidth, trect, line, fontstyle);
 			sy += fheight;
-			MCValueRelease(line);
 		}
 		if (state & CS_KFOCUSED)
 		{
