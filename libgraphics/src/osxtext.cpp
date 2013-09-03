@@ -242,8 +242,12 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         t_text_bounds . x = 0;
         t_text_bounds . y = 0 - p_font . ascent;
         t_text_bounds . height = p_font . descent + p_font . ascent;
-        t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
+        //t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
+        
+        // this will potentially result in osx_prepare_text being called again
+        // though ideally not, as hopefully the text will have been recently measured and in the cache
+        t_text_bounds . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
     }
 	
 	MCGIntRectangle t_clipped_bounds;
