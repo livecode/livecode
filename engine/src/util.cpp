@@ -2271,18 +2271,16 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
 	MCColor color;
-	//char *name = NULL;
 	MCStringRef t_name;
 	MCAutoStringRef string;
 	ep . copyasstringref(&string);
-	//char *cstring = ep.getsvalue().clone();
+
 	if (!MCscreen->parsecolor(*string, color, &t_name))
 	{
 		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
-		//delete cstring;
 		return ES_ERROR;
 	}
-	//delete cstring;
+
 	MCscreen->alloccolor(color);
 	c = color;
 	delete n;

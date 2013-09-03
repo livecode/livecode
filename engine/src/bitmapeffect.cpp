@@ -619,11 +619,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyBlendMode:
 		{
 			MCBitmapEffectBlendMode t_new_mode;
-			if (MCStringIsEqualTo(*t_data, MCSTR("normal"), kMCStringOptionCompareExact))
+			if (MCStringIsEqualToCString(*t_data, "normal", kMCCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeNormal;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("multiply"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "multiply", kMCCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeMultiply;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("colordodge"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "colordodge", kMCCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeColorDodge;
 			else
 			{

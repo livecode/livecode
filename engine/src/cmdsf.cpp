@@ -1439,8 +1439,7 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		MCColor *t_colors;
 		uindex_t t_count;
 		MCAutoStringRef t_input;
-		ep.copyasstringref(&t_input);
-		if (palette_color_list->eval(ep) != ES_NORMAL || ep.isempty() || !MCImageParseColourList(*t_input, t_count, t_colors))
+		if (palette_color_list -> eval(ep) != ES_NORMAL || ep . isempty() || !ep . copyasstringref(&t_input) || !MCImageParseColourList(*t_input, t_count, t_colors))
 		{
 			MCeerror -> add(EE_EXPORT_BADPALETTE, line, pos);
 			return ES_ERROR;
