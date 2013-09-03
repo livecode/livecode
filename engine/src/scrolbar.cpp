@@ -1291,9 +1291,9 @@ IO_stat MCScrollbar::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_write_stringref(startstring, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref(startstring, stream, false)) != IO_NORMAL)
 				return stat;
-			if ((stat = IO_write_stringref(endstring, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref(endstring, stream, false)) != IO_NORMAL)
 				return stat;
 			if ((stat = IO_write_uint2(nffw, stream)) != IO_NORMAL)
 				return stat;
@@ -1330,13 +1330,13 @@ IO_stat MCScrollbar::load(IO_handle stream, const char *version)
 		if (flags & F_HAS_VALUES)
 		{
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_read_stringref(startstring, stream)) != IO_NORMAL)
+			if ((stat = IO_read_stringref(startstring, stream, false)) != IO_NORMAL)
 				return stat;
 			if (!MCStringToDouble(startstring, startvalue))
 				startvalue = 0.0;
 			
 			// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use stringref primitives.
-			if ((stat = IO_read_stringref(endstring, stream)) != IO_NORMAL)
+			if ((stat = IO_read_stringref(endstring, stream, false)) != IO_NORMAL)
 				return stat;
 			if (!MCStringToDouble(endstring, endvalue))
 				endvalue = 0.0;
