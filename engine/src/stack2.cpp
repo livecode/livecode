@@ -208,7 +208,7 @@ void MCStack::iconify()
 {
 	if (!(state & CS_ICONIC))
 	{
-		MCtooltip->settip(NULL);
+		MCtooltip->cleartip();
 		MCiconicstacks++;
 		state |= CS_ICONIC;
 		MCstacks->top(NULL);

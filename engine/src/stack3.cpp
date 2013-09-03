@@ -187,7 +187,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 				MCExecPoint ep;
 				ep . setsvalue(t_native_title);
 				ep . nativetoutf8();
-				/* UNCHECKED */ MCStringCreateWithOldString(ep . getsvalue() . clone(), title);
+				ep . copyasstringref(&title);
 
 				delete t_native_title;
 			}
@@ -257,13 +257,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		linkatts = new Linkatts;
 		memset(linkatts, 0, sizeof(Linkatts));
 		if ((stat = IO_read_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_read_stringref(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_read_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_read_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_read_uint1(&linkatts->underline, stream)) != IO_NORMAL)
 			return stat;
@@ -618,13 +618,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (flags & F_LINK_ATTS)
 	{
 		if ((stat = IO_write_mccolor(linkatts->color, stream)) != IO_NORMAL
-		        || (stat = IO_write_stringref(linkatts->colorname, stream)) != IO_NORMAL)
+		        || (stat = IO_write_stringref(linkatts->colorname, stream, false)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->hilitecolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->hilitecolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_mccolor(linkatts->visitedcolor, stream)) != IO_NORMAL
-		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream))!=IO_NORMAL)
+		        || (stat=IO_write_stringref(linkatts->visitedcolorname, stream, false))!=IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint1(linkatts->underline, stream)) != IO_NORMAL)
 			return stat;

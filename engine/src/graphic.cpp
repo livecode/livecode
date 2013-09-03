@@ -134,7 +134,7 @@ MCGraphic::MCGraphic(const MCGraphic &gref) : MCControl(gref)
 	for (i = 0 ; i < nmarkerpoints ; i++)
 		markerpoints[i] = gref.markerpoints[i];
 	oldpoints = NULL;
-	MCValueAssign(label, gref.label);
+	label = MCValueRetain(gref.label);
 
 	m_fill_gradient = MCGradientFillCopy(gref.m_fill_gradient);
 	m_stroke_gradient = MCGradientFillCopy(gref.m_stroke_gradient);
@@ -1996,7 +1996,7 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		{
 			// Note: 'lines' is an array of strings
 			MCValueRef lineval = nil;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, lineval);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
 			MCStringRef line = (MCStringRef)(lineval);
 			twidth = MCFontMeasureText(m_font, line);
 			
@@ -2019,7 +2019,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			}
 			drawlabel(dc, sx, sy, twidth, trect, line, fontstyle);
 			sy += fheight;
-			MCValueRelease(line);
 		}
 		if (state & CS_KFOCUSED)
 		{

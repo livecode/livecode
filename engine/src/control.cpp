@@ -59,8 +59,8 @@ MCPropertyInfo MCControl::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_RIGHT_MARGIN, Int16, MCControl, RightMargin)
 	DEFINE_RW_OBJ_PROPERTY(P_TOP_MARGIN, Int16, MCControl, TopMargin)
 	DEFINE_RW_OBJ_PROPERTY(P_BOTTOM_MARGIN, Int16, MCControl, BottomMargin)
-	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, OptionalString, MCControl, ToolTip)
-	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, OptionalString, MCControl, UnicodeToolTip)
+	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, String, MCControl, ToolTip)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, BinaryString, MCControl, UnicodeToolTip)
 
 	DEFINE_RW_OBJ_NON_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)
 	DEFINE_RO_OBJ_EFFECTIVE_ENUM_PROPERTY(P_LAYER_MODE, InterfaceLayerMode, MCControl, LayerMode)

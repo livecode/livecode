@@ -750,7 +750,7 @@ IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unico
 	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
 		return stat;
 		
-	if (!MCStringCreateWithBytesAndRelease((const byte_t *)t_bytes, t_length, t_encoding, r_string))
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
 	{
 		delete t_bytes;
 		return IO_ERROR;
@@ -772,6 +772,36 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unico
 	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
 	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
 	MCValueRelease(t_data);
+	return stat;
+}
+
+IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size)
+{
+	// Read in the UTF-8 string and create a StringRef
+	IO_stat stat = IO_NORMAL;
+	char *t_bytes = nil;
+	uint4 t_length = 0;
+	if ((stat = IO_read_string_no_translate(t_bytes, stream, size)) != IO_NORMAL)
+		return stat;
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
+	{
+		delete[] t_bytes;
+		return IO_ERROR;
+	}
+	
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
+{
+	// Convert the string to UTF-8 encoding before writing it out
+	IO_stat stat;
+	char *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
+		return IO_ERROR;
+	stat = IO_write_string(t_bytes, stream, size);
+	MCMemoryDeleteArray(t_bytes);
 	return stat;
 }
 

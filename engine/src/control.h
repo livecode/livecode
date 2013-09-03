@@ -344,8 +344,8 @@ public:
 	void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
 	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
-	void GetUnicodeToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
-	void SetUnicodeToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
+	void GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip);
+	void SetUnicodeToolTip(MCExecContext& ctxt, MCDataRef p_tooltip);
 	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
 	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
 	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);

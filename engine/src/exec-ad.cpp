@@ -417,26 +417,16 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
     bool t_success;
     t_success = false;
     
-    MCAutoStringRef t_ads;
+    MCAutoListRef t_ads;
+	/* UNCHECKED */ MCListCreateMutable('\n', &t_ads);
 	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {
-		if (t_ad->GetName() != nil)
-        {
-            if (*t_ads == nil)
-            {
-                MCAutoStringRef t_first_ad;
-                t_success = MCStringCreateWithCString(t_ad->GetName(), &t_first_ad);
-                if (t_success)
-                    t_success = MCStringMutableCopy(*t_first_ad, &t_ads);
-            }
-            else
-                t_success = MCStringAppendFormat(*t_ads, "\n%s", t_ad->GetName());
-        }
+		t_success = MCListAppend(*t_ads, t_ad->GetName());
     }
     
     if (t_success)
     {
-        r_ads = MCValueRetain(*t_ads);
+        /* UNCHECKED */ MCListCopyAsString(*t_ads, r_ads);
         return;
     }
 
