@@ -206,7 +206,9 @@ bool MCGraphicsContext::changeopaque(bool p_value)
 void MCGraphicsContext::setclip(const MCRectangle& p_clip)
 {
 	//m_clip = p_clip;
-	MCGContextClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
+	// IM-2013-09-03: [[ RefactorGraphics ]] use MCGContextSetClipToRect to replace current
+	// clipping rect with p_clip (consistent with old MCContext::setclip functionality)
+	MCGContextSetClipToRect(m_gcontext, MCRectangleToMCGRectangle(p_clip));
 }
 
 MCRectangle MCGraphicsContext::getclip(void) const

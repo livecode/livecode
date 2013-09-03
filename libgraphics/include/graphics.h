@@ -467,6 +467,7 @@ void MCGContextBeginWithEffects(MCGContextRef context, MCGRectangle shape, const
 void MCGContextEnd(MCGContextRef context);
 
 void MCGContextClipToRect(MCGContextRef context, MCGRectangle rect);
+void MCGContextSetClipToRect(MCGContextRef context, MCGRectangle rect);
 MCGRectangle MCGContextGetClipBounds(MCGContextRef context);
 MCGRectangle MCGContextGetDeviceClipBounds(MCGContextRef context);
 

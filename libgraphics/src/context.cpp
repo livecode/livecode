@@ -1368,17 +1368,25 @@ void MCGContextSetBlendMode(MCGContextRef self, MCGBlendMode p_mode)
 	self -> state -> blend_mode = p_mode;	
 }
 
+// IM-2013-09-03: [[ RefactorGraphics ]] add new function to replace the context clip rect
+void MCGContextSetClipToRect(MCGContextRef self, MCGRectangle p_rect)
+{
+	if (!MCGContextIsValid(self))
+		return;
+	
+	self -> layer ->canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
+}
+
 void MCGContextClipToRect(MCGContextRef self, MCGRectangle p_rect)
 {
 	if (!MCGContextIsValid(self))
 		return;
 	
-	// TODO: ClipToRect should intersect with the current clip (rather than replace).
-	//	Leaving as replace for the moment, as that's how it's used in the context.
+	// IM-2013-09-03: [[ RefactorGraphics ]] revert clipping region op to intersect
 	
 	// we use skia to manage the clip entirely rather than storing in state
 	// this means any transforms to the clip are handled by skia allowing for more complex clips (rather than just a rect)
-	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kReplace_Op, self -> state -> should_antialias);
+	self -> layer -> canvas -> clipRect(MCGRectangleToSkRect(p_rect), SkRegion::kIntersect_Op, self -> state -> should_antialias);
 }
 
 MCGRectangle MCGContextGetClipBounds(MCGContextRef self)
