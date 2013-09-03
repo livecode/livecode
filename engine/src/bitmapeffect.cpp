@@ -654,13 +654,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyFilter:
 		{
 			MCBitmapEffectFilter t_new_filter;
-			if (MCStringIsEqualTo(*t_data, MCSTR("gaussian"), kMCStringOptionCompareExact))
+			if (MCStringIsEqualToCString(*t_data, "gaussian", kMCCompareExact))
 				t_new_filter = kMCBitmapEffectFilterFastGaussian;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("box1pass"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box1pass", kMCCompareExact))
 				t_new_filter = kMCBitmapEffectFilterOnePassBox;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("box2pass"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box2pass", kMCCompareExact))
 				t_new_filter = kMCBitmapEffectFilterTwoPassBox;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("box3pass"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "box3pass", kMCCompareExact))
 				t_new_filter = kMCBitmapEffectFilterThreePassBox;
 			else
 			{
@@ -752,9 +752,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertySource:
 		{
 			MCBitmapEffectSource t_new_source;
-			if (MCStringIsEqualTo(*t_data, MCSTR("edge"), kMCStringOptionCompareExact))
+			if (MCStringIsEqualToCString(*t_data, "edge", kMCCompareExact))
 				t_new_source = kMCBitmapEffectSourceEdge;
-			else if (MCStringIsEqualTo(*t_data, MCSTR("center"), kMCStringOptionCompareExact))
+			else if (MCStringIsEqualToCString(*t_data, "center", kMCCompareExact))
 				t_new_source = kMCBitmapEffectSourceCenter;
 			else
 			{
