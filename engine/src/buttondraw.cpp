@@ -421,7 +421,7 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 			{
 				// Note: 'lines' is an array of strings
 				MCValueRef lineval = nil;
-				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i, lineval);
+				/* UNCHECKED */ MCArrayFetchValueAtIndex(*lines, i + 1, lineval);
 				MCStringRef line = (MCStringRef)(lineval);
 				twidth = MCFontMeasureText(m_font, line);
 				
@@ -494,7 +494,6 @@ void MCButton::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 				sy += fheight;
 				
 				t_totallen += t_linelen;
-				MCValueRelease(line);
 			}
 
 			dc -> setclip(dirty);
