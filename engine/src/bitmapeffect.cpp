@@ -551,7 +551,7 @@ static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p
 	}
 }
 
-static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString& p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, MCStringRef p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
 {
 	uint4 t_value;
 	if (!MCU_stoui4(p_data, t_value))
@@ -569,7 +569,7 @@ static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString
 	return ES_NORMAL;
 }
 
-static Exec_stat MCBitmapEffectSetBooleanProperty(const MCString& p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetBooleanProperty(MCStringRef p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
 {
 	Boolean t_value;
 	if (!MCU_stob(p_data, t_value))
@@ -590,8 +590,8 @@ static Exec_stat MCBitmapEffectSetBooleanProperty(const MCString& p_data, bool p
 
 Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty which, MCExecPoint& ep, Boolean& r_dirty)
 {
-	MCString t_data;
-	t_data = ep . getsvalue();
+	MCAutoStringRef t_data;
+	ep . copyasstringref(&t_data);
 
 	switch(which)
 	{
@@ -600,9 +600,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyColor:
 		{
 			MCColor t_mc_color;
-			if (!MCscreen -> parsecolor(t_data, &t_mc_color, nil))
+			if (!MCscreen -> parsecolor(MCStringGetOldString(*t_data), &t_mc_color, nil))
 			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADCOLOR, 0, 0, t_data);
+				MCeerror -> add(EE_BITMAPEFFECT_BADCOLOR, 0, 0, *t_data);
 				return ES_ERROR;
 			}
 
@@ -619,15 +619,15 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyBlendMode:
 		{
 			MCBitmapEffectBlendMode t_new_mode;
-			if (t_data == "normal")
+			if (MCStringIsEqualTo(*t_data, MCSTR("normal"), kMCStringOptionCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeNormal;
-			else if (t_data == "multiply")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("multiply"), kMCStringOptionCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeMultiply;
-			else if (t_data == "colordodge")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("colordodge"), kMCStringOptionCompareExact))
 				t_new_mode = kMCBitmapEffectBlendModeColorDodge;
 			else
 			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADBLENDMODE, 0, 0, t_data);
+				MCeerror -> add(EE_BITMAPEFFECT_BADBLENDMODE, 0, 0, *t_data);
 				return ES_ERROR;
 			}
 
@@ -642,9 +642,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyOpacity:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> layer . color = (self -> layer . color & 0xffffff) | (t_value << 24);
 		}
 		break;
@@ -654,17 +654,17 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyFilter:
 		{
 			MCBitmapEffectFilter t_new_filter;
-			if (t_data == "gaussian")
+			if (MCStringIsEqualTo(*t_data, MCSTR("gaussian"), kMCStringOptionCompareExact))
 				t_new_filter = kMCBitmapEffectFilterFastGaussian;
-			else if (t_data == "box1pass")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("box1pass"), kMCStringOptionCompareExact))
 				t_new_filter = kMCBitmapEffectFilterOnePassBox;
-			else if (t_data == "box2pass")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("box2pass"), kMCStringOptionCompareExact))
 				t_new_filter = kMCBitmapEffectFilterTwoPassBox;
-			else if (t_data == "box3pass")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("box3pass"), kMCStringOptionCompareExact))
 				t_new_filter = kMCBitmapEffectFilterThreePassBox;
 			else
 			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADFILTER, 0, 0, t_data);
+				MCeerror -> add(EE_BITMAPEFFECT_BADFILTER, 0, 0, *t_data);
 				return ES_ERROR;
 			}
 
@@ -675,13 +675,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 		}
 		break;
-			
+
 		case kMCBitmapEffectPropertySize:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> blur . size, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> blur . size, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> blur . size = t_value;
 		}
 		break;
@@ -689,9 +689,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertySpread:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> blur . spread, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> blur . spread, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> blur . spread = t_value;
 		}
 		break;
@@ -701,19 +701,19 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyDistance:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(32767, t_data, self -> shadow . distance, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(32767, *t_data, self -> shadow . distance, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> shadow . distance = t_value;
 		}
 		break;
-			
+
 		case kMCBitmapEffectPropertyAngle:
 		{
 			uint4 t_value;
-			if (!MCU_stoui4(t_data, t_value))
+			if (!MCU_stoui4(*t_data, t_value))
 			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADNUMBER, 0, 0, t_data);
+				MCeerror -> add(EE_BITMAPEFFECT_BADNUMBER, 0, 0, *t_data);
 				return ES_ERROR;
 			}
 
@@ -726,11 +726,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 		}
 		break;
-		
+
 		case kMCBitmapEffectPropertyKnockOut:
 		{
 			bool t_value;
-			if (MCBitmapEffectSetBooleanProperty(t_data, self -> shadow . knockout, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetBooleanProperty(*t_data, self -> shadow . knockout, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
 
 			self -> shadow . knockout = t_value;
@@ -742,9 +742,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyRange:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, t_data, self -> glow . range, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> glow . range, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> glow . range = t_value;
 		}
 		break;
@@ -752,13 +752,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertySource:
 		{
 			MCBitmapEffectSource t_new_source;
-			if (t_data == "edge")
+			if (MCStringIsEqualTo(*t_data, MCSTR("edge"), kMCStringOptionCompareExact))
 				t_new_source = kMCBitmapEffectSourceEdge;
-			else if (t_data == "center")
+			else if (MCStringIsEqualTo(*t_data, MCSTR("center"), kMCStringOptionCompareExact))
 				t_new_source = kMCBitmapEffectSourceCenter;
 			else
 			{
-				MCeerror -> add(EE_BITMAPEFFECT_BADSOURCE, 0, 0, t_data);
+				MCeerror -> add(EE_BITMAPEFFECT_BADSOURCE, 0, 0, *t_data);
 				return ES_ERROR;
 			}
 
@@ -776,6 +776,7 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 
 	return ES_NORMAL;
 }
+
 
 Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop, Boolean& r_dirty)
 {
