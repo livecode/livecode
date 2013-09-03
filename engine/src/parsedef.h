@@ -1771,7 +1771,7 @@ enum Sugar_constants {
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
     
-    // MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
     SG_RECURSIVELY,
 };
 

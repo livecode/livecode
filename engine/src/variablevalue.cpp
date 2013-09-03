@@ -1061,7 +1061,7 @@ Exec_stat MCVariableValue::factorarray(MCExecPoint& ep, Operators op)
 	return array . factorarray(ep, op);
 }
 
-// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
 Exec_stat MCVariableValue::unionarray(MCVariableValue& v, bool p_recursive)
 {
 	if (!is_array())
@@ -1087,7 +1087,7 @@ Exec_stat MCVariableValue::unionarray(MCVariableValue& v, bool p_recursive)
 	return ES_NORMAL;
 }
 
-// MERG-2013-08-26: [[ Bug 11117 ]] Support nested arrays in union and intersect
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
 Exec_stat MCVariableValue::intersectarray(MCVariableValue& v, bool p_recursive)
 {
 	if (!is_array() || !v . is_array())
