@@ -967,6 +967,9 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCsystemprinter = MCprinter = MCscreen -> createprinter();
 	MCprinter -> Initialize();
 
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsInitialize();
+	
 	// MW-2009-07-02: Clear the result as a startup failure will be indicated
 	//   there.
 	MCresult -> clear();
@@ -1167,6 +1170,9 @@ int X_close(void)
 	
 	MCU_finalize_names();
 	MCNameFinalize();
+	
+	// MM-2013-09-03: [[ RefactorGraphics ]] Initialize graphics library.
+	MCGraphicsFinalize();
     
 #ifdef _ANDROID_MOBILE
     // MM-2012-02-22: Clean up any static variables as Android static vars are preserved between sessions

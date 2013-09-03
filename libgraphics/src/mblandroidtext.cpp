@@ -3,6 +3,16 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGPlatformInitialize(void)
+{
+}
+
+void MCGPlatformFinalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))

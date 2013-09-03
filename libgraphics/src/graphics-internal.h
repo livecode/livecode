@@ -10,7 +10,10 @@
 #define M_PI 3.141592653589793238462643
 #endif
 
-#define kMCGTextMeasuerCacheSize 16384
+#define kMCGTextMeasureCacheTableSize 16384
+#define kMCGTextMeasureCacheByteSize kMCGTextMeasureCacheTableSize * 64
+#define kMCGTextMeasureCacheMaxOccupancy kMCGTextMeasureCacheTableSize * 0.5
+#define kMCGTextMeasureCacheMaxStringLength 128
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -437,14 +440,20 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 
 typedef struct __MCGCacheTable *MCGCacheTableRef;
 
-bool MGCCacheTableCreate(uindex_t num_buckets, MCGCacheTableRef &r_cache_table);
+bool MGCCacheTableCreate(uindex_t size, uindex_t max_occupancy, uindex_t max_bytes, MCGCacheTableRef &r_cache_table);
 void MGCCacheTableDestroy(MCGCacheTableRef cache_table);
-void MCGCacheTableSet(MCGCacheTableRef cache_table, void *key, uint32_t key_length, void *value);
+void MGCCacheTableCompact(MCGCacheTableRef cache_table);
+void MCGCacheTableSet(MCGCacheTableRef cache_table, void *key, uint32_t key_length, void *value, uint32_t value_length);
 void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_length);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font);
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCGPlatformInitialize(void);
+void MCGPlatformInitialize(void);
 
 ////////////////////////////////////////////////////////////////////////////////
 

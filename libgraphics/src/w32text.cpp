@@ -292,6 +292,16 @@ static bool w32_draw_opaque_text_to_context_at_device_location(MCGContextRef p_c
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGPlatformInitialize(void)
+{
+}
+
+void MCGPlatformFinalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))

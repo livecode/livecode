@@ -352,6 +352,12 @@ inline MCGSize MCGSizeMake(MCGFloat p_w, MCGFloat p_h)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGraphicsInitialize(void);
+void MCGraphicsFinalize(void);
+void MCGraphicsCompact(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
 // Create new image with pixel data copied from raster
 bool MCGImageCreateWithRaster(const MCGRaster& raster, MCGImageRef& r_image);
 

@@ -20,6 +20,30 @@
 #include <SkUtils.h>
 #include <SkStippleMaskFilter.h>
 
+#include <time.h>
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCGCacheTableRef s_measure_cache = NULL;
+
+void MCGraphicsInitialize(void)
+{
+	MCGPlatformInitialize();
+	srand(time(NULL));
+	/* UNCHECKED */ MGCCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
+}
+
+void MCGraphicsFinalize(void)
+{
+	MCGPlatformInitialize();
+	MGCCacheTableDestroy(s_measure_cache);
+}
+
+void MCGraphicsCompact(void)
+{
+	MGCCacheTableCompact(s_measure_cache);
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 struct MCGIRectangle
@@ -2481,19 +2505,19 @@ MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCGCacheTableRef s_measure_cache = NULL;
-
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {		
 	if (p_length == 0 || p_text == NULL)
 		return 0.0;
 	
+	if (p_length >= kMCGTextMeasureCacheMaxStringLength)
+		return __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+	
 	bool t_success;
 	t_success = true;
 	
 	if (t_success)
-		if (s_measure_cache == NULL)
-			t_success = MGCCacheTableCreate(kMCGTextMeasuerCacheSize, s_measure_cache);
+		t_success = s_measure_cache != NULL;
 	
 	void *t_key;
 	t_key = NULL;
@@ -2537,7 +2561,7 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 	if (t_success)
 	{
 		*t_width = (MCGFloat) __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
-		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, t_width);
+		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, t_width, sizeof(MCGFloat));
 	}
 	
 	if (!t_success)

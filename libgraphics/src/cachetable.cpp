@@ -9,7 +9,7 @@
 
 #define ELF_STEP(B) T1 = (H << 4) + B; T2 = T1 & 0xF0000000; if (T2) T1 ^= (T2 >> 24); T1 &= (~T2); H = T1;
 
-hash_t MCGHashBytes(const void *p_bytes, size_t length)
+static hash_t MCGHashBytes(const void *p_bytes, size_t length)
 {
 	uint8_t *bytes = (uint8_t *)p_bytes;
 	
@@ -45,6 +45,7 @@ struct __MCGCacheTableEntry
 {
 	hash_t		hash;
 	uint32_t	key_length;
+	uint32_t	value_length;
 	void		*key;
 	void		*value;
 };
@@ -53,12 +54,56 @@ struct __MCGCacheTable
 {
 	uindex_t				total_buckets;
 	uint32_t				used_buckets;
+	uindex_t				max_occupancy;
+	uindex_t				max_bytes;
+	uint32_t				bytes_used;
 	__MCGCacheTableEntry	*pairs;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MGCCacheTableCreate(uindex_t p_size, MCGCacheTableRef &r_cache_table)
+static uindex_t MCGCacheTableLookup(MCGCacheTableRef self, void *p_key, uint32_t p_key_length, hash_t p_hash)
+{
+	uindex_t t_probe;
+	t_probe = p_hash % self -> total_buckets;	
+	
+	if (self -> used_buckets != self -> total_buckets)
+	{
+		for (uindex_t i = 0; i < self -> total_buckets; i++)
+		{
+			__MCGCacheTableEntry *t_pair;
+			t_pair = &self -> pairs[t_probe];
+			
+			if (t_pair -> value == NULL || (t_pair -> hash == p_hash && t_pair -> key_length == p_key_length && MCMemoryEqual(p_key, t_pair -> key, p_key_length)))
+				return t_probe;
+			
+			t_probe++;
+			if (t_probe >= self -> total_buckets)
+				t_probe -= self -> total_buckets;
+		}
+	}
+	
+	return UINDEX_MAX;
+}
+
+static inline void MCGCacheTableDiscardPair(MCGCacheTableRef self, uindex_t p_pair)
+{
+	self -> used_buckets--;
+	self -> bytes_used -= self -> pairs[p_pair] . key_length + self -> pairs[p_pair] . value_length;
+	
+	MCMemoryDelete(self -> pairs[p_pair] . key);
+	MCMemoryDelete(self -> pairs[p_pair] . value);
+	
+	self -> pairs[p_pair] . hash = 0;
+	self -> pairs[p_pair] . key_length = 0;
+	self -> pairs[p_pair] . value_length = 0;
+	self -> pairs[p_pair] . key = NULL;
+	self -> pairs[p_pair] . value = NULL;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MGCCacheTableCreate(uindex_t p_size, uindex_t p_max_occupancy, uindex_t p_max_bytes, MCGCacheTableRef &r_cache_table)
 {
 	bool t_success;
 	t_success = true;
@@ -77,9 +122,16 @@ bool MGCCacheTableCreate(uindex_t p_size, MCGCacheTableRef &r_cache_table)
 	{
 		t_cache_table -> total_buckets = p_size;
 		t_cache_table -> used_buckets = 0;
+		t_cache_table -> max_occupancy = p_max_occupancy;
+		t_cache_table -> max_bytes = p_max_bytes;
+		t_cache_table -> bytes_used = sizeof(__MCGCacheTable) + sizeof(__MCGCacheTableEntry) * p_size;
 		t_cache_table -> pairs = t_pairs;
-		r_cache_table = t_cache_table;
+		
+		t_success =  p_max_bytes > t_cache_table -> bytes_used;
 	}
+	
+	if (t_success)
+		r_cache_table = t_cache_table;
 	else
 	{
 		MCMemoryDeleteArray(t_pairs);
@@ -108,35 +160,32 @@ void MGCCacheTableDestroy(MCGCacheTableRef self)
 	MCMemoryDelete(self);
 }
 
-static uindex_t MCGCacheTableLookup(MCGCacheTableRef self, void *p_key, uint32_t p_key_length, hash_t p_hash)
-{
-	uindex_t t_probe;
-	t_probe = p_hash % self -> total_buckets;	
-	
-	if (self -> used_buckets != self -> total_buckets)
-	{
-		for (uindex_t i = 0; i < self -> total_buckets; i++)
-		{
-			__MCGCacheTableEntry *t_pair;
-			t_pair = &self -> pairs[t_probe];
-			
-			if (t_pair -> value == NULL || (t_pair -> hash == p_hash && t_pair -> key_length == p_key_length && MCMemoryEqual(p_key, t_pair -> key, p_key_length)))
-				return t_probe;
-			
-			t_probe++;
-			if (t_probe >= self -> total_buckets)
-				t_probe -= self -> total_buckets;
-		}
-	}
-	
-	return UINDEX_MAX;
-}
-
-void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length, void *p_value)
+void MGCCacheTableCompact(MCGCacheTableRef self)
 {
 	if (self == NULL)
-		return;	
+		return;
 	
+	for (uindex_t i = 0; i < self -> total_buckets; i++)
+		MCGCacheTableDiscardPair(self, i);	
+}
+
+void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length, void *p_value, uint32_t p_value_length)
+{
+	if (self == NULL)
+		return;
+	
+	if (self -> used_buckets >= self -> max_occupancy)
+	{
+		uindex_t t_discard_bucket;
+		do 
+			t_discard_bucket = rand() % self -> total_buckets;
+		while (self -> pairs[t_discard_bucket] . key != NULL);		
+		
+		MCGCacheTableDiscardPair(self, t_discard_bucket);
+		
+		//MCLog("MCGCacheTableSet: Max occupancy reached. Hash %d discarded.", t_discard_bucket);
+	}
+		
 	hash_t t_hash;
 	t_hash = MCGHashBytes(p_key, p_key_length);
 	
@@ -149,10 +198,15 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		MCMemoryDelete(self -> pairs[t_target_bucket] . key);
 		MCMemoryDelete(self -> pairs[t_target_bucket] . value);
 		
+		self -> bytes_used -= self -> pairs[t_target_bucket] . key_length + self -> pairs[t_target_bucket] . value_length;
+		
 		self -> pairs[t_target_bucket] . hash = t_hash;
 		self -> pairs[t_target_bucket] . key = p_key;
 		self -> pairs[t_target_bucket] . key_length = p_key_length;
 		self -> pairs[t_target_bucket] . value = p_value;
+		self -> pairs[t_target_bucket] . value_length = p_value_length;
+		
+		self -> bytes_used += p_key_length + p_value_length;
 		
 		//MCLog("MCGCacheTableSet: Cache table overflow. Hash %d thrown out.", t_target_bucket);
 	}
@@ -161,7 +215,10 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		MCMemoryDelete(p_key);
 		MCMemoryDelete(self -> pairs[t_target_bucket] . value);
 		
+		self -> bytes_used += p_value_length - self -> pairs[t_target_bucket] . value_length;
+		
 		self -> pairs[t_target_bucket] . value = p_value;
+		self -> pairs[t_target_bucket] . value_length = p_value_length;
 		
 		//MCLog("MCGCacheTableSet: Cache table overwrite. Hash %d rewritten.", t_target_bucket);
 	}
@@ -171,11 +228,25 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		self -> pairs[t_target_bucket] . key = p_key;
 		self -> pairs[t_target_bucket] . key_length = p_key_length;
 		self -> pairs[t_target_bucket] . value = p_value;
+		self -> pairs[t_target_bucket] . value_length = p_value_length;
 		
+		self -> bytes_used += p_key_length + p_value_length;
 		self -> used_buckets++;
 		
 		//MCLog("MCGCacheTableSet: Cache table write. Hash %d written.", t_target_bucket);
-	}	
+	}
+	
+	while (self -> bytes_used >= self -> max_bytes)
+	{
+		uindex_t t_discard_bucket;
+		do 
+			t_discard_bucket = rand() % self -> total_buckets;
+		while (self -> pairs[t_discard_bucket] . key != NULL);		
+		
+		MCGCacheTableDiscardPair(self, t_discard_bucket);
+		
+		//MCLog("MCGCacheTableSet: Max bytes reached. Hash %d discarded.", t_discard_bucket);		
+	}
 }
 
 void *MCGCacheTableGet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length)
@@ -203,3 +274,5 @@ void *MCGCacheTableGet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length
 		return self -> pairs[t_target_bucket] . value;
 	}
 }
+
+////////////////////////////////////////////////////////////////////////////////

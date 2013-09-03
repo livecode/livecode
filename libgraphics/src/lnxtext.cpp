@@ -51,6 +51,17 @@ static void lnx_pango_finalize(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGPlatformInitialize(void)
+{
+	/* UNCHECKED */ lnx_pango_initialize();
+}
+
+void MCGPlatformFinalize(void)
+{
+	lnx_pango_finalize();
+}
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))
@@ -60,7 +71,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 	t_success = true;
 
 	if (t_success)
-		t_success = lnx_pango_initialize();
+		t_success = s_layout != NULL;
 	
 	char *t_text;
 	t_text = nil;
@@ -178,7 +189,7 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 	t_success = true;		
 	
 	if (t_success)
-		t_success = lnx_pango_initialize();
+		t_success = s_layout != NULL;
 	
 	char *t_text;
 	t_text = nil;

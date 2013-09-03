@@ -225,6 +225,16 @@ static bool osx_draw_text_to_cgcontext_at_location(const void *p_text, uindex_t 
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCGPlatformInitialize(void)
+{
+}
+
+void MCGPlatformFinalize(void)
+{
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, MCGPoint p_location, const MCGFont &p_font)
 {
 	if (!MCGContextIsValid(self))
@@ -245,9 +255,13 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
         //t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
         
+		// if the text is short enough to have it's width potentailly cached, use MCGContextMeasurePlatformText
         // this will potentially result in osx_prepare_text being called again
         // though ideally not, as hopefully the text will have been recently measured and in the cache
-        t_text_bounds . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+		if (p_length >= kMCGTextMeasureCacheMaxStringLength)
+			t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
+		else
+			t_text_bounds . width = MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
     }
 	
 	MCGIntRectangle t_clipped_bounds;
