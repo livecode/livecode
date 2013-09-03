@@ -228,14 +228,14 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   strings.
 	if (flags & F_HAS_LINK)
 	{
-		if ((stat = IO_read_stringref(atts->linktext, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(atts->linktext, stream, false)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> linktext, atts -> linktext);
 	}
 
 	if (flags & F_HAS_IMAGE)
 	{
-		if ((stat = IO_read_stringref(atts->imagesource, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> imagesource, atts -> imagesource);
 	}
@@ -244,7 +244,7 @@ IO_stat MCBlock::load(IO_handle stream, const char *version, bool is_ext)
 	//   it in.
 	if (flags & F_HAS_METADATA)
 	{
-		if ((stat = IO_read_stringref(atts->metadata, stream)) != IO_NORMAL)
+		if ((stat = IO_read_stringref(atts->metadata, stream, false)) != IO_NORMAL)
 			return stat;
 		/* UNCHECKED */ MCValueInterAndRelease(atts -> metadata, atts -> metadata);
 	}
@@ -361,10 +361,10 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	// MW-2012-05-04: [[ Values ]] linkText / imageSource / metaData are now uniqued
 	//   strings.
 	if (flags & F_HAS_LINK)
-		if ((stat = IO_write_stringref(atts->linktext, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(atts->linktext, stream, false)) != IO_NORMAL)
 			return stat;
 	if (flags & F_HAS_IMAGE)
-		if ((stat = IO_write_stringref(atts->imagesource, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(atts->imagesource, stream, false)) != IO_NORMAL)
 			return stat;
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] If this is an extended block then emit the
@@ -372,7 +372,7 @@ IO_stat MCBlock::save(IO_handle stream, uint4 p_part)
 	if (t_is_ext)
 	{
 		if (flags & F_HAS_METADATA)
-			if ((stat = IO_write_stringref(atts -> metadata, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref(atts -> metadata, stream, false)) != IO_NORMAL)
 				return stat;
 	}
 	
