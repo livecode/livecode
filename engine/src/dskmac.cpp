@@ -6020,7 +6020,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
     
 	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
@@ -6031,7 +6031,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (t_handle == nil)
             return nil;
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
     
 	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset)
@@ -6045,7 +6045,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
@@ -6497,7 +6497,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 if (MCprocesses[i].ihandle != NULL)
                 {
                     MCStdioFileHandle *t_handle;
-                    t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle->handle);
+                    t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle);
                     clearerr(t_handle -> GetStream());
                 }
                 MCprocesses[i].pid = 0;
@@ -6844,12 +6844,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_closeprocess_dsk_mac */
         if (MCprocesses[p_index].ihandle != NULL)
         {
-            MCprocesses[p_index].ihandle -> handle -> Close();
+            MCprocesses[p_index].ihandle -> Close();
             MCprocesses[p_index].ihandle = NULL;
         }
         if (MCprocesses[p_index].ohandle != NULL)
         {
-            MCprocesses[p_index].ohandle -> handle -> Close();
+            MCprocesses[p_index].ohandle -> Close();
             MCprocesses[p_index].ohandle = NULL;
         }
         MCprocesses[p_index].mode = OM_NEITHER;

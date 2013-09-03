@@ -1539,11 +1539,13 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 
 	if (p_at == nil)
 	{
+#ifdef OLD_IO_HANDLE
 		if (r_stream->flags & IO_WRITTEN)
 		{
 			r_stream->flags &= ~IO_WRITTEN;
 			MCS_sync(r_stream);
 		}
+#endif
 	}
 	else
 	{
@@ -1674,7 +1676,9 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-	MCshellfd = t_stream->getfd();
+#ifdef OLD_IO_HANDLE
+	MCshellfd = t_stream->gefd();
+#endif // OLD_IO_HANDLE
 	t_textmode = MCprocesses[t_index].textmode;
 	MCAutoStringRef t_output;
 
@@ -1866,7 +1870,9 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_WRITTEN;
+#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -1974,7 +1980,9 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
 
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_SEEKED;
+#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);

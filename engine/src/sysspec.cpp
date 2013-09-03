@@ -841,14 +841,14 @@ IO_handle MCS_fakeopen(const MCString& data)
 {
 	MCMemoryFileHandle *t_handle;
 	t_handle = new MCMemoryFileHandle(data . getstring(), data . getlength());
-	return new IO_header(t_handle, IO_FAKE);
+	return t_handle;
 }
 
 IO_handle MCS_fakeopenwrite(void)
 {
 	MCMemoryFileHandle *t_handle;
 	t_handle = new MCMemoryFileHandle();
-	return new IO_header(t_handle, IO_FAKE);
+	return t_handle;
 }
 
 //IO_stat MCS_fakeclosewrite(IO_handle& p_stream, char*& r_buffer, uint4& r_length)
@@ -874,7 +874,7 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 {
     bool t_success;
 
-    t_success = p_stream -> handle -> TakeBuffer(r_buffer, r_length);
+    t_success = p_stream -> TakeBuffer(r_buffer, r_length);
 	
 	MCS_close(p_stream);
 	
@@ -900,15 +900,15 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     uint32_t t_written;
     bool t_success;
     
-    t_old_pos = p_stream -> handle -> Tell();
+    t_old_pos = p_stream -> Tell();
     
-    t_success = p_stream -> handle -> Seek(p_pos, SEEK_SET);
-    
-    if (t_success)
-        t_success = p_stream -> handle -> Write(p_buffer, p_size);
+    t_success = p_stream -> Seek(p_pos, SEEK_SET);
     
     if (t_success)
-        t_success = p_stream -> handle -> Seek(t_old_pos, SEEK_SET);
+        t_success = p_stream -> Write(p_buffer, p_size);
+    
+    if (t_success)
+        t_success = p_stream -> Seek(t_old_pos, SEEK_SET);
     
     if (!t_success)
         return IO_ERROR;
@@ -927,7 +927,7 @@ IO_handle MCS_fakeopencustom(MCFakeOpenCallbacks *p_callbacks, void *p_state)
 {
 	MCSystemFileHandle *t_handle;
 	t_handle = new MCCustomFileHandle(p_callbacks, p_state);
-	return new IO_header(t_handle, 0);
+	return t_handle;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -990,9 +990,10 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	
 	if (t_handle == NULL)
 		return NULL;
-    
+#ifdef OLD_IO_HANDLE
     if (p_mode == kMCSystemFileModeAppend)
         t_handle -> flags |= IO_SEEKED;
+#endif
 	
 	return t_handle;
 }
@@ -1004,35 +1005,35 @@ static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
 
 void MCS_close(IO_handle &x_stream)
 {
-	x_stream -> handle -> Close();
+	x_stream -> Close();
     delete x_stream;
     x_stream = NULL;
 }
 
 IO_stat MCS_putback(char p_char, IO_handle p_stream)
 {
-	if (!p_stream -> handle -> PutBack(p_char))
+	if (!p_stream -> PutBack(p_char))
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 IO_stat MCS_seek_cur(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> handle -> Seek(p_offset, 0))
+	if (!p_stream -> Seek(p_offset, 0))
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 IO_stat MCS_seek_set(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> handle -> Seek(p_offset, 1))
+	if (!p_stream -> Seek(p_offset, 1))
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> handle -> Seek(p_offset, -1))
+	if (!p_stream -> Seek(p_offset, -1))
 		return IO_ERROR;
 	return IO_NORMAL;
 }
@@ -1114,7 +1115,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	
     bool t_success;
 	uint32_t t_size;
-	t_size = (uint32_t)t_file -> handle -> GetFileSize();
+	t_size = (uint32_t)t_file -> GetFileSize();
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
@@ -1139,7 +1140,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         ep.clear();
     }
 
-	t_file -> handle -> Close();
+	t_file -> Close();
     
 	if (!t_success)
 	{
@@ -1175,7 +1176,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	
     bool t_success;
 	uint32_t t_size;
-	t_size = (uint32_t)t_file -> handle -> GetFileSize();
+	t_size = (uint32_t)t_file -> GetFileSize();
 	
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
@@ -1197,7 +1198,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         MCresult -> clear(False);
     }
     
-	t_file -> handle -> Close();
+	t_file -> Close();
     
 	if (!t_success)
 	{
@@ -1232,10 +1233,10 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
     ep . binarytotext();
     /* UNCHECKED */ ep . copyasstring(&t_string);
     
-	if (!t_file -> handle -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
+	if (!t_file -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
 		MCresult -> sets("error writing file");
 	
-	t_file -> handle -> Close();
+	t_file -> Close();
     
     if (!MCresult -> isclear())
         return false;
@@ -1261,10 +1262,10 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 	}
     
 	uint32_t t_written;
-	if (!t_file -> handle -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
+	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
 		MCresult -> sets("error writing file");
 	
-	t_file -> handle -> Close();
+	t_file -> Close();
 	
     if (!MCresult -> isclear())
 		return false;
@@ -1285,7 +1286,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 
 int64_t MCS_fsize(IO_handle p_stream)
 {
-	return p_stream -> handle -> GetFileSize();
+	return p_stream -> GetFileSize();
 }
 
 //IO_stat MCS_read(void *p_ptr, uint4 p_size, uint4& p_count, IO_handle p_stream)
@@ -1327,7 +1328,7 @@ IO_stat MCS_readfixed(void *p_ptr, uint32_t p_byte_size, IO_handle p_stream)
     
     uint32_t t_read;
 	
-    if (!p_stream -> handle -> Read(p_ptr, p_byte_size, t_read) ||
+    if (!p_stream -> Read(p_ptr, p_byte_size, t_read) ||
         t_read != p_byte_size)
         return IO_ERROR;
     
@@ -1339,10 +1340,10 @@ IO_stat MCS_readall(void *p_ptr, uint32_t p_byte_count, IO_handle p_stream, uint
 	if (MCabortscript || p_ptr == NULL || p_stream == NULL)
 		return IO_ERROR;
     
-    if (!p_stream -> handle -> Read(p_ptr, p_byte_count, r_bytes_read))
+    if (!p_stream -> Read(p_ptr, p_byte_count, r_bytes_read))
         return IO_ERROR;
     
-    if (p_stream -> handle -> IsExhausted())
+    if (p_stream -> IsExhausted())
         return IO_EOF;
     
     return IO_NORMAL;
@@ -1360,7 +1361,7 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	t_to_write = p_size * p_count;
 	
 	uint32_t t_written;
-	if (!p_stream -> handle -> Write(p_ptr, t_to_write))
+	if (!p_stream -> Write(p_ptr, t_to_write))
 		return IO_ERROR;
 	
 	return IO_NORMAL;
@@ -1380,33 +1381,33 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 
 IO_stat MCS_flush(IO_handle p_stream)
 {
-	if (!p_stream -> handle -> Flush())
+	if (!p_stream -> Flush())
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 IO_stat MCS_trunc(IO_handle p_stream)
 {
-	if (!p_stream -> handle -> Truncate())
+	if (!p_stream -> Truncate())
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 int64_t MCS_tell(IO_handle p_stream)
 {
-	return p_stream -> handle -> Tell();
+	return p_stream -> Tell();
 }
 
 IO_stat MCS_sync(IO_handle p_stream)
 {
-	if (!p_stream -> handle -> Sync())
+	if (!p_stream -> Sync())
 		return IO_ERROR;
 	return IO_NORMAL;
 }
 
 Boolean MCS_eof(IO_handle p_stream)
 {
-	return (p_stream -> handle -> Tell() == p_stream -> handle ->  GetFileSize());
+	return (p_stream -> Tell() == p_stream ->  GetFileSize());
 }
 
 bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)

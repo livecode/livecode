@@ -108,8 +108,8 @@ enum IO_stat
     IO_TIMEOUT
 };
 
-class IO_header;
-typedef IO_header * IO_handle;
+struct MCSystemFileHandle;
+typedef MCSystemFileHandle * IO_handle;
 class MCObjectInputStream;
 class MCObjectOutputStream;
 

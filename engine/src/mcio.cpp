@@ -85,9 +85,11 @@ Boolean IO_closefile(MCNameRef name)
 			MCS_close(MCfiles[index].ihandle);
 		else
 		{
+#ifdef OLD_IO_HANDLE
 			if (MCfiles[index].ohandle->flags & IO_WRITTEN
 			        && !(MCfiles[index].ohandle->flags & IO_SEEKED))
 				MCS_trunc(MCfiles[index].ohandle);
+#endif
 			MCS_close(MCfiles[index].ohandle);
 		}
 		MCValueRelease(MCfiles[index].name);
