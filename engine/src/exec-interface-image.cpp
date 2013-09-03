@@ -127,25 +127,18 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 		return;
 	}
 
-	if (MCStringCreateWithCString(filename, r_name))
-		return;
+	r_name = MCValueRetain(filename);
 
-    ctxt . Throw();
 }
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
-		p_name == nil || !MCStringIsEqualToCString(p_name, filename, kMCCompareExact))
+		MCStringIsEmpty(p_name) || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
-		const char *t_filename = nil;
-		if (p_name != nil)
-			t_filename = MCStringGetCString(p_name);
-		
-		setfilename(t_filename);
-		
+		setfilename(p_name);
 		resetimage();
-		
+
 		if (m_rep != nil)
 			ctxt . SetTheResultToEmpty();
 		else

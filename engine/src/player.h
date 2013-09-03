@@ -81,7 +81,7 @@ enum
 class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
-	char *filename;
+	MCStringRef filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
@@ -362,7 +362,7 @@ public:
 	void playstepback();
 	Boolean playstop();
 	void setvolume(uint2 tloudness);
-	void setfilename(const char *vcname, char *fname, Boolean istmp);
+	void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
 	uint4 getstarttime()
 	{
 		return starttime;

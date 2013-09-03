@@ -326,7 +326,7 @@ class MCImage : public MCControl
 	int2 repeatcount;
 	int2 irepeatcount;
 	uint1 resizequality;
-	char *filename;
+	MCStringRef filename;
 	static int2 magmx;
 	static int2 magmy;
 	static MCRectangle magrect;
@@ -346,7 +346,7 @@ private:
 	// replace the current image data with the new bitmap
 	bool setbitmap(MCImageBitmap *p_bitmap);
 	bool setcompressedbitmap(MCImageCompressedBitmap *p_compressed);
-	bool setfilename(const char *p_filename);
+	bool setfilename(MCStringRef p_filename);
 	bool setdata(void *p_data, uindex_t p_size);
 	
 	void notifyneeds(bool p_deleting);

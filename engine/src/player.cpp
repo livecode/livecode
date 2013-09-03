@@ -202,7 +202,7 @@ MCPlayer::MCPlayer()
 	flags |= F_TRAVERSAL_ON;
 	nextplayer = NULL;
 	rect.width = rect.height = 128;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	istmpfile = False;
 	scale = 1.0;
 	rate = 1.0;
@@ -241,7 +241,7 @@ MCPlayer::MCPlayer()
 MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 {
 	nextplayer = NULL;
-	filename = strclone(sref.filename);
+	filename = MCValueRetain(sref.filename);
 	istmpfile = False;
 	scale = 1.0;
 	rate = sref.rate;
@@ -323,8 +323,9 @@ MCPlayer::~MCPlayer()
 		delete m_player ;
 #endif
 
-	delete filename;
+	MCValueRelease(filename);
 	MCValueRelease(userCallbackStr);
+
 }
 
 Chunk_term MCPlayer::gettype() const
@@ -1180,7 +1181,7 @@ IO_stat MCPlayer::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			return stat;
 		if ((stat = MCControl::save(stream, p_part, p_force_ext)) != IO_NORMAL)
 			return stat;
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream)) != IO_NORMAL)
 			return stat;
 		if ((stat = IO_write_uint4(starttime, stream)) != IO_NORMAL)
 			return stat;
@@ -1201,7 +1202,7 @@ IO_stat MCPlayer::load(IO_handle stream, const char *version)
 
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
-	if ((stat = IO_read_string(filename, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(filename, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = IO_read_uint4(&starttime, stream)) != IO_NORMAL)
 		return stat;
@@ -1301,11 +1302,8 @@ void MCPlayer::freetmp()
 {
 	if (istmpfile)
 	{
-		MCAutoStringRef t_filename;
-		/* UNCHECKED */ MCStringCreateWithCString(filename, &t_filename);
-		MCS_unlink(*t_filename);
-		delete filename;
-		filename = NULL;
+		MCS_unlink(filename);
+		MCValueAssign(filename, kMCEmptyString);
 	}
 }
 
@@ -1495,7 +1493,7 @@ Boolean MCPlayer::prepare(const char *options)
 {
 	Boolean ok = False;
 
-	if (state & CS_PREPARED || filename == NULL)
+	if (state & CS_PREPARED || MCStringIsEmpty(filename))
 		return True;
 	
 	if (!opened)
@@ -1672,11 +1670,11 @@ Boolean MCPlayer::playstop()
 }
 
 
-void MCPlayer::setfilename(const char *vcname,
-                           char *fname, Boolean istmp)
+void MCPlayer::setfilename(MCStringRef vcname,
+                           MCStringRef fname, Boolean istmp)
 {
-	setname_cstring(vcname);
-	filename = fname;
+	setname_cstring(MCStringGetCString(vcname));
+	filename = MCValueRetain(fname);
 	istmpfile = istmp;
 	disposable = True;
 }
