@@ -78,7 +78,7 @@ MCAndroidPlayerControl::~MCAndroidPlayerControl(void)
 {
     if (m_path != nil)
         MCCStringFree(m_path);
-
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 

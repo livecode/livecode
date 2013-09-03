@@ -51,7 +51,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-ypedef uint32_t MCAndroidFontStyle;
+typedef uint32_t MCAndroidFontStyle;
 enum
 {
 	kMCAndroidFontStyleRegular = 1 << 0,
@@ -296,7 +296,7 @@ static MCAndroidFontStyle MCAndroidCustomFontsGetStyle(const char *p_name)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-tatic MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic)
+static MCAndroidCustomFont* look_up_custom_font(const char *p_name, bool p_bold, bool p_italic)
 {
     char *t_styled_name;
     t_styled_name = nil;    

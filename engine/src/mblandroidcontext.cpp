@@ -38,7 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <SkBitmap.h>
 #include <SkDevice.h>
 #include <SkTypeface.h>
-include <SkDashPathEffect.h>
+#include <SkDashPathEffect.h>
 #include <SkShader.h>
 
 #define SKIA_LAYERING 0
