@@ -95,6 +95,7 @@ private:
 	int32_t m_pattern_x;
 	int32_t m_pattern_y;
 	MCPatternRef m_pattern;
+	uint32_t m_line_width;
 };
 
 
