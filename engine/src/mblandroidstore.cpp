@@ -659,21 +659,21 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
         else if (responseCode == RESULT_ITEM_UNAVAILABLE)
         {
             t_purchase->state = kMCPurchaseStateError;
-            /* UNCHECKED */ MCStringCreateWithCString("requested item unavailable", t_android_data->error);
+            t_android_data->error = MCSTR("requested item unavailable");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);            
         }
         else if (responseCode == RESULT_DEVELOPER_ERROR)
         {
             t_purchase->state = kMCPurchaseStateError;
-             /* UNCHECKED */ MCStringCreateWithCString("developer error", t_android_data->error);
+			t_android_data->error = MCSTR("developer error");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);            
         }
         else if (responseCode == RESULT_ERROR)
         {
             t_purchase->state = kMCPurchaseStateError;
-             /* UNCHECKED */ MCStringCreateWithCString("sending purchase request failed", t_android_data->error);
+			t_android_data->error = MCSTR("sending purchase request failed");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);
         }
