@@ -295,7 +295,7 @@ bool MCAd::FindByNameOrId(MCStringRef p_name, MCAd *&r_ad)
 		return FindById(t_id, r_ad);
 	
 	for(MCAd *t_ad = s_ads; t_ad != nil; t_ad = t_ad -> m_next)
-		if (!MCStringIsEmpty(t_ad->GetName()) && MCStringIsEqualTo(p_name, t_ad->GetName(), kMCStringOptionCompareCaseless))
+		if (MCStringIsEqualTo(p_name, t_ad->GetName(), kMCStringOptionCompareCaseless))
 		{
 			r_ad = t_ad;
 			return true;

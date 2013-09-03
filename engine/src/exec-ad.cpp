@@ -421,8 +421,7 @@ void MCAdGetAds(MCExecContext& ctxt, MCStringRef& r_ads)
 	/* UNCHECKED */ MCListCreateMutable('\n', &t_ads);
 	for(MCAd *t_ad = MCAdGetStaticAdsPtr(); t_ad != nil && t_success; t_ad = t_ad->GetNext())
     {
-		if (!MCStringIsEmpty(t_ad->GetName()))
-            t_success = MCListAppend(*t_ads, t_ad->GetName());
+		t_success = MCListAppend(*t_ads, t_ad->GetName());
     }
     
     if (t_success)
