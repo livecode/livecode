@@ -1473,10 +1473,6 @@ public:
             t_handle = new MCStdioFileHandle;
             t_handle -> m_stream = fptr;
             t_handle -> m_is_eof = False;
-            t_handle -> m_hserialInputBuff = NULL;
-            t_handle -> m_ioptr = NULL;
-            t_handle -> m_serialIn = 0;
-            t_handle -> m_serialOut = 0;
         }
         
         return t_handle;
@@ -1528,47 +1524,9 @@ public:
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
         t_handle -> m_is_eof = False;
-        t_handle -> m_hserialInputBuff = NULL;
-        t_handle -> m_ioptr = NULL;
-        t_handle -> m_serialIn = 0;
-        t_handle -> m_serialOut = 0;
 		
 		return t_handle;
 	}
-    
-    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, MCStringRef serialcontrolsettings)
-    {
-		FILE *fptr;
-        MCStdioFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-		if (fptr != NULL)
-        {
-            int val;
-            val = fcntl(fileno(fptr), F_GETFL, val);
-            val |= O_NONBLOCK |  O_NOCTTY;
-            fcntl(fileno(fptr), F_SETFL, val);
-            configureSerialPort((short)fileno(fptr));
-            
-            t_handle = new MCStdioFileHandle;
-            t_handle -> m_stream = fptr;
-            t_handle -> m_is_eof = False;
-            t_handle -> m_hserialInputBuff = NULL;
-            t_handle -> m_ioptr = NULL;
-            t_handle -> m_serialIn = 0;
-            t_handle -> m_serialOut = 0;
-        }
-        
-        return t_handle;
-    }
 	
 	virtual void Close(void)
 	{
@@ -1590,15 +1548,10 @@ public:
 	stream = NULL;
 	return stat;
 #endif /* MCS_close_dsk_mac */
-        if (m_serialIn != 0 || m_serialOut != 0)
-        {//close the serial port
-            
-        }
-        else if (m_stream != NULL)
+       if (m_stream != NULL)
             fclose(m_stream);
         
-        //delete m_stream;
-        m_stream = NULL;
+        delete this;
 	}
 	
 	virtual bool Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
@@ -1688,57 +1641,44 @@ public:
 		}
 	return stat;
 #endif /* MCS_read_dsk_mac */
-        bool stat = true;
         uint4 nread;
-        if (m_serialIn != 0)
-        {//read from serial port
-            SInt32 sint_toread = (SInt32) p_length;
-            if ((errno = FSRead(m_serialIn, &sint_toread, p_ptr)) != noErr)
-                stat = IO_ERROR;
-            
-            if ((uint32_t)sint_toread < p_length)
-                stat = IO_EOF;
-            r_read = sint_toread;
-        }
-        else
+        
+        // MW-2010-08-26: Taken from the Linux source, this changes the previous code
+        //   to take into account pipes and such.
+        char *sptr = (char *)p_ptr;
+        uint4 toread = p_length;
+        uint4 offset = 0;
+        errno = 0;
+        while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
         {
-            // MW-2010-08-26: Taken from the Linux source, this changes the previous code
-            //   to take into account pipes and such.
-            char *sptr = (char *)p_ptr;
-            uint4 toread = p_length;
-            uint4 offset = 0;
-            errno = 0;
-            while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
+            offset += nread;
+            r_read = offset;
+            if (ferror(m_stream))
             {
-                offset += nread;
-                r_read = offset;
-                if (ferror(m_stream))
-                {
-                    clearerr(m_stream);
-                    
-                    if (errno == EAGAIN)
-                        return false;
-                    
-                    if (errno == EINTR)
-                    {
-                        toread -= nread;
-                        continue;
-                    }
-                    else
-                        return false;
-                }
-                if (feof(m_stream))
-                {
-                    m_is_eof = True;
-                    return true;
-                }
+                clearerr(m_stream);
                 
-                m_is_eof = false;                
-                return false;
+                if (errno == EAGAIN)
+                    return false;
+                
+                if (errno == EINTR)
+                {
+                    toread -= nread;
+                    continue;
+                }
+                else
+                    return false;
             }
-            r_read = nread;
+            if (feof(m_stream))
+            {
+                m_is_eof = true;
+                return true;
+            }
+            
+            m_is_eof = false;
+            return false;
         }
-        return stat;
+        r_read = nread;
+        return true;
 	}
     
 	virtual bool Write(const void *p_buffer, uint32_t p_length)
@@ -1762,17 +1702,6 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write_dsk_mac */
-
-        if (m_serialOut != 0)
-        {//write to serial port
-            uint4 count = p_length;
-            errno = FSWrite(m_serialOut, (long*)&count, p_buffer);
-
-            if (errno != noErr || count != p_length)
-                return false;
-            return true;
-        }
-
         if (fwrite(p_buffer, 1, p_length, m_stream) != p_length)            
             return false;
         
@@ -1885,7 +1814,7 @@ public:
 		
 	return IO_NORMAL;
 #endif /* MCS_putback_dsk_mac */
-        if (m_serialIn != 0 || m_stream == NULL)
+        if (m_stream == NULL)
             return Seek(-1, 0);
         
         if (ungetc(p_char, m_stream) != p_char)
@@ -1947,15 +1876,188 @@ public:
     {
         return false;
     }
-    
-	short m_serialIn;  //serial port Input reference number
-	short m_serialOut; //serial port output reference number
-	MCMacSysHandle m_hserialInputBuff; //handle to serial input buffer
-	char *m_ioptr;
 	
 private:
 	FILE *m_stream;
-    Boolean m_is_eof;
+    bool m_is_eof;
+};
+
+class MCSerialPortFileHandle: public MCSystemFileHandle
+{
+public:
+    static MCSerialPortFileHandle *OpenDevice(MCStringRef p_path)
+    {
+		FILE *fptr;
+        MCSerialPortFileHandle *t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+		if (fptr != NULL)
+        {
+            int val;
+            int t_serial_in;
+            
+            t_serial_in = fileno(fptr);
+            val = fcntl(t_serial_in, F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(t_serial_in, F_SETFL, val);
+            configureSerialPort((short)t_serial_in);
+            
+            t_handle = new MCSerialPortFileHandle;
+            t_handle -> m_serial_port = t_serial_in;
+            t_handle -> m_is_eof = False;
+        }
+        
+        return t_handle;
+    }
+    
+	virtual void Close(void)
+    {
+        close(m_serial_port);
+        delete this;
+    }
+    
+    // Returns true if an attempt has been made to read past the end of the
+    // stream.
+    virtual bool IsExhausted(void)
+    {
+        return m_is_eof;
+    }
+    
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        bool stat = true;
+        SInt32 sint_toread = (SInt32) p_length;
+        
+        if ((errno = FSRead(m_serial_port, &sint_toread, p_buffer)) != noErr)
+            stat = false;
+        
+        if (sint_toread < p_length)
+        {
+            m_is_eof = true;
+        }
+        
+        r_read = sint_toread;
+        return stat;
+#if 0
+        // FSRead is deprecated from OSX 10.4 onwards, switch to read(int fd, size_t size, void* ptr) on the same fashion
+        // it was done for MCStdioFileHandle? This would allow interruption handling and such
+        uint4 nread;
+        
+        // MW-2010-08-26: Taken from the Linux source, this changes the previous code
+        //   to take into account pipes and such.
+        char *sptr = (char *)p_buffer;
+        uint4 toread = p_length;
+        uint4 offset = 0;
+        errno = 0;
+        r_read = 0;
+        while ((nread = read(m_serial_port, &sptr[offset], toread)) != toread)
+        {
+            if (nread == -1) //error
+            {                
+                if (errno == EAGAIN)
+                    return false;
+                
+                if (errno == EINTR)
+                {
+                    // Do we really want to try again?
+                    // When an error occurs, whether the file pointer has moved is unspecified...
+                    continue;
+                }
+                else
+                    return false;
+            }
+            else if (nread == 0) // EOF encountered
+            {
+                m_is_eof = true;
+                return true;
+            }
+            
+            m_is_eof = false;
+            offset += nread;
+            r_read = offset;
+        }
+        
+        m_is_eof = false;
+        r_read = offset + nread;
+        
+        return true;
+#endif // 0
+    }
+    
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
+    {
+        uint4 t_count = p_length;
+        errno = FSWrite(m_serial_port, (long*)&t_count, p_buffer);
+        
+#if 0
+        // Same here, update to write() ?
+        uint32_t t_count;
+        t_count = write(m_serial_port, p_buffer, p_length);
+#endif // 0
+        
+        if (errno != noErr || t_count != p_length)
+            return false;
+        
+        return true;
+    }
+    
+	virtual bool Seek(int64_t offset, int p_dir)
+    {
+        return false;
+    }
+	
+	virtual bool Truncate(void)
+    {
+        return false;
+    }
+    
+	virtual bool Sync(void)
+    {
+        return false;
+    }
+    
+	virtual bool Flush(void)
+    {
+        return false;
+    }
+	
+	virtual bool PutBack(char p_char)
+    {
+        return Seek(-1, 0);
+    }
+	
+	virtual int64_t Tell(void)
+    {
+        return false;
+    }
+	
+	virtual void *GetFilePointer(void)
+    {
+        return NULL;
+    }
+    
+	virtual int64_t GetFileSize(void)
+    {
+        return 0;
+    }
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+    
+private:
+	int m_serial_port;  //serial port Input reference number
+    bool m_is_eof;
+    
 };
 
 struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDesktop
@@ -6034,10 +6136,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return t_handle;
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenDevice(p_path, p_control_string);
+        MCSerialPortFileHandle *t_handle;
+        t_handle = MCSerialPortFileHandle::OpenDevice(p_path);
         
         if (t_handle == nil)
             return nil;

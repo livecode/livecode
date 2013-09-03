@@ -982,7 +982,7 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap, p_offset);
 	else
 	{
-		t_handle = MCsystem -> OpenDevice(*t_native, MCserialcontrolsettings, p_offset);
+		t_handle = MCsystem -> OpenDevice(*t_native, p_offset);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
@@ -1006,8 +1006,6 @@ static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
 void MCS_close(IO_handle &x_stream)
 {
 	x_stream -> Close();
-    delete x_stream;
-    x_stream = NULL;
 }
 
 IO_stat MCS_putback(char p_char, IO_handle p_stream)
