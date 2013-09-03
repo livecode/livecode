@@ -2685,13 +2685,16 @@ void XML_XPathDataFromQuery(char *args[], int nargs, char **retstring, Bool *pas
 }
 
 // MDW-2013-08-09: [[ RevXmlXslt ]]
+// XML stylesheet transformation functions
+
 /**
  * XML_xsltLoadStylesheet
- * @pStylesheet : stylesheet contents
+ * @pStylesheetDocID : xml document id
  *
- * returns an xsltStylesheetPtr which can be used in xsltApplyStyleSheet
+ * returns an xsltStylesheetPtr which can be used in xsltApplyStyleSheet.
+ * it's up to the user to free the stylesheet pointer after processing.
  *
- * put xsltLoadStylesheet(tStylesheet)
+ * put xsltLoadStylesheet(tStylesheetDocID)
  */
 void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -2715,12 +2718,15 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 				*retstring = istrdup(result);
 				free(result);
 			}
+			// couldn't dereference the xml document
 			else
 				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
 		}
+		// couldn't dereference the xml id
 		else
 			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
 	}
+	// only one argument permitted
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 }
@@ -2730,6 +2736,7 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
  * @pStylesheetPath : path to stylesheet file
  *
  * returns an xsltStylesheetPtr which can be used in xsltApplyStyleSheet
+ * it's up to the user to free the stylesheet pointer after processing.
  *
  * put xsltLoadStylesheetFromFile(tPathToStylesheet)
  */
@@ -2748,6 +2755,7 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 		*retstring = istrdup(result);
 		free(result);
 	}
+	// only one argument permitted
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 }
@@ -2758,7 +2766,7 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
  *
  * frees a xsltStylesheetPtr created by xsltLoadStylesheet
  *
- * put xsltFreeStylesheet(tStylesheetID)
+ * xsltFreeStylesheet tStylesheetID
  */
 void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -2772,6 +2780,7 @@ void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 		xsltFreeStylesheet(cur);
 		*retstring = (char *)calloc(1,1);
 	}
+	// only one argument permitted
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 }
@@ -2780,10 +2789,13 @@ void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pas
  * XML_xsltApplyStylesheet
  * @pDocID : xml tree id (already parsed)
  * @pStylesheet : xsltStylesheetPtr from xsltLoadStylesheet
- * @pParamList : ]optional] delimiter between data elements (default="\n")
+ * @pParamList : [optional] delimiter between data elements (default="\n")
  *
+ * Returns the transformed xml data after applying the stylesheet.
+ * Note that the user must free the stylesheet document after processing.
  *
  * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
+ * xsltFreeStylesheet tStylesheet
  */
 void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -2800,7 +2812,6 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 
 	if (2 <= nargs)
 	{
-	//	XML_NewDocumentFromFile(args, nargs, retstring, pass, error);
 		int docID = atoi(args[0]);
 		CXMLDocument *xmlDocument = doclist.find(docID);
 		if (NULL != xmlDocument)
@@ -2811,14 +2822,20 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 				cur = (xsltStylesheetPtr)atoi(args[1]);
 				if (NULL != cur)
 				{
-					params[nbparams] = NULL;
+					if (nargs > 2)
+					{
+					}
+					else
+					{
+						params[nbparams] = NULL;
+					}
 					res = xsltApplyStylesheet(cur, xmlDoc, params);
 
 					xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
 
 					*retstring = istrdup((char *)doc_txt_ptr);
 
-					xsltFreeStylesheet(cur);
+					// free the xml document - we're done with it
 					xmlFreeDoc(res);
 
 					xsltCleanupGlobals();
@@ -2833,6 +2850,7 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 		else
 			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
 	}
+	// requires at least docID and stylesheetPtr arguments
 	else
 		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 }
@@ -2840,11 +2858,12 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 /**
  * XML_xsltApplyStylesheetFile
  * @pDocID : xml tree id (already parsed)
- * @pStylesheet : stylesheet to apply against the xml document
- * @pParamList : ]optional] delimiter between data elements (default="\n")
+ * @pStylesheetPath : path to stylesheet file
+ * @pParamList : [optional] delimiter between data elements (default="\n")
  *
- *
- * put xsltApplyStylesheet(tDocID, tStylesheet, tParamList)
+ * Returns the transformed xml data after applying the stylesheet.
+  *
+ * put xsltApplyStylesheet(tDocID, tStylesheetPath, tParamList)
  */
 void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -2854,49 +2873,58 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 	xsltStylesheetPtr cur = NULL;
 	int nbparams = 0;
 	const char *params[16 + 1];
-	char *result;
 
 	xmlChar *doc_txt_ptr;
 	int doc_txt_len;
 
-//	XML_NewDocumentFromFile(args, nargs, retstring, pass, error);
-	int docID = atoi(args[0]);
-	CXMLDocument *xmlDocument = doclist.find(docID);
-	if (NULL != xmlDocument)
+	if (2 <= nargs)
 	{
-		xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
-		if (NULL != xmlDoc)
+		int docID = atoi(args[0]);
+		CXMLDocument *xmlDocument = doclist.find(docID);
+		if (NULL != xmlDocument)
 		{
-			cur = xsltParseStylesheetFile((const xmlChar *)args[1]);
-			if (NULL != cur)
+			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+			if (NULL != xmlDoc)
 			{
-				params[nbparams] = NULL;
-				res = xsltApplyStylesheet(cur, xmlDoc, params);
+				cur = xsltParseStylesheetFile((const xmlChar *)args[1]);
+				if (NULL != cur)
+				{
+					if (nargs > 2)
+					{
+					}
+					else
+					{
+						params[nbparams] = NULL;
+					}
+					res = xsltApplyStylesheet(cur, xmlDoc, params);
 
-//				xsltSaveResultToFile(stdout, res, cur);
-				xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
+					xsltSaveResultToString(&doc_txt_ptr, &doc_txt_len, res, cur);
 
-//				result = (char *)malloc(INTSTRSIZE);
-//				sprintf(result,"%ld",res);
-//				*retstring = (result != NULL ? istrdup(result) : (char *)calloc(1,1));
-				*retstring = istrdup((char *)doc_txt_ptr);
-//				free(result);
+					*retstring = istrdup((char *)doc_txt_ptr);
 
-				xsltFreeStylesheet(cur);
-				xmlFreeDoc(res);
-//				xmlFreeDoc(doc);
+					// free the xsltStylesheetPtr we just created
+					xsltFreeStylesheet(cur);
+					// free the xml document - we're done with it
+					xmlFreeDoc(res);
 
-				xsltCleanupGlobals();
-				xmlCleanupParser();
+					xsltCleanupGlobals();
+					xmlCleanupParser();
+				}
+				// couldn't dereference the stylesheet document
+				else
+					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
 			}
+			// couldn't dereference the xml document
 			else
 				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
 		}
+		// couldn't dereference the xml id
 		else
-			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
 	}
+	// requires at least docID and stylesheetPath arguments
 	else
-		*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+		*retstring = istrdup(xmlerrors[XMLERR_BADARGUMENTS]);
 }
 
 EXTERNAL_BEGIN_DECLARATIONS("revXML")
