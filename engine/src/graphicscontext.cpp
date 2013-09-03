@@ -243,7 +243,6 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 	switch (p_function)
 	{
 		case GXblendClear:
-		case GXclear:
 			t_blend_mode = kMCGBlendModeClear;
 			break;
 		case GXblendSrc:
@@ -253,11 +252,9 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			t_blend_mode = kMCGBlendModeClear;
 			break;
 		case GXblendSrcOver:
-		case GXcopy:
 			t_blend_mode = kMCGBlendModeSourceOver;
 			break;
 		case GXblendDstOver:
-		case GXor:
 			t_blend_mode = kMCGBlendModeDestinationOver;
 			break;
 		case GXblendSrcIn:
@@ -279,7 +276,6 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			t_blend_mode = kMCGBlendModeDestinationAtop;
 			break;
 		case GXblendXor:
-		case GXxor:
 			t_blend_mode = kMCGBlendModeXor;
 			break;
 		case GXblendPlus:
@@ -317,6 +313,79 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 			break;
 		case GXblendExclusion:
 			t_blend_mode = kMCGBlendModeExclusion;
+			break;		
+			
+		case GXclear:
+			t_blend_mode = kMCGBlendModeLegacyClear;
+			break;
+		case GXand:
+			t_blend_mode = kMCGBlendModeLegacyAnd;
+			break;
+		case GXandReverse:
+			t_blend_mode = kMCGBlendModeLegacyAndReverse;
+			break;
+		case GXcopy:
+			t_blend_mode = kMCGBlendModeLegacyCopy;
+			break;
+		case GXandInverted:
+			t_blend_mode = kMCGBlendModeLegacyInverted;
+			break;
+		case GXnoop:
+			t_blend_mode = kMCGBlendModeLegacyNoop;
+			break;
+		case GXxor:
+			t_blend_mode = kMCGBlendModeLegacyXor;
+			break;
+		case GXor:
+			t_blend_mode = kMCGBlendModeLegacyOr;
+			break;
+		case GXnor:
+			t_blend_mode = kMCGBlendModeLegacyNor;
+			break;
+		case GXequiv:
+			t_blend_mode = kMCGBlendModeLegacyEquiv;
+			break;
+		case GXinvert:
+			t_blend_mode = kMCGBlendModeLegacyInvert;
+			break;
+		case GXorReverse:
+			t_blend_mode = kMCGBlendModeLegacyOrReverse;
+			break;
+		case GXcopyInverted:
+			t_blend_mode = kMCGBlendModeLegacyCopyInverted;
+			break;
+		case GXorInverted:
+			t_blend_mode = kMCGBlendModeLegacyOrInverted;
+			break;
+		case GXnand:
+			t_blend_mode = kMCGBlendModeLegacyNand;
+			break;
+		case GXset:
+			t_blend_mode = kMCGBlendModeLegacySet;
+			break;
+		case GXblend:
+			t_blend_mode = kMCGBlendModeLegacyBlend;
+			break;
+		case GXaddpin:
+			t_blend_mode = kMCGBlendModeLegacyAddPin;
+			break;
+		case GXaddOver:
+			t_blend_mode = kMCGBlendModeLegacyAddOver;
+			break;
+		case GXsubPin:
+			t_blend_mode = kMCGBlendModeLegacySubPin;
+			break;
+		case GXtransparent:
+			t_blend_mode = kMCGBlendModeLegacyTransparent;
+			break;
+		case GXaddMax:
+			t_blend_mode = kMCGBlendModeLegacyAdMax;
+			break;
+		case GXsubOver:
+			t_blend_mode = kMCGBlendModeLegacySubOver;
+			break;
+		case GXaddMin:
+			t_blend_mode = kMCGBlendModeLegacyAdMin;
 			break;
 	}
 	MCGContextSetBlendMode(m_gcontext, t_blend_mode);

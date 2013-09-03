@@ -458,13 +458,34 @@ SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
 		s_skia_blend_modes[kMCGBlendModeSoftLight] = SkXfermode::Create(SkXfermode::kSoftLight_Mode);
 		s_skia_blend_modes[kMCGBlendModeDifference] = SkXfermode::Create(SkXfermode::kDifference_Mode);
 		s_skia_blend_modes[kMCGBlendModeExclusion] = SkXfermode::Create(SkXfermode::kExclusion_Mode);
+			
+		// legacy blend modes
+		s_skia_blend_modes[kMCGBlendModeLegacyClear] = new MCGLegacyBlendMode(kMCGBlendModeLegacyClear);
+		s_skia_blend_modes[kMCGBlendModeLegacyAnd] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAnd);
+		s_skia_blend_modes[kMCGBlendModeLegacyAndReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAndReverse);
+		s_skia_blend_modes[kMCGBlendModeLegacyCopy] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopy);
+		s_skia_blend_modes[kMCGBlendModeLegacyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInverted);
+		s_skia_blend_modes[kMCGBlendModeLegacyNoop] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNoop);
+		s_skia_blend_modes[kMCGBlendModeLegacyXor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyXor);
+		s_skia_blend_modes[kMCGBlendModeLegacyOr] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOr);
+		s_skia_blend_modes[kMCGBlendModeLegacyNor] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNor);
+		s_skia_blend_modes[kMCGBlendModeLegacyEquiv] = new MCGLegacyBlendMode(kMCGBlendModeLegacyEquiv);
+		s_skia_blend_modes[kMCGBlendModeLegacyInvert] = new MCGLegacyBlendMode(kMCGBlendModeLegacyInvert);
+		s_skia_blend_modes[kMCGBlendModeLegacyOrReverse] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrReverse);
+		s_skia_blend_modes[kMCGBlendModeLegacyCopyInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyCopyInverted);
+		s_skia_blend_modes[kMCGBlendModeLegacyOrInverted] = new MCGLegacyBlendMode(kMCGBlendModeLegacyOrInverted);
+		s_skia_blend_modes[kMCGBlendModeLegacyNand] = new MCGLegacyBlendMode(kMCGBlendModeLegacyNand);
+		s_skia_blend_modes[kMCGBlendModeLegacySet] = new MCGLegacyBlendMode(kMCGBlendModeLegacySet);
+		s_skia_blend_modes[kMCGBlendModeLegacyBlend] = new MCGLegacyBlendMode(kMCGBlendModeLegacyBlend);
+		s_skia_blend_modes[kMCGBlendModeLegacyAddPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddPin);
+		s_skia_blend_modes[kMCGBlendModeLegacyAddOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAddOver);
+		s_skia_blend_modes[kMCGBlendModeLegacySubPin] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubPin);
+		s_skia_blend_modes[kMCGBlendModeLegacyTransparent] = new MCGLegacyBlendMode(kMCGBlendModeLegacyTransparent);
+		s_skia_blend_modes[kMCGBlendModeLegacyAdMax] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMax);
+		s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
+		s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);
 		
-		// TODO: non-separable blend modes (and plus darker?)
-		/*kMCGBlendModePlusDarker
-		 kMCGBlendModeHue
-		 kMCGBlendModeSaturation
-		 kMCGBlendModeColor
-		 kMCGBlendModeLuminosity*/		
+		// TODO:  non-separable blend modes and plus darker?
 	}
 	
 	SkXfermode *t_blend_mode;

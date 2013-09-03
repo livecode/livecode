@@ -171,6 +171,32 @@ enum MCGBlendMode
 	kMCGBlendModeColor,
 	kMCGBlendModeLuminosity,
 	
+	// legacy blend modes	
+	kMCGBlendModeLegacyClear,
+	kMCGBlendModeLegacyAnd,
+	kMCGBlendModeLegacyAndReverse,
+	kMCGBlendModeLegacyCopy,
+	kMCGBlendModeLegacyInverted,
+	kMCGBlendModeLegacyNoop,
+	kMCGBlendModeLegacyXor,
+	kMCGBlendModeLegacyOr,
+	kMCGBlendModeLegacyNor,
+	kMCGBlendModeLegacyEquiv,
+	kMCGBlendModeLegacyInvert,
+	kMCGBlendModeLegacyOrReverse,
+	kMCGBlendModeLegacyCopyInverted,
+	kMCGBlendModeLegacyOrInverted,
+	kMCGBlendModeLegacyNand,
+	kMCGBlendModeLegacySet,
+	kMCGBlendModeLegacyBlend,
+	kMCGBlendModeLegacyAddPin,
+	kMCGBlendModeLegacyAddOver,
+	kMCGBlendModeLegacySubPin,
+	kMCGBlendModeLegacyTransparent,
+	kMCGBlendModeLegacyAdMax,
+	kMCGBlendModeLegacySubOver,
+	kMCGBlendModeLegacyAdMin,
+	
 	kMCGBlendModeCount,
 };
 
