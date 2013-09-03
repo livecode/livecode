@@ -1782,6 +1782,9 @@ enum Sugar_constants {
     SG_WILDCARD,
 	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
 	SG_MATCHING,
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    SG_RECURSIVELY,
 };
 
 enum Statements {

@@ -1704,6 +1704,8 @@ class MCSetOp : public MCStatement
 protected:
 	Boolean intersect : 1;
 	bool overlap : 1;
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    bool recursive : 1;
 public:
 	MCSetOp()
 	{

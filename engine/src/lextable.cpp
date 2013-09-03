@@ -1954,6 +1954,8 @@ static LT sugar_table[] =
 		{"pattern", TT_UNDEFINED, SG_PATTERN},
 		// JS-2013-07-01: [[ EnhancedFilter ]] Token for 'regex'.
 		{"regex", TT_UNDEFINED, SG_REGEX},
+        // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        {"recursively", TT_UNDEFINED, SG_RECURSIVELY},
 		{"standard", TT_UNDEFINED, SG_STANDARD},
 		// MERG-2013-06-24: [[ IsAnAsciiString ]] Token for 'string'.
         {"string", TT_UNDEFINED, SG_STRING},
