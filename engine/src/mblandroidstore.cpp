@@ -146,12 +146,12 @@ bool MCStoreRestorePurchases()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase) // REVEW: Update to MCStringRef
+bool MCPurchaseFindByProductId(MCStringRef p_product_id, MCPurchase *&r_purchase) 
 {
     for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
     {
         MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
-        if (MCCStringEqual(p_product_id, MCStringGetCString(t_android_data->product_id)))
+        if (MCStringIsEqualTo(p_product_id, t_android_data->product_id))
         {
             r_purchase = t_purchase;
             return true;
@@ -270,7 +270,6 @@ bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_ident
         return false;
     
 	r_identifier = MCValueRetain(t_android_data->product_id);
-
 	return true;
 }
 
@@ -447,8 +446,8 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
         else
         {
             p_purchase->state = kMCPurchaseStateError;
-            /* UNCHECKED */ MCStringCreateWithCString("unable to verify message from billing service", t_android_data->error); // REVIEW: use MCSTR
-            MCPurchaseNotifyUpdate(p_purchase);
+            t_android_data->error = MCValueRetain(MCSTR("unable to verify message from billing service"));                                                 
+			MCPurchaseNotifyUpdate(p_purchase);
             MCPurchaseRelease(p_purchase);
         }
     }
@@ -532,27 +531,27 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     bool t_success;
     MCPurchase *t_purchase;
     
-    char *t_notification_id = nil;
-    char *t_product_id = nil;
-    char *t_order_id = nil;
-    char *t_developer_payload = nil;
-    char *t_signed_data = nil;
-    char *t_signature = nil;
+    MCAutoStringRef t_notification_id;
+    MCAutoStringRef t_product_id;
+    MCAutoStringRef t_order_id;
+    MCAutoStringRef t_developer_payload;
+    MCAutoStringRef t_signed_data;
+    MCAutoStringRef t_signature;
     
-    t_success = MCCStringFromJava(env, notificationId, t_notification_id) && \
-    MCCStringFromJava(env, productId, t_product_id) && \
-    MCCStringFromJava(env, orderId, t_order_id) && \
-    MCCStringFromJava(env, developerPayload, t_developer_payload) && \
-    MCCStringFromJava(env, signedData, t_signed_data) && \
-    MCCStringFromJava(env, signature, t_signature);
+    t_success = MCCStringFromJava(env, notificationId, &t_notification_id) && \
+    MCCStringFromJava(env, productId, &t_product_id) && \
+    MCCStringFromJava(env, orderId, &t_order_id) && \
+    MCCStringFromJava(env, developerPayload, &t_developer_payload) && \
+    MCCStringFromJava(env, signedData, &t_signed_data) && \
+    MCCStringFromJava(env, signature, &t_signature);
     
-    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, t_product_id);
+    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, MCStringGetCString(*t_product_id));
     
     if (t_success)
     {
-        if (!MCPurchaseFindByProductId(t_product_id, t_purchase))
+        if (!MCPurchaseFindByProductId(*t_product_id, t_purchase))
         {
-            MCLog("unrecognized purchase for %s", t_product_id);
+            MCLog("unrecognized purchase for %s", MCStringGetCString(*t_product_id));
             bool t_success = true;
             MCAndroidPurchase *t_android_data = nil;
             
@@ -567,15 +566,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
 
         if (t_purchase != NULL)
         {
-            MCLog("found purchase for %s", t_product_id);
+            MCLog("found purchase for %s", MCStringGetCString(*t_product_id));
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
             
-			/* UNCHECKED */ MCStringCreateWithCString(t_product_id, t_android_data->product_id);
-			/* UNCHECKED */ MCStringCreateWithCString(t_notification_id, t_android_data->notification_id);
-			/* UNCHECKED */ MCStringCreateWithCString(t_order_id, t_android_data->order_id);
-			/* UNCHECKED */ MCStringCreateWithCString(t_developer_payload, t_android_data->developer_payload);
-			/* UNCHECKED */ MCStringCreateWithCString(t_signed_data, t_android_data->signed_data);
-			/* UNCHECKED */ MCStringCreateWithCString(t_signature, t_android_data->signature);
+			t_android_data->product_id = MCValueRetain(*t_product_id);
+			t_android_data->notification_id = MCValueRetain(*t_notification_id);
+			t_android_data->order_id = MCValueRetain(*t_order_id);
+			t_android_data->developer_payload = MCValueRetain(*t_developer_payload);
+			t_android_data->signed_data = MCValueRetain(*t_signed_data);
+			t_android_data->signature = MCValueRetain(*t_signature);
             
             t_android_data->purchase_time = purchaseTime;
             t_android_data->purchase_state = purchaseState;
@@ -594,12 +593,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     
     if (!t_success);
     {
-        MCCStringFree(t_notification_id);
-        MCCStringFree(t_product_id);
-        MCCStringFree(t_order_id);
-        MCCStringFree(t_developer_payload);
-        MCCStringFree(t_signed_data);
-        MCCStringFree(t_signature);
+        MCValueRelease(t_notification_id);
+        MCValueRelease(t_product_id);
+        MCValueRelease(t_order_id);
+        MCValueRelease(t_developer_payload);
+        MCValueRelease(t_signed_data);
+        MCValueRelease(t_signature);
     }
 }
 

@@ -347,6 +347,16 @@ bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native)
     return t_success;
 }
 
+bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_string)
+{
+	char* t_native;
+	t_native = nil;
+	if(MCJavaStringToNative(env, p_java_string, t_native)
+		return MCStringCreateWithCStringAndRelease(t_native, r_string);
+
+	return false;
+}
+
 bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array)
 {
     if (p_data == nil || p_data->getlength() == 0)

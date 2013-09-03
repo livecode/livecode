@@ -66,6 +66,7 @@ bool MCJavaStringFromNative(JNIEnv *env, const MCString *p_string, jstring &r_ja
 bool MCJavaStringFromUnicode(JNIEnv *env, const MCString *p_string, jstring &r_java_string);
 bool MCJavaStringToUnicode(JNIEnv *env, jstring p_java_string, unichar_t *&r_unicode, uint32_t &r_length);
 bool MCJavaStringToNative(JNIEnv *env, jstring p_java_string, char *&r_native);
+bool MCJavaStringToStringRef(JNIEnv *env, jstring p_java_string, MCStringRef &r_string);
 bool MCJavaByteArrayFromData(JNIEnv *env, const MCString *p_data, jbyteArray &r_byte_array);
 bool MCJavaByteArrayToData(JNIEnv *env, jbyteArray p_byte_array, void *&r_data, uint32_t &r_length);
 
