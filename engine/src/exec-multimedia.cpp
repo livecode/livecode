@@ -208,7 +208,14 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 {
 #ifdef _MOBILE
 	extern void MCSystemGetPlayingSound(MCStringRef r_sound);
-	MCSystemGetPlayingSound(r_sound);
+	MCStringRef t_sound;
+	MCSystemGetPlayingSound(t_sound);
+	if (MCStringIsEmpty(t_sound))
+	{
+		MCValueAssign(t_sound, MCSTR("done"));
+	}
+	r_sound = t_sound;
+	return;
 #else
 	MCU_play();
 	if (MCacptr != nil)
