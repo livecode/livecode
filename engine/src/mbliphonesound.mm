@@ -98,7 +98,7 @@ void MCIHandleFinishedPlayingSound(MCString p_payload)
 
 static MCSoundPlayerDelegate *s_sound_player_delegate = nil;
 static float s_sound_loudness = 1.0;
-static MCStringRef s_sound_file = nil;
+static MCStringRef s_sound_file = MCValueRetain(kMCEmptyString);
 
 @implementation MCSoundPlayerDelegate
 
@@ -143,16 +143,12 @@ static MCStringRef s_sound_file = nil;
 // MM-2012-02-29: [[ BUG 10021 ]] Make sure we clear out the sound file if playback stops for any reason
 - (void)audioPlayerFailedToReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
-    {
-        MCValueRelease(s_sound_file);
-        s_sound_file = nil;
-    }
+	MCValueAssign(s_sound_file, kMCEmptyString);
 }
 
 - (void)audioPlayerDidReachEnd:(NSNotification *)notification
 {
-	if (s_sound_file != nil)
+	if (!MCStringIsEmpty(s_sound_file))
     {
         // MM-2012-02-29: [[ BUG 10039 ]] Audio looping does not work on iOS
         if (m_looping)
@@ -162,8 +158,7 @@ static MCStringRef s_sound_file = nil;
             // HC-2012-02-01: [[ Bug 9983 ]] - Added "playStopped" message to "play" so users can track when their tracks have finished playing
             // Send a message to indicate that we have finished playing a track.
             MCIHandleFinishedPlayingSound (MCStringGetCString(s_sound_file));
-            MCValueRelease(s_sound_file);
-            s_sound_file = nil;
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -175,11 +170,7 @@ static MCStringRef s_sound_file = nil;
     {
         if ([m_player status] == AVPlayerStatusFailed || [m_player_item status] == AVPlayerItemStatusFailed)
         {
-            if (s_sound_file != nil)
-            {
-                MCValueRelease(s_sound_file);
-                s_sound_file = nil;
-            }
+            MCValueAssign(s_sound_file, kMCEmptyString);
         }
     }
 }
@@ -293,11 +284,7 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
 		s_sound_player_delegate = nil;
 	}
 	
-	if (s_sound_file != nil)
-	{
-		MCValueRelease(s_sound_file);
-		s_sound_file = nil;
-	}
+	MCValueRelease(s_sound_file);
 	
 	if (MCStringIsEmpty(p_sound))
 		return true;
@@ -338,21 +325,16 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
         MCresult->clear();
     else
     {
-        MCValueRelease(s_sound_file);
-		s_sound_file = nil;
+        MCValueAssign(s_sound_file, kMCEmptyString);
         MCresult->sets("could not play sound");
     }
     
 	return true;		
 }
 
-bool MCSystemGetPlayingSound(const char *& r_sound)
+void MCSystemGetPlayingSound(MCStringRef &r_sound)
 {
-	if (s_sound_file != nil)
-		r_sound = MCStringGetCString(s_sound_file);
-	else
-		r_sound = nil;
-	return true;
+	r_sound = MCValueRetain(s_sound_file);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

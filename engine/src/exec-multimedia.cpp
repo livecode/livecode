@@ -207,13 +207,8 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 {
 #ifdef _MOBILE
-	extern bool MCSystemGetPlayingSound(const char *& r_sound);
-	const char *t_sound;
-	if (MCSystemGetPlayingSound(t_sound))
-	{
-		/* UNCHECKED */ MCStringCreateWithCString(t_sound != nil ? t_sound : "done", r_sound);
-		return;
-	}
+	extern void MCSystemGetPlayingSound(MCStringRef r_sound);
+	MCSystemGetPlayingSound(r_sound);
 #else
 	MCU_play();
 	if (MCacptr != nil)
