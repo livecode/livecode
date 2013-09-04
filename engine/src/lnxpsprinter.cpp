@@ -429,7 +429,7 @@ private:
 	void write_scaling(const MCRectangle &rect) ;
 
 	bool pattern_created( MCGImageRef p_pattern ) ;
-	void fillpattern ( MCGImageRef p_pattern, MCPoint p_origin ) ;
+	void fillpattern ( MCPatternRef p_pattern, MCPoint p_origin ) ;
 	void create_pattern ( MCGImageRef p_pattern );
 
 	MCRectangle m_composite_rect;
@@ -1462,20 +1462,19 @@ bool MCPSMetaContext::pattern_created( MCGImageRef p_pattern )
 	return ( false ) ;
 }
 
-
-void MCPSMetaContext::fillpattern ( MCGImageRef p_pattern, MCPoint p_origin ) 
+// IM-2013-09-04: [[ ResIndependence ]] update fillpattern to take MCPatternRef & apply scale factor
+void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 {
-	if ( !pattern_created ( p_pattern ) ) 
-		create_pattern ( p_pattern ) ;
+	if (!pattern_created(p_pattern->image))
+		create_pattern(p_pattern->image);
 	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
-	sprintf(buffer, "pattern_id_%ld\n", p_pattern );
+	sprintf(buffer, "pattern_id_%ld\n", p_pattern->image);
 	PSwrite ( buffer );
-	sprintf(buffer, "[1 0 0 1 %d %d]\n", p_origin.x, cardheight - p_origin.y);
+	sprintf(buffer, "[%f 0 0 %f %d %d]\n", 1.0 / p_pattern->scale, 1.0 / p_pattern->scale, p_origin.x, cardheight - p_origin.y);
 	PSwrite(buffer);
 	PSwrite("makepattern\n");
 	PSwrite("setpattern\n");
 }
-
 		
 void MCPSMetaContext::create_pattern ( MCGImageRef p_pattern )
 {
