@@ -2116,13 +2116,11 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 	if (video)
 	{
 #ifdef _MOBILE
-		extern bool MCSystemPlayVideo(MCStringRef p_video);
-		MCAutoStringRef t_video;
-		/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), &t_video);
+		extern bool MCSystemPlayVideo(const char *p_filename);
 		MCExecPoint *t_old_ep;
 		t_old_ep = MCEPptr;
 		MCEPptr = &ep;
-		if (!MCSystemPlayVideo(*t_video))
+		if (!MCSystemPlayVideo(ep.getcstring()))
 			MCresult->sets("no video support");
 		MCEPptr = t_old_ep;
 		return ES_NORMAL;
@@ -2315,12 +2313,9 @@ Exec_stat MCMM::exec(MCExecPoint &ep)
 		if (!MCtemplateaudio->issupported())
 		{
 #ifdef _MOBILE
-			MCStringRef t_sound = nil;
-			/* UNCHECKED */ MCStringCreateWithCString(ep.getcstring(), t_sound);
-			extern bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping);
-			if (!MCSystemPlaySound(t_sound, looping == True))
-				MCresult->sets("no sound support");
-			MCValueRelease(t_sound);
+			extern bool MCSystemPlaySound(const char *p_filename, bool p_looping);
+			if (!MCSystemPlaySound(ep.getcstring(), looping == True))
+			MCresult->sets("no sound support");
 #endif
 			return ES_NORMAL;
 		}

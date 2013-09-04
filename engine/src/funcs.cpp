@@ -7665,7 +7665,7 @@ Exec_stat MCSound::eval(MCExecPoint &ep)
 {
 #ifdef /* MCSound */ LEGACY_EXEC
 #ifdef _MOBILE
-	extern void MCSystemGetPlayingSound(const char *& r_sound);
+	extern bool MCSystemGetPlayingSound(const char *& r_sound);
 	const char *t_sound;
 	if (MCSystemGetPlayingSound(t_sound))
 	{
