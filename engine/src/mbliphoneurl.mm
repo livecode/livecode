@@ -458,7 +458,7 @@ bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, M
 
 struct launch_url_t
 {
-	const char *url;
+	MCStringRef url;
 	bool success;
 };
 
@@ -472,8 +472,11 @@ static void do_launch_url(void *p_ctxt)
 	NSURL *t_url;
 	if (t_success)
 	{
-		t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
+		CFStringRef cfurl = nil;
+		/* UNCHECKED */ MCStringConvertToCFStringRef(ctxt->url, cfurl);
+		t_url = [NSURL URLWithString: (NSString *)cfurl];
 		t_success = (t_url != nil);
+		CFRelease(cfurl);
 	}
 	
 	if (t_success)
@@ -485,7 +488,7 @@ static void do_launch_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
 	launch_url_t ctxt;
 	ctxt . url = p_url;
