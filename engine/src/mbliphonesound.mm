@@ -373,7 +373,7 @@ struct MCSystemSoundChannel;
 
 struct MCSystemSoundPlayer
 {
-	char *sound;
+	MCStringRef sound;
 	AVAudioPlayer *player;
 	MCObjectHandle *object;
 };
@@ -381,7 +381,7 @@ struct MCSystemSoundPlayer
 struct MCSystemSoundChannel
 {
 	MCSystemSoundChannel *next;
-	char *name;
+	MCStringRef name;
 	MCSystemSoundChannelDelegate *delegate;
 	MCSystemSoundPlayer current_player;
 	MCSystemSoundPlayer next_player;
@@ -397,8 +397,7 @@ static void delete_player_on_channel(MCSystemSoundChannel *p_channel, MCSystemSo
 	[x_player . player stop];
 	[x_player . player release];
 	x_player . player = nil;
-	MCCStringFree(x_player . sound);
-	x_player . sound = nil;
+	MCValueRelease(x_player.sound);
 	x_player . object -> Release();
 	x_player . object = nil;
 }
@@ -414,7 +413,7 @@ static void delete_sound_channel(MCSystemSoundChannel *p_channel)
 		delete_player_on_channel(p_channel, p_channel -> current_player);
 	
 	[p_channel -> delegate release];
-	MCCStringFree(p_channel -> name);
+	MCValueRelease(p_channel -> name);
 	MCMemoryDelete(p_channel);
 }
 
@@ -429,7 +428,7 @@ static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_ch
 		t_success = MCMemoryNew(t_channel);
 	
 	if (t_success)
-		t_success = MCCStringClone(MCStringGetCString(p_channel), t_channel -> name);
+		t_channel->name = MCValueRetain(p_channel);
 	
 	if (t_success)
 	{
@@ -456,7 +455,7 @@ static bool new_sound_channel(MCStringRef p_channel, MCSystemSoundChannel*& r_ch
 static bool find_sound_channel(MCStringRef p_channel, bool p_create, MCSystemSoundChannel*& r_channel)
 {
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
-		if (MCStringIsEqualToCString(p_channel, t_channel -> name, kMCCompareCaseless))
+		if (MCStringIsEqualTo(p_channel, t_channel -> name, kMCCompareCaseless))
 		{
 			r_channel = t_channel;
 			return true;
@@ -470,17 +469,20 @@ static bool find_sound_channel(MCStringRef p_channel, bool p_create, MCSystemSou
 
 static bool new_player_for_channel(MCSystemSoundChannel *p_channel, MCStringRef p_file, bool p_looping, MCObjectHandle *p_object, MCSystemSoundPlayer& x_player)
 {
-	char *t_resolved_file;
-	t_resolved_file = MCS_resolvepath(MCStringGetCString(p_file));
+	MCStringRef t_resolved_file = nil;
+	/* UNCHECKED */ MCS_resolvepath(p_file, t_resolved_file);
 	
+	CFStringRef cfresolvedfile = nil;
+	/* UNCHECKED */ MCStringConvertToCFStringRef(t_resolved_file, cfresolvedfile);
 	NSURL *t_url;
-	t_url = [NSURL fileURLWithPath: [NSString stringWithCString: t_resolved_file encoding: NSMacOSRomanStringEncoding]];
+	t_url = [NSURL fileURLWithPath: (NSString *)cfresolvedfile];
+	CFRelease(cfresolvedfile);
 	
 	AVAudioPlayer *t_player;
 	t_player = [[AVAudioPlayer alloc] initWithContentsOfURL: t_url error: nil];
 	if (t_player == nil)
 	{
-		delete t_resolved_file;
+		MCValueRelease(t_resolved_file);
 		return false;
 	}
 	
@@ -703,25 +705,24 @@ bool MCSystemNextSoundOnChannel(MCStringRef p_channel, MCStringRef& r_sound)
 // MM-2012-02-11: Refactored to return a formatted sting of channels
 bool MCSystemListSoundChannels(MCStringRef& r_channels)
 {
-    MCStringCreateMutable(0, r_channels);
+	MCAutoListRef t_list;
+	MCListCreateMutable('\n', &t_list);
     bool t_elementsfound = false;
     
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
     {
-		if (t_channel -> name != nil)
+		if (!MCStringIsEmpty(t_channel->name))
         {
             t_elementsfound = true;
-            if (MCStringGetLength(r_channels))
-                MCStringAppendFormat(r_channels, "%s", t_channel -> name);
-            else
-                MCStringAppendFormat(r_channels, "\n%s", t_channel -> name);
+			MCListAppend(*t_list, t_channel->name);
         }
     }
-    
+	
+    MCListCopyAsString(*t_list, r_channels);
 	return t_elementsfound;
 }
 
-extern void MCSoundPostSoundFinishedOnChannelMessage(const char *p_channel, const char *p_sound, MCObjectHandle *p_object);
+extern void MCSoundPostSoundFinishedOnChannelMessage(MCStringRef p_channel, MCStringRef p_sound, MCObjectHandle *p_object);
 
 @implementation MCSystemSoundChannelDelegate
 
