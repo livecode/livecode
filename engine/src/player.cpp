@@ -189,7 +189,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -3039,6 +3039,16 @@ void MCPlayer::qt_editmovie(Boolean edit)
 void MCPlayer::qt_playselection(Boolean play)
 {
 	MCDoAction((MovieController)theMC, mcActionSetPlaySelection, (void *)play);
+}
+
+void MCPlayer::qt_enablekeys(Boolean enable)
+{
+	MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void *)enable);
+}
+
+void MCPlayer::qt_setcontrollervisible()
+{
+    MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
 }
 
 Boolean MCPlayer::qt_ispaused(void)

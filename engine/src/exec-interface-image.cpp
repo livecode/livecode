@@ -655,3 +655,48 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 		notifyneeds(false);
 	}
 }
+
+void MCImage::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
+{
+    MCObject::SetBlendLevel(ctxt, level);
+    notifyneeds(false);
+}
+
+void MCImage::SetInk(MCExecContext& ctxt, intenum_t ink)
+{
+    MCControl::SetInk(ctxt, ink);
+    notifyneeds(false);
+}
+
+void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+{
+    Boolean wasvisible = isvisible();
+    MCObject::SetVisibility(ctxt, part, setting, visible);
+    if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
+        && !isvisible() && m_rep != nil)
+        closeimage();
+    if (state & CS_IMAGE_PM && opened > 0)
+    {
+        // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+        layer_redrawall();
+    }
+    if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
+    {
+        MCImageFrame *t_frame = nil;
+        if (m_rep->LockImageFrame(currentframe, t_frame))
+        {
+            MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+            m_rep->UnlockImageFrame(currentframe, t_frame);
+        }
+    }
+}
+
+void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, true);
+}
+
+void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, false);
+}

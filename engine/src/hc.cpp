@@ -2428,7 +2428,7 @@ IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 	delete hcstak;
 	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
-		MCStack *tptr = MCdefaultstackptr->findstackname(MChcstatnamestring);
+		MCStack *tptr = MCdefaultstackptr->findstackname_oldstring(MChcstatnamestring);
 		if (tptr != NULL)
 		{
 			sptr->open();
