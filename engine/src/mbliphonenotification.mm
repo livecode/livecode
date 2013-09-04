@@ -165,10 +165,10 @@ bool MCSystemSetNotificationBadgeValue (uint32_t r_badge_value)
 
 bool MCSystemGetDeviceToken (MCStringRef& r_device_token)
 {
-    return MCStringCreateWithCString([MCIPhoneGetApplication() fetchDeviceToken], r_device_token);
+    return MCValueRetain([MCIPhoneGetApplication() fetchDeviceToken]);
 }
 
 bool MCSystemGetLaunchUrl (MCStringRef& r_launch_url)
 {
-	return MCStringCreateWithCString([MCIPhoneGetApplication() fetchLaunchUrl], r_launch_url);
+	return MCValueRetain([MCIPhoneGetApplication() fetchLaunchUrl]);
 }
