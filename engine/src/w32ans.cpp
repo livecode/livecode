@@ -920,10 +920,13 @@ void MCA_setcolordialogcolors(MCExecPoint& p_ep)
 	{
 		MCColor t_colors[16];
 		char *t_colornames[16];
-		uint8_t i;
+		int i;
+        
 		for (i = 0 ; i < 16 ; i++)
 			t_colornames[i] = NULL;
+        
 		MCscreen->parsecolors(t_color_list, t_colors, t_colornames, 16);
+        
 		for(i=0;i < 16;i++)
 		{
 			if (t_colors[i] . flags != 0)
@@ -931,6 +934,8 @@ void MCA_setcolordialogcolors(MCExecPoint& p_ep)
 	                          t_colors[i].blue >> 8);
 			else
 				s_colordialogcolors[i] = NULL;
+            
+            delete t_colornames[i];
 		}
 
 	}
@@ -941,7 +946,7 @@ void MCA_getcolordialogcolors(MCExecPoint& p_ep)
 	p_ep.clear();
 	MCExecPoint t_ep(p_ep);
 
-	for(uint8_t i=0;i < 16;i++)
+	for(int i=0;i < 16;i++)
 	{
 		if (s_colordialogcolors[i] != 0)
 			t_ep.setcolor(GetRValue(s_colordialogcolors[i]), GetGValue(s_colordialogcolors[i]), GetBValue(s_colordialogcolors[i]));
