@@ -207,7 +207,7 @@ void MCMultimediaEvalMCISendString(MCExecContext& ctxt, MCStringRef p_command, M
 void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 {
 #ifdef _MOBILE
-	extern void MCSystemGetPlayingSound(MCStringRef r_sound);
+	extern void MCSystemGetPlayingSound(MCStringRef &r_sound);
 	MCStringRef t_sound;
 	MCSystemGetPlayingSound(t_sound);
 	if (MCStringIsEmpty(t_sound))
