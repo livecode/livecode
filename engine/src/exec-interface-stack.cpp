@@ -197,8 +197,8 @@ static void MCInterfaceDecorationParse(MCExecContext& ctxt, MCStringRef p_input,
                 }
             }
         }
-        
     }
+    r_output . decorations = decorations;
 }
 
 static void MCInterfaceDecorationFormat(MCExecContext& ctxt, const MCInterfaceDecoration& p_input, MCStringRef& r_output)
@@ -2096,4 +2096,173 @@ void MCStack::GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& r_value)
         t_value = MCTileCacheGetCacheLimit(m_tilecache);
         *r_value = t_value;
     }
+}
+
+void MCStack::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPixel(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetForeColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBackColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetHiliteColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBorderColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetTopColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBottomColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetShadowColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetFocusColor(ctxt, r_color);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetForePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBackPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetHilitePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBorderPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTopPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetBottomPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetShadowPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetFocusPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPattern(ctxt, pixel);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextHeight(MCExecContext& ctxt, uinteger_t* height)
+{
+    MCObject::SetTextHeight(ctxt, height);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextFont(MCExecContext& ctxt, MCStringRef font)
+{
+    MCObject::SetTextFont(ctxt, font);
+    if (!ctxt . HasError())
+        MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
+{
+    MCObject::SetTextSize(ctxt, size);
+    MCRedrawDirtyScreen();
+}
+
+void MCStack::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
+{
+    MCObject::SetTextStyle(ctxt, p_style);
+    MCRedrawDirtyScreen();
 }

@@ -3049,6 +3049,16 @@ void MCPlayer::qt_playselection(Boolean play)
 	MCDoAction((MovieController)theMC, mcActionSetPlaySelection, (void *)play);
 }
 
+void MCPlayer::qt_enablekeys(Boolean enable)
+{
+	MCDoAction((MovieController)theMC, mcActionSetKeysEnabled, (void *)enable);
+}
+
+void MCPlayer::qt_setcontrollervisible()
+{
+    MCSetVisible((MovieController)theMC, getflag(F_VISIBLE) && getflag(F_SHOW_CONTROLLER));
+}
+
 Boolean MCPlayer::qt_ispaused(void)
 {
 	if (getstate(CS_PREPARED))

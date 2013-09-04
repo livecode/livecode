@@ -392,7 +392,8 @@ void MCControl::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_marg
         rightmargin = p_margins . margins[1];
         topmargin = p_margins . margins[2];
         bottommargin = p_margins . margins[3];
-    }    
+    }
+    Redraw();
 }
 
 void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
@@ -410,4 +411,34 @@ void MCControl::GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins)
         r_margins . margins[2] = topmargin;
         r_margins . margins[3] = bottommargin;
     }
+}
+
+void MCControl::SetInk(MCExecContext& ctxt, intenum_t ink)
+{
+    MCObject::SetInk(ctxt, ink);
+    m_layer_attr_changed = true;
+}
+
+void MCControl::SetShowBorder(MCExecContext& ctxt, bool setting)
+{
+    MCObject::SetShowBorder(ctxt, setting);
+    m_layer_attr_changed = true;
+}
+
+void MCControl::SetShowFocusBorder(MCExecContext& ctxt, bool setting)
+{
+    MCObject::SetShowFocusBorder(ctxt, setting);
+    m_layer_attr_changed = true;
+}
+
+void MCControl::SetOpaque(MCExecContext& ctxt, bool setting)
+{
+    MCObject::SetOpaque(ctxt, setting);
+    m_layer_attr_changed = true;
+}
+
+void MCControl::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow)
+{
+    MCObject::SetShadow(ctxt, p_shadow);
+    m_layer_attr_changed = true;
 }

@@ -59,6 +59,7 @@ MCPropertyInfo MCControl::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_RIGHT_MARGIN, Int16, MCControl, RightMargin)
 	DEFINE_RW_OBJ_PROPERTY(P_TOP_MARGIN, Int16, MCControl, TopMargin)
 	DEFINE_RW_OBJ_PROPERTY(P_BOTTOM_MARGIN, Int16, MCControl, BottomMargin)
+    DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_MARGINS, InterfaceMargins, MCControl, Margins)
 	DEFINE_RW_OBJ_PROPERTY(P_TOOL_TIP, OptionalString, MCControl, ToolTip)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TOOL_TIP, OptionalString, MCControl, UnicodeToolTip)
 

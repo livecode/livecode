@@ -2724,13 +2724,18 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 
 void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
-	MCStack *parentptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_parent_name));
-	if (parentptr == nil)
-	{
-		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
-		return;
-	}
-
+	MCStack *parentptr;
+    parentptr = nil;
+    
+    if (p_parent_name != nil)
+    {
+        parentptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_parent_name));
+        if (parentptr == nil)
+        {
+            ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
+            return;
+        }
+    }
 	if (p_parent_is_thisstack)
 		parentptr = MCdefaultstackptr;
 	if (parentptr == p_target)

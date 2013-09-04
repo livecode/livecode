@@ -2694,7 +2694,6 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-#endif /* MCStack::setprop */
         case P_FORE_PIXEL:
         case P_BACK_PIXEL:
         case P_HILITE_PIXEL:
@@ -2730,6 +2729,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
             //   of this stack - but for now do the whole screen.
             MCRedrawDirtyScreen();
             return ES_NORMAL;
+    #endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;

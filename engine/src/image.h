@@ -560,6 +560,7 @@ public:
 
 	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data);
 	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
 
@@ -606,6 +607,11 @@ public:
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);
 	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
 	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
+    
+    virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
+	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
+    virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
 };
 
 extern bool MCU_israwimageformat(Export_format p_format);

@@ -1989,6 +1989,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo;
 
 ///////////
 
+extern MCExecCustomTypeInfo *kMCInterfaceMarginsTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceLayerModeTypeInfo;
 
 ///////////
