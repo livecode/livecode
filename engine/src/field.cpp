@@ -116,6 +116,9 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
+    
+    // LIST PROPS TODO
+    DEFINE_RW_OBJ_PROPERTY(P_HILITED_LINES, String, MCField, HilitedLines)
 };
 
 MCObjectPropertyTable MCField::kPropertyTable =

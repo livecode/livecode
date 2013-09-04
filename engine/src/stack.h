@@ -843,6 +843,35 @@ public:
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
 	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+    virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    
 private:
 	void loadexternals(void);
 	void unloadexternals(void);

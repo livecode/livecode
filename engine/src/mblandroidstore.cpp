@@ -53,18 +53,18 @@ typedef enum
 
 typedef struct
 {
-    char *product_id;
-    char *developer_payload;
+    MCStringRef product_id;
+    MCStringRef developer_payload;
     
-    char *signed_data;
-    char *signature;
+    MCStringRef signed_data;
+    MCStringRef signature;
     
-    char *notification_id;
-    char *order_id;
+    MCStringRef notification_id;
+    MCStringRef order_id;
     int64_t purchase_time;
     int32_t purchase_state;
     
-    char *error;
+    MCStringRef error;
 } MCAndroidPurchase;
 
 static bool s_can_make_purchase_returned = false;
@@ -146,12 +146,12 @@ bool MCStoreRestorePurchases()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCPurchaseFindByProductId(const char *p_product_id, MCPurchase *&r_purchase)
+bool MCPurchaseFindByProductId(MCStringRef p_product_id, MCPurchase *&r_purchase) 
 {
     for (MCPurchase *t_purchase = MCStoreGetPurchases(); t_purchase != nil; t_purchase = t_purchase->next)
     {
         MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
-        if (MCCStringEqual(p_product_id, t_android_data->product_id))
+        if (MCStringIsEqualTo(p_product_id, t_android_data->product_id))
         {
             r_purchase = t_purchase;
             return true;
@@ -178,7 +178,7 @@ bool MCPurchaseInit(MCPurchase *p_purchase, MCStringRef p_product_id, void *p_co
         if (t_success)
             t_success = MCMemoryNew(t_android_data);
         if (t_success)
-            t_success = MCCStringClone(MCStringGetCString(p_product_id), t_android_data->product_id);
+			t_android_data->product_id = MCValueRetain(p_product_id);
         if (t_success)
             p_purchase->platform_data = t_android_data;
         else
@@ -198,18 +198,18 @@ void MCPurchaseFinalize(MCPurchase *p_purchase)
     if (t_android_data == nil)
         return;
     
-    MCCStringFree(t_android_data->product_id);
-    MCCStringFree(t_android_data->developer_payload);
-    MCCStringFree(t_android_data->signed_data);
-    MCCStringFree(t_android_data->signature);
-    MCCStringFree(t_android_data->notification_id);
-    MCCStringFree(t_android_data->order_id);
-    MCCStringFree(t_android_data->error);
+    MCValueRelease(t_android_data->product_id);
+    MCValueRelease(t_android_data->developer_payload);
+    MCValueRelease(t_android_data->signed_data);
+    MCValueRelease(t_android_data->signature);
+    MCValueRelease(t_android_data->notification_id);
+    MCValueRelease(t_android_data->order_id);
+    MCValueRelease(t_android_data->error);
     
     MCMemoryDelete(t_android_data);
 }
 
-#ifdef /* MCPurchaseGet */ LEGACY_EXEC
+#ifdef /* MCPurchaseGet */ LEGACY_EXEC 
 Exec_stat MCPurchaseGet(MCPurchase *p_purchase, MCPurchaseProperty p_property, MCExecPoint &ep)
 {
     //MCLog("MCPurchaseGet(%p, %d, ...)", p_purchase, p_property);
@@ -269,7 +269,8 @@ bool MCPurchaseGetProductIdentifier(MCPurchase *p_purchase, MCStringRef& r_ident
     if (t_android_data->product_id == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->product_id, r_identifier);
+	r_identifier = MCValueRetain(t_android_data->product_id);
+	return true;
 }
 
 bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payload)
@@ -279,7 +280,8 @@ bool MCPurchaseGetDeveloperPayload(MCPurchase *p_purchase, MCStringRef& r_payloa
     if (t_android_data->developer_payload == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->developer_payload, r_payload);
+    r_payload = MCValueRetain(t_android_data->developer_payload);
+	return true;
 }
 
 bool MCPurchaseGetPurchaseDate(MCPurchase *p_purchase, integer_t& r_date)
@@ -300,7 +302,8 @@ bool MCPurchaseGetTransactionIdentifier(MCPurchase *p_purchase, MCStringRef& r_i
     if (t_android_data->order_id == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->order_id, r_identifier);
+    r_identifier = MCValueRetain(t_android_data->order_id);
+	return true;
 }
 
 bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data)
@@ -310,7 +313,8 @@ bool MCPurchaseGetSignedData(MCPurchase *p_purchase, MCStringRef& r_data)
     if (t_android_data->signed_data == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->signed_data, r_data);
+	r_data = MCValueRetain(t_android_data->signed_data);
+	return true;
 }
 
 bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature)
@@ -320,7 +324,8 @@ bool MCPurchaseGetSignature(MCPurchase *p_purchase, MCStringRef& r_signature)
     if (t_android_data->signature == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->signature, r_signature);
+	r_signature = MCValueRetain(t_android_data->signature);
+	return true;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////
@@ -367,7 +372,9 @@ bool MCPurchaseGetError(MCPurchase *p_purchase, MCStringRef& r_error)
     if (t_android_data == nil)
         return false;
     
-    return MCStringCreateWithCString(t_android_data->error, r_error);
+    r_error = MCValueRetain(t_android_data->error);
+
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -381,7 +388,7 @@ bool MCPurchaseSendRequest(MCPurchase *p_purchase)
     
     bool t_success = false;
     
-    MCAndroidEngineRemoteCall("purchaseSendRequest", "biss", &t_success, p_purchase->id, t_android_data->product_id, t_android_data->developer_payload);
+    MCAndroidEngineRemoteCall("purchaseSendRequest", "bixx", &t_success, p_purchase->id, t_android_data->product_id, t_android_data->developer_payload);
     
     return t_success;
 }
@@ -392,8 +399,8 @@ static bool purchase_confirm(MCPurchase *p_purchase)
     
     bool t_result = false;
     
-    MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, t_android_data->notification_id);
-    MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bis", &t_result, p_purchase->id, t_android_data->notification_id);
+    MCLog("confirming notification: purchaseId=%d, notificationId=%s", p_purchase->id, MCStringGetCString(t_android_data->notification_id));
+    MCAndroidEngineRemoteCall("purchaseConfirmDelivery", "bix", &t_result, p_purchase->id, t_android_data->notification_id);
     
     return t_result;
 }
@@ -439,8 +446,8 @@ void MCPurchaseVerify(MCPurchase *p_purchase, bool p_verified)
         else
         {
             p_purchase->state = kMCPurchaseStateError;
-            MCCStringClone("unable to verify message from billing service", t_android_data->error);
-            MCPurchaseNotifyUpdate(p_purchase);
+            t_android_data->error = MCValueRetain(MCSTR("unable to verify message from billing service"));                                                 
+			MCPurchaseNotifyUpdate(p_purchase);
             MCPurchaseRelease(p_purchase);
         }
     }
@@ -460,6 +467,7 @@ void update_purchase_state(MCPurchase *p_purchase, int32_t p_state, bool p_verif
         p_purchase->state = kMCPurchaseStateCancelled;
 }
 
+#ifdef LEGACY_EXEC
 bool MCCStringFromJava(JNIEnv *env, jstring p_jstring, char *&r_cstring)
 {
     bool t_success = true;
@@ -491,6 +499,7 @@ void MCCStringReplace(char *&src, char *&dest)
     dest = src;
     src = NULL;
 }
+#endif
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported) __attribute__((visibility("default")));
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doBillingSupported(JNIEnv *env, jobject object, jboolean supported)
@@ -522,27 +531,27 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     bool t_success;
     MCPurchase *t_purchase;
     
-    char *t_notification_id = nil;
-    char *t_product_id = nil;
-    char *t_order_id = nil;
-    char *t_developer_payload = nil;
-    char *t_signed_data = nil;
-    char *t_signature = nil;
+    MCAutoStringRef t_notification_id;
+    MCAutoStringRef t_product_id;
+    MCAutoStringRef t_order_id;
+    MCAutoStringRef t_developer_payload;
+    MCAutoStringRef t_signed_data;
+    MCAutoStringRef t_signature;
     
-    t_success = MCCStringFromJava(env, notificationId, t_notification_id) && \
-    MCCStringFromJava(env, productId, t_product_id) && \
-    MCCStringFromJava(env, orderId, t_order_id) && \
-    MCCStringFromJava(env, developerPayload, t_developer_payload) && \
-    MCCStringFromJava(env, signedData, t_signed_data) && \
-    MCCStringFromJava(env, signature, t_signature);
+    t_success = MCCStringFromJava(env, notificationId, &t_notification_id) && \
+    MCCStringFromJava(env, productId, &t_product_id) && \
+    MCCStringFromJava(env, orderId, &t_order_id) && \
+    MCCStringFromJava(env, developerPayload, &t_developer_payload) && \
+    MCCStringFromJava(env, signedData, &t_signed_data) && \
+    MCCStringFromJava(env, signature, &t_signature);
     
-    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, t_product_id);
+    MCLog("doPurchaseStateChanged(verified=%s, purchaseState=%d, productId=%s, ...)", verified?"TRUE":"FALSE", purchaseState, MCStringGetCString(*t_product_id));
     
     if (t_success)
     {
-        if (!MCPurchaseFindByProductId(t_product_id, t_purchase))
+        if (!MCPurchaseFindByProductId(*t_product_id, t_purchase))
         {
-            MCLog("unrecognized purchase for %s", t_product_id);
+            MCLog("unrecognized purchase for %s", MCStringGetCString(*t_product_id));
             bool t_success = true;
             MCAndroidPurchase *t_android_data = nil;
             
@@ -557,15 +566,15 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
 
         if (t_purchase != NULL)
         {
-            MCLog("found purchase for %s", t_product_id);
+            MCLog("found purchase for %s", MCStringGetCString(*t_product_id));
             MCAndroidPurchase *t_android_data = (MCAndroidPurchase*)t_purchase->platform_data;
             
-            MCCStringReplace(t_product_id, t_android_data->product_id);
-            MCCStringReplace(t_notification_id, t_android_data->notification_id);
-            MCCStringReplace(t_order_id, t_android_data->order_id);
-            MCCStringReplace(t_developer_payload, t_android_data->developer_payload);
-            MCCStringReplace(t_signed_data, t_android_data->signed_data);
-            MCCStringReplace(t_signature, t_android_data->signature);
+			t_android_data->product_id = MCValueRetain(*t_product_id);
+			t_android_data->notification_id = MCValueRetain(*t_notification_id);
+			t_android_data->order_id = MCValueRetain(*t_order_id);
+			t_android_data->developer_payload = MCValueRetain(*t_developer_payload);
+			t_android_data->signed_data = MCValueRetain(*t_signed_data);
+			t_android_data->signature = MCValueRetain(*t_signature);
             
             t_android_data->purchase_time = purchaseTime;
             t_android_data->purchase_state = purchaseState;
@@ -584,12 +593,12 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPurchaseStateChanged(JNI
     
     if (!t_success);
     {
-        MCCStringFree(t_notification_id);
-        MCCStringFree(t_product_id);
-        MCCStringFree(t_order_id);
-        MCCStringFree(t_developer_payload);
-        MCCStringFree(t_signed_data);
-        MCCStringFree(t_signature);
+        MCValueRelease(t_notification_id);
+        MCValueRelease(t_product_id);
+        MCValueRelease(t_order_id);
+        MCValueRelease(t_developer_payload);
+        MCValueRelease(t_signed_data);
+        MCValueRelease(t_signature);
     }
 }
 
@@ -650,21 +659,21 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doRequestPurchaseResponse(
         else if (responseCode == RESULT_ITEM_UNAVAILABLE)
         {
             t_purchase->state = kMCPurchaseStateError;
-            MCCStringClone("requested item unavailable", t_android_data->error);
+            t_android_data->error = MCSTR("requested item unavailable");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);            
         }
         else if (responseCode == RESULT_DEVELOPER_ERROR)
         {
             t_purchase->state = kMCPurchaseStateError;
-            MCCStringClone("developer error", t_android_data->error);
+			t_android_data->error = MCSTR("developer error");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);            
         }
         else if (responseCode == RESULT_ERROR)
         {
             t_purchase->state = kMCPurchaseStateError;
-            MCCStringClone("sending purchase request failed", t_android_data->error);
+			t_android_data->error = MCSTR("sending purchase request failed");
             MCPurchaseNotifyUpdate(t_purchase);
             MCPurchaseRelease(t_purchase);
         }

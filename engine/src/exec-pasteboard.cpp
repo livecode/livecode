@@ -600,13 +600,6 @@ void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-GetClipboardData(index: string, out value: any)
-SetClipboardData(index: string, value: any)
-GetDragData(index: string, out value: any)
-SetDragData(index: string, value: any)
-*/
-////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value)
 {
