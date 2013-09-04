@@ -1539,13 +1539,13 @@ char *path2utf(char *path)
 //	
 //	return t_success && MCListCopy(*t_list, r_list);
 //}
-
-
-Boolean MCS_nodelay(int4 fd)
-{
-	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
-				 >= 0;
-}
+//
+//
+//Boolean MCS_nodelay(int4 fd)
+//{
+//	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+//				 >= 0;
+//}
 //
 //IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
 //{
@@ -2260,96 +2260,96 @@ Boolean MCS_nodelay(int4 fd)
 //		AEanswerData = NULL;
 //	}
 //}
-
-char *MCS_FSSpec2path(FSSpec *fSpec)
-{
-	char *path = new char[PATH_MAX + 1];
-
-
-	char *fname = new char[PATH_MAX + 1];
-
-	CopyPascalStringToC(fSpec->name, fname);
-	MCU_path2std(fname);
-
-	char oldchar = fSpec->name[0];
-	Boolean dontappendname = False;
-	fSpec->name[0] = '\0';
-
-	FSRef ref;
-
-	// MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
-
-	/* fSpec->name[0] = oldchar;
-	  dontappendname = True;*/
-
-	if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
-	{
-		if (errno == nsvErr)
-		{
-			fSpec->name[0] = oldchar;
-			if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
-			{
-				errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
-				dontappendname = True;
-			}
-			else
-				path[0] = '\0';
-		}
-		else
-			path[0] = '\0';
-	}
-	else
-		errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
-	uint4 destlen;
-	char *tutfpath = new char[PATH_MAX + 1];
-	destlen = PATH_MAX;
-	MCS_utf8tonative(path, strlen(path), tutfpath, destlen);
-	tutfpath[destlen] = '\0';
-	if (!dontappendname)
-	{
-		if (tutfpath[destlen - 1] != '/')
-			strcat(tutfpath, "/");
-		strcat(tutfpath, fname);
-	}
-	delete fname;
-	delete path;
-	return tutfpath;
-}
-
-bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
-{
-	MCAutoNativeCharArray t_buffer;
-	if (!t_buffer.New(PATH_MAX))
-		return false;
-	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Chars(), PATH_MAX);
-
-	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
-
-	MCAutoStringRef t_utf8_path;
-	return t_buffer.CreateStringAndRelease(&t_utf8_path) &&
-		MCU_utf8tonative(*t_utf8_path, r_path);
-}
-
-/* LEGACY */
-char *MCS_fsref_to_path(FSRef& p_ref)
-{
-	char *t_path;
-	t_path = new char[PATH_MAX + 1];
-	
-	FSRefMakePath(&p_ref, (UInt8 *)t_path, PATH_MAX);
-	
-	char *t_macroman_path;
-	uint4 t_length;
-	t_macroman_path = new char[PATH_MAX + 1];
-	t_length = PATH_MAX;
-	MCS_utf8tonative(t_path, strlen(t_path), t_macroman_path, t_length);
-	t_macroman_path[t_length] = '\0';
-	
-	delete t_path;
-	
-	return t_macroman_path;
-}
-
+//
+//char *MCS_FSSpec2path(FSSpec *fSpec)
+//{
+//	char *path = new char[PATH_MAX + 1];
+//
+//
+//	char *fname = new char[PATH_MAX + 1];
+//
+//	CopyPascalStringToC(fSpec->name, fname);
+//	MCU_path2std(fname);
+//
+//	char oldchar = fSpec->name[0];
+//	Boolean dontappendname = False;
+//	fSpec->name[0] = '\0';
+//
+//	FSRef ref;
+//
+//	// MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+//
+//	/* fSpec->name[0] = oldchar;
+//	  dontappendname = True;*/
+//
+//	if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+//	{
+//		if (errno == nsvErr)
+//		{
+//			fSpec->name[0] = oldchar;
+//			if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+//			{
+//				errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
+//				dontappendname = True;
+//			}
+//			else
+//				path[0] = '\0';
+//		}
+//		else
+//			path[0] = '\0';
+//	}
+//	else
+//		errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
+//	uint4 destlen;
+//	char *tutfpath = new char[PATH_MAX + 1];
+//	destlen = PATH_MAX;
+//	MCS_utf8tonative(path, strlen(path), tutfpath, destlen);
+//	tutfpath[destlen] = '\0';
+//	if (!dontappendname)
+//	{
+//		if (tutfpath[destlen - 1] != '/')
+//			strcat(tutfpath, "/");
+//		strcat(tutfpath, fname);
+//	}
+//	delete fname;
+//	delete path;
+//	return tutfpath;
+//}
+//
+//bool MCS_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
+//{
+//	MCAutoNativeCharArray t_buffer;
+//	if (!t_buffer.New(PATH_MAX))
+//		return false;
+//	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Chars(), PATH_MAX);
+//
+//	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+//
+//	MCAutoStringRef t_utf8_path;
+//	return t_buffer.CreateStringAndRelease(&t_utf8_path) &&
+//		MCU_utf8tonative(*t_utf8_path, r_path);
+//}
+//
+///* LEGACY */
+//char *MCS_fsref_to_path(FSRef& p_ref)
+//{
+//	char *t_path;
+//	t_path = new char[PATH_MAX + 1];
+//	
+//	FSRefMakePath(&p_ref, (UInt8 *)t_path, PATH_MAX);
+//	
+//	char *t_macroman_path;
+//	uint4 t_length;
+//	t_macroman_path = new char[PATH_MAX + 1];
+//	t_length = PATH_MAX;
+//	MCS_utf8tonative(t_path, strlen(t_path), t_macroman_path, t_length);
+//	t_macroman_path[t_length] = '\0';
+//	
+//	delete t_path;
+//	
+//	return t_macroman_path;
+//}
+//
 //OSErr MCS_pathtoref_and_leaf(const char *p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
 //{
 //	OSErr t_error;
@@ -2407,264 +2407,250 @@ char *MCS_fsref_to_path(FSRef& p_ref)
 //		
 //	return t_error;
 //}
-
-OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
-{
-#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_SYSTEM
-	OSErr t_error;
-	t_error = noErr;
-    
-	char *t_resolved_path;
-	t_resolved_path = NULL;
-	if (t_error == noErr)
-		t_resolved_path = MCS_resolvepath(p_path);
-	
-	char *t_resolved_path_leaf;
-	t_resolved_path_leaf = NULL;
-	if (t_error == noErr)
-	{
-		t_resolved_path_leaf = strrchr(t_resolved_path, '/');
-		if (t_resolved_path_leaf != NULL)
-		{
-			t_resolved_path_leaf[0] = '\0';
-			t_resolved_path_leaf += 1;
-		}
-		else
-			t_error = fnfErr;
-	}
-    
-	char *t_utf8_path;
-	t_utf8_path = NULL;
-	
-	// OK-2010-04-06: [[Bug]] - path2utf frees the buffer passed into it, so we have to clone t_resolved_path
-	// here, as otherwise we are using it after its been freed.
-	char *t_resolved_path_clone;
-	t_resolved_path_clone = strdup(t_resolved_path);
-	
-	if (t_error == noErr)
-		t_utf8_path = path2utf(t_resolved_path_clone);
-    
-	if (t_error == noErr)
-		t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, &r_ref, NULL);
-	
-	// Convert the leaf from MacRoman to UTF16.
-	if (t_error == noErr)
-	{
-		unsigned short *t_utf16_leaf;
-		uint4 t_utf16_leaf_length;
-		
-		t_utf16_leaf = new unsigned short[256];
-		t_utf16_leaf_length = 256;
-		MCS_nativetoutf16(t_resolved_path_leaf, strlen(t_resolved_path_leaf), t_utf16_leaf, t_utf16_leaf_length);
-        
-		r_leaf = (UniChar *)t_utf16_leaf;
-		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
-	}
-	
-	if (t_utf8_path != NULL)
-		delete t_utf8_path;
-    
-	return t_error;
-#endif /* MCS_pathtoref_and_leaf */
-	OSErr t_error;
-	t_error = noErr;
-    
-	MCAutoStringRef t_resolved_path;
-
-    if (!MCS_resolvepath(p_path, &t_resolved_path))
-        // TODO assign relevant error code
-        t_error = fnfErr;
-    
-    MCAutoStringRef t_folder, t_leaf;
-    uindex_t t_leaf_index;
-    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
-    {
-        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
-            t_error = memFullErr;
-    }
-    else
-        t_error = fnfErr;
-        
-	MCAutoStringRefAsUTF8String t_utf8_auto;
-    
-    if (t_error == noErr)
-        if (!t_utf8_auto.Lock(*t_folder))
-            t_error = fnfErr;
-    
-	if (t_error == noErr)
-		t_error = FSPathMakeRef((const UInt8 *)*t_utf8_auto, &r_ref, NULL);
-	
-	// Convert the leaf from MacRoman to UTF16.
-	if (t_error == noErr)
-	{
-		unichar_t *t_utf16_leaf;
-		uint4 t_utf16_leaf_length;
-        /* UNCHECKED */ MCStringConvertToUnicode(*t_leaf, t_utf16_leaf, t_utf16_leaf_length);
-		r_leaf = (UniChar *)t_utf16_leaf;
-		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
-	}
-    
-	return t_error;
-}
-
-OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
-{
-	return FSpMakeFSRef(p_fsspec, r_fsref);
-}
-
-OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
-{
-	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
-}
-
-//Updated to MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
-OSErr MCS_pathtoref(const MCString& p_path, FSRef *r_ref)
-{
-	char *t_cstring_path;
-	t_cstring_path = p_path . clone();
-	
-	OSErr t_error;
-	t_error = MCS_pathtoref(t_cstring_path, r_ref);
-	
-	delete t_cstring_path;
-	
-	return t_error;
-}
-
-OSErr MCS_pathtoref(MCStringRef p_path, FSRef& r_ref)
-{
-#ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(t_resolved_path);
-	
-	OSErr t_error;
-	t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, r_ref, NULL);
-	
-	delete t_utf8_path;
-	
-	// path2utf deletes t_resolved_path
-	// delete t_resolved_path;
-	
-	return t_error;
-#endif /* MCS_pathtoref_dsk_mac */
-    MCAutoStringRef t_auto_path;
-    MCAutoStringRefAsUTF8String t_path;
-    
-    if (!MCS_resolvepath(p_path, &t_auto_path))
-        // TODO assign relevant error code
-        return memFullErr;
-    
-    if (!t_path.Lock(*t_auto_path))
-        return memFullErr;
-    
-	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
-}
-
-/* LEGACY */
-OSErr MCS_pathtoref(const char *p_path, FSRef *r_ref)
-{
-	char *t_resolved_path;
-	t_resolved_path = MCS_resolvepath(p_path);
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(t_resolved_path);
-	
-	OSErr t_error;
-	t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, r_ref, NULL);
-	
-	delete t_utf8_path;
-	
-	// path2utf deletes t_resolved_path
-	// delete t_resolved_path;
-	
-	return t_error;
-}
-
-// based on MoreFiles (Apple DTS)
-OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
-{
-#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM
-	char *path = MCS_resolvepath(p_filename));
-	memset(fspec, 0, sizeof(FSSpec));
-    
-	char *f2 = strrchr(path, '/');
-	if (f2 != NULL && f2 != path)
-		*f2++ = '\0';
-	char *fspecname = strclone(f2);
-	path = path2utf(path);
-	FSRef ref;
-	if ((errno = FSPathMakeRef((unsigned char *)path, &ref, NULL)) == noErr)
-	{
-		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
-		                              NULL, NULL, fspec, NULL)) == noErr)
-		{
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.dirInfo.ioNamePtr = fspec->name;
-			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
-			cpb.dirInfo.ioDrDirID = fspec->parID;
-			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
-			{
-				delete path;
-				return errno;
-			}
-			c2pstr((char *)fspecname);
-			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
-			                     (unsigned char *)fspecname, fspec);
-		}
-	}
-	delete fspecname;
-	delete path;
-	return errno;
-#endif /* MCS_path2FSSpec_dsk_mac */
-    MCAutoStringRef t_resolved_path;
-    MCAutoStringRefAsUTF8String t_utf_path;
-    
-	if (!MCS_resolvepath(p_filename, &t_resolved_path))
-        return memFullErr;
-    
-	memset(fspec, 0, sizeof(FSSpec));
-
-	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
-		*f2++ = '\0';
-	char *fspecname = strclone(f2);
-    if (!t_utf_path.Lock(*t_resolved_path))
-        return memFullErr;
-    
-	FSRef ref;
-	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
-	{
-		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
-		                              NULL, NULL, fspec, NULL)) == noErr)
-		{
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.dirInfo.ioNamePtr = fspec->name;
-			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
-			cpb.dirInfo.ioDrDirID = fspec->parID;
-			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
-			{
-				return errno;
-			}
-			c2pstr((char *)fspecname);
-			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
-			                     (unsigned char *)fspecname, fspec);
-		}
-	}
-	delete fspecname;
-	return errno;
-}
-
-OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
-{
-	MCAutoStringRef t_filename;
-	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
-	return MCS_path2FSSpec(*t_filename, fspec);
-}
+//
+//OSErr MCS_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
+//{
+//#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_SYSTEM
+//	OSErr t_error;
+//	t_error = noErr;
+//    
+//	char *t_resolved_path;
+//	t_resolved_path = NULL;
+//	if (t_error == noErr)
+//		t_resolved_path = MCS_resolvepath(p_path);
+//	
+//	char *t_resolved_path_leaf;
+//	t_resolved_path_leaf = NULL;
+//	if (t_error == noErr)
+//	{
+//		t_resolved_path_leaf = strrchr(t_resolved_path, '/');
+//		if (t_resolved_path_leaf != NULL)
+//		{
+//			t_resolved_path_leaf[0] = '\0';
+//			t_resolved_path_leaf += 1;
+//		}
+//		else
+//			t_error = fnfErr;
+//	}
+//    
+//	char *t_utf8_path;
+//	t_utf8_path = NULL;
+//	
+//	// OK-2010-04-06: [[Bug]] - path2utf frees the buffer passed into it, so we have to clone t_resolved_path
+//	// here, as otherwise we are using it after its been freed.
+//	char *t_resolved_path_clone;
+//	t_resolved_path_clone = strdup(t_resolved_path);
+//	
+//	if (t_error == noErr)
+//		t_utf8_path = path2utf(t_resolved_path_clone);
+//    
+//	if (t_error == noErr)
+//		t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, &r_ref, NULL);
+//	
+//	// Convert the leaf from MacRoman to UTF16.
+//	if (t_error == noErr)
+//	{
+//		unsigned short *t_utf16_leaf;
+//		uint4 t_utf16_leaf_length;
+//		
+//		t_utf16_leaf = new unsigned short[256];
+//		t_utf16_leaf_length = 256;
+//		MCS_nativetoutf16(t_resolved_path_leaf, strlen(t_resolved_path_leaf), t_utf16_leaf, t_utf16_leaf_length);
+//        
+//		r_leaf = (UniChar *)t_utf16_leaf;
+//		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
+//	}
+//	
+//	if (t_utf8_path != NULL)
+//		delete t_utf8_path;
+//    
+//	return t_error;
+//#endif /* MCS_pathtoref_and_leaf */
+//	OSErr t_error;
+//	t_error = noErr;
+//    
+//	MCAutoStringRef t_resolved_path;
+//
+//    if (!MCS_resolvepath(p_path, &t_resolved_path))
+//        // TODO assign relevant error code
+//        t_error = fnfErr;
+//    
+//    MCAutoStringRef t_folder, t_leaf;
+//    uindex_t t_leaf_index;
+//    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+//    {
+//        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
+//            t_error = memFullErr;
+//    }
+//    else
+//        t_error = fnfErr;
+//        
+//	MCAutoStringRefAsUTF8String t_utf8_auto;
+//    
+//    if (t_error == noErr)
+//        if (!t_utf8_auto.Lock(*t_folder))
+//            t_error = fnfErr;
+//    
+//	if (t_error == noErr)
+//		t_error = FSPathMakeRef((const UInt8 *)*t_utf8_auto, &r_ref, NULL);
+//	
+//	// Convert the leaf from MacRoman to UTF16.
+//	if (t_error == noErr)
+//	{
+//		unichar_t *t_utf16_leaf;
+//		uint4 t_utf16_leaf_length;
+//        /* UNCHECKED */ MCStringConvertToUnicode(*t_leaf, t_utf16_leaf, t_utf16_leaf_length);
+//		r_leaf = (UniChar *)t_utf16_leaf;
+//		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
+//	}
+//    
+//	return t_error;
+//}
+//
+//OSErr MCS_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
+//{
+//	return FSpMakeFSRef(p_fsspec, r_fsref);
+//}
+//
+//OSErr MCS_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
+//{
+//	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
+//}
+//
+//OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
+//{
+//#ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
+//	char *t_resolved_path;
+//	t_resolved_path = MCS_resolvepath(p_path);
+//	
+//	char *t_utf8_path;
+//	t_utf8_path = path2utf(t_resolved_path);
+//	
+//	OSErr t_error;
+//	t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, r_ref, NULL);
+//	
+//	delete t_utf8_path;
+//	
+//	// path2utf deletes t_resolved_path
+//	// delete t_resolved_path;
+//	
+//	return t_error;
+//#endif /* MCS_pathtoref_dsk_mac */
+//    MCAutoStringRef t_auto_path;
+//    MCAutoStringRefAsUTF8String t_path;
+//    
+//    if (!MCS_resolvepath(p_path, &t_auto_path))
+//        // TODO assign relevant error code
+//        return memFullErr;
+//    
+//    if (!t_path.Lock(*t_auto_path))
+//        return memFullErr;
+//    
+//	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
+//}
+//
+///* LEGACY */
+//OSErr MCS_mac_pathtoref(const char *p_path, FSRef *r_ref)
+//{
+//	char *t_resolved_path;
+//	t_resolved_path = MCS_resolvepath(p_path);
+//	
+//	char *t_utf8_path;
+//	t_utf8_path = path2utf(t_resolved_path);
+//	
+//	OSErr t_error;
+//	t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, r_ref, NULL);
+//	
+//	delete t_utf8_path;
+//	
+//	// path2utf deletes t_resolved_path
+//	// delete t_resolved_path;
+//	
+//	return t_error;
+//}
+//
+//// based on MoreFiles (Apple DTS)
+//OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
+//{
+//#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM
+//	char *path = MCS_resolvepath(p_filename));
+//	memset(fspec, 0, sizeof(FSSpec));
+//    
+//	char *f2 = strrchr(path, '/');
+//	if (f2 != NULL && f2 != path)
+//		*f2++ = '\0';
+//	char *fspecname = strclone(f2);
+//	path = path2utf(path);
+//	FSRef ref;
+//	if ((errno = FSPathMakeRef((unsigned char *)path, &ref, NULL)) == noErr)
+//	{
+//		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
+//		                              NULL, NULL, fspec, NULL)) == noErr)
+//		{
+//			CInfoPBRec cpb;
+//			memset(&cpb, 0, sizeof(CInfoPBRec));
+//			cpb.dirInfo.ioNamePtr = fspec->name;
+//			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
+//			cpb.dirInfo.ioDrDirID = fspec->parID;
+//			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
+//			{
+//				delete path;
+//				return errno;
+//			}
+//			c2pstr((char *)fspecname);
+//			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
+//			                     (unsigned char *)fspecname, fspec);
+//		}
+//	}
+//	delete fspecname;
+//	delete path;
+//	return errno;
+//#endif /* MCS_path2FSSpec_dsk_mac */
+//    MCAutoStringRef t_resolved_path;
+//    MCAutoStringRefAsUTF8String t_utf_path;
+//    
+//	if (!MCS_resolvepath(p_filename, &t_resolved_path))
+//        return memFullErr;
+//    
+//	memset(fspec, 0, sizeof(FSSpec));
+//
+//	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
+//	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+//		*f2++ = '\0';
+//	char *fspecname = strclone(f2);
+//    if (!t_utf_path.Lock(*t_resolved_path))
+//        return memFullErr;
+//    
+//	FSRef ref;
+//	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
+//	{
+//		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
+//		                              NULL, NULL, fspec, NULL)) == noErr)
+//		{
+//			CInfoPBRec cpb;
+//			memset(&cpb, 0, sizeof(CInfoPBRec));
+//			cpb.dirInfo.ioNamePtr = fspec->name;
+//			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
+//			cpb.dirInfo.ioDrDirID = fspec->parID;
+//			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
+//			{
+//				return errno;
+//			}
+//			c2pstr((char *)fspecname);
+//			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
+//			                     (unsigned char *)fspecname, fspec);
+//		}
+//	}
+//	delete fspecname;
+//	return errno;
+//}
+//
+//OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
+//{
+//	MCAutoStringRef t_filename;
+//	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
+//	return MCS_path2FSSpec(*t_filename, fspec);
+//}
 
 ///**************************************************************************
 // * Utility functions used by this module only
@@ -3322,16 +3308,16 @@ OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
 //	
 //	return true;
 //}
-
-bool MCS_isatty(int fd)
-{
-	return isatty(fd) != 0;
-}
-
-bool MCS_isnan(double v)
-{
-	return isnan(v);
-}
+//
+//bool MCS_isatty(int fd)
+//{
+//	return isatty(fd) != 0;
+//}
+//
+//bool MCS_isnan(double v)
+//{
+//	return isnan(v);
+//}
 //
 //uint32_t MCS_getsyserror(void)
 //{

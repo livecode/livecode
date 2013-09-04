@@ -1003,7 +1003,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	{
 		uint4 rsize = size - tsize;
 		uint4 fullsize = rsize;
-		r_stat = MCS_readfixed(t_current.Chars() + tsize, rsize, p_stream); // ??? readall ???
+		r_stat = MCS_readall(t_current.Chars() + tsize, rsize, p_stream, rsize);
 		tsize += rsize;
 		if (rsize < fullsize)
 		{
@@ -1221,7 +1221,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_readfixed(t_buffer.Chars() + size, rsize, p_stream); // ??? readall ???
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, p_stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -1289,7 +1289,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 						{
 							uint1 term;
 							uint4 nread = 1;
-							if (MCS_readfixed(&term, nread, p_stream) == IO_NORMAL) // ??? readall ???
+							if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
                             {
 								if (term != '\n')
 									MCS_putback(term, p_stream);
@@ -1346,7 +1346,7 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_readfixed(t_buffer.Chars() + size, rsize, stream); // ??? readall ???
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -1492,7 +1492,7 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	MCAutoStringRef t_output;
 
 #ifndef _SERVER
-	if (!MCnoui && MCS_isatty(0))
+	if (!MCnoui && MCS_isinteractiveconsole(0))
 	{
 		ctxt . SetTheResultToStaticCString("eof");
 		ctxt . SetItToValue(kMCNull);
@@ -1539,11 +1539,13 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 
 	if (p_at == nil)
 	{
+#ifdef OLD_IO_HANDLE
 		if (r_stream->flags & IO_WRITTEN)
 		{
 			r_stream->flags &= ~IO_WRITTEN;
 			MCS_sync(r_stream);
 		}
+#endif
 	}
 	else
 	{
@@ -1674,7 +1676,9 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-	MCshellfd = t_stream->getfd();
+#ifdef OLD_IO_HANDLE
+	MCshellfd = t_stream->gefd();
+#endif // OLD_IO_HANDLE
 	t_textmode = MCprocesses[t_index].textmode;
 	MCAutoStringRef t_output;
 
@@ -1866,7 +1870,9 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_WRITTEN;
+#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -1974,7 +1980,9 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
 
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_SEEKED;
+#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);
@@ -2120,7 +2128,7 @@ void MCFilesGetUMask(MCExecContext& ctxt, uinteger_t& r_value)
 }
 void MCFilesSetUMask(MCExecContext& ctxt, uinteger_t p_value)
 {
-	MCS_umask(p_value);
+	MCS_setumask(p_value);
 }
 void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {

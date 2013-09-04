@@ -55,9 +55,15 @@ typedef bool (*MCSystemHostResolveCallback)(void *p_context, MCStringRef p_host)
 struct MCSystemFileHandle
 {
 	virtual void Close(void) = 0;
-	
-	virtual IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written) = 0;
+    
+    // Returns true if an attempt has been made to read past the end of the
+    // stream.
+    virtual bool IsExhausted(void) = 0;
+    
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read) = 0;
+    
+	virtual bool Write(const void *p_buffer, uint32_t p_length) = 0;
+    
 	virtual bool Seek(int64_t offset, int p_dir) = 0;
 	
 	virtual bool Truncate(void) = 0;
@@ -119,16 +125,22 @@ public:
 			free(m_buffer);
 		delete this;
 	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_pointer == m_length;
+    }
+    
+    bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        r_read = MCU_min(p_length, m_length - m_pointer);
+        
+        memcpy(p_buffer, m_buffer + m_pointer, r_read);
+        m_pointer += r_read;
+        return true;
+    }
 	
-	IO_stat Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
-	{
-		r_read = MCU_min(p_length, m_length - m_pointer);
-		memcpy(p_buffer, m_buffer + m_pointer, r_read);
-		m_pointer += r_read;
-		return IO_NORMAL;
-	}
-	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		// If we aren't writable then its an error (writable buffers start off with
 		// nil buffer pointer, and 0 capacity).
@@ -153,7 +165,6 @@ public:
 		memcpy(m_buffer + m_pointer, p_buffer, p_length);
 		m_pointer += p_length;
 		m_length = MCU_max(m_pointer, m_length);
-		r_written = p_length;
         
 		return true;
 	}
@@ -249,16 +260,36 @@ public:
 		// MW-2011-06-12: Fix memory leak - Close() should delete the handle.
 		delete this;
 	}
+    
+    virtual bool IsExhausted(void)
+    {
+        return m_is_eof;
+    }
 	
-	IO_stat Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_blockcount)
+	bool Read(void *p_buffer, uint32_t p_blocksize, uint32_t& r_read)
 	{
 		if (m_callbacks -> read == nil)
 			return IO_ERROR;
         
-		return m_callbacks -> read(m_state, p_buffer, p_blocksize, r_blockcount);
+        IO_stat t_stat;
+        
+        t_stat = m_callbacks -> read(m_state, p_buffer, p_blocksize, r_read);
+        
+        if (t_stat == IO_EOF)
+        {
+            m_is_eof = true;
+            return false;
+        }
+        
+        m_is_eof = false;
+        
+		if (!t_stat == IO_NORMAL)
+            return false;
+        
+        return true;
 	}
 	
-	bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	bool Write(const void *p_buffer, uint32_t p_length)
 	{
 		return false;
 	}
@@ -315,6 +346,7 @@ public:
 private:
 	void *m_state;
 	MCFakeOpenCallbacks *m_callbacks;
+    bool m_is_eof;
 };
 
 enum MCServiceType
@@ -427,8 +459,8 @@ struct MCSystemInterface
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
-	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
-	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset) = 0;
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode) = 0;
+	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
@@ -443,14 +475,9 @@ struct MCSystemInterface
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-
-	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
-	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	///* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
-    virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path) = 0;
 
 	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
 
@@ -470,6 +497,8 @@ struct MCSystemInterface
     virtual void Kill(int4 p_pid, int4 p_sig) = 0;
     virtual void KillAll(void) = 0;
     virtual Boolean Poll(real8 p_delay, int p_fd) = 0;
+    
+    virtual Boolean IsInteractiveConsole(int p_fd) = 0;
     
     virtual int GetErrno(void) = 0;
     virtual void SetErrno(int p_errno) = 0;

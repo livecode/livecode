@@ -1585,7 +1585,7 @@ bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_hand
 		return false;
 	}
 	
-    r_file = new IO_header(MCStdioFileHandle :: OpenFd(t_fd, "w+"), 0);
+    r_file = MCStdioFileHandle :: OpenFd(t_fd, "w+");
 	
 	return true;
 }

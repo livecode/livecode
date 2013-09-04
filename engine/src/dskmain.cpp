@@ -282,7 +282,9 @@ bool X_init(int argc, char *argv[], char *envp[])
 			MCStack *sptr;
 			if (MCdispatcher->loadfile(MCStringGetCString(MCstacknames[i]), sptr) == IO_NORMAL)
 				sptr->open();
+            MCValueRelease(MCstacknames[i]);
 		}
+        MCnstacks = 0;
 		delete MCstacknames;
 		MCstacknames = NULL;
 		MCeerror->clear();
