@@ -603,12 +603,12 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
     {
         MCNativeControl *t_control;
         // Make sure a control does not already exist with the name
-        if (MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_control))
+        if (MCNativeControl::FindByNameOrId(p_control_name, t_control))
             return;
     }
     
     MCNativeControlType t_type;
-    if (!MCNativeControl::LookupType(MCStringGetCString(p_type_name), t_type))
+    if (!MCNativeControl::LookupType(p_type_name, t_type))
         return;
     
     MCNativeControl *t_new_control;
@@ -633,7 +633,7 @@ void MCNativeControlExecCreateControl(MCExecContext& ctxt, MCStringRef p_type_na
 void MCNativeControlExecDeleteControl(MCExecContext& ctxt, MCStringRef p_control_name)
 {
     MCNativeControl *t_control;
-    if (!MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_control))
+    if (!MCNativeControl::FindByNameOrId(p_control_name, t_control))
         return;
     
     t_control -> Delete();
@@ -688,11 +688,11 @@ static MCNativeControlPropertyInfo *lookup_control_property(const MCNativeContro
 void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef& r_result)
 {
     MCNativeControl *t_native_control;
-    if (!MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_native_control))
+    if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
         return;
     
     MCNativeControlProperty t_property;
-    if (!MCNativeControl::LookupProperty(MCStringGetCString(p_property_name), t_property))
+    if (!MCNativeControl::LookupProperty(p_property_name, t_property))
         return;
 
     MCNativeControlPropertyInfo *t_info;
@@ -987,11 +987,11 @@ void MCNativeControlExecGet(MCExecContext& ctxt, MCStringRef p_control_name, MCS
 void MCNativeControlExecSet(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_property_name, MCValueRef p_value)
 {
     MCNativeControl *t_native_control;
-    if (!MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_native_control))
+    if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
         return;
     
     MCNativeControlProperty t_property;
-    if (!MCNativeControl::LookupProperty(MCStringGetCString(p_property_name), t_property))
+    if (!MCNativeControl::LookupProperty(p_property_name, t_property))
         return;
     
     MCNativeControlPropertyInfo *t_info;
@@ -1376,11 +1376,11 @@ static MCNativeControlActionInfo *lookup_control_action(const MCNativeControlAct
 void MCNativeControlExecDo(MCExecContext& ctxt, MCStringRef p_control_name, MCStringRef p_action_name, MCValueRef *p_arguments, uindex_t p_argument_count)
 {
 	MCNativeControl *t_native_control;
-    if (!MCNativeControl::FindByNameOrId(MCStringGetCString(p_control_name), t_native_control))
+    if (!MCNativeControl::FindByNameOrId(p_control_name, t_native_control))
         return;
 
 	MCNativeControlAction t_action;
-    if (!MCNativeControl::LookupAction(MCStringGetCString(p_action_name), t_action))
+    if (!MCNativeControl::LookupAction(p_action_name, t_action))
         return;
     
     MCNativeControlActionInfo *t_info;
