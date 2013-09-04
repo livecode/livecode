@@ -467,6 +467,8 @@ public:
     virtual void xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
     virtual void xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const;
 	
+	//virtual SkPMColor xferColor(SkPMColor src, SkPMColor dst) const;
+	
 	virtual bool asCoeff(Coeff* src, Coeff* dst) const;
 	virtual bool asMode(Mode* mode) const;
 	

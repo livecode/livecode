@@ -174,12 +174,35 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 	if (self == NULL)
 		return;
 	
+	if (self -> bytes_used >= self -> max_bytes)
+	{
+		uindex_t t_discard_bucket;
+		t_discard_bucket = rand() % self -> total_buckets;
+		while (self -> bytes_used >= self -> max_bytes)
+		{			
+			while (self -> pairs[t_discard_bucket] . key != NULL)
+			{
+				t_discard_bucket++;
+				if (t_discard_bucket >= self -> total_buckets)
+					t_discard_bucket -= self -> total_buckets;
+			}
+			
+			MCGCacheTableDiscardPair(self, t_discard_bucket);
+			
+			//MCLog("MCGCacheTableSet: Max bytes reached. Hash %d discarded.", t_discard_bucket);
+		}
+	}
+	
 	if (self -> used_buckets >= self -> max_occupancy)
 	{
 		uindex_t t_discard_bucket;
-		do 
-			t_discard_bucket = rand() % self -> total_buckets;
-		while (self -> pairs[t_discard_bucket] . key != NULL);		
+		t_discard_bucket = rand() % self -> total_buckets;			
+		while (self -> pairs[t_discard_bucket] . key != NULL)
+		{
+			t_discard_bucket++;
+			if (t_discard_bucket >= self -> total_buckets)
+				t_discard_bucket -= self -> total_buckets;
+		}
 		
 		MCGCacheTableDiscardPair(self, t_discard_bucket);
 		
@@ -234,18 +257,6 @@ void MCGCacheTableSet(MCGCacheTableRef self, void *p_key, uint32_t p_key_length,
 		self -> used_buckets++;
 		
 		//MCLog("MCGCacheTableSet: Cache table write. Hash %d written.", t_target_bucket);
-	}
-	
-	while (self -> bytes_used >= self -> max_bytes)
-	{
-		uindex_t t_discard_bucket;
-		do 
-			t_discard_bucket = rand() % self -> total_buckets;
-		while (self -> pairs[t_discard_bucket] . key != NULL);		
-		
-		MCGCacheTableDiscardPair(self, t_discard_bucket);
-		
-		//MCLog("MCGCacheTableSet: Max bytes reached. Hash %d discarded.", t_discard_bucket);		
 	}
 }
 

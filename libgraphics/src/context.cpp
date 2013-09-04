@@ -631,7 +631,7 @@ void MCGContextBegin(MCGContextRef self, bool p_need_layer)
 		return;
 	
 	// If we are blending sourceOver
-	if (!p_need_layer && self -> state -> blend_mode == kMCGBlendModeSourceOver && self -> state -> opacity == 1.0)
+	if (!p_need_layer)
 	{
 		self -> layer -> nesting += 1;
 		return;

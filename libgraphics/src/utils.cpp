@@ -432,9 +432,9 @@ SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
 	if (s_skia_blend_modes == NULL)
 	{
 		/* UNCHECKED */ MCMemoryNewArray(kMCGBlendModeCount, s_skia_blend_modes);	
-		
+
 		s_skia_blend_modes[kMCGBlendModeClear] = SkXfermode::Create(SkXfermode::kClear_Mode);
-		s_skia_blend_modes[kMCGBlendModeCopy] = SkXfermode::Create(SkXfermode::kSrc_Mode);
+		s_skia_blend_modes[kMCGBlendModeCopy] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
 		s_skia_blend_modes[kMCGBlendModeSourceOver] = SkXfermode::Create(SkXfermode::kSrcOver_Mode);
 		s_skia_blend_modes[kMCGBlendModeSourceIn] = SkXfermode::Create(SkXfermode::kSrcIn_Mode);
 		s_skia_blend_modes[kMCGBlendModeSourceOut] = SkXfermode::Create(SkXfermode::kSrcOut_Mode);
@@ -485,7 +485,12 @@ SkXfermode* MCGBlendModeToSkXfermode(MCGBlendMode p_mode)
 		s_skia_blend_modes[kMCGBlendModeLegacySubOver] = new MCGLegacyBlendMode(kMCGBlendModeLegacySubOver);
 		s_skia_blend_modes[kMCGBlendModeLegacyAdMin] = new MCGLegacyBlendMode(kMCGBlendModeLegacyAdMin);
 		
-		// TODO:  non-separable blend modes and plus darker?
+		// TODO: non-separable blend modes and plus darker?
+		// kMCGBlendModeHue
+		// kMCGBlendModeSaturation
+		// kMCGBlendModeColor
+		// kMCGBlendModeLuminosity
+		
 	}
 	
 	SkXfermode *t_blend_mode;

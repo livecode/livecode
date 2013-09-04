@@ -380,6 +380,8 @@ template<typename Type> INLINE Type fastmax(Type a, Type b)
 	return a < b ? b : a;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
 template<Operation x_combiner, bool x_dst_alpha, bool x_src_alpha> INLINE uint32_t bitwise_combiner(uint32_t dst, uint32_t src)
 {
 	uint8_t sa, da;
@@ -984,19 +986,286 @@ template<int x_combiner, bool x_dst_alpha, bool x_src_alpha> void surface_combin
 
 ////////////////////////////////////////////////////////////////////////////////
 
+// MW-2009-02-09: This is the most important combiner so we optimize it.
+//   This optimization is based on the observation that:
+//     (1 - e) * dst + e * (src over dst)
+//   Is equiavlent to:
+//     (e * src) over dst
+//  In addition, we inline the fundamental operations ourselves since it
+//  seems this inlining *isn't* done by GCC on PowerPC.
+//
+static void surface_combine_blendSrcOver(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity)
+{
+	if (p_opacity == 0)
+		return;
+	
+	uint32_t *t_dst_ptr;
+	uint32_t t_dst_stride;
+	
+	t_dst_ptr = (uint32_t *)p_dst;
+	t_dst_stride = (p_dst_stride >> 2) - p_width;
+	
+	uint32_t *t_src_ptr;
+	uint32_t t_src_stride;
+	
+	t_src_ptr = (uint32_t *)p_src;
+	t_src_stride = (p_src_stride >> 2) - p_width;
+	
+	for(; p_height > 0; --p_height, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
+	{
+		for(uint32_t t_width = p_width; t_width > 0; --t_width)
+		{
+			uint32_t t_src;
+			uint32_t t_pixel;
+			
+			t_src = *t_src_ptr++;
+			
+			if (t_src != 0)
+			{
+				// Compute [ opacity * src ]
+				if (p_opacity != 255)
+				{
+					uint32_t u, v;
+					
+					u = ((t_src & 0xff00ff) * p_opacity) + 0x800080;
+					u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+					
+					v = (((t_src >> 8) & 0xff00ff) * p_opacity) + 0x800080;
+					v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+					
+					t_src = u + v;
+				}
+				
+				// Compute [ dst * (1 - src_alpha) + src ]
+				{
+					uint32_t x;
+					uint8_t a;
+					x = *t_dst_ptr;
+					a = (~t_src) >> 24;
+					
+					uint32_t u, v;
+					u = ((x & 0xff00ff) * a) + 0x800080;
+					u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+					
+					v = (((x >> 8) & 0xff00ff) * a) + 0x800080;
+					v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+					
+					t_pixel = u + v + t_src;
+				}
+				
+				*t_dst_ptr++ = t_pixel;
+				
+				continue;
+			}
+			
+			t_dst_ptr += 1;
+		}
+	}
+}
+
+// MW-2011-09-22: Optimized variant of blendSrcOver for alpha-masked image. The
+//    assumption here is that 'src' is not pre-multipled, its alpha mask being
+//    given by the mask array.
+static void surface_combine_blendSrcOver_masked(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity)
+{
+	if (p_opacity == 0)
+		return;
+	
+	uint32_t *t_dst_ptr;
+	uint32_t t_dst_stride;
+	t_dst_ptr = (uint32_t *)p_dst;
+	t_dst_stride = (p_dst_stride >> 2) - p_width;
+	
+	uint32_t *t_src_ptr;
+	uint32_t t_src_stride;
+	t_src_ptr = (uint32_t *)p_src;
+	t_src_stride = (p_src_stride >> 2) - p_width;
+	
+	if (p_opacity == 255)
+	{
+		// If opacity is 255 then we only need do:
+		//   dst = dst * (1 - msk) + msk * src.
+		for(; p_height > 0; --p_height, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
+		{
+			for(uint32_t t_width = p_width; t_width > 0; --t_width)
+			{
+				uint32_t t_src;
+				t_src = *t_src_ptr++;
+				
+				uint8_t t_mask;
+				t_mask = t_src >> 24;
+				
+				if (t_mask != 0)
+				{
+					uint32_t t_dst;
+					t_src |= 0xff000000;
+					t_dst = *t_dst_ptr;
+					
+					uint8_t sa, da;
+					sa = t_mask;
+					da = (~t_mask) & 0xff;
+					
+					// Compute [ dst * (1 - msk) + msk * src ]
+					uint32_t u, v;
+					
+					u = (t_dst & 0xff00ff) * da + (t_src & 0xff00ff) * sa + 0x800080;
+					u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+					
+					v = ((t_dst >> 8) & 0xff00ff) * da + ((t_src >> 8) & 0xff00ff) * sa + 0x800080;
+					v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+					
+					*t_dst_ptr++ = u | v;
+					
+					continue;
+				}
+				
+				t_dst_ptr += 1;
+			}
+		}
+	}
+	else
+	{
+		// If opacity is not 255 then we need to do:
+		//   dst = dst * (1 - (msk * opc)) + (msk * opc) * src.
+		for(; p_height > 0; --p_height, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
+		{
+			for(uint32_t t_width = p_width; t_width > 0; --t_width)
+			{
+				uint32_t t_src;
+				t_src = *t_src_ptr++;
+				
+				uint8_t t_mask;
+				t_mask = t_src >> 24;
+				
+				if (t_mask != 0)
+				{
+					uint32_t t_dst;
+					t_src |= 0xff000000;
+					t_dst = *t_dst_ptr;
+					
+					// Compute [ mask * opacity ]
+					uint32_t a;
+					a = p_opacity * t_mask;
+					
+					uint8_t sa, da;
+					sa = ((a + 0x80) + ((a + 0x80) >> 8)) >> 8;
+					da = (~sa) & 0xff;
+					
+					// Compute [ dst * (1 - msk) + msk * src ]
+					uint32_t u, v;
+					
+					u = (t_dst & 0xff00ff) * da + (t_src & 0xff00ff) * sa + 0x800080;
+					u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+					
+					v = ((t_dst >> 8) & 0xff00ff) * da + ((t_src >> 8) & 0xff00ff) * sa + 0x800080;
+					v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+					
+					*t_dst_ptr++ = u | v;
+					
+					continue;
+				}
+				
+				t_dst_ptr += 1;
+			}
+		}
+	}	
+}
+
+// MW-2011-09-22: Optimized variant of blendSrcOver for a solid image. The
+//   assumption here is that src's alpha is 255.
+static void surface_combine_blendSrcOver_solid(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity)
+{
+	if (p_opacity == 0)
+		return;
+	
+	uint32_t *t_dst_ptr;
+	uint32_t t_dst_stride;
+	t_dst_ptr = (uint32_t *)p_dst;
+	t_dst_stride = (p_dst_stride >> 2) - p_width;
+	
+	uint32_t *t_src_ptr;
+	uint32_t t_src_stride;
+	t_src_ptr = (uint32_t *)p_src;
+	t_src_stride = (p_src_stride >> 2) - p_width;
+	
+	// Special-case opacity == 255, as this is just a copy operation.
+	if (p_opacity == 255)
+	{
+		for(; p_height > 0; --p_height, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
+		{
+			for(uint32_t t_width = p_width; t_width > 0; --t_width)
+			{
+				// MW-2011-10-03: [[ Bug ]] Make sure the source is opaque.
+				*t_dst_ptr++ = *t_src_ptr++ | 0xff000000;
+			}
+		}
+		
+		return;
+	}
+	
+	// Otherwise we must do:
+	//   dst = (1 - opc) * dst + opc * src
+	uint8_t t_inv_opacity;
+	t_inv_opacity = 255 - p_opacity;
+	
+	for(; p_height > 0; --p_height, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
+	{
+		for(uint32_t t_width = p_width; t_width > 0; --t_width)
+		{
+			uint32_t t_src;
+			uint32_t t_pixel;
+			
+			// MW-2011-10-03: [[ Bug ]] Make sure the source is opaque.
+			t_src = *t_src_ptr++ | 0xff000000;
+			
+			// Compute [ opacity * src ]
+			{
+				uint32_t u, v;
+				
+				u = ((t_src & 0xff00ff) * p_opacity) + 0x800080;
+				u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+				
+				v = (((t_src >> 8) & 0xff00ff) * p_opacity) + 0x800080;
+				v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+				
+				t_src = u + v;
+			}
+			
+			// Compute [ dst * (1 - src_alpha) + src ]
+			{
+				uint32_t x;
+				x = *t_dst_ptr;
+				
+				uint32_t u, v;
+				u = ((x & 0xff00ff) * t_inv_opacity) + 0x800080;
+				u = ((u + ((u >> 8) & 0xff00ff)) >> 8) & 0xff00ff;
+				
+				v = (((x >> 8) & 0xff00ff) * t_inv_opacity) + 0x800080;
+				v = (v + ((v >> 8) & 0xff00ff)) & 0xff00ff00;
+				
+				t_pixel = u + v + t_src;
+			}
+			
+			*t_dst_ptr++ = t_pixel;
+		}
+	}	
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity);
+
 // We have the following equivalences:
 //   GXsrcBic == GXandReverse
 //   GXnotSrcBic == GXand
 //   GXcopy == GXblendSrc
-
-typedef void (*surface_combiner_t)(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity);
 
 static surface_combiner_t s_surface_combiners[] =
 {
 	surface_combine<OPERATION_CLEAR, true, true>,
 	surface_combine<OPERATION_AND, true, true>,
 	surface_combine<OPERATION_AND_REVERSE, true, true>,
-	surface_combine<OPERATION_COPY, true, true>,
+	surface_combine_blendSrcOver, // Was OPERATION_COPY
 	surface_combine<OPERATION_AND_INVERTED, true, true>,
 	surface_combine<OPERATION_NOOP, true, true>,
 	surface_combine<OPERATION_XOR, true, true>,
@@ -1009,8 +1278,9 @@ static surface_combiner_t s_surface_combiners[] =
 	surface_combine<OPERATION_OR_INVERTED, true, true>,
 	surface_combine<OPERATION_NAND, true, true>,
 	surface_combine<OPERATION_SET, true, true>,
-	surface_combine<OPERATION_SRC_BIC, true, true>,
-	surface_combine<OPERATION_NOT_SRC_BIC, true, true>,
+	
+	//surface_combine<OPERATION_SRC_BIC, true, true>,
+	//surface_combine<OPERATION_NOT_SRC_BIC, true, true>,
 	
 	surface_combine<OPERATION_BLEND, true, true>,
 	surface_combine<OPERATION_ADD_PIN, true, true>,
@@ -1024,7 +1294,7 @@ static surface_combiner_t s_surface_combiners[] =
 	surface_combine<OPERATION_BLEND_CLEAR, true, true>,
 	surface_combine<OPERATION_BLEND_SRC, true, true>,
 	surface_combine<OPERATION_BLEND_DST, true, true>,
-	surface_combine<OPERATION_BLEND_SRC_OVER, true, true>,
+	surface_combine_blendSrcOver,
 	surface_combine<OPERATION_BLEND_DST_OVER, true, true>,
 	surface_combine<OPERATION_BLEND_SRC_IN, true, true>,
 	surface_combine<OPERATION_BLEND_DST_IN, true, true>,
@@ -1048,12 +1318,116 @@ static surface_combiner_t s_surface_combiners[] =
 	surface_combine<OPERATION_BLEND_EXCLUSION, true, true>,
 };
 
+/*typedef uint32_t (*pixel_combiner_t)(uint32_t dst, uint32_t src);
+
+static pixel_combiner_t s_pixel_combiners[] =
+{
+	pixel_combine<OPERATION_CLEAR, true, true>,
+	pixel_combine<OPERATION_AND, true, true>,
+	pixel_combine<OPERATION_AND_REVERSE, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC_OVER, true, true>,
+	pixel_combine<OPERATION_AND_INVERTED, true, true>,
+	pixel_combine<OPERATION_NOOP, true, true>,
+	pixel_combine<OPERATION_XOR, true, true>,
+	pixel_combine<OPERATION_OR, true, true>,
+	pixel_combine<OPERATION_NOR, true, true>,
+	pixel_combine<OPERATION_EQUIV, true, true>,
+	pixel_combine<OPERATION_INVERT, true, true>,
+	pixel_combine<OPERATION_OR_REVERSE, true, true>,
+	pixel_combine<OPERATION_COPY_INVERTED, true, true>,
+	pixel_combine<OPERATION_OR_INVERTED, true, true>,
+	pixel_combine<OPERATION_NAND, true, true>,
+	pixel_combine<OPERATION_SET, true, true>,
+		
+	pixel_combine<OPERATION_BLEND, true, true>,
+	pixel_combine<OPERATION_ADD_PIN, true, true>,
+	pixel_combine<OPERATION_ADD_OVER, true, true>,
+	pixel_combine<OPERATION_SUB_PIN, true, true>,
+	pixel_combine<OPERATION_TRANSPARENT, true, true>,
+	pixel_combine<OPERATION_AD_MAX, true, true>,
+	pixel_combine<OPERATION_SUB_OVER, true, true>,
+	pixel_combine<OPERATION_AD_MIN, true, true>,
+	
+	pixel_combine<OPERATION_BLEND_CLEAR, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC, true, true>,
+	pixel_combine<OPERATION_BLEND_DST, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC_OVER, true, true>,
+	pixel_combine<OPERATION_BLEND_DST_OVER, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC_IN, true, true>,
+	pixel_combine<OPERATION_BLEND_DST_IN, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC_OUT, true, true>,
+	pixel_combine<OPERATION_BLEND_DST_OUT, true, true>,
+	pixel_combine<OPERATION_BLEND_SRC_ATOP, true, true>,
+	pixel_combine<OPERATION_BLEND_DST_ATOP, true, true>,
+	pixel_combine<OPERATION_BLEND_XOR, true, true>,
+	pixel_combine<OPERATION_BLEND_PLUS, true, true>,
+	pixel_combine<OPERATION_BLEND_MULTIPLY, true, true>,
+	pixel_combine<OPERATION_BLEND_SCREEN, true, true>,
+	
+	pixel_combine<OPERATION_BLEND_OVERLAY, true, true>,
+	pixel_combine<OPERATION_BLEND_DARKEN, true, true>,
+	pixel_combine<OPERATION_BLEND_LIGHTEN, true, true>,
+	pixel_combine<OPERATION_BLEND_DODGE, true, true>,
+	pixel_combine<OPERATION_BLEND_BURN, true, true>,
+	pixel_combine<OPERATION_BLEND_HARD_LIGHT, true, true>,
+	pixel_combine<OPERATION_BLEND_SOFT_LIGHT, true, true>,
+	pixel_combine<OPERATION_BLEND_DIFFERENCE, true, true>,
+	pixel_combine<OPERATION_BLEND_EXCLUSION, true, true>,
+};*/
+
 ////////////////////////////////////////////////////////////////////////////////
 
 static inline uint32_t MCGBlendModeToFunction(MCGBlendMode p_blend_mode)
 {
 	switch (p_blend_mode)
 	{
+		case kMCGBlendModeClear:
+			return OPERATION_BLEND_CLEAR;
+		case kMCGBlendModeCopy:
+			return OPERATION_BLEND_SRC_OVER;
+		case kMCGBlendModeSourceOver:
+			return OPERATION_BLEND_SRC_OVER;
+		case kMCGBlendModeSourceIn:
+			return OPERATION_BLEND_SRC_IN;
+		case kMCGBlendModeSourceOut:
+			return OPERATION_BLEND_SRC_OUT;
+		case kMCGBlendModeSourceAtop:
+			return OPERATION_BLEND_SRC_ATOP;
+		case kMCGBlendModeDestinationOver:
+			return OPERATION_BLEND_DST_OVER;
+		case kMCGBlendModeDestinationIn:
+			return OPERATION_BLEND_DST_IN;
+		case kMCGBlendModeDestinationOut:
+			return OPERATION_BLEND_DST_OUT;
+		case kMCGBlendModeDestinationAtop:
+			return OPERATION_BLEND_DST_ATOP;
+		case kMCGBlendModeXor:
+			return OPERATION_BLEND_XOR;
+		case kMCGBlendModePlusLighter:
+			return OPERATION_BLEND_PLUS;
+		case kMCGBlendModeMultiply:
+			return OPERATION_BLEND_MULTIPLY;
+		case kMCGBlendModeScreen:
+			return OPERATION_BLEND_SCREEN;
+		case kMCGBlendModeOverlay:
+			return OPERATION_BLEND_OVERLAY;
+		case kMCGBlendModeDarken:
+			return OPERATION_BLEND_DARKEN;
+		case kMCGBlendModeLighten:
+			return OPERATION_BLEND_LIGHTEN;
+		case kMCGBlendModeColorDodge:
+			return OPERATION_BLEND_DODGE;
+		case kMCGBlendModeColorBurn:
+			return OPERATION_BLEND_BURN;
+		case kMCGBlendModeSoftLight:
+			return OPERATION_BLEND_SOFT_LIGHT;
+		case kMCGBlendModeHardLight:
+			return OPERATION_BLEND_HARD_LIGHT;
+		case kMCGBlendModeDifference:
+			return OPERATION_BLEND_DIFFERENCE;
+		case kMCGBlendModeExclusion:
+			return OPERATION_BLEND_EXCLUSION;
+			
 		case kMCGBlendModeLegacyClear:
 			return OPERATION_CLEAR;
 		case kMCGBlendModeLegacyAnd:
@@ -1102,8 +1476,9 @@ static inline uint32_t MCGBlendModeToFunction(MCGBlendMode p_blend_mode)
 			return OPERATION_SUB_OVER;
 		case kMCGBlendModeLegacyAdMin:
 			return OPERATION_AD_MIN;
+			
 		default:
-			return 0;
+			return OPERATION_BLEND_SRC_OVER;
 	}
 }
 
@@ -1126,7 +1501,10 @@ bool MCGLegacyBlendMode::asMode(Mode* mode) const
 
 void MCGLegacyBlendMode::xfer32(SkPMColor dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
 {
-	s_surface_combiners[m_function](dst, count * 4, src, count * 4, count, 1, 0xFF);
+	if (aa == NULL)
+		s_surface_combiners[m_function](dst, count * 4, src, count * 4, count, 1, 0xFF);
+	else
+		s_surface_combiners[m_function](dst, count * 4, src, count * 4, count, 1, aa[0]);
 }
 
 void MCGLegacyBlendMode::xfer4444(uint16_t dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
@@ -1140,6 +1518,11 @@ void MCGLegacyBlendMode::xfer16(uint16_t dst[], const SkPMColor src[], int count
 void MCGLegacyBlendMode::xferA8(SkAlpha dst[], const SkPMColor src[], int count, const SkAlpha aa[]) const
 {
 }
+
+/*SkPMColor MCGLegacyBlendMode::xferColor(SkPMColor src, SkPMColor dst) const
+{
+	return s_pixel_combiners[m_function](dst, src);
+}*/
 
 MCGLegacyBlendMode::MCGLegacyBlendMode(SkFlattenableReadBuffer& buffer) : SkXfermode(buffer)
 {

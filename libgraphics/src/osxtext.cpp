@@ -26,7 +26,9 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
-		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id);
+		// if the specified fon't can't be found, just use the default
+		if (ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id) != noErr)
+			t_err = ATSUFONDtoFontID(0, p_font . style, &t_font_id);
     }
 	ATSUAttributeTag t_tags[] =
 	{
@@ -164,7 +166,11 @@ static bool osx_draw_text_to_cgcontext_at_location(const void *p_text, uindex_t 
 	};	
 	
 	if (t_err == noErr)
-		t_err = ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id);
+	{
+		// if the specified fon't can't be found, just use the default
+		if (ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id) != noErr)
+			t_err = ATSUFONDtoFontID(0, p_font . style, &t_font_id);
+	}
 	
 	ATSUStyle t_style;
 	t_style = NULL;
