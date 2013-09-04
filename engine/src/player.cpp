@@ -1946,7 +1946,7 @@ void MCPlayer::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool 
 
 #ifdef FEATURE_QUICKTIME
 	if (!(state & CS_CLOSING))
-		prepare(MCnullstring);
+		prepare(kMCEmptyString);
 
 	if (qtstate == QT_INITTED)
 		qt_draw(dc, dirty);
@@ -2639,15 +2639,19 @@ Boolean MCPlayer::qt_prepare(void)
 	// MW-2010-06-02: [[ Bug 8773 ]] Make sure we pass 'https' urls through to QT's
 	//   URL data handler.
 	theMovie = NULL;
-	if (strnequal(filename, "https:", 6) || strnequal(filename, "http:", 5) || strnequal(filename, "ftp:", 4) || strnequal(filename, "file:", 5) || strnequal(filename, "rtsp:", 5))
+	if (MCStringIsEqualToCString(filename, "https:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "http:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "ftp:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "file:", kMCCompareExact) ||
+		MCStringIsEqualToCString(filename, "rtsp:", kMCCompareExact))
 	{
-		Size mySize = (Size)strlen(filename) + 1;
+		Size mySize = (Size)MCStringGetLength(filename) + 1;
 		if (mySize)
 		{
 			Handle myHandle = NewHandleClear(mySize);
 			if (myHandle != NULL)
 			{
-				BlockMove(filename, *myHandle, mySize);
+				BlockMove(MCStringGetCString(filename), *myHandle, mySize);
 				NewMovieFromDataRef((Movie *)&theMovie, newMovieActive, NULL, myHandle, URLDataHandlerSubType);
 				DisposeHandle(myHandle);
 			}
@@ -2658,7 +2662,7 @@ Boolean MCPlayer::qt_prepare(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
         MCAutoStringRef t_filename_str;
-        /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(filename), &t_filename_str);
+        /* UNCHECKED */ MCStringCreateWithCString(getstack() -> resolve_filename(MCStringGetCString(filename)), &t_filename_str);
 		
         MCAutoStringRef t_resolved_filename_str;
 		

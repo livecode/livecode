@@ -2143,7 +2143,6 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		return true;
 	}
 
-	MCAutoStringRef t_filename;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
@@ -2166,7 +2165,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
-		MCValueAssign(filename, *t_filename);
+		MCValueAssign(filename, p_filename);
 	}
 
 	return t_success;
