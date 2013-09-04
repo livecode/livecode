@@ -755,11 +755,16 @@ int MCA_color(MCExecPoint& ep, const char *p_title, const char *p_initial, Boole
 	return (1);
 }
 
+// MERG-2013-08-18: Stubs for colorDialogColors.
+void MCA_setcolordialogcolors(MCExecPoint& p_ep)
+{
 
+}
 
-
-
-
+void MCA_getcolordialogcolors(MCExecPoint& p_ep)
+{
+	p_ep.clear();
+}
 
 // ---===================================================---
 //
