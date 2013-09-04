@@ -296,7 +296,7 @@ bool MCSystemPlaySound(MCStringRef p_sound, bool p_looping)
     if (t_success)
     {
         // Check if we are playing an ipod file or a resource file.
-		if (MCStringBeginsWith(p_sound, MCSTR("ipod-library://"), kMCStringOptionCompareExact))
+		if (MCStringBeginsWithCString(p_sound, (const char_t *)"ipod-library://", kMCStringOptionCompareExact))
         {
             s_sound_file = MCValueRetain(p_sound);
             t_url = [NSURL URLWithString: [NSString stringWithCString: MCStringGetCString(s_sound_file) encoding: NSMacOSRomanStringEncoding]];

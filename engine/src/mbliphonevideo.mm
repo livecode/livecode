@@ -299,8 +299,8 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	//   than a file;
 	NSURL *t_url;
 	t_url = nil;
-	if (MCStringBeginsWith(p_video, MCSTR("http://"), kMCStringOptionCompareExact)
-		|| MCStringBeginsWith(p_video, MCSTR("https://"), kMCStringOptionCompareExact))
+	if (MCStringBeginsWithCString(p_video, (const char_t *)"http://", kMCStringOptionCompareExact)
+		|| MCStringBeginsWithCString(p_video, (const char_t *)"https://", kMCStringOptionCompareExact))
 	{
 		CFStringRef cfstrurl = nil;
 		/* UNCHECKED */ MCStringConvertToCFStringRef(p_video, cfstrurl);

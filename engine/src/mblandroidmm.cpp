@@ -55,8 +55,8 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	bool t_is_url = false;
 	bool t_is_asset = false;
 
-	if (MCStringBeginsWith(p_video, MCSTR("http://"), kMCStringOptionCompareExact)
-		|| MCStringBeginsWith(p_video, MCSTR("https://"), kMCStringOptionCompareExact)
+	if (MCStringBeginsWithCString(p_video, "http://", kMCStringOptionCompareExact)
+		|| MCStringBeginsWithCString(p_video, "https://", kMCStringOptionCompareExact)
 	{
 		t_is_url = true;
 		t_video_path = p_file;
@@ -74,7 +74,7 @@ bool MCSystemPlayVideo(MCStringRef p_video)
 	t_show_controller = MCtemplateplayer -> getflag(F_SHOW_CONTROLLER) == True;
 
 	s_video_playing = true;
-	MCAndroidEngineRemoteCall("playVideo", "bsbbbb", &t_success, MCStringGetCString(t_video_path), t_is_asset, t_is_url, t_looping, t_show_controller);
+	MCAndroidEngineRemoteCall("playVideo", "bxbbbb", &t_success, MCStringGetCString(t_video_path), t_is_asset, t_is_url, t_looping, t_show_controller);
 
 	if (!t_success)
 		s_video_playing = false;
