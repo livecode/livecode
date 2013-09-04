@@ -477,6 +477,7 @@ void MCServerPutUnicodeMarkup(const MCString& s)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/*
 bool MCSafeCStringEqual(const char *a, const char *b)
 {
 	if (a == NULL && b == NULL)
@@ -486,43 +487,35 @@ bool MCSafeCStringEqual(const char *a, const char *b)
 	else
 		return MCCStringEqual(a, b);
 }
+*/
 
-bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t p_expires, const MCString &p_path, const MCString &p_domain, bool p_secure, bool p_http_only)
+bool MCServerSetCookie(MCStringRef p_name, MCStringRef p_value, uint32_t p_expires, MCStringRef p_path, MCStringRef p_domain, bool p_secure, bool p_http_only)
 {
 	bool t_success = true;
-	char *t_name = NULL;
-	char *t_value = NULL;
-	char *t_path = NULL;
-	char *t_domain = NULL;
-	
 	uint32_t t_index = 0;
 	
-	if (t_success && p_name.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_name.getstring(), p_name.getlength(), t_name);
+	if (t_success && MCStringGetLength(p_name) != 0 && MCStringGetLength(p_path) != 0 && MCStringGetLength(p_domain) != 0)
+		t_success = true;
 		
-	if (t_success && p_value.getlength() != 0)
+	if (t_success && MCStringGetLength(p_value) != 0)
 	{
-		// urlencode cookie value
 		MCExecPoint ep;
-		ep.setsvalue(p_value);
+		ep.setsvalue(MCStringGetCString(p_value));
 		MCU_urlencode(ep);
-		MCString t_encoded = ep.getsvalue();
-		t_success = MCCStringCloneSubstring(t_encoded.getstring(), t_encoded.getlength(), t_value);
-	}	
-	if (t_success && p_path.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_path.getstring(), p_path.getlength(), t_path);
+		MCAutoStringRef t_encoded;
+		t_success = ep .copyasstringref(&t_encoded);
+		MCValueAssign(p_value, *t_encoded);
 
-	if (t_success && p_domain.getlength() != 0)
-		t_success = MCCStringCloneSubstring(p_domain.getstring(), p_domain.getlength(), t_domain);
+	}	
 	
 	if (t_success)
 	{
 		// try to find matching cookie (name, path, domain)
 		for (; t_index < MCservercgicookiecount; t_index++)
 		{
-			if (MCSafeCStringEqual(t_name, MCservercgicookies[t_index].name) &&
-				MCSafeCStringEqual(t_path, MCservercgicookies[t_index].path) &&
-				MCSafeCStringEqual(t_domain, MCservercgicookies[t_index].domain))
+			if (MCStringIsEqualToCString(p_name, MCservercgicookies[t_index].name, kMCCompareExact) &&
+				MCStringIsEqualToCString(p_path, MCservercgicookies[t_index].path, kMCCompareExact) &&
+				MCStringIsEqualToCString(p_domain, MCservercgicookies[t_index].domain, kMCCompareExact))
 				break;
 		}
 		if (t_index == MCservercgicookiecount)
@@ -531,21 +524,14 @@ bool MCServerSetCookie(const MCString &p_name, const MCString &p_value, uint32_t
 	
 	if (t_success)
 	{
-		MCservercgicookies[t_index].name = t_name;
-		MCservercgicookies[t_index].value = t_value;
-		MCservercgicookies[t_index].path = t_path;
-		MCservercgicookies[t_index].domain = t_domain;
+		MCservercgicookies[t_index].name = strdup(MCStringGetCString(p_name));
+		MCservercgicookies[t_index].value = strdup(MCStringGetCString(p_value));
+		MCservercgicookies[t_index].path = strdup(MCStringGetCString(p_path));
+		MCservercgicookies[t_index].domain = strdup(MCStringGetCString(p_domain));
 
 		MCservercgicookies[t_index].expires = p_expires;
 		MCservercgicookies[t_index].secure = p_secure;
 		MCservercgicookies[t_index].http_only = p_http_only;
-	}
-	else
-	{
-		MCCStringFree(t_name);
-		MCCStringFree(t_value);
-		MCCStringFree(t_path);
-		MCCStringFree(t_domain);
 	}
 	
 	return t_success;

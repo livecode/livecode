@@ -1529,7 +1529,11 @@ bool MCServerStartSession()
 	}
 	
 	if (t_success)
-		t_success = MCSessionStart(t_session_id, s_current_session);
+	{
+		MCAutoStringRef t_session_id_str;
+		/* UNCHECKED */ MCStringCreateWithCString(t_session_id, &t_session_id_str);
+		t_success = MCSessionStart(*t_session_id_str, s_current_session);
+	}
 	
 	MCVariable *t_session_var = NULL;
 	
@@ -1613,7 +1617,7 @@ bool MCServerDeleteSession()
 	t_success = MCS_get_session_id(&t_id);
 
 	if (t_success)
-		t_success = MCSessionExpire(MCStringGetCString(*t_id));
+		t_success = MCSessionExpire(*t_id);
 	
 	if (s_current_session != NULL)
 	{
