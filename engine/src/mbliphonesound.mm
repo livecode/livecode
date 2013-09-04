@@ -711,11 +711,8 @@ bool MCSystemListSoundChannels(MCStringRef& r_channels)
     
 	for(MCSystemSoundChannel *t_channel = s_sound_channels; t_channel != nil; t_channel = t_channel -> next)
     {
-		if (!MCStringIsEmpty(t_channel->name))
-        {
-            t_elementsfound = true;
-			MCListAppend(*t_list, t_channel->name);
-        }
+		t_elementsfound = true;
+		MCListAppend(*t_list, t_channel->name);
     }
 	
     MCListCopyAsString(*t_list, r_channels);

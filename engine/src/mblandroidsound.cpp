@@ -214,19 +214,12 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFin
 
 JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundFinishedOnChannel(JNIEnv *env, jobject object, jstring channel, jstring sound, jlong object_handle)
 {
-    const char *t_channel = nil;
-    t_channel = env->GetStringUTFChars(channel, nil);
-    const char *t_sound = nil;
-    t_sound = env->GetStringUTFChars(sound, nil);
+	MCAutoStringRef t_channel;
+	MCAutoStringRef t_sound;
+	/* UNCHECKED */ MCJavaStringToStringRef(env, channel, &t_channel);
+	/* UNCHECKED */ MCJavaStringToStringRef(env, sound, &t_sound);
 	
-	MCAutoStringRef t_channel_ref;
-	MCAutoStringRef t_sound_ref;
-	/* UNCHECKED */ MCStringCreateWithBytes(t_channel, env->GetStringUTFLength(channel), kMCStringEncodingUTF8, false, &t_channel_ref);
-	/* UNCHECKED */ MCStringCreateWithBytes(t_sound, env->GetStringUTFLength(channel), kMCStringEncodingUTF8, false, &t_sound_ref);
-	env->ReleaseStringUTFChars(channel, t_channel);
-	env->ReleaseStringUTFChars(sound, t_sound);
-	
-    MCSoundPostSoundFinishedOnChannelMessage(t_channel_ref, t_sound_ref, (MCObjectHandle*) object_handle);
+    MCSoundPostSoundFinishedOnChannelMessage(*t_channel, *t_sound, (MCObjectHandle*) object_handle);
 }
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_SoundModule_doSoundReleaseCallbackHandle(JNIEnv *env, jobject object, jlong object_handle) __attribute__((visibility("default")));
