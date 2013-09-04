@@ -1407,19 +1407,6 @@ Boolean MCS_eof(IO_handle p_stream)
 	return (p_stream -> Tell() == p_stream ->  GetFileSize());
 }
 
-bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
-{
-    MCAutoStringRef t_resolved_path;
-    MCAutoStringRef t_native_path;
-	
-    if (!(MCS_resolvepath(p_path, &t_resolved_path) && MCS_pathtonative(*t_resolved_path, &t_native_path)))
-        return false;
-    
-	MCsystem -> GetCanonicalPath(*t_native_path, r_path);
-	
-	return true;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean reply)

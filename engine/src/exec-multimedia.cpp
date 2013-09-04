@@ -270,7 +270,7 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 		return;
 
 	MCAutoStringRef soundfile;
-	MCS_get_canonical_path(p_filename, &soundfile);
+    MCS_resolvepath(p_filename, &soundfile);
 	MCtemplateplayer->recordsound(*soundfile);
 }
 

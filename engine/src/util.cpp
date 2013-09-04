@@ -2017,62 +2017,62 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	return stat;
 }
-
-bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
-		return MCStringCopy(p_path, r_stdpath);
-
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
-
-	for (uindex_t i = 0; i < t_length; i++)
-	{
-#ifdef _MACOSX
-		if (t_src[i] == '/')
-			t_dst[i] = ':';
-		else if (t_src[i] == ':')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#else
-		if (t_src[i] == '/')
-			t_dst[i] = '\\';
-		else if (t_src[i] == '\\')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#endif
-	}
-
-	return t_path.CreateStringAndRelease(r_stdpath);
-}
-
-void MCU_path2std(char *dptr)
-{
-	if (dptr == NULL || !*dptr)
-		return;
-	do
-	{
-#ifdef _MACOSX
-		if (*dptr == '/')
-			*dptr = ':';
-		else if (*dptr == ':')
-			*dptr = '/';
-#else
-		if (*dptr == '/')
-			*dptr = '\\';
-		else if (*dptr == '\\')
-			*dptr = '/';
-#endif
-	}
-	while (*++dptr);
-}
+//
+//bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+//{
+//	uindex_t t_length = MCStringGetLength(p_path);
+//	if (t_length == 0)
+//		return MCStringCopy(p_path, r_stdpath);
+//
+//	MCAutoNativeCharArray t_path;
+//	if (!t_path.New(t_length))
+//		return false;
+//
+//	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+//	char_t *t_dst = t_path.Chars();
+//
+//	for (uindex_t i = 0; i < t_length; i++)
+//	{
+//#ifdef _MACOSX
+//		if (t_src[i] == '/')
+//			t_dst[i] = ':';
+//		else if (t_src[i] == ':')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#else
+//		if (t_src[i] == '/')
+//			t_dst[i] = '\\';
+//		else if (t_src[i] == '\\')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#endif
+//	}
+//
+//	return t_path.CreateStringAndRelease(r_stdpath);
+//}
+//
+//void MCU_path2std(char *dptr)
+//{
+//	if (dptr == NULL || !*dptr)
+//		return;
+//	do
+//	{
+//#ifdef _MACOSX
+//		if (*dptr == '/')
+//			*dptr = ':';
+//		else if (*dptr == ':')
+//			*dptr = '/';
+//#else
+//		if (*dptr == '/')
+//			*dptr = '\\';
+//		else if (*dptr == '\\')
+//			*dptr = '/';
+//#endif
+//	}
+//	while (*++dptr);
+//}
 
 bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 {

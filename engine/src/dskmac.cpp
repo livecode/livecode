@@ -1280,6 +1280,32 @@ Boolean MCS_mac_nodelay(int4 p_fd)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+{
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_stdpath);
+    
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+    
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+    
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		if (t_src[i] == '/')
+			t_dst[i] = ':';
+		else if (t_src[i] == ':')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+	}
+    
+	return t_path.CreateStringAndRelease(r_stdpath);
+}
+
 OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
 {
 #ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
@@ -1442,9 +1468,9 @@ bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
     MCU_utf8tonative(*t_utf8_path, r_path);
 }
 
-
-char *MCS_mac_FSSpec2path(FSSpec *fSpec)
+bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
 {
+#ifdef /* MCS_mac_FSSpec2path_dsk_mac */ LEGACY_SYSTEM
 	char *path = new char[PATH_MAX + 1];
     
     
@@ -1495,6 +1521,66 @@ char *MCS_mac_FSSpec2path(FSSpec *fSpec)
 	}
 	delete fname;
 	delete path;
+	return tutfpath;
+#endif /* MCS_mac_FSSpec2path_dsk_mac */
+    MCAutoNativeCharArray t_path, t_name;
+    MCAutoStringRef t_filename;
+    MCAutoStringRef t_filename_std;
+    char *t_char_ptr;
+    
+    t_path.New(PATH_MAX + 1);
+    t_name.New(PATH_MAX + 1);
+    
+    t_char_ptr = (char*)t_path.Chars();
+    
+	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
+    
+    /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
+    
+	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
+    
+    t_char_ptr = strclone(MCStringGetCString(*t_filename));
+    
+	char oldchar = fSpec->name[0];
+	Boolean dontappendname = False;
+	fSpec->name[0] = '\0';
+    
+	FSRef ref;
+    
+	// MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+    
+	/* fSpec->name[0] = oldchar;
+     dontappendname = True;*/
+    
+	if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+	{
+		if (errno == nsvErr)
+		{
+			fSpec->name[0] = oldchar;
+			if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+			{
+				errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+				dontappendname = True;
+			}
+			else
+				t_char_ptr[0] = '\0';
+		}
+		else
+			t_char_ptr[0] = '\0';
+	}
+	else
+		errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+	uint4 destlen;
+	char *tutfpath = new char[PATH_MAX + 1];
+	destlen = PATH_MAX;
+	MCS_utf8tonative(t_char_ptr, strlen(t_char_ptr), tutfpath, destlen);
+	tutfpath[destlen] = '\0';
+	if (!dontappendname)
+	{
+		if (tutfpath[destlen - 1] != '/')
+			strcat(tutfpath, "/");
+		strcat(tutfpath, (char*)t_name.Chars());
+	}
 	return tutfpath;
 }
 
@@ -4583,15 +4669,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             HGetVol(NULL, &vRefNum, &dirID);
             FSSpec fspec;
             FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
-            char *tpath = MCS_mac_FSSpec2path(&fspec);
-            char *newpath = new char[strlen(tpath) + 11];
-            strcpy(newpath, tpath);
-            strcat(newpath, "/../../../");
-            MCAutoStringRef t_new_path_auto;
-            /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
-            /* UNCHECKED */ SetCurrentFolder(*t_new_path_auto);
-            delete tpath;
-            delete newpath;
+            MCAutoStringRef t_path;
+            MCAutoStringRef t_new_path;
+            /* UNCHECKED */ MCS_mac_FSSpec2path(&fspec, &t_path);
+            /* UNCHECKED */ MCStringFormat(&t_new_path, "%s%s", MCStringGetCString(*t_path), "/../../../");
+            /* UNCHECKED */ SetCurrentFolder(*t_new_path);
         }
         
         // MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
@@ -6444,38 +6526,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
 	
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
-	{ // Copied from srvmac.cpp
-		CFStringRef t_cf_path;
-		t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingMacRoman);
-		
-		CFIndex t_used;
-		t_used = CFStringGetMaximumSizeOfFileSystemRepresentation(t_cf_path);
-		
-		MCAutoNativeCharArray t_native;
-		if (!t_native.New(t_used))
-			return false;
-        
-		CFStringGetFileSystemRepresentation(t_cf_path, (char*)t_native.Chars(), t_used);
-		t_native.Shrink(MCCStringLength((char*)t_native.Chars()));
-		
-		return t_native.CreateStringAndRelease(r_native);
+	{
+        return MCStringCopy(p_path, r_native);
 	}
 	
 	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
-	{ // Copied from srvmac.cpp
-		CFStringRef t_cf_path;
-		t_cf_path = CFStringCreateWithFileSystemRepresentation(NULL, MCStringGetCString(p_native));
-		
-		CFIndex t_used;
-		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
-		
-		MCAutoNativeCharArray t_path;
-		if (!t_path.New(t_used))
-			return false;;
-        
-		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
-		
-		return t_path.CreateStringAndRelease(r_path);
+	{
+        return MCStringCopy(p_native, r_path);
 	}
     
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
@@ -6773,19 +6830,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	return MCStringCopy(p_path, r_short_path);
 #endif /* MCS_shortfilepath_dsk_mac */
         return MCStringCopy(p_path, r_short_path);
-    }
-    
-    virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path)
-    {
-#ifdef /* MCS_get_canonical_path_dsk_mac */ LEGACY_SYSTEM
-	char *t_path = NULL;
-	
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
-	
-	return t_path;
-#endif /* MCS_get_canonical_path_dsk_mac */
-        MCU_fix_path(p_path, r_canonical_path);
     }
     
 	virtual char *GetHostName(void)
@@ -8115,9 +8159,11 @@ static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
      */
 	errno = noErr;
 	retDesc->dataHandle = NULL;  /* So caller can dispose always. */
-	char *ptr = strchr(MCStringGetCString(address), ':');
     
-	if (ptr == NULL)
+    uindex_t t_index;
+	/* UNCHECKED */ MCStringFirstIndexOfChar(address, ':', 0, kMCStringOptionCompareExact, t_index);
+    
+	if (t_index == 0)
 	{ //address contains application name only. Form # 3
 		char *appname = new char[MCStringGetLength(address) +1];
 		strcpy(appname, MCStringGetCString(address));
@@ -8250,7 +8296,10 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				FSSpec fs;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
-				result = MCS_mac_FSSpec2path(&fs);
+                MCAutoStringRef t_result;
+                
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             case typeFSRef:
@@ -8349,7 +8398,10 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				FSSpec fs;
 				errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
-				result = MCS_mac_FSSpec2path(&fs);
+                MCAutoStringRef t_result;
+                
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             case typeFSRef:

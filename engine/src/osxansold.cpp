@@ -750,13 +750,14 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 								//process single file for now, may be necessary to add support for multiple files
 								FSSpec theSpec;
 								getFSSpecFromAEDesc(desc, theSpec);	  //put reply in FSSpec
-								char *tpath = MCS_mac_FSSpec2path(&theSpec); //convert FSSpec to a full path
-								if (tpath)
+                                MCAutoStringRef t_path;
+                                
+								if (MCS_mac_FSSpec2path(&theSpec, &t_path))
 								{
-									uint2 tpathsize = strlen(tpath);
+									uint2 tpathsize = MCStringGetLength(*t_path);
 									navfilepath = new char[tpathsize + 32 + PATH_MAX];
 									navfilepath[0] = 0;
-									strcpy(navfilepath, tpath);
+									strcpy(navfilepath, MCStringGetCString(*t_path));
 									strcat(navfilepath, "/");
 									CFStringRef fileName
 									= NavDialogGetSaveFileName(callBackParms->context);
@@ -765,7 +766,6 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 																	 &navfilepath[tpathsize + 1],
 																	 tpathsize + 1 + PATH_MAX,
 																	 CFStringGetSystemEncoding());
-									delete tpath;
 								}
 							}
 						}

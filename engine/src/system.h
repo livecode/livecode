@@ -478,7 +478,6 @@ struct MCSystemInterface
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
-    virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path) = 0;
 
 	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
 

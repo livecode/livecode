@@ -36,6 +36,6 @@ extern bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path);
 extern bool MCS_mac_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error);
 extern void MCS_mac_closeresourcefile(SInt16 p_fork_ref);
 
-extern char *MCS_mac_FSSpec2path(FSSpec *fileSpec);
+extern bool MCS_mac_FSSpec2path(FSSpec *fileSpec, MCStringRef &r_path);
 
 class MCMacOSXTransferData;

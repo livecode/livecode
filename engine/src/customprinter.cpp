@@ -2068,19 +2068,19 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 		return ES_ERROR;
 	}
 
-	char *t_filename = nil;
+    MCAutoStringRef t_filename;
 	if (p_filename != nil)
 	{
-		// TODO error checking
-		MCCStringClone(p_filename, t_filename);
-		MCU_path2native(t_filename);
+        MCAutoStringRef t_stringref_filename;
+        /* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_stringref_filename);
+		/* UNCHECKED */ MCS_pathtonative(*t_stringref_filename, &t_filename);
 	}
 
 	MCCustomPrinter *t_printer;
 	t_printer = new MCCustomPrinter(p_destination, t_device);
 	t_printer -> Initialize();
 	t_printer -> SetDeviceName(p_destination);
-	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, t_filename);
+	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, MCStringGetCString(*t_filename));
 	t_printer -> SetDeviceOptions(p_options);
 	t_printer -> SetPageSize(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
 	t_printer -> SetPageOrientation(MCprinter -> GetPageOrientation());
@@ -2095,8 +2095,6 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 	t_printer -> SetDeviceRectangle(t_printer -> GetPageRectangle());
 
 	r_printer = t_printer;
-
-	MCCStringFree(t_filename);
 
 	return ES_NORMAL;
 }

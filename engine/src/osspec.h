@@ -50,7 +50,7 @@ extern bool MCS_tmpnam(MCStringRef& r_path);
 /* LEGACY */ extern const char *MCS_tmpnam();
 extern bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved_path);
 /* LEGACY */ extern char *MCS_resolvepath(const char *path);
-extern bool MCS_get_canonical_path(MCStringRef path, MCStringRef& r_path);
+//extern bool MCS_get_canonical_path(MCStringRef path, MCStringRef& r_path);
 extern void MCS_getcurdir(MCStringRef& r_path);
 /* LEGACY */ extern char *MCS_getcurdir();
 extern Boolean MCS_setcurdir(MCStringRef p_path);

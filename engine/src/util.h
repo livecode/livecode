@@ -155,10 +155,10 @@ extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
-extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
-extern void MCU_path2std(char *dptr);
-extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
-extern void MCU_path2native(char *dptr);
+//extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
+//extern void MCU_path2std(char *dptr);
+//extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
+//extern void MCU_path2native(char *dptr);
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);
