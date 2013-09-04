@@ -1476,6 +1476,10 @@ static inline uint32_t MCGBlendModeToFunction(MCGBlendMode p_blend_mode)
 			return OPERATION_SUB_OVER;
 		case kMCGBlendModeLegacyAdMin:
 			return OPERATION_AD_MIN;
+		case kMCGBlendModeLegacyBlendSource:
+			return OPERATION_BLEND_SRC;
+		case kMCGBlendModeLegacyBlendDestination:
+			return OPERATION_BLEND_DST;
 			
 		default:
 			return OPERATION_BLEND_SRC_OVER;

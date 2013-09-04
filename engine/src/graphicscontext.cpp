@@ -245,13 +245,8 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 		case GXblendClear:
 			t_blend_mode = kMCGBlendModeClear;
 			break;
-		case GXblendSrc:
-			t_blend_mode = kMCGBlendModeCopy;
-			break;
-		case GXblendDst:
-			t_blend_mode = kMCGBlendModeClear;
-			break;
 		case GXblendSrcOver:
+		case GXcopy:
 			t_blend_mode = kMCGBlendModeSourceOver;
 			break;
 		case GXblendDstOver:
@@ -324,9 +319,6 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 		case GXandReverse:
 			t_blend_mode = kMCGBlendModeLegacyAndReverse;
 			break;
-		case GXcopy:
-			t_blend_mode = kMCGBlendModeLegacyCopy;
-			break;
 		case GXandInverted:
 			t_blend_mode = kMCGBlendModeLegacyInverted;
 			break;
@@ -387,6 +379,13 @@ void MCGraphicsContext::setfunction(uint1 p_function)
 		case GXaddMin:
 			t_blend_mode = kMCGBlendModeLegacyAdMin;
 			break;
+		case GXblendSrc:
+			t_blend_mode = kMCGBlendModeLegacyBlendSource;
+			break;
+		case GXblendDst:
+			t_blend_mode = kMCGBlendModeLegacyBlendDestination;
+			break;
+			
 	}
 	MCGContextSetBlendMode(m_gcontext, t_blend_mode);
 }

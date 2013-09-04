@@ -196,6 +196,8 @@ enum MCGBlendMode
 	kMCGBlendModeLegacyAdMax,
 	kMCGBlendModeLegacySubOver,
 	kMCGBlendModeLegacyAdMin,
+	kMCGBlendModeLegacyBlendSource,
+	kMCGBlendModeLegacyBlendDestination,
 	
 	kMCGBlendModeCount,
 };
