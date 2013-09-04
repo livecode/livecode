@@ -185,23 +185,6 @@ protected:
 };
 
 
-
-extern bool MCS_init_sockets();
-extern bool MCS_compare_host_domain(MCStringRef p_host_a, MCStringRef p_host_b);
-extern MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef m, Boolean secure, Boolean sslverify, MCStringRef sslcertfile);
-extern void MCS_close_socket(MCSocket *s);
-extern void MCS_read_socket(MCSocket *s, MCExecPoint &ep, uint4 length, const char *until, MCNameRef m);
-extern void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRef m);
-extern MCSocket *MCS_accept(uint2 p, MCObject *o, MCNameRef m, Boolean datagram,Boolean secure,Boolean sslverify, MCStringRef sslcertfile);
-extern bool MCS_ha(MCSocket *s, MCStringRef& r_string);
-extern bool MCS_hn(MCStringRef& r_string);
-extern bool MCS_aton(MCStringRef p_address, MCStringRef& r_name);
-extern bool MCS_ntoa(MCStringRef p_hostname, MCObject *p_target, MCNameRef p_message, MCListRef& r_addr);
-extern bool MCS_pa(MCSocket *s, MCStringRef& r_string);
-
-
-
-
 typedef bool (*MCHostNameResolveCallback)(void *p_context, bool p_resolved, bool p_final, struct sockaddr *p_addr, int p_addrlen);
 typedef void (*MCSockAddrToStringCallback)(void *p_context, bool p_resolved, const char *p_hostname);
 

@@ -914,7 +914,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	}
 	MCS_close(stream);
-	uint2 oldmask = MCS_umask(0);
+	uint2 oldmask = MCS_getumask();
 	uint2 newmask = ~oldmask & 00777;
 	if (oldmask & 00400)
 		newmask &= ~00100;
@@ -922,7 +922,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		newmask &= ~00010;
 	if (oldmask & 00004)
 		newmask &= ~00001;
-	MCS_umask(oldmask);
+	MCS_setumask(oldmask);
 	
 	MCS_chmod(*t_linkname, newmask);
 

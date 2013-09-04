@@ -160,6 +160,11 @@ Boolean MCS_handle_sockets()
 {
 	return MCS_poll(0.0, 0.0);
 }
+#else
+Boolean MCS_handle_sockets()
+{
+    return True;
+}
 #endif
 
 #ifdef _WINDOWS
@@ -711,21 +716,25 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	
 		if (s->shared)
 		{
-			char *portptr = strchr(MCNameGetCString(s->name), ':');
+            char *t_name_copy;
+            
+            t_name_copy = strclone(MCNameGetCString(s->name));
+			char *portptr = strchr(t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(MCNameGetCString(s->name), (in_addr *)&to.sin_addr.s_addr)
+			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
 				|| sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-			*portptr = ':';
+            
+            delete[] t_name_copy;
 		}
 		else if (send(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0) < 0)
 		{

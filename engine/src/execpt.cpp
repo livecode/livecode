@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "uidc.h"
 
+#include "osxprefix-legacy.h"
+
 //////////
 
 bool MCExecPoint::isempty(void) const

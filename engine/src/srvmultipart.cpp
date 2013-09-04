@@ -591,7 +591,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 				// check for spaces at end of boundary line.
 				while (t_success && t_crlf[0] == ' ')
 				{
-					t_success = IO_NORMAL == MCS_readfixed(&t_char, 1, t_count, p_stream); // ?? readall ??
+					t_success = IO_NORMAL == MCS_readall(&t_char, t_count, p_stream, t_count); // ?? readall ??
 					t_crlf[0] = t_crlf[1];
 					t_crlf[1] = t_char;
 					r_total_bytes_read += t_count;

@@ -85,9 +85,11 @@ Boolean IO_closefile(MCNameRef name)
 			MCS_close(MCfiles[index].ihandle);
 		else
 		{
+#ifdef OLD_IO_HANDLE
 			if (MCfiles[index].ohandle->flags & IO_WRITTEN
 			        && !(MCfiles[index].ohandle->flags & IO_SEEKED))
 				MCS_trunc(MCfiles[index].ohandle);
+#endif
 			MCS_close(MCfiles[index].ohandle);
 		}
 		MCValueRelease(MCfiles[index].name);
@@ -259,7 +261,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
 	char *dptr;
 	/* UNCHECKED */ ep.reserve(nread, dptr);
-	/* UNCHECKED */ MCS_readfixed(dptr, nread, stream); // ?? readall ??
+	/* UNCHECKED */ MCS_readall(dptr, nread, stream, nread);
 	ep.commit(nread);
 	return IO_NORMAL;
 }
@@ -267,7 +269,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 {
 	uint4 bytes = length;
-	if (MCS_readfixed(ptr, bytes, stream) == IO_ERROR) // readall ??
+	if (MCS_readall(ptr, bytes, stream, bytes) == IO_ERROR)
 		return IO_ERROR;
 	ptr[bytes - 1] = '\0';
 	strtok(ptr, "\n");
@@ -572,13 +574,6 @@ IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
 	return stat;
 }
 
-// MW-2009-06-30: New IO method reads a block of bytes and fails if there is
-//   not enough to satisfy the request.
-IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream)
-{
-	return MCS_readfixed(ptr, size, stream);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 IO_stat IO_read_mccolor(MCColor& r_color, IO_handle p_stream)
@@ -795,6 +790,7 @@ IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 si
 
 ////////////////////////////////////////////////////////////////////////////////
 
+#if OLD_SYSTEM
 int64_t MCS_fake_fsize(IO_handle stream)
 {
 	return 0;
@@ -853,5 +849,6 @@ IO_stat MCS_fake_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 
 	return t_stat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

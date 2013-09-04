@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
+#include "osxprefix-legacy.h"
 
 #include "parsedef.h"
 #include "filedefs.h"
@@ -168,6 +169,8 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length);
 /***************************************************************************/
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// MOVE TO MCScreenDC
 
 EventHandlerUPP MCS_weh;
 
@@ -522,7 +525,7 @@ static pascal OSErr DoOpenDoc(const AppleEvent *theAppleEvent, AppleEvent *reply
 			return errno;
 		// extract FSSpec record's info & form a file name for MC to use
         MCAutoStringRef t_full_path_name;
-		MCS_fsref_to_path(t_doc_fsref, &t_full_path_name);
+		MCS_mac_fsref_to_path(t_doc_fsref, &t_full_path_name);
         
 		if (MCModeShouldQueueOpeningStacks())
 		{
@@ -673,6 +676,8 @@ static pascal OSErr DoAEAnswer(const AppleEvent *ae, AppleEvent *reply, long ref
 	return noErr;
 }
 
+/// END HERE
+
 ///////////////////////////////////////////////////////////////////////////////
 
 static void MCS_launch_set_result_from_lsstatus(void)
@@ -727,7 +732,7 @@ static void MCS_launch_set_result_from_lsstatus(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-IO_stat MCS_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
+IO_stat MCS_mac_shellread(int fd, char *&buffer, uint4 &buffersize, uint4 &size)
 {
 	MCshellfd = fd;
 	size = 0;
@@ -798,7 +803,7 @@ static sysfolders sysfolderlist[] = {
     {&MCN_support, 0, kUserDomain, 'asup'},
 };
 
-bool MCS_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
+static bool MCS_mac_specialfolder_to_mac_folder(MCStringRef p_type, uint32_t& r_folder, OSType& r_domain)
 {
 	for (uindex_t i = 0; i < ELEMENTS(sysfolderlist); i++)
 	{
@@ -996,11 +1001,11 @@ static TextToUnicodeInfo fetch_unicode_info(TextEncoding p_encoding)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCS_setfiletype(MCStringRef p_new_path)
+static void MCS_mac_setfiletype(MCStringRef p_new_path)
 {
 	FSRef t_fsref;
     // TODO Check whether the double path resolution is an issue
-	if (MCS_pathtoref(p_new_path, t_fsref) != noErr)
+	if (MCS_mac_pathtoref(p_new_path, t_fsref) != noErr)
 		return; // ignore errors
     
 	FSCatalogInfo t_catalog;
@@ -1209,8 +1214,8 @@ static void handle_signal(int sig)
 //   MCS_startprocess is called by MCLaunch with a docname
 //   MCS_startprocess is called by MCOpen without a docname
 // Thus, we will fork two methods - and dispatch from MCS_startprocess
-void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
-void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
+static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated);
+static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode);
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1225,14 +1230,19 @@ real8 curtime;
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCS_is_link(MCStringRef p_path)
+bool MCS_mac_is_link(MCStringRef p_path)
 {
+#ifdef /* MCS_is_link_mac_dsk */ LEGACY_SYSTEM
+	struct stat buf;
+	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
+#endif /* MCS_is_link_mac_dsk */
 	struct stat buf;
 	return (lstat(MCStringGetCString(p_path), &buf) == 0 && S_ISLNK(buf.st_mode));
 }
 
-bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
+bool MCS_mac_readlink(MCStringRef p_path, MCStringRef& r_link)
 {
+#ifdef /* MCS_readlink_mac_dsk */ LEGACY_SYSTEM
 	struct stat t_stat;
 	ssize_t t_size;
 	MCAutoNativeCharArray t_buffer;
@@ -1244,6 +1254,596 @@ bool MCS_readlink(MCStringRef p_path, MCStringRef& r_link)
 	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
     
 	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+#endif /* MCS_readlink_mac_dsk */
+	struct stat t_stat;
+	ssize_t t_size;
+	MCAutoNativeCharArray t_buffer;
+    
+	if (lstat(MCStringGetCString(p_path), &t_stat) == -1 ||
+		!t_buffer.New(t_stat.st_size))
+		return false;
+    
+	t_size = readlink(MCStringGetCString(p_path), (char*)t_buffer.Chars(), t_stat.st_size);
+    
+	return (t_size == t_stat.st_size) && t_buffer.CreateStringAndRelease(r_link);
+}
+
+Boolean MCS_mac_nodelay(int4 p_fd)
+{
+#ifdef /* MCS_nodelay_dsk_mac */ LEGACY_SYSTEM
+	return fcntl(fd, F_SETFL, fcntl(fd, F_GETFL, 0) & O_APPEND | O_NONBLOCK)
+    >= 0;
+#endif /* MCS_nodelay_dsk_mac */
+	return fcntl(p_fd, F_SETFL, (fcntl(p_fd, F_GETFL, 0) & O_APPEND) | O_NONBLOCK)
+    >= 0;
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+static bool MCS_mac_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+{
+	uindex_t t_length = MCStringGetLength(p_path);
+	if (t_length == 0)
+		return MCStringCopy(p_path, r_stdpath);
+    
+	MCAutoNativeCharArray t_path;
+	if (!t_path.New(t_length))
+		return false;
+    
+	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+	char_t *t_dst = t_path.Chars();
+    
+	for (uindex_t i = 0; i < t_length; i++)
+	{
+		if (t_src[i] == '/')
+			t_dst[i] = ':';
+		else if (t_src[i] == ':')
+			t_dst[i] = '/';
+		else
+			t_dst[i] = t_src[i];
+	}
+    
+	return t_path.CreateStringAndRelease(r_stdpath);
+}
+
+OSErr MCS_mac_pathtoref(MCStringRef p_path, FSRef& r_ref)
+{
+#ifdef /* MCS_pathtoref_dsk_mac */ LEGACY_SYSTEM
+	char *t_resolved_path;
+	t_resolved_path = MCS_resolvepath(p_path);
+	
+	char *t_utf8_path;
+	t_utf8_path = path2utf(t_resolved_path);
+	
+	OSErr t_error;
+	t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, r_ref, NULL);
+	
+	delete t_utf8_path;
+	
+	// path2utf deletes t_resolved_path
+	// delete t_resolved_path;
+	
+	return t_error;
+#endif /* MCS_pathtoref_dsk_mac */
+    MCAutoStringRef t_auto_path;
+    MCAutoStringRefAsUTF8String t_path;
+    
+    if (!MCS_resolvepath(p_path, &t_auto_path))
+        // TODO assign relevant error code
+        return memFullErr;
+    
+    if (!t_path.Lock(*t_auto_path))
+        return memFullErr;
+    
+	return FSPathMakeRef((const UInt8 *)(*t_path), &r_ref, NULL);
+}
+
+static OSErr MCS_mac_pathtoref_and_leaf(MCStringRef p_path, FSRef& r_ref, UniChar*& r_leaf, UniCharCount& r_leaf_length)
+{
+#ifdef /* MCS_pathtoref_and_leaf */ LEGACY_SYSTEM
+	OSErr t_error;
+	t_error = noErr;
+    
+	char *t_resolved_path;
+	t_resolved_path = NULL;
+	if (t_error == noErr)
+		t_resolved_path = MCS_resolvepath(p_path);
+	
+	char *t_resolved_path_leaf;
+	t_resolved_path_leaf = NULL;
+	if (t_error == noErr)
+	{
+		t_resolved_path_leaf = strrchr(t_resolved_path, '/');
+		if (t_resolved_path_leaf != NULL)
+		{
+			t_resolved_path_leaf[0] = '\0';
+			t_resolved_path_leaf += 1;
+		}
+		else
+			t_error = fnfErr;
+	}
+    
+	char *t_utf8_path;
+	t_utf8_path = NULL;
+	
+	// OK-2010-04-06: [[Bug]] - path2utf frees the buffer passed into it, so we have to clone t_resolved_path
+	// here, as otherwise we are using it after its been freed.
+	char *t_resolved_path_clone;
+	t_resolved_path_clone = strdup(t_resolved_path);
+	
+	if (t_error == noErr)
+		t_utf8_path = path2utf(t_resolved_path_clone);
+    
+	if (t_error == noErr)
+		t_error = FSPathMakeRef((const UInt8 *)t_utf8_path, &r_ref, NULL);
+	
+	// Convert the leaf from MacRoman to UTF16.
+	if (t_error == noErr)
+	{
+		unsigned short *t_utf16_leaf;
+		uint4 t_utf16_leaf_length;
+		
+		t_utf16_leaf = new unsigned short[256];
+		t_utf16_leaf_length = 256;
+		MCS_nativetoutf16(t_resolved_path_leaf, strlen(t_resolved_path_leaf), t_utf16_leaf, t_utf16_leaf_length);
+        
+		r_leaf = (UniChar *)t_utf16_leaf;
+		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
+	}
+	
+	if (t_utf8_path != NULL)
+		delete t_utf8_path;
+    
+	return t_error;
+#endif /* MCS_pathtoref_and_leaf */
+	OSErr t_error;
+	t_error = noErr;
+    
+	MCAutoStringRef t_resolved_path;
+    
+    if (!MCS_resolvepath(p_path, &t_resolved_path))
+        // TODO assign relevant error code
+        t_error = fnfErr;
+    
+    MCAutoStringRef t_folder, t_leaf;
+    uindex_t t_leaf_index;
+    if (MCStringLastIndexOfChar(*t_resolved_path, '/', UINDEX_MAX, kMCStringOptionCompareExact, t_leaf_index))
+    {
+        if (!MCStringDivideAtIndex(*t_resolved_path, t_leaf_index, &t_folder, &t_leaf))
+            t_error = memFullErr;
+    }
+    else
+        t_error = fnfErr;
+    
+	MCAutoStringRefAsUTF8String t_utf8_auto;
+    
+    if (t_error == noErr)
+        if (!t_utf8_auto.Lock(*t_folder))
+            t_error = fnfErr;
+    
+	if (t_error == noErr)
+		t_error = FSPathMakeRef((const UInt8 *)*t_utf8_auto, &r_ref, NULL);
+	
+	// Convert the leaf from MacRoman to UTF16.
+	if (t_error == noErr)
+	{
+		unichar_t *t_utf16_leaf;
+		uint4 t_utf16_leaf_length;
+        /* UNCHECKED */ MCStringConvertToUnicode(*t_leaf, t_utf16_leaf, t_utf16_leaf_length);
+		r_leaf = (UniChar *)t_utf16_leaf;
+		r_leaf_length = (UniCharCount)t_utf16_leaf_length;
+	}
+    
+	return t_error;
+}
+
+static OSErr MCS_mac_fsspec_to_fsref(const FSSpec *p_fsspec, FSRef *r_fsref)
+{
+	return FSpMakeFSRef(p_fsspec, r_fsref);
+}
+
+static OSErr MCS_mac_fsref_to_fsspec(const FSRef *p_fsref, FSSpec *r_fsspec)
+{
+	return FSGetCatalogInfo(p_fsref, 0, NULL, NULL, r_fsspec, NULL);
+}
+
+void MCS_mac_closeresourcefile(SInt16 p_ref) // TODO: remove?
+{
+	OSErr t_err;
+	CloseResFile(p_ref);
+	t_err = ResError();
+}
+
+bool MCS_mac_fsref_to_path(FSRef& p_ref, MCStringRef& r_path)
+{
+	MCAutoNativeCharArray t_buffer;
+	if (!t_buffer.New(PATH_MAX))
+		return false;
+	FSRefMakePath(&p_ref, (UInt8*)t_buffer.Chars(), PATH_MAX);
+    
+	t_buffer.Shrink(MCCStringLength((char*)t_buffer.Chars()));
+    
+	MCAutoStringRef t_utf8_path;
+	return t_buffer.CreateStringAndRelease(&t_utf8_path) &&
+    MCU_utf8tonative(*t_utf8_path, r_path);
+}
+
+bool MCS_mac_FSSpec2path(FSSpec *fSpec, MCStringRef& r_path)
+{
+#ifdef /* MCS_mac_FSSpec2path_dsk_mac */ LEGACY_SYSTEM
+	char *path = new char[PATH_MAX + 1];
+    
+    
+	char *fname = new char[PATH_MAX + 1];
+    
+	CopyPascalStringToC(fSpec->name, fname);
+	MCU_path2std(fname);
+    
+	char oldchar = fSpec->name[0];
+	Boolean dontappendname = False;
+	fSpec->name[0] = '\0';
+    
+	FSRef ref;
+    
+	// MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+    
+	/* fSpec->name[0] = oldchar;
+     dontappendname = True;*/
+    
+	if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+	{
+		if (errno == nsvErr)
+		{
+			fSpec->name[0] = oldchar;
+			if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+			{
+				errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
+				dontappendname = True;
+			}
+			else
+				path[0] = '\0';
+		}
+		else
+			path[0] = '\0';
+	}
+	else
+		errno = FSRefMakePath(&ref, (unsigned char *)path, PATH_MAX);
+	uint4 destlen;
+	char *tutfpath = new char[PATH_MAX + 1];
+	destlen = PATH_MAX;
+	MCS_utf8tonative(path, strlen(path), tutfpath, destlen);
+	tutfpath[destlen] = '\0';
+	if (!dontappendname)
+	{
+		if (tutfpath[destlen - 1] != '/')
+			strcat(tutfpath, "/");
+		strcat(tutfpath, fname);
+	}
+	delete fname;
+	delete path;
+	return tutfpath;
+#endif /* MCS_mac_FSSpec2path_dsk_mac */
+    MCAutoNativeCharArray t_path, t_name;
+    MCAutoStringRef t_filename;
+    MCAutoStringRef t_filename_std;
+    char *t_char_ptr;
+    
+    t_path.New(PATH_MAX + 1);
+    t_name.New(PATH_MAX + 1);
+    
+    t_char_ptr = (char*)t_path.Chars();
+    
+	CopyPascalStringToC(fSpec->name, (char*)t_name.Chars());
+    
+    /* UNCHECKED */ t_name.CreateStringAndRelease(&t_filename_std);
+    
+	/* UNCHECKED */ MCS_pathfromnative(*t_filename_std, &t_filename);
+    
+    t_char_ptr = strclone(MCStringGetCString(*t_filename));
+    
+	char oldchar = fSpec->name[0];
+	Boolean dontappendname = False;
+	fSpec->name[0] = '\0';
+    
+	FSRef ref;
+    
+	// MW-2005-01-21: Removed the following two lines - function would not work if file did not already exist
+    
+	/* fSpec->name[0] = oldchar;
+     dontappendname = True;*/
+    
+	if ((errno = FSpMakeFSRef(fSpec, &ref)) != noErr)
+	{
+		if (errno == nsvErr)
+		{
+			fSpec->name[0] = oldchar;
+			if ((errno = FSpMakeFSRef(fSpec, &ref)) == noErr)
+			{
+				errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+				dontappendname = True;
+			}
+			else
+				t_char_ptr[0] = '\0';
+		}
+		else
+			t_char_ptr[0] = '\0';
+	}
+	else
+		errno = FSRefMakePath(&ref, (unsigned char *)t_char_ptr, PATH_MAX);
+	uint4 destlen;
+	char *tutfpath = new char[PATH_MAX + 1];
+	destlen = PATH_MAX;
+	MCS_utf8tonative(t_char_ptr, strlen(t_char_ptr), tutfpath, destlen);
+	tutfpath[destlen] = '\0';
+	if (!dontappendname)
+	{
+		if (tutfpath[destlen - 1] != '/')
+			strcat(tutfpath, "/");
+		strcat(tutfpath, (char*)t_name.Chars());
+	}
+	return tutfpath;
+}
+
+static void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
+{
+    bool t_success;
+    t_success = true;
+	
+	HFSUniStr255 t_resource_fork_name;
+	if (t_success)
+	{
+		OSErr t_os_error;
+		t_os_error = FSGetResourceForkName(&t_resource_fork_name);
+		if (t_os_error != noErr)
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("couldn't get resource fork name", r_error);
+        }
+	}
+	
+	// Attempt to create a resource fork if required.
+	if (t_success && p_create)
+	{
+		OSErr t_os_error;
+		t_os_error = FSCreateResourceFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, 0);
+		if (t_os_error != noErr && t_os_error != errFSForkExists)
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("can't create resource fork", r_error);
+        }
+	}
+	
+	// Open it..
+	SInt16 t_fork_ref;
+	bool t_fork_opened;
+	t_fork_opened = false;
+	if (t_success)
+	{
+		OSErr t_os_error;
+		t_os_error = FSOpenFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, p_permission, &t_fork_ref);
+		if (t_os_error == noErr)
+			t_fork_opened = true;
+		else
+        {
+            t_success = false;
+            /* UNCHECKED */ MCStringCreateWithCString("can't open resource fork", r_error);
+        }
+	}
+	
+	*r_fork_ref = t_fork_ref;
+}
+
+static void MCS_mac_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
+{
+	FSRef t_ref;
+	OSErr t_os_error;
+	t_os_error = MCS_mac_pathtoref(p_path, t_ref);
+	if (t_os_error != noErr)
+    {
+		/* UNCHECKED */ MCStringCreateWithCString("can't open file", r_error);
+        return;
+    }
+    
+	MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref, r_error);
+}
+
+static bool MCS_mac_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_create, SInt16& r_fileref_num, MCStringRef& r_error)
+{
+	FSSpec fspec;
+	
+	if (FSGetCatalogInfo(&p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
+		return MCStringCreateWithCString("file not found", r_error);
+	
+	r_fileref_num = FSOpenResFile(&p_ref, p_permissions);
+	if (p_create && r_fileref_num < 0)
+	{
+		OSType t_creator, t_ftype;
+		CInfoPBRec t_cpb;
+		MCMemoryClear(&t_cpb, sizeof(t_cpb));
+		t_cpb.hFileInfo.ioNamePtr = fspec.name;
+		t_cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
+		t_cpb.hFileInfo.ioDirID = fspec.parID;
+		/* DEPRECATED */ if (PBGetCatInfoSync(&t_cpb) == noErr)
+		{
+			t_creator = t_cpb.hFileInfo.ioFlFndrInfo.fdCreator;
+			t_ftype = t_cpb.hFileInfo.ioFlFndrInfo.fdType;
+		}
+		else
+		{
+            const char *t_char_ptr;
+            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
+			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
+		}
+		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
+		
+		if ((errno = ResError()) != noErr)
+			return MCStringCreateWithCString("can't create resource fork", r_error);
+		
+		/* DEPRECATED */ r_fileref_num = FSpOpenResFile(&fspec, p_permissions);
+	}
+	
+	if (r_fileref_num < 0)
+	{
+		errno = fnfErr;
+		return MCStringCreateWithCString("Can't open resource fork", r_error);
+	}
+	
+	if ((errno = ResError()) != noErr)
+		return MCStringCreateWithCString("Error opening resource fork", r_error);
+	
+	return true;
+}
+
+bool MCS_mac_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
+{
+    //	MCAutoStringRef t_utf8_path;
+    //	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
+    //		return false;`
+	
+	FSRef t_ref;
+	OSErr t_os_error;
+	
+	t_os_error = MCS_mac_pathtoref(p_path, t_ref);
+	if (t_os_error != noErr)
+		return MCStringCreateWithCString("can't open file", r_error);
+	
+	return MCS_mac_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
+}
+
+static const char *MCS_mac_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool create, SInt16 *fileRefNum)
+{
+	FSSpec fspec;
+	
+	if (FSGetCatalogInfo(p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
+		return "file not found";
+	
+	if ((*fileRefNum = FSpOpenResFile(&fspec, permission)) < 0)
+	{
+		if (create)
+		{
+			OSType creator, ftype;
+			CInfoPBRec cpb;
+			memset(&cpb, 0, sizeof(CInfoPBRec));
+			cpb.hFileInfo.ioNamePtr = fspec.name;
+			cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
+			cpb.hFileInfo.ioDirID = fspec.parID;
+			if (PBGetCatInfoSync(&cpb) == noErr)
+			{
+				memcpy(&creator, &cpb.hFileInfo.ioFlFndrInfo.fdCreator, 4);
+				memcpy(&ftype, &cpb.hFileInfo.ioFlFndrInfo.fdType, 4);
+			}
+			else
+			{
+                const char *t_char_ptr;
+                t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+				memcpy((char*)&creator, t_char_ptr, 4);
+				memcpy((char*)&ftype, t_char_ptr + 4, 4);
+				creator = MCSwapInt32NetworkToHost(creator);
+				ftype = MCSwapInt32NetworkToHost(ftype);
+			}
+			FSpCreateResFile(&fspec, creator, ftype, smRoman);
+			
+			if ((errno = ResError()) != noErr)
+				return "can't create resource fork";
+            
+			*fileRefNum = FSpOpenResFile(&fspec, permission);
+		}
+		
+		if (*fileRefNum < 0)
+		{
+			errno = fnfErr;
+			return "Can't open resource fork";
+		}
+		
+		if ((errno = ResError()) != noErr)
+			return "Error opening resource fork";
+	}
+	
+	return NULL;
+}
+
+// based on MoreFiles (Apple DTS)
+OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
+{
+#ifdef /* MCS_path2FSSpec_dsk_mac */ LEGACY_SYSTEM
+	char *path = MCS_resolvepath(p_filename));
+	memset(fspec, 0, sizeof(FSSpec));
+    
+	char *f2 = strrchr(path, '/');
+	if (f2 != NULL && f2 != path)
+		*f2++ = '\0';
+	char *fspecname = strclone(f2);
+	path = path2utf(path);
+	FSRef ref;
+	if ((errno = FSPathMakeRef((unsigned char *)path, &ref, NULL)) == noErr)
+	{
+		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
+		                              NULL, NULL, fspec, NULL)) == noErr)
+		{
+			CInfoPBRec cpb;
+			memset(&cpb, 0, sizeof(CInfoPBRec));
+			cpb.dirInfo.ioNamePtr = fspec->name;
+			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
+			cpb.dirInfo.ioDrDirID = fspec->parID;
+			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
+			{
+				delete path;
+				return errno;
+			}
+			c2pstr((char *)fspecname);
+			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
+			                     (unsigned char *)fspecname, fspec);
+		}
+	}
+	delete fspecname;
+	delete path;
+	return errno;
+#endif /* MCS_path2FSSpec_dsk_mac */
+    MCAutoStringRef t_resolved_path;
+    MCAutoStringRefAsUTF8String t_utf_path;
+    
+	if (!MCS_resolvepath(p_filename, &t_resolved_path))
+        return memFullErr;
+    
+	memset(fspec, 0, sizeof(FSSpec));
+    
+	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
+	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+		*f2++ = '\0';
+	char *fspecname = strclone(f2);
+    if (!t_utf_path.Lock(*t_resolved_path))
+        return memFullErr;
+    
+	FSRef ref;
+	if ((errno = FSPathMakeRef((unsigned char*)*t_utf_path, &ref, NULL)) == noErr)
+	{
+		if ((errno = FSGetCatalogInfo(&ref, kFSCatInfoNone,
+		                              NULL, NULL, fspec, NULL)) == noErr)
+		{
+			CInfoPBRec cpb;
+			memset(&cpb, 0, sizeof(CInfoPBRec));
+			cpb.dirInfo.ioNamePtr = fspec->name;
+			cpb.dirInfo.ioVRefNum = fspec->vRefNum;
+			cpb.dirInfo.ioDrDirID = fspec->parID;
+			if ((errno = PBGetCatInfoSync(&cpb)) != noErr)
+			{
+				return errno;
+			}
+			c2pstr((char *)fspecname);
+			errno = FSMakeFSSpec(cpb.dirInfo.ioVRefNum, cpb.dirInfo.ioDrDirID,
+			                     (unsigned char *)fspecname, fspec);
+		}
+	}
+	delete fspecname;
+	return errno;
+}
+
+OSErr MCS_path2FSSpec(const char *fname, FSSpec *fspec)
+{
+	MCAutoStringRef t_filename;
+	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_filename);
+	return MCS_path2FSSpec(*t_filename, fspec);
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -1320,7 +1920,7 @@ public:
 	~MCAutoResourceFileHandle()
 	{
 		if (m_res_file != 0)
-			MCS_closeresourcefile(m_res_file);
+			MCS_mac_closeresourcefile(m_res_file);
 	}
 	
 	short operator = (short p_res_file)
@@ -1345,7 +1945,7 @@ private:
 	short m_res_file;
 };
 
-///////////////////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////////////////////////text/////////////
 
 class MCStdioFileHandle: public MCSystemFileHandle
 {
@@ -1466,16 +2066,13 @@ public:
             fptr = fopen(*t_path_utf, IO_CREATE_MODE);
         
         if (fptr != NULL && created)
-            MCS_setfiletype(p_path);
+            MCS_mac_setfiletype(p_path);
         
 		if (fptr != NULL)
         {
             t_handle = new MCStdioFileHandle;
             t_handle -> m_stream = fptr;
-            t_handle -> m_hserialInputBuff = NULL;
-            t_handle -> m_ioptr = NULL;
-            t_handle -> m_serialIn = 0;
-            t_handle -> m_serialOut = 0;
+            t_handle -> m_is_eof = false;
         }
         
         return t_handle;
@@ -1498,6 +2095,7 @@ public:
 	return handle;
 #endif /* MCS_dopen_dsk_mac */
 		FILE *t_stream;
+        t_stream = NULL;
         
         switch (p_mode)
         {
@@ -1526,46 +2124,10 @@ public:
 		MCStdioFileHandle *t_handle;
 		t_handle = new MCStdioFileHandle;
 		t_handle -> m_stream = t_stream;
-        t_handle -> m_hserialInputBuff = NULL;
-        t_handle -> m_ioptr = NULL;
-        t_handle -> m_serialIn = 0;
-        t_handle -> m_serialOut = 0;
+        t_handle -> m_is_eof = false;
 		
 		return t_handle;
 	}
-    
-    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, MCStringRef serialcontrolsettings)
-    {
-		FILE *fptr;
-        MCStdioFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-		if (fptr != NULL)
-        {
-            int val;
-            val = fcntl(fileno(fptr), F_GETFL, val);
-            val |= O_NONBLOCK |  O_NOCTTY;
-            fcntl(fileno(fptr), F_SETFL, val);
-            configureSerialPort((short)fileno(fptr));
-            
-            t_handle = new MCStdioFileHandle;
-            t_handle -> m_stream = fptr;
-            t_handle -> m_hserialInputBuff = NULL;
-            t_handle -> m_ioptr = NULL;
-            t_handle -> m_serialIn = 0;
-            t_handle -> m_serialOut = 0;
-        }
-        
-        return t_handle;
-    }
 	
 	virtual void Close(void)
 	{
@@ -1587,18 +2149,13 @@ public:
 	stream = NULL;
 	return stat;
 #endif /* MCS_close_dsk_mac */
-        if (m_serialIn != 0 || m_serialOut != 0)
-        {//close the serial port
-            
-        }
-        else if (m_stream != NULL)
+       if (m_stream != NULL)
             fclose(m_stream);
         
-        //delete m_stream;
-        m_stream = NULL;
+        delete this;
 	}
 	
-	virtual IO_stat Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
+	virtual bool Read(void *p_ptr, uint32_t p_length, uint32_t& r_read)
 	{
 #ifdef /* MCS_read_dsk_mac */ LEGACY_SYSTEM
 	if (MCabortscript || stream == NULL)
@@ -1685,58 +2242,47 @@ public:
 		}
 	return stat;
 #endif /* MCS_read_dsk_mac */
-        IO_stat stat = IO_NORMAL;
         uint4 nread;
-        if (m_serialIn != 0)
-        {//read from serial port
-            SInt32 sint_toread = (SInt32) p_length;
-            if ((errno = FSRead(m_serialIn, &sint_toread, p_ptr)) != noErr)
-                stat = IO_ERROR;
-            
-            if ((uint32_t)sint_toread < p_length)
-                stat = IO_EOF;
-            r_read = sint_toread;
-        }
-        else
+        
+        // MW-2010-08-26: Taken from the Linux source, this changes the previous code
+        //   to take into account pipes and such.
+        char *sptr = (char *)p_ptr;
+        uint4 toread = p_length;
+        uint4 offset = 0;
+        errno = 0;
+        while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
         {
-            // MW-2010-08-26: Taken from the Linux source, this changes the previous code
-            //   to take into account pipes and such.
-            char *sptr = (char *)p_ptr;
-            uint4 nread;
-            uint4 toread = p_length;
-            uint4 offset = 0;
-            errno = 0;
-            while ((nread = fread(&sptr[offset], 1, toread, m_stream)) != toread)
+            offset += nread;
+            r_read = offset;
+            if (ferror(m_stream))
             {
-                offset += nread;
-                r_read = offset;
-                if (ferror(m_stream))
+                clearerr(m_stream);
+                
+                if (errno == EAGAIN)
+                    return false;
+                
+                if (errno == EINTR)
                 {
-                    clearerr(m_stream);
-                    
-                    if (errno == EAGAIN)
-                        return IO_NORMAL;
-                    
-                    if (errno == EINTR)
-                    {
-                        toread -= nread;
-                        continue;
-                    }
-                    else
-                        return IO_ERROR;
+                    toread -= nread;
+                    continue;
                 }
-                if (feof(m_stream))
-                {
-                    return IO_NORMAL;
-                }
-                return IO_NONE;
+                else
+                    return false;
             }
-            r_read = p_length;
+            if (feof(m_stream))
+            {
+                m_is_eof = true;
+                return true;
+            }
+            
+            m_is_eof = false;
+            return false;
         }
-        return stat;
+        r_read = nread;
+        return true;
 	}
     
-	virtual bool Write(const void *p_buffer, uint32_t p_length, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 #ifdef /* MCS_write_dsk_mac */ LEGACY_SYSTEM
         if (stream == NULL)
@@ -1757,21 +2303,19 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write_dsk_mac */
-
-        if (m_serialOut != 0)
-        {//write to serial port
-            uint4 count = p_length;
-            errno = FSWrite(m_serialOut, (long*)&count, p_buffer);
-            r_written = count;
-            if (errno != noErr || count != p_length)
-                return false;
-            return true;
-        }
-
-        if ((r_written = fwrite(p_buffer, 1, p_length, m_stream)) != p_length)
+        if (fwrite(p_buffer, 1, p_length, m_stream) != p_length)            
             return false;
+        
         return true;
 	}
+    
+    virtual bool IsExhausted(void)
+    {
+        if (m_is_eof)
+            return true;
+        
+        return false;
+    }
 	
 	virtual bool Seek(int64_t offset, int p_dir)
 	{
@@ -1871,7 +2415,7 @@ public:
 		
 	return IO_NORMAL;
 #endif /* MCS_putback_dsk_mac */
-        if (m_serialIn != 0 || m_stream == NULL)
+        if (m_stream == NULL)
             return Seek(-1, 0);
         
         if (ungetc(p_char, m_stream) != p_char)
@@ -1933,14 +2477,203 @@ public:
     {
         return false;
     }
-    
-	short m_serialIn;  //serial port Input reference number
-	short m_serialOut; //serial port output reference number
-	MCMacSysHandle m_hserialInputBuff; //handle to serial input buffer
-	char *m_ioptr;
 	
 private:
 	FILE *m_stream;
+    bool m_is_eof;
+};
+
+class MCSerialPortFileHandle: public MCSystemFileHandle
+{
+public:
+    static MCSerialPortFileHandle *OpenDevice(MCStringRef p_path)
+    {
+		FILE *fptr;
+        MCSerialPortFileHandle *t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+		if (fptr != NULL)
+        {
+            int val;
+            int t_serial_in;
+            
+            t_serial_in = fileno(fptr);
+            val = fcntl(t_serial_in, F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(t_serial_in, F_SETFL, val);
+            configureSerialPort((short)t_serial_in);
+            
+            t_handle = new MCSerialPortFileHandle;
+            t_handle -> m_serial_port = t_serial_in;
+            t_handle -> m_is_eof = false;
+            t_handle -> m_cur_pos = 0;
+        }
+        
+        return t_handle;
+    }
+    
+	virtual void Close(void)
+    {
+        close(m_serial_port);
+        delete this;
+    }
+    
+    // Returns true if an attempt has been made to read past the end of the
+    // stream.
+    virtual bool IsExhausted(void)
+    {
+        return m_is_eof;
+    }
+    
+    virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
+    {
+        SInt32 sint_toread = (SInt32) p_length;
+        
+        if ((errno = FSRead(m_serial_port, &sint_toread, p_buffer)) != noErr)
+            return ;
+        
+        if (sint_toread < p_length)
+        {
+            m_is_eof = true;
+        }
+        
+        r_read = sint_toread;
+        return stat;
+#if 0
+        // FSRead is deprecated since OSX 10.4, FSReaFork since OSX 10.8, update to read(int fd, size_t size, void* ptr) on the same fashion
+        // it was done for MCStdioFileHandle? This would allow interruption handling and such as well
+        uint4 nread;
+        
+        // MW-2010-08-26: Taken from the Linux source, this changes the previous code
+        //   to take into account pipes and such.
+        char *sptr = (char *)p_buffer;
+        uint4 toread = p_length;
+        uint4 offset = 0;
+        errno = 0;
+        r_read = 0;
+        while ((nread = read(m_serial_port, &sptr[offset], toread)) != toread)
+        {
+            if (nread == -1) //error
+            {                
+                if (errno == EAGAIN)
+                    return false;
+                
+                if (errno == EINTR)
+                {
+                    // Do we really want to try again?
+                    // When an error occurs, whether the file pointer has moved is unspecified...
+                    continue;
+                }
+                else
+                    return false;
+            }
+            else if (nread == 0) // EOF encountered
+            {
+                m_is_eof = true;
+                return true;
+            }
+            
+            m_is_eof = false;
+            offset += nread;
+            r_read = offset;
+            m_cur_pos += offset;
+        }
+        
+        m_is_eof = false;
+        r_read = offset + nread;
+        
+        m_cur_pos += nread;
+        return true;
+#endif // 0
+    }
+    
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
+    {
+        uint4 t_count = p_length;
+        errno = FSWrite(m_serial_port, (long*)&t_count, p_buffer);
+        
+#if 0
+        // Same here, FSWrite is deprecated since OSX 10.4, FSWriteFork deprecated since OSX 10.8, update to write() as suggested on developer.apple.com?
+        uint32_t t_count;
+        t_count = write(m_serial_port, p_buffer, p_length);
+#endif // 0
+        
+        if (errno != noErr || t_count != p_length)
+            return false;
+        
+        m_cur_pos += t_count;
+        return true;
+    }
+    
+	virtual bool Seek(int64_t p_offset, int p_dir)
+    {
+        off_t t_new_pos;
+        t_new_pos = lseek(m_serial_port, p_offset, p_dir);
+        
+        if (t_new_pos == (off_t)-1)
+            return false;
+        
+        m_cur_pos = t_new_pos;
+        return true;
+    }
+	
+	virtual bool Truncate(void)
+    {
+        return ftruncate(m_serial_port, m_cur_pos) != -1;
+    }
+    
+	virtual bool Sync(void)
+    {
+        return fsync(m_serial_port) == 0;
+    }
+    
+	virtual bool Flush(void)
+    {
+        return fsync(m_serial_port) == 0; // fsync flushes the data, same as sync?
+    }
+	
+	virtual bool PutBack(char p_char)
+    {
+        return Seek(-1, 0);
+    }
+	
+	virtual int64_t Tell(void)
+    {
+        return m_cur_pos;
+    }
+	
+	virtual void *GetFilePointer(void)
+    {
+        return NULL;
+    }
+    
+	virtual int64_t GetFileSize(void)
+    {
+        struct stat64 t_stat;
+        
+        if (fstat64(m_serial_port, &t_stat) != 0)
+            return 0;
+        
+        return t_stat.st_size;
+    }
+    
+    virtual bool TakeBuffer(void*& r_buffer, size_t& r_length)
+    {
+        return false;
+    }
+    
+private:
+	int m_serial_port;  //serial port Input reference number
+    bool m_is_eof;
+    off_t m_cur_pos; // current position
 };
 
 struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDesktop
@@ -2109,7 +2842,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             rid = (short)strtol(MCStringGetCString(p_id), (char **)&eptr, 10);
         }
         SInt16 resFileRefNum; //open resource fork for read and write permission
-        if (!MCS_openresourcefile_with_path(p_source, fsRdWrPerm, true, resFileRefNum, r_error))
+        if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, resFileRefNum, r_error))
         {
             return MCresult -> setvalueref(r_error);
         }
@@ -2235,7 +2968,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         SInt16 resFileRefNum;
         Handle rh = NULL; //resource handle
         
-        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, resFileRefNum, r_error))
+        if (!MCS_mac_openresourcefile_with_path(p_source, fsRdPerm, true, resFileRefNum, r_error))
         {
             return MCresult -> setvalueref(r_error);
         }
@@ -2360,7 +3093,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
          * resource fork.					    */
         
         MCAutoResourceFileHandle resFileRefNum;
-        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
+        if (!MCS_mac_openresourcefile_with_path(p_source, fsRdPerm, true, &resFileRefNum, r_error))
             return false;
         if (r_error != nil)
             return true;
@@ -2542,14 +3275,14 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         short prev_res_file = CurResFile(); //save the current resource fork
         MCAutoResourceFileHandle srcFileRefNum, destFileRefNum;
         
-        if (!MCS_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
+        if (!MCS_mac_openresourcefile_with_path(p_source, fsRdPerm, false, &srcFileRefNum, r_error)) // RESFILE
             return false;
         if (r_error != nil)
             return true;
 		
         // exclusive read/write permission for the dest file
         // and do not set result if there is error
-        if (!MCS_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
+        if (!MCS_mac_openresourcefile_with_path(p_dest, fsRdWrPerm, true, &destFileRefNum, r_error)) // RESFILE
             return false;
         if (r_error != nil)
             return true;
@@ -2702,7 +3435,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         restype = (ResType)MCSwapInt32HostToNetwork(restype);
         
         MCAutoStringRef t_error;
-        if (!MCS_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
+        if (!MCS_mac_openresourcefile_with_path(p_source, fsRdWrPerm, true, rfRefNum, &t_error))
         {
             return MCresult -> setvalueref(*t_error);
         }
@@ -2792,8 +3525,8 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         bool t_source_fork_opened;
         t_source_fork_opened = false;
         
-        MCS_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
-        if (MCStringGetLength(*t_error) == 0)
+        MCS_mac_openresourcefork_with_path(p_source, fsRdPerm, false, &t_source_ref, &t_error);
+        if (*t_error != nil)
             t_source_fork_opened = true;
         
         SInt16 t_dest_ref;
@@ -2802,7 +3535,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         
         if (t_source_fork_opened)
         {
-            MCS_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
+            MCS_mac_openresourcefork_with_path(p_destination, fsWrPerm, true, &t_dest_ref, &t_error);
             if (MCStringGetLength(*t_error))
                 t_dest_fork_opened = true;
         }
@@ -2895,7 +3628,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         MCAutoStringRef t_open_res_error_string;
         
         short fRefNum;
-        MCS_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
+        MCS_mac_openresourcefork_with_path(p_filename, fsRdPerm, false, &fRefNum, &t_open_res_error_string); // RESFORK
         
         const char *t_open_res_error = nil;
         if (MCStringGetLength(*t_open_res_error_string) != 0)
@@ -2984,14 +3717,14 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
         bool t_fork_opened;
         t_fork_opened = false;
         
-        if (MCStringGetLength(*t_error) == 0)
+        if (*t_error != nil)
         {
-            MCS_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
+            MCS_mac_openresourcefork_with_path(p_path, fsWrPerm, true, &t_fork_ref, &t_error); // RESFORK
             if (MCStringGetLength(*t_error))
                 t_fork_opened = true;
         }
         
-        if (MCStringGetLength(*t_error) == 0)
+        if (*t_error != nil)
         {
             OSErr t_os_error;
             ByteCount t_actual_count;
@@ -3053,7 +3786,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
 		FSSpec fspec;
 		FSRef t_fsref;
 		
-		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+		if (MCS_pathtoref(message, t_fsref) == noErr && MCS_mac_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
 		{
 			AECreateList(NULL, 0, false, &files_list);
 			NewAlias(NULL, &fspec, &the_alias);
@@ -3170,7 +3903,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             FSSpec fspec;
             FSRef t_fsref;
             
-            if (MCS_pathtoref(p_message, t_fsref) == noErr && MCS_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
+            if (MCS_mac_pathtoref(p_message, t_fsref) == noErr && MCS_mac_fsref_to_fsspec(&t_fsref, &fspec) == noErr)
             {
                 AECreateList(NULL, 0, false, &files_list);
                 NewAlias(NULL, &fspec, &the_alias);
@@ -3691,7 +4424,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
-        if (!MCS_isatty(0))
+        if (!IsInteractiveConsole(0))
             MCS_nodelay(0);
         
         setlocale(LC_ALL, MCnullstring);
@@ -3845,10 +4578,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             setlinebuf(stdout);
             setlinebuf(stderr);
         }
-#endif /* MCS_init_dsk_mac */        
-        IO_stdin = MCsystem -> OpenStdFile(0, kMCSystemFileModeRead);
-        IO_stdout = MCsystem -> OpenStdFile(1, kMCSystemFileModeWrite);
-        IO_stderr = MCsystem -> OpenStdFile(2, kMCSystemFileModeWrite);
+#endif /* MCS_init_dsk_mac */
+        IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead);
+        IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
+        IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
         struct sigaction action;
         memset((char *)&action, 0, sizeof(action));
         action.sa_handler = handle_signal;
@@ -3875,8 +4608,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         
         // MW-2010-05-11: Make sure if stdin is not a tty, then we set non-blocking.
         //   Without this you can't poll read when a slave process.
-        if (!MCS_isatty(0))
-            MCS_nodelay(0);
+        if (!IsInteractiveConsole(0))
+            MCS_mac_nodelay(0);
         
         setlocale(LC_ALL, MCnullstring);
         
@@ -3908,11 +4641,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (Gestalt(gestaltSystemVersion, &response) == noErr)
             MCmajorosversion = response;
 		
-        MCaqua = True;
+        MCaqua = True; // Move to MCScreenDC
         
         init_utf8_converters();
         
-        CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices"));
+        // Move to MCScreenDC
+        CFBundleRef theBundle = CFBundleGetBundleWithIdentifier(CFSTR("com.apple.ApplicationServices")); // Move to MCScreenDC
         if (theBundle != NULL)
         {
             if (CFBundleLoadExecutable(theBundle))
@@ -3924,8 +4658,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             }
             CFRelease(theBundle);
         }
+        //
         
-        MCAutoStringRef dptr;
+        MCAutoStringRef dptr; // Check to see if this can ever happen anymore - if not, remove
         /* UNCHECKED */ GetCurrentFolder(&dptr);
         if (MCStringGetLength(*dptr) <= 1)
         { // if root, then started from Finder
@@ -3934,28 +4669,26 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             HGetVol(NULL, &vRefNum, &dirID);
             FSSpec fspec;
             FSMakeFSSpec(vRefNum, dirID, NULL, &fspec);
-            char *tpath = MCS_FSSpec2path(&fspec);
-            char *newpath = new char[strlen(tpath) + 11];
-            strcpy(newpath, tpath);
-            strcat(newpath, "/../../../");
-            MCAutoStringRef t_new_path_auto;
-            /* UNCHECKED */ MCStringCreateWithCString(newpath, &t_new_path_auto);
-            /* UNCHECKED */ SetCurrentFolder(*t_new_path_auto);
-            delete tpath;
-            delete newpath;
+            MCAutoStringRef t_path;
+            MCAutoStringRef t_new_path;
+            /* UNCHECKED */ MCS_mac_FSSpec2path(&fspec, &t_path);
+            /* UNCHECKED */ MCStringFormat(&t_new_path, "%s%s", MCStringGetCString(*t_path), "/../../../");
+            /* UNCHECKED */ SetCurrentFolder(*t_new_path);
         }
         
         // MW-2007-12-10: [[ Bug 5667 ]] Small font sizes have the wrong metrics
         //   Make sure we always use outlines - then everything looks pretty :o)
-        SetOutlinePreferred(TRUE);
+        SetOutlinePreferred(TRUE); // Move to MCScreenDC
         
         MCS_reset_time();
         //do toolbox checking
         long result;
-        hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result)
+        hasPPCToolbox = (Gestalt(gestaltPPCToolboxAttr, &result) // This can be removed (along with hasPPCToolbox)
                          ? False : result != 0);
-        hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result)
+        hasAppleEvents = (Gestalt(gestaltAppleEventsAttr, &result) // This can be removed (always True)
                           ? False : result != 0);
+        
+        // Move TO MCscreenDC
         uint1 i;
         if (hasAppleEvents)
         { //install required AE event handler
@@ -3986,6 +4719,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         //install special handler
         AEEventHandlerUPP specialUPP = NewAEEventHandlerUPP(DoSpecial);
         AEInstallSpecialHandler(keyPreDispatch, specialUPP, False);
+        // END HERE
         
         if (Gestalt('ICAp', &response) == noErr)
         {
@@ -4014,13 +4748,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             }
         }
         
-        
+        // Move to MCScreenDC
         MCS_weh = NewEventHandlerUPP(WinEvtHndlr);
         
         // MW-2005-04-04: [[CoreImage]] Load in CoreImage extension
         extern void MCCoreImageRegister(void);
         if (MCmajorosversion >= 0x1040)
             MCCoreImageRegister();
+        // END HERE
 		
         if (!MCnoui)
         {
@@ -4055,9 +4790,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_shutdown_dsk_mac */
         uint2 i;
         
+        // Move To MCScreenDC
         // MW-2005-04-04: [[CoreImage]] Unload CoreImage extension
         extern void MCCoreImageUnregister(void);
         MCCoreImageUnregister();
+        // End
         
         for (i = 0; i < 32; i++)
             if (unicodeconvertors[i])
@@ -4071,13 +4808,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             CloseComponent(osacomponents[i].compinstance);
         delete osacomponents;
         
-        
+        // Move To MCScreenDC
         DisposeEventHandlerUPP(MCS_weh);
+        // End
     }
 	
     virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
-        if ((p_type & kMCServiceTypeMacSystem) == kMCServiceTypeLinuxSystem)
+        if ((p_type & kMCServiceTypeMacSystem) == kMCServiceTypeMacSystem)
             return (MCMacSystemServiceInterface *)this;
         return nil;
     }
@@ -4418,7 +5156,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_old_name, t_src_ref);
+            t_os_error = MCS_mac_pathtoref(p_old_name, t_src_ref);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4431,12 +5169,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_new_name, t_dst_ref);
+            t_os_error = MCS_mac_pathtoref(p_new_name, t_dst_ref);
             if (t_os_error == noErr)
                 FSDeleteObject(&t_dst_ref);
 			
             // Get the information to create the file
-            t_os_error = MCS_pathtoref_and_leaf(p_new_name, t_dst_parent_ref, t_dst_leaf, t_dst_leaf_length);
+            t_os_error = MCS_mac_pathtoref_and_leaf(p_new_name, t_dst_parent_ref, t_dst_leaf, t_dst_leaf_length);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4549,7 +5287,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_old_name, t_src_ref);
+            t_os_error = MCS_mac_pathtoref(p_old_name, t_src_ref);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4558,7 +5296,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_new_name, t_dst_ref);
+            t_os_error = MCS_mac_pathtoref(p_new_name, t_dst_ref);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4729,7 +5467,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         {
             FSRef t_dst_ref;
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_alias, t_dst_ref);
+            t_os_error = MCS_mac_pathtoref(p_alias, t_dst_ref);
             if (t_os_error == noErr)
                 return False; // we expect an error
         }
@@ -4738,7 +5476,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref(p_target, t_src_ref);
+            t_os_error = MCS_mac_pathtoref(p_target, t_src_ref);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4751,7 +5489,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (!t_error)
         {
             OSErr t_os_error;
-            t_os_error = MCS_pathtoref_and_leaf(p_alias, t_dst_parent_ref, t_dst_leaf_name, t_dst_leaf_name_length);
+            t_os_error = MCS_mac_pathtoref_and_leaf(p_alias, t_dst_parent_ref, t_dst_leaf_name, t_dst_leaf_name_length);
             if (t_os_error != noErr)
                 t_error = true;
         }
@@ -4879,7 +5617,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSRef t_fsref;
         
         OSErr t_os_error;
-        t_os_error = MCS_pathtoref(p_target, t_fsref);
+        t_os_error = MCS_mac_pathtoref(p_target, t_fsref);
         if (t_os_error != noErr)
         {
             if (!MCStringCreateWithCString("file not found", r_resolved_path))
@@ -4900,7 +5638,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 return True;
         }
         
-        if (!MCS_fsref_to_path(t_fsref, r_resolved_path))
+        if (!MCS_mac_fsref_to_path(t_fsref, r_resolved_path))
         {
             if (!MCStringCreateWithCString("can't get alias path", r_resolved_path))
                 return False;
@@ -5026,7 +5764,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         OSType t_domain = kOnAppropriateDisk;
         bool t_found_folder = false;
         
-        if (MCS_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
+        if (MCS_mac_specialfolder_to_mac_folder(MCNameGetString(p_type), t_mac_folder, t_domain))
             t_found_folder = true;
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
@@ -5059,7 +5797,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return True;
         }
 		
-        if (!MCS_fsref_to_path(t_folder_ref, r_folder))
+        if (!MCS_mac_fsref_to_path(t_folder_ref, r_folder))
             return False;
         
         return True;
@@ -5192,7 +5930,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (t_success && FSFindFolder(kOnSystemDisk, kTemporaryFolderType, TRUE, &t_folder_ref) == noErr)
         {
             int t_fd;
-            t_success = MCS_fsref_to_path(t_folder_ref, &t_temp_file_auto);
+            t_success = MCS_mac_fsref_to_path(t_folder_ref, &t_temp_file_auto);
             
             if (t_success)
                 t_success = MCStringAppendFormat(&t_temp_file_auto, "/tmp.%d.XXXXXXXX", getpid());
@@ -5788,38 +6526,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
 	
 	bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
-	{ // Copied from srvmac.cpp
-		CFStringRef t_cf_path;
-		t_cf_path = CFStringCreateWithCString(NULL, MCStringGetCString(p_path), kCFStringEncodingMacRoman);
-		
-		CFIndex t_used;
-		t_used = CFStringGetMaximumSizeOfFileSystemRepresentation(t_cf_path);
-		
-		MCAutoNativeCharArray t_native;
-		if (!t_native.New(t_used))
-			return false;
-        
-		CFStringGetFileSystemRepresentation(t_cf_path, (char*)t_native.Chars(), t_used);
-		t_native.Shrink(MCCStringLength((char*)t_native.Chars()));
-		
-		return t_native.CreateStringAndRelease(r_native);
+	{
+        return MCStringCopy(p_path, r_native);
 	}
 	
 	bool PathFromNative(MCStringRef p_native, MCStringRef& r_path)
-	{ // Copied from srvmac.cpp
-		CFStringRef t_cf_path;
-		t_cf_path = CFStringCreateWithFileSystemRepresentation(NULL, MCStringGetCString(p_native));
-		
-		CFIndex t_used;
-		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
-		
-		MCAutoNativeCharArray t_path;
-		if (!t_path.New(t_used))
-			return false;;
-        
-		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
-		
-		return t_path.CreateStringAndRelease(r_path);
+	{
+        return MCStringCopy(p_native, r_path);
 	}
     
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path)
@@ -5958,11 +6671,11 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         else
             t_fullpath = *t_tilde_path;
         
-        if (!MCS_is_link(*t_fullpath))
+        if (!MCS_mac_is_link(*t_fullpath))
             return MCStringCopy(*t_fullpath, r_resolved_path);
         
         MCAutoStringRef t_newname;
-        if (!MCS_readlink(*t_fullpath, &t_newname))
+        if (!MCS_mac_readlink(*t_fullpath, &t_newname))
             return false;
         
         // IM - Should we really be using the original p_path parameter here?
@@ -5988,11 +6701,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         else
             return MCStringCopy(*t_newname, r_resolved_path);
     }
-    
-	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path)
-    {
-        
-    }
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
     {
@@ -6005,10 +6713,10 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
     
-	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode)
     {
         MCStdioFileHandle *t_handle;
         t_handle = MCStdioFileHandle::OpenFd(fd, mode);
@@ -6016,13 +6724,13 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (t_handle == nil)
             return nil;
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, MCStringRef p_control_string, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenDevice(p_path, p_control_string);
+        MCSerialPortFileHandle *t_handle;
+        t_handle = MCSerialPortFileHandle::OpenDevice(p_path);
         
         if (t_handle == nil)
             return nil;
@@ -6030,7 +6738,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
 	
 	virtual MCSysModuleHandle LoadModule(MCStringRef p_filename)
@@ -6122,19 +6830,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	return MCStringCopy(p_path, r_short_path);
 #endif /* MCS_shortfilepath_dsk_mac */
         return MCStringCopy(p_path, r_short_path);
-    }
-    
-    virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path)
-    {
-#ifdef /* MCS_get_canonical_path_dsk_mac */ LEGACY_SYSTEM
-	char *t_path = NULL;
-	
-	t_path = MCS_resolvepath(p_path);
-	MCU_fix_path(t_path);
-	
-	return t_path;
-#endif /* MCS_get_canonical_path_dsk_mac */
-        MCU_fix_path(p_path, r_canonical_path);
     }
     
 	virtual char *GetHostName(void)
@@ -6481,9 +7176,8 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             {
                 if (MCprocesses[i].ihandle != NULL)
                 {
-                    // TODO Can the handler be a MCMemoryFileHandle?
                     MCStdioFileHandle *t_handle;
-                    t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle->handle);
+                    t_handle = static_cast<MCStdioFileHandle *>(MCprocesses[i].ihandle);
                     clearerr(t_handle -> GetStream());
                 }
                 MCprocesses[i].pid = 0;
@@ -6654,7 +7348,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                 write(tochild[1], "\n", 1);
                 close(tochild[1]);
                 close(toparent[1]);
-                MCS_nodelay(toparent[0]);
+                MCS_mac_nodelay(toparent[0]);
                 if (MCprocesses[index].pid == -1)
                 {
                     if (MCprocesses[index].pid > 0)
@@ -6685,7 +7379,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         buffer = (char *)malloc(4096);
         buffersize = 4096;
         uint4 size = 0;
-        if (MCS_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
+        if (MCS_mac_shellread(toparent[0], buffer, buffersize, size) != IO_NORMAL)
         {
             MCeerror->add(EE_SHELL_ABORT, 0, 0);
             close(toparent[0]);
@@ -6830,12 +7524,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 #endif /* MCS_closeprocess_dsk_mac */
         if (MCprocesses[p_index].ihandle != NULL)
         {
-            MCprocesses[p_index].ihandle -> handle -> Close();
+            MCprocesses[p_index].ihandle -> Close();
             MCprocesses[p_index].ihandle = NULL;
         }
         if (MCprocesses[p_index].ohandle != NULL)
         {
-            MCprocesses[p_index].ohandle -> handle -> Close();
+            MCprocesses[p_index].ohandle -> Close();
             MCprocesses[p_index].ohandle = NULL;
         }
         MCprocesses[p_index].mode = OM_NEITHER;
@@ -7099,6 +7793,14 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return True;
     }
     
+    virtual Boolean IsInteractiveConsole(int p_fd)
+    {
+#ifdef /* MCS_isatty_dsk_mac */ LEGACY_SYSTEM
+	return isatty(fd) != 0;
+#endif /* MCS_isatty_dsk_mac */
+        return isatty(p_fd) != 0;
+    }
+    
     virtual int GetErrno()
     {
 #ifdef /* MCS_geterrno_dsk_mac */ LEGACY_SYSTEM
@@ -7142,7 +7844,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         FSRef t_document_ref;
         if (t_error == 0)
         {
-            errno = MCS_pathtoref(p_document, t_document_ref);
+            errno = MCS_mac_pathtoref(p_document, t_document_ref);
             if (errno != noErr)
             {
                 // MW-2008-06-12: [[ Bug 6336 ]] No result set if file not found on OS X
@@ -7426,14 +8128,15 @@ static bool fetch_ae_as_fsref_list(char*& string, uint4& length)
 				AEDisposeDesc(&docList);
 				return false;
 			}
-			char *fullPathName = MCS_fsref_to_path(t_doc_fsref);
-			uint2 newlength = strlen(fullPathName) + 1;
+            
+            MCAutoStringRef t_fullpathname;
+			/* UNCHECKED */ MCS_mac_fsref_to_path(t_doc_fsref, &t_fullpathname);
+			uint2 newlength = MCStringGetLength(*t_fullpathname) + 1;
 			MCU_realloc(&string, length, length + newlength, 1);
 			if (length)
 				string[length - 1] = '\n';
-			memcpy(&string[length], fullPathName, newlength);
+			memcpy(&string[length], MCStringGetCString(*t_fullpathname), newlength);
 			length += newlength;
-			delete fullPathName;
 		}
 		string[length - 1] = '\0';
 		AEDisposeDesc(&docList);
@@ -7456,9 +8159,11 @@ static OSErr getDescFromAddress(MCStringRef address, AEDesc *retDesc)
      */
 	errno = noErr;
 	retDesc->dataHandle = NULL;  /* So caller can dispose always. */
-	char *ptr = strchr(MCStringGetCString(address), ':');
     
-	if (ptr == NULL)
+    uindex_t t_index;
+	/* UNCHECKED */ MCStringFirstIndexOfChar(address, ':', 0, kMCStringOptionCompareExact, t_index);
+    
+	if (t_index == 0)
 	{ //address contains application name only. Form # 3
 		char *appname = new char[MCStringGetLength(address) +1];
 		strcpy(appname, MCStringGetCString(address));
@@ -7591,14 +8296,20 @@ static OSErr getAEAttributes(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				FSSpec fs;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &fs, s, &rSize);
-				result = MCS_FSSpec2path(&fs);
+                MCAutoStringRef t_result;
+                
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
 				errno = AEGetAttributePtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
-				result = MCS_fsref_to_path(t_fs_ref);
+                MCAutoStringRef t_result;
+                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, &t_result);
+                
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             default:
@@ -7687,14 +8398,20 @@ static OSErr getAEParams(const AppleEvent *ae, AEKeyword key, char *&result)
 			{
 				FSSpec fs;
 				errno = AEGetParamPtr(ae, key, dt, &rType, &fs, s, &rSize);
-				result = MCS_FSSpec2path(&fs);
+                MCAutoStringRef t_result;
+                
+				/* UNCHECKED */ MCS_mac_FSSpec2path(&fs, &t_result);
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             case typeFSRef:
 			{
 				FSRef t_fs_ref;
 				errno = AEGetParamPtr(ae, key, dt, &rType, &t_fs_ref, s, &rSize);
-				result = MCS_fsref_to_path(t_fs_ref);
+                MCAutoStringRef t_result;
+                /* UNCHECKED */ MCS_mac_fsref_to_path(t_fs_ref, &t_result);
+                
+                result = strclone(MCStringGetCString(*t_result));
 			}
                 break;
             default:
@@ -7937,18 +8654,6 @@ void MCS_utf16tonative(const unsigned short *p_utf16, uint4 p_utf16_length, char
 	MCS_unicodetomultibyte((const char *)p_utf16, p_utf16_length * 2, p_native, p_native_length, p_native_length, LCH_ROMAN);
 }
 
-Boolean MCS_imeisunicode()
-{
-	OSErr err;
-	long version;
-	err = Gestalt(gestaltTSMgrVersion, &version);
-	//only enable if os 9.0 or greater and TSM > 1.5
-	if ((err == noErr) && (version >= gestaltTSMgr15))
-		if (Gestalt(gestaltSystemVersion, &version) == noErr)
-			return version >= 0x900;
-	return False;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 static bool startprocess_create_argv(char *name, char *doc, uint32_t & r_argc, char**& r_argv)
@@ -8070,7 +8775,7 @@ bool MCS_mac_elevation_bootstrap_main(int argc, char *argv[])
 	return false;
 }
 
-void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode)
+static void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode)
 {
 	LaunchParamBlockRec launchParms;
 	launchParms.launchBlockID = extendedBlock;
@@ -8085,8 +8790,8 @@ void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode
 	
 	FSRef t_app_fsref;
 	FSSpec t_app_fsspec;
-	errno = MCS_pathtoref(MCNameGetString(name), t_app_fsref);
-	errno = MCS_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
+	errno = MCS_mac_pathtoref(MCNameGetString(name), t_app_fsref);
+	errno = MCS_mac_fsref_to_fsspec(&t_app_fsref, &t_app_fsspec);
 	
 	uint2 i;
     
@@ -8106,7 +8811,7 @@ void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode
 		inLaunchSpec.itemRefs = NULL;
 		if (MCStringGetLength(docname))
 		{
-			if (MCS_pathtoref(docname, t_doc_fsref) != noErr)
+			if (MCS_mac_pathtoref(docname, t_doc_fsref) != noErr)
 			{
 				MCresult->sets("no such document");
 				return;
@@ -8146,7 +8851,7 @@ void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode
 		                   kAnyTransactionID, &ae);
 		FSSpec fspec;
 		FSRef t_tmp_fsref;
-		if (MCS_pathtoref(docname, t_tmp_fsref) == noErr && MCS_fsref_to_fsspec(&t_tmp_fsref, &fspec) == noErr)
+		if (MCS_mac_pathtoref(docname, t_tmp_fsref) == noErr && MCS_mac_fsref_to_fsspec(&t_tmp_fsref, &fspec) == noErr)
 		{
 			AECreateList(NULL, 0, false, &files_list);
 			NewAlias(NULL, &fspec, &the_alias);
@@ -8215,7 +8920,7 @@ void MCS_startprocess_launch(MCNameRef name, MCStringRef docname, Open_mode mode
 }
 
 
-void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
+static void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Boolean elevated)
 {
 	Boolean noerror = True;
 	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
@@ -8322,15 +9027,15 @@ void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Bool
 			if (reading)
 			{
 				close(toparent[1]);
-				MCS_nodelay(toparent[0]);
+				MCS_mac_nodelay(toparent[0]);
 				// Store the in handle for the "process".
-				MCprocesses[index].ihandle = MCsystem -> OpenStdFile(toparent[0], kMCSystemFileModeRead);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(toparent[0], kMCSystemFileModeRead);
 			}
 			if (writing)
 			{
 				close(tochild[0]);
 				// Store the out handle for the "process".
-				MCprocesses[index].ohandle = MCsystem -> OpenStdFile(tochild[1], kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(tochild[1], kMCSystemFileModeWrite);
 			}
 		}
 	}
@@ -8405,11 +9110,11 @@ void MCS_startprocess_unix(MCNameRef name, MCStringRef doc, Open_mode mode, Bool
 			{
 				int t_fd;
 				t_fd = dup(fileno(t_stream));
-				MCS_nodelay(t_fd);
-				MCprocesses[index].ihandle = MCsystem -> OpenStdFile(t_fd, kMCSystemFileModeRead);
+				MCS_mac_nodelay(t_fd);
+				MCprocesses[index].ihandle = MCsystem -> OpenFd(t_fd, kMCSystemFileModeRead);
 			}
 			if (writing)
-				MCprocesses[index].ohandle = MCsystem -> OpenStdFile(dup(fileno(t_stream)), kMCSystemFileModeWrite);
+				MCprocesses[index].ohandle = MCsystem -> OpenFd(dup(fileno(t_stream)), kMCSystemFileModeWrite);
 			
 			noerror = True;
 		}
