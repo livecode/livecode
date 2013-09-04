@@ -620,59 +620,60 @@ void MCS_loadurl(MCObject *p_object, MCStringRef p_url, MCNameRef p_message)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void MCServerPutOutput(const MCString& data);
-extern void MCServerPutUnicodeOutput(const MCString& data);
-extern void MCServerPutBinaryOutput(const MCString& data);
-extern void MCServerPutHeader(const MCString& data, bool add);
-extern void MCServerPutContent(const MCString& data);
-extern void MCServerPutUnicodeContent(const MCString& data);
-extern void MCServerPutMarkup(const MCString& data);
-extern void MCServerPutUnicodeMarkup(const MCString& data);
+extern void MCServerPutOutput(MCStringRef data);
+extern void MCServerPutUnicodeOutput(MCStringRef data);
+extern void MCServerPutBinaryOutput(MCDataRef data);
+extern void MCServerPutHeader(MCStringRef data, bool add);
+extern void MCServerPutContent(MCStringRef data);
+extern void MCServerPutUnicodeContent(MCStringRef data);
+extern void MCServerPutMarkup(MCStringRef data);
+extern void MCServerPutUnicodeMarkup(MCStringRef data);
 
 bool MCS_put(MCExecPoint& ep, MCSPutKind p_kind, MCStringRef p_data_ref)
 {
-	MCString p_data;
-	p_data = MCStringGetOldString(p_data_ref);
-
+	
 	switch(p_kind)
 	{
 	case kMCSPutOutput:
 	case kMCSPutBeforeMessage:
 	case kMCSPutIntoMessage:
 	case kMCSPutAfterMessage:
-		MCServerPutOutput(p_data);
+		MCServerPutOutput(p_data_ref);
 		break;
 			
 	case kMCSPutBinaryOutput:
-		MCServerPutBinaryOutput(p_data);
+		MCDataRef t_data;
+		// This is probably wrong..
+		/* UNCHECKED */ MCStringEncode(p_data_ref, kMCStringEncodingUTF8, false, t_data);
+		MCServerPutBinaryOutput(t_data);
 		break;
 
 	case kMCSPutUnicodeOutput:
-		MCServerPutUnicodeOutput(p_data);
+		MCServerPutUnicodeOutput(p_data_ref);
 		break;
 			
 	case kMCSPutHeader:
-		MCServerPutHeader(p_data, false);
+		MCServerPutHeader(p_data_ref, false);
 		break;
 
 	case kMCSPutNewHeader:
-		MCServerPutHeader(p_data, true);
+		MCServerPutHeader(p_data_ref, true);
 		break;
 
 	case kMCSPutContent:
-		MCServerPutContent(p_data);
+		MCServerPutContent(p_data_ref);
 		break;
 			
 	case kMCSPutUnicodeContent:
-		MCServerPutUnicodeContent(p_data);
+		MCServerPutUnicodeContent(p_data_ref);
 		break;
 
 	case kMCSPutMarkup:
-		MCServerPutMarkup(p_data);
+		MCServerPutMarkup(p_data_ref);
 		break;
 			
 	case kMCSPutUnicodeMarkup:
-		MCServerPutUnicodeMarkup(p_data);
+		MCServerPutUnicodeMarkup(p_data_ref);
 		break;
 			
 	default:
