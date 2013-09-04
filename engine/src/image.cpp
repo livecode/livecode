@@ -2146,7 +2146,6 @@ bool MCImage::setfilename(MCStringRef p_filename)
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	//t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
 	if (t_success)
