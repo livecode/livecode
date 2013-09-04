@@ -547,7 +547,7 @@ void MCMultimediaExecPlayVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 {
 #ifdef _MOBILE
 		extern bool MCSystemPlayVideo(MCStringRef p_video);
-		if (!MCSystemPlayVideo(p_video))
+		if (!MCSystemPlayVideo(p_clip))
 			MCresult->sets("no video support");
 		return;
 #endif

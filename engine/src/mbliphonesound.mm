@@ -98,7 +98,19 @@ void MCIHandleFinishedPlayingSound(MCString p_payload)
 
 static MCSoundPlayerDelegate *s_sound_player_delegate = nil;
 static float s_sound_loudness = 1.0;
-static MCStringRef s_sound_file = MCValueRetain(kMCEmptyString);
+static MCStringRef s_sound_file = nil;
+
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
 
 @implementation MCSoundPlayerDelegate
 

@@ -55,7 +55,19 @@ bool MCSystemGetPlayLoudness(uint2& r_loudness)
 	return true;
 }
 
-static MCStringRef s_sound_file = MCValueRetain(kMCEmptyString);
+static MCStringRef s_sound_file = nil;
+
+bool MCSystemSoundInitialize()
+{
+	s_sound_file = MCValueRetain(kMCEmptyString);
+	return true;
+}
+
+bool MCSystemSoundFinalize()
+{
+	MCValueRelease(s_sound_file);
+	return true;
+}
 
 bool MCSystemPlaySound(MCStringRef p_file, bool p_looping)
 {

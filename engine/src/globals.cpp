@@ -79,6 +79,11 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mblad.h"
 #include "mblcontrol.h"
 #include "mblsensor.h"
+#include "mblsyntax.h"
+#endif
+
+#ifdef _IOS_MOBILE
+#include "mblsyntax.h"
 #endif
 
 #include "exec.h"
@@ -817,6 +822,11 @@ void X_clear_globals(void)
     MCNativeControlInitialize();
     MCSensorInitialize();
     MCAndroidCustomFontsInitialize();
+	MCSystemSoundInitialize();
+#endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
 #endif
 }
 
@@ -1164,6 +1174,11 @@ int X_close(void)
     MCNativeControlFinalize();
     MCSensorFinalize();
     MCAndroidCustomFontsFinalize();
+	MCSystemSoundFinalize();
+#endif
+	
+#ifdef _IOS_MOBILE
+	MCSystemSoundInitialize();
 #endif
 	
 	MCU_finalize_names();
