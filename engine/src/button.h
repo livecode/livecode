@@ -108,7 +108,6 @@ class MCButton : public MCControl
 	MCField *entry;
 	MCStack *menu;
 	MCStringRef acceltext;
-	char *seltext;
 	MCString *tabs;
 	uint2 ntabs;
 	uint2 menuhistory;
