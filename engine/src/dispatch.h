@@ -55,10 +55,15 @@ class MCDispatch : public MCObject
 
 	static MCImage *imagecache;
 
+    static MCPropertyInfo kProperties[];
+	static MCObjectPropertyTable kPropertyTable;
 public:
 	MCDispatch();
 	// virtual functions from MCObject
 	virtual ~MCDispatch();
+    
+    virtual const MCObjectPropertyTable *getpropertytable(void) const { return &kPropertyTable; }
+    
 	virtual Exec_stat getprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	virtual Exec_stat setprop_legacy(uint4 parid, Properties which, MCExecPoint &, Boolean effective);
 	// dummy cut function for checking licensing
@@ -210,7 +215,18 @@ public:
 	void GetDefaultTextFont(MCExecContext& ctxt, MCStringRef& r_font);
 	void GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size);
 	void GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style);
+    void GetDefaultTextAlign(MCExecContext& ctxt, intenum_t& r_align);
+    void GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height);
+    
+    void GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
+	void GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel);
 
+	void GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+	void GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color);
+    
+	void GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern);
+    
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
