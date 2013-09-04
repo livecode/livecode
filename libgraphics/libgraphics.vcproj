@@ -152,6 +152,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\src\legacyblendmodes.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\path.cpp"
 				>
 			</File>
