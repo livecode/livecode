@@ -40,6 +40,10 @@
 
 #include "foundation.h"
 
+#ifdef _WIN32
+#include <float.h> // _isnan()
+#endif 
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern bool MCSystemLaunchUrl(MCStringRef p_document);
@@ -69,9 +73,9 @@ void MCS_common_init(void)
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	
-	IO_stdin = MCsystem -> OpenStdFile(0, kMCSystemFileModeRead) ;
-	IO_stdout = MCsystem -> OpenStdFile(1, kMCSystemFileModeWrite);
-	IO_stderr = MCsystem -> OpenStdFile(2, kMCSystemFileModeWrite);
+	IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead) ;
+	IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
+	IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
 	
 	MCinfinity = HUGE_VAL;
     
@@ -760,11 +764,11 @@ void MCS_setumask(uint2 p_mask)
 {
     MCsystem -> UMask(p_mask);
 }
-
-uint2 MCS_umask(uint2 p_mask)
-{
-	return MCsystem -> UMask(p_mask);
-}
+//
+//uint2 MCS_umask(uint2 p_mask)
+//{
+//	return MCsystem -> UMask(p_mask);
+//}
 
 /* WRAPPER */
 Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
@@ -996,11 +1000,6 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 #endif
 	
 	return t_handle;
-}
-
-static IO_handle MCS_dopen(uint32_t fd, intenum_t mode)
-{
-    return MCsystem -> OpenStdFile(fd, mode);
 }
 
 void MCS_close(IO_handle &x_stream)
@@ -1684,6 +1683,22 @@ Boolean MCS_poll(real8 p_delay, int p_fd)
 //	MCsystem -> Sleep(p_delay);
 //	return False;
     return MCsystem -> Poll(p_delay, p_fd);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCS_isinteractiveconsole(int p_fd)
+{
+    return MCsystem -> IsInteractiveConsole(p_fd);
+}
+
+bool MCS_isnan(double p_number)
+{
+#ifdef _WIN32
+    return _isnan(p_number);
+#else
+    return isnan(p_number);
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -1492,7 +1492,7 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	MCAutoStringRef t_output;
 
 #ifndef _SERVER
-	if (!MCnoui && MCS_isatty(0))
+	if (!MCnoui && MCS_isinteractiveconsole(0))
 	{
 		ctxt . SetTheResultToStaticCString("eof");
 		ctxt . SetItToValue(kMCNull);
@@ -2128,7 +2128,7 @@ void MCFilesGetUMask(MCExecContext& ctxt, uinteger_t& r_value)
 }
 void MCFilesSetUMask(MCExecContext& ctxt, uinteger_t p_value)
 {
-	MCS_umask(p_value);
+	MCS_setumask(p_value);
 }
 void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {

@@ -1308,220 +1308,221 @@ void MCS_savefile(const MCString &fname, MCExecPoint &data, Boolean binary)
 //	if (t_dest_fork_opened)
 //		FSCloseFork(t_dest_ref);
 //}
-
+//
 // MH-2007-04-02 rewriting this function to support FSRefs, long filenames in particular.
 // This function is quite specific to the older API resource routines, so the prototype needs to be adjusted.
 //OSErr MCS_openResFile(const char *p_file, SignedByte p_permission, short *p_file_ref_num, Boolean p_create, Boolean p_set_result)
-
-
-bool MCS_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_create, SInt16& r_fileref_num, MCStringRef& r_error)
-{
-	FSSpec fspec;
-	
-	if (FSGetCatalogInfo(&p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
-		return MCStringCreateWithCString("file not found", r_error);
-	
-	r_fileref_num = FSOpenResFile(&p_ref, p_permissions);
-	if (p_create && r_fileref_num < 0)
-	{
-		OSType t_creator, t_ftype;
-		CInfoPBRec t_cpb;
-		MCMemoryClear(&t_cpb, sizeof(t_cpb));
-		t_cpb.hFileInfo.ioNamePtr = fspec.name;
-		t_cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
-		t_cpb.hFileInfo.ioDirID = fspec.parID;
-		/* DEPRECATED */ if (PBGetCatInfoSync(&t_cpb) == noErr)
-		{
-			t_creator = t_cpb.hFileInfo.ioFlFndrInfo.fdCreator;
-			t_ftype = t_cpb.hFileInfo.ioFlFndrInfo.fdType;
-		}
-		else
-		{
-            const char *t_char_ptr;
-            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
-			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
-			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
-		}
-		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
-		
-		if ((errno = ResError()) != noErr)
-			return MCStringCreateWithCString("can't create resource fork", r_error);
-		
-		/* DEPRECATED */ r_fileref_num = FSpOpenResFile(&fspec, p_permissions);
-	}
-	
-	if (r_fileref_num < 0)
-	{
-		errno = fnfErr;
-		return MCStringCreateWithCString("Can't open resource fork", r_error);
-	}
-	
-	if ((errno = ResError()) != noErr)
-		return MCStringCreateWithCString("Error opening resource fork", r_error);
-	
-	return true;
-}
-
-const char *MCS_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool create, SInt16 *fileRefNum)
-{
-	FSSpec fspec;
-	
-	if (FSGetCatalogInfo(p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
-		return "file not found";
-	
-	if ((*fileRefNum = FSpOpenResFile(&fspec, permission)) < 0)
-	{
-		if (create)
-		{
-			OSType creator, ftype;
-			CInfoPBRec cpb;
-			memset(&cpb, 0, sizeof(CInfoPBRec));
-			cpb.hFileInfo.ioNamePtr = fspec.name;
-			cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
-			cpb.hFileInfo.ioDirID = fspec.parID;
-			if (PBGetCatInfoSync(&cpb) == noErr)
-			{
-				memcpy(&creator, &cpb.hFileInfo.ioFlFndrInfo.fdCreator, 4);
-				memcpy(&ftype, &cpb.hFileInfo.ioFlFndrInfo.fdType, 4);
-			}
-			else
-			{
-                const char *t_char_ptr;
-                t_char_ptr = (char*)MCStringGetCString(MCfiletype);
-				memcpy((char*)&creator, t_char_ptr, 4);
-				memcpy((char*)&ftype, t_char_ptr + 4, 4);
-				creator = MCSwapInt32NetworkToHost(creator);
-				ftype = MCSwapInt32NetworkToHost(ftype);
-			}
-			FSpCreateResFile(&fspec, creator, ftype, smRoman);
-			
-			if ((errno = ResError()) != noErr)
-				return "can't create resource fork";
-				
-			*fileRefNum = FSpOpenResFile(&fspec, permission);
-		}
-		
-		if (*fileRefNum < 0)
-		{
-			errno = fnfErr;
-			return "Can't open resource fork";
-		}
-		
-		if ((errno = ResError()) != noErr)
-			return "Error opening resource fork";
-	}
-	
-	return NULL;
-}
-
-void MCS_closeresourcefile(SInt16 p_ref)
-{
-	OSErr t_err;
-	CloseResFile(p_ref);
-	t_err = ResError();
-}
-
-void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
-{
-    bool t_success;
-    t_success = true;
-	
-	HFSUniStr255 t_resource_fork_name;
-	if (t_success)
-	{
-		OSErr t_os_error;
-		t_os_error = FSGetResourceForkName(&t_resource_fork_name);
-		if (t_os_error != noErr)
-        {
-            t_success = false;
-            /* UNCHECKED */ MCStringCreateWithCString("couldn't get resource fork name", r_error);
-        }
-	}
-	
-	// Attempt to create a resource fork if required.
-	if (t_success && p_create)
-	{
-		OSErr t_os_error;
-		t_os_error = FSCreateResourceFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, 0);
-		if (t_os_error != noErr && t_os_error != errFSForkExists)
-        {
-            t_success = false;
-            /* UNCHECKED */ MCStringCreateWithCString("can't create resource fork", r_error);
-        }
-	}
-	
-	// Open it..
-	SInt16 t_fork_ref;
-	bool t_fork_opened;
-	t_fork_opened = false;
-	if (t_success)
-	{
-		OSErr t_os_error;
-		t_os_error = FSOpenFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, p_permission, &t_fork_ref);
-		if (t_os_error == noErr)
-			t_fork_opened = true;
-		else
-        {
-            t_success = false;
-            /* UNCHECKED */ MCStringCreateWithCString("can't open resource fork", r_error);
-        }
-	}
-	
-	*r_fork_ref = t_fork_ref;
-}
-/*
-const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
-{
-	const char *t_error;
-	t_error = NULL;
-	
-	char *t_utf8_path;
-	t_utf8_path = path2utf(strdup(p_path));
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, &t_ref);
-	if (t_os_error != noErr)
-		t_error = "can't open file";
-		
-	if (t_error == NULL)
-		t_error = MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
-		
-	delete t_utf8_path;
-		
-	return t_error;	
-}
-*/
-
-void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
-{
-	FSRef t_ref;
-	OSErr t_os_error;
-	t_os_error = MCS_pathtoref(p_path, t_ref);
-	if (t_os_error != noErr)
-    {
-		/* UNCHECKED */ MCStringCreateWithCString("can't open file", r_error);
-        return;
-    }
-		
-	MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref, r_error);
-}
-
-bool MCS_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
-{
-//	MCAutoStringRef t_utf8_path;
-//	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
-//		return false;`
-	
-	FSRef t_ref;
-	OSErr t_os_error;
-	
-	t_os_error = MCS_pathtoref(p_path, t_ref);
-	if (t_os_error != noErr)
-		return MCStringCreateWithCString("can't open file", r_error);
-	
-	return MCS_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
-}
+//
+//
+//bool MCS_openresourcefile_with_fsref(FSRef& p_ref, SInt8 p_permissions, bool p_create, SInt16& r_fileref_num, MCStringRef& r_error)
+//{
+//	FSSpec fspec;
+//	
+//	if (FSGetCatalogInfo(&p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
+//		return MCStringCreateWithCString("file not found", r_error);
+//	
+//	r_fileref_num = FSOpenResFile(&p_ref, p_permissions);
+//	if (p_create && r_fileref_num < 0)
+//	{
+//		OSType t_creator, t_ftype;
+//		CInfoPBRec t_cpb;
+//		MCMemoryClear(&t_cpb, sizeof(t_cpb));
+//		t_cpb.hFileInfo.ioNamePtr = fspec.name;
+//		t_cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
+//		t_cpb.hFileInfo.ioDirID = fspec.parID;
+//		/* DEPRECATED */ if (PBGetCatInfoSync(&t_cpb) == noErr)
+//		{
+//			t_creator = t_cpb.hFileInfo.ioFlFndrInfo.fdCreator;
+//			t_ftype = t_cpb.hFileInfo.ioFlFndrInfo.fdType;
+//		}
+//		else
+//		{
+//            const char *t_char_ptr;
+//            t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+//			t_creator = MCSwapInt32NetworkToHost(*(OSType*)t_char_ptr);
+//			t_ftype = MCSwapInt32NetworkToHost(*(OSType*)(t_char_ptr + 4));
+//		}
+//		/* DEPRECATED */ FSpCreateResFile(&fspec, t_creator, t_ftype, smRoman);
+//		
+//		if ((errno = ResError()) != noErr)
+//			return MCStringCreateWithCString("can't create resource fork", r_error);
+//		
+//		/* DEPRECATED */ r_fileref_num = FSpOpenResFile(&fspec, p_permissions);
+//	}
+//	
+//	if (r_fileref_num < 0)
+//	{
+//		errno = fnfErr;
+//		return MCStringCreateWithCString("Can't open resource fork", r_error);
+//	}
+//	
+//	if ((errno = ResError()) != noErr)
+//		return MCStringCreateWithCString("Error opening resource fork", r_error);
+//	
+//	return true;
+//}
+//
+//const char *MCS_openresourcefile_with_fsref(FSRef *p_ref, SInt8 permission, bool create, SInt16 *fileRefNum)
+//{
+//	FSSpec fspec;
+//	
+//	if (FSGetCatalogInfo(p_ref, 0, NULL, NULL, &fspec, NULL) != noErr)
+//		return "file not found";
+//	
+//	if ((*fileRefNum = FSpOpenResFile(&fspec, permission)) < 0)
+//	{
+//		if (create)
+//		{
+//			OSType creator, ftype;
+//			CInfoPBRec cpb;
+//			memset(&cpb, 0, sizeof(CInfoPBRec));
+//			cpb.hFileInfo.ioNamePtr = fspec.name;
+//			cpb.hFileInfo.ioVRefNum = fspec.vRefNum;
+//			cpb.hFileInfo.ioDirID = fspec.parID;
+//			if (PBGetCatInfoSync(&cpb) == noErr)
+//			{
+//				memcpy(&creator, &cpb.hFileInfo.ioFlFndrInfo.fdCreator, 4);
+//				memcpy(&ftype, &cpb.hFileInfo.ioFlFndrInfo.fdType, 4);
+//			}
+//			else
+//			{
+//                const char *t_char_ptr;
+//                t_char_ptr = (char*)MCStringGetCString(MCfiletype);
+//				memcpy((char*)&creator, t_char_ptr, 4);
+//				memcpy((char*)&ftype, t_char_ptr + 4, 4);
+//				creator = MCSwapInt32NetworkToHost(creator);
+//				ftype = MCSwapInt32NetworkToHost(ftype);
+//			}
+//			FSpCreateResFile(&fspec, creator, ftype, smRoman);
+//			
+//			if ((errno = ResError()) != noErr)
+//				return "can't create resource fork";
+//				
+//			*fileRefNum = FSpOpenResFile(&fspec, permission);
+//		}
+//		
+//		if (*fileRefNum < 0)
+//		{
+//			errno = fnfErr;
+//			return "Can't open resource fork";
+//		}
+//		
+//		if ((errno = ResError()) != noErr)
+//			return "Error opening resource fork";
+//	}
+//	
+//	return NULL;
+//}
+//
+//void MCS_closeresourcefile(SInt16 p_ref)
+//{
+//	OSErr t_err;
+//	CloseResFile(p_ref);
+//	t_err = ResError();
+//}
+//
+//void MCS_openresourcefork_with_fsref(FSRef *p_ref, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref, MCStringRef& r_error)
+//{
+//    bool t_success;
+//    t_success = true;
+//	
+//	HFSUniStr255 t_resource_fork_name;
+//	if (t_success)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSGetResourceForkName(&t_resource_fork_name);
+//		if (t_os_error != noErr)
+//        {
+//            t_success = false;
+//            /* UNCHECKED */ MCStringCreateWithCString("couldn't get resource fork name", r_error);
+//        }
+//	}
+//	
+//	// Attempt to create a resource fork if required.
+//	if (t_success && p_create)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSCreateResourceFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, 0);
+//		if (t_os_error != noErr && t_os_error != errFSForkExists)
+//        {
+//            t_success = false;
+//            /* UNCHECKED */ MCStringCreateWithCString("can't create resource fork", r_error);
+//        }
+//	}
+//	
+//	// Open it..
+//	SInt16 t_fork_ref;
+//	bool t_fork_opened;
+//	t_fork_opened = false;
+//	if (t_success)
+//	{
+//		OSErr t_os_error;
+//		t_os_error = FSOpenFork(p_ref, (UniCharCount)t_resource_fork_name . length, t_resource_fork_name . unicode, p_permission, &t_fork_ref);
+//		if (t_os_error == noErr)
+//			t_fork_opened = true;
+//		else
+//        {
+//            t_success = false;
+//            /* UNCHECKED */ MCStringCreateWithCString("can't open resource fork", r_error);
+//        }
+//	}
+//	
+//	*r_fork_ref = t_fork_ref;
+//}
+//
+//const char *MCS_openresourcefork_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)
+//{
+//	const char *t_error;
+//	t_error = NULL;
+//	
+//	char *t_utf8_path;
+//	t_utf8_path = path2utf(strdup(p_path));
+//	
+//	FSRef t_ref;
+//	OSErr t_os_error;
+//	t_os_error = MCS_pathtoref(p_path, &t_ref);
+//	if (t_os_error != noErr)
+//		t_error = "can't open file";
+//		
+//	if (t_error == NULL)
+//		t_error = MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref);
+//		
+//	delete t_utf8_path;
+//		
+//	return t_error;	
+//}
+//
+//
+//void MCS_openresourcefork_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16*r_fork_ref, MCStringRef& r_error)
+//{
+//	FSRef t_ref;
+//	OSErr t_os_error;
+//	t_os_error = MCS_mac_pathtoref(p_path, t_ref);
+//	if (t_os_error != noErr)
+//    {
+//		/* UNCHECKED */ MCStringCreateWithCString("can't open file", r_error);
+//        return;
+//    }
+//		
+//	MCS_openresourcefork_with_fsref(&t_ref, p_permission, p_create, r_fork_ref, r_error);
+//}
+//
+//bool MCS_mac_openresourcefile_with_path(MCStringRef p_path, SInt8 p_permission, bool p_create, SInt16& r_fork_ref, MCStringRef& r_error)
+//{
+////	MCAutoStringRef t_utf8_path;
+////	if (!MCU_nativetoutf8(p_path, &t_utf8_path))
+////		return false;`
+//	
+//	FSRef t_ref;
+//	OSErr t_os_error;
+//	
+//	t_os_error = MCS_mac_pathtoref(p_path, t_ref);
+//	if (t_os_error != noErr)
+//		return MCStringCreateWithCString("can't open file", r_error);
+//	
+//	return MCS_openresourcefile_with_fsref(t_ref, p_permission, p_create, r_fork_ref, r_error);
+//}
+//
 //
 //
 //const char *MCS_openresourcefile_with_path(const char *p_path, SInt8 p_permission, bool p_create, SInt16 *r_fork_ref)

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxprefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -545,10 +546,8 @@ void MCScreenDC::openIME()
 	if (tsmdocument)
 		return;
 	InterfaceTypeList supportedTypes;
-	if (MCS_imeisunicode())
-		supportedTypes[0] = kUnicodeDocument;
-	else
-		supportedTypes[0] = kTextService;
+    supportedTypes[0] = kUnicodeDocument;
+    
 	NewTSMDocument(1, supportedTypes, &tsmdocument, NULL);
 }
 

@@ -688,7 +688,7 @@ IO_stat MCHcstak::macreadresources(void)
     MCAutoStringRef t_path;
     MCAutoStringRef t_error;
     /* UNCHECKED */ MCStringCreateWithCString(name, &t_path);
-	if (MCS_openresourcefile_with_path(*t_path, fsRdPerm, false, resFileRefNum, &t_error))
+	if (MCS_mac_openresourcefile_with_path(*t_path, fsRdPerm, false, resFileRefNum, &t_error))
 		return IO_NORMAL;
 	
 	short rtypeCount = Count1Types(); //get the # of total resource types in current res file
@@ -735,7 +735,7 @@ IO_stat MCHcstak::macreadresources(void)
 			} //for
 		} //if (rtype =='ICON'
 	}
-	MCS_closeresourcefile(resFileRefNum);
+	MCS_mac_closeresourcefile(resFileRefNum);
 	
 	return IO_NORMAL;
 }

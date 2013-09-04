@@ -459,7 +459,7 @@ struct MCSystemInterface
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
-	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode) = 0;
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode) = 0;
 	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
@@ -475,10 +475,6 @@ struct MCSystemInterface
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native) = 0;
 	virtual bool PathFromNative(MCStringRef p_native, MCStringRef& r_path) = 0;
 	virtual bool ResolvePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-
-	///* LEGACY */ char *ResolvePath(const char *p_rev_path);
-	virtual bool ResolveNativePath(MCStringRef p_path, MCStringRef& r_resolved_path) = 0;
-	///* LEGACY */ char *ResolveNativePath(const char *p_rev_path);
 	
 	virtual bool LongFilePath(MCStringRef p_path, MCStringRef& r_long_path) = 0;
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
@@ -502,6 +498,8 @@ struct MCSystemInterface
     virtual void Kill(int4 p_pid, int4 p_sig) = 0;
     virtual void KillAll(void) = 0;
     virtual Boolean Poll(real8 p_delay, int p_fd) = 0;
+    
+    virtual Boolean IsInteractiveConsole(int p_fd) = 0;
     
     virtual int GetErrno(void) = 0;
     virtual void SetErrno(int p_errno) = 0;
