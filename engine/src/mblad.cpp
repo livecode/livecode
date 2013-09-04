@@ -177,16 +177,16 @@ public:
             switch(m_event)
             {
                 case kMCAdEventTypeReceive:
-                    t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCfalsemcstring);
+                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCFalse);
                     break;
                 case kMCAdEventTypeReceiveDefault:
-                    t_object->Get()->message_with_args(MCM_ad_loaded, m_target->GetName(), MCtruemcstring);
+                    t_object->Get()->message_with_valueref_args(MCM_ad_loaded, m_target->GetName(), kMCTrue);
                     break;
                 case kMCAdEventTypeReceiveFailed:
-                    t_object->Get()->message_with_args(MCM_ad_load_failed, m_target->GetName());
+                    t_object->Get()->message_with_valueref_args(MCM_ad_load_failed, m_target->GetName());
                     break;
                 case kMCAdEventTypeClick:
-                    t_object->Get()->message_with_args(MCM_ad_clicked, m_target->GetName());
+                    t_object->Get()->message_with_valueref_args(MCM_ad_clicked, m_target->GetName());
                     break;
             }
         }
@@ -212,7 +212,7 @@ MCAd::MCAd(void)
 {
 	m_references = 1;
 	m_id = ++s_last_ad_id;
-	m_name = nil;
+	m_name = MCValueRetain(kMCEmptyString);
 	m_object = nil;
 	m_next = nil;
 }
@@ -225,11 +225,7 @@ MCAd::~MCAd(void)
 		m_object = nil;
 	}
 	
-	if (m_name != nil)
-	{
-		MCCStringFree(m_name);
-		m_name = nil;
-	}
+	MCValueRelease(m_name);
     
 	if (s_ads == this)
 		s_ads = m_next;
@@ -262,7 +258,7 @@ uint32_t MCAd::GetId(void)
 	return m_id;
 }
 
-const char *MCAd::GetName(void)
+MCStringRef MCAd::GetName()
 {
 	return m_name;
 }
@@ -281,15 +277,7 @@ void MCAd::SetOwner(MCObjectHandle *p_owner)
 
 bool MCAd::SetName(MCStringRef p_name)
 {
-	if (m_name != nil)
-	{
-		MCCStringFree(m_name);
-		m_name = nil;
-	}
-	
-	if (p_name != nil)
-		return MCCStringClone(MCStringGetCString(p_name), m_name);
-	
+	MCValueAssign(m_name, p_name);
 	return true;
 }
 
@@ -307,7 +295,7 @@ bool MCAd::FindByNameOrId(MCStringRef p_name, MCAd *&r_ad)
 		return FindById(t_id, r_ad);
 	
 	for(MCAd *t_ad = s_ads; t_ad != nil; t_ad = t_ad -> m_next)
-		if (t_ad -> GetName() != nil && MCCStringEqualCaseless(t_ad -> GetName(), MCStringGetCString(p_name)))
+		if (MCStringIsEqualTo(p_name, t_ad->GetName(), kMCStringOptionCompareCaseless))
 		{
 			r_ad = t_ad;
 			return true;

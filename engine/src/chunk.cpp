@@ -3394,14 +3394,14 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 			if (t_method != nil)
 				MCSyntaxFactoryEvalMethod(ctxt, t_method);
 			else
-				MCSyntaxFactoryEvalConstantNil(ctxt);
+				return /* ES_ERROR */ ;
 		}
 		
 		// IF OBJECT IS CONTROL THEN RETURN (?) better to handle as type problem
 	}
 	else if (stack == nil && background == nil && card == nil && group == nil && object == nil)
 	{
-		// return ES_ERROR;
+        return /* ES_ERROR */ ;
 	}
 	else if (url != nil)
     {
@@ -3412,18 +3412,15 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
         }
         else
         {
-            // return ES_ERROR;
+            return /* ES_ERROR */ ;
         }
 	}
 	else
 		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalDefaultStackAsObjectMethodInfo);
     
-    MCSyntaxFactoryEndExpression(ctxt);
+	// At this point the top of the stack should be an expr evaluating to an objptr.
     
-    // (nil objptr should be an error?)
-    
-	// At this point the top of the stack should be an expr evaluating to a potentially
-	// nil objptr.
+    // If objptr is nil then an error will already have been thrown.
 		
 	// If we have a stack clause, then we resolve the stack of the objptr. These methods
 	// all take a 'stack' type so will throw an error if things like:
@@ -3440,16 +3437,12 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 		switch(stack -> etype)
 		{
 		case CT_EXPRESSION:
-            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 			stack -> startpos -> compile(ctxt);
 			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfStackByNameMethodInfo);
-            MCSyntaxFactoryEndExpression(ctxt);
 			break;
 		case CT_ID:
-            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 			stack -> startpos -> compile(ctxt);
 			MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalStackOfStackByIdMethodInfo);
-            MCSyntaxFactoryEndExpression(ctxt);
 			break;
 		case CT_THIS:
 			break;
@@ -3465,16 +3458,12 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 			switch(stack -> etype)
 			{
 			case CT_EXPRESSION:
-                MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 				stack -> startpos -> compile(ctxt);
 				MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByNameMethodInfo);
-                MCSyntaxFactoryEndExpression(ctxt);
 				break;
 			case CT_ID:
-                MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 				stack -> startpos -> compile(ctxt);
 				MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalSubstackOfStackByIdMethodInfo);
-                MCSyntaxFactoryEndExpression(ctxt);
 				break;
 			case CT_THIS:
 				break;
@@ -3489,7 +3478,6 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 	// 
 	if (object != nil && (object -> otype == CT_AUDIO_CLIP || object -> otype == CT_VIDEO_CLIP))
 	{
-        MCSyntaxFactoryBeginExpression(ctxt, line, pos);
         switch (ct_class(object -> etype))
         {
             case CT_ORDINAL:
@@ -3510,12 +3498,9 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
         MCSyntaxFactoryEndExpression(ctxt);
         return;
     }
-	
-	// IF no bg, card, group, object then return obj as sptr.
 
 	if (background != nil)
 	{
-        MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 		switch(ct_class(background -> etype))
 		{
 		case CT_ORDINAL:
@@ -3534,14 +3519,8 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 			// ERROR
 			break;
 		}
-        MCSyntaxFactoryEndExpression(ctxt);
 	}
-	
-	// IF no card, group, object then return obj as bptr.
-    if (card == nil && group == nil && object == nil)
-        return;
     
-    MCSyntaxFactoryBeginExpression(ctxt, line, pos);
 	if (card != nil)
 	{
 		MCSyntaxFactoryEvalConstantBool(ctxt, marked);
@@ -3567,16 +3546,10 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
 			break;
 		}
 	}
-	else if (background == nil)
+	else if (background == nil && (group != nil || object != nil))
 	{
 		MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalThisCardOfStackMethodInfo);
 	}
-    MCSyntaxFactoryEndExpression(ctxt);
-    
-    // if no group or object then return obj as cptr
-    if (group == nil && object == nil)
-        return;
-               
                
     // group number/name/id of <group of><group of>... stack
                
@@ -3585,7 +3558,6 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
         MCCRef *tgptr = group;
         while (tgptr != nil)
         {
-            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
             switch (ct_class(tgptr -> etype))
             {
                 MCSyntaxFactoryEvalConstantUInt(ctxt, tgptr -> ptype);
@@ -3619,12 +3591,7 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
             }
             tgptr = tgptr -> next;
         }
-        MCSyntaxFactoryEndExpression(ctxt);
     }
-               
-    // if no object then return gptr as obj.
-    if (object == nil)
-        return;
                
     // MW-2011-08-08: [[ Bug ]] Loop through chain of object chunks. This allows
     //   things like field ... of control ... of.
@@ -3634,7 +3601,6 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
         MCCRef *toptr = object;
         while (toptr != nil)
         {
-            MCSyntaxFactoryBeginExpression(ctxt, line, pos);
             if (toptr -> otype == CT_MENU)
                 MCSyntaxFactoryEvalMethod(ctxt, kMCInterfaceEvalMenubarAsObjectMethodInfo);
             else
@@ -3671,9 +3637,9 @@ void MCChunk::compile_object_ptr(MCSyntaxFactoryRef ctxt)
                 }
                 toptr = toptr -> next;
             }
-            MCSyntaxFactoryEndExpression(ctxt);
         }
     }
+    MCSyntaxFactoryEndExpression(ctxt);
 }
 								  
 ////////////////////////////////////////////////////////////////////////////////

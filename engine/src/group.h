@@ -220,6 +220,8 @@ public:
 	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
 
 	void SetChildDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+    void UpdateMargins(void);
 
 	////////// PROPERTY ACCESSORS
 
@@ -274,7 +276,18 @@ public:
 	void SetBackSize(MCExecContext& ctxt, MCPoint p_size);
 	void GetSelectGroupedControls(MCExecContext& ctxt, bool& r_setting);
 	void SetSelectGroupedControls(MCExecContext& ctxt, bool setting);
+    
 	virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
 	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    
+    virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
 };
 #endif

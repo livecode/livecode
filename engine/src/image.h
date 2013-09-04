@@ -326,7 +326,7 @@ class MCImage : public MCControl
 	int2 repeatcount;
 	int2 irepeatcount;
 	uint1 resizequality;
-	char *filename;
+	MCStringRef filename;
 	static int2 magmx;
 	static int2 magmy;
 	static MCRectangle magrect;
@@ -346,7 +346,7 @@ private:
 	// replace the current image data with the new bitmap
 	bool setbitmap(MCImageBitmap *p_bitmap);
 	bool setcompressedbitmap(MCImageCompressedBitmap *p_compressed);
-	bool setfilename(const char *p_filename);
+	bool setfilename(MCStringRef p_filename);
 	bool setdata(void *p_data, uindex_t p_size);
 	
 	void notifyneeds(bool p_deleting);
@@ -560,6 +560,7 @@ public:
 
 	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data);
 	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
 
@@ -606,6 +607,11 @@ public:
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);
 	void GetAngle(MCExecContext& ctxt, integer_t& r_angle);
 	void SetAngle(MCExecContext& ctxt, integer_t p_angle);
+    
+    virtual void SetBlendLevel(MCExecContext& ctxt, uinteger_t level);
+	virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
+    virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
 };
 
 extern bool MCU_israwimageformat(Export_format p_format);

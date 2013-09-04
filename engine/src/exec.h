@@ -1479,6 +1479,21 @@ extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByIdMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardByNameMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceEvalObjectOfCardOrStackByIdMethodInfo;
 
+extern MCExecMethodInfo *kMCInterfaceEvalHomeStackAsOptionalObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalHelpStackAsOptionalObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalDefaultStackAsOptionalObjectMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalStackOfOptionalStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalStackOfOptionalStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfOptionalStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalSubstackOfOptionalStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalOptionalStackWithBackgroundByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByOrdinalMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByIdMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalCardOfOptionalStackByNameMethodInfo;
+extern MCExecMethodInfo *kMCInterfaceEvalThisCardOfOptionalStackMethodInfo;
+
 void MCInterfaceInitialize(MCExecContext& ctxt);
 void MCInterfaceFinalize(MCExecContext& ctxt);
 
@@ -1725,12 +1740,12 @@ void MCInterfaceExecSortContainer(MCExecContext &ctxt, MCStringRef& x_target, in
 
 void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool);
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCControl *p_background, MCCard *p_card, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_target, MCControl *p_background, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail);
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, bool p_visible, bool p_this_stack);
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_this_stack);
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt);
 void MCInterfaceExecGoCardRelative(MCExecContext& ctxt, bool p_forward, real8 p_amount);
 void MCInterfaceExecGoCardEnd(MCExecContext& ctxt, bool p_is_start);
-void MCInterfaceExecGoHome(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card);
+void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card);
 
 void MCInterfaceExecVisualEffect(MCExecContext& ctxt, MCInterfaceVisualEffect p_effect);
 
@@ -1976,6 +1991,7 @@ extern MCExecCustomTypeInfo *kMCInterfaceDecorationTypeInfo;
 
 ///////////
 
+extern MCExecCustomTypeInfo *kMCInterfaceMarginsTypeInfo;
 extern MCExecEnumTypeInfo *kMCInterfaceLayerModeTypeInfo;
 
 ///////////
@@ -2279,6 +2295,7 @@ void MCEngineEvalSysError(MCExecContext& ctxt, uinteger_t& r_error);
 void MCEngineEvalValue(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 void MCEngineEvalValueWithObject(MCExecContext& ctxt, MCStringRef p_script, MCObjectPtr p_object, MCValueRef& r_value);
 
+bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error);
 void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object);
 void MCEngineEvalOwnerAsObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_owner);
 void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_type, MCObjectPtr& r_object);

@@ -113,7 +113,7 @@ MCImage::MCImage()
 
 	m_needs = nil;
 
-	filename = nil;
+	filename = MCValueRetain(kMCEmptyString);
 
 	xhot = yhot = 1;
 	currentframe = 0;
@@ -156,8 +156,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 			m_rep = iref . m_rep->Retain();
 	}
 
-	if (iref.flags & F_HAS_FILENAME)
-		/* UNCHECKED */ MCCStringClone(iref.filename, filename);
+	
+	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -185,8 +185,8 @@ MCImage::~MCImage()
 		m_transformed = nil;
 	}
 
-	if (filename != nil)
-		MCCStringFree(filename);
+	
+	MCValueRelease(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -1587,6 +1587,11 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 
 IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
+	if (MCStringIsEmpty(filename))
+		flags |= F_HAS_FILENAME;
+	else
+		flags &= ~F_HAS_FILENAME;
+
 	IO_stat stat;
 
 	recompress();
@@ -1673,7 +1678,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1769,12 +1774,11 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		char *t_filename = nil;
-		if ((stat = IO_read_string(t_filename, stream)) != IO_NORMAL)
+		MCAutoStringRef t_filename;
+		if ((stat = IO_read_stringref(&t_filename, stream, false)) != IO_NORMAL)
 			return stat;
 
-		/* UNCHECKED */ setfilename(t_filename);
-		MCCStringFree(t_filename);
+		/* UNCHECKED */ setfilename(*t_filename);
 	}
 	else
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
@@ -2127,11 +2131,11 @@ void MCImage::setrep(MCImageRep *p_rep)
 	notifyneeds(false);
 }
 
-bool MCImage::setfilename(const char *p_filename)
+bool MCImage::setfilename(MCStringRef p_filename)
 {
 	bool t_success = true;
 
-	if (p_filename == nil)
+	if (MCStringIsEmpty(p_filename))
 	{
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
@@ -2139,15 +2143,19 @@ bool MCImage::setfilename(const char *p_filename)
 		return true;
 	}
 
-	char *t_filename = nil;
+	MCAutoStringRef t_filename;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	t_success = MCCStringClone(p_filename, t_filename);
+	//t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
 	if (t_success)
-		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
+	{
+		MCAutoStringRef t_resolved_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_resolved, &t_resolved_string);
+		t_success = MCImageRepGetReferenced(*t_resolved_string, t_rep);
+	}
 
 	MCCStringFree(t_resolved);
 
@@ -2158,13 +2166,8 @@ bool MCImage::setfilename(const char *p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
-		if (filename != nil)
-			MCCStringFree(filename);
-		filename = t_filename;
-	
+		MCValueAssign(filename, *t_filename);
 	}
-	else
-		MCCStringFree(t_filename);
 
 	return t_success;
 }
