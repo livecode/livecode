@@ -186,6 +186,64 @@ bool MCExecContext::TryToConvertToLegacyRectangle(MCValueRef p_value, bool& r_co
 	return true;
 }
 
+///////////////////////////////////////////////////////////////////////////////
+
+bool MCExecContext::CopyElementAsBoolean(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCBooleanRef &r_boolean)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToBoolean(t_val, r_boolean));
+}
+
+bool MCExecContext::CopyElementAsString(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCStringRef &r_string)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToString(t_val, r_string));
+}
+
+bool MCExecContext::CopyElementAsNumber(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCNumberRef &r_number)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToNumber(t_val, r_number));
+}
+
+bool MCExecContext::CopyElementAsInteger(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, integer_t &r_integer)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToInteger(t_val, r_integer));
+}
+
+bool MCExecContext::CopyElementAsUnsignedInteger(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, uinteger_t &r_integer)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToUnsignedInteger(t_val, r_integer));
+}
+
+bool MCExecContext::CopyElementAsReal(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, real64_t &r_real)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToReal(t_val, r_real));
+}
+
+bool MCExecContext::CopyElementAsArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_array)
+{
+	MCValueRef t_val = nil;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
+		return false;
+	return (ConvertToArray(t_val, r_array));
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
