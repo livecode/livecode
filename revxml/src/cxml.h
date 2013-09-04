@@ -19,6 +19,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include <libxml/HTMLparser.h>
 // MDW-2013-07-09: [[ RevXmlXPath ]]
 #include <libxml/xpath.h>
+// MDW-2013-09-03: [[ RevXmlXslt ]]
+#include <xsltInternals.h>
+#include <xsltutils.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -61,7 +64,7 @@ extern void CB_elementData(const char *data, int length);
 class CXMLDocument
 {
 public:
-CXMLDocument() {id = ++idcounter; doc = NULL;}
+CXMLDocument() {id = ++idcounter; doc = NULL; xpathContext = NULL; xsltID = NULL;}
 ~CXMLDocument() {Free();}
 inline Bool isinited() {return doc != NULL;}
 Bool Read(char *data, unsigned long tlength, Bool wellformed);
@@ -77,6 +80,9 @@ xmlDocPtr GetDocPtr() {return doc;}
 // MDW-2013-07-09: [[ RevXmlXPath ]]
 xmlXPathContextPtr GetXPathContext() {return xpathContext;}
 void SetXPathContext(xmlXPathContextPtr ctx) {xpathContext=ctx;}
+// MDW-2013-09-03: [[ RevXmlXslt ]]
+xsltStylesheetPtr GetXsltContext() {return xsltID;}
+void SetXsltContext(xsltStylesheetPtr ctx) {xsltID=ctx;}
 Bool AddDTD(char *data, unsigned long tlength);
 Bool ValidateDTD(char *data, unsigned long tlength);
 char *GetError() {return errorbuf;}
@@ -100,6 +106,8 @@ static char errorbuf[256];
 xmlDocPtr doc;
 // MDW-2013-07-09: [[ RevXmlXPath ]]
 xmlXPathContextPtr xpathContext;
+// MDW-2013-09-03: [[ RevXmlXslt ]]
+xsltStylesheetPtr xsltID;
 };
 
 class CXMLElement

@@ -2701,20 +2701,27 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 	*pass = False;
 	*error = False;
 	xsltStylesheetPtr cur = NULL;
+	CXMLDocument *newdoc = new CXMLDocument;
 	char *result;
 
 	if (1 == nargs)
 	{
 		int docID = atoi(args[0]);
-		CXMLDocument *xmlDocument = doclist.find(docID);
-		if (NULL != xmlDocument)
+		CXMLDocument *xsltDocument = doclist.find(docID);
+		if (NULL != xsltDocument)
 		{
-			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
+			xmlDocPtr xmlDoc = xsltDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
 				cur = xsltParseStylesheetDoc(xmlDoc);
+				
+				newdoc->SetXsltContext(cur);
+				doclist.add(newdoc);
+				unsigned int docid = newdoc->GetID();
+
 				result = (char *)malloc(INTSTRSIZE);
-				sprintf(result,"%d",cur);
+				sprintf(result,"%d",docid);
+				
 				*retstring = istrdup(result);
 				free(result);
 			}
@@ -2745,15 +2752,26 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 	*pass = False;
 	*error = False;
 	xsltStylesheetPtr cur = NULL;
+	CXMLDocument *newdoc = new CXMLDocument;
 	char *result;
 
 	if (1 == nargs)
 	{
 		cur = xsltParseStylesheetFile((const xmlChar *)args[0]);
-		result = (char *)malloc(INTSTRSIZE);
-		sprintf(result,"%d",cur);
-		*retstring = istrdup(result);
-		free(result);
+		if (NULL != cur)
+		{
+			newdoc->SetXsltContext(cur);
+			doclist.add(newdoc);
+			unsigned int docid = newdoc->GetID();
+			result = (char *)malloc(INTSTRSIZE);
+			sprintf(result,"%d",docid);
+			*retstring = istrdup(result);
+			free(result);
+		}
+		else
+		{
+			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+		}
 	}
 	// only one argument permitted
 	else
@@ -2776,9 +2794,26 @@ void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 
 	if (1 == nargs)
 	{
-		cur = (xsltStylesheetPtr)atoi(args[0]);
-		xsltFreeStylesheet(cur);
-		*retstring = (char *)calloc(1,1);
+		int docID = atoi(args[0]);
+		CXMLDocument *xsltDocument = doclist.find(docID);
+		if (NULL != xsltDocument)
+		{
+			cur = xsltDocument->GetXsltContext();
+			if (NULL != cur)
+			{
+				xsltFreeStylesheet(cur);
+				*retstring = (char *)calloc(1,1);
+			}
+			else
+			{
+				*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+			}
+		}
+		else
+		{
+			// couldn't dereference the xml id
+			*retstring = istrdup(xmlerrors[XMLERR_BADDOCID]);
+		}
 	}
 	// only one argument permitted
 	else
@@ -2819,11 +2854,16 @@ void XML_xsltApplyStylesheet(char *args[], int nargs, char **retstring, Bool *pa
 			xmlDocPtr xmlDoc = xmlDocument->GetDocPtr();
 			if (NULL != xmlDoc)
 			{
-				cur = (xsltStylesheetPtr)atoi(args[1]);
+				int docID = atoi(args[1]);
+				CXMLDocument *xsltDocument = doclist.find(docID);
+				
+				cur = xsltDocument->GetXsltContext();
 				if (NULL != cur)
 				{
 					if (nargs > 2)
 					{
+						// no parameter support yet
+						params[nbparams] = NULL;
 					}
 					else
 					{
@@ -2891,6 +2931,8 @@ void XML_xsltApplyStylesheetFile(char *args[], int nargs, char **retstring, Bool
 				{
 					if (nargs > 2)
 					{
+						// no parameter support yet
+						params[nbparams] = NULL;
 					}
 					else
 					{
