@@ -489,7 +489,7 @@ void X_main_loop(void)
 	MCserverscript = static_cast<MCServerScript *>(MCdispatcher -> gethome());
 	
 	X_load_extensions(MCserverscript);
-	
+
 #ifdef _IREVIAM
 	rlim_t t_cpu_time_limit, t_data_limit;
 	t_cpu_time_limit = 30;
@@ -501,7 +501,10 @@ void X_main_loop(void)
 		t_port = getenv("SERVER_PORT");
 		if (t_port != NULL && atoi(t_port) == 7309)
 		{
-			if (MCServerDebugConnect(getenv("SERVER_NAME"), getenv("REQUEST_URI")))
+			MCAutoStringRef t_server_name, t_request_uri;
+			/* UNCHECKED */ MSC_getenv(MCSTR("SERVER_NAME"), &t_server_name);
+			/* UNCHECKED */ MSC_getenv(MCSTR("REQUEST_URI"), &t_request_uri);
+			if (MCServerDebugConnect(*t_server_name, *t_request_uri))
 			{
 				t_cpu_time_limit += t_cpu_time_limit / 2;
 				t_data_limit += t_data_limit / 2;
