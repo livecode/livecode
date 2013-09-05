@@ -1033,6 +1033,7 @@ extern MCExecEnumTypeInfo *kMCInterfaceWindowAlignmentTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfacePaletteSettingsTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectTypeInfo;
 extern MCExecCustomTypeInfo *kMCInterfaceVisualEffectArgumentTypeInfo;
+extern MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo;
 
 extern MCExecMethodInfo *kMCInterfaceMakeCustomImagePaletteSettingsMethodInfo;
 extern MCExecMethodInfo *kMCInterfaceMakeOptimalImagePaletteSettingsMethodInfo;
