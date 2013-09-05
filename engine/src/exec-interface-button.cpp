@@ -460,6 +460,8 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 			reseticon();
 		}
 	}
+	
+	Redraw();
 }
 
 void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
