@@ -377,7 +377,7 @@ struct MCMacSystemServiceInterface: public MCServiceInterface
     virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
     virtual void RequestAE(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value) = 0;
-    virtual void RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
+    virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
 };
 
 struct MCWindowsSystemServiceInterface: public MCServiceInterface
@@ -477,10 +477,6 @@ struct MCSystemInterface
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path) = 0;
 
 	virtual bool Shell(MCStringRef filename, MCDataRef& r_data, int& r_retcode) = 0;
-
-	//virtual char *GetHostName(void) = 0;
-	//virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
-	//virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context) = 0;
 
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset) = 0;
 	virtual bool TextConvertToUnicode(uint32_t p_input_encoding, const void *p_input, uint4 p_input_length, void *p_output, uint4& p_output_length, uint4& r_used) = 0;
