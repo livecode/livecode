@@ -357,11 +357,11 @@ int32_t int_cmp(const void *a, const void *b)
 	return *(uint32_t*)a - *(uint32_t*)b;
 }
 
-bool MCImageParseColourList(const MCString &p_input, uint32_t &r_ncolours, MCColor *&r_colours)
+bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *&r_colours)
 {
 	bool t_success = true;
 
-	char *t_list = p_input.clone();
+	char *t_list = (char*) MCStringGetCString(p_input);
 	char *t_currentstring = t_list;
 
 	t_success = (t_list != NULL);
@@ -395,7 +395,9 @@ bool MCImageParseColourList(const MCString &p_input, uint32_t &r_ncolours, MCCol
 			else
 				t_nextstring = t_currentstring + strlen(t_currentstring);
 
-			if (!MCscreen->parsecolor(MCString(t_currentstring), &t_colours[t_colourindex], NULL))
+			MCAutoStringRef t_currentstring_str;
+			/* UNCHECKED */ MCStringCreateWithCString(t_currentstring, &t_currentstring_str);
+			if (!MCscreen->parsecolor(*t_currentstring_str, t_colours[t_colourindex], NULL))
 			{
 				t_success = false;
 				break;

@@ -1462,8 +1462,8 @@ void MCObject::SetPixel(MCExecContext& ctxt, Properties which, uinteger_t pixel)
 
 	colors[i] . pixel = pixel;
 	MCscreen -> querycolor(colors[i]);
-	delete colornames[i];
-	colornames[i] = NULL;
+	MCValueRelease(colornames[i]);
+	colornames[i] = nil;
 
 	Redraw();
 }
@@ -1663,7 +1663,7 @@ void MCObject::SetColor(MCExecContext& ctxt, int index, const MCInterfaceNamedCo
 		set_interface_color(colors[i], &t_color_name, p_color);
 
 		if (*t_color_name != nil)
-			colornames[i] = strclone(MCStringGetCString(*t_color_name)); 
+			colornames[i] = MCValueRetain(*t_color_name); 
 		j = i;
 		if (getpindex(index, j))
 		{
@@ -1681,12 +1681,8 @@ bool MCObject::GetColor(MCExecContext& ctxt, Properties which, bool effective, M
 	uint2 i;
 	if (getcindex(which - P_FORE_COLOR, i))
 	{
-		MCAutoStringRef t_color_name;
-		if (MCStringCreateWithCString(colornames[i], &t_color_name))
-		{
-			get_interface_color(colors[i], *t_color_name, r_color);
-			return true;
-		}
+		get_interface_color(colors[i], colornames[i], r_color);
+		return true;	
 	}
 	else if (effective && parent != NULL)
 		return parent -> GetColor(ctxt, which, effective, r_color);
@@ -1935,20 +1931,20 @@ void MCObject::SetColors(MCExecContext& ctxt, MCStringRef p_input)
 						colors[i] = t_color . color;
 						if (opened)
 							MCscreen->alloccolor(colors[i]);
-						colornames[i] = t_color . name == nil ? NULL : strclone(MCStringGetCString(t_color . name));
+						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 					}
 				}
 				else
 				{
 					if (t_color . color . flags)
 					{
-						delete colornames[i];
+						MCValueRelease(colornames[i]);
 						if (opened)
 						{
 							colors[i] = t_color . color;
 							MCscreen->alloccolor(colors[i]);
 						}
-						colornames[i] = t_color . name == nil ? NULL : strclone(MCStringGetCString(t_color . name));
+						colornames[i] = t_color . name == nil ? nil : MCValueRetain(t_color . name);
 					}
 					else
 						destroycindex(index, i);
