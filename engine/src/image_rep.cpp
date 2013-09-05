@@ -289,7 +289,7 @@ bool MCImageRepGetReferenced(MCStringRef p_filename, MCImageRep *&r_rep)
 	
 	if (MCCachedImageRep::FindReferencedWithFilename(p_filename, t_rep))
 	{
-		MCLog("image rep cache hit for file %s", p_filename);
+		MCLog("image rep cache hit for file %s", MCStringGetCString(p_filename));
 		r_rep = t_rep->Retain();
 		return true;
 	}

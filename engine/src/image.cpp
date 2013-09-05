@@ -274,7 +274,7 @@ Boolean MCImage::mfocus(int2 x, int2 y)
 	case T_SELECT:
 	case T_SPRAY:
 	case T_TEXT:
-		if (flags & F_HAS_FILENAME || !MCU_point_in_rect(rect, x, y))
+		if (!iseditable() || !MCU_point_in_rect(rect, x, y))
 			return False;
 		message_with_args(MCM_mouse_move, x, y);
 		break;
@@ -1052,7 +1052,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			if (data.getlength() == 0)
 			{
 				// empty text - unset flags & set rep to nil;
-				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+				flags &= ~(F_COMPRESSION | F_TRUE_COLOR);
 				setrep(nil);
 			}
 			else
@@ -2126,7 +2126,7 @@ void MCImage::setrep(MCImageRep *p_rep)
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
 	if (currentframe != 0)
-	setframe(currentframe);
+		setframe(currentframe);
 
 	notifyneeds(false);
 }
@@ -2139,7 +2139,6 @@ bool MCImage::setfilename(MCStringRef p_filename)
 	{
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-		flags &= ~F_HAS_FILENAME;
 		return true;
 	}
 
@@ -2162,7 +2161,6 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		setrep(t_rep);
 		t_rep->Release();
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-		flags |= F_HAS_FILENAME;
 
 		MCValueAssign(filename, p_filename);
 	}
@@ -2181,6 +2179,9 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 
 	if (t_success)
 	{
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
+		
 		setrep(t_rep);
 		t_rep->Release();
 	}
@@ -2231,7 +2232,7 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 	{
 		setrep(t_rep);
 		t_rep->Release();
-		flags &= ~(F_HAS_FILENAME | F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= p_compressed->compression;
 
 		if (p_compressed->compression == F_RLE)
@@ -2239,6 +2240,9 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 			if (p_compressed->color_count == 0)
 				flags |= F_TRUE_COLOR;
 		}
+		
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
 	}
 
 	return t_success;
