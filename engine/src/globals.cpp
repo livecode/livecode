@@ -495,7 +495,7 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	MCcmd = nil;
+	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
 	MCfiletype = MCValueRetain(kMCEmptyString);
 	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
@@ -901,12 +901,14 @@ bool X_open(int argc, char *argv[], char *envp[])
 #endif
 
 	MCValueAssign(MCfiletype, MCSTR("ttxtTEXT"));
-	const char *tname = strrchr(MCStringGetCString(MCcmd), PATH_SEPARATOR);
-	if (tname == NULL)
-		tname = MCStringGetCString(MCcmd);
+    uindex_t t_last_path_separator;
+    // find the actual command to execute
+     if (!MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, MCStringGetLength(MCcmd), kMCStringOptionCompareExact, t_last_path_separator))
+		t_last_path_separator = 0;
 	else
-		tname++;
-	if (MCU_strncasecmp(tname, "rev", 3))
+		t_last_path_separator++;
+    
+	if (MCStringFind(MCcmd, MCRangeMake(t_last_path_separator, 3), MCSTR("rev"), kMCStringOptionCompareExact, nil))
 		MCValueAssign(MCstackfiletype, MCSTR("MCRDMSTK"));
 	else
 		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));

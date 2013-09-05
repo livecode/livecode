@@ -90,7 +90,7 @@ MCPropertyInfo MCImage::kProperties[] =
 
 MCObjectPropertyTable MCImage::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -113,7 +113,7 @@ MCImage::MCImage()
 
 	m_needs = nil;
 
-	filename = nil;
+	filename = MCValueRetain(kMCEmptyString);
 
 	xhot = yhot = 1;
 	currentframe = 0;
@@ -156,8 +156,8 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 			m_rep = iref . m_rep->Retain();
 	}
 
-	if (iref.flags & F_HAS_FILENAME)
-		/* UNCHECKED */ MCCStringClone(iref.filename, filename);
+	
+	filename = MCValueRetain(iref.filename);
 
 	angle = iref.angle;
 	currentframe = 0;
@@ -185,8 +185,8 @@ MCImage::~MCImage()
 		m_transformed = nil;
 	}
 
-	if (filename != nil)
-		MCCStringFree(filename);
+	
+	MCValueRelease(filename);
 }
 
 Chunk_term MCImage::gettype() const
@@ -274,7 +274,7 @@ Boolean MCImage::mfocus(int2 x, int2 y)
 	case T_SELECT:
 	case T_SPRAY:
 	case T_TEXT:
-		if (flags & F_HAS_FILENAME || !MCU_point_in_rect(rect, x, y))
+		if (!iseditable() || !MCU_point_in_rect(rect, x, y))
 			return False;
 		message_with_args(MCM_mouse_move, x, y);
 		break;
@@ -1052,7 +1052,7 @@ Exec_stat MCImage::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 			if (data.getlength() == 0)
 			{
 				// empty text - unset flags & set rep to nil;
-				flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
+				flags &= ~(F_COMPRESSION | F_TRUE_COLOR);
 				setrep(nil);
 			}
 			else
@@ -1587,6 +1587,11 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 
 IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
+	if (MCStringIsEmpty(filename))
+		flags |= F_HAS_FILENAME;
+	else
+		flags &= ~F_HAS_FILENAME;
+
 	IO_stat stat;
 
 	recompress();
@@ -1673,7 +1678,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		if ((stat = IO_write_string(filename, stream)) != IO_NORMAL)
+		if ((stat = IO_write_stringref(filename, stream, false)) != IO_NORMAL)
 			return stat;
 	}
 	else
@@ -1769,12 +1774,11 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 
 	if (flags & F_HAS_FILENAME)
 	{
-		char *t_filename = nil;
-		if ((stat = IO_read_string(t_filename, stream)) != IO_NORMAL)
+		MCAutoStringRef t_filename;
+		if ((stat = IO_read_stringref(&t_filename, stream, false)) != IO_NORMAL)
 			return stat;
 
-		/* UNCHECKED */ setfilename(t_filename);
-		MCCStringFree(t_filename);
+		/* UNCHECKED */ setfilename(*t_filename);
 	}
 	else
 		if (ncolors || flags & F_COMPRESSION || flags & F_TRUE_COLOR)
@@ -1793,8 +1797,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
 					return stat;
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
-				if (IO_read(t_compressed->data, sizeof(uint1),
-				            t_compressed->size, stream) != IO_NORMAL)
+				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
 				if (strncmp(version, "1.4", 3) == 0)
 				{
@@ -1821,8 +1824,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 					if (t_compressed->plane_sizes[i] != 0)
 					{
 						/* UNCHECKED */ MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]);
-						if (IO_read(t_compressed->planes[i], sizeof(uint1),
-						            t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+						if (IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream) != IO_NORMAL)
 						{
 							MCImageFreeCompressedBitmap(t_compressed);
 							return IO_ERROR;
@@ -1841,7 +1843,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (t_compressed->mask_size != 0)
 			{
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask);
-				if (IO_read(t_compressed->mask, sizeof(uint1), t_compressed->mask_size, stream) != IO_NORMAL)
+				if (IO_read(t_compressed->mask, t_compressed->mask_size, stream) != IO_NORMAL)
 					return IO_ERROR;
 			}
 
@@ -2124,32 +2126,33 @@ void MCImage::setrep(MCImageRep *p_rep)
 	// IM-2013-03-11: [[ BZ 10723 ]] If we have a new image, ensure that the current frame falls within the new framecount
 	// IM-2013-04-15: [[ BZ 10827 ]] Skip this check if the currentframe is 0 (preventing unnecessary image loading)
 	if (currentframe != 0)
-	setframe(currentframe);
+		setframe(currentframe);
 
 	notifyneeds(false);
 }
 
-bool MCImage::setfilename(const char *p_filename)
+bool MCImage::setfilename(MCStringRef p_filename)
 {
 	bool t_success = true;
 
-	if (p_filename == nil)
+	if (MCStringIsEmpty(p_filename))
 	{
 		setrep(nil);
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-		flags &= ~F_HAS_FILENAME;
 		return true;
 	}
 
-	char *t_filename = nil;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(p_filename));
+		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
 	if (t_success)
-		t_success = MCImageRepGetReferenced(t_resolved, t_rep);
+	{
+		MCAutoStringRef t_resolved_string;
+		/* UNCHECKED */ MCStringCreateWithCString(t_resolved, &t_resolved_string);
+		t_success = MCImageRepGetReferenced(*t_resolved_string, t_rep);
+	}
 
 	MCCStringFree(t_resolved);
 
@@ -2158,15 +2161,9 @@ bool MCImage::setfilename(const char *p_filename)
 		setrep(t_rep);
 		t_rep->Release();
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
-		flags |= F_HAS_FILENAME;
 
-		if (filename != nil)
-			MCCStringFree(filename);
-		filename = t_filename;
-	
+		MCValueAssign(filename, p_filename);
 	}
-	else
-		MCCStringFree(t_filename);
 
 	return t_success;
 }
@@ -2182,6 +2179,9 @@ bool MCImage::setdata(void *p_data, uindex_t p_size)
 
 	if (t_success)
 	{
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
+		
 		setrep(t_rep);
 		t_rep->Release();
 	}
@@ -2232,7 +2232,7 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 	{
 		setrep(t_rep);
 		t_rep->Release();
-		flags &= ~(F_HAS_FILENAME | F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
+		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= p_compressed->compression;
 
 		if (p_compressed->compression == F_RLE)
@@ -2240,6 +2240,9 @@ bool MCImage::setcompressedbitmap(MCImageCompressedBitmap *p_compressed)
 			if (p_compressed->color_count == 0)
 				flags |= F_TRUE_COLOR;
 		}
+		
+		// MW-2013-09-05: [[ UnicodifyImage ]] Clear the filename property.
+		MCValueAssign(filename, kMCEmptyString);
 	}
 
 	return t_success;

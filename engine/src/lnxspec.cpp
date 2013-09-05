@@ -586,21 +586,7 @@ void MCS_unsetenv(const char *name)
 	unsetenv(name);
 #endif
 }
-/*
-int4 MCS_rawopen(const char *path, int flags)
-{
-	char *newpath = MCS_resolvepath(path);
-	int4 fd = open(newpath, flags);
-	delete newpath;
-	return fd;
-}
-*/
-/*
-int4 MCS_rawclose(int4 fd)
-{
-	return close(fd);
-}
-*/
+
 Boolean MCS_rename(MCStringRef p_oname, MCStringRef p_nname)
 {
 	MCAutoStringRef t_old_resolved_path, t_new_resolved_path;
@@ -739,17 +725,17 @@ bool MCS_resolvepath(MCStringRef p_path, MCStringRef& r_resolved)
 	else
 		return MCStringCopy(*t_newname, r_resolved);
 }
+//
+//char *MCS_get_canonical_path(const char *p_path)
+//{
+//	char *t_path = NULL;
+//
+//	t_path = MCS_resolvepath(p_path);
+//	MCU_fix_path(t_path);
+//
+//	return t_path;
+//}
 
-bool MCS_get_canonical_path(MCStringRef p_path, MCStringRef& r_path)
-{
-	
-	bool t_result;
-	t_result = MCS_resolvepath(p_path, r_path);
-	MCAutoStringRef t_out_path;
-	MCU_fix_path(r_path, &t_out_path);
-	
-	return t_result;
-}
 
 bool MCS_getcurdir(MCStringRef& r_path)
 {
@@ -963,7 +949,7 @@ IO_handle MCS_open(MCStringRef path, MCSOpenFileMode p_mode,
 	return handle;
 }
 
-IO_stat MCS_close(IO_handle &stream)
+void MCS_close(IO_handle &stream)
 {
 	if (stream->fptr == NULL)
 	{
@@ -985,7 +971,6 @@ IO_stat MCS_close(IO_handle &stream)
 		fclose(stream->fptr);
 	delete stream;
 	stream = NULL;
-	return IO_NORMAL;
 }
 
 
@@ -1556,46 +1541,33 @@ void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 
 }
 
 
-bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult->sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
-
-bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
-{
-	/* RESULT */ //MCresult -> sets("not supported");
-	return MCStringCreateWithCString("not supported", r_error);
-}
+//bool MCS_delete_registry(MCStringRef p_key, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_query_registry(MCStringRef p_key, MCStringRef& r_value, MCStringRef& r_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_set_registry(MCStringRef p_key, MCStringRef p_value, MCStringRef p_type, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult->sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
+//
+//bool MCS_list_registry(MCStringRef p_path, MCListRef& r_list, MCStringRef& r_error)
+//{
+//	/* RESULT */ //MCresult -> sets("not supported");
+//	return MCStringCreateWithCString("not supported", r_error);
+//}
 
 double MCS_getfreediskspace(void)
 {
 	return 1.0;
-}
-
-void MCS_exec_command ( char * command ) 
-{
-	MCExecPoint ep;
-	ep.copysvalue(command);
-	if (MCS_runcmd(ep) != IO_NORMAL)
-	{
-		MCeerror->add(EE_PRINT_ERROR, 0, 0);
-	}
-	else
-		MCresult->sets(ep.getsvalue());
-	
 }
 
 void MCS_launch_document(const char *p_document)
@@ -2058,23 +2030,6 @@ void abbrevdatefmt(char *sptr)
 	}
 }
 
-void MCS_localedateinfo(uint2 which, char *dest)
-{
-#ifndef NOLANG
-	strcpy(dest, nl_langinfo(which == P_SHORT? D_FMT: D_T_FMT));
-	if (which == P_ABBREVIATE)
-		abbrevdatefmt(dest);
-#else
-
-	dest[0] = '\0';
-#endif
-}
-
-Boolean MCS_isleadbyte(uint1 charset, char *s)
-{
-	return False;
-}
-
 
 // MW-2005-02-08: Implementation of multibyte conversion routines.
 //   These are naive at the moment - only providing conversion to and from
@@ -2135,16 +2090,11 @@ uint32_t MCS_getsyserror(void)
 	return errno;
 }
 
-bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
-{
-	r_error = true;
-	return true;
-}
-
-void MCS_system_alert(const char *p_title, const char *p_message)
-	{
-	fprintf(stderr, "%s", p_message);
-	}
+//bool MCS_mcisendstring(MCStringRef p_command, MCStringRef& r_result, bool& r_error)
+//{
+//	r_error = true;
+//	return true;
+//}
 
 bool MCS_generate_uuid(char p_buffer[128])
 {

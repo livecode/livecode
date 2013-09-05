@@ -449,6 +449,7 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    
 private:
 	int4 formattedtabwidth(void);
 

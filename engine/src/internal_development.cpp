@@ -306,40 +306,29 @@ public:
 		bool t_success;
 		t_success = true;
 
-		char *t_old_filename;
-		t_old_filename = nil;
-		if (t_success && m_old_file -> eval(ep) == ES_NORMAL)
-			t_old_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
+		MCAutoStringRef t_old_filename;
+		if (t_success)
+            t_success = m_old_file -> eval(ep) == ES_NORMAL;
+        if (t_success)
+            t_success = ep . copyasstringref(&t_old_filename);
 
-		char *t_new_filename;
-		t_new_filename = nil;
-		if (t_success && m_new_file -> eval(ep) == ES_NORMAL)
-			t_new_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
+		MCAutoStringRef t_new_filename;
+		if (t_success)
+            t_success = m_new_file -> eval(ep) == ES_NORMAL;
+        if (t_success)
+            t_success = ep . copyasstringref(&t_new_filename);
 
-		char *t_patch_filename;
-		t_patch_filename = nil;
-		if (t_success && m_patch_file -> eval(ep) == ES_NORMAL)
-			t_patch_filename = ep . getsvalue() . clone();
-		else
-			t_success = false;
-        
-        MCAutoStringRef t_old_filename_str;
-        MCAutoStringRef t_new_filename_str;
-        MCAutoStringRef t_patch_filename_str;
-        
-        /* UNCHECKED */ MCStringCreateWithCString(t_old_filename, &t_old_filename_str);
-        /* UNCHECKED */ MCStringCreateWithCString(t_new_filename, &t_new_filename_str);
-        /* UNCHECKED */ MCStringCreateWithCString(t_patch_filename, &t_patch_filename_str);
+		MCAutoStringRef t_patch_filename;
+		if (t_success)
+            t_success = m_patch_file -> eval(ep) == ES_NORMAL;
+        else
+            t_success = ep . copyasstringref(&t_patch_filename);
 
 		IO_handle t_old_handle;
 		t_old_handle = nil;
 		if (t_success)
 		{
-			t_old_handle = MCS_open(*t_old_filename_str, kMCSOpenFileModeRead, False, False, 0);
+			t_old_handle = MCS_open(*t_old_filename, kMCSOpenFileModeRead, False, False, 0);
 			if (t_old_handle == nil)
 				t_success = false;
 		}
@@ -348,7 +337,7 @@ public:
 		t_new_handle = nil;
 		if (t_success)
 		{
-			t_new_handle = MCS_open(*t_new_filename_str, kMCSOpenFileModeRead, False, False, 0);
+			t_new_handle = MCS_open(*t_new_filename, kMCSOpenFileModeRead, False, False, 0);
 			if (t_new_handle == nil)
 				t_success = false;
 		}
@@ -357,7 +346,7 @@ public:
 		t_patch_handle = nil;
 		if (t_success)
 		{
-			t_patch_handle = MCS_open(*t_patch_filename_str, kMCSOpenFileModeWrite, False, False, 0);
+			t_patch_handle = MCS_open(*t_patch_filename, kMCSOpenFileModeWrite, False, False, 0);
 			if (t_patch_handle == nil)
 				t_success = false;
 		}
@@ -383,10 +372,6 @@ public:
 			MCS_close(t_new_handle);
 		if (t_old_handle != nil)
 			MCS_close(t_old_handle);
-
-		delete t_patch_filename;
-		delete t_new_filename;
-		delete t_old_filename;
 		
 		return ES_NORMAL;
 	}
@@ -404,7 +389,7 @@ private:
 
 		bool ReadBytes(void *p_buffer, uint32_t p_count)
 		{
-			return IO_read_bytes(p_buffer, p_count, handle) == IO_NORMAL;
+			return IO_read(p_buffer, p_count, handle) == IO_NORMAL;
 
 		}
 

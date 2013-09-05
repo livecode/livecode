@@ -153,7 +153,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypePrologue:
 	{
 		MCCapsulePrologueSection t_prologue;
-		if (IO_read_bytes(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
+		if (IO_read(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone prologue");
 			return false;
@@ -165,7 +165,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_redirect;
 		t_redirect = new char[p_length];
-		if (IO_read_bytes(t_redirect, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
 			return false;
@@ -195,7 +195,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_external;
 		t_external = new char[p_length];
-		if (IO_read_bytes(t_external, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_external, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
@@ -216,7 +216,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_script;
 		t_script = new char[p_length];
-		if (IO_read_bytes(t_script, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read startup script");
 			return false;
@@ -243,7 +243,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
-		if (IO_read_bytes(t_read_digest, 16, p_stream) != IO_NORMAL)
+		if (IO_read(t_read_digest, 16, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone checksum");
 			return false;
