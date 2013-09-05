@@ -191,8 +191,8 @@ void MCFilesEvalDriverNames(MCExecContext& ctxt, MCStringRef& r_string)
 		ctxt . LegacyThrow(EE_DISK_NOPERM);
 		return;
 	}
-	MCAutoListRef t_list;
-	if (MCS_getdevices(&t_list) && MCListCopyAsString(*t_list, r_string))
+
+	if (MCS_getdevices(r_string) == True)
 		return;
 
 	ctxt . Throw();
@@ -207,8 +207,8 @@ void MCFilesEvalDrives(MCExecContext& ctxt, MCStringRef& r_string)
 		ctxt . LegacyThrow(EE_DISK_NOPERM);
 		return;
 	}
-	MCAutoListRef t_list;
-	if (MCS_getdrives(&t_list) && MCListCopyAsString(*t_list, r_string))
+    
+	if (MCS_getdrives(r_string) == True)
 		return;
 
 	ctxt . Throw();
@@ -241,10 +241,7 @@ void MCFilesEvalOpenFiles(MCExecContext& ctxt, MCStringRef& r_string)
 
 void MCFilesEvalTempName(MCExecContext& ctxt, MCStringRef& r_string)
 {
-	if (MCS_tmpnam(r_string))
-		return;
-
-	ctxt.Throw();
+	MCS_tmpnam(r_string);
 }
 
 void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCStringRef& r_path)
@@ -255,9 +252,11 @@ void MCFilesEvalSpecialFolderPath(MCExecContext& ctxt, MCStringRef p_folder, MCS
 		return;
 	}
 
-	if (MCS_getspecialfolder(ctxt, p_folder, r_path))
+    MCNewAutoNameRef t_path;
+    MCNameCreate(p_folder, &t_path);
+	if (MCS_getspecialfolder(*t_path, r_path))
 	{
-		if (MCStringGetLength(r_path) == 0)
+		if (MCStringIsEmpty(r_path))
 			ctxt.SetTheResultToCString("folder not found");
 		else
 			ctxt.SetTheResultToEmpty();
@@ -633,16 +632,9 @@ void MCFilesEvalAliasReference(MCExecContext& ctxt, MCStringRef p_path, MCString
 		return;
 	}
 	
-	MCAutoStringRef t_error;
-	if (MCS_resolvealias(p_path, r_reference, &t_error))
+	if (MCS_resolvealias(p_path, r_reference))
 	{
-		if (*t_error != nil)
-		{
-			ctxt.SetTheResultToValue(*t_error);
-			r_reference = MCValueRetain(kMCEmptyString);
-		}
-		else
-			ctxt.SetTheResultToEmpty();
+        ctxt.SetTheResultToEmpty();
 		return;
 	}
 	
@@ -726,15 +718,9 @@ void MCFilesEvalShell(MCExecContext& ctxt, MCStringRef p_command, MCStringRef& r
 		return;
 	}
 
-	if (MCS_runcmd(ctxt . GetEP()) != IO_NORMAL)
+	if (MCS_runcmd(p_command, r_output) != IO_NORMAL)
 	{
 		ctxt . LegacyThrow(EE_SHELL_BADCOMMAND);
-		return;
-	}
-
-	if (!ctxt . GetEP() . copyasstringref(r_output))
-	{
-		ctxt . Throw();
 		return;
 	}
 }
@@ -1017,7 +1003,7 @@ void MCFilesExecPerformReadFor(MCExecContext& ctxt, IO_handle p_stream, int4 p_i
 	{
 		uint4 rsize = size - tsize;
 		uint4 fullsize = rsize;
-		r_stat = MCS_read(t_current.Chars() + tsize, sizeof(char_t), rsize, p_stream); 
+		r_stat = MCS_readall(t_current.Chars() + tsize, rsize, p_stream, rsize);
 		tsize += rsize;
 		if (rsize < fullsize)
 		{
@@ -1235,7 +1221,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_read(t_buffer.Chars() + size, sizeof(char_t), rsize, p_stream);
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, p_stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -1303,7 +1289,7 @@ void MCFilesExecPerformReadUntil(MCExecContext& ctxt, IO_handle p_stream, int4 p
 						{
 							uint1 term;
 							uint4 nread = 1;
-							if (MCS_read(&term, sizeof(char), nread, p_stream) == IO_NORMAL)
+							if (MCS_readall(&term, nread, p_stream, nread) == IO_NORMAL)
                             {
 								if (term != '\n')
 									MCS_putback(term, p_stream);
@@ -1360,7 +1346,7 @@ void MCFilesExecPerformReadUntilBinary(MCExecContext& ctxt, IO_handle stream, in
 			/* UNCHECKED */ t_buffer.Extend(tsize + BUFSIZ);
 			tsize += BUFSIZ;
 		}
-		r_stat = MCS_read(t_buffer.Chars() + size, sizeof(char_t), rsize, stream);
+		r_stat = MCS_readall(t_buffer.Chars() + size, rsize, stream, rsize);
 		size += rsize;
 		if (rsize < fullsize)
 		{
@@ -1506,7 +1492,7 @@ void MCFilesExecReadFromStdin(MCExecContext& ctxt, MCStringRef p_sentinel, uint4
 	MCAutoStringRef t_output;
 
 #ifndef _SERVER
-	if (!MCnoui && MCS_isatty(0))
+	if (!MCnoui && MCS_isinteractiveconsole(0))
 	{
 		ctxt . SetTheResultToStaticCString("eof");
 		ctxt . SetItToValue(kMCNull);
@@ -1553,11 +1539,13 @@ void MCFilesExecReadGetStream(MCExecContext& ctxt, MCNameRef p_name, bool p_is_e
 
 	if (p_at == nil)
 	{
+#ifdef OLD_IO_HANDLE
 		if (r_stream->flags & IO_WRITTEN)
 		{
 			r_stream->flags &= ~IO_WRITTEN;
 			MCS_sync(r_stream);
 		}
+#endif
 	}
 	else
 	{
@@ -1688,7 +1676,9 @@ void MCFilesExecReadFromProcess(MCExecContext& ctxt, MCNameRef p_process, MCStri
 	Boolean t_textmode = False;
 	IO_stat t_stat = IO_NORMAL;
 	t_stream = MCprocesses[t_index].ihandle;
-	MCshellfd = t_stream->getfd();
+#ifdef OLD_IO_HANDLE
+	MCshellfd = t_stream->gefd();
+#endif // OLD_IO_HANDLE
 	t_textmode = MCprocesses[t_index].textmode;
 	MCAutoStringRef t_output;
 
@@ -1858,7 +1848,7 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 
 	if (t_stat != IO_NORMAL)
-	{	
+	{
 		ctxt . SetTheResultToStaticCString("error seeking in file");
 		return;
 	}
@@ -1880,7 +1870,9 @@ void MCFilesExecWriteToFileOrDriver(MCExecContext& ctxt, MCNameRef p_file, MCStr
 		return;
 	}
 	ctxt . SetTheResultToEmpty();
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_WRITTEN;
+#endif
 
 #if !defined _WIN32 && !defined _MACOSX
 	MCS_flush(t_stream);
@@ -1988,7 +1980,9 @@ void MCFilesExecSeekInFile(MCExecContext& ctxt, MCNameRef p_file, bool is_end, b
 	else
 		t_stat = MCS_seek_set(t_stream, p_at);
 
+#ifdef OLD_IO_HANDLE
 	t_stream->flags |= IO_SEEKED;
+#endif
 
 	if (t_stat != IO_NORMAL)
 		ctxt . LegacyThrow(EE_SEEK_BADWHERE);
@@ -2134,7 +2128,7 @@ void MCFilesGetUMask(MCExecContext& ctxt, uinteger_t& r_value)
 }
 void MCFilesSetUMask(MCExecContext& ctxt, uinteger_t p_value)
 {
-	MCS_umask(p_value);
+	MCS_setumask(p_value);
 }
 void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 {
@@ -2142,6 +2136,7 @@ void MCFilesGetFileType(MCExecContext& ctxt, MCStringRef& r_value)
 }
 void MCFilesSetFileType(MCExecContext& ctxt, MCStringRef p_value)
 {
+    MCValueRelease(MCfiletype);
 	MCfiletype = MCValueRetain(p_value);
 }
 
@@ -2184,7 +2179,9 @@ void MCFilesGetCurrentFolder(MCExecContext& ctxt, MCStringRef& r_value)
 	if (!ctxt . EnsureDiskAccessIsAllowed())
 		return;
 
-	if(MCS_getcurdir(r_value))
+	MCS_getcurdir(r_value);
+    
+    if (MCStringGetLength(r_value) != 0)
 		return;
 
 	ctxt . Throw();
@@ -2202,27 +2199,27 @@ void MCFilesSetCurrentFolder(MCExecContext& ctxt, MCStringRef p_value)
 // MW-2011-11-24: [[ Nice Folders ]] Handle fetching of the special folder types.
 void MCFilesGetEngineFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCS_getspecialfolder(ctxt, MCNameGetString(MCN_engine), r_value);
+	/* UNCHECKED */ MCS_getspecialfolder(MCN_engine, r_value);
 }
 
 void MCFilesGetHomeFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCS_getspecialfolder(ctxt, MCNameGetString(MCN_home), r_value);
+	/* UNCHECKED */ MCS_getspecialfolder(MCN_home, r_value);
 }
 
 void MCFilesGetDocumentsFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCS_getspecialfolder(ctxt, MCNameGetString(MCN_documents), r_value);
+	/* UNCHECKED */ MCS_getspecialfolder(MCN_documents, r_value);
 }
 
 void MCFilesGetDesktopFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCS_getspecialfolder(ctxt, MCNameGetString(MCN_desktop), r_value);
+	/* UNCHECKED */ MCS_getspecialfolder(MCN_desktop, r_value);
 }
 
 void MCFilesGetTemporaryFolder(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	MCS_getspecialfolder(ctxt, MCNameGetString(MCN_temporary), r_value);
+	/* UNCHECKED */ MCS_getspecialfolder(MCN_temporary, r_value);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

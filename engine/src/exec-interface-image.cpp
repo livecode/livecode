@@ -358,6 +358,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 	MCPoint t_hotspot;
 	char *t_name = nil;
 	IO_handle t_stream = nil;
+    MCAutoDataRef t_data;
 	
 	if (MCStringGetLength(p_text) == 0)
 	{

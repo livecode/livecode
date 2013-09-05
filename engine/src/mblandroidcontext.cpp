@@ -1237,7 +1237,10 @@ MCGradientShader::MCGradientShader(SkFlattenableReadBuffer &p_read_buffer)
 	t_buffer = malloc(t_length);
 	p_read_buffer.read(t_buffer, t_buffer_size);
 
-	IO_handle t_fake_io = MCS_fakeopen(MCString((char*)t_buffer, t_length));
+    MCAutoDataRef t_data;
+    /* UNCHECKED */ MCDataCreateWithBytes((byte_t*)t_buffer, t_length, &t_data);
+    
+	IO_handle t_fake_io = MCS_fakeopen(*t_data);
 	MCObjectInputStream t_input(t_fake_io, t_length);
 	m_gradient = new MCGradientFill;
 	MCGradientFillUnserialize(m_gradient, t_input);

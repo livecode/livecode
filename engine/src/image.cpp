@@ -1797,8 +1797,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 				if ((stat = IO_read_uint4(&t_compressed->size, stream)) != IO_NORMAL)
 					return stat;
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->size, t_compressed->data);
-				if (IO_read(t_compressed->data, sizeof(uint1),
-				            t_compressed->size, stream) != IO_NORMAL)
+				if (IO_read(t_compressed->data, t_compressed->size, stream) != IO_NORMAL)
 					return IO_ERROR;
 				if (strncmp(version, "1.4", 3) == 0)
 				{
@@ -1825,8 +1824,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 					if (t_compressed->plane_sizes[i] != 0)
 					{
 						/* UNCHECKED */ MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]);
-						if (IO_read(t_compressed->planes[i], sizeof(uint1),
-						            t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+						if (IO_read(t_compressed->planes[i], t_compressed->plane_sizes[i], stream) != IO_NORMAL)
 						{
 							MCImageFreeCompressedBitmap(t_compressed);
 							return IO_ERROR;
@@ -1845,7 +1843,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (t_compressed->mask_size != 0)
 			{
 				/* UNCHECKED */ MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask);
-				if (IO_read(t_compressed->mask, sizeof(uint1), t_compressed->mask_size, stream) != IO_NORMAL)
+				if (IO_read(t_compressed->mask, t_compressed->mask_size, stream) != IO_NORMAL)
 					return IO_ERROR;
 			}
 
@@ -2145,11 +2143,9 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		return true;
 	}
 
-	MCAutoStringRef t_filename;
 	char *t_resolved = nil;
 	MCImageRep *t_rep = nil;
 
-	//t_success = MCCStringClone(p_filename, t_filename);
 	if (t_success)
 		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
 	if (t_success)
@@ -2168,7 +2164,7 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		flags |= F_HAS_FILENAME;
 
-		MCValueAssign(filename, *t_filename);
+		MCValueAssign(filename, p_filename);
 	}
 
 	return t_success;

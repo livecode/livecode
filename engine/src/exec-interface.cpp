@@ -3482,9 +3482,9 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, t_stream, nil);
 	
 	MCAutoNativeCharArray t_autobuffer;
-	char *t_buffer = nil;
-	uint32_t t_size = 0;
-	MCS_fakeclosewrite(t_stream, t_buffer, t_size);
+	void *t_buffer = nil;
+	size_t t_size = 0;
+	MCS_closetakingbuffer(t_stream, t_buffer, t_size);
 	t_autobuffer.Give((char_t*)t_buffer, t_size);
 
 	if (!t_success)

@@ -64,10 +64,28 @@ extern "C" CFStringRef CFStringCreateWithBytesNoCopy(CFAllocatorRef alloc, const
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-	static MCStdioFileHandle *Open(const char *p_path, const char *p_mode)
+	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
 	{
 		FILE *t_stream;
-		t_stream = fopen(p_path, p_mode);
+        
+        switch(p_mode)
+        {
+            case kMCSystemFileModeRead:
+                t_stream = fopen(*t_path_utf, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fopen(*t_path_utf, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeAppend:
+                t_stream = fopen(*t_path_utf, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fopen(*t_path_utf, IO_WRITE_MODE);
+                break;
+            default:
+                t_stream = NULL;
+        }
+        
 		if (t_stream == NULL)
 			return NULL;
 		
@@ -78,10 +96,28 @@ public:
 		return t_handle;
 	}
 	
-	static MCStdioFileHandle *OpenFd(int fd, const char *p_mode)
+	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
 	{
 		FILE *t_stream;
-		t_stream = fdopen(fd, p_mode);
+        
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                t_stream = fdopen(fd, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                t_stream = fdopen(fd, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fdopen(fd, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fdopen(fd, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
+        
 		if (t_stream == NULL)
 			return NULL;
 		
@@ -94,7 +130,6 @@ public:
 		t_handle -> m_stream = t_stream;
 		
 		return t_handle;
-		
 	}
 	
 	virtual void Close(void)
@@ -451,9 +486,9 @@ struct MCMacSystem: public MCSystemInterface
 		return t_result;
 	}
 	
-	virtual void *ResolveModuleSymbol(void *p_module, const char *p_symbol)
+	virtual void *ResolveModuleSymbol(MCSysModuleHandle* p_module, MCStringRef p_symbol)
 	{
-		return dlsym(p_module, p_symbol);
+		return dlsym((void *)p_module, MCStringGetCString(p_symbol));
 	}
 	
 	virtual void UnloadModule(void *p_module)
@@ -490,11 +525,10 @@ struct MCMacSystem: public MCSystemInterface
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, NULL, 0, &t_used);
 		
 		MCAutoNativeCharArray t_path;
-		if (!t_path.New(t_used + 1))
+		if (!t_path.New(t_used))
 			return false;;
 
 		CFStringGetBytes(t_cf_path, CFRangeMake(0, CFStringGetLength(t_cf_path)), kCFStringEncodingMacRoman, '?', FALSE, (UInt8 *)t_path.Chars(), t_used, &t_used);
-		t_path.Chars()[t_used] = '\0';
 		
 		return t_path.CreateStringAndRelease(r_path);
 	}
@@ -1124,7 +1158,7 @@ static Boolean do_backup(const char *p_src_path, const char *p_dst_path)
 	if (!t_error)
 	{
 		const char *MCfiletype_cstring = MCStringGetCString(MCfiletype);
-		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, &MCfiletype_cstring[4], 4);
+		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileType, MCfiletype_cstring + 4, 4);
 		memcpy(&((FileInfo *) t_dst_catalog . finderInfo) -> fileCreator, MCfiletype_cstring, 4);
 		
 		((FileInfo *) t_dst_catalog . finderInfo) -> fileType = MCSwapInt32NetworkToHost(((FileInfo *) t_dst_catalog . finderInfo) -> fileType);
@@ -1551,7 +1585,7 @@ bool MCS_create_temporary_file(MCStringRef p_path, MCStringRef p_prefix, IO_hand
 		return false;
 	}
 	
-    r_file = new IO_header(MCStdioFileHandle :: OpenFd(t_fd, "w+"), 0);
+    r_file = MCStdioFileHandle :: OpenFd(t_fd, "w+");
 	
 	return true;
 }

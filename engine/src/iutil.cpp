@@ -1510,7 +1510,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, t_stream, t_byte_count);
 
-	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
 		t_success = false;
 
 	if (t_success)
@@ -1542,7 +1542,7 @@ bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data)
 	if (t_success)
 		t_success = MCImageEncodePNG(p_bitmap, t_stream, t_byte_count);
 	
-	if (t_stream != nil && IO_NORMAL != MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count))
+	if (t_stream != nil && IO_NORMAL != MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count)))
 		t_success = false;
 	
 	if (t_success)
