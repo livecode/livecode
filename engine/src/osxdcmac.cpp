@@ -527,12 +527,12 @@ static void domenu(short menu, short item)
 			isunicode &= !t_menuhastags;
 			char *menuitemname;
 			uint2 menuitemlen;
-			MCString t_tag;
-			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCString &s);
-			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, t_tag))
+			MCAutoStringRef t_tag_ref;
+			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
+			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = (char*)t_tag.getstring();
-				menuitemlen = t_tag.getlength();
+				menuitemname = strclone("TEST TEST TEST");
+				menuitemlen = strlen(menuitemname);
 			}
 			else
 			{
