@@ -2705,7 +2705,6 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 	*pass = False;
 	*error = False;
 	xsltStylesheetPtr cur = NULL;
-	CXMLDocument *newdoc = new CXMLDocument;
 	char *result;
 
 	if (1 == nargs)
@@ -2718,16 +2717,23 @@ void XML_xsltLoadStylesheet(char *args[], int nargs, char **retstring, Bool *pas
 			if (NULL != xmlDoc)
 			{
 				cur = xsltParseStylesheetDoc(xmlDoc);
-				
-				newdoc->SetXsltContext(cur);
-				doclist.add(newdoc);
-				unsigned int docid = newdoc->GetID();
+				if (NULL != cur)
+				{
+					CXMLDocument *newdoc = new CXMLDocument(cur);
+					doclist.add(newdoc);
+					unsigned int docid = newdoc->GetID();
 
-				result = (char *)malloc(INTSTRSIZE);
-				sprintf(result,"%d",docid);
+					result = (char *)malloc(INTSTRSIZE);
+					sprintf(result,"%d",docid);
 				
-				*retstring = istrdup(result);
-				free(result);
+					*retstring = istrdup(result);
+					free(result);
+				}
+				else
+				{
+					// couldn't parse the stylesheet
+					*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
+				}
 			}
 			// couldn't dereference the xml document
 			else
@@ -2756,7 +2762,6 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 	*pass = False;
 	*error = False;
 	xsltStylesheetPtr cur = NULL;
-	CXMLDocument *newdoc = new CXMLDocument;
 	char *result;
 
 	if (1 == nargs)
@@ -2764,7 +2769,7 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 		cur = xsltParseStylesheetFile((const xmlChar *)args[0]);
 		if (NULL != cur)
 		{
-			newdoc->SetXsltContext(cur);
+			CXMLDocument *newdoc = new CXMLDocument(cur);
 			doclist.add(newdoc);
 			unsigned int docid = newdoc->GetID();
 			result = (char *)malloc(INTSTRSIZE);
@@ -2774,6 +2779,7 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
 		}
 		else
 		{
+			// couldn't parse the stylesheet
 			*retstring = istrdup(xmlerrors[XPATHERR_BADDOCPOINTER]);
 		}
 	}
