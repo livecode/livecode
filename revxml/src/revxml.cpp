@@ -156,7 +156,11 @@ class XMLDocumentList
 		for (theIterator = doclist.begin(); theIterator != doclist.end(); theIterator++){
 			CXMLDocument *curobject = (CXMLDocument *)(*theIterator);
 			// MDW-2013-07-09: [[ RevXmlXPath ]]
-			xmlXPathFreeContext(curobject->GetXPathContext());
+			if (NULL != curobject->GetXPathContext())
+				xmlXPathFreeContext(curobject->GetXPathContext());
+			// MDW-2013-09-04: [[ RevXmlXslt ]]
+			if (NULL != curobject->GetXsltContext())
+				xsltFreeStylesheet(curobject->GetXsltContext());
 			delete curobject;
 		}
 		doclist.clear();
@@ -2785,6 +2789,10 @@ void XML_xsltLoadStylesheetFromFile(char *args[], int nargs, char **retstring, B
  * frees a xsltStylesheetPtr created by xsltLoadStylesheet
  *
  * xsltFreeStylesheet tStylesheetID
+ *
+ * NOTE: this is no longer necessary, so I commented out the reference to it
+ * but I'm keeping this here so I don't have to reinvent it if it becomes
+ * necessary to pull it in again. MDW-2013-09-04
  */
 void XML_xsltFreeStylesheet(char *args[], int nargs, char **retstring, Bool *pass, Bool *error)
 {
@@ -3041,7 +3049,7 @@ EXTERNAL_BEGIN_DECLARATIONS("revXML")
 	EXTERNAL_DECLARE_FUNCTION("xsltApplyStylesheetFile", XML_xsltApplyStylesheetFile)
 	EXTERNAL_DECLARE_FUNCTION("xsltLoadStylesheet", XML_xsltLoadStylesheet)
 	EXTERNAL_DECLARE_FUNCTION("xsltLoadStylesheetFromFile", XML_xsltLoadStylesheetFromFile)
-	EXTERNAL_DECLARE_COMMAND("xsltFreeStylesheet", XML_xsltFreeStylesheet)
+//	EXTERNAL_DECLARE_COMMAND("xsltFreeStylesheet", XML_xsltFreeStylesheet)
 EXTERNAL_END_DECLARATIONS
 
 

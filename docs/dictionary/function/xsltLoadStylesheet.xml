@@ -60,8 +60,8 @@
 		<function tag="xsltApplyStylesheet">xsltApplyStylesheet</function>
 		<function tag="xsltApplyStylesheetFromFile">xsltApplyStylesheetFromFile</function>
 		<function tag="xsltLoadStylesheetFromFile">xsltLoadStylesheetFromFile</function>
-		<command tag="xsltFreeStylesheet">xsltFreeStylesheet</command>
+		<command tag=""></command>
 	</references>
 
-	<description>The xsltLoadStylesheet function loads an xslt stylesheet into memory from xml data so that it can be applied to xml data using the xsltApplyStylesheet function. It returns an xslt stylesheet id. It is the responsibility of the program to free the stylesheet with the xsltFreeStylesheet command when it is no longer needed in order to prevent memory leaks.</description>
+	<description>The xsltLoadStylesheet function loads an xslt stylesheet into memory from xml data so that it can be applied to xml data using the xsltApplyStylesheet function. It returns an xslt stylesheet id.</description>
 </doc>
