@@ -3994,7 +3994,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Debug;
@@ -4007,7 +4007,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Release;
@@ -4096,6 +4096,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB40B80949B00200116 /* Debug.xcconfig */;
 			buildSettings = {
+				GCC_VERSION = "";
 				"GCC_VERSION[sdk=macosx10.4]" = "";
 			};
 			name = Debug;
@@ -4104,6 +4105,7 @@
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 4D587DB20B80949B00200116 /* Release.xcconfig */;
 			buildSettings = {
+				GCC_VERSION = "";
 				"GCC_VERSION[sdk=macosx10.4]" = "";
 			};
 			name = Release;
