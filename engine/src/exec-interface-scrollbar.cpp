@@ -217,40 +217,31 @@ void MCScrollbar::SetNumberFormat(MCExecContext& ctxt, MCStringRef p_format)
 
 void MCScrollbar::GetStartValue(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (startstring != nil)
-	{
-		if (MCStringCreateWithCString(startstring, r_value))
-			return;
-	}
-	else
-	{
-		if (MCStringFormat(r_value, "%d", 0))
-			return;
-	}
-
-	ctxt . Throw();
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Simply return the instance var.
+	r_value = MCValueRetain(startstring);
 }
 
 void MCScrollbar::SetStartValue(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCStringGetLength(p_value) == 0)
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use MCStringRef startstring.
+	if (MCStringIsEmpty(p_value))
+	{
+		reset();
+		return;
+	}
+
+	if (!MCU_stor8(p_value, startvalue))
+	{
+		ctxt . LegacyThrow(EE_OBJECT_NAN);
+		return;
+	}
+	
+	if (startvalue == 0.0 && endvalue == 65535.0)
 		reset();
 	else
 	{
-		if (!MCU_stor8(p_value, startvalue))
-		{
-			ctxt . LegacyThrow(EE_OBJECT_NAN);
-			return;
-		}
-		if (startvalue == 0.0 && endvalue == 65535.0)
-			reset();
-		else
-		{
-			flags |= F_HAS_VALUES;
-			if (startstring != NULL)
-				delete startstring;
-			startstring = strclone(MCStringGetCString(p_value));
-		}
+		flags |= F_HAS_VALUES;
+		MCValueAssign(startstring, p_value);
 	}
 	update(thumbpos, MCM_scrollbar_drag);
 	Redraw();
@@ -258,40 +249,31 @@ void MCScrollbar::SetStartValue(MCExecContext& ctxt, MCStringRef p_value)
 
 void MCScrollbar::GetEndValue(MCExecContext& ctxt, MCStringRef& r_value)
 {
-	if (endstring != nil)
-	{
-		if (MCStringCreateWithCString(endstring, r_value))
-			return;
-	}
-	else
-	{
-		if (MCStringFormat(r_value, "%d", 65535))
-			return;
-	}
-
-	ctxt . Throw();
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Simply return the instance var.
+	r_value = MCValueRetain(endstring);
 }
 
 void MCScrollbar::SetEndValue(MCExecContext& ctxt, MCStringRef p_value)
 {
-	if (MCStringGetLength(p_value) == 0)
+	// MW-2013-08-27: [[ UnicodifyScrollbar ]] Update to use MCStringRef startstring.
+	if (MCStringIsEmpty(p_value))
+	{
+		reset();
+		return;
+	}
+	
+	if (!MCU_stor8(p_value, startvalue))
+	{
+		ctxt . LegacyThrow(EE_OBJECT_NAN);
+		return;
+	}
+	
+	if (startvalue == 0.0 && endvalue == 65535.0)
 		reset();
 	else
 	{
-		if (!MCU_stor8(p_value, endvalue))
-		{
-			ctxt . LegacyThrow(EE_OBJECT_NAN);
-			return;
-		}
-		if (startvalue == 0.0 && endvalue == 65535.0)
-			reset();
-		else
-		{
-			flags |= F_HAS_VALUES;
-			if (endstring != NULL)
-				delete endstring;
-			endstring = strclone(MCStringGetCString(p_value));
-		}
+		flags |= F_HAS_VALUES;
+		MCValueAssign(startstring, p_value);
 	}
 	update(thumbpos, MCM_scrollbar_drag);
 	Redraw();

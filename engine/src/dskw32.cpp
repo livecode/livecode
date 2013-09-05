@@ -963,7 +963,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
-	static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
+	static MCStdioFileHandle *b (MCStringRef p_path, intenum_t p_mode)
 	{
 #ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
 	Boolean appendmode = False;
@@ -1172,7 +1172,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		{
 			DCB dcb;
 			dcb . DCBlength = sizeof(DCB);
-			if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+			if (!GetCommState(hf, &dcb) || !BuildCommDCBA((LPCSTR)MCStringGetCString(MCserialcontrolsettings), &dcb)
 					|| !SetCommState(hf, &dcb))
 			{
 				MCS_seterrno(GetLastError());
@@ -1199,6 +1199,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		t_handle -> m_is_pipe = false;
 		t_handle -> m_ioptr = NULL;
 		t_handle -> m_putback = 0;
+		t_handle -> m_is_eof = false;
 
 		// TODO Implement
 		//if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
@@ -1241,6 +1242,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		t_stdio_handle -> m_handle = (MCWinSysHandle)t_handle;
 		t_stdio_handle -> m_is_pipe = handle_is_pipe((MCWinSysHandle)t_handle);
 		t_stdio_handle -> m_ioptr = NULL;
+		t_stdio_handle -> m_is_eof = false;
 
 		return t_stdio_handle;
 	}
@@ -1265,7 +1267,12 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		delete this;
 	}
 	
-	virtual IO_stat Read(void *p_buffer, uint32_t p_byte_size, uint32_t& r_read)
+    virtual bool IsExhausted(void)
+	{
+		return m_is_eof;
+	}
+	
+	virtual bool Read(void *p_buffer, uint32_t p_byte_size, uint32_t& r_read)
 	{
 #ifdef /* MCS_read_dsk_w32 */ LEGACY_SYSTEM
 	if (MCabortscript || ptr == NULL || stream == NULL)
@@ -1427,7 +1434,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		{
 			MCS_seterrno(GetLastError());
 			r_read = 0;
-			return IO_ERROR;
+			return false;
 		}
 		
 		// If this is named pipe, handle things differently -- we first peek to see how
@@ -1445,10 +1452,15 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 				DWORD t_error;
 				t_error = GetLastError();
 				if (t_error == ERROR_HANDLE_EOF || t_error == ERROR_BROKEN_PIPE)
-					return IO_EOF;
+				{
+					m_is_eof = true;
+					return false;
+				}
+
+				m_is_eof = false;
 
 				MCS_seterrno(GetLastError());
-				return IO_ERROR;
+				return false;
 			}
 
 			// Adjust for putback
@@ -1493,7 +1505,18 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			// Return the number of bytes that were read.
 			r_read = (t_amount_read + t_adjust);
 
-			return t_stat;
+			if (t_stat == IO_EOF)
+			{
+				m_is_eof = true;
+				return false;
+			}
+
+			m_is_eof = false;
+
+			if (t_stat != IO_NORMAL)
+				return false;
+
+			return true;
 		}
 
 		if (m_putback != -1)
@@ -1505,7 +1528,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			{
 				MCS_seterrno(GetLastError());
 				r_read = (nread + 1);
-				return IO_ERROR;
+				return false;
 			}
 			
 			nread += 1;
@@ -1514,20 +1537,22 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		{
 			MCS_seterrno(GetLastError());
 			r_read = nread;
-			return IO_ERROR;
+			return false;
 		}
 
 		if (nread < p_byte_size)
 		{
 			r_read = nread;
-			return IO_EOF;
+			m_is_eof = true;
+			return false;
 		}
-
+ 
+		m_if_eof = false;
 		r_read = nread;
-		return IO_NORMAL;
+		return true;
 	}
 
-	virtual bool Write(const void *p_buffer, uint32_t p_byte_size, uint32_t& r_written)
+	virtual bool Write(const void *p_buffer, uint32_t p_length)
 	{
 #ifdef /* MCS_write_dsk_w32 */ LEGACY_SYSTEM
 	if (stream == IO_stdin)
@@ -1553,19 +1578,20 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		return IO_ERROR;
 	return IO_NORMAL;
 #endif /* MCS_write_dsk_w32 */
-		if (this == IO_stdin -> handle)
+		uint32_t t_written;
+		if (this == IO_stdin)
 			return true; // Shouldn't it return false???
 
 		if (m_handle == NULL)
 			return false;
 
 		if (!WriteFile(m_handle, (LPVOID)p_buffer, (DWORD)p_byte_size,
-					   (LPDWORD)&r_written, NULL))
+					   (LPDWORD)&t_written, NULL))
 		{
 			MCS_seterrno(GetLastError());
 			return false;
 		}
-		if (r_written != p_byte_size)
+		if (t_written != p_byte_size)
 			return false;
 
 		return true;
@@ -1772,6 +1798,7 @@ private:
 	int m_putback;
 	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
 	bool m_is_pipe;
+	bool m_is_eof;
 };
 
 // MW-2005-02-22: Make this global for now so it is accesible by opensslsocket.cpp
@@ -1818,7 +1845,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
 		MCS_query_registry(ep);
 		if (ep.getsvalue().getlength())
-			MChttpproxy = ep . getsvalue() . clone();
+		{
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
+		}
 	}
 	else
 	{
@@ -1834,13 +1865,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			ep.ston();
 			t_port = ep.getint4();
 			ep.setstringf("%s:%d", t_host, t_port);
-			MChttpproxy = ep . getsvalue() . clone();
+			MCAutoStringRef t_http_proxy;
+			/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+			MCValueAssign(MChttpproxy, *t_http_proxy);
 			delete t_host;
 		}
 	}
 
 	// On NT systems 'cmd.exe' is the command processor
-	MCshellcmd = strclone("cmd.exe");
+	MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
 
 	// MW-2005-05-26: Store a global variable containing major OS version...
 	OSVERSIONINFOA osv;
@@ -1853,12 +1886,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	if (MCmajorosversion >= 0x0500)
 	{
 		MCttsize = 11;
-		MCttfont = "Tahoma";
+		MCValueAssign(MCttfont, MCSTR("Tahoma"));
 	}
 	else if (MCmajorosversion >= 0x0600)
 	{
 		MCttsize = 11;
-		MCttfont = "Segoe UI";
+		MCValueAssign(MCttfont, MCSTR("Segoe UI"));
 	}
 
 	OleInitialize(NULL); //for drag & drop
@@ -1867,9 +1900,9 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	//   so it *should* be unnecessary but Win9x plays with the FP control word.
 	signal(SIGFPE, handle_fp_exception);
 #endif /* MCS_init_dsk_w32 */
-	IO_stdin = MCsystem -> OpenStdFile(STD_INPUT_HANDLE, kMCSystemFileModeRead);
-		IO_stdout = MCsystem -> OpenStdFile(STD_OUTPUT_HANDLE, kMCSystemFileModeWrite);
-		IO_stderr = MCsystem -> OpenStdFile(STD_ERROR_HANDLE, kMCSystemFileModeWrite);
+		IO_stdin = MCsystem -> OpenFd(STD_INPUT_HANDLE, kMCSystemFileModeRead);
+		IO_stdout = MCsystem -> OpenFd(STD_OUTPUT_HANDLE, kMCSystemFileModeWrite);
+		IO_stderr = MCsystem -> OpenFd(STD_ERROR_HANDLE, kMCSystemFileModeWrite);
 
 		setlocale(LC_CTYPE, MCnullstring);
 		setlocale(LC_COLLATE, MCnullstring);
@@ -1891,7 +1924,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 			ep.setstaticcstring("HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Internet Settings\\ProxyServer");
 			/* UNCHECKED */ MCS_query_registry(ep);
 			if (ep.getsvalue().getlength())
-				MChttpproxy = ep . getsvalue() . clone();
+			{
+				MCAutoStringRef t_http_proxy;
+				/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+				MCValueAssign(MChttpproxy, *t_http_proxy);
+			}
 		}
 		else
 		{
@@ -1907,13 +1944,15 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				ep.ston();
 				t_port = ep.getint4();
 				ep.setstringf("%s:%d", t_host, t_port);
-				MChttpproxy = ep . getsvalue() . clone();
+				MCAutoStringRef t_http_proxy;
+				/* UNCHECKED */ ep . copyasstringref(&t_http_proxy);
+				MCValueAssign(MChttpproxy, *t_http_proxy);
 				delete t_host;
 			}
 		}
 
 		// On NT systems 'cmd.exe' is the command processor
-		MCshellcmd = strclone("cmd.exe");
+		MCValueAssign(MCshellcmd, MCSTR("cmd.exe"));
 
 		// MW-2005-05-26: Store a global variable containing major OS version...
 		OSVERSIONINFOA osv;
@@ -1926,12 +1965,12 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 		if (MCmajorosversion >= 0x0500)
 		{
 			MCttsize = 11;
-			MCttfont = "Tahoma";
+			MCValueAssign(MCttfont, MCSTR("Tahoma"));
 		}
 		else if (MCmajorosversion >= 0x0600)
 		{
 			MCttsize = 11;
-			MCttfont = "Segoe UI";
+			MCValueAssign(MCttfont, MCSTR("Segoe UI"));
 		}
 
 		OleInitialize(NULL); //for drag & drop
@@ -2311,7 +2350,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
                 /* UNCHECKED */ MCStringCreateMutable(0, &t_path);
                 /* UNCHECKED */ GetCurrentFolder(&t_path); //prepend the current dir
                 /* UNCHECKED */ MCStringAppendFormat(*t_path, "/%x", p_target);
-                /* UNCHECKED */ MCU_path2native(*t_path, &t_src_path);
+                /* UNCHECKED */ MCS_pathtonative(*t_path, &t_src_path);
             }
             ISHLNKvar1->SetPath(MCStringGetCString(*t_src_path));
 			char *t_src_path_char = strclone(MCStringGetCString(*t_src_path));
@@ -2430,7 +2469,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         {
             MCAutoStringRef t_std_path;
             t_dest.Shrink(MCCStringLength((char*)t_dest.Chars()));
-            return t_dest.CreateString(&t_std_path) && MCU_path2std(*t_std_path, r_dest);
+            return t_dest.CreateString(&t_std_path) && MCS_pathfromnative*t_std_path, r_dest);
         }
         else
         {
@@ -2594,7 +2633,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             MCAutoStringRef t_standard_path;
             // TS-2008-06-16: [[ Bug 6403 ]] - specialFolderPath() returns 8.3 paths
             // First we need to swap to standard path seperator
-            if (!MCU_path2std(*t_native_path, &t_standard_path))
+			if (!MCS_pathfromnative(*t_native_path, &t_standard_path))
                 return false;
             
             // OK-2009-01-28: [[Bug 7452]]
@@ -2753,7 +2792,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
     }
     
 	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
@@ -2766,7 +2805,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         if (t_handle == nil)
             return nil;
         
-        return new IO_header(t_handle, 0);
+        return t_handle;
 	}
 
 	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
@@ -2820,7 +2859,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
             t_length = t_ptr - *t_fname;
         
         if (!MCStringCreateWithNativeChars((const char_t*)*t_fname, t_length, &t_path) ||
-            !MCU_path2std(*t_path, &t_stdpath) ||
+            !MCS_pathfromnative(*t_path, &t_stdpath) ||
             !LongFilePath(*t_stdpath, &t_long_path))
 		{
 			r_tmp_name = MCValueRetain(kMCEmptyString);
@@ -3247,7 +3286,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             }
         }
         
-        return MCU_path2std(*t_long_path, r_long_path);
+        return MCS_pathfromnative(*t_long_path, r_long_path);
     }
     
 	virtual bool ShortFilePath(MCStringRef p_path, MCStringRef& r_short_path)
@@ -3284,7 +3323,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         }
         t_buffer.Shrink(MCCStringLength((const char*)t_buffer.Chars()));
         return t_buffer.CreateStringAndRelease(&t_short_path) &&
-		MCU_path2std(*t_short_path, r_short_path);
+		MCS_pathfromnative(*t_short_path, r_short_path);
     }
 
 	virtual void GetCanonicalPath(MCStringRef p_path, MCStringRef& r_canonical_path)
@@ -3675,15 +3714,21 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
             MCresult->clear(False);
 
 		MCExecPoint t_ep;
-        t_ep.copysvalue(MCprocesses[index].ihandle->buffer, MCprocesses[index].ihandle->len);
+		void *t_buffer;
+		uint32_t t_buf_size;
+		bool t_success;
 
-        MCS_close(MCprocesses[index].ihandle);
+		t_success =  MCS_closetakingbuffer(MCprocesses[index].ihandle, t_buffer, t_buf_size);
+
         IO_cleanprocesses();
         delete pname;
-        t_ep.texttobinary();
 
-		return t_ep.copyasdataref(r_data);
-    }
+		if (t_success)
+			t_success = MCDataCreateWithBytes((byte_t*) t_buffer, t_buf_size, r_data))
+
+		delete[] t_buffer;
+		return t_success;
+	}
     
 	//virtual char *GetHostName(void)
 	//{

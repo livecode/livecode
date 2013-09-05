@@ -225,20 +225,20 @@ bool MCSystemOpenElevatedProcess(const char *p_command, int32_t& r_pid, int32_t&
 		char *t_escaped_cmd;
 		t_escaped_cmd = nil;
 		if (t_success)
-			t_success = MCMemoryNewArray(MCCStringLength(MCcmd) * 2 + 1, t_escaped_cmd);
+			t_success = MCMemoryNewArray(MCStringLength(MCcmd) * 2 + 1, t_escaped_cmd);
 
 		if (t_success)
 		{
 			char *t_ptr;
 			t_ptr = t_escaped_cmd;
-			for(uint32_t i = 0; MCcmd[i] != '\0'; i++)
-				if (MCcmd[i] == ' ')
+			for(uint32_t i = 0; MCStringGetNativeCharAtIndex(MCcmd, i) != '\0'; i++)
+				if (MCStringGetNativeCharAtIndex(MCcmd, i) == ' ')
 				{
 					*t_ptr++ = '\\';
 					*t_ptr++ = ' ';
 				}
 				else
-					*t_ptr++ = MCcmd[i];
+					*t_ptr++ = MCStringGetNativeCharAtIndex(MCcmd, i);
 			*t_ptr = '\0';
 		}
 

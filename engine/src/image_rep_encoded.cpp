@@ -125,33 +125,30 @@ uint32_t MCEncodedImageRep::GetDataCompression()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCReferencedImageRep::MCReferencedImageRep(const char *p_file_name)
+MCReferencedImageRep::MCReferencedImageRep(MCStringRef p_file_name)
 {
-	/* UNCHECKED */ MCCStringClone(p_file_name, m_file_name);
+	m_file_name = MCValueRetain(p_file_name);
 	m_url_data = nil;
 }
 
 MCReferencedImageRep::~MCReferencedImageRep()
 {
-	MCCStringFree(m_file_name);
+	MCValueRelease(m_file_name);
 	MCMemoryDeallocate(m_url_data);
 }
 
 bool MCReferencedImageRep::GetDataStream(IO_handle &r_stream)
 {
-	MCAutoStringRef m_file_name_string;
-	/* UNCHECKED */ MCStringCreateWithCString(m_file_name, &m_file_name_string);
-
 	IO_handle t_stream = nil;
 	if (MCSecureModeCanAccessDisk())
-		t_stream = MCS_open(*m_file_name_string, kMCSOpenFileModeRead, false, false, 0);
+		t_stream = MCS_open(m_file_name, kMCSOpenFileModeRead, false, false, 0);
 
 	if (t_stream == nil)
 	{
 		if (m_url_data == nil)
 		{
 			MCExecPoint ep(MCdefaultstackptr, nil, nil);
-			ep.setsvalue(m_file_name);
+			ep.setvalueref(m_file_name);
 			MCU_geturl(ep);
 			if (ep.getsvalue().getlength() == 0)
 				return false;

@@ -115,7 +115,7 @@ MCObject::MCObject()
 	borderwidth = DEFAULT_BORDER;
 	shadowoffset = DEFAULT_SHADOW;
 	props = NULL;
-	tooltip = NULL;
+	tooltip = MCValueRetain(kMCEmptyString);
 	altid = 0;
 	ink = GXcopy;
 	extraflags = 0;
@@ -206,7 +206,7 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	borderwidth = oref.borderwidth;
 	shadowoffset = oref.shadowoffset;
 	/* UNCHECKED */ oref . clonepropsets(props);
-	tooltip = strclone(oref.tooltip);
+	tooltip = MCValueRetain(oref.tooltip);
 	altid = oref.altid;
 	ink = oref.ink;
 	extraflags = oref.extraflags;
@@ -283,7 +283,7 @@ MCObject::~MCObject()
 	delete pixmaps;
 	delete script;
 	deletepropsets();
-	delete tooltip;
+	MCValueRelease(tooltip);
 	
 	MCModeObjectDestroyed(this);
 
@@ -1951,7 +1951,7 @@ Exec_stat MCObject::message(MCNameRef mess, MCParameter *paramptr, Boolean chang
 			uint2 line, pos;
 			MCeerror->geterrorloc(line, pos);
 			fprintf(stderr, "%s: Script execution error at line %d, column %d\n",
-			        MCcmd, line, pos);
+			        MCStringGetCString(MCcmd), line, pos);
 		}
 		else
 			if (!send)
@@ -2921,20 +2921,14 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 		//   then convert native to utf-8.
 		if (strncmp(version, "5.5", 3) < 0)
 		{
-			char *t_native_tooltip;
-			if ((stat = IO_read_string(t_native_tooltip, stream)) != IO_NORMAL)
+			// Read the tooltip, as encoded in its native format
+			if ((stat = IO_read_stringref(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
-			MCExecPoint ep;
-			ep . setsvalue(t_native_tooltip);
-			ep . nativetoutf8();
-			tooltip = ep . getsvalue() . clone();
-			delete t_native_tooltip;
 		}
 		else
 		{
-			// MW-2012-09-19: [[ Bug 10233 ]] When we read in the tooltip, make sure
-			//   we don't translate it as it is encoded as UTF-8.
-			if ((stat = IO_read_string_no_translate(tooltip, stream)) != IO_NORMAL)
+			// The tooltip should be written out encoded in UTF-8 (not UTF-16)
+			if ((stat = IO_read_stringref_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -3155,7 +3149,7 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		addflags |= AF_BORDER_WIDTH;
 	if (shadowoffset != DEFAULT_SHADOW)
 		addflags |= AF_SHADOW_OFFSET;
-	if (tooltip != NULL)
+	if (!MCStringIsEmpty(tooltip))
 		addflags |= AF_TOOL_TIP;
 	if (altid != 0)
 		addflags |= AF_ALT_ID;
@@ -3209,21 +3203,14 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   then convert utf-8 to native before saving.
 		if (MCstackfileversion < 5500)
 		{
-			MCExecPoint ep;
-			char *t_native_tooltip;
-			ep . setsvalue(tooltip);
-			ep . utf8tonative();
-			t_native_tooltip = ep . getsvalue() . clone();
-			if ((stat = IO_write_string(t_native_tooltip, stream)) != IO_NORMAL)
-			{
-				delete t_native_tooltip;
+			// Tooltip is encoded in the native format
+			if ((stat = IO_write_stringref(tooltip, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-			delete t_native_tooltip;
 		}
 		else
 		{
-			if ((stat = IO_write_string(tooltip, stream)) != IO_NORMAL)
+			// Tooltip is encoded as UTF-8
+			if ((stat = IO_write_stringref_utf8(tooltip, stream)) != IO_NORMAL)
 				return stat;
 		}
 	}
@@ -3571,8 +3558,8 @@ bool MCObject::resolveparentscript(void)
 
 	// We have a parent script, so use MCdispatcher to try and find the
 	// stack.
-	MCStack *t_stack = nil;
-	/* UNCHECKED */ getstack()->findstackname(t_script->GetObjectStack(), t_stack);
+	MCStack *t_stack;
+	t_stack = getstack() -> findstackname(t_script -> GetObjectStack());
 
 	// Next search for the control we need.
 	MCControl *t_control;

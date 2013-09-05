@@ -402,10 +402,10 @@ MCNameRef MCIPhoneSystem::GetProcessor(void)
 
 char *MCIPhoneSystem::GetAddress(void)
 {
-	extern char *MCcmd;
+	extern MCStringRef MCcmd;
 	char *t_address;
-	t_address = new char[strlen(MCcmd) + strlen("iphone:") + 1];
-	sprintf(t_address, "iphone:%s", MCcmd);
+	t_address = new char[MCStringGetLength(MCcmd) + strlen("iphone:") + 1];
+	sprintf(t_address, "iphone:%s", MCStringGetCString(MCcmd));
 	return t_address;
 }
 
@@ -595,8 +595,8 @@ char *MCIPhoneSystem::GetStandardFolder(const char *p_folder)
 	}
 	else if (strcasecmp(p_folder, "engine") == 0)
 	{
-		extern char *MCcmd;
-		t_path = my_strndup(MCcmd, strrchr(MCcmd, '/') - MCcmd);
+		extern MCStringRef MCcmd;
+		t_path = my_strndup(MCStringGetCString(MCcmd), strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd));
 	}
 	else if (strcasecmp(p_folder, "library") == 0)
 	{
@@ -871,8 +871,8 @@ bool MCIPhoneSystem::Shell(MCStringRef p_cmd, uint32_t p_cmd_length, MCDataRef &
 	
 	if (t_success)
 	{
-		r_data = (MCDataRef) realloc(t_data, t_length);
-		//r_data_length = t_length;
+		/* UNCHECKED */ MCDataCreateWithBytesAndRelease((byte_t *)realloc(t_data, t_length), t_length, r_data);
+		
 		r_retcode = WEXITSTATUS(t_wait_stat);
 	}
 	else

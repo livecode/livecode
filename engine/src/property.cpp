@@ -348,8 +348,8 @@ static MCPropertyInfo kMCPropertyInfoTable[] =
 	DEFINE_RW_PROPERTY(P_BREAK_POINTS, String, Debugging, Breakpoints)
 	DEFINE_RW_PROPERTY(P_WATCHED_VARIABLES, String, Debugging, WatchedVariables)
 
-	DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
-	DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
+	//DEFINE_RW_PROPERTY(P_CLIPBOARD_DATA, String, Pasteboard, ClipboardData)
+	//DEFINE_RW_PROPERTY(P_DRAG_DATA, String, Pasteboard, DragData)
 };
 
 static bool MCPropertyInfoTableLookup(Properties p_which, Boolean p_effective, const MCPropertyInfo*& r_info)
@@ -1647,7 +1647,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		break;
 	case P_SCRIPT_TEXT_FONT:
 		delete MCscriptfont;
-		MCscriptfont = ep.getsvalue().clone();
+		MCscriptfont = ep.getsvalue();
 		break;
 	case P_SCRIPT_TEXT_SIZE:
 		return ep.getuint2(MCscriptsize, line, pos, EE_PROPERTY_NAN);
@@ -2004,7 +2004,7 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		return ep.getuint2(MCdragdelta, line, pos, EE_PROPERTY_BADDRAGDELTA);
 	case P_STACK_FILE_TYPE:
 		delete MCstackfiletype;
-		MCstackfiletype = ep.getsvalue().clone();
+        MCstackfiletype = ep.getsvalue().clone();
 		return ES_NORMAL;
 	case P_STACK_FILE_VERSION:
 		{
@@ -2989,6 +2989,33 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
+if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
+	{
+        MCAutoStringRef t_data;
+        MCAutoStringRef t_type;
+        
+        ep . copyasstringref(&t_data);
+		if (customindex != nil)
+        {
+			if (customindex -> eval(ep) != ES_NORMAL)
+			{
+				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+				return ES_ERROR;
+			}
+			ep . copyasstringref(&t_type);
+		}
+        
+        MCExecContext ctxt(ep);
+        if (which == P_CLIPBOARD_DATA)
+            MCPasteboardSetClipboardData(ctxt, *t_type, *t_data);
+        else
+            MCPasteboardSetDragData(ctxt, *t_type, *t_data);
+        
+        if (!ctxt . HasError())
+            return ES_NORMAL;
+        
+        return ES_ERROR;
+	}
 	
 	if (destvar != NULL && which != P_CUSTOM_VAR)
 		return set_variable(ep);
@@ -4759,7 +4786,36 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::eval */
-	
+	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
+	{
+        MCAutoStringRef t_data;
+        MCAutoStringRef t_type;
+        
+		if (customindex != nil)
+        {
+			if (customindex -> eval(ep) != ES_NORMAL)
+			{
+				MCeerror -> add(EE_PROPERTY_BADEXPRESSION, line, pos);
+				return ES_ERROR;
+			}
+			ep . copyasstringref(&t_type);
+		}
+        
+        MCExecContext ctxt(ep);
+        if (which == P_CLIPBOARD_DATA)
+            MCPasteboardGetClipboardData(ctxt, *t_type, &t_data);
+        else
+            MCPasteboardGetDragData(ctxt, *t_type, &t_data);
+        
+        if (!ctxt . HasError())
+        {
+            ep . setvalueref(*t_data);
+            return ES_NORMAL;
+        }
+        
+        return ES_ERROR;
+	}
+    
 	ep . setline(line);
 
 	if (destvar != nil && which != P_CUSTOM_VAR)

@@ -47,6 +47,36 @@ MCString MCStringGetOldString(MCStringRef p_string);
 bool MCStringIsEqualToCString(MCStringRef string, const char *cstring, MCCompareOptions options);
 bool MCStringIsEqualToOldString(MCStringRef string, const MCString& oldstring, MCCompareOptions options);
 
+// Attempt to interpret the given string as a base-10 integer. It returns false
+// if conversion fails, otherwise 'r_integer' is set to the result.
+bool MCStringToInteger(MCStringRef string, integer_t& r_integer);
+
+inline bool MCStringToInt16(MCStringRef string, int16_t& r_integer)
+{
+	integer_t t_integer;
+	if (!MCStringToInteger(string, t_integer))
+		return false;
+	if (t_integer < INT16_MIN || t_integer > INT16_MAX)
+		return false;
+	r_integer = (int16_t)t_integer;
+	return true;
+}
+
+inline bool MCStringToUInt16(MCStringRef string, uint16_t& r_integer)
+{
+	integer_t t_integer;
+	if (!MCStringToInteger(string, t_integer))
+		return false;
+	if (t_integer < UINT16_MIN || t_integer > UINT16_MAX)
+		return false;
+	r_integer = (uint16_t)t_integer;
+	return true;
+}
+
+// Attempt to interpret the given string as a double. It returns false if conversion
+// fails, otherwise 'r_real' is set to the result.
+bool MCStringToDouble(MCStringRef string, double& r_double);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCNameCreateWithCString(const char *cstring, MCNameRef& r_name);
@@ -78,8 +108,8 @@ enum IO_stat
     IO_TIMEOUT
 };
 
-class IO_header;
-typedef IO_header * IO_handle;
+struct MCSystemFileHandle;
+typedef MCSystemFileHandle * IO_handle;
 class MCObjectInputStream;
 class MCObjectOutputStream;
 

@@ -216,7 +216,6 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
-
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
@@ -609,9 +608,9 @@ void MCButton::DoSetLabel(MCExecContext& ctxt, MCStringRef p_label)
 
 		if (entry != NULL)
 			if (label == NULL)
-				entry->settext(0, MCnullmcstring, False, False);
+				entry->settext_oldstring(0, MCnullmcstring, False, False);
 			else
-				entry->settext(0, MCString(label, labelsize), False, hasunicode());
+				entry->settext_oldstring(0, MCString(label, labelsize), False, hasunicode());
 
 		clearmnemonic();
 		setupmnemonic();
@@ -807,7 +806,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCStringRef p_name)
 
 void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 {
-	MCObject::SetShowBorder(ctxt, setting);
+	MCControl::SetShowBorder(ctxt, setting);
 	if (MCaqua && menumode == WM_PULLDOWN)
 	{
 		freemenu(False);
@@ -1219,3 +1218,4 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
     if (entry != nil)
         entry -> SetMargins(ctxt, p_margins);
 }
+

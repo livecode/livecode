@@ -90,9 +90,9 @@ Bool MCquitisexplicit;
 int MCidleRate = 200;
 
 Boolean MCaqua;
-char *MCcmd;
-char *MCfiletype;
-char *MCstackfiletype;
+MCStringRef MCcmd;
+MCStringRef MCfiletype;
+MCStringRef MCstackfiletype;
 
 
 #ifdef TARGET_PLATFORM_LINUX
@@ -108,7 +108,7 @@ Boolean MCuseXft = True;
 Boolean MCuselibgnome = False ;
 Boolean MCuseESD = False ;
 
-char **MCstacknames = NULL;
+MCStringRef *MCstacknames = NULL;
 int2 MCnstacks = 0;
 
 Boolean MCnofiles = False;
@@ -296,7 +296,7 @@ MCUIDC *MCscreen;
 MCPrinter *MCprinter;
 MCPrinter *MCsystemprinter;
 
-char *MCscriptfont;
+MCStringRef MCscriptfont;
 uint2 MCscriptsize;
 uint2 MCscrollbarwidth = DEFAULT_SB_WIDTH;
 uint2 MCfocuswidth = 2;
@@ -333,18 +333,16 @@ Boolean MCsystemCS = True;
 Boolean MCsystemPS = True;
 Boolean MChidewindows;
 Boolean MCbufferimages;
-char *MCserialcontrolsettings;
-char *MCshellcmd;
-char *MCvcplayer;
+MCStringRef MCserialcontrolsettings;
+MCStringRef MCshellcmd;
+MCStringRef MCvcplayer;
 
-char *MCftpproxyhost;
+MCStringRef MCftpproxyhost;
 uint2 MCftpproxyport;
 
-char *MChttpproxy;
+MCStringRef MChttpproxy;
 
-char *MClongdateformat;
-char *MCshortdateformat;
-char *MChttpheaders;
+MCStringRef MChttpheaders;
 int4 MCrandomseed;
 Boolean MCshowinvisibles;
 MCObjectList *MCbackscripts;
@@ -359,8 +357,8 @@ MCVariable *MCglobals;
 MCVariable *MCmb;
 MCVariable *MCeach;
 MCVariable *MCdialogdata;
-char *MChcstat;
-char *MCcurdir;
+MCStringRef MChcstat;
+
 MCVariable *MCresult;
 MCVariable *MCurlresult;
 Boolean MCexitall;
@@ -375,22 +373,10 @@ uint4 MCstackfileversion = 5500;
 uint1 MCleftmasks[8] = {0xFF, 0x7F, 0x3f, 0x1F, 0x0F, 0x07, 0x03, 0x01};
 uint1 MCrightmasks[8] = {0x80, 0xC0, 0xE0, 0xF0, 0xF8, 0xFC, 0xFE, 0xFF};
 
-#if defined(_WINDOWS)
-uint2 MClook = LF_WIN95;
-const char *MCttbgcolor = "255,255,231";
-const char *MCttfont = "MS Sans Serif";
-uint2 MCttsize = 12;
-#elif defined(_MACOSX)
-uint2 MClook = LF_MAC;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Lucida Grande";
-uint2 MCttsize = 11;
-#else
-uint2 MClook = LF_MOTIF;
-const char *MCttbgcolor = "255,255,207";
-const char *MCttfont = "Helvetica";
-uint2 MCttsize = 12;
-#endif
+uint2 MClook;
+MCStringRef MCttbgcolor;
+MCStringRef MCttfont;
+uint2 MCttsize;
 uint2 MCtrylock;
 uint2 MCerrorlock;
 Boolean MCwatchcursor;
@@ -509,9 +495,9 @@ void X_clear_globals(void)
 	MCquit = False;
 	MCquitisexplicit = False;
 	MCidleRate = 200;
-	MCcmd = nil;
-	MCfiletype = nil;
-	MCstackfiletype = nil;
+	/* FRAGILE */ MCcmd = MCValueRetain(kMCEmptyString);
+	MCfiletype = MCValueRetain(kMCEmptyString);
+	MCstackfiletype = MCValueRetain(kMCEmptyString);
 	MCstacknames = nil;
 	MCnstacks = 0;
 	MCnofiles = False;
@@ -546,7 +532,7 @@ void X_clear_globals(void)
 	MCmmap = True;
 	MCshmpix = False;
 	MCnoui = False;
-	MCdisplayname = nil;
+	MCdisplayname = NULL;
 	MCshmoff = False;
 	MCshmon = False;
 	MCvisualid = 0;
@@ -668,7 +654,7 @@ void X_clear_globals(void)
 	MCscreen = nil;
 	MCsystemprinter = nil;
 	MCprinter = nil;
-	MCscriptfont = nil;
+	MCscriptfont = MCValueRetain(kMCEmptyString);
 	MCscriptsize = 0;
 	MCscrollbarwidth = DEFAULT_SB_WIDTH;
 	uint2 MCfocuswidth = 2;
@@ -705,15 +691,13 @@ void X_clear_globals(void)
 	MCsystemPS = True;
 	MChidewindows = False;
 	MCbufferimages = False;
-	MCserialcontrolsettings = nil;
-	MCshellcmd = nil;
-	MCvcplayer = nil;
-	MCftpproxyhost = nil;
+	MCserialcontrolsettings = MCValueRetain(kMCEmptyString);
+	MCshellcmd = MCValueRetain(kMCEmptyString);
+	MCvcplayer = MCValueRetain(kMCEmptyString);
+	MCftpproxyhost = MCValueRetain(kMCEmptyString);
 	MCftpproxyport = 0;
-	MChttpproxy = nil;
-	MClongdateformat = nil;
-	MCshortdateformat = nil;
-	MChttpheaders = nil;
+	MChttpproxy = MCValueRetain(kMCEmptyString);
+	MChttpheaders = MCValueRetain(kMCEmptyString);
 	MCrandomseed = 0;
 	MCshowinvisibles = False;
 	MCbackscripts = nil;
@@ -726,7 +710,7 @@ void X_clear_globals(void)
 	MCeach = nil;
 	MCdialogdata = nil;
 	MChcstat = nil;
-	MCcurdir = nil;
+	
 	MCresult = nil;
 	MCurlresult = nil;
 	MCexitall = False;
@@ -735,10 +719,22 @@ void X_clear_globals(void)
 	MCantialiasedtextworkaround = False;
 	// MW-2012-03-08: [[ StackFile5500 ]] Make 5.5 stackfile version the default.
 	MCstackfileversion = 5500;
-	MClook = LF_MOTIF;
-	MCttbgcolor = "255,255,207";
-	MCttfont = "Helvetica";
-	MCttsize = 12;
+#if defined(_WINDOWS)
+    MClook = LF_WIN95;
+    MCttbgcolor = MCSTR("255,255,231");
+    MCttfont = MCSTR("MS Sans Serif");
+    MCttsize = 12;
+#elif defined(_MACOSX)
+    MClook = LF_MAC;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Lucida Grande");
+    MCttsize = 11;
+#else
+    MClook = LF_MOTIF;
+    MCttbgcolor = MCSTR("255,255,207");
+    MCttfont = MCSTR("Helvetica");
+    MCttsize = 12;
+#endif
 	MCtrylock = 0;
 	MCerrorlock = 0;
 	MCwatchcursor = False;
@@ -899,22 +895,24 @@ bool X_open(int argc, char *argv[], char *envp[])
 	MCcstack = new MCCardlist;
 
 #ifdef _LINUX_DESKTOP
-	MCvcplayer = strclone("xanim");
+	MCValueAssign(MCvcplayer, MCSTR("xanim"));
 #else
-	MCvcplayer = strclone("");
+	MCValueAssign(MCvcplayer, MCSTR(""));
 #endif
 
-	MCfiletype = strclone("ttxtTEXT");
-	const char *tname = strrchr(MCcmd, PATH_SEPARATOR);
-	if (tname == NULL)
-		tname = MCcmd;
+	MCValueAssign(MCfiletype, MCSTR("ttxtTEXT"));
+    uindex_t t_last_path_separator;
+    // find the actual command to execute
+     if (!MCStringLastIndexOfChar(MCcmd, PATH_SEPARATOR, MCStringGetLength(MCcmd), kMCStringOptionCompareExact, t_last_path_separator))
+		t_last_path_separator = 0;
 	else
-		tname++;
-	if (MCU_strncasecmp(tname, "rev", 3))
-		MCstackfiletype = strclone("MCRDMSTK");
+		t_last_path_separator++;
+    
+	if (MCStringFind(MCcmd, MCRangeMake(t_last_path_separator, 3), MCSTR("rev"), kMCStringOptionCompareExact, nil))
+		MCValueAssign(MCstackfiletype, MCSTR("MCRDMSTK"));
 	else
-		MCstackfiletype = strclone("RevoRSTK");
-	MCserialcontrolsettings = strclone("baud=9600 parity=N data=8 stop=1");
+		MCValueAssign(MCstackfiletype, MCSTR("RevoRSTK"));
+	MCValueAssign(MCserialcontrolsettings, MCSTR("baud=9600 parity=N data=8 stop=1"));
 
 	MCdispatcher = new MCDispatch;
 
@@ -1007,14 +1005,12 @@ int X_close(void)
 	delete MCtooltip;
 	MCtooltip = NULL;
 
-	delete MChttpproxy;
+	MCValueRelease(MChttpproxy);
 	MCValueRelease(MCpencolorname);
 	MCValueRelease(MCbrushcolorname);
 	MCValueRelease(MChilitecolorname);
 	MCValueRelease(MCaccentcolorname);
 	MCValueRelease(MCselectioncolorname);
-	delete MClongdateformat;
-	delete MCshortdateformat;
 
 	while (MCnfiles)
 		IO_closefile(MCfiles[0].name);
@@ -1069,11 +1065,11 @@ int X_close(void)
 	delete MCresult;
 	delete MCurlresult;
 	delete MCdialogdata;
-	delete MChcstat;
-	delete MCcurdir;
+	MCValueRelease(MChcstat);
+
 	delete MCusing;
-	delete MChttpheaders;
-	delete MCscriptfont;
+	MCValueRelease(MChttpheaders);
+	MCValueRelease(MCscriptfont);
 	MCValueRelease(MClinkatts . colorname);
 	MCValueRelease(MClinkatts . hilitecolorname);
 	MCValueRelease(MClinkatts . visitedcolorname);
@@ -1099,11 +1095,11 @@ int X_close(void)
 	delete MCdragdata;
 	delete MCselectiondata;
 
-	delete MCshellcmd;
-	delete MCvcplayer;
-	delete MCfiletype;
-	delete MCstackfiletype;
-	delete MCserialcontrolsettings;
+	MCValueRelease(MCshellcmd);
+	MCValueRelease(MCvcplayer);
+	MCValueRelease(MCfiletype);
+	MCValueRelease(MCstackfiletype);
+	MCValueRelease(MCserialcontrolsettings);
 	
 	MCprinter -> Finalize();
 	delete MCprinter;
@@ -1151,6 +1147,9 @@ int X_close(void)
 	MCValueRelease(MClicenseparameters . addons);
 
 	// Cleanup the startup stacks list
+	for(uint4 i = 0; i < MCnstacks; ++i)
+		MCValueRelease(MCstacknames[i]);
+
 	delete MCstacknames;
 
 	// Cleanup the parentscript stuff

@@ -85,9 +85,11 @@ Boolean IO_closefile(MCNameRef name)
 			MCS_close(MCfiles[index].ihandle);
 		else
 		{
+#ifdef OLD_IO_HANDLE
 			if (MCfiles[index].ohandle->flags & IO_WRITTEN
 			        && !(MCfiles[index].ohandle->flags & IO_SEEKED))
 				MCS_trunc(MCfiles[index].ohandle);
+#endif
 			MCS_close(MCfiles[index].ohandle);
 		}
 		MCValueRelease(MCfiles[index].name);
@@ -259,7 +261,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 	nread = (uint4)MCS_fsize(stream) - (uint4)MCS_tell(stream);
 	char *dptr;
 	/* UNCHECKED */ ep.reserve(nread, dptr);
-	/* UNCHECKED */ MCS_readfixed(dptr, nread, stream); // ?? readall ??
+	/* UNCHECKED */ MCS_readall(dptr, nread, stream, nread);
 	ep.commit(nread);
 	return IO_NORMAL;
 }
@@ -267,7 +269,7 @@ IO_stat IO_read_to_eof(IO_handle stream, MCExecPoint &ep)
 IO_stat IO_fgets(char *ptr, uint4 length, IO_handle stream)
 {
 	uint4 bytes = length;
-	if (MCS_readfixed(ptr, bytes, stream) == IO_ERROR) // readall ??
+	if (MCS_readall(ptr, bytes, stream, bytes) == IO_ERROR)
 		return IO_ERROR;
 	ptr[bytes - 1] = '\0';
 	strtok(ptr, "\n");
@@ -572,13 +574,6 @@ IO_stat IO_write_string(const char *string, uint4 outlen, IO_handle stream,
 	return stat;
 }
 
-// MW-2009-06-30: New IO method reads a block of bytes and fails if there is
-//   not enough to satisfy the request.
-IO_stat IO_read_bytes(void *ptr, uint4 size, IO_handle stream)
-{
-	return MCS_readfixed(ptr, size, stream);
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 IO_stat IO_read_mccolor(MCColor& r_color, IO_handle p_stream)
@@ -728,8 +723,74 @@ IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, uint1 size)
 	return IO_write_string(t_length != nil ? MCStringGetCString(p_string) : nil, t_length, stream, size);
 }
 
+IO_stat IO_read_stringref(MCStringRef& r_string, IO_handle stream, bool as_unicode, uint1 size)
+{
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	uint4 t_length;
+	char *t_bytes;
+	if ((stat = IO_read_string(t_bytes, t_length, stream, as_unicode, size)) != IO_NORMAL)
+		return stat;
+		
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_length, t_encoding, false, r_string))
+	{
+		delete t_bytes;
+		return IO_ERROR;
+	}
+		
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref(MCStringRef p_string, IO_handle stream, bool as_unicode, uint1 size)
+{	
+	IO_stat stat = IO_NORMAL;
+	MCStringEncoding t_encoding = as_unicode ? kMCStringEncodingUTF16 : kMCStringEncodingNative;
+	
+	MCDataRef t_data = nil;
+	if (!MCStringEncode(p_string, t_encoding, false, t_data))
+		return IO_ERROR;
+	
+	uindex_t t_length = MCDataGetLength(t_data);
+	const char *t_bytes = (const char *)MCDataGetBytePtr(t_data);
+	stat = IO_write_string(t_bytes, t_length, stream, as_unicode, size);
+	MCValueRelease(t_data);
+	return stat;
+}
+
+IO_stat IO_read_stringref_utf8(MCStringRef& r_string, IO_handle stream, uint1 size)
+{
+	// Read in the UTF-8 string and create a StringRef
+	IO_stat stat = IO_NORMAL;
+	char *t_bytes = nil;
+	uint4 t_length = 0;
+	if ((stat = IO_read_string_no_translate(t_bytes, stream, size)) != IO_NORMAL)
+		return stat;
+	if (!MCStringCreateWithBytesAndRelease((byte_t *)t_bytes, t_bytes != nil ? strlen(t_bytes) : 0, kMCStringEncodingUTF8, false, r_string))
+	{
+		delete[] t_bytes;
+		return IO_ERROR;
+	}
+	
+	return IO_NORMAL;
+}
+
+IO_stat IO_write_stringref_utf8(MCStringRef p_string, IO_handle stream, uint1 size)
+{
+	// Convert the string to UTF-8 encoding before writing it out
+	IO_stat stat;
+	char *t_bytes = nil;
+	uindex_t t_length = 0;
+	if (!MCStringConvertToUTF8(p_string, t_bytes, t_length))
+		return IO_ERROR;
+	stat = IO_write_string(t_bytes, stream, size);
+	MCMemoryDeleteArray(t_bytes);
+	return stat;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
+#if OLD_SYSTEM
 int64_t MCS_fake_fsize(IO_handle stream)
 {
 	return 0;
@@ -788,5 +849,6 @@ IO_stat MCS_fake_read(void *ptr, uint4 size, uint4 &n, IO_handle stream)
 
 	return t_stat;
 }
+#endif
 
 ////////////////////////////////////////////////////////////////////////////////

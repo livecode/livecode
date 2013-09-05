@@ -389,7 +389,7 @@ private:
 
 		bool ReadBytes(void *p_buffer, uint32_t p_count)
 		{
-			return IO_read_bytes(p_buffer, p_count, handle) == IO_NORMAL;
+			return IO_read(p_buffer, p_count, handle) == IO_NORMAL;
 
 		}
 

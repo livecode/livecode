@@ -95,7 +95,7 @@ extern bool MCNetworkGetHostFromSocketId(MCStringRef p_socket, MCStringRef& r_ho
 
 extern real8 curtime;
 
-static char *sslerror = NULL;
+static MCStringRef sslerror = NULL;
 static long post_connection_check(SSL *ssl, char *host);
 static int verify_callback(int ok, X509_STORE_CTX *store);
 
@@ -159,6 +159,11 @@ static void socketCallback (CFSocketRef cfsockref, CFSocketCallBackType type, CF
 Boolean MCS_handle_sockets()
 {
 	return MCS_poll(0.0, 0.0);
+}
+#else
+Boolean MCS_handle_sockets()
+{
+    return True;
 }
 #endif
 
@@ -296,7 +301,6 @@ bool MCS_dnsresolve(MCStringRef p_hostname, MCStringRef& r_dns)
 	if (!MCS_init_sockets())
 		return false;
 
-	//char *t_name = NULL;
 	bool t_success = true;
 
 	struct sockaddr_in t_addr;
@@ -442,7 +446,9 @@ bool MCS_connect_socket(MCSocket *p_socket, struct sockaddr_in *p_addr)
 		if (MCdefaultnetworkinterface != NULL)
 		{
 			struct sockaddr_in t_bind_addr;
-			if (!MCS_name_to_sockaddr(MCSTR(MCdefaultnetworkinterface), t_bind_addr))
+			MCAutoStringRef MCdefaultnetworkinterface_string;
+			/* UNCHECKED */ MCStringCreateWithCString(MCdefaultnetworkinterface, &MCdefaultnetworkinterface_string);
+			if (!MCS_name_to_sockaddr(*MCdefaultnetworkinterface_string, t_bind_addr))
 			{
 				p_socket->error = strclone("can't resolve network interface");
 				p_socket->doclose();
@@ -518,7 +524,7 @@ bool open_socket_resolve_callback(void *p_context, bool p_resolved, bool p_final
 	return false;
 }
 
-MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, char *sslcertfile)
+MCSocket *MCS_open_socket(MCNameRef name, Boolean datagram, MCObject *o, MCNameRef mess, Boolean secure, Boolean sslverify, MCStringRef sslcertfile)
 {
 	if (!MCS_init_sockets())
 		return NULL;
@@ -710,22 +716,25 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 	
 		if (s->shared)
 		{
-			char* t_name_copy_ptr = strclone(MCNameGetCString(s->name));
-			char *portptr = strchr(t_name_copy_ptr, ':');
+            char *t_name_copy;
+            
+            t_name_copy = strclone(MCNameGetCString(s->name));
+			char *portptr = strchr(t_name_copy, ':');
 			*portptr = '\0';
 			struct sockaddr_in to;
 			memset((char *)&to, 0, sizeof(to));
 			to.sin_family = AF_INET;
 			uint2 port = atoi(portptr + 1);
 			to.sin_port = MCSwapInt16HostToNetwork(port);
-			if (!inet_aton(t_name_copy_ptr, (in_addr *)&to.sin_addr.s_addr)
+			if (!inet_aton(t_name_copy, (in_addr *)&to.sin_addr.s_addr)
 				|| sendto(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0,
 						  (sockaddr *)&to, sizeof(to)) < 0)
 			{
 				mptr = NULL;
 				MCresult->sets("error sending datagram");
 			}
-			delete[] t_name_copy_ptr;
+            
+            delete[] t_name_copy;
 		}
 		else if (send(s->fd, MCStringGetCString(d), MCStringGetLength(d), 0) < 0)
 		{
@@ -1714,9 +1723,9 @@ char *MCSocket::sslgraberror()
 
 	if (!sslinited)
 		return strclone("cannot load SSL library");
-	if (sslerror)
+	if (sslerror != nil)
 	{
-		terror = sslerror;
+		terror = strdup(MCStringGetCString(sslerror));
 		sslerror = NULL;
 	}
 	else
@@ -1787,32 +1796,22 @@ Boolean MCSocket::initsslcontext()
 				for (i = 0; i < ncerts; i++)
 				{
 					MCAutoStringRef t_oldcertpath;
-					if (!MCStringCreateWithOldString(certs[i], &t_oldcertpath))
-                        return False;
+                    if (t_success)
+                        t_success = MCStringCreateWithOldString(certs[i], &t_oldcertpath);
 
-					MCAutoStringRef t_resolvedpath;
-					if (!MCS_resolvepath(*t_oldcertpath, &t_resolvedpath))
-                        return False;
-					MCAutoStringRef certpath;
-#ifdef _MACOSX
-					MCAutoStringRefAsUTF8String t_utf8_string;
-					if (!t_utf8_string.Lock(*t_resolvedpath))
-                        return False;
-
-					if (!MCStringCreateWithCString(*t_utf8_string, &certpath))
-                        return False;
-#else
+					MCAutoStringRef t_certpath;
+					if (t_success)
+                        t_success = MCS_resolvepath(*t_oldcertpath, &t_certpath);
                     
-					if (!MCStringCopy(*t_resolvedpath, &certpath))
-                        return False;
-#endif
-
-					t_success = (MCS_exists(*t_resolvedpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, MCStringGetCString(*certpath))) ||
-					(MCS_exists(*t_resolvedpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, MCStringGetCString(*certpath)));
+					MCAutoStringRefAsUTF8String t_certpath_utf8;
+					if (t_success)
+                        t_success = t_certpath_utf8.Lock(*t_certpath);
+                    
+                    if (t_success)
+                        t_success = (MCS_exists(*t_certpath, True) && load_ssl_ctx_certs_from_file(_ssl_context, *t_certpath_utf8)) ||
+                                    (MCS_exists(*t_certpath, False) && load_ssl_ctx_certs_from_folder(_ssl_context, *t_certpath_utf8));
 					if (!t_success)
-					{
-                        MCCStringFormat(sslerror, "Error loading CA file and/or directory %s", *certpath);
-					}
+						MCStringFormat(sslerror, "Error loading CA file and/or directory %s", MCStringGetCString(*t_certpath));
 				}
 			}
 			if (certs != NULL)
@@ -1822,7 +1821,7 @@ Boolean MCSocket::initsslcontext()
 		{
 			if (!ssl_set_default_certificates())
 			{
-				MCCStringClone("Error loading default CAs", sslerror);
+				sslerror = MCSTR("Error loading default CAs");
 				
 				t_success = false;
 			}
@@ -2202,8 +2201,9 @@ Boolean MCSocket::sslconnect()
 
 			if (rc != X509_V_OK)
 			{
-				const char *t_message = X509_verify_cert_error_string(rc);
-				sslerror = strdup(t_message);
+				MCAutoStringRef t_message;
+				/* UNCHECKED */ MCStringCreateWithCString(X509_verify_cert_error_string(rc), &t_message);
+				sslerror = MCValueRetain(*t_message);
 				errno = EPIPE;
 				return False;
 			}
@@ -2430,17 +2430,18 @@ static int verify_callback(int ok, X509_STORE_CTX *store)
 		X509 *cert = X509_STORE_CTX_get_current_cert(store);
 		int  depth = X509_STORE_CTX_get_error_depth(store);
 		int  err = X509_STORE_CTX_get_error(store);
-		sslerror = new char[3000];
-		int certlen = strlen(sslerror);
-		sprintf(sslerror, "-Error with certificate at depth: %i\n", depth);
+		
+		/* UNCHECKED */ MCStringCreateMutable(0, sslerror);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "-Error with certificate at depth: %i\n", depth);
 		X509_NAME_oneline(X509_get_issuer_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  issuer   = %s\n", data);
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  issuer   = %s\n", data);
 		X509_NAME_oneline(X509_get_subject_name(cert), data, 256);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  subject  = %s\n", data);
-		certlen = strlen(sslerror);
-		sprintf(&sslerror[certlen-1], "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  subject  = %s\n", data);
+		/* UNCHECKED */ MCStringAppendFormat(sslerror, "  err %i:%s\n", err, X509_verify_cert_error_string(err));
+		
+		/* UNCHECKED */ MCStringCopyAndRelease(sslerror, sslerror);
 	}
 
 	return ok;

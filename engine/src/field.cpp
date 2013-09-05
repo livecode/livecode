@@ -116,11 +116,14 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
+    
+    // LIST PROPS TODO
+    DEFINE_RW_OBJ_PROPERTY(P_HILITED_LINES, String, MCField, HilitedLines)
 };
 
 MCObjectPropertyTable MCField::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -145,7 +148,7 @@ MCField::MCField()
 	scrollbarwidth = MCscrollbarwidth;
 	tabs = NULL;
 	ntabs = 0;
-	label = NULL;
+	label = MCValueRetain(kMCEmptyString);
 }
 
 MCField::MCField(const MCField &fref) : MCControl(fref)
@@ -206,7 +209,8 @@ MCField::MCField(const MCField &fref) : MCControl(fref)
 		}
 		while (fptr != fref.fdata);
 	}
-	label = strclone(fref.label);
+	MCValueRetain(fref.label);
+	label = fref.label;
 	state &= ~CS_KFOCUSED;
 }
 
@@ -248,7 +252,7 @@ MCField::~MCField()
 
 	delete tabs;
 
-	delete label;
+	MCValueRelease(label);
 }
 
 Chunk_term MCField::gettype() const

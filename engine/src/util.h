@@ -116,6 +116,7 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
 extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
+extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
 extern void MCU_roundrect(MCPoint *&, uint2 &npoints,
@@ -154,10 +155,10 @@ extern void MCU_choose_tool(MCExecContext& ctxt, Tool p_tool);
 extern Exec_stat MCU_choose_tool(MCExecPoint &ep, Tool littool,
 	                                 uint2 line, uint2 pos);
 extern Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef message, MCParameter *params);
-extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
-extern void MCU_path2std(char *dptr);
-extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
-extern void MCU_path2native(char *dptr);
+//extern bool MCU_path2std(MCStringRef p_path, MCStringRef& r_std_path);
+//extern void MCU_path2std(char *dptr);
+//extern bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path);
+//extern void MCU_path2native(char *dptr);
 extern void MCU_fix_path(MCStringRef in, MCStringRef& r_out);
 extern void MCU_base64encode(MCExecPoint &ep);
 extern void MCU_base64decode(MCExecPoint &ep);

@@ -133,23 +133,23 @@ public:
 	virtual Exec_stat exec(MCExecPoint &);
 };
 
-static char *s_command_path = NULL;
+static MCStringRef s_command_path = nil;
 
 static void restart_revolution(void)
 {
 #if defined(TARGET_PLATFORM_WINDOWS)
-	_spawnl(_P_NOWAIT, s_command_path, s_command_path, NULL);
+	_spawnl(_P_NOWAIT, MCStringGetCString(s_command_path), MCStringGetCString(s_command_path), NULL);
 #elif defined(TARGET_PLATFORM_MACOS_X)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #elif defined(TARGET_PLATFORM_LINUX)
 	if (fork() == 0)
 	{
 		usleep(250000);
-		execl(MCcmd, MCcmd, NULL);
+		execl(MCStringGetCString(MCcmd), MCStringGetCString(MCcmd), NULL);
 	}
 #else
 #error restart not defined
@@ -187,7 +187,9 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 		return ES_NORMAL;
 	}
 	
-	if (!MCS_unlink(MClicenseparameters . license_token))
+	MCAutoStringRef license_token_string;
+	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
+	if (!MCS_unlink(*license_token_string));
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;
@@ -199,8 +201,11 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	MCtracestackptr = NULL;
 	MCtraceabort = True;
 	MCtracereturn = True;
+    
+    MCAutoStringRef t_command_path;
+    MCS_resolvepath(MCcmd, &t_command_path);
 	
-	s_command_path = MCS_resolvepath(MCcmd);
+	s_command_path = MCValueRetain(*t_command_path);
 
 	atexit(restart_revolution);
 	
@@ -225,9 +230,11 @@ IO_stat MCDispatch::startup(void)
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
+    MCAutoStringRef t_startdir;
+    MCS_getcurdir(&t_startdir);
 	
-	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+	startdir = strdup(MCStringGetCString(*t_startdir));
+	enginedir = strdup(MCStringGetCString(MCcmd));
 
 	char *eptr;
 	eptr = strrchr(enginedir, PATH_SEPARATOR);
@@ -263,7 +270,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strclone(MCcmd));
+	sptr -> setfilename(strdup(MCStringGetCString(MCcmd)));
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -1201,7 +1208,7 @@ bool MCModeHandleMessageBoxChanged(MCExecPoint& ep)
 			else
 				t_msg_stack -> raise();
 
-			((MCField *)MCmessageboxredirect) -> settext(0, ep . getsvalue(), False);
+			((MCField *)MCmessageboxredirect) -> settext_oldstring(0, ep . getsvalue(), False);
 		}
 		else
 		{
@@ -1330,7 +1337,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 		MCscreen -> clearIME(p_stack -> getwindow());
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 

@@ -2011,30 +2011,30 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 #if defined(_WINDOWS)
 			t_module = MCS_loadmodule(MCSTR("revpdfprinter.dll"));
 #elif defined(_MACOSX)
-			MCAutoStringRef t_module_path;
-			
-            /* UNCHECKED */ MCStringCreateMutable(0, &t_module_path);
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%s/../revpdfprinter.bundle", MCcmd);
-			t_module = MCS_loadmodule(*t_module_path);
+            MCAutoStringRef t_module_path_str1;
+
+			/* UNCHECKED */ MCStringFormat(&t_module_path_str1, "%s/../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+			t_module = MCS_loadmodule(*t_module_path_str1);
 			
 			if (t_module == nil)
 			{
-				MCStringFormat(&t_module_path, "%s/../../../../revpdfprinter.bundle", MCcmd);
-				t_module = MCS_loadmodule(*t_module_path);
+                MCAutoStringRef t_module_path_str2;
+				/* UNCHECKED */ MCStringFormat(&t_module_path_str2, "%s/../../../../revpdfprinter.bundle", MCStringGetCString(MCcmd));
+				t_module = MCS_loadmodule(*t_module_path_str2);
 			}
 #elif defined(_LINUX)
 			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
+			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
 			MCAutoStringRef t_module_path;
-			MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCcmd, MCcmd);
+			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.so", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
 			t_module = MCS_loadmodule(*t_module_path);
 #elif defined(TARGET_SUBPLATFORM_IPHONE)
 			const char *t_engine_dir_end;
-			t_engine_dir_end = strrchr(MCcmd, '/');
-			MCAutoStringRef t_module_path;
-            /* UNCHECKED */ MCStringCreateMutable(0, &t_module_path);
-			/* UNCHECKED */ MCStringFormat(&t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCcmd, MCcmd);
-			t_module = MCS_loadmodule(*t_module_path);
+			t_engine_dir_end = strrchr(MCStringGetCString(MCcmd), '/');
+			char *t_module_path;
+			t_module_path = nil;
+			MCCStringFormat(t_module_path, "%.*s/revpdfprinter.dylib", t_engine_dir_end - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
+			t_module = MCS_loadmodule(t_module_path);
 			MCCStringFree(t_module_path);
 #elif defined(_SERVER)
 			
@@ -2068,19 +2068,19 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 		return ES_ERROR;
 	}
 
-	char *t_filename = nil;
+    MCAutoStringRef t_filename;
 	if (p_filename != nil)
 	{
-		// TODO error checking
-		MCCStringClone(p_filename, t_filename);
-		MCU_path2native(t_filename);
+        MCAutoStringRef t_stringref_filename;
+        /* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_stringref_filename);
+		/* UNCHECKED */ MCS_pathtonative(*t_stringref_filename, &t_filename);
 	}
 
 	MCCustomPrinter *t_printer;
 	t_printer = new MCCustomPrinter(p_destination, t_device);
 	t_printer -> Initialize();
 	t_printer -> SetDeviceName(p_destination);
-	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, t_filename);
+	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, MCStringGetCString(*t_filename));
 	t_printer -> SetDeviceOptions(p_options);
 	t_printer -> SetPageSize(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
 	t_printer -> SetPageOrientation(MCprinter -> GetPageOrientation());
@@ -2095,8 +2095,6 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 	t_printer -> SetDeviceRectangle(t_printer -> GetPageRectangle());
 
 	r_printer = t_printer;
-
-	MCCStringFree(t_filename);
 
 	return ES_NORMAL;
 }

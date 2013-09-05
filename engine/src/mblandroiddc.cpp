@@ -895,7 +895,7 @@ IO_handle android_get_mainstack_stream(void)
 	char *t_asset_filename;
 	t_asset_filename = nil;
 
-	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCcmd))
+	if (!MCCStringFormat(t_asset_filename, "%s/revandroidmain.rev", MCStringGetCString(MCcmd)))
 		return nil;
 
 	IO_handle t_stream;
@@ -1855,26 +1855,22 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTextCanceled(JNIEnv *env
 	MCAndroidTextCanceled();
 }
 
-void MCAndroidMediaDone(char *s_media_content);
+void MCAndroidMediaDone(MCStringRef s_media_content);
 void MCAndroidMediaCanceled();
 
-static char *s_media_content = nil;
+static MCStringRef s_media_content = nil;
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doMediaDone(JNIEnv *env, jobject object, jstring p_media_content)
 {
 	MCLog("doMediaDone called - passing arg", 0);
 
     if (s_media_content != nil)
-        MCCStringFree (s_media_content);
+        MCValueRelease(s_media_content);
     s_media_content = nil;
     
     if (p_media_content != nil)
 	{
-		const char *t_utfchars = nil;
-		t_utfchars = env->GetStringUTFChars(p_media_content, nil);
-		if (t_utfchars != nil)
-			MCCStringClone(t_utfchars, s_media_content);
-		env->ReleaseStringUTFChars(p_media_content, t_utfchars);
+		MCJavaStringToStringRef(env, p_media_content, s_media_content);
 	}
 
 	MCAndroidMediaDone(s_media_content);
@@ -2075,7 +2071,7 @@ bool MCAndroidSetOrientationMap(int p_map[4], const char *p_mapping)
 // identify device / android version by:
 //    MANUFACTURER|MODEL|DEVICE|VERSION.RELEASE|VERSION.INCREMENTAL
 
-extern char *MCcmd;
+extern MCStringRef MCcmd;
 
 bool MCAndroidLoadDeviceConfiguration()
 {
@@ -2099,7 +2095,7 @@ bool MCAndroidLoadDeviceConfiguration()
 		t_success = MCAndroidInitBuildInfo();
 
 	if (t_success)
-		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCcmd);
+		t_success = MCCStringFormat(t_config_file_path, "%s/lc_device_config.txt", MCStringGetCString(MCcmd));
 
 	if (t_success)
 	{
@@ -2115,18 +2111,8 @@ bool MCAndroidLoadDeviceConfiguration()
 	}
 
 	if (t_success)
-	{
-		IO_stat t_read_stat = IO_NORMAL;
-		uint32_t t_bytes_read = 0;
-		while (t_success && t_bytes_read < t_filesize)
-		{
-			uint32_t t_count;
-			t_count = t_filesize - t_bytes_read;
-			t_read_stat = MCS_readfixed(t_file_buffer + t_bytes_read, 1, t_count, t_filehandle); // ??? readall ???
-			t_bytes_read += t_count;
-			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_filesize));
-		}
-	}
+        if (MCS_readfixed(t_file_buffer, t_filesize, t_filehandle) != IO_NORMAL)
+            t_success = false;
 
 	if (t_success)
 	{

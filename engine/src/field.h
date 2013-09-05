@@ -190,7 +190,7 @@ class MCField : public MCControl
 	int4 foundoffset;
 	MCScrollbar *vscrollbar;
 	MCScrollbar *hscrollbar;
-	char *label;
+	MCStringRef label;
 	
 	static int2 clickx;
 	static int2 clicky;
@@ -380,7 +380,8 @@ public:
 	MCParagraph *resolveparagraphs(uint4 parid);
 
 	void setparagraphs(MCParagraph *newpgptr, uint4 parid);
-	Exec_stat settext(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
+	Exec_stat settext(uint4 parid, MCStringRef p_text, Boolean p_formatted);
+	Exec_stat settext_oldstring(uint4 parid, const MCString &newtext, Boolean formatted, Boolean asunicode = False);
 	// MW-2012-02-23: [[ PutUnicode ]] Added parameter to specify whether 'is' is unicode or native.
 	Exec_stat settextindex(uint4 parid, int4 si, int4 ei, const MCString &s, Boolean undoing, bool asunicode = false);
 	void getlinkdata(MCRectangle &r, MCBlock *&sb, MCBlock *&eb);
@@ -567,7 +568,9 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
-
+    void UpdateScrollbars(void);
+    
+    void DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting);
 	////////// PROPERTY ACCESSORS
 
 	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
@@ -580,6 +583,7 @@ public:
 	void SetFixedHeight(MCExecContext& ctxt, bool flag);
 	void GetLockText(MCExecContext& ctxt, bool& r_flag);
 	void SetLockText(MCExecContext& ctxt, bool flag);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 	void GetSharedText(MCExecContext& ctxt, bool& r_flag);
 	void SetSharedText(MCExecContext& ctxt, bool flag);
 	void GetShowLines(MCExecContext& ctxt, bool& r_flag);
@@ -643,5 +647,32 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    
+    void GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines); // List type
+    void SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines); // List type
+    
+    virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void Set3D(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+    virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+	virtual void SetWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+    virtual void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
 };
 #endif

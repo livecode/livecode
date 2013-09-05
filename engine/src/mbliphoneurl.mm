@@ -241,7 +241,7 @@ bool UrlRequestSetHTTPHeader(const char *p_key, uint32_t p_key_length, const cha
 @end
 
 extern real8 MCsockettimeout;
-extern char *MChttpheaders;
+extern MCStringRef MChttpheaders;
 
 struct load_url_t
 {
@@ -272,10 +272,10 @@ static void do_system_load_url(void *p_ctxt)
 			t_success = false;
 	}
 	
-	if (t_success && MChttpheaders != nil && MChttpheaders[0] != '\0')
+	if (t_success && MChttpheaders != nil && !MCStringIsEmpty(MChttpheaders))
 	{
 		if ([[t_url scheme] isEqualToString: @"http"] || [[t_url scheme] isEqualToString: @"https"])
-			t_success = MCHTTPParseHeaders(MChttpheaders, UrlRequestSetHTTPHeader, t_request);
+			t_success = MCHTTPParseHeaders(MCStringGetCString(MChttpheaders), UrlRequestSetHTTPHeader, t_request);
 	}
 	
 	MCSystemUrlDelegate *t_delegate;
@@ -400,8 +400,8 @@ static void do_post_url(void *p_ctxt)
 			[t_request setHTTPBody: t_data];
 	}
 	
-	if (t_success && MChttpheaders != nil && MChttpheaders[0] != '\0')
-		t_success = MCHTTPParseHeaders(MChttpheaders, UrlRequestSetHTTPHeader, t_request);
+	if (t_success && MChttpheaders != nil && !MCStringIsEmpty(MChttpheaders))
+		t_success = MCHTTPParseHeaders(MCStringGetCString(MChttpheaders), UrlRequestSetHTTPHeader, t_request);
 	
 	if (t_success)
 	{
@@ -458,7 +458,7 @@ bool MCSystemPostUrl(MCStringRef p_url, MCStringRef p_data, uint32_t p_length, M
 
 struct launch_url_t
 {
-	const char *url;
+	MCStringRef url;
 	bool success;
 };
 
@@ -472,8 +472,11 @@ static void do_launch_url(void *p_ctxt)
 	NSURL *t_url;
 	if (t_success)
 	{
-		t_url = [NSURL URLWithString: [NSString stringWithCString: ctxt -> url encoding: NSMacOSRomanStringEncoding]];
+		CFStringRef cfurl = nil;
+		/* UNCHECKED */ MCStringConvertToCFStringRef(ctxt->url, cfurl);
+		t_url = [NSURL URLWithString: (NSString *)cfurl];
 		t_success = (t_url != nil);
+		CFRelease(cfurl);
 	}
 	
 	if (t_success)
@@ -485,7 +488,7 @@ static void do_launch_url(void *p_ctxt)
 	ctxt -> success = t_success;
 }
 
-bool MCSystemLaunchUrl(const char *p_url)
+bool MCSystemLaunchUrl(MCStringRef p_url)
 {
 	launch_url_t ctxt;
 	ctxt . url = p_url;

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -1269,6 +1270,11 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 	return False;
 }
 
+/* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
+{
+    return MCU_matchname(MCNameGetOldString(p_name), type, name) == True;
+}
+
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
 	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
@@ -2011,62 +2017,62 @@ Exec_stat MCU_dofrontscripts(Handler_type htype, MCNameRef mess, MCParameter *pa
 
 	return stat;
 }
-
-bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
-{
-	uindex_t t_length = MCStringGetLength(p_path);
-	if (t_length == 0)
-		return MCStringCopy(p_path, r_stdpath);
-
-	MCAutoNativeCharArray t_path;
-	if (!t_path.New(t_length))
-		return false;
-
-	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
-	char_t *t_dst = t_path.Chars();
-
-	for (uindex_t i = 0; i < t_length; i++)
-	{
-#ifdef _MACOSX
-		if (t_src[i] == '/')
-			t_dst[i] = ':';
-		else if (t_src[i] == ':')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#else
-		if (t_src[i] == '/')
-			t_dst[i] = '\\';
-		else if (t_src[i] == '\\')
-			t_dst[i] = '/';
-		else
-			t_dst[i] = t_src[i];
-#endif
-	}
-
-	return t_path.CreateStringAndRelease(r_stdpath);
-}
-
-void MCU_path2std(char *dptr)
-{
-	if (dptr == NULL || !*dptr)
-		return;
-	do
-	{
-#ifdef _MACOSX
-		if (*dptr == '/')
-			*dptr = ':';
-		else if (*dptr == ':')
-			*dptr = '/';
-#else
-		if (*dptr == '/')
-			*dptr = '\\';
-		else if (*dptr == '\\')
-			*dptr = '/';
-#endif
-	}
-	while (*++dptr);
-}
+//
+//bool MCU_path2std(MCStringRef p_path, MCStringRef& r_stdpath)
+//{
+//	uindex_t t_length = MCStringGetLength(p_path);
+//	if (t_length == 0)
+//		return MCStringCopy(p_path, r_stdpath);
+//
+//	MCAutoNativeCharArray t_path;
+//	if (!t_path.New(t_length))
+//		return false;
+//
+//	const char_t *t_src = MCStringGetNativeCharPtr(p_path);
+//	char_t *t_dst = t_path.Chars();
+//
+//	for (uindex_t i = 0; i < t_length; i++)
+//	{
+//#ifdef _MACOSX
+//		if (t_src[i] == '/')
+//			t_dst[i] = ':';
+//		else if (t_src[i] == ':')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#else
+//		if (t_src[i] == '/')
+//			t_dst[i] = '\\';
+//		else if (t_src[i] == '\\')
+//			t_dst[i] = '/';
+//		else
+//			t_dst[i] = t_src[i];
+//#endif
+//	}
+//
+//	return t_path.CreateStringAndRelease(r_stdpath);
+//}
+//
+//void MCU_path2std(char *dptr)
+//{
+//	if (dptr == NULL || !*dptr)
+//		return;
+//	do
+//	{
+//#ifdef _MACOSX
+//		if (*dptr == '/')
+//			*dptr = ':';
+//		else if (*dptr == ':')
+//			*dptr = '/';
+//#else
+//		if (*dptr == '/')
+//			*dptr = '\\';
+//		else if (*dptr == '\\')
+//			*dptr = '/';
+//#endif
+//	}
+//	while (*++dptr);
+//}
 
 bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 {
@@ -2166,7 +2172,7 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 				else
 					fptr++;
 	}
-	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)fptr, r_out);
+	/* UNCHECKED */ MCStringCreateWithCStringAndRelease((char_t *)cstr, r_out);
 
 }
 
@@ -2356,7 +2362,6 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
         
         MCExecPoint ep(nil, nil, nil);
         ep . setvalueref(*t_data);
-        ep . binarytotext();
         r_output = (MCStringRef) MCValueRetain(ep . getvalueref());
 	}
 	else if (MCStringGetLength(p_target) > 8 && MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
@@ -2380,60 +2385,14 @@ void MCU_geturl(MCExecContext& ctxt, MCStringRef p_target, MCStringRef &r_output
 
 void MCU_geturl(MCExecPoint &ep)
 {
-    MCAutoStringRef t_filename;
+    MCAutoStringRef t_filename, t_output;
     MCStringCreateWithOldString(ep.getsvalue(), &t_filename);
     
-	if (MCStringGetLength(*t_filename) > 5
-	        && MCStringBeginsWithCString(*t_filename, (const char_t*)"file:", kMCCompareCaseless))
-	{
-        MCAutoStringRef t_output;
-		MCStringCopySubstring(*t_filename, MCRangeMake(5, MCStringGetLength(*t_filename)-8), &t_filename);
-		if (!MCS_loadtextfile(*t_filename, &t_output))
-        {
-            MCurlresult -> setvalueref(kMCEmptyString);
-            return;
-        }
-        MCurlresult -> setvalueref(*t_output);
-	}
-	else
-		if (MCStringGetLength(*t_filename) > 8
-		        && MCStringBeginsWithCString(*t_filename, (const char_t*)"binfile:", kMCCompareCaseless))
-		{
-            MCAutoDataRef t_output;
-            MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
-            if (!MCS_loadbinaryfile(*t_filename, &t_output))
-            {
-                MCurlresult -> setvalueref(kMCEmptyData);
-                return;
-            }
-            MCurlresult -> setvalueref(*t_output);
-		}
-		else
-			if (MCStringGetLength(*t_filename) > 8
-			        && MCStringBeginsWithCString(*t_filename, (const char_t*)"resfile:", kMCCompareCaseless))
-			{
-                MCAutoStringRef t_output;
-                MCStringCopySubstring(*t_filename, MCRangeMake(8, MCStringGetLength(*t_filename)-8), &t_filename);
-                MCS_loadresfile(*t_filename, &t_output);
-                
-                MCurlresult -> setvalueref(*t_output);
-			}
-			else
-			{
-				// MW-2013-03-12: [[ Bug 10731 ]] Make sure that if we aren't looking at something
-				//   that looks like a URL, we clear the EP.
-				const char *sptr = ep.getsvalue().getstring();
-				uint4 l = ep.getsvalue().getlength();
-				if (sptr != NULL && sptr[1] != ':' && MCU_strchr(sptr, l, ':'))
-				{
-					MCAutoStringRef p_url;
-					/* UNCHECKED */ ep . copyasstringref(&p_url);
-					MCS_geturl(ep . getobj(), *p_url);
-					MCurlresult->eval(ep);
-				}
-				else
-					ep . clear();
-			}
+    MCExecContext ctxt(ep);
+    
+    MCU_geturl(ctxt, *t_filename, &t_output);
+    
+    ep.setvalueref(*t_output);
 }
 
 

@@ -154,7 +154,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	case kMCCapsuleSectionTypePrologue:
 	{
 		MCCapsulePrologueSection t_prologue;
-		if (IO_read_bytes(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
+		if (IO_read(&t_prologue, sizeof(t_prologue), p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone prologue");
 			return false;
@@ -166,7 +166,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_redirect;
 		t_redirect = new char[p_length];
-		if (IO_read_bytes(t_redirect, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_redirect, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read redirect ref");
 			return false;
@@ -196,7 +196,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_external;
 		t_external = new char[p_length];
-		if (IO_read_bytes(t_external, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_external, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read external ref");
 			return false;
@@ -217,7 +217,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 	{
 		char *t_script;
 		t_script = new char[p_length];
-		if (IO_read_bytes(t_script, p_length, p_stream) != IO_NORMAL)
+		if (IO_read(t_script, p_length, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read startup script");
 			return false;
@@ -244,7 +244,7 @@ bool MCStandaloneCapsuleCallback(void *p_self, const uint8_t *p_digest, MCCapsul
 
 	case kMCCapsuleSectionTypeDigest:
 		uint8_t t_read_digest[16];
-		if (IO_read_bytes(t_read_digest, 16, p_stream) != IO_NORMAL)
+		if (IO_read(t_read_digest, 16, p_stream) != IO_NORMAL)
 		{
 			MCresult -> sets("failed to read standalone checksum");
 			return false;
@@ -274,13 +274,13 @@ extern void MCAndroidEngineRemoteCall(const char *, const char *, void *, ...);
 IO_stat MCDispatch::startup(void)
 {
 	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+	enginedir = strdup(MCStringGetCString(MCcmd));
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = MCcmd; //point to MCcmd string
+	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
 
 	// set up image cache before the first stack is opened
 	MCCachedImageRep::init();
@@ -334,7 +334,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	MCcmd = openpath;
+	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
@@ -382,7 +382,7 @@ IO_stat MCDispatch::startup(void)
 	t_stream = android_get_mainstack_stream();
 #else
 	char *t_path;
-	MCCStringFormat(t_path, "%.*s/iphone_test.rev", strrchr(MCcmd, '/') - MCcmd, MCcmd);
+	MCCStringFormat(t_path, "%.*s/iphone_test.rev", strrchr(MCStringGetCString(MCcmd), '/') - MCStringGetCString(MCcmd), MCStringGetCString(MCcmd));
 	t_stream = MCS_open(t_path, IO_READ_MODE, False, False, 0);
 	MCCStringFree(t_path);
 #endif
@@ -396,7 +396,7 @@ IO_stat MCDispatch::startup(void)
 
 	MCS_close(t_stream);
 
-	MCcmd = openpath;
+	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 	
 	t_stack -> extraopen(false);
@@ -430,13 +430,13 @@ IO_stat MCDispatch::startup(void)
 IO_stat MCDispatch::startup(void)
 {
 	startdir = MCS_getcurdir();
-	enginedir = strclone(MCcmd);
+	enginedir = strdup(MCStringGetCString(MCcmd));
 	char *eptr = strrchr(enginedir, PATH_SEPARATOR);
 	if (eptr != NULL)
 		*eptr = '\0';
 	else
 		*enginedir = '\0';
-	char *openpath = MCcmd; //point to MCcmd string
+	char *openpath = strdup(MCStringGetCString(MCcmd)); //point to MCcmd string
 
 #ifdef _DEBUG
 #ifdef _WINDOWS
@@ -462,7 +462,7 @@ IO_stat MCDispatch::startup(void)
 		}
 		MCS_close(t_stream);
 		
-		MCcmd = openpath;
+		/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 		MCdefaultstackptr = MCstaticdefaultstackptr = t_stack;
 		
 		t_stack -> extraopen(false);
@@ -522,7 +522,7 @@ IO_stat MCDispatch::startup(void)
 		return IO_ERROR;
 	}
 
-	MCcmd = openpath;
+	/* UNCHECKED */ MCStringCreateWithCString(openpath, MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = t_info . stack;
 	MCCapsuleClose(t_capsule);
 
@@ -865,7 +865,7 @@ void MCModeConfigureIme(MCStack *p_stack, bool p_enabled, int32_t x, int32_t y)
 		MCscreen -> clearIME(p_stack -> getwindow());
 }
 
-void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, const char *text_font, const char *message)
+void MCModeShowToolTip(int32_t x, int32_t y, uint32_t text_size, uint32_t bg_color, MCStringRef text_font, MCStringRef message)
 {
 }
 

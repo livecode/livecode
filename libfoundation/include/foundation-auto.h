@@ -56,6 +56,8 @@ public:
 
 private:
 	T m_value;
+    
+    MCAutoValueRefBase<T>& operator = (MCAutoValueRefBase<T>& x);
 };
 
 typedef MCAutoValueRefBase<MCValueRef> MCAutoValueRef;
