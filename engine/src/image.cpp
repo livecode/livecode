@@ -1509,7 +1509,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		t_length += sizeof(uint16_t) + sizeof(uint16_t);
 		t_length += m_control_color_count * 3 * sizeof(uint16_t);
 		for (uint16_t i = 0; i < m_control_color_count; i++)
-			t_length += MCCStringLength(m_control_color_names[i]) + 1;
+			t_length += MCStringGetLength(m_control_color_names[i]) + 1;
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1524,7 +1524,7 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
 			t_stat = p_stream . WriteColor(m_control_colors[i]);
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-			t_stat = p_stream . WriteCString(m_control_color_names[i]);
+			t_stat = p_stream . WriteCString(MCStringGetCString(m_control_color_names[i]));
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1569,7 +1569,7 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
 				t_stat = p_stream . ReadColor(m_control_colors[i]);
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-				t_stat = p_stream . ReadCString(m_control_color_names[i]);
+				t_stat = p_stream . ReadStringRef(m_control_color_names[i]);
 		}
 
 		if (t_stat == IO_NORMAL)
@@ -1875,7 +1875,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	{
 		MCMemoryDeallocate(colors);
 		for (uint32_t i = 0; i < ncolors; i++)
-			MCCStringFree(colornames[i]);
+			MCValueRelease(colornames[i]);
 		MCMemoryDeallocate(colornames);
 
 		colors = m_control_colors;

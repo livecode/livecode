@@ -526,7 +526,9 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		MCColor t_color;
-		if (MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+		MCAutoStringRef t_value;
+		ep . copyasstringref(&t_value);
+		if (MCscreen -> parsecolor(*t_value, t_color, nil))
 			t_block -> setcolor(&t_color);
 	}
 	
@@ -535,7 +537,9 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		MCColor t_color;
-		if (MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+		MCAutoStringRef t_value;
+		ep . copyasstringref(&t_value);
+		if (MCscreen -> parsecolor(*t_value, t_color, nil))
 			t_block -> setbackcolor(&t_color);
 	}
 	

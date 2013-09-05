@@ -140,7 +140,7 @@ void MCTooltip::opentip()
 	if (!MCModeMakeLocalWindows())
 	{
 		MCColor t_color;
-		MCscreen -> parsecolor(MCStringGetCString(MCttbgcolor),&t_color, nil);
+		MCscreen -> parsecolor(MCttbgcolor, t_color, nil);
 		MCModeShowToolTip(trect . x, trect . y + 16,
 				MCttsize, (t_color . red >> 8) | (t_color . green & 0xFF00) | ((t_color . blue & 0xFF00) << 8), MCttfont,
 				tip);
