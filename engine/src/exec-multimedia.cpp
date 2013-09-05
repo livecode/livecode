@@ -235,7 +235,7 @@ void MCMultimediaEvalSound(MCExecContext& ctxt, MCStringRef& r_sound)
 
 void MCMultimediaExecStartPlayer(MCExecContext& ctxt, MCPlayer *p_target)
 {
-	p_target->playstart(MCnullstring);
+	p_target->playstart(kMCEmptyString);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -270,7 +270,7 @@ void MCMultimediaExecRecord(MCExecContext& ctxt, MCStringRef p_filename)
 		return;
 
 	MCAutoStringRef soundfile;
-	MCS_get_canonical_path(p_filename, &soundfile);
+    MCS_resolvepath(p_filename, &soundfile);
 	MCtemplateplayer->recordsound(*soundfile);
 }
 
@@ -415,7 +415,7 @@ void MCMultimediaExecLoadVideoClip(MCExecContext& ctxt, MCStack *p_target, int p
 	}
 	tptr = (MCPlayer *)MCtemplateplayer->clone(False, OP_NONE, false);
 	tptr->setsprop(P_SHOW_BORDER, MCfalsemcstring);
-	tptr->setfilename(MCStringGetCString(*t_video_name), strclone(MCStringGetCString(*t_temp)), tmpfile);
+	tptr->setfilename(*t_video_name, *t_temp, tmpfile);
 	tptr->open();
 	if (p_prepare)
 		tptr->setflag(False, F_VISIBLE);
@@ -474,12 +474,14 @@ void MCMultimediaExecPlayAudioClip(MCExecContext& ctxt, MCStack *p_target, int p
 		        || (stream = MCS_open(p_clip, kMCSOpenFileModeRead, True, False, 0)) == NULL)
 		{
 			MCAutoStringRef t_url;
+            MCAutoDataRef t_data;
 			MCU_geturl(ctxt, p_clip, &t_url);
 			if (MCStringGetLength(*t_url) == 0)
 			{
 				ctxt . SetTheResultToStaticCString("no data in audioClip");
 				return;
 			}
+            /* UNCHECKED */ MCDataCreateWithBytes(MCStringGetBytePtr(*t_url), MCStringGetLength(*t_url), &t_data);
 			stream = MCS_fakeopen(MCStringGetOldString(*t_url));
 		}
 		MCacptr = new MCAudioClip;

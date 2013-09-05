@@ -651,7 +651,7 @@ bool MCStringConvertToUTF8(MCStringRef p_string, char*& r_utf8string, uindex_t& 
     
     t_byte_count = MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, nil, 0);
     
-    if (!MCMemoryNewArray(t_byte_count, r_utf8string))
+    if (!MCMemoryNewArray(t_byte_count + 1, r_utf8string))
         return false;
     
     MCUnicodeCharsMapToUTF8(t_unichars, t_char_count, (byte_t*)r_utf8string, t_byte_count);
@@ -1533,10 +1533,8 @@ static void split_find_end_of_element_and_key_exact(const char_t *sptr, const ch
 	while(sptr < eptr)
 	{
 		if (*sptr == key)
-		{
-			r_key_ptr = sptr;
 			break;
-		}
+        
 		if (*sptr == del)
 		{
 			r_key_ptr = r_end_ptr = sptr;
@@ -1546,7 +1544,8 @@ static void split_find_end_of_element_and_key_exact(const char_t *sptr, const ch
 		sptr += 1;
 	}
 
-	return split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
+    r_key_ptr = sptr;
+    split_find_end_of_element_exact(sptr, eptr, del, r_end_ptr);
 }
 
 static void split_find_end_of_element_and_key_caseless(const char_t *sptr, const char_t *eptr, char_t del, char_t key, const char_t*& r_key_ptr, const char_t *& r_end_ptr)
@@ -1554,10 +1553,8 @@ static void split_find_end_of_element_and_key_caseless(const char_t *sptr, const
 	while(sptr < eptr)
 	{
 		if (MCNativeCharFold(*sptr) == MCNativeCharFold(key))
-		{
-			r_key_ptr = sptr;
 			break;
-		}
+        
 		if (MCNativeCharFold(*sptr) == MCNativeCharFold(del))
 		{
 			r_key_ptr = r_end_ptr = sptr;
@@ -1567,7 +1564,8 @@ static void split_find_end_of_element_and_key_caseless(const char_t *sptr, const
 		sptr += 1;
 	}
 
-	return split_find_end_of_element_caseless(sptr, eptr, del, r_end_ptr);
+    r_key_ptr = sptr;
+    split_find_end_of_element_caseless(sptr, eptr, del, r_end_ptr);
 }
 
 bool MCStringSplit(MCStringRef self, MCStringRef p_elem_del, MCStringRef p_key_del, MCStringOptions p_options, MCArrayRef& r_array)

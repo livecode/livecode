@@ -169,8 +169,7 @@ void MCObject::stoppickling(MCPickleContext *p_context, MCStringRef& r_string)
 	t_size = 0;
 	if (t_success)
 	{
-		MCS_fakeclosewrite(p_context -> stream, t_buffer, t_size);
-		if (t_buffer == NULL)
+		if (MCS_closetakingbuffer(p_context -> stream, reinterpret_cast<void*&>(t_buffer), reinterpret_cast<size_t&>(t_size)) != IO_NORMAL)
 			t_success = false;
 	}
 
@@ -245,7 +244,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 	// Record where we are now in the stream
 	uint4 t_chunk_start;
 	if (t_stat == IO_NORMAL)
-		t_chunk_start = MCS_faketell(t_stream);
+		t_chunk_start = MCS_tell(t_stream);
 
 	// Write out the charset byte
 	if (t_stat == IO_NORMAL)
@@ -313,9 +312,9 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 	if (t_stat == IO_NORMAL)
 	{
 		uint4 t_chunk_size;
-		t_chunk_size = MCS_faketell(t_stream) - t_chunk_start;
+		t_chunk_size = MCS_tell(t_stream) - t_chunk_start;
 		swap_uint4(&t_chunk_size);
-		MCS_fakewriteat(t_stream, t_chunk_start - 4, &t_chunk_size, 4);
+		MCS_writeat(&t_chunk_size, 4, t_chunk_start - 4, t_stream);
 	}
 
 	if (t_stat != IO_NORMAL)
@@ -580,11 +579,16 @@ MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
 				t_success = false;
 		}
 
+        MCAutoDataRef t_data;
 		IO_handle t_stream;
 		t_stream = NULL;
+        
+        if (t_success)
+            t_success = MCDataCreateWithBytes((byte_t*)t_buffer, t_chunk_length, &t_data);
+        
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(MCString(t_buffer, t_chunk_length));
+			t_stream = MCS_fakeopen(*t_data);
 			if (t_stream == NULL)
 				t_success = false;
 		}
@@ -685,11 +689,13 @@ MCObject *MCObject::unpickle(MCStringRef p_data, MCStack *p_stack)
 				t_success = false;
 		}
 
+        MCAutoDataRef t_data;
 		IO_handle t_stream;
 		t_stream = NULL;
+        
 		if (t_success)
 		{
-			t_stream = MCS_fakeopen(MCString(t_buffer, t_chunk_length));
+			t_stream = MCS_fakeopen(MCString((const char *)t_buffer, t_chunk_length));
 			if (t_stream == NULL)
 				t_success = false;
 		}

@@ -288,9 +288,9 @@ MCExternal *MCExternal::Load(const char *p_filename)
 	{
 		// First try and load it as a new style external.
 	
-		if (MCS_resolvemodulesymbol(t_module, "MCExternalDescribe") != nil)
+		if (MCS_resolvemodulesymbol(t_module, MCSTR("MCExternalDescribe")) != nil)
 			t_external = MCExternalCreateV1();
-		else if (MCS_resolvemodulesymbol(t_module, "getXtable") != nil)
+		else if (MCS_resolvemodulesymbol(t_module, MCSTR("getXtable")) != nil)
 			t_external = MCExternalCreateV0();
 		
 		if (t_external != nil)

@@ -216,10 +216,10 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
-
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo = &_kMCInterfaceButtonIconTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -463,6 +463,8 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 			reseticon();
 		}
 	}
+	
+	Redraw();
 }
 
 void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
@@ -750,7 +752,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCNameRef p_name)
 
 void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 {
-	MCObject::SetShowBorder(ctxt, setting);
+	MCControl::SetShowBorder(ctxt, setting);
 	if (MCaqua && menumode == WM_PULLDOWN)
 	{
 		freemenu(False);
@@ -1093,3 +1095,4 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
     if (entry != nil)
         entry -> SetMargins(ctxt, p_margins);
 }
+

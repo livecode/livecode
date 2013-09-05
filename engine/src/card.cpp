@@ -2365,6 +2365,209 @@ MCControl *MCCard::getchild(Chunk_term etype, const MCString &expression,
 	return getnumberedchild(num + 1, otype, ptype);
 }
 #endif
+
+MCControl *MCCard::getchildbyordinal(Chunk_term p_ordinal_type, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_object_type == CT_UNDEFINED && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+	uint2 num = 0;
+    
+	switch (p_ordinal_type)
+	{
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal_type - CT_FIRST;
+            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(p_object_type, p_parent_type, NULL, num, True);
+            switch (p_ordinal_type)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            return nil;
+    }
+    return getnumberedchild(num + 1, p_object_type, p_parent_type);
+}
+
+MCControl *MCCard::getchildbyid(uinteger_t p_id, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_parent_type == CT_UNDEFINED
+        && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+    MCStack *t_stack;
+    t_stack = getstack();
+    
+    // MW-2012-10-10: [[ IdCache ]] First check the id-cache.
+    MCObject *t_object;
+    t_object = t_stack -> findobjectbyid(p_id);
+    if (t_object != nil)
+    {
+        MCObject *t_parent;
+        t_parent = t_object -> getparent();
+        while(t_parent -> gettype() != CT_CARD && t_parent -> gettype() != CT_STACK)
+            t_parent = t_parent -> getparent();
+        if (t_parent == this)
+        {
+            Chunk_term ttype = optr->getref()->gettype();
+            if (p_parent_type == CT_UNDEFINED
+                || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+                || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+                || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+            {
+                if ((p_object_type == CT_LAYER && t_object -> gettype() > CT_CARD) || t_object -> gettype() == p_object_type)
+                    return (MCControl *)t_object;
+            }
+        }
+    }
+		
+    do
+    {
+        MCControl *foundobj = NULL;
+        Chunk_term ttype = optr->getref()->gettype();
+        
+        // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+        if (p_parent_type == CT_UNDEFINED
+            || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+            || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+            || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+        {
+            if (!optr->getref()->getopened())
+                optr->getref()->setparent(this);
+            foundobj = optr->getref()->findid(p_object_type, p_id, True);
+        }
+        if (foundobj != NULL)
+        {
+            if (foundobj->getparent()->gettype() == CT_STACK)
+                foundobj->setparent(this);
+            
+            // MW-2012-10-10: [[ IdCache ]] Put the object in the id cache.
+            t_stack -> cacheobjectbyid(foundobj);
+            
+            return foundobj;
+        }
+        optr = optr->next();
+    }
+    while (optr != objptrs);
+    
+    // If we are in group editing mode, also search the controls on the
+    // phantom card if the ids match.
+    MCGroup *t_editing;
+    t_editing = getstack() -> getediting();
+    
+    // OK-2008-10-27 : [[Bug 7355]] - Infinite loop caused by incorrect
+    // assumption that getcurcard() will always be equal to this.
+    MCObjptr *t_objects;
+    t_objects = getstack() -> getcurcard() -> objptrs;
+    
+    if (t_editing != NULL && t_editing -> getcard() -> obj_id == obj_id)
+    {
+        optr = t_objects;
+        do
+        {
+            MCControl *foundobj = NULL;
+            Chunk_term ttype = optr->getref()->gettype();
+            
+            // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+            if (p_parent_type == CT_UNDEFINED
+                || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+                || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+                || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+                foundobj = optr->getref()->findid(p_object_type, p_id, True);
+            if (foundobj != NULL)
+            {
+                // MW-2012-10-10: [[ IdCache ]] Cache the object by id.
+                t_stack -> cacheobjectbyid(foundobj);
+                return foundobj;
+            }
+            optr = optr->next();
+        }
+        while (optr != t_objects);
+    }
+
+    return NULL;
+}
+
+MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Chunk_term p_parent_type)
+{
+	// MM-2012-12-02: [[ Bug ]] Make sure we clean the object list before checking if null.
+	if (!opened)
+		clean();
+	
+	MCObjptr *optr = objptrs;
+	if (optr == nil)
+		return nil;
+	
+	if (p_object_type != CT_LAYER && p_object_type != CT_MENU && p_parent_type == CT_UNDEFINED
+        && getstack()->hcaddress())
+		p_parent_type = p_object_type == CT_FIELD ? CT_BACKGROUND : CT_CARD;
+    
+    do
+    {
+        MCControl *foundobj = nil;
+        Chunk_term ttype = optr->getref()->gettype();
+        
+        // MW-2011-08-08: [[ Groups ]] Use 'isbackground()' rather than !F_GROUP_ONLY.
+        if (p_parent_type == CT_UNDEFINED
+            || (p_object_type == CT_GROUP && ttype == CT_GROUP)
+            || (p_parent_type != CT_BACKGROUND && ttype != CT_GROUP)
+            || (ttype == CT_GROUP && p_parent_type == CT_BACKGROUND) == static_cast<MCGroup *>(optr->getref())->isbackground())
+        {
+            if (!optr->getref()->getopened())
+                optr->getref()->setparent(this);
+            foundobj = optr->getref()->findname(p_object_type, MCNameGetOldString(p_name));
+        }
+        if (foundobj != nil)
+        {
+            if (foundobj->getparent()->gettype() == CT_STACK)
+                foundobj->setparent(this);
+            return foundobj;
+        }
+        optr = optr->next();
+    }
+    while (optr != objptrs);
+    return nil;
+}
+
 Boolean MCCard::getchildid(uint4 inid)
 {
 	if (objptrs != NULL)

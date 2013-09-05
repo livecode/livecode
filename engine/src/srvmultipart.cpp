@@ -90,8 +90,7 @@ public:
 		{
 			if (!m_have_char)
 			{
-				uint32_t t_count = 1;
-				t_status = MCS_read(&m_match_char, 1, t_count, m_stream);
+				t_status = MCS_readfixed(&m_match_char, 1, m_stream);
 				if (t_status != IO_NORMAL)
 					break;
 				
@@ -592,7 +591,7 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 				// check for spaces at end of boundary line.
 				while (t_success && t_crlf[0] == ' ')
 				{
-					t_success = IO_NORMAL == MCS_read(&t_char, 1, t_count, p_stream);
+					t_success = IO_NORMAL == MCS_readall(&t_char, t_count, p_stream, t_count); // ?? readall ??
 					t_crlf[0] = t_crlf[1];
 					t_crlf[1] = t_char;
 					r_total_bytes_read += t_count;

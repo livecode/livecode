@@ -113,7 +113,9 @@ static void navigation_event_callback(NavEventCallbackMessage p_message, NavCBRe
 			// MW-2011-02-07: [[ Bug 7974 ]] Make sure we use FSRefs.
 			if (sg_navigation_initial_path != NULL)
 			{
-				MCS_pathtoref(sg_navigation_initial_path, &t_fsref);
+                MCAutoStringRef t_nav_init_path;
+                /* UNCHECKED */ MCStringCreateWithCString(sg_navigation_initial_path, &t_nav_init_path);
+				/* UNCHECKED */ MCS_mac_pathtoref(*t_nav_init_path, t_fsref);
 				AECreateDesc(typeFSRef, &t_fsref, sizeof(FSRef), &t_descriptor);
 				NavCustomControl(p_params -> context, kNavCtlSetLocation, &t_descriptor);
 				AEDisposeDesc(&t_descriptor);
@@ -748,13 +750,14 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 								//process single file for now, may be necessary to add support for multiple files
 								FSSpec theSpec;
 								getFSSpecFromAEDesc(desc, theSpec);	  //put reply in FSSpec
-								char *tpath = MCS_FSSpec2path(&theSpec); //convert FSSpec to a full path
-								if (tpath)
+                                MCAutoStringRef t_path;
+                                
+								if (MCS_mac_FSSpec2path(&theSpec, &t_path))
 								{
-									uint2 tpathsize = strlen(tpath);
+									uint2 tpathsize = MCStringGetLength(*t_path);
 									navfilepath = new char[tpathsize + 32 + PATH_MAX];
 									navfilepath[0] = 0;
-									strcpy(navfilepath, tpath);
+									strcpy(navfilepath, MCStringGetCString(*t_path));
 									strcat(navfilepath, "/");
 									CFStringRef fileName
 									= NavDialogGetSaveFileName(callBackParms->context);
@@ -763,7 +766,6 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 																	 &navfilepath[tpathsize + 1],
 																	 tpathsize + 1 + PATH_MAX,
 																	 CFStringGetSystemEncoding());
-									delete tpath;
 								}
 							}
 						}
@@ -779,7 +781,10 @@ void navEventProc(NavEventCallbackMessage callBackSelector,
 								// MH-2007-05-28 [[Bug 4984]] Answer folder would not return long file paths correctly.
 								FSRef t_fsref;
 								getFSRefFromAEDesc(desc, &t_fsref);
-								navfilepath = MCS_fsref_to_path(t_fsref);
+                                MCAutoStringRef t_navfile_path;
+                                
+								/* UNCHECKED */ MCS_mac_fsref_to_path(t_fsref, &t_navfile_path);
+                                navfilepath = strclone(MCStringGetCString(*t_navfile_path));
 							}
 						}
 						else
@@ -943,7 +948,9 @@ int MCA_folder_tiger(MCExecPoint& ep, const char *p_title, const char *p_prompt,
 	// MW-2005-09-27: Fix to ensure p_initial is treated as a folder path, rather than a file path
 	if (p_initial != NULL && *p_initial != '\0')
 	{
-		MCS_pathtoref(p_initial, &t_defaultfolder);
+        MCAutoStringRef t_initial;
+        /* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_initial);
+        /* UNCHECKED */ MCS_mac_pathtoref(*t_initial, t_defaultfolder);
 		hasDefaultPath = True;
 	}
 	

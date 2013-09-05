@@ -571,7 +571,7 @@ IO_stat MCEPS::load(IO_handle stream, const char *version)
 	if ((stat = IO_read_uint4(&size, stream)) != IO_NORMAL)
 		return stat;
 	postscript = new char[size + 1];
-	if ((stat = IO_read(postscript, sizeof(char), size, stream)) != IO_NORMAL)
+	if ((stat = IO_read(postscript, size, stream)) != IO_NORMAL)
 		return stat;
 	postscript[size] = '\0';
 	if ((stat = IO_read_string(prolog, stream)) != IO_NORMAL)
@@ -730,7 +730,7 @@ Boolean MCEPS::import(const char *fname, IO_handle stream)
 	size = (uint4)MCS_fsize(stream);
 	delete postscript;
 	postscript = new char[size + 1];
-	if (IO_read(postscript, sizeof(char), size, stream) != IO_NORMAL)
+	if (IO_read(postscript, size, stream) != IO_NORMAL)
 		return False;
 	postscript[size] = '\0';
 	const char *tname = strrchr(fname, PATH_SEPARATOR);

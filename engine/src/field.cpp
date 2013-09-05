@@ -89,8 +89,8 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_AUTO_ARM, Bool, MCField, AutoArm)
 	DEFINE_RW_OBJ_PROPERTY(P_FIRST_INDENT, Int16, MCField, FirstIndent)
 	DEFINE_RW_OBJ_PROPERTY(P_WIDE_MARGINS, Bool, MCField, WideMargins)
-	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int16, MCField, HScroll)
-	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int16, MCField, VScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_HSCROLL, Int32, MCField, HScroll)
+	DEFINE_RW_OBJ_PROPERTY(P_VSCROLL, Int32, MCField, VScroll)
 	DEFINE_RW_OBJ_PROPERTY(P_HSCROLLBAR, Bool, MCField, HScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_VSCROLLBAR, Bool, MCField, VScrollbar)
 	DEFINE_RW_OBJ_PROPERTY(P_SCROLLBAR_WIDTH, UInt16, MCField, ScrollbarWidth)
@@ -116,11 +116,14 @@ MCPropertyInfo MCField::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_TOGGLE_HILITE, Bool, MCField, ToggleHilite)
 	DEFINE_RW_OBJ_PROPERTY(P_3D_HILITE, Bool, MCField, ThreeDHilite)
 	DEFINE_RO_OBJ_PART_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCField, Encoding)
+    
+    // LIST PROPS TODO
+    DEFINE_RW_OBJ_PROPERTY(P_HILITED_LINES, String, MCField, HilitedLines)
 };
 
 MCObjectPropertyTable MCField::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };

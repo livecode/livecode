@@ -261,7 +261,7 @@ static bool MCNetworkOpenSocketsList(MCListRef& r_list)
 	IO_cleansockets(MCS_time());
 	for (uinteger_t i = 0; i < MCnsockets; i++)
 		if (!MCsockets[i]->closing)
-			if (!MCListAppendCString(*t_list, MCsockets[i]->name))
+			if (!MCListAppend(*t_list, MCsockets[i]->name))
 				return false;
 
 	return MCListCopy(*t_list, r_list);
@@ -389,10 +389,10 @@ void MCNetworkExecPostToUrl(MCExecContext& ctxt, MCDataRef p_data, MCStringRef p
 void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 {
 	MCAutoStringRef t_filename;
-	if (MCStringGetLength(p_target) > 5 &&
-		MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless) ||
-		MCStringGetLength(p_target) > 8 &&
-		MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless))
+	if ((MCStringGetLength(p_target) > 5 &&
+		MCStringBeginsWithCString(p_target, (const char_t*)"file:", kMCCompareCaseless)) ||
+		(MCStringGetLength(p_target) > 8 &&
+		MCStringBeginsWithCString(p_target, (const char_t*)"binfile:", kMCCompareCaseless)))
 	{
 		// Check the disk access here since MCS_unlink is used more
 		// generally.
@@ -413,7 +413,7 @@ void MCNetworkExecDeleteUrl(MCExecContext& ctxt, MCStringRef p_target)
 			MCStringBeginsWithCString(p_target, (const char_t*)"resfile:", kMCCompareCaseless))
 		{
 			MCStringCopySubstring(p_target, MCRangeMake(8, MCStringGetLength(p_target)-8), &t_filename);
-			MCS_saveresfile(MCStringGetOldString(*t_filename), MCnullmcstring);
+			MCS_saveresfile(*t_filename, kMCEmptyData);
 		}
 		else
 			MCS_deleteurl(ctxt . GetObject(), p_target);
@@ -437,7 +437,7 @@ void MCNetworkExecPerformOpenSocket(MCExecContext& ctxt, MCNameRef p_name, MCNam
 	// MW-2012-10-26: [[ Bug 10062 ]] Make sure we clear the result.
 	MCresult -> clear(True);
 
-	MCSocket *s = MCS_open_socket(MCNameGetString(p_name), p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, NULL);
+	MCSocket *s = MCS_open_socket(p_name, p_datagram, ctxt . GetObject(), p_message, p_secure, p_ssl, kMCEmptyString);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets, MCnsockets + 1, sizeof(MCSocket *));
@@ -484,7 +484,7 @@ void MCNetworkExecPerformAcceptConnections(MCExecContext& ctxt, uint2 p_port, MC
 	if (!ctxt . EnsureNetworkAccessIsAllowed())
 		return;
 
-	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram, p_secure, p_with_verification, NULL);
+	MCSocket *s = MCS_accept(p_port, ctxt . GetObject(), p_message, p_datagram ? True : False, p_secure ? True : False, p_with_verification ? True : False, kMCEmptyString);
 	if (s != NULL)
 	{
 		MCU_realloc((char **)&MCsockets, MCnsockets,

@@ -497,7 +497,7 @@ Boolean MCAudioClip::import(const char *fname, IO_handle stream)
 	if (size == 0)
 		return False;
 	samples = new int1[size];
-	if (IO_read(samples, sizeof(int1), size, stream) != IO_NORMAL)
+	if (IO_read(samples, size, stream) != IO_NORMAL)
 		return False;
 	if (strnequal(samples, ".snd", 4))
 	{
@@ -1011,7 +1011,7 @@ IO_stat MCAudioClip::load(IO_handle stream, const char *version)
 	if (size != 0)
 	{
 		samples = new int1[size];
-		if ((stat = IO_read(samples, sizeof(int1), size, stream)) != IO_NORMAL)
+		if ((stat = IO_read(samples, size, stream)) != IO_NORMAL)
 			return stat;
 	}
 	if ((stat = IO_read_uint2(&format, stream)) != IO_NORMAL)

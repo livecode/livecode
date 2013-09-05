@@ -43,6 +43,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "variable.h"
 #include "chunk.h"
 #include "securemode.h"
+#include "dispatch.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -147,6 +148,14 @@ MC_EXEC_DEFINE_GET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_SET_METHOD(Engine, RecursionLimit, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, Address, 1)
 MC_EXEC_DEFINE_GET_METHOD(Engine, StacksInUse, 1)
+
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, ValueAsObject, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, OwnerAsObject, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, TemplateAsObject, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, MeAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, MenuObjectAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, TargetAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Engine, ErrorObjectAsObject, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -964,7 +973,7 @@ void MCEngineExecStartUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStartUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_name))) == NULL ||
+	if ((sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_name))) == NULL ||
 		!sptr->parsescript(True))
 		{
 			ctxt . LegacyThrow(EE_START_BADTARGET);
@@ -995,7 +1004,7 @@ void MCEngineExecStopUsingStack(MCExecContext& ctxt, MCStack *p_stack)
 void MCEngineExecStopUsingStackByName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	MCStack *sptr;
-	if ((sptr = MCdefaultstackptr->findstackname(MCStringGetOldString(p_name))) == NULL)
+	if ((sptr = MCdefaultstackptr->findstackname_oldstring(MCStringGetOldString(p_name))) == NULL)
 		{
 			ctxt . LegacyThrow(EE_START_BADTARGET);
 			return;
@@ -1541,4 +1550,166 @@ void MCEngineGetStacksInUse(MCExecContext& ctxt, MCStringRef &r_value)
 		return;
 
 	ctxt . Throw();
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+bool MCEngineEvalValueAsObject(MCValueRef p_value, bool p_strict, MCObjectPtr& r_object, bool& r_parse_error)
+{
+    MCExecPoint ep(nil,nil,nil);
+    ep . setvalueref(p_value);
+    MCScriptPoint sp(ep);
+    MCChunk *tchunk = new MCChunk(False);
+    MCerrorlock++;
+    Symbol_type type;
+    Exec_stat stat;
+    
+    bool t_parse_error;
+    t_parse_error = tchunk->parse(sp, False) == PS_NORMAL;
+    if (!t_parse_error && (!p_strict || sp.next(type) == PS_EOF))
+        stat = ES_NORMAL;
+    MCerrorlock--;
+    if (stat == ES_NORMAL)
+        stat = tchunk->getobj(ep, r_object, False);
+    delete tchunk;
+    
+    r_parse_error = t_parse_error;
+    return stat == ES_NORMAL;
+}
+
+void MCEngineEvalValueAsObject(MCExecContext& ctxt, MCValueRef p_value, MCObjectPtr& r_object)
+{
+    bool t_parse_error;
+    if (MCEngineEvalValueAsObject(p_value, true, r_object, t_parse_error))
+        ctxt . LegacyThrow(EE_CHUNK_BADOBJECTEXP);
+}
+
+void MCEngineEvalOwnerAsObject(MCExecContext& ctxt, MCObjectPtr p_object, MCObjectPtr& r_owner)
+{
+    if (!(p_object . object -> gettype() == CT_STACK && MCdispatcher -> ismainstack(static_cast<MCStack *>(p_object . object))))
+    {
+        r_owner . object = p_object . object -> getparent();
+        r_owner . part_id  = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineEvalTemplateAsObject(MCExecContext& ctxt, uinteger_t p_template_type, MCObjectPtr& r_object)
+{
+    MCObject *t_object;
+    t_object = nil;
+    
+    switch ((Dest_type) p_template_type)
+    {
+        case DT_STACK:
+            t_object = MCtemplatestack;
+            break;
+        case DT_AUDIO_CLIP:
+            t_object = (MCObject *)MCtemplateaudio;
+            break;
+        case DT_VIDEO_CLIP:
+            t_object = (MCObject *)MCtemplatevideo;
+            break;
+        case DT_GROUP:
+            t_object = (MCObject *)MCtemplategroup;
+            break;
+        case DT_CARD:
+            t_object = (MCObject *)MCtemplatecard;
+            break;
+        case DT_BUTTON:
+            t_object = (MCObject *)MCtemplatebutton;
+            break;
+        case DT_FIELD:
+            t_object = (MCObject *)MCtemplatefield;
+            break;
+        case DT_IMAGE:
+            t_object = (MCObject *)MCtemplateimage;
+            break;
+        case DT_SCROLLBAR:
+            t_object = (MCObject *)MCtemplatescrollbar;
+            break;
+        case DT_PLAYER:
+            t_object = (MCObject *)MCtemplateplayer;
+            break;
+        case DT_GRAPHIC:
+            t_object = (MCObject *)MCtemplategraphic;
+            break;
+        case DT_EPS:
+            t_object = (MCObject *)MCtemplateeps;
+            break;
+        default:
+            break;
+    }
+    
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id  = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineEvalMeAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    // MW-2009-01-28: [[ Inherited parentScripts ]]
+    // If we are executing in the context of a parent-handle invocation
+    // (indicated by getparentscript() of the EP being non-NULL) 'me'
+    // refers to the derived object context, otherwise it is the object
+    // we were compiled in.
+    
+    MCObject *t_object;
+    
+    if (ctxt . GetParentScript() == NULL)
+        t_object = nil; // destobj!
+    else
+        t_object = ctxt . GetObject();
+
+    if (t_object != nil)
+    {
+        r_object . object = t_object;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineEvalMenuObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCmenuobjectptr != nil)
+    {
+        r_object . object = MCmenuobjectptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineEvalTargetAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCtargetptr != nil)
+    {
+        r_object . object = MCtargetptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCEngineEvalErrorObjectAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCerrorptr != nil)
+    {
+        r_object . object = MCerrorptr;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }

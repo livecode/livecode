@@ -101,7 +101,7 @@ void MCSystemSensorFinalize(void);
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCSensorPostChangeMessage(MCSensorType p_sensor);
-void MCSensorPostErrorMessage(MCSensorType p_sensor, const char *p_error);
+void MCSensorPostErrorMessage(MCSensorType p_sensor, MCStringRef p_error);
 
 // MM-2012-03-13: Added intialize and finalize calls to sensor module.
 void MCSensorInitialize(void);

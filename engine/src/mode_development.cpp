@@ -248,7 +248,7 @@ IO_stat MCDispatch::startup(void)
 	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t*)MCstartupstack, MCstartupstack_length, t_compressed);
 	/* UNCHECKED */ MCFiltersDecompress(t_compressed, t_decompressed);
 	MCValueRelease(t_compressed);
-
+    
 	IO_handle stream = MCS_fakeopen(MCStringGetOldString(t_decompressed));
 	if ((stat = MCdispatcher -> readfile(NULL, NULL, stream, sptr)) != IO_NORMAL)
 	{

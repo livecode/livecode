@@ -275,11 +275,18 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+	
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DISABLED_ICON, InterfaceButtonIcon, MCButton, DisabledIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HILITED_ICON, InterfaceButtonIcon, MCButton, HiliteIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -3341,7 +3348,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		if (menu == NULL)
 		{
 			MCerrorlock++;
-			/* UNCHECKED */ getstack()->findstackname(menuname, menu);
+			menu = getstack()->findstackname(menuname);
 			MCerrorlock--;
 			if (menu != NULL)
 				menu->addneed(this);
@@ -4129,28 +4136,6 @@ void MCButton::freeicons()
 	closeicon(macrbtrack);
 	closeicon(macrbhilite);
 	closeicon(macrbhilitetrack);
-}
-
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This utility method changes the encoding
-//   of the given string either to unicode (if to_unicode is true) or to native
-//   otherwise.
-static void switchunicodeofstring(bool p_to_unicode, char*& x_string, uint2& x_length)
-{
-	if (x_string == nil)
-		return;
-
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(x_string, x_length));
-	if (p_to_unicode)
-		ep . nativetoutf16();
-	else
-		ep . utf16tonative();
-	
-	delete x_string;
-
-	x_length = ep . getsvalue() . getlength();
-	x_string = new char[x_length];
-	memcpy(x_string, ep . getsvalue() . getstring(), x_length);
 }
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in

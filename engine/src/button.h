@@ -107,7 +107,6 @@ class MCButton : public MCControl
 	MCField *entry;
 	MCStack *menu;
 	MCStringRef acceltext;
-	char *seltext;
 	MCArrayRef tabs;
 	uint2 menuhistory;
 	uint2 menulines;
@@ -451,6 +450,7 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    
 private:
 	int4 formattedtabwidth(void);
 
