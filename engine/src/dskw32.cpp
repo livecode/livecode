@@ -15,6 +15,7 @@
  along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "w32dsk-legacy.h"
 
 #include "parsedef.h"
 #include "filedefs.h"
@@ -963,7 +964,7 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
 
 struct MCStdioFileHandle: public MCSystemFileHandle
 {
-	static MCStdioFileHandle *b (MCStringRef p_path, intenum_t p_mode)
+	static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
 	{
 #ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
 	Boolean appendmode = False;
@@ -1198,7 +1199,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		t_handle -> m_handle = (MCWinSysHandle)hf;
 		t_handle -> m_is_pipe = false;
 		t_handle -> m_ioptr = NULL;
-		t_handle -> m_putback = 0;
+		t_handle -> m_putback = -1;
 		t_handle -> m_is_eof = false;
 
 		// TODO Implement
@@ -1243,6 +1244,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		t_stdio_handle -> m_is_pipe = handle_is_pipe((MCWinSysHandle)t_handle);
 		t_stdio_handle -> m_ioptr = NULL;
 		t_stdio_handle -> m_is_eof = false;
+		t_stdio_handle -> m_putback = -1;
 
 		return t_stdio_handle;
 	}
@@ -1547,7 +1549,7 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 			return false;
 		}
  
-		m_if_eof = false;
+		m_is_eof = false;
 		r_read = nread;
 		return true;
 	}
@@ -1585,13 +1587,13 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 		if (m_handle == NULL)
 			return false;
 
-		if (!WriteFile(m_handle, (LPVOID)p_buffer, (DWORD)p_byte_size,
+		if (!WriteFile(m_handle, (LPVOID)p_buffer, (DWORD)p_length,
 					   (LPDWORD)&t_written, NULL))
 		{
 			MCS_seterrno(GetLastError());
 			return false;
 		}
-		if (t_written != p_byte_size)
+		if (t_written != p_length)
 			return false;
 
 		return true;
@@ -2469,7 +2471,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         {
             MCAutoStringRef t_std_path;
             t_dest.Shrink(MCCStringLength((char*)t_dest.Chars()));
-            return t_dest.CreateString(&t_std_path) && MCS_pathfromnative*t_std_path, r_dest);
+            return t_dest.CreateString(&t_std_path) && MCS_pathfromnative(*t_std_path, r_dest);
         }
         else
         {
@@ -2611,7 +2613,10 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         //}
         else
         {
-			if (MCNumberParseUnicodeChars(MCStringGetCharPtr(MCNameGetString(p_type)), MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
+			unichar_t *t_unichar_string;
+			t_unichar_string = new unichar_t[MCStringGetLength(MCNameGetString(p_type))];
+			MCStringGetChars(MCNameGetString(p_type), MCRangeMake(0, MCStringGetLength(MCNameGetString(p_type))), t_unichar_string);
+			if (MCNumberParseUnicodeChars(t_unichar_string, MCStringGetLength(MCNameGetString(p_type)), &t_special_folder) ||
                 MCS_specialfolder_to_csidl(p_type, &t_special_folder))
             {
                 LPITEMIDLIST lpiil;
@@ -2795,7 +2800,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return t_handle;
     }
     
-	virtual IO_handle OpenStdFile(uint32_t fd, intenum_t mode)
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode)
 	{
         MCStdioFileHandle *t_handle;
 		// No opening mode for Windows since only stdin, stdout and stderr can be opened
@@ -2808,7 +2813,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return t_handle;
 	}
 
-	virtual IO_handle OpenDevice(MCStringRef p_path, const char *p_control_string, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
 	{
 		return nil;
 	}
@@ -3718,32 +3723,17 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 		uint32_t t_buf_size;
 		bool t_success;
 
-		t_success =  MCS_closetakingbuffer(MCprocesses[index].ihandle, t_buffer, t_buf_size);
+		t_success = MCS_closetakingbuffer(MCprocesses[index].ihandle, t_buffer, t_buf_size) == IO_NORMAL;
 
         IO_cleanprocesses();
         delete pname;
 
 		if (t_success)
-			t_success = MCDataCreateWithBytes((byte_t*) t_buffer, t_buf_size, r_data))
+			t_success = MCDataCreateWithBytes((byte_t*) t_buffer, t_buf_size, r_data);
 
 		delete[] t_buffer;
 		return t_success;
 	}
-    
-	//virtual char *GetHostName(void)
-	//{
-	//	// Implemented in opensslsocket.cpp
-	//}
-
-	//virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
-	//{
-	//	// Implemented in opensslsocket.cpp
-	//}
-
-	//virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
-	//{
-	//	// Implemented in opensslsocket.cpp
-	//}
     
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
 	{
@@ -4226,7 +4216,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
                 t_info . fMask = SEE_MASK_NOCLOSEPROCESS | SEE_MASK_FLAG_NO_UI | SEE_MASK_NO_CONSOLE ;
                 t_info . hwnd = (HWND)MCdefaultstackptr -> getrealwindow();
                 t_info . lpVerb = "runas";
-                t_info . lpFile = MCcmd;
+                t_info . lpFile = (LPCSTR)MCStringGetCString(MCcmd);
                 t_info . lpParameters = t_parameters;
                 t_info . nShow = SW_HIDE;
                 if (ShellExecuteExA(&t_info) && (uintptr_t)t_info . hInstApp > 32)
@@ -4566,6 +4556,14 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
 			}
 		}
 		return n != 0;
+	}
+    
+    virtual Boolean IsInteractiveConsole(int p_fd)
+	{
+		if (_isatty(p_fd) != 0)
+			return True;
+
+		return False;
 	}
     
     virtual int GetErrno(void)

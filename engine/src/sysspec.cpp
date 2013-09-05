@@ -1456,15 +1456,16 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
 	MCresult->sets("not supported");
 }
 
-void MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result)
+bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result)
 {
     MCMacSystemServiceInterface *t_service;
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestProgram(p_message, p_program, r_result);
+        return t_service -> RequestProgram(p_message, p_program, r_result);
     
 	MCresult->sets("not supported");
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

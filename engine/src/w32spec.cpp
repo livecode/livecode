@@ -1525,12 +1525,12 @@ static IO_stat MCS_seek_do(HANDLE p_file, int64_t p_offset, DWORD p_type)
 //{
 //	return stream -> len;
 //}
-
-void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
-{
-	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
-}
-
+//
+//void MCS_fakewriteat(IO_handle stream, uint4 p_pos, const void *p_buffer, uint4 p_size)
+//{
+//	memcpy(stream -> buffer + p_pos, p_buffer, p_size);
+//}
+//
 // MW-2005-02-22: Make these global for opensslsocket.cpp
 static Boolean wsainited = False;
 HWND sockethwnd;
@@ -2386,16 +2386,16 @@ Boolean MCS_isleadbyte(uint1 charset, char *s)
 //		return false;
 //	return true;
 //}
-
-bool MCS_isatty(int fd)
-{
-	return _isatty(fd) != 0;
-}
-
-bool MCS_isnan(double v)
-{
-	return _isnan(v) != 0;
-}
+//
+//bool MCS_isatty(int fd)
+//{
+//	return _isatty(fd) != 0;
+//}
+//
+//bool MCS_isnan(double v)
+//{
+//	return _isnan(v) != 0;
+//}
 //
 //uint32_t MCS_getsyserror(void)
 //{

@@ -27,6 +27,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "dispatch.h"
 #include "stack.h"
 #include "util.h"
+#include "osspec.h"
 
 #include "mcio.h"
 
@@ -1455,7 +1456,13 @@ bool MCWindowsPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 			if (t_file != NULL)
 			{
 				DragQueryFileA(t_hdrop, i, t_file, t_size + 1);
-				MCU_path2native(t_file);
+				MCAutoStringRef t_std_path;
+				MCAutoStringRef t_native_path;
+
+				/* UNCHECKED */ MCStringCreateWithCString(t_file, &t_std_path);
+				/* UNCHECKED */ MCS_pathtonative(*t_std_path, &t_native_path);
+				/* UNCHECKED */ t_file = strclone(MCStringGetCString(*t_native_path));
+				//MCU_path2native(t_file);
 				ep . concatcstring(t_file, EC_RETURN, i == 0);
 				delete t_file;
 			}

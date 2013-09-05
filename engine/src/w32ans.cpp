@@ -133,14 +133,14 @@ static UINT_PTR CALLBACK open_dialog_hook(HWND p_dialog, UINT p_message, WPARAM 
 //   one at the end of the folder path.
 static void build_path(MCExecPoint& ep, const char *p_folder, const MCString& p_file)
 {
-	char *t_std_file;
-	t_std_file = p_file . clone();
-	MCU_path2std(t_std_file);
+	MCAutoStringRef t_std_path, t_native_path;
+	/* UNCHECKED */ MCStringCreateWithCString(p_file.getstring(), &t_native_path);
+	MCS_pathfromnative(*t_native_path, &t_std_path);
 
 	bool t_use_folder;
 	if (p_folder == NULL || strlen(p_folder) == 0 ||
-		(strlen(t_std_file) > 1 && t_std_file[1] == ':') ||
-		(strlen(t_std_file) > 2 && t_std_file[0] == '/' && t_std_file[1] == '/'))
+		(MCStringGetLength(*t_std_path) > 1 && MCStringGetNativeCharAtIndex(*t_std_path, 1) == ':') ||
+		(MCStringGetLength(*t_std_path) > 2 && MCStringGetNativeCharAtIndex(*t_std_path, 0) == '/' && MCStringGetNativeCharAtIndex(*t_std_path, 1) == '/'))
 		t_use_folder = false;
 	else
 		t_use_folder = true;
@@ -152,16 +152,21 @@ static void build_path(MCExecPoint& ep, const char *p_folder, const MCString& p_
 			ep.appendchar('/');
 	}
 
-	ep . appendcstring(t_std_file);
-
-	delete t_std_file;
+	ep . appendmcstring(MCStringGetOldString(*t_std_path));
 }
 
 static void build_paths(MCExecPoint& ep)
 {
 	ep . clear();
 
-	MCU_path2std(*sg_chosen_folder);
+	MCAutoStringRef t_std_path;
+	MCAutoStringRef t_native_path;
+	/* UNCHECKED */ MCStringCreateWithCString(*sg_chosen_folder, &t_native_path);
+	/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
+
+	sg_chosen_folder.resize(MCStringGetLength(*t_std_path));
+	strcpy(*sg_chosen_folder, MCStringGetCString(*t_std_path));
+
 	if (**sg_chosen_files == '"')
 	{
 		Meta::itemised_string t_items(sg_chosen_files, ' ', true);
@@ -197,11 +202,12 @@ static HRESULT append_shellitem_path_and_release(MCExecPoint& ep, IShellItem *p_
 	
 	if (t_succeeded)
 	{
-		char *t_rev_filename;
-		t_rev_filename = strdup(AnsiCString(t_filename));
-		MCU_path2std(t_rev_filename);
-		ep.concatcstring(t_rev_filename, EC_RETURN, p_first);
-		delete[] t_rev_filename;
+		MCAutoStringRef t_rev_filename;
+		MCAutoStringRef t_native_filename;
+
+		/* UNCHECKED */ MCStringCreateWithCString(AnsiCString(t_filename), &t_native_filename);
+		/* UNCHECKED */ MCS_pathfromnative(*t_native_filename, &t_rev_filename);
+		ep.concatcstring(MCStringGetCString(*t_rev_filename), EC_RETURN, p_first);
 	}
 
 	if (t_filename != NULL)
@@ -760,10 +766,13 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 
 	if (p_initial != NULL)
 	{
-		t_native_filename_length = strlen(p_initial);
-		t_native_filename = (char *)_alloca(t_native_filename_length + 2);
-		strcpy(t_native_filename, p_initial);
-		MCU_path2native(t_native_filename);
+		MCAutoStringRef t_native_path;
+		MCAutoStringRef t_std_path;
+
+		/* UNCHECKED */ MCStringCreateWithCString(p_initial, &t_native_path);
+		/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
+		t_native_filename = strclone(MCStringGetCString(*t_std_path));
+		t_native_filename_length = strlen(t_native_filename);
 	}
 	else
 	{
@@ -778,8 +787,12 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 		{
 			if (s_last_folder != NULL)
 				delete s_last_folder;
-			s_last_folder = ep.getsvalue().clone();
-			MCU_path2native(s_last_folder);
+			MCAutoStringRef t_std_path;
+			MCAutoStringRef t_native_path;
+
+			/* UNCHECKED */ ep. copyasstringref(&t_std_path);
+			/* UNCHECKED */ MCS_pathfromnative(*t_std_path, &t_native_path);
+			s_last_folder = strclone(MCStringGetCString(*t_native_path));
 		}
 		return 0;
 	}
@@ -834,8 +847,16 @@ int MCA_folder(MCExecPoint &ep, const char *p_title, const char *p_prompt, const
 	{
 		if (s_last_folder != NULL)
 			delete s_last_folder;
+
 		s_last_folder = strclone(buf);
-		MCU_path2std(buf);
+
+		MCAutoStringRef t_std_path;
+		MCAutoStringRef t_native_path;
+
+		/* UNCHECKED */ MCStringCreateWithCString(buf, &t_native_path);
+		/* UNCHECKED */ MCS_pathfromnative(*t_native_path, &t_std_path);
+		buf = strclone(MCStringGetCString(*t_std_path));
+		//MCS_pathfromnative(buf);
 		ep.commit(strlen(buf));
 	}
 	else
