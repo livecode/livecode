@@ -50,7 +50,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "redraw.h"
-
+#include "ans.h"
 #include "mctheme.h"
 
 #include "globals.h"
@@ -522,6 +522,9 @@ Parse_stat MCProperty::parse(MCScriptPoint &sp, Boolean the)
 	case P_IMAGE_CACHE_LIMIT:
 	case P_IMAGE_CACHE_USAGE:
 	case P_REV_PROPERTY_LISTENER_THROTTLE_TIME: // DEVELOPMENT only
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
 		break;
 
 	case P_REV_CRASH_REPORT_SETTINGS: // DEVELOPMENT only
@@ -2342,6 +2345,11 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	case P_ALLOW_DATAGRAM_BROADCASTS:
 		return ep . getboolean(MCallowdatagrambroadcasts, line, pos, EE_PROPERTY_NAB);
 	
+		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+		MCA_setcolordialogcolors(ep);
+		return ES_NORMAL;
+
 	case P_BRUSH_COLOR:
 	case P_BRUSH_BACK_COLOR:
 	case P_BRUSH_PATTERN:
@@ -3865,6 +3873,9 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 	case P_PROCESS_TYPE:
 	case P_STACK_LIMIT:
 	case P_ALLOW_DATAGRAM_BROADCASTS:
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	case P_COLOR_DIALOG_COLORS:
+
 		if (target == NULL)
 		{
 			switch (which)
@@ -4016,6 +4027,10 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 				break;
 			case P_ALLOW_DATAGRAM_BROADCASTS:
 				ep . setboolean(MCallowdatagrambroadcasts);
+				break;
+				// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+			case P_COLOR_DIALOG_COLORS:
+				MCA_getcolordialogcolors(ep);
 				break;
 			default:
 				break;

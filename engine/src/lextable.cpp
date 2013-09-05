@@ -644,6 +644,8 @@ LT factor_table[] =
         {"closebox", TT_PROPERTY, P_CLOSE_BOX},
         {"cmdkey", TT_FUNCTION, F_COMMAND_KEY},
         {"collapsebox", TT_PROPERTY, P_COLLAPSE_BOX},
+		// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+		{"colordialogcolors", TT_PROPERTY, P_COLOR_DIALOG_COLORS},
         {"colormap", TT_PROPERTY, P_COLORMAP},
         {"colornames", TT_FUNCTION, F_COLOR_NAMES},
 		{"coloroverlay", TT_PROPERTY, P_BITMAP_EFFECT_COLOR_OVERLAY},
