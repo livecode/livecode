@@ -369,9 +369,7 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 	MCStringRef t_tagstr = nil;
 	if (MCMacGetMenuItemTag(mh, mitem, t_tagstr))
 	{
-		// Pass the reference on
 		t_menuitem = t_tagstr;
-		t_tagstr = nil;
 	}
 	else
 	{
@@ -385,7 +383,7 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 	if (issubmenu)
 	{
 		CFStringRef cftitlestr;
-		MCStringRef t_titlestr = nil;
+		MCStringRef t_titlestr;
 		CopyMenuTitleAsCFString(mh, &cftitlestr);
 		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, t_titlestr);
 		CFRelease(t_menupick);
@@ -394,8 +392,9 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string
 		/* UNCHECKED */ MCStringAppend(t_menupick, t_titlestr);
 		/* UNCHECKED */ MCStringAppend(t_menupick, t_menuitem);
 		MCValueRelease(t_titlestr);
-
 	}
+	else
+		t_menupick = MCValueRetain(t_menuitem);
 	MCValueRelease(t_menuitem);
 	/* UNCHECKED */ MCStringCopyAndRelease(t_menupick, r_string);
 }
