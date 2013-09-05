@@ -690,6 +690,12 @@ static void MCInterfaceTextStyleFormat(MCExecContext& ctxt, const MCInterfaceTex
 		return;
 	}
 
+    if (p_input . style == 0)
+    {
+        r_output = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
 	bool t_success;
 	t_success = true;
 
@@ -2555,7 +2561,10 @@ void MCObject::GetEffectiveTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 void MCObject::GetTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
 {
 	if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+    {
+        r_style . style = 0;
 		return;
+    }
 
 	uint2 fontsize, fontstyle;
 	const char *fontname;
@@ -3665,3 +3674,106 @@ void MCObject::GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+void MCObject::GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_setting)
+{
+    uint2 t_style_set;
+    if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+        t_style_set = FA_DEFAULT_STYLE;
+    else
+        t_style_set = gettextstyle();
+    
+    Font_textstyle t_style;
+    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    {
+        r_setting = MCF_istextstyleset(t_style_set, t_style);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::SetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool p_setting)
+{
+    Font_textstyle t_style;
+    if (MCF_parsetextstyle(MCNameGetOldString(p_index), t_style) == ES_NORMAL)
+    {
+        uint2 t_style_set;
+		if ((m_font_flags & FF_HAS_TEXTSTYLE) == 0)
+			t_style_set = FA_DEFAULT_STYLE;
+		else
+			t_style_set = gettextstyle();
+        
+        MCF_changetextstyle(t_style_set, t_style, p_setting);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef& r_string)
+{
+    MCObjectPropertySet *t_propset;
+    if (findpropset(p_index, true, t_propset))
+    {
+        if (t_propset -> list(r_string))
+            return;
+    }
+    else
+    {
+        r_string = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::GetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef& r_array)
+{
+    MCObjectPropertySet *t_propset;
+    if (findpropset(p_index, true, t_propset))
+    {
+        MCAutoArrayRef t_array;
+        if (t_propset -> fetch(&t_array))
+        {
+            r_array = MCValueRetain(*t_array);
+            return;
+        }
+    }
+    else
+    {
+        r_array = MCValueRetain(kMCEmptyString);
+        return;
+    }
+    
+    ctxt . Throw();
+}
+
+void MCObject::SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCStringRef p_string)
+{
+    MCObjectPropertySet *t_propset;
+    if (MCStringIsEqualTo(p_string, kMCEmptyString, kMCCompareCaseless))
+    {
+        if (findpropset(p_index, true, t_propset))
+            t_propset -> clear();
+        return;
+    }
+
+    /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
+    /* UNCHECKED */ t_propset -> restrict(p_string);
+
+}
+
+void MCObject::SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array)
+{
+    MCObjectPropertySet *t_propset;
+    if  (!MCValueIsArray(p_array))
+    {
+        if (findpropset(p_index, true, t_propset))
+            t_propset -> clear();
+        return;
+    }
+    
+    /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
+    t_propset -> store((MCArrayRef)p_array);
+}

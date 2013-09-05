@@ -483,7 +483,7 @@ Exec_stat MCControl::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -495,7 +495,7 @@ Exec_stat MCControl::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	case P_BITMAP_EFFECT_COLOR_OVERLAY:
 		return MCBitmapEffectsGetProperties(m_bitmap_effects, which, ep, key);
 	default:
-		return MCObject::getarrayprop(parid, which, ep, key, effective);
+		return MCObject::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
@@ -651,7 +651,7 @@ Exec_stat MCControl::setprop_legacy(uint4 parid, Properties which, MCExecPoint &
 	return ES_NORMAL;
 }
 
-Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCControl::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -682,7 +682,7 @@ Exec_stat MCControl::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		break;
 	}
 
-	return MCObject::setarrayprop(parid, which, ep, key, effective);
+	return MCObject::setarrayprop_legacy(parid, which, ep, key, effective);
 }
 
 void MCControl::select()

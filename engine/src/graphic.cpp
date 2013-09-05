@@ -717,7 +717,7 @@ Exec_stat MCGraphic::getprop_legacy(uint4 parid, Properties which, MCExecPoint& 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCGraphic::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -728,7 +728,7 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCGradientFillGetProperty(m_stroke_gradient, ep, key);
 	break;
 	default:
-		return MCControl::getarrayprop(parid, which, ep, key, effective);
+		return MCControl::getarrayprop_legacy(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
 }
@@ -1243,7 +1243,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
 	dirty = False;
@@ -1272,7 +1272,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	break;
 	default:
-		return MCControl::setarrayprop(parid, which, ep, key, effective);
+		return MCControl::setarrayprop_legacy(parid, which, ep, key, effective);
 	}
 
 	if (dirty && opened)

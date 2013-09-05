@@ -218,6 +218,11 @@ MCPropertyInfo MCObject::kProperties[] =
 	DEFINE_RW_OBJ_EFFECTIVE_PROPERTY(P_BOTTOM_RIGHT, Point, MCObject, BottomRight)
 
 	DEFINE_RO_OBJ_ENUM_PROPERTY(P_ENCODING, InterfaceEncoding, MCObject, Encoding)
+    
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_TEXT_STYLE, Bool, MCObject, TextStyleElement)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeysElement)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
+    
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -768,7 +773,7 @@ static bool string_contains_item(const char *p_string, const char *p_item)
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCObject::getarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -1828,7 +1833,7 @@ Exec_stat MCObject::setprop_legacy(uint4 parid, Properties which, MCExecPoint &e
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
-Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
+Exec_stat MCObject::setarrayprop_legacy(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	switch(which)
 	{
@@ -1959,22 +1964,188 @@ Exec_stat MCObject::setprops(uint32_t p_parid, MCExecPoint& ep)
 #endif
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective)
+static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_table, Properties p_which, bool p_effective, bool p_array_prop)
 {
 	for(uindex_t i = 0; i < p_table -> size; i++)
-		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective))
+		if (p_table -> table[i] . property == p_which && (!p_table -> table[i] . has_effective || p_table -> table[i] . effective == p_effective) &&
+            (p_array_prop == p_table -> table[i] . is_array_prop))
 			return &p_table -> table[i];
 	
 	if (p_table -> parent != nil)
-		return lookup_object_property(p_table -> parent, p_which, p_effective);
+		return lookup_object_property(p_table -> parent, p_which, p_effective, p_array_prop);
 	
 	return nil;
+}
+
+Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
+{
+    if (MCNameIsEmpty(p_index))
+        return getarrayprop_legacy(p_part_id, p_which, ep, p_index, p_effective);
+    
+	MCPropertyInfo *t_info;
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
+	
+	if (t_info != nil && t_info -> getter == nil)
+	{
+		MCeerror -> add(EE_OBJECT_GETNOPROP, 0, 0);
+		return ES_ERROR;
+	}
+	
+	if (t_info != nil)
+	{
+		MCExecContext ctxt(ep);
+		
+		MCObjectPtr t_object;
+		t_object . object = this;
+		t_object . part_id = p_part_id;
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_any;
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCValueRef&))t_info -> getter)(ctxt, t_object, p_index, &t_any);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_any);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, bool&))t_info -> getter)(ctxt, t_object, p_index, t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setboolean(t_value ? True : False);
+					return ES_NORMAL;
+				}
+			}
+				break;
+				
+			case kMCPropertyTypeString:
+			{
+				MCAutoStringRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCStringRef&))t_info -> getter)(ctxt, t_object, p_index, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+                
+			case kMCPropertyTypeArray:
+			{
+				MCAutoArrayRef t_value;
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCArrayRef&))t_info -> getter)(ctxt, t_object, p_index, &t_value);
+				if (!ctxt . HasError())
+				{
+					ep . setvalueref(*t_value);
+					return ES_NORMAL;
+				}
+			}
+				break;
+        }
+        return ctxt . Catch(0, 0);
+    }
+
+    Exec_stat t_stat;
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    if (t_stat == ES_NOT_HANDLED)
+    {
+        MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
+        return ES_ERROR;
+    }
+    return t_stat;
+}
+
+Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
+{
+    if (MCNameIsEmpty(p_index))
+        return setarrayprop_legacy(p_part_id, p_which, ep, p_index, p_effective);
+    
+	MCPropertyInfo *t_info;
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
+    
+	if (t_info != nil && t_info -> setter == nil)
+	{
+		MCeerror -> add(EE_OBJECT_SETNOPROP, 0, 0);
+		return ES_ERROR;
+	}
+    
+	if (t_info != nil)
+	{
+		MCExecContext ctxt(ep);
+		
+		MCObjectPtr t_object;
+		t_object . object = this;
+		t_object . part_id = p_part_id;
+		
+		switch(t_info -> type)
+		{
+			case kMCPropertyTypeAny:
+			{
+				MCAutoValueRef t_value;
+				/* UNCHECKED */ ep . copyasvalueref(&t_value);
+				((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCValueRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
+			}
+                break;
+				
+			case kMCPropertyTypeBool:
+			{
+				bool t_value;
+				if (!ep . copyasbool(t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NAB);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, bool))t_info -> setter)(ctxt, t_object, p_index, t_value);
+			}
+                break;
+                
+                
+			case kMCPropertyTypeString:
+			{
+				MCAutoStringRef t_value;
+                if (!ep . copyasstringref(&t_value))
+                    ctxt . LegacyThrow(EE_PROPERTY_NAS);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCStringRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
+			}
+                break;
+                
+			case kMCPropertyTypeArray:
+			{
+				MCAutoArrayRef t_value;
+				if (!ep . copyasarrayref(&t_value))
+					ctxt . LegacyThrow(EE_PROPERTY_NOTANARRAY);
+				if (!ctxt . HasError())
+					((void(*)(MCExecContext&, MCObjectPtr, MCNameRef, MCArrayRef))t_info -> setter)(ctxt, t_object, p_index, *t_value);
+			}
+                break;
+		}
+		
+		if (!ctxt . HasError())
+			return ES_NORMAL;
+        
+		return ctxt . Catch(0, 0);
+	}
+	
+    Exec_stat t_stat;
+    t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
+    if (t_stat == ES_NOT_HANDLED)
+    {
+        MCeerror->add(EE_OBJECT_GETNOPROP, 0, 0);
+        return ES_ERROR;
+    }
+    return t_stat;
 }
 
 Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false);
 	
 	if (t_info != nil && t_info -> getter == nil)
 	{
@@ -2333,7 +2504,7 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 Exec_stat MCObject::setprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, Boolean p_effective)
 {
 	MCPropertyInfo *t_info;
-	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True);
+	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, false);
 
 	if (t_info != nil && t_info -> setter == nil)
 	{
