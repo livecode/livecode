@@ -6832,20 +6832,6 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return MCStringCopy(p_path, r_short_path);
     }
     
-	virtual char *GetHostName(void)
-    {
-        
-    }
-    
-	virtual bool HostNameToAddress(MCStringRef p_hostname, MCSystemHostResolveCallback p_callback, void *p_context)
-    {
-        
-    }
-	virtual bool AddressToHostName(MCStringRef p_address, MCSystemHostResolveCallback p_callback, void *p_context)
-    {
-        
-    }
-    
 	virtual uint32_t TextConvert(const void *p_string, uint32_t p_string_length, void *r_buffer, uint32_t p_buffer_length, uint32_t p_from_charset, uint32_t p_to_charset)
     {
 #ifdef /* MCS_multibytetounicode_dsk_mac */ LEGACY_SYSTEM
