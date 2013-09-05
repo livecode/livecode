@@ -9,8 +9,8 @@ CUSTOM_DEFINES=
 
 CUSTOM_INCLUDES=./src ../libxml/include
 
-CUSTOM_LIBS=external xml z
-CUSTOM_DYNAMIC_LIBS=
+CUSTOM_LIBS=external xml xslt z
+CUSTOM_DYNAMIC_LIBS=m rt
 
 CUSTOM_CCFLAGS=
 
