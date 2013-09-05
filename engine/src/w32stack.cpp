@@ -298,7 +298,7 @@ void MCStack::setopacity(uint1 p_level)
 			
 			// MW-2010-10-22: [[ Bug 8151 ]] Make sure we update the title string.
 			if (titlestring != nil)
-				MCscreen -> setname(window, titlestring);
+				MCscreen -> setname(window, MCStringGetCString(titlestring));
 
 			SetWindowLongA((HWND)window->handle.window, GWL_USERDATA, mode);
 			

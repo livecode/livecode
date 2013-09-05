@@ -344,7 +344,7 @@ void MCUIDC::iconifywindow(Window window)
 { }
 void MCUIDC::uniconifywindow(Window window)
 { }
-void MCUIDC::setname(Window window, const char *newname)
+void MCUIDC::setname(Window window, MCStringRef newname)
 { }
 void MCUIDC::setcmap(MCStack *sptr)
 { }

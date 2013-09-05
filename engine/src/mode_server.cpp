@@ -130,9 +130,9 @@ void MCStack::mode_takefocus(void)
 {
 }
 
-char *MCStack::mode_resolve_filename(const char *filename)
+void MCStack::mode_resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	return NULL;
+	return;
 }
 
 bool MCStack::mode_needstoopen(void)
