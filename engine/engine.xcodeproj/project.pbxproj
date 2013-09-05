@@ -3952,7 +3952,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "security-community";
 			};
 			name = Debug;
@@ -3961,7 +3961,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "security-community";
 			};
 			name = Release;
@@ -3970,7 +3970,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
 				PRODUCT_NAME = "kernel-server";
 			};
@@ -3980,7 +3980,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
 				PRODUCT_NAME = "kernel-server";
 			};
@@ -3994,7 +3994,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Debug;
@@ -4007,7 +4007,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Release;
@@ -4020,7 +4020,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-standalone";
 			};
 			name = Debug;
@@ -4033,7 +4033,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-standalone";
 			};
 			name = Release;
@@ -4070,7 +4070,7 @@
 					"$(inherited)",
 					MODE_INSTALLER,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_1 = "\"../libcore/src\"";
 				HEADER_SEARCH_PATHS_QUOTED_FOR_TARGET_2 = "\"$(SYMROOT)/$(CONFIGURATION)/headers\"";
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
@@ -4086,7 +4086,7 @@
 					"$(inherited)",
 					MODE_INSTALLER,
 				);
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/Installer-Info.plist";
 				PRODUCT_NAME = Installer;
 			};
@@ -4112,7 +4112,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				"GCC_VERSION[sdk=macosx10.4]" = "";
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				PRODUCT_NAME = "LiveCode-Community";
@@ -4124,7 +4124,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				"GCC_VERSION[sdk=macosx10.4]" = "";
 				INFOPLIST_FILE = "rsrc/Revolution-Info.plist";
 				PRODUCT_NAME = "LiveCode-Community";
@@ -4136,7 +4136,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
 				PRODUCT_NAME = "Standalone-Community";
 			};
@@ -4146,7 +4146,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				INFOPLIST_FILE = "rsrc/Standalone-Info.plist";
 				PRODUCT_NAME = "Standalone-Community";
 			};
@@ -4156,7 +4156,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = kernel;
 			};
 			name = Debug;
@@ -4165,7 +4165,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				COMBINE_HIDPI_IMAGES = YES;
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				PRODUCT_NAME = kernel;
 			};
 			name = Release;
@@ -4173,7 +4173,7 @@
 		4DFD484013BA2843008DB91F /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
 				PRODUCT_NAME = "Server-Community";
 			};
@@ -4182,7 +4182,7 @@
 		4DFD484113BA2843008DB91F /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				GCC_VERSION = com.apple.compilers.llvm.clang.1_0;
+				GCC_VERSION = "";
 				GLOBAL_GCC_PREPROCESSOR_DEFINITIONS = "_SERVER _MAC_SERVER";
 				PRODUCT_NAME = "Server-Community";
 			};
