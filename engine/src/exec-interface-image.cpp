@@ -362,9 +362,9 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 	
 	if (MCStringGetLength(p_text) == 0)
 	{
-		// empty text - unset flags & set rep to nil;
-		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
-		setrep(nil);
+		// MW-2013-09-05: [[ UnicodifyImage ]] Setting the text to nil is equivalent
+		//   to setting the filename to empty.
+		setfilename(kMCEmptyString);
 	}
 	else
 	{

@@ -219,6 +219,7 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo = &_kMCInterfaceButtonIconTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -459,6 +460,8 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 			reseticon();
 		}
 	}
+	
+	Redraw();
 }
 
 void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)

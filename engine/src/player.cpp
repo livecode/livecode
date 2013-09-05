@@ -249,7 +249,7 @@ MCPlayer::MCPlayer(const MCPlayer &sref) : MCControl(sref)
 	starttime = sref.starttime;
 	endtime = sref.endtime;
 	disposable = istmpfile = False;
-	MCValueAssign(userCallbackStr, sref.userCallbackStr);
+	userCallbackStr = MCValueRetain(sref.userCallbackStr);
 	formattedwidth = formattedheight = 0;
 	loudness = sref.loudness;
 

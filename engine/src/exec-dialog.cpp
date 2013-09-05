@@ -144,7 +144,7 @@ static bool MCA_file_with_types(bool p_plural, MCStringRef p_prompt, MCStringRef
 {
 	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
 	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	const char *t_initial = p_initial == nil ? nil : MCStringGetCString(p_initial);
 	
 	char **t_types = nil;
 	if (!MCMemoryNewArray(p_type_count, t_types))

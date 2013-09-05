@@ -2538,7 +2538,7 @@ public:
         SInt32 sint_toread = (SInt32) p_length;
         
         if ((errno = FSRead(m_serial_port, &sint_toread, p_buffer)) != noErr)
-            return ;
+            return false;
         
         if (sint_toread < p_length)
         {

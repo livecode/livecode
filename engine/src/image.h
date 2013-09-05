@@ -398,6 +398,9 @@ public:
 	virtual MCControl *clone(Boolean attach, Object_pos p, bool invisible);
 	virtual Boolean maskrect(const MCRectangle &srect);
 
+	// MW-2013-09-05: [[ UnicodifyImage ]] Returns true if the image is editable.
+	bool iseditable(void) const { return MCStringIsEmpty(filename); }
+	
 	bool isediting() const;
 	void startediting(uint16_t p_which);
 	void finishediting();
