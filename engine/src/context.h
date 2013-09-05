@@ -158,6 +158,7 @@ public:
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
 	virtual void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false) = 0;
 	virtual void drawrect(const MCRectangle& rect) = 0;
+	virtual void drawinsetrect(const MCRectangle& rect) {}
 	virtual void fillrect(const MCRectangle& rect) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
 	virtual void fillpolygon(MCPoint *points, uint2 npoints) = 0;

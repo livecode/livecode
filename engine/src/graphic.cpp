@@ -1774,7 +1774,9 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		drawfocus(dc, p_dirty);
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, borderwidth);
-	if (linesize != 0)
+	// IM-2013-09-05: [[ RefactorGraphics ]] use drawinsetrect to render rectangle
+	// graphics rather than inset manually
+	if (getstyleint(flags) != F_G_RECTANGLE && linesize != 0)
 		trect = MCU_reduce_rect(trect, linesize >> 1);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
@@ -1847,7 +1849,9 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		case F_G_RECTANGLE:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinMiter);
 			dc->setmiterlimit(10.0);
-			dc->drawrect(trect);
+			// IM-2013-09-05: [[ RefactorGraphics ]] use drawinsetrect to render rectangle
+			// graphics rather than inset manually
+			dc->drawinsetrect(trect);
 			break;
 		case F_ROUNDRECT:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);

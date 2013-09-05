@@ -694,6 +694,35 @@ void MCGraphicsContext::drawsegments(MCSegment *segments, uint2 nsegs)
 	MCGContextStroke(m_gcontext);
 }
 
+static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_inset)
+{
+	MCGRectangle t_rect;
+	t_rect = MCGRectangleMake(p_rect.origin.x + p_inset, p_rect.origin.y + p_inset, p_rect.size.width - (p_inset * 2.0), p_rect.size.height - (p_inset * 2.0));
+
+	if (t_rect.size.width < 0.0)
+		t_rect.size.width = 0.0;
+	if (t_rect.size.height < 0.0)
+		t_rect.size.height = 0.0;
+
+	return t_rect;
+}
+
+// IM-2013-09-05: [[ RefactorGraphics ]] Add method to draw rectangles inset by line width
+void MCGraphicsContext::drawinsetrect(const MCRectangle& rect)
+{
+	MCGRectangle t_rect;
+	t_rect = MCRectangleToMCGRectangle(rect);
+
+	MCGFloat t_linewidth;
+	t_linewidth = m_line_width == 0 ? 1.0 : (MCGFloat)m_line_width;
+
+	t_rect = MCGRectangleInset(t_rect, t_linewidth / 2.0);
+
+	MCGContextBeginPath(m_gcontext);
+	MCGContextAddRectangle(m_gcontext, t_rect);
+	MCGContextStroke(m_gcontext);
+}
+
 void MCGraphicsContext::drawrect(const MCRectangle& rect)
 {
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
