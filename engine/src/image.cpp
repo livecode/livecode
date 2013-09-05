@@ -1779,7 +1779,16 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	IO_stat stat;
 
 	resizequality = INTERPOLATION_BOX;
-
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] Make sure the control color statics are reset.
+	s_control_colors = nil;
+	s_control_color_names = nil;
+	s_control_color_count = 0;
+	s_control_pixmap_count = 0;
+	s_control_pixmapids = nil;
+	s_control_color_flags = 0;
+	s_have_control_colors = false;
+	
 	if ((stat = MCObject::load(stream, version)) != IO_NORMAL)
 		return stat;
 
@@ -1789,7 +1798,7 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		blendlevel = 100 - (ink & 0x7F);
 		ink = GXblendSrcOver;
 	}
-
+	
 	if (flags & F_HAS_FILENAME)
 	{
 		char *t_filename = nil;
