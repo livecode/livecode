@@ -3994,7 +3994,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Debug;
@@ -4007,7 +4007,7 @@
 					"$(inherited)",
 					MODE_DEVELOPMENT,
 				);
-				GCC_VERSION = 4.2;
+				GCC_VERSION = "";
 				PRODUCT_NAME = "kernel-development";
 			};
 			name = Release;
