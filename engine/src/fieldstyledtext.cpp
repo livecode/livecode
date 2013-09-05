@@ -747,7 +747,10 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 				t_runs_array = nil;
 			
 			// Begin paragraph with style
-			parsestyledtextappendparagraph(MCValueIsArray(t_style_entry) ? (MCArrayRef)t_style_entry : nil, *t_metadata, false, x_paragraphs);
+			if (t_style_entry != nil && MCValueIsArray(t_style_entry))
+				parsestyledtextappendparagraph((MCArrayRef)t_style_entry, *t_metadata, false, x_paragraphs);
+			else
+				parsestyledtextappendparagraph(nil, *t_metadata, false, x_paragraphs);
 					
 			// Finally, we are a sequence so loop through all the elements.
 			if (t_runs_array != nil)
