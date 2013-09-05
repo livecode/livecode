@@ -377,7 +377,7 @@ struct MCMacSystemServiceInterface: public MCServiceInterface
     virtual void Send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventtype, Boolean p_reply) = 0;
     virtual void Reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error) = 0;
     virtual void RequestAE(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value) = 0;
-    virtual void RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
+    virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_result) = 0;
 };
 
 struct MCWindowsSystemServiceInterface: public MCServiceInterface

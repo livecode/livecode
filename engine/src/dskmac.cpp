@@ -4251,7 +4251,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
     }
     
     // MW-2006-08-05: Vetted for Endian issues
-    virtual void RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value)
+    virtual bool RequestProgram(MCStringRef p_message, MCStringRef p_program, MCStringRef& r_value)
     {
 #ifdef /* MCS_request_program_dsk_mac */ LEGACY_SYSTEM
 	AEAddressDesc receiver;
@@ -4328,7 +4328,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             AEDisposeDesc(&receiver);
             MCresult->sets("no such program");
             r_value = MCValueRetain(kMCEmptyString);
-            return;
+            return false;
         }
         AppleEvent ae;
         errno = AECreateAppleEvent('misc', 'eval', &receiver,
@@ -4351,7 +4351,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             delete buffer;
             
             r_value = MCValueRetain(kMCEmptyString);
-            return;
+            return false;
         }
         real8 endtime = curtime + AETIMEOUT;
         while (True)
@@ -4360,13 +4360,13 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             {
                 MCresult->sets("user interrupt");
                 r_value = MCValueRetain(kMCEmptyString);
-                return;
+                return false;
             }
             if (curtime > endtime)
             {
                 MCresult->sets("timeout");
                 r_value = MCValueRetain(kMCEmptyString);
-                return;
+                return false;
             }
             if (AEanswerErr != NULL || AEanswerData != NULL)
                 break;
@@ -4377,7 +4377,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
             delete AEanswerErr;
             AEanswerErr = NULL;
             r_value = MCValueRetain(kMCEmptyString);
-            return;
+            return true;
         }
         else
         {
@@ -4386,6 +4386,7 @@ struct MCMacSystemService: public MCMacSystemServiceInterface//, public MCMacDes
                 r_value = MCValueRetain(kMCEmptyString);
             
             AEanswerData = NULL;
+            return false;
         }
     }
 };
