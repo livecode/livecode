@@ -2398,10 +2398,6 @@ void MCU_geturl(MCExecPoint &ep)
 
 void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 {
-	MCAutoStringRef f;
-	MCStringCreateWithOldString(dest.getsvalue(), &f);
-
-
 	if (dest.getsvalue().getlength() > 5
 	        && !MCU_strncasecmp(dest.getsvalue().getstring(), "file:", 5))
 	{
@@ -2409,7 +2405,9 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		data . texttobinary();
 		MCAutoDataRef t_data_ref;
 		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCS_savebinaryfile(*f, *t_data_ref);
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		MCS_savebinaryfile(*t_filename, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "binfile:", 8))
@@ -2417,13 +2415,17 @@ void MCU_puturl(MCExecPoint &dest, MCExecPoint &data)
 		dest.tail(8);
 		MCAutoDataRef t_data_ref;
 		/* UNCHECKED */ data . copyasdataref(&t_data_ref);
-		MCS_savebinaryfile(*f, *t_data_ref);
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		MCS_savebinaryfile(*t_filename, *t_data_ref);
 	}
 	else if (dest.getsvalue().getlength() > 8
 		        && !MCU_strncasecmp(dest.getsvalue().getstring(), "resfile:", 8))
 	{
 		dest.tail(8);
-		/* UNCHECKED */ MCS_saveresfile((MCStringRef)dest.getvalueref(), (MCDataRef)data.getvalueref());
+		MCAutoStringRef t_filename;
+		/* UNCHECKED */ MCStringCreateWithCString(dest . getcstring(), &t_filename);
+		/* UNCHECKED */ MCS_saveresfile(*t_filename, (MCDataRef)data.getvalueref());
 	}
 	else
 	{
