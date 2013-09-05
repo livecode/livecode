@@ -42,6 +42,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 ////////////////////////////////////////////////////////////////////////////////
 
 #define IMAGE_EXTRA_CONTROLCOLORS (1 << 0)
+#define IMAGE_EXTRA_CONTROLPIXMAPS (1 << 1)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -58,6 +59,14 @@ MCCursorRef MCImage::defaultcursor;
 uint2 MCImage::cmasks[MAX_CMASK + 1] = {0x00, 0x01, 0x03, 0x07,
                                         0x0F, 0x1F, 0x3F, 0x7F};
 
+bool MCImage::s_have_control_colors;
+uint16_t MCImage::s_control_color_count;
+MCColor *MCImage::s_control_colors;
+char **MCImage::s_control_color_names;
+uint16_t MCImage::s_control_pixmap_count;
+uint4 *MCImage::s_control_pixmapids;
+uint16_t MCImage::s_control_color_flags;
+
 MCImage::MCImage()
 {
 	angle = 0;
@@ -66,11 +75,6 @@ MCImage::MCImage()
 	m_rep = nil;
 	m_transformed = nil;
 	m_image_opened = false;
-
-	m_have_control_colors = false;
-	m_control_colors = nil;
-	m_control_color_names = nil;
-	m_control_color_count = 0;
 
 	m_needs = nil;
 
@@ -87,11 +91,6 @@ MCImage::MCImage(const MCImage &iref) : MCControl(iref)
 	m_rep = nil;
 	m_transformed = nil;
 	m_image_opened = false;
-
-	m_have_control_colors = false;
-	m_control_colors = nil;
-	m_control_color_names = nil;
-	m_control_color_count = 0;
 
 	m_needs = nil;
 
@@ -1477,28 +1476,45 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 	uint4 t_length;
 	t_length = 0;
 
-	if (m_have_control_colors)
+	// MW-2013-09-05: [[ Bug 11127 ]] If we have control colors then write them out
+	//   in two sections (first the colors, if any, then the patterns, if any).
+	if (s_have_control_colors)
 	{
 		t_flags |= IMAGE_EXTRA_CONTROLCOLORS;
 		t_length += sizeof(uint16_t) + sizeof(uint16_t);
-		t_length += m_control_color_count * 3 * sizeof(uint16_t);
-		for (uint16_t i = 0; i < m_control_color_count; i++)
-			t_length += MCCStringLength(m_control_color_names[i]) + 1;
+		t_length += s_control_color_count * 3 * sizeof(uint16_t);
+		for (uint16_t i = 0; i < s_control_color_count; i++)
+			t_length += MCCStringLength(s_control_color_names[i]) + 1;
+	
+		if (s_control_pixmap_count != 0)
+		{
+			t_flags |= IMAGE_EXTRA_CONTROLPIXMAPS;
+			t_length += sizeof(uint16_t);
+			t_length += s_control_pixmap_count * sizeof(uint4);
+		}
 	}
 
 	if (t_stat == IO_NORMAL)
 		t_stat = p_stream . WriteTag(t_flags, t_length);
 	
-	if (t_stat == IO_NORMAL && m_have_control_colors)
+	if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLCOLORS) != 0)
 	{
-		t_stat = p_stream . WriteU16(m_control_color_count);
+		t_stat = p_stream . WriteU16(s_control_color_count);
 		if (t_stat == IO_NORMAL)
-			t_stat = p_stream . WriteU16(m_control_color_flags);
+			t_stat = p_stream . WriteU16(s_control_color_flags);
 
-		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-			t_stat = p_stream . WriteColor(m_control_colors[i]);
-		for (uint16_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-			t_stat = p_stream . WriteCString(m_control_color_names[i]);
+		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
+			t_stat = p_stream . WriteColor(s_control_colors[i]);
+		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
+			t_stat = p_stream . WriteCString(s_control_color_names[i]);
+		
+		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLPIXMAPS) != 0)
+		{
+			t_stat = p_stream . WriteU16(s_control_pixmap_count);
+			if (t_stat == IO_NORMAL)
+				for(int i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
+					t_stat = p_stream . WriteU32(s_control_pixmapids[i]);
+		}
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1527,23 +1543,34 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 
 		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . Mark();
-
-		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLCOLORS))
+		
+		// MW-2013-09-05: [[ Bug 11127 ]] If we have control colors then read them in
+		//   (first do colors, then pixmapids - if any).
+		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLCOLORS) != 0)
 		{
-			m_have_control_colors = true;
-			t_stat = p_stream . ReadU16(m_control_color_count);
-			t_stat = p_stream . ReadU16(m_control_color_flags);
+			s_have_control_colors = true;
+			t_stat = p_stream . ReadU16(s_control_color_count);
+			t_stat = p_stream . ReadU16(s_control_color_flags);
 
 			if (t_stat == IO_NORMAL)
 			{
-				/* UNCHECKED */ MCMemoryNewArray(m_control_color_count, m_control_colors);
-				/* UNCHECKED */ MCMemoryNewArray(m_control_color_count, m_control_color_names);
+				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_colors);
+				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_color_names);
 			}
 
-			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-				t_stat = p_stream . ReadColor(m_control_colors[i]);
-			for (uint32_t i = 0; t_stat == IO_NORMAL && i < m_control_color_count; i++)
-				t_stat = p_stream . ReadCString(m_control_color_names[i]);
+			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
+				t_stat = p_stream . ReadColor(s_control_colors[i]);
+			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
+				t_stat = p_stream . ReadCString(s_control_color_names[i]);
+			
+			if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLPIXMAPS) != 0)
+			{
+				t_stat = p_stream . ReadU16(s_control_pixmap_count);
+				if (t_stat == IO_NORMAL)
+					/* UNCHECKED */ MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids);
+				for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
+					t_stat = p_stream . ReadU32(s_control_pixmapids[i]);
+			}
 		}
 
 		if (t_stat == IO_NORMAL)
@@ -1566,30 +1593,46 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	recompress();
 	if ((stat = IO_write_uint1(OT_IMAGE, stream)) != IO_NORMAL)
 		return stat;
-
-	m_have_control_colors = false;
-	if (m_rep != nil)
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] The object colors/pixmaps pertain to an RLE
+	//   compressed image (if this is one); whereas the control colors are stored
+	//   in an extended record. When in memory the object stores the control colors
+	//   in colors/pixmapids so we temporarily switch these here. So the object
+	//   writes out the image colors; and the image does an extended record with the
+	//   control colors.
+	s_have_control_colors = false;
+	if (ncolors != 0 || npixmaps != 0)
 	{
-		if (m_rep->GetType() == kMCImageRepCompressed)
+		s_have_control_colors = true;
+		s_control_color_count = ncolors;
+		s_control_colors = colors;
+		s_control_color_names = colornames;
+		s_control_color_flags = dflags;
+		s_control_pixmap_count = npixmaps;
+		s_control_pixmapids = pixmapids;
+
+		if (m_rep != nil && m_rep -> GetType() == kMCImageRepCompressed)
 		{
 			MCImageCompressedBitmap *t_compressed;
 			t_compressed = static_cast<MCCompressedImageRep*>(m_rep)->GetCompressed();
-			if (t_compressed->colors != nil)
-			{
-				m_have_control_colors = true;
-
-				m_control_color_count = ncolors;
-				m_control_colors = colors;
-				m_control_color_names = colornames;
-				m_control_color_flags = dflags;
-
-				ncolors = t_compressed->color_count;
-				colors = t_compressed->colors;
-				dflags = MCImage::cmasks[MCMin(ncolors, MAX_CMASK)];
-				/* UNCHECKED */ MCMemoryNewArray(ncolors, colornames);
-			}
+			
+			ncolors = t_compressed->color_count;
+			colors = t_compressed->colors;
+			dflags = MCImage::cmasks[MCMin(ncolors, MAX_CMASK)];
+			/* UNCHECKED */ MCMemoryNewArray(ncolors, colornames);
 		}
+		else
+		{
+			ncolors = 0;
+			colors = nil;
+			colornames = nil;
+			dflags = 0;
+		}
+		
+		npixmaps = 0;
+		pixmapids = 0;
 	}
+	
 	uint32_t t_pixwidth, t_pixheight;
 	getgeometry(t_pixwidth, t_pixheight);
 
@@ -1613,7 +1656,7 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	bool t_has_extension = false;
 	if (resizequality != INTERPOLATION_BOX)
 		t_has_extension = true;
-	if (m_have_control_colors)
+	if (s_have_control_colors)
 		t_has_extension = true;
 
 	uint4 oldflags = flags;
@@ -1624,21 +1667,27 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	flags = oldflags;
 
 	ink = t_old_ink;
-
-	if (m_have_control_colors)
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] Now we've written out the control colors and
+	//   object colors, reset the in-memory references to the control colors.
+	if (s_have_control_colors)
 	{
 		MCMemoryDeleteArray(colornames);
 
-		ncolors = m_control_color_count;
-		colors = m_control_colors;
-		colornames = m_control_color_names;
-		dflags = m_control_color_flags;
+		ncolors = s_control_color_count;
+		colors = s_control_colors;
+		colornames = s_control_color_names;
+		npixmaps = s_control_pixmap_count;
+		pixmapids = s_control_pixmapids;
+		dflags = s_control_color_flags;
 
-		m_control_colors = nil;
-		m_control_color_names = nil;
-		m_control_color_count = 0;
+		s_control_colors = nil;
+		s_control_color_names = nil;
+		s_control_color_count = 0;
+		s_control_pixmap_count = 0;
+		s_control_pixmapids = nil;
 
-		m_have_control_colors = false;
+		s_have_control_colors = false;
 	}
 
 	if (stat != IO_NORMAL)
@@ -1842,23 +1891,42 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	if (flags & F_ANGLE)
 		if ((stat = IO_read_uint2(&angle, stream)) != IO_NORMAL)
 			return stat;
-
-	if (m_have_control_colors)
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] At this point the color/pixmap fields in the object
+	//   will pertain to the image colors. This isn't what we want anymore, so free them
+	//   (an RLE compressed rep will already have extracted the info it needs).
+	MCMemoryDeallocate(colors);
+	for (uint32_t i = 0; i < ncolors; i++)
+		MCCStringFree(colornames[i]);
+	MCMemoryDeallocate(colornames);
+	MCMemoryDeallocate(pixmapids);
+	ncolors = 0;
+	npixmaps = 0;
+	dflags = 0;
+	colornames = nil;
+	pixmapids = nil;
+	colors = nil;
+	
+	// MW-2013-09-05: [[ Bug 11127 ]] If we had an extended control color record, then
+	//   take those as the in-memory fields for colors and pixmaps as they are used
+	//   by the control rendering (the rep has already taken its colors if it needed them).
+	if (s_have_control_colors)
 	{
-		MCMemoryDeallocate(colors);
-		for (uint32_t i = 0; i < ncolors; i++)
-			MCCStringFree(colornames[i]);
-		MCMemoryDeallocate(colornames);
+		colors = s_control_colors;
+		colornames = s_control_color_names;
+		ncolors = s_control_color_count;
+		pixmapids = s_control_pixmapids;
+		npixmaps = s_control_pixmap_count;
+		dflags = s_control_color_flags;
+		if (npixmaps != 0)
+			/* UNCHECKED */ MCMemoryNewArray(npixmaps, pixmaps);
 
-		colors = m_control_colors;
-		colornames = m_control_color_names;
-		ncolors = m_control_color_count;
-		dflags = m_control_color_flags;
-
-		m_control_colors = nil;
-		m_control_color_names = nil;
-		m_control_color_count = 0;
-		m_have_control_colors = false;
+		s_control_colors = nil;
+		s_control_color_names = nil;
+		s_control_color_count = 0;
+		s_control_pixmapids = nil;
+		s_control_pixmap_count = 0;
+		s_have_control_colors = false;
 	}
 
 	return loadpropsets(stream);
