@@ -441,9 +441,12 @@ public:
 	{
 		return filename;
 	}
-	const char *gettitletext()
+	void gettitletext(MCStringRef& r_title)
 	{
-		return title != NULL ? title : MCNameGetCString(_name);
+		if(title != NULL)
+			/* UNCHECKED */ MCStringCreateWithCString(title, r_title);
+		else
+			r_title = MCNameGetString(_name);  
 	}
 	MCControl *getcontrols()
 	{

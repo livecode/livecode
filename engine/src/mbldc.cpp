@@ -1065,8 +1065,8 @@ protected:
 	void DoInitialize(void) { }
 	void DoFinalize(void) { }
 	
-	bool DoReset(const char *name) { return false; }
-	bool DoResetSettings(const MCString& settings) { return false; }
+	bool DoReset(MCStringRef name) { return false; }
+	bool DoResetSettings(MCStringRef settings) { return false; }
 	void DoResync(void) {}
 	
 	const char *DoFetchName(void) { return NULL; }
@@ -1074,7 +1074,7 @@ protected:
 	
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner)  { return PRINTER_DIALOG_RESULT_ERROR; }
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner) { return PRINTER_DIALOG_RESULT_ERROR; }
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) { return PRINTER_RESULT_ERROR; }
+	MCPrinterResult DoBeginPrint(MCSTringRef p_document, MCPrinterDevice*& r_device) { return PRINTER_RESULT_ERROR; }
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device) { return PRINTER_RESULT_ERROR; }
 };
 

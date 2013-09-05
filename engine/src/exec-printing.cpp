@@ -656,8 +656,8 @@ void MCPrintingExecPrintCardIntoRect(MCExecContext& ctxt, MCCard *p_card, MCRect
 
 void MCPrintingExecOpenPrintingToDestination(MCExecContext& ctxt, MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options)
 {
-	extern Exec_stat MCCustomPrinterCreate(const char *, const char *, MCArrayRef , MCPrinter*&);
-	if (MCCustomPrinterCreate(MCStringGetCString(p_destination), MCStringGetCString(p_filename), p_options, MCprinter) == ES_NORMAL)
+	extern Exec_stat MCCustomPrinterCreate(MCStringRef, MCStringRef, MCArrayRef , MCPrinter*&);
+	if (MCCustomPrinterCreate(p_destination, p_filename, p_options, MCprinter) == ES_NORMAL)
 		MCPrintingExecOpenPrinting(ctxt);
 }
 
@@ -773,7 +773,7 @@ void MCPrintingGetPrintDeviceFeatures(MCExecContext& ctxt, unsigned int& r_featu
 
 void MCPrintingSetPrintDeviceOutput(MCExecContext& ctxt, const MCPrintingPrintDeviceOutput& p_output)
 {
-	MCprinter -> SetDeviceOutput(p_output . type, MCStringGetCString(p_output . location));
+	MCprinter -> SetDeviceOutput(p_output . type, p_output . location);
 }
 
 void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOutput& r_output)
@@ -951,7 +951,7 @@ void MCPrintingGetPrintDeviceName(MCExecContext& ctxt, MCStringRef &r_name)
 
 void MCPrintingSetPrintDeviceName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	MCprinter -> SetDeviceName(MCStringGetCString(p_name));
+	MCprinter -> SetDeviceName(p_name);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
