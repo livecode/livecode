@@ -227,6 +227,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
+				GCC_VERSION = "";
+				"GCC_VERSION[sdk=macosx10.4]" = "";
 				PRODUCT_NAME = foundation;
 			};
 			name = Debug;
@@ -235,6 +237,8 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				GCC_ENABLE_FIX_AND_CONTINUE = NO;
+				GCC_VERSION = "";
+				"GCC_VERSION[sdk=macosx10.4]" = "";
 				PRODUCT_NAME = foundation;
 			};
 			name = Release;
