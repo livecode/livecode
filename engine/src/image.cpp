@@ -1552,11 +1552,13 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			t_stat = p_stream . ReadU16(s_control_color_count);
 			t_stat = p_stream . ReadU16(s_control_color_flags);
 
-			if (t_stat == IO_NORMAL)
-			{
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_colors);
-				/* UNCHECKED */ MCMemoryNewArray(s_control_color_count, s_control_color_names);
-			}
+			if (t_stat == IO_NORMAL &&
+				!MCMemoryNewArray(s_control_color_count, s_control_colors))
+				t_stat = IO_ERROR;
+			
+			if (t_stat == IO_NORMAL &&
+				!MCMemoryNewArray(s_control_color_count, s_control_color_names))
+				t_stat = IO_ERROR;
 
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 				t_stat = p_stream . ReadColor(s_control_colors[i]);
@@ -1566,8 +1568,9 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLPIXMAPS) != 0)
 			{
 				t_stat = p_stream . ReadU16(s_control_pixmap_count);
-				if (t_stat == IO_NORMAL)
-					/* UNCHECKED */ MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids);
+				if (t_stat == IO_NORMAL && 
+					!MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids))
+					t_stat = IO_ERROR;
 				for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
 					t_stat = p_stream . ReadU32(s_control_pixmapids[i]);
 			}
@@ -1619,7 +1622,8 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 			ncolors = t_compressed->color_count;
 			colors = t_compressed->colors;
 			dflags = MCImage::cmasks[MCMin(ncolors, MAX_CMASK)];
-			/* UNCHECKED */ MCMemoryNewArray(ncolors, colornames);
+			if (!MCMemoryNewArray(ncolors, colornames))
+				return IO_ERROR;
 		}
 		else
 		{
@@ -1781,10 +1785,13 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	resizequality = INTERPOLATION_BOX;
 	
 	// MW-2013-09-05: [[ Bug 11127 ]] Make sure the control color statics are reset.
+	MCMemoryDeleteArray(s_control_colors);
 	s_control_colors = nil;
+	MCMemoryDeleteArray(s_control_color_names);
 	s_control_color_names = nil;
 	s_control_color_count = 0;
 	s_control_pixmap_count = 0;
+	MCMemoryDeleteArray(s_control_pixmapids);
 	s_control_pixmapids = nil;
 	s_control_color_flags = 0;
 	s_have_control_colors = false;
@@ -1839,8 +1846,12 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			else
 			{
 				t_compressed->color_count = ncolors;
-				/* UNCHECKED */ MCMemoryNewArray(ncolors, t_compressed->planes);
-				/* UNCHECKED */ MCMemoryNewArray(ncolors, t_compressed->plane_sizes);
+				if (!MCMemoryNewArray(ncolors, t_compressed->planes) ||
+					!MCMemoryNewArray(ncolors, t_compressed->plane_sizes))
+				{
+					MCImageFreeCompressedBitmap(t_compressed);
+					return IO_ERROR;
+				}
 
 				uint2 i;
 				for (i = 0 ; i < ncolors ; i++)
@@ -1852,9 +1863,8 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 					}
 					if (t_compressed->plane_sizes[i] != 0)
 					{
-						/* UNCHECKED */ MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]);
-						if (IO_read(t_compressed->planes[i], sizeof(uint1),
-						            t_compressed->plane_sizes[i], stream) != IO_NORMAL)
+						if (!MCMemoryAllocate(t_compressed->plane_sizes[i], t_compressed->planes[i]) ||
+							IO_read(t_compressed->planes[i], sizeof(uint1), t_compressed->plane_sizes[i], stream) != IO_NORMAL)
 						{
 							MCImageFreeCompressedBitmap(t_compressed);
 							return IO_ERROR;
@@ -1865,16 +1875,23 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 			if (t_compressed->compression == F_RLE && ncolors != 0 && (flags & F_TRUE_COLOR) == 0)
 			{
 				t_compressed->color_count = ncolors;
-				/* UNCHECKED */ MCMemoryAllocateCopy(colors, sizeof(MCColor) * ncolors, t_compressed->colors);
+				if (!MCMemoryAllocateCopy(colors, sizeof(MCColor) * ncolors, t_compressed->colors))
+				{
+					MCImageFreeCompressedBitmap(t_compressed);
+					return IO_ERROR;
+				}
 			}
 
 			if ((stat = IO_read_uint4(&t_compressed->mask_size, stream)) != IO_NORMAL)
 				return stat;
 			if (t_compressed->mask_size != 0)
 			{
-				/* UNCHECKED */ MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask);
-				if (IO_read(t_compressed->mask, sizeof(uint1), t_compressed->mask_size, stream) != IO_NORMAL)
+				if (!MCMemoryAllocate(t_compressed->mask_size, t_compressed->mask) ||
+					IO_read(t_compressed->mask, sizeof(uint1), t_compressed->mask_size, stream) != IO_NORMAL)
+				{
+					MCImageFreeCompressedBitmap(t_compressed);
 					return IO_ERROR;
+				}
 			}
 
 			uint16_t t_pixwidth, t_pixheight;
@@ -1904,11 +1921,11 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 	// MW-2013-09-05: [[ Bug 11127 ]] At this point the color/pixmap fields in the object
 	//   will pertain to the image colors. This isn't what we want anymore, so free them
 	//   (an RLE compressed rep will already have extracted the info it needs).
-	MCMemoryDeallocate(colors);
+	MCMemoryDeleteArray(colors);
 	for (uint32_t i = 0; i < ncolors; i++)
 		MCCStringFree(colornames[i]);
-	MCMemoryDeallocate(colornames);
-	MCMemoryDeallocate(pixmapids);
+	MCMemoryDeleteArray(colornames);
+	MCMemoryDeleteArray(pixmapids);
 	ncolors = 0;
 	npixmaps = 0;
 	dflags = 0;
@@ -1927,8 +1944,9 @@ IO_stat MCImage::load(IO_handle stream, const char *version)
 		pixmapids = s_control_pixmapids;
 		npixmaps = s_control_pixmap_count;
 		dflags = s_control_color_flags;
-		if (npixmaps != 0)
-			/* UNCHECKED */ MCMemoryNewArray(npixmaps, pixmaps);
+		if (npixmaps != 0 &&
+			!MCMemoryNewArray(npixmaps, pixmaps))
+			return IO_ERROR;
 
 		s_control_colors = nil;
 		s_control_color_names = nil;
