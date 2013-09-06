@@ -144,7 +144,7 @@ int32_t MCFontMeasureText(MCFontRef p_font, MCStringRef p_text)
 		return MCFontMeasureText(p_font, (const char *)t_native_text, MCStringGetLength(p_text), false);
 	
 	// Not native text, must be unicode
-	return MCFontMeasureText(p_font, (const char *)MCStringGetCharPtr(p_text), MCStringGetLength(p_text), true);
+	return MCFontMeasureText(p_font, (const char *)MCStringGetNativeCharPtr(p_text), MCStringGetLength(p_text), true);
 }
 
 int32_t MCFontMeasureText(MCFontRef font, const char *chars, uint32_t char_count, bool is_unicode)

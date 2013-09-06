@@ -4816,7 +4816,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
     virtual MCServiceInterface *QueryService(MCServiceType p_type)
     {
-        if ((p_type & kMCServiceTypeMacSystem) == kMCServiceTypeMacSystem)
+        if (p_type == kMCServiceTypeMacSystem)
             return (MCMacSystemServiceInterface *)this;
         return nil;
     }
@@ -5964,7 +5964,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
     }
     
 #define CATALOG_MAX_ENTRIES 16
-	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list)
+	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_mac */ LEGACY_SYSTEM
 	MCAutoListRef t_list;
@@ -6116,11 +6116,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	
 	FSCloseIterator(t_catalog_iterator);
 	return MCListCopy(*t_list, r_list);
-#endif /* MCS_getentries_dsk_mac */
-        MCAutoListRef t_list;
-        if (!MCListCreateMutable('\n', &t_list))
-            return false;
-        
+#endif /* MCS_getentries_dsk_mac */  
         OSStatus t_os_status;
         
         Boolean t_is_folder;
@@ -6139,11 +6135,12 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         uint4 t_entry_count;
         t_entry_count = 0;
         
-        if (!p_files)
-        {
-            t_entry_count++;
-            /* UNCHECKED */ MCListAppendCString(*t_list, "..");
-        }
+        // Add ".." folder on Mac, for now impossible since there is no direct access to MCS_getentries_state type
+//        if (!p_files)
+//        {
+//            t_entry_count++;
+//            /* UNCHECKED */ MCListAppendCString(*t_list, "..");
+//        }
         
         ItemCount t_max_objects, t_actual_objects;
         t_max_objects = CATALOG_MAX_ENTRIES;
@@ -6173,100 +6170,79 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             
             for(uint4 t_i = 0; t_i < (uint4)t_actual_objects; t_i++)
             {
-                // folders
-                UInt16 t_is_folder;
-                t_is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
-                if ( (!p_files && t_is_folder) || (p_files && !t_is_folder))
+                MCSystemFolderEntry t_entry;
+                
+                char t_native_name[256];
+                uint4 t_native_length;
+                t_native_length = 256;
+                MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
+                // MCS_utf16tonative return a non nul-terminated string
+                t_native_name[t_native_length] = '\0';
+                
+                // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
+                for(uint4 i = 0; i < t_native_length; ++i)
+                    if (t_native_name[i] == '/')
+                        t_native_name[i] = ':';                
+
+                FSPermissionInfo *t_permissions;
+                t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
+                
+                uint32_t t_creator;
+                uint32_t t_type;
+                
+                t_creator = 0;
+                t_type = 0;
+                
+                if (!t_is_folder)
                 {
-                    char t_native_name[256];
-                    uint4 t_native_length;
-                    t_native_length = 256;
-                    MCS_utf16tonative((const unsigned short *)t_names[t_i] . unicode, t_names[t_i] . length, t_native_name, t_native_length);
-                    
-                    // MW-2008-02-27: [[ Bug 5920 ]] Make sure we convert Finder to POSIX style paths
-                    for(uint4 i = 0; i < t_native_length; ++i)
-                        if (t_native_name[i] == '/')
-                            t_native_name[i] = ':';
-                    
-                    char t_buffer[512];
-                    if (p_detailed)
-                    { // the detailed|long files
-                        FSPermissionInfo *t_permissions;
-                        t_permissions = (FSPermissionInfo *)&(t_catalog_infos[t_i] . permissions);
-                        
-                        t_tmp_context . copysvalue(t_native_name, t_native_length);
-                        MCU_urlencode(t_tmp_context);
-                        
-                        char t_filetype[9];
-                        if (!t_is_folder)
-                        {
-                            FileInfo *t_file_info;
-                            t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
-                            uint4 t_creator;
-                            t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
-                            uint4 t_type;
-                            t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
-                            
-                            if (t_file_info != NULL)
-                            {
-                                memcpy(t_filetype, (char*)&t_creator, 4);
-                                memcpy(&t_filetype[4], (char *)&t_type, 4);
-                                t_filetype[8] = '\0';
-                            }
-                            else
-                                t_filetype[0] = '\0';
-                        } else
-                            strcpy(t_filetype, "????????"); // this is what the "old" getentries did
-                        
-                        CFAbsoluteTime t_creation_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
-                        t_creation_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_modification_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
-                        t_modification_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_access_time;
-                        UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
-                        t_access_time += kCFAbsoluteTimeIntervalSince1970;
-                        
-                        CFAbsoluteTime t_backup_time;
-                        if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
-                            t_backup_time = 0;
-                        else
-                        {
-                            UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
-                            t_backup_time += kCFAbsoluteTimeIntervalSince1970;
-                        }
-                        
-                        sprintf(t_buffer, "%*.*s,%llu,%llu,%.0lf,%.0lf,%.0lf,%.0lf,%d,%d,%03o,%.8s",
-                                t_tmp_context . getsvalue() . getlength(),  
-                                t_tmp_context . getsvalue() . getlength(),  
-                                t_tmp_context . getsvalue() . getstring(),
-                                t_catalog_infos[t_i] . dataLogicalSize,
-                                t_catalog_infos[t_i] . rsrcLogicalSize,
-                                t_creation_time,
-                                t_modification_time,
-                                t_access_time,
-                                t_backup_time,
-                                t_permissions -> userID,
-                                t_permissions -> groupID,
-                                t_permissions -> mode & 0777,
-                                t_filetype);
-						
-                        /* UNCHECKED */ MCListAppendCString(*t_list, t_buffer);
-                    }
-                    else
-					/* UNCHECKED */ MCListAppendNativeChars(*t_list, (const char_t *)t_native_name, t_native_length);
-					
-                    t_entry_count += 1;		
+                    FileInfo *t_file_info;
+                    t_file_info = (FileInfo *) &t_catalog_infos[t_i] . finderInfo;
+                    t_creator = MCSwapInt32NetworkToHost(t_file_info -> fileCreator);
+                    t_type = MCSwapInt32NetworkToHost(t_file_info -> fileType);
                 }
-            }	
+                
+                CFAbsoluteTime t_creation_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . createDate, &t_creation_time);
+                t_creation_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_modification_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . contentModDate, &t_modification_time);
+                t_modification_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_access_time;
+                UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . accessDate, &t_access_time);
+                t_access_time += kCFAbsoluteTimeIntervalSince1970;
+                
+                CFAbsoluteTime t_backup_time;
+                if (t_catalog_infos[t_i] . backupDate . highSeconds == 0 && t_catalog_infos[t_i] . backupDate . lowSeconds == 0 && t_catalog_infos[t_i] . backupDate . fraction == 0)
+                    t_backup_time = 0;
+                else
+                {
+                    UCConvertUTCDateTimeToCFAbsoluteTime(&t_catalog_infos[t_i] . backupDate, &t_backup_time);
+                    t_backup_time += kCFAbsoluteTimeIntervalSince1970;
+                }
+                
+                t_entry.name = t_native_name;
+                t_entry.data_size = t_catalog_infos[t_i] . dataLogicalSize;
+                t_entry.resource_size = t_catalog_infos[t_i] . rsrcLogicalSize;
+                t_entry.creation_time = (uint32_t)t_creation_time;
+                t_entry.modification_time = (uint32_t) t_modification_time;
+                t_entry.access_time = (uint32_t) t_access_time;
+                t_entry.backup_time = (uint32_t) t_backup_time;
+                t_entry.user_id = (uint32_t) t_permissions -> userID;
+                t_entry.group_id = (uint32_t) t_permissions -> groupID;
+                t_entry.permissions = (uint32_t) t_permissions->mode & 0777;
+                t_entry.file_creator = t_creator;
+                t_entry.file_type = t_type;
+                t_entry.is_folder = t_catalog_infos[t_i] . nodeFlags & kFSNodeIsDirectoryMask;
+            
+                p_callback(x_context, &t_entry);
+            }
         } while(t_oserror != errFSNoMoreItems);
         
         FSCloseIterator(t_catalog_iterator);
-        return MCListCopy(*t_list, r_list);
         
+        return true;
     }
     
     virtual real8 GetFreeDiskSpace()

@@ -319,7 +319,7 @@ void MCS_reset_time(void)
 		t_service -> ResetTime();
 	}
 
-	MCresult -> sets("not supported");
+//	MCresult -> sets("not supported");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -718,8 +718,8 @@ static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *
 #else
 		/* UNCHECKED */ MCStringFormat(t_detailed_string,
                                        "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
-                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
-                                       MCStringGetNativeCharPtr(t_urlencoded_string),
+                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
+                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
                                        p_entry -> data_size,
                                        p_entry -> modification_time, p_entry -> access_time,
                                        p_entry -> user_id, p_entry -> group_id,
@@ -744,7 +744,7 @@ bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 	if (!MCListCreateMutable('\n', &(t_list)))
 		return false;
 
-	MCS_getentries_state t_state;
+	MCS_getentries_state t_state;	
 	t_state.files = p_files;
 	t_state.details = p_detailed;
 	t_state.list = (*t_list);
