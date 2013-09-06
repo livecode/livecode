@@ -38,6 +38,7 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/I &quot;C:\livecode\lcidlc\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_WINDOWS;_USRDLL;REVTESTEXTERNAL_EXPORTS"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="3"
@@ -200,7 +201,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(OutDir)\lcidlc.exe&quot; &quot;$(InputPath)&quot; &quot;$(InputPath).cpp&quot;"
+					CommandLine="&quot;$(OutDir)\lcidlc.exe&quot; &quot;$(InputPath)&quot; &quot;$(InputPath).cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(OutDir)lcidlc.exe"
 					Outputs="$(InputPath).cpp"
 				/>
@@ -210,7 +211,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(OutDir)\lcidlc.exe&quot; &quot;$(InputPath)&quot; &quot;$(InputPath).cpp&quot;"
+					CommandLine="&quot;$(OutDir)\lcidlc.exe&quot; &quot;$(InputPath)&quot; &quot;$(InputPath).cpp&quot;&#x0D;&#x0A;"
 					AdditionalDependencies="$(OutDir)lcidlc.exe"
 					Outputs="$(InputPath).cpp"
 				/>

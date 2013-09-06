@@ -2913,7 +2913,62 @@ static jobject java__get_engine(void)
 }
 
 //////////
+    
 
+static LCError java_from__cstring(JNIEnv *env, const char* p_value, jobject& r_value)
+{
+    LCError err;
+    err = kLCErrorNone;
+    
+    size_t t_char_count;
+    jchar *t_jchar_value;
+    t_jchar_value = nil;
+    if (err == kLCErrorNone)
+    {
+        t_char_count = strlen(p_value);
+        t_jchar_value = (jchar *)malloc(sizeof(jchar) * t_char_count);
+        if (t_jchar_value == nil)
+            err = kLCErrorOutOfMemory;
+    }
+    
+    if (err == kLCErrorNone)
+    {
+        for(uint32_t i = 0; i < t_char_count; i++)
+            t_jchar_value[i] = p_value[i];
+    }
+    
+    jobject t_java_value;
+    if (err == kLCErrorNone)
+    {
+        t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
+        if (t_java_value == nil || env -> ExceptionOccurred() != nil)
+        {
+            env -> ExceptionClear();
+            err = kLCErrorOutOfMemory;
+        }
+    }
+    
+    free(t_jchar_value);
+    
+    if (err == kLCErrorNone)
+        r_value = t_java_value;
+    
+    return err;
+}
+
+static bool default__java_string(JNIEnv *env, const char *p_value, jobject& r_java_value)
+{
+    LCError err;
+    err = kLCErrorNone;
+    
+    err = java_from__cstring(env, p_value, r_java_value);
+    
+    if (err == kLCErrorNone)
+        return true;
+    else
+        return error__out_of_memory();
+}
+    
 static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
 	LCError err;
@@ -2923,31 +2978,13 @@ static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, 
 	t_cstring_value = nil;
 	if (err == kLCErrorNone)
 		err = LCValueFetch(var, kLCValueOptionAsCString, &t_cstring_value);
+    
+    jobject t_java_value;
+    t_java_value = nil;
+    if (err == kLCErrorNone)
+        err = java_from__cstring(env, t_cstring_value, t_java_value);
 
-	size_t t_char_count;
-	jchar *t_jchar_value;
-	t_jchar_value = nil;
-	if (err == kLCErrorNone)
-	{
-		t_char_count = strlen(t_cstring_value);
-		t_jchar_value = (jchar *)malloc(sizeof(jchar) * t_char_count);
-		if (t_jchar_value == nil)
-			err = kLCErrorOutOfMemory;
-	}
-	
-	jobject t_java_value;
-	if (err == kLCErrorNone)
-	{
-		t_java_value = (jobject)env -> NewString(t_jchar_value, t_char_count);
-		if (t_java_value == nil || env -> ExceptionOccurred() != nil)
-		{
-			env -> ExceptionClear();
-			err = kLCErrorOutOfMemory;
-		}
-	}
-	
-	free(t_jchar_value);
-	free(t_cstring_value);
+    free(t_cstring_value);
 	
 	if (err == kLCErrorNone)
 	{
@@ -2957,7 +2994,7 @@ static bool fetch__java_string(JNIEnv *env, const char *arg, MCVariableRef var, 
 	
 	return fetch__report_error(err, arg);
 }
-
+    
 static bool fetch__java_data(JNIEnv *env, const char *arg, MCVariableRef var, jobject& r_value)
 {
 	LCError err;

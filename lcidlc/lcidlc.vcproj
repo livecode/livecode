@@ -168,6 +168,10 @@
 			UniqueIdentifier="{4FC737F1-C7A5-4376-A066-2A32D752A2FF}"
 			>
 			<File
+				RelativePath=".\src\Coder.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\src\Error.cpp"
 				>
 			</File>
@@ -209,6 +213,10 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
+			<File
+				RelativePath=".\src\Coder.h"
+				>
+			</File>
 			<File
 				RelativePath=".\src\Error.h"
 				>
@@ -272,7 +280,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedJavaSupport.c&quot; &quot;g_java_support_template&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedJavaSupport.c&quot; &quot;g_java_support_template&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)EncodedJavaSupport.c"
 				/>
 			</FileConfiguration>
@@ -281,7 +289,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedJavaSupport.c&quot; &quot;g_java_support_template&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedJavaSupport.c&quot; &quot;g_java_support_template&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)EncodedJavaSupport.c"
 				/>
 			</FileConfiguration>
@@ -294,7 +302,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedSupport.c&quot; &quot;g_support_template&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedSupport.c&quot; &quot;g_support_template&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)EncodedSupport.c"
 				/>
 			</FileConfiguration>
@@ -303,7 +311,7 @@
 				>
 				<Tool
 					Name="VCCustomBuildTool"
-					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedSupport.c&quot; &quot;g_support_template&quot;"
+					CommandLine="&quot;$(SolutionDir)prebuilt\bin\Revolution.exe&quot; &quot;$(ProjectDir)encode_source.rev&quot; &quot;$(InputPath)&quot; &quot;$(InputDir)EncodedSupport.c&quot; &quot;g_support_template&quot;&#x0D;&#x0A;"
 					Outputs="$(InputDir)EncodedSupport.c"
 				/>
 			</FileConfiguration>
