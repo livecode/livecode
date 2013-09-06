@@ -3040,7 +3040,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				t_entry.backup_time = 0; // ???
 				t_entry.user_id = buf.st_uid;
 				t_entry.group_id = buf.st_gid;
-				t_entry.permissions = buf.st_mode;
+				t_entry.permissions = buf.st_mode & 0777;
 				t_entry.file_creator = 0; // ???
 				t_entry.file_type = 0; // ???
 				t_entry.is_folder = (buf.st_mode & _S_IFDIR) != 0;
