@@ -1264,33 +1264,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 }
 #endif
 
-Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
-{
-	if (s == MCtruestring)
-	{
-		if (!(flags & w))
-		{
-			flags |= w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	if (s == MCfalsestring)
-	{
-		if (flags & w)
-		{
-			flags &= ~w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	return False;
-}
-
 /* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {
     return MCU_matchname(MCNameGetOldString(p_name), type, name) == True;

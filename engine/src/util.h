@@ -116,7 +116,6 @@ extern void MCU_sort(MCSortnode *items, uint4 nitems,
 #ifndef _DEBUG_MEMORY
 extern void MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize);
 #endif
-extern Boolean MCU_matchflags(const MCString &, uint4 &, uint4, Boolean &);
 extern bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name);
 extern Boolean MCU_matchname(const MCString &, Chunk_term type, MCNameRef name);
 extern void MCU_snap(int2 &p);
