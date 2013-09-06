@@ -1088,7 +1088,7 @@ static void map_parameter(InterfaceRef self, HandlerMapping p_mapping, HandlerPa
 	r_param . is_optional = p_parameter -> is_optional;
 }
 
-static bool InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant, HandlerMapping p_mapping)
+static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handler *p_handler, HandlerVariant *p_variant, HandlerMapping p_mapping)
 {
 	Handler *t_handler;
 	t_handler = p_handler;
@@ -1458,7 +1458,7 @@ static bool InterfaceGenerateHandlers(InterfaceRef self, CoderRef p_coder)
 		
 			CoderWriteLine(p_coder, "static bool handler__%s(MCVariableRef *argv, uint32_t argc, MCVariableRef result)", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "{");
-			CoderWriteLine(p_coder, "\thandler__%s_env_t env;");
+			CoderWriteLine(p_coder, "\thandler__%s_env_t env;", NameGetCString(t_handler -> name));
 			CoderWriteLine(p_coder, "\tenv . argv = argv;");
 			CoderWriteLine(p_coder, "\tenv . argc = argc;");
 			CoderWriteLine(p_coder, "\tenv . result = result;");
