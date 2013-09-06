@@ -11,14 +11,14 @@ SOURCES=\
 	execpt.cpp express.cpp field.cpp fieldf.cpp fieldh.cpp fields.cpp \
 	font.cpp funcs.cpp funcsm.cpp globals.cpp graphic.cpp group.cpp \
 	handler.cpp hc.cpp hndlrlst.cpp ibmp.cpp idraw.cpp ifile.cpp \
-	igif.cpp iimport.cpp ijpg.cpp image.cpp image_rep.cpp \
-	image_rep_encoded.cpp image_rep_mutable.cpp image_rep_transformed.cpp \
+	igif.cpp iimport.cpp ijpg.cpp image.cpp image_rep.cpp imagelist.cpp \
+	image_rep_encoded.cpp image_rep_mutable.cpp \
 	imagebitmap.cpp ipng.cpp \
 	iquantization.cpp iquantize_new.cpp irle.cpp iutil.cpp \
 	itransform.cpp keywords.cpp line.cpp literal.cpp magnify.cpp mcerror.cpp \
 	mcio.cpp mcstring.cpp mctheme.cpp newobj.cpp \
 	object.cpp objptr.cpp operator.cpp paragraf.cpp param.cpp \
-	property.cpp pxmaplst.cpp pickle.cpp regex.cpp \
+	property.cpp pickle.cpp regex.cpp \
 	scriptpt.cpp scrolbar.cpp scrollbardraw.cpp sellst.cpp stack.cpp stack2.cpp \
 	stack3.cpp stackcache.cpp stacklst.cpp \
 	statemnt.cpp styledtext.cpp tooltip.cpp \
@@ -29,16 +29,17 @@ SOURCES=\
 	combiners.cpp path.cpp metacontext.cpp \
 	printer.cpp unicode.cpp rtf.cpp rtfsupport.cpp text.cpp pathgray.cpp \
 	pathprocess.cpp \
-	contextscalewrapper.cpp variablearray.cpp objectstream.cpp \
+	variablearray.cpp objectstream.cpp \
 	menuparse.cpp parentscript.cpp securemode.cpp \
 	bitmapeffect.cpp bitmapeffectblur.cpp md5.cpp sha1.cpp capsule.cpp \
 	externalv0.cpp externalv1.cpp lextable.cpp uuid.cpp \
 	objectprops.cpp objectpropsets.cpp variablevalue.cpp mcutility.cpp notify.cpp customprinter.cpp \
 	sysspec.cpp mode_server.cpp sysunxdate.cpp sysunxnetwork.cpp sysunxrandom.cpp \
 	srvmain.cpp srvspec.cpp srvsession.cpp srvstack.cpp srvflst.cpp srvposix.cpp srvdebug.cpp \
-	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp \
+	srvscript.cpp srvcgi.cpp srvoutput.cpp srvmultipart.cpp srvtheme.cpp \
 	eventqueue.cpp encodederrors.cpp name.cpp redraw.cpp sysregion.cpp tilecache.cpp tilecachesw.cpp \
-	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp
+	fonttable.cpp fieldrtf.cpp fieldhtml.cpp fieldstyledtext.cpp paragrafattr.cpp \
+	graphicscontext.cpp
 	
 SOURCE_DIRS=
 

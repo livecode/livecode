@@ -6,6 +6,9 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
+extern "C" int initialise_weak_link_pango();
+extern "C" int initialise_weak_link_pangoft2();
+
 static PangoFontMap *s_font_map = NULL;
 static PangoContext *s_pango = NULL;
 static PangoLayout *s_layout = NULL;
@@ -15,6 +18,9 @@ static bool lnx_pango_initialize(void)
 	bool t_success;
 	t_success = true;
 
+	if (t_success)
+		t_success == initialise_weak_link_pango() != 0 && initialise_weak_link_pangoft2() != 0;
+	
 	if (t_success)
 		if (s_font_map == NULL)
 		{
