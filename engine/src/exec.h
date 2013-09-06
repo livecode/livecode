@@ -2138,10 +2138,10 @@ void MCPasteboardSetDragImageOffset(MCExecContext& ctxt, MCPoint *p_value);
 void MCPasteboardGetAllowableDragActions(MCExecContext& ctxt, intset_t& r_value);
 void MCPasteboardSetAllowableDragActions(MCExecContext& ctxt, intset_t p_value);
 
-void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
-void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
-void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef& r_data);
-void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data);
+void MCPasteboardGetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
+void MCPasteboardSetClipboardData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
+void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef& r_data);
+void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCDataRef p_data);
 
 ///////////
 

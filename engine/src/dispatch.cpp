@@ -1709,31 +1709,7 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 	
 	if (MCactiveimage != NULL && MCclipboarddata -> HasImage())
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_data;
-		t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-		if (t_data != NULL)
-		{
-			MCExecPoint ep(NULL, NULL, NULL);
-			ep . setsvalue(t_data -> Get());
-
-			MCImage *t_image;
-			t_image = new MCImage;
-			t_image -> open();
-			t_image -> openimage();
-			t_image -> setprop(0, P_TEXT, ep, False);
-			MCactiveimage -> pasteimage(t_image);
-			t_image -> closeimage();
-			t_image -> close();
-
-			delete t_image;
-
-			t_data -> Release();
-		}
-
-		return true;
-#else
-		MCAutoStringRef t_data;
+		MCAutoDataRef t_data;
 		if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 		{
 			MCExecPoint ep(NULL, NULL, NULL);
@@ -1753,7 +1729,6 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 		}
 
 		return false;
-#endif
 	}
 	
 	if (MCdefaultstackptr != NULL && (p_explicit || MCdefaultstackptr -> gettool(MCdefaultstackptr) == T_POINTER))
@@ -1765,39 +1740,13 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 			return false;
 		if (MCclipboarddata -> HasObjects())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS);
-			if (t_data != NULL)
-			{
-				t_objects = MCObject::unpickle(t_data, MCdefaultstackptr);
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_OBJECTS, &t_data))
 				t_objects = MCObject::unpickle(*t_data, MCdefaultstackptr);
-#endif
 		}
 		else if (MCclipboarddata -> HasImage())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE);
-			if (t_data != NULL)
-			{
-				MCExecPoint ep(NULL, NULL, NULL);
-				ep . setsvalue(t_data -> Get());
-
-				t_objects = new MCImage(*MCtemplateimage);
-				t_objects -> open();
-				t_objects -> setprop(0, P_TEXT, ep, False);
-				t_objects -> close();
-
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			if (MCclipboarddata -> Fetch(TRANSFER_TYPE_IMAGE, &t_data))
 			{
 				MCExecPoint ep(NULL, NULL, NULL);
@@ -1807,7 +1756,6 @@ bool MCDispatch::dopaste(MCObject*& r_objptr, bool p_explicit)
 				t_objects -> setprop(0, P_TEXT, ep, False);
 				t_objects -> close();
 			}
-#endif
 		}
 		MCclipboarddata -> Unlock();
 

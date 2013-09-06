@@ -61,11 +61,7 @@ MCMacOSXTransferData::~MCMacOSXTransferData(void)
 		MCValueRelease(m_entries[i] . data);
 }
 
-#ifdef SHARED_STRING
-bool MCMacOSXTransferData::Publish(ScrapFlavorType p_type, MCSharedString* p_data, MCMacOSXConversionCallback p_converter)
-#else
-bool MCMacOSXTransferData::Publish(ScrapFlavorType p_type, MCStringRef p_data, MCMacOSXConversionCallback p_converter)
-#endif
+bool MCMacOSXTransferData::Publish(ScrapFlavorType p_type, MCDataRef p_data, MCMacOSXConversionCallback p_converter)
 {
 	bool t_success;
 	t_success = true;
@@ -82,12 +78,7 @@ bool MCMacOSXTransferData::Publish(ScrapFlavorType p_type, MCStringRef p_data, M
 	if (t_success)
 	{
 		t_new_entries[m_entry_count] . type = p_type;
-#ifdef SHARED_STRING
-		p_data -> Retain();
-		t_new_entries[m_entry_count] . data = p_data;
-#else
 		t_new_entries[m_entry_count] . data = MCValueRetain(p_data);
-#endif
 		t_new_entries[m_entry_count] . converter = p_converter;
 
 		m_entries = t_new_entries;
@@ -97,11 +88,7 @@ bool MCMacOSXTransferData::Publish(ScrapFlavorType p_type, MCStringRef p_data, M
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCMacOSXTransferData::Publish(MCTransferType p_type, MCSharedString *p_data)
-#else
-bool MCMacOSXTransferData::Publish(MCTransferType p_type, MCStringRef p_data)
-#endif
+bool MCMacOSXTransferData::Publish(MCTransferType p_type, MCDataRef p_data)
 {
 	bool t_success;
 	t_success = true;
@@ -172,57 +159,23 @@ bool MCMacOSXTransferData::Publish(MCPasteboard *p_pasteboard)
 	if (t_success)
 		for(uint4 i = 0; i < t_type_count && t_success; ++i)
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_success = p_pasteboard -> Fetch(t_types[i], t_data);
-			if (t_success)
-				t_success = Publish(t_types[i], t_data);
-			if (t_data != NULL)
-				t_data -> Release();
-#else
-			MCAutoStringRef t_data;
+			MCAutoDataRef t_data;
 			t_success = p_pasteboard -> Fetch(t_types[i], &t_data);
 			if (t_success)
 				t_success = Publish(t_types[i], *t_data);
-#endif
 		}
 
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCMacOSXTransferData::Subscribe(ScrapFlavorType p_type)
+bool MCMacOSXTransferData::Subscribe(ScrapFlavorType p_type, MCDataRef& r_data)
 {
 	for(uint4 i = 0; i < m_entry_count; ++i)
 		if (m_entries[i] . type == p_type)
 		{
 			if (m_entries[i] . converter != NULL)
 			{
-				MCSharedString *t_converted_data;
-				t_converted_data =  m_entries[i] . converter(m_entries[i] . data);
-				
-				m_entries[i] . data -> Release();
-				m_entries[i] . data = t_converted_data;
-				m_entries[i] . converter = NULL;
-			}
-
-			if (m_entries[i] . data != NULL)
-				m_entries[i] . data -> Retain();
-
-			return m_entries[i] . data;
-		}
-
-	return NULL;
-}
-#else
-bool MCMacOSXTransferData::Subscribe(ScrapFlavorType p_type, MCStringRef& r_data)
-{
-	for(uint4 i = 0; i < m_entry_count; ++i)
-		if (m_entries[i] . type == p_type)
-		{
-			if (m_entries[i] . converter != NULL)
-			{
-				MCAutoStringRef t_converted_data;
+				MCAutoDataRef t_converted_data;
 				if (!m_entries[i] . converter(m_entries[i] . data, &t_converted_data))
 					return false;
 				
@@ -239,8 +192,6 @@ bool MCMacOSXTransferData::Subscribe(ScrapFlavorType p_type, MCStringRef& r_data
 		}
 	return false;
 }
-#endif
-
 
 bool MCMacOSXTransferData::ForEachFlavor(bool (*p_callback)(MCMacOSXTransferData *p_data, ScrapFlavorType p_type, void *p_context), void *p_context)
 {
@@ -267,13 +218,8 @@ MCMacOSXPasteboard::MCMacOSXPasteboard(void)
 MCMacOSXPasteboard::~MCMacOSXPasteboard(void)
 {
 	for(uint4 i = 0; i < m_entry_count; ++i)
-#ifdef SHARED_STRING
-		if (m_entries[i] . data != NULL)
-			m_entries[i] . data -> Release();
-#else
 		if (m_entries[i] . data != nil)
 			MCValueRelease(m_entries[i] . data);
-#endif
 
 	delete m_entries;
 	delete m_types;
@@ -312,11 +258,7 @@ bool MCMacOSXPasteboard::Query(MCTransferType*& r_types, unsigned int& r_type_co
 
 	return false;
 }
-#ifdef SHARED_STRING
-bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCSharedString*& r_data)
-#else
-bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
-#endif
+bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCDataRef& r_data)
 {
 	if (!m_valid)
 		return false;
@@ -331,81 +273,42 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 
 	if (m_entries[t_entry] . data != NULL)
 	{
-#ifdef SHARED_STRING
-		m_entries[t_entry] . data -> Retain();
-		r_data = m_entries[t_entry] . data;
-#else
 		r_data = MCValueRetain(m_entries[t_entry] . data);
-#endif
 		return true;
 	}
 
-#ifdef SHARED_STRING
-	MCSharedString *t_in_data;
-	t_in_data = NULL;
-	if (!FetchFlavor(m_entries[t_entry] . flavor, t_in_data))
-		return false;
-	
-	MCSharedString *t_out_data;
-	t_out_data = NULL;
-#else
-	MCAutoStringRef t_in_data;
+	MCAutoDataRef t_in_data;
 	if (!FetchFlavor(m_entries[t_entry] . flavor, &t_in_data))
 		return false;
 	
-	MCAutoStringRef t_out_data;
-#endif
-	
+	MCAutoDataRef t_out_data;
 	switch(m_entries[t_entry] . flavor)
 	{
 	case kScrapFlavorTypeText:
 	{
 		MCExecPoint ep;
-#ifdef SHARED_STRING
-		ep . setsvalue(t_in_data -> Get());
-		ep . texttobinary();
-		t_out_data = MCSharedString::Create(ep . getsvalue());
-#else
 		ep . setvalueref(*t_in_data);
 		ep . texttobinary();
-		ep . copyasstringref(&t_out_data);
-#endif
+		ep . copyasdataref(&t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeUnicode:
 	{
 		MCExecPoint ep;
-#ifdef SHARED_STRING
-		ep . setsvalue(t_in_data -> Get());
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		t_out_data = MCSharedString::Create(ep . getsvalue());
-#else
 		ep . setvalueref(*t_in_data);
 		ep . utf16toutf8();
 		ep . texttobinary();
 		ep . utf8toutf16();
-		ep . copyasstringref(&t_out_data);
-#endif
+		ep . copyasdataref(&t_out_data);
 	}
 	break;
 
 	case kScrapFlavorTypeTextStyle:
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_text_data;
-		if (FetchFlavor(kScrapFlavorTypeText, t_text_data))
-		{	
-			t_out_data = MCConvertMacStyledToStyledText(t_text_data, t_in_data);
-			t_text_data -> Release();
-		}
-#else
-		MCAutoStringRef t_text_data;
+		MCAutoDataRef t_text_data;
 		if (FetchFlavor(kScrapFlavorTypeText, &t_text_data))
 			MCConvertMacStyledToStyledText(*t_text_data, *t_in_data, &t_out_data);
-#endif
 	}
 	break;
 
@@ -415,96 +318,46 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 		t_is_external = false;
 		
 		// MW-2010-01-08: [[ Bug 8327 ]] Make sure we fetch the correct unicode text!
-#ifdef SHARED_STRING
-		MCSharedString *t_text_data;
-		t_text_data = nil;
-		if (FetchFlavor(kScrapFlavorTypeUTF16External, t_text_data))
-			t_is_external = true;
-		if (t_text_data != nil ||
-			FetchFlavor(kScrapFlavorTypeUnicode, t_text_data))
-		{
-			t_out_data = MCConvertMacUnicodeStyledToStyledText(t_text_data, t_in_data, t_is_external);
-			t_text_data -> Release();
-		}
-#else
-		MCAutoStringRef t_text_data;
+		MCAutoDataRef t_text_data;
 		if (FetchFlavor(kScrapFlavorTypeUTF16External, &t_text_data))
 			t_is_external = true;
 		if (*t_text_data != nil || FetchFlavor(kScrapFlavorTypeUnicode, &t_text_data))
 			MCConvertMacUnicodeStyledToStyledText(*t_text_data, *t_in_data, t_is_external, &t_out_data);
-#endif
 	}
 	break;
 
 	// MW-2011-01-17: Add support for fetching RTF encoded text from clipboard.
 	case flavorTypeRichText:
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_text_data;
-		if (FetchFlavor(flavorTypeRichText, t_text_data))
-		{
-			t_out_data = MCConvertRTFToStyledText(t_text_data);
-			t_text_data -> Release();
-		}
-#else
-		MCAutoStringRef t_text_data;
+		MCAutoDataRef t_text_data;
 		if (FetchFlavor(flavorTypeRichText, &t_text_data))
 			MCConvertRTFToStyledText(*t_text_data, &t_out_data);
-#endif
 	}
 	break;
 	
 	// MW-2012-11-19: [[ Bug 10542 ]] Add support for processing HTML encoded text from clipboard.
 	case flavorTypeHtml:
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_text_data;
-		if (FetchFlavor(flavorTypeHtml, t_text_data))
-		{
-			t_out_data = MCConvertHTMLToStyledText(t_text_data);
-			t_text_data -> Release();
-		}
-#else
-		MCAutoStringRef t_text_data;
+		MCAutoDataRef t_text_data;
 		if (FetchFlavor(flavorTypeRichText, &t_text_data))
 			MCConvertHTMLToStyledText(*t_text_data, &t_out_data);
-#endif
 	}
 	break;
 							
 	case kScrapFlavorTypePicture:
-#ifdef SHARED_STRING
-		t_out_data = MCConvertMacPictureToImage(t_in_data);
-#else
-		MCConvertMacPictureToImage(*t_in_data, &t_out_data);
-#endif
-	break;
+		MCConvertMacPictureToImage(*t_in_data, &t_out_data);	break;
 
 	case flavorTypeTIFF:
 		// MW-2010-11-17: [[ Bug 9183 ]] Check the data is actually TIFF, it is actually a PNG then
 		//   do nothing
-#ifdef SHARED_STRING
-		if (t_in_data -> GetLength() >= 4 && memcmp(t_in_data -> GetBuffer(), "\211PNG", 4) == 0)
-		{
-			t_in_data -> Retain();
-			t_out_data = t_in_data;
-		}
-		else
-			t_out_data = MCConvertMacTIFFToImage(t_in_data);
-#else
-		if (MCStringGetLength(*t_in_data) >= 4 && memcmp(MCStringGetCString(*t_in_data), "\211PNG", 4) == 0)
+		if (MCDataGetLength(*t_in_data) >= 4 && memcmp(MCDataGetBytePtr(*t_in_data), "\211PNG", 4) == 0)
 			&t_out_data = MCValueRetain(*t_in_data);
 		else
 			MCConvertMacTIFFToImage(*t_in_data, &t_out_data);
-#endif
 	break;
 
 	case flavorTypeHFS:
-#ifdef SHARED_STRING
-		t_out_data = MCConvertMacHFSToFiles(t_in_data);
-#else
 		MCConvertMacHFSToFiles(*t_in_data, &t_out_data);
-#endif
 	break;
 
 	case flavorTypeRevolutionText:
@@ -512,32 +365,15 @@ bool MCMacOSXPasteboard::Fetch(MCTransferType p_type, MCStringRef& r_data)
 	case flavorTypePNG:
 	case flavorTypeGIF:
 	case flavorTypeJPEG:
-#ifdef SHARED_STRING
-		t_in_data -> Retain();
-		t_out_data = t_in_data;
-#else
-		&t_out_data = MCValueRetain(*t_in_data);
-#endif
+		t_out_data = *t_in_data;
 	break;
 	}
 
-#ifdef SHARED_STRING
-	t_in_data -> Release();
-
-	if (t_out_data == NULL)
-		return false;
-
-	m_entries[t_entry] . data = t_out_data;
-	t_out_data -> Retain();
-
-	r_data = t_out_data;
-#else
 	if (*t_out_data == nil)
 		return false;
 
 	m_entries[t_entry] . data = MCValueRetain(*t_out_data);
 	r_data = MCValueRetain(*t_out_data);
-#endif
 
 	return true;
 }
@@ -705,97 +541,28 @@ bool MCMacOSXPasteboard::AddEntry(MCTransferType p_type, ScrapFlavorType p_flavo
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef SHARED_STRING
-MCSharedString *MCConvertTextToMacPlain(MCSharedString *p_data)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_data -> Get());
-	ep . binarytotext();
-	return MCSharedString::Create(ep . getsvalue());
-}
 
-MCSharedString *MCConvertUnicodeToMacUnicode(MCSharedString *p_data)
-{
-	MCExecPoint ep(NULL, NULL, NULL);
-	ep . setsvalue(p_data -> Get());
-	ep . utf16toutf8();
-	ep . binarytotext();
-	ep . utf8toutf16();
-	return MCSharedString::Create(ep . getsvalue());
-}
-
-MCSharedString *MCConvertStyledTextToMacUnicode(MCSharedString *p_data)
-{
-	MCSharedString *t_result;
-	t_result = NULL;
-	
-	MCSharedString *t_unicode;
-	t_unicode = MCConvertStyledTextToUnicode(p_data);
-	if (t_unicode != NULL)
-	{
-		t_result = MCConvertUnicodeToMacUnicode(t_unicode);
-		t_unicode -> Release();
-	}
-	
-	return t_result;
-}
-
-MCSharedString *MCConvertStyledTextToMacUnicodeStyled(MCSharedString *p_in)
-{
-	MCObject *t_object;
-	t_object = MCObject::unpickle(p_in, MCtemplatefield -> getstack());
-	if (t_object != NULL)
-	{
-		MCParagraph *t_paragraphs;
-		t_paragraphs = ((MCStyledText *)t_object) -> getparagraphs();
-
-		MCExecPoint ep(NULL, NULL, NULL);
-		MCtemplatefield -> getparagraphmacunicodestyles(ep, t_paragraphs, t_paragraphs -> prev());
-
-		delete t_object;
-
-		return MCSharedString::Create(ep . getsvalue());
-	}
-	return NULL;
-}
-
-MCSharedString *MCConvertStyledTextToMacPlain(MCSharedString *p_data)
-{
-	MCSharedString *t_result;
-	t_result = NULL;
-	
-	MCSharedString *t_text;
-	t_text = MCConvertStyledTextToText(p_data);
-	if (t_text != NULL)
-	{
-		t_result = MCConvertTextToMacPlain(t_text);
-		t_text -> Release();
-	}
-	
-	return t_result;
-}
-#else
-bool MCConvertTextToMacPlain(MCStringRef p_input, MCStringRef& r_output)
+bool MCConvertTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 	ep . setvalueref(p_input);
 	ep . binarytotext();
-	return ep . copyasstringref(r_output);
+	return ep . copyasdataref(r_output);
 }
 
-bool MCConvertUnicodeToMacUnicode(MCStringRef p_input, MCStringRef& r_output)
+bool MCConvertUnicodeToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCExecPoint ep(NULL, NULL, NULL);
 	ep . setvalueref(p_input);
 	ep . utf16toutf8();
 	ep . binarytotext();
 	ep . utf8toutf16();
-	return ep . copyasstringref(r_output);
+	return ep . copyasdataref(r_output);
 }
 
-bool MCConvertStyledTextToMacUnicode(MCStringRef p_input, MCStringRef& r_output)
+bool MCConvertStyledTextToMacUnicode(MCDataRef p_input, MCDataRef& r_output)
 {
-	MCAutoStringRef t_unicode;
+	MCAutoDataRef t_unicode;
 	
 	if (!MCConvertStyledTextToUnicode(p_input, &t_unicode))
 		return false;
@@ -803,7 +570,7 @@ bool MCConvertStyledTextToMacUnicode(MCStringRef p_input, MCStringRef& r_output)
 	return MCConvertUnicodeToMacUnicode(*t_unicode, r_output);
 }
 
-bool MCConvertStyledTextToMacUnicodeStyled(MCStringRef p_input, MCStringRef& r_output)
+bool MCConvertStyledTextToMacUnicodeStyled(MCDataRef p_input, MCDataRef& r_output)
 {
 	MCObject *t_object;
 	t_object = MCObject::unpickle(p_input, MCtemplatefield -> getstack());
@@ -818,46 +585,19 @@ bool MCConvertStyledTextToMacUnicodeStyled(MCStringRef p_input, MCStringRef& r_o
 	
 	delete t_object;
 	
-	return ep . copyasstringref(r_output);
+	return ep . copyasdataref(r_output);
 }
 
-bool MCConvertStyledTextToMacPlain(MCStringRef p_input, MCStringRef& r_output)
+bool MCConvertStyledTextToMacPlain(MCDataRef p_input, MCDataRef& r_output)
 {	
-	MCAutoStringRef t_text;
+	MCAutoDataRef t_text;
 	if (!MCConvertStyledTextToText(p_input, &t_text))
 		return false;
 	
 	return MCConvertTextToMacPlain(*t_text, r_output);
 }
-#endif
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertImageToMacPicture(MCSharedString* p_data)
-{
-	bool t_success = true;
-	
-	MCMacSysPictHandle t_handle = nil;
-	MCSharedString *t_result = nil;
-	MCImageFrame *t_frames = nil;
-	uindex_t t_frame_count = 0;
-	
-	t_success = MCImageDecode((const uint8_t*)p_data->GetBuffer(), p_data->GetLength(), t_frames, t_frame_count) &&
-		MCImageBitmapToPICT(t_frames[0].image, t_handle);
-	
-	MCImageFreeFrames(t_frames, t_frame_count);
-	
-	if (t_success)
-	{
-		HLock((Handle)t_handle);
-		t_success = nil != (t_result = MCSharedString::Create(*(Handle)t_handle, GetHandleSize((Handle)t_handle)));
-		HUnlock((Handle)t_handle);
-		DisposeHandle((Handle)t_handle);
-	}
-	
-	return t_success ? t_result : nil;
-}
-#else
-bool MCConvertImageToMacPicture(MCStringRef p_input, MCStringRef &r_output)
+bool MCConvertImageToMacPicture(MCDataRef p_input, MCDataRef &r_output)
 {
 	bool t_success = true;
 	
@@ -865,7 +605,7 @@ bool MCConvertImageToMacPicture(MCStringRef p_input, MCStringRef &r_output)
 	MCImageFrame *t_frames = nil;
 	uindex_t t_frame_count = 0;
 	
-	t_success = MCImageDecode((const uint8_t*)MCStringGetBytePtr(p_input), MCStringGetLength(p_input), t_frames, t_frame_count) &&
+	t_success = MCImageDecode((const uint8_t*)MCDataGetBytePtr(p_input), MCDataGetLength(p_input), t_frames, t_frame_count) &&
 	MCImageBitmapToPICT(t_frames[0].image, t_handle);
 	
 	MCImageFreeFrames(t_frames, t_frame_count);
@@ -873,26 +613,18 @@ bool MCConvertImageToMacPicture(MCStringRef p_input, MCStringRef &r_output)
 	if (t_success)
 	{
 		HLock((Handle)t_handle);
-		t_success = MCStringCreateWithNativeChars((const char_t *)t_handle, GetHandleSize((Handle)t_handle), r_output);
+		t_success = MCDataCreateWithBytes((const char_t *)t_handle, GetHandleSize((Handle)t_handle), r_output);
 		HUnlock((Handle)t_handle);
 		DisposeHandle((Handle)t_handle);
 	}
 	
 	return t_success;
 }
-#endif
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertFilesToMacHFS(MCSharedString *p_data)
+bool MCConvertFilesToMacHFS(MCDataRef p_input, MCDataRef& r_output)
 {
-	uint4 t_length = p_data -> GetLength();
-	const char *t_buffer = (const char *)p_data -> GetBuffer();
-#else
-bool MCConvertFilesToMacHFS(MCStringRef p_input, MCStringRef& r_output)
-{
-	uint4 t_length = MCStringGetLength(p_input);
-	const char *t_buffer = MCStringGetCString(p_input);
-#endif
+	uint4 t_length = MCDataGetLength(p_input);
+	const char *t_buffer = (const char *)MCDataGetBytePtr(p_input);
 	
 	HFSFlavor *t_items;
 	t_items = NULL;
@@ -957,66 +689,20 @@ bool MCConvertFilesToMacHFS(MCStringRef p_input, MCStringRef& r_output)
 	if (t_items == NULL)
 		return NULL;
 
-#ifdef SHARED_STRING
-	return MCSharedString::CreateNoCopy(t_items, sizeof(HFSFlavor) * t_count);
-#else
-	return MCStringCreateWithNativeChars((char_t *)t_items, sizeof(HFSFlavor) * t_count, r_output);
-#endif
+	if (MCDataCreateWithBytesAndRelease((char_t *)t_items, sizeof(HFSFlavor) * t_count, r_output))
+		return true;
+	
+	free(t_items);
+	
+	return false;
 }
 
 //
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertMacStyledToStyledText(MCSharedString *p_text_data, MCSharedString *p_style_data)
+bool MCConvertMacStyledToStyledText(MCDataRef p_text_data, MCDataRef p_style_data, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> macstyletexttoparagraphs(p_text_data -> Get(), p_style_data -> Get(), False);
-	
-	MCStyledText t_styled_text;
-	t_styled_text . setparent(MCtemplatefield -> getparent());
-	t_styled_text . setparagraphs(t_paragraphs);
-	
-	return MCObject::pickle(&t_styled_text, 0);
-}
-
-MCSharedString *MCConvertMacUnicodeStyledToStyledText(MCSharedString *p_text_data, MCSharedString *p_style_data, bool t_is_external)
-{
-	MCParagraph *t_paragraphs;
-	
-	MCString t_text;
-	t_text = p_text_data -> Get();
-	
-	// MW-2010-01-08: [[ Bug 8327 ]] If the text is 'external' representation, skip the BOM.
-	if (t_is_external && t_text . getlength() >= 2 &&
-		(*(uint2 *)t_text . getstring() == 0xfffe || 
-		*(uint2 *)t_text . getstring() == 0xfeff))
-		t_text . set(t_text . getstring() + 2, t_text . getlength() - 1);
-	
-	// MW-2009-12-01: If the unicode styled text has an empty style data, then make
-	//   sure we just convert it as plain unicode text.
-	if (p_style_data -> Get() . getlength() != 0)
-		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, p_style_data -> Get());
-	else
-	{
-		MCExecPoint ep;
-		ep . setsvalue(t_text);
-		ep . utf16toutf8();
-		ep . texttobinary();
-		ep . utf8toutf16();
-		t_paragraphs = MCtemplatefield -> texttoparagraphs(ep . getsvalue(), true);
-	}
-	
-	MCStyledText t_styled_text;
-	t_styled_text . setparent(MCtemplatefield -> getparent());
-	t_styled_text . setparagraphs(t_paragraphs);
-	
-	return MCObject::pickle(&t_styled_text, 0);
-}
-#else
-bool MCConvertMacStyledToStyledText(MCStringRef p_text_data, MCStringRef p_style_data, MCStringRef& r_output)
-{
-	MCParagraph *t_paragraphs;
-	t_paragraphs = MCtemplatefield -> macstyletexttoparagraphs(MCStringGetOldString(p_text_data), MCStringGetOldString(p_style_data), False);
+	t_paragraphs = MCtemplatefield -> macstyletexttoparagraphs(MCDataGetOldString(p_text_data), MCDataGetOldString(p_style_data), False);
 	
 	MCStyledText t_styled_text;
 	t_styled_text . setparent(MCtemplatefield -> getparent());
@@ -1027,12 +713,12 @@ bool MCConvertMacStyledToStyledText(MCStringRef p_text_data, MCStringRef p_style
 	return true;
 }
 
-bool MCConvertMacUnicodeStyledToStyledText(MCStringRef p_text_data, MCStringRef p_style_data, bool p_is_external, MCStringRef& r_output)
+bool MCConvertMacUnicodeStyledToStyledText(MCDataRef p_text_data, MCDataRef p_style_data, bool p_is_external, MCDataRef& r_output)
 {
 	MCParagraph *t_paragraphs;
 	
 	MCString t_text;
-	t_text = MCStringGetOldString(p_text_data);
+	t_text = MCDataGetOldString(p_text_data);
 	
 	// MW-2010-01-08: [[ Bug 8327 ]] If the text is 'external' representation, skip the BOM.
 	if (p_is_external && t_text . getlength() >= 2 &&
@@ -1042,8 +728,8 @@ bool MCConvertMacUnicodeStyledToStyledText(MCStringRef p_text_data, MCStringRef 
 	
 	// MW-2009-12-01: If the unicode styled text has an empty style data, then make
 	//   sure we just convert it as plain unicode text.
-	if (MCStringGetLength(p_style_data) != 0)
-		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCStringGetOldString(p_style_data));
+	if (MCDataGetLength(p_style_data) != 0)
+		t_paragraphs = MCtemplatefield -> macunicodestyletexttoparagraphs(t_text, MCDataGetOldString(p_style_data));
 	else
 	{
 		MCExecPoint ep;
@@ -1062,7 +748,7 @@ bool MCConvertMacUnicodeStyledToStyledText(MCStringRef p_text_data, MCStringRef 
 	
 	return true;
 }
-#endif
+
 //
 
 static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
@@ -1078,17 +764,10 @@ static inline uint32_t packed_scale_bounded(uint32_t x, uint8_t a)
 	return u + v;
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertMacPictureToImage(MCSharedString *p_data)
+bool MCConvertMacPictureToImage(MCDataRef p_data, MCDataRef &r_output)
 {
-	const uint8_t *t_data_ptr = (uint8_t*)p_data -> GetBuffer();
-	uint32_t t_data_len = p_data -> GetLength();
-#else
-bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
-{
-	const uint8_t *t_data_ptr = MCStringGetBytePtr(p_data);
-	uint32_t t_data_len = MCStringGetLength(p_data);
-#endif
+	const uint8_t *t_data_ptr = MCDataGetBytePtr(p_data);
+	uint32_t t_data_len = MCDataGetLength(p_data);
 	
 	CGrafPtr t_old_port;
 	GDHandle t_old_gdevice;
@@ -1151,10 +830,6 @@ bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
 	}
 	
 	// We have our worlds so render the picture to both and divine the alpha channel
-#ifdef SHARED_STRING
-	MCSharedString *t_out_data;	
-	t_out_data = NULL;
-#endif
 	if (t_success)
 	{
 		Pattern temp;
@@ -1224,11 +899,7 @@ bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
 		/* UNCHECKED */ MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
 		/* UNCHECKED */ MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count));
 
-#ifdef SHARED_STRING
-		t_success = nil != (t_out_data = MCSharedString::Create(t_bytes, t_byte_count));
-#else
-		t_success = MCStringCreateWithNativeChars((const char_t*)t_bytes, t_byte_count, r_output);
-#endif
+		t_success = MCDataCreateWithBytes((const char_t*)t_bytes, t_byte_count, r_output);
 		MCMemoryDeallocate(t_bytes);
 	}
 	
@@ -1243,18 +914,10 @@ bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
 
 	SetGWorld(t_old_port, t_old_gdevice);
 
-#ifdef SHARED_STRING
-	return t_out_data;
-#else
 	return t_success;
-#endif
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertMacTIFFToImage(MCSharedString *p_data)
-#else
-bool MCConvertMacTIFFToImage(MCStringRef p_data, MCStringRef& r_output)
-#endif
+bool MCConvertMacTIFFToImage(MCDataRef p_data, MCDataRef& r_output)
 {
 	bool t_success;
 	t_success = true;
@@ -1280,13 +943,8 @@ bool MCConvertMacTIFFToImage(MCStringRef p_data, MCStringRef& r_output)
 	if (t_success)
 	{
 		PointerDataRefRecord t_dataref;
-#ifdef SHARED_STRING
-		t_dataref . data = (void *)p_data -> GetBuffer();
-		t_dataref . dataLength = p_data -> GetLength();
-#else
-		t_dataref . data = (void *)MCStringGetCString(p_data);
-		t_dataref . dataLength = MCStringGetLength(p_data);
-#endif
+		t_dataref . data = (void *)MCDataGetBytePtr(p_data);
+		t_dataref . dataLength = MCDataGetLength(p_data);
 		if (PtrToHand(&t_dataref, &t_input_dataref_handle, sizeof(PointerDataRefRecord)) != noErr)
 			t_success = false;
 	}
@@ -1324,23 +982,12 @@ bool MCConvertMacTIFFToImage(MCStringRef p_data, MCStringRef& r_output)
 			t_success = false;
 	}
 	
-#ifdef SHARED_STRING
-	MCSharedString *t_result;
-	t_result = NULL;
 	if (t_success)
 	{
 		HLock(t_output_handle);
-		t_result = MCSharedString::Create(*t_output_handle, GetHandleSize(t_output_handle));
+		t_success = MCDataCreateWithBytes((const char_t *)*t_output_handle, GetHandleSize(t_output_handle), r_output);
 		HUnlock(t_output_handle);
 	}
-#else
-	if (t_success)
-	{
-		HLock(t_output_handle);
-		t_success = MCStringCreateWithNativeChars((const char_t *)*t_output_handle, GetHandleSize(t_output_handle), r_output);
-		HUnlock(t_output_handle);
-	}
-#endif
 	
 	if (t_output_handle != NULL)
 		DisposeHandle(t_output_handle);
@@ -1354,47 +1001,16 @@ bool MCConvertMacTIFFToImage(MCStringRef p_data, MCStringRef& r_output)
 	if (t_importer != 0)
 		CloseComponent(t_importer);
 		
-#ifdef SHARED_STRING
-	return t_result;
-#else
 	return t_success;
-#endif
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCConvertMacHFSToFiles(MCSharedString *p_data)
+bool MCConvertMacHFSToFiles(MCDataRef p_data, MCDataRef& r_output)
 {
 	HFSFlavor *t_items;
-	t_items = (HFSFlavor *)(p_data -> GetBuffer());
+	t_items = (HFSFlavor *)MCDataGetBytePtr(p_data);
 	
 	uint32_t t_count;
-	t_count = p_data -> GetLength() / sizeof(HFSFlavor);
-	
-	MCExecPoint ep(NULL, NULL, NULL);
-	for(uint32_t i = 0; i < t_count; ++i)
-	{
-		FSRef t_fs_ref;
-		if (FSpMakeFSRef(&t_items[i] . fileSpec, &t_fs_ref) != noErr)
-			continue;
-        
-		MCAutoStringRef t_filename;
-		
-		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
-			continue;
-        
-		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
-	}
-	
-	return MCSharedString::Create(ep . getsvalue());
-}
-#else
-bool MCConvertMacHFSToFiles(MCStringRef p_data, MCStringRef& r_output)
-{
-	HFSFlavor *t_items;
-	t_items = (HFSFlavor *)strclone(MCStringGetCString(p_data));
-	
-	uint32_t t_count;
-	t_count = MCStringGetLength(p_data) / sizeof(HFSFlavor);
+	t_count = MCDataGetLength(p_data) / sizeof(HFSFlavor);
 	
 	MCExecPoint ep(NULL, NULL, NULL);
 	for(uint32_t i = 0; i < t_count; ++i)
@@ -1411,6 +1027,5 @@ bool MCConvertMacHFSToFiles(MCStringRef p_data, MCStringRef& r_output)
 		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
 	}
 	
-	return ep . copyasstringref(r_output);
+	return ep . copyasdataref(r_output);
 }
-#endif

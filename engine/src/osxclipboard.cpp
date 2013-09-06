@@ -91,11 +91,7 @@ bool MCMacOSXScrapPasteboard::QueryFlavors(ScrapFlavorType*& r_types, uint4& r_t
 	return t_success;
 }
 
-#ifdef SHARED_STRING
-bool MCMacOSXScrapPasteboard::FetchFlavor(ScrapFlavorType p_type, MCSharedString*& r_data)
-#else
-bool MCMacOSXScrapPasteboard::FetchFlavor(ScrapFlavorType p_type, MCStringRef& r_data)
-#endif
+bool MCMacOSXScrapPasteboard::FetchFlavor(ScrapFlavorType p_type, MCDataRef& r_data)
 {
 	bool t_success;
 	t_success = true;
@@ -120,11 +116,7 @@ bool MCMacOSXScrapPasteboard::FetchFlavor(ScrapFlavorType p_type, MCStringRef& r
 			t_success = false;
 
 	if (t_success)
-#ifdef SHARED_STRING
-		t_success = nil != (r_data = MCSharedString::CreateNoCopy(t_buffer, (uint4)t_size));
-#else
-		t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_size, r_data);
-#endif
+		t_success = MCDataCreateWithBytesAndRelease((char_t *)t_buffer, t_size, r_data);
 	
 	if (!t_success)
 	{
@@ -188,25 +180,12 @@ static OSStatus SubscribeScrapFlavor(ScrapRef p_scrap, ScrapFlavorType p_type, v
 	OSStatus t_status;
 	t_status = noErr;
 
-#ifdef SHARED_STRING
-	MCSharedString *t_string;
-	t_string = t_data -> Subscribe(p_type);
-	if (t_string == NULL)
-		t_status = internalScrapErr;
-
-	if (t_status == noErr)
-		t_status = PutScrapFlavor(p_scrap, p_type, kScrapFlavorMaskNone, t_string -> GetLength(), t_string -> GetBuffer());
-
-	if (t_string != NULL)
-		t_string -> Release();
-#else
-	MCAutoStringRef t_string;
+	MCAutoDataRef t_string;
 	if (!t_data -> Subscribe(p_type, &t_string))
 		t_status = internalScrapErr;
 
 	if (t_status == noErr)
-		t_status = PutScrapFlavor(p_scrap, p_type, kScrapFlavorMaskNone, MCStringGetLength(*t_string), MCStringGetCString(*t_string));
-#endif
+		t_status = PutScrapFlavor(p_scrap, p_type, kScrapFlavorMaskNone, MCDataGetLength(*t_string), MCDataGetBytePtr(*t_string));
 
 	return t_status;
 }

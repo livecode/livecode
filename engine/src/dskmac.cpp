@@ -2616,7 +2616,7 @@ public:
 	virtual bool Seek(int64_t p_offset, int p_dir)
     {
         off_t t_new_pos;
-        t_new_pos = lseek(m_serial_port, p_offset, p_dir);
+        t_new_pos = lseek(m_serial_port, p_offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR));
         
         if (t_new_pos == (off_t)-1)
             return false;
@@ -6712,7 +6712,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return nil;
         
         if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+            t_handle -> Seek(p_offset, 1);
         
         return t_handle;
     }
@@ -6737,7 +6737,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return nil;
         
         if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+            t_handle -> Seek(p_offset, 1);
         
         return t_handle;
     }

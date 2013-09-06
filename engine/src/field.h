@@ -436,10 +436,7 @@ public:
 	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
-#ifdef SHARED_STRING
-	MCSharedString *pickleselection(void);
-#endif
-	bool pickleselection(MCStringRef& r_string);
+	bool pickleselection(MCDataRef& r_string);
 
 	void cuttext();
 	void copytext();

@@ -906,13 +906,13 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     
     t_old_pos = p_stream -> Tell();
     
-    t_success = p_stream -> Seek(p_pos, SEEK_SET);
+    t_success = p_stream -> Seek(p_pos, 1);
     
     if (t_success)
         t_success = p_stream -> Write(p_buffer, p_size);
     
     if (t_success)
-        t_success = p_stream -> Seek(t_old_pos, SEEK_SET);
+        t_success = p_stream -> Seek(t_old_pos, 1);
     
     if (!t_success)
         return IO_ERROR;

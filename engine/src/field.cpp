@@ -851,7 +851,7 @@ void MCField::mdrag(void)
 	if (!getstate(CS_SOURCE_TEXT))
 		return;
 
-	MCAutoStringRef t_data;
+	MCAutoDataRef t_data;
 	pickleselection(&t_data);
 	if (*t_data != nil)
 	{
@@ -1097,26 +1097,14 @@ Boolean MCField::mup(uint2 which)
 		}
 		else if (MCscreen -> hasfeature(PLATFORM_FEATURE_TRANSIENT_SELECTION) && MCselectiondata -> HasText())
 		{
-#ifdef SHARED_STRING
-			MCSharedString *t_text;
-			t_text = MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT);
-			if (t_text != NULL)
-			{
-				extend = extendwords = False;
-				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
-				setfocus(mx, my);
-				typetext(t_text -> Get());
-			}
-#else
-			MCAutoStringRef t_text;
+			MCAutoDataRef t_text;
 			if (MCselectiondata -> Fetch(TRANSFER_TYPE_TEXT, &t_text))
 			{
 				extend = extendwords = False;
 				// MW-2012-01-25: [[ FieldMetrics ]] Co-ordinates are now card-based.
 				setfocus(mx, my);
-				typetext(MCStringGetOldString(*t_text));
+				typetext(MCDataGetOldString(*t_text));
 			}
-#endif
 		}
 		break;
 	case Button3:

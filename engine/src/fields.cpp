@@ -2460,19 +2460,8 @@ MCParagraph *MCField::cloneselection()
 	return cutptr;
 }
 
-#ifdef SHARED_STRING
-MCSharedString *MCField::pickleselection(void)
-{
-	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
-	//   styledtext's parent the field so that font attr inheritence works.
-	MCStyledText t_styled_text;
-	t_styled_text . setparent(this);
-	t_styled_text . setparagraphs(cloneselection());
-	return MCObject::pickle(&t_styled_text, 0);
-}
-#endif
 
-bool MCField::pickleselection(MCStringRef& r_string)
+bool MCField::pickleselection(MCDataRef& r_string)
 {
 	// MW-2012-02-17: [[ SplitTextAttrs ]] When pickling in the field, make the
 	//   styledtext's parent the field so that font attr inheritence works.
@@ -2510,32 +2499,16 @@ void MCField::cuttext()
 	textchanged();
 }
 
-#ifdef SHARED_STRING
 void MCField::copytext()
 {
 	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
 		return;
 
-	MCSharedString *t_data;
-	t_data = pickleselection();
-	if (t_data != NULL)
-	{
-		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, t_data);
-		t_data -> Release();
-	}
-}
-#else
-void MCField::copytext()
-{
-	if (!focusedparagraph->isselection() && firstparagraph == lastparagraph)
-		return;
-
-	MCAutoStringRef t_data;
+	MCAutoDataRef t_data;
 	/* UNCHECKED */ pickleselection(&t_data);
 	if (*t_data != nil)
 		MCclipboarddata -> Store(TRANSFER_TYPE_STYLED_TEXT, *t_data);
 }
-#endif
 
 void MCField::cuttextindex(uint4 parid, int4 si, int4 ei)
 {

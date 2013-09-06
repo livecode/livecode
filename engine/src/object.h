@@ -653,15 +653,10 @@ public:
 	//   of the objects will be included.
 	static MCPickleContext *startpickling(bool include_2700);
 	static void continuepickling(MCPickleContext *p_context, MCObject *p_object, uint4 p_part);
-#ifdef SHARED_STRING
-	static MCSharedString *stoppickling(MCPickleContext *p_context);
-	static MCSharedString *pickle(MCObject *p_object, uint4 p_part);
-	static MCObject *unpickle(MCSharedString *p_object, MCStack *p_stack);
-#else
-	static void pickle(MCObject *p_object, uint4 p_part, MCStringRef& r_string);
-	static void stoppickling(MCPickleContext *p_context, MCStringRef& r_string);
-	static MCObject *unpickle(MCStringRef p_data, MCStack *p_stack);
-#endif
+	static void pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_string);
+	static void stoppickling(MCPickleContext *p_context, MCDataRef& r_string);
+	static MCObject *unpickle(MCDataRef p_data, MCStack *p_stack);
+	
 	// in DLList overrides
 	MCObject *next()
 	{

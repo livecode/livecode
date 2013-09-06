@@ -1900,39 +1900,8 @@ bool MCImage::recomputefonts(MCFontRef p_parent_font)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-#ifdef SHARED_STRING
-MCSharedString *MCImage::getclipboardtext(void)
-{
-	MCSharedString *t_data = nil;
-	recompress();
-	if (getcompression() == F_RLE)
-	{
-		bool t_success = true;
 
-		MCImageBitmap *t_bitmap = nil;
-
-		t_success = lockbitmap(t_bitmap);
-		if (t_success)
-			t_success = MCImageCreateClipboardData(t_bitmap, t_data);
-		unlockbitmap(t_bitmap);
-	}
-	else if (m_rep != nil)
-	{
-		MCImageRepType t_type = m_rep->GetType();
-		void *t_bytes = nil;
-		uindex_t t_size = 0;
-		if (t_type == kMCImageRepResident)
-			static_cast<MCResidentImageRep*>(m_rep)->GetData(t_bytes, t_size);
-		else if (t_type == kMCImageRepVector)
-			static_cast<MCVectorImageRep*>(m_rep)->GetData(t_bytes, t_size);
-
-		t_data = MCSharedString::Create(t_bytes, t_size);
-	}
-
-	return t_data;
-}
-#else
-bool MCImage::getclipboardtext(MCStringRef& r_data)
+bool MCImage::getclipboardtext(MCDataRef& r_data)
 {
 	bool t_success = true;
 	
@@ -1959,14 +1928,13 @@ bool MCImage::getclipboardtext(MCStringRef& r_data)
 			t_success = false;
 		
 		if (t_success)
-			t_success = MCStringCreateWithNativeChars((const char_t *)t_bytes, t_size, r_data);
+			t_success = MCDataCreateWithBytes((const char_t *)t_bytes, t_size, r_data);
 	}
 	else
 		t_success = false;
 	
 	return t_success;
 }
-#endif
 
 ///////////////////////////////////////////////////////////////////////////////
 
