@@ -39,7 +39,9 @@ public:
 	void setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y);
 	void getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y);
 	void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle);
+	void getlineatts(uint2 &r_linesize, uint2 &r_linestyle, uint2 &r_capstyle, uint2 &r_joinstyle);
 	void setmiterlimit(real8 p_limit);
+	void getmiterlimit(real8 &r_limit);
 	void setgradient(MCGradientFill *p_gradient);
 	
 	void drawline(int2 x1, int2 y1, int2 x2, int2 y2);
@@ -95,7 +97,13 @@ private:
 	int32_t m_pattern_x;
 	int32_t m_pattern_y;
 	MCPatternRef m_pattern;
-	uint32_t m_line_width;
+
+	uint16_t m_line_width;
+	uint16_t m_line_style;
+	uint16_t m_cap_style;
+	uint16_t m_join_style;
+
+	real64_t m_miter_limit;
 };
 
 

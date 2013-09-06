@@ -334,6 +334,24 @@ void MCMetaContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle,
 	}
 }
 
+void MCMetaContext::getlineatts(uint2& linesize, uint2& linestyle, uint2& capstyle, uint2& joinstyle)
+{
+	if (f_stroke != nil)
+	{
+		linesize = f_stroke->width;
+		linestyle = f_stroke->style;
+		capstyle = f_stroke->cap;
+		joinstyle = f_stroke->join;
+	}
+	else
+	{
+		linesize = 0;
+		linestyle = LineSolid;
+		capstyle = CapButt;
+		joinstyle = JoinBevel;
+	}
+}
+
 void MCMetaContext::setmiterlimit(real8 p_limit)
 {
 	if (f_stroke == NULL || p_limit != f_stroke->miter_limit)
@@ -343,6 +361,14 @@ void MCMetaContext::setmiterlimit(real8 p_limit)
 	{
 		f_stroke->miter_limit = p_limit;
 	}
+}
+
+void MCMetaContext::getmiterlimit(real8 &r_limit)
+{
+	if (f_stroke != nil)
+		r_limit = f_stroke->miter_limit;
+	else
+		r_limit = 0.0;
 }
 
 void MCMetaContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)

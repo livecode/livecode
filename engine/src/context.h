@@ -150,7 +150,9 @@ public:
 	virtual void setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y) = 0;
 	virtual void getfillstyle(uint2& style, MCPatternRef &p, int2& x, int2& y) = 0;
 	virtual void setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle, uint2 joinstyle) = 0;
+	virtual void getlineatts(uint2 &r_linesize, uint2 &r_linestyle, uint2 &r_capstyle, uint2 &r_joinstyle) = 0;
 	virtual void setmiterlimit(real8 p_limit) = 0;
+	virtual void getmiterlimit(real8 &r_limit) = 0;
 	virtual void setgradient(MCGradientFill *p_gradient) = 0;
 
 	virtual void drawline(int2 x1, int2 y1, int2 x2, int2 y2) = 0;

@@ -73,6 +73,13 @@ MCGraphicsContext::MCGraphicsContext(MCGContextRef p_context)
 	m_gcontext = MCGContextRetain(p_context);
 	m_pattern = nil;
 	m_background = getblack();
+
+	m_line_width = 0;
+	m_line_style = LineSolid;
+	m_cap_style = CapButt;
+	m_join_style = JoinBevel;
+
+	m_miter_limit = 0.0;
 }
 
 MCGraphicsContext::MCGraphicsContext(uint32_t p_width, uint32_t p_height, bool p_alpha)
@@ -471,6 +478,9 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 {
 	// IM-2013-09-03: [[ RefactorGraphics ]] track the current linewidth setting
 	m_line_width = linesize;
+	m_line_style = linestyle;
+	m_cap_style = capstyle;
+	m_join_style = joinstyle;
 	
 	MCGContextSetStrokeWidth(m_gcontext, (MCGFloat) linesize);
 	
@@ -514,9 +524,24 @@ void MCGraphicsContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capst
 	}	
 }
 
+void MCGraphicsContext::getlineatts(uint2& linesize, uint2& linestyle, uint2& capstyle, uint2& joinstyle)
+{
+	linesize = m_line_width;
+	linestyle = m_line_style;
+	capstyle = m_cap_style;
+	joinstyle = m_join_style;
+}
+
 void MCGraphicsContext::setmiterlimit(real8 p_limit)
 {
+	m_miter_limit = p_limit;
+
 	MCGContextSetStrokeMiterLimit(m_gcontext, (MCGFloat) p_limit);
+}
+
+void MCGraphicsContext::getmiterlimit(real8 &r_limit)
+{
+	r_limit = m_miter_limit;
 }
 
 void MCGraphicsContext::setgradient(MCGradientFill *p_gradient)

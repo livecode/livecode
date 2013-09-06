@@ -2257,7 +2257,39 @@ void MCObject::drawshadow(MCDC *dc, const MCRectangle &drect, int2 soffset)
 	dc->fillrect(trect);
 }
 
+static inline void gen_3d_top_points(MCPoint p_points[6], int32_t p_left, int32_t p_top, int32_t p_right, int32_t p_bottom, uint32_t p_width)
+{
+	p_points[0].x = p_left;
+	p_points[0].y = p_top;
+	p_points[1].x = p_right;
+	p_points[1].y = p_top;
+	p_points[2].x = p_right;
+	p_points[2].y = p_top + p_width;
+	p_points[3].x = p_left + p_width;
+	p_points[3].y = p_top + p_width;
+	p_points[4].x = p_left + p_width;
+	p_points[4].y = p_bottom;
+	p_points[5].x = p_left;
+	p_points[5].y = p_bottom;
+}
 
+static inline void gen_3d_bottom_points(MCPoint p_points[6], int32_t p_left, int32_t p_top, int32_t p_right, int32_t p_bottom, uint32_t p_width)
+{
+	p_points[0].x = p_right;
+	p_points[0].y = p_bottom;
+	p_points[1].x = p_left;
+	p_points[1].y = p_bottom;
+	p_points[2].x = p_left + p_width;
+	p_points[2].y = p_bottom - p_width;
+	p_points[3].x = p_right - p_width;
+	p_points[3].y = p_bottom - p_width;
+	p_points[4].x = p_right - p_width;
+	p_points[4].y = p_top + p_width;
+	p_points[5].x = p_right;
+	p_points[5].y = p_top;
+}
+
+// IM-2013-09-06: [[ RefactorGraphics ]] Render all emulated theme 3D borders as polygons
 void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
                       Etch style, uint2 bwidth)
 {
@@ -2274,9 +2306,9 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 		b = new MCSegment[bwidth * 2];
 	}
 	int2 lx = drect.x;
-	int2 rx = drect.x + drect.width - 1;
+	int2 rx = drect.x + drect.width;
 	int2 ty = drect.y;
-	int2 by = drect.y + drect.height - 1;
+	int2 by = drect.y + drect.height;
 	uint2 i;
 
 	Boolean reversed = style == ETCH_SUNKEN || style == ETCH_SUNKEN_BUTTON;
@@ -2287,11 +2319,9 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 	case LF_WIN95:
 		if (bwidth == DEFAULT_BORDER)
 		{
-			MCPoint p[3];
-			p[0].x = p[1].x = lx;
-			p[2].x = rx - 1;
-			p[0].y = by - 1;
-			p[1].y = p[2].y = ty;
+			MCPoint t_points[6];
+
+			gen_3d_top_points(t_points, lx, ty, rx, by, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				if (reversed)
 					dc->setforeground(dc->getblack());
@@ -2302,11 +2332,9 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 						setforeground(dc, DI_BACK, False);
 			else
 				setforeground(dc, DI_TOP, reversed);
-			dc->drawlines(p, 3);
-			p[0].x = p[1].x = lx + 1;
-			p[2].x = rx - 2;
-			p[0].y = by - 2;
-			p[1].y = p[2].y = ty + 1;
+			dc->fillpolygon(t_points, 6);
+
+			gen_3d_top_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
 			if (style == ETCH_RAISED_SMALL || style == ETCH_SUNKEN_BUTTON)
 				setforeground(dc, DI_TOP, reversed);
 			else
@@ -2314,9 +2342,9 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 					dc->setforeground(dc->getblack());
 				else
 					setforeground(dc, DI_BACK, False);
-			dc->drawlines(p, 3);
-			p[0].y = p[1].y = by - 1;
-			p[1].x = p[2].x = rx - 1;
+			dc->fillpolygon(t_points, 6);
+
+			gen_3d_bottom_points(t_points, lx + 1, ty + 1, rx - 1, by - 1, 1);
 			if (MClook != LF_MAC && MClook != LF_AM || style != ETCH_SUNKEN)
 				if (reversed)
 					if (gettype() == CT_FIELD)
@@ -2325,55 +2353,27 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 						setforeground(dc, DI_BACK, False);
 				else
 					setforeground(dc, DI_BOTTOM, False);
-			dc->drawlines(p, 3);
-			p[0].x = lx;
-			p[1].x = p[2].x = rx;
-			p[0].y = p[1].y = by;
-			p[2].y = ty;
+			dc->fillpolygon(t_points, 6);
+
+			gen_3d_bottom_points(t_points, lx, ty, rx, by, 1);
 			if (reversed)
 				setforeground(dc, DI_TOP, False);
 			else
 				dc->setforeground(dc->getblack());
-			dc->drawlines(p, 3);
+			dc->fillpolygon(t_points, 6);
 			break;
 		}
 	case LF_MOTIF:
 		// IM-2013-09-03: [[ RefactorGraphics ]] render Motif 3D border using polygons instead of line segments
-		rx++;
-		by++;
-		
-		MCPoint t_top_points[6];
-		t_top_points[0].x = lx;
-		t_top_points[0].y = ty;
-		t_top_points[1].x = rx;
-		t_top_points[1].y = ty;
-		t_top_points[2].x = rx - bwidth;
-		t_top_points[2].y = ty + bwidth;
-		t_top_points[3].x = lx + bwidth;
-		t_top_points[3].y = ty + bwidth;
-		t_top_points[4].x = lx + bwidth;
-		t_top_points[4].y = by - bwidth;
-		t_top_points[5].x = lx;
-		t_top_points[5].y = by;
-		
-		MCPoint t_bottom_points[6];
-		t_bottom_points[0].x = rx;
-		t_bottom_points[0].y = by;
-		t_bottom_points[1].x = lx;
-		t_bottom_points[1].y = by;
-		t_bottom_points[2].x = lx + bwidth;
-		t_bottom_points[2].y = by - bwidth;
-		t_bottom_points[3].x = rx - bwidth;
-		t_bottom_points[3].y = by - bwidth;
-		t_bottom_points[4].x = rx - bwidth;
-		t_bottom_points[4].y = ty + bwidth;
-		t_bottom_points[5].x = rx;
-		t_bottom_points[5].y = ty;
+		MCPoint t_points[6];
 
-		setforeground(dc, DI_BOTTOM, reversed);
-		dc->fillpolygon(t_bottom_points, 6);
+		gen_3d_top_points(t_points, lx, ty, rx, by, bwidth);
 		setforeground(dc, DI_TOP, reversed);
-		dc->fillpolygon(t_top_points, 6);
+		dc->fillpolygon(t_points, 6);
+
+		gen_3d_bottom_points(t_points, lx, ty, rx, by, bwidth);
+		setforeground(dc, DI_BOTTOM, reversed);
+		dc->fillpolygon(t_points, 6);
 		break;
 	}
 	if (t != tb)
@@ -2385,13 +2385,20 @@ void MCObject::draw3d(MCDC *dc, const MCRectangle &drect,
 
 void MCObject::drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth)
 {
-	MCRectangle trect = drect;
-	setforeground(dc, DI_BORDER, False);
-	while (bwidth--)
-	{
-		dc->drawrect(trect);
-		trect = MCU_reduce_rect(trect, 1);
-	}
+	// IM-2013-09-06: [[ RefactorGraphics ]] rewrite to use drawrect with inside line width
+	uint2 t_linesize, t_linestyle, t_capstyle, t_joinstyle;
+	real8 t_miter_limit;
+
+	dc->getlineatts(t_linesize, t_linestyle, t_capstyle, t_joinstyle);
+	dc->getmiterlimit(t_miter_limit);
+
+	dc->setlineatts(bwidth, t_linestyle, t_capstyle, JoinMiter);
+	dc->setmiterlimit(2.0);
+
+	dc->drawrect(drect, true);
+
+	dc->setlineatts(t_linesize, t_linestyle, t_capstyle, t_joinstyle);
+	dc->setmiterlimit(t_miter_limit);
 }
 
 void MCObject::positionrel(const MCRectangle &drect,

@@ -1892,13 +1892,7 @@ void MCControl::drawfocus(MCDC *dc, const MCRectangle &dirty)
 		setforeground(dc, DI_FOCUS, False, True);
 		if (IsMacEmulatedLF() || IsMacLFAM() && !MCaqua)
 			trect = MCU_reduce_rect(trect, 1);
-		uint2 bwidth;
-		bwidth = MCfocuswidth;
-		while (bwidth--)
-		{
-			dc->drawrect(trect);
-			trect = MCU_reduce_rect(trect, 1);
-		}
+		drawborder(dc, trect, MCfocuswidth);
 	}
 }
 
