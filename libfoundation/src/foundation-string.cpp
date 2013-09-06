@@ -500,6 +500,12 @@ char_t MCStringGetNativeCharAtIndex(MCStringRef self, uindex_t p_index)
 	return self -> chars[p_index];
 }
 
+codepoint_t MCStringGetCodepointAtIndex(MCStringRef self, uindex_t p_index)
+{
+	// Stop-gap until support for UTF-16 with surrogate pairs is added
+	return MCStringGetCharAtIndex(self, p_index);
+}
+
 uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 {
 	uindex_t t_count;
