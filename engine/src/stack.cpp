@@ -936,7 +936,7 @@ Boolean MCStack::kdown(MCStringRef p_string, KeySym key)
 	// Does this keypress correspond to a mnemonic letter?
 	// The comparison should be case-insensitive for letters
 	KeySym t_key;
-	t_key = KeySymToLower(key);
+	t_key = MCKeySymToLower(key);
 	for (i = 0 ; i < nmnemonics ; i++)
 	{
 		if (mnemonics[i].key == t_key

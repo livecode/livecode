@@ -1866,7 +1866,7 @@ void MCStack::addmnemonic(MCButton *button, KeySym p_key)
 	// Ensure that letter mnemonics are added case-insensitively
 	// (the shift state is handled by the button)
 	KeySym t_key;
-	t_key = KeySymToLower(p_key);
+	t_key = MCKeySymToLower(p_key);
 	mnemonics[nmnemonics].key = t_key;
 	nmnemonics++;
 }
@@ -1907,7 +1907,7 @@ MCButton *MCStack::findmnemonic(KeySym p_key)
 {
 	uint2 i;
 	KeySym t_key;
-	t_key = KeySymToLower(p_key);
+	t_key = MCKeySymToLower(p_key);
 	for (i = 0 ; i < nmnemonics ; i++)
 		if (mnemonics[i].key == t_key)
 			return mnemonics[i].button;
