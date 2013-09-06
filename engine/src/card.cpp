@@ -1863,9 +1863,11 @@ Exec_stat MCCard::relayer(MCControl *optr, uint2 newlayer)
 	return ES_NORMAL;
 }
 
-MCCard *MCCard::findname(Chunk_term type, const MCString &inname)
+MCCard *MCCard::findname(Chunk_term type, MCStringRef inname)
 {
-	if (type == CT_CARD && MCU_matchname(inname, CT_CARD, getname()))
+    MCAutoNameRef t_name;
+    /* UNCHECKED */ MCNameCreate(inname, t_name);
+	if (type == CT_CARD && MCU_matchname(t_name, CT_CARD, getname()))
 		return this;
 	else
 		return NULL;
@@ -2152,7 +2154,7 @@ MCControl *MCCard::getchild(Chunk_term etype, MCStringRef p_expression,
 				{
 					if (!optr->getref()->getopened())
 						optr->getref()->setparent(this);
-					foundobj = optr->getref()->findname(otype, MCStringGetOldString(p_expression));
+					foundobj = optr->getref()->findname(otype, p_expression);
 				}
 				if (foundobj != NULL)
 				{
@@ -2554,7 +2556,7 @@ MCControl *MCCard::getchildbyname(MCNameRef p_name, Chunk_term p_object_type, Ch
         {
             if (!optr->getref()->getopened())
                 optr->getref()->setparent(this);
-            foundobj = optr->getref()->findname(p_object_type, MCNameGetOldString(p_name));
+            foundobj = optr->getref()->findname(p_object_type, MCNameGetString(p_name));
         }
         if (foundobj != nil)
         {

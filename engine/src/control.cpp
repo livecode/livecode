@@ -904,10 +904,12 @@ MCControl *MCControl::findnum(Chunk_term type, uint2 &num)
 		return NULL;
 }
 
-MCControl *MCControl::findname(Chunk_term type, const MCString &inname)
+MCControl *MCControl::findname(Chunk_term type, MCStringRef inname)
 {
+    MCAutoNameRef t_name;
+    /* UNCHECKED */ MCNameCreate(inname, t_name);
 	if ((type == gettype() || type == CT_LAYER)
-	        && MCU_matchname(inname, gettype(), getname()))
+	        && MCU_matchname(t_name, gettype(), getname()))
 		return this;
 	else
 		return NULL;

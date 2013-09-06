@@ -908,7 +908,9 @@ MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+        MCAutoStringRef t_s;
+        /* UNCHECKED */ MCStringCreateWithOldString(s, &t_s);
+		MCControl *foundobj = tobj->findname(type, *t_s);
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -1213,7 +1215,7 @@ MCStack *MCStack::findstackname(MCNameRef p_name)
 
 MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
+	if (findname(CT_STACK, MCNameGetString(p_name)) != nil)
 		return this;
     
 	MCStack *sptr = this;
@@ -1236,7 +1238,7 @@ MCStack *MCStack::findsubstackname(MCNameRef p_name)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
+				if (tptr->findname(CT_STACK, MCNameGetString(p_name)) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}

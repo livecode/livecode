@@ -682,18 +682,20 @@ IO_stat MCStack::saveas(const MCStringRef p_fname)
 	return IO_NORMAL;
 }
 
-MCStack *MCStack::findname(Chunk_term type, const MCString &findname)
+MCStack *MCStack::findname(Chunk_term type, MCStringRef findname)
 { // should do case-sensitive match on filename on UNIX...
 	if (type == CT_STACK)
 	{
-		if (MCU_matchname(findname, CT_STACK, getname()))
+        MCAutoNameRef t_name;
+        /* UNCHECKED */ MCNameCreate(findname, t_name);
+		if (MCU_matchname(t_name, CT_STACK, getname()))
 		return this;
 		
 		MCAutoNameRef t_filename_name;
 		if (filename != nil)
 			t_filename_name . CreateWithCString(filename);
 
-		if (MCU_matchname(findname, CT_STACK, t_filename_name))
+		if (MCU_matchname(t_name, CT_STACK, t_filename_name))
 			return this;
 	}
 
@@ -1328,7 +1330,7 @@ MCCard *MCStack::getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term
 		{
 			do
 			{
-				found = cptr->findname(otype, MCStringGetOldString(p_expression));
+				found = cptr->findname(otype, p_expression);
 				if (found != NULL
 				        && found->countme(backgroundid, (state & CS_MARKED) != 0))
 					break;
@@ -1615,7 +1617,8 @@ MCCard *MCStack::getchildbyname(MCNameRef p_name)
     MCCard *found = nil;
     do
     {
-        found = cptr->findname(CT_CARD, MCNameGetOldString(p_name));
+        
+        found = cptr->findname(CT_CARD, MCNameGetString(p_name));
         if (found != nil && found->countme(backgroundid, (state & CS_MARKED) != 0))
             break;
         cptr = cptr->next();
@@ -1724,7 +1727,9 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 		{
 			do
 			{
-				MCControl *found = cptr->findname(otype, s);
+                MCAutoStringRef t_s;
+                /* UNCHECKED */ MCStringCreateWithOldString(s, &t_s);
+				MCControl *found = cptr->findname(otype, *t_s);
 				if (found != NULL)
 					return (MCGroup *)found;
 				cptr = cptr->next();
@@ -1848,7 +1853,7 @@ MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
 		return NULL;
     do
     {
-        MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
+        MCControl *found = cptr->findname(CT_GROUP, MCNameGetString(p_name));
         if (found != NULL)
             return (MCGroup *)found;
         cptr = cptr->next();
