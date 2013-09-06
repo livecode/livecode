@@ -3131,6 +3131,16 @@ Exec_stat MCProperty::set_global_property(MCExecPoint& ep)
 			}
 			break;
 				
+			case kMCPropertyTypeName:
+			{
+				MCNewAutoNameRef t_value;
+				if (!ep.copyasnameref(&t_value))
+					ctxt.LegacyThrow(EE_PROPERTY_NAC);
+				if (!ctxt.HasError())
+					((void(*)(MCExecContext&, MCNameRef))t_info->setter)(ctxt, *t_value);
+			}
+			break;
+				
 			case kMCPropertyTypeColor:
 			{
 				MCColor t_value;
