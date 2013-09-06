@@ -1103,7 +1103,10 @@ void MCButton::GetText(MCExecContext& ctxt, MCStringRef& r_text)
 void MCButton::SetText(MCExecContext& ctxt, MCStringRef p_text)
 {
 	if (MCStringIsEqualTo(menustring, p_text, kMCStringOptionCompareExact))
+	{
+		resetlabel();
 		return;
+	}
 	
 	freemenu(False);
 	MCValueAssign(menustring, p_text);
