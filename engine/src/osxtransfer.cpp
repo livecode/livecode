@@ -915,7 +915,9 @@ bool MCConvertFilesToMacHFS(MCStringRef p_input, MCStringRef& r_output)
 		FSCatalogInfo t_info;
 		
 		OSErr t_err;
-		t_err = MCS_pathtoref(MCString(t_start, t_buffer - t_start), &t_ref);
+        MCAutoStringRef t_path;
+        /* UNCHECKED */ MCStringCreateWithNativeChars((char_t*) t_start, t_buffer - t_start, &t_path);
+		/* UNCHECKED */ MCS_mac_pathtoref(*t_path, t_ref);
 		if (t_err == noErr)
 			t_err = FSGetCatalogInfo(&t_ref, kFSCatInfoFinderInfo | kFSCatInfoNodeFlags, &t_info, NULL, &t_spec, NULL);
 		
@@ -1220,8 +1222,7 @@ bool MCConvertMacPictureToImage(MCStringRef p_data, MCStringRef &r_output)
 		uindex_t t_byte_count = 0;
 
 		/* UNCHECKED */ MCImageEncodePNG(&t_bitmap, t_stream, t_byte_count);
-
-		MCS_fakeclosewrite(t_stream, t_bytes, t_byte_count);
+		/* UNCHECKED */ MCS_closetakingbuffer(t_stream, reinterpret_cast<void*&>(t_bytes), reinterpret_cast<size_t&>(t_byte_count));
 
 #ifdef SHARED_STRING
 		t_success = nil != (t_out_data = MCSharedString::Create(t_bytes, t_byte_count));
@@ -1375,15 +1376,13 @@ MCSharedString *MCConvertMacHFSToFiles(MCSharedString *p_data)
 		FSRef t_fs_ref;
 		if (FSpMakeFSRef(&t_items[i] . fileSpec, &t_fs_ref) != noErr)
 			continue;
-			
-		char *t_filename;
-		t_filename = MCS_fsref_to_path(t_fs_ref);
-		if (t_filename == NULL)
-			continue;
-			
-		ep . concatcstring(t_filename, EC_RETURN, i == 0);
+        
+		MCAutoStringRef t_filename;
 		
-		delete t_filename;
+		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
+			continue;
+        
+		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
 	}
 	
 	return MCSharedString::Create(ep . getsvalue());
@@ -1404,14 +1403,12 @@ bool MCConvertMacHFSToFiles(MCStringRef p_data, MCStringRef& r_output)
 		if (FSpMakeFSRef(&t_items[i] . fileSpec, &t_fs_ref) != noErr)
 			continue;
 			
-		char *t_filename;
-		t_filename = MCS_fsref_to_path(t_fs_ref);
-		if (t_filename == NULL)
+		MCAutoStringRef t_filename;
+		
+		if (!MCS_mac_fsref_to_path(t_fs_ref, &t_filename))
 			continue;
 			
-		/* UNCHECKED */ ep . concatcstring(t_filename, EC_RETURN, i == 0);
-		
-		delete t_filename;
+		/* UNCHECKED */ ep . concatstringref(*t_filename, EC_RETURN, i == 0);
 	}
 	
 	return ep . copyasstringref(r_output);

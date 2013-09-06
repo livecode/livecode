@@ -3220,10 +3220,8 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if (t_extended)
 	{
 		uint4 t_length_offset;
-		if (MCS_isfake(stream))
-			t_length_offset = MCS_faketell(stream);
-		else
-			t_length_offset = (uint4)MCS_tell(stream);
+
+        t_length_offset = MCS_tell(stream);
 
 		stat = IO_write_uint4(t_length_offset, stream);
 
@@ -3246,24 +3244,13 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if (stat == IO_NORMAL)
 		{
 			uint4 t_cur_offset;
-			if (MCS_isfake(stream))
-				t_cur_offset = MCS_faketell(stream);
-			else
-				t_cur_offset = (uint4)MCS_tell(stream);
+            
+            t_cur_offset = MCS_tell(stream);
 
 			uint4 t_length;
 			t_length = MCSwapInt32HostToNetwork(t_cur_offset - t_length_offset - 4);
 
-			if (MCS_isfake(stream))
-				MCS_fakewriteat(stream, t_length_offset, &t_length, sizeof(uint4));
-			else
-			{
-				stat = MCS_seek_set(stream, t_length_offset);
-				if (stat == IO_NORMAL)
-					stat = MCS_write(&t_length, sizeof(uint4), 1, stream);
-				if (stat == IO_NORMAL)
-					stat = MCS_seek_set(stream, t_cur_offset);
-			}
+			MCS_writeat(&t_length, sizeof(uint4), t_length_offset, stream);
 		}
 		if (stat != IO_NORMAL)
 			return stat;
@@ -3558,8 +3545,8 @@ bool MCObject::resolveparentscript(void)
 
 	// We have a parent script, so use MCdispatcher to try and find the
 	// stack.
-	MCStack *t_stack = nil;
-	/* UNCHECKED */ getstack()->findstackname(t_script->GetObjectStack(), t_stack);
+	MCStack *t_stack;
+	t_stack = getstack() -> findstackname(t_script -> GetObjectStack());
 
 	// Next search for the control we need.
 	MCControl *t_control;

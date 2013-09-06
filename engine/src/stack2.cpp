@@ -1496,6 +1496,135 @@ MCCard *MCStack::getchild(Chunk_term etype, const MCString &s, Chunk_term otype)
 }
 #endif
 
+MCCard *MCStack::getchildbyordinal(Chunk_term p_ordinal)
+{
+	uint2 num = 0;
+    
+	if (cards == NULL)
+	{
+		curcard = cards = MCtemplatecard->clone(False, False);
+		cards->setparent(this);
+	}
+
+    MCCard *cptr;
+    
+	switch (p_ordinal)
+	{
+        case CT_THIS:
+            if (curcard != NULL)
+                return curcard;
+            return cards;
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal - CT_FIRST;
+            break;
+        case CT_NEXT:
+            cptr = curcard;
+            do
+            {
+                cptr = cptr->next();
+                if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
+                    return cptr;
+            }
+            while (cptr != curcard);
+            return NULL;
+        case CT_PREV:
+            cptr = curcard;
+            do
+            {
+                cptr = cptr->prev();
+                if (cptr->countme(backgroundid, (state & CS_MARKED) != 0))
+                    return cptr;
+            }
+            while (cptr != curcard);
+            return NULL;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(CT_CARD, CT_UNDEFINED, NULL, num);
+            switch (p_ordinal)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            break;
+    }
+    return NULL;
+}
+
+MCCard *MCStack::getchildbyid(uinteger_t p_id)
+{
+    // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
+    MCCard *cptr;
+    if (editing != NULL && savecards != NULL)
+        cptr = savecards;
+    else
+        cptr = cards;
+    
+    MCCard *found = NULL;
+
+    // OK-2008-06-27: <Bug where looking up a card by id when in edit group mode could cause an infinite loop>
+    MCCard *t_cards = cptr;
+    
+    // OK-2007-04-09 : Allow cards to be found by ID when in edit group mode.
+    if (editing == NULL)
+        found = curcard -> findid(CT_CARD, p_id, True);
+    else
+    {
+        do
+        {
+            found = cptr->findid(CT_CARD, p_id, True);
+            if (found != NULL
+                && found->countme(backgroundid, (state & CS_MARKED) != 0))
+                break;
+            cptr = cptr->next();
+        }
+        while (cptr != t_cards);
+    }
+    
+    return found;
+}
+
+MCCard *MCStack::getchildbyname(MCNameRef p_name)
+{
+    MCCard *cptr;
+	if (editing != NULL && savecards != NULL)
+		cptr = savecards;
+	else
+		cptr = cards;
+    
+    MCCard *found = nil;
+    do
+    {
+        found = cptr->findname(CT_CARD, MCNameGetOldString(p_name));
+        if (found != nil && found->countme(backgroundid, (state & CS_MARKED) != 0))
+            break;
+        cptr = cptr->next();
+    }
+    while (cptr != cards);
+    
+    return found;
+}
+
 MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
                                 Chunk_term otype)
 {
@@ -1616,6 +1745,116 @@ MCGroup *MCStack::getbackground(Chunk_term etype, const MCString &s,
 	}
 	while (cptr != startcptr);
 	return NULL;
+}
+
+MCGroup *MCStack::getbackgroundbyordinal(Chunk_term p_ordinal)
+{    
+	uint2 num = 0;
+	switch (p_ordinal)
+	{
+        case CT_THIS:
+            if  (editing != 0)
+                return editing;
+            return (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, CT_GROUP, CT_BACKGROUND);
+        case CT_FIRST:
+        case CT_SECOND:
+        case CT_THIRD:
+        case CT_FOURTH:
+        case CT_FIFTH:
+        case CT_SIXTH:
+        case CT_SEVENTH:
+        case CT_EIGHTH:
+        case CT_NINTH:
+        case CT_TENTH:
+            num = p_ordinal - CT_FIRST;
+            break;
+        case CT_NEXT:
+		{
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, CT_GROUP, CT_BACKGROUND);
+			while (True)
+			{
+				gptr = gptr->next();
+				if (gptr->gettype() == CT_GROUP)
+					return gptr;
+			}
+		}
+            break;
+        case CT_PREV:
+		{
+			MCGroup *gptr = (MCGroup *)curcard->getchild(CT_FIRST, kMCEmptyString, CT_GROUP, CT_BACKGROUND);
+			while (True)
+			{
+				gptr = gptr->prev();
+				if (gptr->gettype() == CT_GROUP)
+					return gptr;
+			};
+		}
+            break;
+        case CT_LAST:
+        case CT_MIDDLE:
+        case CT_ANY:
+            count(CT_GROUP, CT_UNDEFINED, NULL, num);
+            switch (p_ordinal)
+		{
+            case CT_LAST:
+                num--;
+                break;
+            case CT_MIDDLE:
+                num >>= 1;
+                break;
+            case CT_ANY:
+                num = MCU_any(num);
+                break;
+            default:
+                break;
+		}
+            break;
+        default:
+            break;
+    }
+    return NULL;
+}
+
+MCGroup *MCStack::getbackgroundbyid(uinteger_t p_id)
+{
+	MCControl *cptr;
+	if (editing != NULL)
+		cptr = savecontrols;
+	else
+		cptr = controls;
+	MCControl *startcptr = cptr;
+	if (cptr == NULL)
+		return NULL;
+    do
+    {
+        MCControl *found = cptr->findid(CT_GROUP, p_id, True);
+        if (found != NULL)
+            return (MCGroup *)found;
+        cptr = cptr->next();
+    }
+    while (cptr != startcptr);
+    return NULL;
+}
+
+MCGroup *MCStack::getbackgroundbyname(MCNameRef p_name)
+{
+	MCControl *cptr;
+	if (editing != NULL)
+		cptr = savecontrols;
+	else
+		cptr = controls;
+	MCControl *startcptr = cptr;
+	if (cptr == NULL)
+		return NULL;
+    do
+    {
+        MCControl *found = cptr->findname(CT_GROUP, MCNameGetOldString(p_name));
+        if (found != NULL)
+            return (MCGroup *)found;
+        cptr = cptr->next();
+    }
+    while (cptr != startcptr);
+    return NULL;
 }
 
 void MCStack::addmnemonic(MCButton *button, KeySym p_key)
@@ -2399,6 +2638,7 @@ char *MCStack::getstackfile(const MCString &s)
 
 void MCStack::setfilename(char *f)
 {
+#if 0
 	delete filename;
 	filename = f;
 	MCAutoStringRef in_filename_string;
@@ -2408,6 +2648,22 @@ void MCStack::setfilename(char *f)
 		MCAutoStringRef out_filename_string;
 		MCU_fix_path(*in_filename_string, &out_filename_string );
 	}
+#endif
+    
+    if (f == nil)
+    {
+        delete filename;
+        filename = nil;
+        return;
+    }
+    
+    MCAutoStringRef t_in_filename_string;
+	/* UNCHECKED */ MCStringCreateWithCString(f, &t_in_filename_string);
+    MCAutoStringRef t_out_filename_string;
+    MCU_fix_path(*t_in_filename_string, &t_out_filename_string);
+    
+    delete filename;
+    filename = strclone(MCStringGetCString(*t_out_filename_string));
 }
 
 void MCStack::loadwindowshape()

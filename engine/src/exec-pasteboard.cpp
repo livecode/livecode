@@ -46,6 +46,9 @@ MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheClipboardData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsAmongTheKeysOfTheDragData, 2)
 MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, IsNotAmongTheKeysOfTheDragData, 2)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragSourceAsObject, 1)
+MC_EXEC_DEFINE_EVAL_METHOD(Pasteboard, DragDestinationAsObject, 1)
+
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Paste, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, Copy, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Pasteboard, CopyTextToClipboard, 1)
@@ -597,13 +600,6 @@ void MCPasteboardExecCutObjectsToClipboard(MCExecContext& ctxt, MCObjectPtr *p_t
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/*
-GetClipboardData(index: string, out value: any)
-SetClipboardData(index: string, value: any)
-GetDragData(index: string, out value: any)
-SetDragData(index: string, value: any)
-*/
-////////////////////////////////////////////////////////////////////////////////
 
 void MCPasteboardGetAcceptDrop(MCExecContext& ctxt, bool& r_value)
 {
@@ -743,4 +739,30 @@ void MCPasteboardGetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringR
 void MCPasteboardSetDragData(MCExecContext& ctxt, MCStringRef p_index, MCStringRef p_data)
 {
 	MCPasteboardSetClipboardOrDragData(ctxt, p_index, false, p_data);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCPasteboardEvalDragSourceAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdragsource != nil)
+    {
+        r_object . object = MCdragsource;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
+}
+
+void MCPasteboardEvalDragDestinationAsObject(MCExecContext& ctxt, MCObjectPtr& r_object)
+{
+    if (MCdragdest != nil)
+    {
+        r_object . object = MCdragdest;
+        r_object . part_id = 0;
+        return;
+    }
+    
+    ctxt . LegacyThrow(EE_CHUNK_NOTARGET);
 }

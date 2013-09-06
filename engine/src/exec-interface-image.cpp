@@ -127,25 +127,18 @@ void MCImage::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 		return;
 	}
 
-	if (MCStringCreateWithCString(filename, r_name))
-		return;
+	r_name = MCValueRetain(filename);
 
-    ctxt . Throw();
 }
 
 void MCImage::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
 	if (m_rep == nil || m_rep->GetType() != kMCImageRepReferenced ||
-		p_name == nil || !MCStringIsEqualToCString(p_name, filename, kMCCompareExact))
+		MCStringIsEmpty(p_name) || !MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
-		const char *t_filename = nil;
-		if (p_name != nil)
-			t_filename = MCStringGetCString(p_name);
-		
-		setfilename(t_filename);
-		
+		setfilename(p_name);
 		resetimage();
-		
+
 		if (m_rep != nil)
 			ctxt . SetTheResultToEmpty();
 		else
@@ -365,12 +358,13 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 	MCPoint t_hotspot;
 	char *t_name = nil;
 	IO_handle t_stream = nil;
+    MCAutoDataRef t_data;
 	
 	if (MCStringGetLength(p_text) == 0)
 	{
-		// empty text - unset flags & set rep to nil;
-		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_HAS_FILENAME);
-		setrep(nil);
+		// MW-2013-09-05: [[ UnicodifyImage ]] Setting the text to nil is equivalent
+		//   to setting the filename to empty.
+		setfilename(kMCEmptyString);
 	}
 	else
 	{
@@ -661,4 +655,49 @@ void MCImage::SetAngle(MCExecContext& ctxt, integer_t p_angle)
 		
 		notifyneeds(false);
 	}
+}
+
+void MCImage::SetBlendLevel(MCExecContext& ctxt, uinteger_t level)
+{
+    MCObject::SetBlendLevel(ctxt, level);
+    notifyneeds(false);
+}
+
+void MCImage::SetInk(MCExecContext& ctxt, intenum_t ink)
+{
+    MCControl::SetInk(ctxt, ink);
+    notifyneeds(false);
+}
+
+void MCImage::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+{
+    Boolean wasvisible = isvisible();
+    MCObject::SetVisibility(ctxt, part, setting, visible);
+    if (!(MCbufferimages || flags & F_I_ALWAYS_BUFFER)
+        && !isvisible() && m_rep != nil)
+        closeimage();
+    if (state & CS_IMAGE_PM && opened > 0)
+    {
+        // MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
+        layer_redrawall();
+    }
+    if (isvisible() && !wasvisible && m_rep != nil && m_rep->GetFrameCount() > 1)
+    {
+        MCImageFrame *t_frame = nil;
+        if (m_rep->LockImageFrame(currentframe, t_frame))
+        {
+            MCscreen->addtimer(this, MCM_internal, t_frame->duration);
+            m_rep->UnlockImageFrame(currentframe, t_frame);
+        }
+    }
+}
+
+void MCImage::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, true);
+}
+
+void MCImage::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, false);
 }

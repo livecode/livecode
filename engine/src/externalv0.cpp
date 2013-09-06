@@ -136,16 +136,16 @@ bool MCExternalV0::Prepare(void)
 	// as it is used to determine if its a V0 external!).
 
 	GETXTABLE t_getter;
-	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, "getXtable");
+	t_getter = (GETXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("getXtable"));
 	t_getter(MCcbs, deleter, &m_name, &m_table, &m_free);
 	
 	CONFIGURESECURITY t_conf_security;
-	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, "configureSecurity");
+	t_conf_security = (CONFIGURESECURITY)MCS_resolvemodulesymbol(m_module, MCSTR("configureSecurity"));
 	if (t_conf_security != nil)
 		t_conf_security(MCsecuritycbs);
 
 	SHUTDOWNXTABLE t_shutdown;
-	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, "shutdownXtable");
+	t_shutdown = (SHUTDOWNXTABLE)MCS_resolvemodulesymbol(m_module, MCSTR("shutdownXtable"));
 	if (t_shutdown != nil)
 		m_shutdown = t_shutdown;
 

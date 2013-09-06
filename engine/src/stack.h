@@ -64,6 +64,8 @@ enum MCStackSurfaceTargetType
 	kMCStackSurfaceTargetPixmap,
 };
 
+struct MCInterfaceDecoration;
+
 class MCStackSurface
 {
 public:
@@ -353,8 +355,16 @@ public:
 	MCCard *getchild(Chunk_term etype, MCStringRef p_expression, Chunk_term otype);
 #ifdef OLD_EXEC
 	MCCard *getchild(Chunk_term etype, const MCString &, Chunk_term otype);
-#endif
-	MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+#endif  
+    MCCard *getchildbyordinal(Chunk_term p_ordinal);
+    MCCard *getchildbyid(uinteger_t p_id);
+    MCCard *getchildbyname(MCNameRef p_name);
+    
+	/* LEGACY */ MCGroup *getbackground(Chunk_term etype, const MCString &, Chunk_term otype);
+    
+    MCGroup *getbackgroundbyordinal(Chunk_term otype);
+    MCGroup *getbackgroundbyid(uinteger_t p_id);
+    MCGroup *getbackgroundbyname(MCNameRef p_name);
 	void addneed(MCButton *bptr);
 	void removeneed(MCButton *bptr);
 	void addmnemonic(MCButton *button, KeySym p_key);
@@ -389,12 +399,15 @@ public:
 	MCControl *getcontrolid(Chunk_term type, uint4 inid, bool p_recurse = false);
 	MCControl *getcontrolname(Chunk_term type, const MCString &);
 	MCObject *getAVid(Chunk_term type, uint4 inid);
-	MCObject *getAVname(Chunk_term type, const MCString &);
+	/* LEGACY */ MCObject *getAVname(Chunk_term type, const MCString &);
+    bool getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object);
 	Exec_stat setcard(MCCard *card, Boolean recent, Boolean dynamic);
-	MCStack *findstackfile(const MCString &s);
-	bool findstackname(MCNameRef p_name, MCStack *&r_stack);
-	/* LEGACY */ MCStack *findstackname(const MCString &);
-	MCStack *findsubstackname(const MCString &);
+	MCStack *findstackfile_oldstring(const MCString &s);
+	MCStack *findstackname_oldstring(const MCString &);
+	MCStack *findsubstackname_oldstring(const MCString &);
+	MCStack *findstackfile(MCNameRef name);
+	MCStack *findstackname(MCNameRef name);
+	MCStack *findsubstackname(MCNameRef name);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findsubstackid(uint4 fid);
 	void translatecoords(MCStack *dest, int2 &x, int2 &y);
@@ -821,12 +834,43 @@ public:
 	void GetDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
 	void SetDeferScreenUpdates(MCExecContext& ctxt, bool p_value);
 	void GetEffectiveDeferScreenUpdates(MCExecContext& ctxt, bool& r_value);
-
+    void SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p_value);
+    void GetDecorations(MCExecContext& ctxt, MCInterfaceDecoration& r_value);
+    
 	void GetCompositorTileSize(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorTileSize(MCExecContext& ctxt, uinteger_t* p_size);
 	void GetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t*& p_size);
-	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t p_size);
+	void SetCompositorCacheLimit(MCExecContext& ctxt, uinteger_t* p_size);
 
+    virtual void SetForePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel);
+	virtual void SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& color);
+	virtual void SetForePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBackPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetHilitePattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBorderPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetTopPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetBottomPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetShadowPattern(MCExecContext& ctxt, uinteger_t* pattern);
+	virtual void SetFocusPattern(MCExecContext& ctxt, uinteger_t* pattern);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    
 private:
 	void loadexternals(void);
 	void unloadexternals(void);

@@ -89,6 +89,7 @@ typedef struct
 iconlist;
 
 struct MCInterfaceButtonIcon;
+struct MCInterfaceButtonHilite;
 
 #define MENUCONTROL_NONE 0
 #define MENUCONTROL_ITEM 1
@@ -107,7 +108,6 @@ class MCButton : public MCControl
 	MCField *entry;
 	MCStack *menu;
 	MCStringRef acceltext;
-	char *seltext;
 	MCArrayRef tabs;
 	uint2 menuhistory;
 	uint2 menulines;
@@ -240,10 +240,6 @@ public:
 	MCStringRef getmenustring()
 	{
 		return menustring;
-	}
-	void setmenustring(MCStringRef p_string)
-	{
-		MCValueAssign(menustring, p_string);
 	}
 	uint1 getmenumode()
 	{
@@ -451,6 +447,9 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceButtonHilite& r_hilite);
+    void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceButtonHilite& p_hilite);
+    
 private:
 	int4 formattedtabwidth(void);
 

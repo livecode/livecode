@@ -86,7 +86,7 @@ MCPropertyInfo MCGraphic::kProperties[] =
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -2019,7 +2019,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			}
 			drawlabel(dc, sx, sy, twidth, trect, line, fontstyle);
 			sy += fheight;
-			MCValueRelease(line);
 		}
 		if (state & CS_KFOCUSED)
 		{

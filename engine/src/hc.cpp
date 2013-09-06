@@ -1882,8 +1882,8 @@ IO_stat MCHcstak::read(IO_handle stream)
 	HC_File_type filetype = HC_RAW;
 	uint4 *uint4buff = (uint4 *)header;
 	uint2 *uint2buff;
-	uint4 size = HC_HEADER_SIZE;
-	if (IO_read(header, sizeof(char), size, stream) != IO_NORMAL)
+	uint4 size;
+	if (IO_read(header, HC_HEADER_SIZE, stream) != IO_NORMAL)
 		return IO_ERROR;
 	swap_uint4(&uint4buff[1]);
 	if (uint4buff[1] == HC_STAK)
@@ -2034,8 +2034,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 			if (type == HC_BUGS)
 				size = 512;
 			fullbuffer = new char[size];
-			uint4 bsize = size - 8;
-			if (IO_read(&fullbuffer[8], sizeof(char), bsize, stream) != IO_NORMAL)
+			if (IO_read(&fullbuffer[8], size - 8, stream) != IO_NORMAL)
 				return IO_ERROR;
 			buffer = fullbuffer;
 			uint2buff = (uint2 *)buffer;
@@ -2158,7 +2157,7 @@ IO_stat MCHcstak::read(IO_handle stream)
 	{
 		fullbuffer = new char[rsize];
 		MCS_seek_set(stream, roffset);
-		if (MCS_read(fullbuffer, sizeof(char), rsize, stream) != IO_NORMAL)
+		if (MCS_readfixed(fullbuffer, rsize, stream) != IO_NORMAL)
 			return IO_ERROR;
 	}
 	else
@@ -2427,7 +2426,7 @@ IO_stat hc_import(const char *name, IO_handle stream, MCStack *&sptr)
 	delete hcstak;
 	if (!MClockerrors && MCStringGetLength(MChcstat) != startlen)
 	{
-		MCStack *tptr = MCdefaultstackptr->findstackname(MChcstatnamestring);
+		MCStack *tptr = MCdefaultstackptr->findstackname_oldstring(MChcstatnamestring);
 		if (tptr != NULL)
 		{
 			sptr->open();

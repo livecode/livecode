@@ -2111,18 +2111,8 @@ bool MCAndroidLoadDeviceConfiguration()
 	}
 
 	if (t_success)
-	{
-		IO_stat t_read_stat = IO_NORMAL;
-		uint32_t t_bytes_read = 0;
-		while (t_success && t_bytes_read < t_filesize)
-		{
-			uint32_t t_count;
-			t_count = t_filesize - t_bytes_read;
-			t_read_stat = MCS_read(t_file_buffer + t_bytes_read, 1, t_count, t_filehandle);
-			t_bytes_read += t_count;
-			t_success = (t_read_stat == IO_NORMAL || (t_read_stat == IO_EOF && t_bytes_read == t_filesize));
-		}
-	}
+        if (MCS_readfixed(t_file_buffer, t_filesize, t_filehandle) != IO_NORMAL)
+            t_success = false;
 
 	if (t_success)
 	{

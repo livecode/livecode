@@ -242,3 +242,172 @@ void MCCard::GetDefaultButton(MCExecContext& ctxt, MCStringRef& r_button)
 		else
 			odefbutton -> GetLongId(ctxt, r_button);
 }
+
+void MCCard::SetForePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBackPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetHilitePixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBorderPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTopPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBottomPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetShadowPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetFocusPixel(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPixel(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetForeColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetForeColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBackColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBackColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetHiliteColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetHiliteColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBorderColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBorderColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTopColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetTopColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBottomColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetBottomColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetShadowColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetShadowColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetFocusColor(MCExecContext& ctxt, const MCInterfaceNamedColor& r_color)
+{
+    MCObject::SetFocusColor(ctxt, r_color);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetForePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetForePattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBackPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBackPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetHilitePattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetHilitePattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBorderPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBorderPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTopPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetTopPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetBottomPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetBottomPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetShadowPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetShadowPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetFocusPattern(MCExecContext& ctxt, uinteger_t* pixel)
+{
+    MCObject::SetFocusPattern(ctxt, pixel);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTextHeight(MCExecContext& ctxt, uinteger_t* height)
+{
+    MCObject::SetTextHeight(ctxt, height);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTextFont(MCExecContext& ctxt, MCStringRef font)
+{
+    MCObject::SetTextFont(ctxt, font);
+    if (!ctxt . HasError())
+       getstack() -> dirtyall();     
+}
+
+void MCCard::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
+{
+    MCObject::SetTextSize(ctxt, size);
+    getstack() -> dirtyall();
+}
+
+void MCCard::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
+{
+    MCObject::SetTextStyle(ctxt, p_style);
+    getstack() -> dirtyall();
+}

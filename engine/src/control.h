@@ -335,13 +335,13 @@ public:
 	////////// PROPERTY ACCESSORS
 
 	void GetLeftMargin(MCExecContext& ctxt, integer_t& r_margin);
-	void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetRightMargin(MCExecContext& ctxt, integer_t& r_margin);
-	void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetTopMargin(MCExecContext& ctxt, integer_t& r_margin);
-	void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetBottomMargin(MCExecContext& ctxt, integer_t& r_margin);
-	void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
 	void GetToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip);
 	void SetToolTip(MCExecContext& ctxt, MCStringRef p_tooltip);
 	void GetUnicodeToolTip(MCExecContext& ctxt, MCDataRef& r_tooltip);
@@ -349,8 +349,14 @@ public:
 	void GetLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
 	void SetLayerMode(MCExecContext& ctxt, intenum_t p_mode);
 	void GetEffectiveLayerMode(MCExecContext& ctxt, intenum_t& r_mode);
-    void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
     void GetMargins(MCExecContext& ctxt, MCInterfaceMargins& r_margins);
+    
+    virtual void SetInk(MCExecContext& ctxt, intenum_t ink);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+	virtual void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+	virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
 
 };
 #endif

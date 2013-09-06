@@ -31,6 +31,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "uidc.h"
 
+#include "osxprefix-legacy.h"
+
 //////////
 
 bool MCExecPoint::isempty(void) const
@@ -1211,6 +1213,8 @@ bool MCExecPoint::convertvaluereftostring(MCValueRef p_value, MCStringRef& r_str
 		return true;
 	case kMCValueTypeCodeString:
 		return MCStringCopy((MCStringRef)p_value, r_string);
+    case kMCValueTypeCodeData:
+            return MCStringCreateWithNativeChars((const char_t *)MCDataGetBytePtr((MCDataRef)p_value), MCDataGetLength((MCDataRef)p_value), r_string);
 	case kMCValueTypeCodeNumber:
 	{
 		if (MCNumberIsInteger((MCNumberRef)p_value))

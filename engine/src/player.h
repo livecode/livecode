@@ -81,7 +81,7 @@ enum
 class MCPlayer : public MCControl
 {
 	MCPlayer *nextplayer;
-	char *filename;
+	MCStringRef filename;
 	uint2 framerate;
 	Boolean disposable;
 	Boolean istmpfile;
@@ -216,7 +216,7 @@ public:
 	void setloudness();
 	void gettracks(MCExecPoint &ep);
 	void getenabledtracks(MCExecPoint &ep);
-	Boolean setenabledtracks(const MCString &s);
+	Boolean setenabledtracks(MCStringRef s);
 	void getnodes(MCExecPoint &ep);
 	void gethotspots(MCExecPoint &ep);
 	bool geteffectlist(MCStringRef& r_string);
@@ -347,22 +347,14 @@ public:
 	{
 		scale = s;
 	}
-	Boolean prepare(const char *options);
-	bool prepare(MCStringRef p_options)
-	{
-		return True == prepare(MCStringGetCString(p_options));
-	}
-	Boolean playstart(const char *options);
-	bool playstart(MCStringRef p_options)
-	{
-		return True == playstart(MCStringGetCString(p_options));
-	}
+	Boolean prepare(MCStringRef options);
+	Boolean playstart(MCStringRef options);
 	Boolean playpause(Boolean on);
 	void playstepforward();
 	void playstepback();
 	Boolean playstop();
 	void setvolume(uint2 tloudness);
-	void setfilename(const char *vcname, char *fname, Boolean istmp);
+	void setfilename(MCStringRef vcname, MCStringRef fname, Boolean istmp);
 	uint4 getstarttime()
 	{
 		return starttime;
@@ -391,6 +383,7 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(void);
+    void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 
 	////////// PROPERTY ACCESSORS
 
@@ -449,6 +442,12 @@ public:
 	void GetConstraints(MCExecContext& ctxt, MCMultimediaQTVRConstraints& r_constraints);
 	void GetNodes(MCExecContext& ctxt, MCStringRef& r_nodes);
 	void GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots);
+    
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 
 #ifdef FEATURE_QUICKTIME
 	Boolean qt_prepare(void);
@@ -467,6 +466,8 @@ public:
 	void qt_showbadge(Boolean show);
 	void qt_editmovie(Boolean edit);
 	void qt_playselection(Boolean play);
+    void qt_enablekeys(Boolean enable);
+    void qt_setcontrollervisible();
 	Boolean qt_ispaused(void);
 	void qt_showcontroller(Boolean show);
 	MCRectangle qt_getpreferredrect(void);

@@ -251,12 +251,12 @@ MC_EXEC_DEFINE_EXEC_METHOD(Interface, SortCardsOfStack, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SortField, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, SortContainer, 5)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, ChooseTool, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardAsMode, 9)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardInWindow, 9)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardAsMode, 4)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardInWindow, 4)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoRecentCard, 0)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardRelative, 2)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoCardEnd, 1)
-MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoHome, 2)
+MC_EXEC_DEFINE_EXEC_METHOD(Interface, GoHome, 1)
 MC_EXEC_DEFINE_EXEC_METHOD(Interface, VisualEffect, 1)
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2725,13 +2725,18 @@ void MCInterfaceExecSubwindow(MCExecContext& ctxt, MCStack *p_target, MCStack *p
 
 void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
-	MCStack *parentptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_parent_name));
-	if (parentptr == nil)
-	{
-		ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
-		return;
-	}
-
+	MCStack *parentptr;
+    parentptr = nil;
+    
+    if (p_parent_name != nil)
+    {
+        parentptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_parent_name));
+        if (parentptr == nil)
+        {
+            ctxt . LegacyThrow(EE_SUBWINDOW_BADEXP);
+            return;
+        }
+    }
 	if (p_parent_is_thisstack)
 		parentptr = MCdefaultstackptr;
 	if (parentptr == p_target)
@@ -2756,7 +2761,7 @@ void MCInterfaceExecDrawerOrSheetStack(MCExecContext& ctxt, MCStack *p_target, M
 void MCInterfaceExecDrawerOrSheetStackByName(MCExecContext& ctxt, MCStringRef p_name, MCStringRef p_parent_name, bool p_parent_is_thisstack, int p_at, int p_aligned, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -2809,7 +2814,7 @@ void MCInterfaceExecOpenStack(MCExecContext& ctxt, MCStack *p_target, int p_mode
 void MCInterfaceExecOpenStackByName(MCExecContext& ctxt, MCStringRef p_name, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -2854,7 +2859,7 @@ void MCInterfaceExecPopupStack(MCExecContext& ctxt, MCStack *p_target, MCPoint *
 void MCInterfaceExecPopupStackByName(MCExecContext& ctxt, MCStringRef p_name, MCPoint *p_at, int p_mode)
 {
 	MCStack *sptr;
-	sptr = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_name));
+	sptr = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_name));
 
 	if (sptr == nil)
 	{
@@ -3478,9 +3483,9 @@ void MCInterfaceExportBitmap(MCExecContext &ctxt, MCImageBitmap *p_bitmap, int p
 	t_success = MCImageExport(p_bitmap, (Export_format)p_format, t_ps_ptr, p_dither, t_stream, nil);
 	
 	MCAutoNativeCharArray t_autobuffer;
-	char *t_buffer = nil;
-	uint32_t t_size = 0;
-	MCS_fakeclosewrite(t_stream, t_buffer, t_size);
+	void *t_buffer = nil;
+	size_t t_size = 0;
+	MCS_closetakingbuffer(t_stream, t_buffer, t_size);
 	t_autobuffer.Give((char_t*)t_buffer, t_size);
 
 	if (!t_success)
@@ -3952,29 +3957,25 @@ void MCInterfaceExecChooseTool(MCExecContext& ctxt, int p_tool)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, MCStringRef p_window, int p_mode, bool p_with_background, bool p_marked, bool p_this_stack, bool p_visible, bool p_binary_fail)
+void MCInterfaceExecGo(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, int p_mode, bool p_this_stack, bool p_visible)
 {
-	MCresult->clear(False);
-
-	if (p_stack == nil || p_card == nil)
-	{
-		if (MCresult->isclear())
-		{
-			if (p_binary_fail)
-				ctxt . SetTheResultToStaticCString("can't build stack from string");
-			else
-				ctxt . SetTheResultToStaticCString("No such card");
-		}
+	if (p_card == nil)
+    {
+        if (MCresult -> isclear())
+            ctxt . SetTheResultToStaticCString("No such card");
 		return;
-	}
-
+    }
+    
+    MCStack *t_stack;
+    t_stack = p_card -> getstack();
+    
 	MCRectangle rel;
 	MCStack *parentptr;
 
 	if (p_mode == WM_PULLDOWN || p_mode == WM_POPUP || p_mode == WM_OPTION)
 	{
 		MCButton *bptr = (MCButton *)ctxt . GetObject();
-		if (ctxt . GetObject()->gettype() == CT_BUTTON && bptr->attachmenu(p_stack))
+		if (ctxt . GetObject()->gettype() == CT_BUTTON && bptr->attachmenu(t_stack))
 			rel = MCU_recttoroot(bptr->getstack(), bptr->getrect());
 		else
 		{
@@ -3993,31 +3994,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 		rel = parentptr -> getrect();
 	}
 
-	p_stack->stopedit();
-
-	if (p_with_background)
-	{
-		if (p_background == nil)
-		{
-			if (MCresult->isclear())
-				ctxt . SetTheResultToStaticCString("No such card");
-			return;	
-		}
-		p_stack->setbackground(p_background);
-	}
-
-	if (p_marked)
-		p_stack->setmark();
+	t_stack->stopedit();
 
 	Window_mode wm = (Window_mode)p_mode;
-	if (wm == WM_LAST && p_stack->userlevel() != 0 && p_window == nil && !p_this_stack)
-		wm = (Window_mode)(p_stack->userlevel() + WM_TOP_LEVEL_LOCKED);
+	if (wm == WM_LAST && t_stack->userlevel() != 0 && p_window == nil && !p_this_stack)
+		wm = (Window_mode)(t_stack->userlevel() + WM_TOP_LEVEL_LOCKED);
 
-	p_stack->clearmark();
-	p_stack->clearbackground();
-
-	uint2 oldw = p_stack->getrect().width;
-	uint2 oldh = p_stack->getrect().height;
+	uint2 oldw = t_stack->getrect().width;
+	uint2 oldh = t_stack->getrect().height;
 
 	// Here 'oldstack' is the pointer to the stack's window we are taking over.
 	// If it turns out NULL then we aren't subverting another stacks' window to
@@ -4037,7 +4021,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 			if (MCU_stoui4(p_window, win) && MCscreen->uint4towindow(win, w))
 				oldstack = MCdispatcher->findstackd(w);
 			else
-				oldstack = ctxt . GetObject()->getstack()->findstackname(MCStringGetOldString(p_window));
+				oldstack = ctxt . GetObject()->getstack()->findstackname_oldstring(MCStringGetOldString(p_window));
 		}
 		
 		if (oldstack == NULL || !oldstack->getopened())
@@ -4046,7 +4030,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 			return;
 		}
 		
-		if (oldstack == p_stack)
+		if (oldstack == t_stack)
 			oldstack = NULL;
 		else
 		{
@@ -4067,7 +4051,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 				return;
 			}
 			oldstack->kunfocus();
-			p_stack->close();
+			t_stack->close();
 			
 			MCPlayer *tptr = MCplayers;
 			while (tptr != NULL)
@@ -4078,7 +4062,7 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 					oldptr->close();
 			}
 
-			if (!p_stack->takewindow(oldstack))
+			if (!t_stack->takewindow(oldstack))
 			{
 				MCRedrawUnlockScreen();
 				ctxt . LegacyThrow(EE_GO_BADWINDOWEXP);
@@ -4096,11 +4080,11 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 	MCtrace = False;
 
 	// MW-2007-02-11: [[ Bug 4029 ]] - 'go invisible' fails to close stack window if window already open
-	if (!p_visible && p_stack -> getflag(F_VISIBLE))
+	if (!p_visible && t_stack -> getflag(F_VISIBLE))
 	{
-		if (p_stack -> getwindow() != NULL)
-			MCscreen -> closewindow(p_stack -> getwindow());
-		p_stack->setflag(False, F_VISIBLE);
+		if (t_stack -> getwindow() != NULL)
+			MCscreen -> closewindow(t_stack -> getwindow());
+		t_stack->setflag(False, F_VISIBLE);
 	}
 
 	// MW-2011-02-27: [[ Bug ]] Make sure that if we open as a sheet, we have a parent pointer!
@@ -4118,16 +4102,16 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 #ifdef _MOBILE
 	// MW-2011-01-30: [[ Effects ]] On Mobile, we must twiddle with snapshots to
 	//   ensure go stack with visual effect works.
-	if (oldstack == nil && MCcur_effects != nil && MCdefaultstackptr != p_stack)
+	if (oldstack == nil && MCcur_effects != nil && MCdefaultstackptr != t_stack)
 	{
 		MCdefaultstackptr -> snapshotwindow(MCdefaultstackptr -> getcurcard() -> getrect());
-		p_stack -> takewindowsnapshot(MCdefaultstackptr);
+		t_stack -> takewindowsnapshot(MCdefaultstackptr);
 		MCRedrawLockScreen();
 	}
 #endif	
 	
-	if (p_stack->setcard(p_card, True, True) == ES_ERROR
-	        || p_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE) == ES_ERROR)
+	if (t_stack->setcard(p_card, True, True) == ES_ERROR
+	        || t_stack->openrect(rel, wm, parentptr, WP_DEFAULT, OP_NONE) == ES_ERROR)
 	{
 		MCtrace = oldtrace;
 		stat = ES_ERROR;
@@ -4135,37 +4119,37 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 	
 	if (oldstack != NULL)
 	{
-		MCRectangle trect = p_stack->getcurcard()->getrect();
-		p_stack->getcurcard()->message_with_args(MCM_resize_stack, trect.width, trect.height, oldw, oldh);
+		MCRectangle trect = t_stack->getcurcard()->getrect();
+		t_stack->getcurcard()->message_with_args(MCM_resize_stack, trect.width, trect.height, oldw, oldh);
 		
 		MCRedrawUnlockScreen();
 		
 		if (MCcur_effects != nil)
 		{
 			Boolean t_abort;
-			p_stack -> effectrect(p_stack -> getcurcard() -> getrect(), t_abort);
+			t_stack -> effectrect(t_stack -> getcurcard() -> getrect(), t_abort);
 		}
 		
 		Boolean oldlock = MClockmessages;
 		MClockmessages = True;
 		oldstack->close();
 		MClockmessages = oldlock;
-		p_stack->kfocus();
+		t_stack->kfocus();
 	}
 	
 #ifdef _MOBILE
 	// MW-2011-01-30: [[ Effects ]] Apply any stack level visual efect.
-	if (oldstack == nil && MCcur_effects != nil && MCdefaultstackptr != p_stack)
+	if (oldstack == nil && MCcur_effects != nil && MCdefaultstackptr != t_stack)
 	{
 		MCRedrawUnlockScreen();
 		
 		// MW-2011-10-17: [[ Bug 9811 ]] Make sure we configure the new card now.
 		MCRedrawDisableScreenUpdates();
-		p_stack -> configure(True);
+		t_stack -> configure(True);
 		MCRedrawEnableScreenUpdates();
 			
 		Boolean t_abort;
-		p_stack -> effectrect(p_stack -> getcurcard() -> getrect(), t_abort);
+		t_stack -> effectrect(t_stack -> getcurcard() -> getrect(), t_abort);
 	}
 #endif	
 
@@ -4173,8 +4157,8 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 		MCnexecutioncontexts--;
 	
 	MCtrace = oldtrace;
-	if (p_stack->getmode() == WM_TOP_LEVEL || p_stack->getmode() == WM_TOP_LEVEL_LOCKED)
-		MCdefaultstackptr = p_stack;
+	if (t_stack->getmode() == WM_TOP_LEVEL || t_stack->getmode() == WM_TOP_LEVEL_LOCKED)
+		MCdefaultstackptr = t_stack;
 	if (MCmousestackptr != NULL)
 		MCmousestackptr->resetcursor(True);
 	if (MCabortscript)
@@ -4183,14 +4167,14 @@ void MCInterfaceExecGo(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MC
 		ctxt . Throw();
 }
 
-void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, int p_mode, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
+void MCInterfaceExecGoCardAsMode(MCExecContext& ctxt, MCCard *p_card, int p_mode, bool p_visible, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_stack, p_card, p_background, nil, p_mode, p_with_background, p_marked, p_this_stack, p_visible, p_binary_fail);
+	MCInterfaceExecGo(ctxt, p_card, nil, p_mode, p_this_stack, p_visible);
 }
 
-void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card, MCControl *p_background, MCStringRef p_window, bool p_visible, bool p_with_background, bool p_marked, bool p_this_stack, bool p_binary_fail)
+void MCInterfaceExecGoCardInWindow(MCExecContext& ctxt, MCCard *p_card, MCStringRef p_window, bool p_visible, bool p_this_stack)
 {
-	MCInterfaceExecGo(ctxt, p_stack, p_card, p_background, p_window, WM_MODELESS, p_with_background, p_marked, p_this_stack, p_visible, p_binary_fail);
+	MCInterfaceExecGo(ctxt, p_card, p_window, WM_MODELESS, p_this_stack, p_visible);
 }
 
 void MCInterfaceExecGoRecentCard(MCExecContext& ctxt)
@@ -4209,14 +4193,14 @@ void MCInterfaceExecGoCardEnd(MCExecContext& ctxt, bool p_is_start)
 	MCrecent->godirect(p_is_start);
 }
 
-void MCInterfaceExecGoHome(MCExecContext& ctxt, MCStack *p_stack, MCCard *p_card)
+void MCInterfaceExecGoHome(MCExecContext& ctxt, MCCard *p_card)
 {
-	if (p_stack != MCdefaultstackptr)
+	if (p_card -> getstack() != MCdefaultstackptr)
 	{
 		MCdefaultstackptr->close();
 		MCdefaultstackptr->checkdestroy();
 	}
-	MCInterfaceExecGo(ctxt, p_stack, p_card, nil, nil, 0, false, false, false, true, false);
+	MCInterfaceExecGo(ctxt, p_card, nil, 0, false, true);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

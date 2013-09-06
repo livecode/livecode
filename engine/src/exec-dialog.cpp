@@ -144,7 +144,7 @@ static bool MCA_file_with_types(bool p_plural, MCStringRef p_prompt, MCStringRef
 {
 	const char *t_title = p_title == nil ? "" : MCStringGetCString(p_title);
 	const char *t_prompt = p_prompt == nil ? "" : MCStringGetCString(p_prompt);
-	const char *t_initial = p_initial == nil ? "" : MCStringGetCString(p_initial);
+	const char *t_initial = p_initial == nil ? nil : MCStringGetCString(p_initial);
 	
 	char **t_types = nil;
 	if (!MCMemoryNewArray(p_type_count, t_types))
@@ -459,12 +459,12 @@ void MCDialogExecCustomAnswerDialog(MCExecContext &ctxt, MCNameRef p_stack, MCNa
 
 	MCStack *t_stack;
 	if (t_success)
-		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+		t_stack = ctxt.GetObject()->getstack()->findstackname(p_stack);
+	
+	Boolean t_old_trace = MCtrace;
+	MCtrace = False;
 
-	bool t_old_trace = MCtrace == True;
-	MCtrace = false;
-
-	if (t_success)
+	if (t_success && t_stack != nil)
 	{
 		MCStack *t_parent_stack = nil;
 
@@ -745,12 +745,12 @@ void MCDialogExecCustomAskDialog(MCExecContext& ctxt, MCNameRef p_stack, MCNameR
 	
 	MCStack *t_stack;
 	if (t_success)
-		t_success = ctxt.GetObject()->getstack()->findstackname(p_stack, t_stack);
+		t_stack = ctxt.GetObject()->getstack()->findstackname(p_stack);
 	
-	bool t_old_trace = MCtrace == True;
-	MCtrace = false;
+	Boolean t_old_trace = MCtrace;
+	MCtrace = False;
 	
-	if (t_success)
+	if (t_success && t_stack != nil)
 	{
 		MCStack *t_parent_stack = nil;
 		

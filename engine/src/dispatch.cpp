@@ -76,6 +76,56 @@ static char header[HEADERSIZE] = "#!/bin/sh\n# MetaCard 2.4 stack\n# The followi
 static const char *newheader = "REVO2700";
 static const char *newheader5500 = "REVO5500";
 
+////////////////////////////////////////////////////////////////////////////////
+
+MCPropertyInfo MCDispatch::kProperties[] =
+{
+	DEFINE_RO_OBJ_PROPERTY(P_TEXT_FONT, String, MCDispatch, DefaultTextFont)
+    DEFINE_RO_OBJ_PROPERTY(P_TEXT_SIZE, UInt32, MCDispatch, DefaultTextSize)
+	DEFINE_RO_OBJ_ENUM_PROPERTY(P_TEXT_ALIGN, InterfaceTextAlign, MCDispatch, DefaultTextAlign)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_TEXT_STYLE, InterfaceTextStyle, MCDispatch, DefaultTextStyle)
+	DEFINE_RO_OBJ_PROPERTY(P_TEXT_HEIGHT, UInt32, MCDispatch, DefaultTextHeight)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_FORE_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_HILITE_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_BORDER_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_BOTTOM_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_SHADOW_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    DEFINE_RO_OBJ_PROPERTY(P_FOCUS_PIXEL, UInt32, MCDispatch, DefaultForePixel)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_BACK_PIXEL, UInt32, MCDispatch, DefaultBackPixel)
+    
+    DEFINE_RO_OBJ_PROPERTY(P_TOP_PIXEL, UInt32, MCDispatch, DefaultTopPixel)
+    
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_FORE_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BORDER_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_TOP_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BOTTOM_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_SHADOW_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_FOCUS_COLOR, InterfaceNamedColor, MCDispatch, DefaultForeColor)
+    
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_BACK_COLOR, InterfaceNamedColor, MCDispatch, DefaultBackColor)
+    DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_HILITE_COLOR, InterfaceNamedColor, MCDispatch, DefaultBackColor)
+
+    DEFINE_RO_OBJ_PROPERTY(P_FORE_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BACK_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_HILITE_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BORDER_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_TOP_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_BOTTOM_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_SHADOW_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+    DEFINE_RO_OBJ_PROPERTY(P_FOCUS_PATTERN, OptionalUInt32, MCDispatch, DefaultPattern)
+};
+
+MCObjectPropertyTable MCDispatch::kPropertyTable =
+{
+	&MCObject::kPropertyTable,
+	sizeof(kProperties) / sizeof(kProperties[0]),
+	&kProperties[0],
+};
+
+////////////////////////////////////////////////////////////////////////////////
+
 MCDispatch::MCDispatch()
 {
 	license = NULL;
@@ -428,9 +478,7 @@ Boolean MCDispatch::openenv(MCStringRef sname, MCStringRef env,
 IO_stat readheader(IO_handle& stream, char *version)
 {
 	char tnewheader[NEWHEADERSIZE];
-	uint4 size = NEWHEADERSIZE;
-
-	if (IO_read(tnewheader, sizeof(char), size, stream) == IO_NORMAL)
+	if (IO_read(tnewheader, NEWHEADERSIZE, stream) == IO_NORMAL)
 	{
 		// MW-2012-03-04: [[ StackFile5500 ]] Check for either the 2.7 or 5.5 header.
 		if (strncmp(tnewheader, newheader, NEWHEADERSIZE) == 0 ||
@@ -447,11 +495,10 @@ IO_stat readheader(IO_handle& stream, char *version)
 		else
 		{
 			char theader[HEADERSIZE + 1];
-			uint4 size = HEADERSIZE - NEWHEADERSIZE;
 			theader[HEADERSIZE] = '\0';
 			uint4 offset;
 			strncpy(theader, tnewheader, NEWHEADERSIZE);
-			if (IO_read(theader + NEWHEADERSIZE, sizeof(char), size, stream) == IO_NORMAL
+			if (IO_read(theader + NEWHEADERSIZE, HEADERSIZE - NEWHEADERSIZE, stream) == IO_NORMAL
 		        && MCU_offset(SIGNATURE, theader, offset))
 			{
 				if (theader[offset - 1] != '\n' || theader[offset - 2] == '\r')
@@ -690,7 +737,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			char *script = new char[size + 2];
 			script[size] = '\n';
 			script[size + 1] = '\0';
-			if (IO_read(script, sizeof(char), size, stream) != IO_NORMAL
+			if (IO_read(script, size, stream) != IO_NORMAL
 			        || !stacks->setscript(script))
 			{
 				delete script;
@@ -717,12 +764,11 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 {
 	IO_handle stream;
 	char *openpath = NULL;
-	char *fname = strclone(inname);
 
 	MCAutoStringRef t_open_path;
 
 	MCAutoStringRef t_fname_string;
-	/* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname_string);
+	/* UNCHECKED */ MCStringCreateWithCString(inname, &t_fname_string);
 
 	bool t_found;
 	t_found = false;
@@ -731,7 +777,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 		if ((stream = MCS_open(*t_fname_string, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			// This should probably use resolvepath().
-			if (fname[0] != PATH_SEPARATOR && fname[1] != ':')
+			if (inname[0] != PATH_SEPARATOR && inname[1] != ':')
 			{
 				MCAutoStringRef t_curpath;
 				
@@ -739,7 +785,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 				/* UNCHECKED */ MCStringFormat(&t_open_path, "%s/%s", MCStringGetCString(*t_curpath), MCStringGetCString(*t_fname_string)); 
 			}
 			else
-				t_open_path = t_fname_string;
+				t_open_path = *t_fname_string;
 
 			t_found = true;
 		}
@@ -752,8 +798,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 		if (MCStringLastIndexOfChar(*t_fname_string, PATH_SEPARATOR, UINDEX_MAX, kMCStringOptionCompareCaseless, t_leaf_index))
 			/* UNCHECKED */ MCStringCopySubstring(*t_fname_string, MCRangeMake(t_leaf_index + 1, MCStringGetLength(*t_fname_string) - (t_leaf_index + 1)), &t_leaf_name);
 		else
-			t_leaf_name = t_fname_string;
-		
+			t_leaf_name = *t_fname_string;
 		if ((stream = MCS_open(*t_leaf_name, kMCSOpenFileModeRead, True, False, 0)) != NULL)
 		{
 			MCAutoStringRef t_curpath;
@@ -787,7 +832,7 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 			if (MCStringGetNativeCharAtIndex(*t_homename, MCStringGetLength(*t_homename) - 1) == '/')
 				/* UNCHECKED */ MCStringCopySubstring(*t_homename, MCRangeMake(0, MCStringGetLength(*t_homename) - 1), &t_trimmed_homename);
 			else
-				t_trimmed_homename = t_homename;
+				t_trimmed_homename = *t_homename;
 
 			if (!t_found)
 				t_found = attempt_to_loadfile(stream, &t_open_path, "%s/%s", MCStringGetCString(*t_trimmed_homename), MCStringGetCString(*t_fname_string));
@@ -803,10 +848,8 @@ IO_stat MCDispatch::loadfile(const char *inname, MCStack *&sptr)
 
 	if (stream == NULL)
 	{
-		delete fname;
 		return IO_ERROR;
 	}
-	delete fname;
 	IO_stat stat = readfile(MCStringGetCString(*t_open_path), inname, stream, sptr);
 	MCS_close(stream);
 	return stat;
@@ -855,8 +898,8 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	}
 
 	MCStringRef oldfiletype;
-	oldfiletype = MCfiletype;
-	MCfiletype = MCstackfiletype;
+	oldfiletype = (MCStringRef)MCValueRetain(MCfiletype);
+	MCValueAssign(MCfiletype, MCstackfiletype);
 	
 	MCAutoStringRef t_backup;
 	/* UNCHECKED */ MCStringFormat(&t_backup, "%s~", MCStringGetCString(*t_linkname)); 
@@ -866,7 +909,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	{
 		MCresult->sets("can't open stack backup file");
 
-		MCfiletype = oldfiletype;
+		MCValueAssign(MCfiletype, oldfiletype);
 		return IO_ERROR;
 	}
 	IO_handle stream;
@@ -875,10 +918,10 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	{
 		MCresult->sets("can't open stack file");
 		cleanup(stream, *t_linkname, *t_backup);
-		MCfiletype = oldfiletype;
+		MCValueAssign(MCfiletype, oldfiletype);
 		return IO_ERROR;
 	}
-	MCfiletype = oldfiletype;
+	MCValueAssign(MCfiletype, oldfiletype);
 	MCString errstring = "Error writing stack (disk full?)";
 	
 	// MW-2012-03-04: [[ StackFile5500 ]] Work out what header to emit, and the size.
@@ -921,7 +964,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		return IO_ERROR;
 	}
 	MCS_close(stream);
-	uint2 oldmask = MCS_umask(0);
+	uint2 oldmask = MCS_getumask();
 	uint2 newmask = ~oldmask & 00777;
 	if (oldmask & 00400)
 		newmask &= ~00100;
@@ -929,7 +972,7 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 		newmask &= ~00010;
 	if (oldmask & 00004)
 		newmask &= ~00001;
-	MCS_umask(oldmask);
+	MCS_setumask(oldmask);
 	
 	MCS_chmod(*t_linkname, newmask);
 
@@ -1324,7 +1367,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findsubstackname(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findsubstackname_oldstring(s)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -1337,7 +1380,7 @@ MCStack *MCDispatch::findstackname(const MCString &s)
 		do
 		{
 			MCStack *foundstk;
-			if ((foundstk = (MCStack *)tstk->findstackfile(s)) != NULL)
+			if ((foundstk = (MCStack *)tstk->findstackfile_oldstring(s)) != NULL)
 				return foundstk;
 			tstk = (MCStack *)tstk->next();
 		}
@@ -2053,6 +2096,52 @@ void MCDispatch::GetDefaultTextSize(MCExecContext& ctxt, uinteger_t& r_size)
 void MCDispatch::GetDefaultTextStyle(MCExecContext& ctxt, MCInterfaceTextStyle& r_style)
 {
 	r_style . style = FA_DEFAULT_STYLE;
+}
+
+void MCDispatch::GetDefaultTextAlign(MCExecContext& ctxt, intenum_t& r_align)
+{
+    r_align = F_ALIGN_LEFT;
+}
+
+void MCDispatch::GetDefaultTextHeight(MCExecContext& ctxt, uinteger_t& r_height)
+{
+    r_height = heightfromsize(DEFAULT_TEXT_SIZE);
+}
+
+void MCDispatch::GetDefaultForePixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->black_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultBackPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->background_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultTopPixel(MCExecContext& ctxt, uinteger_t& r_pixel)
+{
+    r_pixel = MCscreen->white_pixel.pixel & 0xFFFFFF;
+}
+
+void MCDispatch::GetDefaultForeColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+    if (MCStringCreateWithCString("black", r_color . name))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultBackColor(MCExecContext& ctxt, MCInterfaceNamedColor& r_color)
+{
+    if (MCStringCreateWithCString("white", r_color . name))
+        return;
+    
+    ctxt . Throw();
+}
+
+void MCDispatch::GetDefaultPattern(MCExecContext& ctxt, uinteger_t*& r_pattern)
+{
+    r_pattern = nil;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

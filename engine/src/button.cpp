@@ -275,11 +275,21 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+	
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DISABLED_ICON, InterfaceButtonIcon, MCButton, DisabledIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HILITED_ICON, InterfaceButtonIcon, MCButton, HiliteIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
+    
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceButtonHilite, MCButton, Hilite)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -1155,12 +1165,12 @@ Boolean MCButton::mdown(uint2 which)
 					uindex_t t_ntabs;
 					t_ntabs = MCArrayGetCount(tabs);
 					MCValueRef t_tab = nil;
-					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab, t_tab);
+					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab + 1, t_tab);
 					if (starttab < t_ntabs && starttab + 1 != menuhistory
 					        && MCStringGetCharAtIndex((MCStringRef)t_tab, 0) != '(')
 					{
 						MCValueRef t_oldhist = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_oldhist);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_oldhist);
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
@@ -1396,14 +1406,14 @@ Boolean MCButton::mup(uint2 which)
 					uindex_t t_ntabs;
 					MCValueRef t_tab = nil;
 					t_ntabs = MCArrayGetCount(tabs);
-					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab, t_tab);
+					/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, starttab + 1, t_tab);
 					int2 curx = rect.x + 2;
 					if (getmousetab(curx) == starttab && starttab < t_ntabs
 					        && starttab + 1 != menuhistory
 					        && MCStringGetCharAtIndex((MCStringRef)t_tab, 0) != '(')
 					{
 						MCValueRef t_oldhist = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_oldhist);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_oldhist);
 						setmenuhistoryprop(starttab + 1);
 						// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 						layer_redrawall();
@@ -3343,7 +3353,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		if (menu == NULL)
 		{
 			MCerrorlock++;
-			/* UNCHECKED */ getstack()->findstackname(menuname, menu);
+			menu = getstack()->findstackname(menuname);
 			MCerrorlock--;
 			if (menu != NULL)
 				menu->addneed(this);
@@ -3413,7 +3423,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 					for (uindex_t i = 0 ; i < t_ntabs ; i++)
 					{
 						MCValueRef t_tabval = nil;
-						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+						/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 						MCStringRef t_tab;
 						t_tab = (MCStringRef)t_tabval;
 						if (MCStringGetCharAtIndex(t_tab, 0) == '!'
@@ -3424,7 +3434,6 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 							menuflags |= F_CHECK;
 							break;
 						}
-						MCValueRelease(t_tab);
 					}
 
 					ButtonMenuCallback t_callback(this, menuflags);
@@ -3966,8 +3975,8 @@ void MCButton::setmenuhistory(int2 newline)
 		{
 			MCValueRef t_menuhistory = nil;
 			MCValueRef t_oldline = nil;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory - 1, t_menuhistory);
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline - 1, t_oldline);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, menuhistory, t_menuhistory);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, oldline, t_oldline);
 			message_with_valueref_args(MCM_menu_pick, t_menuhistory, t_oldline);
 		}
 		resetlabel();
@@ -3993,7 +4002,7 @@ uint2 MCButton::getmousetab(int2 &curx)
 		for (i = 0 ; i < MCArrayGetCount(tabs) ; i++)
 		{
 			MCValueRef t_tabval;
-			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+			/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 			MCStringRef t_tab;
 			t_tab = (MCStringRef)t_tabval;
 			
@@ -4005,7 +4014,6 @@ uint2 MCButton::getmousetab(int2 &curx)
 				t_range.length--;
 			}
 			totalwidth += MCFontMeasureTextSubstring(m_font, t_tab, t_range) + 23;
-			MCValueRelease(t_tab);
 		}
 		if (totalwidth < rect.width)
 			curx += rect.width - totalwidth >> 1;
@@ -4033,7 +4041,7 @@ uint2 MCButton::getmousetab(int2 &curx)
 	for (i = 0 ; i < t_ntabs ; i++)
 	{
 		MCValueRef t_tabval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
 		if (MCcurtheme)
@@ -4046,7 +4054,6 @@ uint2 MCButton::getmousetab(int2 &curx)
 				tx += MCFontMeasureText(m_font, t_tab) + 12;
 
 		}
-		MCValueRelease(t_tab);
 		if (mx < tx)
 			break;
 	}
@@ -4074,7 +4081,7 @@ int4 MCButton::formattedtabwidth(void)
 	for (uint4 i = 0 ; i < t_ntabs ; i++)
 	{
 		MCValueRef t_tabval = nil;
-		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i, t_tabval);
+		/* UNCHECKED */ MCArrayFetchValueAtIndex(tabs, i + 1, t_tabval);
 		MCStringRef t_tab;
 		t_tab = (MCStringRef)t_tabval;
 		if (MCcurtheme)
@@ -4087,7 +4094,6 @@ int4 MCButton::formattedtabwidth(void)
 				tx += MCFontMeasureText(m_font, t_tab) + 12;
 
 		}
-		MCValueRelease(t_tab);
 	}
 	if (t_ntabs > 0)
 		tx += taboverlap + tabrightmargin;
@@ -4135,28 +4141,6 @@ void MCButton::freeicons()
 	closeicon(macrbtrack);
 	closeicon(macrbhilite);
 	closeicon(macrbhilitetrack);
-}
-
-// MW-2012-02-16: [[ IntrinsicUnicode ]] This utility method changes the encoding
-//   of the given string either to unicode (if to_unicode is true) or to native
-//   otherwise.
-static void switchunicodeofstring(bool p_to_unicode, char*& x_string, uint2& x_length)
-{
-	if (x_string == nil)
-		return;
-
-	MCExecPoint ep(nil, nil, nil);
-	ep . setsvalue(MCString(x_string, x_length));
-	if (p_to_unicode)
-		ep . nativetoutf16();
-	else
-		ep . utf16tonative();
-	
-	delete x_string;
-
-	x_length = ep . getsvalue() . getlength();
-	x_string = new char[x_length];
-	memcpy(x_string, ep . getsvalue() . getstring(), x_length);
 }
 
 // MW-2012-02-16: [[ IntrinsicUnicode ]] This method switches all the text in

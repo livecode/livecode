@@ -153,17 +153,19 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNDERLINE_LINKS, Bool, MCStack, UnderlineLinks)
 
-	DEFINE_RW_OBJ_PROPERTY(P_WINDOW_SHAPE, UInt16, MCStack, WindowShape)
+	DEFINE_RW_OBJ_PROPERTY(P_WINDOW_SHAPE, UInt32, MCStack, WindowShape)
 	DEFINE_RO_OBJ_PROPERTY(P_SCREEN, Int16, MCStack, Screen)
 	DEFINE_RW_OBJ_PROPERTY(P_CURRENT_CARD, OptionalString, MCStack, CurrentCard)
 	DEFINE_RW_OBJ_PROPERTY(P_MODIFIED_MARK, Bool, MCStack, ModifiedMark)
 	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATED_RENDERING, Bool, MCStack, AcceleratedRendering)
 
 	DEFINE_RW_OBJ_OPTIONAL_ENUM_PROPERTY(P_COMPOSITOR_TYPE, InterfaceCompositorType, MCStack, CompositorType)
-	// P_COMPOSITOR_CACHE_LIMIT
-	// P_COMPOSITOR_TILE_SIZE
+	DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_CACHE_LIMIT, OptionalUInt32, MCStack, CompositorCacheLimit)
+    DEFINE_RW_OBJ_PROPERTY(P_COMPOSITOR_TILE_SIZE, OptionalUInt32, MCStack, CompositorTileSize)
 	DEFINE_RW_OBJ_NON_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_DEFER_SCREEN_UPDATES, Bool, MCStack, DeferScreenUpdates)
+    
+    DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DECORATIONS, InterfaceDecoration, MCStack, Decorations)
 
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_SHOW_BORDER)
 	DEFINE_UNAVAILABLE_OBJ_PROPERTY(P_BORDER_WIDTH)
@@ -2697,7 +2699,42 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-#endif /* MCStack::setprop */
+        case P_FORE_PIXEL:
+        case P_BACK_PIXEL:
+        case P_HILITE_PIXEL:
+        case P_BORDER_PIXEL:
+        case P_TOP_PIXEL:
+        case P_BOTTOM_PIXEL:
+        case P_SHADOW_PIXEL:
+        case P_FOCUS_PIXEL:
+        case P_FORE_COLOR:
+        case P_BACK_COLOR:
+        case P_HILITE_COLOR:
+        case P_BORDER_COLOR:
+        case P_TOP_COLOR:
+        case P_BOTTOM_COLOR:
+        case P_SHADOW_COLOR:
+        case P_FOCUS_COLOR:
+        case P_COLORS:
+        case P_FORE_PATTERN:
+        case P_BACK_PATTERN:
+        case P_HILITE_PATTERN:
+        case P_BORDER_PATTERN:
+        case P_TOP_PATTERN:
+        case P_BOTTOM_PATTERN:
+        case P_SHADOW_PATTERN:
+        case P_FOCUS_PATTERN:
+        case P_TEXT_FONT:
+        case P_TEXT_SIZE:
+        case P_TEXT_STYLE:
+        case P_TEXT_HEIGHT:
+            if (MCObject::setprop(parid, which, ep, effective) != ES_NORMAL)
+                return ES_ERROR;
+            // MW-2011-08-18: [[ Redraw ]] This could be restricted to just children
+            //   of this stack - but for now do the whole screen.
+            MCRedrawDirtyScreen();
+            return ES_NORMAL;
+    #endif /* MCStack::setprop */
 	default:
 	{
 		Exec_stat t_stat;

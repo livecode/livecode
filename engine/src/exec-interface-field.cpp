@@ -88,11 +88,27 @@ void MCField::Redraw(bool reset, int4 xoffset, int4 yoffset)
 	if (reset)
 		resetparagraphs();
 	hscroll(xoffset, False);
-	vscroll(yoffset - texty, False);
+	vscroll(yoffset, False);
 	resetscrollbars(True);
 
 	// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 	layer_redrawall();
+}
+
+void MCField::UpdateScrollbars()
+{
+    if (vscrollbar != NULL)
+    {
+        vscrollbar->setflag(flags & F_3D, F_3D);
+        vscrollbar->setflag(flags & F_OPAQUE, F_OPAQUE);
+        vscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
+    }
+    if (hscrollbar != NULL)
+    {
+        hscrollbar->setflag(flags & F_3D, F_3D);
+        hscrollbar->setflag(flags & F_OPAQUE, F_OPAQUE);
+        hscrollbar->setflag(flags & F_DISABLED, F_DISABLED);
+    }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -151,26 +167,26 @@ void MCField::GetLockText(MCExecContext& ctxt, bool& r_setting)
 	r_setting = getflag(F_LOCK_TEXT);
 }
 
-void MCField::SetLockText(MCExecContext& ctxt, bool setting)
+void MCField::DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting)
 {
-	uint4 tflags = flags;
+    uint4 tflags = flags;
 	bool t_dirty = false;
 	
-	if (setting != ((tflags & F_LOCK_TEXT) == True))
+	if (setting != ((tflags & (which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON)) == True))
 	{
 		if (setting)
-			tflags |= F_LOCK_TEXT;
+			tflags |= (which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON);
 		else
-			tflags &= ~F_LOCK_TEXT;
+			tflags &= ~(which == P_LOCK_TEXT ? F_LOCK_TEXT : F_TRAVERSAL_ON);
 		t_dirty = true;
 	}
-
+    
 	if (flags & F_LIST_BEHAVIOR)
 	{
 		flags |= F_LOCK_TEXT;
 		t_dirty = true;
 	}
-
+    
 	if (t_dirty)
 	{
 		bool t_was_locked;
@@ -196,9 +212,19 @@ void MCField::SetLockText(MCExecContext& ctxt, bool setting)
 			vscrollbar->setflag(False, F_TRAVERSAL_ON);
 		if (hscrollbar != NULL)
 			hscrollbar->setflag(False, F_TRAVERSAL_ON);
-
+        
 		Redraw();
 	}
+}
+
+void MCField::SetLockText(MCExecContext& ctxt, bool setting)
+{
+    DoSetInputControl(ctxt, P_LOCK_TEXT, setting);
+}
+
+void MCField::SetTraversalOn(MCExecContext& ctxt, bool setting)
+{
+    DoSetInputControl(ctxt, P_TRAVERSAL_ON, setting);
 }
 
 void MCField::GetSharedText(MCExecContext& ctxt, bool& r_setting)
@@ -725,4 +751,174 @@ void MCField::GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encod
 		r_encoding = t_state ? 1 : 0;
 	else
 		r_encoding = 2;
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+// TODO:: list types
+
+void MCField::GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines)
+{
+    MCExecPoint& ep = ctxt . GetEP();
+    hilitedlines(ep);
+    ep . copyasstringref(r_lines);
+}
+
+void MCField::SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines)
+{
+    if (!opened)
+        return;
+    if (flags & F_LIST_BEHAVIOR)
+        if (sethilitedlines(MCStringGetOldString(p_lines)) != ES_NORMAL)
+        {
+            ctxt . Throw();
+            return;
+        }
+    // MW-2011-08-18: [[ Layers ]] Just redraw the content (we don't need a recompute).
+    layer_redrawall();
+}
+
+////////////////////////////////////////////////////////////////////////////////////////
+
+void MCField::SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow)
+{
+    MCControl::SetShadow(ctxt, p_shadow);
+    Redraw(true);
+}
+
+void MCField::SetShowBorder(MCExecContext& ctxt, bool setting)
+{
+    MCControl::SetShowBorder(ctxt, setting);
+    Redraw(true);
+}
+
+
+void MCField::SetTextHeight(MCExecContext& ctxt, uinteger_t* height)
+{
+    MCObject::SetTextHeight(ctxt, height);
+    Redraw(true);
+}
+
+
+void MCField::SetTextFont(MCExecContext& ctxt, MCStringRef font)
+{
+    MCObject::SetTextFont(ctxt, font);
+    Redraw(true);
+}
+
+
+void MCField::SetTextSize(MCExecContext& ctxt, uinteger_t* size)
+{
+    MCObject::SetTextSize(ctxt, size);
+    Redraw(true);
+}
+
+
+void MCField::SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style)
+{
+    MCObject::SetTextStyle(ctxt, p_style);
+    Redraw(true);
+}
+
+
+void MCField::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
+{
+    MCObject::SetBorderWidth(ctxt, width);
+    Redraw(true);
+}
+
+
+void MCField::Set3D(MCExecContext& ctxt, bool setting)
+{
+    MCObject::Set3D(ctxt, setting);
+    UpdateScrollbars();
+    Redraw(true);
+}
+
+
+void MCField::SetOpaque(MCExecContext& ctxt, bool setting)
+{
+    MCControl::SetOpaque(ctxt, setting);
+    UpdateScrollbars();
+}
+
+
+void MCField::SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting)
+{
+    MCObject::SetEnabled(ctxt, part, setting);
+    UpdateScrollbars();
+    Redraw(true);
+}
+
+
+void MCField::SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting)
+{
+    MCObject::SetDisabled(ctxt, part, setting);
+    UpdateScrollbars();
+    Redraw(true);
+}
+
+void MCField::SetLeftMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetLeftMargin(ctxt, p_margin);
+    Redraw(true);
+}
+
+void MCField::SetRightMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetRightMargin(ctxt, p_margin);
+    Redraw(true);
+}
+
+void MCField::SetTopMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetTopMargin(ctxt, p_margin);
+    Redraw(true);
+}
+
+void MCField::SetBottomMargin(MCExecContext& ctxt, integer_t p_margin)
+{
+    MCControl::SetBottomMargin(ctxt, p_margin);
+    Redraw(true);
+}
+
+void MCField::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins)
+{
+    MCControl::SetMargins(ctxt, p_margins);
+    Redraw(true);
+}
+
+void MCField::SetWidth(MCExecContext& ctxt, uinteger_t value)
+{
+    MCObject::SetWidth(ctxt, value);
+    Redraw(true);
+}
+
+void MCField::SetHeight(MCExecContext& ctxt, uinteger_t value)
+{
+    MCObject::SetHeight(ctxt, value);
+    Redraw(true);
+}
+
+void MCField::SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value)
+{
+    MCObject::SetEffectiveWidth(ctxt, value);
+    Redraw(true);
+}
+
+void MCField::SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value)
+{
+    MCObject::SetEffectiveHeight(ctxt, value);
+    Redraw(true);
+}
+
+void MCField::SetRectangle(MCExecContext& ctxt, MCRectangle p_rect)
+{
+    MCObject::SetRectangle(ctxt, p_rect);
+    Redraw(true);
+}
+
+void MCField::SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect)
+{
+    MCObject::SetEffectiveRectangle(ctxt, p_rect);
+    Redraw(true);
 }
