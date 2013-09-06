@@ -33,6 +33,7 @@ command revTestExternalTestWait
 
 command revTestExternalTestArrays
 
+use java on android
 command revTestExternalTestPostAndSend
 
 use none on linux, windows, android
