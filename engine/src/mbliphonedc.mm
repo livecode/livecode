@@ -291,9 +291,9 @@ void MCScreenDC::freecontext(MCContext *p_context)
 	delete p_context;
 }
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef p_string, uint2 p_length, bool p_unicode_override)
 {
-	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
+	return ceil(iphone_font_measure_text(f -> fid, MCStringGetCString(p_string), p_length, p_unicode_override || f -> unicode));
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -563,12 +563,12 @@ static void MCScreenDCDoSnapshot(void *p_env)
 	env -> result = t_bitmap;
 }
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname)
 {
 	MCScreenDCDoSnapshotEnv env;
 	env . r = r;
 	env . window = window;
-	env . displayname = displayname;
+	env . displayname = MCStringGetCString(displayname);
 
 	// MW-2012-08-06: [[ Fibers ]] Execute the system code on the main fiber.
 	/* REMOTE */ MCFiberCall(s_main_fiber, MCScreenDCDoSnapshot, &env);
