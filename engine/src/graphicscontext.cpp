@@ -759,8 +759,8 @@ void MCGraphicsContext::fillrects(MCRectangle *rects, uint2 nrects)
 void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius)
 {
 	MCGSize t_corner_radii;
-	t_corner_radii . width = radius;
-	t_corner_radii . height = radius;
+	t_corner_radii . width = radius * 0.5;
+	t_corner_radii . height = radius * 0.5;
 	
 	MCGContextBeginPath(m_gcontext);	
 	MCGContextAddRoundedRectangle(m_gcontext, MCRectangleToMCGRectangle(rect), t_corner_radii);	
@@ -770,8 +770,8 @@ void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius)
 void MCGraphicsContext::fillroundrect(const MCRectangle& rect, uint2 radius)
 {
 	MCGSize t_corner_radii;
-	t_corner_radii . width = radius;
-	t_corner_radii . height = radius;
+	t_corner_radii . width = radius * 0.5;
+	t_corner_radii . height = radius * 0.5;
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddRoundedRectangle(m_gcontext, MCRectangleToMCGRectangle(rect), t_corner_radii);	
