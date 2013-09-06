@@ -798,16 +798,15 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 	fdescent = MCFontGetDescent(m_font);
 	if (rect.height - thumb.height > fascent)
 	{
-		char *data = NULL;
-		uint4 length = 0;
-		length = MCU_r8tos(data, length, thumbpos, nffw, nftrailing, nfforce);
-		uint2 tw = MCFontMeasureText(m_font, data, length, false);
+		MCAutoStringRef t_data;
+		/* UNCHECKED */ MCU_r8tos(&t_data, thumbpos, nffw, nftrailing, nfforce);
+		uint2 tw = MCFontMeasureText(m_font, *t_data);
 		if (getstyleint(flags) == F_VERTICAL)
 		{
 			uint2 sx = thumb.x + thumb.width + ((rect.width - thumb.width - tw) >> 1);
 			uint2 sy = thumb.y + ((thumb.height + fascent) >> 1);
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, data, length, false, dc, sx, sy, False);
+			MCFontDrawText(m_font, *t_data, dc, sx, sy, False);
 		}
 		else
 		{
@@ -822,9 +821,8 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 			else
 				sy = rect.y + rect.height - fdescent;
 			setforeground(dc, DI_FORE, False);
-			MCFontDrawText(m_font, data, length, false, dc, sx, sy, False);
+			MCFontDrawText(m_font, *t_data, dc, sx, sy, False);
 		}
-		delete data;
 	}
 }
 
