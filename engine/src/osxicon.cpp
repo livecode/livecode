@@ -215,8 +215,8 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 
 			if (*t_item_start == '(')
 			{
-				MCAutoStringref t_head;
-				/* UNCHECKED */ MCStringDivideAtIndex(p_menu, ++t_offset, &t_head, p_menu);
+				MCAutoStringRef t_head;
+				/* UNCHECKED */ MCStringDivideAtIndex(p_menu, t_offset++, &t_head, p_menu);
 				t_item_start++, t_item -> disabled = true;
 			}
 			else
