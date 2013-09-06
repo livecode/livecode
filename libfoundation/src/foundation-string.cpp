@@ -674,7 +674,7 @@ bool MCStringConvertToCFStringRef(MCStringRef p_string, CFStringRef& r_cfstring)
         return false;
     
     MCStringGetNativeChars(p_string, MCRangeMake(0, t_length), t_chars);
-    r_cfstring = CFStringCreateWithCharacters(nil, (UniChar *)t_chars, t_length);
+	r_cfstring = CFStringCreateWithBytes(nil, t_chars, t_length, kCFStringEncodingMacRoman, false);
     
     MCMemoryDeleteArray(t_chars);
     return r_cfstring != nil;
