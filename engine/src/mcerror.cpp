@@ -121,6 +121,11 @@ void MCError::copysvalue(const MCString &s, Boolean t)
 		svalue.set(buffer, strlen(buffer));
 }
 
+bool MCError::copyasstring(MCStringRef &r_string)
+{
+	return MCStringCreateWithCString(buffer, r_string);
+}
+
 void MCError::clear()
 {
 	delete buffer;
