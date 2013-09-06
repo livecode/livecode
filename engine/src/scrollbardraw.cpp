@@ -799,7 +799,7 @@ void MCScrollbar::drawvalue(MCDC *dc, MCRectangle &thumb)
 	if (rect.height - thumb.height > fascent)
 	{
 		MCAutoStringRef t_data;
-		/* UNCHECKED */ MCU_r8tos(&t_data, thumbpos, nffw, nftrailing, nfforce);
+		/* UNCHECKED */ MCU_r8tos(thumbpos, nffw, nftrailing, nfforce, &t_data);
 		uint2 tw = MCFontMeasureText(m_font, *t_data);
 		if (getstyleint(flags) == F_VERTICAL)
 		{
