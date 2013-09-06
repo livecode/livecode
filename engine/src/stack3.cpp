@@ -901,14 +901,14 @@ MCControl *MCStack::getcontrolid(Chunk_term type, uint4 inid, bool p_recurse)
 	return NULL;
 }
 
-MCControl *MCStack::getcontrolname(Chunk_term type, const MCString &s)
+MCControl *MCStack::getcontrolname(Chunk_term type, MCStringRef s)
 {
 	if (controls == NULL)
 		return NULL;
 	MCControl *tobj = controls;
 	do
 	{
-		MCControl *foundobj = tobj->findname(type, s);
+		MCControl *foundobj = tobj->findname(type, MCStringGetOldString(s));
 		if (foundobj != NULL)
 			return foundobj;
 		tobj = (MCControl *)tobj->next();
@@ -937,10 +937,10 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, MCStringRef s)
 {
 	MCNewAutoNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	/* UNCHECKED */ MCNameCreate(s, &t_name);
 	MCObject *t_object;
 	if (!getAVname(type, *t_name, t_object))
 		return nil;
@@ -1429,7 +1429,7 @@ MCObject *MCStack::getobjid(Chunk_term type, uint4 inid)
 		return MCdispatcher->getobjid(type, inid);
 }
 
-MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
+MCObject *MCStack::getsubstackobjname(Chunk_term type, MCStringRef s)
 {
 	MCStack *sptr = this;
 	MCObject *optr = NULL;
@@ -1459,12 +1459,8 @@ MCObject *MCStack::getsubstackobjname(Chunk_term type, const MCString &s)
 	return NULL;
 }
 
-/* WRAPPER */ MCObject *MCStack::getobjname(Chunk_term type, MCStringRef p_name)
-{
-	return getobjname(type, MCStringGetOldString(p_name));
-}
 
-MCObject *MCStack::getobjname(Chunk_term type, const MCString& s)
+MCObject *MCStack::getobjname(Chunk_term type, MCStringRef s)
 {
 	MCObject *optr = NULL;
 	uint4 iid;

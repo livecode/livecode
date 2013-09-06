@@ -524,7 +524,7 @@ public:
 	// This method searches for the image with the given id, taking into account
 	// the containment and behavior hierarchy of this object.
 	MCImage *resolveimageid(uint4 image_id);
-	MCImage *resolveimagename(const MCString& name);
+	MCImage *resolveimagename(MCStringRef name);
 	
 	Boolean isvisible();
 	Boolean resizeparent();
@@ -1090,7 +1090,7 @@ private:
 	bool needtosavefontflags(void) const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
-	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 
