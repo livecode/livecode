@@ -149,7 +149,7 @@ static const char *pstring[] =
 *************************************************/
 
 size_t
-regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
+regerror(int errcode, const regex_t *preg, MCStringRef errbuf, size_t errbuf_size)
 {
 	const char *message, *addmessage;
 	size_t length, addlength;
@@ -165,11 +165,11 @@ regerror(int errcode, const regex_t *preg, char *errbuf, size_t errbuf_size)
 	if (errbuf_size > 0)
 	{
 		if (addlength > 0 && errbuf_size >= length + addlength)
-			sprintf(errbuf, "%s%s%-6d", message, addmessage, (int)preg->re_erroffset);
+			MCStringFormat(errbuf, "%s%s%-6d", message, addmessage, (int)preg->re_erroffset);
 		else
 		{
-			strncpy(errbuf, message, errbuf_size - 1);
-			errbuf[errbuf_size-1] = 0;
+			/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *) message, errbuf_size - 1, errbuf);
+			/* UNCHECKED */ MCStringAppendNativeChars(errbuf, (const char_t)0, 1);
 		}
 	}
 	return length + addlength;
@@ -201,7 +201,7 @@ Returns:      0 on success
               various non-zero codes on failure
 */
 
-int regcomp(regex_t *preg, const char *pattern, int cflags)
+int regcomp(regex_t *preg, MCStringRef pattern, int cflags)
 {
 	const char *errorptr;
 	int erroffset;
@@ -211,7 +211,7 @@ int regcomp(regex_t *preg, const char *pattern, int cflags)
 		options |= PCRE_CASELESS;
 	if ((cflags & REG_NEWLINE) != 0)
 		options |= PCRE_MULTILINE;
-	preg->re_pcre = pcre_compile(pattern, options, &errorptr, &erroffset, NULL);
+	preg->re_pcre = pcre_compile(MCStringGetCString(pattern), options, &errorptr, &erroffset, NULL);
 	preg->re_erroffset = erroffset;
 
 	if (preg->re_pcre == NULL)
@@ -230,7 +230,7 @@ substring, so we have to get and release working store instead of just using
 the POSIX structures as was done in earlier releases when PCRE needed only 2
 ints. */
 
-int regexec(regex_t *preg, const char *string, int len, size_t nmatch,
+int regexec(regex_t *preg, MCStringRef string, int len, size_t nmatch,
             regmatch_t pmatch[], int eflags)
 {
 	int rc;
@@ -250,7 +250,7 @@ int regexec(regex_t *preg, const char *string, int len, size_t nmatch,
 			return REG_ESPACE;
 	}
 
-	rc = pcre_exec((const pcre *)preg->re_pcre, NULL, string, len, 0, options,
+	rc = pcre_exec((const pcre *)preg->re_pcre, NULL, MCStringGetCString(string), len, 0, options,
 	               ovector, nmatch * 3);
 
 	if (rc == 0)
@@ -301,7 +301,7 @@ const char *MCR_geterror()
 	return regexperror;
 }
 
-regexp *MCR_compile(const char *exp)
+regexp *MCR_compile(MCStringRef exp)
 {
 	regexp *re = new regexp;
 	int status;
@@ -309,14 +309,16 @@ regexp *MCR_compile(const char *exp)
 	status = regcomp(&re->rexp, exp, flags);
 	if (status != REG_OKAY)
 	{
-		regerror(status, NULL, regexperror, sizeof(regexperror));
+		MCAutoStringRef t_regexperror;
+		/* UNCHECKED */ MCStringCreateWithCString(regexperror, &t_regexperror);
+		regerror(status, NULL, *t_regexperror, sizeof(regexperror));
 		delete re;
 		return(NULL);
 	}
 	return re;
 }
 
-int MCR_exec(regexp *prog, const char *string, uint4 len)
+int MCR_exec(regexp *prog, MCStringRef string, uint4 len)
 {
 	int status;
 	int flags = 0;
@@ -327,7 +329,9 @@ int MCR_exec(regexp *prog, const char *string, uint4 len)
 		{
 			return (0);
 		}
-		regerror(status, NULL, regexperror, sizeof(regexperror));
+		MCAutoStringRef t_regexperror;
+		/* UNCHECKED */ MCStringCreateWithCString(regexperror, &t_regexperror);
+		regerror(status, NULL, *t_regexperror, sizeof(regexperror));
 		return(0);
 	}
 	return (1);
