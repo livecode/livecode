@@ -157,15 +157,14 @@ public:
 	virtual void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false) = 0;
 	virtual void drawsegments(MCSegment *segments, uint2 nsegs) = 0;
 	virtual void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false) = 0;
-	virtual void drawrect(const MCRectangle& rect) = 0;
-	virtual void drawinsetrect(const MCRectangle& rect) {}
+	virtual void drawrect(const MCRectangle& rect, bool inside = false) = 0;
 	virtual void fillrect(const MCRectangle& rect) = 0;
 	virtual void fillrects(MCRectangle *rects, uint2 nrects) = 0;
 	virtual void fillpolygon(MCPoint *points, uint2 npoints) = 0;
-	virtual void drawroundrect(const MCRectangle& rect, uint2 radius) = 0;
+	virtual void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside = false) = 0;
 	virtual void fillroundrect(const MCRectangle& rect, uint2 radius) = 0;
-	virtual void drawarc(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
-	virtual void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
+	virtual void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
+	virtual void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside = false) = 0;
 	virtual void fillarc(const MCRectangle& rect, uint2 start, uint2 angle) = 0;
 
 	virtual void drawpath(MCPath *path) = 0;

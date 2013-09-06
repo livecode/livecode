@@ -630,15 +630,21 @@ void MCGraphicsContext::fillpolygon(MCPoint *points, uint2 npoints)
 	MCMemoryDeleteArray(t_points);	
 }
 
-void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
+	MCGFloat t_adjustment;
+	if (m_line_width == 0.0f || inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;
+	
 	MCGPoint t_center;
 	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
 	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
 	
 	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width;
-	t_radii . height = (MCGFloat) rect . height;
+	t_radii . width = (MCGFloat) rect . width - t_adjustment;
+	t_radii . height = (MCGFloat) rect . height - t_adjustment;
 
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddArc(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
@@ -663,15 +669,21 @@ void MCGraphicsContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angl
 	MCGContextFill(m_gcontext);
 }
 
-void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
+	MCGFloat t_adjustment;
+	if (m_line_width == 0.0f || inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;
+	
 	MCGPoint t_center;
 	t_center . x = (MCGFloat) (rect . x + 0.5f * rect . width);
 	t_center . y = (MCGFloat) (rect . y + 0.5f * rect . height);
 	
 	MCGSize t_radii;
-	t_radii . width = (MCGFloat) rect . width;
-	t_radii . height = (MCGFloat) rect . height;
+	t_radii . width = (MCGFloat) rect . width - t_adjustment;
+	t_radii . height = (MCGFloat) rect . height - t_adjustment;
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddSegment(m_gcontext, t_center, t_radii, 0.0f, (MCGFloat) (360 - (start + angle)), (MCGFloat) (360 - start));
@@ -707,34 +719,17 @@ static MCGRectangle MCGRectangleInset(const MCGRectangle &p_rect, MCGFloat p_ins
 	return t_rect;
 }
 
-// IM-2013-09-05: [[ RefactorGraphics ]] Add method to draw rectangles inset by line width
-void MCGraphicsContext::drawinsetrect(const MCRectangle& rect)
-{
-	MCGRectangle t_rect;
-	t_rect = MCRectangleToMCGRectangle(rect);
-
-	MCGFloat t_linewidth;
-	t_linewidth = m_line_width == 0 ? 1.0 : (MCGFloat)m_line_width;
-
-	t_rect = MCGRectangleInset(t_rect, t_linewidth / 2.0);
-
-	MCGContextBeginPath(m_gcontext);
-	MCGContextAddRectangle(m_gcontext, t_rect);
-	MCGContextStroke(m_gcontext);
-}
-
-void MCGraphicsContext::drawrect(const MCRectangle& rect)
+void MCGraphicsContext::drawrect(const MCRectangle& rect, bool inside)
 {
 	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
 	
-	// IM-2013-09-03: [[ RefactorGraphics ]] convert zero-linewidth rect to libgraphics coordinate system
-	if (m_line_width == 0)
-	{
-		t_rect.size.width = MCMax(0.0, t_rect.size.width - 1.0);
-		t_rect.size.height = MCMax(0.0, t_rect.size.height - 1.0);
-		t_rect.origin.x += 0.5;
-		t_rect.origin.y += 0.5;
-	}
+	MCGFloat t_adjustment;
+	if (m_line_width == 0.0f || inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;
+	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
 	
 	MCGContextBeginPath(m_gcontext);
 	MCGContextAddRectangle(m_gcontext, t_rect);
@@ -756,14 +751,24 @@ void MCGraphicsContext::fillrects(MCRectangle *rects, uint2 nrects)
 	MCGContextFill(m_gcontext);
 }
 
-void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius)
+void MCGraphicsContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
+	MCGRectangle t_rect = MCRectangleToMCGRectangle(rect);
+	
 	MCGSize t_corner_radii;
 	t_corner_radii . width = radius;
 	t_corner_radii . height = radius;
 	
+	MCGFloat t_adjustment;
+	if (m_line_width == 0.0f || inside)
+		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+	else
+		t_adjustment = 0.0f;
+	
+	t_rect = MCGRectangleInset(t_rect, t_adjustment);
+	
 	MCGContextBeginPath(m_gcontext);	
-	MCGContextAddRoundedRectangle(m_gcontext, MCRectangleToMCGRectangle(rect), t_corner_radii);	
+	MCGContextAddRoundedRectangle(m_gcontext, t_rect, t_corner_radii);	
 	MCGContextStroke(m_gcontext);
 }
 

@@ -167,14 +167,14 @@ public:
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
-	void drawrect(const MCRectangle& rect);
+	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect);
 	void fillrects(MCRectangle *rects, uint2 nrects);
 	void fillpolygon(MCPoint *points, uint2 npoints);
-	void drawroundrect(const MCRectangle& rect, uint2 radius);
+	void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside);
 	void fillroundrect(const MCRectangle& rect, uint2 radius);
-	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle);
-	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle);
+	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
+	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
 	void fillarc(const MCRectangle& rect, uint2 start, uint2 angle);
 
 	void drawpath(MCPath *path);
@@ -246,10 +246,10 @@ private:
 	void new_fill_background(void);
 	void new_stroke(void);
 	
-	void rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect);
-	void round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius);
+	void rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, bool inside);
+	void round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius, bool inside);
 	void polygon_mark(bool p_stroke, bool p_fill, MCPoint *p_vertices, uint2 p_arity, bool p_closed);
-	void arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete);
+	void arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete, bool inside);
 	void path_mark(bool stroke, bool fill, MCPath *path, bool evenodd);
 };
 
@@ -288,19 +288,22 @@ struct MCMarkPolygon
 struct MCMarkRectangle
 {
 	MCRectangle bounds;
+	bool inside : 1;
 };
 
 struct MCMarkRoundRectangle
 {
 	MCRectangle bounds;
 	uint2 radius;
+	bool inside : 1;
 };
 
 struct MCMarkArc
 {
 	MCRectangle bounds;
 	uint2 start, angle;
-	bool complete;
+	bool complete : 1;
+	bool inside : 1;
 };
 
 struct MCMarkImage

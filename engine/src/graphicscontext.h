@@ -46,15 +46,14 @@ public:
 	void drawlines(MCPoint *points, uint2 npoints, bool p_closed = false);
 	void drawsegments(MCSegment *segments, uint2 nsegs);
 	void drawtext(int2 x, int2 y, const char *s, uint2 length, MCFontStruct *f, Boolean image, bool p_unicode_override = false);
-	void drawinsetrect(const MCRectangle& rect);
-	void drawrect(const MCRectangle& rect);
+	void drawrect(const MCRectangle& rect, bool inside);
 	void fillrect(const MCRectangle& rect);
 	void fillrects(MCRectangle *rects, uint2 nrects);
 	void fillpolygon(MCPoint *points, uint2 npoints);
-	void drawroundrect(const MCRectangle& rect, uint2 radius);
+	void drawroundrect(const MCRectangle& rect, uint2 radius, bool inside);
 	void fillroundrect(const MCRectangle& rect, uint2 radius);
-	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle);
-	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle);
+	void drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
+	void drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside);
 	void fillarc(const MCRectangle& rect, uint2 start, uint2 angle);
 	
 	void drawpath(MCPath *path);

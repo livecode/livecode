@@ -400,20 +400,20 @@ void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFont
 	}
 }
 
-void MCMetaContext::drawrect(const MCRectangle& rect)
+void MCMetaContext::drawrect(const MCRectangle& rect, bool inside)
 {
-	rectangle_mark(true, false, rect);
+	rectangle_mark(true, false, rect, inside);
 }
 	
 void MCMetaContext::fillrect(const MCRectangle& rect)
 {
-	rectangle_mark(false, true, rect); 
+	rectangle_mark(false, true, rect, false); 
 }
 
 void MCMetaContext::fillrects(MCRectangle *rects, uint2 nrects)
 {
 	for(uint4 t_index = 0; t_index < nrects; ++t_index)
-		rectangle_mark(false, true, rects[t_index]);
+		rectangle_mark(false, true, rects[t_index], false);
 }
 
 void MCMetaContext::fillpolygon(MCPoint *points, uint2 npoints)
@@ -421,29 +421,29 @@ void MCMetaContext::fillpolygon(MCPoint *points, uint2 npoints)
 	polygon_mark(false, true, points, npoints, true);
 }
 
-void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius)
+void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
-	round_rectangle_mark(true, false, rect, radius);
+	round_rectangle_mark(true, false, rect, radius, inside);
 }
 
 void MCMetaContext::fillroundrect(const MCRectangle& rect, uint2 radius)
 {
-	round_rectangle_mark(false, true, rect, radius);
+	round_rectangle_mark(false, true, rect, radius, false);
 }
 
-void MCMetaContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCMetaContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
-	arc_mark(true, false, rect, start, angle, false);
+	arc_mark(true, false, rect, start, angle, false, inside);
 }
 
-void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
-	arc_mark(true, false, rect, start, angle, true);
+	arc_mark(true, false, rect, start, angle, true, inside);
 }
 
 void MCMetaContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
 {
-	arc_mark(false, true, rect, start, angle, true);
+	arc_mark(false, true, rect, start, angle, true, false);
 }
 
 
@@ -696,14 +696,14 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			
 			case MARK_TYPE_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawrect(p_mark -> rectangle . bounds);
+					p_context -> drawrect(p_mark -> rectangle . bounds, p_mark -> rectangle . inside);
 				else
 					p_context -> fillrect(p_mark -> rectangle . bounds);
 			break;
 			
 			case MARK_TYPE_ROUND_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius);
+					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> round_rectangle . inside);
 				else
 					p_context -> fillroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius);
 			break;
@@ -712,9 +712,9 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				if (p_mark -> stroke != NULL)
 				{
 					if (p_mark -> arc . complete)
-						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
+						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
 					else
-						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
+						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
 				}
 				else
 					p_context -> fillarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
@@ -970,15 +970,18 @@ MCMark *MCMetaContext::new_mark(uint4 p_type, bool p_stroke, bool p_fill)
 	return t_mark;
 }
 
-void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect)
+void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, bool inside)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_RECTANGLE, p_stroke, p_fill);
 	if (t_mark != NULL)
+	{
 		t_mark -> rectangle . bounds = rect;
+		t_mark -> rectangle . inside = inside;
+	}
 }
 
-void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius)
+void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius, bool inside)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_ROUND_RECTANGLE, p_stroke, p_fill);
@@ -986,6 +989,7 @@ void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRec
 	{
 		t_mark -> round_rectangle . bounds = rect;
 		t_mark -> round_rectangle . radius = radius;
+		t_mark -> round_rectangle . inside = inside;
 	}
 }
 
@@ -1004,7 +1008,7 @@ void MCMetaContext::polygon_mark(bool p_stroke, bool p_fill, MCPoint *p_vertices
 	}
 }
 
-void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete)
+void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete, bool inside)
 {
 	MCMark *t_mark;
 	
@@ -1015,6 +1019,7 @@ void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bo
 		t_mark -> arc . start = p_start;
 		t_mark -> arc . angle = p_angle;
 		t_mark -> arc . complete = p_complete;
+		t_mark -> arc . inside = inside;
 	}
 }
 
