@@ -156,6 +156,14 @@ bool MCNameCreateWithNativeChars(const char_t *p_chars, uindex_t p_count, MCName
 	return MCNameCreateAndRelease(t_string, r_name);
 }
 
+bool MCNameCreateWithChars(const unichar_t *p_chars, uindex_t p_count, MCNameRef& r_name)
+{
+	MCStringRef t_string;
+	if (!MCStringCreateWithChars(p_chars, p_count, t_string))
+		return false;
+	return MCNameCreateAndRelease(t_string, r_name);
+}
+
 bool MCNameCreateAndRelease(MCStringRef p_string, MCNameRef& r_name)
 {
 	if (MCNameCreate(p_string, r_name))
