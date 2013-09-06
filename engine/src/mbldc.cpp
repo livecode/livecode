@@ -381,7 +381,7 @@ void MCScreenDC::raisewindow(Window p_window)
 	open_window(p_window);
 }
 
-void MCScreenDC::setname(Window p_window, const char *p_new_name)
+void MCScreenDC::setname(Window p_window, MCStringRef p_new_name)
 {
 }
 
@@ -1134,7 +1134,7 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard *p_pasteboard, MCDragActionSet 
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCScriptEnvironment *MCScreenDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCScreenDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }

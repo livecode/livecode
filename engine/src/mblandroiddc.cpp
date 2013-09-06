@@ -307,9 +307,9 @@ void MCScreenDC::freecontext(MCContext *p_context)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef p_string, uint2 p_length, bool p_unicode_override)
 {
-	return android_font_measure_text(f->fid, p_string, p_length, f->unicode || p_unicode_override);
+	return android_font_measure_text(f->fid, MCStringGetCString(p_string), p_length, f->unicode || p_unicode_override);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -340,7 +340,7 @@ void MCScreenDC::setbeep(uint4 property, int4 beep)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, const char *displayname)
+MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window, MCStringRef displayname)
 {
 	return NULL;
 }

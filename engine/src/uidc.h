@@ -265,9 +265,9 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 
-	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
+	virtual int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override = false);
 
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -300,7 +300,7 @@ public:
 	virtual void uniconifywindow(Window window);
 
 	// Set the name of 'window' to the UTF-8 string 'newname'
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 
 	virtual void sync(Window w);
@@ -363,7 +363,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 
 	virtual void enablebackdrop(bool p_hard = false);
 	virtual void disablebackdrop(bool p_hard = false);
@@ -417,8 +417,8 @@ public:
 	virtual void closeIME();
 
 	virtual void seticon(uint4 p_icon);
-	virtual void seticonmenu(const char *p_menu);
-	virtual void configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip);
+	virtual void seticonmenu(MCStringRef p_menu);
+	virtual void configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip);
 	virtual void enactraisewindows(void);
 
 	//
@@ -510,13 +510,13 @@ public:
 	
 	//
 
-	virtual MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	virtual MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 
 	/* WRAPPER */ virtual bool popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice);
-	virtual int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	virtual bool popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result);
+	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	//
 

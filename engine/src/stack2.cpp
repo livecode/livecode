@@ -1979,7 +1979,9 @@ void MCStack::setwindowname()
 	{
 		delete titlestring;
 		titlestring = newname;
-		MCscreen->setname(window, titlestring);
+		MCAutoStringref t_titlestring;
+		/* UNCHECKED */ MCStringCreateWithCString(titlestring, &t_titlestring);
+		MCscreen->setname(window, *t_titlestring);
 	}
 	else
 		delete newname;

@@ -68,7 +68,7 @@ static MCColor vgapalette[16] =
         {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
     };
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 
@@ -553,7 +553,7 @@ void MCScreenDC::uniconifywindow(Window w)
 //   logic doesn't work :o(. Therefore I'm removing this for now and have instead
 //   added a bit to 'revRuntimeBehaviour' which allows turning off creation of
 //   unicode windows.
-void MCScreenDC::setname(Window w, const char *newname)
+void MCScreenDC::setname(Window w, MCStringRef newname)
 {
 	// MW-2009-11-01: Do nothing if there is no window
 	if (w == NULL)
@@ -1179,7 +1179,7 @@ static bool WindowsIsCompositionEnabled(void)
 }
 
 MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+                               MCStringRef displayname)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();
