@@ -678,7 +678,7 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
 {
 	if (nmessages == maxmessages)
 	{
@@ -693,11 +693,11 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
 	if (p1 != NULL)
 	{
 		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
+		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
 			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
+			params->getnext()->setvalueref_argument(p2);
 		}
 	}
 	messages[nmessages++].params = params;

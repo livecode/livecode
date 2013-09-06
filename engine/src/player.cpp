@@ -3855,7 +3855,9 @@ static pascal void userMovieCallbacks(QTCallBack mcb, long index)
 //	int4 tdiff = callbacktable[index].calledAtTime - tplayer->getmoviecurtime();
 //	uint4 ztime = tplayer->gettimescale();
 //	if (MCU_abs(tdiff) < (ztime / 15) )
-		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, strclone(callbacktable[index].param), NULL);
+	MCAutoStringRef t_param;
+	/* UNCHECKED */ MCStringCreateWithCString(callbacktable[index].param, &t_param);
+		MCscreen->delaymessage(callbacktable[index].playerObj, callbacktable[index].msg, *t_param);
 }
 
 // This callback is triggered when the end of the movie is reached.
