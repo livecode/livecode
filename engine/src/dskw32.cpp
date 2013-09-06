@@ -3033,16 +3033,16 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 				MCSystemFolderEntry t_entry;
 				t_entry.name = strclone(data.cFileName);
 				t_entry.data_size = buf.st_size;
-				t_entry.resource_size = 0; // Mac specific???
+				t_entry.resource_size = 0; //Doesn't exist on Windows
 				t_entry.creation_time = (uint32_t)buf.st_ctime;
 				t_entry.modification_time = (uint32_t)buf.st_mtime;
 				t_entry.access_time = (uint32_t)buf.st_atime;
-				t_entry.backup_time = 0; // ???
+				t_entry.backup_time = 0; // Doesn't exist on Windows
 				t_entry.user_id = buf.st_uid;
 				t_entry.group_id = buf.st_gid;
 				t_entry.permissions = buf.st_mode & 0777;
-				t_entry.file_creator = 0; // ???
-				t_entry.file_type = 0; // ???
+				t_entry.file_creator = 0; // Doesnt't exist on Windows
+				t_entry.file_type = 0; // Doesn't exist on Windows
 				t_entry.is_folder = (buf.st_mode & _S_IFDIR) != 0;
 	            
 				t_success = p_callback(x_context, &t_entry);
