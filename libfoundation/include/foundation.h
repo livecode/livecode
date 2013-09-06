@@ -1203,6 +1203,10 @@ bool MCStringCreateWithWStringAndRelease(unichar_t *wstring, MCStringRef& r_stri
 bool MCStringCreateWithNativeChars(const char_t *chars, uindex_t char_count, MCStringRef& r_string);
 bool MCStringCreateWithNativeCharsAndRelease(char_t *chars, uindex_t char_count, MCStringRef& r_string);
 
+// Create an immutable string from the given (native) c-string.
+bool MCStringCreateWithCString(const char_t *cstring, MCStringRef& r_string);
+bool MCStringCreateWithCStringAndRelease(char_t *cstring, MCStringRef& r_string);
+
 #ifdef __HAS_CORE_FOUNDATION__
 // Create a string from a CoreFoundation string object.
 bool MCStringCreateWithCFString(CFStringRef cf_string, MCStringRef& r_string);
@@ -1216,8 +1220,12 @@ bool MCStringCreateMutable(uindex_t initial_capacity, MCStringRef& r_string);
 
 /////////
 
+// Encode the given string with the specified encoding. Characters which cannot
+// be represented in the target encoding are replaced by '?'.
 bool MCStringEncode(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
 bool MCStringEncodeAndRelease(MCStringRef string, MCStringEncoding encoding, bool is_external_rep, MCDataRef& r_data);
+
+// Decode the given data, intepreting in the given encoding.
 bool MCStringDecode(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 bool MCStringDecodeAndRelease(MCDataRef data, MCStringEncoding encoding, bool is_external_rep, MCStringRef& r_string);
 
@@ -1261,6 +1269,15 @@ bool MCStringMutableCopyAndRelease(MCStringRef string, MCRange range, MCStringRe
 // Returns true if the string is mutable
 bool MCStringIsMutable(const MCStringRef string);
 
+// Returns true if the string is the empty string.
+bool MCStringIsEmpty(MCStringRef string);
+
+// Returns true if the the string only requires native characters to represent.
+bool MCStringIsNative(MCStringRef string);
+
+// Returns true if the string only requires BMP characters to represent.
+bool MCStringIsSimple(MCStringRef string);
+
 /////////
 
 // Returns the number of chars that make up the string. Note that a char is
@@ -1301,9 +1318,6 @@ uindex_t MCStringGetChars(MCStringRef string, MCRange range, unichar_t *chars);
 // that would be generated is returned. Any unmappable chars get generated as '?'.
 uindex_t MCStringGetNativeChars(MCStringRef string, MCRange range, char_t *chars);
 
-// Returns true if the the string is stored as native chars internally or false if
-// it is encoded in UTF-16.
-bool MCStringIsNative(MCStringRef string);
 
 /////////
 
@@ -1354,7 +1368,6 @@ hash_t MCStringHash(MCStringRef string, MCStringOptions options);
 // to options.
 bool MCStringIsEqualTo(MCStringRef string, MCStringRef other, MCStringOptions options);
 bool MCStringIsEqualToNativeChars(MCStringRef string, const char_t *chars, uindex_t char_count, MCStringOptions options);
-bool MCStringIsEmpty(MCStringRef string);
 
 // Returns true if the substring is equal to the other, according to options
 bool MCStringSubstringIsEqualTo(MCStringRef string, MCRange other, MCStringRef p_other, MCStringOptions p_options);

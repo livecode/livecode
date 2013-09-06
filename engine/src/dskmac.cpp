@@ -5769,7 +5769,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_found_folder = true;
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
-            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(MCNameGetString(p_type))));
+            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
 			
             uindex_t t_i;
             for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)

@@ -561,8 +561,8 @@ public:
 
 	////////// PROPERTY SUPPORT METHODS
 
-	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data);
-	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data);
+	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data);
+	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data);
     void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
@@ -597,14 +597,14 @@ public:
 	void SetRepeatCount(MCExecContext& ctxt, integer_t p_count);
 	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
 	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
-	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
-	void SetText(MCExecContext& ctxt, MCStringRef p_text);
-	void GetImageData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetImageData(MCExecContext& ctxt, MCStringRef p_data);
-	void GetMaskData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetMaskData(MCExecContext& ctxt, MCStringRef p_data);
-	void GetAlphaData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetAlphaData(MCExecContext& ctxt, MCStringRef p_data);
+	void GetText(MCExecContext& ctxt, MCDataRef& r_text);
+	void SetText(MCExecContext& ctxt, MCDataRef p_text);
+	void GetImageData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
+	void GetMaskData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetMaskData(MCExecContext& ctxt, MCDataRef p_data);
+	void GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetAlphaData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetResizeQuality(MCExecContext& ctxt, intenum_t& r_quality);
 	void SetResizeQuality(MCExecContext& ctxt, intenum_t p_quality);
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);

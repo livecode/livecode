@@ -62,9 +62,9 @@ inline uint1 val(uint1 x)
 	          (x == '+' ? 62 : (x == '/' ? 63 : 0)))));
 }
 
-bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst)
+bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst)
 {
-	MCAutoNativeCharArray buffer;
+	MCAutoByteArray buffer;
 
 	uint32_t l;
 	const char_t *s = nil;
@@ -76,7 +76,7 @@ bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst)
 	if (!buffer . New(l))
 		return false;
 
-	p = buffer . Chars();
+	p = buffer . Bytes();
 
 	uint1 c[5];
 	c[4] = '\0';
@@ -125,9 +125,9 @@ bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst)
 	}
 
 
-	buffer . Shrink(p - buffer . Chars());
+	buffer . Shrink(p - buffer . Bytes());
 
-	return buffer . CreateStringAndRelease(r_dst);
+	return buffer . CreateDataAndRelease(r_dst);
 }
 
 //////////
@@ -139,7 +139,7 @@ inline uint1 lav(uint1 x)
 	                              (x == 62 ? '+' : (x == 63 ? '/' : '?')))));
 }
 
-bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst)
+bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst)
 {
 	MCAutoNativeCharArray buffer;
 	uint32_t size;
@@ -147,8 +147,8 @@ bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst)
 	const char_t *s = nil;
 	char_t *p = nil;
 
-	size = MCStringGetLength(p_src);
-	s = MCStringGetNativeCharPtr(p_src);
+	size = MCDataGetLength(p_src);
+	s = (char_t *)MCDataGetBytePtr(p_src);
 
 	uint32_t newsize = size * 4 / 3 + size / 54 + 5;
 	if (!buffer.New(newsize))
@@ -228,23 +228,23 @@ bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst)
 static char_t gzip_header[GZIP_HEADER_SIZE] = { (char_t)0x1f, (char_t)0x8b,
         Z_DEFLATED, 0, 0, 0, 0, 0, 0, 3 };
 
-bool MCFiltersCompress(MCStringRef p_source, MCStringRef& r_result)
+bool MCFiltersCompress(MCDataRef p_source, MCDataRef& r_result)
 {
-	const char_t *t_src_ptr = MCStringGetNativeCharPtr(p_source);
-	uindex_t t_src_len = MCStringGetLength(p_source);
+	const byte_t *t_src_ptr = MCDataGetBytePtr(p_source);
+	uindex_t t_src_len = MCDataGetLength(p_source);
 
 	uint4 size = t_src_len + 12 + GZIP_HEADER_SIZE + 8;
 	size += size / 999;  //dest must be "0.1% larger than (source) plus 12 bytes"
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(size))
 		return false;
 
-	memcpy(t_buffer.Chars(), gzip_header, GZIP_HEADER_SIZE);
+	memcpy(t_buffer.Bytes(), gzip_header, GZIP_HEADER_SIZE);
 	z_stream zstrm;
 	memset((char *)&zstrm, 0, sizeof(z_stream));
 	zstrm.next_in = (unsigned char *)t_src_ptr;
 	zstrm.avail_in = t_src_len;
-	zstrm.next_out = (unsigned char *)t_buffer.Chars() + GZIP_HEADER_SIZE;
+	zstrm.next_out = (unsigned char *)t_buffer.Bytes() + GZIP_HEADER_SIZE;
 	zstrm.avail_out = size - GZIP_HEADER_SIZE - 8;
 	if (deflateInit2(&zstrm, Z_DEFAULT_COMPRESSION, Z_DEFLATED, -MAX_WBITS, 8, 0) != Z_OK
 	        || deflate(&zstrm, Z_FINISH) != Z_STREAM_END
@@ -257,30 +257,30 @@ bool MCFiltersCompress(MCStringRef p_source, MCStringRef& r_result)
 	check = crc32(check, (unsigned char *)t_src_ptr, t_src_len);
 	MCswapbytes = !MCswapbytes;
 	swap_uint4(&check);
-	memcpy(t_buffer.Chars() + osize, &check, 4);
+	memcpy(t_buffer.Bytes() + osize, &check, 4);
 	check = t_src_len;
 	swap_uint4(&check);
-	memcpy(t_buffer.Chars() + osize + 4, &check, 4);
+	memcpy(t_buffer.Bytes() + osize + 4, &check, 4);
 	MCswapbytes = !MCswapbytes;
 
 	t_buffer.Shrink(osize + 8);
-	return t_buffer.CreateStringAndRelease(r_result);
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
-bool MCFiltersIsCompressed(MCStringRef p_source)
+bool MCFiltersIsCompressed(MCDataRef p_source)
 {
-	const char_t *sptr = MCStringGetNativeCharPtr(p_source);
-	return (MCStringGetLength(p_source) >= 10) &&
+	const char_t *sptr = MCDataGetBytePtr(p_source);
+	return (MCDataGetLength(p_source) >= 10) &&
 		(sptr[0] == gzip_header[0]) &&
 		(sptr[1] == gzip_header[1]) &&
 		(sptr[2] == gzip_header[2]) &&
 		((sptr[3] & GZIP_RESERVED) == 0);
 }
 
-bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result)
+bool MCFiltersDecompress(MCDataRef p_source, MCDataRef& r_result)
 {
-	const char_t *t_src_ptr = MCStringGetNativeCharPtr(p_source);
-	uindex_t t_src_len = MCStringGetLength(p_source);
+	const char_t *t_src_ptr = MCDataGetBytePtr(p_source);
+	uindex_t t_src_len = MCDataGetLength(p_source);
 
 	const char_t *sptr = t_src_ptr;
 
@@ -307,13 +307,14 @@ bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result)
 	MCswapbytes = !MCswapbytes;
 	if (size == 0)
 	{
-		return MCStringCopy(kMCEmptyString, r_result);
+		r_result = MCValueRetain(kMCEmptyData);
+		return true;
 	}
 	if (t_src_len < (startindex + 8))
 	{
 		return false;
 	}
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(size))
 	{
 		// SMR 1935 no need to abort rest of script...
@@ -325,7 +326,7 @@ bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result)
 	memset((char *)&zstrm, 0, sizeof(z_stream));
 	zstrm.next_in = (unsigned char *)sptr + startindex;
 	zstrm.avail_in = t_src_len - startindex - 8;
-	zstrm.next_out = (unsigned char *)t_buffer.Chars();
+	zstrm.next_out = (unsigned char *)t_buffer.Bytes();
 	zstrm.avail_out = size;
 	int err;
 	if (inflateInit2(&zstrm, -MAX_WBITS) != Z_OK
@@ -334,54 +335,47 @@ bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result)
 	        || inflateEnd(&zstrm) != Z_OK)
 		return false;
 
-	return t_buffer.CreateStringAndRelease(r_result);
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// REVIEW-MW-2012-05-28: Using 'GetNativeCharAtIndex()' is overkill here. As
-//   isoToMac/macToIso only make sense on native (binary) strings, this method
-//   won't ever be called with a Unicode string. Thus you are safe to use more
-//   direct access via MCStringGetNativeCharPtr().
-
-// IM-2012-05-28: rewritten to use MCStringGetNativeCharPtr()
-
-bool MCFiltersIsoToMac(MCStringRef p_source, MCStringRef &r_result)
+bool MCFiltersIsoToMac(MCDataRef p_source, MCDataRef &r_result)
 {
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	const char_t *t_srcptr;
 	uindex_t t_srclen;
-	t_srcptr = MCStringGetBytePtr(p_source);
-	t_srclen = MCStringGetLength(p_source);
+	t_srcptr = MCDataGetBytePtr(p_source);
+	t_srclen = MCDataGetLength(p_source);
 
 	if (!t_buffer.New(t_srclen))
 		return false;
 
-	uint1 *sptr = (uint1 *)t_buffer.Chars();
+	uint1 *sptr = (uint1 *)t_buffer.Bytes();
 	uindex_t len = t_srclen;
 	while (len--)
 		*sptr++ = MCisotranslations[*t_srcptr++];
 
-	return t_buffer.CreateStringAndRelease(r_result);
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
-bool MCFiltersMacToIso(MCStringRef p_source, MCStringRef &r_result)
+bool MCFiltersMacToIso(MCDataRef p_source, MCDataRef &r_result)
 {
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	const char_t *t_srcptr;
 	uindex_t t_srclen;
-	t_srcptr = MCStringGetBytePtr(p_source);
-	t_srclen = MCStringGetLength(p_source);
+	t_srcptr = MCDataGetBytePtr(p_source);
+	t_srclen = MCDataGetLength(p_source);
 
 	if (!t_buffer.New(t_srclen))
 		return false;
 
-	uint1 *sptr = (uint1 *)t_buffer.Chars();
+	uint1 *sptr = (uint1 *)t_buffer.Bytes();
 	uindex_t len = t_srclen;
 	while (len--)
 		*sptr++ = MCmactranslations[*t_srcptr++];
 
-	return t_buffer.CreateStringAndRelease(r_result);
+	return t_buffer.CreateDataAndRelease(r_result);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -504,13 +498,13 @@ bool MCFiltersUrlDecode(MCStringRef p_source, MCStringRef& r_result)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCFiltersEvalCompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalCompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result)
 {
 	if (!MCFiltersCompress(p_source, r_result))
 		ctxt.LegacyThrow(EE_COMPRESS_ERROR);
 }
 
-void MCFiltersEvalDecompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalDecompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result)
 {
 	if (!MCFiltersIsCompressed(p_source))
 		ctxt.LegacyThrow(EE_DECOMPRESS_NOTCOMPRESSED);
@@ -520,13 +514,13 @@ void MCFiltersEvalDecompress(MCExecContext& ctxt, MCStringRef p_source, MCString
 
 //////////
 
-void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result)
 {
 	if (!MCFiltersBase64Decode(p_source, r_result))
 		ctxt.Throw();
 }
 
-void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result)
 {
 	if (!MCFiltersBase64Encode(p_source, r_result))
 		ctxt.Throw();
@@ -534,13 +528,13 @@ void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCStringRef p_source, MCStri
 
 //////////
 
-void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result)
 {
 	if (!MCFiltersIsoToMac(p_source, r_result))
 		ctxt.Throw();
 }
 
-void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result)
+void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result)
 {
 	if (!MCFiltersMacToIso(p_source, r_result))
 		ctxt.Throw();
@@ -579,7 +573,7 @@ static void MCU_gettemplate(const char_t *&format, char_t &cmd, uindex_t &count)
 			count = 1;
 }
 
-void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStringRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done)
+void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCDataRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done)
 {
 	if (p_data == nil)
 	{
@@ -589,8 +583,8 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStri
 
 	const char_t *fptr = MCStringGetNativeCharPtr(p_format);
 
-	const byte_t *t_data_ptr = MCStringGetBytePtr(p_data);
-	uindex_t length = MCStringGetLength(p_data);
+	const byte_t *t_data_ptr = MCDataGetBytePtr(p_data);
+	uindex_t length = MCDataGetLength(p_data);
 
 	uindex_t t_index = 0;
 	uindex_t offset = 0;
@@ -637,7 +631,7 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStri
 					}
 				}
 
-				t_success = MCStringCopySubstring(p_data, MCRangeMake(offset, size), (MCStringRef&)r_results[t_index]);
+				t_success = MCStringCreateWithBytes(t_data_ptr + offset, size, kMCStringEncodingNative, false, (MCStringRef&)r_results[t_index]);
 
 				done++;
 				offset += count;
@@ -914,33 +908,33 @@ void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStri
 	ctxt.Throw();
 }
 
-bool append_to_array(MCAutoNativeCharArray& p_chars, const void* p_bytes, size_t p_byte_count)
+bool append_to_array(MCAutoByteArray& p_chars, const void* p_bytes, size_t p_byte_count)
 {
-	size_t t_size = p_chars.CharCount();
+	size_t t_size = p_chars.ByteCount();
 	if (!p_chars.Extend(t_size + p_byte_count))
 		return false;
 
-	MCMemoryCopy(p_chars.Chars() + t_size, p_bytes, p_byte_count);
+	MCMemoryCopy(p_chars.Bytes() + t_size, p_bytes, p_byte_count);
 	return true;
 }
 
-bool pad_array(MCAutoNativeCharArray& p_chars, char_t p_pad, size_t p_count)
+bool pad_array(MCAutoByteArray& p_chars, char_t p_pad, size_t p_count)
 {
-	size_t t_size = p_chars.CharCount();
+	size_t t_size = p_chars.ByteCount();
 	if (!p_chars.Extend(t_size + p_count))
 		return false;
 
 	for (uinteger_t i = 0; i < p_count; i++)
-		p_chars.Chars()[t_size + i] = p_pad;
+		p_chars.Bytes()[t_size + i] = p_pad;
 
 	return true;
 }
 
-void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCStringRef& r_string)
+void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCDataRef& r_string)
 {
 	const char_t *fptr = MCStringGetNativeCharPtr(p_format);
 
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	uindex_t t_index = 0;
 
 	bool t_success = true;
@@ -1008,12 +1002,12 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
-						size_t t_char_count = t_buffer.CharCount();
+						size_t t_char_count = t_buffer.ByteCount();
 						size_t t_output_count = (count + 7) / 8;
 						t_success = t_buffer.Extend(t_char_count + t_output_count);
 						if (!t_success)
 							break;
-						char_t *cursor = t_buffer.Chars() + t_char_count;
+						char_t *cursor = t_buffer.Bytes() + t_char_count;
 						char_t *buffer_end = cursor + t_output_count;
 						uint1 value = 0;
 						if (count > length)
@@ -1058,12 +1052,12 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 						else
 							if (count == BINARY_NOCOUNT)
 								count = 1;
-						size_t t_char_count = t_buffer.CharCount();
+						size_t t_char_count = t_buffer.ByteCount();
 						size_t t_output_count = (count + 1) / 2;
 						t_success = t_buffer.Extend(t_char_count + t_output_count);
 						if (!t_success)
 							break;
-						char_t *cursor = t_buffer.Chars() + t_char_count;
+						char_t *cursor = t_buffer.Bytes() + t_char_count;
 						char_t *buffer_end = cursor + t_output_count;
 						uint1 value = 0;
 						if (count > length)
@@ -1230,7 +1224,7 @@ void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValu
 		}
 	}
 
-	if (t_success && t_buffer.CreateStringAndRelease(r_string))
+	if (t_success && t_buffer.CreateDataAndRelease(r_string))
 		return;
 
 	ctxt.Throw();
@@ -1260,29 +1254,29 @@ void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCFiltersMD5Digest(MCStringRef p_src, MCStringRef& r_digest)
+bool MCFiltersMD5Digest(MCDataRef p_src, MCDataRef& r_digest)
 {
 	md5_state_t state;
 	md5_byte_t digest[16];
 	md5_init(&state);
-	md5_append(&state, MCStringGetNativeCharPtr(p_src), MCStringGetLength(p_src));
+	md5_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
 	md5_finish(&state, digest);
 
-	return MCStringCreateWithNativeChars(digest, 16, r_digest);
+	return MCDataCreateWithBytes(digest, 16, r_digest);
 }
 
-bool MCFiltersSHA1Digest(MCStringRef p_src, MCStringRef& r_digest)
+bool MCFiltersSHA1Digest(MCDataRef p_src, MCDataRef& r_digest)
 {
 	sha1_state_t state;
 	uint8_t digest[20];
 	sha1_init(&state);
-	sha1_append(&state, MCStringGetNativeCharPtr(p_src), MCStringGetLength(p_src));
+	sha1_append(&state, MCDataGetBytePtr(p_src), MCDataGetLength(p_src));
 	sha1_finish(&state, digest);
 
-	return MCStringCreateWithNativeChars(digest, 20, r_digest);
+	return MCDataCreateWithBytes(digest, 20, r_digest);
 }
 
-void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest)
+void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
 {
 	if (MCFiltersMD5Digest(p_src, r_digest))
 		return;
@@ -1290,7 +1284,7 @@ void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef&
 	ctxt.Throw();
 }
 
-void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest)
+void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest)
 {
 	if (MCFiltersSHA1Digest(p_src, r_digest))
 		return;

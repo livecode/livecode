@@ -719,6 +719,11 @@ bool MCStringToDouble(MCStringRef p_string, double& r_real)
 	return true;
 }
 
+MCString MCDataGetOldString(MCDataRef p_data)
+{
+	return MCString((const char *)MCDataGetBytePtr(p_data), MCDataGetLength(p_data));
+}
+
 #if defined(_MACOSX) || defined(TARGET_SUBPLATFORM_IPHONE)
 bool MCCStringToCFString(const char *p_cstring, CFStringRef& r_cfstring)
 {

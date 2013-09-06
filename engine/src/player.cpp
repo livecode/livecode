@@ -147,7 +147,7 @@ static Boolean IsQTVRInstalled(void);
 extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
 #endif
 
-extern bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+extern bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 //-----------------------------------------------------------------------------
 // Control Implementation
@@ -4208,11 +4208,11 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	HLock((Handle)effectdesc);
 	uint4 datasize = GetHandleSize(effectdesc) + sizeof(long) * 2;
 
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	if (!t_buffer.New(datasize))
 		return false;
 
-	long *aLong = (long *)t_buffer.Chars();
+	long *aLong = (long *)t_buffer.Bytes();
 	HLock((Handle)effectdesc);
 	aLong[0] = EndianU32_NtoB(datasize);
 	aLong[1] = EndianU32_NtoB('qtfx');
@@ -4222,8 +4222,8 @@ bool MCPlayer::stdeffectdlg(MCStringRef &r_value, MCStringRef &r_result)
 	QTDisposeAtomContainer(effectdesc);
 	QTDisposeAtomContainer(effectlist);
 
-	MCAutoStringRef t_data;
-	return t_buffer.CreateStringAndRelease(&t_data) &&
+	MCAutoDataRef t_data;
+	return t_buffer.CreateDataAndRelease(&t_data) &&
 		MCFiltersBase64Encode(*t_data, r_value);
 #endif
 

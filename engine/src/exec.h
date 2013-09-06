@@ -919,20 +919,20 @@ extern MCExecMethodInfo *kMCFiltersEvalUniDecodeMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalMD5DigestMethodInfo;
 extern MCExecMethodInfo *kMCFiltersEvalSHA1DigestMethodInfo;
 
-void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCStringRef& r_string);
-void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCStringRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done);
-void MCFiltersEvalCompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalDecompress(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
-void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
+void MCFiltersEvalBase64Encode(MCExecContext& ctxt, MCDataRef p_source, MCStringRef& r_result);
+void MCFiltersEvalBase64Decode(MCExecContext& ctxt, MCStringRef p_source, MCDataRef& r_result);
+void MCFiltersEvalBinaryEncode(MCExecContext& ctxt, MCStringRef p_format, MCValueRef *p_params, uindex_t p_param_count, MCDataRef& r_string);
+void MCFiltersEvalBinaryDecode(MCExecContext& ctxt, MCStringRef p_format, MCDataRef p_data, MCValueRef *r_results, uindex_t p_result_count, integer_t& r_done);
+void MCFiltersEvalCompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalDecompress(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalIsoToMac(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
+void MCFiltersEvalMacToIso(MCExecContext& ctxt, MCDataRef p_source, MCDataRef& r_result);
 void MCFiltersEvalUrlEncode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
 void MCFiltersEvalUrlDecode(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_result);
 void MCFiltersEvalUniEncode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest);
 void MCFiltersEvalUniDecode(MCExecContext& ctxt, MCStringRef p_src, MCNameRef p_lang, MCStringRef& r_dest);
-void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest);
-void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCStringRef p_src, MCStringRef& r_digest);
+void MCFiltersEvalMD5Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
+void MCFiltersEvalSHA1Digest(MCExecContext& ctxt, MCDataRef p_src, MCDataRef& r_digest);
 
 ///////////
 
@@ -2915,7 +2915,7 @@ extern MCExecMethodInfo *kMCSecuritySetSslCertificatesMethodInfo;
 
 void MCSecurityEvalEncrypt(MCExecContext& ctxt, MCStringRef p_source, MCStringRef& r_dest);
 void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names);
-void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCStringRef& r_bytes);
+void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCDataRef& r_bytes);
 
 void MCSecurityExecRsaEncrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase);
 void MCSecurityExecRsaDecrypt(MCExecContext& ctxt, MCStringRef p_data, bool p_is_public, MCStringRef p_key, MCStringRef p_passphrase);

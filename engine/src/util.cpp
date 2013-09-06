@@ -2176,26 +2176,26 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 
 }
 
-bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 void MCU_base64encode(MCExecPoint &ep)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
 	MCAutoStringRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
-bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
 void MCU_base64decode(MCExecPoint &ep)
 {
 	MCAutoStringRef t_source;
 	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }

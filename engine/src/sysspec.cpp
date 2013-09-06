@@ -1035,58 +1035,6 @@ IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 	return IO_NORMAL;
 }
 
-#if 0
-void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
-{
-	MCAutoStringRef t_resolved_path;
-	MCAutoStringRef t_filename_string;
-	ep . copyasstringref(&t_filename_string);
-	
-	MCS_resolvepath(*t_filename_string, &t_resolved_path);
-	
-	MCSystemFileHandle *t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
-	
-	if (t_file == NULL)
-	{
-		// MW-2011-05-23: [[ Bug 9549 ]] Make sure we empty the result if opening the file
-		//   failed.
-		ep . clear();
-		MCresult -> sets("can't open file");
-		return;
-	}
-	
-	uint32_t t_size;
-	t_size = (uint32_t)t_file -> GetFileSize();
-	
-	MCAutoNativeCharArray t_buffer;
-	/* UNCHECKED */ t_buffer . New(t_size);
-	//t_buffer = ep . getbuffer(t_size);
-	
-	uint32_t t_read;
-	if (t_buffer.Chars() != NULL &&
-		t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
-		t_read == t_size)
-	{
-		MCAutoStringRef t_string;
-		t_buffer . Shrink(t_size);
-		t_buffer . CreateStringAndRelease(&t_string);
-		ep . setvalueref(*t_string);
-        
-		if (!p_binary)
-			ep . texttobinary();
-		MCresult -> clear(False);
-	}
-	else
-	{
-		ep . clear();
-		MCresult -> sets("error reading file");
-	}
-    
-	t_file -> Close();
-}
-#endif // 0
-
 bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1175,19 +1123,17 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	uint32_t t_size;
 	t_size = (uint32_t)t_file -> GetFileSize();
 	
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
+        t_success = MCS_readfixed(t_buffer.Bytes(), t_size, t_file) == IO_NORMAL;
     
     if (t_success)
     {
-        MCAutoStringRef t_string;
 		t_buffer . Shrink(t_size);
-        t_success = t_buffer.CreateString(&t_string) &&
-                    MCDataCreateWithBytes(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), r_data);
+        t_success = t_buffer.CreateData(r_data);
     }
     
     if (t_success)
@@ -1224,13 +1170,13 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	}
     
     // Need to convert the string to a binary string
-    MCAutoStringRef t_string;
+    MCAutoDataRef t_data;
     MCExecPoint ep(nil, nil, nil);
     /* UNCHECKED */ ep . setvalueref(p_string);
     ep . binarytotext();
-    /* UNCHECKED */ ep . copyasstring(&t_string);
+    /* UNCHECKED */ ep . copyasdataref(&t_data);
     
-	if (!t_file -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
+	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");
 	
 	t_file -> Close();
