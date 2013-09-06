@@ -3742,7 +3742,7 @@ bool MCButton::resetlabel()
 		if (MCStringIsEmpty(menustring))
 		{
 			if (entry != NULL)
-				entry->settext_oldstring(0, MCnullmcstring, False, hasunicode());
+				entry->settext(0, kMCEmptyString, False);
 
 			if (!MCStringIsEmpty(label))
 			{
