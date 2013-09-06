@@ -524,7 +524,9 @@ void MCMetaContext::drawlink(const char *p_link, const MCRectangle& p_region)
 
 int4 MCMetaContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	return MCscreen->textwidth(f, s, l, p_unicode_override);
+	MCAutoStringRef t_s;
+	/* UNCHECKED */ MCStringCreateWithCString(s, &t_s);
+	return MCscreen->textwidth(f, *t_s, l, p_unicode_override);
 }
 
 void MCMetaContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)

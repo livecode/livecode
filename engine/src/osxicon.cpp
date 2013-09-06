@@ -174,7 +174,7 @@ static MenuRef create_menu(MenuRef p_menu, MenuItemDescriptor *p_items)
 	return t_menu;
 }
 
-void MCScreenDC::seticonmenu(const char *p_menu)
+void MCScreenDC::seticonmenu(MCStringRef p_menu)
 {
 	MenuItemDescriptor *t_items, *t_current_item;
 	uint4 t_id;
@@ -182,12 +182,13 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 	t_items = NULL;
 	t_current_item = NULL;
 	t_id = 65536;
-	
-	if (p_menu != NULL)
-		while(*p_menu != '\0')
+	uindex_t t_offset;
+	t_offset = 0;
+	if (p_menu != nil)
+		while(MCStringGetNativeCharAtIndex(p_menu, t_offset) != '\0')
 		{
 			const char *t_item_start, *t_item_end, *t_item_middle;
-			t_item_start = p_menu;
+			t_item_start = MCStringGetCString(p_menu);
 			t_item_end = strchr(t_item_start, '\n');
 			if (t_item_end == NULL)
 				t_item_end = strchr(t_item_start, '\0');
@@ -211,8 +212,13 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 			
 			t_item -> next = NULL;
 			
+
 			if (*t_item_start == '(')
-				t_item_start++, p_menu++, t_item -> disabled = true;
+			{
+				MCAutoStringref t_head;
+				/* UNCHECKED */ MCStringDivideAtIndex(p_menu, ++t_offset, &t_head, p_menu);
+				t_item_start++, t_item -> disabled = true;
+			}
 			else
 				t_item -> disabled = false;
 				
@@ -230,14 +236,14 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 				t_item -> tag_length = t_item_end - t_item_middle - 1;
 			}
 			
-			t_item -> depth = t_item_start - p_menu;
+			t_item -> depth = t_item_start - MCStringGetCString(p_menu);
 			t_item -> submenu = NULL;
 			t_item -> id = t_id++;
 			
 			if (*t_item_end == '\0')
-				p_menu = t_item_end;
+				/* UNCHECKED */ MCStringCreateWithCString(t_item_end, p_menu);
 			else
-				p_menu = t_item_end + 1;
+				/* UNCHECKED */ MCStringCreateWithCString(t_item_end + 1, p_menu);
 		}
 	
 	if (t_items != NULL)
@@ -340,7 +346,7 @@ OSStatus MCScreenDC::handleiconmenuevent(EventHandlerCallRef p_ref, EventRef p_e
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::configurestatusicon(uint32_t p_icon_id, const char *p_menu, const char *p_tooltip)
+void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCStringRef p_tooltip)
 {
 }
 

@@ -1593,7 +1593,9 @@ void MCX11Context::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy,
 
 int4 MCX11Context::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	return MCscreen -> textwidth(f, s, l, p_unicode_override);
+	MCAutoStringRef t_s;
+	/* UNCHECKED */ MCStringCreateWithCString(s, &t_s);
+	return MCscreen -> textwidth(f, *t_s, l, p_unicode_override);
 }
 
 

@@ -82,7 +82,7 @@ public:
 	void raisewindow(Window window);
 	void iconifywindow(Window window);
 	void uniconifywindow(Window window);
-	void setname(Window window, const char *newname);
+	void setname(Window window, MCStringRef newname);
 	void sync(Window w);
 	void setinputfocus(Window window);
 	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
@@ -106,7 +106,7 @@ public:
 	MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
 	void freecontext(MCContext *p_context);
 
-	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
+	int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
 	void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel);
@@ -131,7 +131,7 @@ public:
 	void getbeep(uint4 property, int4& r_value);
 	void setbeep(uint4 property, int4 beep);
 
-	MCBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	MCBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
@@ -196,12 +196,12 @@ public:
 
 	//
 
-	MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 	
-	int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	bool popupaskdialog(uint32_t p_type, const char *p_title, const char *p_prompt, const char *p_initial, bool p_hint, MCStringRef& r_result);
+	int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	////////// COMMON IMPLEMENTATION METHODS
 	

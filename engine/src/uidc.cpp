@@ -236,7 +236,7 @@ bool MCUIDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-void MCUIDC::setstatus(const char *status)
+void MCUIDC::setstatus(MCStringRef status)
 { }
 Boolean MCUIDC::open()
 {
@@ -344,7 +344,7 @@ void MCUIDC::iconifywindow(Window window)
 { }
 void MCUIDC::uniconifywindow(Window window)
 { }
-void MCUIDC::setname(Window window, const char *newname)
+void MCUIDC::setname(Window window, MCStringRef newname)
 { }
 void MCUIDC::setcmap(MCStack *sptr)
 { }
@@ -375,7 +375,7 @@ void MCUIDC::freecontext(MCContext *p_context)
 void MCUIDC::freepixmap(Pixmap &pixmap)
 { }
 
-int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
+int4 MCUIDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override)
 {
 	return 0;
 }
@@ -585,7 +585,7 @@ Window MCUIDC::getroot()
 }
 
 MCBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
-                           const char *displayname)
+                           MCStringRef displayname)
 {
 	return NULL;
 }
@@ -1951,11 +1951,11 @@ void MCUIDC::seticon(uint4 p_icon)
 {
 }
 
-void MCUIDC::seticonmenu(const char *p_menu)
+void MCUIDC::seticonmenu(MCStringRef p_menu)
 {
 }
 
-void MCUIDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+void MCUIDC::configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip)
 {
 }
 
@@ -2034,7 +2034,7 @@ MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_al
 
 //
 
-MCScriptEnvironment *MCUIDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCUIDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }
@@ -2045,27 +2045,19 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	return 0;
 }
 
-bool MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
+bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	return false;
 }
 
 bool MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice)
 {
-	const char **t_buttons = nil;
-	if (!MCMemoryNewArray(p_button_count, t_buttons))
-		return false;
-	for (uindex_t i = 0; i < p_button_count; i++)
-		t_buttons[i] = MCStringGetCString(p_buttons[i]);
-
-	r_choice = popupanswerdialog(t_buttons, p_button_count, p_type, MCStringGetCString(p_title), MCStringGetCString(p_message));
-
-	MCMemoryDelete(t_buttons);
+	r_choice = popupanswerdialog(p_buttons, p_button_count, p_type, p_title, p_message);
 	return true;
 }
 
