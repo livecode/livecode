@@ -1521,6 +1521,20 @@ struct OSXMenuItem : public MCMenuItem
 	char mark;
 	uint2 glyph;
 	uint2 after; //insert new menu item after this number
+	
+	OSXMenuItem() :
+		MCMenuItem()
+	{
+		mh = nil;
+		mark = 0;
+		glyph = 0;
+		after = 0;
+	}
+	
+	~OSXMenuItem()
+	{
+		;
+	}
 };
 
 static void SetMacMenuItemText(MenuHandle mh, uint2 mitem, char *mitemtext, uint2 mitemlength, bool isunicode)
@@ -1583,7 +1597,6 @@ public:
 		isunicode = p_menubutton -> hasunicode();
 		firstTime = true;
 		mainMenuID = p_mainmenu_id;
-		memset(curMenuStruct, 0, sizeof(curMenuStruct));
 		curMenuLevel = 0;
 		firstitem = 0;
 		curMenuStruct[0].after = firstitem;
@@ -1809,7 +1822,6 @@ Boolean MCScreenDC::addMenuItemsAndSubMenu(uint2 mainMenuID, MenuHandle mainMenu
 	MCStringRef t_string;
 	t_string = p_menubutton->getmenustring();
 	MCParseMenuString(t_string, &t_callback, menumode);
-	p_menubutton->setmenustring(t_string);
 
 	return True;
 }

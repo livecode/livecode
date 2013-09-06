@@ -241,10 +241,6 @@ public:
 	{
 		return menustring;
 	}
-	void setmenustring(MCStringRef p_string)
-	{
-		MCValueAssign(menustring, p_string);
-	}
 	uint1 getmenumode()
 	{
 		return menumode;
