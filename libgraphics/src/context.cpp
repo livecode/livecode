@@ -35,8 +35,9 @@ void MCGraphicsInitialize(void)
 
 void MCGraphicsFinalize(void)
 {
-	MCGPlatformInitialize();
 	MGCCacheTableDestroy(s_measure_cache);
+
+	MCGPlatformFinalize();
 }
 
 void MCGraphicsCompact(void)
