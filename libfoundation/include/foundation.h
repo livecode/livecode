@@ -1298,10 +1298,6 @@ const unichar_t *MCStringGetCharPtr(MCStringRef string);
 // in native encoding.
 const char_t *MCStringGetNativeCharPtr(MCStringRef string);
 
-// Return a pointer to the byte backing-store if possible. For this method to
-// succeed the string must be binary (native), otherwise nil will be returned.
-const byte_t *MCStringGetBytePtr(MCStringRef string);
-
 // Returns the char at the given index.
 unichar_t MCStringGetCharAtIndex(MCStringRef string, uindex_t index);
 
