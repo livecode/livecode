@@ -3133,6 +3133,10 @@
 					>
 				</File>
 				<File
+					RelativePath=".\src\w32dsk-legacy.h"
+					>
+				</File>
+				<File
 					RelativePath="src\w32flst.cpp"
 					>
 					<FileConfiguration

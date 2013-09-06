@@ -398,7 +398,7 @@ bool MCS_unlink(const char *p_path)
 	if (!MCStringCreateWithCString(p_path, &t_resolved_path))
         return false;
 	
-	return MCS_unlink(*t_resolved_path);
+	return MCS_unlink(*t_resolved_path) == True;
 }
 
 Boolean MCS_unlink(MCStringRef p_path)
@@ -680,78 +680,82 @@ void MCS_getcurdir(MCStringRef& r_path)
         r_path = MCValueRetain(kMCEmptyString);
 }
 
-//struct MCS_getentries_state
-//{
-//	bool files;
-//	bool details;
-//	MCAutoListRef list;
-//};
+struct MCS_getentries_state
+{
+	bool files;
+	bool details;
+	MCAutoListRef list;
+};
 
-//bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
+bool MCFiltersUrlEncode(MCStringRef p_source, MCStringRef& r_result);
 
-//static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
-//{
-//	MCS_getentries_state *t_state;
-//	t_state = static_cast<MCS_getentries_state *>(p_context);
-//	
-//	if (!t_state -> files != p_entry -> is_folder)
-//		return true;
-//	
-//	MCStringRef t_detailed_string;
-//	if (t_state -> details)
-//	{
-//		MCStringRef t_filename_string;
-//		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), t_filename_string);
-//		MCStringRef t_urlencoded_string;
-//		/* UNCHECKED */ MCFiltersUrlEncode(t_filename_string, t_urlencoded_string);
-//		MCValueRelease(t_filename_string);
-//#ifdef _WIN32
-//		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-//                                       "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-//                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
-//                                       MCStringGetNativeCharPtr(t_urlencoded_string),
-//                                       p_entry -> data_size,
-//                                       p_entry -> creation_time,
-//                                       p_entry -> modification_time,
-//                                       p_entry -> access_time,
-//                                       p_entry -> permissions);
-//#else
-//		/* UNCHECKED */ MCStringFormat(t_detailed_string,
-//                                       "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
-//                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
-//                                       MCStringGetNativeCharPtr(t_urlencoded_string),
-//                                       p_entry -> data_size,
-//                                       p_entry -> modification_time, p_entry -> access_time,
-//                                       p_entry -> user_id, p_entry -> group_id,
-//                                       p_entry -> permissions);
-//#endif
-//		MCValueRelease(t_urlencoded_string);
-//	}
-//	if (t_state -> details)
-//	{
-//		/* UNCHECKED */ MCListAppend(*(t_state->list), t_detailed_string);
-//		MCValueRelease(t_detailed_string);
-//	}
-//	else
-//    /* UNCHECKED */ MCListAppendCString(*(t_state->list), p_entry->name);
-//	
-//	return true;
-//}
+static bool MCS_getentries_callback(void *p_context, const MCSystemFolderEntry *p_entry)
+{
+	MCS_getentries_state *t_state;
+	t_state = static_cast<MCS_getentries_state *>(p_context);
+	
+	if (!t_state -> files != p_entry -> is_folder)
+		return true;
+	
+	MCStringRef t_detailed_string;
+	if (t_state -> details)
+	{
+		MCAutoStringRef t_filename_string;
+		/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)p_entry->name, MCCStringLength(p_entry->name), &t_filename_string);
+		MCAutoStringRef t_urlencoded_string;
+		/* UNCHECKED */ MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
+		
+#ifdef _WIN32
+		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+                                       "%*.*s,%I64d,,%ld,%ld,%ld,,,,%03o,",
+                                       MCStringGetLength(*t_urlencoded_string), MCStringGetLength(*t_urlencoded_string),
+                                       MCStringGetNativeCharPtr(*t_urlencoded_string),
+                                       p_entry -> data_size,
+                                       p_entry -> creation_time,
+                                       p_entry -> modification_time,
+                                       p_entry -> access_time,
+                                       p_entry -> permissions);
+#else
+		/* UNCHECKED */ MCStringFormat(t_detailed_string,
+                                       "%*.*s,%lld,,,%u,%u,,%d,%d,%03o,",
+                                       MCStringGetLength(t_urlencoded_string), MCStringGetLength(t_urlencoded_string),
+                                       MCStringGetNativeCharPtr(t_urlencoded_string),
+                                       p_entry -> data_size,
+                                       p_entry -> modification_time, p_entry -> access_time,
+                                       p_entry -> user_id, p_entry -> group_id,
+                                       p_entry -> permissions);
+#endif
+	}
+	if (t_state -> details)
+	{
+		/* UNCHECKED */ MCListAppend(*(t_state->list), t_detailed_string);
+		MCValueRelease(t_detailed_string);
+	}
+	else
+    /* UNCHECKED */ MCListAppendCString(*(t_state->list), p_entry->name);
+	
+	return true;
+}
 
 bool MCS_getentries(bool p_files, bool p_detailed, MCListRef& r_list)
 {    
 	MCAutoListRef t_list;
     
 	if (!MCListCreateMutable('\n', &(t_list)))
-		return False;
+		return false;
+
+	MCS_getentries_state t_state;
+	t_state.files = p_files;
+	t_state.details = p_detailed;
+	t_state.list = (*t_list);
 	
-	if (!MCsystem -> ListFolderEntries(p_files, p_detailed, &t_list))
-		return False;
+	if (!MCsystem -> ListFolderEntries(MCS_getentries_callback, (void*)&(t_state)))
+		return false;
     
 	if (!MCListCopy(*t_list, r_list))
-        return False;
+        return false;
     
-    return True;
+    return true;
 }
 
 Boolean MCS_chmod(MCStringRef p_path, uint2 p_mask)
@@ -792,7 +796,7 @@ Boolean MCS_exists(MCStringRef p_path, bool p_is_file)
 	if (!(MCS_resolvepath(p_path, &t_resolved) && MCS_pathtonative(*t_resolved, &t_native)))
 		return False;
     
-    bool t_success;
+    Boolean t_success;
 	if (p_is_file)
 		t_success = MCsystem->FileExists(*t_native);
 	else
@@ -1697,9 +1701,9 @@ bool MCS_isinteractiveconsole(int p_fd)
 bool MCS_isnan(double p_number)
 {
 #ifdef _WIN32
-    return _isnan(p_number);
+    return (_isnan(p_number) != 0);
 #else
-    return isnan(p_number);
+    return (isnan(p_number) != 0);
 #endif
 }
 

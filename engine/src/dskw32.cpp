@@ -2927,7 +2927,7 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         FreeLibrary((HMODULE)p_module);
     }
 	
-	virtual bool ListFolderEntries(bool p_files, bool p_detailed, MCListRef& r_list)
+	virtual bool ListFolderEntries(MCSystemListFolderEntriesCallback p_callback, void *x_context)
     {
 #ifdef /* MCS_getentries_dsk_w32 */ LEGACY_SYSTEM
 	MCAutoListRef t_list;
@@ -2996,17 +2996,11 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
 	FindClose(ffh);
 
 	return MCListCopy(*t_list, r_list);
-#endif /* MCS_getentries_dsk_w32 */
-        MCAutoListRef t_list;
-        
-        if (!MCListCreateMutable('\n', &t_list))
-            return false;
-        
+#endif /* MCS_getentries_dsk_w32 */        
         WIN32_FIND_DATAA data;
         HANDLE ffh;            //find file handle
-        uint4 t_entry_count;
-        t_entry_count = 0;
-        Boolean ok = False;
+		bool t_success;
+		t_success = true;
         
         MCAutoStringRef t_curdir_native;
         MCAutoStringRef t_search_path;
@@ -3030,39 +3024,34 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         {
             if (strequal(data.cFileName, "."))
                 continue;
-            if ((data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && !p_files
-		        || !(data.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) && p_files)
-            {
-                MCAutoStringRef t_detailed_string;
-                if (p_detailed)
-                {
-                    MCAutoStringRef t_filename_string;
-                    /* UNCHECKED */ MCStringCreateWithNativeChars((char_t *)data.cFileName, MCCStringLength(data.cFileName), &t_filename_string);
-                    MCAutoStringRef t_urlencoded_string;
-                    /* UNCHECKED */ MCFiltersUrlEncode(*t_filename_string, &t_urlencoded_string);
-                    struct _stati64 buf;
-                    _stati64(data.cFileName, &buf);
-                    // MW-2007-02-26: [[ Bug 4474 ]] - Fix issue with detailed files not working on windows due to time field lengths
-                    // MW-2007-12-10: [[ Bug 606 ]] - Make unsupported fields appear as empty
-                    /* UNCHECKED */ MCStringFormat(&t_detailed_string,
-                                                   "%s,%I64d,,%ld,%ld,%ld,,,,%03o,",
-                                                   MCStringGetCString(*t_urlencoded_string),
-                                                   buf.st_size, (long)buf.st_ctime, (long)buf.st_mtime,
-                                                   (long)buf.st_atime, buf.st_mode & 0777);
-                }
-                
-                if (p_detailed)
-				/* UNCHECKED */ MCListAppend(*t_list, *t_detailed_string);
-                else
-				/* UNCHECKED */ MCListAppendNativeChars(*t_list, (char_t *)data.cFileName, MCCStringLength(data.cFileName));
-                
-                t_entry_count += 1;
-            }
+
+            struct _stati64 buf;
+            t_success = (_stati64(data.cFileName, &buf) != -1);
+
+			if (t_success)
+			{
+				MCSystemFolderEntry t_entry;
+				t_entry.name = strclone(data.cFileName);
+				t_entry.data_size = buf.st_size;
+				t_entry.resource_size = 0; // Mac specific???
+				t_entry.creation_time = (uint32_t)buf.st_ctime;
+				t_entry.modification_time = (uint32_t)buf.st_mtime;
+				t_entry.access_time = (uint32_t)buf.st_atime;
+				t_entry.backup_time = 0; // ???
+				t_entry.user_id = buf.st_uid;
+				t_entry.group_id = buf.st_gid;
+				t_entry.permissions = buf.st_mode;
+				t_entry.file_creator = 0; // ???
+				t_entry.file_type = 0; // ???
+				t_entry.is_folder = (buf.st_mode & _S_IFDIR) != 0;
+	            
+				t_success = p_callback(x_context, &t_entry);
+			}
         }
-        while (FindNextFileA(ffh, &data));
+        while (FindNextFileA(ffh, &data) && t_success);
         FindClose(ffh);
         
-        return MCListCopy(*t_list, r_list);
+		return t_success;
     }
     
 	virtual bool PathToNative(MCStringRef p_path, MCStringRef& r_native)
@@ -4137,9 +4126,8 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         if (created)
         {
             MCAutoStringRef t_cmdline;
-            if (MCStringGetLength(p_doc) != nil && MCStringGetNativeCharAtIndex(p_doc, 0) != '\0')
+            if (p_doc != nil && MCStringGetNativeCharAtIndex(p_doc, 0) != '\0')
 			{
-				/* UNCHECKED */ MCStringCreateMutable(0, &t_cmdline);
 				/* UNCHECKED */ MCStringFormat(&t_cmdline, "%s \"%s\"", MCNameGetCString(p_name), MCStringGetCString(p_doc));
 			}
             else
