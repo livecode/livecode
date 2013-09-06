@@ -89,6 +89,7 @@ typedef struct
 iconlist;
 
 struct MCInterfaceButtonIcon;
+struct MCInterfaceButtonHilite;
 
 #define MENUCONTROL_NONE 0
 #define MENUCONTROL_ITEM 1
@@ -449,6 +450,8 @@ public:
     void SetHoverIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon);
     void GetHoverIcon(MCExecContext& ctxt, MCInterfaceButtonIcon& r_icon);
     virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+    void GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceButtonHilite& r_hilite);
+    void SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceButtonHilite& p_hilite);
     
 private:
 	int4 formattedtabwidth(void);

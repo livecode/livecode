@@ -835,7 +835,7 @@ bool MCU_stoui4x2(MCStringRef p_string, uint4 &r_d1, uint4 &r_d2)
 	return true;
 }
 
-/* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool r_condition)
+/* WRAPPER */ bool MCU_stob(MCStringRef p_string, bool& r_condition)
 {
 	Boolean t_condition;
 	bool t_success;
