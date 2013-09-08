@@ -540,8 +540,10 @@ IO_stat MCDispatch::readstartupstack(IO_handle stream, MCStack*& r_stack)
 
 	MCStack *t_stack = nil;
 	/* UNCHECKED */ MCStackSecurityCreateStack(t_stack);
+
 	t_stack -> setparent(this);
-	t_stack -> setfilename(strdup(MCStringGetCString(MCcmd)));
+	t_stack -> setfilename(MCcmd);
+
 	if (IO_read_uint1(&type, stream) != IO_NORMAL
 	        || type != OT_STACK && type != OT_ENCRYPT_STACK
 	        || t_stack->load(stream, version, type) != IO_NORMAL)
@@ -626,7 +628,9 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			sptr->setparent(this);
 		else
 			sptr->setparent(stacks);
-		sptr->setfilename(strclone(openpath));
+		MCAutoStringRef t_openpath;
+		/* UNCHECKED */ MCStringCreateWithCString(openpath, &t_openpath);
+		sptr->setfilename(*t_openpath);
 
 		if (MCModeCanLoadHome() && type == OT_HOME)
 		{
@@ -678,8 +682,9 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 
 					delete sptr;
 					sptr = NULL;
-
-					if (strequal(tstk->getfilename(), openpath))
+					MCAutoStringRef t_fname;
+					tstk->getfilename(&t_fname);
+					if (MCStringIsEqualTo(*t_fname, *t_openpath, kMCStringOptionCompareExact))
 						sptr = tstk;
 					else
 					{
@@ -883,13 +888,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 
 	if (!MCStringIsEmpty(p_fname))
 		t_linkname = p_fname;
-	else if (sptr -> getfilename() != NULL)
-		 /* UNCHECKED */ MCStringCreateWithCString(sptr -> getfilename(), &t_linkname);
-	else
-	{
-		MCresult -> sets("stack does not have filename");
-		return IO_ERROR;
-	}
+	else 
+		sptr -> getfilename(&t_linkname);
+		if (*t_linkname == nil)
+		{
+			MCresult -> sets("stack does not have filename");
+			return IO_ERROR;
+		}
 	
 	if (MCS_noperm(*t_linkname))
 	{
@@ -977,15 +982,14 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCS_chmod(*t_linkname, newmask);
 
 	MCAutoStringRef t_filename;
-	if (sptr -> getfilename() != nil)
-		/* UNCHECKED */ MCStringCreateWithCString(sptr->getfilename(), &t_filename);
-
+	sptr -> getfilename(&t_filename);
+	
 	if (*t_filename != nil && (*t_linkname == nil || !MCStringIsEqualTo(*t_filename, *t_linkname, kMCCompareExact)))
 		MCS_copyresourcefork(*t_filename, *t_linkname);
 	else if (*t_filename != nil)
 		MCS_copyresourcefork(*t_backup, *t_linkname);
 
-	sptr->setfilename(strdup(MCStringGetCString(*t_linkname)));
+	sptr->setfilename(*t_linkname);
 	MCS_unlink(*t_backup);
 	return IO_NORMAL;
 }

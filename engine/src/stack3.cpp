@@ -172,7 +172,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
 			}
 			else
@@ -187,7 +187,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 				MCExecPoint ep;
 				ep . setsvalue(t_native_title);
 				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
+				ep . copyasstringref(title);
 
 				delete t_native_title;
 			}
@@ -218,7 +218,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 	if (strncmp(version, "1.3", 3) > 0)
 	{
@@ -555,7 +555,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   write out UTF-8 directly.
 		if (MCstackfileversion >= 5500)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
@@ -564,7 +564,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 			//   stored as a UTF-8 string.
 			MCExecPoint ep;
 			char *t_native_title;
-			ep . setsvalue(title);
+			ep . setsvalue(MCStringGetOldString(title));
 			ep . utf8tonative();
 			t_native_title = ep . getsvalue() . clone();
 
@@ -596,7 +596,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, true)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.

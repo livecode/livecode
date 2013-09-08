@@ -2110,19 +2110,21 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		return true;
 	}
 
-	char *t_resolved = nil;
+	
+	MCAutoStringRef t_resolved_str;
+
+	MCAutoStringRef t_filename;
+
 	MCImageRep *t_rep = nil;
 
 	if (t_success)
-		t_success = nil != (t_resolved = getstack() -> resolve_filename(MCStringGetCString(p_filename)));
-	if (t_success)
-	{
-		MCAutoStringRef t_resolved_string;
-		/* UNCHECKED */ MCStringCreateWithCString(t_resolved, &t_resolved_string);
-		t_success = MCImageRepGetReferenced(*t_resolved_string, t_rep);
+	{		
+		getstack() -> resolve_filename(*t_filename, &t_resolved_str);
+		t_success = nil != *t_resolved_str;
 	}
-
-	MCCStringFree(t_resolved);
+	
+	if (t_success)
+		t_success = MCImageRepGetReferenced(*t_resolved_str, t_rep);
 
 	if (t_success)
 	{

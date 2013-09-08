@@ -270,7 +270,7 @@ IO_stat MCDispatch::startup(void)
 #endif
 	
 	MCenvironmentactive = True;
-	sptr -> setfilename(strdup(MCStringGetCString(MCcmd)));
+	sptr -> setfilename(MCcmd);
 	MCdefaultstackptr = MCstaticdefaultstackptr = stacks;
 
 	{
@@ -556,9 +556,9 @@ void MCStack::mode_takefocus(void)
 	MCscreen->setinputfocus(window);
 }
 
-char *MCStack::mode_resolve_filename(const char *filename)
+void MCStack::mode_resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	return NULL;
+	return ;
 }
 
 bool MCStack::mode_needstoopen(void)
