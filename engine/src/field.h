@@ -495,19 +495,19 @@ public:
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, either as unicode
 	//   or native encoding.
 	void exportastext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, bool as_unicode, MCStringRef& r_string);
+	bool exportastext(uint32_t p_part_id, int32_t start_index, int32_t finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices. The output is encoded in either unicode or native.
 	void exportasplaintext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
 	void exportasplaintext(MCExecPoint& ep, MCParagraph *paragraphs, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
-	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+	bool exportasplaintext(MCParagraph *p_paragraphs, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
+	bool exportasplaintext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to text, including any list
 	//   indices and line breaks.
 	void exportasformattedtext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index, bool as_unicode);
-	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, bool p_as_unicode, MCStringRef& r_string);
+	bool exportasformattedtext(uint32_t p_part_id, int32_t p_start_index, int32_t p_finish_index, MCStringRef& r_string);
 
 	// MW-2012-02-20: [[ FieldExport ]] Convert the content of the field to rtf.
 	void exportasrtftext(uint32_t p_part_id, MCExecPoint& ep, int32_t start_index, int32_t finish_index);
@@ -619,8 +619,8 @@ public:
 	void SetNoncontiguousHilites(MCExecContext& ctxt, bool setting);
 	void GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
 	void SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
-	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
-	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
+	void GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text);
+	void SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text);
 	void GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
 	void SetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text);
 	void GetEffectiveHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text);
@@ -632,11 +632,11 @@ public:
 	void GetFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
 	void GetEffectiveFormattedStyledText(MCExecContext& ctxt, uint32_t part, MCArrayRef& r_array);
 	void GetPlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
-	void GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
+	void GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string);
 	void GetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
 	void SetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
-	void GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string);
-	void SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string);
+	void GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string);
+	void SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef p_string);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_string);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_string);
 	void GetToggleHilite(MCExecContext& ctxt, bool& r_setting);

@@ -541,7 +541,7 @@ void MCField::SetNoncontiguousHilites(MCExecContext& ctxt, bool setting)
 
 void MCField::GetText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
 {
-	if (exportastext(part, 0, INT32_MAX, false, r_text))
+	if (exportastext(part, 0, INT32_MAX, r_text))
 		return;
 
 	ctxt . Throw();
@@ -552,17 +552,21 @@ void MCField::SetText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
 	settext(part, p_text, False);
 }
 
-void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
+void MCField::GetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_text)
 {
-	if (exportastext(part, 0, INT32_MAX, true, r_text))
-		return;
-
+	MCAutoStringRef t_text;
+	if (exportastext(part, 0, INT32_MAX, &t_text))
+		if (MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_text))
+			return;
+	
 	ctxt . Throw();
 }
 
-void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCStringRef p_text)
+void MCField::SetUnicodeText(MCExecContext& ctxt, uint32_t part, MCDataRef p_text)
 {
-	setpartialtext(part, MCStringGetOldString(p_text), true);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringDecode(p_text, kMCStringEncodingUTF16, false, &t_string);
+	SetText(ctxt, part, *t_string);
 }
 
 void MCField::GetHtmlText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_text)
@@ -638,23 +642,28 @@ void MCField::GetEffectiveFormattedStyledText(MCExecContext& ctxt, uint32_t part
 
 void MCField::GetPlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string)
 {
-	if (exportasplaintext(part, 0, INT32_MAX, false, r_string))
+	if (exportasplaintext(part, 0, INT32_MAX, r_string))
 		return;
 
 	ctxt . Throw();
 }
 
-void MCField::GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string)
+void MCField::GetUnicodePlainText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string)
 {
-	if (exportasplaintext(part, 0, INT32_MAX, true, r_string))
+	MCAutoStringRef t_string;
+	GetPlainText(ctxt, part, &t_string);
+	if (ctxt . HasError())
 		return;
-
+	
+	if (MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_string))
+		return;
+	
 	ctxt . Throw();
 }
 
 void MCField::GetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string)
 {
-	if (exportasformattedtext(part, 0, INT32_MAX, false, r_string))
+	if (exportasformattedtext(part, 0, INT32_MAX, r_string))
 		return;
 
 	ctxt . Throw();
@@ -666,18 +675,29 @@ void MCField::SetFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p
 	Redraw(true);
 }
 
-void MCField::GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef& r_string)
+void MCField::GetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef& r_string)
 {
-	if (exportasformattedtext(part, 0, INT32_MAX, true, r_string))
+	MCAutoStringRef t_string;
+	GetFormattedText(ctxt, part, &t_string);
+	if (ctxt . HasError())
 		return;
-
+	
+	if (MCStringEncode(*t_string, kMCStringEncodingUTF16, false, r_string))
+		return;
+	
 	ctxt . Throw();
 }
 
-void MCField::SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCStringRef p_string)
+void MCField::SetUnicodeFormattedText(MCExecContext& ctxt, uint32_t part, MCDataRef p_string)
 {
-	settext(part, p_string, True);
-	Redraw(true);
+	MCAutoStringRef t_text;
+	if (MCStringDecode(p_string, kMCStringEncodingUTF16, false, &t_text))
+	{
+		SetFormattedText(ctxt, part, *t_text);
+		return;
+	}
+
+	ctxt . Throw();
 }
 
 void MCField::GetLabel(MCExecContext& ctxt, MCStringRef& r_string)

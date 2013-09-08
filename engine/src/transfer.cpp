@@ -883,7 +883,7 @@ bool MCConvertStyledTextToText(MCDataRef p_input, MCDataRef& r_output)
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, false, &t_text);
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
 	
 	if (t_success)
 		t_success = MCStringEncode(*t_text, kMCStringEncodingNative, false, r_output);
@@ -910,7 +910,7 @@ bool MCConvertStyledTextToUnicode(MCDataRef p_input, MCDataRef& r_output)
 	// MW-2012-02-21: [[ FieldExport ]] Use the new plain text export method.
 	MCAutoStringRef t_text;
 	if (t_success)
-		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, true, &t_text);
+		t_success = MCtemplatefield -> exportasplaintext(t_paragraphs, 0, INT32_MAX, &t_text);
 	
 	if (t_success)
 		t_success = MCStringEncode(*t_text, kMCStringEncodingUTF16, false, r_output);

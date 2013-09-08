@@ -506,12 +506,14 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 
 Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
 {
-	const char *t_bytes = (const char*)MCStringGetNativeCharPtr(p_text);
-	uindex_t t_length = MCStringGetLength(p_text);
-	if (t_bytes != nil)
-		return settext_oldstring(parid, MCString(t_bytes, t_length), p_formatted, false);
-	else
-		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), t_length * sizeof(unichar_t)), p_formatted, true);
+	if (MCStringIsNative(p_text))
+	{
+		const char *t_bytes = (const char*)MCStringGetNativeCharPtr(p_text);
+		uindex_t t_length = MCStringGetLength(p_text);
+		if (t_bytes != nil)
+			return settext_oldstring(parid, MCString(t_bytes, t_length), p_formatted, false);
+	}
+	return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
 }
 
 Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)
@@ -2344,7 +2346,7 @@ void MCField::returntext(MCExecPoint &ep, int4 si, int4 ei)
 
 bool MCField::returntext(int4 p_si, int4 p_ei, MCStringRef& r_string)
 {
-	return exportastext(0, p_si, p_ei, false, r_string);
+	return exportastext(0, p_si, p_ei, r_string);
 }
 
 void MCField::charstoparagraphs(int4 si, int4 ei, MCParagraph*& rsp, MCParagraph*& rep, uint4& rsl, uint4& rel)
