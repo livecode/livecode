@@ -1286,7 +1286,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 {
 	// Fetch the string value of the ep as 's' for compatibility with pre-ep taking
 	// code.
-	const MCString& s = ep . getsvalue();
+	
+	MCAutoStringRef s;
+	ep . copyasstringref(&s);
 	
 	if (flags & F_SHARED_TEXT)
 		parid = 0;
@@ -1322,10 +1324,10 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		switch (which)
 		{
 		case P_HTML_TEXT:
-			sethtml(parid, s);
+			sethtml(parid, MCStringGetOldString(*s));
 			break;
 		case P_RTF_TEXT:
-			setrtf(parid, s);
+			setrtf(parid, MCStringGetOldString(*s));
 			break;
 		// MW-2011-12-08: [[ StyledText ]] Import the styled text.
 		case P_STYLED_TEXT:
@@ -1333,7 +1335,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			break;
 		case P_UNICODE_TEXT:
 		case P_TEXT:
-			setpartialtext(parid, s, which == P_UNICODE_TEXT);
+			setpartialtext(parid, MCStringGetOldString(*s), which == P_UNICODE_TEXT);
 			break;
 		default:
 			break;
@@ -1478,9 +1480,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			break;
 		}
 	case P_FORE_COLOR:
-		if (!s.getlength())
+		if (!MCStringGetLength(*s))
 			color = NULL;
-		else if (!MCscreen->parsecolor(s, &tcolor, nil))
+		else if (!MCscreen->parsecolor(*s, tcolor, nil))
 			return ES_ERROR;
 		t_value = color;
 		break;
@@ -1495,9 +1497,9 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				return ES_ERROR;
 
 			Boolean t_new_state;
-			if (!MCU_stob(s, t_new_state))
+			if (!MCU_stob(*s, t_new_state))
 			{
-				MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+				MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 				return ES_ERROR;
 			}
 
@@ -1512,7 +1514,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		// Fall through for default (non-array) handling.
 	case P_TEXT_FONT:
 	case P_TEXT_SIZE:
-		if (MCF_parsetextatts(which, s, flags, fname, fontheight, size, style) != ES_NORMAL)
+		if (MCF_parsetextatts(which, MCStringGetOldString(*s), flags, fname, fontheight, size, style) != ES_NORMAL)
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
@@ -1523,7 +1525,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 			t_value = (void *)style;
 		break;
 	case P_TEXT_SHIFT:
-		if (!MCU_stoi2(s, shift))
+		if (!MCU_stoi2(*s, shift))
 		{
 			MCeerror->add(EE_FIELD_SHIFTNAN, 0, 0);
 			return ES_ERROR;
@@ -1548,18 +1550,18 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		break;
 	// MW-2012-01-26: [[ FlaggedField ]] Set the flagged status of the range.
 	case P_FLAGGED:
-		if (!MCU_stob(s, newstate))
+		if (!MCU_stob(*s, newstate))
 		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
 		}
 		t_value = (void *)(Boolean)newstate;
 		t_value = (void *)newstate;
 		break;
 	case P_VISITED:
-		if (!MCU_stob(s, newstate))
+		if (!MCU_stob(*s, newstate))
 		{
-			MCeerror->add(EE_OBJECT_NAB, 0, 0, s);
+			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
 		}
 		pgptr->setvisited(si, MCU_min(ei, pgptr->gettextsize()), newstate);
