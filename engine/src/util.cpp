@@ -2253,27 +2253,7 @@ void MCU_cleaninserted()
 		;
 }
 
-Exec_stat MCU_change_color(MCColor& c, MCStringRef& n, MCExecPoint& ep, uint2 line, uint2 pos)
-{
-	char *t_name;
-	t_name = nil;
-	if (MCU_change_color(c, t_name, ep, line, pos) != ES_NORMAL)
-		return ES_ERROR;
-	
-	MCStringRef t_name_ref;
-	if (!MCStringCreateWithCString(t_name, t_name_ref))
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-
-	MCValueRelease(n);
-	n = t_name_ref;
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
+Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
 	MCColor color;
@@ -2281,6 +2261,7 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
 	MCAutoStringRef string;
 	ep . copyasstringref(&string);
 
+	t_name = nil;
 	if (!MCscreen->parsecolor(*string, color, &t_name))
 	{
 		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
@@ -2289,8 +2270,12 @@ Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
 
 	MCscreen->alloccolor(color);
 	c = color;
-	delete n;
-	n = strdup(MCStringGetCString(t_name));
+	if (n != nil)
+		MCValueRelease(n);
+	if (t_name != nil)
+		n = t_name;
+	else
+		n = nil;
 	return ES_NORMAL;
 }
 

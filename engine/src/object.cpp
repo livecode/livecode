@@ -175,7 +175,10 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			colors[i] = oref.colors[i];
-			colornames[i] = MCValueRetain(oref.colornames[i]);
+			if (oref . colornames[i] != nil)
+				colornames[i] = MCValueRetain(oref.colornames[i]);
+			else
+				colornames[i] = nil;
 		}
 	}
 	else
@@ -276,7 +279,8 @@ MCObject::~MCObject()
 	if (colornames != nil)
 	{
 		while (ncolors--)
-			MCValueRelease(colornames[ncolors]);
+			if (colornames[ncolors] != nil)
+				MCValueRelease(colornames[ncolors]);
 		delete colornames;
 	}
 	delete pixmapids;
@@ -1632,7 +1636,7 @@ uint2 MCObject::createcindex(uint2 di)
 			if (dflags & m)
 			{
 				colors[c] = oldcolors[oc];
-				colornames[c++] = MCValueRetain(oldnames[oc++]);
+				colornames[c++] = oldnames[oc++];
 			}
 		i++;
 		m <<= 1;
@@ -1647,12 +1651,17 @@ uint2 MCObject::createcindex(uint2 di)
 
 void MCObject::destroycindex(uint2 di, uint2 i)
 {
-	MCValueRelease(colornames[i]);
+	if (colornames[i] != nil)
+	{
+		MCValueRelease(colornames[i]);
+		colornames[i] = nil;
+	}
+	
 	ncolors--;
 	while (i < ncolors)
 	{
 		colors[i] = colors[i + 1];
-		colornames[i] = MCValueRetain(colornames[i + 1]);
+		colornames[i] = colornames[i + 1];
 		i++;
 	}
 	uint2 m = DF_FORE_COLOR;
@@ -2880,6 +2889,11 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 				break;
 			if ((stat = IO_read_stringref(colornames[i], stream)) != IO_NORMAL)
 				break;
+			if (MCStringIsEmpty(colornames[i]))
+			{
+				MCValueRelease(colornames[i]);
+				colornames[i] = nil;
+			}
 			colors[i].pixel = i;
 		}
 		if (stat != IO_NORMAL)
@@ -3146,9 +3160,12 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(ncolors, stream)) != IO_NORMAL)
 		return stat;
 	for (i = 0 ; i < ncolors ; i++)
-		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL
-		        || (stat = IO_write_stringref(colornames[i], stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
+		if ((stat = IO_write_stringref(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream)) != IO_NORMAL)
+			return stat;
+	}
 	if (props != NULL)
 		addflags |= AF_CUSTOM_PROPS;
 	if (borderwidth != DEFAULT_BORDER)

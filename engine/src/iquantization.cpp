@@ -361,7 +361,7 @@ bool MCImageParseColourList(MCStringRef p_input, uint32_t &r_ncolours, MCColor *
 {
 	bool t_success = true;
 
-	char *t_list = (char*) MCStringGetCString(p_input);
+	char *t_list = (char*)strclone(MCStringGetCString(p_input));
 	char *t_currentstring = t_list;
 
 	t_success = (t_list != NULL);

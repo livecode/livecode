@@ -1497,7 +1497,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 				return ES_ERROR;
 
 			Boolean t_new_state;
-			if (!MCU_stob(*s, t_new_state))
+			if (!MCU_stob(MCStringGetOldString(*s), t_new_state))
 			{
 				MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 				return ES_ERROR;
@@ -1550,7 +1550,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		break;
 	// MW-2012-01-26: [[ FlaggedField ]] Set the flagged status of the range.
 	case P_FLAGGED:
-		if (!MCU_stob(*s, newstate))
+		if (!MCU_stob(MCStringGetOldString(*s), newstate))
 		{
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;
@@ -1559,7 +1559,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		t_value = (void *)newstate;
 		break;
 	case P_VISITED:
-		if (!MCU_stob(*s, newstate))
+		if (!MCU_stob(MCStringGetOldString(*s), newstate))
 		{
 			MCeerror->add(EE_OBJECT_NAB, 0, 0, *s);
 			return ES_ERROR;

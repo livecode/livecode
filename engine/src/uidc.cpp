@@ -1342,7 +1342,7 @@ bool MCUIDC::parsecolor(MCStringRef p_string, MCColor& r_color)
 
 Boolean MCUIDC::parsecolor(MCStringRef s, MCColor& color, MCStringRef *cname)
 {
-	if (cname)
+	if (cname != nil)
 	{
 		MCValueRelease(*cname);
 		*cname = nil;

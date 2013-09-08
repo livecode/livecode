@@ -166,7 +166,7 @@ extern void MCU_urlencode(MCExecPoint &ep);
 extern void MCU_urldecode(MCExecPoint &ep);
 extern Boolean MCU_freeinserted(MCObjectList *&l);
 extern void MCU_cleaninserted();
-extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
+//extern Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern Exec_stat MCU_change_color(MCColor &c, MCStringRef&n, MCExecPoint &ep, uint2 line, uint2 pos);
 extern void MCU_get_color(MCExecPoint &ep, const char *name, MCColor &c);
 extern void MCU_get_color(MCExecPoint &ep, MCStringRef name, MCColor &c);

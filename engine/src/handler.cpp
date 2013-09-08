@@ -382,8 +382,8 @@ Exec_stat MCHandler::exec(MCExecPoint &ep, MCParameter *plist)
 				// being set.
 				vars[i] -> setvalueref(vinfo[i] . name);
 				vars[i] -> setuql();
+			}
 		}
-	}
 	}
 
 	executing++;
