@@ -551,7 +551,7 @@ static void MCBitmapEffectDefault(MCBitmapEffect *p_effect, MCBitmapEffectType p
 	}
 }
 
-static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString& p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, MCStringRef p_data, uint4 p_current_value, uint4& r_new_value, Boolean& r_dirty)
 {
 	uint4 t_value;
 	if (!MCU_stoui4(p_data, t_value))
@@ -569,21 +569,19 @@ static Exec_stat MCBitmapEffectSetCardinalProperty(uint4 p_bound, const MCString
 	return ES_NORMAL;
 }
 
-static Exec_stat MCBitmapEffectSetBooleanProperty(const MCString& p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
+static Exec_stat MCBitmapEffectSetBooleanProperty(MCStringRef p_data, bool p_current_value, bool& r_new_value, Boolean& r_dirty)
 {
-	Boolean t_value;
+	bool t_value;
 	if (!MCU_stob(p_data, t_value))
 	{
 		MCeerror -> add(EE_BITMAPEFFECT_BADBOOLEAN, 0, 0, p_data);
 		return ES_ERROR;
 	}
 
-	bool t_bvalue;
-	t_bvalue = t_value == True;
-	if (t_bvalue != p_current_value)
+	if (t_value != p_current_value)
 		r_dirty = True;
 
-	r_new_value = t_bvalue;
+	r_new_value = t_value;
 
 	return ES_NORMAL;
 }
@@ -642,9 +640,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyOpacity:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, MCStringGetOldString(*t_data), self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> layer . color >> 24, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> layer . color = (self -> layer . color & 0xffffff) | (t_value << 24);
 		}
 		break;
@@ -675,13 +673,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 		}
 		break;
-			
+
 		case kMCBitmapEffectPropertySize:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, MCStringGetOldString(*t_data), self -> blur . size, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> blur . size, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> blur . size = t_value;
 		}
 		break;
@@ -689,9 +687,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertySpread:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, MCStringGetOldString(*t_data), self -> blur . spread, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> blur . spread, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> blur . spread = t_value;
 		}
 		break;
@@ -701,13 +699,13 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyDistance:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(32767, MCStringGetOldString(*t_data), self -> shadow . distance, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(32767, *t_data, self -> shadow . distance, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> shadow . distance = t_value;
 		}
 		break;
-			
+
 		case kMCBitmapEffectPropertyAngle:
 		{
 			uint4 t_value;
@@ -726,11 +724,11 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 			}
 		}
 		break;
-		
+
 		case kMCBitmapEffectPropertyKnockOut:
 		{
 			bool t_value;
-			if (MCBitmapEffectSetBooleanProperty(MCStringGetOldString(*t_data), self -> shadow . knockout, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetBooleanProperty(*t_data, self -> shadow . knockout, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
 
 			self -> shadow . knockout = t_value;
@@ -742,9 +740,9 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 		case kMCBitmapEffectPropertyRange:
 		{
 			uint4 t_value;
-			if (MCBitmapEffectSetCardinalProperty(255, MCStringGetOldString(*t_data), self -> glow . range, t_value, r_dirty) != ES_NORMAL)
+			if (MCBitmapEffectSetCardinalProperty(255, *t_data, self -> glow . range, t_value, r_dirty) != ES_NORMAL)
 				return ES_ERROR;
-			
+
 			self -> glow . range = t_value;
 		}
 		break;
@@ -776,6 +774,7 @@ Exec_stat MCBitmapEffectSetProperty(MCBitmapEffect *self, MCBitmapEffectProperty
 
 	return ES_NORMAL;
 }
+
 
 Exec_stat MCBitmapEffectsSetProperties(MCBitmapEffectsRef& self, Properties which_type, MCExecPoint& ep, MCNameRef prop, Boolean& r_dirty)
 {
