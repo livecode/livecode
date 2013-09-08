@@ -2662,10 +2662,9 @@ Boolean MCPlayer::qt_prepare(void)
 #if defined(TARGET_PLATFORM_MACOS_X)
 		// OK-2009-01-09: [[Bug 1161]] - File resolving code standardized between image and player
         MCAutoStringRef t_filename_str;
-        getstack() -> resolve_filename(filename, &t_filename_str);
+        /* UNCHECKED */ getstack() -> resolve_filename(filename, &t_filename_str);
 		
         MCAutoStringRef t_resolved_filename_str;
-		
 		CFStringRef t_cf_filename;
 		t_cf_filename = NULL;
 		if (MCS_resolvepath(*t_filename_str, &t_resolved_filename_str))

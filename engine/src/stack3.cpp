@@ -172,24 +172,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				ep . copyasstringref(title);
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -560,21 +549,8 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		}
 		else
 		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(MCStringGetOldString(title));
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -596,7 +572,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_stringref(externalfiles, stream, true)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.

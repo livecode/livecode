@@ -628,6 +628,7 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 			sptr->setparent(this);
 		else
 			sptr->setparent(stacks);
+			
 		MCAutoStringRef t_openpath;
 		/* UNCHECKED */ MCStringCreateWithCString(openpath, &t_openpath);
 		sptr->setfilename(*t_openpath);
@@ -682,9 +683,8 @@ IO_stat MCDispatch::doreadfile(const char *openpath, const char *inname, IO_hand
 
 					delete sptr;
 					sptr = NULL;
-					MCAutoStringRef t_fname;
-					tstk->getfilename(&t_fname);
-					if (MCStringIsEqualTo(*t_fname, *t_openpath, kMCStringOptionCompareExact))
+					
+					if (MCStringIsEqualTo(tstk -> getfilename(), *t_openpath, kMCStringOptionCompareExact))
 						sptr = tstk;
 					else
 					{
@@ -888,13 +888,13 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 
 	if (!MCStringIsEmpty(p_fname))
 		t_linkname = p_fname;
-	else 
-		sptr -> getfilename(&t_linkname);
-		if (*t_linkname == nil)
-		{
-			MCresult -> sets("stack does not have filename");
-			return IO_ERROR;
-		}
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
+		t_linkname = sptr -> getfilename();
+	else
+	{
+		MCresult -> sets("stack does not have filename");
+		return IO_ERROR;
+	}
 	
 	if (MCS_noperm(*t_linkname))
 	{
@@ -980,13 +980,10 @@ IO_stat MCDispatch::dosavestack(MCStack *sptr, const MCStringRef p_fname)
 	MCS_setumask(oldmask);
 	
 	MCS_chmod(*t_linkname, newmask);
-
-	MCAutoStringRef t_filename;
-	sptr -> getfilename(&t_filename);
 	
-	if (*t_filename != nil && (*t_linkname == nil || !MCStringIsEqualTo(*t_filename, *t_linkname, kMCCompareExact)))
-		MCS_copyresourcefork(*t_filename, *t_linkname);
-	else if (*t_filename != nil)
+	if (!MCStringIsEmpty(sptr -> getfilename()) && !MCStringIsEqualTo(sptr -> getfilename(), *t_linkname, kMCCompareExact))
+		MCS_copyresourcefork(sptr -> getfilename(), *t_linkname);
+	else if (!MCStringIsEmpty(sptr -> getfilename()))
 		MCS_copyresourcefork(*t_backup, *t_linkname);
 
 	sptr->setfilename(*t_linkname);

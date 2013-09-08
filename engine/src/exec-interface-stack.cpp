@@ -436,15 +436,11 @@ void MCStack::GetLayer(MCExecContext& ctxt, integer_t& r_layer)
 
 void MCStack::GetFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
 {
-	if (filename == NULL)
-		return;
-
 	r_file_name = MCValueRetain(filename);
 }
 
 void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
-{
-	MCValueRelease(filename);
+{	
 	// MW-2007-03-15: [[ Bug 616 ]] Throw an error if you try and set the filename of a substack
 	if (!MCdispatcher->ismainstack(this))
 	{
@@ -452,10 +448,7 @@ void MCStack::SetFileName(MCExecContext& ctxt, MCStringRef p_file_name)
 		return;
 	}
 	
-	if (p_file_name == nil)
-		filename = NULL;
-	else
-		filename = MCValueRetain(p_file_name);
+	MCValueAssign(filename, p_file_name);
 }
 
 void MCStack::GetEffectiveFileName(MCExecContext& ctxt, MCStringRef& r_file_name)
@@ -623,82 +616,29 @@ void MCStack::SetAlwaysBuffer(MCExecContext& ctxt, bool setting)
 
 void MCStack::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	if (title == nil)
-		return;
-
-	if (MCU_utf8tonative(title, r_label))
-		return;
-
-	ctxt . Throw();
+	r_label = MCValueRetain(title);
 }
 
 void MCStack::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-	//   stored as a UTF-8 string.
-	MCValueRelease(title);
-	title = nil;
+	MCValueAssign(title, p_label);
+	dirtywindowname();
+}
 
-	bool t_success;
-	t_success = true;
-
-	if (p_label != nil)
-	{
-		if (t_success)
-			t_success = MCU_nativetoutf8(p_label, title);
-		if (t_success)
-		{
-			flags |= F_TITLE;
-		}
-	}
-	else
-		flags &= ~F_TITLE;
-
-	if (t_success)
-	{
-		dirtywindowname();
+void MCStack::GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
+{
+	if (MCStringEncode(title, kMCStringEncodingUTF16, false, r_label))
 		return;
-	}
-
+		
 	ctxt . Throw();
 }
 
-void MCStack::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCStack::SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label)
 {
-	if (title == nil)
-		return;
-
-	if (MCU_multibytetounicode(title, LCH_UTF8, r_label))
-		return;
-
-	ctxt . Throw();
-}
-
-void MCStack::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
-{
-	// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-	//   stored as a UTF-8 string.
-	MCValueRelease(title);
-	title = nil;
-	
-	bool t_success;
-	t_success = true;
-
-	if (p_label != nil)
+	MCAutoStringRef t_new_label;
+	if (MCStringDecode(p_label, kMCStringEncodingUTF16, false, &t_new_label))
 	{
-		if (t_success)
-			t_success = MCU_unicodetomultibyte(p_label, LCH_UTF8, title);
-		if (t_success)
-		{
-			flags |= F_TITLE;
-		}
-	}
-	else
-		flags &= ~F_TITLE;
-
-	if (t_success)
-	{
-		dirtywindowname();
+		SetLabel(ctxt, *t_new_label);
 		return;
 	}
 
@@ -2017,8 +1957,7 @@ void MCStack::SetDecorations(MCExecContext& ctxt, const MCInterfaceDecoration& p
             {
                 stop_externals();
                 MCscreen->destroywindow(window);
-                delete titlestring;
-                titlestring = NULL;
+				MCValueAssign(titlestring, kMCEmptyString);
             }
         }
     }

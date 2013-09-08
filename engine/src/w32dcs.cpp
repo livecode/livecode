@@ -553,7 +553,7 @@ void MCScreenDC::uniconifywindow(Window w)
 //   logic doesn't work :o(. Therefore I'm removing this for now and have instead
 //   added a bit to 'revRuntimeBehaviour' which allows turning off creation of
 //   unicode windows.
-void MCScreenDC::setname(Window w, const char *newname)
+void MCScreenDC::setname(Window w, MCStringRef newname)
 {
 	// MW-2009-11-01: Do nothing if there is no window
 	if (w == NULL)
@@ -561,17 +561,15 @@ void MCScreenDC::setname(Window w, const char *newname)
 
 	if (IsWindowUnicode((HWND)w -> handle . window))
 	{
-		LPWSTR t_unicode_name;
-		t_unicode_name = convertutf8towide(newname);
-		SetWindowTextW((HWND)w -> handle . window, t_unicode_name);
-		delete t_unicode_name;
+		MCAutoStringRefAsWString t_newname_w;
+		/* UNCHECKED */ t_newname_w . Lock(newname);
+		SetWindowTextW((HWND)w -> handle . window, *t_newname_w);
 	}
 	else
 	{
-		LPCSTR t_ansi_name;
-		t_ansi_name = convertutf8toansi(newname);
-		SetWindowTextA((HWND)w->handle.window, t_ansi_name);
-		delete t_ansi_name;
+		MCAutoStringRefAsCString t_newname_a;
+		/* UNCHECKED */ t_newname_a . Lock(newname);
+		SetWindowTextA((HWND)w->handle.window, *t_newname_a);
 	}
 }
 

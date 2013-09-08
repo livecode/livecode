@@ -275,7 +275,7 @@ public:
 	void extraopen(bool p_force);
 	void extraclose(bool p_force);
 
-	void resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
+	bool resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 
 	void setopacity(uint1 p_value);
 	
@@ -450,16 +450,15 @@ public:
 	{
 		return (flags & F_CANT_ABORT) != 0;
 	}
-	void getfilename(MCStringRef& r_filename)
+	MCStringRef getfilename(void)
 	{
-		r_filename = MCValueRetain(filename);
+		return filename;
 	}
-	void gettitletext(MCStringRef& r_title)
+	MCStringRef gettitletext(void)
 	{
-		if(title != NULL)
-			r_title = MCValueRetain(title);
-		else
-			r_title = MCNameGetString(_name);	
+		if (!MCStringIsEmpty(title))
+			return title;
+		return MCNameGetString(_name);
 	}
 	MCControl *getcontrols()
 	{
@@ -735,8 +734,8 @@ public:
 	void SetAlwaysBuffer(MCExecContext& ctxt, bool setting);
 	void GetLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void SetLabel(MCExecContext& ctxt, MCStringRef p_label);
-	void GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
-	void SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label);
+	void GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label);
+	void SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label);
 	void GetCloseBox(MCExecContext& ctxt, bool& r_setting);
 	void SetCloseBox(MCExecContext& ctxt, bool setting);
 	void GetZoomBox(MCExecContext& ctxt, bool& r_setting);
@@ -891,7 +890,6 @@ private:
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 	Exec_stat mode_setprop(uint4 parid, Properties which, MCExecPoint &, const MCString &cprop, const MCString &carray, Boolean effective);
 
-	void mode_resolve_filename(MCStringRef filename, MCStringRef& r_resolved);
 	void mode_getrealrect(MCRectangle& r_rect);
 	void mode_takewindow(MCStack *other);
 	void mode_takefocus(void);

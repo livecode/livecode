@@ -2139,10 +2139,10 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 		{
 			MCStack *t_this;
 			t_this = static_cast<MCStack *>(this);
-			MCAutoStringRef t_filename;
-			t_this -> getfilename(&t_filename);
-
-			if (*t_filename == nil)
+			
+			MCStringRef t_filename;
+			t_filename = t_this -> getfilename();
+			if (MCStringIsEmpty(t_filename))
 			{
 				if (MCdispatcher->ismainstack(t_this))
 				{
@@ -2159,8 +2159,9 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(*t_filename));
+				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
 		}
+		
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).
 		Properties t_which_requested;

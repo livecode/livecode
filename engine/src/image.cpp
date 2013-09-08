@@ -2109,20 +2109,12 @@ bool MCImage::setfilename(MCStringRef p_filename)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR | F_NEED_FIXING);
 		return true;
 	}
-
 	
 	MCAutoStringRef t_resolved_str;
-
-	MCAutoStringRef t_filename;
-
-	MCImageRep *t_rep = nil;
-
 	if (t_success)
-	{		
-		getstack() -> resolve_filename(*t_filename, &t_resolved_str);
-		t_success = nil != *t_resolved_str;
-	}
+		t_success = getstack() -> resolve_filename(p_filename, &t_resolved_str);
 	
+	MCImageRep *t_rep = nil;
 	if (t_success)
 		t_success = MCImageRepGetReferenced(*t_resolved_str, t_rep);
 

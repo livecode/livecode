@@ -1237,6 +1237,12 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 {
 	switch (which)
 	{
+	// MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
+	//   to the format method.
+	case P_TAB_STOPS:
+	case P_TAB_WIDTHS:
+		formattabstops(which, ep, tabs, ntabs);
+		break;
 #ifdef /* MCField::getprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
@@ -1378,12 +1384,6 @@ Exec_stat MCField::getprop_legacy(uint4 parid, Properties which, MCExecPoint& ep
 		else
 			ep.setsvalue(label);
 		break;
-	// MW-2012-02-11: [[ TabWidths ]] Handle both tabStops and tabWidths by deferring
-	//   to the format method.
-	case P_TAB_STOPS:
-	case P_TAB_WIDTHS:
-		formattabstops(which, ep, tabs, ntabs);
-		break;
 	case P_TOGGLE_HILITE:
 		ep.setboolean(getflag(F_TOGGLE_HILITE));
 		break;
@@ -1515,6 +1515,34 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 	MCExecPoint *oldep;
 	switch (p)
 	{
+	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
+	//   can now do either stops or widths).
+	case P_TAB_WIDTHS:
+	case P_TAB_STOPS:
+		{
+			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
+			uint2 *newtabs = NULL;
+			uint2 newntabs = 0;
+			if (!parsetabstops(p, data, newtabs, newntabs))
+				return ES_ERROR;
+
+			delete tabs;
+			if (newtabs != NULL)
+			{
+				tabs = newtabs;
+				ntabs = newntabs;
+				flags |= F_TABS;
+			}
+			else
+			{
+				tabs = NULL;
+				ntabs = 0;
+				flags &= ~F_TABS;
+			}
+			dirty = True;
+			reset = True;
+		}
+		break;
 #ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
@@ -1887,34 +1915,6 @@ Exec_stat MCField::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, Bo
 		settext(parid, data, True);
 		dirty = True;
 		reset = True;
-		break;
-	// MW-2012-02-11: [[ TabWidths ]] Handle the new tabWidths property (parsetabstops
-	//   can now do either stops or widths).
-	case P_TAB_WIDTHS:
-	case P_TAB_STOPS:
-		{
-			// MW-2012-01-25: [[ ParaStyles ]] Use the refactored tabStop parsing method.
-			uint2 *newtabs = NULL;
-			uint2 newntabs = 0;
-			if (!parsetabstops(p, data, newtabs, newntabs))
-				return ES_ERROR;
-
-			delete tabs;
-			if (newtabs != NULL)
-			{
-				tabs = newtabs;
-				ntabs = newntabs;
-				flags |= F_TABS;
-			}
-			else
-			{
-				tabs = NULL;
-				ntabs = 0;
-				flags &= ~F_TABS;
-			}
-			dirty = True;
-			reset = True;
-		}
 		break;
 	case P_TOGGLE_HILITE:
 		if (!MCU_matchflags(data, flags, F_TOGGLE_HILITE, dummy))

@@ -381,7 +381,7 @@ void MCScreenDC::raisewindow(Window p_window)
 	open_window(p_window);
 }
 
-void MCScreenDC::setname(Window p_window, const char *p_new_name)
+void MCScreenDC::setname(Window p_window, MCStringRef p_new_name)
 {
 }
 
