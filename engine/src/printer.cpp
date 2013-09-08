@@ -412,8 +412,8 @@ void MCPrinter::Open(bool p_cancelled)
 		else
 		{
 			if (m_loop_status == STATUS_READY)
-				SetStatusFromResult(DoBeginPrint(m_job_name == NULL ? MCdefaultstackptr -> gettitletext() : m_job_name, m_device));
-		
+				SetStatusFromResult(DoBeginPrint(m_job_name == NULL ? MCStringGetCString(MCdefaultstackptr -> gettitletext()) : m_job_name, m_device));
+
 			ResetLayout();
 
 			m_loop_page = 1;

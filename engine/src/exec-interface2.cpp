@@ -332,31 +332,23 @@ MC_EXEC_DEFINE_EVAL_METHOD(Interface, ThisCardOfOptionalStack, 2)
 
 void MCInterfaceNamedColorParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceNamedColor& r_output)
 {
-	if (MCStringGetLength(p_input) == 0)
+	if (MCStringIsEmpty(p_input))
 	{
 		r_output . name = MCValueRetain(kMCEmptyString);
 		return;
 	}
 
 	MCColor t_color;
-	MCAutoPointer<char> t_color_name;
-	if (!MCscreen -> parsecolor(MCStringGetOldString(p_input), &t_color, &(&t_color_name)))
+	MCStringRef t_color_name;
+	t_color_name = nil;
+	if (!MCscreen -> parsecolor(p_input, t_color, &t_color_name))
 	{
 		 ctxt . LegacyThrow(EE_PROPERTY_BADCOLOR);
 		 return;
 	}
 	
-	MCStringRef t_color_name_ref;
-	t_color_name_ref = nil;
-	if (*t_color_name != nil &&
-		!MCStringCreateWithCString(*t_color_name, t_color_name_ref))
-	{
-		ctxt . Throw();
-		return;
-	}
-
 	r_output . color = t_color;
-	r_output . name = t_color_name_ref;
+	r_output . name = t_color_name;
 }
 
 void MCInterfaceNamedColorFormat(MCExecContext& ctxt, const MCInterfaceNamedColor& p_input, MCStringRef& r_output)
@@ -818,7 +810,8 @@ void get_interface_color(const MCColor& p_color, MCStringRef p_color_name, MCInt
 
 void set_interface_color(MCColor& x_color, MCStringRef& x_color_name, const MCInterfaceNamedColor& p_color)
 {
-	MCValueRelease(x_color_name);
+	if (x_color_name != nil)
+		MCValueRelease(x_color_name);
 	x_color_name = p_color . name != nil ? (MCStringRef)MCValueRetain(p_color . name) : nil;
 	x_color = p_color . color;
 }

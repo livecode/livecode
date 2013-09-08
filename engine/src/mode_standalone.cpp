@@ -581,11 +581,6 @@ void MCStack::mode_takefocus(void)
 	MCscreen->setinputfocus(window);
 }
 
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
-}
-
 bool MCStack::mode_needstoopen(void)
 {
 	return true;

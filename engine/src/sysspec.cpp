@@ -522,6 +522,8 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
             return;
         
         t_service -> CopyResourceFork(*t_native_source, *t_native_dest);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -574,6 +576,8 @@ void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
             return;
         
         t_service -> LoadResFile(*t_native_path, r_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -592,6 +596,8 @@ void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
             return;
         
         t_service -> SaveResFile(*t_native_path, p_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -1361,7 +1367,10 @@ void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventt
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> Send(p_message, p_program, p_eventtype, reply);
+    {
+	    t_service -> Send(p_message, p_program, p_eventtype, reply);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1372,7 +1381,10 @@ void MCS_reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
+	{
         t_service -> Reply(p_message, p_keyword, p_error);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1383,7 +1395,10 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestAE(p_message, p_ae, r_value);
+    {
+	    t_service -> RequestAE(p_message, p_ae, r_value);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1394,7 +1409,7 @@ bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestProgram(p_message, p_program, r_result);
+        return t_service -> RequestProgram(p_message, p_program, r_result);
     
 	MCresult->sets("not supported");
 }

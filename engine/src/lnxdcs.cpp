@@ -574,15 +574,15 @@ void MCScreenDC::uniconifywindow(Window window)
 	XMapRaised(dpy, window);
 }
 
-void MCScreenDC::setname(Window window, const char *newname)
+void MCScreenDC::setname(Window window, MCStringRef newname)
 {
-	MCExecPoint ep(NULL, NULL, NULL) ;
-	ep.setsvalue ( newname );
-	ep.utf8tonative() ;
-	XStoreName(dpy, window, ep.getcstring());
-	XSetIconName(dpy, window, ep.getcstring());
+	MCAutoStringRefAsUTF8String t_newname_utf8;
+	/* UNCHECKED */ t_newname_utf8 . Lock(newname);
+	
+	XStoreName(dpy, window, *t_newname_utf8);
+	XSetIconName(dpy, window, *t_newname_utf8);
 
-	XChangeProperty(dpy, window, XInternAtom(dpy, "_NET_WM_NAME", false), XInternAtom(dpy, "UTF8_STRING", false), 8, PropModeReplace, (unsigned char *)newname, strlen(newname));
+	XChangeProperty(dpy, window, XInternAtom(dpy, "_NET_WM_NAME", false), XInternAtom(dpy, "UTF8_STRING", false), 8, PropModeReplace, (unsigned char *)*t_newname_utf8, strlen(*t_newname_utf8));
 
 }
 
