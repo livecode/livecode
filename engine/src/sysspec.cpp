@@ -1512,7 +1512,7 @@ IO_stat MCS_runcmd(MCStringRef p_command, MCStringRef& r_output)
     return IO_NORMAL;
 }
 
-void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+void MCS_startprocess(MCNameRef p_app, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
 {
     MCsystem -> StartProcess(p_app, p_doc, p_mode, p_elevated);
 }

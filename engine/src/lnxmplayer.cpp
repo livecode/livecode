@@ -123,15 +123,15 @@ bool MPlayer::shutdown(void)
 }	
 	
 
-
-static IO_handle open_fd(int4 fd, const char *mode)
-{
-	IO_handle handle = NULL;
-	FILE *fptr = fdopen(fd, mode);
-	if (fptr != NULL)
-		handle = new IO_header(fptr, NULL, 0, fd, 0);
-	return handle;
-}
+//// Never referenced
+//static IO_handle open_fd(int4 fd, const char *mode)
+//{
+//	IO_handle handle = NULL;
+//	FILE *fptr = fdopen(fd, mode);
+//	if (fptr != NULL)
+//		handle = new IO_header(fptr, NULL, 0, fd, 0);
+//	return handle;
+//}
 
 
 

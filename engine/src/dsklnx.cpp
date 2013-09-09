@@ -20,36 +20,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globdefs.h"
 #include "filedefs.h"
 #include "objdefs.h"
-//#include "parsedef.h"
+#include "parsedef.h"
 #include "mcio.h"
 #include "system.h"
 #include "foundation.h"
 
-//#include "object.h"
-//#include "stack.h"
-//#include "card.h"
+#include "object.h"
+#include "stack.h"
+#include "card.h"
 #include "mcerror.h"
 #include "execpt.h"
 //#include "param.h"
-//#include "handler.h"
+#include "handler.h"
 #include "util.h"
-//#include "globals.h"
+#include "globals.h"
 //#include "ports.cpp"
-//#include "socket.h"
+#include "socket.h"
 //#include "mcssl.h"
 //#include "securemode.h"
-//#include "mode.h"
-//#include "player.h"
+#include "mode.h"
+#include "player.h"
+#include "text.h"
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
 //#include <sys/mman.h>
 #include <sys/dir.h>
-//#include <sys/wait.h>
+#include <sys/wait.h>
 #include <dlfcn.h>
 #include <termios.h>
 //#include <langinfo.h>
-//#include <locale.h>
+#include <locale.h>
 #include <pwd.h>
 
 #include <libgnome/gnome-url.h>
@@ -174,7 +175,7 @@ static void configureSerialPort(int sRefNum)
     cfsetispeed(&theTermios,  B9600);
     theTermios.c_cflag = CS8;
 
-    char *controlptr = MCStringGetCString(MCserialcontrolsettings);
+    char *controlptr = strclone(MCStringGetCString(MCserialcontrolsettings));
     char *str = controlptr;
     char *each = NULL;
     while ((each = strchr(str, ' ')) != NULL)
@@ -481,7 +482,7 @@ static void handle_signal(int sig)
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-    static MCStdioFileHandle Open(MCStringRef p_path, intenum_t p_mode)
+    static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
     {
 #ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
         MCAutoStringRef t_resolved_path;
@@ -534,30 +535,7 @@ public:
         delete t_mode;
         return handle;
 #endif /* MCS_open_dsk_lnx */
-        IO_handle t_handle = NULL;
-    #ifndef NOMMAP
-
-        if (map && MCmmap && !driver && p_mode == kMCSOpenFileModeRead)
-        {
-            int fd = open(MCStringGetCString(*t_resolved_path), O_RDONLY);
-            struct stat64 buf;
-            if (fd != -1 && !fstat64(fd, &buf))
-            {
-                uint4 len = buf.st_size - offset;
-                if (len != 0)
-                {
-                    char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
-                                                fd, offset);
-                    if ((int)buffer != -1)
-                    {
-                        t_handle = new IO_header(NULL, buffer, len, fd, 0);
-                        return t_handle;
-                    }
-                }
-                close(fd);
-            }
-        }
-    #endif
+        MCStdioFileHandle *t_handle = NULL;
         const char *t_mode;
         if (p_mode == kMCSOpenFileModeRead)
             t_mode = IO_READ_MODE;
@@ -570,7 +548,7 @@ public:
 
         FILE *t_fptr = fopen(MCStringGetCString(p_path), t_mode);
         if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(*t_resolved_path), IO_CREATE_MODE);
+            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
 
         if (t_fptr != NULL)
         {
@@ -582,9 +560,9 @@ public:
         return t_handle;
     }
 
-    static MCStdioFileHandle OpenDevice(MCStringRef p_path, intenum_t p_mode)
+    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, intenum_t p_mode)
     {
-        IO_handle t_handle = NULL;
+        MCStdioFileHandle *t_handle = NULL;
         FILE *t_fptr = NULL;
 
         const char *t_mode;
@@ -600,7 +578,7 @@ public:
         if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
             t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
 
-        configureSerialPort((short)fileno(fptr));
+        configureSerialPort((short)fileno(t_fptr));
 
         if (t_fptr != NULL)
         {
@@ -613,9 +591,9 @@ public:
         return t_handle;
     }
 
-    static MCStdioFileHandle OpenFd(uint32_t p_fd, intenum_t p_mode)
+    static MCStdioFileHandle *OpenFd(uint32_t p_fd, intenum_t p_mode)
     {
-        IO_handle t_handle = NULL;
+        MCStdioFileHandle *t_handle = NULL;
 
         FILE *t_fptr = NULL;
 
@@ -639,7 +617,7 @@ public:
         {
             t_handle = new MCStdioFileHandle;
             t_handle -> m_fptr = t_fptr;
-            t_handle -> m_is_eod = false;
+            t_handle -> m_is_eof = false;
         }
 
         return t_handle;
@@ -673,7 +651,6 @@ public:
             fclose(m_fptr);
 
         delete this;
-        this = NULL;
     }
 
     // Returns true if an attempt has been made to read past the end of the
@@ -803,13 +780,13 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_write_dsk_lnx */
-        if (fwrite(p_buffer, 1, p_length, m_fptr) != n)
+        if (fwrite(p_buffer, 1, p_length, m_fptr) != p_length)
             return false;
 
         return true;
     }
 
-    virtual bool Seek(int64_t offset, int p_dir)
+    virtual bool Seek(int64_t p_offset, int p_dir)
     {
 #ifdef /* MCS_seek_cur_dsk_lnx */ LEGACY_SYSTEM
         // MW-2009-06-25: If this is a custom stream, call the appropriate callback.
@@ -947,7 +924,7 @@ public:
 #endif /* MCS_fsize_dsk_lnx */
         struct stat64 buf;
 
-        int fd = fileno(stream->fptr);
+        int fd = fileno(m_fptr);
 
         if (fstat64(fd, &buf))
             return 0;
@@ -961,7 +938,7 @@ public:
     }
 
 private:
-    FILE m_fptr;
+    FILE *m_fptr;
     bool m_is_eof;
 };
 
@@ -1029,9 +1006,9 @@ public:
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif /* MCS_init_dsk_lnx */
-        IO_stdin = MCStdioFileHandle::Open(stdin, kMCSOpenFileModeRead);
-        IO_stdout = MCStdioFileHandle::Open(stdout, kMCSOpenFileModeWrite);
-        IO_stderr = MCStdioFileHandle::Open(stderr, kMCSOpenFileModeWrite);
+        IO_stdin = MCStdioFileHandle::OpenFd(0, kMCSOpenFileModeRead);
+        IO_stdout = MCStdioFileHandle::OpenFd(1, kMCSOpenFileModeWrite);
+        IO_stderr = MCStdioFileHandle::OpenFd(2, kMCSOpenFileModeWrite);
 
         setlocale(LC_CTYPE, MCnullstring);
         setlocale(LC_COLLATE, MCnullstring);
@@ -1274,7 +1251,7 @@ public:
         putenv(dptr);
 #else
 
-        setenv(p_name, p_value, True);
+        setenv(MCStringGetCString(p_name), MCStringGetCString(p_value), True);
 #endif
     }
 
@@ -1297,7 +1274,7 @@ public:
 #endif /* MCS_mkdir_dsk_lnx */
         MCAutoStringRef t_resolved_path_string;
         if (MCS_resolvepath(p_path, &t_resolved_path_string))
-            return mkdir(MCStringGetCString(*t_resolved_path_string, 0777)) == 0;
+            return mkdir(MCStringGetCString(p_path), 0777) == 0;
 
         return false;
     }
@@ -1487,7 +1464,7 @@ public:
             return MCStringFormat(r_folder, "%s/Desktop", MCStringGetCString(*t_home));
         else if (MCNameIsEqualTo(p_type, MCN_home, kMCCompareCaseless))
             return MCStringCopy(*t_home, r_folder);
-        else if (MCStringIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
+        else if (MCNameIsEqualTo(p_type, MCN_temporary, kMCCompareCaseless))
             return MCStringCreateWithCString("/tmp", r_folder);
 
         r_folder = MCValueRetain(kMCEmptyString);
@@ -1606,7 +1583,7 @@ public:
             return IO_ERROR;
         return IO_NORMAL;
 #endif /* MCS_chmod_dsk_lnx */
-        if (chmod(MCStringGetCString(p_path), mask) != 0)
+        if (chmod(MCStringGetCString(p_path), p_mask) != 0)
             return IO_ERROR;
         return IO_NORMAL;
     }
@@ -1632,7 +1609,7 @@ public:
     {
         IO_handle t_handle;
 
-        t_handle = MCStdioFileHandle::Open(p_path, t_mode);
+        t_handle = MCStdioFileHandle::Open(p_path, p_mode);
 
         if (t_handle && p_offset != 0)
             t_handle -> Seek(p_offset, SEEK_SET);
@@ -1649,11 +1626,11 @@ public:
         return t_handle;
     }
 
-    virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, uint32_t p_offset)
     {
         IO_handle t_handle;
 
-        t_handle = MCStdioFileHandle::OpenDevice(p_path);
+        t_handle = MCStdioFileHandle::OpenDevice(p_path, p_mode);
 
         if (t_handle && p_offset > 0)
             t_handle -> Seek(p_offset, SEEK_SET);
@@ -1695,8 +1672,8 @@ public:
         // spurious noise - so in DEBUG mode we make sure we allocate a 4-byte aligned block of memory.
         //
         char *t_aligned_filename;
-        t_aligned_filename = new char[(strlen(p_filename) + 4) & ~3];
-        strcpy(t_aligned_filename, p_filename);
+        t_aligned_filename = new char[(MCStringGetLength(p_path) + 4) & ~3];
+        strcpy(t_aligned_filename, MCStringGetCString(p_path));
 
         MCSysModuleHandle t_result;
         t_result = (MCSysModuleHandle)dlopen(t_aligned_filename, (RTLD_NOW | RTLD_LOCAL));
@@ -1704,7 +1681,7 @@ public:
         delete t_aligned_filename;
         return t_result ;
 #else
-        return ( (MCSysModuleHandle)dlopen ( p_filename , (RTLD_NOW | RTLD_LOCAL) ));
+        return (MCSysModuleHandle)dlopen(MCStringGetCString(p_filename), (RTLD_NOW | RTLD_LOCAL));
 #endif
     }
 
@@ -1713,7 +1690,7 @@ public:
 #ifdef /* MCS_resolvemodulesymbol_dsk_lnx */ LEGACY_SYSTEM
         return ( dlsym ( p_module, p_symbol ) ) ;
 #endif /* MCS_resolvemodulesymbol_dsk_lnx */
-        return (MCSysModuleHandle)(dlsym(p_module, p_symbol));
+        return (MCSysModuleHandle)(dlsym(p_module, MCStringGetCString(p_symbol)));
     }
 
     virtual void UnloadModule(MCSysModuleHandle p_module)
@@ -1796,18 +1773,18 @@ public:
 
             if (MCCStringEqual(direntp->d_name, "."))
                 continue;
-            struct stat64 buf;
-            stat64(direntp->d_name, &buf);
+            struct stat buf;
+            stat(direntp->d_name, &buf);
 
             p_entry.name = direntp -> d_name;
-            p_entry.data_size = direntp -> buf.st_size;
-            p_entry.modification_time = buf.st_mtim;
-            p_entry.access_time = buf.st_atim;
+            p_entry.data_size = buf.st_size;
+            p_entry.modification_time = (uint32_t)buf.st_mtime;
+            p_entry.access_time = (uint32_t)buf.st_atime;
             p_entry.group_id = buf.st_uid;
             p_entry.user_id = buf.st_uid;
             p_entry.permissions = buf.st_mode & 0777;
 
-            t_success = p_callback(x_context, p_entry);
+            t_success = p_callback(x_context, &p_entry);
         }
 
         closedir(dirptr);
@@ -1897,7 +1874,10 @@ public:
             return MCStringCopy(*t_newname, r_resolved);
 #endif /* MCS_resolvepath_dsk_lnx */
         if (MCStringGetLength(p_path) == 0)
-            return MCS_getcurdir(r_resolved_path);
+        {
+            MCS_getcurdir(r_resolved_path);
+            return true;
+        }
 
         MCAutoStringRef t_tilde_path;
         if (MCStringGetCharAtIndex(p_path, 0) == '~')
@@ -2172,10 +2152,10 @@ public:
             if (MCprocesses[index].pid != 0)
                 Kill(MCprocesses[index].pid, SIGKILL);
 
-            return MCDataCreateWithBytesAndRelease(buffer, buffersize, r_data);
+            return MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data);
         }
 
-        if (!MCDataCreateWithBytesAndRelease(buffer, buffersize, r_data))
+        if (!MCDataCreateWithBytesAndRelease((byte_t*)buffer, buffersize, r_data))
             return false;
 
         close(toparent[0]);
@@ -2238,9 +2218,14 @@ public:
             else
             {
                 uint32_t t_count;
+                unsigned char *t_input_ptr;
+                uint2 *t_output_ptr;
+                t_input_ptr = (unsigned char*)p_string;
+                t_output_ptr = (uint2*)r_buffer;
+
                 t_count = MCU_min(p_string_length, p_buffer_length / 2);
                 for(uint32_t i = 0; i < t_count; ++i)
-                    ((uint2 *)r_buffer)[i] = (unsigned char)p_string[i];
+                    t_output_ptr[i] = t_input_ptr[i];
                 t_used = t_count * 2;
             }
         }
@@ -2251,9 +2236,14 @@ public:
             else
             {
                 uint4 t_count;
+                unsigned char *t_output_ptr;
+                uint2 *t_input_ptr;
+                t_input_ptr = (uint2*)p_string;
+                t_output_ptr = (unsigned char*)r_buffer;
+
                 t_count = MCU_min(p_string_length / 2, p_buffer_length);
                 for(uint4 i = 0; i < t_count; ++i)
-                    ((unsigned char *)r_buffer)[i] = (unsigned char)((uint2 *)p_string)[i];
+                    t_output_ptr[i] = (unsigned char)t_input_ptr[i];
                 t_used = t_count;
             }
         }
@@ -2641,12 +2631,12 @@ public:
                 {
                     close(toparent[1]);
                     MCS_lnx_nodelay(toparent[0]);
-                    MCprocesses[index].ihandle = OpenFd(toparent[0], IO_READ_MODE);
+                    MCprocesses[index].ihandle = OpenFd(toparent[0], kMCSOpenFileModeRead);
                 }
                 if (writing)
                 {
                     close(tochild[0]);
-                    MCprocesses[index].ohandle = OpenFd(tochild[1], IO_WRITE_MODE);
+                    MCprocesses[index].ohandle = OpenFd(tochild[1], kMCSOpenFileModeWrite);
                 }
             }
         }
@@ -2661,13 +2651,13 @@ public:
                 if (reading)
                 {
                     MCS_lnx_nodelay(t_input_fd);
-                    MCprocesses[index] . ihandle = MCS_dopen(t_input_fd, IO_READ_MODE);
+                    MCprocesses[index] . ihandle = OpenFd(t_input_fd, kMCSOpenFileModeRead);
                 }
                 else
                     close(t_input_fd);
 
                 if (writing)
-                    MCprocesses[index] . ohandle = MCS_dopen(t_output_fd, IO_WRITE_MODE);
+                    MCprocesses[index] . ohandle = OpenFd(t_output_fd, kMCSOpenFileModeWrite);
                 else
                     close(t_output_fd);
 
@@ -3161,4 +3151,4 @@ public:
             MCListAppend(*t_list, MCresult->getvalueref()) &&
             MCListCopy(*t_list, r_list);
     }
-}
+};

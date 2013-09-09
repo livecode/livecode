@@ -1565,15 +1565,16 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 
 void exec_command ( char * command ) 
 {
-	MCExecPoint ep;
-	ep.copysvalue(command);
-	if (MCS_runcmd(ep) != IO_NORMAL)
+    MCAutoStringRef t_command;
+    MCAutoStringRef t_output;
+    /* UNCHECKED */ MCStringCreateWithCString(command, &t_command);
+
+    if (MCS_runcmd(*t_command, &t_output) != IO_NORMAL)
 	{
 		MCeerror->add(EE_PRINT_ERROR, 0, 0);
 	}
 	else
-		MCresult->sets(ep.getsvalue());
-	
+        MCresult->setvalueref(*t_output);
 }
 
 
