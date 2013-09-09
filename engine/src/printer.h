@@ -223,15 +223,15 @@ public:
 
 	// Device configuration properties
 	//
-	void SetDeviceName(const char *p_name);
+	void SetDeviceName(MCStringRef p_name);
 	const char *GetDeviceName(void);
 
 	void SetDeviceSettings(MCStringRef p_settings);
-	/* LEGACY */ void SetDeviceSettings(const MCString& p_settings);
+	/* LEGACY */ void SetDeviceSettings(MCDataRef p_settings);
 	bool CopyDeviceSettings(MCStringRef &r_settings);
 	/* LEGACY */ MCString CopyDeviceSettings(void);
 
-	void SetDeviceOutput(MCPrinterOutputType p_type, const char *p_location);
+	void SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_location);
 	MCPrinterOutputType GetDeviceOutputType(void) const;
 	const char *GetDeviceOutputLocation(void) const;
 	
@@ -323,13 +323,13 @@ protected:
 	// for the default system printer.
 	// If the printer is unknown or there is no default printer return false
 	//
-	virtual bool DoReset(const char *p_name) = 0;
+	virtual bool DoReset(MCStringRef p_name) = 0;
 
 	// Reset the printer properties to those held in the p_settings
 	// string.
 	// If the printer is unknown, return false.
 	//
-	virtual bool DoResetSettings(const MCString& p_settings) = 0;
+	virtual bool DoResetSettings(MCStringRef p_settings) = 0;
 
 	// Return the name of the currently selected printer - this should
 	// be stored from a previous call to DoReset/DoResetSettings.
@@ -364,7 +364,7 @@ protected:
 	// note that a valid device object must be returned regardless of whether
 	// a printer error, or cancellation occured.
 	//
-	virtual MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device) = 0;
+	virtual MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device) = 0;
 
 	// End the current print job. This call will be made regardless of the error
 	// or cancellation state of the device object.
