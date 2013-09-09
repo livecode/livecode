@@ -95,16 +95,16 @@ static MCStringRef s_cgi_temp_dir = nil;
 
 bool MCS_get_temporary_folder(MCStringRef &r_temp_folder);
 
-static const char *cgi_get_upload_temp_dir()
+static MCStringRef cgi_get_upload_temp_dir()
 {
 	if (s_cgi_upload_temp_dir != NULL)
-		return MCStringGetCString(s_cgi_upload_temp_dir);
+		return s_cgi_upload_temp_dir;
 	
 	if (s_cgi_temp_dir != NULL)
-		return MCStringGetCString(s_cgi_temp_dir);
+		return s_cgi_temp_dir;
 
 	/* UNCHECKED */ MCS_get_temporary_folder(s_cgi_temp_dir);
-	return MCStringGetCString(s_cgi_temp_dir);
+	return s_cgi_temp_dir;
 	
 }
 
@@ -1088,15 +1088,19 @@ static bool cgi_multipart_header_callback(void *p_context, MCMultiPartHeader *p_
 		}
 		else if (cgi_context_is_file(t_context))
 		{
-			const char *t_temp_dir = cgi_get_upload_temp_dir();
+			const MCStringRef t_temp_dir = cgi_get_upload_temp_dir();
 			const char *t_error = NULL;
+            MCAutoStringRef t_temp_name;
 			if (t_temp_dir == NULL || !MCS_exists(t_temp_dir, False))
 			{
 				t_context->file_status = kMCFileStatusNoUploadFolder;
 			}
-			else if (!MCMultiPartCreateTempFile(cgi_get_upload_temp_dir(), t_context->file_handle, t_context->temp_name))
+			else if (MCStringCreateWithCString(t_context->temp_name, &t_temp_name))
 			{
-				t_context->file_status = kMCFileStatusIOError;
+                if (MCMultiPartCreateTempFile(cgi_get_upload_temp_dir(), t_context->file_handle, *t_temp_name)
+                   t_context->temp_name = strdup(MCStringgetCString(*t_temp_name));
+                else
+				   t_context->file_status = kMCFileStatusIOError;
 			}
 		}
 	}
@@ -1188,8 +1192,12 @@ static bool cgi_store_form_multipart(MCExecPoint& ep, IO_handle p_stream)
 	if (t_success)
 		t_success = cgi_multipart_get_boundary(t_boundary);
 	if (t_success)
-		t_success = MCMultiPartReadMessageFromStream(p_stream, t_boundary, t_bytes_read,
+    {
+        MCAutoStringRef t_boundary_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_boundary, &t_boundary_str);
+		t_success = MCMultiPartReadMessageFromStream(p_stream, *t_boundary_str, t_bytes_read,
 													 cgi_multipart_header_callback, cgi_multipart_body_callback, &t_context);
+    }
 
 	// clean up in case of errors;
 	if (!t_success)

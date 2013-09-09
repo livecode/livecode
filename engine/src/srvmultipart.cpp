@@ -47,7 +47,7 @@ public:
 	char m_match_char;
 	bool m_have_char;
 	
-	MCBoundaryReader(IO_handle p_stream, const char *p_boundary, uint32_t p_boundary_length)
+	MCBoundaryReader(IO_handle p_stream, MCStringRef p_boundary, uint32_t p_boundary_length)
 	{
 		m_stream = p_stream;
 		m_table = NULL;
@@ -62,9 +62,9 @@ public:
 		MCMemoryDeleteArray(m_table);
 	}
 	
-	void setBoundary(const char *p_boundary, uint32_t p_boundary_length)
+	void setBoundary(MCStringRef p_boundary, uint32_t p_boundary_length)
 	{
-		m_boundary = p_boundary;
+		m_boundary = MCStringGetCString(p_boundary);
 		m_boundary_length = p_boundary_length;
 		
 		m_match_index = 0;
@@ -78,7 +78,7 @@ public:
 		create_table();
 	}
 	
-	IO_stat read(char *p_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
+	IO_stat read(MCStringRef p_buffer, uint32_t p_buffer_size, uint32_t &r_bytes_read, uint32_t &r_bytes_consumed, bool &r_boundary_reached)
 	{
 		IO_stat t_status = IO_NORMAL;
 		
@@ -109,9 +109,11 @@ public:
 			}
 			else
 			{
+                char *t_buffer = strdup(MCStringGetCString(p_buffer));
 				if (m_match_index == 0)
 				{
-					p_buffer[r_bytes_read++] = m_match_char;
+					t_buffer[r_bytes_read++] = m_match_char;
+                    /* UNCHECKED */ MCStringCreateWithCString(t_buffer, p_buffer);
 					m_have_char = false;
 				}
 				else
@@ -120,7 +122,9 @@ public:
 					if (m_match_frontier != t_diff)
 					{
 						uint32_t t_out = MCMin(t_diff - m_match_frontier, p_buffer_size - r_bytes_read);
-						MCMemoryCopy(p_buffer + r_bytes_read, m_boundary + m_match_frontier, t_out);
+                        
+						MCMemoryCopy(t_buffer + r_bytes_read, m_boundary + m_match_frontier, t_out);
+                        /* UNCHECKED */ MCStringCreateWithCString(t_buffer, p_buffer);
 						m_match_frontier += t_out;
 						r_bytes_read += t_out;
 					}
@@ -130,6 +134,7 @@ public:
 						m_match_index = m_table[m_match_index];
 					}
 				}
+                delete t_buffer;
 			}
 		}
 		
@@ -455,7 +460,7 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	bool t_success = true;
 	
 	MCBoundaryReader *t_reader;
-	t_reader = new MCBoundaryReader(p_stream, "\r\n", 2);
+	t_reader = new MCBoundaryReader(p_stream, MCSTR("\r\n"), 2);
 	
 	r_bytes_read = 0;
 	
@@ -478,7 +483,9 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 				t_success = t_max_bytes > 0;
 				if (t_success)
 				{
-					IO_stat t_status = t_reader->read(t_line_buffer + t_frontier, t_max_bytes, t_line_size, t_line_bytes_read, t_have_line);
+                    MCAutoStringRef t_buffer_str;
+                    /* UNCHECKED */ MCStringCreateWithCString(t_line_buffer + t_frontier, &t_buffer_str);
+					IO_stat t_status = t_reader->read(*t_buffer_str, t_max_bytes, t_line_size, t_line_bytes_read, t_have_line);
 					r_bytes_read += t_line_bytes_read;
 					t_frontier += t_line_size;
 					t_success = (t_status == IO_NORMAL);
@@ -513,11 +520,11 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 	return t_success;
 }
 
-bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary, uint32_t &r_total_bytes_read,
+bool MCMultiPartReadMessageFromStream(IO_handle p_stream, MCStringRef p_boundary, uint32_t &r_total_bytes_read,
 									  MCMultiPartHeaderCallback p_header_callback, MCMultiPartBodyCallback p_body_callback, void *p_context)
 {
 	bool t_success = true;
-	char *t_boundary = NULL;
+	MCStringRef t_boundary;
 	uint32_t t_boundary_length;
 	uint32_t t_bytes_read = 0;
 	uint32_t t_bytes_consumed = 0;
@@ -531,10 +538,10 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	
 	MCBoundaryReader *t_reader = NULL;
 
-	t_boundary_length = MCCStringLength(p_boundary);
+	t_boundary_length = MCStringGetLength(p_boundary);
 	// typical boundary == CRLF & "--" & p_boundary
 	if (t_success)
-		t_success = MCCStringFormat(t_boundary, "\r\n--%s", p_boundary);
+		t_success = MCStringFormat(t_boundary, "\r\n--%s", MCStringGetCString(p_boundary));
 	
 	if (t_success)
 		t_success = MCMemoryAllocate(t_buffer_size, t_buffer);
@@ -543,7 +550,9 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	// after a CRLF
 	if (t_success)
 	{
-		t_reader = new MCBoundaryReader(p_stream, t_boundary + 2, t_boundary_length + 2);
+        MCAutoStringRef t_boundary_head, t_boundary_tail;
+        /* UNCHECKED */ MCStringDivideAtIndex(t_boundary, 2, &t_boundary_head, &t_boundary_tail);
+		t_reader = new MCBoundaryReader(p_stream, *t_boundary_tail, t_boundary_length + 2);
 		t_success = t_reader != NULL;
 	}
 	
@@ -551,7 +560,9 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 	
 	while (t_success && !t_boundary_reached)
 	{
-		t_success = IO_NORMAL == t_reader->read(t_buffer, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
+        MCAutoStringRef t_buffer_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_buffer, &t_buffer_str);
+		t_success = IO_NORMAL == t_reader->read(*t_buffer_str, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
 		r_total_bytes_read += t_bytes_consumed;
 		if (t_success)
 		{
@@ -617,8 +628,10 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 			
 			while (t_success && !t_boundary_reached)
 			{
+                MCAutoStringRef t_buffer_str;
+                /* UNCHECKED */ MCStringCreateWithCString(t_buffer, &t_buffer_str);
 				IO_stat t_state;
-				t_state = t_reader->read(t_buffer, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
+				t_state = t_reader->read(*t_buffer_str, t_buffer_size, t_bytes_read, t_bytes_consumed, t_boundary_reached);
 				r_total_bytes_read += t_bytes_consumed;
 
 				t_success = p_body_callback(p_context, t_buffer, t_bytes_read, t_boundary_reached, t_state == IO_EOF);
@@ -632,8 +645,8 @@ bool MCMultiPartReadMessageFromStream(IO_handle p_stream, const char *p_boundary
 		MCMemoryDeallocate(t_buffer);
 	if (t_reader != NULL)
 		delete t_reader;
-	if (t_boundary != NULL)
-		MCMemoryDeallocate(t_boundary);
+	if (t_boundary != nil)
+		MCValueRelease(t_boundary);
 
 	return t_success;
 }
@@ -783,13 +796,12 @@ typedef struct _mcmultiparttempfilelist
 
 static MCMultiPartTempFileList *s_temp_files = NULL;
 
-bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_handle, const char *&r_temp_name)
+bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
 	bool t_blocked = true;
 	
 	IO_handle t_file_handle = NULL;
-	char *t_temp_name = NULL;
 	
 	MCMultiPartTempFileList *t_list_item = NULL;
 	
@@ -799,7 +811,7 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 	if (t_success)
 	{
 		while (t_blocked)
-			t_success = create_temp_file_with_lock(p_temp_folder, t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
+			t_success = create_temp_file_with_lock(MCStringGetCString(p_temp_folder), t_list_item->file, t_list_item->lock, t_list_item->file_name, t_list_item->lock_name, t_blocked);
 	}
 	if (t_success)
 	{
@@ -807,12 +819,11 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 		s_temp_files = t_list_item;
 		
 		r_file_handle = t_list_item->file;
-		r_temp_name = t_list_item->file_name;
+        /* UNCHECKED */ MCStringCreateWithCString(t_list_item->file_name, r_temp_name);
 	}
 	else
 	{
 		MCS_close(t_file_handle);
-		MCCStringFree(t_temp_name);
 	}
 	
 	return t_success;
@@ -908,14 +919,13 @@ typedef struct _mcmultiparttempfilelist
 
 static MCMultiPartTempFileList *s_temp_files = NULL;
 
-bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_handle, const char *&r_temp_name)
+bool MCMultiPartCreateTempFile(MCStringRef p_temp_folder, IO_handle &r_file_handle, MCStringRef &r_temp_name)
 {
 	bool t_success = true;
 	bool t_blocked = true;
-	MCAutoStringRef t_temp_folder_string, t_temp_name_string;
+	MCAutoStringRef t_temp_name_string;
 	
 	IO_handle t_file_handle = NULL;
-	char *t_temp_name = NULL;
 	
 	MCMultiPartTempFileList *t_list_item = NULL;
 	
@@ -924,25 +934,21 @@ bool MCMultiPartCreateTempFile(const char *p_temp_folder, IO_handle &r_file_hand
 	
 	if (t_success)
 	{
-		/* UNCHECKED */ MCStringCreateWithCString(p_temp_folder, &t_temp_folder_string);
-		/* UNCHECKED */ MCStringCreateWithCString(t_temp_name, &t_temp_name_string);
-
-		t_success = MCS_create_temporary_file(*t_temp_folder_string, MCSTR(TEMP_PREFIX), t_file_handle, &t_temp_name_string);
+		t_success = MCS_create_temporary_file(p_temp_folder, MCSTR(TEMP_PREFIX), t_file_handle, &t_temp_name_string);
 	}
 
 	if (t_success)
 	{
-		t_list_item->file_name = t_temp_name;
+		t_list_item->file_name = strdup(MCStringgetCString(*t_temp_name_string));
 		t_list_item->next = s_temp_files;
 		s_temp_files = t_list_item;
 		
 		r_file_handle = t_file_handle;
-		r_temp_name = t_temp_name;
+		r_temp_name = MCValueRetain(*t_temp_name_string);
 	}
 	else
 	{
 		MCS_close(t_file_handle);
-		MCCStringFree(t_temp_name);
 	}
 	
 	return t_success;
