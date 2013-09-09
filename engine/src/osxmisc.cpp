@@ -332,7 +332,7 @@ bool MCMacIsWindowVisible(Window window)
 //  REFACTORED FROM BUTTON.CPP
 //
 
-bool MCMacGetMenuItemTag(MenuHandle mh, uint2 mitem, MCString &s)
+bool MCMacGetMenuItemTag(MenuHandle mh, uint2 mitem, MCStringRef &r_string)
 {
 	UInt32 t_propsize;
 	OSStatus t_result = GetMenuItemPropertySize(mh, mitem, 'RRev', 'MTag', &t_propsize);
@@ -341,14 +341,17 @@ bool MCMacGetMenuItemTag(MenuHandle mh, uint2 mitem, MCString &s)
 		char *t_tag = new char[t_propsize + 1];
 		t_result = GetMenuItemProperty(mh, mitem, 'RRev', 'MTag', t_propsize, NULL, t_tag);
 		t_tag[t_propsize] = '\0';
-		s.set(t_tag, t_propsize);
-		return true;
+		if (MCStringCreateWithCStringAndRelease((char_t*)t_tag, r_string))
+			return true;
+		
+		delete[] t_tag;
+		return false;
 	}
 	else
 		return false;
 }
 
-static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCString &s, Boolean issubmenu, Boolean isunicode)
+static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCStringRef &r_string, Boolean issubmenu)
 {
 	//find menu root, to get tags property
 	bool t_menuhastags;
@@ -359,64 +362,45 @@ static void getmacmenuitemtext(MenuHandle mh, uint2 mitem, MCString &s, Boolean 
 		GetMenuItemProperty(mh, 0, 'RRev', 'MMID', sizeof(t_menu), NULL, &t_menu);
 	GetMenuItemProperty(GetMenuHandle(t_menu), 0, 'RRev', 'Tags', sizeof(t_menuhastags), NULL, &t_menuhastags);
 	
-	isunicode &= !t_menuhastags;
+	//isunicode &= !t_menuhastags;
 	char *newmenu = NULL;
-	char *menuitemname;
-	uint2 menuitemlen;
-	
-	MCString t_tagstr;
+
+	MCStringRef t_menuitem = nil;
+	MCStringRef t_tagstr = nil;
 	if (MCMacGetMenuItemTag(mh, mitem, t_tagstr))
 	{
-		menuitemlen = t_tagstr.getlength();
-		menuitemname = (char*)t_tagstr.getstring();
+		t_menuitem = t_tagstr;
 	}
 	else
 	{
 		CFStringRef cfmenuitemstr;
 		CopyMenuItemTextAsCFString(mh, mitem,&cfmenuitemstr);
-		uint4 t_itemlen = CFStringGetLength(cfmenuitemstr);
-		menuitemlen = t_itemlen * MCU_charsize(isunicode);
-		if (isunicode)
-		{
-			menuitemname = new char[menuitemlen];
-			CFStringGetCharacters(cfmenuitemstr, CFRangeMake(0, t_itemlen),
-								  (UniChar *)menuitemname);
-		}
-		else
-		{
-			menuitemname = new char[menuitemlen + 1];
-			CFStringGetCString(cfmenuitemstr, menuitemname, menuitemlen + 1,kCFStringEncodingMacRoman);
-		}
+		/* UNCHECKED */ MCStringCreateWithCFString(cfmenuitemstr, t_menuitem);
+		CFRelease(cfmenuitemstr);
 	}
-	char *menupick = menuitemname;
-	uint2 menupicklen = menuitemlen;
+	
+	MCStringRef t_menupick = nil;
 	if (issubmenu)
 	{
 		CFStringRef cftitlestr;
-		CopyMenuTitleAsCFString(mh,&cftitlestr);
-		uint2 titlelen = CFStringGetLength(cftitlestr);
-		uint4 t_titlestrlen = titlelen * MCU_charsize(isunicode);
-		if (isunicode)
-		{
-			newmenu = new char[t_titlestrlen + menuitemlen];
-			CFStringGetCharacters(cftitlestr, CFRangeMake(0, titlelen),
-			                      (UniChar *)newmenu);
-		}
-		else
-		{
-			newmenu = new char[t_titlestrlen + menuitemlen + 1];
-			CFStringGetCString(cftitlestr, newmenu, t_titlestrlen + 1, kCFStringEncodingMacRoman);
-		}
-		memcpy(&newmenu[t_titlestrlen],menuitemname, menuitemlen);
-		delete menuitemname;
+		MCStringRef t_titlestr;
+		CopyMenuTitleAsCFString(mh, &cftitlestr);
+		/* UNCHECKED */ MCStringCreateWithCFString(cftitlestr, t_titlestr);
+		CFRelease(t_menupick);
 		
-		menupick = newmenu;
-		menupicklen = t_titlestrlen + menuitemlen;
+		/* UNCHECKED */ MCStringCreateMutable(0, t_menupick);
+		/* UNCHECKED */ MCStringAppend(t_menupick, t_titlestr);
+		/* UNCHECKED */ MCStringAppend(t_menupick, t_menuitem);
+		MCValueRelease(t_titlestr);
 	}
-	s.set(menupick,menupicklen);
+	else
+		t_menupick = MCValueRetain(t_menuitem);
+	MCValueRelease(t_menuitem);
+	/* UNCHECKED */ MCStringCopyAndRelease(t_menupick, r_string);
 }
 
-static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
+//static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
+static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
 	uint2 itemcount = CountMenuItems(menu);
 	for (uint2 i = 1; i <= itemcount; i++)
@@ -425,8 +409,8 @@ static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 
 		GetMenuItemHierarchicalMenu(menu, i, &submenu);
 		if (submenu != NULL)
 		{
-			getmacmenuitemtextfromaccelerator(submenu, key, mods, s, isunicode, true);
-			if (s.getstring() != NULL)
+			getmacmenuitemtextfromaccelerator(submenu, key, mods, r_string, true);
+			if (!MCStringIsEmpty(r_string))
 				return;
 		}
 		else
@@ -453,7 +437,7 @@ static void getmacmenuitemtextfromaccelerator(MenuHandle menu, uint2 key, uint1 
 				
 				if (t_mods == mods)
 				{
-					getmacmenuitemtext(menu, i, s, issubmenu, isunicode);
+					getmacmenuitemtext(menu, i, r_string, issubmenu);
 					return;
 				}
 			}
@@ -479,10 +463,7 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 		if (newMenuID == 0)
 			return False;
 		
-		// MW-2012-02-17: [[ IntrinsicUnicode ]] Fetch the label and its encoding.
-		MCString smenuname;
-		bool isunicode;
-		getlabeltext(smenuname, isunicode);
+		MCStringRef t_menu_name = getlabeltext();
 		
 		// MW-2012-02-17: Update to use CreateNewMenu / CFStringCreateWithBytes since
 		//   we don't have a valid charset of font any more.
@@ -491,9 +472,8 @@ Bool MCButton::macfindmenu(bool p_just_for_accel)
 		CreateNewMenu(newMenuID, 0, &mh);
 		if (mh != nil)
 		{
-			
 			CFStringRef t_menu_title;
-			t_menu_title = CFStringCreateWithBytes(kCFAllocatorDefault, (const UInt8 *)smenuname . getstring(), smenuname . getlength(), isunicode ? kCFStringEncodingUTF16 : kCFStringEncodingMacRoman, False);
+			/* UNCHECKED */ MCStringConvertToCFStringRef(t_menu_name, t_menu_title);
 			SetMenuTitleWithCFString(mh, t_menu_title);
 			
 			MCString s;
@@ -576,13 +556,12 @@ void MCButton::macopenmenu(void)
 				setmenuhistoryprop(LoWord(result));
 				//low word of result from PopUpMenuSelect() is the item selected
 				//high word contains the menu id
-				MCString slabel;
-				getmacmenuitemtext(mh, menuhistory, slabel, False, hasunicode());
-				delete label;
-				label = (char *)slabel.getstring();
-				labelsize = slabel.getlength();
-				flags |= F_LABEL;
-				Exec_stat es = message_with_args(MCM_menu_pick, slabel);
+				
+				MCStringRef t_label = nil;
+				getmacmenuitemtext(mh, menuhistory, t_label, False);
+				MCValueAssign(label, t_label);
+				MCValueRelease(t_label);
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, label);
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}
@@ -619,10 +598,10 @@ void MCButton::macopenmenu(void)
 			{ //user selected something
 				MenuHandle mhandle = GetMenuHandle(HiWord(result));
 				setmenuhistoryprop(LoWord(result));
-				MCString smenustring;
-				getmacmenuitemtext(mhandle, menuhistory, smenustring, mhandle != mh, hasunicode());
-				Exec_stat es = message_with_args(MCM_menu_pick, smenustring);
-				delete (char *)smenustring.getstring();
+				MCStringRef t_menu_string = nil;
+				getmacmenuitemtext(mhandle, menuhistory, t_menu_string, mhandle != mh);
+				Exec_stat es = message_with_valueref_args(MCM_menu_pick, t_menu_string);
+				MCValueRelease(t_menu_string);
 				if (es == ES_NOT_HANDLED || es == ES_PASS)
 					message_with_args(MCM_mouse_up, menubutton);
 			}
@@ -653,9 +632,9 @@ void MCButton::macfreemenu(void)
 	}
 }
 
-void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCString &s, bool isunicode, bool issubmenu)
+void MCButton::getmacmenuitemtextfromaccelerator(short menuid, uint2 key, uint1 mods, MCStringRef &r_string, bool issubmenu)
 {
-	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, s, isunicode, issubmenu);
+	::getmacmenuitemtextfromaccelerator(GetMenu(menuid), key, mods, r_string, issubmenu);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

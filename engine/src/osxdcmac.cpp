@@ -527,12 +527,12 @@ static void domenu(short menu, short item)
 			isunicode &= !t_menuhastags;
 			char *menuitemname;
 			uint2 menuitemlen;
-			MCString t_tag;
-			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCString &s);
-			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, t_tag))
+			MCAutoStringRef t_tag_ref;
+			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
+			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = (char*)t_tag.getstring();
-				menuitemlen = t_tag.getlength();
+				menuitemname = strclone("TEST TEST TEST");
+				menuitemlen = strlen(menuitemname);
 			}
 			else
 			{
@@ -1940,11 +1940,9 @@ void MCScreenDC::updatemenubar(Boolean force)
 		MCstacks->deleteaccelerator(bptr, bptr->getstack());
 		
 		//found a menu group & is not the very last menu
-		MCString t_menu_label;
-		bool t_is_unicode;
-		bptr->getlabeltext(t_menu_label, t_is_unicode); // clone menu title/name
+		MCStringRef t_menu_label = bptr->getlabeltext();
 		
-		if (t_menu_label . getlength() != 0 && bptr->getflag(F_VISIBLE))
+		if (!MCStringIsEmpty(t_menu_label) && bptr->getflag(F_VISIBLE))
 		{
 			//unsigned char *tmp = c2pstr(mname);
 			
@@ -1959,10 +1957,7 @@ void MCScreenDC::updatemenubar(Boolean force)
 			//separated by ','. the cloned menustring is deleted in
 			//addMenuItemsAndSubMenu().
 			CFStringRef cfmenustring;
-			if (t_is_unicode)
-				cfmenustring = CFStringCreateWithCharacters(NULL, (UniChar *)t_menu_label.getstring(), t_menu_label.getlength() >> 1);
-			else
-				cfmenustring = CFStringCreateWithBytes(NULL, (UInt8*)t_menu_label . getstring(), t_menu_label . getlength(), kCFStringEncodingMacRoman, False);
+			/* UNCHECKED */ MCStringConvertToCFStringRef(t_menu_label, cfmenustring);
 			SetMenuTitleWithCFString(menu,cfmenustring);
 			CFRelease(cfmenustring);
 

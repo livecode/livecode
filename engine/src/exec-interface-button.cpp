@@ -631,112 +631,57 @@ void MCButton::SetShowName(MCExecContext& ctxt, bool setting)
 	}
 }
 
-void MCButton::DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef& r_label)
-{
-	MCString slabel;
-	bool is_unicode;
-	if (entry != NULL || effective)
-		getlabeltext(slabel, is_unicode);
-	else
-		slabel.set(label, labelsize), is_unicode = hasunicode();
-
-	if (MCU_mapunicode(slabel, is_unicode, to_unicode, r_label))
-		return;
-
-	ctxt . Throw();
-}
-
-void MCButton::DoSetLabel(MCExecContext& ctxt, MCStringRef p_label)
-{
-	// Make sure the label is up to date.
-	if (entry != NULL)
-		getentrytext();
-
-	// Only do anything if there is a change.
-	if (label == NULL || p_label == nil ||
-		MCStringIsEqualToOldString(p_label, MCString(label, labelsize), kMCCompareExact))
-	{
-		delete label;
-		if (p_label != nil)
-		{
-			labelsize = MCStringGetLength(p_label);
-			label = new char[labelsize];
-			memcpy(label, MCStringGetCString(p_label), labelsize);
-			flags |= F_LABEL;
-		}
-		else
-		{
-			label = NULL;
-			labelsize = 0;
-			flags &= ~F_LABEL;
-		}
-
-		// Now that we've updated the label, try to change everything to native.
-		trytochangetonative();
-
-		if (entry != NULL)
-			if (label == NULL)
-				entry->settext_oldstring(0, MCnullmcstring, False, False);
-			else
-				entry->settext_oldstring(0, MCString(label, labelsize), False, hasunicode());
-
-		clearmnemonic();
-		setupmnemonic();
-		Redraw();
-	}
-	else
-	{
-		// Try to change everything back to native.
-		trytochangetonative();
-	}
-
-}
-
 void MCButton::GetLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	DoGetLabel(ctxt, false, false, r_label);
+	r_label = MCValueRetain(label);
 }
 
 void MCButton::SetLabel(MCExecContext& ctxt, MCStringRef p_label)
 {
-	if (hasunicode() && p_label != nil)
+	if (MCStringIsEqualTo(p_label, label, kMCStringOptionCompareExact))
+		return;
+	
+	MCValueAssign(label, p_label);
+	Redraw();
+}
+
+void MCButton::GetUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
+{
+	MCStringRef t_label = nil;
+	GetLabel(ctxt, t_label);
+	if (MCStringEncodeAndRelease(t_label, kMCStringEncodingUTF16, false, r_label))
+		return;
+	MCValueRelease(t_label);
+	
+	ctxt.Throw();
+}
+
+void MCButton::SetUnicodeLabel(MCExecContext& ctxt, MCDataRef p_label)
+{
+	MCAutoStringRef t_new_label;
+	if (MCStringDecode(p_label, kMCStringEncodingUTF16, false, &t_new_label))
 	{
-		MCAutoStringRef t_label;
-		if (MCU_multibytetounicode(p_label, LCH_ROMAN, &t_label))
-		{
-			DoSetLabel(ctxt, *t_label);
-			return;
-		}
-	}
-	else
-	{
-		DoSetLabel(ctxt, p_label);
+		SetLabel(ctxt, *t_new_label);
 		return;
 	}
-
-	ctxt . Throw();
-}
-
-void MCButton::GetUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
-{
-	DoGetLabel(ctxt, true, false, r_label);
-}
-
-void MCButton::SetUnicodeLabel(MCExecContext& ctxt, MCStringRef p_label)
-{
-	if (!hasunicode())
-		switchunicode(true);
-	DoSetLabel(ctxt, p_label);
+	
+	ctxt.Throw();
 }
 
 void MCButton::GetEffectiveLabel(MCExecContext& ctxt, MCStringRef& r_label)
 {
-	DoGetLabel(ctxt, false, true, r_label);
+	r_label = MCValueRetain(getlabeltext());
 }
 
-void MCButton::GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label)
+void MCButton::GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCDataRef& r_label)
 {
-	DoGetLabel(ctxt, true, true, r_label);
+	MCStringRef t_label = nil;
+	GetEffectiveLabel(ctxt, t_label);
+	if (MCStringEncodeAndRelease(t_label, kMCStringEncodingUTF16, false, r_label))
+		return;
+	MCValueRelease(t_label);
+	
+	ctxt.Throw();
 }
 
 void MCButton::GetLabelWidth(MCExecContext& ctxt, uinteger_t& r_width)
@@ -885,44 +830,27 @@ void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 
 void MCButton::GetAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text)
 {
-	if (acceltext == nil)
-		r_text = MCValueRetain(kMCEmptyString);
-
-	MCString atext;
-	atext . set(acceltext, acceltextsize);
-
-	if (MCU_mapunicode(atext, hasunicode(), false, r_text))
-		return;
-
-	ctxt . Throw();
+	r_text = MCValueRetain(acceltext);
 }
 
 void MCButton::SetAcceleratorText(MCExecContext& ctxt, MCStringRef p_text)
 {
-	delete acceltext;
-	acceltext = NULL;
-	acceltextsize = 0;
-	if (p_text != nil)
-	{
-		acceltextsize  = MCStringGetLength(p_text);
-		acceltext = new char[acceltextsize];
-		memcpy(acceltext, MCStringGetCString(p_text), acceltextsize);
-	}
+	if (MCStringIsEqualTo(acceltext, p_text, kMCStringOptionCompareExact))
+		return;
+	MCValueAssign(acceltext, p_text);
 	Redraw();
 }
 
-void MCButton::GetUnicodeAcceleratorText(MCExecContext& ctxt, MCStringRef& r_text)
+void MCButton::GetUnicodeAcceleratorText(MCExecContext& ctxt, MCDataRef& r_text)
 {
-	if (acceltext == nil)
+	MCDataRef t_text = nil;
+	if (MCStringEncode(acceltext, kMCStringEncodingUTF16, false, t_text))
+	{
+		r_text = t_text;
 		return;
-
-	MCString atext;
-	atext . set(acceltext, acceltextsize);
-
-	if (MCU_mapunicode(atext, hasunicode(), true, r_text))
-		return;
-
-	ctxt . Throw();
+	}
+	
+	ctxt.Throw();
 }
 
 void MCButton::GetAcceleratorKey(MCExecContext& ctxt, MCStringRef& r_key)
@@ -1005,13 +933,13 @@ void MCButton::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 		else
 		{
 			uint2 fwidth;
-			bool t_is_unicode;
-			MCString slabel;
-			getlabeltext(slabel, t_is_unicode);
-			if (slabel.getstring() == NULL)
+			
+			MCStringRef t_label = getlabeltext();
+			if (MCStringIsEmpty)
 				fwidth = 0;
-			else
-				fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, slabel.getstring(), slabel.getlength(), t_is_unicode);
+			else 
+				fwidth = leftmargin + rightmargin + MCFontMeasureText(m_font, t_label);
+			
 			if (flags & F_SHOW_ICON && icons != NULL)
 			{
 				reseticon();
