@@ -191,7 +191,7 @@ real8 IO_cleansockets(real8 ctime)
 					s->revents->timeout = ctime + MCsockettimeout;
 				if (s->wevents != NULL)
 					s->wevents->timeout = ctime + MCsockettimeout;
-				MCscreen->delaymessage(s->object, MCM_socket_timeout, strclone(MCNameGetCString(s->name)));
+				MCscreen->delaymessage(s->object, MCM_socket_timeout, MCNameGetString(s->name));
 			}
 			if (s->wevents != NULL && s->wevents->timeout < etime)
 				etime = s->wevents->timeout;
