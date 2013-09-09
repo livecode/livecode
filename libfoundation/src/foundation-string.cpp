@@ -358,7 +358,20 @@ bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args
 					t_success = MCStringAppendNativeChars(t_buffer, (const char_t *)t_cnumber, strlen(t_cnumber));
 				}
 				else if (*p_format == '@')
-					t_success = MCStringAppend(t_buffer, va_arg(p_args, MCStringRef));
+				{
+					MCValueRef t_value;
+					t_value = va_arg(p_args, MCValueRef);
+					
+					MCStringRef t_string;
+					if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeString)
+						t_string = (MCStringRef)t_value;
+					else if (MCValueGetTypeCode(t_value) == kMCValueTypeCodeName)
+						t_string = MCNameGetString((MCNameRef)t_value);
+					else
+						MCAssert(false);
+
+					t_success = MCStringAppend(t_buffer, t_string);
+				}
 			}
 			else
 				t_success = MCStringAppendNativeChar(t_buffer, *p_format);
