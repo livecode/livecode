@@ -188,7 +188,7 @@ public:
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
 	MCObject *getobjid(Chunk_term type, uint4 inid);
-	MCObject *getobjname(Chunk_term type, const MCString &);
+	MCObject *getobjname(Chunk_term type, MCStringRef);
 	MCStack *gethome();
 	Boolean ismainstack(MCStack *sptr);
 	void addmenu(MCObject *target);

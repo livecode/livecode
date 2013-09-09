@@ -2384,7 +2384,7 @@ void MCInterfaceEvalSubstackOfStackById(MCExecContext& ctxt, MCObjectPtr p_paren
 void MCInterfaceEvalAudioClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_AUDIO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_AUDIO_CLIP);
     
     if (t_clip != nil)
     {
@@ -2432,7 +2432,7 @@ void MCInterfaceEvalAudioClipOfStackByName(MCExecContext& ctxt, MCObjectPtr p_st
 void MCInterfaceEvalVideoClipOfStackByOrdinal(MCExecContext& ctxt, MCObjectPtr p_stack, uinteger_t p_ordinal_type, MCObjectPtr& r_clip)
 {
     MCObject *t_clip;
-    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, MCnullmcstring, CT_VIDEO_CLIP);
+    t_clip = static_cast<MCStack *>(p_stack . object) -> getAV((Chunk_term)p_ordinal_type, kMCEmptyString, CT_VIDEO_CLIP);
     
     if (t_clip != nil)
     {
