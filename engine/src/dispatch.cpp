@@ -1508,7 +1508,7 @@ MCObject *MCDispatch::getobjid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
+MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 {
 	if (stacks != NULL)
 	{
@@ -1525,13 +1525,12 @@ MCObject *MCDispatch::getobjname(Chunk_term type, const MCString &s)
 
 	if (type == CT_IMAGE)
 	{
-		const char *sptr = s.getstring();
-		uint4 l = s.getlength();
+		const char *sptr = MCStringGetCString(s);
+		uint4 l = MCStringGetLength(s);
 
 		MCAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-			/* UNCHECKED */ t_image_name . CreateWithOldString(s);
-
+        /* UNCHECKED */ MCNameCreate(s, t_image_name);
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
 		{
@@ -1559,7 +1558,7 @@ check:
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
 			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setsvalue(s);
+			epptr->setsvalue(MCStringGetCString(s));
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{

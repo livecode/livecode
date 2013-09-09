@@ -3621,12 +3621,12 @@ bool MCObject::resolveparentscript(void)
 // the behavior hierarchy. We first search the behavior chain's for successive ancestors
 // of the object, up to and including its stack. If this fails, fall back to the original
 // search.
-MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
+MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 {
 	// If the name string ptr is nil, then this is an id search.
 	bool t_is_id;
 	t_is_id = false;
-	if (p_name . getstring() == nil)
+	if (p_name == nil)
 		t_is_id = true;
 
 	MCControl *t_control;
@@ -3699,10 +3699,12 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 
 MCImage *MCObject::resolveimageid(uint32_t p_id)
 {
-	return resolveimage(MCString(nil, 0), p_id);
+    MCAutoStringRef tmp;
+    /* UNCHECKED */ MCStringCreateWithOldString(MCString(nil, 0), &tmp);
+	return resolveimage(*tmp, p_id);
 }
 
-MCImage *MCObject::resolveimagename(const MCString& p_name)
+MCImage *MCObject::resolveimagename(MCStringRef p_name)
 {
 	return resolveimage(p_name, 0);
 }
