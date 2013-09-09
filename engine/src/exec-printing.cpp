@@ -454,7 +454,7 @@ void MCPrintingExecPrintAnchor(MCExecContext& ctxt, MCStringRef p_name, MCPoint 
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
 
-	MCprinter -> MakeAnchor(MCStringGetCString(p_name), p_location . x, p_location . y);
+	MCprinter -> MakeAnchor(p_name, p_location . x, p_location . y);
 }
 
 void MCPrintingExecPrintLink(MCExecContext& ctxt, int p_type, MCStringRef p_target, MCRectangle p_area)
@@ -462,10 +462,10 @@ void MCPrintingExecPrintLink(MCExecContext& ctxt, int p_type, MCStringRef p_targ
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
 		
-	MCprinter -> MakeLink(MCStringGetCString(p_target), p_area, (MCPrinterLinkType)p_type);
+	MCprinter -> MakeLink(p_target, p_area, (MCPrinterLinkType)p_type);
 }
 
-static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, const char *p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
+static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
 {
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
@@ -478,8 +478,10 @@ void MCPrintingExecPrintNativeBookmark(MCExecContext& ctxt, MCStringRef p_title,
 	MCAutoPointer<char> t_utf8_title;
 	if (!ctxt . EncodeStringAsUTF8(p_title, &t_utf8_title))
 		return;
-	
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title, p_location, p_level, p_initially_closed);
+
+	MCAutoStringRef t_utf8_title_str; 
+	/* UNCHECKED */ MCStringCreateWithCString(*t_utf8_title, &t_utf8_title_str);
+	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title_str, p_location, p_level, p_initially_closed);
 }
 
 void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
@@ -488,7 +490,9 @@ void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef p_title
 	if (!ctxt . EncodeUnicodeStringAsUTF8(p_title, &t_utf8_title))
 		return;
 	
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title, p_location, p_level, p_initially_closed);
+	MCAutoStringRef t_utf8_title_str; 
+	/* UNCHECKED */ MCStringCreateWithCString(*t_utf8_title, &t_utf8_title_str);
+	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title_str, p_location, p_level, p_initially_closed);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -871,7 +875,7 @@ void MCPrintingGetPrintJobName(MCExecContext& ctxt, MCStringRef &r_value)
 
 void MCPrintingSetPrintJobName(MCExecContext& ctxt, MCStringRef p_value)
 {
-	MCprinter -> SetJobName(MCStringGetCString(p_value));
+	MCprinter -> SetJobName(p_value);
 }
 
 void MCPrintingGetPrintJobCopies(MCExecContext& ctxt, integer_t &r_value)
@@ -1041,7 +1045,7 @@ void MCPrintingGetPrintCommand(MCExecContext& ctxt, MCStringRef &r_command)
 
 void MCPrintingSetPrintCommand(MCExecContext& ctxt, MCStringRef p_command)
 {
-	MCprinter -> SetDeviceCommand(MCStringGetCString(p_command));
+	MCprinter -> SetDeviceCommand(p_command);
 }
 
 void MCPrintingGetPrintFontTable(MCExecContext& ctxt, MCStringRef &r_table)
@@ -1057,7 +1061,7 @@ void MCPrintingGetPrintFontTable(MCExecContext& ctxt, MCStringRef &r_table)
 
 void MCPrintingSetPrintFontTable(MCExecContext& ctxt, MCStringRef p_table)
 {
-	MCprinter -> SetDeviceFontTable(MCStringGetCString(p_table));
+	MCprinter -> SetDeviceFontTable(p_table);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

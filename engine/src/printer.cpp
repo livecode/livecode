@@ -230,19 +230,19 @@ void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, const char *p_locati
 		m_device_output_location = strdup(p_location);
 }
 
-void MCPrinter::SetDeviceCommand(const char *p_command)
+void MCPrinter::SetDeviceCommand(MCStringRef p_command)
 {
 	delete m_device_command;
-	if (p_command == NULL || *p_command == '\0')
+	if (p_command == nil || MCStringGetNativeCharAtIndex(p_command, 0) == '\0')
 		m_device_command = NULL;
 	else
-		m_device_command = strdup(p_command);
+		m_device_command = strdup(MCStringGetCString(p_command));
 }
 
-void MCPrinter::SetDeviceFontTable(const char *p_font_table)
+void MCPrinter::SetDeviceFontTable(MCStringRef p_font_table)
 {
 	delete m_device_font_table;
-	m_device_font_table = strdup(p_font_table);
+	m_device_font_table = strdup(MCStringGetCString(p_font_table));
 }
 
 
@@ -319,10 +319,10 @@ void MCPrinter::SetJobCollate(bool p_collate)
 	m_job_collate = p_collate;
 }
 
-void MCPrinter::SetJobName(const char *p_name)
+void MCPrinter::SetJobName(MCStringRef p_name)
 {
 	delete m_job_name;
-	m_job_name = strdup(p_name);
+	m_job_name = strdup(MCStringGetCString(p_name));
 }
 
 void MCPrinter::SetJobDuplex(MCPrinterDuplexMode p_mode)
@@ -583,7 +583,7 @@ void MCPrinter::LayoutCard(MCCard *p_card, const MCRectangle *p_rect)
 	Close();
 }
 
-void MCPrinter::MakeAnchor(const char *p_name, int16_t x, int16_t y)
+void MCPrinter::MakeAnchor(MCStringRef p_name, int16_t x, int16_t y)
 {
 	Open();
 
@@ -592,7 +592,7 @@ void MCPrinter::MakeAnchor(const char *p_name, int16_t x, int16_t y)
 	Close();
 }
 
-void MCPrinter::MakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
+void MCPrinter::MakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
 {
 	Open();
 
@@ -601,7 +601,7 @@ void MCPrinter::MakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinte
 	Close();
 }
 
-void MCPrinter::MakeBookmark(const char *p_title, int2 x, int2 y, uint32_t level, bool closed)
+void MCPrinter::MakeBookmark(MCStringRef p_title, int2 x, int2 y, uint32_t level, bool closed)
 {
 	Open();
 
@@ -740,13 +740,13 @@ void MCPrinter::DoPrint(MCCard *p_card, const MCRectangle& p_src, const MCRectan
 	}
 }
 
-void MCPrinter::DoMakeAnchor(const char *p_name, int2 x, int2 y)
+void MCPrinter::DoMakeAnchor(MCStringRef p_name, int2 x, int2 y)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
-		SetStatusFromResult(m_device -> Anchor(p_name, x, y));
+		SetStatusFromResult(m_device -> Anchor(MCStringGetCString(p_name), x, y));
 }
 
-void MCPrinter::DoMakeLink(const char *p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
+void MCPrinter::DoMakeLink(MCStringRef p_dest, const MCRectangle& p_area, MCPrinterLinkType p_type)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
 	{
@@ -755,15 +755,15 @@ void MCPrinter::DoMakeLink(const char *p_dest, const MCRectangle& p_area, MCPrin
 		t_print_area . top = p_area . y;
 		t_print_area . right = p_area . x + p_area . width;
 		t_print_area . bottom = p_area . y + p_area . height;
-		SetStatusFromResult(m_device -> Link(p_dest, t_print_area, p_type));
+		SetStatusFromResult(m_device -> Link(MCStringGetCString(p_dest), t_print_area, p_type));
 	}
 }
 
-void MCPrinter::DoMakeBookmark(const char *p_title, int2 x, int2 y, uint32_t level, bool closed)
+void MCPrinter::DoMakeBookmark(MCStringRef p_title, int2 x, int2 y, uint32_t level, bool closed)
 {
 	if (m_loop_nesting > 0 && m_loop_status == STATUS_READY && (m_job_range_count <= 0 || MCU_disjointrangecontains(m_job_ranges, m_job_range_count, m_loop_page)))
 	{
-		SetStatusFromResult(m_device -> Bookmark(p_title, x, y, level, closed));
+		SetStatusFromResult(m_device -> Bookmark(MCStringGetCString(p_title), x, y, level, closed));
 	}
 }
 
@@ -852,7 +852,7 @@ void MCPrinter::UpdateLayout(const MCRectangle& p_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCPrinter::SetStatus(uint32_t p_status, const char *p_error)
+void MCPrinter::SetStatus(uint32_t p_status, MCStringRef p_error)
 {
 	m_loop_status = p_status;
 	
@@ -862,8 +862,8 @@ void MCPrinter::SetStatus(uint32_t p_status, const char *p_error)
 		m_loop_error = NULL;
 	}
 	
-	if (p_error != NULL)
-		m_loop_error = strdup(p_error);
+	if (p_error != nil)
+		m_loop_error = strdup(MCStringGetCString(p_error));
 }
 
 void MCPrinter::SetStatusFromResult(MCPrinterResult p_result)
@@ -878,7 +878,7 @@ void MCPrinter::SetStatusFromResult(MCPrinterResult p_result)
 		break;
 		
 		case PRINTER_RESULT_ERROR:
-			SetStatus(STATUS_ERROR, "printing failed");
+			SetStatus(STATUS_ERROR, MCSTR("printing failed"));
 		break;
 		
 		case PRINTER_RESULT_CANCEL:
