@@ -1769,7 +1769,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 	switch (which)
 	{
 	case P_HSCROLLBAR:
-		dirty = (flags & F_HSCROLLBAR) ^ (F_HSCROLLBAR * p_enable);
+		dirty = getflag(F_HSCROLLBAR) != p_enable;
 		if (p_enable)
 			flags |= F_HSCROLLBAR;
 		else
@@ -1813,7 +1813,7 @@ Exec_stat MCControl::setsbprop(Properties which, bool p_enable,
 		}
 		break;
 	case P_VSCROLLBAR:
-		dirty = (flags & F_VSCROLLBAR) ^ (F_VSCROLLBAR * p_enable);
+		dirty = getflag(F_VSCROLLBAR) != p_enable;
 		if (p_enable)
 			flags |= F_VSCROLLBAR;
 		else
