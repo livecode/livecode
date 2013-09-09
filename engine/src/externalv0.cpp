@@ -495,7 +495,9 @@ static char *show_image_by_id(const char *arg1, const char *arg2,
 		iptr = (MCImage *)getobj(CT_IMAGE, CT_ID, arg1, arg2);
 	else
 	{
-		MCScriptPoint sp(arg1);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithCString(arg1, &t_string);
+		MCScriptPoint sp(*t_string);
 		MCChunk *t_chunk;
 		t_chunk = new MCChunk(False);
 		

@@ -53,7 +53,7 @@ extern const uint4 factor_table_size;
 
 MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
 {
-	script = NULL;
+	script = MCValueRetain(kMCEmptyString);
 	curobj = o;
 	curhlist = hl;
 	curhandler = NULL;
@@ -70,7 +70,7 @@ MCScriptPoint::MCScriptPoint(MCObject *o, MCHandlerlist *hl, const char *s)
 
 MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 {
-	script = NULL;
+	script = MCValueRetain(kMCEmptyString);
 	curobj = sp.curobj;
 	curhlist = sp.curhlist;
 	curhandler = sp.curhandler;
@@ -91,11 +91,11 @@ MCScriptPoint::MCScriptPoint(MCScriptPoint &sp)
 
 MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 {
-	script = ep.getsvalue().clone();
+	/* UNCHECKED */ ep.copyasstring(script);
 	curobj = ep.getobj();
 	curhlist = ep.gethlist();
 	curhandler = ep.gethandler();
-	curptr = tokenptr = backupptr = (uint1 *)script;
+	curptr = tokenptr = backupptr = MCStringGetNativeCharPtr(script);
 	lowered = NULL;
 	loweredsize = 0;
 	line = pos = 0;
@@ -106,13 +106,13 @@ MCScriptPoint::MCScriptPoint(MCExecPoint &ep)
 	token_nameref = nil;
 }
 
-MCScriptPoint::MCScriptPoint(const MCString &s)
+MCScriptPoint::MCScriptPoint(MCStringRef p_string)
 {
-	script = s.clone();
+	script = MCValueRetain(p_string);
 	curobj = NULL;
 	curhlist = NULL;
 	curhandler = NULL;
-	curptr = tokenptr = backupptr = (uint1 *)script;
+	curptr = tokenptr = backupptr = MCStringGetNativeCharPtr(script);
 	lowered = NULL;
 	loweredsize = 0;
 	line = pos = 0;
@@ -125,8 +125,8 @@ MCScriptPoint::MCScriptPoint(const MCString &s)
 
 MCScriptPoint::~MCScriptPoint()
 {
+	MCValueRelease(script);
 	MCNameDelete(token_nameref);
-	delete script;
 	delete lowered;
 }
 

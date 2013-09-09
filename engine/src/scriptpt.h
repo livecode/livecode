@@ -37,7 +37,7 @@ struct Cvalue
 
 class MCScriptPoint
 {
-	char *script;
+	MCStringRef script;
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
@@ -64,7 +64,7 @@ public:
 	MCScriptPoint(MCScriptPoint &sp);
 	MCScriptPoint(MCObject *, MCHandlerlist *, const char *);
 	MCScriptPoint(MCExecPoint &ep);
-	MCScriptPoint(const MCString &s);
+	MCScriptPoint(MCStringRef p_string);
 	~MCScriptPoint();
 	MCScriptPoint& operator=(const MCScriptPoint& sp)
 	{
@@ -111,7 +111,7 @@ public:
 
 	MCNameRef gettoken_nameref(void);
 
-	const char *getscript()
+	MCStringRef getscript()
 	{
 		return script;
 	}
