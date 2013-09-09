@@ -80,7 +80,7 @@ void MCSecurityEvalCipherNames(MCExecContext& ctxt, MCStringRef& r_names)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCStringRef& r_bytes)
+void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCDataRef& r_bytes)
 {
 	if (!InitSSLCrypt())
 	{
@@ -90,15 +90,11 @@ void MCSecurityEvalRandomBytes(MCExecContext& ctxt, uinteger_t p_byte_count, MCS
 
 	if (MCCrypt_random_bytes(p_byte_count, r_bytes))
 	{
-		if (p_byte_count != 0 && MCStringGetLength(r_bytes) == 0)
-			ctxt.SetTheResultToCString("error: could not get random bytes");
-		else
-			ctxt.SetTheResultToEmpty();
-
+		ctxt.SetTheResultToEmpty();
 		return;
 	}
-
-	ctxt.Throw();
+	
+	ctxt.SetTheResultToCString("error: could not get random bytes");
 }
 
 ////////////////////////////////////////////////////////////////////////////////

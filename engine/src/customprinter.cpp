@@ -1445,7 +1445,7 @@ bool MCCustomPrinterDevice::StartPage(void)
 class MCCustomPrinter: public MCPrinter
 {
 public:
-	MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device);
+	MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device);
 	~MCCustomPrinter(void);
 
 	void SetDeviceOptions(MCArrayRef p_options);
@@ -1454,8 +1454,8 @@ protected:
 	void DoInitialize(void);
 	void DoFinalize(void);
 
-	bool DoReset(const char *p_name);
-	bool DoResetSettings(const MCString& p_settings);
+	bool DoReset(MCStringRef p_name);
+	bool DoResetSettings(MCDataRef p_settings);
 
 	const char *DoFetchName(void);
 	void DoFetchSettings(void*& r_bufer, uint4& r_length);
@@ -1465,19 +1465,19 @@ protected:
 	MCPrinterDialogResult DoPrinterSetup(bool p_window_modal, Window p_owner);
 	MCPrinterDialogResult DoPageSetup(bool p_window_modal, Window p_owner);
 
-	MCPrinterResult DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device);
+	MCPrinterResult DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device);
 	MCPrinterResult DoEndPrint(MCPrinterDevice* p_device);
 
 private:
-	char *m_device_name;
+	MCStringRef m_device_name;
 	MCCustomPrintingDevice *m_device;
 	MCArrayRef m_device_options;
 };
 
-MCCustomPrinter::MCCustomPrinter(const char *p_name, MCCustomPrintingDevice *p_device)
+MCCustomPrinter::MCCustomPrinter(MCStringRef p_name, MCCustomPrintingDevice *p_device)
 {
 	m_device_options = nil;
-	m_device_name = strdup(p_name);
+	m_device_name = MCValueRetain(p_name);
 	m_device = p_device;
 }
 
@@ -1489,7 +1489,7 @@ MCCustomPrinter::~MCCustomPrinter(void)
 	// scope of a single print loop.
 	Finalize();
 
-	delete m_device_name;
+	MCValueRelease(m_device_name);
 	MCValueRelease(m_device_options);
 }
 
@@ -1510,19 +1510,19 @@ void MCCustomPrinter::DoFinalize(void)
 {
 }
 
-bool MCCustomPrinter::DoReset(const char *p_name)
+bool MCCustomPrinter::DoReset(MCStringRef p_name)
 {
-	return MCCStringEqualCaseless(p_name, m_device_name);
+	return MCStringIsEqualTo(p_name, m_device_name, kMCStringOptionCompareCaseless);
 }
 
-bool MCCustomPrinter::DoResetSettings(const MCString& p_settings)
+bool MCCustomPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	return p_settings . getlength() == 0;
+	return MCDataIsEmpty(p_settings);
 }
 
 const char *MCCustomPrinter::DoFetchName(void)
 {
-	return m_device_name;
+	return MCStringGetCString(m_device_name);
 }
 
 void MCCustomPrinter::DoResync(void)
@@ -1545,7 +1545,7 @@ MCPrinterDialogResult MCCustomPrinter::DoPageSetup(bool p_window_modal, Window p
 	return PRINTER_DIALOG_RESULT_ERROR;
 }
 
-MCPrinterResult MCCustomPrinter::DoBeginPrint(const char *p_document, MCPrinterDevice*& r_device)
+MCPrinterResult MCCustomPrinter::DoBeginPrint(MCStringRef p_document, MCPrinterDevice*& r_device)
 {
 	MCPrinterResult t_result;
 	t_result = PRINTER_RESULT_SUCCESS;
@@ -1560,7 +1560,7 @@ MCPrinterResult MCCustomPrinter::DoBeginPrint(const char *p_document, MCPrinterD
 	}
 	
 	if (t_result == PRINTER_RESULT_SUCCESS)
-		t_result = t_printer_device -> Start(p_document, m_device_options);
+		t_result = t_printer_device -> Start(MCStringGetCString(p_document), m_device_options);
 
 	if (t_result == PRINTER_RESULT_SUCCESS)
 		r_device = t_printer_device;
@@ -1995,11 +1995,11 @@ private:
 
 typedef MCCustomPrintingDevice *(*MCCustomPrinterCreateProc)(void);
 
-Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
+Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filename, MCArrayRef p_options, MCPrinter*& r_printer)
 {
 	MCCustomPrintingDevice *t_device;
 	t_device = nil;
-	if (MCCStringEqualCaseless(p_destination, "pdf"))
+	if (MCStringIsEqualToCString(p_destination, "pdf", kMCCompareCaseless))
 	{
 		// To generalize/improve in the future if we open up the custom printing
 		// device interface :o)
@@ -2053,7 +2053,7 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 			t_device = nil;
 	}
 #ifdef _DEBUG
-	else if (MCCStringEqualCaseless(p_destination, "debug"))
+	else if (MCStringIsEqualToCString(p_destination, "debug", kMCCompareCaseless))
 		t_device = new MCDebugPrintingDevice;
 #endif
 
@@ -2068,19 +2068,15 @@ Exec_stat MCCustomPrinterCreate(const char *p_destination, const char *p_filenam
 		return ES_ERROR;
 	}
 
-    MCAutoStringRef t_filename;
+	MCAutoStringRef t_native_path;
 	if (p_filename != nil)
-	{
-        MCAutoStringRef t_stringref_filename;
-        /* UNCHECKED */ MCStringCreateWithCString(p_filename, &t_stringref_filename);
-		/* UNCHECKED */ MCS_pathtonative(*t_stringref_filename, &t_filename);
-	}
+		/* UNCHECKED */ MCS_pathtonative(p_filename, &t_native_path);
 
 	MCCustomPrinter *t_printer;
 	t_printer = new MCCustomPrinter(p_destination, t_device);
 	t_printer -> Initialize();
 	t_printer -> SetDeviceName(p_destination);
-	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, MCStringGetCString(*t_filename));
+	t_printer -> SetDeviceOutput(PRINTER_OUTPUT_FILE, *t_native_path);
 	t_printer -> SetDeviceOptions(p_options);
 	t_printer -> SetPageSize(MCprinter -> GetPageWidth(), MCprinter -> GetPageHeight());
 	t_printer -> SetPageOrientation(MCprinter -> GetPageOrientation());

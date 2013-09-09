@@ -521,7 +521,11 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 
 				t_value . setstringf("%s color", s_script_class_names[t_class]);
 				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
-					MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil);
+                {
+                    MCAutoStringRef t_value_str;
+                    t_value . copyasstringref(&t_value_str);
+					MCscreen -> parsecolor(*t_value_str, t_style . colour, nil);
+                }
 
 				s_script_class_styles[t_class] = commit_style(t_style);
 			}
@@ -563,7 +567,11 @@ Exec_stat MCIdeScriptConfigure::exec(MCExecPoint& p_exec)
 				t_value . setstringf("%s color", s_script_keywords[t_keyword]);
 				if (t_value . fetcharrayelement_oldstring(*t_settings, t_value . getsvalue()) == ES_NORMAL)
 				{
-					if (MCscreen -> parsecolor(t_value . getsvalue(), &t_style . colour, nil))
+                    
+                    MCAutoStringRef t_value_str;
+                    t_value . copyasstringref(&t_value_str);
+                    
+					if (MCscreen -> parsecolor(*t_value_str, t_style . colour, nil))
 						t_changed = true;
 				}
 

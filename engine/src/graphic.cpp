@@ -38,6 +38,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 
 #include "exec.h"
+#include "exec-interface.h"
 
 #define GRAPHIC_EXTRA_MITERLIMIT		(1UL << 0)
 #define GRAPHIC_EXTRA_FILLGRADIENT		(1UL << 1)
@@ -1235,6 +1236,7 @@ Exec_stat MCGraphic::setprop_legacy(uint4 parid, Properties p, MCExecPoint &ep, 
 }
 
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
+
 Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
 	Boolean dirty;
@@ -1247,7 +1249,10 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_fill_gradient != NULL)
 		{
-			setcolor(P_BACK_COLOR - P_FORE_COLOR, MCnullmcstring);
+			MCInterfaceNamedColor t_color;
+			t_color . name = kMCEmptyString;
+			MCExecContext ctxt(ep);
+			SetColor(ctxt, P_BACK_COLOR - P_FORE_COLOR, t_color);
 			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, MCnullmcstring);
 		}
 	}
@@ -1258,7 +1263,10 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			return ES_ERROR;
 		if (m_stroke_gradient != NULL)
 		{
-			setcolor(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
+			MCInterfaceNamedColor t_color;
+			t_color . name = kMCEmptyString;
+			MCExecContext ctxt(ep);
+			SetColor(ctxt, P_FORE_COLOR - P_FORE_COLOR, t_color);
 			setpattern(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
 		}
 	}
@@ -1275,6 +1283,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	
 	return ES_NORMAL;
 }
+
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)
 {

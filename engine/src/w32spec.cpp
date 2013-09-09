@@ -2130,7 +2130,7 @@ bool MCS_getlongfilepath(MCStringRef p_short_path, MCStringRef& r_long_path)
 void MCS_doalternatelanguage(MCStringRef p_script, MCStringRef p_language)
 {
 	MCScriptEnvironment *t_environment;
-	t_environment = MCscreen -> createscriptenvironment(MCStringGetCString(p_language));
+	t_environment = MCscreen -> createscriptenvironment(p_language);
 	if (t_environment == NULL)
 		MCresult -> sets("alternate language not found");
 	else

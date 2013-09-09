@@ -712,15 +712,9 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 	
 	for ( uint4 a = 0 ; a < ntypes ; a++)
 	{
-#ifdef SHARED_STRING
-		MCSharedString *t_data ;
-		if ( p_pasteboard -> Fetch ( t_ttypes[a], t_data ) )
-			MCtransferstore -> addRevType ( t_ttypes[a], t_data) ;
-#else
-		MCAutoStringRef t_data;
+		MCAutoDataRef t_data;
 		if ( p_pasteboard -> Fetch ( t_ttypes[a], &t_data ) )
 			MCtransferstore -> addRevType ( t_ttypes[a], *t_data) ;
-#endif
 	}
 	
 	MCtransferstore -> apply_to_window ( last_window ) ;
@@ -919,15 +913,10 @@ MCDragAction MCScreenDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet 
 						t_type = t_mime_type->asRev() ;
 						last_target = xevent.xselectionrequest.target ;
 						
-#ifdef SHARED_STRING
-						MCSharedString * t_string ;
-						if ( t_pasteboard->Fetch_MIME ( t_mime_type, t_string ) )
-							xdnd_selection_send( &xevent.xselectionrequest, t_string -> Get() . getstring() , t_string -> Get() . getlength() ) ;
-#else
-						MCAutoStringRef t_string ;
+						MCAutoDataRef t_string ;
 						if ( t_pasteboard->Fetch_MIME ( t_mime_type, &t_string ) )
-							xdnd_selection_send( &xevent.xselectionrequest, MCStringGetCString(*t_string), MCStringGetLength(*t_string) ) ;
-#endif
+							xdnd_selection_send( &xevent.xselectionrequest, MCDataGetBytePtr(*t_string), MCDataGetLength(*t_string) ) ;
+						
 						xdnd_stage = XDND_STAGE_WAITING ;
 					}
 				break;

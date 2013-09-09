@@ -131,11 +131,7 @@ bool MCImageExport(MCImageBitmap *p_bitmap, Export_format p_format, MCImagePalet
 bool MCImageDecode(IO_handle p_stream, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 bool MCImageDecode(const uint8_t *p_data, uindex_t p_size, MCImageFrame *&r_frames, uindex_t &r_frame_count);
 
-#ifdef SHARED_STRING
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCSharedString *&r_data);
-#else
-bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCStringRef &r_data);
-#endif
+bool MCImageCreateClipboardData(MCImageBitmap *p_bitmap, MCDataRef &r_data);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -315,7 +311,7 @@ class MCImage : public MCControl
 
 	bool m_have_control_colors;
 	MCColor *m_control_colors;
-	char **m_control_color_names;
+	MCStringRef *m_control_color_names;
 	uint16_t m_control_color_count;
 	uint16_t m_control_color_flags;
 	
@@ -491,11 +487,8 @@ public:
 	// publishing to the clipboard. For PNG, GIF, JPEG images this is the text 
 	// property of the image. For RAW images, the data will be compressed and
 	// returned as PNG.
-#ifdef SHARED_STRING
-	MCSharedString *getclipboardtext(void);
-#else
-	bool getclipboardtext(MCStringRef& r_data);
-#endif
+	bool getclipboardtext(MCDataRef& r_data);
+	
 	// MW-2011-09-13: [[ Masks ]] Updated to return a 'MCWindowMask'
 	MCWindowShape *makewindowshape(void);
 	
@@ -504,11 +497,7 @@ public:
 	CGImageRef converttodragimage(void);
 #elif defined(_WINDOWS_DESKTOP)
 	MCWinSysIconHandle makeicon(uint4 p_width, uint4 p_height);
-#ifdef SHARED_STRING
-	MCSharedString *converttodragimage(void);
-#else
-	void converttodragimage(MCStringRef& r_output);
-#endif
+	void converttodragimage(MCDataRef& r_output);
 #elif defined(_LINUX_DESKTOP)
 	Pixmap makewindowregion();
 #else
@@ -561,8 +550,8 @@ public:
 
 	////////// PROPERTY SUPPORT METHODS
 
-	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data);
-	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data);
+	void GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data);
+	void SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data);
     void SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible);
 	
 	////////// PROPERTY ACCESSORS
@@ -597,14 +586,14 @@ public:
 	void SetRepeatCount(MCExecContext& ctxt, integer_t p_count);
 	void GetFormattedHeight(MCExecContext& ctxt, uinteger_t& r_height);
 	void GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width);
-	void GetText(MCExecContext& ctxt, MCStringRef& r_text);
-	void SetText(MCExecContext& ctxt, MCStringRef p_text);
-	void GetImageData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetImageData(MCExecContext& ctxt, MCStringRef p_data);
-	void GetMaskData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetMaskData(MCExecContext& ctxt, MCStringRef p_data);
-	void GetAlphaData(MCExecContext& ctxt, MCStringRef& r_data);
-	void SetAlphaData(MCExecContext& ctxt, MCStringRef p_data);
+	void GetText(MCExecContext& ctxt, MCDataRef& r_text);
+	void SetText(MCExecContext& ctxt, MCDataRef p_text);
+	void GetImageData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetImageData(MCExecContext& ctxt, MCDataRef p_data);
+	void GetMaskData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetMaskData(MCExecContext& ctxt, MCDataRef p_data);
+	void GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data);
+	void SetAlphaData(MCExecContext& ctxt, MCDataRef p_data);
 	void GetResizeQuality(MCExecContext& ctxt, intenum_t& r_quality);
 	void SetResizeQuality(MCExecContext& ctxt, intenum_t p_quality);
 	void GetPaintCompression(MCExecContext& ctxt, intenum_t& r_compression);

@@ -174,10 +174,13 @@ static MenuRef create_menu(MenuRef p_menu, MenuItemDescriptor *p_items)
 	return t_menu;
 }
 
-void MCScreenDC::seticonmenu(const char *p_menu)
+void MCScreenDC::seticonmenu(MCStringRef p_menu_str)
 {
 	MenuItemDescriptor *t_items, *t_current_item;
 	uint4 t_id;
+	
+	const char *p_menu;
+	p_menu = strclone(MCStringGetCString(p_menu_str));
 	
 	t_items = NULL;
 	t_current_item = NULL;
@@ -244,6 +247,8 @@ void MCScreenDC::seticonmenu(const char *p_menu)
 		flatten_menu(t_items);
 	
 	create_menu(f_icon_menu, t_items);
+	
+	delete p_menu;
 }
 
 static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_command)
@@ -340,7 +345,7 @@ OSStatus MCScreenDC::handleiconmenuevent(EventHandlerCallRef p_ref, EventRef p_e
 
 ///////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::configurestatusicon(uint32_t p_icon_id, const char *p_menu, const char *p_tooltip)
+void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCStringRef p_tooltip)
 {
 }
 

@@ -891,8 +891,8 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 		fptr->colors = new MCColor;
 		fptr->colors[0].red = fptr->colors[0].green
 		                      = fptr->colors[0].blue = MAXUINT2;
-		fptr->colornames = new char *[1];
-		fptr->colornames[0] = NULL;
+		fptr->colornames = new MCStringRef[1];
+		fptr->colornames[0] = nil;
 		fptr->dflags |= DF_FORE_COLOR;
 	}
 	while (text != NULL)
@@ -1091,8 +1091,8 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 		bptr->colors = new MCColor;
 		bptr->colors[0].red = bptr->colors[0].green = bptr->colors[0].blue
 		                      = bptr->colors[0].blue = MAXUINT2;
-		bptr->colornames = new char *[1];
-		bptr->colornames[0] = NULL;
+		bptr->colornames = new MCStringRef[1];
+		bptr->colornames[0] = nil;
 		bptr->dflags |= DF_FORE_COLOR;
 	}
 	if (bptr->flags & F_SHARED_HILITE)
@@ -1227,8 +1227,8 @@ MCControl *MCHcbmap::build()
 		iptr->dflags = MCImage::cmasks[1];
 		iptr->colors = new MCColor[1];
 		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0;
-		iptr->colornames = new char *[1];
-		iptr->colornames[0] = NULL;
+		iptr->colornames = new MCStringRef[1];
+		iptr->colornames[0] = nil;
 		mask = MCscreen->copyimage(data, False);
 	}
 	else
@@ -1264,8 +1264,8 @@ MCControl *MCHcbmap::build()
 		iptr->colors[0].red = iptr->colors[0].green = iptr->colors[0].blue = 0x0;
 		iptr->colors[1].red = iptr->colors[1].green
 		                      = iptr->colors[1].blue = 0xFFFF;
-		iptr->colornames = new char *[2];
-		iptr->colornames[0] = iptr->colornames[1] = NULL;
+		iptr->colornames = new MCStringRef[2];
+		iptr->colornames[0] = iptr->colornames[1] = nil;
 		data2 = MCscreen->copyimage(mask, False);
 		bytes = mask->bytes_per_line * mask->height;
 		sptr = (uint1 *)data->data;
