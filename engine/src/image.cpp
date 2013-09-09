@@ -41,8 +41,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#define IMAGE_EXTRA_CONTROLCOLORS (1 << 0)
-#define IMAGE_EXTRA_CONTROLPIXMAPS (1 << 1)
+#define IMAGE_EXTRA_CONTROLCOLORS_DEAD (1 << 0) // Due to a bug, this cannot be used.
+#define IMAGE_EXTRA_CONTROLPIXMAPS_DEAD (1 << 1) // Due to a bug, this cannot be used.
+
+#define IMAGE_EXTRA_CONTROLCOLORS (1 << 2)
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -1486,12 +1488,8 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		for (uint16_t i = 0; i < s_control_color_count; i++)
 			t_length += MCCStringLength(s_control_color_names[i]) + 1;
 	
-		if (s_control_pixmap_count != 0)
-		{
-			t_flags |= IMAGE_EXTRA_CONTROLPIXMAPS;
-			t_length += sizeof(uint16_t);
-			t_length += s_control_pixmap_count * sizeof(uint4);
-		}
+		t_length += sizeof(uint16_t);
+		t_length += s_control_pixmap_count * sizeof(uint4);
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1508,13 +1506,12 @@ IO_stat MCImage::extendedsave(MCObjectOutputStream& p_stream, uint4 p_part)
 		for (uint16_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 			t_stat = p_stream . WriteCString(s_control_color_names[i]);
 		
-		if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLPIXMAPS) != 0)
-		{
+		if (t_stat == IO_NORMAL)
 			t_stat = p_stream . WriteU16(s_control_pixmap_count);
-			if (t_stat == IO_NORMAL)
-				for(int i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
-					t_stat = p_stream . WriteU32(s_control_pixmapids[i]);
-		}
+		
+		if (t_stat == IO_NORMAL)
+			for(int i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
+				t_stat = p_stream . WriteU32(s_control_pixmapids[i]);
 	}
 
 	if (t_stat == IO_NORMAL)
@@ -1565,15 +1562,14 @@ IO_stat MCImage::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 			for (uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_color_count; i++)
 				t_stat = p_stream . ReadCString(s_control_color_names[i]);
 			
-			if (t_stat == IO_NORMAL && (t_flags & IMAGE_EXTRA_CONTROLPIXMAPS) != 0)
-			{
+			if (t_stat == IO_NORMAL)
 				t_stat = p_stream . ReadU16(s_control_pixmap_count);
-				if (t_stat == IO_NORMAL && 
-					!MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids))
-					t_stat = IO_ERROR;
-				for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
-					t_stat = p_stream . ReadU32(s_control_pixmapids[i]);
-			}
+			
+			if (t_stat == IO_NORMAL && 
+				!MCMemoryNewArray(s_control_pixmap_count, s_control_pixmapids))
+				t_stat = IO_ERROR;
+			for(uint32_t i = 0; t_stat == IO_NORMAL && i < s_control_pixmap_count; i++)
+				t_stat = p_stream . ReadU32(s_control_pixmapids[i]);
 		}
 
 		if (t_stat == IO_NORMAL)
@@ -1604,7 +1600,8 @@ IO_stat MCImage::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	//   writes out the image colors; and the image does an extended record with the
 	//   control colors.
 	s_have_control_colors = false;
-	if (ncolors != 0 || npixmaps != 0)
+	if (ncolors != 0 || npixmaps != 0 ||
+		(m_rep != nil && m_rep -> GetType() == kMCImageRepCompressed))
 	{
 		s_have_control_colors = true;
 		s_control_color_count = ncolors;
