@@ -80,6 +80,7 @@ extern real8 MCU_strtor8(const char *&, uint4 &, int1, Boolean &r_done,
 						Boolean convertoctals = False);
 extern void MCU_strip(char *sptr, uint2 trailing, uint2 force);
 extern uint4 MCU_r8tos(char *&sptr, uint4 &s, real8 n,uint2 fw, uint2 trailing, uint2 force);
+extern bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string);
 extern bool MCU_stor8(MCStringRef, real8& r_d, bool co = false);
 extern Boolean MCU_stor8(const MCString&, real8& d, Boolean co = False);
 extern bool MCU_stoi2(MCStringRef, int2 &r_d);
