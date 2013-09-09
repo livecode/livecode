@@ -174,14 +174,14 @@ static inline bool is_ctl(char p_char)
 	return p_char >= 0 && p_char <= 31;
 }
 
-static inline bool is_crlf(const char *p_str)
+static inline bool is_crlf(MCStringRef p_str)
 {
-	return p_str[0] == '\r' && p_str[1] == '\n';
+	return MCStringGetNativeCharAtIndex(p_str, 0) == '\r' && MCStringGetNativeCharAtIndex(p_str, 1) == '\n';
 }
 
-static inline bool is_folded_lwsp(const char *p_str)
+static inline bool is_folded_lwsp(MCStringRef p_str)
 {
-	return is_crlf(p_str) && is_whitespace(p_str[2]);
+	return is_crlf(p_str) && is_whitespace(MCStringGetNativeCharAtIndex(p_str, 2));
 }
 
 static inline bool is_field_name_char(char p_char)
@@ -207,68 +207,69 @@ bool is_token_char(char p_char)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool skip_whitespace(const char *&x_header)
+static bool skip_whitespace(MCStringRef &x_header)
 {
-	if (is_whitespace(*x_header))
-	{
-		x_header++;
+	MCAutoStringRef t_head;
+	if (is_whitespace(MCStringGetNativeCharAtIndex(x_header, 0)))
+	{	
+		MCStringDivideAtIndex(x_header, 0, &t_head, x_header);
 		return true;
 	}
 	else if (is_folded_lwsp(x_header))
 	{
-		x_header += 3;
+		MCStringDivideAtIndex(x_header, 2, &t_head, x_header);
 		return true;
 	}
 	
 	return false;
 }
 
-void consume_whitespace(const char *&x_header)
+void consume_whitespace(MCStringRef &x_header)
 {
 	while (skip_whitespace(x_header))
 		;
 }
 
-bool read_name(const char *p_header, const char * &r_name_end, char *&r_name)
+bool read_name(MCStringRef p_header, MCStringRef &r_name_end, MCStringRef &r_name)
 {
 	bool t_success = true;
 	
-	char *t_name = NULL;
+	MCAutoStringRef t_name;
 	uint32_t t_index = 0;
 	
-	while (t_success && is_field_name_char(p_header[t_index]))
+	while (t_success && is_field_name_char(MCStringGetNativeCharAtIndex(p_header, t_index)))
 	{
 		t_index++;
 	}
 	if (t_success)
-		t_success = MCCStringCloneSubstring(p_header, t_index, t_name);
+		t_success = MCStringCopySubstring(p_header, MCRangeMake(0, t_index-1), &t_name);
 	if (t_success)
 	{
-		r_name = t_name;
-		r_name_end = p_header + t_index;
+		r_name = MCValueRetain(*t_name);
+		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index), r_name_end);
 	}
 	else
-		MCCStringFree(t_name);
+		MCValueRelease(*t_name);
 	
 	return t_success;
 }
 
-bool read_token(const char *p_header, const char *&r_token_end, char *&r_token)
+bool read_token(MCStringRef p_header, MCStringRef &r_token_end, MCStringRef &r_token)
 {
 	bool t_success = true;
 	
-	char *t_token = NULL;
+	MCAutoStringRef t_token;
 	uint32_t t_index = 0;
 	
-	while (t_success && is_token_char(p_header[t_index]))
+	while (t_success && is_token_char(MCStringGetNativeCharAtIndex(p_header, t_index)))
 		t_index++;
 	t_success = t_index > 0;
 	if (t_success)
-		t_success = MCCStringCloneSubstring(p_header, t_index, t_token);
+		t_success = MCStringCopySubstring(p_header, MCRangeMake(0, t_index - 1), &t_token);
 	if (t_success)
 	{
-		r_token_end = p_header + t_index;
-		r_token = t_token;
+		MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index), r_token_end); 
+		r_token = MCValueRetain(*t_token);
 	}
 	return t_success;
 }
@@ -278,33 +279,38 @@ static inline bool is_qtext(char p_char)
 	return (p_char != '"') && (p_char != '\\') && (p_char != '\r');
 }
 
-bool read_quoted_string(const char *p_header, const char *&r_string_end, char *&r_string)
+bool read_quoted_string(MCStringRef p_header, MCStringRef &r_string_end, MCStringRef &r_string)
 {
 	bool t_success = true;
 	char *t_string = NULL;
 	uint32_t t_strlen = 0;
 	
-	if (p_header[0] != '"')
+	if (MCStringGetNativeCharAtIndex(p_header, 0) != '"')
 		return false;
 	
-	p_header++;
-	while (t_success && p_header[0] != '"')
+	MCAutoStringRef t_head;
+	MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
+
+	while (t_success && MCStringGetNativeCharAtIndex(p_header, 0) != '"')
 	{
 		char t_char;
 		if (is_folded_lwsp(p_header))
 		{
-			t_char = p_header[2];
-			p_header += 3;
+			t_char = MCStringGetNativeCharAtIndex(p_header, 2);
+			MCAutoStringRef t_head;
+			MCStringDivideAtIndex(p_header, 2, &t_head, p_header);
 		}
-		else if (p_header[0] == '\\')
+		else if (MCStringGetNativeCharAtIndex(p_header, 0) == '\\')
 		{
-			t_char = p_header[1];
-			p_header += 2;
+			t_char = MCStringGetNativeCharAtIndex(p_header, 1);
+			MCAutoStringRef t_head;
+			MCStringDivideAtIndex(p_header, 1, &t_head, p_header);
 		}
-		else if (is_qtext(p_header[0]))
+		else if (is_qtext(MCStringGetNativeCharAtIndex(p_header, 0)))
 		{
-			t_char = p_header[0];
-			p_header += 1;
+			t_char = MCStringGetNativeCharAtIndex(p_header, 0);
+			MCAutoStringRef t_head;
+			MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
 		}
 		else
 			t_success = false;
@@ -320,8 +326,8 @@ bool read_quoted_string(const char *p_header, const char *&r_string_end, char *&
 	{
 		if (t_string != NULL)
 			t_string[t_strlen] = '\0';
-		r_string = t_string;
-		r_string_end = p_header + 1;
+		/* UNCHECKED */ MCStringCreateWithCString(t_string, r_string);
+		/* UNCHECKED */ MCStringCopySubstring(p_header, MCRangeMake(1, MCStringGetLength(p_header) - 1), r_string_end);
 	}
 	else
 		MCCStringFree(t_string);
@@ -329,16 +335,16 @@ bool read_quoted_string(const char *p_header, const char *&r_string_end, char *&
 	return t_success;
 }
 
-bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **&r_values, uint32_t &r_param_count)
+bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, MCStringRef *&r_values, uint32_t &r_param_count)
 {
 	bool t_success = true;
 	
 	const char *t_next_param = NULL;
-	char *t_name = NULL;
-	char *t_value = NULL;
+	MCStringRef t_name = NULL;
+	MCStringRef t_value = NULL;
 	uint32_t t_index = 0;
 	
-	t_next_param = p_params;
+	t_next_param = MCStringGetCString(p_params);
 	
 	r_names = NULL;
 	r_values = NULL;
@@ -346,7 +352,7 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 	
 	while (t_success && t_next_param != NULL)
 	{
-		p_params = t_next_param;
+		/* UNCHECKED */ MCStringCreateWithCString(t_next_param, p_params);
 		consume_whitespace(p_params);
 		
 		bool t_has_value = false;
@@ -355,8 +361,9 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 		if (t_success)
 		{
 			consume_whitespace(p_params);
-			t_has_value = p_params[0] == '=';
-			p_params++;
+			t_has_value = (MCStringGetNativeCharAtIndex(p_params, 0) == '=');
+			MCAutoStringRef t_head;
+			/* UNCHEKED */ MCStringDivideAtIndex(p_params, 0, &t_head, p_params);
 		}
 		if (t_success && t_has_value)
 		{
@@ -365,9 +372,9 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 		if (t_success)
 		{
 			consume_whitespace(p_params);
-			if (MCCStringFirstIndexOf(p_params, ';', t_index))
+			if (MCStringFirstIndexOfChar(p_params, ';', 0, kMCCompareExact, t_index))
 			{
-				t_next_param = p_params + t_index + 1;
+				t_next_param = MCStringGetCString(p_params) + t_index + 1;
 			}
 			else
 			{
@@ -379,57 +386,62 @@ bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **
 		}
 		if (t_success)
 		{
-			r_names[r_param_count - 1] = t_name;
-			r_values[r_param_count - 1] = t_value;
+			r_names[r_param_count - 1] = MCValueRetain(t_name);
+			r_values[r_param_count - 1] = MCValueRetain(t_value);
 		}
 		else
 		{
-			MCCStringFree(t_name);
-			MCCStringFree(t_value);
+			MCValueRelease(t_name);
+			MCValueRelease(t_value);
 		}
-		t_name = t_value = NULL;
+		t_name = t_value = nil;
 	}
 
 	return t_success;
 }
 
-bool MCMultiPartParseHeader(const char *p_header, MCMultiPartHeaderCallback p_callback, void *p_context)
+bool MCMultiPartParseHeader(MCStringRef p_header, MCMultiPartHeaderCallback p_callback, void *p_context)
 {
-	MCMultiPartHeader t_header = {NULL, NULL, 0, NULL, NULL};
+	MCMultiPartHeader t_header = {nil, nil, 0, nil, nil};
 	
 	bool t_success = true;
 	
 	uint32_t t_index = 0;
-	char *t_value = NULL;
-	char *t_name = NULL;
 	const char *t_next_param = NULL;
 	
 	t_success = read_name(p_header, p_header, t_header.name);
 	if (t_success)
 	{
 		consume_whitespace(p_header);
-		t_success = p_header[0] == ':';
-		p_header++;
+		t_success = MCStringGetNativeCharAtIndex(p_header, 0) == ':';
+		MCAutoStringRef t_head;
+		/* UNCHECKED */ MCStringDivideAtIndex(p_header, 0, &t_head, p_header);
+			
 	}
 
 	if (t_success)
 	{
 		consume_whitespace(p_header);
 
-		if (MCCStringFirstIndexOf(p_header, ';', t_index))
+		if (MCStringFirstIndexOfChar(p_header, ';', 0, kMCCompareExact, t_index))
 		{
-			t_next_param = p_header + t_index + 1;
+			t_next_param = MCStringGetCString(p_header) + t_index + 1;
 		}
 		else
-			t_index = MCCStringLength(p_header);
+			t_index = MCStringGetLength(p_header);
 
-		while (t_index > 0 && p_header[t_index - 1] == ' ')
+		while (t_index > 0 && MCStringGetNativeCharAtIndex(p_header, t_index - 1) == ' ')
 			t_index--;
 		
-		t_success = MCCStringCloneSubstring(p_header, t_index, t_header.value);
+		
+		t_success = MCStringCopySubstring(p_header, MCRangeMake(t_index, MCStringGetLength(p_header) - t_index) , t_header.value);
 		
 		if (t_success && t_next_param != NULL)
-			t_success = MCMultiPartParseHeaderParams(t_next_param, t_header.param_name, t_header.param_value, t_header.param_count);
+		{
+			MCAutoStringRef t_next_param_str;
+			/* UNCHECKED */ MCStringCreateWithCString(t_next_param, &t_next_param_str);
+			t_success = MCMultiPartParseHeaderParams(*t_next_param_str, t_header.param_name, t_header.param_value, t_header.param_count);
+		}
 	}
 	
 	if (t_success)
@@ -437,15 +449,15 @@ bool MCMultiPartParseHeader(const char *p_header, MCMultiPartHeaderCallback p_ca
 	
 	for (uint32_t i = 0; i < t_header.param_count; i++)
 	{
-		MCCStringFree(t_header.param_name[i]);
-		MCCStringFree(t_header.param_value[i]);
+		MCValueRelease(t_header.param_name[i]);
+		MCValueRelease(t_header.param_value[i]);
 	}
 	
 	MCMemoryDeleteArray(t_header.param_name);
 	MCMemoryDeleteArray(t_header.param_value);
 	
-	MCCStringFree(t_header.name);
-	MCCStringFree(t_header.value);
+	MCValueRelease(t_header.name);
+	MCValueRelease(t_header.value);
 	
 	return t_success;
 }
@@ -499,7 +511,11 @@ bool MCMultiPartReadHeaders(IO_handle p_stream, uint32_t &r_bytes_read, MCMultiP
 					break;
 				}
 				else
-					t_success = MCMultiPartParseHeader(t_line_buffer, p_callback, p_context);
+				{
+					MCAutoStringRef t_line_buffer_str;
+					/* UNCHECKED */ MCStringCreateWithCString(t_line_buffer, &t_line_buffer_str);
+					t_success = MCMultiPartParseHeader(*t_line_buffer_str, p_callback, p_context);
+				}
 			}
 		}
 	}

@@ -37,11 +37,11 @@ typedef enum
 
 typedef struct
 {
-	char *name;
-	char *value;
+	MCStringRef name;
+	MCStringRef value;
 	uint32_t param_count;
-	char **param_name;
-	char **param_value;
+	MCStringRef *param_name;
+	MCStringRef *param_value;
 } MCMultiPartHeader;
 
 

@@ -924,7 +924,7 @@ static Exec_stat cgi_compute_files_var(void *p_context, MCVariable *p_var)
 // processing of multipart/form-data type post data
 
 // from srvmultipart.cpp:
-bool MCMultiPartParseHeaderParams(const char *p_params, char **&r_names, char **&r_values, uint32_t &r_param_count);
+bool MCMultiPartParseHeaderParams(MCStringRef p_params, MCStringRef *&r_names, MCStringRef *&r_values, uint32_t &r_param_count);
 
 static bool cgi_multipart_get_boundary(char *&r_boundary)
 {
@@ -937,15 +937,19 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	char *t_params = NULL;
 	uint32_t t_index = 0;
 	
-	char **t_names = NULL;
-	char **t_values = NULL;
+	MCStringRef *t_names = NULL;
+	MCStringRef *t_values = NULL;
 	uint32_t t_param_count = 0;
 	
 	t_success = MCStringFirstIndexOfChar(*t_content_type, ';', 0, kMCStringOptionCompareExact, t_index);
 	//t_success = MCCStringFirstIndexOf(MCStringGetCString(*t_content_type), ';', t_index);
 
 	if (t_success)
-		t_success = MCMultiPartParseHeaderParams(MCStringGetCString(*t_content_type) + t_index + 1, t_names, t_values, t_param_count);
+	{
+		MCAutoStringRef t_head, t_tail;
+		MCStringDivideAtIndex(*t_content_type, t_index , &t_head, &t_tail);
+		t_success = MCMultiPartParseHeaderParams(*t_tail, t_names, t_values, t_param_count);
+	}
 
 	r_boundary = NULL;
 	
@@ -953,10 +957,10 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	{
 		for (uint32_t i = 0; i < t_param_count; i++)
 		{
-			if (MCCStringEqualCaseless(t_names[i], "boundary") && MCCStringLength(t_values[i]) > 0)
+			if (MCStringIsEqualToCString(t_names[i], "boundary", kMCCompareCaseless) && MCStringGetLength(t_values[i]) > 0)
 			{
-				r_boundary = t_values[i];
-				t_values[i] = NULL;
+				r_boundary = strdup(MCStringGetCString(t_values[i]));
+				t_values[i] = nil;
 				break;
 			}
 		}
@@ -967,8 +971,8 @@ static bool cgi_multipart_get_boundary(char *&r_boundary)
 	
 	for (uint32_t i = 0; i < t_param_count; i++)
 	{
-		MCCStringFree(t_names[i]);
-		MCCStringFree(t_values[i]);
+		MCValueRelease(t_names[i]);
+		MCValueRelease(t_values[i]);
 	}
 	MCMemoryDeleteArray(t_names);
 	MCMemoryDeleteArray(t_values);
