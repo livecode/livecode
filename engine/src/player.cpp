@@ -3970,10 +3970,11 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 	case mcActionShowMessageString:
 		if (params != NULL)
 		{
-			char *m = strclone(p2cstr((unsigned char *)params));
-			c2pstr((char *)params);
+			MCAutoStringRef t_string;
+			/* UNCHECKED */ MCStringCreateWithCString(p2cstr((unsigned char *)params), &t_string);
+			
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setvalueref_argument(*t_string);
 			MCscreen->addmessage(tplayer, MCM_qtdebugstr, MCS_time(), p);
 		}
 		break;
@@ -3999,10 +4000,8 @@ static pascal Boolean controllerMsgFilter(MovieController mc, short action, void
 static pascal OSErr enterNodeCallback(QTVRInstance theInstance, UInt32 nodeid, SInt32 player)
 {
 	OSErr err = noErr;
-	char *m = new char[U2L];
-	sprintf(m, "%u", (unsigned int)nodeid);
 	MCParameter *p = new MCParameter;
-	p->setbuffer(m, strlen(m));
+	p->setn_argument(nodeid);
 	MCscreen->addmessage((MCPlayer*)player, MCM_node_changed, MCS_time(), p);
 	return err;
 }
@@ -4015,12 +4014,8 @@ static pascal void clickHotSpotCallback(QTVRInstance qtvr, QTVRInterceptPtr qtvr
 	{
 	case kQTVRTriggerHotSpotSelector:
 		{
-			char *m = new char[U2L];
-			
-			// MW-2005-04-26: [[Tiger]] Seems to complain about the conversion to uint2... 
-			sprintf(m, "%d", (uint4)(qtvrMsg->parameter[0]));
 			MCParameter *p = new MCParameter;
-			p->setbuffer(m, strlen(m));
+			p->setn_argument((uint4)qtvrMsg->parameter[0]);
 			MCscreen->addmessage((MCPlayer*)player, MCM_hot_spot_clicked, MCS_time(), p);
 		}
 		break;
