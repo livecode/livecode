@@ -762,7 +762,7 @@ static void MCWindowsResourcesClearIcons(MCWindowsResources& self)
 }
 
 // This method inserts the given icon file into a set of resources using the given id.
-static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, const char *p_icon_file, uint32_t p_id, uint32_t p_culture_id)
+static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, MCStringRef p_icon_file, uint32_t p_id, uint32_t p_culture_id)
 {
 	bool t_success;
 	t_success = true;
@@ -771,7 +771,7 @@ static bool MCWindowsResourcesAddIcon(MCWindowsResources& self, const char *p_ic
 	MCDeployFileRef t_icon;
 	t_icon = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_icon_file, "rb", t_icon);
+		t_success = MCDeployFileOpen(p_icon_file, kMCSOpenFileModeRead, t_icon);
 
 	// Next read the header - care here to ensure correct structure size
 	ICONDIR t_dir;
@@ -1194,7 +1194,7 @@ static bool MCWindowsResourcesAddVersionInfo(MCWindowsResources& self, MCArrayRe
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, const char *p_manifest_path)
+static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, MCStringRef p_manifest_path)
 {
 	bool t_success;
 	t_success = true;
@@ -1203,7 +1203,7 @@ static bool MCWindowsResourcesAddManifest(MCWindowsResources& self, const char *
 	MCDeployFileRef t_manifest;
 	t_manifest = NULL;
 	if (t_success)
-		t_success = MCDeployFileOpen(p_manifest_path, "rb", t_manifest);
+		t_success = MCDeployFileOpen(p_manifest_path, kMCSOpenFileModeRead, t_manifest);
 
 	// Measure the manifest
 	uint32_t t_size;
@@ -1566,7 +1566,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (r_dos_header . e_magic != IMAGE_DOS_SIGNATURE)
 		return MCDeployThrow(kMCDeployErrorWindowsBadDOSSignature);
 
-	if (!MCDeployFileSeek(p_file, r_dos_header . e_lfanew, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew))
 		return MCDeployThrow(kMCDeployErrorWindowsBadDOSHeader);
 
 	if (!MCDeployFileRead(p_file, &r_nt_header, sizeof(IMAGE_NT_HEADERS)))
@@ -1577,7 +1577,7 @@ static bool MCDeployToWindowsReadHeaders(MCDeployFileRef p_file, IMAGE_DOS_HEADE
 	if (r_nt_header . Signature != IMAGE_NT_SIGNATURE)
 		return MCDeployThrow(kMCDeployErrorWindowsBadNTSignature);
 
-	if (!MCDeployFileSeek(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader, SEEK_SET))
+	if (!MCDeployFileSeekSet(p_file, r_dos_header . e_lfanew + FIELD_OFFSET(IMAGE_NT_HEADERS, OptionalHeader) + r_nt_header . FileHeader . SizeOfOptionalHeader))
 		return MCDeployThrow(kMCDeployErrorWindowsBadSectionHeaderOffset);
 
 	r_section_headers = new IMAGE_SECTION_HEADER[r_nt_header . FileHeader . NumberOfSections];
@@ -1618,11 +1618,11 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	t_success = true;
 
 	// First thing to do is to open the files.
-	FILE *t_engine, *t_output;
+	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// First load the headers we need
@@ -1814,10 +1814,8 @@ Exec_stat MCDeployToWindows(const MCDeployParameters& p_params)
 	if (t_section_headers != NULL)
 		delete[] t_section_headers;
 
-	if (t_engine != NULL)
-		fclose(t_engine);
-	if (t_output != NULL)
-		fclose(t_output);
+	MCDeployFileClose(t_engine);
+	MCDeployFileClose(t_output);
 
 	return t_success ? ES_NORMAL : ES_ERROR;
 }

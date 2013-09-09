@@ -611,9 +611,9 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	// First thing we do is open the files.
 	MCDeployFileRef t_engine, t_output;
 	t_engine = t_output = NULL;
-	if (t_success && !MCDeployFileOpen(p_params . engine, "rb", t_engine))
+	if (t_success && !MCDeployFileOpen(p_params . engine, kMCSOpenFileModeRead, t_engine))
 		t_success = MCDeployThrow(kMCDeployErrorNoEngine);
-	if (t_success && !MCDeployFileOpen(p_params . output, "wb+", t_output))
+	if (t_success && !MCDeployFileOpen(p_params . output, kMCSOpenFileModeWrite, t_output))
 		t_success = MCDeployThrow(kMCDeployErrorNoOutput);
 
 	// Now read in the main ELF header
@@ -820,7 +820,7 @@ Exec_stat MCDeployToELF(const MCDeployParameters& p_params, bool p_is_android)
 	t_path = nil;
 #if defined(_MACOSX)
 	if (t_success)
-		t_success = MCCStringFromNative(p_params . output, t_path);
+		t_success = MCCStringFromNative((const char *)MCStringGetNativeCharPtr(p_params . output), t_path);
 #else
 	t_path = p_params . output;
 #endif
