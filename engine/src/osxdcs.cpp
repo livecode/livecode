@@ -291,7 +291,7 @@ Boolean MCScreenDC::close(Boolean force)
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if (colornames[i] != NULL)
-				delete colornames[i];
+				MCValueRelease(colornames[i]);
 		}
 		delete colors;
 		delete colornames;
