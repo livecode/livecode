@@ -1809,7 +1809,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	memset(fspec, 0, sizeof(FSSpec));
     
 	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+	if (f2 != NULL && f2 != (const char*)MCStringGetCString(*t_resolved_path))
 		*f2++ = '\0';
 	char *fspecname = strclone(f2);
     if (!t_utf_path.Lock(*t_resolved_path))
