@@ -1503,9 +1503,7 @@ void MCGDIContext::drawimage(const MCImageDescriptor& p_image, int2 sx, int2 sy,
 
 int4 MCGDIContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	MCAutoStringRef t_s;
-	/* UNCHCKED */ MCStringCreateWithCString(s, &t_s);
-	return MCscreen -> textwidth(f, *t_s, l, p_unicode_override);
+	return MCscreen -> textwidth(f, s, l, p_unicode_override);
 }
 
 void MCGDIContext::applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height)

@@ -796,9 +796,7 @@ void MCAndroidContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCF
 
 int4 MCAndroidContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	MCAutoStringRef t_s;
-	/* UNCHECKED */ MCStringCreateWithCString(s, &t_s);
-	return MCscreen -> textwidth(f, *t_s, l, p_unicode_override);
+	return MCscreen -> textwidth(f, s, l, p_unicode_override);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

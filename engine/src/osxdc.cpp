@@ -136,7 +136,7 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 extern int4 OSX_DrawUnicodeText(int2 x, int2 y, const void *p_text, uint4 p_text_byte_length, MCFontStruct *f, bool p_fill_background, bool p_measure_only = false);
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
 {
 	if (len == 0)
 		return 0;
@@ -144,7 +144,7 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_uni
 	{
 		if (MCmajorosversion >= 0x1050)
 		{
-			return OSX_DrawUnicodeText(0, 0, MCStringGetCString(s), len, f, false, true);
+			return OSX_DrawUnicodeText(0, 0, s, len, f, false, true);
 		}
 		else
 		{
@@ -175,9 +175,7 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_uni
 				}
 			}
 
-            MCAutoStringRef t_tempbuffer;
-            /* UNCHECKED */ MCStringCreateWithCString(tempbuffer, &t_tempbuffer);
-			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? MCStringGetCString(*t_tempbuffer): MCStringGetCString(s)), (tempbuffer != NULL? len + 2:len) >> 1,
+			cfstring = CFStringCreateWithCharactersNoCopy(NULL, (UniChar *)(tempbuffer != NULL? tempbuffer : s), (tempbuffer != NULL? len + 2:len) >> 1,
 					   kCFAllocatorNull);
 			Point dimensions = {0, 0};
 			GetThemeTextDimensions(cfstring, kThemeCurrentPortFont, kThemeStateActive, false, &dimensions, &baseline);
@@ -215,11 +213,9 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_uni
 		else
 		{
             int4 iwidth = 0;
-            uindex_t t_start;
-            t_start = 0;
             while (len--)
             {
-                iwidth += f->widths[(uint1)MCStringGetNativeCharAtIndex(s, t_start)];
+                iwidth += f->widths[(uint1)*s++];
                 
             }
             return iwidth;

@@ -644,9 +644,7 @@ void MCIPhoneContext::drawlink(const char *link, const MCRectangle& region)
 
 int4 MCIPhoneContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	MCAutoStringRef t_s;
-	/* UNCHCKED */ MCStringCreateWithCString(s, &t_s);
-	return MCscreen -> textwidth(f, *t_s, l, p_unicode_override);
+	return MCscreen -> textwidth(f, s, l, p_unicode_override);
 }
 
 void MCIPhoneContext::applywindowshape(MCWindowShape *p_mask, uint4 p_u_width, uint4 p_u_height)

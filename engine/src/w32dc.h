@@ -185,7 +185,7 @@ public:
 	MCScreenDC();
 	virtual ~MCScreenDC();
 
-	virtual int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override = false);
+	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 

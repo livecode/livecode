@@ -375,7 +375,7 @@ void MCUIDC::freecontext(MCContext *p_context)
 void MCUIDC::freepixmap(Pixmap &pixmap)
 { }
 
-int4 MCUIDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override)
+int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
 	return 0;
 }
@@ -2056,12 +2056,6 @@ int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_coun
 bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	return false;
-}
-
-bool MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice)
-{
-	r_choice = popupanswerdialog(p_buttons, p_button_count, p_type, p_title, p_message);
-	return true;
 }
 
 //

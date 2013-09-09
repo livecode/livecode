@@ -631,6 +631,7 @@ void MCInterfaceGetDialogData(MCExecContext& ctxt, MCValueRef& r_value)
 {
 	r_value = MCValueRetain(MCdialogdata -> getvalueref());
 }
+
 void MCInterfaceSetDialogData(MCExecContext& ctxt, MCValueRef p_value)
 {
 	MCdialogdata -> setvalueref(p_value);
@@ -1197,8 +1198,7 @@ void MCInterfaceGetIconMenu(MCExecContext& ctxt, MCStringRef& r_menu)
 
 void MCInterfaceSetIconMenu(MCExecContext& ctxt, MCStringRef p_menu)
 {
-	MCValueRelease(MCiconmenu);
-	MCiconmenu = (MCStringRef)MCValueRetain(p_menu);
+	MCValueAssign(MCiconmenu, p_menu);
 	MCscreen -> seticonmenu(MCiconmenu);
 }
 
@@ -1223,8 +1223,7 @@ void MCInterfaceGetStatusIconToolTip(MCExecContext& ctxt, MCStringRef& r_tooltip
 
 void MCInterfaceSetStatusIconToolTip(MCExecContext& ctxt, MCStringRef p_tooltip)
 {
-	MCValueRelease(MCstatusicontooltip);
-	MCstatusicontooltip = (MCStringRef)MCValueRetain(p_tooltip);
+	MCValueAssign(MCstatusicontooltip, p_tooltip);
 	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 
@@ -1235,8 +1234,7 @@ void MCInterfaceGetStatusIconMenu(MCExecContext& ctxt, MCStringRef& r_icon_menu)
 
 void MCInterfaceSetStatusIconMenu(MCExecContext& ctxt, MCStringRef p_icon_menu)
 {
-	MCValueRelease(MCstatusiconmenu);
-	MCstatusiconmenu = (MCStringRef)MCValueRetain(p_icon_menu);
+	MCValueAssign(MCstatusiconmenu, p_icon_menu);
 	MCscreen -> configurestatusicon(MCstatusiconid, MCstatusiconmenu, MCstatusicontooltip);
 }
 

@@ -153,7 +153,7 @@ void MCScreenDC::freecontext(MCContext *p_context)
 	delete p_context;
 }
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override)
 {
 	if (len == 0)
 		return 0;
@@ -171,16 +171,16 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_uni
 
 		if (f->unicode || p_unicode_override)
 		{
-			if ((long)MCStringGetCString(s) & 1)
+			if (s & 1)
 			{ // odd byte boundary, must be realigned
 				char *b = new char[len];
-				memcpy(b, MCStringGetCString(s), len);
-				GetTextExtentPoint32W(hdc, (LPCWSTR)MCStringGetCString(s),
+				memcpy(b, s, len);
+				GetTextExtentPoint32W(hdc, (LPCWSTR)s,
 				                      (int)len >> 1, &tsize);
 				delete b;
 			}
 			else
-				GetTextExtentPoint32W(hdc, (LPCWSTR)MCStringGetCString(s),
+				GetTextExtentPoint32W(hdc, (LPCWSTR)s,
 				                      (int)len >> 1, &tsize);
 		}
 		else
@@ -193,7 +193,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_uni
 	{
 		int4 iwidth = 0;
 		while (len--)
-			// DON'T KNOW HOW TO DO THIS!!
 			iwidth += f->widths[(uint1)*s++];
 		return iwidth;
 	}

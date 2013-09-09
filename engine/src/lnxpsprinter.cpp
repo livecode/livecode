@@ -1200,12 +1200,8 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	char *newsptr = NULL;
 	char *text = new char[l + 1];
 	memcpy(text, p_mark -> text . data , l);
-	MCStringRef t_text = nil;
-	/* UNCHECHED */ MCStringCreateWithCString(text, t_text);
-	uint2 w = MCscreen->textwidth(f, t_text, l);
-	if (t_text != nil)
-		MCValueRelease(t_text);
 	
+	uint2 w = MCscreen->textwidth(f, text, l);
 	
 	text[l] = '\0';
 	const char *sptr = text;

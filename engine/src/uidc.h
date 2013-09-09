@@ -267,7 +267,7 @@ public:
 
 	virtual void setstatus(MCStringRef status);
 
-	virtual int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override = false);
+	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
@@ -514,7 +514,6 @@ public:
 
 	//
 
-	/* WRAPPER */ virtual bool popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice);
 	virtual int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
 	virtual bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	

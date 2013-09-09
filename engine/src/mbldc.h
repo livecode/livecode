@@ -106,7 +106,7 @@ public:
 	MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
 	void freecontext(MCContext *p_context);
 
-	int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 len, bool p_unicode_override);
+	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
 	void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel);

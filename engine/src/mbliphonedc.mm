@@ -291,9 +291,9 @@ void MCScreenDC::freecontext(MCContext *p_context)
 	delete p_context;
 }
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef p_string, uint2 p_length, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
 {
-	return ceil(iphone_font_measure_text(f -> fid, MCStringGetCString(p_string), p_length, p_unicode_override || f -> unicode));
+	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
 }
 
 ////////////////////////////////////////////////////////////////////////////////

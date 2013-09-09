@@ -174,21 +174,23 @@ static MenuRef create_menu(MenuRef p_menu, MenuItemDescriptor *p_items)
 	return t_menu;
 }
 
-void MCScreenDC::seticonmenu(MCStringRef p_menu)
+void MCScreenDC::seticonmenu(MCStringRef p_menu_str)
 {
 	MenuItemDescriptor *t_items, *t_current_item;
 	uint4 t_id;
 	
+	const char *p_menu;
+	p_menu = strclone(MCStringGetCString(p_menu_str));
+	
 	t_items = NULL;
 	t_current_item = NULL;
 	t_id = 65536;
-	uindex_t t_offset;
-	t_offset = 0;
-	if (p_menu != nil)
-		while(MCStringGetNativeCharAtIndex(p_menu, t_offset) != '\0')
+	
+	if (p_menu != NULL)
+		while(*p_menu != '\0')
 		{
 			const char *t_item_start, *t_item_end, *t_item_middle;
-			t_item_start = MCStringGetCString(p_menu);
+			t_item_start = p_menu;
 			t_item_end = strchr(t_item_start, '\n');
 			if (t_item_end == NULL)
 				t_item_end = strchr(t_item_start, '\0');
@@ -212,13 +214,8 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 			
 			t_item -> next = NULL;
 			
-
 			if (*t_item_start == '(')
-			{
-				MCAutoStringRef t_head;
-				/* UNCHECKED */ MCStringDivideAtIndex(p_menu, t_offset++, &t_head, p_menu);
-				t_item_start++, t_item -> disabled = true;
-			}
+				t_item_start++, p_menu++, t_item -> disabled = true;
 			else
 				t_item -> disabled = false;
 				
@@ -236,20 +233,22 @@ void MCScreenDC::seticonmenu(MCStringRef p_menu)
 				t_item -> tag_length = t_item_end - t_item_middle - 1;
 			}
 			
-			t_item -> depth = t_item_start - MCStringGetCString(p_menu);
+			t_item -> depth = t_item_start - p_menu;
 			t_item -> submenu = NULL;
 			t_item -> id = t_id++;
 			
 			if (*t_item_end == '\0')
-				/* UNCHECKED */ MCStringCreateWithCString(t_item_end, p_menu);
+				p_menu = t_item_end;
 			else
-				/* UNCHECKED */ MCStringCreateWithCString(t_item_end + 1, p_menu);
+				p_menu = t_item_end + 1;
 		}
 	
 	if (t_items != NULL)
 		flatten_menu(t_items);
 	
 	create_menu(f_icon_menu, t_items);
+	
+	delete p_menu;
 }
 
 static bool build_pick_string(MCExecPoint& p_result, MenuRef p_menu, UInt32 p_command)
