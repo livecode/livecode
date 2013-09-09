@@ -481,6 +481,11 @@ IO_stat MCStack::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 		flags |= F_LINK_ATTS;
 	else
 		flags &= ~F_LINK_ATTS;
+	
+	if (!MCStringIsEmpty(title))
+		flags |= F_TITLE;
+	else
+		flags &= ~F_TITLE;
 
 	// MW-2013-03-28: Make sure we never save a stack with F_CANT_STANDALONE set.
 	flags &= ~F_CANT_STANDALONE;
