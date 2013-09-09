@@ -298,6 +298,18 @@ bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_k
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCExecContext::CopyOptElementAsBoolean(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCBooleanRef &r_boolean)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_boolean = MCValueRetain(kMCFalse);
+		return true;
+	}
+	
+	return CopyElementAsBoolean(p_array, p_name, p_case_sensitive, r_boolean);
+}
+
 bool MCExecContext::CopyOptElementAsString(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCStringRef &r_string)
 {
 	MCValueRef t_val;
