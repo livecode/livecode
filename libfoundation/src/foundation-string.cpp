@@ -547,7 +547,7 @@ uindex_t MCStringGetChars(MCStringRef self, MCRange p_range, unichar_t *p_chars)
 		if (i >= self -> char_count)
 			break;
 
-		p_chars[i - p_range . offset] = MCStrCharMapFromNative(self -> chars[i]);
+		p_chars[i - p_range . offset] = MCStrCharMapToUnicode(self -> chars[i]);
 
 		t_count += 1;
 	}
