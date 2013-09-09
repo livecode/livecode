@@ -1034,23 +1034,23 @@ IO_stat MCS_putback(char p_char, IO_handle p_stream)
 
 IO_stat MCS_seek_cur(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, 0))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, 0))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
 
 IO_stat MCS_seek_set(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, 1))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, 1))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
 
 IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 {
-	if (!p_stream -> Seek(p_offset, -1))
-		return IO_ERROR;
-	return IO_NORMAL;
+    if (!p_stream -> Seek(p_offset, -1))
+        return IO_ERROR;
+    return IO_NORMAL;
 }
 
 #if 0

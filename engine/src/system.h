@@ -392,14 +392,6 @@ struct MCWindowsSystemServiceInterface: public MCServiceInterface
     virtual void ResetTime() = 0;
 };
 
-struct MCLinuxSystemServiceInterface
-{
-    virtual bool ExecCommand(MCStringRef p_command, MCStringRef& r_output) = 0;
-    virtual bool LocaleDateInfo(MCStringRef &r_dateInfo) = 0;
-    virtual bool RawClose() = 0;
-    virtual bool RawOpen(MCStringRef& p_path) = 0;
-};
-
 struct MCSystemInterface
 {
     virtual MCServiceInterface *QueryService(MCServiceType type) = 0;
