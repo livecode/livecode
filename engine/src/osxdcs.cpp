@@ -84,7 +84,7 @@ static MCColor accentcolors[8];
 
 ////////
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 

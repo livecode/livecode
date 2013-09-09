@@ -20,7 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 #include "filedefs.h"
-
 #include "execpt.h"
 #include "stack.h"
 #include "card.h"
@@ -1755,9 +1754,11 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 							p_mark -> text . background -> colour . blue / 65535.0f),
 						1.0f);
 
+				MCAutoStringRef t_s;
+	            /* UNCHECKED */ MCStringCreateWithCString((char *)s, &t_s);
 				CGContextFillRect(m_context,
 					CGRectMake(x, y - f -> ascent,
-						MCscreen -> textwidth(f, (const char *)s, len), f -> ascent + f -> descent));
+						MCscreen -> textwidth(f, *t_s, len), f -> ascent + f -> descent));
 
 				CGContextRestoreGState(m_context);
 			}

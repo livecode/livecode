@@ -180,12 +180,12 @@ public:
 	virtual MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient) ;
 	virtual void freecontext(MCContext *p_context) ;
 
-	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
+	virtual int4 textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override = false);
 	
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 	
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 	virtual Boolean setdest(Drawable d, uint2 depth);
 	virtual Drawable getdest();
 	virtual Boolean open();
@@ -256,7 +256,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 	
 	virtual void destroybackdrop();
 	

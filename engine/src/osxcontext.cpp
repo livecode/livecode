@@ -1517,7 +1517,9 @@ void MCQuickDrawContext::drawlink(const char *p_name, const MCRectangle& p_area)
 
 int4 MCQuickDrawContext::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
 {
-	return MCscreen -> textwidth(f, s, l, p_unicode_override);
+	MCAutoStringRef t_s;
+	/* UNCHCKED */ MCStringCreateWithCString(s, &t_s);
+	return MCscreen -> textwidth(f, *t_s, l, p_unicode_override);
 }
 
 void MCQuickDrawContext::applywindowshape(MCWindowShape *p_mask, unsigned int p_update_width, unsigned int p_update_height)

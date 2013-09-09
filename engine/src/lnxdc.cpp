@@ -194,9 +194,9 @@ GC MCScreenDC::getgc(void)
 }
 
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
+int4 MCScreenDC::textwidth(MCFontStruct *f, MCStringRef s, uint2 l, bool p_unicode_override)
 {
-	return MCFontlistGetCurrent() -> ctxt_textwidth(f, s, l, p_unicode_override);
+	return MCFontlistGetCurrent() -> ctxt_textwidth(f, MCStringGetCString(s), l, p_unicode_override);
 }
 
 bool MCScreenDC::apply_workarea()
