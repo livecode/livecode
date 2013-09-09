@@ -310,12 +310,12 @@ void MCImage::GetFormattedWidth(MCExecContext& ctxt, uinteger_t& r_width)
 	r_width = t_width;
 }
 
-void MCImage::GetText(MCExecContext& ctxt, MCStringRef& r_text)
+void MCImage::GetText(MCExecContext& ctxt, MCDataRef& r_text)
 {
 	recompress();
 	if (m_rep == nil || m_rep->GetType() == kMCImageRepReferenced)
 	{
-		r_text = MCValueRetain(kMCEmptyString);
+		r_text = MCValueRetain(kMCEmptyData);
 		return;
 	}
 	else
@@ -342,14 +342,14 @@ void MCImage::GetText(MCExecContext& ctxt, MCStringRef& r_text)
 			}
 		}
 
-		if (MCStringCreateWithNativeChars((const char_t *)t_data, t_size, r_text))
+		if (MCDataCreateWithBytes((const byte_t *)t_data, t_size, r_text))
 			return;
 	}
 	
 	ctxt . Throw();
 }
 
-void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
+void MCImage::SetText(MCExecContext& ctxt, MCDataRef p_text)
 {
 	bool t_success = true;
 	
@@ -360,7 +360,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 	IO_handle t_stream = nil;
     MCAutoDataRef t_data;
 	
-	if (MCStringGetLength(p_text) == 0)
+	if (MCDataGetLength(p_text) == 0)
 	{
 		// MW-2013-09-05: [[ UnicodifyImage ]] Setting the text to nil is equivalent
 		//   to setting the filename to empty.
@@ -369,7 +369,7 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 	else
 	{
 		if (t_success)
-			t_success = nil != (t_stream = MCS_fakeopen(MCStringGetOldString(p_text)));
+			t_success = nil != (t_stream = MCS_fakeopen(MCString((const char *)MCDataGetBytePtr(p_text), MCDataGetLength(p_text))));
 		if (t_success)
 			t_success = MCImageImport(t_stream, nil, t_hotspot, t_name, t_compressed, t_bitmap);
 		if (t_success)
@@ -391,14 +391,14 @@ void MCImage::SetText(MCExecContext& ctxt, MCStringRef p_text)
 		resetimage();
 }
 
-void MCImage::GetImageData(MCExecContext& ctxt, MCStringRef& r_data)
+void MCImage::GetImageData(MCExecContext& ctxt, MCDataRef& r_data)
 {
 	// IM-2013-02-07: image data must return a block of data, even if the image is empty.
 	// image data should always be for an image the size of the rect.
 	uint32_t t_pixel_count = rect.width * rect.height;
 	uint32_t t_data_size = t_pixel_count * sizeof(uint32_t);
 	
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	
 	bool t_success = true;
 	
@@ -406,7 +406,7 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCStringRef& r_data)
 	
 	if (t_success)
 	{
-		uint32_t *t_data_ptr = (uint32_t*)t_buffer.Chars();
+		uint32_t *t_data_ptr = (uint32_t*)t_buffer.Bytes();
 		if (m_rep == nil)
 			MCMemoryClear(t_data_ptr, t_data_size);
 		else
@@ -428,7 +428,7 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCStringRef& r_data)
 		}
 	}
 	if (t_success)
-		t_success = t_buffer.CreateStringAndRelease(r_data);
+		t_success = t_buffer.CreateDataAndRelease(r_data);
 	
 	if (t_success)
 		return;
@@ -436,10 +436,10 @@ void MCImage::GetImageData(MCExecContext& ctxt, MCStringRef& r_data)
 	ctxt . Throw();
 }
 
-void MCImage::SetImageData(MCExecContext& ctxt, MCStringRef p_data)
+void MCImage::SetImageData(MCExecContext& ctxt, MCDataRef p_data)
 {
 	uindex_t t_length;
-	t_length = MCStringGetLength(p_data);
+	t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
 	{
 		bool t_success = true;
@@ -465,7 +465,7 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCStringRef p_data)
 			uint32_t t_stride = MCMin(t_length / t_copy->height, t_copy->width * 4);
 			uint32_t t_width = t_stride / 4;
 			
-			uint8_t *t_src_ptr = (uint8_t*)MCStringGetBytePtr(p_data);
+			uint8_t *t_src_ptr = (uint8_t*)MCDataGetBytePtr(p_data);
 			uint8_t *t_dst_ptr = (uint8_t*)t_copy->data;
 			for (uindex_t y = 0; y < t_copy->height; y++)
 			{
@@ -495,20 +495,20 @@ void MCImage::SetImageData(MCExecContext& ctxt, MCStringRef p_data)
 	}
 }
 
-void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef &r_data)
+void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef &r_data)
 {
 	uint32_t t_pixel_count = rect.width * rect.height;
 	uint32_t t_data_size = t_pixel_count;
 	
 	bool t_success = true;
 	
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	
 	t_success = t_buffer.New(t_data_size);
 	
 	if (t_success)
 	{
-		uint8_t *t_data_ptr = (uint8_t*)t_buffer.Chars();
+		uint8_t *t_data_ptr = (uint8_t*)t_buffer.Bytes();
 		if (m_rep == nil)
 			MCMemoryClear(t_data_ptr, t_data_size);
 		else
@@ -542,7 +542,7 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringR
 	}
 	
 	if (t_success)
-		t_success = t_buffer.CreateStringAndRelease(r_data);
+		t_success = t_buffer.CreateDataAndRelease(r_data);
 	
 	if (t_success)
 		return;
@@ -551,9 +551,9 @@ void MCImage::GetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringR
 }
 
 extern void MCImageSetMask(MCImageBitmap *p_bitmap, uint8_t *p_mask_data, uindex_t p_mask_size, bool p_is_alpha);
-void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringRef p_data)
+void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCDataRef p_data)
 {
-	uindex_t t_length = MCStringGetLength(p_data);
+	uindex_t t_length = MCDataGetLength(p_data);
 	if (t_length != 0)
 	{
 		bool t_success = true;
@@ -576,7 +576,7 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringR
 		
 		if (t_success)
 		{
-			MCImageSetMask(t_copy, (uint8_t*)MCStringGetBytePtr(p_data), t_length, !p_flatten);
+			MCImageSetMask(t_copy, (uint8_t*)MCDataGetBytePtr(p_data), t_length, !p_flatten);
 			setbitmap(t_copy);
 		}
 		
@@ -587,22 +587,22 @@ void MCImage::SetTransparencyData(MCExecContext &ctxt, bool p_flatten, MCStringR
 	}
 }
 
-void MCImage::GetMaskData(MCExecContext& ctxt, MCStringRef& r_data)
+void MCImage::GetMaskData(MCExecContext& ctxt, MCDataRef& r_data)
 {
 	GetTransparencyData(ctxt, true, r_data);
 }
 
-void MCImage::SetMaskData(MCExecContext& ctxt, MCStringRef p_data)
+void MCImage::SetMaskData(MCExecContext& ctxt, MCDataRef p_data)
 {
 	SetTransparencyData(ctxt, true, p_data);
 }
 
-void MCImage::GetAlphaData(MCExecContext& ctxt, MCStringRef& r_data)
+void MCImage::GetAlphaData(MCExecContext& ctxt, MCDataRef& r_data)
 {
 	GetTransparencyData(ctxt, false, r_data);
 }
 
-void MCImage::SetAlphaData(MCExecContext& ctxt, MCStringRef p_data)
+void MCImage::SetAlphaData(MCExecContext& ctxt, MCDataRef p_data)
 {
 	SetTransparencyData(ctxt, false, p_data);
 }

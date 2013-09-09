@@ -531,7 +531,7 @@ static void domenu(short menu, short item)
 			extern bool MCMacGetMenuItemTag(MenuHandle menu, uint2 mitem, MCStringRef &r_string);
 			if (t_menuhastags && MCMacGetMenuItemTag(mhandle, item, &t_tag_ref))
 			{
-				menuitemname = strclone("TEST TEST TEST");
+				menuitemname = strclone(MCStringGetCString(*t_tag_ref));
 				menuitemlen = strlen(menuitemname);
 			}
 			else

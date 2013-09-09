@@ -181,7 +181,7 @@ public:
 	Boolean sbup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubledown(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
 	Boolean sbdoubleup(uint2 which, MCScrollbar *hsb, MCScrollbar *vsb);
-	Exec_stat setsbprop(Properties which, const MCString &data, int4 tx, int4 ty,
+	Exec_stat setsbprop(Properties which, bool p_enable, int4 tx, int4 ty,
 	                    uint2 &sbw, MCScrollbar *&hsb, MCScrollbar *&vsb,
 	                    Boolean &dirty);
 

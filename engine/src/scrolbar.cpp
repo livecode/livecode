@@ -904,7 +904,7 @@ void MCScrollbar::compute_barsize()
 				barsize = MCU_max(barsize, 5);
 			else
 				barsize = MCU_max((uindex_t)barsize, MCStringGetLength(endstring));
-			barsize *= MCFontMeasureText(m_font, "0", 1, false);
+			barsize *= MCFontMeasureText(m_font, MCSTR("0"));
 			barsize = twidth - (barsize + barsize * (twidth - barsize) / twidth);
 		}
 		else

@@ -485,11 +485,6 @@ const char_t *MCStringGetNativeCharPtr(MCStringRef self)
 	return (const char_t *)self -> chars;
 }
 
-const uint8_t *MCStringGetBytePtr(MCStringRef self)
-{
-	return (const uint8_t *)self -> chars;
-}
-
 unichar_t MCStringGetCharAtIndex(MCStringRef self, uindex_t p_index)
 {
 	return MCUnicodeCharMapFromNative(self -> chars[p_index]);

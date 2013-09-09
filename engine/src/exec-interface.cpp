@@ -3298,7 +3298,7 @@ void MCInterfaceExecImportSnapshot(MCExecContext& ctxt, MCStringRef p_display, M
 		t_rect = *p_region;
 	
 	MCBitmap *t_bitmap = nil;
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display == nil ? nil : MCStringGetCString(p_display));
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	
 	if (t_bitmap != nil)
 	{
@@ -3568,7 +3568,7 @@ MCImageBitmap* MCInterfaceGetSnapshotBitmap(MCExecContext &ctxt, MCStringRef p_d
 	MCBitmap *t_bitmap = nil;
 	MCImageBitmap *t_image_bitmap = nil;
 	
-	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display == nil ? nil : MCStringGetCString(p_display));
+	t_bitmap = MCscreen->snapshot(t_rect, p_window, p_display);
 	if (t_bitmap == nil)
 	{
 		ctxt . LegacyThrow(EE_EXPORT_NOSELECTED);

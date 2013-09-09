@@ -185,7 +185,7 @@ public:
 	virtual uint2 getdepth();
 	virtual uint2 getrealdepth(void);
 	
-	virtual void setstatus(const char *status);
+	virtual void setstatus(MCStringRef status);
 	virtual Boolean setdest(Drawable d, uint2 depth);
 	virtual Drawable getdest();
 	virtual Boolean open();
@@ -207,7 +207,7 @@ public:
 	virtual void raisewindow(Window window);
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 	virtual void sync(Window w);
 	virtual void flush(Window w);
@@ -256,7 +256,7 @@ public:
 	virtual uint2 getpad();
 	virtual Window getroot();
 	virtual MCBitmap *snapshot(MCRectangle &r, uint4 window,
-	                           const char *displayname);
+	                           MCStringRef displayname);
 	
 	virtual void destroybackdrop();
 	

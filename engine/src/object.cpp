@@ -103,7 +103,7 @@ MCObject::MCObject()
 	ncolors = 0;
 
 	colors = NULL;
-	colornames = NULL;
+	colornames = nil;
 	npixmaps = 0;
 	pixmapids = NULL;
 	pixmaps = NULL;
@@ -170,18 +170,21 @@ MCObject::MCObject(const MCObject &oref) : MCDLlist(oref)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		uint2 i;
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			colors[i] = oref.colors[i];
-			colornames[i] = strclone(oref.colornames[i]);
+			if (oref . colornames[i] != nil)
+				colornames[i] = MCValueRetain(oref.colornames[i]);
+			else
+				colornames[i] = nil;
 		}
 	}
 	else
 	{
 		colors = NULL;
-		colornames = NULL;
+		colornames = nil;
 	}
 	npixmaps = oref.npixmaps;
 	if (npixmaps > 0)
@@ -273,10 +276,11 @@ MCObject::~MCObject()
 	delete hlist;
 	MCNameDelete(_name);
 	delete colors;
-	if (colornames != NULL)
+	if (colornames != nil)
 	{
 		while (ncolors--)
-			delete colornames[ncolors];
+			if (colornames[ncolors] != nil)
+				MCValueRelease(colornames[ncolors]);
 		delete colornames;
 	}
 	delete pixmapids;
@@ -1420,6 +1424,7 @@ void MCObject::setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite)
 	}
 }
 
+#ifdef  LEGACY EXEC 
 Boolean MCObject::setcolor(uint2 index, const MCString &data)
 {
 	uint2 i, j;
@@ -1513,6 +1518,7 @@ Boolean MCObject::setcolors(const MCString &data)
 	}
 	return True;
 }
+#endif
 
 Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 {
@@ -1596,10 +1602,10 @@ Boolean MCObject::getcindex(uint2 di, uint2 &i)
 uint2 MCObject::createcindex(uint2 di)
 {
 	MCColor *oldcolors = colors;
-	char **oldnames = colornames;
+	MCStringRef *oldnames = colornames;
 	ncolors++;
 	colors = new MCColor[ncolors];
-	colornames = new char *[ncolors];
+	colornames = new MCStringRef[ncolors];
 	uint2 ri = 0;
 	uint2 i = 0;
 	uint2 c = 0;
@@ -1610,7 +1616,7 @@ uint2 MCObject::createcindex(uint2 di)
 		if (i == di)
 		{
 			dflags |= m;
-			colornames[c] = NULL;
+			colornames[c] = nil;
 			ri = c++;
 		}
 		else
@@ -1632,7 +1638,12 @@ uint2 MCObject::createcindex(uint2 di)
 
 void MCObject::destroycindex(uint2 di, uint2 i)
 {
-	delete colornames[i];
+	if (colornames[i] != nil)
+	{
+		MCValueRelease(colornames[i]);
+		colornames[i] = nil;
+	}
+	
 	ncolors--;
 	while (i < ncolors)
 	{
@@ -2048,19 +2059,21 @@ Exec_stat MCObject::message_with_args(MCNameRef mess, int4 v1, int4 v2, int4 v3,
 
 void MCObject::senderror()
 {
-	char *perror = NULL;
+	MCAutoStringRef t_perror;
 	if (!MCperror->isempty())
 	{
 		MCExecPoint ep(this, NULL, NULL);
 		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
 		MCperror->add
 		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-		perror = MCperror->getsvalue().clone();
+		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
 	if (MCerrorptr == NULL)
 		MCerrorptr = this;
-	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, MCeerror->getsvalue().clone(), perror);
+	MCAutoStringRef t_eerror;
+	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
+	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
 	MCerrorptr = NULL;
 }
@@ -2126,7 +2139,10 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 		{
 			MCStack *t_this;
 			t_this = static_cast<MCStack *>(this);
-			if (t_this -> getfilename() == NULL)
+			
+			MCStringRef t_filename;
+			t_filename = t_this -> getfilename();
+			if (MCStringIsEmpty(t_filename))
 			{
 				if (MCdispatcher->ismainstack(t_this))
 				{
@@ -2143,8 +2159,9 @@ bool MCObject::names(Properties which, MCStringRef& r_name)
 				which = P_LONG_NAME;
 			}
 			else
-				return MCStringFormat(r_name, "stack \"%s\"", t_this -> getfilename());
+				return MCStringFormat(r_name, "stack \"%s\"", MCStringGetCString(t_filename));
 		}
+		
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).
 		Properties t_which_requested;
@@ -2854,19 +2871,24 @@ IO_stat MCObject::load(IO_handle stream, const char *version)
 	if (ncolors > 0)
 	{
 		colors = new MCColor[ncolors];
-		colornames = new char *[ncolors];
+		colornames = new MCStringRef[ncolors];
 		for (i = 0 ; i < ncolors ; i++)
 		{
 			if ((stat = IO_read_mccolor(colors[i], stream)) != IO_NORMAL)
 				break;
-			if ((stat = IO_read_string(colornames[i], stream)) != IO_NORMAL)
+			if ((stat = IO_read_stringref(colornames[i], stream)) != IO_NORMAL)
 				break;
+			if (MCStringIsEmpty(colornames[i]))
+			{
+				MCValueRelease(colornames[i]);
+				colornames[i] = nil;
+			}
 			colors[i].pixel = i;
 		}
 		if (stat != IO_NORMAL)
 		{
 			while (i < ncolors)
-				colornames[i++] = NULL;
+				colornames[i++] = nil;
 			return stat;
 		}
 	}
@@ -3127,9 +3149,12 @@ IO_stat MCObject::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 	if ((stat = IO_write_uint2(ncolors, stream)) != IO_NORMAL)
 		return stat;
 	for (i = 0 ; i < ncolors ; i++)
-		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL
-		        || (stat = IO_write_string(colornames[i], stream)) != IO_NORMAL)
+	{
+		if ((stat = IO_write_mccolor(colors[i], stream)) != IO_NORMAL)
 			return stat;
+		if ((stat = IO_write_stringref(colornames[i] != nil ? colornames[i] : kMCEmptyString, stream)) != IO_NORMAL)
+			return stat;
+	}
 	if (props != NULL)
 		addflags |= AF_CUSTOM_PROPS;
 	if (borderwidth != DEFAULT_BORDER)
@@ -3583,12 +3608,12 @@ bool MCObject::resolveparentscript(void)
 // the behavior hierarchy. We first search the behavior chain's for successive ancestors
 // of the object, up to and including its stack. If this fails, fall back to the original
 // search.
-MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
+MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 {
 	// If the name string ptr is nil, then this is an id search.
 	bool t_is_id;
 	t_is_id = false;
-	if (p_name . getstring() == nil)
+	if (p_name == nil)
 		t_is_id = true;
 
 	MCControl *t_control;
@@ -3661,10 +3686,10 @@ MCImage *MCObject::resolveimage(const MCString& p_name, uint4 p_image_id)
 
 MCImage *MCObject::resolveimageid(uint32_t p_id)
 {
-	return resolveimage(MCString(nil, 0), p_id);
+	return resolveimage(nil, p_id);
 }
 
-MCImage *MCObject::resolveimagename(const MCString& p_name)
+MCImage *MCObject::resolveimagename(MCStringRef p_name)
 {
 	return resolveimage(p_name, 0);
 }

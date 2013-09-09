@@ -85,8 +85,8 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_STACK, Bool, MCStack, DestroyStack)
 	DEFINE_RW_OBJ_PROPERTY(P_DESTROY_WINDOW, Bool, MCStack, DestroyWindow)
 	DEFINE_RW_OBJ_PROPERTY(P_ALWAYS_BUFFER, Bool, MCStack, AlwaysBuffer)
-	DEFINE_RW_OBJ_PROPERTY(P_LABEL, OptionalString, MCStack, Label)
-	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, OptionalString, MCStack, UnicodeLabel)
+	DEFINE_RW_OBJ_PROPERTY(P_LABEL, String, MCStack, Label)
+	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_LABEL, BinaryString, MCStack, UnicodeLabel)
 
 	DEFINE_RW_OBJ_PROPERTY(P_CLOSE_BOX, Bool, MCStack, CloseBox)
 	DEFINE_RW_OBJ_PROPERTY(P_ZOOM_BOX, Bool, MCStack, ZoomBox)
@@ -122,7 +122,7 @@ MCPropertyInfo MCStack::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_CARD_NAMES, String, MCStack, CardNames)
 
 	DEFINE_RW_OBJ_PROPERTY(P_EDIT_BACKGROUND, Bool, MCStack, EditBackground)
-	DEFINE_RW_OBJ_PROPERTY(P_EXTERNALS, OptionalString, MCStack, Externals)
+	DEFINE_RW_OBJ_PROPERTY(P_EXTERNALS, String, MCStack, Externals)
 	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_COMMANDS, OptionalString, MCStack, ExternalCommands)
 	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_FUNCTIONS, OptionalString, MCStack, ExternalFunctions)
 	DEFINE_RO_OBJ_PROPERTY(P_EXTERNAL_PACKAGES, OptionalString, MCStack, ExternalPackages)
@@ -207,13 +207,13 @@ MCStack::MCStack()
 	rect.x = rect.y = 0;
 	rect.width = MCminsize << 5;
 	rect.height = MCminsize << 5;
-	title = NULL;
-	titlestring = NULL;
+	title = MCValueRetain(kMCEmptyString);
+	titlestring = MCValueRetain(kMCEmptyString);
 	minwidth = MCminstackwidth;
 	minheight = MCminstackheight;
 	maxwidth = MAXUINT2;
 	maxheight = MAXUINT2;
-	externalfiles = NULL;
+	externalfiles = MCValueRetain(kMCEmptyString);
 	idlefunc = NULL;
 	windowshapeid = 0;
 
@@ -230,7 +230,7 @@ MCStack::MCStack()
 	nstackfiles = 0;
 	stackfiles = NULL;
 	linkatts = NULL;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	/* UNCHECKED */ MCNameClone(kMCEmptyName, _menubar);
 	menuy = menuheight = 0;
 	menuwindow = False;
@@ -301,13 +301,13 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	vclips = NULL;
 	backgroundid = 0;
 	iconid = 0;
-	title = strclone(sref.title);
-	titlestring = NULL;
+	title = MCValueRetain(sref.title);
+	titlestring = MCValueRetain(kMCEmptyString);
 	minwidth = sref.minwidth;
 	minheight = sref.minheight;
 	maxwidth = sref.maxwidth;
 	maxheight = sref.maxheight;
-	externalfiles = strclone(sref.externalfiles);
+	externalfiles = MCValueRetain(sref.externalfiles);
 	idlefunc = NULL;
 	windowshapeid = sref.windowshapeid;
 
@@ -403,8 +403,8 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 		stackfiles = new MCStackfile[ts];
 		while (ts--)
 		{
-			stackfiles[ts].stackname = strclone(sref.stackfiles[ts].stackname);
-			stackfiles[ts].filename = strclone(sref.stackfiles[ts].filename);
+			stackfiles[ts].stackname = MCValueRetain(sref.stackfiles[ts].stackname);
+			stackfiles[ts].filename = MCValueRetain(sref.stackfiles[ts].filename);
 		}
 	}
 	else
@@ -419,7 +419,7 @@ MCStack::MCStack(const MCStack &sref) : MCObject(sref)
 	}
 	else
 		linkatts = NULL;
-	filename = NULL;
+	filename = MCValueRetain(kMCEmptyString);
 	/* UNCHECKED */ MCNameClone(sref._menubar, _menubar);
 	menuy = menuheight = 0;
 
@@ -482,8 +482,8 @@ MCStack::~MCStack()
 	if (parentwindow != DNULL)
 		setparentwindow(DNULL);
 	delete mnemonics;
-	delete title;
-	delete titlestring;
+	MCValueRelease(title);
+	MCValueRelease(titlestring);
 
 	if (window != DNULL && !(state & CS_FOREIGN_WINDOW))
 	{
@@ -517,7 +517,7 @@ MCStack::~MCStack()
 		               (cards);
 		delete cptr;
 	}
-	delete externalfiles;
+	MCValueRelease(externalfiles);
 
 	uint2 i = 0;
 	while (i < MCnusing)
@@ -541,8 +541,8 @@ MCStack::~MCStack()
 	{
 		while (nstackfiles--)
 		{
-			delete stackfiles[nstackfiles].stackname;
-			delete stackfiles[nstackfiles].filename;
+			MCValueRelease(stackfiles[nstackfiles].stackname);
+			MCValueRelease(stackfiles[nstackfiles].filename);
 		}
 		delete stackfiles;
 	}
@@ -553,7 +553,7 @@ MCStack::~MCStack()
 		MCValueRelease(linkatts->visitedcolorname);
 		delete linkatts;
 	}
-	delete filename;
+	MCValueRelease(filename);
 
 	MCNameDelete(_menubar);
 
@@ -704,8 +704,7 @@ void MCStack::close()
 			MCscreen->destroywindow(window);
 			window = DNULL;
 			cursor = None;
-			delete titlestring;
-			titlestring = NULL;
+			MCValueAssign(titlestring, kMCEmptyString);
 			state &= ~CS_BEEN_MOVED;
 		}
 	}
@@ -2213,8 +2212,7 @@ Exec_stat MCStack::setprop_legacy(uint4 parid, Properties which, MCExecPoint &ep
 					{
 						stop_externals();
 						MCscreen->destroywindow(window);
-						delete titlestring;
-						titlestring = NULL;
+						MCValueAssign(titlestring, kMCEmptyString);
 					}
 				}
 		}
@@ -2925,7 +2923,7 @@ void MCStack::loadexternals(void)
 
 	m_externals = new MCExternalHandlerList;
 
-	char *ename = strclone(externalfiles);
+	char *ename = strdup(MCStringGetCString(externalfiles));
 	char *sptr = ename;
 	while (*sptr)
 	{
@@ -2966,55 +2964,54 @@ void MCStack::unloadexternals(void)
 // This function will attempt to resolve the specified filename relative to the stack
 // and will either return an absolute path if the filename was found relative to the stack,
 // or a copy of the original buffer. The returned buffer should be freed by the caller.
-char *MCStack::resolve_filename(const char *filename)
+bool MCStack::resolve_filename(MCStringRef filename, MCStringRef& r_resolved)
 {
-	char *t_mode_filename;
-	t_mode_filename = mode_resolve_filename(filename);
-	if (t_mode_filename != NULL)
-		return t_mode_filename;
-
-	if (filename != NULL && filename[0] != '\0' && filename[0] != '/' && filename[1] != ':')
+	if (!MCStringIsEmpty(filename) && MCStringGetNativeCharAtIndex(filename, 0) != '/' && MCStringGetNativeCharAtIndex(filename, 1) != ':')
 	{
-		const char *t_stack_filename;
+		MCStringRef t_stack_filename;
 		t_stack_filename = getfilename();
-		if (t_stack_filename == NULL)
+		if (MCStringIsEmpty(t_stack_filename))
 		{
 			MCStack *t_parent_stack;
 			t_parent_stack = static_cast<MCStack *>(getparent());
 			if (t_parent_stack != NULL)
 				t_stack_filename = t_parent_stack -> getfilename();
 		}
-		if (t_stack_filename != NULL)
+		if (!MCStringIsEmpty(t_stack_filename))
 		{
 			const char *t_last_separator;
-			t_last_separator = strrchr(t_stack_filename, '/');
+			t_last_separator = strrchr(MCStringGetCString(t_stack_filename), '/');
 			if (t_last_separator != NULL)
 			{
 				char *t_filename;
-				t_filename = new char[strlen(t_stack_filename) + strlen(filename) + 2];
-				strcpy(t_filename, t_stack_filename);
+				t_filename = new char[MCStringGetLength(t_stack_filename) + MCStringGetLength(filename) + 2];
+				strcpy(t_filename, MCStringGetCString(t_stack_filename));
 
 				// If the relative path begins with "./" or ".\", we must remove this, otherwise
 				// certain system calls will get confused by the path.
 				const char *t_leaf;
-				if (filename[0] == '.' && (filename[1] == '/' || filename[1] == '\\'))
-					t_leaf = filename + 2;
+				if (MCStringGetNativeCharAtIndex(filename, 0) == '.' && (MCStringGetNativeCharAtIndex(filename, 1) == '/' || MCStringGetNativeCharAtIndex(filename, 1) == '\\'))
+					t_leaf = MCStringGetCString(filename) + 2;
 				else
-					t_leaf = filename;
+					t_leaf = MCStringGetCString(filename);
 
-				strcpy(t_filename + (t_last_separator - t_stack_filename + 1), t_leaf);
+				strcpy(t_filename + (t_last_separator - MCStringGetCString(t_stack_filename) + 1), t_leaf);
 
 				MCAutoStringRef t_filename_string;
 				/* UNCHECKED */ MCStringCreateWithCString(t_filename, &t_filename_string);
 
 				if (MCS_exists(*t_filename_string, True))
-					return t_filename;
-				else if (t_filename != NULL)
-					delete t_filename;
+				{
+					r_resolved = MCValueRetain(*t_filename_string);
+					return true;
+				}
+				
+				delete t_filename;
 			}
 		}
 	}
-	return strdup(filename);
+	r_resolved = MCValueRetain(filename);
+	return true;
 }
 
 MCRectangle MCStack::recttoroot(const MCRectangle& p_rect)

@@ -1184,7 +1184,7 @@ void MCWindowsPrinter::DoInitialize(void)
 	m_dc_locked = false;
 	m_dc_changed = false;
 
-	DoReset(NULL);
+	DoReset(kMCEmptyString);
 }
 
 void MCWindowsPrinter::DoFinalize(void)
@@ -1199,20 +1199,20 @@ void MCWindowsPrinter::DoFinalize(void)
 	m_valid = false;
 }
 
-bool MCWindowsPrinter::DoReset(const char *p_name)
+bool MCWindowsPrinter::DoReset(MCStringRef p_name)
 {
 	// Get a copy of the printer name - fetching the default
 	// name if the incoming name is NULL.
 	//
 	char *t_name;
-	if (p_name == NULL || *p_name == '\0')
+	if (MCStringIsEmpty(p_name))
 	{
 		t_name = WindowsGetDefaultPrinter();
 		if (t_name == NULL)
 			return false;
 	}
 	else
-		t_name = strdup(p_name);
+		t_name = strdup(MCStringGetCString(p_name));
 
 	// Fetch the DEVMODE for the printer with the given name
 	//
@@ -1232,17 +1232,17 @@ bool MCWindowsPrinter::DoReset(const char *p_name)
 	return true;
 }
 
-bool MCWindowsPrinter::DoResetSettings(const MCString& p_settings)
+bool MCWindowsPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	if (p_settings . getlength() == 0)
-		return DoReset(NULL);
+	if (MCDataIsEmpty(p_settings))
+		return DoReset(kMCEmptyString);
 
 	// Attempt to decode the settings string into name and devmode
 	// This call also automatically validates the settings
 	//
 	char *t_name;
 	DEVMODEA *t_devmode;
-	if (!DecodeSettings(p_settings, t_name, t_devmode))
+	if (!DecodeSettings(MCDataGetOldString(p_settings), t_name, t_devmode))
 		return false;
 
 	// Reset the printer properties based on the name and devmode
@@ -1544,7 +1544,7 @@ MCPrinterDialogResult MCWindowsPrinter::DoPageSetup(bool p_window_modal, Window 
 
 ///////////////////////////////////////////////////////////////////////////////
 
-MCPrinterResult MCWindowsPrinter::DoBeginPrint(const char *p_document_name, MCPrinterDevice*& r_device)
+MCPrinterResult MCWindowsPrinter::DoBeginPrint(MCStringRef p_document_name, MCPrinterDevice*& r_device)
 {
 	if (!m_valid)
 		return PRINTER_RESULT_ERROR;

@@ -62,10 +62,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
-
-bool MCFiltersDecompress(MCStringRef p_source, MCStringRef& r_result);
-
-////////////////////////////////////////////////////////////////////////////////
 //
 //  Globals specific to STANDALONE mode
 //
@@ -583,11 +579,6 @@ void MCStack::mode_takewindow(MCStack *other)
 void MCStack::mode_takefocus(void)
 {
 	MCscreen->setinputfocus(window);
-}
-
-char *MCStack::mode_resolve_filename(const char *filename)
-{
-	return NULL;
 }
 
 bool MCStack::mode_needstoopen(void)

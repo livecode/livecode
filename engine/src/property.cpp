@@ -2989,12 +2989,12 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 	}
 	return ES_NORMAL;
 #endif /* MCProperty::set */
-if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
+	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
 	{
-        MCAutoStringRef t_data;
+        MCAutoDataRef t_data;
         MCAutoStringRef t_type;
         
-        ep . copyasstringref(&t_data);
+        ep . copyasdataref(&t_data);
 		if (customindex != nil)
         {
 			if (customindex -> eval(ep) != ES_NORMAL)
@@ -4798,7 +4798,7 @@ Exec_stat MCProperty::eval(MCExecPoint &ep)
 #endif /* MCProperty::eval */
 	if (which == P_CLIPBOARD_DATA || which == P_DRAG_DATA)
 	{
-        MCAutoStringRef t_data;
+        MCAutoDataRef t_data;
         MCAutoStringRef t_type;
         
 		if (customindex != nil)

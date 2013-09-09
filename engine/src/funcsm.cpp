@@ -1416,15 +1416,15 @@ Exec_stat MCMD5Digest::eval(MCExecPoint &ep)
 
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_source;
+	MCAutoDataRef t_result;
 
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
+	/* UNCHECKED */ ep.copyasdataref(&t_source);
 
 	MCFiltersEvalMD5Digest(ctxt, *t_source, &t_result);
 
@@ -1473,15 +1473,15 @@ Exec_stat MCSHA1Digest::eval(MCExecPoint &ep)
 
 
 	MCExecContext ctxt(ep);
-	MCAutoStringRef t_source;
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_source;
+	MCAutoDataRef t_result;
 
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_MD5DIGEST_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
-	/* UNCHECKED */ ep.copyasstringref(&t_source);
+	/* UNCHECKED */ ep.copyasdataref(&t_source);
 
 	MCFiltersEvalSHA1Digest(ctxt, *t_source, &t_result);
 

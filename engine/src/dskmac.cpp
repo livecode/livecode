@@ -1809,7 +1809,7 @@ OSErr MCS_path2FSSpec(MCStringRef p_filename, FSSpec *fspec)
 	memset(fspec, 0, sizeof(FSSpec));
     
 	char *f2 = strrchr(MCStringGetCString(*t_resolved_path), '/');
-	if (f2 != NULL && f2 != (const char*)MCStringGetNativeCharPtr(*t_resolved_path))
+	if (f2 != NULL && f2 != (const char*)MCStringGetCString(*t_resolved_path))
 		*f2++ = '\0';
 	char *fspecname = strclone(f2);
     if (!t_utf_path.Lock(*t_resolved_path))
@@ -2616,7 +2616,7 @@ public:
 	virtual bool Seek(int64_t p_offset, int p_dir)
     {
         off_t t_new_pos;
-        t_new_pos = lseek(m_serial_port, p_offset, p_dir);
+        t_new_pos = lseek(m_serial_port, p_offset, p_dir < 0 ? SEEK_END : (p_dir > 0 ? SEEK_SET : SEEK_CUR));
         
         if (t_new_pos == (off_t)-1)
             return false;
@@ -5730,7 +5730,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         t_found_folder = true;
     else if (MCStringGetLength(p_type) == 4)
     {
-        t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(p_type)));
+        t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(p_type)));
         
         uindex_t t_i;
         for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
@@ -5769,7 +5769,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             t_found_folder = true;
         else if (MCStringGetLength(MCNameGetString(p_type)) == 4)
         {
-            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetBytePtr(MCNameGetString(p_type))));
+            t_mac_folder = MCSwapInt32NetworkToHost(*((uint32_t*)MCStringGetNativeCharPtr(MCNameGetString(p_type))));
 			
             uindex_t t_i;
             for (t_i = 0 ; t_i < ELEMENTS(sysfolderlist); t_i++)
@@ -6712,7 +6712,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return nil;
         
         if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+            t_handle -> Seek(p_offset, 1);
         
         return t_handle;
     }
@@ -6737,7 +6737,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return nil;
         
         if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+            t_handle -> Seek(p_offset, 1);
         
         return t_handle;
     }
