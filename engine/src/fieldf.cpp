@@ -2233,7 +2233,7 @@ void MCField::setupmenu(const MCString &s, uint2 fheight,
 	if (scrolling)
 	{
 		Boolean dirty;
-		setsbprop(P_VSCROLLBAR, MCtruemcstring, 0, 0,
+		setsbprop(P_VSCROLLBAR, kMCTrue, 0, 0,
 							scrollbarwidth, hscrollbar, vscrollbar, dirty);
 	}
 	fontheight = fheight;
