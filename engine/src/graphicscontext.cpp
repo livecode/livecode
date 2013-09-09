@@ -659,7 +659,7 @@ void MCGraphicsContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angl
 {
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
 	else
 		t_adjustment = 0.0f;
 	
@@ -698,7 +698,7 @@ void MCGraphicsContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 
 {
 	MCGFloat t_adjustment;
 	if (m_line_width == 0.0f || inside)
-		t_adjustment = (m_line_width == 0.0f ? 0.5f : m_line_width / 2.0f);
+		t_adjustment = (m_line_width == 0.0f ? 1.0f : m_line_width);
 	else
 		t_adjustment = 0.0f;
 	
