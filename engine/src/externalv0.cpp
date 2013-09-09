@@ -78,7 +78,7 @@ struct MCarray
 };
 
 typedef char *(*XCB)(const char *arg1, const char *arg2, const char *arg3, int *retval);
-typedef int (*SECURITYHANDLER)(MCStringRef);
+typedef int (*SECURITYHANDLER)(const char *);
 typedef void (*DELETER)(void *data);
 typedef void (*GETXTABLE)(XCB *, DELETER, const char **, Xternal **, DELETER *);
 typedef void (*CONFIGURESECURITY)(SECURITYHANDLER *handlers);
@@ -780,19 +780,21 @@ XCB MCcbs[] =
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static int can_access_file(MCStringRef p_file)
+static int can_access_file(const char *p_file)
 {
 	return MCSecureModeCanAccessDisk();
 }
 
-static int can_access_host(MCStringRef p_host)
+static int can_access_host(const char *p_host)
 {
 	if (MCSecureModeCanAccessNetwork())
 		return true;
-	return MCModeCanAccessDomain(p_host);
+    MCAutoStringRef t_host;
+    /* UNCHECKED */ MCStringCreateWithCString(p_host, &t_host);
+	return MCModeCanAccessDomain(*t_host);
 }
 
-static int can_access_library(MCStringRef p_host)
+static int can_access_library(const char *p_host)
 {
 	return true;
 }
