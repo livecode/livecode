@@ -321,6 +321,56 @@ bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_k
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCExecContext::CopyOptElementAsString(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCStringRef &r_string)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_string = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return CopyElementAsString(p_array, p_name, p_case_sensitive, r_string);
+}
+
+bool MCExecContext::CopyOptElementAsStringArray(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCArrayRef &r_string_array)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_string_array = MCValueRetain(kMCEmptyArray);
+		return true;
+	}
+	
+	return CopyElementAsStringArray(p_array, p_name, p_case_sensitive, r_string_array);
+}
+
+bool MCExecContext::CopyOptElementAsFilepath(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCStringRef &r_path)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_path = MCValueRetain(kMCEmptyString);
+		return true;
+	}
+	
+	return CopyElementAsFilepath(p_array, p_name, p_case_sensitive, r_path);
+}
+
+bool MCExecContext::CopyOptElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_name, bool p_case_sensitive, MCArrayRef &r_path_array)
+{
+	MCValueRef t_val;
+	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_name, t_val))
+	{
+		r_path_array = MCValueRetain(kMCEmptyArray);
+		return true;
+	}
+	
+	return CopyElementAsFilepathArray(p_array, p_name, p_case_sensitive, r_path_array); 
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool FormatUnsignedInteger(uinteger_t p_integer, MCStringRef& r_output)
 {
 	return MCStringFormat(r_output, "%d", p_integer);
