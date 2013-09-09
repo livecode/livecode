@@ -233,7 +233,7 @@ void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, const char *p_locati
 void MCPrinter::SetDeviceCommand(MCStringRef p_command)
 {
 	delete m_device_command;
-	if (p_command == nil || MCStringGetNativeCharAtIndex(p_command, 0) == '\0')
+	if (MCStringIsEmpty(p_command))
 		m_device_command = NULL;
 	else
 		m_device_command = strdup(MCStringGetCString(p_command));

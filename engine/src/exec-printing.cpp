@@ -465,7 +465,7 @@ void MCPrintingExecPrintLink(MCExecContext& ctxt, int p_type, MCStringRef p_targ
 	MCprinter -> MakeLink(p_target, p_area, (MCPrinterLinkType)p_type);
 }
 
-static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
+void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
 {
 	if (!ctxt . EnsurePrintingIsAllowed())
 		return;
@@ -473,26 +473,16 @@ static void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef p_title
 	MCprinter -> MakeBookmark(p_title, p_location . x, p_location . y, p_level, p_initially_closed);
 }
 
-void MCPrintingExecPrintNativeBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
+void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCDataRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
 {
-	MCAutoPointer<char> t_utf8_title;
-	if (!ctxt . EncodeStringAsUTF8(p_title, &t_utf8_title))
+	MCAutoStringRef t_title_string;
+	if (MCStringDecode(p_title, kMCStringEncodingUTF16, false, &t_title_string))
+	{
+		MCPrintingExecPrintBookmark(ctxt, *t_title_string, p_location, p_level, p_initially_closed);
 		return;
-
-	MCAutoStringRef t_utf8_title_str; 
-	/* UNCHECKED */ MCStringCreateWithCString(*t_utf8_title, &t_utf8_title_str);
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title_str, p_location, p_level, p_initially_closed);
-}
-
-void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef p_title, MCPoint p_location, integer_t p_level, bool p_initially_closed)
-{
-	MCAutoPointer<char> t_utf8_title;
-	if (!ctxt . EncodeUnicodeStringAsUTF8(p_title, &t_utf8_title))
-		return;
+	}
 	
-	MCAutoStringRef t_utf8_title_str; 
-	/* UNCHECKED */ MCStringCreateWithCString(*t_utf8_title, &t_utf8_title_str);
-	MCPrintingExecPrintBookmark(ctxt, *t_utf8_title_str, p_location, p_level, p_initially_closed);
+	ctxt . Throw();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
