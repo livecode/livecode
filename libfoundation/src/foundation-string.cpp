@@ -301,8 +301,77 @@ bool MCStringDecodeAndRelease(MCDataRef p_data, MCStringEncoding p_encoding, boo
 
 ////////////////////////////////////////////////////////////////////////////////
 
+static bool __MCStringFormatSupportedForUnicode(const char *p_format)
+{
+	while(*p_format != '\0')
+	{
+		if (*p_format == '%' &&
+			(p_format[1] != 's' && p_format[1] != 'd' && p_format[1] != '@'))
+			return false;
+		
+		if (*p_format == '\\' &&
+			(p_format[1] != 'n' && p_format[1] != '"'))
+			return false;
+		
+		p_format++;
+	}
+	
+	return true;
+}
+
 bool MCStringFormatV(MCStringRef& r_string, const char *p_format, va_list p_args)
 {
+	if (__MCStringFormatSupportedForUnicode(p_format))
+	{
+		MCStringRef t_buffer;
+		if (!MCStringCreateMutable(0, t_buffer))
+			return false;
+		
+		bool t_success;
+		t_success = true;
+		
+		while(t_success && *p_format != '\0')
+		{
+			if (*p_format == '\\')
+			{
+				p_format++;
+				if (*p_format == 'n')
+					t_success = MCStringAppendNativeChar(t_buffer, '\n');
+				else if (*p_format == '"')
+					t_success = MCStringAppendNativeChar(t_buffer, '"');
+				else
+					MCAssert(false);
+			}
+			else if (*p_format == '%')
+			{
+				p_format++;
+				if (*p_format == 's')
+				{
+					const char *t_cstring;
+					t_cstring = va_arg(p_args, const char *);
+					t_success = MCStringAppendNativeChars(t_buffer, (const char_t *)t_cstring, strlen(t_cstring));
+				}
+				else if (*p_format == 'd')
+				{
+					char t_cnumber[16];
+					sprintf(t_cnumber, "%d", va_arg(p_args, int));
+					t_success = MCStringAppendNativeChars(t_buffer, (const char_t *)t_cnumber, strlen(t_cnumber));
+				}
+				else if (*p_format == '@')
+					t_success = MCStringAppend(t_buffer, va_arg(p_args, MCStringRef));
+			}
+			else
+				t_success = MCStringAppendNativeChar(t_buffer, *p_format);
+			
+			p_format++;
+		}
+		
+		if (t_success)
+			t_success = MCStringCopyAndRelease(t_buffer, r_string);
+		
+		return t_success;
+	}
+	
 	char_t *t_string;
 	uindex_t t_size;
 	if (!MCNativeCharsFormatV(t_string, t_size, p_format, p_args))
