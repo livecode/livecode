@@ -785,8 +785,8 @@ MCControl *MCHcfield::build(MCHcstak *hcsptr, MCStack *sptr)
 	fptr->obj_id = ++maxid;
 	if (script != NULL)
 	{
-		fptr->script = script;
-		fptr->flags |= F_SCRIPT;
+		fptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	fptr->rect = rect;
@@ -962,8 +962,8 @@ MCControl *MCHcbutton::build(MCHcstak *hcsptr, MCStack *sptr)
 	bptr->rect = rect;
 	if (script != NULL)
 	{
-		bptr->script = script;
-		bptr->flags |= F_SCRIPT;
+		bptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	bptr->flags &= ~(F_STYLE | F_DISPLAY_STYLE | F_ALIGNMENT | F_SHOW_ICON
@@ -1433,8 +1433,8 @@ MCCard *MCHccard::build(MCHcstak *hcsptr, MCStack *sptr)
 	delete name;
 	if (script != NULL)
 	{
-		cptr->script = script;
-		cptr->flags |= F_SCRIPT;
+		cptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	if (atts & HC_BC_DONT_SEARCH)
@@ -1649,8 +1649,8 @@ MCGroup *MCHcbkgd::build(MCHcstak *hcsptr, MCStack *sptr)
 	gptr->rect.x = gptr->rect.y = 0;
 	if (script != NULL)
 	{
-		gptr->script = script;
-		gptr->flags |= F_SCRIPT;
+		gptr -> setscript_cstring(script);
+		delete script;
 	}
 	name = script = NULL;
 	if (atts & HC_BC_DONT_SEARCH)
@@ -2241,15 +2241,13 @@ MCStack *MCHcstak::build()
 	delete name;
 	if (script != NULL)
 	{
-		if (sptr->script != NULL)
-			delete sptr->script;
-		sptr->script = script;
+		sptr -> setscript_cstring(script);
+		delete script;
 		if (sptr->hlist != NULL)
 		{
 			delete sptr->hlist;
 			sptr->hlist = NULL;
 		}
-		sptr->flags |= F_SCRIPT;
 	}
 	name = script = NULL;
 	sptr->rect = rect;

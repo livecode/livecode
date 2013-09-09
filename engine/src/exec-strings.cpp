@@ -877,7 +877,7 @@ void MCStringsEvalIsAmongTheTokensOf(MCExecContext& ctxt, MCStringRef p_token, M
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{
-		if (MCStringIsEqualToOldString(p_token, sp.gettoken(), t_options))
+		if (MCStringIsEqualToOldString(p_token, sp.gettoken_oldstring(), t_options))
 		{
 			r_result = true;
 			return;

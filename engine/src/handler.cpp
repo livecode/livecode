@@ -103,12 +103,12 @@ MCHandler::~MCHandler()
 
 Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 {
-	MCString t_token;
-	t_token = sp . gettoken();
+	MCStringRef t_token;
+	t_token = sp . gettoken_stringref();
 
-	MCString t_token_name;
+	MCAutoStringRef t_token_name;
 	bool t_is_reference;
-	if (t_token . getstring()[0] != '@')
+	if (MCStringGetNativeCharAtIndex(t_token, 0) != '@')
 	{
 		t_is_reference = false;
 		t_token_name = t_token;
@@ -116,11 +116,11 @@ Parse_stat MCHandler::newparam(MCScriptPoint& sp)
 	else
 	{
 		t_is_reference = true;
-		t_token_name . set(t_token . getstring() + 1, t_token . getlength() - 1);
+		/* UNCHECKED */ MCStringCopySubstring(t_token, MCRangeMake(1, MCStringGetLength(t_token) - 1), &t_token_name);
 	}
 
 	MCNameRef t_name;
-	/* UNCHECKED */ MCNameCreateWithOldString(t_token_name, t_name);
+	/* UNCHECKED */ MCNameCreate(*t_token_name, t_name);
 
 	// OK-2010-01-11: [[Bug 7744]] - Check existing parsed parameters for duplicates.
 	for (uint2 i = 0; i < npnames; i++)
@@ -790,7 +790,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 				{
 					if (te->type != TT_STATEMENT)
 					{
-						MCeerror->add(EE_DO_NOTCOMMAND, line, pos, sp.gettoken());
+						MCeerror->add(EE_DO_NOTCOMMAND, line, pos, sp.gettoken_stringref());
 						stat = ES_ERROR;
 					}
 					else
@@ -798,7 +798,7 @@ Exec_stat MCHandler::doscript(MCExecPoint &ep, uint2 line, uint2 pos)
 				}
 			else
 			{
-				MCeerror->add(EE_DO_NOCOMMAND, line, pos, sp.gettoken());
+				MCeerror->add(EE_DO_NOCOMMAND, line, pos, sp.gettoken_stringref());
 				stat = ES_ERROR;
 			}
 			if (stat == ES_NORMAL)

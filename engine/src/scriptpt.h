@@ -37,7 +37,7 @@ struct Cvalue
 
 class MCScriptPoint
 {
-	char *script;
+	MCDataRef script;
 	MCObject *curobj;
 	MCHandlerlist *curhlist;
 	MCHandler *curhandler;
@@ -62,23 +62,12 @@ class MCScriptPoint
 
 public:
 	MCScriptPoint(MCScriptPoint &sp);
-	MCScriptPoint(MCObject *, MCHandlerlist *, const char *);
+	MCScriptPoint(MCObject *, MCHandlerlist *, MCStringRef script);
 	MCScriptPoint(MCExecPoint &ep);
 	MCScriptPoint(const MCString &s);
 	~MCScriptPoint();
-	MCScriptPoint& operator=(const MCScriptPoint& sp)
-	{
-		curobj = sp.curobj;
-		curhlist = sp.curhlist;
-		curhandler = sp.curhandler;
-		curptr = sp.curptr;
-		tokenptr = sp.tokenptr;
-		backupptr = sp.backupptr;
-		token = sp.token;
-		line = sp.line;
-		pos = sp.pos;
-		return *this;
-	}
+	MCScriptPoint& operator=(const MCScriptPoint& sp);
+	
 	void allowescapes(Boolean which)
 	{
 		escapes = which;
@@ -104,16 +93,15 @@ public:
 		return pos > (curptr - backupptr)
 		       ?  pos - (curptr - backupptr) : 1;
 	}
-	MCString &gettoken()
-	{
-		return token;
-	}
+	bool token_is_cstring(const char *p_cstring);
 
+	MCString gettoken_oldstring(void);
 	MCNameRef gettoken_nameref(void);
+	MCStringRef gettoken_stringref(void);
 
 	const char *getscript()
 	{
-		return script;
+		return (const char *)MCDataGetBytePtr(script);
 	}
 	MCObject *getobj()
 	{

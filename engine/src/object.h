@@ -189,7 +189,7 @@ protected:
 	MCStringRef *colornames;
 	uint4 *pixmapids;
 	Pixmap *pixmaps;
-	char *script;
+	MCStringRef _script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
@@ -445,9 +445,9 @@ public:
 	{
 		return flags;
 	}
-	char *getscript(void)
+	MCStringRef _getscript(void)
 	{
-		return script;
+		return _script;
 	}
 	MCHandlerlist *gethandlers(void)
 	{
@@ -1034,6 +1034,8 @@ protected:
 	// MW-2012-02-14: [[ FontRefs ]] Called by open/close to map/unmap the concrete font.
 	void mapfont(void);
 	void unmapfont(void);
+	
+	void setscript_cstring(const char *script);
 	
 private:
 #ifdef OLD_EXEC

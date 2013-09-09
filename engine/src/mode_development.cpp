@@ -297,8 +297,9 @@ IO_stat MCDispatch::startup(void)
 				return IO_NORMAL;
 		}
 
-		if (sptr -> getscript() != NULL)
-			memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
+		// TODO: Script Wiping
+		// if (sptr -> getscript() != NULL)
+		//	memset(sptr -> getscript(), 0, strlen(sptr -> getscript()));
 
 		destroystack(sptr, True);
 		MCtopstackptr = NULL;

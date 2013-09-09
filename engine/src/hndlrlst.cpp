@@ -414,7 +414,7 @@ void MCHandlerlist::newglobal(MCNameRef p_name)
 	globals[nglobals++] = gptr;
 }
 
-Parse_stat MCHandlerlist::parse(MCObject *objptr, const char *script)
+Parse_stat MCHandlerlist::parse(MCObject *objptr, MCStringRef script)
 {
 	Parse_stat status = PS_NORMAL;
 

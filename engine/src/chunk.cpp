@@ -1697,10 +1697,10 @@ Exec_stat MCChunk::mark(MCExecPoint &ep, int4 &start, int4 &end, Boolean force, 
 		Parse_stat ps = sp.nexttoken();
 		while (s-- && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		start = sp.gettoken().getstring() - sp.getscript() + offset;
+		start = sp.gettoken_oldstring().getstring() - sp.getscript() + offset;
 		while (--n && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		end = sp.gettoken().getstring() + sp.gettoken().getlength()
+		end = sp.gettoken_oldstring().getstring() + sp.gettoken_oldstring().getlength()
 		      - sp.getscript() + offset;
 		MCerrorlock--;
 		sptr = startptr + start;

@@ -71,9 +71,8 @@ void MCStack::setidlefunc(void (*newfunc)())
 
 Boolean MCStack::setscript(char *newscript)
 {
-	delete script;
-	script = newscript;
-	flags |= F_SCRIPT;
+	setscript_cstring(newscript);
+	delete newscript;
 	parsescript(False);
 	if (hlist == NULL)
 	{
