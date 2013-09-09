@@ -1779,10 +1779,11 @@ public:
 	virtual ~MCGo();
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
+    virtual void compile(MCSyntaxFactoryRef);
 #ifdef OLD_EXEC
 	MCStack *findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr);
 #endif
-	MCStack *findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr, bool &binary_fail);
+	MCStack *findstack(MCExecPoint &ep, Chunk_term etype, MCCard *&cptr);
 };
 
 class MCHide : public MCStatement

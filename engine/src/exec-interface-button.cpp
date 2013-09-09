@@ -216,10 +216,75 @@ static MCExecCustomTypeInfo _kMCInterfaceButtonIconTypeInfo =
 
 //////////
 
+enum MCInterfaceButtonHiliteType
+{
+    kMCInterfaceButtonHiliteMixed,
+    kMCInterfaceButtonHiliteBoolean
+};
+
+struct MCInterfaceButtonHilite
+{
+    MCInterfaceButtonHiliteType type;
+    
+    union
+    {
+        bool state;
+        uint2 mixed;
+    };
+    
+};
+
+static void MCInterfaceButtonHiliteParse(MCExecContext& ctxt, MCStringRef p_input, MCInterfaceButtonHilite& r_output)
+{
+    if (MCStringIsEqualToCString(p_input, "mixed", kMCCompareCaseless))
+    {
+        r_output . mixed = Mixed;
+        r_output . type = kMCInterfaceButtonHiliteMixed;
+    }
+    
+    if (MCU_stob(p_input, r_output . state))
+    {
+        r_output . type = kMCInterfaceButtonHiliteBoolean;
+        return;
+    }
+
+    ctxt . LegacyThrow(EE_OBJECT_NAB);
+}
+
+static void MCInterfaceButtonHiliteFormat(MCExecContext& ctxt, const MCInterfaceButtonHilite& p_input, MCStringRef& r_output)
+{
+    if (p_input . type == kMCInterfaceButtonHiliteBoolean)
+    {
+        r_output = MCValueRetain(p_input . state ? kMCTrueString : kMCFalseString);
+        return;
+    }
+    
+    if (MCStringCreateWithCString("mixed", r_output))
+        return;
+    
+    ctxt . Throw();
+}
+
+static void MCInterfaceButtonHiliteFree(MCExecContext& ctxt, MCInterfaceButtonHilite& p_input)
+{
+}
+
+static MCExecCustomTypeInfo _kMCInterfaceButtonHiliteTypeInfo =
+{
+	"Interface.ButtonHilite",
+	sizeof(MCInterfaceButtonHilite),
+	(void *)MCInterfaceButtonHiliteParse,
+	(void *)MCInterfaceButtonHiliteFormat,
+	(void *)MCInterfaceButtonHiliteFree
+};
+
+//////////
 
 MCExecEnumTypeInfo *kMCInterfaceButtonStyleTypeInfo = &_kMCInterfaceButtonStyleTypeInfo;
 MCExecEnumTypeInfo *kMCInterfaceButtonMenuModeTypeInfo = &_kMCInterfaceButtonMenuModeTypeInfo;
 MCExecSetTypeInfo *kMCInterfaceButtonAcceleratorModifiersTypeInfo = &_kMCInterfaceButtonAcceleratorModifiersTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceButtonIconTypeInfo = &_kMCInterfaceButtonIconTypeInfo;
+MCExecCustomTypeInfo *kMCInterfaceButtonHiliteTypeInfo = &_kMCInterfaceButtonHiliteTypeInfo;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -460,6 +525,8 @@ void MCButton::DoSetIcon(MCExecContext& ctxt, Current_icon which, const MCInterf
 			reseticon();
 		}
 	}
+	
+	Redraw();
 }
 
 void MCButton::SetArmedIcon(MCExecContext& ctxt, const MCInterfaceButtonIcon& p_icon)
@@ -807,7 +874,7 @@ void MCButton::SetMenuName(MCExecContext& ctxt, MCStringRef p_name)
 
 void MCButton::SetShowBorder(MCExecContext& ctxt, bool setting)
 {
-	MCObject::SetShowBorder(ctxt, setting);
+	MCControl::SetShowBorder(ctxt, setting);
 	if (MCaqua && menumode == WM_PULLDOWN)
 	{
 		freemenu(False);
@@ -1218,4 +1285,45 @@ void MCButton::SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margi
     
     if (entry != nil)
         entry -> SetMargins(ctxt, p_margins);
+}
+
+void MCButton::GetHilite(MCExecContext& ctxt, uint32_t p_part, MCInterfaceButtonHilite& r_hilite)
+{
+    uint2 t_hilite;
+    t_hilite = gethilite(p_part);
+    
+    if (t_hilite == Mixed)
+    {
+        r_hilite . type = kMCInterfaceButtonHiliteMixed;
+        r_hilite . mixed = t_hilite;
+        return;
+    }
+
+    r_hilite . type = kMCInterfaceButtonHiliteBoolean;
+    r_hilite . state = (Boolean)t_hilite == True;
+}
+
+void MCButton::SetHilite(MCExecContext& ctxt, uint32_t p_part, const MCInterfaceButtonHilite& p_hilite)
+{
+    Boolean t_new_state;
+    if (p_hilite . type == kMCInterfaceButtonHiliteMixed)
+        t_new_state = p_hilite . mixed;
+    else
+        t_new_state = (Boolean)p_hilite . state;
+    
+    if (sethilite(p_part, t_new_state))
+    {
+        if (state & CS_HILITED)
+        {
+            // MH-2007-03-20: [[ Bug 4035 ]] If the hilite of a radio button is set programmatically, other radio buttons were not unhilited if the radiobehavior of the group is set.
+            if (getstyleint(flags) == F_RADIO && parent -> gettype() == CT_GROUP)
+            {
+                MCGroup *gptr = (MCGroup *)parent;
+                gptr->radio(p_part, this);
+            }
+            radio();
+        }
+        reseticon();
+        Redraw();
+    }
 }

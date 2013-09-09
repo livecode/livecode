@@ -218,7 +218,7 @@ public:
 	virtual void iconifywindow(Window window);
 	virtual void uniconifywindow(Window window);
 	
-	virtual void setname(Window window, const char *newname);
+	virtual void setname(Window window, MCStringRef newname);
 	virtual void setcmap(MCStack *sptr);
 	virtual void sync(Window w);
 	virtual void beep();

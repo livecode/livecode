@@ -111,9 +111,17 @@ static int32_t s_location_calibration_timeout = 0;
 - (void)locationManager: (CLLocationManager *)manager didFailWithError: (NSError *)error
 {
 	if (s_location_enabled)
-		MCSensorPostErrorMessage(kMCSensorTypeLocation, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+		MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeLocation, *t_error);
+	}
 	else if (s_heading_enabled)
-        MCSensorPostErrorMessage(kMCSensorTypeHeading, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+	{
+        MCAutoStringRef t_error;
+		/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+		MCSensorPostErrorMessage(kMCSensorTypeHeading, *t_error);
+	}
 }
 
 - (void)locationManager: (CLLocationManager *)manager didUpdateToLocation: (CLLocation *)newLocation fromLocation: (CLLocation *)oldLocation
@@ -389,7 +397,11 @@ static void (^acceleration_update)(CMAccelerometerData *, NSError *) = ^(CMAccel
 		if (error == nil)
 			MCSensorPostChangeMessage(kMCSensorTypeAcceleration);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);		
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeAcceleration, *t_error);
+		}
 	}
 };
 
@@ -451,7 +463,11 @@ static void (^rotation_rate_update)(CMGyroData *, NSError *) = ^(CMGyroData *gyr
 		if (error == nil)
             MCSensorPostChangeMessage(kMCSensorTypeRotationRate);
 		else
-			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, [[error localizedDescription] cStringUsingEncoding: NSMacOSRomanStringEncoding]);
+		{
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCFString((CFStringRef)[error localizedDescription], &t_error);
+			MCSensorPostErrorMessage(kMCSensorTypeRotationRate, *t_error);
+		}
 	}
 };
 

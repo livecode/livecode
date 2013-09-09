@@ -172,24 +172,13 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 			//   stack title will be UTF-8 already.
 			if (strncmp(version, "5.5", 3) >= 0)
 			{
-				if ((stat = IO_read_string(title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref_utf8(title, stream)) != IO_NORMAL)
 					return stat;
 			}
 			else
 			{
-				// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-				//   stored as a UTF-8 string.
-				char *t_native_title;
-
-				if ((stat = IO_read_string(t_native_title, stream)) != IO_NORMAL)
+				if ((stat = IO_read_stringref(title, stream, false)) != IO_NORMAL)
 					return stat;
-
-				MCExecPoint ep;
-				ep . setsvalue(t_native_title);
-				ep . nativetoutf8();
-				title = ep . getsvalue() . clone();
-
-				delete t_native_title;
 			}
 		}
 		if (flags & F_DECORATIONS)
@@ -218,7 +207,7 @@ IO_stat MCStack::load_stack(IO_handle stream, const char *version)
 		if (maxwidth == 1280 && maxheight == 1024)
 			maxwidth = maxheight = MAXUINT2;
 	}
-	if ((stat = IO_read_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_read_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 	if (strncmp(version, "1.3", 3) > 0)
 	{
@@ -555,26 +544,13 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		//   write out UTF-8 directly.
 		if (MCstackfileversion >= 5500)
 		{
-			if ((stat = IO_write_string(title, stream)) != IO_NORMAL)
+			if ((stat = IO_write_stringref_utf8(title, stream)) != IO_NORMAL)
 				return stat;
 		}
 		else
 		{
-			// MW-2007-07-06: [[ Bug 3226 ]] Updated to take into account 'title' being
-			//   stored as a UTF-8 string.
-			MCExecPoint ep;
-			char *t_native_title;
-			ep . setsvalue(title);
-			ep . utf8tonative();
-			t_native_title = ep . getsvalue() . clone();
-
-			if ((stat = IO_write_string(t_native_title, stream)) != IO_NORMAL)
-			{
-				delete t_native_title;
+			if ((stat = IO_write_stringref(title, stream, false)) != IO_NORMAL)
 				return stat;
-			}
-
-			delete t_native_title;
 		}
 	}
 	if (flags & F_DECORATIONS)
@@ -596,7 +572,7 @@ IO_stat MCStack::save_stack(IO_handle stream, uint4 p_part, bool p_force_ext)
 		if ((stat = IO_write_uint2(maxheight, stream)) != IO_NORMAL)
 			return stat;
 	}
-	if ((stat = IO_write_string(externalfiles, stream)) != IO_NORMAL)
+	if ((stat = IO_write_stringref(externalfiles, stream, false)) != IO_NORMAL)
 		return stat;
 
 	// MW-2012-02-17: [[ LogFonts ]] Save the stack's logical font table.
@@ -937,7 +913,18 @@ MCObject *MCStack::getAVid(Chunk_term type, uint4 inid)
 	return NULL;
 }
 
-MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+/* LEGACY */ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	MCObject *t_object;
+	if (!getAVname(type, *t_name, t_object))
+		return nil;
+    
+	return t_object;
+}
+
+bool MCStack::getAVname(Chunk_term type, MCNameRef p_name, MCObject*& r_object)
 {
 	MCObject *objs;
 	if (type == CT_AUDIO_CLIP)
@@ -945,16 +932,19 @@ MCObject *MCStack::getAVname(Chunk_term type, const MCString &s)
 	else
 		objs = vclips;
 	if (objs == NULL)
-		return NULL;
+		return false;
 	MCObject *tobj = objs;
 	do
 	{
-		if (MCU_matchname(s, type, tobj->getname()))
-			return tobj;
+		if (MCU_matchname(p_name, type, tobj->getname()))
+        {
+			r_object = tobj;
+            return true;
+        }
 		tobj = (MCControl *)tobj->next();
 	}
 	while (tobj != objs);
-	return NULL;
+	return false;
 }
 
 Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
@@ -1151,7 +1141,7 @@ Exec_stat MCStack::setcard(MCCard *card, Boolean recent, Boolean dynamic)
 }
 
 
-MCStack *MCStack::findstackfile(const MCString &s)
+MCStack *MCStack::findstackfile_oldstring(const MCString &s)
 {
 	char *fname;
 	if ((fname = getstackfile(s)) != NULL)
@@ -1161,7 +1151,7 @@ MCStack *MCStack::findstackfile(const MCString &s)
 		if (MCdispatcher->loadfile(fname, tstk) == IO_NORMAL)
 		{
 			delete fname;
-			MCStack *stackptr = tstk->findsubstackname(s);
+			MCStack *stackptr = tstk->findsubstackname_oldstring(s);
 			
 			// MW-2007-12-17: [[ Bug 266 ]] The watch cursor must be reset before we
 			//   return back to the caller.
@@ -1181,38 +1171,35 @@ MCStack *MCStack::findstackfile(const MCString &s)
 	return NULL;
 }
 
-bool MCStack::findstackname(MCNameRef p_name, MCStack *&r_stack)
+MCStack *MCStack::findstackname(MCNameRef p_name)
 {
-	if (nil != (r_stack = findsubstackname(MCNameGetOldString(p_name))))
-		return true;
+	MCStack *foundstk;
+	if ((foundstk = findsubstackname(p_name)) != NULL)
+		return foundstk;
 	else
-		return nil != (r_stack = MCdispatcher->findstackname(MCNameGetOldString(p_name)));
+		return MCdispatcher->findstackname(MCNameGetOldString(p_name));
 }
 
-/* LEGACY */ MCStack *MCStack::findstackname(const MCString &s)
+/* LEGACY */ MCStack *MCStack::findstackname_oldstring(const MCString &s)
 {
 	MCNewAutoNameRef t_name;
 	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
-	MCStack *t_stack;
-	if (!findstackname(*t_name, t_stack))
-		return nil;
-
-	return t_stack;
+	return findstackname(*t_name);
 }
 
-MCStack *MCStack::findsubstackname(const MCString &s)
+MCStack *MCStack::findsubstackname(MCNameRef p_name)
 {
-	if (findname(CT_STACK, s) != NULL)
+	if (findname(CT_STACK, MCNameGetOldString(p_name)) != nil)
 		return this;
-
+    
 	MCStack *sptr = this;
 	uint2 num = 0;
-	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(s, num))
+	if (!MCdispatcher->ismainstack(this) && !MCU_stoui2(MCNameGetString(p_name), num))
 		sptr = parent->getstack();
 	if (sptr->substacks != NULL)
 	{
 		MCStack *tptr = sptr->substacks;
-		if (MCU_stoui2(s, num))
+		if (MCU_stoui2(MCNameGetString(p_name), num))
 		{
 			while (--num)
 			{
@@ -1225,13 +1212,20 @@ MCStack *MCStack::findsubstackname(const MCString &s)
 		else
 			do
 			{
-				if (tptr->findname(CT_STACK, s) != NULL)
+				if (tptr->findname(CT_STACK, MCNameGetOldString(p_name)) != NULL)
 					return tptr;
 				tptr = (MCStack *)tptr->next();
 			}
-			while (tptr != sptr->substacks);
+        while (tptr != sptr->substacks);
 	}
 	return NULL;
+}
+
+/* LEGACY */ MCStack *MCStack::findsubstackname_oldstring(const MCString &s)
+{
+	MCNewAutoNameRef t_name;
+	/* UNCHECKED */ MCNameCreateWithOldString(s, &t_name);
+	return findsubstackname(*t_name);
 }
 
 MCStack *MCStack::findstackid(uint4 fid)

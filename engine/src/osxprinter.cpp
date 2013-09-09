@@ -923,14 +923,12 @@ void MCMacOSXPrinter::GetProperties(bool p_include_output)
 			CFRelease(t_output_url);
 	}
 	
-	const char *t_document_name;
-	t_document_name = GetJobName();
-	if (t_document_name == NULL)
-		t_document_name = MCdefaultstackptr -> gettitletext();
+    MCAutoStringRef t_document_name_str;
+	if (!MCStringCreateWithCString(GetJobName(), &t_document_name_str))
+        t_document_name_str = MCdefaultstackptr -> gettitletext();
 	
 	CFStringRef t_cf_document;
-	t_cf_document = CFStringCreateWithCString(kCFAllocatorDefault, t_document_name, kCFStringEncodingMacRoman);
-	if (t_cf_document != NULL)
+	if (MCStringConvertToCFStringRef(*t_document_name_str, t_cf_document))
 	{
 		PMSetJobNameCFString(m_settings, t_cf_document);
 		CFRelease(t_cf_document);

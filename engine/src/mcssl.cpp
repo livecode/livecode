@@ -153,14 +153,14 @@ unsigned long SSLError(char *errbuf)
 }
 
 #ifdef MCSSL
-bool MCCrypt_random_bytes(uint32_t p_bytecount, MCStringRef& r_bytes)
+bool MCCrypt_random_bytes(uint32_t p_bytecount, MCDataRef& r_bytes)
 {
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 
 	return (InitSSLCrypt() == True) &&
 		t_buffer.New(p_bytecount) &&
-		(RAND_bytes(t_buffer.Chars(), p_bytecount) == 1) &&
-		t_buffer.CreateString(r_bytes);
+		(RAND_bytes(t_buffer.Bytes(), p_bytecount) == 1) &&
+		t_buffer.CreateData(r_bytes);
 }
 
 bool load_pem_key(const char *p_data, uint32_t p_length, RSA_KEYTYPE p_type, const char *p_passphrase, EVP_PKEY *&r_key)
@@ -335,10 +335,9 @@ bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_messag
 }
 
 #else // !defined(MCSSL)
-bool MCCrypt_random_bytes(uint32_t p_byte_count, MCStringRef& r_bytes)
+bool MCCrypt_random_bytes(uint32_t p_byte_count, MCDataRef& r_bytes)
 {
-	r_bytes = MCValueRetain(kMCEmptyString);
-	return true;
+	return false;
 }
 
 bool MCCrypt_rsa_op(bool p_encrypt, RSA_KEYTYPE p_key_type, const char *p_message_in, uint32_t p_message_in_length,

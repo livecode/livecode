@@ -125,14 +125,14 @@ bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_so
 			case REI_VISUALEFFECT_PARAMETER_TYPE_COLOUR:
 			{
 				MCColor t_colour;
-				char *t_colourname = NULL;
-				if (MCscreen -> parsecolor(t_argument -> value, &t_colour, &t_colourname))
+                MCAutoStringRef t_value;
+                /* UNCHECKED */ MCStringCreateWithCString(t_argument -> value, &t_value);
+				if (MCscreen -> parsecolor(*t_value, t_colour, NULL))
 				{
 					t_parameters -> entries[t_index] . value . colour . red = t_colour . red >> 8;
 					t_parameters -> entries[t_index] . value . colour . green = t_colour . green >> 8;
 					t_parameters -> entries[t_index] . value . colour . blue = t_colour . blue >> 8;
 					t_parameters -> entries[t_index] . value . colour . alpha = 255;
-					delete[] t_colourname;
 				}
 				else
 					t_success = false;

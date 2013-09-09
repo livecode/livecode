@@ -526,7 +526,9 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		MCColor t_color;
-		if (MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+		MCAutoStringRef t_value;
+		ep . copyasstringref(&t_value);
+		if (MCscreen -> parsecolor(*t_value, t_color, nil))
 			t_block -> setcolor(&t_color);
 	}
 	
@@ -535,7 +537,9 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		MCColor t_color;
-		if (MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+		MCAutoStringRef t_value;
+		ep . copyasstringref(&t_value);
+		if (MCscreen -> parsecolor(*t_value, t_color, nil))
 			t_block -> setbackcolor(&t_color);
 	}
 	
@@ -747,7 +751,10 @@ void MCField::parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_br
 				t_runs_array = nil;
 			
 			// Begin paragraph with style
-			parsestyledtextappendparagraph(MCValueIsArray(t_style_entry) ? (MCArrayRef)t_style_entry : nil, *t_metadata, false, x_paragraphs);
+			if (t_style_entry != nil && MCValueIsArray(t_style_entry))
+				parsestyledtextappendparagraph((MCArrayRef)t_style_entry, *t_metadata, false, x_paragraphs);
+			else
+				parsestyledtextappendparagraph(nil, *t_metadata, false, x_paragraphs);
 					
 			// Finally, we are a sequence so loop through all the elements.
 			if (t_runs_array != nil)

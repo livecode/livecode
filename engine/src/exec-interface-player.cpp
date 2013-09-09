@@ -242,24 +242,21 @@ void MCPlayer::GetFileName(MCExecContext& ctxt, MCStringRef& r_name)
 	if (filename == nil)
 		return;
 	
-	if (MCStringCreateWithCString(filename, r_name))
-		return;
-
-	ctxt . Throw();
+	r_name = MCValueRetain(filename);
 }
 
 void MCPlayer::SetFileName(MCExecContext& ctxt, MCStringRef p_name)
 {
-	if (filename == NULL || p_name == nil ||
-		!MCStringIsEqualToCString(p_name, filename, kMCCompareExact))
+	if (filename == nil || p_name == nil ||
+		!MCStringIsEqualTo(p_name, filename, kMCCompareExact))
 	{
-		delete filename;
+		MCValueRelease(filename);
 		filename = NULL;
 		playstop();
 		starttime = MAXUINT4; //clears the selection
 		endtime = MAXUINT4;
 		if (p_name != nil)
-			filename = strclone(MCStringGetCString(p_name));
+			filename = MCValueRetain(p_name);
 		prepare(kMCEmptyString);
 		Redraw();
 	}
@@ -660,5 +657,50 @@ void MCPlayer::GetHotSpots(MCExecContext& ctxt, MCStringRef& r_spots)
 
 	for (uindex_t i = 0; i < t_spot_array . Size(); i++)
 		MCMultimediaQTVRHotSpotFree(ctxt, t_spot_array[i]);
+#endif
+}
+
+void MCPlayer::SetShowBorder(MCExecContext& ctxt, bool setting)
+{
+    MCControl::SetShowBorder(ctxt, setting);
+    setrect(rect);
+    Redraw();
+}
+
+void MCPlayer::SetBorderWidth(MCExecContext& ctxt, uinteger_t width)
+{
+    MCObject::SetBorderWidth(ctxt, width);
+    setrect(rect);
+    Redraw();
+}
+
+void MCPlayer::SetVisibility(MCExecContext& ctxt, uinteger_t part, bool setting, bool visible)
+{
+    uint4 oldflags = flags;
+    MCObject::SetVisibility(ctxt, part, setting, visible);
+    if (flags != oldflags && !(flags & F_VISIBLE))
+        playstop();
+#ifdef FEATURE_QUICKTIME
+    if (theMC != NULL)
+        qt_setcontrollervisible();
+#endif
+}
+
+void MCPlayer::SetVisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, true);
+}
+
+void MCPlayer::SetInvisible(MCExecContext& ctxt, uinteger_t part, bool setting)
+{
+    SetVisibility(ctxt, part, setting, false);
+}
+
+void MCPlayer::SetTraversalOn(MCExecContext& ctxt, bool setting)
+{
+    MCObject::SetTraversalOn(ctxt, setting);
+#ifdef FEATURE_QUICKTIME
+    if (qtstate == QT_INITTED && getstate(CS_PREPARED))
+        qt_enablekeys((flags & F_TRAVERSAL_ON) != 0);
 #endif
 }

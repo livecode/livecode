@@ -1416,24 +1416,14 @@ void MCField::endselection()
 		{
 			MCExecPoint ep;
 			selectedtext(ep);
-#ifdef SHARED_STRING
-			MCSharedString *t_data;
-			t_data = MCSharedString::Create(ep . getsvalue());
-			if (t_data != NULL)
-			{
-				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, t_data))
-					MCactivefield = this;
-				t_data -> Release();
-			}
-#else
-			MCAutoStringRef t_data;
-			/* UNCHECKED */ ep . copyasstringref(&t_data);
+			
+			MCAutoDataRef t_data;
+			/* UNCHECKED */ ep . copyasdataref(&t_data);
 			if (*t_data != nil)
 			{
 				if (MCselectiondata -> Store(TRANSFER_TYPE_TEXT, *t_data))
 					MCactivefield = this;
 			}
-#endif
 		}
 
 		if (!(flags & F_LOCK_TEXT) && MCU_point_in_rect(rect, mx, my))

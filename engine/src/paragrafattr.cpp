@@ -376,9 +376,11 @@ static bool setparagraphattr_color(MCExecPoint& ep, MCParagraphAttrs*& attrs, ui
 	}
 
 	MCColor t_color;
-	if (!MCscreen -> parsecolor(ep . getsvalue(), &t_color, nil))
+	MCAutoStringRef t_value;
+	ep.copyasstringref(&t_value);
+	if (!MCscreen -> parsecolor(*t_value, t_color, nil))
 	{
-		MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, ep . getsvalue());
+		MCeerror->add(EE_OBJECT_BADCOLOR, 0, 0, *t_value);
 		return false;
 	}
 

@@ -436,10 +436,7 @@ public:
 	void linestoparagraphs(int4 si, int4 ei, MCParagraph*& sp, MCParagraph*& ep);
 
 	MCParagraph *cloneselection();
-#ifdef SHARED_STRING
-	MCSharedString *pickleselection(void);
-#endif
-	bool pickleselection(MCStringRef& r_string);
+	bool pickleselection(MCDataRef& r_string);
 
 	void cuttext();
 	void copytext();
@@ -568,7 +565,9 @@ public:
 	////////// PROPERTY SUPPORT METHODS
 
 	void Redraw(bool reset = false, int4 xoffset = 0, int4 yoffset = 0);
-
+    void UpdateScrollbars(void);
+    
+    void DoSetInputControl(MCExecContext& ctxt, Properties which, bool setting);
 	////////// PROPERTY ACCESSORS
 
 	void GetAutoTab(MCExecContext& ctxt, bool& r_flag);
@@ -581,6 +580,7 @@ public:
 	void SetFixedHeight(MCExecContext& ctxt, bool flag);
 	void GetLockText(MCExecContext& ctxt, bool& r_flag);
 	void SetLockText(MCExecContext& ctxt, bool flag);
+    virtual void SetTraversalOn(MCExecContext& ctxt, bool setting);
 	void GetSharedText(MCExecContext& ctxt, bool& r_flag);
 	void SetSharedText(MCExecContext& ctxt, bool flag);
 	void GetShowLines(MCExecContext& ctxt, bool& r_flag);
@@ -644,5 +644,32 @@ public:
 	void GetThreeDHilite(MCExecContext& ctxt, bool& r_setting);
 	void SetThreeDHilite(MCExecContext& ctxt, bool setting);
 	void GetEncoding(MCExecContext& ctxt, uint32_t part, intenum_t& r_encoding);
+    
+    void GetHilitedLines(MCExecContext& ctxt, MCStringRef& r_lines); // List type
+    void SetHilitedLines(MCExecContext& ctxt, MCStringRef p_lines); // List type
+    
+    virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+    virtual void SetShowBorder(MCExecContext& ctxt, bool setting);
+    virtual void SetTextHeight(MCExecContext& ctxt, uinteger_t* height);
+    virtual void SetTextFont(MCExecContext& ctxt, MCStringRef font);
+    virtual void SetTextSize(MCExecContext& ctxt, uinteger_t* size);
+    virtual void SetTextStyle(MCExecContext& ctxt, const MCInterfaceTextStyle& p_style);
+    virtual void SetBorderWidth(MCExecContext& ctxt, uinteger_t width);
+    virtual void Set3D(MCExecContext& ctxt, bool setting);
+    virtual void SetOpaque(MCExecContext& ctxt, bool setting);
+    virtual void SetEnabled(MCExecContext& ctxt, uint32_t part, bool setting);
+	virtual void SetDisabled(MCExecContext& ctxt, uint32_t part, bool setting);
+    
+	virtual void SetLeftMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetRightMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetTopMargin(MCExecContext& ctxt, integer_t p_margin);
+	virtual void SetBottomMargin(MCExecContext& ctxt, integer_t p_margin);
+    virtual void SetMargins(MCExecContext& ctxt, const MCInterfaceMargins& p_margins);
+	virtual void SetWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetEffectiveWidth(MCExecContext& ctxt, uinteger_t value);
+	virtual void SetEffectiveHeight(MCExecContext& ctxt, uinteger_t value);
+    virtual void SetRectangle(MCExecContext& ctxt, MCRectangle p_rect);
+    virtual void SetEffectiveRectangle(MCExecContext& ctxt, MCRectangle p_rect);
 };
 #endif

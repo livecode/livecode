@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "prefix.h"
+#include "osxprefix-legacy.h"
 
 #include "globdefs.h"
 #include "filedefs.h"
@@ -1688,7 +1689,9 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 					case kImportHtmlAttrColor:
 						{
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1699,8 +1702,10 @@ static void import_html_change_style(import_html_t& ctxt, const import_html_tag_
 						break;
 					case kImportHtmlAttrBgColor:
 						{
+							MCAutoStringRef t_value;
+							/* UNCHECKED */ MCStringCreateWithCString(p_tag . attrs[i] . value, &t_value);
 							MCColor t_color;
-							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(p_tag . attrs[i] . value, &t_color, nil))
+							if (p_tag . attrs[i] . value != nil && MCscreen -> parsecolor(*t_value, t_color, nil))
 							{
 								MCscreen -> alloccolor(t_color);
 								
@@ -1860,8 +1865,10 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			break;
 			case kImportHtmlAttrBgColor:
 			{
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_background_color = true;
@@ -1875,8 +1882,10 @@ static void import_html_parse_paragraph_attrs(import_html_tag_t& p_tag, MCFieldP
 			break;
 			case kImportHtmlAttrBorderColor:
 			{
+				MCAutoStringRef t_value_str;
+				/* UNCHECKED */ MCStringCreateWithCString(t_value, &t_value_str);
 				MCColor t_color;
-				if (MCscreen -> parsecolor(t_value, &t_color, nil))
+				if (MCscreen -> parsecolor(*t_value_str, t_color, nil))
 				{
 					MCscreen -> alloccolor(t_color);
 					r_style . has_border_color = true;

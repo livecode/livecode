@@ -262,6 +262,7 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_HISTORY, UInt16, MCButton, MenuHistory)
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_LINES, OptionalUInt16, MCButton, MenuLines)
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_BUTTON, UInt16, MCButton, MenuButton)
+
 	DEFINE_RW_OBJ_PROPERTY(P_MENU_NAME, OptionalString, MCButton, MenuName)
 	DEFINE_RW_OBJ_PROPERTY(P_ACCELERATOR_TEXT, String, MCButton, AcceleratorText)
 	DEFINE_RO_OBJ_PROPERTY(P_UNICODE_ACCELERATOR_TEXT, String, MCButton, UnicodeAcceleratorText)
@@ -275,11 +276,21 @@ MCPropertyInfo MCButton::kProperties[] =
 	DEFINE_RW_OBJ_PROPERTY(P_DEFAULT, Bool, MCButton, Default)
 	DEFINE_RW_OBJ_PROPERTY(P_TEXT, String, MCButton, Text)
 	DEFINE_RW_OBJ_PROPERTY(P_UNICODE_TEXT, String, MCButton, Text)
+	
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ICON, InterfaceButtonIcon, MCButton, Icon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_ARMED_ICON, InterfaceButtonIcon, MCButton, ArmedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_DISABLED_ICON, InterfaceButtonIcon, MCButton, DisabledIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HILITED_ICON, InterfaceButtonIcon, MCButton, HiliteIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_VISITED_ICON, InterfaceButtonIcon, MCButton, VisitedIcon)
+	DEFINE_RW_OBJ_CUSTOM_PROPERTY(P_HOVER_ICON, InterfaceButtonIcon, MCButton, HoverIcon)
+    
+    DEFINE_RW_OBJ_PART_CUSTOM_PROPERTY(P_HILITE, InterfaceButtonHilite, MCButton, Hilite)
+    DEFINE_RW_OBJ_ENUM_PROPERTY(P_MENU_MODE, InterfaceButtonMenuMode, MCButton, MenuMode)
 };
 
 MCObjectPropertyTable MCButton::kPropertyTable =
 {
-	&MCObject::kPropertyTable,
+	&MCControl::kPropertyTable,
 	sizeof(kProperties) / sizeof(kProperties[0]),
 	&kProperties[0],
 };
@@ -3416,7 +3427,7 @@ Boolean MCButton::findmenu(bool p_just_for_accel)
 		if (menu == NULL)
 		{
 			MCerrorlock++;
-			menu = getstack()->findstackname(menuname);
+			menu = getstack()->findstackname_oldstring(menuname);
 			MCerrorlock--;
 			if (menu != NULL)
 				menu->addneed(this);
