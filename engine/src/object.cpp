@@ -2079,13 +2079,13 @@ void MCObject::senderror()
 		MCerrorptr->getprop(0, P_LONG_ID, ep, False);
 		MCperror->add
 		(PE_OBJECT_NAME, 0, 0, ep.getsvalue());
-		/* UNCHECKED */ MCperror->copyasstring(&t_perror);
+		/* UNCHECKED */ MCperror->copyasstringref(&t_perror);
 		MCperror->clear();
 	}
 	if (MCerrorptr == NULL)
 		MCerrorptr = this;
 	MCAutoStringRef t_eerror;
-	/* UNCHECKED */ MCeerror->copyasstring(&t_eerror);
+	/* UNCHECKED */ MCeerror->copyasstringref(&t_eerror);
 	MCscreen->delaymessage(MCerrorlockptr == NULL ? MCerrorptr : MCerrorlockptr, MCM_error_dialog, *t_eerror, *t_perror);
 	MCeerror->clear();
 	MCerrorptr = NULL;
