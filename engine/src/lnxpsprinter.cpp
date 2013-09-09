@@ -1203,7 +1203,6 @@ void MCPSMetaContext::drawtext(MCMark * p_mark )
 	
 	uint2 w = MCscreen->textwidth(f, text, l);
 	
-	
 	text[l] = '\0';
 	const char *sptr = text;
 	if ((sptr = strpbrk(text, "()\\")) != NULL)

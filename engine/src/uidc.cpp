@@ -236,7 +236,7 @@ bool MCUIDC::hasfeature(MCPlatformFeature p_feature)
 	return false;
 }
 
-void MCUIDC::setstatus(const char *status)
+void MCUIDC::setstatus(MCStringRef status)
 { }
 Boolean MCUIDC::open()
 {
@@ -585,7 +585,7 @@ Window MCUIDC::getroot()
 }
 
 MCBitmap *MCUIDC::snapshot(MCRectangle &r, uint4 window,
-                           const char *displayname)
+                           MCStringRef displayname)
 {
 	return NULL;
 }
@@ -678,7 +678,7 @@ Boolean MCUIDC::getmouseclick(uint2 button, Boolean& r_abort)
 	return False;
 }
 
-void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
+void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, MCStringRef p1, MCStringRef p2)
 {
 	if (nmessages == maxmessages)
 	{
@@ -693,11 +693,11 @@ void MCUIDC::delaymessage(MCObject *optr, MCNameRef mptr, char *p1, char *p2)
 	if (p1 != NULL)
 	{
 		params = new MCParameter;
-		params->setbuffer(p1, strlen(p1));
+		params->setvalueref_argument(p1);
 		if (p2 != NULL)
 		{
 			params->setnext(new MCParameter);
-			params->getnext()->setbuffer(p2, strlen(p2));
+			params->getnext()->setvalueref_argument(p2);
 		}
 	}
 	messages[nmessages++].params = params;
@@ -1571,102 +1571,6 @@ void MCUIDC::getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
 	bb = bluebits;
 }
 
-static int ReadInteger(const char *string, const char **NextString)
-{
-	int Result = 0;
-	int Sign = 1;
-	if (*string == '+')
-		string++;
-	else
-		if (*string == '-')
-		{
-			string++;
-			Sign = -1;
-		}
-	for (; (*string >= '0') && (*string <= '9'); string++)
-		Result = (Result * 10) + (*string - '0');
-	*NextString = string;
-	if (Sign >= 0)
-		return Result;
-	else
-		return -Result;
-}
-
-Boolean MCUIDC::position(const char *geom, MCRectangle &rect)
-{
-	unsigned int tempWidth, tempHeight;
-	int tempX, tempY;
-	const char *nextCharacter;
-
-	if (geom == NULL || *geom == '\0')
-		return False;
-	if (*geom == '=')
-		geom++;  /* ignore possible '=' at beg of geometry spec */
-
-	if (*geom != '+' && *geom != '-' && *geom != 'x')
-	{
-		tempWidth = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.width = tempWidth;
-	}
-	if (*geom == 'x' || *geom == 'X')
-	{
-		geom++;
-		tempHeight = ReadInteger(geom, &nextCharacter);
-		if (geom == nextCharacter)
-			return False;
-		geom = nextCharacter;
-		rect.height = tempHeight;
-	}
-	if (*geom == '+' || *geom == '-')
-	{
-		if (*geom == '-')
-		{
-			geom++;
-			tempX = -ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = MCscreen->getwidth() - rect.width + tempX;
-		}
-		else
-		{
-			geom++;
-			tempX = ReadInteger(geom, &nextCharacter);
-			if (geom == nextCharacter)
-				return False;
-			geom = nextCharacter;
-			rect.x = tempX;
-		}
-		if (*geom == '+' || *geom == '-')
-		{
-			if (*geom == '-')
-			{
-				geom++;
-				tempY = -ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = MCscreen->getheight() - rect.height + tempY;
-			}
-			else
-			{
-				geom++;
-				tempY = ReadInteger(geom, &nextCharacter);
-				if (geom == nextCharacter)
-					return False;
-				geom = nextCharacter;
-				rect.y = tempY;
-			}
-		}
-	}
-	if (*geom != '\0')
-		return False;
-	return True;
-}
-
 static void scaleline1(uint1 *s, uint1 *d, uint2 sw, uint2 dw)
 {
 	uint1 sbyte = *s++;
@@ -1954,11 +1858,11 @@ void MCUIDC::seticon(uint4 p_icon)
 {
 }
 
-void MCUIDC::seticonmenu(const char *p_menu)
+void MCUIDC::seticonmenu(MCStringRef p_menu)
 {
 }
 
-void MCUIDC::configurestatusicon(uint32_t icon_id, const char *menu, const char *tooltip)
+void MCUIDC::configurestatusicon(uint32_t icon_id, MCStringRef menu, MCStringRef tooltip)
 {
 }
 
@@ -2037,7 +1941,7 @@ MCDragAction MCUIDC::dodragdrop(MCPasteboard* p_pasteboard, MCDragActionSet p_al
 
 //
 
-MCScriptEnvironment *MCUIDC::createscriptenvironment(const char *p_language)
+MCScriptEnvironment *MCUIDC::createscriptenvironment(MCStringRef p_language)
 {
 	return NULL;
 }
@@ -2048,28 +1952,14 @@ void MCUIDC::enactraisewindows(void)
 }
 //
 
-int32_t MCUIDC::popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message)
+int32_t MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message)
 {
 	return 0;
 }
 
-bool MCUIDC::popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint, MCStringRef& r_result)
+bool MCUIDC::popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_message, MCStringRef p_initial, bool p_hint, MCStringRef& r_result)
 {
 	return false;
-}
-
-bool MCUIDC::popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message, int32_t &r_choice)
-{
-	const char **t_buttons = nil;
-	if (!MCMemoryNewArray(p_button_count, t_buttons))
-		return false;
-	for (uindex_t i = 0; i < p_button_count; i++)
-		t_buttons[i] = MCStringGetCString(p_buttons[i]);
-
-	r_choice = popupanswerdialog(t_buttons, p_button_count, p_type, MCStringGetCString(p_title), MCStringGetCString(p_message));
-
-	MCMemoryDelete(t_buttons);
-	return true;
 }
 
 //

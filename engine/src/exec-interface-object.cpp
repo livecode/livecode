@@ -1177,14 +1177,9 @@ void MCObject::GetScript(MCExecContext& ctxt, MCStringRef& r_script)
 
 	bool t_success = true;
 	
-	if (script == nil)
-		r_script = MCValueRetain(kMCEmptyString);
-	else
-	{
-		getstack() -> unsecurescript(this);
-		t_success = MCStringCreateWithCString(script, r_script);
-		getstack() -> securescript(this);
-	}
+	getstack() -> unsecurescript(this);
+	r_script = MCValueRetain(_script);
+	getstack() -> securescript(this);
 	
 	if (t_success)
 		return;
@@ -1216,18 +1211,20 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 	uint4 length;
 	length = MCStringGetLength(new_script);
 
-	if (length == 0)
+	if (MCStringIsEmpty(new_script))
 	{
 		delete hlist;
 		hlist = NULL;
-		delete script;
-		script = NULL;
-		flags &= ~F_SCRIPT;
+		MCValueRelease(_script);
+		_script = MCValueRetain(kMCEmptyString);
 		hashandlers = 0;
 	}
 	else
 	{
-		char *oldscript = script;
+		MCAutoStringRef t_old_script;
+		t_old_script = _script;
+		
+		MCAutoStringRef t_new_script;
 		if (MCStringGetNativeCharAtIndex(new_script, length - 1) != '\n')
 		{
 			MCAutoStringRef t_script;
@@ -1236,18 +1233,17 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 			if (t_success)
 				t_success = MCStringAppendChar(*t_script, '\n');
 			if (t_success)
-				t_success = MCStringAppendChar(*t_script, '\0');
-			if (t_success)
-				script = strclone(MCStringGetCString(*t_script));
+				/* UNCHECKED */ MCStringCopy(*t_script, &t_new_script);
 		}
 		else
-			script = strclone(MCStringGetCString(new_script));
+			t_new_script = new_script;
+		
+		MCValueAssign(_script, *t_new_script);
 
 		getstack() -> securescript(this);
 		
 		if (t_success)
 		{
-			flags |= F_SCRIPT;
 			if (MCModeCanSetObjectScript(obj_id))
 			{ // not template object
 				hashandlers = 0;
@@ -1256,11 +1252,7 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 				{
 					delete hlist;
 					hlist = NULL;
-					delete script;
-					script = oldscript;
-					oldscript = NULL;
-					if (script == NULL)
-						flags &= ~F_SCRIPT;
+					MCValueAssign(_script, *t_old_script);
 					MCperror->add(PE_OBJECT_NOTLICENSED, 0, 0);
 				}
 				if (!MCperror->isempty())
@@ -1272,7 +1264,6 @@ void MCObject::SetScript(MCExecContext& ctxt, MCStringRef new_script)
 					ctxt . SetTheResultToEmpty();
 			}
 		}
-		delete oldscript;
 	}
 
 	if (t_success)

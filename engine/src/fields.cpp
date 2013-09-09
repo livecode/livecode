@@ -506,14 +506,10 @@ void MCField::setparagraphs(MCParagraph *newpgptr, uint4 parid)
 
 Exec_stat MCField::settext(uint4 parid, MCStringRef p_text, Boolean p_formatted)
 {
-	if (MCStringIsNative(p_text))
-	{
-		const char *t_bytes = (const char*)MCStringGetNativeCharPtr(p_text);
-		uindex_t t_length = MCStringGetLength(p_text);
-		if (t_bytes != nil)
-			return settext_oldstring(parid, MCString(t_bytes, t_length), p_formatted, false);
-	}
-	return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
+	if (MCStringGetCharPtr(p_text) != nil)
+		return settext_oldstring(parid, MCString((const char*)MCStringGetCharPtr(p_text), MCStringGetLength(p_text) * sizeof(unichar_t)), p_formatted, true);
+		
+	return settext_oldstring(parid, MCStringGetOldString(p_text), p_formatted, false);
 }
 
 Exec_stat MCField::settext_oldstring(uint4 parid, const MCString &s, Boolean formatted, Boolean isunicode)

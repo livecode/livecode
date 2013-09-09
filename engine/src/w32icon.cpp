@@ -37,7 +37,7 @@ void MCScreenDC::seticon(uint4 p_icon)
 {
 }
 
-void MCScreenDC::seticonmenu(const char *p_menu)
+void MCScreenDC::seticonmenu(MCStringRef p_menu)
 {
 }
 
@@ -359,7 +359,7 @@ static void destroy_icon_menu(HMENU p_menu)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::configurestatusicon(uint32_t p_icon_id, const char *p_menu, const char *p_tooltip)
+void MCScreenDC::configurestatusicon(uint32_t p_icon_id, MCStringRef p_menu, MCStringRef p_tooltip)
 {
 	NOTIFYICONDATAA t_nidata;
 	memset(&t_nidata, 0, sizeof(NOTIFYICONDATAA));
@@ -390,14 +390,14 @@ void MCScreenDC::configurestatusicon(uint32_t p_icon_id, const char *p_menu, con
 	t_nidata . uCallbackMessage = CWM_TASKBAR_NOTIFICATION;
 	t_nidata . hIcon = t_icon;
 	if (p_tooltip != nil)
-		strncpy(t_nidata . szTip, p_tooltip, 63);
+		strncpy(t_nidata . szTip, MCStringGetCString(p_tooltip), 63);
 	else
 		t_nidata . szTip[0] = '\0';
 
 	Shell_NotifyIconA(f_has_icon ? NIM_MODIFY : NIM_ADD, &t_nidata);
 
 	if (p_menu != nil)
-		f_icon_menu = create_icon_menu(p_menu);
+		f_icon_menu = create_icon_menu(MCStringGetCString(p_menu));
 
 	f_has_icon = true;
 }

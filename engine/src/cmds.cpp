@@ -2904,12 +2904,14 @@ void MCInclude::compile(MCSyntaxFactoryRef ctxt)
 
 MCEcho::~MCEcho(void)
 {
+	if (data != nil)
+		MCValueRelease(data);
 }
 
 Parse_stat MCEcho::parse(MCScriptPoint& sp)
 {
 	initpoint(sp);
-	data = sp . gettoken();
+	data = MCValueRetain(sp . gettoken_stringref());
 	return PS_NORMAL;
 }
 
@@ -2922,11 +2924,8 @@ Exec_stat MCEcho::exec(MCExecPoint& ep)
 	return ES_NORMAL;
 #endif /* MCEcho */
 
-	MCAutoStringRef t_data;
-	/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)data . getstring(), data . getlength(), &t_data);
-
 	MCExecContext ctxt(ep);
-	MCServerExecEcho(ctxt, *t_data);
+	MCServerExecEcho(ctxt, data);
 	if (!ctxt . HasError())
 		return ES_NORMAL;
 	
@@ -2937,7 +2936,7 @@ void MCEcho::compile(MCSyntaxFactoryRef ctxt)
 {
 	MCSyntaxFactoryBeginStatement(ctxt, line, pos);
 
-	MCSyntaxFactoryEvalConstantOldString(ctxt, data);
+	MCSyntaxFactoryEvalConstant(ctxt, data);
 
 	MCSyntaxFactoryExecMethod(ctxt, kMCServerExecEchoMethodInfo);
 

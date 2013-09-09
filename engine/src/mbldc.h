@@ -131,7 +131,7 @@ public:
 	void getbeep(uint4 property, int4& r_value);
 	void setbeep(uint4 property, int4 beep);
 
-	MCBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	MCBitmap *snapshot(MCRectangle &r, uint4 window, MCStringRef displayname);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
@@ -196,12 +196,12 @@ public:
 
 	//
 
-	MCScriptEnvironment *createscriptenvironment(const char *p_language);
+	MCScriptEnvironment *createscriptenvironment(MCStringRef p_language);
 
 	//
 	
-	int32_t popupanswerdialog(const char **p_buttons, uint32_t p_button_count, uint32_t p_type, const char *p_title, const char *p_message);
-	bool popupaskdialog(uint32_t p_type, const char *p_title, const char *p_prompt, const char *p_initial, bool p_hint, MCStringRef& r_result);
+	int32_t popupanswerdialog(MCStringRef *p_buttons, uint32_t p_button_count, uint32_t p_type, MCStringRef p_title, MCStringRef p_message);
+	bool popupaskdialog(uint32_t p_type, MCStringRef p_title, MCStringRef p_prompt, MCStringRef p_initial, bool p_hint, MCStringRef& r_result);
 	
 	////////// COMMON IMPLEMENTATION METHODS
 	

@@ -68,7 +68,7 @@ static MCColor vgapalette[16] =
         {14, 0x0000, 0xFFFF, 0xFFFF, 0, 0}, {15, 0xFFFF, 0xFFFF, 0xFFFF, 0, 0},
     };
 
-void MCScreenDC::setstatus(const char *status)
+void MCScreenDC::setstatus(MCStringRef status)
 { //No action
 }
 
@@ -1177,7 +1177,7 @@ static bool WindowsIsCompositionEnabled(void)
 }
 
 MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
-                               const char *displayname)
+                               MCStringRef displayname)
 {
 	bool t_is_composited;
 	t_is_composited = WindowsIsCompositionEnabled();

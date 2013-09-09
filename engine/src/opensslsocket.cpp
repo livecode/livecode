@@ -359,7 +359,7 @@ bool ntoa_message_callback(void *p_context, bool p_resolved, bool p_final, struc
 	{
 		MCAutoStringRef t_string;
 		/* UNCHECKED */ MCListCopyAsString(t_info->list, &t_string);
-		MCscreen->delaymessage(t_info->target->Get(), t_info->message, strclone(MCStringGetCString(t_info->name)), strclone(MCStringGetCString(*t_string)));
+		MCscreen->delaymessage(t_info->target->Get(), t_info->message, t_info->name, *t_string);
 		free_ntoa_message_callback_info(t_info);
 	}
 	return true;
@@ -743,7 +743,7 @@ void MCS_write_socket(const MCStringRef d, MCSocket *s, MCObject *optr, MCNameRe
 		}
 		if (mptr != NULL)
 		{
-			MCscreen->delaymessage(optr, mptr, strclone(MCNameGetCString(s->name)));
+			MCscreen->delaymessage(optr, mptr, MCNameGetString(s->name));
 			s->added = True;
 		}
 	}
@@ -1239,12 +1239,16 @@ void MCSocket::readsome()
 					MCsockets[MCnsockets++] = new MCSocket(*t_name, object, NULL,
 					                                       True, fd, False, True,False);
 				}
+				
+				MCAutoDataRef t_data;
+				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)dbuffer, l, &t_data);
+				
 				MCParameter *params = new MCParameter;
-				params->setbuffer(strclone(MCNameGetCString(*t_name)), MCStringGetLength(MCNameGetString(*t_name)));
+				params->setvalueref_argument(*t_name);
 				params->setnext(new MCParameter);
-				params->getnext()->setbuffer(dbuffer, l);
+				params->getnext()->setvalueref_argument(*t_data);
 				params->getnext()->setnext(new MCParameter);
-				params->getnext()->getnext()->setbuffer(strclone(MCNameGetCString(name)), MCStringGetLength(MCNameGetString(name)));
+				params->getnext()->getnext()->setvalueref_argument(name);
 				MCscreen->addmessage(object, message, curtime, params);
 			}
 		}
@@ -1280,7 +1284,7 @@ void MCSocket::readsome()
 				if (secure)
 					MCsockets[MCnsockets]->sslaccept();
 				MCsockets[MCnsockets++]->setselect();
-				MCscreen->delaymessage(object, message, strclone(MCNameGetCString(*t_name)), strclone(MCNameGetCString(name)));
+				MCscreen->delaymessage(object, message, MCNameGetString(*t_name), MCNameGetString(name));
 				added = True;
 			}
 #endif
@@ -1375,21 +1379,23 @@ void MCSocket::processreadqueue()
 				if (size > 1 && revents->until != NULL && *revents->until == '\n'
 				        && !*(revents->until + 1) && rbuffer[size - 1] == '\r')
 					rbuffer[--size] = '\n';
-				char *datacopy = new char[MCU_max((uint4)size, (uint4)1)]; // can't malloc 0
-				memcpy(datacopy, rbuffer, size);
+
+				MCAutoDataRef t_data;
+				/* UNCHECKED */ MCDataCreateWithBytes((const byte_t *)rbuffer, size, &t_data);
+				
 				nread -= revents->size;
 				// MW-2010-11-19: [[ Bug 9182 ]] This should be a memmove (I think)
 				memmove(rbuffer, rbuffer + revents->size, nread);
 				MCSocketread *e = revents->remove
 				                  (revents);
 				MCParameter *params = new MCParameter;
-				params->setbuffer(strclone(MCNameGetCString(name)), MCStringGetLength(MCNameGetString((name))));
+				params->setvalueref_argument(name);
 				params->setnext(new MCParameter);
-				params->getnext()->setbuffer(datacopy, size);
+				params->getnext()->setvalueref_argument(*t_data);
 				MCscreen->addmessage(e->optr, e->message, curtime, params);
 				delete e;
 				if (nread == 0 && fd == 0)
-					MCscreen->delaymessage(object, MCM_socket_closed, strclone(MCNameGetCString(name)));
+					MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 			else
@@ -1406,7 +1412,7 @@ void MCSocket::writesome()
 	if (!accepting && !connected && message != NULL)
 	{
 #endif
-		MCscreen->delaymessage(object, message, strclone(MCNameGetCString(name)));
+		MCscreen->delaymessage(object, message, MCNameGetString(name));
 		added = True;
 		MCNameDelete(message);
 		message = NULL;
@@ -1448,7 +1454,7 @@ void MCSocket::writesome()
 			{
 				MCSocketwrite *e = wevents->remove
 				                   (wevents);
-				MCscreen->delaymessage(e->optr, e->message, strclone(MCNameGetCString(name)));
+				MCscreen->delaymessage(e->optr, e->message, MCNameGetString(name));
 				added = True;
 				delete e;
 			}
@@ -1476,13 +1482,15 @@ void MCSocket::doclose()
 	{
 		if (error != NULL)
 		{
-			MCscreen->delaymessage(object, MCM_socket_error, strclone(MCNameGetCString(name)), error);
+			MCAutoStringRef t_error;
+			/* UNCHECKED */ MCStringCreateWithCString(error, &t_error);
+			MCscreen->delaymessage(object, MCM_socket_error, MCNameGetString(name), *t_error);
 			added = True;
 		}
 		else
 			if (nread == 0)
 			{
-				MCscreen->delaymessage(object, MCM_socket_closed, strclone(MCNameGetCString(name)));
+				MCscreen->delaymessage(object, MCM_socket_closed, MCNameGetString(name));
 				added = True;
 			}
 	}

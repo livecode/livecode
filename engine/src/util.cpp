@@ -575,6 +575,27 @@ real8 MCU_fwrap(real8 p_x, real8 p_y)
 		
 }
 
+bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string)
+{
+	char *t_str = nil;
+	uint4 t_s = 0;
+	if (MCU_r8tos(t_str, t_s, n, fw, trailing, force) == 0)
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	MCStringRef t_string;
+	if (!MCStringCreateWithCStringAndRelease((char_t *)t_str, t_string))
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	r_string = t_string;
+	return true;
+}
+
 uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
                 uint2 fw, uint2 trailing, uint2 force)
 {
@@ -1242,33 +1263,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 	*data = ndata;
 }
 #endif
-
-Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
-{
-	if (s == MCtruestring)
-	{
-		if (!(flags & w))
-		{
-			flags |= w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	if (s == MCfalsestring)
-	{
-		if (flags & w)
-		{
-			flags &= ~w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	return False;
-}
 
 /* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {

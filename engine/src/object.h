@@ -189,7 +189,7 @@ protected:
 	MCStringRef *colornames;
 	uint4 *pixmapids;
 	Pixmap *pixmaps;
-	char *script;
+	MCStringRef _script;
 	MCHandlerlist *hlist;
 	MCObjectPropertySet *props;
 	uint4 state;
@@ -445,9 +445,9 @@ public:
 	{
 		return flags;
 	}
-	char *getscript(void)
+	MCStringRef _getscript(void)
 	{
-		return script;
+		return _script;
 	}
 	MCHandlerlist *gethandlers(void)
 	{
@@ -524,7 +524,7 @@ public:
 	// This method searches for the image with the given id, taking into account
 	// the containment and behavior hierarchy of this object.
 	MCImage *resolveimageid(uint4 image_id);
-	MCImage *resolveimagename(const MCString& name);
+	MCImage *resolveimagename(MCStringRef name);
 	
 	Boolean isvisible();
 	Boolean resizeparent();
@@ -1035,6 +1035,8 @@ protected:
 	void mapfont(void);
 	void unmapfont(void);
 	
+	void setscript_cstring(const char *script);
+	
 private:
 #ifdef OLD_EXEC
 	Exec_stat setvisibleprop(uint4 parid, Properties which, MCExecPoint& ep);
@@ -1085,7 +1087,7 @@ private:
 	bool needtosavefontflags(void) const;
 
 	// MW-2013-03-06: [[ Bug 10695 ]] New method used by resolveimage* - if name is nil, then id search.
-	MCImage *resolveimage(const MCString& name, uint4 image_id);
+	MCImage *resolveimage(MCStringRef name, uint4 image_id);
 	
 	Exec_stat mode_getprop(uint4 parid, Properties which, MCExecPoint &, const MCString &carray, Boolean effective);
 
