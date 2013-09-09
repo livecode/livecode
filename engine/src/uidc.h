@@ -551,7 +551,6 @@ public:
 	uint4 getpixel(MCBitmap *image, int2 x, int2 y);
 	void getfixed(uint2 &rs, uint2 &gs, uint2 &bs,
 	              uint2 &rb, uint2 &gb, uint2 &bb);
-	Boolean position(const char *geom, MCRectangle &rect);
 	void setpixel(MCBitmap *image, int2 x, int2 y, uint4 pixel);
 	Boolean hasmessages()
 	{
