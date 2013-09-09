@@ -575,6 +575,27 @@ real8 MCU_fwrap(real8 p_x, real8 p_y)
 		
 }
 
+bool MCU_r8tos(real8 n, uint2 fw, uint2 trailing, uint2 force, MCStringRef &r_string)
+{
+	char *t_str = nil;
+	uint4 t_s = 0;
+	if (MCU_r8tos(t_str, t_s, n, fw, trailing, force) == 0)
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	MCStringRef t_string;
+	if (!MCStringCreateWithCStringAndRelease((char_t *)t_str, t_string))
+	{
+		delete[] t_str;
+		return false;
+	}
+	
+	r_string = t_string;
+	return true;
+}
+
 uint4 MCU_r8tos(char *&d, uint4 &s, real8 n,
                 uint2 fw, uint2 trailing, uint2 force)
 {
@@ -1242,33 +1263,6 @@ void _dbg_MCU_realloc(char **data, uint4 osize, uint4 nsize, uint4 csize, const 
 	*data = ndata;
 }
 #endif
-
-Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
-{
-	if (s == MCtruestring)
-	{
-		if (!(flags & w))
-		{
-			flags |= w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	if (s == MCfalsestring)
-	{
-		if (flags & w)
-		{
-			flags &= ~w;
-			c = True;
-		}
-		else
-			c = False;
-		return True;
-	}
-	return False;
-}
 
 /* WRAPPER */ bool MCU_matchname(MCNameRef p_name, Chunk_term type, MCNameRef name)
 {
@@ -2176,26 +2170,26 @@ void MCU_fix_path(MCStringRef in, MCStringRef& r_out)
 
 }
 
-bool MCFiltersBase64Encode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Encode(MCDataRef p_src, MCStringRef& r_dst);
 
 void MCU_base64encode(MCExecPoint &ep)
 {
-	MCAutoStringRef t_source;
-	/* UNCHECKED */ ep . copyasstringref(&t_source);
+	MCAutoDataRef t_source;
+	/* UNCHECKED */ ep . copyasdataref(&t_source);
 
 	MCAutoStringRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Encode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
 
-bool MCFiltersBase64Decode(MCStringRef p_src, MCStringRef& r_dst);
+bool MCFiltersBase64Decode(MCStringRef p_src, MCDataRef& r_dst);
 
 void MCU_base64decode(MCExecPoint &ep)
 {
 	MCAutoStringRef t_source;
 	/* UNCHECKED */ ep . copyasstringref(&t_source);
 
-	MCAutoStringRef t_result;
+	MCAutoDataRef t_result;
 	/* UNCHECKED */ MCFiltersBase64Decode(*t_source, &t_result);
 	/* UNCHECKED */ ep.setvalueref(*t_result);
 }
@@ -2253,43 +2247,29 @@ void MCU_cleaninserted()
 		;
 }
 
-Exec_stat MCU_change_color(MCColor& c, MCStringRef& n, MCExecPoint& ep, uint2 line, uint2 pos)
-{
-	char *t_name;
-	t_name = nil;
-	if (MCU_change_color(c, t_name, ep, line, pos) != ES_NORMAL)
-		return ES_ERROR;
-	
-	MCStringRef t_name_ref;
-	if (!MCStringCreateWithCString(t_name, t_name_ref))
-	{
-		MCeerror -> add(EE_NO_MEMORY, line, pos);
-		return ES_ERROR;
-	}
-
-	MCValueRelease(n);
-	n = t_name_ref;
-	
-	return ES_NORMAL;
-}
-
-Exec_stat MCU_change_color(MCColor &c, char *&n, MCExecPoint &ep,
+Exec_stat MCU_change_color(MCColor &c, MCStringRef &n, MCExecPoint &ep,
                            uint2 line, uint2 pos)
 {
 	MCColor color;
-	char *name = NULL;
-	char *cstring = ep.getsvalue().clone();
-	if (!MCscreen->parsecolor(cstring, &color, &name))
+	MCStringRef t_name;
+	MCAutoStringRef string;
+	ep . copyasstringref(&string);
+
+	t_name = nil;
+	if (!MCscreen->parsecolor(*string, color, &t_name))
 	{
-		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, ep.getsvalue());
-		delete cstring;
+		MCeerror->add(EE_PROPERTY_BADCOLOR, line, pos, *string);
 		return ES_ERROR;
 	}
-	delete cstring;
+
 	MCscreen->alloccolor(color);
 	c = color;
-	delete n;
-	n = name;
+	if (n != nil)
+		MCValueRelease(n);
+	if (t_name != nil)
+		n = t_name;
+	else
+		n = nil;
 	return ES_NORMAL;
 }
 
@@ -2810,7 +2790,7 @@ MCDictionary::~MCDictionary(void)
 	}
 }
 
-void MCDictionary::Set(uint4 p_id, const MCString& p_value)
+void MCDictionary::Set(uint4 p_id, MCString p_value)
 {
 	Node *t_node;
 	t_node = Find(p_id);
@@ -2835,8 +2815,7 @@ bool MCDictionary::Get(uint4 p_id, MCString& r_value)
 	if (t_node == NULL)
 		return false;
 
-	r_value . set((char *)t_node -> buffer, t_node -> length);
-	
+	r_value . set((const char *)t_node -> buffer, t_node -> length);
 	return true;
 }
 
@@ -2913,7 +2892,7 @@ bool MCDictionary::Unpickle(const void* p_buffer, uint4 p_length)
 
 		if (t_size < t_node_size)
 			return false;
-
+		
 		Set(t_node_key, MCString(t_buffer, t_node_size));
 
 		t_buffer += (t_node_size + 3) & ~3;

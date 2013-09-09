@@ -336,7 +336,7 @@ void MCNetworkEvalHTTPProxyForURLWithPAC(MCExecContext& ctxt, MCStringRef p_url,
 
 	if (MCStringGetLength(p_pac) > 0)
 	{
-		s_pac_engine = MCscreen -> createscriptenvironment("javascript");
+		s_pac_engine = MCscreen -> createscriptenvironment(MCSTR("javascript"));
 		if (s_pac_engine != NULL)
 		{
 			bool t_success;

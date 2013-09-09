@@ -79,6 +79,10 @@ bool MCStringToDouble(MCStringRef string, double& r_double);
 
 ////////////////////////////////////////////////////////////////////////////////
 
+MCString MCDataGetOldString(MCDataRef data);
+
+////////////////////////////////////////////////////////////////////////////////
+
 bool MCNameCreateWithCString(const char *cstring, MCNameRef& r_name);
 bool MCNameCreateWithOldString(const MCString& oldstring, MCNameRef& r_name);
 void MCNameDelete(MCNameRef name);

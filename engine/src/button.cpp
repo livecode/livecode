@@ -3024,8 +3024,8 @@ void MCButton::makemenu(sublist *bstack, int2 &stackdepth, uint2 menuflags, MCFo
 	uint2 pwidth = 0;
 	if (stackdepth > 0)
 	{
-		MCString lastname = bstack[stackdepth].parent->getname_oldstring();
-		pwidth = MCFontMeasureText(fontref, lastname . getstring(), lastname . getlength(), false) + 16;
+		MCStringRef t_lastname = MCNameGetString(bstack[stackdepth].parent->getname());
+		pwidth = MCFontMeasureText(fontref, t_lastname) + 16;
 	}
 	sublist *m = &bstack[stackdepth--];
 

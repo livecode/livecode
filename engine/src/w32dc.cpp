@@ -171,11 +171,11 @@ int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_uni
 
 		if (f->unicode || p_unicode_override)
 		{
-			if ((long)s & 1)
+			if (s & 1)
 			{ // odd byte boundary, must be realigned
 				char *b = new char[len];
 				memcpy(b, s, len);
-				GetTextExtentPoint32W(hdc, (LPCWSTR)b,
+				GetTextExtentPoint32W(hdc, (LPCWSTR)s,
 				                      (int)len >> 1, &tsize);
 				delete b;
 			}

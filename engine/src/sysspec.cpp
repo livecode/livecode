@@ -522,6 +522,8 @@ void MCS_copyresourcefork(MCStringRef p_source, MCStringRef p_dst)
             return;
         
         t_service -> CopyResourceFork(*t_native_source, *t_native_dest);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -574,6 +576,8 @@ void MCS_loadresfile(MCStringRef p_filename, MCStringRef& r_data)
             return;
         
         t_service -> LoadResFile(*t_native_path, r_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -592,6 +596,8 @@ void MCS_saveresfile(MCStringRef p_path, MCDataRef p_data)
             return;
         
         t_service -> SaveResFile(*t_native_path, p_data);
+		
+		return;
     }
     
     MCresult -> sets("not supported");
@@ -906,13 +912,13 @@ IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_ha
     
     t_old_pos = p_stream -> Tell();
     
-    t_success = p_stream -> Seek(p_pos, SEEK_SET);
+    t_success = p_stream -> Seek(p_pos, 1);
     
     if (t_success)
         t_success = p_stream -> Write(p_buffer, p_size);
     
     if (t_success)
-        t_success = p_stream -> Seek(t_old_pos, SEEK_SET);
+        t_success = p_stream -> Seek(t_old_pos, 1);
     
     if (!t_success)
         return IO_ERROR;
@@ -1035,58 +1041,6 @@ IO_stat MCS_seek_end(IO_handle p_stream, int64_t p_offset)
 	return IO_NORMAL;
 }
 
-#if 0
-void MCS_loadfile(MCExecPoint& ep, Boolean p_binary)
-{
-	MCAutoStringRef t_resolved_path;
-	MCAutoStringRef t_filename_string;
-	ep . copyasstringref(&t_filename_string);
-	
-	MCS_resolvepath(*t_filename_string, &t_resolved_path);
-	
-	MCSystemFileHandle *t_file;
-	t_file = MCsystem -> OpenFile(*t_resolved_path, kMCSystemFileModeRead, false);
-	
-	if (t_file == NULL)
-	{
-		// MW-2011-05-23: [[ Bug 9549 ]] Make sure we empty the result if opening the file
-		//   failed.
-		ep . clear();
-		MCresult -> sets("can't open file");
-		return;
-	}
-	
-	uint32_t t_size;
-	t_size = (uint32_t)t_file -> GetFileSize();
-	
-	MCAutoNativeCharArray t_buffer;
-	/* UNCHECKED */ t_buffer . New(t_size);
-	//t_buffer = ep . getbuffer(t_size);
-	
-	uint32_t t_read;
-	if (t_buffer.Chars() != NULL &&
-		t_file -> Read(t_buffer.Chars(), t_size, t_read) &&
-		t_read == t_size)
-	{
-		MCAutoStringRef t_string;
-		t_buffer . Shrink(t_size);
-		t_buffer . CreateStringAndRelease(&t_string);
-		ep . setvalueref(*t_string);
-        
-		if (!p_binary)
-			ep . texttobinary();
-		MCresult -> clear(False);
-	}
-	else
-	{
-		ep . clear();
-		MCresult -> sets("error reading file");
-	}
-    
-	t_file -> Close();
-}
-#endif // 0
-
 bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 {
 	if (!MCSecureModeCanAccessDisk())
@@ -1175,19 +1129,17 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	uint32_t t_size;
 	t_size = (uint32_t)t_file -> GetFileSize();
 	
-	MCAutoNativeCharArray t_buffer;
+	MCAutoByteArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
 	uint32_t t_read;
 	if (t_success)
-        t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
+        t_success = MCS_readfixed(t_buffer.Bytes(), t_size, t_file) == IO_NORMAL;
     
     if (t_success)
     {
-        MCAutoStringRef t_string;
 		t_buffer . Shrink(t_size);
-        t_success = t_buffer.CreateString(&t_string) &&
-                    MCDataCreateWithBytes(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string), r_data);
+        t_success = t_buffer.CreateData(r_data);
     }
     
     if (t_success)
@@ -1224,13 +1176,13 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
 	}
     
     // Need to convert the string to a binary string
-    MCAutoStringRef t_string;
+    MCAutoDataRef t_data;
     MCExecPoint ep(nil, nil, nil);
     /* UNCHECKED */ ep . setvalueref(p_string);
     ep . binarytotext();
-    /* UNCHECKED */ ep . copyasstring(&t_string);
+    /* UNCHECKED */ ep . copyasdataref(&t_data);
     
-	if (!t_file -> Write(MCStringGetBytePtr(*t_string), MCStringGetLength(*t_string)))
+	if (!t_file -> Write(MCDataGetBytePtr(*t_data), MCDataGetLength(*t_data)))
 		MCresult -> sets("error writing file");
 	
 	t_file -> Close();
@@ -1415,7 +1367,10 @@ void MCS_send(MCStringRef p_message, MCStringRef p_program, MCStringRef p_eventt
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> Send(p_message, p_program, p_eventtype, reply);
+    {
+	    t_service -> Send(p_message, p_program, p_eventtype, reply);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1426,7 +1381,10 @@ void MCS_reply(MCStringRef p_message, MCStringRef p_keyword, Boolean p_error)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
+	{
         t_service -> Reply(p_message, p_keyword, p_error);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1437,7 +1395,10 @@ void MCS_request_ae(MCStringRef p_message, uint2 p_ae, MCStringRef& r_value)
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestAE(p_message, p_ae, r_value);
+    {
+	    t_service -> RequestAE(p_message, p_ae, r_value);
+		return;
+	}
     
 	MCresult->sets("not supported");
 }
@@ -1448,7 +1409,7 @@ bool MCS_request_program(MCStringRef p_message, MCStringRef p_program, MCStringR
     t_service = (MCMacSystemServiceInterface *)MCsystem -> QueryService(kMCServiceTypeMacSystem);
     
     if (t_service != nil)
-        t_service -> RequestProgram(p_message, p_program, r_result);
+        return t_service -> RequestProgram(p_message, p_program, r_result);
     
 	MCresult->sets("not supported");
 }

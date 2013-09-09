@@ -116,44 +116,7 @@ MCPickleContext *MCObject::startpickling(bool p_include_2700)
 //  stoppickling is used to end a sequence of pickling operations. It returns
 //  an MCSharedString containing the serialized object data.
 //
-#ifdef SHARED_STRING
-MCSharedString *MCObject::stoppickling(MCPickleContext *p_context)
-{
-	// Since we can use the start, continue and stop pickling methods without
-	// checking for errors, exit if the context is NULL.
-	if (p_context == NULL)
-		return NULL;
-
-	bool t_success;
-	t_success = true;
-
-	char* t_buffer;
-	uint4 t_size;
-	t_buffer = NULL;
-	t_size = 0;
-	if (t_success)
-	{
-		MCS_fakeclosewrite(p_context -> stream, t_buffer, t_size);
-		if (t_buffer == NULL)
-			t_success = false;
-	}
-
-	MCSharedString *t_result;
-	t_result = NULL;
-	if (t_success)
-		t_result = MCSharedString::CreateNoCopy(MCString(t_buffer, t_size));
-	else
-	{
-		if (t_buffer != NULL)
-			free(t_buffer);
-	}
-
-	delete p_context;
-
-	return t_result;
-}
-#else
-void MCObject::stoppickling(MCPickleContext *p_context, MCStringRef& r_string)
+void MCObject::stoppickling(MCPickleContext *p_context, MCDataRef& r_string)
 {
 	// Since we can use the start, continue and stop pickling methods without
 	// checking for errors, exit if the context is NULL.
@@ -174,7 +137,7 @@ void MCObject::stoppickling(MCPickleContext *p_context, MCStringRef& r_string)
 	}
 
 	if (t_success)
-		t_success = MCStringCreateWithNativeCharsAndRelease((char_t *)t_buffer, t_size, r_string);
+		t_success = MCDataCreateWithBytesAndRelease((char_t *)t_buffer, t_size, r_string);
 
 	if (!t_success)
 	{
@@ -184,7 +147,7 @@ void MCObject::stoppickling(MCPickleContext *p_context, MCStringRef& r_string)
 
 	delete p_context;
 }
-#endif
+
 // Convert the given object to a byte-stream that can be read at a later date
 // to recreate it exactly.
 //
@@ -327,8 +290,7 @@ void MCObject::continuepickling(MCPickleContext *p_context, MCObject *p_object, 
 }
 
 // Do a start/continue/stop pickling call all in one.
-#ifdef SHARED_STRING
-MCSharedString *MCObject::pickle(MCObject *p_object, uint4 p_part)
+void MCObject::pickle(MCObject *p_object, uint4 p_part, MCDataRef& r_data)
 {
 	MCPickleContext *t_context;
 	// MW-2012-03-04: [[ StackFile5500 ]] The pickle method is only used for
@@ -336,20 +298,9 @@ MCSharedString *MCObject::pickle(MCObject *p_object, uint4 p_part)
 	//   case - so pass 'false' for include_2700.
 	t_context = startpickling(false);
 	continuepickling(t_context, p_object, p_part);
-	return stoppickling(t_context);
+	stoppickling(t_context, r_data);
 }
-#else
-void MCObject::pickle(MCObject *p_object, uint4 p_part, MCStringRef& r_string)
-{
-	MCPickleContext *t_context;
-	// MW-2012-03-04: [[ StackFile5500 ]] The pickle method is only used for
-	//   internal purposes, and we don't want to include 2.7 versions in this
-	//   case - so pass 'false' for include_2700.
-	t_context = startpickling(false);
-	continuepickling(t_context, p_object, p_part);
-	stoppickling(t_context, r_string);
-}
-#endif
+
 // This visitor iterates over all objects and does the follows:
 //   - ensures that non-shared data has the right id
 //
@@ -532,16 +483,15 @@ static bool unpickle_object_from_stream(IO_handle p_stream, const char *p_versio
 
 // Unpickle a byte-stream into a linked-list of objects.
 //
-#ifdef SHARED_STRING
-MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
+MCObject *MCObject::unpickle(MCDataRef p_data, MCStack *p_stack)
 {
 	bool t_success;
 	t_success = true;
 
 	const char *t_buffer;
 	uint4 t_length;
-	t_buffer = p_data -> Get() . getstring();
-	t_length = p_data -> Get() . getlength();
+	t_buffer = (const char *)MCDataGetBytePtr(p_data);
+	t_length = MCDataGetLength(p_data);
 
 	MCObject *t_result;
 	t_result = NULL;
@@ -579,117 +529,6 @@ MCObject *MCObject::unpickle(MCSharedString *p_data, MCStack *p_stack)
 				t_success = false;
 		}
 
-        MCAutoDataRef t_data;
-		IO_handle t_stream;
-		t_stream = NULL;
-        
-        if (t_success)
-            t_success = MCDataCreateWithBytes((byte_t*)t_buffer, t_chunk_length, &t_data);
-        
-		if (t_success)
-		{
-			t_stream = MCS_fakeopen(*t_data);
-			if (t_stream == NULL)
-				t_success = false;
-		}
-
-		// MW-2012-03-04: [[ StackFile5500 ]] Unpickle the first version in the chunk.
-		//   If there is no 2.7, then the version will be 5.5; otherwise it is the
-		//   2.7 version preceeding the 5.5 one.
-		MCObject *t_object;
-		t_object = nil;
-		if (t_success)
-			t_success = unpickle_object_from_stream(t_stream, t_5500_only ? "5.5" : "2.7", p_stack, t_object);
-			
-		// MW-2012-03-04: [[ StackFile5500 ]] If the header was 2.7, then there could
-		//   be a 5.5 version following it. So attempt to unpickle a second version, and
-		//   use that if present.
-		if (t_success && !t_5500_only)
-		{
-			MCObject *t_other_object;
-			if (unpickle_object_from_stream(t_stream, "5.5", p_stack, t_other_object))
-			{
-				delete t_object;
-				t_object = t_other_object;
-			}
-		}
-
-		if (t_success)
-		{
-			t_object -> appendto(t_result);
-
-			t_length -= t_chunk_length;
-			t_buffer += t_chunk_length;
-		}
-
-		// MW-2012-02-17: [[ LogFonts ]] Cleanup the font table.
-		MCLogicalFontTableFinish();
-
-		if (t_stream != NULL)
-			MCS_close(t_stream);
-	}
-
-	if (!t_success)
-	{
-		while(t_result != NULL)
-		{
-			MCObject *t_object;
-			t_object = t_result -> remove(t_result);
-			delete t_object;
-		}
-	}
-
-	return t_result;
-}
-#else
-
-MCObject *MCObject::unpickle(MCStringRef p_data, MCStack *p_stack)
-{
-	bool t_success;
-	t_success = true;
-
-	const char *t_buffer;
-	uint4 t_length;
-	t_buffer = MCStringGetCString(p_data);
-	t_length = MCStringGetLength(p_data);
-
-	MCObject *t_result;
-	t_result = NULL;
-
-	while(t_length > 0 && t_success)
-	{
-		bool t_5500_only;
-		t_5500_only = false;
-		
-		if (t_success)
-			t_success = t_length >= 12;
-
-		if (t_success)
-		{
-			// MW-2012-03-04: [[ StackFile5500 ]] If the header is 5.5, then there
-			//   won't be a 2.7 version before it.
-			if (memcmp(t_buffer, "REVO5500", 8) == 0)
-				t_5500_only = true;
-			else if (memcmp(t_buffer, "REVO2700", 8) != 0)
-				t_success = false;
-			
-			t_buffer += 8;
-			t_length -= 8;
-		}
-
-		uint4 t_chunk_length;
-		t_chunk_length = 0;
-		if (t_success)
-		{
-			memcpy(&t_chunk_length, t_buffer, 4);
-			swap_uint4(&t_chunk_length);
-			t_buffer += 4;
-			t_length -= 4;
-			if (t_chunk_length > t_length)
-				t_success = false;
-		}
-
-        MCAutoDataRef t_data;
 		IO_handle t_stream;
 		t_stream = NULL;
         
@@ -748,5 +587,5 @@ MCObject *MCObject::unpickle(MCStringRef p_data, MCStack *p_stack)
 
 	return t_result;
 }
-#endif
+
 ///////////////////////////////////////////////////////////////////////////////
