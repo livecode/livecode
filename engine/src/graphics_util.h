@@ -83,6 +83,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
 	t_font . fid = t_android_font -> typeface;
+	t_font . style = 0;
 	return t_font;
 }
 
@@ -110,6 +111,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
 	t_font . fid = static_cast<MCNewFontStruct *>(p_font) -> description;
+	t_font . style = 0;
 	return t_font;
 }
 
@@ -122,6 +124,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
 	t_font . fid = nil;
+	t_font . style = 0;
 	return t_font;
 }
 
@@ -134,6 +137,7 @@ static inline MCGFont MCFontStructToMCGFont(MCFontStruct *p_font)
 	t_font . ascent = p_font -> ascent;
 	t_font . descent = p_font -> descent;
 	t_font . fid = p_font -> fid;
+	t_font . style = 0;
 	return t_font;
 }
 

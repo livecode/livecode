@@ -24,28 +24,6 @@
 
 ////////////////////////////////////////////////////////////////////////////////
 
-static MCGCacheTableRef s_measure_cache = NULL;
-
-void MCGraphicsInitialize(void)
-{
-	MCGPlatformInitialize();
-	srand(time(NULL));
-	/* UNCHECKED */ MGCCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
-}
-
-void MCGraphicsFinalize(void)
-{
-	MGCCacheTableDestroy(s_measure_cache);
-
-	MCGPlatformFinalize();
-}
-
-void MCGraphicsCompact(void)
-{
-	MGCCacheTableCompact(s_measure_cache);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 struct MCGIRectangle
 {
@@ -2516,6 +2494,24 @@ MCGFloat MCGContextMeasureText(MCGContextRef self, const char *p_text, uindex_t 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+static MCGCacheTableRef s_measure_cache = NULL;
+
+void MCGTextMeasureCacheInitialize(void)
+{
+	srand(time(NULL));
+	/* UNCHECKED */ MGCCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
+}
+
+void MCGTextMeasureCacheFinalize(void)
+{
+	MGCCacheTableDestroy(s_measure_cache);
+}
+
+void MCGTextMeasureCacheCompact(void)
+{
+	MGCCacheTableCompact(s_measure_cache);
+}
 
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
 {		

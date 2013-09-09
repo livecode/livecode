@@ -455,6 +455,13 @@ MCGFloat __MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_
 void MCGPlatformInitialize(void);
 void MCGPlatformFinalize(void);
 
+void MCGTextMeasureCacheInitialize(void);
+void MCGTextMeasureCacheFinalize(void);
+void MCGTextMeasureCacheCompact(void);
+
+void MCGBlendModesInitialize(void);
+void MCGBlendModesFinalize(void);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 class MCGLegacyBlendMode : public SkXfermode
