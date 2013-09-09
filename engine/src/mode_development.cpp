@@ -1290,7 +1290,7 @@ Window MCModeGetParentWindow(void)
 	return t_window;
 }
 
-bool MCModeCanAccessDomain(const char *p_name)
+bool MCModeCanAccessDomain(MCStringRef p_name)
 {
 	return false;
 }
