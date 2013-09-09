@@ -1530,7 +1530,8 @@ MCObject *MCDispatch::getobjname(Chunk_term type, MCStringRef s)
 
 		MCAutoNameRef t_image_name;
 		if (MCU_strchr(sptr, l, ':'))
-        /* UNCHECKED */ MCNameCreate(s, t_image_name);
+			/* UNCHECKED */ MCNameCreate(s, t_image_name);
+		
 		MCImage *iptr = imagecache;
 		if (iptr != NULL)
 		{
@@ -1558,7 +1559,7 @@ check:
 			MCresult->clear(False);
 			MCExecPoint ep(MCdefaultstackptr, NULL, NULL);
 			MCExecPoint *epptr = MCEPptr == NULL ? &ep : MCEPptr;
-			epptr->setsvalue(MCStringGetCString(s));
+			epptr->setvalueref(s);
 			MCU_geturl(*epptr);
 			if (MCresult->isempty())
 			{

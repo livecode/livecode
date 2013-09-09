@@ -3699,9 +3699,7 @@ MCImage *MCObject::resolveimage(MCStringRef p_name, uint4 p_image_id)
 
 MCImage *MCObject::resolveimageid(uint32_t p_id)
 {
-    MCAutoStringRef tmp;
-    /* UNCHECKED */ MCStringCreateWithOldString(MCString(nil, 0), &tmp);
-	return resolveimage(*tmp, p_id);
+	return resolveimage(nil, p_id);
 }
 
 MCImage *MCObject::resolveimagename(MCStringRef p_name)
