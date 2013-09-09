@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "exec.h"
 
+#include "osspec.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 bool MCExecContext::ForceToString(MCValueRef p_value, MCStringRef& r_string)
@@ -242,6 +244,79 @@ bool MCExecContext::CopyElementAsArray(MCArrayRef p_array, MCNameRef p_key, bool
 	if (!MCArrayFetchValue(p_array, p_case_sensitive, p_key, t_val))
 		return false;
 	return (ConvertToArray(t_val, r_array));
+}
+
+bool MCExecContext::CopyElementAsStringArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_string_array)
+{
+	MCAutoArrayRef t_array;
+	if (!CopyElementAsArray(p_array, p_key, p_case_sensitive, &t_array))
+		return false;
+	
+	// Should be possible to add an optimization, if necessary:
+	//	 don't copy the array if all elements are already strings
+	
+	MCAutoArrayRef t_string_array;
+	if (!MCArrayCreateMutable(&t_string_array))
+		return false;
+		
+	for (uindex_t i = 0; i < MCArrayGetCount(*t_array); i++)
+	{
+		MCValueRef t_val;
+		MCAutoStringRef t_string;
+		
+		if (!MCArrayFetchValueAtIndex(*t_array, i, t_val))
+			return false;
+		
+		if (!ConvertToString(t_val, &t_string))
+			return false;
+		
+		if (!MCArrayStoreValueAtIndex(*t_array, i, *t_string))
+			return false;
+	}
+	
+	r_string_array = MCValueRetain(*t_string_array);
+	return true;
+}
+
+bool MCExecContext::CopyElementAsFilepath(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCStringRef &r_path)
+{
+	MCAutoStringRef t_string, t_path;
+	if (!CopyElementAsString(p_array, p_key, p_case_sensitive, &t_string))
+		return false;
+	
+	if (!MCS_resolvepath(*t_string, &t_path))
+		return false;
+	
+	r_path = MCValueRetain(*t_path);
+	return true;
+}
+
+bool MCExecContext::CopyElementAsFilepathArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_path_array)
+{
+	MCAutoArrayRef t_array;
+	if (!CopyElementAsStringArray(p_array, p_key, p_case_sensitive, &t_array))
+		return false;
+	
+	MCAutoArrayRef t_path_array;
+	if (!MCArrayCreateMutable(&t_path_array))
+		return false;
+	
+	for (uindex_t i = 0; i < MCArrayGetCount(*t_array); i++)
+	{
+		MCValueRef t_val;
+		if (!MCArrayFetchValueAtIndex(*t_array, i, t_val))
+			return false;
+		
+		MCAutoStringRef t_path;
+		if (!MCS_resolvepath((MCStringRef)t_val, &t_path))
+			return false;
+		
+		if (!MCArrayStoreValueAtIndex(*t_path_array, i, *t_path))
+			return false;
+	}
+	
+	r_path_array = MCValueRetain(*t_path_array);
+	return true;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
