@@ -64,6 +64,16 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 	return true;
 }
 
+bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
+{
+	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
+		r_array = MCValueRetain(p_value);
+	else
+		r_array = MCValueRetain(kMCEmptyArray);
+	
+	return true;
+}
+
 bool MCExecContext::ConvertToInteger(MCValueRef p_value, integer_t& r_integer)
 {
 	MCAutoNumberRef t_number;
