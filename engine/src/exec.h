@@ -3300,8 +3300,8 @@ void MCPrintingExecCancelPrinting(MCExecContext& ctxt);
 void MCPrintingExecResetPrinting(MCExecContext& ctxt);
 void MCPrintingExecPrintAnchor(MCExecContext& ctxt, MCStringRef name, MCPoint location);
 void MCPrintingExecPrintLink(MCExecContext& ctxt, int type, MCStringRef target, MCRectangle area);
-void MCPrintingExecPrintNativeBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
-void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
+void MCPrintingExecPrintBookmark(MCExecContext& ctxt, MCStringRef title, MCPoint location, integer_t level, bool initially_closed);
+void MCPrintingExecPrintUnicodeBookmark(MCExecContext& ctxt, MCDataRef title, MCPoint location, integer_t level, bool initially_closed);
 void MCPrintingExecPrintBreak(MCExecContext& ctxt);
 void MCPrintingExecPrintAllCards(MCExecContext& ctxt, MCStack *stack, bool only_marked);
 void MCPrintingExecPrintRectOfAllCards(MCExecContext& ctxt, MCStack *stack, bool p_only_marked, MCPoint from, MCPoint to);
@@ -3325,8 +3325,8 @@ void MCPrintingSetPrintDeviceOutput(MCExecContext& ctxt, const MCPrintingPrintDe
 void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOutput& r_output);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
-void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settings);
-void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef p_settings);
+void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef &r_settings);
+void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef p_settings);
 void MCPrintingGetPrintDeviceName(MCExecContext& ctxt, MCStringRef &r_name);
 void MCPrintingSetPrintDeviceName(MCExecContext& ctxt, MCStringRef p_name);
 

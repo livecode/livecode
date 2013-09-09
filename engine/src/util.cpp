@@ -2796,7 +2796,7 @@ MCDictionary::~MCDictionary(void)
 	}
 }
 
-void MCDictionary::Set(uint4 p_id, const MCString& p_value)
+void MCDictionary::Set(uint4 p_id, MCString p_value)
 {
 	Node *t_node;
 	t_node = Find(p_id);
@@ -2821,8 +2821,7 @@ bool MCDictionary::Get(uint4 p_id, MCString& r_value)
 	if (t_node == NULL)
 		return false;
 
-	r_value . set((char *)t_node -> buffer, t_node -> length);
-	
+	r_value . set((const char *)t_node -> buffer, t_node -> length);
 	return true;
 }
 
@@ -2899,7 +2898,7 @@ bool MCDictionary::Unpickle(const void* p_buffer, uint4 p_length)
 
 		if (t_size < t_node_size)
 			return false;
-
+		
 		Set(t_node_key, MCString(t_buffer, t_node_size));
 
 		t_buffer += (t_node_size + 3) & ~3;

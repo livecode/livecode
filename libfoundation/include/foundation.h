@@ -1517,6 +1517,8 @@ extern MCDataRef kMCEmptyData;
 bool MCDataCreateWithBytes(const byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCDataRef& r_data);
 
+bool MCDataIsEmpty(MCDataRef p_data);
+
 uindex_t MCDataGetLength(MCDataRef p_data);
 const byte_t *MCDataGetBytePtr(MCDataRef p_data);
 
