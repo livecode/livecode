@@ -1482,7 +1482,9 @@ static int4 counttokens(MCExecPoint &ep, const char *sptr, const char *eptr)
 {
 	int4 tokens = 0;
 	MCString s(sptr, eptr - sptr);
-	MCScriptPoint sp(s);
+	MCAutoStringRef t_string;
+	/* UNCHECKED */ MCStringCreateWithOldString(s, &t_string);
+	MCScriptPoint sp(*t_string);
 	Parse_stat ps = sp.nexttoken();
 	while (ps != PS_ERROR && ps != PS_EOF)
 	{
@@ -1691,17 +1693,19 @@ Exec_stat MCChunk::mark(MCExecPoint &ep, int4 &start, int4 &end, Boolean force, 
 		}
 		uint4 offset = sptr - startptr;
 		MCString string(sptr, eptr - sptr);
-		MCScriptPoint sp(string);
+		MCAutoStringRef t_string;
+		/* UNCHECKED */ MCStringCreateWithOldString(string, &t_string);
+		MCScriptPoint sp(*t_string);
 		MCerrorlock++;
 
 		Parse_stat ps = sp.nexttoken();
 		while (s-- && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
-		start = sp.gettoken().getstring() - sp.getscript() + offset;
+		start = sp.gettoken().getstring() - (const char *)MCStringGetNativeCharPtr(sp.getscript()) + offset;
 		while (--n && ps != PS_ERROR && ps != PS_EOF)
 			ps = sp.nexttoken();
 		end = sp.gettoken().getstring() + sp.gettoken().getlength()
-		      - sp.getscript() + offset;
+		      - (const char *)MCStringGetNativeCharPtr(sp.getscript()) + offset;
 		MCerrorlock--;
 		sptr = startptr + start;
 		eptr = startptr + end;
