@@ -67,7 +67,7 @@ bool MCExecContext::ConvertToReal(MCValueRef p_value, real64_t& r_double)
 bool MCExecContext::ConvertToArray(MCValueRef p_value, MCArrayRef &r_array)
 {
 	if (MCValueGetTypeCode(p_value) == kMCValueTypeCodeArray)
-		r_array = MCValueRetain(p_value);
+		r_array = MCValueRetain((MCArrayRef)p_value);
 	else
 		r_array = MCValueRetain(kMCEmptyArray);
 	
@@ -235,32 +235,14 @@ bool MCExecContext::CopyElementAsArray(MCArrayRef p_array, MCNameRef p_key, bool
 
 bool MCExecContext::CopyElementAsStringArray(MCArrayRef p_array, MCNameRef p_key, bool p_case_sensitive, MCArrayRef &r_string_array)
 {
-	MCAutoArrayRef t_array;
-	if (!CopyElementAsArray(p_array, p_key, p_case_sensitive, &t_array))
+	MCAutoStringRef t_string;
+	if (!CopyElementAsString(p_array, p_key, p_case_sensitive, &t_string))
 		return false;
-	
-	// Should be possible to add an optimization, if necessary:
-	//	 don't copy the array if all elements are already strings
 	
 	MCAutoArrayRef t_string_array;
-	if (!MCArrayCreateMutable(&t_string_array))
+	if (!MCStringSplit(*t_string, MCSTR("\n"), nil, kMCStringOptionCompareExact, &t_string_array))
 		return false;
 		
-	for (uindex_t i = 0; i < MCArrayGetCount(*t_array); i++)
-	{
-		MCValueRef t_val;
-		MCAutoStringRef t_string;
-		
-		if (!MCArrayFetchValueAtIndex(*t_array, i, t_val))
-			return false;
-		
-		if (!ConvertToString(t_val, &t_string))
-			return false;
-		
-		if (!MCArrayStoreValueAtIndex(*t_array, i, *t_string))
-			return false;
-	}
-	
 	r_string_array = MCValueRetain(*t_string_array);
 	return true;
 }
