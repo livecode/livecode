@@ -50,7 +50,7 @@ protected:
 	void DoFinalize(void) {}
 
 	bool DoReset(MCStringRef p_name) {return false;}
-	bool DoResetSettings(MCStringRef p_settings) {return false;}
+	bool DoResetSettings(MCDataRef p_settings) {return false;}
 
 	const char *DoFetchName(void) {return "";}
 	void DoFetchSettings(void*& r_buffer, uint4& r_length) {r_buffer = NULL; r_length = 0;}

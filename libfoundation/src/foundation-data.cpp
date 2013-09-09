@@ -77,6 +77,11 @@ bool MCDataCreateWithBytesAndRelease(byte_t *p_bytes, uindex_t p_byte_count, MCD
     return false;
 }
 
+bool MCDataIsEmpty(MCDataRef p_data)
+{
+	return p_data -> byte_count == 0;
+}
+
 uindex_t MCDataGetLength(MCDataRef p_data)
 {
     return p_data->byte_count;

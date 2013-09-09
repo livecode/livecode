@@ -1455,7 +1455,7 @@ protected:
 	void DoFinalize(void);
 
 	bool DoReset(MCStringRef p_name);
-	bool DoResetSettings(MCStringRef p_settings);
+	bool DoResetSettings(MCDataRef p_settings);
 
 	const char *DoFetchName(void);
 	void DoFetchSettings(void*& r_bufer, uint4& r_length);
@@ -1515,9 +1515,9 @@ bool MCCustomPrinter::DoReset(MCStringRef p_name)
 	return MCStringIsEqualTo(p_name, m_device_name, kMCStringOptionCompareCaseless);
 }
 
-bool MCCustomPrinter::DoResetSettings(MCStringRef  p_settings)
+bool MCCustomPrinter::DoResetSettings(MCDataRef p_settings)
 {
-	return MCStringGetLength(p_settings) == 0;
+	return MCDataIsEmpty(p_settings);
 }
 
 const char *MCCustomPrinter::DoFetchName(void)
@@ -2070,7 +2070,7 @@ Exec_stat MCCustomPrinterCreate(MCStringRef p_destination, MCStringRef p_filenam
 
 	MCAutoStringRef t_native_path;
 	if (p_filename != nil)
-		/* UNCHECKED */ MCU_path2native(p_filename, &t_native_path);
+		/* UNCHECKED */ MCS_pathtonative(p_filename, &t_native_path);
 
 	MCCustomPrinter *t_printer;
 	t_printer = new MCCustomPrinter(p_destination, t_device);

@@ -3323,8 +3323,8 @@ void MCPrintingSetPrintDeviceOutput(MCExecContext& ctxt, const MCPrintingPrintDe
 void MCPrintingGetPrintDeviceOutput(MCExecContext& ctxt, MCPrintingPrintDeviceOutput& r_output);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
 void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_rectangle);
-void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settings);
-void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef p_settings);
+void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef &r_settings);
+void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef p_settings);
 void MCPrintingGetPrintDeviceName(MCExecContext& ctxt, MCStringRef &r_name);
 void MCPrintingSetPrintDeviceName(MCExecContext& ctxt, MCStringRef p_name);
 

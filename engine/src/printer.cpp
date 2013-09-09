@@ -181,10 +181,10 @@ const char *MCPrinter::GetDeviceName(void)
 	return DoFetchName();
 }
 
-void MCPrinter::SetDeviceSettings(MCStringRef p_settings)
+void MCPrinter::SetDeviceSettings(MCDataRef p_settings)
 {
-	if (MCStringGetLength(p_settings) == 0)
-		DoReset(NULL);
+	if (MCDataIsEmpty(p_settings))
+		DoReset(kMCEmptyString);
 	else if (!DoResetSettings(p_settings))
 	{
 		MCresult -> sets("unknown printer");
@@ -192,31 +192,12 @@ void MCPrinter::SetDeviceSettings(MCStringRef p_settings)
 	}
 }
 
-/* LEGACY */ void MCPrinter::SetDeviceSettings(MCDataRef p_settings)
-{
-	if (MCDataGetLength(p_settings) == 0)
-		DoReset(NULL);
-	else if (!DoResetSettings((MCStringRef)MCDataGetBytePtr(p_settings)))
-	{
-		MCresult -> sets("unknown printer");
-		return;
-	}
-}
-
-bool MCPrinter::CopyDeviceSettings(MCStringRef &r_settings)
+bool MCPrinter::CopyDeviceSettings(MCDataRef &r_settings)
 {
 	void *t_buffer;
 	uint4 t_length;
 	DoFetchSettings(t_buffer, t_length);
-	return MCStringCreateWithCString((char *)t_buffer, r_settings);
-}
-
-/* LEGACY */ MCString MCPrinter::CopyDeviceSettings(void)
-{
-	void *t_buffer;
-	uint4 t_length;
-	DoFetchSettings(t_buffer, t_length);
-	return MCString((char *)t_buffer, t_length);
+	return MCDataCreateWithBytesAndRelease((byte_t *)t_buffer, t_length, r_settings);
 }
 
 void MCPrinter::SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_location)
@@ -413,7 +394,7 @@ void MCPrinter::Open(bool p_cancelled)
 		{
 			if (m_loop_status == STATUS_READY)
 			{
-				MCAutoString t_job_name;
+				MCAutoStringRef t_job_name;
 				if (m_job_name == nil)
 					t_job_name = MCdefaultstackptr -> gettitletext();
 				else

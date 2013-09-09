@@ -226,10 +226,8 @@ public:
 	void SetDeviceName(MCStringRef p_name);
 	const char *GetDeviceName(void);
 
-	void SetDeviceSettings(MCStringRef p_settings);
-	/* LEGACY */ void SetDeviceSettings(MCDataRef p_settings);
-	bool CopyDeviceSettings(MCStringRef &r_settings);
-	/* LEGACY */ MCString CopyDeviceSettings(void);
+	void SetDeviceSettings(MCDataRef p_settings);
+	bool CopyDeviceSettings(MCDataRef &r_settings);
 
 	void SetDeviceOutput(MCPrinterOutputType p_type, MCStringRef p_location);
 	MCPrinterOutputType GetDeviceOutputType(void) const;
@@ -329,7 +327,7 @@ protected:
 	// string.
 	// If the printer is unknown, return false.
 	//
-	virtual bool DoResetSettings(MCStringRef p_settings) = 0;
+	virtual bool DoResetSettings(MCDataRef p_settings) = 0;
 
 	// Return the name of the currently selected printer - this should
 	// be stored from a previous call to DoReset/DoResetSettings.

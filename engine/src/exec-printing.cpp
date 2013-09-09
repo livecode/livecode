@@ -922,7 +922,7 @@ void MCPrintingGetPrintDeviceRectangle(MCExecContext& ctxt, MCRectangle &r_recta
 	r_rectangle = MCprinter -> GetDeviceRectangle();
 }
 
-void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settings)
+void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef &r_settings)
 {
 	if (MCprinter -> CopyDeviceSettings(r_settings))
 		return;
@@ -930,7 +930,7 @@ void MCPrintingGetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef &r_settin
 	ctxt . Throw();
 }
 
-void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCStringRef p_settings)
+void MCPrintingSetPrintDeviceSettings(MCExecContext& ctxt, MCDataRef p_settings)
 {
 	MCprinter -> SetDeviceSettings(p_settings);
 }

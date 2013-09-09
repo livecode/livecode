@@ -1058,9 +1058,9 @@ int X_close(void)
 	delete MCstacks;
 	delete MCcstack;
 	delete MCrecent;
-	delete IO_stdin;
-	delete IO_stdout;
-	delete IO_stderr;
+	MCS_close(IO_stdin);
+	MCS_close(IO_stdout);
+	MCS_close(IO_stderr);
 	delete MCpatterns;
 	delete MCresult;
 	delete MCurlresult;
