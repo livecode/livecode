@@ -3236,13 +3236,11 @@ public:
 		MCValueRelease(t_name);
 
 #ifndef TARGET_PLATFORM_MACOS_X
-		const char *t_tabptr = p_menuitem->label.getstring();
-		uint4 t_labelsize = p_menuitem->label.getlength();
-		// replace any tabs, as these don't display in button menus
-		while (MCU_strchr(t_tabptr, t_labelsize, '\t', p_menuitem->is_unicode))
-		{
-			MCU_copychar(' ', (char*)t_tabptr, p_menuitem->is_unicode);
-		}
+		MCStringRef t_label;
+		/* UNCHECKED */ MCStringMutableCopy(p_menuitem.label, t_label);
+		/* UNCHECKED */ MCStringFindAndReplaceChar(t_label, '\t', ' ', kMCStringOptionCompareExact);
+		MCValueRelease(p_menuitem.label);
+		/* UNCHECKED */ MCStringCopyAndRelease(t_label, p_menuitem.label);
 #endif
 
 		newbutton->menubutton = parent->menubutton;
