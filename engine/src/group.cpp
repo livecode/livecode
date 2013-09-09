@@ -2926,7 +2926,13 @@ IO_stat MCGroup::extendedload(MCObjectInputStream& p_stream, const char *p_versi
 IO_stat MCGroup::save(IO_handle stream, uint4 p_part, bool p_force_ext)
 {
 	IO_stat stat;
-
+	
+	// Update the "has label" flag
+	if (!MCStringIsEmpty(label))
+		flags |= F_LABEL;
+	else
+		flags &= ~F_LABEL;
+	
 	if ((stat = IO_write_uint1(OT_GROUP, stream)) != IO_NORMAL)
 		return stat;
 	if ((stat = MCObject::save(stream, p_part, p_force_ext)) != IO_NORMAL)
@@ -3006,12 +3012,6 @@ IO_stat MCGroup::load(IO_handle stream, const char *version)
 	//   if it is a background.
 	if (isbackground())
 		setflag(True, F_GROUP_SHARED);
-
-	// Update the "has label" flag
-	if (!MCStringIsEmpty(label))
-		flags |= F_LABEL;
-	else
-		flags &= ~F_LABEL;
 	
 	// MW-2012-02-17: [[ IntrinsicUnicode ]] If the unicode tag is set, then we are unicode.
 	if ((m_font_flags & FF_HAS_UNICODE_TAG) != 0)
