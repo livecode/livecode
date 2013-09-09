@@ -241,7 +241,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		if (t_effects -> sound != NULL)
 		{
 			MCAudioClip *acptr;
-			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, t_effects->sound)) == NULL)
+            MCAutoStringRef t_sound;
+            /* UNCHECKED */ MCStringCreateWithCString(t_effects->sound, &t_sound);
+			if ((acptr = (MCAudioClip *)getobjname(CT_AUDIO_CLIP, *t_sound)) == NULL)
 			{
 				IO_handle stream;
 				MCAutoStringRef t_sound;
