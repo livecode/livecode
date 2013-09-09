@@ -604,7 +604,7 @@ public:
 	            Etch style, uint2 bwidth);
 	void drawborder(MCDC *dc, const MCRectangle &drect, uint2 bwidth);
 	void positionrel(const MCRectangle &dptr, Object_pos xpos, Object_pos ypos);
-	Exec_stat domess(const char *sptr);
+	Exec_stat domess(MCStringRef sptr);
 	void eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value);
 	Exec_stat eval(const char *sptr, MCExecPoint &ep);
 	void editscript();

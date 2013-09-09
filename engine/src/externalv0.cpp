@@ -337,7 +337,9 @@ static char *card_message(const char *arg1, const char *arg2,
 	MCStack *s = MCdefaultstackptr;
 	Boolean oldcheck = MCcheckstack;
 	MCcheckstack = False;
-	*retval = trans_stat(s->getcurcard()->domess(arg1));
+    MCAutoStringRef t_arg1;
+    /* UNCHECKED */ MCStringCreateWithCString(arg1, &t_arg1);
+	*retval = trans_stat(s->getcurcard()->domess(*t_arg1));
 	MCcheckstack = oldcheck;
 	return NULL;
 }

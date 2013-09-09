@@ -1207,19 +1207,22 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
 		else
 		{
-			char *tptr = (char *)MCNameGetCString(*t_message);
+            MCStringRef tptr;
+            tptr = MCNameGetString(*t_message);
+		//	char *tptr = (char *)MCNameGetCString(*t_message);
 			if (t_params != NULL)
 			{
 				t_params->eval(ctxt . GetEP());
 				char *p = ctxt . GetEP() . getsvalue() . clone();
-				tptr = new char[strlen(MCNameGetCString(*t_message)) + ctxt . GetEP() . getsvalue() . getlength() + 2];
-				sprintf(tptr, "%s %s", MCNameGetCString(*t_message), p);
+		//		tptr = new char[strlen(MCNameGetCString(*t_message)) + ctxt . GetEP() . getsvalue() . getlength() + 2];
+		//		sprintf(tptr, "%s %s", MCNameGetCString(*t_message), p);
+                MCStringFormat(tptr, "%s %s", MCNameGetCString(*t_message), p);
 				delete p;
 			}
 			if ((stat = optr->domess(tptr)) == ES_ERROR)
 				ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
-			if (tptr != MCNameGetCString(*t_message))
-				delete tptr;
+			if (tptr != MCNameGetString(*t_message))
+				MCValueRelease(tptr);
 		}
 	}
 	else if (stat == ES_PASS)

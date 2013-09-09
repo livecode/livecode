@@ -467,9 +467,11 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				sptr[rSize] = '\0';
 				AEGetParamPtr(aePtr, keyDirectObject, typeChar, &rType, sptr, rSize, &rSize);
 				MCExecPoint ep(MCdefaultstackptr->getcard(), NULL, NULL);
+                MCAutoStringRef t_sptr;
+                /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
 				if (aeid == kAEDoScript)
 				{
-					MCdefaultstackptr->getcard()->domess(sptr);
+					MCdefaultstackptr->getcard()->domess(*t_sptr);
 					MCresult->eval(ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
@@ -6250,7 +6252,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
                                 t_access_time,
                                 t_backup_time,
                                 t_permissions -> userID,
-                                t_permissions -> groupID,
+                                (unsigned int)t_permissions -> groupID,
                                 t_permissions -> mode & 0777,
                                 t_filetype);
 						
@@ -8070,7 +8072,7 @@ delete last char of it; return it"
         MCAutoListRef t_list;
         
         MCresult->clear();
-        MCdefaultstackptr->domess(DNS_SCRIPT);
+        MCdefaultstackptr->domess(MCSTR(DNS_SCRIPT));
         
         return MCListCreateMutable('\n', &t_list) &&
             MCListAppend(*t_list, MCresult->getvalueref()) &&

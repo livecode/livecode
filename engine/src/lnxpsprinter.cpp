@@ -597,7 +597,7 @@ MCPrinterResult MCPSPrinterDevice::Bookmark(const char *title, double x, double 
 char * getdefaultprinter(void)
 {
 	MCExecPoint ep ( NULL, NULL, NULL ) ;
-	MCdefaultstackptr->domess(DEFAULT_PRINTER_SCRIPT);
+	MCdefaultstackptr->domess(MCSTR(DEFAULT_PRINTER_SCRIPT));
 	MCresult->eval(ep);
 	return strdup(ep.getcstring());
 }
