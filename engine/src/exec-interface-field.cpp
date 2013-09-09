@@ -314,7 +314,7 @@ void MCField::SetStyle(MCExecContext& ctxt, intenum_t p_style)
 	{
 		Boolean dummy;
 		if (!(flags & F_VSCROLLBAR))
-			setsbprop(P_VSCROLLBAR, kMCTrue, textx, texty,
+			setsbprop(P_VSCROLLBAR, true, textx, texty,
 			          scrollbarwidth, hscrollbar, vscrollbar, dummy);
 		flags |= F_SHOW_BORDER | F_OPAQUE;
 	}
