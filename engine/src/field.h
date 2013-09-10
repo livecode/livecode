@@ -364,7 +364,7 @@ public:
 	void insertparagraph(MCParagraph *newtext);
 	// MCField selection functions in fields.cc
 	Boolean find(MCExecPoint &ep, uint4 cardid,
-	             Find_mode mode, const MCString &, Boolean first);
+	             Find_mode mode, MCStringRef, Boolean first);
 	Exec_stat sort(MCExecPoint &ep, uint4 parid, Chunk_term type,
 	               Sort_type dir, Sort_type form, MCExpression *by);
 	// MW-2012-02-08: [[ Field Indices ]] The 'index' parameter, if non-nil, will contain
