@@ -188,8 +188,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_float_text_bounds = MCGRectangleApplyAffineTransform(t_float_text_bounds, t_transform);		
 		t_float_clipped_bounds = MCGRectangleIntersection(t_float_text_bounds, t_device_clip);
 		
-		t_text_bounds = MCGRecangleIntegerBounds(t_float_text_bounds);
-		t_clipped_bounds = MCGRecangleIntegerBounds(t_float_clipped_bounds);
+		t_text_bounds = MCGRectangleIntegerBounds(t_float_text_bounds);
+		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
 			return;

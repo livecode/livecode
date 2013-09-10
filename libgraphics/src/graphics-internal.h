@@ -10,7 +10,12 @@
 #define M_PI 3.141592653589793238462643
 #endif
 
+#ifdef __MOBILE
 #define kMCGTextMeasureCacheTableSize 16384
+#else
+#define kMCGTextMeasureCacheTableSize 65535
+#endif
+
 #define kMCGTextMeasureCacheByteSize kMCGTextMeasureCacheTableSize * 64
 #define kMCGTextMeasureCacheMaxOccupancy kMCGTextMeasureCacheTableSize * 0.5
 #define kMCGTextMeasureCacheMaxStringLength 128
@@ -167,7 +172,7 @@ struct MCGIntRectangle
 	int32_t height;
 };
 
-inline MCGIntRectangle MCGRecangleIntegerBounds(const MCGRectangle &p_rect)
+inline MCGIntRectangle MCGRectangleIntegerBounds(const MCGRectangle &p_rect)
 {
 	MCGIntRectangle t_bounds;
 	t_bounds .  x = floor(p_rect . origin . x);
@@ -440,9 +445,9 @@ bool MCGBlurBox(const SkMask& p_src, SkScalar p_x_radius, SkScalar p_y_radius, S
 
 typedef struct __MCGCacheTable *MCGCacheTableRef;
 
-bool MGCCacheTableCreate(uindex_t size, uindex_t max_occupancy, uindex_t max_bytes, MCGCacheTableRef &r_cache_table);
-void MGCCacheTableDestroy(MCGCacheTableRef cache_table);
-void MGCCacheTableCompact(MCGCacheTableRef cache_table);
+bool MCGCacheTableCreate(uindex_t size, uindex_t max_occupancy, uindex_t max_bytes, MCGCacheTableRef &r_cache_table);
+void MCGCacheTableDestroy(MCGCacheTableRef cache_table);
+void MCGCacheTableCompact(MCGCacheTableRef cache_table);
 void MCGCacheTableSet(MCGCacheTableRef cache_table, void *key, uint32_t key_length, void *value, uint32_t value_length);
 void *MCGCacheTableGet(MCGCacheTableRef cache_table, void *key, uint32_t key_length);
 

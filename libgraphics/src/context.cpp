@@ -2500,17 +2500,17 @@ static MCGCacheTableRef s_measure_cache = NULL;
 void MCGTextMeasureCacheInitialize(void)
 {
 	srand(time(NULL));
-	/* UNCHECKED */ MGCCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
+	/* UNCHECKED */ MCGCacheTableCreate(kMCGTextMeasureCacheTableSize, kMCGTextMeasureCacheMaxOccupancy, kMCGTextMeasureCacheByteSize, s_measure_cache);
 }
 
 void MCGTextMeasureCacheFinalize(void)
 {
-	MGCCacheTableDestroy(s_measure_cache);
+	MCGCacheTableDestroy(s_measure_cache);
 }
 
 void MCGTextMeasureCacheCompact(void)
 {
-	MGCCacheTableCompact(s_measure_cache);
+	MCGCacheTableCompact(s_measure_cache);
 }
 
 MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_text, uindex_t p_length, const MCGFont &p_font)
@@ -2536,8 +2536,6 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		t_success = MCMemoryNew(t_key_length, t_key);
 	}
 	
-	MCGFloat *t_width;
-	t_width = NULL;
 	if (t_success)
 	{
 		uint8_t *t_key_ptr;
@@ -2554,34 +2552,23 @@ MCGFloat MCGContextMeasurePlatformText(MCGContextRef self, const unichar_t *p_te
 		MCMemoryCopy(t_key_ptr, &p_font . style, sizeof(p_font . style));
 		t_key_ptr += sizeof(p_font . style);
 		
-		t_width = (MCGFloat *) MCGCacheTableGet(s_measure_cache, t_key, t_key_length);
-		
-		if (t_width != NULL)
+		MCGFloat *t_width_ptr;
+		t_width_ptr = (MCGFloat *) MCGCacheTableGet(s_measure_cache, t_key, t_key_length);		
+		if (t_width_ptr != NULL)
 		{
 			MCMemoryDelete(t_key);
-			return *t_width;
+			return *t_width_ptr;
 		}		
-	}	
 	
-	if (t_success)
-		t_success = MCMemoryNew(t_width);
-	
-	if (t_success)
-	{
-		*t_width = (MCGFloat) __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
-		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, t_width, sizeof(MCGFloat));
+		MCGFloat t_width;
+		t_width = __MCGContextMeasurePlatformText(self, p_text, p_length, p_font);
+		MCGCacheTableSet(s_measure_cache, t_key, t_key_length, &t_width, sizeof(MCGFloat));
+		return t_width;
 	}
 	
 	if (!t_success)
-	{
-		MCMemoryDelete(t_width);
 		MCMemoryDelete(t_key);
-	}
-    	
-	if (t_width != NULL)
-		return *t_width;
-	else
-		return 0.0;
+	return 0.0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

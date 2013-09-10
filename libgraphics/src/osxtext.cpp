@@ -26,7 +26,7 @@ static bool osx_prepare_text(const void *p_text, uindex_t p_length, const MCGFon
     if (t_err == noErr)
     {
         t_font_size = p_font . size << 16;
-		// if the specified fon't can't be found, just use the default
+		// if the specified font can't be found, just use the default
 		if (ATSUFONDtoFontID((short)(intptr_t)p_font . fid, p_font . style, &t_font_id) != noErr)
 			t_err = ATSUFONDtoFontID(0, p_font . style, &t_font_id);
     }
@@ -257,7 +257,7 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
     {
         t_text_bounds . x = 0;
         t_text_bounds . y = 0 - p_font . ascent;
-        t_text_bounds . height = p_font . descent + p_font . ascent;
+        t_text_bounds . height = p_font . descent + p_font . ascent + 1; // the +1 fudge is to make sure chars with descent are not clipped
         //t_success = osx_measure_text_substring_width(p_length, t_text_bounds . width);
 		//t_success = osx_draw_text_to_cgcontext_at_location(p_text, p_length, MCGPointMake(0.0, 0.0), p_font, NULL, t_text_bounds);
         
@@ -289,8 +289,8 @@ void MCGContextDrawPlatformText(MCGContextRef self, const unichar_t *p_text, uin
 		t_float_text_bounds = MCGRectangleApplyAffineTransform(MCGRectangleMake(t_text_bounds . x, t_text_bounds . y, t_text_bounds . width, t_text_bounds . height), t_transform);		
 		t_float_clipped_bounds = MCGRectangleIntersection(t_float_text_bounds, t_device_clip);
 		
-		t_text_bounds = MCGRecangleIntegerBounds(t_float_text_bounds);
-		t_clipped_bounds = MCGRecangleIntegerBounds(t_float_clipped_bounds);
+		t_text_bounds = MCGRectangleIntegerBounds(t_float_text_bounds);
+		t_clipped_bounds = MCGRectangleIntegerBounds(t_float_clipped_bounds);
 		
 		if (t_clipped_bounds . width == 0 || t_clipped_bounds . height == 0)
 			return;
