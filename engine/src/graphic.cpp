@@ -1253,7 +1253,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			t_color . name = kMCEmptyString;
 			MCExecContext ctxt(ep);
 			SetColor(ctxt, P_BACK_COLOR - P_FORE_COLOR, t_color);
-			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, MCnullmcstring);
+			setpattern(P_BACK_PATTERN - P_FORE_PATTERN, kMCEmptyString);
 		}
 	}
 	break;
@@ -1267,7 +1267,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 			t_color . name = kMCEmptyString;
 			MCExecContext ctxt(ep);
 			SetColor(ctxt, P_FORE_COLOR - P_FORE_COLOR, t_color);
-			setpattern(P_FORE_COLOR - P_FORE_COLOR, MCnullmcstring);
+			setpattern(P_FORE_COLOR - P_FORE_COLOR, kMCEmptyString);
 		}
 	}
 	break;

@@ -1541,12 +1541,12 @@ Boolean MCObject::setcolors(const MCString &data)
 }
 #endif
 
-Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
+Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 {
 	uint2 i;
 	bool t_isopened;
 	t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-	if (data.getlength() == 0)
+	if (MCStringIsEmpty(data))
 	{
 		if (getpindex(newpixmap, i))
 		{
@@ -1580,9 +1580,9 @@ Boolean MCObject::setpattern(uint2 newpixmap, const MCString &data)
 	return True;
 }
 
-Boolean MCObject::setpatterns(const MCString &data)
+Boolean MCObject::setpatterns(MCStringRef data)
 {
-	char *string = data.clone();
+	char *string = strdup(MCStringGetCString(data));
 	char *sptr = string;
 	uint2 p;
 	Boolean done = False;
@@ -1593,7 +1593,10 @@ Boolean MCObject::setpatterns(const MCString &data)
 			*eptr++ = '\0';
 		else
 			eptr = &sptr[strlen(sptr)];
-		if (!setpattern(p - P_FORE_PATTERN, sptr))
+        
+        MCAutoStringRef t_sptr;
+        /* UNCHECKED */ MCStringCreateWithCString(sptr, &t_sptr);
+		if (!setpattern(p - P_FORE_PATTERN, *t_sptr))
 		{
 			delete string;
 			return False;

@@ -533,8 +533,8 @@ public:
 	void setforeground(MCDC *dc, uint2 di, Boolean rev, Boolean hilite = False);
 	Boolean setcolor(uint2 index, const MCString &eptr);
 	Boolean setcolors(const MCString &data);
-	Boolean setpattern(uint2 newpixmap, const MCString &);
-	Boolean setpatterns(const MCString &data);
+	Boolean setpattern(uint2 newpixmap, MCStringRef);
+	Boolean setpatterns(MCStringRef data);
 	Boolean getcindex(uint2 di, uint2 &i);
 	uint2 createcindex(uint2 di);
 	void destroycindex(uint2 di, uint2 i);
