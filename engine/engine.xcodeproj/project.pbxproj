@@ -1023,7 +1023,7 @@
 		4D587E2A0B8096E600200116 /* hc.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = hc.h; path = src/hc.h; sourceTree = "<group>"; };
 		4D587E2C0B8096E600200116 /* prefix.h */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.c.h; name = prefix.h; path = src/prefix.h; sourceTree = "<group>"; };
 		4D587E2F0B8096FD00200116 /* dispatch.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = dispatch.cpp; path = src/dispatch.cpp; sourceTree = "<group>"; };
-		4D587E300B8096FD00200116 /* fields.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = fields.cpp; path = src/fields.cpp; sourceTree = "<group>"; };
+		4D587E300B8096FD00200116 /* fields.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = fields.cpp; path = src/fields.cpp; sourceTree = "<group>"; usesTabs = 0; };
 		4D587E310B8096FD00200116 /* fieldh.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = fieldh.cpp; path = src/fieldh.cpp; sourceTree = "<group>"; };
 		4D587E330B8096FD00200116 /* ports.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = ports.cpp; path = src/ports.cpp; sourceTree = "<group>"; };
 		4D587E340B8096FD00200116 /* operator.cpp */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = sourcecode.cpp.cpp; name = operator.cpp; path = src/operator.cpp; sourceTree = "<group>"; };

@@ -1783,8 +1783,7 @@ Exec_stat MCStack::sort(MCExecPoint &ep, Sort_type dir, Sort_type form,
 
 void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstrings, Find_mode fmode)
 {
-    MCString *tdest = nil;
-	MCStringRef *tdest_str = nil;
+    MCStringRef *tdest_str = nil;
 	nstrings = 0;
 	switch (fmode)
 	{
@@ -1802,9 +1801,8 @@ void MCStack::breakstring(MCStringRef source, MCStringRef*& dest, uint2 &nstring
 				while(l != 0 && !isspace(*sptr))
 					sptr += 1, l -= 1;
 
-				MCU_realloc((char **)&tdest, nstrings, nstrings + 1, sizeof(MCString));
-				tdest[nstrings].set(startptr, sptr - startptr);
-                MCStringCreateWithOldString(tdest[nstrings], tdest_str[nstrings]);
+				MCU_realloc((char **)&tdest_str, nstrings, nstrings + 1, sizeof(MCStringRef));
+                /* UNCHECKED */ MCStringCreateWithNativeChars ((const char_t *) startptr, sptr - startptr, tdest_str[nstrings]);
 				nstrings++;
 				MCU_skip_spaces(sptr, l);
 				startptr = sptr;
@@ -1941,6 +1939,8 @@ void MCStack::markfind(MCExecPoint &ep, Find_mode fmode,
 		curcard = (MCCard *)curcard->next();
 	}
 	while (curcard != ocard);
+    for (uint i = 0 ; i < nstrings ; i++)
+        MCValueRelease(strings[i]);
 	delete strings;
 	if (MCfoundfield != NULL)
 		MCfoundfield->clearfound();
