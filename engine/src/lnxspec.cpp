@@ -1634,12 +1634,11 @@ void MCS_launch_url(const char *p_document)
 	}
 	else
 	{
-		MCStringRef t_handler = nil;
-		/* UNCHECKED */ MCStringFormat(t_handler, LAUNCH_URL_SCRIPT, p_document);
+		MCAutoStringRef t_handler;
+		/* UNCHECKED */ MCStringFormat(&t_handler, LAUNCH_URL_SCRIPT, p_document);
 		MCExecPoint ep (NULL, NULL, NULL) ;
-		MCdefaultstackptr->domess(t_handler);
+		MCdefaultstackptr->domess(*t_handler);
 		MCresult->eval(ep);	
-		MCValueRelease(t_handler);
 	}
 }
 

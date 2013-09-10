@@ -1207,22 +1207,21 @@ static void MCEngineSendOrCall(MCExecContext& ctxt, MCStringRef p_script, MCObje
 			ctxt . LegacyThrow(EE_SEND_BADEXP, *t_message);
 		else
 		{
-            MCStringRef tptr;
-            tptr = MCNameGetString(*t_message);
-		//	char *tptr = (char *)MCNameGetCString(*t_message);
+            MCAutoStringRef tptr;
+
 			if (t_params != NULL)
 			{
 				t_params->eval(ctxt . GetEP());
-				char *p = ctxt . GetEP() . getsvalue() . clone();
-		//		tptr = new char[strlen(MCNameGetCString(*t_message)) + ctxt . GetEP() . getsvalue() . getlength() + 2];
-		//		sprintf(tptr, "%s %s", MCNameGetCString(*t_message), p);
-                MCStringFormat(tptr, "%s %s", MCNameGetCString(*t_message), p);
-				delete p;
+                MCAutoStringRef t_value;
+				ctxt . GetEP() . copyasstringref(&t_value);
+                MCStringFormat(&tptr, "%@ %@", *t_message, *t_value);
+				
 			}
-			if ((stat = optr->domess(tptr)) == ES_ERROR)
+            else
+                tptr = MCNameGetString(*t_message);
+            
+			if ((stat = optr->domess(&tptr)) == ES_ERROR)
 				ctxt . LegacyThrow(EE_STATEMENT_BADCOMMAND, *t_message);
-			if (tptr != MCNameGetString(*t_message))
-				MCValueRelease(tptr);
 		}
 	}
 	else if (stat == ES_PASS)

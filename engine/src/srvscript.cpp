@@ -303,7 +303,7 @@ Parse_stat MCServerScript::ParseNextStatement(MCScriptPoint& sp, MCStatement*& r
 // MW-2009-06-02: Add support for 'require' style includes.
 bool MCServerScript::Include(MCExecPoint& outer_ep, MCStringRef p_filename, bool p_require)
 {
-	if (p_filename == nil || MCStringGetNativeCharAtIndex(p_filename, 0) == '\0')
+	if (MCStringIsEmpty(p_filename))
 	{
 		MCeerror->add(EE_INCLUDE_BADFILENAME, 0, 0, p_filename);
 		return false;
