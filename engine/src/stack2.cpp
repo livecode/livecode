@@ -1941,7 +1941,7 @@ void MCStack::setwindowname()
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%08d) *", tptr, num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d) *", tptr, num);
 			}
 		}
 		else
@@ -1950,7 +1950,7 @@ void MCStack::setwindowname()
 			{
 				uint2 num;
 				count(CT_CARD, CT_UNDEFINED, curcard, num);
-				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%08d)", tptr, num);
+				/* UNCHECKED */ MCStringFormat(&newname, "%@ (%d)", tptr, num);
 			}
 			else
 				newname = tptr;
