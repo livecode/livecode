@@ -1155,7 +1155,9 @@ Exec_stat MCMarking::exec(MCExecPoint &ep)
 			(EE_MARK_BADSTRING, line, pos);
 			return ES_ERROR;
 		}
-		MCdefaultstackptr->markfind(ep, mode, ep.getsvalue(), field, mark);
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCdefaultstackptr->markfind(ep, mode, *t_value, field, mark);
 	}
 	return ES_NORMAL;
 }
