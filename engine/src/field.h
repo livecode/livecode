@@ -475,7 +475,7 @@ public:
 	MCParagraph *texttoparagraphs(const MCString &data, Boolean isunicode);
 	
 	MCParagraph *parsestyledtextappendparagraph(MCArrayRef p_style, MCNameRef metadata, bool p_split, MCParagraph*& x_paragraphs);
-	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode);
+	void parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_initial, MCStringRef p_final, MCStringRef p_metadata, bool p_is_unicode);
 	void parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& x_paragraphs);
 	void parsestyledtextarray(MCArrayRef p_styled_text, bool p_paragraph_break, MCParagraph*& x_paragraphs);
 	

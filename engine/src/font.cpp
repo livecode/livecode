@@ -322,8 +322,8 @@ Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
 	return False;
 }
 
-Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
-                            uint4 &flags, char *&fname, uint2 &height,
+Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
+                            uint4 &flags, MCStringRef &fname, uint2 &height,
                             uint2 &size, uint2 &style)
 {
 	int2 i1;
@@ -331,16 +331,16 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 	{
 	case P_TEXT_ALIGN:
 		flags &= ~F_ALIGNMENT;
-		if (data == MCleftstring || data.getlength() == 0)
+		if (MCStringIsEqualToCString(data, MCleftstring, kMCCompareExact) || MCStringIsEmpty(data))
 			flags |= F_ALIGN_LEFT;
 		else
-			if (data == MCcenterstring)
+			if (MCStringIsEqualToCString(data, MCcenterstring, kMCCompareExact))
 				flags |= F_ALIGN_CENTER;
 			else
-				if (data == MCrightstring)
+				if (MCStringIsEqualToCString(data, MCrightstring, kMCCompareExact))
 					flags |= F_ALIGN_RIGHT;
 				else
-					if (data == MCjustifystring)
+					if (MCStringIsEqualToCString(data, MCjustifystring, kMCCompareExact))
 						flags |= F_ALIGN_JUSTIFY;
 					else
 					{
@@ -350,12 +350,12 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		break;
 	case P_TEXT_FONT:
 		{
-			fname = data.clone();
+			fname = MCValueRetain(data);
 			
 			// MW-2012-02-17: [[ IntrinsicUnicode ]] Strip any lang tag from the
 			//   fontname.
 			char *t_tag;
-			t_tag = strchr(fname, ',');
+			t_tag = strchr(MCStringGetCString(fname), ',');
 			if (t_tag != nil)
 				t_tag[0] = '\0';
 		}
@@ -370,7 +370,7 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		height = i1;
 		break;
 	case P_TEXT_SIZE:
-		if (data.getlength() == 0)
+		if (MCStringIsEmpty(data))
 			i1 = 0;
 		else
 			if (!MCU_stoi2(data, i1))
@@ -385,8 +385,8 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 		{
 			// MW-2012-02-17: [[ SplitTextAttrs ]] If the string is empty, then
 			//   return 0 for the style - indicating to unset the property.
-			uint4 l = data.getlength();
-			const char *sptr = data.getstring();
+			uint4 l = MCStringGetLength(data);
+			const char *sptr = MCStringGetCString(data);
 			if (l == 0)
 				style = 0;
 			else
@@ -459,7 +459,7 @@ Exec_stat MCF_parsetextatts(Properties which, const MCString &data,
 }
 
 Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
-                              const char *name, uint2 height, uint2 size,
+                              MCStringRef name, uint2 height, uint2 size,
                               uint2 style)
 {
 	switch (which)
@@ -482,7 +482,7 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 		}
 		break;
 	case P_TEXT_FONT:
-		ep.setsvalue(name);
+		ep.setsvalue(MCStringGetOldString(name));
 		break;
 	case P_TEXT_HEIGHT:
 		ep.setint(height);
@@ -527,27 +527,27 @@ Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
 }
 
 // MW-2011-11-23: [[ Array TextStyle ]] Convert a textStyle name into the enum.
-Exec_stat MCF_parsetextstyle(const MCString &data, Font_textstyle &style)
+Exec_stat MCF_parsetextstyle(MCStringRef data, Font_textstyle &style)
 {
-	if (data == "bold")
+	if (MCStringIsEqualToCString(data, "bold", kMCCompareExact))
 		style = FTS_BOLD;
-	else if (data == "condensed")
+	else if (MCStringIsEqualToCString(data, "condensed", kMCCompareExact))
 		style = FTS_CONDENSED;
-	else if (data == "expanded")
+	else if (MCStringIsEqualToCString(data, "expanded", kMCCompareExact))
 		style = FTS_EXPANDED;
-	else if (data == "italic")
+	else if (MCStringIsEqualToCString(data, "italic", kMCCompareExact))
 		style = FTS_ITALIC;
-	else if (data == "oblique")
+	else if (MCStringIsEqualToCString(data, "oblique", kMCCompareExact))
 		style = FTS_OBLIQUE;
-	else if (data == MCboxstring)
+	else if (MCStringIsEqualToCString(data, MCboxstring, kMCCompareExact))
 		style = FTS_BOX;
-	else if (data == MCthreedboxstring)
+	else if (MCStringIsEqualToCString(data, MCthreedboxstring, kMCCompareExact))
 		style = FTS_3D_BOX;
-	else if (data == MCunderlinestring)
+	else if (MCStringIsEqualToCString(data, MCunderlinestring, kMCCompareExact))
 		style = FTS_UNDERLINE;
-	else if (data == MCstrikeoutstring)
+	else if (MCStringIsEqualToCString(data, MCstrikeoutstring, kMCCompareExact))
 		style = FTS_STRIKEOUT;
-	else if (data == MCgroupstring || data == MClinkstring)
+	else if (MCStringIsEqualToCString(data, MCgroupstring, kMCCompareExact) || MCStringIsEqualToCString(data, MClinkstring, kMCCompareExact))
 		style = FTS_LINK;
 	else
 	{

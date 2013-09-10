@@ -438,8 +438,10 @@ Exec_stat MCParagraph::setparagraphattr(Properties which, MCExecPoint& ep)
 			
 			uint4 myflags;
 			uint2 fontheight, size, style;
-			char *fname;
-			if (MCF_parsetextatts(which, ep . getsvalue(), myflags, fname, fontheight, size, style) != ES_NORMAL)
+			MCAutoStringRef fname;
+            MCAutoStringRef t_value;
+            ep . copyasstringref(&t_value);
+			if (MCF_parsetextatts(which, *t_value, myflags, &fname, fontheight, size, style) != ES_NORMAL)
 				return ES_ERROR;
 
 			if (attrs == nil)

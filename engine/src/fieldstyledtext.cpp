@@ -459,11 +459,11 @@ MCParagraph *MCField::parsestyledtextappendparagraph(MCArrayRef p_style, MCNameR
 	return t_new_paragraph;
 }
 
-void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, const char *p_initial, const char *p_final, MCStringRef p_metadata, bool p_is_unicode)
+void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_style, MCStringRef p_initial, MCStringRef p_final, MCStringRef p_metadata, bool p_is_unicode)
 {
 	// Make sure we don't try and append any more than 64K worth of bytes.
 	uint32_t t_text_length;
-	t_text_length = MCMin(p_final - p_initial, 65534 - p_paragraph -> textsize);
+	t_text_length = MCMin(MCStringGetCString(p_final) - MCStringGetCString(p_initial), 65534 - p_paragraph -> textsize);
 	
 	// If we are unicode and the text length is odd, chop off the last char.
 	if (p_is_unicode && (t_text_length & 1) != 0)
@@ -500,7 +500,7 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	t_block -> size = t_text_length;
 	
 	// Copy across the bytes of the text.
-	memcpy(p_paragraph -> text + t_block -> index, p_initial, t_block -> size);
+	memcpy(p_paragraph -> text + t_block -> index, MCStringGetCString(p_initial), t_block -> size);
 	p_paragraph -> textsize += t_block -> size;
 	
 	// Now set the block styles.
@@ -573,11 +573,13 @@ void MCField::parsestyledtextappendblock(MCParagraph *p_paragraph, MCArrayRef p_
 	if (!ep . isempty())
 	{
 		uint4 flags;
-		char *fname;
+		MCAutoStringRef fname;
 		uint2 height;
 		uint2 size;
 		uint2 style;
-		MCF_parsetextatts(P_TEXT_STYLE, ep . getsvalue(), flags, fname, height, size, style);
+        MCAutoStringRef t_value;
+        ep . copyasstringref(&t_value);
+		MCF_parsetextatts(P_TEXT_STYLE, *t_value, flags, &fname, height, size, style);
 		t_block -> setatts(P_TEXT_STYLE, (void *)style);
 	}
 
@@ -683,7 +685,10 @@ void MCField::parsestyledtextblockarray(MCArrayRef p_block_value, MCParagraph*& 
 		}
 
 		// We now add the range initial...final as a block.
-		parsestyledtextappendblock(t_paragraph, *t_style_entry, t_text_initial_ptr, t_text_final_ptr, *t_metadata, t_is_unicode);
+        MCAutoStringRef t_initial_str, t_final_str;
+        /* UNCHECKED */ MCStringCreateWithCString(t_text_initial_ptr, &t_initial_str);
+        /* UNCHECKED */ MCStringCreateWithCString(t_text_final_ptr, &t_final_str);
+		parsestyledtextappendblock(t_paragraph, *t_style_entry, *t_initial_str, *t_final_str, *t_metadata, t_is_unicode);
 		
 		// And, if we need a new paragraph, add it.
 		if (t_add_paragraph)

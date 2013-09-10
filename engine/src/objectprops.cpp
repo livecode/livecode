@@ -786,7 +786,7 @@ Exec_stat MCObject::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// Check the textstyle string is within the object's textstyle set.
@@ -1854,7 +1854,7 @@ Exec_stat MCObject::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep,
 
 		// Parse the requested text style.
 		Font_textstyle t_style;
-		if (MCF_parsetextstyle(MCNameGetOldString(key), t_style) != ES_NORMAL)
+		if (MCF_parsetextstyle(MCNameGetString(key), t_style) != ES_NORMAL)
 			return ES_ERROR;
 
 		// MW-2012-02-19: [[ SplitTextAttrs ]] If we have no textStyle set then

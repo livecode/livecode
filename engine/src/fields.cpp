@@ -1113,7 +1113,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		//   an index, then decode which specific style is being manipulated.
 		if (which == P_TEXT_STYLE && !MCNameIsEmpty(index))
 		{
-			if (MCF_parsetextstyle(MCNameGetOldString(index), t_text_style) != ES_NORMAL)
+			if (MCF_parsetextstyle(MCNameGetString(index), t_text_style) != ES_NORMAL)
 				return ES_ERROR;
 
 			pspecstyle = MCF_istextstyleset(pstyle, t_text_style);
@@ -1197,6 +1197,8 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 		}
 		while (ei > 0);
 
+        MCAutoStringRef t_fname;
+        /* UNCHECKED */ MCStringCreateWithCString(fname, &t_fname);
 		if (!has)
 		{
 			if (effective)
@@ -1234,13 +1236,13 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 			if (mixed & MIXED_NAMES)
 				ep.setstaticcstring(MCmixedstring);
 			else
-				stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+				stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			break;
 		case P_TEXT_SIZE:
 			if (mixed & MIXED_SIZES)
 				ep.setstaticcstring(MCmixedstring);
 			else
-				stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+				stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			break;
 		case P_TEXT_STYLE:
 			// MW-2011-11-23: [[ Array TextStyle ]] If no textStyle has been specified
@@ -1250,7 +1252,7 @@ Exec_stat MCField::gettextatts(uint4 parid, Properties which, MCExecPoint &ep, M
 				if (mixed & MIXED_STYLES)
 					ep.setstaticcstring(MCmixedstring);
 				else
-					stat = MCF_unparsetextatts(which, ep, flags, fname, height, size, style);
+					stat = MCF_unparsetextatts(which, ep, flags, *t_fname, height, size, style);
 			}
 			else
 			{
@@ -1452,7 +1454,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 	verifyindex(pgptr, ei, true);
 
 	pgptr = indextoparagraph(pgptr, si, ei);
-	char *fname = NULL;
+	MCStringRef fname = NULL;
 	uint2 size = 0;
 	uint2 style = FA_DEFAULT_STYLE;
 	MCColor tcolor;
@@ -1493,7 +1495,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		{
 			Font_textstyle t_text_style;
 
-			if (MCF_parsetextstyle(MCNameGetOldString(index), t_text_style) != ES_NORMAL)
+			if (MCF_parsetextstyle(MCNameGetString(index), t_text_style) != ES_NORMAL)
 				return ES_ERROR;
 
 			Boolean t_new_state;
@@ -1514,7 +1516,7 @@ Exec_stat MCField::settextatts(uint4 parid, Properties which, MCExecPoint& ep, M
 		// Fall through for default (non-array) handling.
 	case P_TEXT_FONT:
 	case P_TEXT_SIZE:
-		if (MCF_parsetextatts(which, MCStringGetOldString(*s), flags, fname, fontheight, size, style) != ES_NORMAL)
+		if (MCF_parsetextatts(which, *s, flags, fname, fontheight, size, style) != ES_NORMAL)
 			return ES_ERROR;
 		all = True;
 		if (which == P_TEXT_FONT)
