@@ -330,7 +330,11 @@ public:
 	void DoSetHScrollbar(MCExecContext& ctxt, MCScrollbar*& hsb, uint2& sbw);
 	void DoSetVScrollbar(MCExecContext& ctxt, MCScrollbar*& vsb, uint2& sbw);
 	void DoSetScrollbarWidth(MCExecContext& ctxt, uint2& sbw, uinteger_t p_width);
-
+    
+    void DoGetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef& r_array);
+    void DoSetBitmapEffectArray(MCExecContext& ctxt, Properties which, MCArrayRef p_array);
+    void DoGetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef& r_value);
+    void DoSetBitmapEffectElement(MCExecContext& ctxt, Properties which, MCNameRef p_prop, MCValueRef p_value);
 
 	////////// PROPERTY ACCESSORS
 
@@ -357,6 +361,27 @@ public:
 	virtual void SetShowFocusBorder(MCExecContext& ctxt, bool setting);
     virtual void SetOpaque(MCExecContext& ctxt, bool setting);
 	virtual void SetShadow(MCExecContext& ctxt, const MCInterfaceShadow& p_shadow);
+    
+    void GetDropShadow(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetDropShadow(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetDropShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetInnerShadow(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetInnerShadow(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetInnerShadowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetOuterGlow(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetOuterGlow(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetOuterGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetInnerGlow(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetInnerGlow(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetInnerGlowElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetColorOverlay(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetColorOverlay(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetColorOverlayElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
 
 };
 #endif

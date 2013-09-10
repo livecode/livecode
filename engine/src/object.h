@@ -1024,6 +1024,9 @@ public:
 
 	void GetEncoding(MCExecContext& ctxt, intenum_t& r_encoding);
 
+    void GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string);
+    void SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string);
+    
 	////////// ARRAY PROPS
     
     void GetTextStyleElement(MCExecContext& ctxt, MCNameRef p_index, bool& r_element);

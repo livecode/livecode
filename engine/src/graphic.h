@@ -149,6 +149,11 @@ public:
 	void Redraw(void);
 	void DoGetLabel(MCExecContext& ctxt, bool to_unicode, bool effective, MCStringRef r_string);
 	void DoSetLabel(MCExecContext& ctxt, bool to_unicode, MCStringRef p_label);
+    
+    void DoGetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, MCArrayRef& r_array);
+    void DoSetGradientFillArray(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCArrayRef p_array);
+    void DoGetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, MCNameRef p_prop, MCValueRef& r_value);
+    void DoSetGradientFillElement(MCExecContext& ctxt, MCGradientFill *p_fill, Draw_index p_di, MCNameRef p_prop, MCValueRef p_value);
 
 	////////// PROPERTY ACCESSORS
 
@@ -204,5 +209,14 @@ public:
 	void GetEffectiveUnicodeLabel(MCExecContext& ctxt, MCStringRef& r_label);
 	void GetFilled(MCExecContext& ctxt, bool& r_setting);
 	void SetFilled(MCExecContext& ctxt, bool setting);
+    
+    void GetGradientFill(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetGradientFill(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetGradientFillElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
+    void GetGradientStroke(MCExecContext& ctxt, MCArrayRef& r_array);
+    void SetGradientStroke(MCExecContext& ctxt, MCArrayRef p_array);
+    void GetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef& r_value);
+    void SetGradientStrokeElement(MCExecContext& ctxt, MCNameRef p_prop, MCValueRef p_value);
 };
 #endif

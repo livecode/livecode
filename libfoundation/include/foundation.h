@@ -1553,6 +1553,9 @@ bool MCArrayApply(MCArrayRef array, MCArrayApplyCallback callback, void *context
 // inbetween calls to Iterate as this will cause undefined behavior.
 bool MCArrayIterate(MCArrayRef array, uintptr_t& iterator, MCNameRef& r_key, MCValueRef& r_value);
 
+// Returns true if the given array is the empty array.
+bool MCArrayIsEmpty(MCArrayRef self);
+
 ////////////////////////////////////////////////////////////////////////////////
 //
 //  LIST DEFINITIONS

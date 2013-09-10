@@ -3761,7 +3761,6 @@ void MCObject::SetCustomKeysElement(MCExecContext& ctxt, MCNameRef p_index, MCSt
 
     /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
     /* UNCHECKED */ t_propset -> restrict(p_string);
-
 }
 
 void MCObject::SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCValueRef p_array)
@@ -3776,4 +3775,14 @@ void MCObject::SetCustomProperties(MCExecContext& ctxt, MCNameRef p_index, MCVal
     
     /* UNCHECKED */ ensurepropset(p_index, true, t_propset);
     t_propset -> store((MCArrayRef)p_array);
+}
+
+void MCObject::GetCustomKeys(MCExecContext& ctxt, MCStringRef& r_string)
+{
+    GetCustomKeysElement(ctxt, kMCEmptyName, r_string);
+}
+
+void MCObject::SetCustomKeys(MCExecContext& ctxt, MCStringRef p_string)
+{
+    SetCustomKeysElement(ctxt, kMCEmptyName, p_string);
 }

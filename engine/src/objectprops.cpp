@@ -223,6 +223,8 @@ MCPropertyInfo MCObject::kProperties[] =
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeysElement)
     DEFINE_RW_OBJ_ARRAY_PROPERTY(P_CUSTOM_PROPERTIES, Any, MCObject, CustomProperties)
     
+    DEFINE_RW_OBJ_PROPERTY(P_CUSTOM_KEYS, String, MCObject, CustomKeys) 
+    
 };
 
 MCObjectPropertyTable MCObject::kPropertyTable =
@@ -1980,7 +1982,7 @@ static MCPropertyInfo *lookup_object_property(const MCObjectPropertyTable *p_tab
 Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
     if (MCNameIsEmpty(p_index))
-        return getarrayprop_legacy(p_part_id, p_which, ep, p_index, p_effective);
+        return getprop(p_part_id, p_which, ep, p_effective);
     
 	MCPropertyInfo *t_info;
 	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
@@ -2051,7 +2053,7 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         }
         return ctxt . Catch(0, 0);
     }
-
+    
     Exec_stat t_stat;
     t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
@@ -2065,7 +2067,7 @@ Exec_stat MCObject::getarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
 Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecPoint& ep, MCNameRef p_index, Boolean p_effective)
 {
     if (MCNameIsEmpty(p_index))
-        return setarrayprop_legacy(p_part_id, p_which, ep, p_index, p_effective);
+        return setprop(p_part_id, p_which, ep, p_effective);
     
 	MCPropertyInfo *t_info;
 	t_info = lookup_object_property(getpropertytable(), p_which, p_effective == True, true);
@@ -2131,7 +2133,7 @@ Exec_stat MCObject::setarrayprop(uint32_t p_part_id, Properties p_which, MCExecP
         
 		return ctxt . Catch(0, 0);
 	}
-	
+    
     Exec_stat t_stat;
     t_stat = mode_getprop(p_part_id, p_which, ep, MCNameGetOldString(p_index), False);
     if (t_stat == ES_NOT_HANDLED)
@@ -2316,12 +2318,15 @@ Exec_stat MCObject::getprop(uint32_t p_part_id, Properties p_which, MCExecPoint&
 				((void(*)(MCExecContext&, MCObjectPtr, MCArrayRef&))t_info -> getter)(ctxt, t_object, &t_value);
 				if (!ctxt . HasError())
 				{
-					ep . setvalueref(*t_value);
-					return ES_NORMAL;
+                    if (*t_value != nil)
+                        ep . setvalueref(*t_value);
+                    else
+                        ep . clear();
+                    return ES_NORMAL;
 				}
 			}
 				break;
-
+                
 			case kMCPropertyTypeEnum:
 			{
 				int t_value;

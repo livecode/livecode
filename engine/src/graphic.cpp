@@ -82,6 +82,11 @@ MCPropertyInfo MCGraphic::kProperties[] =
 	DEFINE_RO_OBJ_EFFECTIVE_PROPERTY(P_UNICODE_TEXT, String, MCGraphic, UnicodeLabel)
 	DEFINE_RW_OBJ_PROPERTY(P_FILLED, Bool, MCGraphic, Filled)
 	DEFINE_RW_OBJ_PROPERTY(P_OPAQUE, Bool, MCGraphic, Filled)
+    
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_FILL, Any, MCGraphic, GradientFillElement)
+    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_FILL, Array, MCGraphic, GradientFill)
+    DEFINE_RW_OBJ_ARRAY_PROPERTY(P_GRADIENT_STROKE, Any, MCGraphic, GradientStrokeElement)
+    DEFINE_RW_OBJ_PROPERTY(P_GRADIENT_STROKE, Array, MCGraphic, GradientStroke)
 };
 
 MCObjectPropertyTable MCGraphic::kPropertyTable =
@@ -1280,7 +1285,6 @@ Exec_stat MCGraphic::setarrayprop_legacy(uint4 parid, Properties which, MCExecPo
 		// MW-2011-08-18: [[ Layers ]] Invalidate the whole object.
 		layer_redrawall();
 	}
-	
 	return ES_NORMAL;
 }
 
