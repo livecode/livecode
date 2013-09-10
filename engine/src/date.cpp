@@ -445,6 +445,16 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 				t_valid = true;
 			break;
 			}
+			
+			// FG-2013-09-10 [[ Bug 11162 ]]
+			// Trailing spaces after an accepted format specifier should be squashed
+			if (t_valid && !t_skip)
+			{
+				while (p_format[1] != '\0' && isspace(p_format[1]))
+					p_format++;
+				while (t_input_length > 1 && isspace(t_input[1]))
+					t_input++, t_input_length--;
+			}
 
 		}
 		else if (*p_format != *t_input)
@@ -474,6 +484,13 @@ static bool datetime_parse(const MCDateTimeLocale *p_locale, int4 p_century_cuto
 		}
 		else
 		{
+			// FG-2013-09-10 [[ Bug 11162 ]]
+			// One or more spaces in the format string should accept any number of input spaces
+			while (t_input_length > 0 && isspace(*t_input))
+				t_input += 1, t_input_length -= 1;
+			while (*p_format != '\0' && isspace(*p_format))
+				p_format++;
+			
 			if (t_input_length > 0)
 			{
 				t_input += 1;
