@@ -724,9 +724,12 @@ MCPrinterResult MCPSPrinter::DoBeginPrint(const char *p_document, MCPrinterDevic
 	if (GetDeviceOutputType() == PRINTER_OUTPUT_FILE)
 		t_output_file = GetDeviceOutputLocation();
 	else
-		t_output_file = C_FNAME;
+        t_output_file = C_FNAME;
 
-	stream = MCS_open(t_output_file, IO_CREATE_MODE, False, False, 0);
+    MCAutoStringRef t_path;
+    /* UNCHECKED */ MCStringCreateWithCString(t_output_file, &t_path);
+
+    stream = MCS_open(*t_path, kMCSOpenFileModeWrite, False, False, 0);
 
 	PSwrite("%!PS-Adobe-3.0\n");
 	sprintf(buffer, "%%%%Creator: Revolution %s\n", MCNameGetCString(MCN_version_string)); PSwrite(buffer);

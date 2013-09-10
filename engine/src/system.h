@@ -54,8 +54,8 @@ typedef bool (*MCSystemHostResolveCallback)(void *p_context, MCStringRef p_host)
 
 struct MCSystemFileHandle
 {
-	virtual void Close(void) = 0;
-    
+    virtual void Close(void) = 0;
+
     // Returns true if an attempt has been made to read past the end of the
     // stream.
     virtual bool IsExhausted(void) = 0;
@@ -450,7 +450,7 @@ struct MCSystemInterface
 	
 	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
 	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode) = 0;
-	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset) = 0;
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, uint32_t p_offset) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;
@@ -477,7 +477,7 @@ struct MCSystemInterface
     
     virtual uint32_t GetSystemError(void) = 0;
     
-    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated) = 0;
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated) = 0;
     virtual void CloseProcess(uint2 p_index) = 0;
     virtual void Kill(int4 p_pid, int4 p_sig) = 0;
     virtual void KillAll(void) = 0;

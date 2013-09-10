@@ -44,7 +44,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <sys/utsname.h>
 #include <sys/ioctl.h>
-//#include <sys/mman.h>
+#include <sys/mman.h>
 #include <sys/dir.h>
 #include <sys/wait.h>
 #include <dlfcn.h>
@@ -478,149 +478,68 @@ static void handle_signal(int sig)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+bool MCS_generate_uuid(char p_buffer[128])
+{
+    typedef void (*uuid_generate_ptr)(unsigned char uuid[16]);
+    typedef void (*uuid_unparse_ptr)(unsigned char uuid[16], char *out);
+    static void *s_uuid_generate = NULL, *s_uuid_unparse = NULL;
+
+    if (s_uuid_generate == NULL && s_uuid_unparse == NULL)
+    {
+        void *t_libuuid;
+        t_libuuid = dlopen("libuuid.so", RTLD_LAZY);
+        if (t_libuuid == NULL)
+            t_libuuid = dlopen("libuuid.so.1", RTLD_LAZY);
+        if (t_libuuid != NULL)
+        {
+            s_uuid_generate = dlsym(t_libuuid, "uuid_generate");
+            s_uuid_unparse = dlsym(t_libuuid, "uuid_unparse");
+}
+    }
+
+    if (s_uuid_generate != NULL && s_uuid_unparse != NULL)
+    {
+        unsigned char t_uuid[16];
+        ((uuid_generate_ptr)s_uuid_generate)(t_uuid);
+        ((uuid_unparse_ptr)s_uuid_unparse)(t_uuid, p_buffer);
+        return true;
+    }
+
+    return false;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+class MCMemoryMappedFileHandle: public MCMemoryFileHandle
+{
+public:
+    MCMemoryMappedFileHandle(int p_fd, void *p_buffer, uint32_t p_length)
+        : MCMemoryFileHandle(p_buffer, p_length)
+    {
+        m_fd = p_fd;
+        m_buffer = p_buffer;
+        m_length = p_length;
+    }
+
+    void Close(void)
+    {
+        munmap((char *)m_buffer, m_length);
+        close(m_fd);
+        MCMemoryFileHandle::Close();
+    }
+
+private:
+    int m_fd;
+    void *m_buffer;
+    uint32_t m_length;
+};
 
 class MCStdioFileHandle: public MCSystemFileHandle
 {
 public:
-    static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
+    MCStdioFileHandle(FILE* p_fptr)
     {
-#ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
-        MCAutoStringRef t_resolved_path;
-        MCS_resolvepath(path, &t_resolved_path);
-        IO_handle handle = NULL;
-    #ifndef NOMMAP
-
-        if (map && MCmmap && !driver && p_mode == kMCSOpenFileModeRead)
-        {
-            int fd = open(MCStringGetCString(*t_resolved_path), O_RDONLY);
-            struct stat64 buf;
-            if (fd != -1 && !fstat64(fd, &buf))
-            {
-                uint4 len = buf.st_size - offset;
-                if (len != 0)
-                {
-                    char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
-                                                fd, offset);
-                    if ((int)buffer != -1)
-                    {
-                        handle = new IO_header(NULL, buffer, len, fd, 0);
-                        return handle;
-                    }
-                }
-                close(fd);
-            }
-        }
-    #endif
-        const char *t_mode;
-        if (p_mode == kMCSOpenFileModeRead)
-            t_mode = IO_READ_MODE;
-        else if (p_mode == kMCSOpenFileModeWrite)
-            t_mode = IO_WRITE_MODE;
-        else if (p_mode == kMCSOpenFileModeUpdate)
-            t_mode = IO_UPDATE_MODE;
-        else if (p_mode == kMCSOpenFileModeAppend)
-            t_mode = IO_APPEND_MODE;
-
-        FILE *fptr = fopen(MCStringGetCString(*t_resolved_path), t_mode);
-        if (fptr == NULL && !strequal(t_mode, IO_READ_MODE))
-            fptr = fopen(MCStringGetCString(*t_resolved_path), IO_CREATE_MODE);
-        if (driver)
-            configureSerialPort((short)fileno(fptr));
-        if (fptr != NULL)
-        {
-            handle = new IO_header(fptr, NULL, 0, 0, 0);
-            if (offset > 0)
-                fseek(handle->fptr, offset, SEEK_SET);
-        }
-        delete t_mode;
-        return handle;
-#endif /* MCS_open_dsk_lnx */
-        MCStdioFileHandle *t_handle = NULL;
-        const char *t_mode;
-        if (p_mode == kMCSOpenFileModeRead)
-            t_mode = IO_READ_MODE;
-        else if (p_mode == kMCSOpenFileModeWrite)
-            t_mode = IO_WRITE_MODE;
-        else if (p_mode == kMCSOpenFileModeUpdate)
-            t_mode = IO_UPDATE_MODE;
-        else if (p_mode == kMCSOpenFileModeAppend)
-            t_mode = IO_APPEND_MODE;
-
-        FILE *t_fptr = fopen(MCStringGetCString(p_path), t_mode);
-        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
-
-        if (t_fptr != NULL)
-        {
-           t_handle = new MCStdioFileHandle;
-           t_handle -> m_fptr = t_fptr;
-           t_handle -> m_is_eof = false;
-        }
-
-        return t_handle;
-    }
-
-    static MCStdioFileHandle *OpenDevice(MCStringRef p_path, intenum_t p_mode)
-    {
-        MCStdioFileHandle *t_handle = NULL;
-        FILE *t_fptr = NULL;
-
-        const char *t_mode;
-        if (p_mode == kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_READ_MODE);
-        else if (p_mode == kMCSOpenFileModeWrite)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_WRITE_MODE);
-        else if (p_mode == kMCSOpenFileModeUpdate)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_UPDATE_MODE);
-        else if (p_mode == kMCSOpenFileModeAppend)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_APPEND_MODE);
-
-        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
-            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
-
-        configureSerialPort((short)fileno(t_fptr));
-
-        if (t_fptr != NULL)
-        {
-            t_handle = new MCStdioFileHandle;
-
-            t_handle -> m_fptr = t_fptr;
-            t_handle -> m_is_eof = false;
-        }
-
-        return t_handle;
-    }
-
-    static MCStdioFileHandle *OpenFd(uint32_t p_fd, intenum_t p_mode)
-    {
-        MCStdioFileHandle *t_handle = NULL;
-
-        FILE *t_fptr = NULL;
-
-        switch (p_mode)
-        {
-        case kMCSOpenFileModeRead:
-            t_fptr = fdopen(p_fd, IO_READ_MODE);
-            break;
-        case kMCSOpenFileModeWrite:
-            t_fptr = fdopen(p_fd, IO_WRITE_MODE);
-            break;
-        case kMCSOpenFileModeUpdate:
-            t_fptr = fdopen(p_fd, IO_UPDATE_MODE);
-            break;
-        case kMCSOpenFileModeAppend:
-            t_fptr = fdopen(p_fd, IO_APPEND_MODE);
-            break;
-        }
-
-        if (t_fptr != NULL)
-        {
-            t_handle = new MCStdioFileHandle;
-            t_handle -> m_fptr = t_fptr;
-            t_handle -> m_is_eof = false;
-        }
-
-        return t_handle;
+        m_fptr = p_fptr;
     }
 
     virtual void Close(void)
@@ -657,7 +576,7 @@ public:
     // stream.
     virtual bool IsExhausted(void)
     {
-        return m_is_eof;
+        return feof(m_fptr);
     }
 
     virtual bool Read(void *p_buffer, uint32_t p_length, uint32_t& r_read)
@@ -755,18 +674,12 @@ public:
                     toread -= nread;
                     continue;
                 }
-                else
-                    return false;
             }
-            if (feof(m_fptr))
-            {
-                m_is_eof = true;
-                return false;
-            }
+
             return false;
         }
 
-        r_read = nread;
+        r_read = offset + nread;
         return stat;
     }
 
@@ -1006,9 +919,9 @@ public:
         for(uint4 i = 0; i < 256; ++i)
             MClowercasingtable[i] = (uint1)tolower((uint1)i);
 #endif /* MCS_init_dsk_lnx */
-        IO_stdin = MCStdioFileHandle::OpenFd(0, kMCSOpenFileModeRead);
-        IO_stdout = MCStdioFileHandle::OpenFd(1, kMCSOpenFileModeWrite);
-        IO_stderr = MCStdioFileHandle::OpenFd(2, kMCSOpenFileModeWrite);
+        IO_stdin = MCsystem -> OpenFd(0, kMCSOpenFileModeRead);
+        IO_stdout = MCsystem -> OpenFd(1, kMCSOpenFileModeWrite);
+        IO_stderr = MCsystem -> OpenFd(2, kMCSOpenFileModeWrite);
 
         setlocale(LC_CTYPE, MCnullstring);
         setlocale(LC_COLLATE, MCnullstring);
@@ -1532,6 +1445,8 @@ public:
 
         if (t_found)
             t_found = (buf.st_mode & S_IFDIR) == 0;
+
+        return t_found ? True : False;
     }
 
     virtual Boolean FolderExists(MCStringRef p_path)
@@ -1607,33 +1522,153 @@ public:
 
     virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
     {
+#ifdef /* MCS_open_dsk_lnx */ LEGACY_SYSTEM
+        MCAutoStringRef t_resolved_path;
+        MCS_resolvepath(path, &t_resolved_path);
+        IO_handle handle = NULL;
+    #ifndef NOMMAP
+
+        if (map && MCmmap && !driver && p_mode == kMCSOpenFileModeRead)
+        {
+            int fd = open(MCStringGetCString(*t_resolved_path), O_RDONLY);
+            struct stat64 buf;
+            if (fd != -1 && !fstat64(fd, &buf))
+            {
+                uint4 len = buf.st_size - offset;
+                if (len != 0)
+                {
+                    char *buffer = (char *)mmap(NULL, len, PROT_READ, MAP_SHARED,
+                                                fd, offset);
+                    if ((int)buffer != -1)
+                    {
+                        handle = new IO_header(NULL, buffer, len, fd, 0);
+                        return handle;
+                    }
+                }
+                close(fd);
+            }
+        }
+    #endif
+        const char *t_mode;
+        if (p_mode == kMCSOpenFileModeRead)
+            t_mode = IO_READ_MODE;
+        else if (p_mode == kMCSOpenFileModeWrite)
+            t_mode = IO_WRITE_MODE;
+        else if (p_mode == kMCSOpenFileModeUpdate)
+            t_mode = IO_UPDATE_MODE;
+        else if (p_mode == kMCSOpenFileModeAppend)
+            t_mode = IO_APPEND_MODE;
+
+        FILE *fptr = fopen(MCStringGetCString(*t_resolved_path), t_mode);
+        if (fptr == NULL && !strequal(t_mode, IO_READ_MODE))
+            fptr = fopen(MCStringGetCString(*t_resolved_path), IO_CREATE_MODE);
+        if (driver)
+            configureSerialPort((short)fileno(fptr));
+        if (fptr != NULL)
+        {
+            handle = new IO_header(fptr, NULL, 0, 0, 0);
+            if (offset > 0)
+                fseek(handle->fptr, offset, SEEK_SET);
+        }
+        delete t_mode;
+        return handle;
+#endif /* MCS_open_dsk_lnx */
         IO_handle t_handle;
+        t_handle = NULL;
 
-        t_handle = MCStdioFileHandle::Open(p_path, p_mode);
+        if (p_map && MCmmap && p_mode == kMCSOpenFileModeRead)
+        {
+            int t_fd = open(MCStringGetCString(p_path), O_RDONLY);
+            struct stat64 t_buf;
+            if (t_fd != -1 && !fstat64(t_fd, &t_buf))
+            {
+                uint4 t_len = t_buf.st_size - p_offset;
+                if (t_len != 0)
+                {
+                    char *t_buffer = (char *)mmap(NULL, t_len, PROT_READ, MAP_SHARED,
+                                                t_fd, p_offset);
+                    if ((int)t_buffer != -1)
+                    {
+                        t_handle = new MCMemoryMappedFileHandle(t_fd, t_buffer, t_len);
+                        return t_handle;
+                    }
+                }
+                close(t_fd);
+            }
+        }
 
-        if (t_handle && p_offset != 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+        const char *t_mode;
+        if (p_mode == kMCSOpenFileModeRead)
+            t_mode = IO_READ_MODE;
+        else if (p_mode == kMCSOpenFileModeWrite)
+            t_mode = IO_WRITE_MODE;
+        else if (p_mode == kMCSOpenFileModeUpdate)
+            t_mode = IO_UPDATE_MODE;
+        else if (p_mode == kMCSOpenFileModeAppend)
+            t_mode = IO_APPEND_MODE;
+
+        FILE *t_fptr = fopen(MCStringGetCString(p_path), t_mode);
+
+        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
+
+        if (t_fptr != NULL)
+        {
+            t_handle = new MCStdioFileHandle(t_fptr);
+        }
 
         return t_handle;
     }
 
     virtual IO_handle OpenFd(uint32_t p_fd, intenum_t p_mode)
     {
-        IO_handle t_handle = NULL;
+       IO_handle t_handle = NULL;
+        FILE *t_fptr = NULL;
 
-        t_handle = MCStdioFileHandle::OpenFd(p_fd, p_mode);
+        switch (p_mode)
+        {
+        case kMCSOpenFileModeRead:
+            t_fptr = fdopen(p_fd, IO_READ_MODE);
+            break;
+        case kMCSOpenFileModeWrite:
+            t_fptr = fdopen(p_fd, IO_WRITE_MODE);
+            break;
+        case kMCSOpenFileModeUpdate:
+            t_fptr = fdopen(p_fd, IO_UPDATE_MODE);
+            break;
+        case kMCSOpenFileModeAppend:
+            t_fptr = fdopen(p_fd, IO_APPEND_MODE);
+            break;
+        }
+
+        if (t_fptr != NULL)
+            t_handle = new MCStdioFileHandle(t_fptr);
 
         return t_handle;
     }
 
     virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, uint32_t p_offset)
     {
-        IO_handle t_handle;
+        IO_handle t_handle = NULL;
+        FILE *t_fptr = NULL;
 
-        t_handle = MCStdioFileHandle::OpenDevice(p_path, p_mode);
+        const char *t_mode;
+        if (p_mode == kMCSOpenFileModeRead)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_READ_MODE);
+        else if (p_mode == kMCSOpenFileModeWrite)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_WRITE_MODE);
+        else if (p_mode == kMCSOpenFileModeUpdate)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_UPDATE_MODE);
+        else if (p_mode == kMCSOpenFileModeAppend)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_APPEND_MODE);
 
-        if (t_handle && p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+        if (t_fptr == NULL && p_mode != kMCSOpenFileModeRead)
+            t_fptr = fopen(MCStringGetCString(p_path), IO_CREATE_MODE);
+
+        configureSerialPort((short)fileno(t_fptr));
+
+        if (t_fptr != NULL)
+            t_handle = new MCStdioFileHandle(t_fptr);
 
         return t_handle;
     }
@@ -2388,7 +2423,7 @@ public:
         return errno;
     }
 
-    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
     {
 #ifdef /* MCS_startprocess_dsk_lnx */ LEGACY_SYSTEM
         Boolean noerror = True;
@@ -2539,7 +2574,7 @@ public:
         MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
                     sizeof(Streamnode));
         MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(p_name);
-        MCprocesses[MCnprocesses].mode = p_mode;
+        MCprocesses[MCnprocesses].mode = (Open_mode)p_mode;
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
 
@@ -3152,3 +3187,8 @@ public:
             MCListCopy(*t_list, r_list);
     }
 };
+
+MCSystemInterface *MCDesktopCreateLinuxSystem()
+{
+    return new MCLinuxDesktop;
+}

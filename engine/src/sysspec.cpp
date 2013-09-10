@@ -1001,21 +1001,28 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	
 	IO_handle t_handle;
 	if (!p_driver)
+    {
 		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap, p_offset);
+    }
 	else
 	{
-		t_handle = MCsystem -> OpenDevice(*t_native, p_offset);
+        t_handle = MCsystem -> OpenDevice(*t_native, p_mode, p_offset);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
     //	delete t_resolved_path;
-	
+
 	if (t_handle == NULL)
 		return NULL;
 #ifdef OLD_IO_HANDLE
     if (p_mode == kMCSystemFileModeAppend)
         t_handle -> flags |= IO_SEEKED;
 #endif
+
+    if (p_mode == kMCSystemFileModeAppend)
+        t_handle -> Seek(0, SEEK_END);
+    else if (p_offset > 0)
+        t_handle -> Seek(p_offset, SEEK_SET);
 	
 	return t_handle;
 }

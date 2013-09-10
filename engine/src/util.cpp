@@ -39,6 +39,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "globals.h"
 #include "exec.h"
+#include "system.h"
 
 #define QA_NPOINTS 10
 
@@ -2570,7 +2571,7 @@ void MCU_multibytetounicode(const char *p_mbstring, uint4 p_mblength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UTF8ToUnicode(p_mbstring, p_mblength, (uint2 *)p_buffer, p_capacity);
 	else
-		MCS_multibytetounicode(p_mbstring, p_mblength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_mbstring, p_mblength, (void*)p_buffer, p_capacity, p_mbcharset, LCH_UNICODE);
 }
 
 // MW-2005-02-08: New implementation of unicodetomultibyte
@@ -2580,7 +2581,7 @@ void MCU_unicodetomultibyte(const char *p_ucstring, uint4 p_uclength,
 	if (p_mbcharset == LCH_UTF8)
 		r_used = UnicodeToUTF8((uint2 *)p_ucstring, p_uclength, p_buffer, p_capacity);
 	else
-		MCS_unicodetomultibyte(p_ucstring, p_uclength, p_buffer, p_capacity, r_used, p_mbcharset);
+        r_used = MCsystem ->TextConvert((const void*)p_ucstring, p_uclength, (void*)p_buffer, p_capacity, LCH_UNICODE, p_mbcharset);
 }
 
 //////////

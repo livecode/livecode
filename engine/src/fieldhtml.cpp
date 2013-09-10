@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "textbuffer.h"
 #include "uidc.h"
 #include "globals.h"
+#include "util.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -272,7 +273,7 @@ static void export_html_emit_text(text_buffer_t& buffer, const void *p_bytes, ui
 		uint32_t t_char_count;
 		t_chars = new uint16_t[p_byte_count * 2];
 		t_char_count = p_byte_count;
-		MCS_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
+        MCU_multibytetounicode((const char *)p_bytes, p_byte_count, (char *)t_chars, t_char_count * 2, t_char_count, LCH_ROMAN);
 		t_char_count /= 2;
 		
 		export_html_emit_unicode_text(buffer, t_chars, t_char_count, p_escape);
