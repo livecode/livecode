@@ -477,7 +477,7 @@ static pascal OSErr DoSpecial(const AppleEvent *ae, AppleEvent *reply, long refC
 				}
 				else
 				{
-					MCdefaultstackptr->getcard()->eval(sptr, ep);
+					MCdefaultstackptr->getcard()->eval(*t_sptr, ep);
 					AEPutParamPtr(reply, '----', typeChar, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 				}
 				delete sptr;

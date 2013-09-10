@@ -2560,10 +2560,10 @@ Exec_stat MCObject::domess(MCStringRef sptr)
 	}
 }
 
-Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
+Exec_stat MCObject::eval(MCStringRef sptr, MCExecPoint &ep)
 {
 	MCAutoStringRef t_temp_script;
-	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %s\nend eval\n", sptr);
+	/* UNCHECKED */ MCStringFormat(&t_temp_script, "on eval\nreturn %@\nend eval\n", sptr);
 	
 	MCHandlerlist *handlist = new MCHandlerlist;
 	if (handlist->parse(this, *t_temp_script) != PS_NORMAL)
@@ -2604,7 +2604,7 @@ Exec_stat MCObject::eval(const char *sptr, MCExecPoint &ep)
 /* WRAPPER */ void MCObject::eval(MCExecContext& ctxt, MCStringRef p_script, MCValueRef& r_value)
 {
 	MCExecPoint ep(ctxt.GetEP());
-	Exec_stat stat = eval(MCStringGetCString(p_script), ep);
+	Exec_stat stat = eval(p_script, ep);
 	/* UNCHECKED */ ep.copyasvalueref(r_value);
 	if (stat != ES_ERROR)
 		return;
