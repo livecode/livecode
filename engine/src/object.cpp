@@ -1546,7 +1546,7 @@ Boolean MCObject::setpattern(uint2 newpixmap, MCStringRef data)
 	uint2 i;
 	bool t_isopened;
 	t_isopened = (opened != 0) || (gettype() == CT_STACK && static_cast<MCStack*>(this)->getextendedstate(ECS_ISEXTRAOPENED));
-	if (MCStringGetLength(data) == 0)
+	if (MCStringIsEmpty(data))
 	{
 		if (getpindex(newpixmap, i))
 		{
