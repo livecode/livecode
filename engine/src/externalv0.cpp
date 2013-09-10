@@ -789,7 +789,9 @@ static int can_access_host(const char *p_host)
 {
 	if (MCSecureModeCanAccessNetwork())
 		return true;
-	return MCModeCanAccessDomain(p_host);
+    MCAutoStringRef t_host;
+    /* UNCHECKED */ MCStringCreateWithCString(p_host, &t_host);
+	return MCModeCanAccessDomain(*t_host);
 }
 
 static int can_access_library(const char *p_host)
@@ -800,6 +802,6 @@ static int can_access_library(const char *p_host)
 SECURITYHANDLER MCsecuritycbs[] =
 {
 	can_access_file,
-	can_access_host,
+    can_access_host,
 	can_access_library
 };
