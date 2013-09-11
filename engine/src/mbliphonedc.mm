@@ -305,13 +305,6 @@ bool MCScreenDC::device_getwindowgeometry(Window p_window, MCRectangle& r_rect)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-#if 0
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *p_string, uint2 p_length, bool p_unicode_override)
-{
-	return ceil(iphone_font_measure_text(f -> fid, p_string, p_length, p_unicode_override || f -> unicode));
-}
-#endif
-
 // MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
 int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
 {
@@ -327,86 +320,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_len
 		ep . nativetoutf16();
 	
 	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}
-
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
-{
-	bool t_success;
-	t_success = true;
-	    
-    MCRectangle t_transformed_bounds;
-	MCRectangle t_bounds;
-	if (t_success)
-	{
-		MCGRectangle t_gbounds;
-        t_gbounds . origin . x = 0;
-        t_gbounds . origin . y = -p_font -> ascent;
-        t_gbounds . size . width = textwidth(p_font, p_text, p_length, p_unicode_override);
-        t_gbounds . size . height = p_font -> ascent + p_font -> descent;
-		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
-		
-		t_transformed_bounds . x = floor(t_gbounds . origin . x);
-		t_transformed_bounds . y = floor(t_gbounds . origin . y);
-		t_transformed_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_transformed_bounds . x;
-		t_transformed_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_transformed_bounds . y;
-		
-		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
-		
-		if (t_bounds . width == 0 || t_bounds . height == 0)
-		{
-			r_mask = nil;
-			return true;
-		}
-	}
-	
-	void *t_data;
-	t_data = nil;
-	if (t_success)
-		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
-	
-	CGContextRef t_cgcontext;
-	t_cgcontext = nil;
-	if (t_success)
-	{
-		t_cgcontext = CGBitmapContextCreate(t_data, t_bounds . width, t_bounds . height, 8, t_bounds . width, nil, kCGImageAlphaOnly);
-		t_success = t_cgcontext != nil;
-	}
-    
-    MCGMaskRef t_mask;
-	t_mask = nil;
-	if (t_success)
-	{
-        CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
-		CGContextFillRect(t_cgcontext, CGRectMake(0, 0, t_bounds . width, t_bounds . height));
-		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
-        
-		CGContextTranslateCTM(t_cgcontext, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y));
-		CGContextTranslateCTM(t_cgcontext, 0, t_transformed_bounds . height + t_transformed_bounds . y);
-		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
-        CGContextScaleCTM(t_cgcontext, 1.0, -1.0);                
-        
-        iphone_font_draw_text(p_font -> fid, t_cgcontext, 0, 0, p_text, p_length, p_unicode_override || p_font -> unicode);
-        
-        CGContextFlush(t_cgcontext);
-        
-		MCGDeviceMaskInfo t_mask_info;
-		t_mask_info . format = kMCGMaskFormat_A8;
-		t_mask_info . x = t_bounds . x;
-		t_mask_info . y = t_bounds . y;
-		t_mask_info . width = t_bounds . width;
-		t_mask_info . height = t_bounds . height;
-		t_mask_info . data = t_data;
-		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
-	}
-	
-	if (t_success)
-		r_mask = t_mask;
-	else
-		MCMemoryDelete(t_data);
-	
-	CGContextRelease(t_cgcontext);
-	return t_success;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -708,6 +621,10 @@ Boolean MCScreenDC::wait(real8 duration, Boolean dispatch, Boolean anyevent)
 	
 	do
 	{
+		// MW-2013-08-18: [[ XPlatNotify ]] Handle any pending notifications
+		if (MCNotifyDispatch(dispatch == True) && anyevent)
+			break;
+		
 		real8 eventtime = exittime;
 		if (handlepending(curtime, eventtime, dispatch))
 		{
@@ -1035,7 +952,7 @@ float iphone_font_measure_text(void *p_font, const char *p_text, uint32_t p_text
 
 	iphone_font_measure_text_context_t t_context;
 	t_context . font = p_font;
-	t_context . width = 0.0f;
+t_context . width = 0.0f;
 	for_each_word(p_text, p_text_length, p_is_unicode, iphone_font_do_measure_text, &t_context);
 
 	return t_context . width;
@@ -1211,11 +1128,12 @@ bool iphone_run_on_main_thread(void *p_callback, void *p_callback_state, int p_o
 		return true;
 	}
 
+	// MW-2013-06-18: [[ XPlatNotify ]] Make sure we check whether either fiber is the
+	//   current thread, rather than is the current fiber (otherwise calls from aux. threads
+	//   don't work!).
 	// If we aren't on one of the fibers, then post a selector to the main fiber's
 	// thread.
-	MCFiberRef t_current_fiber;
-	t_current_fiber = MCFiberGetCurrent();
-	if (t_current_fiber != s_script_fiber && t_current_fiber != s_main_fiber)
+	if (!MCFiberIsCurrentThread(s_script_fiber) && !MCFiberIsCurrentThread(s_main_fiber))
 	{
 		com_runrev_livecode_MCRunOnMainThreadHelper *t_helper;
 		t_helper = [[com_runrev_livecode_MCRunOnMainThreadHelper alloc] initWithCallback: p_callback state: p_callback_state options: p_options];
@@ -1756,10 +1674,15 @@ static void MCIPhoneDoBreakWait(void *)
 	if (s_wait_depth > 0)
 	{
 		NSArray *t_modes;
-		t_modes = [[NSArray alloc] initWithObject: NSRunLoopCommonModes];
+		t_modes = [[NSArray alloc] initWithObjects: NSRunLoopCommonModes, nil];
 		[s_break_wait_helper performSelector: @selector(breakWait) withObject: nil afterDelay: 0 inModes: t_modes];
 		[t_modes release];
 	}
+}
+
+static void MCIPhoneDoBreakWaitOnCorrectThread(void *context)
+{
+	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
 }
 
 void MCIPhoneBreakWait(void)
@@ -1770,7 +1693,7 @@ void MCIPhoneBreakWait(void)
 	if (s_break_wait_helper == nil)
 		s_break_wait_helper = [[com_runrev_livecode_MCIPhoneBreakWaitHelper alloc] init];
 
-	MCFiberCall(s_main_fiber, MCIPhoneDoBreakWait, nil);
+	iphone_run_on_main_thread((void *)MCIPhoneDoBreakWaitOnCorrectThread, nil, kMCExternalRunOnMainThreadUnsafe | kMCExternalRunOnMainThreadImmediate);
 }
 
 static void MCIPhoneDoScheduleWait(void *p_ctxt)

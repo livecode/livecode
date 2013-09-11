@@ -902,6 +902,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 
 	switch (which)
 	{
+#ifdef /* MCCard::getprop */ LEGACY_EXEC
 	case P_NUMBER:
 	case P_LAYER:
 		getstack()->count(CT_CARD, CT_UNDEFINED, this, num);
@@ -1028,6 +1029,7 @@ Exec_stat MCCard::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boolea
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;
+#endif /* MCCard::getprop */
 	default:
 		return MCObject::getprop(parid, which, ep, effective);
 	}
@@ -1042,6 +1044,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 
 	switch (which)
 	{
+#ifdef /* MCCard::setprop */ LEGACY_EXEC
 	// MW-2011-09-20: [[ Bug 9741 ]] Make sure we update the card completely if
 	//   any of these are set.
 	case P_FORE_PIXEL:
@@ -1102,7 +1105,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 	case P_SHADOW:
 	case P_LOCK_LOCATION:
 	case P_TOOL_TIP:
-	// MW-2012-03-13: [[ UnicodeToolTip ]] Card's don't have tooltips.
+	// MW-2012-03-13: [[ UnicodeToolTip ]] Cards don't have tooltips.
 	case P_UNICODE_TOOL_TIP:
 		MCeerror->add(EE_OBJECT_SETNOPROP, 0, 0);
 		return ES_ERROR;
@@ -1149,6 +1152,7 @@ Exec_stat MCCard::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boolea
 			return ES_ERROR;
 		}
 		break;
+#endif /* MCCard::setprop */
 	default:
 		return MCObject::setprop(parid, which, ep, effective);
 	}

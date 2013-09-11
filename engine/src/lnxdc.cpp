@@ -168,13 +168,6 @@ GC MCScreenDC::getgc(void)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-#if 0
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
-{
-	return MCFontlistGetCurrent() -> ctxt_textwidth(f, s, l, p_unicode_override);
-}
-#endif
-
 // MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
 int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
 {
@@ -190,12 +183,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_len
 		ep . nativetoutf16();
 	
 	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-}
-
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-bool MCScreenDC::textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask)
-{
-	return MCFontlistGetCurrent() -> ctxt_textmask(f, s, len, p_unicode_override, clip, transform, r_mask);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

@@ -180,7 +180,7 @@ void MCCachedImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame)
 
 uint32_t MCCachedImageRep::GetFrameByteCount()
 {
-	if (m_frames == nil)
+	if (m_frames == nil || m_frame_count == 0)
 		return 0;
 
 	return (m_frames[0].image->height * m_frames[0].image->stride + sizeof(MCImageBitmap) + sizeof(MCImageFrame)) * m_frame_count;

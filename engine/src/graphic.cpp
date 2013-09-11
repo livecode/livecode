@@ -465,6 +465,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 
 	switch (which)
 	{
+#ifdef /* MCGraphic::getprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		ep.setboolean(getflag(F_G_ANTI_ALIASED));
 		break;
@@ -659,6 +660,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 			ep.mapunicode(isunicode, (which == P_UNICODE_TEXT || which == P_UNICODE_LABEL));
 		}
 		break;
+#endif /* MCGraphic::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -668,6 +670,7 @@ Exec_stat MCGraphic::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boo
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::getarrayprop */ LEGACY_EXEC
 	switch(which)
 	{
 	case P_GRADIENT_FILL:
@@ -681,6 +684,7 @@ Exec_stat MCGraphic::getarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 		return MCControl::getarrayprop(parid, which, ep, key, effective);
 	}
 	return ES_NORMAL;
+#endif /* MCGraphic::getarrayprop */
 }
 
 Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean effective)
@@ -692,6 +696,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 
 	switch (p)
 	{
+#ifdef /* MCGraphic::setprop */ LEGACY_EXEC
 	case P_ANTI_ALIASED:
 		if (!MCU_matchflags(data, flags, F_G_ANTI_ALIASED, dirty))
 		{
@@ -1172,6 +1177,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 		else
 			dirty = False;
 		break;
+#endif /* MCGraphic::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}
@@ -1193,6 +1199,7 @@ Exec_stat MCGraphic::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean
 // MW-2011-11-23: [[ Array Chunk Props ]] Add 'effective' param to arrayprop access.
 Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep, MCNameRef key, Boolean effective)
 {
+#ifdef /* MCGraphic::setarrayprop */ LEGACY_EXEC
 	Boolean dirty;
 	dirty = False;
 	switch(which)
@@ -1230,6 +1237,7 @@ Exec_stat MCGraphic::setarrayprop(uint4 parid, Properties which, MCExecPoint& ep
 	}
 	
 	return ES_NORMAL;
+#endif /* MCGraphic::setarrayprop */
 }
 
 MCControl *MCGraphic::clone(Boolean attach, Object_pos p, bool invisible)

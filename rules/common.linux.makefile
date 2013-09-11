@@ -23,6 +23,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libpq/include \
 	$(SOLUTION_DIR)/thirdparty/libsqlite/include \
 	$(SOLUTION_DIR)/thirdparty/libxml/include \
+	$(SOLUTION_DIR)/thirdparty/libxslt/include \
 	$(SOLUTION_DIR)/thirdparty/libz/include \
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
 	$(SOLUTION_DIR)/thirdparty/libopenssl/include \

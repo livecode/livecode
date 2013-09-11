@@ -83,6 +83,23 @@ uint2 MCLogicalFontTableMap(MCNameRef p_textfont, uint2 p_textstyle, uint2 p_tex
 // Lookup the given index in the logical font table, and return its attrs.
 void MCLogicalFontTableLookup(uint2 index, MCNameRef& r_textfont, uint2& r_textstyle, uint2& r_textsize, bool& r_unicode);
 
+
+////////////////////////////////////////////////////////////////////////////////
+
+typedef struct MCLoadedFont *MCLoadedFontRef;
+
+// Attempt to load the given file as a font. If globally is true, the font is
+// loaded for all applications, otherwise just for the current one. If the
+// font is already loaded and the globally flag has changed an attempt is first
+// made to unload it before loading it again.
+Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally);
+
+// Attempt to unload the given file as a font.
+Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path);
+
+// List all currently loaded font files (loaded via MCFontLoad).
+Exec_stat MCFontListLoaded(MCExecPoint& ep);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Font_weight {

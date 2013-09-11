@@ -786,8 +786,12 @@ MCExpression *MCN_new_function(int2 which)
 	// MW-2013-05-08: [[ Uuid ]] Constructor for uuid function.
 	case F_UUID:
 		return new MCUuidFunc;
-
-	default:
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    case F_MEASURE_TEXT:
+        return new MCMeasureText(false);
+    case F_MEASURE_UNICODE_TEXT:
+        return new MCMeasureText(true);
+    default:
 		break;
 	}
 

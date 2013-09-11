@@ -20,14 +20,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #ifndef	PARSEDEFS_H
 #define	PARSEDEFS_H
 
-// for regex
-#define PATTERN_CACHE_SIZE 20
-extern char *MCregexpatterns[];
-
-#define NSUBEXP  50
-typedef struct _regexp regexp;
-extern regexp *MCregexcache[];
-
 typedef struct _constant
 {
 	MCString name;
@@ -221,7 +213,9 @@ enum Dest_type {
 	
 	// MW-2008-11-05: [[ Owner Reference ]] This desttype is used for chunks of the form:
 	//   ... of the owner of ...
-	DT_OWNER
+	DT_OWNER,
+	// MW-2013-08-05: [[ ThisMe ]] Access to the behavior object (this me).
+	DT_THIS_ME,
 };
 
 
@@ -627,6 +621,10 @@ enum Functions {
 	
 	// MW-2013-05-08: [[ Uuid ]] New function for generating uuids.
 	F_UUID,
+    
+    // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+    F_MEASURE_TEXT,
+    F_MEASURE_UNICODE_TEXT,
 };
 
 enum Handler_type {
@@ -720,6 +718,13 @@ enum Mark_constants {
     MC_CARDS,
     MC_FINDING,
     MC_WHERE
+};
+
+// JS-2013-07-01: [[ EnhancedFilter ]] Tags for the type of pattern matcher to use.
+enum Match_mode {
+    MA_UNDEFINED,
+    MA_WILDCARD,
+    MA_REGEX
 };
 
 enum Move_mode {
@@ -867,7 +872,7 @@ enum Preposition_type {
 	PT_CONTENT,
 	PT_MARKUP,
 	PT_BINARY,
-	PT_COOKIE
+	PT_COOKIE,
 };
 
 enum Print_mode {
@@ -1117,6 +1122,9 @@ enum Properties {
     P_ADDRESS,
     P_STACKS_IN_USE,
 	P_NETWORK_INTERFACES,
+    
+  	// TD-2013-06-20: [[ DynamicFonts ]] global property for list of font files
+    P_FONTFILES_IN_USE,
 	
     // window properties
     P_NAME,
@@ -1580,6 +1588,9 @@ enum Properties {
     P_CONTROL_NAMES,
 	P_CHILD_CONTROL_IDS,
     P_CHILD_CONTROL_NAMES,
+
+	// MERG-2013-08-17: [[ ColorDialogColors ]] Custom color management for the windows color dialog
+	P_COLOR_DIALOG_COLORS,
 	
 	// ARRAY STYLE PROPERTIES
 	P_FIRST_ARRAY_PROP,
@@ -1771,6 +1782,23 @@ enum Sugar_constants {
 	
 	// MERG-2013-06-24: [[ IsAnAsciiString ]] Tag for 'string'.
     SG_STRING,
+	
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'pattern'.
+    SG_PATTERN,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'regex'.
+    SG_REGEX,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'wildcard'.
+    SG_WILDCARD,
+	// JS-2013-07-01: [[ EnhancedFilter ]] Tag for 'matching'.
+	SG_MATCHING,
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    SG_RECURSIVELY,
+    
+    // TD-2013-06-14: [[ DynamicFonts ]] start using font theFont [globally]
+    SG_FONT,
+    SG_GLOBALLY,
+    SG_FILE
 };
 
 enum Statements {

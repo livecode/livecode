@@ -441,12 +441,20 @@ int4 MCU_strtol(const char *&sptr, uint4 &l, int1 c, Boolean &done,
 						if (startlength > 1)
 						{
 							if (reals)
+							{
+								// MDW-2013-06-09: [[ Bug 10964 ]] Round integral values to nearest
+								//   (consistent with getuint4() and round()).
+								if (*(sptr+1) > '4')
+								{
+									value++;
+								}
 								do
 								{
 									sptr++;
 									l--;
 								}
 								while (l && isdigit((uint1)*sptr));
+							}
 							else
 								do
 								{
@@ -1021,7 +1029,8 @@ void MCU_break_string(const MCString &s, MCString *&ptrs, uint2 &nptrs,
 	}
 }
 
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 extern compare_t MCSystemCompareInternational(const char *, const char *);
 #endif
 
@@ -1046,7 +1055,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			switch (form)
 			{
 			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 				first = MCSystemCompareInternational(b1->svalue, b2->svalue) >= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) >= 0;
@@ -1063,7 +1073,8 @@ static void msort(MCSortnode *b, uint4 n, MCSortnode *t, Sort_type form, Boolean
 			switch (form)
 			{
 			case ST_INTERNATIONAL:
-#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE)
+// AL-2013-14-07 [[ Bug 10445 ]] Sort international on Android
+#if defined(_MAC_DESKTOP) || defined(_IOS_MOBILE) || defined(_ANDROID_MOBILE)
 				first = MCSystemCompareInternational(b1->svalue, b2->svalue) <= 0;
 #else
 				first = strcoll(b1->svalue, b2->svalue) <= 0;
@@ -1169,8 +1180,12 @@ Boolean MCU_matchflags(const MCString &s, uint4 &flags, uint4 w, Boolean &c)
 
 Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 {
-	if (name == nil || MCNameIsEmpty(name) || test == MCnullmcstring)
-		return False;
+    if (name == nil)
+        return False;
+    
+    // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
+	if (MCNameIsEmpty(name) && test == MCnullmcstring)
+		return True;
 
 	if (MCNameIsEqualToOldString(name, test, kMCCompareCaseless))
 		return True;
@@ -1189,16 +1204,25 @@ Boolean MCU_matchname(const MCString &test, Chunk_term type, MCNameRef name)
 	        MCepsstring, MCmagnifierstring,
 	        MCcolorstring, MCfieldstring
 	    };
+	
+	// MW-2013-07-29: [[ Bug 11068 ]] Make sure that we only match a reference
+	//   of the form 'field "..."', and throw an error if not.
 	const char *sptr = test.getstring();
 	uint4 l = test.getlength();
 	if (MCU_strchr(sptr, l, '"')
-	        && l > tname.getlength() + 1
+			&& l > tname.getlength() + 1
 	        && sptr[tname.getlength() + 1] == '"'
 	        && !MCU_strncasecmp(sptr + 1, tname.getstring(), tname.getlength())
 	        && sptr - test.getstring() >= (int)strlen(nametable[type - CT_STACK])
 	        && !MCU_strncasecmp(test.getstring(), nametable[type - CT_STACK],
 	                            strlen(nametable[type - CT_STACK])))
-		match = True;
+	{
+		if (l == tname.getlength() + 2)
+			match = True;
+		
+		if (!match)
+			MCLog("[[ Bug 11068 ]] match name '%s' to '%.*s' attempted and failed due to better checking", MCNameGetCString(name), test . getlength(), test . getstring());
+	}
 
 	return match;
 }
@@ -1303,8 +1327,9 @@ Boolean MCU_parsepoints(MCPoint *&points, uint2 &noldpoints,
 	while (l)
 	{
 		Boolean done1, done2;
-		int2 i1= MCU_strtol(sptr, l, ',', done1);
-		int2 i2 = MCU_strtol(sptr, l, ',', done2);
+		// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+		int2 i1= (int2)MCU_strtol(sptr, l, ',', done1, True);
+		int2 i2 = (int2)MCU_strtol(sptr, l, ',', done2, True);
 		while (l && !isdigit((uint1)*sptr) && *sptr != '-' && *sptr != '+')
 		{
 			l--;
@@ -1338,8 +1363,9 @@ Boolean MCU_parsepoint(MCPoint &point, const MCString &data)
 	const char *sptr = data.getstring();
 	uint4 l = data.getlength();
 	Boolean done1, done2;
-	int2 i1= MCU_strtol(sptr, l, ',', done1);
-	int2 i2 = MCU_strtol(sptr, l, ',', done2);
+	// MDW-2013-06-09: [[ Bug 11041 ]] Round non-integer values to nearest.
+	int2 i1= (int2)(MCU_strtol(sptr, l, ',', done1, True));
+	int2 i2 = (int2)(MCU_strtol(sptr, l, ',', done2, True));
 	if (!done1 || !done2)
 	{
 		i1 = i2 = MININT2;
@@ -2299,20 +2325,26 @@ void MCU_dofunc(Functions func, uint4 &nparams, real8 &n,
 // MW-2013-06-25: [[ Bug 10983 ]] This function returns true if the given string
 //   could be a url. It checks for strings of the form:
 //     <letter> (<letter> | <digit> | '+' | '.' | '-')+ ':' <char>+
-static bool could_be_url(const char *p_url, uint4 p_length)
+// MW-2013-07-01: [[ Bug 10975 ]] Update to a MCU_* utility function.
+bool MCU_couldbeurl(const MCString& p_potential_url)
 {
+	uint4 t_length;
+	const char *t_url;
+	t_length = p_potential_url . getlength();
+	t_url = p_potential_url . getstring();
+	
 	// If the first char isn't a letter, then we are done.
-	if (p_length == 0 || !isalpha(p_url[0]))
+	if (t_length == 0 || !isalpha(t_url[0]))
 		return false;
 	
 	uint4 t_colon_index;
-	for(t_colon_index = 0; t_colon_index < p_length; t_colon_index++)
+	for(t_colon_index = 0; t_colon_index < t_length; t_colon_index++)
 	{
 		char t_char;
-		t_char = p_url[t_colon_index];
+		t_char = t_url[t_colon_index];
 		
 		// If we find the ':' we are done (end of scheme).
-		if (p_url[t_colon_index] == ':')
+		if (t_url[t_colon_index] == ':')
 			break;
 		
 		// If the character isn't something allowed in a scheme name, we are done.
@@ -2321,7 +2353,7 @@ static bool could_be_url(const char *p_url, uint4 p_length)
 	}
 	
 	// If the scheme name < 2 chars, or there is nothing after it, we are done.
-	if (t_colon_index < 2 || t_colon_index + 1 == p_length)
+	if (t_colon_index < 2 || t_colon_index + 1 == t_length)
 		return false;
 	
 	// If we get here then we could well have a url.
@@ -2352,9 +2384,8 @@ void MCU_geturl(MCExecPoint &ep)
 	{
 		// MW-2013-06-25: [[ Bug 10983 ]] Take more care to check if we do in fact
 		//   have something that could be a url.
-		const char *sptr = ep.getsvalue().getstring();
-		uint4 l = ep.getsvalue().getlength();
-		if (could_be_url(sptr, l))
+		// MW-2013-07-01: [[ Bug 10975 ]] Change to use MCU_couldbeurl utility function.
+		if (MCU_couldbeurl(ep.getsvalue()))
 		{
 			MCS_geturl(ep . getobj(), ep . getcstring());
 			MCurlresult->fetch(ep);

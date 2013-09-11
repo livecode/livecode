@@ -221,6 +221,10 @@ Boolean MCScrollbar::mfocus(int2 x, int2 y)
 		t_bar_start += t_thumb_length / 2;
 		t_bar_length -= t_thumb_length;
 
+        // AL-2013-07-26: [[ Bug 11044 ]] Prevent divide by zero when computing scrollbar thumbposition
+        if (t_bar_length == 0)
+            t_bar_length = 1;
+        
 		int32_t t_new_position;
 		t_new_position = t_thumb_start + t_thumb_length / 2 + t_movement;
 		t_new_position = MCU_min(t_bar_start + t_bar_length, MCU_max(t_bar_start, t_new_position));
@@ -652,6 +656,7 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 {
 	switch (which)
 	{
+#ifdef /* MCScrollbar::getprop */ LEGACY_EXEC
 	case P_STYLE:
 		if (flags & F_SCALE)
 			ep.setstaticcstring(MCscalestring);
@@ -660,18 +665,26 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 		else
 			ep.setstaticcstring(MCscrollbarstring);
 		break;
-	case P_THUMB_SIZE:
-		ep.setr8(thumbsize, nffw, nftrailing, nfforce);
-		break;
-	case P_THUMB_POS:
-		ep.setr8(thumbpos, nffw, nftrailing, nfforce);
-		break;
-	case P_LINE_INC:
-		ep.setr8(lineinc, nffw, nftrailing, nfforce);
-		break;
-	case P_PAGE_INC:
-		ep.setr8(pageinc, nffw, nftrailing, nfforce);
-		break;
+    case P_THUMB_SIZE:
+        ep.setr8(thumbsize, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_THUMB_POS:
+        ep.setr8(thumbpos, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_LINE_INC:
+        ep.setr8(lineinc, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
+    case P_PAGE_INC:
+        ep.setr8(pageinc, nffw, nftrailing, nfforce);
+        // AL-2013-07-26: [[ Bug 6720 ]] Scrollbar properties not returned in correct format.
+        ep.setsvalue(ep.getsvalue());
+        break;
 	case P_ORIENTATION:
 		ep.setstaticcstring(getstyleint(flags) == F_VERTICAL ? "vertical" : "horizontal");
 		break;
@@ -693,6 +706,7 @@ Exec_stat MCScrollbar::getprop(uint4 parid, Properties which, MCExecPoint& ep, B
 	case P_SHOW_VALUE:
 		ep.setboolean(getflag(F_SHOW_VALUE));
 		break;
+#endif /* MCScrollbar::getprop */
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -707,6 +721,7 @@ Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 
 	switch (p)
 	{
+#ifdef /* MCScrollbar::setprop */ LEGACY_EXEC
 	case P_STYLE:
 		flags &= ~F_SB_STYLE;
 		if (data == MCscalestring)
@@ -834,6 +849,7 @@ Exec_stat MCScrollbar::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boole
 		else
 			dirty = False;
 		break;
+#endif /* MCScrollbar::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}

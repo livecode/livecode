@@ -21,6 +21,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objdefs.h"
 #include "parsedef.h"
 
+#include "core.h"
+#include "osspec.h"
 #include "dispatch.h"
 #include "image.h"
 #include "stack.h"
@@ -31,6 +33,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxdc.h"
 #include "osxprinter.h"
+#include "securemode.h"
+#include "mcerror.h"
 
 #include "graphicscontext.h"
 #include "graphics_util.h"
@@ -144,6 +148,47 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 
 ///////////////////////////////////////////////////////////////////////////////
+
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{	
+	FSRef t_ref;
+    FSSpec t_fsspec;
+	OSErr t_os_error;
+	
+	t_os_error = MCS_pathtoref(p_path, &t_ref); // resolves and converts to UTF8.
+	if (t_os_error != noErr)
+		return false;
+    
+    t_os_error = MCS_fsref_to_fsspec(&t_ref, &t_fsspec);
+    if (t_os_error != noErr)
+		return false;
+    
+    ATSFontContext t_context = kATSFontContextLocal;
+    if (p_globally)
+        t_context = kATSFontContextGlobal;
+    
+    ATSFontContainerRef t_container = NULL;
+    
+    // Note: ATSFontActivateFromFileReference should be used from 10.5 onward.
+    //       ATSFontActivateFromFileSpecification deprecated in 10.5.
+    t_os_error = ATSFontActivateFromFileSpecification(&t_fsspec, t_context, kATSFontFormatUnspecified, NULL, kATSOptionFlagsDefault, &t_container);
+    if (t_os_error != noErr)
+        return false;
+    
+    r_loaded_font_handle = (void *)t_container;
+    
+    return true;
+}
+
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+{
+    OSStatus t_status;
+    t_status = ATSFontDeactivate((ATSFontContainerRef)r_loaded_font_handle, NULL, kATSOptionFlagsDefault);
+    
+    return (t_status == noErr);
+}
 
 // MM-2013-08-16: [[ RefactorGraphics ]] Refactored from previous ATSUI drawing method.
 //	If context is NULL, the bounds of the text is calculated. Otherwise, the text is rendered into the context at the given location.
@@ -264,153 +309,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_len
 		ep . nativetoutf16();
 	
 	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
-} 
-
-#if 0
-// MM-2013-08-16: [[ RefactorGraphics ]] Refactored to use drawtexttocgcontext to measure the bounds of the text.
-int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
-
-	if (p_length == 0)
-		return 0;
-	
-	bool t_success;
-	t_success = true;
-	
-	MCExecPoint ep;
-	uint2 t_length;
-	const void *t_text;
-	t_text = nil;
-	if (t_success)
-	{
-		if (p_font -> unicode || p_unicode_override)
-		{
-			t_text = p_text;
-			t_length = p_length;
-		}
-		else
-		{
-			ep . setsvalue(MCString(p_text, p_length));
-			ep . nativetoutf16();
-			t_text =  ep . getsvalue() . getstring();
-			t_length =  ep . getsvalue() . getlength();
-		}
-		t_success = t_text != nil;
-	}
-	
-	MCRectangle t_bounds;
-	if (t_success)
-		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, nil, t_bounds);
-	
-	if (t_success)
-		return t_bounds . width;
-	else
-		return 0;
-}
-#endif
-
-
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
-{
-	bool t_success;
-	t_success = true;
-	
-	MCExecPoint ep;
-	uint2 t_length;
-	const void *t_text;
-	t_text = nil;
-	if (t_success)
-	{
-		if (p_font -> unicode || p_unicode_override)
-		{
-			t_text = p_text;
-			t_length = p_length;
-		}
-		else
-		{
-			ep . setsvalue(MCString(p_text, p_length));
-			ep . nativetoutf16();
-			t_text =  ep . getsvalue() . getstring();
-			t_length =  ep . getsvalue() . getlength();
-		}
-		t_success = t_text != nil;
-	}
-	
-	MCRectangle t_text_bounds;
-	if (t_success)
-		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, nil, t_text_bounds);
-	
-	MCRectangle t_transformed_bounds;
-	MCRectangle t_bounds;
-	if (t_success)
-	{
-		MCGRectangle t_gbounds;
-		t_gbounds = MCGRectangleMake(t_text_bounds . x, t_text_bounds . y, t_text_bounds . width, t_text_bounds . height);
-		t_gbounds = MCGRectangleApplyAffineTransform(t_gbounds, p_transform);
-		
-		t_transformed_bounds . x = floor(t_gbounds . origin . x);
-		t_transformed_bounds . y = floor(t_gbounds . origin . y);
-		t_transformed_bounds . width = ceil(t_gbounds . origin . x + t_gbounds . size . width) - t_transformed_bounds . x;
-		t_transformed_bounds . height = ceil(t_gbounds . origin . y + t_gbounds . size . height) - t_transformed_bounds . y;
-		
-		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
-		
-		if (t_bounds . width == 0 || t_bounds . height == 0)
-		{
-			r_mask = nil;
-			return true;
-		}
-	}
-	
-	void *t_data;
-	t_data = nil;
-	if (t_success)
-		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
-	
-	CGContextRef t_cgcontext;
-	t_cgcontext = nil;
-	if (t_success)
-	{
-		t_cgcontext = CGBitmapContextCreate(t_data, t_bounds . width, t_bounds . height, 8, t_bounds . width, nil, kCGImageAlphaOnly);
-		t_success = t_cgcontext != nil;
-	}
-		
-	if (t_success)
-	{
-		CGContextSetRGBFillColor(t_cgcontext, 1.0, 1.0, 1.0, 0.0);
-		CGContextFillRect(t_cgcontext, CGRectMake(0, 0, t_bounds . width, t_bounds . height));
-		CGContextSetRGBFillColor(t_cgcontext, 0.0, 0.0, 0.0, 1.0);
-		
-		CGContextTranslateCTM(t_cgcontext, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y));
-		CGContextTranslateCTM(t_cgcontext, 0, t_transformed_bounds . height + t_transformed_bounds . y);
-		CGContextConcatCTM(t_cgcontext, CGAffineTransformMake(p_transform . a, p_transform . b, p_transform . c, p_transform . d, p_transform . tx, p_transform . ty));
-		
-		t_success = drawtexttocgcontext(0, 0, t_text, t_length, p_font, t_cgcontext, t_bounds);
-	}
-	
-	MCGMaskRef t_mask;
-	t_mask = nil;
-	if (t_success)
-	{
-		CGContextFlush(t_cgcontext);
-		
-		MCGDeviceMaskInfo t_mask_info;
-		t_mask_info . format = kMCGMaskFormat_A8;
-		t_mask_info . x = t_bounds . x;
-		t_mask_info . y = t_bounds . y;
-		t_mask_info . width = t_bounds . width;
-		t_mask_info . height = t_bounds . height;
-		t_mask_info . data = t_data;
-		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
-	}
-	
-	if (t_success)
-		r_mask = t_mask;
-	else
-		MCMemoryDelete(t_data);
-	
-	CGContextRelease(t_cgcontext);	
-	return t_success;	
 }
 
 ///////////////////////////////////////////////////////////////////////////////

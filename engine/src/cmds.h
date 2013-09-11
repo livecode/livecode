@@ -19,6 +19,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "statemnt.h"
 #include "objdefs.h"
+#include "regex.h"
 #include "util.h"
 #include "uidc.h"
 
@@ -1166,6 +1167,9 @@ class MCStart : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-12: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
+    bool is_globally : 1;
 protected:
 	Start_constants mode;
 public:
@@ -1174,6 +1178,9 @@ public:
 		target = NULL;
 		stack = NULL;
 		mode = SC_UNDEFINED;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
+        is_globally = 0;
 	}
 	virtual ~MCStart();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1193,12 +1200,16 @@ class MCStop : public MCStatement
 {
 	MCChunk *target;
 	MCExpression *stack;
+    // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+    MCExpression *font;
 	Start_constants mode;
 public:
 	MCStop()
 	{
 		target = NULL;
 		stack = NULL;
+        // TD-2013-06-20: [[ DynamicFonts ]] Property to store font path
+        font = NULL;
 	}
 	virtual ~MCStop();
 	virtual Parse_stat parse(MCScriptPoint &);
@@ -1331,23 +1342,81 @@ public:
 	}
 };
 
+// JS-2013-07-01: [[ EnhancedFilter ]] Utility class and descendents handling the
+//   regex and wildcard style pattern matchers.
+class MCPatternMatcher
+{
+protected:
+	char *pattern;
+	Boolean casesensitive;
+public:
+	// MW-2013-07-01: [[ EnhancedFilter ]] Tweaked to take 'const char *' since class
+	//   copies the string.
+	MCPatternMatcher(const char *p, Boolean cs)
+	{
+		/* UNCHECKED */ pattern = strdup(p);
+		casesensitive = cs;
+	}
+	virtual ~MCPatternMatcher();
+	virtual Exec_stat compile(uint2 line, uint2 pos) = 0;
+	virtual Boolean match(char *s) = 0;
+};
+
+class MCRegexMatcher : public MCPatternMatcher
+{
+protected:
+	regexp *compiled;
+public:
+	MCRegexMatcher(const char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+		compiled = NULL;
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(char *s);
+};
+
+class MCWildcardMatcher : public MCPatternMatcher
+{
+public:
+	MCWildcardMatcher(const char *p, Boolean cs) : MCPatternMatcher(p, cs)
+	{
+	}
+	virtual Exec_stat compile(uint2 line, uint2 pos);
+	virtual Boolean match(char *s);
+protected:
+	static Boolean match(char *s, char *p, Boolean cs);
+};
+
 class MCFilter : public MCStatement
 {
+	// JS-2013-07-01: [[ EnhancedFilter ]] Type of the filter (items or lines).
+	Chunk_term chunktype;
 	MCChunk *container;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Optional output container (into ... clause).
+	MCChunk *target;
+	// JS-2013-07-01: [[ EnhancedFilter ]] 'it' reference to use if source is an expr.
+	MCVarref *it;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Source expression if source not a container.
+	MCExpression *source;
 	MCExpression *pattern;
-	Boolean out;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether to use regex or wildcard pattern matcher.
+	Match_mode matchmode;
+	// JS-2013-07-01: [[ EnhancedFilter ]] Whether it is 'matching' (False) or 'not matching' (True)
+	Boolean discardmatches;
 public:
 	MCFilter()
 	{
+		chunktype = CT_UNDEFINED;
 		container = NULL;
+		target = NULL;
+		it = NULL;
+		source = NULL;
 		pattern = NULL;
-		out = False;
+		matchmode = MA_UNDEFINED;
+		discardmatches = False;
 	}
 	virtual ~MCFilter();
-	Boolean match(char *s, char *p, Boolean casesensitive);
-    // JS-2013-05-26: [[ Bug 10926 ]] filter should honour lineDelimiter
-    //     pass linedelimiter as extra parameter to filterlines
-	char *filterlines(char *sstring, char *pstring, char delimiter, Boolean casesensitive);
+	char *filterdelimited(char *sstring, char delimiter, MCPatternMatcher *matcher);
 	virtual Parse_stat parse(MCScriptPoint &);
 	virtual Exec_stat exec(MCExecPoint &);
 };
@@ -1645,6 +1714,8 @@ class MCSetOp : public MCStatement
 protected:
 	Boolean intersect : 1;
 	bool overlap : 1;
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    bool recursive : 1;
 public:
 	MCSetOp()
 	{

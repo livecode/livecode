@@ -22,6 +22,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 //  MODE AND FEATURE DEFINITIONS
 //
 
+#ifndef LEGACY_EXEC
+#define LEGACY_EXEC
+#endif
+
 #ifdef MODE_DEVELOPMENT
 #define FEATURE_PROPERTY_LISTENER
 #endif

@@ -807,11 +807,8 @@ void X_clear_globals(void)
 	MCnullmcstring = NULL;
 
 	// MW-2013-03-11: [[ Bug 10713 ]] Make sure we reset the regex cache globals to nil.
-	for(uindex_t i = 0; i < PATTERN_CACHE_SIZE; i++)
-	{
-		MCregexpatterns[i] = nil;
-		MCregexcache[i] = nil;
-	}
+	// JS-2013-07-01: [[ EnhancedFilter ]] Refactored regex caching mechanism.
+	MCR_clearcache();
 
 	for(uint32_t i = 0; i < PI_NCURSORS; i++)
 		MCcursors[i] = nil;
@@ -942,7 +939,25 @@ bool X_open(int argc, char *argv[], char *envp[])
 	
 	// MW-2012-02-14: [[ FontRefs ]] Open the dispatcher after we have an open
 	//   screen, otherwise we don't have a root fontref!
+	// MW-2013-08-07: [[ Bug 10995 ]] Configure fonts based on platform.
+#if defined(TARGET_PLATFORM_WINDOWS)
+	if (MCmajorosversion >= 0x0600)
+	{
+		// Vista onwards
+		MCdispatcher -> setfontattrs("Segoe UI", 12, FA_DEFAULT_STYLE);
+	}
+	else
+	{
+		// Pre-Vista
+		MCdispatcher -> setfontattrs("Tahoma", 11, FA_DEFAULT_STYLE);
+	}
+#elif defined(TARGET_PLATFORM_MACOS_X)
+	MCdispatcher -> setfontattrs("Lucida Grande", 11, FA_DEFAULT_STYLE);
+#elif defined(TARGET_PLATFORM_LINUX)
+	MCdispatcher -> setfontattrs("Helvetica", 12, FA_DEFAULT_STYLE);
+#else
 	MCdispatcher -> setfontattrs(DEFAULT_TEXT_FONT, DEFAULT_TEXT_SIZE, FA_DEFAULT_STYLE);
+#endif
 	MCdispatcher -> open();
 
 	// This is here because it relies on MCscreen being initialized.
@@ -1091,12 +1106,8 @@ int X_close(void)
 		MCglobals = MCglobals->getnext();
 		delete tvar;
 	}
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-	{
-		delete MCregexpatterns[i];
-		MCR_free(MCregexcache[i]);
-	}
+	// JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism
+    MCR_clearcache();
 	delete MCperror;
 	delete MCeerror;
 

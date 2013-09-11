@@ -71,9 +71,6 @@ public:
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
 	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context);
 	
-	// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-	virtual bool ctxt_textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
-
 private:
 	MCNewFontStruct *m_fonts;
 
@@ -473,108 +470,6 @@ bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_co
 
 	return t_success;
 }
-
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-bool MCNewFontlist::ctxt_textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
-{
-	bool t_success;
-	t_success = true;
-	
-	char *t_utf8_text;
-	t_utf8_text = nil;
-	if (t_success)
-	{
-		if (p_font -> unicode || p_unicode_override)
-			t_success = MCCStringFromUnicodeSubstring((const unichar_t *)p_text, p_length / 2, t_utf8_text);
-		else
-			t_success = MCCStringFromNativeSubstring(p_text, p_length, t_utf8_text);
-	}
-
-	PangoLayoutLine *t_line;
-	t_line = nil;
-	if (t_success)
-	{
-		PangoMatrix t_ptransform;		
-		t_ptransform . xx = p_transform . a;
-		t_ptransform . xy = p_transform . b;
-		t_ptransform . yx = p_transform . c;
-		t_ptransform . yy = p_transform . d;
-		t_ptransform . x0 = p_transform . tx;
-		t_ptransform . y0 = p_transform . ty;
-		pango_context_set_matrix(m_pango, &t_ptransform);
-
-		pango_layout_set_font_description(m_layout, static_cast<MCNewFontStruct *>(p_font) -> description);
-		pango_layout_set_text(m_layout, t_utf8_text, -1);
-		MCCStringFree(t_utf8_text);
-		
-		extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
-		if (pango_layout_get_line_readonly_ptr != nil)
-			t_line = pango_layout_get_line_readonly_ptr(m_layout, 0);
-		else
-			t_line = pango_layout_get_line(m_layout, 0);
-		t_success = t_line != nil;
-	}
-		
-	MCRectangle t_transformed_bounds;
-	MCRectangle t_bounds;
-	if (t_success)
-	{
-		PangoRectangle t_pbounds;
-		pango_layout_line_get_extents(t_line, NULL, &t_pbounds);
-		
-		t_transformed_bounds . x = floor(t_pbounds . x / PANGO_SCALE);
-		t_transformed_bounds . y = floor(t_pbounds . y / PANGO_SCALE);
-		t_transformed_bounds . width = ceil(t_pbounds . x / PANGO_SCALE + t_pbounds . width / PANGO_SCALE) - t_transformed_bounds . x;
-		t_transformed_bounds . height = ceil(t_pbounds . y / PANGO_SCALE + t_pbounds . height / PANGO_SCALE) - t_transformed_bounds . y;
-				
-		t_bounds = MCU_intersect_rect(t_transformed_bounds, p_clip);
-				
-		if (t_bounds . width == 0 || t_bounds . height == 0)
-		{
-			r_mask = nil;
-			return true;
-		}	
-	}
-		
-	void *t_data;
-	t_data = nil;
-	if (t_success)
-		t_success = MCMemoryNew(t_bounds . width * t_bounds . height, t_data);
-	
-	MCGMaskRef t_mask;
-	t_mask = nil;
-	if (t_success)
-	{
-		FT_Bitmap t_bitmap;
-		t_bitmap . rows = t_bounds . height;
-		t_bitmap . width = t_bounds . width;
-		t_bitmap . pitch = t_bounds . width;
-		t_bitmap . buffer = (unsigned char*) t_data;
-		t_bitmap . num_grays = 256;
-		t_bitmap . pixel_mode = FT_PIXEL_MODE_GRAY;
-		t_bitmap . palette_mode = 0;
-		t_bitmap . palette = nil;
-				
-		pango_ft2_render_layout_line(&t_bitmap, t_line, -(t_bounds . x - t_transformed_bounds . x), -(t_bounds . y - t_transformed_bounds . y) - t_transformed_bounds . y);
-		
-		MCGDeviceMaskInfo t_mask_info;
-		t_mask_info . format = kMCGMaskFormat_A8;
-		t_mask_info . x = t_bounds . x;
-		t_mask_info . y = t_bounds . y;
-		t_mask_info . width = t_bounds . width;
-		t_mask_info . height = t_bounds . height;
-		t_mask_info . data = t_data;
-		t_success = MCGMaskCreateWithInfoAndRelease(t_mask_info, t_mask);
-	}
-			
-	if (t_success)
-		r_mask = t_mask;
-	else
-		MCMemoryDelete(t_data);
-	
-	pango_context_set_matrix(m_pango, nil);
-	return t_success;
-}	
 
 ////////////////////////////////////////////////////////////////////////////////
 

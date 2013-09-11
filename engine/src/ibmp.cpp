@@ -388,7 +388,10 @@ bool MCImageEncodeBMP(MCImageBitmap *p_bitmap, IO_handle p_stream, uindex_t &r_b
 #define BMP_FILE_TYPE_OS2_ICON ('IC')
 #define BMP_FILE_TYPE_OS2_POINTER ('PT')
 
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
 #define BMP_COMPRESSION_RGB (0)
+#define BMP_COMPRESSION_RLE8 (1)
+#define BMP_COMPRESSION_RLE4 (2)
 #define BMP_COMPRESSION_BITFIELDS (3)
 
 #define BMP_FILE_HEADER_SIZE (14)
@@ -563,6 +566,196 @@ bool bmp_read_color_table(IO_handle p_stream, uindex_t &x_bytes_read, uint32_t p
 	else
 		MCMemoryDeleteArray(t_color_table);
 
+	return t_success;
+}
+
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+bool bmp_read_rle4_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uint32_t *p_color_table, uindex_t p_color_count, bool p_topdown)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_end_bitmap;
+	t_end_bitmap = false;
+	
+	uint32_t x, y;
+	x = y = 0;
+	
+	while (t_success && !t_end_bitmap)
+	{
+		uint8_t t_count, t_value;
+		t_success = IO_NORMAL == IO_read_uint1(&t_count, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_read_uint1(&t_value, p_stream);
+		if (t_success)
+		{
+			x_bytes_read += 2;
+			if (t_count > 0)
+			{
+				// encoded mode
+				uint8_t t_upper, t_lower;
+				t_upper = t_value >> 4;
+				t_lower = t_value & 0x0F;
+				
+				for (uint32_t i = 0; i < t_count; i++)
+				{
+					uint8_t t_index;
+					t_index = ((i & 0x1) == 0) ? t_upper : t_lower;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+			else if (t_value == 0)
+			{
+				// end-of-line escape
+				x = 0;
+				y++;
+			}
+			else if (t_value == 1)
+			{
+				// end-of-bitmap escape
+				t_end_bitmap = true;
+			}
+			else if (t_value == 2)
+			{
+				// delta escape
+				uint8_t t_dx, t_dy;
+				t_success = IO_NORMAL == IO_read_uint1(&t_dx, p_stream);
+				if (t_success)
+					t_success = IO_NORMAL == IO_read_uint1(&t_dy, p_stream);
+				if (t_success)
+				{
+					x_bytes_read += 2;
+					x += t_dx;
+					y += t_dy;
+				}
+			}
+			else
+			{
+				// absolute mode
+				uint8_t t_byte, t_upper, t_lower;
+				
+				uint8_t t_run_buffer[128];
+				uint32_t t_run_bytes;
+				t_run_bytes = (t_value + 1) / 2;
+				t_run_bytes = (t_run_bytes + 1) & ~0x1;
+				
+				t_success = IO_NORMAL == MCS_read(t_run_buffer, 1, t_run_bytes, p_stream);
+				
+				if (t_success)
+					x_bytes_read += t_run_bytes;
+				
+				for (uint32_t i = 0; t_success && i < t_value; i++)
+				{
+					if ((i & 0x1) == 0)
+					{
+						t_byte = t_run_buffer[i / 2];
+						t_upper = t_byte >> 4;
+						t_lower = t_byte & 0x0F;
+					}
+					
+					uint8_t t_index;
+					t_index = ((i & 0x1) == 0) ? t_upper : t_lower;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+		}
+	}
+	
+	return t_success;
+}
+
+// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+bool bmp_read_rle8_image(IO_handle p_stream, uindex_t &x_bytes_read, MCImageBitmap *p_bitmap, uint32_t *p_color_table, uindex_t p_color_count, bool p_topdown)
+{
+	bool t_success;
+	t_success = true;
+	
+	bool t_end_bitmap;
+	t_end_bitmap = false;
+	
+	uint32_t x, y;
+	x = y = 0;
+	
+	while (t_success && !t_end_bitmap)
+	{
+		uint8_t t_count, t_value;
+		t_success = IO_NORMAL == IO_read_uint1(&t_count, p_stream);
+		if (t_success)
+			t_success = IO_NORMAL == IO_read_uint1(&t_value, p_stream);
+		if (t_success)
+		{
+			x_bytes_read += 2;
+			if (t_count > 0)
+			{
+				// encoded mode
+				for (uint32_t i = 0; i < t_count; i++)
+				{
+					uint8_t t_index;
+					t_index = t_value;
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+			else if (t_value == 0)
+			{
+				// end-of-line escape
+				x = 0;
+				y++;
+			}
+			else if (t_value == 1)
+			{
+				// end-of-bitmap escape
+				t_end_bitmap = true;
+			}
+			else if (t_value == 2)
+			{
+				// delta escape
+				uint8_t t_dx, t_dy;
+				t_success = IO_NORMAL == IO_read_uint1(&t_dx, p_stream);
+				if (t_success)
+					t_success = IO_NORMAL == IO_read_uint1(&t_dy, p_stream);
+				if (t_success)
+				{
+					x_bytes_read += 2;
+					x += t_dx;
+					y += t_dy;
+				}
+			}
+			else
+			{
+				// absolute mode
+				uint8_t t_byte, t_upper, t_lower;
+				
+				uint8_t t_run_buffer[256];
+				uint32_t t_run_bytes;
+				t_run_bytes = (t_value + 1) & ~0x1;
+				
+				t_success = IO_NORMAL == MCS_read(t_run_buffer, 1, t_run_bytes, p_stream);
+				
+				if (t_success)
+					x_bytes_read += t_run_bytes;
+				
+				for (uint32_t i = 0; t_success && i < t_value; i++)
+				{
+					uint8_t t_index;
+					t_index = t_run_buffer[i];
+					
+					if (t_index < p_color_count && x < p_bitmap->width && y < p_bitmap->height)
+						MCImageBitmapSetPixel(p_bitmap, x, p_topdown ? y : (p_bitmap->height - 1 - y), p_color_table[t_index]);
+					x++;
+				}
+			}
+		}
+	}
+	
 	return t_success;
 }
 
@@ -756,6 +949,13 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 	if (t_success)
 		t_success = bmp_read_dib_header(p_stream, x_bytes_read, t_header, t_is_os2);
 
+	// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+	if (t_success)
+		t_success = t_header.compression == BMP_COMPRESSION_RGB ||
+		t_header.compression == BMP_COMPRESSION_RLE8 ||
+		t_header.compression == BMP_COMPRESSION_RLE4 ||
+		t_header.compression == BMP_COMPRESSION_BITFIELDS;
+	
 	if (t_success)
 	{
 		if (t_header.compression == BMP_COMPRESSION_BITFIELDS)
@@ -772,11 +972,6 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 				t_header.green_mask = 0x1F << 5;
 				t_header.blue_mask = 0x1F;
 			}
-		}
-		else
-		{
-			// we only support uncompressed images
-			t_success = false;
 		}
 	}
 
@@ -807,10 +1002,26 @@ bool MCImageDecodeBMPStruct(IO_handle p_stream, uindex_t &x_bytes_read, MCImageB
 
 	if (t_success)
 	{
-		if (t_header.compression == BMP_COMPRESSION_BITFIELDS)
-			t_success = bmp_read_bitfield_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_header.alpha_mask, t_header.red_mask, t_header.green_mask, t_header.blue_mask, t_topdown);
-		else
-			t_success = bmp_read_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_color_table, t_header.color_count, t_topdown);
+		switch (t_header.compression)
+		{
+			case BMP_COMPRESSION_RGB:
+				t_success = bmp_read_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+			case BMP_COMPRESSION_RLE8:
+				t_success = bmp_read_rle8_image(p_stream, x_bytes_read, t_bitmap, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			// IM-2013-08-16: [[ Bugfix 10278 ]] Add support for reading RLE compressed BMP images
+			case BMP_COMPRESSION_RLE4:
+				t_success = bmp_read_rle4_image(p_stream, x_bytes_read, t_bitmap, t_color_table, t_header.color_count, t_topdown);
+				break;
+				
+			case BMP_COMPRESSION_BITFIELDS:
+				t_success = bmp_read_bitfield_image(p_stream, x_bytes_read, t_bitmap, t_header.bits_per_pixel, t_header.alpha_mask, t_header.red_mask, t_header.green_mask, t_header.blue_mask, t_topdown);
+				break;
+		}
 	}
 
 	if (t_success)

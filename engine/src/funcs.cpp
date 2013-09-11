@@ -58,12 +58,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "stacksecurity.h"
 #include "uuid.h"
+#include "font.h"
 
 #include "core.h"
 #include "resolution.h"
-
-char *MCregexpatterns[PATTERN_CACHE_SIZE];
-regexp *MCregexcache[PATTERN_CACHE_SIZE];
 
 #define GZIP_HEAD_CRC     0x02 /* bit 1 set: header CRC present */
 #define GZIP_EXTRA_FIELD  0x04 /* bit 2 set: extra field present */
@@ -177,6 +175,7 @@ Parse_stat MCArrayDecode::parse(MCScriptPoint& sp, Boolean the)
 
 Exec_stat MCArrayDecode::eval(MCExecPoint& ep)
 {
+#ifdef /* MCArrayDecode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ARRAYDECODE_BADSOURCE, line, pos);
@@ -205,6 +204,7 @@ Exec_stat MCArrayDecode::eval(MCExecPoint& ep)
 	}
 	
 	return ES_NORMAL;
+#endif /* MCArrayDecode */
 }
 
 //
@@ -283,14 +283,16 @@ Parse_stat MCBase64Decode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCBase64Decode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBase64Decode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
-		MCeerror->add
+	MCeerror->add
 		(EE_BASE64DECODE_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	MCU_base64decode(ep);
 	return ES_NORMAL;
+#endif /* MCBase64Decode */
 }
 
 MCBase64Encode::~MCBase64Encode()
@@ -311,6 +313,7 @@ Parse_stat MCBase64Encode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCBase64Encode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBase64Encode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -319,6 +322,7 @@ Exec_stat MCBase64Encode::eval(MCExecPoint &ep)
 	}
 	MCU_base64encode(ep);
 	return ES_NORMAL;
+#endif /* MCBase64Encode */
 }
 
 MCBaseConvert::~MCBaseConvert()
@@ -342,6 +346,7 @@ Parse_stat MCBaseConvert::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCBaseConvert::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBaseConvert */ LEGACY_EXEC
 	if (destbase->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL
 	        || ep.getnvalue() < 2.0 || ep.getnvalue() > 36.0)
 	{
@@ -436,6 +441,7 @@ Exec_stat MCBaseConvert::eval(MCExecPoint &ep)
 	dptr++;
 	ep.copysvalue(dptr, 64 - (dptr - result));
 	return ES_NORMAL;
+#endif /* MCBaseConvert */
 }
 
 
@@ -483,6 +489,7 @@ Parse_stat MCBinaryDecode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBinaryDecode */ LEGACY_EXEC
 	if (params->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -819,6 +826,7 @@ Exec_stat MCBinaryDecode::eval(MCExecPoint &ep)
 		pptr = pptr->getnext();
 	}
 	return ES_NORMAL;
+#endif /* MCBinaryDecode */
 }
 
 MCBinaryEncode::~MCBinaryEncode()
@@ -844,6 +852,7 @@ Parse_stat MCBinaryEncode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCBinaryEncode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBinaryEncode */ LEGACY_EXEC
 	if (params->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1168,25 +1177,32 @@ Exec_stat MCBinaryEncode::eval(MCExecPoint &ep)
 	}
 	delete format;
 	return ES_NORMAL;
+#endif /* MCBinaryEncode */
 }
 
 Exec_stat MCBuildNumber::eval(MCExecPoint &ep)
 {
+#ifdef /* MCBuildNumber */ LEGACY_EXEC
 	ep.setint(MCbuildnumber);
 	return ES_NORMAL;
+#endif /* MCBuildNumber */
 }
 
 Exec_stat MCCachedUrls::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCachedUrls */ LEGACY_EXEC
 	ep.getobj()->message(MCM_get_cached_urls, (MCParameter*)NULL, False, True);
 	MCresult->fetch(ep);
 	return ES_NORMAL;
+#endif /* MCCachedUrls */
 }
 
 Exec_stat MCCapsLockKey::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCapsLockKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_CAPS_LOCK) != 0));
 	return ES_NORMAL;
+#endif /* MCCapsLockKey */
 }
 
 MCCharToNum::~MCCharToNum()
@@ -1207,6 +1223,7 @@ Parse_stat MCCharToNum::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCharToNum::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCharToNum */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1236,6 +1253,7 @@ Exec_stat MCCharToNum::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCCharToNum */
 }
 
 MCByteToNum::~MCByteToNum()
@@ -1255,6 +1273,7 @@ Parse_stat MCByteToNum::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCByteToNum::eval(MCExecPoint &ep)
 {
+#ifdef /* MCByteToNum */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep . getsvalue() . getlength() != 1)
 	{
 		MCeerror->add(EE_BYTETONUM_BADSOURCE, line, pos);
@@ -1262,6 +1281,7 @@ Exec_stat MCByteToNum::eval(MCExecPoint &ep)
 	}
 	ep . setnvalue(((uint1*)ep . getsvalue() . getstring())[0]);
 	return ES_NORMAL;
+#endif /* MCByteToNum */
 }
 
 MCChunkOffset::~MCChunkOffset()
@@ -1284,6 +1304,7 @@ Parse_stat MCChunkOffset::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCChunkOffset::eval(MCExecPoint &ep)
 {
+#ifdef /* MCChunkOffset */ LEGACY_EXEC
 	uint4 start = 0;
 	if (offset != NULL)
 	{
@@ -1360,6 +1381,7 @@ Exec_stat MCChunkOffset::eval(MCExecPoint &ep)
 		MCU_chunk_offset(ep, w, ep.getwholematches(), delimiter);
 	}
 	return ES_NORMAL;
+#endif /* MCChunkOffset */
 }
 
 Exec_stat MCClickChar::eval(MCExecPoint &ep)
@@ -1373,25 +1395,30 @@ Exec_stat MCClickChar::eval(MCExecPoint &ep)
 
 Exec_stat MCClickCharChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickCharChunk */ LEGACY_EXEC
 	if (MCclickfield == NULL)
 		ep.clear();
 	else
 		MCclickfield->loccharchunk(ep, True);
 	return ES_NORMAL;
+#endif /* MCClickCharChunk */
 }
 
 Exec_stat MCClickChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickChunk */ LEGACY_EXEC
 
 	if (MCclickfield == NULL)
 		ep.clear();
 	else
 		MCclickfield->locchunk(ep, True);
 	return ES_NORMAL;
+#endif /* MCClickChunk */
 }
 
 Exec_stat MCClickField::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickField */ LEGACY_EXEC
 	if (MCclickfield != NULL)
 	{
 		MCclickfield->getprop(0, P_NUMBER, ep, False);
@@ -1400,56 +1427,70 @@ Exec_stat MCClickField::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCClickField */
 }
 
 Exec_stat MCClickH::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickH */ LEGACY_EXEC
 	ep.setint(MCclicklocx);
 	return ES_NORMAL;
+#endif /* MCClickH */
 }
 
 Exec_stat MCClickLine::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickLine */ LEGACY_EXEC
 	if (MCclickfield == NULL)
 		ep.clear();
 	else
 		MCclickfield->locline(ep, True);
 	return ES_NORMAL;
+#endif /* MCClickLine */
 }
 
 Exec_stat MCClickLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickLoc */ LEGACY_EXEC
 	ep.setpoint(MCclicklocx, MCclicklocy);
 	return ES_NORMAL;
+#endif /* MCClickLoc */
 }
 
 Exec_stat MCClickStack::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickStack */ LEGACY_EXEC
 	if (MCclickstackptr == NULL)
 	{
 		ep.clear();
 		return ES_NORMAL;
 	}
 	return MCclickstackptr->getprop(0, P_LONG_NAME, ep, False);
+#endif /* MCClickStack */
 }
 
 Exec_stat MCClickText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickText */ LEGACY_EXEC
 	if (MCclickfield == NULL)
 		ep.clear();
 	else
 		MCclickfield->loctext(ep, True);
 	return ES_NORMAL;
+#endif /* MCClickText */
 }
 
 Exec_stat MCClickV::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClickV */ LEGACY_EXEC
 	ep.setnvalue(MCclicklocy);
 	return ES_NORMAL;
+#endif /* MCClickV */
 }
 
 Exec_stat MCClipboard::eval(MCExecPoint &ep)
 {
+#ifdef /* MCClipboard */ LEGACY_EXEC
 	bool t_success;
 	t_success = true;
 
@@ -1480,12 +1521,15 @@ Exec_stat MCClipboard::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCClipboard */
 }
 
 Exec_stat MCCommandKey::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCommandKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_CONTROL) != 0));
 	return ES_NORMAL;
+#endif /* MCCommandKey */
 }
 
 MCCompress::~MCCompress()
@@ -1506,6 +1550,7 @@ Parse_stat MCCompress::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCompress::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCompress */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -1550,45 +1595,57 @@ Exec_stat MCCompress::eval(MCExecPoint &ep)
 	ep.setbuffer(newbuffer, size);
 	ep.setlength(osize + 8);
 	return ES_NORMAL;
-
+#endif /* MCCompress */
 }
 
 Exec_stat MCControlKey::eval(MCExecPoint &ep)
 {
+#ifdef /* MCControlKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_MAC_CONTROL) != 0));
 	return ES_NORMAL;
+#endif /* MCControlKey */
 }
 
 Exec_stat MCColorNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCColorNames */ LEGACY_EXEC
 	MCscreen->getcolornames(ep);
 	return ES_NORMAL;
+#endif /* MCColorNames */
 }
 
 Exec_stat MCCommandNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCommandNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getcommands(ep);
+#endif /* MCCommandNames */
 }
 
 Exec_stat MCConstantNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCConstantNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getconstants(ep);
+#endif /* MCConstantNames */
 }
 
 Exec_stat MCDate::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDate */ LEGACY_EXEC
 	MCD_date(P_UNDEFINED, ep);
 	return ES_NORMAL;
+#endif /* MCDate */
 }
 
 Exec_stat MCDateFormat::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDateFormat */ LEGACY_EXEC
 	MCD_dateformat(P_UNDEFINED, ep);
 	return ES_NORMAL;
+#endif /* MCDateFormat */
 }
 
 MCDecompress::~MCDecompress()
@@ -1609,14 +1666,17 @@ Parse_stat MCDecompress::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCDecompress::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDecompress */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_DECOMPRESS_BADSOURCE, line, pos);
 		return ES_ERROR;
 	}
 	return do_decompress(ep, line, pos);
+#endif /* MCDecompress */
 }
 
+#ifdef /* MCDecompress::do_decompress */ LEGACY_EXEC
 Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
 {
 	const char *sptr = ep.getsvalue().getstring();
@@ -1684,9 +1744,11 @@ Exec_stat MCDecompress::do_decompress(MCExecPoint& ep, uint2 line, uint2 pos)
 	ep.setlength(size);
 	return ES_NORMAL;
 }
+#endif /* MCDecompress::do_decompress */
 
 Exec_stat MCDirectories::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDirectories */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -1694,39 +1756,48 @@ Exec_stat MCDirectories::eval(MCExecPoint &ep)
 	}
 	MCS_getentries(ep, false, false);
 	return ES_NORMAL;
+#endif /* MCDirectories */
 }
 
 Exec_stat MCDiskSpace::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDiskSpace */ LEGACY_EXEC
 	ep . setnvalue(MCS_getfreediskspace());
 	return ES_NORMAL;
+#endif /* MCDiskSpace */
 }
 
 Exec_stat MCDNSServers::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDNSServers */ LEGACY_EXEC
 	if (!MCSecureModeCheckNetwork())
 		return ES_ERROR;
 
 	MCS_getDNSservers(ep);
 	return ES_NORMAL;
+#endif /* MCDNSServers */
 }
 
 Exec_stat MCDragDestination::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDragDestination */ LEGACY_EXEC
 	if (MCdragdest != NULL)
 		return MCdragdest->getprop(0, P_LONG_ID, ep, False);
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCDragDestination */
 }
 
 Exec_stat MCDragSource::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDragSource */ LEGACY_EXEC
 	if (MCdragsource != NULL)
 		return MCdragsource->getprop(0, P_LONG_ID, ep, False);
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCDragSource */
 }
 
 MCDriverNames::~MCDriverNames()
@@ -1752,6 +1823,7 @@ Parse_stat MCDriverNames::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCDriverNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDriverNames */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -1768,6 +1840,7 @@ Exec_stat MCDriverNames::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return MCS_getdevices(ep) ? ES_NORMAL : ES_ERROR;
+#endif /* MCDriverNames */
 }
 
 MCDrives::~MCDrives()
@@ -1793,6 +1866,7 @@ Parse_stat MCDrives::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCDrives::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDrives */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -1809,33 +1883,42 @@ Exec_stat MCDrives::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return MCS_getdrives(ep) ? ES_NORMAL : ES_ERROR;
+#endif /* MCDrives */
 }
 
 Exec_stat MCDropChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDropChunk */ LEGACY_EXEC
 	if (MCdropfield == NULL)
 		ep.clear();
 	else
 		MCdropfield->returnchunk(ep, MCdropchar, MCdropchar);
 	return ES_NORMAL;
+#endif /* MCDropChunk */
 }
 
 Exec_stat MCQTEffects::eval(MCExecPoint &ep)
 {
+#ifdef /* MCQTEffects */ LEGACY_EXEC
 	MCtemplateplayer->geteffectlist(ep);
 	return ES_NORMAL;
+#endif /* MCQTEffects */
 }
 
 Exec_stat MCRecordCompressionTypes::eval(MCExecPoint &ep)
 {
+#ifdef /* MCRecordCompressionTypes */ LEGACY_EXEC
 	MCtemplateplayer->getrecordcompressionlist(ep);
 	return ES_NORMAL;
+#endif /* MCRecordCompressionTypes */
 }
 
 Exec_stat MCRecordLoudness::eval(MCExecPoint &ep)
 {
+#ifdef /* MCRecordLoudness */ LEGACY_EXEC
 	MCtemplateplayer->getrecordloudness(ep);
 	return ES_NORMAL;
+#endif /* MCRecordLoudness */
 }
 
 MCEncrypt::~MCEncrypt()
@@ -1856,6 +1939,7 @@ Parse_stat MCEncrypt::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCEncrypt::eval(MCExecPoint &ep)
 {
+#ifdef /* MCEncrypt */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ENCRYPT_BADSOURCE, line, pos);
@@ -1871,12 +1955,15 @@ Exec_stat MCEncrypt::eval(MCExecPoint &ep)
 	MCCStringFree(t_enc);
 
 	return ES_NORMAL;
+#endif /* MCEncrypt */
 }
 
 Exec_stat MCEnvironment::eval(MCExecPoint &ep)
 {
+#ifdef /* MCEnvironment */ LEGACY_EXEC
 	ep . setstaticcstring(MCModeGetEnvironment());
 	return ES_NORMAL;
+#endif /* MCEnvironment */
 }
 
 MCExists::~MCExists()
@@ -1891,12 +1978,14 @@ Parse_stat MCExists::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExists::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExists */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	MCerrorlock++;
 	ep.setboolean(object->getobj(ep, optr, parid, True) == ES_NORMAL);
 	MCerrorlock--;
 	return ES_NORMAL;
+#endif /* MCExists */
 }
 
 MCExtents::~MCExtents()
@@ -1916,6 +2005,7 @@ Parse_stat MCExtents::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCExtents::eval(MCExecPoint &ep)
 {
+#ifdef /* MCExtents */ LEGACY_EXEC
 	if (source -> eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_EXTENTS_BADSOURCE, line, pos);
@@ -1937,11 +2027,13 @@ Exec_stat MCExtents::eval(MCExecPoint &ep)
 		ep . clear();
 
 	return ES_NORMAL;
+#endif /* MCExtents */
 }
 
 
 Exec_stat MCTheFiles::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTheFiles */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -1949,6 +2041,7 @@ Exec_stat MCTheFiles::eval(MCExecPoint &ep)
 	}
 	MCS_getentries(ep, true, false);
 	return ES_NORMAL;
+#endif /* MCTheFiles */
 }
 
 MCFlushEvents::~MCFlushEvents()
@@ -1970,6 +2063,7 @@ Parse_stat MCFlushEvents::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFlushEvents::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFlushEvents */ LEGACY_EXEC
 	static const char *enames[FE_LAST] =
 	    { "all", "mousedown", "mouseup",
 	      "keydown", "keyup", "autokey",
@@ -1988,10 +2082,12 @@ Exec_stat MCFlushEvents::eval(MCExecPoint &ep)
 			MCscreen->flushevents(i);
 	ep.clear();
 	return ES_NORMAL;
+#endif /* MCFlushEvents */
 }
 
 Exec_stat MCFocusedObject::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFocusedObject */ LEGACY_EXEC
 	if (MCfocusedstackptr != NULL)
 	{
 		MCControl *cptr = MCfocusedstackptr->getcard()->getkfocused();
@@ -2001,6 +2097,7 @@ Exec_stat MCFocusedObject::eval(MCExecPoint &ep)
 	}
 	ep.clear();
 	return ES_NORMAL;
+#endif /* MCFocusedObject */
 }
 
 
@@ -2029,6 +2126,7 @@ Parse_stat MCFontNames::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFontNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFontNames */ LEGACY_EXEC
 	if (type != NULL)
 	{
 		if (type->eval(ep) != ES_NORMAL)
@@ -2043,6 +2141,7 @@ Exec_stat MCFontNames::eval(MCExecPoint &ep)
 
 	delete type;
 	return ES_NORMAL;
+#endif /* MCFontNames */
 }
 
 
@@ -2064,6 +2163,7 @@ Parse_stat MCFontLanguage::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFontLanguage::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFontLanguage */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_FONTSIZES_BADFONTNAME, line, pos);
@@ -2074,6 +2174,7 @@ Exec_stat MCFontLanguage::eval(MCExecPoint &ep)
 	ep.setstaticcstring(MCU_charsettolanguage(charset));
 	delete fname;
 	return ES_NORMAL;
+#endif /* MCFontLanguage */
 }
 
 MCFontSizes::~MCFontSizes()
@@ -2094,6 +2195,7 @@ Parse_stat MCFontSizes::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFontSizes::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFontSizes */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2104,6 +2206,7 @@ Exec_stat MCFontSizes::eval(MCExecPoint &ep)
 	MCdispatcher->getfontlist()->getfontsizes(fname, ep);
 	delete fname;
 	return ES_NORMAL;
+#endif /* MCFontSizes */
 }
 
 MCFontStyles::~MCFontStyles()
@@ -2125,6 +2228,7 @@ Parse_stat MCFontStyles::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFontStyles::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFontStyles */ LEGACY_EXEC
 	if (fontname->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2140,6 +2244,7 @@ Exec_stat MCFontStyles::eval(MCExecPoint &ep)
 	delete fname;
 
 	return ES_NORMAL;
+#endif /* MCFontStyles */
 }
 
 MCFormat::~MCFormat()
@@ -2171,6 +2276,7 @@ Parse_stat MCFormat::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCFormat::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFormat */ LEGACY_EXEC
 	MCExecPoint ep2(ep);
 	if (params->eval(ep) != ES_NORMAL)
 	{
@@ -2417,20 +2523,24 @@ fmtError:
 	delete string;
 	delete sbuffer;
 	return ES_ERROR;
+#endif /* MCFormat */
 }
 
 Exec_stat MCFoundChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFoundChunk */ LEGACY_EXEC
 
 	if (MCfoundfield == NULL)
 		ep.clear();
 	else
 		MCfoundfield->foundchunk(ep);
 	return ES_NORMAL;
+#endif /* MCFoundChunk */
 }
 
 Exec_stat MCFoundField::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFoundField */ LEGACY_EXEC
 	if (MCfoundfield != NULL)
 	{
 		MCfoundfield->getprop(0, P_NUMBER, ep, False);
@@ -2439,40 +2549,49 @@ Exec_stat MCFoundField::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCFoundField */
 }
 
 Exec_stat MCFoundLine::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFoundLine */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
 	else
 		MCfoundfield->foundline(ep);
 	return ES_NORMAL;
+#endif /* MCFoundLine */
 }
 
 Exec_stat MCFoundLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFoundLoc */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
 	else
 		MCfoundfield->foundloc(ep);
 	return ES_NORMAL;
+#endif /* MCFoundLoc */
 }
 
 Exec_stat MCFoundText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFoundText */ LEGACY_EXEC
 	if (MCfoundfield == NULL)
 		ep.clear();
 	else
 		MCfoundfield->foundtext(ep);
 	return ES_NORMAL;
+#endif /* MCFoundText */
 }
 
 Exec_stat MCFunctionNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCFunctionNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getfactors(ep, TT_FUNCTION);
+#endif /* MCFunctionNames */
 }
 
 MCGlobalLoc::~MCGlobalLoc()
@@ -2493,6 +2612,7 @@ Parse_stat MCGlobalLoc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCGlobalLoc */ LEGACY_EXEC
 	int2 x, y;
 	if (point->eval(ep) != ES_NORMAL || !MCU_stoi2x2(ep.getsvalue(), x, y))
 	{
@@ -2503,10 +2623,12 @@ Exec_stat MCGlobalLoc::eval(MCExecPoint &ep)
 	MCRectangle trect = MCdefaultstackptr->getrect();
 	ep.setpoint(x + trect.x, y + trect.y - MCdefaultstackptr->getscroll());
 	return ES_NORMAL;
+#endif /* MCGlobalLoc */
 }
 
 Exec_stat MCGlobals::eval(MCExecPoint &ep)
 {
+#ifdef /* MCGlobals */ LEGACY_EXEC
 	ep.clear();
 	MCVariable *tmp;
 	uint2 i = 0;
@@ -2514,6 +2636,7 @@ Exec_stat MCGlobals::eval(MCExecPoint &ep)
 		if (!tmp->isfree() || tmp->isarray())
 			ep.concatnameref(tmp->getname(), EC_COMMA, i++ == 0);
 	return ES_NORMAL;
+#endif /* MCGlobals */
 }
 
 MCHasMemory::~MCHasMemory()
@@ -2535,6 +2658,7 @@ Parse_stat MCHasMemory::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCHasMemory::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHasMemory */ LEGACY_EXEC
 	if (amount->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2549,12 +2673,15 @@ Exec_stat MCHasMemory::eval(MCExecPoint &ep)
 
 	return ES_NORMAL;
 
+#endif /* MCHasMemory */
 }
 
 Exec_stat MCHeapSpace::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHeapSpace */ LEGACY_EXEC
 	ep.setstaticcstring(HEAP_SPACE);
 	return ES_NORMAL;
+#endif /* MCHeapSpace */
 }
 
 MCHostAddress::~MCHostAddress()
@@ -2575,6 +2702,7 @@ Parse_stat MCHostAddress::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCHostAddress::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHostAddress */ LEGACY_EXEC
 	if (socket->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2589,6 +2717,7 @@ Exec_stat MCHostAddress::eval(MCExecPoint &ep)
 		ep.setstaticcstring("not an open socket");
 	delete name;
 	return ES_NORMAL;
+#endif /* MCHostAddress */
 }
 
 MCHostAtoN::~MCHostAtoN()
@@ -2609,6 +2738,7 @@ Parse_stat MCHostAtoN::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCHostAtoN::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHostAtoN */ LEGACY_EXEC
 	if (address->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2626,12 +2756,15 @@ Exec_stat MCHostAtoN::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCHostAtoN */
 }
 
 Exec_stat MCHostName::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHostName */ LEGACY_EXEC
 	MCS_hn(ep);
 	return ES_NORMAL;
+#endif /* MCHostName */
 }
 
 MCHostNtoA::~MCHostNtoA()
@@ -2653,6 +2786,7 @@ Parse_stat MCHostNtoA::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCHostNtoA::eval(MCExecPoint &ep)
 {
+#ifdef /* MCHostNtoA */ LEGACY_EXEC
 	if (name->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_HOSTNTOA_BADNAME, line, pos);
@@ -2678,10 +2812,12 @@ Exec_stat MCHostNtoA::eval(MCExecPoint &ep)
 	MCS_ntoa(ep, ep2);
 	
 	return ES_NORMAL;
+#endif /* MCHostNtoA */
 }
 
 Exec_stat MCInsertScripts::eval(MCExecPoint &ep)
 {
+#ifdef /* MCInsertScripts */ LEGACY_EXEC
 	ep.clear();
 	MCObjectList *lptr = front ? MCfrontscripts : MCbackscripts;
 	if (lptr != NULL)
@@ -2702,12 +2838,15 @@ Exec_stat MCInsertScripts::eval(MCExecPoint &ep)
 		while (optr != lptr);
 	}
 	return ES_NORMAL;
+#endif /* MCInsertScripts */
 }
 
 Exec_stat MCInterrupt::eval(MCExecPoint &ep)
 {
+#ifdef /* MCInterrupt */ LEGACY_EXEC
 	ep.setboolean(MCinterrupt);
 	return ES_NORMAL;
+#endif /* MCInterrupt */
 }
 
 MCIntersect::~MCIntersect()
@@ -2769,6 +2908,7 @@ Parse_stat MCIntersect::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCIntersect::eval(MCExecPoint &ep)
 {
+#ifdef /* MCIntersect */ LEGACY_EXEC
 	MCObject *o1ptr, *o2ptr;
 	uint4 parid;
 	if (o1->getobj(ep, o1ptr, parid, True) != ES_NORMAL
@@ -2816,6 +2956,7 @@ Exec_stat MCIntersect::eval(MCExecPoint &ep)
 	ep . setboolean(o1ptr -> intersects(o2ptr, t_threshold));
 	
 	return ES_NORMAL;
+#endif /* MCIntersect */
 }
 
 MCIsNumber::~MCIsNumber()
@@ -2836,6 +2977,7 @@ Parse_stat MCIsNumber::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCIsNumber::eval(MCExecPoint &ep)
 {
+#ifdef /* MCIsNumber */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2845,6 +2987,7 @@ Exec_stat MCIsNumber::eval(MCExecPoint &ep)
 	real8 r;
 	ep.setboolean(MCU_stor8(ep.getsvalue(), r));
 	return ES_NORMAL;
+#endif /* MCIsNumber */
 }
 
 MCIsoToMac::~MCIsoToMac()
@@ -2866,6 +3009,7 @@ Parse_stat MCIsoToMac::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
 {
+#ifdef /* MCIsoToMac */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -2875,6 +3019,7 @@ Exec_stat MCIsoToMac::eval(MCExecPoint &ep)
 	ep.grabsvalue();
 	IO_iso_to_mac(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
+#endif /* MCIsoToMac */
 }
 
 MCKeys::~MCKeys()
@@ -2926,6 +3071,7 @@ Parse_stat MCKeys::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCKeys::eval(MCExecPoint &ep)
 {
+#ifdef /* MCKeys */ LEGACY_EXEC
 	if (source != NULL)
 	{
 		if (source -> eval(ep) != ES_NORMAL)
@@ -3005,7 +3151,7 @@ Exec_stat MCKeys::eval(MCExecPoint &ep)
 
 					default:
 						// MW-2009-04-05: Stop GCC warning
-						break;
+					break;
 					}
 				}
 			}
@@ -3025,12 +3171,15 @@ Exec_stat MCKeys::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCKeys */
 }
 
 Exec_stat MCKeysDown::eval(MCExecPoint &ep)
 {
+#ifdef /* MCKeysDown */ LEGACY_EXEC
 	MCscreen->getkeysdown(ep);
 	return ES_NORMAL;
+#endif /* MCKeysDown */
 }
 
 MCLength::~MCLength()
@@ -3051,6 +3200,7 @@ Parse_stat MCLength::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLength::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLength */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -3059,6 +3209,7 @@ Exec_stat MCLength::eval(MCExecPoint &ep)
 	}
 	ep.setnvalue(ep.getsvalue().getlength());
 	return ES_NORMAL;
+#endif /* MCLength */
 }
 
 MCLicensed::~MCLicensed()
@@ -3080,8 +3231,10 @@ Parse_stat MCLicensed::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLicensed::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLicensed */ LEGACY_EXEC
 	ep . setboolean(MCModeGetLicensed());
 	return ES_NORMAL;
+#endif /* MCLicensed */
 }
 
 MCLocalLoc::~MCLocalLoc()
@@ -3103,6 +3256,7 @@ Parse_stat MCLocalLoc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLocalLoc */ LEGACY_EXEC
 	int2 x, y;
 	if (point->eval(ep) != ES_NORMAL || !MCU_stoi2x2(ep.getsvalue(), x, y))
 	{
@@ -3113,6 +3267,7 @@ Exec_stat MCLocalLoc::eval(MCExecPoint &ep)
 	MCRectangle trect = MCdefaultstackptr->getrect();
 	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
 	return ES_NORMAL;
+#endif /* MCLocalLoc */
 }
 
 Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
@@ -3123,13 +3278,17 @@ Parse_stat MCLocals::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLocals::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLocals */ LEGACY_EXEC
 	return h->getvarnames(ep, False);
+#endif /* MCLocals */
 }
 
 Exec_stat MCMachine::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMachine */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getmachine());
 	return ES_NORMAL;
+#endif /* MCMachine */
 }
 
 MCMacToIso::~MCMacToIso()
@@ -3150,6 +3309,7 @@ Parse_stat MCMacToIso::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMacToIso */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -3159,12 +3319,15 @@ Exec_stat MCMacToIso::eval(MCExecPoint &ep)
 	ep.grabsvalue();
 	IO_mac_to_iso(ep.getbuffer(0), ep.getsvalue().getlength());
 	return ES_NORMAL;
+#endif /* MCMacToIso */
 }
 
 Exec_stat MCMainStacks::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMainStacks */ LEGACY_EXEC
 	MCdispatcher->getmainstacknames(ep);
 	return ES_NORMAL;
+#endif /* MCMainStacks */
 }
 
 MCMatch::~MCMatch()
@@ -3193,37 +3356,18 @@ Parse_stat MCMatch::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMatch::eval(MCExecPoint &ep)
 {
-
+#ifdef /* MCMatch */ LEGACY_EXEC
 	if (params->getnext()->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
 		(EE_MATCH_BADPATTERN, line, pos);
 		return ES_ERROR;
 	}
-	char *pstring = ep.getsvalue().clone();
-	regexp *compiled = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly as MCR_compile copies pattern (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /* casesensitive */);
 	if (compiled == NULL)
 	{
 		MCeerror->add
@@ -3244,7 +3388,7 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 	match = MCR_exec(compiled, ep.getsvalue().getstring(), ep.getsvalue().getlength());
 
 	MCParameter *p = params->getnext()->getnext();
-	i = 1;
+	uint2 i = 1;
 	if (chunk)
 	{
 		while (p != NULL && p->getnext() != NULL)
@@ -3325,6 +3469,7 @@ Exec_stat MCMatch::eval(MCExecPoint &ep)
 	}
 	ep.setboolean(match);
 	return ES_NORMAL;
+#endif /* MCMatch */
 }
 
 Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
@@ -3341,26 +3486,32 @@ Parse_stat MCMe::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMe::eval(MCExecPoint &ep)
 {	
+#ifdef /* MCMe */ LEGACY_EXEC
 	MCObject *target = ep.getobj();
 	if (target->gettype() != CT_FIELD && target->gettype() != CT_BUTTON)
 		return target->getprop(0, P_NAME, ep, False);
 	return target->getprop(0, P_TEXT, ep, False);
+#endif /* MCMe */
 }
 
 Exec_stat MCMenuObject::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMenuObject */ LEGACY_EXEC
 	if (MCmenuobjectptr == NULL)
 	{
 		ep.clear();
 		return ES_NORMAL;
 	}
 	return MCmenuobjectptr->getprop(0, P_NAME, ep, False);
+#endif /* MCMenuObject */
 }
 
 Exec_stat MCMenus::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMenus */ LEGACY_EXEC
 	ep.clear();  // hc compatibility
 	return ES_NORMAL;
+#endif /* MCMenus */
 }
 
 MCMerge::~MCMerge()
@@ -3382,6 +3533,7 @@ Parse_stat MCMerge::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMerge::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMerge */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -3466,18 +3618,23 @@ Exec_stat MCMerge::eval(MCExecPoint &ep)
 	MCerrorlock--;
 	delete tstring;
 	return ES_NORMAL;
+#endif /* MCMerge */
 }
 
 Exec_stat MCMillisecs::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMillisecs */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time() * 1000.0));
 	return ES_NORMAL;
+#endif /* MCMillisecs */
 }
 
 Exec_stat MCMonthNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMonthNames */ LEGACY_EXEC
 	MCD_monthnames(P_UNDEFINED, ep);
 	return ES_NORMAL;
+#endif /* MCMonthNames */
 }
 
 MCMouse::~MCMouse()
@@ -3503,6 +3660,7 @@ Parse_stat MCMouse::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMouse::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouse */ LEGACY_EXEC
 	uint2 b = 0;
 	if (which != NULL)
 	{
@@ -3526,10 +3684,12 @@ Exec_stat MCMouse::eval(MCExecPoint &ep)
 	}
 	
 	return ES_NORMAL;
+#endif /* MCMouse */
 }
 
 Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseChar */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3541,10 +3701,12 @@ Exec_stat MCMouseChar::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseChar */
 }
 
 Exec_stat MCMouseCharChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseCharChunk */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3556,10 +3718,12 @@ Exec_stat MCMouseCharChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseCharChunk */
 }
 
 Exec_stat MCMouseChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseChunk */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3571,10 +3735,12 @@ Exec_stat MCMouseChunk::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseChunk */
 }
 
 Exec_stat MCMouseClick::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseClick */ LEGACY_EXEC
 	Boolean t_abort;
 	ep.setboolean(MCscreen->getmouseclick(0, t_abort));
 	
@@ -3586,20 +3752,24 @@ Exec_stat MCMouseClick::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCMouseClick */
 }
 
 Exec_stat MCMouseColor::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseColor */ LEGACY_EXEC
 	int2 mx, my;
 	MCscreen->querymouse(mx, my);
 	MCColor c;
 	MCscreen->dropper(DNULL, mx, my, &c);
 	ep.setcolor(c);
 	return ES_NORMAL;
+#endif /* MCMouseColor */
 }
 
 Exec_stat MCMouseControl::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseControl */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3612,21 +3782,25 @@ Exec_stat MCMouseControl::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseControl */
 }
 
 
 
 Exec_stat MCMouseH::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseH */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
 	MCRectangle trect = MCdefaultstackptr->getrect();
 	ep.setint(x - trect.x);
 	return ES_NORMAL;
+#endif /* MCMouseH */
 }
 
 Exec_stat MCMouseLine::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseLine */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3638,29 +3812,35 @@ Exec_stat MCMouseLine::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseLine */
 }
 
 Exec_stat MCMouseLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseLoc */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
 	MCRectangle trect = MCdefaultstackptr->getrect();
 	ep.setpoint(x - trect.x, y - trect.y + MCdefaultstackptr->getscroll());
 	return ES_NORMAL;
+#endif /* MCMouseLoc */
 }
 
 Exec_stat MCMouseStack::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseStack */ LEGACY_EXEC
 	if (MCmousestackptr == NULL)
 	{
 		ep.clear();
 		return ES_NORMAL;
 	}
 	return MCmousestackptr->getprop(0, P_SHORT_NAME, ep, False);
+#endif /* MCMouseStack */
 }
 
 Exec_stat MCMouseText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseText */ LEGACY_EXEC
 	ep.clear();
 	if (MCmousestackptr != NULL)
 	{
@@ -3672,19 +3852,23 @@ Exec_stat MCMouseText::eval(MCExecPoint &ep)
 		}
 	}
 	return ES_NORMAL;
+#endif /* MCMouseText */
 }
 
 Exec_stat MCMouseV::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMouseV */ LEGACY_EXEC
 	int2 x, y;
 	MCscreen->querymouse(x, y);
 	MCRectangle trect = MCdefaultstackptr->getrect();
 	ep.setint(y - trect.y + MCdefaultstackptr->getscroll());
 	return ES_NORMAL;
+#endif /* MCMouseV */
 }
 
 Exec_stat MCMovie::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMovie */ LEGACY_EXEC
 #ifdef X11
 	IO_cleanprocesses();
 #else
@@ -3714,12 +3898,15 @@ Exec_stat MCMovie::eval(MCExecPoint &ep)
 	if (!done)
 		ep.setstaticcstring(MCdonestring);
 	return ES_NORMAL;
+#endif /* MCMovie */
 }
 
 Exec_stat MCMovingControls::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMovingControls */ LEGACY_EXEC
 	MCscreen->listmoves(ep);
 	return ES_NORMAL;
+#endif /* MCMovingControls */
 }
 
 MCNumToChar::~MCNumToChar()
@@ -3739,6 +3926,7 @@ Parse_stat MCNumToChar::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 {
+#ifdef /* MCNumToChar */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_NUMTOCHAR_BADSOURCE, line, pos);
@@ -3755,6 +3943,7 @@ Exec_stat MCNumToChar::eval(MCExecPoint &ep)
 		ep.copysvalue(&d, 1);
 	}
 	return ES_NORMAL;
+#endif /* MCNumToChar */
 }
 
 MCNumToByte::~MCNumToByte()
@@ -3774,6 +3963,7 @@ Parse_stat MCNumToByte::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCNumToByte::eval(MCExecPoint &ep)
 {
+#ifdef /* MCNumToByte */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_NUMTOBYTE_BADSOURCE, line, pos);
@@ -3783,37 +3973,45 @@ Exec_stat MCNumToByte::eval(MCExecPoint &ep)
 	d = (uint1)ep.getuint4();
 	ep . copysvalue((const char *)&d, 1);
 	return ES_NORMAL;
+#endif /* MCNumToByte */
 }
 
 Exec_stat MCOpenFiles::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOpenFiles */ LEGACY_EXEC
 	ep.clear();
 	for(uint2 i = 0 ; i < MCnfiles ; i++)
 		ep.concatcstring(MCfiles[i] . name, EC_RETURN, i == 0);
 	return ES_NORMAL;
+#endif /* MCOpenFiles */
 }
 
 Exec_stat MCOpenProcesses::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOpenProcesses */ LEGACY_EXEC
 	IO_cleanprocesses();
 	ep.clear();
 	for(uint2 i = 0 ; i < MCnprocesses ; i++)
 		if (MCprocesses[i].mode != OM_VCLIP)
 			ep.concatcstring(MCprocesses[i].name, EC_RETURN, i == 0);
 	return ES_NORMAL;
+#endif /* MCOpenProcesses */
 }
 
 Exec_stat MCOpenProcessIds::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOpenProcessIds */ LEGACY_EXEC
 	IO_cleanprocesses();
 	ep.clear();
 	for(uint2 i = 0 ; i < MCnprocesses ; i++)
 		ep.concatuint(MCprocesses[i] . pid, EC_RETURN, i == 0);
 	return ES_NORMAL;
+#endif /* MCOpenProcessIds */
 }
 
 Exec_stat MCOpenSockets::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOpenSockets */ LEGACY_EXEC
 	IO_cleansockets(MCS_time());
 	ep.clear();
 	uint2 j = 0;
@@ -3821,18 +4019,23 @@ Exec_stat MCOpenSockets::eval(MCExecPoint &ep)
 		if (!MCsockets[i]->closing)
 			ep.concatcstring(MCsockets[i] -> name, EC_RETURN, j++ == 0);
 	return ES_NORMAL;
+#endif /* MCOpenSockets */
 }
 
 Exec_stat MCOpenStacks::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOpenStacks */ LEGACY_EXEC
 	MCstacks->stackprops(ep, P_SHORT_NAME);
 	return ES_NORMAL;
+#endif /* MCOpenStacks */
 }
 
 Exec_stat MCOptionKey::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOptionKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_MOD1) != 0));
 	return ES_NORMAL;
+#endif /* MCOptionKey */
 }
 
 MCParam::~MCParam()
@@ -3854,6 +4057,7 @@ Parse_stat MCParam::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCParam::eval(MCExecPoint &ep)
 {
+#ifdef /* MCParam */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_PARAM_BADSOURCE, line, pos);
@@ -3865,6 +4069,7 @@ Exec_stat MCParam::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCParam */
 }
 
 Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
@@ -3875,10 +4080,12 @@ Parse_stat MCParamCount::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCParamCount::eval(MCExecPoint &ep)
 {
+#ifdef /* MCParamCount */ LEGACY_EXEC
 	uint2 count;
 	h->getnparams(count);
 	ep.setnvalue(count);
 	return ES_NORMAL;
+#endif /* MCParamCount */
 }
 
 Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
@@ -3889,6 +4096,7 @@ Parse_stat MCParams::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCParams::eval(MCExecPoint &ep)
 {
+#ifdef /* MCParams */ LEGACY_EXEC
 	ep . setnameref_unsafe(h -> getname());
 	ep . appendchar(h -> gettype() == HT_FUNCTION ? '(' : ' ');
 
@@ -3907,6 +4115,7 @@ Exec_stat MCParams::eval(MCExecPoint &ep)
 	if (h->gettype() == HT_FUNCTION)
 		ep . appendchar(')');
 	return ES_NORMAL;
+#endif /* MCParams */
 }
 
 MCPeerAddress::~MCPeerAddress()
@@ -3927,6 +4136,7 @@ Parse_stat MCPeerAddress::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
 {
+#ifdef /* MCPeerAddress */ LEGACY_EXEC
 	if (socket->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -3941,43 +4151,56 @@ Exec_stat MCPeerAddress::eval(MCExecPoint &ep)
 		ep.setstaticcstring("not an open socket");
 	delete name;
 	return ES_NORMAL;
+#endif /* MCPeerAddress */
 }
 
 Exec_stat MCPendingMessages::eval(MCExecPoint &ep)
 {
+#ifdef /* MCPendingMessages */ LEGACY_EXEC
 	MCscreen->listmessages(ep);
 	return ES_NORMAL;
+#endif /* MCPendingMessages */
 }
 
 Exec_stat MCPid::eval(MCExecPoint &ep)
 {
+#ifdef /* MCPid */ LEGACY_EXEC
 	ep.setnvalue(MCS_getpid());
 	return ES_NORMAL;
+#endif /* MCPid */
 }
 
 Exec_stat MCPlatform::eval(MCExecPoint &ep)
 {
+#ifdef /* MCPlatform */ LEGACY_EXEC
 	ep.setstaticcstring(MCplatformstring);
 	return ES_NORMAL;
+#endif /* MCPlatform */
 }
 
 Exec_stat MCProcessor::eval(MCExecPoint &ep)
 {
+#ifdef /* MCProcessor */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getprocessor());
 	return ES_NORMAL;
+#endif /* MCProcessor */
 }
 
 Exec_stat MCPropertyNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCPropertyNames */ LEGACY_EXEC
 	ep.clear();
 	MCScriptPoint sp(ep);
 	return sp.getfactors(ep, TT_PROPERTY);
+#endif /* MCPropertyNames */
 }
 
 Exec_stat MCQTVersion::eval(MCExecPoint &ep)
 {
+#ifdef /* MCQTVersion */ LEGACY_EXEC
 	MCtemplateplayer->getversion(ep);
 	return ES_NORMAL;
+#endif /* MCQTVersion */
 }
 
 MCReplaceText::~MCReplaceText()
@@ -4020,6 +4243,7 @@ static void *realloc_range(void *p_block, unsigned int p_minimum, unsigned int p
 
 Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCReplaceText */ LEGACY_EXEC
 	if (replacement->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4041,34 +4265,14 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 		delete rstring;
 		return ES_NORMAL;
 	}
-	char *pstring = ep.getsvalue().clone();
-
-	regexp *compiled = NULL;
-	const char *pattern = NULL;
-	uint2 i;
-	for (i = 0 ; i < PATTERN_CACHE_SIZE ; i++)
-		if (strequal(pstring, MCregexpatterns[i]))
-		{
-			compiled = MCregexcache[i];
-			pattern = MCregexpatterns[i];
-			break;
-		}
-	if (compiled == NULL)
-	{
-		delete MCregexpatterns[PATTERN_CACHE_SIZE - 1];
-		MCR_free(MCregexcache[PATTERN_CACHE_SIZE - 1]);
-		uint2 i;
-		for (i = PATTERN_CACHE_SIZE - 1 ; i ; i--)
-		{
-			MCregexcache[i] = MCregexcache[i - 1];
-			MCregexpatterns[i] = MCregexpatterns[i - 1];
-		}
-		pattern = MCregexpatterns[0] = pstring;
-		MCregexcache[0] = MCR_compile(MCregexpatterns[0]);
-		compiled = MCregexcache[0];
-	}
-	else
-		delete pstring;
+    const char *pattern = NULL;
+    // JS-2013-06-21: [[ EnhancedFilter ]] refactored regex caching mechanism and case sentitivity
+	// MW-2013-07-01: [[ EnhancedFilter ]] Use ep directly since MCR_compile copies pattern string (if needed).
+	// MW-2013-07-01: [[ EnhancedFilter ]] Removed 'usecache' parameter as there's
+	//   no reason not to use the cache.
+	regexp *compiled = MCR_compile(ep.getcstring(), True /*casesensitive*/);
+    if (compiled != NULL)
+        pattern = compiled->pattern;
 	if (compiled == NULL)
 	{
 		delete rstring;
@@ -4130,6 +4334,7 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 	}
 	delete rstring;
 	return ES_NORMAL;
+#endif /* MCReplaceText */
 }
 
 // MW-2010-12-15: [[ Bug ]] Make sure the value of 'the result' is grabbed, otherwise
@@ -4138,45 +4343,57 @@ Exec_stat MCReplaceText::eval(MCExecPoint &ep)
 //      the result = func_modifying_result()
 Exec_stat MCTheResult::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTheResult */ LEGACY_EXEC
 	if (MCresult->fetch(ep) != ES_NORMAL)
 		return ES_ERROR;
 	ep . grab();
 	return ES_NORMAL;
+#endif /* MCTheResult */
 }
 
 Exec_stat MCScreenColors::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenColors */ LEGACY_EXEC
 	ep.setnvalue(pow(2.0, MCscreen->getdepth()));
 	return ES_NORMAL;
+#endif /* MCScreenColors */
 }
 
 Exec_stat MCScreenDepth::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenDepth */ LEGACY_EXEC
 	ep.setnvalue(MCscreen->getdepth());
 	return ES_NORMAL;
+#endif /* MCScreenDepth */
 }
 
 Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenLoc */ LEGACY_EXEC
 	MCDisplay const *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
 	MCRectangle t_viewport = t_displays -> viewport;
 	ep.setpoint(t_viewport . x + (t_viewport . width / 2), t_viewport . y + (t_viewport . height / 2));
 	return ES_NORMAL;
+#endif /* MCScreenLoc */
 }
 
 Exec_stat MCScreenName::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenName */ LEGACY_EXEC
 	ep.setstaticcstring(MCscreen->getdisplayname());
 	return ES_NORMAL;
+#endif /* MCScreenName */
 }
 
 Exec_stat MCScreenRect::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenRect */ LEGACY_EXEC
 	evaluate(ep, false, f_plural, false);
 	return ES_NORMAL;
+#endif /* MCScreenRect */
 }
-
+#ifdef /* MCScreenRect::evaluate */ LEGACY_EXEC
 void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool p_effective)
 {
 	const MCDisplay *t_displays;
@@ -4198,9 +4415,11 @@ void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool
 		ep.concatcstring(t_buffer, EC_RETURN, t_index == 0);
 	}
 }
+#endif /* MCScreenRect::evaluate */
 
 Exec_stat MCScreenType::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenType */ LEGACY_EXEC
 	switch (MCscreen->getvclass())
 	{
 	case StaticGray:
@@ -4223,24 +4442,31 @@ Exec_stat MCScreenType::eval(MCExecPoint &ep)
 		break;
 	}
 	return ES_NORMAL;
+#endif /* MCScreenType */
 }
 
 Exec_stat MCScreenVendor::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScreenVendor */ LEGACY_EXEC
 	MCscreen->getvendorstring(ep);
 	return ES_NORMAL;
+#endif /* MCScreenVendor */
 }
 
 Exec_stat MCScriptLimits::eval(MCExecPoint &ep)
 {
+#ifdef /* MCScriptLimits */ LEGACY_EXEC
 	ep.setstringf("%d,%d,%d,%d", MClicenseparameters . script_limit, MClicenseparameters . do_limit, MClicenseparameters . using_limit, MClicenseparameters . insert_limit);
 	return ES_NORMAL;
+#endif /* MCScriptLimits */
 }
 
 Exec_stat MCSeconds::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSeconds */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time()));
 	return ES_NORMAL;
+#endif /* MCSeconds */
 }
 
 MCSelectedButton::~MCSelectedButton()
@@ -4289,6 +4515,7 @@ Parse_stat MCSelectedButton::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSelectedButton::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedButton */ LEGACY_EXEC
 	if (family->eval(ep) != ES_NORMAL || ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4327,6 +4554,7 @@ Exec_stat MCSelectedButton::eval(MCExecPoint &ep)
 		cptr = MCdefaultstackptr->getchild(CT_THIS, MCnullmcstring, CT_CARD);
 	cptr->selectedbutton(ep.getuint2(), bg, ep);
 	return ES_NORMAL;
+#endif /* MCSelectedButton */
 }
 
 MCSelectedChunk::~MCSelectedChunk()
@@ -4341,6 +4569,7 @@ Parse_stat MCSelectedChunk::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSelectedChunk::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedChunk */ LEGACY_EXEC
 	if (object != NULL)
 	{
 		MCObject *optr;
@@ -4371,16 +4600,24 @@ Exec_stat MCSelectedChunk::eval(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	}
+	else if (MCactivefield == NULL)
+		ep.clear();
 	else
-		if (MCactivefield == NULL)
-			ep.clear();
+	{
+		// MW-2013-08-07: [[ Bug 10689 ]] If the parent of the field is a button
+		//   then return the chunk of the button, not the embedded field.
+		if (MCactivefield -> getparent() -> gettype() == CT_BUTTON)
+			static_cast<MCButton *>(MCactivefield -> getparent()) -> selectedchunk(ep);
 		else
 			MCactivefield->selectedchunk(ep);
+	}
 	return ES_NORMAL;
+#endif /* MCSelectedChunk */
 }
 
 Exec_stat MCSelectedField::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedField */ LEGACY_EXEC
 	if (MCactivefield != NULL)
 	{
 		MCactivefield->getprop(0, P_NUMBER, ep, False);
@@ -4389,10 +4626,12 @@ Exec_stat MCSelectedField::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCSelectedField */
 }
 
 Exec_stat MCSelectedImage::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedImage */ LEGACY_EXEC
 	if (MCactiveimage != NULL)
 	{
 		MCactiveimage->getprop(0, P_NUMBER, ep, False);
@@ -4402,6 +4641,7 @@ Exec_stat MCSelectedImage::eval(MCExecPoint &ep)
 	else
 		ep.clear();
 	return ES_NORMAL;
+#endif /* MCSelectedImage */
 }
 
 MCSelectedLine::~MCSelectedLine()
@@ -4416,6 +4656,7 @@ Parse_stat MCSelectedLine::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSelectedLine::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedLine */ LEGACY_EXEC
 	if (object != NULL)
 	{
 		MCObject *optr;
@@ -4452,6 +4693,7 @@ Exec_stat MCSelectedLine::eval(MCExecPoint &ep)
 		else
 			MCactivefield->selectedline(ep);
 	return ES_NORMAL;
+#endif /* MCSelectedLine */
 }
 
 MCSelectedLoc::~MCSelectedLoc()
@@ -4466,6 +4708,7 @@ Parse_stat MCSelectedLoc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedLoc */ LEGACY_EXEC
 	if (object != NULL)
 	{
 		MCObject *optr;
@@ -4497,12 +4740,15 @@ Exec_stat MCSelectedLoc::eval(MCExecPoint &ep)
 		else
 			MCactivefield->selectedloc(ep);
 	return ES_NORMAL;
+#endif /* MCSelectedLoc */
 }
 
 Exec_stat MCSelectedObject::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedObject */ LEGACY_EXEC
 	MCselected->getids(ep);
 	return ES_NORMAL;
+#endif /* MCSelectedObject */
 }
 
 MCSelectedText::~MCSelectedText()
@@ -4517,6 +4763,7 @@ Parse_stat MCSelectedText::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSelectedText::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSelectedText */ LEGACY_EXEC
 	if (object != NULL)
 	{
 		MCObject *optr;
@@ -4553,6 +4800,7 @@ Exec_stat MCSelectedText::eval(MCExecPoint &ep)
 		else
 			MCactivefield->selectedtext(ep);
 	return ES_NORMAL;
+#endif /* MCSelectedText */
 }
 
 MCShell::~MCShell()
@@ -4573,6 +4821,7 @@ Parse_stat MCShell::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCShell::eval(MCExecPoint &ep)
 {
+#ifdef /* MCShell */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_SHELL_BADSOURCE, line, pos);
@@ -4589,16 +4838,20 @@ Exec_stat MCShell::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCShell */
 }
 
 Exec_stat MCShiftKey::eval(MCExecPoint &ep)
 {
+#ifdef /* MCShiftKey */ LEGACY_EXEC
 	ep.setstaticcstring(MCU_ktos((MCscreen->querymods() & MS_SHIFT) != 0));
 	return ES_NORMAL;
+#endif /* MCShiftKey */
 }
 
 Exec_stat MCSound::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSound */ LEGACY_EXEC
 #ifdef _MOBILE
 	extern bool MCSystemGetPlayingSound(const char *& r_sound);
 	const char *t_sound;
@@ -4617,30 +4870,39 @@ Exec_stat MCSound::eval(MCExecPoint &ep)
 		return MCacptr->getprop(0, P_NAME, ep, False);
 	ep.setstaticcstring(MCdonestring);
 	return ES_NORMAL;
+#endif /* MCSound */
 }
 
 Exec_stat MCStacks::eval(MCExecPoint &ep)
 {
+#ifdef /* MCStacks */ LEGACY_EXEC
 	MCstacks->stackprops(ep, P_FILE_NAME);
 	return ES_NORMAL;
+#endif /* MCStacks */
 }
 
 Exec_stat MCStackSpace::eval(MCExecPoint &ep)
 {
+#ifdef /* MCStackSpace */ LEGACY_EXEC
 	ep.setstaticcstring(STACK_SPACE);
 	return ES_NORMAL;
+#endif /* MCStackSpace */
 }
 
 Exec_stat MCSysError::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSysError */ LEGACY_EXEC
 	ep.setnvalue(MCS_getsyserror());
 	return ES_NORMAL;
+#endif /* MCSysError */
 }
 
 Exec_stat MCSystemVersion::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSystemVersion */ LEGACY_EXEC
 	ep.setstaticcstring(MCS_getsystemversion());
 	return ES_NORMAL;
+#endif /* MCSystemVersion */
 }
 
 Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
@@ -4663,6 +4925,7 @@ Parse_stat MCTarget::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTarget::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTarget */ LEGACY_EXEC
 	if (MCtargetptr == NULL)
 	{
 		ep.clear();
@@ -4671,6 +4934,7 @@ Exec_stat MCTarget::eval(MCExecPoint &ep)
 	if (!contents || MCtargetptr->gettype() != CT_FIELD)
 		return MCtargetptr->getprop(0, P_NAME, ep, False);
 	return MCtargetptr->getprop(0, P_TEXT, ep, False);
+#endif /* MCTarget */
 }
 
 // MW-2008-11-05: [[ Owner Reference ]] This is the 'owner' function syntax class.
@@ -4688,6 +4952,7 @@ Parse_stat MCOwner::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCOwner::eval(MCExecPoint &ep)
 {
+#ifdef /* MCOwner */ LEGACY_EXEC
 	MCObject *t_objptr;
 	uint4 t_part;
 	if (object -> getobj(ep, t_objptr, t_part, True) != ES_NORMAL)
@@ -4695,12 +4960,15 @@ Exec_stat MCOwner::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return t_objptr -> getprop(0, P_OWNER, ep, False);
+#endif /* MCOwner */
 }
 
 Exec_stat MCTempName::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTempName */ LEGACY_EXEC
 	ep.setcstring(MCS_tmpnam());
 	return ES_NORMAL;
+#endif /* MCTempName */
 }
 
 MCTextHeightSum::~MCTextHeightSum()
@@ -4715,6 +4983,7 @@ Parse_stat MCTextHeightSum::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTextHeightSum::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTextHeightSum */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	if (object->getobj(ep, optr, parid, True) != ES_NORMAL)
@@ -4724,18 +4993,23 @@ Exec_stat MCTextHeightSum::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return optr->getprop(0, P_FORMATTED_HEIGHT, ep, False);
+#endif /* MCTextHeightSum */
 }
 
 Exec_stat MCTicks::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTicks */ LEGACY_EXEC
 	ep.setnvalue(floor(MCS_time() * 60.0));
 	return ES_NORMAL;
+#endif /* MCTicks */
 }
 
 Exec_stat MCTheTime::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTheTime */ LEGACY_EXEC
 	MCD_time(P_UNDEFINED, ep);
 	return ES_NORMAL;
+#endif /* MCTheTime */
 }
 
 MCToLower::~MCToLower()
@@ -4756,6 +5030,7 @@ Parse_stat MCToLower::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCToLower::eval(MCExecPoint &ep)
 {
+#ifdef /* MCToLower */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4764,6 +5039,7 @@ Exec_stat MCToLower::eval(MCExecPoint &ep)
 	}
 	ep.lower();
 	return ES_NORMAL;
+#endif /* MCToLower */
 }
 
 MCToUpper::~MCToUpper()
@@ -4784,6 +5060,7 @@ Parse_stat MCToUpper::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCToUpper::eval(MCExecPoint &ep)
 {
+#ifdef /* MCToUpper */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4792,6 +5069,7 @@ Exec_stat MCToUpper::eval(MCExecPoint &ep)
 	}
 	ep.upper();
 	return ES_NORMAL;
+#endif /* MCToUpper */
 }
 
 MCTopStack::~MCTopStack()
@@ -4813,6 +5091,7 @@ Parse_stat MCTopStack::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCTopStack::eval(MCExecPoint &ep)
 {
+#ifdef /* MCTopStack */ LEGACY_EXEC
 	MCStack *sptr = MCtopstackptr;
 	if (which != NULL)
 	{
@@ -4831,6 +5110,7 @@ Exec_stat MCTopStack::eval(MCExecPoint &ep)
 		ep.clear();
 		return ES_NORMAL;
 	}
+#endif /* MCTopStack */
 }
 
 MCUniDecode::~MCUniDecode()
@@ -4853,6 +5133,7 @@ Parse_stat MCUniDecode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCUniDecode */ LEGACY_EXEC
 	uint1 destcharset = 0;
 	if (language)
 	{
@@ -4882,6 +5163,7 @@ Exec_stat MCUniDecode::eval(MCExecPoint &ep)
 	ep.setsvalue(MCString(dptr,dlength));
 	delete startptr;
 	return ES_NORMAL;
+#endif /* MCUniDecode */
 }
 
 MCUniEncode::~MCUniEncode()
@@ -4903,6 +5185,7 @@ Parse_stat MCUniEncode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCUniEncode */ LEGACY_EXEC
 	uint1 srccharset = 0;
 	if (language)
 	{
@@ -4933,6 +5216,7 @@ Exec_stat MCUniEncode::eval(MCExecPoint &ep)
 	ep.setsvalue(s);
 	delete startptr;
 	return ES_NORMAL;
+#endif /* MCUniEncode */
 }
 
 MCUrlDecode::~MCUrlDecode()
@@ -4953,6 +5237,7 @@ Parse_stat MCUrlDecode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCUrlDecode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCUrlDecode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4961,6 +5246,7 @@ Exec_stat MCUrlDecode::eval(MCExecPoint &ep)
 	}
 	MCU_urldecode(ep);
 	return ES_NORMAL;
+#endif /* MCUrlDecode */
 }
 
 MCUrlEncode::~MCUrlEncode()
@@ -4981,6 +5267,7 @@ Parse_stat MCUrlEncode::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCUrlEncode::eval(MCExecPoint &ep)
 {
+#ifdef /* MCUrlEncode */ LEGACY_EXEC
 	if (source->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -4989,6 +5276,7 @@ Exec_stat MCUrlEncode::eval(MCExecPoint &ep)
 	}
 	MCU_urlencode(ep);
 	return ES_NORMAL;
+#endif /* MCUrlEncode */
 }
 
 MCUrlStatus::~MCUrlStatus()
@@ -5009,6 +5297,7 @@ Parse_stat MCUrlStatus::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCUrlStatus::eval(MCExecPoint &ep)
 {
+#ifdef /* MCUrlStatus */ LEGACY_EXEC
 	if (url->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add
@@ -5019,6 +5308,7 @@ Exec_stat MCUrlStatus::eval(MCExecPoint &ep)
 	ep.getobj()->message(MCM_get_url_status, &p1, False, True);
 	MCresult->fetch(ep);
 	return ES_NORMAL;
+#endif /* MCUrlStatus */
 }
 
 MCValue::~MCValue()
@@ -5083,6 +5373,7 @@ Parse_stat MCValue::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCValue::eval(MCExecPoint &ep)
 {
+#ifdef /* MCValue */ LEGACY_EXEC
 	if (source == NULL)
 	{
 		ep.clear();
@@ -5147,6 +5438,7 @@ Exec_stat MCValue::eval(MCExecPoint &ep)
 			return ES_ERROR;
 		}
 	return ES_NORMAL;
+#endif /* MCValue */
 }
 
 Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
@@ -5157,25 +5449,33 @@ Parse_stat MCVariables::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCVariables::eval(MCExecPoint &ep)
 {
+#ifdef /* MCVariables */ LEGACY_EXEC
 	return h->getvarnames(ep, True);
+#endif /* MCVariables */
 }
 
 Exec_stat MCVersion::eval(MCExecPoint &ep)
 {
+#ifdef /* MCVersion */ LEGACY_EXEC
 	ep.setstaticcstring(MCversionstring);
 	return ES_NORMAL;
+#endif /* MCVersion */
 }
 
 Exec_stat MCWeekDayNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCWeekDayNames */ LEGACY_EXEC
 	MCD_weekdaynames(P_UNDEFINED, ep);
 	return ES_NORMAL;
+#endif /* MCWeekDayNames */
 }
 
 Exec_stat MCWaitDepth::eval(MCExecPoint &ep)
 {
+#ifdef /* MCWaitDepth */ LEGACY_EXEC
 	ep.setnvalue(MCwaitdepth);
 	return ES_NORMAL;
+#endif /* MCWaitDepth */
 }
 
 MCWithin::~MCWithin()
@@ -5220,6 +5520,7 @@ Parse_stat MCWithin::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCWithin::eval(MCExecPoint &ep)
 {
+#ifdef /* MCWithin */ LEGACY_EXEC
 	MCObject *optr;
 	uint4 parid;
 	if (object->getobj(ep, optr, parid, True) != ES_NORMAL)
@@ -5245,6 +5546,7 @@ Exec_stat MCWithin::eval(MCExecPoint &ep)
 		ep.setboolean(cptr->maskrect(drect));
 	}
 	return ES_NORMAL;
+#endif /* MCWithin */
 }
 
 // platform specific functions
@@ -5271,6 +5573,7 @@ Parse_stat MCMCISendString::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCMCISendString::eval(MCExecPoint &ep)
 {
+#ifdef /* MCMCISendString */ LEGACY_EXEC
 	if (string->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add (EE_MCISENDSTRING_BADSOURCE, line, pos);
@@ -5295,6 +5598,7 @@ Exec_stat MCMCISendString::eval(MCExecPoint &ep)
 	delete sptr;
 
 	return ES_NORMAL;
+#endif /* MCMCISendString */
 }
 
 MCDeleteRegistry::~MCDeleteRegistry()
@@ -5315,6 +5619,7 @@ Parse_stat MCDeleteRegistry::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCDeleteRegistry::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDeleteRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)
 	{
 		MCeerror->add(EE_REGISTRY_NOPERM, line, pos);
@@ -5329,6 +5634,7 @@ Exec_stat MCDeleteRegistry::eval(MCExecPoint &ep)
 	MCS_delete_registry(kptr, ep);
 	delete kptr;
 	return ES_NORMAL;
+#endif /* MCDeleteRegistry */
 }
 
 MCListRegistry::~MCListRegistry()
@@ -5348,6 +5654,7 @@ Parse_stat MCListRegistry::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCListRegistry::eval(MCExecPoint &ep)
 {
+#ifdef /* MCListRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
 	{
 		MCeerror->add(EE_REGISTRY_NOPERM, line, pos);
@@ -5360,6 +5667,7 @@ Exec_stat MCListRegistry::eval(MCExecPoint &ep)
 	}
 	MCS_list_registry(ep);
 	return ES_NORMAL;
+#endif /* MCListRegistry */
 }
 
 MCQueryRegistry::~MCQueryRegistry()
@@ -5381,6 +5689,7 @@ Parse_stat MCQueryRegistry::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
 {
+#ifdef /* MCQueryRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_READ)
 	{
 		MCeerror->add(EE_REGISTRY_NOPERM, line, pos);
@@ -5418,6 +5727,7 @@ Exec_stat MCQueryRegistry::eval(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCQueryRegistry */
 }
 
 MCSetRegistry::~MCSetRegistry()
@@ -5440,6 +5750,7 @@ Parse_stat MCSetRegistry::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSetRegistry::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSetRegistry */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_REGISTRY_WRITE)
 	{
 		MCeerror->add(EE_REGISTRY_NOPERM, line, pos);
@@ -5476,6 +5787,7 @@ Exec_stat MCSetRegistry::eval(MCExecPoint &ep)
 	delete tstring;
 	delete kptr;
 	return ES_NORMAL;
+#endif /* MCSetRegistry */
 }
 
 MCCopyResource::~MCCopyResource()
@@ -5500,6 +5812,7 @@ Parse_stat MCCopyResource::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCCopyResource::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCopyResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5557,6 +5870,7 @@ Exec_stat MCCopyResource::eval(MCExecPoint &ep)
 	ep.clear();
 	return ES_NORMAL;
 
+#endif /* MCCopyResource */
 }
 
 MCDeleteResource::~MCDeleteResource()
@@ -5579,6 +5893,7 @@ Parse_stat MCDeleteResource::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCDeleteResource::eval(MCExecPoint &ep)
 {
+#ifdef /* MCDeleteResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5618,6 +5933,7 @@ Exec_stat MCDeleteResource::eval(MCExecPoint &ep)
 	}
 	ep.clear();
 	return ES_NORMAL;
+#endif /* MCDeleteResource */
 }
 
 MCGetResource::~MCGetResource()
@@ -5640,6 +5956,7 @@ Parse_stat MCGetResource::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCGetResource::eval(MCExecPoint &ep)
 {
+#ifdef /* MCGetResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5679,6 +5996,7 @@ Exec_stat MCGetResource::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCGetResource */
 }
 
 MCGetResources::~MCGetResources()
@@ -5700,6 +6018,7 @@ Parse_stat MCGetResources::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCGetResources::eval(MCExecPoint &ep)
 {
+#ifdef /* MCGetResources */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5736,6 +6055,7 @@ Exec_stat MCGetResources::eval(MCExecPoint &ep)
 		return ES_ERROR;
 	}
 	return ES_NORMAL;
+#endif /* MCGetResources */
 }
 
 MCSetResource::~MCSetResource()
@@ -5761,6 +6081,7 @@ Parse_stat MCSetResource::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSetResource::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSetResource */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5818,6 +6139,7 @@ Exec_stat MCSetResource::eval(MCExecPoint &ep)
 	}
 	ep.clear();
 	return ES_NORMAL;
+#endif /* MCSetResource */
 }
 
 MCSpecialFolderPath::~MCSpecialFolderPath()
@@ -5838,6 +6160,7 @@ Parse_stat MCSpecialFolderPath::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCSpecialFolderPath::eval(MCExecPoint &ep)
 {
+#ifdef /* MCSpecialFolderPath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5850,6 +6173,7 @@ Exec_stat MCSpecialFolderPath::eval(MCExecPoint &ep)
 	}
 	MCS_getspecialfolder(ep);
 	return ES_NORMAL;
+#endif /* MCSpecialFolderPath */
 }
 
 
@@ -5871,6 +6195,7 @@ Parse_stat MCLongFilePath::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCLongFilePath::eval(MCExecPoint &ep)
 {
+#ifdef /* MCLongFilePath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5883,6 +6208,7 @@ Exec_stat MCLongFilePath::eval(MCExecPoint &ep)
 	}
 	MCS_longfilepath(ep);
 	return ES_NORMAL;
+#endif /* MCLongFilePath */
 }
 
 MCShortFilePath::~MCShortFilePath()
@@ -5903,6 +6229,7 @@ Parse_stat MCShortFilePath::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCShortFilePath::eval(MCExecPoint &ep)
 {
+#ifdef /* MCShortFilePath */ LEGACY_EXEC
 	if (MCsecuremode & MC_SECUREMODE_DISK)
 	{
 		MCeerror->add(EE_DISK_NOPERM, line, pos);
@@ -5921,6 +6248,7 @@ Exec_stat MCShortFilePath::eval(MCExecPoint &ep)
 	MCS_shortfilepath(ep);
 
 	return ES_NORMAL;
+#endif /* MCShortFilePath */
 }
 
 MCAliasReference::~MCAliasReference()
@@ -5941,6 +6269,7 @@ Parse_stat MCAliasReference::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCAliasReference::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAliasReference */ LEGACY_EXEC
 	if (type->eval(ep) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ALIASREFERENCE_BADSOURCE, line, pos);
@@ -5953,10 +6282,12 @@ Exec_stat MCAliasReference::eval(MCExecPoint &ep)
 	MCS_resolvealias(ep);
 
 	return ES_NORMAL;
+#endif /* MCAliasReference */
 }
 
 Exec_stat MCAlternateLanguages::eval(MCExecPoint &ep)
 {
+#ifdef /* MCAlternateLanguages */ LEGACY_EXEC
 	// If we don't have 'do alternate' privileges, this function should just 
 	// return empty.
 	if (!MCSecureModeCanAccessDoAlternate())
@@ -5968,12 +6299,15 @@ Exec_stat MCAlternateLanguages::eval(MCExecPoint &ep)
 	MCS_alternatelanguages(ep);
 
 	return ES_NORMAL;
+#endif /* MCAlternateLanguages */
 }
 
 Exec_stat MCCipherNames::eval(MCExecPoint &ep)
 {
+#ifdef /* MCCipherNames */ LEGACY_EXEC
 	SSL_ciphernames(ep);
 	return ES_NORMAL;
+#endif /* MCCipherNames */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -5999,6 +6333,7 @@ Parse_stat MCHTTPProxyForURL::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCHTTPProxyForURL::eval(MCExecPoint& ep)
 {
+#ifdef /* MCHTTPProxyForURL */ LEGACY_EXEC
 	Exec_stat t_result;
 	t_result = ES_NORMAL;
 
@@ -6086,6 +6421,7 @@ Exec_stat MCHTTPProxyForURL::eval(MCExecPoint& ep)
 	delete t_url;
 
 	return t_result;
+#endif /* MCHTTPProxyForURL */
 }
 
 char *MCHTTPProxyForURL::PACdnsResolve(const char* const* p_arguments, unsigned int p_argument_count)
@@ -6129,6 +6465,7 @@ Parse_stat MCRandomBytes::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 {
+#ifdef /* MCRandomBytes */ LEGACY_EXEC
 	if (byte_count->eval(ep) != ES_NORMAL && ep.ton() != ES_NORMAL)
 	{
 		MCeerror->add(EE_RANDOMBYTES_BADCOUNT, line, pos);
@@ -6158,6 +6495,7 @@ Exec_stat MCRandomBytes::eval(MCExecPoint &ep)
 	}
 	
 	return ES_NORMAL;
+#endif /* MCRandomBytes */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6179,6 +6517,7 @@ Parse_stat MCControlAtLoc::parse(MCScriptPoint &sp, Boolean the)
 
 Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 {
+#ifdef /* MCControlAtLoc */ LEGACY_EXEC
 	MCPoint t_location;
 	if (location -> eval(ep) != ES_NORMAL ||
 		!MCU_stoi2x2(ep . getsvalue(), t_location . x, t_location . y))
@@ -6228,6 +6567,7 @@ Exec_stat MCControlAtLoc::eval(MCExecPoint &ep)
 		t_object -> names(P_LONG_ID, ep, 0);
 	
 	return ES_NORMAL;
+#endif /* MCControlAtLoc */
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -6279,6 +6619,7 @@ Parse_stat MCUuidFunc::parse(MCScriptPoint& sp, Boolean the)
 
 Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 {
+#ifdef /* MCUuidFunc */ LEGACY_EXEC
 	// First work out what type we want.
 	MCUuidType t_type;
 	if (type == nil)
@@ -6386,4 +6727,115 @@ Exec_stat MCUuidFunc::eval(MCExecPoint& ep)
 	ep . copysvalue(t_uuid_buffer);
 	
 	return ES_NORMAL;
+#endif /* MCUuidFunc */
+}
+
+///////////////////////////////////////////////////////////////////////////////
+
+// MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
+MCMeasureText::~MCMeasureText(void)
+{
+	delete m_object;
+	delete m_text;
+	delete m_mode;
+}
+
+// Syntax:
+// measure[Unicode]Text(<text>,<object>,[<mode>])
+Parse_stat MCMeasureText::parse(MCScriptPoint &sp, Boolean the)
+{
+    initpoint(sp);
+    
+	if (sp.skip_token(SP_FACTOR, TT_LPAREN) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_FACTOR_NOLPAREN, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.parseexp(True, False, &m_text) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_BADTEXT, sp);
+		return PS_ERROR;
+	}
+	
+	Symbol_type type;
+	m_object = new MCChunk(False);
+	if (sp.next(type) != PS_NORMAL || type != ST_SEP
+        || m_object->parse(sp, False) != PS_NORMAL)
+	{
+		MCperror->add
+		(PE_MEASURE_TEXT_NOOBJECT, sp);
+		return PS_ERROR;
+	}
+    
+    if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+    {
+        MCperror->add
+        (PE_FACTOR_NORPAREN, sp);
+        return PS_ERROR;
+    }
+    if (type == ST_SEP)
+    {
+        if (sp.parseexp(True, False, &m_mode) != PS_NORMAL)
+        {
+            MCperror->add
+            (PE_MEASURE_TEXT_BADMODE, sp);
+            return PS_ERROR;
+        }
+        
+        if (sp.next(type) != PS_NORMAL || (type != ST_RP && type != ST_SEP))
+        {
+            MCperror->add
+            (PE_FACTOR_NORPAREN, sp);
+            return PS_ERROR;
+        }
+    }
+
+	return PS_NORMAL;
+}
+
+Exec_stat MCMeasureText::eval(MCExecPoint &ep)
+{
+    MCObject *t_object_ptr;
+	uint4 parid;
+	if (m_object->getobj(ep, t_object_ptr, parid, True) != ES_NORMAL)
+	{
+		MCeerror->add
+		(EE_MEASURE_TEXT_NOOBJECT, line, pos);
+		return ES_ERROR;
+	}
+    
+    if (m_text -> eval(ep) != ES_NORMAL)
+    {
+        MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+        return ES_ERROR;
+    }
+    
+    MCRectangle t_bounds = t_object_ptr -> measuretext(ep.getsvalue(), m_is_unicode);
+    
+    if (m_mode)
+    {
+        if (m_mode -> eval(ep) != ES_NORMAL)
+        {
+            MCeerror -> add(EE_CHUNK_BADTEXT, line, pos);
+            return ES_ERROR;
+        }
+        
+        if (ep.getsvalue() == "size")
+        {
+            ep.setpoint(t_bounds . width,t_bounds . height);
+            return ES_NORMAL;
+        }
+        
+        if(ep.getsvalue() == "bounds")
+        {
+            ep.setrectangle(t_bounds);
+            return ES_NORMAL;
+        }
+    }
+    
+    ep.setuint(t_bounds . width);
+    return ES_NORMAL;
 }

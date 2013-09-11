@@ -156,6 +156,7 @@ extern uint2 MCiconicstacks;
 extern uint2 MCwaitdepth;
 extern uint4 MCrecursionlimit;
 
+
 extern Boolean MCownselection;
 extern MCUndolist *MCundos;
 extern MCSellist *MCselected;

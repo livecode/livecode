@@ -925,6 +925,13 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 						}
 						t_index++;
 					}
+					// MW-2013-08-23: [[ Bug 11122 ]] Special-case '$#'.
+					if (t_index < p_length && t_klength == 1 && t_keyword[0] == '$' && p_text[t_index] == '#')
+					{
+						t_keyword[t_klength] = '#';
+						t_klength++;
+						t_index++;
+					}
 					t_end = t_index;
 					if (t_class == COLOURIZE_CLASS_KEYWORD)
 					{
@@ -1596,6 +1603,44 @@ static bool searchforhandlerinexternallist(MCExternalHandlerList *p_list, MCName
 	return false;
 }
 
+static bool searchforhandlerinobject(MCObject *p_object, MCNameRef p_handler, Handler_type& r_type)
+{
+	if (p_object == nil)
+		return false;
+	
+	if (searchforhandlerinlist(p_object -> gethandlers(), p_handler, r_type))
+		return true;
+	
+	if (p_object -> getparentscript() != nil)
+	{
+		MCObject *t_behavior;
+		t_behavior = p_object -> getparentscript() -> GetObject();
+		if (t_behavior != nil)
+		{
+			t_behavior -> parsescript(True);
+			if (searchforhandlerinobject(t_behavior, p_handler, r_type))
+				return true;
+		}
+	}
+	
+	if (p_object -> gettype() == CT_STACK &&
+		searchforhandlerinexternallist(((MCStack *)p_object) -> getexternalhandlers(), p_handler, r_type))
+		return true;
+	
+	return false;
+}
+
+static bool searchforhandlerinlibrarystacks(MCNameRef p_handler, Handler_type& r_type)
+{
+	for (uint32_t i = 0; i < MCnusing; i++)
+	{
+		if (searchforhandlerinobject(MCusing[i], p_handler, r_type))
+			return true;
+	}
+	
+	return false;	
+}
+
 static bool searchforhandlerinobjectlist(MCObjectList *p_list, MCNameRef p_name, Handler_type& r_type)
 {
 	if (p_list == nil)
@@ -1606,47 +1651,50 @@ static bool searchforhandlerinobjectlist(MCObjectList *p_list, MCNameRef p_name,
 	do
 	{
 		if (!t_object_ref -> getremoved() &&
-			searchforhandlerinlist(t_object_ref -> getobject() -> gethandlers(), p_name, r_type))
+			searchforhandlerinobject(t_object_ref -> getobject(), p_name, r_type))
 			return true;
 		
 		t_object_ref = t_object_ref -> next();
 	}
-	while(t_object_ref != p_list);
+	while (t_object_ref != p_list);
 
 	return false;
 }
 
+// MM-2013-07-26: [[ Bug 11017 ]] Make sure we search the full message path for handler.
+//    FrontScripts
+//      Behavior chain of FrontScript objects
+//      (if stack, then externals)
+//    Object
+//      Behavior chain of object
+//      (if stack, then externals)
+//    Object's Ancestor's
+//      Behavior chain of object ancestors
+//      (if stack, then externals)
+//    Backscripts
+//      Behavior chain of backscript objects
+//      (if stack, then externals)
+//    Library Stacks
+//      Behavior chain of stack
+//      Externals of stack
 static bool searchforhandler(MCObject *p_object, MCNameRef p_handler, Handler_type& r_type)
 {
 	if (searchforhandlerinobjectlist(MCfrontscripts, p_handler, r_type))
 		return true;
 	
-	for(MCObject *t_object = p_object; t_object != NULL; t_object = t_object -> getparent())
+	for (MCObject *t_object = p_object; t_object != nil; t_object = t_object -> getparent())
 	{
 		t_object -> parsescript(False);
-		if (searchforhandlerinlist(t_object -> gethandlers(), p_handler, r_type))
-			return true;
-		
-		if (t_object -> getparentscript() != nil)
-		{
-			MCObject *t_behavior;
-			t_behavior = t_object -> getparentscript() -> GetObject();
-			if (t_behavior != nil)
-			{
-				t_behavior -> parsescript(True);
-				if (searchforhandlerinlist(t_behavior -> gethandlers(), p_handler, r_type))
-					return true;
-			}
-		}
-		
-		if (t_object -> gettype() == CT_STACK &&
-			searchforhandlerinexternallist(((MCStack *)t_object) -> getexternalhandlers(), p_handler, r_type))
-				return true;
+		if (searchforhandlerinobject(t_object, p_handler, r_type))
+			return true;	
 	}
 	
 	if (searchforhandlerinobjectlist(MCbackscripts, p_handler, r_type))
 		return true;
-
+	
+	if (searchforhandlerinlibrarystacks(p_handler, r_type))
+		return true;
+	
 	return false;
 }
 

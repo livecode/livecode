@@ -303,9 +303,6 @@ public:
 
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 	
-    // MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-	virtual bool textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
-	
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 	
 			// in macdcs.cc   Screen routines
@@ -415,6 +412,10 @@ public:
 	virtual bool ownsclipboard(void);
 	virtual bool setclipboard(MCPasteboard *p_pasteboard);
 	virtual MCPasteboard *getclipboard(void);
+    
+    // TD-2013-07-01: [[ DynamicFonts ]]
+    virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
 
 	//
 

@@ -3,7 +3,7 @@
   <name>union</name>
   <type>command</type>
   <syntax>
-    <example>union <i>array</i> with <i>testArray</i></example>
+    <example>union <i>array</i> with <i>testArray</i> [recursively]</example>
   </syntax>
   <library></library>
   <objects>
@@ -20,6 +20,7 @@
   </references>
   <history>
     <introduced version="1.1">Added.</introduced>
+    <introduced version="6.5">Added nested array support.</introduced>
   </history>
   <platforms>
     <mac/>
@@ -41,6 +42,6 @@
     <example>union monthlyPayments with quarterlyPayments</example>
   </examples>
   <description>
-    <p>Use the <b>union</b> <glossary tag="command">command</glossary> to combine two <glossary tag="array">arrays</glossary>, eliminating duplicate elements.</p><p/><p><b>Parameters:</b></p><p>The <i>array</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p>The <i>testArray</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p><b>Comments:</b></p><p>The <b>union</b> <glossary tag="command">command</glossary> combines the <i>array</i> and <i>testArray</i>. Each <glossary tag="key">key</glossary> of the <i>array</i> is checked to see whether there is already an <keyword tag="element">element</keyword> with that <glossary tag="key">key</glossary> in the <i>testArray</i>. If there is, that <keyword tag="element">element</keyword> of the <i>array</i> is unchanged. If not, the corresponding <keyword tag="element">element</keyword> of the <i>testArray</i> is placed in the <i>array</i>.</p><p/><p>After the <b>union</b> <glossary tag="command">command</glossary> is <glossary tag="execute">executed</glossary>, the <function tag="keys">keys</function> of the <i>array</i> consists of the logical union of the <function tag="keys">keys</function> of the original <i>array</i> and the keys of the <i>testArray</i>.</p><p/><p>The content of individual elements of the <i>testArray</i> does not affect the final result. Only which <glossary tag="element">elements</glossary> exist in the <i>testArray</i>, not their content, controls which <glossary tag="element">elements</glossary> of the <i>testArray</i> are placed in the <i>array</i>. If the <i>array</i> and <i>testArray</i> have the same set of <function tag="keys">keys</function> but different content in each <keyword tag="element">element</keyword>, the <b>union</b> <glossary tag="command">command</glossary> does not change the value of the <i>array</i>.</p>
+    <p>Use the <b>union</b> <glossary tag="command">command</glossary> to combine two <glossary tag="array">arrays</glossary>, eliminating duplicate elements.</p><p/><p><b>Parameters:</b></p><p>The <i>array</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p>The <i>testArray</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p>The <i>recursively</i> adverb indicates that the union should recurse through nested arrays.</p><p><b>Comments:</b></p><p>The <b>union</b> <glossary tag="command">command</glossary> combines the <i>array</i> and <i>testArray</i>. Each <glossary tag="key">key</glossary> of the <i>array</i> is checked to see whether there is already an <keyword tag="element">element</keyword> with that <glossary tag="key">key</glossary> in the <i>testArray</i>. If there is, that <keyword tag="element">element</keyword> of the <i>array</i> is unchanged. If not, the corresponding <keyword tag="element">element</keyword> of the <i>testArray</i> is placed in the <i>array</i>.</p><p/><p>After the <b>union</b> <glossary tag="command">command</glossary> is <glossary tag="execute">executed</glossary>, the <function tag="keys">keys</function> of the <i>array</i> consists of the logical union of the <function tag="keys">keys</function> of the original <i>array</i> and the keys of the <i>testArray</i>.</p><p/><p>The content of individual elements of the <i>testArray</i> does not affect the final result. Only which <glossary tag="element">elements</glossary> exist in the <i>testArray</i>, not their content, controls which <glossary tag="element">elements</glossary> of the <i>testArray</i> are placed in the <i>array</i>. If the <i>array</i> and <i>testArray</i> have the same set of <function tag="keys">keys</function> but different content in each <keyword tag="element">element</keyword>, the <b>union</b> <glossary tag="command">command</glossary> does not change the value of the <i>array</i>.</p>
   </description>
 </doc>

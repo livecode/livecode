@@ -1775,23 +1775,26 @@ void MCObject::allowmessages(Boolean allow)
 
 Exec_stat MCObject::conditionalmessage(uint32_t p_flag, MCNameRef p_message)
 {
-	parsescript(True);
-	
-	if ((hashandlers & p_flag) != 0)
-		return message(p_message);
-		
-	if (parent_script != NULL)
+	// MW-2013-08-06: [[ Bug 11084 ]] Restructured to loop through object and
+	//   its behavior chain.
+	MCObject *t_object;
+	t_object = this;
+	while(t_object != nil)
 	{
-		MCObject *t_parent;
-		t_parent = parent_script -> GetParent() -> GetObject();
-		if (t_parent != NULL)
-		{
-			t_parent -> parsescript(True);
-			if ((t_parent -> hashandlers & p_flag) != 0)
-				return message(p_message);
-		}
-	}
+		// Make sure the script is parsed.
+		t_object -> parsescript(True);
 	
+		// If the current object has the relevant handler we are done.
+		if ((t_object -> hashandlers & p_flag) != 0)
+			return message(p_message);
+		
+		// If the object has a parent script, skip to its parent script (if any).
+		if (t_object -> parent_script != nil)
+			t_object = t_object -> parent_script -> GetParent() -> GetObject();
+		else
+			t_object = nil;
+	}
+
 	return ES_NORMAL;
 }
 
@@ -2079,19 +2082,21 @@ Exec_stat MCObject::names(Properties which, MCExecPoint &ep, uint4 parid)
 			ep.appendmcstring(ep2.getsvalue());
 		}
 		break;
-	case P_NAME:
-	case P_ABBREV_NAME:
-		if (isunnamed())
-			stat = getprop(parid, P_ABBREV_ID, ep, False);
-		else
-			ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
-		break;
-	case P_SHORT_NAME:
-		if (isunnamed())
-			stat = names(P_ABBREV_ID, ep, parid);
-		else
-			ep.setnameref_unsafe(getname());
-		break;
+    case P_NAME:
+    case P_ABBREV_NAME:
+        if (isunnamed())
+            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
+            ep.setstringf("%s \"\"", itypestring);
+        else
+            ep.setstringf("%s \"%s\"", itypestring, getname_cstring());
+        break;
+    case P_SHORT_NAME:
+        if (isunnamed())
+            // AL-2013-07-29: [[ Bug 10981 ]] Allow the empty name for objects.
+            ep . clear();
+        else
+            ep.setnameref_unsafe(getname());
+        break;
 	case P_LONG_NAME:
 		// MW-2013-01-15: [[ Bug 2629 ]] If this control is unnamed, use the abbrev id form
 		//   but *only* for this control (continue with names the rest of the way).
@@ -4384,6 +4389,33 @@ void MCObject::scheduledelete(void)
 	//   (if it is in it!).
 	if (m_in_id_cache)
 		getstack() -> uncacheobjectbyid(this);
+}
+
+MCRectangle MCObject::measuretext(const MCString& p_text, bool p_is_unicode)
+{
+    bool t_mapped_font;
+    t_mapped_font = false;
+    if (!opened && m_font == nil)
+    {
+        mapfont();
+        t_mapped_font = true;
+    }
+    
+    MCRectangle t_bounds;
+    t_bounds . x = 0;
+	// MW-2013-08-23: [[ MeasureText ]] Shortcut if no text - useful for just
+	//   getting the font ascent/descent (as used in MCGroup methods).
+	if (p_text . getlength() != 0)
+		t_bounds . width = MCFontMeasureText(m_font, p_text . getstring(), p_text . getlength(), p_is_unicode);
+	else
+		t_bounds . width = 0;
+    t_bounds . y = -MCFontGetAscent(m_font);
+    t_bounds . height = MCFontGetDescent(m_font) + MCFontGetAscent(m_font);
+    
+    if (t_mapped_font)
+        unmapfont();
+    
+    return t_bounds;
 }
 
 ///////////////////////////////////////////////////////////////////////////////

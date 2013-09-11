@@ -509,9 +509,7 @@ void MCImage::rotate_transform(int32_t p_angle)
 			t_transform = MCGAffineTransformScale(t_transform, rect.width / (MCGFloat)t_trans_width, rect.height / (MCGFloat)t_trans_height);
 			t_trans_width = rect.width;
 			t_trans_height = rect.height;
-	}
-
-		m_transform = t_transform;
+		}
 	}
 
 	if (t_trans_width != rect.width || t_trans_height != rect.height)
@@ -533,13 +531,13 @@ void MCImage::resize_transform()
 	if (rect.width == t_src_width && rect.height == t_src_height)
 		m_has_transform = nil;
 	else
-		{
+	{
 		m_has_transform = true;
 		MCGFloat t_mid_x = (MCGFloat)t_src_width / 2.0;
 		MCGFloat t_mid_y = (MCGFloat)t_src_height / 2.0;
 		m_transform = MCGAffineTransformMakeScale(rect.width / (MCGFloat)t_src_width, rect.height / (MCGFloat)t_src_height);
-		}
 	}
+}
 
 void MCImage::createbrush(Properties which)
 {

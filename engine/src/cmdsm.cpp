@@ -58,7 +58,10 @@ MCAdd::~MCAdd()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCAdd::parse(MCScriptPoint &sp)
@@ -89,6 +92,10 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
 
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
@@ -99,6 +106,7 @@ Parse_stat MCAdd::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCAdd::exec(MCExecPoint &ep)
 {
+#ifdef /* MCAdd */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -111,7 +119,7 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 
 	if (overlap)
 		ep . grab();
-
+	
 	if (destvar != NULL && destvar -> evalcontainer(ep, t_dst_var, t_dst_ref) != ES_NORMAL)
 	{
 		MCeerror->add(EE_ADD_BADDEST, line, pos);
@@ -170,13 +178,17 @@ Exec_stat MCAdd::exec(MCExecPoint &ep)
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return ES_NORMAL;
+#endif /* MCAdd */
 }
 
 MCDivide::~MCDivide()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCDivide::parse(MCScriptPoint &sp)
@@ -208,7 +220,11 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 		MCperror->add(PE_DIVIDE_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -218,6 +234,7 @@ Parse_stat MCDivide::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCDivide::exec(MCExecPoint &ep)
 {
+#ifdef /* MCDivide */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -309,13 +326,17 @@ Exec_stat MCDivide::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCDivide */
 }
 
 MCMultiply::~MCMultiply()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCMultiply::parse(MCScriptPoint &sp)
@@ -350,7 +371,11 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 		(PE_MULTIPLY_BADEXP, sp);
 		return PS_ERROR;
 	}
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -360,6 +385,7 @@ Parse_stat MCMultiply::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCMultiply::exec(MCExecPoint &ep)
 {
+#ifdef /* MCMultiply */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -445,13 +471,17 @@ Exec_stat MCMultiply::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCMultiply */
 }
 
 MCSubtract::~MCSubtract()
 {
 	delete source;
 	delete dest;
-	delete destvar;
+	// MW-2013-08-01: [[ Bug 10925 ]] Only delete the destvar varref if dest is NULL,
+	//   otherwise its owned by dest.
+	if (dest == NULL)
+		delete destvar;
 }
 
 Parse_stat MCSubtract::parse(MCScriptPoint &sp)
@@ -486,7 +516,11 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 	}
 	else
 		destvar->parsearray(sp);
-
+	
+	// MW-2013-08-01: [[ Bug 10925 ]] If the dest chunk is just a var, extract the varref.
+	if (dest != NULL && dest -> isvarchunk())
+		destvar = dest -> getrootvarref();
+	
 	overlap = MCMathOpCommandComputeOverlap(source, dest, destvar);
 
 	return PS_NORMAL;
@@ -496,6 +530,7 @@ Parse_stat MCSubtract::parse(MCScriptPoint &sp)
 //   Here the source can be an array or number so we use 'tona'.
 Exec_stat MCSubtract::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSubtract */ LEGACY_EXEC
 	MCVariable *t_dst_var;
 	MCVariableValue *t_dst_ref;
 	t_dst_ref = NULL;
@@ -564,6 +599,7 @@ Exec_stat MCSubtract::exec(MCExecPoint &ep)
 	}
 
 	return ES_NORMAL;
+#endif /* MCSubtract */
 }
 
 MCArrayOp::~MCArrayOp()
@@ -641,6 +677,7 @@ Parse_stat MCArrayOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCArrayOp */ LEGACY_EXEC
 	uint1 e;
 	uint1 k = '\0';
 	uint4 chunk;
@@ -726,6 +763,7 @@ Exec_stat MCArrayOp::exec(MCExecPoint &ep)
 		t_dst_var -> synchronize(ep, True);
 
 	return ES_NORMAL;
+#endif /* MCArrayOp */
 }
 
 MCSetOp::~MCSetOp()
@@ -760,6 +798,9 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 		MCperror->add(PE_ARRAYOP_BADEXP, sp);
 		return PS_ERROR;
 	}
+    
+    // MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+    recursive = sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_RECURSIVELY) == PS_NORMAL;
 
 	MCVarref *t_src_ref, *t_dst_ref;
 	t_src_ref = source -> getrootvarref();
@@ -771,6 +812,7 @@ Parse_stat MCSetOp::parse(MCScriptPoint &sp)
 
 Exec_stat MCSetOp::exec(MCExecPoint &ep)
 {
+#ifdef /* MCSetOp */ LEGACY_EXEC
 	// ARRAYEVAL
 	if (source -> eval(ep) != ES_NORMAL)
 	{
@@ -804,18 +846,21 @@ Exec_stat MCSetOp::exec(MCExecPoint &ep)
 		if (t_src_ref == NULL)
 			t_dst_ref -> assign_empty();
 		else
-			t_dst_ref -> intersectarray(*t_src_ref);
+			// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+            t_dst_ref -> intersectarray(*t_src_ref,recursive);
 	}
 	else
 	{
 		if (t_src_ref == NULL)
 			return ES_NORMAL;
 
-		t_dst_ref -> unionarray(*t_src_ref);
+		// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+        t_dst_ref -> unionarray(*t_src_ref,recursive);
 	}
 
 	if (t_dst_var != NULL)
 		t_dst_var -> synchronize(ep, True);
 
 	return ES_NORMAL;
+#endif /* MCSetOp */
 }

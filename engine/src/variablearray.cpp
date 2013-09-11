@@ -358,7 +358,7 @@ void MCVariableArray::getextents(MCExecPoint &ep)
 	if (extents != NULL)
 		for (i = 0 ; i < dimensions ; i++)
 		{
-			char buf[U2L * 2];
+			char buf[(U4L * 2) + 1];
 			sprintf(buf, "%d,%d", extents[i].min, extents[i].max);
 			ep.concatcstring(buf, EC_RETURN, i == 0);
 		}
@@ -414,7 +414,7 @@ Exec_stat MCVariableArray::transpose(MCVariableArray& v)
 		return ES_ERROR;
 	presethash(v.nfilled);
 	uint2 i, j;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	for (i = v.extents[COL_DIM].min; i <= v.extents[COL_DIM].max; i++)
 		for (j = v.extents[ROW_DIM].min; j <= v.extents[ROW_DIM].max; j++)
 		{
@@ -591,7 +591,8 @@ Exec_stat MCVariableArray::factorarray(MCExecPoint &ep, Operators op)
 	return ES_NORMAL;
 }
 
-Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+Exec_stat MCVariableArray::intersectarray(MCVariableArray& v, bool p_recursive)
 {
 	uint4 i;
 	MCHashentry *last;
@@ -602,7 +603,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 			MCHashentry *e = table[i];
 			while (e != NULL)
 			{
-				if (v.lookuphash(e->string, False, False) == NULL)
+                MCHashentry *t_entry = v.lookuphash(e->string, False, False);
+				if (t_entry == NULL)
 				{
 					if (last == NULL)
 						table[i] = e->next;
@@ -619,6 +621,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 				}
 				else
 				{
+                    if (t_entry -> value . is_array() && e -> value . is_array() && p_recursive)
+                        e -> value . intersectarray(t_entry -> value, p_recursive);
 					last = e;
 					e = e->next;
 				}
@@ -628,7 +632,8 @@ Exec_stat MCVariableArray::intersectarray(MCVariableArray& v)
 	return ES_NORMAL;
 }
 
-Exec_stat MCVariableArray::unionarray(MCVariableArray& v)
+// MERG-2013-08-26: [[ RecursiveArrayOp ]] Support nested arrays in union and intersect
+Exec_stat MCVariableArray::unionarray(MCVariableArray& v, bool p_recursive)
 {
 	uint4 i;
 	for (i = 0 ; i < v.tablesize ; i++)
@@ -637,12 +642,16 @@ Exec_stat MCVariableArray::unionarray(MCVariableArray& v)
 			MCHashentry *e = v.table[i];
 			while (e != NULL)
 			{
-				if (lookuphash(e->string, False, False) == NULL)
+                MCHashentry *t_entry = lookuphash(e->string, False, False);
+                if (t_entry == NULL)
 				{
 					MCHashentry *ne = lookuphash(e->string, False, True);
 					ne -> value . assign(e -> value);
 				}
-				e = e->next;
+                else if (e -> value . is_array() && p_recursive)
+                    t_entry -> value . unionarray(e ->value, p_recursive);
+               
+                e = e->next;
 			}
 		}
 	return ES_NORMAL;
@@ -698,7 +707,7 @@ Exec_stat MCVariableArray::matrixmultiply(MCExecPoint& ep, MCVariableArray &va, 
 		return ES_ERROR; //columns does not equal rows
 	presethash(va.getextent(ROW_DIM) * vb.getextent(COL_DIM));
 	uint2 i,j,k;
-	char tbuf[(U2L * 2) + 1];
+	char tbuf[(U4L * 2) + 1];
 	MCHashentry *vaptr,*vbptr,*vcptr;
 	for (i = va.extents[ROW_DIM].min; i <= va.extents[ROW_DIM].max; i++)
 	{
@@ -1372,6 +1381,9 @@ void MCVariableArray::split_as_set(const MCString& s, char e)
 //   to ensure other properties don't set them differently.
 static struct { Properties prop; const char *tag; } s_preprocess_props[] =
 {
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure lockLocation of groups is set before rectangle
+    { P_LOCK_LOCATION, "lockLocation" },
+    { P_LOCK_LOCATION, "lockLoc" },
     { P_RECTANGLE, "rectangle" },// gradients will be wrong if this isn't set first
     { P_RECTANGLE, "rect" },     // synonym
     { P_WIDTH, "width" },        // incase left,right are in the array
@@ -1380,6 +1392,12 @@ static struct { Properties prop; const char *tag; } s_preprocess_props[] =
     { P_TEXT_SIZE, "textSize" }, // changes textHeight
 	// MERG-2013-06-24: [[ RevisedPropsProp ]] Ensure filename takes precedence over text.
     { P_FILE_NAME, "fileName" }, // setting image filenames to empty after setting the text will clear them
+    // MERG-2013-07-20: [[ Bug 11060 ]] hilitedLines being lost.
+    { P_LIST_BEHAVIOR, "listBehavior" }, // setting hilitedLines before listBehavior will lose the hilited lines
+    { P_HTML_TEXT, "htmlText" }, // setting hilitedLines before htmlText will lose the hilited lines
+    // MERG-2013-08-30: [[ RevisedPropsProp ]] Ensure button text has precedence over label and menuHistory
+    { P_TEXT, "text" }, 
+    { P_MENU_HISTORY, "menuHistory" },
     { P_FORE_PATTERN, "forePattern" },
     { P_FORE_PATTERN, "foregroundPattern" },
     { P_FORE_PATTERN, "textPattern" },
@@ -1418,13 +1436,6 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
         if (e)
         {
             e -> value . fetch(ep);
-			
-			// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only set the
-			//   'filename' of an image if it is non-empty or the image has a filename.
-			if (s_preprocess_props[j].prop == P_FILE_NAME && optr -> gettype() == CT_IMAGE &&
-				ep . isempty() && !optr -> getflag(F_HAS_FILENAME))
-				continue;
-				
             optr->setprop(parid, (Properties)s_preprocess_props[j].prop, ep, False);
         }
     }
@@ -1463,15 +1474,7 @@ Exec_stat MCVariableArray::setprops(uint4 parid, MCObject *optr)
 						if ((Properties)te->which > P_FIRST_ARRAY_PROP)
 							optr->setarrayprop(parid, (Properties)te->which, ep, kMCEmptyName, False);
 						else
-						{
-							// MW-2013-06-24: [[ RevisedPropsProp ]] Workaround Bug 10977 - only
-							//   set the 'text' of an image if it is non-empty and doesn't have a filename.
-							if (te -> which == P_TEXT && optr -> gettype() == CT_IMAGE &&
-								ep . isempty() && optr -> getflag(F_HAS_FILENAME))
-								continue;
-							
 							optr->setprop(parid, (Properties)te->which, ep, False);
-						}
 					}
                 }
             	e = e->next;

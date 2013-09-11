@@ -171,9 +171,6 @@ public:
 
 	virtual bool hasfeature(MCPlatformFeature p_feature);
 
-	// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-	virtual bool textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
-	
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 	
 	virtual uint2 getdepth();

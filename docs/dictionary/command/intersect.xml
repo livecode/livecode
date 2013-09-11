@@ -3,7 +3,7 @@
   <name>intersect</name>
   <type>command</type>
   <syntax>
-    <example>intersect <i>array</i> with <i>templateArray</i></example>
+    <example>intersect <i>array</i> with <i>templateArray</i> [recursively]</example>
   </syntax>
   <library></library>
   <objects>
@@ -19,6 +19,7 @@
   </references>
   <history>
     <introduced version="1.1">Added.</introduced>
+    <introduced version="6.5">Added nested array support.</introduced>
   </history>
   <platforms>
     <mac/>
@@ -38,8 +39,9 @@
   <summary>Removes <glossary tag="element">elements</glossary> from an <glossary tag="array">array</glossary> if they have no corresponding <keyword tag="element">element</keyword> in another <glossary tag="array">array</glossary>.</summary>
   <examples>
     <example>intersect myArray with the templateData of this stack</example>
+    <example>intersect myArray with theTemplate recursively</example>
   </examples>
   <description>
-    <p>Use the <b>intersect</b> <glossary tag="command">command</glossary> to filter out <glossary tag="element">elements</glossary> from an <glossary tag="array">array</glossary> according to the contents of another <glossary tag="array">array</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>array</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p>The <i>templateArray</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p><b>Comments:</b></p><p>Each key of the <i>array</i> is checked to see whether there is a matching <glossary tag="key">key</glossary> in the <i>templateArray</i>. The <glossary tag="element">elements</glossary> of <i>array</i> that do not match an <keyword tag="element">element</keyword> of the <i>templateArray</i> are removed from the <i>array</i>.</p><p/><p>The content of individual elements of the <i>templateArray</i> does not affect the final result. Only which <glossary tag="element">elements</glossary> exist in the <i>templateArray</i>, not their content, controls which <glossary tag="element">elements</glossary> of the <i>array</i> are retained and which are removed. If the <i>array</i> and <i>templateArray</i> have the same set of <glossary tag="element">elements</glossary> but different content in each <keyword tag="element">element</keyword>, the <b>intersect</b> <glossary tag="command">command</glossary> does not change the value of the <i>array</i>.</p>
+    <p>Use the <b>intersect</b> <glossary tag="command">command</glossary> to filter out <glossary tag="element">elements</glossary> from an <glossary tag="array">array</glossary> according to the contents of another <glossary tag="array">array</glossary>.</p><p/><p><b>Parameters:</b></p><p>The <i>array</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p/><p>The <i>templateArray</i> is any <glossary tag="array">array</glossary> <glossary tag="variable">variable</glossary>.</p><p>The <i>recursively</i> adverb indicates that the intersect should recurse through nested arrays.</p><p/><p><b>Comments:</b></p><p>Each key of the <i>array</i> is checked to see whether there is a matching <glossary tag="key">key</glossary> in the <i>templateArray</i>. The <glossary tag="element">elements</glossary> of <i>array</i> that do not match an <keyword tag="element">element</keyword> of the <i>templateArray</i> are removed from the <i>array</i>.</p><p/><p>The content of individual elements of the <i>templateArray</i> does not affect the final result. Only which <glossary tag="element">elements</glossary> exist in the <i>templateArray</i>, not their content, controls which <glossary tag="element">elements</glossary> of the <i>array</i> are retained and which are removed. If the <i>array</i> and <i>templateArray</i> have the same set of <glossary tag="element">elements</glossary> but different content in each <keyword tag="element">element</keyword>, the <b>intersect</b> <glossary tag="command">command</glossary> does not change the value of the <i>array</i>.</p>
   </description>
 </doc>

@@ -273,10 +273,6 @@ public:
 
 	virtual int4 textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override = false);
 
-    // MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-	virtual bool textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
-
-
 	virtual Boolean open();
 	virtual Boolean close(Boolean force);
 
@@ -517,7 +513,13 @@ public:
 	virtual char *popupaskdialog(uint32_t p_type, const char *p_title, const char *p_message, const char *p_initial, bool p_hint);
 	
 	//
-	
+    
+    // TD-2013-05-29: [[ DynamicFonts ]]
+	virtual bool loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle);
+    virtual bool unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle);
+    
+    //
+
 	void addtimer(MCObject *optr, MCNameRef name, uint4 delay);
 	void cancelmessageindex(uint2 i, Boolean dodelete);
 	void cancelmessageid(uint4 id);
@@ -531,7 +533,7 @@ public:
 	void handlemoves(real8 &curtime, real8 &eventtime);
 	void siguser();
 	Boolean lookupcolor(const MCString &s, MCColor *color);
-	void dropper(Drawable d, int2 mx, int2 my, MCColor *cptr);
+	void dropper(Window w, int2 mx, int2 my, MCColor *cptr);
 	Boolean parsecolor(const MCString &s, MCColor *color, char **cname);
 	Boolean parsecolors(const MCString &values, MCColor *colors,
 	                    char *cnames[], uint2 ncolors);

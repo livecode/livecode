@@ -1064,7 +1064,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 	switch (which)
 	{
-		
+#ifdef /* MCStack::getprop */ LEGACY_EXEC		
 	case P_FULLSCREEN:
 			ep.setsvalue( MCU_btos(getextendedstate(ECS_FULLSCREEN)));
 	break;
@@ -1549,7 +1549,7 @@ Exec_stat MCStack::getprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 	case P_DEFER_SCREEN_UPDATES:
 		ep . setboolean(effective ? m_defer_updates && m_tilecache != nil : m_defer_updates);
 		break;
-
+#endif /* MCStack::getprop */
 	default:
 	{
 		Exec_stat t_stat;
@@ -1577,6 +1577,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 
 	switch (which)
 	{
+#ifdef /* MCStack::setprop */ LEGACY_EXEC
 	case P_FULLSCREEN:
 		{
 			if (!MCU_stob(data, bval))
@@ -2580,7 +2581,7 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 		m_defer_updates = (t_defer_updates == True);
 	}
 	break;
-	
+#endif /* MCStack::setprop */	
 	default:
 	{
 		Exec_stat t_stat;
@@ -2974,12 +2975,11 @@ bool MCStack::recomputefonts(MCFontRef p_parent_font)
 
 void MCStack::purgefonts()
 {
-#ifdef _WINDOWS_DESKTOP
 	recomputefonts(parent -> getfontref());
+	recompute();
 	
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
-#endif
 }
 
 //////////

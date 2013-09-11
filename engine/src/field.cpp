@@ -1178,6 +1178,7 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
 {
 	switch (which)
 	{
+#ifdef /* MCField::getprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		ep.setboolean(getflag(F_AUTO_TAB));
 		break;
@@ -1413,12 +1414,15 @@ Exec_stat MCField::getprop(uint4 parid, Properties which, MCExecPoint& ep, Boole
         }
         break;
     // MW-2012-02-08: [[ FlaggedRanges ]] Return the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, getpgsize(nil), false);
+		return gettextatts(parid, P_FLAGGED_RANGES, ep, nil, False, 0, INT32_MAX, false);
 	// MW-2012-02-22: [[ IntrinsicUnicode ]] Fetch the encoding property of the field, this is
 	//   actually the encoding of the content.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_ENCODING:
-		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, getpgsize(nil), false);
+		return gettextatts(parid, P_ENCODING, ep, nil, False, 0, INT32_MAX, false);
+#endif /* MCField::getprop */ 
 	default:
 		return MCControl::getprop(parid, which, ep, effective);
 	}
@@ -1501,6 +1505,7 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 	MCExecPoint *oldep;
 	switch (p)
 	{
+#ifdef /* MCField::setprop */ LEGACY_EXEC
 	case P_AUTO_TAB:
 		if (!MCU_matchflags(data, flags, F_AUTO_TAB, dummy))
 		{
@@ -1950,8 +1955,10 @@ Exec_stat MCField::setprop(uint4 parid, Properties p, MCExecPoint &ep, Boolean e
 		setsbrects();
 		break;
 	// MW-2012-02-08: [[ FlaggedField ]] Set the flaggedRanges of the whole field.
+	// MW-2013-08-27: [[ Bug 11129 ]] Use INT32_MAX as upper limit.
 	case P_FLAGGED_RANGES:
-		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, getpgsize(nil), false);
+		return settextatts(parid, P_FLAGGED_RANGES, ep, nil, 0, INT32_MAX, false);
+#endif /* MCField::setprop */
 	default:
 		return MCControl::setprop(parid, p, ep, effective);
 	}

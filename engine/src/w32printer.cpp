@@ -2016,5 +2016,5 @@ void MCWindowsPrinter::ChangeDC(void)
 	DeleteDC(m_dc);
 	m_dc = NULL;
 
-	MCstacks -> reopenforprint();
+	MCstacks -> purgefonts();
 }

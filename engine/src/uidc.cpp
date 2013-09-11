@@ -40,6 +40,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osspec.h"
 #include "redraw.h"
 #include "notify.h"
+#include "dispatch.h"
 
 #include "graphicscontext.h"
 
@@ -519,13 +520,6 @@ int4 MCUIDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_o
 	return 0;
 }
 
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-//  Implementations platform specific.
-bool MCUIDC::textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask)
-{
-	return false;
-}
-
 uint2 MCUIDC::getrealdepth(void)
 {
 	//fprintf(stderr,"UIDC::getrealdepth() called\n");
@@ -768,7 +762,6 @@ void MCUIDC::pingwait(void)
 	//   any running wait.
 	MCNotifyPing(false);
 #endif
-	
 }
 
 void MCUIDC::flushevents(uint2 e)
@@ -1295,13 +1288,28 @@ Boolean MCUIDC::lookupcolor(const MCString &s, MCColor *color)
 	return False;
 }
 
-void MCUIDC::dropper(Drawable d, int2 mx, int2 my, MCColor *cptr)
+void MCUIDC::dropper(Window w, int2 mx, int2 my, MCColor *cptr)
 {
 	MCColor newcolor;
 	// MW-2012-03-30: [[ Bug ]] On Mac, use the snapshot method to get the mouseColor
 	//   otherwise things fail on Lion.
 	MCRectangle t_rect;
 	MCU_set_rect(t_rect, mx, my, 1, 1);
+	
+	// IM-2013-07-30: [[ Bug 11018 ]] if the target is a window, then convert local coords to global
+	if (w != nil)
+	{
+		MCRectangle t_stack_rect;
+		MCStack *t_stack;
+		t_stack = MCdispatcher->findstackd(w);
+		if (t_stack != nil)
+		{
+			t_stack_rect = t_stack->getrect();
+			t_rect.x += t_stack_rect.x;
+			t_rect.y += t_stack_rect.y;
+		}
+	}
+	
 	MCImageBitmap *image = snapshot(t_rect, 1.0, 0, nil);
 
 	// If fetching the mouse pixel fails, then just return black.
@@ -1531,6 +1539,18 @@ MCPasteboard *MCUIDC::getclipboard(void)
 }
 
 bool MCUIDC::setclipboard(MCPasteboard *p_pasteboard)
+{
+	return false;
+}
+
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+bool MCUIDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{
+	return false;
+}
+
+bool MCUIDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
 {
 	return false;
 }

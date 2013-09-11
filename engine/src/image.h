@@ -303,12 +303,6 @@ class MCImage : public MCControl
 	MCGFloat m_scale_factor;
 
 	MCImageNeed *m_needs;
-
-	bool m_have_control_colors;
-	MCColor *m_control_colors;
-	char **m_control_color_names;
-	uint16_t m_control_color_count;
-	uint16_t m_control_color_flags;
 	
 	uint32_t m_current_width;
 	uint32_t m_current_height;
@@ -339,6 +333,17 @@ public:
 	// IM-2013-07-19: [[ ResIndependence ]] add scale param for hi-res images
 	bool setbitmap(MCImageBitmap *p_bitmap, MCGFloat p_scale, bool p_update_geometry = false);
 
+	// MW-2013-09-05: [[ Bug 11127 ]] These are used when saving / loading an image
+	//   they hold the control's colors, as the ones serialized in MCObject are the
+	//   image colors (for <= 8 color RLE images).
+	static bool s_have_control_colors;
+	static uint16_t s_control_color_count;
+	static MCColor *s_control_colors;
+	static char **s_control_color_names;
+	static uint16_t s_control_pixmap_count;
+	static MCPatternInfo *s_control_pixmapids;
+	static uint16_t s_control_color_flags;
+	
 private:
 	void setrep(MCImageRep *p_rep);
 	

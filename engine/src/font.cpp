@@ -30,6 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "uidc.h"
 #include "context.h"
+#include "stacklst.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -46,11 +47,23 @@ struct MCFont
 	MCFontStruct *fontstruct;
 };
 
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+struct MCLoadedFont
+{
+    MCLoadedFont *next;
+    char *path;
+    bool is_global;
+    void *handle;
+};
+
+static MCLoadedFont *s_loaded_fonts = nil;
 static MCFont *s_fonts = nil;
 
 bool MCFontInitialize(void)
 {
 	s_fonts = nil;
+	s_loaded_fonts = nil;
 	return true;
 }
 
@@ -181,6 +194,111 @@ uint16_t MCFontStyleToTextStyle(MCFontStyle p_font_style)
 	if ((p_font_style & kMCFontStyleCondensed) != 0)
 		t_style = (t_style & ~FA_EXPAND) | 0x30;
 	return t_style;
+}
+
+void MCFontRemap(void)
+{
+	// Make sure the fontlist is flushed (deletes all fontstructs).
+	MCdispatcher -> flushfonts();
+	
+	// Now reload the new fontstruct for each font.
+	for(MCFont *t_font = s_fonts; t_font != nil; t_font = t_font -> next)
+	{
+		uint2 t_temp_size;
+		t_temp_size = t_font -> size;
+		t_font -> fontstruct = MCdispatcher -> loadfont(MCNameGetCString(t_font -> name), t_temp_size, MCFontStyleToTextStyle(t_font -> style), (t_font -> style & kMCFontStylePrinterMetrics) != 0);
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+// TD-2013-07-02: [[ DynamicFonts ]]
+// MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCLoadedFont
+Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally)
+{
+    Exec_stat t_stat;
+    t_stat = ES_NORMAL;
+    
+    if (t_stat == ES_NORMAL)
+    {
+        // check if already loaded and unload if globally is not the same as loaded version
+        for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+            if (MCU_strcasecmp(t_font -> path, p_path) == 0)
+			{
+				if (t_font -> is_global != p_globally)
+				{
+					t_stat = MCFontUnload(ep,p_path);
+					break;
+				}
+				else
+					return ES_NORMAL;
+			}
+    }
+    
+    if (t_stat == ES_NORMAL)
+    {
+        void * t_loaded_font_handle;
+        
+        if (!MCscreen -> loadfont(p_path, p_globally, t_loaded_font_handle))
+            return ES_ERROR;
+    
+        MCLoadedFontRef self;
+        if (!MCMemoryNew(self))
+            return ES_ERROR;
+        
+        self -> is_global = p_globally;
+        self -> handle = t_loaded_font_handle;
+        self -> path = strdup(p_path);
+		self -> next = s_loaded_fonts;
+		s_loaded_fonts = self;
+		
+		// MW-2013-09-11: [[ DynamicFonts ]] Make sure the engine reloads all fonts.
+		MCFontRemap();
+		MCstacks -> purgefonts();
+    }
+
+    return t_stat;
+}
+
+Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path)
+{
+    MCLoadedFont *t_prev_font;
+    t_prev_font = nil;
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+    {
+        if (MCU_strcasecmp(t_font -> path, p_path) == 0)
+        {
+            if (!MCscreen -> unloadfont(p_path, t_font -> is_global, t_font -> handle))
+                return ES_ERROR;
+            
+            if (t_prev_font != nil)
+                t_prev_font -> next = t_font -> next;
+            else
+                s_loaded_fonts = t_font -> next;
+			
+			MCMemoryDelete(t_font -> path);
+            MCMemoryDelete(t_font);
+			
+			// MW-2013-09-11: [[ DynamicFonts ]] Make sure the engine reloads all fonts.
+			MCFontRemap();
+			MCstacks -> purgefonts();
+			
+            break;
+        }
+		
+        t_prev_font = t_font;
+    }
+    
+    return ES_NORMAL;
+}
+
+Exec_stat MCFontListLoaded(MCExecPoint& ep)
+{
+    ep.clear();
+    for(MCLoadedFont *t_font = s_loaded_fonts; t_font != nil; t_font = t_font -> next)
+        ep.concatcstring(t_font -> path, EC_RETURN, t_font == s_loaded_fonts);
+    
+    return ES_NORMAL;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

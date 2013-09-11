@@ -3,7 +3,7 @@ export TOOLS=`dirname $0`
 export TRUNK=`cd $TOOLS/..; pwd`
 
 # Global variables needed later
-if [ $MODE="" ]; then
+if [ "$MODE" == "" ]; then
 	export MODE=debug
 fi
 export DEBUGGABLE_FLAG=false

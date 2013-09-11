@@ -327,13 +327,6 @@ int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_len
 	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
 
-// MM-2013-08-16: [[ RefactorGraphics ]] Render text into mask taking into account clip and transform.
-//  Not currently use on Android - we use Skia to draw text.
-bool MCScreenDC::textmask(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override, MCRectangle p_clip, MCGAffineTransform p_transform, MCGMaskRef& r_mask)
-{
-    return false;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
 void MCScreenDC::beep(void)
@@ -1445,7 +1438,7 @@ static void MCAndroidEngineCallThreadCallback(void *p_context)
 		case kMCJavaTypeMCStringUnicode:
 			{
 				jstring t_java_string;
-				t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
+			t_java_string = (jstring)t_env -> CallObjectMethodA(context->object, t_method_id, t_params->params);
 				if (t_cleanup_java_refs && t_env -> ExceptionCheck())
 				{
 					t_exception_thrown = true;
@@ -1613,6 +1606,26 @@ void *MCAndroidGetContainer(void)
 	return (void *)s_android_container;
 }
 
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the Android system
+//   thread.
+void *MCAndroidGetSystemJavaEnv(void)
+{
+	return s_android_ui_env;
+}
+
+// MW-2013-06-14: [[ ExternalsApiV5 ]] Return the JavaEnv of the engine's script
+//   thread.
+void *MCAndroidGetScriptJavaEnv(void)
+{
+	return s_java_env;
+}
+
+// MW-2013-07-25: [[ ExternalsApiV5 ]] Return the engine object (EngineApi really)
+void *MCAndroidGetEngine(void)
+{
+	return s_android_view;
+}
+
 ////////////////////////////////////////////////////////////////////////////////
 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doCreate(JNIEnv *env, jobject object, jobject activity, jobject container, jobject view) __attribute__((visibility("default")));
@@ -1624,6 +1637,7 @@ extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doPause(JNIEnv 
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doResume(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doLowMemory(JNIEnv *env, jobject object) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, jobject object, bool timedout) __attribute__((visibility("default")));
+extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doTouch(JNIEnv *env, jobject object, int action, int id, int timestamp, int x, int y) __attribute__((visibility("default")));
 extern "C" JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doKeyPress(JNIEnv *env, jobject object, int modifiers, int char_code, int key_code) __attribute__((visibility("default")));
@@ -1790,6 +1804,16 @@ JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doProcess(JNIEnv *env, job
 
 	s_schedule_wakeup_was_broken = !timedout;
 	co_yield_to_engine();
+}
+
+// MW-2013-08-07: [[ ExternalsApiV5 ]] Native implementation of the Engine 'doWait'
+//   method - just calls MCScreenDC::wait().
+JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doWait(JNIEnv *env, jobject object, double time, bool dispatch, bool anyevent)
+{
+	if (!s_engine_running)
+		return;
+	
+	MCscreen -> wait(time, dispatch, anyevent);
 }
 
 JNIEXPORT void JNICALL Java_com_runrev_android_Engine_doReconfigure(JNIEnv *env, jobject object, int w, int h, jobject bitmap)
@@ -2160,7 +2184,7 @@ bool MCAndroidSignatureMatch(const char *p_signature)
 			if (MCCStringLength(s_build_info[t_component_index]) != t_component_length ||
 			!MCCStringEqualSubstringCaseless(s_build_info[t_component_index], t_component, t_component_length))
 			{
-				return false;
+			return false;
 			}
 		}
 

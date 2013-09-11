@@ -166,7 +166,6 @@ public:
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
 	virtual bool ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context);
-	virtual bool ctxt_textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask);
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -703,11 +702,6 @@ int4 MCOldFontlist::ctxt_textwidth(MCFontStruct *of, const char *s, uint2 l, boo
 }
 
 bool MCOldFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context)
-{
-	return false;
-}
-
-bool MCOldFontlist::ctxt_textmask(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override, MCRectangle clip, MCGAffineTransform transform, MCGMaskRef& r_mask)
 {
 	return false;
 }
