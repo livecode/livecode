@@ -189,7 +189,7 @@ Exec_stat MCRevRelicense::exec(MCExecPoint& ep)
 	
 	MCAutoStringRef license_token_string;
 	/* UNCHECKED */ MCStringCreateWithCString(MClicenseparameters . license_token, &license_token_string);
-	if (!MCS_unlink(*license_token_string));
+	if (!MCS_unlink(*license_token_string))
 	{
 		MCresult -> sets("token deletion failed");
 		return ES_NORMAL;

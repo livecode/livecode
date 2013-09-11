@@ -961,295 +961,15 @@ struct MCWindowsSystemService: public MCWindowsSystemServiceInterface
     }
 };
 
-
-struct MCStdioFileHandle: public MCSystemFileHandle
+struct MCMemoryMappedFileHandle: public MCMemoryFileHandle
 {
-	static MCStdioFileHandle *Open(MCStringRef p_path, intenum_t p_mode)
+	MCMemoryMappedFileHandle(MCWinSysHandle p_handle, const void *p_buffer, uint32_t p_length):
+		MCMemoryFileHandle(p_buffer, p_length)
 	{
-#ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
-	Boolean appendmode = False;
-	DWORD omode = 0;		//file open mode
-	DWORD createmode = OPEN_ALWAYS;
-	DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
-	char *newpath = MCS_resolvepath(path);
-	HANDLE hf = NULL;
-	IO_handle handle;
-
-	bool t_device = false;
-	bool t_serial_device = false;
-
-	// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
-	//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
-	uint4 t_path_len;
-	t_path_len = strlen(newpath);
-	if (*newpath != '\0' && newpath[t_path_len - 1] == ':')
-	{
-		if (MCU_strncasecmp(newpath, "COM", 3) == 0)
-		{
-			// If the path length > 4 then it means it must have double digits so rewrite
-			if (t_path_len > 4)
-			{
-				char *t_rewritten_path;
-				t_rewritten_path = new char[t_path_len + 4 + 1];
-				sprintf(t_rewritten_path, "\\\\.\\%s", newpath);
-				delete newpath;
-				newpath = t_rewritten_path;
-				t_path_len += 4;
-			}
-			
-			// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
-			newpath[t_path_len - 1] = '\0';
-
-			t_serial_device = true;
-		}
-		
-		t_device = true;
+		m_handle = p_handle;
 	}
 
-	if (strequal(mode, IO_READ_MODE))
-	{
-		omode = GENERIC_READ;
-		createmode = OPEN_EXISTING;
-	}
-	if (strequal(mode, IO_WRITE_MODE))
-	{
-		omode = GENERIC_WRITE;
-		createmode = CREATE_ALWAYS;
-	}
-	if (strequal(mode, IO_UPDATE_MODE))
-		omode = GENERIC_WRITE | GENERIC_READ;
-	if (strequal(mode, IO_APPEND_MODE))
-	{
-		omode = GENERIC_WRITE;
-		appendmode = True;
-	}
-
-	DWORD sharemode;
-	if (t_device)
-	{
-		createmode = OPEN_EXISTING;
-		sharemode = 0;
-	}
-	else
-		sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-	if ((hf = CreateFileA(newpath, omode, sharemode, NULL,
-	                     createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
-	{
-		delete newpath;
-		return NULL;
-	}
-	delete newpath;
-
-	if (t_serial_device)
-	{
-		DCB dcb;
-		dcb . DCBlength = sizeof(DCB);
-		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
-		        || !SetCommState(hf, &dcb))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommState error");
-			return NULL;
-		}
-		COMMTIMEOUTS timeout;         //set timeout to prevent blocking
-		memset(&timeout, 0, sizeof(COMMTIMEOUTS));
-		timeout.ReadIntervalTimeout = MAXDWORD;
-		timeout.WriteTotalTimeoutConstant = 2000;
-		if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
-		{
-			MCS_seterrno(GetLastError());
-			CloseHandle(hf);
-			MCresult->sets("SetCommTimeouts error");
-			return NULL;
-		}
-		map = False;
-	}
-
-	handle = new IO_header((MCWinSysHandle)hf, NULL, 0, 0);
-
-	if (appendmode) //if append mode, move file ptr to the end of file
-		SetFilePointer(hf, 0, NULL, FILE_END);
-
-	if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
-	        && (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
-	                                                0, 0, NULL)) != NULL)
-	{
-		handle->len = GetFileSize(hf, NULL);
-		handle->buffer = (char*)MapViewOfFile(handle->mhandle,
-		                                      FILE_MAP_READ, 0, 0, 0);
-		handle->ioptr = handle->buffer;
-		if (handle->buffer == NULL)
-		{
-			CloseHandle(handle->mhandle);
-			if (offset != 0) //move file ptr to the offset position
-				SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-		}
-		else
-			handle->ioptr += offset;
-	}
-	else
-		if (offset != 0) //move file ptr to the offset position
-			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-
-	return handle;
-#endif /* MCS_open_dsk_w32 */
-		Boolean appendmode = False;
-		DWORD omode = 0;		//file open mode
-		DWORD createmode = OPEN_ALWAYS;
-		DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
-		MCAutoNativeCharArray t_newpath;
-		char *t_char_ptr;
-		HANDLE hf = NULL;
-		MCStdioFileHandle *t_handle;
-
-		bool t_device = false;
-		bool t_serial_device = false;
-
-		// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
-		//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
-		uint4 t_path_len;
-		t_path_len = MCStringGetLength(p_path);
-		/* UNCHECKED */ t_newpath . New(t_path_len + 1);
-		t_char_ptr = (char*)t_newpath . Chars();
-		memcpy(t_char_ptr, MCStringGetNativeCharPtr(p_path), t_path_len);
-
-		if (t_char_ptr != '\0' && t_char_ptr[t_path_len - 1] == ':')
-		{
-			if (MCU_strncasecmp(t_char_ptr, "COM", 3) == 0)
-			{
-				// If the path length > 4 then it means it must have double digits so rewrite
-				if (t_path_len > 4)
-				{
-					t_newpath . Resize(t_path_len + 4 + 1);
-					t_char_ptr = (char*)t_newpath . Chars();
-					memmove(t_char_ptr + 4, t_char_ptr, t_path_len);
-					strcpy(t_char_ptr, "\\\\.\\");
-					t_path_len += 4;
-				}
-				
-				// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
-				t_char_ptr[t_path_len - 1] = '\0';
-
-				t_serial_device = true;
-			}
-			
-			t_device = true;
-		}
-
-		if (p_mode == kMCSystemFileModeRead)
-		{
-			omode = GENERIC_READ;
-			createmode = OPEN_EXISTING;
-		}
-		if (p_mode == kMCSystemFileModeWrite)
-		{
-			omode = GENERIC_WRITE;
-			createmode = CREATE_ALWAYS;
-		}
-		if (p_mode == kMCSystemFileModeUpdate)
-			omode = GENERIC_WRITE | GENERIC_READ;
-		if (p_mode == kMCSystemFileModeAppend)
-		{
-			omode = GENERIC_WRITE;
-			appendmode = True;
-		}
-
-		DWORD sharemode;
-		if (t_device)
-		{
-			createmode = OPEN_EXISTING;
-			sharemode = 0;
-		}
-		else
-			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
-		if ((hf = CreateFileA(t_char_ptr, omode, sharemode, NULL,
-							 createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
-		{
-			return NULL;
-		}
-
-		if (t_serial_device)
-		{
-			DCB dcb;
-			dcb . DCBlength = sizeof(DCB);
-			if (!GetCommState(hf, &dcb) || !BuildCommDCBA((LPCSTR)MCStringGetCString(MCserialcontrolsettings), &dcb)
-					|| !SetCommState(hf, &dcb))
-			{
-				MCS_seterrno(GetLastError());
-				CloseHandle(hf);
-				MCresult->sets("SetCommState error");
-				return NULL;
-			}
-			COMMTIMEOUTS timeout;         //set timeout to prevent blocking
-			memset(&timeout, 0, sizeof(COMMTIMEOUTS));
-			timeout.ReadIntervalTimeout = MAXDWORD;
-			timeout.WriteTotalTimeoutConstant = 2000;
-			if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
-			{
-				MCS_seterrno(GetLastError());
-				CloseHandle(hf);
-				MCresult->sets("SetCommTimeouts error");
-				return NULL;
-			}
-			//TODO Implement map = False;
-		}
-
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_handle = (MCWinSysHandle)hf;
-		t_handle -> m_is_pipe = false;
-		t_handle -> m_ioptr = NULL;
-		t_handle -> m_putback = -1;
-		t_handle -> m_is_eof = false;
-
-		// TODO Implement
-		//if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
-		//		&& (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
-		//												0, 0, NULL)) != NULL)
-		//{
-		//	handle->len = GetFileSize(hf, NULL);
-		//	handle->buffer = (char*)MapViewOfFile(handle->mhandle,
-		//										  FILE_MAP_READ, 0, 0, 0);
-		//	handle->ioptr = handle->buffer;
-		//	if (handle->buffer == NULL)
-		//	{
-		//		CloseHandle(handle->mhandle);
-		//		if (offset != 0) //move file ptr to the offset position
-		//			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
-		//	}
-		//	else
-		//		handle->ioptr += offset;
-		//}
-
-		if (appendmode) //if append mode, move file ptr to the end of file
-			t_handle -> Seek(0, -1);
-
-		return t_handle;
-	}
-
-	static MCStdioFileHandle *OpenFd(DWORD p_fd)
-	{
-		MCStdioFileHandle *t_stdio_handle;
-		HANDLE t_handle;
-
-		// No need to open p_fd, as on Windows only STD_INPUT_HANDLE, STD_OUTPUT_HANDLE 
-		// and STD_ERROR_HANDLE can be processed by GetStdHandle
-		t_handle = GetStdHandle(p_fd);  
-
-		if (t_handle == INVALID_HANDLE_VALUE)
-			return nil;
-
-		t_stdio_handle = new MCStdioFileHandle;
-		t_stdio_handle -> m_handle = (MCWinSysHandle)t_handle;
-		t_stdio_handle -> m_is_pipe = handle_is_pipe((MCWinSysHandle)t_handle);
-		t_stdio_handle -> m_ioptr = NULL;
-		t_stdio_handle -> m_is_eof = false;
-		t_stdio_handle -> m_putback = -1;
-
-		return t_stdio_handle;
-	}
-
-	virtual void Close(void)
+	virtual void Close()
 	{
 #ifdef /* MCS_close_dsk_w32 */ LEGACY_SYSTEM
 	if (stream->buffer != NULL)
@@ -1265,6 +985,28 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 	delete stream;
 	stream = NULL;
 #endif /* MCS_close_dsk_w32 */
+		/* UNCHECKED */ UnmapViewOfFile(m_buffer);
+		CloseHandle((HANDLE)m_handle);
+		MCMemoryFileHandle::Close();
+	}
+
+private:
+	MCWinSysHandle m_handle;
+};
+
+
+struct MCStdioFileHandle: public MCSystemFileHandle
+{
+	MCStdioFileHandle(MCWinSysHandle p_handle)
+	{
+		m_handle = p_handle;
+		m_is_eof = false;
+		m_is_pipe = handle_is_pipe(m_handle);
+		m_putback = -1;
+	}
+
+	virtual void Close(void)
+	{
 		CloseHandle(m_handle);
 		delete this;
 	}
@@ -1796,7 +1538,6 @@ struct MCStdioFileHandle: public MCSystemFileHandle
 
 private:
 	MCWinSysHandle m_handle;
-	char *m_ioptr;
 	int m_putback;
 	// MW-2012-09-10: [[ Bug 10230 ]] If true, it means this IO handle is a pipe.
 	bool m_is_pipe;
@@ -2786,36 +2527,288 @@ struct MCWindowsDesktop: public MCSystemInterface, public MCWindowsSystemService
         return _umask(p_mask);
     }
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
-		MCStdioFileHandle *t_handle;
-		t_handle = MCStdioFileHandle::Open(p_path, p_mode);
+#ifdef /* MCS_open_dsk_w32 */ LEGACY_SYSTEM
+	Boolean appendmode = False;
+	DWORD omode = 0;		//file open mode
+	DWORD createmode = OPEN_ALWAYS;
+	DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
+	char *newpath = MCS_resolvepath(path);
+	HANDLE hf = NULL;
+	IO_handle handle;
 
-        if (t_handle == nil)
-            return nil;
-        
-        if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
-        
-        return t_handle;
-    }
-    
-	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode)
+	bool t_device = false;
+	bool t_serial_device = false;
+
+	// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
+	//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
+	uint4 t_path_len;
+	t_path_len = strlen(newpath);
+	if (*newpath != '\0' && newpath[t_path_len - 1] == ':')
 	{
-        MCStdioFileHandle *t_handle;
-		// No opening mode for Windows since only stdin, stdout and stderr can be opened
-		// with a file descriptor
-        t_handle = MCStdioFileHandle::OpenFd(fd);
-        
-        if (t_handle == nil)
-            return nil;
-        
-        return t_handle;
+		if (MCU_strncasecmp(newpath, "COM", 3) == 0)
+		{
+			// If the path length > 4 then it means it must have double digits so rewrite
+			if (t_path_len > 4)
+			{
+				char *t_rewritten_path;
+				t_rewritten_path = new char[t_path_len + 4 + 1];
+				sprintf(t_rewritten_path, "\\\\.\\%s", newpath);
+				delete newpath;
+				newpath = t_rewritten_path;
+				t_path_len += 4;
+			}
+			
+			// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
+			newpath[t_path_len - 1] = '\0';
+
+			t_serial_device = true;
+		}
+		
+		t_device = true;
 	}
 
-	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
+	if (strequal(mode, IO_READ_MODE))
 	{
-		return nil;
+		omode = GENERIC_READ;
+		createmode = OPEN_EXISTING;
+	}
+	if (strequal(mode, IO_WRITE_MODE))
+	{
+		omode = GENERIC_WRITE;
+		createmode = CREATE_ALWAYS;
+	}
+	if (strequal(mode, IO_UPDATE_MODE))
+		omode = GENERIC_WRITE | GENERIC_READ;
+	if (strequal(mode, IO_APPEND_MODE))
+	{
+		omode = GENERIC_WRITE;
+		appendmode = True;
+	}
+
+	DWORD sharemode;
+	if (t_device)
+	{
+		createmode = OPEN_EXISTING;
+		sharemode = 0;
+	}
+	else
+		sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+	if ((hf = CreateFileA(newpath, omode, sharemode, NULL,
+	                     createmode, fa, NULL)) == INVALID_HANDLE_VALUE)
+	{
+		delete newpath;
+		return NULL;
+	}
+	delete newpath;
+
+	if (t_serial_device)
+	{
+		DCB dcb;
+		dcb . DCBlength = sizeof(DCB);
+		if (!GetCommState(hf, &dcb) || !BuildCommDCBA(MCserialcontrolsettings, &dcb)
+		        || !SetCommState(hf, &dcb))
+		{
+			MCS_seterrno(GetLastError());
+			CloseHandle(hf);
+			MCresult->sets("SetCommState error");
+			return NULL;
+		}
+		COMMTIMEOUTS timeout;         //set timeout to prevent blocking
+		memset(&timeout, 0, sizeof(COMMTIMEOUTS));
+		timeout.ReadIntervalTimeout = MAXDWORD;
+		timeout.WriteTotalTimeoutConstant = 2000;
+		if (!SetCommTimeouts(hf, (LPCOMMTIMEOUTS)&timeout))
+		{
+			MCS_seterrno(GetLastError());
+			CloseHandle(hf);
+			MCresult->sets("SetCommTimeouts error");
+			return NULL;
+		}
+		map = False;
+	}
+
+	handle = new IO_header((MCWinSysHandle)hf, NULL, 0, 0);
+
+	if (appendmode) //if append mode, move file ptr to the end of file
+		SetFilePointer(hf, 0, NULL, FILE_END);
+
+	if (map && MCmmap && (omode == GENERIC_READ) //if memory map file
+	        && (handle->mhandle = (MCWinSysHandle)CreateFileMappingA(hf, NULL, PAGE_READONLY,
+	                                                0, 0, NULL)) != NULL)
+	{
+		handle->len = GetFileSize(hf, NULL);
+		handle->buffer = (char*)MapViewOfFile(handle->mhandle,
+		                                      FILE_MAP_READ, 0, 0, 0);
+		handle->ioptr = handle->buffer;
+		if (handle->buffer == NULL)
+		{
+			CloseHandle(handle->mhandle);
+			if (offset != 0) //move file ptr to the offset position
+				SetFilePointer(hf, offset, NULL, FILE_BEGIN);
+		}
+		else
+			handle->ioptr += offset;
+	}
+	else
+		if (offset != 0) //move file ptr to the offset position
+			SetFilePointer(hf, offset, NULL, FILE_BEGIN);
+
+	return handle;
+#endif /* MCS_open_dsk_w32 */
+		Boolean appendmode = False;
+		DWORD omode = 0;		//file open mode
+		DWORD createmode = OPEN_ALWAYS;
+		DWORD fa = FILE_ATTRIBUTE_NORMAL; //file flags & attribute
+		MCAutoNativeCharArray t_newpath;
+		char *t_char_ptr;
+		HANDLE t_file_handle = NULL;
+		IO_handle t_handle;
+
+		bool t_device = false;
+		bool t_serial_device = false;
+
+		// MW-2008-08-18: [[ Bug 6941 ]] Update device logic.
+		//   To open COM<n> for <n> > 9 we need to use '\\.\COM<n>'.
+		uint4 t_path_len;
+		t_path_len = MCStringGetLength(p_path);
+		/* UNCHECKED */ t_newpath . New(t_path_len + 1);
+		t_char_ptr = (char*)t_newpath . Chars();
+		memcpy(t_char_ptr, MCStringGetNativeCharPtr(p_path), t_path_len);
+
+		if (*t_char_ptr != '\0' && t_char_ptr[t_path_len - 1] == ':')
+		{
+			if (MCU_strncasecmp(t_char_ptr, "COM", 3) == 0)
+			{
+				// If the path length > 4 then it means it must have double digits so rewrite
+				if (t_path_len > 4)
+				{
+					t_newpath . Resize(t_path_len + 4 + 1);
+					t_char_ptr = (char*)t_newpath . Chars();
+					memmove(t_char_ptr + 4, t_char_ptr, t_path_len);
+					strcpy(t_char_ptr, "\\\\.\\");
+					t_path_len += 4;
+				}
+				
+				// Strictly speaking, we don't need the ':' at the end of the path, so we remove it.
+				t_char_ptr[t_path_len - 1] = '\0';
+
+				t_serial_device = true;
+			}
+			
+			t_device = true;
+		}
+
+		if (p_mode == kMCSOpenFileModeRead)
+		{
+			omode = GENERIC_READ;
+			createmode = OPEN_EXISTING;
+		}
+		if (p_mode== kMCSOpenFileModeWrite)
+		{
+			omode = GENERIC_WRITE;
+			createmode = CREATE_ALWAYS;
+		}
+		if (p_mode == kMCSOpenFileModeUpdate)
+			omode = GENERIC_WRITE | GENERIC_READ;
+		if (p_mode == kMCSOpenFileModeAppend)
+		{
+			omode = GENERIC_WRITE;
+			appendmode = True;
+		}
+
+		DWORD sharemode;
+		if (t_device)
+		{
+			createmode = OPEN_EXISTING;
+			sharemode = 0;
+		}
+		else
+			sharemode = FILE_SHARE_READ | FILE_SHARE_WRITE;
+		t_file_handle = CreateFileA(t_char_ptr, omode, sharemode, NULL,
+							 createmode, fa, NULL);
+		
+		t_newpath.Delete();
+
+		if (t_file_handle == INVALID_HANDLE_VALUE)
+		{
+			return NULL;
+		}
+
+		if (t_serial_device)
+		{
+			DCB dcb;
+			dcb . DCBlength = sizeof(DCB);
+			if (!GetCommState(t_file_handle, &dcb) || !BuildCommDCBA(MCStringGetCString(MCserialcontrolsettings), &dcb)
+					|| !SetCommState(t_file_handle, &dcb))
+			{
+				MCS_seterrno(GetLastError());
+				CloseHandle(t_file_handle);
+				MCresult->sets("SetCommState error");
+				return NULL;
+			}
+			COMMTIMEOUTS timeout;         //set timeout to prevent blocking
+			memset(&timeout, 0, sizeof(COMMTIMEOUTS));
+			timeout.ReadIntervalTimeout = MAXDWORD;
+			timeout.WriteTotalTimeoutConstant = 2000;
+			if (!SetCommTimeouts(t_file_handle, (LPCOMMTIMEOUTS)&timeout))
+			{
+				MCS_seterrno(GetLastError());
+				CloseHandle(t_file_handle);
+				MCresult->sets("SetCommTimeouts error");
+				return NULL;
+			}
+			p_map = False;
+		}
+
+		if (p_map && (omode == GENERIC_READ)) //if memory map file
+		{
+			MCWinSysHandle t_file_mapped_handle = 
+				(MCWinSysHandle)CreateFileMappingA(t_file_handle, NULL, PAGE_READONLY,
+														0, 0, NULL);
+
+			if (t_file_mapped_handle != NULL)
+			{
+				uint32_t t_len = GetFileSize(t_file_handle, NULL);
+				char *t_buffer = (char*)MapViewOfFile(t_file_mapped_handle,
+													  FILE_MAP_READ, 0, 0, 0);
+				
+				if (t_buffer == NULL)
+				{
+					CloseHandle(t_file_mapped_handle);
+				}
+				else
+					t_handle = new MCMemoryMappedFileHandle(t_file_mapped_handle, t_buffer, t_len);
+			}
+		}
+		else
+			t_handle = new MCStdioFileHandle((MCWinSysHandle)t_file_handle);
+
+		return t_handle;
+    }
+    
+	virtual IO_handle OpenFd(uint32_t p_fd, intenum_t p_mode)
+	{
+		IO_handle t_stdio_handle;
+		HANDLE t_handle;
+
+		// No need to open p_fd, as on Windows only STD_INPUT_HANDLE, STD_OUTPUT_HANDLE 
+		// and STD_ERROR_HANDLE can be processed by GetStdHandle
+		t_handle = GetStdHandle(p_fd);  
+
+		if (t_handle == INVALID_HANDLE_VALUE)
+			return nil;
+
+		t_stdio_handle = new MCStdioFileHandle((MCWinSysHandle)t_handle);
+
+		return t_stdio_handle;
+	}
+
+	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
+	{
+		// For Windows, the path is used to determine whether a file or a device is being opened
+		return OpenFile(p_path, p_mode, True);
 	}
 	
 	// NOTE: 'GetTemporaryFileName' returns a non-native path.
@@ -3755,7 +3748,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
     
     // MW-2010-05-09: Updated to add 'elevated' parameter for executing binaries
     //   at increased privilege level.
-    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
     {
 #ifdef /* MCS_startprocess_dsk_w32 */ LEGACY_SYSTEM
 	Boolean reading = mode == OM_READ || mode == OM_UPDATE;
@@ -3976,7 +3969,7 @@ bool MCU_path2native(MCStringRef p_path, MCStringRef& r_native_path)
         MCU_realloc((char **)&MCprocesses, MCnprocesses, MCnprocesses + 1,
                     sizeof(Streamnode));
         MCprocesses[MCnprocesses].name = (MCNameRef)MCValueRetain(p_name);
-        MCprocesses[MCnprocesses].mode = p_mode;
+        MCprocesses[MCnprocesses].mode = (Open_mode)p_mode;
         MCprocesses[MCnprocesses].ihandle = NULL;
         MCprocesses[MCnprocesses].ohandle = NULL;
         MCprocesses[MCnprocesses].phandle = NULL; //process handle

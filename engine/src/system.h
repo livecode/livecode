@@ -233,7 +233,7 @@ public:
 		return true;
 	}
 	
-private:
+protected:
 	char *m_buffer;
 	uint32_t m_pointer;
 	uint32_t m_length;
@@ -448,9 +448,9 @@ struct MCSystemInterface
 	virtual Boolean ChangePermissions(MCStringRef p_path, uint2 p_mask) = 0;
 	virtual uint2 UMask(uint2 p_mask) = 0;
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset) = 0;
-	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode) = 0;
-    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode, uint32_t p_offset) = 0;
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map) = 0;
+	virtual IO_handle OpenFd(uint32_t fd, intenum_t p_mode) = 0;
+    virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode) = 0;
 	
 	// NOTE: 'GetTemporaryFileName' returns a standard (not native) path.
 	virtual bool GetTemporaryFileName(MCStringRef& r_tmp_name) = 0;

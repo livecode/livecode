@@ -919,7 +919,6 @@ IO_stat MCS_closetakingbuffer(IO_handle& p_stream, void*& r_buffer, size_t& r_le
 IO_stat MCS_writeat(const void *p_buffer, uint32_t p_size, uint32_t p_pos, IO_handle p_stream)
 {
     uint64_t t_old_pos;
-    uint32_t t_written;
     bool t_success;
     
     t_old_pos = p_stream -> Tell();
@@ -1002,11 +1001,11 @@ IO_handle MCS_open(MCStringRef path, intenum_t p_mode, Boolean p_map, Boolean p_
 	IO_handle t_handle;
 	if (!p_driver)
     {
-		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap, p_offset);
+		t_handle = MCsystem -> OpenFile(*t_native, p_mode, p_map && MCmmap);
     }
 	else
 	{
-        t_handle = MCsystem -> OpenDevice(*t_native, p_mode, p_offset);
+        t_handle = MCsystem -> OpenDevice(*t_native, p_mode);
 	}
 	
 	// MW-2011-06-12: Fix memory leak - make sure we delete the resolved path.
@@ -1127,7 +1126,7 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1142,7 +1141,6 @@ bool MCS_loadtextfile(MCStringRef p_filename, MCStringRef& r_text)
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
-	uint32_t t_read;
 	if (t_success)
         t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
 
@@ -1188,7 +1186,7 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeRead, false);
 	
 	if (t_file == NULL)
 	{
@@ -1203,7 +1201,6 @@ bool MCS_loadbinaryfile(MCStringRef p_filename, MCDataRef& r_data)
 	MCAutoNativeCharArray t_buffer;
 	t_success = t_buffer . New(t_size);
 	
-	uint32_t t_read;
 	if (t_success)
         t_success = MCS_readfixed(t_buffer.Chars(), t_size, t_file) == IO_NORMAL;
     
@@ -1240,7 +1237,7 @@ bool MCS_savetextfile(MCStringRef p_filename, MCStringRef p_string)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1275,7 +1272,7 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
         return false;
 	
 	IO_handle t_file;
-	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false, 0);
+	t_file = MCsystem -> OpenFile(*t_native_path, (intenum_t)kMCSystemFileModeWrite, false);
 	
 	if (t_file == NULL)
 	{
@@ -1283,7 +1280,6 @@ bool MCS_savebinaryfile(MCStringRef p_filename, MCDataRef p_data)
 		return false;
 	}
     
-	uint32_t t_written;
 	if (!t_file -> Write(MCDataGetBytePtr(p_data), MCDataGetLength(p_data)))
 		MCresult -> sets("error writing file");
 	
@@ -1382,7 +1378,6 @@ IO_stat MCS_write(const void *p_ptr, uint32_t p_size, uint32_t p_count, IO_handl
 	uint32_t t_to_write;
 	t_to_write = p_size * p_count;
 	
-	uint32_t t_written;
 	if (!p_stream -> Write(p_ptr, t_to_write))
 		return IO_ERROR;
 	
