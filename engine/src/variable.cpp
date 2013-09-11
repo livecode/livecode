@@ -79,23 +79,6 @@ bool MCVariable::createwithname(MCNameRef p_name, MCVariable*& r_var)
 	return true;
 }
 
-bool MCVariable::createwithname_cstring(const char *p_name, MCVariable*& r_var)
-{
-	MCVariable *self;
-	if (!create(self))
-		return false;
-
-	if (!MCNameCreateWithCString(p_name, self -> name))
-	{
-		delete self;
-		return false;
-	}
-
-	r_var = self;
-
-	return true;
-}
-
 // This is only called by MCObject to create copies of prop sets.
 bool MCVariable::createcopy(MCVariable& p_var, MCVariable*& r_new_var)
 {

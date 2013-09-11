@@ -821,7 +821,6 @@ public:
 
 	/* CAN FAIL */ static bool create(MCVariable*& r_var);
 	/* CAN FAIL */ static bool createwithname(MCNameRef name, MCVariable*& r_var);
-	/* CAN FAIL */ static bool createwithname_cstring(const char *name, MCVariable*& r_var);
 
 	/* CAN FAIL */ static bool createcopy(MCVariable& other, MCVariable*& r_var);
 };

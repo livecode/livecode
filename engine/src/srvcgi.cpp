@@ -1273,7 +1273,7 @@ bool cgi_initialize()
 	MCExecPoint ep;
 	
 	// Construct the _SERVER variable
-	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SERVER", s_cgi_server);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("$_SERVER", s_cgi_server);
 	s_cgi_server -> setnext(MCglobals);
 	MCglobals = s_cgi_server;
 	
@@ -1391,7 +1391,7 @@ bool cgi_initialize()
 	// Create the $_SESSION variable explicitly, to be populated upon calls to "start session"
 	// required as implicit references to "$_SESSION" will result in its creation as an env var
 	MCVariable *t_session_var = NULL;
-	/* UNCHECKED */ MCVariable::createwithname_cstring("$_SESSION", t_session_var);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("$_SESSION"), t_session_var);
 	t_session_var->setnext(MCglobals);
 	MCglobals = t_session_var;
 
@@ -1538,7 +1538,7 @@ bool MCServerStartSession()
 		t_session_var = MCVariable::lookupglobal_cstring("$_SESSION");
 		if (t_session_var == NULL)
 		{
-			t_success = MCVariable::createwithname_cstring("$_SESSION", t_session_var);
+			t_success = MCVariable::createwithname(MCNAME("$_SESSION"), t_session_var);
 			if (t_success)
 			{
 				t_session_var->setnext(MCglobals);

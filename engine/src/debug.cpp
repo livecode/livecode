@@ -164,7 +164,7 @@ void MCB_message(MCExecPoint &ep, MCNameRef mess, MCParameter *p)
 	else
 		MCtracewindow = ep.getobj()->getw();
 	MCVariable *oldresult = MCresult;
-	/* UNCHECKED */ MCVariable::createwithname_cstring("MCdebugresult", MCresult);
+	/* UNCHECKED */ MCVariable::createwithname(MCNAME("MCdebugresult"), MCresult);
 	MCtracereturn = False;
 	MCtraceabort = False;
 
