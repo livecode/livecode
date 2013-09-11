@@ -283,13 +283,20 @@ static bool MCS_geturl_callback(void *p_context, MCSystemUrlStatus p_status, con
 
 void MCS_geturl(MCObject *p_target, const char *p_url)
 {
+	char *t_processed_url;
+	t_processed_url = nil;
+	
+	// IM-2013-07-30: [[ Bug 10800 ]] strip whitespace chars from url before attempting to fetch
+	if (!MCSystemProcessUrl(p_url, kMCSystemUrlOperationStrip, t_processed_url))
+		return;
+	
 	MCSGetUrlState t_state;
-	t_state . url = p_url;
+	t_state . url = t_processed_url;
 	t_state . status = kMCSystemUrlStatusNone;
 	t_state . object = p_target -> gethandle();
 	t_state . data . assign_empty();
 	
-	if (!MCSystemLoadUrl(p_url, MCS_geturl_callback, &t_state))
+	if (!MCSystemLoadUrl(t_processed_url, MCS_geturl_callback, &t_state))
 	{
 		t_state . object -> Release();
 		return;
@@ -309,6 +316,8 @@ void MCS_geturl(MCObject *p_target, const char *p_url)
 	{
 		MCresult -> getvalue() . exchange(t_state . error);
 	}
+	
+	MCCStringFree(t_processed_url);
 	
 	t_state . object -> Release();
 }
