@@ -1949,185 +1949,12 @@ private:
 
 class MCStdioFileHandle: public MCSystemFileHandle
 {
-public:    
-	static MCStdioFileHandle *OpenFile(MCStringRef p_path, intenum_t p_mode)
-	{
-#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
-        IO_handle handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-		char *oldpath = strclone(path);
-		
-		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
-		char *t_resolved_path;
-		t_resolved_path = MCS_resolvepath(path);
-		if (t_resolved_path == NULL)
-			return NULL;
-		
-		char *newpath = path2utf(t_resolved_path);
-		FILE *fptr;
-        
-		if (driver)
-		{
-			fptr = fopen(newpath,  mode );
-			if (fptr != NULL)
-			{
-				int val;
-				val = fcntl(fileno(fptr), F_GETFL, val);
-				val |= O_NONBLOCK |  O_NOCTTY;
-				fcntl(fileno(fptr), F_SETFL, val);
-				configureSerialPort((short)fileno(fptr));
-			}
-		}
-		else
-		{
-			fptr = fopen(newpath, IO_READ_MODE);
-			if (fptr == NULL)
-				fptr = fopen(oldpath, IO_READ_MODE);
-			Boolean created = True;
-			if (fptr != NULL)
-			{
-				created = False;
-				if (mode != IO_READ_MODE)
-				{
-					fclose(fptr);
-					fptr = NULL;
-				}
-			}
-			if (fptr == NULL)
-				fptr = fopen(newpath, mode);
-            
-			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
-				fptr = fopen(newpath, IO_CREATE_MODE);
-			if (fptr != NULL && created)
-				MCS_setfiletype(oldpath);
-		}
-        
-		delete newpath;
-		delete oldpath;
-		if (fptr != NULL)
-		{
-			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
-			if (offset > 0)
-				fseek(handle->fptr, offset, SEEK_SET);
-            
-			if (strequal(mode, IO_APPEND_MODE))
-				handle->flags |= IO_SEEKED;
-		}
-        
-        return handle;
-#endif /* MCS_open_dsk_mac */
-		FILE *fptr;
-        MCStdioFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-        Boolean created = True;
-        
-        if (fptr != NULL)
-        {
-            created = False;
-            if (p_mode != kMCSystemFileModeRead)
-            {
-                fclose(fptr);
-                fptr = NULL;
-            }
-        }
-        
-        if (fptr == NULL)
-        {
-            switch(p_mode)
-            {
-                case kMCSystemFileModeRead:
-                    fptr = fopen(*t_path_utf, IO_READ_MODE);
-                    break;
-                case kMCSystemFileModeUpdate:
-                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
-                    break;
-                case kMCSystemFileModeAppend:
-                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
-                    break;
-                case kMCSystemFileModeWrite:
-                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
-                    break;
-                default:
-                    fptr = NULL;
-            }
-        }
-        
-        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
-            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
-        
-        if (fptr != NULL && created)
-            MCS_mac_setfiletype(p_path);
-        
-		if (fptr != NULL)
-        {
-            t_handle = new MCStdioFileHandle;
-            t_handle -> m_stream = fptr;
-            t_handle -> m_is_eof = false;
-        }
-        
-        return t_handle;
-	}
-	
-	static MCStdioFileHandle *OpenFd(uint32_t fd, intenum_t p_mode)
-	{
-#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
-	IO_handle handle = NULL;
-	FILE *fptr = fdopen(fd, mode);
-	
-	if (fptr != NULL)
-	{
-		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (mode[0] == 'w')
-			setvbuf(fptr, NULL, _IONBF, 0);
-
-		handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
-	}	
-	return handle;
-#endif /* MCS_dopen_dsk_mac */
-		FILE *t_stream;
-        t_stream = NULL;
-        
-        switch (p_mode)
-        {
-            case kMCSystemFileModeAppend:
-                t_stream = fdopen(fd, IO_APPEND_MODE);
-                break;
-            case kMCSystemFileModeRead:
-                t_stream = fdopen(fd, IO_READ_MODE);
-                break;
-            case kMCSystemFileModeUpdate:
-                t_stream = fdopen(fd, IO_UPDATE_MODE);
-                break;
-            case kMCSystemFileModeWrite:
-                t_stream = fdopen(fd, IO_WRITE_MODE);
-                break;
-            default:
-                break;
-        }
-		if (t_stream == NULL)
-			return NULL;
-		
-		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
-		if (p_mode == kMCSystemFileModeWrite)
-			setvbuf(t_stream, NULL, _IONBF, 0);
-		
-		MCStdioFileHandle *t_handle;
-		t_handle = new MCStdioFileHandle;
-		t_handle -> m_stream = t_stream;
-        t_handle -> m_is_eof = false;
-		
-		return t_handle;
-	}
+public:
+    
+    MCStdioFileHandle(FILE *p_fptr)
+    {
+        m_stream = p_fptr;
+    }
 	
 	virtual void Close(void)
 	{
@@ -2465,7 +2292,7 @@ public:
 	
 	virtual void *GetFilePointer(void)
 	{
-		return NULL;
+		return m_stream;
 	}
 	
 	FILE *GetStream(void)
@@ -2486,38 +2313,12 @@ private:
 class MCSerialPortFileHandle: public MCSystemFileHandle
 {
 public:
-    static MCSerialPortFileHandle *OpenDevice(MCStringRef p_path)
+    
+    MCSerialPortFileHandle(int p_serial_port)
     {
-		FILE *fptr;
-        MCSerialPortFileHandle *t_handle;
-        t_handle = NULL;
-		//opening regular files
-		//set the file type and it's creator. These are 2 global variables
-        
-        MCAutoStringRefAsUTF8String t_path_utf;
-        if (!t_path_utf.Lock(p_path))
-            return NULL;
-        
-        fptr = fopen(*t_path_utf, IO_READ_MODE);
-        
-		if (fptr != NULL)
-        {
-            int val;
-            int t_serial_in;
-            
-            t_serial_in = fileno(fptr);
-            val = fcntl(t_serial_in, F_GETFL, val);
-            val |= O_NONBLOCK |  O_NOCTTY;
-            fcntl(t_serial_in, F_SETFL, val);
-            configureSerialPort((short)t_serial_in);
-            
-            t_handle = new MCSerialPortFileHandle;
-            t_handle -> m_serial_port = t_serial_in;
-            t_handle -> m_is_eof = false;
-            t_handle -> m_cur_pos = 0;
-        }
-        
-        return t_handle;
+        m_serial_port = p_serial_port;
+        m_cur_pos = 0;
+        m_is_eof = false;
     }
     
 	virtual void Close(void)
@@ -6679,41 +6480,208 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
             return MCStringCopy(*t_newname, r_resolved_path);
     }
 	
-	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map, uint32_t p_offset)
+	virtual IO_handle OpenFile(MCStringRef p_path, intenum_t p_mode, Boolean p_map)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenFile(p_path, p_mode);
+#ifdef /* MCS_open_dsk_mac */ LEGACY_SYSTEM
+        IO_handle handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+		char *oldpath = strclone(path);
+		
+		// OK-2008-01-10 : Bug 5764. Check here that MCS_resolvepath does not return NULL
+		char *t_resolved_path;
+		t_resolved_path = MCS_resolvepath(path);
+		if (t_resolved_path == NULL)
+			return NULL;
+		
+		char *newpath = path2utf(t_resolved_path);
+		FILE *fptr;
         
-        if (t_handle == nil)
-            return nil;
+		if (driver)
+		{
+			fptr = fopen(newpath,  mode );
+			if (fptr != NULL)
+			{
+				int val;
+				val = fcntl(fileno(fptr), F_GETFL, val);
+				val |= O_NONBLOCK |  O_NOCTTY;
+				fcntl(fileno(fptr), F_SETFL, val);
+				configureSerialPort((short)fileno(fptr));
+			}
+		}
+		else
+		{
+			fptr = fopen(newpath, IO_READ_MODE);
+			if (fptr == NULL)
+				fptr = fopen(oldpath, IO_READ_MODE);
+			Boolean created = True;
+			if (fptr != NULL)
+			{
+				created = False;
+				if (mode != IO_READ_MODE)
+				{
+					fclose(fptr);
+					fptr = NULL;
+				}
+			}
+			if (fptr == NULL)
+				fptr = fopen(newpath, mode);
+            
+			if (fptr == NULL && !strequal(mode, IO_READ_MODE))
+				fptr = fopen(newpath, IO_CREATE_MODE);
+			if (fptr != NULL && created)
+				MCS_setfiletype(oldpath);
+		}
         
-        if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+		delete newpath;
+		delete oldpath;
+		if (fptr != NULL)
+		{
+			handle = new IO_header(fptr, 0, 0, 0, NULL, 0, 0);
+			if (offset > 0)
+				fseek(handle->fptr, offset, SEEK_SET);
+            
+			if (strequal(mode, IO_APPEND_MODE))
+				handle->flags |= IO_SEEKED;
+		}
+        
+        return handle;
+#endif /* MCS_open_dsk_mac */
+		FILE *fptr;
+        IO_handle t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
+        
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+        Boolean created = True;
+        
+        if (fptr != NULL)
+        {
+            created = False;
+            if (p_mode != kMCSystemFileModeRead)
+            {
+                fclose(fptr);
+                fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL)
+        {
+            switch(p_mode)
+            {
+                case kMCSystemFileModeRead:
+                    fptr = fopen(*t_path_utf, IO_READ_MODE);
+                    break;
+                case kMCSystemFileModeUpdate:
+                    fptr = fopen(*t_path_utf, IO_UPDATE_MODE);
+                    break;
+                case kMCSystemFileModeAppend:
+                    fptr = fopen(*t_path_utf, IO_APPEND_MODE);
+                    break;
+                case kMCSystemFileModeWrite:
+                    fptr = fopen(*t_path_utf, IO_WRITE_MODE);
+                    break;
+                default:
+                    fptr = NULL;
+            }
+        }
+        
+        if (fptr == NULL && p_mode != kMCSystemFileModeRead)
+            fptr = fopen(*t_path_utf, IO_CREATE_MODE);
+        
+        if (fptr != NULL && created)
+            MCS_mac_setfiletype(p_path);
+        
+		if (fptr != NULL)
+            t_handle = new MCStdioFileHandle(fptr);
         
         return t_handle;
     }
     
-	virtual IO_handle OpenFd(uint32_t fd, intenum_t mode)
+	virtual IO_handle OpenFd(uint32_t p_fd, intenum_t p_mode)
     {
-        MCStdioFileHandle *t_handle;
-        t_handle = MCStdioFileHandle::OpenFd(fd, mode);
+#ifdef /* MCS_dopen_dsk_mac */ LEGACY_SYSTEM
+        IO_handle handle = NULL;
+        FILE *fptr = fdopen(fd, mode);
         
-        if (t_handle == nil)
-            return nil;
+        if (fptr != NULL)
+        {
+            // MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+            if (mode[0] == 'w')
+                setvbuf(fptr, NULL, _IONBF, 0);
+            
+            handle = new IO_header(fptr, 0, 0, NULL, NULL, 0, 0);
+        }
+        return handle;
+#endif /* MCS_dopen_dsk_mac */
+		FILE *t_stream;
+        t_stream = NULL;
         
-        return t_handle;
+        switch (p_mode)
+        {
+            case kMCSystemFileModeAppend:
+                t_stream = fdopen(p_fd, IO_APPEND_MODE);
+                break;
+            case kMCSystemFileModeRead:
+                t_stream = fdopen(p_fd, IO_READ_MODE);
+                break;
+            case kMCSystemFileModeUpdate:
+                t_stream = fdopen(p_fd, IO_UPDATE_MODE);
+                break;
+            case kMCSystemFileModeWrite:
+                t_stream = fdopen(p_fd, IO_WRITE_MODE);
+                break;
+            default:
+                break;
+        }
+        
+		if (t_stream == NULL)
+			return NULL;
+		
+		// MH-2007-05-17: [[Bug 3196]] Opening the write pipe to a process should not be buffered.
+		if (p_mode == kMCSystemFileModeWrite)
+			setvbuf(t_stream, NULL, _IONBF, 0);
+		
+		IO_handle t_handle;
+		t_handle = new MCStdioFileHandle(t_stream);
+		
+		return t_handle;
     }
     
-	virtual IO_handle OpenDevice(MCStringRef p_path, uint32_t p_offset)
+	virtual IO_handle OpenDevice(MCStringRef p_path, intenum_t p_mode)
     {
-        MCSerialPortFileHandle *t_handle;
-        t_handle = MCSerialPortFileHandle::OpenDevice(p_path);
+		FILE *fptr;
         
-        if (t_handle == nil)
-            return nil;
+        IO_handle t_handle;
+        t_handle = NULL;
+		//opening regular files
+		//set the file type and it's creator. These are 2 global variables
         
-        if (p_offset > 0)
-            t_handle -> Seek(p_offset, SEEK_SET);
+        MCAutoStringRefAsUTF8String t_path_utf;
+        if (!t_path_utf.Lock(p_path))
+            return NULL;
+        
+        fptr = fopen(*t_path_utf, IO_READ_MODE);
+        
+		if (fptr != NULL)
+        {
+            int val;
+            int t_serial_in;
+            
+            t_serial_in = fileno(fptr);
+            val = fcntl(t_serial_in, F_GETFL, val);
+            val |= O_NONBLOCK |  O_NOCTTY;
+            fcntl(t_serial_in, F_SETFL, val);
+            configureSerialPort((short)t_serial_in);
+            
+            t_handle = new MCSerialPortFileHandle(t_serial_in);
+        }
         
         return t_handle;
     }
@@ -7380,7 +7348,7 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
         return IO_NORMAL;
     }
     
-    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, Open_mode p_mode, Boolean p_elevated)
+    virtual bool StartProcess(MCNameRef p_name, MCStringRef p_doc, intenum_t p_mode, Boolean p_elevated)
     {
 #ifdef /* MCS_startprocess_dsk_mac */ LEGACY_SYSTEM
 	if (MCStringEndsWithCString(MCNameGetString(name), (const char_t *)".app", kMCStringOptionCompareCaseless) || MCStringGetLength(docname) != 0))
@@ -7389,9 +7357,9 @@ struct MCMacDesktop: public MCSystemInterface, public MCMacSystemService
 	  MCS_startprocess_unix(name, kMCEmptyString, mode, elevated);
 #endif /* MCS_startprocess_dsk_mac */
         if (MCStringEndsWithCString(MCNameGetString(p_name), (const char_t *)".app", kMCStringOptionCompareCaseless) || (p_doc != nil && MCStringGetLength(p_doc) != 0))
-            MCS_startprocess_launch(p_name, p_doc, p_mode);
+            MCS_startprocess_launch(p_name, p_doc, (Open_mode)p_mode);
         else
-            MCS_startprocess_unix(p_name, kMCEmptyString, p_mode, p_elevated);
+            MCS_startprocess_unix(p_name, kMCEmptyString, (Open_mode)p_mode, p_elevated);
     }
     
     virtual bool ProcessTypeIsForeground(void)
