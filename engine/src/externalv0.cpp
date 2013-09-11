@@ -380,8 +380,10 @@ static char *get_global(const char *arg1, const char *arg2,
 static char *set_global(const char *arg1, const char *arg2,
                         const char *arg3, int *retval)
 {
+	MCNewAutoNameRef t_arg1;
+	/* UNCHECKED */ MCNameCreateWithCString(arg1, &t_arg1);
 	MCVariable *tmp;
-	if (!MCVariable::ensureglobal_cstring(arg1, tmp))
+	if (!MCVariable::ensureglobal(*t_arg1, tmp))
 	{
 		*retval = xresFail;
 		return NULL;
