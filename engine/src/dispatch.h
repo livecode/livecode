@@ -170,10 +170,6 @@ public:
 	// This method installs the given stack as the new home stack
 	void changehome(MCStack *stack);
 
-	// This method executes the given message in the given encoded stack in an isolated
-	// environment.
-	bool isolatedsend(const char *p_stack_data, uint32_t p_stack_data_length, const char *p_message, MCParameter *p_parameters);
-
 #ifdef _WINDOWS_DESKTOP
 	void freeprinterfonts();
 #endif
