@@ -1097,7 +1097,7 @@ Exec_stat MCVarref::resolve(MCExecPoint& ep, MCVariable*& r_var, MCVariableValue
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCDeferredVariable::createwithname_cstring(const char *p_name, MCDeferredVariableComputeCallback p_callback, void *p_context, MCVariable*& r_var)
+bool MCDeferredVariable::createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback p_callback, void *p_context, MCVariable*& r_var)
 {
 	MCDeferredVariable *self;
 	self = new MCDeferredVariable;
@@ -1105,7 +1105,7 @@ bool MCDeferredVariable::createwithname_cstring(const char *p_name, MCDeferredVa
 		return false;
 
 	self -> next = nil;
-	/* UNCHECKED */ MCNameCreateWithCString(p_name, self -> name);
+	self -> name = MCValueRetain(p_name);
 
 	self -> value = nil;
 	self -> is_msg = false;

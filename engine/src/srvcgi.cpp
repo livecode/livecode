@@ -1355,36 +1355,36 @@ bool cgi_initialize()
 	
 	// Construct the GET variables by parsing the QUERY_STRING
 	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET_RAW", cgi_compute_get_raw_var, nil, s_cgi_get_raw);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET_RAW"), cgi_compute_get_raw_var, nil, s_cgi_get_raw);
 	s_cgi_get_raw -> setnext(MCglobals);
 	MCglobals = s_cgi_get_raw;	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET", cgi_compute_get_var, nil, s_cgi_get);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET"), cgi_compute_get_var, nil, s_cgi_get);
 	s_cgi_get -> setnext(MCglobals);
 	MCglobals = s_cgi_get;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_GET_BINARY", cgi_compute_get_binary_var, nil, s_cgi_get_binary);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_GET_BINARY"), cgi_compute_get_binary_var, nil, s_cgi_get_binary);
 	s_cgi_get_binary -> setnext(MCglobals);
 	MCglobals = s_cgi_get_binary;	
 	
 	// Construct the _POST variables by reading stdin.
 	
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST_RAW", cgi_compute_post_raw_var, nil, s_cgi_post_raw);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST_RAW"), cgi_compute_post_raw_var, nil, s_cgi_post_raw);
 	s_cgi_post_raw -> setnext(MCglobals);
 	MCglobals = s_cgi_post_raw;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST", cgi_compute_post_var, nil, s_cgi_post);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST"), cgi_compute_post_var, nil, s_cgi_post);
 	s_cgi_post -> setnext(MCglobals);
 	MCglobals = s_cgi_post;
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_POST_BINARY", cgi_compute_post_binary_var, nil, s_cgi_post_binary);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_POST_BINARY"), cgi_compute_post_binary_var, nil, s_cgi_post_binary);
 	s_cgi_post_binary -> setnext(MCglobals);
 	MCglobals = s_cgi_post_binary;	
 	
 	// Construct the FILES variable by reading stdin
 
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_FILES", cgi_compute_files_var, nil, s_cgi_files);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_FILES"), cgi_compute_files_var, nil, s_cgi_files);
 	s_cgi_files -> setnext(MCglobals);
 	MCglobals = s_cgi_files;
 	
 	// Construct the COOKIES variable by parsing HTTP_COOKIE
-	/* UNCHECKED */ MCDeferredVariable::createwithname_cstring("$_COOKIE", cgi_compute_cookie_var, nil, s_cgi_cookie);
+	/* UNCHECKED */ MCDeferredVariable::createwithname(MCNAME("$_COOKIE"), cgi_compute_cookie_var, nil, s_cgi_cookie);
 	s_cgi_cookie -> setnext(MCglobals);
 	MCglobals = s_cgi_cookie;
 	

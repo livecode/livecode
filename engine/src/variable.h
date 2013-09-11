@@ -1042,7 +1042,7 @@ protected:
 	void *m_context;
 
 public:
-	static bool createwithname_cstring(const char *name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
+	static bool createwithname(MCNameRef p_name, MCDeferredVariableComputeCallback callback, void *context, MCVariable*& r_var);
 
 	Exec_stat compute(void);
 };
