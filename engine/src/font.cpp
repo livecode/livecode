@@ -246,11 +246,11 @@ const char *MCF_getweightstring(uint2 style)
 	return weightstrings[weight];
 }
 
-Boolean MCF_setweightstring(uint2 &style, const MCString &data)
+Boolean MCF_setweightstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = MCFW_UNDEFINED ; w <= MCFW_ULTRABOLD ; w++)
-		if (data == weightstrings[w])
+		if (MCStringIsEqualToCString(data, weightstrings[w], kMCCompareExact))
 			break;
 	if (w <= MCFW_ULTRABOLD)
 	{
@@ -274,11 +274,11 @@ const char *MCF_getexpandstring(uint2 style)
 	return expandstrings[expand];
 }
 
-Boolean MCF_setexpandstring(uint2 &style, const MCString &data)
+Boolean MCF_setexpandstring(uint2 &style, MCStringRef data)
 {
 	uint2 w;
 	for (w = FE_UNDEFINED ; w <= FE_ULTRAEXPANDED ; w++)
-		if (data == expandstrings[w])
+		if (MCStringIsEqualToCString(data, expandstrings[w], kMCCompareExact))
 			break;
 	if (w <= FE_ULTRAEXPANDED)
 	{
@@ -307,14 +307,14 @@ const char *MCF_getslantlongstring(uint2 style)
 	return "";
 }
 
-Boolean MCF_setslantlongstring(uint2 &style, const MCString &data)
+Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data)
 {
-	if (data == "oblique")
+	if (MCStringIsEqualToCString(data, "oblique", kMCCompareExact))
 	{
 		style |= FA_OBLIQUE;
 		return True;
 	}
-	if (data == "italic")
+	if (MCStringIsEqualToCString(data, "italic", kMCCompareExact))
 	{
 		style |= FA_ITALIC;
 		return True;
@@ -400,48 +400,50 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 						sptr += l;
 						l = 0;
 					}
-					MCString tdata(startptr, sptr - startptr);
+                    MCAutoStringRef tdata;
+					/* UNCHECKED */ MCStringCreateWithNativeChars((const char_t *)startptr, sptr - startptr, &tdata);
 					MCU_skip_char(sptr, l);
 					MCU_skip_spaces(sptr, l);
-					if (MCF_setweightstring(style, tdata))
+					if (MCF_setweightstring(style, *tdata))
 						continue;
-					if (MCF_setexpandstring(style, tdata))
+					if (MCF_setexpandstring(style, *tdata))
 						continue;
-					if (MCF_setslantlongstring(style, tdata))
+					if (MCF_setslantlongstring(style, *tdata))
 						continue;
-					if (tdata == MCplainstring)
+					if (MCStringIsEqualToCString(*tdata, MCplainstring, kMCCompareExact))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCmixedstring)
+					if (MCStringIsEqualToCString(*tdata, MCmixedstring, kMCCompareExact))
 					{
 						style = FA_DEFAULT_STYLE;
 						continue;
 					}
-					if (tdata == MCboxstring)
+					if (MCStringIsEqualToCString(*tdata, MCboxstring, kMCCompareExact))
 					{
 						style &= ~FA_3D_BOX;
 						style |= FA_BOX;
 						continue;
-					}
-					if (tdata == MCthreedboxstring)
+                    }
+                
+					if (MCStringIsEqualToCString(*tdata, MCthreedboxstring, kMCCompareExact))
 					{
 						style &= ~FA_BOX;
 						style |= FA_3D_BOX;
 						continue;
 					}
-					if (tdata == MCunderlinestring)
+					if (MCStringIsEqualToCString(*tdata, MCunderlinestring, kMCCompareExact))
 					{
 						style |= FA_UNDERLINE;
 						continue;
 					}
-					if (tdata == MCstrikeoutstring)
+					if (MCStringIsEqualToCString(*tdata, MCstrikeoutstring, kMCCompareExact))
 					{
 						style |= FA_STRIKEOUT;
 						continue;
 					}
-					if (tdata == MCgroupstring || tdata == MClinkstring)
+					if (MCStringIsEqualToCString(*tdata, MCgroupstring, kMCCompareExact) || MCStringIsEqualToCString(*tdata, MClinkstring, kMCCompareExact))
 					{
 						style |= FA_LINK;
 						continue;
@@ -458,9 +460,8 @@ Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 	return ES_NORMAL;
 }
 
-Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags,
-                              MCStringRef name, uint2 height, uint2 size,
-                              uint2 style)
+    
+Exec_stat MCF_unparsetextatts(Properties which, MCExecPoint &ep, uint4 flags, MCStringRef name, uint2 height, uint2 size, uint2 style)
 {
 	switch (which)
 	{
@@ -610,13 +611,13 @@ void MCF_changetextstyle(uint2& x_style_set, Font_textstyle p_style, bool p_new_
 	switch(p_style)
 	{
 	case FTS_BOLD:
-		MCF_setweightstring(x_style_set, p_new_state ? "bold" : "medium");
+		MCF_setweightstring(x_style_set, p_new_state ? MCSTR("bold") : MCSTR("medium"));
 		return;
 	case FTS_CONDENSED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "condensed" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("condensed") : MCSTR("normal"));
 		return;
 	case FTS_EXPANDED:
-		MCF_setexpandstring(x_style_set, p_new_state ? "expanded" : "normal");
+		MCF_setexpandstring(x_style_set, p_new_state ? MCSTR("expanded") : MCSTR("normal"));
 		return;
 	case FTS_ITALIC:
 		t_flag = FA_ITALIC;

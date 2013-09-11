@@ -130,13 +130,13 @@ enum Font_textstyle {
 
 extern uint2 MCF_getweightint(uint2 style);
 extern const char *MCF_getweightstring(uint2 style);
-extern Boolean MCF_setweightstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setweightstring(uint2 &style, MCStringRef data);
 extern uint2 MCF_getexpandint(uint2 style);
 extern const char *MCF_getexpandstring(uint2 style);
-extern Boolean MCF_setexpandstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setexpandstring(uint2 &style, MCStringRef data);
 extern const char *MCF_getslantshortstring(uint2 style);
 extern const char *MCF_getslantlongstring(uint2 style);
-extern Boolean MCF_setslantlongstring(uint2 &style, const MCString &data);
+extern Boolean MCF_setslantlongstring(uint2 &style, MCStringRef data);
 extern Exec_stat MCF_parsetextatts(Properties which, MCStringRef data,
 	                                   uint4 &flags, MCStringRef &fname,
 	                                   uint2 &height, uint2 &size, uint2 &style);

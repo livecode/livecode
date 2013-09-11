@@ -620,9 +620,9 @@ static void MCInterfaceTextStyleParse(MCExecContext& ctxt, MCStringRef p_input, 
 		{
 			t_old_offset = t_new_offset + 1;
 
-			if (MCF_setweightstring(style, MCStringGetOldString(*t_text_style)))
+			if (MCF_setweightstring(style, *t_text_style))
 				continue;
-			if (MCF_setexpandstring(style, MCStringGetOldString(*t_text_style)))
+			if (MCF_setexpandstring(style, *t_text_style))
 				continue;
 			if (MCStringIsEqualToCString(*t_text_style, "oblique", kMCCompareCaseless))
 			{
