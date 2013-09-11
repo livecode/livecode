@@ -671,9 +671,9 @@ char *MCSystemLowercaseInternational(const MCString& p_string)
 	return t_lc_string;
 }
 
-int MCSystemCompareInternational(const char *p_left, const char *p_right)
+int MCSystemCompareInternational(MCStringRef p_left, MCStringRef p_right)
 {
-	return CompareText(p_left, p_right, strlen(p_left), strlen(p_right), NULL);
+	return CompareText(p_left, p_right, MCStringGetLength(p_left), MCStringGetLength(p_right), NULL);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

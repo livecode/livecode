@@ -1690,7 +1690,9 @@ void MCField::finsertnew(Field_translations function, const MCString& p_string, 
 	selectedmark(False, si, ei, False, False);
 
 	// Defer to the paragraph method to insert the text.
-	focusedparagraph -> finsertnew(p_string, p_is_unicode);
+    MCAutoStringRef t_string;
+    /* UNCHECKED */ MCStringCreateWithOldString(p_string, &t_string);
+	focusedparagraph -> finsertnew(*t_string, p_is_unicode);
 
 	// Compute the end of the selection.
 	int4 ti;
@@ -2267,19 +2269,19 @@ void MCField::setupentry(MCButton *bptr, const MCString &s, Boolean isunicode)
 	settext_oldstring(0, s, False, isunicode);
 }
 
-void MCField::typetext(const MCString &newtext)
+void MCField::typetext(MCStringRef newtext)
 {
-	if (newtext . getlength() == 0)
+	if (MCStringIsEmpty(newtext))
 		return;
 
 	if (MCactivefield == this)
 		unselect(False, True);
-	if (newtext.getlength() < MAX_PASTE_MESSAGES)
+	if (MCStringGetLength(newtext) < MAX_PASTE_MESSAGES)
 	{
 		char string[2];
 		string[1] = '\0';
-		char *sptr = (char *)newtext.getstring();
-		const char *eptr = sptr + newtext.getlength();
+		char *sptr = (char *)MCStringGetCString(newtext);
+		const char *eptr = sptr + MCStringGetLength(newtext);
 		while (sptr < eptr)
 		{
 			string[0] = *sptr;
@@ -2293,10 +2295,10 @@ void MCField::typetext(const MCString &newtext)
 	uint2 oldfocused;
 	focusedparagraph->getselectionindex(oldfocused, oldfocused);
 	state |= CS_CHANGED;
-	if (newtext.getlength() && focusedparagraph->finsertnew(newtext, false))
+	if (!MCStringIsEmpty(newtext) && focusedparagraph->finsertnew(newtext, false))
 	{
 		recompute();
-		int4 endindex = oldfocused + newtext.getlength();
+		int4 endindex = oldfocused + MCStringGetLength(newtext);
 		int4 junk;
 		MCParagraph *newfocused = indextoparagraph(focusedparagraph, endindex, junk);
 		while (focusedparagraph != newfocused)
@@ -2310,7 +2312,7 @@ void MCField::typetext(const MCString &newtext)
 	}
 	else
 		updateparagraph(True, False);
-	delete (char *)newtext.getstring();
+	delete (char *)MCStringGetCString(newtext);
 }
 
 void MCField::startcomposition()
