@@ -926,7 +926,7 @@ static void tokenize(const unsigned char *p_text, uint4 p_length, uint4 p_in_nes
 						t_index++;
 					}
 					// MW-2013-08-23: [[ Bug 11122 ]] Special-case '$#'.
-					if (t_index < p_length && t_klength == 1 && t_keyword[0] == '$' and p_text[t_index] == '#')
+					if (t_index < p_length && t_klength == 1 && t_keyword[0] == '$' && p_text[t_index] == '#')
 					{
 						t_keyword[t_klength] = '#';
 						t_klength++;
