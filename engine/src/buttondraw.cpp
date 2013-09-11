@@ -931,37 +931,54 @@ void MCButton::drawradio(MCDC *dc, MCRectangle &srect, Boolean white)
 		}
 		break;
 	case LF_MOTIF:
+		// IM-2013-09-09: [[ RefactorGraphics ]] draw with polygons to improve scaled appearance
 		p[0].x = ++lx;
-		p[0].y = p[2].y = --cy;
-		p[1].x = p[3].x = lx + (CHECK_SIZE >> 1);
+		p[0].y = --cy;
+		p[1].x = lx + (CHECK_SIZE >> 1);
 		p[1].y = ty;
 		p[2].x = lx + CHECK_SIZE - 1;
+		p[2].y = cy;
+		p[3].x = lx + (CHECK_SIZE >> 1);
 		p[3].y = cy + (CHECK_SIZE >> 1);
-		p[4].x = lx + 1;
-		p[4].y = cy + 1;
+		//p[4].x = lx + 1;
+		//p[4].y = cy + 1;
 		setforeground(dc, DI_BACK, (state & CS_HILITED) != 0);
-		dc->fillpolygon(p, 5);
+		//dc->fillpolygon(p, 5);
+		dc->fillpolygon(p, 4);
 
-		uint1 i;
-		for (i = 0 ; i < 3 ; i++)
+		MCPoint t_top_points[6];
+		t_top_points[0] = p[0];
+		t_top_points[1] = p[1];
+		t_top_points[2] = p[2];
+		t_top_points[3] = p[2];
+		t_top_points[3].x -= 3;
+		t_top_points[4] = p[1];
+		t_top_points[4].y += 3;
+		t_top_points[5] = p[0];
+		t_top_points[5].x += 3;
+
+		MCPoint t_bottom_points[6];
+		t_bottom_points[0] = p[2];
+		t_bottom_points[1] = p[3];
+		t_bottom_points[2] = p[0];
+		t_bottom_points[3] = p[0];
+		t_bottom_points[3].x += 3;
+		t_bottom_points[4] = p[3];
+		t_bottom_points[4].y -= 3;
+		t_bottom_points[5] = p[2];
+		t_bottom_points[5].x -= 3;
+		if (flags & F_3D)
 		{
-			if (flags & F_3D)
-			{
-				setforeground(dc, DI_TOP, (state & CS_HILITED) != 0);
-				dc->drawlines(p, 3);
-				setforeground(dc, DI_BOTTOM, (state & CS_HILITED) != 0);
-				dc->drawlines(&p[2], 3);
-			}
-			else
-			{
-				setforeground(dc, DI_BORDER, False);
-				dc->drawlines(p, 5);
-			}
-			p[0].x++;
-			p[4].x++;
-			p[1].y++;
-			p[2].x--;
-			p[3].y--;
+			setforeground(dc, DI_TOP, (state & CS_HILITED) != 0);
+			dc->fillpolygon(t_top_points, 6);
+			setforeground(dc, DI_BOTTOM, (state & CS_HILITED) != 0);
+			dc->fillpolygon(t_bottom_points, 6);
+		}
+		else
+		{
+			setforeground(dc, DI_BORDER, False);
+			dc->fillpolygon(t_top_points, 6);
+			dc->fillpolygon(t_bottom_points, 6);
 		}
 		break;
 	}
