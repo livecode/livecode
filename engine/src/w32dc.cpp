@@ -37,6 +37,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "mctheme.h"
 
+#include <sys/stat.h>
+
 MCScreenDC::MCScreenDC()
 {
 	f_src_dc = NULL;
@@ -123,6 +125,53 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 
 	return false;
 }
+
+// TD-2013-07-01 [[ DynamicFonts ]]
+bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_font_handle)
+{
+	bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_globally)
+        t_private = FR_PRIVATE;
+    
+	if (t_success)
+	{
+		struct _stat t_info;
+		if (_stat(p_path, &t_info) != 0 || (t_info . st_mode & _S_IFDIR) != 0)
+			return false;
+	}
+	
+	if (t_success)
+	{
+		if (AddFontResourceExA(p_path, t_private, 0) == 0)
+			return false;
+	}
+    
+	if (t_success)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return true;
+}
+
+
+bool MCScreenDC::unloadfont(const char *p_path, bool p_globally, void *r_loaded_font_handle)
+{
+    bool t_success = true;
+    DWORD t_private = NULL;
+    
+    if (p_globally)
+        t_private = FR_PRIVATE;
+    
+    if (t_success)
+		t_success = RemoveFontResourceExA(p_path, t_private, 0) != 0;
+    
+	if (t_success)
+		PostMessage(HWND_BROADCAST, WM_FONTCHANGE, 0, 0);
+    
+	return t_success;
+}
+
 
 MCContext *MCScreenDC::createcontext(Drawable p_drawable, MCBitmap *p_alpha)
 {

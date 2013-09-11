@@ -83,6 +83,22 @@ uint2 MCLogicalFontTableMap(MCNameRef p_textfont, uint2 p_textstyle, uint2 p_tex
 // Lookup the given index in the logical font table, and return its attrs.
 void MCLogicalFontTableLookup(uint2 index, MCNameRef& r_textfont, uint2& r_textstyle, uint2& r_textsize, bool& r_unicode);
 
+
+typedef struct MCLoadedFont *MCLoadedFontRef;
+
+// TD-2013-07-01: [[ DynamicFonts ]]
+struct MCLoadedFont
+{
+    MCLoadedFont *next;
+    char *path;
+    bool is_global;
+    void *handle;
+};
+
+Exec_stat MCFontLoad(MCExecPoint& ep, const char *p_path, bool p_globally);
+Exec_stat MCFontUnload(MCExecPoint& ep, const char *p_path);
+Exec_stat MCFontListLoaded(MCExecPoint& ep);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 enum Font_weight {

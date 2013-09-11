@@ -45,6 +45,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "securemode.h"
 #include "osspec.h"
 #include "image.h"
+#include "font.h"
 
 #include "globals.h"
 
@@ -1899,6 +1900,7 @@ MCStart::~MCStart()
 {
 	delete target;
 	delete stack;
+    delete font;
 }
 
 Parse_stat MCStart::parse(MCScriptPoint &sp)
@@ -1922,7 +1924,7 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 		mode = (Start_constants)te->which;
 	}
 	if (mode == SC_USING)
-	{
+	{        
 		if (sp.skip_token(SP_FACTOR, TT_CHUNK, CT_STACK) == PS_NORMAL
 		        || sp.skip_token(SP_FACTOR, TT_CHUNK, CT_THIS) == PS_NORMAL)
 		{
@@ -1934,12 +1936,31 @@ Parse_stat MCStart::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp . parseexp(False, True, &font) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+        
+            is_globally = (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_GLOBALLY) == PS_NORMAL);
+        }
 		else
+        {
 			if (sp.parseexp(False, True, &stack) != PS_NORMAL)
 			{
 				MCperror->add(PE_START_BADCHUNK, sp);
 				return PS_ERROR;
 			}
+        }
 	}
 	else if (mode == SC_SESSION)
 	{
@@ -1965,49 +1986,100 @@ Exec_stat MCStart::exec(MCExecPoint &ep)
 #ifdef /* MCStart */ LEGACY_EXEC
 	if (mode == SC_USING)
 	{
-		MCStack *sptr = NULL;
-		if (target != NULL)
-		{
-			MCObject *optr;
-			uint4 parid;
-			if (target->getobj(ep, optr, parid, True) != ES_NORMAL
-			        || optr->gettype() != CT_STACK)
+        // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+        if (font != NULL)
+        {
+            if (MCsecuremode & MC_SECUREMODE_DISK)
+            {
+                MCeerror->add(EE_DISK_NOPERM, line, pos);
+                return ES_ERROR;
+            }
+            
+            // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontLoad
+            if (font->eval(ep) == ES_NORMAL)
 			{
+                Exec_stat t_stat;
+                t_stat = ES_NORMAL;
+                
+                char *t_resolved_path;
+                t_resolved_path = nil;
+                
+                if (t_stat == ES_NORMAL)
+                {
+                    t_resolved_path = MCS_resolvepath(ep . getcstring());
+                    if (!t_resolved_path)
+                    {
+                        MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+                        return ES_ERROR;
+                    }
+                }
+                
+                if (t_stat == ES_NORMAL)
+                {
+                    t_stat = MCFontLoad(ep, t_resolved_path , is_globally);
+                }
+                
+                if (t_stat != ES_NORMAL)
+                    MCresult -> sets("can't load font file");
+                else
+                    MCresult -> clear();
+                
+            }
+            else
+            {
 				MCeerror->add(EE_START_BADTARGET, line, pos);
 				return ES_ERROR;
 			}
-			sptr = (MCStack *)optr;
-		}
-		else
-			if (stack->eval(ep) != ES_NORMAL
-			        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL
-			        || !sptr->parsescript(True))
-			{
-				MCeerror->add(EE_START_BADTARGET, line, pos);
-				return ES_ERROR;
-			}
-		uint2 i = MCnusing;
-		while (i--)
-			if (MCusing[i] == sptr)
-			{
-				MCnusing--;
-				while (i < MCnusing)
-				{
-					MCusing[i] = MCusing[i + 1];
-					i++;
-				}
-				break;
-			}
+        }
+        else
+        {
+            MCStack *sptr = NULL;
+            if (target != NULL)
+            {
+                MCObject *optr;
+                uint4 parid;
+                
+                if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+                        || optr->gettype() != CT_STACK)
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
+                }
+                sptr = (MCStack *)optr;
+            }
+            else
+            {
+                if (stack->eval(ep) != ES_NORMAL
+                        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL
+                        || !sptr->parsescript(True))
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
+                }
+            }
+            uint2 i = MCnusing;
+            while (i--)
+                if (MCusing[i] == sptr)
+                {
+                    MCnusing--;
+                    while (i < MCnusing)
+                    {
+                        MCusing[i] = MCusing[i + 1];
+                        i++;
+                    }
+                    break;
+                }
 
-		if (MClicenseparameters . using_limit > 0 && MCnusing >= MClicenseparameters . using_limit)
-		{
-			MCeerror->add(EE_START_NOTLICENSED, line, pos);
-			return ES_ERROR;
-		}
-		MCU_realloc((char **)&MCusing, MCnusing, MCnusing + 1, sizeof(MCStack *));
-		MCusing[MCnusing++] = sptr;
-		if (sptr->message(MCM_library_stack) == ES_ERROR)
-			return ES_ERROR;
+            if (MClicenseparameters . using_limit > 0 && MCnusing >= MClicenseparameters . using_limit)
+            {
+                MCeerror->add(EE_START_NOTLICENSED, line, pos);
+                return ES_ERROR;
+            }
+            MCU_realloc((char **)&MCusing, MCnusing, MCnusing + 1, sizeof(MCStack *));
+            MCusing[MCnusing++] = sptr;
+            if (sptr->message(MCM_library_stack) == ES_ERROR)
+                return ES_ERROR;
+        }
 	}
 	else if (mode == SC_SESSION)
 	{
@@ -2060,6 +2132,7 @@ MCStop::~MCStop()
 {
 	delete target;
 	delete stack;
+    delete font;
 }
 
 Parse_stat MCStop::parse(MCScriptPoint &sp)
@@ -2097,6 +2170,21 @@ Parse_stat MCStop::parse(MCScriptPoint &sp)
 				return PS_ERROR;
 			}
 		}
+        // TD-2013-06-20: [[ DynamicFonts ]] Look for font
+        else if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FONT) == PS_NORMAL)
+        {
+            if (sp.skip_token(SP_SUGAR, TT_UNDEFINED, SG_FILE) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+            
+            if (sp . parseexp(False, True, &font) != PS_NORMAL)
+            {
+                MCperror->add(PE_START_BADCHUNK, sp);
+                return PS_ERROR;
+            }
+        }
 		else
 			if (sp.parseexp(False, True, &stack) != PS_NORMAL)
 			{
@@ -2186,39 +2274,86 @@ Exec_stat MCStop::exec(MCExecPoint &ep)
 		break;
 	case SC_USING:
 		{
-			MCStack *sptr = NULL;
-			if (target != NULL)
-			{
-				MCObject *optr;
-				uint4 parid;
-				if (target->getobj(ep, optr, parid, True) != ES_NORMAL
-				        || optr->gettype() != CT_STACK)
-				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
-					return ES_ERROR;
-				}
-				sptr = (MCStack *)optr;
-			}
-			else
-				if (stack->eval(ep) != ES_NORMAL
-				        || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL)
-				{
-					MCeerror->add(EE_STOP_BADTARGET, line, pos);
-					return ES_ERROR;
-				}
-			uint2 i = MCnusing;
-			while (i--)
-				if (MCusing[i] == sptr)
-				{
-					MCnusing--;
-					while (i < MCnusing)
-					{
-						MCusing[i] = MCusing[i + 1];
-						i++;
-					}
-					break;
-				}
-			sptr->message(MCM_release_stack);
+            // TD-2013-06-12: [[ DynamicFonts ]] Look for font.
+            if (font != NULL)
+            {
+                // MERG-2013-08-14: [[ DynamicFonts ]] Refactored to use MCFontUnload
+                Exec_stat t_stat;
+                t_stat = ES_NORMAL;
+                
+                char *t_resolved_path;
+                t_resolved_path = nil;
+                
+                if (font->eval(ep) == ES_NORMAL)
+                {
+                    
+                    char *t_resolved_path;
+                    t_resolved_path = nil;
+                    
+                    if (t_stat == ES_NORMAL)
+                    {
+                        t_resolved_path = MCS_resolvepath(ep . getcstring());
+                        if (!t_resolved_path)
+                        {
+                            MCeerror->add(EE_FONT_BADFILEEXP, line, pos);
+                            return ES_ERROR;
+                        }
+                    }
+                    
+                    if (t_stat == ES_NORMAL)
+                    {
+                        t_stat = MCFontUnload(ep, t_resolved_path);
+                    }
+                    
+                    if (t_stat != ES_NORMAL)
+                        MCresult -> sets("can't unload font file");
+                    else
+                        MCresult -> clear();
+                        
+                }
+                else
+                {
+                    MCeerror->add(EE_START_BADTARGET, line, pos);
+                    return ES_ERROR;
+                }
+
+            }
+            else
+            {
+                MCStack *sptr = NULL;
+                if (target != NULL)
+                {
+                    MCObject *optr;
+                    uint4 parid;
+                    if (target->getobj(ep, optr, parid, True) != ES_NORMAL
+                            || optr->gettype() != CT_STACK)
+                    {
+                        MCeerror->add(EE_STOP_BADTARGET, line, pos);
+                        return ES_ERROR;
+                    }
+                    sptr = (MCStack *)optr;
+                }
+                else
+                    if (stack->eval(ep) != ES_NORMAL
+                            || (sptr = MCdefaultstackptr->findstackname(ep.getsvalue())) == NULL)
+                    {
+                        MCeerror->add(EE_STOP_BADTARGET, line, pos);
+                        return ES_ERROR;
+                    }
+                uint2 i = MCnusing;
+                while (i--)
+                    if (MCusing[i] == sptr)
+                    {
+                        MCnusing--;
+                        while (i < MCnusing)
+                        {
+                            MCusing[i] = MCusing[i + 1];
+                            i++;
+                        }
+                        break;
+                    }
+                sptr->message(MCM_release_stack);
+            }
 		}
 		break;
 	case SC_SESSION:

@@ -2420,6 +2420,10 @@ enum Exec_errors
     // MERG-2013-08-14: [[ MeasureText ]] Measure text relative to the effective font on an object
     // {EE-0797} measureText: no object
     EE_MEASURE_TEXT_NOOBJECT,
+
+    // TD-2013-06-24: [[ DynamicFonts ]]
+    // {EE-0798} font: couldn't find font
+	EE_FONT_BADFILEEXP,
 };
 
 extern const char *MCexecutionerrors;
