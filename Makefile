@@ -142,7 +142,7 @@ libxslt:
 revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml revxml
 
-server-revxml: libxml libexternal
+server-revxml: libxml libxslt libexternal
 	$(MAKE) -C ./revxml server-revxml
 
 ###############################################################################
