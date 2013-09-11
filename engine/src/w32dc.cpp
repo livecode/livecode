@@ -22,6 +22,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "parsedef.h"
 
 #include "dispatch.h"
+#include "osspec.h"
 #include "image.h"
 #include "stack.h"
 #include "util.h"
@@ -132,11 +133,11 @@ bool MCScreenDC::loadfont(const char *p_path, bool p_globally, void*& r_loaded_f
 	bool t_success = true;
     DWORD t_private = NULL;
     
-    if (p_globally)
+    if (!p_globally)
         t_private = FR_PRIVATE;
     
 	if (t_success)
-		t_success = MCS_exists(p_path, True);
+		t_success = (MCS_exists(p_path, True) == True);
 	
 	if (t_success)
 		t_success = (AddFontResourceExA(p_path, t_private, 0) != 0);
