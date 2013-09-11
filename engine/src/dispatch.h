@@ -79,8 +79,8 @@ public:
 	Boolean openstartup(MCStringRef name, MCStringRef& r_outpath, IO_handle &r_stream);
 	Boolean openenv(MCStringRef name, MCStringRef env, MCStringRef& r_outpath, IO_handle& r_stream, uint4 offset);
 
-	IO_stat readfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr);
-	IO_stat loadfile(const char *fname, MCStack *&sptr);
+	IO_stat readfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
+	IO_stat loadfile(MCStringRef p_name, MCStack *&sptr);
 
 	// MW-2009-06-25: This method should be used to read stacks used from startup.
 	//   Specifically, embedded stacks and ones contained in deployed project info.
@@ -183,7 +183,7 @@ public:
 		return fonts;
 	}
 	
-	MCStack *findstackname(const MCString &);
+	MCStack *findstackname(MCNameRef);
 	MCStack *findstackid(uint4 fid);
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 index);
@@ -229,7 +229,7 @@ public:
 private:
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a load stack. This
 	//   is wrapped by readfile to handle logical font table.
-	IO_stat doreadfile(const char *openpath, const char *inname, IO_handle &stream, MCStack *&sptr);
+	IO_stat doreadfile(MCStringRef openpath, MCStringRef inname, IO_handle &stream, MCStack *&sptr);
 	// MW-2012-02-17: [[ LogFonts ]] Actual method which performs a save stack. This
 	//   is wrapped by savestack to handle logical font table.
 	IO_stat dosavestack(MCStack *sptr, const MCStringRef);

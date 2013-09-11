@@ -456,10 +456,12 @@ public:
 			return ES_ERROR;
 
 		MCStack *t_new_home;
-		t_new_home = MCdispatcher -> findstackname(ep . getsvalue());
+		MCNewAutoNameRef t_name;
+		/* UNCHECKED */ ep.copyasnameref(&t_name);
+		t_new_home = MCdispatcher -> findstackname(*t_name);
 
 		if (t_new_home == nil &&
-			MCdispatcher -> loadfile(ep . getcstring(), t_new_home) != IO_NORMAL)
+			MCdispatcher -> loadfile(MCNameGetString(*t_name), t_new_home) != IO_NORMAL)
 			return ES_ERROR;
 
 		MCdispatcher -> changehome(t_new_home);	

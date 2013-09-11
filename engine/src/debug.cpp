@@ -128,7 +128,7 @@ void MCB_setmsg(MCExecPoint &ep)
 	{
 		// MW-2004-11-17: Now use global 'MCmbstackptr' instead
 		if (MCmbstackptr == NULL)
-			MCmbstackptr = MCdispatcher->findstackname(MCmessagenamestring);
+			MCmbstackptr = MCdispatcher->findstackname(MCNAME(MCmessagenamestring));
 			
 		if (MCmbstackptr != NULL)
 		{
