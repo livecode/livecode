@@ -291,6 +291,10 @@
         <description>returns true if a control is presented to allow the user to choose AirPlay-enabled hardware for playback (maps to the native allowsAirPlay property). Note: This property is only supported on iOS 4.3 and later.</description>
       </option>
       <option>
+        <item>duration (iOS Only)</item>
+        <description>returns the duration of a movie, measured in milliseconds (maps to the native duration property). This is an integer value.</description>
+      </option>
+      <option>
         <item>playableDuration (iOS Only)</item>
         <description>returns the amount of currently playable content, measured in milliseconds (maps to the native playableDuration property). This is an integer value.</description>
       </option>
