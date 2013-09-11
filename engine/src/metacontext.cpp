@@ -35,6 +35,9 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "bitmapeffect.h"
 #include "path.h"
 
+#include "graphics.h"
+#include "graphicscontext.h"
+
 inline bool operator != (const MCColor& a, const MCColor& b)
 {
 	return a . red != b . red || a . green != b . green || a . blue != b . blue;
@@ -61,6 +64,18 @@ MCMetaContext::~MCMetaContext(void)
 {
 	while(f_state_stack != NULL)
 		end();
+
+	while (f_fill_foreground != nil)
+	{
+		MCPatternRelease(f_fill_foreground -> pattern);
+		f_fill_foreground = f_fill_foreground -> previous;
+	}
+
+	while (f_fill_background != nil)
+	{
+		MCPatternRelease(f_fill_background -> pattern);
+		f_fill_background = f_fill_background -> previous;
+	}
 }
 
 
@@ -168,7 +183,7 @@ void MCMetaContext::setclip(const MCRectangle& rect)
 	f_clip = rect;
 }
 
-const MCRectangle& MCMetaContext::getclip(void) const
+MCRectangle MCMetaContext::getclip(void) const
 {
 	return f_clip;
 }
@@ -247,7 +262,7 @@ void MCMetaContext::setdashes(uint2 offset, const uint1 *dashes, uint2 ndashes)
 	}
 }
 
-void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
+void MCMetaContext::setfillstyle(uint2 style, MCPatternRef p, int2 x, int2 y)
 {
 	if (f_fill_foreground == NULL || style != f_fill_foreground -> style || p != f_fill_foreground -> pattern || x != f_fill_foreground -> origin . x || y != f_fill_foreground -> origin . y)
 	{
@@ -258,7 +273,8 @@ void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
 			if (style != FillTiled || p != NULL)
 			{
 				f_fill_foreground -> style = style;
-				f_fill_foreground -> pattern = p;
+				MCPatternRelease(f_fill_foreground -> pattern);
+				f_fill_foreground -> pattern = MCPatternRetain(p);
 				f_fill_foreground -> origin . x = x;
 				f_fill_foreground -> origin . y = y;
 			}
@@ -273,7 +289,7 @@ void MCMetaContext::setfillstyle(uint2 style, Pixmap p, int2 x, int2 y)
 	}
 }
 
-void MCMetaContext::getfillstyle(uint2& style, Pixmap& p, int2& x, int2& y)
+void MCMetaContext::getfillstyle(uint2& style, MCPatternRef& p, int2& x, int2& y)
 {
 	if (f_fill_foreground != NULL)
 	{
@@ -318,6 +334,24 @@ void MCMetaContext::setlineatts(uint2 linesize, uint2 linestyle, uint2 capstyle,
 	}
 }
 
+void MCMetaContext::getlineatts(uint2& linesize, uint2& linestyle, uint2& capstyle, uint2& joinstyle)
+{
+	if (f_stroke != nil)
+	{
+		linesize = f_stroke->width;
+		linestyle = f_stroke->style;
+		capstyle = f_stroke->cap;
+		joinstyle = f_stroke->join;
+	}
+	else
+	{
+		linesize = 0;
+		linestyle = LineSolid;
+		capstyle = CapButt;
+		joinstyle = JoinBevel;
+	}
+}
+
 void MCMetaContext::setmiterlimit(real8 p_limit)
 {
 	if (f_stroke == NULL || p_limit != f_stroke->miter_limit)
@@ -327,6 +361,14 @@ void MCMetaContext::setmiterlimit(real8 p_limit)
 	{
 		f_stroke->miter_limit = p_limit;
 	}
+}
+
+void MCMetaContext::getmiterlimit(real8 &r_limit)
+{
+	if (f_stroke != nil)
+		r_limit = f_stroke->miter_limit;
+	else
+		r_limit = 0.0;
 }
 
 void MCMetaContext::drawline(int2 x1, int2 y1, int2 x2, int2 y2)
@@ -384,20 +426,20 @@ void MCMetaContext::drawtext(int2 x, int2 y, const char *s, uint2 length, MCFont
 	}
 }
 
-void MCMetaContext::drawrect(const MCRectangle& rect)
+void MCMetaContext::drawrect(const MCRectangle& rect, bool inside)
 {
-	rectangle_mark(true, false, rect);
+	rectangle_mark(true, false, rect, inside);
 }
 	
 void MCMetaContext::fillrect(const MCRectangle& rect)
 {
-	rectangle_mark(false, true, rect); 
+	rectangle_mark(false, true, rect, false); 
 }
 
 void MCMetaContext::fillrects(MCRectangle *rects, uint2 nrects)
 {
 	for(uint4 t_index = 0; t_index < nrects; ++t_index)
-		rectangle_mark(false, true, rects[t_index]);
+		rectangle_mark(false, true, rects[t_index], false);
 }
 
 void MCMetaContext::fillpolygon(MCPoint *points, uint2 npoints)
@@ -405,29 +447,29 @@ void MCMetaContext::fillpolygon(MCPoint *points, uint2 npoints)
 	polygon_mark(false, true, points, npoints, true);
 }
 
-void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius)
+void MCMetaContext::drawroundrect(const MCRectangle& rect, uint2 radius, bool inside)
 {
-	round_rectangle_mark(true, false, rect, radius);
+	round_rectangle_mark(true, false, rect, radius, inside);
 }
 
 void MCMetaContext::fillroundrect(const MCRectangle& rect, uint2 radius)
 {
-	round_rectangle_mark(false, true, rect, radius);
+	round_rectangle_mark(false, true, rect, radius, false);
 }
 
-void MCMetaContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCMetaContext::drawarc(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
-	arc_mark(true, false, rect, start, angle, false);
+	arc_mark(true, false, rect, start, angle, false, inside);
 }
 
-void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle)
+void MCMetaContext::drawsegment(const MCRectangle& rect, uint2 start, uint2 angle, bool inside)
 {
-	arc_mark(true, false, rect, start, angle, true);
+	arc_mark(true, false, rect, start, angle, true, inside);
 }
 
 void MCMetaContext::fillarc(const MCRectangle& rect, uint2 start, uint2 angle)
 {
-	arc_mark(false, true, rect, start, angle, true);
+	arc_mark(false, true, rect, start, angle, true, false);
 }
 
 
@@ -551,45 +593,6 @@ void MCMetaContext::drawtheme(MCThemeDrawType type, MCThemeDrawInfo* p_info)
 	end();
 }
 
-/* OVERHAUL - REVISIT - change source parameter */
-void MCMetaContext::copyarea(Drawable p_src, uint4 p_dx, uint4 p_dy, uint4 p_sx, uint4 p_sy, uint4 p_sw, uint4 p_sh)
-{
-	MCImageDescriptor t_image;
-	memset(&t_image, 0, sizeof(MCImageDescriptor));
-	
-	uint2 w, h, d;
-	MCscreen -> getpixmapgeometry(p_src, w, h, d);
-
-	MCBitmap *t_old_bitmap = nil;
-	MCImageBitmap *t_bitmap = nil;
-	/* UNCHECKED */ t_old_bitmap = MCscreen->getimage(p_src, 0, 0, w, h);
-	/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_old_bitmap, t_bitmap);
-	MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-
-	t_image . bitmap = t_bitmap;
-
-	drawimage(t_image, p_sx, p_sy, p_sw, p_sh, p_dx, p_dy);
-
-	MCImageFreeBitmap(t_bitmap);
-	if (t_old_bitmap != nil)
-		MCscreen -> destroyimage(t_old_bitmap);
-}
-
-void MCMetaContext::combine(Pixmap p_src, int4 p_dx, int4 p_dy, int4 p_sx, int4 p_sy, uint4 p_sw, uint4 p_sh)
-{
-}
-
-MCBitmap *MCMetaContext::lock(void)
-{
-	assert(false);
-	return NULL;
-}
-
-void MCMetaContext::unlock(MCBitmap *)
-{
-	assert(false);
-}
-
 void MCMetaContext::clear(const MCRectangle *rect)
 {
 	assert(false);
@@ -685,6 +688,7 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 		if (p_mark -> fill != NULL)
 		{
 			p_context -> setforeground(p_mark -> fill -> colour);
+
 			p_context -> setfillstyle(p_mark -> fill -> style, p_mark -> fill -> pattern, p_mark -> fill -> origin . x, p_mark -> fill -> origin . y);
 
 			p_context->setgradient(p_mark->fill->gradient);	
@@ -718,14 +722,14 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 			
 			case MARK_TYPE_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawrect(p_mark -> rectangle . bounds);
+					p_context -> drawrect(p_mark -> rectangle . bounds, p_mark -> rectangle . inside);
 				else
 					p_context -> fillrect(p_mark -> rectangle . bounds);
 			break;
 			
 			case MARK_TYPE_ROUND_RECTANGLE:
 				if (p_mark -> stroke != NULL)
-					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius);
+					p_context -> drawroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius, p_mark -> round_rectangle . inside);
 				else
 					p_context -> fillroundrect(p_mark -> round_rectangle . bounds, p_mark -> round_rectangle . radius);
 			break;
@@ -734,9 +738,9 @@ static bool mark_indirect(MCContext *p_context, MCMark *p_mark, MCMark *p_upto_m
 				if (p_mark -> stroke != NULL)
 				{
 					if (p_mark -> arc . complete)
-						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
+						p_context -> drawsegment(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
 					else
-						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
+						p_context -> drawarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle, p_mark -> arc . inside);
 				}
 				else
 					p_context -> fillarc(p_mark -> arc . bounds, p_mark -> arc . start, p_mark -> arc . angle);
@@ -782,9 +786,6 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 	{
 		if (!candomark(t_mark))
 		{
-			MCContext *t_context;
-			t_context = nil;
-
 			// Compute the region of the destination we need to rasterize.
 			MCRectangle t_dst_clip;
 			if (t_mark -> type != MARK_TYPE_GROUP || t_mark -> group . effects == NULL)
@@ -795,32 +796,54 @@ void MCMetaContext::executegroup(MCMark *p_group_mark)
 			// Get a raster context for the given clip - but only if there is something to
 			// render.
 			if (t_dst_clip . width != 0 && t_dst_clip . height != 0)
-				t_context = begincomposite(t_dst_clip);
-			
-			if (t_context != nil)
 			{
-				// First render just the group we are interested in, so we can clip out any pixels not
-				// affected by it.
-				mark_indirect(t_context, t_mark, nil, t_dst_clip);
-
-				// Compute the region touched by non-transparent pixels.
-				MCRegionRef t_clip_region;
-				t_clip_region = t_context -> computemaskregion();
-				t_context -> clear(nil);
-
-				// MW-2007-11-28: [[ Bug 4873 ]] Failure to reset the context state here means the first
-				//   objects rendered up until a group are all wrong!
-				t_context -> setfunction(GXcopy);
-				t_context -> setopacity(255);
-				t_context -> clearclip();
-
-				// Render all marks from the bottom up to and including the current mark - clipped
-				// by the dst bounds.
-				for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next; t_raster_mark = t_raster_mark -> next)
-					if (mark_indirect(t_context, t_raster_mark, t_mark, t_dst_clip))
-						break;
+				bool t_success;
+				t_success = true;
 				
-				endcomposite(t_context, t_clip_region);
+				MCGContextRef t_context;
+				t_context = nil;
+				
+				MCContext *t_gfx_context;
+				t_gfx_context = nil;
+				
+				MCRegionRef t_clip_region;
+				t_clip_region = nil;
+				
+				if (t_success)
+					t_success = begincomposite(t_dst_clip, t_context);
+				
+				if (t_success)
+					t_success = nil != (t_gfx_context = new MCGraphicsContext(t_context));
+				
+				if (t_success)
+				{
+					t_gfx_context -> setprintmode();
+					
+					// First render just the group we are interested in, so we can clip out any pixels not
+					// affected by it.
+					mark_indirect(t_gfx_context, t_mark, nil, t_dst_clip);
+					
+					// Compute the region touched by non-transparent pixels.
+					t_clip_region = t_gfx_context -> computemaskregion();
+					t_gfx_context -> clear(nil);
+					
+					// MW-2007-11-28: [[ Bug 4873 ]] Failure to reset the context state here means the first
+					//   objects rendered up until a group are all wrong!
+					t_gfx_context -> setfunction(GXcopy);
+					t_gfx_context -> setopacity(255);
+					t_gfx_context -> clearclip();
+					
+					// Render all marks from the bottom up to and including the current mark - clipped
+					// by the dst bounds.
+					for(MCMark *t_raster_mark = f_state_stack -> root -> group . head; t_raster_mark != t_mark -> next; t_raster_mark = t_raster_mark -> next)
+						if (mark_indirect(t_gfx_context, t_raster_mark, t_mark, t_dst_clip))
+							break;
+				}
+				
+				if (t_gfx_context != nil)
+					delete t_gfx_context;
+				
+				endcomposite(t_clip_region);
 			}
 		}
 		else
@@ -832,15 +855,18 @@ void MCMetaContext::new_fill_foreground(void)
 {
 	if (f_fill_foreground_used || f_fill_foreground == NULL)
 	{
-		f_fill_foreground = f_heap . allocate<MCMarkFill>();
-		if (f_fill_foreground != NULL)
+		MCMarkFill *t_new_fill = f_heap . allocate<MCMarkFill>();
+		if (t_new_fill != NULL)
 		{
-			f_fill_foreground -> style = FillSolid;
-			f_fill_foreground -> colour = getblack();
-			f_fill_foreground -> pattern = NULL;
-			f_fill_foreground -> origin . x = 0;
-			f_fill_foreground -> origin . y = 0;
-			f_fill_foreground -> gradient = NULL;
+			t_new_fill -> style = FillSolid;
+			t_new_fill -> colour = getblack();
+			t_new_fill -> pattern = NULL;
+			t_new_fill -> origin . x = 0;
+			t_new_fill -> origin . y = 0;
+			t_new_fill -> gradient = NULL;
+
+			t_new_fill -> previous = f_fill_foreground;
+			f_fill_foreground = t_new_fill;
 		}
 		
 		f_fill_foreground_used = false;
@@ -851,15 +877,18 @@ void MCMetaContext::new_fill_background(void)
 {
 	if (f_fill_background_used || f_fill_background == NULL)
 	{
-		f_fill_background = f_heap . allocate<MCMarkFill>();
-		if (f_fill_background != NULL)
+		MCMarkFill *t_new_fill = f_heap . allocate<MCMarkFill>();
+		if (t_new_fill != NULL)
 		{
-			f_fill_background -> style = FillSolid;
-			f_fill_background -> colour = getwhite();
-			f_fill_background -> pattern = NULL;
-			f_fill_background -> origin . x = 0;
-			f_fill_background -> origin . y = 0;
-			f_fill_background -> gradient = NULL;
+			t_new_fill -> style = FillSolid;
+			t_new_fill -> colour = getwhite();
+			t_new_fill -> pattern = NULL;
+			t_new_fill -> origin . x = 0;
+			t_new_fill -> origin . y = 0;
+			t_new_fill -> gradient = NULL;
+
+			t_new_fill -> previous = f_fill_background;
+			f_fill_background = t_new_fill;
 		}
 		
 		f_fill_background_used = false;
@@ -912,8 +941,16 @@ MCMark *MCMetaContext::new_mark(uint4 p_type, bool p_stroke, bool p_fill)
 		sizeof(MCMarkPath),
 	};
 	
+	// IM-2013-06-11: dynamically allocate sufficient memory for a
+	// MCThemeDrawInfo struct (previous fixed size of 64bytes was too
+	// small.
+	uint32_t t_mark_size;
+	t_mark_size = sizeof(MCMarkHeader) + s_mark_sizes[p_type];
+	if (p_type == MARK_TYPE_THEME && MCcurtheme != nil)
+		t_mark_size += MCcurtheme->getthemedrawinfosize();
+		
 	MCMark *t_mark;
-	t_mark = f_heap . allocate<MCMark>(sizeof(MCMarkHeader) + s_mark_sizes[p_type]);
+	t_mark = f_heap . allocate<MCMark>(t_mark_size);
 	if (t_mark != NULL)
 	{
 		if (p_stroke)
@@ -959,15 +996,18 @@ MCMark *MCMetaContext::new_mark(uint4 p_type, bool p_stroke, bool p_fill)
 	return t_mark;
 }
 
-void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect)
+void MCMetaContext::rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, bool inside)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_RECTANGLE, p_stroke, p_fill);
 	if (t_mark != NULL)
+	{
 		t_mark -> rectangle . bounds = rect;
+		t_mark -> rectangle . inside = inside;
+	}
 }
 
-void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius)
+void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRectangle& rect, uint2 radius, bool inside)
 {
 	MCMark *t_mark;
 	t_mark = new_mark(MARK_TYPE_ROUND_RECTANGLE, p_stroke, p_fill);
@@ -975,6 +1015,7 @@ void MCMetaContext::round_rectangle_mark(bool p_stroke, bool p_fill, const MCRec
 	{
 		t_mark -> round_rectangle . bounds = rect;
 		t_mark -> round_rectangle . radius = radius;
+		t_mark -> round_rectangle . inside = inside;
 	}
 }
 
@@ -993,7 +1034,7 @@ void MCMetaContext::polygon_mark(bool p_stroke, bool p_fill, MCPoint *p_vertices
 	}
 }
 
-void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete)
+void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bounds, uint2 p_start, uint2 p_angle, bool p_complete, bool inside)
 {
 	MCMark *t_mark;
 	
@@ -1004,6 +1045,7 @@ void MCMetaContext::arc_mark(bool p_stroke, bool p_fill, const MCRectangle& p_bo
 		t_mark -> arc . start = p_start;
 		t_mark -> arc . angle = p_angle;
 		t_mark -> arc . complete = p_complete;
+		t_mark -> arc . inside = inside;
 	}
 }
 

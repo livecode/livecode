@@ -203,7 +203,7 @@ UIViewController *MCIPhoneGetViewController(void);
 			self.contentSizeForViewInPopover = CGSizeMake(320,216);
 		// create the popover controller
 		popoverController = [[t_popover alloc] initWithContentViewController:self];
-		[popoverController presentPopoverFromRect:MCRectangleToLogicalCGRect(p_button_rect)
+		[popoverController presentPopoverFromRect:MCUserRectToLogicalCGRect(p_button_rect)
 										   inView:MCIPhoneGetView()
 						 permittedArrowDirections:UIPopoverArrowDirectionAny
 										 animated:YES];

@@ -53,78 +53,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// The list of all possible bitmap effect types.
-enum MCBitmapEffectType
-{
-	kMCBitmapEffectTypeDropShadow,
-	kMCBitmapEffectTypeInnerShadow,
-	kMCBitmapEffectTypeOuterGlow,
-	kMCBitmapEffectTypeInnerGlow,
-	kMCBitmapEffectTypeColorOverlay,
-	// kMCBitmapEffectTypeBevelAndEmboss, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypeGradientOverlay, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypePatternOverlay, // NOT YET SUPPORTED
-	// kMCBitmapEffectTypeStroke, // NOT YET SUPPORTED
-	kMCBitmapEffectType_Count
-};
-
-// The list of all possible bitmap effect properties.
-enum MCBitmapEffectProperty
-{
-	kMCBitmapEffectPropertyColor, // ALL
-	kMCBitmapEffectPropertyOpacity, // ALL
-	kMCBitmapEffectPropertyBlendMode, // ALL
-	kMCBitmapEffectPropertyFilter, // BLUR EFFECTS
-	kMCBitmapEffectPropertySize, // BLUR EFFECTS
-	kMCBitmapEffectPropertySpread, // BLUR EFFECTS
-	kMCBitmapEffectPropertyRange, // GLOW EFFECTS
-	kMCBitmapEffectPropertyKnockOut, // DROP SHADOW EFFECT
-	kMCBitmapEffectPropertyDistance, // SHADOW EFFECTS
-	kMCBitmapEffectPropertyAngle, // SHADOW EFFECTS
-	kMCBitmapEffectPropertySource, // INNER GLOW EFFECT
-};
-
-// The list of blend modes applicable to the bitmap effects.
-enum MCBitmapEffectBlendMode
-{
-	kMCBitmapEffectBlendModeNormal,
-	kMCBitmapEffectBlendModeMultiply,
-	kMCBitmapEffectBlendModeScreen,
-	kMCBitmapEffectBlendModeOverlay,
-	kMCBitmapEffectBlendModeDarken,
-	kMCBitmapEffectBlendModeLighten,
-	kMCBitmapEffectBlendModeColorDodge,
-	kMCBitmapEffectBlendModeColorBurn,
-	kMCBitmapEffectBlendModeHardLight,
-	kMCBitmapEffectBlendModeSoftLight,
-	kMCBitmapEffectBlendModeDifference,
-	kMCBitmapEffectBlendModeExclusion,
-	kMCBitmapEffectBlendModeHue,
-	kMCBitmapEffectBlendModeSaturation,
-	kMCBitmapEffectBlendModeColor,
-	kMCBitmapEffectBlendModeLuminosity
-};
-
-enum MCBitmapEffectSource
-{
-	kMCBitmapEffectSourceEdge,
-	kMCBitmapEffectSourceCenter
-};
-
-enum
-{
-	kMCBitmapEffectTypeDropShadowBit = 1 << kMCBitmapEffectTypeDropShadow,
-	kMCBitmapEffectTypeInnerShadowBit = 1 << kMCBitmapEffectTypeInnerShadow,
-	kMCBitmapEffectTypeOuterGlowBit = 1 << kMCBitmapEffectTypeOuterGlow,
-	kMCBitmapEffectTypeInnerGlowBit = 1 << kMCBitmapEffectTypeInnerGlow,
-	kMCBitmapEffectTypeColorOverlayBit = 1 << kMCBitmapEffectTypeColorOverlay,
-
-	kMCBitmapEffectTypeAllShadowBits = kMCBitmapEffectTypeDropShadowBit | kMCBitmapEffectTypeInnerShadowBit,
-	kMCBitmapEffectTypeAllGlowBits = kMCBitmapEffectTypeOuterGlowBit | kMCBitmapEffectTypeInnerGlowBit,
-	kMCBitmapEffectTypeAllBlurBits = kMCBitmapEffectTypeAllShadowBits | kMCBitmapEffectTypeAllGlowBits,
-	kMCBitmapEffectTypeAllBits = (1 << (kMCBitmapEffectType_Count + 1)) - 1
-};
-
 // This record represents a mapping from token to property.
 struct MCBitmapEffectPropertyMap
 {
@@ -184,75 +112,6 @@ static Exec_stat MCBitmapEffectLookupProperty(MCBitmapEffectType p_type, MCNameR
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-
-// Fields common to all effects
-struct MCLayerEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned : 28;
-};
-#define kMCLayerEffectPickleSize 5
-
-// Fields common to all blur-based effects (shadow and glow)
-struct MCBlurEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8;
-	unsigned spread : 8;
-	unsigned : 8;
-};
-#define kMCBlurEffectPickleSize 8
-
-// Fields common to all shadow effects
-struct MCShadowEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8; // blurs only
-	unsigned spread : 8; // blurs only
-	unsigned angle : 9; // shadows only
-	unsigned distance : 15; // shadows only
-	bool knockout: 1; // drop shadow only
-	unsigned : 16;
-};
-#define kMCShadowEffectPickleSize 10
-
-// Fields common to all glow effects
-struct MCGlowEffect
-{
-	uint4 color;
-	unsigned blend_mode : 4;
-	unsigned filter : 3;
-	unsigned size : 8; // blurs only
-	unsigned spread : 8; // blurs only
-	unsigned range : 8; // glows only
-	unsigned source : 1; // innerGlow only
-};
-#define kMCGlowEffectPickleSize 8
-
-union MCBitmapEffect
-{
-	MCLayerEffect layer;
-	MCBlurEffect blur;
-	MCShadowEffect shadow;
-	MCGlowEffect glow;
-};
-
-// The opaque MCBitmapEffects object that gets managed by the public API. For
-// now we'll just make this a flat array, although it could be improved to be a
-// bit-field compressed one (like the color arrays on objects).
-struct MCBitmapEffects
-{
-	// The mask determines which of the effects is present.
-	uint32_t mask;
-
-	// The effect fields.
-	MCBitmapEffect effects[kMCBitmapEffectType_Count];
-};
 
 void MCBitmapEffectsInitialize(MCBitmapEffectsRef& self)
 {
@@ -1388,26 +1247,21 @@ static MCBitmapEffectCompositeCallback MCBitmapEffectChooseCompositer(MCBitmapEf
 	return NULL;
 }
 
-// MP-2013-02-05: [[ x64 ]] Change strides to be signed to avoid problems with
-//   ptr arithmetic and promotions in 64-bit.
 static void MCBitmapEffectRender(MCBitmapEffectRenderState& state, MCBitmapEffectLayer& dst, MCBitmapEffectLayer& src)
 {
 	// Compute the dst ptr/stride in pixels.
-	int32_t t_dst_stride;
+	uint32_t t_dst_stride, *t_dst_pixels;
 	t_dst_stride = dst . stride / 4;
-	uint32_t *t_dst_pixels;
 	t_dst_pixels = (uint4 *)dst . bits + t_dst_stride * (state . region . y - dst . bounds . y) + (state . region . x - dst . bounds . x);
 
 	// Compute the blur src ptr/stride in pixels.
-	int32_t t_blur_src_stride;
+	uint32_t t_blur_src_stride, *t_blur_src_pixels;
 	t_blur_src_stride = src . stride / 4;
-	uint32_t *t_blur_src_pixels;
 	t_blur_src_pixels = (uint4 *)src . bits + t_blur_src_stride * (state . blur_rect . y - src . bounds . y) + (state . blur_rect . x - src . bounds . x);
 
 	// Compute the src ptr/stride in pixels.
-	int32_t t_src_stride;
+	uint32_t t_src_stride, *t_src_pixels;
 	t_src_stride = src . stride / 4;
-	uint32_t *t_src_pixels;
 	t_src_pixels = (uint4 *)src . bits + t_src_stride * (state . region . y - src . bounds . y) + (state . region . x - src . bounds . x);
 
 	// Compute the pre-multiplied color.

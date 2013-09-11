@@ -59,8 +59,6 @@ public:
 	bool hasfeature(MCPlatformFeature feature);
 	const char *getdisplayname(void);
 	void getvendorstring(MCExecPoint &ep);
-	uint2 getwidth();
-	uint2 getheight();
 	uint2 getwidthmm();
 	uint2 getheightmm();
 	uint2 getmaxpoints();
@@ -69,7 +67,14 @@ public:
 	uint2 getrealdepth(void);
 	uint2 getpad();
 	Window getroot();
-	uint4 getdisplays(MCDisplay const *& p_displays, bool p_effective);
+	
+	uint16_t device_getwidth();
+	uint16_t device_getheight();
+	bool device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count);
+	bool device_getwindowgeometry(Window w, MCRectangle &drect);
+	void device_boundrect(MCRectangle &rect, Boolean title, Window_mode m);
+	void device_querymouse(int16_t &r_x, int16_t &r_y);
+	void device_setmouse(int16_t p_x, int16_t p_y);
 
 	void resetcursors(void);
 	void setcursor(Window w, MCCursorRef c);
@@ -85,44 +90,18 @@ public:
 	void setname(Window window, const char *newname);
 	void sync(Window w);
 	void setinputfocus(Window window);
-	void boundrect(MCRectangle &rect, Boolean title, Window_mode m);
 
 	void setcmap(MCStack *sptr);
 	void setgraphicsexposures(Boolean on, MCStack *sptr);
 
-	Pixmap createpixmap(uint2 width, uint2 height, uint2 depth, Boolean purge);
-	void freepixmap(Pixmap &pixmap);
-	
-	bool lockpixmap(Pixmap pixmap, void*& r_data, uint4& r_stride);
-	void unlockpixmap(Pixmap pixmap, void* p_data, uint4 p_stride);
-
-	Pixmap createstipple(uint2 width, uint2 height, uint4 *bits);
-
-	Boolean getwindowgeometry(Window w, MCRectangle &drect);
-	Boolean getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d);
-
-	MCContext *createcontext(Drawable p_drawable, MCBitmap *p_mask);
-	MCContext *createcontext(Drawable p_drawable, bool p_alpha = false, bool p_transient = false);
-	MCContext *creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient);
-	void freecontext(MCContext *p_context);
-
 	int4 textwidth(MCFontStruct *f, const char *s, uint2 len, bool p_unicode_override);
 
 	void copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop);
-	void copyplane(Drawable source, Drawable dest, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel);
-	MCBitmap *createimage(uint2 depth, uint2 width, uint2 height, Boolean set, uint1 value, Boolean shm, Boolean forceZ);
 
-	void destroyimage(MCBitmap *image);
-	MCBitmap *copyimage(MCBitmap *source, Boolean invert);
-	void putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int2 dx, int2 dy, uint2 w, uint2 h);
-	MCBitmap *getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h, Boolean shm = False);
-	void flipimage(MCBitmap *image, int2 byte_order, int2 bit_order);
-
-	MCCursorRef createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
+	MCCursorRef createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y);
 	void freecursor(MCCursorRef c);
 
 	uint4 dtouint4(Drawable d);
-	Boolean uint4topixmap(uint4, Pixmap &p);
 	Boolean uint4towindow(uint4, Window &w);
 
 	void beep();
@@ -131,11 +110,11 @@ public:
 	void getbeep(uint4 property, MCExecPoint &ep);
 	void setbeep(uint4 property, int4 beep);
 
-	MCBitmap *snapshot(MCRectangle &r, uint4 window, const char *displayname);
+	MCImageBitmap *snapshot(MCRectangle &r, MCGFloat p_scale_factor, uint4 window, const char *displayname);
 
 	void enablebackdrop(bool p_hard = false);
 	void disablebackdrop(bool p_hard = false);
-	void configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge);
+	void configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge);
 	void assignbackdrop(Window_mode p_mode, Window p_window);
 
 	void hidemenu();
@@ -150,9 +129,7 @@ public:
 	void waitconfigure(Window w);
 	void waitreparent(Window w);
 	void waitfocus();
-	void querymouse(int2 &x, int2 &y);
 	uint2 querymods();
-	void setmouse(int2 x, int2 y);
 	Boolean getmouse(uint2 button, Boolean& r_abort);
 	Boolean getmouseclick(uint2 button, Boolean& r_abort);
 	Boolean wait(real8 duration, Boolean dispatch, Boolean anyevent);
@@ -218,7 +195,7 @@ public:
 	void handle_key_focus(bool focused);
 	void handle_redraw(const MCRectangle& p_dirty);
 	void handle_motion(MCEventMotionType type, double timestamp);
-	void handle_touch(MCEventTouchPhase phase, void *touch, int32_t p_timestamp, int32_t p_x, int32_t p_y);
+	void handle_touch(MCEventTouchPhase phase, void *touch, int32_t p_timestamp, int32_t p_device_x, int32_t p_device_y);
 	
 	// Common window handling methods.
 	void open_window(Window p_window);

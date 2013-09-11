@@ -21,7 +21,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 typedef struct MCTileCache *MCTileCacheRef;
 
 // The callback type required to render layers.
-typedef bool (*MCTileCacheRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+typedef bool (*MCTileCacheRenderCallback)(void *context, MCGContextRef target, const MCRectangle& region);
 
 // The compositor cleanup callback
 typedef void (*MCTileCacheCleanupCallback)(void *context);
@@ -48,9 +48,9 @@ typedef bool (*MCTileCacheCompositeTileCallback)(void *context, int32_t x, int32
 // Composite a tile-sized rectangle at the given location.
 typedef bool (*MCTileCacheCompositeRectCallback)(void *context, int32_t x, int32_t y, uint32_t color);
 // Snapshot of the current frame has begun.
-typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, Pixmap target);
+typedef bool (*MCTileCacheBeginSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 // Snapshot of the current frame has ended.
-typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, Pixmap target);
+typedef bool (*MCTileCacheEndSnapshotCallback)(void *context, MCRectangle area, MCGRaster &target);
 
 // The compositor description structure.
 struct MCTileCacheCompositor
@@ -182,7 +182,7 @@ void MCTileCacheRenderDirectSprite(MCTileCacheRef self, MCTileCacheLayer& layer,
 bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *surface, MCRegionRef region);
 
 // Render the current frame into an offscreen buffer.
-bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle area, Pixmap& r_pixmap);
+bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle area, MCGImageRef& r_pixmap);
 
 // Configure the tilecache to use the software compositor.
 bool MCTileCacheSoftwareCompositorConfigure(MCTileCacheRef p_tilecache, MCTileCacheCompositor& compositor);

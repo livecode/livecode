@@ -32,7 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxflst.h"
 #include "packed.h"
 
-#include <pango/pangoxft.h>
+#include <pango/pangoft2.h>
+#include <glib.h>
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -51,20 +52,6 @@ extern "C" int initialise_weak_link_pangoft2();
 
 ////////////////////////////////////////////////////////////////////////////////
 
-struct MCNewFontStruct: public MCFontStruct
-{
-	// The requested details of the font
-	char *family;
-	uint16_t size;
-	uint16_t style;
-
-	// The pango description
-	PangoFontDescription *description;
-
-	// The link to the next one.
-	MCNewFontStruct *next;
-};
-
 class MCNewFontlist: public MCFontlist
 {
 public:
@@ -82,59 +69,48 @@ public:
 	virtual void getfontreqs(MCFontStruct *f, const char*& r_name, uint2& r_size, uint2& r_style);
 
 	virtual int4 ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override);
-	virtual void ctxt_drawtext(MCX11Context *context, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override);
-	virtual void ctxt_setfont(MCX11Context *context, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font);
-
 	virtual bool ctxt_layouttext(const unichar_t *chars, uint32_t char_count, MCFontStruct *font, MCTextLayoutCallback callback, void *context);
-
+	
 private:
-	void setuptarget(Pixmap pixmap, uint32_t color);
-
 	MCNewFontStruct *m_fonts;
 
 	PangoContext *m_pango;
 	PangoLayout *m_layout;
-	PangoRenderer *m_renderer;
-
-	XftDraw *m_target;
-	XftColor m_target_color;
-	XftColor m_target_bg_color;
-	uint32_t m_target_color_pixel;
+	PangoFontMap *m_font_map;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
 MCNewFontlist::MCNewFontlist()
 {
+	m_font_map = nil;
 	m_pango = nil;
 	m_layout = nil;
-	m_target = nil;
 	m_fonts = nil;
-	m_target_color_pixel = 0;
 }
 
 MCNewFontlist::~MCNewFontlist()
 {
-	if (m_target != nil)
-	{
-		XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_bg_color);
-		XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_color);
-		XftDrawDestroy(m_target);
-	}
+	if (m_font_map != nil)
+		g_object_unref(m_font_map);
 	if (m_layout != nil)
 		g_object_unref(m_layout);
+	if (m_pango != nil)
+		g_object_unref(m_pango);
 }
 
 bool MCNewFontlist::create(void)
 {
-	if (initialise_weak_link_xft() == 0 ||
-		initialise_weak_link_pango() == 0 ||
-		initialise_weak_link_pangoxft() == 0 ||
+	if (initialise_weak_link_pango() == 0 ||
 		initialise_weak_link_pangoft2() == 0)
 		return false;
 
-	// MW-2011-03-12: [[ Bug 9439 ]] Make sure we pass the appropriate 'screen' through.
-	m_pango = pango_xft_get_context(MCdpy, ((MCScreenDC *)MCscreen) -> getscreen());
+	m_font_map = pango_ft2_font_map_new();
+	if (m_font_map == nil)
+		return false;
+	
+	//m_pango = pango_font_map_create_context(m_font_map);
+	m_pango = pango_ft2_font_map_create_context((PangoFT2FontMap *) m_font_map);
 	if (m_pango == nil)
 		return false;
 
@@ -148,47 +124,6 @@ bool MCNewFontlist::create(void)
 void MCNewFontlist::destroy(void)
 {
 	delete this;
-}
-
-void MCNewFontlist::setuptarget(Pixmap p_pixmap, uint32_t p_color)
-{
-	bool t_change_color;
-	t_change_color = false;
-	if (m_target == nil)
-	{
-		XRenderColor t_xr_color;
-		t_xr_color . red = 0;
-		t_xr_color . green = 0;
-		t_xr_color . blue = 0;
-		t_xr_color . alpha = 0xffff;
-		XftColorAllocValue(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &t_xr_color, &m_target_bg_color);
-		
-		m_target = XftDrawCreate(MCdpy, p_pixmap, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32());
-		
-		t_change_color = true;
-	}
-	else
-	{
-		XftDrawChange(m_target, p_pixmap);
-		if (p_color != m_target_color_pixel)
-		{
-			XftColorFree(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &m_target_color);
-			t_change_color = true;
-		}
-	}
-
-	if (t_change_color)
-	{
-		XRenderColor t_xr_color;
-		t_xr_color . red = (p_color & 0x00ff0000) >> 8;
-		t_xr_color . red |= t_xr_color . red >> 8;
-		t_xr_color . green = (p_color & 0x0000ff00) ;
-		t_xr_color . green |= t_xr_color . green >> 8;
-		t_xr_color . blue =  (p_color & 0x000000ff) << 8 ;
-		t_xr_color . blue |= t_xr_color . blue >> 8;
-		t_xr_color . alpha = 0xffff ;
-		XftColorAllocValue(MCdpy, ((MCScreenDC*)MCscreen) -> getvis32() -> visual, ((MCScreenDC*)MCscreen) -> getcmap32(), &t_xr_color, &m_target_color);
-	}
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -383,201 +318,6 @@ int4 MCNewFontlist::ctxt_textwidth(MCFontStruct *f, const char *s, uint2 l, bool
 	pango_layout_get_pixel_extents(m_layout, nil, &t_logical);
 
 	return t_logical . width;
-}
-
-void MCNewFontlist::ctxt_drawtext(MCX11Context *ctxt, int2 x, int2 y, const char *s, uint2 l, MCFontStruct *f, Boolean image, bool unicode_override)
-{
-	// Set the text of the layout appropriately.
-	bool t_is_unicode;
-	t_is_unicode = (f -> unicode || unicode_override);
-
-	char *t_utf8;
-	if (t_is_unicode)
-	{
-		if (!MCCStringFromUnicodeSubstring((const unichar_t *)s, l / 2, t_utf8))
-			return;
-	}
-	else
-	{
-		if (!MCCStringFromNativeSubstring(s, l, t_utf8))
-			return;
-	}
-	pango_layout_set_text(m_layout, t_utf8, -1);
-	MCCStringFree(t_utf8);
-
-	pango_layout_set_font_description(m_layout, static_cast<MCNewFontStruct *>(f) -> description);
-
-	if (image)
-	{
-		PangoRectangle t_logical;
-		pango_layout_get_pixel_extents(m_layout, nil, &t_logical);
-
-		uint1 t_quality;
-		t_quality = ctxt -> f_quality;
-
-		ctxt -> setquality(QUALITY_DEFAULT);
-		XSetForeground(ctxt -> m_display, ctxt -> m_gc, ctxt -> m_bgcolor);
-
-		MCRectangle t_rect;
-		t_rect . x = x;
-		t_rect . y = y - f -> ascent;
-		t_rect . width = t_logical . width;
-		t_rect . height = f -> ascent + f -> descent;
-		ctxt -> fillrect(t_rect);
-
-		XSetForeground(ctxt -> m_display, ctxt -> m_gc, ctxt -> f_fill . colour);
-		ctxt -> setquality(t_quality);
-	}
-
-	// Get the line we are to render.
-	extern PangoLayoutLine *(*pango_layout_get_line_readonly_ptr)(PangoLayout *, int);
-	PangoLayoutLine *t_line;
-	if (pango_layout_get_line_readonly_ptr != nil)
-		t_line = pango_layout_get_line_readonly_ptr(m_layout, 0);
-	else
-		t_line = pango_layout_get_line(m_layout, 0);
-
-	// Now we must switch depending on whether we need the text's alpha channel.
-	// This is the case if:
-	//   1) The dc is not currently opaque
-	//   2) 'image' is False
-	//   3) The dc has background alpha.
-	if (image || !ctxt -> want_painted_text())
-	{		
-		setuptarget(ctxt -> m_layers -> surface, ctxt -> f_fill . colour);
-
-		MCRectangle t_clip ;
-		t_clip = ctxt -> getclip() ;
-		t_clip . x -= ctxt -> m_layers -> origin . x ;
-		t_clip . y -= ctxt -> m_layers -> origin . y ;
-
-		XPoint pa[4] ;
-		pa[0].x = t_clip . x;
-		pa[0].y = t_clip . y;
-		pa[1].x = t_clip . x + t_clip . width;
-		pa[1].y = t_clip . y;
-		pa[2].x = t_clip . x + t_clip . width;
-		pa[2].y = t_clip . y + t_clip . height;
-		pa[3].x = t_clip . x;
-		pa[3].y = t_clip . y + t_clip . height;
-		
-		Region crect;			
-		crect = XPolygonRegion(pa, 4, WindingRule);
-		XftDrawSetClip(m_target, crect);
-		XDestroyRegion(crect);
-
-		if (t_line != nil)
-			pango_xft_render_layout_line(m_target, &m_target_color, t_line, (x - ctxt -> m_layers -> origin . x) * PANGO_SCALE, (y - ctxt -> m_layers -> origin . y) * PANGO_SCALE);
-
-		ctxt -> update_mask(t_clip . x, (y - ctxt -> m_layers -> origin . y)  - f -> ascent, ctxt -> m_layers -> clip . width, f -> ascent + f -> descent);
-	}
-	else
-	{
-		bool t_success;
-		t_success = true;
-
-		// As we touch the alpha of the context, make sure it is in sync.
-		ctxt -> flush_mask();
-
-		// Get the source rect
-		MCRectangle t_ink;
-		PangoRectangle t_ink_p;
-		pango_layout_line_get_pixel_extents(t_line, &t_ink_p, nil);
-		t_ink . x = x + t_ink_p . x;
-		t_ink . y = y + t_ink_p . y;
-		t_ink . width = t_ink_p . width;
-		t_ink . height = t_ink_p . height;
-
-		// Get the target clip
-		MCRectangle t_clip;
-		t_clip = ctxt -> getclip() ;
-
-		// Compute the intersecting region we need to render - in target coords.
-		MCRectangle t_src;
-		t_src = MCU_intersect_rect(t_clip, t_ink);
-
-		// If there is nothing to render, do nothing
-		if (t_src . width == 0 || t_src . height == 0)
-			return;
-
-		// Create a pixmap of the appropriate size
-		Pixmap t_alpha;
-		t_alpha = DNULL;
-		if (t_success)
-		{
-			t_alpha = MCscreen -> createpixmap(t_src . width, t_src . height, 0, False);
-			if (t_alpha == DNULL)
-				t_success = false;
-		}
-
-		// Render the line and get the alpha bitmap
-		MCBitmap *t_alpha_data;
-		t_alpha_data = nil;
-		if (t_success)
-		{
-			setuptarget(t_alpha, 0xffffffff);
-			XftDrawSetClip(m_target, None);
-			XftDrawRect(m_target, &m_target_bg_color, 0, 0, t_src . width, t_src . height);
-			pango_xft_render_layout_line(m_target, &m_target_color, t_line, (x - t_src . x) * PANGO_SCALE, (y - t_src . y) * PANGO_SCALE);
-			t_alpha_data = MCscreen -> getimage(t_alpha, 0, 0, t_src . width, t_src . height);
-			if (t_alpha_data == nil)
-				t_success = false;
-		}
-
-		if (t_success)
-		{
-			int32_t dx, dy, sw, sh;
-			dx = t_src . x - ctxt -> m_layers -> origin . x;
-			dy = t_src . y - ctxt -> m_layers -> origin . y;
-			sw = t_src . width;
-			sh = t_src . height;
-
-			MCBitmap *t_dst_image;
-			uint1 *t_locked_dst_ptr;
-			uint4 t_dst_stride;
-			t_locked_dst_ptr = nil;
-			t_dst_stride = nil;
-			t_dst_image = ctxt -> lock_layer(t_locked_dst_ptr, t_dst_stride, ctxt -> m_layers, dx, dy, sw, sh);
-			if (t_dst_image != NULL)
-			{
-				t_locked_dst_ptr = (uint1*)t_dst_image -> data;
-				t_dst_stride = t_dst_image -> bytes_per_line;
-			}
-
-			for(uint32_t y = 0; y < sh; y++)
-			{
-				uint4 *t_src_ptr;
-				uint4 *t_dst_ptr;
-				t_src_ptr = (uint4 *)(t_alpha_data -> data + t_alpha_data -> bytes_per_line * y);
-				t_dst_ptr = (uint4 *)(t_locked_dst_ptr + t_dst_stride * y);
-
-				for(uint32_t x = 0; x < sw; x++)
-				{
-					uint4 t_mask;
-					t_mask = t_src_ptr[x];
-
-					uint1 t_alpha;
-					t_alpha = ((t_mask & 0xFF) + ((t_mask & 0xFF00) >> 8) + ((t_mask & 0xFF0000) >> 16)) / 3;
-					
-					t_dst_ptr[x] = packed_bilinear_bounded(t_dst_ptr[x], 255 - t_alpha, ctxt -> f_fill . colour, t_alpha);
-				}
-			}
-
-			if (t_dst_image != NULL) 
-				MCscreen -> putimage(ctxt -> m_layers -> surface, t_dst_image, 0, 0, dx, dy, sw, sh);
-
-			ctxt -> unlock_layer(t_locked_dst_ptr, t_dst_stride, ctxt -> m_layers, dx, dy, sw, sh);
-		}
-
-		if (t_alpha_data != nil)
-			MCscreen -> destroyimage(t_alpha_data);
-		if (t_alpha != DNULL)
-			MCscreen -> freepixmap(t_alpha);
-	}
-}
-
-void MCNewFontlist::ctxt_setfont(MCX11Context *ctxt, const char *fontname, uint2 fontsize, uint2 fontstyle, MCFontStruct *font)
-{
 }
 
 bool MCNewFontlist::ctxt_layouttext(const unichar_t *p_chars, uint32_t p_char_count, MCFontStruct *p_font, MCTextLayoutCallback p_callback, void *p_context)

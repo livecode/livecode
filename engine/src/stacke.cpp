@@ -38,6 +38,13 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "context.h"
 #include "execpt.h"
 
+#include "graphicscontext.h"
+
+#include "graphics.h"
+#include "resolution.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 #define ZOOM_RECTS 6
 #define DISSOLVE_SIZE 16
 #define DISSOLVE_MASK 15
@@ -48,28 +55,129 @@ static uint2 Zoomsize = 16;
 
 static int2 dissolve_array[DISSOLVE_SIZE] = { 13, 2, 10, 7, 14, 8, 11, 3, 0, 5, 12, 9, 1, 6, 4, 15};
 
-static Boolean barneffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean checkerboardeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean dissolveeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean iriseffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean pusheffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean revealeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean scrolleffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean shrinkeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean stretcheffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean venetianeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
-static Boolean wipeeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean barneffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean checkerboardeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean dissolveeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean iriseffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean pusheffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean revealeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean scrolleffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean shrinkeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean venetianeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean wipeeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
+static Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration);
 
-extern bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, Drawable p_target, Drawable p_start, Drawable p_end, const MCRectangle& p_area);
-extern bool MCQTEffectStep(uint4 p_delta, uint4 p_duration);
+extern bool MCQTEffectBegin(Visual_effects p_type, const char *p_name, Visual_effects p_direction, MCGImageRef p_start, MCGImageRef p_end, const MCRectangle& p_area);
+extern bool MCQTEffectStep(const MCRectangle &drect, MCStackSurface *p_target, uint4 p_delta, uint4 p_duration);
 extern void MCQTEffectEnd(void);
 
-extern bool MCCoreImageEffectBegin(const char *p_name, Drawable p_target, Drawable p_source_a, Drawable p_source_b, const MCRectangle& p_rect, MCEffectArgument *p_arguments);
-extern bool MCCoreImageEffectStep(float p_time);
+extern bool MCCoreImageEffectBegin(const char *p_name, MCGImageRef p_source_a, MCGImageRef p_source_b, const MCRectangle& p_rect, MCGFloat p_surface_height, MCEffectArgument *p_arguments);
+extern bool MCCoreImageEffectStep(MCStackSurface *p_target, float p_time);
 extern void MCCoreImageEffectEnd(void);
 
 extern void MCMacDisableScreenUpdates(void);
 extern void MCMacEnableScreenUpdates(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+struct MCStackEffectContext
+{
+	MCGImageRef initial_image;
+	MCGImageRef final_image;
+	
+	MCEffectList *effect;
+	MCRectangle effect_area;
+	
+	uint32_t delta;
+	uint32_t duration;
+};
+
+bool MCStackRenderInitial(MCStackSurface *p_target, MCRegionRef p_region, void *p_context)
+{
+	MCStackEffectContext *context = static_cast<MCStackEffectContext*>(p_context);
+	
+	p_target->Composite(MCRectangleToMCGRectangle(context->effect_area), context->initial_image, MCGRectangleMake(0, 0, context->effect_area.width, context->effect_area.height), 1.0, kMCGBlendModeCopy);
+	
+	return true;
+}
+
+bool MCStackRenderEffect(MCStackSurface *p_target, MCRegionRef p_region, void *p_context)
+{
+	bool t_drawn = false;
+	MCStackEffectContext *context = static_cast<MCStackEffectContext*>(p_context);
+	
+	// Render the effect into the dst image buffer.
+	switch(context->effect->type)
+	{
+		case VE_BARN:
+			t_drawn = barneffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_CHECKERBOARD:
+			t_drawn = checkerboardeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_DISSOLVE:
+			t_drawn = dissolveeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_IRIS:
+			t_drawn = iriseffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_PUSH:
+			t_drawn = pusheffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_REVEAL:
+			t_drawn = revealeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_SCROLL:
+			t_drawn = scrolleffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_SHRINK:
+			t_drawn = shrinkeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_STRETCH:
+			t_drawn = stretcheffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_VENETIAN:
+			t_drawn = venetianeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_WIPE:
+			t_drawn = wipeeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+		case VE_ZOOM:
+			t_drawn = zoomeffect_step(context->effect_area, p_target, context->initial_image, context->final_image, context->effect->direction, context->delta, context->duration);
+			break;
+			
+#ifdef _MAC_DESKTOP
+		case VE_CIEFFECT:
+			t_drawn = MCCoreImageEffectStep(p_target, (float)context->delta / context->duration);
+			break;
+#endif
+			
+#ifdef FEATURE_QUICKTIME
+		case VE_QTEFFECT:
+			t_drawn = MCQTEffectStep(context->effect_area, p_target, context->delta, context->duration);
+			break;
+#endif
+			
+		default:
+			break;
+	}
+	
+	return t_drawn;
+}
+
+//////////
 
 void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 {
@@ -106,11 +214,27 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	t_effect_area . height -= t_effect_area . y;
 	t_effect_area = MCU_intersect_rect(t_effect_area, p_area);
 	
+	// IM-2013-08-21: [[ ResIndependence ]] Scale effect area to device coords
+	// Align snapshot rect to device pixels
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
+	MCRectangle t_user_rect;
+	t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
+	
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	// IM-2013-08-29: [[ RefactorGraphics ]] get device height for CoreImage effects
+	uint32_t t_device_height;
+	t_device_height = floor(getcurcard()->getrect().height * t_scale);
+	
 	// Make a region of the effect area
-	MCRegionRef t_effect_rgn;
-	MCRegionCreate(t_effect_rgn);
-	MCRegionSetRect(t_effect_rgn, t_effect_area);
-
+	// IM-2013-08-29: [[ ResIndependence ]] scale effect region to device coords
+	MCRegionRef t_device_region;
+	t_device_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_device_region);
+	/* UNCHECKED */ MCRegionSetRect(t_device_region, t_device_rect);
+	
 #if defined(FEATURE_QUICKTIME)
 	// MW-2010-07-07: Make sure QT is only loaded if we actually are doing an effect
 	if (t_effects != nil)
@@ -125,118 +249,98 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	// By default, we have not aborted.
 	r_abort = False;
 	
-	// If we don't have a (soft) windowshape we can directly target the window (on
-	// desktop).
-	bool t_direct_dst;
-#ifndef _MOBILE
-	t_direct_dst = true;
-	if (m_window_shape != nil && !m_window_shape -> is_sharp)
-		t_direct_dst = false;
-#else
-	t_direct_dst = false;
-#endif
-
-	// Loop through the effects until we are done.
-	Pixmap t_start_image, t_end_image, t_dst_image;
-	t_start_image = nil;
-	t_end_image = nil;
-	t_dst_image = nil;
+	MCGImageRef t_initial_image;
+	t_initial_image = MCGImageRetain(m_snapshot);
+	
 	while(t_effects != nil)
 	{
-		// The target of the effects.
-		Drawable t_dst_drawable;
+		uint32_t t_duration;
+		t_duration = MCU_max(1, MCeffectrate / (t_effects -> speed - VE_VERY));
+		if (t_effects -> type == VE_DISSOLVE)
+			t_duration *= 2;
 		
-		// The effect area from the point of view of the effects is based at
-		// (0, 0) for temp dsts.
-		MCRectangle t_dst_effect_area;
-		if (t_direct_dst)
-		{
-			t_dst_effect_area = t_effect_area;
-			
-			// MW-2011-10-18: [[ Bug 9822 ]] In direct mode, make sure we take into account the
-			//   scroll.
-			t_dst_effect_area . y -= getscroll();
-		}
-		else
-			t_dst_effect_area = MCU_offset_rect(t_effect_area, -t_effect_area . x, -t_effect_area . y);
+		uint32_t t_delta;
+		t_delta = 0;
+		
+		// Create surface at effect_area size.
+		// Render into surface based on t_effects -> image
+		MCGImageRef t_final_image = nil;
 		
 		// If this isn't a plain effect, then we must fetch first and last images.
 		if (t_effects -> type != VE_PLAIN)
 		{
-			// Get the starting image for the effect.
-			t_start_image = m_snapshot;
-			m_snapshot = nil;
-
-			// Allocate a pixmap for the final image.
-			t_end_image = MCscreen -> createpixmap(t_effect_area . width, t_effect_area . height, 32, False);
-			if (t_end_image == nil)
-				break;
-
-			// Allocate a destination image - if we are not direct.
-			if (!t_direct_dst)
-			{
-				t_dst_image = MCscreen -> createpixmap(t_effect_area . width, t_effect_area . height, 32, False);
-				if (t_dst_image == nil)
-					break;
-			}
-			
-			// Compute the target drawable - this is the window if direct mode is possible.
-			if (t_direct_dst)
-				t_dst_drawable = window;
-			else
-				t_dst_drawable = t_dst_image;
-			
-			// MW-2011-10-20: [[ Bug 9824 ]] Make sure dst point is correct.
-			// Initialize the destination with the start image.
-			MCscreen -> copyarea(t_start_image, t_dst_drawable, 32, 0, 0, t_effect_area . width, t_effect_area . height, t_dst_effect_area . x, t_dst_effect_area . y, GXcopy);
-
 			// Render the final image.
-			MCContext *t_context;
-			t_context = MCscreen -> createcontext(t_end_image, true, true);
-			if (t_context == nil)
-				break;
-
+			MCGContextRef t_context = nil;
+			
+			/* UNCHECKED */ MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+			
+			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
 			// Configure the context.
-			t_context -> setorigin(t_effect_area . x, t_effect_area . y);
-			t_context -> setclip(t_effect_area);
+			MCGContextClipToRect(t_context, MCRectangleToMCGRectangle(t_user_rect));
 			
 			// Render an appropriate image
 			switch(t_effects -> image)
 			{
 				case VE_INVERSE:
-					t_context -> setfunction(GXinvert);
-					t_context -> begin(true);
-					curcard -> draw(t_context, t_effect_area, false);
-					t_context -> end();
-				break;
-				
+					{
+						MCContext *t_old_context = nil;
+						/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+						curcard->draw(t_old_context, t_user_rect, false);
+						delete t_old_context;
+						
+						MCGContextSetFillRGBAColor(t_context, 1.0, 1.0, 1.0, 1.0);
+						MCGContextSetBlendMode(t_context, kMCGBlendModeDifference);
+						MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
+						MCGContextFill(t_context);
+						
+					}
+					break;
+					
 				case VE_BLACK:
-					t_context -> setforeground(MCscreen -> getblack());
-					t_context -> fillrect(t_effect_area);
-				break;
-				
+					MCGContextSetFillRGBAColor(t_context, 0.0, 0.0, 0.0, 1.0);
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
+					MCGContextFill(t_context);
+					break;
+					
 				case VE_WHITE:
-					t_context -> setforeground(MCscreen -> getwhite());
-					t_context -> fillrect(t_effect_area);
-				break;
-				
+					MCGContextSetFillRGBAColor(t_context, 1.0, 1.0, 1.0, 1.0);
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
+					MCGContextFill(t_context);
+					break;
+					
 				case VE_GRAY:
-					t_context -> setforeground(MCscreen -> getgray());
-					t_context -> fillrect(t_effect_area);
-				break;
-				
+					MCGContextSetFillRGBAColor(t_context, 0.5, 0.5, 0.5, 1.0);
+					MCGContextAddRectangle(t_context, MCRectangleToMCGRectangle(t_user_rect));
+					MCGContextFill(t_context);
+					break;
+					
 				default:
-					curcard -> draw(t_context, t_effect_area, false);
-				break;
+				{
+					MCContext *t_old_context = nil;
+					/* UNCHECKED */ t_old_context = new MCGraphicsContext(t_context);
+					curcard->draw(t_old_context, t_user_rect, false);
+					delete t_old_context;
+				}
 			}
 			
-			// Apply the window mask (if any).
-			if (m_window_shape != nil && !m_window_shape -> is_sharp)
-				t_context -> applywindowshape(m_window_shape, t_effect_area . width, t_effect_area . height);
-
-			MCscreen -> freecontext(t_context);
+			/* UNCHECKED */ MCGContextCopyImage(t_context, t_final_image);
+			MCGContextRelease(t_context);
 		}
-
+		
+		MCStackEffectContext t_context;
+		t_context.delta = t_delta;
+		t_context.duration = t_duration;
+		t_context.effect = t_effects;
+		t_context.effect_area = t_device_rect;
+		t_context.initial_image = t_initial_image;
+		t_context.final_image = t_final_image;
+		
+		// MW-2011-10-20: [[ Bug 9824 ]] Make sure dst point is correct.
+		// Initialize the destination with the start image.
+		device_updatewindowwithcallback(t_device_region, MCStackRenderInitial, &t_context);
+		
 		// If there is a sound, then start playing it.
 		if (t_effects -> sound != NULL)
 		{
@@ -256,7 +360,7 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 					MCS_close(stream);
 				}
 			}
-
+			
 			if (acptr != NULL)
 			{
 				MCU_play_stop();
@@ -265,120 +369,49 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				if (MCacptr != NULL)
 					MCscreen->addtimer(MCacptr, MCM_internal, PLAY_RATE);
 			}
-
+			
 			if (MCscreen->wait((real8)MCsyncrate / 1000.0, False, True))
 			{
 				r_abort = True;
 				break;
 			}
 		}
-
+		
 		// Initialize CoreImage of QTEffects if needed.
 		if (t_effects -> type != VE_PLAIN)
 		{
 #ifdef _MAC_DESKTOP
-			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area, t_effects -> arguments))
+			// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for CI effects
+			if (t_effects -> type == VE_UNDEFINED && MCCoreImageEffectBegin(t_effects -> name, t_initial_image, t_final_image, t_device_rect, t_device_height, t_effects -> arguments))
 				t_effects -> type = VE_CIEFFECT;
 			else
 #endif
 #ifdef FEATURE_QUICKTIME
-			if (MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_dst_drawable, t_start_image, t_end_image, t_dst_effect_area))
-				t_effects -> type = VE_QTEFFECT;
+				// IM-2013-08-29: [[ ResIndependence ]] use scaled effect rect for QT effects
+				if (t_effects -> type == VE_UNDEFINED && MCQTEffectBegin(t_effects -> type, t_effects -> name, t_effects -> direction, t_initial_image, t_final_image, t_device_rect))
+					t_effects -> type = VE_QTEFFECT;
 #endif
 		}
-
+		
+		// Run effect
 		// Now perform the effect loop, but only if there is something to do.
 		if (t_effects -> type != VE_PLAIN || old_blendlevel != blendlevel)
 		{
 			// Calculate timing parameters.
 			double t_start_time;
 			t_start_time = 0.0;
-
-			uint32_t t_duration;
-			t_duration = MCU_max(1, MCeffectrate / (t_effects -> speed - VE_VERY));
-			if (t_effects -> type == VE_DISSOLVE)
-				t_duration *= 2;
-
-			uint32_t t_delta;
-			t_delta = 0;
+			
 			for(;;)
 			{
-				Boolean t_drawn;
-
-				// Render the effect into the dst image buffer.
-				switch(t_effects -> type)
-				{
-					case VE_BARN:
-						t_drawn = barneffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_CHECKERBOARD:
-						t_drawn = checkerboardeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_DISSOLVE:
-						t_drawn = dissolveeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
+				t_context.delta = t_delta;
 				
-					case VE_IRIS:
-						t_drawn = iriseffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_PUSH:
-						t_drawn = pusheffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_REVEAL:
-						t_drawn = revealeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_SCROLL:
-						t_drawn = scrolleffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_SHRINK:
-						t_drawn = shrinkeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_STRETCH:
-						t_drawn = stretcheffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_VENETIAN:
-						t_drawn = venetianeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-					case VE_WIPE:
-						t_drawn = wipeeffect_step(t_dst_effect_area, t_dst_drawable, t_start_image, t_end_image, t_effects->direction, t_delta, t_duration);
-					break;
-					
-#ifdef _MAC_DESKTOP
-					case VE_CIEFFECT:
-						t_drawn = MCCoreImageEffectStep((float)t_delta / t_duration);
-					break;
-#endif
-
-#ifdef FEATURE_QUICKTIME
-					case VE_QTEFFECT:
-						t_drawn = MCQTEffectStep(t_delta, t_duration);
-					break;
-#endif
-					
-					default:
-					break;
-				}
-
+				Boolean t_drawn = False;
+				device_updatewindowwithcallback(t_device_region, MCStackRenderEffect, &t_context);
+				
 				// Now redraw the window with the new image.
-				if (t_drawn)
+//				if (t_drawn)
 				{
-					if (t_direct_dst)
-						MCscreen -> sync(getw());
-					else
-					{
-						if (m_window_shape != nil && !m_window_shape -> is_sharp)
-							setextendedstate(True, ECS_MASK_CHANGED);
-						updatewindowwithbuffer(t_dst_image, t_effect_rgn);
-					}
+					MCscreen -> sync(getw());
 				}
 				
 				// Update the window's blendlevel (if needed)
@@ -429,29 +462,24 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 				if (r_abort)
 					t_delta = t_duration;
 			}
-		}
-
+		}		
 #ifdef _MAC_DESKTOP
 		if (t_effects -> type == VE_CIEFFECT)
 			MCCoreImageEffectEnd();
 		else
 #endif
 #ifdef FEATURE_QUICKTIME
-		if (t_effects -> type == VE_QTEFFECT)
-			MCQTEffectEnd();
+			if (t_effects -> type == VE_QTEFFECT)
+				MCQTEffectEnd();
 #endif
-
-		// Free the start image - this will be the snapshot first time
-		// round.
-		MCscreen -> freepixmap(t_start_image);
 		
-		// Free the end image.
-		MCscreen -> freepixmap(t_dst_image);
-
-		// The snapshot now becomes the end image.
-		m_snapshot = t_end_image;
-		t_end_image = nil;
-
+		// Free initial surface.
+		MCGImageRelease(t_initial_image);
+		
+		// initial surface becomes final surface.
+		t_initial_image = t_final_image;
+		t_final_image = nil;
+		
 		// Move to the next effect.
 		MCEffectList *t_current_effect;
 		t_current_effect = t_effects;
@@ -463,9 +491,9 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	// are cleaned up.
 	if (t_effects != NULL)
 	{
-		MCscreen -> freepixmap(t_start_image);
-		MCscreen -> freepixmap(t_end_image);
-		MCscreen -> freepixmap(t_dst_image);
+		/* OVERHAUL - REVISIT: error cleanup needs revised */
+		MCGImageRelease(t_initial_image);
+//		MCGSurfaceRelease(t_final_image);
 
 		while(t_effects != NULL)
 		{
@@ -476,6 +504,13 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 		}
 	}
 
+	MCRegionDestroy(t_device_region);
+	
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
+	
+	m_snapshot = t_initial_image;
+	
 	// Unlock the screen.
 	MCRedrawUnlockScreen();
 	
@@ -492,571 +527,433 @@ void MCStack::effectrect(const MCRectangle& p_area, Boolean& r_abort)
 	dirtyrect(p_area);
 }
 
-Boolean barneffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+
+Boolean barneffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
-	static int2 x;
-	if (delta == 0)
-		x = 0;
-	int2 newx = (drect.width >> 1) * delta / duration;
-	if (newx != x)
+	uint32_t width, x;
+	MCGImageRef t_top, t_bottom;
+	MCGRectangle t_top_src, t_bottom_src;
+	
+	if (dir == VE_CLOSE)
 	{
-		uint2 width = newx - x;
-		if (dir == VE_CLOSE)
-		{
-			MCscreen->copyarea(p_end, p_target, 0, x, 0,
-			                   width, drect.height, drect.x + x, drect.y, GXcopy);
-			MCscreen->copyarea(p_end, p_target, 0, drect.width - x - width,
-			                   0, width, drect.height,
-			                   drect.x + drect.width - x - width, drect.y, GXcopy);
-		}
-		else
-		{
-			uint2 mid = drect.x + (drect.width >> 1);
-			MCscreen->copyarea(p_end, p_target, 0, mid - x - width - drect . x, 0,
-			                   width, drect.height, mid - x - width, drect.y, GXcopy);
-			MCscreen->copyarea(p_end, p_target, 0, mid + x - drect . x, 0,
-			                   width, drect.height, mid + x, drect.y, GXcopy);
-		}
-		x = newx;
-		return True;
-	}
-	return False;
-}
-
-Boolean checkerboardeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static int2 oldy;
-	Boolean done = False;
-	
-	if (delta == 0)
-	{
-		oldy = drect . y;
-		done = True;
-	}
-	
-	int2 newy = drect . y + (Checkersize << 1) * delta / duration;
-	if (newy != oldy)
-	{
-		for(int2 y = oldy; y < newy; y++)
-		{
-			MCRectangle trect;
-			trect . height = 1;
-			trect . width = Checkersize;
-			
-			Boolean odd = True;
-			for(trect . y = -Checkersize; trect . y < drect . height; trect . y += Checkersize)
-			{
-				odd = !odd;
-				Boolean draw = odd;
-				for(trect . x = 0; trect . x < drect . width; trect . x += Checkersize)
-				{
-					if (draw)
-						MCscreen -> copyarea(p_end, p_target, 32, trect . x, trect . y + y - drect . y, trect . width, trect . height, trect . x + drect . x, trect . y + y, GXcopy);
-					draw = !draw;
-				}
-			}
-		}
-		oldy = newy;
-		done = True;
-	}
-	
-	return done;
-}
-
-Boolean dissolveeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static uint2 oldindex;
-	uint2 y;
-	Boolean done = False;
-
-	void *t_result_ptr;
-	uint4 t_result_stride;
-
-	void *t_end_ptr;
-	uint4 t_end_stride;
-	
-#ifndef TARGET_PLATFORM_LINUX
-	MCscreen -> lockpixmap(p_start, t_result_ptr, t_result_stride);
-	MCscreen -> lockpixmap(p_end, t_end_ptr, t_end_stride);
-#endif
-
-	if (delta == 0)
-		oldindex = 0;
+		width = (drect.width) * (duration - delta) / duration;
+		x = (drect.width / 2) * delta / duration;
 		
-	uint2 index = DISSOLVE_SIZE * delta / duration;
-	
-	if (index != oldindex)
-	{
-#ifdef TARGET_PLATFORM_LINUX
-		MCBitmap *t_start_image;
-		t_start_image = MCscreen -> getimage(p_start, 0, 0, drect . width, drect . height, False);
-		t_result_ptr = t_start_image -> data;
-		t_result_stride = t_start_image -> bytes_per_line;
+		t_top = p_start;
+		t_bottom = p_end;
 
-		MCBitmap *t_end_image;
-		t_end_image = MCscreen -> getimage(p_end, 0, 0, drect . width, drect . height, False);
-		t_end_ptr = t_end_image -> data;
-		t_end_stride = t_end_image -> bytes_per_line;
-#endif
-
-		while(index > oldindex)
-		{
-			for (y = 0 ; y < drect . height ; y++)
-			{
-				uint2 offset = dissolve_array[y + dissolve_array[oldindex] & DISSOLVE_MASK];
-				uint4 *sptr = (uint4 *)&((uint1 *)t_end_ptr)[y * t_end_stride];
-				sptr += offset;
-				uint4 *dptr = (uint4 *)&((uint1 *)t_result_ptr)[y * t_result_stride];
-				dptr += offset;
-				uint4 *eptr = (uint4 *)&((uint1 *)t_result_ptr)[(y + 1) * t_result_stride];
-				while (dptr < eptr)
-				{
-					*dptr = *sptr;
-					sptr += DISSOLVE_SIZE;
-					dptr += DISSOLVE_SIZE;
-				}
-			}
-			oldindex++;
-		}
-
-#ifdef TARGET_PLATFORM_LINUX
-		MCscreen -> putimage(p_start, t_start_image, 0, 0, 0, 0, drect . width, drect . height);
-		MCscreen -> destroyimage(t_start_image);
-		MCscreen -> destroyimage(t_end_image);
-#endif
-
-		MCscreen -> copyarea(p_start, p_target, 0, 0, 0, drect . width, drect . height, drect . x, drect . y, GXcopy);
-		done = True;
-	}
-	
-#ifndef TARGET_PLATFORM_LINUX
-	MCscreen -> unlockpixmap(p_end, t_end_ptr, t_end_stride);
-	MCscreen -> unlockpixmap(p_start, t_result_ptr, t_result_stride);
-#endif
-	
-	return done;
-}
-
-Boolean iriseffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static MCRectangle orect;
-	
-	if (delta == 0)
-		orect . width = orect . height = 0;
-	
-	MCRectangle trect;
-	Boolean done = False;
-	
-	if (dir == VE_OPEN)
-	{
-		trect.width =	drect.width * delta / duration;
-		trect.height = drect.height * delta / duration;
-		if (trect.width != orect.width || trect.height != orect.height)
-		{
-			trect = MCU_center_rect(drect, trect);
-			MCscreen -> copyarea(p_end, p_target, 0, orect . x - drect . x, orect . y - drect . y, orect . width, orect . height, orect . x, orect . y, GXcopy);
-			done = True;
-		}
 	}
 	else
 	{
-		trect.width = drect.width - drect.width * delta / duration;
-		trect.height = drect.height - drect.height * delta / duration;
-		if (trect.width != orect.width || trect.height != orect.height)
+		width = (drect.width) * delta / duration;
+		x = (drect.width / 2) * (duration - delta) / duration;
+		
+		t_top = p_end;
+		t_bottom = p_start;
+	}
+	
+	t_bottom_src = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_top_src = MCGRectangleMake(x, 0, width, drect.height);
+	
+	p_target->Composite(MCGRectangleTranslate(t_bottom_src, drect.x, drect.y), t_bottom, t_bottom_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(MCGRectangleTranslate(t_top_src, drect.x, drect.y), t_top, t_top_src, 1.0, kMCGBlendModeCopy);
+
+	return True;
+}
+
+Boolean checkerboardeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	int2 newy = (Checkersize << 1) * delta / duration;
+
+	MCGRectangle t_src_rect, t_dst_rect;
+	
+	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
+	
+	p_target->Composite(t_dst_rect, p_start, t_src_rect, 1.0, kMCGBlendModeCopy);
+	
+	bool t_odd = false;
+	for (uint32_t x = 0; x < drect.width; x += Checkersize)
+	{
+		for (int32_t y = (t_odd ? -Checkersize : 0); y < drect.height; y += Checkersize * 2)
 		{
-			trect = MCU_center_rect(drect, trect);
+			t_src_rect = MCGRectangleMake(x, y, Checkersize, newy);
+			t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
+			p_target->Composite(t_dst_rect, p_end, t_src_rect, 1.0, kMCGBlendModeCopy);
+		}
+		t_odd = !t_odd;
+	}
+	
+	return True;
+}
+
+Boolean dissolveeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	MCGFloat t_alpha;
+	t_alpha = (MCGFloat)delta / (MCGFloat)duration;
+	
+	MCGRectangle t_src_rect, t_dst_rect;
+	t_dst_rect = MCRectangleToMCGRectangle(drect);
+	t_src_rect = MCGRectangleMake(0.0, 0.0, t_dst_rect.size.width, t_dst_rect.size.height);
+	
+	p_target->Composite(t_dst_rect, p_start, t_src_rect, 1.0, kMCGBlendModeSourceOver);
+	p_target->Composite(t_dst_rect, p_end, t_src_rect, t_alpha, kMCGBlendModeSourceOver);
+	
+	return True;
+}
+
+Boolean iriseffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	MCGFloat t_position = (MCGFloat) delta / (MCGFloat) duration;
+	uint32_t width, height, x, y;
+	MCGImageRef t_top, t_bottom;
+	MCGRectangle t_top_src, t_bottom_src;
+	
+	if (dir == VE_CLOSE)
+	{
+		width = drect.width * (1.0 - t_position);
+		height = drect.height * (1.0 - t_position);
+		x = (drect.width / 2) * t_position;
+		y = (drect.height / 2) * t_position;
+		
+		t_top = p_start;
+		t_bottom = p_end;
+		
+	}
+	else
+	{
+		width = drect.width * t_position;
+		height = drect.height * t_position;
+		x = (drect.width / 2) * (1.0 - t_position);
+		y = (drect.height / 2) * (1.0 - t_position);
+		
+		t_top = p_end;
+		t_bottom = p_start;
+	}
+	
+	t_bottom_src = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_top_src = MCGRectangleMake(x, y, width, height);
+	
+	p_target->Composite(MCGRectangleTranslate(t_bottom_src, drect.x, drect.y), t_bottom, t_bottom_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(MCGRectangleTranslate(t_top_src, drect.x, drect.y), t_top, t_top_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
+}
+
+Boolean pusheffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	uint2 size;
+	
+	if (dir == VE_LEFT || dir == VE_RIGHT)
+		size = drect.width * delta / duration;
+	else
+		size = drect.height * delta / duration;
+	
+	MCGRectangle t_src_rect, t_dst_rect;
+	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_dst_rect = MCRectangleToMCGRectangle(drect);
+	MCGRectangle t_start_dst, t_end_dst;
+	switch (dir)
+	{
+		case VE_LEFT:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, -(MCGFloat)size, 0.0);
+			t_end_dst = MCGRectangleTranslate(t_start_dst, drect.width, 0.0);
+			break;
 			
-			uint4 oleft, otop, oright, obottom;
-			oleft = orect . x - drect . x;
-			otop = orect . y - drect . y;
-			oright = oleft + orect . width;
-			obottom = otop + orect . height;
-
-			uint4 ileft, itop, iright, ibottom;
-			ileft = trect . x - drect . x;
-			itop = trect . y - drect . y;
-			iright = ileft + trect . width;
-			ibottom = itop + trect . height;
-
-			MCscreen -> copyarea(p_end, p_target, 0, oleft, otop, ileft - oleft, obottom - otop, orect . x, orect . y, GXcopy);
-			MCscreen -> copyarea(p_end, p_target, 0, iright, otop, oright - iright, obottom - otop, orect . x + iright - oleft, orect . y, GXcopy);
-			MCscreen -> copyarea(p_end, p_target, 0, ileft, otop, iright - ileft, itop - otop, orect . x + ileft - oleft, orect . y, GXcopy);
-			MCscreen -> copyarea(p_end, p_target, 0, ileft, ibottom, iright - ileft, obottom - ibottom, orect . x + ileft - oleft, orect . y + ibottom - otop, GXcopy);
-
-			MCscreen -> copyarea(p_start, p_target, 0, trect . x - drect . x, trect . y - drect . y, trect . width, trect . height, trect . x, trect . y, GXcopy);
-			done = True;
-		}
+		case VE_RIGHT:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, size, 0.0);
+			t_end_dst = MCGRectangleTranslate(t_start_dst, -(MCGFloat)drect.width, 0.0);
+			break;
+			
+		case VE_UP:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, 0.0, -(MCGFloat)size);
+			t_end_dst = MCGRectangleTranslate(t_start_dst, 0.0, drect.height);
+			break;
+			
+		case VE_DOWN:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, 0.0, size);
+			t_end_dst = MCGRectangleTranslate(t_start_dst, 0.0, -(MCGFloat)drect.height);
+			break;
+			
 	}
 	
-	if (done)
-		orect = trect;
+	p_target->Composite(t_start_dst, p_start, t_src_rect, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_end_dst, p_end, t_src_rect, 1.0, kMCGBlendModeCopy);
 	
-	return done;
+	return True;
 }
 
-Boolean pusheffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+Boolean revealeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
-	static uint2 oldsize;
-	if (delta == 0)
-		oldsize = 0;
-
+	uint2 size;
 	if (dir == VE_LEFT || dir == VE_RIGHT)
-	{
-		uint2 size = drect.width * delta / duration;
-		if (size != oldsize)
-		{
-			if (dir == VE_LEFT)
-			{
-				MCscreen->copyarea(p_start, p_target, 0, size, 0, drect.width - size, drect.height, drect.x, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, size, drect.height, drect.x + drect.width - size, drect.y, GXcopy);
-			}
-			else
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, 0, drect.width - size, drect.height, drect.x + size, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, drect.width - size, 0, size, drect.height, drect.x, drect.y, GXcopy);
-			}
-			oldsize = size;
-			return True;
-		}
-	}
+		size = drect.width * delta / duration;
 	else
+		size = drect.height * delta / duration;
+	
+	MCGRectangle t_start_src, t_end_src, t_dst_rect;
+	MCGRectangle t_start_dst, t_end_dst;
+	t_dst_rect = MCRectangleToMCGRectangle(drect);
+	
+	t_start_src = MCGRectangleMake(0, 0, drect.width, drect.height);
+	switch (dir)
 	{
-		uint2 size = drect.height * delta / duration;
-		if (size != oldsize)
-		{
-			if (dir == VE_UP)
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, size, drect.width, drect.height - size, drect.x, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, drect.width, size, drect.x, drect.y + drect.height - size, GXcopy);
-			}
-			else
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, 0, drect.width, drect.height - size, drect.x, drect.y + size, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, drect.height - size, drect.width, size, drect.x, drect.y, GXcopy);
-			}
-			oldsize = size;
-			return True;
-		}
+		case VE_LEFT:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, -(MCGFloat)size, 0.0);
+			t_end_src = MCGRectangleMake(t_dst_rect.size.width - size, 0.0, size, t_dst_rect.size.height);
+			break;
+			
+		case VE_RIGHT:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, size, 0.0);
+			t_end_src = MCGRectangleMake(0.0, 0.0, size, t_dst_rect.size.height);
+			break;
+			
+		case VE_UP:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, 0.0, -(MCGFloat)size);
+			t_end_src = MCGRectangleMake(0.0, t_dst_rect.size.height - size, t_dst_rect.size.width, size);
+			break;
+			
+		case VE_DOWN:
+			t_start_dst = MCGRectangleTranslate(t_dst_rect, 0.0, size);
+			t_end_src = MCGRectangleMake(0.0, 0.0, t_dst_rect.size.width, size);
+			break;
+			
 	}
-	return False;
+	
+	t_end_dst = MCGRectangleTranslate(t_end_src, t_dst_rect.origin.x, t_dst_rect.origin.y);
+	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
 }
 
-Boolean revealeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+Boolean scrolleffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
-	static uint2 oldsize;
-	if (delta == 0)
-		oldsize = 0;
-
-	if (dir == VE_LEFT || dir == VE_RIGHT)
+	MCGFloat t_position = (MCGFloat)delta / (MCGFloat)duration;
+	
+	MCGRectangle t_end_src, t_end_dst;
+	MCGRectangle t_start_src, t_start_dst;
+	t_start_dst = MCRectangleToMCGRectangle(drect);
+	
+	t_start_src = t_end_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height);
+	
+	uint32_t width, height;
+	
+	switch (dir)
 	{
-		uint2 size = drect.width * delta / duration;
-		if (size != oldsize)
-		{
-			if (dir == VE_LEFT)
-			{
-				MCscreen->copyarea(p_start, p_target, 0, size, 0, drect.width - size, drect.height, drect.x, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, drect.width - size, 0, size, drect.height, drect.x + drect.width - size, drect.y, GXcopy);
-			}
-			else
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, 0, drect.width - size, drect.height, drect.x + size, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, size, drect.height, drect.x, drect.y, GXcopy);
-			}
-			oldsize = size;
-			return True;
-		}
+		case VE_LEFT:
+			width = drect.width * t_position;
+			t_end_dst = MCGRectangleTranslate(t_end_src, t_end_src.size.width - width, 0.0);
+			break;
+			
+		case VE_RIGHT:
+			width = drect.width * t_position;
+			t_end_dst = MCGRectangleTranslate(t_end_src, -t_end_src.size.width + width, 0.0);
+			break;
+			
+		case VE_UP:
+			height = drect.height * t_position;
+			t_end_dst = MCGRectangleTranslate(t_end_src, 0.0, t_end_src.size.height - height);
+			break;
+			
+		case VE_DOWN:
+			height = drect.height * t_position;
+			t_end_dst = MCGRectangleTranslate(t_end_src, 0.0, -t_end_src.size.height + height);
+			break;
 	}
-	else
-	{
-		uint2 size = drect.height * delta / duration;
-		if (size != oldsize)
-		{
-			if (dir == VE_UP)
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, size, drect.width, drect.height - size, drect.x, drect.y, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, drect.height - size, drect.width, size, drect.x, drect.y + drect.height - size, GXcopy);
-			}
-			else
-			{
-				MCscreen->copyarea(p_start, p_target, 0, 0, 0, drect.width, drect.height - size, drect.x, drect.y + size, GXcopy);
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, drect.width, size, drect.x, drect.y, GXcopy);
-			}
-			oldsize = size;
-			return True;
-		}
-	}
-	return False;
+	
+	t_end_dst.origin.x += drect.x;
+	t_end_dst.origin.y += drect.y;
+	
+	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
 }
 
-Boolean scrolleffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+Boolean shrinkeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
-	static uint2 oldsize;
-	if (delta == 0)
-		oldsize = 0;
-
-	if (dir == VE_LEFT || dir == VE_RIGHT)
-	{
-		uint2 width = drect.width * delta / duration;
-		if (width != oldsize)
-		{
-			if (dir == VE_LEFT)
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, width, drect.height, drect.x + drect.width - width, drect.y, GXcopy);
-			else
-				MCscreen->copyarea(p_end, p_target, 0, drect.width - width, 0, width, drect.height, drect.x, drect.y, GXcopy);
-			oldsize = width;
-			return True;
-		}
-	}
-	else
-	{
-		uint2 height = drect.height * delta / duration;
-		if (height != oldsize)
-		{
-			if (dir == VE_UP)
-				MCscreen->copyarea(p_end, p_target, 0, 0, 0, drect.width, height, drect.x, drect.y + drect.height - height, GXcopy);
-			else
-				MCscreen->copyarea(p_end, p_target, 0, 0, drect.height - height, drect.width, height, drect.x, drect.y, GXcopy);
-			oldsize = height;
-			return True;
-		}
-	}
-	return False;
-}
-
-Boolean shrinkeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static Drawable result;
-	static uint2 oldheight;
-
-	Boolean done = False;
-	if (delta == 0)
-	{
-		result = MCscreen->createpixmap(drect.width, drect.height, 32, False);
-		oldheight = drect.height;
-	}
 	uint2 height = drect.height - drect.height * delta / duration;
-	if (height != 0 && height != oldheight)
+	
+	uint32_t t_top, t_bottom;
+	
+	switch (dir)
 	{
-		uint2 offset = 0;
-		switch (dir)
-		{
-		case VE_BOTTOM:
-			offset = drect.height - height;
+		case VE_TOP:
+			t_top = 0;
 			break;
+			
 		case VE_CENTER:
-			offset = (drect.height - height) >> 1;
+			t_top = (drect.height - height) / 2;
 			break;
-		default:
-			break;
-		}
-		
-		void *t_result_ptr;
-		uint4 t_result_stride;
-		void *t_start_ptr;
-		uint4 t_start_stride;
-				
-#ifdef TARGET_PLATFORM_LINUX
-		MCBitmap *t_result_image;
-		t_result_image = MCscreen -> getimage(result, 0, 0, drect . width, drect . height, False);
-		t_result_ptr = t_result_image -> data;
-		t_result_stride = t_result_image -> bytes_per_line;
-
-		MCBitmap *t_start_image;
-		t_start_image = MCscreen -> getimage(p_start, 0, 0, drect . width, drect . height, False);
-		t_start_ptr = t_start_image -> data;
-		t_start_stride = t_start_image -> bytes_per_line;
-#else
-		MCscreen -> lockpixmap(result, t_result_ptr, t_result_stride);
-		MCscreen -> lockpixmap(p_start, t_start_ptr, t_start_stride);
-#endif
-
-		uint2 dy;
-		for (dy = 0 ; dy < height ; dy++)
-		{
-			uint2 sy = dy * drect.height / height;
-			memcpy(&((uint1 *)t_result_ptr)[dy * t_result_stride], &((uint1 *)t_start_ptr)[sy * t_start_stride], drect . width * 4);
-		}
-		
-#ifdef TARGET_PLATFORM_LINUX
-		MCscreen -> destroyimage(t_start_image);
-
-		MCscreen -> putimage(result, t_result_image, 0, 0, 0, 0, drect . width, drect . height);
-		MCscreen -> destroyimage(t_result_image);
-#else
-		MCscreen -> unlockpixmap(p_start, t_start_ptr, t_start_stride);
-		MCscreen -> unlockpixmap(result, t_result_ptr, t_result_stride);
-#endif
-
-		MCscreen->copyarea(result, p_target, 0, 0, 0, drect . width, height, drect.x, drect.y + offset, GXcopy);
-		uint2 halfheight;
-		switch (dir)
-		{
+			
 		case VE_BOTTOM:
-			MCscreen->copyarea(p_end, p_target, 0, 0, drect.height - oldheight, drect.width, oldheight - height, drect.x, drect.y + drect.height - oldheight, GXcopy);
+			t_top = drect.height - height;
 			break;
-		case VE_CENTER:
-			halfheight = ((oldheight - height) >> 1) + 1;
-			MCscreen->copyarea(p_end, p_target, 0, 0, ((drect.height - oldheight) >> 1), drect.width, halfheight, drect.x, drect.y + ((drect.height - oldheight) >> 1), GXcopy);
-			MCscreen->copyarea(p_end, p_target, 0, 0, ((drect.height + height) >> 1), drect.width, halfheight, drect.x, drect.y + ((drect.height + height) >> 1), GXcopy);
-			break;
-		default:
-			MCscreen->copyarea(p_end, p_target, 0, 0, height, drect.width, oldheight - height, drect.x, drect.y + height, GXcopy);
-			break;
-		}
-		
-		oldheight = height;
-		done = True;
 	}
-	if (delta == duration)
-		MCscreen->freepixmap(result);
-	return done;
-}
-
-Boolean stretcheffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static Drawable result;
-	static uint2 oldheight;
-
-	Boolean done = False;
-	if (delta == 0)
+	t_bottom = t_top + height;
+	
+	MCGRectangle t_start_src, t_start_dst;
+	t_start_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height);
+	t_start_dst = MCGRectangleMake(drect.x, drect.y + t_top, drect.width, height);
+	
+	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
+	
+	MCGRectangle t_end_src, t_end_dst;
+	if (t_top > 0)
 	{
-		result = MCscreen->createpixmap(drect.width, drect.height, 32, False);
-		oldheight = 0;
-	}
-
-	uint2 height = drect.height * delta / duration;
-	if (height != oldheight)
-	{
-		uint2 offset;
-		switch (dir)
-		{
-		case VE_BOTTOM:
-			offset = drect.height - height;
-			break;
-		case VE_CENTER:
-			offset = (drect.height - height) >> 1;
-			break;
-		default:
-			offset = 0;
-			break;
-		}
-		
-		void *t_result_ptr;
-		uint4 t_result_stride;
-		void *t_end_ptr;
-		uint4 t_end_stride;
-		
-#ifdef TARGET_PLATFORM_LINUX
-		MCBitmap *t_result_image;
-		t_result_image = MCscreen -> getimage(result, 0, 0, drect . width, drect . height, False);
-		t_result_ptr = t_result_image -> data;
-		t_result_stride = t_result_image -> bytes_per_line;
-
-		MCBitmap *t_end_image;
-		t_end_image = MCscreen -> getimage(p_end, 0, 0, drect . width, drect . height, False);
-		t_end_ptr = t_end_image -> data;
-		t_end_stride = t_end_image -> bytes_per_line;
-#else
-		MCscreen -> lockpixmap(result, t_result_ptr, t_result_stride);
-		MCscreen -> lockpixmap(p_end, t_end_ptr, t_end_stride);
-#endif
-		
-		for (uint2 dy = 0 ; dy < height ; dy++)
-		{
-			uint2 sy = dy * drect.height / height;
-			memcpy(&((uint1 *)t_result_ptr)[dy * t_result_stride], &((uint1 *)t_end_ptr)[sy * t_end_stride], drect . width * 4);
-		}
-		
-#ifdef TARGET_PLATFORM_LINUX
-		MCscreen -> destroyimage(t_end_image);
-
-		MCscreen -> putimage(result, t_result_image, 0, 0, 0, 0, drect . width, drect . height);
-		MCscreen -> destroyimage(t_result_image);
-#else
-		MCscreen -> unlockpixmap(p_start, t_end_ptr, t_end_stride);
-		MCscreen -> unlockpixmap(result, t_result_ptr, t_result_stride);
-#endif
-		
-		MCscreen->copyarea(result, p_target, 0, 0, 0, drect . width, height, drect.x, drect.y + offset, GXcopy);
-
-		oldheight = height;
-		done = True;
+		t_end_src = MCGRectangleMake(0, 0, drect.width, t_top);
+		t_end_dst = MCGRectangleTranslate(t_end_src, drect.x, drect.y);
+		p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
 	}
 	
-	if (delta == duration)
-		MCscreen->freepixmap(result);
-		
-	return done;
-}
-
-Boolean venetianeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
-{
-	static int2 oldy;
-	if (delta == 0)
-		oldy = 0;
-
-	int2 newy = Venetiansize * delta / duration;
-	if (newy != oldy)
+	if (t_bottom < drect.height)
 	{
-		uint2 height = newy - oldy;
-		int2 y = oldy;
-		while (y <= drect.height - height)
-		{
-			MCscreen->copyarea(p_end, p_target, 0, 0, y,
-			                   drect.width, height, drect.x, drect.y + y, GXcopy);
-			y += Venetiansize;
-		}
-		oldy = newy;
-		return True;
+		t_end_src = MCGRectangleMake(0, t_bottom, drect.width, drect.height - t_bottom);
+		t_end_dst = MCGRectangleTranslate(t_end_src, drect.x, drect.y);
+		p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
 	}
-	return False;
+	
+	return True;
 }
 
-Boolean wipeeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+Boolean stretcheffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
-	static int2 old;
-	if (delta == 0)
-		old = 0;
-
-	if (dir == VE_LEFT || dir == VE_RIGHT)
+	uint2 height = drect.height * delta / duration;
+	
+	uint32_t t_top, t_bottom;
+	
+	switch (dir)
 	{
-		int2 newx = drect.width * delta / duration;
-		if (newx != old)
-		{
-			uint2 width = newx - old;
-			int2 x;
-			if (dir == VE_LEFT)
-				x = drect.width - newx;
-			else
-				x = old;
-			MCscreen->copyarea(p_end, p_target, 0, x, 0,
-			                   width, drect.height, drect.x + x, drect.y, GXcopy);
-			old = newx;
-			return True;
-		}
+		case VE_TOP:
+			t_top = 0;
+			break;
+			
+		case VE_CENTER:
+			t_top = (drect.height - height) / 2;
+			break;
+			
+		case VE_BOTTOM:
+			t_top = drect.height - height;
+			break;
+	}
+	t_bottom = t_top + height;
+	
+	MCGRectangle t_start_src, t_start_dst;
+	MCGRectangle t_end_src, t_end_dst;
+	t_start_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height);
+	t_start_dst = MCGRectangleTranslate(t_start_src, drect.x, drect.y);
+	t_end_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height);
+	t_end_dst = MCGRectangleMake(drect.x, drect.y + t_top, drect.width, height);
+	
+	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
+}
+
+Boolean venetianeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	int2 newy = Venetiansize * delta / duration;
+	
+	MCGRectangle t_src_rect, t_dst_rect;
+	
+	t_src_rect = MCGRectangleMake(0, 0, drect.width, drect.height);
+	t_dst_rect = MCGRectangleTranslate(t_src_rect, drect.x, drect.y);
+	
+	p_target->Composite(t_dst_rect, p_start, t_src_rect, 1.0, kMCGBlendModeCopy);
+	
+	uint2 height = newy;
+	int2 y = 0;
+	while (y <= drect.height)
+	{
+		MCGRectangle t_end_src, t_end_dst;
+		t_end_src = MCGRectangleMake(0, y, drect.width, height);
+		t_end_dst = MCGRectangleTranslate(t_end_src, drect.x, drect.y);
+		p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
+		y += Venetiansize;
+	}
+	
+	return True;
+}
+
+Boolean wipeeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
+{
+	int2 size;
+	if (dir == VE_LEFT || dir == VE_RIGHT)
+		size = drect.width * delta / duration;
+	else
+		size = drect.height * delta / duration;
+	
+	MCGRectangle t_start_src, t_start_dst;
+	MCGRectangle t_end_src, t_end_dst;
+	switch (dir)
+	{
+		case VE_LEFT:
+			t_start_src = MCGRectangleMake(0.0, 0.0, drect.width - size, drect.height);
+			t_end_src = MCGRectangleMake(drect.width - size, 0.0, size, drect.height);
+			break;
+			
+		case VE_RIGHT:
+			t_start_src = MCGRectangleMake(size, 0.0, drect.width - size, drect.height);
+			t_end_src = MCGRectangleMake(0.0, 0.0, size, drect.height);
+			break;
+			
+		case VE_UP:
+			t_start_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height - size);
+			t_end_src = MCGRectangleMake(0.0, drect.height - size, drect.width, size);
+			break;
+			
+		case VE_DOWN:
+			t_start_src = MCGRectangleMake(0.0, size, drect.width, drect.height - size);
+			t_end_src = MCGRectangleMake(0.0, 0.0, drect.width, size);
+			break;
+	}
+	
+	t_start_dst = MCGRectangleTranslate(t_start_src, drect.x, drect.y);
+	t_end_dst = MCGRectangleTranslate(t_end_src, drect.x, drect.y);
+	p_target->Composite(t_start_dst, p_start, t_start_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_end_dst, p_end, t_end_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
+}
+
+Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint32_t p_delta, uint32_t p_duration)
+{
+	MCGFloat t_position = (MCGFloat)p_delta / (MCGFloat)p_duration;
+	uint32_t t_width, t_height;
+	
+	MCGImageRef t_top, t_bottom;
+	if (dir == VE_OUT || dir == VE_OPEN)
+	{
+		t_bottom = p_start;
+		t_top = p_end;
+		
+		t_width = drect.width * t_position;
+		t_height = drect.height * t_position;
 	}
 	else
 	{
-		int2 newy = drect.height * delta / duration;
-		if (newy != old)
-		{
-			uint2 height = newy - old;
-			int2 y;
-			if (dir == VE_DOWN)
-				y = old;
-			else
-				y = drect.height - newy;
-			MCscreen->copyarea(p_end, p_target, 0, 0, y,
-			                   drect.width, height, drect.x, drect.y + y, GXcopy);
-			old = newy;
-			return True;
-		}
+		t_bottom = p_end;
+		t_top = p_start;
+		
+		t_width = drect.width * (1.0 - t_position);
+		t_height = drect.height * (1.0 - t_position);
 	}
-	return False;
+	
+	MCGRectangle t_src, t_dst, t_top_dst;
+	t_src = MCGRectangleMake(0.0, 0.0, drect.width, drect.height);
+	t_dst = MCGRectangleTranslate(t_src, drect.x, drect.y);
+	t_top_dst = MCGRectangleMake(drect.x + (drect.width - t_width) / 2, drect.y + (drect.height - t_height) / 2, t_width, t_height);
+	
+	p_target->Composite(t_dst, t_bottom, t_src, 1.0, kMCGBlendModeCopy);
+	p_target->Composite(t_top_dst, t_top, t_src, 1.0, kMCGBlendModeCopy);
+	
+	return True;
 }
 
 #if 0
-Boolean zoomeffect_step(const MCRectangle &drect, Drawable p_target, Drawable p_start, Drawable p_end, Visual_effects dir, uint4 delta, uint4 duration)
+Boolean zoomeffect_step(const MCRectangle &drect, MCStackSurface *p_target, MCGImageRef p_start, MCGImageRef p_end, Visual_effects dir, uint4 delta, uint4 duration)
 {
 
 	static MCRectangle trects[ZOOM_RECTS];

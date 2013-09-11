@@ -1,0 +1,266 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 46;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		4C03161B17D4D7BB00D6BDB7 /* cachetable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */; };
+		4C4463D716C3ACBD00C5CE3C /* context.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D316C3ACBD00C5CE3C /* context.cpp */; };
+		4C4463D816C3ACBD00C5CE3C /* image.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D516C3ACBD00C5CE3C /* image.cpp */; };
+		4C4463D916C3ACBD00C5CE3C /* path.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C4463D616C3ACBD00C5CE3C /* path.cpp */; };
+		4C9A538216D6786A0041F9A3 /* utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4C9A538116D6786A0041F9A3 /* utils.cpp */; };
+		4CAFB58E17C5041E0076F2ED /* osxtext.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CAFB58C17C504100076F2ED /* osxtext.cpp */; };
+		4CF7963617D6249F009DDCC2 /* legacyblendmodes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4CF7963517D6249F009DDCC2 /* legacyblendmodes.cpp */; };
+		4D6762EC17C3B3D600EE62C2 /* blur.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4D6762EB17C3B3D600EE62C2 /* blur.cpp */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		4D587C800B808FDB00200116 /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = headers;
+			dstSubfolderSpec = 16;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
+
+/* Begin PBXFileReference section */
+		4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = cachetable.cpp; path = src/cachetable.cpp; sourceTree = "<group>"; };
+		4C4463D316C3ACBD00C5CE3C /* context.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = context.cpp; path = src/context.cpp; sourceTree = "<group>"; };
+		4C4463D416C3ACBD00C5CE3C /* graphics-internal.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = "graphics-internal.h"; path = "src/graphics-internal.h"; sourceTree = "<group>"; };
+		4C4463D516C3ACBD00C5CE3C /* image.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = image.cpp; path = src/image.cpp; sourceTree = "<group>"; };
+		4C4463D616C3ACBD00C5CE3C /* path.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = path.cpp; path = src/path.cpp; sourceTree = "<group>"; };
+		4C4463DA16C3ACE900C5CE3C /* graphics.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = graphics.h; path = include/graphics.h; sourceTree = "<group>"; };
+		4C9A538116D6786A0041F9A3 /* utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = utils.cpp; path = src/utils.cpp; sourceTree = "<group>"; };
+		4CAFB58917C504100076F2ED /* lnxtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = lnxtext.cpp; path = src/lnxtext.cpp; sourceTree = "<group>"; };
+		4CAFB58A17C504100076F2ED /* mblandroidtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = mblandroidtext.cpp; path = src/mblandroidtext.cpp; sourceTree = "<group>"; };
+		4CAFB58B17C504100076F2ED /* mbliphonetext.mm */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.objcpp; name = mbliphonetext.mm; path = src/mbliphonetext.mm; sourceTree = "<group>"; };
+		4CAFB58C17C504100076F2ED /* osxtext.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = osxtext.cpp; path = src/osxtext.cpp; sourceTree = "<group>"; };
+		4CAFB58D17C504100076F2ED /* w32text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = w32text.cpp; path = src/w32text.cpp; sourceTree = "<group>"; };
+		4CF7963517D6249F009DDCC2 /* legacyblendmodes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = legacyblendmodes.cpp; path = src/legacyblendmodes.cpp; sourceTree = "<group>"; };
+		4D6762EB17C3B3D600EE62C2 /* blur.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = blur.cpp; path = src/blur.cpp; sourceTree = "<group>"; };
+		4DCDCA230B80890D0040D436 /* Release.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = ../rules/Release.xcconfig; sourceTree = SOURCE_ROOT; };
+		4DCDCA240B80890D0040D436 /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = ../rules/Debug.xcconfig; sourceTree = SOURCE_ROOT; };
+		4DCDCA320B8089D00040D436 /* Global.xcconfig */ = {isa = PBXFileReference; fileEncoding = 30; lastKnownFileType = text.xcconfig; name = Global.xcconfig; path = ../rules/Global.xcconfig; sourceTree = SOURCE_ROOT; };
+		D2AAC046055464E500DB518D /* libgraphics.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libgraphics.a; sourceTree = BUILT_PRODUCTS_DIR; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		D289987405E68DCB004EDB86 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
+/* Begin PBXGroup section */
+		08FB7794FE84155DC02AAC07 /* libz */ = {
+			isa = PBXGroup;
+			children = (
+				4DCDCA1E0B8088440040D436 /* Configurations */,
+				4C4463D216C3AC9C00C5CE3C /* Headers */,
+				08FB7795FE84155DC02AAC07 /* Source */,
+				1AB674ADFE9D54B511CA2CBB /* Products */,
+			);
+			name = libz;
+			sourceTree = "<group>";
+		};
+		08FB7795FE84155DC02AAC07 /* Source */ = {
+			isa = PBXGroup;
+			children = (
+				4C4463D416C3ACBD00C5CE3C /* graphics-internal.h */,
+				4C4463D316C3ACBD00C5CE3C /* context.cpp */,
+				4C4463D516C3ACBD00C5CE3C /* image.cpp */,
+				4C4463D616C3ACBD00C5CE3C /* path.cpp */,
+				4C9A538116D6786A0041F9A3 /* utils.cpp */,
+				4D6762EB17C3B3D600EE62C2 /* blur.cpp */,
+				4CAFB58917C504100076F2ED /* lnxtext.cpp */,
+				4CAFB58C17C504100076F2ED /* osxtext.cpp */,
+				4CAFB58D17C504100076F2ED /* w32text.cpp */,
+				4CAFB58A17C504100076F2ED /* mblandroidtext.cpp */,
+				4CAFB58B17C504100076F2ED /* mbliphonetext.mm */,
+				4C03161A17D4D7BB00D6BDB7 /* cachetable.cpp */,
+				4CF7963517D6249F009DDCC2 /* legacyblendmodes.cpp */,
+			);
+			name = Source;
+			sourceTree = "<group>";
+		};
+		1AB674ADFE9D54B511CA2CBB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				D2AAC046055464E500DB518D /* libgraphics.a */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		4C4463D216C3AC9C00C5CE3C /* Headers */ = {
+			isa = PBXGroup;
+			children = (
+				4C4463DA16C3ACE900C5CE3C /* graphics.h */,
+			);
+			name = Headers;
+			sourceTree = "<group>";
+		};
+		4DCDCA1E0B8088440040D436 /* Configurations */ = {
+			isa = PBXGroup;
+			children = (
+				4DCDCA320B8089D00040D436 /* Global.xcconfig */,
+				4DCDCA230B80890D0040D436 /* Release.xcconfig */,
+				4DCDCA240B80890D0040D436 /* Debug.xcconfig */,
+			);
+			name = Configurations;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		D2AAC045055464E500DB518D /* libgraphics */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "libgraphics" */;
+			buildPhases = (
+				D2AAC044055464E500DB518D /* Sources */,
+				D289987405E68DCB004EDB86 /* Frameworks */,
+				4D587C800B808FDB00200116 /* CopyFiles */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = libgraphics;
+			productName = libmysql;
+			productReference = D2AAC046055464E500DB518D /* libgraphics.a */;
+			productType = "com.apple.product-type.library.static";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		08FB7793FE84155DC02AAC07 /* Project object */ = {
+			isa = PBXProject;
+			buildConfigurationList = 1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "libgraphics" */;
+			compatibilityVersion = "Xcode 3.2";
+			developmentRegion = English;
+			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
+			mainGroup = 08FB7794FE84155DC02AAC07 /* libz */;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				D2AAC045055464E500DB518D /* libgraphics */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		D2AAC044055464E500DB518D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				4C4463D716C3ACBD00C5CE3C /* context.cpp in Sources */,
+				4C4463D816C3ACBD00C5CE3C /* image.cpp in Sources */,
+				4C4463D916C3ACBD00C5CE3C /* path.cpp in Sources */,
+				4C9A538216D6786A0041F9A3 /* utils.cpp in Sources */,
+				4D6762EC17C3B3D600EE62C2 /* blur.cpp in Sources */,
+				4CAFB58E17C5041E0076F2ED /* osxtext.cpp in Sources */,
+				4C03161B17D4D7BB00D6BDB7 /* cachetable.cpp in Sources */,
+				4CF7963617D6249F009DDCC2 /* legacyblendmodes.cpp in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		1DEB91EC08733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = graphics;
+			};
+			name = Debug;
+		};
+		1DEB91ED08733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = graphics;
+			};
+			name = Release;
+		};
+		1DEB91F008733DB70010E9CD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DCDCA240B80890D0040D436 /* Debug.xcconfig */;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		1DEB91F108733DB70010E9CD /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 4DCDCA230B80890D0040D436 /* Release.xcconfig */;
+			buildSettings = {
+			};
+			name = Release;
+		};
+		4D587C270B808F1100200116 /* Release PowerPC-32 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = graphics;
+			};
+			name = "Release PowerPC-32";
+		};
+		4D587C280B808F1100200116 /* Release x86-32 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				PRODUCT_NAME = graphics;
+			};
+			name = "Release x86-32";
+		};
+		4D587C290B808F1100200116 /* Release PowerPC-32 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = "Release PowerPC-32";
+		};
+		4D587C2A0B808F1100200116 /* Release x86-32 */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = "Release x86-32";
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		1DEB91EB08733DB70010E9CD /* Build configuration list for PBXNativeTarget "libgraphics" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91EC08733DB70010E9CD /* Debug */,
+				1DEB91ED08733DB70010E9CD /* Release */,
+				4D587C270B808F1100200116 /* Release PowerPC-32 */,
+				4D587C280B808F1100200116 /* Release x86-32 */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		1DEB91EF08733DB70010E9CD /* Build configuration list for PBXProject "libgraphics" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				1DEB91F008733DB70010E9CD /* Debug */,
+				1DEB91F108733DB70010E9CD /* Release */,
+				4D587C290B808F1100200116 /* Release PowerPC-32 */,
+				4D587C2A0B808F1100200116 /* Release x86-32 */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+/* End XCConfigurationList section */
+	};
+	rootObject = 08FB7793FE84155DC02AAC07 /* Project object */;
+}

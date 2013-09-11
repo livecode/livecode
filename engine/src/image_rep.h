@@ -41,7 +41,7 @@ public:
 
 	virtual MCImageRepType GetType() = 0;
 	virtual uindex_t GetFrameCount() = 0;
-	virtual bool LockImageFrame(uindex_t p_index, MCImageFrame *&r_frame) = 0;
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame) = 0;
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame) = 0;
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height) = 0;
 
@@ -66,7 +66,7 @@ public:
 	virtual MCImageRepType GetType() = 0;
 
 	virtual uindex_t GetFrameCount();
-	virtual bool LockImageFrame(uindex_t p_index, MCImageFrame *&r_frame);
+	virtual bool LockImageFrame(uindex_t p_index, bool p_premultiplied, MCImageFrame *&r_frame);
 	virtual void UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame);
 
 	virtual bool GetGeometry(uindex_t &r_width, uindex_t &r_height);
@@ -100,8 +100,11 @@ protected:
 	bool m_have_geometry;
 	uindex_t m_width, m_height;
 
+	bool m_premultiplied;
+
 private:
-	bool EnsureImageFrames();
+	bool EnsureImageFrames(bool p_premultiplied);
+	void PremultiplyFrames();
 	
 	uindex_t m_lock_count;
 
@@ -273,46 +276,10 @@ protected:
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class MCTransformedImageRep : public MCCachedImageRep
-{
-public:
-	MCTransformedImageRep(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source);
-	~MCTransformedImageRep();
-	
-	MCImageRepType GetType() { return kMCImageRepTransformed; }
-	uindex_t GetFrameCount() { return m_source->GetFrameCount(); }
-	
-	//////////
-	
-	int32_t GetAngle() { return m_angle; }
-	uindex_t GetWidth() { return m_width; }
-	uindex_t GetHeight() { return m_height; }
-	MCImageRep *GetSource() { return m_source; }
-	
-	//////////
-	
-	bool Matches(uint32_t p_width, uint32_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source);
-	
-protected:
-	bool LoadImageFrames(MCImageFrame *&r_frames, uindex_t &r_frame_count);
-	bool CalculateGeometry(uindex_t &r_width, uindex_t &r_height);
-	
-	//////////
-	
-	MCImageRep *m_source;
-	uindex_t m_width, m_height;
-	int32_t m_angle;
-	bool m_lock_rect;
-	uint32_t m_quality;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
 bool MCImageRepGetReferenced(const char *p_filename, MCImageRep *&r_rep);
 bool MCImageRepGetResident(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetVector(void *p_data, uindex_t p_size, MCImageRep *&r_rep);
 bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *&r_rep);
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source, MCImageRep *&r_rep);
 
 ////////////////////////////////////////////////////////////////////////////////
 

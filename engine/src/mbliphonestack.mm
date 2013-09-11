@@ -33,15 +33,24 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "mbliphoneapp.h"
 
+#include "resolution.h"
+
 #include <UIKit/UIKit.h>
 #include <QuartzCore/QuartzCore.h>
 
+////////////////////////////////////////////////////////////////////////////////
+
 extern UIView *MCIPhoneGetView(void);
+extern float MCIPhoneGetDeviceScale();
 extern float MCIPhoneGetResolutionScale(void);
 extern bool MCIPhoneGrabUIViewSnapshot(UIView *p_view, CGRect &p_bounds, UIImage *&r_image);
 
+////////////////////////////////////////////////////////////////////////////////
+
 // This global tells RevMobileContainerView that its not UIWebView modifying us.
 extern bool g_engine_manipulating_container;
+
+////////////////////////////////////////////////////////////////////////////////
 
 @interface EffectDelegate : NSObject
 {
@@ -258,46 +267,34 @@ void layer_animation_changes(UIView *p_new_view, UIView *p_old_view, uint32_t p_
 //    push     (Push)
 //    reveal   (Reveal)
 
-static UIImage *pixmap_to_uiimage(Pixmap p_pixmap)
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
+
+// IM-2013-07-18: [[ ResIndependence ]] added scale parameter to support hi-res images
+static bool MCGImageToUIImage(MCGImageRef p_image, bool p_copy, MCGFloat p_scale, UIImage *&r_uiimage)
 {
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_pixmap -> handle . pixmap;
+	bool t_success = true;
 	
-	CGColorSpaceRef t_colorspace;
-	t_colorspace = CGColorSpaceCreateDeviceRGB();
+	CGImageRef t_cg_image = nil;
+	UIImage *t_image = nil;
 	
-	CGImageRef t_cg_image;
-	t_cg_image = nil;
+	t_success = MCGImageToCGImage(p_image, MCGRectangleMake(0, 0, MCGImageGetWidth(p_image), MCGImageGetHeight(p_image)), p_copy, false, t_cg_image);
 	
-	CGBitmapInfo t_flags;
-	if (t_bitmap -> is_swapped)
-		t_flags = kCGBitmapByteOrder32Big | kCGImageAlphaNoneSkipLast;
-	else
-		t_flags = kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst;
+	if (t_success)
+		t_success = nil != (t_image = [UIImage imageWithCGImage:t_cg_image scale:p_scale orientation:/*0.0*/UIImageOrientationUp]);
 	
-	CGContextRef t_context;
-	t_context = CGBitmapContextCreate(t_bitmap -> data, t_bitmap -> width, t_bitmap -> height, 8, t_bitmap -> stride, t_colorspace, t_flags);
-	if (t_context != nil)
-	{
-		t_cg_image = CGBitmapContextCreateImage(t_context);
-		CGContextRelease(t_context);
-	}
-	CGColorSpaceRelease(t_colorspace);
-	
-	UIImage *t_image;
 	if (t_cg_image != nil)
-	{
-		t_image = [UIImage imageWithCGImage: t_cg_image];
 		CGImageRelease(t_cg_image);
-	}
 	
-	return t_image;
+	if (t_success)
+		r_uiimage = t_image;
+	
+	return t_success;
 }
 
 struct effectrect_t
 {
 	MCColor bg_color;
-	Pixmap snapshot;
+	MCGImageRef snapshot;
 	MCEffectList *effect;
 	MCRectangle effect_area;
 	UIImage *current_image;
@@ -317,7 +314,9 @@ static void effectrect_phase_1(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	ctxt -> current_image = pixmap_to_uiimage(ctxt -> snapshot);
+	// IM-2013-07-18: [[ ResIndependence ]] our snapshots are now always at the device resolution, so
+	// pass that as the image scale factor
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, true, MCIPhoneGetDeviceScale(), ctxt->current_image);
 	[ctxt -> current_image retain];
 }
 
@@ -325,8 +324,13 @@ static void effectrect_phase_2(void *p_context)
 {
 	effectrect_t *ctxt;
 	ctxt = (effectrect_t *)p_context;
-	ctxt -> updated_image = pixmap_to_uiimage(ctxt -> snapshot);
+	// IM-2013-07-18: [[ ResIndependence ]] our snapshots are now always at the device resolution, so
+	// pass that as the image scale factor
+	/* UNCHECKED */ MCGImageToUIImage(ctxt->snapshot, false, MCIPhoneGetDeviceScale(), ctxt->updated_image);
 	[ctxt -> updated_image retain];
+	
+	CGSize t_img_size;
+	t_img_size = [ctxt -> updated_image size];
 	
 	ctxt -> current_image_view = [[UIImageView alloc] initWithImage: ctxt -> current_image];
 	[ctxt -> current_image release];
@@ -336,21 +340,21 @@ static void effectrect_phase_2(void *p_context)
 	float t_scale = MCIPhoneGetResolutionScale();
 	
 	// MW-2011-09-27: [[ iOSApp ]] Adjust for content origin.
+	// IM-2013-07-18: [[ ResIndependence ]] use width / height from the UIImage
 	CGRect t_bounds;
-	t_bounds = CGRectMake(ctxt -> effect_area.x / t_scale + [ctxt -> main_view frame] . origin . x, ctxt -> effect_area.y / t_scale + [ctxt -> main_view frame] . origin . y, ctxt -> effect_area.width / t_scale, ctxt -> effect_area.height / t_scale);
+	t_bounds = CGRectMake(ctxt -> effect_area.x / t_scale + [ctxt -> main_view frame] . origin . x,
+						  ctxt -> effect_area.y / t_scale + [ctxt -> main_view frame] . origin . y,
+						  t_img_size . width,
+						  t_img_size . height);
 	ctxt -> effect_view = [[UIView alloc] initWithFrame: t_bounds];
 	
 	[ctxt -> effect_view setClipsToBounds: YES];
 	[ctxt -> effect_view addSubview: ctxt -> updated_image_view];
 	[ctxt -> effect_view addSubview: ctxt -> current_image_view];
 	
-	// MW-2011-10-01: Make sure we use the correct image bounds (just take them from
-	//   the image object itself).
-	// MW-2011-10-10: [[ Bug 9796 ]] Make sure we scale the image bounds appropriately
-	//   as per device res.
-	CGRect t_image_bounds;
-	[ctxt -> current_image_view setFrame: CGRectApplyAffineTransform([ctxt -> current_image_view bounds], CGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale))];
-	[ctxt -> updated_image_view setFrame: CGRectApplyAffineTransform([ctxt -> updated_image_view bounds], CGAffineTransformMakeScale(1.0 / t_scale, 1.0 / t_scale))];
+	// IM-2013-07-18: [[ ResIndependence ]] we don't need to scale the bounds any more
+	// as the UIImage scale is set appropriately
+	
 	ctxt -> duration = MCU_max(1, MCeffectrate / (ctxt -> effect->speed - VE_VERY)) / 1000.0;
 	
 	ctxt -> effect_delegate = [[EffectDelegate alloc] init];
@@ -634,14 +638,17 @@ void MCStack::deactivatetilecache(void)
 	});
 }
 
-bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
+bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_image)
 {
 	if (m_tilecache == nil)
 		return false;
 	
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
 	__block bool t_result;
 	MCIPhoneRunBlockOnMainFiber(^(void) {
-		t_result = MCTileCacheSnapshot(m_tilecache, p_area, r_pixmap);
+		t_result = MCTileCacheSnapshot(m_tilecache, t_device_rect, r_image);
 	});
 	
 	return t_result;

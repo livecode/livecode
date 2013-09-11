@@ -1782,8 +1782,6 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		drawfocus(dc, p_dirty);
 	if (flags & F_SHOW_BORDER)
 		trect = MCU_reduce_rect(trect, borderwidth);
-	if (linesize != 0)
-		trect = MCU_reduce_rect(trect, linesize >> 1);
 	if (points == NULL && getstyleint(flags) == F_REGULAR)
 	{
 		if (npoints <= nsides)
@@ -1854,12 +1852,14 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 		{
 		case F_G_RECTANGLE:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinMiter);
-			dc->setmiterlimit(10.0);
-			dc->drawrect(trect);
+				dc->setmiterlimit(10.0);
+				// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawrect(trect, true);
 			break;
 		case F_ROUNDRECT:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
-			dc->drawroundrect(trect, roundradius);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
+			dc->drawroundrect(trect, roundradius, true);
 			break;
 		case F_REGULAR:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinRound);
@@ -1894,10 +1894,11 @@ void MCGraphic::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bool
 			break;
 		case F_OVAL:
 			dc->setlineatts(linesize, lstyle, CapButt, JoinBevel);
+			// MW-2013-09-06: [[ RefactorGraphics ]] Make sure we draw on the inside of the rect.
 			if (getflag(F_OPAQUE) && arcangle != 360)
-				dc -> drawsegment(trect, startangle, arcangle);
+				dc -> drawsegment(trect, startangle, arcangle, true);
 			else
-				dc -> drawarc(trect, startangle, arcangle);
+				dc -> drawarc(trect, startangle, arcangle, true);
 			break;
 		}
 		if (m_stroke_gradient != NULL)

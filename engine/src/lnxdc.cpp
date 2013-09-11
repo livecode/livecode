@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "printer.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
 
 #include "lnxpsprinter.h"
 
@@ -47,6 +46,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include <X11/extensions/Xinerama.h>
 
+#include "graphics_util.h"
+
+////////////////////////////////////////////////////////////////////////////////
+
 static Boolean pserror;
 Bool debugtest = False;
 
@@ -54,6 +57,16 @@ MCDisplay *MCScreenDC::s_monitor_displays = NULL;
 uint4 MCScreenDC::s_monitor_count = 0;
 
 extern "C" int initialise_weak_link_Xinerama(void);
+
+////////////////////////////////////////////////////////////////////////////////
+
+MCGFloat MCResGetDeviceScale(void)
+{
+	// IM-2013-08-12: [[ ResIndependence ]] Linux implementation currently returns 1.0
+	return 1.0;
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 MCScreenDC::MCScreenDC()
 {
@@ -148,56 +161,31 @@ bool MCScreenDC::hasfeature(MCPlatformFeature p_feature)
 }
 
 
-
-MCContext *MCScreenDC::createcontext ( Drawable p_drawable, MCBitmap *p_mask)
-{
-	MCContext *t_context ;
-	t_context = createcontext ( p_drawable, true, false ) ;
-	if ( p_mask != NULL ) 
-		((MCX11Context*)t_context) -> map_alpha_data ( p_mask );
-	
-	return t_context ;
-	
-}
-
-
-
-MCContext *MCScreenDC::createcontext(Drawable p_drawable, bool p_alpha, bool p_transient)
-{
-	MCContext *t_context;
-	uint2 w, h, d ;
-	
-	getpixmapgeometry(p_drawable, w, h, d ) ;
-		
-	assert( w > 0 ) ;
-	assert( h > 0 ) ;
-	
-	t_context = MCX11Context::create_context(p_drawable, w, h, dpy, p_alpha);
-
-	return t_context;
-}
-
-
-MCContext *MCScreenDC::creatememorycontext(uint2 p_width, uint2 p_height, bool p_alpha, bool p_transient)
-{	
-	return MCX11Context::create_memory_context(p_width, p_height, dpy, p_alpha);
-}
-
-void MCScreenDC::freecontext(MCContext *p_context)
-{
-	delete p_context;
-}
-
 GC MCScreenDC::getgc(void)
 {
 	return ( destdepth == 1 ? gc1 : gc );
 }
 
+///////////////////////////////////////////////////////////////////////////////
 
-int4 MCScreenDC::textwidth(MCFontStruct *f, const char *s, uint2 l, bool p_unicode_override)
+// MM-2013-08-30: [[ RefactorGraphics ]] Move text measuring to libgraphics.
+int4 MCScreenDC::textwidth(MCFontStruct *p_font, const char *p_text, uint2 p_length, bool p_unicode_override)
 {
-	return MCFontlistGetCurrent() -> ctxt_textwidth(f, s, l, p_unicode_override);
+	if (p_length == 0 || p_text == NULL)
+		return 0;
+	
+    MCGFont t_font;
+	t_font = MCFontStructToMCGFont(p_font);
+	
+	MCExecPoint ep;
+	ep . setsvalue(MCString(p_text, p_length));
+	if (!p_font -> unicode && !p_unicode_override)
+		ep . nativetoutf16();
+	
+	return MCGContextMeasurePlatformText(NULL, (unichar_t *) ep . getsvalue() . getstring(), ep . getsvalue() . getlength(), t_font);
 }
+
+///////////////////////////////////////////////////////////////////////////////
 
 bool MCScreenDC::apply_workarea()
 {
@@ -222,7 +210,7 @@ bool MCScreenDC::apply_workarea()
 		
 		for (uindex_t i = 0; i < s_monitor_count; i++)
 		{
-			s_monitor_displays[i].workarea  = MCU_intersect_rect(t_work_rect, s_monitor_displays[i].viewport);
+			s_monitor_displays[i].device_workarea  = MCU_intersect_rect(t_work_rect, s_monitor_displays[i].device_viewport);
 		}
 	}
 	
@@ -252,8 +240,8 @@ bool MCScreenDC::apply_partial_struts()
 	if (t_success)
 	{
 		int32_t t_screenwidth, t_screenheight;
-		t_screenwidth = getwidth();
-		t_screenheight = getheight();
+		t_screenwidth = device_getwidth();
+		t_screenheight = device_getheight();
 		for (uindex_t i = 0; t_success && i < t_client_count; i++)
 		{
 			unsigned long t_strut_count;
@@ -318,13 +306,13 @@ bool MCScreenDC::apply_partial_struts()
 				
 				for (uindex_t s = 0; s < s_monitor_count; s++)
 				{
-					MCRectangle t_workarea = s_monitor_displays[s].workarea;
+					MCRectangle t_workarea = s_monitor_displays[s].device_workarea;
 
 					MCRectangle t_test = MCU_intersect_rect(t_strut_test, t_workarea);
 					if (t_test.width != 0 && t_test.height != 0)
 						t_workarea = MCU_intersect_rect(t_strut_rect, t_workarea);
 						
-					s_monitor_displays[s].workarea = t_workarea;
+					s_monitor_displays[s].device_workarea = t_workarea;
 				}
 			}
 			if (t_struts != nil)
@@ -338,7 +326,7 @@ bool MCScreenDC::apply_partial_struts()
 	return t_success;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay * &r_displays, uint32_t &r_count)
 {
 	MCDisplay *t_monitor_displays = NULL;
 
@@ -378,15 +366,15 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 			
 			t_monitor_displays[a] . index = a;
 
-			t_monitor_displays[a] . viewport . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . viewport . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . viewport . width = monitors[a] . width ;
-			t_monitor_displays[a] . viewport . height = monitors[a] . height ;
+			t_monitor_displays[a] . device_viewport . x = monitors[a] . x_org ;
+			t_monitor_displays[a] . device_viewport . y = monitors[a] . y_org ;
+			t_monitor_displays[a] . device_viewport . width = monitors[a] . width ;
+			t_monitor_displays[a] . device_viewport . height = monitors[a] . height ;
 			
-			t_monitor_displays[a] . workarea . x = monitors[a] . x_org ;
-			t_monitor_displays[a] . workarea . y = monitors[a] . y_org ;
-			t_monitor_displays[a] . workarea . width = monitors[a] . width ;
-			t_monitor_displays[a] . workarea . height = monitors[a] . height ;
+			t_monitor_displays[a] . device_workarea . x = monitors[a] . x_org ;
+			t_monitor_displays[a] . device_workarea . y = monitors[a] . y_org ;
+			t_monitor_displays[a] . device_workarea . width = monitors[a] . width ;
+			t_monitor_displays[a] . device_workarea . height = monitors[a] . height ;
 		}
 		
 		XFree(monitors);
@@ -396,8 +384,8 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 	else
 	{
 		t_monitor_displays = new MCDisplay[1];
-		MCU_set_rect(t_monitor_displays[0] . viewport, 0, 0, getwidth(), getheight());
-		MCU_set_rect(t_monitor_displays[0] . workarea, 0, 0, getwidth(), getheight());
+		MCU_set_rect(t_monitor_displays[0] . device_viewport, 0, 0, device_getwidth(), device_getheight());
+		MCU_set_rect(t_monitor_displays[0] . device_workarea, 0, 0, device_getwidth(), device_getheight());
 		t_monitor_displays[0] . index = 0 ;
 		s_monitor_count = 1 ;
 		s_monitor_displays = t_monitor_displays ;
@@ -413,11 +401,13 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 		apply_partial_struts();
 	}
 
-	p_displays = s_monitor_displays;
-	
-	return (s_monitor_count);
+	if (s_monitor_count == 0)
+		return false;
 		
-
+	r_displays = s_monitor_displays;
+	r_count = s_monitor_count;
+	
+	return true;
 }
 
 
@@ -445,10 +435,4 @@ MCPrinter *MCScreenDC::createprinter(void)
 {
 	return ( new MCPSPrinter );
 	
-}
-
-
-MCStack *MCScreenDC::getstackatpoint(int32_t x, int32_t y)
-{
-	return nil;
 }

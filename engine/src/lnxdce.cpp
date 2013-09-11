@@ -44,15 +44,22 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "lnxdc.h"
 
+#include "resolution.h"
+
 #define WM_TITLE_HEIGHT 16
 
-void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 	MCRectangle srect;
 	if (m >= WM_MODAL)
-		MCU_set_rect(srect, 0, 0, getwidth(), getheight());
+		MCU_set_rect(srect, 0, 0, device_getwidth(), device_getheight());
 	else
-		srect = MCwbr;
+	{
+		// IM-2013-08-08: [[ ResIndependence ]] Scale source rect to device space
+		srect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(MCwbr));
+	}
+	
+	
 	if (rect.x < srect.x)
 		rect.x = srect.x;
 	else
@@ -172,7 +179,7 @@ void MCScreenDC::waitfocus()
 		MCdispatcher->wkunfocus(foevent->window);
 }
 
-void MCScreenDC::querymouse(int2 &x, int2 &y)
+void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	Window root, child;
 	int rx, ry, wx, wy;
@@ -209,7 +216,7 @@ uint2 MCScreenDC::querymods()
 	return t_rstate;
 }
 
-void MCScreenDC::setmouse(int2 x, int2 y)
+void MCScreenDC::device_setmouse(int2 x, int2 y)
 {
 	XWarpPointer(dpy, None, getroot(), 0, 0, 0, 0, x, y);
 }
@@ -251,6 +258,9 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 	
 	r_abort = False;
 	
+	MCGFloat t_device_scale;
+	t_device_scale = MCResGetDeviceScale();
+	
 	MCEventnode *tptr = pendingevents;
 	MCEventnode *pressptr = NULL;
 	MCEventnode *releaseptr = NULL;
@@ -265,8 +275,9 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 				{
 					setmods(bpevent->state, 0, bpevent->button, False);
 					MCclickstackptr = MCmousestackptr;
-					MCclicklocx = bpevent->x;
-					MCclicklocy = bpevent->y;
+					// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coordinates to user space
+					MCclicklocx = bpevent->x / t_device_scale;
+					MCclicklocy = bpevent->y / t_device_scale;
 					pressptr = tptr;
 					tptr = (MCEventnode *)tptr->next();
 					break;

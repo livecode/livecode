@@ -35,23 +35,48 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "objectstream.h"
 
 #include "context.h"
+#include "graphics.h"
 
 #include "globals.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-extern void surface_mask_flush_to_alpha(void *p_alpha_ptr, uint4 p_alpha_stride, void * p_mask_ptr, uint4 p_mask_stride, uint4 sw, uint4 sh);
-extern void surface_mask_flush_to_alpha_inverted(void *p_alpha_ptr, uint4 p_alpha_stride, void * p_mask_ptr, uint4 p_mask_stride, uint4 sw, uint4 sh) ;
-
-extern void surface_merge_with_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_offset, uint4 p_width, uint4 p_height);
-extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-
-extern void surface_extract_mask(void *p_pixels, uint4 p_pixel_stride, void *p_mask, uint4 p_mask_stride, uint4 p_width, uint4 p_height, uint1 p_threshold);
-extern void surface_extract_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
-
-extern void surface_unmerge_pre(void *p_pixels, uint4 p_pixel_stride, uint4 p_width, uint4 p_height);
-
 void surface_combine_blendSrcOver_masked(void *p_dst, int32_t p_dst_stride, const void *p_src, uint32_t p_src_stride, uint32_t p_width, uint32_t p_height, uint8_t p_opacity);
+
+////////////////////////////////////////////////////////////////////////////////
+
+/* OVERHAUL - REVISIT: should move this to shared util code as will probably be
+ * useful elsewhere */
+static inline MCGRectangle MCRectangleToMCGRectangle(MCRectangle p_rect)
+{
+	MCGRectangle t_rect;
+	t_rect . origin . x = (MCGFloat) p_rect . x;
+	t_rect . origin . y = (MCGFloat) p_rect . y;
+	t_rect . size . width = (MCGFloat) p_rect . width;
+	t_rect . size . height = (MCGFloat) p_rect . height;
+	return t_rect;
+}
+
+bool MCImageAllocMask(uint32_t p_width, uint32_t p_height, MCGRaster &r_mask)
+{
+	r_mask.width = p_width;
+	r_mask.height = p_height;
+	r_mask.stride = p_width;
+	r_mask.format = kMCGRasterFormat_A;
+	if (MCMemoryAllocate(r_mask.height * r_mask.stride, r_mask.pixels))
+	{
+		MCMemoryClear(r_mask.pixels, r_mask.height * r_mask.stride);
+		return true;
+	}
+	else
+		return false;
+}
+
+void MCImageFreeMask(MCGRaster &p_mask)
+{
+	MCMemoryDeallocate(p_mask.pixels);
+	p_mask.pixels = nil;
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -64,12 +89,6 @@ void surface_combine_blendSrcOver_masked(void *p_dst, int32_t p_dst_stride, cons
 
 Boolean MCMutableImageRep::erasing;
 
-Pixmap MCMutableImageRep::editmask;
-Pixmap MCMutableImageRep::editdata;
-MCBitmap *MCMutableImageRep::editimage;
-MCBitmap *MCMutableImageRep::editmaskimage;
-MCBitmap *MCMutableImageRep::editmaskimagealpha;
-
 Tool MCMutableImageRep::oldtool = T_UNDEFINED;
 MCRectangle MCMutableImageRep::newrect;
 
@@ -79,12 +98,20 @@ uint2 MCMutableImageRep::polypoints;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, MCImageFrame *&r_frame)
+bool MCMutableImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCImageFrame *&r_frame)
 {
 	if (p_frame > 0)
 		return false;
 
-	m_frame.image = m_bitmap;
+	if (p_premultiplied)
+		m_frame.image = m_bitmap;
+	else
+	{
+		if (!MCImageCopyBitmap(m_bitmap, m_unpre_bitmap))
+			return false;
+		MCImageBitmapUnpremultiply(m_unpre_bitmap);
+		m_frame.image = m_unpre_bitmap;
+	}
 
 	Retain();
 
@@ -99,6 +126,9 @@ void MCMutableImageRep::UnlockImageFrame(uindex_t p_index, MCImageFrame *p_frame
 		return;
 
 	m_frame.image = nil;
+
+	MCImageFreeBitmap(m_unpre_bitmap);
+	m_unpre_bitmap = nil;
 
 	Release();
 }
@@ -124,6 +154,7 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 	rect = m_owner->getrect();
 
 	/* UNCHECKED */ MCImageCopyBitmap(p_bitmap, m_bitmap);
+	m_unpre_bitmap = nil;
 	m_selection_image = nil;
 	m_undo_image = nil;
 	m_rub_image = nil;
@@ -138,21 +169,12 @@ MCMutableImageRep::MCMutableImageRep(MCImage *p_owner, MCImageBitmap *p_bitmap)
 MCMutableImageRep::~MCMutableImageRep()
 {
 	MCImageFreeBitmap(m_bitmap);
+	MCImageFreeBitmap(m_unpre_bitmap);
 	MCImageFreeBitmap(m_selection_image);
 	MCImageFreeBitmap(m_undo_image);
 	MCImageFreeBitmap(m_rub_image);
 
-	MCscreen->freepixmap(editmask);
-	MCscreen->freepixmap(editdata);
-	if (editimage != nil)
-		MCscreen->destroyimage(editimage);
-	if (editmaskimage != nil)
-		MCscreen->destroyimage(editmaskimage);
-	if (editmaskimagealpha != nil)
-		MCscreen->destroyimage(editmaskimagealpha);
-
-	editmask = editdata = nil;
-	editimage = editmaskimage = editmaskimagealpha = nil;
+	MCImageFreeMask(m_draw_mask);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -329,29 +351,6 @@ void MCMutableImageRep::drawselrect(MCDC *dc)
 
 ///////////////////////////////////////////////////////////////////////////////
 
-bool MCImageCreateOpaqueDrawmask(uindex_t p_width, uindex_t p_height, Pixmap &r_drawmask)
-{
-	bool t_success = true;
-
-	MCBitmap *t_mask = nil;
-	Pixmap t_drawmask = nil;
-	t_success = nil != (t_mask = MCscreen->createimage(1, p_width, p_height, True, 0xFF, False, False));
-	if (t_success)
-		t_success = nil != (t_drawmask = MCscreen->createpixmap(p_width, p_height, 1, False));
-	if (t_success)
-		MCscreen->putimage(t_drawmask, t_mask, 0, 0, p_width, p_height, 0, 0);
-
-	if (t_success)
-		r_drawmask = t_drawmask;
-
-	if (t_mask != nil)
-		MCscreen->destroyimage(t_mask);
-
-	return t_success;
-}
-
-//////////
-
 void MCMutableImageRep::startdraw()
 {
 	MCeditingimage = m_owner;
@@ -383,11 +382,8 @@ void MCMutableImageRep::startdraw()
 	case T_SPRAY:
 	case T_ERASER:
 		// Note that in brush/spray/eraser mode, we accumulate the mask that has
-		// been affected - the alpha channel has no influence on this and so no
-		// editmaskalphaimage need be created.
-		editmask = MCscreen->createpixmap(rect.width, rect.height, 1, False);
-		editdata = MCscreen->createpixmap(rect.width, rect.height, 0, False);
-		editimage = MCscreen->createimage(1, rect.width, rect.height, True, 0x00, True, False);
+		// been affected.
+		/* UNCHECKED */ MCImageAllocMask(rect.width, rect.height, m_draw_mask);
 		brect = drawbrush(t_tool);
 		state |= CS_DRAW;
 		break;
@@ -520,48 +516,11 @@ void MCMutableImageRep::continuedraw()
 			MCRectangle t_clip;
 			t_clip = MCU_reduce_rect(trect, -((MClinesize >> 1) + 1));
 
-			uint16_t pixwidth, pixheight;
-			pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-			Pixmap drawdata = nil, drawmask = nil;
-			MCBitmap *maskimagealpha = nil;
-			/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-			if (drawmask == nil && erasing)
-				/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
-				
-			MCContext *t_context;
-			if (drawmask != nil)
-			{
-				t_context = MCscreen -> createcontext(drawmask);
-				t_context->setforeground(fixmaskcolor(MConecolor));
-				t_context->setclip(t_clip);
-				pattson(t_context, False, 1);
-				t_context->drawline(mx - rect.x, my - rect.y,
-								   points[polypoints - 1].x - rect.x,
-								   points[polypoints - 1].y - rect.y);
-				pattsoff(t_context, 1);
-				MCscreen -> freecontext(t_context);
-			}
+			MCGPathRef t_path = nil;
+			/* UNCHECKED */ MCGPathCreateMutable(t_path);
+			MCGPathAddLine(t_path, MCGPointMake(mx - rect.x, my - rect.y), MCGPointMake(points[polypoints - 1].x - rect.x, points[polypoints - 1].y - rect.y));
 
-			if ( maskimagealpha != NULL ) 
-				t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-			else 
-				t_context = MCscreen -> createcontext(drawdata);
-
-			
-			t_context -> setclip(t_clip);
-			pattson(t_context, False, 0);
-			t_context->drawline(mx - rect.x, my - rect.y,
-			                   points[polypoints - 1].x - rect.x,
-			                   points[polypoints - 1].y - rect.y);
-			pattsoff(t_context, 0);
-			MCscreen -> freecontext(t_context);
-
-			MCImageFreeBitmap(m_bitmap);
-			/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-			MCscreen->freepixmap(drawdata);
-			MCscreen->freepixmap(drawmask);
-			if (maskimagealpha != nil)
-				MCscreen->destroyimage(maskimagealpha);
+			stroke_path(t_path);
 
 			brect = MCU_compute_rect(points[polypoints-1].x,
 			                         points[polypoints-1].y, mx, my);
@@ -671,11 +630,8 @@ void MCMutableImageRep::enddraw()
 	case T_BRUSH:
 	case T_SPRAY:
 	case T_ERASER:
-		if (editimage != nil)
-			MCscreen->destroyimage(editimage);
-		editimage = nil;
-		MCscreen->freepixmap(editmask);
-		MCscreen->freepixmap(editdata);
+		MCMemoryDeallocate(m_draw_mask.pixels);
+		m_draw_mask.pixels = nil;
 		break;
 	case T_POLYGON:
 		endrub();
@@ -684,71 +640,23 @@ void MCMutableImageRep::enddraw()
 		{
 			MCU_offset_points(points, polypoints, -rect.x, -rect.y);
 
-			uint16_t pixwidth, pixheight;
-			pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-			Pixmap drawdata = nil, drawmask = nil;
-			MCBitmap *maskimagealpha = nil;
-			/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-
-			if (MCfilled && polypoints > 2)
+			/* OVERHAUL - REVISIT: for now convert points to MCGPathRef,
+			 * but we should be able to build the path directly */
+			MCGPathRef t_path = nil;
+			/* UNCHECKED */ MCGPathCreateMutable(t_path);
+			if (polypoints > 0)
 			{
-				if (points[polypoints - 1].x != points[0].x
-						|| points[polypoints - 1].y != points[0].y)
-					points[polypoints++] = points[0];
+				MCGPathMoveTo(t_path, MCGPointMake(points[0].x, points[0].y));
+				for (uint32_t i = 0; i < polypoints; i++)
+					MCGPathLineTo(t_path, MCGPointMake(points[i].x, points[i].y));
 
-				MCContext *t_context;
-
-				if (drawmask != nil)
+				if (MCfilled && polypoints > 2)
 				{
-					t_context = MCscreen -> createcontext(drawmask);
-					t_context->setforeground(fixmaskcolor(MConecolor));
-					battson(t_context, 1);
-					t_context->fillpolygon(points, polypoints);
-					battsoff(t_context, 1);
-					MCscreen -> freecontext(t_context);
+					MCGPathCloseSubpath(t_path);
+					fill_path(t_path);
 				}
-
-				if ( maskimagealpha != NULL ) 
-					t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-				else 
-					t_context = MCscreen -> createcontext(drawdata);
-
-				battson(t_context, 0);
-				t_context->fillpolygon(points, polypoints);
-				battsoff(t_context, 0);
-				MCscreen -> freecontext(t_context);
+				stroke_path(t_path);
 			}
-			if (polypoints > 1)
-			{
-				MCContext *t_context;
-
-				if (drawmask != nil)
-				{
-					t_context = MCscreen -> createcontext(drawmask);
-					t_context->setforeground(fixmaskcolor(MConecolor));
-					pattson(t_context, False, 1);
-					t_context->drawlines(points, polypoints);
-					pattsoff(t_context, 1);
-					MCscreen -> freecontext(t_context);
-				}
-
-				if ( maskimagealpha != NULL ) 
-					t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-				else 
-					t_context = MCscreen -> createcontext(drawdata);
-
-				pattson(t_context, False, 0);
-				t_context->drawlines(points, polypoints);
-				pattsoff(t_context, 0);
-				MCscreen -> freecontext(t_context);
-			}
-
-			MCImageFreeBitmap(m_bitmap);
-			/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-			MCscreen->freepixmap(drawdata);
-			MCscreen->freepixmap(drawmask);
-			if (maskimagealpha != nil)
-				MCscreen->destroyimage(maskimagealpha);
 
 			delete points;
 			points = NULL;
@@ -869,9 +777,7 @@ MCRectangle MCMutableImageRep::continuerub(Boolean line)
 	brect.width++;
 	brect.height++;
 
-	MCPoint t_dst;
-	t_dst.x = brect.x; t_dst.y = brect.y;
-	MCImageBitmapCopyRegionToBitmap(m_bitmap, m_rub_image, t_dst, brect);
+	MCImageBitmapCopyRegionToBitmap(m_rub_image, m_bitmap, brect.x, brect.y, brect.x, brect.y, brect.width, brect.height);
 
 	brect.x += rect.x;
 	brect.y += rect.y;
@@ -923,206 +829,50 @@ void MCMutableImageRep::endsel()
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMutableImageRep::pattson(MCContext *p_context, Boolean miter, uint2 depth)
-{
-	int4 lstyle, lends, jstyle;
-	if (MCdashes)
-	{
-		lstyle = LineOnOffDash;
-		p_context->setdashes(0, MCdashes, MCndashes);
-	}
-	else
-		lstyle = LineSolid;
-	if (MCroundends)
-	{
-		lends = CapRound;
-		jstyle = JoinRound;
-	}
-	else
-	{
-		lends = CapProjecting;
-		if (miter)
-			jstyle = JoinMiter;
-		else
-			jstyle = JoinBevel;
-	}
-	p_context->setlineatts(MClinesize == 0 ? 1 : MClinesize, lstyle, lends, jstyle);
-	if (erasing)
-	{
-		p_context->setforeground(fixmaskcolor(MCzerocolor));
-		p_context->setfillstyle(FillSolid, DNULL, 0, 0);
-	}
-	else
-		if (depth != 1)
-			if (MCmodifierstate & MS_MOD1)
-				battson(p_context, depth);
-			else
-				if (MCpenpm == DNULL)
-				{
-					p_context->setforeground(MCpencolor);
-					p_context->setfillstyle(FillSolid, DNULL, 0, 0);
-				}
-				else
-					p_context->setfillstyle(FillTiled, MCpenpm, 0, 0);
-}
-
-void MCMutableImageRep::pattsoff(MCContext *p_context, uint2 depth)
-{
-	p_context->setlineatts(0, LineSolid, CapButt, JoinBevel);
-	if (erasing)
-		p_context->setforeground(fixmaskcolor(MConecolor));
-	else
-		if (depth != 1)
-			if (MCmodifierstate & MS_MOD1)
-				battsoff(p_context, depth);
-}
-
 void MCMutableImageRep::battson(MCContext *p_context, uint2 depth)
 {
 	if (erasing)
 		p_context->setforeground(fixmaskcolor(MCzerocolor));
 	else
 		if (depth != 1)
-			if (MCbrushpm == DNULL)
+			if (MCbrushpattern == nil)
 			{
 				p_context->setforeground(MCbrushcolor);
-				p_context->setfillstyle(FillSolid, DNULL, 0, 0);
+				p_context->setfillstyle(FillSolid, nil, 0, 0);
 			}
 			else
-				p_context->setfillstyle(FillTiled, MCbrushpm, 0, 0);
-}
-
-void MCMutableImageRep::battsoff(MCContext *p_context, uint2 depth)
-{
-	if (erasing)
-		p_context->setforeground(fixmaskcolor(MConecolor));
-	else
-		if (depth != 1)
-			if (MCbrushpm != DNULL)
-				p_context->setfillstyle(FillSolid, DNULL, 0, 0);
+				p_context->setfillstyle(FillTiled, MCbrushpattern, 0, 0);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCMutableImageRep::put_brush(MCBitmap *image, int2 x, int2 y,
-                        uint2 maxwidth, uint2 maxheight, MCbrushmask *bmptr)
+void MCMutableImageRep::put_brush(int2 x, int2 y, MCBrush *bmptr)
 {
-	uint4 sx, sy ;
-	uint4 sw, sh ;
-	uint2 bwidth = bmptr->width;
-	uint2 bheight = bmptr->height;
-	int2 mw = (int2)maxwidth;
-	int2 mh = (int2)maxheight;
+	uint32_t bwidth = MCGImageGetWidth(bmptr->image);
+	uint32_t bheight = MCGImageGetHeight(bmptr->image);
 
 	x -= bmptr->xhot - 1;
 	y -= bmptr->yhot - 1;
-	int2 bx, by;
-	if (x < 0)
-	{
-		if (x <= -bwidth)
-			return;
-		bx = -x;
-		bwidth -= bx;
-		x = 0;
-	}
-	else
-	{
-		bx = 0;
-		if (x + bwidth > maxwidth)
-		{
-			if (x >= mw)
-				return;
-			bwidth = maxwidth - x;
-		}
-	}
-	if (y < 0)
-	{
-		if (y <= -bheight)
-			return;
-		by = -y;
-		bheight -= by;
-		y = 0;
-	}
-	else
-	{
-		by = 0;
-		if (y + bheight > maxheight)
-		{
-			if (y >= mh)
-				return;
-			bheight = maxheight - y;
-		}
-	}
-	
-	// Take a copy of these values before we start messing around with em
-	sx = x ;
-	sy = y ;
-	sw = bmptr -> width ;
-	sh = bmptr -> height ;
-	
-	uint1 *dptr ;
-	uint1 *sptr ;
-	
-	
-	dptr = (uint1 *)&image->data[y * image->bytes_per_line + (x >> 3)];
-	sptr = &bmptr->data[by * bmptr->bytes + (bx >> 3)];
-	
-	if (bx == 0)
-	{
-		x &= 0x07;
-		while (bheight--)
-		{
-			uint1 *tdptr = dptr;
-			uint1 *tsptr = sptr;
-			int2 width = bwidth - (8 - x);
-			*tdptr++ |= *tsptr >> x;
-			while (width >= 8)
-			{
-				*tdptr++ |= *tsptr << (8 - x) | *(tsptr + 1) >> x;
-				width -= 8;
-				tsptr++;
-			}
-			if (width)
-				*tdptr |= *tsptr << (8 - x);
-			dptr += image->bytes_per_line;
-			sptr += bmptr->bytes;
-		}
-	}
-	else
-	{
-		bx &= 0x07;
-		while (bheight--)
-		{
-			uint1 *tdptr = dptr;
-			uint1 *tsptr = sptr;
-			int2 width = bwidth;
-			while (width > 8)
-			{
-				*tdptr++ |= *tsptr << bx | *(tsptr + 1) >> (8 - bx);
-				width -= 8;
-				tsptr++;
-			}
-			*tdptr |= *tsptr << bx;
-			dptr += image->bytes_per_line;
-			sptr += bmptr->bytes;
-		}
-	}
+
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithRaster(m_draw_mask, t_context);
+	MCGRectangle t_dst = MCGRectangleMake(x, y, bwidth, bheight);
+	MCGContextDrawImage(t_context, bmptr->image, t_dst, kMCGImageFilterNearest);
+	MCGContextRelease(t_context);
 }
 
 MCRectangle MCMutableImageRep::drawbrush(Tool which)
 {
-	MCbrushmask *bmptr = NULL;
+	MCBrush *bmptr = NULL;
 
 	bmptr = MCImage::getbrush(which);
 
-	MCscreen->flipimage(editimage, MSBFirst, MSBFirst);
 	if (which == T_SPRAY)
 	{
 		newrect = MCU_compute_rect(mx, my, mx, my);
 		newrect.x -= rect.x;
 		newrect.y -= rect.y;
-		put_brush(editimage, newrect.x, newrect.y,
-		          rect.width, rect.height, bmptr);
+		put_brush(newrect.x, newrect.y, bmptr);
 	}
 	else
 	{
@@ -1158,7 +908,7 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 			e1 = e - dx;
 			while (dx-- >= 0)
 			{
-				put_brush(editimage, x++, y, rect.width, rect.height, bmptr);
+				put_brush(x++, y, bmptr);
 				if (e > 0)
 				{
 					y += yinc;
@@ -1175,7 +925,7 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 			e1 = e - dy;
 			while (dy-- >= 0)
 			{
-				put_brush(editimage, x, y, rect.width, rect.height, bmptr);
+				put_brush(x, y, bmptr);
 				y += yinc;
 				if (e > 0)
 				{
@@ -1189,8 +939,8 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 	}
 	newrect.x -= bmptr->xhot;
 	newrect.y -= bmptr->yhot;
-	newrect.width += bmptr->width;
-	newrect.height += bmptr->height;
+	newrect.width += MCGImageGetWidth(bmptr->image);
+	newrect.height += MCGImageGetHeight(bmptr->image);
 	newrect = MCU_clip_rect(newrect, 0, 0, rect.width, rect.height);
 	if (which == T_ERASER || erasing)
 		eraseimage(newrect);
@@ -1201,20 +951,13 @@ MCRectangle MCMutableImageRep::drawbrush(Tool which)
 	return newrect;
 }
 
-void MCMutableImageRep::fill_line(MCBitmap *plane, int2 left, int2 right, int2 y)
+void MCMutableImageRep::fill_line(MCGRaster &plane, int2 left, int2 right, int2 y)
 {
-	uint1 *sptr = (uint1 *)&plane->data[y * plane->bytes_per_line + (left>>3)];
-	uint1 *eptr = (uint1 *)&plane->data[y * plane->bytes_per_line + (right>>3)];
+	uint1 *sptr = (uint1 *)plane.pixels + y * plane.stride + left;
+	uint1 *eptr = (uint1 *)plane.pixels + y * plane.stride + right;
 
-	if (sptr == eptr)
-		*sptr |= MCleftmasks[left & 0x07] & MCrightmasks[right & 0x07];
-	else
-	{
-		*sptr++ |= MCleftmasks[left & 0x07];
-		while (sptr < eptr)
-			*sptr++ |= 0xFF;
-		*sptr |= MCrightmasks[right & 0x07];
-	}
+	while (sptr <= eptr)
+		*sptr++ = 0xFF;
 }
 
 bool MCMutableImageRep::bucket_line(MCImageBitmap *p_src, uint4 color,
@@ -1245,7 +988,7 @@ bool MCMutableImageRep::bucket_line(MCImageBitmap *p_src, uint4 color,
 	return true;
 }
 
-bool MCMutableImageRep::bucket_point(MCImageBitmap *p_src, uint4 color, MCBitmap *dimage,
+bool MCMutableImageRep::bucket_point(MCImageBitmap *p_src, uint4 color, MCGRaster &dimage,
                               MCstacktype pstack[], uint2 &pstacktop,
                               uint2 &pstackptr, int2 xin, int2 yin,
                               int2 direction, int2 &xleftout, int2 &xrightout,
@@ -1296,7 +1039,7 @@ bool MCMutableImageRep::bucket_point(MCImageBitmap *p_src, uint4 color, MCBitmap
 		return false;
 }
 
-void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCBitmap *dimage,
+void MCMutableImageRep::bucket_fill(MCImageBitmap *p_src, uint4 scolor, MCGRaster &dimage,
                           int2 xleft, int2 oldy)
 {
 	int2 oldxleft;
@@ -1406,20 +1149,104 @@ void MCMutableImageRep::drawbucket()
 	uint32_t t_color = MCImageBitmapGetPixel(m_bitmap, mx - rect.x, my - rect.y);
 	MCRectangle trect;
 	MCU_set_rect(trect, 0, 0, rect.width, rect.height);
-	editmask = MCscreen->createpixmap(rect.width, rect.height, 1, False);
-	editdata = MCscreen->createpixmap(rect.width, rect.height, 0, False);
-	editimage = MCscreen->createimage(1, rect.width, rect.height,
-	                                  True, 0x0, True, False);
-	bucket_fill(m_bitmap, t_color, editimage, mx - rect.x, my - rect.y);
+	/* UNCHECKED */ MCImageAllocMask(rect.width, rect.height, m_draw_mask);
+	bucket_fill(m_bitmap, t_color, m_draw_mask, mx - rect.x, my - rect.y);
 	if (erasing)
 		eraseimage(trect);
 	else
 		fillimage(trect);
-	MCscreen->destroyimage(editimage);
-	editimage = nil;
-	MCscreen->freepixmap(editmask);
-	MCscreen->freepixmap(editdata);
+	MCImageFreeMask(m_draw_mask);
 	MCU_unwatchcursor(m_owner->getstack(), True);
+}
+
+void MCMutableImageRep::apply_stroke_style(MCGContextRef p_context, bool p_miter)
+{
+	if (MCdashes)
+	{
+		MCGFloat *t_lengths = nil;
+		/* OVERHAUL - REVISIT: change type of MCdashes to MCGFloat[] */
+		/* UNCHECKED */ MCMemoryNewArray(MCndashes, t_lengths);
+		for (uint32_t i = 0; i < MCndashes; i++)
+			t_lengths[i] = MCdashes[i];
+
+		MCGContextSetStrokeDashes(p_context, 0, t_lengths, MCndashes);
+		MCMemoryDelete(t_lengths);
+	}
+
+	if (MCroundends)
+		MCGContextSetStrokeCapStyle(p_context, kMCGCapStyleRound);
+	else
+	{
+		MCGContextSetStrokeCapStyle(p_context, kMCGCapStyleSquare);
+		MCGContextSetStrokeJoinStyle(p_context, p_miter ? kMCGJoinStyleMiter : kMCGJoinStyleBevel);
+		/* OVERHAUL - REVISIT: is this configured elsewhere? */
+		MCGContextSetStrokeMiterLimit(p_context, 1.0);
+	}
+
+	MCGContextSetStrokeWidth(p_context, MClinesize == 0 ? 1 : MClinesize);
+}
+
+void MCMutableImageRep::apply_fill_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
+{
+	if (erasing)
+		MCGContextSetFillRGBAColor(p_context, 0, 0, 0, 0);
+	else if (p_pattern == nil)
+		MCGContextSetFillRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
+	else
+		MCGContextSetFillPattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
+}
+
+void MCMutableImageRep::apply_stroke_paint(MCGContextRef p_context, MCPatternRef p_pattern, const MCColor &p_color)
+{
+	if (erasing)
+		MCGContextSetStrokeRGBAColor(p_context, 0, 0, 0, 0);
+	else if (p_pattern == nil)
+		MCGContextSetStrokeRGBAColor(p_context, p_color.red / 65535.0, p_color.green / 65535.0, p_color.blue / 65535.0, 1.0);
+	else
+		MCGContextSetStrokePattern(p_context, p_pattern->image, MCGAffineTransformMakeScale(1.0 / p_pattern->scale, 1.0 / p_pattern->scale), kMCGImageFilterNearest);
+}
+
+void MCMutableImageRep::fill_path(MCGPathRef p_path)
+{
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
+
+	//MCGContextSetShouldAntialias(t_context, true);
+	apply_fill_paint(t_context, MCbrushpattern, MCbrushcolor);
+	MCGContextAddPath(t_context, p_path);
+	MCGContextFill(t_context);
+
+	MCGContextRelease(t_context);
+
+	MCImageBitmapCheckTransparency(m_bitmap);
+}
+
+void MCMutableImageRep::stroke_path(MCGPathRef p_path)
+{
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
+
+	//MCGContextSetShouldAntialias(t_context, true);
+	apply_stroke_style(t_context, true);
+	if ((MCmodifierstate & MS_MOD1) == 0)
+		apply_stroke_paint(t_context, MCpenpattern, MCpencolor);
+	else
+		apply_stroke_paint(t_context, MCbrushpattern, MCbrushcolor);
+
+	MCGContextAddPath(t_context, p_path);
+	MCGContextStroke(t_context);
+
+	MCGContextRelease(t_context);
+
+	MCImageBitmapCheckTransparency(m_bitmap);
+}
+
+void MCMutableImageRep::draw_path(MCGPathRef p_path)
+{
+	if (MCfilled)
+		fill_path(p_path);
+	if (MClinesize != 0)
+		stroke_path(p_path);
 }
 
 MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
@@ -1434,50 +1261,27 @@ MCRectangle MCMutableImageRep::drawline(Boolean cancenter)
 		oldy -= my - starty;
 	}
 
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
-
-	MCContext *t_context;
-
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context->setforeground(fixmaskcolor(MConecolor));
-		pattson(t_context, False, 1);
-		t_context->drawline(oldx - rect.x, oldy - rect.y, mx - rect.x, my - rect.y);
-		pattsoff(t_context, 1);
-		MCscreen -> freecontext(t_context);
-	}
-
-	if ( maskimagealpha != NULL ) 
-		t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
-
-	pattson(t_context, False, 0);
-	t_context->drawline(oldx - rect.x, oldy - rect.y, mx - rect.x, my - rect.y);
-	pattsoff(t_context, 0);
-	MCscreen -> freecontext(t_context);
-
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCGPathRef t_path = nil;
+	/* UNCHECKED */ MCGPathCreateMutable(t_path);
+	MCGPathAddLine(t_path, MCGPointMake(oldx - rect.x, oldy - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
+	stroke_path(t_path);
 
 	return brect;
 }
 
 MCRectangle MCMutableImageRep::drawreg()
 {
-	real8 dx = (real8)(mx - startx);
-	real8 dy = (real8)(my - starty);
+	int32_t t_start_x, t_start_y, t_end_x, t_end_y;
+	t_start_x = startx - rect.x;
+	t_start_y = starty - rect.y;
+	t_end_x = mx - rect.x;
+	t_end_y = my - rect.y;
+
+	MCGPathRef t_path = nil;
+	/* UNCHECKED */ MCGPathCreateMutable(t_path);
+
+	real8 dx = (real8)(t_end_x - t_start_x);
+	real8 dy = (real8)(t_end_y - t_start_y);
 	real8 length = sqrt(dx * dx + dy * dy);
 	real8 angle;
 	if (dx == 0 && dy == 0)
@@ -1488,40 +1292,35 @@ MCRectangle MCMutableImageRep::drawreg()
 	{
 		real8 quanta = M_PI * 2.0 / (real8)MCslices;
 		angle = floor((angle + quanta / 2.0) / quanta) * quanta;
-		mx = startx + (int2)(cos(angle) * length);
-		my = starty + (int2)(sin(angle) * length);
+		t_end_x = t_start_x + (int2)(cos(angle) * length);
+		t_end_y = t_start_y + (int2)(sin(angle) * length);
 	}
-	if (npoints <= MCpolysides)
-	{
-		npoints = MCpolysides + 1;
-		if (points != NULL)
-			delete points;
-		points = new MCPoint[npoints];
-	}
-	points[0].x = points[MCpolysides].x = mx;
-	points[0].y = points[MCpolysides].y = my;
-	int2 minx = mx;
-	int2 miny = my;
-	int2 maxx = mx;
-	int2 maxy = my;
+
+	MCGPathMoveTo(t_path, MCGPointMake(t_end_x, t_end_y));
+	int2 minx = t_end_x;
+	int2 miny = t_end_y;
+	int2 maxx = t_end_x;
+	int2 maxy = t_end_y;
 	real8 factor = 2.0 * M_PI / (real8)MCpolysides;
 	uint2 i;
 	for (i = 1 ; i < MCpolysides ; i++)
 	{
 		real8 iangle = angle + (real8)i * factor;
-		points[i].x = startx + (int2)(cos(iangle) * length);
-		points[i].y = starty + (int2)(sin(iangle) * length);
-		minx = MCU_min(minx, points[i].x);
-		miny = MCU_min(miny, points[i].y);
-		maxx = MCU_max(maxx, points[i].x);
-		maxy = MCU_max(maxy, points[i].y);
+		int32_t t_new_x = t_start_x + (int2)(cos(iangle) * length);
+		int32_t t_new_y = t_start_y + (int2)(sin(iangle) * length);
+
+		MCGPathLineTo(t_path, MCGPointMake(t_new_x, t_new_y));
+		minx = MCU_min(minx, t_new_x);
+		miny = MCU_min(miny, t_new_y);
+		maxx = MCU_max(maxx, t_new_x);
+		maxy = MCU_max(maxy, t_new_y);
 	}
-	MCU_offset_points(points, MCpolysides + 1, -rect.x, -rect.y);
+	//MCU_offset_points(points, MCpolysides + 1, -rect.x, -rect.y);
 
 	MCRectangle brect = newrect;
+
 	newrect = MCU_compute_rect(minx, miny, maxx, maxy);
-	newrect.x -= rect.x;
-	newrect.y -= rect.y;
+
 	brect = MCU_union_rect(brect, newrect);
 	brect = MCU_reduce_rect(brect, -((MClinesize >> 1) + 1));
 
@@ -1529,69 +1328,15 @@ MCRectangle MCMutableImageRep::drawreg()
 	// - the other drawing tools do the same thing by calling continuerub, but
 	// reg poly can't use that due to its different way of dragging out the shape.
 
-	MCPoint t_dst;
-	t_dst.x = brect.x;
-	t_dst.y = brect.y;
-	MCImageBitmapCopyRegionToBitmap(m_bitmap, m_rub_image, t_dst, brect);
-
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
+	MCImageBitmapCopyRegionToBitmap(m_rub_image, m_bitmap, brect.x, brect.y, brect.x, brect.y, brect.width, brect.height);
 
 	brect.x += rect.x;
 	brect.y += rect.y;
 
-	MCContext *t_context;
+	MCGPathCloseSubpath(t_path);
+	draw_path(t_path);
 
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context->setforeground(fixmaskcolor(MConecolor));
-		if (MCfilled)
-		{
-			battson(t_context, 1);
-			t_context->fillpolygon(points, MCpolysides + 1);
-			battsoff(t_context, 1);
-		}
-		if (MClinesize != 0)
-		{
-			pattson(t_context, True, 1);
-			t_context->drawlines(points, MCpolysides + 1);
-			pattsoff(t_context, 1);
-		}
-		MCscreen -> freecontext(t_context);
-	}
-
-	// Make sure we target the alpha channel if present.
-	if (maskimagealpha != NULL) 
-		t_context = MCscreen -> createcontext(drawdata, maskimagealpha);
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
-
-	if (MCfilled)
-	{
-		battson(t_context, 0);
-		t_context->fillpolygon(points, MCpolysides + 1);
-		battsoff(t_context, 0);
-	}
-	if (MClinesize != 0)
-	{
-		pattson(t_context, True, 0);
-		t_context->drawlines(points, MCpolysides + 1);
-		pattsoff(t_context, 0);
-	}
-	MCscreen -> freecontext(t_context);
-
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCGPathRelease(t_path);
 
 	return brect;
 }
@@ -1599,378 +1344,111 @@ MCRectangle MCMutableImageRep::drawreg()
 MCRectangle MCMutableImageRep::drawroundrect()
 {
 	MCRectangle brect = continuerub(False);
-	MCU_roundrect(points, npoints, newrect, MCroundradius);
+	//MCU_roundrect(points, npoints, newrect, MCroundradius);
 
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
+	MCGSize t_radii;
+	t_radii . width = MCroundradius;
+	t_radii . height = MCroundradius;
 
-	MCContext *t_context;
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context->setforeground(fixmaskcolor(MConecolor));
-		if (MCfilled)
-		{
-			battson(t_context, 1);
-			t_context->fillpolygon(points, npoints);
-			battsoff(t_context, 1);
-		}
-		if (MClinesize != 0)
-		{
-			pattson(t_context, True, 1);
-			t_context->drawlines(points, npoints);
-			pattsoff(t_context, 1);
-		}
-		MCscreen -> freecontext(t_context);
-	}
+	MCGRectangle t_bounds = MCRectangleToMCGRectangle(newrect);
 
-	// Make sure we target the alpha channel if present.
-	if ( maskimagealpha != NULL ) 
-		t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
-	
-	
-	if (MCfilled)
-	{
-		battson(t_context, 0);
-		t_context->fillpolygon(points, npoints);
-		battsoff(t_context, 0);
-	}
-	if (MClinesize != 0)
-	{
-		pattson(t_context, True, 0);
-		t_context->drawlines(points, npoints);
-		pattsoff(t_context, 0);
-	}
-	MCscreen -> freecontext(t_context);
+	MCGPathRef t_path = nil;
+	/* UNCHECKED */ MCGPathCreateMutable(t_path);
+	MCGPathAddRoundedRectangle(t_path, t_bounds, t_radii);
 
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	draw_path(t_path);
+
+	MCGPathRelease(t_path);
 
 	return brect;
 }
 
 MCRectangle MCMutableImageRep::drawoval()
 {
-	MCContext *t_context;
-
 	MCRectangle brect = continuerub(False);
 	
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
+	MCGPoint t_center;
+	t_center.x = newrect.x + 0.5 * newrect.width;
+	t_center.y = newrect.y + 0.5 * newrect.height;
 
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context -> setforeground(fixmaskcolor(MConecolor));
-		if (MCfilled)
-		{
-			battson(t_context, 1);
-			t_context -> fillarc(newrect, MCstartangle, MCarcangle);
-			battsoff(t_context, 1);
-		}
-		if (MClinesize != 0)
-		{
-			pattson(t_context, False, 1);
-			t_context -> drawarc(newrect, MCstartangle, MCarcangle);
-			pattsoff(t_context, 1);
-		}
-		MCscreen -> freecontext(t_context);
-	}
+	MCGSize t_radii;
+	t_radii.width = newrect.width;
+	t_radii.height = newrect.height;
 
-	if ( maskimagealpha != NULL ) 
-		t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
+	MCGPathRef t_path = nil;
+	/* UNCHECKED */ MCGPathCreateMutable(t_path);
+	if (MCarcangle != 0 && MCarcangle % 360 == 0)
+		MCGPathAddArc(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
+	else
+		MCGPathAddSegment(t_path, t_center, t_radii, 0.0, 360 - (MCstartangle + MCarcangle), 360 - MCstartangle);
 	
-	if (MCfilled)
-	{
-		battson(t_context, 0);
-		t_context->fillarc(newrect, MCstartangle, MCarcangle);
-		battsoff(t_context, 0);
-	}
-	if (MClinesize != 0)
-	{
-		pattson(t_context, False, 0);
-		t_context->drawarc(newrect, MCstartangle, MCarcangle);
-		pattsoff(t_context, 0);
-	}
-	MCscreen -> freecontext(t_context);
+	draw_path(t_path);
 
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCGPathRelease(t_path);
+
+	return brect;
+}
+
+MCRectangle MCMutableImageRep::drawrectangle()
+{
+	// miter = False;
+	MCRectangle brect = continuerub(False);
+
+	MCGPathRef t_path = nil;
+	/* UNCHECKED */ MCGPathCreateMutable(t_path);
+	MCGPathAddRectangle(t_path, MCRectangleToMCGRectangle(newrect));
+
+	draw_path(t_path);
+
+	MCGPathRelease(t_path);
 
 	return brect;
 }
 
 MCRectangle MCMutableImageRep::drawpencil()
 {
-	MCContext *t_context;
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
 
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
+	if (erasing)
+		MCGContextSetStrokeRGBAColor(t_context, 0, 0, 0, 0);
+	else
+		MCGContextSetStrokeRGBAColor(t_context, MCpencolor.red / 65535.0, MCpencolor.green / 65535.0, MCpencolor.blue / 65535.0, 1.0);
+	MCGContextAddLine(t_context, MCGPointMake(startx - rect.x, starty - rect.y), MCGPointMake(mx - rect.x, my - rect.y));
+	MCGContextStroke(t_context);
 
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context -> setforeground(erasing ? fixmaskcolor(MCzerocolor) : fixmaskcolor(MConecolor));
-		t_context -> drawline(startx - rect . x, starty - rect . y, mx - rect . x, my - rect . y);
-		MCscreen -> freecontext(t_context);
-	}
-	
-	if ( maskimagealpha != NULL ) 
-		t_context = MCscreen -> createcontext ( drawdata, maskimagealpha);
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
-	t_context -> setforeground(erasing ? fixmaskcolor(MCzerocolor) : MCpencolor );
-	t_context -> drawline(startx - rect . x, starty - rect . y, mx - rect . x, my - rect . y);
-	
-	MCscreen -> freecontext(t_context);
+	MCGContextRelease(t_context);
 
-	if ( maskimagealpha != NULL && erasing )
-	{
-		Drawable t_mask;
-		t_mask = MCscreen -> createpixmap ( rect . width, rect . height, 1 , true ) ;
-		
-		t_context = MCscreen -> createcontext(t_mask);
-		t_context -> setforeground(fixmaskcolor(MCzerocolor));
-
-		MCRectangle t_rect;
-		MCU_set_rect(t_rect, 0, 0, rect . width, rect . height);
-		t_context -> fillrect(t_rect);
-
-		t_context -> setforeground(fixmaskcolor(MConecolor));
-		t_context -> drawline(startx - rect . x, starty - rect . y, mx - rect . x, my - rect . y);
-		MCscreen -> freecontext(t_context);
-		
-		MCBitmap *t_image;
-		t_image = MCscreen -> getimage(t_mask, 0, 0, rect . width, rect . height, False );
-		
-		surface_mask_flush_to_alpha_inverted(maskimagealpha -> data, maskimagealpha -> bytes_per_line, t_image->data, t_image -> bytes_per_line, t_image -> width, t_image -> height);
-		if (t_image != NULL)
-			MCscreen -> destroyimage(t_image);
-
-		if (t_mask != DNULL)
-			MCscreen -> freepixmap(t_mask);
-	}
-
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCImageBitmapCheckTransparency(m_bitmap);
 
 	return MCU_compute_rect(startx, starty, mx, my);
 }
 
-MCRectangle MCMutableImageRep::drawrectangle()
-{
-	MCContext *t_context;
-
-	MCRectangle brect = continuerub(False);
-
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil && erasing)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
-
-	if (drawmask != nil)
-	{
-		t_context = MCscreen -> createcontext(drawmask);
-		t_context->setforeground(fixmaskcolor(MConecolor));
-		if (MCfilled)
-		{
-			battson(t_context, 1);
-			t_context->fillrect(newrect);
-			battsoff(t_context, 1);
-		}
-		if (MClinesize != 0)
-		{
-			pattson(t_context, False, 1);
-			t_context->drawrect(newrect);
-			pattsoff(t_context, 1);
-		}
-		MCscreen -> freecontext(t_context);
-	}
-
-	if ( maskimagealpha != NULL ) 
-		t_context = MCscreen -> createcontext ( drawdata, maskimagealpha );
-	else 
-		t_context = MCscreen -> createcontext(drawdata);
-
-	if (MCfilled)
-	{
-		battson(t_context, 0);
-		t_context->fillrect(newrect);
-		battsoff(t_context, 0);
-	}
-	if (MClinesize != 0)
-	{
-		pattson(t_context, False, 0);
-		t_context->drawrect(newrect);
-		pattsoff(t_context, 0);
-	}
-	MCscreen -> freecontext(t_context);
-
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
-
-	return brect;
-}
-
 void MCMutableImageRep::fillimage(const MCRectangle &drect)
 {
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
 
-	// Render the 1 bit mask pixmap into the 1-bit editmask IMAGE
-	MCscreen->putimage(editmask, editimage, drect.x, drect.y,
-					   drect.x, drect.y, drect.width, drect.height);
-		
-	if (drawmask != nil)
-	{
-		// Copy the editmask into the drawmask. We do this with a logical OR operation
-		// as we are merging the filled mask with that which is already present.
-		MCscreen->copyarea(editmask, drawmask, 1, drect.x, drect.y,
-						   drect.width, drect.height,
-						   drect.x, drect.y, fixmaskrop(GXor));
-	}
-		
-	// Copy the editmask into the editdata, expanding 1's to 0xFFFFFFFF and
-	// 0's to 0x00000000.
-#ifdef _MACOSX
-	MCscreen->copyplane(editmask, editdata, drect.x, drect.y, drect.width,
-						drect.height, drect.x, drect.y, GXcopy,
-						(uint4)0 );//needs to be 0x000000 on Mac
-#else
-	MCscreen->copyplane(editmask, editdata, drect.x, drect.y, drect.width,
-						drect.height, drect.x, drect.y, GXcopy,
-						(uint4)AllPlanes );//needs to be 0x000000 on Mac
-#endif
-	
-	// Copy the editdata into the drawdata using a logical inverted and. This
-	// has the effect of setting all pixels inside the mask (i.e. where it is 1)
-	// to 0 and leaving the rest unaffected. After this operation, the target
-	// color data has a black space where the new filled shape is to go.
-	MCscreen->copyarea(editdata, drawdata, 0, drect.x, drect.y,
-	                   drect.width, drect.height,
-	                   drect.x, drect.y, GXandInverted);
+	apply_fill_paint(t_context, MCbrushpattern, MCbrushcolor);
+	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNearest);
 
-	// Now fill the editdata with the fill pattern. This is done by using the
-	// logical and operation. This results in the appropriate pattern appearing
-	// in the editdata but only inside the mask.
-	MCContext *t_context;
-	t_context = MCscreen -> createcontext(editdata);
-	battson(t_context, 0);
-	
-	// MW-2011-09-15: [[ Bug 9724 ]] Reinstate per-platform hooks - seems the
-	//   AND operation doesn't quite work right except on Windows...
-#if defined(_MACOSX)
-	extern void MCMacApplyPatternToFillImage(MCContext *, const MCRectangle&);
-	MCMacApplyPatternToFillImage(t_context, drect);
-#elif defined(_LINUX)
-	extern void MCLinuxApplyPatternToFillImage(MCContext *, const MCRectangle&);
-	MCLinuxApplyPatternToFillImage(t_context, drect);
-#else
-	t_context->setfunction(GXand);
-	t_context -> fillrect(drect);
-#endif
-	
-	battsoff(t_context, 0);
-	MCscreen -> freecontext(t_context);
+	MCGContextRelease(t_context);
 
-	// Now logically OR the color pattern in editdata with the colors in drawdata.
-	// As drawdata contains 0's where the new filled shape is to go, and editdata
-	// only contains non-0's inside the filled shape this works as expected.
-#ifdef _MACOSX 
-	MCscreen->copyplane(editdata, drawdata, drect.x, drect.y, drect.width,
-	                    drect.height, drect.x, drect.y, GXor,
-	                    MCbrushpm == DNULL ? MCbrushcolor.pixel : (uint4)AllPlanes);
-#else
-	//Finally, copy the editdata back to the drawdata again to finish.
-	MCscreen->copyarea(editdata, drawdata, 0, drect.x, drect.y,
-	                   drect.width, drect.height, drect.x, drect.y, GXor);
-#endif
-
-	// Now, if the target image has an alpha channel we ensure that any pixels that
-	// were just filled by the above sequence are maked as fully opaque in the alpha.
-	if (maskimagealpha != NULL)
-		surface_mask_flush_to_alpha(maskimagealpha -> data, maskimagealpha->bytes_per_line, editimage->data, editimage->bytes_per_line, editimage->width, editimage->height);	
-
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCImageBitmapCheckTransparency(m_bitmap);
 }
 
 void MCMutableImageRep::eraseimage(const MCRectangle &drect)
 {
-	uint16_t pixwidth, pixheight;
-	pixwidth = m_bitmap->width; pixheight = m_bitmap->height;
-	Pixmap drawdata = nil, drawmask = nil;
-	MCBitmap *maskimagealpha = nil;
-	/* UNCHECKED */ MCImageSplitPixmaps(m_bitmap, drawdata, drawmask, maskimagealpha);
-	if (drawmask == nil)
-		/* UNCHECKED */ MCImageCreateOpaqueDrawmask(pixwidth, pixheight, drawmask);
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(m_bitmap->width, m_bitmap->height, m_bitmap->stride, m_bitmap->data, true, t_context);
 
-	MCscreen->putimage(editmask, editimage, drect.x, drect.y,
-	                   drect.x, drect.y, drect.width, drect.height);
-	MCscreen->copyarea(editmask, drawmask, 1, drect.x, drect.y,
-	                   drect.width, drect.height,
-	                   drect.x, drect.y, fixmaskrop(GXandInverted));
-	MCscreen->copyplane(editmask, editdata, drect.x, drect.y, drect.width,
-	                    drect.height, drect.x, drect.y, GXcopy,
-	                    (uint4)AllPlanes);
-	MCscreen->copyarea(editdata, drawdata, 0, drect.x, drect.y,
-	                   drect.width, drect.height,
-	                   drect.x, drect.y, GXandInverted);
-	
-	if ( maskimagealpha != NULL)
-		surface_mask_flush_to_alpha_inverted ( maskimagealpha -> data, maskimagealpha->bytes_per_line, editimage->data, editimage->bytes_per_line, editimage->width, editimage->height);
+	MCGContextSetBlendMode(t_context, kMCGBlendModeClear);
+	MCGContextSetFillRGBAColor(t_context, 1, 1, 1, 1);
+	MCGContextDrawPixels(t_context, m_draw_mask, MCGRectangleMake(0, 0, m_bitmap->width, m_bitmap->height), kMCGImageFilterNearest);
 
-	MCImageFreeBitmap(m_bitmap);
-	/* UNCHECKED */ MCImageMergePixmaps(pixwidth, pixheight, drawdata, drawmask, maskimagealpha, m_bitmap);
-	MCscreen->freepixmap(drawdata);
-	MCscreen->freepixmap(drawmask);
-	if (maskimagealpha != nil)
-		MCscreen->destroyimage(maskimagealpha);
+	MCGContextRelease(t_context);
+
+	MCImageBitmapCheckTransparency(m_bitmap);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2254,12 +1732,7 @@ void MCMutableImageRep::rotatesel(int2 angle)
 		t_dst_image = m_selection_image;
 	}
 
-	MCPoint t_dst_offset;
-	t_dst_offset.x = trect.x;
-	t_dst_offset.y = trect.y;
-	MCRectangle t_src_rect;
-	t_src_rect = MCU_make_rect(xoffset, yoffset, selrect.width, selrect.height);
-	MCImageBitmapCopyRegionToBitmap(t_dst_image, t_rotated, t_dst_offset, t_src_rect);
+	MCImageBitmapCopyRegionToBitmap(t_rotated, t_dst_image, xoffset, yoffset, trect.x, trect.y, selrect.width, selrect.height);
 
 	MCImageFreeBitmap(t_rotated);
 
@@ -2351,11 +1824,7 @@ void MCMutableImageRep::flipsel(Boolean ishorizontal)
 		trect = selrect;
 	}
 
-	MCPoint t_dst_point;
-	t_dst_point.x = trect.x;
-	t_dst_point.y = trect.y;
-	MCRectangle t_src_rect = MCU_make_rect(0, 0, trect.width, trect.height);
-	MCImageBitmapCopyRegionToBitmap(t_dst_image, t_flipped, t_dst_point, t_src_rect);
+	MCImageBitmapCopyRegionToBitmap(t_flipped, t_dst_image, 0, 0, trect.x, trect.y, trect.width, trect.height);
 
 	MCImageFreeBitmap(t_flipped);
 

@@ -38,24 +38,37 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #import <OpenGLES/ES1/gl.h>
 #import <OpenGLES/ES1/glext.h>
 
-#include "mbliphonecontext.h"
 #include "mbliphoneview.h"
+
+#include "resolution.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern UIView *MCIPhoneGetView(void);
 extern float MCIPhoneGetResolutionScale(void);
+extern float MCIPhoneGetDeviceScale(void);
+
+bool MCGRasterToCGImage(const MCGRaster &p_raster, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 extern void MCIPhoneCallOnMainFiber(void (*)(void *), void *);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCGRectangle MCGRectangleFromCGRect(CGRect p_rect)
+{
+	return MCGRectangleMake(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 static void do_update(void *p_dirty)
 {
 	[MCIPhoneGetDisplayView() renderInRegion: (MCRegionRef)p_dirty];
 }
 
-void MCStack::updatewindow(MCRegionRef p_dirty_rgn)
+void MCStack::device_updatewindow(MCRegionRef p_dirty_rgn)
 {
 	// MW-2011-09-13: [[ Redraw ]] Only perform an update if the window should
 	//   draw (i.e. if it is top-most).
@@ -75,9 +88,9 @@ class MCIPhoneStackSurface: public MCStackSurface
 protected:
 	MCRectangle m_region;
 	MCRectangle m_locked_area;
-	Pixmap m_locked_pixmap;
-	MCContext *m_locked_context;
+	MCGContextRef m_locked_context;
 	void *m_locked_bits;
+	uint32_t m_locked_stride;
 	
 	virtual void FlushBits(void *p_bits, uint32_t p_stride) = 0;
 
@@ -85,35 +98,28 @@ public:
 	MCIPhoneStackSurface(const MCRectangle& p_area)
 	{
 		m_region = p_area;
-		m_locked_pixmap = nil;
 		m_locked_context = nil;
 		m_locked_bits = nil;
 	}
 	
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef &r_context)
 	{
-		MCRectangle t_actual_area;
-		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), m_region);
-		
-		if (MCU_empty_rect(t_actual_area))
-			return false;
-		
-		m_locked_pixmap = MCscreen -> createpixmap(t_actual_area . width, t_actual_area . height, 0, False);
-		if (m_locked_pixmap != nil)
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
 		{
-			m_locked_context = MCscreen -> createcontext(m_locked_pixmap, False, False);
-			if (m_locked_context != nil)
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
 			{
-				m_locked_context -> setorigin(t_actual_area . x, t_actual_area . y);
-				m_locked_context -> setclip(t_actual_area);
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
 				
-				m_locked_area = t_actual_area;
 				r_context = m_locked_context;
 				
 				return true;
 			}
 			
-			MCscreen -> freepixmap(m_locked_pixmap);
+			UnlockPixels(false);
 		}
 		
 		return false;
@@ -124,19 +130,13 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		MCscreen -> freecontext(m_locked_context);
+		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
 		
-		void *t_bits;
-		uint32_t t_stride;
-		MCscreen -> lockpixmap(m_locked_pixmap, t_bits, t_stride);
-		FlushBits(t_bits, t_stride);
-		MCscreen -> unlockpixmap(m_locked_pixmap, t_bits, t_stride);
-		
-		MCscreen -> freepixmap(m_locked_pixmap);
+		UnlockPixels(true);
 	}
 	
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
 		MCRectangle t_actual_area;
 		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), m_region);
@@ -144,13 +144,17 @@ public:
 		if (MCU_empty_rect(t_actual_area))
 			return false;
 		
-		m_locked_bits = malloc(t_actual_area . width * t_actual_area . height * sizeof(uint32_t));
+		m_locked_stride = t_actual_area.width * sizeof(uint32_t);
+		m_locked_bits = malloc(t_actual_area . height * m_locked_stride);
 		if (m_locked_bits != nil)
 		{
 			m_locked_area = t_actual_area;
 			
-			r_bits = m_locked_bits;
-			r_stride = t_actual_area . width * sizeof(uint32_t);
+			r_raster.width = t_actual_area.width;
+			r_raster.height = t_actual_area.height;
+			r_raster.stride = m_locked_stride;
+			r_raster.pixels = m_locked_bits;
+			r_raster.format = kMCGRasterFormat_ARGB;
 			return true;
 		}
 		
@@ -159,13 +163,46 @@ public:
 	
 	void UnlockPixels(void)
 	{
+		UnlockPixels(true);
+	}
+	
+	void UnlockPixels(bool p_update)
+	{
 		if (m_locked_bits == nil)
 			return;
 		
-		FlushBits(m_locked_bits, m_locked_area . width * sizeof(uint32_t));
+		if (p_update)
+			FlushBits(m_locked_bits, m_locked_stride);
 		
 		free(m_locked_bits);
 		m_locked_bits = nil;
+	}
+	
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+		
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+		
+		t_success = MCRegionCreate(t_region);
+		
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleGetIntegerBounds(p_dst_rect));
+		
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+		
+		if (t_success)
+		{
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+		
+		UnlockGraphics();
+		
+		MCRegionDestroy(t_region);
+		
+		return t_success;
 	}
 };
 
@@ -177,11 +214,21 @@ class MCUIKitStackSurface: public MCIPhoneStackSurface
 	int32_t m_height;
 	
 public:
-	MCUIKitStackSurface(MCRegionRef p_region, CGContextRef p_context, int32_t p_height)
+	// IM-2013-08-23: [[ RefactorGraphics ]] Reinstate surface height parameter
+	MCUIKitStackSurface(MCRegionRef p_region, int32_t p_height, CGContextRef p_context)
 		: MCIPhoneStackSurface(MCRegionGetBoundingBox(p_region))
 	{
 		m_context = p_context;
 		m_height = p_height;
+	}
+	
+	bool Lock(void)
+	{
+		return true;
+	}
+	
+	void Unlock(void)
+	{
 	}
 	
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
@@ -193,9 +240,11 @@ public:
 		//   when redrawing.
 		CGContextSetInterpolationQuality(m_context, kCGInterpolationNone);
 		
+		// IM-2013-08-23: [[ RefactorGraphics ]] Flip the surface so the origin is the
+		// bottom-left, as expected by the MCTileCacheCoreGraphicsCompositor
 		CGContextScaleCTM(m_context, 1.0, -1.0);
-		CGContextTranslateCTM(m_context, 0.0, -(m_height / MCIPhoneGetResolutionScale()));
-		CGContextScaleCTM(m_context, 1.0 / MCIPhoneGetResolutionScale(), 1.0 / MCIPhoneGetResolutionScale());
+		CGContextTranslateCTM(m_context, 0.0, -m_height);
+		
 		CGContextSaveGState(m_context);
 		
 		r_context = m_context;
@@ -215,25 +264,29 @@ protected:
 		if (!LockTarget(kMCStackSurfaceTargetCoreGraphics, t_target))
 			return;
 		
+		// IM-2013-07-18: [[ RefactorGraphics ]] remove previous image flip transformation as now entire
+		// CGContext will be flipped. Instead, we draw the image at an offset from the bottom
+		
 		CGColorSpaceRef t_colorspace;
 		t_colorspace = CGColorSpaceCreateDeviceRGB();
 		
-		CGContextRef t_context;
-		t_context = CGBitmapContextCreate(p_bits, m_locked_area . width, m_locked_area . height, 8, p_stride, t_colorspace, kCGBitmapByteOrder32Little | kCGImageAlphaNoneSkipFirst);
-		CGColorSpaceRelease(t_colorspace);
+		CGImageRef t_image;
+		t_image = nil;
 		
-		if (t_context != nil)
+		MCGRaster t_raster;
+		t_raster.width = m_locked_area.width;
+		t_raster.height = m_locked_area.height;
+		t_raster.pixels = p_bits;
+		t_raster.stride = p_stride;
+		t_raster.format = kMCGRasterFormat_ARGB;
+		
+		if (MCGRasterToCGImage(t_raster, MCGRectangleMake(0, 0, m_locked_area.width, m_locked_area.height), t_colorspace, false, false, t_image))
 		{
-			CGImageRef t_image;
-			t_image = CGBitmapContextCreateImage(t_context);
-			CGContextRelease(t_context);
-			
-			if (t_image != nil)
-			{
-				CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)(m_height - (m_locked_area . y + m_locked_area . height)), (float)m_locked_area . width, (float)m_locked_area . height), t_image);
-				CGImageRelease(t_image);
-			}
+			CGContextDrawImage((CGContextRef)t_target, CGRectMake((float)m_locked_area . x, (float)(m_height - (m_locked_area . y + m_locked_area . height)), (float)m_locked_area . width, (float)m_locked_area . height), t_image);
+			CGImageRelease(t_image);
 		}
+		
+		CGColorSpaceRelease(t_colorspace);
 		
 		UnlockTarget();
 	}
@@ -260,17 +313,34 @@ protected:
 	if (t_stack == nil)
 		return;
     
+	// IM-2013-07-18: [[ ResIndependence ]] We are now always rendering at the device resolution
+	MCGFloat t_scale;
+	t_scale = MCIPhoneGetDeviceScale();
+	
     MCRectangle t_hull;
-    t_hull . x = (int)floor(rect . origin . x * MCIPhoneGetResolutionScale());
-    t_hull . y = (int)floor(rect . origin . y * MCIPhoneGetResolutionScale());
-    t_hull . width = (int)ceil((rect . origin . x + rect . size . width) * MCIPhoneGetResolutionScale()) - t_hull . x;
-    t_hull . height = (int)ceil((rect . origin . y + rect . size . height) * MCIPhoneGetResolutionScale()) - t_hull . y;
+	t_hull = MCGRectangleGetIntegerBounds(MCGRectangleScale(MCGRectangleFromCGRect(rect), t_scale));
     
 	MCRegionRef t_dirty_rgn;
 	MCRegionCreate(t_dirty_rgn);
 	MCRegionSetRect(t_dirty_rgn, t_hull);
-	MCUIKitStackSurface t_surface(t_dirty_rgn, UIGraphicsGetCurrentContext(), t_stack -> getrect() . height);
-	t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+	
+	CGContext *t_cgcontext;
+	t_cgcontext = UIGraphicsGetCurrentContext();
+	
+	CGContextScaleCTM(t_cgcontext, 1.0 / t_scale, 1.0 / t_scale);
+	
+	// IM-2013-08-23: [[ RefactorGraphics ]] pass scaled surface height to stack surface constructor
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_stack->getrect()));
+	
+	MCUIKitStackSurface t_surface(t_dirty_rgn, t_device_rect.height, t_cgcontext);
+	
+	if (t_surface . Lock())
+	{
+		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
+		t_surface . Unlock();
+	}
+	
 	MCRegionDestroy(t_dirty_rgn);
 }
 
@@ -279,8 +349,8 @@ protected:
 	MCRectangle t_visible;
 	t_visible = MCRegionGetBoundingBox(p_region);
 	
-	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetResolutionScale(), (float)t_visible . y / MCIPhoneGetResolutionScale(),
-											 (float)t_visible . width / MCIPhoneGetResolutionScale(), (float)t_visible . height / MCIPhoneGetResolutionScale()) ];
+	[ self setNeedsDisplayInRect: CGRectMake((float)t_visible . x / MCIPhoneGetDeviceScale(), (float)t_visible . y / MCIPhoneGetDeviceScale(),
+											 (float)t_visible . width / MCIPhoneGetDeviceScale(), (float)t_visible . height / MCIPhoneGetDeviceScale()) ];
 	[[self layer] display];
 }
 
@@ -301,6 +371,15 @@ public:
 		m_width = p_width;
 		m_height = p_height;
 		m_layer = p_layer;
+	}
+	
+	bool Lock(void)
+	{
+		return true;
+	}
+	
+	void Unlock(void)
+	{
 	}
 	
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
@@ -326,9 +405,8 @@ protected:
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
         
-        // MW-2011-10-07: iOS 5 doesn't like an inconsistency in input format between
-        //   TexImage2D and TexSubImage2D.
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_BGRA, GL_UNSIGNED_BYTE, NULL);
+		// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, 256, 256, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
 		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
@@ -361,7 +439,8 @@ protected:
 				
 				// Fill the texture scanline by scanline
 				for(int32_t s = 0; s < t_th; s++)
-					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, s, t_tw, 1, GL_BGRA, GL_UNSIGNED_BYTE, (uint8_t *)p_bits + (y * 256 + s) * p_stride + x * 256 * sizeof(uint32_t));
+					// IM_2013-08-21: [[ RefactorGraphics ]] set iOS pixel format to RGBA
+					glTexSubImage2D(GL_TEXTURE_2D, 0, 0, s, t_tw, 1, GL_RGBA, GL_UNSIGNED_BYTE, (uint8_t *)p_bits + (y * 256 + s) * p_stride + x * 256 * sizeof(uint32_t));
 				
 				int32_t t_px, t_py;
 				t_px = x * 256;
@@ -486,7 +565,13 @@ protected:
 	MCRegionRef t_dirty_rgn;
 	MCRegionCreate(t_dirty_rgn);
 	MCRegionSetRect(t_dirty_rgn, MCU_make_rect(0, 0, m_backing_width, m_backing_height));
-	t_stack -> redrawwindow(&t_surface, t_dirty_rgn);
+	
+	if (t_surface . Lock())
+	{
+		t_stack -> device_redrawwindow(&t_surface, t_dirty_rgn);
+		t_surface . Unlock();
+	}
+	
 	MCRegionDestroy(t_dirty_rgn);
 	
     glBindRenderbufferOES(GL_RENDERBUFFER_OES, m_renderbuffer);

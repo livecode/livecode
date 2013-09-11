@@ -37,7 +37,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "cardlst.h"
-#include "pxmaplst.h"
 #include "dispatch.h"
 #include "property.h"
 #include "mcerror.h"
@@ -829,7 +828,6 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 {
 #ifdef /* MCProperty::set */ LEGACY_EXEC
 	MCImage *newim;
-	Pixmap newpm;
 	int2 mx, my;
 	uint2 tir;
 	Exec_stat stat;
@@ -1436,11 +1434,8 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 		if (ep.getsvalue() != MCbackdropcolor)
 		{
 			delete MCbackdropcolor;
-			if (MCbackdroppm != DNULL)
-			{
-				MCpatterns->freepat(MCbackdroppm);
-				MCbackdroppm = DNULL;
-			}
+			if (MCbackdroppattern != nil)
+				MCpatternlist->freepat(MCbackdroppattern);
 			if (ep.getsvalue() != "none" && ep.getsvalue() != "0")
 			{
 				MCColor t_colour;
@@ -1455,24 +1450,24 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 						MCbackdroppmid = tmp;
 						if (MCbackdroppmid < PI_END)
 							MCbackdroppmid += PI_PATTERNS;
-						newpm = MCpatterns->allocpat(MCbackdroppmid, parent);
-						if (newpm != None)
-							MCbackdroppm = newpm;
+						MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbackdroppmid, parent);
+						if (t_new_pattern != nil)
+							MCbackdroppattern = t_new_pattern;
 					}
 				}
-				if (MCbackdroppm == DNULL && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
+				if (MCbackdroppattern == nil && MCscreen -> parsecolor(MCbackdropcolor, &t_colour, &t_colour_name))
 				{
 					delete t_colour_name;
 				}
 				else
 					t_colour . red = t_colour . green = t_colour . blue = 0;
-				MCscreen -> configurebackdrop(t_colour, MCbackdroppm, nil);
+				MCscreen -> configurebackdrop(t_colour, MCbackdroppattern, nil);
 				MCscreen -> enablebackdrop();
 			}
 			else
 			{
 				MCscreen -> disablebackdrop();
-				MCscreen -> configurebackdrop(MCscreen -> getwhite(), NULL, nil);
+				MCscreen -> configurebackdrop(MCscreen -> getwhite(), nil, nil);
 				MCbackdropcolor = NULL;
 			}
 		}
@@ -2396,41 +2391,40 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 			switch (which)
 			{
 			case P_BRUSH_PATTERN:
-				if (ep.getuint4(MCbrushpmid, line, pos,
-				                EE_PROPERTY_BRUSHPATNAN) != ES_NORMAL)
-					return ES_ERROR;
-				if (MCbrushpmid < PI_END)
-					MCbrushpmid += PI_PATTERNS;
-				newpm = MCpatterns->allocpat(MCbrushpmid, parent);
-				if (newpm == None)
 				{
-					MCeerror->add
-					(EE_PROPERTY_BRUSHPATNOIMAGE, line, pos,
-					 ep.getsvalue());
-					return ES_ERROR;
-				}
-				MCeditingimage = nil;
+					if (ep.getuint4(MCbrushpmid, line, pos, EE_PROPERTY_BRUSHPATNAN) != ES_NORMAL)
+						return ES_ERROR;
+					if (MCbrushpmid < PI_END)
+						MCbrushpmid += PI_PATTERNS;
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCbrushpmid, parent);
+					if (t_new_pattern == None)
+					{
+						MCeerror->add(EE_PROPERTY_BRUSHPATNOIMAGE, line, pos, ep.getsvalue());
+						return ES_ERROR;
+					}
+					MCeditingimage = nil;
 
-				MCpatterns->freepat(MCbrushpm);
-				MCbrushpm = newpm;
+					MCpatternlist->freepat(MCbrushpattern);
+					MCbrushpattern = t_new_pattern;
+				}
 				break;
 			case P_PEN_PATTERN:
-				if (ep.getuint4(MCpenpmid, line, pos,
-				                EE_PROPERTY_PENPATNAN) != ES_NORMAL)
-					return ES_ERROR;
-				if (MCpenpmid < PI_END)
-					MCpenpmid += PI_PATTERNS;
-				newpm = MCpatterns->allocpat(MCpenpmid, parent);
-				if (newpm == None)
 				{
-					MCeerror->add
-					(EE_PROPERTY_PENPATNOIMAGE, line, pos, ep.getsvalue());
-					return ES_ERROR;
-				}
-				MCeditingimage = nil;
+					if (ep.getuint4(MCpenpmid, line, pos, EE_PROPERTY_PENPATNAN) != ES_NORMAL)
+						return ES_ERROR;
+					if (MCpenpmid < PI_END)
+						MCpenpmid += PI_PATTERNS;
+					MCPatternRef t_new_pattern = MCpatternlist->allocpat(MCpenpmid, parent);
+					if (t_new_pattern == None)
+					{
+						MCeerror->add(EE_PROPERTY_PENPATNOIMAGE, line, pos, ep.getsvalue());
+						return ES_ERROR;
+					}
+					MCeditingimage = nil;
 
-				MCpatterns->freepat(MCpenpm);
-				MCpenpm = newpm;
+					MCpatternlist->freepat(MCpenpattern);
+					MCpenpattern = t_new_pattern;
+				}
 				break;
 			case P_BRUSH_BACK_COLOR:
 			case P_PEN_BACK_COLOR:
@@ -2455,14 +2449,14 @@ Exec_stat MCProperty::set(MCExecPoint &ep)
 
 					if (which == P_BRUSH_COLOR)
 					{
-						MCpatterns->freepat(MCbrushpm);
+						MCpatternlist->freepat(MCbrushpattern);
 						MCbrushcolor = color;
 						delete MCbrushcolorname;
 						MCbrushcolorname = name;
 					}
 					else
 					{
-						MCpatterns->freepat(MCpenpm);
+						MCpatternlist->freepat(MCpenpattern);
 						MCpencolor = color;
 						delete MCpencolorname;
 						MCpencolorname = name;

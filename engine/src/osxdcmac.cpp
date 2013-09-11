@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "osxdc.h"
 
+#include "resolution.h"
+
 extern "C"
 {
 	OSStatus HMGetHelpMenu(MenuRef *outHelpMenu,
@@ -392,6 +394,10 @@ void MCScreenDC::mode_globaltolocal(Point& p)
 	SetGWorld(GetWindowPort((WindowPtr)mousewindow->handle.window), GetMainDevice());
 	GlobalToLocal(&p);
 	SetGWorld(oldport, olddevice);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] apply device scale
+	p.v = p.v / MCResGetDeviceScale();
+	p.h = p.h / MCResGetDeviceScale();
 }
 
 void MCScreenDC::mfocus(EventRecord *event, Point p, Boolean dispatch, bool post_or_handle)
@@ -1299,22 +1305,6 @@ void MCScreenDC::activatewindow(Window window)
 	MCdispatcher->wkfocus(activewindow);
 }
 
-void MCScreenDC::MCRect2MacRect(const MCRectangle &mcR, Rect &macR)
-{ //convert MCRectangle to Mac's Rect structure
-	macR.top = mcR.y;
-	macR.left = mcR.x;
-	macR.bottom = mcR.y + mcR.height;
-	macR.right = mcR.x + mcR.width;
-}
-
-void MCScreenDC::MacRect2MCRect(const Rect &macR, MCRectangle &mcR)
-{ //convert MCRectangle to Mac's Rect structure
-	mcR.x = macR.left;
-	mcR.y = macR.top;
-	mcR.width = macR.right - macR.left;
-	mcR.height = macR.bottom - macR.top;
-}
-
 void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 {
 	if ((WindowPtr)event.message != backdrop_window)
@@ -1336,7 +1326,7 @@ void MCScreenDC::doredraw(EventRecord &event, bool p_update_called)
 		Rect vrect;
 		GetRegionBounds(r, &vrect);
 		MCRectangle dirtyRect;
-		MacRect2MCRect(vrect, dirtyRect);
+		dirtyRect = MCMacRectToMCRect(vrect);
 		updatebackdrop(dirtyRect);
 	}
 	else
@@ -1378,67 +1368,6 @@ void MCScreenDC::copybits(Drawable s, Drawable d, int2 sx, int2 sy,
 		UnlockPixels(spm);
 	if (d->type == DC_BITMAP)
 		UnlockPixels(dpm);
-}
-
-
-
-Pixmap MCScreenDC::getbackpm(Window_mode m, Boolean active)
-{
-	static _Drawable bpm;
-	static ThemeBrush oldtb;
-	ThemeBrush tb;
-	switch (m)
-	{
-	case WM_TOP_LEVEL:
-	case WM_TOP_LEVEL_LOCKED:
-		tb = kThemeBrushDocumentWindowBackground;
-		break;
-	case WM_MODELESS:
-		tb = kThemeBrushModelessDialogBackgroundActive;
-		break;
-	case WM_MODAL:
-	case WM_SHEET:
-		tb = kThemeBrushDialogBackgroundActive;
-		break;
-	case WM_PALETTE:
-		tb = kThemeBrushUtilityWindowBackgroundActive;
-		break;
-
-
-	case WM_DRAWER:
-		tb = kThemeBrushDrawerBackground;
-		break;
-
-
-	default:
-		tb = kThemeBrushDialogBackgroundActive;
-		break;
-	}
-	if (!active && tb != kThemeBrushDocumentWindowBackground)
-		tb++;
-	if (tb == oldtb)
-		return &bpm;
-	CGrafPtr oldport;
-	GDHandle olddevice;
-	GetGWorld(&oldport, &olddevice);
-	Rect r;
-	SetRect(&r, 0, 0, 64, 64);
-	if (bgw == NULL)
-	{
-		NewGWorld(&bgw, 32, &r, NULL, NULL, MCmajorosversion >= 0x1040 ? kNativeEndianPixMap : 0);
-		bpm.type = DC_BITMAP;
-		bpm.handle.pixmap = (MCSysBitmapHandle)bgw;
-	}
-	SetGWorld(bgw, NULL);
-	PixMapHandle pm = GetGWorldPixMap(bgw);
-	LockPixels(pm);
-
-	SetThemeBackground(tb, getdepth(), True);
-	EraseRect(&r);
-	UnlockPixels(pm);
-	SetGWorld(oldport, olddevice);
-	oldtb = tb;
-	return &bpm;
 }
 
 /**************************************************************************

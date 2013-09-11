@@ -48,6 +48,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "osxdc.h"
 #include "mcssl.h"
 
+#include "resolution.h"
+
 #include <sys/stat.h>
 #include <sys/utsname.h>
 #include <sys/wait.h>
@@ -280,7 +282,8 @@ static pascal OSStatus WinEvtHndlr(EventHandlerCallRef ehcf, EventRef event, voi
 			
 			// MW-2011-09-12: [[ MacScroll ]] Make sure the top of the HIView takes into
 			//   account the scroll.
-			t_rect . top = -sptr -> getscroll();
+			// IM-2013-08-01: [[ ResIndependence ]] scale to device pixels
+			t_rect . top = -sptr -> getscroll() * MCResGetDeviceScale();
 			
 			ControlRef t_root_control;
 			GetRootControl((WindowPtr)t_window . handle . window, &t_root_control);

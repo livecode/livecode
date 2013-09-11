@@ -30,14 +30,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 #include "metacontext.h"
 #include "printer.h"
-#include "contextscalewrapper.h"
 #include "mode.h"
 #include "region.h"
 
 #include "osxdc.h"
-#include "osxcontext.h"
 #include "osxprinter.h"
 #include "sserialize_osx.h"
+
+#include "graphicscontext.h"
 
 #include <cups/ppd.h>
 #include <pwd.h>
@@ -54,12 +54,29 @@ extern void MCRemotePageSetupDialog(char *&r_reply_data, uint32_t &r_reply_data_
 ///////////////////////////////////////////////////////////////////////////////
 
 extern char *osx_cfstring_to_cstring(CFStringRef p_string, bool p_release = true);
-extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_invert, CGImageRef &r_image);
+extern bool MCImageBitmapToCGImage(MCImageBitmap *p_bitmap, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, CGColorSpaceRef p_colorspace, bool p_copy, bool p_invert, CGImageRef &r_image);
+extern bool MCGImageToCGImage(MCGImageRef p_src, MCGRectangle p_src_rect, bool p_copy, bool p_invert, CGImageRef &r_image);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 bool MCMacOSXPrinter::c_sheet_pending = false;
 bool MCMacOSXPrinter::c_sheet_accepted = false;
+
+///////////////////////////////////////////////////////////////////////////////
+
+CGAffineTransform MCGAffineTransformToCGAffineTransform(const MCGAffineTransform &p_transform)
+{
+	CGAffineTransform t_transform;
+	t_transform.a = p_transform.a;
+	t_transform.b = p_transform.b;
+	t_transform.c = p_transform.c;
+	t_transform.d = p_transform.d;
+	t_transform.tx = p_transform.tx;
+	t_transform.ty = p_transform.ty;
+	
+	return t_transform;
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 
@@ -1093,8 +1110,8 @@ protected:
 	void domark(MCMark *p_mark);
 	bool candomark(MCMark *p_mark);
 	
-	MCContext *begincomposite(const MCRectangle& p_region);
-	void endcomposite(MCContext *p_context, MCRegionRef p_clip_region);
+	bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context);
+	void endcomposite(MCRegionRef p_clip_region);
 
 private:
 	bool m_color;
@@ -1103,6 +1120,7 @@ private:
 	
 	CGContextRef m_context;
 
+	MCGContextRef m_composite_context;
 	MCRectangle m_composite_rect;
 };
 
@@ -1192,105 +1210,23 @@ CGColorSpaceRef OSX_CGColorSpaceCreateGenericRGB(void)
 	return s_colorspace;
 }
 
-CGImageRef PixMapToCGImage(PixMapHandle p_pixmap, bool p_grayscale, bool p_with_alpha)
+bool MCGImageToCGImage(MCGImageRef p_src, CGImageRef &r_image)
 {
-	Rect t_bounds;
-	GetPixBounds(p_pixmap, &t_bounds);
-		
-	uint4 t_height;
-	t_height = t_bounds . bottom - t_bounds . top;
+	bool t_success = true;
 	
-	uint4 t_width;
-	t_width = t_bounds . right - t_bounds . left;
+	/* OVERHAUL - REVISIT: for a grayscale image this should be a grayscale colorspace */
+	CGColorSpaceRef t_colorspace = nil;
+	if (t_success)
+		t_success = nil != (t_colorspace = OSX_CGColorSpaceCreateGenericRGB());
 	
-	uint4 t_stride;
-	t_stride = 0;
+	MCGRectangle t_src_rect = MCGRectangleMake(0, 0, MCGImageGetWidth(p_src), MCGImageGetHeight(p_src));
+	if (t_success)
+		t_success = MCGImageToCGImage(p_src, t_src_rect, t_colorspace, true, true, r_image);
 	
-	uint4 t_data_size;
-	t_data_size = 0;
+	if (t_colorspace != nil)
+		CGColorSpaceRelease(t_colorspace);
 	
-	void *t_data;
-	t_data = NULL;
-	
-	uint4 t_bits_per_pixel;
-	t_bits_per_pixel = 0;
-	
-	CGColorSpaceRef t_colorspace;
-	t_colorspace = NULL;
-	
-	LockPixels(p_pixmap);
-	
-	void *t_pixmap_base;
-	t_pixmap_base = GetPixBaseAddr(p_pixmap);
-	
-	uint4 t_pixmap_stride;
-	t_pixmap_stride = GetPixRowBytes(p_pixmap);
-
-	if (p_grayscale)
-	{
-		t_stride = (t_width + 3) & ~3;
-		t_data_size = t_stride * t_height;
-		t_data = malloc(t_data_size);
-		
-		for(uint4 y = 0; y < t_height; y++)
-			for(uint4 x = 0; x < t_width; x++)
-			{
-				unsigned char *t_src;
-				t_src = (unsigned char *)t_pixmap_base + (t_height - y - 1) * t_pixmap_stride + x * 4;
-				
-				unsigned char *t_dst;
-				t_dst = (unsigned char *)t_data + y * t_stride + x;
-				
-				int t_value;
-				t_value = (int)GRAYSCALE(t_src[1], t_src[2], t_src[3]);
-				
-				if (t_value > 255)
-					t_value = 255;
-				
-				*t_dst = (unsigned char)t_value;
-			}
-	
-		t_colorspace = OSX_CGColorSpaceCreateGenericGray();
-		t_bits_per_pixel = 8;
-	}
-	else
-	{
-		t_stride = t_pixmap_stride;
-		t_data_size = t_pixmap_stride * t_height;
-		t_data = malloc(t_data_size);
-	
-		// We invert the image vertically to avoid annoying CTM mapping calculations
-		// later.
-		for(uint4 y = 0; y < t_height; y++)
-			memcpy((char *)t_data + y * t_pixmap_stride, (char *)t_pixmap_base + (t_height - y - 1) * t_pixmap_stride, t_pixmap_stride);
-			
-		t_colorspace = OSX_CGColorSpaceCreateGenericRGB();
-		t_bits_per_pixel = 32;
-	}
-	
-	UnlockPixels(p_pixmap);
-	
-	CGDataProviderRef t_image_data;
-	t_image_data = CGDataProviderCreateWithData(t_data, t_data, t_data_size, FreeData);
-	
-	CGBitmapInfo t_bitmap_info;
-	if (p_with_alpha)
-		t_bitmap_info = kCGImageAlphaPremultipliedFirst;
-	else
-		t_bitmap_info = p_grayscale ? kCGImageAlphaNone : kCGImageAlphaNoneSkipFirst;
-	if (!p_grayscale && MCmajorosversion >= 0x1040)
-		t_bitmap_info |= kCGBitmapByteOrder32Host;
-
-	CGImageRef t_image;
-	t_image = CGImageCreate(
-		t_width, t_height,
-		8, t_bits_per_pixel, t_stride, t_colorspace, t_bitmap_info,
-		t_image_data, NULL, true, kCGRenderingIntentDefault);
-		
-	CGColorSpaceRelease(t_colorspace);
-	CGDataProviderRelease(t_image_data);
-	
-	return t_image;
+	return t_success;
 }
 
 static OSStatus OSX_PMSessionGetCGGraphicsContext(PMPrintSession p_session, CGContextRef* r_context)
@@ -1621,10 +1557,16 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 			};
 		
 			CGImageRef t_tile_image;
-			t_tile_image = PixMapToCGImage(GetGWorldPixMap((CGrafPtr)p_mark -> fill -> pattern -> handle . pixmap), !m_color);
+			/* UNCHECKED */ MCGImageToCGImage(p_mark -> fill -> pattern -> image, t_tile_image);
+			
+			// IM-2013-08-14: [[ ResIndependence ]] Append pattern image scale to pattern transform
+			MCGFloat t_scale;
+			t_scale = 1.0 / p_mark -> fill -> pattern -> scale;
 			
 			CGAffineTransform t_transform;
-			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), CGContextGetCTM(m_context));
+			t_transform = CGContextGetCTM(m_context);
+			t_transform = CGAffineTransformConcat(CGAffineTransformMakeTranslation(p_mark -> fill -> origin . x, p_mark -> fill -> origin . y), t_transform);
+			t_transform = CGAffineTransformConcat(CGAffineTransformMakeScale(t_scale, t_scale), t_transform);
 			
 			CGPatternRef t_pattern;
 			t_pattern = CGPatternCreate(
@@ -1655,7 +1597,6 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 				
 			CGColorSpaceRelease(t_pattern_space);
 			CGPatternRelease(t_pattern);
-				
 		}
 		else
 		{
@@ -1915,23 +1856,39 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 		case MARK_TYPE_IMAGE:
 		{
 			MCImageBitmap *t_src_bitmap = nil;
-			uint32_t t_dst_width, t_dst_height;
-			if (p_mark -> image . descriptor . angle != 0 || p_mark -> image . descriptor . original_bitmap == nil)
-				t_src_bitmap = p_mark -> image . descriptor . bitmap;
-			else
-				t_src_bitmap = p_mark -> image . descriptor . original_bitmap;
-			t_dst_width = p_mark -> image . descriptor . bitmap -> width;
-			t_dst_height = p_mark -> image . descriptor . bitmap -> height;
 			
-			CGImageRef t_image = nil;
-			/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, true, t_image);
+			int32_t t_dst_x, t_dst_y;
+			uint32_t t_dst_width, t_dst_height;
+
+			t_dst_x = p_mark->image.dx - p_mark->image.sx;
+			t_dst_y = p_mark->image.dy - p_mark->image.sy;
+			
+			t_dst_width = p_mark->image.descriptor.bitmap->width;
+			t_dst_height = p_mark->image.descriptor.bitmap->height;
+			
+			t_src_bitmap = p_mark->image.descriptor.bitmap;
+
+			CGContextSaveGState(m_context);
 
 			CGContextClipToRect(m_context, CGRectMake(p_mark -> image . dx, p_mark -> image . dy, p_mark -> image . sw, p_mark -> image . sh));
 			
+			if (p_mark->image.descriptor.has_transform)
+			{
+				CGAffineTransform t_transform = MCGAffineTransformToCGAffineTransform(p_mark->image.descriptor.transform);
+				CGContextTranslateCTM(m_context, t_dst_x, t_dst_y);
+				CGContextConcatCTM(m_context, t_transform);
+				CGContextTranslateCTM(m_context, -t_dst_x, -t_dst_y);
+			}
+			
+			CGImageRef t_image = nil;
+			/* UNCHECKED */ MCImageBitmapToCGImage(t_src_bitmap, false, true, t_image);
+			
 			CGRect t_dst_rect;
-			t_dst_rect = CGRectMake(p_mark -> image . dx - p_mark -> image . sx, p_mark -> image . dy - p_mark -> image . sy, t_dst_width, t_dst_height);
+			t_dst_rect = CGRectMake(t_dst_x, t_dst_y, t_dst_width, t_dst_height);
 			
 			CGContextDrawImage(m_context, t_dst_rect, t_image);
+			
+			CGContextRestoreGState(m_context);
 			
 			CGImageRelease(t_image);
 		}
@@ -1941,36 +1898,60 @@ void MCQuartzMetaContext::domark(MCMark *p_mark)
 	CGContextRestoreGState(m_context);
 }
 
-MCContext *MCQuartzMetaContext::begincomposite(const MCRectangle& p_region)
-{
-	uint4 t_scale = 4;
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(p_region . width * t_scale, p_region . height * t_scale, true, true);
-	t_context -> setprintmode();
-	t_context = new MCContextScaleWrapper(t_context, t_scale);
-	t_context -> setorigin(p_region . x, p_region . y);
+#define SCALE 4
 
-	m_composite_rect = p_region;
+bool MCQuartzMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef &r_context)
+{
+	bool t_success = true;
 	
-	return t_context;
+	uint4 t_scale = SCALE;
+	
+	MCGContextRef t_context = nil;
+	
+	uint32_t t_width = p_region.width * t_scale;
+	uint32_t t_height = p_region.height * t_scale;
+	
+	if (t_success)
+		t_success = MCGContextCreate(t_width, t_height, true, t_context);
+	
+	if (t_success)
+	{
+		MCGContextScaleCTM(t_context, t_scale, t_scale);
+		MCGContextTranslateCTM(t_context, -(MCGFloat)p_region.x, -(MCGFloat)p_region.y);
+		
+		m_composite_context = t_context;
+		m_composite_rect = p_region;
+		
+		r_context = m_composite_context;
+	}
+	else
+	{
+		MCGContextRelease(t_context);
+	}
+	
+	return t_success;
 }
 
 
-void MCQuartzMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region)
+void MCQuartzMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
 	OSX_CGContextClipToRegion(m_context, (RgnHandle)p_clip_region);
 	
-	CGImageRef t_image;
-	MCContext *t_context = ((MCContextScaleWrapper*)p_context)->getcontext();
-	t_image = PixMapToCGImage(((MCQuickDrawContext*) t_context) -> qd_get_pixmap(), !m_color);
+	MCGImageRef t_image;
+	t_image = nil;
 	
-	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_image);
+	/* UNCHECKED */ MCGContextCopyImage(m_composite_context, t_image);
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
 	
-	CGImageRelease(t_image);
-	delete p_context;
+	CGImageRef t_cgimage = nil;
+	/* UNCHECKED */ MCGImageToCGImage(t_image, MCGRectangleMake(0, 0, MCGImageGetWidth(t_image), MCGImageGetHeight(t_image)), false, true, t_cgimage);
+	
+	CGContextDrawImage(m_context, CGRectMake(m_composite_rect . x, m_composite_rect . y, m_composite_rect . width, m_composite_rect . height), t_cgimage);
+	CGImageRelease(t_cgimage);
+	
+	MCGImageRelease(t_image);
 	MCRegionDestroy(p_clip_region);
-	
-	MCscreen -> freecontext(t_context);
 }
 
 ///////////////////////////////////////////////////////////////////////////////

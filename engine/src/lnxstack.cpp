@@ -46,17 +46,21 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 
 #include "lnxdc.h"
-#include "lnxcontext.h"
+#include "graphicscontext.h"
+
+#include "resolution.h"
 
 static uint2 calldepth;
 static uint2 nwait;
 
 ////////////////////////////////////////////////////////////////////////////////
 
-// MW-2011-09-14: [[ Redraw ]] If non-nil, this pixmap is used in the next
-//   onpaint update.
-static Pixmap s_update_pixmap = nil;
-static MCRectangle s_update_rect;
+extern void surface_merge_with_alpha(void *p_pixels, uint4 p_pixel_stride, void *p_alpha, uint4 p_alpha_stride, uint4 p_width, uint4 p_height);
+
+////////////////////////////////////////////////////////////////////////////////
+
+static MCStackUpdateCallback s_update_callback = nil;
+static void *s_update_context = nil;
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -202,29 +206,41 @@ void MCStack::sethints()
 {
 	if (!opened || MCnoui || window == DNULL)
 		return;
+		
+	// IM-2013-08-12: [[ ResIndependence ]] Use device coordinates when setting WM hints
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
+	t_minwidth = minwidth * t_scale;
+	t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
+	t_minheight = minheight * t_scale;
+	t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
+	
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
+	
 	if (flags & F_RESIZABLE)
 	{
-		rect.width = MCU_max(minwidth, rect.width);
-		rect.width = MCU_min(maxwidth, rect.width);
-		rect.width = MCU_min(MCscreen->getwidth(), rect.width);
-		rect.height = MCU_max(minheight, rect.height);
-		rect.height = MCU_min(maxheight, rect.height);
-		rect.height = MCU_min(MCscreen->getheight(), rect.height);
+		t_device_rect.width = MCMin(t_maxwidth, MCMax(t_minwidth, (uint32_t)t_device_rect.width));
+		t_device_rect.height = MCMin(t_maxheight, MCMax(t_minheight, (uint32_t)t_device_rect.height));
+		
+		rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
 	}
 	if (opened)
 	{
 		XSizeHints hints;
 		if (flags & F_RESIZABLE )
 		{
-			hints.min_width = minwidth;
-			hints.min_height = minheight;
-			hints.max_width = MCU_min(maxwidth, MCscreen->getwidth());
-			hints.max_height = MCU_min(maxheight, MCscreen->getheight());
+			hints.min_width = t_minwidth;
+			hints.min_height = t_minheight;
+			hints.max_width = t_maxwidth;
+			hints.max_height = t_maxheight;
 		}
 		else
 		{
-			hints.min_width = hints.max_width = rect.width;
-			hints.min_height = hints.max_height = rect.height;
+			hints.min_width = hints.max_width = t_device_rect.width;
+			hints.min_height = hints.max_height = t_device_rect.height;
 		}
 		hints.width_inc = hints.height_inc = 1;
 		hints.win_gravity = StaticGravity;
@@ -303,7 +319,7 @@ void MCStack::sethints()
 	case WM_PALETTE:
 	case WM_DRAWER:
 		mwmhints.decorations |= MWM_DECOR_MENU;
-		if (mode != WM_PALETTE && rect.width > DECORATION_MINIMIZE_WIDTH)
+		if (mode != WM_PALETTE && t_device_rect.width > DECORATION_MINIMIZE_WIDTH)
 		//if (rect.width > DECORATION_MINIMIZE_WIDTH)
 		{
 			mwmhints.decorations |= MWM_DECOR_MINIMIZE;
@@ -448,18 +464,15 @@ void MCStack::destroywindowshape()
 		Pixmap t_pixmap;
 		t_pixmap = (Pixmap)m_window_shape -> handle;
 		if (t_pixmap != nil)
-			MCscreen -> freepixmap(t_pixmap);
+			((MCScreenDC*)MCscreen) -> freepixmap(t_pixmap);
 	}
 
 	delete m_window_shape;
 	m_window_shape = nil;
 }
 
-MCRectangle MCStack::getwindowrect(void) const
+MCRectangle MCStack::device_getwindowrect(void) const
 {
-	if (window == DNULL)
-		return rect;
-
 	Window t_root, t_child, t_parent;
 	Window *t_children;
 	int32_t t_win_x, t_win_y, t_x_offset, t_y_offset;
@@ -488,6 +501,73 @@ MCRectangle MCStack::getwindowrect(void) const
 	return t_rect;
 }
 
+// IM-2013-08-12: [[ ResIndependence ]] factor out device-specific window-sizing code
+// set window rect to p_rect, returns old window rect
+MCRectangle MCStack::device_setgeom(const MCRectangle &p_rect)
+{
+	Window t_root, t_child;
+	int t_win_x, t_win_y;
+	unsigned int t_width, t_height, t_border_width, t_depth;
+	
+	XGetGeometry(MCdpy, window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
+
+	XTranslateCoordinates(MCdpy, window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
+	
+	MCRectangle t_old_rect;
+	t_old_rect = MCU_make_rect(t_win_x, t_win_y, t_width, t_height);
+	
+	if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
+	{
+		XSizeHints hints;
+		hints.x = p_rect.x;
+		hints.y = p_rect.y;
+		hints.width = p_rect.width;
+		hints.height = p_rect.height;
+		if (flags & F_RESIZABLE )
+		{
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			uint32_t t_minwidth, t_maxwidth, t_minheight, t_maxheight;
+			t_minwidth = minwidth * t_scale;
+			t_maxwidth = MCMin((uint32_t)(maxwidth * t_scale), (uint32_t)MCscreen->device_getwidth());
+			t_minheight = minheight * t_scale;
+			t_maxheight = MCMin((uint32_t)(maxheight * t_scale), (uint32_t)MCscreen->device_getheight());
+			
+			hints.min_width = t_minwidth;
+			hints.min_height = t_minheight;
+			hints.max_width = t_maxwidth;
+			hints.max_height = t_maxheight;
+		}
+		else
+		{
+			hints.min_width = hints.max_width = p_rect.width;
+			hints.min_height = hints.max_height = p_rect.height;
+		}
+		hints.width_inc = hints.height_inc = 1;
+		hints.win_gravity = StaticGravity;
+		hints.flags = USSize | PMaxSize | PMinSize | PResizeInc | PWinGravity;
+		if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
+			hints.flags |= USPosition;
+		XSetWMNormalHints(MCdpy, window, &hints);
+	}
+	
+	if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED) && (t_win_x != p_rect.x || t_win_y != p_rect.y))
+	{
+		if (t_width != p_rect.width || t_height != p_rect.height)
+			XMoveResizeWindow(MCdpy, window, p_rect.x, p_rect.y, p_rect.width, p_rect.height);
+		else
+			XMoveWindow(MCdpy, window, p_rect.x, p_rect.y);
+	}
+	else
+	{
+		if (t_width != p_rect.width || t_height != p_rect.height)
+			XResizeWindow(MCdpy, window, p_rect.width, p_rect.height);
+	}
+	
+	return t_old_rect;
+}
+
 void MCStack::setgeom()
 {
 	if (MCnoui || !opened)
@@ -504,60 +584,19 @@ void MCStack::setgeom()
 		return;
 	}
 
-	Window t_root, t_child;
-	int t_win_x, t_win_y;
-	unsigned int t_width, t_height, t_border_width, t_depth;
+	MCRectangle t_device_rect, t_old_device_rect;
+	t_device_rect = MCGRectangleGetIntegerInterior(MCResUserToDeviceRect(rect));
 	
-	XGetGeometry(MCdpy, window, &t_root, &t_win_x, &t_win_y, &t_width, &t_height, &t_border_width, &t_depth);
-
-	XTranslateCoordinates(MCdpy, window, t_root, 0, 0, &t_win_x, &t_win_y, &t_child);
-	
-	if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-	{
-		XSizeHints hints;
-		hints.x = rect.x;
-		hints.y = rect.y;
-		hints.width = rect.width;
-		hints.height = rect.height;
-		if (flags & F_RESIZABLE )
-		{
-			hints.min_width = minwidth;
-			hints.min_height = minheight;
-			hints.max_width = MCU_min(maxwidth, MCscreen->getwidth());
-			hints.max_height = MCU_min(maxheight, MCscreen->getheight());
-		}
-		else
-		{
-			hints.min_width = hints.max_width = rect.width;
-			hints.min_height = hints.max_height = rect.height;
-		}
-		hints.width_inc = hints.height_inc = 1;
-		hints.win_gravity = StaticGravity;
-		hints.flags = USSize | PMaxSize | PMinSize | PResizeInc | PWinGravity;
-		if (!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-			hints.flags |= USPosition;
-		XSetWMNormalHints(MCdpy, window, &hints);
-	}
-	
+	t_old_device_rect = device_setgeom(t_device_rect);
 	
 	state &= ~CS_NEED_RESIZE;
-	if ((!(flags & F_WM_PLACE) || state & CS_BEEN_MOVED)
-	        && (t_win_x != rect.x || t_win_y != rect.y))
+	
+	if (t_old_device_rect.width != t_device_rect.width || t_old_device_rect.height != t_device_rect.height)
 	{
-		if (t_width != rect.width || t_height != rect.height)
-		{
-			XMoveResizeWindow(MCdpy, window, rect.x, rect.y, rect.width, rect.height);
-			resize(t_width, t_height);
-		}
-		else
-			XMoveWindow(MCdpy, window, rect.x, rect.y);
+		MCRectangle t_old_rect;
+		t_old_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_old_device_rect));
+		resize(t_old_rect.width, t_old_rect.height);
 	}
-	else
-		if (t_width != rect.width || t_height != rect.height)
-		{
-			XResizeWindow(MCdpy, window, rect.width, rect.height);
-			resize(t_width, t_height);
-		}
 		
 	state &= ~CS_ISOPENING;
 }
@@ -634,14 +673,38 @@ void MCStack::clearscroll(void)
 
 ////////////////////////////////////////////////////////////////////////////////
 
+void MCBitmapClearRegion(MCBitmap *p_image, int32_t p_x, int32_t p_y, uint32_t p_width, uint32_t p_height)
+{
+	uint8_t *t_dst_row = (uint8_t*)p_image->data + p_y * p_image->bytes_per_line + p_x * sizeof(uint32_t);
+	for (uint32_t y = 0; y < p_height; y++)
+	{
+		MCMemoryClear(t_dst_row, p_width * sizeof(uint32_t));
+		t_dst_row += p_image->bytes_per_line;
+	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+static inline MCRectangle MCGRectangleToMCRectangle(const MCGRectangle &p_rect)
+{
+	return MCU_make_rect(p_rect.origin.x, p_rect.origin.y, p_rect.size.width, p_rect.size.height);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 class MCLinuxStackSurface: public MCStackSurface
 {
 	MCStack *m_stack;
 	MCRegionRef m_region;
 
+	bool m_locked;
+	MCGContextRef m_locked_context;
 	MCRectangle m_locked_area;
-	MCContext *m_locked_context;
-	MCBitmap *m_locked_bitmap;
+	
+	MCRegionRef m_redraw_region;
+	MCBitmap *m_bitmap;
+	MCGRaster m_raster;
+	MCRectangle m_area;
 
 public:
 	MCLinuxStackSurface(MCStack *p_stack, MCRegionRef p_region)
@@ -649,25 +712,115 @@ public:
 		m_stack = p_stack;
 		m_region = p_region;
 
+		m_locked = false;
 		m_locked_context = nil;
-		m_locked_bitmap = nil;
+		
+		m_redraw_region = nil;
+		m_bitmap = nil;
 	}
 
-	bool LockGraphics(MCRegionRef p_area, MCContext*& r_context)
+	bool Lock(void)
 	{
-		m_locked_area = MCRegionGetBoundingBox(p_area);
+		if (m_bitmap != nil)
+			return false;
+			
+		MCRectangle t_actual_area;
+		t_actual_area = MCRegionGetBoundingBox(m_region);
+		if (MCU_empty_rect(t_actual_area))
+			return false;
 
-		MCWindowShape *t_mask;
-		t_mask = m_stack -> getwindowshape();
-		m_locked_context = MCscreen -> creatememorycontext(m_locked_area . width, m_locked_area . height, t_mask != nil && !t_mask -> is_sharp, False);
-		if (m_locked_context != nil)
+		bool t_success = true;
+
+		if (t_success)
+			t_success = MCRegionCreate(m_redraw_region);
+
+		if (t_success)
+			t_success = nil != (m_bitmap = ((MCScreenDC*)MCscreen)->createimage(32, t_actual_area.width, t_actual_area.height, False, 0x0, False, False));
+
+		if (t_success)
 		{
-			m_locked_context -> setorigin(m_locked_area . x, m_locked_area . y);
-			m_locked_context -> setclip(m_locked_area);
-			r_context = m_locked_context;
+			m_raster . format = kMCGRasterFormat_ARGB;
+			m_raster . width = t_actual_area . width;
+			m_raster . height = t_actual_area . height;
+			m_raster . stride = t_actual_area . width * sizeof(uint32_t);
+			m_raster . pixels = m_bitmap->data;
+
+			m_area = t_actual_area;
+
 			return true;
 		}
 
+		MCRegionDestroy(m_redraw_region);
+		m_redraw_region = nil;
+
+		if (m_bitmap != nil)
+			((MCScreenDC*)MCscreen)->destroyimage(m_bitmap);
+		m_bitmap = nil;
+
+		return false;
+	}
+	
+	void Unlock(void)
+	{
+		Unlock(true);
+	}
+
+	void Unlock(bool p_update)
+	{
+		if (m_bitmap == nil)
+			return;
+
+		if (p_update)
+		{
+			MCWindowShape *t_mask;
+			t_mask = m_stack -> getwindowshape();
+			if (t_mask != nil && !t_mask -> is_sharp)
+			{
+				if (m_area.x + m_area.width > t_mask->width)
+					MCBitmapClearRegion(m_bitmap, t_mask->width, 0, m_area.x + m_area.width - t_mask->width, m_area.height);
+				if (m_area.y + m_area.height > t_mask->height)
+					MCBitmapClearRegion(m_bitmap, 0, t_mask->height, m_area.width, m_area.y + m_area.height - t_mask->height);
+					
+				uint32_t t_width = 0;
+				uint32_t t_height = 0;
+				if (t_mask->width > m_area.x)
+					t_width = MCMin(t_mask->width - m_area.x, m_area.width);
+				if (t_mask->height > m_area.y)
+					t_height = MCMin(t_mask->height - m_area.y, m_area.height);
+					
+				void *t_src_ptr;
+				t_src_ptr = t_mask -> data + m_area . y * t_mask -> stride + m_area . x;
+				surface_merge_with_alpha(m_raster.pixels, m_raster.stride, t_src_ptr, t_mask -> stride, t_width, t_height);
+			}
+
+			
+			((MCScreenDC*)MCscreen)->putimage(m_stack->getwindow(), m_bitmap, 0, 0, m_area.x, m_area.y, m_area.width, m_area.height);
+		}
+		
+		((MCScreenDC*)MCscreen)->destroyimage(m_bitmap);
+		m_bitmap = nil;
+	}
+	
+	bool LockGraphics(MCRegionRef p_area, MCGContextRef& r_context)
+	{
+		MCGRaster t_raster;
+		if (LockPixels(p_area, t_raster))
+		{
+			if (MCGContextCreateWithRaster(t_raster, m_locked_context))
+			{
+				// Set origin
+				MCGContextTranslateCTM(m_locked_context, -m_locked_area.x, -m_locked_area.y);
+				// Set clipping rect
+				MCGContextClipToRect(m_locked_context, MCRectangleToMCGRectangle(m_locked_area));
+				
+				r_context = m_locked_context;
+				
+				return true;
+			}
+			
+			UnlockPixels();
+		}
+		
 		return false;
 	}
 
@@ -676,36 +829,45 @@ public:
 		if (m_locked_context == nil)
 			return;
 		
-		MCWindowShape *t_mask;
-		t_mask = m_stack -> getwindowshape();
-		if (t_mask != nil && !t_mask -> is_sharp)
-			m_locked_context -> applywindowshape(t_mask, m_locked_area . width, m_locked_area . height);
-		
-		MCscreen -> copyarea(((MCX11Context *)m_locked_context) -> get_surface(), m_stack -> getwindow(), 0, 0, 0, m_locked_area . width, m_locked_area . height, m_locked_area . x, m_locked_area . y, GXcopy);
-		
-		MCscreen -> freecontext(m_locked_context);
+		MCGContextRelease(m_locked_context);
 		m_locked_context = nil;
+		
+		UnlockPixels();
 	}
 
-	bool LockPixels(MCRegionRef p_area, void*& r_bits, uint32_t& r_stride)
+	bool LockPixels(MCRegionRef p_area, MCGRaster &r_raster)
 	{
-		MCContext *t_context;
-		if (!LockGraphics(p_area, t_context))
+		if (m_bitmap == nil || m_locked)
 			return false;
 
-		m_locked_bitmap = ((MCX11Context *)t_context) -> lock_bits(r_bits, r_stride);
+		MCRectangle t_bounds = MCRegionGetBoundingBox(m_region);
+		MCRectangle t_actual_area;
+		t_actual_area = MCU_intersect_rect(MCRegionGetBoundingBox(p_area), t_bounds);
+		if (MCU_empty_rect(t_actual_area))
+			return false;
+
+		/* UNCHECKED */ MCRegionIncludeRect(m_redraw_region, t_actual_area);
+
+		uint8_t *t_bits = (uint8_t*)m_raster.pixels + (t_actual_area.y - t_bounds.y) * m_raster.stride + (t_actual_area.x - t_bounds.x) * sizeof(uint32_t);
+
+		m_locked_area = t_actual_area;
+
+		r_raster . format = kMCGRasterFormat_ARGB;
+		r_raster . width = t_actual_area . width;
+		r_raster . height = t_actual_area . height;
+		r_raster . stride = m_raster.stride;
+		r_raster . pixels = t_bits;
+
+		m_locked = true;
 
 		return true;
 	}
 
 	void UnlockPixels(void)
 	{
-		((MCX11Context *)m_locked_context) -> unlock_bits(m_locked_bitmap);
-		m_locked_bitmap = nil;
-
-		UnlockGraphics();
+		m_locked = false;
 	}
-
+	
 	bool LockTarget(MCStackSurfaceTargetType p_type, void*& r_context)
 	{
 		return false;
@@ -714,9 +876,36 @@ public:
 	void UnlockTarget(void)
 	{
 	}
+
+	bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_src, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend)
+	{
+		bool t_success = true;
+
+		MCGContextRef t_context = nil;
+		MCRegionRef t_region = nil;
+
+		t_success = MCRegionCreate(t_region);
+
+		if (t_success)
+			t_success = MCRegionSetRect(t_region, MCGRectangleToMCRectangle(p_dst_rect));
+
+		if (t_success)
+			t_success = LockGraphics(t_region, t_context);
+
+		if (t_success)
+		{
+			MCGContextDrawRectOfImage(t_context, p_src, p_src_rect, p_dst_rect, kMCGImageFilterNearest);
+		}
+
+		UnlockGraphics();
+
+		MCRegionDestroy(t_region);
+
+		return t_success;
+	}
 };
 
-void MCStack::updatewindow(MCRegionRef p_region)
+void MCStack::device_updatewindow(MCRegionRef p_region)
 {
 	MCRegionRef t_update_region;
 	t_update_region = nil;
@@ -744,23 +933,27 @@ void MCStack::updatewindow(MCRegionRef p_region)
 		MCRegionDestroy(t_update_region);
 }
 
-void MCStack::updatewindowwithbuffer(Pixmap p_buffer, MCRegionRef p_region)
+void MCStack::device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context)
 {
-	s_update_pixmap = p_buffer;
-	s_update_rect = MCRegionGetBoundingBox(p_region);
-	updatewindow(p_region);
-	s_update_pixmap = nil;
+	s_update_callback = p_callback;
+	s_update_context = p_context;
+	device_updatewindow(p_region);
+	s_update_callback = nil;
+	s_update_context = nil;
 }
 
 void MCStack::onexpose(MCRegionRef p_region)
 {
-	if (s_update_pixmap == nil)
+	MCLinuxStackSurface t_surface(this, p_region);
+	if (t_surface.Lock())
 	{
-		MCLinuxStackSurface t_surface(this, p_region);
-		redrawwindow(&t_surface, p_region);
+		if (s_update_callback == nil)
+			device_redrawwindow(&t_surface, p_region);
+		else
+			s_update_callback(&t_surface, p_region, s_update_context);
+			
+		t_surface.Unlock();
 	}
-	else
-		MCscreen -> copyarea(s_update_pixmap, window, 0, 0, 0, s_update_rect . width, s_update_rect . height, s_update_rect . x, s_update_rect . y, GXcopy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

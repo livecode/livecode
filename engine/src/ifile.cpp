@@ -29,6 +29,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "execpt.h"
 
 #include "globals.h"
+#include "osspec.h"
 #include "context.h"
 
 #include "core.h"
@@ -89,50 +90,6 @@ bool MCImageCompress(MCImageBitmap *p_bitmap, bool p_dither, MCImageCompressedBi
 	}
 
 	return t_success;
-}
-
-void MCImage::compress(MCBitmap *image, bool p_take_geometry, bool p_includes_alpha)
-{
-	bool t_success = true;
-
-	MCImageBitmap *t_bitmap = nil;
-
-	t_success = MCImageBitmapCreateWithOldBitmap(image, t_bitmap);
-
-	if (t_success)
-	{
-		if (p_includes_alpha)
-		{
-			// IM-2013-03-27: [[ BZ 10759 ]] if the source has alpha transparency, then we need to unpremultiply
-			MCImageBitmapUnpremultiply(t_bitmap);
-			MCImageBitmapCheckTransparency(t_bitmap);
-		}
-		else
-			MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
-	}
-
-	if (t_success)
-		t_success = setbitmap(t_bitmap);
-
-	MCImageFreeBitmap(t_bitmap);
-
-	if (t_success)
-	{
-		if (p_take_geometry)
-		{
-			if (!(flags & F_LOCK_LOCATION))
-			{
-				uindex_t t_width, t_height;
-				if (m_rep->GetGeometry(t_width, t_height))
-				{
-					rect . width = t_width;
-					rect . height = t_height;
-				}
-			}
-		}
-
-		angle = 0;
-	}
 }
 
 void MCImage::recompress()
@@ -198,74 +155,50 @@ bool MCImageDecompress(MCImageCompressedBitmap *p_compressed, MCImageFrame *&r_f
 	return t_success;
 }
 
-bool MCImageCreateBrush(MCImageBitmap *p_src, Pixmap &r_drawdata, Pixmap &r_drawmask, MCBitmap *&r_bitmap)
-{
-	bool t_success = true;
-
-	MCBitmap *t_drawimage = nil;
-	MCBitmap *t_maskimage = nil;
-	MCBitmap *t_maskimagealpha = nil;
-	Pixmap t_drawdata = nil;
-	Pixmap t_drawmask = nil;
-
-	t_success = MCImageSplitRasters(p_src, t_drawimage, t_maskimage, t_maskimagealpha);
-
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_drawimage, 1, t_drawdata);
-	if (t_success)
-		t_success = MCImagePixmapFromBitmap(t_maskimage, 1, t_drawmask);
-
-	if (t_success)
-	{
-		r_drawdata = t_drawdata;
-		r_drawmask = t_drawmask;
-		r_bitmap = t_maskimage;
-	}
-	else
-	{
-		MCscreen->freepixmap(t_drawdata);
-		MCscreen->freepixmap(t_drawmask);
-		if (t_maskimage != nil)
-			MCscreen->destroyimage(t_maskimage);
-	}
-
-	if (t_drawimage != nil)
-		MCscreen->destroyimage(t_drawimage);
-	if (t_maskimagealpha != nil)
-		MCscreen->destroyimage(t_maskimagealpha);
-
-	return t_success;
-}
-
-void MCImage::decompressbrush(Pixmap &r_mask, Pixmap &r_data, MCBitmap *&r_bitmap)
+bool MCImage::decompressbrush(MCGImageRef &r_brush)
 {
 	/* TODO - may be able to improve this now by rasterizing the metafile */
 	if (getcompression() == F_PICT || m_rep == nil)
 	{
-		r_mask = r_data = DNULL;
-		r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
-		return;
+		return false;
+		//r_mask = r_data = DNULL;
+		//r_bitmap = MCscreen->createimage(1, 32, 32, False, 0x0, False, False);
+		//return;
 	}
 
 	bool t_success = true;
 
 	MCImageFrame *t_frame = nil;
 
-	t_success = m_rep->LockImageFrame(0, t_frame);
+	t_success = m_rep->LockImageFrame(0, true, t_frame);
 
 	if (t_success)
-		t_success = MCImageCreateBrush(t_frame->image, r_data, r_mask, r_bitmap);
+	{
+		MCGRaster t_raster;
+		t_raster.width = t_frame->image->width;
+		t_raster.height = t_frame->image->height;
+		t_raster.stride = t_frame->image->stride;
+		t_raster.format = MCImageBitmapHasTransparency(t_frame->image) ? kMCGRasterFormat_ARGB : kMCGRasterFormat_xRGB;
+		t_raster.pixels = t_frame->image->data;
+
+		t_success = MCGImageCreateWithRaster(t_raster, r_brush);
+	}
 
 	m_rep->UnlockImageFrame(0, t_frame);
+
+	return t_success;
 }
 
 void MCImage::prepareimage()
 {
 	if (m_rep != nil)
 	{
-		MCImageBitmap *t_bitmap = nil;
-		lockbitmap(t_bitmap);
-		unlockbitmap(t_bitmap);
+		/* OVERHAUL - REVISIT: for the moment, prepared images are premultiplied
+		 * as we expect them to be rendered, but if not then this is actually
+		 * causing more work to be done than needed */
+		MCImageFrame *t_frame = nil;
+		m_rep->LockImageFrame(0, true, t_frame);
+		m_rep->UnlockImageFrame(0, t_frame);
 	}
 }
 
@@ -279,7 +212,7 @@ void MCImage::openimage()
 		t_width = rect . width;
 		t_height = rect . height;
 		
-		/* UNCHECKED */ m_rep->GetGeometry(t_width, t_height);
+		/* UNCHECKED */ getsourcegeometry(t_width, t_height);
 		
 		MCRectangle t_old_rect;
 		t_old_rect = rect;
@@ -323,12 +256,6 @@ void MCImage::closeimage()
 	MCscreen->cancelmessageobject(this, MCM_internal);
 
 	recompress();
-
-	if (m_transformed != nil)
-	{
-		m_transformed->Release();
-		m_transformed = nil;
-	}
 
 	m_image_opened--;
 }
@@ -453,8 +380,6 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	while (opened)
 		close();
 
-	delete pixmapids;
-	delete pixmaps;
 	if (p_newfile)
 		flags &= ~(F_COMPRESSION | F_TRUE_COLOR);
 	Boolean was = (flags & F_I_ALWAYS_BUFFER) != 0;
@@ -485,3 +410,224 @@ void MCImage::reopen(bool p_newfile, bool p_lock_size)
 	if (parent != nil && !resizeparent())
 		layer_rectchanged(orect, true);
 }
+
+////////////////////////////////////////////////////////////////////////////////
+// IM-2013-07-30: [[ ResIndependence ]] Density-mapped Image Support
+
+typedef struct _MCImageScaleLabels_t
+{
+	const char *label;
+	MCGFloat scale;
+} MCImageScaleLabel;
+
+static MCImageScaleLabel s_image_scale_labels[] = {
+	{"@ultra-low", 0.25},
+	{"@extra-low", 0.5},
+	{"@low", 0.75},
+	{"@medium", 1.0},
+	{"@high", 1.5},
+	{"@extra-high", 2.0},
+	{"@ultra-high", 4.0},
+	
+	// unlabeled default scale
+	{"", 1.0},
+	
+	{nil, 0.0}
+};
+
+bool MCImageGetScaleForLabel(const char *p_label, uint32_t p_length, MCGFloat &r_scale)
+{
+	MCImageScaleLabel *t_scale_label;
+	t_scale_label = s_image_scale_labels;
+	
+	while (t_scale_label->label != nil)
+	{
+		if (MCCStringEqualSubstring(p_label, t_scale_label->label, p_length))
+		{
+			r_scale = t_scale_label->scale;
+			return true;
+		}
+		t_scale_label++;
+	}
+	
+	return false;
+}
+
+void MCImageFreeScaledFileList(MCImageScaledFile *p_list, uint32_t p_count)
+{
+	if (p_list == nil)
+		return;
+	
+	for (uint32_t i = 0; i < p_count; i++)
+		MCCStringFree(p_list[i].filename);
+	
+	MCMemoryDeleteArray(p_list);
+}
+
+bool MCImageSplitScaledFilename(const char *p_filename, char *&r_base, char *&r_extension, bool &r_has_scale, MCGFloat &r_scale)
+{
+	if (p_filename == nil)
+		return false;
+	
+	bool t_success;
+	t_success = true;
+	
+	MCGFloat t_scale;
+	bool t_has_scale = false;
+	
+	uint32_t t_length;
+	t_length = MCCStringLength(p_filename);
+	
+	uint32_t t_index, t_name_start, t_label_start, t_label_search_start, t_ext_start;
+	
+	if (MCCStringLastIndexOf(p_filename, '/', t_index))
+		t_name_start = t_index + 1;
+	else
+		t_name_start = 0;
+	
+	if (MCCStringLastIndexOf(p_filename + t_name_start, '.', t_index))
+		t_ext_start = t_name_start + t_index;
+	else
+		t_ext_start = t_length;
+	
+	// find first '@' char before the extension part
+	t_label_start = t_label_search_start = t_name_start;
+	while (MCCStringFirstIndexOf(p_filename + t_label_search_start, '@', t_index))
+	{
+		if (t_label_start + t_index > t_ext_start)
+			break;
+		
+		t_label_start += t_index;
+		t_label_search_start = t_label_start + 1;
+	}
+	
+	// check label begins with '@'
+	if (p_filename[t_label_start] != '@')
+	{
+		// no scale label
+		t_label_start = t_ext_start;
+	}
+	else
+	{
+		t_has_scale = MCImageGetScaleForLabel(p_filename + t_label_start, t_ext_start - t_label_start, t_scale);
+		
+		if (!t_has_scale)
+		{
+			// @... is not a recognised scale
+			t_label_start = t_ext_start;
+		}
+	}
+	
+	char *t_base, *t_extension;
+	t_base = t_extension = nil;
+	
+	t_success = MCCStringCloneSubstring(p_filename, t_label_start, t_base) && MCCStringCloneSubstring(p_filename + t_ext_start, t_length - t_ext_start, t_extension);
+	
+	if (t_success)
+	{
+		r_base = t_base;
+		r_extension = t_extension;
+		r_has_scale = t_has_scale;
+		r_scale = t_has_scale ? t_scale : 1.0;
+	}
+	else
+	{
+		MCCStringFree(t_base);
+		MCCStringFree(t_extension);
+	}
+	
+	return t_success;
+}
+
+bool MCImageGetScaledFiles(const char *p_filename, MCStack *p_stack, MCImageScaledFile *&r_list, uint32_t &r_count)
+{
+	bool t_success;
+	t_success = nil;
+	
+	MCImageScaledFile *t_filelist;
+	t_filelist = nil;
+	
+	char *t_base, *t_extension, *t_scale_label;
+	t_base = t_extension = t_scale_label = nil;
+	
+	uint32_t t_count;
+	t_count = 0;
+	
+	MCGFloat t_scale;
+	bool t_has_scale;
+	
+	t_success = MCImageSplitScaledFilename(p_filename, t_base, t_extension, t_has_scale, t_scale);
+	
+	if (t_success)
+	{
+		// if given filename is tagged for a scale then we just return that scaled file
+		if (t_has_scale)
+		{
+			t_success = MCMemoryNewArray(1, t_filelist);
+			if (t_success)
+			{
+				t_count = 1;
+				t_filelist[0].scale = t_scale;
+				t_filelist[0].filename = p_stack->resolve_filename(p_filename);
+				
+				t_success = t_filelist[0].filename != nil;
+			}
+		}
+		else
+		{
+			MCImageScaleLabel *t_scale_labels;
+			t_scale_labels = s_image_scale_labels;
+			
+			while (t_success && t_scale_labels->label != nil)
+			{
+				char *t_filename;
+				t_filename = nil;
+				
+				char *t_resolved;
+				t_resolved = nil;
+				
+				t_success = MCCStringFormat(t_filename, "%s%s%s", t_base, t_scale_labels->label, t_extension);
+				
+				if (t_success)
+					t_success = nil != (t_resolved = p_stack->resolve_filename(t_filename));
+				
+				if (t_success)
+				{
+					if (MCS_exists(t_resolved, True))
+					{
+						t_success = MCMemoryResizeArray(t_count + 1, t_filelist, t_count);
+						
+						if (t_success)
+						{
+							t_filelist[t_count - 1].filename = t_resolved;
+							t_filelist[t_count - 1].scale = t_scale_labels->scale;
+							
+							t_resolved = nil;
+						}
+					}
+				}
+				
+				MCCStringFree(t_filename);
+				MCCStringFree(t_resolved);
+				
+				t_scale_labels++;
+			}
+		}
+	}
+	
+	if (t_success)
+	{
+		r_list = t_filelist;
+		r_count = t_count;
+	}
+	else
+		MCImageFreeScaledFileList(t_filelist, t_count);
+	
+	MCCStringFree(t_base);
+	MCCStringFree(t_extension);
+	
+	return t_success;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+

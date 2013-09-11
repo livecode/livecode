@@ -56,6 +56,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "core.h"
 
+#include "resolution.h"
+
 MCClose::~MCClose()
 {
 	delete fname;
@@ -815,7 +817,7 @@ Parse_stat MCExport::parse(MCScriptPoint &sp)
 Exec_stat MCExport::exec(MCExecPoint &ep)
 {
 #ifdef /* MCExport */ LEGACY_EXEC
-	MCBitmap *t_img = nil;
+	MCImageBitmap *t_bitmap = nil;
 	MCObject *optr = NULL;
 
 	Exec_stat t_status = ES_NORMAL;
@@ -837,9 +839,6 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 	//   indicates to do this processing later on in the method.
 	bool t_needs_unpremultiply;
 	t_needs_unpremultiply = false;
-	// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
-	// with "alpha" channel set to zero. 
-	bool t_has_alpha = false;
 	if (sformat == EX_SNAPSHOT)
 	{
 		char *srect = NULL;
@@ -927,12 +926,11 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 
 		if (optr != NULL)
 		{
-			/* UNCHECKED */ t_img = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
-			t_has_alpha = true;
+			/* UNCHECKED */ t_bitmap = optr -> snapshot(exsrect == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, 1.0, with_effects);
 			// OK-2007-04-24: Bug found in ticket 2006072410002591, when exporting a snapshot of an object
 			// while the object is being moved in the IDE, it is possible for the snapshot rect not to intersect with
 			// the rect of the object, causing optr -> snapshot() to return NULL, and a crash.
-			if (t_img == nil)
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror -> add(EE_EXPORT_EMPTYRECT, line, pos);
@@ -945,8 +943,8 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		}
 		else
 		{
-			t_img = MCscreen->snapshot(r, w, sdisp);
-			if (t_img == nil)
+			t_bitmap = MCscreen->snapshot(r, 1.0, w, sdisp);
+			if (t_bitmap == nil)
 			{
 				delete sdisp;
 				MCeerror->add(EE_EXPORT_NOSELECTED, line, pos);
@@ -1020,32 +1018,31 @@ Exec_stat MCExport::exec(MCExecPoint &ep)
 		delete mfile;
 	}
 
-	MCImageBitmap *t_bitmap = nil;
 	bool t_dither = false;
 	bool t_image_locked = false;
-	if (t_img == nil)
+	if (t_bitmap == nil)
 	{
-		/* UNCHECKED */ static_cast<MCImage*>(optr)->lockbitmap(t_bitmap);
-		t_image_locked = true;
-		t_dither = !optr->getflag(F_DONT_DITHER);
-	}
-	else
-	{
-		/* UNCHECKED */ MCImageBitmapCreateWithOldBitmap(t_img, t_bitmap);
-		if (!t_has_alpha)
+		MCImage *t_img = static_cast<MCImage*>(optr);
+		
+		// IM-2013-07-26: [[ ResIndependence ]] the exported image needs to be unscaled,
+		// so if the image has a scale factor we need to get a 1:1 copy
+		if (t_img->getscalefactor() == 1.0)
 		{
-			// IM-2013-06-21: [[ Bug 10967 ]] Set alpha of opaque image to 255
-			MCImageBitmapSetAlphaValue(t_bitmap, 255);
+			/* UNCHECKED */ t_img->lockbitmap(t_bitmap, false);
+			t_image_locked = true;
 		}
 		else
 		{
-			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
-			if (t_needs_unpremultiply)
-				MCImageBitmapUnpremultiply(t_bitmap);
-			MCImageBitmapCheckTransparency(t_bitmap);
+			/* UNCHECKED */ t_img->copybitmap(1.0, false, t_bitmap);
 		}
-
-		MCscreen->destroyimage(t_img);
+		t_dither = !t_img->getflag(F_DONT_DITHER);
+	}
+	else
+	{
+		// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+		if (t_needs_unpremultiply)
+			MCImageBitmapUnpremultiply(t_bitmap);
+		MCImageBitmapCheckTransparency(t_bitmap);
 		t_dither = !MCtemplateimage->getflag(F_DONT_DITHER);
 	}
 
@@ -1772,8 +1769,18 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		}
 		mfile = ep.getsvalue().clone();
 	}
+
+	// MW-2013-05-20: [[ Bug 10897 ]] Object snapshot returns a premultipled
+	//   bitmap, which needs to be processed before compression. This flag
+	//   indicates to do this processing later on in the method.
+	bool t_needs_unpremultiply;
+	t_needs_unpremultiply = false;
 	if (format == EX_SNAPSHOT)
 	{
+		// IM-2013-08-01: [[ ResIndependence ]] Resolution scale for snapshots - unless specified should produce point-scale image
+		MCGFloat t_image_scale;
+		t_image_scale = 1.0;
+		
 		char *disp = NULL;
 		if (dname != NULL)
 		{
@@ -1834,10 +1841,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 			}
 		}
 		
-		// IM-2013-06-21: [[ Bug 10967 ]] screen snapshot can return opaque image
-		// with "alpha" channel set to zero. 
-		bool t_has_alpha = false;
-		MCBitmap *t_bitmap = nil;
+		MCImageBitmap *t_bitmap = nil;
 		if (container != NULL)
 		{
 			MCObject *parent = NULL;
@@ -1848,8 +1852,7 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				return ES_ERROR;
 			}
 		
-			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, with_effects);
-			t_has_alpha = true;
+			t_bitmap = parent -> snapshot(fname == NULL ? nil : &r, size == NULL ? nil : &t_wanted_size, t_image_scale, with_effects);
 			// OK-2007-04-24: If the import rect doesn't intersect with the object, MCobject::snapshot
 			// may return null. In this case, return an error.
 			if (t_bitmap == NULL)
@@ -1857,10 +1860,14 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 				MCeerror ->add(EE_IMPORT_EMPTYRECT, line, pos);
 				return ES_ERROR;
 			}
+			
+			// MW-2013-05-20: [[ Bug 10897 ]] The 'snapshot' command produces a premultiplied bitmap
+			//   so mark it to be unpremultiplied for later on.
+			t_needs_unpremultiply = true;
 		}
 		else
 		{
-			t_bitmap = MCscreen->snapshot(r, w, disp);
+			t_bitmap = MCscreen->snapshot(r, t_image_scale, w, disp);
 
 			delete disp;
 		}
@@ -1868,9 +1875,16 @@ Exec_stat MCImport::exec(MCExecPoint &ep)
 		MCImage *iptr = nil;
 		if (t_bitmap != nil)
 		{
+			// MW-2013-05-20: [[ Bug 10897 ]] Make sure we unpremultiply if needed.
+			if (t_needs_unpremultiply)
+				MCImageBitmapUnpremultiply(t_bitmap);
+			MCImageBitmapCheckTransparency(t_bitmap);
+
 			/* UNCHECKED */ iptr = (MCImage *)MCtemplateimage->clone(False, OP_NONE, false);
-			iptr -> compress(t_bitmap, true, t_has_alpha);
-			MCscreen->destroyimage(t_bitmap);
+			// IM-2013-08-01: [[ ResIndependence ]] pass image scale when setting bitmap
+			if (t_bitmap != nil)
+				iptr->setbitmap(t_bitmap, t_image_scale, true);
+			MCImageFreeBitmap(t_bitmap);
 		}
 	
 		if (iptr != NULL)

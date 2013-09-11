@@ -13,6 +13,7 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/engine/include \
 	$(SOLUTION_DIR)/libcore/include \
 	$(SOLUTION_DIR)/libexternal/include \
+	$(SOLUTION_DIR)/libgraphics/include \
 	$(SOLUTION_DIR)/thirdparty/libiodbc/include \
 	$(SOLUTION_DIR)/thirdparty/libjpeg/include \
 	$(SOLUTION_DIR)/thirdparty/libmysql/include \
@@ -26,8 +27,11 @@ GLOBAL_INCLUDES=\
 	$(SOLUTION_DIR)/thirdparty/libz/include \
 	$(SOLUTION_DIR)/thirdparty/libzip/include \
 	$(SOLUTION_DIR)/thirdparty/libopenssl/include \
-	$(SOLUTION_DIR)/thirdparty/libcurl/include
-
+	$(SOLUTION_DIR)/thirdparty/libcurl/include \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/core \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/config \
+	$(SOLUTION_DIR)/thirdparty/libskia/include/effects
+	
 GLOBAL_LIBS=\
 	$(PREBUILT_LIB_DIR)
 

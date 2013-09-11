@@ -29,6 +29,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "tilecache.h"
 #include "region.h"
 
+#include "graphicscontext.h"
+
 #ifdef _HAS_QSORT_R
 #define stdc_qsort(a, b, c, d, e) qsort_r(a, b, c, e, d)
 #elif defined(_HAS_QSORT_S)
@@ -233,7 +235,7 @@ static void MCTileCacheDirtyTile(MCTileCacheRef self, uint32_t index);
 // Mark the tile as in-use, i.e. make sure it isn't flushed during this frame.
 static void MCTileCacheTouchTile(MCTileCacheRef self, uint32_t index);
 // Fill the given tile with an image from context.
-static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t index, MCContext *context, int32_t x, int32_t y);
+static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t index, MCImageBitmap *bitmap, int32_t x, int32_t y);
 // Empty the tile's image (if any).
 static void MCTileCacheEmptyTile(MCTileCacheRef self, uint32_t index);
 
@@ -883,21 +885,17 @@ static bool MCTileCacheEnsureTile(MCTileCacheRef self)
 	return true;
 }
 
-static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCContext *p_context, int32_t p_x, int32_t p_y)
+static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCImageBitmap *p_bitmap, int32_t p_x, int32_t p_y)
 {	
 	// Get the tile ptr.
 	MCTileCacheTile *t_tile;
 	t_tile = MCTileCacheGetTile(self, p_index);
 
-	// Lock the context.
-	MCBitmap *t_bitmap;
-	t_bitmap = p_context -> lock();
-
 	// Calculate the source tile offset / stride (in pixels).
 	uint32_t *t_src_bits;
 	uint32_t t_src_stride;
-	t_src_stride = t_bitmap -> bytes_per_line / sizeof(uint32_t);
-	t_src_bits = (uint32_t *)t_bitmap -> data + p_y * self -> tile_size * t_src_stride + p_x * self -> tile_size;
+	t_src_stride = p_bitmap -> stride / sizeof(uint32_t);
+	t_src_bits = (uint32_t *)p_bitmap -> data + p_y * self -> tile_size * t_src_stride + p_x * self -> tile_size;
 
 	// First thing to do is to do the opacity and constancy check as if the
 	// tile is transparent, or constant we don't need to do anything. To avoid
@@ -935,7 +933,7 @@ static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCContext
 	
 		// Use direct access to context back-buffer.
 		t_tile_ptr = (void *)t_src_bits;
-		t_tile_stride = t_bitmap -> bytes_per_line;
+		t_tile_stride = p_bitmap -> stride;
 	}
 	
 	// The tile is constant if the or bits are the same as the and bits.
@@ -948,13 +946,8 @@ static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCContext
 		t_tile -> constant = 1;
 		t_tile -> alpha = t_or_bits >> 24;
 
-		// MW-2011-10-28: [[ Bug 9837 ]] The 'bits' value are native bitmap byte
-		//   order, so make sure we swap on Android!
-#ifdef TARGET_SUBPLATFORM_ANDROID
-		t_tile -> data = (void *)((t_or_bits & 0xff00ff00) | ((t_or_bits & 0x00ff0000) >> 16) | ((t_or_bits & 0x000000ff) << 16));
-#else
+		// IM-2013-08-23: [[ RefactorGraphics ]] Use MCGPixelUnpackNative to fix color swap issues
 		t_tile -> data = (void *)t_or_bits;
-#endif
 	}
 	else if (MCTileCacheEnsureTile(self))
 	{
@@ -974,9 +967,6 @@ static void MCTileCacheFillTile(MCTileCacheRef self, uint32_t p_index, MCContext
 			MCTileCacheInvalidate(self);
 		}
 	}
-
-	// Unlock the context.
-	p_context -> unlock(t_bitmap);
 }
 
 static void MCTileCacheEmptyTile(MCTileCacheRef self, uint32_t p_index)
@@ -1500,7 +1490,7 @@ void MCTileCacheEndFrame(MCTileCacheRef self)
 #endif
 }
 
-static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCContext *p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawSprite(MCTileCacheRef self, uint32_t p_sprite_id, MCGContextRef p_context, const MCRectangle& p_rect)
 {
 	MCTileCacheSprite *t_sprite;
 	t_sprite = MCTileCacheGetSprite(self, p_sprite_id);
@@ -1572,18 +1562,30 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 						(t_required_tiles . bottom - t_required_tiles . top) * self -> tile_size);
 
 		// Create a memory context of the appropriate size.
-		MCContext *t_context;
-		t_context = nil;
+		MCGContextRef t_context = nil;
+		MCImageBitmap *t_bitmap = nil;
+
 		if (self -> valid)
 		{
-			t_context = MCscreen -> creatememorycontext(t_required_rect . width, t_required_rect . height, true, true);
-			if (t_context == nil)
+			bool t_success = true;
+			t_success = MCImageBitmapCreate(t_required_rect.width, t_required_rect.height, t_bitmap);
+			if (t_success)
+			{
+				// IM-2013-08-22: [[ RefactorGraphics ]] clear sprite bitmap before rendering to it
+				MCImageBitmapClear(t_bitmap);
+				t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+			}
+
+			if (!t_success)
 				MCTileCacheInvalidate(self);
 		}
 
 		// Invoke the sprite renderer to draw it.
 		if (self -> valid)
 			MCTileCacheDrawSprite(self, t_sprite_id, t_context, t_required_rect);
+
+		// Get rid of the temporary context.
+		MCGContextRelease(t_context);
 
 		// Now extract each of the required tiles.
 		if (self -> valid)
@@ -1599,12 +1601,11 @@ static void MCTileCacheRenderSpriteTiles(MCTileCacheRef self)
 				*t_cell = self -> sprite_render_list . contents[i];
 
 				// Fetch the tile's image.
-				MCTileCacheFillTile(self, self -> sprite_render_list . contents[i], t_context, t_tile -> x - t_required_tiles . left, t_tile -> y - t_required_tiles . top);
+				MCTileCacheFillTile(self, self -> sprite_render_list . contents[i], t_bitmap, t_tile -> x - t_required_tiles . left, t_tile -> y - t_required_tiles . top);
 			}
 
-		// Get rid of the temporary context.
-		if (t_context != nil)
-			MCscreen -> freecontext(t_context);
+		// free the temporary bitmap
+		MCImageFreeBitmap(t_bitmap);
 	}
 }
 
@@ -1649,7 +1650,7 @@ static int MCTileCacheSortRenderListByIncreasingYThenX(void *p_context, const vo
 	return d;
 }
 
-static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCContext *p_context, const MCRectangle& p_rect)
+static void MCTileCacheDrawScenery(MCTileCacheRef self, uint32_t p_layer_id, MCGContextRef p_context, const MCRectangle& p_rect)
 {
 	if (!self -> scenery_renderers[p_layer_id] . callback(self -> scenery_renderers[p_layer_id] . context, p_context, p_rect))
 		MCTileCacheInvalidate(self);
@@ -1733,18 +1734,22 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 			MCTileCacheInvalidate(self);
 
 	// Create a memory context of the appropriate size.
-	MCContext *t_context;
-	t_context = nil;
+	MCImageBitmap *t_bitmap = nil;
+	MCGContextRef t_context = nil;
 	if (self -> valid)
 	{
-		t_context = MCscreen -> creatememorycontext(t_required_rect . width, t_required_rect . height, true, true);
-		if (t_context == nil)
+		bool t_success = true;
+		t_success = MCImageBitmapCreate(t_required_rect.width, t_required_rect.height, t_bitmap);
+		if (t_success)
+			t_success = MCGContextCreateWithPixels(t_bitmap->width, t_bitmap->height, t_bitmap->stride, t_bitmap->data, true, t_context);
+
+		if (!t_success)
 			MCTileCacheInvalidate(self);
 	}
 
 	// Configure the context.
 	if (self -> valid)
-		t_context -> setorigin(t_required_rect . x, t_required_rect . y);
+	MCGContextTranslateCTM(t_context, -t_required_rect . x, -t_required_rect . y);
 
 	// Now we use the original render list in reverse to determine what layers
 	// to render, siphoning off tiles as we reach them in the sorted render
@@ -1776,17 +1781,8 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 			// we are not clipping accurately yet, we must always erase).
 			if (*t_activity < 2)
 			{
-#ifdef _LINUX_DESKTOP
-				MCRectangle t_rect;
-				t_rect = MCU_make_rect(t_required_rect . x + (t_tile -> x - t_required_tiles . left) * self -> tile_size, t_required_rect . y + (t_tile -> y - t_required_tiles . top) * self -> tile_size, self -> tile_size, self -> tile_size);
-				t_context -> clear(&t_rect);
-#else
-				MCBitmap *t_bitmap;
-				t_bitmap = t_context -> lock();
 				for(int32_t y = 0; y < self -> tile_size; y++)
-					memset(t_bitmap -> data + t_bitmap -> bytes_per_line * (y + (t_tile -> y - t_required_tiles . top) * self -> tile_size) + (t_tile -> x - t_required_tiles . left) * self -> tile_size * sizeof(uint32_t), 0, self -> tile_size * sizeof(uint32_t));
-				t_context -> unlock(t_bitmap);
-#endif
+					memset((uint8_t*)t_bitmap -> data + t_bitmap -> stride * (y + (t_tile -> y - t_required_tiles . top) * self -> tile_size) + (t_tile -> x - t_required_tiles . left) * self -> tile_size * sizeof(uint32_t), 0, self -> tile_size * sizeof(uint32_t));
 			}
 
 			// An active tile is marked with a 2.
@@ -1818,7 +1814,7 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 					break;
 
 				// Fetch the tile's image.
-				MCTileCacheFillTile(self, t_sorted_render_list[t_output_index], t_context, t_tile -> x - t_required_tiles . left, t_tile -> y - t_required_tiles . top);
+				MCTileCacheFillTile(self, t_sorted_render_list[t_output_index], t_bitmap, t_tile -> x - t_required_tiles . left, t_tile -> y - t_required_tiles . top);
 
 				// Mark the tile as inactive but used.
 				uint8_t *t_activity;
@@ -1835,8 +1831,8 @@ static void MCTileCacheRenderSceneryTiles(MCTileCacheRef self)
 	}
 
 	// Get rid of the context.
-	if (t_context != nil)
-		MCscreen -> freecontext(t_context);
+	MCGContextRelease(t_context);
+	MCImageFreeBitmap(t_bitmap);
 
 	// Get rid of the active tiles array
 	MCMemoryDeleteArray(t_active_tiles);
@@ -2491,7 +2487,7 @@ bool MCTileCacheComposite(MCTileCacheRef self, MCStackSurface *p_surface, MCRegi
 	return t_success;
 }
 
-bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, Pixmap& r_pixmap)
+bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, MCGImageRef& r_image)
 {
 	if (self -> compositor . begin_snapshot == nil ||
 		self -> compositor . end_snapshot == nil)
@@ -2500,28 +2496,34 @@ bool MCTileCacheSnapshot(MCTileCacheRef self, MCRectangle p_area, Pixmap& r_pixm
 	bool t_success;
 	t_success = true;
 	
-	Pixmap t_snapshot;
-	t_snapshot = nil;
-	if (t_success)
-	{
-		t_snapshot = MCscreen -> createpixmap(p_area . width, p_area . height, 0, False);
-		if (t_snapshot == nil)
-			t_success = false;
-	}
+	MCGRaster t_raster;
+	t_raster.width = p_area.width;
+	t_raster.height = p_area.height;
+	t_raster.pixels = nil;
+	t_raster.stride = p_area.width * sizeof(uint32_t);
+	t_raster.format = kMCGRasterFormat_ARGB;
 	
 	if (t_success)
-		t_success = self -> compositor . begin_snapshot(self -> compositor . context, p_area, t_snapshot);
+		t_success = MCMemoryAllocate(t_raster.stride * t_raster.height, t_raster.pixels);
+	
+	if (t_success)
+		t_success = self -> compositor . begin_snapshot(self -> compositor . context, p_area, t_raster);
 	
 	if (t_success)
 		t_success = MCTileCacheDoComposite(self);
 	
 	if (t_success)
-		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_snapshot);
+		t_success = self -> compositor . end_snapshot(self -> compositor . context, p_area, t_raster);
 	
+	MCGImageRef t_image = nil;
 	if (t_success)
-		r_pixmap = t_snapshot;
-	else
-		MCscreen -> freepixmap(t_snapshot);
+	{
+		t_success = MCGImageCreateWithRasterAndRelease(t_raster, r_image);
+		if (t_success)
+			t_raster.pixels = nil;
+	}
+
+	MCMemoryDeallocate(t_raster.pixels);
 	
 	return t_success;
 }

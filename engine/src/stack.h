@@ -67,14 +67,14 @@ enum MCStackSurfaceTargetType
 class MCStackSurface
 {
 public:
-	// Lock the surface for access with an MCContext
-	virtual bool LockGraphics(MCRegionRef area, MCContext*& r_context) = 0;
+	// Lock the surface for access with an MCGContextRef
+	virtual bool LockGraphics(MCRegionRef area, MCGContextRef& r_context) = 0;
 	// Unlock the surface.
 	virtual void UnlockGraphics(void) = 0;
 	
 	// Lock the pixels within the given region. The bits are returned relative
 	// to the top-left of the region.
-	virtual bool LockPixels(MCRegionRef area, void*& r_bits, uint32_t& r_stride) = 0;
+	virtual bool LockPixels(MCRegionRef area, MCGRaster& r_raster) = 0;
 	// Unlock the surface.
 	virtual void UnlockPixels(void) = 0;
 	
@@ -82,7 +82,18 @@ public:
 	virtual bool LockTarget(MCStackSurfaceTargetType type, void*& r_context) = 0;
 	// Unlock the target.
 	virtual void UnlockTarget(void) = 0;
+	
+	// Composite the source image onto the surface using the given blend mode & opacity
+	virtual bool Composite(MCGRectangle p_dst_rect, MCGImageRef p_source, MCGRectangle p_src_rect, MCGFloat p_alpha, MCGBlendMode p_blend) = 0;
+
+	/* OVERHAUL - REVISIT: ideally, these methods should not be part of the public MCStackSurface interface */
+	// Prepare surface for use - do not call from within drawing code
+	virtual bool Lock(void) = 0;
+	// Atomically update target surface with drawn image - do not call from within drawing code
+	virtual void Unlock(void) = 0;
 };
+
+typedef bool (*MCStackUpdateCallback)(MCStackSurface *p_surface, MCRegionRef p_region, void *p_context);
 
 class MCStack : public MCObject
 {
@@ -158,7 +169,7 @@ protected:
 	
 	// MW-2011-09-13: [[ Effects ]] The temporary snapshot of a rect of the
 	//  window.
-	Pixmap m_snapshot;
+	MCGImageRef m_snapshot;
 	
 	// MW-2011-09-13: [[ Masks ]] The window mask for the stack.
 	MCWindowShape *m_window_shape;
@@ -221,12 +232,21 @@ public:
 	// MW-2011-08-17: [[ Redraw ]] Render the stack into the given context 'dirty' is the
 	//   hull of the clipping region.
     virtual void render(MCContext *dc, const MCRectangle& dirty);
+	void render(MCGContextRef p_context, const MCRectangle &p_dirty);
 
 	// MW-2012-02-14: [[ FontRefs ]] Recompute the font inheritence hierarchy.
 	virtual bool recomputefonts(MCFontRef parent_font);
 	
+	//////////
+	
     // IM-2012-05-15: [[ Effective Rect ]] get the rect of the window (including decorations)
     MCRectangle getwindowrect() const;
+	MCRectangle device_getwindowrect() const;
+	
+	void setgeom();
+	MCRectangle device_setgeom(const MCRectangle &p_rect);
+	//////////
+	
     virtual MCRectangle getrectangle(bool p_effective) const;
     
 	void external_idle();
@@ -240,7 +260,6 @@ public:
 	void configure(Boolean user);
 	void iconify();
 	void uniconify();
-	void position(const char *geometry);
 	Window_mode getmode();
 	Window_mode getrealmode()
 	{
@@ -472,25 +491,11 @@ public:
 	}
 
 	void effectrect(const MCRectangle &drect, Boolean &abort);
-	Boolean ve_barn(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_checkerboard(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_dissolve(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_iris(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_push(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_reveal(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_scroll(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_shrink(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, MCBitmap *on);
-	Boolean ve_stretch(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_venetian(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_wipe(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_zoom(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration);
-	Boolean ve_qteffect(const MCRectangle &drect, Visual_effects dir, uint4 delta, uint4 duration, long sequence, void  *effectdescription, void *timebase);
 	
 	MCStack *findstackd(Window w);
 	MCStack *findchildstackd(Window w,uint2 &ccount, uint2 cindex);
 	void realize();
 	void sethints();
-	void setgeom();
 	void destroywindowshape();
 
 	// MW-2011-08-17: [[ Redraw ]] Mark the whole content area as needing redrawn.
@@ -506,24 +511,34 @@ public:
 	// MW-2011-09-10: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window. This is a platform-specific method which causes 'redrawwindow' to be
 	//   invoked.
+	// IM-2013-08-29: [[ ResIndependence ]] add device-specific version of updatewindow.
+	//   device_updatewindow takes a region in device coordinates.
 	void updatewindow(MCRegionRef region);
+	void device_updatewindow(MCRegionRef p_region);
+	
 	// MW-2011-09-13: [[ Redraw ]] Request an immediate update of the given region of the
 	//   window using the presented pixmap. This is a platform-specific method - note that
 	//   any window-mask is ignored with per-pixel alpha assumed to come from the the image.
 	//   (although a window-mask needs to be present in the stack for it not to be ignored).
-	void updatewindowwithbuffer(Pixmap buffer, MCRegionRef region);
+	// IM-2013-06-19: [[ RefactorGraphics ]] Replace pixmap update method with this
+	//   version which uses a callback function to perform the actual drawing using a
+	//    provided MCStackSurface instance. The MCStackSurface class is now responsible
+	//    for handling any window mask present.
+	// IM-2013-08-29: [[ ResIndependence ]] change updatewindowwithcallback to device-specific version.
+	//   device_updatewindowwithcallback takes a region in device coordinates.
+	void device_updatewindowwithcallback(MCRegionRef p_region, MCStackUpdateCallback p_callback, void *p_context);
 	
 	// MW-2012-08-06: [[ Fibers ]] Ensure the tilecache is updated to reflect the current
 	//   frame.
 	void updatetilecache(void);
 	// MW-2013-01-08: Snapshot the contents of the tilecache (if any).
-	bool snapshottilecache(MCRectangle area, Pixmap& r_pixmap);
+	bool snapshottilecache(MCRectangle area, MCGImageRef& r_image);
 	// MW-2013-06-26: [[ Bug 10990 ]] Deactivate the tilecache.
     void deactivatetilecache(void);
     
 	// MW-2011-09-10: [[ Redraw ]] Perform a redraw of the window's content to the given
 	//   surface.
-	void redrawwindow(MCStackSurface *surface, MCRegionRef region);
+	void device_redrawwindow(MCStackSurface *surface, MCRegionRef region);
 	
 	// MW-2011-09-08: [[ Redraw ]] Capture the contents of the given rect of the window
 	//   into a temporary buffer. The buffer is ditched at the next update.
@@ -588,9 +603,6 @@ public:
 	//   window.
 	void composite(void);
 	
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom) { }
 	void getstyle(uint32_t &wstyle, uint32_t &exstyle);
 	void constrain(intptr_t lp);
 #elif defined(_MAC_DESKTOP)
@@ -600,16 +612,10 @@ public:
 	}
 	MCSysWindowHandle getqtwindow(void);
 	void showmenubar();
-	void scrollpm(Pixmap tpm, int2 newy);
-	void property(Window w, Atom atom) { }
 	void getWinstyle(uint32_t &wstyle, uint32_t &wclass);
 
 	void getminmax(MCMacSysRect *winrect);
-	void drawgrowicon(const MCRectangle &dirty);
 #elif defined(_LINUX_DESKTOP)
-	void scrollpm(Pixmap tpm, int2 newy) { }
-	void drawgrowicon(const MCRectangle &dirty) { }
-	void property(Window w, Atom atom);
 	void setmodalhints(void);
 
 	// MW-201-09-15: [[ Redraw ]] The 'onexpose()' method is called when a sequence

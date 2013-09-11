@@ -65,6 +65,7 @@ MCCachedImageRep::MCCachedImageRep()
 {
 	m_lock_count = 0;
 	m_have_geometry = false;
+	m_premultiplied = false;
 
 	m_frames = nil;
 	m_frame_count = 0;
@@ -84,17 +85,42 @@ uindex_t MCCachedImageRep::GetFrameCount()
 {
 	if (!m_have_geometry)
 	{
-		if (!EnsureImageFrames())
-			return 0;
+		if (!EnsureImageFrames(m_premultiplied))
+			return false;
 	}
 
 	return m_frame_count;
 }
 
-bool MCCachedImageRep::EnsureImageFrames()
+void MCCachedImageRep::PremultiplyFrames()
+{
+	if (m_premultiplied)
+		return;
+
+	for (uindex_t i = 0; i < m_frame_count; i++)
+		MCImageBitmapPremultiply(m_frames[i].image);
+
+	m_premultiplied = true;
+}
+
+bool MCCachedImageRep::EnsureImageFrames(bool p_premultiplied)
 {
 	if (m_frames != nil)
-		return true;
+	{
+		if (p_premultiplied)
+		{
+			if (!m_premultiplied)
+				PremultiplyFrames();
+
+			return true;
+		}
+
+		if (!m_premultiplied)
+			return true;
+
+		MCLog("<%p> discarding premultiplied image frames", this);
+		ReleaseFrames();
+	}
 	
 	if (!LoadImageFrames(m_frames, m_frame_count))
 		return false;
@@ -111,13 +137,10 @@ bool MCCachedImageRep::EnsureImageFrames()
 	return true;
 }
 
-bool MCCachedImageRep::LockImageFrame(uindex_t p_frame, MCImageFrame *&r_frame)
+bool MCCachedImageRep::LockImageFrame(uindex_t p_frame, bool p_premultiplied, MCImageFrame *&r_frame)
 {
-	if (m_frames == nil)
-	{
-		if (!EnsureImageFrames())
-			return false;
-	}
+	if (!EnsureImageFrames(p_premultiplied))
+		return false;
 
 	if (p_frame < m_frame_count)
 	{
@@ -172,6 +195,7 @@ void MCCachedImageRep::ReleaseFrames()
 
 	MCImageFreeFrames(m_frames, m_frame_count);
 	m_frames = nil;
+	m_premultiplied = false;
 }
 
 void MCCachedImageRep::FlushCache()
@@ -353,23 +377,6 @@ bool MCImageRepGetCompressed(MCImageCompressedBitmap *p_compressed, MCImageRep *
 	}
 	
 	return t_success;
-}
-
-bool MCImageRepGetTranformed(uindex_t p_width, uindex_t p_height, int32_t p_angle, bool p_lock_rect, uint32_t p_quality, MCImageRep *p_source, MCImageRep *&r_rep)
-{
-	bool t_success = true;
-	
-	MCCachedImageRep *t_rep = new MCTransformedImageRep(p_width, p_height, p_angle, p_lock_rect, p_quality, p_source);
-	
-	t_success = t_rep != nil;
-	if (t_success)
-	{
-		MCCachedImageRep::AddRep(t_rep);
-		r_rep = t_rep->Retain();
-	}
-	
-	return t_success;
-	
 }
 
 ////////////////////////////////////////////////////////////////////////////////

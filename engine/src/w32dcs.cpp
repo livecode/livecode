@@ -31,7 +31,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "sellst.h"
 #include "stacklst.h"
-#include "pxmaplst.h"
 #include "card.h"
 #include "globals.h"
 #include "osspec.h"
@@ -44,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "core.h"
 
 #include "w32text.h"
+
+#include "graphicscontext.h"
 
 #ifndef CS_DROPSHADOW
 #define CS_DROPSHADOW   0x00020000
@@ -350,7 +351,7 @@ void MCScreenDC::ungrabpointer()
 	}
 }
 
-uint2 MCScreenDC::getwidth()
+uint2 MCScreenDC::device_getwidth()
 {
 	HDC winhdc = GetDC(NULL);
 	uint2 width = (uint2)GetDeviceCaps(winhdc, HORZRES);
@@ -358,7 +359,7 @@ uint2 MCScreenDC::getwidth()
 	return width;
 }
 
-uint2 MCScreenDC::getheight()
+uint2 MCScreenDC::device_getheight()
 {
 	HDC winhdc = GetDC(NULL);
 	uint2 height = (uint2)GetDeviceCaps(winhdc, VERTRES);
@@ -610,74 +611,10 @@ void MCScreenDC::setinputfocus(Window w)
 	SetFocus((HWND)w->handle.window);
 }
 
-void MCScreenDC::freepixmap(Pixmap &p)
-{
-	if (p != DNULL)
-	{
-		DeleteObject(p->handle.pixmap);
-		delete p;
-		p = DNULL;
-	}
-}
-
-extern bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
-Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height,
-                                uint2 depth, Boolean purge)
-{
-	HBITMAP hbm;
-	if (depth == 1)
-		hbm = CreateBitmap(width, height, 1, 1, NULL);
-	else
-	{
-		HDC windc = GetDC(NULL);
-		void *bits;
-
-		if (!create_temporary_dib(windc, width, height, hbm, bits))
-			hbm = NULL;
-
-		ReleaseDC(NULL, windc);
-	}
-	if (hbm == NULL)
-		return DNULL;
-	Pixmap pm = new _Drawable;
-	pm->type = DC_BITMAP;
-	pm->handle.pixmap = (MCSysBitmapHandle)hbm;
-	return pm;
-}
-
-bool MCScreenDC::lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride)
-{
-	BITMAP t_bitmap;
-
-	GetObjectA(p_pixmap -> handle . pixmap, sizeof(BITMAP), &t_bitmap);
-	if (t_bitmap . bmBits == NULL)
-		return false;
-
-	r_data = t_bitmap . bmBits;
-	r_stride = t_bitmap . bmWidthBytes;
-
-	return true;
-}
-
-void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride)
-{
-}
-
-Pixmap MCScreenDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-	HBITMAP hbm = CreateBitmap(width, height, 1, 1, bits);
-	if (hbm == NULL)
-		return DNULL;
-	Pixmap pm = new _Drawable;
-	pm->type = DC_BITMAP;
-	pm->handle.pixmap = (MCSysBitmapHandle)hbm;
-	return pm;
-}
-
-Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
+bool MCScreenDC::device_getwindowgeometry(Window w, MCRectangle &drect)
 {//get the client window's geometry in screen coord
 	if (w == DNULL || w->handle.window == 0)
-		return False;
+		return false;
 	RECT wrect;
 	GetClientRect((HWND)w->handle.window, &wrect);
 	POINT p;
@@ -688,22 +625,7 @@ Boolean MCScreenDC::getwindowgeometry(Window w, MCRectangle &drect)
 	drect.y = (int2)p.y;
 	drect.width = (uint2)(wrect.right - wrect.left);
 	drect.height = (uint2)(wrect.bottom - wrect.top);
-	return True;
-}
-
-Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
-{
-	if (p != DNULL)
-	{
-		BITMAP bm;
-		if (!GetObjectA(p->handle.pixmap, sizeof(BITMAP), &bm))
-			return False;
-		w = (uint2)bm.bmWidth;
-		h = (uint2)bm.bmHeight;
-		d = bm.bmBitsPixel;
-		return True;
-	}
-	return False;
+	return true;
 }
 
 void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
@@ -757,300 +679,6 @@ void MCScreenDC::copyarea(Drawable s, Drawable d, int2 depth, int2 sx, int2 sy,
 	}
 }
 
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy,
-                           uint2 sw, uint2 sh, int2 dx, int2 dy,
-                           uint4 rop, uint4 pixel)
-{
-	HDC t_src_dc, t_dst_dc;
-	HGDIOBJ t_old_src, t_old_dst;
-
-	if (s == nil || d == nil)
-		return;
-	
-	if (s -> type == DC_WINDOW)
-		t_src_dc = GetDC((HWND)s -> handle . window); // Released
-	else
-		t_old_src = SelectObject(f_src_dc, s -> handle . pixmap), t_src_dc = f_src_dc;
-
-	if (d -> type == DC_WINDOW)
-		t_dst_dc = GetDC((HWND)s -> handle . window); // Released
-	else
-		t_old_dst = SelectObject(f_dst_dc, d -> handle . pixmap), t_dst_dc = f_dst_dc;
-
-	int t_old_mode;
-	t_old_mode = SetBkMode(f_dst_dc, OPAQUE);
-	if (rop == GXand)
-		MaskBlt(t_dst_dc, dx, dy, sw, sh, t_dst_dc, dx, dy, (HBITMAP)s->handle.pixmap, sx, sy, MAKEROP4(BLACKNESS, SRCCOPY));
-	else
-	{
-		// MW-2011-07-15: [[ COLOR ]] The 'pixel' field of MCColor is now 0xXXRRGGBB
-		//   universally. As Win32 uses 0xXXBBGGRR, we must flip.
-		SetTextColor(t_dst_dc, (pixel & 0x00ff00) | ((pixel & 0x0000ff) << 16) | ((pixel & 0xff0000) >> 16));
-		BitBlt(t_dst_dc, dx, dy, sw, sh, t_src_dc, sx, sy, image_inks[rop]);
-		SetTextColor(t_dst_dc, white_pixel . pixel);
-	}
-	SetBkMode(f_dst_dc, t_old_mode);
-
-	if (d -> type == DC_WINDOW)
-		ReleaseDC((HWND)d -> handle . window, t_dst_dc);
-	else
-		SelectObject(f_dst_dc, t_old_dst);
-
-	if (s -> type == DC_WINDOW)
-		ReleaseDC((HWND)s -> handle . window, t_src_dc);
-	else
-		SelectObject(f_src_dc, t_old_src);
-}
-
-MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height, Boolean set, uint1 value, Boolean shm, Boolean forceZ)
-{
-	if (depth == 0)
-		depth = getdepth();
-	if (depth == 24)
-		depth = 32;
-
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = (uint1)depth;
-	image->red_mask = image->green_mask = image->blue_mask
-	                                      = depth == 1 || depth == getdepth() ? 0x00 : 0xFF;
-	image->data = NULL;
-	image->bm = NULL;
-
-	BITMAPINFO *bmi = NULL;
-	if (depth < 16)
-	{
-		if (depth == 1)
-		{
-			bmi = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER)
-			                             + 2 * sizeof(RGBQUAD)];
-			memset(bmi, 0, sizeof(BITMAPINFOHEADER));
-			bmi->bmiColors[0].rgbRed = bmi->bmiColors[0].rgbGreen
-			                           = bmi->bmiColors[0].rgbBlue = bmi->bmiColors[0].rgbReserved
-			                                                         = bmi->bmiColors[1].rgbReserved = 0;
-			bmi->bmiColors[1].rgbRed = bmi->bmiColors[1].rgbGreen
-			                           = bmi->bmiColors[1].rgbBlue = 0xFF;
-		}
-		else
-		{
-			uint2 cells = MCU_min(1L << depth, ncolors);
-			bmi = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER)
-			                             + cells * sizeof(uint2)];
-			memset(bmi, 0, sizeof(BITMAPINFOHEADER));
-			uint2 *dptr = (uint2 *)(&bmi->bmiColors[0]);
-			if (depth == 1)
-			{
-				*dptr++ = 0;
-				*dptr = 0xFF;
-			}
-			else
-			{
-				uint2 i;
-				for (i = 0 ; i < cells ; i++)
-					*dptr++ = i;
-			}
-		}
-		bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		bmi->bmiHeader.biCompression = BI_RGB;
-	}
-	else
-	{
-		bmi = (BITMAPINFO *)new char[sizeof(BITMAPV4HEADER)];
-		memset(bmi, 0, sizeof(BITMAPV4HEADER));
-		bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		bmi->bmiHeader.biCompression = BI_BITFIELDS;
-		BITMAPV4HEADER *b4 = (BITMAPV4HEADER *)bmi;
-		if (depth == getdepth())
-		{
-			b4->bV4RedMask = vis->red_mask;
-			b4->bV4GreenMask = vis->green_mask;
-			b4->bV4BlueMask = vis->blue_mask;
-		}
-		else
-		{
-			b4->bV4RedMask = 0xFF0000;
-			b4->bV4GreenMask = 0xFF00;
-			b4->bV4BlueMask = 0xFF;
-		}
-	}
-	bmi->bmiHeader.biWidth = width;
-	bmi->bmiHeader.biHeight = -height;
-	bmi->bmiHeader.biPlanes = 1;
-	bmi->bmiHeader.biBitCount = depth;
-	bmi->bmiHeader.biSizeImage = image->bytes_per_line * height;
-
-	UINT iusage = DIB_RGB_COLORS;
-
-	image->bm = (MCSysBitmapHandle)CreateDIBSection(f_dst_dc, bmi, iusage,
-	                             (void **)&image->data, NULL, 0);
-	delete bmi;
-
-	if (image->data == NULL || image->bm == NULL)
-		image->data = new char[image->bytes_per_line * height];
-	if (set)
-	{
-		uint4 bytes = image->bytes_per_line * height;
-		memset(image->data, value, bytes);
-	}
-	return image;
-}
-
-void MCScreenDC::destroyimage(MCBitmap *image)
-{
-	if (image->bm == NULL)
-		delete image->data;
-	else
-		DeleteObject(image->bm);
-	delete image;
-}
-
-MCBitmap *MCScreenDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = createimage(source->depth, source->width,
-	                              source->height, 0, 0, False, False);
-	uint4 bytes = image->bytes_per_line * image->height;
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
-void MCScreenDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy,
-                          int2 dx, int2 dy, uint2 w, uint2 h)
-{
-	// Win32s doesn't support BitBlt for DIBs, and it's broken
-	// in 8-bit mode in Windows 98
-	HDC t_dst_dc;
-	HGDIOBJ t_old_dst;
-	
-	if (dest == nil)
-		return;
-
-	if (dest -> type == DC_WINDOW)
-		t_dst_dc = GetDC((HWND)dest -> handle . window);
-	else
-	{
-		t_dst_dc = f_dst_dc;
-		t_old_dst = SelectObject(f_dst_dc, dest -> handle . pixmap);
-	}
-
-	if (source->bm == NULL)
-	{
-		BITMAPINFO *bmi = NULL;
-		if (source->depth < 16)
-		{
-			if (source->depth == 1)
-			{
-				bmi = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER)
-				                             + 2 * sizeof(RGBQUAD)];
-				memset(bmi, 0, sizeof(BITMAPINFOHEADER));
-				bmi->bmiColors[0].rgbRed = bmi->bmiColors[0].rgbGreen
-				                           = bmi->bmiColors[0].rgbBlue = bmi->bmiColors[0].rgbReserved
-				                                                         = bmi->bmiColors[1].rgbReserved = 0;
-				bmi->bmiColors[1].rgbRed = bmi->bmiColors[1].rgbGreen
-				                           = bmi->bmiColors[1].rgbBlue = 0xFF;
-			}
-			else
-			{
-				uint2 cells = MCU_min(1L << source->depth, ncolors);
-				bmi = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER)
-				                             + cells * sizeof(uint2)];
-				memset(bmi, 0, sizeof(BITMAPINFOHEADER));
-				uint2 *dptr = (uint2 *)(&bmi->bmiColors[0]);
-				if (source->depth == 1)
-				{
-					*dptr++ = 0;
-					*dptr = 0xFF;
-				}
-				else
-				{
-					uint2 i;
-					for (i = 0 ; i < cells ; i++)
-						*dptr++ = i;
-				}
-			}
-		}
-		else
-		{
-			bmi = (BITMAPINFO *)new char[sizeof(BITMAPINFOHEADER)];
-			memset(bmi, 0, sizeof(BITMAPINFOHEADER));
-		}
-		bmi->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-		bmi->bmiHeader.biWidth = source->width;
-		bmi->bmiHeader.biHeight = source->height;
-		bmi->bmiHeader.biPlanes = 1;
-		bmi->bmiHeader.biBitCount = source->depth;
-		bmi->bmiHeader.biCompression = BI_RGB;
-		bmi->bmiHeader.biSizeImage = source->bytes_per_line * source->height;
-		UINT iusage = DIB_RGB_COLORS;
-		bmi->bmiHeader.biHeight = -source->height;
-
-		SetDIBitsToDevice(t_dst_dc, dx, dy, w, h, sx, sy, sx, source->height, source->data, bmi, iusage);
-		delete bmi;
-		if (source->depth == 1)
-			BitBlt(t_dst_dc, dx, dy, w, h, f_dst_dc, dx, dy, DSTINVERT);
-	}
-	else
-	{
-		HBITMAP obm = (HBITMAP)SelectObject(f_src_dc, source->bm);
-		BitBlt(t_dst_dc, dx, dy, w, h, f_src_dc, sx, sy, SRCCOPY);
-		SelectObject(f_src_dc, obm);
-	}
-
-	if (dest -> type == DC_WINDOW)
-		ReleaseDC((HWND)dest -> handle . window, t_dst_dc);
-	else
-		SelectObject(f_dst_dc, t_old_dst);
-}
-
-MCBitmap *MCScreenDC::getimage(Drawable s, int2 x, int2 y, uint2 w, uint2 h, Boolean shm)
-{
-	MCBitmap *image = NULL;
-	if (s == DNULL)
-		s = getroot();
-	if (s->type == DC_WINDOW)
-	{
-		image = createimage(getdepth(), w, h, False, 0, True, True);
-		HBITMAP odbm = (HBITMAP)SelectObject(f_dst_dc, image->bm);
-		HDC t_dc;
-		t_dc = GetDC((HWND)s -> handle . window); // Released
-		BitBlt(f_dst_dc, 0, 0, w, h, t_dc, x, y, SRCCOPY);
-		ReleaseDC((HWND)s -> handle . window, t_dc);
-		SelectObject(f_dst_dc, odbm);
-	}
-	else
-	{
-		uint2 bw, bh, d;
-		
-		getpixmapgeometry(s, bw, bh, d);
-
-		image = createimage(d, w, h, False, 0, True, True);
-
-		HBITMAP odbm = (HBITMAP)SelectObject(f_dst_dc, image->bm);
-		HBITMAP osbm = (HBITMAP)SelectObject(f_src_dc, s->handle.pixmap);
-
-		BitBlt(f_dst_dc, 0, 0, w, h, f_src_dc, x, y, SRCCOPY);
-
-		SelectObject(f_src_dc, osbm);
-		SelectObject(f_dst_dc, odbm);
-	}
-	return image;
-}
-
 static void fixdata(uint4 *bits, uint2 width, uint2 height)
 {
 	uint4 mask = width == 16 ? 0xFFFF0000 : 0xFF000000;
@@ -1067,14 +695,6 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 			return (uint4)(d->handle.window);
 		else
 			return (uint4)(d->handle.pixmap);
-}
-
-Boolean MCScreenDC::uint4topixmap(uint4 id, Pixmap &p)
-{
-	p = new _Drawable;
-	p->type = DC_BITMAP;
-	p->handle.pixmap = (MCSysBitmapHandle)id;
-	return True;
 }
 
 Boolean MCScreenDC::uint4towindow(uint4 id, Window &w)
@@ -1142,7 +762,6 @@ Window MCScreenDC::getroot()
 	return mydrawable;
 }
 
-MCBitmap *snapimage;
 static Boolean snapdone;
 static Boolean snapcancelled;
 static Boolean rubbering;
@@ -1183,7 +802,8 @@ static bool WindowsIsCompositionEnabled(void)
 	return t_enabled != FALSE;
 }
 
-MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
+bool create_temporary_dib(HDC p_dc, uint4 p_width, uint4 p_height, HBITMAP& r_bitmap, void*& r_bits);
+MCImageBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
                                const char *displayname)
 {
 	bool t_is_composited;
@@ -1241,7 +861,8 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 		}
 		r = snaprect;
 	}
-	MCBitmap *newimage = NULL;
+	HBITMAP newimage = NULL;
+	void *t_bits = nil;
 	if (!snapcancelled)
 	{
 		if (r.x == -32768)
@@ -1282,10 +903,9 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 		r = MCU_clip_rect(r, t_virtual_viewport . x, t_virtual_viewport . y, t_virtual_viewport . width, t_virtual_viewport . height);
 		if (r.width != 0 && r.height != 0)
 		{
-			snapimage = createimage(32, r.width, r.height, False, 0, False, False);
-			if (snapimage != NULL)
+			if (create_temporary_dib(snapdesthdc, r.width, r.height, newimage, t_bits))
 			{
-				HBITMAP obm = (HBITMAP)SelectObject(snapdesthdc, snapimage->bm);
+				HBITMAP obm = (HBITMAP)SelectObject(snapdesthdc, newimage);
 				
 				// MW-2012-09-19: [[ Bug 4173 ]] Add the 'CAPTUREBLT' flag to make sure
 				//   layered windows are included.
@@ -1297,21 +917,35 @@ MCBitmap *MCScreenDC::snapshot(MCRectangle &r, uint4 window,
 						   snaphdc, r.x - t_virtual_viewport . x, r.y - t_virtual_viewport . y, CAPTUREBLT | SRCCOPY);
 				}
 				SelectObject(snapdesthdc, obm);
-				snapimage->red_mask = 0xFF;
-				newimage = snapimage;
-				snapimage = NULL;
 			}
 		}
 	}
 	SetWindowPos(hwndsnap, HWND_TOPMOST,
-				 0, 0, getwidth(), getheight(), SWP_HIDEWINDOW
+				 0, 0, device_getwidth(), device_getheight(), SWP_HIDEWINDOW
 				 | SWP_DEFERERASE | SWP_NOREDRAW);
 	if (t_is_composited)
 		ReleaseDC(NULL, snaphdc);
 	else
 		ReleaseDC(hwndsnap, snaphdc);
 	DestroyWindow(hwndsnap);
-	return newimage;
+
+	MCImageBitmap *t_bitmap = nil;
+	if (newimage != NULL)
+	{
+		/* UNCHECKED */ MCImageBitmapCreate(r.width, r.height, t_bitmap);
+		BITMAPINFOHEADER t_out_fmt;
+		MCMemoryClear(&t_out_fmt, sizeof(BITMAPINFOHEADER));
+		t_out_fmt.biSize = sizeof(BITMAPINFOHEADER);
+		t_out_fmt.biWidth = r.width;
+		t_out_fmt.biHeight = -(int32_t)r.height;
+		t_out_fmt.biPlanes = 1;
+		t_out_fmt.biBitCount = 32;
+		t_out_fmt.biCompression = BI_RGB;
+		GetDIBits(snapdesthdc, newimage, 0, r.height, t_bitmap->data, (BITMAPINFO*)&t_out_fmt, DIB_RGB_COLORS);
+		DeleteObject(newimage);
+		MCImageBitmapSetAlphaValue(t_bitmap, 0xFF);
+	}
+	return t_bitmap;
 }
 
 LRESULT CALLBACK MCSnapshotWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
@@ -1443,179 +1077,120 @@ void MCScreenDC::hidetaskbar()
 }
 
 // MW-2006-05-26: [[ Bug 3642 ]] Changed global allocation routines to use malloc
-HRGN MCScreenDC::PixmapToRegion(Pixmap p)
+HRGN MCScreenDC::BitmapToRegion(MCImageBitmap *p_bitmap)
 {
 	HRGN hRgn = NULL;
-	COLORREF cTransparentColor = 0xFFFFFF;
-	HBITMAP hBmp = (HBITMAP)p->handle.pixmap;
-	COLORREF cTolerance = 0x101010;
-	if (hBmp)
+
+	if (p_bitmap)
 	{
-		// Create a memory DC inside which we will scan the bitmap content
-		HDC hMemDC = CreateCompatibleDC(NULL);
-		if (hMemDC)
-		{
-			// Get bitmap size
-			BITMAP bm;
-			GetObjectA(hBmp, sizeof(bm), &bm);
-
-			// Create a 32 bits depth bitmap and select it into the memory DC
-			BITMAPINFOHEADER bmi = {
-			                           sizeof(BITMAPINFOHEADER), bm.bmWidth, bm.bmHeight, 1, 32, BI_RGB,
-			                           0, 0, 0, 0, 0 };
-			VOID * pbits32;
-			HBITMAP hbm32 = CreateDIBSection(hMemDC, (BITMAPINFO *)&bmi,
-			                                 DIB_RGB_COLORS, &pbits32, NULL, 0);
-			if (hbm32)
-			{
-				HBITMAP holdBmp = (HBITMAP)SelectObject(hMemDC, hbm32);
-				HDC hDC = CreateCompatibleDC(hMemDC);
-				if (hDC)
-				{
-					// Get how many bytes per row we have for the bitmap bits (rounded up
-					// to 32 bits)
-					BITMAP bm32;
-					GetObjectA(hbm32, sizeof(bm32), &bm32);
-					while (bm32.bmWidthBytes % 4)
-						bm32.bmWidthBytes++;
-
-					// Copy the bitmap into the memory DC
-					HBITMAP holdBmp = (HBITMAP)SelectObject(hDC, hBmp);
-					BitBlt(hMemDC, 0, 0, bm.bmWidth, bm.bmHeight, hDC, 0, 0, SRCCOPY);
-					// For better performances, we will use the ExtCreateRegion() function
-					// to create the region. This function take a RGNDATA structure on
-					// entry. We will add rectangles by amount of ALLOC_UNIT number in
-					// this structure.
+		// For better performances, we will use the ExtCreateRegion() function
+		// to create the region. This function take a RGNDATA structure on
+		// entry. We will add rectangles by amount of ALLOC_UNIT number in
+		// this structure.
 #define ALLOC_UNIT 100
 
-					DWORD maxRects = ALLOC_UNIT;
-					RGNDATA *pData;
-					pData = (RGNDATA *)malloc(sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
-					if (pData == NULL)
-						goto no_mem_error;
+		DWORD maxRects = ALLOC_UNIT;
+		RGNDATA *pData;
+		pData = (RGNDATA *)malloc(sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
+		if (pData == NULL)
+			goto no_mem_error;
 
-					pData->rdh.dwSize = sizeof(RGNDATAHEADER);
-					pData->rdh.iType = RDH_RECTANGLES;
-					pData->rdh.nCount = pData->rdh.nRgnSize = 0;
-					SetRect(&pData->rdh.rcBound, MAXLONG, MAXLONG, 0, 0);
+		pData->rdh.dwSize = sizeof(RGNDATAHEADER);
+		pData->rdh.iType = RDH_RECTANGLES;
+		pData->rdh.nCount = pData->rdh.nRgnSize = 0;
+		SetRect(&pData->rdh.rcBound, MAXLONG, MAXLONG, 0, 0);
 
-					// Keep on hand highest and lowest values for the "transparent" pixels
-					BYTE lr = GetRValue(cTransparentColor);
-					BYTE lg = GetGValue(cTransparentColor);
-					BYTE lb = GetBValue(cTransparentColor);
-					BYTE hr = MCU_min(0xff, lr + GetRValue(cTolerance));
-					BYTE hg = MCU_min(0xff, lg + GetGValue(cTolerance));
-					BYTE hb = MCU_min(0xff, lb + GetBValue(cTolerance));
-
-					// Scan each bitmap row from bottom to top (the bitmap is
-					// inverted vertically)
-					BYTE *p32 = (BYTE *)bm32.bmBits + (bm32.bmHeight - 1)
-					            * bm32.bmWidthBytes;
-					for (int y = 0; y < bm.bmHeight; y++)
-					{
-						// Scan each bitmap pixel from left to right
-						for (int x = 0; x < bm.bmWidth; x++)
-						{
-							// Search for a continuous range of "non transparent pixels"
-							int x0 = x;
-							LONG *p = (LONG *)p32 + x;
-							while (x < bm.bmWidth)
-							{
-								BYTE b = GetRValue(*p);
-								if (b >= lr && b <= hr)
-								{
-									b = GetGValue(*p);
-									if (b >= lg && b <= hg)
-									{
-										b = GetBValue(*p);
-										if (b >= lb && b <= hb)
-											// This pixel is "transparent"
-											break;
-									}
-								}
-								p++;
-								x++;
-							}
-
-							if (x > x0)
-							{
-								// Add the pixels (x0, y) to (x, y+1) as a new
-								// rectangle in the region
-								if (pData->rdh.nCount >= maxRects)
-								{
-									maxRects += ALLOC_UNIT;
-									pData = (RGNDATA *)realloc(pData, sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
-									if (pData == NULL)
-										goto no_mem_error;
-								}
-								RECT *pr = (RECT *)&pData->Buffer;
-								SetRect(&pr[pData->rdh.nCount], x0, y, x, y+1);
-								if (x0 < pData->rdh.rcBound.left)
-									pData->rdh.rcBound.left = x0;
-								if (y < pData->rdh.rcBound.top)
-									pData->rdh.rcBound.top = y;
-								if (x > pData->rdh.rcBound.right)
-									pData->rdh.rcBound.right = x;
-								if (y+1 > pData->rdh.rcBound.bottom)
-									pData->rdh.rcBound.bottom = y+1;
-								pData->rdh.nCount++;
-
-								// On Windows98, ExtCreateRegion() may fail if the
-								// number of rectangles is too large (ie: >
-								// 4000). Therefore, we have to create the region by
-								// multiple steps.
-								if (pData->rdh.nCount == 2000)
-								{
-									HRGN h = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER)
-									                         + (sizeof(RECT) * maxRects), pData);
-									if (hRgn)
-									{
-										CombineRgn(hRgn, hRgn, h, RGN_OR);
-										DeleteObject(h);
-									}
-									else
-										hRgn = h;
-									pData->rdh.nCount = 0;
-									SetRect(&pData->rdh.rcBound, MAXLONG, MAXLONG, 0, 0);
-								}
-							}
-						}
-
-						// Go to next row (remember, the bitmap is inverted vertically)
-						p32 -= bm32.bmWidthBytes;
-					}
-
-					// Create or extend the region with the remaining rectangles
-					HRGN h = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER)
-					                         + (sizeof(RECT) * maxRects), pData);
-					if (hRgn)
-					{
-						CombineRgn(hRgn, hRgn, h, RGN_OR);
-						DeleteObject(h);
-					}
-					else
-						hRgn = h;
-
-					// Clean up
-no_mem_error:
-					if (pData != NULL)
-						free(pData);
-					else if (hRgn != NULL)
-					{
-						DeleteObject(hRgn);
-						hRgn = NULL;
-					}
-
-					SelectObject(hDC, holdBmp);
-					DeleteDC(hDC);
+		// Scan each bitmap row from top to bottom
+		uint8_t *t_src_ptr = (uint8_t*)p_bitmap->data;
+		for (int y = 0; y < p_bitmap->height; y++)
+		{
+			uint32_t *t_src_row = (uint32_t*)t_src_ptr;
+			// Scan each bitmap pixel from left to right
+			for (int x = 0; x < p_bitmap->width; x++)
+			{
+				// Search for a continuous range of "non transparent pixels"
+				int x0 = x;
+				uint32_t *t_src_pixel = t_src_row + x;
+				while (x < p_bitmap->width)
+				{
+					uint8_t t_alpha = *t_src_pixel++ >> 24;
+					if (t_alpha == 0)
+						// This pixel is "transparent"
+						break;
+					x++;
 				}
 
-				DeleteObject(SelectObject(hMemDC, holdBmp));
+				if (x > x0)
+				{
+					// Add the pixels (x0, y) to (x, y+1) as a new
+					// rectangle in the region
+					if (pData->rdh.nCount >= maxRects)
+					{
+						maxRects += ALLOC_UNIT;
+						pData = (RGNDATA *)realloc(pData, sizeof(RGNDATAHEADER) + (sizeof(RECT) * maxRects));
+						if (pData == NULL)
+							goto no_mem_error;
+					}
+					RECT *pr = (RECT *)&pData->Buffer;
+					SetRect(&pr[pData->rdh.nCount], x0, y, x, y+1);
+					if (x0 < pData->rdh.rcBound.left)
+						pData->rdh.rcBound.left = x0;
+					if (y < pData->rdh.rcBound.top)
+						pData->rdh.rcBound.top = y;
+					if (x > pData->rdh.rcBound.right)
+						pData->rdh.rcBound.right = x;
+					if (y+1 > pData->rdh.rcBound.bottom)
+						pData->rdh.rcBound.bottom = y+1;
+					pData->rdh.nCount++;
+
+					// On Windows98, ExtCreateRegion() may fail if the
+					// number of rectangles is too large (ie: >
+					// 4000). Therefore, we have to create the region by
+					// multiple steps.
+					if (pData->rdh.nCount == 2000)
+					{
+						HRGN h = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER)
+						                         + (sizeof(RECT) * maxRects), pData);
+						if (hRgn)
+						{
+							CombineRgn(hRgn, hRgn, h, RGN_OR);
+							DeleteObject(h);
+						}
+						else
+							hRgn = h;
+						pData->rdh.nCount = 0;
+						SetRect(&pData->rdh.rcBound, MAXLONG, MAXLONG, 0, 0);
+					}
+				}
 			}
 
-			DeleteDC(hMemDC);
+			// Go to next row
+			t_src_ptr += p_bitmap->stride;
+		}
+
+		// Create or extend the region with the remaining rectangles
+		HRGN h = ExtCreateRegion(NULL, sizeof(RGNDATAHEADER)
+		                         + (sizeof(RECT) * maxRects), pData);
+		if (hRgn)
+		{
+			CombineRgn(hRgn, hRgn, h, RGN_OR);
+			DeleteObject(h);
+		}
+		else
+			hRgn = h;
+
+		// Clean up
+no_mem_error:
+		if (pData != NULL)
+			free(pData);
+		else if (hRgn != NULL)
+		{
+			DeleteObject(hRgn);
+			hRgn = NULL;
 		}
 	}
+
+
 	return hRgn;
 }
 
@@ -1683,7 +1258,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 		InvalidateRect(backdrop_window, NULL, TRUE);
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCGImageRef p_pattern, MCImage *p_badge)
 {
 	if (backdrop_badge != p_badge || backdrop_pattern != p_pattern || backdrop_colour . red != p_colour . red || backdrop_colour . green != p_colour . green || backdrop_colour . blue != p_colour . blue)
 	{
@@ -1741,29 +1316,70 @@ void MCScreenDC::finalisebackdrop(void)
 
 void MCScreenDC::redrawbackdrop(void)
 {
-	_Drawable t_drawable;		
-	MCContext *t_context;
-	t_drawable . type = DC_WINDOW;
-	t_drawable . handle . window = (MCSysWindowHandle)backdrop_window;
-	t_context = MCscreen -> createcontext(&t_drawable);
+	bool t_success = true;
 
-	t_context -> setforeground(backdrop_colour);
+	RECT t_winrect;
+	HBITMAP t_bitmap = nil;
+	void *t_bits;
+	MCGContextRef t_context = nil;
+	uint32_t t_width, t_height;
 
-	if (backdrop_pattern != NULL)
-		t_context -> setfillstyle(FillTiled, backdrop_pattern, 0, 0);
-	else
-		t_context -> setfillstyle(FillSolid, NULL, 0, 0);
+	GetClientRect(backdrop_window, &t_winrect);
+	t_width = t_winrect.right - t_winrect.left;
+	t_height = t_winrect.bottom - t_winrect.top;
 
-	t_context -> fillrect(t_context -> getclip());
+	t_success = create_temporary_dib(getdsthdc(), t_width, t_height, t_bitmap, t_bits);
+	if (t_success)
+		t_success = MCGContextCreateWithPixels(t_width, t_height, t_width * sizeof(uint32_t), t_bits, true, t_context);
 
-	if (backdrop_badge != NULL && backdrop_hard)
+	if (t_success)
 	{
-		MCRectangle t_rect;
-		t_rect = backdrop_badge -> getrect();
-		backdrop_badge -> drawme(t_context, 0, 0, t_rect . width, t_rect . height, 32, getheight() - 32 - t_rect . height);
+		if (backdrop_pattern != nil)
+			MCGContextSetFillPattern(t_context, backdrop_pattern, MCGAffineTransformMakeIdentity(), kMCGImageFilterNearest);
+		else
+			MCGContextSetFillRGBAColor(t_context, backdrop_colour.red / 65535.0, backdrop_colour.green / 65535.0, backdrop_colour.blue / 65535.0, 1.0);
+		MCGContextAddRectangle(t_context, MCGRectangleMake(0, 0, t_width, t_height));
+		MCGContextFill(t_context);
+
+		if (backdrop_badge != NULL && backdrop_hard)
+		{
+			MCContext *t_gfxcontext = nil;
+			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+
+			if (t_success)
+			{
+				MCRectangle t_rect;
+				t_rect = backdrop_badge -> getrect();
+				backdrop_badge -> drawme(t_gfxcontext, 0, 0, t_rect . width, t_rect . height, 32, getheight() - 32 - t_rect . height);
+			}
+
+			delete t_gfxcontext;
+		}
 	}
 
-	MCscreen -> freecontext(t_context);
+	MCGContextRelease(t_context);
+
+	// draw to backdrop window
+	HDC t_dc = nil;
+	HDC t_src_dc = nil;
+	if (t_success)
+		t_success = nil != (t_dc = GetDC(backdrop_window));
+	if (t_success)
+		t_success = nil != (t_src_dc = getsrchdc());
+
+	if (t_success)
+	{
+		HGDIOBJ t_old_obj;
+		t_old_obj = SelectObject(t_src_dc, t_bitmap);
+		BitBlt(t_dc, 0, 0, t_width, t_height, t_src_dc, 0, 0, SRCCOPY);
+		SelectObject(t_src_dc, t_old_obj);
+	}
+
+	if (t_dc != nil)
+		ReleaseDC(backdrop_window, t_dc);
+
+	if (t_bitmap != nil)
+		DeleteObject(t_bitmap);
 }
 
 void MCScreenDC::enactraisewindows(void)

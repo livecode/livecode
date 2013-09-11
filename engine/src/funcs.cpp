@@ -61,6 +61,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "font.h"
 
 #include "core.h"
+#include "resolution.h"
 
 #define GZIP_HEAD_CRC     0x02 /* bit 1 set: header CRC present */
 #define GZIP_EXTRA_FIELD  0x04 /* bit 2 set: extra field present */
@@ -4371,7 +4372,8 @@ Exec_stat MCScreenLoc::eval(MCExecPoint &ep)
 #ifdef /* MCScreenLoc */ LEGACY_EXEC
 	MCDisplay const *t_displays;
 	MCscreen -> getdisplays(t_displays, false);
-	ep.setpoint(t_displays -> viewport . x + (t_displays -> viewport . width >> 1), t_displays -> viewport . y + (t_displays -> viewport . height >> 1));
+	MCRectangle t_viewport = t_displays -> viewport;
+	ep.setpoint(t_viewport . x + (t_viewport . width / 2), t_viewport . y + (t_viewport . height / 2));
 	return ES_NORMAL;
 #endif /* MCScreenLoc */
 }
@@ -4406,7 +4408,7 @@ void MCScreenRect::evaluate(MCExecPoint& ep, bool p_working, bool p_plural, bool
 	{
 		char t_buffer[U2L * 4 + 4];
 		MCRectangle t_rectangle;
-		t_rectangle =  p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
+		t_rectangle = p_working ? t_displays[t_index] . workarea : t_displays[t_index] . viewport;
 		sprintf(t_buffer, "%d,%d,%d,%d", t_rectangle . x, t_rectangle . y,
 						t_rectangle . x + t_rectangle . width,
 						t_rectangle . y + t_rectangle . height);

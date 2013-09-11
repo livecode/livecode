@@ -40,6 +40,10 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "tilecache.h"
 #include "context.h"
 
+#include "graphicscontext.h"
+
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // This method resets the layer-related attribtues to defaults and marks them
@@ -447,7 +451,14 @@ void MCControl::layer_contentoriginchanged(int32_t p_dx, int32_t p_dy)
 
 	// Scroll the sprite - note that this method is only called if
 	// layer_isscrolling() is true, which is only possible if we have a tilecache.
-	MCTileCacheScrollSprite(t_tilecache, m_layer_id, p_dx, p_dy);
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCGFloat t_dx, t_dy;
+	t_dx = p_dx * t_scale;
+	t_dy = p_dy * t_scale;
+	MCTileCacheScrollSprite(t_tilecache, m_layer_id, t_dx, t_dy);
 }
 
 void MCControl::layer_scrolled(void)
@@ -491,7 +502,13 @@ void MCControl::layer_dirtycontentrect(const MCRectangle& p_updated_rect, bool p
 	// Note that this method is only called if layer_isscrolling() is true, which is only
 	// possible if we have a tilecache.
 	if (m_layer_id != 0)
-		MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_offset_rect(p_updated_rect, -t_content_rect . x, -t_content_rect . y));
+	{
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_device_updated_rect, t_device_content_rect;
+		t_device_updated_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_updated_rect));
+		t_device_content_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_content_rect));
+		MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_offset_rect(t_device_updated_rect, -t_device_content_rect . x, -t_device_content_rect . y));
+	}
 		
 	// Add the rect to the update region - but only if instructed (update_card will be
 	// false if the object was invisible).
@@ -536,6 +553,10 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 	MCTileCacheRef t_tilecache;
 	t_tilecache = t_control -> getstack() -> gettilecache();
 
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_dirty_rect));
+	
 	// Notify any tilecache of the changes.
 	if (t_tilecache != nil)
 	{
@@ -549,13 +570,18 @@ void MCControl::layer_dirtyeffectiverect(const MCRectangle& p_effective_rect, bo
 		{
 			// Non-dynamic layers are scenery in the tilecache, their rect is in
 			// canvas co-ords.
-			MCTileCacheUpdateScenery(t_tilecache, t_control -> m_layer_id, t_dirty_rect);
+			MCTileCacheUpdateScenery(t_tilecache, t_control -> m_layer_id, t_device_rect);
 		}
 		else
 		{
 			// Dynamic layers are sprites in the tilecache, their rect is in
 			// sprite co-ords.
-			MCTileCacheUpdateSprite(t_tilecache, t_control -> m_layer_id, MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y));
+			MCRectangle t_offset_rect;
+			t_offset_rect = MCU_offset_rect(t_dirty_rect, -t_control -> rect . x, -t_control -> rect . y);
+			
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_offset_rect));
+			MCTileCacheUpdateSprite(t_tilecache, t_control -> m_layer_id, t_device_rect);
 		}
 	}
 
@@ -629,7 +655,12 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 		// new effective rects so that the appropriate tiles get flushed. Note
 		// that 'force_update' has no effect here as reshaping a scenery layer
 		// implicitly invalidates all tiles it touches.
-		MCTileCacheReshapeScenery(t_tilecache, m_layer_id, p_old_effective_rect, t_new_effective_rect);
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_old_device_rect, t_new_device_rect;
+		t_old_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_old_effective_rect));
+		t_new_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_new_effective_rect));
+		
+		MCTileCacheReshapeScenery(t_tilecache, m_layer_id, t_old_device_rect, t_new_device_rect);
 	}
 	else
 	{
@@ -649,7 +680,12 @@ void MCControl::layer_changeeffectiverect(const MCRectangle& p_old_effective_rec
 			else
 				t_rect = layer_getcontentrect();
 				
-			MCTileCacheUpdateSprite(t_tilecache, m_layer_id, MCU_make_rect(0, 0, t_rect . width, t_rect . height));
+			t_rect . x = t_rect . y = 0;
+			
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			MCRectangle t_device_rect;
+			t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_rect));
+			MCTileCacheUpdateSprite(t_tilecache, m_layer_id, t_device_rect);
 		}
 	}
 }
@@ -699,7 +735,10 @@ void MCCard::layer_added(MCControl *p_control, MCObjptr *p_previous, MCObjptr *p
 			return;
 		
 		// Now insert the scenery.
-		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, p_control -> geteffectiverect());
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_control->geteffectiverect()));
+		MCTileCacheInsertScenery(t_tilecache, t_before_layer_id, t_device_rect);
 
 		// Finally, set the id of the layer to that of the one before. This causes
 		// the layer to be treated 'as one' with that layer until a redraw is done.
@@ -738,7 +777,10 @@ void MCCard::layer_removed(MCControl *p_control, MCObjptr *p_previous, MCObjptr 
 		}
 
 		// Remove the scenery.
-		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), p_control -> geteffectiverect());
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_device_rect;
+		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_control->geteffectiverect()));
+		MCTileCacheRemoveScenery(t_tilecache, p_control -> layer_getid(), t_device_rect);
 		
 		// MW-2012-10-11: [[ Bug ]] Redraw glitch caused by resetting the layer id
 		//   before removing the layer.
@@ -789,7 +831,13 @@ void MCCard::layer_setviewport(int32_t p_x, int32_t p_y, int32_t p_width, int32_
 
 	// Notify any tilecache of the changes.
 	if (t_tilecache != nil)
-		MCTileCacheSetViewport(t_tilecache, MCU_make_rect(p_x, p_y, p_width, p_height));
+	{
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_user_rect, t_device_rect;
+		t_user_rect = MCRectangleMake(p_x, p_y, p_width, p_height);
+		t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_user_rect));
+		MCTileCacheSetViewport(t_tilecache, t_device_rect);
+	}
 
 	// Get the current rect, before updating it.
 	MCRectangle t_old_rect;
@@ -819,7 +867,13 @@ void MCCard::layer_selectedrectchanged(const MCRectangle& p_old_rect, const MCRe
 	t_tilecache = getstack() -> gettilecache();
 
 	if (t_tilecache != nil)
-		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, p_old_rect, p_new_rect);
+	{
+		// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+		MCRectangle t_new_device_rect, t_old_device_rect;
+		t_new_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_new_rect));
+		t_old_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_old_rect));
+		MCTileCacheReshapeScenery(t_tilecache, m_fg_layer_id, t_old_device_rect, t_new_device_rect);
+	}
 
 	layer_dirtyrect(p_old_rect);
 	layer_dirtyrect(p_new_rect);
@@ -831,6 +885,33 @@ void MCCard::layer_dirtyrect(const MCRectangle& p_dirty_rect)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+
+// IM-2013-08-21: [[ ResIndependence ]] callback wrapper function to create scaled MCContext
+// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+typedef bool (*MCTileCacheDeviceRenderCallback)(void *context, MCContext *target, const MCRectangle& region);
+static bool tilecache_device_renderer(MCTileCacheDeviceRenderCallback p_callback, void *p_context, MCGContextRef p_target, const MCRectangle &p_rectangle)
+{
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCGContextSave(p_target);
+	MCGContextScaleCTM(p_target, t_scale, t_scale);
+	
+	MCGraphicsContext *t_gfx_context;
+	/* UNCHECKED */ t_gfx_context = new MCGraphicsContext(p_target);
+	
+	MCRectangle t_user_rect;
+	t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(p_rectangle));
+	
+	bool t_success;
+	t_success = p_callback(p_context, t_gfx_context, t_user_rect);
+	
+	delete t_gfx_context;
+	
+	MCGContextRestore(p_target);
+	
+	return t_success;
+}
 
 static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
@@ -866,6 +947,11 @@ static bool testtilecache_sprite_renderer(void *p_context, MCContext *p_target, 
 	return true;
 }
 
+static bool testtilecache_device_sprite_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_sprite_renderer, p_context, p_target, p_rectangle);
+}
+
 static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target, const MCRectangle& p_rectangle)
 {
 	MCControl *t_control;
@@ -893,6 +979,11 @@ static bool testtilecache_scenery_renderer(void *p_context, MCContext *p_target,
 	return true;
 }
 
+static bool testtilecache_device_scenery_renderer(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(testtilecache_scenery_renderer, p_context, p_target, p_rectangle);
+}
+
 bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
 {
 	MCCard *t_card;
@@ -911,6 +1002,11 @@ bool MCCard::render_foreground(void *p_context, MCContext *p_target, const MCRec
 	p_target->setbackground(MCzerocolor);
 
 	return true;
+}
+
+bool device_render_foreground(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::render_foreground, p_context, p_target, p_rectangle);
 }
 
 bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRectangle& p_dirty)
@@ -934,6 +1030,11 @@ bool MCCard::render_background(void *p_context, MCContext *p_target, const MCRec
 	return true;
 }
 
+bool device_render_background(void *p_context, MCGContextRef p_target, const MCRectangle& p_rectangle)
+{
+	return tilecache_device_renderer(MCCard::render_background, p_context, p_target, p_rectangle);
+}
+
 void MCCard::render(void)
 {
 	MCTileCacheRef t_tiler;
@@ -950,7 +1051,7 @@ void MCCard::render(void)
 		t_fg_layer . is_opaque = false;
 		t_fg_layer . opacity = 255;
 		t_fg_layer . ink = GXblendSrcOver;
-		t_fg_layer . callback = render_foreground;
+		t_fg_layer . callback = device_render_foreground;
 		t_fg_layer . context = this;
 		MCTileCacheRenderScenery(t_tiler, t_fg_layer);
 		m_fg_layer_id = t_fg_layer . id;
@@ -1012,6 +1113,10 @@ void MCCard::render(void)
 				t_layer . clip = t_control -> geteffectiverect();
 			}
 
+			// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+			t_layer . region = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_layer . region));
+			t_layer . clip = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_layer . clip));
+			
 			// Now render the layer - what method we use depends on whether the
 			// layer is a sprite or not.
 			if (t_control -> layer_issprite())
@@ -1020,11 +1125,14 @@ void MCCard::render(void)
 				// layer that it was.
 				if (!t_old_is_sprite && t_layer . id != 0)
 				{
-					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_control -> geteffectiverect());
+					// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+					MCRectangle t_device_rect;
+					t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_control -> geteffectiverect()));
+					MCTileCacheRemoveScenery(t_tiler, t_layer . id, t_device_rect);
 					t_layer . id = 0;
 				}
 				
-				t_layer . callback = testtilecache_sprite_renderer;
+				t_layer . callback = testtilecache_device_sprite_renderer;
 				MCTileCacheRenderSprite(t_tiler, t_layer);
 			}
 			else
@@ -1037,7 +1145,7 @@ void MCCard::render(void)
 					t_layer . id = 0;
 				}
 
-				t_layer . callback = testtilecache_scenery_renderer;
+				t_layer . callback = testtilecache_device_scenery_renderer;
 				MCTileCacheRenderScenery(t_tiler, t_layer);
 			}
 			
@@ -1060,7 +1168,7 @@ void MCCard::render(void)
 	t_bg_layer . is_opaque = true;
 	t_bg_layer . opacity = 255;
 	t_bg_layer . ink = GXblendSrcOver;
-	t_bg_layer . callback = render_background;
+	t_bg_layer . callback = device_render_background;
 	t_bg_layer . context = this;
 	MCTileCacheRenderScenery(t_tiler, t_bg_layer);
 	m_bg_layer_id = t_bg_layer . id;
@@ -1112,7 +1220,7 @@ void MCStack::setacceleratedrendering(bool p_value)
 	MCscreen -> getdisplays(t_display, false);
 	
 	MCRectangle t_viewport;
-	t_viewport = t_display -> viewport;
+	t_viewport = t_display -> device_viewport;
 	
 	bool t_small_screen, t_medium_screen;
 	t_small_screen = MCMin(t_viewport . width, t_viewport . height) <= 480 && MCMax(t_viewport . width, t_viewport . height) <= 640;
@@ -1126,8 +1234,11 @@ void MCStack::setacceleratedrendering(bool p_value)
 		t_tile_size = 64, t_cache_limit = 64 * 1024 * 1024;
 #endif
 
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
 	MCTileCacheCreate(t_tile_size, t_cache_limit, m_tilecache);
-	MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
+	MCTileCacheSetViewport(m_tilecache, t_device_rect);
 	MCTileCacheSetCompositor(m_tilecache, t_compositor_type);
 	
 	dirtyall();

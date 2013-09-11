@@ -54,8 +54,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacksecurity.h"
 
 #include "context.h"
-
-MCBitmap *dither_image(uint2 depth, MCBitmap *image);
+#include "graphicscontext.h"
+#include "resolution.h"
 
 void MCStack::external_idle()
 {
@@ -231,12 +231,6 @@ void MCStack::uniconify()
 		resetcursor(True);
 		dirtywindowname();
 	}
-}
-
-void MCStack::position(const char *geom)
-{
-	if (MCscreen->position(geom, rect))
-		state |= CS_BEEN_MOVED;
 }
 
 Window_mode MCStack::getmode()
@@ -566,8 +560,10 @@ Boolean MCStack::takewindow(MCStack *sptr)
 
 Boolean MCStack::setwindow(Window w)
 {
-	if (!MCscreen->getwindowgeometry(window, rect))
+	MCRectangle t_rect;
+	if (!MCscreen->getwindowgeometry(window, t_rect))
 		return False;
+	rect = t_rect;
 	window = w;
 	state |= CS_FOREIGN_WINDOW;
 	return True;
@@ -1842,8 +1838,10 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		MCU_set_rect(t_rect, rel . x + rel . width / 2, rel . y + rel . height / 2, 1, 1);
 		const MCDisplay *t_display;
 		t_display = MCscreen -> getnearestdisplay(t_rect);
-		if (rel.y + rel.height + rect.height > t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE
-		        && rel.y - rect.height > t_display -> workarea . y + MENU_SPACE)
+		MCRectangle t_workarea;
+		t_workarea = t_display -> workarea;
+		if (rel.y + rel.height + rect.height > t_workarea . y + t_workarea . height - MENU_SPACE
+		        && rel.y - rect.height > t_workarea . y + MENU_SPACE)
 			positionrel(rel, OP_ALIGN_LEFT, OP_TOP);
 		else
 			positionrel(rel, OP_ALIGN_LEFT, OP_BOTTOM);
@@ -1919,8 +1917,7 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 	// "bind" the stack's rect... Or in other words, make sure its within the 
 	// screens (well viewports) working area.
 	if (!(flags & F_FORMAT_FOR_PRINTING) && !(state & CS_BEEN_MOVED))
-		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS)
-		                           || decorations & WD_TITLE), mode);
+		MCscreen->boundrect(rect, (!(flags & F_DECORATIONS) || decorations & WD_TITLE), mode);
 	
 	state |= CS_NO_FOCUS;
 	if (flags & F_DYNAMIC_PATHS)
@@ -1963,29 +1960,32 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 		MCU_set_rect(t_nearest, rect . x + rect . width / 2, rect . y + rect . height / 2, 1, 1);
 		t_display = MCscreen -> getnearestdisplay(t_nearest);
 
+		MCRectangle t_workarea;
+		t_workarea = t_display->workarea;
+		
 		// Make sure that we are not starting our menu off the top of the screen.
-		if (rect . y < t_display -> workarea . y + MENU_SPACE)
-			rect . y = t_display -> workarea . y + MENU_SPACE, oldy = rect . y;
+		if (rect . y < t_workarea . y + MENU_SPACE)
+			rect . y = t_workarea . y + MENU_SPACE, oldy = rect . y;
 
 		// Make sure that the length of the menu does not make it drop of the bottom of the screen.
-		if (rect . y + rect . height > t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE)
+		if (rect . y + rect . height > t_workarea . y + t_workarea . height - MENU_SPACE)
 		{
 			t_fullscreen_menu = true ;
-			if (rect . height > t_display -> workarea . height - ( 2 * MENU_SPACE) )
+			if (rect . height > t_workarea . height - ( 2 * MENU_SPACE) )
 			{
-				rect . y = t_display -> workarea . y + MENU_SPACE ;
-				rect . height = ( t_display -> workarea . height - ( 2 * MENU_SPACE) ) ;
+				rect . y = t_workarea . y + MENU_SPACE ;
+				rect . height = ( t_workarea . height - ( 2 * MENU_SPACE) ) ;
 			}
 			else
 			{
-				rect . y = t_display -> workarea . y + t_display -> workarea . height - MENU_SPACE - rect . height ;
+				rect . y = t_workarea . y + t_workarea . height - MENU_SPACE - rect . height ;
 				oldy = rect . y;
 			}
 		}
 
 		// Get the middle point (Y) of the work area.
 		int t_screen_mid_y ;
-		t_screen_mid_y = ( t_display -> workarea . height / 2 ) + t_display -> workarea . y ;
+		t_screen_mid_y = ( t_workarea . height / 2 ) + t_workarea . y ;
 
 		bool t_menu_downwards = ( rel.y < t_screen_mid_y ) ;
 
@@ -2010,9 +2010,9 @@ Exec_stat MCStack::openrect(const MCRectangle &rel, Window_mode wm, MCStack *par
 				int t_adjust_y ;
 				t_adjust_y = ((rect.y + rect.height) - rel.y) ;
 				rect.y -= t_adjust_y ;
-				if ( rect.y < t_display->workarea.y + MENU_SPACE ) 
+				if ( rect.y < t_workarea.y + MENU_SPACE ) 
 				{
-					rect.y = t_display -> workarea . y + MENU_SPACE ;
+					rect.y = t_workarea . y + MENU_SPACE ;
 					rect.height = rel.y ;
 				}
 			}
@@ -2401,12 +2401,15 @@ void MCStack::deactivatetilecache(void)
     MCTileCacheDeactivate(gettilecache());
 }
 
-bool MCStack::snapshottilecache(MCRectangle p_area, Pixmap& r_pixmap)
+bool MCStack::snapshottilecache(MCRectangle p_area, MCGImageRef& r_pixmap)
 {
 	if (m_tilecache == nil)
 		return false;
 	
-	return MCTileCacheSnapshot(m_tilecache, p_area, r_pixmap);
+	// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+	MCRectangle t_device_rect;
+	t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(p_area));
+	return MCTileCacheSnapshot(m_tilecache, t_device_rect, r_pixmap);
 }
 
 #endif
@@ -2415,7 +2418,10 @@ void MCStack::applyupdates(void)
 {
 	// MW-2011-09-13: [[ Effects ]] Ditch any snapshot.
 	if (m_snapshot != nil)
-		MCscreen -> freepixmap(m_snapshot);
+	{
+		MCGImageRelease(m_snapshot);
+		m_snapshot = nil;
+	}
 	
 	// Ensure the title is up to date.
 	if (getstate(CS_TITLE_CHANGED))
@@ -2463,16 +2469,38 @@ void MCStack::applyupdates(void)
 #endif
 }
 
-void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
+void MCStack::render(MCGContextRef p_context, const MCRectangle &p_rect)
+{
+	MCGraphicsContext *t_old_context = nil;
+	t_old_context = new MCGraphicsContext(p_context);
+	if (t_old_context != nil)
+		render(t_old_context, p_rect);
+	delete t_old_context;
+}
+
+void MCStack::device_redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 {
 	if (m_tilecache == nil || !MCTileCacheIsValid(m_tilecache))
 	{
 		// If there is no tilecache, or the tilecache is invalid then fetch an
 		// MCContext for the surface and render.
-		MCContext *t_context;
+		MCGContextRef t_context = nil;
 		if (p_surface -> LockGraphics(p_region, t_context))
 		{
-			render(t_context, MCRegionGetBoundingBox(p_region));
+			// p_region is in device coordinates, translate to user-space coords & ensure any fractional pixels are accounted for
+			MCGRectangle t_user_rect;
+			t_user_rect = MCGRectangleToUserSpace(MCRectangleToMCGRectangle(MCRegionGetBoundingBox(p_region)));
+			
+			MCRectangle t_rect;
+			t_rect = MCGRectangleGetIntegerBounds(t_user_rect);
+			
+			// scale user -> device space
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
+			render(t_context, t_rect);
+			
 			p_surface -> UnlockGraphics();
 		}
 	}
@@ -2485,7 +2513,7 @@ void MCStack::redrawwindow(MCStackSurface *p_surface, MCRegionRef p_region)
 
 void MCStack::takewindowsnapshot(MCStack *p_other_stack)
 {
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
 	m_snapshot = p_other_stack -> m_snapshot;
 	p_other_stack -> m_snapshot = nil;
 }
@@ -2494,7 +2522,10 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 {
 	// Dispose of any existing snapshot.
 	if (m_snapshot != nil)
-		MCscreen -> freepixmap(m_snapshot);
+	{
+		MCGImageRelease(m_snapshot);
+		m_snapshot = nil;
+	}
 
 	// If the window isn't open, or is invisible do nothing.
 	if (opened == 0 || window == NULL || !isvisible())
@@ -2515,31 +2546,51 @@ void MCStack::snapshotwindow(const MCRectangle& p_area)
 	}
 	
 	if (!snapshottilecache(t_effect_area, m_snapshot))
-	{
-		// Create a pixmap the size of the window.
-		m_snapshot = MCscreen -> createpixmap(t_effect_area . width, t_effect_area . height, 0, False);
-		if (m_snapshot == nil)
-			return;
-		
+	{	
+		bool t_success = true;
 		// Render the current content.
-		MCContext *t_context;
-		t_context = MCscreen -> createcontext(m_snapshot, True, True);
-		if (t_context != nil)
+		MCGContextRef t_context = nil;
+		MCContext *t_gfxcontext = nil;
+
+		// IM-2013-07-18: [[ ResIndependence ]] take stack snapshot at device resolution
+		// IM-2013-08-21: [[ ResIndependence ]] Align snapshots to device pixel boundaries
+		MCRectangle t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_effect_area));
+		MCRectangle t_user_rect = MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_device_rect));
+		
+		if (t_success)
+			t_success = MCGContextCreate(t_device_rect.width, t_device_rect.height, true, t_context);
+
+		if (t_success)
 		{
-			t_context -> setorigin(t_effect_area . x, t_effect_area . y);
-			t_context -> setclip(t_effect_area);
-			render(t_context, t_effect_area);
+			MCGContextTranslateCTM(t_context, -t_device_rect.x, -t_device_rect.y);
+			
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			MCGContextScaleCTM(t_context, t_scale, t_scale);
+			
+			t_success = nil != (t_gfxcontext = new MCGraphicsContext(t_context));
+		}
+
+		if (t_success)
+		{
+			t_gfxcontext -> setclip(t_user_rect);
+			render(t_gfxcontext, t_user_rect);
 			
 			if (m_window_shape != nil && !m_window_shape -> is_sharp)
 			{
-				t_context -> setclip(t_effect_area);
-				t_context -> applywindowshape(m_window_shape, t_effect_area . width, t_effect_area . height);
+				t_gfxcontext -> setclip(t_user_rect);
+				t_gfxcontext -> applywindowshape(m_window_shape, t_user_rect . width, t_user_rect . height);
 			}
 			
-			MCscreen -> freecontext(t_context);
 		}
-		else
-			MCscreen -> freepixmap(m_snapshot);
+
+		if (t_success)
+			t_success = MCGContextCopyImage(t_context, m_snapshot);
+
+		delete t_gfxcontext;
+		MCGContextRelease(t_context);
+
 	}
 	
 #ifdef _ANDROID_MOBILE
@@ -2560,6 +2611,24 @@ void MCStack::render(MCContext *p_context, const MCRectangle& p_dirty)
         clipmenu(p_context, t_clipped_visible);
     
     curcard -> draw(p_context, t_clipped_visible, false);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void MCStack::updatewindow(MCRegionRef p_region)
+{
+	MCRectangle t_update_rect;
+	t_update_rect = MCRegionGetBoundingBox(p_region);
+	
+	// IM-2013-08-01: [[ ResIndependence ]] Scale update region to device coords
+	MCRegionRef t_dev_region;
+	t_dev_region = nil;
+	/* UNCHECKED */ MCRegionCreate(t_dev_region);
+	MCRegionSetRect(t_dev_region, MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(t_update_rect)));
+	
+	device_updatewindow(t_dev_region);
+	
+	MCRegionDestroy(t_dev_region);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

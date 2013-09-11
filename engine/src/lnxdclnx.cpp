@@ -43,6 +43,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "lnxgtkthemedrawing.h"
 #include "lnxtransfer.h"
 
+#include "resolution.h"
+
 #define XK_Window_L 0xFF6C
 #define XK_Window_R 0xFF6D
 
@@ -272,25 +274,6 @@ void MCScreenDC::create_stipple()
 	XSetGraphicsExposures(dpy, gc1, False);
 	XSetForeground(dpy, gc1, 1);
 	XSetBackground(dpy, gc1, 0);
-
-	Boolean oldshm = MCshm;
-	MCBitmap *im = createimage(1, 64, 64, False, 0x0, True, False);
-	int2 i;
-	uint4 *dptr = (uint4 *)im->data;
-	for (i = 0 ; i < 16 ; i++)
-	{
-
-		*dptr++ = 0xAAAAAAAA;
-		*dptr++ = 0xAAAAAAAA;
-		*dptr++ = 0x55555555;
-		*dptr++ = 0x55555555;
-	}
-
-	putimage(graystipple, im, 0, 0, 0, 0, 32, 32);
-	XSync(dpy, False);
-	if (oldshm != MCshm)
-		putimage(graystipple, im, 0, 0, 0, 0, 32, 32);
-	destroyimage(im);
 }
 
 void MCScreenDC::setmods(uint2 state, KeySym sym,
@@ -569,7 +552,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			handled = True;
 			break;
 		case MotionNotify:
-				
+		{
 			//XDND
 			// Do this so we can store the last message time stamp, which is needed later for xDnD protocol.
 			xdnd_interested_in_event ( event ) ;
@@ -579,8 +562,17 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				                              MotionNotify, &event))
 					;
 			setmods(mevent->state, 0, 0, False);
-			MCmousex = mevent->x;
-			MCmousey = mevent->y;
+			
+			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			MCPoint t_mouseloc;
+			t_mouseloc.x = mevent->x / t_scale;
+			t_mouseloc.y = mevent->y / t_scale;
+			
+			MCmousex = t_mouseloc.x;
+			MCmousey = t_mouseloc.y;
 			MCmousestackptr = MCdispatcher->findstackd(mevent->window);
 			
 			//XDND
@@ -598,7 +590,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 				{
 					MCeventtime = mevent->time;
 					MCdispatcher->wmfocus(mevent->window,
-					                      (int2)mevent->x, (int2)mevent->y);
+					                      (int2)t_mouseloc.x, (int2)t_mouseloc.y);
 				}
 			}
 			else
@@ -608,13 +600,28 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			}
 			handled = True;
 			break;
+		}
 		case ButtonPress:
-			
+		{
 			dragclick = false ;
 			
 			setmods(bpevent->state, 0, bpevent->button, False);
-			MCclicklocx = brevent->x;
-			MCclicklocy = brevent->y;
+			
+			// IM-2013-08-12: [[ ResIndependence ]] Scale mouse coords to user space
+			MCGFloat t_scale;
+			t_scale = MCResGetDeviceScale();
+			
+			MCGPoint t_clickloc;
+			t_clickloc.x = brevent->x / t_scale;
+			t_clickloc.y = brevent->y / t_scale;
+			
+			MCGPoint t_oldclickloc;
+			t_oldclickloc.x = MCclicklocx;
+			t_oldclickloc.y = MCclicklocy;
+			
+			MCclicklocx = t_clickloc.x;
+			MCclicklocy = t_clickloc.y;
+			
 			MCclickstackptr = MCmousestackptr;
 			if (dispatch)
 			{
@@ -648,8 +655,8 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 						else
 						{
 							if (delay < MCdoubletime
-							        && MCU_abs(MCclicklocx - bpevent->x) < MCdoubledelta
-							        && MCU_abs(MCclicklocy - bpevent->y) < MCdoubledelta)
+							        && MCU_abs(t_oldclickloc.x - t_clickloc.x) < MCdoubledelta
+							        && MCU_abs(t_oldclickloc.y - t_clickloc.x) < MCdoubledelta)
 							{
 								if (doubleclick)
 								{
@@ -667,7 +674,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 							{
 								tripleclick = doubleclick = False;
 								MCdispatcher->wmfocus(bpevent->window,
-								                      (int2)bpevent->x, (int2)bpevent->y);
+								                      (int2)t_clickloc.x, (int2)t_clickloc.y);
 								MCdispatcher->wmdown(bpevent->window, bpevent->button);
 							}
 							reset = True;
@@ -682,6 +689,7 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 			}
 			handled = True;
 			break;
+		}
 		case ButtonRelease:
 			// Discard button4 or 5 release event (button4= ScrollWheel up, button5 = ScrollWheel down)
 				
@@ -763,8 +771,6 @@ Boolean MCScreenDC::handle(Boolean dispatch, Boolean anyevent,
 						}
 					}
 				}
-				else
-					MCdispatcher->property(pevent->window, pevent->atom);
 			handled = True;
 			break;
 		case ConfigureNotify:

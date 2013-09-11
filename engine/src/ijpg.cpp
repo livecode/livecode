@@ -155,7 +155,6 @@ bool MCImageValidateJpeg(const void *p_data, uint32_t p_length, uint16_t& r_widt
 
 static boolean read_icc_profile(j_decompress_ptr cinfo, JOCTET **icc_data_ptr, unsigned int *icc_data_len);
 static bool read_exif_orientation(j_decompress_ptr cinfo, uint32_t* r_orientation);
-static void apply_exif_orientation(uint32_t orientation, MCBitmap *bitmap);
 
 ////DECODING
 
@@ -672,7 +671,7 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 			{
 				for (uindex_t x = 0; x < t_jpeg.output_width; x++)
 				{
-					*t_dst_ptr++ = t_src_ptr[2] | (t_src_ptr[1] << 8) | (t_src_ptr[0] << 16) | 0xFF000000;
+					*t_dst_ptr++ = MCGPixelPackNative(t_src_ptr[0], t_src_ptr[1], t_src_ptr[2], 255);
 					t_src_ptr += 3;
 				}
 			}
@@ -721,7 +720,11 @@ bool MCImageDecodeJPEG(IO_handle p_stream, MCImageBitmap *&r_image)
 					uint32_t p, k;
 					p = *dptr;
 					k = 255 - (p >> 24);
-					*dptr++ = 0xFF000000 | ((255 - (p & 0xff)) * k / 255) << 16 | ((255 - ((p >> 8) & 0xff)) * k / 255) << 8 | ((255 - ((p >> 16) & 0xff)) * k / 255);
+					uint8_t t_r, t_g, t_b;
+					t_r = ((255 - (p & 0xff)) * k / 255);
+					t_g = ((255 - ((p >> 8) & 0xff)) * k / 255);
+					t_b = ((255 - ((p >> 16) & 0xff)) * k / 255);
+					*dptr++ = MCGPixelPackNative(t_r, t_g, t_b, 255);
 				}
 				t_img_ptr += t_image->stride;
 			}
@@ -880,11 +883,10 @@ bool MCImageEncodeJPEG(MCImageBitmap *p_image, IO_handle p_stream, uindex_t &r_b
 		{
 			JSAMPROW t_dst_ptr = t_row_buffer;
 			uint32_t *t_src_ptr = (uint32_t*) (((uint8_t*)p_image->data) + t_jpeg.next_scanline * p_image->stride);
+			uint8_t t_alpha;
 			for (uindex_t x = 0; x < p_image->width; x++)
 			{
-				t_dst_ptr[0] = *t_src_ptr >> 16 & 0xFF;
-				t_dst_ptr[1] = *t_src_ptr >> 8 & 0xFF;
-				t_dst_ptr[2] = *t_src_ptr++ & 0xFF;
+				MCGPixelUnpackNative(*t_src_ptr++, t_dst_ptr[0], t_dst_ptr[1], t_dst_ptr[2], t_alpha);
 
 				t_dst_ptr += 3;
 			}

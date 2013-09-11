@@ -30,7 +30,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "redraw.h"
 
 #include "mctheme.h"
-#include "lnxcontext.h"
+#include "context.h"
 #include "lnxgtkthemedrawing.h"
 #include "lnxtheme.h"
 #include "lnximagecache.h"
@@ -1490,3 +1490,192 @@ MCTheme *MCThemeCreateNative(void)
 	return new MCNativeTheme;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+
+#include "lnxdc.h"
+static XImage *calc_alpha_from_bitmaps ( XImage *t_bm_black, XImage * t_bm_white, uint1 rh = 0, uint1 bh = 0, uint1 gh = 0)
+{
+	uint1 *t_black_ptr ;
+	uint1 *t_white_ptr ;
+	uint4 t_black_stride ;
+	uint4 t_white_stride ;
+	
+	uint4 t_w , t_h ;
+	
+	t_w = t_bm_black -> width ;
+	t_h = t_bm_black -> height ; 
+	
+	/*
+		Formula for calculating the alpha of the source, by 
+		rendering it twice - once against black, the second time
+		agaist white.
+	
+			Dc' = Sc.Sa + (1 - Sa) * Dc
+
+			composite against black (Dc == 0):
+			Dc'b = Sc.Sa => Dc'b <= Sa
+
+			composite against white (Dc == 1.0)
+			Dc'w = Sc.Sa + (1 - Sa)
+
+			Sa = 1 - (Dc'w - Dc'b)
+			Sc.Sa = Dc'b
+	
+			As Sc=Dc'b all we need to actually do is recalculate the alpha byte for the black image.
+	*/
+	
+	uint1 rb, rw ;
+	uint1 na ;
+	uint1 a ;
+	uint4 x, y ;
+
+	
+	t_black_stride = t_bm_black -> bytes_per_line ;	
+	t_white_stride = t_bm_white -> bytes_per_line ;
+	
+	bool t_bad;
+	t_bad = false;
+	
+	for ( y = 0 ; y < t_h; y ++ )
+	{
+		for ( x = 0 ; x < t_w ; x++ )
+		{	
+						
+			t_white_ptr = (uint1*)t_bm_white -> data + ( t_white_stride * y ) + (x*4) ;
+			t_black_ptr = (uint1*)t_bm_black -> data + ( t_black_stride * y ) + (x*4) ;
+			
+			rb = *(t_black_ptr);
+			rw = *(t_white_ptr);
+			
+			na = (( uint1) ( 255 - rw + rb ) );
+			*(t_black_ptr + 3 ) = na;
+			
+		}
+	}
+	
+	((MCScreenDC*)MCscreen)->destroyimage ( (MCBitmap*)t_bm_white ) ;
+	
+	return ( t_bm_black ) ;
+}
+	
+static void fill_gdk_drawable(GdkDrawable *p_drawable, GdkColormap *p_colormap, int p_red, int p_green, int p_blue, int p_width, int p_height)
+{
+	GdkGC *t_gc;
+	t_gc = gdk_gc_new(p_drawable);
+	gdk_gc_set_colormap(t_gc, p_colormap);
+	
+	GdkColor t_color;
+	t_color . red = p_red;
+	t_color . green = p_green;
+	t_color . blue = p_blue;
+	
+	gdk_gc_set_rgb_fg_color(t_gc, &t_color);
+	gdk_draw_rectangle(p_drawable, t_gc, TRUE, 0, 0, p_width, p_height);
+	g_object_unref(t_gc);
+}
+
+static XImage * drawtheme_calc_alpha ( MCThemeDrawInfo &p_info)
+{
+	XImage *t_bm_black ;
+	XImage *t_bm_white ;
+		
+	GdkPixmap *t_black ;
+	GdkPixmap *t_white ;
+
+	GdkColormap *cm ;
+	GdkVisual *best_vis ;
+	
+	uint4	t_w ;
+	uint4	t_h ;
+	
+		
+	t_w = p_info.drect.width ;
+	t_h = p_info.drect.height ;
+
+	// Create two new pixmaps
+	t_black = gdk_pixmap_new( NULL, t_w, t_h, 32);
+	t_white = gdk_pixmap_new( NULL, t_w, t_h, 32);
+	
+	// We need to attach a colourmap to the Drawables in GDK
+	best_vis = gdk_visual_get_best_with_depth(32);
+	cm = gdk_colormap_new( best_vis , False ) ;
+	gdk_drawable_set_colormap( t_black, cm);
+	gdk_drawable_set_colormap( t_white, cm);
+
+	//gdk_flush();
+	
+	// Render solid black into one and white into the other.
+	//black_and_white_masks ( gdk_x11_drawable_get_xid( t_black ) , gdk_x11_drawable_get_xid(t_white));
+	
+	fill_gdk_drawable(t_black, cm, 0, 0, 0, t_w, t_h);
+	fill_gdk_drawable(t_white, cm, 65535, 65535, 65535, t_w, t_h);
+	
+	MCThemeDrawInfo t_info;
+	
+	t_info = p_info;
+	moz_gtk_widget_paint ( p_info.moztype, t_white , &t_info.drect, &t_info.cliprect, &t_info.state, t_info.flags ) ;
+	
+	t_info = p_info;
+	moz_gtk_widget_paint ( p_info.moztype, t_black , &t_info.drect, &t_info.cliprect, &t_info.state, t_info.flags ) ;
+
+	gdk_flush();
+	
+	// Get the byte data for each of these pixmaps
+	t_bm_black = ((MCScreenDC*)MCscreen) -> getimage ( gdk_x11_drawable_get_xid(t_black), 0, 0, t_w, t_h, False ) ;
+	t_bm_white = ((MCScreenDC*)MCscreen) -> getimage ( gdk_x11_drawable_get_xid(t_white), 0, 0, t_w, t_h, False ) ;
+	
+	// Calculate the alpha from these two bitmaps --- the t_bm_black image now has full ARGB
+	calc_alpha_from_bitmaps ( t_bm_black, t_bm_white ) ;
+	
+	// clean up.
+	g_object_unref( t_black ) ;
+	g_object_unref( t_white ) ;
+	g_object_unref( cm ) ;
+		
+	return ( t_bm_black ) ;
+}
+
+bool MCThemeDraw(MCGContextRef p_context, MCThemeDrawType p_type, MCThemeDrawInfo *p_info)
+{
+	MCXImageCacheNode *cache_node = NULL ;
+	MCBitmap * t_argb_image ;
+	bool t_cached ;
+	
+	if ( ( p_info -> moztype != MOZ_GTK_CHECKBUTTON ) && ( p_info -> moztype != MOZ_GTK_RADIOBUTTON ) )
+		cache_node = MCimagecache -> find_cached_image ( p_info -> drect.width, p_info -> drect.height, p_info -> moztype, &p_info -> state, p_info -> flags ) ;
+	
+	if ( cache_node != NULL ) 
+	{
+		t_argb_image = MCimagecache -> get_from_cache( cache_node ) ;
+		t_cached = true ;
+	}
+	else
+	{
+		// Calculate the alpha for the rendered widget, by rendering against white & black.
+		t_argb_image = (MCBitmap*)drawtheme_calc_alpha ( *p_info ) ;
+		t_cached = MCimagecache -> add_to_cache ( t_argb_image, *p_info ) ;
+		
+	}
+
+	MCGRaster t_raster;
+	t_raster.width = t_argb_image->width;
+	t_raster.height = t_argb_image->height;
+	t_raster.stride = t_argb_image->bytes_per_line;
+	t_raster.pixels = t_argb_image->data;
+	t_raster.format = kMCGRasterFormat_ARGB;
+	
+	MCGRectangle t_dest;
+	t_dest.origin.x = p_info->crect.x;
+	t_dest.origin.y = p_info->crect.y;
+	t_dest.size.width = p_info->crect.width;
+	t_dest.size.height = p_info->crect.height;
+
+	MCGContextDrawPixels(p_context, t_raster, t_dest, kMCGImageFilterNearest);
+	
+	if (!t_cached)
+		((MCScreenDC*)MCscreen)->destroyimage(t_argb_image);
+	
+	return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////

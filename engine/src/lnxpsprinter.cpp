@@ -41,14 +41,14 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "metacontext.h"
 
-#include "contextscalewrapper.h"
-
+#include "lnxflst.h"
 #include "printer.h"
-#include "lnxcontext.h"
 #include "lnxpsprinter.h"
+#include "lnxdc.h"
 
-#include "lnxcontext.h"
 #include "lnxans.h"
+
+#include "graphicscontext.h"
 
 #define A4_PAPER_HEIGHT	210
 #define A4_PAPER_WIDTH	297
@@ -404,8 +404,8 @@ public:
 protected:
 	bool candomark(MCMark *p_mark);
 	void domark(MCMark *p_mark);
-	MCContext *begincomposite(const MCRectangle& p_region);
-	void endcomposite(MCContext *p_context, MCRegionRef p_clip_region );
+	bool begincomposite(const MCRectangle &p_region, MCGContextRef &r_context);
+	void endcomposite(MCRegionRef p_clip_region);
 
 private:
 
@@ -418,19 +418,22 @@ private:
 	MCColor oldcolor ;
 	
 	
-	uint4 f_pattern_pixmaps[MAX_PATTERNS];
+	MCGImageRef f_pattern_pixmaps[MAX_PATTERNS];
 	uint2 f_pattern_count ;
 
 	void drawtext(MCMark * p_mark );
 	void setfont(MCFontStruct *font) ;
-	void printpattern(MCBitmap *image) ;
-	void printimage(MCBitmap *image, int2 dx, int2 dy, real8 xscale, real8 yscale) ;
+	void printpattern(const MCGRaster &image) ;
+	void printraster(const MCGRaster &p_raster, int16_t p_dx, int16_t p_dy, real64_t p_xscale, real64_t p_yscale);
+	void printimage(MCImageBitmap *image, int2 dx, int2 dy, real8 xscale, real8 yscale) ;
 	void write_scaling(const MCRectangle &rect) ;
 
-	bool pattern_created( Pixmap p_pattern ) ;
-	void fillpattern ( Pixmap p_pattern, MCPoint p_origin ) ;
-	void create_pattern ( Pixmap p_pattern );
+	bool pattern_created( MCGImageRef p_pattern ) ;
+	void fillpattern ( MCPatternRef p_pattern, MCPoint p_origin ) ;
+	void create_pattern ( MCGImageRef p_pattern );
 
+	MCRectangle m_composite_rect;
+	MCGContextRef m_composite_context;
 };
 
 
@@ -565,7 +568,7 @@ MCPrinterResult MCPSPrinterDevice::End(MCContext *p_context)
 	t_metacontext = static_cast<MCPSMetaContext *>(p_context) ;
 	t_metacontext -> execute();
 	
-	MCscreen -> freecontext ( t_metacontext ) ;
+	delete t_metacontext ;
 	
 	return ( PRINTER_RESULT_SUCCESS ) ;
 }
@@ -883,10 +886,15 @@ MCPSMetaContext::MCPSMetaContext ( MCRectangle& p_rect ) : MCMetaContext(p_rect)
 
 MCPSMetaContext::~MCPSMetaContext(void)
 {
+	
 }
 
 bool MCPSMetaContext::candomark(MCMark *p_mark)
 {
+	/* OVERHAUL - REVISIT: supporting transformed images requires more work */
+	if (p_mark -> type == MARK_TYPE_IMAGE && p_mark->image.descriptor.has_transform)
+		return false;
+		
 	return p_mark -> type != MARK_TYPE_GROUP;
 }
 
@@ -937,7 +945,6 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 	}
 	if ( isFilled ) 
 	{
-		
 		if (p_mark -> fill -> style == FillTiled)
 		{
 			fillpattern( p_mark -> fill -> pattern, p_mark -> fill -> origin )  ;
@@ -1119,9 +1126,24 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 		
 		
 		case MARK_TYPE_IMAGE:
-			
-			MCBitmap *image ;
+		{
 			uint2 sx, sy, dx, dy, sw, sh, dw, dh ;
+			sx = p_mark -> image . sx ;
+			sy = p_mark -> image . sy ;
+			sw = p_mark -> image . sw ;
+			sh = p_mark -> image . sh ;
+			
+			dx = p_mark -> image . dx ;
+			dy = p_mark -> image . dy ;
+			
+			MCRectangle t_src_rect;
+			MCU_set_rect(t_src_rect, sx, sy, sw, sh);
+			
+			MCImageBitmap *t_image = nil;
+			/* UNCHECKED */ MCImageCopyBitmapRegion(p_mark->image.descriptor.bitmap, t_src_rect, t_image);
+			printimage ( t_image, dx, dy, 1.0, 1.0);
+			MCImageFreeBitmap(t_image);
+		}
 		break;
 		
 		case MARK_TYPE_METAFILE:
@@ -1131,53 +1153,60 @@ void MCPSMetaContext::domark(MCMark *p_mark)
 	
 }
 
-MCContext *MCPSMetaContext::begincomposite(const MCRectangle& p_region)
-{
-	uint4 t_scale = 4;
-	
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(p_region . width * t_scale, p_region . height * t_scale, true, true);
-	t_context = new MCContextScaleWrapper(t_context, t_scale);
-	t_context -> setorigin(p_region . x, p_region . y);
+#define SCALE 4
 
-	t_context -> setprintmode();
-	return t_context;
+bool MCPSMetaContext::begincomposite(const MCRectangle &p_region, MCGContextRef &r_context)
+{
+	bool t_success = true;
 	
+	MCGContextRef t_context = nil;
+
+	uint4 t_scale = SCALE;
+	
+	uint32_t t_width, t_height;
+	t_width = p_region . width * t_scale;
+	t_height = p_region . height * t_scale;
+
+	if (t_success)
+		t_success = MCGContextCreate(t_width, t_height, true, t_context);
+
+	if (t_success)
+{
+		MCGContextScaleCTM(t_context, t_scale, t_scale);
+		MCGContextTranslateCTM(t_context, -(MCGFloat)p_region . x, -(MCGFloat)p_region . y);
+
+		m_composite_context = t_context;
+		m_composite_rect = p_region;
+
+		r_context = m_composite_context;
+	}
+	else
+		MCGContextRelease(t_context);
+	
+	return t_success;
 }
 
-
-void MCPSMetaContext::endcomposite(MCContext *p_context, MCRegionRef p_clip_region )
+void MCPSMetaContext::endcomposite(MCRegionRef p_clip_region)
 {
-	// Get the t_context surface
-	// get the bytes
-	// Dump it to PS
-	uint4 t_scale = 4;
+	uint4 t_scale = SCALE;
+	
+	MCGImageRef t_image;
+	t_image = nil;
+	
+	/* UNCHECKED */ MCGContextCopyImage(m_composite_context, t_image);
+	
+	MCGRaster t_raster;
+	MCGImageGetRaster(t_image, t_raster);
+	
+	printraster(t_raster, m_composite_rect.x, m_composite_rect.y, t_scale, t_scale);
+	
+	MCGImageRelease(t_image);
 
-	uint2 t_w, t_h, t_d ;
-	XRectangle *t_box = new XRectangle ;
-
-	XClipBox ( (Region)p_clip_region, t_box ) ;
-	
-	Drawable d ;
-
-	MCX11Context *t_context = (MCX11Context*) ((MCContextScaleWrapper*)p_context)->getcontext();
-	d = t_context -> get_surface ();
-	
-	MCscreen -> getpixmapgeometry ( d, t_w, t_h, t_d ) ;
-	
-	MCBitmap * image = MCscreen -> getimage ( d, 0, 0, t_w, t_h, False ) ;
-	
-	printimage ( image, t_box -> x / t_scale, t_box -> y / t_scale, t_scale, t_scale );
-	
-	MCscreen -> destroyimage ( image ) ;
-	
-	delete t_box ;
+	MCGContextRelease(m_composite_context);
+	m_composite_context = nil;
 	
 	if ( p_clip_region != NULL )
 		MCRegionDestroy(p_clip_region);
-
-	MCscreen -> freecontext(t_context);
-	delete p_context;
 }
 
 
@@ -1260,134 +1289,57 @@ void MCPSMetaContext::write_scaling(const MCRectangle &rect)
 	
 }
 
-void MCPSMetaContext::printimage(MCBitmap *image, int2 dx, int2 dy, real8 xscale, real8 yscale)
+// IM-2013-08-12: [[ ResIndependence ]] refactor bitmap printing to printraster method
+// *NOTE* currently assumes raster is xRGB.
+void MCPSMetaContext::printraster(const MCGRaster &p_raster, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
 {
 	MCColor c;
 	uint2 x, y;
 	uint4 charCount = 0;
 
-	bool colorprint = True ;
 	bool cmapdone = False ;
 	
-	if (colorprint && image->depth == 8)
-	{ // can we use compression?
-		if (!cmapdone)
-		{ //Need to dump the colormap
-			PSwrite("/cmap 768 string def\n"); //define size of colormap table in PS
-			PSwrite("currentfile cmap readhexstring\n");
-			for (y = 0; y < 256; y++)
-			{ //dump out colormap in PS
-				c.pixel = y;
-				MCscreen->querycolor(c);
-				sprintf(buffer, "%02X%02X%02X ", c.red >> 8,
-				        c.green >> 8, c.blue >> 8);
-				PSwrite(buffer);
-				charCount += 7;
-				if (charCount % 70 == 0)
-					PSwrite("\n");
-			}
-			PSwrite("\npop pop\n");  //lose return values from readhexstring in PS
-			cmapdone = True; //colormap is already dumped out for the current card
-		}
-		sprintf(buffer, "%d %d 8\n", image->width, image->height);
-		PSwrite (buffer);
-		sprintf(buffer, "[ %g 0 0 -%g %g %g ]\n", xscale, yscale, -dx * xscale,
-		        (cardheight - dy) * yscale);
-		PSwrite(buffer);
-		PSwrite("rlecmapimage\n\n");
-		for (y = 0 ; y < image->height ; y++)
-		{
-			uint1 *sptr = (uint1 *)&image->data[y * image->bytes_per_line];
-			uint1 *eptr = sptr + image->width;
-			while (sptr < eptr)
-			{
-				uint2 run = 0;
-				if (sptr < eptr - 1 && *sptr == *(sptr + 1))
-				{//found a run
-					uint1 byte = *sptr++;
-					while (sptr < eptr && *sptr == byte && run < 127)
-					{
-						sptr++;
-						run++;
-					}
-					sprintf(buffer, "%02X", run);
-					PSwrite(buffer);
-					sprintf(buffer, "%02X", byte);
-					PSwrite(buffer);
-				}
-				else
-				{ //not a run
-					sprintf(buffer, "%02X", *sptr++);
-					while (sptr < eptr - 1 && *sptr != *(sptr + 1) && run < 127)
-					{
-						run++;
-						sprintf(&buffer[run << 1], "%02X", *sptr++);
-					}
-					char tmpbuf[3];
-					sprintf(tmpbuf, "%02X", run | 0x80);
-					PSwrite(tmpbuf);
-					PSwrite(buffer);
-				} //else
-			} //loop throuth x
-			PSwrite("\n");
-		} //loop through y
-		PSwrite("\n");
-	}
-	else
+	sprintf(buffer, "/tmp %d string def\n%d %d %d\n",
+			p_raster.width * 3, p_raster.width, p_raster.height, 8);
+			
+	PSwrite(buffer);
+	sprintf(buffer, "[ %g 0 0 -%g %g %g ]\n", xscale, yscale, -dx * xscale,
+			(cardheight - dy) * yscale);
+	PSwrite(buffer);
+	PSwrite("{currentfile tmp readhexstring pop}\nfalse 3\ncolorimage\n");
+
+	uint8_t *t_src_row = (uint8_t*)p_raster.pixels;
+	for (y = 0 ; y < p_raster.height ; y++)
 	{
-		if (colorprint)
-			sprintf(buffer, "/tmp %d string def\n%d %d %d\n",
-			        image->width * 3, image->width, image->height, 8);
-		else
+		uint32_t *t_src_ptr = (uint32_t*)t_src_row;
+		for (x = 0 ; x < p_raster.width ; x++)
 		{
-			image->width &= 0xFFFE;
-			image->height &= 0xFFFE;
-			sprintf(buffer, "/tmp %d string def\n%d %d %d\n",
-			        image->width, image->width, image->height, 4);
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(*t_src_ptr++, r, g, b, a);
+			
+			sprintf(buffer, "%02X%02X%02X", r, g, b);
+			PSwrite(buffer);
+			charCount += 6;
+			
+			if (charCount % 78 == 0)
+				PSwrite("\n");
 		}
-		PSwrite(buffer);
-		sprintf(buffer, "[ %g 0 0 -%g %g %g ]\n", xscale, yscale, -dx * xscale,
-		        (cardheight - dy) * yscale);
-		PSwrite(buffer);
-		if (colorprint)
-			PSwrite("{currentfile tmp readhexstring pop}\nfalse 3\ncolorimage\n");
-		else
-			PSwrite("{currentfile tmp readhexstring pop}\nfalse 1\ncolorimage\n");
-
-		for (y = 0 ; y < image->height ; y++)
-		{
-			for (x = 0 ; x < image->width ; x++)
-			{
-				c.pixel = MCscreen->getpixel(image, x, y);
-				c . blue = (c . pixel & 0xFF) << 8;
-				c . green = (c . pixel & 0xFF00);
-				c . red = (c . pixel & 0xFF0000) >> 8;
-
-				if (colorprint)
-				{
-					sprintf(buffer, "%02X%02X%02X", c.red >> 8,
-					        c.green >> 8, c.blue >> 8);
-					PSwrite(buffer);
-					charCount += 6;
-				}
-				else
-				{
-					// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
-					if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
-						PSwrite("F");
-					else
-						PSwrite("0");
-					charCount += 1;
-				}
-				if (charCount % 78 == 0)
-					PSwrite("\n");
-			}
-		}
-		PSwrite("\n");
+		t_src_row += p_raster.stride;
 	}
+	PSwrite("\n");
 }
 
-
+void MCPSMetaContext::printimage(MCImageBitmap *p_image, int16_t dx, int16_t dy, real64_t xscale, real64_t yscale)
+{
+	MCGRaster t_raster;
+	t_raster.width = p_image->width;
+	t_raster.height = p_image->height;
+	t_raster.pixels = p_image->data;
+	t_raster.stride = p_image->stride;
+	t_raster.format = kMCGRasterFormat_xRGB;
+	
+	printraster(t_raster, dx, dy, xscale, yscale);
+}
 
 void MCPSMetaContext::setfont(MCFontStruct *font)
 {
@@ -1444,7 +1396,7 @@ void MCPSMetaContext::setfont(MCFontStruct *font)
 	PSwrite(buffer);
 }
 
-void MCPSMetaContext::printpattern(MCBitmap *image)
+void MCPSMetaContext::printpattern(const MCGRaster &image)
 {
 	MCColor c;
 	uint2 x, y;
@@ -1452,33 +1404,32 @@ void MCPSMetaContext::printpattern(MCBitmap *image)
 	
 	bool colorprint = True ;
 
-	sprintf(buffer, "%d %d 8\n", image->width, image->height);
+	sprintf(buffer, "%d %d 8\n", image.width, image.height);
 	PSwrite ( buffer ) ;
 
 	PSwrite ( "[ 1 0 0 1 0 0 ]\n");
 	PSwrite ( "<\n");
 	
-	y = image->height;
-	while (y)
+	// print out pattern image bottom-to-top
+	uint8_t *t_src_row = (uint8_t*)image.pixels + (image.height - 1) * image.stride;
+	y = image.height;
+	while (y--)
 	{
-		y--;
-		for (x = 0 ; x < image->width ; x++)
+		uint32_t *t_src_ptr = (uint32_t*)t_src_row;
+		for (x = 0 ; x < image.width ; x++)
 		{
-			c.pixel = MCscreen->getpixel(image, x, y);
-			c . red = (c . pixel & 0xFF0000) >> 8;
-			c . green = (c . pixel & 0xFF00);
-			c . blue = (c . pixel & 0xFF) << 8;
+			uint8_t r, g, b, a;
+			MCGPixelUnpackNative(*t_src_ptr++, r, g, b, a);
 			if (colorprint)
 			{
-				sprintf(buffer, "%02X%02X%02X", c.red >> 8,
-						c.green >> 8, c.blue >> 8);
+				sprintf(buffer, "%02X%02X%02X", r, g, b);
 				PSwrite(buffer);
 				charCount += 6;
 			}
 			else
 			{
 				// MDW-2013-04-16: [[ x64 ]] need to compare unsigned with unsigned
-				if ((unsigned)(c.red + c.green + c.blue) > (unsigned)(MAXUINT2 * 3 / 2))
+				if ((unsigned)(r + g + b) > (unsigned)(MAXUINT1 * 3 / 2))
 					PSwrite("F");
 				else
 					PSwrite("0");
@@ -1487,7 +1438,7 @@ void MCPSMetaContext::printpattern(MCBitmap *image)
 			if (charCount % 78 == 0)
 				PSwrite("\n");
 		}
-
+		t_src_row -= image.stride;
 	}
 	if (colorprint)
 		PSwrite(">\nfalse 3\ncolorimage\n");
@@ -1503,7 +1454,7 @@ void MCPSMetaContext::printpattern(MCBitmap *image)
 
 
 
-bool MCPSMetaContext::pattern_created( Pixmap p_pattern ) 
+bool MCPSMetaContext::pattern_created( MCGImageRef p_pattern ) 
 {
 	for ( uint2 i = 0 ; i < f_pattern_count; i++)
 		if ( f_pattern_pixmaps[i] == p_pattern ) 
@@ -1511,28 +1462,28 @@ bool MCPSMetaContext::pattern_created( Pixmap p_pattern )
 	return ( false ) ;
 }
 
-
-void MCPSMetaContext::fillpattern ( Pixmap p_pattern, MCPoint p_origin ) 
+// IM-2013-09-04: [[ ResIndependence ]] update fillpattern to take MCPatternRef & apply scale factor
+void MCPSMetaContext::fillpattern(MCPatternRef p_pattern, MCPoint p_origin)
 {
-	if ( !pattern_created ( p_pattern ) ) 
-		create_pattern ( p_pattern ) ;
+	if (!pattern_created(p_pattern->image))
+		create_pattern(p_pattern->image);
 	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
-	sprintf(buffer, "pattern_id_%ld\n", p_pattern );
+	sprintf(buffer, "pattern_id_%ld\n", p_pattern->image);
 	PSwrite ( buffer );
-	sprintf(buffer, "[1 0 0 1 %d %d]\n", p_origin.x, cardheight - p_origin.y);
+	sprintf(buffer, "[%f 0 0 %f %d %d]\n", 1.0 / p_pattern->scale, 1.0 / p_pattern->scale, p_origin.x, cardheight - p_origin.y);
 	PSwrite(buffer);
 	PSwrite("makepattern\n");
 	PSwrite("setpattern\n");
 }
-
 		
-void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
+void MCPSMetaContext::create_pattern ( MCGImageRef p_pattern )
 {
-	uint2 t_w, t_h, t_d ;
-	MCscreen -> getpixmapgeometry ( p_pattern, t_w, t_h, t_d ) ;
+	int32_t t_w, t_h;
+	t_w = MCGImageGetWidth(p_pattern);
+	t_h = MCGImageGetHeight(p_pattern);
 	
-	MCBitmap *image ;
-	image = MCscreen -> getimage ( p_pattern, 0, 0, t_w, t_h, false ) ;
+	MCGRaster t_raster;
+	MCGImageGetRaster(p_pattern, t_raster);
 	
 	// MDW-2013-04-16: [[ x64 ]] p_pattern is an XID (long unsigned int), so need $ld here
 	sprintf(buffer, "/pattern_id_%ld\n", p_pattern);
@@ -1545,7 +1496,7 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 	sprintf(buffer, "/XStep %d /YStep %d\n", t_w, t_h ) ; PSwrite ( buffer ) ;
 	PSwrite("/PaintProc {\n") ;
 	PSwrite("begin\n");
-	printpattern(image);
+	printpattern(t_raster);
 	PSwrite("end\n");
 	PSwrite("}\n");
 	PSwrite(">>\n");
@@ -1553,7 +1504,6 @@ void MCPSMetaContext::create_pattern ( Pixmap p_pattern )
 	
 	f_pattern_count ++ ;
 	f_pattern_pixmaps [ f_pattern_count ] = p_pattern ; // Mark this pattern as being created already
-		
 }
 
 

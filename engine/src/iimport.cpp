@@ -296,7 +296,7 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 	if (t_success)
 	{
 		if (t_compressed == nil)
-			t_success = setbitmap(t_bitmap);
+			t_success = setbitmap(t_bitmap, 1.0);
 		else
 			t_success = setcompressedbitmap(t_compressed);
 	}
@@ -306,7 +306,7 @@ IO_stat MCImage::import(const char *newname, IO_handle stream, IO_handle mstream
 
 	uindex_t t_width, t_height;
 	if (t_success)
-		t_success = m_rep->GetGeometry(t_width, t_height);
+		t_success = getsourcegeometry(t_width, t_height);
 
 	if (t_success)
 	{
@@ -358,10 +358,3 @@ void MCImage::set_gif(uint1 *data, uint4 length)
 	flags |= F_GIF;
 	obj_id = 1;
 }
-
-#if !defined(_DESKTOP)
-MCRegionRef MCImage::makewindowregion(void)
-{
-	return NULL;
-}
-#endif

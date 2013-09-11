@@ -44,6 +44,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mode.h"
 #include "socket.h"
 
+#include "resolution.h"
+
 #define VK_LAST 0xDE   //last is 222
 #define LEAVE_CHECK_INTERVAL 500
 #ifndef WM_MOUSEWHEEL
@@ -469,6 +471,11 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 	uint2 button;
 	Boolean down;
 	char buffer[XLOOKUPSTRING_SIZE];
+
+	// IM-2013-08-08: [[ ResIndependence ]] scale mouse position from device to user space
+	int32_t t_mx, t_my;
+	t_mx = LOWORD(lParam) / MCResGetDeviceScale();
+	t_my = HIWORD(lParam) / MCResGetDeviceScale();
 
 	// MW-2005-02-20: Seed the SSL random number generator
 #ifdef MCSSL
@@ -964,10 +971,10 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 		break;
 	case WM_MOUSEMOVE:  //MotionNotify:
 	case WM_NCMOUSEMOVE:
-		if (MCmousex != LOWORD(lParam) || MCmousey != HIWORD(lParam))
+		if (MCmousex != t_mx || MCmousey != t_my)
 		{
-			MCmousex = LOWORD(lParam);
-			MCmousey = HIWORD(lParam);
+			MCmousex = t_mx;
+			MCmousey = t_my;
 			if (curinfo->dispatch)
 			{
 				MCStack *oms = MCmousestackptr;
@@ -1071,17 +1078,17 @@ LRESULT CALLBACK MCWindowProc(HWND hwnd, UINT msg, WPARAM wParam,
 					else
 					{
 						if (doubleclick && MCeventtime - clicktime < MCdoubletime
-						        && MCU_abs(MCclicklocx - LOWORD(lParam)) < MCdoubledelta
-						        && MCU_abs(MCclicklocy - HIWORD(lParam)) < MCdoubledelta)
+						        && MCU_abs(MCclicklocx - t_mx) < MCdoubledelta
+						        && MCU_abs(MCclicklocy - t_my) < MCdoubledelta)
 							tripleclick = True;
 						else
 							tripleclick = False;
 						doubleclick = False;
-						MCclicklocx = LOWORD(lParam);
-						MCclicklocy = HIWORD(lParam);
+						MCclicklocx = t_mx;
+						MCclicklocy = t_my;
 						MCclickstackptr = MCmousestackptr;
 						dragclick = False;
-						MCdispatcher->wmfocus(dw, LOWORD(lParam), HIWORD(lParam));
+						MCdispatcher->wmfocus(dw, t_mx, t_my);
 						MCdispatcher->wmdown(dw, button);
 					}
 				else

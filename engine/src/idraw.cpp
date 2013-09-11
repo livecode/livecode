@@ -32,6 +32,7 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "globals.h"
 
 #include "context.h"
+#include "graphicscontext.h"
 
 void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy)
 {
@@ -53,23 +54,39 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 			// source images from flushing everything else out of the cache.
 			bool t_success = true;
 
-			MCImageBitmap *t_bitmap = nil;
 			MCImageFrame *t_frame = nil;
 
 			bool t_printer = dc->gettype() == CONTEXT_TYPE_PRINTER;
 			bool t_update = !((state & CS_SIZE) && (state & CS_EDITED));
 
-			if (t_printer && t_success)
-				t_success = m_rep->LockImageFrame(currentframe, t_frame);
-			if (t_success)
-				t_success = lockbitmap(t_bitmap, t_update);
+			if (t_update)
+				apply_transform();
+			t_success = m_rep->LockImageFrame(currentframe, true, t_frame);
 			if (t_success)
 			{
 				MCImageDescriptor t_image;
+				MCMemoryClear(&t_image, sizeof(MCImageDescriptor));
 
-				t_image . bitmap = t_bitmap;
-				t_image . original_bitmap = t_frame != nil ? t_frame->image : nil;
-				t_image . angle = angle;
+				t_image.has_transform = m_has_transform;
+				t_image.transform = m_transform;
+				// IM-2013-07-19: [[ ResIndependence ]] set scale factor so hi-res image draws at the right size
+				t_image.scale_factor = m_scale_factor;
+
+				switch (resizequality)
+				{
+				case INTERPOLATION_NEAREST:
+				case INTERPOLATION_BOX:
+					t_image . filter = kMCGImageFilterNearest;
+					break;
+				case INTERPOLATION_BILINEAR:
+					t_image . filter = kMCGImageFilterBilinear;
+					break;
+				case INTERPOLATION_BICUBIC:
+					t_image . filter = kMCGImageFilterBicubic;
+					break;
+				}
+
+				t_image . bitmap = t_frame->image;
 
 				if (t_printer && m_rep->GetType() == kMCImageRepResident)
 				{
@@ -97,20 +114,19 @@ void MCImage::drawme(MCDC *dc, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, in
 				MCU_set_rect(drect, dx, dy, sw, sh);
 				setforeground(dc, DI_BACK, False);
 				dc->setbackground(MCscreen->getwhite());
-				dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
+				dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
 				dc->fillrect(drect);
 				dc->setbackground(MCzerocolor);
-				dc->setfillstyle(FillSolid, DNULL, 0, 0);
+				dc->setfillstyle(FillSolid, nil, 0, 0);
 			}
 
 			m_rep->UnlockImageFrame(currentframe, t_frame);
-			unlockbitmap(t_bitmap);
 		}
 
 		if (state & CS_DO_START)
 		{
 			MCImageFrame *t_frame = nil;
-			if (m_rep->LockImageFrame(currentframe, t_frame))
+			if (m_rep->LockImageFrame(currentframe, true, t_frame))
 			{
 				MCscreen->addtimer(this, MCM_internal, t_frame->duration);
 				m_rep->UnlockImageFrame(currentframe, t_frame);
@@ -223,7 +239,7 @@ void MCImage::drawmagrect(MCDC *dc)
 			dc->setforeground(dc->getblack());
 		else
 			dc->setforeground(dc->getwhite());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawrect(trect);
 		trect = MCU_reduce_rect(trect, -1);
 	}
@@ -249,28 +265,33 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 	MCRectangle t_mr;
 	MCU_set_rect(t_mr, magrect . x + rect . x, magrect . y + rect . y, magrect . width, magrect . height);
 
-	MCContext *t_context;
-	t_context = MCscreen -> creatememorycontext(magrect . width, magrect . height, true, true);
-	t_context -> setorigin(magrect . x + rect . x, magrect . y + rect . y);
-	t_context -> setclip(t_mr);
+	MCImageBitmap *t_magimage = nil;
+	/* UNCHECKED */ MCImageBitmapCreate(magrect.width, magrect.height, t_magimage);
+
+	MCGContextRef t_context = nil;
+	/* UNCHECKED */ MCGContextCreateWithPixels(t_magimage->width, t_magimage->height, t_magimage->stride, t_magimage->data, true, t_context);
+	MCGContextTranslateCTM(t_context, -(int32_t)(magrect.x + rect.x), -(int32_t)(magrect.y - rect.y));
+	MCGRectangle t_clip = MCGRectangleMake(magrect.x + rect.x, magrect.y + rect.y, magrect.width, magrect.height);
+	MCGContextClipToRect(t_context, t_clip);
+
+	MCContext *t_gfxcontext = nil;
+	/* UNCHECKED */ t_gfxcontext = new MCGraphicsContext(t_context);
+
+	getstack() -> getcurcard() -> draw(t_gfxcontext, t_mr, false); 
 	
-	getstack() -> getcurcard() -> draw(t_context, t_mr, false); 
-	
-	MCBitmap *magimage;
-	magimage = t_context -> lock();
-	
-	assert(magimage->depth == 32);
+	delete t_gfxcontext;
+	MCGContextRelease(t_context);
 
 	uint2 linewidth = magrect.width * MCmagnification;
 	MCImageBitmap *t_line = nil;
 	/* UNCHECKED */ MCImageBitmapCreate(linewidth, MCmagnification, t_line);
 	
 	uint2 dy = drect.y / MCmagnification * MCmagnification;
-	uint2 sbytes = magimage->bytes_per_line;
+	uint2 sbytes = t_magimage->stride;
 	uint4 yoffset = dy / MCmagnification * sbytes;
 	while (dy < drect.y + drect.height)
 	{
-		uint32_t *t_src_row = (uint32_t*)&magimage->data[yoffset];
+		uint32_t *t_src_row = (uint32_t*)(uint8_t*)t_magimage->data + yoffset;
 		uint32_t *t_dst_row = (uint32_t*)t_line->data;
 		for (uindex_t x = 0 ; x < magrect.width ; x++)
 		{
@@ -281,20 +302,22 @@ void MCImage::magredrawrect(MCContext *dest_context, const MCRectangle &drect)
 		for (uint32_t i = 1; i < MCmagnification; i++)
 			memcpy((uint8_t*)t_line->data + i * t_line->stride, t_line->data, t_line->stride);
 		
+		// OVERHAUL - REVISIT: may be able to use scaling transform with nearest filter
+		// instead of manually scaling image
+
 		// Render the scanline into the destination context.
 		MCImageDescriptor t_image;
 		memset(&t_image, 0, sizeof(MCImageDescriptor));
 		t_image . bitmap = t_line;
+
 		dest_context -> drawimage(t_image, 0, 0, linewidth, MCmagnification, 0, dy);
 		
 		dy += MCmagnification;
-		yoffset += magimage->bytes_per_line;
+		yoffset += t_magimage->stride;
 	}
 
 	MCImageFreeBitmap(t_line);
-	
-	t_context -> unlock(magimage);
-	MCscreen -> freecontext(t_context);
+	MCImageFreeBitmap(t_magimage);
 }
 
 Boolean MCImage::magmfocus(int2 x, int2 y)

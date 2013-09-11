@@ -41,6 +41,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 #include "meta.h"
 
+#include "resolution.h"
+
 // Used to be in w32defs.h, but only used by MCScreenDC::boundrect.
 #define WM_TITLE_HEIGHT 16
 
@@ -68,7 +70,7 @@ static BOOL CALLBACK DescribeMonitorsCallback(HMONITOR p_monitor, HDC p_monitor_
 	return TRUE;
 }
 
-uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
+bool MCScreenDC::device_getdisplays(bool p_effective, MCDisplay *&r_displays, uint32_t &r_count)
 {
 	if (s_monitor_count == 0)
 	{
@@ -104,15 +106,15 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 
 				t_monitor_displays[t_index] . index = t_index;
 
-				t_monitor_displays[t_index] . viewport . x = int2(t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . viewport . y = int2(t_info[t_monitor] . rcMonitor . top);
-				t_monitor_displays[t_index] . viewport . width = uint2(t_info[t_monitor] . rcMonitor . right - t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . viewport . height = uint2(t_info[t_monitor] . rcMonitor . bottom - t_info[t_monitor] . rcMonitor . top);
+				t_monitor_displays[t_index] . device_viewport . x = int2(t_info[t_monitor] . rcMonitor . left);
+				t_monitor_displays[t_index] . device_viewport . y = int2(t_info[t_monitor] . rcMonitor . top);
+				t_monitor_displays[t_index] . device_viewport . width = uint2(t_info[t_monitor] . rcMonitor . right - t_info[t_monitor] . rcMonitor . left);
+				t_monitor_displays[t_index] . device_viewport . height = uint2(t_info[t_monitor] . rcMonitor . bottom - t_info[t_monitor] . rcMonitor . top);
 				
-				t_monitor_displays[t_index] . workarea . x = int2(t_info[t_monitor] . rcWork . left);
-				t_monitor_displays[t_index] . workarea . y = int2(t_info[t_monitor] . rcWork . top);
-				t_monitor_displays[t_index] . workarea . width = uint2(t_info[t_monitor] . rcWork . right - t_info[t_monitor] . rcMonitor . left);
-				t_monitor_displays[t_index] . workarea . height = uint2(t_info[t_monitor] . rcWork . bottom - t_info[t_monitor] . rcMonitor . top);
+				t_monitor_displays[t_index] . device_workarea . x = int2(t_info[t_monitor] . rcWork . left);
+				t_monitor_displays[t_index] . device_workarea . y = int2(t_info[t_monitor] . rcWork . top);
+				t_monitor_displays[t_index] . device_workarea . width = uint2(t_info[t_monitor] . rcWork . right - t_info[t_monitor] . rcMonitor . left);
+				t_monitor_displays[t_index] . device_workarea . height = uint2(t_info[t_monitor] . rcWork . bottom - t_info[t_monitor] . rcMonitor . top);
 			}
 
 		delete[] t_info;
@@ -132,21 +134,24 @@ uint4 MCScreenDC::getdisplays(MCDisplay const *& p_displays, bool p_effective)
 		static MCDisplay t_monitor;
 		RECT r;
 		SystemParametersInfoA(SPI_GETWORKAREA, 0, &r, 0);
-		MCU_set_rect(t_monitor . viewport, 0, 0, getwidth(), getheight());
-		MCU_set_rect(t_monitor . workarea, 0, 0, uint2(r . right - r . left), uint2(r . bottom - r . top));
-		p_displays = &t_monitor;
-		return 1;
+		MCU_set_rect(t_monitor . device_viewport, 0, 0, device_getwidth(), device_getheight());
+		MCU_set_rect(t_monitor . device_workarea, 0, 0, uint2(r . right - r . left), uint2(r . bottom - r . top));
+		r_displays = &t_monitor;
+		r_count = 1;
+		return true;
 	}
-	p_displays = s_monitor_displays;
 
 	if (taskbarhidden)
 		for(uint4 t_index = 0; t_index < s_monitor_count; t_index++)
-			s_monitor_displays[t_index] . workarea = s_monitor_displays[t_index] . viewport;
+			s_monitor_displays[t_index] . device_workarea = s_monitor_displays[t_index] . device_viewport;
 
-	return s_monitor_count;
+	r_displays = s_monitor_displays;
+	r_count = s_monitor_count;
+
+	return true;
 }
 
-void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 	MCRectangle srect;
 
@@ -158,6 +163,8 @@ void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 	}
 	else
 		srect = MCwbr;
+
+	srect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(srect));
 
 	if (rect.x < srect.x)
 		rect.x = srect.x;
@@ -233,7 +240,7 @@ Boolean MCScreenDC::abortkey()
 	return False;
 }
 
-void MCScreenDC::querymouse(int2 &x, int2 &y)
+void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	POINT p;
 	if (GetCursorPos(&p))
@@ -261,7 +268,7 @@ uint2 MCScreenDC::querymods()
 	return state;
 }
 
-void MCScreenDC::setmouse(int2 x, int2 y)
+void MCScreenDC::device_setmouse(int2 x, int2 y)
 {
 	SetCursorPos(x, y);
 }
@@ -391,8 +398,9 @@ Boolean MCScreenDC::getmouseclick(uint2 button, Boolean& r_abort)
 					break;
 				}
 				MCbuttonstate &= ~(1L << (b - 1));
-				MCclicklocx = LOWORD(tptr->lParam);
-				MCclicklocy = HIWORD(tptr->lParam);
+				// IM-2013-08-08: [[ ResIndependence ]] scale device to userspace coords
+				MCclicklocx = LOWORD(tptr->lParam) / MCResGetDeviceScale();
+				MCclicklocy = HIWORD(tptr->lParam) / MCResGetDeviceScale();
 				releaseptr = tptr;
 				break;
 			}

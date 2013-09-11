@@ -32,6 +32,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #include "core.h"
 
+#include "resolution.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
 // A utility class used to manage a stack of windows.
@@ -193,7 +195,12 @@ void MCScreenDC::handle_mouse_press(uint32_t p_time, uint32_t p_modifiers, int32
 	{
 		m_mouse_x = x;
 		m_mouse_y = y;
-		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
+
+		// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
+		MCGFloat t_scale;
+		t_scale = MCResGetDeviceScale();
+		
+		MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 	}
 	
 	MCEventQueuePostMousePress((MCStack *)m_current_window, p_time, p_modifiers, p_state, p_button);
@@ -209,7 +216,12 @@ void MCScreenDC::handle_mouse_move(uint32_t p_time, uint32_t p_modifiers, int32_
 	
 	m_mouse_x = x;
 	m_mouse_y = y;
-	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x, y);
+
+	// IM-2013-08-02: [[ ResIndependence]] scale mouse coords to user space
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	MCEventQueuePostMousePosition((MCStack *)m_current_window, p_time, p_modifiers, x / t_scale, y / t_scale);
 }
 
 void MCScreenDC::handle_key_press(uint32_t p_modifiers, uint32_t p_char_code, uint32_t p_key_code)
@@ -277,7 +289,11 @@ void MCScreenDC::process_touch(MCEventTouchPhase p_phase, void *p_touch_handle, 
 	t_touch -> y = p_y;
 	t_touch -> timestamp = p_timestamp;
 	
-	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x, p_y);
+	MCGFloat t_scale;
+	t_scale = MCResGetDeviceScale();
+	
+	// IM-2013-08-02: [[ ResIndependence]] scale touch coords to user space
+	MCEventQueuePostTouch((MCStack *)m_current_window, p_phase, t_touch -> ident, 1, p_x / t_scale, p_y / t_scale);
 	
 	if (p_phase == kMCEventTouchPhaseEnded || p_phase == kMCEventTouchPhaseCancelled)
 	{
@@ -411,7 +427,7 @@ void MCScreenDC::setinputfocus(Window p_window)
 		focus_window(p_window);
 }
 
-void MCScreenDC::boundrect(MCRectangle &rect, Boolean title, Window_mode m)
+void MCScreenDC::device_boundrect(MCRectangle &rect, Boolean title, Window_mode m)
 {
 }
 
@@ -554,7 +570,7 @@ MCMobileBitmap *MCMobileBitmapCreate(uint32_t width, uint32_t height, bool mono)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::querymouse(int2 &x, int2 &y)
+void MCScreenDC::device_querymouse(int2 &x, int2 &y)
 {
 	// These co-ords should be in screen co-ords, so adjust the view-based current co-ords
 	// by the view top-left.
@@ -601,62 +617,6 @@ void MCScreenDC::setcmap(MCStack *sptr)
 
 void MCScreenDC::setgraphicsexposures(Boolean on, MCStack *sptr)
 {
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-Pixmap MCScreenDC::createpixmap(uint2 width, uint2 height, uint2 depth, Boolean purge)
-{
-	_Drawable *t_pixmap;
-	t_pixmap = new _Drawable;
-	t_pixmap -> type = DC_BITMAP;
-	t_pixmap -> handle . pixmap = (MCSysBitmapHandle)MCMobileBitmapCreate(width, height, depth == 1);
-	return t_pixmap;
-}
-
-Pixmap MCScreenDC::createstipple(uint2 width, uint2 height, uint4 *bits)
-{
-	return NULL;
-}
-
-void MCScreenDC::freepixmap(Pixmap &pixmap)
-{
-	if (pixmap == NULL)
-		return;
-	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)pixmap -> handle . pixmap;
-	free(t_bitmap -> data);
-	delete t_bitmap;
-	delete pixmap;
-	
-	pixmap = nil;
-}
-
-bool MCScreenDC::lockpixmap(Pixmap p_pixmap, void*& r_data, uint4& r_stride)
-{
-	if (p_pixmap == NULL)
-		return false;
-	
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p_pixmap -> handle . pixmap;
-	r_data = t_bitmap -> data;
-	r_stride = t_bitmap -> stride;
-	return true;
-}
-
-void MCScreenDC::unlockpixmap(Pixmap p_pixmap, void *p_data, uint4 p_stride)
-{
-}
-
-Boolean MCScreenDC::getpixmapgeometry(Pixmap p, uint2 &w, uint2 &h, uint2 &d)
-{
-	MCMobileBitmap *t_bitmap;
-	t_bitmap = (MCMobileBitmap *)p -> handle . pixmap;
-	w = t_bitmap -> width;
-	h = t_bitmap -> height;
-	d = t_bitmap -> is_mono ? 1 : 32;
-	return True;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -718,188 +678,9 @@ void MCScreenDC::copyarea(Drawable source, Drawable dest, int2 depth, int2 sx, i
 	}
 }
 
-void MCScreenDC::copyplane(Drawable s, Drawable d, int2 sx, int2 sy, uint2 sw, uint2 sh, int2 dx, int2 dy, uint4 rop, uint4 pixel)
-{
-	MCMobileBitmap *t_src_bitmap, *t_dst_bitmap;
-	t_src_bitmap = (MCMobileBitmap *)s -> handle . pixmap;
-	t_dst_bitmap = (MCMobileBitmap *)d -> handle . pixmap;
-	
-	assert(t_src_bitmap -> is_mono);
-	assert(!t_dst_bitmap -> is_mono);
-	
-	uint8_t *t_src_ptr, *t_dst_ptr;
-	t_src_ptr = (uint8_t *)t_src_bitmap -> data;
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data;
-	
-	uint32_t t_src_stride, t_dst_stride;
-	t_src_stride = t_src_bitmap -> stride;
-	t_dst_stride = t_dst_bitmap -> stride;
-	
-	t_src_ptr += sy * t_src_stride + sx / 8;
-	t_dst_ptr += dy * t_dst_stride + dx * 4;
-	
-	uint32_t t_src_first_bit;
-	t_src_first_bit = 0x80 >> (sx & 0x7);
-	
-	for (uint32_t y = 0; y < sh; y++)
-	{
-		uint8_t *t_src_bits;
-		uint32_t *t_dst_bits;
-		t_src_bits = t_src_ptr;
-		t_dst_bits = (uint32_t *)t_dst_ptr;
-		uint32_t t_bit;
-		t_bit = t_src_first_bit;
-		for (uint32_t x = 0; x < sw; x++)
-		{
-			if (*t_src_bits & t_bit)
-			{
-				switch (rop)
-				{
-					case GXcopy:
-						*t_dst_bits = pixel;
-						break;
-					case GXand:
-						*t_dst_bits &= pixel;
-						break;
-					case GXor:
-						*t_dst_bits |= pixel;
-						break;
-				}
-			}
-			
-			t_bit >>= 1;
-			if (t_bit == 0)
-			{
-				t_bit = 0x80;
-				t_src_bits++;
-			}
-			t_dst_bits++;
-		}
-		t_src_ptr += t_src_stride;
-		t_dst_ptr += t_dst_stride;
-	}
-}
-
-MCBitmap *MCScreenDC::createimage(uint2 depth, uint2 width, uint2 height, Boolean set, uint1 value, Boolean shm, Boolean forceZ)
-{
-	if (depth == 0)
-		depth = 32;
-	
-	MCBitmap *image = new MCBitmap;
-	image->width = width;
-	image->height = height;
-	image->format = ZPixmap;
-	image->bitmap_unit = 32;
-	image->byte_order = MSBFirst;
-	image->bitmap_pad = 32;
-	image->bitmap_bit_order = MSBFirst;
-	image->depth = (uint1)depth;
-	image->bytes_per_line = ((width * depth + 31) >> 3) & 0xFFFFFFFC;
-	image->bits_per_pixel = (uint1)depth;
-	image->red_mask = image->green_mask = image->blue_mask = (depth == 1 || depth == getdepth() ? 0x00 : 0xFF);
-	image->data = new char[image->bytes_per_line * height];
-	
-	if (set)
-	{
-		uint4 bytes = image->bytes_per_line * height;
-		memset(image->data, value, bytes);
-	}
-	
-	return image;
-}
-
-void MCScreenDC::destroyimage(MCBitmap *image)
-{
-	if (image -> data != NULL)
-		delete image -> data;
-	delete image;
-}
-
-MCBitmap *MCScreenDC::copyimage(MCBitmap *source, Boolean invert)
-{
-	MCBitmap *image = createimage(source->depth, source->width, source->height, 0, 0, False, False);
-	uint4 bytes = image->bytes_per_line * image->height;
-	if (invert)
-	{
-		uint1 *sptr = (uint1 *)source->data;
-		uint1 *dptr = (uint1 *)image->data;
-		while (bytes--)
-			*dptr++ = ~*sptr++;
-	}
-	else
-		memcpy(image->data, source->data, bytes);
-	return image;
-}
-
 ////////////////////////////////////////////////////////////////////////////////
 
-void MCScreenDC::putimage(Drawable dest, MCBitmap *source, int2 sx, int2 sy, int2 dx, int2 dy, uint2 w, uint2 h)
-{
-	uint8_t *t_src_ptr;
-	uint32_t t_src_stride;
-	t_src_ptr = (uint8_t *)source -> data + source -> bytes_per_line * sy + sx * source -> depth / 8;
-	t_src_stride = source -> bytes_per_line;
-	
-	MCMobileBitmap *t_dst_bitmap;
-	uint8_t *t_dst_ptr;
-	uint32_t t_dst_stride;
-	t_dst_bitmap = (MCMobileBitmap *)dest -> handle . pixmap;
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data + t_dst_bitmap -> stride * dy + dx * (t_dst_bitmap -> is_mono ? 1 : 32) / 8;
-	t_dst_stride = t_dst_bitmap -> stride;
-	
-	if (!t_dst_bitmap -> is_mono)
-		for(uint32_t i = 0; i < h; i++, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
-			for(uint32_t j = 0; j < w; j++)
-				((uint32_t *)t_dst_ptr)[j] = ((uint32_t *)t_src_ptr)[j];
-	else
-	{
-		// MW-2012-06-27: [[ Bug ]] Round up number of bytes to copy to nearest byte
-		//   (rather than down).
-		for(uint32_t i = 0; i < h; i++)
-			memcpy(t_dst_ptr + i * t_dst_stride, t_src_ptr + i * t_src_stride, (w * source -> depth + 7) / 8);
-	}
-}
-
-MCBitmap *MCScreenDC::getimage(Drawable pm, int2 x, int2 y, uint2 w, uint2 h, Boolean shm)
-{
-	// NULL input means get from screen - not supported at present.
-	if (pm == NULL)
-		return NULL;
-	
-	MCMobileBitmap *t_src_bitmap;
-	uint8_t *t_src_ptr;
-	uint32_t t_src_stride;
-	t_src_bitmap = (MCMobileBitmap *)pm -> handle . pixmap;
-	t_src_ptr = (uint8_t*)t_src_bitmap -> data + y * t_src_bitmap -> stride + x * (t_src_bitmap -> is_mono ? 1 : 32) / 8;
-	t_src_stride = t_src_bitmap -> stride;
-	
-	MCBitmap *t_dst_bitmap;
-	uint8_t *t_dst_ptr;
-	uint32_t t_dst_stride;
-	t_dst_bitmap = createimage(t_src_bitmap -> is_mono ? 1 : 32, w, h, False, 0, False, shm);
-	t_dst_ptr = (uint8_t *)t_dst_bitmap -> data;
-	t_dst_stride = t_dst_bitmap -> bytes_per_line;
-	
-	if (!t_src_bitmap -> is_mono)
-		for(uint32_t i = 0; i < h; i++, t_dst_ptr += t_dst_stride, t_src_ptr += t_src_stride)
-			for(uint32_t j = 0; j < w; j++)
-				((uint32_t *)t_dst_ptr)[j] = ((uint32_t *)t_src_ptr)[j];
-	else
-		// IM-2012-11-16: [[ Bug ]] Round up number of bytes to copy to nearest byte
-		//   (rather than down).
-		for(uint32_t i = 0; i < h; i++)
-			memcpy(t_dst_ptr + i * t_dst_stride, t_src_ptr + i * t_src_stride, (w + 7) / 8);
-	
-	return t_dst_bitmap;
-}
-
-void MCScreenDC::flipimage(MCBitmap *image, int2 byte_order, int2 bit_order)
-{
-}
-
-////////////////////////////////////////////////////////////////////////////////
-
-MCCursorRef MCScreenDC::createcursor(MCImageBuffer *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
+MCCursorRef MCScreenDC::createcursor(MCImageBitmap *p_image, int2 p_hotspot_x, int2 p_hotspot_y)
 {
 	return NULL;
 }
@@ -918,16 +699,6 @@ uint4 MCScreenDC::dtouint4(Drawable d)
 	return (uint4)d -> handle . pixmap;
 }
 
-Boolean MCScreenDC::uint4topixmap(uint4 p_ptr, Pixmap &p)
-{
-	_Drawable *t_pixmap;
-	t_pixmap = new _Drawable;
-	t_pixmap -> type = DC_BITMAP;
-	t_pixmap -> handle . pixmap = (MCSysBitmapHandle)p_ptr;
-	p = t_pixmap;
-	return True;
-}
-
 Boolean MCScreenDC::uint4towindow(uint4, Window &w)
 {
 	return False;
@@ -944,7 +715,7 @@ void MCScreenDC::disablebackdrop(bool p_hard)
 {
 }
 
-void MCScreenDC::configurebackdrop(const MCColor& p_colour, Pixmap p_pattern, MCImage *p_badge)
+void MCScreenDC::configurebackdrop(const MCColor& p_colour, MCPatternRef p_pattern, MCImage *p_badge)
 {
 }
 
@@ -1005,7 +776,7 @@ uint2 MCScreenDC::querymods()
 	return 0;
 }
 
-void MCScreenDC::setmouse(int2 x, int2 y)
+void MCScreenDC::device_setmouse(int2 x, int2 y)
 {
 }
 

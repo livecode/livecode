@@ -47,7 +47,6 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "stacklst.h"
 #include "sellst.h"
 #include "undolst.h"
-#include "pxmaplst.h"
 #include "util.h"
 #include "date.h"
 #include "printer.h"
@@ -1266,11 +1265,11 @@ Exec_stat MCReset::exec(MCExecPoint &ep)
 		MCslices = 16;
 		MCmagnification = 8;
 
-		MCpatterns->freepat(MCpenpm);
+		MCpatternlist->freepat(MCpenpattern);
 		MCpencolor.red = MCpencolor.green = MCpencolor.blue = 0x0;
 		MCscreen->alloccolor(MCpencolor);
 
-		MCpatterns->freepat(MCbrushpm);
+		MCpatternlist->freepat(MCbrushpattern);
 		MCbrushcolor.red = MCbrushcolor.green = MCbrushcolor.blue = 0xFFFF;
 		MCscreen->alloccolor(MCbrushcolor);
 		break;

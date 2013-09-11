@@ -108,7 +108,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 			//need to use a color that is a bit darker than MAC_DISABLED for disabled
 			//Mac Progress bar. If (flags & F_PROGRESS) set different foreground color
 			dc->setforeground(maccolors[MAC_DISABLED]);
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 			dc->fillrect(trect);
 		}
 		//window's progress bar, Motif's scrollbar and
@@ -118,10 +118,10 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 		{
 			dc->setforeground(dc->getgray());
 			dc->setbackground(MCscreen->getwhite());
-			dc->setfillstyle(FillOpaqueStippled, DNULL, 0, 0);
+			dc->setfillstyle(FillOpaqueStippled, nil, 0, 0);
 			dc->fillrect(trect);
 			dc->setbackground(MCzerocolor);
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 		}
 		else		
 			// MW-2007-09-18: [[ Bug 1650 ]] Disabled state linked to thumb size
@@ -136,7 +136,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 				{
 					MCRectangle brect = trect;
 					dc->setforeground(MCscreen->getblack());
-					dc->setfillstyle(FillSolid, DNULL, 0, 0);
+					dc->setfillstyle(FillSolid, nil, 0, 0);
 					if (getstyleint(flags) == F_VERTICAL)
 					{
 						brect.y += trect.width;
@@ -171,7 +171,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 				if (!db)
 				{
 					dc->setforeground(dc->getgray());
-					dc->setfillstyle(FillSolid, DNULL, 0, 0);
+					dc->setfillstyle(FillSolid, nil, 0, 0);
 					int2 y = trect.y + trect.width;
 					dc->drawline(trect.x, y, trect.x + trect.width, y);
 					y = trect.y + trect.height - trect.width;
@@ -188,7 +188,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 				if (!db)
 				{
 					dc->setforeground(dc->getgray());
-					dc->setfillstyle(FillSolid, DNULL, 0, 0);
+					dc->setfillstyle(FillSolid, nil, 0, 0);
 					int2 x = trect.x + trect.height;
 					dc->drawline(x, trect.y, x, trect.y + trect.height);
 					x = trect.x + trect.width - trect.height;
@@ -230,7 +230,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 									dc->setforeground(maccolors[MAC_THUMB_BOTTOM]);
 								else
 									dc->setforeground(maccolors[MAC_THUMB_BACK]);
-								dc->setfillstyle(FillSolid, DNULL, 0, 0);
+								dc->setfillstyle(FillSolid, nil, 0, 0);
 							}
 							else
 								if (parent->gettype() == CT_FIELD)
@@ -320,7 +320,7 @@ void MCScrollbar::draw(MCDC *dc, const MCRectangle& p_dirty, bool p_isolated, bo
 						p[2].x = frect.x + frect.width - 1;
 						p[2].y = p[1].y;
 						dc->setforeground(maccolors[MAC_SHADOW]);
-						dc->setfillstyle(FillSolid, DNULL, 0, 0);
+						dc->setfillstyle(FillSolid, nil, 0, 0);
 						dc->drawlines(p, 3);
 						//draw White part of 3D effect
 						p[0].x = frect.x;
@@ -390,7 +390,7 @@ void MCScrollbar::DrawMacProgressBar(MCDC *dc, MCRectangle &trect, int2 endpos)
 	{//draw the progress bar's thumb
 		//fill the thumb with color
 		dc->setforeground(maccolors[MAC_THUMB_BACK]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 
 
 
@@ -401,7 +401,7 @@ void MCScrollbar::DrawMacProgressBar(MCDC *dc, MCRectangle &trect, int2 endpos)
 	else
 	{//Draw a Black vertical line at the right edge of the thumb
 		dc->setforeground(dc->getblack());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
 	dc->drawline(trect.x + trect.width, trect.y, trect.x + trect.width,
 	             trect.y + trect.height);
@@ -416,7 +416,7 @@ void MCScrollbar::DrawMacProgressBar(MCDC *dc, MCRectangle &trect, int2 endpos)
 
 		//draw a vertical gray line next to the vertical balck line
 		dc->setforeground(maccolors[MAC_SHADOW]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawline(trect.x + trect.width + 1, trect.y, trect.x + trect.width + 1,
 		             trect.y + trect.height);
 		/*draw Mac 3D effect, gray on top left corner, white on bottom right corner*/
@@ -516,7 +516,7 @@ void MCScrollbar::DrawWinProgressBar(MCDC *dc, MCRectangle &trect, int2 endpos)
 		else
 		{
 			dc->setforeground(MCaccentcolor);
-			dc->setfillstyle(FillSolid, DNULL, 0, 0);
+			dc->setfillstyle(FillSolid, nil, 0, 0);
 		}
 		uint2 blockwidth = trect.height * 2 / 3;
 		trect.width = blockwidth;
@@ -549,7 +549,7 @@ void MCScrollbar::DrawMacScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 		dc->setforeground(dc->getgray());
 	else
 		dc->setforeground(dc->getblack());
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	MCPoint p[12];
 	p[0].x = p[1].x = r.x + 1;
 	p[0].y = r.y;
@@ -596,7 +596,7 @@ void MCScrollbar::DrawMacScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 		p[4].x = p[5].x = p[3].x - 1;
 		p[5].y = p[4]. y + 3;
 		dc->setforeground(dc->getgray());
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawlines(p, 6);
 	}
 	/* draw the thumb of the scale, Mac Scale's thumb is 15 wide x 16 tall */
@@ -612,7 +612,7 @@ void MCScrollbar::DrawMacScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 			dc->setforeground(maccolors[MAC_THUMB_BOTTOM]);
 		else
 			dc->setforeground(maccolors[MAC_THUMB_BACK]); //light blue color
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 	}
 	//draw the thumb outline start from 9 o'clock and clockwise arround 360 degree
 	p[0].x = p[1].x = thumb.x;
@@ -641,7 +641,7 @@ void MCScrollbar::DrawMacScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 		dc->setforeground(dc->getgray());
 	else
 		dc->setforeground(dc->getblack());
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawlines(p, 11); //draw thumb outline
 
 	// MW-2007-09-18: [[ Bug 1650 ]] Disabled state linked to thumb size
@@ -715,7 +715,7 @@ void MCScrollbar::DrawWinScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 	p[0].y = rect.y + h;
 	p[1].x = rect.x + rect.width;
 	dc->setforeground(dc->getgray()); //gray
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawline(p[0].x, p[0].y, p[1].x, p[0].y);
 	p[0].y += 1;
 	dc->setforeground(dc->getblack()); //black
@@ -764,7 +764,7 @@ void MCScrollbar::DrawWinScale(MCDC *dc, MCRectangle &trect, MCRectangle &thumb)
 	p[1].y = by;
 	p[2].y = thumb.y + thumb.height - 2;
 	dc->setforeground(dc->getgray());
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	dc->drawlines(p, 3);
 
 	//draw black
@@ -832,7 +832,7 @@ void MCScrollbar::drawticks(MCDC *dc, MCRectangle &thumb)
 {
 	MCPoint p;
 	dc->setforeground(dc->getblack()); //black
-	dc->setfillstyle(FillSolid, DNULL, 0, 0);
+	dc->setfillstyle(FillSolid, nil, 0, 0);
 	int2 sx;
 	if (IsMacEmulatedLF())
 	{
@@ -892,7 +892,7 @@ void MCScrollbar::drawmacthumb(MCDC *dc, MCRectangle &thumb)
 			ty += 2;
 		}
 		dc->setforeground(maccolors[MAC_THUMB_TOP + shift]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawsegments(grid, gridpoints - 1);
 		for (i = 0 ; i < gridpoints ; i++)
 		{
@@ -932,7 +932,7 @@ void MCScrollbar::drawmacthumb(MCDC *dc, MCRectangle &thumb)
 			grid[i].y2 = by - offset - 1;
 		}
 		dc->setforeground(maccolors[MAC_THUMB_TOP + shift]);
-		dc->setfillstyle(FillSolid, DNULL, 0, 0);
+		dc->setfillstyle(FillSolid, nil, 0, 0);
 		dc->drawsegments(grid, gridpoints - 1);
 		for (i = 0 ; i < gridpoints ; i++)
 		{

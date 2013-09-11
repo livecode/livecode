@@ -61,6 +61,8 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 #include "mbldc.h"
 #endif
 
+#include "resolution.h"
+
 static int4 s_last_stack_time = 0;
 static int4 s_last_stack_index = 0;
 
@@ -446,7 +448,8 @@ MCStack::~MCStack()
 	MCTileCacheDestroy(m_tilecache);
 	
 	// MW-2011-09-13: [[ Redraw ]] If there is snapshot, get rid of it.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	// MW-2012-10-10: [[ IdCache ]] Free the idcache.
 	freeobjectidcache();
@@ -593,7 +596,8 @@ void MCStack::close()
 		opened--;
 
 	// MW-2011-09-13: [[ Effects ]] Free any snapshot that we have.
-	MCscreen -> freepixmap(m_snapshot);
+	MCGImageRelease(m_snapshot);
+	m_snapshot = nil;
 	
 	state &= ~(CS_IGNORE_CLOSE | CS_KFOCUSED | CS_ISOPENING);
 }
@@ -2512,7 +2516,10 @@ Exec_stat MCStack::setprop(uint4 parid, Properties which, MCExecPoint &ep, Boole
 			if (m_tilecache == nil)
 			{
 				MCTileCacheCreate(32, 4096 * 1024, m_tilecache);
-				MCTileCacheSetViewport(m_tilecache, curcard -> getrect());
+				// IM-2013-08-21: [[ ResIndependence ]] Use device coords for tilecache operation
+				MCRectangle t_device_rect;
+				t_device_rect = MCGRectangleGetIntegerBounds(MCResUserToDeviceRect(curcard->getrect()));
+				MCTileCacheSetViewport(m_tilecache, t_device_rect);
 			}
 		
 			MCTileCacheSetCompositor(m_tilecache, t_type);
@@ -2974,3 +2981,18 @@ void MCStack::purgefonts()
 	// MW-2011-08-17: [[ Redraw ]] Tell the stack to dirty all of itself.
 	dirtyall();
 }
+
+//////////
+
+MCRectangle MCStack::getwindowrect(void) const
+{
+	if (window == nil)
+		return rect;
+		
+	MCRectangle t_rect;
+	t_rect = device_getwindowrect();
+	
+	return MCGRectangleGetIntegerBounds(MCResDeviceToUserRect(t_rect));
+}
+
+//////////
