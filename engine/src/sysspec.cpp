@@ -75,10 +75,6 @@ void MCS_common_init(void)
 	MCsystem -> Initialize();    
     MCsystem -> SetErrno(errno);
 	
-	IO_stdin = MCsystem -> OpenFd(0, kMCSystemFileModeRead) ;
-	IO_stdout = MCsystem -> OpenFd(1, kMCSystemFileModeWrite);
-	IO_stderr = MCsystem -> OpenFd(2, kMCSystemFileModeWrite);
-	
 	MCinfinity = HUGE_VAL;
     
 #if !defined(_WINDOWS_DESKTOP) && !defined(_WINDOWS_SERVER)
