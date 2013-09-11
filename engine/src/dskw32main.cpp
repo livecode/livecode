@@ -33,12 +33,12 @@ along with LiveCode.  If not see <http://www.gnu.org/licenses/>.  */
 
 ////////////////////////////////////////////////////////////////////////////////
 
-bool X_init(int argc, char *argv[], char *envp[]);
+bool X_init(int argc, MCStringRef argv[], MCStringRef envp[]);
 void X_main_loop_iteration();
 int X_close();
 
 HINSTANCE MChInst;
-char *MCcmdline;
+MCStringRef MCcmdline;
 
 // MW-2008-09-15: [[ Bug 7148 ]] Increase the maximum limit on the number of arguments to
 //   256 - should hopefully be enough for most people's applications!
@@ -122,14 +122,13 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	MCModePreMain();
 
-	int argc = 1;
-	char *argv[MAXARGS];
-	char cmdbuffer[MAX_PATH];
-	char *sptr = NULL;
-	int nEnvVar = 0;
-	int sizeEnvVar = 0;
-	char **envp = NULL;
-	char *envStrings = NULL;
+	int argc = 0;
+	int envc = 0;
+	MCStringRef *argv;
+	MCStringRef *envp;
+	
+	argv = nil;
+	envp = nil;
 
 	// MW-2004-11-25: Under Win9x it would appear that not all exceptions are masked...
 	// MW-2004-11-28: Actually, this doesn't solve the problem, it seems the OS is
@@ -150,61 +149,49 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 
 	MCModeSetupCrashReporting();
 
-	MChInst = hInstance;
-	GetModuleFileNameA(NULL, cmdbuffer, MAX_PATH);
-	sptr = cmdbuffer;
-	if (sptr != NULL && *sptr)
+	// Get the command line and convert it into the expected argc/argv form
+	LPCWSTR lpWCmdLine = GetCommandLineW();
+	LPWSTR *lpWargv = CommandLineToArgvW(lpWCmdLine, argc);
+	
+	// Windows uses slashes the opposite way around to the other platforms and requires conversion
+	for (int i = 0; i < argc; i++)
 	{
-		do
+		LPWSTR *sptr = lpWargv[i];
+		while (*sptr)
 		{
-			if (*sptr == '/')
+			if (*sptr == '\\')
+				*sptr = '/';
+			else if (i == 0 && *sptr == '/')
 				*sptr = '\\';
-			else
-				if (*sptr == '\\')
-					*sptr = '/';
-		}
-		while (*++sptr);
-	}
-	argv[0] = cmdbuffer;
-	sptr = lpCmdLine;
-	while (*sptr)
-	{
-		if (*sptr == '\\')
-			*sptr = '/';
-		sptr++;
-	}
-	sptr = lpCmdLine;
-	MCcmdline = strdup(lpCmdLine);
-	while (*sptr && argc < MAXARGS)
-	{
-		while (isspace(*sptr))
 			sptr++;
-		if (*sptr == '"')
-		{
-			argv[argc++] = ++sptr;
-			while (*sptr && *sptr != '"')
-				sptr++;
 		}
-		else
-		{
-			argv[argc++] = sptr;
-			while(*sptr && !isspace(*sptr))
-				sptr++;
-		}
-		if (*sptr)
-			*sptr++ = '\0';
+		
 	}
-#undef GetEnvironmentStrings
-	envStrings = (char *)GetEnvironmentStrings();// and SetEnvironmentVariable
-	sptr = envStrings;
-	while ((sizeEnvVar = strlen(sptr)) > 0)
+	
+	// Convert the WStrings (UTF-16) into StringRefs
+	for (int i = 0; i < argc; i++)
+		/* UNCHECKED */ MCStringCreateWithWString(lpWargv[i], argv[i]);
+	
+	LocalFree(lpWargv);
+	
+	// Convert the environment strings into StringRefs
+	LPWCH lpEnvStrings = GetEnvironmentStringsW();
+	LPCWSTR sptr = lpEnvStrings;
+	size_t t_len;
+	while ((t_len = wcslen(sptr)) > 0)
 	{
-		envp = (char **)realloc(envp, (nEnvVar + 1) *  sizeof(char *));
-		envp[nEnvVar++] = sptr;
-		sptr = sptr + sizeEnvVar + 1; //move sptr to next set the env var set
+		uindex_t t_index = envc++;
+		/* UNCHECKED */ MCMemoryResizeArray(envc, envp, t_index);
+		/* UNCHECKED */ MCStringCreateWithWString(sptr, envp[envc - 1]);
+		sptr += t_len + 1;
 	}
-	envp = (char **)realloc(envp, (nEnvVar + 1) *  sizeof(char *));
-	envp[nEnvVar] = NULL;
+	
+	// Terminate the envp array
+	uindex_t t_temp = envc;
+	/* UNCHECKED */ MCMemoryResizeArray(envc + 1, envp, t_temp);
+	envp[envc] = nil;
+	
+	FreeEnvironmentStringsW(lpEnvStrings);
 
 	// Initialize OLE on the main thread.
 	OleInitialize(nil);
@@ -235,10 +222,16 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	SwitchToFiber(t_init_fiber);
 	DeleteFiber(t_init_fiber);
 
+	// Clean up the argv and envp strings
+	for (int i = 0; i < argc; i++)
+		MCValueRelease(argv[i]);
+	for (int i = 0; i < envc; i++)
+		MCValueRelease(envp[i]);
+	MCMemoryDeleteArray(argv);
+	MCMemoryDeleteArray(envp);
+	
 	if (!t_init . success)
 		DisplayStartupErrorAndExit();
-
-	FreeEnvironmentStringsA(envStrings);
 
 	// Now we loop continually until quit. If 'X_main_loop' returns without quitting
 	// it means a stack size change request has occured.
@@ -287,8 +280,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLi
 	if (t_tsf_mgr != nil)
 		t_tsf_mgr -> Release();
 
-	delete envp;
-	delete MCcmdline;
+	MCValueRelease(MCcmdline);
 
 	return r;
 }

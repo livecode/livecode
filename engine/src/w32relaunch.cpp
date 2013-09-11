@@ -66,7 +66,7 @@ struct message_t
 };
 
 extern void md5_compute(const char *p_data, unsigned int p_length, void *p_buffer);
-extern char *MCcmdline;
+extern MCStringRef MCcmdline;
 
 static char *s_previous_folder = NULL;
 
