@@ -185,6 +185,7 @@ MCPropertyInfo MCPlayer::kProperties[] =
 	DEFINE_RO_OBJ_PROPERTY(P_NODES, String, MCPlayer, Nodes)
 	DEFINE_RO_OBJ_PROPERTY(P_HOT_SPOTS, String, MCPlayer, HotSpots)
 	DEFINE_RO_OBJ_CUSTOM_PROPERTY(P_CONSTRAINTS, MultimediaQTVRConstraints, MCPlayer, Constraints)
+    DEFINE_RO_OBJ_LIST_PROPERTY(P_ENABLED_TRACKS, LinesOfUInt, MCPlayer, EnabledTracks)
 };
 
 MCObjectPropertyTable MCPlayer::kPropertyTable =
@@ -3164,6 +3165,25 @@ void MCPlayer::qt_getenabledtracks(MCExecPoint& ep)
 	}
 }
 
+void MCPlayer::qt_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    MCAutoArray<uinteger_t> t_tracks;
+    
+	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
+	uint2 i;
+    
+	for (i = 1 ; i <= trackcount ; i++)
+	{
+		Track trak = GetMovieIndTrack((Movie)theMovie,i);
+		if (trak == nil)
+			break;
+		if (GetTrackEnabled(trak))
+			t_tracks . Push(GetTrackID(trak));
+	}
+    
+    t_tracks . Take(r_tracks, r_count);
+}
+
 Boolean MCPlayer::qt_setenabledtracks(const MCString& s)
 {
 	uint2 trackcount = (uint2)GetMovieTrackCount((Movie)theMovie);
@@ -3692,6 +3712,11 @@ void MCPlayer::avi_gettracks(MCExecPoint& ep)
 
 void MCPlayer::avi_getenabledtracks(MCExecPoint& ep)
 {
+}
+
+void MCPlayer::avi_getenabledtracks(uindex_t& r_count, uinteger_t*& r_tracks)
+{
+    r_count = 0;
 }
 
 Boolean MCPlayer::avi_setenabledtracks(const MCString& s)
