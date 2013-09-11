@@ -1251,7 +1251,11 @@ static void InterfaceGenerateVariant(InterfaceRef self, CoderRef p_coder, Handle
 			CoderWrite(p_coder, "%s(", NameGetCString(t_variant -> binding));
         
         for(uint32_t k = 0; k < p_variant -> parameter_count; k++)
-            CoderWrite(p_coder, ", %s", t_mapped_params[k] . var_name);
+        {
+            if (k != 0)
+                CoderWrite(p_coder, ", ", t_mapped_params[k] . var_name);
+            CoderWrite(p_coder, "%s", t_mapped_params[k] . var_name);
+        }
 			
         CoderWrite(p_coder, ")");
 		

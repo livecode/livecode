@@ -1371,7 +1371,7 @@ LCError LCPostBlockOnMainThread(unsigned int options, void (^callback)(void));
 	
 ////////////////////////////////////////////////////////////////////////////////
 
-#if defined(__IPHONE_4_0) && defined(__OBJC__)
+#if defined(__OBJC__) && TARGET_OS_IPHONE
 
 #import <UIKit/UIKit.h>
     
